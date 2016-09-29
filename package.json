@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "gulp": "^3.9.1",
+    "gulp-eslint": "^3.0.1",
     "gulp-jsdoc3": "^0.3.0",
     "require-dir": "^0.3.0",
     "tape": "^4.5.1",

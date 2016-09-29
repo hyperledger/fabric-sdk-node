@@ -34,16 +34,16 @@ var _chains = {};
  * @returns [Chain]{@link module:api.Chain} a new instance of the Chain class
  */
 module.exports.newChain = function(name) {
-    var chain = _chains[name];
-    
-    if (chain) 
-    	throw new Error(util.format("Chain %s already exists", name));
+	var chain = _chains[name];
 
-    chain = new Chain(name);
+	if (chain)
+		throw new Error(util.format('Chain %s already exists', name));
 
-    _chains[name] = chain;
-    return chain;
-}
+	chain = new Chain(name);
+
+	_chains[name] = chain;
+	return chain;
+};
 
 /**
  * Get a chain.  If it doesn't yet exist and 'create' is true, create it.
@@ -52,14 +52,14 @@ module.exports.newChain = function(name) {
  * @returns {Chain} Returns the chain, or null if it doesn't exist and create is false.
  */
 module.exports.getChain = function(chainName, create) {
-    var chain = _chains[chainName];
+	var chain = _chains[chainName];
 
-    if (!chain && create) {
-        chain = newChain(chainName);
-    }
+	if (!chain && create) {
+		chain = newChain(chainName);
+	}
 
-    return chain;
-}
+	return chain;
+};
 
 /**
  * Obtains an instance of the [KeyValueStore]{@link module:api.KeyValueStore} class. By default
@@ -73,5 +73,4 @@ module.exports.getChain = function(chainName, create) {
  */
 module.exports.newKeyValueStore = function(options) {
 	return utils.newKeyValueStore(options);
-}
-
+};

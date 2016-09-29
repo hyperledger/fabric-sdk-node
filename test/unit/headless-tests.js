@@ -21,20 +21,20 @@ var execSync = require('child_process').execSync;
 var utils = require('../../lib/utils.js');
 
 var grpc = require('grpc');
-var _fabricProto = grpc.load("../../lib/protos/fabric.proto").protos;
-var _chaincodeProto = grpc.load("../../lib/protos/chaincode.proto").protos;
+var _fabricProto = grpc.load('../../lib/protos/fabric.proto').protos;
+var _chaincodeProto = grpc.load('../../lib/protos/chaincode.proto').protos;
 
 // FileKeyValueStore tests /////////////
 var FileKeyValueStore = require('../../lib/FileKeyValueStore.js');
 
-var keyValStorePath = path.join(getUserHome(), "kvsTemp");
-var testKey = "keyValFileStoreName";
-var testValue = "secretKeyValue";
+var keyValStorePath = path.join(getUserHome(), 'kvsTemp');
+var testKey = 'keyValFileStoreName';
+var testValue = 'secretKeyValue';
 // End: FileKeyValueStore tests ////////
 
 // Chain tests /////////////
 // var Chain = require('../../lib/Chain.js');
-// var chainName = "testChain";
+// var chainName = 'testChain';
 
 // End: Chain tests ////////
 
@@ -48,62 +48,62 @@ var testValue = "secretKeyValue";
 // Run the FileKeyValueStore test
 //
 test('FileKeyValueStore read and write test', function(t) {
-    // clean up
-    fs.existsSync(keyValStorePath, (exists) => {
-        if (exists) {
-            execSync('rm -rf ' + keyValStorePath);
-        }
-    });
+	// clean up
+	fs.existsSync(keyValStorePath, (exists) => {
+		if (exists) {
+			execSync('rm -rf ' + keyValStorePath);
+		}
+	});
 
-    var store = new FileKeyValueStore({
-        path: keyValStorePath
-    });
+	var store = new FileKeyValueStore({
+		path: keyValStorePath
+	});
 
-    fs.exists(keyValStorePath, (exists) => {
-        if (exists)
-            t.pass("Successfully created new directory for testValueStore");
-        else {
-            t.fail("Failed to create new directory: " + keyValStorePath);
-            t.end();
-        }
-    });
+	fs.exists(keyValStorePath, (exists) => {
+		if (exists)
+			t.pass('Successfully created new directory for testValueStore');
+		else {
+			t.fail('Failed to create new directory: ' + keyValStorePath);
+			t.end();
+		}
+	});
 
-    store.setValue(testKey, testValue)
-    .then(function(result) {
-        if (result) {
-            t.pass("Successfully set value");
-        
-            fs.exists(path.join(keyValStorePath, testKey), (exists) => {
-                if (exists)
-                    t.pass("Verified the file for key " + testKey + " does exist");
-                else {
-                    t.fail("Failed to create file for key " + testKey);
-                    t.end();
-                }
-            });
-        } else {
-            t.fail("Failed to set value");
-            t.end();
-        }
-    });
-    
-    store.getValue(testKey)
-    .then(
-        // Log the fulfillment value
-        function(val) {
-            if (val != testValue) {
-                t.fail(val + " does not equal testValue of " + testValue);
-                t.end();
-            } else 
-                t.pass("Successfully retrieved value");
-        })
-    .catch(
-        // Log the rejection reason
-        function(reason) {
-            t.fail(reason);
-        });
+	store.setValue(testKey, testValue)
+	.then(function(result) {
+		if (result) {
+			t.pass('Successfully set value');
+		
+			fs.exists(path.join(keyValStorePath, testKey), (exists) => {
+				if (exists)
+					t.pass('Verified the file for key ' + testKey + ' does exist');
+				else {
+					t.fail('Failed to create file for key ' + testKey);
+					t.end();
+				}
+			});
+		} else {
+			t.fail('Failed to set value');
+			t.end();
+		}
+	});
+	
+	store.getValue(testKey)
+	.then(
+		// Log the fulfillment value
+		function(val) {
+			if (val != testValue) {
+				t.fail(val + ' does not equal testValue of ' + testValue);
+				t.end();
+			} else 
+				t.pass('Successfully retrieved value');
+		})
+	.catch(
+		// Log the rejection reason
+		function(reason) {
+			t.fail(reason);
+		});
 
-    t.end();
+	t.end();
 });
 
 // test('Chain test', function(t) {
@@ -113,29 +113,29 @@ test('FileKeyValueStore read and write test', function(t) {
 // });
 
 // test('Peer test', function(t) {
-//     var peer = new Peer("grpc://localhost:7051");
+//     var peer = new Peer('grpc://localhost:7051');
 
 //     var emitter = new EventEmitter();
-//     emitter.on("submitted", function(data) {
-//         t.pass("Successfully submitted transaction. " + data);
+//     emitter.on('submitted', function(data) {
+//         t.pass('Successfully submitted transaction. ' + data);
 //         t.end();
 //     });
-//     emitter.on("error", function(err) {
-//         t.fail("ERROR! " + err);
+//     emitter.on('error', function(err) {
+//         t.fail('ERROR! ' + err);
 //         t.end();
 //     });
 
 //     peer.sendTransaction(
 //         newDevModeDeployTransaction({
-//             chaincodeName: "mycc",
-//             fcn: "init",
-//             args: ["a", "100", "b", "200"]
+//             chaincodeName: 'mycc',
+//             fcn: 'init',
+//             args: ['a', '100', 'b', '200']
 //         }), 
 //         emitter);
 // });
 
 function getUserHome() {
-  return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+	return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 }
 
 /**
@@ -147,46 +147,48 @@ function getUserHome() {
  */
 function newDevModeDeployTransaction(request) {
 
-    var tx = new _fabricProto.Transaction();
-    tx.setType(_fabricProto.Transaction.Type.CHAINCODE_DEPLOY);
+	var tx = new _fabricProto.Transaction();
+	tx.setType(_fabricProto.Transaction.Type.CHAINCODE_DEPLOY);
 
-    // Set the chaincodeID
-    var chaincodeID = new _chaincodeProto.ChaincodeID();
-    chaincodeID.setName(request.chaincodeName);
-    tx.setChaincodeID(chaincodeID.toBuffer());
+	// Set the chaincodeID
+	var chaincodeID = new _chaincodeProto.ChaincodeID();
+	chaincodeID.setName(request.chaincodeName);
+	tx.setChaincodeID(chaincodeID.toBuffer());
 
-    // Construct the ChaincodeSpec
-    var chaincodeSpec = new _chaincodeProto.ChaincodeSpec();
-    // Set Type -- GOLANG is the only chaincode language supported at this time
-    chaincodeSpec.setType(_chaincodeProto.ChaincodeSpec.Type.GOLANG);
-    // Set chaincodeID
-    chaincodeSpec.setChaincodeID(chaincodeID);
-    // Set ctorMsg
-    var chaincodeInput = new _chaincodeProto.ChaincodeInput();
-    chaincodeInput.setArgs(prepend(request.fcn, request.args));
-    chaincodeSpec.setCtorMsg(chaincodeInput);
+	// Construct the ChaincodeSpec
+	var chaincodeSpec = new _chaincodeProto.ChaincodeSpec();
+	// Set Type -- GOLANG is the only chaincode language supported at this time
+	chaincodeSpec.setType(_chaincodeProto.ChaincodeSpec.Type.GOLANG);
+	// Set chaincodeID
+	chaincodeSpec.setChaincodeID(chaincodeID);
+	// Set ctorMsg
+	var chaincodeInput = new _chaincodeProto.ChaincodeInput();
+	chaincodeInput.setArgs(prepend(request.fcn, request.args));
+	chaincodeSpec.setCtorMsg(chaincodeInput);
 
-    // Construct the ChaincodeDeploymentSpec (i.e. the payload)
-    var chaincodeDeploymentSpec = new _chaincodeProto.ChaincodeDeploymentSpec();
-    chaincodeDeploymentSpec.setChaincodeSpec(chaincodeSpec);
-    tx.setPayload(chaincodeDeploymentSpec.toBuffer());
+	// Construct the ChaincodeDeploymentSpec (i.e. the payload)
+	var chaincodeDeploymentSpec = new _chaincodeProto.ChaincodeDeploymentSpec();
+	chaincodeDeploymentSpec.setChaincodeSpec(chaincodeSpec);
+	tx.setPayload(chaincodeDeploymentSpec.toBuffer());
 
-    // Set the transaction UUID
-    tx.setTxid(request.chaincodeName);
+	// Set the transaction UUID
+	tx.setTxid(request.chaincodeName);
 
-    // Set the transaction timestamp
-    tx.setTimestamp(utils.GenerateTimestamp());
+	// Set the transaction timestamp
+	tx.setTimestamp(utils.GenerateTimestamp());
 
-    tx.setConfidentialityLevel(_fabricProto.ConfidentialityLevel.PUBLIC);
+	tx.setConfidentialityLevel(_fabricProto.ConfidentialityLevel.PUBLIC);
 
-    return {
-        pb: tx, 
-        chaincodeID: request.chaincodeName
-    };
+	return {
+		pb: tx, 
+		chaincodeID: request.chaincodeName
+	};
 }
 
 function prepend(item, list) {
-    var l = list.slice();
-    l.unshift(item);
-    return l.map(function(x) { return new Buffer(x) });
+	var l = list.slice();
+	l.unshift(item);
+	return l.map(function(x) { 
+		return new Buffer(x);
+	});
 }
