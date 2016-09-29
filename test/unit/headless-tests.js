@@ -25,7 +25,7 @@ var _fabricProto = grpc.load('../../lib/protos/fabric.proto').protos;
 var _chaincodeProto = grpc.load('../../lib/protos/chaincode.proto').protos;
 
 // FileKeyValueStore tests /////////////
-var FileKeyValueStore = require('../../lib/FileKeyValueStore.js');
+var FileKeyValueStore = require('../../lib/impl/FileKeyValueStore.js');
 
 var keyValStorePath = path.join(getUserHome(), 'kvsTemp');
 var testKey = 'keyValFileStoreName';

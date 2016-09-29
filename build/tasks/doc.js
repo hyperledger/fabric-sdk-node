@@ -22,9 +22,12 @@ gulp.task('doc', function () {
 		'README.md', 
 		'index.js',
 		'./lib/api.js', 
-		'./lib/FileKeyValueStore.js',
+		'./lib/impl/FileKeyValueStore.js',
+		'./lib/impl/CryptoSuite_ECDSA_SHA.js',
+		'./lib/impl/MemberServices.js',
 		'./lib/Chain.js',
-		'./lib/Member.js'
+		'./lib/Member.js',
+		'./lib/X509Certificate.js'
 	], {read: false})
 	.pipe(jsdoc())
 	.pipe(gulp.dest('./docs/gen'));
