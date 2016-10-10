@@ -20,6 +20,8 @@ var hfc = require(path.join(__dirname,'../..'));
 var fs = require('fs');
 var execSync = require('child_process').execSync;
 var utils = require('../../lib/utils.js');
+var cryptoSuiteReq = require('../../lib/impl/CryptoSuite_ECDSA_SHA.js');
+//var util = require('util');
 
 // FileKeyValueStore tests /////////////
 var FileKeyValueStore = require('../../lib/impl/FileKeyValueStore.js');
@@ -53,6 +55,10 @@ var memberCfg = {'enrollmentID': enrollmentID ,
 		'roles': roles,
 		'affiliation': affiliation};
 
+// CryptoSuite_ECDSA_SHA tests //////////
+var cryptoUtils = null;
+// End: CryptoSuite_ECDSA_SHA tests /////
+
 // Peer tests ////////
 // var Peer = require('../../lib/Peer.js');
 // var EventEmitter = require('events');
@@ -71,7 +77,7 @@ test('FileKeyValueStore read and write test', function(t){
 		}
 	});
 
-	var store = new FileKeyValueStore({
+	var store = utils.newKeyValueStore({
 		path: keyValStorePath
 	});
 
@@ -307,6 +313,197 @@ test('Member constructor set get tests', function(t) {
 	t.end();
 
 
+});
+
+test('CryptoSuite_ECDSA_SHA constructor tests', function(t) {
+	cryptoUtils = utils.getCryptoSuite();
+
+	t.equal(256, cryptoUtils.getSecurityLevel(),
+		'CryptoSuite_ECDSA_SHA constructor tests: crytoUtils default getSecurityLevel() == 256');
+
+	var keyPair = cryptoUtils.generateKeyPair();
+	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA constructor tests: cryptoUtils keyPair.pubKeyObj.curveName == secp256r1');
+
+	var cryptoReq = new cryptoSuiteReq();
+	t.equal(256, cryptoReq.getSecurityLevel(),
+		'CryptoSuite_ECDSA_SHA constructor tests: cryptoReq default getSecurityLevel() == 256');
+
+	keyPair = cryptoReq.generateKeyPair();
+	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA constructor tests: cryptoReq keyPair.pubKeyObj.curveName == secp256r1');
+
+	t.end();
+});
+
+test('CryptoSuite_ECDSA_SHA function tests', function(t) {
+
+	t.equal('ECDSA', cryptoUtils.getPublicKeyAlgorithm(),
+		'CryptoSuite_ECDSA_SHA function tests: default getPublicKeyAlgorithm == "ECDSA"');
+
+	// Test SHA3-256 //
+	cryptoUtils.setHashAlgorithm('SHA3');
+	if (t.equal('SHA3', cryptoUtils.getHashAlgorithm(),
+		'CryptoSuite_ECDSA_SHA function tests: set/getHashAlgorithm("SHA3")'));
+	cryptoUtils.setSecurityLevel(256);
+	t.equal(256, cryptoUtils.getSecurityLevel(),
+		'CryptoSuite_ECDSA_SHA function tests: set/getSecurityLevel == 256');
+	var keyPair = cryptoUtils.generateKeyPair();
+	if (!!keyPair.pubKeyObj && !!keyPair.prvKeyObj)
+		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
+	else
+		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
+
+	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair public curveName == secp256r1');
+	t.equal('secp256r1', keyPair.prvKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair private curveName == secp256r1');
+
+	// Test SHA3-384 //
+	cryptoUtils.setHashAlgorithm('SHA3');
+	cryptoUtils.setSecurityLevel(384);
+	t.equal(384, cryptoUtils.getSecurityLevel(),
+		'CryptoSuite_ECDSA_SHA function tests: set/getSecurityLevel == 384');
+	keyPair = cryptoUtils.generateKeyPair();
+	if (!!keyPair.pubKeyObj && !!keyPair.prvKeyObj)
+		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
+	else
+		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
+
+	t.equal('secp384r1', keyPair.pubKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair public curveName == secp384r1');
+	t.equal('secp384r1', keyPair.prvKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair private curveName == secp384r1');
+
+	// Test SHA2-256 //	
+	cryptoUtils.setSecurityLevel(256);
+	cryptoUtils.setHashAlgorithm('SHA2');
+	t.equal(256, cryptoUtils.getSecurityLevel(),
+		'CryptoSuite_ECDSA_SHA function tests: set/getSecurityLevel == 256');
+	keyPair = cryptoUtils.generateKeyPair();
+	if (!!keyPair.pubKeyObj && !!keyPair.prvKeyObj)
+		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
+	else
+		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
+
+	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair public curveName == secp256r1');
+	t.equal('secp256r1', keyPair.prvKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair private curveName == secp256r1');
+
+	cryptoUtils.setHashAlgorithm('sha2');//lower or upper case is allowed
+	if (t.equal('sha2', cryptoUtils.getHashAlgorithm(),
+		'CryptoSuite_ECDSA_SHA function tests: set/getHashAlgorithm("sha2")'));
+	keyPair = cryptoUtils.generateKeyPair();
+	if (!!keyPair.pubKeyObj && !!keyPair.prvKeyObj)
+		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
+	else
+		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
+
+	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair public curveName == secp256r1');
+	t.equal('secp256r1', keyPair.prvKeyObj.curveName,
+		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair private curveName == secp256r1');
+
+	t.throws(
+		function() {
+			cryptoUtils.setHashAlgorithm('SHA2');
+			cryptoUtils.setSecurityLevel(384);
+		},
+		/^Error: Unsupported/,
+		'CryptoSuite_ECDSA_SHA function tests: SHA2 and 384 should throw '+
+		'Error: Unsupported hash algorithm and security level pair sha2-384'
+	);
+	
+	t.throws(
+		function() {
+			cryptoUtils.setSecurityLevel(123);
+		},
+		/^Error: Illegal level/,
+		'CryptoSuite_ECDSA_SHA function tests: setSecurityLevel(123) should throw Illegal level error'
+	);
+
+	//SHA2 or SHA3
+
+	t.throws(
+		function() {
+			cryptoUtils.setHashAlgorithm(23456);//not a string is illegal
+		},
+		/^Error: Illegal Hash function family/,
+		'CryptoSuite_ECDSA_SHA function tests: setHashAlgorithm(23456) should throw Illegal Hash function family'
+	);
+
+	t.throws(
+		function() {
+			cryptoUtils.setHashAlgorithm('SHA5');
+		},
+		/^Error: Illegal Hash function family/,
+		'CryptoSuite_ECDSA_SHA function tests: setHashAlgorithm("SHA5") should throw Illegal Hash function family'
+	);
+
+	var nonce1 = cryptoUtils.generateNonce();
+	if (t.equal(24, nonce1.length,
+		'CryptoSuite_ECDSA_SHA function tests: generateNonce length'));
+
+	var nonce2 = cryptoUtils.generateNonce();
+	var nonce3 = cryptoUtils.generateNonce();
+	if (nonce1 != nonce2 && nonce2 != nonce3)
+		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateNonce buffers are different');
+	else
+		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateNonce buffers are different');
+
+	t.throws(
+		function() {
+			cryptoUtils.setHashAlgorithm('SHA3');
+			cryptoUtils.setSecurityLevel(256);
+			var keyPair = cryptoUtils.generateKeyPair();
+			cryptoUtils.setSecurityLevel(384);
+			cryptoUtils.asymmetricDecrypt(keyPair.prvKeyObj, 'fakeCipherText');
+		},
+		/^Error: Invalid key./,
+		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' +
+		'"Error: Invalid key. It\'s security does not match the current security level 384 256"'
+	);
+
+	t.throws(
+		function() {
+			cryptoUtils.setHashAlgorithm('SHA3');
+			cryptoUtils.setSecurityLevel(256);
+			var keyPair = cryptoUtils.generateKeyPair();
+			cryptoUtils.asymmetricDecrypt(keyPair.prvKeyObj, 'fakeCipherText');
+		},
+		/^Error: Illegal cipherText length/,
+		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' + 
+		'"Error: Illegal cipherText length: 14 must be > 97"'
+	);
+
+	t.throws(
+		function() {
+			cryptoUtils.setHashAlgorithm('SHA3');
+			cryptoUtils.setSecurityLevel(256);
+			var keyPair = cryptoUtils.generateKeyPair();
+			cryptoUtils.asymmetricDecrypt(keyPair.prvKeyObj, '66616b654369706865725465787431323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930');
+		},
+		/^TypeError: Invalid hex string/,
+		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' + 
+		'"TypeError: Invalid hex string"'
+	);
+
+	cryptoUtils.setSecurityLevel(256);
+	cryptoUtils.setHashAlgorithm('SHA2');
+	keyPair = cryptoUtils.generateKeyPair();
+	//console.log('keyPair.prvKeyObj.prvKeyHex: '+keyPair.prvKeyObj.prvKeyHex);
+	var kps = cryptoUtils.getKeyPairForSigning(keyPair.prvKeyObj.prvKeyHex, 'hex');
+    //console.log(util.inspect(keyPair, false, null))
+	t.equal(keyPair.prvKeyObj.prvKeyHex.toString(16, 2), kps.priv.toString(16, 2),
+		'CryptoSuite_ECDSA_SHA function tests: getKeyPairForSigning prvKeyHex == priv');
+
+	var pubHex = kps.getPublic('hex');
+	var encryptKey = cryptoUtils.getKeyPairForEncryption(pubHex, 'hex');
+	//getKeyPairForEncryption (previously ecdsaKeyFromPublic)
+	t.ok(encryptKey.pub, 'Encrypted public key of getKeyPairForEncryption created');
+
+	t.end();
 });
 
 function getUserHome() {
