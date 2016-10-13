@@ -50,6 +50,7 @@
     "gulp": "^3.9.1",
     "gulp-eslint": "^3.0.1",
     "gulp-jsdoc3": "^0.3.0",
+    "gulp-npm-test": "0.0.4",
     "intercept-stdout": "^0.1.2",
     "log4js": "^0.6.38",
     "require-dir": "^0.3.0",
