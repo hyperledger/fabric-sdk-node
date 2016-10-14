@@ -16,12 +16,12 @@
 
 var gulp = require('gulp');
 var jsdoc = require('gulp-jsdoc3');
- 
+
 gulp.task('doc', function () {
 	gulp.src([
-		'README.md', 
+		'README.md',
 		'index.js',
-		'./lib/api.js', 
+		'./lib/api.js',
 		'./lib/impl/FileKeyValueStore.js',
 		'./lib/impl/CryptoSuite_ECDSA_SHA.js',
 		'./lib/impl/MemberServices.js',

@@ -113,7 +113,7 @@ test('registrar test', function(t) {
 			}
 
 			t.pass('Successfully tested failed registration of validators');
-			
+
 			chain.setRegistrar(webUser);
 
 			return registerAndEnroll('webUser2', 'client', null, chain);
