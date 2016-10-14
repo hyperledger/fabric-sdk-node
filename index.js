@@ -55,7 +55,7 @@ module.exports.getChain = function(chainName, create) {
 	var chain = _chains[chainName];
 
 	if (!chain && create) {
-		chain = newChain(chainName);
+		chain = this.newChain(chainName);
 	}
 
 	return chain;
