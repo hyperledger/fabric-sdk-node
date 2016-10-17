@@ -7,7 +7,7 @@
     "url": "http://gerrit.hyperledger.org/r/fabric-sdk-node"
   },
   "scripts": {
-    "test": "node test/unit/ca-tests.js"
+    "test": "node test/unit/headless-tests.js"
   },
   "dependencies": {
     "aes-js": "^1.0.0",
@@ -38,12 +38,16 @@
     "uuidv4": "^0.3.1"
   },
   "devDependencies": {
+    "bunyan": "^1.8.1",
     "gulp": "^3.9.1",
     "gulp-eslint": "^3.0.1",
     "gulp-jsdoc3": "^0.3.0",
+    "intercept-stdout": "^0.1.2",
+    "log4js": "^0.6.38",
     "require-dir": "^0.3.0",
     "tape": "^4.5.1",
-    "tape-promise": "^1.1.0"
+    "tape-promise": "^1.1.0",
+    "winston": "^2.2.0"
   },
   "license": "Apache-2.0",
   "licenses": [

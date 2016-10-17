@@ -28,7 +28,7 @@ var keyValStorePath2 = keyValStorePath + '2';
 //
 // Run the registrar test
 //
-test('registrar test', function(t) {
+test('Test enroll() and registrar privileges with registerAndEnroll()', function(t) {
 	//
 	// Create and configure the test chain
 	//
@@ -137,6 +137,64 @@ test('registrar test', function(t) {
 	);
 });
 
+test('Test register() and Enroll() methods', function(t) {
+	//
+	// Create and configure the test chain
+	//
+	var chain = hfc.newChain('testChain1');
+	var expect = '';
+	var found = '';
+	var webUser;
+
+	chain.setKeyValueStore(hfc.newKeyValueStore({
+		path: keyValStorePath
+	}));
+
+	chain.setMemberServicesUrl('grpc://localhost:7054');
+
+	chain.enroll('admin', 'Xurw3yU9zI0l')
+	.then(
+		function(admin) {
+			t.pass('Successfully enrolled user \'admin\'');
+
+			chain.setRegistrar(admin);
+
+			// Register and enroll newUser1
+			return chain.register({
+				enrollmentID: 'newUser1',
+				roles: 'client',
+				affiliation: 'bank_a',
+				registrar: { roles: ['client'] }
+			});
+		},
+		function(err) {
+			t.fail('Failed to enroll user \'admin\'. ' + err);
+			t.end();
+		}
+	).then(
+		function(userPwd) {
+			t.pass('Successfully registered \'newUser1\'');
+
+			return chain.enroll('newUser1', userPwd);
+		},
+		function(err) {
+			t.fail('Failed to register user \'newUser1\'. ' + err);
+			t.end();
+		}
+	).then(
+		function(_webAdmin) {
+			t.pass('Successfully enrolled \'newUser1\'');
+			t.end();
+		},
+		function(err) {
+			t.fail('Failed to enroll user \'newUser1\'. ' + err);
+			t.end();
+		}
+	).catch(function(err) {
+		t.fail('Failed due to unexpected error: ' + err.stack ? err.stack : err);
+		t.end();
+	});
+});
 
 // Run the registrar test
 

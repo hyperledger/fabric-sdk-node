@@ -74,3 +74,50 @@ module.exports.getChain = function(chainName, create) {
 module.exports.newKeyValueStore = function(options) {
 	return utils.newKeyValueStore(options);
 };
+
+/**
+ * Configures a logger for the entire HFC SDK to use and override the default logger. Unless this method is called,
+ * HFC uses a default logger (based on winston). When using the built-in "winston" based logger, use the environment
+ * variable HFC_LOGGING to pass in configurations in the following format:
+ *
+ * {
+ *   'error': 'error.log',				// 'error' logs are printed to file 'error.log' relative of the current working dir for node.js
+ *   'debug': '/tmp/myapp/debug.log',	// 'debug' and anything more critical ('info', 'warn', 'error') can also be an absolute path
+ *   'info': 'console'					// 'console' is a keyword for logging to console
+ * }
+ *
+ * @param {Object} logger a logger instance that defines the following methods: debug(), info(), warn(), error() with
+ * string interpolation methods like [util.format]{@link https://nodejs.org/api/util.html#util_util_format_format}.
+ */
+module.exports.setLogger = function(logger) {
+	var err = '';
+
+	if (typeof logger.debug !== 'function') {
+		err += 'debug() ';
+	}
+
+	if (typeof logger.info !== 'function') {
+		err += 'info() ';
+	}
+
+	if (typeof logger.warn !== 'function') {
+		err += 'warn() ';
+	}
+
+	if (typeof logger.error !== 'function' ) {
+		err += 'error()';
+	}
+
+	if (err !== '') {
+		throw new Error('The "logger" parameter must be an object that implements the following methods, which are missing: ' + err);
+	}
+
+	if (global.hfc) {
+		global.hfc.logger = logger;
+	} else {
+		global.hfc = {
+			logger: logger
+		};
+	}
+};
+

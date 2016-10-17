@@ -14,14 +14,19 @@
  *  limitations under the License.
  */
 
+'use strict';
+
 var test = require('tape');
 var path = require('path');
+var util = require('util');
 var hfc = require(path.join(__dirname,'../..'));
 var fs = require('fs');
 var execSync = require('child_process').execSync;
 var utils = require('../../lib/utils.js');
 var cryptoSuiteReq = require('../../lib/impl/CryptoSuite_ECDSA_SHA.js');
-//var util = require('util');
+var bunyan = require('bunyan');
+var log4js = require('log4js');
+var intercept = require('intercept-stdout');
 
 // FileKeyValueStore tests /////////////
 var FileKeyValueStore = require('../../lib/impl/FileKeyValueStore.js');
@@ -228,7 +233,34 @@ test('Chain constructor test', function(t) {
 	if (_chain.getName() === chainName)
 		t.pass('Chain constructor test: getName successful');
 	else t.fail('Chain constructor test: getName not successful');
-	t.end();
+
+	// trying to get member on a chain without keyvalue store, should fail
+	_chain.getMember('randomName')
+	.then(function(member) {
+		t.fail('Should not have Successfully resolved a member without having keyvalue store configured first');
+	}, function(err) {
+		if (err.message && err.message.indexOf('No key value store was found') === 0) {
+			t.pass('Successfully rejected a "getMember()" call on a chain without keyvalue store');
+		} else {
+			t.fail('Error: ' + err.stack ? err.stack : err);
+		}
+	})
+	.then(function() {
+		_chain.setKeyValueStore({}); // set a dummy keyvalue store to get past the check
+
+		return _chain.getMember('randomName');
+	})
+	.then(function(member) {
+		t.fail('Should not have Successfully resolved a member without having member services configured first');
+		t.end();
+	}, function(err) {
+		if (err.message && err.message.indexOf('No member services was found') === 0) {
+			t.pass('Successfully rejected a "getMember()" call on a chain without member services');
+		} else {
+			t.fail('Error: ' + err.stack ? err.stack : err);
+		}
+		t.end();
+	});
 });
 
 test('Chain setKeyValueStore getKeyValueStore test', function(t) {
@@ -260,6 +292,35 @@ test('Chain setKeyValueStore getKeyValueStore test', function(t) {
 		});
 
 	t.end();
+});
+
+test('Chain public methods parameters tests', function(t) {
+	let chain = new Chain('testChain1');
+
+	chain.register({})
+	.then(function() {
+		t.fail('Should not have worked becaused the input param was missing user enrollmentID');
+	}, function(err) {
+		if (err.message && err.message.indexOf('Invalid parameter to "register()" function') === 0) {
+			t.pass('Successfully rejected call to "register()" method with invalid parameter missing enrollmentID');
+		} else {
+			t.fail('Something unexpected happened. Error: ' + err.stack ? err.stack : err);
+		}
+	})
+	.then(function() {
+		return chain.registerAndEnroll({});
+	})
+	.then(function() {
+		t.fail('Should not have worked becaused the input param was missing user enrollmentID');
+		t.end();
+	}, function(err) {
+		if (err.message && err.message.indexOf('Invalid parameter to "registerAndEnroll()" function') === 0) {
+			t.pass('Successfully rejected call to "registerAndEnroll()" method with invalid parameter missing enrollmentID');
+		} else {
+			t.fail('Something unexpected happened. Error: ' + err.stack ? err.stack : err);
+		}
+		t.end();
+	});
 });
 
 // Member tests /////////
@@ -375,7 +436,7 @@ test('CryptoSuite_ECDSA_SHA function tests', function(t) {
 	t.equal('secp384r1', keyPair.prvKeyObj.curveName,
 		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair private curveName == secp384r1');
 
-	// Test SHA2-256 //	
+	// Test SHA2-256 //
 	cryptoUtils.setSecurityLevel(256);
 	cryptoUtils.setHashAlgorithm('SHA2');
 	t.equal(256, cryptoUtils.getSecurityLevel(),
@@ -414,7 +475,7 @@ test('CryptoSuite_ECDSA_SHA function tests', function(t) {
 		'CryptoSuite_ECDSA_SHA function tests: SHA2 and 384 should throw '+
 		'Error: Unsupported hash algorithm and security level pair sha2-384'
 	);
-	
+
 	t.throws(
 		function() {
 			cryptoUtils.setSecurityLevel(123);
@@ -473,7 +534,7 @@ test('CryptoSuite_ECDSA_SHA function tests', function(t) {
 			cryptoUtils.asymmetricDecrypt(keyPair.prvKeyObj, 'fakeCipherText');
 		},
 		/^Error: Illegal cipherText length/,
-		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' + 
+		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' +
 		'"Error: Illegal cipherText length: 14 must be > 97"'
 	);
 
@@ -485,7 +546,7 @@ test('CryptoSuite_ECDSA_SHA function tests', function(t) {
 			cryptoUtils.asymmetricDecrypt(keyPair.prvKeyObj, '66616b654369706865725465787431323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930');
 		},
 		/^TypeError: Invalid hex string/,
-		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' + 
+		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' +
 		'"TypeError: Invalid hex string"'
 	);
 
@@ -506,6 +567,206 @@ test('CryptoSuite_ECDSA_SHA function tests', function(t) {
 	t.end();
 });
 
+// Logger tests /////////
+function testLogger(t, ignoreLevels) {
+	var output = '';
+
+	let unhook = intercept(function(txt) {
+		output += txt;
+	});
+
+	let log = utils.getLogger('testlogger');
+	log.error('Test logger - error');
+	log.warn('Test logger - warn');
+	log.info('Test logger - info');
+	log.debug('Test logger - debug');
+
+	unhook();
+
+	if (output.indexOf('Test logger - error') > 0 &&
+		output.indexOf('Test logger - warn') > 0 &&
+		output.indexOf('Test logger - info') > 0) {
+		if (output.indexOf('Test logger - debug') > 0 && !ignoreLevels) {
+			t.fail('Default logger setting should not have printed debug logs');
+		} else {
+			t.pass('Successfully tested default logger levels');
+		}
+	} else {
+		t.fail('Failed to test default logger levels: info, warn and error');
+	}
+}
+
+test('Logging utility tests - built-in logger', function(t) {
+	// test 1: default logging levels for console logging
+	testLogger(t);
+
+	// test 2: custom logging levels for console logging
+	var output = '';
+	process.env.HFC_LOGGING = "{'debug': 'console'}"; // expected json format so this is invalid
+	// internal call. clearing the cached logger.
+	global.hfc.logger = undefined;
+
+	try {
+		let unhook = intercept(function(txt) {
+			output += txt;
+		});
+
+		let logger = utils.getLogger('testlogger');
+
+		unhook();
+
+		if (output.indexOf('Failed to parse environment variable "HFC_LOGGING"') > 0 && logger) {
+			t.pass('Successfully caught error thrown by "utils.getLogger()" on invalid environment variable value, and returned a valid default logger');
+		} else {
+			t.fail('Failed to catch invalid environment variable value or return a valid default logger');
+		}
+	} catch(err) {
+		t.fail('Failed to properly handle invalid environment variable value. ' + err.stack ? err.stack : err);
+	}
+
+
+	output = '';
+	process.env.HFC_LOGGING = '{"debug": "console"}';
+	// internal call. clearing the cached logger.
+	global.hfc.logger = undefined;
+
+	let unhook = intercept(function(txt) {
+		output += txt;
+	});
+
+	let log = utils.getLogger('testlogger');
+	log.error('Test logger - error');
+	log.warn('Test logger - warn');
+	log.info('Test logger - info');
+	log.debug('Test logger - debug');
+
+	unhook();
+
+	if (output.indexOf('Test logger - error') > 0 &&
+		output.indexOf('Test logger - warn') > 0 &&
+		output.indexOf('Test logger - info') > 0 &&
+		output.indexOf('Test logger - debug') > 0) {
+		t.pass('Successfully tested debug logger levels');
+	} else {
+		t.fail('Failed to test debug logger levels. All of info, warn and error message should have appeared in console');
+	}
+
+
+	let prepareEmptyFile = function(logPath) {
+		try {
+			let stats = fs.statSync(logPath);
+
+			if (stats.isFile()) {
+				fs.truncateSync(logPath);
+			}
+		} catch(err) {
+			if (err.code == 'ENOENT') {
+				try {
+					// file doesn't exist, create new
+					let stats = fs.statSync(path.dirname(logPath));
+
+					if (stats.isDirectory()) {
+						fs.writeFileSync(logPath, '');
+					}
+				} catch(err) {
+					if (err.code == 'ENOENT') {
+						// create the dir
+						fs.mkdirSync(path.dirname(logPath));
+						fs.writeFileSync(logPath, '');
+					}
+				}
+			} else {
+				t.fail('Can not create an empty file to prepare for the rest of this test. ' + err.stack ? err.stack : err);
+				t.end();
+			}
+		}
+	};
+
+	let debugPath = '/tmp/hfc-log/debug.log';
+	let errorPath = '/tmp/hfc-log/error.log';
+	prepareEmptyFile(debugPath);
+	prepareEmptyFile(errorPath);
+
+	process.env.HFC_LOGGING = util.format('{"debug": "%s", "error": "%s"}', debugPath, errorPath);
+	// internal call. clearing the cached logger.
+	global.hfc.logger = undefined;
+	var log1 = utils.getLogger('testlogger');
+	log1.error('Test logger - error');
+	log1.warn('Test logger - warn');
+	log1.info('Test logger - info');
+	log1.debug('Test logger - debug');
+
+	setTimeout(function() {
+		var data = fs.readFileSync(debugPath);
+
+		if (data.indexOf('Test logger - error') > 0 &&
+			data.indexOf('Test logger - warn') > 0 &&
+			data.indexOf('Test logger - info') > 0 &&
+			data.indexOf('Test logger - debug') > 0) {
+			t.pass('Successfully tested logging to debug file');
+		} else {
+			t.fail('Failed to validate content in debug log file');
+		}
+
+		var data = fs.readFileSync(errorPath);
+
+		if (data.indexOf('Test logger - error') > 0) {
+			if (data.indexOf('Test logger - warn') > 0 ||
+				data.indexOf('Test logger - info') > 0 ||
+				data.indexOf('Test logger - debug') > 0) {
+				t.fail('Failed testing logging to error file, it should not contain any debug, info or warn messages.');
+			} else {
+				t.pass('Successfully tested logging to error file');
+			}
+		} else {
+			t.fail('Failed to validate content in error log file');
+		}
+
+		t.end();
+	}, 1000);
+});
+
+test('Logging utility tests - test setting an external logger based on bunyan', function(t) {
+	var logger = bunyan.createLogger({name: 'bunyanLogger'});
+	hfc.setLogger(logger);
+
+	testLogger(t);
+	t.end();
+});
+
+test('Logging utility tests - test setting an external logger based on log4js', function(t) {
+	var logger = log4js.getLogger();
+	hfc.setLogger(logger);
+
+	testLogger(t, true);
+	t.end();
+});
+
+test('Logging utility tests - test setting an invalid external logger', function(t) {
+	// construct an invalid logger
+	var logger = {
+		inf: function() { console.log('info'); },
+	};
+
+	try {
+		hfc.setLogger(logger);
+		t.fail('Should not have allowed an invalid logger to be set');
+		t.end();
+	} catch(err) {
+		err = err.toString();
+		if (err.indexOf('debug()') > 0 &&
+			err.indexOf('info()') > 0 &&
+			err.indexOf('warn()') > 0 &&
+			err.indexOf('error()') > 0) {
+			t.pass('Successfully tested thrown error for an invalid logger to set on the HFC SDK');
+			t.end();
+		} else {
+			t.fail('Failed to catch all errors for an invalid logger missing required methods');
+			t.end();
+		}
+	}
+});
+
 function getUserHome() {
 	return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 }
@@ -520,7 +781,7 @@ function cleanupFileKeyValueStore(keyValStorePath) {
 
 // prepend absolute path where this test is running, then join to the relative path
 function getAbsolutePath(dir) {
-	return path.join(__dirname, getRelativePath(dir));
+	return path.join(process.cwd(), getRelativePath(dir));
 }
 
 // get relative file path for either Unix or Windows
