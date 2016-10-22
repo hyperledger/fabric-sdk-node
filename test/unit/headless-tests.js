@@ -19,7 +19,7 @@
 var test = require('tape');
 var path = require('path');
 var util = require('util');
-var hfc = require(path.join(__dirname,'../..'));
+var hfc = require('../..');
 var fs = require('fs');
 var execSync = require('child_process').execSync;
 var utils = require('../../lib/utils.js');
@@ -36,6 +36,8 @@ var keyValStorePath = path.join(getUserHome(), 'kvsTemp');
 //windows relative path starts with '/'
 var keyValStorePath1 = 'tmp/keyValStore1';
 var keyValStorePath2 = '/tmp/keyValStore2';
+var keyValStorePath3 = '/tmp/keyValStore3';
+var keyValStorePath4 = '/tmp/keyValStore4';
 var testKey = 'keyValFileStoreName';
 var testValue = 'secretKeyValue';
 var store1 = '';
@@ -63,11 +65,6 @@ var memberCfg = {'enrollmentID': enrollmentID ,
 // CryptoSuite_ECDSA_SHA tests //////////
 var cryptoUtils = null;
 // End: CryptoSuite_ECDSA_SHA tests /////
-
-// Peer tests ////////
-// var Peer = require('../../lib/Peer.js');
-// var EventEmitter = require('events');
-// End: Peer tests ////////
 
 
 //
@@ -154,6 +151,7 @@ test('FileKeyValueStore constructor test', function(t){
 	else
 		t.fail('FileKeyValueStore constructor test:  Failed to create new directory: ' + keyValStorePath2);
 
+
 	t.end();
 });
 
@@ -172,7 +170,7 @@ test('FileKeyValueStore setValue test', function(t) {
 						// Log the fulfillment value
 						function(val) {
 							if (val != testValue) {
-								t.fail('FileKeyValueStore store1 getValue test:  '+ val + ' does not equal testValue of ' + testValue + 'for FileKeyValueStore read and write test');
+								t.fail('FileKeyValueStore store1 getValue test:  '+ val + ' does not equal testValue of ' + testValue);
 							} else {
 								t.pass('FileKeyValueStore store1 getValue test:  Successfully retrieved value');
 							}
@@ -206,7 +204,7 @@ test('FileKeyValueStore setValue test', function(t) {
 						// Log the fulfillment value
 						function(val) {
 							if (val != testValue)
-								t.fail('FileKeyValueStore store2 getValue test:  '+ val + ' does not equal testValue of ' + testValue + 'for FileKeyValueStore read and write test');
+								t.fail('FileKeyValueStore store2 getValue test:  '+ val + ' does not equal testValue of ' + testValue);
 							else
 								t.pass('FileKeyValueStore store2 getValue test:  Successfully retrieved value');
 						})
@@ -226,6 +224,87 @@ test('FileKeyValueStore setValue test', function(t) {
 
 	t.end();
 });
+
+test('FileKeyValueStore error check tests', function(t){
+
+	t.throws(
+		function() {
+			store3 = new FileKeyValueStore();
+		},
+		/^Error: Must provide the path/,
+		'FileKeyValueStore error check tests: new FileKeyValueStore with no options should throw '+
+		'"Must provide the path to the directory to hold files for the store."'
+	);
+
+	t.throws(
+		function() {
+			store3 = new FileKeyValueStore({dir: getRelativePath(keyValStorePath3)});
+		},
+		/^Error: Must provide the path/,
+		'FileKeyValueStore error check tests: new FileKeyValueStore with no options.path should throw '+
+		'"Must provide the path to the directory to hold files for the store."'
+	);
+
+	cleanupFileKeyValueStore(keyValStorePath3);
+	var store3 = new FileKeyValueStore({path: getRelativePath(keyValStorePath3)});
+	store3.setValue(testKey, testValue)
+	.then(
+		function(result) {
+			if (result) {
+				t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Successfully set value');
+
+				var exists = utils.existsSync(getAbsolutePath(keyValStorePath3), testKey);
+				if (exists) {
+					t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Verified the file for key ' + testKey + ' does exist');
+					cleanupFileKeyValueStore(keyValStorePath3);
+					exists = utils.existsSync(getAbsolutePath(keyValStorePath3), testKey);
+					t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Deleted store, exists: '+exists);
+					store3.getValue(testKey)
+					.then(
+						// Log the fulfillment value
+						function(val) {
+							if (val === null) {
+								t.pass('FileKeyValueStore error check tests:  Delete store & getValue test. getValue is null');
+							} else {
+								t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue successfully retrieved value: '+val);
+							}
+						})
+					.catch(
+						// Log the rejection reason
+						function(reason) {
+							t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue caught unexpected error: '+reason);
+						});
+				} else {
+					t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. Failed to create file for key ' + testKey);
+				}
+			}
+		})
+	.catch(
+		function(reason) {
+			t.fail('FileKeyValueStore error check tests: Delete store & getValue test. Failed to set value: '+reason);
+		});
+
+	cleanupFileKeyValueStore(keyValStorePath4);
+	var store4 = new FileKeyValueStore({path: getRelativePath(keyValStorePath4)});
+	cleanupFileKeyValueStore(keyValStorePath4);
+	var exists = utils.existsSync(getAbsolutePath(keyValStorePath4));
+	t.comment('FileKeyValueStore error check tests:  Delete store & setValue test. Deleted store, exists: '+exists);
+	store4.setValue(testKey, testValue)
+	.then(
+		function(result) {
+			if (result) {
+				t.fail('FileKeyValueStore error check tests:  Delete store & setValue test.  Successfully set value');
+			}
+		})
+	.catch(
+		function(reason) {
+			t.pass('FileKeyValueStore error check tests:  Delete store & setValue test.  Failed to set value: '+reason);
+		});
+
+
+	t.end();
+});
+
 
 // Chain tests /////////////
 test('Chain constructor test', function(t) {
@@ -502,12 +581,12 @@ test('CryptoSuite_ECDSA_SHA function tests', function(t) {
 		'CryptoSuite_ECDSA_SHA function tests: setHashAlgorithm("SHA5") should throw Illegal Hash function family'
 	);
 
-	var nonce1 = cryptoUtils.generateNonce();
+	var nonce1 = cryptoSuiteReq.generateNonce();
 	if (t.equal(24, nonce1.length,
 		'CryptoSuite_ECDSA_SHA function tests: generateNonce length'));
 
-	var nonce2 = cryptoUtils.generateNonce();
-	var nonce3 = cryptoUtils.generateNonce();
+	var nonce2 = cryptoSuiteReq.generateNonce();
+	var nonce3 = cryptoSuiteReq.generateNonce();
 	if (nonce1 != nonce2 && nonce2 != nonce3)
 		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateNonce buffers are different');
 	else
@@ -553,9 +632,7 @@ test('CryptoSuite_ECDSA_SHA function tests', function(t) {
 	cryptoUtils.setSecurityLevel(256);
 	cryptoUtils.setHashAlgorithm('SHA2');
 	keyPair = cryptoUtils.generateKeyPair();
-	//console.log('keyPair.prvKeyObj.prvKeyHex: '+keyPair.prvKeyObj.prvKeyHex);
 	var kps = cryptoUtils.getKeyPairForSigning(keyPair.prvKeyObj.prvKeyHex, 'hex');
-    //console.log(util.inspect(keyPair, false, null))
 	t.equal(keyPair.prvKeyObj.prvKeyHex.toString(16, 2), kps.priv.toString(16, 2),
 		'CryptoSuite_ECDSA_SHA function tests: getKeyPairForSigning prvKeyHex == priv');
 
@@ -602,7 +679,7 @@ test('Logging utility tests - built-in logger', function(t) {
 
 	// test 2: custom logging levels for console logging
 	var output = '';
-	process.env.HFC_LOGGING = "{'debug': 'console'}"; // expected json format so this is invalid
+	process.env.HFC_LOGGING = '{\'debug\': \'console\'}'; // expected json format so this is invalid
 	// internal call. clearing the cached logger.
 	global.hfc.logger = undefined;
 
@@ -708,7 +785,7 @@ test('Logging utility tests - built-in logger', function(t) {
 			t.fail('Failed to validate content in debug log file');
 		}
 
-		var data = fs.readFileSync(errorPath);
+		data = fs.readFileSync(errorPath);
 
 		if (data.indexOf('Test logger - error') > 0) {
 			if (data.indexOf('Test logger - warn') > 0 ||
@@ -753,11 +830,11 @@ test('Logging utility tests - test setting an invalid external logger', function
 		t.fail('Should not have allowed an invalid logger to be set');
 		t.end();
 	} catch(err) {
-		err = err.toString();
-		if (err.indexOf('debug()') > 0 &&
-			err.indexOf('info()') > 0 &&
-			err.indexOf('warn()') > 0 &&
-			err.indexOf('error()') > 0) {
+		var er1 = err.toString();
+		if (er1.indexOf('debug()') > 0 &&
+			er1.indexOf('info()') > 0 &&
+			er1.indexOf('warn()') > 0 &&
+			er1.indexOf('error()') > 0) {
 			t.pass('Successfully tested thrown error for an invalid logger to set on the HFC SDK');
 			t.end();
 		} else {
