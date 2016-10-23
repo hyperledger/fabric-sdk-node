@@ -9,6 +9,9 @@
   "scripts": {
     "test": "node test/unit/headless-tests.js"
   },
+  "engines": {"node": ">=6.7.0","npm":">=3.0.0"},
+  "engine-strict": true,
+  "engineStrict": true,
   "dependencies": {
     "aes-js": "^1.0.0",
     "asn1": "https://github.com/mcavage/node-asn1",
