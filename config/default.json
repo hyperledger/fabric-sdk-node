@@ -1,0 +1,4 @@
+{ 
+	"request-timeout" : 3000,
+	"tcert-batch-size" : 10
+}

@@ -5,3 +5,4 @@ npm-shrinkwrap.json
 npm-debug.log
 tmp
 .project
+.DS_Store

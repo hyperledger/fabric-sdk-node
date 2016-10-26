@@ -23,6 +23,8 @@
 
 var util = require('util');
 var Chain = require('./lib/Chain.js');
+var Config = require('./lib/Config.js');
+var Peer = require('./lib/Peer.js');
 var utils = require('./lib/utils.js');
 
 var _chains = {};
@@ -60,6 +62,20 @@ module.exports.getChain = function(chainName, create) {
 
 	return chain;
 };
+
+/**
+ * Constructs and returns a Peer given its endpoint configuration settings.
+ *
+ * @param {string} url The URL with format of "grpcs://host:port".
+ * @param {Object} opts The options for the connection to the peer.
+ * @returns {Peer} Returns the new peer.
+ */
+module.exports.getPeer = function(url, opts) {
+	var peer = new Peer(url, opts);
+
+	return peer;
+};
+
 
 /**
  * Obtains an instance of the [KeyValueStore]{@link module:api.KeyValueStore} class. By default
@@ -119,5 +135,66 @@ module.exports.setLogger = function(logger) {
 			logger: logger
 		};
 	}
+};
+
+/**
+ * Adds a file to the top of the list of configuration setting files that are
+ * part of the hierarchical configuration.
+ * These files will override the default settings and be overriden by environment,
+ * command line arguments, and settings programmatically set into configuration settings.
+ *
+ * hierarchy search order:
+ *  1. memory - all settings added with utils.setConfigSetting(name,value)
+ *  2. Command-line arguments
+ *  3. Environment variables (names will be change from AAA-BBB to aaa-bbb)
+ *  4. Custom Files - all files added with the addConfigFile(path)
+ *     will be ordered by when added, were last one added will override previously added files
+ *  5. The file located at 'config/default.json' with default settings
+ *
+ * @param {String} path - The path to the file to be added to the top of list of configuration files
+ */
+module.exports.addConfigFile = function(path) {
+
+	utils.addConfigFile(path);
+};
+
+/**
+ * Adds a setting to override all settings that are
+ * part of the hierarchical configuration.
+ *
+ * hierarchy search order:
+ *  1. memory - settings added with this call
+ *  2. Command-line arguments
+ *  3. Environment variables (names will be change from AAA-BBB to aaa-bbb)
+ *  4. Custom Files - all files added with the addConfigFile(path)
+ *     will be ordered by when added, were last one added will override previously added files
+ *  5. The file located at 'config/default.json' with default settings
+ *
+ * @param {String} name - The name of a setting
+ * @param {Object} value - The value of a setting
+ */
+module.exports.setConfigSetting = function(name, value) {
+
+	utils.setConfigSetting(name, value);
+};
+
+/**
+ * Retrieves a setting from the hierarchical configuration and if not found
+ * will return the provided default value.
+ *
+ * hierarchy search order:
+ *  1. memory - settings added with utils.setConfigSetting(name,value)
+ *  2. Command-line arguments
+ *  3. Environment variables (names will be change from AAA-BBB to aaa-bbb)
+ *  4. Custom Files - all files added with the addConfigFile(path)
+ *     will be ordered by when added, were last one added will override previously added files
+ *  5. The file located at 'config/default.json' with default settings
+ *
+ * @param {String} name - The name of a setting
+ * @param {Object} default_value - The value of a setting if not found in the hierarchical configuration
+ */
+module.exports.getConfigSetting = function(name, default_value) {
+
+	return utils.getConfigSetting(name, default_value);
 };
 
