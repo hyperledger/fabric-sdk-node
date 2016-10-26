@@ -455,6 +455,61 @@ test('Member constructor set get tests', function(t) {
 
 });
 
+test('Member sendDeploymentProposal() tests', function(t) {
+	var m = new Member('does not matter', _chain);
+
+	var p1 = m.sendDeploymentProposal({
+		chaincodePath: 'blah',
+		fcn: 'init'
+	}).then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing "endorserUrl" parameter');
+	}).catch(function(err) {
+		if (err.message === 'missing endorserUrl in Deployment proposal request') {
+			t.pass('Successfully caught missing endorserUrl error');
+		} else {
+			t.fail('Failed to catch the missing endorserUrl error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p2 = m.sendDeploymentProposal({
+		endorserUrl: 'blah',
+		fcn: 'init'
+	}).then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
+	}).catch(function(err) {
+		if (err.message === 'missing chaincodePath in Deployment proposal request') {
+			t.pass('Successfully caught missing chaincodePath error');
+		} else {
+			t.fail('Failed to catch the missing chaincodePath error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p3 = m.sendDeploymentProposal({
+		endorserUrl: 'blah',
+		chaincodePath: 'blah'
+	}).then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing "fcn" parameter');
+	}).catch(function(err) {
+		if (err.message === 'missing fcn in Deployment proposal request') {
+			t.pass('Successfully caught missing fcn error');
+		} else {
+			t.fail('Failed to catch the missing fcn error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3])
+	.then(
+		function(data) {
+			t.end();
+		}
+	).catch(
+		function(err) {
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		}
+	);
+});
+
 test('CryptoSuite_ECDSA_SHA constructor tests', function(t) {
 	cryptoUtils = utils.getCryptoSuite();
 
