@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "bunyan": "^1.8.1",
+    "fs-extra": "^0.30.0",
     "gulp": "^3.9.1",
     "gulp-eslint": "^3.0.1",
     "gulp-jsdoc3": "^0.3.0",

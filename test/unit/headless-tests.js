@@ -59,8 +59,8 @@ var enrollmentID = 123454321;
 var roles = ['admin', 'user'];
 var affiliation = 'Hyperledger Community';
 var memberCfg = {'enrollmentID': enrollmentID ,
-		'roles': roles,
-		'affiliation': affiliation};
+	'roles': roles,
+	'affiliation': affiliation};
 
 // GRPC Options tests ///////////////
 var Remote = require('../../lib/Remote.js');
