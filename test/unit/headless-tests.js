@@ -189,6 +189,7 @@ test('\n\n ** FileKeyValueStore - read and write test', function(t){
 		// Log the rejection reason
 		function(reason){
 			t.fail('FileKeyValueStore read and write test: Failed getValue, reason: '+reason);
+			t.end();
 		});
 
 	t.end();
