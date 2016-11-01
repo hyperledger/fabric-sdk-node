@@ -1,5 +1,5 @@
 site_name: Hyperledger Fabric Node SDK
-site_url: http://hyperledger-fabric-sdk-node.readthedocs.io
+site_url: http://fabric-sdk-node.readthedocs.io
 theme: readthedocs
 repo_url: https://github.com/hyperledger/fabric-sdk-node.git
 site_description: 'Welcome to the Hyperledger Fabric Node SDK documentation'
