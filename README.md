@@ -76,13 +76,14 @@ vp0:
     - CORE_PEER_PROFILE_ENABLED=true
   links:
     - membersrvc
-    - orderer0
+    - orderer
   ports:
     - 7051:7051
     - 7053:7053
 ```
-* run `docker-compose up` to launch the network
+* run `docker-compose up --force-recreate` to launch the network
 * Back in your native host (MacOS, or Windows, or Ubuntu, etc), run the following tests:
+  * Clear out your previous keyvalue store if needed (rm -fr /tmp/KeyValStore*)
   * Test user management with a member services, run `node test/unit/ca-tests.js`
   * Test happy path from end to end, run `node test/unit/end-2-end.js`
   * Test transaction proposals, run `node test/unit/endorser-tests.js`
