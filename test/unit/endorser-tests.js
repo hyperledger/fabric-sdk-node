@@ -62,8 +62,8 @@ test('endorser test', function(t) {
 			t.end();
 		}
 	).then(
-		function(status) {
-			if (status === 200) {
+		function(response) {
+			if (response && response.response && response.response.status === 200) {
 				t.pass('Successfully obtained endorsement.');
 			} else {
 				t.fail('Failed to obtain endorsement. Error code: ' + status);
