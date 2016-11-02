@@ -16,7 +16,10 @@
 
 'use strict';
 
-var test = require('tape');
+var tape = require('tape');
+var _test = require('tape-promise');
+var test = _test(tape);
+
 var path = require('path');
 var util = require('util');
 var hfc = require('../..');
@@ -134,65 +137,54 @@ test('\n\n ** Config **', function(t) {
 
 test('\n\n ** FileKeyValueStore - read and write test', function(t){
 	// clean up
-	fs.existsSync(keyValStorePath, (exists) =>{
-		if (exists){
-			execSync('rm -rf ' + keyValStorePath);
-		}
-	});
+	if (utils.existsSync(keyValStorePath)) {
+		execSync('rm -rf ' + keyValStorePath);
+	}
 
 	var store = utils.newKeyValueStore({
 		path: keyValStorePath
 	});
 
-	fs.exists(keyValStorePath, (exists) =>{
-		if (exists)
-			t.pass('FileKeyValueStore read and write test: Successfully created new directory for testValueStore');
-		else{
-			t.fail('FileKeyValueStore read and write test: Failed to create new directory: ' + keyValStorePath);
-			t.end();
-		}
-	});
+	if (utils.existsSync(keyValStorePath)) {
+		t.pass('FileKeyValueStore read and write test: Successfully created new directory for testValueStore');
 
-	store.setValue(testKey, testValue)
-	.then(
-		function(result){
-			if (result){
+		store.setValue(testKey, testValue)
+		.then(
+			function(result){
 				t.pass('FileKeyValueStore read and write test: Successfully set value');
 
-				fs.exists(path.join(keyValStorePath, testKey), (exists) =>{
-					if (exists)
-						t.pass('FileKeyValueStore read and write test: Verified the file for key ' + testKey + ' does exist');
-					else{
-						t.fail('FileKeyValueStore read and write test: Failed to create file for key ' + testKey);
-						t.end();
-					}
-				});
-			}
-		})
-	.catch(
-		function(reason){
-			t.fail('FileKeyValueStore read and write test: Failed to set value, reason: '+reason);
-			t.end();
-		});
+				if (utils.existsSync(path.join(keyValStorePath, testKey))) {
+					t.pass('FileKeyValueStore read and write test: Verified the file for key ' + testKey + ' does exist');
 
-	store.getValue(testKey)
-	.then(
-		// Log the fulfillment value
-		function(val){
-			if (val != testValue){
-				t.fail('FileKeyValueStore read and write test: '+ val + ' does not equal testValue of ' + testValue);
+					return store.getValue(testKey);
+				} else {
+					t.fail('FileKeyValueStore read and write test: Failed to create file for key ' + testKey);
+					t.end();
+				}
+			},
+			function(reason){
+				t.fail('FileKeyValueStore read and write test: Failed to set value, reason: '+reason);
 				t.end();
-			}else
-				t.pass('FileKeyValueStore read and write test: Successfully retrieved value');
-		})
-	.catch(
-		// Log the rejection reason
-		function(reason){
-			t.fail('FileKeyValueStore read and write test: Failed getValue, reason: '+reason);
-			t.end();
-		});
+			})
+		.then(
+			// Log the fulfillment value
+			function(val){
+				if (val != testValue)
+					t.fail('FileKeyValueStore read and write test: '+ val + ' does not equal testValue of ' + testValue);
+				else
+					t.pass('FileKeyValueStore read and write test: Successfully retrieved value');
 
-	t.end();
+				t.end();
+			},
+			// Log the rejection reason
+			function(reason){
+				t.fail('FileKeyValueStore read and write test: Failed getValue, reason: '+reason);
+				t.end();
+			});
+	} else{
+		t.fail('FileKeyValueStore read and write test: Failed to create new directory: ' + keyValStorePath);
+		t.end();
+	}
 });
 
 test('\n\n ** FileKeyValueStore - constructor test', function(t){
@@ -221,70 +213,70 @@ test('\n\n ** FileKeyValueStore - setValue test', function(t) {
 	store1.setValue(testKey, testValue)
 	.then(
 		function(result) {
-			if (result) {
-				t.pass('FileKeyValueStore store1 setValue test:  Successfully set value');
+			t.pass('FileKeyValueStore store1 setValue test:  Successfully set value');
 
-				var exists = utils.existsSync(getAbsolutePath(keyValStorePath1), testKey);
-				if (exists) {
-					t.pass('FileKeyValueStore store1 setValue test:  Verified the file for key ' + testKey + ' does exist');
-					store1.getValue(testKey)
-					.then(
-						// Log the fulfillment value
-						function(val) {
-							if (val != testValue) {
-								t.fail('FileKeyValueStore store1 getValue test:  '+ val + ' does not equal testValue of ' + testValue);
-							} else {
-								t.pass('FileKeyValueStore store1 getValue test:  Successfully retrieved value');
-							}
-						})
-					.catch(
-						// Log the rejection reason
-						function(reason) {
-							t.fail(reason);
-						});
-				} else {
-					t.fail('FileKeyValueStore store1 setValue test:  Failed to create file for key ' + testKey);
-				}
+			var exists = utils.existsSync(getAbsolutePath(keyValStorePath1), testKey);
+			if (exists) {
+				t.pass('FileKeyValueStore store1 setValue test:  Verified the file for key ' + testKey + ' does exist');
+				return store1.getValue(testKey);
+			} else {
+				t.fail('FileKeyValueStore store1 setValue test:  Failed to create file for key ' + testKey);
+				t.end();
 			}
-		})
-	.catch(
+		},
 		function(reason) {
 			t.fail('FileKeyValueStore store1 setValue test:  Failed to set value: '+reason);
-		});
+			t.end();
+		})
+	.then(
+		// Log the fulfillment value
+		function(val) {
+			if (val != testValue) {
+				t.fail('FileKeyValueStore store1 getValue test:  '+ val + ' does not equal testValue of ' + testValue);
+			} else {
+				t.pass('FileKeyValueStore store1 getValue test:  Successfully retrieved value');
+			}
 
-	store2.setValue(testKey, testValue)
+			return store2.setValue(testKey, testValue);
+		},
+		function(reason) {
+			t.fail(reason);
+			t.end();
+		})
 	.then(
 		function(result) {
-			if (result) {
-				t.pass('FileKeyValueStore store2 setValue test:  Successfully set value');
+			t.pass('FileKeyValueStore store2 setValue test:  Successfully set value');
 
-				var exists = utils.existsSync(getAbsolutePath(keyValStorePath2), testKey);
-				if (exists) {
-					t.pass('FileKeyValueStore store2 setValue test:  Verified the file for key ' + testKey + ' does exist');
-					store2.getValue(testKey)
-					.then(
-						// Log the fulfillment value
-						function(val) {
-							if (val != testValue)
-								t.fail('FileKeyValueStore store2 getValue test:  '+ val + ' does not equal testValue of ' + testValue);
-							else
-								t.pass('FileKeyValueStore store2 getValue test:  Successfully retrieved value');
-						})
-					.catch(
-						// Log the rejection reason
-						function(reason) {
-							t.fail(reason);
-						});
-				} else
-					t.fail('FileKeyValueStore store2 setValue test:  Failed to create file for key ' + testKey);
+			var exists = utils.existsSync(getAbsolutePath(keyValStorePath2), testKey);
+			if (exists) {
+				t.pass('FileKeyValueStore store2 setValue test:  Verified the file for key ' + testKey + ' does exist');
+
+				return store2.getValue(testKey);
+			} else {
+				t.fail('FileKeyValueStore store2 setValue test:  Failed to create file for key ' + testKey);
+				t.end();
 			}
-		})
-	.catch(
+		},
 		function(reason) {
 			t.fail('FileKeyValueStore store2 setValue test:  Failed to set value: '+reason);
-		});
+			t.end();
+		})
+	.then(
+		// Log the fulfillment value
+		function(val) {
+			if (val != testValue)
+				t.fail('FileKeyValueStore store2 getValue test:  '+ val + ' does not equal testValue of ' + testValue);
+			else
+				t.pass('FileKeyValueStore store2 getValue test:  Successfully retrieved value');
 
-	t.end();
+			t.end();
+		})
+	.catch(
+		// Log the rejection reason
+		function(reason) {
+			t.fail(reason);
+			t.end();
+		});
 });
 
 test('FileKeyValueStore error check tests', function(t){
@@ -312,59 +304,54 @@ test('FileKeyValueStore error check tests', function(t){
 	store3.setValue(testKey, testValue)
 	.then(
 		function(result) {
-			if (result) {
-				t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Successfully set value');
+			t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Successfully set value');
 
-				var exists = utils.existsSync(getAbsolutePath(keyValStorePath3), testKey);
-				if (exists) {
-					t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Verified the file for key ' + testKey + ' does exist');
-					cleanupFileKeyValueStore(keyValStorePath3);
-					exists = utils.existsSync(getAbsolutePath(keyValStorePath3), testKey);
-					t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Deleted store, exists: '+exists);
-					store3.getValue(testKey)
-					.then(
-						// Log the fulfillment value
-						function(val) {
-							if (val === null) {
-								t.pass('FileKeyValueStore error check tests:  Delete store & getValue test. getValue is null');
-							} else {
-								t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue successfully retrieved value: '+val);
-							}
-						})
-					.catch(
-						// Log the rejection reason
-						function(reason) {
-							t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue caught unexpected error: '+reason);
-						});
-				} else {
-					t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. Failed to create file for key ' + testKey);
-				}
+			var exists = utils.existsSync(getAbsolutePath(keyValStorePath3), testKey);
+			if (exists) {
+				t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Verified the file for key ' + testKey + ' does exist');
+				cleanupFileKeyValueStore(keyValStorePath3);
+				exists = utils.existsSync(getAbsolutePath(keyValStorePath3), testKey);
+				t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Deleted store, exists: '+exists);
+				return store3.getValue(testKey);
+			} else {
+				t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. Failed to create file for key ' + testKey);
 			}
 		})
-	.catch(
+	.then(
+		// Log the fulfillment value
+		function(val) {
+			if (val === null) {
+				t.pass('FileKeyValueStore error check tests:  Delete store & getValue test. getValue is null');
+			} else {
+				t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue successfully retrieved value: '+val);
+			}
+		},
 		function(reason) {
-			t.fail('FileKeyValueStore error check tests: Delete store & getValue test. Failed to set value: '+reason);
-		});
-
-	cleanupFileKeyValueStore(keyValStorePath4);
-	var store4 = new FileKeyValueStore({path: getRelativePath(keyValStorePath4)});
-	cleanupFileKeyValueStore(keyValStorePath4);
-	var exists = utils.existsSync(getAbsolutePath(keyValStorePath4));
-	t.comment('FileKeyValueStore error check tests:  Delete store & setValue test. Deleted store, exists: '+exists);
-	store4.setValue(testKey, testValue)
+			t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue caught unexpected error: '+reason);
+		})
+	.then(
+		function() {
+			cleanupFileKeyValueStore(keyValStorePath4);
+			var store4 = new FileKeyValueStore({path: getRelativePath(keyValStorePath4)});
+			cleanupFileKeyValueStore(keyValStorePath4);
+			var exists = utils.existsSync(getAbsolutePath(keyValStorePath4));
+			t.comment('FileKeyValueStore error check tests:  Delete store & setValue test. Deleted store, exists: '+exists);
+			return store4.setValue(testKey, testValue);
+		})
 	.then(
 		function(result) {
-			if (result) {
-				t.fail('FileKeyValueStore error check tests:  Delete store & setValue test.  Successfully set value');
-			}
+			t.fail('FileKeyValueStore error check tests:  Delete store & setValue test.  Successfully set value but should have failed.');
+			t.end();
+		},
+		function(reason) {
+			t.pass('FileKeyValueStore error check tests:  Delete store & setValue test.  Failed to set value as expected: '+reason);
+			t.end();
 		})
 	.catch(
-		function(reason) {
-			t.pass('FileKeyValueStore error check tests:  Delete store & setValue test.  Failed to set value: '+reason);
+		function(err) {
+			t.fail('Failed with unexpected error: ' + err.stack ? err.stack : err);
+			t.end();
 		});
-
-
-	t.end();
 });
 
 
@@ -426,13 +413,14 @@ test('\n\n ** Chain - setKeyValueStore getKeyValueStore test', function(t) {
 				t.pass('Chain getKeyValueStore test:  Verified the file for key ' + testKey + ' does exist');
 			else
 				t.fail('Chain getKeyValueStore test:  Failed to create file for key ' + testKey);
+
+			t.end();
 		})
 	.catch(
 		function(reason) {
 			t.fail('Chain getKeyValueStore test:  Failed to set value, reason: '+reason);
+			t.end();
 		});
-
-	t.end();
 });
 
 test('\n\n ** Chain register methods parameters tests', function(t) {
@@ -575,8 +563,6 @@ test('\n\n ** Member - constructor set get tests', function(t) {
 		t.fail('Member constructor get set tests 2: getChain new Member cfg getName was not successful');
 
 	t.end();
-
-
 });
 
 test('Member sendDeploymentProposal() tests', function(t) {
@@ -905,9 +891,16 @@ test('\n\n ** Remote node tests **', function(t) {
 	t.ok(peer._endpoint.creds, 'GRPC Options tests: new Peer grpc with opts _endpoint.creds created');
 	t.equal(peer.getUrl(), url, 'checking that getURL works');
 
+	// the grpc client did not throw an error as expected.
 	// peer.sendProposal('bad data')
-	// 	.then(function(results) { t.fail('This will not happen');})
-	// 	.catch(function(err) { t.pass('This should fail');});
+	// .then(
+	// 	function(results) {
+	// 		t.fail('This will not happen');
+	// 	})
+	// .catch(
+	// 	function(err) {
+	// 		t.pass('This should fail');
+	// 	});
 
 	t.throws(
 		function() {
