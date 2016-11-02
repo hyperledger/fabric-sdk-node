@@ -32,7 +32,7 @@ test('Test enroll() and registrar privileges with registerAndEnroll()', function
 	//
 	// Create and configure the test chain
 	//
-	var chain = hfc.newChain('testChain');
+	var chain = hfc.newChain('testChain-ca');
 	var expect = '';
 	var found = '';
 	var webUser;

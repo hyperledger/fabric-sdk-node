@@ -31,6 +31,7 @@ The following tests require setting up a local blockchain network as the target.
 * run `docker-compose up --force-recreate` to launch the network
 * Back in your native host (MacOS, or Windows, or Ubuntu, etc), run the following tests:
   * Clear out your previous keyvalue store if needed (rm -fr /tmp/KeyValStore*)
+  * Run `gulp test` to run the entire test bucket and generate coverage reports (both in console output and HTMLs)
   * Test user management with a member services, run `node test/unit/ca-tests.js`
   * Test happy path from end to end, run `node test/unit/end-2-end.js`
   * Test transaction proposals, run `node test/unit/endorser-tests.js`
@@ -42,13 +43,10 @@ The following check-list is for code contributors to make sure their changesets 
 Check the coding styles, run the following command and make sure no ESLint violations are present:
 * `gulp`
 
-Run the full unit test bucket:
-* `node test/unit/headless-tests.js`
-* `node test/unit/ca-tests.js`
-* `node test/unit/end-2-end.js`
-* `node test/unit/endorser-tests.js`
-* `node test/unit/orderer-tests.js`
-* `node test/unit/orderer-member-tests.js`
+Run the full unit test bucket and make sure 100% are passing:
+* `gulp test`
+
+The gulp test command above also generates code coverage reports. Your new code should be accompanied with unit tests and pass 80% lines coverage or above.
 
 ### HFC objects and reference documentation
 For a high-level design specificiation for Fabric SDKs of all languages, visit [this google doc](https://docs.google.com/document/d/1R5RtIBMW9fZpli37E5Li5_Q9ve3BnQ4q3gWmGZj6Sv4/edit?usp=sharing) (Work-In-Progress).

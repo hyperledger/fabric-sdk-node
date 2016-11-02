@@ -13,7 +13,7 @@ var testUtil = require('./util.js');
 
 var _fabricProto = grpc.load(path.join(__dirname,'../../lib/protos/fabric_next.proto')).protos;
 
-var chain = hfc.newChain('testChain');
+var chain = hfc.newChain('testChain-e2e');
 var webUser;
 
 testUtil.setupChaincodeDeploy();

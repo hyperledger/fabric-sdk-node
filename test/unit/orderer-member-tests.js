@@ -38,7 +38,7 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 	//
 	// Create and configure the test chain
 	//
-	var chain = hfc.getChain('testChain', true);
+	var chain = hfc.getChain('testChain-orderer-member', true);
 	try {
 		var order_address = 'grpc://localhost:5151';
 		chain.setOrderer(order_address);
