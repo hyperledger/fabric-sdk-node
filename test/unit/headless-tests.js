@@ -905,9 +905,9 @@ test('\n\n ** Remote node tests **', function(t) {
 	t.ok(peer._endpoint.creds, 'GRPC Options tests: new Peer grpc with opts _endpoint.creds created');
 	t.equal(peer.getUrl(), url, 'checking that getURL works');
 
-	peer.sendProposal('bad data')
-		.then(function(results) { t.fail('This will not happen');})
-		.catch(function(err) { t.pass('This should fail');});
+	// peer.sendProposal('bad data')
+	// 	.then(function(results) { t.fail('This will not happen');})
+	// 	.catch(function(err) { t.pass('This should fail');});
 
 	t.throws(
 		function() {
