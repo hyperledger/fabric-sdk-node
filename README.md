@@ -27,63 +27,7 @@ The following tests require setting up a local blockchain network as the target.
 * run `vagrant up` to launch the vagrant VM
 * Once inside vagrant, `cd $GOPATH/src/github.com/hyperledger/fabric`
 * run `make images` to build the docker images
-* create a docker-compose.yaml file in home directory (/home/vagrant) and copy the following content into the file
-```yaml
-vp:
-  image: hyperledger/fabric-peer
-  environment:
-    - CORE_PEER_ADDRESSAUTODETECT=true
-    - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-    - CORE_LOGGING_LEVEL=DEBUG
-    - CORE_PEER_NETWORKID=${CORE_PEER_NETWORKID}
-    - CORE_NEXT=true
-    - CORE_PEER_ENDORSER_ENABLED=true
-    - CORE_SECURITY_ENABLED=true
-    - CORE_PEER_PKI_ECA_PADDR=membersrvc:7054
-    - CORE_PEER_PKI_TCA_PADDR=membersrvc:7054
-    - CORE_PEER_PKI_TLSCA_PADDR=membersrvc:7054
-    - CORE_PEER_PKI_TLS_ROOTCERT_FILE=./bddtests/tlsca.cert
-  command: peer node start
-  volumes:
-      - /var/run/:/host/var/run/
-
-membersrvc:
-  image: hyperledger/fabric-membersrvc
-  command: membersrvc
-  ports:
-    - 7054:7054
-
-orderer:
-  image: hyperledger/fabric-orderer
-  environment:
-    - ORDERER_GENERAL_LEDGERTYPE=ram
-    - ORDERER_GENERAL_BATCHTIMEOUT=10s
-    - ORDERER_GENERAL_BATCHSIZE=10
-    - ORDERER_GENERAL_MAXWINDOWSIZE=1000
-    - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-    - ORDERER_GENERAL_LISTENPORT=5005
-    - ORDERER_RAMLEDGER_HISTORY_SIZE=100
-    - ORDERER_GENERAL_ORDERERTYPE=solo
-  working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
-  command: orderer
-  ports:
-    - 5151:5005
-
-vp0:
-  extends:
-    service: vp
-  environment:
-    - CORE_PEER_ID=vp0
-    - CORE_SECURITY_ENROLLID=test_vp0
-    - CORE_SECURITY_ENROLLSECRET=MwYpmSRjupbT
-    - CORE_PEER_PROFILE_ENABLED=true
-  links:
-    - membersrvc
-    - orderer
-  ports:
-    - 7051:7051
-    - 7053:7053
-```
+* copy [docker-compose.yml](https://raw.githubusercontent.com/hyperledger/fabric-sdk-node/master/test/fixtures/docker-compose.yml) file in home directory (/home/vagrant) and copy the following content into the file
 * run `docker-compose up --force-recreate` to launch the network
 * Back in your native host (MacOS, or Windows, or Ubuntu, etc), run the following tests:
   * Clear out your previous keyvalue store if needed (rm -fr /tmp/KeyValStore*)
