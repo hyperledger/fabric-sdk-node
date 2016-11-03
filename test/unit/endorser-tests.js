@@ -13,6 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+'use strict';
 
 var tape = require('tape');
 var _test = require('tape-promise');
@@ -62,11 +63,17 @@ test('endorser test', function(t) {
 			t.end();
 		}
 	).then(
-		function(response) {
-			if (response && response.response && response.response.status === 200) {
-				t.pass('Successfully obtained endorsement.');
+		function(data) {
+			if (Array.isArray(data) && data.length === 2) {
+				let response = data[0];
+
+				if (response && response.response && response.response.status === 200) {
+					t.pass('Successfully obtained endorsement.');
+				} else {
+					t.fail('Failed to obtain endorsement. Error code: ' + status);
+				}
 			} else {
-				t.fail('Failed to obtain endorsement. Error code: ' + status);
+				t.fail('Invalid response data. Must be an array carrying proposal response and the original proposal payload');
 			}
 
 			t.end();
