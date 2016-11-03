@@ -22,8 +22,11 @@ var test = _test(tape);
 var hfc = require('../..');
 var util = require('util');
 var fs = require('fs');
+var testUtil = require('./util.js');
 
 var keyValStorePath = '/tmp/keyValStore';
+
+testUtil.setupChaincodeDeploy();
 
 //
 // Run the endorser test
@@ -51,7 +54,7 @@ test('endorser test', function(t) {
 			// send proposal to endorser
 			var request = {
 				endorserUrl: 'grpc://localhost:7051',
-				chaincodePath: 'github.com/chaincode_example02',
+				chaincodePath: testUtil.CHAINCODE_PATH,
 				fcn: 'init',
 				args: ['a', '100', 'b', '200']
 			};

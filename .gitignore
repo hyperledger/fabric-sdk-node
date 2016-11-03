@@ -1,6 +1,7 @@
 coverage
 docs/gen
 node_modules/*
+test/fixtures/src/github.com/example_cc/Dockerfile
 npm-shrinkwrap.json
 npm-debug.log
 tmp
