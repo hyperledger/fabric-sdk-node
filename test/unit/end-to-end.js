@@ -25,7 +25,7 @@ var webUser;
 testUtil.setupChaincodeDeploy();
 
 chain.setKeyValueStore(hfc.newKeyValueStore({
-	path: '/tmp/kvs-hfc-e2e'
+	path: testUtil.KVS
 }));
 
 chain.setMemberServicesUrl('grpc://localhost:7054');

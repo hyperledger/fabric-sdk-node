@@ -24,7 +24,7 @@ var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
 
-var keyValStorePath = '/tmp/keyValStore';
+var keyValStorePath = testUtil.KVS;
 
 testUtil.setupChaincodeDeploy();
 

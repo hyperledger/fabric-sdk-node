@@ -21,11 +21,12 @@ var test = _test(tape);
 var hfc = require('../..');
 var util = require('util');
 var fs = require('fs');
+var testUtil = require('./util.js');
 
 var Orderer = require('../../lib/Orderer.js');
 var Member = require('../../lib/Member.js');
 
-var keyValStorePath = '/tmp/keyValStore';
+var keyValStorePath = testUtil.KVS;
 
 //
 // Orderer via chain setOrderer/getOrderer

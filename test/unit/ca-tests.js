@@ -21,8 +21,9 @@ var test = _test(tape);
 var hfc = require('../..');
 var util = require('util');
 var fs = require('fs');
+var testUtil = require('./util.js');
 
-var keyValStorePath = '/tmp/keyValStore';
+var keyValStorePath = testUtil.KVS;
 var keyValStorePath2 = keyValStorePath + '2';
 
 //

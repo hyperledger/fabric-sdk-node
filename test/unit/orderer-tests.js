@@ -21,10 +21,11 @@ var test = _test(tape);
 var hfc = require('../..');
 var util = require('util');
 var fs = require('fs');
+var testUtil = require('./util.js');
 
 var Orderer = require('../../lib/Orderer.js');
 
-var keyValStorePath = '/tmp/keyValStore';
+var keyValStorePath = testUtil.KVS;
 
 //
 // Orderer happy path test

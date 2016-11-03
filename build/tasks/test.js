@@ -12,7 +12,12 @@ gulp.task('pre-test', function() {
 });
 
 gulp.task('test', ['pre-test'], function() {
-	return gulp.src('test/unit/*.js')
+	// use individual tests to control the sequence they get executed
+	// first run the ca-tests that tests all the member registration and
+	// enrollment scenarios (good and bad calls). then the rest of the
+	// tests will re-used the same key value store that has saved the
+	// user certificates so they can interact with the network
+	return gulp.src(['test/unit/ca-tests.js', 'test/unit/endorser-tests.js', 'test/unit/orderer-tests.js', 'test/unit/orderer-member-tests.js', 'test/unit/end-to-end.js', 'test/unit/headless-tests.js'])
 		.pipe(tape({
 			reporter: tapColorize()
 		}))
