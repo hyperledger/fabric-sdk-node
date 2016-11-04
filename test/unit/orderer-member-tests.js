@@ -295,7 +295,7 @@ test('\n\n** TEST ** orderer via member bad orderer address', function(t) {
 // with the orderer address set to the correct URL and the data not being null.
 // Verify that a success is returned when tying to send the request.
 //
-test('\n\n** TEST ** orderer via member good data', function(t) {
+test('\n\n** TEST ** orderer via member bad data', function(t) {
 	//
 	// Create and configure the test chain
 	//
@@ -323,10 +323,14 @@ test('\n\n** TEST ** orderer via member good data', function(t) {
 		function(status) {
 			console.log('Status: ' + status + ', type: (' + typeof status + ')');
 			if (status.Status === 'SUCCESS') {
-				t.pass('Successfully submitted request.');
+				t.fail('Successfully submitted request.');
 			} else {
-				t.fail('Failed to submit. Error code: ' + status);
+				t.pass('Failed to submit. Error code: ' + status);
 			}
+			t.end();
+		},
+		function(err) {
+			t.pass('Failed to submit. Error code:'+ err);
 			t.end();
 		}
 	).catch(function(err) {

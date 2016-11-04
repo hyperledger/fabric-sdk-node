@@ -565,19 +565,19 @@ test('\n\n ** Member - constructor set get tests', function(t) {
 	t.end();
 });
 
-test('Member sendDeploymentProposal() tests', function(t) {
+test('\n\n ** Member sendDeploymentProposal() tests', function(t) {
 	var m = new Member('does not matter', _chain);
 
 	var p1 = m.sendDeploymentProposal({
 		chaincodePath: 'blah',
 		fcn: 'init'
 	}).then(function() {
-		t.fail('Should not have been able to resolve the promise because of missing "endorserUrl" parameter');
+		t.fail('Should not have been able to resolve the promise because of missing "peer" parameter');
 	}).catch(function(err) {
-		if (err.message === 'missing endorserUrl in Deployment proposal request') {
-			t.pass('Successfully caught missing endorserUrl error');
+		if (err.message === 'Missing "target" for the endorsing peer object in the Deployment proposal request') {
+			t.pass('Successfully caught missing peer error');
 		} else {
-			t.fail('Failed to catch the missing endorserUrl error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing peer error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
@@ -594,16 +594,194 @@ test('Member sendDeploymentProposal() tests', function(t) {
 		}
 	});
 
-	var p3 = m.sendDeploymentProposal({
-		endorserUrl: 'blah',
-		chaincodePath: 'blah'
+	Promise.all([p1, p2])
+	.then(
+		function(data) {
+			t.end();
+		}
+	).catch(
+		function(err) {
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		}
+	);
+});
+
+test('\n\n ** Member sendTransactionProposal() tests', function(t) {
+	var m = new Member('does not matter', _chain);
+
+	var p1 = m.sendTransactionProposal({
+		chaincodeId: 'someid'
 	}).then(function() {
-		t.fail('Should not have been able to resolve the promise because of missing "fcn" parameter');
-	}).catch(function(err) {
-		if (err.message === 'missing fcn in Deployment proposal request') {
-			t.pass('Successfully caught missing fcn error');
+		t.fail('Should not have been able to resolve the promise because of missing "target" parameter');
+	}, function(err) {
+		if (err.message === 'Missing "target" for endorser peer object in the Transaction proposal request') {
+			t.pass('Successfully caught missing target error');
 		} else {
-			t.fail('Failed to catch the missing fcn error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing target error. Error: ' + err.stack ? err.stask : err);
+		}
+	}).catch(function(err) {
+		if (err.message === 'Missing "target" for endorser peer object in the Transaction proposal request') {
+			t.pass('Successfully caught missing target error');
+		} else {
+			t.fail('Failed to catch the missing target error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p2 = m.sendTransactionProposal({
+		target: hfc.getPeer('grpc://somehost.com:9000')
+	}).then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
+	}, function(err) {
+		if (err.message === 'Missing chaincode ID in the Transaction proposal request') {
+			t.pass('Successfully caught missing chaincodeid error');
+		} else {
+			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
+		}
+	}).catch(function(err) {
+		if (err.message === 'Missing chaincode ID in the Transaction proposal request') {
+			t.pass('Successfully caught missing chaincodeid error');
+		} else {
+			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p3 = m.sendTransactionProposal({
+		target: hfc.getPeer('grpc://somehost.com:9000'),
+		chaincodeId: 'someid'
+	}).then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
+	}, function(err) {
+		if (err.message === 'Missing arguments in Transaction proposal request') {
+			t.pass('Successfully caught missing args error');
+		} else {
+			t.fail('Failed to catch the missing args error. Error: ' + err.stack ? err.stask : err);
+		}
+	}).catch(function(err) {
+		if (err.message === 'Missing arguments in Transaction proposal request') {
+			t.pass('Successfully caught missing args error');
+		} else {
+			t.fail('Failed to catch the missing args error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3])
+	.then(
+		function(data) {
+			t.end();
+		}
+	).catch(
+		function(err) {
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		}
+	);
+});
+
+test('\n\n ** Member queryByChaincode() tests', function(t) {
+	var m = new Member('does not matter', _chain);
+
+	var p1 = m.queryByChaincode({
+		chaincodeId: 'someid'
+	}).then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing "target" parameter');
+	}, function(err) {
+		if (err.message === 'Missing "target" for endorser peer object in the Transaction proposal request') {
+			t.pass('Successfully caught missing target error');
+		} else {
+			t.fail('Failed to catch the missing target error. Error: ' + err.stack ? err.stask : err);
+		}
+	}).catch(function(err) {
+		if (err.message === 'Missing "target" for endorser peer object in the Transaction proposal request') {
+			t.pass('Successfully caught missing target error');
+		} else {
+			t.fail('Failed to catch the missing target error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p2 = m.queryByChaincode({
+		target: hfc.getPeer('grpc://somehost.com:9000')
+	}).then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
+	}, function(err) {
+		if (err.message === 'Missing chaincode ID in the Transaction proposal request') {
+			t.pass('Successfully caught missing chaincodeid error');
+		} else {
+			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
+		}
+	}).catch(function(err) {
+		if (err.message === 'Missing chaincode ID in the Transaction proposal request') {
+			t.pass('Successfully caught missing chaincodeid error');
+		} else {
+			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p3 = m.queryByChaincode({
+		target: hfc.getPeer('grpc://somehost.com:9000'),
+		chaincodeId: 'someid'
+	}).then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
+	}, function(err) {
+		if (err.message === 'Missing arguments in Transaction proposal request') {
+			t.pass('Successfully caught missing args error');
+		} else {
+			t.fail('Failed to catch the missing args error. Error: ' + err.stack ? err.stask : err);
+		}
+	}).catch(function(err) {
+		if (err.message === 'Missing arguments in Transaction proposal request') {
+			t.pass('Successfully caught missing args error');
+		} else {
+			t.fail('Failed to catch the missing args error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3])
+	.then(
+		function(data) {
+			t.end();
+		}
+	).catch(
+		function(err) {
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		}
+	);
+});
+
+test('\n\n ** Member sendTransaction() tests', function(t) {
+	var m = new Member('does not matter', _chain);
+	_chain._orderer = undefined;
+	var p1 = m.sendTransaction()
+	 .then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing parameters');
+	 },function(err) {
+		if (err.message === 'Missing proposalResponse object parameter') {
+			t.pass('Successfully caught missing proposalResponse error');
+		} else {
+			t.fail('Failed to catch the missing object error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p2 = m.sendTransaction('data')
+	 .then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing parameters');
+	 },function(err) {
+		if (err.message === 'Missing chaincodeProposal object parameter') {
+			t.pass('Successfully caught missing chaincodeProposal error');
+		} else {
+			t.fail('Failed to catch the missing objet error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p3 = m.sendTransaction('data','data')
+	 .then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing parameters');
+	 },function(err) {
+		if (err.message === 'no Orderer defined') {
+			t.pass('Successfully caught missing orderer error');
+		} else {
+			t.fail('Failed to catch the missing order error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 

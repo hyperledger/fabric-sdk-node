@@ -31,9 +31,115 @@ message BroadcastResponse {
     Status Status = 1;
 }
 
+// For backwards compatibility, this is message is being left as bytes for the moment. 
+// Internally, for testing authentication, the Data payload will be a marshalled SignedData message
+// However in the future, this whole message is likely to go away.
+// XXX Temporary
 message BroadcastMessage {
     bytes Data = 1;
 }
+
+// SignedData is a temporary message type to be removed once the real transaction type is finalized
+// Note that the identity of the signer is explicitely not included, but embedded in the envelope because
+// apparently the signature should always be over an object which contains the signer's identity
+// XXX Temporary
+message SignedData {
+    bytes PayloadEnvelope = 1;
+    bytes Signature = 2;
+}
+
+// PayloadEnvelope is the thin wrapper which allows the embedding of a signer's identity to sign over
+// XXX Temporary
+message PayloadEnvelope {
+    bytes Payload = 1;
+    bytes Signer = 2;
+}
+
+
+// Transaction embeds a configuration change and associated signoffs
+// This will be superseded once the real transaction format is finalized
+// XXX Temporary
+message Transaction {
+    oneof Type {
+        bytes Opaque = 1;               // An opaque set of bytes
+	bytes ConfigurationEnvelope = 2;        // A marshalled Configuration message
+    }
+    repeated SignedData Signatures = 3; // Signatures over the hash of the bytes for Type
+}
+
+// ConfigurationEnvelope is designed to contain _all_ configuration for a chain and is
+// intended to be a permenant data structure (noted explicitly because others above are temporary)
+// Its generated with the following scheme.  Given an existing configuration, a new configuration
+// increments the Sequence number, and updates any existing configuration entries and or adds new
+// configuration entries.  For each added or modified entry, the LastModified value must be set
+// to the Sequence number of the ConfigurationEnvelope.  The configuration manager will verify that
+// all configuration changes satisfy system policy, that all configuration changes have a LastModified
+// field equal to Sequence, that no configuration has been deleted without corresponding authorization,
+// that the configuration is well formed, and that some configuration item corresponds to the new
+// ConfigurationEnvelope sequence number.
+message ConfigurationEnvelope {
+    uint64 Sequence = 1;
+    bytes ChainID = 2;
+    repeated ConfigurationEntry Entries = 3;
+}
+
+// This message may change slightly depending on the finalization of signature schemes for transactions
+message ConfigurationEntry {
+    bytes Configuration = 1;
+    repeated SignedData Signatures = 2; // Signatures over the hash of Configuration
+}
+
+
+message Configuration {
+    enum ConfigurationType {
+        Policy = 0;
+        Fabric = 1;
+	Chain = 2;
+        Solo = 3;
+        Kafka = 4;
+        PBFT = 5;
+    }
+
+    bytes ChainID = 1;              // A Globally Unique Chain ID
+    string ID = 2;                  // A unique ID, unique scoped by Type
+    uint64 LastModified = 3;        // The Sequence number in the ConfigurationEnvelope this item was last modified
+    ConfigurationType Type = 4;     // The type of configuration
+    bytes Data = 5;                 // The byte representation of this configuration, usually a marshaled message
+    string ModificationPolicy = 6;  // What policy to check before allowing modification
+}
+
+// Policy expresses a policy which the orderer can evaluate, because there has been some desire expressed to support
+// multiple policy engines, this is typed as a oneof for now
+message Policy {
+    oneof Type {
+        SignaturePolicyEnvelope SignaturePolicy = 2;
+    }
+}
+
+// SignaturePolicyEnvelope wraps a SignaturePolicy and includes a version for future enhancements
+message SignaturePolicyEnvelope {
+    int32 Version = 1;
+    SignaturePolicy Policy = 2;
+    repeated bytes Identities = 3;
+}
+
+// SignaturePolicy is a recursive message structure which defines a featherweight DSL for describing
+// policies which are more complicated than 'exactly this signature'.  The NOutOf operator is sufficent
+// to express AND as well as OR, as well as of course N out of the following M policies
+// SignedBy implies that the signature is from a valid certificate which is signed by the trusted
+// authority specified in the bytes.  This will be the certificate itself for a self-signed certificate
+// and will be the CA for more traditional certificates
+message SignaturePolicy {
+    message NOutOf {
+        int32 N = 1;
+        repeated SignaturePolicy Policies = 2;
+    }
+    oneof Type {
+        int32 SignedBy = 1;
+        NOutOf From = 2;
+    }
+}
+
 
 message SeekInfo {
     // Start may be specified to a specific block number, or may be request from the newest or oldest available
@@ -62,15 +168,28 @@ message DeliverUpdate {
     }
 }
 
-// This is a temporary data structure, meant to hold the place of the finalized block structure
-// This must be a 'block' structure and not a 'batch' structure, although the terminology is slightly confusing
-// The requirement is to allow for a consumer of the orderer to declare the unvalidated blockchain as the definitive
-// blockchain, without breaking the hash chain or existing proof
+// This is a temporary data structure, but is hopefully very close to the finalized block structure
+// Note that the BlockHeader chains to the previous BlockHeader, and the BlockData hash is embedded
+// in the BlockHeader.  This makes it natural and obvious that the Data is included in the hash, but
+// the Metadata is not.
 message Block {
-    uint64 Number = 2;
-    bytes PrevHash = 3;
-    bytes Proof = 4;
-    repeated BroadcastMessage Messages = 5;
+    BlockHeader Header = 1;
+    BlockData Data = 2;
+    BlockMetadata Metadata = 3;
+}
+
+message BlockHeader {
+    uint64 Number = 1; // The position in the blockchain
+    bytes PreviousHash = 2; // The hash of the previous block header
+    bytes DataHash = 3; // The hash of the BlockData, by MerkleTree
+}
+
+message BlockData {
+    repeated bytes Data = 1;
+}
+
+message BlockMetadata {
+    repeated bytes Metadata = 1;
 }
 
 message DeliverResponse {
@@ -89,4 +208,3 @@ service AtomicBroadcast {
     // To avoid latency, clients will likely acknowledge before the WindowSize has been exhausted, preventing the server from stopping and waiting for an Acknowledgement
     rpc Deliver(stream DeliverUpdate) returns (stream DeliverResponse) {}
 }
-
