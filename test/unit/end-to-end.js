@@ -51,7 +51,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 
 			// send proposal to endorser
 			var request = {
-				target: hfc.getPeer('grpc://localhost:7051'),
+				targets: [hfc.getPeer('grpc://localhost:7051')],
 				chaincodePath: testUtil.CHAINCODE_PATH,
 				fcn: 'init',
 				args: ['a', '100', 'b', '200']
@@ -65,12 +65,13 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		}
 	).then(
 		function(results) {
-			var proposalResponse = results[0];
+			var proposalResponses = results[0];
+			console.log('proposalResponses:'+JSON.stringify(proposalResponses));
 			var proposal = results[1];
-			if (proposalResponse && proposalResponse.response && proposalResponse.response.status === 200) {
-				t.pass(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponse.response.status, proposalResponse.response.message, proposalResponse.response.payload, proposalResponse.endorsement.signature));
-				chaincode_id = proposalResponse.chaincodeId;
-				return webUser.sendTransaction(proposalResponse, proposal);
+			if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
+				t.pass(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
+				chaincode_id = proposalResponses[0].chaincodeId;
+				return webUser.sendTransaction(proposalResponses, proposal);
 			} else {
 				t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
 				t.end();
@@ -100,7 +101,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		function() {
 			// send proposal to endorser
 			var request = {
-				target: hfc.getPeer('grpc://localhost:7051'),
+				targets: [hfc.getPeer('grpc://localhost:7051')],
 				chaincodeId : chaincode_id,
 				fcn: 'invoke',
 				args: ['move', 'a', 'b','100']
@@ -113,11 +114,11 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		}
 	).then(
 		function(results) {
-			var proposalResponse = results[0];
+			var proposalResponses = results[0];
 			var proposal = results[1];
-			if (proposalResponse.response.status === 200) {
-				t.pass('Successfully obtained transaction endorsement.' + JSON.stringify(proposalResponse));
-				return webUser.sendTransaction(proposalResponse, proposal);
+			if (proposalResponses[0].response.status === 200) {
+				t.pass('Successfully obtained transaction endorsement.' + JSON.stringify(proposalResponses));
+				return webUser.sendTransaction(proposalResponses, proposal);
 			} else {
 				t.fail('Failed to obtain transaction endorsement. Error code: ' + status);
 				t.end();
@@ -146,7 +147,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		function() {
 			// send query
 			var request = {
-				target: hfc.getPeer('grpc://localhost:7051'),
+				targets: [hfc.getPeer('grpc://localhost:7051')],
 				chaincodeId : chaincode_id,
 				fcn: 'invoke',
 				args: ['query','b']
@@ -158,8 +159,10 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			t.end();
 		}
 	).then(
-		function(response_payload) {
-			t.equal(response_payload.toString('utf8'),'300','checking query results are correct that user b has 300 now after the move');
+		function(response_payloads) {
+			for(let i = 0; i < response_payloads.length; i++) {
+				t.equal(response_payloads[i].toString('utf8'),'300','checking query results are correct that user b has 300 now after the move');
+			}
 			t.end();
 		},
 		function(err) {

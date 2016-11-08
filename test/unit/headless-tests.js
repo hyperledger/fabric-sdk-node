@@ -574,7 +574,7 @@ test('\n\n ** Member sendDeploymentProposal() tests', function(t) {
 	}).then(function() {
 		t.fail('Should not have been able to resolve the promise because of missing "peer" parameter');
 	}).catch(function(err) {
-		if (err.message === 'Missing "target" for the endorsing peer object in the Deployment proposal request') {
+		if (err.message === 'Missing "targets" for the endorsing peer objects in the Deployment proposal request') {
 			t.pass('Successfully caught missing peer error');
 		} else {
 			t.fail('Failed to catch the missing peer error. Error: ' + err.stack ? err.stask : err);
@@ -613,23 +613,23 @@ test('\n\n ** Member sendTransactionProposal() tests', function(t) {
 	var p1 = m.sendTransactionProposal({
 		chaincodeId: 'someid'
 	}).then(function() {
-		t.fail('Should not have been able to resolve the promise because of missing "target" parameter');
+		t.fail('Should not have been able to resolve the promise because of missing "targets" parameter');
 	}, function(err) {
-		if (err.message === 'Missing "target" for endorser peer object in the Transaction proposal request') {
-			t.pass('Successfully caught missing target error');
+		if (err.message === 'Missing "targets" for endorser peer objects in the Transaction proposal request') {
+			t.pass('Successfully caught missing targets error');
 		} else {
-			t.fail('Failed to catch the missing target error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
 		}
 	}).catch(function(err) {
-		if (err.message === 'Missing "target" for endorser peer object in the Transaction proposal request') {
-			t.pass('Successfully caught missing target error');
+		if (err.message === 'Missing "targets" for endorser peer objects in the Transaction proposal request') {
+			t.pass('Successfully caught missing targets error');
 		} else {
-			t.fail('Failed to catch the missing target error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
 	var p2 = m.sendTransactionProposal({
-		target: hfc.getPeer('grpc://somehost.com:9000')
+		targets: [hfc.getPeer('grpc://somehost.com:9000')]
 	}).then(function() {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
 	}, function(err) {
@@ -647,7 +647,7 @@ test('\n\n ** Member sendTransactionProposal() tests', function(t) {
 	});
 
 	var p3 = m.sendTransactionProposal({
-		target: hfc.getPeer('grpc://somehost.com:9000'),
+		targets: [hfc.getPeer('grpc://somehost.com:9000')],
 		chaincodeId: 'someid'
 	}).then(function() {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
@@ -684,23 +684,23 @@ test('\n\n ** Member queryByChaincode() tests', function(t) {
 	var p1 = m.queryByChaincode({
 		chaincodeId: 'someid'
 	}).then(function() {
-		t.fail('Should not have been able to resolve the promise because of missing "target" parameter');
+		t.fail('Should not have been able to resolve the promise because of missing "targets" parameter');
 	}, function(err) {
-		if (err.message === 'Missing "target" for endorser peer object in the Transaction proposal request') {
-			t.pass('Successfully caught missing target error');
+		if (err.message === 'Missing "targets" for endorser peer objects in the Transaction proposal request') {
+			t.pass('Successfully caught missing targets error');
 		} else {
-			t.fail('Failed to catch the missing target error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
 		}
 	}).catch(function(err) {
-		if (err.message === 'Missing "target" for endorser peer object in the Transaction proposal request') {
-			t.pass('Successfully caught missing target error');
+		if (err.message === 'Missing "targets" for endorser peer objects in the Transaction proposal request') {
+			t.pass('Successfully caught missing targets error');
 		} else {
-			t.fail('Failed to catch the missing target error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
 	var p2 = m.queryByChaincode({
-		target: hfc.getPeer('grpc://somehost.com:9000')
+		targets: [hfc.getPeer('grpc://somehost.com:9000')]
 	}).then(function() {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
 	}, function(err) {
@@ -718,7 +718,7 @@ test('\n\n ** Member queryByChaincode() tests', function(t) {
 	});
 
 	var p3 = m.queryByChaincode({
-		target: hfc.getPeer('grpc://somehost.com:9000'),
+		targets: [hfc.getPeer('grpc://somehost.com:9000')],
 		chaincodeId: 'someid'
 	}).then(function() {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');

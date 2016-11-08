@@ -154,7 +154,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 
 			// send proposal to endorser
 			var request = {
-				target: hfc.getPeer('grpc://localhost:7051'),
+				targets: [hfc.getPeer('grpc://localhost:7051')],
 				chaincodePath: testUtil.CHAINCODE_PATH,
 				fcn: 'init',
 				args: ['a', '100', 'b', '200']
@@ -171,7 +171,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 			if (Array.isArray(data) && data.length === 2) {
 				let response = data[0];
 
-				if (response && response.response && response.response.status === 200) {
+				if (response[0] && response[0].response && response[0].response.status === 200) {
 					t.pass('Successfully obtained endorsement.');
 				} else {
 					t.fail('Failed to obtain endorsement. Error code: ' + status);
