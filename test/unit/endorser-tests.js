@@ -31,7 +31,7 @@ testUtil.setupChaincodeDeploy();
 //
 //Run the failing endorser test
 //
-test('\n\n** TEST ** endorser test - missing peer', function(t) {
+test('\n\n** TEST ** endorser test - missing targets', function(t) {
 	//
 	// Create and configure the test chain
 	var chain = hfc.getChain('testChain', true);
@@ -48,7 +48,8 @@ test('\n\n** TEST ** endorser test - missing peer', function(t) {
 
 			// send proposal to endorser
 			var request = {
-				chaincodeID: 'mycc',
+				chaincodeId: 'mycc',
+				chaincodePath: 'something',
 				fcn: 'invoke',
 				args: ['a', 'b', '1']
 			};
@@ -81,7 +82,7 @@ test('\n\n** TEST ** endorser test - missing peer', function(t) {
 	);
 });
 
-test('\n\n** TEST ** endorse transaction bad test', function(t) {
+test('\n\n** TEST ** endorse transaction missing chaincodeId test', function(t) {
 	//
 	// Create and configure the test chain
 	//
@@ -100,7 +101,7 @@ test('\n\n** TEST ** endorse transaction bad test', function(t) {
 
 			// send proposal to endorser
 			var request = {
-				target: hfc.getPeer('grpc://localhost:7051'),
+				targets: hfc.getPeer('grpc://localhost:7051'),
 				fcn: 'init',
 				args: ['a', '100', 'b', '200']
 			};
@@ -156,6 +157,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 			var request = {
 				targets: [hfc.getPeer('grpc://localhost:7051')],
 				chaincodePath: testUtil.CHAINCODE_PATH,
+				chaincodeId : 'endorsertest',
 				fcn: 'init',
 				args: ['a', '100', 'b', '200']
 			};

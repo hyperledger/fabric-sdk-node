@@ -31,7 +31,7 @@ var testUtil = require('./util.js');
 
 var chain = hfc.newChain('testChain-e2e');
 var webUser;
-var chaincode_id;
+var chaincode_id = 'mycc1';
 
 testUtil.setupChaincodeDeploy();
 
@@ -53,6 +53,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			var request = {
 				targets: [hfc.getPeer('grpc://localhost:7051')],
 				chaincodePath: testUtil.CHAINCODE_PATH,
+				chaincodeId: chaincode_id,
 				fcn: 'init',
 				args: ['a', '100', 'b', '200']
 			};
@@ -70,7 +71,6 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			var proposal = results[1];
 			if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 				t.pass(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-				chaincode_id = proposalResponses[0].chaincodeId;
 				return webUser.sendTransaction(proposalResponses, proposal);
 			} else {
 				t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
@@ -118,7 +118,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			var proposal = results[1];
 			if (proposalResponses[0].response.status === 200) {
 				t.pass('Successfully obtained transaction endorsement.' + JSON.stringify(proposalResponses));
-				return webUser.sendTransaction(proposalResponses, proposal);
+				return webUser.sendTransaction(proposalResponses[0], proposal);
 			} else {
 				t.fail('Failed to obtain transaction endorsement. Error code: ' + status);
 				t.end();
@@ -147,7 +147,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		function() {
 			// send query
 			var request = {
-				targets: [hfc.getPeer('grpc://localhost:7051')],
+				targets: hfc.getPeer('grpc://localhost:7051'),
 				chaincodeId : chaincode_id,
 				fcn: 'invoke',
 				args: ['query','b']
