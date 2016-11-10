@@ -924,17 +924,6 @@ test('\n\n ** CryptoSuite_ECDSA_SHA - function tests', function(t) {
 		'CryptoSuite_ECDSA_SHA function tests: setHashAlgorithm("SHA5") should throw Illegal Hash function family'
 	);
 
-	var nonce1 = cryptoUtils.generateNonce();
-	if (t.equal(24, nonce1.length,
-		'CryptoSuite_ECDSA_SHA function tests: generateNonce length'));
-
-	var nonce2 = cryptoUtils.generateNonce();
-	var nonce3 = cryptoUtils.generateNonce();
-	if (nonce1 != nonce2 && nonce2 != nonce3)
-		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateNonce buffers are different');
-	else
-		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateNonce buffers are different');
-
 	t.throws(
 		function() {
 			cryptoUtils.setHashAlgorithm('SHA3');
