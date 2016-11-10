@@ -51,7 +51,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 
 			// send proposal to endorser
 			var request = {
-				targets: [hfc.getPeer('grpc://localhost:7051')],
+				targets: [hfc.getPeer('grpc://localhost:7051'), hfc.getPeer('grpc://localhost:7056')],
 				chaincodePath: testUtil.CHAINCODE_PATH,
 				chaincodeId: chaincode_id,
 				fcn: 'init',
@@ -101,7 +101,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		function() {
 			// send proposal to endorser
 			var request = {
-				targets: [hfc.getPeer('grpc://localhost:7051')],
+				targets: [hfc.getPeer('grpc://localhost:7051'), hfc.getPeer('grpc://localhost:7056')],
 				chaincodeId : chaincode_id,
 				fcn: 'invoke',
 				args: ['move', 'a', 'b','100']
@@ -147,7 +147,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		function() {
 			// send query
 			var request = {
-				targets: hfc.getPeer('grpc://localhost:7051'),
+				targets: [hfc.getPeer('grpc://localhost:7051'), hfc.getPeer('grpc://localhost:7056')],
 				chaincodeId : chaincode_id,
 				fcn: 'invoke',
 				args: ['query','b']
