@@ -570,6 +570,7 @@ test('\n\n ** Member sendDeploymentProposal() tests', function(t) {
 
 	var p1 = m.sendDeploymentProposal({
 		chaincodePath: 'blah',
+		chaincodeId: 'blah',
 		fcn: 'init'
 	}).then(function() {
 		t.fail('Should not have been able to resolve the promise because of missing "peer" parameter');
@@ -587,14 +588,27 @@ test('\n\n ** Member sendDeploymentProposal() tests', function(t) {
 	}).then(function() {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
 	}).catch(function(err) {
-		if (err.message === 'missing chaincodePath in Deployment proposal request') {
+		if (err.message === 'Missing chaincodePath in Deployment proposal request') {
 			t.pass('Successfully caught missing chaincodePath error');
 		} else {
 			t.fail('Failed to catch the missing chaincodePath error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
-	Promise.all([p1, p2])
+	var p3 = m.sendDeploymentProposal({
+		chaincodePath: 'blah',
+		fcn: 'init'
+	}).then(function() {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
+	}).catch(function(err) {
+		if (err.message === 'Missing chaincodeId in the Deployment proposal request') {
+			t.pass('Successfully caught missing chaincodeId error');
+		} else {
+			t.fail('Failed to catch the missing chaincodeId error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3])
 	.then(
 		function(data) {
 			t.end();
@@ -633,7 +647,7 @@ test('\n\n ** Member sendTransactionProposal() tests', function(t) {
 	}).then(function() {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
 	}, function(err) {
-		if (err.message === 'Missing chaincode ID in the Transaction proposal request') {
+		if (err.message === 'Missing chaincodeId in the Transaction proposal request') {
 			t.pass('Successfully caught missing chaincodeid error');
 		} else {
 			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
@@ -704,7 +718,7 @@ test('\n\n ** Member queryByChaincode() tests', function(t) {
 	}).then(function() {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
 	}, function(err) {
-		if (err.message === 'Missing chaincode ID in the Transaction proposal request') {
+		if (err.message === 'Missing chaincodeId in the Transaction proposal request') {
 			t.pass('Successfully caught missing chaincodeid error');
 		} else {
 			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
