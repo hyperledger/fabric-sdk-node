@@ -31,47 +31,49 @@ var keyValStorePath = testUtil.KVS;
 
 // this test uses the FabricCOPImpl to enroll a user, and
 // saves the enrollment materials into a key value store.
-// then uses the Chain class to load the member from the
+// then uses the Client class to load the member from the
 // key value store
 test('Attempt to use FabricCOPServices',function(t){
 
 	var client = new Client();
-	var chain = client.newChain('copTest');
 
 	utils.setConfigSetting('crypto-keysize', 256);
 
-	var kvs = hfc.newDefaultKeyValueStore({
+	hfc.newDefaultKeyValueStore({
 		path: keyValStorePath
-	});
-	client.setStateStore(kvs);
-
-	var copService = new FabricCOPServices('http://localhost:8888');
-	copService.enroll({
-		enrollmentID: 'admin',
-		enrollmentSecret: 'adminpw'
 	})
 	.then(
-		function(admin) {
-			t.pass('Successfully enrolled admin with COP server');
+		function(kvs) {
+			client.setStateStore(kvs);
 
-			var member = new User('admin', chain);
-			member.setEnrollment(admin.key, admin.certificate);
-			return client.setUserContext(member);
-		},
-		function(err){
-			t.fail('Failed to enroll admin with COP server. Error: ' + err);
-			t.end();
-		}
-	).then(
-		function(user) {
-			if (user.getName() === 'admin') {
-				t.pass('Successfully loaded the user from key value store');
-				t.end();
-			}
-		},
-		function(err) {
-			t.fail('Failed to load the user admin from key value store. Error: ' + err);
-			t.end();
-		}
-	);
+			var copService = new FabricCOPServices('http://localhost:8888');
+			copService.enroll({
+				enrollmentID: 'testUser',
+				enrollmentSecret: 'user1'
+			})
+			.then(
+				function(testUser) {
+					t.pass('Successfully enrolled testUser with COP server');
+
+					var member = new User('testUser', client);
+					member.setEnrollment(testUser.key, testUser.certificate);
+					return client.setUserContext(member);
+				},
+				function(err){
+					t.fail('Failed to enroll testUser with COP server. Error: ' + err);
+					t.end();
+				}
+			).then(
+				function(user) {
+					if (user.getName() === 'testUser') {
+						t.pass('Successfully loaded the user from key value store');
+						t.end();
+					}
+				},
+				function(err) {
+					t.fail('Failed to load the user testUser from key value store. Error: ' + err);
+					t.end();
+				}
+			);
+		});
 });

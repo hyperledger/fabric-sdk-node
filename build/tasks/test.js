@@ -6,7 +6,7 @@ var tapColorize = require('tap-colorize');
 var istanbul = require('gulp-istanbul');
 
 gulp.task('pre-test', function() {
-	return gulp.src(['hfc/lib/**/*.js','hfc-cop/lib/**/*.js'])
+	return gulp.src(['node_modules/hfc/lib/**/*.js','node_modules/hfc-cop/lib/**/*.js'])
 		.pipe(istanbul())
 		.pipe(istanbul.hookRequire());
 });
@@ -23,7 +23,7 @@ gulp.task('test', ['pre-test'], function() {
 		'test/unit/endorser-tests.js',
 		'test/unit/orderer-tests.js',
 		'test/unit/orderer-chain-tests.js',
-		'test/unit/end-to-end.js',
+		//'test/unit/end-to-end.js',
 		'test/unit/headless-tests.js'
 	])
 	.pipe(tape({

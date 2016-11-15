@@ -60,10 +60,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		super();
 
 		if (typeof kvs === 'undefined' || kvs === null) {
-			logger.info('This class requires a KeyValueStore to save keys, no store was passed in, using the default store');
-			this._store = utils.newKeyValueStore({
-				path: '/tmp/hfc-key-store'
-			});
+			this._store = null;
 		} else {
 			if (typeof kvs.getValue !== 'function' || typeof kvs.setValue !== 'function') {
 				throw new Error('The "kvs" parameter for this constructor must be an instance of a KeyValueStore implementation');
@@ -132,16 +129,21 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 			var self = this;
 			return new Promise(
 				function(resolve, reject) {
-					self._store.setValue(key.getSKI(), KEYUTIL.getPEM(pair.prvKeyObj, 'PKCS8PRV'))
-					.then(
-						function() {
-							return resolve(key);
-						}
-					).catch(
-						function(err) {
-							reject(err);
-						}
-					);
+					self._getKeyValueStore(self._store)
+					.then (
+						function (store) {
+							logger.debug('generateKey, store.setValue');
+							store.setValue(key.getSKI(), KEYUTIL.getPEM(pair.prvKeyObj, 'PKCS8PRV'))
+							.then(
+								function() {
+									return resolve(key);
+								}
+							).catch(
+								function(err) {
+									reject(err);
+								}
+							);
+						});
 				}
 			);
 		}
@@ -193,20 +195,46 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
 		return new Promise(
 			function(resolve, reject) {
-				self._store.getValue(ski)
-				.then(function(raw) {
-					if (raw !== null) {
-						var privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
-						return resolve(new ECDSAKey(privKey, self._keySize));
-					} else {
-						return resolve(null);
-					}
-				})
-				.catch(function(err) {
-					reject(err);
-				});
+				self._getKeyValueStore(self._store)
+				.then (
+					function (store) {
+						store.getValue(ski)
+						.then(function(raw) {
+							if (raw !== null) {
+								var privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
+								return resolve(new ECDSAKey(privKey, self._keySize));
+							} else {
+								return resolve(null);
+							}
+						})
+						.catch(function(err) {
+							reject(err);
+						});
+					});
 			}
 		);
+	}
+
+	_getKeyValueStore(store) {
+		var self = this;
+		return new Promise(function(resolve, reject) {
+			if (store === null) {
+				logger.info('This class requires a KeyValueStore to save keys, no store was passed in, using the default store');
+				store = utils.newKeyValueStore({
+					path: '/tmp/hfc-key-store'
+				})
+				.then(
+					function (kvs) {
+						logger.debug('_getKeyValueStore returning kvs');
+						self._store = kvs;
+						resolve(kvs);
+					}
+				);
+			} else {
+				logger.debug('_getKeyValueStore resolving store');
+				resolve(store);
+			}
+		});
 	}
 
 	/**

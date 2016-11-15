@@ -29,9 +29,6 @@ var Chain = require('hfc/lib/Chain.js');
 var keyValStorePath = testUtil.KVS;
 
 var client = new hfc();
-client.setStateStore(hfc.newDefaultKeyValueStore({
-	path: testUtil.KVS
-}));
 
 //
 // Orderer via chain setOrderer/getOrderer
@@ -44,45 +41,52 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 	//
 	// Create and configure the test chain
 	//
-	var chain = client.newChain('testChain-orderer-member');
-	try {
-		var orderer = new Orderer('grpc://localhost:7050');
-		chain.addOrderer(orderer);
-		t.pass('Successfully set the new orderer URL');
+	hfc.newDefaultKeyValueStore({
+		path: testUtil.KVS
+	})
+	.then ( function (store) {
+		client.setStateStore(store);
 
-		var orderers = chain.getOrderers();
-		if(orderers !== null && orderers.length > 0 && orderers[0].getUrl() === 'grpc://localhost:7050') {
-			t.pass('Successfully retrieved the new orderer URL from the chain');
-		}
-		else {
-			t.fail('Failed to retieve the new orderer URL from the chain');
-			t.end();
-		}
-
+		var chain = client.newChain('testChain-orderer-member');
 		try {
-			var orderer2 = new Orderer('grpc://localhost:5152');
-			chain.addOrderer(orderer2);
-			t.pass('Successfully updated the orderer URL');
+			var orderer = new Orderer('grpc://localhost:7050');
+			chain.addOrderer(orderer);
+			t.pass('Successfully set the new orderer URL');
 
 			var orderers = chain.getOrderers();
-			if(orderers !== null && orderers.length > 0 && orderers[1].getUrl() === 'grpc://localhost:5152') {
-				t.pass('Successfully retrieved the upated orderer URL from the chain');
-				t.end();
+			if(orderers !== null && orderers.length > 0 && orderers[0].getUrl() === 'grpc://localhost:7050') {
+				t.pass('Successfully retrieved the new orderer URL from the chain');
 			}
 			else {
-				t.fail('Failed to retieve the updated orderer URL from the chain');
+				t.fail('Failed to retieve the new orderer URL from the chain');
+				t.end();
+			}
+
+			try {
+				var orderer2 = new Orderer('grpc://localhost:5152');
+				chain.addOrderer(orderer2);
+				t.pass('Successfully updated the orderer URL');
+
+				var orderers = chain.getOrderers();
+				if(orderers !== null && orderers.length > 0 && orderers[1].getUrl() === 'grpc://localhost:5152') {
+					t.pass('Successfully retrieved the upated orderer URL from the chain');
+					t.end();
+				}
+				else {
+					t.fail('Failed to retieve the updated orderer URL from the chain');
+					t.end();
+				}
+			}
+			catch(err2) {
+				t.fail('Failed to update the order URL ' + err2);
 				t.end();
 			}
 		}
-		catch(err2) {
-			t.fail('Failed to update the order URL ' + err2);
+		catch(err) {
+			t.fail('Failed to set the new order URL ' + err);
 			t.end();
 		}
-	}
-	catch(err) {
-		t.fail('Failed to set the new order URL ' + err);
-		t.end();
-	}
+	});
 });
 
 //

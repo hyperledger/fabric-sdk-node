@@ -21,6 +21,8 @@ var fs = require('fs-extra');
 var path = require('path');
 var utils = require('../utils');
 
+var logger = utils.getLogger('FileKeyValueStore.js');
+
 /**
  * This is a default implementation of the [KeyValueStore]{@link module:api.KeyValueStore} API.
  * It uses files to store the key values.
@@ -32,20 +34,34 @@ var KeyValueStore = class extends api.KeyValueStore {
 	/**
 	 * constructor
 	 *
-	 * @param {Object} options contains a single property "path" which points to the top-level directory
+	 * @param {Object} options contains a single property 'path' which points to the top-level directory
 	 * for the store
 	 */
 	constructor(options) {
+		logger.debug('FileKeyValueStore.js - constructor');
+
 		if (!options || !options.path) {
 			throw new Error('Must provide the path to the directory to hold files for the store.');
 		}
 
+		// Create the keyValStore instance
 		super();
 
+		var self = this;
 		this._dir = options.path;
-		if (!utils.existsSync(this._dir)) {
-			fs.mkdirsSync(this._dir);
-		}
+		return new Promise(function(resolve, reject) {
+			fs.mkdirs(self._dir, function (err) {
+				if (err) {
+					logger.debug('FileKeyValueStore.js - constructor, error creating directory, code: ' + err.code);
+					if (err.code == 'EEXIST') {
+						return resolve(self);
+					} else {
+						return reject(err.code);
+					}
+				}
+				return resolve(self);
+			});
+		});
 	}
 
 	/**
@@ -55,6 +71,8 @@ var KeyValueStore = class extends api.KeyValueStore {
 	 * @ignore
 	 */
 	getValue(name) {
+		logger.debug('FileKeyValueStore -- getValue');
+
 		var self = this;
 
 		return new Promise(function(resolve, reject) {
@@ -62,12 +80,11 @@ var KeyValueStore = class extends api.KeyValueStore {
 			fs.readFile(p, 'utf8', function (err, data) {
 				if (err) {
 					if (err.code !== 'ENOENT') {
-						reject(err);
+						return reject(err);
 					} else {
 						return resolve(null);
 					}
 				}
-
 				return resolve(data);
 			});
 		});
@@ -81,6 +98,8 @@ var KeyValueStore = class extends api.KeyValueStore {
 	 * @ignore
 	 */
 	setValue(name, value) {
+		logger.debug('FileKeyValueStore -- setValue');
+
 		var self = this;
 
 		return new Promise(function(resolve, reject) {
@@ -97,4 +116,3 @@ var KeyValueStore = class extends api.KeyValueStore {
 };
 
 module.exports = KeyValueStore;
-

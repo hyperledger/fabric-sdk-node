@@ -22,6 +22,7 @@ var test = _test(tape);
 
 var path = require('path');
 var util = require('util');
+var testUtil = require('./util.js');
 var hfc = require('hfc');
 var fs = require('fs');
 var execSync = require('child_process').execSync;
@@ -41,10 +42,14 @@ var keyValStorePath1 = 'tmp/keyValStore1';
 var keyValStorePath2 = '/tmp/keyValStore2';
 var keyValStorePath3 = '/tmp/keyValStore3';
 var keyValStorePath4 = '/tmp/keyValStore4';
+var keyValStorePath5 = '/tmp/keyValStore5';
+var keyValStorePath6 = '/tmp/keyValStore6';
 var testKey = 'keyValFileStoreName';
 var testValue = 'secretKeyValue';
 var store1 = '';
 var store2 = '';
+var store3 = '';
+var store4 = '';
 // End: FileKeyValueStore tests ////////
 
 // Chain tests /////////////
@@ -62,6 +67,7 @@ var memberCfg = {
 	'enrollmentID': enrollmentID,
 	'roles': roles
 };
+var _client = null;
 // End: User tests //////
 
 // FabricCoPServices tests /////////
@@ -127,7 +133,6 @@ test('\n\n ** index.js **\n\n', function (t) {
 var Client = hfc;
 var client = new Client();
 var chainKeyValStorePath = 'tmp/chainKeyValStorePath';
-var store3 = '';
 test('\n\n ** lib/Client.js **\n\n', function (t) {
 	var chain = client.newChain('someChain');
 	t.equals(chain.getName(), 'someChain', 'Checking chain names match');
@@ -154,34 +159,36 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 
 	cleanupFileKeyValueStore(chainKeyValStorePath);
 
-	client.setStateStore(Client.newDefaultKeyValueStore({ path: getRelativePath(chainKeyValStorePath) }));
-
-	var exists = utils.existsSync(getAbsolutePath(chainKeyValStorePath));
-	if (exists)
-		t.pass('Client setKeyValueStore test:  Successfully created new directory');
-	else
-		t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + chainKeyValStorePath);
-
-	store3 = client.getStateStore();
-	store3.setValue(testKey, testValue)
-	.then(
-		function (result) {
-			t.pass('Client getStateStore test:  Successfully set value, result: ' + result);
-
-			var exists = utils.existsSync(getAbsolutePath(chainKeyValStorePath), testKey);
+	Client.newDefaultKeyValueStore({ path: getRelativePath(chainKeyValStorePath) })
+	.then (
+		function (kvs) {
+			client.setStateStore(kvs);
+			var exists = utils.existsSync(getAbsolutePath(chainKeyValStorePath));
 			if (exists)
-				t.pass('Client getStateStore test:  Verified the file for key ' + testKey + ' does exist');
+				t.pass('Client setKeyValueStore test:  Successfully created new directory');
 			else
-				t.fail('Client getStateStore test:  Failed to create file for key ' + testKey);
+				t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + chainKeyValStorePath);
+			store3 = client.getStateStore();
+			store3.setValue(testKey, testValue)
+			.then(
+				function (result) {
+					t.pass('Client getStateStore test:  Successfully set value, result: ' + result);
 
-			t.end();
-		}
-	).catch(
-		function (reason) {
-			t.fail('Client getStateStore test:  Failed to set value, reason: ' + reason);
-			t.end();
-		}
-	);
+					var exists = utils.existsSync(getAbsolutePath(chainKeyValStorePath), testKey);
+					if (exists)
+						t.pass('Client getStateStore test:  Verified the file for key ' + testKey + ' does exist');
+					else
+						t.fail('Client getStateStore test:  Failed to create file for key ' + testKey);
+
+					t.end();
+				}
+			).catch(
+				function (reason) {
+					t.fail('Client getStateStore test:  Failed to set value, reason: ' + reason);
+					t.end();
+				}
+		);
+		});
 });
 
 
@@ -218,143 +225,148 @@ test('\n\n ** FileKeyValueStore - read and write test **\n\n', function (t) {
 	if (utils.existsSync(keyValStorePath)) {
 		execSync('rm -rf ' + keyValStorePath);
 	}
-
-	var store = utils.newKeyValueStore({
+	utils.newKeyValueStore({
 		path: keyValStorePath
-	});
-
-	if (utils.existsSync(keyValStorePath)) {
-		t.pass('FileKeyValueStore read and write test: Successfully created new directory for testValueStore');
-
-		store.setValue(testKey, testValue)
-			.then(
-			function (result) {
-				t.pass('FileKeyValueStore read and write test: Successfully set value');
-
-				if (utils.existsSync(path.join(keyValStorePath, testKey))) {
-					t.pass('FileKeyValueStore read and write test: Verified the file for key ' + testKey + ' does exist');
-
-					return store.getValue(testKey);
-				} else {
-					t.fail('FileKeyValueStore read and write test: Failed to create file for key ' + testKey);
-					t.end();
-				}
-			},
-			function (reason) {
-				t.fail('FileKeyValueStore read and write test: Failed to set value, reason: ' + reason);
+	})
+	.then(
+		function (store) {
+			if (utils.existsSync(keyValStorePath)) {
+				t.pass('FileKeyValueStore read and write test: Successfully created new directory for testValueStore');
+			} else {
+				t.fail('FileKeyValueStore read and write test: failed to create new directory for testValueStore');
 				t.end();
-			})
-			.then(
-			// Log the fulfillment value
-			function (val) {
-				if (val != testValue)
-					t.fail('FileKeyValueStore read and write test: ' + val + ' does not equal testValue of ' + testValue);
-				else
-					t.pass('FileKeyValueStore read and write test: Successfully retrieved value');
-
-				t.end();
-			},
-			// Log the rejection reason
-			function (reason) {
-				t.fail('FileKeyValueStore read and write test: Failed getValue, reason: ' + reason);
-				t.end();
-			});
-	} else {
-		t.fail('FileKeyValueStore read and write test: Failed to create new directory: ' + keyValStorePath);
-		t.end();
-	}
-});
-
-test('\n\n ** FileKeyValueStore - constructor test **\n\n', function (t) {
-	cleanupFileKeyValueStore(keyValStorePath1);
-	cleanupFileKeyValueStore(keyValStorePath2);
-
-	store1 = new FileKeyValueStore({ path: getRelativePath(keyValStorePath1) });
-	var exists = utils.existsSync(getAbsolutePath(keyValStorePath1));
-	if (exists)
-		t.pass('FileKeyValueStore constructor test:  Successfully created new directory');
-	else
-		t.fail('FileKeyValueStore constructor test:  Failed to create new directory: ' + keyValStorePath1);
-
-	store2 = new FileKeyValueStore({ path: getRelativePath(keyValStorePath2) });
-	exists = utils.existsSync(getAbsolutePath(keyValStorePath2));
-	if (exists)
-		t.pass('FileKeyValueStore constructor test:  Successfully created new directory');
-	else
-		t.fail('FileKeyValueStore constructor test:  Failed to create new directory: ' + keyValStorePath2);
-
-
-	t.end();
-});
-
-test('\n\n ** FileKeyValueStore - setValue test **\n\n', function (t) {
-	store1.setValue(testKey, testValue)
-		.then(
+			}
+			store1 = store;
+			return store.setValue(testKey, testValue);
+		}
+	).then(
 		function (result) {
-			t.pass('FileKeyValueStore store1 setValue test:  Successfully set value');
+			if (result == testValue) {
+				t.pass('FileKeyValueStore read and write test: Successfully set value');
+			} else {
+				t.fail('FileKeyValueStore read and write test: set value '+result+ 'does not match testValue '+testValue);
+				t.end();
+			}
+			if (utils.existsSync(path.join(keyValStorePath, testKey))) {
+				t.pass('FileKeyValueStore read and write test: Verified the file for key ' + testKey + ' does exist');
 
-			var exists = utils.existsSync(getAbsolutePath(keyValStorePath1), testKey);
-			if (exists) {
-				t.pass('FileKeyValueStore store1 setValue test:  Verified the file for key ' + testKey + ' does exist');
 				return store1.getValue(testKey);
 			} else {
-				t.fail('FileKeyValueStore store1 setValue test:  Failed to create file for key ' + testKey);
+				t.fail('FileKeyValueStore read and write test: Failed to create file for key ' + testKey);
 				t.end();
 			}
 		},
 		function (reason) {
-			t.fail('FileKeyValueStore store1 setValue test:  Failed to set value: ' + reason);
+			t.fail('FileKeyValueStore read and write test: Failed to set value, reason: ' + reason);
 			t.end();
-		})
-		.then(
-		// Log the fulfillment value
-		function (val) {
-			if (val != testValue) {
-				t.fail('FileKeyValueStore store1 getValue test:  ' + val + ' does not equal testValue of ' + testValue);
-			} else {
-				t.pass('FileKeyValueStore store1 getValue test:  Successfully retrieved value');
-			}
-
-			return store2.setValue(testKey, testValue);
-		},
-		function (reason) {
-			t.fail(reason);
-			t.end();
-		})
-		.then(
-		function (result) {
-			t.pass('FileKeyValueStore store2 setValue test:  Successfully set value');
-
-			var exists = utils.existsSync(getAbsolutePath(keyValStorePath2), testKey);
-			if (exists) {
-				t.pass('FileKeyValueStore store2 setValue test:  Verified the file for key ' + testKey + ' does exist');
-
-				return store2.getValue(testKey);
-			} else {
-				t.fail('FileKeyValueStore store2 setValue test:  Failed to create file for key ' + testKey);
-				t.end();
-			}
-		},
-		function (reason) {
-			t.fail('FileKeyValueStore store2 setValue test:  Failed to set value: ' + reason);
-			t.end();
-		})
-		.then(
+		}
+	).then(
 		// Log the fulfillment value
 		function (val) {
 			if (val != testValue)
-				t.fail('FileKeyValueStore store2 getValue test:  ' + val + ' does not equal testValue of ' + testValue);
+				t.fail('FileKeyValueStore read and write test: get value ' + val + ' does not equal testValue of ' + testValue);
 			else
-				t.pass('FileKeyValueStore store2 getValue test:  Successfully retrieved value');
+				t.pass('FileKeyValueStore read and write test: Successfully retrieved value');
 
 			t.end();
-		})
-		.catch(
+		},
 		// Log the rejection reason
 		function (reason) {
-			t.fail(reason);
+			t.fail('FileKeyValueStore read and write test: Failed getValue, reason: ' + reason);
 			t.end();
-		});
+		}
+	).catch(
+		function (err) {
+			t.fail('FileKeyValueStore read and write test, err: ' + err);
+			t.end();
+		}
+	);
+});
+
+test('\n\n ** FileKeyValueStore - constructor setValue getValue test store1 **\n\n', function (t) {
+	cleanupFileKeyValueStore(keyValStorePath1);
+	cleanupFileKeyValueStore(keyValStorePath2);
+
+	var promise1 = new FileKeyValueStore({ path: getRelativePath(keyValStorePath1) })
+	.then(
+		function(store) {
+			var exists = utils.existsSync(getAbsolutePath(keyValStorePath1));
+			if (exists)
+				t.pass('FileKeyValueStore constructor test:  Successfully created new directory');
+			else
+				t.fail('FileKeyValueStore constructor test:  Failed to create new directory: ' + keyValStorePath1);
+
+			store1 = store;
+			return store.setValue(testKey, testValue);
+		}
+	).then(
+		function (result) {
+			t.pass('FileKeyValueStore store1 setValue test:  Successfully set value');
+			if (result == testValue) {
+				t.pass('FileKeyValueStore store1 setValue test store1');
+			} else {
+				t.fail('FileKeyValueStore store1 setValue test store1, result '+result+' does not match testValue '+testValue);
+				t.end();
+			}
+			return store1.getValue(testKey);
+		}
+	).then(
+		function (val) {
+			if (val != testValue)
+				t.fail('FileKeyValueStore read and write test store1: get value ' + val + ' does not equal testValue of ' + testValue);
+			else
+				t.pass('FileKeyValueStore read and write test store1: Successfully retrieved value');
+		}
+	).catch (
+			function(err) {
+				t.fail('FileKeyValueStore store1 setValue test store1, caught err: ' + err);
+			}
+		);
+	t.end();
+});
+
+test('\n\n ** FileKeyValueStore - constructor setValue getValue test store2 **\n\n', function (t) {
+	cleanupFileKeyValueStore(keyValStorePath2);
+
+	var promise2 = new FileKeyValueStore({ path: getRelativePath(keyValStorePath2) })
+	.then(
+		function(store) {
+			var exists = utils.existsSync(getAbsolutePath(keyValStorePath2));
+			if (exists)
+				t.pass('FileKeyValueStore constructor test store2:  Successfully created new directory');
+			else
+				t.fail('FileKeyValueStore constructor test store2:  Failed to create new directory: ' + keyValStorePath2);
+
+			store2 = store;
+			return store.setValue(testKey, testValue);
+		}
+	).then(
+		function (result) {
+			t.pass('FileKeyValueStore store2 setValue test:  Successfully set value');
+			if (result == testValue) {
+				t.pass('FileKeyValueStore store2 setValue test store2');
+			} else {
+				t.fail('FileKeyValueStore store2 setValue test store2, result '+result+' does not match testValue '+testValue);
+				t.end();
+			}
+			return store2.getValue(testKey);
+		}
+	).then(
+		function (val) {
+			if (val != testValue)
+				t.fail('FileKeyValueStore read and write test store2: get value ' + val + ' does not equal testValue of ' + testValue);
+			else
+				t.pass('FileKeyValueStore read and write test store2: Successfully retrieved value');
+
+			t.end();
+		}
+	).catch (
+		// Log the rejection reason
+		function (reason) {
+			t.fail('FileKeyValueStore store2 setValue test store2, reason: ' + reason);
+			t.end();
+		}
+	);
 });
 
 test('\n\n** FileKeyValueStore error check tests **\n\n', function (t) {
@@ -378,24 +390,29 @@ test('\n\n** FileKeyValueStore error check tests **\n\n', function (t) {
 	);
 
 	cleanupFileKeyValueStore(keyValStorePath3);
-	var store3 = new FileKeyValueStore({ path: getRelativePath(keyValStorePath3) });
-	store3.setValue(testKey, testValue)
-		.then(
+	var promise3 = new FileKeyValueStore({ path: getRelativePath(keyValStorePath3) })
+	.then(
+		function(store) {
+			store3 = store;
+			return store.setValue(testKey, testValue);
+		})
+	.then(
 		function (result) {
 			t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Successfully set value');
 
-			var exists = utils.existsSync(getAbsolutePath(keyValStorePath3), testKey);
+			var exists = utils.existsSync(getAbsolutePath(keyValStorePath3));
 			if (exists) {
 				t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Verified the file for key ' + testKey + ' does exist');
 				cleanupFileKeyValueStore(keyValStorePath3);
-				exists = utils.existsSync(getAbsolutePath(keyValStorePath3), testKey);
+				exists = utils.existsSync(getAbsolutePath(keyValStorePath3));
 				t.comment('FileKeyValueStore error check tests:  Delete store & getValue test. Deleted store, exists: ' + exists);
 				return store3.getValue(testKey);
 			} else {
 				t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. Failed to create file for key ' + testKey);
+				t.end();
 			}
 		})
-		.then(
+	.then(
 		// Log the fulfillment value
 		function (val) {
 			if (val === null) {
@@ -407,16 +424,23 @@ test('\n\n** FileKeyValueStore error check tests **\n\n', function (t) {
 		function (reason) {
 			t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue caught unexpected error: ' + reason);
 		})
-		.then(
-		function () {
-			cleanupFileKeyValueStore(keyValStorePath4);
-			var store4 = new FileKeyValueStore({ path: getRelativePath(keyValStorePath4) });
+	.catch(
+		function (err) {
+			t.fail('Failed with unexpected error: ' + err.stack ? err.stack : err);
+			t.end();
+		});
+
+	cleanupFileKeyValueStore(keyValStorePath4);
+	var promise4 = new FileKeyValueStore({ path: getRelativePath(keyValStorePath4) })
+	.then(
+		function (store) {
+			store4 = store;
 			cleanupFileKeyValueStore(keyValStorePath4);
 			var exists = utils.existsSync(getAbsolutePath(keyValStorePath4));
 			t.comment('FileKeyValueStore error check tests:  Delete store & setValue test. Deleted store, exists: ' + exists);
 			return store4.setValue(testKey, testValue);
 		})
-		.then(
+	.then(
 		function (result) {
 			t.fail('FileKeyValueStore error check tests:  Delete store & setValue test.  Successfully set value but should have failed.');
 			t.end();
@@ -425,7 +449,7 @@ test('\n\n** FileKeyValueStore error check tests **\n\n', function (t) {
 			t.pass('FileKeyValueStore error check tests:  Delete store & setValue test.  Failed to set value as expected: ' + reason);
 			t.end();
 		})
-		.catch(
+	.catch(
 		function (err) {
 			t.fail('Failed with unexpected error: ' + err.stack ? err.stack : err);
 			t.end();
@@ -439,9 +463,24 @@ test('\n\n ** Chain - constructor test **\n\n', function (t) {
 		t.pass('Chain constructor test: getName successful');
 	else t.fail('Chain constructor test: getName not successful');
 
+	t.throws(
+		function () {
+			_chain = new Chain(null, client);
+		},
+		/^Error: Failed to create Chain. Missing requirement "name" parameter./,
+		'Chain constructor tests: Missing name parameter'
+	);
+
+	t.throws(
+		function () {
+			_chain = new Chain(chainName, null);
+		},
+		/^Error: Failed to create Chain. Missing requirement "clientContext" parameter./,
+		'Chain constructor tests: Missing clientContext parameter'
+	);
+
 	t.end();
 });
-
 
 test('\n\n ** Chain - method tests **\n\n', function (t) {
 	t.equal(_chain.isSecurityEnabled(), true, 'checking security setting');
@@ -590,7 +629,8 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 
 // User tests /////////
 test('\n\n ** User - constructor set get tests **\n\n', function (t) {
-	var member1 = new User(memberName, _chain);
+	_client = new Client();
+	var member1 = new User(memberName, _client);
 	if (member1.getName() === memberName)
 		t.pass('User constructor set get tests 1: new User getName was successful');
 	else
@@ -628,7 +668,7 @@ test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 	/Invalid parameter. Must have a valid certificate/,
 	'Test invalid enrollment with empty certificate');
 
-	var member2 = new User(memberCfg, _chain);
+	var member2 = new User(memberCfg, _client);
 	if (member2.getName() === enrollmentID)
 		t.pass('User constructor test 2: new User cfg getName was successful');
 	else
@@ -1171,6 +1211,34 @@ test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
 	t.end();
 });
 
+test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
+	cleanupFileKeyValueStore(keyValStorePath5);
+	var keyValueStorePromise = utils.newKeyValueStore({ path: getRelativePath(keyValStorePath5) });
+
+	t.throws(
+		function() {
+			utils.getCryptoSuite(keyValueStorePromise);
+		},
+		/^Error: The "kvs" parameter for this constructor must be an instance of a KeyValueStore implementation/,
+		'CryptoSuite_ECDSA_AES constructor tests: KeyValueStore passed as a promise should throw error'
+	);
+
+	var keyValueStore = null;
+	t.doesNotThrow(
+		function () {
+			keyValueStorePromise
+			.then(
+				function(kvs) {
+					keyValueStore = kvs;
+					utils.getCryptoSuite(keyValueStore);
+				});
+		},
+		null,
+		'CryptoSuite_ECDSA_AES constructor tests: pass in an instance of FileKeyValueStore'
+	);
+	t.end();
+});
+
 var TEST_MSG = 'this is a test message';
 var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative effort created to advance cross-industry blockchain technologies. ' +
 	'It is a global collaboration including leaders in finance, banking, Internet of Things, supply chains, manufacturing and Technology. The Linux ' +
@@ -1262,7 +1330,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	cryptoUtils.generateKey()
 		.then(function (key) {
 			t.equal('secp256r1', key.getPublicKey()._key.curveName,
-				'CryptoSuite_ECDSA_AES constructor tests: cryptoUtils generated public key curveName == secp256r1');
+				'CryptoSuite_ECDSA_AES function tests: cryptoUtils generated public key curveName == secp256r1');
 
 			// test curve 256 with SHA3_256
 			utils.setConfigSetting('crypto-hash-algo', 'SHA3');
@@ -1271,7 +1339,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		})
 		.then(function (key) {
 			t.equal('secp256r1', key.getPublicKey()._key.curveName,
-				'CryptoSuite_ECDSA_AES constructor tests: ccryptoUtils generated public key curveName == secp256r1');
+				'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp256r1');
 
 			t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_256,
 				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
@@ -1293,7 +1361,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		})
 		.then(function (key) {
 			t.equal('secp384r1', key.getPublicKey()._key.curveName,
-				'CryptoSuite_ECDSA_AES constructor tests: ccryptoUtils generated public key curveName == secp384r1');
+				'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp384r1');
 
 			if (!!key._key)
 				t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');

@@ -47,8 +47,16 @@ var Client = class {
 		this._stateStore = null;
 		// TODO, assuming a single CrytoSuite implementation per SDK instance for now
 		// change this to be per Client or per Chain
-		this._cryptoSuite = sdkUtils.getCryptoSuite();
+		this._cryptoSuite = null;
 		this._userContext = null;
+	}
+
+	setCryptoSuite(cryptoSuite) {
+		this._cryptoSuite = cryptoSuite;
+	}
+
+	getCryptoSuite() {
+		return this._cryptoSuite;
 	}
 
     /**
@@ -138,16 +146,45 @@ var Client = class {
 	 */
 	saveUserToStateStore() {
 		var self = this;
-		return this._stateStore.setValue(this._userContext._name, this._userContext.toString())
-		.then(
-			function() {
-				return self._userContext;
+		logger.debug('saveUserToStateStore, userContext: ' + self._userContext);
+		return new Promise(function(resolve, reject) {
+			if (self._userContext && self._userContext._name) {
+				logger.debug('saveUserToStateStore, begin promise stateStore.setValue');
+				self._stateStore.setValue(self._userContext._name, self._userContext.toString())
+				.then(
+					function(result) {
+						logger.debug('saveUserToStateStore, store.setValue, result = ' + result);
+						// FileKeyValueStore returns value.  CouchDBKeyValueStore returns boolean.
+						if (typeof(result) === 'boolean') {
+							if (result == true) {
+								resolve(self._userContext);
+							} else {
+								logger.debug('saveUserToStateStore, store.setValue, reject result');
+								reject(new Error('Failed to save user to state store.'));
+							}
+						} else {
+							resolve(self._userContext);
+						}
+					},
+					function (reason) {
+						logger.debug('saveUserToStateStore, store.setValue, reject reason = ' + reason);
+						reject(reason);
+					}
+				).catch(
+					function(err) {
+						logger.debug('saveUserToStateStore, store.setValue, error: ' +err);
+						return reject(new Error(err));
+					}
+				);
+			} else {
+				logger.debug('saveUserToStateStore Promise rejected');
+				reject(new Error('Cannot save null userContext name to stateStore.'));
 			}
-		);
+		});
 	}
 
 	/**
-	 * Sets an instance of the User class as the security context of this client instance. This user’s
+	 * Sets an instance of the User class as the security context of self client instance. This user’s
 	 * credentials (ECert), or special transaction certificates that are derived from the user's ECert,
 	 * will be used to conduct transactions and queries with the blockchain network.
 	 * Upon setting the user context, the SDK saves the object in a persistence cache if the “state store”
@@ -161,12 +198,23 @@ var Client = class {
 	 * @returns {Promise} Promise of the 'user' object upon successful persistence of the user to the state store
 	 */
 	setUserContext(user, skipPersistence) {
-		this._userContext = user;
-		if (!skipPersistence) {
-			return this.saveUserToStateStore();
-		} else {
-			return Promise.resolve(user);
-		}
+		logger.debug('setUserContext, user: ' + user + ', skipPersistence: ' + skipPersistence);
+		var self = this;
+		return new Promise(function(resolve, reject) {
+			if (user) {
+				self._userContext = user;
+				if (!skipPersistence) {
+					logger.debug('setUserContext begin promise to saveUserToStateStore');
+					resolve(self.saveUserToStateStore());
+				} else {
+					logger.debug('setUserContext, resolved user');
+					resolve(user);
+				}
+			} else {
+				logger.debug('setUserContext, Cannot save null userContext');
+				reject(new Error('Cannot save null userContext.'));
+			}
+		});
 	}
 
 	/**
@@ -201,12 +249,17 @@ var Client = class {
 				if (self._stateStore) {
 					self.loadUserFromStateStore(username).then(
 						function(userContext) {
-							logger.debug('Requested user "%s" loaded successfully from the state store on this Client instance: name - %s', name, name);
-							return self.setUserContext(userContext, true);
+							if (userContext) {
+								logger.debug('Requested user "%s" loaded successfully from the state store on this Client instance: name - %s', name, name);
+								return self.setUserContext(userContext, false);
+							} else {
+								logger.debug('Requested user "%s" not loaded from the state store on this Client instance: name - %s', name, name);
+								resolve(null);
+							}
 						}
 					).then(
 						function(userContext) {
-							return resolve(userContext);
+							resolve(userContext);
 						}
 					).catch(
 						function(err) {
@@ -216,7 +269,7 @@ var Client = class {
 					);
 				} else {
 					// we don't have it in memory or persistence, just return null
-					return resolve(null);
+					resolve(null);
 				}
 			}
 		});
@@ -236,19 +289,22 @@ var Client = class {
 				function(memberStr) {
 					if (memberStr) {
 						// The member was found in the key value store, so restore the state.
-						var newUser = new User(name);
+						var newUser = new User(name, self);
 
-						return newUser.fromString(memberStr)
-						.then(function(data) {
-							logger.info('Successfully loaded user "%s" from local key value store', name);
-							return resolve(data);
-						});
+						return newUser.fromString(memberStr);
 					} else {
-						logger.info('Failed to load user "%s" from local key value store', name);
-						return resolve(null);
+						resolve(null);
 					}
+				})
+			.then(function(data) {
+				if (data) {
+					logger.info('Successfully loaded user "%s" from local key value store', name);
+					resolve(data);
+				} else {
+					logger.info('Failed to load user "%s" from local key value store', name);
+					resolve(null);
 				}
-			).catch(
+			}).catch(
 				function(err) {
 					logger.error('Failed to load user "%s" from local key value store. Error: %s', name, err.stack ? err.stack : err);
 					reject(err);

@@ -41,60 +41,63 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 	var client = new Client();
 	var chain = client.newChain('testChain', client);
 
-	client.setStateStore(Client.newDefaultKeyValueStore({
+	Client.newDefaultKeyValueStore({
 		path: keyValStorePath
-	}));
+	}).
+	then( function (store) {
+		client.setStateStore(store);
 
-	testUtil.getSubmitter(client, t)
-	.then(
-		function(admin) {
-			t.pass('Successfully enrolled user \'admin\'');
+		testUtil.getSubmitter(client, t)
+		.then(
+			function(admin) {
+				t.pass('Successfully enrolled user \'admin\'');
 
-			chain.addPeer(new Peer('grpc://localhost:7051'));
-			chain.addPeer(new Peer('grpc://localhost:7056'));
-			// send proposal to endorser
-			var request = {
-				chaincodePath: testUtil.CHAINCODE_PATH,
-				chaincodeId: 'mycc',
-				fcn: 'init',
-				args: ['a', '100', 'b', '200'],
-				chainId: '**TEST_CHAINID**',
-				txId: 'blah',
-				nonce: utils.getNonce()
-			};
+				chain.addPeer(new Peer('grpc://localhost:7051'));
+				chain.addPeer(new Peer('grpc://localhost:7056'));
+				// send proposal to endorser
+				var request = {
+					chaincodePath: testUtil.CHAINCODE_PATH,
+					chaincodeId: 'mycc',
+					fcn: 'init',
+					args: ['a', '100', 'b', '200'],
+					chainId: '**TEST_CHAINID**',
+					txId: 'blah',
+					nonce: utils.getNonce()
+				};
 
-			return chain.sendDeploymentProposal(request);
-		},
-		function(err) {
-			t.fail('Failed to enroll user \'admin\'. ' + err);
-			t.end();
-		}
-	).then(
-		function(data) {
-			if (Array.isArray(data) && data.length === 3) {
-				let response = data[0];
-
-				if (response[0] && response[0].response && response[0].response.status === 200) {
-					t.pass('Successfully obtained endorsement.');
-				} else {
-					t.fail('Failed to obtain endorsement. Error response: ' + response[0]);
-				}
-			} else {
-				t.fail('Invalid response data. Must be an array carrying proposal response, the original proposal payload and header');
+				return chain.sendDeploymentProposal(request);
+			},
+			function(err) {
+				t.fail('Failed to enroll user \'admin\'. ' + err);
+				t.end();
 			}
+		).then(
+			function(data) {
+				if (Array.isArray(data) && data.length === 3) {
+					let response = data[0];
 
-			t.end();
-		},
-		function(err) {
-			t.fail('Failed to send deployment proposal due to error: ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	).catch(
-		function(err) {
-			t.fail('Failed to send deployment proposal. ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	);
+					if (response[0] && response[0].response && response[0].response.status === 200) {
+						t.pass('Successfully obtained endorsement.');
+					} else {
+						t.fail('Failed to obtain endorsement. Error response: ' + response[0]);
+					}
+				} else {
+					t.fail('Invalid response data. Must be an array carrying proposal response, the original proposal payload and header');
+				}
+
+				t.end();
+			},
+			function(err) {
+				t.fail('Failed to send deployment proposal due to error: ' + err.stack ? err.stack : err);
+				t.end();
+			}
+		).catch(
+			function(err) {
+				t.fail('Failed to send deployment proposal. ' + err.stack ? err.stack : err);
+				t.end();
+			}
+		);
+	});
 });
 
 function rmdir(path) {

@@ -29,6 +29,7 @@
     "intercept-stdout": "^0.1.2",
     "jsrsasign": "6.2.2",
     "log4js": "^0.6.38",
+    "nano": "^6.2.0",
     "require-dir": "^0.3.0",
     "tap-colorize": "^1.2.0",
     "tape": "^4.5.1",

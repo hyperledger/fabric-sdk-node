@@ -69,7 +69,8 @@ var User = class {
 		this._signingIdentity = null;
 
 		this._client = client;
-		this.cryptoPrimitives = sdkUtils.getCryptoSuite();
+
+		this.cryptoPrimitives = client && client.getCryptoSuite() ? client.getCryptoSuite() : sdkUtils.getCryptoSuite();
 
 		// TODO: this should be using config properties obtained from the environment
 		this.mspImpl = new MSP({

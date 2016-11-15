@@ -39,9 +39,9 @@ var FabricCOPServices = class {
 	 * constructor
 	 *
 	 * @param {string} url The endpoint URL for Fabric COP services of the form: "http://host:port" or "https://host:port"
-	 * @param {Object} options Connection options for Fabric COP services
+	 * @param {KeyValueStore} kvs KeyValueStore for CryptoSuite
 	 */
-	constructor(url, opts) {
+	constructor(url, kvs) {
 
 		var endpoint = FabricCOPServices._parseURL(url);
 
@@ -51,7 +51,7 @@ var FabricCOPServices = class {
 			port: endpoint.port
 		});
 
-		this.cryptoPrimitives = utils.getCryptoSuite();
+		this.cryptoPrimitives = utils.getCryptoSuite(kvs);
 
 		logger.info('Successfully constructed Fabric COP service client: endpoint - %j', endpoint);
 

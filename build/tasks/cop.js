@@ -9,6 +9,7 @@ const DEPS = [
 	'hfc/lib/utils.js',
 	'hfc/lib/Config.js',
 	'hfc/lib/Remote.js',
+	'hfc/lib/impl/CouchDBKeyValueStore.js',
 	'hfc/lib/impl/CryptoSuite_ECDSA_AES.js',
 	'hfc/lib/impl/ecdsa/*',
 	'hfc/lib/impl/FileKeyValueStore.js'
