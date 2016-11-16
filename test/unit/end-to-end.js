@@ -55,7 +55,12 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 				chaincodePath: testUtil.CHAINCODE_PATH,
 				chaincodeId: chaincode_id,
 				fcn: 'init',
-				args: ['a', '100', 'b', '200']
+				args: ['a', '100', 'b', '200'],
+				'dockerfile-contents' :
+				'from hyperledger/fabric-ccenv\n' +
+				'COPY . $GOPATH/src/build-chaincode/\n' +
+				'WORKDIR $GOPATH\n\n' +
+				'RUN go install build-chaincode && mv $GOPATH/bin/build-chaincode $GOPATH/bin/%s'
 			};
 
 			return admin.sendDeploymentProposal(request);
@@ -67,7 +72,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 	).then(
 		function(results) {
 			var proposalResponses = results[0];
-			console.log('proposalResponses:'+JSON.stringify(proposalResponses));
+			//console.log('proposalResponses:'+JSON.stringify(proposalResponses));
 			var proposal = results[1];
 			if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 				t.pass(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
@@ -118,7 +123,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			var proposal = results[1];
 			if (proposalResponses[0].response.status === 200) {
 				t.pass('Successfully obtained transaction endorsement.' + JSON.stringify(proposalResponses));
-				return webUser.sendTransaction(proposalResponses[0], proposal);
+				return webUser.sendTransaction(proposalResponses, proposal);
 			} else {
 				t.fail('Failed to obtain transaction endorsement. Error code: ' + status);
 				t.end();

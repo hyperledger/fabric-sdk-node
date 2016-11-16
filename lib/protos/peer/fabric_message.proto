@@ -16,11 +16,33 @@ limitations under the License.
 
 syntax = "proto3";
 
+option go_package = "github.com/hyperledger/fabric/protos/peer";
+
 package protos;
 
-import "fabric_proposal.proto";
-import "fabric_proposal_response.proto";
+// A Message2 encapsulates a payload of the indicated type in this message.
+message Message2 {
 
-service Endorser {
-	rpc ProcessProposal(Proposal) returns (ProposalResponse) {}
+	enum Type {
+
+	    // Undefined exists to prevent invalid message construction.
+	    UNDEFINED = 0;
+
+	    // Handshake messages.
+	    DISCOVERY = 1;
+
+	    // Sent to catch up with existing peers.
+	    SYNC = 2;
+	}
+
+	// Type of this message.
+	Type type = 1;
+
+	// Version indicates message protocol version.
+	int32 version = 2;
+
+	// The payload in this message. The way it should be unmarshaled
+	// depends in the type field
+	bytes payload = 3;
+
 }

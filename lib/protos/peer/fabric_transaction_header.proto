@@ -16,9 +16,11 @@ limitations under the License.
 
 syntax = "proto3";
 
+option go_package = "github.com/hyperledger/fabric/protos/peer";
+
 package protos;
 
-import "google/protobuf/timestamp.proto";
+import "../google/protobuf/timestamp.proto";
 
 // A Header contains fields that are common to all proposals and all
 // transactions, no matter their type.  It can include also type-dependant

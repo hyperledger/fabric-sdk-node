@@ -27,6 +27,7 @@ gulp.task('doc', function () {
 		'./lib/impl/MemberServices.js',
 		'./lib/Chain.js',
 		'./lib/Member.js',
+		'./lib/Peer.js',
 		'./lib/X509Certificate.js'
 	], {read: false})
 	.pipe(jsdoc())

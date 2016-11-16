@@ -16,9 +16,11 @@ limitations under the License.
 
 syntax = "proto3";
 
+option go_package = "github.com/hyperledger/fabric/protos/peer";
+
 package protos;
 
-import "google/protobuf/timestamp.proto";
+import "../google/protobuf/timestamp.proto";
 
 // This message is necessary to facilitate the verification of the signature
 // (in the signature field) over the bytes of the transaction (in the

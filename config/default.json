@@ -1,4 +1,6 @@
 { 
 	"request-timeout" : 3000,
-	"tcert-batch-size" : 10
+	"tcert-batch-size" : 10,
+	"nonce-size" : 24,
+	"dockerfile-contents" : "from hyperledger/fabric-ccenv\nCOPY . $GOPATH/src/build-chaincode/\nWORKDIR $GOPATH\n\nRUN go install build-chaincode && mv $GOPATH/bin/build-chaincode $GOPATH/bin/%s"
 }
