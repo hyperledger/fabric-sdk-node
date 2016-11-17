@@ -22,6 +22,7 @@ var hfc = require('../..');
 var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
+var utils = require('../../lib/utils.js');
 
 var keyValStorePath = testUtil.KVS;
 var keyValStorePath2 = keyValStorePath + '2';
@@ -37,6 +38,10 @@ test('Test enroll() and registrar privileges with registerAndEnroll()', function
 	var expect = '';
 	var found = '';
 	var webUser;
+
+	// need to override the default key size 384 to match the member service backend
+	// otherwise the client will not be able to decrypt the enrollment challenge
+	utils.setConfigSetting('crypto-keysize', 256);
 
 	chain.setKeyValueStore(hfc.newKeyValueStore({
 		path: keyValStorePath
@@ -212,7 +217,9 @@ test('enroll again', function(t) {
 			path: '/tmp/keyValStore'
 		}));
 	chain.setMemberServicesUrl('grpc://localhost:7054');
-	chain.enroll('admin', 'Xurw3yU9zI0l')
+	chain.getMemberServices().enroll({
+		enrollmentID: 'admin',
+		enrollmentSecret: 'Xurw3yU9zI0l'})
 	.then(
 		function(admin) {
 			rmdir(keyValStorePath);

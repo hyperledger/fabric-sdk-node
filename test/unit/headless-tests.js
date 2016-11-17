@@ -26,7 +26,7 @@ var hfc = require('../..');
 var fs = require('fs');
 var execSync = require('child_process').execSync;
 var utils = require('../../lib/utils.js');
-var cryptoSuiteReq = require('../../lib/impl/CryptoSuite_ECDSA_SHA.js');
+var cryptoSuiteReq = require('../../lib/impl/CryptoSuite_ECDSA_AES.js');
 var bunyan = require('bunyan');
 var log4js = require('log4js');
 var intercept = require('intercept-stdout');
@@ -86,7 +86,16 @@ var aPem = '-----BEGIN CERTIFICATE-----'+
 var aHostname = 'atesthostname';
 var aHostnameOverride = 'atesthostnameoverride';
 
-test('\n\n ** Index **', function(t) {
+// specifically set the values to defaults because they may have been overridden when
+// running in the overall test bucket ('gulp test')
+function resetDefaults() {
+	var defaultSettings = require('../../config/default.json');
+	for (var setting in defaultSettings) {
+		hfc.setConfigSetting(setting, defaultSettings[setting]);
+	}
+}
+
+test('\n\n ** Index **\n\n', function(t) {
 	var chain = hfc.getChain('someChain', true);
 	t.equals(chain.getName(),'someChain','Checking chain names match');
 	t.throws(
@@ -111,7 +120,7 @@ test('\n\n ** Index **', function(t) {
  * This test assumes that there is a ./config directory from the running location
  * and that there is file called 'config.json'.
  */
-test('\n\n ** Config **', function(t) {
+test('\n\n ** Config **\n\n', function(t) {
 	// setup the environment
 	process.argv.push('--test-4=argv');
 	process.argv.push('--test-5=argv');
@@ -135,7 +144,7 @@ test('\n\n ** Config **', function(t) {
 // Run the FileKeyValueStore tests
 //
 
-test('\n\n ** FileKeyValueStore - read and write test', function(t){
+test('\n\n ** FileKeyValueStore - read and write test **\n\n', function(t){
 	// clean up
 	if (utils.existsSync(keyValStorePath)) {
 		execSync('rm -rf ' + keyValStorePath);
@@ -187,7 +196,7 @@ test('\n\n ** FileKeyValueStore - read and write test', function(t){
 	}
 });
 
-test('\n\n ** FileKeyValueStore - constructor test', function(t){
+test('\n\n ** FileKeyValueStore - constructor test **\n\n', function(t){
 	cleanupFileKeyValueStore(keyValStorePath1);
 	cleanupFileKeyValueStore(keyValStorePath2);
 
@@ -209,7 +218,7 @@ test('\n\n ** FileKeyValueStore - constructor test', function(t){
 	t.end();
 });
 
-test('\n\n ** FileKeyValueStore - setValue test', function(t) {
+test('\n\n ** FileKeyValueStore - setValue test **\n\n', function(t) {
 	store1.setValue(testKey, testValue)
 	.then(
 		function(result) {
@@ -279,7 +288,7 @@ test('\n\n ** FileKeyValueStore - setValue test', function(t) {
 		});
 });
 
-test('FileKeyValueStore error check tests', function(t){
+test('\n\n** FileKeyValueStore error check tests **\n\n', function(t){
 
 	t.throws(
 		function() {
@@ -356,7 +365,7 @@ test('FileKeyValueStore error check tests', function(t){
 
 
 // Chain tests /////////////
-test('\n\n ** Chain - constructor test', function(t) {
+test('\n\n ** Chain - constructor test **\n\n', function(t) {
 	_chain = new Chain(chainName);
 	if (_chain.getName() === chainName)
 		t.pass('Chain constructor test: getName successful');
@@ -391,7 +400,7 @@ test('\n\n ** Chain - constructor test', function(t) {
 	});
 });
 
-test('\n\n ** Chain - setKeyValueStore getKeyValueStore test', function(t) {
+test('\n\n ** Chain - setKeyValueStore getKeyValueStore test **\n\n', function(t) {
 	cleanupFileKeyValueStore(chainKeyValStorePath);
 
 	_chain.setKeyValueStore(hfc.newKeyValueStore({path: getRelativePath(chainKeyValStorePath)}));
@@ -423,7 +432,7 @@ test('\n\n ** Chain - setKeyValueStore getKeyValueStore test', function(t) {
 		});
 });
 
-test('\n\n ** Chain register methods parameters tests', function(t) {
+test('\n\n ** Chain register methods parameters tests **\n\n', function(t) {
 	let chain = new Chain('testChain1');
 
 	chain.register({})
@@ -452,7 +461,7 @@ test('\n\n ** Chain register methods parameters tests', function(t) {
 	});
 });
 
-test('\n\n ** Chain - method tests', function(t) {
+test('\n\n ** Chain - method tests **\n\n', function(t) {
 	t.doesNotThrow(
 		function() {
 			_chain.setRegistrar('something');
@@ -515,7 +524,7 @@ test('\n\n ** Chain - method tests', function(t) {
 });
 
 // Member tests /////////
-test('\n\n ** Member - constructor set get tests', function(t) {
+test('\n\n ** Member - constructor set get tests **\n\n', function(t) {
 	var member1 = new Member(memberName, _chain);
 	if (member1.getName() === memberName)
 		t.pass('Member constructor set get tests 1: new Member getName was successful');
@@ -565,7 +574,7 @@ test('\n\n ** Member - constructor set get tests', function(t) {
 	t.end();
 });
 
-test('\n\n ** Member sendDeploymentProposal() tests', function(t) {
+test('\n\n ** Member sendDeploymentProposal() tests **\n\n', function(t) {
 	var m = new Member('does not matter', _chain);
 
 	var p1 = m.sendDeploymentProposal({
@@ -621,7 +630,7 @@ test('\n\n ** Member sendDeploymentProposal() tests', function(t) {
 	);
 });
 
-test('\n\n ** Member sendTransactionProposal() tests', function(t) {
+test('\n\n ** Member sendTransactionProposal() tests **\n\n', function(t) {
 	var m = new Member('does not matter', _chain);
 
 	var p1 = m.sendTransactionProposal({
@@ -692,7 +701,7 @@ test('\n\n ** Member sendTransactionProposal() tests', function(t) {
 	);
 });
 
-test('\n\n ** Member queryByChaincode() tests', function(t) {
+test('\n\n ** Member queryByChaincode() tests **\n\n', function(t) {
 	var m = new Member('does not matter', _chain);
 
 	var p1 = m.queryByChaincode({
@@ -763,7 +772,7 @@ test('\n\n ** Member queryByChaincode() tests', function(t) {
 	);
 });
 
-test('\n\n ** Member sendTransaction() tests', function(t) {
+test('\n\n ** Member sendTransaction() tests **\n\n', function(t) {
 	var m = new Member('does not matter', _chain);
 	_chain._orderer = undefined;
 	var p1 = m.sendTransaction()
@@ -812,185 +821,319 @@ test('\n\n ** Member sendTransaction() tests', function(t) {
 	);
 });
 
-test('\n\n ** CryptoSuite_ECDSA_SHA - constructor tests', function(t) {
+var TEST_MSG = 'this is a test message';
+var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative effort created to advance cross-industry blockchain technologies. '+
+'It is a global collaboration including leaders in finance, banking, Internet of Things, supply chains, manufacturing and Technology. The Linux '+
+'Foundation hosts Hyperledger as a Collaborative Project under the foundation. Why Create the Project? Not since the Web itself has a technology '+
+'promised broader and more fundamental revolution than blockchain technology. A blockchain is a peer-to-peer distributed ledger forged by consensus, '+
+'combined with a system for “smart contracts” and other assistive technologies. Together these can be used to build a new generation of transactional '+
+'applications that establishes trust, accountability and transparency at their core, while streamlining business processes and legal constraints. '+
+'Think of it as an operating system for marketplaces, data-sharing networks, micro-currencies, and decentralized digital communities. It has the potential '+
+'to vastly reduce the cost and complexity of getting things done in the real world. Only an Open Source, collaborative software development approach can '+
+'ensure the transparency, longevity, interoperability and support required to bring blockchain technologies forward to mainstream commercial adoption. That '+
+'is what Hyperledger is about – communities of software developers building blockchain frameworks and platforms.';
+
+var TEST_KEY_PRIVATE = '93f15b31e3c3f3bddcd776d9219e93d8559e31453757b79e193a793cbd239573';
+var TEST_KEY_PUBLIC = '04f46815aa00fe2ba2814b906aa4ef1755caf152658de8997a6a858088296054baf45b06b2eba514bcbc37ae0c0cc7465115d36429d0e0bff23dc40e3760c10aa9';
+var TEST_MSG_SIGNATURE_SHA2_256 = '3046022100a6460b29373fa16ee96172bfe04666140405fdef78182280545d451f08547736022100d9022fe620ceadabbef1714b894b8d6be4b74c0f9c573bd774871764f4f789c9';
+var TEST_LONG_MSG_SIGNATURE_SHA2_256 = '3045022073266302d730b07499aabd0f88f12c8749a0f90144034dbc86a8cd742722ad29022100852346f93e50911008ab97afc452f83c5985a19fa3aa6d58f615c03bddaa90a1';
+
+var jsrsa = require('jsrsasign');
+var KEYUTIL = jsrsa.KEYUTIL;
+var ECDSA = jsrsa.ECDSA;
+
+var ecdsaKey = require('../../lib/impl/ecdsa/key.js');
+
+test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function(t) {
+	resetDefaults();
+
 	var cryptoUtils = utils.getCryptoSuite();
 
-	t.equal(256, cryptoUtils.getSecurityLevel(),
-		'CryptoSuite_ECDSA_SHA constructor tests: crytoUtils default getSecurityLevel() == 256');
+	t.equal(true, (typeof cryptoUtils._ecdsaCurve !== 'undefined' && typeof cryptoUtils._ecdsa !== 'undefined'),
+		'CryptoSuite_ECDSA_AES function tests: default instance has "_ecdsaCurve" and "_ecdsa" properties');
 
-	var keyPair = cryptoUtils.generateKeyPair();
-	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA constructor tests: cryptoUtils keyPair.pubKeyObj.curveName == secp256r1');
+	// test default curve 384 with SHA3_384
+	t.equal(cryptoUtils.hash(TEST_MSG), '9e9c2e5edf6cbc0b512807a8efa2917daff71b83e04dee28fcc00b1a1dd935fb5afc5eafa06bf55bd64792a597e2a8f3',
+		'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with default key size which should be 384');
 
-	t.equal(256, cryptoUtils.getSecurityLevel(),
-		'CryptoSuite_ECDSA_SHA constructor tests: cryptoReq default getSecurityLevel() == 256');
+	t.equal(cryptoUtils.hash(TEST_LONG_MSG), '47a90d6721523682e09b81da0a60e6ee1faf839f0503252316638daf038cf682c0a842edaf310eb0f480a2e181a07af0',
+		'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with default key size which should be 384');
 
-	keyPair = cryptoUtils.generateKeyPair();
-	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA constructor tests: cryptoReq keyPair.pubKeyObj.curveName == secp256r1');
+	cryptoUtils.generateKey()
+	.then(function(key) {
+		t.equal('secp384r1', key.getPublicKey()._key.curveName,
+			'CryptoSuite_ECDSA_AES constructor tests: cryptoUtils generated public key curveName == secp384r1');
+
+		// test curve 256 with SHA3_256
+		utils.setConfigSetting('crypto-keysize', 256);
+		cryptoUtils = utils.getCryptoSuite();
+		return cryptoUtils.generateKey();
+	})
+	.then(function(key) {
+		t.equal('secp256r1', key.getPublicKey()._key.curveName,
+			'CryptoSuite_ECDSA_AES constructor tests: ccryptoUtils generated public key curveName == secp256r1');
+
+		t.equal(cryptoUtils.hash(TEST_MSG), '7daeff454f7e91e3cd2d1c1bd5fcd1b6c9d4d5fffc6c327710d8fae7b06ee4a3',
+			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
+
+		t.equal(cryptoUtils.hash(TEST_LONG_MSG), '577174210438a85ae4311a62e5fccf2441b960013f5691993cdf38ed6ba0c84f',
+			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
+
+		// test SHA2_256
+		utils.setConfigSetting('crypto-hash-algo', 'SHA2');
+		cryptoUtils = utils.getCryptoSuite();
+
+		t.equal(cryptoUtils.hash(TEST_MSG), '4e4aa09b6d80efbd684e80f54a70c1d8605625c3380f4cb012b32644a002b5be',
+			'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with key size 256');
+
+		t.equal(cryptoUtils.hash(TEST_LONG_MSG), '0d98987f5e4e3ea611f0e3d768c594ff9aac25404265d73554d12c86d7f6fbbc',
+			'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with key size 256');
+
+
+		return cryptoUtils.generateKey();
+	})
+	.then(function(key) {
+		if (!!key._key)
+			t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
+		else
+			t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
+
+		utils.setConfigSetting('crypto-hash-algo', 'sha3'); //lower or upper case is allowed
+		cryptoUtils = utils.getCryptoSuite();
+		t.equal(cryptoUtils.hash(TEST_MSG), '7daeff454f7e91e3cd2d1c1bd5fcd1b6c9d4d5fffc6c327710d8fae7b06ee4a3',
+			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
+
+		// test generation options
+		return cryptoUtils.generateKey({ephemeral: true});
+	})
+	.then(function(key) {
+		if (!!key._key)
+			t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
+		else
+			t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
+
+		t.throws(
+			function() {
+				utils.setConfigSetting('crypto-hash-algo', 'sha2');
+				utils.setConfigSetting('crypto-keysize', 384);
+				cryptoUtils = utils.getCryptoSuite();
+			},
+			/^Error: Unsupported/,
+			'CryptoSuite_ECDSA_AES function tests: SHA2 and 384 should throw '+
+			'Error: Unsupported hash algorithm and security level pair sha2-384'
+		);
+
+		t.throws(
+			function() {
+				utils.setConfigSetting('crypto-keysize', 123);
+				cryptoUtils = utils.getCryptoSuite();
+			},
+			/^Error: Illegal key size/,
+			'CryptoSuite_ECDSA_AES function tests: setting key size 123 should throw Illegal level error'
+		);
+
+		t.throws(
+			function() {
+				utils.setConfigSetting('crypto-keysize', 256);
+				utils.setConfigSetting('crypto-hash-algo', '12345');
+				cryptoUtils = utils.getCryptoSuite();
+			},
+			/^Error: Unsupported hash algorithm/,
+			'CryptoSuite_ECDSA_AES function tests: setting hash algo to 12345 should throw Illegal Hash function family'
+		);
+
+		utils.setConfigSetting('crypto-keysize', 256);
+		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
+		cryptoUtils = utils.getCryptoSuite();
+		return cryptoUtils.generateKey();
+	})
+	.then(function(key) {
+		t.throws(
+			function() {
+				utils.setConfigSetting('crypto-keysize', 384);
+				cryptoUtils = utils.getCryptoSuite();
+				cryptoUtils.decrypt(key, 'fakeCipherText');
+			},
+			/^Error: Invalid key./,
+			'CryptoSuite_ECDSA_AES function tests: decrypt should throw ' +
+			'"Error: Invalid key. It\'s security does not match the current security level 384 256"'
+		);
+
+		utils.setConfigSetting('crypto-keysize', 256);
+		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
+		cryptoUtils = utils.getCryptoSuite();
+		return cryptoUtils.generateKey();
+	})
+	.then(function(key) {
+		t.throws(
+			function() {
+				cryptoUtils.decrypt(key, 'fakeCipherText');
+			},
+			/^Error: Illegal cipherText length/,
+			'CryptoSuite_ECDSA_AES function tests: decrypt should throw ' +
+			'"Error: Illegal cipherText length: 14 must be > 97"'
+		);
+
+		utils.setConfigSetting('crypto-keysize', 256);
+		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
+		cryptoUtils = utils.getCryptoSuite();
+		return cryptoUtils.generateKey();
+	})
+	.then(function(key) {
+		t.throws(
+			function() {
+				cryptoUtils.decrypt(key, '66616b654369706865725465787431323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930');
+			},
+			/^TypeError: Invalid hex string/,
+			'CryptoSuite_ECDSA_AES function tests: sign() should throw ' +
+			'"TypeError: Invalid hex string"'
+		);
+
+		t.throws(
+			function() {
+				cryptoUtils.sign();
+			},
+			/A valid key is required to sign/,
+			'CryptoSuite_ECDSA_AES function tests: sign() should throw "A valid key is required to sign"'
+		);
+
+		t.throws(
+			function() {
+				cryptoUtils.sign('dummy key');
+			},
+			/A valid message is required to sign/,
+			'CryptoSuite_ECDSA_AES function tests: sign() should throw "A valid message is required to sign"'
+		);
+
+		var testSignature = function(msg) {
+			var sig = cryptoUtils.sign(key, msg);
+			if (sig) {
+				t.pass('Valid signature object generated from sign()');
+
+				// using internal calls to verify the signature
+				var pubKey = cryptoUtils._ecdsa.keyFromPublic(key.getPublicKey()._key.pubKeyHex, 'hex');
+				// note that the signature is generated on the hash of the message, not the message itself
+				t.equal(pubKey.verify(cryptoUtils.hash(msg), new Buffer(sig.toDER())), true,
+					'CryptoSuite_ECDSA_AES function tests: sign() method produced proper signature that was successfully verified');
+			} else {
+				t.fail('Invalid signature generated by sign()');
+			}
+		};
+
+		testSignature(TEST_MSG);
+		testSignature(TEST_LONG_MSG);
+
+		t.throws(
+			function() {
+				cryptoUtils.verify();
+			},
+			/A valid key is required to verify/,
+			'CryptoSuite_ECDSA_AES function tests: verify() should throw "A valid key is required to verify"'
+		);
+
+		t.throws(
+			function() {
+				cryptoUtils.verify('dummy key');
+			},
+			/A valid signature is required to verify/,
+			'CryptoSuite_ECDSA_AES function tests: verify() should throw "A valid signature is required to verify"'
+		);
+
+		t.throws(
+			function() {
+				cryptoUtils.verify('dummy key', 'dummy signature');
+			},
+			/A valid message is required to verify/,
+			'CryptoSuite_ECDSA_AES function tests: verify() should throw "A valid message is required to verify"'
+		);
+
+		utils.setConfigSetting('crypto-keysize', 256);
+		utils.setConfigSetting('crypto-hash-algo', 'SHA2');
+		cryptoUtils = utils.getCryptoSuite();
+
+		var testVerify = function(sig, msg) {
+			// manually construct a key based on the saved privKeyHex and pubKeyHex
+			var f = new ECDSA({ curve: 'secp256r1' });
+			f.setPrivateKeyHex(TEST_KEY_PRIVATE);
+			f.setPublicKeyHex(TEST_KEY_PUBLIC);
+			f.isPrivate = true;
+			f.isPublic = false;
+
+			t.equal(cryptoUtils.verify(new ecdsaKey(f, 256), sig, msg), true,
+				'CryptoSuite_ECDSA_AES function tests: verify() method');
+		};
+
+		testVerify(TEST_MSG_SIGNATURE_SHA2_256, TEST_MSG);
+		testVerify(TEST_LONG_MSG_SIGNATURE_SHA2_256, TEST_LONG_MSG);
+
+		t.end();
+	})
+	.catch(function(err) {
+		t.fail('Unexpected error: ' + err.stack ? err.stack : err);
+		t.end();
+	});
+});
+
+test('\n\n ** ECDSA Key Impl tests **\n\n', function(t) {
+	t.throws(
+		function() {
+			var k = new ecdsaKey('dummy private key');
+		},
+		/The ECDSA Key class requires the key size/,
+		'ECDSA Impl test: catch missing key size'
+	);
+
+	t.throws(
+		function() {
+			var k = new ecdsaKey('dummy private key', 'dummy public key', 123);
+		},
+		/The ECDSA Key class only supports key sizes 256 and 384/,
+		'ECDSA Impl test: catch invalid key size'
+	);
+
+	t.doesNotThrow(
+		function() {
+			var k = new ecdsaKey('dummy private key', 256);
+		},
+		null,
+		'ECDSA Impl test: construct private key with size 256'
+	);
+
+	t.doesNotThrow(
+		function() {
+			var k = new ecdsaKey('dummy private key', 384);
+		},
+		null,
+		'ECDSA Impl test: construct private key with size 384'
+	);
+
+	// test private keys
+	var pair1 = KEYUTIL.generateKeypair('EC', 'secp256r1');
+	var key1 = new ecdsaKey(pair1.prvKeyObj, 256);
+	t.equal(key1.getSKI().length, 64, 'Checking generated SKI hash string for 256 curve keys');
+
+	t.throws(
+		function() {
+			key1.toBytes();
+		},
+		/This is a private key/,
+		'Checking that a private key instance does not allow toBytes()'
+	);
+
+	var pair2 = KEYUTIL.generateKeypair('EC', 'secp384r1');
+	var key2 = new ecdsaKey(pair2.prvKeyObj, 384);
+	t.equal(key2.getSKI().length, 96, 'Checking generated SKI hash string for 384 curve keys');
+
+	t.equal(key1.isSymmetric() || key2.isSymmetric(), false, 'Checking if key is symmetric');
+	t.equal(key1.isPrivate() && key2.isPrivate(), true, 'Checking if key is private');
+
+	t.equal(key1.getPublicKey().isPrivate(), false, 'Checking isPrivate() logic');
+	t.equal(key1.getPublicKey().toBytes().length, 182, 'Checking toBytes() output');
 
 	t.end();
 });
 
-test('\n\n ** CryptoSuite_ECDSA_SHA - function tests', function(t) {
-	var cryptoUtils = utils.getCryptoSuite();
-
-	t.equal('ECDSA', cryptoUtils.getPublicKeyAlgorithm(),
-		'CryptoSuite_ECDSA_SHA function tests: default getPublicKeyAlgorithm == "ECDSA"');
-
-	// Test SHA3-256 //
-	cryptoUtils.setHashAlgorithm('SHA3');
-	if (t.equal('SHA3', cryptoUtils.getHashAlgorithm(),
-		'CryptoSuite_ECDSA_SHA function tests: set/getHashAlgorithm("SHA3")'));
-	cryptoUtils.setSecurityLevel(256);
-	t.equal(256, cryptoUtils.getSecurityLevel(),
-		'CryptoSuite_ECDSA_SHA function tests: set/getSecurityLevel == 256');
-	var keyPair = cryptoUtils.generateKeyPair();
-	if (!!keyPair.pubKeyObj && !!keyPair.prvKeyObj)
-		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
-	else
-		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
-
-	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair public curveName == secp256r1');
-	t.equal('secp256r1', keyPair.prvKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair private curveName == secp256r1');
-
-	// Test SHA3-384 //
-	cryptoUtils.setHashAlgorithm('SHA3');
-	cryptoUtils.setSecurityLevel(384);
-	t.equal(384, cryptoUtils.getSecurityLevel(),
-		'CryptoSuite_ECDSA_SHA function tests: set/getSecurityLevel == 384');
-	keyPair = cryptoUtils.generateKeyPair();
-	if (!!keyPair.pubKeyObj && !!keyPair.prvKeyObj)
-		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
-	else
-		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
-
-	t.equal('secp384r1', keyPair.pubKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair public curveName == secp384r1');
-	t.equal('secp384r1', keyPair.prvKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair private curveName == secp384r1');
-
-	// Test SHA2-256 //
-	cryptoUtils.setSecurityLevel(256);
-	cryptoUtils.setHashAlgorithm('SHA2');
-	t.equal(256, cryptoUtils.getSecurityLevel(),
-		'CryptoSuite_ECDSA_SHA function tests: set/getSecurityLevel == 256');
-	keyPair = cryptoUtils.generateKeyPair();
-	if (!!keyPair.pubKeyObj && !!keyPair.prvKeyObj)
-		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
-	else
-		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
-
-	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair public curveName == secp256r1');
-	t.equal('secp256r1', keyPair.prvKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair private curveName == secp256r1');
-
-	cryptoUtils.setHashAlgorithm('sha2');//lower or upper case is allowed
-	if (t.equal('sha2', cryptoUtils.getHashAlgorithm(),
-		'CryptoSuite_ECDSA_SHA function tests: set/getHashAlgorithm("sha2")'));
-	keyPair = cryptoUtils.generateKeyPair();
-	if (!!keyPair.pubKeyObj && !!keyPair.prvKeyObj)
-		t.pass('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
-	else
-		t.fail('CryptoSuite_ECDSA_SHA function tests: verify generateKeyPair pub/prvKeyObj');
-
-	t.equal('secp256r1', keyPair.pubKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair public curveName == secp256r1');
-	t.equal('secp256r1', keyPair.prvKeyObj.curveName,
-		'CryptoSuite_ECDSA_SHA function tests: cryptoReq generateKeyPair private curveName == secp256r1');
-
-	t.throws(
-		function() {
-			cryptoUtils.setHashAlgorithm('SHA2');
-			cryptoUtils.setSecurityLevel(384);
-		},
-		/^Error: Unsupported/,
-		'CryptoSuite_ECDSA_SHA function tests: SHA2 and 384 should throw '+
-		'Error: Unsupported hash algorithm and security level pair sha2-384'
-	);
-
-	t.throws(
-		function() {
-			cryptoUtils.setSecurityLevel(123);
-		},
-		/^Error: Illegal level/,
-		'CryptoSuite_ECDSA_SHA function tests: setSecurityLevel(123) should throw Illegal level error'
-	);
-
-	//SHA2 or SHA3
-
-	t.throws(
-		function() {
-			cryptoUtils.setHashAlgorithm(23456);//not a string is illegal
-		},
-		/^Error: Illegal Hash function family/,
-		'CryptoSuite_ECDSA_SHA function tests: setHashAlgorithm(23456) should throw Illegal Hash function family'
-	);
-
-	t.throws(
-		function() {
-			cryptoUtils.setHashAlgorithm('SHA5');
-		},
-		/^Error: Illegal Hash function family/,
-		'CryptoSuite_ECDSA_SHA function tests: setHashAlgorithm("SHA5") should throw Illegal Hash function family'
-	);
-
-	t.throws(
-		function() {
-			cryptoUtils.setHashAlgorithm('SHA3');
-			cryptoUtils.setSecurityLevel(256);
-			var keyPair = cryptoUtils.generateKeyPair();
-			cryptoUtils.setSecurityLevel(384);
-			cryptoUtils.asymmetricDecrypt(keyPair.prvKeyObj, 'fakeCipherText');
-		},
-		/^Error: Invalid key./,
-		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' +
-		'"Error: Invalid key. It\'s security does not match the current security level 384 256"'
-	);
-
-	t.throws(
-		function() {
-			cryptoUtils.setHashAlgorithm('SHA3');
-			cryptoUtils.setSecurityLevel(256);
-			var keyPair = cryptoUtils.generateKeyPair();
-			cryptoUtils.asymmetricDecrypt(keyPair.prvKeyObj, 'fakeCipherText');
-		},
-		/^Error: Illegal cipherText length/,
-		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' +
-		'"Error: Illegal cipherText length: 14 must be > 97"'
-	);
-
-	t.throws(
-		function() {
-			cryptoUtils.setHashAlgorithm('SHA3');
-			cryptoUtils.setSecurityLevel(256);
-			var keyPair = cryptoUtils.generateKeyPair();
-			cryptoUtils.asymmetricDecrypt(keyPair.prvKeyObj, '66616b654369706865725465787431323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930');
-		},
-		/^TypeError: Invalid hex string/,
-		'CryptoSuite_ECDSA_SHA function tests: asymmetricDecrypt should throw ' +
-		'"TypeError: Invalid hex string"'
-	);
-
-	cryptoUtils.setSecurityLevel(256);
-	cryptoUtils.setHashAlgorithm('SHA2');
-	keyPair = cryptoUtils.generateKeyPair();
-	var kps = cryptoUtils.getKeyPairForSigning(keyPair.prvKeyObj.prvKeyHex, 'hex');
-	t.equal(keyPair.prvKeyObj.prvKeyHex.toString(16, 2), kps.priv.toString(16, 2),
-		'CryptoSuite_ECDSA_SHA function tests: getKeyPairForSigning prvKeyHex == priv');
-
-	var pubHex = kps.getPublic('hex');
-	var encryptKey = cryptoUtils.getKeyPairForEncryption(pubHex, 'hex');
-	//getKeyPairForEncryption (previously ecdsaKeyFromPublic)
-	t.ok(encryptKey.pub, 'Encrypted public key of getKeyPairForEncryption created');
-
-	t.end();
-});
-
-test('\n\n ** Remote node tests **', function(t) {
+test('\n\n ** Remote node tests **\n\n', function(t) {
 	console.log('\n * REMOTE *');
 	//Peer: secure grpcs, requires opts.pem
 	var url = 'grpcs://'+aHostname+':aport';
@@ -1071,17 +1214,6 @@ test('\n\n ** Remote node tests **', function(t) {
 	t.equal(aHostname, peer._endpoint.addr, 'GRPC Options tests: new Peer grpc with opts _endpoint.addr created');
 	t.ok(peer._endpoint.creds, 'GRPC Options tests: new Peer grpc with opts _endpoint.creds created');
 	t.equal(peer.getUrl(), url, 'checking that getURL works');
-
-	// the grpc client did not throw an error as expected.
-	// peer.sendProposal('bad data')
-	// .then(
-	// 	function(results) {
-	// 		t.fail('This will not happen');
-	// 	})
-	// .catch(
-	// 	function(err) {
-	// 		t.pass('This should fail');
-	// 	});
 
 	t.throws(
 		function() {
@@ -1178,104 +1310,6 @@ test('\n\n ** Remote node tests **', function(t) {
 		'PEM encoded certificate is required.'
 	);
 
-	console.log('\n * MemberServices *');
-	//MemberServices: secure grpcs, requires opts.pem
-	url = 'grpcs://'+aHostname+':aport';
-	var opts = {pem: aPem};
-	var memberServices = null;
-	t.doesNotThrow(
-		function() {
-			memberServices = new MemberServices(url, opts);
-		},
-		null,
-		'Check not passing any GRPC options.'
-	);
-
-	opts = {};
-	t.throws(
-		function() {
-			url = 'grpcs://'+aHostname+':aport';
-			memberServices = new MemberServices(url,opts);
-		},
-		/^Error: PEM encoded certificate is required./,
-		'GRPCS Options tests: new Peer http should throw '+
-		'PEM encoded certificate is required.'
-	);
-
-	t.throws(
-		function() {
-			url = 'grpcs://'+aHostname+':aport';
-			memberServices = new MemberServices(url);
-		},
-		/^Error: PEM encoded certificate is required./,
-		'GRPCS Options tests: new Peer http should throw '+
-		'PEM encoded certificate is required.'
-	);
-
-	opts = {pem: aPem, 'ssl-target-name-override': aHostnameOverride};
-	memberServices = new MemberServices(url,opts);
-
-	t.equal(aHostname, memberServices._endpoint.addr, 'GRPC Options tests: new MemberServices grpcs with opts created');
-	t.equal(memberServices.toString(),' MemberServices : {url:grpcs://'+aHostname+':aport}', 'Checking that memberServices.toString() reports correctly');
-
-	t.doesNotThrow(
-		function() {
-			memberServices.setSecurityLevel(256);
-		},
-		null,
-		'check setting the security level'
-	);
-	t.equal(memberServices.getSecurityLevel(),256, 'checking the security level');
-	t.doesNotThrow(
-			function() {
-				memberServices.setHashAlgorithm('SHA3');
-			},
-			null,
-			'check setting the HashAlgorithm'
-		);
-	t.equal(memberServices.getHashAlgorithm(),'SHA3', 'checking the HashAlgorithm');
-	t.ok(memberServices.getCrypto(),'checking get crypto');
-
-	t.equal(MemberServices._rolesToMask('bad'),1, 'rolesToMask = 1');
-	t.equal(MemberServices._rolesToMask(['client']),1, 'rolesToMask = 1');
-	t.equal(MemberServices._rolesToMask(['peer']),2, 'rolesToMask = 2');
-	t.equal(MemberServices._rolesToMask(['validator']),4, 'rolesToMask = 4');
-	t.equal(MemberServices._rolesToMask(['auditor']),8, 'rolesToMask = 8');
-
-
-	//MemberServices: insecure grpc, opts.pem optional
-	url = 'grpc://'+aHostname+':aport';
-	opts = null;
-	memberServices = new MemberServices(url,opts);
-	t.equal(aHostname, memberServices._endpoint.addr, 'GRPC Options tests: new MemberServices grpc with opts = null _endpoint.addr created');
-	t.ok(memberServices._endpoint.creds, 'GRPC Options tests: new MemberServices grpc with opts = null _endpoint.creds created');
-
-	opts = {pem: aPem, 'ssl-target-name-override': aHostnameOverride};
-	memberServices = new MemberServices(url,opts);
-
-	t.equal(aHostname, memberServices._endpoint.addr, 'GRPC Options tests: new MemberServices grpc with opts _endpoint.addr created');
-	t.ok(memberServices._endpoint.creds, 'GRPC Options tests: new MemberServices grpc with opts _endpoint.creds created');
-
-	t.throws(
-		function() {
-			url = 'http://'+aHostname+':aport';
-			memberServices = new MemberServices(url, opts);
-		},
-		/^InvalidProtocol: Invalid protocol: http./,
-		'GRPC Options tests: new MemberServices http should throw '+
-		'InvalidProtocol: Invalid protocol: http. URLs must begin with grpc:// or grpcs://.'
-	);
-
-	t.throws(
-		function() {
-			url = 'https://'+aHostname+':aport';
-			memberServices = new MemberServices(url, opts);
-		},
-		/^InvalidProtocol: Invalid protocol: https./,
-		'GRPC Options tests: new MemberServices https should throw '+
-		'InvalidProtocol: Invalid protocol: http. URLs must begin with grpc:// or grpcs://.'
-	);
-
 	t.end();
 });
 
@@ -1308,7 +1342,7 @@ function testLogger(t, ignoreLevels) {
 	}
 }
 
-test('\n\n ** Logging utility tests - built-in logger', function(t) {
+test('\n\n ** Logging utility tests - built-in logger **\n\n', function(t) {
 	// test 1: default logging levels for console logging
 	testLogger(t);
 
@@ -1472,7 +1506,7 @@ test('\n\n ** Logging utility tests - built-in logger', function(t) {
 	}, 1000);
 });
 
-test('\n\n ** Logging utility tests - test setting an external logger based on bunyan', function(t) {
+test('\n\n ** Logging utility tests - test setting an external logger based on bunyan **\n\n', function(t) {
 	var logger = bunyan.createLogger({name: 'bunyanLogger'});
 	hfc.setLogger(logger);
 
@@ -1480,7 +1514,7 @@ test('\n\n ** Logging utility tests - test setting an external logger based on b
 	t.end();
 });
 
-test('\n\n ** Logging utility tests - test setting an external logger based on log4js', function(t) {
+test('\n\n ** Logging utility tests - test setting an external logger based on log4js **\n\n', function(t) {
 	var logger = log4js.getLogger();
 	hfc.setLogger(logger);
 
@@ -1488,7 +1522,7 @@ test('\n\n ** Logging utility tests - test setting an external logger based on l
 	t.end();
 });
 
-test('\n\n ** Logging utility tests - test setting an invalid external logger', function(t) {
+test('\n\n ** Logging utility tests - test setting an invalid external logger **\n\n', function(t) {
 	// construct an invalid logger
 	var logger = {
 		inf: function() { console.log('info'); },
