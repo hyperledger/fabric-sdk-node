@@ -176,7 +176,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 				if (response[0] && response[0].response && response[0].response.status === 200) {
 					t.pass('Successfully obtained endorsement.');
 				} else {
-					t.fail('Failed to obtain endorsement. Error code: ' + status);
+					t.fail('Failed to obtain endorsement. Error response: ' + response[0]);
 				}
 			} else {
 				t.fail('Invalid response data. Must be an array carrying proposal response and the original proposal payload');
