@@ -28,12 +28,17 @@ var hfc = require('../..');
 var util = require('util');
 var grpc = require('grpc');
 var testUtil = require('./util.js');
+var utils = require('../../lib/utils.js');
 
 var chain = hfc.newChain('testChain-e2e');
 var webUser;
 var chaincode_id = 'mycc1';
 
 testUtil.setupChaincodeDeploy();
+
+// need to override the default key size 384 to match the member service backend
+// otherwise the client will not be able to decrypt the enrollment challenge
+utils.setConfigSetting('crypto-keysize', 256);
 
 chain.setKeyValueStore(hfc.newKeyValueStore({
 	path: testUtil.KVS
