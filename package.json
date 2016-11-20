@@ -28,7 +28,7 @@
     "grpc": "^1.0.0",
     "js-sha3": "^0.5.1",
     "json-stringify-safe": "^5.0.1",
-    "jsrsasign": "^5.0.10",
+    "jsrsasign": "^6.2.2",
     "jssha": "^2.1.0",
     "lodash": "^4.15.0",
     "nconf": "^0.8.4",
