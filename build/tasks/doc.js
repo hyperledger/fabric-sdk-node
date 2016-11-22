@@ -26,6 +26,7 @@ gulp.task('doc', function () {
 		'./lib/impl/CryptoSuite_ECDSA_AES.js',
 		'./lib/impl/ecdsa/key.js',
 		'./lib/impl/MemberServices.js',
+		'./lib/impl/FabricCOPImpl.js',
 		'./lib/Chain.js',
 		'./lib/Member.js',
 		'./lib/Peer.js',

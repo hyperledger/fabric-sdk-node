@@ -474,12 +474,19 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 	t.equal(_chain.getRegistrar(), 'something', 'checking the getRegistrar');
 	t.doesNotThrow(
 		function () {
-			_chain.setMemberServicesUrl('grpc://somehost.com:9999');
+			_chain.setMemberServicesUrl('http://somehost.com:9999');
 		},
 		null,
 		'checking the setMemberServicesUrl'
 	);
-	t.equal(_chain.getMemberServices().toString(), ' MemberServices : {url:grpc://somehost.com:9999}', 'checking the getMemberServices');
+	t.doesNotThrow(
+		function () {
+			_chain.setMemberServicesUrl('https://somehost.com:9999');
+		},
+		null,
+		'checking the setMemberServicesUrl'
+	);
+	t.equal(_chain.getMemberServices().toString(), ' FabricCOPServices : {hostname: somehost.com, port: 9999}', 'checking the getMemberServices');
 	t.equal(_chain.isSecurityEnabled(), true, 'checking security setting');
 	t.doesNotThrow(
 		function () {
