@@ -40,6 +40,10 @@ testUtil.setupChaincodeDeploy();
 // otherwise the client will not be able to decrypt the enrollment challenge
 utils.setConfigSetting('crypto-keysize', 256);
 
+// need to override the default hash algorithm (SHA3) to SHA2 (aka SHA256 when combined
+// with the key size 256 above), in order to match what the peer and COP use
+utils.setConfigSetting('crypto-hash-algo', 'SHA2');
+
 chain.setKeyValueStore(hfc.newKeyValueStore({
 	path: testUtil.KVS
 }));
