@@ -19,7 +19,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var hfc = require('../..');
-var FabricCOPServices = require('../../lib/impl/FabricCOPImpl').FabricCOPServices;
+var FabricCOPServices = require('../../lib/impl/FabricCOPImpl');
 
 var utils = require('../../lib/utils.js');
 var testUtil = require('./util.js');
