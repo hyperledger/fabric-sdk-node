@@ -23,6 +23,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var path = require('path');
+var http = require('http');
 
 var hfc = require('../..');
 var util = require('util');
@@ -40,15 +41,19 @@ testUtil.setupChaincodeDeploy();
 // otherwise the client will not be able to decrypt the enrollment challenge
 utils.setConfigSetting('crypto-keysize', 256);
 
+// need to override the default hash algorithm (SHA3) to SHA2 (aka SHA256 when combined
+// with the key size 256 above), in order to match what the peer and COP use
+utils.setConfigSetting('crypto-hash-algo', 'SHA2');
+
 chain.setKeyValueStore(hfc.newKeyValueStore({
 	path: testUtil.KVS
 }));
 
-chain.setMemberServicesUrl('grpc://localhost:7054');
+chain.setMemberServicesUrl('http://localhost:8888');
 chain.setOrderer('grpc://localhost:5151');
 
 test('End-to-end flow of chaincode deploy, transaction invocation, and query', function(t) {
-	chain.enroll('admin', 'Xurw3yU9zI0l')
+	chain.enroll('admin', 'adminpw')
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
@@ -120,11 +125,19 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		function(results) {
 			var proposalResponses = results[0];
 			var proposal = results[1];
-			if (proposalResponses[0].response.status === 200) {
+			if (proposalResponses[0].response && proposalResponses[0].response.status && proposalResponses[0].response.status === 200) {
 				t.pass('Successfully obtained transaction endorsement to create marbles.' + JSON.stringify(proposalResponses));
 				return webUser.sendTransaction(proposalResponses, proposal);
+			} else if (proposalResponses[0] instanceof Error) {
+				if (proposalResponses[0].message && proposalResponses[0].message.indexOf('This marble arleady exists') >= 0) {
+					t.pass('Marble already exists, continue');
+					return Promise.resolve({Status: 'SUCCESS'});
+				} else {
+					t.fail('Proposal response contained errors. Error: ' + proposalResponses[0]);
+					t.end();
+				}
 			} else {
-				t.fail('Failed to obtain transaction endorsement to create marbles. Error code: ' + status);
+				t.fail('Failed to obtain transaction endorsement to create marbles. Error code: ' + proposalResponses[0].response.status);
 				t.end();
 			}
 		},
@@ -195,7 +208,46 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		}
 	).then(
 		function() {
-			t.end();
+			var options = {
+				hostname: 'localhost',
+				port: 5984,
+				path: '/system/_find',
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			};
+
+			var query = JSON.stringify({
+				'selector' : {
+					'docType': 'Marble',
+					'owner': 'jerry'
+				}
+			});
+
+			var post_req = http.request(options, function(res) {
+				res.setEncoding('utf8');
+				var raw = '';
+				res.on('data', function (chunk) {
+					raw += chunk;
+				}).on('error', function(e) {
+					t.fail('Could not query for marble owner. Error: ' + e);
+					t.end();
+				}).on('end', function() {
+					var json = JSON.parse(raw);
+					if (json.docs && Array.isArray(json.docs) && json.docs[0].owner === 'jerry') {
+						t.pass('Successfully queries marble owned by "jerry"');
+						t.end();
+					} else {
+						t.fail('Did not understand the response from query. raw data: ' + raw);
+						t.end();
+					}
+				});
+			});
+
+			// post the data
+			post_req.write(query);
+			post_req.end();
 		},
 		function(err) {
 			t.end();
