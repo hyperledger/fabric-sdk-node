@@ -52,7 +52,7 @@ chain.setMemberServicesUrl('http://localhost:8888');
 chain.setOrderer('grpc://localhost:5151');
 
 test('End-to-end flow of chaincode deploy, transaction invocation, and query', function(t) {
-	chain.enroll('sdk', 'sdkpw')
+	chain.enroll('admin', 'adminpw')
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
