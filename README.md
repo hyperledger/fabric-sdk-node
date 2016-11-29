@@ -23,9 +23,8 @@ Clone the project and launch the following commands in the project root folder t
 The following tests require setting up a local blockchain network as the target. Because v1.0 is still in active development, you still need the vagrant environment to build the necessary Docker images needed to run the network. Follow the steps below to set it up.
 * `cd fabric/devenv`
 * Open the file `Vagrantfile` and insert the following statement below the existing `config.vm.network` statements:
-  * `  config.vm.network :forwarded_port, guest: 5151, host: 5151 # orderer service`
-  * `  config.vm.network :forwarded_port, guest: 7056, host: 7056 # Openchain gRPC services`
-  * `  config.vm.network :forwarded_port, guest: 7058, host: 7058 # GRPCCient gRPC services`
+  * `  config.vm.network :forwarded_port, guest: 7056, host: 7056 # gRPC services port for peer vp1`
+  * `  config.vm.network :forwarded_port, guest: 8888, host: 8888 # http port for COP server`
 
 * run `vagrant up` to launch the vagrant VM
 * Once inside vagrant, `cd $GOPATH/src/github.com/hyperledger/fabric`

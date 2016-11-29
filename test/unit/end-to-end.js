@@ -36,20 +36,17 @@ var chaincode_id = 'mycc1';
 
 testUtil.setupChaincodeDeploy();
 
-// need to override the default key size 384 to match the member service backend
-// otherwise the client will not be able to decrypt the enrollment challenge
-utils.setConfigSetting('crypto-keysize', 256);
-
 // need to override the default hash algorithm (SHA3) to SHA2 (aka SHA256 when combined
 // with the key size 256 above), in order to match what the peer and COP use
 utils.setConfigSetting('crypto-hash-algo', 'SHA2');
+utils.setConfigSetting('crypto-keysize', 256);
 
 chain.setKeyValueStore(hfc.newKeyValueStore({
 	path: testUtil.KVS
 }));
 
 chain.setMemberServicesUrl('http://localhost:8888');
-chain.setOrderer('grpc://localhost:5151');
+chain.setOrderer('grpc://localhost:7050');
 
 test('End-to-end flow of chaincode deploy, transaction invocation, and query', function(t) {
 	chain.enroll('admin', 'adminpw')

@@ -23,10 +23,16 @@ var hfc = require('../..');
 var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
+var utils = require('../../lib/utils.js');
 
 var keyValStorePath = testUtil.KVS;
 
 testUtil.setupChaincodeDeploy();
+
+// need to override the default hash algorithm (SHA3) to SHA2 (aka SHA256 when combined
+// with the key size 256 above), in order to match what the peer and COP use
+utils.setConfigSetting('crypto-hash-algo', 'SHA2');
+utils.setConfigSetting('crypto-keysize', 256);
 
 //
 //Run the failing endorser test
@@ -39,9 +45,9 @@ test('\n\n** TEST ** endorser test - missing targets', function(t) {
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('grpc://localhost:7054');
+	chain.setMemberServicesUrl('http://localhost:8888');
 
-	chain.enroll('admin', 'Xurw3yU9zI0l')
+	chain.enroll('admin', 'adminpw')
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
@@ -92,9 +98,9 @@ test('\n\n** TEST ** endorse transaction missing chaincodeId test', function(t) 
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('grpc://localhost:7054');
+	chain.setMemberServicesUrl('http://localhost:8888');
 
-	chain.enroll('admin', 'Xurw3yU9zI0l')
+	chain.enroll('admin', 'adminpw')
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
@@ -146,9 +152,9 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('grpc://localhost:7054');
+	chain.setMemberServicesUrl('http://localhost:8888');
 
-	chain.enroll('admin', 'Xurw3yU9zI0l')
+	chain.enroll('admin', 'adminpw')
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
