@@ -130,6 +130,30 @@ var Member = class {
 	}
 
 	/**
+	 * Get the enrollment object for this User instance
+	 * @returns {Enrollment} the enrollment object
+	 */
+	getEnrollment() {
+		return this._enrollment;
+	}
+
+	/**
+	 * Set the enrollment object for this User instance
+	 * @param {Enrollment} the enrollment object
+	 */
+	setEnrollment(enrollment) {
+		if (typeof enrollment.privateKey === 'undefined' || enrollment.privateKey === null || enrollment.privateKey === '') {
+			throw new Error('Invalid enrollment object. Must have a valid private key.');
+		}
+
+		if (typeof enrollment.certificate === 'undefined' || enrollment.certificate === null || enrollment.certificate === '') {
+			throw new Error('Invalid enrollment object. Must have a valid certificate.');
+		}
+
+		this._enrollment = enrollment;
+	}
+
+	/**
 	 * Get the transaction certificate (tcert) batch size, which is the number of tcerts retrieved
 	 * from member services each time (i.e. in a single batch).
 	 * @returns {int} The tcert batch size.

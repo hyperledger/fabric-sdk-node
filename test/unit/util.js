@@ -28,7 +28,7 @@ function getSubmitter(username, password, chain, t) {
 						t.pass('Successfully enrolled user \'' + username + '\'');
 
 						var member = new Member(username, chain);
-						member._enrollment = enrollment;
+						member.setEnrollment(enrollment);
 						return member.saveState();
 					}
 				).then(

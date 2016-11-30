@@ -507,7 +507,31 @@ test('\n\n ** Member - constructor set get tests **\n\n', function (t) {
 	if (member1.getAffiliation() === affiliation)
 		t.pass('Member constructor get set tests 1: setAffiliation getAffiliation was successful');
 	else
-		t.pass('Member constructor get set tests 1: setAffiliation getAffiliation was not successful');
+		t.fail('Member constructor get set tests 1: setAffiliation getAffiliation was not successful');
+
+	t.throws(function() {
+		member1.setEnrollment( {privateKey: undefined} );
+	},
+	/Invalid enrollment object. Must have a valid private key/,
+	'Test invalid enrollment without private key');
+
+	t.throws(function() {
+		member1.setEnrollment( {privateKey: ''} );
+	},
+	/Invalid enrollment object. Must have a valid private key/,
+	'Test invalid enrollment with empty private key');
+
+	t.throws(function() {
+		member1.setEnrollment( {privateKey: 'dummy', certificate: undefined} );
+	},
+	/Invalid enrollment object. Must have a valid certificate/,
+	'Test invalid enrollment without certificate');
+
+	t.throws(function() {
+		member1.setEnrollment( {privateKey: 'dummy', certificate: ''} );
+	},
+	/Invalid enrollment object. Must have a valid certificate/,
+	'Test invalid enrollment with empty certificate');
 
 	var member2 = new Member(memberCfg, _chain);
 	if (member2.getName() === enrollmentID)
@@ -525,7 +549,7 @@ test('\n\n ** Member - constructor set get tests **\n\n', function (t) {
 	if (member1.getAffiliation() === affiliation)
 		t.pass('Member constructor get set tests 1: new Member cfg getAffiliation was successful');
 	else
-		t.pass('Member constructor get set tests 1: new Member cfg getAffiliation was not successful');
+		t.fail('Member constructor get set tests 1: new Member cfg getAffiliation was not successful');
 
 	if (member2.getChain().getName() === chainName)
 		t.pass('Member constructor get set tests 2: getChain new Member cfg getName was successful');

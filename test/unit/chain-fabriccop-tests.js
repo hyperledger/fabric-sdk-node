@@ -53,7 +53,7 @@ test('Attempt to use FabricCOPServices',function(t){
 			t.pass('Successfully enrolled admin with COP server');
 
 			var member = new Member('admin', chain);
-			member._enrollment = admin;
+			member.setEnrollment(admin);
 			return member.saveState();
 		},
 		function(err){
