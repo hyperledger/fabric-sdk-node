@@ -21,7 +21,6 @@ var utils = require('./utils.js');
 var urlParser = require('url');
 var net = require('net');
 var util = require('util');
-var MemberServices = utils.getMemberService();
 var Member = require('./Member.js');
 var Orderer = require('./Orderer.js');
 
@@ -51,12 +50,6 @@ var Chain = class {
 
 		// The number of tcerts to get in each batch
 		this._tcertBatchSize = utils.getConfigSetting('tcert-batch-size',200);
-
-		// The registrar (if any) that registers & enrolls new members/users
-		this._registrar = null; // Member
-
-		// The member services used for this chain
-		this._memberServices = null; // MemberServices
 
 		// The key-val store used for this chain
 		this._keyValStore = null; // KeyValueStore;
@@ -91,54 +84,10 @@ var Chain = class {
 	}
 
 	/**
-	 * Get the member whose credentials are used to register and enroll other users, or undefined if not set.
-	 * @returns [Member]{@link module:api.Member} The member whose credentials are used to perform registration, or undefined if not set.
-	 */
-	getRegistrar() {
-		return this._registrar;
-	}
-
-	/**
-	 * Set the member whose credentials are used to register and enroll other users.
-	 * @param [Member]{@link module:api.Member} registrar The member whose credentials are used to perform registration.
-	 */
-	setRegistrar(registrar) {
-		this._registrar = registrar;
-	}
-
-	/**
-	 * Set the member services URL
-	 * @param {string} url Member services URL of the form: 'grpc://host:port' or 'grpcs://host:port'
-	 * @param {Object} opts Object with all connections settings including the 'pem' value of the TLS certificate for the local client
-	 */
-	setMemberServicesUrl(url, opts) {
-		this.setMemberServices(new MemberServices(url, opts));
-	}
-
-	/**
-	 * Get the member service associated this chain.
-	 * @returns [MemberService]{@link module:api.MemberService} Return the current member service, or undefined if not set.
-	 */
-	getMemberServices() {
-		return this._memberServices;
-	}
-
-	/**
-	 * Set the member service associated this chain.  This allows the default implementation of member service to be overridden.
-	 * @param [MemberService]{@link module:api.MemberService} an instance of the MemberServices class
-	 */
-	setMemberServices(memberServices) {
-		this._memberServices = memberServices;
-		if (memberServices instanceof MemberServices) {
-			this.cryptoPrimitives = memberServices.getCrypto();
-		}
-	}
-
-	/**
 	 * Determine if security is enabled.
 	 */
 	isSecurityEnabled() {
-		return this._memberServices !== undefined;
+		return this._keyValStore !== undefined;
 	}
 
 	/**
@@ -211,11 +160,6 @@ var Chain = class {
 				return reject(new Error('No key value store was found.  You must first call Chain.configureKeyValueStore or Chain.setKeyValueStore'));
 			}
 
-			if (!self._memberServices) {
-				logger.error('No member services was found on this Chain instance: name - "%s"', self._name);
-				return reject(new Error('No member services was found.  You must first call Chain.configureMemberServices or Chain.setMemberServices'));
-			}
-
 			self._getMemberHelper(name).then(
 				function(member) {
 					logger.debug('Requested member "%s" resolved successfully on this Chain instance: name - %s', name, self._name);
@@ -271,116 +215,6 @@ var Chain = class {
 			).catch(
 				function(err) {
 					logger.error('Failed to load requested member "%s" locally in cache or key value store. Error: %s', name, err.stack ? err.stack : err);
-					reject(err);
-				}
-			);
-		});
-	}
-
-	/**
-	 * Register a user or other member type with the chain.
-	 * @param registrationRequest Registration information.
-	 * @returns Promise for a 'true' status on successful registration
-	 */
-	register(registrationRequest) {
-		if (!registrationRequest.enrollmentID) {
-			logger.error('Invalid parameter to "register()" function, object must include property "enrollmentID"');
-			return Promise.reject(new Error('Invalid parameter to "register()" function, object must include property "enrollmentID"'));
-		}
-
-		var self = this;
-
-		return new Promise(function(resolve, reject) {
-			self.getMember(registrationRequest.enrollmentID)
-			.then(
-				function(member) {
-					if (member.isRegistered()) {
-						return resolve(member._enrollmentSecret);
-					} else {
-						return member.register(registrationRequest);
-					}
-				}
-			).then(
-				function(enrollmentSecret) {
-					return resolve(enrollmentSecret);
-				}
-			).catch(
-				function(err) {
-					logger.error('Failed to register member "%s". Error: %s', registrationRequest.enrollmentID, err.stack ? err.stack : err);
-					reject(err);
-				}
-			);
-		});
-	}
-
-	/**
-	 * Enroll a user or other identity which has already been registered.
-	 * If the user has already been enrolled, this will still succeed.
-	 * @param name The name of the user or other member to enroll.
-	 * @param secret The secret of the user or other member to enroll.
-	 * @param cb The callback to return the user or other member.
-	 */
-	enroll(name, secret) {
-		logger.debug('Chain.enroll - start name:'+name);
-		var self = this;
-
-		return new Promise(function(resolve, reject) {
-			var _member;
-			self.getMember(name)
-			.then(
-				function(member) {
-					_member = member;
-					logger.debug('Chain.enroll - call member.enroll');
-					return _member.enroll(secret);
-				}
-			).then(
-				function() {
-					logger.debug('Chain.enroll - resolved - member:'+name);
-					return resolve(_member);
-				}
-			).catch(
-				function(err) {
-					logger.error('Failed to enroll member "%s". Error: %s', name, err.stack ? err.stack : err);
-					reject(err);
-				}
-			);
-		});
-	}
-
-	/**
-	 * Register and enroll a user or other member type.
-	 * This assumes that a registrar with sufficient privileges has been set.
-	 * @param registrationRequest Registration information.
-	 * @params
-	 */
-	registerAndEnroll(registrationRequest) {
-		if (!registrationRequest.enrollmentID) {
-			logger.error('Invalid parameter to "registerAndEnroll()" function, object must include property "enrollmentID"');
-			return Promise.reject(new Error('Invalid parameter to "registerAndEnroll()" function, object must include property "enrollmentID"'));
-		}
-
-		var self = this;
-
-		return new Promise(function(resolve, reject) {
-			var _member;
-
-			self.getMember(registrationRequest.enrollmentID)
-			.then(
-				function(member) {
-					if (member.isEnrolled()) {
-						return resolve(member);
-					}
-
-					_member = member;
-					return _member.registerAndEnroll(registrationRequest);
-				}
-			).then(
-				function() {
-					return resolve(_member);
-				}
-			).catch(
-				function(err) {
-					logger.error('Failed to register and enroll member "%s". Error: %s', registrationRequest.enrollmentID, err.stack ? err.stack : err);
 					reject(err);
 				}
 			);

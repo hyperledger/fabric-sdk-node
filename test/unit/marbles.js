@@ -25,11 +25,10 @@ var test = _test(tape);
 var path = require('path');
 var http = require('http');
 
-var hfc = require('../..');
+var hfc = require('hfc');
 var util = require('util');
-var grpc = require('grpc');
 var testUtil = require('./util.js');
-var utils = require('../../lib/utils.js');
+var utils = require('hfc/lib/utils.js');
 
 var chain = hfc.newChain('testChain-e2e');
 var webUser;
@@ -42,15 +41,18 @@ testUtil.setupChaincodeDeploy();
 utils.setConfigSetting('crypto-hash-algo', 'SHA2');
 utils.setConfigSetting('crypto-keysize', 256);
 
+// need to override the default hash algorithm (SHA3) to SHA2 (aka SHA256 when combined
+// with the key size 256 above), in order to match what the peer and COP use
+utils.setConfigSetting('crypto-hash-algo', 'SHA2');
+
 chain.setKeyValueStore(hfc.newKeyValueStore({
 	path: testUtil.KVS
 }));
 
-chain.setMemberServicesUrl('http://localhost:8888');
 chain.setOrderer('grpc://localhost:7050');
 
 test('End-to-end flow of chaincode deploy, transaction invocation, and query', function(t) {
-	chain.enroll('admin', 'adminpw')
+	testUtil.getSubmitter(chain, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');

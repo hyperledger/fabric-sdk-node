@@ -18,17 +18,17 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('../..');
+var hfc = require('hfc');
 var util = require('util');
 var fs = require('fs');
 var path = require('path');
 var testUtil = require('./util.js');
-var utils = require('../../lib/utils.js');
+var utils = require('hfc/lib/utils.js');
 
 var keyValStorePath = testUtil.KVS;
 
 
-var FabricCOPServices = require('../../lib/impl/FabricCOPImpl');
+var FabricCOPServices = require('hfc-cop/lib/FabricCOPImpl');
 var FabricCOPClient = FabricCOPServices.FabricCOPClient;
 
 /**
@@ -174,8 +174,8 @@ test('FabricCOPClient: Test enroll with missing parameters', function (t) {
 		});
 });
 
-var enrollmentID = 'testUser';
-var enrollmentSecret = 'user1';
+var enrollmentID = 'sdk';
+var enrollmentSecret = 'sdkpw';
 var csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabriccop/enroll-csr.pem'));
 
 

@@ -6,7 +6,7 @@ var tapColorize = require('tap-colorize');
 var istanbul = require('gulp-istanbul');
 
 gulp.task('pre-test', function() {
-	return gulp.src(['lib/**/*.js'])
+	return gulp.src(['hfc/lib/**/*.js','hfc-cop/lib/**/*.js'])
 		.pipe(istanbul())
 		.pipe(istanbul.hookRequire());
 });
@@ -17,11 +17,19 @@ gulp.task('test', ['pre-test'], function() {
 	// enrollment scenarios (good and bad calls). then the rest of the
 	// tests will re-used the same key value store that has saved the
 	// user certificates so they can interact with the network
-	return gulp.src(['test/unit/ca-tests.js', 'test/unit/endorser-tests.js', 'test/unit/orderer-tests.js', 'test/unit/orderer-member-tests.js', 'test/unit/end-to-end.js', 'test/unit/headless-tests.js'])
-		.pipe(tape({
-			reporter: tapColorize()
-		}))
-		.pipe(istanbul.writeReports());
+	return gulp.src([
+		// 'test/unit/ca-tests.js',
+		'test/unit/chain-fabriccop-tests.js',
+		'test/unit/endorser-tests.js',
+		'test/unit/orderer-tests.js',
+		'test/unit/orderer-member-tests.js',
+		'test/unit/end-to-end.js',
+		'test/unit/headless-tests.js'
+	])
+	.pipe(tape({
+		reporter: tapColorize()
+	}))
+	.pipe(istanbul.writeReports());
 });
 
 gulp.task('test-headless', ['pre-test'], function() {

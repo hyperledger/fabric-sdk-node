@@ -1,6 +1,14 @@
 coverage
 docs/gen
 node_modules/*
+hfc/node_modules/*
+hfc-cop/node_modules/*
+hfc-cop/lib/api.js
+hfc-cop/lib/utils.js
+hfc-cop/lib/Config.js
+hfc-cop/lib/Remote.js
+hfc-cop/lib/hash.js
+hfc-cop/lib/impl/*
 test/fixtures/src/github.com/example_cc/Dockerfile
 test/fixtures/src/github.com/marbles_cc/Dockerfile
 npm-shrinkwrap.json
@@ -8,3 +16,5 @@ npm-debug.log
 tmp
 .project
 .DS_Store
+hfc/.DS_Store
+hfc-cop/.DS_Store

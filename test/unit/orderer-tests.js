@@ -18,12 +18,12 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('../..');
+var hfc = require('hfc');
 var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
 
-var Orderer = require('../../lib/Orderer.js');
+var Orderer = require('hfc/lib/Orderer.js');
 
 var keyValStorePath = testUtil.KVS;
 
@@ -34,7 +34,7 @@ var keyValStorePath = testUtil.KVS;
 // expected in this case.
 //
 test('orderer happy path test', function(t) {
-	var client = new Orderer('grpc://127.0.0.1:5151');
+	var client = new Orderer('grpc://127.0.0.1:7050');
 
 	client.sendBroadcast('some data')
 	.then(

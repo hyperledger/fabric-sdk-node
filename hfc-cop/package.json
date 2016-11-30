@@ -1,0 +1,35 @@
+{
+  "name": "hfc-cop",
+  "version": "0.0.1",
+  "main": "./lib/FabricCOPImpl.js",
+  "repository": {
+    "type": "gerrit",
+    "url": "http://gerrit.hyperledger.org/r/fabric-sdk-node"
+  },
+  "engines": {
+    "node": ">=4.5.0",
+    "npm": ">=2.15.9"
+  },
+  "engine-strict": true,
+  "engineStrict": true,
+  "dependencies": {
+    "asn1": "https://github.com/mcavage/node-asn1",
+    "elliptic": "^6.2.3",
+    "fs-extra": ">=0.30.0 <0.31.0",
+    "grpc": "^1.0.0",
+    "js-sha3": "^0.5.1",
+    "jsrsasign": "^6.2.2",
+    "jssha": "^2.1.0",
+    "nconf": "^0.8.4",
+    "sjcl": "1.0.3",
+    "sjcl-codec": "0.1.1",
+    "tar-fs": "^1.13.0",
+    "url": "^0.11.0",
+    "util": "^0.10.3"
+  },
+  "license": "Apache-2.0",
+  "licenses": [{
+    "type": "Apache-2.0",
+    "url": "https://github.com/hyperledger/fabric/blob/master/LICENSE"
+  }]
+}

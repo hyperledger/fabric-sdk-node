@@ -18,40 +18,67 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('../..');
-var FabricCOPServices = require('../../lib/impl/FabricCOPImpl');
+var hfc = require('hfc');
+var FabricCOPServices = require('hfc-cop/lib/FabricCOPImpl');
 
-var utils = require('../../lib/utils.js');
+var utils = require('hfc/lib/utils.js');
+var Member = require('hfc/lib/Member.js');
 var testUtil = require('./util.js');
 
 var keyValStorePath = testUtil.KVS;
 
-
+// this test uses the FabricCOPImpl to enroll a user, and
+// saves the enrollment materials into a key value store.
+// then uses the Chain class to load the member from the
+// key value store
 test('Attempt to use FabricCOPServices',function(t){
-
 
 	var chain = hfc.newChain('copTest');
 
 	utils.setConfigSetting('crypto-keysize', 256);
-	chain.setKeyValueStore(hfc.newKeyValueStore({
+
+	var kvs = hfc.newKeyValueStore({
 		path: keyValStorePath
-	}));
+	});
+	chain.setKeyValueStore(kvs);
 
 	var copService = new FabricCOPServices('http://localhost:8888');
-
-	chain.setMemberServices(copService);
-
-	chain.enroll('admin', 'adminpw')
+	copService.enroll({
+		enrollmentID: 'admin',
+		enrollmentSecret: 'adminpw'
+	})
 	.then(
 		function(admin) {
 			console.log(admin);
-			t.pass('Successfully enrolled admin');
+			t.pass('Successfully enrolled admin with COP server');
+
+			var member = new Member('admin', chain);
+			member._enrollment = admin;
+			return member.saveState();
 		},
 		function(err){
-			t.fail(err);
+			t.fail('Failed to enroll admin with COP server. Error: ' + err);
+			t.end();
+		}
+	).then(
+		function(success) {
+			// attempt to load the persisted member from the kvs using the Chain object
+			return chain.getUser('admin');
+		},
+		function(err) {
+			t.fail('Failed to save member to key value store. Error: ' + err);
+			t.end();
+		}
+	).then(
+		function(user) {
+			if (user.getName() === 'admin') {
+				t.pass('Successfully loaded the user from key value store');
+				t.end();
+			}
+		},
+		function(err) {
+			t.fail('Failed to load the user admin from key value store. Error: ' + err);
+			t.end();
 		}
 	);
-
-	t.end();
-
 });

@@ -22,17 +22,17 @@ var test = _test(tape);
 
 var path = require('path');
 var util = require('util');
-var hfc = require('../..');
+var hfc = require('hfc');
 var fs = require('fs');
 var execSync = require('child_process').execSync;
-var utils = require('../../lib/utils.js');
-var cryptoSuiteReq = require('../../lib/impl/CryptoSuite_ECDSA_AES.js');
+var utils = require('hfc/lib/utils.js');
+var cryptoSuiteReq = require('hfc/lib/impl/CryptoSuite_ECDSA_AES.js');
 var bunyan = require('bunyan');
 var log4js = require('log4js');
 var intercept = require('intercept-stdout');
 
 // FileKeyValueStore tests /////////////
-var FileKeyValueStore = require('../../lib/impl/FileKeyValueStore.js');
+var FileKeyValueStore = require('hfc/lib/impl/FileKeyValueStore.js');
 
 var keyValStorePath = path.join(getUserHome(), 'kvsTemp');
 //Note: unix relative path does not start with '/'
@@ -48,7 +48,7 @@ var store2 = '';
 // End: FileKeyValueStore tests ////////
 
 // Chain tests /////////////
-var Chain = require('../../lib/Chain.js');
+var Chain = require('hfc/lib/Chain.js');
 var _chain = null;
 var chainName = 'testChain';
 var chainKeyValStorePath = 'tmp/chainKeyValStorePath';
@@ -56,7 +56,7 @@ var store3 = '';
 // End: Chain tests ////////
 
 // Member tests //////////
-var Member = require('../../lib/Member.js');
+var Member = require('hfc/lib/Member.js');
 var memberName = 'Donald T. Duck';
 var enrollmentID = 123454321;
 var roles = ['admin', 'user'];
@@ -68,11 +68,10 @@ var memberCfg = {
 };
 
 // GRPC Options tests ///////////////
-var Remote = require('../../lib/Remote.js');
-var Peer = require('../../lib/Peer.js');
-var Orderer = require('../../lib/Orderer.js');
-var Config = require('../../lib/Config.js');
-var MemberServices = require('../../lib/impl/MemberServices.js');
+var Remote = require('hfc/lib/Remote.js');
+var Peer = require('hfc/lib/Peer.js');
+var Orderer = require('hfc/lib/Orderer.js');
+var Config = require('hfc/lib/Config.js');
 var aPem = '-----BEGIN CERTIFICATE-----' +
 	'MIIBwTCCAUegAwIBAgIBATAKBggqhkjOPQQDAzApMQswCQYDVQQGEwJVUzEMMAoG' +
 	'A1UEChMDSUJNMQwwCgYDVQQDEwNPQkMwHhcNMTYwMTIxMjI0OTUxWhcNMTYwNDIw' +
@@ -91,7 +90,7 @@ var aHostnameOverride = 'atesthostnameoverride';
 // specifically set the values to defaults because they may have been overridden when
 // running in the overall test bucket ('gulp test')
 function resetDefaults() {
-	var defaultSettings = require('../../config/default.json');
+	var defaultSettings = require('hfc/config/default.json');
 	for (var setting in defaultSettings) {
 		hfc.setConfigSetting(setting, defaultSettings[setting]);
 	}
@@ -393,11 +392,16 @@ test('\n\n ** Chain - constructor test **\n\n', function (t) {
 			t.fail('Should not have Successfully resolved a member without having member services configured first');
 			t.end();
 		}, function (err) {
-			if (err.message && err.message.indexOf('No member services was found') === 0) {
-				t.pass('Successfully rejected a "getMember()" call on a chain without member services');
+			if (err.message && err.message.indexOf('KeyValueStore.getValue function is undefined') === 0) {
+				t.pass('Successfully rejected a "getMember()" call on a chain without KeyValueStore getValue defined');
 			} else {
-				t.fail('Error: ' + err.stack ? err.stack : err);
+				t.fail('Failed with unexpected error: ' + err.stack ? err.stack : err);
 			}
+			t.end();
+		})
+		.catch(
+		function (err) {
+			t.fail('Failed with unexpected error: ' + err.stack ? err.stack : err);
 			t.end();
 		});
 });
@@ -434,59 +438,7 @@ test('\n\n ** Chain - setKeyValueStore getKeyValueStore test **\n\n', function (
 		});
 });
 
-test('\n\n ** Chain register methods parameters tests **\n\n', function (t) {
-	let chain = new Chain('testChain1');
-
-	chain.register({})
-		.then(function () {
-			t.fail('Should not have worked becaused the input param was missing user enrollmentID');
-		}, function (err) {
-			if (err.message && err.message.indexOf('Invalid parameter to "register()" function') === 0) {
-				t.pass('Successfully rejected call to "register()" method with invalid parameter missing enrollmentID');
-			} else {
-				t.fail('Something unexpected happened. Error: ' + err.stack ? err.stack : err);
-			}
-		})
-		.then(function () {
-			return chain.registerAndEnroll({});
-		})
-		.then(function () {
-			t.fail('Should not have worked becaused the input param was missing user enrollmentID');
-			t.end();
-		}, function (err) {
-			if (err.message && err.message.indexOf('Invalid parameter to "registerAndEnroll()" function') === 0) {
-				t.pass('Successfully rejected call to "registerAndEnroll()" method with invalid parameter missing enrollmentID');
-			} else {
-				t.fail('Something unexpected happened. Error: ' + err.stack ? err.stack : err);
-			}
-			t.end();
-		});
-});
-
 test('\n\n ** Chain - method tests **\n\n', function (t) {
-	t.doesNotThrow(
-		function () {
-			_chain.setRegistrar('something');
-		},
-		null,
-		'checking the setRegistrar'
-	);
-	t.equal(_chain.getRegistrar(), 'something', 'checking the getRegistrar');
-	t.doesNotThrow(
-		function () {
-			_chain.setMemberServicesUrl('http://somehost.com:9999');
-		},
-		null,
-		'checking the setMemberServicesUrl'
-	);
-	t.doesNotThrow(
-		function () {
-			_chain.setMemberServicesUrl('https://somehost.com:9999');
-		},
-		null,
-		'checking the setMemberServicesUrl'
-	);
-	t.equal(_chain.getMemberServices().toString(), ' FabricCOPServices : {hostname: somehost.com, port: 9999}', 'checking the getMemberServices');
 	t.equal(_chain.isSecurityEnabled(), true, 'checking security setting');
 	t.doesNotThrow(
 		function () {
@@ -852,7 +804,7 @@ var KEYUTIL = jsrsa.KEYUTIL;
 var ECDSA = jsrsa.ECDSA;
 var asn1 = jsrsa.asn1;
 
-var ecdsaKey = require('../../lib/impl/ecdsa/key.js');
+var ecdsaKey = require('hfc/lib/impl/ecdsa/key.js');
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	resetDefaults();
@@ -1170,7 +1122,7 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', function (t) {
 		csrObject = asn1.csr.CSRUtil.getInfo(csrPEM);
 	}
 	catch (err) {
-		t.fail('Failed to generate a CSR: ' + err);
+		t.fail('Failed to generate a CSR: ' + err.stack ? err.stack : err);
 	};
 
 	t.equal(asn1.x509.X500Name.onelineToLDAP(csrObject.subject.name), subjectDN,

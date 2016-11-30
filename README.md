@@ -3,28 +3,38 @@
 [![Build Status](https://jenkins.hyperledger.org/buildStatus/icon?job=fabric-sdk-node-merge-x86_64)](https://jenkins.hyperledger.org/view/fabric-sdk-node/job/fabric-sdk-node-merge-x86_64/)
 [![Documentation Status](https://readthedocs.org/projects/fabric-sdk-node/badge/?version=master)](http://fabric-sdk-node.readthedocs.io/en/master/?badge=master)
 
-The Hyperledger Fabric Client SDK (HFC) provides a powerful and easy to use API to interact with a Hyperledger Fabric blockchain.
+The Hyperledger Fabric Client SDK (HFC) makes it easy to use APIs to interact with a Hyperledger Fabric blockchain.
 
 As an application developer, to learn about how to install and use the Node.js SDK, please visit the [fabric documentation](http://hyperledger-fabric.readthedocs.io/en/latest/Setup/NodeSDK-setup).
 
-The following section targets a current or future contributor to this project itself. It describes the main object hierarchy, plus HFC's pluggability and extensibility design.
+The following section targets a current or future contributor to this project itself.
 
 ### Build and Test
 To build and test, the following pre-requisites must be installed first:
-* node runtime version 4.3 or later (which also installs the npm tool)
+* node runtime version 4.5 or later (which also installs the npm tool)
+* npm tool version 2.15.9 or later
 * gulp command
 * docker (not required if you only want to run the headless tests with `npm test`, see below)
 
-Clone the project and launch the following commands in the project root folder to install the dependencies and perform various tasks:
-* `npm install` to install all dependencies
+Clone the project and launch the following commands to install the dependencies and perform various tasks.
+
+This project publishes two separate npm packages:
+* `hfc` - main client for the Hyperledger Fabric. Applications can use this package to deploy chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
+* `hfc-cop` - client for the optional component in Hyperledger Fabric, [COP](https://github.com/hyperledger/fabric-cop). The COP component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, then the application does not need to use this package.
+
+In the project root folder:
+* `npm install` to install dependencies
+* `gulp cop` to copy common dependent modules from the `hfc` folder to the `hfc-cop` folder
+* `gulp watch` to set up watch that updates hfc-cop's shared dependencies from hfc/lib and updates installed hfc and hfc-cop modules in node_modules
 * `gulp doc` to generate API docs
 * `npm test` to run the headless tests that do not require any additional set up
 
 The following tests require setting up a local blockchain network as the target. Because v1.0 is still in active development, you still need the vagrant environment to build the necessary Docker images needed to run the network. Follow the steps below to set it up.
 * `cd fabric/devenv`
 * Open the file `Vagrantfile` and insert the following statement below the existing `config.vm.network` statements:
-  * `  config.vm.network :forwarded_port, guest: 7056, host: 7056 # gRPC services port for peer vp1`
-  * `  config.vm.network :forwarded_port, guest: 8888, host: 8888 # http port for COP server`
+  * `  config.vm.network :forwarded_port, guest: 7056, host: 7056 # Openchain gRPC services`
+  * `  config.vm.network :forwarded_port, guest: 7058, host: 7058 # GRPCCient gRPC services`
+  * `  config.vm.network :forwarded_port, guest: 8888, host: 8888 # COP services`
 
 * run `vagrant up` to launch the vagrant VM
 * Once inside vagrant, `cd $GOPATH/src/github.com/hyperledger/fabric`

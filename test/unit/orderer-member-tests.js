@@ -18,13 +18,13 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('../..');
+var hfc = require('hfc');
 var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
 
-var Orderer = require('../../lib/Orderer.js');
-var Member = require('../../lib/Member.js');
+var Orderer = require('hfc/lib/Orderer.js');
+var Member = require('hfc/lib/Member.js');
 
 var keyValStorePath = testUtil.KVS;
 
@@ -41,7 +41,7 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 	//
 	var chain = hfc.getChain('testChain-orderer-member', true);
 	try {
-		var order_address = 'grpc://localhost:5151';
+		var order_address = 'grpc://localhost:7050';
 		chain.setOrderer(order_address);
 		t.pass('Successfully set the new orderer URL');
 		t.end();
@@ -145,9 +145,7 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('grpc://localhost:7054');
-
-	chain.enroll('admin', 'Xurw3yU9zI0l')
+	testUtil.getSubmitter(chain, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
@@ -198,10 +196,9 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('grpc://localhost:7054');
-	chain.setOrderer('grpc://localhost:5151');
+	chain.setOrderer('grpc://localhost:7050');
 
-	chain.enroll('admin', 'Xurw3yU9zI0l')
+	testUtil.getSubmitter(chain, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
@@ -252,11 +249,10 @@ test('\n\n** TEST ** orderer via member bad orderer address', function(t) {
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('grpc://localhost:7054');
 	// Set bad orderer address here
 	chain.setOrderer('grpc://localhost:5199');
 
-	chain.enroll('admin', 'Xurw3yU9zI0l')
+	testUtil.getSubmitter(chain, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
@@ -305,10 +301,9 @@ test('\n\n** TEST ** orderer via member bad data', function(t) {
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('grpc://localhost:7054');
-	chain.setOrderer('grpc://localhost:5151');
+	chain.setOrderer('grpc://localhost:7050');
 
-	chain.enroll('admin', 'Xurw3yU9zI0l')
+	testUtil.getSubmitter(chain, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');

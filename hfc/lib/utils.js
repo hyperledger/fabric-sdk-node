@@ -1,4 +1,4 @@
-/**
+ /**
  * Copyright 2016 IBM All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,12 +32,6 @@ var Config = require('./Config.js');
 var sha3_256 = require('js-sha3').sha3_256;
 
 //
-// Load required protobufs.
-//
-
-var _timeStampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.proto').google.protobuf.Timestamp;
-
-//
 // The following methods are for loading the proper implementation of an extensible APIs.
 //
 
@@ -56,26 +50,6 @@ module.exports.newKeyValueStore = function(options) {
 	var kvsEnv = this.getConfigSetting('key-value-store');
 	var store = require(kvsEnv);
 	return new store(options);
-};
-
-module.exports.getMemberService = function() {
-	// expecting a path to an alternative implementation
-	var msEnv = this.getConfigSetting('member-service');
-	var ms = require(msEnv);
-	return ms;
-};
-
-//
-// Other methods
-//
-
-//
-// generateTimestamp returns the current time in the google/protobuf/timestamp.proto
-// structure.
-//
-module.exports.generateTimestamp = function() {
-	var timestamp = new _timeStampProto({ seconds: Date.now() / 1000, nanos: 0 });
-	return timestamp;
 };
 
 const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];

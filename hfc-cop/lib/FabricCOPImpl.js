@@ -16,8 +16,8 @@
 
 'use strict';
 
-var api = require('../api.js');
-var utils = require('../utils');
+var api = require('./api.js');
+var utils = require('./utils.js');
 var util = require('util');
 var jsrsa = require('jsrsasign');
 var asn1 = jsrsa.asn1;

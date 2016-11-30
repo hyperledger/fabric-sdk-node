@@ -19,11 +19,12 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('../..');
+var hfc = require('hfc');
+var copService = require('hfc-cop');
 var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
-var utils = require('../../lib/utils.js');
+var utils = require('hfc/lib/utils.js');
 
 var keyValStorePath = testUtil.KVS;
 
@@ -45,12 +46,10 @@ test('\n\n** TEST ** endorser test - missing targets', function(t) {
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('http://localhost:8888');
-
-	chain.enroll('admin', 'adminpw')
+	testUtil.getSubmitter(chain, t)
 	.then(
 		function(admin) {
-			t.pass('Successfully enrolled user \'admin\'');
+			t.pass('Successfully obtained enrolled member admin');
 
 			// send proposal to endorser
 			var request = {
@@ -98,9 +97,7 @@ test('\n\n** TEST ** endorse transaction missing chaincodeId test', function(t) 
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('http://localhost:8888');
-
-	chain.enroll('admin', 'adminpw')
+	testUtil.getSubmitter(chain, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
@@ -152,9 +149,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 		path: keyValStorePath
 	}));
 
-	chain.setMemberServicesUrl('http://localhost:8888');
-
-	chain.enroll('admin', 'adminpw')
+	testUtil.getSubmitter(chain, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');

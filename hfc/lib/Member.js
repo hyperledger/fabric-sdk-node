@@ -72,7 +72,6 @@ var Member = class {
 		}
 
 		this._chain = chain;
-		this._memberServices = chain.getMemberServices();
 		this._keyValStore = chain.getKeyValueStore();
 		this._keyValStoreName = toKeyValueStoreName(this._name);
 		this._tcertBatchSize = chain.getTCertBatchSize();
@@ -96,14 +95,6 @@ var Member = class {
 	 */
 	getChain() {
 		return this._chain;
-	}
-
-	/**
-	 * Get the member services.
-	 * @returns {MemberServices} The member services.
-	 */
-	getMemberServices() {
-		return this._memberServices;
 	}
 
 	/**
@@ -160,138 +151,11 @@ var Member = class {
 	}
 
 	/**
-	 * Get the enrollment info.
-	 * @returns {Enrollment} The enrollment.
-	 */
-	getEnrollment() {
-		return this._enrollment;
-	}
-
-	/**
-	 * Determine if this name has been registered.
-	 * @returns {boolean} True if registered; otherwise, false.
-	 */
-	isRegistered() {
-		return this._enrollmentSecret !== '';
-	}
-
-	/**
 	 * Determine if this name has been enrolled.
 	 * @returns {boolean} True if enrolled; otherwise, false.
 	 */
 	isEnrolled() {
 		return this._enrollment !== null;
-	}
-
-	/**
-	 * Register the member.
-	 * @param {Object} registrationRequest
-	 */
-	register(registrationRequest) {
-		var self = this;
-
-		return new Promise(function(resolve, reject) {
-			if (registrationRequest.enrollmentID !== self.getName()) {
-				reject(new Error('registration enrollment ID and member name are not equal'));
-			}
-
-			var enrollmentSecret = self._enrollmentSecret;
-			if (enrollmentSecret && enrollmentSecret !== '') {
-				return resolve(enrollmentSecret);
-			} else {
-				self._memberServices.register(registrationRequest, self._chain.getRegistrar())
-				.then(
-					function(enrollmentSecret) {
-
-						self._enrollmentSecret = enrollmentSecret;
-						return self.saveState();
-					}
-				).then(
-					function(data) {
-						return resolve(self._enrollmentSecret);
-					}
-				).catch(
-					function(err) {
-						logger.error('Failed to register user "%s". Error: %s', registrationRequest.enrollmentID, err.stack ? err.stack : err);
-						reject(err);
-					}
-				);
-			}
-		});
-	}
-
-	/**
-	 * Enroll the member and return the enrollment results.
-	 * @param {Object} enrollmentSecret The password or enrollment secret as returned by register.
-	 */
-	enroll(enrollmentSecret) {
-		var self = this;
-
-		return new Promise(function(resolve, reject) {
-			var enrollment = self._enrollment;
-			if (self.isEnrolled()) {
-				return resolve(self.getEnrollment());
-			} else {
-				var req = {
-					enrollmentID: self.getName(),
-					enrollmentSecret: enrollmentSecret
-				};
-
-				self._memberServices.enroll(req)
-					.then(
-						function(enrollment) {
-
-							self._enrollment = enrollment;
-
-							// Save state
-							return self.saveState()
-								.then(function() {
-									return resolve(enrollment);
-								});
-						}
-					).then(
-						function(enrollment) {
-							return resolve(enrollment);
-						}
-					).catch(
-						function(err) {
-							logger.error('Failed to enroll user "%s". Error: %s', self.getName(), err.stack ? err.stack : err);
-							reject(err);
-						}
-					);
-			}
-		});
-	}
-
-	/**
-	 * Perform both registration and enrollment.
-	 * @param {Object} registrationRequest
-	 */
-	registerAndEnroll(registrationRequest) {
-		var self = this;
-
-		return new Promise(function(resolve, reject) {
-			var enrollment = self._enrollment;
-			if (enrollment) {
-				return resolve(enrollment);
-			} else {
-				self.register(registrationRequest)
-					.then(
-						function(enrollmentSecret) {
-							return self.enroll(enrollmentSecret);
-						}
-					).then(
-						function(enrollment) {
-							return resolve(enrollment);
-						}
-					).catch(
-						function(err) {
-							logger.error('Failed to register and enroll user "%s". Error: %s', self.getName(), err.stack ? err.stack : err);
-							reject(err);
-						}
-					);
-			}
-		});
 	}
 
 	/**
@@ -310,6 +174,10 @@ var Member = class {
 		var self = this;
 
 		return new Promise(function(resolve, reject) {
+			if (!self._keyValStore.getValue) {
+				logger.error('KeyValueStore.getValue function is undefined.  Need to setValue on KeyValueStore.');
+				reject(new Error('KeyValueStore.getValue function is undefined.  Need to setValue on KeyValueStore.'));
+			}
 			self._keyValStore.getValue(self._keyValStoreName)
 			.then(
 				function(memberStr) {

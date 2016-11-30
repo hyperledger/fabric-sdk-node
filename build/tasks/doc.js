@@ -20,17 +20,16 @@ var jsdoc = require('gulp-jsdoc3');
 gulp.task('doc', function () {
 	gulp.src([
 		'README.md',
-		'index.js',
-		'./lib/api.js',
-		'./lib/impl/FileKeyValueStore.js',
-		'./lib/impl/CryptoSuite_ECDSA_AES.js',
-		'./lib/impl/ecdsa/key.js',
-		'./lib/impl/MemberServices.js',
-		'./lib/impl/FabricCOPImpl.js',
-		'./lib/Chain.js',
-		'./lib/Member.js',
-		'./lib/Peer.js',
-		'./lib/X509Certificate.js'
+		'hfc/index.js',
+		'hfc/lib/api.js',
+		'hfc/lib/impl/FileKeyValueStore.js',
+		'hfc/lib/impl/CryptoSuite_ECDSA_AES.js',
+		'hfc/lib/impl/ecdsa/key.js',
+		'hfc/lib/impl/FabricCOPImpl.js',
+		'hfc/lib/Chain.js',
+		'hfc/lib/Member.js',
+		'hfc/lib/Peer.js',
+		'hfc/lib/X509Certificate.js'
 	], {read: false})
 	.pipe(jsdoc())
 	.pipe(gulp.dest('./docs/gen'));
