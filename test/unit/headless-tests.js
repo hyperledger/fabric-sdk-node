@@ -96,6 +96,10 @@ function resetDefaults() {
 	}
 }
 
+// this is needed to avoid a problem in tape-promise with adding too many listeners
+// to the "unhandledRejection" event
+process.setMaxListeners(0);
+
 test('\n\n ** Index **\n\n', function (t) {
 	var chain = hfc.getChain('someChain', true);
 	t.equals(chain.getName(), 'someChain', 'Checking chain names match');
