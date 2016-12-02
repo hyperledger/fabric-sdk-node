@@ -208,7 +208,9 @@ var Chain = class {
 			member.restoreState()
 			.then(
 				function() {
-					self._members[name] = member;
+					if (member.isEnrolled()) {
+						self._members[name] = member;
+					}
 					logger.debug('Requested member "%s" loaded from key value store', name);
 					return resolve(member);
 				}

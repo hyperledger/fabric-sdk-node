@@ -31,7 +31,10 @@ var utils = require('hfc/lib/utils.js');
 
 var chain = hfc.newChain('testChain-e2e');
 var webUser;
-var chaincode_id = 'mycc1';
+var chaincode_id = 'mycc2';
+var chain_id = '**TEST_CHAINID**';
+var tx_id = null;
+var nonce = null;
 
 testUtil.setupChaincodeDeploy();
 
@@ -52,14 +55,19 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
 			webUser = admin;
+			tx_id = hfc.buildTransactionID({length:12});
+			nonce = hfc.getNonce();
 
 			// send proposal to endorser
 			var request = {
-				targets: [hfc.getPeer('grpc://localhost:7051'), hfc.getPeer('grpc://localhost:7056')],
+				targets: [hfc.getPeer('grpc://localhost:7051')], // hfc.getPeer('grpc://localhost:7056')],
 				chaincodePath: testUtil.CHAINCODE_PATH,
 				chaincodeId: chaincode_id,
 				fcn: 'init',
 				args: ['a', '100', 'b', '200'],
+				chainId: chain_id,
+				txId: tx_id,
+				nonce: nonce,
 				'dockerfile-contents' :
 				'from hyperledger/fabric-ccenv\n' +
 				'COPY . $GOPATH/src/build-chaincode/\n' +
@@ -78,9 +86,15 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			var proposalResponses = results[0];
 			//console.log('proposalResponses:'+JSON.stringify(proposalResponses));
 			var proposal = results[1];
+			var header   = results[2];
 			if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 				t.pass(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-				return webUser.sendTransaction(proposalResponses, proposal);
+				var request = {
+					proposalResponses: proposalResponses,
+					proposal: proposal,
+					header: header
+				};
+				return webUser.sendTransaction(request);
 			} else {
 				t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
 				t.end();
@@ -108,12 +122,17 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			}
 	).then(
 		function() {
+			tx_id = hfc.buildTransactionID({length:12});
+			nonce = hfc.getNonce();
 			// send proposal to endorser
 			var request = {
-				targets: [hfc.getPeer('grpc://localhost:7051'), hfc.getPeer('grpc://localhost:7056')],
+				targets: [hfc.getPeer('grpc://localhost:7051')], // hfc.getPeer('grpc://localhost:7056')],
 				chaincodeId : chaincode_id,
 				fcn: 'invoke',
-				args: ['move', 'a', 'b','100']
+				args: ['move', 'a', 'b','100'],
+				chainId: chain_id,
+				txId: tx_id,
+				nonce: nonce
 			};
 			return webUser.sendTransactionProposal(request);
 		},
@@ -125,9 +144,15 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		function(results) {
 			var proposalResponses = results[0];
 			var proposal = results[1];
+			var header   = results[2];
 			if (proposalResponses[0].response.status === 200) {
-				t.pass('Successfully obtained transaction endorsement.' + JSON.stringify(proposalResponses));
-				return webUser.sendTransaction(proposalResponses, proposal);
+				t.pass('Successfully obtained transaction endorsement.'); // + JSON.stringify(proposalResponses));
+				var request = {
+					proposalResponses: proposalResponses,
+					proposal: proposal,
+					header: header
+				};
+				return webUser.sendTransaction(request);
 			} else {
 				t.fail('Failed to obtain transaction endorsement. Error code: ' + status);
 				t.end();
@@ -156,8 +181,11 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		function() {
 			// send query
 			var request = {
-				targets: [hfc.getPeer('grpc://localhost:7051'), hfc.getPeer('grpc://localhost:7056')],
+				targets: [hfc.getPeer('grpc://localhost:7051')], // hfc.getPeer('grpc://localhost:7056')],
 				chaincodeId : chaincode_id,
+				chainId: chain_id,
+				txId: hfc.buildTransactionID(),
+				nonce: hfc.getNonce(),
 				fcn: 'invoke',
 				args: ['query','b']
 			};

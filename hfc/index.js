@@ -198,3 +198,29 @@ module.exports.getConfigSetting = function(name, default_value) {
 	return utils.getConfigSetting(name, default_value);
 };
 
+/**
+ * Builds an unique transaction ID based on the values in
+ * the request object.
+ *
+ * @param {Object} request - An object with the values to be used
+ *                           to build an unique transaction ID.
+ * @returns {String} An unique transaction ID
+ */
+module.exports.buildTransactionID = function(request) {
+
+	return utils.buildTransactionID(request);
+};
+
+/**
+ * Gets a random number for a one time use
+ *
+ * @param {int} length - Optional value to control the length of the number.
+ *              The configuration setting 'nonce-size' will be used if not
+ *              passed in.
+ * @return {int} Random number of the specified length
+ */
+module.exports.getNonce = function(length) {
+
+	return utils.buildTransactionID(length);
+};
+

@@ -33,24 +33,24 @@ vp0:
   ports:
     - 7051:7051
 
-vp1:
-  image: hyperledger/fabric-peer
-  environment:
-    - CORE_PEER_ADDRESSAUTODETECT=true
-    - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-    - CORE_LOGGING_LEVEL=DEBUG
-    - CORE_PEER_NETWORKID=${CORE_PEER_NETWORKID}
-    - CORE_NEXT=true
-    - CORE_PEER_ENDORSER_ENABLED=true
-    - CORE_PEER_ID=vp1
-    - CORE_PEER_PROFILE_ENABLED=true
-    - CORE_PEER_COMMITTER_LEDGER_ORDERER=orderer:7050
-    - CORE_PEER_DISCOVERY_ROOTNODE=vp0:7051
-  volumes:
-      - /var/run/:/host/var/run/
-  command: peer node start
-  links:
-    - orderer
-    - vp0
-  ports:
-    - 7056:7051
+# vp1:
+#   image: hyperledger/fabric-peer
+#   environment:
+#     - CORE_PEER_ADDRESSAUTODETECT=true
+#     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+#     - CORE_LOGGING_LEVEL=DEBUG
+#     - CORE_PEER_NETWORKID=${CORE_PEER_NETWORKID}
+#     - CORE_NEXT=true
+#     - CORE_PEER_ENDORSER_ENABLED=true
+#     - CORE_PEER_ID=vp1
+#     - CORE_PEER_PROFILE_ENABLED=true
+#     - CORE_PEER_COMMITTER_LEDGER_ORDERER=orderer:7050
+#     - CORE_PEER_DISCOVERY_ROOTNODE=vp0:7051
+#   volumes:
+#       - /var/run/:/host/var/run/
+#   command: peer node start
+#   links:
+#     - orderer
+#     - vp0
+#   ports:
+#     - 7056:7051

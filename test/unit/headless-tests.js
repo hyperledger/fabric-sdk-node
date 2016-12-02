@@ -567,13 +567,17 @@ test('\n\n ** Member sendDeploymentProposal() tests **\n\n', function (t) {
 	var m = new Member('does not matter', _chain);
 
 	var p1 = m.sendDeploymentProposal({
-		chaincodePath: 'blah',
+		targets: [hfc.getPeer('grpc://localhost:7051')],
 		chaincodeId: 'blah',
-		fcn: 'init'
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		chainId: 'blah',
+		txId: 'blah',
+		nonce: 'blah'
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "peer" parameter');
 	}).catch(function (err) {
-		if (err.message === 'Missing "targets" for the endorsing peer objects in the Deployment proposal request') {
+		if (err.message.indexOf('Missing chaincodePath parameter in Deployment proposal request') >= 0) {
 			t.pass('Successfully caught missing peer error');
 		} else {
 			t.fail('Failed to catch the missing peer error. Error: ' + err.stack ? err.stask : err);
@@ -581,32 +585,106 @@ test('\n\n ** Member sendDeploymentProposal() tests **\n\n', function (t) {
 	});
 
 	var p2 = m.sendDeploymentProposal({
-		endorserUrl: 'blah',
-		fcn: 'init'
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodePath: 'blah',
+		chaincodeId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah',
+		nonce: 'blah'
 	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
+		t.fail('Should not have been able to resolve the promise because of missing "chainId" parameter');
 	}).catch(function (err) {
-		if (err.message === 'Missing chaincodePath in Deployment proposal request') {
-			t.pass('Successfully caught missing chaincodePath error');
+		if (err.message.indexOf('Missing "chainId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing chainId error');
 		} else {
-			t.fail('Failed to catch the missing chaincodePath error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing chainId error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
 	var p3 = m.sendDeploymentProposal({
+		targets: [hfc.getPeer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
-		fcn: 'init'
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah',
+		nonce: 'blah'
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
 	}).catch(function (err) {
-		if (err.message === 'Missing chaincodeId in the Deployment proposal request') {
+		if (err.message.indexOf('Missing "chaincodeId" parameter in the proposal request') >= 0) {
 			t.pass('Successfully caught missing chaincodeId error');
 		} else {
 			t.fail('Failed to catch the missing chaincodeId error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
-	Promise.all([p1, p2, p3])
+	var p4 = m.sendDeploymentProposal({
+		chaincodePath: 'blah',
+		chaincodeId: 'blah',
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah',
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "targets" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "targets" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing targets error');
+		} else {
+			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p5 = m.sendDeploymentProposal({
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodePath: 'blah',
+		chaincodeId: 'blah',
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "txId" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "txId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing txId error');
+		} else {
+			t.fail('Failed to catch the missing txId error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p6 = m.sendDeploymentProposal({
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodePath: 'blah',
+		chaincodeId: 'blah',
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "nonce" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "nonce" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing nonce error');
+		} else {
+			t.fail('Failed to catch the missing nonce error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p7 = m.sendDeploymentProposal().then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
+			t.pass('Successfully caught missing request error');
+		} else {
+			t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3, p4, p6, p7])
 		.then(
 		function (data) {
 			t.end();
@@ -623,17 +701,16 @@ test('\n\n ** Member sendTransactionProposal() tests **\n\n', function (t) {
 	var m = new Member('does not matter', _chain);
 
 	var p1 = m.sendTransactionProposal({
-		chaincodeId: 'someid'
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodeId : 'blah',
+		fcn: 'invoke',
+		chainId: 'blah',
+		txId: 'blah',
+		nonce: 'blah'
 	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "targets" parameter');
-	}, function (err) {
-		if (err.message === 'Missing "targets" for endorser peer objects in the Transaction proposal request') {
-			t.pass('Successfully caught missing targets error');
-		} else {
-			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
-		}
+		t.fail('Should not have been able to resolve the promise because of missing "args" parameter');
 	}).catch(function (err) {
-		if (err.message === 'Missing "targets" for endorser peer objects in the Transaction proposal request') {
+		if (err.message.indexOf('Missing "targets" for endorser peer objects in the Transaction proposal request')) {
 			t.pass('Successfully caught missing targets error');
 		} else {
 			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
@@ -641,43 +718,101 @@ test('\n\n ** Member sendTransactionProposal() tests **\n\n', function (t) {
 	});
 
 	var p2 = m.sendTransactionProposal({
-		targets: [hfc.getPeer('grpc://somehost.com:9000')]
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodeId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah',
+		nonce: 'blah'
 	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
-	}, function (err) {
-		if (err.message === 'Missing chaincodeId in the Transaction proposal request') {
-			t.pass('Successfully caught missing chaincodeid error');
-		} else {
-			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
-		}
+		t.fail('Should not have been able to resolve the promise because of missing "chainId" parameter');
 	}).catch(function (err) {
-		if (err.message === 'Missing chaincode ID in the Transaction proposal request') {
-			t.pass('Successfully caught missing chaincodeid error');
+		if (err.message.indexOf('Missing "chainId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing chainId error');
 		} else {
-			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing chainId error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
 	var p3 = m.sendTransactionProposal({
-		targets: [hfc.getPeer('grpc://somehost.com:9000')],
-		chaincodeId: 'someid'
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah',
+		nonce: 'blah'
 	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
-	}, function (err) {
-		if (err.message === 'Missing arguments in Transaction proposal request') {
-			t.pass('Successfully caught missing args error');
-		} else {
-			t.fail('Failed to catch the missing args error. Error: ' + err.stack ? err.stask : err);
-		}
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
 	}).catch(function (err) {
-		if (err.message === 'Missing arguments in Transaction proposal request') {
-			t.pass('Successfully caught missing args error');
+		if (err.message.indexOf('Missing "chaincodeId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing chaincodeId error');
 		} else {
-			t.fail('Failed to catch the missing args error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing chaincodeId error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
-	Promise.all([p1, p2, p3])
+	var p4 = m.sendTransactionProposal({
+		chaincodeId: 'blah',
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah',
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "targets" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "targets" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing targets error');
+		} else {
+			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p5 = m.sendTransactionProposal({
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodeId: 'blah',
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "txId" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "txId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing txId error');
+		} else {
+			t.fail('Failed to catch the missing txId error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p6 = m.sendTransactionProposal({
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodeId: 'blah',
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "nonce" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "nonce" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing nonce error');
+		} else {
+			t.fail('Failed to catch the missing nonce error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p7 = m.sendTransactionProposal().then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
+			t.pass('Successfully caught missing request error');
+		} else {
+			t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3, p4, p5, p6, p7])
 		.then(
 		function (data) {
 			t.end();
@@ -694,17 +829,16 @@ test('\n\n ** Member queryByChaincode() tests **\n\n', function (t) {
 	var m = new Member('does not matter', _chain);
 
 	var p1 = m.queryByChaincode({
-		chaincodeId: 'someid'
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodeId : 'blah',
+		fcn: 'invoke',
+		chainId: 'blah',
+		txId: 'blah',
+		nonce: 'blah'
 	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "targets" parameter');
-	}, function (err) {
-		if (err.message === 'Missing "targets" for endorser peer objects in the Transaction proposal request') {
-			t.pass('Successfully caught missing targets error');
-		} else {
-			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
-		}
+		t.fail('Should not have been able to resolve the promise because of missing "args" parameter');
 	}).catch(function (err) {
-		if (err.message === 'Missing "targets" for endorser peer objects in the Transaction proposal request') {
+		if (err.message.indexOf('Missing "targets" for endorser peer objects in the Transaction proposal request')) {
 			t.pass('Successfully caught missing targets error');
 		} else {
 			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
@@ -712,43 +846,101 @@ test('\n\n ** Member queryByChaincode() tests **\n\n', function (t) {
 	});
 
 	var p2 = m.queryByChaincode({
-		targets: [hfc.getPeer('grpc://somehost.com:9000')]
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodeId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah',
+		nonce: 'blah'
 	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
-	}, function (err) {
-		if (err.message === 'Missing chaincodeId in the Transaction proposal request') {
-			t.pass('Successfully caught missing chaincodeid error');
-		} else {
-			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
-		}
+		t.fail('Should not have been able to resolve the promise because of missing "chainId" parameter');
 	}).catch(function (err) {
-		if (err.message === 'Missing chaincode ID in the Transaction proposal request') {
-			t.pass('Successfully caught missing chaincodeid error');
+		if (err.message.indexOf('Missing "chainId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing chainId error');
 		} else {
-			t.fail('Failed to catch the missing chaincodeid error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing chainId error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
 	var p3 = m.queryByChaincode({
-		targets: [hfc.getPeer('grpc://somehost.com:9000')],
-		chaincodeId: 'someid'
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah',
+		nonce: 'blah'
 	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
-	}, function (err) {
-		if (err.message === 'Missing arguments in Transaction proposal request') {
-			t.pass('Successfully caught missing args error');
-		} else {
-			t.fail('Failed to catch the missing args error. Error: ' + err.stack ? err.stask : err);
-		}
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
 	}).catch(function (err) {
-		if (err.message === 'Missing arguments in Transaction proposal request') {
-			t.pass('Successfully caught missing args error');
+		if (err.message.indexOf('Missing "chaincodeId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing chaincodeId error');
 		} else {
-			t.fail('Failed to catch the missing args error. Error: ' + err.stack ? err.stask : err);
+			t.fail('Failed to catch the missing chaincodeId error. Error: ' + err.stack ? err.stask : err);
 		}
 	});
 
-	Promise.all([p1, p2, p3])
+	var p4 = m.queryByChaincode({
+		chaincodeId: 'blah',
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah',
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "targets" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "targets" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing targets error');
+		} else {
+			t.fail('Failed to catch the missing targets error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p5 = m.queryByChaincode({
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodeId: 'blah',
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "txId" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "txId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing txId error');
+		} else {
+			t.fail('Failed to catch the missing txId error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p6 = m.queryByChaincode({
+		targets: [hfc.getPeer('grpc://localhost:7051')],
+		chaincodeId: 'blah',
+		chainId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		txId: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "nonce" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "nonce" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing nonce error');
+		} else {
+			t.fail('Failed to catch the missing nonce error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	var p7 = m.queryByChaincode().then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
+			t.pass('Successfully caught missing request error');
+		} else {
+			t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3, p4, p5, p6, p7])
 		.then(
 		function (data) {
 			t.end();
@@ -768,36 +960,56 @@ test('\n\n ** Member sendTransaction() tests **\n\n', function (t) {
 		.then(function () {
 			t.fail('Should not have been able to resolve the promise because of missing parameters');
 		}, function (err) {
-			if (err.message === 'Missing proposalResponse object parameter') {
+			if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
+				t.pass('Successfully caught missing request error');
+			} else {
+				t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stask : err);
+			}
+		});
+
+	var p2 = m.sendTransaction({
+			proposal: 'blah',
+			header: 'blah'
+		})
+		.then(function () {
+			t.fail('Should not have been able to resolve the promise because of missing parameters');
+		}, function (err) {
+			if (err.message.indexOf('Missing "proposalResponse" parameter in transaction request') >= 0) {
 				t.pass('Successfully caught missing proposalResponse error');
 			} else {
-				t.fail('Failed to catch the missing object error. Error: ' + err.stack ? err.stask : err);
+				t.fail('Failed to catch the missing proposalResponse error. Error: ' + err.stack ? err.stask : err);
 			}
 		});
 
-	var p2 = m.sendTransaction('data')
+	var p3 = m.sendTransaction({
+			proposalResponses: 'blah',
+			header: 'blah'
+		})
 		.then(function () {
 			t.fail('Should not have been able to resolve the promise because of missing parameters');
 		}, function (err) {
-			if (err.message === 'Missing chaincodeProposal object parameter') {
-				t.pass('Successfully caught missing chaincodeProposal error');
+			if (err.message.indexOf('Missing "proposal" parameter in transaction request') >= 0) {
+				t.pass('Successfully caught missing proposal error');
 			} else {
-				t.fail('Failed to catch the missing objet error. Error: ' + err.stack ? err.stask : err);
+				t.fail('Failed to catch the missing proposal error. Error: ' + err.stack ? err.stask : err);
 			}
 		});
 
-	var p3 = m.sendTransaction('data', 'data')
+	var p4 = m.sendTransaction({
+			proposalResponses: 'blah',
+			proposal: 'blah'
+		})
 		.then(function () {
 			t.fail('Should not have been able to resolve the promise because of missing parameters');
 		}, function (err) {
-			if (err.message === 'no Orderer defined') {
-				t.pass('Successfully caught missing orderer error');
+			if (err.message.indexOf('Missing "header" parameter in transaction request') >= 0) {
+				t.pass('Successfully caught missing header error');
 			} else {
-				t.fail('Failed to catch the missing order error. Error: ' + err.stack ? err.stask : err);
+				t.fail('Failed to catch the missing header error. Error: ' + err.stack ? err.stask : err);
 			}
 		});
 
-	Promise.all([p1, p2, p3])
+	Promise.all([p1, p2, p3, p4])
 		.then(
 		function (data) {
 			t.end();
@@ -822,6 +1034,13 @@ var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative eff
 	'ensure the transparency, longevity, interoperability and support required to bring blockchain technologies forward to mainstream commercial adoption. That ' +
 	'is what Hyperledger is about – communities of software developers building blockchain frameworks and platforms.';
 
+var HASH_MSG_SHA3_384 = '9e9c2e5edf6cbc0b512807a8efa2917daff71b83e04dee28fcc00b1a1dd935fb5afc5eafa06bf55bd64792a597e2a8f3';
+var HASH_LONG_MSG_SHA3_384 = '47a90d6721523682e09b81da0a60e6ee1faf839f0503252316638daf038cf682c0a842edaf310eb0f480a2e181a07af0';
+var HASH_MSG_SHA256 = '4e4aa09b6d80efbd684e80f54a70c1d8605625c3380f4cb012b32644a002b5be';
+var HASH_LONG_MSG_SHA256 = '0d98987f5e4e3ea611f0e3d768c594ff9aac25404265d73554d12c86d7f6fbbc';
+var HASH_MSG_SHA3_256 = '7daeff454f7e91e3cd2d1c1bd5fcd1b6c9d4d5fffc6c327710d8fae7b06ee4a3';
+var HASH_LONG_MSG_SHA3_256 = '577174210438a85ae4311a62e5fccf2441b960013f5691993cdf38ed6ba0c84f';
+
 var TEST_KEY_PRIVATE = '93f15b31e3c3f3bddcd776d9219e93d8559e31453757b79e193a793cbd239573';
 var TEST_KEY_PUBLIC = '04f46815aa00fe2ba2814b906aa4ef1755caf152658de8997a6a858088296054baf45b06b2eba514bcbc37ae0c0cc7465115d36429d0e0bff23dc40e3760c10aa9';
 var TEST_MSG_SIGNATURE_SHA2_256 = '3046022100a6460b29373fa16ee96172bfe04666140405fdef78182280545d451f08547736022100d9022fe620ceadabbef1714b894b8d6be4b74c0f9c573bd774871764f4f789c9';
@@ -842,20 +1061,20 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	t.equal(true, (typeof cryptoUtils._ecdsaCurve !== 'undefined' && typeof cryptoUtils._ecdsa !== 'undefined'),
 		'CryptoSuite_ECDSA_AES function tests: default instance has "_ecdsaCurve" and "_ecdsa" properties');
 
-	// test default curve 384 with SHA3_384
-	t.equal(cryptoUtils.hash(TEST_MSG), '9e9c2e5edf6cbc0b512807a8efa2917daff71b83e04dee28fcc00b1a1dd935fb5afc5eafa06bf55bd64792a597e2a8f3',
-		'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with default key size which should be 384');
+	// test default curve 256 with SHA256
+	t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA256,
+		'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with default key size which should be 256');
 
-	t.equal(cryptoUtils.hash(TEST_LONG_MSG), '47a90d6721523682e09b81da0a60e6ee1faf839f0503252316638daf038cf682c0a842edaf310eb0f480a2e181a07af0',
-		'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with default key size which should be 384');
+	t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA256,
+		'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with default key size which should be 256');
 
 	cryptoUtils.generateKey()
 		.then(function (key) {
-			t.equal('secp384r1', key.getPublicKey()._key.curveName,
-				'CryptoSuite_ECDSA_AES constructor tests: cryptoUtils generated public key curveName == secp384r1');
+			t.equal('secp256r1', key.getPublicKey()._key.curveName,
+				'CryptoSuite_ECDSA_AES constructor tests: cryptoUtils generated public key curveName == secp256r1');
 
 			// test curve 256 with SHA3_256
-			utils.setConfigSetting('crypto-keysize', 256);
+			utils.setConfigSetting('crypto-hash-algo', 'SHA3');
 			cryptoUtils = utils.getCryptoSuite();
 			return cryptoUtils.generateKey();
 		})
@@ -863,26 +1082,28 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			t.equal('secp256r1', key.getPublicKey()._key.curveName,
 				'CryptoSuite_ECDSA_AES constructor tests: ccryptoUtils generated public key curveName == secp256r1');
 
-			t.equal(cryptoUtils.hash(TEST_MSG), '7daeff454f7e91e3cd2d1c1bd5fcd1b6c9d4d5fffc6c327710d8fae7b06ee4a3',
+			t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_256,
 				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
 
-			t.equal(cryptoUtils.hash(TEST_LONG_MSG), '577174210438a85ae4311a62e5fccf2441b960013f5691993cdf38ed6ba0c84f',
+			t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_256,
 				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
 
-			// test SHA2_256
-			utils.setConfigSetting('crypto-hash-algo', 'SHA2');
+			// test SHA3_384
+			utils.setConfigSetting('crypto-keysize', 384);
 			cryptoUtils = utils.getCryptoSuite();
 
-			t.equal(cryptoUtils.hash(TEST_MSG), '4e4aa09b6d80efbd684e80f54a70c1d8605625c3380f4cb012b32644a002b5be',
-				'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with key size 256');
+			t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
+				'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with key size 384');
 
-			t.equal(cryptoUtils.hash(TEST_LONG_MSG), '0d98987f5e4e3ea611f0e3d768c594ff9aac25404265d73554d12c86d7f6fbbc',
-				'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with key size 256');
-
+			t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_384,
+				'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with key size 384');
 
 			return cryptoUtils.generateKey();
 		})
 		.then(function (key) {
+			t.equal('secp384r1', key.getPublicKey()._key.curveName,
+				'CryptoSuite_ECDSA_AES constructor tests: ccryptoUtils generated public key curveName == secp384r1');
+
 			if (!!key._key)
 				t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
 			else
@@ -890,8 +1111,8 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 			utils.setConfigSetting('crypto-hash-algo', 'sha3'); //lower or upper case is allowed
 			cryptoUtils = utils.getCryptoSuite();
-			t.equal(cryptoUtils.hash(TEST_MSG), '7daeff454f7e91e3cd2d1c1bd5fcd1b6c9d4d5fffc6c327710d8fae7b06ee4a3',
-				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
+			t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
+				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
 			// test generation options
 			return cryptoUtils.generateKey({ ephemeral: true });

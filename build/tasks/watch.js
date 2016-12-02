@@ -10,7 +10,10 @@ gulp.task('watch', function () {
 
 	watch([
 		'hfc/lib/**/*',
-		'hfc-cop/lib/**/*'
+		'hfc/index.js',
+		'hfc/config/**/*',
+		'hfc-cop/lib/**/*',
+		'hfc-cop/config/**/*'
 	], { ignoreInitial: false, base: './' })
 	.pipe(debug())
 	.pipe(gulp.dest('node_modules'));

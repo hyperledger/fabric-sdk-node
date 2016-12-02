@@ -1,4 +1,6 @@
 var path = require('path');
+var copService = require('hfc-cop/lib/FabricCOPImpl.js');
+var Member = require('hfc/lib/Member.js');
 
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
 module.exports.CHAINCODE_MARBLES_PATH = 'github.com/marbles_cc';

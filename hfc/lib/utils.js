@@ -24,6 +24,7 @@ var zlib = require('zlib');
 var urlParser = require('url');
 var winston = require('winston');
 var Config = require('./Config.js');
+var crypto = require('crypto');
 
 //
 // Load required crypto stuff.
@@ -364,5 +365,34 @@ module.exports.existsSync = function(absolutePath /*string*/) {
 	catch (e) {
 		return false;
 	}
+};
+
+// utility function to build an unique transaction id
+// The request object may contain values that could be
+// used to help generate the result value
+module.exports.buildTransactionID = function(request /*object*/) {
+	var length = 10;
+	if(request && request.length) {
+		length = request.length;
+	}
+	var value = crypto.randomBytes(10); //TODO how should we really generate this value
+	return value;
+};
+
+// utility function to create a random number of
+// the specified length.
+module.exports.getNonce = function(length) {
+	if(length) {
+		if(Number.isInteger(length)) {
+			// good, it is a number
+		} else {
+			throw new Error('Parameter must be an integer');
+		}
+	} else {
+		length = this.getConfigSetting('nonce-size', 24);
+	}
+
+	var value = crypto.randomBytes(length);
+	return value;
 };
 
