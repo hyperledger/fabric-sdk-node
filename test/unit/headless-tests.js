@@ -973,46 +973,46 @@ test('\n\n ** Member sendTransaction() tests **\n\n', function (t) {
 		});
 
 	var p2 = m.sendTransaction({
-			proposal: 'blah',
-			header: 'blah'
-		})
-		.then(function () {
-			t.fail('Should not have been able to resolve the promise because of missing parameters');
-		}, function (err) {
-			if (err.message.indexOf('Missing "proposalResponse" parameter in transaction request') >= 0) {
-				t.pass('Successfully caught missing proposalResponse error');
-			} else {
-				t.fail('Failed to catch the missing proposalResponse error. Error: ' + err.stack ? err.stask : err);
-			}
-		});
+		proposal: 'blah',
+		header: 'blah'
+	})
+	.then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing parameters');
+	}, function (err) {
+		if (err.message.indexOf('Missing "proposalResponse" parameter in transaction request') >= 0) {
+			t.pass('Successfully caught missing proposalResponse error');
+		} else {
+			t.fail('Failed to catch the missing proposalResponse error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
 
 	var p3 = m.sendTransaction({
-			proposalResponses: 'blah',
-			header: 'blah'
-		})
-		.then(function () {
-			t.fail('Should not have been able to resolve the promise because of missing parameters');
-		}, function (err) {
-			if (err.message.indexOf('Missing "proposal" parameter in transaction request') >= 0) {
-				t.pass('Successfully caught missing proposal error');
-			} else {
-				t.fail('Failed to catch the missing proposal error. Error: ' + err.stack ? err.stask : err);
-			}
-		});
+		proposalResponses: 'blah',
+		header: 'blah'
+	})
+	.then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing parameters');
+	}, function (err) {
+		if (err.message.indexOf('Missing "proposal" parameter in transaction request') >= 0) {
+			t.pass('Successfully caught missing proposal error');
+		} else {
+			t.fail('Failed to catch the missing proposal error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
 
 	var p4 = m.sendTransaction({
-			proposalResponses: 'blah',
-			proposal: 'blah'
-		})
-		.then(function () {
-			t.fail('Should not have been able to resolve the promise because of missing parameters');
-		}, function (err) {
-			if (err.message.indexOf('Missing "header" parameter in transaction request') >= 0) {
-				t.pass('Successfully caught missing header error');
-			} else {
-				t.fail('Failed to catch the missing header error. Error: ' + err.stack ? err.stask : err);
-			}
-		});
+		proposalResponses: 'blah',
+		proposal: 'blah'
+	})
+	.then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing parameters');
+	}, function (err) {
+		if (err.message.indexOf('Missing "header" parameter in transaction request') >= 0) {
+			t.pass('Successfully caught missing header error');
+		} else {
+			t.fail('Failed to catch the missing header error. Error: ' + err.stack ? err.stask : err);
+		}
+	});
 
 	Promise.all([p1, p2, p3, p4])
 		.then(
