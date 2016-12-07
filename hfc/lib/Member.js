@@ -29,7 +29,6 @@ var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 var _ccProposalProto = grpc.load(__dirname + '/protos/peer/chaincode_proposal.proto').protos;
 var _ccTransProto = grpc.load(__dirname + '/protos/peer/chaincode_transaction.proto').protos;
 var _transProto = grpc.load(__dirname + '/protos/peer/fabric_transaction.proto').protos;
-var _headerProto = grpc.load(__dirname + '/protos/peer/fabric_transaction_header.proto').protos;
 var _proposalProto = grpc.load(__dirname + '/protos/peer/fabric_proposal.proto').protos;
 var _responseProto = grpc.load(__dirname + '/protos/peer/fabric_proposal_response.proto').protos;
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
@@ -241,18 +240,34 @@ var Member = class {
 	 *         This will be an acknowledgement from the orderer of successfully submitted transaction.
 	 * @see the ./proto/atomicbroadcast/ab.proto
 	 */
-	sendTransaction(proposalResponses, chaincodeProposal) {
+	sendTransaction(request) {
 		logger.debug('Member.sendTransaction - start :: chain '+this._chain);
+		var errorMsg = null;
 
-		// Verify that data is being passed in
-		if (!proposalResponses) {
-			logger.error('Member.sendTransaction - input proposalResponse missing');
-			return Promise.reject(new Error('Missing proposalResponse object parameter'));
+		if (request) {
+			// Verify that data is being passed in
+			if (!request.proposalResponses) {
+				errorMsg = 'Missing "proposalResponse" parameter in transaction request';
+			}
+			if (!request.proposal) {
+				errorMsg = 'Missing "proposal" parameter in transaction request';
+			}
+			if (!request.header) {
+				errorMsg = 'Missing "header" parameter in transaction request';
+			}
+		} else {
+			errorMsg = 'Missing input request object on the proposal request';
 		}
-		if (!chaincodeProposal) {
-			logger.error('Member.sendTransaction - input chaincodeProposal missing');
-			return Promise.reject(new Error('Missing chaincodeProposal object parameter'));
+
+		if(errorMsg) {
+			logger.error('Member.sendTransaction error '+ errorMsg);
+			return Promise.reject(new Error(errorMsg));
 		}
+
+		let proposalResponses = request.proposalResponses;
+		let chaincodeProposal = request.proposal;
+		let header            = request.header;
+
 		// verify that we have an orderer configured
 		if(!this._chain.getOrderer()) {
 			logger.error('Member.sendTransaction - no orderer defined');
@@ -274,36 +289,43 @@ var Member = class {
 			endorsements.push(proposalResponse.endorsement);
 		}
 
-//		logger.debug('Member.sendTransaction - proposalResponse %j', proposalResponse);
-//		logger.debug('Member.sendTransaction - chaincodePropsoal %j', chaincodeProposal);
-
 		var chaincodeEndorsedAction = new _ccTransProto.ChaincodeEndorsedAction();
 		chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);
 		chaincodeEndorsedAction.setEndorsements(endorsements);
 
 		var chaincodeActionPayload = new _ccTransProto.ChaincodeActionPayload();
 		chaincodeActionPayload.setAction(chaincodeEndorsedAction);
-		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposal.payload);
+		var chaincodeProposalPayloadNoTrans = _ccProposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
+		chaincodeProposalPayloadNoTrans.transient = null;
+		var payload_hash = this._chain.cryptoPrimitives.hash(chaincodeProposalPayloadNoTrans.toBuffer());
+		chaincodeActionPayload.setChaincodeProposalPayload(Buffer.from(payload_hash, 'hex'));
+
+		//let header = Member._buildHeader(this._enrollment.certificate, request.chainId, request.chaincodeId, request.txId, request.nonce);
 
 		var transactionAction = new _transProto.TransactionAction();
-		transactionAction.setHeader(chaincodeProposal.header);
+		transactionAction.setHeader(header.getSignatureHeader().toBuffer());
 		transactionAction.setPayload(chaincodeActionPayload.toBuffer());
 
 		var actions = [];
 		actions.push(transactionAction);
 
-		var transaction2 = new _transProto.Transaction2();
-		transaction2.setActions(actions);
+		var transaction = new _transProto.Transaction();
+		transaction.setActions(actions);
 
-		let header = Member._buildHeader(this._enrollment.certificate, null);
 
 		var payload = new _commonProto.Payload();
 		payload.setHeader(header);
-		payload.setData(transaction2.toBuffer());
+		payload.setData(transaction.toBuffer());
+
+		let payload_bytes = payload.toBuffer();
+		// sign the proposal
+		let sig = this._chain.cryptoPrimitives.sign(this._enrollment.privateKey, payload_bytes);
+		let signature = Buffer.from(sig.toDER());
 
 		// building manually or will get protobuf errors on send
 		var envelope = {
-			payload : payload.toBuffer()
+			signature: signature,
+			payload : payload_bytes
 		};
 
 		var orderer = this._chain.getOrderer();
@@ -317,6 +339,9 @@ var Member = class {
 	 *		<br>`targets` : required - An array or single Endorsing {@link Peer} objects as the targets of the request
 	 *		<br>`chaincodePath` : required - String of the path to location of the source code of the chaincode
 	 *		<br>`chaincodeId` : required - String of the name of the chaincode
+	 *		<br>`chainId` : required - String of the name of the chain
+	 *		<br>`txId` : required - String of the transaction id
+	 *		<br>`nonce` : required - Integer of the once time number
 	 *		<br>`fcn` : optional - String of the function to be called on the chaincode once deployed (default 'init')
 	 *		<br>`args` : optional - String Array arguments specific to the chaincode being deployed
 	 *		<br>`dockerfile-contents` : optional - String defining the
@@ -324,21 +349,18 @@ var Member = class {
 	 * @see /protos/peer/fabric_proposal_response.proto
 	 */
 	sendDeploymentProposal(request) {
+		var errorMsg = null;
+
 		// Verify that chaincodePath is being passed
-		if (!request.chaincodePath || request.chaincodePath === '') {
-			logger.error('Invalid input parameter to "sendDeploymentProposal": must have "chaincodePath"');
-		  	return Promise.reject(new Error('Missing chaincodePath in Deployment proposal request'));
+		if (request && (!request.chaincodePath || request.chaincodePath === '')) {
+			errorMsg = 'Missing chaincodePath parameter in Deployment proposal request';
+		} else {
+			errorMsg = Member._checkProposalRequest(request);
 		}
 
-		if(!request.chaincodeId) {
-			logger.error('Missing chaincodeId in the Deployment proposal request');
-			return Promise.reject(new Error('Missing chaincodeId in the Deployment proposal request'));
-		}
-
-		// verify that the caller has included a peer object
-		if(!request.targets) {
-			logger.error('Invalid input parameter to "sendDeploymentProposal": must have "targets" object');
-			return Promise.reject(new Error('Missing "targets" for the endorsing peer objects in the Deployment proposal request'));
+		if(errorMsg) {
+			logger.error('Member.sendDeploymentProposal error '+ errorMsg);
+			return Promise.reject(new Error(errorMsg));
 		}
 
 		// args is optional because some chaincode may not need any input parameters during initialization
@@ -395,13 +417,14 @@ var Member = class {
 								}
 							};
 
-							let proposal = self._buildProposal(lcccSpec, 'lccc');
-							let signed_proposal = self._signProposal(proposal);
+							let header = Member._buildHeader(self._enrollment.certificate, request.chainId, 'lccc', request.txId, request.nonce);
+							let proposal = self._buildProposal(lcccSpec, header);
+							let signed_proposal = self._signProposal(self._enrollment, proposal);
 
 							return Member._sendPeersProposal(request.targets, signed_proposal)
 							.then(
 								function(responses) {
-									resolve([responses, proposal]);
+									resolve([responses, proposal, header]);
 								}
 							).catch(
 								function(err) {
@@ -427,27 +450,25 @@ var Member = class {
 	 * @param {Object} request
 	 *		<br>`targets` : An array or single Endorsing {@link Peer} objects as the targets of the request
 	 *		<br>`chaincodeId` : The id of the chaincode to perform the transaction proposal
+	 *		<br>`chainId` : required - String of the name of the chain
+	 *		<br>`txId` : required - String of the transaction id
+	 *		<br>`nonce` : required - Integer of the once time number
 	 *		<br>`args` : an array of arguments specific to the chaincode 'innvoke'
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 */
 	sendTransactionProposal(request) {
 		logger.debug('Member.sendTransactionProposal - start');
-
-		// verify that the caller has included a peer object
-		if(!request.targets) {
-			logger.error('Missing "targets" endorser peer objects in the Transaction proposal request');
-			return Promise.reject(new Error('Missing "targets" for endorser peer objects in the Transaction proposal request'));
-		}
-
-		if(!request.chaincodeId) {
-			logger.error('Missing chaincodeId in the Transaction proposal request');
-			return Promise.reject(new Error('Missing chaincodeId in the Transaction proposal request'));
-		}
-
+		var errorMsg = null;
 		// args is not optional because we need for transaction to execute
-		if (!request.args) {
-			logger.error('Missing arguments in Transaction proposal request');
-			return Promise.reject(new Error('Missing arguments in Transaction proposal request'));
+		if (request && !request.args) {
+			errorMsg = 'Missing "args" in Transaction proposal request';
+		} else {
+			errorMsg = Member._checkProposalRequest(request);
+		}
+
+		if(errorMsg) {
+			logger.error('Member.sendTransactionProposal error '+ errorMsg);
+			return Promise.reject(new Error(errorMsg));
 		}
 
 		var args = [];
@@ -470,13 +491,14 @@ var Member = class {
 			}
 		};
 
-		let proposal = this._buildProposal(invokeSpec, request.chaincodeId);
-		let signed_proposal = this._signProposal(proposal);
+		let header = Member._buildHeader(this._enrollment.certificate, request.chainId, request.chaincodeId, request.txId, request.nonce);
+		let proposal = this._buildProposal(invokeSpec, header);
+		let signed_proposal = this._signProposal(this._enrollment, proposal);
 
 		return Member._sendPeersProposal(request.targets, signed_proposal)
 		.then(
 			function(responses) {
-				return Promise.resolve([responses,proposal]);
+				return Promise.resolve([responses, proposal, header]);
 			}
 		).catch(
 			function(err) {
@@ -532,26 +554,25 @@ var Member = class {
 	/**
 	 * @private
 	 */
-	static _buildHeader(creator, chaincode_id) {
+	static _buildHeader(creator, chain_id, chaincode_id, tx_id, nonce) {
 		let chainHeader = new _commonProto.ChainHeader();
 		chainHeader.setType(_commonProto.HeaderType.ENDORSER_TRANSACTION);
-		chainHeader.setVersion(0); //TODO what should this be
+		chainHeader.setTxID(tx_id.toString());
+		chainHeader.setChainID(Buffer.from(chain_id));
 		if(chaincode_id) {
 			let chaincodeID = new _ccProto.ChaincodeID();
 			chaincodeID.setName(chaincode_id);
 
 			let headerExt = new _ccProposalProto.ChaincodeHeaderExtension();
 			headerExt.setChaincodeID(chaincodeID);
-//			headerExt.setPayloadVisibility(TODO);
 
-			chainHeader.setChainID(chaincodeID.toBuffer());
 			chainHeader.setExtension(headerExt.toBuffer());
 		}
 
 		let signatureHeader = new _commonProto.SignatureHeader();
 
 		signatureHeader.setCreator(Buffer.from(creator));
-		signatureHeader.setNonce(crypto.randomBytes(sdkUtils.getConfigSetting('nonce-size', 24)));
+		signatureHeader.setNonce(nonce);
 
 		let header = new _commonProto.Header();
 		header.setSignatureHeader(signatureHeader);
@@ -564,7 +585,7 @@ var Member = class {
 	/**
 	 * @private
 	 */
-	_buildProposal(invokeSpec, chaincode_id) {
+	_buildProposal(invokeSpec, header) {
 		// construct the ChaincodeInvocationSpec
 		let cciSpec = new _ccProto.ChaincodeInvocationSpec();
 		cciSpec.setChaincodeSpec(invokeSpec);
@@ -572,9 +593,7 @@ var Member = class {
 
 		let cc_payload = new _ccProposalProto.ChaincodeProposalPayload();
 		cc_payload.setInput(cciSpec.toBuffer());
-		//cc_payload.setTransient(n/a); // TODO application-level confidentiality related
-
-		let header = Member._buildHeader(this._enrollment.certificate, chaincode_id);
+		//cc_payload.setTransient(null); // TODO application-level confidentiality related
 
 		// proposal -- will switch to building the proposal once the signProposal is used
 		let proposal = new _proposalProto.Proposal();
@@ -632,11 +651,11 @@ var Member = class {
 	/**
 	 * @private
 	 */
-	_signProposal(proposal) {
+	_signProposal(enrollment, proposal) {
 		let proposal_bytes = proposal.toBuffer();
 		// sign the proposal
-		let sig = this._chain.cryptoPrimitives.sign(this._enrollment.privateKey, proposal_bytes);
-		let signature = new Buffer(sig.toDER());
+		let sig = this._chain.cryptoPrimitives.sign(enrollment.privateKey, proposal_bytes);
+		let signature = Buffer.from(sig.toDER());
 
 		logger.debug('_signProposal - signature::'+JSON.stringify(signature));
 
@@ -703,6 +722,32 @@ var Member = class {
 		};
 
 		return JSON.stringify(state);
+	}
+
+	/*
+	 * @private
+	 */
+	static _checkProposalRequest(request) {
+		var errorMsg = null;
+
+		if(request) {
+			if(!request.chaincodeId) {
+				errorMsg = 'Missing "chaincodeId" parameter in the proposal request';
+			} else if(!request.chainId) {
+				errorMsg = 'Missing "chainId" parameter in the proposal request';
+			} else if(!request.targets) {
+				errorMsg = 'Missing "targets" parameter in the proposal request';
+			} else if(!request.txId) {
+				errorMsg = 'Missing "txId" parameter in the proposal request';
+			} else if(!request.chainId) {
+				errorMsg = 'Missing "chainId" parameter in the proposal request';
+			} else if(!request.nonce) {
+				errorMsg = 'Missing "nonce" parameter in the proposal request';
+			}
+		} else {
+			errorMsg = 'Missing input request object on the proposal request';
+		}
+		return errorMsg;
 	}
 };
 
