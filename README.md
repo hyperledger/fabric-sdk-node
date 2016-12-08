@@ -31,25 +31,26 @@ In the project root folder:
 
 The following tests require setting up a local blockchain network as the target. Because v1.0 is still in active development, you still need the vagrant environment to build the necessary Docker images needed to run the network. Follow the steps below to set it up.
 * You will need the COP server (new implementation of the member service) to run the tests. Because the COP project's build script does not yet produce a docker image, you'd need to run the COP server as a native process inside vagrant
-  * git clone the repository hyperledger/fabric-cop alongside your hyperledger/fabric project in your $GOPATH/src/github.com location
+* git clone both the *fabric* and *fabric-cop* repositories into the $GOPATH/src/github.com/hyperledger folder in your native host (MacOS, Windows or Ubuntu, etc)
 * `cd fabric/devenv`
 * Open the file `Vagrantfile` and insert the following statement below the existing `config.vm.network` statements:
   * `  config.vm.network :forwarded_port, guest: 7056, host: 7056 # Openchain gRPC services`
-  * `  config.vm.network :forwarded_port, guest: 7058, host: 7058 # GRPCCient gRPC services`
   * `  config.vm.network :forwarded_port, guest: 8888, host: 8888 # COP services`
 
 * run `vagrant up` to launch the vagrant VM
-* Once inside vagrant, `cd $GOPATH/src/github.com/hyperledger/fabric`
-* run `make images` to build the docker images
-* copy [docker-compose.yml](https://raw.githubusercontent.com/hyperledger/fabric-sdk-node/master/test/fixtures/docker-compose.yml) file in home directory (/home/vagrant) and copy the following content into the file
-* run `docker-compose up --force-recreate` to launch the network
-* You also need to start your COP server to allow the SDK to enroll users:
-  * change directory to they fabric-cop project, follow the instructions in [the fabric-cop README](https://github.com/hyperledger/fabric-cop) to build the COP binary
-  * launch the server with the following command from the fabric-cop directory:
+* Once inside vagrant, follow these steps to start the COP server and the Peers network with orderer
+* start COP (new membership service)
+  * cd `$GOPATH/src/github.com/hyperledger/fabric-cop
+  * follow the instructions in [fabric-cop README](https://github.com/hyperledger/fabric-cop) to build the COP binary
+  * from the `fabric-cop` folder, launch the following command to start the COP server. The ec.pem and ec-key.pem certificates sets up the COP server as the trusted root that the Peer nodes have been statically configured as a temporary measure. In other words, the Peers will be able to trust any user certificates that have been signed by the COP server. This is important because the endorser code inside the Peer will need to validate the user certificate issued by COP before using it to verify the signature of the transaction proposal.
   	* `bin/cop server start -address "" -ca testdata/ec.pem -ca-key testdata/ec-key.pem -config testdata/testconfig.json`
-
+* start the Peer network
+  * `cd $GOPATH/src/github.com/hyperledger/fabric`
+  * run `make docker` to build the docker images
+  * create a docker-compose.yml file in home directory (/home/vagrant), and copy [docker-compose.yml](https://raw.githubusercontent.com/hyperledger/fabric-sdk-node/master/test/fixtures/docker-compose.yml) file content into the file
+  * from /home/vagrant, run `docker-compose up --force-recreate` to launch the network
 * Back in your native host (MacOS, or Windows, or Ubuntu, etc), run the following tests:
-  * Clear out your previous keyvalue store if needed (rm -fr /tmp/KeyValStore*)
+  * Clear out your previous keyvalue store if needed (rm -fr /tmp/hfc-*)
   * Run `gulp test` to run the entire test bucket and generate coverage reports (both in console output and HTMLs)
   * Test user management with a member services, run `node test/unit/ca-tests.js`
   * Test happy path from end to end, run `node test/unit/end-to-end.js`
@@ -86,4 +87,4 @@ HFC defines the following abstract classes for application developers to supply 
 
 2. The cryptography suite used by the default implementation uses ECDSA for asymmetric keys cryptography, AES for encryption and SHA2/3 for secure hashes. A different suite can be plugged in with "CRYPTO_SUITE" environment variable specifying full require() path to the alternative implementation of the api.CrytoSuite abstract class.
 
-3. If the user application uses an alternative membership service than the one provided by Hyperledger Fabric, the client code will likely need to use an alternative client to interact with the membership service. Use the "MEMBER_SERVICE" environment variable to specify a full require() path to the alternative implementation.
+3. If the user application uses an alternative membership service than the one provided by the component `fabric-cop`, the client code will likely need to use an alternative client to `hfc-cop` to interact with that membership service.
