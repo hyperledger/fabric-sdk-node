@@ -131,7 +131,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 
 		if (steps.length === 0) {
 			// this is called without steps parameter in order to execute all steps
-			// in sequence, will needs to sleep for 30sec here
+			// in sequence, will need to sleep for 30sec here
 			promise = promise.then(
 				function(response) {
 					if (response.Status === 'SUCCESS') {
@@ -197,6 +197,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 				var proposalResponses = results[0];
 				var proposal = results[1];
 				var header   = results[2];
+
 				var all_good = true;
 				for(var i in proposalResponses) {
 					let one_good = false;
@@ -229,7 +230,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 
 		if (steps.length === 0) {
 			// this is called without steps parameter in order to execute all steps
-			// in sequence, will needs to sleep for 30sec here
+			// in sequence, will need to sleep for 30sec here
 			promise = promise.then(
 				function(response) {
 					if (response.Status === 'SUCCESS') {

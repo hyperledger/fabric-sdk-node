@@ -659,11 +659,6 @@ var Member = class {
 
 		logger.debug('_signProposal - signature::'+JSON.stringify(signature));
 
-//		Should be doing the following, but it does not work
-//		let signedProposal = new _proposalProto.SignedProposal();
-//		signedProposal.setSignature(signature);
-//		signedProposal.setProposalBytes(proposal_bytes);
-
 		// build manually for now
 		let signedProposal = {
 			signature :  signature,
