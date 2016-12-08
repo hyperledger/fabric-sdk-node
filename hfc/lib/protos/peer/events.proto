@@ -82,7 +82,7 @@ message Event {
         Register register = 1;
 
         //producer events
-        Block2 block = 2;
+        common.Block block = 2;
         ChaincodeEvent chaincodeEvent = 3;
         Rejection rejection = 4;
 

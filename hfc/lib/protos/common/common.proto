@@ -29,6 +29,7 @@ enum Status {
     BAD_REQUEST = 400;
     FORBIDDEN = 403;
     NOT_FOUND = 404;
+    REQUEST_ENTITY_TOO_LARGE = 413;
     INTERNAL_SERVER_ERROR = 500;
     SERVICE_UNAVAILABLE = 503;
 }
@@ -57,7 +58,7 @@ message ChainHeader {
     google.protobuf.Timestamp timestamp = 3;
 
     // Identifier of the chain this message is bound for
-    bytes chainID = 4;
+    string chainID = 4;
 
     // An unique identifier that is used end-to-end.
     //  -  set by higher layers such as end user or SDK

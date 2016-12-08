@@ -558,7 +558,7 @@ var Member = class {
 		let chainHeader = new _commonProto.ChainHeader();
 		chainHeader.setType(_commonProto.HeaderType.ENDORSER_TRANSACTION);
 		chainHeader.setTxID(tx_id.toString());
-		chainHeader.setChainID(Buffer.from(chain_id));
+		chainHeader.setChainID(chain_id);
 		if(chaincode_id) {
 			let chaincodeID = new _ccProto.ChaincodeID();
 			chaincodeID.setName(chaincode_id);

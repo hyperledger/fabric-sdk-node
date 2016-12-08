@@ -25,11 +25,13 @@ This project publishes two separate npm packages:
 In the project root folder:
 * `npm install` to install dependencies
 * `gulp cop` to copy common dependent modules from the `hfc` folder to the `hfc-cop` folder
-* `gulp watch` to set up watch that updates hfc-cop's shared dependencies from hfc/lib and updates installed hfc and hfc-cop modules in node_modules
-* `gulp doc` to generate API docs
+* `gulp watch` to set up watch that updates hfc-cop's shared dependencies from hfc/lib and updates installed hfc and hfc-cop modules in node_modules. This command does not return, so you should keep it running in a separate command window as you work on the code and test in another command window
+* optionally, `gulp doc` to generate API docs if you want to review the doc content
 * `npm test` to run the headless tests that do not require any additional set up
 
 The following tests require setting up a local blockchain network as the target. Because v1.0 is still in active development, you still need the vagrant environment to build the necessary Docker images needed to run the network. Follow the steps below to set it up.
+* You will need the COP server (new implementation of the member service) to run the tests. Because the COP project's build script does not yet produce a docker image, you'd need to run the COP server as a native process inside vagrant
+  * git clone the repository hyperledger/fabric-cop alongside your hyperledger/fabric project in your $GOPATH/src/github.com location
 * `cd fabric/devenv`
 * Open the file `Vagrantfile` and insert the following statement below the existing `config.vm.network` statements:
   * `  config.vm.network :forwarded_port, guest: 7056, host: 7056 # Openchain gRPC services`
@@ -41,11 +43,16 @@ The following tests require setting up a local blockchain network as the target.
 * run `make images` to build the docker images
 * copy [docker-compose.yml](https://raw.githubusercontent.com/hyperledger/fabric-sdk-node/master/test/fixtures/docker-compose.yml) file in home directory (/home/vagrant) and copy the following content into the file
 * run `docker-compose up --force-recreate` to launch the network
+* You also need to start your COP server to allow the SDK to enroll users:
+  * change directory to they fabric-cop project, follow the instructions in [the fabric-cop README](https://github.com/hyperledger/fabric-cop) to build the COP binary
+  * launch the server with the following command from the fabric-cop directory:
+  	* `bin/cop server start -address "" -ca testdata/ec.pem -ca-key testdata/ec-key.pem -config testdata/testconfig.json`
+
 * Back in your native host (MacOS, or Windows, or Ubuntu, etc), run the following tests:
   * Clear out your previous keyvalue store if needed (rm -fr /tmp/KeyValStore*)
   * Run `gulp test` to run the entire test bucket and generate coverage reports (both in console output and HTMLs)
   * Test user management with a member services, run `node test/unit/ca-tests.js`
-  * Test happy path from end to end, run `node test/unit/end-2-end.js`
+  * Test happy path from end to end, run `node test/unit/end-to-end.js`
   * Test transaction proposals, run `node test/unit/endorser-tests.js`
   * Test sending endorsed transactions for consensus, run `node test/unit/orderer-tests.js`
 
