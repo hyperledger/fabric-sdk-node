@@ -734,8 +734,6 @@ var Member = class {
 				errorMsg = 'Missing "targets" parameter in the proposal request';
 			} else if(!request.txId) {
 				errorMsg = 'Missing "txId" parameter in the proposal request';
-			} else if(!request.chainId) {
-				errorMsg = 'Missing "chainId" parameter in the proposal request';
 			} else if(!request.nonce) {
 				errorMsg = 'Missing "nonce" parameter in the proposal request';
 			}
