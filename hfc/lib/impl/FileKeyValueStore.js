@@ -89,7 +89,7 @@ var KeyValueStore = class extends api.KeyValueStore {
 				if (err) {
 					reject(err);
 				} else {
-					return resolve(true);
+					return resolve(value);
 				}
 			});
 		});

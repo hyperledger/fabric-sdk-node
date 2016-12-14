@@ -24,9 +24,14 @@ var fs = require('fs');
 var testUtil = require('./util.js');
 
 var Orderer = require('hfc/lib/Orderer.js');
-var Member = require('hfc/lib/Member.js');
+var Chain = require('hfc/lib/Chain.js');
 
 var keyValStorePath = testUtil.KVS;
+
+var client = new hfc();
+client.setStateStore(hfc.newDefaultKeyValueStore({
+	path: testUtil.KVS
+}));
 
 //
 // Orderer via chain setOrderer/getOrderer
@@ -39,17 +44,15 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 	//
 	// Create and configure the test chain
 	//
-	var chain = hfc.getChain('testChain-orderer-member', true);
+	var chain = client.newChain('testChain-orderer-member');
 	try {
-		var order_address = 'grpc://localhost:7050';
-		chain.setOrderer(order_address);
+		var orderer = new Orderer('grpc://localhost:7050');
+		chain.addOrderer(orderer);
 		t.pass('Successfully set the new orderer URL');
-		t.end();
 
-		var order = chain.getOrderer();
-		if(order.getUrl() === order_address) {
+		var orderers = chain.getOrderers();
+		if(orderers !== null && orderers.length > 0 && orderers[0].getUrl() === 'grpc://localhost:7050') {
 			t.pass('Successfully retrieved the new orderer URL from the chain');
-			t.end();
 		}
 		else {
 			t.fail('Failed to retieve the new orderer URL from the chain');
@@ -57,13 +60,12 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 		}
 
 		try {
-			var order_address2 = 'grpc://localhost:5152';
-			chain.setOrderer(order_address2);
+			var orderer2 = new Orderer('grpc://localhost:5152');
+			chain.addOrderer(orderer2);
 			t.pass('Successfully updated the orderer URL');
-			t.end();
 
-			var order2 = chain.getOrderer();
-			if(order2.getUrl() === order_address2) {
+			var orderers = chain.getOrderers();
+			if(orderers !== null && orderers.length > 0 && orderers[1].getUrl() === 'grpc://localhost:5152') {
 				t.pass('Successfully retrieved the upated orderer URL from the chain');
 				t.end();
 			}
@@ -73,7 +75,7 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 			}
 		}
 		catch(err2) {
-			t.fail('Failed to update the order URL ' + err);
+			t.fail('Failed to update the order URL ' + err2);
 			t.end();
 		}
 	}
@@ -93,39 +95,26 @@ test('\n\n** TEST ** orderer via chain set/get bad address', function(t) {
 	//
 	// Create and configure the test chain
 	//
-	var chain = hfc.getChain('testChain', true);
-	try {
-		var order_address = 'xxx';
-		chain.setOrderer(order_address);
-		t.failed('Failed by setting the orderer to a bad address');
-		t.end();
-	}
-	catch(err) {
-		t.pass('Successfully caught setting of a bad address ' + err);
-		t.end();
-	}
-});
+	var chain = client.newChain('testChain-orderer-member1');
 
-//
-// Orderer via chain set/get empty address
-//
-// Set the orderer URL to an empty address through the chain setOrderer method.
-// Verify that an error is reported when trying to set an empty address.
-//
-test('\n\n** TEST ** orderer via chain set/get empty address', function(t) {
-	//
-	// Create and configure the test chain
-	//
-	var chain = hfc.getChain('testChain', true);
-	try {
-		chain.setOrderer();
-		t.failed('Failed by setting the orderer to a empty address');
-		t.end();
-	}
-	catch(err) {
-		t.pass('Successfully caught the setting of a empty address ' + err);
-		t.end();
-	}
+	t.throws(
+		function() {
+			var order_address = 'xxx';
+			chain.addOrderer(new Orderer(order_address));
+		},
+		/InvalidProtocol: Invalid protocol: undefined/,
+		'Test setting a bad orderer address'
+	);
+
+	t.throws(
+		function() {
+			chain.addOrderer(new Orderer());
+		},
+		/TypeError: Parameter 'url' must be a string/,
+		'Test setting an empty orderer address'
+	);
+
+	t.end();
 });
 
 //
@@ -139,19 +128,15 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 	//
 	// Create and configure the test chain
 	//
-	var chain = hfc.getChain('testChain', true);
+	var chain = client.newChain('testChain-orderer-member2');
 
-	chain.setKeyValueStore(hfc.newKeyValueStore({
-		path: keyValStorePath
-	}));
-
-	testUtil.getSubmitter(chain, t)
+	testUtil.getSubmitter(client, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
 
 			// send to orderer
-			return admin.sendTransaction('data');
+			return chain.sendTransaction('data');
 		},
 		function(err) {
 			t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -161,20 +146,20 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 		function(status) {
 			console.log('Status: ' + status + ', type: (' + typeof status + ')');
 			if (status === 0) {
-				t.fail('Successfully submitted request.');
+				t.fail('Successfully submitted request, which is bad because the chain is missing orderers.');
 			} else {
-				t.pass('Failed to submit. Error code: ' + status);
+				t.pass('Successfully tested invalid submission due to missing orderers. Error code: ' + status);
 			}
 
 			t.end();
 		},
 		function(err) {
 			console.log('Error: ' + err);
-			t.pass('Failed to submit. Error code: ' + err);
+			t.pass('Successfully tested invalid submission due to missing orderers. Error code: ' + err);
 			t.end();
 		}
 	).catch(function(err) {
-		t.pass('Failed request. ' + err);
+		t.fail('Failed request. ' + err);
 		t.end();
 	});
 });
@@ -190,21 +175,17 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 	//
 	// Create and configure the test chain
 	//
-	var chain = hfc.getChain('testChain', true);
+	var chain = client.newChain('testChain-orderer-member3');
 
-	chain.setKeyValueStore(hfc.newKeyValueStore({
-		path: keyValStorePath
-	}));
+	chain.addOrderer(new Orderer('grpc://localhost:7050'));
 
-	chain.setOrderer('grpc://localhost:7050');
-
-	testUtil.getSubmitter(chain, t)
+	testUtil.getSubmitter(client, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
 
 			// send to orderer
-			return admin.sendTransaction(null);
+			return chain.sendTransaction(null);
 		},
 		function(err) {
 			t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -212,17 +193,30 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 		}
 	).then(
 		function(status) {
-			console.log('Status: ' + status + ', type: (' + typeof status + ')');
 			if (status === 0) {
-				t.fail('Successfully submitted request.');
+				t.fail('Successfully submitted request, which is bad because the submission was missing data');
+				t.end();
 			} else {
-				t.pass('Failed to submit. Error code: ' + status);
-			}
+				t.pass('Successfully tested invalid submission due to null data. Error code: ' + status);
 
-			t.end();
+				return chain.sendTransaction('some non-null but still bad data');
+			}
 		},
 		function(err) {
-			console.log('Error: ' + err);
+			t.pass('Failed to submit. Error code: ' + err);
+			t.end();
+		}
+	).then(
+		function(status) {
+			if (status === 0) {
+				t.fail('Successfully submitted request, which is bad because the submission was using bad data');
+				t.end();
+			} else {
+				t.pass('Successfully tested invalid submission due to bad data. Error code: ' + status);
+				t.end();
+			}
+		},
+		function(err) {
 			t.pass('Failed to submit. Error code: ' + err);
 			t.end();
 		}
@@ -243,22 +237,18 @@ test('\n\n** TEST ** orderer via member bad orderer address', function(t) {
 	//
 	// Create and configure the test chain
 	//
-	var chain = hfc.getChain('testChain', true);
-
-	chain.setKeyValueStore(hfc.newKeyValueStore({
-		path: keyValStorePath
-	}));
+	var chain = client.newChain('testChain-orderer-member4');
 
 	// Set bad orderer address here
-	chain.setOrderer('grpc://localhost:5199');
+	chain.addOrderer(new Orderer('grpc://localhost:5199'));
 
-	testUtil.getSubmitter(chain, t)
+	testUtil.getSubmitter(client, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
 
 			// send to orderer
-			return admin.sendTransaction('some data');
+			return chain.sendTransaction('some data');
 		},
 		function(err) {
 			t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -268,9 +258,9 @@ test('\n\n** TEST ** orderer via member bad orderer address', function(t) {
 		function(status) {
 			console.log('Status: ' + status + ', type: (' + typeof status + ')');
 			if (status === 0) {
-				t.fail('Successfully submitted request.');
+				t.fail('Successfully submitted request, which is bad because the chain\'s orderer address is invalid');
 			} else {
-				t.pass('Failed to submit. Error code: ' + status);
+				t.pass('Successfully tested invalid submission due to the chain using orderers with bad addresses. Error code: ' + status);
 			}
 			t.end();
 		},
@@ -280,56 +270,6 @@ test('\n\n** TEST ** orderer via member bad orderer address', function(t) {
 		}
 	).catch(function(err) {
 		t.pass('Failed to submit orderer request. ' + err);
-		t.end();
-	});
-});
-
-//
-// Orderer via member good data
-//
-// Attempt to send a request to the orderer with the sendTransaction method
-// with the orderer address set to the correct URL and the data not being null.
-// Verify that a success is returned when tying to send the request.
-//
-test('\n\n** TEST ** orderer via member bad data', function(t) {
-	//
-	// Create and configure the test chain
-	//
-	var chain = hfc.getChain('testChain', true);
-
-	chain.setKeyValueStore(hfc.newKeyValueStore({
-		path: keyValStorePath
-	}));
-
-	chain.setOrderer('grpc://localhost:7050');
-
-	testUtil.getSubmitter(chain, t)
-	.then(
-		function(admin) {
-			t.pass('Successfully enrolled user \'admin\'');
-
-			return admin.sendTransaction('some data');
-		},
-		function(err) {
-			t.fail('Failed to enroll user \'admin\'. ' + err);
-			t.end();
-		}
-	).then(
-		function(status) {
-			console.log('Status: ' + status + ', type: (' + typeof status + ')');
-			if (status.Status === 'SUCCESS') {
-				t.fail('Successfully submitted request.');
-			} else {
-				t.pass('Failed to submit. Error code: ' + status);
-			}
-			t.end();
-		},
-		function(err) {
-			t.pass('Failed to submit. Error code:'+ err);
-			t.end();
-		}
-	).catch(function(err) {
-		t.fail('Failed to submit orderer request. ' + err);
 		t.end();
 	});
 });

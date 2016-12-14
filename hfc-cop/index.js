@@ -15,10 +15,10 @@
  */
 
 /**
- * This is the main module for the "hfc" (Hyperledger Fabric Client) package. It provides the convenience
- * APIs to the classes of the package including [Chain]{@link module:api.Chain}
+ * This is the pluggable module for the "hfc-cop" (Hyperledger Fabric Client Membership Services
+ * aka "COP") package.  COP is not an acronym.   The name was selected because:
+ *  - it provides police-like security functionality for Hyperledger Fabric, and
+ *  - it is shorter and easier to say and write “COP” rather than “Membership Services"
  *
- * @module hfc
+ * @module hfc-cop
  */
-
-module.exports = require('./lib/Client.js');

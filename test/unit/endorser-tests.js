@@ -19,7 +19,8 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('hfc');
+var Client = require('hfc');
+var Peer = require('hfc/lib/Peer');
 var copService = require('hfc-cop');
 var util = require('util');
 var fs = require('fs');
@@ -30,112 +31,6 @@ var keyValStorePath = testUtil.KVS;
 
 testUtil.setupChaincodeDeploy();
 
-// need to override the default hash algorithm (SHA3) to SHA2 (aka SHA256 when combined
-// with the key size 256 above), in order to match what the peer and COP use
-utils.setConfigSetting('crypto-hash-algo', 'SHA2');
-utils.setConfigSetting('crypto-keysize', 256);
-
-//
-//Run the failing endorser test
-//
-test('\n\n** TEST ** endorser test - missing targets', function(t) {
-	//
-	// Create and configure the test chain
-	var chain = hfc.getChain('testChain', true);
-	chain.setKeyValueStore(hfc.newKeyValueStore({
-		path: keyValStorePath
-	}));
-
-	testUtil.getSubmitter(chain, t)
-	.then(
-		function(admin) {
-			t.pass('Successfully obtained enrolled member admin');
-
-			// send proposal to endorser
-			var request = {
-				chaincodeId: 'mycc',
-				chaincodePath: 'something',
-				fcn: 'invoke',
-				args: ['a', 'b', '1']
-			};
-
-			return admin.sendDeploymentProposal(request);
-		},
-		function(err) {
-			t.fail('Failed to enroll user \'admin\'. ' + err);
-			t.end();
-		}
-	).then(
-		function(status) {
-			if (status === 200) {
-				t.fail('Successfully obtained endorsement.');
-			} else {
-				t.pass('Failed to obtain endorsement. Error code: ' + status);
-			}
-
-			t.end();
-		},
-		function(err) {
-			t.pass('Failed to send deployment proposal due to error: ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	).catch(
-		function(err) {
-			t.fail('Failed to send deployment proposal. ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	);
-});
-
-test('\n\n** TEST ** endorse transaction missing chaincodeId test', function(t) {
-	//
-	// Create and configure the test chain
-	//
-	var chain = hfc.getChain('testChain', true);
-
-	chain.setKeyValueStore(hfc.newKeyValueStore({
-		path: keyValStorePath
-	}));
-
-	testUtil.getSubmitter(chain, t)
-	.then(
-		function(admin) {
-			t.pass('Successfully enrolled user \'admin\'');
-
-			// send proposal to endorser
-			var request = {
-				targets: hfc.getPeer('grpc://localhost:7051'),
-				fcn: 'init',
-				args: ['a', '100', 'b', '200']
-			};
-
-			return admin.sendTransactionProposal(request);
-		},
-		function(err) {
-			t.fail('Failed to enroll user \'admin\'. ' + err);
-			t.end();
-		}
-	).then(
-		function(status) {
-			if (status === 200) {
-				t.fail('Successfully obtained transaction endorsement.');
-			} else {
-				t.pass('Failed to obtain transaction endorsement. Error code: ' + status);
-			}
-
-			t.end();
-		},
-		function(err) {
-			t.pass('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	).catch(
-		function(err) {
-			t.pass('Failed to send transaction proposal. ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	);
-});
 //
 // Run the endorser good tests
 //
@@ -143,27 +38,31 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 	//
 	// Create and configure the test chain
 	//
-	var chain = hfc.getChain('testChain', true);
+	var client = new Client();
+	var chain = client.newChain('testChain', client);
 
-	chain.setKeyValueStore(hfc.newKeyValueStore({
+	client.setStateStore(Client.newDefaultKeyValueStore({
 		path: keyValStorePath
 	}));
 
-	testUtil.getSubmitter(chain, t)
+	testUtil.getSubmitter(client, t)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
 
 			// send proposal to endorser
 			var request = {
-				targets: [hfc.getPeer('grpc://localhost:7051')],
+				targets: [new Peer('grpc://localhost:7051'), new Peer('grpc://localhost:7056')],
 				chaincodePath: testUtil.CHAINCODE_PATH,
-				chaincodeId : 'endorsertest',
+				chaincodeId: 'mycc',
 				fcn: 'init',
-				args: ['a', '100', 'b', '200']
+				args: ['a', '100', 'b', '200'],
+				chainId: '**TEST_CHAINID**',
+				txId: 'blah',
+				nonce: utils.getNonce()
 			};
 
-			return admin.sendDeploymentProposal(request);
+			return chain.sendDeploymentProposal(request);
 		},
 		function(err) {
 			t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -171,7 +70,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 		}
 	).then(
 		function(data) {
-			if (Array.isArray(data) && data.length === 2) {
+			if (Array.isArray(data) && data.length === 3) {
 				let response = data[0];
 
 				if (response[0] && response[0].response && response[0].response.status === 200) {
@@ -180,7 +79,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 					t.fail('Failed to obtain endorsement. Error response: ' + response[0]);
 				}
 			} else {
-				t.fail('Invalid response data. Must be an array carrying proposal response and the original proposal payload');
+				t.fail('Invalid response data. Must be an array carrying proposal response, the original proposal payload and header');
 			}
 
 			t.end();

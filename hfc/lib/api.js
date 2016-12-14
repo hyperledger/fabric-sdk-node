@@ -43,7 +43,8 @@ module.exports.KeyValueStore = class {
 	 * Get the value associated with name.
 	 *
 	 * @param {string} name of the key
-	 * @returns Promise for the value corresponding to the key
+	 * @returns Promise for the value corresponding to the key. If the value does not exist in the
+	 * store, returns null without rejecting the promise
 	 */
 	getValue(name) {}
 
@@ -51,7 +52,7 @@ module.exports.KeyValueStore = class {
 	 * Set the value associated with name.
 	 * @param {string} name of the key to save
 	 * @param {string} value to save
-	 * @returns {Promise} Promise for a "true" value upon successful write operation
+	 * @returns {Promise} Promise for the 'value' object upon successful write operation
 	 */
 	setValue(name, value) {}
 

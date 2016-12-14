@@ -19,6 +19,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var hfc = require('hfc');
+var sdkUtil = require('hfc/lib/utils.js');
 var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
@@ -28,30 +29,10 @@ var Orderer = require('hfc/lib/Orderer.js');
 var keyValStorePath = testUtil.KVS;
 
 //
-// Orderer happy path test
-//
-// Send a broadcast message containing data as Buffer. A successful response is
-// expected in this case.
-//
-test('orderer happy path test', function(t) {
-	var client = new Orderer('grpc://127.0.0.1:7050');
-
-	client.sendBroadcast('some data')
-	.then(
-		function(status) {
-			console.log('response status: ' + JSON.stringify(status));
-			t.pass('Successfully sent to orderer.');
-			t.end();
-		},
-		function(err) {
-			t.fail('Failed to send to orderer!' + err.stack ? err.stack : err);
-			t.end();
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: ' + err.stack ? err.stack : err);
-		t.end();
-	});
-});
+// Orderer happy path test are implemented as part of the end-to-end tests only
+// because the orderer no longer accepts random data but requires all the payload
+// header structure, making it impractical to carry out a happy path test outside
+// of a proposal-transaction flow
 
 //
 // Orderer bad address test

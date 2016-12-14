@@ -9,11 +9,12 @@ gulp.task('watch', function () {
 	.pipe(gulp.dest('hfc-cop/'));
 
 	watch([
-		'hfc/lib/**/*',
 		'hfc/index.js',
 		'hfc/config/**/*',
-		'hfc-cop/lib/**/*',
-		'hfc-cop/config/**/*'
+		'hfc/lib/**/*',
+		'hfc-cop/index.js',
+		'hfc-cop/config/**/*',
+		'hfc-cop/lib/**/*'
 	], { ignoreInitial: false, base: './' })
 	.pipe(debug())
 	.pipe(gulp.dest('node_modules'));

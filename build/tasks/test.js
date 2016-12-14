@@ -22,7 +22,7 @@ gulp.task('test', ['pre-test'], function() {
 		'test/unit/chain-fabriccop-tests.js',
 		'test/unit/endorser-tests.js',
 		'test/unit/orderer-tests.js',
-		'test/unit/orderer-member-tests.js',
+		'test/unit/orderer-chain-tests.js',
 		'test/unit/end-to-end.js',
 		'test/unit/headless-tests.js'
 	])

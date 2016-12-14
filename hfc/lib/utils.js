@@ -396,3 +396,13 @@ module.exports.getNonce = function(length) {
 	return value;
 };
 
+module.exports.getClassMethods = function(clazz) {
+	var i = new clazz();
+	var proto = Object.getPrototypeOf(i);
+	return Object.getOwnPropertyNames(proto).filter(
+		function(e) {
+			if (e !== 'constructor' && typeof i[e] === 'function')
+				return true;
+		});
+};
+

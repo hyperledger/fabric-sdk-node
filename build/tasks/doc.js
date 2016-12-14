@@ -25,11 +25,13 @@ gulp.task('doc', function () {
 		'hfc/lib/impl/FileKeyValueStore.js',
 		'hfc/lib/impl/CryptoSuite_ECDSA_AES.js',
 		'hfc/lib/impl/ecdsa/key.js',
-		'hfc/lib/impl/FabricCOPImpl.js',
 		'hfc/lib/Chain.js',
-		'hfc/lib/Member.js',
 		'hfc/lib/Peer.js',
-		'hfc/lib/X509Certificate.js'
+		'hfc/lib/User.js',
+		'hfc/lib/Client.js',
+		'hfc/lib/X509Certificate.js',
+		'hfc-cop/index.js',
+		'hfc-cop/lib/FabricCOPImpl.js'
 	], {read: false})
 	.pipe(jsdoc())
 	.pipe(gulp.dest('./docs/gen'));

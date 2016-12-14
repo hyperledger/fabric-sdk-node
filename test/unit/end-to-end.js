@@ -34,13 +34,22 @@ hfc.setLogger(logger);
 var util = require('util');
 var testUtil = require('./util.js');
 var utils = require('hfc/lib/utils.js');
+var Peer = require('hfc/lib/Peer.js');
+var Orderer = require('hfc/lib/Orderer.js');
 
-var chain = hfc.newChain('testChain-e2e');
+var client = new hfc();
+var chain = client.newChain('testChain-e2e');
+client.setStateStore(hfc.newDefaultKeyValueStore({
+	path: testUtil.KVS
+}));
+
 var webUser = null;
 var chaincode_id = 'mycc';
 var chain_id = '**TEST_CHAINID**';
 var tx_id = null;
 var nonce = null;
+var peer0 = new Peer('grpc://localhost:7051'),
+	peer1 = new Peer('grpc://localhost:7056');
 
 var steps = [];
 if (process.argv.length > 2) {
@@ -52,14 +61,10 @@ logger.info('Found steps: %s', steps);
 
 testUtil.setupChaincodeDeploy();
 
-chain.setKeyValueStore(hfc.newKeyValueStore({
-	path: testUtil.KVS
-}));
-
-chain.setOrderer('grpc://localhost:7050');
+chain.addOrderer(new Orderer('grpc://localhost:7050'));
 
 test('End-to-end flow of chaincode deploy, transaction invocation, and query', function(t) {
-	var promise = testUtil.getSubmitter(chain, t);
+	var promise = testUtil.getSubmitter(client, t);
 
 	if (steps.length === 0 || steps.indexOf('step1') >= 0) {
 		logger.info('Executing step1');
@@ -67,12 +72,12 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			function(admin) {
 				t.pass('Successfully enrolled user \'admin\'');
 				webUser = admin;
-				tx_id = hfc.buildTransactionID({length:12});
-				nonce = hfc.getNonce();
+				tx_id = utils.buildTransactionID({length:12});
+				nonce = utils.getNonce();
 
 				// send proposal to endorser
 				var request = {
-					targets: [hfc.getPeer('grpc://localhost:7051'), hfc.getPeer('grpc://localhost:7056')],
+					targets: [peer0, peer1],
 					chaincodePath: testUtil.CHAINCODE_PATH,
 					chaincodeId: chaincode_id,
 					fcn: 'init',
@@ -87,7 +92,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 					'RUN go install build-chaincode && mv $GOPATH/bin/build-chaincode $GOPATH/bin/%s'
 				};
 
-				return admin.sendDeploymentProposal(request);
+				return chain.sendDeploymentProposal(request);
 			},
 			function(err) {
 				t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -117,7 +122,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 						proposal: proposal,
 						header: header
 					};
-					return webUser.sendTransaction(request);
+					return chain.sendTransaction(request);
 				} else {
 					t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
 					t.end();
@@ -174,11 +179,11 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			}
 		).then(
 			function() {
-				tx_id = hfc.buildTransactionID({length:12});
-				nonce = hfc.getNonce();
+				tx_id = utils.buildTransactionID({length:12});
+				nonce = utils.getNonce();
 				// send proposal to endorser
 				var request = {
-					targets: [hfc.getPeer('grpc://localhost:7051'), hfc.getPeer('grpc://localhost:7056')],
+					targets: [peer0, peer1],
 					chaincodeId : chaincode_id,
 					fcn: 'invoke',
 					args: ['move', 'a', 'b','100'],
@@ -186,7 +191,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 					txId: tx_id,
 					nonce: nonce
 				};
-				return webUser.sendTransactionProposal(request);
+				return chain.sendTransactionProposal(request);
 			},
 			function(err) {
 				t.fail('Failed to wait due to error: ' + err.stack ? err.stack : err);
@@ -216,7 +221,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 						proposal: proposal,
 						header: header
 					};
-					return webUser.sendTransaction(request);
+					return chain.sendTransaction(request);
 				} else {
 					t.fail('Failed to obtain transaction endorsements. Error code: ' + status);
 					t.end();
@@ -275,15 +280,15 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			function() {
 				// send query
 				var request = {
-					targets: [hfc.getPeer('grpc://localhost:7051'), hfc.getPeer('grpc://localhost:7056')],
+					targets: [peer0, peer1],
 					chaincodeId : chaincode_id,
 					chainId: chain_id,
-					txId: hfc.buildTransactionID(),
-					nonce: hfc.getNonce(),
+					txId: utils.buildTransactionID(),
+					nonce: utils.getNonce(),
 					fcn: 'invoke',
 					args: ['query','b']
 				};
-				return webUser.queryByChaincode(request);
+				return chain.queryByChaincode(request);
 			},
 			function(err) {
 				t.fail('Failed to wait-- error: ' + err.stack ? err.stack : err);

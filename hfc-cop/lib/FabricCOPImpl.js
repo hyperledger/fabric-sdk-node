@@ -31,7 +31,6 @@ var logger = utils.getLogger('FabricCOPImpl.js');
 
 /**
  * This is an implementation of the member service client which communicates with the Fabric COP server.
- *
  * @class
  */
 var FabricCOPServices = class {
