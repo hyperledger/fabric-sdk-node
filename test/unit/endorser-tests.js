@@ -50,9 +50,10 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
 
+			chain.addPeer(new Peer('grpc://localhost:7051'));
+			chain.addPeer(new Peer('grpc://localhost:7056'));
 			// send proposal to endorser
 			var request = {
-				targets: [new Peer('grpc://localhost:7051'), new Peer('grpc://localhost:7056')],
 				chaincodePath: testUtil.CHAINCODE_PATH,
 				chaincodeId: 'mycc',
 				fcn: 'init',

@@ -287,7 +287,6 @@ var Chain = class {
 	 * Sends a deployment proposal to one or more endorsing peers.
 	 *
 	 * @param {Object} request - An object containing the following fields:
-	 *		<br>`targets` : required - An array or single Endorsing {@link Peer} objects as the targets of the request
 	 *		<br>`chaincodePath` : required - String of the path to location of the source code of the chaincode
 	 *		<br>`chaincodeId` : required - String of the name of the chaincode
 	 *		<br>`chainId` : required - String of the name of the chain
@@ -301,6 +300,13 @@ var Chain = class {
 	 */
 	sendDeploymentProposal(request) {
 		var errorMsg = null;
+
+		// Verify that a Peer has been added
+		if (this.getPeers().length < 1) {
+			errorMsg = 'Missing peer objects in Deployment proposal chain';
+			logger.error('Chain.sendDeploymentProposal error '+ errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
 
 		// Verify that chaincodePath is being passed
 		if (request && (!request.chaincodePath || request.chaincodePath === '')) {
@@ -376,7 +382,7 @@ var Chain = class {
 									proposal = self._buildProposal(lcccSpec, header);
 									let signed_proposal = self._signProposal(userContext.getEnrollment(), proposal);
 
-									return Chain._sendPeersProposal(request.targets, signed_proposal);
+									return Chain._sendPeersProposal(self.getPeers(), signed_proposal);
 								}
 							).then(
 								function(responses) {
@@ -404,7 +410,6 @@ var Chain = class {
 	 * Sends a transaction proposal to one or more endorsing peers.
 	 *
 	 * @param {Object} request
-	 *		<br>`targets` : An array or single Endorsing {@link Peer} objects as the targets of the request
 	 *		<br>`chaincodeId` : The id of the chaincode to perform the transaction proposal
 	 *		<br>`chainId` : required - String of the name of the chain
 	 *		<br>`txId` : required - String of the transaction id
@@ -415,6 +420,14 @@ var Chain = class {
 	sendTransactionProposal(request) {
 		logger.debug('Chain.sendTransactionProposal - start');
 		var errorMsg = null;
+
+		// Verify that a Peer has been added
+		if (this.getPeers().length < 1) {
+			errorMsg = 'Missing peer objects in Transaction proposal chain';
+			logger.error('Chain.sendDeploymentProposal error '+ errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+
 		// args is not optional because we need for transaction to execute
 		if (request && !request.args) {
 			errorMsg = 'Missing "args" in Transaction proposal request';
@@ -456,7 +469,7 @@ var Chain = class {
 				proposal = self._buildProposal(invokeSpec, header);
 				let signed_proposal = self._signProposal(userContext.getEnrollment(), proposal);
 
-				return Chain._sendPeersProposal(request.targets, signed_proposal);
+				return Chain._sendPeersProposal(self.getPeers(), signed_proposal);
 			}
 		).then(
 			function(responses) {
@@ -604,7 +617,7 @@ var Chain = class {
 			function(results) {
 				var responses = results[0];
 				var proposal = results[1];
-				logger.debug('Member-sendQueryProposal - response %j', responses);
+				logger.debug('Chain-queryByChaincode - response %j', responses);
 				if(responses && Array.isArray(responses)) {
 					var results = [];
 					for(let i = 0; i < responses.length; i++) {
@@ -696,7 +709,7 @@ var Chain = class {
 					}
 				).catch(
 					function(err) {
-						logger.error('Member-sendPeersProposal - Promise is rejected: %s',err.stack ? err.stack : err);
+						logger.error('Chain-sendPeersProposal - Promise is rejected: %s',err.stack ? err.stack : err);
 						return reject(err);
 					}
 				);
@@ -710,10 +723,10 @@ var Chain = class {
 		  .then(function (results) {
 			results.forEach(function (result) {
 			  if (result.isFulfilled()) {
-				logger.debug('Member-sendPeersProposal - Promise is fulfilled: '+result.value());
+				logger.debug('Chain-sendPeersProposal - Promise is fulfilled: '+result.value());
 				responses.push(result.value());
 			  } else {
-				logger.debug('Member-sendPeersProposal - Promise is rejected: '+result.reason());
+				logger.debug('Chain-sendPeersProposal - Promise is rejected: '+result.reason());
 				responses.push(result.reason());
 			  }
 			});
@@ -752,8 +765,6 @@ var Chain = class {
 				errorMsg = 'Missing "chaincodeId" parameter in the proposal request';
 			} else if(!request.chainId) {
 				errorMsg = 'Missing "chainId" parameter in the proposal request';
-			} else if(!request.targets) {
-				errorMsg = 'Missing "targets" parameter in the proposal request';
 			} else if(!request.txId) {
 				errorMsg = 'Missing "txId" parameter in the proposal request';
 			} else if(!request.nonce) {

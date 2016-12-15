@@ -74,10 +74,11 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 				webUser = admin;
 				tx_id = utils.buildTransactionID({length:12});
 				nonce = utils.getNonce();
+				chain.addPeer(peer0);
+				chain.addPeer(peer1);
 
 				// send proposal to endorser
 				var request = {
-					targets: [peer0, peer1],
 					chaincodePath: testUtil.CHAINCODE_PATH,
 					chaincodeId: chaincode_id,
 					fcn: 'init',
@@ -181,9 +182,10 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			function() {
 				tx_id = utils.buildTransactionID({length:12});
 				nonce = utils.getNonce();
+				chain.addPeer(peer0);
+				chain.addPeer(peer1);
 				// send proposal to endorser
 				var request = {
-					targets: [peer0, peer1],
 					chaincodeId : chaincode_id,
 					fcn: 'invoke',
 					args: ['move', 'a', 'b','100'],
