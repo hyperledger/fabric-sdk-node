@@ -160,7 +160,29 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 * To be implemented
 	 */
 	importKey(raw, opts) {
-		throw new Error('Not implemented yet');
+		if (!opts)
+			throw new Error('Missing required parameter "opts"');
+
+		if (!opts.algorithm)
+			throw new Error('Parameter "opts" missing required field "algorithm"');
+
+		if (opts.algorithm === 'X509Certificate') {
+			// importing public key from an x.509 certificate
+			var pemString = Buffer.from(raw).toString();
+			try {
+				var publicKey = KEYUTIL.getKey(raw);
+
+				if (publicKey.type === 'EC') {
+					return new ECDSAKey(publicKey, publicKey.ecparams.keylen);
+				} else {
+					// TODO PEM encoded private keys, DER encoded public certs and private keys, etc
+					throw new Error('Does not understand certificates other than ECDSA public keys');
+				}
+			} catch(err) {
+				logger.error('Failed to parse public key from PEM: ' + err);
+				throw err;
+			}
+		}
 	}
 
 	/**

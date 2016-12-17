@@ -1032,6 +1032,34 @@ var TEST_KEY_PUBLIC = '04f46815aa00fe2ba2814b906aa4ef1755caf152658de8997a6a85808
 var TEST_MSG_SIGNATURE_SHA2_256 = '3046022100a6460b29373fa16ee96172bfe04666140405fdef78182280545d451f08547736022100d9022fe620ceadabbef1714b894b8d6be4b74c0f9c573bd774871764f4f789c9';
 var TEST_LONG_MSG_SIGNATURE_SHA2_256 = '3045022073266302d730b07499aabd0f88f12c8749a0f90144034dbc86a8cd742722ad29022100852346f93e50911008ab97afc452f83c5985a19fa3aa6d58f615c03bddaa90a1';
 
+var TEST_PUBLICKEY_PEM = '-----BEGIN ECDSA PUBLIC KEY-----\n' +
+'MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEp53zR7+0ZkYyHw1jattcyl6S0Es9uaqc\n' +
+'lABdfMBflwZWBB8jOj+CGW3l4v+qYnAaEJl/TFG73GGtCY5/FNx9E0FkmjCtXsUY\n' +
+'tDKOY53CUoBQParnUL0mgpYkBRlguYIG\n' +
+'-----END ECDSA PUBLIC KEY-----';
+var TEST_PRIVATEKEY_PEM = '-----BEGIN PRIVATE KEY-----MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgzXIgbq9dtAzwK1yknvFTyQmZKmoLkipQHZUjfE2ILb2hRANCAASaQgfH/7XGn9mQ261INTENal0rLGzZroTK7oKHp5IAPK1nDPu+WovQwiDuaL6CzinkufHxvoeZ3XEZOonRP3qP-----END PRIVATE KEY-----';
+// var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----MIIDVDCCAvqgAwIBAgIBATAKBggqhkjOPQQDAjBOMRMwEQYDVQQKDArOoyBBY21lIENvMRkwFwYDVQQDExB0ZXN0LmV4YW1wbGUuY29tMQ8wDQYDVQQqEwZHb3BoZXIxCzAJBgNVBAYTAk5MMB4XDTE2MTIxNjIzMTAxM1oXDTE2MTIxNzAxMTAxM1owTjETMBEGA1UECgwKzqMgQWNtZSBDbzEZMBcGA1UEAxMQdGVzdC5leGFtcGxlLmNvbTEPMA0GA1UEKhMGR29waGVyMQswCQYDVQQGEwJOTDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABFKnXh7hBdp6s9OJ/aadigT1z2WzBbSc7Hzb3rkaWFz4e+9alqqWg9lrur/mDYzG9dudC8jFjVa7KIh+2BxgBayjggHHMIIBwzAOBgNVHQ8BAf8EBAMCAgQwJgYDVR0lBB8wHQYIKwYBBQUHAwIGCCsGAQUFBwMBBgIqAwYDgQsBMA8GA1UdEwEB/wQFMAMBAf8wDQYDVR0OBAYEBAECAwQwDwYDVR0jBAgwBoAEAQIDBDBiBggrBgEFBQcBAQRWMFQwJgYIKwYBBQUHMAGGGmh0dHA6Ly9vY0JDQ1NQLmV4YW1wbGUuY29tMCoGCCsGAQUFBzAChh5odHRwOi8vY3J0LmV4YW1wbGUuY29tL2NhMS5jcnQwRgYDVR0RBD8wPYIQdGVzdC5leGFtcGxlLmNvbYERZ29waGVyQGdvbGFuZy5vcmeHBH8AAAGHECABSGAAACABAAAAAAAAAGgwDwYDVR0gBAgwBjAEBgIqAzAqBgNVHR4EIzAhoB8wDoIMLmV4YW1wbGUuY29tMA2CC2V4YW1wbGUuY29tMFcGA1UdHwRQME4wJaAjoCGGH2h0dHA6Ly9jcmwxLmV4YW1wbGUuY29tL2NhMS5jcmwwJaAjoCGGH2h0dHA6Ly9jcmwyLmV4YW1wbGUuY29tL2NhMS5jcmwwFgYDKgMEBA9leHRyYSBleHRlbnNpb24wCgYIKoZIzj0EAwIDSAAwRQIgcguBb6FUxO+X8DbY17gpqSGuNC4NT4BddPg1UWUxIC0CIQDNyHQAwzhw+512meXRwG92GfpzSBssDKLdwlrqiHOu5A==-----END CERTIFICATE-----';
+var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
+'MIIDVDCCAvqgAwIBAgIBATAKBggqhkjOPQQDAjBOMRMwEQYDVQQKDArOoyBBY21l' +
+'IENvMRkwFwYDVQQDExB0ZXN0LmV4YW1wbGUuY29tMQ8wDQYDVQQqEwZHb3BoZXIx' +
+'CzAJBgNVBAYTAk5MMB4XDTE2MTIxNjIzMTAxM1oXDTE2MTIxNzAxMTAxM1owTjET' +
+'MBEGA1UECgwKzqMgQWNtZSBDbzEZMBcGA1UEAxMQdGVzdC5leGFtcGxlLmNvbTEP' +
+'MA0GA1UEKhMGR29waGVyMQswCQYDVQQGEwJOTDBZMBMGByqGSM49AgEGCCqGSM49' +
+'AwEHA0IABFKnXh7hBdp6s9OJ/aadigT1z2WzBbSc7Hzb3rkaWFz4e+9alqqWg9lr' +
+'ur/mDYzG9dudC8jFjVa7KIh+2BxgBayjggHHMIIBwzAOBgNVHQ8BAf8EBAMCAgQw' +
+'JgYDVR0lBB8wHQYIKwYBBQUHAwIGCCsGAQUFBwMBBgIqAwYDgQsBMA8GA1UdEwEB' +
+'/wQFMAMBAf8wDQYDVR0OBAYEBAECAwQwDwYDVR0jBAgwBoAEAQIDBDBiBggrBgEF' +
+'BQcBAQRWMFQwJgYIKwYBBQUHMAGGGmh0dHA6Ly9vY0JDQ1NQLmV4YW1wbGUuY29t' +
+'MCoGCCsGAQUFBzAChh5odHRwOi8vY3J0LmV4YW1wbGUuY29tL2NhMS5jcnQwRgYD' +
+'VR0RBD8wPYIQdGVzdC5leGFtcGxlLmNvbYERZ29waGVyQGdvbGFuZy5vcmeHBH8A' +
+'AAGHECABSGAAACABAAAAAAAAAGgwDwYDVR0gBAgwBjAEBgIqAzAqBgNVHR4EIzAh' +
+'oB8wDoIMLmV4YW1wbGUuY29tMA2CC2V4YW1wbGUuY29tMFcGA1UdHwRQME4wJaAj' +
+'oCGGH2h0dHA6Ly9jcmwxLmV4YW1wbGUuY29tL2NhMS5jcmwwJaAjoCGGH2h0dHA6' +
+'Ly9jcmwyLmV4YW1wbGUuY29tL2NhMS5jcmwwFgYDKgMEBA9leHRyYSBleHRlbnNp' +
+'b24wCgYIKoZIzj0EAwIDSAAwRQIgcguBb6FUxO+X8DbY17gpqSGuNC4NT4BddPg1' +
+'UWUxIC0CIQDNyHQAwzhw+512meXRwG92GfpzSBssDKLdwlrqiHOu5A==' +
+'-----END CERTIFICATE-----';
+
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 var ECDSA = jsrsa.ECDSA;
@@ -1263,6 +1291,11 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			testVerify(TEST_MSG_SIGNATURE_SHA2_256, TEST_MSG);
 			testVerify(TEST_LONG_MSG_SIGNATURE_SHA2_256, TEST_LONG_MSG);
 
+			// test importKey()
+			var pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: 'X509Certificate' });
+			t.equal(pubKey.isPrivate(), false, 'Test imported public key isPrivate()');
+			t.equal(pubKey.getSKI(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef', 'Test imported public key SKI');
+
 			t.end();
 		})
 		.catch(function (err) {
@@ -1319,13 +1352,40 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', function (t) {
 
 	var pair2 = KEYUTIL.generateKeypair('EC', 'secp384r1');
 	var key2 = new ecdsaKey(pair2.prvKeyObj, 384);
-	t.equal(key2.getSKI().length, 96, 'Checking generated SKI hash string for 384 curve keys');
+	t.equal(key2.getSKI().length, 64, 'Checking generated SKI hash string for 384 curve keys');
 
 	t.equal(key1.isSymmetric() || key2.isSymmetric(), false, 'Checking if key is symmetric');
 	t.equal(key1.isPrivate() && key2.isPrivate(), true, 'Checking if key is private');
 
 	t.equal(key1.getPublicKey().isPrivate(), false, 'Checking isPrivate() logic');
 	t.equal(key1.getPublicKey().toBytes().length, 182, 'Checking toBytes() output');
+
+	// test public keys
+	var key3 = new ecdsaKey(pair1.pubKeyObj, 256);
+	t.equal(key3.getSKI().length, 64, 'Checking generated SKI hash string for 256 curve public key');
+
+	t.doesNotThrow(
+		function() {
+			key3.toBytes();
+		},
+		null,
+		'Checking to dump a public ECDSAKey object to bytes'
+	);
+
+	var key4 = new ecdsaKey(pair2.pubKeyObj, 384);
+	t.equal(key4.getSKI().length, 64, 'Checking generated SKI hash string for 384 curve public key');
+
+	t.doesNotThrow(
+		function() {
+			key4.toBytes();
+		},
+		null,
+		'Checking to dump a public ECDSAKey object to bytes'
+	);
+
+	t.equal(!key3.isPrivate() && !key4.isPrivate(), true, 'Checking if both keys are public');
+	t.equal(key3.getPublicKey().isPrivate(), false, 'Checking getPublicKey() logic');
+	t.equal(key4.getPublicKey().toBytes().length, 220, 'Checking toBytes() output');
 
 	//test CSR generation
 	var pair3 = KEYUTIL.generateKeypair('EC', 'secp256r1');
