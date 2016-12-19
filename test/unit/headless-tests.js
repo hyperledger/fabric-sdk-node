@@ -1032,13 +1032,6 @@ var TEST_KEY_PUBLIC = '04f46815aa00fe2ba2814b906aa4ef1755caf152658de8997a6a85808
 var TEST_MSG_SIGNATURE_SHA2_256 = '3046022100a6460b29373fa16ee96172bfe04666140405fdef78182280545d451f08547736022100d9022fe620ceadabbef1714b894b8d6be4b74c0f9c573bd774871764f4f789c9';
 var TEST_LONG_MSG_SIGNATURE_SHA2_256 = '3045022073266302d730b07499aabd0f88f12c8749a0f90144034dbc86a8cd742722ad29022100852346f93e50911008ab97afc452f83c5985a19fa3aa6d58f615c03bddaa90a1';
 
-var TEST_PUBLICKEY_PEM = '-----BEGIN ECDSA PUBLIC KEY-----\n' +
-'MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEp53zR7+0ZkYyHw1jattcyl6S0Es9uaqc\n' +
-'lABdfMBflwZWBB8jOj+CGW3l4v+qYnAaEJl/TFG73GGtCY5/FNx9E0FkmjCtXsUY\n' +
-'tDKOY53CUoBQParnUL0mgpYkBRlguYIG\n' +
-'-----END ECDSA PUBLIC KEY-----';
-var TEST_PRIVATEKEY_PEM = '-----BEGIN PRIVATE KEY-----MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgzXIgbq9dtAzwK1yknvFTyQmZKmoLkipQHZUjfE2ILb2hRANCAASaQgfH/7XGn9mQ261INTENal0rLGzZroTK7oKHp5IAPK1nDPu+WovQwiDuaL6CzinkufHxvoeZ3XEZOonRP3qP-----END PRIVATE KEY-----';
-// var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----MIIDVDCCAvqgAwIBAgIBATAKBggqhkjOPQQDAjBOMRMwEQYDVQQKDArOoyBBY21lIENvMRkwFwYDVQQDExB0ZXN0LmV4YW1wbGUuY29tMQ8wDQYDVQQqEwZHb3BoZXIxCzAJBgNVBAYTAk5MMB4XDTE2MTIxNjIzMTAxM1oXDTE2MTIxNzAxMTAxM1owTjETMBEGA1UECgwKzqMgQWNtZSBDbzEZMBcGA1UEAxMQdGVzdC5leGFtcGxlLmNvbTEPMA0GA1UEKhMGR29waGVyMQswCQYDVQQGEwJOTDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABFKnXh7hBdp6s9OJ/aadigT1z2WzBbSc7Hzb3rkaWFz4e+9alqqWg9lrur/mDYzG9dudC8jFjVa7KIh+2BxgBayjggHHMIIBwzAOBgNVHQ8BAf8EBAMCAgQwJgYDVR0lBB8wHQYIKwYBBQUHAwIGCCsGAQUFBwMBBgIqAwYDgQsBMA8GA1UdEwEB/wQFMAMBAf8wDQYDVR0OBAYEBAECAwQwDwYDVR0jBAgwBoAEAQIDBDBiBggrBgEFBQcBAQRWMFQwJgYIKwYBBQUHMAGGGmh0dHA6Ly9vY0JDQ1NQLmV4YW1wbGUuY29tMCoGCCsGAQUFBzAChh5odHRwOi8vY3J0LmV4YW1wbGUuY29tL2NhMS5jcnQwRgYDVR0RBD8wPYIQdGVzdC5leGFtcGxlLmNvbYERZ29waGVyQGdvbGFuZy5vcmeHBH8AAAGHECABSGAAACABAAAAAAAAAGgwDwYDVR0gBAgwBjAEBgIqAzAqBgNVHR4EIzAhoB8wDoIMLmV4YW1wbGUuY29tMA2CC2V4YW1wbGUuY29tMFcGA1UdHwRQME4wJaAjoCGGH2h0dHA6Ly9jcmwxLmV4YW1wbGUuY29tL2NhMS5jcmwwJaAjoCGGH2h0dHA6Ly9jcmwyLmV4YW1wbGUuY29tL2NhMS5jcmwwFgYDKgMEBA9leHRyYSBleHRlbnNpb24wCgYIKoZIzj0EAwIDSAAwRQIgcguBb6FUxO+X8DbY17gpqSGuNC4NT4BddPg1UWUxIC0CIQDNyHQAwzhw+512meXRwG92GfpzSBssDKLdwlrqiHOu5A==-----END CERTIFICATE-----';
 var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'MIIDVDCCAvqgAwIBAgIBATAKBggqhkjOPQQDAjBOMRMwEQYDVQQKDArOoyBBY21l' +
 'IENvMRkwFwYDVQQDExB0ZXN0LmV4YW1wbGUuY29tMQ8wDQYDVQQqEwZHb3BoZXIx' +
@@ -1066,6 +1059,7 @@ var ECDSA = jsrsa.ECDSA;
 var asn1 = jsrsa.asn1;
 
 var ecdsaKey = require('hfc/lib/impl/ecdsa/key.js');
+var api = require('hfc/lib/api.js');
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	resetDefaults();
@@ -1292,7 +1286,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			testVerify(TEST_LONG_MSG_SIGNATURE_SHA2_256, TEST_LONG_MSG);
 
 			// test importKey()
-			var pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: 'X509Certificate' });
+			var pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: api.CryptoAlgorithms.X509Certificate });
 			t.equal(pubKey.isPrivate(), false, 'Test imported public key isPrivate()');
 			t.equal(pubKey.getSKI(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef', 'Test imported public key SKI');
 
@@ -2020,6 +2014,111 @@ test('FabricCOPServices: Test _parseURL() function', function (t) {
 		/InvalidURL: url must start with http or https./,
 		'Throw error for missing protocol'
 	);
+});
+
+var Identity = require('hfc/lib/msp/identity.js');
+var MSP = require('hfc/lib/msp/msp.js');
+
+test('\n\n ** Identity class tests **\n\n', function (t) {
+	t.throws(
+		function() {
+			new Identity();
+		},
+		/Missing required parameter "id"/,
+		'Checking required input parameters'
+	);
+
+	t.throws(
+		function() {
+			new Identity('id');
+		},
+		/Missing required parameter "certificate"/,
+		'Checking required input parameters'
+	);
+
+	t.throws(
+		function() {
+			new Identity('id', 'cert');
+		},
+		/Missing required parameter "publicKey"/,
+		'Checking required input parameters'
+	);
+
+	t.throws(
+		function() {
+			new Identity('id', 'cert', 'pubKey');
+		},
+		/Missing required parameter "msp"/,
+		'Checking required input parameters'
+	);
+
+	t.throws(
+		function() {
+			var mspImpl = new MSP();
+		},
+		/Missing required parameter "config"/,
+		'Checking required config parameter for MSP constructor'
+	);
+
+	t.throws(
+		function() {
+			var mspImpl = new MSP({signer: 'blah', admins: [], id: 'blah', cryptoSuite: 'blah'});
+		},
+		/Parameter "config" missing required field "trustedCerts"/,
+		'Checking required config parameter "trustedCerts" for MSP constructor'
+	);
+
+	t.throws(
+		function() {
+			var mspImpl = new MSP({trustedCerts: [], admins: [], id: 'blah', cryptoSuite: 'blah'});
+		},
+		/Parameter "config" missing required field "signer"/,
+		'Checking required config parameter "signer" for MSP constructor'
+	);
+
+	t.throws(
+		function() {
+			var mspImpl = new MSP({trustedCerts: [], signer: 'blah', id: 'blah', cryptoSuite: 'blah'});
+		},
+		/Parameter "config" missing required field "admins"/,
+		'Checking required config parameter "admins" for MSP constructor'
+	);
+
+	t.throws(
+		function() {
+			var mspImpl = new MSP({trustedCerts: [], signer: 'blah', admins: [], cryptoSuite: 'blah'});
+		},
+		/Parameter "config" missing required field "id"/,
+		'Checking required config parameter "id" for MSP constructor'
+	);
+
+	t.throws(
+		function() {
+			var mspImpl = new MSP({trustedCerts: [], signer: 'blah', admins: [], id: 'blah'});
+		},
+		/Parameter "config" missing required field "cryptoSuite"/,
+		'Checking required config parameter "cryptoSuite" for MSP constructor'
+	);
+
+	var mspImpl = new MSP({
+		trustedCerts: [],
+		signer: 'blah',
+		admins: [],
+		id: 'testMSP',
+		cryptoSuite: utils.getCryptoSuite()
+	});
+
+	var cryptoUtils = utils.getCryptoSuite();
+	var pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: api.CryptoAlgorithms.X509Certificate });
+	var identity = new Identity('testIdentity', TEST_CERT_PEM, pubKey, mspImpl);
+
+	var serializedID = identity.serialize();
+	var dsID = mspImpl.deserializeIdentity(serializedID);
+	t.equal(dsID._certificate, TEST_CERT_PEM, 'Identity class function tests: deserialized certificate');
+	t.equal(dsID._publicKey.isPrivate(), false, 'Identity class function tests: deserialized public key');
+	t.equal(dsID._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'Identity class function tests: deserialized public key ecparam check');
+
+	t.end();
 });
 
 function getUserHome() {

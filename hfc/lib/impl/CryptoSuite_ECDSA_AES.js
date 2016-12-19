@@ -157,7 +157,6 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
 	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
-	 * To be implemented
 	 */
 	importKey(raw, opts) {
 		if (!opts)
@@ -166,7 +165,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		if (!opts.algorithm)
 			throw new Error('Parameter "opts" missing required field "algorithm"');
 
-		if (opts.algorithm === 'X509Certificate') {
+		if (opts.algorithm === api.CryptoAlgorithms.X509Certificate) {
 			// importing public key from an x.509 certificate
 			var pemString = Buffer.from(raw).toString();
 			try {

@@ -80,6 +80,7 @@ module.exports = class ECDSA_KEY {
 			buff = pointToOctet(this.getPublicKey()._key);
 		}
 
+		// always use SHA256 regardless of the key size in effect
 		return Hash.sha2_256(buff);
 	}
 
