@@ -372,9 +372,9 @@ var Chain = class {
 							return self._clientContext.getUserContext()
 							.then(
 								function(userContext) {
-									header = Chain._buildHeader(userContext.getEnrollment().certificate, request.chainId, 'lccc', request.txId, request.nonce);
+									header = Chain._buildHeader(userContext.getIdentity(), request.chainId, 'lccc', request.txId, request.nonce);
 									proposal = self._buildProposal(lcccSpec, header);
-									let signed_proposal = self._signProposal(userContext.getEnrollment(), proposal);
+									let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
 
 									return Chain._sendPeersProposal(request.targets, signed_proposal);
 								}
@@ -452,9 +452,9 @@ var Chain = class {
 		return this._clientContext.getUserContext()
 		.then(
 			function(userContext) {
-				header = Chain._buildHeader(userContext.getEnrollment().certificate, request.chainId, request.chaincodeId, request.txId, request.nonce);
+				header = Chain._buildHeader(userContext.getIdentity(), request.chainId, request.chaincodeId, request.txId, request.nonce);
 				proposal = self._buildProposal(invokeSpec, header);
-				let signed_proposal = self._signProposal(userContext.getEnrollment(), proposal);
+				let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
 
 				return Chain._sendPeersProposal(request.targets, signed_proposal);
 			}
@@ -567,7 +567,7 @@ var Chain = class {
 		return this._clientContext.getUserContext()
 		.then(
 			function(userContext) {
-				let sig = self.cryptoPrimitives.sign(userContext.getEnrollment().privateKey, payload_bytes);
+				let sig = self.cryptoPrimitives.sign(userContext.getSigningIdentity().key, payload_bytes);
 				let signature = Buffer.from(sig.toDER());
 
 				// building manually or will get protobuf errors on send
@@ -645,7 +645,7 @@ var Chain = class {
 
 		let signatureHeader = new _commonProto.SignatureHeader();
 
-		signatureHeader.setCreator(Buffer.from(creator));
+		signatureHeader.setCreator(creator.serialize());
 		signatureHeader.setNonce(nonce);
 
 		let header = new _commonProto.Header();
@@ -725,10 +725,10 @@ var Chain = class {
 	/**
 	 * @private
 	 */
-	_signProposal(enrollment, proposal) {
+	_signProposal(signingIdentity, proposal) {
 		let proposal_bytes = proposal.toBuffer();
 		// sign the proposal
-		let sig = this.cryptoPrimitives.sign(enrollment.privateKey, proposal_bytes);
+		let sig = this.cryptoPrimitives.sign(signingIdentity.key, proposal_bytes);
 		let signature = Buffer.from(sig.toDER());
 
 		logger.debug('_signProposal - signature::'+JSON.stringify(signature));

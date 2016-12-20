@@ -30,7 +30,7 @@ function getSubmitter(username, password, client, t) {
 						t.pass('Successfully enrolled user \'' + username + '\'');
 
 						var member = new User(username, client);
-						member.setEnrollment(enrollment);
+						member.setEnrollment(enrollment.key, enrollment.certificate);
 						return client.setUserContext(member);
 					}
 				).catch(

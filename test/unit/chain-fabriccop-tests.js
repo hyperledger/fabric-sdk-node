@@ -55,7 +55,7 @@ test('Attempt to use FabricCOPServices',function(t){
 			t.pass('Successfully enrolled admin with COP server');
 
 			var member = new User('admin', chain);
-			member.setEnrollment(admin);
+			member.setEnrollment(admin.key, admin.certificate);
 			return client.setUserContext(member);
 		},
 		function(err){

@@ -78,7 +78,7 @@ var FabricCOPServices = class {
 	 * @param req Enrollment request
 	 * @param {string} req.enrollmentID The registered ID to use for enrollment
 	 * @param {string} req.enrollmentSecret The secret associated with the enrollment ID
-	 * @returns Promise for [Enrollment]{@link module:api.Enrollment}
+	 * @returns Promise for an object with "key" for private key and "certificate" for the signed certificate
 	 */
 	enroll(req) {
 		var self = this;
@@ -107,7 +107,10 @@ var FabricCOPServices = class {
 						self._fabricCOPClient.enroll(req.enrollmentID, req.enrollmentSecret, csr)
 							.then(
 							function (csrPEM) {
-								return resolve(new api.Enrollment(privateKey, csrPEM));
+								return resolve({
+									key: privateKey,
+									certificate: csrPEM
+								});
 							},
 							function (err) {
 								return reject(err);

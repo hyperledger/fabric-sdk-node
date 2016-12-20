@@ -18,7 +18,10 @@
 
 var util = require('util');
 var sdkUtils = require('./utils.js');
+var api = require('./api.js');
 var logger = sdkUtils.getLogger('Client.js');
+var Identity = require('./msp/identity.js');
+var MSP = require('./msp/msp.js');
 
 /**
  * The User class represents users that have been enrolled and represented by
@@ -59,10 +62,20 @@ var User = class {
 		}
 
 		this._enrollmentSecret = '';
-		this._enrollment = null;
+		this._identity = null;
+		this._signingIdentity = null;
 
 		this._client = client;
 		this.cryptoPrimitives = sdkUtils.getCryptoSuite();
+
+		// TODO: this should be using config properties obtained from the environment
+		this.mspImpl = new MSP({
+			trustedCerts: [],
+			signer: 'blah',
+			admins: [],
+			id: 'DEFAULT',
+			cryptoSuite: this.cryptoPrimitives
+		});
 	}
 
 	/**
@@ -106,27 +119,43 @@ var User = class {
 	}
 
 	/**
-	 * Get the enrollment object for this User instance
-	 * @returns {Enrollment} the enrollment object
+	 * Get the {@link Identity} object for this User instance, used to verify signatures
+	 * @returns {Identity} the identity object that encapsulates the user's enrollment certificate
 	 */
-	getEnrollment() {
-		return this._enrollment;
+	getIdentity() {
+		return this._identity;
+	}
+
+	/**
+	 * Get the {@link SigningIdentity} object for this User instance, used to generate signatures
+	 * @returns {SigningIdentity} the identity object that encapsulates the user's private key for signing
+	 */
+	getSigningIdentity() {
+		return this._signingIdentity;
 	}
 
 	/**
 	 * Set the enrollment object for this User instance
-	 * @param {Enrollment} the enrollment object
+	 * @param {Key} privateKey the private key object
+	 * @param {string} certificate the PEM-encoded string of certificate
 	 */
-	setEnrollment(enrollment) {
-		if (typeof enrollment.privateKey === 'undefined' || enrollment.privateKey === null || enrollment.privateKey === '') {
-			throw new Error('Invalid enrollment object. Must have a valid private key.');
+	setEnrollment(privateKey, certificate) {
+		if (typeof privateKey === 'undefined' || privateKey === null || privateKey === '') {
+			throw new Error('Invalid parameter. Must have a valid private key.');
 		}
 
-		if (typeof enrollment.certificate === 'undefined' || enrollment.certificate === null || enrollment.certificate === '') {
-			throw new Error('Invalid enrollment object. Must have a valid certificate.');
+		if (typeof certificate === 'undefined' || certificate === null || certificate === '') {
+			throw new Error('Invalid parameter. Must have a valid certificate.');
 		}
 
-		this._enrollment = enrollment;
+		var pubKey = this.cryptoPrimitives.importKey(certificate, { algorithm: api.CryptoAlgorithms.X509Certificate });
+		var identity = new Identity('testIdentity', certificate, pubKey, this.mspImpl);
+		this._identity = identity;
+
+		// TODO: to be encapsulated by a new class SigningIdentity
+		this._signingIdentity = {
+			key: privateKey
+		};
 	}
 
 	/**
@@ -155,7 +184,7 @@ var User = class {
 	 * @returns {boolean} True if enrolled; otherwise, false.
 	 */
 	isEnrolled() {
-		return this._enrollment !== null;
+		return this._identity !== null && this._signingIdentity != null;
 	}
 
 	/**
@@ -174,15 +203,21 @@ var User = class {
 		this._roles = state.roles;
 		this._affiliation = state.affiliation;
 		this._enrollmentSecret = state.enrollmentSecret;
-		this._enrollment = state.enrollment;
 
 		var self = this;
 
+		var pubKey = this.cryptoPrimitives.importKey(state.enrollment.identity.certificate, { algorithm: api.CryptoAlgorithms.X509Certificate });
+		var identity = new Identity(state.enrollment.identity.id, state.enrollment.identity.certificate, pubKey, this.mspImpl);
+		this._identity = identity;
+
 		// during serialization (see toString() below) only the key's SKI are saved
 		// swap out that for the real key from the crypto provider
-		var promise = this.cryptoPrimitives.getKey(this._enrollment.privateKey)
-		.then(function(key) {
-			self._enrollment.privateKey = key;
+		var promise = this.cryptoPrimitives.getKey(state.enrollment.signingIdentity)
+		.then(function(privateKey) {
+			self._signingIdentity = {
+				key: privateKey
+			};
+
 			return self;
 		});
 
@@ -194,9 +229,16 @@ var User = class {
 	 * @return {string} The state of this member as a string
 	 */
 	toString() {
-		var serializedEnrollment = (this._enrollment) ? Object.assign({}, this._enrollment) : null;
-		if (this._enrollment && this._enrollment.privateKey) {
-			serializedEnrollment.privateKey = this._enrollment.privateKey.getSKI();
+		var serializedEnrollment = {};
+		if (this._signingIdentity) {
+			serializedEnrollment.signingIdentity = this._signingIdentity.key.getSKI();
+		}
+
+		if (this._identity) {
+			serializedEnrollment.identity = {
+				id: this._identity.getId(),
+				certificate: this._identity._certificate
+			};
 		}
 
 		var state = {

@@ -499,27 +499,27 @@ test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 		t.fail('User constructor set get tests 1: setRoles getRoles was not successful');
 
 	t.throws(function() {
-		member1.setEnrollment( {privateKey: undefined} );
+		member1.setEnrollment();
 	},
-	/Invalid enrollment object. Must have a valid private key/,
+	/Invalid parameter. Must have a valid private key/,
 	'Test invalid enrollment without private key');
 
 	t.throws(function() {
-		member1.setEnrollment( {privateKey: ''} );
+		member1.setEnrollment('');
 	},
-	/Invalid enrollment object. Must have a valid private key/,
+	/Invalid parameter. Must have a valid private key/,
 	'Test invalid enrollment with empty private key');
 
 	t.throws(function() {
-		member1.setEnrollment( {privateKey: 'dummy', certificate: undefined} );
+		member1.setEnrollment('dummy');
 	},
-	/Invalid enrollment object. Must have a valid certificate/,
+	/Invalid parameter. Must have a valid certificate/,
 	'Test invalid enrollment without certificate');
 
 	t.throws(function() {
-		member1.setEnrollment( {privateKey: 'dummy', certificate: ''} );
+		member1.setEnrollment('dummy', '');
 	},
-	/Invalid enrollment object. Must have a valid certificate/,
+	/Invalid parameter. Must have a valid certificate/,
 	'Test invalid enrollment with empty certificate');
 
 	var member2 = new User(memberCfg, _chain);
@@ -534,6 +534,19 @@ test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 		t.pass('User constructor test 2: new User cfg getRoles was successful');
 	else
 		t.fail('User constructor test 2: new User cfg getRoles was not successful');
+
+	// test set enrollment for identity and signing identity
+	var cryptoUtils = utils.getCryptoSuite();
+	cryptoUtils.generateKey()
+	.then(function (key) {
+		// the private key and cert don't match, but it's ok, the code doesn't check
+		member2.setEnrollment(key, TEST_CERT_PEM);
+		var id = member2.getIdentity();
+
+		t.equal(id._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'User class setEnrollment() test');
+		// TODO: test SigningIdentity
+		t.end();
+	});
 
 	t.end();
 });
@@ -2100,6 +2113,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 		'Checking required config parameter "cryptoSuite" for MSP constructor'
 	);
 
+	// test identity serialization and deserialization
 	var mspImpl = new MSP({
 		trustedCerts: [],
 		signer: 'blah',
