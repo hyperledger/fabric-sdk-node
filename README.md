@@ -31,7 +31,15 @@ In the project root folder:
 
 The following tests require setting up a local blockchain network as the target. Because v1.0 is still in active development, you still need the vagrant environment to build the necessary Docker images needed to run the network. Follow the steps below to set it up.
 * You will need the COP server (new implementation of the member service) to run the tests. Because the COP project's build script does not yet produce a docker image, you'd need to run the COP server as a native process inside vagrant
-* git clone both the *fabric* and *fabric-cop* repositories into the $GOPATH/src/github.com/hyperledger folder in your native host (MacOS, Windows or Ubuntu, etc)
+* git clone both the *fabric* and *fabric-cop* repositories into the $GOPATH/src/github.com/hyperledger folder in your native host (MacOS, Windows or Ubuntu, etc).
+
+If you are using a Mac and would like to build the docker images and run them natively instead of using vagrant, do the following:
+* If docker is installed and it’s not ‘Docker for Mac’, uninstall and follow Docker’s clean up instructions to uninstall completely.
+* Install ‘Docker for Mac’. 
+* Install Brew: http://brew.sh
+* run `brew install gnu-tar —-with-default-names`
+
+* To use vagrant, do the following:
 * `cd fabric/devenv`
 * Open the file `Vagrantfile` and insert the following statement below the existing `config.vm.network` statements:
   * `  config.vm.network :forwarded_port, guest: 7056, host: 7056 # Openchain gRPC services`
@@ -41,7 +49,7 @@ The following tests require setting up a local blockchain network as the target.
 * Once inside vagrant, follow these steps to start the COP server and the Peers network with orderer
 * start COP (new membership service)
   * cd `$GOPATH/src/github.com/hyperledger/fabric-cop
-  * follow the instructions in [fabric-cop README](https://github.com/hyperledger/fabric-cop) to build the COP binary
+  * run `make cop` to build the COP binary or follow the instructions in [fabric-cop README](https://github.com/hyperledger/fabric-cop)
   * from the `fabric-cop` folder, launch the following command to start the COP server. The ec.pem and ec-key.pem certificates sets up the COP server as the trusted root that the Peer nodes have been statically configured as a temporary measure. In other words, the Peers will be able to trust any user certificates that have been signed by the COP server. This is important because the endorser code inside the Peer will need to validate the user certificate issued by COP before using it to verify the signature of the transaction proposal.
   	* `bin/cop server start -address "" -ca testdata/ec.pem -ca-key testdata/ec-key.pem -config testdata/testconfig.json`
 * start the Peer network
@@ -50,7 +58,7 @@ The following tests require setting up a local blockchain network as the target.
   * create a docker-compose.yml file in home directory (/home/vagrant), and copy [docker-compose.yml](https://raw.githubusercontent.com/hyperledger/fabric-sdk-node/master/test/fixtures/docker-compose.yml) file content into the file
   * from /home/vagrant, run `docker-compose up --force-recreate` to launch the network
 * Back in your native host (MacOS, or Windows, or Ubuntu, etc), run the following tests:
-  * Clear out your previous keyvalue store if needed (rm -fr /tmp/hfc-*)
+  * Clear out your previous keyvalue store if needed for fabric-sdk-node (rm -fr /tmp/hfc-*) and for fabric-cop (rm $HOME/.cop/cop.db) 
   * Run `gulp test` to run the entire test bucket and generate coverage reports (both in console output and HTMLs)
   * Test user management with a member services, run `node test/unit/ca-tests.js`
   * Test happy path from end to end, run `node test/unit/end-to-end.js`
