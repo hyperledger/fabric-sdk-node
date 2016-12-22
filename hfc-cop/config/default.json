@@ -4,5 +4,5 @@
 	"crypto-asymmetric-key-algo": "ECDSA",
 	"crypto-hash-algo": "SHA2",
 	"crypto-keysize": 256,
-	"crypto-suite": "./impl/CryptoSuite_ECDSA_AES.js",
+	"crypto-suite": "./impl/CryptoSuite_ECDSA_AES.js"
 }

@@ -227,7 +227,7 @@ var FabricCOPClient = class {
 		} else {
 			this._port = (connect_opts.protocol === 'http' ? 80 : 443);
 		}
-		this._ca = (connect_opts.ca) ? ca : null;
+		this._ca = (connect_opts.ca) ? connect_opts.ca : null;
 		this._baseAPI = '/api/v1/cfssl/';
 
 
