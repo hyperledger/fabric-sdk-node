@@ -62,6 +62,8 @@ logger.info('Found steps: %s', steps);
 testUtil.setupChaincodeDeploy();
 
 chain.addOrderer(new Orderer('grpc://localhost:7050'));
+chain.addPeer(peer0);
+chain.addPeer(peer1);
 
 test('End-to-end flow of chaincode deploy, transaction invocation, and query', function(t) {
 	var promise = testUtil.getSubmitter(client, t);
@@ -74,8 +76,6 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 				webUser = admin;
 				tx_id = utils.buildTransactionID({length:12});
 				nonce = utils.getNonce();
-				chain.addPeer(peer0);
-				chain.addPeer(peer1);
 
 				// send proposal to endorser
 				var request = {
@@ -182,8 +182,6 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			function() {
 				tx_id = utils.buildTransactionID({length:12});
 				nonce = utils.getNonce();
-				chain.addPeer(peer0);
-				chain.addPeer(peer1);
 				// send proposal to endorser
 				var request = {
 					chaincodeId : chaincode_id,
