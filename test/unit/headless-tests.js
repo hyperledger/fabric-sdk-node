@@ -551,6 +551,43 @@ test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 	t.end();
 });
 
+test('\n\n ** Chain addPeer() duplicate tests **\n\n', function (t) {
+	var chain_duplicate = new Chain('chain_duplicate', client);
+	var peers = [
+		'grpc://localhost:7051',
+		'grpc://localhost:7052',
+		'grpc://localhost:7053',
+		'grpc://localhost:7051'
+	];
+
+	var expected = peers.length - 1;
+
+	peers.forEach(function (peer) {
+		try {
+			var _peer = new Peer(peer);
+			chain_duplicate.addPeer(_peer);
+		}
+		catch (err) {
+			if (err.name != 'DuplicatePeer'){
+				t.fail('Unexpected error ' + err.toString());
+			}
+			else {
+				t.pass('Expected error message "DuplicatePeer" thrown');
+			}
+		}
+	});
+
+	//check to see we have the correct number of peers
+	if (chain_duplicate.getPeers().length == expected) {
+		t.pass('Duplicate peer not added to the chain(' + expected +
+		' expected | ' + chain_duplicate.getPeers().length + ' found)');
+	}
+	else {
+		t.fail('Failed to detect duplicate peer (' + expected +
+		' expected | ' + chain_duplicate.getPeers().length + ' found)');
+	}
+	t.end();
+});
 
 test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 	var c = new Chain('does not matter', client);
@@ -1046,8 +1083,6 @@ var HASH_MSG_SHA256 = '4e4aa09b6d80efbd684e80f54a70c1d8605625c3380f4cb012b32644a
 var HASH_LONG_MSG_SHA256 = '0d98987f5e4e3ea611f0e3d768c594ff9aac25404265d73554d12c86d7f6fbbc';
 var HASH_MSG_SHA3_256 = '7daeff454f7e91e3cd2d1c1bd5fcd1b6c9d4d5fffc6c327710d8fae7b06ee4a3';
 var HASH_LONG_MSG_SHA3_256 = '577174210438a85ae4311a62e5fccf2441b960013f5691993cdf38ed6ba0c84f';
-var HASH_MSG_SHAKE_256 = '8fe2527123be79ffea8d28572c570ffc54c6e1c03f382645f46b16ba5b7cffd8a6b1553f216909e9a28eb8c88d7711d7fafe757a30b40e203b4f29101b3a1d51';
-var HASH_LONG_MSG_SHAKE_256 = 'bf8056882ba669f6ac174e7fd9c1b1af3202bb318b21bd7b47f70427a8f99b0f887462c7ef21a60ce5bd9b5c1cc39e180e23646f3a77e92a0e16730b52882155';
 
 var TEST_KEY_PRIVATE = '93f15b31e3c3f3bddcd776d9219e93d8559e31453757b79e193a793cbd239573';
 var TEST_KEY_PUBLIC = '04f46815aa00fe2ba2814b906aa4ef1755caf152658de8997a6a858088296054baf45b06b2eba514bcbc37ae0c0cc7465115d36429d0e0bff23dc40e3760c10aa9';
@@ -1082,7 +1117,6 @@ var asn1 = jsrsa.asn1;
 
 var ecdsaKey = require('hfc/lib/impl/ecdsa/key.js');
 var api = require('hfc/lib/api.js');
-var hashPrimitive = require('hfc/lib/hash.js');
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	resetDefaults();
@@ -1128,13 +1162,6 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 			t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_384,
 				'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with key size 384');
-
-			// test SHAKE_256 hash primitive
-			t.equal(hashPrimitive.shake_256(TEST_MSG, 512), HASH_MSG_SHAKE_256,
-				'hash.js function tests: shake_256() on short message');
-
-			t.equal(hashPrimitive.shake_256(TEST_LONG_MSG, 512), HASH_LONG_MSG_SHAKE_256,
-				'hash.js function tests: shake_256() on long message');
 
 			return cryptoUtils.generateKey();
 		})
@@ -2048,8 +2075,6 @@ test('FabricCOPServices: Test _parseURL() function', function (t) {
 
 var Identity = require('hfc/lib/msp/identity.js');
 var MSP = require('hfc/lib/msp/msp.js');
-
-
 
 test('\n\n ** Identity class tests **\n\n', function (t) {
 	t.throws(
