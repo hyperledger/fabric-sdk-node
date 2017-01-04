@@ -23,9 +23,11 @@
 var sjcl = require('sjcl');
 var sjcl_codec = require('sjcl-codec');
 var jssha = require('jssha');
-var sha3_256 = require('js-sha3').sha3_256;
-var sha3_384 = require('js-sha3').sha3_384;
 
+var jsSHA3 = require('js-sha3');
+var sha3_256 = jsSHA3.sha3_256;
+var sha3_384 = jsSHA3.sha3_384;
+var shake_256 = jsSHA3.shake_256;
 
 hash_sha2_256 = function (hash) {
 
@@ -165,3 +167,4 @@ exports.sha2_256 = function (data) {
 };
 exports.sha3_256 = sha3_256;
 exports.sha3_384 = sha3_384;
+exports.shake_256 = shake_256;
