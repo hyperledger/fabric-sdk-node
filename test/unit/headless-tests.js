@@ -1219,47 +1219,6 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		.then(function (key) {
 			t.throws(
 				function () {
-					utils.setConfigSetting('crypto-keysize', 384);
-					cryptoUtils = utils.getCryptoSuite();
-					cryptoUtils.decrypt(key, 'fakeCipherText');
-				},
-				/^Error: Invalid key./,
-				'CryptoSuite_ECDSA_AES function tests: decrypt should throw ' +
-				'"Error: Invalid key. It\'s security does not match the current security level 384 256"'
-			);
-
-			utils.setConfigSetting('crypto-keysize', 256);
-			utils.setConfigSetting('crypto-hash-algo', 'SHA3');
-			cryptoUtils = utils.getCryptoSuite();
-			return cryptoUtils.generateKey();
-		})
-		.then(function (key) {
-			t.throws(
-				function () {
-					cryptoUtils.decrypt(key, 'fakeCipherText');
-				},
-				/^Error: Illegal cipherText length/,
-				'CryptoSuite_ECDSA_AES function tests: decrypt should throw ' +
-				'"Error: Illegal cipherText length: 14 must be > 97"'
-			);
-
-			utils.setConfigSetting('crypto-keysize', 256);
-			utils.setConfigSetting('crypto-hash-algo', 'SHA3');
-			cryptoUtils = utils.getCryptoSuite();
-			return cryptoUtils.generateKey();
-		})
-		.then(function (key) {
-			t.throws(
-				function () {
-					cryptoUtils.decrypt(key, '66616b654369706865725465787431323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930');
-				},
-				/^TypeError: Invalid hex string/,
-				'CryptoSuite_ECDSA_AES function tests: sign() should throw ' +
-				'"TypeError: Invalid hex string"'
-			);
-
-			t.throws(
-				function () {
 					cryptoUtils.sign();
 				},
 				/A valid key is required to sign/,
