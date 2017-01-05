@@ -140,9 +140,9 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			// in sequence, will need to sleep for 30sec here
 			promise = promise.then(
 				function(response) {
-					if (response.Status === 'SUCCESS') {
+					if (response.status === 'SUCCESS') {
 						t.pass('Successfully ordered deployment endorsement.');
-						console.log(' need to wait now for the committer to catch up after the deployment');
+						console.log('  ** need to wait now for the committer to catch up after the deployment');
 						return sleep(30000);
 					} else {
 						t.fail('Failed to order the deployment endorsement. Error code: ' + response.status);
@@ -238,13 +238,13 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			// in sequence, will need to sleep for 30sec here
 			promise = promise.then(
 				function(response) {
-					if (response.Status === 'SUCCESS') {
+					if (response.status === 'SUCCESS') {
 						t.pass('Successfully ordered endorsement transaction.');
 					} else {
 						t.fail('Failed to order the endorsement of the transaction. Error code: ' + response.status);
 					}
 					// always sleep and check with query
-					console.log(' need to wait now for the committer to catch up after the **** MOVE ****');
+					console.log('  ** need to wait now for the committer to catch up after the **** MOVE ****');
 					t.end();
 					return sleep(30000);
 				},
