@@ -1,7 +1,8 @@
 'use strict';
 
 var api = require('../api.js');
-var Identity = require('./identity.js');
+var idModule = require('./identity.js');
+var Identity = idModule.Identity;
 var utils = require('../utils.js');
 var logger = utils.getLogger('msp.js');
 

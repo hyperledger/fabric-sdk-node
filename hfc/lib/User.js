@@ -20,7 +20,8 @@ var util = require('util');
 var sdkUtils = require('./utils.js');
 var api = require('./api.js');
 var logger = sdkUtils.getLogger('Client.js');
-var Identity = require('./msp/identity.js');
+var idModule = require('./msp/identity.js');
+var Identity = idModule.Identity;
 var MSP = require('./msp/msp.js');
 
 /**

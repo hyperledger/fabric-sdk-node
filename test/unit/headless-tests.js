@@ -1075,6 +1075,26 @@ var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'UWUxIC0CIQDNyHQAwzhw+512meXRwG92GfpzSBssDKLdwlrqiHOu5A==' +
 '-----END CERTIFICATE-----';
 
+var TEST_KEY_PRIVATE_PEM = '-----BEGIN PRIVATE KEY-----' +
+'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgZYMvf3w5VkzzsTQY' +
+'I8Z8IXuGFZmmfjIX2YSScqCvAkihRANCAAS6BhFgW/q0PzrkwT5RlWTt41VgXLgu' +
+'Pv6QKvGsW7SqK6TkcCfxsWoSjy6/r1SzzTMni3J8iQRoJ3roPmoxPLK4' +
+'-----END PRIVATE KEY-----';
+var TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
+'MIICEDCCAbagAwIBAgIUXoY6X7jIpHAAgL267xHEpVr6NSgwCgYIKoZIzj0EAwIw' +
+'fzELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNh' +
+'biBGcmFuY2lzY28xHzAdBgNVBAoTFkludGVybmV0IFdpZGdldHMsIEluYy4xDDAK' +
+'BgNVBAsTA1dXVzEUMBIGA1UEAxMLZXhhbXBsZS5jb20wHhcNMTcwMTAzMDEyNDAw' +
+'WhcNMTgwMTAzMDEyNDAwWjAQMQ4wDAYDVQQDEwVhZG1pbjBZMBMGByqGSM49AgEG' +
+'CCqGSM49AwEHA0IABLoGEWBb+rQ/OuTBPlGVZO3jVWBcuC4+/pAq8axbtKorpORw' +
+'J/GxahKPLr+vVLPNMyeLcnyJBGgneug+ajE8srijfzB9MA4GA1UdDwEB/wQEAwIF' +
+'oDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAd' +
+'BgNVHQ4EFgQU9BUt7QfgDXx9g6zpzCyJGxXsNM0wHwYDVR0jBBgwFoAUF2dCPaqe' +
+'gj/ExR2fW8OZ0bWcSBAwCgYIKoZIzj0EAwIDSAAwRQIgcWQbMzluyZsmvQCvGzPg' +
+'f5B7ECxK0kdmXPXIEBiizYACIQD2x39Q4oVwO5uL6m3AVNI98C2LZWa0g2iea8wk' +
+'BAHpeA==' +
+'-----END CERTIFICATE-----';
+
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 var ECDSA = jsrsa.ECDSA;
@@ -2046,7 +2066,10 @@ test('FabricCOPServices: Test _parseURL() function', function (t) {
 	);
 });
 
-var Identity = require('hfc/lib/msp/identity.js');
+var idModule = require('hfc/lib/msp/identity.js');
+var Identity = idModule.Identity;
+var Signer = idModule.Signer;
+var SigningIdentity = idModule.SigningIdentity;
 var MSP = require('hfc/lib/msp/msp.js');
 
 
@@ -2132,6 +2155,62 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 		'Checking required config parameter "cryptoSuite" for MSP constructor'
 	);
 
+	t.throws(
+		function() {
+			var signer = new Signer();
+		},
+		/Missing required parameter "cryptoSuite"/,
+		'Checking required parameter "cryptoSuite"'
+	);
+
+	t.throws(
+		function() {
+			var signer = new Signer('blah');
+		},
+		/Missing required parameter "key" for private key/,
+		'Checking required parameter "key"'
+	);
+
+	t.throws(
+		function() {
+			new SigningIdentity();
+		},
+		/Missing required parameter "id"/,
+		'Checking required input parameters'
+	);
+
+	t.throws(
+		function() {
+			new SigningIdentity('id');
+		},
+		/Missing required parameter "certificate"/,
+		'Checking required input parameters'
+	);
+
+	t.throws(
+		function() {
+			new SigningIdentity('id', 'cert');
+		},
+		/Missing required parameter "publicKey"/,
+		'Checking required input parameters'
+	);
+
+	t.throws(
+		function() {
+			new SigningIdentity('id', 'cert', 'pubKey');
+		},
+		/Missing required parameter "msp"/,
+		'Checking required input parameters'
+	);
+
+	t.throws(
+		function() {
+			new SigningIdentity('id', 'cert', 'pubKey', 'msp');
+		},
+		/Missing required parameter "signer"/,
+		'Checking required input parameters'
+	);
+
 	// test identity serialization and deserialization
 	var mspImpl = new MSP({
 		trustedCerts: [],
@@ -2150,6 +2229,20 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 	t.equal(dsID._certificate, TEST_CERT_PEM, 'Identity class function tests: deserialized certificate');
 	t.equal(dsID._publicKey.isPrivate(), false, 'Identity class function tests: deserialized public key');
 	t.equal(dsID._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'Identity class function tests: deserialized public key ecparam check');
+
+	// manually construct a key based on the saved privKeyHex and pubKeyHex
+	var f = KEYUTIL.getKey(TEST_KEY_PRIVATE_PEM);
+	var testKey = new ecdsaKey(f, 256);
+	var pubKey = testKey.getPublicKey();
+
+	var signer = new Signer(cryptoUtils, testKey);
+	t.equal(signer.getPublicKey().isPrivate(), false, 'Test Signer class getPublicKey() method');
+
+	var signingID = new SigningIdentity('testSigningIdentity', TEST_KEY_PRIVATE_CERT_PEM, pubKey, mspImpl, signer);
+
+	var sig = signingID.sign(TEST_MSG);
+	t.equal(cryptoUtils.verify(pubKey, sig.toDER(), TEST_MSG), true, 'Test SigningIdentity sign() method');
+	t.equal(signingID.verify(TEST_MSG, sig.toDER()), true, 'Test Identity verify() method');
 
 	t.end();
 });

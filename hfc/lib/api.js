@@ -116,7 +116,7 @@ module.exports.CryptoSuite = class {
 	 * @param {byte[]} msg Source message to be hashed
 	 * @param {Object} opts
 	 *      algorithm: an identifier for the algorithm to be used, such as "SHA3"
-	 * @returns {byte[]} The hashed digest
+	 * @returns {string} The hashed digest in hexidecimal string encoding
 	 */
 	hash(msg, opts) {}
 

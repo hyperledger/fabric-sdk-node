@@ -117,4 +117,95 @@ var Identity = class {
 	}
 };
 
-module.exports = Identity;
+/**
+ * Signer is an interface for an opaque private key that can be used for signing operations
+ *
+ * @class
+ */
+var Signer = class {
+	/**
+	 * @param {CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
+	 * signature algorithm
+	 * @param {Key} key The private key
+	 */
+	constructor(cryptoSuite, key) {
+		if (!cryptoSuite)
+			throw new Error('Missing required parameter "cryptoSuite"');
+
+		if (!key)
+			throw new Error('Missing required parameter "key" for private key');
+
+		this._cryptoSuite = cryptoSuite;
+		this._key = key;
+	}
+
+	/**
+	 * Returns the public key corresponding to the opaque, private key
+	 *
+	 * @returns {Key} The public key corresponding to the private key
+	 */
+	getPublicKey() {
+		return this._key.getPublicKey();
+	}
+
+	/**
+	 * Signs digest with the private key.
+     *
+     * Hash implements the SignerOpts interface and, in most cases, one can
+     * simply pass in the hash function used as opts. Sign may also attempt
+     * to type assert opts to other types in order to obtain algorithm
+     * specific values.
+     *
+     * Note that when a signature of a hash of a larger message is needed,
+     * the caller is responsible for hashing the larger message and passing
+     * the hash (as digest) and the hash function (as opts) to Sign.
+	 *
+	 * @param {byte[]} digest The message to sign
+	 * @param {Object} opts
+	 *      hashingFunction: the function to use to hash
+	 */
+	sign(digest, opts) {
+		return this._cryptoSuite.sign(this._key, digest, opts);
+	}
+};
+
+/**
+ * SigningIdentity is an extension of Identity to cover signing capabilities. E.g., signing identity
+ * should be requested in the case of a client who wishes to sign proposal responses and transactions
+ *
+ * @class
+ */
+var SigningIdentity = class extends Identity {
+	/**
+	 * @param {string} id Identifier of this identity object
+	 * @param {string} certificate HEX string for the PEM encoded certificate
+	 * @param {Key} publicKey The public key represented by the certificate
+	 * @param {Signer} signer The signer object encapsulating the opaque private key and the corresponding
+	 * digital signature algorithm to be used for signing operations
+	 * @param {MSP} msp The associated MSP that manages this identity
+	 */
+	constructor(id, certificate, publicKey, msp, signer) {
+		super(id, certificate, publicKey, msp);
+
+		if (!signer)
+			throw new Error('Missing required parameter "signer".');
+
+		this._signer = signer;
+	}
+
+	/**
+	 * Signs digest with the private key contained inside the signer.
+	 *
+	 * @param {byte[]} msg The message to sign
+	 */
+	sign(msg) {
+		// calculate the hash for the message before signing
+		var digest = this._msp.cryptoSuite.hash(msg);
+		return this._signer.sign(msg, null);
+	}
+};
+
+module.exports.Identity = Identity;
+module.exports.SigningIdentity = SigningIdentity;
+module.exports.Signer = Signer;
+
