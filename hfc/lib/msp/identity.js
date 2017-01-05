@@ -201,7 +201,7 @@ var SigningIdentity = class extends Identity {
 	sign(msg) {
 		// calculate the hash for the message before signing
 		var digest = this._msp.cryptoSuite.hash(msg);
-		return this._signer.sign(msg, null);
+		return this._signer.sign(Buffer.from(digest, 'hex'), null);
 	}
 };
 

@@ -235,9 +235,9 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		// Note that the statement below uses internal implementation specific to the
 		// module './ecdsa/key.js'
 		var signKey = this._ecdsa.keyFromPrivate(key._key.prvKeyHex, 'hex');
-		var sig = this._ecdsa.sign(new Buffer(this.hash(digest), 'hex'), signKey);
+		var sig = this._ecdsa.sign(digest, signKey);
 		logger.debug('ecdsa signature: ', sig);
-		return sig;
+		return sig.toDER();
 	}
 
 	/**

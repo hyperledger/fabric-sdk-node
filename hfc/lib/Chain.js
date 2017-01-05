@@ -580,8 +580,8 @@ var Chain = class {
 		return this._clientContext.getUserContext()
 		.then(
 			function(userContext) {
-				let sig = self.cryptoPrimitives.sign(userContext.getSigningIdentity().key, payload_bytes);
-				let signature = Buffer.from(sig.toDER());
+				let sig = userContext.getSigningIdentity().sign(payload_bytes);
+				let signature = Buffer.from(sig);
 
 				// building manually or will get protobuf errors on send
 				var envelope = {
@@ -741,8 +741,8 @@ var Chain = class {
 	_signProposal(signingIdentity, proposal) {
 		let proposal_bytes = proposal.toBuffer();
 		// sign the proposal
-		let sig = this.cryptoPrimitives.sign(signingIdentity.key, proposal_bytes);
-		let signature = Buffer.from(sig.toDER());
+		let sig = signingIdentity.sign(proposal_bytes);
+		let signature = Buffer.from(sig);
 
 		logger.debug('_signProposal - signature::'+JSON.stringify(signature));
 

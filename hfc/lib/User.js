@@ -22,6 +22,8 @@ var api = require('./api.js');
 var logger = sdkUtils.getLogger('Client.js');
 var idModule = require('./msp/identity.js');
 var Identity = idModule.Identity;
+var SigningIdentity = idModule.SigningIdentity;
+var Signer = idModule.Signer;
 var MSP = require('./msp/msp.js');
 
 /**
@@ -152,11 +154,7 @@ var User = class {
 		var pubKey = this.cryptoPrimitives.importKey(certificate, { algorithm: api.CryptoAlgorithms.X509Certificate });
 		var identity = new Identity('testIdentity', certificate, pubKey, this.mspImpl);
 		this._identity = identity;
-
-		// TODO: to be encapsulated by a new class SigningIdentity
-		this._signingIdentity = {
-			key: privateKey
-		};
+		this._signingIdentity = new SigningIdentity('testSigningIdentity', certificate, pubKey, this.mspImpl, new Signer(this.mspImpl.cryptoSuite, privateKey));
 	}
 
 	/**
@@ -215,9 +213,7 @@ var User = class {
 		// swap out that for the real key from the crypto provider
 		var promise = this.cryptoPrimitives.getKey(state.enrollment.signingIdentity)
 		.then(function(privateKey) {
-			self._signingIdentity = {
-				key: privateKey
-			};
+			self._signingIdentity = new SigningIdentity(state.enrollment.identity.id, state.enrollment.identity.certificate, pubKey, self.mspImpl, new Signer(self.mspImpl.cryptoSuite, privateKey));
 
 			return self;
 		});
@@ -232,7 +228,7 @@ var User = class {
 	toString() {
 		var serializedEnrollment = {};
 		if (this._signingIdentity) {
-			serializedEnrollment.signingIdentity = this._signingIdentity.key.getSKI();
+			serializedEnrollment.signingIdentity = this._signingIdentity._signer._key.getSKI();
 		}
 
 		if (this._identity) {

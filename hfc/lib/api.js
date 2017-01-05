@@ -125,7 +125,10 @@ module.exports.CryptoSuite = class {
 	 * The opts argument should be appropriate for the algorithm used.
 	 *
 	 * @param {Key} key Signing key (private key)
-	 * @param {byte[]} digest The message digest to be signed
+	 * @param {byte[]} digest The message digest to be signed. Note that when a
+	 * signature of a hash of a larger message is needed, the caller is responsible
+	 * for hashing the larger message and passing the hash (as digest) and the hash
+	 * function (as opts) to sign.
 	 * @param {Object} opts
 	 *      hashingFunction: the function to use to hash
 	 * @returns {byte[]} the resulting signature
