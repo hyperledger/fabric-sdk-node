@@ -65,7 +65,7 @@ var enrollmentSecret = 'user1';
 var csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabriccop/enroll-csr.pem'));
 
 
-test('FabricCOPClient: Test enroll', function (t) {
+test('FabricCOPClient: Test enroll With Static CSR', function (t) {
 
 	var client = new FabricCOPClient({
 		protocol: 'http',
@@ -74,15 +74,15 @@ test('FabricCOPClient: Test enroll', function (t) {
 	});
 
 	//
-	return client.enroll(enrollmentID,enrollmentSecret, csr)
+	return client.enroll(enrollmentID, enrollmentSecret, csr.toString())
 		.then(function (pem) {
 			t.comment(pem);
-			t.pass('Successfully invoked enroll API with enrollmentID \''+ enrollmentID + '\'');
+			t.pass('Successfully invoked enroll API with enrollmentID \'' + enrollmentID + '\'');
 			//check that we got back the expected certificate
 			var cert = new X509();
 			cert.readCertPEM(pem);
 			t.comment(cert.getSubjectString());
-			t.equal(cert.getSubjectString(),'/CN='+enrollmentID,'Subject should be /CN='+enrollmentID);
+			t.equal(cert.getSubjectString(), '/CN=' + enrollmentID, 'Subject should be /CN=' + enrollmentID);
 		})
 		.catch(function (err) {
 			t.fail('Failed to enroll \'' + enrollmentID + '\'.  ' + err);
@@ -95,20 +95,11 @@ test('FabricCOPClient: Test enroll', function (t) {
 
 //run the enroll test
 
-test('FabricCOPServices: Test enroll()', function (t) {
-
-	//
-	// Create and configure the test chain
-	//
-	var chain = hfc.newChain('testChain-ca');
+test('FabricCOPServices: Test enroll() With Dynamic CSR', function (t) {
 
 	// need to override the default key size 384 to match the member service backend
 	// otherwise the client will not be able to decrypt the enrollment challenge
 	utils.setConfigSetting('crypto-keysize', 256);
-
-	chain.setKeyValueStore(hfc.newKeyValueStore({
-		path: keyValStorePath
-	}));
 
 	var cop = new FabricCOPServices('http://localhost:8888');
 
@@ -127,7 +118,7 @@ test('FabricCOPServices: Test enroll()', function (t) {
 			var cert = new X509();
 			cert.readCertPEM(enrollment.certificate);
 			t.comment(cert.getSubjectString());
-			t.equal(cert.getSubjectString(),'/CN='+req.enrollmentID,'Subject should be /CN='+req.enrollmentID);
+			t.equal(cert.getSubjectString(), '/CN=' + req.enrollmentID, 'Subject should be /CN=' + req.enrollmentID);
 		},
 		function (err) {
 			t.fail('Failed to enroll \'' + req.enrollmentID + '\'.  ' + err);

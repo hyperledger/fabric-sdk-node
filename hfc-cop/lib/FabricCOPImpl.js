@@ -262,6 +262,10 @@ var FabricCOPClient = class {
 				ca: self._ca
 			};
 
+			var enrollRequest = {
+				certificate_request: csr
+			};
+
 			var request = self._httpClient.request(requestOptions, function (response) {
 
 				const responseBody = [];
@@ -300,7 +304,7 @@ var FabricCOPClient = class {
 				reject(new Error(util.format('Calling enrollment endpoint failed with error [%s]', err)));
 			});
 
-			request.write(csr);
+			request.write(JSON.stringify(enrollRequest));
 			request.end();
 
 		});
