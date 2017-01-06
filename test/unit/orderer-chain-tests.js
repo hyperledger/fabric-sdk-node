@@ -110,7 +110,7 @@ test('\n\n** TEST ** orderer via chain set/get bad address', function(t) {
 		function() {
 			chain.addOrderer(new Orderer());
 		},
-		/TypeError: Parameter 'url' must be a string/,
+		/TypeError: Parameter "url" must be a string, not undefined/,
 		'Test setting an empty orderer address'
 	);
 
