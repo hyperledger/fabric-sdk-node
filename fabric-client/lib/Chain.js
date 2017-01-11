@@ -870,15 +870,9 @@ var Chain = class {
 			return Promise.reject(new Error(errorMsg));
 		}
 
-		// Verify that chaincodePath is being passed
-		if (request && (!request.chaincodePath || request.chaincodePath === '')) {
-			errorMsg = 'Missing chaincodePath parameter in Deployment proposal request';
-		} else {
-			errorMsg = Chain._checkProposalRequest(request);
-		}
-
-		if(errorMsg) {
-			logger.error('Chain.sendDeploymentProposal error '+ errorMsg);
+		errorMsg = Chain._checkProposalRequest(request);
+		if (errorMsg) {
+			logger.error('Chain.sendDeploymentProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -888,93 +882,72 @@ var Chain = class {
 		}
 		let self = this;
 
-		return packageChaincode(request.chaincodePath, request.chaincodeId, request['dockerfile-contents'])
-		.then(
-			function(data) {
-				var targzFilePath = data;
+		// step 1: construct a ChaincodeSpec
+		var args = [];
+		args.push(Buffer.from(request.fcn ? request.fcn : 'init', 'utf8'));
 
-				logger.debug('Chain.sendDeployment- Successfully generated chaincode deploy archive and name (%s)', request.chaincodeId);
+		for (let i = 0; i < request.args.length; i++)
+			args.push(Buffer.from(request.args[i], 'utf8'));
 
-				// at this point, the targzFile has been successfully generated
+		let ccSpec = {
+			type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			chaincodeID: {
+				name: request.chaincodeId
+			},
+			input: {
+				args: args
+			}
+		};
 
-				// step 1: construct a ChaincodeSpec
-				var args = [];
-				args.push(Buffer.from(request.fcn ? request.fcn : 'init', 'utf8'));
+		// step 2: construct the ChaincodeDeploymentSpec
+		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 
-				for (let i=0; i<request.args.length; i++)
-					args.push(Buffer.from(request.args[i], 'utf8'));
+		return packageChaincode(this.isDevMode(), request)
+			.then(
+				function(data) {
 
-				let ccSpec = {
-					type: _ccProto.ChaincodeSpec.Type.GOLANG,
-					chaincodeID: {
-						name: request.chaincodeId
-					},
-					input: {
-						args: args
+					// DATA may or may not be present depending on devmode settings
+					if (data) {
+						chaincodeDeploymentSpec.setCodePackage(data);
 					}
-				};
 
-				// step 2: construct the ChaincodeDeploymentSpec
-				let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
-				chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
-
-				return new Promise(function(resolve, reject) {
-					fs.readFile(targzFilePath, function(err, data) {
-						if(err) {
-							reject(new Error(util.format('Error reading deployment archive [%s]: %s', targzFilePath, err)));
-						} else {
-							chaincodeDeploymentSpec.setCodePackage(data);
-
-							// TODO add ESCC/VSCC info here ??????
-							let lcccSpec = {
-								type: _ccProto.ChaincodeSpec.Type.GOLANG,
-								chaincodeID: {
-									name: 'lccc'
-								},
-								input: {
-									args: [Buffer.from('deploy', 'utf8'), Buffer.from('default', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
-								}
-							};
-
-							var header, proposal;
-							return self._clientContext.getUserContext()
-							.then(
-								function(userContext) {
-									var chainHeader = buildChainHeader(
-										_commonProto.HeaderType.ENDORSER_TRANSACTION,
-										request.chainId,
-										request.txId,
-										null,
-										'lccc'
-									);
-									header = buildHeader(userContext.getIdentity(), chainHeader, request.nonce);
-									proposal = self._buildProposal(lcccSpec, header);
-									let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
-
-									return Chain._sendPeersProposal(self.getPeers(), signed_proposal);
-								}
-							).then(
-								function(responses) {
-									resolve([responses, proposal, header]);
-								}
-							).catch(
-								function(err) {
-									logger.error('Sending the deployment proposal failed. Error: %s', err.stack ? err.stack : err);
-									reject(err);
-								}
-							);
+					// TODO add ESCC/VSCC info here ??????
+					let lcccSpec = {
+						type: _ccProto.ChaincodeSpec.Type.GOLANG,
+						chaincodeID: {
+							name: 'lccc'
+						},
+						input: {
+							args: [Buffer.from('deploy', 'utf8'), Buffer.from('default', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
 						}
-					});
-				});
-			}
-		).catch(
-			function(err) {
-				logger.error('Building the deployment proposal failed. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
-	}
+					};
 
+					var header, proposal;
+					return self._clientContext.getUserContext()
+						.then(
+							function(userContext) {
+								var chainHeader = buildChainHeader(
+									_commonProto.HeaderType.ENDORSER_TRANSACTION,
+									request.chainId,
+									request.txId,
+									null,
+									'lccc'
+								);
+								header = buildHeader(userContext.getIdentity(), chainHeader, request.nonce);
+								proposal = self._buildProposal(lcccSpec, header);
+								let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
+
+								return Chain._sendPeersProposal(self.getPeers(), signed_proposal);
+							}
+						).then(
+							function(responses) {
+								return [responses, proposal, header];
+							}
+						);
+				}
+			);
+	}
 	/**
 	 * Sends a transaction proposal to one or more endorsing peers.
 	 *
@@ -1342,47 +1315,70 @@ function toKeyValueStoreName(name) {
 	return 'member.' + name;
 }
 
-function packageChaincode(chaincodePath, chaincodeId, dockerfileContents) {
-
-	// Determine the user's $GOPATH
-	let goPath =  process.env['GOPATH'];
-
-	// Compose the path to the chaincode project directory
-	let projDir = goPath + '/src/' + chaincodePath;
-
-	// Compose the Dockerfile commands
-	if (dockerfileContents === undefined) {
-		dockerfileContents = utils.getConfigSetting('dockerfile-contents', undefined);
-	}
-
-	// Substitute the hashStrHash for the image name
-	dockerfileContents = util.format(dockerfileContents, chaincodeId);
-
+function readFile(path) {
 	return new Promise(function(resolve, reject) {
-		// Create a Docker file with dockerFileContents
-		let dockerFilePath = projDir + '/Dockerfile';
-		fs.writeFile(dockerFilePath, dockerfileContents, function(err) {
+		fs.readFile(path, function(err, data) {
 			if (err) {
-				reject(new Error(util.format('Error writing file [%s]: %s', dockerFilePath, err)));
+				reject(err);
 			} else {
-				// Create the .tar.gz file of the chaincode package
-				let targzFilePath = '/tmp/deployment-package.tar.gz';
-				// Create the compressed archive
-				return utils.generateTarGz(projDir, targzFilePath)
-				.then(
-					function(targzFilePath) {
-						// return both the hash and the tar.gz file path as resolved data
-						resolve(targzFilePath);
-					}
-				).catch(
-					function(err) {
-						logger.error('Failed to build chaincode package: %s', err.stack ? err.stack : err);
-						reject(err);
-					}
-				);
+				resolve(data);
 			}
 		});
 	});
+}
+
+function writeFile(path, contents) {
+	return new Promise(function(resolve, reject) {
+		fs.writeFile(path, contents, function(err) {
+			if (err) {
+				reject(new Error(util.format('Error writing file [%s]: %s', path, err)));
+			} else {
+				resolve(path);
+			}
+		});
+	});
+}
+
+function packageChaincode(devmode, request) {
+	if (devmode) {
+		logger.debug('Skipping chaincode packaging due to devmode configuration');
+		return Promise.resolve(null);
+	} else if (!request.chaincodePath || request.chaincodePath === '') {
+		// Verify that chaincodePath is being passed
+		return Promise.reject(new Error('Missing chaincodePath parameter in Deployment proposal request'));
+	} else {
+		var chaincodePath = request.chaincodePath;
+		var chaincodeId = request.chaincodeId;
+		var dockerfileContents = request['dockerfile-contents'];
+
+		// Determine the user's $GOPATH
+		let goPath =  process.env['GOPATH'];
+
+		// Compose the path to the chaincode project directory
+		let projDir = goPath + '/src/' + chaincodePath;
+		let dockerFilePath = projDir + '/Dockerfile';
+
+		// Compose the Dockerfile commands
+		if (dockerfileContents === undefined) {
+			dockerfileContents = utils.getConfigSetting('dockerfile-contents', undefined);
+		}
+
+		// Substitute the hashStrHash for the image name
+		dockerfileContents = util.format(dockerfileContents, chaincodeId);
+
+		// Create the .tar.gz file of the chaincode package
+		// FIXME: this should use a mktmp to avoid collisions
+		let targzFilePath = '/tmp/deployment-package.tar.gz';
+
+		return writeFile(dockerFilePath, dockerfileContents)
+			.then(function() {
+				return utils.generateTarGz(projDir, targzFilePath);
+			})
+			.then(function() {
+				logger.debug('Chain.sendDeployment- Successfully generated chaincode deploy archive and name (%s)', chaincodeId);
+				return readFile(targzFilePath);
+			});
+	}
 }
 
 //utility method to build a common chain header
