@@ -475,11 +475,117 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 			_chain.addOrderer(orderer);
 		},
 		null,
-		'checking the set of Orderers'
+		'checking the chain addOrderer()'
 	);
-	t.equal(_chain.getOrderers()[0].toString(), ' Orderer : {url:grpc://somehost.com:1234}', 'checking getOrderers orderer');
+	t.equal(_chain.getOrderers()[0].toString(), ' Orderer : {url:grpc://somehost.com:1234}', 'checking chain getOrderers()');
+	t.throws(
+		function () {
+			var orderer = new Orderer('grpc://somehost.com:1234');
+			_chain.addOrderer(orderer);
+		},
+		/^DuplicateOrderer: Orderer with URL/,
+		'Chain tests: checking that orderer already exists.'
+	);
 	t.equal(_chain.toString(), '{"name":"testChain","orderers":" Orderer : {url:grpc://somehost.com:1234}|"}', 'checking chain toString');
-	t.end();
+
+	_chain.setConsesusType('SOMETYPE');
+	t.equal(_chain.getConsesusType(), 'SOMETYPE', 'Chain tests: checking set and get Consesus type');
+	t.throws(
+		function () {
+			_chain.setInitialEpoch(-1);
+		},
+		/^Error: initial epoch must be a positive integer/,
+		'Chain tests: checking that epoch should be positive integer when input is negative.'
+	);
+	t.throws(
+		function () {
+			_chain.setInitialEpoch(1.1);
+		},
+		/^Error: initial epoch must be a positive integer/,
+		'Chain tests: checking that epoch should be positive integer when input is float.'
+	);
+	t.throws(
+		function () {
+			_chain.setInitialEpoch('a');
+		},
+		/^Error: initial epoch must be a positive integer/,
+		'Chain tests: checking that epoch should be positive integer when inut is char.'
+	);
+	t.doesNotThrow(
+		function () {
+			_chain.setInitialEpoch(3);
+		},
+		null,
+		'checking the chain setInitialEpoch()'
+	);
+	t.equal(_chain.getInitialEpoch(), 3, 'Chain tests: checking set and get initial epoch');
+	t.throws(
+		function () {
+			_chain.setInitialMaxMessageCount(-1);
+		},
+		/^Error: initial maximum message count must be a positive integer/,
+		'Chain tests: checking that max message count should be positive integer when input is negative.'
+	);
+	t.throws(
+		function () {
+			_chain.setInitialMaxMessageCount(1.1);
+		},
+		/^Error: initial maximum message count must be a positive integer/,
+		'Chain tests: checking that max message count should be positive integer when input is float.'
+	);
+	t.throws(
+		function () {
+			_chain.setInitialMaxMessageCount('a');
+		},
+		/^Error: initial maximum message count must be a positive integer/,
+		'Chain tests: checking that max message count should be positive integer when inut is char.'
+	);
+	t.doesNotThrow(
+		function () {
+			_chain.setInitialMaxMessageCount(30);
+		},
+		null,
+		'checking the chain setInitialMaxMessageCount()'
+	);
+	t.equal(_chain.getInitialMaxMessageCount(), 30, 'Chain tests: checking set and get initial max message count');
+
+	t.doesNotThrow(
+		function () {
+			_chain.setInitialTransactionId('abcde');
+		},
+		null,
+		'checking the chain setInitialTransactionId()'
+	);
+	t.equal(_chain.getInitialTransactionId(), 'abcde', 'Chain tests: checking set and get initial transaction id');
+	var test_chain = new Chain('someTestChain', client);
+	test_chain.initializeChain().then(
+		function (response) {
+			t.fail('Chain tests: orderer should have been required');
+		},
+		function (error) {
+			if(!error) {
+				t.fail('Should be getting an error back');
+			}
+			else {
+				t.equals(error.toString(),'Error: no primary orderer defined','Chain tests: orederer is required when initializing');
+			}
+		}
+	);
+	var test_chain2 = new Chain('someTestChain2', {_userContext : {} });
+	test_chain2.addOrderer(new Orderer('grpc://somehost.com:1234'));
+	test_chain2.initializeChain().then(
+		function (response) {
+			t.fail('Chain tests: transaction should have been required');
+		},
+		function (error) {
+			if(!error) {
+				t.fail('Should be getting an error back');
+			}
+			else {
+				t.equals(error.toString(),'Error: Initial transaction id is not defined','Chain tests: transaction id is required when initializing');
+			}
+		}
+	);	t.end();
 });
 
 // User tests /////////
