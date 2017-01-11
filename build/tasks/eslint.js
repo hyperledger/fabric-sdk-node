@@ -15,7 +15,18 @@ gulp.task('lint', function () {
 					'linebreak-style': ['error', 'unix'],
 					quotes: ['error', 'single'],
 					semi: ['error', 'always'],
-					'no-trailing-spaces': ['error']
+					'no-trailing-spaces': ['error'],
+					'max-len': [
+						'error',
+						{
+							'code': 150,
+							'ignoreTrailingComments': true,
+							'ignoreUrls': true,
+							'ignoreStrings': true,
+							'ignoreTemplateLiterals': true,
+							'ignoreRegExpLiterals': true
+						}
+					]
 				}
 			}
 		))
