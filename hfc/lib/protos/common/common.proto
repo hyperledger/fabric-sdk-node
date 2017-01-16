@@ -40,6 +40,7 @@ enum HeaderType {
     CONFIGURATION_ITEM = 2;        // Used inside of the the reconfiguration message for signing over ConfigurationItems
     ENDORSER_TRANSACTION = 3;      // Used by the SDK to submit endorser based transactions
     ORDERER_TRANSACTION = 4;       // Used internally by the orderer for management
+    DELIVER_SEEK_INFO = 5;         // Used as the type for Envelope messages submitted to instruct the Deliver API to seek
 }
 
 // This enum enlist indexes of the block metadata array
@@ -47,6 +48,22 @@ enum BlockMetadataIndex {
     SIGNATURES = 0;             // Block metadata array position for block signatures
     LAST_CONFIGURATION = 1;     // Block metadata array poistion to store last configuration block sequence number
     TRANSACTIONS_FILTER = 2;    // Block metadata array poistion to store serialized bit array filter of invalid transactions
+}
+
+// LastConfiguration is the encoded value for the Metadata message which is encoded in the LAST_CONFIGURATION block metadata index
+message LastConfiguration {
+	uint64 index  = 1;
+}
+
+// Metadata is a common structure to be used to encode block metadata
+message Metadata {
+    bytes value = 1;
+    repeated MetadataSignature signatures = 2;
+}
+
+message MetadataSignature {
+    bytes signatureHeader = 1; // An encoded SignatureHeader
+    bytes signature = 2;       // The signature over the concatenation of the Metadata value bytes, signatureHeader, and block header
 }
 
 message Header {
