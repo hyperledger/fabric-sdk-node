@@ -6,9 +6,11 @@ var tapColorize = require('tap-colorize');
 var istanbul = require('gulp-istanbul');
 
 gulp.task('pre-test', function() {
-	return gulp.src(['node_modules/hfc/lib/**/*.js','node_modules/hfc-cop/lib/**/*.js'])
-		.pipe(istanbul())
-		.pipe(istanbul.hookRequire());
+	return gulp.src([
+		'node_modules/hfc/lib/**/*.js',
+		'node_modules/hfc-cop/lib/FabricCOPImpl.js'])
+	.pipe(istanbul())
+	.pipe(istanbul.hookRequire());
 });
 
 gulp.task('test', ['pre-test'], function() {
