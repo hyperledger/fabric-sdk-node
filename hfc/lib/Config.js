@@ -83,7 +83,8 @@ var Config = class {
 			key = key.toLowerCase();
 			key = key.replace(/_/g, '-');
 //			if(store.get(key)) {
-//				throw new Error('Unable to map environment variable to configuration setting. There is another config setting with the same converted name:'+key);
+//				throw new Error('Unable to map environment variable to configuration setting.
+//				There is another config setting with the same converted name:'+key);
 //			}
 			store.set(key,value);
 		}

@@ -213,7 +213,11 @@ var User = class {
 		// swap out that for the real key from the crypto provider
 		var promise = this.cryptoPrimitives.getKey(state.enrollment.signingIdentity)
 		.then(function(privateKey) {
-			self._signingIdentity = new SigningIdentity(state.enrollment.identity.id, state.enrollment.identity.certificate, pubKey, self.mspImpl, new Signer(self.mspImpl.cryptoSuite, privateKey));
+			self._signingIdentity = new SigningIdentity(
+				state.enrollment.identity.id,
+				state.enrollment.identity.certificate,
+				pubKey, self.mspImpl,
+				new Signer(self.mspImpl.cryptoSuite, privateKey));
 
 			return self;
 		});
