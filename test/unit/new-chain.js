@@ -108,20 +108,15 @@ test('\n\n** TEST ** new chain - chain.initializeChain() success', function(t) {
 	)
 	.then(
 		function(response) {
-			if (response.status === 'SUCCESS') {
+			if (response && response.block) {
 				t.pass('Successfully created chain.');
 			} else {
-				t.fail('Failed to get correct error. Error code: ' + response);
+				t.fail('Failed to order the chain create. Error code: ' + response.status);
 			}
 			t.end();
 		},
 		function(err) {
-			if (err.status === 'BAD_REQUEST') {
-				t.fail('Failed to create chain.' + err);
-			}
-			else {
-				t.fail('Failed to get error status. Error code: ' + err);
-			}
+			t.fail('Failed to get the genesis block back due to error: ' + err.stack ? err.stack : err);
 			t.end();
 		}
 	)
@@ -163,20 +158,11 @@ test('\n\n** TEST ** new chain - chain.initializeChain() fail due to already exi
 	)
 	.then(
 		function(response) {
-			if (response.status === 'SUCCESS') {
-				t.fail('Failed, the chain was created again.');
-			} else {
-				t.fail('Failed to get correct error. Response code: ' + response);
-			}
+			t.fail('Failed to get correct error. Response code: ' + response);
 			t.end();
 		},
 		function(err) {
-			if (err.status === 'BAD_REQUEST') {
-				t.pass('Received the correct error message.');
-			}
-			else {
-				t.fail('Failed to get correct error. Error code: ' + err);
-			}
+			t.pass('Got back failure error. Error code: ' + err);
 			t.end();
 		}
 	)

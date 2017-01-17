@@ -1,5 +1,5 @@
 /*
- Copyright 2016 IBM All Rights Reserved.
+ Copyright 2016, 2017 IBM All Rights Reserved.
 
  Licensed under the Apache License, Version 2.0 (the 'License');
  you may not use this file except in compliance with the License.
@@ -55,59 +55,56 @@ var Orderer = class extends Remote {
 	}
 
 	/**
-	 * Send a BroadcastMessage to the orderer service.
+	 * Send a Broadcast message to the orderer service.
 	 *
-	 * @param {byte} envelope - Byte data to be included in the BroadcastMessage
-	 *        @see the ./proto/atomicbroadcast/ab.proto
+	 * @param {byte} envelope - Byte data to be included in the Broadcast
+	 *        @see the ./proto/orderer/ab.proto
 	 * @returns {Promise} A Promise for a BroadcastResponse
-	 *        @see the ./proto/atomicbroadcast/ab.proto
+	 *        @see the ./proto/orderer/ab.proto
 	 */
 	sendBroadcast(envelope) {
-		logger.debug('Orderer.sendBroadcast - start');
+		logger.debug('sendBroadcast - start');
 
 		if(!envelope || envelope == '') {
-			logger.debug('Orderer.sendBroadcast ERROR - missing envelope');
+			logger.debug('sendBroadcast ERROR - missing envelope');
 			var err = new Error('Missing data - Nothing to broadcast');
 			return Promise.reject(err);
 		}
 
 		var self = this;
 
-		// Send the endorsed proposals to the peer node (orderer) via grpc
-		// The rpc specification on the peer side is:
-		// rpc Broadcast(stream BroadcastMessage) returns (stream BroadcastResponse) {}
+		// Send the envelope to the orderer via grpc
 		return new Promise(function(resolve, reject) {
 			var broadcast = self._ordererClient.broadcast();
 			var all_done = false;
-
 			var broadcast_timeout = setTimeout(function(){
-				logger.debug('Orderer.sendBroadcast - timed out after:%s', self._request_timeout);
+				logger.debug('sendBroadcast - timed out after:%s', self._request_timeout);
 				return reject(new Error('REQUEST_TIMEOUT'));
 			}, self._request_timeout);
 
 			broadcast.on('data', function (response) {
-				logger.debug('Orderer.sendBroadcast - on data response: %j', response);
+				logger.debug('sendBroadcast - on data response: %j', response);
 				clearTimeout(broadcast_timeout);
 				all_done = true;
 
 				if(response.status) {
 					if (response.status === 'SUCCESS') {
-						logger.debug('Orderer.sendBroadcast - resolve with %s', response.status);
+						logger.debug('sendBroadcast - resolve with %s', response.status);
 						return resolve(response);
 					} else {
-						logger.error('Orderer.sendBroadcast - reject with %s', response.status);
-						return reject(response);
+						logger.error('sendBroadcast - reject with %s', response.status);
+						return reject(new Error(response));
 					}
 				}
 				else {
-					logger.error('Orderer.sendBroadcast ERROR - reject with invalid response from the orderer');
+					logger.error('sendBroadcast ERROR - reject with invalid response from the orderer');
 					return reject(new Error('SYSTEM_ERROR'));
 				}
 
 			});
 
 			broadcast.on('end', function (response) {
-				logger.debug('Orderer.sendBroadcast - on end:');
+				logger.debug('sendBroadcast - on end:');
 				// Removing the promise reject here as on an 'error', this case
 				// will hit before the 'error' event, and we loose the error
 				// information coming back to the caller
@@ -115,22 +112,114 @@ var Orderer = class extends Remote {
 			});
 
 			broadcast.on('error', function (err) {
+				clearTimeout(broadcast_timeout);
 				if(all_done) {
 					return;
 				}
 				if(err && err.code) {
 					if(err.code == 14) {
-						logger.error('Orderer.sendBroadcast - on error: %j',err.stack ? err.stack : err);
+						logger.error('sendBroadcast - on error: %j',err.stack ? err.stack : err);
 						return reject(new Error('SERVICE_UNAVAILABLE'));
 					}
 				}
-				logger.debug('Orderer.sendBroadcast - on error: %j',err.stack ? err.stack : err);
+				logger.debug('sendBroadcast - on error: %j',err.stack ? err.stack : err);
 				return reject(new Error(err));
 			});
 
 			broadcast.write(envelope);
 			broadcast.end();
-			logger.debug('Orderer.sendBroadcast - sent message');
+			logger.debug('sendBroadcast - sent message');
+		});
+	}
+
+	/**
+	 * Send a Deliver message to the orderer service.
+	 *
+	 * @param {byte} envelope - Byte data to be included in the Deliver
+	 *        @see the ./proto/orderer/ab.proto
+	 * @returns {Promise} A Promise for a DeliverResponse
+	 *        @see the ./proto/orderer/ab.proto
+	 */
+	sendDeliver(envelope) {
+		logger.debug('sendDeliver - start');
+
+		if(!envelope || envelope == '') {
+			logger.debug('sendDeliver ERROR - missing envelope');
+			var err = new Error('Missing data - Nothing to deliver');
+			return Promise.reject(err);
+		}
+
+		var self = this;
+
+		// Send the seek info to the orderer via grpc
+		return new Promise(function(resolve, reject) {
+			try {
+				var deliver = self._ordererClient.deliver();
+				var all_done = false;
+				var deliver_timeout = setTimeout(function(){
+					logger.debug('sendDeliver - timed out after:%s', self._request_timeout);
+					deliver.cancel();
+					all_done = true;
+					return reject(new Error('REQUEST_TIMEOUT'));
+				}, self._request_timeout);
+
+				deliver.on('data', function (response) {
+					logger.debug('sendDeliver - on data response: %j', response);
+					clearTimeout(deliver_timeout);
+					deliver.cancel();
+					all_done = true;
+
+					if(response.status) {
+						// first check if the block is there, right now the 'status' will be 'UNKNOWN' when the block comes back
+						if (response.block) {
+							logger.debug('sendDeliver - resolve with block found - return status:%s', response.status);
+							return resolve(response);
+						} else {
+							logger.error('sendDeliver - reject with %s', response.status);
+							return reject(new Error(response));
+						}
+					}
+					else {
+						logger.error('sendDeliver ERROR - reject with invalid response from the orderer');
+						return reject(new Error('SYSTEM_ERROR'));
+					}
+				});
+
+				deliver.on('end', function (response) {
+					logger.debug('sendDeliver - on end');
+					// this will hit before the 'error'
+					// so do not send reject yet
+					// return reject(response);
+				});
+
+				deliver.on('error', function (err) {
+					logger.debug('sendDeliver - on error');
+					if(all_done) {
+						return;
+					}
+					else {
+						clearTimeout(deliver_timeout);
+						deliver.cancel();
+						all_done = true;
+					}
+					if(err && err.code) {
+						if(err.code == 14) {
+							logger.error('sendDeliver - on error code 14: %j',err.stack ? err.stack : err);
+							return reject(new Error('SERVICE_UNAVAILABLE'));
+						}
+					}
+					logger.debug('sendDeliver - on error: %j',err.stack ? err.stack : err);
+					return reject(new Error(err));
+				});
+
+				deliver.write(envelope);
+				deliver.end();
+				logger.debug('sendDeliver - sent message');
+			}
+			catch(error) {
+				logger.error('sendDeliver - system error ::' + error.stack ? error.stack : error);
+				return reject(new Error(error));
+			}
 		});
 	}
 

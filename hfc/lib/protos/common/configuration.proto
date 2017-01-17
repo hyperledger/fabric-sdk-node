@@ -17,6 +17,7 @@ limitations under the License.
 syntax = "proto3";
 
 import "common.proto";
+import "msp_principal.proto";
 
 option go_package = "github.com/hyperledger/fabric/protos/common";
 
@@ -47,10 +48,17 @@ message ConfigurationEnvelope {
     repeated SignedConfigurationItem Items = 1;
 }
 
+// ConfigurationTemplate is used as a serialization format to share configuration templates
+// The orderer supplies a configuration template to the user to use when constructing a new
+// chain creation transaction, so this is used to facilitate that.
+message ConfigurationTemplate {
+    repeated ConfigurationItem Items = 1;
+}
+
 // This message may change slightly depending on the finalization of signature schemes for transactions
 message SignedConfigurationItem {
     bytes ConfigurationItem = 1;
-    repeated ConfigurationSignature Signatures = 2; // Signatures over the hash of ConfigurationItem
+    repeated ConfigurationSignature Signatures = 2;
 }
 
 message ConfigurationItem {
@@ -58,7 +66,7 @@ message ConfigurationItem {
         Policy = 0;   // Implies that the Value is a marshaled Policy message, and may be referred to by Key as a ModificationPolicy
         Chain = 1;    // Marshaled format for this type is yet to be determined
         Orderer = 2;  // Marshaled format for this type is yet to be determined
-        Fabric = 3;   // Marshaled format for this type is yet to be determined
+        Peer = 3;   // Marshaled format for this type is yet to be determined
     }
     ChainHeader Header = 1;  // The header which ties this configuration to a particular chain
     ConfigurationType Type = 2;     // The type of configuration this is.
@@ -69,11 +77,9 @@ message ConfigurationItem {
 }
 
 message ConfigurationSignature {
-    bytes signatureHeader = 1;
-    bytes signature = 2; // Signature over the concatenation of configurationItem bytes and signatureHeader bytes
+    bytes signatureHeader = 1; // A marshaled SignatureHeader
+    bytes signature = 2;       // Signature over the concatenation of configurationItem bytes and signatureHeader bytes
 }
-
-// 
 
 // Policy expresses a policy which the orderer can evaluate, because there has been some desire expressed to support
 // multiple policy engines, this is typed as a oneof for now
@@ -91,7 +97,7 @@ message Policy {
 message SignaturePolicyEnvelope {
     int32 Version = 1;
     SignaturePolicy Policy = 2;
-    repeated bytes Identities = 3;
+    repeated MSPPrincipal Identities = 3;
 }
 
 // SignaturePolicy is a recursive message structure which defines a featherweight DSL for describing
