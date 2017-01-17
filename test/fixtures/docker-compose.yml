@@ -35,6 +35,7 @@ services:
       - orderer
     ports:
       - 7051:7051
+      - 7053:7053
     depends_on:
       - orderer
 
