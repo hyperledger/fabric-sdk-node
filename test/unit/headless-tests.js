@@ -1311,6 +1311,14 @@ var asn1 = jsrsa.asn1;
 
 var ecdsaKey = require('hfc/lib/impl/ecdsa/key.js');
 var api = require('hfc/lib/api.js');
+var elliptic = require('elliptic');
+var BN = require('bn.js');
+var Signature = require('elliptic/lib/elliptic/ec/signature.js');
+
+const halfOrdersForCurve = {
+	'secp256r1': elliptic.curves['p256'].n.shrn(1),
+	'secp384r1': elliptic.curves['p384'].n.shrn(1)
+};
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	resetDefaults();
@@ -1437,7 +1445,14 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			var testSignature = function (msg) {
 				var sig = cryptoUtils.sign(key, cryptoUtils.hash(msg));
 				if (sig) {
-					t.pass('Valid signature object generated from sign()');
+					// test that signatures have low-S
+					var halfOrder = halfOrdersForCurve[key._key.ecparams.name];
+					var sigObject = new Signature(sig);
+					if (sigObject.s.cmp(halfOrder) == 1) {
+						t.fail('Invalid signature object: S value larger than N/2');
+					} else {
+						t.pass('Valid signature object generated from sign()');
+					}
 
 					// using internal calls to verify the signature
 					var pubKey = cryptoUtils._ecdsa.keyFromPublic(key.getPublicKey()._key.pubKeyHex, 'hex');
@@ -1480,7 +1495,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			utils.setConfigSetting('crypto-hash-algo', 'SHA2');
 			cryptoUtils = utils.getCryptoSuite();
 
-			var testVerify = function (sig, msg) {
+			var testVerify = function (sig, msg, expected) {
 				// manually construct a key based on the saved privKeyHex and pubKeyHex
 				var f = new ECDSA({ curve: 'secp256r1' });
 				f.setPrivateKeyHex(TEST_KEY_PRIVATE);
@@ -1488,12 +1503,13 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 				f.isPrivate = true;
 				f.isPublic = false;
 
-				t.equal(cryptoUtils.verify(new ecdsaKey(f, 256), sig, msg), true,
+				t.equal(cryptoUtils.verify(new ecdsaKey(f, 256), sig, msg), expected,
 					'CryptoSuite_ECDSA_AES function tests: verify() method');
 			};
 
-			testVerify(TEST_MSG_SIGNATURE_SHA2_256, TEST_MSG);
-			testVerify(TEST_LONG_MSG_SIGNATURE_SHA2_256, TEST_LONG_MSG);
+			// these signatures have S values larger than N/2
+			testVerify(TEST_MSG_SIGNATURE_SHA2_256, TEST_MSG, false);
+			testVerify(TEST_LONG_MSG_SIGNATURE_SHA2_256, TEST_LONG_MSG, false);
 
 			// test importKey()
 			var pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: api.CryptoAlgorithms.X509Certificate });

@@ -22,19 +22,14 @@ var api = require('../api.js');
 var crypto = require('crypto');
 var elliptic = require('elliptic');
 var EC = elliptic.ec;
-var sjcl = require('sjcl');
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 var util = require('util');
 var hashPrimitives = require('../hash.js');
 var utils = require('../utils');
 var ECDSAKey = require('./ecdsa/key.js');
-
-// constants
-const AESKeyLength = 32;
-const HMACKeyLength = 32;
-const ECIESKDFOutput = 512; // bits
-const IVLength = 16; // bytes
+var BN = require('bn.js');
+var Signature = require('elliptic/lib/elliptic/ec/signature.js');
 
 var logger = utils.getLogger('crypto_ecdsa_aes');
 
@@ -264,6 +259,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		// module './ecdsa/key.js'
 		var signKey = this._ecdsa.keyFromPrivate(key._key.prvKeyHex, 'hex');
 		var sig = this._ecdsa.sign(digest, signKey);
+		sig = _preventMalleability(sig, key._key.ecparams);
 		logger.debug('ecdsa signature: ', sig);
 		return sig.toDER();
 	}
@@ -284,6 +280,11 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
 		if (typeof digest === 'undefined' || digest === null) {
 			throw new Error('A valid message is required to verify');
+		}
+
+		if (!_checkMalleability(signature, key._key.ecparams)) {
+			logger.error(new Error('Invalid S value in signature. Must be smaller than half of the order.').stack);
+			return false;
 		}
 
 		var pubKey = this._ecdsa.keyFromPublic(key.getPublicKey()._key.pubKeyHex, 'hex');
@@ -310,10 +311,58 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	}
 };
 
-function _zeroBuffer(length) {
-	var buf = new Buffer(length);
-	buf.fill(0);
-	return buf;
+// [Angelo De Caro] ECDSA signatures do not have unique representation and this can facilitate
+// replay attacks and more. In order to have a unique representation,
+// this change-set forses BCCSP to generate and accept only signatures
+// with low-S.
+// Bitcoin has also addressed this issue with the following BIP:
+// https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki
+// Before merging this change-set, we need to ensure that client-sdks
+// generates signatures properly in order to avoid massive rejection
+// of transactions.
+
+// map for easy lookup of the "N/2" value per elliptic curve
+const halfOrdersForCurve = {
+	'secp256r1': elliptic.curves['p256'].n.shrn(1),
+	'secp384r1': elliptic.curves['p384'].n.shrn(1)
+};
+
+function _preventMalleability(sig, curveParams) {
+	var halfOrder = halfOrdersForCurve[curveParams.name];
+	if (!halfOrder) {
+		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curve);
+	}
+
+	// in order to guarantee 's' falls in the lower range of the order, as explained in the above link,
+	// first see if 's' is larger than half of the order, if so, it needs to be specially treated
+	if (sig.s.cmp(halfOrder) == 1) { // module 'bn.js', file lib/bn.js, method cmp()
+		// convert from BigInteger used by jsrsasign Key objects and bn.js used by elliptic Signature objects
+		var bigNum = new BN(curveParams.n.toString(16), 16);
+		sig.s = bigNum.sub(sig.s);
+	}
+
+	return sig;
+}
+
+function _checkMalleability(sig, curveParams) {
+	var halfOrder = halfOrdersForCurve[curveParams.name];
+	if (!halfOrder) {
+		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curve);
+	}
+
+	// first need to unmarshall the signature bytes into the object with r and s values
+	var sigObject = new Signature(sig, 'hex');
+	if (!sigObject.r || !sigObject.s) {
+		throw new Error('Failed to load the signature object from the bytes.');
+	}
+
+	// in order to guarantee 's' falls in the lower range of the order, as explained in the above link,
+	// first see if 's' is larger than half of the order, if so, it is considered invalid in this context
+	if (sigObject.s.cmp(halfOrder) == 1) { // module 'bn.js', file lib/bn.js, method cmp()
+		return false;
+	}
+
+	return true;
 }
 
 module.exports = CryptoSuite_ECDSA_AES;
