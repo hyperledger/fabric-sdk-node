@@ -72,8 +72,6 @@ var Chain = class {
 			throw new Error('Failed to create Chain. Missing requirement "clientContext" parameter.');
 		}
 
-		// naming for the chain will be enforced later by the orderer when
-		// "initialize()" gets called
 		this._name = name;
 
 		// Security enabled flag
@@ -214,7 +212,6 @@ var Chain = class {
 				return;
 			}
 		}
-		logger.debug('Did not find a peer to remove with url "%s".', url);
 	}
 
 	/**
@@ -262,7 +259,6 @@ var Chain = class {
 				return;
 			}
 		}
-		logger.debug('Did not find an orderer to remove with url "%s".', url);
 	}
 
 	/**
@@ -403,12 +399,6 @@ var Chain = class {
 		if(!this._clientContext._userContext) {
 			logger.error('initializeChain - no user defined');
 			return Promise.reject(new Error('no user defined'));
-		}
-
-		// verify that we have a name configured
-		if(!this._name) {
-			logger.error('initializeChain - no chain id defined');
-			return Promise.reject(new Error('Chain name is not defined'));
 		}
 
 		// verify that we have a transactionid configured

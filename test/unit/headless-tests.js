@@ -133,7 +133,81 @@ test('\n\n ** index.js **\n\n', function (t) {
 var Client = hfc;
 var client = new Client();
 var chainKeyValStorePath = 'tmp/chainKeyValStorePath';
+
 test('\n\n ** lib/Client.js **\n\n', function (t) {
+
+	t.equals(client.getCryptoSuite(), null, 'Client getCryptoSuite should initially be null');
+	client.setCryptoSuite(utils.getCryptoSuite());
+	if (client.getCryptoSuite() != null) t.pass('Client getCryptoSuite should not be null after setCryptoSuite');
+
+	client.getUserContext()
+	.then(function(response){
+		if (response === null)
+			t.pass('Client tests: getUserContext successful null user name.');
+		else t.fail('Client tests: getUserContext failed null name check');
+	}, function(error){
+		t.fail('Client tests: Unexpected error, getUserContext null name check. ' + error);
+	});
+
+	client.saveUserToStateStore()
+	.then(function(response){
+		t.fail('Client tests: got response, but should throw "Cannot save user to state store when userContext is null."');
+	}, function(error){
+		if (error.message === 'Cannot save user to state store when userContext is null.')
+			t.pass('Client tests: Should throw "Cannot save user to state store when userContext is null."');
+		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when userContext is null." ' + error);
+	});
+
+	client.setUserContext(null)
+	.then(function(response){
+		t.fail('Client tests: got response, but should throw "Cannot save null userContext."');
+	}, function(error){
+		if (error.message === 'Cannot save null userContext.')
+			t.pass('Client tests: Should throw "Cannot save null userContext."');
+		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save null userContext." ' + error);
+	});
+
+	client.getUserContext('someUser')
+	.then(function(response){
+		if (response == null)
+			t.pass('Client tests: getUserContext with no context in memory or persisted returns null');
+		else t.fail('Client tests: getUserContext with no context in memory or persisted did not return null');
+	}, function(error){
+		t.fail('Client tests: getUserContext with no context in memory or persisted did not returned error. ' + error);
+	});
+
+	client.setUserContext(new User('someUser'), true)
+	.then(function(response){
+		if (response && response.getName() === 'someUser') {
+			t.pass('Client tests: successfully setUserContext with skipPersistence.');
+			debugger;//check out this return
+			return response;
+		}
+		else t.fail('Client tests: failed name check after setUserContext with skipPersistence.');
+	}, function(error){
+		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + error);
+	})
+	.then(function(response){
+		client.getUserContext('someUser')
+		.then(function(response){
+			if (response && response.getName() === 'someUser')
+				t.pass('Client tests: getUserContext not persisted/skipPersistence was successful.');
+			else t.fail('Client tests: getUserContext not persisted/skipPersistence was not successful.');
+		}, function(error){
+			t.fail('Client tests: Unexpected error, getUserContext not persisted/skipPersistence. ' + error);
+		});
+	});
+
+	client.setUserContext(new User('someUser'))
+	.then(function(result){
+		t.fail('Client tests: setUserContext without skipPersistence and no stateStore should not return result.');
+	},
+	function(error){
+		if (error.message === 'Cannot save user to state store when stateStore is null.')
+			t.pass('Client tests: Should throw "Cannot save user to state store when stateStore is null"');
+		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error);
+	});
+
 	var chain = client.newChain('someChain');
 	t.equals(chain.getName(), 'someChain', 'Checking chain names match');
 	t.throws(
@@ -149,6 +223,13 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 		},
 		null,
 		'Client tests: getChain()');
+
+	t.throws(
+			function () {
+				client.getChain('someOtherChain');
+			},
+			/^Error: Chain not found for name someOtherChain./,
+			'Client tests: Should throw Error: Chain not found for name someOtherChain.');
 
 	t.throws(
 		function() {
@@ -187,7 +268,7 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 					t.fail('Client getStateStore test:  Failed to set value, reason: ' + reason);
 					t.end();
 				}
-		);
+			);
 		});
 });
 
@@ -624,7 +705,19 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 				t.equals(error.toString(),'Error: Initial transaction id is not defined','Chain tests: transaction id is required when initializing');
 			}
 		}
-	);	t.end();
+	);
+	var client3 = new Client();
+	var test_chain3 = new Chain('someTestChain3', client3);
+	test_chain3.addOrderer(new Orderer('grpc://somehost.com:1234'));
+	test_chain3.initializeChain().then(function(response){
+		t.fail('Chain tests: no user defined should, throw error, response '+response);
+	},function(error){
+		if (error && error.message && error.message === 'no user defined')
+			t.pass('Chain tests: no user defined, should throw error');
+		else t.fail('Chain tests: no user defined, should have thrown error "no user defined"');
+	});
+
+	t.end();
 });
 
 // User tests /////////

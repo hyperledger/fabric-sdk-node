@@ -148,7 +148,7 @@ var Client = class {
 		var self = this;
 		logger.debug('saveUserToStateStore, userContext: ' + self._userContext);
 		return new Promise(function(resolve, reject) {
-			if (self._userContext && self._userContext._name) {
+			if (self._userContext && self._userContext._name && self._stateStore) {
 				logger.debug('saveUserToStateStore, begin promise stateStore.setValue');
 				self._stateStore.setValue(self._userContext._name, self._userContext.toString())
 				.then(
@@ -177,8 +177,16 @@ var Client = class {
 					}
 				);
 			} else {
-				logger.debug('saveUserToStateStore Promise rejected');
-				reject(new Error('Cannot save null userContext name to stateStore.'));
+				if (self._userContext == null) {
+					logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when userContext is null.');
+					reject(new Error('Cannot save user to state store when userContext is null.'));
+				} else if (self._userContext._name == null) {
+					logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when userContext has no name.');
+					reject(new Error('Cannot save user to state store when userContext has no name.'));
+				} else {
+					logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when stateStore is null.');
+					reject(new Error('Cannot save user to state store when stateStore is null.'));
+				}
 			}
 		});
 	}
