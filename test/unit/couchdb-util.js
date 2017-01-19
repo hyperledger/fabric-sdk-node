@@ -14,7 +14,26 @@
  *  limitations under the License.
  */
 
+var hfc = require('hfc');
 var nano = require('nano');
+var Cloudant = require('cloudant');
+
+module.exports.getCloudantClient = function(configFile) {
+	var username = hfc.getConfigSetting('cloudant-username', 'notfound');
+	var password = hfc.getConfigSetting('cloudant-password', 'notfound');
+	console.log('CloudantClient username = ' + username + ', password: ' + password);
+	return Cloudant({account: username, password: password});
+};
+
+module.exports.getCouchDBClient = function(configFile) {
+	var couchdbIPAddr = hfc.getConfigSetting('couchdb-ip-addr', 'notfound');
+	var couchdbPort = hfc.getConfigSetting('couchdb-port', 'notfound');
+
+	// Record the CouchDB KeyValueStorePath set by couchdb.json
+	var keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
+	console.log('CouchDBClient IP address:port = ' + keyValStorePath);
+	return nano(keyValStorePath);
+};
 
 module.exports.destroy = function(name, path) {
 	this._path = path;
@@ -25,9 +44,7 @@ module.exports.destroy = function(name, path) {
 	}
 	var self = this;
 	return new Promise(function(resolve, reject) {
-		// Initialize the CouchDB database client
-		var dbClient = nano(self._path);
-		// Check if the database already exists. If not, create it.
+		var dbClient = self._path;
 		dbClient.db.destroy(self._name, function(err, body) {
 			if (err) {
 				resolve(false);
