@@ -1344,6 +1344,8 @@ var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative eff
 	'ensure the transparency, longevity, interoperability and support required to bring blockchain technologies forward to mainstream commercial adoption. That ' +
 	'is what Hyperledger is about – communities of software developers building blockchain frameworks and platforms.';
 
+var HASH_MSG_SHA384 = '6247065855a812ecd182476576c02d46a675845ef4b0056e973ca42dcf8191d3adabc8c6c4b909f20f96136032ab723a';
+var HASH_LONG_MSG_SHA384 = 'e647ea97fec64412a34f522b5d80cbba9a293f89d4dc63802c79bf485078ecbaed59a0d53cd7ab08a9ae983e64f886a6';
 var HASH_MSG_SHA3_384 = '9e9c2e5edf6cbc0b512807a8efa2917daff71b83e04dee28fcc00b1a1dd935fb5afc5eafa06bf55bd64792a597e2a8f3';
 var HASH_LONG_MSG_SHA3_384 = '47a90d6721523682e09b81da0a60e6ee1faf839f0503252316638daf038cf682c0a842edaf310eb0f480a2e181a07af0';
 var HASH_MSG_SHA256 = '4e4aa09b6d80efbd684e80f54a70c1d8605625c3380f4cb012b32644a002b5be';
@@ -1428,6 +1430,17 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA256,
 		'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with default key size which should be 256');
 
+	// test SHA384 hash
+	utils.setConfigSetting('crypto-hash-algo', 'sha2');
+	utils.setConfigSetting('crypto-keysize', 384);
+	cryptoUtils = utils.getCryptoSuite();
+	t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA384,
+		'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with default key size which should be 384');
+
+    //reset to default key size
+	utils.setConfigSetting('crypto-keysize', 256);
+	cryptoUtils = utils.getCryptoSuite();
+
 	cryptoUtils.generateKey()
 		.then(function (key) {
 			t.equal('secp256r1', key.getPublicKey()._key.curveName,
@@ -1435,6 +1448,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 			// test curve 256 with SHA3_256
 			utils.setConfigSetting('crypto-hash-algo', 'SHA3');
+			utils.setConfigSetting('crypto-keysize', 256);
 			cryptoUtils = utils.getCryptoSuite();
 			return cryptoUtils.generateKey();
 		})
@@ -1453,10 +1467,10 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			cryptoUtils = utils.getCryptoSuite();
 
 			t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
-				'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with key size 384');
+				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
 			t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_384,
-				'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with key size 384');
+				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
 			return cryptoUtils.generateKey();
 		})
@@ -1482,17 +1496,6 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 				t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
 			else
 				t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
-
-			t.throws(
-				function () {
-					utils.setConfigSetting('crypto-hash-algo', 'sha2');
-					utils.setConfigSetting('crypto-keysize', 384);
-					cryptoUtils = utils.getCryptoSuite();
-				},
-				/^Error: Unsupported/,
-				'CryptoSuite_ECDSA_AES function tests: SHA2 and 384 should throw ' +
-				'Error: Unsupported hash algorithm and security level pair sha2-384'
-			);
 
 			t.throws(
 				function () {

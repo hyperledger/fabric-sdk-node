@@ -28,6 +28,7 @@ var jsSHA3 = require('js-sha3');
 var sha3_256 = jsSHA3.sha3_256;
 var sha3_384 = jsSHA3.sha3_384;
 var shake_256 = jsSHA3.shake_256;
+var crypto = require('crypto');
 
 hash_sha2_256 = function (hash) {
 
@@ -166,5 +167,9 @@ exports.sha2_256 = function (data) {
 	return sjcl_codec.hex.fromBits(new sjcl.hash.sha256().update(bytesToBits(Buffer.from(data, 'utf8'))).finalize());
 };
 exports.sha3_256 = sha3_256;
+exports.sha2_384 = function (data){
+	var sha384 = crypto.createHash('sha384');
+	return sha384.update(data).digest('hex');
+};
 exports.sha3_384 = sha3_384;
 exports.shake_256 = shake_256;

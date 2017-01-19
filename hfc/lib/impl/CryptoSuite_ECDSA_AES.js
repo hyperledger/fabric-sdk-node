@@ -96,6 +96,10 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 			this._hashFunction = hashPrimitives.sha2_256;
 			this._hashFunctionKeyDerivation = hashPrimitives.hash_sha2_256;
 			break;
+		case 'sha2-384':
+			this._hashFunction = hashPrimitives.sha2_384;
+			//TODO: this._hashFunctionKeyDerivation = xxxxxxx;
+			break;
 		default:
 			throw Error(util.format('Unsupported hash algorithm and key size pair: %s-%s', hashAlgo, this._keySize));
 		}
