@@ -229,20 +229,23 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 				}
 			).then(
 				function(results) {
-					var proposalResponses = results[0];
-					var proposal = results[1];
-					var header   = results[2];
+					var all_good = false;
+					if (results) {
+						var proposalResponses = results[0];
+						var proposal = results[1];
+						var header   = results[2];
 
-					var all_good = true;
-					for(var i in proposalResponses) {
-						let one_good = false;
-						if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
-							one_good = true;
-							logger.info('move proposal was good');
-						} else {
-							logger.error('move proposal was bad');
+						all_good = true;
+						for(var i in proposalResponses) {
+							let one_good = false;
+							if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
+								one_good = true;
+								logger.info('move proposal was good');
+							} else {
+								logger.error('move proposal was bad');
+							}
+							all_good = all_good & one_good;
 						}
-						all_good = all_good & one_good;
 					}
 					if (all_good) {
 						t.pass('Successfully obtained transaction endorsements.'); // + JSON.stringify(proposalResponses));
@@ -253,7 +256,8 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 						};
 						return chain.sendTransaction(request);
 					} else {
-						t.fail('Failed to obtain transaction endorsements. Error code: ' + results);
+						t.fail('Failed to obtain transaction endorsements. Error code: '
+							+ (results ? results : 'Results are null'));
 						t.end();
 					}
 				},
@@ -265,7 +269,6 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 				function(response) {
 					if (response.status === 'SUCCESS') {
 						t.pass('Successfully ordered endorsement transaction.');
-
 						return new Promise((resolve, reject) => {
 							var handle = setTimeout(reject, 30000);
 
