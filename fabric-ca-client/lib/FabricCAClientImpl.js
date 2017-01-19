@@ -234,6 +234,104 @@ var FabricCOPClient = class {
 	}
 
 	/**
+	 * @typedef {Object} KeyValueAttribute
+	 * @property {string} key The key used to reference the attribute
+	 * @property {string} value The value of the attribute
+	 */
+
+	/**
+	 * Register a new user and return the enrollment secret
+	 * @param {string} enrollmentID ID which will be used for enrollment
+	 * @param {string} role Type of role for this user
+	 * @param {string} group Group to which this user will be assigned
+	 * @param {KeyValueAttribute[]} attrs Array of key/value attributes to assign to the user
+	 * @param {string} callerID The ID of the user who is registering this user
+	 * @returns {Promise} The enrollment secret to use when this user enrolls
+	 */
+	register(enrollmentID, role, group, attrs, callerID) {
+
+		var self = this;
+		var numArgs = arguments.length;
+
+		return new Promise(function (resolve, reject) {
+			//all arguments are required
+			if (numArgs < 5) {
+				reject(new Error('Missing required parameters.  \'enrollmentID\', \'role\', \'group\', \'attrs\', \
+					and \'callerID\' are all required.'));
+			}
+
+
+			var regRequest = {
+				'id': enrollmentID,
+				'type': role,
+				'group': group,
+				'attrs': attrs,
+				'callerID': callerID
+			};
+
+			var requestOptions = {
+				hostname: self._hostname,
+				port: self._port,
+				path: self._baseAPI + 'register',
+				method: 'POST',
+				//auth: enrollmentID + ':' + enrollmentSecret,
+				ca: self._ca
+			};
+
+			var request = self._httpClient.request(requestOptions, function (response) {
+
+				const responseBody = [];
+				response.on('data', function (chunk) {
+					responseBody.push(chunk);
+				});
+
+				response.on('end', function () {
+
+					var payload = responseBody.join('');
+
+					if (!payload) {
+						reject(new Error(
+							util.format('Registerfailed with HTTP status code ', response.statusCode)));
+					}
+					//response should be JSON
+					try {
+						var regResponse = JSON.parse(payload);
+						if (regResponse.success) {
+							//we want the result field which is Base64-encoded PEM
+							return resolve(regResponse.result);
+						} else {
+							return reject(new Error(
+								util.format('Register failed with errors [%s]', JSON.stringify(regResponse.errors))));
+						}
+
+					} catch (err) {
+						reject(new Error(
+							util.format('Could not parse register response [%s] as JSON due to error [%s]', payload, err)));
+					}
+				});
+
+			});
+
+			request.on('error', function (err) {
+				reject(new Error(util.format('Calling register endpoint failed with error [%s]', err)));
+			});
+
+			request.write(JSON.stringify(regRequest));
+			request.end();
+		});
+	}
+
+	/**
+	 * Generate authorization token required for accessing fabric-cop APIs
+	 * @param {string} privKey The pem-encoded private key used for signing
+	 * @param {string} X509Key The pem-encoded X509 certificate associated with privKey
+	 * @param {string} reqBody The body of the request to sign as part of the token
+	 */
+	static generateAuthToken(privKey, X509Key, reqBody) {
+
+	}
+
+	/**
 	 * Enroll a registered user in order to receive a signed X509 certificate
 	 * @param {string} enrollmentID The registered ID to use for enrollment
 	 * @param {string} enrollmentSecret The secret associated with the enrollment ID

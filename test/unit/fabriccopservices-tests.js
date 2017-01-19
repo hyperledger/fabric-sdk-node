@@ -126,3 +126,50 @@ test('FabricCOPServices: Test enroll() With Dynamic CSR', function (t) {
 		);
 
 });
+
+/**
+ * FabricCOPClient register tests
+ */
+test('FabricCOPClient: Test register with missing parameters', function (t) {
+
+	var client = new FabricCOPClient({
+		protocol: 'http',
+		hostname: '127.0.0.1',
+		port: 7054
+	});
+
+	return client.register()
+		.then(function (token) {
+			t.fail('Register must fail when missing required parameters');
+		})
+		.catch(function (err) {
+			if (err.message.startsWith('Missing required parameters')) {
+				t.pass('Register should fail when missing required parameters');
+			} else {
+				t.fail('Register should have failed with \'Missing required parameters\'');
+			}
+		});
+});
+
+test('FabricCOPClient: Test register', function (t) {
+
+	var client = new FabricCOPClient({
+		protocol: 'http',
+		hostname: '127.0.0.1',
+		port: 7054
+	});
+
+	var enrollmentID = 'testRegisterUser';
+
+
+	return client.register(enrollmentID, 'client', 'bank_a', [], 'admin')
+		.then(function (secret) {
+			t.comment(secret);
+			t.pass('Successfully invoked register API with enrollmentID \'' + enrollmentID + '\'');
+
+		})
+		.catch(function (err) {
+			t.fail('Failed to register \'' + enrollmentID + '\'.  ' + err);
+		});
+});
+
