@@ -57,10 +57,10 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 				// send proposal to endorser
 				var request = {
 					chaincodePath: testUtil.CHAINCODE_PATH,
-					chaincodeId: 'mycc',
+					chaincodeId: 'endorser_test',
 					fcn: 'init',
 					args: ['a', '100', 'b', '200'],
-					chainId: '**TEST_CHAINID**',
+					chainId: 'test_chainid',
 					txId: 'blah',
 					nonce: utils.getNonce()
 				};
