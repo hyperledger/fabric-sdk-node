@@ -30,6 +30,8 @@ var utils = require('../utils');
 var ECDSAKey = require('./ecdsa/key.js');
 var BN = require('bn.js');
 var Signature = require('elliptic/lib/elliptic/ec/signature.js');
+var path = require('path');
+const os = require('os');
 
 var logger = utils.getLogger('crypto_ecdsa_aes');
 
@@ -218,9 +220,10 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		var self = this;
 		return new Promise(function(resolve, reject) {
 			if (store === null) {
-				logger.info('This class requires a KeyValueStore to save keys, no store was passed in, using the default store');
+				var defaultKS = CryptoSuite_ECDSA_AES.getKeyStorePath();
+				logger.info('This class requires a KeyValueStore to save keys, no store was passed in, using the default store %s', defaultKS);
 				store = utils.newKeyValueStore({
-					path: '/tmp/hfc-key-store'
+					path: defaultKS
 				})
 				.then(
 					function (kvs) {
@@ -312,6 +315,10 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 */
 	decrypt(key, cipherText, opts) {
 		throw new Error('Not implemented yet');
+	}
+
+	static getKeyStorePath() {
+		return path.join(os.homedir(), '.hfc-key-store');
 	}
 };
 

@@ -15,8 +15,17 @@
  */
 
 var path = require('path');
+var fs = require('fs');
+var os = require('os');
+
+var jsrsa = require('jsrsasign');
+var KEYUTIL = jsrsa.KEYUTIL;
+
 var copService = require('hfc-cop/lib/FabricCOPImpl.js');
 var User = require('hfc/lib/User.js');
+var CryptoSuite = require('hfc/lib/impl/CryptoSuite_ECDSA_AES.js');
+var FileStore = require('hfc/lib/impl/FileKeyValueStore.js');
+var ecdsaKey = require('hfc/lib/impl/ecdsa/key.js');
 
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
 module.exports.CHAINCODE_MARBLES_PATH = 'github.com/marbles_cc';
@@ -29,49 +38,92 @@ module.exports.setupChaincodeDeploy = function() {
 	process.env.GOPATH = path.join(__dirname, '../fixtures');
 };
 
-function getSubmitter(username, password, client, t) {
+function getSubmitter(username, password, client, t, loadFromConfig) {
 	return client.getUserContext(username)
-	.then(
-		function(user) {
+	.then((user) => {
+		return new Promise((resolve, reject) => {
 			if (user && user.isEnrolled()) {
 				t.pass('Successfully loaded member from persistence');
-				return Promise.resolve(user);
+				return resolve(user);
 			} else {
-				// need to enroll it with COP server
-				var cop = new copService('http://localhost:8888');
+				if (!loadFromConfig) {
+					// need to enroll it with COP server
+					var cop = new copService('http://localhost:8888');
 
-				return cop.enroll({
-					enrollmentID: username,
-					enrollmentSecret: password
-				}).then(
-					function(enrollment) {
+					return cop.enroll({
+						enrollmentID: username,
+						enrollmentSecret: password
+					}).then((enrollment) => {
 						t.pass('Successfully enrolled user \'' + username + '\'');
 
 						var member = new User(username, client);
 						member.setEnrollment(enrollment.key, enrollment.certificate);
 						return client.setUserContext(member);
-					}
-				).catch(
-					function(err) {
+					}).catch((err) => {
 						t.fail('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
 						t.end();
-					}
-				);
+					});
+				} else {
+					// need to load private key and pre-enrolled certificate from files based on the MSP
+					// config directory structure:
+					// <config>
+					//    \_ keystore
+					//       \_ admin.pem  <<== this is the private key saved in PEM file
+					//    \_ signcerts
+					//       \_ admin.pem  <<== this is the signed certificate saved in PEM file
+
+					// first load the private key and save in the BCCSP's key store
+					var privKeyPEM = path.join(__dirname, '../fixtures/msp/keystore/admin.pem');
+					var pemData;
+					return readFile(privKeyPEM)
+					.then((data) => {
+						pemData = data;
+						// default crypto suite uses $HOME/.hfc-key-store as key store
+						var kspath = CryptoSuite.getKeyStorePath();
+						var testKey;
+						return new FileStore({
+							path: kspath
+						});
+					}).then((store) => {
+						var rawKey = KEYUTIL.getKey(pemData.toString());
+						testKey = new ecdsaKey(rawKey, 256);
+						return store.setValue(testKey.getSKI(), pemData);
+					}).then((value) => {
+						// next save the certificate in a serialized user enrollment in the state store
+						var certPEM = path.join(__dirname, '../fixtures/msp/signcerts/admin.pem');
+						return readFile(certPEM);
+					}).then((data) => {
+						var member = new User(username, client);
+						member.setEnrollment(testKey, data.toString());
+						return client.setUserContext(member);
+					}).then((user) => {
+						return resolve(user);
+					}).catch((err) => {
+						reject(new Error('Failed to load key or certificate and save to local stores. ' + err));
+					});
+				}
 			}
-		},
-		function(err) {
-			t.fail('Failed to obtain a member object for user. Error: ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	).catch(
+		});
+	}).catch(
 		function(err) {
 			Promise.reject(err);
 		}
 	);
 }
 
-module.exports.getSubmitter = function(client, test) {
-	return getSubmitter('admin', 'adminpw', client, test);
+function readFile(path) {
+	return new Promise((resolve, reject) => {
+		fs.readFile(path, (err, data) => {
+			if (!!err)
+				reject(new Error('Failed to read file ' + path + ' due to error: ' + err));
+			else
+				resolve(data);
+		});
+	});
+}
+
+module.exports.getSubmitter = function(client, test, loadFromConfig) {
+	return getSubmitter('admin', 'adminpw', client, test, loadFromConfig);
 };
 
 
