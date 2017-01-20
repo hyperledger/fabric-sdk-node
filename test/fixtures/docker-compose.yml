@@ -3,11 +3,11 @@ version: '2.0'
 services:
 
   cop:
-    image: hyperledger/fabric-cop
+    image: hyperledger/fabric-ca
     ports:
       - "8888:8888"
-    command: sh -c 'cop server start -ca ~/.cop/ec.pem -ca-key ~/.cop/ec-key.pem -config /etc/hyperledger/fabric-cop/cop.json -address "0.0.0.0"'
-    container_name: cop
+    command: sh -c 'fabric-ca server start -ca /.fabric-ca/ec.pem -ca-key /.fabric-ca/ec-key.pem -config /etc/hyperledger/fabric-ca/server-config.json -address "0.0.0.0"'
+    container_name: ca
 
   orderer:
     image: hyperledger/fabric-orderer
