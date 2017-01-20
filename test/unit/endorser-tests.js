@@ -47,10 +47,17 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 	then( function (store) {
 		client.setStateStore(store);
 
-		testUtil.getSubmitter(client, t)
+		// use this test suite to go the "loadFromConfig" path that loads the
+		// pre-provisioned private key and cert from an MSP config directory
+		testUtil.getSubmitter(client, t, true)
 		.then(
 			function(admin) {
-				t.pass('Successfully enrolled user \'admin\'');
+				if (!!admin)
+					t.pass('Successfully enrolled user \'admin\'');
+				else {
+					t.fail('Failed to obtain enrolled user \'admin\'');
+					t.end();
+				}
 
 				chain.addPeer(new Peer('grpc://localhost:7051'));
 				chain.addPeer(new Peer('grpc://localhost:7056'));
@@ -93,11 +100,16 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 			}
 		).catch(
 			function(err) {
-				t.fail('Failed to send deployment proposal. ' + err.stack ? err.stack : err);
+				t.fail('Failed to obtain a legimiate transaction submitter. ' + err.stack ? err.stack : err);
 				t.end();
 			}
 		);
-	});
+	}).catch(
+		function(err) {
+			t.fail('Failed to send deployment proposal. ' + err.stack ? err.stack : err);
+			t.end();
+		}
+	);
 });
 
 function rmdir(path) {
