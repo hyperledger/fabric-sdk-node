@@ -26,7 +26,7 @@ var logger = utils.getLogger('CouchDBKeyValueStore.js');
 
 /**
  * This is a sample database implementation of the [KeyValueStore]{@link module:api.KeyValueStore} API.
- * It uses a local CouchDB database instance to store the keys.
+ * It uses a local or remote CouchDB database instance to store the keys.
  *
  * @class
  */
@@ -35,22 +35,36 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 	/**
 	 * constructor
 	 *
-	 * @param {Object} options contains two properties: 'path', which points to the CouchDB database instance
-	 * and 'name', which identifies the name of the database if different from the default of 'member_db'.
-	 * The 'name' parameter is optional.
+	 * @description <b>options</b> contains a path property which represents a CouchDB client instance.
+	 * The following code snippet shows how to create a nano minimalistic client for CouchDB.  For more
+	 * information see <a href='https://github.com/dscape/nano'>github dscape / nano</a>.
+	 * <pre><code>var nano = require('nano');
+	 * var couchDBClient = nano(couchdb_IP_Address + ':' + couchdb_Port);</code></pre>
+	 *
+	 * <br>The following code snippet shows how to create a Cloudant CouchDB client.
+	 * Username and password map to the IBM Bluemix service credentials VCAP_SERVICES environment variables username and password.
+	 * To obtain an instance of Cloudant, see the IBM Bluemix Catalog --> Services --> Data & Analytics at
+	 * <a href='https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db'>Cloudant NoSQL DB</a>.
+	 * <pre><code>var Cloudant = require('cloudant');
+	 * var cloudantClient = Cloudant({account: username, password: password});</code></pre>
+	 * <br>
+	 *
+	 * @param {Object} options Contains two properties:
+	 * <li>path - The CouchDB database client instance.
+	 * <li>name - Optional.  Identifies the name of the database if different from the default of 'member_db'.
 	 */
 	constructor(options) {
-		logger.debug('constructor, options: ' + JSON.stringify(options));
+		logger.debug('constructor, options: ' + options);
 
 		if (!options || !options.path) {
-			throw new Error('Must provide the path to the CouchDB database instance to store membership data.');
+			throw new Error('Must provide the CouchDB database client instance to store membership data.');
 		}
 
 		// Create the keyValStore instance
 		super();
 
 		var self = this;
-		// path pointer to the database
+		// path is the database client instance
 		this._path = options.path;
 		// Name of the database, optional
 		if (!options.name) {
@@ -64,7 +78,7 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 
 		return new Promise(function(resolve, reject) {
 			// Initialize the CouchDB database client
-			var dbClient = nano(options.path);
+			var dbClient = self._path;
 			// Check if the database already exists. If not, create it.
 			dbClient.db.get(self._name, function(err, body) {
 				// Check for error

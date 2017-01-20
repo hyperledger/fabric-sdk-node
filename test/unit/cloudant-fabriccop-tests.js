@@ -26,9 +26,9 @@ var FabricCOPServices = require('hfc-cop/lib/FabricCOPImpl');
 var utils = require('hfc/lib/utils.js');
 var couchdbUtil = require('./couchdb-util.js');
 
-// Use the CouchDB specific config file
-hfc.addConfigFile('test/fixtures/couchdb.json');
-var dbClient = couchdbUtil.getCouchDBClient();
+// Use the Cloudant specific config file
+hfc.addConfigFile('test/fixtures/cloudant.json');
+var dbClient = couchdbUtil.getCloudantClient();
 var keyValueStore = hfc.getConfigSetting('key-value-store');
 console.log('Key Value Store = ' + keyValueStore);
 
@@ -37,7 +37,7 @@ console.log('Key Value Store = ' + keyValueStore);
 // FabricCOPImpl to enroll a user, and saves the enrollment materials into the
 // CouchDB KeyValueStore. Then the test uses the Chain class to load the member
 // from the key value store.
-test('Use FabricCOPServices with a CouchDB KeyValueStore', function(t) {
+test('Use FabricCOPServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 
 	//var user = new User();
 	var client = new Client();
@@ -47,6 +47,8 @@ test('Use FabricCOPServices with a CouchDB KeyValueStore', function(t) {
 
 	// Clean up the couchdb test database
 	var dbname = 'member_db';
+
+	//ccd next needs to be changed
 	couchdbUtil.destroy(dbname, dbClient)
 	.then( function(status) {
 		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
@@ -54,7 +56,7 @@ test('Use FabricCOPServices with a CouchDB KeyValueStore', function(t) {
 		utils.newKeyValueStore({name: dbname, path: dbClient})
 		.then(
 			function(kvs) {
-				t.comment('Setting client keyValueStore to: ' +kvs);
+				t.comment('Setting client keyValueStore to: ' + kvs);
 				client.setStateStore(kvs);
 				if (client.getStateStore() === kvs) {
 					t.pass('Successfully set CouchDB KeyValueStore for client');

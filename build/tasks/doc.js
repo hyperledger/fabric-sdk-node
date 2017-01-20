@@ -23,6 +23,7 @@ gulp.task('doc', function () {
 		'hfc/index.js',
 		'hfc/lib/api.js',
 		'hfc/lib/impl/FileKeyValueStore.js',
+		'hfc/lib/impl/CouchDBKeyValueStore.js',
 		'hfc/lib/impl/CryptoSuite_ECDSA_AES.js',
 		'hfc/lib/impl/ecdsa/key.js',
 		'hfc/lib/Chain.js',
