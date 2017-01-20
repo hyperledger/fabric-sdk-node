@@ -608,8 +608,8 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 	);
 	t.equal(_chain.toString(), '{"name":"testChain","orderers":" Orderer : {url:grpc://somehost.com:1234}|"}', 'checking chain toString');
 
-	_chain.setConsesusType('SOMETYPE');
-	t.equal(_chain.getConsesusType(), 'SOMETYPE', 'Chain tests: checking set and get Consesus type');
+	_chain.setConsensusType('SOMETYPE');
+	t.equal(_chain.getConsensusType(), 'SOMETYPE', 'Chain tests: checking set and get Consesus type');
 	t.throws(
 		function () {
 			_chain.setInitialEpoch(-1);
