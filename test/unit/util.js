@@ -58,7 +58,7 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 
 						var member = new User(username, client);
 						member.setEnrollment(enrollment.key, enrollment.certificate);
-						return client.setUserContext(member);
+						return resolve(client.setUserContext(member));
 					}).catch((err) => {
 						t.fail('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
 						t.end();
