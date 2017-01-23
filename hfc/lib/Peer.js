@@ -21,7 +21,7 @@ var utils = require('./utils.js');
 var Remote = require('./Remote');
 var grpc = require('grpc');
 
-var _serviceProto = grpc.load(__dirname + '/protos/peer/fabric_service.proto').protos;
+var _serviceProto = grpc.load(__dirname + '/protos/peer/peer.proto').protos;
 
 var logger = utils.getLogger('Peer.js');
 

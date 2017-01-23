@@ -29,11 +29,9 @@ var grpc = require('grpc');
 var logger = utils.getLogger('Chain.js');
 
 var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
-var _ccProposalProto = grpc.load(__dirname + '/protos/peer/chaincode_proposal.proto').protos;
-var _ccTransProto = grpc.load(__dirname + '/protos/peer/chaincode_transaction.proto').protos;
-var _transProto = grpc.load(__dirname + '/protos/peer/fabric_transaction.proto').protos;
-var _proposalProto = grpc.load(__dirname + '/protos/peer/fabric_proposal.proto').protos;
-var _responseProto = grpc.load(__dirname + '/protos/peer/fabric_proposal_response.proto').protos;
+var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
+var _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
+var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
 var _mspPrProto = grpc.load(__dirname + '/protos/common/msp_principal.proto').common;
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
 var _configurationProto = grpc.load(__dirname + '/protos/common/configuration.proto').common;
@@ -477,7 +475,7 @@ var Chain = class {
 //				creation_items.push(chainCreatorsItem.getConfigurationItem().toBuffer());
 
 				var ingressPolicy = new _ordererConfigurationProto.IngressPolicy();
-				ingressPolicy.setName(chainCreatorPolicyName);
+				ingressPolicy.setNames([chainCreatorPolicyName]);
 				var ingressPolicyItem = buildSignedConfigurationItem(
 					configItemChainHeader,
 					orderer_type,
@@ -489,7 +487,7 @@ var Chain = class {
 				creation_items.push(ingressPolicyItem.getConfigurationItem().toBuffer());
 
 				var egressPolicy = new _ordererConfigurationProto.EgressPolicy();
-				egressPolicy.setName(chainCreatorPolicyName);
+				egressPolicy.setNames([chainCreatorPolicyName]);
 				var egressPolicyItem = buildSignedConfigurationItem(
 					configItemChainHeader,
 					orderer_type,
@@ -772,7 +770,7 @@ var Chain = class {
 					chaincodeID: {
 						name: request.chaincodeId
 					},
-					ctorMsg: {
+					input: {
 						args: args
 					}
 				};
@@ -794,7 +792,7 @@ var Chain = class {
 								chaincodeID: {
 									name: 'lccc'
 								},
-								ctorMsg: {
+								input: {
 									args: [Buffer.from('deploy', 'utf8'), Buffer.from('default', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
 								}
 							};
@@ -887,7 +885,7 @@ var Chain = class {
 			chaincodeID: {
 				name: request.chaincodeId
 			},
-			ctorMsg: {
+			input: {
 				args: args
 			}
 		};
@@ -986,13 +984,13 @@ var Chain = class {
 			endorsements.push(proposalResponse.endorsement);
 		}
 
-		var chaincodeEndorsedAction = new _ccTransProto.ChaincodeEndorsedAction();
+		var chaincodeEndorsedAction = new _transProto.ChaincodeEndorsedAction();
 		chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);
 		chaincodeEndorsedAction.setEndorsements(endorsements);
 
-		var chaincodeActionPayload = new _ccTransProto.ChaincodeActionPayload();
+		var chaincodeActionPayload = new _transProto.ChaincodeActionPayload();
 		chaincodeActionPayload.setAction(chaincodeEndorsedAction);
-		var chaincodeProposalPayloadNoTrans = _ccProposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
+		var chaincodeProposalPayloadNoTrans = _proposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
 		chaincodeProposalPayloadNoTrans.transient = null;
 		var payload_hash = this.cryptoPrimitives.hash(chaincodeProposalPayloadNoTrans.toBuffer());
 		chaincodeActionPayload.setChaincodeProposalPayload(Buffer.from(payload_hash, 'hex'));
@@ -1085,7 +1083,7 @@ var Chain = class {
 		cciSpec.setChaincodeSpec(invokeSpec);
 //		cciSpec.setIdGenerationAlg('');
 
-		let cc_payload = new _ccProposalProto.ChaincodeProposalPayload();
+		let cc_payload = new _proposalProto.ChaincodeProposalPayload();
 		cc_payload.setInput(cciSpec.toBuffer());
 		//cc_payload.setTransient(null); // TODO application-level confidentiality related
 
@@ -1265,7 +1263,7 @@ function buildChainHeader(type, chain_id, tx_id, epoch, chaincode_id) {
 		let chaincodeID = new _ccProto.ChaincodeID();
 		chaincodeID.setName(chaincode_id);
 
-		let headerExt = new _ccProposalProto.ChaincodeHeaderExtension();
+		let headerExt = new _proposalProto.ChaincodeHeaderExtension();
 		headerExt.setChaincodeID(chaincodeID);
 
 		chainHeader.setExtension(headerExt.toBuffer());
