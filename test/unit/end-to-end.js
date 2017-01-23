@@ -108,12 +108,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 						args: ['a', '100', 'b', '200'],
 						chainId: chain_id,
 						txId: tx_id,
-						nonce: nonce,
-						'dockerfile-contents' :
-						'from hyperledger/fabric-ccenv\n' +
-						'COPY . $GOPATH/src/build-chaincode/\n' +
-						'WORKDIR $GOPATH\n\n' +
-						'RUN go install build-chaincode && mv $GOPATH/bin/build-chaincode $GOPATH/bin/%s'
+						nonce: nonce
 					};
 
 					return chain.sendDeploymentProposal(request);

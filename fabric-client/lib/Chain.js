@@ -856,7 +856,6 @@ var Chain = class {
 	 *                  the chaincode once deployed (default 'init')
 	 *		<br>`args` : optional - String Array arguments specific to
 	 *                   the chaincode being deployed
-	 *		<br>`dockerfile-contents` : optional - String defining the
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 * @see /protos/peer/fabric_proposal_response.proto
 	 */
@@ -1349,31 +1348,18 @@ function packageChaincode(devmode, request) {
 	} else {
 		var chaincodePath = request.chaincodePath;
 		var chaincodeId = request.chaincodeId;
-		var dockerfileContents = request['dockerfile-contents'];
 
 		// Determine the user's $GOPATH
 		let goPath =  process.env['GOPATH'];
 
 		// Compose the path to the chaincode project directory
 		let projDir = goPath + '/src/' + chaincodePath;
-		let dockerFilePath = projDir + '/Dockerfile';
-
-		// Compose the Dockerfile commands
-		if (dockerfileContents === undefined) {
-			dockerfileContents = utils.getConfigSetting('dockerfile-contents', undefined);
-		}
-
-		// Substitute the hashStrHash for the image name
-		dockerfileContents = util.format(dockerfileContents, chaincodeId);
 
 		// Create the .tar.gz file of the chaincode package
 		// FIXME: this should use a mktmp to avoid collisions
 		let targzFilePath = '/tmp/deployment-package.tar.gz';
 
-		return writeFile(dockerFilePath, dockerfileContents)
-			.then(function() {
-				return utils.generateTarGz(projDir, targzFilePath);
-			})
+		return utils.generateTarGz(projDir, targzFilePath)
 			.then(function() {
 				logger.debug('Chain.sendDeployment- Successfully generated chaincode deploy archive and name (%s)', chaincodeId);
 				return readFile(targzFilePath);
