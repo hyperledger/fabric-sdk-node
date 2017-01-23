@@ -37,6 +37,7 @@ var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
 var _configurationProto = grpc.load(__dirname + '/protos/common/configuration.proto').common;
 var _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configuration.proto').orderer;
 var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
+var _mspConfigProto = grpc.load(__dirname + '/protos/msp/mspconfig.proto').msp;
 
 
 /**
@@ -101,9 +102,10 @@ var Chain = class {
 		// the following settings will be used when this chain
 		// is initialized (created) The user should set these
 		// to the desired values before initializing this chain
-		this._initial_epoch = 0;
-		this._initial_max_message_count = 10;
-		this._initial_absolute_max_bytes = 10 * 1024 * 1024;
+		this.setInitialEpoch(0);
+		this.setInitialMaxMessageCount(10);
+		this.setInitialAbsoluteMaxBytes(10 * 1024 * 1024);
+		this.setInitialPrefferedMaxBytes(10 * 1024 * 1024);
 		this._consensus_type = 'solo';
 		// user must set this value before the initializeChain() method
 		// is called
@@ -271,7 +273,7 @@ var Chain = class {
 	 * chain is created.
 	 * @return {string} consensus type
 	 */
-	getConsesusType() {
+	getConsensusType() {
 		return this._consensus_type;
 	}
 
@@ -282,7 +284,7 @@ var Chain = class {
 	 *
 	 * @param {string} consensus type
 	 */
-	setConsesusType(consensus_type) {
+	setConsensusType(consensus_type) {
 		this._consensus_type = consensus_type;
 	}
 
@@ -350,11 +352,33 @@ var Chain = class {
 	 */
 	setInitialAbsoluteMaxBytes(initial_absolute_max_bytes) {
 		if(!Number.isInteger(initial_absolute_max_bytes) || initial_absolute_max_bytes < 0) {
-			throw new Error('initial maximum message count must be a positive integer');
+			throw new Error('initial absolute maximum bytes must be a positive integer');
 		}
 		this._initial_absolute_max_bytes = initial_absolute_max_bytes;
 	}
 
+	/**
+	 * Get the initial preferred maximum bytes that will be used when this
+	 * chain is created.
+	 * @return {int} initial preferred maximum bytes
+	 */
+	getInitialPrefferedMaxBytes() {
+		return this._initial_preferred_max_bytes;
+	}
+
+	/**
+	 * Set the initial preferred maximum bytes that will be used when this
+	 * chain is created.
+	 * Default 0
+	 *
+	 * @param {int} initial preferred maximum bytes
+	 */
+	setInitialPrefferedMaxBytes(initial_preferred_max_bytes) {
+		if(!Number.isInteger(initial_preferred_max_bytes) || initial_preferred_max_bytes < 0) {
+			throw new Error('initial preferred maximum bytes must be a positive integer');
+		}
+		this._initial_preferred_max_bytes = initial_preferred_max_bytes;
+	}
 	/**
 	 * Get the initial transaction ID that will be used when this
 	 * chain is created.
@@ -399,6 +423,12 @@ var Chain = class {
 			return Promise.reject(new Error('no user defined'));
 		}
 
+		// verify that we have a name configured
+		if(!this._name) {
+			logger.error('initializeChain - no chain id defined');
+			return Promise.reject(new Error('Chain name is not defined'));
+		}
+
 		// verify that we have a transactionid configured
 		if(!this._initial_transaction_id) {
 			logger.error('initializeChain - no transaction id defined');
@@ -435,7 +465,7 @@ var Chain = class {
 
 				// build configuration items
 				var consensusType = new _ordererConfigurationProto.ConsensusType();
-				consensusType.setType(self._consensus_type);
+				consensusType.setType(self.getConsensusType());
 				var consensusTypeItem = buildSignedConfigurationItem(
 					configItemChainHeader,
 					orderer_type,
@@ -447,8 +477,9 @@ var Chain = class {
 				creation_items.push(consensusTypeItem.getConfigurationItem().toBuffer());
 
 				var batchSize = new _ordererConfigurationProto.BatchSize();
-				batchSize.setMaxMessageCount(self._initial_max_message_count);
-				batchSize.setAbsoluteMaxBytes(self._initial_absolute_max_bytes);
+				batchSize.setMaxMessageCount(self.getInitialMaxMessageCount());
+				batchSize.setAbsoluteMaxBytes(self.getInitialAbsoluteMaxBytes());
+				batchSize.setPreferredMaxBytes(self.getInitialPrefferedMaxBytes());
 				var batchSizeItem = buildSignedConfigurationItem(
 					configItemChainHeader,
 					orderer_type,
@@ -474,26 +505,26 @@ var Chain = class {
 //				);
 //				creation_items.push(chainCreatorsItem.getConfigurationItem().toBuffer());
 
-				var ingressPolicy = new _ordererConfigurationProto.IngressPolicy();
+				var ingressPolicy = new _ordererConfigurationProto.IngressPolicyNames();
 				ingressPolicy.setNames([chainCreatorPolicyName]);
 				var ingressPolicyItem = buildSignedConfigurationItem(
 					configItemChainHeader,
 					orderer_type,
 					last_modified,
 					mod_policy,
-					'IngressPolicy',
+					'IngressPolicyNames',
 					ingressPolicy.toBuffer()
 				);
 				creation_items.push(ingressPolicyItem.getConfigurationItem().toBuffer());
 
-				var egressPolicy = new _ordererConfigurationProto.EgressPolicy();
+				var egressPolicy = new _ordererConfigurationProto.EgressPolicyNames();
 				egressPolicy.setNames([chainCreatorPolicyName]);
 				var egressPolicyItem = buildSignedConfigurationItem(
 					configItemChainHeader,
 					orderer_type,
 					last_modified,
 					mod_policy,
-					'EgressPolicy',
+					'EgressPolicyNames',
 					egressPolicy.toBuffer()
 				);
 				creation_items.push(egressPolicyItem.getConfigurationItem().toBuffer());
@@ -523,6 +554,34 @@ var Chain = class {
 					rejectAllPolicy.toBuffer()
 				);
 				creation_items.push(defaultModificationPolicyItem.getConfigurationItem().toBuffer());
+
+				var keyinfo = new _mspConfigProto.KeyInfo();
+				keyinfo.setKeyIdentifier('PEER');
+				keyinfo.setKeyMaterial(Buffer.from('peer')); //TODO get keys
+
+				var sigid = new _mspConfigProto.SigningIdentityInfo();
+				sigid.setPublicSigner(Buffer.from('signcert[0]')); //TODO get cert
+				sigid.setPrivateSigner(keyinfo);
+
+				var fmspconf = new _mspConfigProto.FabricMSPConfig();
+				fmspconf.setAdmins([Buffer.from('admincert')]); //TODO get certs
+				fmspconf.setRootCerts([Buffer.from('cacerts')]); //TODO get certs
+				fmspconf.setSigningIdentity(sigid);
+				fmspconf.setName('DEFAULT');
+
+				var mspconf = new _mspConfigProto.MSPConfig();
+				mspconf.setConfig(fmspconf.toBuffer());
+				mspconf.setType(0);
+
+				var mspConfigItem = buildSignedConfigurationItem(
+					configItemChainHeader,
+					orderer_type,
+					last_modified,
+					mod_policy,
+					'MSP',
+					mspconf.toBuffer()
+				);
+				creation_items.push(mspConfigItem.getConfigurationItem().toBuffer());
 
 				logger.debug('initializeChain - all policies built');
 
@@ -560,7 +619,8 @@ var Chain = class {
 					ingressPolicyItem,
 					egressPolicyItem,
 					acceptAllPolicyItem,
-					defaultModificationPolicyItem
+					defaultModificationPolicyItem,
+					mspConfigItem
 				]);
 
 				// build a chain header for later to be
@@ -591,6 +651,51 @@ var Chain = class {
 		)
 		.then(
 			function(results) {
+				logger.debug('initializeChain - good results from broadcast :: %j',results);
+				return Promise.resolve(results);
+			}
+		)
+		.catch(
+			function(error) {
+				logger.error('initializeChain - system error ::' + error.stack ? error.stack : error);
+				return Promise.reject(new Error(error));
+			}
+		);
+	}
+
+	/**
+	 * Sends a join channel proposal to one or more endorsing peers.
+	 *
+	 * @returns {Promise} A Promise for a `ProposalResponse`
+	 */
+	sendJoinChannelProposal(request) {
+		logger.debug('sendJoinChannelProposal - start');
+		var errorMsg = null;
+
+		// verify that we have an orderer configured
+		if(!this.getOrderers()[0]) {
+			errorMsg = 'Missing orderer object for the join channel proposal';
+		}
+
+		// Verify that a Peer has been added
+		if (this.getPeers().length < 1) {
+			errorMsg = 'Missing peer objects for the join channel proposal';
+		}
+
+		if(errorMsg) {
+			logger.error('sendJoinChannelProposal error '+ errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+
+		var self = this;
+		var userContext = null;
+		var orderer = self.getOrderers()[0];
+
+		return this._clientContext.getUserContext()
+		.then(
+			function(foundUserContext) {
+				userContext = foundUserContext;
+
 				// now build the seek info , will be used once the chain is created
 				// to get the genesis block back
 				//   build start
@@ -609,13 +714,13 @@ var Chain = class {
 				var seekInfo = new _abProto.SeekInfo();
 				seekInfo.setStart(seekStart);
 				seekInfo.setStop(seekStop);
-				seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY); //TODO should we do this or fail ??
+				seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 				//logger.debug('initializeChain - seekInfo ::' + JSON.stringify(seekInfo));
 
 				// build the header for use with the seekInfo payload
 				var seekInfoHeader = buildChainHeader(
 					_commonProto.HeaderType.DELIVER_SEEK_INFO,
-					chain_id,
+					self._name,
 					self._initial_transaction_id,
 					self._initial_epoch
 				);
@@ -639,19 +744,53 @@ var Chain = class {
 			}
 		)
 		.then(
-			function(results) {
-				logger.debug('initializeChain - good results from seek block :: %j',results);
+			function(block) {
+				logger.debug('sendJoinChannelProposal - good results from seek block '); // :: %j',results);
 				// verify that we have the genesis block
-				if(results.block) {
-					logger.debug('initializeChain - found block');
+				if(block) {
+					logger.debug('sendJoinChannelProposal - found genesis block');
 				}
-				return Promise.resolve(results);
+				else {
+					logger.error('sendJoinChannelProposal - did not find genesis block');
+					return Promise.reject(new Error('Join Channel failed, no genesis block found'));
+				}
+				var chaincodeInput = new _ccProto.ChaincodeInput();
+				var args = [];
+				args.push(Buffer.from('JoinChain', 'utf8'));
+				args.push(block.toBuffer());
+
+				chaincodeInput.setArgs(args);
+
+				var chaincodeID = new _ccProto.ChaincodeID();
+				chaincodeID.setName('cscc');
+
+				var chaincodeSpec = new _ccProto.ChaincodeSpec();
+				chaincodeSpec.setType(_ccProto.ChaincodeSpec.Type.GOLANG);
+				chaincodeSpec.setChaincodeID(chaincodeID);
+				chaincodeSpec.setInput(chaincodeInput);
+
+				var chainHeader = buildChainHeader(
+					_commonProto.HeaderType.CONFIGURATION_TRANSACTION,
+					'',
+					self._initial_transaction_id,
+					null, //no epoch
+					'cscc'
+					);
+
+				var header = buildHeader(userContext.getIdentity(), chainHeader, utils.getNonce());
+				var proposal = self._buildProposal(chaincodeSpec, header);
+				var signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
+
+				return Chain._sendPeersProposal(self.getPeers(), signed_proposal);
 			}
-		)
-		.catch(
-			function(error) {
-				logger.error('initializeChain - system error ::' + error.stack ? error.stack : error);
-				return Promise.reject(new Error(error));
+		).then(
+			function(responses) {
+				return Promise.resolve(responses);
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Proposal. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
 			}
 		);
 	}
