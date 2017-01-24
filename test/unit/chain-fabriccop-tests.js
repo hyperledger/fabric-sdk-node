@@ -47,20 +47,28 @@ test('Attempt to use FabricCOPServices',function(t){
 			client.setStateStore(kvs);
 
 			var copService = new FabricCOPServices('http://localhost:7054');
+			var member;
 			copService.enroll({
-				enrollmentID: 'testUser',
-				enrollmentSecret: 'user1'
+				enrollmentID: 'notadmin',
+				enrollmentSecret: 'pass'
 			})
 			.then(
 				function(testUser) {
 					t.pass('Successfully enrolled testUser with COP server');
 
-					var member = new User('testUser', client);
-					member.setEnrollment(testUser.key, testUser.certificate);
+					member = new User('testUser', client);
+					return member.setEnrollment(testUser.key, testUser.certificate);
+				},
+				function(err) {
+					t.fail('Failed to use returned private key and certificate to construct a user object. Error: ' + err);
+					t.end();
+				}
+			).then(
+				function() {
 					return client.setUserContext(member);
 				},
 				function(err){
-					t.fail('Failed to enroll testUser with COP server. Error: ' + err);
+					t.fail('Failed to set user context to client instance. Error: ' + err);
 					t.end();
 				}
 			).then(

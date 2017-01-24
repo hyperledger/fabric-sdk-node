@@ -142,6 +142,7 @@ var User = class {
 	 * Set the enrollment object for this User instance
 	 * @param {Key} privateKey the private key object
 	 * @param {string} certificate the PEM-encoded string of certificate
+	 * @returns {Promise} Promise for successful completion of creating the user's signing Identity
 	 */
 	setEnrollment(privateKey, certificate) {
 		if (typeof privateKey === 'undefined' || privateKey === null || privateKey === '') {
@@ -152,10 +153,12 @@ var User = class {
 			throw new Error('Invalid parameter. Must have a valid certificate.');
 		}
 
-		var pubKey = this.cryptoPrimitives.importKey(certificate, { algorithm: api.CryptoAlgorithms.X509Certificate });
-		var identity = new Identity('testIdentity', certificate, pubKey, this.mspImpl);
-		this._identity = identity;
-		this._signingIdentity = new SigningIdentity('testSigningIdentity', certificate, pubKey, this.mspImpl, new Signer(this.mspImpl.cryptoSuite, privateKey));
+		return this.cryptoPrimitives.importKey(certificate)
+		.then((pubKey) => {
+			var identity = new Identity('testIdentity', certificate, pubKey, this.mspImpl);
+			this._identity = identity;
+			this._signingIdentity = new SigningIdentity('testSigningIdentity', certificate, pubKey, this.mspImpl, new Signer(this.mspImpl.cryptoSuite, privateKey));
+		});
 	}
 
 	/**
@@ -205,25 +208,28 @@ var User = class {
 		this._enrollmentSecret = state.enrollmentSecret;
 
 		var self = this;
+		var pubKey;
 
-		var pubKey = this.cryptoPrimitives.importKey(state.enrollment.identity.certificate, { algorithm: api.CryptoAlgorithms.X509Certificate });
-		var identity = new Identity(state.enrollment.identity.id, state.enrollment.identity.certificate, pubKey, this.mspImpl);
-		this._identity = identity;
+		return this.cryptoPrimitives.importKey(state.enrollment.identity.certificate, { algorithm: api.CryptoAlgorithms.X509Certificate })
+		.then((key) => {
+			pubKey = key;
 
-		// during serialization (see toString() below) only the key's SKI are saved
-		// swap out that for the real key from the crypto provider
-		var promise = this.cryptoPrimitives.getKey(state.enrollment.signingIdentity)
-		.then(function(privateKey) {
+			var identity = new Identity(state.enrollment.identity.id, state.enrollment.identity.certificate, pubKey, self.mspImpl);
+			self._identity = identity;
+
+			// during serialization (see toString() below) only the key's SKI are saved
+			// swap out that for the real key from the crypto provider
+			return self.cryptoPrimitives.getKey(state.enrollment.signingIdentity);
+		}).then((privateKey) => {
 			self._signingIdentity = new SigningIdentity(
 				state.enrollment.identity.id,
 				state.enrollment.identity.certificate,
-				pubKey, self.mspImpl,
+				pubKey,
+				self.mspImpl,
 				new Signer(self.mspImpl.cryptoSuite, privateKey));
 
 			return self;
 		});
-
-		return promise;
 	}
 
 	/**

@@ -163,7 +163,7 @@ var Client = class {
 				).catch(
 					function(err) {
 						logger.debug('saveUserToStateStore, store.setValue, error: ' +err);
-						return reject(new Error(err));
+						reject(new Error(err));
 					}
 				);
 			} else {
@@ -198,15 +198,20 @@ var Client = class {
 	setUserContext(user, skipPersistence) {
 		logger.debug('setUserContext, user: ' + user + ', skipPersistence: ' + skipPersistence);
 		var self = this;
-		return new Promise(function(resolve, reject) {
+		return new Promise((resolve, reject) => {
 			if (user) {
 				self._userContext = user;
 				if (!skipPersistence) {
 					logger.debug('setUserContext begin promise to saveUserToStateStore');
-					resolve(self.saveUserToStateStore());
+					self.saveUserToStateStore()
+					.then((user) => {
+						return resolve(user);
+					}).catch((err) => {
+						reject(err);
+					});
 				} else {
 					logger.debug('setUserContext, resolved user');
-					resolve(user);
+					return resolve(user);
 				}
 			} else {
 				logger.debug('setUserContext, Cannot save null userContext');
@@ -252,12 +257,12 @@ var Client = class {
 								return self.setUserContext(userContext, false);
 							} else {
 								logger.debug('Requested user "%s" not loaded from the state store on this Client instance: name - %s', name, name);
-								resolve(null);
+								return null;
 							}
 						}
 					).then(
 						function(userContext) {
-							resolve(userContext);
+							return resolve(userContext);
 						}
 					).catch(
 						function(err) {
@@ -267,7 +272,7 @@ var Client = class {
 					);
 				} else {
 					// we don't have it in memory or persistence, just return null
-					resolve(null);
+					return resolve(null);
 				}
 			}
 		});
@@ -291,16 +296,16 @@ var Client = class {
 
 						return newUser.fromString(memberStr);
 					} else {
-						resolve(null);
+						return null;
 					}
 				})
 			.then(function(data) {
 				if (data) {
 					logger.info('Successfully loaded user "%s" from local key value store', name);
-					resolve(data);
+					return resolve(data);
 				} else {
 					logger.info('Failed to load user "%s" from local key value store', name);
-					resolve(null);
+					return resolve(null);
 				}
 			}).catch(
 				function(err) {
