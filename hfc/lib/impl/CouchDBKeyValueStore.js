@@ -164,7 +164,7 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 						self._dbInsert({ _id: name, member: value })
 						.then( function (status) {
 							logger.debug('setValue add: ' + name + ', status: ' + status);
-							if (status == true) resolve(status);
+							if (status == true) resolve(value);
 							else reject(new Error('Couch database insert add failed.'));
 						});
 					}
@@ -177,7 +177,7 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 					self._dbInsert({ _id: name, _rev: body._rev, member: value })
 					.then( function (status) {
 						logger.debug('setValue update: ' + name + ', status: ' + status);
-						if (status == true) resolve(status);
+						if (status == true) resolve(value);
 						else reject(new Error('Couch database insert update failed.'));
 					});
 				}

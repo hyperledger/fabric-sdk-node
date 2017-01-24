@@ -48,7 +48,7 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 			} else {
 				if (!loadFromConfig) {
 					// need to enroll it with COP server
-					var cop = new copService('http://localhost:8888');
+					var cop = new copService('http://localhost:7054');
 
 					return cop.enroll({
 						enrollmentID: username,

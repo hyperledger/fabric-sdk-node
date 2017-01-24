@@ -64,7 +64,7 @@ test('Use FabricCOPServices with a CouchDB KeyValueStore', function(t) {
 					process.exit(1);
 				}
 				t.comment('Initialize the COP server connection and KeyValueStore');
-				return new FabricCOPServices('http://localhost:8888', kvs);
+				return new FabricCOPServices('http://localhost:7054', kvs);
 			},
 			function(err) {
 				console.log(err);

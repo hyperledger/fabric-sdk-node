@@ -43,7 +43,7 @@ test('FabricCOPClient: Test enroll with missing parameters', function (t) {
 	var client = new FabricCOPClient({
 		protocol: 'http',
 		hostname: '127.0.0.1',
-		port: 8888
+		port: 7054
 	});
 
 	//
@@ -70,7 +70,7 @@ test('FabricCOPClient: Test enroll With Static CSR', function (t) {
 	var client = new FabricCOPClient({
 		protocol: 'http',
 		hostname: '127.0.0.1',
-		port: 8888
+		port: 7054
 	});
 
 	//
@@ -101,7 +101,7 @@ test('FabricCOPServices: Test enroll() With Dynamic CSR', function (t) {
 	// otherwise the client will not be able to decrypt the enrollment challenge
 	utils.setConfigSetting('crypto-keysize', 256);
 
-	var cop = new FabricCOPServices('http://localhost:8888');
+	var cop = new FabricCOPServices('http://localhost:7054');
 
 	var req = {
 		enrollmentID: 'admin',

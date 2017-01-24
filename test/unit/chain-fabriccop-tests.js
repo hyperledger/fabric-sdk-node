@@ -46,7 +46,7 @@ test('Attempt to use FabricCOPServices',function(t){
 		function(kvs) {
 			client.setStateStore(kvs);
 
-			var copService = new FabricCOPServices('http://localhost:8888');
+			var copService = new FabricCOPServices('http://localhost:7054');
 			copService.enroll({
 				enrollmentID: 'testUser',
 				enrollmentSecret: 'user1'

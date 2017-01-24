@@ -154,17 +154,7 @@ var Client = class {
 				.then(
 					function(result) {
 						logger.debug('saveUserToStateStore, store.setValue, result = ' + result);
-						// FileKeyValueStore returns value.  CouchDBKeyValueStore returns boolean.
-						if (typeof(result) === 'boolean') {
-							if (result == true) {
-								resolve(self._userContext);
-							} else {
-								logger.debug('saveUserToStateStore, store.setValue, reject result');
-								reject(new Error('Failed to save user to state store.'));
-							}
-						} else {
-							resolve(self._userContext);
-						}
+						resolve(self._userContext);
 					},
 					function (reason) {
 						logger.debug('saveUserToStateStore, store.setValue, reject reason = ' + reason);

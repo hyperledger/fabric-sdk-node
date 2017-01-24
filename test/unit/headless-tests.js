@@ -2226,7 +2226,7 @@ test('FabricCOPClient: Test constructor', function (t) {
 		'Should not throw error if port is not set'
 	);
 
-	connectOpts.port = '8888';
+	connectOpts.port = '7054';
 
 	t.throws(
 		function () {
@@ -2236,7 +2236,7 @@ test('FabricCOPClient: Test constructor', function (t) {
 		'Throw error for invalid port'
 	);
 
-	connectOpts.port = 8888;
+	connectOpts.port = 7054;
 
 	t.doesNotThrow(
 		function () {
@@ -2279,7 +2279,7 @@ test('FabricCOPClient: Test _pemToDer static method',function(t){
 test('FabricCOPServices: Test _parseURL() function', function (t) {
 
 	var goodHost = 'www.example.com';
-	var goodPort = 8888;
+	var goodPort = 7054;
 	var goodURL = 'http://' + goodHost + ':' + goodPort;
 	var goodURLSecure = 'https://' + goodHost + ':' + goodPort;
 
