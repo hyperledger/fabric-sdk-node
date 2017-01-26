@@ -2554,6 +2554,60 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 	t.end();
 });
 
+var EventHub = require('hfc/lib/EventHub.js');
+
+test('\n\n** EventHub tests\n\n', (t) => {
+	var eh = new EventHub();
+
+	t.throws(
+		() => {
+			eh.connect();
+		},
+		/Must set peer address before connecting/,
+		'Must not allow connect() when peer address has not been set'
+	);
+
+	t.throws(
+		() => {
+			eh.setPeerAddr('badUrl');
+		},
+		/InvalidProtocol: Invalid protocol: undefined/,
+		'Must not allow a bad url without protocol to be set'
+	);
+
+	t.throws(
+		() => {
+			eh.setPeerAddr('http://badUrl');
+		},
+		/InvalidProtocol: Invalid protocol: http/,
+		'Must not allow an http url to be set'
+	);
+
+	t.throws(
+		() => {
+			eh.setPeerAddr('https://badUrl');
+		},
+		/InvalidProtocol: Invalid protocol: https/,
+		'Must not allow an https url to be set'
+	);
+
+	t.doesNotThrow(
+		() => {
+			eh.setPeerAddr('grpc://localhost:7053');
+		},
+		null,
+		'Test valid url connect and disconnect'
+	);
+
+	eh.registerTxEvent('dummyId', () => {
+		// dummy function
+	});
+
+	t.equal(eh.txRegistrants.size(), 1, 'txRegistrants size should be 1 after registering a transaction event listener');
+
+	t.end();
+});
+
 function getUserHome() {
 	return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 }

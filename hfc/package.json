@@ -27,6 +27,7 @@
     "fs": "0.0.2",
     "fs-extra": ">=0.30.0 <0.31.0",
     "grpc": "^1.0.0",
+    "hashtable": "^2.0.2",
     "js-sha3": "^0.5.1",
     "json-stringify-safe": "^5.0.1",
     "jsrsasign": "6.2.2",

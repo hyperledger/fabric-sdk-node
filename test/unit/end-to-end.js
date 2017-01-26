@@ -36,6 +36,7 @@ var testUtil = require('./util.js');
 var utils = require('hfc/lib/utils.js');
 var Peer = require('hfc/lib/Peer.js');
 var Orderer = require('hfc/lib/Orderer.js');
+var EventHub = require('hfc/lib/EventHub.js');
 
 var client = new hfc();
 var chain = client.newChain('testChain-e2e');
@@ -68,6 +69,23 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 	}).then( function (store) {
 		client.setStateStore(store);
 		var promise = testUtil.getSubmitter(client, t);
+
+		// setup event hub to get notified when transactions are committed
+		var eh = new EventHub();
+		eh.setPeerAddr('grpc://localhost:7053');
+		eh.connect();
+
+		// override t.end function so it'll always disconnect the event hub
+		t.end = (function(context, eventhub, f) {
+			return function() {
+				if (eventhub && eventhub.isconnected()) {
+					logger.info('Disconnecting the event hub');
+					eventhub.disconnect();
+				}
+
+				f.apply(context, arguments);
+			};
+		})(t, eh, t.end);
 
 		if (steps.length === 0 || steps.indexOf('step1') >= 0) {
 			logger.info('Executing step1');
@@ -134,35 +152,42 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 					t.fail('Failed to send deployment proposal due to error: ' + err.stack ? err.stack : err);
 					t.end();
 				}
+			).then(
+				function(response) {
+					if (response.status === 'SUCCESS') {
+						t.pass('Successfully sent deployment transaction to the orderer.');
+
+						// set the transaction listener and set a timeout of 30sec
+						// if the transaction did not get committed within the timeout period,
+						// fail the test
+						return new Promise((resolve, reject) => {
+							var handle = setTimeout(reject, 30000);
+
+							eh.registerTxEvent(tx_id.toString(), (tx) => {
+								t.pass('The chaincode deploy transaction has been successfully committed');
+								clearTimeout(handle);
+
+								if (steps.length === 0) {
+									// this is called without steps parameter in order to execute all steps
+									// in sequence, just continue
+									setTimeout(resolve, 2000);
+								} else if (steps.length === 1 && steps[0] === 'step1') {
+									t.end();
+									resolve();
+								}
+							});
+						});
+					} else {
+						t.fail('Failed to order the deployment endorsement. Error code: ' + response.status);
+						t.end();
+					}
+
+				},
+				function(err) {
+					t.fail('Failed to send deployment e due to error: ' + err.stack ? err.stack : err);
+					t.end();
+				}
 			);
-
-			if (steps.length === 0) {
-				// this is called without steps parameter in order to execute all steps
-				// in sequence, will need to sleep for 30sec here
-				promise = promise.then(
-					function(response) {
-						if (response.status === 'SUCCESS') {
-							t.pass('Successfully ordered deployment endorsement.');
-							console.log('  ** need to wait now for the committer to catch up after the deployment');
-							return sleep(30000);
-						} else {
-							t.fail('Failed to order the deployment endorsement. Error code: ' + response.status);
-							t.end();
-						}
-
-					},
-					function(err) {
-						t.fail('Failed to send deployment e due to error: ' + err.stack ? err.stack : err);
-						t.end();
-					}
-				);
-			} else if (steps.length === 1 && steps[0] === 'step1') {
-				promise = promise.then(
-					function() {
-						t.end();
-					}
-				);
-			}
 		}
 
 		if (steps.length === 0 || steps.indexOf('step2') >= 0) {
@@ -177,7 +202,11 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 						webUser = data;
 					}
 
-					return Promise.resolve();
+					return;
+				},
+				function(err) {
+					t.fail('Failed to get transaction notification within the timeout period');
+					t.end();
 				}
 			).then(
 				function() {
@@ -232,35 +261,38 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 					t.fail('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
 					t.end();
 				}
-			);
+			).then(
+				function(response) {
+					if (response.status === 'SUCCESS') {
+						t.pass('Successfully ordered endorsement transaction.');
 
-			if (steps.length === 0) {
-				// this is called without steps parameter in order to execute all steps
-				// in sequence, will need to sleep for 30sec here
-				promise = promise.then(
-					function(response) {
-						if (response.status === 'SUCCESS') {
-							t.pass('Successfully ordered endorsement transaction.');
-						} else {
-							t.fail('Failed to order the endorsement of the transaction. Error code: ' + response.status);
-						}
-						// always sleep and check with query
-						console.log('  ** need to wait now for the committer to catch up after the **** MOVE ****');
-						t.end();
-						return sleep(30000);
-					},
-					function(err) {
-						t.fail('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
-						t.end();
-					}
-				);
-			} else if (steps.length >= 1 && steps[steps.length - 1] === 'step2') {
-				promise = promise.then(
-					function() {
+						return new Promise((resolve, reject) => {
+							var handle = setTimeout(reject, 30000);
+
+							eh.registerTxEvent(tx_id.toString(), (tx) => {
+								t.pass('The chaincode deploy transaction has been successfully committed');
+								clearTimeout(handle);
+
+								if (steps.length === 0) {
+									// this is called without steps parameter in order to execute all steps
+									// in sequence, just continue
+									setTimeout(resolve, 2000);
+								} else if (steps.length === 1 && steps[0] === 'step2') {
+									t.end();
+									resolve();
+								}
+							});
+						});
+					} else {
+						t.fail('Failed to order the endorsement of the transaction. Error code: ' + response.status);
 						t.end();
 					}
-				);
-			}
+				},
+				function(err) {
+					t.fail('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
+					t.end();
+				}
+			);
 		}
 
 		if (steps.length === 0 || steps.indexOf('step3') >= 0) {
@@ -275,7 +307,11 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 						webUser = data;
 					}
 
-					return Promise.resolve();
+					return;
+				},
+				function(err) {
+					t.fail('Failed to get transaction notification within the timeout period');
+					t.end();
 				}
 			).then(
 				function() {
@@ -315,8 +351,3 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 		}
 	});
 });
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
