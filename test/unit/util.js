@@ -50,15 +50,19 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 					// need to enroll it with COP server
 					var cop = new copService('http://localhost:7054');
 
+					var member;
 					return cop.enroll({
 						enrollmentID: username,
 						enrollmentSecret: password
 					}).then((enrollment) => {
 						t.pass('Successfully enrolled user \'' + username + '\'');
 
-						var member = new User(username, client);
-						member.setEnrollment(enrollment.key, enrollment.certificate);
-						return resolve(client.setUserContext(member));
+						member = new User(username, client);
+						return member.setEnrollment(enrollment.key, enrollment.certificate);
+					}).then(() => {
+						return client.setUserContext(member);
+					}).then(() => {
+						return resolve(member);
 					}).catch((err) => {
 						t.fail('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
 						t.end();
@@ -74,7 +78,7 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 
 					// first load the private key and save in the BCCSP's key store
 					var privKeyPEM = path.join(__dirname, '../fixtures/msp/keystore/admin.pem');
-					var pemData;
+					var pemData, member;
 					return readFile(privKeyPEM)
 					.then((data) => {
 						pemData = data;
@@ -93,8 +97,9 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 						var certPEM = path.join(__dirname, '../fixtures/msp/signcerts/admin.pem');
 						return readFile(certPEM);
 					}).then((data) => {
-						var member = new User(username, client);
-						member.setEnrollment(testKey, data.toString());
+						member = new User(username, client);
+						return member.setEnrollment(testKey, data.toString());
+					}).then(() => {
 						return client.setUserContext(member);
 					}).then((user) => {
 						return resolve(user);
@@ -123,7 +128,7 @@ function readFile(path) {
 }
 
 module.exports.getSubmitter = function(client, test, loadFromConfig) {
-	return getSubmitter('admin', 'adminpw', client, test, loadFromConfig);
+	return getSubmitter('admin2', 'adminpw2', client, test, loadFromConfig);
 };
 
 

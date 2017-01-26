@@ -128,25 +128,22 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 			var key = new ECDSAKey(pair.prvKeyObj, this._keySize);
 
 			var self = this;
-			return new Promise(
-				function(resolve, reject) {
-					self._getKeyValueStore(self._store)
-					.then (
-						function (store) {
-							logger.debug('generateKey, store.setValue');
-							store.setValue(key.getSKI(), KEYUTIL.getPEM(pair.prvKeyObj, 'PKCS8PRV'))
-							.then(
-								function() {
-									return resolve(key);
-								}
-							).catch(
-								function(err) {
-									reject(err);
-								}
-							);
-						});
-				}
-			);
+			return new Promise((resolve, reject) => {
+				self._getKeyValueStore(self._store)
+				.then ((store) => {
+					logger.debug('generateKey, store.setValue');
+					store.setValue(_getKeyIndex(key.getSKI(), true), KEYUTIL.getPEM(pair.prvKeyObj, 'PKCS8PRV'))
+					.then(
+						function() {
+							return resolve(key);
+						}
+					).catch(
+						function(err) {
+							reject(err);
+						}
+					);
+				});
+			});
 		}
 	}
 
@@ -162,29 +159,45 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
 	 */
 	importKey(raw, opts) {
-		if (!opts)
-			throw new Error('Missing required parameter "opts"');
-
-		if (!opts.algorithm)
-			throw new Error('Parameter "opts" missing required field "algorithm"');
-
-		if (opts.algorithm === api.CryptoAlgorithms.X509Certificate) {
-			// importing public key from an x.509 certificate
+		var self = this;
+		return new Promise((resolve, reject) => {
+			// attempt to import the raw content, assuming it's one of the following:
+			// X.509v1/v3 PEM certificate (RSA/DSA/ECC)
+			// PKCS#8 PEM RSA/DSA/ECC public key
+			// PKCS#5 plain PEM DSA/RSA private key
+			// PKCS#8 plain PEM RSA/ECDSA private key
+			// TODO: add support for the following passcode-protected PEM formats
+			// - PKCS#5 encrypted PEM RSA/DSA private
+			// - PKCS#8 encrypted PEM RSA/ECDSA private key
 			var pemString = Buffer.from(raw).toString();
 			try {
-				var publicKey = KEYUTIL.getKey(raw);
+				var key = KEYUTIL.getKey(pemString);
 
-				if (publicKey.type === 'EC') {
-					return new ECDSAKey(publicKey, publicKey.ecparams.keylen);
+				if (key.type && key.type === 'EC') {
+					// save the key in the key store
+					var theKey = new ECDSAKey(key, key.ecparams.keylen);
+
+					var idx = _getKeyIndex(theKey.getSKI(), key.isPrivate);
+					var pem = (key.isPrivate) ? KEYUTIL.getPEM(key, 'PKCS8PRV') : KEYUTIL.getPEM(key);
+
+					// use <ski>-priv or <ski>-pub as the index to the key store entry
+					return self._getKeyValueStore(self._store)
+						.then ((store) => {
+							return store.setValue(idx, pem);
+						}).then(() => {
+							return resolve(theKey);
+						}).catch((err) => {
+							reject(err);
+						});
 				} else {
-					// TODO PEM encoded private keys, DER encoded public certs and private keys, etc
-					throw new Error('Does not understand certificates other than ECDSA public keys');
+					// TODO PEM encoded RSA public keys
+					reject(new Error('Does not understand certificates other than ECDSA public keys'));
 				}
 			} catch(err) {
-				logger.error('Failed to parse public key from PEM: ' + err);
-				throw err;
+				logger.error('Failed to parse key from PEM: ' + err);
+				reject(err);
 			}
-		}
+		});
 	}
 
 	/**
@@ -193,32 +206,40 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 */
 	getKey(ski) {
 		var self = this;
+		var store;
 
-		return new Promise(
-			function(resolve, reject) {
-				self._getKeyValueStore(self._store)
-				.then (
-					function (store) {
-						store.getValue(ski)
-						.then(function(raw) {
-							if (raw !== null) {
-								var privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
-								return resolve(new ECDSAKey(privKey, self._keySize));
-							} else {
-								return resolve(null);
-							}
-						})
-						.catch(function(err) {
-							reject(err);
-						});
-					});
-			}
-		);
+		return new Promise((resolve, reject) => {
+			self._getKeyValueStore(self._store)
+			.then ((st) => {
+				store = st;
+				// first try the private key entry, since it encapsulates both
+				// the private key and public key
+				return store.getValue(_getKeyIndex(ski, true));
+			}).then((raw) => {
+				if (raw !== null) {
+					var privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
+					return resolve(new ECDSAKey(privKey, self._keySize));
+				} else {
+					// didn't find the private key entry matching the SKI
+					// next try the public key entry
+					return store.getValue(_getKeyIndex(ski, false));
+				}
+			}).then((key) => {
+				if (key instanceof ECDSAKey)
+					return resolve(key);
+				else if (key !== null) {
+					var pubKey = KEYUTIL.getKey(key);
+					return resolve(new ECDSAKey(pubKey, self._keySize));
+				}
+			}).catch((err) => {
+				reject(err);
+			});
+		});
 	}
 
 	_getKeyValueStore(store) {
 		var self = this;
-		return new Promise(function(resolve, reject) {
+		return new Promise((resolve, reject) => {
 			if (store === null) {
 				var defaultKS = CryptoSuite_ECDSA_AES.getKeyStorePath();
 				logger.info('This class requires a KeyValueStore to save keys, no store was passed in, using the default store %s', defaultKS);
@@ -321,6 +342,13 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		return path.join(os.homedir(), '.hfc-key-store');
 	}
 };
+
+function _getKeyIndex(ski, isPrivateKey) {
+	if (isPrivateKey)
+		return ski + '-priv';
+	else
+		return ski + '-pub';
+}
 
 // [Angelo De Caro] ECDSA signatures do not have unique representation and this can facilitate
 // replay attacks and more. In order to have a unique representation,

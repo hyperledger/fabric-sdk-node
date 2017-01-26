@@ -98,7 +98,14 @@ test('Use FabricCOPServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 
 				// Persist the user state
 				var member = new User('admin2', client);
-				member.setEnrollment(admin2.key, admin2.certificate);
+				return member.setEnrollment(admin2.key, admin2.certificate);
+			},
+			function(err) {
+				t.fail('Failed to use obtained private key and certificate to construct a User object. Error: ' + err);
+				t.end();
+			}
+		).then(
+			function(member) {
 				if (member.isEnrolled()) {
 					t.pass('Member isEnrolled successfully.');
 				} else {

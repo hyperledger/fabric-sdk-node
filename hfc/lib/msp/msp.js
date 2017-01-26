@@ -90,15 +90,17 @@ var MSP = class {
 	 * DeserializeIdentity deserializes an identity
 	 * @param {byte[]} serializedIdentity A protobuf-based serialization of an object with
 	 * two fields: mspid and idBytes for certificate PEM bytes
-	 * @returns {Identity}
+	 * @returns {Promise} Promise for an {@link Identity} instance
 	 */
 	deserializeIdentity(serializedIdentity) {
 		var sid = identityProto.SerializedIdentity.decode(serializedIdentity);
 		var cert = sid.IdBytes.toBinary();
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
-		var publicKey = this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate });
-		// TODO: the id of the new Identity instance should probably be derived from the subject info in the cert?
-		return new Identity('SomeDummyValue', cert, publicKey, this);
+		return this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate })
+		.then((publicKey) => {
+			// TODO: the id of the new Identity instance should probably be derived from the subject info in the cert?
+			return new Identity('SomeDummyValue', cert, publicKey, this);
+		});
 	}
 
 	/**

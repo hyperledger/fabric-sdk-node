@@ -92,13 +92,16 @@ module.exports.CryptoSuite = class {
 	deriveKey(key, opts) {}
 
 	/**
-	 * Imports a key from its raw representation using opts.
+	 * Imports a key from its raw representation using opts. If the `opts.ephemeral`
+	 * parameter is false, the method, in addition to returning the imported {@link Key}
+	 * instance, also saves the imported key in the key store as PEM files that can be
+	 * retrieved using the 'getKey()' method
 	 * @param {byte[]} raw Raw bytes of the key to import
 	 * @param {Object} opts
 	 *      <br>`type`: type of information that 'raw' represents: x509 certificate,
 	 *      <br>`algorithm`: an identifier for the algorithm to be used
 	 *      <br>`ephemeral`: true if the key to generate has to be ephemeral
-	 * @returns {Key} An instance of the Key class wrapping the raw key bytes
+	 * @returns {Key} Promise of an instance of the Key class wrapping the raw key bytes
 	 */
 	importKey(raw, opts) {}
 

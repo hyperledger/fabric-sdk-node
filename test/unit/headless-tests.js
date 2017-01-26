@@ -779,10 +779,14 @@ test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 	cryptoUtils.generateKey()
 	.then(function (key) {
 		// the private key and cert don't match, but it's ok, the code doesn't check
-		member2.setEnrollment(key, TEST_CERT_PEM);
-		var id = member2.getIdentity();
+		member2.setEnrollment(key, TEST_CERT_PEM)
+		.then(() => {
+			var id = member2.getIdentity();
 
-		t.equal(id._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'User class setEnrollment() test');
+			t.equal(id._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'User class setEnrollment() test');
+			t.end();
+		});
+
 		// TODO: test SigningIdentity
 		t.end();
 	});
@@ -1404,6 +1408,7 @@ var KEYUTIL = jsrsa.KEYUTIL;
 var ECDSA = jsrsa.ECDSA;
 var asn1 = jsrsa.asn1;
 
+var CryptoSuite_ECDSA_AES = require('hfc/lib/impl/CryptoSuite_ECDSA_AES.js');
 var ecdsaKey = require('hfc/lib/impl/ecdsa/key.js');
 var api = require('hfc/lib/api.js');
 var elliptic = require('elliptic');
@@ -1608,9 +1613,37 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			testVerify(TEST_LONG_MSG_SIGNATURE_SHA2_256, TEST_LONG_MSG, false);
 
 			// test importKey()
-			var pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: api.CryptoAlgorithms.X509Certificate });
-			t.equal(pubKey.isPrivate(), false, 'Test imported public key isPrivate()');
-			t.equal(pubKey.getSKI(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef', 'Test imported public key SKI');
+			cryptoUtils.importKey(TEST_CERT_PEM)
+			.then((pubKey) => {
+				t.equal(pubKey.isPrivate(), false, 'Test imported public key isPrivate()');
+				t.equal(pubKey.getSKI(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef', 'Test imported public key SKI');
+
+				// verify that the pub key has been saved in the key store by the proper key
+				t.equal(
+					fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getKeyStorePath(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef-pub')),
+					true,
+					'Check that the imported public key has been saved in the key store');
+			});
+
+			cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM)
+			.then((privKey) => {
+				t.equal(privKey.isPrivate(), true, 'Test imported private key isPrivate');
+				t.equal(privKey.getSKI(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a', 'Test imported private key SKI');
+				t.end();
+
+				// verify that the imported private key has been saved in the key store by the proper key
+				t.equal(
+					fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv')),
+					true,
+					'Check that the imported private key has been saved in the key store');
+
+				// verify that the imported key can properly sign messages
+				var testSig = cryptoUtils.sign(privKey, cryptoUtils.hash(TEST_MSG));
+				t.equal(
+					cryptoUtils.verify(privKey.getPublicKey(), testSig, TEST_MSG),
+					true,
+					'Check that the imported private key can properly sign messages');
+			});
 
 			t.end();
 		})
@@ -2495,24 +2528,28 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 	var identity = new Identity('testIdentity', TEST_CERT_PEM, pubKey, mspImpl);
 
 	var serializedID = identity.serialize();
-	var dsID = mspImpl.deserializeIdentity(serializedID);
-	t.equal(dsID._certificate, TEST_CERT_PEM, 'Identity class function tests: deserialized certificate');
-	t.equal(dsID._publicKey.isPrivate(), false, 'Identity class function tests: deserialized public key');
-	t.equal(dsID._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'Identity class function tests: deserialized public key ecparam check');
+	mspImpl.deserializeIdentity(serializedID)
+	.then((dsID) => {
+		t.equal(dsID._certificate, TEST_CERT_PEM, 'Identity class function tests: deserialized certificate');
+		t.equal(dsID._publicKey.isPrivate(), false, 'Identity class function tests: deserialized public key');
+		t.equal(dsID._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'Identity class function tests: deserialized public key ecparam check');
 
-	// manually construct a key based on the saved privKeyHex and pubKeyHex
-	var f = KEYUTIL.getKey(TEST_KEY_PRIVATE_PEM);
-	var testKey = new ecdsaKey(f, 256);
-	var pubKey = testKey.getPublicKey();
+		// manually construct a key based on the saved privKeyHex and pubKeyHex
+		var f = KEYUTIL.getKey(TEST_KEY_PRIVATE_PEM);
+		var testKey = new ecdsaKey(f, 256);
+		var pubKey = testKey.getPublicKey();
 
-	var signer = new Signer(cryptoUtils, testKey);
-	t.equal(signer.getPublicKey().isPrivate(), false, 'Test Signer class getPublicKey() method');
+		var signer = new Signer(cryptoUtils, testKey);
+		t.equal(signer.getPublicKey().isPrivate(), false, 'Test Signer class getPublicKey() method');
 
-	var signingID = new SigningIdentity('testSigningIdentity', TEST_KEY_PRIVATE_CERT_PEM, pubKey, mspImpl, signer);
+		var signingID = new SigningIdentity('testSigningIdentity', TEST_KEY_PRIVATE_CERT_PEM, pubKey, mspImpl, signer);
 
-	var sig = signingID.sign(TEST_MSG);
-	t.equal(cryptoUtils.verify(pubKey, sig, TEST_MSG), true, 'Test SigningIdentity sign() method');
-	t.equal(signingID.verify(TEST_MSG, sig), true, 'Test Identity verify() method');
+		var sig = signingID.sign(TEST_MSG);
+		t.equal(cryptoUtils.verify(pubKey, sig, TEST_MSG), true, 'Test SigningIdentity sign() method');
+		t.equal(signingID.verify(TEST_MSG, sig), true, 'Test Identity verify() method');
+
+		t.end();
+	});
 
 	t.end();
 });
