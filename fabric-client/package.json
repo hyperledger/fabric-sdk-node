@@ -1,6 +1,6 @@
 {
-  "name": "hfc",
-  "version": "0.0.2",
+  "name": "fabric-client",
+  "version": "0.1.0",
   "main": "index.js",
   "repository": {
     "type": "gerrit",

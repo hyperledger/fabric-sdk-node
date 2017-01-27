@@ -18,12 +18,12 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('hfc');
+var hfc = require('fabric-client');
 var Client = hfc;
-var User = require('hfc/lib/User.js');
-var FabricCOPServices = require('hfc-cop/lib/FabricCOPImpl');
+var User = require('fabric-client/lib/User.js');
+var FabricCOPServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 
-var utils = require('hfc/lib/utils.js');
+var utils = require('fabric-client/lib/utils.js');
 var couchdbUtil = require('./couchdb-util.js');
 
 // Use the CouchDB specific config file
@@ -34,7 +34,7 @@ console.log('Key Value Store = ' + keyValueStore);
 
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
-// FabricCOPImpl to enroll a user, and saves the enrollment materials into the
+// FabricCAClientImpl to enroll a user, and saves the enrollment materials into the
 // CouchDB KeyValueStore. Then the test uses the Chain class to load the member
 // from the key value store.
 test('Use FabricCOPServices with a CouchDB KeyValueStore', function(t) {

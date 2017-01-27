@@ -3,7 +3,7 @@
 [![Build Status](https://jenkins.hyperledger.org/buildStatus/icon?job=fabric-sdk-node-merge-x86_64)](https://jenkins.hyperledger.org/view/fabric-sdk-node/job/fabric-sdk-node-merge-x86_64/)
 [![Documentation Status](https://readthedocs.org/projects/fabric-sdk-node/badge/?version=master)](http://fabric-sdk-node.readthedocs.io/en/master/?badge=master)
 
-The Hyperledger Fabric Client SDK (HFC) makes it easy to use APIs to interact with a Hyperledger Fabric blockchain.
+The Hyperledger Fabric Client SDK makes it easy to use APIs to interact with a Hyperledger Fabric blockchain.
 
 As an application developer, to learn about how to install and use the Node.js SDK, please visit the [fabric documentation](http://hyperledger-fabric.readthedocs.io/en/latest/Setup/NodeSDK-setup).
 
@@ -19,13 +19,13 @@ To build and test, the following pre-requisites must be installed first:
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
 
 This project publishes two separate npm packages:
-* `hfc` - main client for the Hyperledger Fabric. Applications can use this package to deploy chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
-* `hfc-cop` - client for the optional component in Hyperledger Fabric, [fabric-ca](https://github.com/hyperledger/fabric-ca). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, then the application does not need to use this package.
+* `fabric-client` - main client for the Hyperledger Fabric. Applications can use this package to deploy chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
+* `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](https://github.com/hyperledger/fabric-ca). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, then the application does not need to use this package.
 
 In the project root folder:
 * `npm install` to install dependencies
-* `gulp cop` to copy common dependent modules from the `hfc` folder to the `hfc-cop` folder
-* `gulp watch` to set up watch that updates hfc-cop's shared dependencies from hfc/lib and updates installed hfc and hfc-cop modules in node_modules. This command does not return, so you should keep it running in a separate command window as you work on the code and test in another command window
+* `gulp ca` to copy common dependent modules from the `fabric-client` folder to the `fabric-ca-client` folder
+* `gulp watch` to set up watch that updates fabric-ca-client's shared dependencies from fabric-client/lib and updates installed fabric-client and fabric-ca-client modules in node_modules. This command does not return, so you should keep it running in a separate command window as you work on the code and test in another command window
 * optionally, `gulp doc` to generate API docs if you want to review the doc content
 * `npm test` to run the headless tests that do not require any additional set up
 
@@ -144,4 +144,4 @@ HFC defines the following abstract classes for application developers to supply 
 
 2. The cryptography suite used by the default implementation uses ECDSA for asymmetric keys cryptography, AES for encryption and SHA2/3 for secure hashes. A different suite can be plugged in with "CRYPTO_SUITE" environment variable specifying full require() path to the alternative implementation of the api.CrytoSuite abstract class.
 
-3. If the user application uses an alternative membership service than the one provided by the component `fabric-ca`, the client code will likely need to use an alternative client to `hfc-cop` to interact with that membership service.
+3. If the user application uses an alternative membership service than the one provided by the component `fabric-ca`, the client code will likely need to use an alternative client to `fabric-ca-client` to interact with that membership service.

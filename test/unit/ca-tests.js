@@ -18,11 +18,11 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('hfc');
+var hfc = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
-var utils = require('hfc/lib/utils.js');
+var utils = require('fabric-client/lib/utils.js');
 
 var keyValStorePath = testUtil.KVS;
 var keyValStorePath2 = keyValStorePath + '2';

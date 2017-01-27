@@ -27,7 +27,7 @@ var https = require('https');
 var urlParser = require('url');
 
 
-var logger = utils.getLogger('FabricCOPImpl.js');
+var logger = utils.getLogger('FabricCAClientImpl.js');
 
 /**
  * This is an implementation of the member service client which communicates with the Fabric COP server.

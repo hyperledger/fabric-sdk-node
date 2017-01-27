@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-var hfc = require('hfc');
+var hfc = require('fabric-client');
 var nano = require('nano');
 var Cloudant = require('cloudant');
 

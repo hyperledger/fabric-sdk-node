@@ -23,17 +23,17 @@ var test = _test(tape);
 var path = require('path');
 var util = require('util');
 var testUtil = require('./util.js');
-var hfc = require('hfc');
+var hfc = require('fabric-client');
 var fs = require('fs');
 var execSync = require('child_process').execSync;
-var utils = require('hfc/lib/utils.js');
-var cryptoSuiteReq = require('hfc/lib/impl/CryptoSuite_ECDSA_AES.js');
+var utils = require('fabric-client/lib/utils.js');
+var cryptoSuiteReq = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
 var bunyan = require('bunyan');
 var log4js = require('log4js');
 var intercept = require('intercept-stdout');
 
 // FileKeyValueStore tests /////////////
-var FileKeyValueStore = require('hfc/lib/impl/FileKeyValueStore.js');
+var FileKeyValueStore = require('fabric-client/lib/impl/FileKeyValueStore.js');
 
 var keyValStorePath = path.join(getUserHome(), 'kvsTemp');
 //Note: unix relative path does not start with '/'
@@ -53,13 +53,13 @@ var store4 = '';
 // End: FileKeyValueStore tests ////////
 
 // Chain tests /////////////
-var Chain = require('hfc/lib/Chain.js');
+var Chain = require('fabric-client/lib/Chain.js');
 var _chain = null;
 var chainName = 'testChain';
 // End: Chain tests ////////
 
 // User tests //////////
-var User = require('hfc/lib/User.js');
+var User = require('fabric-client/lib/User.js');
 var memberName = 'Donald T. Duck';
 var enrollmentID = 123454321;
 var roles = ['admin', 'user'];
@@ -71,15 +71,15 @@ var _client = null;
 // End: User tests //////
 
 // FabricCoPServices tests /////////
-var FabricCOPServices = require('hfc-cop/lib/FabricCOPImpl');
+var FabricCOPServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 var FabricCOPClient = FabricCOPServices.FabricCOPClient;
 // End: FabricCoPServices tests ////
 
 // GRPC Options tests ///////////////
-var Remote = require('hfc/lib/Remote.js');
-var Peer = require('hfc/lib/Peer.js');
-var Orderer = require('hfc/lib/Orderer.js');
-var Config = require('hfc/lib/Config.js');
+var Remote = require('fabric-client/lib/Remote.js');
+var Peer = require('fabric-client/lib/Peer.js');
+var Orderer = require('fabric-client/lib/Orderer.js');
+var Config = require('fabric-client/lib/Config.js');
 var aPem = '-----BEGIN CERTIFICATE-----' +
 	'MIIBwTCCAUegAwIBAgIBATAKBggqhkjOPQQDAzApMQswCQYDVQQGEwJVUzEMMAoG' +
 	'A1UEChMDSUJNMQwwCgYDVQQDEwNPQkMwHhcNMTYwMTIxMjI0OTUxWhcNMTYwNDIw' +
@@ -98,7 +98,7 @@ var aHostnameOverride = 'atesthostnameoverride';
 // specifically set the values to defaults because they may have been overridden when
 // running in the overall test bucket ('gulp test')
 function resetDefaults() {
-	var defaultSettings = require('hfc/config/default.json');
+	var defaultSettings = require('fabric-client/config/default.json');
 	for (var setting in defaultSettings) {
 		hfc.setConfigSetting(setting, defaultSettings[setting]);
 	}
@@ -1408,9 +1408,9 @@ var KEYUTIL = jsrsa.KEYUTIL;
 var ECDSA = jsrsa.ECDSA;
 var asn1 = jsrsa.asn1;
 
-var CryptoSuite_ECDSA_AES = require('hfc/lib/impl/CryptoSuite_ECDSA_AES.js');
-var ecdsaKey = require('hfc/lib/impl/ecdsa/key.js');
-var api = require('hfc/lib/api.js');
+var CryptoSuite_ECDSA_AES = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
+var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
+var api = require('fabric-client/lib/api.js');
 var elliptic = require('elliptic');
 var BN = require('bn.js');
 var Signature = require('elliptic/lib/elliptic/ec/signature.js');
@@ -2371,11 +2371,11 @@ test('FabricCOPServices: Test _parseURL() function', function (t) {
 	);
 });
 
-var idModule = require('hfc/lib/msp/identity.js');
+var idModule = require('fabric-client/lib/msp/identity.js');
 var Identity = idModule.Identity;
 var Signer = idModule.Signer;
 var SigningIdentity = idModule.SigningIdentity;
-var MSP = require('hfc/lib/msp/msp.js');
+var MSP = require('fabric-client/lib/msp/msp.js');
 
 test('\n\n ** Identity class tests **\n\n', function (t) {
 	t.throws(
@@ -2554,7 +2554,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 	t.end();
 });
 
-var EventHub = require('hfc/lib/EventHub.js');
+var EventHub = require('fabric-client/lib/EventHub.js');
 
 test('\n\n** EventHub tests\n\n', (t) => {
 	var eh = new EventHub();

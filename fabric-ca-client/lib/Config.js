@@ -15,7 +15,7 @@
  */
 
 /**
- * This is the configuration class for the "hfc" (Hyperledger Fabric Client) package.
+ * This is the configuration class for the "fabric-client" package.
  * It provides all configuration settings using "config" node.js package to retrieve the
  * settings from JSON based files, environment settings, and command line startup settings
  *

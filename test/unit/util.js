@@ -21,11 +21,11 @@ var os = require('os');
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 
-var copService = require('hfc-cop/lib/FabricCOPImpl.js');
-var User = require('hfc/lib/User.js');
-var CryptoSuite = require('hfc/lib/impl/CryptoSuite_ECDSA_AES.js');
-var FileStore = require('hfc/lib/impl/FileKeyValueStore.js');
-var ecdsaKey = require('hfc/lib/impl/ecdsa/key.js');
+var copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
+var User = require('fabric-client/lib/User.js');
+var CryptoSuite = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
+var FileStore = require('fabric-client/lib/impl/FileKeyValueStore.js');
+var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
 module.exports.CHAINCODE_MARBLES_PATH = 'github.com/marbles_cc';

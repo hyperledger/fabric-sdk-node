@@ -19,7 +19,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 
-var hfc = require('hfc');
+var hfc = require('fabric-client');
 
 var X509 = require('jsrsasign').X509;
 
@@ -27,12 +27,12 @@ var util = require('util');
 var fs = require('fs');
 var path = require('path');
 var testUtil = require('./util.js');
-var utils = require('hfc/lib/utils.js');
+var utils = require('fabric-client/lib/utils.js');
 
 var keyValStorePath = testUtil.KVS;
 
 
-var FabricCOPServices = require('hfc-cop/lib/FabricCOPImpl');
+var FabricCOPServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 var FabricCOPClient = FabricCOPServices.FabricCOPClient;
 
 /**

@@ -20,19 +20,19 @@ var jsdoc = require('gulp-jsdoc3');
 gulp.task('doc', function () {
 	gulp.src([
 		'README.md',
-		'hfc/index.js',
-		'hfc/lib/api.js',
-		'hfc/lib/impl/FileKeyValueStore.js',
-		'hfc/lib/impl/CouchDBKeyValueStore.js',
-		'hfc/lib/impl/CryptoSuite_ECDSA_AES.js',
-		'hfc/lib/impl/ecdsa/key.js',
-		'hfc/lib/Chain.js',
-		'hfc/lib/Peer.js',
-		'hfc/lib/User.js',
-		'hfc/lib/Client.js',
-		'hfc/lib/X509Certificate.js',
-		'hfc-cop/index.js',
-		'hfc-cop/lib/FabricCOPImpl.js'
+		'fabric-client/index.js',
+		'fabric-client/lib/api.js',
+		'fabric-client/lib/impl/FileKeyValueStore.js',
+		'fabric-client/lib/impl/CouchDBKeyValueStore.js',
+		'fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js',
+		'fabric-client/lib/impl/ecdsa/key.js',
+		'fabric-client/lib/Chain.js',
+		'fabric-client/lib/Peer.js',
+		'fabric-client/lib/User.js',
+		'fabric-client/lib/Client.js',
+		'fabric-client/lib/X509Certificate.js',
+		'fabric-ca-client/index.js',
+		'fabric-ca-client/lib/FabricCAClientImpl.js'
 	], {read: false})
 	.pipe(jsdoc())
 	.pipe(gulp.dest('./docs/gen'));

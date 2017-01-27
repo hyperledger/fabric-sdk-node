@@ -28,7 +28,7 @@ var test = _test(tape);
 
 var crypto = require('crypto');
 var util = require('util');
-var utils = require('hfc/lib/utils.js');
+var utils = require('fabric-client/lib/utils.js');
 
 var libpath;
 switch(process.platform) {

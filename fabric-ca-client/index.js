@@ -15,10 +15,11 @@
  */
 
 /**
- * This is the main module for the "hfc" (Hyperledger Fabric Client) package. It provides the convenience
- * APIs to the classes of the package including [Chain]{@link module:api.Chain}
+ * This is the main module for the "fabric-ca-client" package. It communicates with the
+ * "fabric-ca" server to manage user certificates lifecycle including register, enroll,
+ * renew and revoke, so that the application can use the properly signed certificates to
+ * authenticate with the fabric
  *
- * @module hfc
+ * @module fabric-ca-client
  */
-
-module.exports = require('./lib/Client.js');
+module.exports = require('./lib/FabricCAClientImpl.js');

@@ -1,7 +1,7 @@
 {
-  "name": "hfc-cop",
-  "version": "0.0.1",
-  "main": "./lib/FabricCOPImpl.js",
+  "name": "fabric-ca-client",
+  "version": "0.1.0",
+  "main": "index.js",
   "repository": {
     "type": "gerrit",
     "url": "http://gerrit.hyperledger.org/r/fabric-sdk-node"

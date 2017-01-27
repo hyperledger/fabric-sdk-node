@@ -18,18 +18,18 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('hfc');
-var FabricCOPServices = require('hfc-cop/lib/FabricCOPImpl');
+var hfc = require('fabric-client');
+var FabricCOPServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 
-var utils = require('hfc/lib/utils.js');
-var User = require('hfc/lib/User.js');
-var Client = require('hfc/lib/Client.js');
+var utils = require('fabric-client/lib/utils.js');
+var User = require('fabric-client/lib/User.js');
+var Client = require('fabric-client/lib/Client.js');
 
 var testUtil = require('./util.js');
 
 var keyValStorePath = testUtil.KVS;
 
-// this test uses the FabricCOPImpl to enroll a user, and
+// this test uses the FabricCAClientImpl to enroll a user, and
 // saves the enrollment materials into a key value store.
 // then uses the Client class to load the member from the
 // key value store

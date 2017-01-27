@@ -19,13 +19,13 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var Client = require('hfc');
-var Peer = require('hfc/lib/Peer');
-var copService = require('hfc-cop');
+var Client = require('fabric-client');
+var Peer = require('fabric-client/lib/Peer');
+var copService = require('fabric-ca-client');
 var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
-var utils = require('hfc/lib/utils.js');
+var utils = require('fabric-client/lib/utils.js');
 
 var keyValStorePath = testUtil.KVS;
 

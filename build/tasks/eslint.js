@@ -2,7 +2,7 @@ var gulp = require('gulp');
 var eslint = require('gulp-eslint');
 
 gulp.task('lint', function () {
-	return gulp.src(['**/*.js', 'hfc/**/*.js', '!node_modules/**', '!docs/**', '!coverage/**', '!tmp/**', 'hfc-cop/lib/*.js'])
+	return gulp.src(['**/*.js', 'fabric-client/**/*.js', '!node_modules/**', '!docs/**', '!coverage/**', '!tmp/**', 'fabric-ca-client/lib/*.js'])
 		.pipe(eslint(
 			{
 				env: ['es6', 'node'],

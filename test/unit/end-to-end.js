@@ -28,15 +28,15 @@ logger.setLevel('DEBUG');
 
 var path = require('path');
 
-var hfc = require('hfc');
+var hfc = require('fabric-client');
 hfc.setLogger(logger);
 
 var util = require('util');
 var testUtil = require('./util.js');
-var utils = require('hfc/lib/utils.js');
-var Peer = require('hfc/lib/Peer.js');
-var Orderer = require('hfc/lib/Orderer.js');
-var EventHub = require('hfc/lib/EventHub.js');
+var utils = require('fabric-client/lib/utils.js');
+var Peer = require('fabric-client/lib/Peer.js');
+var Orderer = require('fabric-client/lib/Orderer.js');
+var EventHub = require('fabric-client/lib/EventHub.js');
 
 var client = new hfc();
 var chain = client.newChain('testChain-e2e');

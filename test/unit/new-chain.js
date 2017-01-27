@@ -18,14 +18,14 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 process.env.HFC_LOGGING = '{"debug": "console"}';
-var hfc = require('hfc');
+var hfc = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
 var testUtil = require('./util.js');
 
-var Orderer = require('hfc/lib/Orderer.js');
-var User = require('hfc/lib/User.js');
-var Peer = require('hfc/lib/Peer.js');
+var Orderer = require('fabric-client/lib/Orderer.js');
+var User = require('fabric-client/lib/User.js');
+var Peer = require('fabric-client/lib/Peer.js');
 
 var peer0 = new Peer('grpc://localhost:7051'),
 	peer1 = new Peer('grpc://localhost:7056');

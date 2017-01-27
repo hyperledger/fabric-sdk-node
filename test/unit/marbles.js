@@ -29,10 +29,10 @@ var log4js = require('log4js');
 var logger = log4js.getLogger('E2E');
 logger.setLevel('DEBUG');
 
-var hfc = require('hfc');
+var hfc = require('fabric-client');
 var util = require('util');
 var testUtil = require('./util.js');
-var utils = require('hfc/lib/utils.js');
+var utils = require('fabric-client/lib/utils.js');
 
 var chain = hfc.newChain('testChain-e2e');
 var webUser;
