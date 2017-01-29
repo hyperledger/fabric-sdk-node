@@ -67,7 +67,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 					chaincodeId: 'endorser_test',
 					fcn: 'init',
 					args: ['a', '100', 'b', '200'],
-					chainId: 'test_chainid',
+					chainId: 'testchainid',
 					txId: 'blah',
 					nonce: utils.getNonce()
 				};
