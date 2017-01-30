@@ -105,7 +105,7 @@ var Chain = class {
 		this.setInitialEpoch(0);
 		this.setInitialMaxMessageCount(10);
 		this.setInitialAbsoluteMaxBytes(10 * 1024 * 1024);
-		this.setInitialPrefferedMaxBytes(10 * 1024 * 1024);
+		this.setInitialPreferredMaxBytes(10 * 1024 * 1024);
 		this._consensus_type = 'solo';
 		// user must set this value before the initializeChain() method
 		// is called
@@ -362,7 +362,7 @@ var Chain = class {
 	 * chain is created.
 	 * @return {int} initial preferred maximum bytes
 	 */
-	getInitialPrefferedMaxBytes() {
+	getInitialPreferredMaxBytes() {
 		return this._initial_preferred_max_bytes;
 	}
 
@@ -373,7 +373,7 @@ var Chain = class {
 	 *
 	 * @param {int} initial preferred maximum bytes
 	 */
-	setInitialPrefferedMaxBytes(initial_preferred_max_bytes) {
+	setInitialPreferredMaxBytes(initial_preferred_max_bytes) {
 		if(!Number.isInteger(initial_preferred_max_bytes) || initial_preferred_max_bytes < 0) {
 			throw new Error('initial preferred maximum bytes must be a positive integer');
 		}
@@ -479,7 +479,7 @@ var Chain = class {
 				var batchSize = new _ordererConfigurationProto.BatchSize();
 				batchSize.setMaxMessageCount(self.getInitialMaxMessageCount());
 				batchSize.setAbsoluteMaxBytes(self.getInitialAbsoluteMaxBytes());
-				batchSize.setPreferredMaxBytes(self.getInitialPrefferedMaxBytes());
+				batchSize.setPreferredMaxBytes(self.getInitialPreferredMaxBytes());
 				var batchSizeItem = buildSignedConfigurationItem(
 					configItemChainHeader,
 					orderer_type,
