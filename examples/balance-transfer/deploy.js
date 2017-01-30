@@ -35,7 +35,10 @@ var client = new hfc();
 var chain;
 var eventhub;
 var tx_id = null;
-process.env.GOPATH = config.goPath;
+
+if (!process.env.GOPATH){
+	process.env.GOPATH = config.goPath;
+}
 
 init();
 
