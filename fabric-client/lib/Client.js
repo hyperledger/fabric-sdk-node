@@ -225,7 +225,7 @@ var Client = class {
 	 * in the storage which can be accessed by authorized users of the application (authentication is done by
 	 * the application outside of the SDK). This function attempts to load the user by name from the local storage
 	 * (via the KeyValueStore interface). The loaded user object must represent an enrolled user with a valid
-	 * enrollment certificate signed by a trusted CA (such as the COP server).
+	 * enrollment certificate signed by a trusted CA (such as the CA server).
 	 *
 	 * @param {String} name Optional. If not specified, will only return the in-memory user context object, or null
 	 * if not found in memory. If "name" is specified, will also attempt to load it from the state store if search

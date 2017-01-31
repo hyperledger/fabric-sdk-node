@@ -32,15 +32,15 @@ var utils = require('fabric-client/lib/utils.js');
 var keyValStorePath = testUtil.KVS;
 
 
-var FabricCOPServices = require('fabric-ca-client/lib/FabricCAClientImpl');
-var FabricCOPClient = FabricCOPServices.FabricCOPClient;
+var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
+var FabricCAClient = FabricCAServices.FabricCAClient;
 
 /**
- * FabricCOPClient enroll tests
+ * FabricCAClient enroll tests
  */
-test('FabricCOPClient: Test enroll with missing parameters', function (t) {
+test('FabricCAClient: Test enroll with missing parameters', function (t) {
 
-	var client = new FabricCOPClient({
+	var client = new FabricCAClient({
 		protocol: 'http',
 		hostname: '127.0.0.1',
 		port: 7054
@@ -65,9 +65,9 @@ var enrollmentSecret = 'user1';
 var csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabriccop/enroll-csr.pem'));
 
 
-test('FabricCOPClient: Test enroll With Static CSR', function (t) {
+test('FabricCAClient: Test enroll With Static CSR', function (t) {
 
-	var client = new FabricCOPClient({
+	var client = new FabricCAClient({
 		protocol: 'http',
 		hostname: '127.0.0.1',
 		port: 7054
@@ -90,18 +90,18 @@ test('FabricCOPClient: Test enroll With Static CSR', function (t) {
 });
 
 /**
- * FabricCOPServices class tests
+ * FabricCAServices class tests
  */
 
 //run the enroll test
 
-test('FabricCOPServices: Test enroll() With Dynamic CSR', function (t) {
+test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 
 	// need to override the default key size 384 to match the member service backend
 	// otherwise the client will not be able to decrypt the enrollment challenge
 	utils.setConfigSetting('crypto-keysize', 256);
 
-	var cop = new FabricCOPServices('http://localhost:7054');
+	var cop = new FabricCAServices('http://localhost:7054');
 
 	var req = {
 		enrollmentID: 'admin',
@@ -128,11 +128,11 @@ test('FabricCOPServices: Test enroll() With Dynamic CSR', function (t) {
 });
 
 /**
- * FabricCOPClient register tests
+ * FabricCAClient register tests
  */
-test('FabricCOPClient: Test register with missing parameters', function (t) {
+test('FabricCAClient: Test register with missing parameters', function (t) {
 
-	var client = new FabricCOPClient({
+	var client = new FabricCAClient({
 		protocol: 'http',
 		hostname: '127.0.0.1',
 		port: 7054
@@ -151,9 +151,9 @@ test('FabricCOPClient: Test register with missing parameters', function (t) {
 		});
 });
 
-test('FabricCOPClient: Test register', function (t) {
+test('FabricCAClient: Test register', function (t) {
 
-	var client = new FabricCOPClient({
+	var client = new FabricCAClient({
 		protocol: 'http',
 		hostname: '127.0.0.1',
 		port: 7054
@@ -172,4 +172,3 @@ test('FabricCOPClient: Test register', function (t) {
 			t.fail('Failed to register \'' + enrollmentID + '\'.  ' + err);
 		});
 });
-

@@ -30,22 +30,22 @@ var urlParser = require('url');
 var logger = utils.getLogger('FabricCAClientImpl.js');
 
 /**
- * This is an implementation of the member service client which communicates with the Fabric COP server.
+ * This is an implementation of the member service client which communicates with the Fabric CA server.
  * @class
  */
-var FabricCOPServices = class {
+var FabricCAServices = class {
 
 	/**
 	 * constructor
 	 *
-	 * @param {string} url The endpoint URL for Fabric COP services of the form: "http://host:port" or "https://host:port"
+	 * @param {string} url The endpoint URL for Fabric CA services of the form: "http://host:port" or "https://host:port"
 	 * @param {KeyValueStore} kvs KeyValueStore for CryptoSuite
 	 */
 	constructor(url, kvs) {
 
-		var endpoint = FabricCOPServices._parseURL(url);
+		var endpoint = FabricCAServices._parseURL(url);
 
-		this._fabricCOPClient = new FabricCOPClient({
+		this._fabricCAClient = new FabricCAClient({
 			protocol: endpoint.protocol,
 			hostname: endpoint.hostname,
 			port: endpoint.port
@@ -53,7 +53,7 @@ var FabricCOPServices = class {
 
 		this.cryptoPrimitives = utils.getCryptoSuite(kvs);
 
-		logger.info('Successfully constructed Fabric COP service client: endpoint - %j', endpoint);
+		logger.info('Successfully constructed Fabric CA service client: endpoint - %j', endpoint);
 
 	}
 
@@ -104,7 +104,7 @@ var FabricCOPServices = class {
 					//generate CSR using enrollmentID for the subject
 					try {
 						var csr = privateKey.generateCSR('CN=' + req.enrollmentID);
-						self._fabricCOPClient.enroll(req.enrollmentID, req.enrollmentSecret, csr)
+						self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr)
 							.then(
 							function (csrPEM) {
 								return resolve({
@@ -130,7 +130,7 @@ var FabricCOPServices = class {
 	}
 
 	/**
-	 * @typedef {Object} FabricCOPServices-HTTPEndpoint
+	 * @typedef {Object} FabricCAServices-HTTPEndpoint
 	 * @property {string} hostname
 	 * @property {number} port
 	 * @property {string} protocol
@@ -139,7 +139,7 @@ var FabricCOPServices = class {
 	/**
 	 * Utility function which parses an HTTP URL into its component parts
 	 * @param {string} url HTTP or HTTPS url including protocol, host and port
-	 * @returns {...FabricCOPServices-HTTPEndpoint}
+	 * @returns {...FabricCAServices-HTTPEndpoint}
 	 * @throws InvalidURL for malformed URLs
 	 * @ignore
 	 */
@@ -178,22 +178,22 @@ var FabricCOPServices = class {
 	* return a printable representation of this object
 	*/
 	toString() {
-		return ' FabricCOPServices : {' +
-			'hostname: ' + this._fabricCOPClient._hostname +
-			', port: ' + this._fabricCOPClient._port +
+		return ' FabricCAServices : {' +
+			'hostname: ' + this._fabricCAClient._hostname +
+			', port: ' + this._fabricCAClient._port +
 			'}';
 	}
 };
 
 /**
- * Client for communciating with the Fabric COP APIs
+ * Client for communciating with the Fabric CA APIs
  *
  * @class
  */
-var FabricCOPClient = class {
+var FabricCAClient = class {
 
 	/**
-	 * @typedef {Object} FabricCOPServices-HTTPEndpoint
+	 * @typedef {Object} FabricCAServices-HTTPEndpoint
 	 * @property {string} hostname
 	 * @property {number} port
 	 * @property {boolean} isSecure
@@ -202,10 +202,10 @@ var FabricCOPClient = class {
 	/**
 	 * constructor
 	 *
-	 * @param {object} connect_opts Connection options for communciating with the Fabric COP server
+	 * @param {object} connect_opts Connection options for communciating with the Fabric CA server
 	 * @param {string} connect_opts.protocol The protocol to use (either HTTP or HTTPS)
-	 * @param {string} connect_opts.hostname The hostname of the Fabric COP server endpoint
-	 * @param {number} connect_opts.port The port of the Fabric COP server endpoint
+	 * @param {string} connect_opts.hostname The hostname of the Fabric CA server endpoint
+	 * @param {number} connect_opts.port The port of the Fabric CA server endpoint
 	 * @param {Buffer[]} connect_opts.ca An array of trusted certificates in PEM format
 	 * @throws Will throw an error if connection options are missing or invalid
 	 *
@@ -463,6 +463,5 @@ var FabricCOPClient = class {
 	}
 };
 
-module.exports = FabricCOPServices;
-module.exports.FabricCOPClient = FabricCOPClient;
-
+module.exports = FabricCAServices;
+module.exports.FabricCAClient = FabricCAClient;
