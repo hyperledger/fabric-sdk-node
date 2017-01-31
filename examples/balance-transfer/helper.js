@@ -41,7 +41,7 @@ module.exports.getSubmitter = function(client) {
 				return user;
 			} else {
 				var ca_client = new copService(config.caserver.ca_url);
-				// need to enroll it with COP server
+				// need to enroll it with CA server
 				return ca_client.enroll({
 					enrollmentID: username,
 					enrollmentSecret: password

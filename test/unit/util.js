@@ -47,7 +47,7 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 				return resolve(user);
 			} else {
 				if (!loadFromConfig) {
-					// need to enroll it with COP server
+					// need to enroll it with CA server
 					var cop = new copService('http://localhost:7054');
 
 					var member;
@@ -130,5 +130,3 @@ function readFile(path) {
 module.exports.getSubmitter = function(client, test, loadFromConfig) {
 	return getSubmitter('admin2', 'adminpw2', client, test, loadFromConfig);
 };
-
-

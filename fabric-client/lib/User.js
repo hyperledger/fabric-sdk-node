@@ -34,7 +34,7 @@ var MSP = require('./msp/msp.js');
  * transactions and queries with the Chain.
  *
  * User ECerts can be obtained from a CA beforehand as part of deploying the application,
- * or it can be obtained from the optional Fabric COP service via its enrollment process.
+ * or it can be obtained from the optional Fabric CA service via its enrollment process.
  *
  * Sometimes User identities are confused with Peer identities. User identities represent
  * signing capability because it has access to the private key, while Peer identities in

@@ -71,8 +71,8 @@ var _client = null;
 // End: User tests //////
 
 // FabricCoPServices tests /////////
-var FabricCOPServices = require('fabric-ca-client/lib/FabricCAClientImpl');
-var FabricCOPClient = FabricCOPServices.FabricCOPClient;
+var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
+var FabricCAClient = FabricCAServices.FabricCAClient;
 // End: FabricCoPServices tests ////
 
 // GRPC Options tests ///////////////
@@ -2193,16 +2193,16 @@ test('\n\n ** Logging utility tests - test setting an invalid external logger **
 });
 
 /**
- * FabricCOPClient class tests
+ * FabricCAClient class tests
  */
 //test constructor
-test('FabricCOPClient: Test constructor', function (t) {
+test('FabricCAClient: Test constructor', function (t) {
 
 	var connectOpts = {};
 
 	t.throws(
 		function () {
-			let client = new FabricCOPClient(connectOpts);
+			let client = new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options.  Protocol must be set to 'http' or 'https'/,
 		'Throw error for missing protocol'
@@ -2212,7 +2212,7 @@ test('FabricCOPClient: Test constructor', function (t) {
 
 	t.throws(
 		function () {
-			let client = new FabricCOPClient(connectOpts);
+			let client = new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options.  Protocol must be set to 'http' or 'https'/,
 		'Throw error for invalid protocol'
@@ -2223,7 +2223,7 @@ test('FabricCOPClient: Test constructor', function (t) {
 
 	t.doesNotThrow(
 		function () {
-			let client = new FabricCOPClient(connectOpts);
+			let client = new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options.  Protocol must be set to 'http' or 'https'/,
 		'HTTP is a valid protocol'
@@ -2233,7 +2233,7 @@ test('FabricCOPClient: Test constructor', function (t) {
 
 	t.doesNotThrow(
 		function () {
-			let client = new FabricCOPClient(connectOpts);
+			let client = new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options.  Protocol must be set to 'http' or 'https'/,
 		'HTTPS is a valid protocol'
@@ -2243,7 +2243,7 @@ test('FabricCOPClient: Test constructor', function (t) {
 
 	t.throws(
 		function () {
-			let client = new FabricCOPClient(connectOpts);
+			let client = new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options.  Hostname must be set/,
 		'Throw error for missing hostname'
@@ -2253,7 +2253,7 @@ test('FabricCOPClient: Test constructor', function (t) {
 
 	t.doesNotThrow(
 		function () {
-			let client = new FabricCOPClient(connectOpts);
+			let client = new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options.  Port must be an integer/,
 		'Should not throw error if port is not set'
@@ -2263,7 +2263,7 @@ test('FabricCOPClient: Test constructor', function (t) {
 
 	t.throws(
 		function () {
-			let client = new FabricCOPClient(connectOpts);
+			let client = new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options.  Port must be an integer/,
 		'Throw error for invalid port'
@@ -2273,7 +2273,7 @@ test('FabricCOPClient: Test constructor', function (t) {
 
 	t.doesNotThrow(
 		function () {
-			let client = new FabricCOPClient(connectOpts);
+			let client = new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options.  Port must be an integer/,
 		'Integer is a valid type for port'
@@ -2283,24 +2283,24 @@ test('FabricCOPClient: Test constructor', function (t) {
 
 });
 
-//FabricCOPClient _pemToDER tests
+//FabricCAClient _pemToDER tests
 var ecertPEM = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabriccop/ecert.pem'));
 
-test('FabricCOPClient: Test _pemToDer static method',function(t){
+test('FabricCAClient: Test _pemToDer static method',function(t){
 
 	t.plan(2);
 
 	//call function with garbage
 	t.throws(
 		function(){
-			var hex = FabricCOPClient.pemToDER('garbage');
+			var hex = FabricCAClient.pemToDER('garbage');
 		},
 		/Input parameter does not appear to be PEM-encoded./,
 		'Throw an error when input is not PEM-encoded'
 	);
 
 	try {
-		var hex = FabricCOPClient.pemToDER(ecertPEM.toString());
+		var hex = FabricCAClient.pemToDER(ecertPEM.toString());
 		t.pass('Sucessfully converted ecert from PEM to DER');
 	} catch(err) {
 		t.fail('Failed to convert PEM to DER due to ' + err);
@@ -2309,7 +2309,7 @@ test('FabricCOPClient: Test _pemToDer static method',function(t){
 	t.end();
 });
 
-test('FabricCOPServices: Test _parseURL() function', function (t) {
+test('FabricCAServices: Test _parseURL() function', function (t) {
 
 	var goodHost = 'www.example.com';
 	var goodPort = 7054;
@@ -2326,13 +2326,13 @@ test('FabricCOPServices: Test _parseURL() function', function (t) {
 	t.plan(10);
 
 	//valid http endpoint
-	var endpointGood = FabricCOPServices._parseURL(goodURL);
+	var endpointGood = FabricCAServices._parseURL(goodURL);
 	t.equals(endpointGood.protocol, 'http', 'Check that protocol is set correctly to \'http\'');
 	t.equals(endpointGood.hostname, goodHost, 'Check that hostname is set correctly');
 	t.equals(endpointGood.port, goodPort, 'Check that port is set correctly');
 
 	//valid https endpoint
-	var endpointGoodSecure = FabricCOPServices._parseURL(goodURLSecure);
+	var endpointGoodSecure = FabricCAServices._parseURL(goodURLSecure);
 	t.equals(endpointGoodSecure.protocol, 'https', 'Check that protocol is set correctly to \'https\'');
 	t.equals(endpointGoodSecure.hostname, goodHost, 'Check that hostname is set correctly');
 	t.equals(endpointGoodSecure.port, goodPort, 'Check that port is set correctly');
@@ -2340,7 +2340,7 @@ test('FabricCOPServices: Test _parseURL() function', function (t) {
 	//check invalid endpoints
 	t.throws(
 		function () {
-			FabricCOPServices._parseURL(badURL);
+			FabricCAServices._parseURL(badURL);
 		},
 		/InvalidURL: missing hostname./,
 		'Throw error for missing hostname'
@@ -2348,7 +2348,7 @@ test('FabricCOPServices: Test _parseURL() function', function (t) {
 
 	t.throws(
 		function () {
-			FabricCOPServices._parseURL(badURL2);
+			FabricCAServices._parseURL(badURL2);
 		},
 		/InvalidURL: url must start with http or https./,
 		'Throw error for invalid protocol'
@@ -2356,7 +2356,7 @@ test('FabricCOPServices: Test _parseURL() function', function (t) {
 
 	t.throws(
 		function () {
-			FabricCOPServices._parseURL(badURL3);
+			FabricCAServices._parseURL(badURL3);
 		},
 		/InvalidURL: url must start with http or https./,
 		'Throw error for invalid protocol'
@@ -2364,7 +2364,7 @@ test('FabricCOPServices: Test _parseURL() function', function (t) {
 
 	t.throws(
 		function () {
-			FabricCOPServices._parseURL(badURL3);
+			FabricCAServices._parseURL(badURL3);
 		},
 		/InvalidURL: url must start with http or https./,
 		'Throw error for missing protocol'
