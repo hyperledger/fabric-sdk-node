@@ -1,6 +1,6 @@
 {
   "name": "fabric-client",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "main": "index.js",
   "repository": {
     "type": "gerrit",
@@ -10,8 +10,8 @@
     "test": "node test/unit/headless-tests.js"
   },
   "engines": {
-    "node": ">=4.5.0",
-    "npm": ">=2.15.9"
+    "node": ">=6.9.0 <7.0",
+    "npm": ">=3.10.0"
   },
   "engine-strict": true,
   "engineStrict": true,
