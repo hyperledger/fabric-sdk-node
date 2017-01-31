@@ -128,5 +128,5 @@ function readFile(path) {
 }
 
 module.exports.getSubmitter = function(client, test, loadFromConfig) {
-	return getSubmitter('admin2', 'adminpw2', client, test, loadFromConfig);
+	return getSubmitter('admin', 'adminpw', client, test, loadFromConfig);
 };
