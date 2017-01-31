@@ -53,6 +53,8 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 	.then( function(status) {
 		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
 		t.comment('Initilize the CouchDB KeyValueStore');
+
+		var member;
 		utils.newKeyValueStore({name: dbname, path: dbClient})
 		.then(
 			function(kvs) {
@@ -88,7 +90,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				});
 			},
 			function(err) {
-				t.fail('Failed to initilize the Fabric CA service: ' + err);
+				t.fail('Failed to initilize the Fabric CA service: ' + err.stack ? err.stack : err);
 				t.end();
 			}
 		)
@@ -97,15 +99,15 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				t.pass('Successfully enrolled admin2 with CA server');
 
 				// Persist the user state
-				var member = new User('admin2', client);
+				member = new User('admin2', client);
 				return member.setEnrollment(admin2.key, admin2.certificate);
 			},
 			function(err) {
-				t.fail('Failed to use obtained private key and certificate to construct a User object. Error: ' + err);
+				t.fail('Failed to use obtained private key and certificate to construct a User object. Error: ' + err.stack ? err.stack : err);
 				t.end();
 			}
 		).then(
-			function(member) {
+			function() {
 				if (member.isEnrolled()) {
 					t.pass('Member isEnrolled successfully.');
 				} else {
@@ -114,7 +116,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				return client.setUserContext(member);
 			},
 			function(err) {
-				t.fail('Failed to enroll admin2 with CA server. Error: ' + err);
+				t.fail('Failed to enroll admin2 with CA server. Error: ' + err.stack ? err.stack : err);
 				t.end();
 			})
 		.then(
@@ -132,7 +134,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				}
 			},
 			function(err) {
-				t.fail('Failed to load the user admin2 from key value store. Error: ' + err);
+				t.fail('Failed to load the user admin2 from key value store. Error: ' + err.stack ? err.stack : err);
 				t.end();
 			}
 		).catch(
