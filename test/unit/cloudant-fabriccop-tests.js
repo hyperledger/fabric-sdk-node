@@ -21,7 +21,7 @@ var test = _test(tape);
 var hfc = require('fabric-client');
 var Client = hfc;
 var User = require('fabric-client/lib/User.js');
-var FabricCOPServices = require('fabric-ca-client/lib/FabricCAClientImpl');
+var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 
 var utils = require('fabric-client/lib/utils.js');
 var couchdbUtil = require('./couchdb-util.js');
@@ -37,7 +37,7 @@ console.log('Key Value Store = ' + keyValueStore);
 // FabricCAClientImpl to enroll a user, and saves the enrollment materials into the
 // CouchDB KeyValueStore. Then the test uses the Chain class to load the member
 // from the key value store.
-test('Use FabricCOPServices wih a Cloudant CouchDB KeyValueStore', function(t) {
+test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 
 	//var user = new User();
 	var client = new Client();
@@ -65,8 +65,8 @@ test('Use FabricCOPServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 					t.end();
 					process.exit(1);
 				}
-				t.comment('Initialize the COP server connection and KeyValueStore');
-				return new FabricCOPServices('http://localhost:7054', kvs);
+				t.comment('Initialize the CA server connection and KeyValueStore');
+				return new FabricCAServices('http://localhost:7054', kvs);
 			},
 			function(err) {
 				console.log(err);
@@ -77,7 +77,7 @@ test('Use FabricCOPServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 		.then(
 			function(copService) {
 				console.log('ADD: copService - ' + copService);
-				t.pass('Successfully initialized the Fabric COP service.');
+				t.pass('Successfully initialized the Fabric CA service.');
 
 				client.setCryptoSuite(copService.getCrypto());
 				t.comment('Set cryptoSuite on client');
@@ -88,13 +88,13 @@ test('Use FabricCOPServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				});
 			},
 			function(err) {
-				t.fail('Failed to initilize the Fabric COP service: ' + err);
+				t.fail('Failed to initilize the Fabric CA service: ' + err);
 				t.end();
 			}
 		)
 		.then(
 			function(admin2) {
-				t.pass('Successfully enrolled admin2 with COP server');
+				t.pass('Successfully enrolled admin2 with CA server');
 
 				// Persist the user state
 				var member = new User('admin2', client);
@@ -114,7 +114,7 @@ test('Use FabricCOPServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				return client.setUserContext(member);
 			},
 			function(err) {
-				t.fail('Failed to enroll admin2 with COP server. Error: ' + err);
+				t.fail('Failed to enroll admin2 with CA server. Error: ' + err);
 				t.end();
 			})
 		.then(

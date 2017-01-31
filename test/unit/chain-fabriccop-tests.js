@@ -19,7 +19,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var hfc = require('fabric-client');
-var FabricCOPServices = require('fabric-ca-client/lib/FabricCAClientImpl');
+var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 
 var utils = require('fabric-client/lib/utils.js');
 var User = require('fabric-client/lib/User.js');
@@ -33,7 +33,7 @@ var keyValStorePath = testUtil.KVS;
 // saves the enrollment materials into a key value store.
 // then uses the Client class to load the member from the
 // key value store
-test('Attempt to use FabricCOPServices',function(t){
+test('Attempt to use FabricCAServices',function(t){
 
 	var client = new Client();
 
@@ -46,7 +46,7 @@ test('Attempt to use FabricCOPServices',function(t){
 		function(kvs) {
 			client.setStateStore(kvs);
 
-			var copService = new FabricCOPServices('http://localhost:7054');
+			var copService = new FabricCAServices('http://localhost:7054');
 			var member;
 			copService.enroll({
 				enrollmentID: 'notadmin',
@@ -54,7 +54,7 @@ test('Attempt to use FabricCOPServices',function(t){
 			})
 			.then(
 				function(testUser) {
-					t.pass('Successfully enrolled testUser with COP server');
+					t.pass('Successfully enrolled testUser with CA server');
 
 					member = new User('testUser', client);
 					return member.setEnrollment(testUser.key, testUser.certificate);
