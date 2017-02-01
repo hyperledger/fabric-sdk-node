@@ -7,31 +7,31 @@
    "keyValueStore":"/tmp/fabric-client-kvs",
    "waitTime":"30000",
    "caserver":{
-      "ca_url":"http://localhost:7054"
+      "ca_url":"http://localhost:8054"
    },
    "orderer":{
-      "orderer_url":"grpc://localhost:7050"
+      "orderer_url":"grpc://localhost:8050"
    },
    "peers":[
-      {
-         "peer_url":"grpc://localhost:7051"
-      },
       {
          "peer_url":"grpc://localhost:8051"
       },
       {
-         "peer_url":"grpc://localhost:9051"
+         "peer_url":"grpc://localhost:8055"
+      },
+      {
+         "peer_url":"grpc://localhost:8056"
       }
    ],
    "events":[
-      {
-         "event_url":"grpc://localhost:7053"
-      },
       {
          "event_url":"grpc://localhost:8053"
       },
       {
          "event_url":"grpc://localhost:9053"
+      },
+      {
+         "event_url":"grpc://localhost:10053"
       }
    ],
    "users":[
