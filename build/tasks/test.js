@@ -25,7 +25,7 @@ gulp.task('test', ['pre-test'], function() {
 		'test/unit/endorser-tests.js',
 		'test/unit/orderer-tests.js',
 		'test/unit/orderer-chain-tests.js',
-		//'test/unit/end-to-end.js',
+		'test/unit/end-to-end.js',
 		'test/unit/headless-tests.js'
 	])
 	.pipe(tape({

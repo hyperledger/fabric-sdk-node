@@ -55,7 +55,11 @@ if (process.argv.length > 2) {
 		steps.push(process.argv[i]);
 	}
 }
-logger.info('Found steps: %s', steps);
+var useSteps = false;
+if (steps.length > 0 &&
+	(steps.indexOf('step1') > -1 || steps.indexOf('step2') > -1 || steps.indexOf('step3') > -1))
+	useSteps = true;
+logger.info('Found steps: %s', steps, 'useSteps: '+useSteps);
 
 testUtil.setupChaincodeDeploy();
 
@@ -87,7 +91,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			};
 		})(t, eh, t.end);
 
-		if (steps.length === 0 || steps.indexOf('step1') >= 0) {
+		if (!useSteps || steps.indexOf('step1') >= 0) {
 			logger.info('Executing step1');
 			promise = promise.then(
 				function(admin) {
@@ -167,7 +171,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 								t.pass('The chaincode deploy transaction has been successfully committed');
 								clearTimeout(handle);
 
-								if (steps.length === 0) {
+								if (!useSteps) {
 									// this is called without steps parameter in order to execute all steps
 									// in sequence, just continue
 									setTimeout(resolve, 2000);
@@ -190,7 +194,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			);
 		}
 
-		if (steps.length === 0 || steps.indexOf('step2') >= 0) {
+		if (!useSteps || steps.indexOf('step2') >= 0) {
 			promise = promise.then(
 				function(data) {
 					logger.info('Executing step2');
@@ -276,7 +280,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 								t.pass('The chaincode deploy transaction has been successfully committed');
 								clearTimeout(handle);
 
-								if (steps.length === 0) {
+								if (!useSteps) {
 									// this is called without steps parameter in order to execute all steps
 									// in sequence, just continue
 									setTimeout(resolve, 2000);
@@ -298,7 +302,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			);
 		}
 
-		if (steps.length === 0 || steps.indexOf('step3') >= 0) {
+		if (!useSteps || steps.indexOf('step3') >= 0) {
 			promise = promise.then(
 				function(data) {
 					logger.info('Executing step3');
