@@ -47,6 +47,8 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 
 	// Clean up the couchdb test database
 	var dbname = 'member_db';
+
+	var member;
 	couchdbUtil.destroy(dbname, dbClient)
 	.then( function(status) {
 		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
@@ -73,14 +75,14 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				process.exit(1);
 			})
 		.then(
-			function(copService) {
-				console.log('ADD: copService - ' + copService);
+			function(caService) {
+				console.log('ADD: caService - ' + caService);
 				t.pass('Successfully initialized the Fabric CA service.');
 
-				client.setCryptoSuite(copService.getCrypto());
+				client.setCryptoSuite(caService.getCrypto());
 				t.comment('Set cryptoSuite on client');
-				t.comment('Begin copService.enroll');
-				return copService.enroll({
+				t.comment('Begin caService.enroll');
+				return caService.enroll({
 					enrollmentID: 'admin2',
 					enrollmentSecret: 'adminpw2'
 				});
@@ -95,8 +97,15 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				t.pass('Successfully enrolled admin2 with CA server');
 
 				// Persist the user state
-				var member = new User('admin2', client);
-				member.setEnrollment(admin2.key, admin2.certificate);
+				member = new User('admin2', client);
+				return member.setEnrollment(admin2.key, admin2.certificate);
+			},
+			function(err) {
+				t.fail('Failed to use obtained private key and certificate to construct a User object. Error: ' + err);
+				t.end();
+			}
+		).then(
+			function() {
 				if (member.isEnrolled()) {
 					t.pass('Member isEnrolled successfully.');
 				} else {
@@ -128,7 +137,7 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 			}
 		).catch(
 			function(err) {
-				t.fail('Failed couchdb-fabriccop-test with error:' + err.stack ? err.stack : err);
+				t.fail('Failed couchdb-fabricca-test with error:' + err.stack ? err.stack : err);
 				t.end();
 			}
 		);

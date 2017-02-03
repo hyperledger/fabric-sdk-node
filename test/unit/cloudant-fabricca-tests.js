@@ -45,23 +45,23 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 	// Set the relevant configuration values
 	utils.setConfigSetting('crypto-keysize', 256);
 
-	// Clean up the couchdb test database
+	// Clean up the cloudant couchdb test database
 	var dbname = 'member_db';
 
-	//ccd next needs to be changed
+	var member;
 	couchdbUtil.destroy(dbname, dbClient)
 	.then( function(status) {
 		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
-		t.comment('Initilize the CouchDB KeyValueStore');
+		t.comment('Initilize the Cloudant CouchDB KeyValueStore');
 		utils.newKeyValueStore({name: dbname, path: dbClient})
 		.then(
 			function(kvs) {
 				t.comment('Setting client keyValueStore to: ' + kvs);
 				client.setStateStore(kvs);
 				if (client.getStateStore() === kvs) {
-					t.pass('Successfully set CouchDB KeyValueStore for client');
+					t.pass('Successfully set Cloudant CouchDB KeyValueStore for client');
 				} else {
-					t.pass('CouchDB KeyValStore is not set successfully on this client!');
+					t.pass('Cloudant CouchDB KeyValStore is not set successfully on this client!');
 					t.end();
 					process.exit(1);
 				}
@@ -70,19 +70,19 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 			},
 			function(err) {
 				console.log(err);
-				t.fail('Error initializing CouchDB KeyValueStore. Exiting.');
+				t.fail('Error initializing Cloudant KeyValueStore. Exiting.');
 				t.end();
 				process.exit(1);
 			})
 		.then(
-			function(copService) {
-				console.log('ADD: copService - ' + copService);
+			function(caService) {
+				console.log('ADD: caService - ' + caService);
 				t.pass('Successfully initialized the Fabric CA service.');
 
-				client.setCryptoSuite(copService.getCrypto());
+				client.setCryptoSuite(caService.getCrypto());
 				t.comment('Set cryptoSuite on client');
-				t.comment('Begin copService.enroll');
-				return copService.enroll({
+				t.comment('Begin caService.enroll');
+				return caService.enroll({
 					enrollmentID: 'admin2',
 					enrollmentSecret: 'adminpw2'
 				});
@@ -97,7 +97,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				t.pass('Successfully enrolled admin2 with CA server');
 
 				// Persist the user state
-				var member = new User('admin2', client);
+				member = new User('admin2', client);
 				return member.setEnrollment(admin2.key, admin2.certificate);
 			},
 			function(err) {
@@ -105,7 +105,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				t.end();
 			}
 		).then(
-			function(member) {
+			function() {
 				if (member.isEnrolled()) {
 					t.pass('Member isEnrolled successfully.');
 				} else {
@@ -137,7 +137,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 			}
 		).catch(
 			function(err) {
-				t.fail('Failed couchdb-fabriccop-test with error:' + err.stack ? err.stack : err);
+				t.fail('Failed cloudant-fabricca-test with error:' + err.stack ? err.stack : err);
 				t.end();
 			}
 		);
