@@ -172,9 +172,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 								clearTimeout(handle);
 
 								if (!useSteps) {
-									// this is called without steps parameter in order to execute all steps
-									// in sequence, just continue
-									setTimeout(resolve, 2000);
+									resolve();
 								} else if (steps.length === 1 && steps[0] === 'step1') {
 									t.end();
 									resolve();
@@ -281,9 +279,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 								clearTimeout(handle);
 
 								if (!useSteps) {
-									// this is called without steps parameter in order to execute all steps
-									// in sequence, just continue
-									setTimeout(resolve, 2000);
+									resolve();
 								} else if (steps.length === 1 && steps[0] === 'step2') {
 									t.end();
 									resolve();
