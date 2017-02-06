@@ -9,8 +9,6 @@ fabric-ca-client/lib/Config.js
 fabric-ca-client/lib/Remote.js
 fabric-ca-client/lib/hash.js
 fabric-ca-client/lib/impl/*
-test/fixtures/src/github.com/example_cc/Dockerfile
-test/fixtures/src/github.com/marbles_cc/Dockerfile
 npm-shrinkwrap.json
 npm-debug.log
 tmp
