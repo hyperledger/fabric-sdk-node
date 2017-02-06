@@ -26,7 +26,8 @@
     "sjcl-codec": "0.1.1",
     "tar-fs": "^1.13.0",
     "url": "^0.11.0",
-    "util": "^0.10.3"
+    "util": "^0.10.3",
+    "winston": "^2.2.0"
   },
   "license": "Apache-2.0",
   "licenses": [{
