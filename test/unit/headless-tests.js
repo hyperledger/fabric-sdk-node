@@ -19,12 +19,13 @@
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
+var rewire = require('rewire');
 
 var path = require('path');
 var util = require('util');
 var testUtil = require('./util.js');
 var hfc = require('fabric-client');
-var fs = require('fs');
+var fs = require('fs-extra');
 var execSync = require('child_process').execSync;
 var utils = require('fabric-client/lib/utils.js');
 var cryptoSuiteReq = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
@@ -180,7 +181,6 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 	.then(function(response){
 		if (response && response.getName() === 'someUser') {
 			t.pass('Client tests: successfully setUserContext with skipPersistence.');
-			debugger;//check out this return
 			return response;
 		}
 		else t.fail('Client tests: failed name check after setUserContext with skipPersistence.');
@@ -829,6 +829,46 @@ test('\n\n ** Chain addPeer() duplicate tests **\n\n', function (t) {
 		t.fail('Failed to detect duplicate peer (' + expected +
 		' expected | ' + chain_duplicate.getPeers().length + ' found)');
 	}
+	t.end();
+});
+
+// use rewire to load the module to get access to the private functions to test
+var ChainModule = rewire('../../fabric-client/lib/Chain.js');
+var tar = require('tar-fs');
+var gunzip = require('gunzip-maybe');
+
+test('\n\n** Chain packageChaincode tests **\n\n', function(t) {
+	var packageChaincode = ChainModule.__get__('packageChaincode');
+	t.equal(typeof packageChaincode, 'function', 'The rewired module should return the private function here');
+
+	packageChaincode(true, 'blah')
+	.then((data) => {
+		t.equal(data, null, 'Chain.packageChaincode() should return null for dev mode');
+		return packageChaincode(false, {});
+	}).then(() => {
+		t.fail('Chain.packageChaincode() should have rejected a call that does not have the valid request argument');
+	}).catch((err) => {
+		t.equal(err.message, 'Missing chaincodePath parameter in Deployment proposal request', 'Chain.packageChaincode() argument validation');
+
+		testUtil.setupChaincodeDeploy();
+
+		return packageChaincode(false, {
+			chaincodePath: testUtil.CHAINCODE_PATH,
+			chaincodeId: 'testChaincodeId'
+		});
+	}).then((data) => {
+		var tmpFile = '/tmp/test-deploy-copy.tar.gz';
+		var destDir = '/tmp/test-deploy-copy-tar-gz';
+		fs.writeFileSync(tmpFile, data);
+		fs.removeSync(destDir);
+		var pipe = fs.createReadStream(tmpFile).pipe(gunzip()).pipe(tar.extract(destDir));
+
+		pipe.on('close', function() {
+			var checkPath = path.join(destDir, 'src', 'github.com', 'example_cc');
+			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Chain.packageChaincode() has the "src/github.com/example_cc" folder');
+		});
+	});
+
 	t.end();
 });
 

@@ -21,7 +21,9 @@ var utils = require('./utils.js');
 var urlParser = require('url');
 var net = require('net');
 var util = require('util');
-var fs = require('fs');
+var fs = require('fs-extra');
+var os = require('os');
+var path = require('path');
 var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
 var settle = require('promise-settle');
@@ -891,7 +893,8 @@ var Chain = class {
 		let ccSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			chaincodeID: {
-				name: request.chaincodeId
+				name: request.chaincodeId,
+				path: request.chaincodePath
 			},
 			input: {
 				args: args
@@ -1339,13 +1342,17 @@ function writeFile(path, contents) {
 }
 
 function packageChaincode(devmode, request) {
-	if (devmode) {
-		logger.debug('Skipping chaincode packaging due to devmode configuration');
-		return Promise.resolve(null);
-	} else if (!request.chaincodePath || request.chaincodePath === '') {
-		// Verify that chaincodePath is being passed
-		return Promise.reject(new Error('Missing chaincodePath parameter in Deployment proposal request'));
-	} else {
+	return new Promise(function(resolve, reject) {
+		if (devmode) {
+			logger.debug('Skipping chaincode packaging due to devmode configuration');
+			return resolve(null);
+		}
+
+		if (!request.chaincodePath || request.chaincodePath === '') {
+			// Verify that chaincodePath is being passed
+			return reject(new Error('Missing chaincodePath parameter in Deployment proposal request'));
+		}
+
 		var chaincodePath = request.chaincodePath;
 		var chaincodeId = request.chaincodeId;
 
@@ -1353,18 +1360,31 @@ function packageChaincode(devmode, request) {
 		let goPath =  process.env['GOPATH'];
 
 		// Compose the path to the chaincode project directory
-		let projDir = goPath + '/src/' + chaincodePath;
+		let projDir = path.join(goPath, 'src', chaincodePath);
 
 		// Create the .tar.gz file of the chaincode package
-		// FIXME: this should use a mktmp to avoid collisions
-		let targzFilePath = '/tmp/deployment-package.tar.gz';
+		fs.mkdtemp(path.join(os.tmpdir(), path.sep), (err, folder) => {
+			if (err) return reject(new Error('Failed to create temp folder. ' + err));
 
-		return utils.generateTarGz(projDir, targzFilePath)
-			.then(function() {
-				logger.debug('Chain.sendDeployment- Successfully generated chaincode deploy archive and name (%s)', chaincodeId);
-				return readFile(targzFilePath);
+			// first copy all the target chaincode files from the source folder to
+			// <this_temp_folder>/src/<chaincodePath> folder so that the tar.gz
+			// archive can be created with the folder structure preserved
+			var dest = path.join(folder, 'src', chaincodePath);
+			fs.copy(projDir, dest, (err) => {
+				if (err) return reject(new Error('Failed to copy chaincode source to temp folder. ' + err));
+
+				let targzFilePath = path.join(folder, 'deployment-package.tar.gz');
+				return utils.generateTarGz(folder, targzFilePath)
+					.then(function() {
+						logger.debug('Chain.sendDeployment- Successfully generated chaincode deploy archive %s and name (%s)', targzFilePath, chaincodeId);
+						return readFile(targzFilePath)
+						.then((data) => {
+							return resolve(data);
+						});
+					});
 			});
-	}
+		});
+	});
 }
 
 //utility method to build a common chain header
