@@ -51,6 +51,8 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 	.then( function(status) {
 		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
 		t.comment('Initilize the CouchDB KeyValueStore');
+
+		var member;
 		utils.newKeyValueStore({name: dbname, path: dbClient})
 		.then(
 			function(kvs) {
@@ -95,8 +97,11 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				t.pass('Successfully enrolled admin2 with CA server');
 
 				// Persist the user state
-				var member = new User('admin2', client);
-				member.setEnrollment(admin2.key, admin2.certificate);
+				member = new User('admin2', client);
+				return member.setEnrollment(admin2.key, admin2.certificate);
+			}
+		).then(
+			function() {
 				if (member.isEnrolled()) {
 					t.pass('Member isEnrolled successfully.');
 				} else {
