@@ -221,14 +221,20 @@ var User = class {
 			// swap out that for the real key from the crypto provider
 			return self.cryptoPrimitives.getKey(state.enrollment.signingIdentity);
 		}).then((privateKey) => {
-			self._signingIdentity = new SigningIdentity(
-				state.enrollment.identity.id,
-				state.enrollment.identity.certificate,
-				pubKey,
-				self.mspImpl,
-				new Signer(self.mspImpl.cryptoSuite, privateKey));
+			// the key retrieved from the key store using the SKI could be a public key
+			// or a private key, check to make sure it's a private key
+			if (privateKey.isPrivate()) {
+				self._signingIdentity = new SigningIdentity(
+					state.enrollment.identity.id,
+					state.enrollment.identity.certificate,
+					pubKey,
+					self.mspImpl,
+					new Signer(self.mspImpl.cryptoSuite, privateKey));
 
-			return self;
+				return self;
+			} else {
+				throw new Error(util.format('Private key missing from key store. Can not establish the signing identity for user %s', state.name));
+			}
 		});
 	}
 

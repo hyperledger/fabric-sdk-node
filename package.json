@@ -22,6 +22,7 @@
     "elliptic": "^6.3.2",
     "fabric-ca-client": "file:./fabric-ca-client",
     "fabric-client": "file:./fabric-client",
+    "fs-extra": "^2.0.0",
     "gulp": "^3.9.1",
     "gulp-debug": "^3.0.0",
     "gulp-eslint": "^3.0.1",
