@@ -25,13 +25,15 @@ var EC = elliptic.ec;
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 var util = require('util');
-var hashPrimitives = require('../hash.js');
-var utils = require('../utils');
-var ECDSAKey = require('./ecdsa/key.js');
 var BN = require('bn.js');
 var Signature = require('elliptic/lib/elliptic/ec/signature.js');
 var path = require('path');
 const os = require('os');
+
+var hashPrimitives = require('../hash.js');
+var utils = require('../utils');
+var ECDSAKey = require('./ecdsa/key.js');
+var CKS = require('./CryptoKeyStore.js');
 
 var logger = utils.getLogger('crypto_ecdsa_aes');
 
@@ -47,26 +49,27 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 * constructor
 	 *
 	 * @param {number} keySize Key size for the ECDSA algorithm, can only be 256 or 384
-	 * @param {KeyValueStore} kvs An instance of a {@link module:api.KeyValueStore} implementation used to save private keys
+	 * @param {string} kvsPath A path to a directory used by the built-in key store to save private keys
 	 */
-	constructor(keySize, kvs) {
+	constructor(keySize, kvsPath) {
 		if (keySize !== 256 && keySize !== 384) {
 			throw new Error('Illegal key size: ' + keySize + ' - this crypto suite only supports key sizes 256 or 384');
 		}
 
 		super();
 
-		if (typeof kvs === 'undefined' || kvs === null) {
-			this._store = null;
+		if (typeof kvsPath === 'undefined' || kvsPath === null) {
+			this._storePath = null;
 		} else {
-			if (typeof kvs.getValue !== 'function' || typeof kvs.setValue !== 'function') {
-				throw new Error('The "kvs" parameter for this constructor must be an instance of a KeyValueStore implementation');
+			if (typeof kvsPath !== 'string') {
+				throw new Error('The "kvsPath" parameter for this constructor, if specified, must be a string specifying a file system path');
 			}
 
-			this._store = kvs;
+			this._storePath = kvsPath;
 		}
 
 		this._keySize = keySize;
+		this._store = null;
 		this._initialize();
 	}
 
@@ -129,19 +132,15 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
 			var self = this;
 			return new Promise((resolve, reject) => {
-				self._getKeyValueStore(self._store)
+				self._getKeyStore()
 				.then ((store) => {
 					logger.debug('generateKey, store.setValue');
-					store.setValue(_getKeyIndex(key.getSKI(), true), KEYUTIL.getPEM(pair.prvKeyObj, 'PKCS8PRV'))
-					.then(
-						function() {
+					return store.putKey(key)
+						.then(() => {
 							return resolve(key);
-						}
-					).catch(
-						function(err) {
+						}).catch((err) => {
 							reject(err);
-						}
-					);
+						});
 				});
 			});
 		}
@@ -177,13 +176,9 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 					// save the key in the key store
 					var theKey = new ECDSAKey(key, key.ecparams.keylen);
 
-					var idx = _getKeyIndex(theKey.getSKI(), key.isPrivate);
-					var pem = (key.isPrivate) ? KEYUTIL.getPEM(key, 'PKCS8PRV') : KEYUTIL.getPEM(key);
-
-					// use <ski>-priv or <ski>-pub as the index to the key store entry
-					return self._getKeyValueStore(self._store)
+					return self._getKeyStore()
 						.then ((store) => {
-							return store.setValue(idx, pem);
+							return store.putKey(theKey);
 						}).then(() => {
 							return resolve(theKey);
 						}).catch((err) => {
@@ -209,25 +204,15 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		var store;
 
 		return new Promise((resolve, reject) => {
-			self._getKeyValueStore(self._store)
+			self._getKeyStore()
 			.then ((st) => {
 				store = st;
-				// first try the private key entry, since it encapsulates both
-				// the private key and public key
-				return store.getValue(_getKeyIndex(ski, true));
-			}).then((raw) => {
-				if (raw !== null) {
-					var privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
-					return resolve(new ECDSAKey(privKey, self._keySize));
-				} else {
-					// didn't find the private key entry matching the SKI
-					// next try the public key entry
-					return store.getValue(_getKeyIndex(ski, false));
-				}
+				return store.getKey(ski);
 			}).then((key) => {
 				if (key instanceof ECDSAKey)
 					return resolve(key);
-				else if (key !== null) {
+
+				if (key !== null) {
 					var pubKey = KEYUTIL.getKey(key);
 					return resolve(new ECDSAKey(pubKey, self._keySize));
 				}
@@ -237,25 +222,24 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		});
 	}
 
-	_getKeyValueStore(store) {
+	_getKeyStore() {
 		var self = this;
 		return new Promise((resolve, reject) => {
-			if (store === null) {
-				var defaultKS = CryptoSuite_ECDSA_AES.getKeyStorePath();
-				logger.info('This class requires a KeyValueStore to save keys, no store was passed in, using the default store %s', defaultKS);
-				store = utils.newKeyValueStore({
-					path: defaultKS
+			if (self._store === null) {
+				var storePath = self._storePath ? self._storePath : CryptoSuite_ECDSA_AES.getDefaultKeyStorePath();
+				logger.info('This class requires a CryptoKeyStore to save keys, using the store at %s', self._storePath);
+
+				new CKS({
+					path: storePath
 				})
-				.then(
-					function (kvs) {
-						logger.debug('_getKeyValueStore returning kvs');
-						self._store = kvs;
-						resolve(kvs);
-					}
-				);
+				.then((ks) => {
+					logger.debug('_getKeyStore returning ks');
+					self._store = ks;
+					return resolve(self._store);
+				});
 			} else {
-				logger.debug('_getKeyValueStore resolving store');
-				resolve(store);
+				logger.debug('_getKeyStore resolving store');
+				return resolve(self._store);
 			}
 		});
 	}
@@ -338,17 +322,10 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		throw new Error('Not implemented yet');
 	}
 
-	static getKeyStorePath() {
+	static getDefaultKeyStorePath() {
 		return path.join(os.homedir(), '.hfc-key-store');
 	}
 };
-
-function _getKeyIndex(ski, isPrivateKey) {
-	if (isPrivateKey)
-		return ski + '-priv';
-	else
-		return ski + '-pub';
-}
 
 // [Angelo De Caro] ECDSA signatures do not have unique representation and this can facilitate
 // replay attacks and more. In order to have a unique representation,

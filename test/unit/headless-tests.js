@@ -1348,34 +1348,6 @@ test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
-	cleanupFileKeyValueStore(keyValStorePath5);
-	var keyValueStorePromise = utils.newKeyValueStore({ path: getRelativePath(keyValStorePath5) });
-
-	t.throws(
-		function() {
-			utils.getCryptoSuite(keyValueStorePromise);
-		},
-		/^Error: The "kvs" parameter for this constructor must be an instance of a KeyValueStore implementation/,
-		'CryptoSuite_ECDSA_AES constructor tests: KeyValueStore passed as a promise should throw error'
-	);
-
-	var keyValueStore = null;
-	t.doesNotThrow(
-		function () {
-			keyValueStorePromise
-			.then(
-				function(kvs) {
-					keyValueStore = kvs;
-					utils.getCryptoSuite(keyValueStore);
-				});
-		},
-		null,
-		'CryptoSuite_ECDSA_AES constructor tests: pass in an instance of FileKeyValueStore'
-	);
-	t.end();
-});
-
 var TEST_MSG = 'this is a test message';
 var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative effort created to advance cross-industry blockchain technologies. ' +
 	'It is a global collaboration including leaders in finance, banking, Internet of Things, supply chains, manufacturing and Technology. The Linux ' +
@@ -1473,6 +1445,46 @@ const halfOrdersForCurve = {
 	'secp256r1': elliptic.curves['p256'].n.shrn(1),
 	'secp384r1': elliptic.curves['p384'].n.shrn(1)
 };
+
+test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
+	cleanupFileKeyValueStore(keyValStorePath5);
+	var keyValueStorePromise = utils.newKeyValueStore({ path: getRelativePath(keyValStorePath5) });
+
+	t.throws(
+		function() {
+			utils.getCryptoSuite(keyValueStorePromise);
+		},
+		/^Error: The "kvsPath" parameter for this constructor, if specified, must be a string specifying a file system path/,
+		'CryptoSuite_ECDSA_AES constructor tests: opts passed as a promise should throw error'
+	);
+
+	var keyValueStore = null;
+	var cs5;
+	t.doesNotThrow(
+		function () {
+			cs5 = utils.getCryptoSuite(keyValStorePath5);
+		},
+		null,
+		'CryptoSuite_ECDSA_AES constructor tests: pass in a string as kvs path'
+	);
+
+	cs5._getKeyStore()
+	.then((store) => {
+		t.notEqual(store, null, 'Crypto Key Store successfully initialized by CryptoSuite_ECDSA_AES');
+		t.equal(typeof store.getKey, 'function', 'Crypto key store much have the "getKey()" function');
+		t.equal(typeof store.putKey, 'function', 'Crypto key store much have the "putKey()" function');
+	});
+
+	var cs = new CryptoSuite_ECDSA_AES(256, keyValStorePath5);
+	cs._getKeyStore()
+	.then((store) => {
+		t.notEqual(store, null, 'Crypto Key Store successfully initialized by CryptoSuite_ECDSA_AES');
+		t.equal(typeof store.getKey, 'function', 'Crypto key store much have the "getKey()" function');
+		t.equal(typeof store.putKey, 'function', 'Crypto key store much have the "putKey()" function');
+	});
+
+	t.end();
+});
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	resetDefaults();
@@ -1674,7 +1686,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 				// verify that the pub key has been saved in the key store by the proper key
 				t.equal(
-					fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getKeyStorePath(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef-pub')),
+					fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef-pub')),
 					true,
 					'Check that the imported public key has been saved in the key store');
 			});
@@ -1687,7 +1699,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 				// verify that the imported private key has been saved in the key store by the proper key
 				t.equal(
-					fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv')),
+					fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv')),
 					true,
 					'Check that the imported private key has been saved in the key store');
 
@@ -1701,7 +1713,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 				// manufacture an error condition where the private key does not exist for the SKI, and only the public key does
 				return cryptoUtils.importKey(TEST_KEY_PRIVATE_CERT_PEM);
 			}).then((pubKey) => {
-				fs.removeSync(path.join(CryptoSuite_ECDSA_AES.getKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
+				fs.removeSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
 
 				var poorUser = new User('admin2', _client);
 				poorUser.fromString(JSON.stringify(TEST_USER_ENROLLMENT))
@@ -1758,12 +1770,12 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', function (t) {
 	var key1 = new ecdsaKey(pair1.prvKeyObj, 256);
 	t.equal(key1.getSKI().length, 64, 'Checking generated SKI hash string for 256 curve keys');
 
-	t.throws(
+	t.doesNotThrow(
 		function () {
 			key1.toBytes();
 		},
-		/This is a private key/,
-		'Checking that a private key instance does not allow toBytes()'
+		null,
+		'Checking that a private key instance allows toBytes()'
 	);
 
 	var pair2 = KEYUTIL.generateKeypair('EC', 'secp384r1');
@@ -1841,6 +1853,67 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', function (t) {
 
 	t.equal(csrObject.pubkey.obj.pubKeyHex, key3.getPublicKey()._key.pubKeyHex,
 		'Checking CSR public key matches requested public key');
+
+	t.end();
+});
+
+var CKS = require('../../fabric-client/lib/impl/CryptoKeyStore.js');
+
+test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
+	t.throws(
+		() => {
+			new CKS();
+		},
+		/Must provide the path to the directory to hold files for the store/,
+		'Test invalid constructor calls: missing options parameter'
+	);
+
+	t.throws(
+		() => {
+			new CKS({something: 'useless'});
+		},
+		/Must provide the path to the directory to hold files for the store/,
+		'Test invalid constructor calls: missing "path" property in the "options" parameter'
+	);
+
+	var f1 = KEYUTIL.getKey(TEST_KEY_PRIVATE_PEM);
+	var testPrivKey = new ecdsaKey(f1, 256);
+	var f2 = KEYUTIL.getKey(TEST_KEY_PRIVATE_CERT_PEM);
+	var testPubKey = new ecdsaKey(f2, 256);
+
+	var store;
+	var _cks = new CKS({path: '/tmp/hfc-cks'})
+	.then((st) => {
+		store = st;
+		return store.putKey(testPrivKey);
+	}).then((keyPEM) => {
+		t.pass('Successfully saved private key in store');
+
+		t.equal(fs.existsSync(path.join('/tmp/hfc-cks', testPrivKey.getSKI() + '-priv')), true,
+			'Check that the private key has been saved with the proper <SKI>-priv index');
+
+		return store.getKey(testPrivKey.getSKI());
+	}).then((recoveredKey) => {
+		t.notEqual(recoveredKey, null, 'Successfully read private key from store using SKI');
+		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
+
+		return store.putKey(testPubKey);
+	}).then((keyPEM) => {
+		t.equal(fs.existsSync(path.join('/tmp/hfc-cks', testPrivKey.getSKI() + '-pub')), true,
+			'Check that the public key has been saved with the proper <SKI>-pub index');
+
+		return store.getKey(testPubKey.getSKI());
+	}).then((recoveredKey) => {
+		t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
+		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
+
+		// delete the private key entry and test if getKey() would return the public key
+		fs.unlinkSync(path.join('/tmp/hfc-cks', testPrivKey.getSKI() + '-priv'));
+		return store.getKey(testPubKey.getSKI());
+	}).then((recoveredKey) => {
+		t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
+		t.equal(recoveredKey.isPrivate(), false, 'Test if the recovered key is a public key');
+	});
 
 	t.end();
 });
