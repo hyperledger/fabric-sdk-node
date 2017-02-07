@@ -75,29 +75,19 @@ hfc.newDefaultKeyValueStore({
 			chainId: config.channelID,
 			txId: tx_id,
 			nonce: nonce,
-			'dockerfile-contents': config.dockerfile_contents
 		};
 		return chain.sendDeploymentProposal(request);
 	}
 ).then(
 	function(results) {
 		logger.info('Successfully obtained proposal responses from endorsers');
-		return helper.processProposal(chain, results, 'deploy');
+		return helper.processProposal(tx_id, eventhub, chain, results, 'deploy');
 	}
 ).then(
 	function(response) {
 		if (response.status === 'SUCCESS') {
 			logger.info('Successfully sent deployment transaction to the orderer.');
-			var handle = setTimeout(() => {
-				logger.error('Failed to receive transaction notification within the timeout period');
-				process.exit(1);
-			}, parseInt(config.waitTime));
-
-			eventhub.registerTxEvent(tx_id.toString(), (tx) => {
-				logger.info('The chaincode transaction has been successfully committed');
-				clearTimeout(handle);
-				eventhub.disconnect();
-			});
+			process.exit();
 		} else {
 			logger.error('Failed to order the deployment endorsement. Error code: ' + response.status);
 		}

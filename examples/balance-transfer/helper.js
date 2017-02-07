@@ -61,7 +61,7 @@ module.exports.getSubmitter = function(client) {
 			}
 		});
 };
-module.exports.processProposal = function(chain, results, proposalType) {
+module.exports.processProposal = function(tx_id, eventhub, chain, results, proposalType) {
 	var proposalResponses = results[0];
 	//logger.debug('deploy proposalResponses:'+JSON.stringify(proposalResponses));
 	var proposal = results[1];
@@ -92,7 +92,28 @@ module.exports.processProposal = function(chain, results, proposalType) {
 			proposal: proposal,
 			header: header
 		};
-		return chain.sendTransaction(request);
+
+		// set the transaction listener and set a timeout of 30sec
+		// if the transaction did not get committed within the timeout period,
+		// fail the test
+		var deployId = tx_id.toString();
+		var txPromise = new Promise((resolve, reject) => {
+			var handle = setTimeout(reject, config.waitTime);
+
+			eventhub.registerTxEvent(deployId, (tx) => {
+				logger.info('The chaincode'+(proposalType == 'deploy' ? proposalType: '')+' transaction has been successfully committed');
+				clearTimeout(handle);
+				eventhub.unregisterTxEvent(deployId);
+				resolve();
+			});
+		});
+
+		var sendPromise = chain.sendTransaction(request);
+		return Promise.all([sendPromise, txPromise]).then((results) => {
+			return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
+		}).catch((err) => {
+			logger.error('Failed to send transaction and get notifications within the timeout period. ' + err.stack ? err.stack : err);
+		});
 	} else {
 		logger.error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
 		throw new Error('Problems happened when examining proposal responses');
