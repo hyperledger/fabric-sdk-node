@@ -36,7 +36,9 @@ var _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos
 var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
 var _mspPrProto = grpc.load(__dirname + '/protos/common/msp_principal.proto').common;
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-var _configurationProto = grpc.load(__dirname + '/protos/common/configuration.proto').common;
+var _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
+var _policiesProto = grpc.load(__dirname + '/protos/common/policies.proto').common;
+var _ledgerProto = grpc.load(__dirname + '/protos/common/ledger.proto').common;
 var _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configuration.proto').orderer;
 var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
 var _mspConfigProto = grpc.load(__dirname + '/protos/msp/mspconfig.proto').msp;
@@ -457,9 +459,9 @@ var Chain = class {
 				);
 
 				var orderer_type =
-					_configurationProto.ConfigurationItem.ConfigurationType.Orderer;
+					_configtxProto.ConfigurationItem.ConfigurationType.Orderer;
 				var policy_type =
-					_configurationProto.ConfigurationItem.ConfigurationType.Policy;
+					_configtxProto.ConfigurationItem.ConfigurationType.Policy;
 				var last_modified = '0';
 				var mod_policy = 'DefaultModificationPolicy';
 
@@ -469,7 +471,6 @@ var Chain = class {
 				var consensusType = new _ordererConfigurationProto.ConsensusType();
 				consensusType.setType(self.getConsensusType());
 				var consensusTypeItem = buildSignedConfigurationItem(
-					configItemChainHeader,
 					orderer_type,
 					last_modified,
 					mod_policy,
@@ -483,7 +484,6 @@ var Chain = class {
 				batchSize.setAbsoluteMaxBytes(self.getInitialAbsoluteMaxBytes());
 				batchSize.setPreferredMaxBytes(self.getInitialPreferredMaxBytes());
 				var batchSizeItem = buildSignedConfigurationItem(
-					configItemChainHeader,
 					orderer_type,
 					last_modified,
 					mod_policy,
@@ -498,7 +498,6 @@ var Chain = class {
 //				var chainCreators = new _ordererConfigurationProto.ChainCreators();
 //				chainCreators.setPolicies([chainCreatorPolicyName]);
 //				var chainCreatorsItem = buildSignedConfigurationItem(
-//					configItemChainHeader,
 //					orderer_type,
 //					last_modified,
 //					mod_policy,
@@ -510,7 +509,6 @@ var Chain = class {
 				var ingressPolicy = new _ordererConfigurationProto.IngressPolicyNames();
 				ingressPolicy.setNames([chainCreatorPolicyName]);
 				var ingressPolicyItem = buildSignedConfigurationItem(
-					configItemChainHeader,
 					orderer_type,
 					last_modified,
 					mod_policy,
@@ -522,7 +520,6 @@ var Chain = class {
 				var egressPolicy = new _ordererConfigurationProto.EgressPolicyNames();
 				egressPolicy.setNames([chainCreatorPolicyName]);
 				var egressPolicyItem = buildSignedConfigurationItem(
-					configItemChainHeader,
 					orderer_type,
 					last_modified,
 					mod_policy,
@@ -534,7 +531,6 @@ var Chain = class {
 				var acceptAllPolicy = buildAcceptAllPolicy();
 				logger.debug('accept policy::'+JSON.stringify(acceptAllPolicy));
 				var acceptAllPolicyItem = buildSignedConfigurationItem(
-					configItemChainHeader,
 					policy_type,
 					last_modified,
 					mod_policy,
@@ -548,7 +544,6 @@ var Chain = class {
 				var rejectAllPolicy = buildRejectAllPolicy();
 				logger.debug('reject policy::'+JSON.stringify(rejectAllPolicy));
 				var defaultModificationPolicyItem = buildSignedConfigurationItem(
-					configItemChainHeader,
 					policy_type,
 					last_modified,
 					mod_policy,
@@ -576,7 +571,6 @@ var Chain = class {
 				mspconf.setType(0);
 
 				var mspConfigItem = buildSignedConfigurationItem(
-					configItemChainHeader,
 					orderer_type,
 					last_modified,
 					mod_policy,
@@ -601,7 +595,6 @@ var Chain = class {
 				creationPolicy.setDigest(Buffer.from(creation_items_hash, 'hex'));
 				//creationPolicy.setDigest(creation_items_hash);
 				var createPolicyItem = buildSignedConfigurationItem(
-					configItemChainHeader,
 					orderer_type,
 					last_modified,
 					mod_policy,
@@ -612,7 +605,7 @@ var Chain = class {
 				logger.debug('initializeChain - all items built');
 
 				//bundle all the items
-				var configurationEnvelope = new _configurationProto.ConfigurationEnvelope();
+				var configurationEnvelope = new _configtxProto.ConfigurationEnvelope();
 				configurationEnvelope.setItems([
 					createPolicyItem,
 					consensusTypeItem,
@@ -624,6 +617,7 @@ var Chain = class {
 					defaultModificationPolicyItem,
 					mspConfigItem
 				]);
+				configurationEnvelope.setHeader(configItemChainHeader);
 
 				// build a chain header for later to be
 				// used in the atomic broadcast
@@ -1427,22 +1421,20 @@ function buildHeader(creator, chainHeader, nonce) {
 
 //utility method to build a signed configuration item
 function buildSignedConfigurationItem(
-		chain_header,
 		type,
 		last_modified,
 		mod_policy,
 		key,
 		value,
 		signatures) {
-	var configurationItem = new _configurationProto.ConfigurationItem();
-	configurationItem.setHeader(chain_header); // ChainHeader
+	var configurationItem = new _configtxProto.ConfigurationItem();
 	configurationItem.setType(type); // ConfigurationType
 	configurationItem.setLastModified(last_modified); // uint64
 	configurationItem.setModificationPolicy(mod_policy); // ModificationPolicy
 	configurationItem.setKey(key); // string
 	configurationItem.setValue(value); // bytes
 
-	var signedConfigurationItem = new _configurationProto.SignedConfigurationItem();
+	var signedConfigurationItem = new _configtxProto.SignedConfigurationItem();
 	signedConfigurationItem.setConfigurationItem(configurationItem.toBuffer());
 	if(signatures) {
 		signedConfigurationItem.setSignatures(signatures);
@@ -1464,12 +1456,12 @@ function buildRejectAllPolicy() {
 //utility method to build a policy with a signature policy envelope
 function buildPolicyEnvelope(nOf) {
 	logger.debug('buildPolicyEnvelope - building policy with nOf::'+nOf);
-	var nOutOf = new _configurationProto.SignaturePolicy.NOutOf();
+	var nOutOf = new _policiesProto.SignaturePolicy.NOutOf();
 	nOutOf.setN(nOf);
 	nOutOf.setPolicies([]);
-	var signaturePolicy = new _configurationProto.SignaturePolicy();
+	var signaturePolicy = new _policiesProto.SignaturePolicy();
 	signaturePolicy.setFrom(nOutOf);
-	var signaturePolicyEnvelope = new _configurationProto.SignaturePolicyEnvelope();
+	var signaturePolicyEnvelope = new _policiesProto.SignaturePolicyEnvelope();
 	signaturePolicyEnvelope.setVersion(0);
 	signaturePolicyEnvelope.setPolicy(signaturePolicy);
 //	var identity = new _mspPrProto.MSPPrincipal();
@@ -1477,8 +1469,8 @@ function buildPolicyEnvelope(nOf) {
 //	identity.setPrincipal(Buffer.from('Admin'));
 	signaturePolicyEnvelope.setIdentities([]);
 
-	var policy = new _configurationProto.Policy();
-	policy.setType(_configurationProto.Policy.PolicyType.SIGNATURE);
+	var policy = new _policiesProto.Policy();
+	policy.setType(_policiesProto.Policy.PolicyType.SIGNATURE);
 	policy.setPolicy(signaturePolicyEnvelope.toBuffer());
 	return policy;
 };
