@@ -40,7 +40,7 @@ var CryptoKeyStore = class extends FKVS {
 			if (raw !== null) {
 				var privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
 				// TODO: for now assuming ECDSA keys only, need to add support for RSA keys
-				return new ECDSAKey(privKey, privKey.ecparams.keylen);
+				return new ECDSAKey(privKey);
 			}
 
 			// didn't find the private key entry matching the SKI
@@ -52,7 +52,7 @@ var CryptoKeyStore = class extends FKVS {
 
 			if (key !== null) {
 				var pubKey = KEYUTIL.getKey(key);
-				return new ECDSAKey(pubKey, pubKey.ecparams.keylen);
+				return new ECDSAKey(pubKey);
 			}
 		});
 	}

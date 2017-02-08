@@ -91,7 +91,7 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 					});
 				}).then((store) => {
 					var rawKey = KEYUTIL.getKey(pemData.toString());
-					testKey = new ecdsaKey(rawKey, 256);
+					testKey = new ecdsaKey(rawKey);
 					return store.putKey(testKey);
 				}).then((value) => {
 					// next save the certificate in a serialized user enrollment in the state store

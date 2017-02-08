@@ -125,10 +125,10 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		var pair = KEYUTIL.generateKeypair('EC', this._curveName);
 
 		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
-			return Promise.resolve(new ECDSAKey(pair.prvKeyObj, this._keySize));
+			return Promise.resolve(new ECDSAKey(pair.prvKeyObj));
 		} else {
 			// unless "opts.ephemeral" is explicitly set to "true", default to saving the key
-			var key = new ECDSAKey(pair.prvKeyObj, this._keySize);
+			var key = new ECDSAKey(pair.prvKeyObj);
 
 			var self = this;
 			return new Promise((resolve, reject) => {
@@ -174,7 +174,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
 				if (key.type && key.type === 'EC') {
 					// save the key in the key store
-					var theKey = new ECDSAKey(key, key.ecparams.keylen);
+					var theKey = new ECDSAKey(key);
 
 					return self._getKeyStore()
 						.then ((store) => {
@@ -214,7 +214,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
 				if (key !== null) {
 					var pubKey = KEYUTIL.getKey(key);
-					return resolve(new ECDSAKey(pubKey, self._keySize));
+					return resolve(new ECDSAKey(pubKey));
 				}
 			}).catch((err) => {
 				reject(err);

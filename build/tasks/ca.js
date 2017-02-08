@@ -12,6 +12,7 @@ const DEPS = [
 	'fabric-client/lib/impl/CouchDBKeyValueStore.js',
 	'fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js',
 	'fabric-client/lib/impl/ecdsa/*',
+	'fabric-client/lib/impl/CryptoKeyStore.js',
 	'fabric-client/lib/impl/FileKeyValueStore.js'
 ];
 
