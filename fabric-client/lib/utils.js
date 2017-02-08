@@ -36,12 +36,12 @@ var sha3_256 = require('js-sha3').sha3_256;
 // The following methods are for loading the proper implementation of an extensible APIs.
 //
 
-module.exports.getCryptoSuite = function(kvs) {
+module.exports.getCryptoSuite = function(opts) {
 	// expecting a path to an alternative implementation
 	var csEnv = this.getConfigSetting('crypto-suite');
 	var cryptoSuite = require(csEnv);
 	var keySize = this.getConfigSetting('crypto-keysize');
-	return new cryptoSuite(keySize, kvs);
+	return new cryptoSuite(keySize, opts);
 };
 
 // Provide a Promise-based keyValueStore for couchdb, etc.
