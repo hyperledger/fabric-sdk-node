@@ -40,7 +40,6 @@
          "secret":"adminpw"
       }
    ],
-   "dockerfile_contents": "from hyperledger/fabric-ccenv\n COPY . $GOPATH/src/build-chaincode/\n  WORKDIR $GOPATH\n\n RUN go install build-chaincode && mv $GOPATH/bin/build-chaincode $GOPATH/bin/%s",
    "deployRequest":{
       "functionName":"init",
       "args":[

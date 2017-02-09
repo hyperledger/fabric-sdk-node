@@ -77,21 +77,13 @@ hfc.newDefaultKeyValueStore({
 	function(results) {
 		logger.info('Successfully obtained proposal responses from endorsers');
 
-		return helper.processProposal(chain, results, 'move');
+		return helper.processProposal(tx_id, eventhub, chain, results, 'move');
 	}
 ).then(
 	function(response) {
 		if (response.status === 'SUCCESS') {
-			var handle = setTimeout(() => {
-				logger.error('Failed to receive transaction notification within the timeout period');
-				process.exit(1);
-			}, parseInt(config.waitTime));
-
-			eventhub.registerTxEvent(tx_id.toString(), (tx) => {
-				logger.info('The chaincode transaction has been successfully committed');
-				clearTimeout(handle);
-				eventhub.disconnect();
-			});
+			logger.info('The chaincode transaction has been successfully committed');
+			process.exit();
 		}
 	}
 ).catch(
