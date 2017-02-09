@@ -35,6 +35,7 @@ var utils = require('fabric-client/lib/utils.js');
 var libpath;
 switch(process.platform) {
 case 'darwin': // OSX
+case 'linux':  // Ubuntu VM
 	libpath = '/usr/local/lib/softhsm/libsofthsm2.so';
 	break;
 default:
