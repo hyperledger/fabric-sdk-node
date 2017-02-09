@@ -629,7 +629,7 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 			_chain.setInitialEpoch('a');
 		},
 		/^Error: initial epoch must be a positive integer/,
-		'Chain tests: checking that epoch should be positive integer when inut is char.'
+		'Chain tests: checking that epoch should be positive integer when input is char.'
 	);
 	t.doesNotThrow(
 		function () {
@@ -658,16 +658,89 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 			_chain.setInitialMaxMessageCount('a');
 		},
 		/^Error: initial maximum message count must be a positive integer/,
-		'Chain tests: checking that max message count should be positive integer when inut is char.'
+		'Chain tests: checking that max message count should be positive integer when input is char.'
 	);
 	t.doesNotThrow(
 		function () {
 			_chain.setInitialMaxMessageCount(30);
 		},
 		null,
-		'checking the chain setInitialMaxMessageCount()'
+		'Chain tests: checking the chain setInitialMaxMessageCount()'
 	);
 	t.equal(_chain.getInitialMaxMessageCount(), 30, 'Chain tests: checking set and get initial max message count');
+
+	t.throws(
+		function () {
+			_chain.setInitialAbsoluteMaxBytes(-1);
+		},
+		/^Error: initial absolute maximum bytes must be a positive integer/,
+		'Chain tests: checking that absolute max bytes should be positive integer when input is negative.'
+	);
+	t.throws(
+		function () {
+			_chain.setInitialAbsoluteMaxBytes(1.1);
+		},
+		/^Error: initial absolute maximum bytes must be a positive integer/,
+		'Chain tests: checking that absolute max bytes should be positive integer when input is float.'
+	);
+	t.throws(
+		function () {
+			_chain.setInitialAbsoluteMaxBytes('a');
+		},
+		/^Error: initial absolute maximum bytes must be a positive integer/,
+		'Chain tests: checking that absolute max bytes should be positive integer when input is char.'
+	);
+
+	var initialAbsoluteMaxBytes = _chain.getInitialAbsoluteMaxBytes();
+	t.equal(initialAbsoluteMaxBytes, 0xA00000,
+			'Chain tests: check absolute maximum bytes default value');
+	_chain.setInitialAbsoluteMaxBytes(0);
+	t.equal(_chain.getInitialAbsoluteMaxBytes(), 0, 'Chain tests: set max ab bytes to zero');
+	t.doesNotThrow(
+		function () {
+			_chain.setInitialAbsoluteMaxBytes(0x9fFFFF);
+		},
+		null,
+		'Chain tests: setInitialAbsoluteMaxBytes()'
+	);
+	t.equal(_chain.getInitialAbsoluteMaxBytes(), initialAbsoluteMaxBytes - 1,
+		    'Chain tests: checking set and get initial maximum absolute bytes');
+
+	var  initialPreferredMaxBytes = _chain.getInitialPreferredMaxBytes();
+	t.throws(
+		function () {
+			_chain.setInitialPreferredMaxBytes(-1);
+		},
+		/^Error: initial preferred maximum bytes must be a positive integer/,
+		'Chain tests: checking that preferred max bytes should be positive integer when input is negative.'
+	);
+	t.throws(
+		function () {
+			_chain.setInitialPreferredMaxBytes(1.1);
+		},
+		/^Error: initial preferred maximum bytes must be a positive integer/,
+		'Chain tests: checking that preferred max bytes should be positive integer when input is float.'
+	);
+	t.throws(
+		function () {
+			_chain.setInitialPreferredMaxBytes('a');
+		},
+		/^Error: initial preferred maximum bytes must be a positive integer/,
+		'Chain tests: checking that preferred max bytes should be positive integer when input is char.'
+	);
+	t.equal(initialPreferredMaxBytes, 0xA00000,
+			'Chain tests: check initial preferred maximum bytes default value');
+	_chain.setInitialPreferredMaxBytes(0);
+	t.equal(_chain.getInitialPreferredMaxBytes(), 0, 'Chain tests: set initial preferred maximum bytes to zero');
+	t.doesNotThrow(
+		function () {
+			_chain.setInitialPreferredMaxBytes(0x9fFFFF);
+		},
+		null,
+		'Chain tests: setInitialPreferredMaxBytes()'
+	);
+	t.equal(_chain.getInitialPreferredMaxBytes(), initialPreferredMaxBytes - 1,
+		    'Chain tests: checking set and get initial maximum preferred bytes');
 
 	t.doesNotThrow(
 		function () {
