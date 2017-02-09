@@ -28,6 +28,8 @@ var test = _test(tape);
 
 var crypto = require('crypto');
 var util = require('util');
+var path = require('path');
+
 var utils = require('fabric-client/lib/utils.js');
 
 var libpath;
@@ -39,13 +41,20 @@ default:
 	libpath = '/usr/lib/libacsp-pkcs11.so'; //LinuxOne
 }
 
-utils.setConfigSetting('crypto-suite', './impl/bccsp_pkcs11.js');
-var cryptoUtils = utils.getCryptoSuite({
-	lib: libpath,
-	slot: 0,
-	pin: '1234' });
+// use this specific way to test application overriding the default with a config file
+utils.addConfigFile(path.join(__dirname, '../fixtures/config/overrides.json'));
+
+var cryptoUtils;
 
 test('\n\n**PKCS11 - generate an ephemeral key\n\n', (t) => {
+	t.equal(utils.getConfigSetting('crypto-hsm'), true, 'Verify that the HSM based key management module has been enabled');
+
+	cryptoUtils = utils.getCryptoSuite({
+		lib: libpath,
+		slot: 0,
+		pin: '1234'
+	});
+
 	// Test generate AES key, encrypt, and decrypt.
 	cryptoUtils.generateKey({ algorithm: 'AES', ephemeral: true })
 	.then((key) => {

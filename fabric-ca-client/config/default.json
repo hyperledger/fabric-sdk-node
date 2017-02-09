@@ -1,8 +1,13 @@
 { 
 	"request-timeout" : 3000,
 	"tcert-batch-size" : 10,
-	"crypto-asymmetric-key-algo": "ECDSA",
 	"crypto-hash-algo": "SHA2",
 	"crypto-keysize": 256,
-	"crypto-suite": "./impl/CryptoSuite_ECDSA_AES.js"
+	"crypto-hsm": false,
+	"crypto-suite-software": {
+		"EC": "./impl/CryptoSuite_ECDSA_AES.js"
+	},
+	"crypto-suite-hsm": {
+		"EC": "./impl/bccsp_pkcs11.js"
+	}
 }

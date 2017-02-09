@@ -1440,11 +1440,51 @@ var api = require('fabric-client/lib/api.js');
 var elliptic = require('elliptic');
 var BN = require('bn.js');
 var Signature = require('elliptic/lib/elliptic/ec/signature.js');
+var PKCS11 = require('fabric-client/lib/impl/bccsp_pkcs11.js');
 
 const halfOrdersForCurve = {
 	'secp256r1': elliptic.curves['p256'].n.shrn(1),
 	'secp384r1': elliptic.curves['p384'].n.shrn(1)
 };
+
+test('\n\n** utils.getCryptoSuite tests **\n\n', (t) => {
+	var cs = utils.getCryptoSuite({keysize: 384, algorithm: 'EC'}, keyValStorePath5);
+	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
+	t.equal(cs._keySize, 384, 'Returned instance should have keysize of 384');
+	t.equal(cs._storePath, keyValStorePath5, 'Returned instance should have store path of ' + keyValStorePath5);
+
+	cs = utils.getCryptoSuite({keysize: 384, algorithm: 'EC'}, keyValStorePath5);
+	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Default test: should return an instance of CryptoSuite_ECDSA_AES');
+	t.equal(cs._keySize, 384, 'Returned instance should have keysize of 384');
+	t.equal(cs._storePath, keyValStorePath5, 'Returned instance should have store path of ' + keyValStorePath5);
+
+	cs = utils.getCryptoSuite({algorithm: 'EC'}, keyValStorePath5);
+	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
+	t.equal(cs._keySize, 256, 'Returned instance should have keysize of 256');
+	t.equal(cs._storePath, keyValStorePath5, 'Returned instance should have store path of ' + keyValStorePath5);
+
+	// each app instance is expected to use either HSM or software-based key management, as such this question
+	// is answered with a config setting rather than controlled on a case-by-case basis
+	utils.setConfigSetting('crypto-hsm', true);
+	t.throws(
+		() => {
+			cs = utils.getCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
+		},
+		/Error:.*\/usr\/local\/lib/,
+		'Should attempt to load the bccsp_pkcs11 module and fail because of the dummy library path'
+	);
+
+	utils.setConfigSetting('crypto-hsm', false);
+	t.throws(
+		() => {
+			cs = utils.getCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
+		},
+		/^Error: The "kvsPath" parameter for this constructor, if specified, must be a string specifying a file system path/,
+		'Should attempt to load the CryptoSuite_ECDSA_AES module and fail because of the invalid file store path'
+	);
+
+	t.end();
+});
 
 test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
 	cleanupFileKeyValueStore(keyValStorePath5);

@@ -22,9 +22,10 @@ var grpc = require('grpc');
 var path = require('path');
 var zlib = require('zlib');
 var urlParser = require('url');
+var util = require('util');
 var winston = require('winston');
-var Config = require('./Config.js');
 var crypto = require('crypto');
+var Config = require('./Config.js');
 
 //
 // Load required crypto stuff.
@@ -36,12 +37,56 @@ var sha3_256 = require('js-sha3').sha3_256;
 // The following methods are for loading the proper implementation of an extensible APIs.
 //
 
-module.exports.getCryptoSuite = function(opts) {
+// returns a new instance of the CryptoSuite API implementation
+//
+// @param {object} setting This optional parameter is an object with the following optional properties:
+// 	- software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
+//		default is true (for software based implementation), specific implementation module is specified
+//		in the setting 'crypto-suite-software'
+//  - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
+//  - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
+//
+// @param {object} opts Implementation-specific option object used in the constructor
+//
+module.exports.getCryptoSuite = function(setting, opts) {
+	var csImpl, keysize, algorithm, haveSettings = false;
+
+	csImpl = this.getConfigSetting('crypto-hsm') ? this.getConfigSetting('crypto-suite-hsm') : this.getConfigSetting('crypto-suite-software');
+
+	if (typeof setting === 'object' && typeof setting.keysize === 'number') {
+		keysize = setting.keysize;
+		haveSettings = true;
+	} else
+		keysize = this.getConfigSetting('crypto-keysize');
+
+	if (typeof setting === 'object' && typeof setting.algorithm === 'string') {
+		algorithm = setting.algorithm.toUpperCase();
+		haveSettings = true;
+	} else
+		algorithm = 'EC';
+
+	// csImpl at this point should be a map (see config/default.json) with keys being the algorithm
+	csImpl = csImpl[algorithm];
+
+	if (!csImpl)
+		throw new Error(util.format('Desired CryptoSuite module not found supporting algorithm "%s"', algorithm));
+
 	// expecting a path to an alternative implementation
-	var csEnv = this.getConfigSetting('crypto-suite');
-	var cryptoSuite = require(csEnv);
-	var keySize = this.getConfigSetting('crypto-keysize');
-	return new cryptoSuite(keySize, opts);
+	var cryptoSuite = require(csImpl);
+
+	if (typeof setting !== 'undefined' && typeof opts !== 'undefined')
+		return new cryptoSuite(keysize, opts);
+
+	if (typeof setting !== 'undefined') {
+		// only one object is passed in as argument, we need to decide whether it's meant for the 'setting' or 'opts'
+		if (haveSettings)
+			return new cryptoSuite(keysize); // this implementation must not need any opts because no 'opts' argument was passed in
+		else
+			return new cryptoSuite(keysize, setting); // the function was called with only the 'opts' argument
+	}
+
+	// the function was called without any argument
+	return new cryptoSuite(keysize);
 };
 
 // Provide a Promise-based keyValueStore for couchdb, etc.
