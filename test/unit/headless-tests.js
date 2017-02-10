@@ -793,6 +793,113 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 	t.end();
 });
 
+test('\n\n **  Chain query tests', function(t) {
+	var peer = new Peer('grpc://localhost:7051');
+	_chain.addPeer(peer);
+	var test_peer = new Peer('grpc://localhost:7051');
+	t.throws(
+		function () {
+			_chain.setPrimaryPeer(test_peer);
+		},
+		/^Error: The primary peer must be on this chain\'s peer list/,
+		'Not able to set a primary peer even if has the same addresss'
+	);
+	t.doesNotThrow(
+		function () {
+			_chain.setPrimaryPeer(peer);
+		},
+		null,
+		'Able to set a primary peer as long as same peer'
+	);
+	test_peer = new Peer('grpc://localhost:7099');
+	t.throws(
+		function () {
+			_chain.setPrimaryPeer(test_peer);
+		},
+		/^Error: The primary peer must be on this chain\'s peer list/,
+		'Not Able to set a primary peer when not on the list'
+	);
+	t.throws(
+		function () {
+			_chain.setPrimaryPeer();
+		},
+		/^Error: The primary peer must be on this chain\'s peer list/,
+		'Not Able to set a primary peer to a null peer'
+	);
+
+	_chain.queryBlockByHash()
+		.then(
+			function(results) {
+				t.fail('Error: Blockhash bytes are required');
+				t.end();
+			},
+			function(err) {
+				var errMessage = 'Error: Blockhash bytes are required';
+				if(err.toString() == errMessage) t.pass(errMessage);
+				else t.fail(errMessage);
+				return _chain.queryTransaction();
+			}
+		).then(
+			function(results) {
+				t.fail('Error: Transaction id is required');
+				t.end();
+			},
+			function(err) {
+				t.pass(err);
+				return _chain.queryBlock('a');
+			}
+		).then(
+			function(results) {
+				t.fail('Error: block id must be integer');
+				t.end();
+			},
+			function(err) {
+				var errMessage = 'Error: Block number must be a postive integer';
+				if(err.toString() == errMessage) t.pass(errMessage);
+				else t.fail(errMessage);
+				return _chain.queryBlock();
+			}
+		).then(
+			function(results) {
+				t.fail('Error: block id is required');
+				t.end();
+			},
+			function(err) {
+				var errMessage = 'Error: Block number must be a postive integer';
+				if(err.toString() == errMessage) t.pass(errMessage);
+				else t.fail(errMessage);
+				return _chain.queryBlock(-1);
+			}
+		).then(
+			function(results) {
+				t.fail('Error: block id must be postive integer');
+				t.end();
+			},
+			function(err) {
+				var errMessage = 'Error: Block number must be a postive integer';
+				if(err.toString() == errMessage) t.pass(errMessage);
+				else t.fail(errMessage);
+				return _chain.queryBlock(10.5);
+			}
+		).then(
+			function(results) {
+				t.fail('Error: block id must be integer');
+				t.end();
+			},
+			function(err) {
+				var errMessage = 'Error: Block number must be a postive integer';
+				if(err.toString() == errMessage) t.pass(errMessage);
+				else t.fail(errMessage);
+				t.end();
+			}
+		).catch(
+			function(err) {
+				t.fail('should not have gotten the catch ' + err);
+				t.end();
+			}
+		);
+});
+
 // User tests /////////
 test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 	_client = new Client();
