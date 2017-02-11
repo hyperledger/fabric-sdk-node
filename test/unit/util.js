@@ -38,6 +38,8 @@ module.exports.setupChaincodeDeploy = function() {
 	process.env.GOPATH = path.join(__dirname, '../fixtures');
 };
 
+module.exports.readFile = readFile;
+
 function getSubmitter(username, password, client, t, loadFromConfig) {
 	return client.getUserContext(username)
 	.then((user) => {
@@ -78,7 +80,7 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 				//       \_ admin.pem  <<== this is the signed certificate saved in PEM file
 
 				// first load the private key and save in the BCCSP's key store
-				var privKeyPEM = path.join(__dirname, '../fixtures/msp/keystore/admin.pem');
+				var privKeyPEM = path.join(__dirname, '../fixtures/msp/local/keystore/admin.pem');
 				var pemData, member;
 				return readFile(privKeyPEM)
 				.then((data) => {
@@ -95,7 +97,7 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 					return store.putKey(testKey);
 				}).then((value) => {
 					// next save the certificate in a serialized user enrollment in the state store
-					var certPEM = path.join(__dirname, '../fixtures/msp/signcerts/admin.pem');
+					var certPEM = path.join(__dirname, '../fixtures/msp/local/signcerts/admin.pem');
 					return readFile(certPEM);
 				}).then((data) => {
 					member = new User(username, client);

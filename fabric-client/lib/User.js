@@ -24,7 +24,7 @@ var idModule = require('./msp/identity.js');
 var Identity = idModule.Identity;
 var SigningIdentity = idModule.SigningIdentity;
 var Signer = idModule.Signer;
-var MSP = require('./msp/msp.js');
+var LocalMSP = require('./msp/msp.js');
 
 /**
  * The User class represents users that have been enrolled and represented by
@@ -73,10 +73,7 @@ var User = class {
 		this.cryptoPrimitives = client && client.getCryptoSuite() ? client.getCryptoSuite() : sdkUtils.getCryptoSuite();
 
 		// TODO: this should be using config properties obtained from the environment
-		this.mspImpl = new MSP({
-			trustedCerts: [],
-			signer: 'blah',
-			admins: [],
+		this.mspImpl = new LocalMSP({
 			id: 'DEFAULT',
 			cryptoSuite: this.cryptoPrimitives
 		});

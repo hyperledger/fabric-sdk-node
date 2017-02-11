@@ -319,7 +319,35 @@ module.exports.generateTarGz = function(src, dest) {
 	});
 };
 
+// this is a per-application map of msp managers for each chain
+var mspManagers = {};
 
+//
+// returns the MSP manager responsible for the given chain
+//
+module.exports.getMSPManager = function(chainId) {
+	var mspm = mspManagers[chainId];
+	if (mspm === null) {
+		// this is a rather catastrophic error, without an MSP manager not much can continue
+		throw new Error(util.format('Can not find an MSP Manager for the given chain ID: %s', chainId));
+	}
+
+	return mspm;
+};
+
+//
+// registers an MSP manager using the chainId as the key
+//
+module.exports.addMSPManager = function(chainId, mspm) {
+	mspManagers[chainId] = mspm;
+};
+
+//
+// unregisters the MSP manager for the given chainId
+//
+module.exports.removeMSPManager = function(chainId) {
+	delete mspManagers[chainId];
+};
 
 //
 // The Endpoint class represents a remote grpc or grpcs target

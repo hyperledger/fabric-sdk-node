@@ -3,6 +3,7 @@
 var api = require('../api.js');
 var idModule = require('./identity.js');
 var Identity = idModule.Identity;
+var SigningIdentity = idModule.SigningIdentity;
 var utils = require('../utils.js');
 var logger = utils.getLogger('msp.js');
 
@@ -20,10 +21,11 @@ var MSP = class {
 	/**
 	 * Setup the MSP instance according to configuration information
 	 * @param {Object} config A configuration object specific to the implementation. For this
-	 * implementation it requires the following fields:
-	 *		<br>`trustedCerts`: array of {@link Identity} to establish trust anchorts for validating signing certificates
-	 *		<br>`signer`: {@link SigningIdentity} signing identity
+	 * implementation it uses the following fields:
+	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
+	 * signing certificates. Required for MSPs used in verifying signatures
 	 *		<br>`admins`: array of {@link Identity} representing admin privileges
+	 *		<br>`signer`: {@link SigningIdentity} signing identity. Required for MSPs used in signing
 	 *		<br>`id`: {string} value for the identifier of this instance
 	 *		<br>`cryptoSuite': the underlying {@link module:api.CryptoSuite} for crypto primitive operations
 	 */
@@ -31,22 +33,20 @@ var MSP = class {
 		if (!config)
 			throw new Error('Missing required parameter "config"');
 
-		if (!config.trustedCerts)
-			throw new Error('Parameter "config" missing required field "trustedCerts"');
-
-		if (!config.signer)
-			throw new Error('Parameter "config" missing required field "signer"');
-
-		if (!config.admins)
-			throw new Error('Parameter "config" missing required field "admins"');
-
 		if (!config.id)
 			throw new Error('Parameter "config" missing required field "id"');
 
 		if (!config.cryptoSuite)
 			throw new Error('Parameter "config" missing required field "cryptoSuite"');
 
-		this._trustedCerts = config.trustedCerts;
+		if (typeof config.signer !== 'undefined') {
+			// when constructing local msp, a signer property is required and it must be an instance of SigningIdentity
+			if (!(config.signer instanceof SigningIdentity)) {
+				throw new Error('Parameter "signer" must be an instance of SigningIdentity');
+			}
+		}
+
+		this._rootCerts = config.rootCerts;
 		this._signer = config.signer;
 		this._admins = config.admins;
 		this.cryptoSuite = config.cryptoSuite;

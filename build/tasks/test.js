@@ -35,9 +35,12 @@ gulp.task('test', ['pre-test'], function() {
 });
 
 gulp.task('test-headless', ['pre-test'], function() {
-	return gulp.src('test/unit/headless-tests.js')
-		.pipe(tape({
-			reporter: tapColorize()
-		}))
-		.pipe(istanbul.writeReports());
+	return gulp.src([
+		'test/unit/headless-tests.js',
+		'test/unit/msp-tests.js'
+	])
+	.pipe(tape({
+		reporter: tapColorize()
+	}))
+	.pipe(istanbul.writeReports());
 });

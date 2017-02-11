@@ -2698,31 +2698,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 
 	t.throws(
 		function() {
-			var mspImpl = new MSP({signer: 'blah', admins: [], id: 'blah', cryptoSuite: 'blah'});
-		},
-		/Parameter "config" missing required field "trustedCerts"/,
-		'Checking required config parameter "trustedCerts" for MSP constructor'
-	);
-
-	t.throws(
-		function() {
-			var mspImpl = new MSP({trustedCerts: [], admins: [], id: 'blah', cryptoSuite: 'blah'});
-		},
-		/Parameter "config" missing required field "signer"/,
-		'Checking required config parameter "signer" for MSP constructor'
-	);
-
-	t.throws(
-		function() {
-			var mspImpl = new MSP({trustedCerts: [], signer: 'blah', id: 'blah', cryptoSuite: 'blah'});
-		},
-		/Parameter "config" missing required field "admins"/,
-		'Checking required config parameter "admins" for MSP constructor'
-	);
-
-	t.throws(
-		function() {
-			var mspImpl = new MSP({trustedCerts: [], signer: 'blah', admins: [], cryptoSuite: 'blah'});
+			var mspImpl = new MSP({admins: [], cryptoSuite: 'blah'});
 		},
 		/Parameter "config" missing required field "id"/,
 		'Checking required config parameter "id" for MSP constructor'
@@ -2730,10 +2706,18 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 
 	t.throws(
 		function() {
-			var mspImpl = new MSP({trustedCerts: [], signer: 'blah', admins: [], id: 'blah'});
+			var mspImpl = new MSP({admins: [], id: 'blah'});
 		},
 		/Parameter "config" missing required field "cryptoSuite"/,
 		'Checking required config parameter "cryptoSuite" for MSP constructor'
+	);
+
+	t.throws(
+		function() {
+			var mspImpl = new MSP({signer: 'blah', id: 'blah', cryptoSuite: 'blah'});
+		},
+		/Error: Parameter "signer" must be an instance of SigningIdentity/,
+		'Checking required config parameter "admins" for MSP constructor'
 	);
 
 	t.throws(
@@ -2794,8 +2778,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 
 	// test identity serialization and deserialization
 	var mspImpl = new MSP({
-		trustedCerts: [],
-		signer: 'blah',
+		rootCerts: [],
 		admins: [],
 		id: 'testMSP',
 		cryptoSuite: utils.getCryptoSuite()
