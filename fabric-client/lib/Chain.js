@@ -99,6 +99,8 @@ var Chain = class {
 		this.cryptoPrimitives = utils.getCryptoSuite();
 
 		this._peers = [];
+		this._primary_peer = null; // if not set, will use the first peer on the list
+
 		this._orderers = [];
 
 		this._clientContext = clientContext;
@@ -225,6 +227,45 @@ var Chain = class {
 	getPeers() {
 		logger.debug('getPeers - list size: %s.', this._peers.length);
 		return this._peers;
+	}
+
+	/**
+	 * Set the primary peer
+	 * The peer to use for doing queries.
+	 * Peer must be a peer on this chain's peer list.
+	 * Default: When no primary peer has been set the first peer
+	 * on the list will be used.
+	 * @param {Peer} peer An instance of the Peer class.
+	 * @throws Error when peer is not on the existing peer list
+	 */
+	setPrimaryPeer(peer) {
+		if(peer) {
+			for (let i = 0; i < this._peers.length; i++) {
+				if (this._peers[i] === peer) {
+					this._primary_peer = this._peers[i];
+					return;
+				}
+			}
+		}
+		throw new Error('The primary peer must be on this chain\'s peer list');
+	}
+
+	/**
+	 * Get the primary peer
+	 * The peer to use for doing queries.
+	 * Default: When no primary peer has been set the first peer
+	 * on the list will be used.
+	 * @returns {Peer} peer An instance of the Peer class.
+	 */
+	getPrimaryPeer() {
+		logger.debug('getPrimaryPeer :: start');
+		var result = this._primary_peer;
+		if(!result) {
+			result = this._peers[0];
+			logger.info(' Primary peer was not set, using %s',result);
+		}
+		// return what we found
+		return result;
 	}
 
 	/**
@@ -814,28 +855,219 @@ var Chain = class {
 	/**
 	 * Queries for various useful information on the state of the Chain
 	 * (height, known peers).
+	 * This query will be made to the primary peer.
 	 * @returns {object} With height, currently the only useful info.
 	 */
 	queryInfo() {
-		//to do
+		logger.debug('queryInfo - start');
+		var request = {
+			targets: [this.getPrimaryPeer()],
+			chaincodeId : 'qscc',
+			chainId: '',
+			txId: utils.buildTransactionID(),
+			nonce: utils.getNonce(),
+			fcn : 'GetChainInfo',
+			args: [ this._name]
+		};
+		return this.sendTransactionProposal(request)
+		.then(
+			function(results) {
+				var responses = results[0];
+				logger.debug('queryInfo - got responses=' + responses.length);
+				if(responses && Array.isArray(responses)) {
+					//will only be one response as we are only querying the primary peer
+					if(responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					let response = responses[0];
+					if(response instanceof Error ) {
+						return Promise.reject(response);
+					}
+					if(response.response) {
+						logger.debug('queryInfo - response status %d:', response.response.status);
+						var chain_info = _ledgerProto.BlockchainInfo.decode(response.response.payload);
+						return Promise.resolve(chain_info);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query chain info'));
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Query chain info. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			}
+		);
+	}
+
+	/**
+	 * Queries the ledger for Block by block hash.
+	 * This query will be made to the primary peer.
+	 * @param {[byte]} block hash of the Block.
+	 * @returns {object} Object containing the block.
+	 */
+	queryBlockByHash(blockHash) {
+		logger.debug('queryBlockByHash - start');
+		if(!blockHash) {
+			return Promise.reject( new Error('Blockhash bytes are required'));
+		}
+		var request = {
+			targets: [this.getPrimaryPeer()],
+			chaincodeId : 'qscc',
+			chainId: '',
+			txId: utils.buildTransactionID(),
+			nonce: utils.getNonce(),
+			fcn : 'GetBlockByHash',
+			args: [ this._name],
+			argbytes : blockHash
+		};
+		return this.sendTransactionProposal(request)
+		.then(
+			function(results) {
+				var responses = results[0];
+				logger.debug('queryBlockByHash - got response');
+				if(responses && Array.isArray(responses)) {
+					//will only be one response as we are only querying the primary peer
+					if(responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					let response = responses[0];
+					if(response instanceof Error ) {
+						return Promise.reject(response);
+					}
+					if(response.response) {
+						logger.debug('queryBlockByHash - response status %d:', response.response.status);
+						var block = _commonProto.Block.decode(response.response.payload);
+						logger.debug('queryBlockByHash - looking at block number:'+block.Header.Number);
+						return Promise.resolve(block);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query'));
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Query block. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			}
+		);
 	}
 
 	/**
 	 * Queries the ledger for Block by block number.
+	 * This query will be made to the primary peer.
 	 * @param {number} blockNumber The number which is the ID of the Block.
 	 * @returns {object} Object containing the block.
 	 */
 	queryBlock(blockNumber) {
-		//to do
+		logger.debug('queryBlock - start blockNumber %s',blockNumber);
+		var block_number = null;
+		if(Number.isInteger(blockNumber) && blockNumber >= 0) {
+			block_number = blockNumber.toString();
+		} else {
+			return Promise.reject( new Error('Block number must be a postive integer'));
+		}
+		var request = {
+			targets: [this.getPrimaryPeer()],
+			chaincodeId : 'qscc',
+			chainId: '',
+			txId: utils.buildTransactionID(),
+			nonce: utils.getNonce(),
+			fcn : 'GetBlockByNumber',
+			args: [ this._name, block_number]
+		};
+		return this.sendTransactionProposal(request)
+		.then(
+			function(results) {
+				var responses = results[0];
+				logger.debug('queryBlock - got response');
+				if(responses && Array.isArray(responses)) {
+					//will only be one response as we are only querying the primary peer
+					if(responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					let response = responses[0];
+					if(response instanceof Error ) {
+						return Promise.reject(response);
+					}
+					if(response.response) {
+						logger.debug('queryBlock - response status %d:', response.response.status);
+						var block = _commonProto.Block.decode(response.response.payload);
+						logger.debug('queryBlock - looking at block number:'+block.Header.Number);
+						return Promise.resolve(block);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query'));
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Query block. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			}
+		);
 	}
 
 	/**
 	 * Queries the ledger for Transaction by number.
+	 * This query will be made to the primary peer.
 	 * @param {number} transactionID
 	 * @returns {object} Transaction information containing the transaction.
 	 */
 	queryTransaction(transactionID) {
-		//to do
+		logger.debug('queryTransaction - start transactionID %s',transactionID);
+		var transaction_id = null;
+		if(transactionID) {
+			transaction_id = transactionID.toString();
+		} else {
+			return Promise.reject( new Error('Transaction id is required'));
+		}
+		var request = {
+			targets: [this.getPrimaryPeer()],
+			chaincodeId : 'qscc',
+			chainId: '',
+			txId: utils.buildTransactionID(),
+			nonce: utils.getNonce(),
+			fcn : 'GetTransactionByID',
+			args: [ this._name, transaction_id]
+		};
+		return this.sendTransactionProposal(request)
+		.then(
+			function(results) {
+				var responses = results[0];
+				logger.debug('queryTransaction - got response');
+				if(responses && Array.isArray(responses)) {
+					//will only be one response as we are only querying the primary peer
+					if(responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					let response = responses[0];
+					if(response instanceof Error ) {
+						return Promise.reject(response);
+					}
+					if(response.response) {
+						logger.debug('queryTransaction - response status %d:', response.response.status);
+						//logger.debug('queryTransaction - responses[i] -- %j:', responses[i]);
+						var envelope = _commonProto.Envelope.decode(response.response.payload);
+						//logger.debug('queryTransaction - envelope :: %j:', envelope);
+						var payload = _commonProto.Payload.decode(envelope.payload);
+						logger.debug('queryTransaction - transaction ID :: %s:', payload.header.chainHeader.txID);
+						return Promise.resolve(envelope);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query'));
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Transaction Query. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			}
+		);
 	}
 
 	/**
@@ -956,13 +1188,13 @@ var Chain = class {
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 */
 	sendTransactionProposal(request) {
-		logger.debug('Chain.sendTransactionProposal - start');
+		logger.debug('sendTransactionProposal - start');
 		var errorMsg = null;
 
 		// Verify that a Peer has been added
 		if (this.getPeers().length < 1) {
 			errorMsg = 'Missing peer objects in Transaction proposal chain';
-			logger.error('Chain.sendDeploymentProposal error '+ errorMsg);
+			logger.error('sendDeploymentProposal error '+ errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -974,20 +1206,27 @@ var Chain = class {
 		}
 
 		if(errorMsg) {
-			logger.error('Chain.sendTransactionProposal error '+ errorMsg);
+			logger.error('sendTransactionProposal error '+ errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
 		var args = [];
 		// leaving this for now... but this call is always an invoke and we are not telling caller to include 'fcn' any longer
 		args.push(Buffer.from(request.fcn ? request.fcn : 'invoke', 'utf8'));
-		logger.debug('Chain.sendTransactionProposal - adding function arg:%s', request.fcn ? request.fcn : 'invoke');
+		logger.debug('sendTransactionProposal - adding function arg:%s', request.fcn ? request.fcn : 'invoke');
 
 		for (let i=0; i<request.args.length; i++) {
+			logger.debug('sendTransactionProposal - adding arg:%s', request.args[i]);
 			args.push(Buffer.from(request.args[i], 'utf8'));
-			logger.debug('Chain.sendTransactionProposal - adding arg:%s', request.args[i]);
 		}
-
+		//special case to support the bytes argument of the query by hash
+		if(request.argbytes) {
+			logger.debug('sendTransactionProposal - adding the argument :: argbytes');
+			args.push(request.argbytes);
+		}
+		else {
+			logger.debug('sendTransactionProposal - not adding the argument :: argbytes');
+		}
 		let invokeSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			chaincodeID: {
@@ -1013,8 +1252,12 @@ var Chain = class {
 				header = buildHeader(userContext.getIdentity(), chainHeader, request.nonce);
 				proposal = self._buildProposal(invokeSpec, header);
 				let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
+				var targets = self.getPeers();
+				if(request.targets) {
+					targets = request.targets;
+				}
 
-				return Chain._sendPeersProposal(self.getPeers(), signed_proposal);
+				return Chain._sendPeersProposal(targets, signed_proposal);
 			}
 		).then(
 			function(responses) {
@@ -1274,9 +1517,10 @@ var Chain = class {
 		var errorMsg = null;
 
 		if(request) {
+			var isQuery = request.chaincodeId == 'qscc';
 			if(!request.chaincodeId) {
 				errorMsg = 'Missing "chaincodeId" parameter in the proposal request';
-			} else if(!request.chainId) {
+			} else if(!request.chainId && !isQuery) {
 				errorMsg = 'Missing "chainId" parameter in the proposal request';
 			} else if(!request.txId) {
 				errorMsg = 'Missing "txId" parameter in the proposal request';

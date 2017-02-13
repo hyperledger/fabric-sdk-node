@@ -191,7 +191,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 			promise = promise.then((data) => {
 				logger.info('Executing step2');
 
-				tx_id = utils.buildTransactionID({length:12});
+				tx_id = '5678'; //utils.buildTransactionID({length:12});
 				nonce = utils.getNonce();
 				// send proposal to endorser
 				var request = {
