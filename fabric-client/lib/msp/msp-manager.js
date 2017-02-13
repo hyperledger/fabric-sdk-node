@@ -29,11 +29,27 @@ var Signer = idModule.Signer;
 var mspProto = grpc.load(path.join(__dirname, '../protos/msp/mspconfig.proto')).msp;
 var identityProto = grpc.load(path.join(__dirname, '../protos/identity.proto')).msp;
 
+/**
+ * MSPManager is an interface defining a manager of one or more MSPs. This essentially acts
+ * as a mediator to MSP calls and routes MSP related calls to the appropriate MSP. This object
+ * is immutable, it is initialized once and never changed.
+ *
+ * @class
+ */
 var MSPManager = class {
 	constructor() {
 		this._msps = {};
 	}
 
+	/**
+	 * Instantiates MSPs for validating identities (like the endorsor in the ProposalResponse). The
+	 * MSPs loaded via this method require the CA certificate representing the Certificate
+	 * Authority that signed the identities to be validated. They also optionally contain the
+	 * certificates for the administrators of the organization that the CA certs represent.
+	 *
+	 * @param {protos/msp/mspconfig.proto} mspConfigs An array of MSPConfig objects as defined by the
+	 *   protobuf protos/msp/mspconfig.proto
+	 */
 	loadMSPs(mspConfigs) {
 		var self = this;
 		if (!mspConfigs || !Array.isArray(mspConfigs))
@@ -72,6 +88,9 @@ var MSPManager = class {
 		});
 	}
 
+	/**
+	 * Returns the validating MSPs. Note that this does NOT return the local MSP
+	 */
 	getMSPs() {
 		return this._msps;
 	}
