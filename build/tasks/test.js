@@ -42,5 +42,7 @@ gulp.task('test-headless', ['pre-test'], function() {
 	.pipe(tape({
 		reporter: tapColorize()
 	}))
-	.pipe(istanbul.writeReports());
+	.pipe(istanbul.writeReports({
+		reporters: ['cobertura']
+	}));
 });
