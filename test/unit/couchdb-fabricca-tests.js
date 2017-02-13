@@ -61,7 +61,7 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				if (client.getStateStore() === kvs) {
 					t.pass('Successfully set CouchDB KeyValueStore for client');
 				} else {
-					t.pass('CouchDB KeyValStore is not set successfully on this client!');
+					t.fail('CouchDB KeyValStore is not set successfully on this client!');
 					t.end();
 					process.exit(1);
 				}
