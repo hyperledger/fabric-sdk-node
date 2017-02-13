@@ -49,8 +49,8 @@ test('Attempt to use FabricCAServices',function(t){
 			var copService = new FabricCAServices('http://localhost:7054');
 			var member;
 			copService.enroll({
-				enrollmentID: 'notadmin',
-				enrollmentSecret: 'pass'
+				enrollmentID: 'admin',
+				enrollmentSecret: 'adminpw'
 			})
 			.then(
 				function(testUser) {

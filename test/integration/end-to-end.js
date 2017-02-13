@@ -18,6 +18,7 @@
 // in a happy-path scenario
 'use strict';
 
+process.env.HFC_LOGGING = '{"debug": "console"}';
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
@@ -32,7 +33,7 @@ var hfc = require('fabric-client');
 hfc.setLogger(logger);
 
 var util = require('util');
-var testUtil = require('./util.js');
+var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
@@ -42,6 +43,7 @@ var client = new hfc();
 var chain = client.newChain('testChain-e2e');
 
 var chaincode_id = 'end2end';
+var chaincode_version = 'v0';
 var chain_id = 'testchainid';
 var tx_id = null;
 var nonce = null;
@@ -56,7 +58,7 @@ if (process.argv.length > 2) {
 }
 var useSteps = false;
 if (steps.length > 0 &&
-	(steps.indexOf('step1') > -1 || steps.indexOf('step2') > -1 || steps.indexOf('step3') > -1))
+	(steps.indexOf('step1') > -1 || steps.indexOf('step2') > -1 || steps.indexOf('step3') > -1 || steps.indexOf('step4') > -1))
 	useSteps = true;
 logger.info('Found steps: %s', steps, 'useSteps: '+useSteps);
 
@@ -66,7 +68,8 @@ chain.addOrderer(new Orderer('grpc://localhost:7050'));
 chain.addPeer(peer0);
 chain.addPeer(peer1);
 
-test('End-to-end flow of chaincode deploy, transaction invocation, and query', (t) => {
+test('End-to-end flow of chaincode install, deploy, transaction invocation, and query', (t) => {
+
 	hfc.newDefaultKeyValueStore({
 		path: testUtil.KVS
 	}).then((store) => {
@@ -92,6 +95,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 
 		if (!useSteps || steps.indexOf('step1') >= 0) {
 			logger.info('Executing step1');
+
 			promise = promise.then((admin) => {
 				t.pass('Successfully enrolled user \'admin\'');
 				tx_id = utils.buildTransactionID({length:12});
@@ -101,6 +105,65 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 				var request = {
 					chaincodePath: testUtil.CHAINCODE_PATH,
 					chaincodeId: chaincode_id,
+					chaincodeVersion: chaincode_version,
+					txId: tx_id,
+					nonce: nonce
+				};
+
+				return chain.sendInstallProposal(request);
+
+			},
+			(err) => {
+				t.fail('Failed to enroll user \'admin\'. ' + err);
+				t.end();
+			}).then((results) => {
+				var proposalResponses = results[0];
+
+				var proposal = results[1];
+				var header   = results[2];
+				var all_good = true;
+				for(var i in proposalResponses) {
+					let one_good = false;
+					if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
+						one_good = true;
+						logger.info('install proposal was good');
+					} else {
+						logger.error('install proposal was bad');
+					}
+					all_good = all_good & one_good;
+				}
+				if (all_good) {
+					t.pass(util.format('Successfully sent install Proposal and received ProposalResponse: Status - %s', proposalResponses[0].response.status));
+				} else {
+					t.fail('Failed to send install Proposal or receive valid response. Response null or status is not 200. exiting...');
+					t.end();
+				}
+				return sleep(5000);
+			},
+			(err) => {
+				t.fail('Failed to send install proposal due to error: ' + err.stack ? err.stack : err);
+				t.end();
+			}).then((nothing) => {
+				t.pass('Successfully waited on timer');
+			},
+			(err) => {
+				t.fail('Failed to wait on timer: ' + err.stack ? err.stack : err);
+				t.end();
+			});
+		}
+
+		if (!useSteps || steps.indexOf('step2') >= 0) {
+			logger.info('Executing step2');
+			promise = promise.then((admin) => {
+				t.pass('Successfully enrolled user \'admin\'');
+				tx_id = utils.buildTransactionID({length:12});
+				nonce = utils.getNonce();
+
+				// send proposal to endorser
+				var request = {
+					chaincodePath: testUtil.CHAINCODE_PATH,
+					chaincodeId: chaincode_id,
+					chaincodeVersion: chaincode_version,
 					fcn: 'init',
 					args: ['a', '100', 'b', '200'],
 					chainId: chain_id,
@@ -109,6 +172,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 				};
 
 				return chain.sendDeploymentProposal(request);
+
 			},
 			(err) => {
 				t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -151,7 +215,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 
 							if (!useSteps) {
 								resolve();
-							} else if (steps.length === 1 && steps[0] === 'step1') {
+							} else if (steps.length === 1 && steps[0] === 'step2') {
 								t.end();
 								resolve();
 							}
@@ -162,7 +226,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 					return Promise.all([sendPromise, txPromise]).then((results) => {
 						return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 					}).catch((err) => {
-						t.fail('Failed to send deploy transaction and get notifications within the timeout period. ' + err.stack ? err.stack : err);
+						t.fail('Failed to send deploy transaction and get notifications within the timeout period. ');
 						t.end();
 					});
 				} else {
@@ -187,15 +251,17 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 			});
 		}
 
-		if (!useSteps || steps.indexOf('step2') >= 0) {
-			promise = promise.then((data) => {
-				logger.info('Executing step2');
 
-				tx_id = '5678'; //utils.buildTransactionID({length:12});
+		if (!useSteps || steps.indexOf('step3') >= 0) {
+			promise = promise.then((data) => {
+				logger.info('Executing step3');
+
+				tx_id = '5678'; //number to search for when running the query.js tests
 				nonce = utils.getNonce();
 				// send proposal to endorser
 				var request = {
 					chaincodeId : chaincode_id,
+					chaincodeVersion : chaincode_version,
 					fcn: 'invoke',
 					args: ['move', 'a', 'b','100'],
 					chainId: chain_id,
@@ -241,7 +307,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 
 							if (!useSteps) {
 								resolve();
-							} else if (steps.length === 1 && steps[0] === 'step2') {
+							} else if (steps.length === 1 && steps[0] === 'step3') {
 								t.end();
 								resolve();
 							}
@@ -253,7 +319,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 					return Promise.all([sendPromise, txPromise]).then((results) => {
 						return results[0];
 					}).catch((err) => {
-						t.fail('Failed to send invoke transaction and get notifications within the timeout period. ' + err.stack ? err.stack : err);
+						t.fail('Failed to send invoke transaction and get notifications within the timeout period. ');
 						t.end();
 					});
 				} else {
@@ -279,14 +345,15 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 			});
 		}
 
-		if (!useSteps || steps.indexOf('step3') >= 0) {
+		if (!useSteps || steps.indexOf('step4') >= 0) {
 			promise = promise.then((data) => {
-				logger.info('Executing step3');
+				logger.info('Executing step4');
 
 				// send query
 				var request = {
 					targets: [peer0, peer1],
 					chaincodeId : chaincode_id,
+					chaincodeVersion : chaincode_version,
 					chainId: chain_id,
 					txId: utils.buildTransactionID(),
 					nonce: utils.getNonce(),
@@ -314,3 +381,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', (
 		}
 	});
 });
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}

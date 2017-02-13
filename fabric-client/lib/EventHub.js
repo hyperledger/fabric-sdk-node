@@ -124,23 +124,23 @@ var EventHub = class {
 				eh.blockRegistrants.forEach(function(cb) {
 					cb(event.block);
 				});
-				event.block.Data.Data.forEach(function(transaction) {
+				event.block.data.data.forEach(function(transaction) {
 					try {
 						var env = _common.Envelope.decode(transaction);
 						var payload = _common.Payload.decode(env.payload);
-						if (payload.header.chainHeader.type == _common.HeaderType.ENDORSER_TRANSACTION) {
+						if (payload.header.channel_header.type == _common.HeaderType.ENDORSER_TRANSACTION) {
 							var tx = _transProto.Transaction.decode(payload.data);
 							var chaincodeActionPayload = _ccTransProto.ChaincodeActionPayload.decode(tx.actions[0].payload);
 							var propRespPayload = _responseProto.ProposalResponsePayload
-							.decode(chaincodeActionPayload.action.proposalResponsePayload);
+							.decode(chaincodeActionPayload.action.proposal_response_payload);
 							var caPayload = _ccProposalProto.ChaincodeAction.decode(propRespPayload.extension);
 							var ccEvent = _ccEventProto.ChaincodeEvent.decode(caPayload.events);
-							var cbtable = eh.chaincodeRegistrants.get(ccEvent.chaincodeID);
+							var cbtable = eh.chaincodeRegistrants.get(ccEvent.chaincode_id);
 							if (!cbtable) {
 								return;
 							}
 							cbtable.forEach(function(cbe) {
-								if (cbe.eventNameFilter.test(ccEvent.eventName)) {
+								if (cbe.eventNameFilter.test(ccEvent.event_name)) {
 									cbe.cb(ccEvent);
 								}
 							});
@@ -287,17 +287,17 @@ var EventHub = class {
 	txCallback(block) {
 		logger.debug('txCallback block=%j', block);
 		var eh = this;
-		block.Data.Data.forEach(function(transaction) {
+		block.data.data.forEach(function(transaction) {
 			try {
 				var env = _common.Envelope.decode(transaction);
 				var payload = _common.Payload.decode(env.payload);
 			} catch (err) {
 				logger.error('Error unmarshalling transaction from block=', err);
 			}
-			logger.debug('txid=' + payload.header.chainHeader.txID);
-			var cb = eh.txRegistrants.get(payload.header.chainHeader.txID);
+			logger.debug('txid=' + payload.header.channel_header.tx_id);
+			var cb = eh.txRegistrants.get(payload.header.channel_header.tx_id);
 			if (cb)
-				cb(transaction.txid);
+				cb(payload.header.channel_header.tx_id);
 		});
 	};
 };

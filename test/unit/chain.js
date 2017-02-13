@@ -478,14 +478,15 @@ test('\n\n** Chain packageChaincode tests **\n\n', function(t) {
 	t.end();
 });
 
-test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
+test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
 	var c = new Chain('does not matter', client);
 	var peer = new Peer('grpc://localhost:7051');
 	c.addPeer(peer);
 
-	var p1 = c.sendDeploymentProposal({
+	var p1 = c.sendInstallProposal({
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodeId: 'blah',
+		chaincodeVersion: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		chainId: 'blah',
@@ -494,10 +495,170 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
 	}).catch(function (err) {
-		if (err.message.indexOf('Missing chaincodePath parameter in Deployment proposal request') >= 0) {
+		if (err.message.indexOf('Missing "chaincodePath" parameter in the proposal request') >= 0) {
 			t.pass('Successfully caught missing chaincodePath error');
 		} else {
-			t.fail('Failed to catch the missing chaincodePath error. Error: ' + err.stack ? err.stack : err);
+			t.fail('Failed to catch the missing chaincodePath error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p1a = c.sendInstallProposal({
+		targets: [new Peer('grpc://localhost:7051')],
+		chaincodeId: 'blah',
+		chaincodePath: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		chainId: 'blah',
+		txId: 'blah',
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodeVersion" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "chaincodeVersion" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing chaincodeVersion error');
+		} else {
+			t.fail('Failed to catch the missing chaincodeVersion error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p3 = c.sendInstallProposal({
+		targets: [new Peer('grpc://localhost:7051')],
+		chaincodePath: 'blah',
+		chaincodeVersion: 'blah',
+		txId: 'blah',
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "chaincodeId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing chaincodeId error');
+		} else {
+			t.fail('Failed to catch the missing chaincodeId error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	c.removePeer(peer);
+	var p4 = c.sendInstallProposal({
+		chaincodePath: 'blah',
+		chaincodeId: 'blah',
+		chaincodeVersion: 'blah',
+		chainId: 'blah',
+		txId: 'blah',
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on chain');
+	}).catch(function (err) {
+		var msg = 'Missing peer objects in Install proposal chain';
+		if (err.message.indexOf(msg) >= 0) {
+			t.pass('Successfully caught error: '+msg);
+		} else {
+			t.fail('Failed to catch error: '+msg+'. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	c.addPeer(peer);
+	var p5 = c.sendInstallProposal({
+		targets: [new Peer('grpc://localhost:7051')],
+		chaincodePath: 'blah',
+		chaincodeId: 'blah',
+		chaincodeVersion: 'blah',
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "txId" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "txId" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing txId error');
+		} else {
+			t.fail('Failed to catch the missing txId error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	var p6 = c.sendInstallProposal({
+		targets: [new Peer('grpc://localhost:7051')],
+		chaincodePath: 'blah',
+		chaincodeId: 'blah',
+		chaincodeVersion: 'blah',
+		txId: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "nonce" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "nonce" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing nonce error');
+		} else {
+			t.fail('Failed to catch the missing nonce error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	var p7 = c.sendInstallProposal().then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
+			t.pass('Successfully caught missing request error');
+		} else {
+			t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	Promise.all([p1, p1a, p3, p4, p6, p7])
+		.then(
+		function (data) {
+			t.end();
+		}
+		).catch(
+		function (err) {
+			t.fail('Chain sendInstallProposal() tests, Promise.all: ');
+			console.log(err.stack ? err.stack : err);
+			t.end();
+		}
+		);
+
+	t.end();
+});
+
+test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
+	var c = new Chain('does not matter', client);
+	var peer = new Peer('grpc://localhost:7051');
+	c.addPeer(peer);
+
+	var p1 = c.sendDeploymentProposal({
+		targets: [new Peer('grpc://localhost:7051')],
+		chaincodeId: 'blah',
+		chaincodeVersion: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		chainId: 'blah',
+		txId: 'blah',
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "chaincodePath" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing chaincodePath error');
+		} else {
+			t.fail('Failed to catch the missing chaincodePath error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p1a = c.sendDeploymentProposal({
+		targets: [new Peer('grpc://localhost:7051')],
+		chaincodePath: 'blah',
+		chaincodeId: 'blah',
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		chainId: 'blah',
+		txId: 'blah',
+		nonce: 'blah'
+	}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodeVersion" parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing "chaincodeVersion" parameter in the proposal request') >= 0) {
+			t.pass('Successfully caught missing chaincodeVersion error');
+		} else {
+			t.fail('Failed to catch the missing chaincodeVersion error. Error: ');
+			console.log(err.stack ? err.stack : err);
 		}
 	});
 
@@ -505,6 +666,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
+		chaincodeVersion: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah',
@@ -522,6 +684,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 	var p3 = c.sendDeploymentProposal({
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
+		chaincodeVersion: 'blah',
 		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
@@ -541,6 +704,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 	var p4 = c.sendDeploymentProposal({
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
+		chaincodeVersion: 'blah',
 		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
@@ -562,6 +726,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
+		chaincodeVersion: 'blah',
 		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
@@ -580,6 +745,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
+		chaincodeVersion: 'blah',
 		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
@@ -604,7 +770,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1, p2, p3, p4, p6, p7])
+	Promise.all([p1, p1a, p2, p3, p4, p6, p7])
 		.then(
 		function (data) {
 			t.end();
@@ -873,7 +1039,8 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 		}
 		).catch(
 		function (err) {
-			t.fail('Client queryByChaincode() tests, Promise.all: '+err.stack ? err.stack : err);
+			t.fail('Client queryByChaincode() tests, Promise.all: ');
+			console.log(err.stack ? err.stack : err);
 			t.end();
 		}
 		);

@@ -229,6 +229,17 @@ var Chain = class {
 		return this._peers;
 	}
 
+	// utility function to ensure that a peer exists on this chain
+	isValidPeer(peer) {
+		var url = peer.getUrl();
+		for (let i = 0; i < this._peers.length; i++) {
+			if (this._peers[i].getUrl() === url) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Set the primary peer
 	 * The peer to use for doing queries.
@@ -492,8 +503,8 @@ var Chain = class {
 
 				logger.debug('initializeChain - building broadcast message');
 				// build fields to use when building the configuration items
-				var configItemChainHeader =	buildChainHeader(
-					_commonProto.HeaderType.CONFIGURATION_ITEM,
+				var configItemChainHeader =	buildChannelHeader(
+					_commonProto.HeaderType.CONFIG,
 					chain_id,
 					self._initial_transaction_id,
 					self._initial_epoch
@@ -646,8 +657,8 @@ var Chain = class {
 				logger.debug('initializeChain - all items built');
 
 				//bundle all the items
-				var configurationEnvelope = new _configtxProto.ConfigurationEnvelope();
-				configurationEnvelope.setItems([
+				var configEnvelope = new _configtxProto.ConfigEnvelope();
+				configEnvelope.setItems([
 					createPolicyItem,
 					consensusTypeItem,
 					batchSizeItem,
@@ -658,12 +669,12 @@ var Chain = class {
 					defaultModificationPolicyItem,
 					mspConfigItem
 				]);
-				configurationEnvelope.setHeader(configItemChainHeader);
+				configEnvelope.setHeader(configItemChainHeader);
 
 				// build a chain header for later to be
 				// used in the atomic broadcast
-				var newChainHeader = buildChainHeader(
-					_commonProto.HeaderType.CONFIGURATION_TRANSACTION,
+				var newChainHeader = buildChannelHeader(
+					_commonProto.HeaderType.CONFIG_UPDATE,
 					chain_id,
 					self._initial_transaction_id,
 					self._initial_epoch
@@ -671,7 +682,7 @@ var Chain = class {
 				var broadcastHeader = buildHeader(userContext.getIdentity(), newChainHeader, utils.getNonce());
 				var payload = new _commonProto.Payload();
 				payload.setHeader(broadcastHeader);
-				payload.setData(configurationEnvelope.toBuffer());
+				payload.setData(configEnvelope.toBuffer());
 				var payload_bytes = payload.toBuffer();
 				//logger.debug('initializeChain - Here is the envelope to broadcast :: '+ JSON.stringify(payload));
 				let sig = userContext.getSigningIdentity().sign(payload_bytes);
@@ -755,7 +766,7 @@ var Chain = class {
 				//logger.debug('initializeChain - seekInfo ::' + JSON.stringify(seekInfo));
 
 				// build the header for use with the seekInfo payload
-				var seekInfoHeader = buildChainHeader(
+				var seekInfoHeader = buildChannelHeader(
 					_commonProto.HeaderType.DELIVER_SEEK_INFO,
 					self._name,
 					self._initial_transaction_id,
@@ -803,18 +814,18 @@ var Chain = class {
 
 				var chaincodeSpec = new _ccProto.ChaincodeSpec();
 				chaincodeSpec.setType(_ccProto.ChaincodeSpec.Type.GOLANG);
-				chaincodeSpec.setChaincodeID(chaincodeID);
+				chaincodeSpec.setChaincodeId(chaincodeID);
 				chaincodeSpec.setInput(chaincodeInput);
 
-				var chainHeader = buildChainHeader(
-					_commonProto.HeaderType.CONFIGURATION_TRANSACTION,
+				var channelHeader = buildChannelHeader(
+					_commonProto.HeaderType.CONFIG_UPDATE,
 					'',
 					self._initial_transaction_id,
 					null, //no epoch
 					'cscc'
 					);
 
-				var header = buildHeader(userContext.getIdentity(), chainHeader, utils.getNonce());
+				var header = buildHeader(userContext.getIdentity(), channelHeader, utils.getNonce());
 				var proposal = self._buildProposal(chaincodeSpec, header);
 				var signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
 
@@ -904,7 +915,7 @@ var Chain = class {
 	/**
 	 * Queries the ledger for Block by block hash.
 	 * This query will be made to the primary peer.
-	 * @param {[byte]} block hash of the Block.
+	 * @param {byte[]} block hash of the Block.
 	 * @returns {object} Object containing the block.
 	 */
 	queryBlockByHash(blockHash) {
@@ -1071,35 +1082,58 @@ var Chain = class {
 	}
 
 	/**
-	 * Sends a deployment proposal to one or more endorsing peers.
+	 * Sends an install proposal to one or more endorsing peers.
 	 *
 	 * @param {Object} request - An object containing the following fields:
 	 *		<br>`chaincodePath` : required - String of the path to location of
 	 *                            the source code of the chaincode
 	 *		<br>`chaincodeId` : required - String of the name of the chaincode
-	 *		<br>`chainId` : required - String of the name of the chain
+	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
 	 *		<br>`txId` : required - String of the transaction id
 	 *		<br>`nonce` : required - Integer of the once time number
-	 *		<br>`fcn` : optional - String of the function to be called on
-	 *                  the chaincode once deployed (default 'init')
-	 *		<br>`args` : optional - String Array arguments specific to
-	 *                   the chaincode being deployed
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 * @see /protos/peer/fabric_proposal_response.proto
 	 */
-	sendDeploymentProposal(request) {
+	sendInstallProposal(request) {
+		logger.debug('Chain.sendInstallProposal begin');
+
 		var errorMsg = null;
 
+		var peers = null;
+		if (request) {
+			let peers = request.targets;
+			if (peers && peers.length > 0) {
+				for (let p = 0; p < peers.length; p++) {
+					if (!this.isValidPeer(peers[p])) {
+						errorMsg = 'Request targets peer object '+ peers[p] +' not in chain';
+						logger.error('Chain.sendInstallProposal error '+ errorMsg);
+						return Promise.reject(new Error(errorMsg));
+					}
+				}
+			}
+		}
+		if (!peers || peers.length < 1) {
+			peers = this.getPeers();
+		}
 		// Verify that a Peer has been added
-		if (this.getPeers().length < 1) {
-			errorMsg = 'Missing peer objects in Deployment proposal chain';
-			logger.error('Chain.sendDeploymentProposal error '+ errorMsg);
+		if (peers.length < 1) {
+			errorMsg = 'Missing peer objects in Install proposal chain or request';
+			logger.error('Chain.sendInstallProposal error '+ errorMsg);
 			return Promise.reject(new Error(errorMsg));
+		}
+		// modify the request so the following checks will be OK
+		if(request) {
+			request.chainId = 'dummy';
 		}
 
 		errorMsg = Chain._checkProposalRequest(request);
 		if (errorMsg) {
-			logger.error('Chain.sendDeploymentProposal error ' + errorMsg);
+			logger.error('Chain.sendInstallProposal error ' + errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+		errorMsg = Chain._checkInstallDeployRequest(request);
+		if (errorMsg) {
+			logger.error('Chain.sendInstallProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -1118,9 +1152,10 @@ var Chain = class {
 
 		let ccSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
-			chaincodeID: {
+			chaincode_id: {
 				name: request.chaincodeId,
-				path: request.chaincodePath
+				path: request.chaincodePath,
+				version: request.chaincodeVersion
 			},
 			input: {
 				args: args
@@ -1143,11 +1178,11 @@ var Chain = class {
 					// TODO add ESCC/VSCC info here ??????
 					let lcccSpec = {
 						type: _ccProto.ChaincodeSpec.Type.GOLANG,
-						chaincodeID: {
+						chaincode_id: {
 							name: 'lccc'
 						},
 						input: {
-							args: [Buffer.from('deploy', 'utf8'), Buffer.from('default', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
+							args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
 						}
 					};
 
@@ -1155,18 +1190,18 @@ var Chain = class {
 					return self._clientContext.getUserContext()
 						.then(
 							function(userContext) {
-								var chainHeader = buildChainHeader(
+								var channelHeader = buildChannelHeader(
 									_commonProto.HeaderType.ENDORSER_TRANSACTION,
-									request.chainId,
+									'', //install does not target a channel
 									request.txId,
 									null,
 									'lccc'
 								);
-								header = buildHeader(userContext.getIdentity(), chainHeader, request.nonce);
+								header = buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
 								proposal = self._buildProposal(lcccSpec, header);
 								let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
 
-								return Chain._sendPeersProposal(self.getPeers(), signed_proposal);
+								return Chain._sendPeersProposal(peers, signed_proposal);
 							}
 						).then(
 							function(responses) {
@@ -1176,6 +1211,125 @@ var Chain = class {
 				}
 			);
 	}
+
+	/**
+	 * Sends a deployment / initialize proposal to one or more endorsing peers.
+	 *
+	 * @param {Object} request - An object containing the following fields:
+	 *		<br>`chaincodePath` : required - String of the path to location of
+	 *                            the source code of the chaincode
+	 *		<br>`chaincodeId` : required - String of the name of the chaincode
+	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
+	 *		<br>`chainId` : required - String of the name of the chain
+	 *		<br>`txId` : required - String of the transaction id
+	 *		<br>`nonce` : required - Integer of the once time number
+	 *		<br>`fcn` : optional - String of the function to be called on
+	 *                  the chaincode once deployed (default 'init')
+	 *		<br>`args` : optional - String Array arguments specific to
+	 *                   the chaincode being deployed
+	 * @returns {Promise} A Promise for a `ProposalResponse`
+	 * @see /protos/peer/fabric_proposal_response.proto
+	 */
+	sendDeploymentProposal(request) {
+		var errorMsg = null;
+
+		var peers = null;
+		if (request) {
+			let peers = request.targets;
+			if (peers && peers.length > 0) {
+				for (let p = 0; p < peers.length; p++) {
+					if (!this.isValidPeer(peers[p])) {
+						errorMsg = 'Request targets peer object '+ peers[p] +' not in chain';
+						logger.error('Chain.sendDeploymentProposal error '+ errorMsg);
+						return Promise.reject(new Error(errorMsg));
+					}
+				}
+			}
+		}
+		if (!peers || peers.length < 1) {
+			peers = this.getPeers();
+		}
+		// Verify that a Peer has been added
+		if (peers.length < 1) {
+			errorMsg = 'Missing peer objects in Deployment proposal chain';
+			logger.error('Chain.sendDeploymentProposal error '+ errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+
+		errorMsg = Chain._checkProposalRequest(request);
+		if (errorMsg) {
+			logger.error('Chain.sendDeploymentProposal error ' + errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+		errorMsg = Chain._checkInstallDeployRequest(request);
+		if (errorMsg) {
+			logger.error('Chain.sendDeploymentProposal error ' + errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+
+		// args is optional because some chaincode may not need any input parameters during initialization
+		if (!request.args) {
+			request.args = [];
+		}
+		let self = this;
+
+		// step 1: construct a ChaincodeSpec
+		var args = [];
+		args.push(Buffer.from(request.fcn ? request.fcn : 'init', 'utf8'));
+
+		for (let i = 0; i < request.args.length; i++)
+			args.push(Buffer.from(request.args[i], 'utf8'));
+
+		let ccSpec = {
+			type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			chaincode_id: {
+				name: request.chaincodeId,
+				path: request.chaincodePath,
+				version: request.chaincodeVersion
+			},
+			input: {
+				args: args
+			}
+		};
+
+		// step 2: construct the ChaincodeDeploymentSpec
+		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
+
+		let lcccSpec = {
+			type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			chaincode_id: {
+				name: 'lccc'
+			},
+			input: {
+				args: [Buffer.from('deploy', 'utf8'), Buffer.from('default', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
+			}
+		};
+
+		var header, proposal;
+		return self._clientContext.getUserContext()
+			.then(
+				function(userContext) {
+					var channelHeader = buildChannelHeader(
+						_commonProto.HeaderType.ENDORSER_TRANSACTION,
+						request.chainId,
+						request.txId,
+						null,
+						'lccc'
+					);
+					header = buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
+					proposal = self._buildProposal(lcccSpec, header);
+					let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
+
+					return Chain._sendPeersProposal(peers, signed_proposal);
+				}
+			).then(
+				function(responses) {
+					return [responses, proposal, header];
+				}
+			);
+	}
+
 	/**
 	 * Sends a transaction proposal to one or more endorsing peers.
 	 *
@@ -1194,7 +1348,7 @@ var Chain = class {
 		// Verify that a Peer has been added
 		if (this.getPeers().length < 1) {
 			errorMsg = 'Missing peer objects in Transaction proposal chain';
-			logger.error('sendDeploymentProposal error '+ errorMsg);
+			logger.error('Chain.sendTransactionProposal error '+ errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -1229,8 +1383,9 @@ var Chain = class {
 		}
 		let invokeSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
-			chaincodeID: {
-				name: request.chaincodeId
+			chaincode_id: {
+				name: request.chaincodeId,
+				version: request.chaincodeVersion
 			},
 			input: {
 				args: args
@@ -1242,14 +1397,14 @@ var Chain = class {
 		return this._clientContext.getUserContext()
 		.then(
 			function(userContext) {
-				var chainHeader = buildChainHeader(
+				var channelHeader = buildChannelHeader(
 					_commonProto.HeaderType.ENDORSER_TRANSACTION,
 					request.chainId,
 					request.txId,
 					null,
 					request.chaincodeId
 					);
-				header = buildHeader(userContext.getIdentity(), chainHeader, request.nonce);
+				header = buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
 				proposal = self._buildProposal(invokeSpec, header);
 				let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
 				var targets = self.getPeers();
@@ -1287,7 +1442,7 @@ var Chain = class {
 	 * @see the ./proto/atomicbroadcast/ab.proto
 	 */
 	sendTransaction(request) {
-		logger.debug('Chain.sendTransaction - start :: chain '+this._chain);
+		logger.debug('sendTransaction - start :: chain %s',this);
 		var errorMsg = null;
 
 		if (request) {
@@ -1306,7 +1461,7 @@ var Chain = class {
 		}
 
 		if(errorMsg) {
-			logger.error('Chain.sendTransaction error '+ errorMsg);
+			logger.error('sendTransaction error '+ errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -1316,7 +1471,7 @@ var Chain = class {
 
 		// verify that we have an orderer configured
 		if(!this.getOrderers()) {
-			logger.error('Chain.sendTransaction - no orderers defined');
+			logger.error('sendTransaction - no orderers defined');
 			return Promise.reject(new Error('no Orderer defined'));
 		}
 
@@ -1342,9 +1497,11 @@ var Chain = class {
 		var chaincodeActionPayload = new _transProto.ChaincodeActionPayload();
 		chaincodeActionPayload.setAction(chaincodeEndorsedAction);
 		var chaincodeProposalPayloadNoTrans = _proposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
-		chaincodeProposalPayloadNoTrans.transient = null;
-		var payload_hash = this.cryptoPrimitives.hash(chaincodeProposalPayloadNoTrans.toBuffer());
-		chaincodeActionPayload.setChaincodeProposalPayload(Buffer.from(payload_hash, 'hex'));
+		//chaincodeProposalPayloadNoTrans.setTransient(null);
+//		var payload_hash = this.cryptoPrimitives.hash(chaincodeProposalPayloadNoTrans.toBuffer());
+//		chaincodeActionPayload.setChaincodeProposalPayload(Buffer.from(payload_hash, 'hex')); //when we want to enforce visibilty
+		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposalPayloadNoTrans.toBuffer());
+//		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposal.getPayload()); //TODO  we should do this but it does not work
 
 		var transactionAction = new _transProto.TransactionAction();
 		transactionAction.setHeader(header.getSignatureHeader().toBuffer());
@@ -1505,7 +1662,7 @@ var Chain = class {
 		// build manually for now
 		let signedProposal = {
 			signature :  signature,
-			proposalBytes : proposal_bytes
+			proposal_bytes : proposal_bytes
 		};
 		return signedProposal;
 	}
@@ -1526,6 +1683,24 @@ var Chain = class {
 				errorMsg = 'Missing "txId" parameter in the proposal request';
 			} else if(!request.nonce) {
 				errorMsg = 'Missing "nonce" parameter in the proposal request';
+			}
+		} else {
+			errorMsg = 'Missing input request object on the proposal request';
+		}
+		return errorMsg;
+	}
+
+	/*
+	 * @private
+	 */
+	static _checkInstallDeployRequest(request) {
+		var errorMsg = null;
+
+		if (request) {
+			if(!request.chaincodePath) {
+				errorMsg = 'Missing "chaincodePath" parameter in the proposal request';
+			}  else if(!request.chaincodeVersion) {
+				errorMsg = 'Missing "chaincodeVersion" parameter in the proposal request';
 			}
 		} else {
 			errorMsg = 'Missing input request object on the proposal request';
@@ -1626,39 +1801,39 @@ function packageChaincode(devmode, request) {
 }
 
 //utility method to build a common chain header
-function buildChainHeader(type, chain_id, tx_id, epoch, chaincode_id) {
-	logger.debug('buildChainHeader - type %s chain_id %s tx_id %d epoch % chaincode_id %s',
+function buildChannelHeader(type, chain_id, tx_id, epoch, chaincode_id) {
+	logger.debug('buildChannelHeader - type %s chain_id %s tx_id %d epoch % chaincode_id %s',
 			type, chain_id, tx_id, epoch, chaincode_id);
-	var chainHeader = new _commonProto.ChainHeader();
-	chainHeader.setType(type); // int32
-	chainHeader.setVersion(1); // int32
-	//chainHeader.setTimeStamp(time_stamp); // google.protobuf.Timestamp
-	chainHeader.setChainID(chain_id); //string
-	chainHeader.setTxID(tx_id.toString()); //string
+	var channelHeader = new _commonProto.ChannelHeader();
+	channelHeader.setType(type); // int32
+	channelHeader.setVersion(1); // int32
+	//channelHeader.setTimeStamp(time_stamp); // google.protobuf.Timestamp
+	channelHeader.setChannelId(chain_id); //string
+	channelHeader.setTxId(tx_id.toString()); //string
 	if(epoch) {
-		chainHeader.setEpoch(epoch); // uint64
+		channelHeader.setEpoch(epoch); // uint64
 	}
 	if(chaincode_id) {
 		let chaincodeID = new _ccProto.ChaincodeID();
 		chaincodeID.setName(chaincode_id);
 
 		let headerExt = new _proposalProto.ChaincodeHeaderExtension();
-		headerExt.setChaincodeID(chaincodeID);
+		headerExt.setChaincodeId(chaincodeID);
 
-		chainHeader.setExtension(headerExt.toBuffer());
+		channelHeader.setExtension(headerExt.toBuffer());
 	}
-	return chainHeader;
+	return channelHeader;
 };
 
 // utility method to build the header
-function buildHeader(creator, chainHeader, nonce) {
+function buildHeader(creator, channelHeader, nonce) {
 	let signatureHeader = new _commonProto.SignatureHeader();
 	signatureHeader.setCreator(creator.serialize());
 	signatureHeader.setNonce(nonce);
 
 	let header = new _commonProto.Header();
 	header.setSignatureHeader(signatureHeader);
-	header.setChainHeader(chainHeader);
+	header.setChannelHeader(channelHeader);
 
 	return header;
 }
@@ -1678,7 +1853,7 @@ function buildSignedConfigurationItem(
 	configurationItem.setKey(key); // string
 	configurationItem.setValue(value); // bytes
 
-	var signedConfigurationItem = new _configtxProto.SignedConfigurationItem();
+	var signedConfigurationItem = new _configtxProto.SignedConfigurationItem();//to do - this proto has changed drastically
 	signedConfigurationItem.setConfigurationItem(configurationItem.toBuffer());
 	if(signatures) {
 		signedConfigurationItem.setSignatures(signatures);
