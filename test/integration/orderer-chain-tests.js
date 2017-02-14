@@ -21,7 +21,7 @@ var test = _test(tape);
 var hfc = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
-var testUtil = require('./util.js');
+var testUtil = require('../unit/util.js');
 
 var Orderer = require('fabric-client/lib/Orderer.js');
 var Chain = require('fabric-client/lib/Chain.js');
@@ -29,97 +29,6 @@ var Chain = require('fabric-client/lib/Chain.js');
 var keyValStorePath = testUtil.KVS;
 
 var client = new hfc();
-
-//
-// Orderer via chain setOrderer/getOrderer
-//
-// Set the orderer URL through the chain setOrderer method. Verify that the
-// orderer URL was set correctly through the getOrderer method. Repeat the
-// process by updating the orderer URL to a different address.
-//
-test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
-	//
-	// Create and configure the test chain
-	//
-	hfc.newDefaultKeyValueStore({
-		path: testUtil.KVS
-	})
-	.then ( function (store) {
-		client.setStateStore(store);
-
-		var chain = client.newChain('testChain-orderer-member');
-		try {
-			var orderer = new Orderer('grpc://localhost:7050');
-			chain.addOrderer(orderer);
-			t.pass('Successfully set the new orderer URL');
-
-			var orderers = chain.getOrderers();
-			if(orderers !== null && orderers.length > 0 && orderers[0].getUrl() === 'grpc://localhost:7050') {
-				t.pass('Successfully retrieved the new orderer URL from the chain');
-			}
-			else {
-				t.fail('Failed to retieve the new orderer URL from the chain');
-				t.end();
-			}
-
-			try {
-				var orderer2 = new Orderer('grpc://localhost:5152');
-				chain.addOrderer(orderer2);
-				t.pass('Successfully updated the orderer URL');
-
-				var orderers = chain.getOrderers();
-				if(orderers !== null && orderers.length > 0 && orderers[1].getUrl() === 'grpc://localhost:5152') {
-					t.pass('Successfully retrieved the upated orderer URL from the chain');
-					t.end();
-				}
-				else {
-					t.fail('Failed to retieve the updated orderer URL from the chain');
-					t.end();
-				}
-			}
-			catch(err2) {
-				t.fail('Failed to update the order URL ' + err2);
-				t.end();
-			}
-		}
-		catch(err) {
-			t.fail('Failed to set the new order URL ' + err);
-			t.end();
-		}
-	});
-});
-
-//
-// Orderer via chain set/get bad address
-//
-// Set the orderer URL to a bad address through the chain setOrderer method.
-// Verify that an error is reported when trying to set a bad address.
-//
-test('\n\n** TEST ** orderer via chain set/get bad address', function(t) {
-	//
-	// Create and configure the test chain
-	//
-	var chain = client.newChain('testChain-orderer-member1');
-
-	t.throws(
-		function() {
-			var order_address = 'xxx';
-			chain.addOrderer(new Orderer(order_address));
-		},
-		/InvalidProtocol: Invalid protocol: undefined/,
-		'Test setting a bad orderer address'
-	);
-
-	t.throws(
-		function() {
-			chain.addOrderer(new Orderer());
-		},
-		/TypeError: Parameter "url" must be a string, not undefined/,
-		'Test setting an empty orderer address'
-	);
-
-	t.end();
-});
 
 //
 // Orderer via member missing orderer

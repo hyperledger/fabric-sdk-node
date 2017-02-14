@@ -15,7 +15,7 @@
  */
 
 var path = require('path');
-var fs = require('fs');
+var fs = require('fs-extra');
 var os = require('os');
 
 var jsrsa = require('jsrsasign');
@@ -36,6 +36,36 @@ module.exports.KVS = '/tmp/hfc-test-kvs';
 // temporarily set $GOPATH to the test fixture folder
 module.exports.setupChaincodeDeploy = function() {
 	process.env.GOPATH = path.join(__dirname, '../fixtures');
+};
+
+// specifically set the values to defaults because they may have been overridden when
+// running in the overall test bucket ('gulp test')
+module.exports.resetDefaults = function() {
+	global.hfc.config = undefined;
+};
+
+module.exports.cleanupDir = function(keyValStorePath) {
+	var absPath = path.join(process.cwd(), keyValStorePath);
+	var exists = module.exports.existsSync(absPath);
+	if (exists) {
+		fs.removeSync(absPath);
+	}
+};
+
+
+// utility function to check if directory or file exists
+// uses entire / absolute path from root
+module.exports.existsSync = function(absolutePath /*string*/) {
+	try  {
+		var stat = fs.statSync(absolutePath);
+		if (stat.isDirectory() || stat.isFile()) {
+			return true;
+		} else
+			return false;
+	}
+	catch (e) {
+		return false;
+	}
 };
 
 module.exports.readFile = readFile;

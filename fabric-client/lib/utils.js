@@ -427,21 +427,6 @@ module.exports.toArrayBuffer = function(buffer) {
 	return ab;
 };
 
-// utility function to check if directory or file exists
-// uses entire / absolute path from root
-module.exports.existsSync = function(absolutePath /*string*/) {
-	try  {
-		var stat = fs.statSync(absolutePath);
-		if (stat.isDirectory() || stat.isFile()) {
-			return true;
-		} else
-			return false;
-	}
-	catch (e) {
-		return false;
-	}
-};
-
 // utility function to build an unique transaction id
 // The request object may contain values that could be
 // used to help generate the result value

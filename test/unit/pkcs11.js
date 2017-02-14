@@ -18,7 +18,8 @@
 // https://wiki.opendnssec.org/display/SoftHSMDOCS/SoftHSM+Documentation+v2
 // After installing the library, you need to initialize at least one token
 // which will be used below. For the 'pin' property in the configuration
-// object below, use the 'user PIN' value (not SO PIN)
+// object below, use the 'user PIN' value (not SO PIN) and please set it to
+// '1234' so the code below can run successfully
 
 'use strict';
 
@@ -42,13 +43,10 @@ default:
 	libpath = '/usr/lib/libacsp-pkcs11.so'; //LinuxOne
 }
 
-// use this specific way to test application overriding the default with a config file
-utils.addConfigFile(path.join(__dirname, '../fixtures/config/overrides.json'));
-
 var cryptoUtils;
 
 test('\n\n**PKCS11 - generate an ephemeral key\n\n', (t) => {
-	t.equal(utils.getConfigSetting('crypto-hsm'), true, 'Verify that the HSM based key management module has been enabled');
+	utils.setConfigSetting('crypto-hsm', true);
 
 	cryptoUtils = utils.getCryptoSuite({
 		lib: libpath,
