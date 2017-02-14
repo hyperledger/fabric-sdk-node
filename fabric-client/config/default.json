@@ -10,6 +10,6 @@
 	"crypto-suite-hsm": {
 		"EC": "./impl/bccsp_pkcs11.js"
 	},
-	"key-value-store": "./impl/FileKeyValueStore.js",
+	"key-value-store": "fabric-client/lib/impl/FileKeyValueStore.js",
 	"nonce-size" : 24
 }

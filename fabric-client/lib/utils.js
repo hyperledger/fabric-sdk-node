@@ -94,7 +94,7 @@ module.exports.newKeyValueStore = function(options) {
 	// initialize the correct KeyValueStore
 	var self = this;
 	return new Promise(function(resolve, reject) {
-		var kvsEnv = self.getConfigSetting('key-value-store','./impl/FileKeyValueStore.js');
+		var kvsEnv = self.getConfigSetting('key-value-store');
 		var store = require(kvsEnv);
 		return resolve(new store(options));
 	});

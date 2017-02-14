@@ -9,5 +9,6 @@
 	},
 	"crypto-suite-hsm": {
 		"EC": "./impl/bccsp_pkcs11.js"
-	}
+	},
+	"key-value-store": "fabric-ca-client/lib/impl/FileKeyValueStore.js"
 }

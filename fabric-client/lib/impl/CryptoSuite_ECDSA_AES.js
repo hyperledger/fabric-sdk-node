@@ -229,7 +229,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 				var storePath = self._storePath ? self._storePath : CryptoSuite_ECDSA_AES.getDefaultKeyStorePath();
 				logger.info('This class requires a CryptoKeyStore to save keys, using the store at %s', self._storePath);
 
-				new CKS({
+				CKS({
 					path: storePath
 				})
 				.then((ks) => {

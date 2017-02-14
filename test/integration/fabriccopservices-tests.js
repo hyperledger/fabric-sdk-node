@@ -35,31 +35,6 @@ var keyValStorePath = testUtil.KVS;
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 var FabricCAClient = FabricCAServices.FabricCAClient;
 
-/**
- * FabricCAClient enroll tests
- */
-test('FabricCAClient: Test enroll with missing parameters', function (t) {
-
-	var client = new FabricCAClient({
-		protocol: 'http',
-		hostname: '127.0.0.1',
-		port: 7054
-	});
-
-	//
-	return client.enroll()
-		.then(function (csr) {
-			t.fail('Enrollment must fail when missing required parameters');
-		})
-		.catch(function (err) {
-			if (err.message.startsWith('Missing required parameters')) {
-				t.pass('Enrollment should fail when missing required parameters');
-			} else {
-				t.fail('Enrollment should have failed with \'Missing required parameters\'');
-			}
-		});
-});
-
 var enrollmentID = 'testUser';
 var enrollmentSecret = 'user1';
 var csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabriccop/enroll-csr.pem'));
@@ -125,30 +100,6 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		}
 		);
 
-});
-
-/**
- * FabricCAClient register tests
- */
-test('FabricCAClient: Test register with missing parameters', function (t) {
-
-	var client = new FabricCAClient({
-		protocol: 'http',
-		hostname: '127.0.0.1',
-		port: 7054
-	});
-
-	return client.register()
-		.then(function (token) {
-			t.fail('Register must fail when missing required parameters');
-		})
-		.catch(function (err) {
-			if (err.message.startsWith('Missing required parameters')) {
-				t.pass('Register should fail when missing required parameters');
-			} else {
-				t.fail('Register should have failed with \'Missing required parameters\'');
-			}
-		});
 });
 
 test('FabricCAClient: Test register', function (t) {

@@ -55,7 +55,7 @@ var TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
 	t.throws(
 		() => {
-			new CKS();
+			CKS();
 		},
 		/Must provide the path to the directory to hold files for the store/,
 		'Test invalid constructor calls: missing options parameter'
@@ -63,7 +63,7 @@ test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
 
 	t.throws(
 		() => {
-			new CKS({something: 'useless'});
+			CKS({something: 'useless'});
 		},
 		/Must provide the path to the directory to hold files for the store/,
 		'Test invalid constructor calls: missing "path" property in the "options" parameter'
@@ -75,7 +75,7 @@ test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
 	var testPubKey = new ecdsaKey(f2);
 
 	var store;
-	var _cks = new CKS({path: '/tmp/hfc-cks'})
+	CKS({path: '/tmp/hfc-cks'})
 	.then((st) => {
 		store = st;
 		return store.putKey(testPrivKey);

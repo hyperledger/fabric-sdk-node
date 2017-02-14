@@ -208,3 +208,52 @@ test('FabricCAServices: Test _parseURL() function', function (t) {
 		'Throw error for missing protocol'
 	);
 });
+
+/**
+ * FabricCAClient enroll tests
+ */
+test('FabricCAClient: Test enroll with missing parameters', function (t) {
+
+	var client = new FabricCAClient({
+		protocol: 'http',
+		hostname: '127.0.0.1',
+		port: 7054
+	});
+
+	//
+	return client.enroll()
+		.then(function (csr) {
+			t.fail('Enrollment must fail when missing required parameters');
+		})
+		.catch(function (err) {
+			if (err.message.startsWith('Missing required parameters')) {
+				t.pass('Enrollment should fail when missing required parameters');
+			} else {
+				t.fail('Enrollment should have failed with \'Missing required parameters\'');
+			}
+		});
+});
+
+/**
+ * FabricCAClient register tests
+ */
+test('FabricCAClient: Test register with missing parameters', function (t) {
+
+	var client = new FabricCAClient({
+		protocol: 'http',
+		hostname: '127.0.0.1',
+		port: 7054
+	});
+
+	return client.register()
+		.then(function (token) {
+			t.fail('Register must fail when missing required parameters');
+		})
+		.catch(function (err) {
+			if (err.message.startsWith('Missing required parameters')) {
+				t.pass('Register should fail when missing required parameters');
+			} else {
+				t.fail('Register should have failed with \'Missing required parameters\'');
+			}
+		});
+});

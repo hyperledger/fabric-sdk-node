@@ -19,13 +19,18 @@
 var jsrsasign = require('jsrsasign');
 var KEYUTIL = jsrsasign.KEYUTIL;
 
-var FKVS = require('./FileKeyValueStore.js');
+var api = require('../api.js');
 var utils = require('../utils');
 var ECDSAKey = require('./ecdsa/key.js');
 
 var logger = utils.getLogger('CryptoKeyStore.js');
 
-var CryptoKeyStore = class extends FKVS {
+/*
+ * The mixin enforces the special indexing mechanism with private and public
+ * keys on top of a standard implementation of the KeyValueStore interface
+ * with the getKey() and putKey() methods
+ */
+var CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
 	constructor(options) {
 		return super(options);
 	}
@@ -65,6 +70,29 @@ var CryptoKeyStore = class extends FKVS {
 			return key;
 		});
 	}
+};
+
+/*
+ * The main API for this module. Returns an instance of the CryptoKeyStore that uses the
+ * api.KeyValueStore implementation class 'KVSImplClass' under the cover to persist keys.
+ * 'opts' is specific to the implementation 'KVSImplClass'
+ */
+var CryptoKeyStore = function(KVSImplClass, opts) {
+	var superClass;
+
+	if (typeof KVSImplClass !== 'function') {
+		superClass = require(utils.getConfigSetting('key-value-store'));
+	} else {
+		superClass = KVSImplClass;
+	}
+
+	if (KVSImplClass !== null && typeof opts === 'undefined') {
+		// the function is called with only one argument for the 'opts'
+		opts = KVSImplClass;
+	}
+
+	var MyClass = class extends CryptoKeyStoreMixin(superClass) {};
+	return new MyClass(opts);
 };
 
 function _getKeyIndex(ski, isPrivateKey) {
