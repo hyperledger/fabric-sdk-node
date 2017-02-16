@@ -15,10 +15,11 @@ gulp.task('pre-test', function() {
 
 gulp.task('test', ['lint', 'test-headless'], function() {
 	// use individual tests to control the sequence they get executed
-	// first run the ca-tests that tests all the member registration and
-	// enrollment scenarios (good and bad calls). then the rest of the
-	// tests will re-used the same key value store that has saved the
-	// user certificates so they can interact with the network
+	// first run the ca-tests that tests all the member registration
+	// and enrollment scenarios (good and bad calls). Then the rest
+	// of the tests will re-use the same key value store that has
+	// saved the user certificates so they can interact with the
+	// network
 	return gulp.src([
 		// 'test/integration/ca-tests.js',
 		'test/integration/chain-fabriccop-tests.js',
@@ -33,7 +34,8 @@ gulp.task('test', ['lint', 'test-headless'], function() {
 });
 
 gulp.task('test-headless', ['lint', 'pre-test'], function() {
-	// this is needed to avoid a problem in tape-promise with adding too many listeners
+	// this is needed to avoid a problem in tape-promise with adding
+	// too many listeners
 	// to the "unhandledRejection" event
 	process.setMaxListeners(0);
 
@@ -46,6 +48,7 @@ gulp.task('test-headless', ['lint', 'pre-test'], function() {
 		reporter: tapColorize()
 	}))
 	.pipe(istanbul.writeReports({
-		reporters: ['cobertura']
+		reporters: ['lcov', 'json', 'text',
+			'text-summary', 'cobertura']
 	}));
 });
