@@ -262,9 +262,10 @@ var EventHub = class {
 	 * the sdk to track instantiate and invoke completion events. Nodejs
 	 * clients generally should not need to call directly.
 	 * @param {string} txid string transaction id
-	 * @param {function} callback Function that takes a single parameter which
+	 * @param {function} callback Function that takes a parameter which
 	 * is a json object representation of type "message Transaction"
-	 * from lib/proto/fabric.proto
+	 * from lib/proto/fabric.proto and a parameter which is a boolean
+	 * that indicates if the transaction is invalid (true=invalid)
 	 */
 	registerTxEvent(txid, callback) {
 		logger.debug('reg txid ' + txid);
@@ -287,18 +288,27 @@ var EventHub = class {
 	txCallback(block) {
 		logger.debug('txCallback block=%s', block.header.number);
 		var eh = this;
-		block.data.data.forEach(function(transaction) {
+		var invalidTxs = block.metadata.metadata[_common.BlockMetadataIndex.TRANSACTIONS_FILTER];
+
+		for (var index=0; index < block.data.data.length; index++) {
 			try {
-				var env = _common.Envelope.decode(transaction);
+				var env = _common.Envelope.decode(block.data.data[index]);
 				var payload = _common.Payload.decode(env.payload);
 			} catch (err) {
 				logger.error('Error unmarshalling transaction from block=', err);
+				break;
+			}
+
+			var metaval = utils.getBufferBit(invalidTxs, index);
+			if ( metaval.error == true ) {
+				logger.error('Metadata invalid buffer too small for tx index');
+				break;
 			}
 			logger.debug('txid=' + payload.header.channel_header.tx_id);
 			var cb = eh.txRegistrants.get(payload.header.channel_header.tx_id);
 			if (cb)
-				cb(payload.header.channel_header.tx_id);
-		});
+				cb(payload.header.channel_header.tx_id, metaval.invalid);
+		}
 	};
 };
 
