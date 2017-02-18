@@ -25,18 +25,8 @@ module.exports.getCloudantClient = function(configFile) {
 	return Cloudant({account: username, password: password});
 };
 
-module.exports.getCouchDBClient = function(configFile) {
-	var couchdbIPAddr = hfc.getConfigSetting('couchdb-ip-addr', 'notfound');
-	var couchdbPort = hfc.getConfigSetting('couchdb-port', 'notfound');
-
-	// Record the CouchDB KeyValueStorePath set by couchdb.json
-	var keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
-	console.log('CouchDBClient IP address:port = ' + keyValStorePath);
-	return nano(keyValStorePath);
-};
-
-module.exports.destroy = function(name, path) {
-	this._path = path;
+module.exports.destroy = function(name, url) {
+	this._url = url;
 	this._name = name;
 	// Name of the database, optional
 	if (!name) {
@@ -44,7 +34,7 @@ module.exports.destroy = function(name, path) {
 	}
 	var self = this;
 	return new Promise(function(resolve, reject) {
-		var dbClient = self._path;
+		var dbClient = nano(self._url);
 		dbClient.db.destroy(self._name, function(err, body) {
 			if (err) {
 				resolve(false);

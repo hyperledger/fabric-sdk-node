@@ -257,6 +257,7 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 	test_chain.initializeChain().then(
 		function (response) {
 			t.fail('Chain tests: orderer should have been required');
+			t.end();
 		},
 		function (error) {
 			if(!error) {
@@ -265,13 +266,15 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 			else {
 				t.equals(error.toString(),'Error: no primary orderer defined','Chain tests: orederer is required when initializing');
 			}
+
+			var test_chain2 = new Chain('someTestChain2', {_userContext : {} });
+			test_chain2.addOrderer(new Orderer('grpc://somehost.com:1234'));
+			return test_chain2.initializeChain();
 		}
-	);
-	var test_chain2 = new Chain('someTestChain2', {_userContext : {} });
-	test_chain2.addOrderer(new Orderer('grpc://somehost.com:1234'));
-	test_chain2.initializeChain().then(
+	).then(
 		function (response) {
 			t.fail('Chain tests: transaction should have been required');
+			t.end();
 		},
 		function (error) {
 			if(!error) {
@@ -280,20 +283,24 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 			else {
 				t.equals(error.toString(),'Error: Initial transaction id is not defined','Chain tests: transaction id is required when initializing');
 			}
+
+			var client3 = new Client();
+			var test_chain3 = new Chain('someTestChain3', client3);
+			test_chain3.addOrderer(new Orderer('grpc://somehost.com:1234'));
+			return test_chain3.initializeChain();
+		}
+	).then(
+		function(response){
+			t.fail('Chain tests: no user defined should, throw error, response '+response);
+			t.end();
+		},function(error){
+			if (error && error.message && error.message === 'no user defined')
+				t.pass('Chain tests: no user defined, should throw error');
+			else t.fail('Chain tests: no user defined, should have thrown error "no user defined"');
+
+			t.end();
 		}
 	);
-	var client3 = new Client();
-	var test_chain3 = new Chain('someTestChain3', client3);
-	test_chain3.addOrderer(new Orderer('grpc://somehost.com:1234'));
-	test_chain3.initializeChain().then(function(response){
-		t.fail('Chain tests: no user defined should, throw error, response '+response);
-	},function(error){
-		if (error && error.message && error.message === 'no user defined')
-			t.pass('Chain tests: no user defined, should throw error');
-		else t.fail('Chain tests: no user defined, should have thrown error "no user defined"');
-	});
-
-	t.end();
 });
 
 test('\n\n **  Chain query tests', function(t) {
@@ -471,11 +478,12 @@ test('\n\n** Chain packageChaincode tests **\n\n', function(t) {
 			var checkPath = path.join(destDir, 'src', 'github.com', 'example_cc');
 			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Chain.packageChaincode() has the "src/github.com/example_cc" folder');
 		});
+
+		t.end();
 	}).catch((err) => {
 		t.fail(err.stack ? err.stack : err);
+		t.end();
 	});
-
-	t.end();
 });
 
 test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
@@ -602,19 +610,17 @@ test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
 	});
 
 	Promise.all([p1, p1a, p3, p4, p6, p7])
-		.then(
+	.then(
 		function (data) {
 			t.end();
 		}
-		).catch(
+	).catch(
 		function (err) {
 			t.fail('Chain sendInstallProposal() tests, Promise.all: ');
 			console.log(err.stack ? err.stack : err);
 			t.end();
 		}
-		);
-
-	t.end();
+	);
 });
 
 test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
@@ -771,18 +777,16 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 	});
 
 	Promise.all([p1, p1a, p2, p3, p4, p6, p7])
-		.then(
+	.then(
 		function (data) {
 			t.end();
 		}
-		).catch(
+	).catch(
 		function (err) {
 			t.fail('Chain sendDeploymentProposal() tests, Promise.all: '+err.stack ? err.stack : err);
 			t.end();
 		}
-		);
-
-	t.end();
+	);
 });
 
 test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
@@ -902,18 +906,16 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 	});
 
 	Promise.all([p1, p2, p3, p4, p5, p6, p7])
-		.then(
+	.then(
 		function (data) {
 			t.end();
 		}
-		).catch(
+	).catch(
 		function (err) {
 			t.fail('Chain sendTransactionProposal() tests, Promise.all: '+err.stack ? err.stack : err);
 			t.end();
 		}
-		);
-
-	t.end();
+	);
 });
 
 test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
@@ -1033,19 +1035,17 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 	});
 
 	Promise.all([p1, p2, p3, p4, p5, p6, p7])
-		.then(
+	.then(
 		function (data) {
 			t.end();
 		}
-		).catch(
+	).catch(
 		function (err) {
 			t.fail('Client queryByChaincode() tests, Promise.all: ');
 			console.log(err.stack ? err.stack : err);
 			t.end();
 		}
-		);
-
-	t.end();
+	);
 });
 
 test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
@@ -1107,18 +1107,16 @@ test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
 	});
 
 	Promise.all([p1, p2, p3, p4])
-		.then(
+	.then(
 		function (data) {
 			t.end();
 		}
-		).catch(
+	).catch(
 		function (err) {
 			t.fail('Chain sendTransaction() tests, Promise.all: '+err.stack ? err.stack : err);
 			t.end();
 		}
-		);
-
-	t.end();
+	);
 });
 
 //
@@ -1161,14 +1159,13 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 				var orderers = chain.getOrderers();
 				if(orderers !== null && orderers.length > 0 && orderers[1].getUrl() === 'grpc://localhost:5152') {
 					t.pass('Successfully retrieved the upated orderer URL from the chain');
-					t.end();
 				}
 				else {
 					t.fail('Failed to retieve the updated orderer URL from the chain');
-					t.end();
 				}
-			}
-			catch(err2) {
+
+				t.end();
+			} catch(err2) {
 				t.fail('Failed to update the order URL ' + err2);
 				t.end();
 			}

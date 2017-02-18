@@ -49,27 +49,41 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 * constructor
 	 *
 	 * @param {number} keySize Key size for the ECDSA algorithm, can only be 256 or 384
-	 * @param {string} kvsPath A path to a directory used by the built-in key store to save private keys
+	 * @param {string} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
+	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
+	 * KeyValueStore interface.
+	 * @param {object} opts Implementation-specific options object for the {@link KeyValueStore} class to instantiate an instance
 	 */
-	constructor(keySize, kvsPath) {
+	constructor(keySize, KVSImplClass, opts) {
 		if (keySize !== 256 && keySize !== 384) {
 			throw new Error('Illegal key size: ' + keySize + ' - this crypto suite only supports key sizes 256 or 384');
 		}
 
 		super();
 
-		if (typeof kvsPath === 'undefined' || kvsPath === null) {
-			this._storePath = null;
-		} else {
-			if (typeof kvsPath !== 'string') {
-				throw new Error('The "kvsPath" parameter for this constructor, if specified, must be a string specifying a file system path');
-			}
+		var superClass;
 
-			this._storePath = kvsPath;
+		if (typeof KVSImplClass !== 'function') {
+			superClass = require(utils.getConfigSetting('key-value-store'));
+		} else {
+			superClass = KVSImplClass;
+		}
+
+		if (KVSImplClass && typeof opts === 'undefined') {
+			// the function is called with only one argument for the 'opts'
+			opts = KVSImplClass;
+		} else if (typeof KVSImplClass === 'undefined' && typeof opts === 'undefined') {
+			opts = {
+				path: CryptoSuite_ECDSA_AES.getDefaultKeyStorePath()
+			};
 		}
 
 		this._keySize = keySize;
 		this._store = null;
+		this._storeConfig = {
+			superClass: superClass,
+			opts: opts
+		};
 		this._initialize();
 	}
 
@@ -226,16 +240,15 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		var self = this;
 		return new Promise((resolve, reject) => {
 			if (self._store === null) {
-				var storePath = self._storePath ? self._storePath : CryptoSuite_ECDSA_AES.getDefaultKeyStorePath();
-				logger.info('This class requires a CryptoKeyStore to save keys, using the store at %s', self._storePath);
+				logger.info(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', self._storeConfig));
 
-				CKS({
-					path: storePath
-				})
+				CKS(self._storeConfig.superClass, self._storeConfig.opts)
 				.then((ks) => {
 					logger.debug('_getKeyStore returning ks');
 					self._store = ks;
 					return resolve(self._store);
+				}).catch((err) => {
+					reject(err);
 				});
 			} else {
 				logger.debug('_getKeyStore resolving store');

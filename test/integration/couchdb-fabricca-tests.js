@@ -28,9 +28,13 @@ var couchdbUtil = require('./couchdb-util.js');
 
 // Use the CouchDB specific config file
 hfc.addConfigFile('test/fixtures/couchdb.json');
-var dbClient = couchdbUtil.getCouchDBClient();
+
 var keyValueStore = hfc.getConfigSetting('key-value-store');
 console.log('Key Value Store = ' + keyValueStore);
+
+var couchdbIPAddr = hfc.getConfigSetting('couchdb-ip-addr', 'notfound');
+var couchdbPort = hfc.getConfigSetting('couchdb-port', 'notfound');
+var keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
 
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
@@ -49,11 +53,11 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 	var dbname = 'member_db';
 
 	var member;
-	couchdbUtil.destroy(dbname, dbClient)
+	couchdbUtil.destroy(dbname, keyValStorePath)
 	.then( function(status) {
 		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
 		t.comment('Initilize the CouchDB KeyValueStore');
-		utils.newKeyValueStore({name: dbname, path: dbClient})
+		utils.newKeyValueStore({name: dbname, url: keyValStorePath})
 		.then(
 			function(kvs) {
 				t.comment('Setting client keyValueStore to: ' +kvs);
@@ -88,7 +92,7 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				});
 			},
 			function(err) {
-				t.fail('Failed to initilize the Fabric CA service: ' + err);
+				t.fail('Failed to initilize the Fabric CA service: ' + err.stack ? err.stack : err);
 				t.end();
 			}
 		)
