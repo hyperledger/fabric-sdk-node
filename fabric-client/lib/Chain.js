@@ -950,7 +950,7 @@ var Chain = class {
 					if(response.response) {
 						logger.debug('queryBlockByHash - response status %d:', response.response.status);
 						var block = _commonProto.Block.decode(response.response.payload);
-						logger.debug('queryBlockByHash - looking at block number:'+block.Header.Number);
+						logger.debug('queryBlockByHash - looking at block :: %s',block.header.number);
 						return Promise.resolve(block);
 					}
 					// no idea what we have, lets fail it and send it back
@@ -1006,7 +1006,7 @@ var Chain = class {
 					if(response.response) {
 						logger.debug('queryBlock - response status %d:', response.response.status);
 						var block = _commonProto.Block.decode(response.response.payload);
-						logger.debug('queryBlock - looking at block number:'+block.Header.Number);
+						logger.debug('queryBlockByHash - looking at block :: %s',block.header.number);
 						return Promise.resolve(block);
 					}
 					// no idea what we have, lets fail it and send it back
@@ -1060,16 +1060,15 @@ var Chain = class {
 						return Promise.reject(response);
 					}
 					if(response.response) {
-						logger.debug('queryTransaction - response status %d:', response.response.status);
-						//logger.debug('queryTransaction - responses[i] -- %j:', responses[i]);
-						var envelope = _commonProto.Envelope.decode(response.response.payload);
-						//logger.debug('queryTransaction - envelope :: %j:', envelope);
-						var payload = _commonProto.Payload.decode(envelope.payload);
-						logger.debug('queryTransaction - transaction ID :: %s:', payload.header.chainHeader.txID);
-						return Promise.resolve(envelope);
+						logger.debug('queryTransaction - response status :: %d', response.response.status);
+						var processTrans = _transProto.ProcessedTransaction.decode(response.response.payload);
+						logger.debug('queryTransaction - ProcessedTransaction.valid :: %s', processTrans.valid);
+						var payload = _commonProto.Payload.decode(processTrans.transactionEnvelope.payload);
+						logger.debug('queryTransaction - transaction ID :: %s:', payload.header.channel_header.tx_id);
+						return Promise.resolve(processTrans);
 					}
 					// no idea what we have, lets fail it and send it back
-					return Promise.reject(response);
+					return Promise.reject(processTrans);
 				}
 				return Promise.reject(new Error('Payload results are missing from the query'));
 			}
