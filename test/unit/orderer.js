@@ -87,15 +87,17 @@ test('orderer missing data test', function(t) {
 		function(status) {
 			console.log('response status: ' + JSON.stringify(status));
 			t.fail('Should have noticed missing data.');
+			t.end();
 		},
 		function(err) {
 			console.log('Caught Error: ' + err);
 			t.pass('Successfully found missing data: ' + err);
+			t.end();
 		}
 	).catch(function(err) {
 		t.fail('Caught Error: should not be here if we defined promise error function: ' + err);
+		t.end();
 	});
-	t.end();
 });
 
 //
@@ -113,13 +115,15 @@ test('orderer unknown address test', function(t) {
 		function(status) {
 			console.log('response status: ' + JSON.stringify(status));
 			t.fail('Should have noticed a bad address.');
+			t.end();
 		},
 		function(err) {
 			t.pass('Successfully found bad address!');
+			t.end();
 		}
 	).catch(function(err) {
 		t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
+		t.end();
 	});
-	t.end();
 });
