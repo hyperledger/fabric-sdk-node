@@ -77,7 +77,7 @@ var EventHub = class {
 		// grpc event client interface
 		this._client = null;
 		// grpc chat streaming interface
-		this.call - null;
+		this.call = null;
 		// fabric connection state of this eventhub
 		this.connected = false;
 	}
