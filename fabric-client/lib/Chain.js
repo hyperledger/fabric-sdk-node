@@ -871,16 +871,21 @@ var Chain = class {
 	 */
 	queryInfo() {
 		logger.debug('queryInfo - start');
-		var request = {
-			targets: [this.getPrimaryPeer()],
-			chaincodeId : 'qscc',
-			chainId: '',
-			txId: utils.buildTransactionID(),
-			nonce: utils.getNonce(),
-			fcn : 'GetChainInfo',
-			args: [ this._name]
-		};
-		return this.sendTransactionProposal(request)
+		var self = this;
+		var nonce = utils.getNonce();
+		return this.buildTransactionID_getUserContext(nonce)
+		.then(function(txId) {
+			var request = {
+				targets: [self.getPrimaryPeer()],
+				chaincodeId : 'qscc',
+				chainId: '',
+				txId: txId,
+				nonce: nonce,
+				fcn : 'GetChainInfo',
+				args: [ self._name]
+			};
+			return self.sendTransactionProposal(request);
+		})
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -923,17 +928,22 @@ var Chain = class {
 		if(!blockHash) {
 			return Promise.reject( new Error('Blockhash bytes are required'));
 		}
-		var request = {
-			targets: [this.getPrimaryPeer()],
-			chaincodeId : 'qscc',
-			chainId: '',
-			txId: utils.buildTransactionID(),
-			nonce: utils.getNonce(),
-			fcn : 'GetBlockByHash',
-			args: [ this._name],
-			argbytes : blockHash
-		};
-		return this.sendTransactionProposal(request)
+		var self = this;
+		var nonce = utils.getNonce();
+		return this.buildTransactionID_getUserContext(nonce)
+		.then(function(txId) {
+			var request = {
+				targets: [self.getPrimaryPeer()],
+				chaincodeId : 'qscc',
+				chainId: '',
+				txId: txId,
+				nonce: nonce,
+				fcn : 'GetBlockByHash',
+				args: [ self._name],
+				argbytes : blockHash
+			};
+			return self.sendTransactionProposal(request);
+		})
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -980,16 +990,21 @@ var Chain = class {
 		} else {
 			return Promise.reject( new Error('Block number must be a postive integer'));
 		}
-		var request = {
-			targets: [this.getPrimaryPeer()],
-			chaincodeId : 'qscc',
-			chainId: '',
-			txId: utils.buildTransactionID(),
-			nonce: utils.getNonce(),
-			fcn : 'GetBlockByNumber',
-			args: [ this._name, block_number]
-		};
-		return this.sendTransactionProposal(request)
+		var self = this;
+		var nonce = utils.getNonce();
+		return this.buildTransactionID_getUserContext(nonce)
+		.then(function(txId) {
+			var request = {
+				targets: [self.getPrimaryPeer()],
+				chaincodeId : 'qscc',
+				chainId: '',
+				txId: txId,
+				nonce: nonce,
+				fcn : 'GetBlockByNumber',
+				args: [ self._name, block_number]
+			};
+			return self.sendTransactionProposal(request);
+		})
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -1040,8 +1055,8 @@ var Chain = class {
 			targets: [this.getPrimaryPeer()],
 			chaincodeId : 'qscc',
 			chainId: '',
-			txId: utils.buildTransactionID(),
-			nonce: utils.getNonce(),
+			txId: transactionID,
+			nonce: utils.getNonce(),//to do - get nonce from transaction id
 			fcn : 'GetTransactionByID',
 			args: [ this._name, transaction_id]
 		};
@@ -1190,10 +1205,11 @@ var Chain = class {
 					return self._clientContext.getUserContext()
 						.then(
 							function(userContext) {
+								var txId = self.buildTransactionID(request.nonce, userContext);
 								var channelHeader = buildChannelHeader(
 									_commonProto.HeaderType.ENDORSER_TRANSACTION,
 									'', //install does not target a channel
-									request.txId,
+									txId,
 									null,
 									'lccc'
 								);
@@ -1706,6 +1722,43 @@ var Chain = class {
 			errorMsg = 'Missing input request object on the proposal request';
 		}
 		return errorMsg;
+	}
+
+	/**
+	* Utility method to build an unique transaction id
+	* based on a nonce and this chain's user.
+	* @param {int} nonce - a one time use number
+	* @param {User} userContext - the user context
+	* @returns {string} An unique string
+	*/
+	buildTransactionID(nonce, userContext) {
+		logger.debug('buildTransactionID - start');
+		var creator_bytes = userContext.getIdentity().serialize();//same as signatureHeader.Creator
+		var nonce_bytes = nonce;//nonce is already in bytes
+		var trans_bytes = Buffer.concat([nonce_bytes, creator_bytes]);
+		var trans_hash = this.cryptoPrimitives.hash(trans_bytes);
+		var transaction_id = Buffer.from(trans_hash).toString();
+		logger.debug('buildTransactionID - transaction_id %s',transaction_id);
+		return transaction_id;
+	}
+
+	/**
+	* Utility method to build an unique transaction id
+	* based on a nonce and this chain's user.
+	* Gets the user context.
+	* @param {int} nonce - a one time use number
+	* @returns {Promise} A promise for the transaction id
+	*/
+	buildTransactionID_getUserContext(nonce) {
+		return this._clientContext.getUserContext()
+		.then((userContext) => {
+			logger.debug('buildTransactionID_getUserContext - got userContext');
+			return this.buildTransactionID(nonce, userContext);
+		})
+		.catch(function(error) {
+			logger.debug('buildTransactionID_getUserContext - caught error ::' + error.stack ? error.stack : error);
+			return Promise.reject(new Error(error));
+		});
 	}
 
 	/**

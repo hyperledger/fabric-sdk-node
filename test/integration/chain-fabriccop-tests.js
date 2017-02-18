@@ -25,7 +25,7 @@ var utils = require('fabric-client/lib/utils.js');
 var User = require('fabric-client/lib/User.js');
 var Client = require('fabric-client/lib/Client.js');
 
-var testUtil = require('./util.js');
+var testUtil = require('../unit/util.js');
 
 var keyValStorePath = testUtil.KVS;
 

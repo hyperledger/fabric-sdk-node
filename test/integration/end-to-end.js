@@ -145,6 +145,7 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 				t.end();
 			}).then((nothing) => {
 				t.pass('Successfully waited on timer');
+				if (useSteps) t.end();
 			},
 			(err) => {
 				t.fail('Failed to wait on timer: ' + err.stack ? err.stack : err);
@@ -332,7 +333,7 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 				t.fail('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			}).then((response) => {
-				if (response.status === 'SUCCESS') {
+				if (response && response.status === 'SUCCESS') {
 					t.pass('Successfully ordered endorsement transaction.');
 				} else {
 					t.fail('Failed to order the endorsement of the transaction. Error code: ' + response.status);
@@ -363,13 +364,19 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 				return chain.queryByChaincode(request);
 			},
 			(err) => {
-				t.fail('Failed to get transaction notification within the timeout period');
+				t.comment('Failed to get transaction notification within the timeout period. exiting...');
+				t.fail('Error: ' + err.stack ? err.stack : err );
 				t.end();
 			}).then((response_payloads) => {
-				for(let i = 0; i < response_payloads.length; i++) {
-					t.equal(response_payloads[i].toString('utf8'),'300','checking query results are correct that user b has 300 now after the move');
+				if (response_payloads) {
+					for(let i = 0; i < response_payloads.length; i++) {
+						t.equal(response_payloads[i].toString('utf8'),'300','checking query results are correct that user b has 300 now after the move');
+					}
+					t.end();
+				} else {
+					t.fail('response_payloads is null');
+					t.end();
 				}
-				t.end();
 			},
 			(err) => {
 				t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
@@ -380,6 +387,7 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 			});
 		}
 	});
+	t.end();
 });
 
 function sleep(ms) {
