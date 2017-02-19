@@ -32,7 +32,7 @@ var hfc = require('fabric-client');
 hfc.setLogger(logger);
 
 var util = require('util');
-var testUtil = require('./util.js');
+var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
@@ -83,7 +83,7 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 				}
 			).then(
 				function(response) {
-					t.equal(response.Header.Number.toString(),'0','checking query results are correct that we got zero block back');
+					t.equal(response.header.number.toString(),'0','checking query results are correct that we got zero block back');
 					chain.setPrimaryPeer(peer0);
 					// send query
 					return chain.queryTransaction('5678'); //assumes the end-to-end has run first
@@ -93,8 +93,8 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 					t.end();
 				}
 			).then(
-				function(response) {
-					t.pass('got back transaction '); // + JSON.stringify(response_payloads));
+				function(transaction) {
+					t.pass('got back transaction %j',transaction); // + JSON.stringify(response_payloads));
 					chain.setPrimaryPeer(peer1);
 					// send query
 					return chain.queryInfo();
@@ -116,8 +116,8 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 					t.end();
 				}
 			).then(
-				function(response) {
-					t.pass('got back block number ' + response.Header.Number);
+				function(block) {
+					t.pass('got back block number %s', block.header.number);
 					t.end();
 				},
 				function(err) {
