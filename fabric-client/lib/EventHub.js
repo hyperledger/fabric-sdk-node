@@ -229,7 +229,7 @@ var EventHub = class {
 			var register = {
 				register: {
 					events: [{
-						eventType: 'BLOCK'
+						event_type: 'BLOCK'
 					}]
 				}
 			};
@@ -247,7 +247,7 @@ var EventHub = class {
 			var unregister = {
 				unregister: {
 					events: [{
-						eventType: 'BLOCK'
+						event_type: 'BLOCK'
 					}]
 				}
 			};
@@ -285,7 +285,7 @@ var EventHub = class {
 	 * from the fabric
 	 */
 	txCallback(block) {
-		logger.debug('txCallback block=%j', block);
+		logger.debug('txCallback block=%s', block.header.number);
 		var eh = this;
 		block.data.data.forEach(function(transaction) {
 			try {

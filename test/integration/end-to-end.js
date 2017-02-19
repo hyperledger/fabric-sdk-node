@@ -47,6 +47,7 @@ var chaincode_version = 'v0';
 var chain_id = 'testchainid';
 var tx_id = null;
 var nonce = null;
+var the_user = null;
 var peer0 = new Peer('grpc://localhost:7051'),
 	peer1 = new Peer('grpc://localhost:7056');
 
@@ -98,8 +99,9 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 
 			promise = promise.then((admin) => {
 				t.pass('Successfully enrolled user \'admin\'');
-				tx_id = utils.buildTransactionID({length:12});
+				the_user = admin;
 				nonce = utils.getNonce();
+				tx_id = chain.buildTransactionID(nonce, the_user);
 
 				// send proposal to endorser
 				var request = {
@@ -134,21 +136,16 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 				}
 				if (all_good) {
 					t.pass(util.format('Successfully sent install Proposal and received ProposalResponse: Status - %s', proposalResponses[0].response.status));
+					if (useSteps) {
+						t.end();
+					}
 				} else {
 					t.fail('Failed to send install Proposal or receive valid response. Response null or status is not 200. exiting...');
 					t.end();
 				}
-				return sleep(5000);
 			},
 			(err) => {
 				t.fail('Failed to send install proposal due to error: ' + err.stack ? err.stack : err);
-				t.end();
-			}).then((nothing) => {
-				t.pass('Successfully waited on timer');
-				if (useSteps) t.end();
-			},
-			(err) => {
-				t.fail('Failed to wait on timer: ' + err.stack ? err.stack : err);
 				t.end();
 			});
 		}
@@ -157,8 +154,11 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 			logger.info('Executing step2');
 			promise = promise.then((admin) => {
 				t.pass('Successfully enrolled user \'admin\'');
-				tx_id = utils.buildTransactionID({length:12});
+				if(the_user === null) {
+					the_user = admin;
+				}
 				nonce = utils.getNonce();
+				tx_id = chain.buildTransactionID(nonce, the_user);
 
 				// send proposal to endorser
 				var request = {
@@ -254,11 +254,14 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 
 
 		if (!useSteps || steps.indexOf('step3') >= 0) {
-			promise = promise.then((data) => {
+			promise = promise.then((admin) => {
 				logger.info('Executing step3');
+				if(the_user === null) {
+					the_user = admin;
+				}
+				nonce = Buffer.from('12');
+				tx_id = chain.buildTransactionID(nonce, the_user);
 
-				tx_id = '5678'; //number to search for when running the query.js tests
-				nonce = utils.getNonce();
 				// send proposal to endorser
 				var request = {
 					chaincodeId : chaincode_id,
@@ -347,8 +350,13 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 		}
 
 		if (!useSteps || steps.indexOf('step4') >= 0) {
-			promise = promise.then((data) => {
+			promise = promise.then((admin) => {
 				logger.info('Executing step4');
+				if(the_user === null) {
+					the_user = admin;
+				}
+				nonce = utils.getNonce();
+				tx_id = chain.buildTransactionID(nonce, the_user);
 
 				// send query
 				var request = {
@@ -356,8 +364,8 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 					chaincodeId : chaincode_id,
 					chaincodeVersion : chaincode_version,
 					chainId: chain_id,
-					txId: utils.buildTransactionID(),
-					nonce: utils.getNonce(),
+					txId: tx_id,
+					nonce: nonce,
 					fcn: 'invoke',
 					args: ['query','b']
 				};
@@ -389,7 +397,3 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 	});
 	t.end();
 });
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}

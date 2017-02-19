@@ -16,14 +16,13 @@ limitations under the License.
 
 syntax = "proto3";
 
-import "../common/common.proto";
-
 option go_package = "github.com/hyperledger/fabric/protos/peer";
 
 package protos;
 
 import "../google/protobuf/timestamp.proto";
 import "proposal_response.proto";
+import "../common/common.proto";
 
 // This message is necessary to facilitate the verification of the signature
 // (in the signature field) over the bytes of the transaction (in the
@@ -68,16 +67,9 @@ message ProcessedTransaction {
 // to ensure that they are treated atomically.
 message Transaction {
 
-	// Version indicates message protocol version.
-	int32 version = 1;
-
-	// Timestamp is the local time that the
-	// message was created by the sender
-	google.protobuf.Timestamp timestamp = 2;
-
 	// The payload is an array of TransactionAction. An array is necessary to
 	// accommodate multiple actions per transaction
-	repeated TransactionAction actions = 3;
+	repeated TransactionAction actions = 1;
 }
 
 // TransactionAction binds a proposal to its action.  The type field in the

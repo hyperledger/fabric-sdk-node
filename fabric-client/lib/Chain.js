@@ -1576,7 +1576,7 @@ var Chain = class {
 			function(results) {
 				var responses = results[0];
 				var proposal = results[1];
-				logger.debug('Chain-queryByChaincode - response %j', responses);
+				logger.debug('Chain-queryByChaincode - results received');
 				if(responses && Array.isArray(responses)) {
 					var results = [];
 					for(let i = 0; i < responses.length; i++) {
