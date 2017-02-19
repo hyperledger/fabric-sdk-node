@@ -118,19 +118,14 @@ test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 	cryptoUtils.generateKey()
 	.then(function (key) {
 		// the private key and cert don't match, but it's ok, the code doesn't check
-		member2.setEnrollment(key, TEST_CERT_PEM)
-		.then(() => {
-			var id = member2.getIdentity();
+		return member2.setEnrollment(key, TEST_CERT_PEM);
+	}).then(() => {
+		var id = member2.getIdentity();
 
-			t.equal(id._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'User class setEnrollment() test');
-			t.end();
-		});
-
-		// TODO: test SigningIdentity
+		t.equal(id._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'User class setEnrollment() test');
 		t.end();
 	}).catch((err) => {
 		t.fail(err.stack ? err.stack : err);
+		t.end();
 	});
-
-	t.end();
 });

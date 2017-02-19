@@ -1,5 +1,5 @@
 {
 	"couchdb-ip-addr" : "http://localhost",
 	"couchdb-port" : "5984",
-	"key-value-store" : "./impl/CouchDBKeyValueStore.js"
+	"key-value-store" : "fabric-client/lib/impl/CouchDBKeyValueStore.js"
 }

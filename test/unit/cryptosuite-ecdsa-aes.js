@@ -25,13 +25,14 @@ var testutil = require('./util.js');
 var utils = require('fabric-client/lib/utils.js');
 var path = require('path');
 var fs = require('fs-extra');
-
-testutil.resetDefaults();
+var util = require('util');
+var os = require('os');
 
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 var ECDSA = jsrsa.ECDSA;
 
+var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
 var CryptoSuite_ECDSA_AES = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
 var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 var api = require('fabric-client/lib/api.js');
@@ -132,20 +133,31 @@ const halfOrdersForCurve = {
 var _client = new hfc();
 
 test('\n\n** utils.getCryptoSuite tests **\n\n', (t) => {
-	var cs = utils.getCryptoSuite({keysize: 384, algorithm: 'EC'}, keyValStorePath);
+	testutil.resetDefaults();
+
+	let config = { path: keyValStorePath };
+
+	let cs = utils.getCryptoSuite({keysize: 384, algorithm: 'EC'}, config);
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 384, 'Returned instance should have keysize of 384');
-	t.equal(cs._storePath, keyValStorePath, 'Returned instance should have store path of ' + keyValStorePath);
+	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
+	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
 
-	cs = utils.getCryptoSuite({keysize: 384, algorithm: 'EC'}, keyValStorePath);
+	cs = utils.getCryptoSuite({keysize: 384}, config);
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Default test: should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 384, 'Returned instance should have keysize of 384');
-	t.equal(cs._storePath, keyValStorePath, 'Returned instance should have store path of ' + keyValStorePath);
+	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
 
-	cs = utils.getCryptoSuite({algorithm: 'EC'}, keyValStorePath);
+	cs = utils.getCryptoSuite({algorithm: 'EC'}, config);
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 256, 'Returned instance should have keysize of 256');
-	t.equal(cs._storePath, keyValStorePath, 'Returned instance should have store path of ' + keyValStorePath);
+	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
+
+	let defaultKVSPath = path.join(os.homedir(), '.hfc-key-store');
+	cs = utils.getCryptoSuite({algorithm: 'EC'});
+	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
+	t.equal(cs._keySize, 256, 'Returned instance should have keysize of 256');
+	t.equal(cs._storeConfig.opts.path, defaultKVSPath, util.format('Returned instance should have store config opts.path of %s', defaultKVSPath));
 
 	// each app instance is expected to use either HSM or software-based key management, as such this question
 	// is answered with a config setting rather than controlled on a case-by-case basis
@@ -159,57 +171,77 @@ test('\n\n** utils.getCryptoSuite tests **\n\n', (t) => {
 	);
 
 	utils.setConfigSetting('crypto-hsm', false);
-	t.throws(
+	t.doesNotThrow(
 		() => {
 			cs = utils.getCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
+			cs._getKeyStore()
+			.then((store) => {
+				t.fail('Should not have been able to get a valid key store because of invalid store config');
+				t.end();
+			}).catch((err) => {
+				t.pass('Successfully rejected _getKeyStore() due to invalid config');
+				t.end();
+			});
 		},
-		/^Error: The "kvsPath" parameter for this constructor, if specified, must be a string specifying a file system path/,
-		'Should attempt to load the CryptoSuite_ECDSA_AES module and fail because of the invalid file store path'
+		null,
+		'Load the CryptoSuite_ECDSA_AES module and pass in an invalid config object'
 	);
-
-	t.end();
 });
 
 test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
 	cleanupFileKeyValueStore(keyValStorePath);
-	var keyValueStorePromise = utils.newKeyValueStore({ path: getRelativePath(keyValStorePath) });
-
-	t.throws(
-		function() {
-			utils.getCryptoSuite(keyValueStorePromise);
-		},
-		/^Error: The "kvsPath" parameter for this constructor, if specified, must be a string specifying a file system path/,
-		'CryptoSuite_ECDSA_AES constructor tests: opts passed as a promise should throw error'
-	);
 
 	var keyValueStore = null;
-	var cs5;
-	t.doesNotThrow(
-		function () {
-			cs5 = utils.getCryptoSuite(keyValStorePath);
-		},
-		null,
-		'CryptoSuite_ECDSA_AES constructor tests: pass in a string as kvs path'
-	);
+	let cs;
 
-	cs5._getKeyStore()
-	.then((store) => {
-		t.notEqual(store, null, 'Crypto Key Store successfully initialized by CryptoSuite_ECDSA_AES');
-		t.equal(typeof store.getKey, 'function', 'Crypto key store much have the "getKey()" function');
-		t.equal(typeof store.putKey, 'function', 'Crypto key store much have the "putKey()" function');
-	});
-
-	var cs = new CryptoSuite_ECDSA_AES(256, keyValStorePath);
+	cs = new CryptoSuite_ECDSA_AES(256, CouchDBKeyValueStore, { name: 'test_db', url: 'http://dummyUrl'});
 	cs._getKeyStore()
-	.then((store) => {
+	.then(() => {
+		t.fail('Should not have been able to get a valid key store because the url was invalid');
+	}).catch((err) => {
+		if (err.message.indexOf('Error creating test_db database to store membership data: Error: getaddrinfo ENOTFOUND dummyurl') >= 0) {
+			t.pass('Successfully rejected _getKeyStore() because the url was invalid');
+		} else {
+			t.fail(err);
+		}
+
+		t.doesNotThrow(
+			() => {
+				cs = utils.getCryptoSuite(keyValStorePath);
+			},
+			null,
+			'CryptoSuite_ECDSA_AES constructor tests: pass in a string as kvs path'
+		);
+
+		return cs._getKeyStore();
+	}).then(() => {
+		t.fail('Should not have been able to obtain a proper key store due to invalid config');
+	}).catch(() => {
+		t.pass('Successfully rejected attempt to obtain a proper key store');
+
+		utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
+
+		let cs1 = utils.getCryptoSuite({
+			path: keyValStorePath
+		});
+
+		return cs1._getKeyStore();
+	}).then((store) => {
 		t.notEqual(store, null, 'Crypto Key Store successfully initialized by CryptoSuite_ECDSA_AES');
 		t.equal(typeof store.getKey, 'function', 'Crypto key store much have the "getKey()" function');
 		t.equal(typeof store.putKey, 'function', 'Crypto key store much have the "putKey()" function');
+
+		let cs2 = new CryptoSuite_ECDSA_AES(256, {path: keyValStorePath});
+		return cs2._getKeyStore();
+	}).then((store) => {
+		t.notEqual(store, null, 'Crypto Key Store successfully initialized by CryptoSuite_ECDSA_AES');
+		t.equal(typeof store.getKey, 'function', 'Crypto key store much have the "getKey()" function');
+		t.equal(typeof store.putKey, 'function', 'Crypto key store much have the "putKey()" function');
+		t.end();
 	}).catch((err) => {
 		t.fail(err.stack ? err.stack : err);
+		t.end();
 	});
-
-	t.end();
 });
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
@@ -405,59 +437,51 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		testVerify(TEST_LONG_MSG_SIGNATURE_SHA2_256, TEST_LONG_MSG, false);
 
 		// test importKey()
-		cryptoUtils.importKey(TEST_CERT_PEM)
-		.then((pubKey) => {
-			t.equal(pubKey.isPrivate(), false, 'Test imported public key isPrivate()');
-			t.equal(pubKey.getSKI(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef', 'Test imported public key SKI');
+		return cryptoUtils.importKey(TEST_CERT_PEM);
+	}).then((pubKey) => {
+		t.equal(pubKey.isPrivate(), false, 'Test imported public key isPrivate()');
+		t.equal(pubKey.getSKI(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef', 'Test imported public key SKI');
 
-			// verify that the pub key has been saved in the key store by the proper key
-			t.equal(
-				fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef-pub')),
-				true,
-				'Check that the imported public key has been saved in the key store');
-		}).catch((err) => {
-			t.fail(err.stack ? err.stack : err);
-		});
+		// verify that the pub key has been saved in the key store by the proper key
+		t.equal(
+			fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef-pub')),
+			true,
+			'Check that the imported public key has been saved in the key store');
 
-		cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM)
-		.then((privKey) => {
-			t.equal(privKey.isPrivate(), true, 'Test imported private key isPrivate');
-			t.equal(privKey.getSKI(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a', 'Test imported private key SKI');
-			t.end();
-
-			// verify that the imported private key has been saved in the key store by the proper key
-			t.equal(
-				fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv')),
-				true,
-				'Check that the imported private key has been saved in the key store');
-
-			// verify that the imported key can properly sign messages
-			var testSig = cryptoUtils.sign(privKey, cryptoUtils.hash(TEST_MSG));
-			t.equal(
-				cryptoUtils.verify(privKey.getPublicKey(), testSig, TEST_MSG),
-				true,
-				'Check that the imported private key can properly sign messages');
-
-			// manufacture an error condition where the private key does not exist for the SKI, and only the public key does
-			return cryptoUtils.importKey(TEST_KEY_PRIVATE_CERT_PEM);
-		}).then((pubKey) => {
-			fs.removeSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
-
-			var poorUser = new User('admin2', _client);
-			poorUser.fromString(JSON.stringify(TEST_USER_ENROLLMENT))
-			.then(() => {
-				t.fail('Failed to catch missing private key expected from a user enrollment object');
-			}).catch((err) => {
-				t.pass('Successfully caught missing private key expected from a user enrollment object');
-			});
-		}).catch((err) => {
-			t.fail(err.stack ? err.stack : err);
-		});
-
+		return cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM);
+	}).then((privKey) => {
+		t.equal(privKey.isPrivate(), true, 'Test imported private key isPrivate');
+		t.equal(privKey.getSKI(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a', 'Test imported private key SKI');
 		t.end();
-	})
-	.catch(function (err) {
-		t.fail('Unexpected error: ' + err.stack ? err.stack : err);
+
+		// verify that the imported private key has been saved in the key store by the proper key
+		t.equal(
+			fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv')),
+			true,
+			'Check that the imported private key has been saved in the key store');
+
+		// verify that the imported key can properly sign messages
+		var testSig = cryptoUtils.sign(privKey, cryptoUtils.hash(TEST_MSG));
+		t.equal(
+			cryptoUtils.verify(privKey.getPublicKey(), testSig, TEST_MSG),
+			true,
+			'Check that the imported private key can properly sign messages');
+
+		// manufacture an error condition where the private key does not exist for the SKI, and only the public key does
+		return cryptoUtils.importKey(TEST_KEY_PRIVATE_CERT_PEM);
+	}).then((pubKey) => {
+		fs.removeSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
+
+		var poorUser = new User('admin2', _client);
+		return poorUser.fromString(JSON.stringify(TEST_USER_ENROLLMENT));
+	}).then(() => {
+		t.fail('Failed to catch missing private key expected from a user enrollment object');
+		t.end();
+	},(err) => {
+		t.pass('Successfully caught missing private key expected from a user enrollment object');
+		t.end();
+	}).catch((err) => {
+		t.fail(err.stack ? err.stack : err);
 		t.end();
 	});
 });

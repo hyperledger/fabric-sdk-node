@@ -64,102 +64,100 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 		if (response === null)
 			t.pass('Client tests: getUserContext successful null user name.');
 		else t.fail('Client tests: getUserContext failed null name check');
+
+		return client.saveUserToStateStore();
 	}, function(error){
 		t.fail('Client tests: Unexpected error, getUserContext null name check. ' + error);
-	});
-
-	client.saveUserToStateStore()
-	.then(function(response){
+		t.end();
+	}).then(function(response){
 		t.fail('Client tests: got response, but should throw "Cannot save user to state store when userContext is null."');
+		t.end();
 	}, function(error){
 		if (error.message === 'Cannot save user to state store when userContext is null.')
 			t.pass('Client tests: Should throw "Cannot save user to state store when userContext is null."');
 		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when userContext is null." ' + error);
-	});
 
-	client.setUserContext(null)
-	.then(function(response){
+		return client.setUserContext(null);
+	}).then(function(response){
 		t.fail('Client tests: got response, but should throw "Cannot save null userContext."');
+		t.end();
 	}, function(error){
 		if (error.message === 'Cannot save null userContext.')
 			t.pass('Client tests: Should throw "Cannot save null userContext."');
 		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save null userContext." ' + error);
-	});
 
-	client.getUserContext('someUser')
-	.then(function(response){
+		return client.getUserContext('someUser');
+	}).then(function(response){
 		if (response == null)
 			t.pass('Client tests: getUserContext with no context in memory or persisted returns null');
 		else t.fail('Client tests: getUserContext with no context in memory or persisted did not return null');
+
+		return client.setUserContext(new User('someUser'), true);
 	}, function(error){
 		t.fail('Client tests: getUserContext with no context in memory or persisted did not returned error. ' + error);
-	});
-
-	client.setUserContext(new User('someUser'), true)
-	.then(function(response){
+		t.end();
+	}).then(function(response){
 		if (response && response.getName() === 'someUser') {
 			t.pass('Client tests: successfully setUserContext with skipPersistence.');
 			return response;
 		}
 		else t.fail('Client tests: failed name check after setUserContext with skipPersistence.');
+
+		return client.getUserContext('someUser');
 	}, function(error){
 		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + error);
-	})
-	.then(function(response){
-		client.getUserContext('someUser')
-		.then(function(response){
-			if (response && response.getName() === 'someUser')
-				t.pass('Client tests: getUserContext not persisted/skipPersistence was successful.');
-			else t.fail('Client tests: getUserContext not persisted/skipPersistence was not successful.');
-		}, function(error){
-			t.fail('Client tests: Unexpected error, getUserContext not persisted/skipPersistence. ' + error);
-		});
-	});
+		t.end();
+	}).then(function(response){
+		if (response && response.getName() === 'someUser')
+			t.pass('Client tests: getUserContext not persisted/skipPersistence was successful.');
+		else t.fail('Client tests: getUserContext not persisted/skipPersistence was not successful.');
 
-	client.setUserContext(new User('someUser'))
-	.then(function(result){
+		return client.setUserContext(new User('someUser'));
+	}, function(error){
+		t.fail('Client tests: Unexpected error, getUserContext not persisted/skipPersistence. ' + error);
+		t.end();
+	}).then(function(result){
 		t.fail('Client tests: setUserContext without skipPersistence and no stateStore should not return result.');
-	},
-	function(error){
+		t.end();
+	}, function(error){
 		if (error.message === 'Cannot save user to state store when stateStore is null.')
 			t.pass('Client tests: Should throw "Cannot save user to state store when stateStore is null"');
 		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error);
-	});
 
-	var chain = client.newChain('someChain');
-	t.equals(chain.getName(), 'someChain', 'Checking chain names match');
-	t.throws(
-		function () {
-			client.newChain('someChain');
-		},
-		/^Error: Chain someChain already exist/,
-		'Client tests: checking that chain already exists.');
-
-	t.doesNotThrow(
-		function() {
-			client.getChain('someChain');
-		},
-		null,
-		'Client tests: getChain()');
-
-	t.throws(
+		var chain = client.newChain('someChain');
+		t.equals(chain.getName(), 'someChain', 'Checking chain names match');
+		t.throws(
 			function () {
-				client.getChain('someOtherChain');
+				client.newChain('someChain');
 			},
-			/^Error: Chain not found for name someOtherChain./,
-			'Client tests: Should throw Error: Chain not found for name someOtherChain.');
+			/^Error: Chain someChain already exist/,
+			'Client tests: checking that chain already exists.');
 
-	t.throws(
-		function() {
-			client.setStateStore({});
-		},
-		/The "keyValueStore" parameter must be an object that implements the following methods, which are missing:/,
-		'Client tests: checking state store parameter implementing required functions');
+		t.doesNotThrow(
+			function() {
+				client.getChain('someChain');
+			},
+			null,
+			'Client tests: getChain()');
 
-	testutil.cleanupDir(chainKeyValStorePath);
+		t.throws(
+				function () {
+					client.getChain('someOtherChain');
+				},
+				/^Error: Chain not found for name someOtherChain./,
+				'Client tests: Should throw Error: Chain not found for name someOtherChain.');
 
-	Client.newDefaultKeyValueStore({ path: chainKeyValStorePath })
-	.then (
+		t.throws(
+			function() {
+				client.setStateStore({});
+			},
+			/The "keyValueStore" parameter must be an object that implements the following methods, which are missing:/,
+			'Client tests: checking state store parameter implementing required functions');
+
+		testutil.cleanupDir(chainKeyValStorePath);
+
+		return Client.newDefaultKeyValueStore({ path: chainKeyValStorePath });
+	}).then (
 		function (kvs) {
 			client.setStateStore(kvs);
 
@@ -170,26 +168,25 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 				t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + chainKeyValStorePath);
 
 			var store = client.getStateStore();
-			store.setValue('testKey', 'testValue')
-			.then(
-				function (result) {
-					t.pass('Client getStateStore test:  Successfully set value, result: ' + result);
+			return store.setValue('testKey', 'testValue');
+		}).then(
+			function (result) {
+				t.pass('Client getStateStore test:  Successfully set value, result: ' + result);
 
-					var exists = testutil.existsSync(chainKeyValStorePath, testKey);
-					if (exists)
-						t.pass('Client getStateStore test:  Verified the file for key ' + testKey + ' does exist');
-					else
-						t.fail('Client getStateStore test:  Failed to create file for key ' + testKey);
+				var exists = testutil.existsSync(chainKeyValStorePath, testKey);
+				if (exists)
+					t.pass('Client getStateStore test:  Verified the file for key ' + testKey + ' does exist');
+				else
+					t.fail('Client getStateStore test:  Failed to create file for key ' + testKey);
 
-					t.end();
-				}
-			).catch(
-				function (reason) {
-					t.fail('Client getStateStore test:  Failed to set value, reason: ' + reason);
-					t.end();
-				}
-			);
-		});
+				t.end();
+			}
+		).catch(
+			function (reason) {
+				t.fail('Client getStateStore test:  Failed to set value, reason: ' + reason);
+				t.end();
+			}
+		);
 });
 
 /*

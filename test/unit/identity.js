@@ -233,9 +233,9 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 		var sig = signingID.sign(TEST_MSG);
 		t.equal(cryptoUtils.verify(pubKey, sig, TEST_MSG), true, 'Test SigningIdentity sign() method');
 		t.equal(signingID.verify(TEST_MSG, sig), true, 'Test Identity verify() method');
+		t.end();
 	}).catch((err) => {
 		t.fail(err.stack ? err.stack : err);
+		t.end();
 	});
-
-	t.end();
 });

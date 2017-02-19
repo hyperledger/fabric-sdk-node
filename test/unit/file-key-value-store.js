@@ -141,13 +141,15 @@ test('\n\n ** FileKeyValueStore - constructor setValue getValue test store1 **\n
 				t.fail('FileKeyValueStore read and write test store1: get value ' + val + ' does not equal testValue of ' + testValue);
 			else
 				t.pass('FileKeyValueStore read and write test store1: Successfully retrieved value');
+
+			t.end();
 		}
 	).catch (
-			function(err) {
-				t.fail('FileKeyValueStore store1 setValue test store1, caught err: ' + err);
-			}
-		);
-	t.end();
+		function(err) {
+			t.fail('FileKeyValueStore store1 setValue test store1, caught err: ' + err);
+			t.end();
+		}
+	);
 });
 
 test('\n\n ** FileKeyValueStore - constructor setValue getValue test store2 **\n\n', function (t) {
@@ -245,18 +247,14 @@ test('\n\n** FileKeyValueStore error check tests **\n\n', function (t) {
 			} else {
 				t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue successfully retrieved value: ' + val);
 			}
+
+			cleanupFileKeyValueStore(keyValStorePath4);
+			return new FileKeyValueStore({ path: getRelativePath(keyValStorePath4) });
 		},
 		function (reason) {
 			t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue caught unexpected error: ' + reason);
-		})
-	.catch(
-		function (err) {
-			t.fail('Failed with unexpected error: ' + err.stack ? err.stack : err);
-			t.end();
-		});
-
-	cleanupFileKeyValueStore(keyValStorePath4);
-	var promise4 = new FileKeyValueStore({ path: getRelativePath(keyValStorePath4) })
+		}
+	)
 	.then(
 		function (store) {
 			store4 = store;
