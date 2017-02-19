@@ -552,7 +552,6 @@ test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		chaincodeVersion: 'blah',
-		chainId: 'blah',
 		txId: 'blah',
 		nonce: 'blah'
 	}).then(function () {
