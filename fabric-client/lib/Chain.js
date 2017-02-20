@@ -1463,7 +1463,7 @@ var Chain = class {
 		if (request) {
 			// Verify that data is being passed in
 			if (!request.proposalResponses) {
-				errorMsg = 'Missing "proposalResponse" parameter in transaction request';
+				errorMsg = 'Missing "proposalResponses" parameter in transaction request';
 			}
 			if (!request.proposal) {
 				errorMsg = 'Missing "proposal" parameter in transaction request';

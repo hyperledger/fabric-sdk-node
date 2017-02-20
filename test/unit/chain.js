@@ -1070,10 +1070,10 @@ test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
 	.then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing parameters');
 	}, function (err) {
-		if (err.message.indexOf('Missing "proposalResponse" parameter in transaction request') >= 0) {
-			t.pass('Successfully caught missing proposalResponse error');
+		if (err.message.indexOf('Missing "proposalResponses" parameter in transaction request') >= 0) {
+			t.pass('Successfully caught missing proposalResponses error');
 		} else {
-			t.fail('Failed to catch the missing proposalResponse error. Error: ' + err.stack ? err.stack : err);
+			t.fail('Failed to catch the missing proposalResponses error. Error: ' + err.stack ? err.stack : err);
 		}
 	});
 
