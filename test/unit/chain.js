@@ -459,7 +459,7 @@ test('\n\n** Chain packageChaincode tests **\n\n', function(t) {
 	}).then(() => {
 		t.fail('Chain.packageChaincode() should have rejected a call that does not have the valid request argument');
 	}).catch((err) => {
-		t.equal(err.message, 'Missing chaincodePath parameter in Deployment proposal request', 'Chain.packageChaincode() argument validation');
+		t.equal(err.message, 'Missing chaincodePath parameter in Install proposal request', 'Chain.packageChaincode() argument validation');
 
 		testutil.setupChaincodeDeploy();
 
@@ -622,12 +622,12 @@ test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
 	);
 });
 
-test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
+test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 	var c = new Chain('does not matter', client);
 	var peer = new Peer('grpc://localhost:7051');
 	c.addPeer(peer);
 
-	var p1 = c.sendDeploymentProposal({
+	var p1 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodeId: 'blah',
 		chaincodeVersion: 'blah',
@@ -647,7 +647,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	var p1a = c.sendDeploymentProposal({
+	var p1a = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
@@ -667,7 +667,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	var p2 = c.sendDeploymentProposal({
+	var p2 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
@@ -686,7 +686,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	var p3 = c.sendDeploymentProposal({
+	var p3 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
 		chaincodeVersion: 'blah',
@@ -706,7 +706,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 	});
 
 	c.removePeer(peer);
-	var p4 = c.sendDeploymentProposal({
+	var p4 = c.sendInstantiateProposal({
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		chaincodeVersion: 'blah',
@@ -718,7 +718,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on chain');
 	}).catch(function (err) {
-		var msg = 'Missing peer objects in Deployment proposal chain';
+		var msg = 'Missing peer objects in Instantiate proposal chain';
 		if (err.message.indexOf(msg) >= 0) {
 			t.pass('Successfully caught error: '+msg);
 		} else {
@@ -727,7 +727,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 	});
 
 	c.addPeer(peer);
-	var p5 = c.sendDeploymentProposal({
+	var p5 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
@@ -746,7 +746,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	var p6 = c.sendDeploymentProposal({
+	var p6 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
@@ -765,7 +765,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	var p7 = c.sendDeploymentProposal().then(function () {
+	var p7 = c.sendInstantiateProposal().then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
 	}).catch(function (err) {
 		if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
@@ -782,7 +782,7 @@ test('\n\n ** Chain sendDeploymentProposal() tests **\n\n', function (t) {
 		}
 	).catch(
 		function (err) {
-			t.fail('Chain sendDeploymentProposal() tests, Promise.all: '+err.stack ? err.stack : err);
+			t.fail('Chain sendInstantiateProposal() tests, Promise.all: '+err.stack ? err.stack : err);
 			t.end();
 		}
 	);

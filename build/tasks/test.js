@@ -24,7 +24,6 @@ gulp.task('test', ['lint', 'test-headless'], function() {
 		// 'test/integration/ca-tests.js',
 		'test/integration/chain-fabriccop-tests.js',
 		'test/integration/endorser-tests.js',
-		'test/integration/orderer-tests.js',
 		'test/integration/orderer-chain-tests.js'
 	])
 	.pipe(tape({

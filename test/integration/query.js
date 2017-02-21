@@ -43,7 +43,7 @@ var chain_id = 'testchainid';
 var chain = client.newChain(chain_id);
 
 var webUser = null;
-var chaincode_id = 'end2end'; // assumes end to end has run first and deployed this chain code
+var chaincode_id = 'end2end'; // assumes end to end has run first and installed and instantiated this chain code
 var tx_id = null;
 var nonce = null;
 var peer0 = new Peer('grpc://localhost:7051'),

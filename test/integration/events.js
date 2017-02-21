@@ -64,7 +64,7 @@ chain.addOrderer(new Orderer('grpc://localhost:7050'));
 chain.addPeer(peer0);
 chain.addPeer(peer1);
 
-test('Test chaincode deploy with event, transaction invocation with chaincode event, and query number of chaincode events', (t) => {
+test('Test chaincode instantiate with event, transaction invocation with chaincode event, and query number of chaincode events', (t) => {
 	hfc.newDefaultKeyValueStore({
 		path: testUtil.KVS
 	}).then((store) => {
@@ -108,7 +108,7 @@ test('Test chaincode deploy with event, transaction invocation with chaincode ev
 					nonce: nonce
 				};
 
-				return chain.sendDeploymentProposal(request);
+				return chain.sendInstantiateProposal(request);
 			},
 			(err) => {
 				t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -122,9 +122,9 @@ test('Test chaincode deploy with event, transaction invocation with chaincode ev
 					let one_good = false;
 					if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 						one_good = true;
-						logger.info('deploy proposal was good');
+						logger.info('instantiate proposal was good');
 					} else {
-						logger.error('deploy proposal was bad');
+						logger.error('instantiate proposal was bad');
 					}
 					all_good = all_good & one_good;
 				}
@@ -148,7 +148,7 @@ test('Test chaincode deploy with event, transaction invocation with chaincode ev
 				}
 			},
 			(err) => {
-				t.fail('Failed to send deployment proposal due to error: ' + err.stack ? err.stack : err);
+				t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			}).then((results) => {
 				if (steps.length === 1 && steps[0] === 'step1') {
@@ -156,7 +156,7 @@ test('Test chaincode deploy with event, transaction invocation with chaincode ev
 				}
 			},
 			(err) => {
-				t.fail('Failed to send deployment proposal due to error: ' + err.stack ? err.stack : err);
+				t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			});
 		}

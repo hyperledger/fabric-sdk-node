@@ -45,7 +45,7 @@ testUtil.setupChaincodeDeploy();
 //
 // Run the endorser good tests
 //
-test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
+test('\n\n** TEST ** endorse chaincode install good test', function(t) {
 	//
 	// Create and configure the test chain
 	//
@@ -72,7 +72,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 
 				chain.addPeer(new Peer('grpc://localhost:7051'));
 				chain.addPeer(new Peer('grpc://localhost:7056'));
-///
+
 				the_user = admin;
 				nonce = utils.getNonce();
 				tx_id = chain.buildTransactionID(nonce, the_user);
@@ -139,7 +139,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 					nonce: nonce
 				};
 
-				return chain.sendDeploymentProposal(request);
+				return chain.sendInstantiateProposal(request);
 			},
 			function(err) {
 				t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -161,7 +161,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 				t.end();
 			},
 			function(err) {
-				t.fail('Failed to send deployment proposal due to error: ' + err.stack ? err.stack : err);
+				t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			}
 		).catch(
@@ -172,7 +172,7 @@ test('\n\n** TEST ** endorse chaincode deployment good test', function(t) {
 		);
 	}).catch(
 		function(err) {
-			t.fail('Failed to send deployment proposal. ' + err.stack ? err.stack : err);
+			t.fail('Failed to send instantiate proposal. ' + err.stack ? err.stack : err);
 			t.end();
 		}
 	);

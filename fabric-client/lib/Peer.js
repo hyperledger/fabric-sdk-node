@@ -76,7 +76,7 @@ var Peer = class extends Remote {
 	/**
 	 * A network call that discovers if at least one listener has been connected to the target
 	 * Peer for a given event. This helps application instance to decide whether it needs to
-	 * connect to the event source in a crash recovery or multiple instance deployment.
+	 * connect to the event source in a crash recovery or multiple instance instantiation.
 	 * @param {string} eventName required
 	 * @param {Chain} chain optional
 	 * @result {boolean} Whether the said event has been listened on by some application instance on that chain.

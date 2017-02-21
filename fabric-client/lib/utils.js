@@ -272,7 +272,7 @@ module.exports.getConfig = function() {
 module.exports.generateTarGz = function(src, dest) {
 	// A list of file extensions that should be packaged into the .tar.gz.
 	// Files with all other file extenstions will be excluded to minimize the size
-	// of the deployment transaction payload.
+	// of the install payload.
 	var keep = [
 		'.go',
 		'.yaml',

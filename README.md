@@ -19,7 +19,7 @@ To build and test, the following pre-requisites must be installed first:
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
 
 This project publishes two separate npm packages:
-* `fabric-client` - main client for the Hyperledger Fabric. Applications can use this package to deploy chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
+* `fabric-client` - main client for the Hyperledger Fabric. Applications can use this package to install and instantiate chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
 * `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](https://github.com/hyperledger/fabric-ca). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, then the application does not need to use this package.
 
 In the project root folder:

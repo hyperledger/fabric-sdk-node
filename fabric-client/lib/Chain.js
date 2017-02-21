@@ -1145,7 +1145,7 @@ var Chain = class {
 			logger.error('Chain.sendInstallProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
-		errorMsg = Chain._checkInstallDeployRequest(request);
+		errorMsg = Chain._checkInstallInstantiateRequest(request);
 		if (errorMsg) {
 			logger.error('Chain.sendInstallProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
@@ -1228,7 +1228,7 @@ var Chain = class {
 	}
 
 	/**
-	 * Sends a deployment / initialize proposal to one or more endorsing peers.
+	 * Sends an instantiate proposal to one or more endorsing peers.
 	 *
 	 * @param {Object} request - An object containing the following fields:
 	 *		<br>`chaincodePath` : required - String of the path to location of
@@ -1239,13 +1239,13 @@ var Chain = class {
 	 *		<br>`txId` : required - String of the transaction id
 	 *		<br>`nonce` : required - Integer of the once time number
 	 *		<br>`fcn` : optional - String of the function to be called on
-	 *                  the chaincode once deployed (default 'init')
+	 *                  the chaincode once instantiated (default 'init')
 	 *		<br>`args` : optional - String Array arguments specific to
-	 *                   the chaincode being deployed
+	 *                   the chaincode being instantiated
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 * @see /protos/peer/fabric_proposal_response.proto
 	 */
-	sendDeploymentProposal(request) {
+	sendInstantiateProposal(request) {
 		var errorMsg = null;
 
 		var peers = null;
@@ -1255,7 +1255,7 @@ var Chain = class {
 				for (let p = 0; p < peers.length; p++) {
 					if (!this.isValidPeer(peers[p])) {
 						errorMsg = 'Request targets peer object '+ peers[p] +' not in chain';
-						logger.error('Chain.sendDeploymentProposal error '+ errorMsg);
+						logger.error('Chain.sendInstantiateProposal error '+ errorMsg);
 						return Promise.reject(new Error(errorMsg));
 					}
 				}
@@ -1266,19 +1266,19 @@ var Chain = class {
 		}
 		// Verify that a Peer has been added
 		if (peers.length < 1) {
-			errorMsg = 'Missing peer objects in Deployment proposal chain';
-			logger.error('Chain.sendDeploymentProposal error '+ errorMsg);
+			errorMsg = 'Missing peer objects in Instantiate proposal chain';
+			logger.error('Chain.sendInstantiateProposal error '+ errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
 		errorMsg = Chain._checkProposalRequest(request);
 		if (errorMsg) {
-			logger.error('Chain.sendDeploymentProposal error ' + errorMsg);
+			logger.error('Chain.sendInstantiateProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
-		errorMsg = Chain._checkInstallDeployRequest(request);
+		errorMsg = Chain._checkInstallInstantiateRequest(request);
 		if (errorMsg) {
-			logger.error('Chain.sendDeploymentProposal error ' + errorMsg);
+			logger.error('Chain.sendInstantiateProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -1708,7 +1708,7 @@ var Chain = class {
 	/*
 	 * @private
 	 */
-	static _checkInstallDeployRequest(request) {
+	static _checkInstallInstantiateRequest(request) {
 		var errorMsg = null;
 
 		if (request) {
@@ -1815,7 +1815,7 @@ function packageChaincode(devmode, request) {
 
 		if (!request.chaincodePath || request.chaincodePath === '') {
 			// Verify that chaincodePath is being passed
-			return reject(new Error('Missing chaincodePath parameter in Deployment proposal request'));
+			return reject(new Error('Missing chaincodePath parameter in Install proposal request'));
 		}
 
 		var chaincodePath = request.chaincodePath;
@@ -1841,7 +1841,7 @@ function packageChaincode(devmode, request) {
 				let targzFilePath = path.join(folder, 'deployment-package.tar.gz');
 				return utils.generateTarGz(folder, targzFilePath)
 					.then(function() {
-						logger.debug('Chain.sendDeployment- Successfully generated chaincode deploy archive %s and name (%s)', targzFilePath, chaincodeId);
+						logger.debug('Chain.sendInstantiateProposal - Successfully generated chaincode instantiate archive %s and name (%s)', targzFilePath, chaincodeId);
 						return readFile(targzFilePath)
 						.then((data) => {
 							return resolve(data);

@@ -57,7 +57,7 @@ chain.setKeyValueStore(hfc.newKeyValueStore({
 
 chain.setOrderer('grpc://localhost:7050');
 
-test('End-to-end flow of chaincode deploy, transaction invocation, and query', function(t) {
+test('End-to-end flow of chaincode instantiate, transaction invocation, and query', function(t) {
 	var promise = testUtil.getSubmitter(chain, t);
 
 	if (steps.length === 0 || steps.indexOf('step1') >= 0) {
@@ -82,7 +82,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 					nonce: nonce
 				};
 
-				return admin.sendDeploymentProposal(request);
+				return admin.sendInstantiateProposal(request);
 			},
 			function(err) {
 				t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -106,7 +106,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 				}
 			},
 			function(err) {
-				t.fail('Failed to send deployment proposal due to error: ' + err.stack ? err.stack : err);
+				t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			}
 		);
@@ -117,7 +117,7 @@ test('End-to-end flow of chaincode deploy, transaction invocation, and query', f
 			promise = promise.then(
 				function(response) {
 					if (response.Status === 'SUCCESS') {
-						t.pass('Successfully ordered deployment endorsement.');
+						t.pass('Successfully ordered instantiate endorsement.');
 						console.log(' need to wait now for the committer to catch up');
 						return sleep(20000);
 					} else {

@@ -30,11 +30,12 @@ var LocalMSP = require('./msp/msp.js');
  * The User class represents users that have been enrolled and represented by
  * an enrollment certificate (ECert) and a signing key. The ECert must have
  * been signed by one of the CAs the blockchain network has been configured to trust.
- * An enrolled user (having a signing key and ECert) can conduct chaincode deployments,
+ * An enrolled user (having a signing key and ECert) can conduct chaincode instantiate,
  * transactions and queries with the Chain.
  *
- * User ECerts can be obtained from a CA beforehand as part of deploying the application,
- * or it can be obtained from the optional Fabric CA service via its enrollment process.
+ * User ECerts can be obtained from a CA beforehand as part of installing and instantiating
+ * the application, or it can be obtained from the optional Fabric CA service via its
+ * enrollment process.
  *
  * Sometimes User identities are confused with Peer identities. User identities represent
  * signing capability because it has access to the private key, while Peer identities in

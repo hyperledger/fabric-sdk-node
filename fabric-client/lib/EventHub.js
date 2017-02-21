@@ -259,7 +259,7 @@ var EventHub = class {
 	/**
 	 * Register a callback function to receive transactional events.<p>
 	 * Note: transactional event registration is primarily used by
-	 * the sdk to track deploy and invoke completion events. Nodejs
+	 * the sdk to track instantiate and invoke completion events. Nodejs
 	 * clients generally should not need to call directly.
 	 * @param {string} txid string transaction id
 	 * @param {function} callback Function that takes a single parameter which

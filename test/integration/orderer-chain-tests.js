@@ -43,8 +43,13 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 	//
 	var chain = client.newChain('testChain-orderer-member2');
 
-	testUtil.getSubmitter(client, t)
-	.then(
+	hfc.newDefaultKeyValueStore({
+		path: testUtil.KVS
+	}).then((store) => {
+		client.setStateStore(store);
+		return testUtil.getSubmitter(client, t);
+	}
+	).then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
 
@@ -146,7 +151,7 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 // with the orderer address set to a bad URL. Verify that an error is reported
 // when tying to send the request.
 //
-test('\n\n** TEST ** orderer via member bad orderer address', function(t) {
+test('\n\n** TEST ** orderer via member bad request', function(t) {
 	//
 	// Create and configure the test chain
 	//
@@ -176,18 +181,20 @@ test('\n\n** TEST ** orderer via member bad orderer address', function(t) {
 		function(status) {
 			t.comment('Status: ' + status + ', type: (' + typeof status + ')');
 			if (status === 0) {
-				t.fail('Successfully submitted request, which is bad because the chain\'s orderer address is invalid');
+				t.fail('Successfully submitted request, which is bad because request is invalid');
 			} else {
-				t.pass('Successfully tested invalid submission due to the chain using orderers with bad addresses. Error code: ' + status);
+				t.pass('Successfully tested invalid submission due to the invalid request. Error code: ' + status);
 			}
 			t.end();
 		},
 		function(err) {
-			t.pass('Failed to submit ::' + err.stack ? err.stack : err);
+			t.comment('Failed to submit. Error: ');
+			t.pass('Error :' + err.stack ? err.stack : err);
 			t.end();
 		}
 	).catch(function(err) {
-		t.pass('Failed to submit orderer request. ' + err);
+		t.comment('Failed to submit orderer request.  Error: ');
+		t.pass('Error: ' + err);
 		t.end();
 	});
 });

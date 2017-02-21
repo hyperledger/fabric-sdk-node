@@ -76,7 +76,7 @@ hfc.newDefaultKeyValueStore({
 			txId: tx_id,
 			nonce: nonce,
 		};
-		return chain.sendDeploymentProposal(request);
+		return chain.sendInstantiateProposal(request);
 	}
 ).then(
 	function(results) {

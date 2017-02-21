@@ -69,7 +69,7 @@ chain.addOrderer(new Orderer('grpc://localhost:7050'));
 chain.addPeer(peer0);
 chain.addPeer(peer1);
 
-test('End-to-end flow of chaincode install, deploy, transaction invocation, and query', (t) => {
+test('End-to-end flow of chaincode install, instantiate, transaction invocation, and query', (t) => {
 
 	hfc.newDefaultKeyValueStore({
 		path: testUtil.KVS
@@ -172,7 +172,7 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 					nonce: nonce
 				};
 
-				return chain.sendDeploymentProposal(request);
+				return chain.sendInstantiateProposal(request);
 
 			},
 			(err) => {
@@ -188,9 +188,9 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 					let one_good = false;
 					if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 						one_good = true;
-						logger.info('deploy proposal was good');
+						logger.info('instantiate proposal was good');
 					} else {
-						logger.error('deploy proposal was bad');
+						logger.error('instantiate proposal was bad');
 					}
 					all_good = all_good & one_good;
 				}
@@ -210,7 +210,7 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 						var handle = setTimeout(reject, 30000);
 
 						eh.registerTxEvent(deployId, (tx) => {
-							t.pass('The chaincode deploy transaction has been successfully committed');
+							t.pass('The chaincode instantiate transaction has been successfully committed');
 							clearTimeout(handle);
 							eh.unregisterTxEvent(deployId);
 
@@ -227,27 +227,27 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 					return Promise.all([sendPromise, txPromise]).then((results) => {
 						return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 					}).catch((err) => {
-						t.fail('Failed to send deploy transaction and get notifications within the timeout period. ');
+						t.fail('Failed to send instantiate transaction and get notifications within the timeout period. ');
 						t.end();
 					});
 				} else {
-					t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
+					t.fail('Failed to send instantiate Proposal or receive valid response. Response null or status is not 200. exiting...');
 					t.end();
 				}
 			},
 			(err) => {
-				t.fail('Failed to send deployment proposal due to error: ' + err.stack ? err.stack : err);
+				t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			}).then((response) => {
 				if (response.status === 'SUCCESS') {
-					t.pass('Successfully sent deployment transaction to the orderer.');
+					t.pass('Successfully sent instantiate transaction to the orderer.');
 				} else {
-					t.fail('Failed to order the deployment endorsement. Error code: ' + response.status);
+					t.fail('Failed to order the instantiate endorsement. Error code: ' + response.status);
 					t.end();
 				}
 			},
 			(err) => {
-				t.fail('Failed to send deployment e due to error: ' + err.stack ? err.stack : err);
+				t.fail('Failed to send instantiate due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			});
 		}
@@ -305,7 +305,7 @@ test('End-to-end flow of chaincode install, deploy, transaction invocation, and 
 						var handle = setTimeout(reject, 30000);
 
 						eh.registerTxEvent(txId.toString(), (tx) => {
-							t.pass('The chaincode deploy transaction has been successfully committed');
+							t.pass('The chaincode instantiate transaction has been successfully committed');
 							clearTimeout(handle);
 							eh.unregisterTxEvent(txId);
 
