@@ -163,13 +163,13 @@ var Orderer = class extends Remote {
 					// check the type of the response
 					if(response.Type === 'block') {
 						var blockHeader = new _common.BlockHeader();
-						blockHeader.setNumber(response.block.Header.Number);
-						blockHeader.setPreviousHash(response.block.Header.PreviousHash);
-						blockHeader.setDataHash(response.block.Header.DataHash);
+						blockHeader.setNumber(response.block.header.number);
+						blockHeader.setPreviousHash(response.block.header.previous_hash);
+						blockHeader.setDataHash(response.block.header.data_hash);
 						var blockData = new _common.BlockData();
-						blockData.setData(response.block.Data.Data);
+						blockData.setData(response.block.data.data);
 						var blockMetadata = new _common.BlockMetadata();
-						blockMetadata.setMetadata(response.block.Metadata.Metadata);
+						blockMetadata.setMetadata(response.block.metadata.metadata);
 
 						var block = new _common.Block();
 						block.setHeader(blockHeader);
@@ -177,7 +177,7 @@ var Orderer = class extends Remote {
 						block.setMetadata(blockMetadata);
 						return_block  = block;
 
-						logger.debug('sendDeliver - wait for success, keep this block');
+						logger.debug('sendDeliver - wait for success, keep this block number %s',return_block.header.number);
 					}
 					else if(response.Type === 'status') {
 						deliver.end();

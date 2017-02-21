@@ -42,6 +42,7 @@ var _ledgerProto = grpc.load(__dirname + '/protos/common/ledger.proto').common;
 var _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configuration.proto').orderer;
 var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
 var _mspConfigProto = grpc.load(__dirname + '/protos/msp/mspconfig.proto').msp;
+var _timestampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.proto').google.protobuf;
 
 
 /**
@@ -462,33 +463,30 @@ var Chain = class {
 	 * This is a long-running process. Only one of the application instances needs
 	 * to call this method. Once the chain is successfully created, other application
 	 * instances only need to call getChain() to obtain the information about this chain.
+	 * @param {Object} request - An object containing the following fields:
+	 *		<br>`envelope` : required - byte[] of the envelope object containing
+	 *                          all required settings to initialize this channel
 	 * @returns {boolean} Whether the chain initialization process was successful.
 	 */
-	initializeChain() {
-		logger.debug('initializeChain - start');
+	initializeChannel(request) {
+		logger.debug('initializeChannel - start');
 
 		// verify that we have an orderer configured
 		if(!this.getOrderers()[0]) {
-			logger.error('initializeChain - no primary orderer defined');
+			logger.error('initializeChannel - no primary orderer defined');
 			return Promise.reject(new Error('no primary orderer defined'));
-		}
-
-		// verify that we have a user configured
-		if(!this._clientContext._userContext) {
-			logger.error('initializeChain - no user defined');
-			return Promise.reject(new Error('no user defined'));
 		}
 
 		// verify that we have a name configured
 		if(!this._name) {
-			logger.error('initializeChain - no chain id defined');
+			logger.error('initializeChannel - no chain id defined');
 			return Promise.reject(new Error('Chain name is not defined'));
 		}
 
-		// verify that we have a transactionid configured
-		if(!this._initial_transaction_id) {
-			logger.error('initializeChain - no transaction id defined');
-			return Promise.reject(new Error('Initial transaction id is not defined'));
+		// verify that we have an envelope to send
+		if(!request || !request.envelope) {
+			logger.error('initializeChannel - no envelope defined');
+			return Promise.reject(new Error('The required envelope containing the configuration is not defined'));
 		}
 
 		var self = this;
@@ -501,197 +499,13 @@ var Chain = class {
 			function(foundUserContext) {
 				userContext = foundUserContext;
 
-				logger.debug('initializeChain - building broadcast message');
-				// build fields to use when building the configuration items
-				var configItemChainHeader =	buildChannelHeader(
-					_commonProto.HeaderType.CONFIG,
-					chain_id,
-					self._initial_transaction_id,
-					self._initial_epoch
-				);
-
-				var orderer_type =
-					_configtxProto.ConfigurationItem.ConfigurationType.Orderer;
-				var policy_type =
-					_configtxProto.ConfigurationItem.ConfigurationType.Policy;
-				var last_modified = '0';
-				var mod_policy = 'DefaultModificationPolicy';
-
-				var creation_items = [];
-
-				// build configuration items
-				var consensusType = new _ordererConfigurationProto.ConsensusType();
-				consensusType.setType(self.getConsensusType());
-				var consensusTypeItem = buildSignedConfigurationItem(
-					orderer_type,
-					last_modified,
-					mod_policy,
-					'ConsensusType',
-					consensusType.toBuffer()
-				);
-				creation_items.push(consensusTypeItem.getConfigurationItem().toBuffer());
-
-				var batchSize = new _ordererConfigurationProto.BatchSize();
-				batchSize.setMaxMessageCount(self.getInitialMaxMessageCount());
-				batchSize.setAbsoluteMaxBytes(self.getInitialAbsoluteMaxBytes());
-				batchSize.setPreferredMaxBytes(self.getInitialPreferredMaxBytes());
-				var batchSizeItem = buildSignedConfigurationItem(
-					orderer_type,
-					last_modified,
-					mod_policy,
-					'BatchSize',
-					batchSize.toBuffer()
-				);
-				creation_items.push(batchSizeItem.getConfigurationItem().toBuffer());
-
-				// TODO how do we deal with KafkaBrokers ?
-				var chainCreatorPolicyName = 'AcceptAllPolicy';
-
-//				var chainCreators = new _ordererConfigurationProto.ChainCreators();
-//				chainCreators.setPolicies([chainCreatorPolicyName]);
-//				var chainCreatorsItem = buildSignedConfigurationItem(
-//					orderer_type,
-//					last_modified,
-//					mod_policy,
-//					'ChainCreators',
-//					chainCreators.toBuffer()
-//				);
-//				creation_items.push(chainCreatorsItem.getConfigurationItem().toBuffer());
-
-				var ingressPolicy = new _ordererConfigurationProto.IngressPolicyNames();
-				ingressPolicy.setNames([chainCreatorPolicyName]);
-				var ingressPolicyItem = buildSignedConfigurationItem(
-					orderer_type,
-					last_modified,
-					mod_policy,
-					'IngressPolicyNames',
-					ingressPolicy.toBuffer()
-				);
-				creation_items.push(ingressPolicyItem.getConfigurationItem().toBuffer());
-
-				var egressPolicy = new _ordererConfigurationProto.EgressPolicyNames();
-				egressPolicy.setNames([chainCreatorPolicyName]);
-				var egressPolicyItem = buildSignedConfigurationItem(
-					orderer_type,
-					last_modified,
-					mod_policy,
-					'EgressPolicyNames',
-					egressPolicy.toBuffer()
-				);
-				creation_items.push(egressPolicyItem.getConfigurationItem().toBuffer());
-
-				var acceptAllPolicy = buildAcceptAllPolicy();
-				logger.debug('accept policy::'+JSON.stringify(acceptAllPolicy));
-				var acceptAllPolicyItem = buildSignedConfigurationItem(
-					policy_type,
-					last_modified,
-					mod_policy,
-					chainCreatorPolicyName,
-					acceptAllPolicy.toBuffer()
-				);
-				creation_items.push(
-					acceptAllPolicyItem.getConfigurationItem().toBuffer()
-				);
-
-				var rejectAllPolicy = buildRejectAllPolicy();
-				logger.debug('reject policy::'+JSON.stringify(rejectAllPolicy));
-				var defaultModificationPolicyItem = buildSignedConfigurationItem(
-					policy_type,
-					last_modified,
-					mod_policy,
-					'DefaultModificationPolicy',
-					rejectAllPolicy.toBuffer()
-				);
-				creation_items.push(defaultModificationPolicyItem.getConfigurationItem().toBuffer());
-
-				var keyinfo = new _mspConfigProto.KeyInfo();
-				keyinfo.setKeyIdentifier('PEER');
-				keyinfo.setKeyMaterial(Buffer.from('peer')); //TODO get keys
-
-				var sigid = new _mspConfigProto.SigningIdentityInfo();
-				sigid.setPublicSigner(Buffer.from('signcert[0]')); //TODO get cert
-				sigid.setPrivateSigner(keyinfo);
-
-				var fmspconf = new _mspConfigProto.FabricMSPConfig();
-				fmspconf.setAdmins([Buffer.from('admincert')]); //TODO get certs
-				fmspconf.setRootCerts([Buffer.from('cacerts')]); //TODO get certs
-				fmspconf.setSigningIdentity(sigid);
-				fmspconf.setName('DEFAULT');
-
-				var mspconf = new _mspConfigProto.MSPConfig();
-				mspconf.setConfig(fmspconf.toBuffer());
-				mspconf.setType(0);
-
-				var mspConfigItem = buildSignedConfigurationItem(
-					orderer_type,
-					last_modified,
-					mod_policy,
-					'MSP',
-					mspconf.toBuffer()
-				);
-				creation_items.push(mspConfigItem.getConfigurationItem().toBuffer());
-
-				logger.debug('initializeChain - all policies built');
-
-				// hash all the bytes of all items
-				var itemBytes = Buffer.concat(creation_items);
-				logger.debug('initializeChain - itemBytes::'+itemBytes.toString('hex'));
-				//var creation_items_hash = this.cryptoPrimitives.hash(itemBytes);
-				var hashPrimitives = require('./hash.js');
-				var creation_items_hash = hashPrimitives.shake_256(itemBytes, 512);
-				logger.debug('initializeChain - creation_item_hash::'+creation_items_hash);
-
-				// final item to contain hash of all others
-				var creationPolicy = new _ordererConfigurationProto.CreationPolicy();
-				creationPolicy.setPolicy(chainCreatorPolicyName);
-				creationPolicy.setDigest(Buffer.from(creation_items_hash, 'hex'));
-				//creationPolicy.setDigest(creation_items_hash);
-				var createPolicyItem = buildSignedConfigurationItem(
-					orderer_type,
-					last_modified,
-					mod_policy,
-					'CreationPolicy',
-					creationPolicy.toBuffer()
-				);
-
-				logger.debug('initializeChain - all items built');
-
-				//bundle all the items
-				var configEnvelope = new _configtxProto.ConfigEnvelope();
-				configEnvelope.setItems([
-					createPolicyItem,
-					consensusTypeItem,
-					batchSizeItem,
-//					chainCreatorsItem,
-					ingressPolicyItem,
-					egressPolicyItem,
-					acceptAllPolicyItem,
-					defaultModificationPolicyItem,
-					mspConfigItem
-				]);
-				configEnvelope.setHeader(configItemChainHeader);
-
-				// build a chain header for later to be
-				// used in the atomic broadcast
-				var newChainHeader = buildChannelHeader(
-					_commonProto.HeaderType.CONFIG_UPDATE,
-					chain_id,
-					self._initial_transaction_id,
-					self._initial_epoch
-				);
-				var broadcastHeader = buildHeader(userContext.getIdentity(), newChainHeader, utils.getNonce());
-				var payload = new _commonProto.Payload();
-				payload.setHeader(broadcastHeader);
-				payload.setData(configEnvelope.toBuffer());
-				var payload_bytes = payload.toBuffer();
-				//logger.debug('initializeChain - Here is the envelope to broadcast :: '+ JSON.stringify(payload));
-				let sig = userContext.getSigningIdentity().sign(payload_bytes);
-				let signature = Buffer.from(sig);
-
 				// building manually or will get protobuf errors on send
+				var envelope = _commonProto.Envelope.decode(request.envelope);
+				logger.debug('initializeChannel - envelope %j',envelope);
+
 				var envelope = {
-					signature: signature,
-					payload : payload_bytes
+					signature: envelope.signature,
+					payload : envelope.payload
 				};
 
 				return orderer.sendBroadcast(envelope);
@@ -699,13 +513,13 @@ var Chain = class {
 		)
 		.then(
 			function(results) {
-				logger.debug('initializeChain - good results from broadcast :: %j',results);
+				logger.debug('initializeChannel - good results from broadcast :: %j',results);
 				return Promise.resolve(results);
 			}
 		)
 		.catch(
 			function(error) {
-				logger.error('initializeChain - system error ::' + error.stack ? error.stack : error);
+				logger.error('initializeChannel - system error ::' + error.stack ? error.stack : error);
 				return Promise.reject(new Error(error));
 			}
 		);
@@ -769,11 +583,11 @@ var Chain = class {
 				var seekInfoHeader = buildChannelHeader(
 					_commonProto.HeaderType.DELIVER_SEEK_INFO,
 					self._name,
-					self._initial_transaction_id,
+					request.txId,
 					self._initial_epoch
 				);
 
-				var seekHeader = buildHeader(userContext.getIdentity(), seekInfoHeader, utils.getNonce());
+				var seekHeader = buildHeader(userContext.getIdentity(), seekInfoHeader, request.nonce);
 				var seekPayload = new _commonProto.Payload();
 				seekPayload.setHeader(seekHeader);
 				seekPayload.setData(seekInfo.toBuffer());
@@ -818,14 +632,14 @@ var Chain = class {
 				chaincodeSpec.setInput(chaincodeInput);
 
 				var channelHeader = buildChannelHeader(
-					_commonProto.HeaderType.CONFIG_UPDATE,
+					_commonProto.HeaderType.ENDORSER_TRANSACTION,
 					'',
-					self._initial_transaction_id,
+					request.txId,
 					null, //no epoch
 					'cscc'
-					);
+				);
 
-				var header = buildHeader(userContext.getIdentity(), channelHeader, utils.getNonce());
+				var header = buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
 				var proposal = self._buildProposal(chaincodeSpec, header);
 				var signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
 
@@ -1051,16 +865,21 @@ var Chain = class {
 		} else {
 			return Promise.reject( new Error('Transaction id is required'));
 		}
-		var request = {
-			targets: [this.getPrimaryPeer()],
-			chaincodeId : 'qscc',
-			chainId: '',
-			txId: transactionID,
-			nonce: utils.getNonce(),//to do - get nonce from transaction id
-			fcn : 'GetTransactionByID',
-			args: [ this._name, transaction_id]
-		};
-		return this.sendTransactionProposal(request)
+		var self = this;
+		var nonce = utils.getNonce();
+		return this.buildTransactionID_getUserContext(nonce)
+		.then(function(txId) {
+			var request = {
+				targets: [self.getPrimaryPeer()],
+				chaincodeId : 'qscc',
+				chainId: '',
+				txId: txId,
+				nonce: nonce,
+				fcn : 'GetTransactionByID',
+				args: [ self._name, transaction_id]
+			};
+			return self.sendTransactionProposal(request);
+		})
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -1179,6 +998,7 @@ var Chain = class {
 		// step 2: construct the ChaincodeDeploymentSpec
 		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
+		chaincodeDeploymentSpec.setEffectiveDate(buildCurrentTimestamp()); //TODO may wish to add this as a request setting
 
 		return packageChaincode(this.isDevMode(), request)
 			.then(
@@ -1519,7 +1339,7 @@ var Chain = class {
 //		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposal.getPayload()); //TODO  we should do this but it does not work
 
 		var transactionAction = new _transProto.TransactionAction();
-		transactionAction.setHeader(header.getSignatureHeader().toBuffer());
+		transactionAction.setHeader(header.getSignatureHeader());
 		transactionAction.setPayload(chaincodeActionPayload.toBuffer());
 
 		var actions = [];
@@ -1853,13 +1673,16 @@ function packageChaincode(devmode, request) {
 }
 
 //utility method to build a common chain header
-function buildChannelHeader(type, chain_id, tx_id, epoch, chaincode_id) {
+function buildChannelHeader(type, chain_id, tx_id, epoch, chaincode_id, time_stamp) {
 	logger.debug('buildChannelHeader - type %s chain_id %s tx_id %d epoch % chaincode_id %s',
 			type, chain_id, tx_id, epoch, chaincode_id);
 	var channelHeader = new _commonProto.ChannelHeader();
 	channelHeader.setType(type); // int32
 	channelHeader.setVersion(1); // int32
-	//channelHeader.setTimeStamp(time_stamp); // google.protobuf.Timestamp
+	if(!time_stamp) {
+		time_stamp = buildCurrentTimestamp();
+	}
+	channelHeader.setTimestamp(time_stamp); // google.protobuf.Timestamp
 	channelHeader.setChannelId(chain_id); //string
 	channelHeader.setTxId(tx_id.toString()); //string
 	if(epoch) {
@@ -1884,8 +1707,8 @@ function buildHeader(creator, channelHeader, nonce) {
 	signatureHeader.setNonce(nonce);
 
 	let header = new _commonProto.Header();
-	header.setSignatureHeader(signatureHeader);
-	header.setChannelHeader(channelHeader);
+	header.setSignatureHeader(signatureHeader.toBuffer());
+	header.setChannelHeader(channelHeader.toBuffer());
 
 	return header;
 }
@@ -1945,5 +1768,15 @@ function buildPolicyEnvelope(nOf) {
 	policy.setPolicy(signaturePolicyEnvelope.toBuffer());
 	return policy;
 };
+
+//utility method to return a timestamp for the current time
+function buildCurrentTimestamp() {
+	logger.debug('buildCurrentTimestamp - building');
+	var now = new Date();
+	var timestamp = new _timestampProto.Timestamp();
+	timestamp.setSeconds(now.getTime() / 1000);
+	timestamp.setNanos((now.getTime() % 1000) * 1000000);
+	return timestamp;
+}
 
 module.exports = Chain;

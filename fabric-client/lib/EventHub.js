@@ -128,7 +128,8 @@ var EventHub = class {
 					try {
 						var env = _common.Envelope.decode(transaction);
 						var payload = _common.Payload.decode(env.payload);
-						if (payload.header.channel_header.type == _common.HeaderType.ENDORSER_TRANSACTION) {
+						var channel_header = _common.ChannelHeader.decode(payload.header.channel_header);
+						if (channel_header.type == _common.HeaderType.ENDORSER_TRANSACTION) {
 							var tx = _transProto.Transaction.decode(payload.data);
 							var chaincodeActionPayload = _ccTransProto.ChaincodeActionPayload.decode(tx.actions[0].payload);
 							var propRespPayload = _responseProto.ProposalResponsePayload
@@ -291,11 +292,12 @@ var EventHub = class {
 			try {
 				var env = _common.Envelope.decode(transaction);
 				var payload = _common.Payload.decode(env.payload);
+				var channel_header = _common.ChannelHeader.decode(payload.header.channel_header);
 			} catch (err) {
 				logger.error('Error unmarshalling transaction from block=', err);
 			}
-			logger.debug('txid=' + payload.header.channel_header.tx_id);
-			var cb = eh.txRegistrants.get(payload.header.channel_header.tx_id);
+			logger.debug('txid=' + channel_header.tx_id);
+			var cb = eh.txRegistrants.get(channel_header.tx_id);
 			if (cb)
 				cb(payload.header.channel_header.tx_id);
 		});

@@ -85,8 +85,11 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 				function(response) {
 					t.equal(response.header.number.toString(),'0','checking query results are correct that we got zero block back');
 					chain.setPrimaryPeer(peer0);
+					nonce = Buffer.from('12');//hard coded to be the same as end-to-end.js, this transaction will only exist if
+					                          // end-to-end runs first
+					tx_id = chain.buildTransactionID(nonce, webUser);
 					// send query
-					return chain.queryTransaction('5678'); //assumes the end-to-end has run first
+					return chain.queryTransaction(tx_id); //assumes the end-to-end has run first
 				},
 				function(err) {
 					t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
@@ -94,7 +97,7 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 				}
 			).then(
 				function(transaction) {
-					t.pass('got back transaction %j',transaction); // + JSON.stringify(response_payloads));
+					t.pass('got back ProcessedTransaction that is was a valid transaction='+transaction.valid); // + JSON.stringify(response_payloads));
 					chain.setPrimaryPeer(peer1);
 					// send query
 					return chain.queryInfo();
@@ -117,7 +120,7 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 				}
 			).then(
 				function(block) {
-					t.pass('got back block number %s', block.header.number);
+					t.pass('got back block number '+ block.header.number);
 					t.end();
 				},
 				function(err) {

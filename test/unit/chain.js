@@ -254,7 +254,7 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 	);
 	t.equal(_chain.getInitialTransactionId(), 'abcde', 'Chain tests: checking set and get initial transaction id');
 	var test_chain = new Chain('someTestChain', client);
-	test_chain.initializeChain().then(
+	test_chain.initializeChannel().then(
 		function (response) {
 			t.fail('Chain tests: orderer should have been required');
 			t.end();
@@ -269,34 +269,35 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 
 			var test_chain2 = new Chain('someTestChain2', {_userContext : {} });
 			test_chain2.addOrderer(new Orderer('grpc://somehost.com:1234'));
-			return test_chain2.initializeChain();
+			return test_chain2.initializeChannel();
 		}
-	).then(
-		function (response) {
-			t.fail('Chain tests: transaction should have been required');
-			t.end();
-		},
-		function (error) {
-			if(!error) {
-				t.fail('Should be getting an error back');
-			}
-			else {
-				t.equals(error.toString(),'Error: Initial transaction id is not defined','Chain tests: transaction id is required when initializing');
-			}
-
-			var client3 = new Client();
-			var test_chain3 = new Chain('someTestChain3', client3);
-			test_chain3.addOrderer(new Orderer('grpc://somehost.com:1234'));
-			return test_chain3.initializeChain();
-		}
+// do not need this test right now
+//	).then(
+//		function (response) {
+//			t.fail('Chain tests: transaction should have been required');
+//			t.end();
+//		},
+//		function (error) {
+//			if(!error) {
+//				t.fail('Should be getting an error back');
+//			}
+//			else {
+//				t.equals(error.toString(),'Error: Initial transaction id is not defined','Chain tests: transaction id is required when initializing');
+//			}
+//
+//			var client3 = new Client();
+//			var test_chain3 = new Chain('someTestChain3', client3);
+//			test_chain3.addOrderer(new Orderer('grpc://somehost.com:1234'));
+//			return test_chain3.initializeChannel();
+//		}
 	).then(
 		function(response){
-			t.fail('Chain tests: no user defined should, throw error, response '+response);
+			t.fail('Chain tests: no envelope should have rejected with error, response '+response);
 			t.end();
 		},function(error){
-			if (error && error.message && error.message === 'no user defined')
-				t.pass('Chain tests: no user defined, should throw error');
-			else t.fail('Chain tests: no user defined, should have thrown error "no user defined"');
+			if (error && error.message && error.message === 'The required envelope containing the configuration is not defined')
+				t.pass('Chain tests: no envelope defined, should throw error');
+			else t.fail('Chain tests: no envelope defined, should have thrown error "no user defined"');
 
 			t.end();
 		}

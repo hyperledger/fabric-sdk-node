@@ -39,12 +39,13 @@ var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
 
-var client = new hfc();
-var chain = client.newChain('testChain-e2e');
-
 var chaincode_id = 'end2end';
 var chaincode_version = 'v0';
 var chain_id = 'testchainid';
+
+var client = new hfc();
+var chain = client.newChain(chain_id);
+
 var tx_id = null;
 var nonce = null;
 var the_user = null;
@@ -259,7 +260,7 @@ test('End-to-end flow of chaincode install, instantiate, transaction invocation,
 				if(the_user === null) {
 					the_user = admin;
 				}
-				nonce = Buffer.from('12');
+				nonce = Buffer.from('12');//hard coded this so that we have a known transaction id that may be queried later
 				tx_id = chain.buildTransactionID(nonce, the_user);
 
 				// send proposal to endorser
