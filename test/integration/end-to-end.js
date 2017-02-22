@@ -210,16 +210,20 @@ test('End-to-end flow of chaincode install, instantiate, transaction invocation,
 					var txPromise = new Promise((resolve, reject) => {
 						var handle = setTimeout(reject, 30000);
 
-						eh.registerTxEvent(deployId, (tx) => {
-							t.pass('The chaincode instantiate transaction has been successfully committed');
+						eh.registerTxEvent(deployId, (tx, invalid) => {
+							t.pass('The chaincode deploy transaction has been successfully committed');
 							clearTimeout(handle);
 							eh.unregisterTxEvent(deployId);
 
-							if (!useSteps) {
-								resolve();
-							} else if (steps.length === 1 && steps[0] === 'step2') {
-								t.end();
-								resolve();
+							if (invalid) {
+								reject();
+							} else {
+								if (!useSteps) {
+									resolve();
+								} else if (steps.length === 1 && steps[0] === 'step2') {
+									t.end();
+									resolve();
+								}
 							}
 						});
 					});
@@ -305,16 +309,20 @@ test('End-to-end flow of chaincode install, instantiate, transaction invocation,
 					var txPromise = new Promise((resolve, reject) => {
 						var handle = setTimeout(reject, 30000);
 
-						eh.registerTxEvent(txId.toString(), (tx) => {
-							t.pass('The chaincode instantiate transaction has been successfully committed');
+						eh.registerTxEvent(txId.toString(), (tx, invalid) => {
+							t.pass('The chaincode deploy transaction has been successfully committed');
 							clearTimeout(handle);
 							eh.unregisterTxEvent(txId);
 
-							if (!useSteps) {
-								resolve();
-							} else if (steps.length === 1 && steps[0] === 'step3') {
-								t.end();
-								resolve();
+							if (invalid) {
+								reject();
+							} else {
+								if (!useSteps) {
+									resolve();
+								} else if (steps.length === 1 && steps[0] === 'step3') {
+									t.end();
+									resolve();
+								}
 							}
 						});
 					});

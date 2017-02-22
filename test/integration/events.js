@@ -29,7 +29,7 @@ var hfc = require('fabric-client');
 hfc.setLogger(logger);
 
 var util = require('util');
-var testUtil = require('./util.js');
+var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
@@ -37,12 +37,14 @@ var EventHub = require('fabric-client/lib/EventHub.js');
 var eputil = require('./eventutil.js');
 
 var client = new hfc();
-var chain = client.newChain('testChain-events-test');
+var chain_id = 'testchainid';
+var chain = client.newChain(chain_id);
 
 var chaincode_id = 'events_unit_test';
-var chain_id = 'testchainid';
-var tx_id = null;
+var chaincode_version = 'v0';
+var request = null;
 var nonce = null;
+var the_user = null;
 var peer0 = new Peer('grpc://localhost:7051'),
 	peer1 = new Peer('grpc://localhost:7056');
 
@@ -54,7 +56,7 @@ if (process.argv.length > 2) {
 }
 var useSteps = false;
 if (steps.length > 0 &&
-	(steps.indexOf('step1') > -1 || steps.indexOf('step2') > -1 || steps.indexOf('step3') > -1))
+	(steps.indexOf('step1') > -1 || steps.indexOf('step2') > -1 || steps.indexOf('step3') > -1 || steps.indexOf('step4') > -1 ))
 	useSteps = true;
 logger.info('Found steps: %s', steps);
 
@@ -92,157 +94,84 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			logger.info('Executing step1');
 			promise = promise.then((admin) => {
 				t.pass('Successfully enrolled user \'admin\'');
-				tx_id = utils.buildTransactionID({
-					length: 12
-				});
-				nonce = utils.getNonce();
-
-				// send proposal to endorser
-				var request = {
-					chaincodePath: 'github.com/events_cc',
-					chaincodeId: chaincode_id,
-					fcn: 'init',
-					args: [],
-					chainId: chain_id,
-					txId: tx_id,
-					nonce: nonce
-				};
-
-				return chain.sendInstantiateProposal(request);
+				the_user = admin;
+				request = eputil.createRequest(chain, the_user, chaincode_id, '', '');
+				request.chaincodePath = 'github.com/events_cc';
+				request.chaincodeVersion = chaincode_version;
+				return chain.sendInstallProposal(request);
 			},
 			(err) => {
 				t.fail('Failed to enroll user \'admin\'. ' + err);
 				t.end();
 			}).then((results) => {
-				var proposalResponses = results[0];
-				var proposal = results[1];
-				var header = results[2];
-				var all_good = true;
-				for (var i in proposalResponses) {
-					let one_good = false;
-					if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
-						one_good = true;
-						logger.info('instantiate proposal was good');
-					} else {
-						logger.error('instantiate proposal was bad');
-					}
-					all_good = all_good & one_good;
-				}
-				if (all_good) {
-					t.pass(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-					var request = {
-						proposalResponses: proposalResponses,
-						proposal: proposal,
-						header: header
-					};
-					var reginfo = {
-						type: 'TX',
-						txid: tx_id.toString()
-					};
-					return eputil.triggerEvent(eh, reginfo, 50000, function() {
-						return chain.sendTransaction(request);
-					});
+				if ( eputil.checkProposal(results)) {
+					request = eputil.createRequest(chain, the_user, chaincode_id, 'init', []);
+					request.chaincodePath = 'github.com/events_cc';
+					request.chaincodeVersion = chaincode_version;
+					return chain.sendDeploymentProposal(request);
 				} else {
-					t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
-					t.end();
+					return Promise.reject('bad install proposal:' + results);
 				}
 			},
 			(err) => {
 				t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			}).then((results) => {
+				var tmo = 50000;
+				return Promise.all([eputil.registerTxEvent(eh, request.txId.toString(), tmo),
+					eputil.sendTransaction(chain, results)]);
+			},
+			(err) => {
+				t.fail('Failed sending deployment proposal: ' + err);
+				t.end();
+			}).then((results) => {
+				t.pass('Successfully deployed chaincode.');
 				if (steps.length === 1 && steps[0] === 'step1') {
 					t.end();
 				}
 			},
 			(err) => {
-				t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
+				t.fail('Failed deployment due to error: ' + err);
 				t.end();
 			});
 		}
 
 		if (!useSteps || steps.indexOf('step2') >= 0) {
-			promise = promise.then((data) => {
+			promise = promise.then((admin) => {
 				logger.info('Executing step2');
-
-				tx_id = utils.buildTransactionID({
-					length: 12
-				});
-				nonce = utils.getNonce();
-				// send proposal to endorser
-				var request = {
-					chaincodeId: chaincode_id,
-					fcn: 'invoke',
-					args: ['invoke', 'SEVERE'],
-					chainId: chain_id,
-					txId: tx_id.toString(),
-					nonce: nonce
-				};
+				if(the_user === null) {
+					the_user = admin;
+				}
+				request = eputil.createRequest(chain, the_user, chaincode_id, 'invoke', ['invoke', 'SEVERE']);
 				return chain.sendTransactionProposal(request);
 			}).then((results) => {
-				var proposalResponses = results[0];
-				var proposal = results[1];
-				var header = results[2];
-
-				var all_good = true;
-				for (var i in proposalResponses) {
-					let one_good = false;
-					if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
-						one_good = true;
-						logger.info('invoke proposal was good');
-					} else {
-						logger.error('invoke proposal was bad');
-					}
-					all_good = all_good & one_good;
-				}
-				if (all_good) {
-					t.pass('Successfully obtained transaction endorsements.'); // + JSON.stringify(proposalResponses));
-					var request = {
-						proposalResponses: proposalResponses,
-						proposal: proposal,
-						header: header
-					};
-					var reginfo = {
-						type: 'CHAINCODE',
-						chaincodeID: chaincode_id.toString(),
-						eventNameRegex: '^evtsender*'
-					};
-					return eputil.triggerEvent(eh, reginfo, 25000, function() {
-						return chain.sendTransaction(request);
-					});
-				} else {
-					t.fail('Failed to obtain transaction endorsements. Error code: ' + results);
-					t.end();
-				}
+				var tmo = 20000;
+				return Promise.all([eputil.registerCCEvent(eh, chaincode_id.toString(), '^evtsender*', tmo),
+					eputil.sendTransaction(chain, results)
+				]);
 			},
 			(err) => {
 				t.fail('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			}).then((results) => {
+				t.pass('Successfully recieved chaincode event.');
 				if (steps.length === 1 && steps[0] === 'step2') {
 					t.end();
 				}
 			},
 			(err) => {
-				t.fail('Failed to order the transaction due to error: ' + err.stack ? err.stack : err);
+				t.fail('Failed to recieved chaincode event: ' + err);
 				t.end();
 			});
 		}
 
 		if (!useSteps || steps.indexOf('step3') >= 0) {
-			promise = promise.then((data) => {
+			promise = promise.then((admin) => {
 				logger.info('Executing step3');
-
-				// send query
-				var request = {
-					targets: [peer0, peer1],
-					chaincodeId: chaincode_id,
-					chainId: chain_id,
-					txId: utils.buildTransactionID(),
-					nonce: utils.getNonce(),
-					fcn: 'invoke',
-					args: ['query']
-				};
+				if(the_user === null) {
+					the_user = admin;
+				}
+				request = eputil.createRequest(chain, the_user, chaincode_id, 'invoke', ['query']);
 				return chain.queryByChaincode(request);
 			},
 			(err) => {
@@ -252,7 +181,9 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				for (let i = 0; i < response_payloads.length; i++) {
 					t.equal(response_payloads[i].toString('utf8'), '1', 'checking query results are number of events generated');
 				}
-				t.end();
+				if (steps.length === 1 && steps[0] === 'step3') {
+					t.end();
+				}
 			},
 			(err) => {
 				t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
@@ -260,6 +191,40 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			}
 			).catch((err) => {
 				t.fail('Failed to end to end test with error:' + err.stack ? err.stack : err);
+				t.end();
+			});
+		}
+
+		if (!useSteps || steps.indexOf('step4') >= 0) {
+			logger.info('Executing step5');
+			// Test invalid transaction
+			// create 2 invoke requests in quick succession that modify
+			// the same state variable which should cause one invoke to
+			// be invalid
+			var req1 = null;
+			var req2 = null;
+			promise = promise.then((admin) => {
+				if(the_user === null) {
+					the_user = admin;
+				}
+				req1 = eputil.createRequest(chain, the_user, chaincode_id, 'invoke', ['invoke', 'SEVERE']);
+				req2 = eputil.createRequest(chain, the_user, chaincode_id, 'invoke', ['invoke', 'SEVERE']);
+				return Promise.all([chain.sendTransactionProposal(req1),
+					chain.sendTransactionProposal(req2)]);
+			}).then(([results1, results2]) => {
+				var tmo = 20000;
+				return Promise.all([eputil.registerTxEvent(eh, req1.txId.toString(), tmo),
+					eputil.registerTxEvent(eh, req2.txId.toString(), tmo),
+					eputil.sendTransaction(chain, results1),
+					eputil.sendTransaction(chain, results2)
+				]);
+
+			}).then(([regResult1, regResult2, sendResult1, sendResult2]) => {
+				t.fail('Failed to generate an invalid transaction');
+				t.end();
+			},
+			(err) => {
+				t.equal(err, 'invalid', 'Expecting a rejected promise from the 2nd transaction should be invalid');
 				t.end();
 			});
 		}

@@ -481,3 +481,15 @@ module.exports.getClassMethods = function(clazz) {
 				return true;
 		});
 };
+
+module.exports.getBufferBit = function(buf, idx, val) {
+	// return error=true if bit to mask exceeds buffer length
+	if ((parseInt(idx/8) + 1) > buf.length) {
+		return { error: true, invalid: 0} ;
+	}
+	if ((buf[parseInt(idx/8)] & (1<<(idx%8))) != 0) {
+		return { error: false, invalid: 1};
+	} else {
+		return { error: false, invalid: 0};
+	}
+};
