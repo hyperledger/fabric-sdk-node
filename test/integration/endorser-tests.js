@@ -33,7 +33,7 @@ var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 
 var keyValStorePath = testUtil.KVS;
-var chaincode_id = 'end2end';
+var chaincode_id = 'endorsertest';
 var chaincode_version = 'endorser-v0';
 var chain_id = 'testchainid';
 var tx_id = null;

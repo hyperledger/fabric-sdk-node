@@ -49,33 +49,35 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 * constructor
 	 *
 	 * @param {number} keySize Key size for the ECDSA algorithm, can only be 256 or 384
+	 * @param {object} opts Implementation-specific options object for the {@link KeyValueStore} class to instantiate an instance
 	 * @param {string} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
 	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
 	 * KeyValueStore interface.
-	 * @param {object} opts Implementation-specific options object for the {@link KeyValueStore} class to instantiate an instance
 	 */
-	constructor(keySize, KVSImplClass, opts) {
+	constructor(keySize, opts, KVSImplClass) {
 		if (keySize !== 256 && keySize !== 384) {
 			throw new Error('Illegal key size: ' + keySize + ' - this crypto suite only supports key sizes 256 or 384');
 		}
 
 		super();
 
-		var superClass;
-
-		if (typeof KVSImplClass !== 'function') {
-			superClass = require(utils.getConfigSetting('key-value-store'));
-		} else {
-			superClass = KVSImplClass;
-		}
-
-		if (KVSImplClass && typeof opts === 'undefined') {
-			// the function is called with only one argument for the 'opts'
-			opts = KVSImplClass;
-		} else if (typeof KVSImplClass === 'undefined' && typeof opts === 'undefined') {
+		if (typeof opts === 'undefined' || opts === null) {
 			opts = {
 				path: CryptoSuite_ECDSA_AES.getDefaultKeyStorePath()
 			};
+		}
+
+		var superClass;
+
+		if (typeof KVSImplClass !== 'undefined' && KVSImplClass !== null) {
+			if (typeof KVSImplClass !== 'function') {
+				throw new Error('Super class for the key store must be a module.');
+			} else {
+				superClass = KVSImplClass;
+			}
+		} else {
+			// no super class specified, use the default key value store implementation
+			superClass = require(utils.getConfigSetting('key-value-store'));
 		}
 
 		this._keySize = keySize;

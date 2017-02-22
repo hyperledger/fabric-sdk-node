@@ -5,10 +5,10 @@
 	"crypto-keysize": 256,
 	"crypto-hsm": false,
 	"crypto-suite-software": {
-		"EC": "./impl/CryptoSuite_ECDSA_AES.js"
+		"EC": "fabric-ca-client/lib/impl/CryptoSuite_ECDSA_AES.js"
 	},
 	"crypto-suite-hsm": {
-		"EC": "./impl/bccsp_pkcs11.js"
+		"EC": "fabric-ca-client/lib/impl/bccsp_pkcs11.js"
 	},
 	"key-value-store": "fabric-ca-client/lib/impl/FileKeyValueStore.js"
 }

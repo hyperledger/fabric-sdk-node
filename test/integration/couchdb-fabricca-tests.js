@@ -70,7 +70,7 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 					process.exit(1);
 				}
 				t.comment('Initialize the CA server connection and KeyValueStore');
-				return new FabricCAServices('http://localhost:7054', kvs);
+				return new FabricCAServices('http://localhost:7054', {name: dbname, url: keyValStorePath});
 			},
 			function(err) {
 				console.log(err);
@@ -87,8 +87,8 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				t.comment('Set cryptoSuite on client');
 				t.comment('Begin caService.enroll');
 				return caService.enroll({
-					enrollmentID: 'admin2',
-					enrollmentSecret: 'adminpw2'
+					enrollmentID: 'admin',
+					enrollmentSecret: 'adminpw'
 				});
 			},
 			function(err) {

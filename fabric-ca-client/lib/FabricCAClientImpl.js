@@ -39,9 +39,19 @@ var FabricCAServices = class {
 	 * constructor
 	 *
 	 * @param {string} url The endpoint URL for Fabric CA services of the form: "http://host:port" or "https://host:port"
-	 * @param {KeyValueStore} kvs KeyValueStore for CryptoSuite
+	 * @param {object} cryptoSetting This optional parameter is an object with the following optional properties:
+	 * - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
+	 *	default is true (for software based implementation), specific implementation module is specified
+	 *	in the setting 'crypto-suite-software'
+	 * - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
+	 * - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
+	 *
+	 * @param {string} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
+	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
+	 * KeyValueStore interface.
+	 * @param {object} opts Implementation-specific options object for the {@link KeyValueStore} class to instantiate an instance
 	 */
-	constructor(url, kvs) {
+	constructor(url, cryptoSettings, KVSImplClass, opts) {
 
 		var endpoint = FabricCAServices._parseURL(url);
 
@@ -51,7 +61,7 @@ var FabricCAServices = class {
 			port: endpoint.port
 		});
 
-		this.cryptoPrimitives = utils.getCryptoSuite(kvs);
+		this.cryptoPrimitives = utils.getCryptoSuite(cryptoSettings, KVSImplClass, opts);
 
 		logger.info('Successfully constructed Fabric CA service client: endpoint - %j', endpoint);
 
