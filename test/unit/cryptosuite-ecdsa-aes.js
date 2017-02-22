@@ -177,15 +177,28 @@ test('\n\n** utils.getCryptoSuite tests **\n\n', (t) => {
 			cs._getKeyStore()
 			.then((store) => {
 				t.fail('Should not have been able to get a valid key store because of invalid store config');
-				t.end();
 			}).catch((err) => {
 				t.pass('Successfully rejected _getKeyStore() due to invalid config');
-				t.end();
 			});
 		},
 		null,
 		'Load the CryptoSuite_ECDSA_AES module and pass in an invalid config object'
 	);
+
+	cs = utils.getCryptoSuite({software: true, algorithm: 'EC', keysize: 256}, CouchDBKeyValueStore, { name: 'test_db', url: 'http://dummyUrl' });
+	cs._getKeyStore()
+	.then(() => {
+		t.fail('Should not have been able to get a valid key store because the url was invalid');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf('Error creating test_db database to store membership data: Error: getaddrinfo ENOTFOUND dummyurl') >= 0) {
+			t.pass('Successfully loaded CryptoKeyStore based on CouchDBKeyValueStore, but rejected _getKeyStore() because the url was invalid');
+		} else {
+			t.fail(err);
+		}
+
+		t.end();
+	});
 });
 
 test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
@@ -194,7 +207,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
 	var keyValueStore = null;
 	let cs;
 
-	cs = new CryptoSuite_ECDSA_AES(256, CouchDBKeyValueStore, { name: 'test_db', url: 'http://dummyUrl'});
+	cs = new CryptoSuite_ECDSA_AES(256, { name: 'test_db', url: 'http://dummyUrl'}, CouchDBKeyValueStore);
 	cs._getKeyStore()
 	.then(() => {
 		t.fail('Should not have been able to get a valid key store because the url was invalid');

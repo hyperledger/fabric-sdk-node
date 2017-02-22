@@ -26,7 +26,7 @@ var X509 = require('jsrsasign').X509;
 var util = require('util');
 var fs = require('fs');
 var path = require('path');
-var testUtil = require('./util.js');
+var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 
 var keyValStorePath = testUtil.KVS;

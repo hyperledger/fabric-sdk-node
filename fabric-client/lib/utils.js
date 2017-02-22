@@ -46,13 +46,25 @@ var sha3_256 = require('js-sha3').sha3_256;
 //  - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
 //  - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
 //
+// @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
+// {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
+// KeyValueStore interface.
 // @param {object} opts Implementation-specific option object used in the constructor
 //
-module.exports.getCryptoSuite = function(setting, opts) {
+module.exports.getCryptoSuite = function(setting, KVSImplClass, opts) {
 	var csImpl, keysize, algorithm, haveSettings = false;
 
 	csImpl = this.getConfigSetting('crypto-hsm') ? this.getConfigSetting('crypto-suite-hsm') : this.getConfigSetting('crypto-suite-software');
 
+	// this function supports skipping any of the arguments such that it can be called in any of the following fashions:
+	// - getCryptoSuite({software: true, keysize: 256, algorithm: EC}, CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
+	// - getCryptoSuite(CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
+	// - getCryptoSuite({software: true, keysize: 256, algorithm: EC}, {path: '/tmp/app-state-store'})
+	// - getCryptoSuite({software: false}, {lib: '/usr/local/bin/pkcs11.so', slot: 0, pin: '1234'})
+	// - getCryptoSuite({keysize: 384})
+	// - getCryptoSuite()
+
+	// step 1: what's the cryptosuite impl to use, key size and algo
 	if (typeof setting === 'object' && typeof setting.keysize === 'number') {
 		keysize = setting.keysize;
 		haveSettings = true;
@@ -74,19 +86,35 @@ module.exports.getCryptoSuite = function(setting, opts) {
 	// expecting a path to an alternative implementation
 	var cryptoSuite = require(csImpl);
 
-	if (typeof setting !== 'undefined' && typeof opts !== 'undefined')
-		return new cryptoSuite(keysize, opts);
+	// step 2: what's the super class to use for the crypto key store?
+	var keystoreSuperClass;
 
-	if (typeof setting !== 'undefined') {
-		// only one object is passed in as argument, we need to decide whether it's meant for the 'setting' or 'opts'
-		if (haveSettings)
-			return new cryptoSuite(keysize); // this implementation must not need any opts because no 'opts' argument was passed in
-		else
-			return new cryptoSuite(keysize, setting); // the function was called with only the 'opts' argument
+	if (typeof KVSImplClass === 'function') {
+		keystoreSuperClass = KVSImplClass;
+	} else {
+		keystoreSuperClass = null;
 	}
 
-	// the function was called without any argument
-	return new cryptoSuite(keysize);
+	// step 3: what 'opts' object should be passed to the cryptosuite impl?
+	if (KVSImplClass && typeof opts === 'undefined') {
+		if (typeof KVSImplClass === 'function') {
+			// the super class module was passed in, but not the 'opts'
+			opts = null;
+		} else {
+			// called with only one argument for the 'opts' but KVSImplClass was skipped
+			opts = KVSImplClass;
+		}
+	} else if (typeof KVSImplClass === 'undefined' && typeof opts === 'undefined') {
+		if (haveSettings) {
+			// the function was called with only the 'settings' argument
+			opts = null;
+		} else {
+			// the function was called with only the 'opts' argument or none at all
+			opts = (typeof setting === 'undefined') ? null : setting;
+		}
+	}
+
+	return new cryptoSuite(keysize, opts, keystoreSuperClass);
 };
 
 // Provide a Promise-based keyValueStore for couchdb, etc.

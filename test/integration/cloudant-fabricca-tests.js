@@ -22,15 +22,17 @@ var hfc = require('fabric-client');
 var Client = hfc;
 var User = require('fabric-client/lib/User.js');
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
+var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore');
 
 var utils = require('fabric-client/lib/utils.js');
 var couchdbUtil = require('./couchdb-util.js');
 
-// Use the Cloudant specific config file
+require('../unit/util.js').resetDefaults();
+
 hfc.addConfigFile('test/fixtures/cloudant.json');
-var dbClient = couchdbUtil.getCloudantClient();
 var keyValueStore = hfc.getConfigSetting('key-value-store');
-console.log('Key Value Store = ' + keyValueStore);
+
+var cloudantUrl = 'https://1421acc7-6faa-491a-8e10-951e2e190684-bluemix:7179ef7a72602189243deeabe207889bde1c2fada173ae1022b5592e5a79dacc@1421acc7-6faa-491a-8e10-951e2e190684-bluemix.cloudant.com';
 
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
@@ -38,6 +40,7 @@ console.log('Key Value Store = ' + keyValueStore);
 // CouchDB KeyValueStore. Then the test uses the Chain class to load the member
 // from the key value store.
 test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
+	t.equal(keyValueStore, 'fabric-client/lib/impl/CouchDBKeyValueStore.js', 'Check key value store override for CouchDBKeyValueStore');
 
 	//var user = new User();
 	var client = new Client();
@@ -49,11 +52,11 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 	var dbname = 'member_db';
 
 	var member;
-	couchdbUtil.destroy(dbname, dbClient)
+	couchdbUtil.destroy(dbname, cloudantUrl)
 	.then( function(status) {
 		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
 		t.comment('Initilize the Cloudant CouchDB KeyValueStore');
-		utils.newKeyValueStore({name: dbname, path: dbClient})
+		utils.newKeyValueStore({name: dbname, url: cloudantUrl})
 		.then(
 			function(kvs) {
 				t.comment('Setting client keyValueStore to: ' + kvs);
@@ -66,7 +69,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 					process.exit(1);
 				}
 				t.comment('Initialize the CA server connection and KeyValueStore');
-				return new FabricCAServices('http://localhost:7054', kvs);
+				return new FabricCAServices('http://localhost:7054', {name: dbname, url: cloudantUrl});
 			},
 			function(err) {
 				console.log(err);
@@ -83,8 +86,8 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				t.comment('Set cryptoSuite on client');
 				t.comment('Begin caService.enroll');
 				return caService.enroll({
-					enrollmentID: 'admin2',
-					enrollmentSecret: 'adminpw2'
+					enrollmentID: 'admin',
+					enrollmentSecret: 'adminpw'
 				});
 			},
 			function(err) {
