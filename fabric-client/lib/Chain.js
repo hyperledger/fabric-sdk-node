@@ -458,35 +458,38 @@ var Chain = class {
 	}
 
 	/**
-	 * Calls the orderer(s) to start building the new chain, which is a combination
-	 * of opening new message stream and connecting the list of participating peers.
-	 * This is a long-running process. Only one of the application instances needs
-	 * to call this method. Once the chain is successfully created, other application
-	 * instances only need to call getChain() to obtain the information about this chain.
-	 * @param {Object} request - An object containing the following fields:
+	 * Calls the orderer(s) to start building the new chain.
+	 * Only one of the application instances needs to call this method.
+	 * Once the chain is successfully created, this and other application
+	 * instances only need to call joinChannel() to participate on the channel.
+	 * @param {Object} request - An object containing the following field:
 	 *		<br>`envelope` : required - byte[] of the envelope object containing
 	 *                          all required settings to initialize this channel
 	 * @returns {boolean} Whether the chain initialization process was successful.
 	 */
-	initializeChannel(request) {
-		logger.debug('initializeChannel - start');
+	createChannel(request) {
+		logger.debug('createChannel - start');
+		var errorMsg = null;
 
 		// verify that we have an orderer configured
 		if(!this.getOrderers()[0]) {
-			logger.error('initializeChannel - no primary orderer defined');
-			return Promise.reject(new Error('no primary orderer defined'));
+			errorMsg = 'Missing orderer object for the initialize channel';
 		}
 
-		// verify that we have a name configured
-		if(!this._name) {
-			logger.error('initializeChannel - no chain id defined');
-			return Promise.reject(new Error('Chain name is not defined'));
+		// verify that we have targets (Peers) to join this channel
+		// defined by the caller
+		else if(!request) {
+			errorMsg = 'Missing all required input request parameters for initialize channel';
 		}
 
-		// verify that we have an envelope to send
-		if(!request || !request.envelope) {
-			logger.error('initializeChannel - no envelope defined');
-			return Promise.reject(new Error('The required envelope containing the configuration is not defined'));
+		// Verify that a Peer has been added
+		else if (!request.envelope) {
+			errorMsg = 'Missing envelope input parameter containing the configuration of the new channel';
+		}
+
+		if(errorMsg) {
+			logger.error('createChannel error '+ errorMsg);
+			return Promise.reject(new Error(errorMsg));
 		}
 
 		var self = this;
@@ -501,7 +504,7 @@ var Chain = class {
 
 				// building manually or will get protobuf errors on send
 				var envelope = _commonProto.Envelope.decode(request.envelope);
-				logger.debug('initializeChannel - envelope %j',envelope);
+				logger.debug('createChannel - envelope %j',envelope);
 
 				var envelope = {
 					signature: envelope.signature,
@@ -513,25 +516,32 @@ var Chain = class {
 		)
 		.then(
 			function(results) {
-				logger.debug('initializeChannel - good results from broadcast :: %j',results);
+				logger.debug('createChannel - good results from broadcast :: %j',results);
 				return Promise.resolve(results);
 			}
 		)
 		.catch(
 			function(error) {
-				logger.error('initializeChannel - system error ::' + error.stack ? error.stack : error);
+				logger.error('createChannel - system error ::' + error.stack ? error.stack : error);
 				return Promise.reject(new Error(error));
 			}
 		);
 	}
 
 	/**
-	 * Sends a join channel proposal to one or more endorsing peers.
-	 *
+	 * Sends a join channel proposal to one or more endorsing peers
+	 * Will get the genesis block from the defined orderer to be used
+	 * in the proposal.
+	 * @param {Object} request - An object containing the following fields:
+	 *		<br>`targets` : required - An array of `Peer` objects that will join
+	 *                      this channel
+	 *		<br>`txId` : required - String of the transaction id
+	 *		<br>`nonce` : required - Integer of the once time number
 	 * @returns {Promise} A Promise for a `ProposalResponse`
+	 * @see /protos/peer/fabric_proposal_response.proto
 	 */
-	sendJoinChannelProposal(request) {
-		logger.debug('sendJoinChannelProposal - start');
+	joinChannel(request) {
+		logger.debug('joinChannel - start');
 		var errorMsg = null;
 
 		// verify that we have an orderer configured
@@ -539,13 +549,29 @@ var Chain = class {
 			errorMsg = 'Missing orderer object for the join channel proposal';
 		}
 
+		// verify that we have targets (Peers) to join this channel
+		// defined by the caller
+		else if(!request) {
+			errorMsg = 'Missing all required input request parameters';
+		}
+
 		// Verify that a Peer has been added
-		if (this.getPeers().length < 1) {
-			errorMsg = 'Missing peer objects for the join channel proposal';
+		else if (!request.targets) {
+			errorMsg = 'Missing targets input parameter with the peer objects for the join channel proposal';
+		}
+
+		// verify that we have transaction id
+		else if(!request.txId) {
+			errorMsg = 'Missing txId input parameter with the required transaction identifier';
+		}
+
+		// verify that we have the nonce
+		else if(!request.nonce) {
+			errorMsg = 'Missing nonce input parameter with the required single use number';
 		}
 
 		if(errorMsg) {
-			logger.error('sendJoinChannelProposal error '+ errorMsg);
+			logger.error('joinChannel - error '+ errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -607,13 +633,13 @@ var Chain = class {
 		)
 		.then(
 			function(block) {
-				logger.debug('sendJoinChannelProposal - good results from seek block '); // :: %j',results);
+				logger.debug('joinChannel - good results from seek block '); // :: %j',results);
 				// verify that we have the genesis block
 				if(block) {
-					logger.debug('sendJoinChannelProposal - found genesis block');
+					logger.debug('joinChannel - found genesis block');
 				}
 				else {
-					logger.error('sendJoinChannelProposal - did not find genesis block');
+					logger.error('joinChannel - did not find genesis block');
 					return Promise.reject(new Error('Join Channel failed, no genesis block found'));
 				}
 				var chaincodeInput = new _ccProto.ChaincodeInput();
@@ -643,7 +669,7 @@ var Chain = class {
 				var proposal = self._buildProposal(chaincodeSpec, header);
 				var signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
 
-				return Chain._sendPeersProposal(self.getPeers(), signed_proposal);
+				return Chain._sendPeersProposal(request.targets, signed_proposal);
 			}
 		).then(
 			function(responses) {
@@ -651,7 +677,7 @@ var Chain = class {
 			}
 		).catch(
 			function(err) {
-				logger.error('Failed Proposal. Error: %s', err.stack ? err.stack : err);
+				logger.error('joinChannel - Failed Proposal. Error: %s', err.stack ? err.stack : err);
 				return Promise.reject(err);
 			}
 		);

@@ -253,55 +253,7 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 		'checking the chain setInitialTransactionId()'
 	);
 	t.equal(_chain.getInitialTransactionId(), 'abcde', 'Chain tests: checking set and get initial transaction id');
-	var test_chain = new Chain('someTestChain', client);
-	test_chain.initializeChannel().then(
-		function (response) {
-			t.fail('Chain tests: orderer should have been required');
-			t.end();
-		},
-		function (error) {
-			if(!error) {
-				t.fail('Should be getting an error back');
-			}
-			else {
-				t.equals(error.toString(),'Error: no primary orderer defined','Chain tests: orederer is required when initializing');
-			}
-
-			var test_chain2 = new Chain('someTestChain2', {_userContext : {} });
-			test_chain2.addOrderer(new Orderer('grpc://somehost.com:1234'));
-			return test_chain2.initializeChannel();
-		}
-// do not need this test right now
-//	).then(
-//		function (response) {
-//			t.fail('Chain tests: transaction should have been required');
-//			t.end();
-//		},
-//		function (error) {
-//			if(!error) {
-//				t.fail('Should be getting an error back');
-//			}
-//			else {
-//				t.equals(error.toString(),'Error: Initial transaction id is not defined','Chain tests: transaction id is required when initializing');
-//			}
-//
-//			var client3 = new Client();
-//			var test_chain3 = new Chain('someTestChain3', client3);
-//			test_chain3.addOrderer(new Orderer('grpc://somehost.com:1234'));
-//			return test_chain3.initializeChannel();
-//		}
-	).then(
-		function(response){
-			t.fail('Chain tests: no envelope should have rejected with error, response '+response);
-			t.end();
-		},function(error){
-			if (error && error.message && error.message === 'The required envelope containing the configuration is not defined')
-				t.pass('Chain tests: no envelope defined, should throw error');
-			else t.fail('Chain tests: no envelope defined, should have thrown error "no user defined"');
-
-			t.end();
-		}
-	);
+	t.end();
 });
 
 test('\n\n **  Chain query tests', function(t) {
@@ -447,6 +399,144 @@ test('\n\n ** Chain addPeer() duplicate tests **\n\n', function (t) {
 		' expected | ' + chain_duplicate.getPeers().length + ' found)');
 	}
 	t.end();
+});
+
+test('\n\n ** Chain createChannel() tests **\n\n', function (t) {
+	var c = new Chain('createChannel', client);
+	var orderer = new Orderer('grpc://localhost:7050');
+
+	var p1 = c.createChannel({}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of orderer missing');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing orderer') >= 0) {
+			t.pass('Successfully caught missing orderer error');
+		} else {
+			t.fail('Failed to catch the missing orderer error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	c.addOrderer(orderer);
+
+	var p2 = c.createChannel(
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing all') >= 0) {
+			t.pass('Successfully caught missing request error');
+		} else {
+			t.fail('Failed to catch the missing request error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p3 = c.createChannel({}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of envelope request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing envelope') >= 0) {
+			t.pass('Successfully caught missing envelope request error');
+		} else {
+			t.fail('Failed to catch the missing envelope request error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+
+
+	Promise.all([p1, p2, p3])
+	.then(
+		function (data) {
+			t.end();
+		}
+	).catch(
+		function (err) {
+			t.fail('Chain createChannel() tests, Promise.all: ');
+			console.log(err.stack ? err.stack : err);
+			t.end();
+		}
+	);
+});
+
+test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
+	var c = new Chain('joinChannel', client);
+	var orderer = new Orderer('grpc://localhost:7050');
+
+	var p1 = c.joinChannel({}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of orderer missing');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing orderer') >= 0) {
+			t.pass('Successfully caught missing orderer error');
+		} else {
+			t.fail('Failed to catch the missing orderer error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	c.addOrderer(orderer);
+
+	var p2 = c.joinChannel(
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing all') >= 0) {
+			t.pass('Successfully caught missing request error');
+		} else {
+			t.fail('Failed to catch the missing request error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p3 = c.joinChannel({}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of targets request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing targets') >= 0) {
+			t.pass('Successfully caught missing targets request error');
+		} else {
+			t.fail('Failed to catch the missing targets request error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p4 = c.joinChannel({targets: 'targets'}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of txId request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing txId') >= 0) {
+			t.pass('Successfully caught missing txId request error');
+		} else {
+			t.fail('Failed to catch the missing txId request error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p5 = c.joinChannel({targets: 'targets' , txId : 'txId' }
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of nonce request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing nonce') >= 0) {
+			t.pass('Successfully caught missing nonce request error');
+		} else {
+			t.fail('Failed to catch the missing nonce request error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3, p4, p5])
+	.then(
+		function (data) {
+			t.end();
+		}
+	).catch(
+		function (err) {
+			t.fail('Chain joinChannel() tests, Promise.all: ');
+			console.log(err.stack ? err.stack : err);
+			t.end();
+		}
+	);
 });
 
 test('\n\n** Chain packageChaincode tests **\n\n', function(t) {
