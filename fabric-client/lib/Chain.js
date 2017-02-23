@@ -996,18 +996,7 @@ var Chain = class {
 			return Promise.reject(new Error(errorMsg));
 		}
 
-		// args is optional because some chaincode may not need any input parameters during initialization
-		if (!request.args) {
-			request.args = [];
-		}
 		let self = this;
-
-		// step 1: construct a ChaincodeSpec
-		var args = [];
-		args.push(Buffer.from(request.fcn ? request.fcn : 'init', 'utf8'));
-
-		for (let i = 0; i < request.args.length; i++)
-			args.push(Buffer.from(request.args[i], 'utf8'));
 
 		let ccSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
@@ -1015,9 +1004,6 @@ var Chain = class {
 				name: request.chaincodeId,
 				path: request.chaincodePath,
 				version: request.chaincodeVersion
-			},
-			input: {
-				args: args
 			}
 		};
 
