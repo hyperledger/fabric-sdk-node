@@ -1131,7 +1131,6 @@ var Chain = class {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			chaincode_id: {
 				name: request.chaincodeId,
-				path: request.chaincodePath,
 				version: request.chaincodeVersion
 			},
 			input: {
@@ -1544,9 +1543,7 @@ var Chain = class {
 		var errorMsg = null;
 
 		if (request) {
-			if(!request.chaincodePath) {
-				errorMsg = 'Missing "chaincodePath" parameter in the proposal request';
-			}  else if(!request.chaincodeVersion) {
+			if(!request.chaincodeVersion) {
 				errorMsg = 'Missing "chaincodeVersion" parameter in the proposal request';
 			}
 		} else {
