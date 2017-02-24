@@ -89,19 +89,9 @@ var FabricCAServices = class {
 			throw new Error('Missing required argument "request.enrollmentID"');
 		}
 
-		if (typeof registrar === 'undefined' || registrar === null) {
-			throw new Error('Missing required argument "registrar"');
-		}
+		checkRegistrar(registrar);
 
-		if (typeof registrar.getName !== 'function') {
-			throw new Error('Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getName()"');
-		}
-
-		if (typeof registrar.getSigningIdentity !== 'function') {
-			throw new Error('Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity()"');
-		}
-
-		return this._fabricCAClient.register(req.enrollmentID, 'client', req.group, req.attrs, registrar.getName(), registrar.getSigningIdentity());
+		return this._fabricCAClient.register(req.enrollmentID, 'client', req.group, req.attrs, registrar.getSigningIdentity());
 	}
 
 	/**
@@ -158,6 +148,41 @@ var FabricCAServices = class {
 				);
 
 		});
+	}
+
+	/**
+	 * Revoke an existing certificate (enrollment certificate or transaction certificate), or revoke
+	 * all certificates issued to an enrollment id. If revoking a particular certificate, then both
+	 * the Authority Key Identifier and serial number are required. If revoking by enrollment id,
+	 * then all future requests to enroll this id will be rejected.
+	 * @param {Object} request Request object with the following fields:
+	 * <br> - enrollmentID {string}. ID to revoke
+	 * <br> - aki {string}. Authority Key Identifier string, hex encoded, for the specific certificate to revoke
+	 * <br> - serial {string}. Serial number string, hex encoded, for the specific certificate to revoke
+	 * <br> - reason {string}. The reason for revocation. See https://godoc.org/golang.org/x/crypto/ocsp
+	 *  for valid values. The default value is 0 (ocsp.Unspecified).
+	 * @param {User} registrar The identity of the registrar (i.e. who is performing the revocation)
+	 * @returns {Promise} The revocation results
+	 */
+	revoke(request, registrar) {
+		if (typeof request === 'undefined' || request === null) {
+			throw new Error('Missing required argument "request"');
+		}
+
+		if (request.enrollmentID === null || request.enrollmentID === '') {
+			if (request.aki === null || request.aki === '' || request.serial === null || request.serial === '') {
+				throw new Error('Enrollment ID is empty, thus both "aki" and "serial" must have non-empty values');
+			}
+		}
+
+		checkRegistrar(registrar);
+
+		return this._fabricCAClient.revoke(
+			request.enrollmentID,
+			request.aki,
+			request.serial,
+			(request.reason) ? request.reason : 0,
+			registrar.getSigningIdentity());
 	}
 
 	/**
@@ -274,39 +299,92 @@ var FabricCAClient = class {
 	 * @param {string} role Type of role for this user
 	 * @param {string} group Group to which this user will be assigned
 	 * @param {KeyValueAttribute[]} attrs Array of key/value attributes to assign to the user
-	 * @param {string} callerID The ID of the user who is registering this user
 	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
 	 * signing certificate, hash algorithm and signature algorithm
 	 * @returns {Promise} The enrollment secret to use when this user enrolls
 	 */
-	register(enrollmentID, role, group, attrs, callerID, signingIdentity) {
+	register(enrollmentID, role, group, attrs, signingIdentity) {
 
 		var self = this;
 		var numArgs = arguments.length;
+		//all arguments are required
+		if (numArgs < 5) {
+			throw new Error('Missing required parameters.  \'enrollmentID\', \'role\', \'group\', \'attrs\', \
+				and \'signingIdentity\' are all required.');
+		}
 
 		return new Promise(function (resolve, reject) {
-			//all arguments are required
-			if (numArgs < 6) {
-				reject(new Error('Missing required parameters.  \'enrollmentID\', \'role\', \'group\', \'attrs\', \
-					\'callerID\' and \'signingIdentity\' are all required.'));
-			}
-
-
 			var regRequest = {
 				'id': enrollmentID,
 				'type': role,
 				'group': group,
-				'attrs': attrs,
-				'callerID': callerID
+				'attrs': attrs
 			};
 
+			return self.post('register', regRequest, signingIdentity)
+			.then(function (response) {
+				// TODO: Keith said this may be changed soon for 'result' to be the raw secret
+				// without Base64-encoding it
+				return resolve(Buffer.from(response.result, 'base64').toString());
+			}).catch(function (err) {
+				return reject(err);
+			});
+		});
+	}
+
+	/**
+	 * Revoke an existing certificate (enrollment certificate or transaction certificate), or revoke
+	 * all certificates issued to an enrollment id. If revoking a particular certificate, then both
+	 * the Authority Key Identifier and serial number are required. If revoking by enrollment id,
+	 * then all future requests to enroll this id will be rejected.
+	 * @param {string} enrollmentID ID to revoke
+	 * @param {string} aki Authority Key Identifier string, hex encoded, for the specific certificate to revoke
+	 * @param {string} serial Serial number string, hex encoded, for the specific certificate to revoke
+	 * @param {string} reason The reason for revocation. See https://godoc.org/golang.org/x/crypto/ocsp
+	 *  for valid values
+	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
+	 * signing certificate, hash algorithm and signature algorithm
+	 * @returns {Promise} The revocation results
+	 */
+	revoke(enrollmentID, aki, serial, reason, signingIdentity) {
+
+		var self = this;
+		var numArgs = arguments.length;
+
+		//all arguments are required
+		if (numArgs < 5) {
+			throw new Error('Missing required parameters.  \'enrollmentID\', \'aki\', \'serial\', \'reason\', \
+				\'callerID\' and \'signingIdentity\' are all required.');
+		}
+
+		return new Promise(function (resolve, reject) {
+
+			var regRequest = {
+				'id': enrollmentID,
+				'aki': aki,
+				'serial': parseInt(serial, 16) + '', // per CFSSL, serial numbers are saved as decimals instead of hex strings in cert database
+				'reason': reason
+			};
+
+			return self.post('revoke', regRequest, signingIdentity)
+			.then(function (response) {
+				return resolve(response);
+			}).catch(function (err) {
+				return reject(err);
+			});
+		});
+	}
+
+	post(api_method, requestObj, signingIdentity) {
+		var self = this;
+		return new Promise(function (resolve, reject) {
 			var requestOptions = {
 				hostname: self._hostname,
 				port: self._port,
-				path: self._baseAPI + 'register',
+				path: self._baseAPI + api_method,
 				method: 'POST',
 				headers: {
-					Authorization: FabricCAClient.generateAuthToken(regRequest, signingIdentity)
+					Authorization: FabricCAClient.generateAuthToken(requestObj, signingIdentity)
 				}
 			};
 
@@ -327,15 +405,12 @@ var FabricCAClient = class {
 					}
 					//response should be JSON
 					try {
-						var regResponse = JSON.parse(payload);
-						if (regResponse.success) {
-							// we want the result field which is Base64-encoded secret.
-							// TODO: Keith said this may be changed soon for 'result' to be the raw secret
-							// without Base64-encoding it
-							return resolve(Buffer.from(regResponse.result, 'base64').toString());
+						var responseObj = JSON.parse(payload);
+						if (responseObj.success) {
+							return resolve(responseObj);
 						} else {
 							return reject(new Error(
-								util.format('Register failed with errors [%s]', JSON.stringify(regResponse.errors))));
+								util.format('Register failed with errors [%s]', JSON.stringify(responseObj.errors))));
 						}
 
 					} catch (err) {
@@ -350,12 +425,12 @@ var FabricCAClient = class {
 				reject(new Error(util.format('Calling register endpoint failed with error [%s]', err)));
 			});
 
-			request.write(JSON.stringify(regRequest));
+			request.write(JSON.stringify(requestObj));
 			request.end();
 		});
 	}
 
-	/**
+	/*
 	 * Generate authorization token required for accessing fabric-ca APIs
 	 */
 	static generateAuthToken(reqBody, signingIdentity) {
@@ -506,6 +581,16 @@ var FabricCAClient = class {
 
 	}
 };
+
+function checkRegistrar(registrar) {
+	if (typeof registrar === 'undefined' || registrar === null) {
+		throw new Error('Missing required argument "registrar"');
+	}
+
+	if (typeof registrar.getSigningIdentity !== 'function') {
+		throw new Error('Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity()"');
+	}
+}
 
 module.exports = FabricCAServices;
 module.exports.FabricCAClient = FabricCAClient;

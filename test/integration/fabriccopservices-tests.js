@@ -85,7 +85,7 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 
 			var signingIdentity = new SigningIdentity('testSigningIdentity', eResult.certificate, pubKey, msp, new Signer(msp.cryptoSuite, eResult.key));
 
-			return cop._fabricCAClient.register(enrollmentID, 'client', 'bank_a', [], 'admin', signingIdentity);
+			return cop._fabricCAClient.register(enrollmentID, 'client', 'bank_a', [], signingIdentity);
 		}).then((secret) => {
 			t.comment(secret);
 			enrollmentSecret = secret; // to be used in the next test case
@@ -108,6 +108,30 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 			return cop.register({enrollmentID: 'testUserX', group: 'bank_a'}, member);
 		}).then((secret) => {
 			t.pass('Successfully enrolled "testUserX" in group "bank_a" with enrollment secret returned: ' + secret);
+
+			return cop.revoke({enrollmentID: 'testUserX'}, member);
+		}).then((response) => {
+			t.equal(response.success, true, 'Successfully revoked "testUserX"');
+
+			return cop.register({enrollmentID: 'testUserY', group: 'bank_a'}, member);
+		}).then((secret) => {
+			t.comment('Successfully registered another user "testUserY"');
+
+			return cop.enroll({enrollmentID: 'testUserY', enrollmentSecret: secret}, member);
+		}).then((enrollment) => {
+			t.comment('Successfully enrolled "testUserY"');
+
+			var cert = new X509();
+			cert.readCertPEM(enrollment.certificate);
+			var aki = X509.getExtAuthorityKeyIdentifier(cert.hex).kid;
+			var serial = cert.getSerialNumberHex();
+
+			t.comment(util.format('Ready to revoke certificate serial # "%s" with aki "%s"', serial, aki));
+
+			return cop.revoke({serial: serial, aki: aki}, member);
+		}).then((response) => {
+			t.equal(response.success, true, 'Successfully revoked "testUserY" using serial number and AKI');
+
 			t.end();
 		}).catch((err) => {
 			t.fail('Failed at ' + err.stack ? err.stack : err);

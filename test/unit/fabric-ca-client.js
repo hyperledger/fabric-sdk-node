@@ -182,25 +182,66 @@ test('FabricCAServices: Test register() function', function(t) {
 		() => {
 			cop.register({enrollmentID: 'testUser'}, {});
 		},
-		/Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getName/,
-		'Must fail if registrar argument is not a User object'
-	);
-	t.throws(
-		() => {
-			cop.register({enrollmentID: 'testUser'}, { getName: function() { return 'dummy';} });
-		},
 		/Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity/,
 		'Must fail if registrar argument is not a User object'
 	);
+
+	cop.register({enrollmentID: 'testUser'}, { getSigningIdentity: function() { return 'dummy'; } })
+	.then(() => {
+		t.fail('Should not have been able to resolve this request');
+		t.end();
+	}).catch((err) => {
+		t.pass('Successfully rejected register call due to invalid parameters');
+
+		t.end();
+	});
+});
+
+test('FabricCAServices: Test revoke() function', function(t) {
+	var cop = new FabricCAServices('http://localhost:7054');
+
+	t.throws(
+		() => {
+			cop.revoke({enrollmentID: null, aki: null, serial: '', reason: 0});
+		},
+		/Enrollment ID is empty, thus both "aki" and "serial" must have non-empty values/,
+		'Test missing both enrollmentID and aki/serial'
+	);
+	t.throws(
+		() => {
+			cop.revoke({enrollmentID: null, aki: 'someId', serial: '', reason: 0});
+		},
+		/Enrollment ID is empty, thus both "aki" and "serial" must have non-empty values/,
+		'Test having valid "aki" but missing "serial"'
+	);
+	t.throws(
+		() => {
+			cop.revoke({enrollmentID: null, aki: '', serial: 'someId', reason: 0});
+		},
+		/Enrollment ID is empty, thus both "aki" and "serial" must have non-empty values/,
+		'Test having valid "serial" but missing "aki"'
+	);
+	t.throws(
+		() => {
+			cop.revoke({enrollmentID: null, aki: 'someId', serial: 'someId', reason: 0}, {});
+		},
+		/Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity/,
+		'Test invalid "signingIdentity"'
+	);
 	t.doesNotThrow(
 		() => {
-			cop.register({enrollmentID: 'testUser'}, { getName: function() { return 'dummy'; }, getSigningIdentity: function() { return 'dummy'; } });
+			cop.revoke({enrollmentID: null, aki: 'someId', serial: 'someId', reason: 0}, {getSigningIdentity: function() { return 'dummy'; }})
+			.then(() => {
+				t.fail('Should not have been able to successfully resolved the revoke call');
+				t.end();
+			}).catch(() => {
+				t.pass('Successfully rejected the request to revoke due to invalid parameters');
+				t.end();
+			});
 		},
 		null,
-		'Should pass the argument checking but would fail when the register call tries to assemble the auth token'
+		'Test invalid "signingIdentity"'
 	);
-
-	t.end();
 });
 
 test('FabricCAServices: Test _parseURL() function', function (t) {
@@ -305,18 +346,35 @@ test('FabricCAClient: Test register with missing parameters', function (t) {
 		port: 7054
 	});
 
-	client.register()
-	.then(function (token) {
-		t.fail('Register must fail when missing required parameters');
-		t.end();
-	})
-	.catch(function (err) {
-		if (err.message.startsWith('Missing required parameters')) {
-			t.pass('Register should fail when missing required parameters');
-		} else {
-			t.fail('Register should have failed with \'Missing required parameters\'');
-		}
+	t.throws(
+		() => {
+			client.register();
+		},
+		/Missing required parameters/,
+		'Test missing all parameters'
+	);
 
-		t.end();
+	t.end();
+});
+
+/**
+ * FabricCAClient revoke tests
+ */
+test('FabricCAClient: Test revoke with missing parameters', function (t) {
+
+	var client = new FabricCAClient({
+		protocol: 'http',
+		hostname: '127.0.0.1',
+		port: 7054
 	});
+
+	t.throws(
+		() => {
+			client.revoke();
+		},
+		/Missing required parameters/,
+		'Test missing all parameters'
+	);
+
+	t.end();
 });
