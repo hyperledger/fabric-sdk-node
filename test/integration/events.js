@@ -108,7 +108,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 					request = eputil.createRequest(chain, the_user, chaincode_id, 'init', []);
 					request.chaincodePath = 'github.com/events_cc';
 					request.chaincodeVersion = chaincode_version;
-					return chain.sendDeploymentProposal(request);
+					return chain.sendInstantiateProposal(request);
 				} else {
 					return Promise.reject('bad install proposal:' + results);
 				}
