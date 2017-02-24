@@ -114,7 +114,7 @@ var Chain = class {
 		this.setInitialAbsoluteMaxBytes(10 * 1024 * 1024);
 		this.setInitialPreferredMaxBytes(10 * 1024 * 1024);
 		this._consensus_type = 'solo';
-		// user must set this value before the initializeChain() method
+		// user must set this value before the createChannel() method
 		// is called
 		this._initial_transaction_id = null;
 
@@ -448,7 +448,7 @@ var Chain = class {
 	/**
 	 * Set the initial transaction ID that will be used when this
 	 * chain is created. This value must be set before the
-	 * initializeChain() method is called.
+	 * createChannel() method is called.
 	 * There is no default.
 	 *
 	 * @param {int} initial transaction ID
@@ -603,7 +603,7 @@ var Chain = class {
 				seekInfo.setStart(seekStart);
 				seekInfo.setStop(seekStop);
 				seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
-				//logger.debug('initializeChain - seekInfo ::' + JSON.stringify(seekInfo));
+				//logger.debug('createChannel - seekInfo ::' + JSON.stringify(seekInfo));
 
 				// build the header for use with the seekInfo payload
 				var seekInfoHeader = buildChannelHeader(
@@ -948,10 +948,17 @@ var Chain = class {
 	 *                            the source code of the chaincode
 	 *		<br>`chaincodeId` : required - String of the name of the chaincode
 	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
+	 *		<br>`chaincodePackage` : optional - Byte array of the archive content for
+	 *                               the chaincode source. The archive must have a 'src'
+	 *                               folder containing subfolders corresponding to the
+	 *                               'chaincodePath' field. For instance, if the chaincodePath
+	 *                               is 'mycompany/myproject', then the archive must contain a
+	 *                               folder at the path 'src/mycompany/myproject', where the
+	 *                               GO source code resides.
+	 *		<br>`chaincodeType` : optional - Type of chaincode ['golang', 'car', 'java']
+	 *                   (default 'golang')
 	 *		<br>`txId` : required - String of the transaction id
 	 *		<br>`nonce` : required - Integer of the once time number
-	 *      	<br>`type` : optional - type of chaincode ['golang', 'car', 'java']
-	 *                   (default 'golang')
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 * @see /protos/peer/fabric_proposal_response.proto
 	 */
@@ -1001,7 +1008,7 @@ var Chain = class {
 		let self = this;
 
 		let ccSpec = {
-			type: translateCCType(request.type),
+			type: translateCCType(request.chaincodeType),
 			chaincode_id: {
 				name: request.chaincodeId,
 				path: request.chaincodePath,
@@ -1014,53 +1021,94 @@ var Chain = class {
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 		chaincodeDeploymentSpec.setEffectiveDate(buildCurrentTimestamp()); //TODO may wish to add this as a request setting
 
-		return packageChaincode(this.isDevMode(), request)
-			.then(
-				function(data) {
+		return Chain._getChaincodePackageData(request, this.isDevMode())
+		.then((data) => {
+			logger.debug('Chain.sendInstallProposal data %s ',data);
+			// DATA may or may not be present depending on devmode settings
+			if (data) {
+				chaincodeDeploymentSpec.setCodePackage(data);
+			}
+			logger.debug('Chain.sendInstallProposal sending deployment spec %s ',chaincodeDeploymentSpec);
 
-					// DATA may or may not be present depending on devmode settings
-					if (data) {
-						chaincodeDeploymentSpec.setCodePackage(data);
-					}
-
-					logger.debug('sending deployment spec' + chaincodeDeploymentSpec);
-
-					// TODO add ESCC/VSCC info here ??????
-					let lcccSpec = {
-						type: _ccProto.ChaincodeSpec.Type.GOLANG,
-						chaincode_id: {
-							name: 'lccc'
-						},
-						input: {
-							args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
-						}
-					};
-
-					var header, proposal;
-					return self._clientContext.getUserContext()
-						.then(
-							function(userContext) {
-								var txId = self.buildTransactionID(request.nonce, userContext);
-								var channelHeader = buildChannelHeader(
-									_commonProto.HeaderType.ENDORSER_TRANSACTION,
-									'', //install does not target a channel
-									txId,
-									null,
-									'lccc'
-								);
-								header = buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
-								proposal = self._buildProposal(lcccSpec, header);
-								let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
-
-								return Chain._sendPeersProposal(peers, signed_proposal);
-							}
-						).then(
-							function(responses) {
-								return [responses, proposal, header];
-							}
-						);
+			// TODO add ESCC/VSCC info here ??????
+			let lcccSpec = {
+				type: _ccProto.ChaincodeSpec.Type.GOLANG,
+				chaincode_id: {
+					name: 'lccc'
+				},
+				input: {
+					args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
 				}
-			);
+			};
+
+			var header, proposal;
+			return self._clientContext.getUserContext()
+				.then(
+					function(userContext) {
+						var txId = self.buildTransactionID(request.nonce, userContext);
+						var channelHeader = buildChannelHeader(
+							_commonProto.HeaderType.ENDORSER_TRANSACTION,
+							'', //install does not target a channel
+							txId,
+							null,
+							'lccc'
+						);
+						header = buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
+						proposal = self._buildProposal(lcccSpec, header);
+						let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
+
+						return Chain._sendPeersProposal(peers, signed_proposal);
+					}
+				).then(
+					function(responses) {
+						return [responses, proposal, header];
+					}
+				);
+		});
+	}
+
+
+	/**
+	* Utility function to package a chaincode.  All of the files
+	* in the directory of the environment variable GOPATH joined
+	* to the request.chaincodePath will be included in an archive
+	* file.  The contents will be returned as a byte array.
+	*
+	* @param {Object} chaincodePath required - String of the path to location of
+	*                the source code of the chaincode
+	* @param {Object} chaincodeType optional - String of the type of chaincode
+	*                 ['golang', 'car', 'java'] (default 'golang')
+	* @param {boolean} devmode optional - True if using dev mode
+	* @returns {Promise} A promise for the data as a byte array
+	*/
+	static packageChaincode(chaincodePath, chaincodeType, devmode) {
+		logger.debug('Chain.packageChaincode chaincodePath: %s, chaincodeType: %s, devmode: %s',chaincodePath,chaincodeType,devmode);
+		return new Promise(function(resolve, reject) {
+			if (devmode) {
+				logger.debug('Chain.packageChaincode Skipping chaincode packaging due to devmode configuration');
+				return resolve(null);
+			}
+
+			if (!chaincodePath || chaincodePath && chaincodePath.length < 1) {
+				// Verify that chaincodePath is being passed
+				return reject(new Error('Missing chaincodePath parameter in Chain.packageChaincode'));
+			}
+
+			let type = !!chaincodeType ? chaincodeType : 'golang';
+			logger.debug('Chain.packageChaincode type %s ',type);
+
+			let handler;
+
+			switch (type) {
+			case 'car':
+				handler = packageCarChaincode;
+				break;
+			default:
+				handler = packageGolangChaincode;
+			}
+
+			return resolve(handler(chaincodePath));
+		});
 	}
 
 	/**
@@ -1593,6 +1641,20 @@ var Chain = class {
 		});
 	}
 
+	// internal utility method to get the chaincodePackage data in bytes
+	/**
+	 * @private
+	 */
+	static _getChaincodePackageData(request, devMode) {
+		return new Promise((resolve,reject) => {
+			if (!request.chaincodePackage) {
+				resolve(Chain.packageChaincode(request.chaincodePath, request.chaincodeType, devMode));
+			} else {
+				resolve(request.chaincodePackage);
+			}
+		});
+	}
+
 	/**
 	* return a printable representation of this object
 	*/
@@ -1639,39 +1701,9 @@ function writeFile(path, contents) {
 	});
 }
 
-function packageChaincode(devmode, request) {
-	if (devmode) {
-		logger.debug('Skipping chaincode packaging due to devmode configuration');
-		return Promise.resolve(null);
-	}
-
-	if (!request.chaincodePath || request.chaincodePath === '') {
-		// Verify that chaincodePath is being passed
-		return Promise.reject(new Error('Missing chaincodePath parameter in Install proposal request'));
-	}
-
-	var type = request.type;
-	var handler;
-
-	switch (type) {
-	default:
-	case 'golang':
-		handler = packageGolangChaincode;
-		break;
-	case 'car':
-		handler = packageCarChaincode;
-		break;
-	}
-
-	return handler(request);
-}
-
-function packageGolangChaincode(request) {
+function packageGolangChaincode(chaincodePath) {
 	return new Promise(function(resolve, reject) {
-		logger.info('packaging GOLANG from %s', request.chaincodePath);
-
-		var chaincodePath = request.chaincodePath;
-		var chaincodeId = request.chaincodeId;
+		logger.info('Chain.packageGolangChaincode packaging GOLANG from %s', chaincodePath);
 
 		// Determine the user's $GOPATH
 		let goPath =  process.env['GOPATH'];
@@ -1693,9 +1725,10 @@ function packageGolangChaincode(request) {
 				let targzFilePath = path.join(folder, 'deployment-package.tar.gz');
 				return utils.generateTarGz(folder, targzFilePath)
 					.then(function() {
-						logger.debug('Chain.sendInstantiateProposal - Successfully generated chaincode instantiate archive %s and name (%s)', targzFilePath, chaincodeId);
+						logger.debug('Chain.packageGolangChaincode - Successfully generated chaincode archive %s ', targzFilePath);
 						return readFile(targzFilePath)
 							.then((data) => {
+								logger.debug('Chain.packageGolangChaincode - Successful readFile to data in bytes');
 								return resolve(data);
 							});
 					});
@@ -1704,9 +1737,9 @@ function packageGolangChaincode(request) {
 	});
 }
 
-function packageCarChaincode(request) {
-	logger.info('packaging CAR file from %s', request.chaincodePath);
-	return readFile(request.chaincodePath);
+function packageCarChaincode(chaincodePath) {
+	logger.info('Chain.packageCarChaincode packaging CAR file from %s', chaincodePath);
+	return readFile(chaincodePath);
 }
 
 //utility method to build a common chain header
