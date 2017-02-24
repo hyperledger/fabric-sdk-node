@@ -73,14 +73,35 @@ var FabricCAServices = class {
 
 	/**
 	 * Register the member and return an enrollment secret.
-	 * @param {Object} req Registration request with the following fields: enrollmentID, roles, registrar
-	 * @param {Member} registrar The identity of the registrar (i.e. who is performing the registration)
-	 * @returns Promise for the enrollmentSecret
-	 * @ignore
+	 * @param {Object} req Registration request with the following fields:
+	 * <br> - enrollmentID {string}. ID which will be used for enrollment
+	 * <br> - group {string}. Group to which this user will be assigned, like a company or an organization
+	 * <br> - attrs {{@link KeyValueAttribute}[]}. Array of key/value attributes to assign to the user.
+	 * @param registrar {User}. The identity of the registrar (i.e. who is performing the registration)
+	 * @returns {Promise} The enrollment secret to use when this user enrolls
 	 */
 	register(req, registrar) {
-		var self = this;
+		if (typeof req === 'undefined' || req === null) {
+			throw new Error('Missing required argument "request"');
+		}
 
+		if (typeof req.enrollmentID === 'undefined' || req.enrollmentID === null) {
+			throw new Error('Missing required argument "request.enrollmentID"');
+		}
+
+		if (typeof registrar === 'undefined' || registrar === null) {
+			throw new Error('Missing required argument "registrar"');
+		}
+
+		if (typeof registrar.getName !== 'function') {
+			throw new Error('Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getName()"');
+		}
+
+		if (typeof registrar.getSigningIdentity !== 'function') {
+			throw new Error('Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity()"');
+		}
+
+		return this._fabricCAClient.register(req.enrollmentID, 'client', req.group, req.attrs, registrar.getName(), registrar.getSigningIdentity());
 	}
 
 	/**
@@ -216,7 +237,6 @@ var FabricCAClient = class {
 	 * @param {string} connect_opts.protocol The protocol to use (either HTTP or HTTPS)
 	 * @param {string} connect_opts.hostname The hostname of the Fabric CA server endpoint
 	 * @param {number} connect_opts.port The port of the Fabric CA server endpoint
-	 * @param {Buffer[]} connect_opts.ca An array of trusted certificates in PEM format
 	 * @throws Will throw an error if connection options are missing or invalid
 	 *
 	 */
@@ -237,7 +257,6 @@ var FabricCAClient = class {
 		} else {
 			this._port = (connect_opts.protocol === 'http' ? 80 : 443);
 		}
-		this._ca = (connect_opts.ca) ? connect_opts.ca : null;
 		this._baseAPI = '/api/v1/cfssl/';
 
 
@@ -256,18 +275,20 @@ var FabricCAClient = class {
 	 * @param {string} group Group to which this user will be assigned
 	 * @param {KeyValueAttribute[]} attrs Array of key/value attributes to assign to the user
 	 * @param {string} callerID The ID of the user who is registering this user
+	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
+	 * signing certificate, hash algorithm and signature algorithm
 	 * @returns {Promise} The enrollment secret to use when this user enrolls
 	 */
-	register(enrollmentID, role, group, attrs, callerID) {
+	register(enrollmentID, role, group, attrs, callerID, signingIdentity) {
 
 		var self = this;
 		var numArgs = arguments.length;
 
 		return new Promise(function (resolve, reject) {
 			//all arguments are required
-			if (numArgs < 5) {
+			if (numArgs < 6) {
 				reject(new Error('Missing required parameters.  \'enrollmentID\', \'role\', \'group\', \'attrs\', \
-					and \'callerID\' are all required.'));
+					\'callerID\' and \'signingIdentity\' are all required.'));
 			}
 
 
@@ -284,8 +305,9 @@ var FabricCAClient = class {
 				port: self._port,
 				path: self._baseAPI + 'register',
 				method: 'POST',
-				//auth: enrollmentID + ':' + enrollmentSecret,
-				ca: self._ca
+				headers: {
+					Authorization: FabricCAClient.generateAuthToken(regRequest, signingIdentity)
+				}
 			};
 
 			var request = self._httpClient.request(requestOptions, function (response) {
@@ -307,8 +329,10 @@ var FabricCAClient = class {
 					try {
 						var regResponse = JSON.parse(payload);
 						if (regResponse.success) {
-							//we want the result field which is Base64-encoded PEM
-							return resolve(regResponse.result);
+							// we want the result field which is Base64-encoded secret.
+							// TODO: Keith said this may be changed soon for 'result' to be the raw secret
+							// without Base64-encoding it
+							return resolve(Buffer.from(regResponse.result, 'base64').toString());
 						} else {
 							return reject(new Error(
 								util.format('Register failed with errors [%s]', JSON.stringify(regResponse.errors))));
@@ -332,13 +356,24 @@ var FabricCAClient = class {
 	}
 
 	/**
-	 * Generate authorization token required for accessing fabric-cop APIs
-	 * @param {string} privKey The pem-encoded private key used for signing
-	 * @param {string} X509Key The pem-encoded X509 certificate associated with privKey
-	 * @param {string} reqBody The body of the request to sign as part of the token
+	 * Generate authorization token required for accessing fabric-ca APIs
 	 */
-	static generateAuthToken(privKey, X509Key, reqBody) {
+	static generateAuthToken(reqBody, signingIdentity) {
+		// sometimes base64 encoding results in trailing one or two "=" as padding
+		var trim = function(string) {
+			return string.replace(/=*$/, '');
+		};
 
+		// specific signing procedure is according to:
+		// https://github.com/hyperledger/fabric-ca/blob/master/util/util.go#L213
+		var cert = trim(Buffer.from(signingIdentity._certificate).toString('base64'));
+		var body = trim(Buffer.from(JSON.stringify(reqBody)).toString('base64'));
+
+		var bodyAndcert = body + '.' + cert;
+		var sig = signingIdentity.sign(bodyAndcert);
+
+		var b64Sign = trim(Buffer.from(sig, 'hex').toString('base64'));
+		return cert + '.' + b64Sign;
 	}
 
 	/**
@@ -366,8 +401,7 @@ var FabricCAClient = class {
 				port: self._port,
 				path: self._baseAPI + 'enroll',
 				method: 'POST',
-				auth: enrollmentID + ':' + enrollmentSecret,
-				ca: self._ca
+				auth: enrollmentID + ':' + enrollmentSecret
 			};
 
 			var enrollRequest = {

@@ -28,41 +28,20 @@ var fs = require('fs');
 var path = require('path');
 var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
+var LocalMSP = require('fabric-client/lib/msp/msp.js');
+var idModule = require('fabric-client/lib/msp/identity.js');
+var SigningIdentity = idModule.SigningIdentity;
+var Signer = idModule.Signer;
+var User = require('fabric-client/lib/User.js');
 
 var keyValStorePath = testUtil.KVS;
-
 
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 var FabricCAClient = FabricCAServices.FabricCAClient;
 
 var enrollmentID = 'testUser';
-var enrollmentSecret = 'user1';
+var enrollmentSecret;
 var csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabriccop/enroll-csr.pem'));
-
-
-test('FabricCAClient: Test enroll With Static CSR', function (t) {
-
-	var client = new FabricCAClient({
-		protocol: 'http',
-		hostname: '127.0.0.1',
-		port: 7054
-	});
-
-	//
-	return client.enroll(enrollmentID, enrollmentSecret, csr.toString())
-		.then(function (pem) {
-			t.comment(pem);
-			t.pass('Successfully invoked enroll API with enrollmentID \'' + enrollmentID + '\'');
-			//check that we got back the expected certificate
-			var cert = new X509();
-			cert.readCertPEM(pem);
-			t.comment(cert.getSubjectString());
-			t.equal(cert.getSubjectString(), '/CN=' + enrollmentID, 'Subject should be /CN=' + enrollmentID);
-		})
-		.catch(function (err) {
-			t.fail('Failed to enroll \'' + enrollmentID + '\'.  ' + err);
-		});
-});
 
 /**
  * FabricCAServices class tests
@@ -83,26 +62,60 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		enrollmentSecret: 'adminpw'
 	};
 
+	var eResult, client, member;
 	return cop.enroll(req)
-		.then(
-		function (enrollment) {
-
+		.then((enrollment) => {
 			t.pass('Successfully enrolled \'' + req.enrollmentID + '\'.');
+			eResult = enrollment;
 
 			//check that we got back the expected certificate
 			var cert = new X509();
 			cert.readCertPEM(enrollment.certificate);
 			t.comment(cert.getSubjectString());
 			t.equal(cert.getSubjectString(), '/CN=' + req.enrollmentID, 'Subject should be /CN=' + req.enrollmentID);
-		},
-		function (err) {
-			t.fail('Failed to enroll \'' + req.enrollmentID + '\'.  ' + err);
-		}
-		);
 
+			return cop.cryptoPrimitives.importKey(enrollment.certificate);
+		}).then((pubKey) => {
+			t.pass('Successfully imported public key from the resulting enrollment certificate');
+
+			var msp = new LocalMSP({
+				id: 'DEFAULT',
+				cryptoSuite: cop.cryptoPrimitives
+			});
+
+			var signingIdentity = new SigningIdentity('testSigningIdentity', eResult.certificate, pubKey, msp, new Signer(msp.cryptoSuite, eResult.key));
+
+			return cop._fabricCAClient.register(enrollmentID, 'client', 'bank_a', [], 'admin', signingIdentity);
+		}).then((secret) => {
+			t.comment(secret);
+			enrollmentSecret = secret; // to be used in the next test case
+
+			t.pass('Successfully invoked register API with enrollmentID \'' + enrollmentID + '\'');
+
+			return hfc.newDefaultKeyValueStore({
+				path: testUtil.KVS
+			});
+		}).then((store) => {
+			t.comment('Successfully constructed a state store');
+
+			client = new hfc();
+			client.setStateStore(store);
+			member = new User('adminX', client);
+			return member.setEnrollment(eResult.key, eResult.certificate);
+		}).then(() => {
+			t.comment('Successfully constructed a user object based on the enrollment');
+
+			return cop.register({enrollmentID: 'testUserX', group: 'bank_a'}, member);
+		}).then((secret) => {
+			t.pass('Successfully enrolled "testUserX" in group "bank_a" with enrollment secret returned: ' + secret);
+			t.end();
+		}).catch((err) => {
+			t.fail('Failed at ' + err.stack ? err.stack : err);
+			t.end();
+		});
 });
 
-test('FabricCAClient: Test register', function (t) {
+test('FabricCAClient: Test enroll With Static CSR', function (t) {
 
 	var client = new FabricCAClient({
 		protocol: 'http',
@@ -110,16 +123,20 @@ test('FabricCAClient: Test register', function (t) {
 		port: 7054
 	});
 
-	var enrollmentID = 'testRegisterUser';
-
-
-	return client.register(enrollmentID, 'client', 'bank_a', [], 'admin')
-		.then(function (secret) {
-			t.comment(secret);
-			t.pass('Successfully invoked register API with enrollmentID \'' + enrollmentID + '\'');
-
+	t.comment(util.format('Sending enroll request for user %s with enrollment secret %s', enrollmentID, enrollmentSecret));
+	return client.enroll(enrollmentID, enrollmentSecret, csr.toString())
+		.then(function (pem) {
+			t.comment(pem);
+			t.pass('Successfully invoked enroll API with enrollmentID \'' + enrollmentID + '\'');
+			//check that we got back the expected certificate
+			var cert = new X509();
+			cert.readCertPEM(pem);
+			t.comment(cert.getSubjectString());
+			t.equal(cert.getSubjectString(), '/CN=' + enrollmentID, 'Subject should be /CN=' + enrollmentID);
+			t.end();
 		})
 		.catch(function (err) {
-			t.fail('Failed to register \'' + enrollmentID + '\'.  ' + err);
+			t.fail('Failed to enroll \'' + enrollmentID + '\'.  ' + err);
+			t.end();
 		});
 });

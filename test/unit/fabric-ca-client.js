@@ -147,6 +147,62 @@ test('FabricCAClient: Test _pemToDer static method',function(t){
 	t.end();
 });
 
+test('FabricCAServices: Test register() function', function(t) {
+	var cop = new FabricCAServices('http://localhost:7054');
+
+	t.throws(
+		() => {
+			cop.register();
+		},
+		/Missing required argument "request"/,
+		'Must fail if missing request argument'
+	);
+	t.throws(
+		() => {
+			cop.register({});
+		},
+		/Missing required argument "request.enrollmentID"/,
+		'Must fail if missing request.enrollmentID argument'
+	);
+	t.throws(
+		() => {
+			cop.register({dummy: 'value'});
+		},
+		/Missing required argument "request.enrollmentID"/,
+		'Must fail if missing request argument'
+	);
+	t.throws(
+		() => {
+			cop.register({enrollmentID: 'testUser'});
+		},
+		/Missing required argument "registrar"/,
+		'Must fail if missing registrar argument'
+	);
+	t.throws(
+		() => {
+			cop.register({enrollmentID: 'testUser'}, {});
+		},
+		/Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getName/,
+		'Must fail if registrar argument is not a User object'
+	);
+	t.throws(
+		() => {
+			cop.register({enrollmentID: 'testUser'}, { getName: function() { return 'dummy';} });
+		},
+		/Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity/,
+		'Must fail if registrar argument is not a User object'
+	);
+	t.doesNotThrow(
+		() => {
+			cop.register({enrollmentID: 'testUser'}, { getName: function() { return 'dummy'; }, getSigningIdentity: function() { return 'dummy'; } });
+		},
+		null,
+		'Should pass the argument checking but would fail when the register call tries to assemble the auth token'
+	);
+
+	t.end();
+});
+
 test('FabricCAServices: Test _parseURL() function', function (t) {
 
 	var goodHost = 'www.example.com';
@@ -207,6 +263,8 @@ test('FabricCAServices: Test _parseURL() function', function (t) {
 		/InvalidURL: url must start with http or https./,
 		'Throw error for missing protocol'
 	);
+
+	t.end();
 });
 
 /**
