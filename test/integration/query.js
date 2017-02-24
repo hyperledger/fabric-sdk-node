@@ -57,6 +57,18 @@ if (process.argv.length > 2) {
 }
 logger.info('Found query: %s', querys);
 
+// Second test in query.js has optional parameters; have they been specified?
+var queryParameters = false;    // false = do all queries; true = do some queries
+if (querys.length > 0 ) {
+	// Parameters detected; are these query parameters or gulp parameters?
+	if ((querys.indexOf('GetBlockByNumber') > -1) ||
+		(querys.indexOf('GetTransactionByID') > -1) ||
+		(querys.indexOf('GetChainInfo') > -1) ||
+		(querys.indexOf('GetBlockByHash') > -1)) {
+		queryParameters = true;  // at least one query parameter specified
+	}
+}
+
 testUtil.setupChaincodeDeploy();
 
 chain.addOrderer(new Orderer('grpc://localhost:7050'));
@@ -142,8 +154,9 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 	}).then( function (store) {
 		client.setStateStore(store);
 		var promise = testUtil.getSubmitter(client, t);
-
-		if (querys.length === 0 || querys.indexOf('GetBlockByNumber') >= 0) {
+		var queryAttempts = 0;  // number of queries attempted in this test
+		if (!queryParameters || querys.indexOf('GetBlockByNumber') >= 0) {
+			queryAttempts++;
 			logger.info('Executing GetBlockByNumber');
 			promise = promise.then(
 				function(admin) {
@@ -173,7 +186,8 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 			);
 		}
 
-		if (querys.length === 0 || querys.indexOf('GetTransactionByID') >= 0) {
+		if (!queryParameters || querys.indexOf('GetTransactionByID') >= 0) {
+			queryAttempts++;
 			promise = promise.then(
 				function(admin) {
 					t.pass('Successfully enrolled user ' + admin);
@@ -202,7 +216,8 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 			);
 		}
 
-		if (querys.length === 0 || querys.indexOf('GetChainInfo') >= 0) {
+		if (!queryParameters || querys.indexOf('GetChainInfo') >= 0) {
+			queryAttempts++;
 			promise = promise.then(
 				function(admin) {
 					t.pass('Successfully enrolled user ' + admin);
@@ -232,7 +247,8 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 			);
 		}
 
-		if (querys.length === 0 || querys.indexOf('GetBlockByHash') >= 0) {
+		if (!queryParameters || querys.indexOf('GetBlockByHash') >= 0) {
+			queryAttempts++;
 			promise = promise.then(
 				function(admin) {
 					t.pass('Successfully enrolled user ' + admin);
@@ -260,6 +276,10 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 					t.end();
 				}
 			);
-		}
+		};
+		if (queryAttempts == 0) {  				// No query attempts based on querys value
+			t.pass('No queries were attempted!!!');  // therefore, no one issued t.end() yet
+			t.end();
+		};
 	});
 });
