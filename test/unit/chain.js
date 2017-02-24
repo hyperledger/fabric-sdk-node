@@ -19,10 +19,7 @@
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
-var rewire = require('rewire');
 
-// use rewire to load the module to get access to the private functions to test
-var ChainModule = rewire('../../fabric-client/lib/Chain.js');
 var tar = require('tar-fs');
 var gunzip = require('gunzip-maybe');
 var fs = require('fs-extra');
@@ -540,25 +537,27 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 });
 
 test('\n\n** Chain packageChaincode tests **\n\n', function(t) {
-	var packageChaincode = ChainModule.__get__('packageChaincode');
-	t.equal(typeof packageChaincode, 'function', 'The rewired module should return the private function here');
-
-	packageChaincode(true, 'blah')
+	Chain.packageChaincode('blah','',true)
 	.then((data) => {
 		t.equal(data, null, 'Chain.packageChaincode() should return null for dev mode');
-		return packageChaincode(false, {});
+		return Chain.packageChaincode(null,'',false);
 	}).then(() => {
-		t.fail('Chain.packageChaincode() should have rejected a call that does not have the valid request argument');
-	}).catch((err) => {
-		t.equal(err.message, 'Missing chaincodePath parameter in Install proposal request', 'Chain.packageChaincode() argument validation');
+		t.fail('Chain.packageChaincode() should have rejected a call that does not have chaincodePath parameter');
+		t.end();
+	},
+	(err) => {
+		var msg = 'Missing chaincodePath parameter in Chain.packageChaincode';
+		if (err.message.indexOf(msg) >= 0) {
+			t.pass('Should throw error: '+msg);
+		} else {
+			t.fail(err.message+' should be '+msg);
+			t.end();
+		}
 
 		testutil.setupChaincodeDeploy();
-
-		return packageChaincode(false, {
-			chaincodePath: testutil.CHAINCODE_PATH,
-			chaincodeId: 'testChaincodeId'
-		});
+		return Chain.packageChaincode(testutil.CHAINCODE_PATH,'',false);
 	}).then((data) => {
+		t.comment('Verify byte data begin');
 		var tmpFile = '/tmp/test-deploy-copy.tar.gz';
 		var destDir = '/tmp/test-deploy-copy-tar-gz';
 		fs.writeFileSync(tmpFile, data);
@@ -568,11 +567,13 @@ test('\n\n** Chain packageChaincode tests **\n\n', function(t) {
 		pipe.on('close', function() {
 			var checkPath = path.join(destDir, 'src', 'github.com', 'example_cc');
 			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Chain.packageChaincode() has the "src/github.com/example_cc" folder');
+			t.comment('Verify byte data on close');
 		});
-
+		t.comment('Verify byte data end');
 		t.end();
 	}).catch((err) => {
-		t.fail(err.stack ? err.stack : err);
+		t.fail('Caught error in Chain packageChaincode tests');
+		t.comment(err.stack ? err.stack : err);
 		t.end();
 	});
 });
@@ -594,7 +595,7 @@ test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
 	}).catch(function (err) {
-		if (err.message.indexOf('Missing chaincodePath parameter in Install proposal request') >= 0) {
+		if (err.message.indexOf('Missing chaincodePath parameter in Chain.packageChaincode') >= 0) {
 			t.pass('Successfully caught missing chaincodePath error');
 		} else {
 			t.fail('Failed to catch the missing chaincodePath error. Error: ');
