@@ -64,7 +64,10 @@ if (querys.length > 0 ) {
 	if ((querys.indexOf('GetBlockByNumber') > -1) ||
 		(querys.indexOf('GetTransactionByID') > -1) ||
 		(querys.indexOf('GetChainInfo') > -1) ||
-		(querys.indexOf('GetBlockByHash') > -1)) {
+		(querys.indexOf('GetBlockByHash') > -1) ||
+		(querys.indexOf('GetInstalledChaincodes') > -1) ||
+		(querys.indexOf('GetInstantiatedChaincodes') > -1) ||
+		(querys.indexOf('GetChannels') > -1)) {
 		queryParameters = true;  // at least one query parameter specified
 	}
 }
@@ -282,4 +285,143 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 			t.end();
 		};
 	});
+});
+
+test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
+	if (!queryParameters || querys.indexOf('GetInstalledChaincodes') >= 0) {
+		hfc.newDefaultKeyValueStore({
+			path: testUtil.KVS
+		}).then( function (store) {
+			client.setStateStore(store);
+			testUtil.getSubmitter(client, t)
+				.then(
+					function(admin) {
+						t.pass('Successfully enrolled user ' + admin);
+						// send query
+						return chain.queryInstalledChaincodes(peer0);
+					},
+					function(err) {
+						t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+						t.end();
+					}
+				).then(
+					function(response) {
+						t.comment('<<< installed chaincodes >>>');
+						for (let i=0; i<response.chaincodes.length; i++) {
+							t.comment('name: '+response.chaincodes[i].name+
+							', version: '+response.chaincodes[i].version+
+							', path: '+response.chaincodes[i].path);
+						}
+						if (response.chaincodes[0].name === 'end2end' && response.chaincodes[0].version === 'v0' && response.chaincodes[0].path === 'github.com/example_cc') {
+							t.pass('queryInstalledChaincodes matches end2end');
+							t.end();
+						} else {
+							t.fail('queryInstalledChaincodes does not match end2end');
+							t.end();
+						}
+					},
+					function(err) {
+						t.fail('Failed to send queryInstalledChaincodes due to error: ' + err.stack ? err.stack : err);
+						t.end();
+					}
+				).catch(
+					function(err) {
+						t.fail('Failed to queryInstalledChaincodes with error:' + err.stack ? err.stack : err);
+						t.end();
+					}
+				);
+		});
+	} else t.end();
+});
+
+test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t) {
+	if (!queryParameters || querys.indexOf('GetInstantiatedChaincodes') >= 0) {
+		hfc.newDefaultKeyValueStore({
+			path: testUtil.KVS
+		}).then( function (store) {
+			client.setStateStore(store);
+			testUtil.getSubmitter(client, t)
+				.then(
+					function(admin) {
+						t.pass('Successfully enrolled user ' + admin);
+						// send query
+						return chain.queryInstantiatedChaincodes();
+					},
+					function(err) {
+						t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+						t.end();
+					}
+				).then(
+					function(response) {
+						t.comment('<<< instantiated chaincodes >>>');
+						for (let i=0; i<response.chaincodes.length; i++) {
+							t.comment('name: '+response.chaincodes[i].name+
+							', version: '+response.chaincodes[i].version+
+							', path: '+response.chaincodes[i].path);
+						}
+						if (response.chaincodes[0].name === 'end2end' && response.chaincodes[0].version === 'v0' && response.chaincodes[0].path === 'github.com/example_cc') {
+							t.pass('queryInstantiatedChaincodes matches end2end');
+							t.end();
+						} else {
+							t.fail('queryInstantiatedChaincodes does not match end2end');
+							t.end();
+						}
+					},
+					function(err) {
+						t.fail('Failed to send queryInstantiatedChaincodes due to error: ' + err.stack ? err.stack : err);
+						t.end();
+					}
+				).catch(
+					function(err) {
+						t.fail('Failed to queryInstantiatedChaincodes with error:' + err.stack ? err.stack : err);
+						t.end();
+					}
+				);
+		});
+	} else t.end();
+});
+
+test('  ---->>>>> Query Channels working <<<<<-----', function(t) {
+	if (!queryParameters || querys.indexOf('GetChannels') >= 0) {
+		hfc.newDefaultKeyValueStore({
+			path: testUtil.KVS
+		}).then( function (store) {
+			client.setStateStore(store);
+			testUtil.getSubmitter(client, t)
+				.then(
+					function(admin) {
+						t.pass('Successfully enrolled user ' + admin);
+						// send query
+						return chain.queryChannels(peer0);
+					},
+					function(err) {
+						t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+						t.end();
+					}
+				).then(
+					function(response) {
+						t.comment('<<< channels >>>');
+						for (let i=0; i<response.channels.length; i++) {
+							t.comment('channel id: '+response.channels[i].channel_id);
+						}
+						if (response.channels[0].channel_id === 'testchainid') {
+							t.pass('queryChannels matches end2end');
+							t.end();
+						} else {
+							t.fail('queryChannels does not match end2end');
+							t.end();
+						}
+					},
+					function(err) {
+						t.fail('Failed to send queryChannels due to error: ' + err.stack ? err.stack : err);
+						t.end();
+					}
+				).catch(
+					function(err) {
+						t.fail('Failed to queryChannels with error:' + err.stack ? err.stack : err);
+						t.end();
+					}
+				);
+		});
+	} else t.end();
 });

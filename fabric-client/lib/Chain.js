@@ -35,6 +35,7 @@ var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
 var _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
 var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
+var _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
 var _mspPrProto = grpc.load(__dirname + '/protos/common/msp_principal.proto').common;
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
 var _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
@@ -942,6 +943,182 @@ var Chain = class {
 	}
 
 	/**
+	 * Queries the installed chaincodes on a peer
+	 * returning the details of all chaincodes
+	 * installed on a peer.
+	 * @param {Peer} peer
+	 * @returns {object} ChaincodeQueryResponse proto
+	 */
+	queryInstalledChaincodes(peer) {
+		logger.debug('queryInstalledChaincodes - start peer %s',peer);
+		if(!peer) {
+			return Promise.reject( new Error('Peer is required'));
+		}
+		var self = this;
+		var nonce = utils.getNonce();
+		return this.buildTransactionID_getUserContext(nonce)
+		.then(function(txId) {
+			var request = {
+				targets: [peer],
+				chaincodeId : 'lccc',
+				chainId: self._name,
+				txId: txId,
+				nonce: nonce,
+				fcn : 'getinstalledchaincodes',
+				args: []
+			};
+			return self.sendTransactionProposal(request);
+		})
+		.then(
+			function(results) {
+				var responses = results[0];
+				logger.debug('queryInstalledChaincodes - got response');
+				if(responses && Array.isArray(responses)) {
+					//will only be one response as we are only querying one peer
+					if(responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					let response = responses[0];
+					if(response instanceof Error ) {
+						return Promise.reject(response);
+					}
+					if(response.response) {
+						logger.debug('queryInstalledChaincodes - response status :: %d', response.response.status);
+						var queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+						logger.debug('queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
+						for (let i=0; i<queryTrans.chaincodes.length; i++) {
+							logger.debug('>>> name %s, version %s, path %s',queryTrans.chaincodes[i].name,queryTrans.chaincodes[i].version,queryTrans.chaincodes[i].path);
+						}
+						return Promise.resolve(queryTrans);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query'));
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Installed Chaincodes Query. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			}
+		);
+	}
+
+	/**
+	 * Queries the instantiated chaincodes on this channel.
+	 * @returns {object} ChaincodeQueryResponse proto
+	 */
+	queryInstantiatedChaincodes() {
+		logger.debug('queryInstantiatedChaincodes - start');
+		var self = this;
+		var nonce = utils.getNonce();
+		return this.buildTransactionID_getUserContext(nonce)
+		.then(function(txId) {
+			var request = {
+				targets: [self.getPrimaryPeer()],
+				chaincodeId : 'lccc',
+				chainId: self._name,
+				txId: txId,
+				nonce: nonce,
+				fcn : 'getchaincodes',
+				args: []
+			};
+			return self.sendTransactionProposal(request);
+		})
+		.then(
+			function(results) {
+				var responses = results[0];
+				logger.debug('queryInstantiatedChaincodes - got response');
+				if(responses && Array.isArray(responses)) {
+					//will only be one response as we are only querying one peer
+					if(responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					let response = responses[0];
+					if(response instanceof Error ) {
+						return Promise.reject(response);
+					}
+					if(response.response) {
+						logger.debug('queryInstantiatedChaincodes - response status :: %d', response.response.status);
+						var queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+						logger.debug('queryInstantiatedChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
+						for (let i=0; i<queryTrans.chaincodes.length; i++) {
+							logger.debug('>>> name %s, version %s, path %s',queryTrans.chaincodes[i].name,queryTrans.chaincodes[i].version,queryTrans.chaincodes[i].path);
+						}
+						return Promise.resolve(queryTrans);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query'));
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Instantiated Chaincodes Query. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			}
+		);
+	}
+
+	/**
+	 * Queries the names of all the channels that a
+	 * peer has joined.
+	 * @param {Peer} peer
+	 * @returns {object} ChannelQueryResponse proto
+	 */
+	queryChannels(peer) {
+		logger.debug('queryChannels - start');
+		var self = this;
+		var nonce = utils.getNonce();
+		return this.buildTransactionID_getUserContext(nonce)
+		.then(function(txId) {
+			var request = {
+				targets: [peer],
+				chaincodeId : 'cscc',
+				chainId: self._name,
+				txId: txId,
+				nonce: nonce,
+				fcn : 'GetChannels',
+				args: []
+			};
+			return self.sendTransactionProposal(request);
+		})
+		.then(
+			function(results) {
+				var responses = results[0];
+				logger.debug('queryChannels - got response');
+				if(responses && Array.isArray(responses)) {
+					//will only be one response as we are only querying one peer
+					if(responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					let response = responses[0];
+					if(response instanceof Error ) {
+						return Promise.reject(response);
+					}
+					if(response.response) {
+						logger.debug('queryChannels - response status :: %d', response.response.status);
+						var queryTrans = _queryProto.ChannelQueryResponse.decode(response.response.payload);
+						logger.debug('queryChannels - ProcessedTransaction.channelInfo.length :: %s', queryTrans.channels.length);
+						for (let i=0; i<queryTrans.channels.length; i++) {
+							logger.debug('>>> channel id %s ',queryTrans.channels[i].channel_id);
+						}
+						return Promise.resolve(queryTrans);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query'));
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Channels Query. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			}
+		);
+	}
+
+	/**
 	 * Sends an install proposal to one or more endorsing peers.
 	 *
 	 * @param {Object} request - An object containing the following fields:
@@ -1000,7 +1177,7 @@ var Chain = class {
 			logger.error('Chain.sendInstallProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
-		errorMsg = Chain._checkInstallInstantiateRequest(request);
+		errorMsg = Chain._checkInstallRequest(request);
 		if (errorMsg) {
 			logger.error('Chain.sendInstallProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
@@ -1016,6 +1193,7 @@ var Chain = class {
 				version: request.chaincodeVersion
 			}
 		};
+		logger.debug('Chain.sendInstallProposal ccSpec %s ',JSON.stringify(ccSpec));
 
 		// step 2: construct the ChaincodeDeploymentSpec
 		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
@@ -1161,7 +1339,12 @@ var Chain = class {
 			logger.error('Chain.sendInstantiateProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
-		errorMsg = Chain._checkInstallInstantiateRequest(request);
+		errorMsg = Chain._checkInstallRequest(request);
+		if (errorMsg) {
+			logger.error('Chain.sendInstantiateProposal error ' + errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+		errorMsg = Chain._checkInstantiateRequest(request);
 		if (errorMsg) {
 			logger.error('Chain.sendInstantiateProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
@@ -1184,6 +1367,7 @@ var Chain = class {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			chaincode_id: {
 				name: request.chaincodeId,
+				path: request.chaincodePath,
 				version: request.chaincodeVersion
 			},
 			input: {
@@ -1237,7 +1421,7 @@ var Chain = class {
 	 *		<br>`chainId` : required - String of the name of the chain
 	 *		<br>`txId` : required - String of the transaction id
 	 *		<br>`nonce` : required - Integer of the once time number
-	 *		<br>`args` : an array of arguments specific to the chaincode 'innvoke'
+	 *		<br>`args` : an array of arguments specific to the chaincode 'invoke'
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 */
 	sendTransactionProposal(request) {
@@ -1592,12 +1776,28 @@ var Chain = class {
 	/*
 	 * @private
 	 */
-	static _checkInstallInstantiateRequest(request) {
+	static _checkInstallRequest(request) {
 		var errorMsg = null;
 
 		if (request) {
 			if(!request.chaincodeVersion) {
 				errorMsg = 'Missing "chaincodeVersion" parameter in the proposal request';
+			}
+		} else {
+			errorMsg = 'Missing input request object on the proposal request';
+		}
+		return errorMsg;
+	}
+
+	/*
+	 * @private
+	 */
+	static _checkInstantiateRequest(request) {
+		var errorMsg = null;
+
+		if (request) {
+			if(!request.chaincodePath) {
+				errorMsg = 'Missing "chaincodePath" parameter in the proposal request';
 			}
 		} else {
 			errorMsg = 'Missing input request object on the proposal request';
