@@ -75,6 +75,7 @@ var FabricCAServices = class {
 	 * Register the member and return an enrollment secret.
 	 * @param {Object} req Registration request with the following fields:
 	 * <br> - enrollmentID {string}. ID which will be used for enrollment
+	 * <br> - role {string}. An arbitrary string representing a role value for the user
 	 * <br> - group {string}. Group to which this user will be assigned, like a company or an organization
 	 * <br> - attrs {{@link KeyValueAttribute}[]}. Array of key/value attributes to assign to the user.
 	 * @param registrar {User}. The identity of the registrar (i.e. who is performing the registration)
@@ -91,7 +92,7 @@ var FabricCAServices = class {
 
 		checkRegistrar(registrar);
 
-		return this._fabricCAClient.register(req.enrollmentID, 'client', req.group, req.attrs, registrar.getSigningIdentity());
+		return this._fabricCAClient.register(req.enrollmentID, req.role, req.group, req.attrs, registrar.getSigningIdentity());
 	}
 
 	/**
@@ -289,7 +290,7 @@ var FabricCAClient = class {
 
 	/**
 	 * @typedef {Object} KeyValueAttribute
-	 * @property {string} key The key used to reference the attribute
+	 * @property {string} name The key used to reference the attribute
 	 * @property {string} value The value of the attribute
 	 */
 
@@ -316,7 +317,7 @@ var FabricCAClient = class {
 		return new Promise(function (resolve, reject) {
 			var regRequest = {
 				'id': enrollmentID,
-				'type': role,
+				'type': role ? role : 'client',
 				'group': group,
 				'attrs': attrs
 			};

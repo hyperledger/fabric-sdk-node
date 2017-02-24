@@ -62,7 +62,7 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		enrollmentSecret: 'adminpw'
 	};
 
-	var eResult, client, member;
+	var eResult, client, member, webAdmin;
 	return cop.enroll(req)
 		.then((enrollment) => {
 			t.pass('Successfully enrolled \'' + req.enrollmentID + '\'.');
@@ -117,7 +117,7 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		}).then((secret) => {
 			t.comment('Successfully registered another user "testUserY"');
 
-			return cop.enroll({enrollmentID: 'testUserY', enrollmentSecret: secret}, member);
+			return cop.enroll({enrollmentID: 'testUserY', enrollmentSecret: secret});
 		}).then((enrollment) => {
 			t.comment('Successfully enrolled "testUserY"');
 
@@ -132,6 +132,33 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserY" using serial number and AKI');
 
+			// register a new user 'webAdmin' that can register other users of the role 'client'
+			return cop.register({enrollmentID: 'webAdmin', group: 'bank_a', attrs: [{name: 'hf.Registrar.Roles', value: 'client'}]}, member);
+		}).then((secret) => {
+			t.pass('Successfully registered "webAdmin" who can register other users of the "client" role');
+
+			return cop.enroll({enrollmentID: 'webAdmin', enrollmentSecret: secret});
+		},(err) => {
+			t.fail('Failed to register "webAdmin". ' + err.stack ? err.stack : err);
+			t.end();
+		}).then((enrollment) => {
+			t.pass('Successfully enrolled "webAdmin"');
+
+			webAdmin = new User('webAdmin', client);
+			return webAdmin.setEnrollment(enrollment.key, enrollment.certificate);
+		}).then(() => {
+			t.pass('Successfully constructed User object for "webAdmin"');
+
+			return cop.register({enrollmentID: 'auditor', role: 'auditor'}, webAdmin);
+		}).then(() => {
+			t.fail('Should not have been able to use "webAdmin" to register a user of the "auditor" role');
+			t.end();
+		},(err) => {
+			t.pass('Successfully rejected attempt to register a user of invalid role. ' + err);
+
+			return cop.register({enrollmentID: 'auditor', role: 'client', group: 'bank_a'}, webAdmin);
+		}).then(() => {
+			t.pass('Successfully registered "auditor" of role "client" from "webAdmin"');
 			t.end();
 		}).catch((err) => {
 			t.fail('Failed at ' + err.stack ? err.stack : err);
