@@ -22,7 +22,7 @@ gulp.task('test', ['lint', 'test-headless'], function() {
 	// network
 	return gulp.src([
 		// 'test/integration/ca-tests.js',
-		'test/integration/chain-fabriccop-tests.js',
+		'test/integration/chain-fabric-ca-tests.js',
 		'test/integration/endorser-tests.js',
 		'test/integration/orderer-chain-tests.js',
 		'test/integration/install.js'
