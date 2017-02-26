@@ -29,6 +29,7 @@ var Orderer = require('./Orderer.js');
 var settle = require('promise-settle');
 var grpc = require('grpc');
 var logger = utils.getLogger('Chain.js');
+var hashPrimitives = require('./hash.js');
 
 var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
@@ -1616,7 +1617,7 @@ var Chain = class {
 		var creator_bytes = userContext.getIdentity().serialize();//same as signatureHeader.Creator
 		var nonce_bytes = nonce;//nonce is already in bytes
 		var trans_bytes = Buffer.concat([nonce_bytes, creator_bytes]);
-		var trans_hash = this.cryptoPrimitives.hash(trans_bytes);
+		var trans_hash = hashPrimitives.sha2_256(trans_bytes);
 		var transaction_id = Buffer.from(trans_hash).toString();
 		logger.debug('buildTransactionID - transaction_id %s',transaction_id);
 		return transaction_id;
