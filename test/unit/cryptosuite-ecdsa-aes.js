@@ -265,11 +265,11 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	t.equal(true, (typeof cryptoUtils._ecdsaCurve !== 'undefined' && typeof cryptoUtils._ecdsa !== 'undefined'),
 		'CryptoSuite_ECDSA_AES function tests: default instance has "_ecdsaCurve" and "_ecdsa" properties');
 
-	// test default curve 256 with SHA256
-	t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA256,
+	// test default curve 256 with SHA3_256
+	t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_256,
 		'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with default key size which should be 256');
 
-	t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA256,
+	t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_256,
 		'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with default key size which should be 256');
 
 	// test SHA384 hash
@@ -288,8 +288,8 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		t.equal('secp256r1', key.getPublicKey()._key.curveName,
 			'CryptoSuite_ECDSA_AES function tests: cryptoUtils generated public key curveName == secp256r1');
 
-		// test curve 256 with SHA3_256
-		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
+		// test curve 256 with SHA2_256
+		utils.setConfigSetting('crypto-hash-algo', 'SHA2');
 		utils.setConfigSetting('crypto-keysize', 256);
 		cryptoUtils = utils.getCryptoSuite();
 		return cryptoUtils.generateKey();
@@ -298,13 +298,14 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		t.equal('secp256r1', key.getPublicKey()._key.curveName,
 			'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp256r1');
 
-		t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_256,
+		t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA256,
 			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
 
-		t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_256,
+		t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA256,
 			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
 
 		// test SHA3_384
+		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
 		utils.setConfigSetting('crypto-keysize', 384);
 		cryptoUtils = utils.getCryptoSuite();
 
