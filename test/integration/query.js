@@ -23,7 +23,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var log4js = require('log4js');
-var logger = log4js.getLogger('E2E');
+var logger = log4js.getLogger('QUERY TEST');
 logger.setLevel('DEBUG');
 
 var path = require('path');
@@ -97,8 +97,9 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 					t.end();
 				}
 			).then(
-				function(response) {
-					t.equal(response.header.number.toString(),'0','checking query results are correct that we got zero block back');
+				function(block) {
+					logger.info(' Chain getBlock() returned block number=%s',block.header.number);
+					t.equal(block.header.number.toString(),'0','checking query results are correct that we got zero block back');
 					chain.setPrimaryPeer(peer0);
 					nonce = Buffer.from('12');//hard coded to be the same as end-to-end.js, this transaction will only exist if
 					                          // end-to-end runs first
@@ -111,8 +112,23 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 					t.end();
 				}
 			).then(
-				function(transaction) {
-					t.pass('got back ProcessedTransaction that is was a valid transaction='+transaction.valid); // + JSON.stringify(response_payloads));
+				function(processed_transaction) {
+					// set to be able to decode grpc objects
+					var grpc = require('grpc');
+					var commonProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/common.proto').common;
+					var transProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/transaction.proto').protos;
+					logger.info(' Chain queryTransaction() returned processed tranaction is valid='+processed_transaction.validationCode);
+					t.equals(transProto.TxValidationCode.VALID,processed_transaction.validationCode,'got back ProcessedTransaction that is a valid transaction');
+
+					try {
+						var payload = commonProto.Payload.decode(processed_transaction.transactionEnvelope.payload);
+						var channel_header = commonProto.ChannelHeader.decode(payload.header.channel_header);
+						logger.debug('queryTransaction - transaction ID :: %s:', channel_header.tx_id);
+					}
+					catch(err) {
+						logger.error(err);
+					}
+
 					chain.setPrimaryPeer(peer1);
 					// send query
 					return chain.queryInfo();
@@ -122,9 +138,12 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 					t.end();
 				}
 			).then(
-				function(response) {
-					t.pass('got back blockchain info '); // + JSON.stringify(response_payloads[i]));
-					var block_hash = response.previousBlockHash;
+				function(blockchainInfo) {
+					t.pass('got back blockchain info ');
+					logger.info(' Chain queryInfo() returned block height='+blockchainInfo.height);
+					logger.info(' Chain queryInfo() returned block previousBlockHash='+blockchainInfo.previousBlockHash);
+					logger.info(' Chain queryInfo() returned block currentBlockHash='+blockchainInfo.currentBlockHash);
+					var block_hash = blockchainInfo.previousBlockHash;
 					chain.setPrimaryPeer(peer0);
 					// send query
 					return chain.queryBlockByHash(block_hash);
@@ -135,6 +154,7 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 				}
 			).then(
 				function(block) {
+					logger.info(' Chain getBlockByHash() returned block number=%s',block.header.number);
 					t.pass('got back block number '+ block.header.number);
 					t.end();
 				},

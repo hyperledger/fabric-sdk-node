@@ -29,6 +29,13 @@ var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto
 var _ccProposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
 var _ccEventProto = grpc.load(__dirname + '/protos/peer/chaincodeevent.proto').protos;
 
+var _validation_codes = {};
+var keys = Object.keys(_transProto.TxValidationCode);
+for(var i = 0;i<keys.length;i++) {
+	var new_key = _transProto.TxValidationCode[keys[i]];
+	_validation_codes[new_key] = keys[i];
+}
+
 /**
  * The ChainCodeCBE is used internal to the EventHub to hold chaincode
  * event registration callbacks.
@@ -289,9 +296,10 @@ var EventHub = class {
 	txCallback(block) {
 		logger.debug('txCallback block=%s', block.header.number);
 		var eh = this;
-		var invalidTxs = block.metadata.metadata[_common.BlockMetadataIndex.TRANSACTIONS_FILTER];
+		var txStatusCodes = block.metadata.metadata[_common.BlockMetadataIndex.TRANSACTIONS_FILTER];
 
 		for (var index=0; index < block.data.data.length; index++) {
+			logger.debug('txCallback - trans index=%s',index);
 			try {
 				var env = _common.Envelope.decode(block.data.data[index]);
 				var payload = _common.Payload.decode(env.payload);
@@ -301,17 +309,20 @@ var EventHub = class {
 				break;
 			}
 
-			var metaval = utils.getBufferBit(invalidTxs, index);
-			if ( metaval.error == true ) {
-				logger.error('Metadata invalid buffer too small for tx index');
-				break;
-			}
-			logger.debug('txid=' + channel_header.tx_id);
+			var val_code = convertValidationCode(txStatusCodes[index]);
+			logger.debug('txCallback - txid=%s  val_code=%s',val_code,  channel_header.tx_id);
 			var cb = eh.txRegistrants.get(channel_header.tx_id);
-			if (cb)
-				cb(payload.header.channel_header.tx_id, metaval.invalid);
+			if (cb){
+				logger.debug('txCallback - about to call the transaction call back for code=%s tx=%s', val_code, channel_header.tx_id);
+				cb(channel_header.tx_id, val_code);
+			}
+
 		}
 	};
 };
+
+function convertValidationCode(code) {
+	return _validation_codes[code];
+}
 
 module.exports = EventHub;
