@@ -21,11 +21,11 @@ var utils = require('./utils.js');
 var urlParser = require('url');
 var net = require('net');
 var util = require('util');
-var fs = require('fs-extra');
 var os = require('os');
 var path = require('path');
 var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
+var Packager = require('./Packager.js');
 var settle = require('promise-settle');
 var grpc = require('grpc');
 var logger = utils.getLogger('Chain.js');
@@ -1070,49 +1070,6 @@ var Chain = class {
 
 
 	/**
-	* Utility function to package a chaincode.  All of the files
-	* in the directory of the environment variable GOPATH joined
-	* to the request.chaincodePath will be included in an archive
-	* file.  The contents will be returned as a byte array.
-	*
-	* @param {Object} chaincodePath required - String of the path to location of
-	*                the source code of the chaincode
-	* @param {Object} chaincodeType optional - String of the type of chaincode
-	*                 ['golang', 'car', 'java'] (default 'golang')
-	* @param {boolean} devmode optional - True if using dev mode
-	* @returns {Promise} A promise for the data as a byte array
-	*/
-	static packageChaincode(chaincodePath, chaincodeType, devmode) {
-		logger.debug('Chain.packageChaincode chaincodePath: %s, chaincodeType: %s, devmode: %s',chaincodePath,chaincodeType,devmode);
-		return new Promise(function(resolve, reject) {
-			if (devmode) {
-				logger.debug('Chain.packageChaincode Skipping chaincode packaging due to devmode configuration');
-				return resolve(null);
-			}
-
-			if (!chaincodePath || chaincodePath && chaincodePath.length < 1) {
-				// Verify that chaincodePath is being passed
-				return reject(new Error('Missing chaincodePath parameter in Chain.packageChaincode'));
-			}
-
-			let type = !!chaincodeType ? chaincodeType : 'golang';
-			logger.debug('Chain.packageChaincode type %s ',type);
-
-			let handler;
-
-			switch (type) {
-			case 'car':
-				handler = packageCarChaincode;
-				break;
-			default:
-				handler = packageGolangChaincode;
-			}
-
-			return resolve(handler(chaincodePath));
-		});
-	}
-
-	/**
 	 * Sends an instantiate proposal to one or more endorsing peers.
 	 *
 	 * @param {Object} request - An object containing the following fields:
@@ -1649,7 +1606,7 @@ var Chain = class {
 	static _getChaincodePackageData(request, devMode) {
 		return new Promise((resolve,reject) => {
 			if (!request.chaincodePackage) {
-				resolve(Chain.packageChaincode(request.chaincodePath, request.chaincodeType, devMode));
+				resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode));
 			} else {
 				resolve(request.chaincodePackage);
 			}
@@ -1676,71 +1633,6 @@ var Chain = class {
 
 function toKeyValueStoreName(name) {
 	return 'member.' + name;
-}
-
-function readFile(path) {
-	return new Promise(function(resolve, reject) {
-		fs.readFile(path, function(err, data) {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(data);
-			}
-		});
-	});
-}
-
-function writeFile(path, contents) {
-	return new Promise(function(resolve, reject) {
-		fs.writeFile(path, contents, function(err) {
-			if (err) {
-				reject(new Error(util.format('Error writing file [%s]: %s', path, err)));
-			} else {
-				resolve(path);
-			}
-		});
-	});
-}
-
-function packageGolangChaincode(chaincodePath) {
-	return new Promise(function(resolve, reject) {
-		logger.info('Chain.packageGolangChaincode packaging GOLANG from %s', chaincodePath);
-
-		// Determine the user's $GOPATH
-		let goPath =  process.env['GOPATH'];
-
-		// Compose the path to the chaincode project directory
-		let projDir = path.join(goPath, 'src', chaincodePath);
-
-		// Create the .tar.gz file of the chaincode package
-		fs.mkdtemp(path.join(os.tmpdir(), path.sep), (err, folder) => {
-			if (err) return reject(new Error('Failed to create temp folder. ' + err));
-
-			// first copy all the target chaincode files from the source folder to
-			// <this_temp_folder>/src/<chaincodePath> folder so that the tar.gz
-			// archive can be created with the folder structure preserved
-			var dest = path.join(folder, 'src', chaincodePath);
-			fs.copy(projDir, dest, (err) => {
-				if (err) return reject(new Error('Failed to copy chaincode source to temp folder. ' + err));
-
-				let targzFilePath = path.join(folder, 'deployment-package.tar.gz');
-				return utils.generateTarGz(folder, targzFilePath)
-					.then(function() {
-						logger.debug('Chain.packageGolangChaincode - Successfully generated chaincode archive %s ', targzFilePath);
-						return readFile(targzFilePath)
-							.then((data) => {
-								logger.debug('Chain.packageGolangChaincode - Successful readFile to data in bytes');
-								return resolve(data);
-							});
-					});
-			});
-		});
-	});
-}
-
-function packageCarChaincode(chaincodePath) {
-	logger.info('Chain.packageCarChaincode packaging CAR file from %s', chaincodePath);
-	return readFile(chaincodePath);
 }
 
 //utility method to build a common chain header

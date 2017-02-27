@@ -37,6 +37,7 @@ var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
+var Packager = require('fabric-client/lib/Packager.js');
 
 var client = new hfc();
 var Chain = require('fabric-client/lib/Chain.js');
@@ -134,10 +135,10 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 		t.end();
 		throw('Error - Failed to enroll user \'admin\'. ' + err);
 	}).then((admin) => {
-		return Chain.packageChaincode(testUtil.CHAINCODE_PATH, null, false); //use good path here to get data
+		return Packager.package(testUtil.CHAINCODE_PATH, null, false); //use good path here to get data
 	})
 	.then((data) => {
-		t.comment('Chain.packageChaincode data: '+data);
+		t.comment('Packager.package data: '+data);
 		request = {
 			chaincodePath: testUtil.CHAINCODE_PATH+'pkg',//not an existing path
 			chaincodeId: 'install-package',
