@@ -55,13 +55,13 @@ var FabricCAServices = class {
 
 		var endpoint = FabricCAServices._parseURL(url);
 
+		this.cryptoPrimitives = utils.getCryptoSuite(cryptoSettings, KVSImplClass, opts);
+
 		this._fabricCAClient = new FabricCAClient({
 			protocol: endpoint.protocol,
 			hostname: endpoint.hostname,
 			port: endpoint.port
-		});
-
-		this.cryptoPrimitives = utils.getCryptoSuite(cryptoSettings, KVSImplClass, opts);
+		}, this.cryptoPrimitives);
 
 		logger.info('Successfully constructed Fabric CA service client: endpoint - %j', endpoint);
 
@@ -266,7 +266,7 @@ var FabricCAClient = class {
 	 * @throws Will throw an error if connection options are missing or invalid
 	 *
 	 */
-	constructor(connect_opts) {
+	constructor(connect_opts, cryptoPrimitives) {
 
 		//check connect_opts
 		try {
@@ -285,7 +285,7 @@ var FabricCAClient = class {
 		}
 		this._baseAPI = '/api/v1/cfssl/';
 
-
+		this._cryptoPrimitives = cryptoPrimitives;
 	}
 
 	/**
@@ -324,9 +324,7 @@ var FabricCAClient = class {
 
 			return self.post('register', regRequest, signingIdentity)
 			.then(function (response) {
-				// TODO: Keith said this may be changed soon for 'result' to be the raw secret
-				// without Base64-encoding it
-				return resolve(Buffer.from(response.result, 'base64').toString());
+				return resolve(response.result.credential);
 			}).catch(function (err) {
 				return reject(err);
 			});
@@ -385,7 +383,7 @@ var FabricCAClient = class {
 				path: self._baseAPI + api_method,
 				method: 'POST',
 				headers: {
-					Authorization: FabricCAClient.generateAuthToken(requestObj, signingIdentity)
+					Authorization: self.generateAuthToken(requestObj, signingIdentity)
 				}
 			};
 
@@ -402,7 +400,7 @@ var FabricCAClient = class {
 
 					if (!payload) {
 						reject(new Error(
-							util.format('Registerfailed with HTTP status code ', response.statusCode)));
+							util.format('fabric-ca request %s failed with HTTP status code %s', api_method, response.statusCode)));
 					}
 					//response should be JSON
 					try {
@@ -411,19 +409,19 @@ var FabricCAClient = class {
 							return resolve(responseObj);
 						} else {
 							return reject(new Error(
-								util.format('Register failed with errors [%s]', JSON.stringify(responseObj.errors))));
+								util.format('fabric-ca request %s failed with errors [%s]', api_method, JSON.stringify(responseObj.errors))));
 						}
 
 					} catch (err) {
 						reject(new Error(
-							util.format('Could not parse register response [%s] as JSON due to error [%s]', payload, err)));
+							util.format('Could not parse %s response [%s] as JSON due to error [%s]', api_method, payload, err)));
 					}
 				});
 
 			});
 
 			request.on('error', function (err) {
-				reject(new Error(util.format('Calling register endpoint failed with error [%s]', err)));
+				reject(new Error(util.format('Calling %s endpoint failed with error [%s]', api_method, err)));
 			});
 
 			request.write(JSON.stringify(requestObj));
@@ -434,7 +432,7 @@ var FabricCAClient = class {
 	/*
 	 * Generate authorization token required for accessing fabric-ca APIs
 	 */
-	static generateAuthToken(reqBody, signingIdentity) {
+	generateAuthToken(reqBody, signingIdentity) {
 		// sometimes base64 encoding results in trailing one or two "=" as padding
 		var trim = function(string) {
 			return string.replace(/=*$/, '');
@@ -446,7 +444,8 @@ var FabricCAClient = class {
 		var body = trim(Buffer.from(JSON.stringify(reqBody)).toString('base64'));
 
 		var bodyAndcert = body + '.' + cert;
-		var sig = signingIdentity.sign(bodyAndcert);
+		var sig = signingIdentity.sign(bodyAndcert, { hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives) });
+		logger.debug(util.format('bodyAndcert: %s', bodyAndcert));
 
 		var b64Sign = trim(Buffer.from(sig, 'hex').toString('base64'));
 		return cert + '.' + b64Sign;

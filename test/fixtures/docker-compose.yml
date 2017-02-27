@@ -8,7 +8,7 @@ services:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
     ports:
       - "7054:7054"
-    command: sh -c 'fabric-ca-server start -b admin:adminpw'
+    command: sh -c 'fabric-ca-server start -b admin:adminpw' -d
     container_name: ca
 
   orderer:

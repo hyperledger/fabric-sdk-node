@@ -53,13 +53,20 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 * @param {string} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
 	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
 	 * KeyValueStore interface.
+	 * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
 	 */
-	constructor(keySize, opts, KVSImplClass) {
+	constructor(keySize, opts, KVSImplClass, hash) {
+		super();
+
 		if (keySize !== 256 && keySize !== 384) {
 			throw new Error('Illegal key size: ' + keySize + ' - this crypto suite only supports key sizes 256 or 384');
 		}
 
-		super();
+		if (typeof hash === 'string' && hash !== null && hash !== '') {
+			this._hashAlgo = hash;
+		} else {
+			this._hashAlgo = utils.getConfigSetting('crypto-hash-algo');
+		}
 
 		if (typeof opts === 'undefined' || opts === null) {
 			opts = {
@@ -100,11 +107,10 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
 		// hash function must be set carefully to produce the hash size compatible with the key algorithm
 		// https://www.ietf.org/rfc/rfc5480.txt (see page 9 "Recommended key size, digest algorithm and curve")
-		var hashAlgo = utils.getConfigSetting('crypto-hash-algo');
 
-		logger.debug('Hash algorithm: %s, hash output size: %s', hashAlgo, this._keySize);
+		logger.debug('Hash algorithm: %s, hash output size: %s', this._hashAlgo, this._keySize);
 
-		switch (hashAlgo.toLowerCase() + '-' + this._keySize) {
+		switch (this._hashAlgo.toLowerCase() + '-' + this._keySize) {
 		case 'sha3-256':
 			this._hashFunction = hashPrimitives.sha3_256;
 			this._hashFunctionKeyDerivation = hashPrimitives.hash_sha3_256;
@@ -122,7 +128,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 			//TODO: this._hashFunctionKeyDerivation = xxxxxxx;
 			break;
 		default:
-			throw Error(util.format('Unsupported hash algorithm and key size pair: %s-%s', hashAlgo, this._keySize));
+			throw Error(util.format('Unsupported hash algorithm and key size pair: %s-%s', this._hashAlgo, this._keySize));
 		}
 
 		this._hashOutputSize = this._keySize / 8;

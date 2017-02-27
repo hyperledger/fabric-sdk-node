@@ -42,6 +42,7 @@ var sha3_256 = require('js-sha3').sha3_256;
 //		in the setting 'crypto-suite-software'
 //  - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
 //  - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
+//  - hash {string}: 'SHA2' or 'SHA3'
 //
 // @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
 // {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
@@ -49,9 +50,16 @@ var sha3_256 = require('js-sha3').sha3_256;
 // @param {object} opts Implementation-specific option object used in the constructor
 //
 module.exports.getCryptoSuite = function(setting, KVSImplClass, opts) {
-	var csImpl, keysize, algorithm, haveSettings = false;
+	var csImpl, keysize, algorithm, hashAlgo, haveSettings = false;
 
-	csImpl = this.getConfigSetting('crypto-hsm') ? this.getConfigSetting('crypto-suite-hsm') : this.getConfigSetting('crypto-suite-software');
+	var useHSM = false;
+	if (setting && typeof setting.software === 'boolean') {
+		useHSM = !setting.software;
+	} else {
+		useHSM = this.getConfigSetting('crypto-hsm');
+	}
+
+	csImpl = useHSM ? this.getConfigSetting('crypto-suite-hsm') : this.getConfigSetting('crypto-suite-software');
 
 	// this function supports skipping any of the arguments such that it can be called in any of the following fashions:
 	// - getCryptoSuite({software: true, keysize: 256, algorithm: EC}, CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
@@ -73,6 +81,12 @@ module.exports.getCryptoSuite = function(setting, KVSImplClass, opts) {
 		haveSettings = true;
 	} else
 		algorithm = 'EC';
+
+	if (typeof setting === 'object' && typeof setting.hash === 'string') {
+		hashAlgo = setting.hash.toUpperCase();
+		haveSettings = true;
+	} else
+		hashAlgo = null;
 
 	// csImpl at this point should be a map (see config/default.json) with keys being the algorithm
 	csImpl = csImpl[algorithm];
@@ -111,7 +125,7 @@ module.exports.getCryptoSuite = function(setting, KVSImplClass, opts) {
 		}
 	}
 
-	return new cryptoSuite(keysize, opts, keystoreSuperClass);
+	return new cryptoSuite(keysize, opts, keystoreSuperClass, hashAlgo);
 };
 
 // Provide a Promise-based keyValueStore for couchdb, etc.

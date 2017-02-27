@@ -197,10 +197,24 @@ var SigningIdentity = class extends Identity {
 	 * Signs digest with the private key contained inside the signer.
 	 *
 	 * @param {byte[]} msg The message to sign
+	 * @param {object} opts Options object for the signing, contains one field 'hashFunction' that allows
+	 *   different hashing algorithms to be used. If not present, will default to the hash function
+	 *   configured for the identity's own crypto suite object
 	 */
-	sign(msg) {
+	sign(msg, opts) {
 		// calculate the hash for the message before signing
-		var digest = this._msp.cryptoSuite.hash(msg);
+		var hashFunction;
+		if (opts && opts.hashFunction) {
+			if (typeof opts.hashFunction !== 'function') {
+				throw new Error('The "hashFunction" field must be a function');
+			}
+
+			hashFunction = opts.hashFunction;
+		} else {
+			hashFunction = this._msp.cryptoSuite.hash.bind(this._msp.cryptoSuite);
+		}
+
+		var digest = hashFunction(msg);
 		return this._signer.sign(Buffer.from(digest, 'hex'), null);
 	}
 };

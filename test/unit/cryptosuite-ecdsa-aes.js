@@ -185,6 +185,8 @@ test('\n\n** utils.getCryptoSuite tests **\n\n', (t) => {
 		'Load the CryptoSuite_ECDSA_AES module and pass in an invalid config object'
 	);
 
+	// make sure the "software: true" setting overrides the config setting
+	utils.setConfigSetting('crypto-hsm', true);
 	cs = utils.getCryptoSuite({software: true, algorithm: 'EC', keysize: 256}, CouchDBKeyValueStore, { name: 'test_db', url: 'http://dummyUrl' });
 	cs._getKeyStore()
 	.then(() => {
@@ -206,6 +208,8 @@ test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
 
 	var keyValueStore = null;
 	let cs;
+
+	utils.setConfigSetting('crypto-hsm', false);
 
 	cs = new CryptoSuite_ECDSA_AES(256, { name: 'test_db', url: 'http://dummyUrl'}, CouchDBKeyValueStore);
 	cs._getKeyStore()
