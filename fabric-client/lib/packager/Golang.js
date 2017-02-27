@@ -16,120 +16,171 @@
 
 var os = require('os');
 var fs = require('fs-extra');
-var tar = require('tar-fs');
+var klaw = require('klaw');
+var tar = require('tar-stream');
 var path = require('path');
 var zlib = require('zlib');
+var sbuf = require('stream-buffers');
 var utils = require('../utils.js');
-var dir = require('node-dir');
 
 var logger = utils.getLogger('packager/Golang.js');
 
-/**
- * All of the files in the directory of the environment variable
- * GOPATH joined to the request.chaincodePath will be included
- * in an archive file.
- */
+// A list of file extensions that should be packaged into the .tar.gz.
+// Files with all other file extenstions will be excluded to minimize the size
+// of the install payload.
+var keep = [
+	'.go',
+	'.c',
+	'.h'
+];
+
+// -------------------------------------------------------------------------
+// package(path)
+// -------------------------------------------------------------------------
+// All of the files in the directory of the environment variable
+// GOPATH joined to the request.chaincodePath will be included
+// in an archive file.
+// -------------------------------------------------------------------------
 module.exports.package = function(chaincodePath) {
-	return new Promise(function(resolve, reject) {
-		logger.info('packaging GOLANG from %s', chaincodePath);
+	logger.info('packaging GOLANG from %s', chaincodePath);
 
-		// Determine the user's $GOPATH
-		let goPath =  process.env['GOPATH'];
+	// Determine the user's $GOPATH
+	let goPath =  process.env['GOPATH'];
 
-		// Compose the path to the chaincode project directory
-		let projDir = path.join(goPath, 'src', chaincodePath);
+	// Compose the path to the chaincode project directory
+	let projDir = path.join(goPath, 'src', chaincodePath);
 
-		// Create the .tar.gz file of the chaincode package
-		fs.mkdtemp(path.join(os.tmpdir(), path.sep), (err, folder) => {
-			if (err) return reject(new Error('Failed to create temp folder. ' + err));
+	// We generate the tar in two phases: First grab a list of descriptors,
+	// and then pack them into an archive.  While the two phases aren't
+	// strictly necessary yet, they pave the way for the future where we
+	// will need to assemble sources from multiple packages
 
-			// first copy all the target chaincode files from the source folder to
-			// <this_temp_folder>/src/<chaincodePath> folder so that the tar.gz
-			// archive can be created with the folder structure preserved
-			var dest = path.join(folder, 'src', chaincodePath);
-			fs.copy(projDir, dest, (err) => {
-				if (err) return reject(new Error('Failed to copy chaincode source to temp folder. ' + err));
+	var buffer = new sbuf.WritableStreamBuffer();
 
-				// first set the mode of all files to -rw-r--r--
-				dir.files(dest, (err, files) => {
-					if (err) return reject(new Error('Failed to iterate over files and subdirectories of the destination folder. ' + err));
-
-					let entries = [];
-					files.forEach((file) => {
-						fs.chmodSync(file, '644');
-
-						let entry = path.relative(folder, file);
-						logger.info('Chaincode package entry: ' + entry);
-						entries.push(entry);
-					});
-
-					let targzFilePath = path.join(folder, 'deployment-package.tar.gz');
-					return generateTarGz(folder, targzFilePath, entries)
-						.then(function() {
-							logger.debug('Successfully generated chaincode archive %s ', targzFilePath);
-							return utils.readFile(targzFilePath)
-								.then((data) => {
-									logger.debug('Successful readFile to data in bytes');
-									return resolve(data);
-								});
-						});
-				});
-			});
-		});
-	});
-};
-
-//
-// generateTarGz creates a .tar.gz file from contents in the src directory and
-// saves them in a dest file.
-//
-function generateTarGz(src, dest, entries) {
-	// A list of file extensions that should be packaged into the .tar.gz.
-	// Files with all other file extenstions will be excluded to minimize the size
-	// of the install payload.
-	var keep = [
-		'.go',
-		'.yaml',
-		'.json',
-		'.c',
-		'.h'
-	];
-
-	return new Promise(function(resolve, reject) {
-		// Create the pack stream specifying the ignore/filtering function
-		var pack = tar.pack(src, {
-			entries: entries,
-			ignore: function(name) {
-				// Check whether the entry is a file or a directory
-				if (fs.statSync(name).isDirectory()) {
-					// If the entry is a directory, keep it in order to examine it further
-					return false;
-				} else {
-					// If the entry is a file, check to see if it's the Dockerfile
-					if (name.indexOf('Dockerfile') > -1) {
-						return false;
-					}
-
-					// If it is not the Dockerfile, check its extension
-					var ext = path.extname(name);
-
-					// Ignore any file who's extension is not in the keep list
-					if (keep.indexOf(ext) === -1) {
-						return true;
-					} else {
-						return false;
-					}
-				}
-			}
+	return findSource(goPath, projDir)
+		.then((descriptors) => {
+			return generateTarGz(descriptors, buffer);
 		})
-		.pipe(zlib.Gzip())
-		.pipe(fs.createWriteStream(dest));
-
-		pack.on('close', function() {
-			return resolve(dest);
+		.then(() => {
+			return buffer.getContents();;
 		});
-		pack.on('error', function() {
-			return reject(new Error('Error on fs.createWriteStream'));
-		});
-	});
 };
+
+// -------------------------------------------------------------------------
+// isSource(path)
+// -------------------------------------------------------------------------
+// predicate function for determining whether a given path should be
+// considered valid source code, based entirely on the extension.  It is
+// assumed that other checks for file type (e.g. ISREG) have already been
+// performed.
+// -------------------------------------------------------------------------
+function isSource(filePath) {
+	return (keep.indexOf(path.extname(filePath)) != -1);
+}
+
+// -------------------------------------------------------------------------
+// findSource(goPath, filePath)
+// -------------------------------------------------------------------------
+// Given an input 'filePath', recursively parse the filesystem for any files
+// that fit the criteria for being valid golang source (ISREG + (*.(go|c|h)))
+// As a convenience, we also formulate a tar-friendly "name" for each file
+// based on relative position to 'goPath'.
+// -------------------------------------------------------------------------
+function findSource(goPath, filePath) {
+	return new Promise((resolve, reject) => {
+		var descriptors = [];
+		klaw(filePath)
+			.on('data', (entry) => {
+
+				if (entry.stats.isFile() && isSource(entry.path)) {
+
+					var desc = {
+						name: path.relative(goPath, entry.path),
+						fqp: entry.path
+					};
+
+					logger.debug('adding entry', desc);
+					descriptors.push(desc);
+				}
+
+			})
+			.on('end', () => {
+				resolve(descriptors);
+			});
+	});
+}
+
+// -------------------------------------------------------------------------
+// packEntry(pack, desc)
+// -------------------------------------------------------------------------
+// Given an {fqp, name} tuple, generate a tar entry complete with sensible
+// header and populated contents read from the filesystem.
+// -------------------------------------------------------------------------
+function packEntry(pack, desc) {
+	return new Promise((resolve, reject) => {
+		// Use a synchronous read to reduce non-determinism
+		var content = fs.readFileSync(desc.fqp);
+		if (!content) {
+			reject(new Error('failed to read ' + desc.fqp));
+		} else {
+			// Use a deterministic "zero-time" for all date fields
+			var zeroTime = new Date(0);
+			var header = {name: desc.name,
+						  size: content.size,
+						  mode: 0o100644,
+						  atime: zeroTime,
+						  mtime: zeroTime,
+						  ctime: zeroTime
+						 };
+
+			pack.entry(header, content, (err) => {
+				if (err)
+					reject(err);
+				else
+					resolve(true);
+			});
+		}
+	});
+}
+
+// -------------------------------------------------------------------------
+// generateTarGz(descriptors, dest)
+// -------------------------------------------------------------------------
+// creates an .tar.gz stream from the provided descriptor entries
+// -------------------------------------------------------------------------
+function generateTarGz(descriptors, dest) {
+	return new Promise((resolve, reject) => {
+		var pack = tar.pack();
+
+		// Setup the pipeline to compress on the fly and resolve/reject the promise
+		pack
+			.pipe(zlib.createGzip())
+			.pipe(dest)
+			.on('finish', () => {
+				resolve(true);
+			})
+			.on('error', (err) => {
+				reject(err);
+			});
+
+		// Iterate through each descriptor in the order it was provided and resolve
+		// the entry asynchronously.  We will gather results below before
+		// finalizing the tarball
+		var tasks = [];
+		for (let desc of descriptors) {
+			var task = packEntry(pack, desc);
+			tasks.push(task);
+		}
+
+		// Block here until all entries have been gathered, and then finalize the
+		// tarball.  This should result in a flush of the entire pipeline before
+		// resolving the top-level promise.
+		Promise.all(tasks)
+			.then(() => {
+				pack.finalize();
+			})
+			.catch((err) => {
+				reject(err);
+			});
+	});
+}
