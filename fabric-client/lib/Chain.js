@@ -1753,7 +1753,10 @@ var Chain = class {
 		var errorMsg = null;
 
 		if (request) {
-			if(!request.chaincodePath) {
+			var type = translateCCType(request.chaincodeType);
+			// FIXME: GOLANG platform on the peer has a bug that requires chaincodePath
+			// during instantiate.  Police this for now until the peer is fixed.
+			if(type === _ccProto.ChaincodeSpec.Type.GOLANG && !request.chaincodePath) {
 				errorMsg = 'Missing "chaincodePath" parameter in the proposal request';
 			}
 		} else {
