@@ -20,6 +20,7 @@ var tar = require('tar-fs');
 var path = require('path');
 var zlib = require('zlib');
 var utils = require('../utils.js');
+var dir = require('node-dir');
 
 var logger = utils.getLogger('packager/Golang.js');
 
@@ -49,16 +50,30 @@ module.exports.package = function(chaincodePath) {
 			fs.copy(projDir, dest, (err) => {
 				if (err) return reject(new Error('Failed to copy chaincode source to temp folder. ' + err));
 
-				let targzFilePath = path.join(folder, 'deployment-package.tar.gz');
-				return generateTarGz(folder, targzFilePath)
-					.then(function() {
-						logger.debug('Successfully generated chaincode archive %s ', targzFilePath);
-						return utils.readFile(targzFilePath)
-							.then((data) => {
-								logger.debug('Successful readFile to data in bytes');
-								return resolve(data);
-							});
+				// first set the mode of all files to -rw-r--r--
+				dir.files(dest, (err, files) => {
+					if (err) return reject(new Error('Failed to iterate over files and subdirectories of the destination folder. ' + err));
+
+					let entries = [];
+					files.forEach((file) => {
+						fs.chmodSync(file, '644');
+
+						let entry = path.relative(folder, file);
+						logger.info('Chaincode package entry: ' + entry);
+						entries.push(entry);
 					});
+
+					let targzFilePath = path.join(folder, 'deployment-package.tar.gz');
+					return generateTarGz(folder, targzFilePath, entries)
+						.then(function() {
+							logger.debug('Successfully generated chaincode archive %s ', targzFilePath);
+							return utils.readFile(targzFilePath)
+								.then((data) => {
+									logger.debug('Successful readFile to data in bytes');
+									return resolve(data);
+								});
+						});
+				});
 			});
 		});
 	});
@@ -68,7 +83,7 @@ module.exports.package = function(chaincodePath) {
 // generateTarGz creates a .tar.gz file from contents in the src directory and
 // saves them in a dest file.
 //
-function generateTarGz(src, dest) {
+function generateTarGz(src, dest, entries) {
 	// A list of file extensions that should be packaged into the .tar.gz.
 	// Files with all other file extenstions will be excluded to minimize the size
 	// of the install payload.
@@ -83,6 +98,7 @@ function generateTarGz(src, dest) {
 	return new Promise(function(resolve, reject) {
 		// Create the pack stream specifying the ignore/filtering function
 		var pack = tar.pack(src, {
+			entries: entries,
 			ignore: function(name) {
 				// Check whether the entry is a file or a directory
 				if (fs.statSync(name).isDirectory()) {
