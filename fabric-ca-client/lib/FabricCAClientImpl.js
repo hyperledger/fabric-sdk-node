@@ -433,21 +433,16 @@ var FabricCAClient = class {
 	 * Generate authorization token required for accessing fabric-ca APIs
 	 */
 	generateAuthToken(reqBody, signingIdentity) {
-		// sometimes base64 encoding results in trailing one or two "=" as padding
-		var trim = function(string) {
-			return string.replace(/=*$/, '');
-		};
-
 		// specific signing procedure is according to:
 		// https://github.com/hyperledger/fabric-ca/blob/master/util/util.go#L213
-		var cert = trim(Buffer.from(signingIdentity._certificate).toString('base64'));
-		var body = trim(Buffer.from(JSON.stringify(reqBody)).toString('base64'));
+		var cert = Buffer.from(signingIdentity._certificate).toString('base64');
+		var body = Buffer.from(JSON.stringify(reqBody)).toString('base64');
 
 		var bodyAndcert = body + '.' + cert;
 		var sig = signingIdentity.sign(bodyAndcert, { hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives) });
 		logger.debug(util.format('bodyAndcert: %s', bodyAndcert));
 
-		var b64Sign = trim(Buffer.from(sig, 'hex').toString('base64'));
+		var b64Sign = Buffer.from(sig, 'hex').toString('base64');
 		return cert + '.' + b64Sign;
 	}
 
