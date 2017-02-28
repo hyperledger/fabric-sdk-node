@@ -68,5 +68,6 @@ services:
       - vp0
     ports:
       - 7056:7051
+      - 7058:7053
     depends_on:
       - orderer

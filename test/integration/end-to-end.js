@@ -78,22 +78,30 @@ test('End-to-end flow of chaincode install, instantiate, transaction invocation,
 		client.setStateStore(store);
 		var promise = testUtil.getSubmitter(client, t);
 
-		// setup event hub to get notified when transactions are committed
-		var eh = new EventHub();
-		eh.setPeerAddr('grpc://localhost:7053');
-		eh.connect();
+		// setup event hub for peer0 to get notified when transactions are committed
+		var eh1 = new EventHub();
+		eh1.setPeerAddr('grpc://localhost:7053');
+		eh1.connect();
+
+		// setup event hub or peer1 to get notified when transactions are committed
+		var eh2 = new EventHub();
+		eh2.setPeerAddr('grpc://localhost:7058');
+		eh2.connect();
 
 		// override t.end function so it'll always disconnect the event hub
-		t.end = ((context, eventhub, f) => {
+		t.end = ((context, eventhubs, f) => {
 			return function() {
-				if (eventhub && eventhub.isconnected()) {
-					logger.info('Disconnecting the event hub');
-					eventhub.disconnect();
+				for(var key in eventhubs) {
+					var eventhub = eventhubs[key];
+					if (eventhub && eventhub.isconnected()) {
+						logger.info('Disconnecting the event hub');
+						eventhub.disconnect();
+					}
 				}
 
 				f.apply(context, arguments);
 			};
-		})(t, eh, t.end);
+		})(t, [eh1, eh2], t.end);
 
 		if (!useSteps || steps.indexOf('step1') >= 0) {
 			logger.info('Executing step1');
@@ -207,34 +215,53 @@ test('End-to-end flow of chaincode install, instantiate, transaction invocation,
 					// if the transaction did not get committed within the timeout period,
 					// fail the test
 					var deployId = tx_id.toString();
-					var txPromise = new Promise((resolve, reject) => {
-						var handle = setTimeout(reject, 30000);
+					var txPromise1 = new Promise((resolve, reject) => {
+						let handle = setTimeout(reject, 30000);
 
-						eh.registerTxEvent(deployId, (tx, invalid) => {
-							t.pass('The chaincode deploy transaction has been successfully committed');
+						eh1.registerTxEvent(deployId.toString(), (tx, code) => {
+							t.pass('The chaincode deploy transaction has been committed on this '+ peer0);
 							clearTimeout(handle);
-							eh.unregisterTxEvent(deployId);
+							eh1.unregisterTxEvent(deployId);
 
-							if (invalid) {
+							if (code !== 'VALID') {
+								t.pass('The chaincode deploy transaction was valid');
 								reject();
 							} else {
-								if (!useSteps) {
-									resolve();
-								} else if (steps.length === 1 && steps[0] === 'step2') {
-									t.end();
-									resolve();
-								}
+								t.pass('The chaincode deploy transaction was not valid code='+code);
+								resolve();
+							}
+						});
+					});
+					var txPromise2 = new Promise((resolve, reject) => {
+						let handle = setTimeout(reject, 30000);
+
+						eh2.registerTxEvent(deployId.toString(), (tx, code) => {
+							t.pass('The chaincode deploy transaction has been committed on this '+ peer1);
+							clearTimeout(handle);
+							eh2.unregisterTxEvent(deployId);
+
+							if (code !== 'VALID') {
+								reject();
+							} else {
+								resolve();
 							}
 						});
 					});
 
 					var sendPromise = chain.sendTransaction(request);
-					return Promise.all([sendPromise, txPromise]).then((results) => {
+					return Promise.all([sendPromise, txPromise1, txPromise2]).then((results) => {
+						if (!useSteps) {
+							logger.debug(' event promise all complete');
+						} else if (steps.length === 1 && steps[0] === 'step3') {
+							logger.debug(' event promise all complete and testing complete');
+							t.end();
+						}
 						return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 					}).catch((err) => {
 						t.fail('Failed to send instantiate transaction and get notifications within the timeout period. ');
 						t.end();
 					});
+
 				} else {
 					t.fail('Failed to send instantiate Proposal or receive valid response. Response null or status is not 200. exiting...');
 					t.end();
@@ -265,6 +292,8 @@ test('End-to-end flow of chaincode install, instantiate, transaction invocation,
 					the_user = admin;
 				}
 				nonce = Buffer.from('12');//hard coded this so that we have a known transaction id that may be queried later
+//				nonce = utils.getNonce();
+
 				tx_id = chain.buildTransactionID(nonce, the_user);
 
 				// send proposal to endorser
@@ -306,30 +335,48 @@ test('End-to-end flow of chaincode install, instantiate, transaction invocation,
 					};
 
 					var txId = tx_id.toString();
-					var txPromise = new Promise((resolve, reject) => {
-						var handle = setTimeout(reject, 30000);
+					var txPromise1 = new Promise((resolve, reject) => {
+						let handle = setTimeout(reject, 30000);
 
-						eh.registerTxEvent(txId.toString(), (tx, invalid) => {
-							t.pass('The chaincode deploy transaction has been successfully committed');
+						eh1.registerTxEvent(txId.toString(), (tx, code) => {
+							t.pass('The chaincode invoke move transaction has been successfully committed on this '+ peer0);
 							clearTimeout(handle);
-							eh.unregisterTxEvent(txId);
+							eh1.unregisterTxEvent(txId);
 
-							if (invalid) {
+							if (code !== 'VALID') {
 								reject();
 							} else {
-								if (!useSteps) {
-									resolve();
-								} else if (steps.length === 1 && steps[0] === 'step3') {
-									t.end();
-									resolve();
-								}
+								resolve();
+							}
+						});
+					});
+					var txPromise2 = new Promise((resolve, reject) => {
+						let handle = setTimeout(reject, 30000);
+
+						eh2.registerTxEvent(txId.toString(), (tx, code) => {
+							t.pass('The chaincode invoke move transaction has been successfully committed on this '+ peer1);
+							clearTimeout(handle);
+							eh2.unregisterTxEvent(txId);
+
+							if (code !== 'VALID') {
+								t.pass('The chaincode invoke transaction was valid');
+								reject();
+							} else {
+								t.pass('The chaincode invoke transaction was not valid code='+code);
+								resolve();
 							}
 						});
 					});
 
 					var sendPromise = chain.sendTransaction(request);
 
-					return Promise.all([sendPromise, txPromise]).then((results) => {
+					return Promise.all([sendPromise, txPromise1, txPromise2]).then((results) => {
+						if (!useSteps) {
+							logger.debug(' event promise all complete');
+						} else if (steps.length === 1 && steps[0] === 'step3') {
+							logger.debug(' event promise all complete and testing complete');
+							t.end();
+						}
 						return results[0];
 					}).catch((err) => {
 						t.fail('Failed to send invoke transaction and get notifications within the timeout period. ');
