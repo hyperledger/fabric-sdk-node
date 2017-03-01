@@ -14,7 +14,7 @@ To build and test, the following pre-requisites must be installed first:
 * node runtime version 4.5 or later (which also installs the npm tool)
 * npm tool version 2.15.9 or later
 * gulp command
-* docker (not required if you only want to run the headless tests with `npm test`, see below)
+* docker (not required if you only want to run the headless tests with `npm test-headless`, see below)
 
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
 
@@ -27,43 +27,33 @@ In the project root folder:
 * `gulp ca` to copy common dependent modules from the `fabric-client` folder to the `fabric-ca-client` folder
 * `gulp watch` to set up watch that updates fabric-ca-client's shared dependencies from fabric-client/lib and updates installed fabric-client and fabric-ca-client modules in node_modules. This command does not return, so you should keep it running in a separate command window as you work on the code and test in another command window
 * optionally, `gulp doc` to generate API docs if you want to review the doc content
-* `npm test` to run the headless tests that do not require any additional set up
+* `npm test-headless` to run the headless tests that do not require any additional set up
 
-The following tests require setting up a local blockchain network as the target. Because v1.0 is still in active development, you still need the vagrant environment to build the necessary Docker images needed to run the network. Follow the steps below to set it up.
-* You will need the fabric-ca server (new implementation of the member service) to run the tests. Because the fabric-ca project's build script does not yet produce a docker image, you'd need to run the fabric-ca server as a native process inside vagrant
+The following tests require setting up a local blockchain network as the target. Because v1.0 is still in active development, you still need to build the necessary Docker images needed to run the network. Follow the steps below to set it up.
+* You will need the peers, orderers and fabric-ca server (new implementation of the member service) to run the tests. The first two components are from the *fabric* repository. The fabric-ca server is from the *fabric-ca* repository.
 * git clone both the *fabric* and *fabric-ca* repositories into the $GOPATH/src/github.com/hyperledger folder in your native host (MacOS, Windows or Ubuntu, etc).
 
 If you are using a Mac and would like to build the docker images and run them natively instead of using vagrant, do the following:
 * If docker is installed and it’s not ‘Docker for Mac’, uninstall and follow Docker’s clean up instructions to uninstall completely.
-* Install ‘Docker for Mac’. 
+* Install ‘Docker for Mac’: https://docs.docker.com/docker-for-mac/install
 * Install Brew: http://brew.sh
-* run `brew install gnu-tar —-with-default-names`
+* run `brew install gnu-tar —-with-default-names` in order to swap out Mac's default tar command for a gnu-compliant one needed by chaincode execution on the peers
 
-* To use vagrant, do the following:
-* `cd fabric/devenv`
-* Open the file `Vagrantfile` and insert the following statement below the existing `config.vm.network` statements:
-  * `  config.vm.network :forwarded_port, guest: 7056, host: 7056 # Openchain gRPC services`
-
-* run `vagrant up` to launch the vagrant VM
-* Once inside vagrant, follow these steps to start the fabric-ca server and the Peers network with orderer
-* start fabric-ca (new membership service)
+* build fabric-ca docker image (new membership service)
   * cd `$GOPATH/src/github.com/hyperledger/fabric-ca
-  * run `make fabric-ca` to build the fabric-ca binary or follow the instructions in [fabric-ca README](https://github.com/hyperledger/fabric-ca)
-  * from the `fabric-ca` folder, launch the following command to start the fabric-ca server. The ec.pem and ec-key.pem certificates sets up the fabric-ca server as the trusted root that the Peer nodes have been statically configured as a temporary measure. In other words, the Peers will be able to trust any user certificates that have been signed by the fabric-ca server. This is important because the endorser code inside the Peer will need to validate the user certificate issued by fabric-ca before using it to verify the signature of the transaction proposal.
-  	* `bin/fabric-ca server start -ca testdata/ec.pem -ca-key testdata/ec-key.pem -config testdata/testconfig.json`
-* start the Peer network
+  * run `make docker`. For more build instructions see [fabric-ca README](https://github.com/hyperledger/fabric-ca)
+* build fabric peer and orderer docker images and other ancillary images
   * `cd $GOPATH/src/github.com/hyperledger/fabric`
   * run `make docker` to build the docker images
-  * create a docker-compose.yml file in home directory (/home/vagrant), and copy [docker-compose.yml](https://raw.githubusercontent.com/hyperledger/fabric-sdk-node/master/test/fixtures/docker-compose.yml) file content into the file
-  * from /home/vagrant, run `docker-compose up --force-recreate` to launch the network
-* Back in your native host (MacOS, or Windows, or Ubuntu, etc), run the following tests:
-  * Clear out your previous key value store if needed for fabric-sdk-node (`rm -fr /tmp/hfc-*`) and for fabric-ca (`rm <...>/fabric-ca/testdata/fabric-ca.db`)
-  * Clear out your previous chaincode if needed by restarting the docker images (`docker-compose up --force-recreate`)
+* go to fabric-sdk-node/test/fixtures
+  * run `docker-compose up --force-recreate` to launch the network
+* Now you are ready to run the tests:
+  * Clear out your previous key value store if needed for fabric-sdk-node (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store)
   * Run `gulp test` to run the entire test bucket and generate coverage reports (both in console output and HTMLs)
-  * Test user management by member services with the `test/unit/ca-tests.js`. This test exercises the KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
-  * Test happy path from end to end, run `node test/unit/end-to-end.js`
-  * Test transaction proposals, run `node test/unit/endorser-tests.js`
-  * Test sending endorsed transactions for consensus, run `node test/unit/orderer-tests.js`
+  * Test user management by member services with the `test/integration/couchdb-fabricca-tests.js` and `test/integration/cloudant-fabricca-tests.js`. This test exercises the KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
+  * Test happy path from end to end, run `node test/integration/end-to-end.js`
+  * Test transaction proposals, run `node test/integration/endorser-tests.js`
+  * Test sending endorsed transactions for consensus, run `node test/integration/orderer-tests.js`
 
 ### Set Up CouchDB Database for couchdb-fabriccop-tests.js
 
@@ -133,8 +123,8 @@ HFC is written in CommonJS modules and is object-oriented. It's comprised of the
 * index.js is the top-level module that provides the main API surface into the HFC package. It's mainly a collection of convenient methods.
 * The main top-level class is **Chain**. It is the client's view of a blockchain network. HFC allows you to interact with multiple chains. Each chain object can be configured with a different member service or share a common member service, depending on how the target blockchain networks are set up. Each chain object has a _KeyValueStore_ to store private keys and certificates for authenticated users. Each chain object can be configured with an ordering service, to which HFC connects to send transactions for consensus and committing to the ledger.
 * The **KeyValueStore** is a very simple interface which HFC uses to store and retrieve all persistent data. This data includes private keys, so it is very important to keep this storage secure. The default implementation is a simple file-based version found in the _FileKeyValueStore_ class.
-* The **MemberServices** interface provides security and identity related features such as user registration and enrollment, transaction certificate issuance. The Hyperledger Fabric has a built-in implementation that issues _ECerts_ (enrollment certificates) and _TCerts_ (transaction certificates). ECerts are for enrollment identity and TCerts are for transactions.
-* The **Member** class represents an end user who transacts on the chain. From the Member class, you can _register_ and _enroll_ users. This class interacts with the MemberServices object. You can also deploy, query, and invoke chaincode from this class, which interact with the _Peer_ objects.
+* The **FabricCAClientImpl** class provides security and identity related features such as user registration and enrollment, transaction certificate issuance. The Hyperledger Fabric has a built-in implementation that issues _ECerts_ (enrollment certificates) and _TCerts_ (transaction certificates). ECerts are for enrollment identity and TCerts are for transactions.
+* The **User** class represents an end user who transacts on the chain. The user object must have a valid enrollment configured in order to properly sign transaction requests. The enrollment materials can either be obtained from enrolling with fabric-ca or loaded from an MSP configuration directory.
 * The **EventHub** class encapsulates the interaction with the network peers' event streams.
 
 ### Pluggability
