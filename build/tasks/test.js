@@ -21,11 +21,12 @@ gulp.task('test', ['lint', 'test-headless'], function() {
 	// saved the user certificates so they can interact with the
 	// network
 	return gulp.src([
-		// 'test/integration/ca-tests.js',
 		'test/integration/chain-fabric-ca-tests.js',
 		'test/integration/endorser-tests.js',
 		'test/integration/orderer-chain-tests.js',
-		'test/integration/install.js'
+		'test/integration/cloudant-fabricca-tests.js',
+		'test/integration/install.js',
+		'test/integration/end-to-end.js'
 	])
 	.pipe(tape({
 		reporter: tapColorize()

@@ -102,7 +102,7 @@ Configurable settings are encapsulated in test/fixtures/couchdb.json and can be 
 
 Run the associated unit test with the following command:
 
-	node test/unit/couchdb-fabriccop-test.js
+	node test/unit/couchdb-fabricca-tests.js
 
 ### Contributor Check-list
 The following check-list is for code contributors to make sure their changesets are compliant to the coding standards and avoid time wasted in rejected changesets:

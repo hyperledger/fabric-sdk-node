@@ -19,22 +19,26 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var hfc = require('fabric-client');
+
 var Client = hfc;
 var User = require('fabric-client/lib/User.js');
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 
 var utils = require('fabric-client/lib/utils.js');
 var couchdbUtil = require('./couchdb-util.js');
+var logger = utils.getLogger('couchdb-fabricca');
+hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
 
 // Use the CouchDB specific config file
 hfc.addConfigFile('test/fixtures/couchdb.json');
 
 var keyValueStore = hfc.getConfigSetting('key-value-store');
-console.log('Key Value Store = ' + keyValueStore);
+logger.info('couchdb Key Value Store = ' + keyValueStore);
 
 var couchdbIPAddr = hfc.getConfigSetting('couchdb-ip-addr', 'notfound');
 var couchdbPort = hfc.getConfigSetting('couchdb-port', 'notfound');
 var keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
+logger.info('couch keyValStorePath: '+keyValStorePath);
 
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
@@ -48,6 +52,7 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 
 	// Set the relevant configuration values
 	utils.setConfigSetting('crypto-keysize', 256);
+	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');
 
 	// Clean up the couchdb test database
 	var dbname = 'member_db';
@@ -70,17 +75,18 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 					process.exit(1);
 				}
 				t.comment('Initialize the CA server connection and KeyValueStore');
-				return new FabricCAServices('http://localhost:7054', {name: dbname, url: keyValStorePath});
+				t.comment('Test optional parameters passed into FabricCAServices of cryptoSettings and KVSImplClass');
+				return new FabricCAServices('http://localhost:7054', null/*cryptoSettings*/, kvs/*KVSImplClass*/, {name: dbname, url: keyValStorePath});
 			},
 			function(err) {
-				console.log(err);
+				logger.error(err);
 				t.fail('Error initializing CouchDB KeyValueStore. Exiting.');
 				t.end();
 				process.exit(1);
 			})
 		.then(
 			function(caService) {
-				console.log('ADD: caService - ' + caService);
+				logger.info('ADD: caService - ' + caService);
 				t.pass('Successfully initialized the Fabric CA service.');
 
 				client.setCryptoSuite(caService.getCrypto());

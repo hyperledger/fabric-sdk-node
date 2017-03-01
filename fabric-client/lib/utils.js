@@ -70,19 +70,19 @@ module.exports.getCryptoSuite = function(setting, KVSImplClass, opts) {
 	// - getCryptoSuite()
 
 	// step 1: what's the cryptosuite impl to use, key size and algo
-	if (typeof setting === 'object' && typeof setting.keysize === 'number') {
+	if (setting && setting.keysize && typeof setting === 'object' && typeof setting.keysize === 'number') {
 		keysize = setting.keysize;
 		haveSettings = true;
 	} else
 		keysize = this.getConfigSetting('crypto-keysize');
 
-	if (typeof setting === 'object' && typeof setting.algorithm === 'string') {
+	if (setting && setting.algorithm && typeof setting === 'object' && typeof setting.algorithm === 'string') {
 		algorithm = setting.algorithm.toUpperCase();
 		haveSettings = true;
 	} else
 		algorithm = 'EC';
 
-	if (typeof setting === 'object' && typeof setting.hash === 'string') {
+	if (setting && setting.hash && typeof setting === 'object' && typeof setting.hash === 'string') {
 		hashAlgo = setting.hash.toUpperCase();
 		haveSettings = true;
 	} else
