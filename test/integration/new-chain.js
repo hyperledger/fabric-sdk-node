@@ -18,6 +18,9 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 process.env.HFC_LOGGING = '{"debug": "console"}';
+var log4js = require('log4js');
+var logger = log4js.getLogger('NEW CHAIN');
+logger.setLevel('DEBUG');
 var hfc = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
@@ -87,6 +90,7 @@ test('\n\n** TEST ** new chain using chain.createChannel() method with good orde
 	)
 	.then(
 		function(response) {
+			logger.debug(' response ::%j',response);
 			if (response && response.status === 'SUCCESS') {
 				t.pass('Successfully created the channel.');
 				return sleep(5000);
@@ -96,7 +100,7 @@ test('\n\n** TEST ** new chain using chain.createChannel() method with good orde
 			}
 		},
 		function(err) {
-			t.pass('Failed to initialize the channel: ' + err.stack ? err.stack : err);
+			t.fail('Failed to initialize the channel: ' + err.stack ? err.stack : err);
 			t.end();
 		}
 	)
@@ -118,9 +122,12 @@ test('\n\n** TEST ** new chain using chain.createChannel() method with good orde
 		}
 	)
 	.then(
-		function(response) {
-			console.log(' Join Channel R E S P O N S E ::'+ JSON.stringify(response));
-			t.pass('Successfully joined channel.');
+		function(results) {
+			console.log(' Join Channel R E S P O N S E ::'+ JSON.stringify(results));
+			if(results[0] && results[0].response && results[0].response.status == 200)
+				t.pass('Successfully joined channel.');
+			else
+				t.fail(' Failed to join channel');
 			t.end();
 		},
 		function(err) {
@@ -146,8 +153,7 @@ test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist
 	// Create and configure the test chain
 	//
 	var client = new hfc();
-	var chain = client.newChain('testChain2');
-	chain.setInitialTransactionId('1234');
+	var chain = client.newChain('foo');
 	chain.addOrderer(new Orderer('grpc://localhost:7050'));
 
 	hfc.newDefaultKeyValueStore({path: testUtil.KVS}
@@ -187,7 +193,7 @@ test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist
 	)
 	.then(
 		function(response) {
-			t.fail('Failed to get correct error. Response code: ' + response);
+			t.fail('Failed to get correct error. Response code: ' + response.status);
 			t.end();
 		},
 		function(err) {

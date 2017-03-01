@@ -30,6 +30,7 @@ var Peer = require('fabric-client/lib/Peer.js');
 var Chain = require('fabric-client/lib/Chain.js');
 var Packager = require('fabric-client/lib/Packager.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
+var MSPManager = require('fabric-client/lib/msp/msp-manager.js');
 
 var _chain = null;
 var chainName = 'testChain';
@@ -108,149 +109,16 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 		'Chain tests: checking that orderer already exists.'
 	);
 	t.equal(_chain.toString(), '{"name":"testChain","orderers":" Orderer : {url:grpc://somehost.com:1234}|"}', 'checking chain toString');
-
-	_chain.setConsensusType('SOMETYPE');
-	t.equal(_chain.getConsensusType(), 'SOMETYPE', 'Chain tests: checking set and get Consensus type');
-	t.throws(
-		function () {
-			_chain.setInitialEpoch(-1);
-		},
-		/^Error: initial epoch must be a positive integer/,
-		'Chain tests: checking that epoch should be positive integer when input is negative.'
-	);
-	t.throws(
-		function () {
-			_chain.setInitialEpoch(1.1);
-		},
-		/^Error: initial epoch must be a positive integer/,
-		'Chain tests: checking that epoch should be positive integer when input is float.'
-	);
-	t.throws(
-		function () {
-			_chain.setInitialEpoch('a');
-		},
-		/^Error: initial epoch must be a positive integer/,
-		'Chain tests: checking that epoch should be positive integer when input is char.'
-	);
+	t.notEquals(_chain.getMSPManager(),null,'checking the chain getMSPManager()');
 	t.doesNotThrow(
 		function () {
-			_chain.setInitialEpoch(3);
+			var msp_manager = new MSPManager();
+			_chain.setMSPManager(msp_manager);
 		},
 		null,
-		'checking the chain setInitialEpoch()'
+		'checking the chain setMSPManager()'
 	);
-	t.equal(_chain.getInitialEpoch(), 3, 'Chain tests: checking set and get initial epoch');
-	t.throws(
-		function () {
-			_chain.setInitialMaxMessageCount(-1);
-		},
-		/^Error: initial maximum message count must be a positive integer/,
-		'Chain tests: checking that max message count should be positive integer when input is negative.'
-	);
-	t.throws(
-		function () {
-			_chain.setInitialMaxMessageCount(1.1);
-		},
-		/^Error: initial maximum message count must be a positive integer/,
-		'Chain tests: checking that max message count should be positive integer when input is float.'
-	);
-	t.throws(
-		function () {
-			_chain.setInitialMaxMessageCount('a');
-		},
-		/^Error: initial maximum message count must be a positive integer/,
-		'Chain tests: checking that max message count should be positive integer when input is char.'
-	);
-	t.doesNotThrow(
-		function () {
-			_chain.setInitialMaxMessageCount(30);
-		},
-		null,
-		'Chain tests: checking the chain setInitialMaxMessageCount()'
-	);
-	t.equal(_chain.getInitialMaxMessageCount(), 30, 'Chain tests: checking set and get initial max message count');
-
-	t.throws(
-		function () {
-			_chain.setInitialAbsoluteMaxBytes(-1);
-		},
-		/^Error: initial absolute maximum bytes must be a positive integer/,
-		'Chain tests: checking that absolute max bytes should be positive integer when input is negative.'
-	);
-	t.throws(
-		function () {
-			_chain.setInitialAbsoluteMaxBytes(1.1);
-		},
-		/^Error: initial absolute maximum bytes must be a positive integer/,
-		'Chain tests: checking that absolute max bytes should be positive integer when input is float.'
-	);
-	t.throws(
-		function () {
-			_chain.setInitialAbsoluteMaxBytes('a');
-		},
-		/^Error: initial absolute maximum bytes must be a positive integer/,
-		'Chain tests: checking that absolute max bytes should be positive integer when input is char.'
-	);
-
-	var initialAbsoluteMaxBytes = _chain.getInitialAbsoluteMaxBytes();
-	t.equal(initialAbsoluteMaxBytes, 0xA00000,
-			'Chain tests: check absolute maximum bytes default value');
-	_chain.setInitialAbsoluteMaxBytes(0);
-	t.equal(_chain.getInitialAbsoluteMaxBytes(), 0, 'Chain tests: set max ab bytes to zero');
-	t.doesNotThrow(
-		function () {
-			_chain.setInitialAbsoluteMaxBytes(0x9fFFFF);
-		},
-		null,
-		'Chain tests: setInitialAbsoluteMaxBytes()'
-	);
-	t.equal(_chain.getInitialAbsoluteMaxBytes(), initialAbsoluteMaxBytes - 1,
-		    'Chain tests: checking set and get initial maximum absolute bytes');
-
-	var  initialPreferredMaxBytes = _chain.getInitialPreferredMaxBytes();
-	t.throws(
-		function () {
-			_chain.setInitialPreferredMaxBytes(-1);
-		},
-		/^Error: initial preferred maximum bytes must be a positive integer/,
-		'Chain tests: checking that preferred max bytes should be positive integer when input is negative.'
-	);
-	t.throws(
-		function () {
-			_chain.setInitialPreferredMaxBytes(1.1);
-		},
-		/^Error: initial preferred maximum bytes must be a positive integer/,
-		'Chain tests: checking that preferred max bytes should be positive integer when input is float.'
-	);
-	t.throws(
-		function () {
-			_chain.setInitialPreferredMaxBytes('a');
-		},
-		/^Error: initial preferred maximum bytes must be a positive integer/,
-		'Chain tests: checking that preferred max bytes should be positive integer when input is char.'
-	);
-	t.equal(initialPreferredMaxBytes, 0xA00000,
-			'Chain tests: check initial preferred maximum bytes default value');
-	_chain.setInitialPreferredMaxBytes(0);
-	t.equal(_chain.getInitialPreferredMaxBytes(), 0, 'Chain tests: set initial preferred maximum bytes to zero');
-	t.doesNotThrow(
-		function () {
-			_chain.setInitialPreferredMaxBytes(0x9fFFFF);
-		},
-		null,
-		'Chain tests: setInitialPreferredMaxBytes()'
-	);
-	t.equal(_chain.getInitialPreferredMaxBytes(), initialPreferredMaxBytes - 1,
-		    'Chain tests: checking set and get initial maximum preferred bytes');
-
-	t.doesNotThrow(
-		function () {
-			_chain.setInitialTransactionId('abcde');
-		},
-		null,
-		'checking the chain setInitialTransactionId()'
-	);
-	t.equal(_chain.getInitialTransactionId(), 'abcde', 'Chain tests: checking set and get initial transaction id');
+	t.notEquals(_chain.getOrganizationUnits(),null,'checking the chain getOrganizationUnits()');
 	t.end();
 });
 

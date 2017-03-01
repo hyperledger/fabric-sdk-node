@@ -23,13 +23,17 @@ var MSP = class {
 	 * @param {Object} config A configuration object specific to the implementation. For this
 	 * implementation it uses the following fields:
 	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
-	 * signing certificates. Required for MSPs used in verifying signatures
+	 *           signing certificates. Required for MSPs used in verifying signatures
+	 *		<br>`intermediateCerts`: array of {@link Identity} representing trust anchors for validating
+	 *           signing certificates. optional for MSPs used in verifying signatures
 	 *		<br>`admins`: array of {@link Identity} representing admin privileges
 	 *		<br>`signer`: {@link SigningIdentity} signing identity. Required for MSPs used in signing
 	 *		<br>`id`: {string} value for the identifier of this instance
+	 *		<br>`orgs`: {string} array of organizational unit identifiers
 	 *		<br>`cryptoSuite': the underlying {@link module:api.CryptoSuite} for crypto primitive operations
 	 */
 	constructor(config) {
+		logger.debug('const - start');
 		if (!config)
 			throw new Error('Missing required parameter "config"');
 
@@ -47,10 +51,12 @@ var MSP = class {
 		}
 
 		this._rootCerts = config.rootCerts;
+		this._intermediateCerts = config.intermediateCerts;
 		this._signer = config.signer;
 		this._admins = config.admins;
 		this.cryptoSuite = config.cryptoSuite;
 		this._id = config.id;
+		this._organization_units = config.orgs;
 	}
 
 	/**
@@ -59,6 +65,14 @@ var MSP = class {
 	 */
 	getId() {
 		return this._id;
+	}
+
+	/**
+	 * Get organizational unit identifiers
+	 * @returns {string[]}
+	 */
+	getOrganizationUnits() {
+		return this._organization_units;
 	}
 
 	/**

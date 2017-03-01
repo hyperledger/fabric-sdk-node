@@ -22,7 +22,9 @@ var grpc = require('grpc');
 
 var MSP = require('./msp.js');
 var utils = require('../utils.js');
+var logger = utils.getLogger('MSPManager.js');
 var idModule = require('./identity.js');
+
 var SigningIdentity = idModule.SigningIdentity;
 var Signer = idModule.Signer;
 
@@ -51,6 +53,7 @@ var MSPManager = class {
 	 *   protobuf protos/msp/mspconfig.proto
 	 */
 	loadMSPs(mspConfigs) {
+		logger.debug('loadMSPs - start number of msps=%s',mspConfigs.length);
 		var self = this;
 		if (!mspConfigs || !Array.isArray(mspConfigs))
 			throw new Error('"mspConfigs" argument must be an array');
@@ -77,13 +80,25 @@ var MSPManager = class {
 			// and digital signature algorithm should be from the config itself
 			var cs = utils.getCryptoSuite();
 
+			// get the application org names
+			var orgs = [];
+			let org_units = fabricConfig.getOrganizationalUnitIdentifiers();
+			if(org_units) for(let i = 0; i < org_units.length; i++) {
+				let org_unit = org_units[i];
+				let org_id = org_unit.organizational_unit_identifier;
+				logger.debug('loadMSPs - found org of :: %s',org_id);
+				orgs.push(org_id);
+			}
+
 			var newMSP = new MSP({
 				rootCerts: fabricConfig.getRootCerts(),
+				intermediateCerts: fabricConfig.getIntermediateCerts(),
 				admins: fabricConfig.getAdmins(),
 				id: fabricConfig.getName(),
+				orgs : orgs,
 				cryptoSuite: cs
 			});
-
+			logger.debug('loadMSPs - found msp=',newMSP.getId());
 			self._msps[fabricConfig.getName()] = newMSP;
 		});
 	}
