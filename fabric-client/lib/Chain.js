@@ -1252,6 +1252,8 @@ var Chain = class {
 	 * Sends an instantiate proposal to one or more endorsing peers.
 	 *
 	 * @param {Object} request - An object containing the following fields:
+	 *		<br>`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java']
+	 *                            (default 'golang')
 	 *		<br>`chaincodePath` : required - String of the path to location of
 	 *                            the source code of the chaincode
 	 *		<br>`chaincodeId` : required - String of the name of the chaincode
@@ -1322,7 +1324,7 @@ var Chain = class {
 			args.push(Buffer.from(request.args[i], 'utf8'));
 
 		let ccSpec = {
-			type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			type: translateCCType(request.chaincodeType),
 			chaincode_id: {
 				name: request.chaincodeId,
 				path: request.chaincodePath,
