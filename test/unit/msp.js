@@ -120,6 +120,8 @@ test('\n\n** MSP Tests **\n\n', (t) => {
 				t.notEqual(msp._rootCerts, null, 'Check loaded MSP instance of non-null root certs');
 				t.notEqual(msp._admins, null, 'Check loaded MSP instance of non-null admin certs');
 				t.notEqual(msp._cryptoSuite, null, 'Check loaded MSP instance of non-null crypto suite');
+				t.equal(msp.getOrganizationUnits().length,0,'Check loaded MSP instance for orgs');
+				t.notEqual(msp._intermediateCerts,null,'Check loaded MSP instance for intermediateCerts');
 			}
 		}
 
