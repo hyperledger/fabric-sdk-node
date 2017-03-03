@@ -41,7 +41,7 @@ var EventHub = require('fabric-client/lib/EventHub.js');
 
 var chaincode_id = 'end2end';
 var chaincode_version = 'v0';
-var chain_id = 'mychannel';
+var chain_id = 'testchainid';
 
 var client = new hfc();
 var chain = client.newChain(chain_id);
@@ -49,8 +49,8 @@ var chain = client.newChain(chain_id);
 var tx_id = null;
 var nonce = null;
 var the_user = null;
-var peer0 = new Peer('grpc://localhost:8051'),
-	peer1 = new Peer('grpc://localhost:8056');
+var peer0 = new Peer('grpc://localhost:7051'),
+	peer1 = new Peer('grpc://localhost:7056');
 
 var steps = [];
 if (process.argv.length > 2) {
@@ -73,19 +73,19 @@ chain.addPeer(peer1);
 test('End-to-end flow of chaincode install, instantiate, transaction invocation, and query', (t) => {
 
 	hfc.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg('org2')
+		path: testUtil.KVS
 	}).then((store) => {
 		client.setStateStore(store);
-		var promise = testUtil.getSubmitter(client, t, 'org2');
+		var promise = testUtil.getSubmitter(client, t);
 
 		// setup event hub for peer0 to get notified when transactions are committed
 		var eh1 = new EventHub();
-		eh1.setPeerAddr('grpc://localhost:8053');
+		eh1.setPeerAddr('grpc://localhost:7053');
 		eh1.connect();
 
 		// setup event hub or peer1 to get notified when transactions are committed
 		var eh2 = new EventHub();
-		eh2.setPeerAddr('grpc://localhost:8058');
+		eh2.setPeerAddr('grpc://localhost:7058');
 		eh2.connect();
 
 		// override t.end function so it'll always disconnect the event hub
@@ -109,8 +109,6 @@ test('End-to-end flow of chaincode install, instantiate, transaction invocation,
 			promise = promise.then((admin) => {
 				t.pass('Successfully enrolled user \'admin\'');
 				the_user = admin;
-
-				the_user.mspImpl._id = 'Org2MSP';
 
 				nonce = utils.getNonce();
 				tx_id = chain.buildTransactionID(nonce, the_user);

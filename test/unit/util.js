@@ -185,7 +185,7 @@ module.exports.getSubmitter = function(client, test, loadFromConfig, org) {
 		if (typeof org === 'string') {
 			userOrg = org;
 		} else {
-			userOrg = 'peerOrg1';
+			userOrg = 'org1';
 		}
 	}
 
