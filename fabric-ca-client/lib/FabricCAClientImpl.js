@@ -46,7 +46,7 @@ var FabricCAServices = class {
 	 * - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
 	 * - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
 	 *
-	 * @param {string} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
+	 * @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
 	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
 	 * KeyValueStore interface.
 	 * @param {object} opts Implementation-specific options object for the {@link KeyValueStore} class to instantiate an instance
