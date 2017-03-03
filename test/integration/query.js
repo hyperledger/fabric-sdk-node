@@ -14,23 +14,21 @@
  *  limitations under the License.
  */
 
-// This is an end-to-end test that focuses on exercising all parts of the fabric APIs
+// This is an end to end test that focuses on exercising all parts of the fabric APIs
 // in a happy-path scenario
+
+// IMPORTANT ------>>>>> MUST RUN e2e.js FIRST
+// AND set environment variables indicated in the comments
+// at the end of the invoke-transaction run.
+
 'use strict';
-process.env.HFC_LOGGING = '{"debug": "console"}';
+
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var log4js = require('log4js');
-var logger = log4js.getLogger('QUERY TEST');
-logger.setLevel('DEBUG');
-
 var path = require('path');
-
 var hfc = require('fabric-client');
-hfc.setLogger(logger);
-
 var util = require('util');
 var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
@@ -39,15 +37,23 @@ var Orderer = require('fabric-client/lib/Orderer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
 
 var client = new hfc();
-var chain_id = 'testchainid';
+var chain_id = testUtil.END2END.channel;
 var chain = client.newChain(chain_id);
+hfc.addConfigFile(path.join(__dirname, './config.json'));
+var ORGS = hfc.getConfigSetting('test-network');
+var org = 'org1';
+var orgName = ORGS[org].name;
 
-var webUser = null;
-var chaincode_id = 'end2end'; // assumes end to end has run first and installed and instantiated this chain code
+var e2e = testUtil.END2END;
+
+var logger = utils.getLogger('query');
+hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
+
+var the_user = null;
 var tx_id = null;
 var nonce = null;
-var peer0 = new Peer('grpc://localhost:7051'),
-	peer1 = new Peer('grpc://localhost:7056');
+var peer0 = new Peer(ORGS[org]['peer1'].requests),
+	peer1 = new Peer(ORGS[org]['peer2'].requests);
 
 var querys = [];
 if (process.argv.length > 2) {
@@ -74,117 +80,100 @@ if (querys.length > 0 ) {
 
 testUtil.setupChaincodeDeploy();
 
-chain.addOrderer(new Orderer('grpc://localhost:7050'));
+chain.addOrderer(new Orderer(ORGS.orderer));
 chain.addPeer(peer0);
 chain.addPeer(peer1);
 
 test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 	hfc.newDefaultKeyValueStore({
-		path: testUtil.KVS
+		path: testUtil.storePathForOrg(orgName)
 	}).then( function (store) {
 		client.setStateStore(store);
-		testUtil.getSubmitter(client, t)
-			.then(
-				function(admin) {
-					t.pass('Successfully enrolled user ' + admin);
-					webUser = admin;
-					// use default primary peer
-					// send query
-					return chain.queryBlock(0);
-				},
-				function(err) {
-					t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-					t.end();
-				}
-			).then(
-				function(block) {
-					logger.info(' Chain getBlock() returned block number=%s',block.header.number);
-					t.equal(block.header.number.toString(),'0','checking query results are correct that we got zero block back');
-					chain.setPrimaryPeer(peer0);
-					nonce = Buffer.from('12');//hard coded to be the same as end-to-end.js, this transaction will only exist if
-					                          // end-to-end runs first
-					tx_id = chain.buildTransactionID(nonce, webUser);
+		testUtil.getSubmitter(client, t, org)
+			.then((admin) => {
+				t.pass('Successfully enrolled user \'admin\'');
+				the_user = admin;
+				the_user.mspImpl._id = ORGS[org].mspid;
+				// read the config block from the orderer for the chain
+				// and initialize the verify MSPs based on the participating
+				// organizations
+				return chain.initialize();
+			}).then((success) => {
+				t.pass('Successfully initialized chain');
+				// use default primary peer
+				// send query
+				return chain.queryBlock(0);
+			}).then((block) => {
+				logger.info(' Chain getBlock() returned block number=%s',block.header.number);
+				t.equal(block.header.number.toString(),'0','checking query results are correct that we got zero block back');
+				chain.setPrimaryPeer(peer0);
+
+				tx_id = utils.getConfigSetting('E2E_TX_ID', 'notfound');
+				logger.info('getConfigSetting("E2E_TX_ID") = %s', tx_id);
+				if (tx_id === 'notfound') {
+					t.comment('   Did you set the E2E_TX_ID environment variable after running invoke-transaction.js ?');
+					throw new Error('Could not get tx_id from ConfigSetting "E2E_TX_ID"');
+				} else {
+					t.pass('Got tx_id from ConfigSetting "E2E_TX_ID"');
 					// send query
 					return chain.queryTransaction(tx_id); //assumes the end-to-end has run first
-				},
-				function(err) {
-					t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
-					t.end();
 				}
-			).then(
-				function(processed_transaction) {
-					// set to be able to decode grpc objects
-					var grpc = require('grpc');
-					var commonProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/common.proto').common;
-					var transProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/transaction.proto').protos;
-					logger.info(' Chain queryTransaction() returned processed tranaction is valid='+processed_transaction.validationCode);
-					t.equals(transProto.TxValidationCode.VALID,processed_transaction.validationCode,'got back ProcessedTransaction that is a valid transaction');
+			}).then((processed_transaction) => {
+				// set to be able to decode grpc objects
+				var grpc = require('grpc');
+				var commonProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/common.proto').common;
+				var transProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/transaction.proto').protos;
+				logger.info(' Chain queryTransaction() returned processed tranaction is valid='+processed_transaction.validationCode);
+				t.equals(transProto.TxValidationCode.VALID,processed_transaction.validationCode,'got back ProcessedTransaction that is a valid transaction');
 
-					try {
-						var payload = commonProto.Payload.decode(processed_transaction.transactionEnvelope.payload);
-						var channel_header = commonProto.ChannelHeader.decode(payload.header.channel_header);
-						logger.debug('queryTransaction - transaction ID :: %s:', channel_header.tx_id);
-					}
-					catch(err) {
-						logger.error(err);
-					}
+				try {
+					var payload = commonProto.Payload.decode(processed_transaction.transactionEnvelope.payload);
+					var channel_header = commonProto.ChannelHeader.decode(payload.header.channel_header);
+					logger.debug(' Chain queryTransaction - transaction ID :: %s:', channel_header.tx_id);
+				}
+				catch(err) {
+					logger.error(err);
+					throw new Error(err.stack ? err.stack : err);
+				}
 
-					chain.setPrimaryPeer(peer1);
-					// send query
-					return chain.queryInfo();
-				},
-				function(err) {
-					t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
-					t.end();
-				}
-			).then(
-				function(blockchainInfo) {
-					t.pass('got back blockchain info ');
-					logger.info(' Chain queryInfo() returned block height='+blockchainInfo.height);
-					logger.info(' Chain queryInfo() returned block previousBlockHash='+blockchainInfo.previousBlockHash);
-					logger.info(' Chain queryInfo() returned block currentBlockHash='+blockchainInfo.currentBlockHash);
-					var block_hash = blockchainInfo.previousBlockHash;
-					chain.setPrimaryPeer(peer0);
-					// send query
-					return chain.queryBlockByHash(block_hash);
-				},
-				function(err) {
-					t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
-					t.end();
-				}
-			).then(
-				function(block) {
-					logger.info(' Chain getBlockByHash() returned block number=%s',block.header.number);
-					t.pass('got back block number '+ block.header.number);
-					t.end();
-				},
-				function(err) {
-					t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
-					t.end();
-				}
-			).catch(
-				function(err) {
-					t.fail('Failed to query with error:' + err.stack ? err.stack : err);
-					t.end();
-				}
-			);
+				chain.setPrimaryPeer(peer1);
+				// send query
+				return chain.queryInfo();
+			}).then((blockchainInfo) => {
+				t.pass('got back blockchain info ');
+				logger.info(' Chain queryInfo() returned block height='+blockchainInfo.height);
+				logger.info(' Chain queryInfo() returned block previousBlockHash='+blockchainInfo.previousBlockHash);
+				logger.info(' Chain queryInfo() returned block currentBlockHash='+blockchainInfo.currentBlockHash);
+				var block_hash = blockchainInfo.currentBlockHash;
+				chain.setPrimaryPeer(peer0);
+				// send query
+				return chain.queryBlockByHash(block_hash);
+			}).then((block) => {
+				logger.info(' Chain queryBlockByHash() returned block number=%s',block.header.number);
+				t.pass('got back block number '+ block.header.number);
+				t.end();
+			}).catch((err) => {
+				t.comment('Failed \'Query chain working\' with error:');
+				throw new Error(err.stack ? err.stack : err);
+			}
+		);
 	});
 });
 
 test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 	hfc.newDefaultKeyValueStore({
-		path: testUtil.KVS
+		path: testUtil.storePathForOrg(orgName)
 	}).then( function (store) {
 		client.setStateStore(store);
-		var promise = testUtil.getSubmitter(client, t);
+		var promise = testUtil.getSubmitter(client, t, org);
 		var queryAttempts = 0;  // number of queries attempted in this test
 		if (!queryParameters || querys.indexOf('GetBlockByNumber') >= 0) {
 			queryAttempts++;
 			logger.info('Executing GetBlockByNumber');
 			promise = promise.then(
 				function(admin) {
-					t.pass('Successfully enrolled user ' + admin);
-					webUser = admin;
+					t.pass('Successfully enrolled user \'admin\'');
+					the_user = admin;
 					// send query
 					return chain.queryBlock(9999999); //should not find it
 				},
@@ -213,8 +202,8 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 			queryAttempts++;
 			promise = promise.then(
 				function(admin) {
-					t.pass('Successfully enrolled user ' + admin);
-					if(admin) webUser = admin;
+					t.pass('Successfully enrolled user \'admin\'');
+					if(admin) the_user = admin;
 					// send query
 					return chain.queryTransaction('99999'); //assumes the end-to-end has run first
 				},
@@ -243,8 +232,8 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 			queryAttempts++;
 			promise = promise.then(
 				function(admin) {
-					t.pass('Successfully enrolled user ' + admin);
-					if(admin) webUser = admin;
+					t.pass('Successfully enrolled user \'admin\'');
+					if(admin) the_user = admin;
 					// send query
 					chain._name = 'dummy';
 					return chain.queryInfo();
@@ -274,8 +263,8 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 			queryAttempts++;
 			promise = promise.then(
 				function(admin) {
-					t.pass('Successfully enrolled user ' + admin);
-					if(admin) webUser = admin;
+					t.pass('Successfully enrolled user \'admin\'');
+					if(admin) the_user = admin;
 					// send query
 					chain._name = chain_id; //put it back
 					return chain.queryBlockByHash(Buffer.from('dummy'));
@@ -310,13 +299,13 @@ test('  ---->>>>> Query chain failing <<<<<-----', function(t) {
 test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetInstalledChaincodes') >= 0) {
 		hfc.newDefaultKeyValueStore({
-			path: testUtil.KVS
+			path: testUtil.storePathForOrg(orgName)
 		}).then( function (store) {
 			client.setStateStore(store);
-			testUtil.getSubmitter(client, t)
+			testUtil.getSubmitter(client, t, org)
 				.then(
 					function(admin) {
-						t.pass('Successfully enrolled user ' + admin);
+						t.pass('Successfully enrolled user \'admin\'');
 						// send query
 						return chain.queryInstalledChaincodes(peer0);
 					},
@@ -327,16 +316,24 @@ test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
 				).then(
 					function(response) {
 						t.comment('<<< installed chaincodes >>>');
+						let found = false;
+
 						for (let i=0; i<response.chaincodes.length; i++) {
 							t.comment('name: '+response.chaincodes[i].name+
 							', version: '+response.chaincodes[i].version+
 							', path: '+response.chaincodes[i].path);
-						}
-						if (response.chaincodes[0].name === 'end2end' && response.chaincodes[0].version === 'v0' && response.chaincodes[0].path === 'github.com/example_cc') {
-							t.pass('queryInstalledChaincodes matches end2end');
+
+							if (response.chaincodes[i].name === e2e.chaincodeId
+								&& response.chaincodes[i].version === e2e.chaincodeVersion
+								&& response.chaincodes[i].path === testUtil.CHAINCODE_PATH) {
+								found = true;
+							}
 							t.end();
+						}
+						if (found) {
+							t.pass('queryInstalledChaincodes - found match for e2e');
 						} else {
-							t.fail('queryInstalledChaincodes does not match end2end');
+							t.fail('queryInstalledChaincodes - did not find match for e2e');
 							t.end();
 						}
 					},
@@ -357,13 +354,13 @@ test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
 test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetInstantiatedChaincodes') >= 0) {
 		hfc.newDefaultKeyValueStore({
-			path: testUtil.KVS
+			path: testUtil.storePathForOrg(orgName)
 		}).then( function (store) {
 			client.setStateStore(store);
-			testUtil.getSubmitter(client, t)
+			testUtil.getSubmitter(client, t, org)
 				.then(
 					function(admin) {
-						t.pass('Successfully enrolled user ' + admin);
+						t.pass('Successfully enrolled user \'admin\'');
 						// send query
 						return chain.queryInstantiatedChaincodes();
 					},
@@ -374,16 +371,23 @@ test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t)
 				).then(
 					function(response) {
 						t.comment('<<< instantiated chaincodes >>>');
+						let found = false;
 						for (let i=0; i<response.chaincodes.length; i++) {
 							t.comment('name: '+response.chaincodes[i].name+
 							', version: '+response.chaincodes[i].version+
 							', path: '+response.chaincodes[i].path);
+
+							if (response.chaincodes[i].name === e2e.chaincodeId
+								&& response.chaincodes[i].version === e2e.chaincodeVersion
+								&& response.chaincodes[i].path === testUtil.CHAINCODE_PATH) {
+								found = true;
+							}
 						}
-						if (response.chaincodes[0].name === 'end2end' && response.chaincodes[0].version === 'v0' && response.chaincodes[0].path === 'github.com/example_cc') {
-							t.pass('queryInstantiatedChaincodes matches end2end');
+						if (found) {
+							t.pass('queryInstantiatedChaincodes - found match for e2e');
 							t.end();
 						} else {
-							t.fail('queryInstantiatedChaincodes does not match end2end');
+							t.fail('queryInstantiatedChaincodes - did not find match for e2e');
 							t.end();
 						}
 					},
@@ -404,13 +408,16 @@ test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t)
 test('  ---->>>>> Query Channels working <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetChannels') >= 0) {
 		hfc.newDefaultKeyValueStore({
-			path: testUtil.KVS
+			path: testUtil.storePathForOrg(orgName)
 		}).then( function (store) {
 			client.setStateStore(store);
-			testUtil.getSubmitter(client, t)
+			testUtil.getSubmitter(client, t, org)
 				.then(
 					function(admin) {
-						t.pass('Successfully enrolled user ' + admin);
+						t.pass('Successfully enrolled user \'admin\'');
+						the_user = admin;
+						the_user.mspImpl._id = ORGS[org].mspid;
+
 						// send query
 						return chain.queryChannels(peer0);
 					},
@@ -424,11 +431,11 @@ test('  ---->>>>> Query Channels working <<<<<-----', function(t) {
 						for (let i=0; i<response.channels.length; i++) {
 							t.comment('channel id: '+response.channels[i].channel_id);
 						}
-						if (response.channels[0].channel_id === 'testchainid') {
-							t.pass('queryChannels matches end2end');
+						if (response.channels[0].channel_id === chain_id) {
+							t.pass('queryChannels matches e2e');
 							t.end();
 						} else {
-							t.fail('queryChannels does not match end2end');
+							t.fail('queryChannels does not match e2e');
 							t.end();
 						}
 					},

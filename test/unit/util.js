@@ -51,6 +51,7 @@ module.exports.setupChaincodeDeploy = function() {
 // running in the overall test bucket ('gulp test')
 module.exports.resetDefaults = function() {
 	global.hfc.config = undefined;
+	require('nconf').reset();
 };
 
 module.exports.cleanupDir = function(keyValStorePath) {
@@ -59,6 +60,11 @@ module.exports.cleanupDir = function(keyValStorePath) {
 	if (exists) {
 		fs.removeSync(absPath);
 	}
+};
+
+module.exports.getUniqueVersion = function(prefix) {
+	if (!prefix) prefix = 'v';
+	return prefix + Date.now();
 };
 
 // utility function to check if directory or file exists

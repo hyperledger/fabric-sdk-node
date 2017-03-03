@@ -17,130 +17,39 @@
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
-process.env.HFC_LOGGING = '{"debug": "console"}';
-var log4js = require('log4js');
-var logger = log4js.getLogger('NEW CHAIN');
-logger.setLevel('DEBUG');
+
 var hfc = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
+var path = require('path');
 var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
-var User = require('fabric-client/lib/User.js');
 var Peer = require('fabric-client/lib/Peer.js');
 
-var peer0 = new Peer('grpc://localhost:7051'),
-	peer1 = new Peer('grpc://localhost:7056');
+var client = new hfc();
+var chain = client.newChain(testUtil.END2END.channel);
+hfc.addConfigFile(path.join(__dirname, './config.json'));
+var ORGS = hfc.getConfigSetting('test-network');
+chain.addOrderer(new Orderer(ORGS.orderer));
+var org = 'org1';
+var orgName = ORGS[org].name;
+for (let key in ORGS[org]) {
+	if (ORGS[org].hasOwnProperty(key)) {
+		if (key.indexOf('peer') === 0) {
+			let peer = new Peer(ORGS[org][key].requests);
+			chain.addPeer(peer);
+		}
+	}
+}
+
+var logger = utils.getLogger('NEW CHAIN');
+hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
 
 var keyValStorePath = testUtil.KVS;
 var the_user = null;
 var tx_id = null;
 var nonce = null;
-//
-//Orderer via member send chain create
-//
-//Attempt to send a request to the orderer with the sendCreateChain method - fail
-//  missing order or invalid order
-//
-test('\n\n** TEST ** new chain using chain.createChannel() method with good orderer address', function(t) {
-	//
-	// Create and configure the test chain
-	//
-	var client = new hfc();
-	var chain = client.newChain('foo');
-	chain.addOrderer(new Orderer('grpc://localhost:7050'));
-	chain.addPeer(peer0);
-	chain.addPeer(peer1);
-
-	hfc.newDefaultKeyValueStore({path: testUtil.KVS}
-	)
-	.then(
-		function (store) {
-			client.setStateStore(store);
-			return testUtil.getSubmitter(client, t);
-		}
-	)
-	.then(
-		function(admin) {
-			t.pass('Successfully enrolled user \'admin\'');
-			the_user = admin;
-			// readin the envelope to send to the orderer
-			return readFile('./test/fixtures/foo.tx');
-		},
-		function(err) {
-			t.fail('Failed to enroll user \'admin\'. ' + err);
-			t.end();
-		}
-	)
-	.then(
-		function(data) {
-			t.pass('Successfully read file');
-			//console.log('envelope contents ::'+JSON.stringify(data));
-			var request = {
-				envelope : data
-			};
-			// send to orderer
-			return chain.createChannel(request);
-		},
-		function(err) {
-			t.fail('Failed to read file :: ' + err);
-			t.end();
-		}
-	)
-	.then(
-		function(response) {
-			logger.debug(' response ::%j',response);
-			if (response && response.status === 'SUCCESS') {
-				t.pass('Successfully created the channel.');
-				return sleep(5000);
-			} else {
-				t.fail('Failed to create the channel. ');
-				t.end();
-			}
-		},
-		function(err) {
-			t.fail('Failed to initialize the channel: ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	)
-	.then(
-		function(nothing) {
-			t.pass('Successfully waited to make sure new channel was created.');
-			nonce = utils.getNonce();
-			tx_id = chain.buildTransactionID(nonce, the_user);
-			var request = {
-				targets : [peer0, peer1],
-				txId : 	tx_id,
-				nonce : nonce
-			};
-			return chain.joinChannel(request);
-		},
-		function(err) {
-			t.pass('Failed to sleep due to error: ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	)
-	.then(
-		function(results) {
-			console.log(' Join Channel R E S P O N S E ::'+ JSON.stringify(results));
-			if(results[0] && results[0].response && results[0].response.status == 200)
-				t.pass('Successfully joined channel.');
-			else
-				t.fail(' Failed to join channel');
-			t.end();
-		},
-		function(err) {
-			t.fail('Failed to join channel due to error: ' + err.stack ? err.stack : err);
-			t.end();
-		}
-	)
-	.catch(function(err) {
-		t.fail('Failed request. ' + err);
-		t.end();
-	});
-});
-
 
 //
 //Orderer via member send chain create
@@ -152,24 +61,24 @@ test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist
 	//
 	// Create and configure the test chain
 	//
-	var client = new hfc();
-	var chain = client.newChain('foo');
-	chain.addOrderer(new Orderer('grpc://localhost:7050'));
 
-	hfc.newDefaultKeyValueStore({path: testUtil.KVS}
+	hfc.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)}
 	)
 	.then(
 		function (store) {
 			client.setStateStore(store);
-			return testUtil.getSubmitter(client, t);
+			return testUtil.getSubmitter(client, t, org);
 		}
 	)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
 			the_user = admin;
+
+			the_user.mspImpl._id = ORGS[org].mspid;
+
 			// readin the envelope to send to the orderer
-			return readFile('./test/fixtures/foo.tx');
+			return readFile('./test/fixtures/channel/mychannel.tx');
 		},
 		function(err) {
 			t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -193,7 +102,7 @@ test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist
 	)
 	.then(
 		function(response) {
-			t.fail('Failed to get correct error. Response code: ' + response.status);
+			t.fail('Failed to get error. Response code: ' + response && response.status ? response.status : '');
 			t.end();
 		},
 		function(err) {

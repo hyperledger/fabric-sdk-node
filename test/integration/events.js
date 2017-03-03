@@ -20,14 +20,8 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var log4js = require('log4js');
-var logger = log4js.getLogger('events-test');
-
 var path = require('path');
-
 var hfc = require('fabric-client');
-hfc.setLogger(logger);
-
 var util = require('util');
 var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
@@ -36,17 +30,29 @@ var Orderer = require('fabric-client/lib/Orderer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var eputil = require('./eventutil.js');
 
-var client = new hfc();
-var chain_id = 'testchainid';
-var chain = client.newChain(chain_id);
+var logger = utils.getLogger('events');
+hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
 
-var chaincode_id = 'events_unit_test';
-var chaincode_version = 'v0';
+var client = new hfc();
+var chain = client.newChain(testUtil.END2END.channel);
+hfc.addConfigFile(path.join(__dirname, './config.json'));
+var ORGS = hfc.getConfigSetting('test-network');
+chain.addOrderer(new Orderer(ORGS.orderer));
+var org = 'org1';
+var orgName = ORGS[org].name;
+for (let key in ORGS[org]) {
+	if (ORGS[org].hasOwnProperty(key)) {
+		if (key.indexOf('peer') === 0) {
+			let peer = new Peer(ORGS[org][key].requests);
+			chain.addPeer(peer);
+		}
+	}
+}
+var chaincode_id = testUtil.getUniqueVersion('events_unit_test');
+var chaincode_version = testUtil.getUniqueVersion();
 var request = null;
 var nonce = null;
 var the_user = null;
-var peer0 = new Peer('grpc://localhost:7051'),
-	peer1 = new Peer('grpc://localhost:7056');
 
 var steps = [];
 if (process.argv.length > 2) {
@@ -62,20 +68,16 @@ logger.info('Found steps: %s', steps);
 
 testUtil.setupChaincodeDeploy();
 
-chain.addOrderer(new Orderer('grpc://localhost:7050'));
-chain.addPeer(peer0);
-chain.addPeer(peer1);
-
 test('Test chaincode instantiate with event, transaction invocation with chaincode event, and query number of chaincode events', (t) => {
 	hfc.newDefaultKeyValueStore({
-		path: testUtil.KVS
+		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 		client.setStateStore(store);
-		var promise = testUtil.getSubmitter(client, t);
+		var promise = testUtil.getSubmitter(client, t, org);
 
 		// setup event hub to get notified when transactions are committed
 		var eh = new EventHub();
-		eh.setPeerAddr('grpc://localhost:7053');
+		eh.setPeerAddr(ORGS[org].peer1.events);
 		eh.connect();
 
 		// override t.end function so it'll always disconnect the event hub
@@ -95,6 +97,9 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			promise = promise.then((admin) => {
 				t.pass('Successfully enrolled user \'admin\'');
 				the_user = admin;
+
+				the_user.mspImpl._id = ORGS[org].mspid;
+
 				request = eputil.createRequest(chain, the_user, chaincode_id, '', '');
 				request.chaincodePath = 'github.com/events_cc';
 				request.chaincodeVersion = chaincode_version;
@@ -105,16 +110,26 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				t.end();
 			}).then((results) => {
 				if ( eputil.checkProposal(results)) {
-					request = eputil.createRequest(chain, the_user, chaincode_id, 'init', []);
-					request.chaincodePath = 'github.com/events_cc';
-					request.chaincodeVersion = chaincode_version;
-					return chain.sendInstantiateProposal(request);
+					// read the config block from the orderer for the chain
+					// and initialize the verify MSPs based on the participating
+					// organizations
+					return chain.initialize();
 				} else {
 					return Promise.reject('bad install proposal:' + results);
 				}
-			},
-			(err) => {
-				t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
+			}, (err) => {
+				t.comment(err);
+				t.fail(err);//Failed to initialize the chain or bad install proposal
+				throw new Error(err.stack ? err.stack : err);
+			}).then((success) => {
+				t.pass('Successfully initialized the chain');
+				request = eputil.createRequest(chain, the_user, chaincode_id, 'init', []);
+				request.chaincodePath = 'github.com/events_cc';
+				request.chaincodeVersion = chaincode_version;
+				return chain.sendInstantiateProposal(request);
+			}, (err) => {
+				t.comment('Failed to send instantiate proposal due to error: ');
+				t.fail(err.stack ? err.stack : err);
 				t.end();
 			}).then((results) => {
 				var tmo = 50000;
@@ -122,16 +137,16 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 					eputil.sendTransaction(chain, results)]);
 			},
 			(err) => {
-				t.fail('Failed sending deployment proposal: ' + err);
+				t.fail('Failed sending instantiate proposal: ' + err);
 				t.end();
 			}).then((results) => {
-				t.pass('Successfully deployed chaincode.');
+				t.pass('Successfully instantiated chaincode.');
 				if (steps.length === 1 && steps[0] === 'step1') {
 					t.end();
 				}
 			},
 			(err) => {
-				t.fail('Failed deployment due to error: ' + err);
+				t.fail('Failed instantiate due to error: ' + err);
 				t.end();
 			});
 		}
@@ -154,13 +169,13 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				t.fail('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
 				t.end();
 			}).then((results) => {
-				t.pass('Successfully recieved chaincode event.');
+				t.pass('Successfully received chaincode event.');
 				if (steps.length === 1 && steps[0] === 'step2') {
 					t.end();
 				}
 			},
 			(err) => {
-				t.fail('Failed to recieved chaincode event: ' + err);
+				t.fail('Failed to receive chaincode event: ' + err);
 				t.end();
 			});
 		}
@@ -212,6 +227,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				return Promise.all([chain.sendTransactionProposal(req1),
 					chain.sendTransactionProposal(req2)]);
 			}).then(([results1, results2]) => {
+				t.comment('sendTransactionProposal received [results1, results2]');
 				var tmo = 20000;
 				return Promise.all([eputil.registerTxEvent(eh, req1.txId.toString(), tmo),
 					eputil.registerTxEvent(eh, req2.txId.toString(), tmo),

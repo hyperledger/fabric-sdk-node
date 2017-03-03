@@ -17,22 +17,22 @@
 // This is an end-to-end test that focuses on exercising all parts of the fabric APIs
 // in a happy-path scenario
 'use strict';
-process.env.HFC_LOGGING = '{"debug": "console"}';
+
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
 var path = require('path');
-
 var hfc = require('fabric-client');
-
 var util = require('util');
 var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
+
 var logger = utils.getLogger('GET CONFIG');
+hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
 
 // Get the proto bufs
 var grpc = require('grpc');
@@ -47,14 +47,24 @@ var _ccEventProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/
 
 var client = new hfc();
 // IMPORTANT ------>>>>> MUST RUN e2e/create-channel.js FIRST
-var chain_id = 'mychannel';
-var chain = client.newChain(chain_id);
+var chain = client.newChain(testUtil.END2END.channel);
+hfc.addConfigFile(path.join(__dirname, './config.json'));
+var ORGS = hfc.getConfigSetting('test-network');
+chain.addOrderer(new Orderer(ORGS.orderer));
+var org = 'org1';
+var orgName = ORGS[org].name;
+for (let key in ORGS[org]) {
+	if (ORGS[org].hasOwnProperty(key)) {
+		if (key.indexOf('peer') === 0) {
+			let peer = new Peer(ORGS[org][key].requests);
+			chain.addPeer(peer);
+		}
+	}
+}
 
-var webUser = null;
+var the_user = null;
 var tx_id = null;
 var nonce = null;
-var peer0 = new Peer('grpc://localhost:7051'),
-	peer1 = new Peer('grpc://localhost:7056');
 
 var querys = [];
 if (process.argv.length > 2) {
@@ -66,20 +76,19 @@ logger.info('Found query: %s', querys);
 
 testUtil.setupChaincodeDeploy();
 
-chain.addOrderer(new Orderer('grpc://localhost:7050'));
-chain.addPeer(peer0);
-chain.addPeer(peer1);
-
 test('  ---->>>>> get config <<<<<-----', function(t) {
 	hfc.newDefaultKeyValueStore({
-		path: testUtil.KVS
+		path: testUtil.storePathForOrg(orgName)
 	}).then( function (store) {
 		client.setStateStore(store);
-		testUtil.getSubmitter(client, t)
+		testUtil.getSubmitter(client, t, org)
 			.then(
 				function(admin) {
 					t.pass('Successfully enrolled user ' + admin);
-					webUser = admin;
+					the_user = admin;
+
+					the_user.mspImpl._id = ORGS[org].mspid;
+
 					// use default primary peer
 					// send query
 					logger.debug('will initialize the chain');
@@ -92,7 +101,7 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 			).then(
 				function(result) {
 					t.pass('Chain was successfully initialized');
-					var orgs = chain.getOrganizationUnits();
+					let orgs = chain.getOrganizationUnits();
 					logger.debug(' Got the following orgs back %j', orgs);
 					t.equals(orgs.length, 2, 'Checking the that we got back the right number of orgs');
 					if(orgs[0].id.indexOf('Org') == 0) {

@@ -103,7 +103,8 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) =>
 
 		nonce = utils.getNonce();
 		tx_id = chain.buildTransactionID(nonce, the_user);
-
+		utils.setConfigSetting('E2E_TX_ID', tx_id);
+		logger.info('setConfigSetting("E2E_TX_ID") = %s', tx_id);
 		t.comment(util.format('Sending transaction "%s"', tx_id));
 
 		// send proposal to endorser
@@ -202,6 +203,10 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) =>
 
 		if (response.status === 'SUCCESS') {
 			t.pass('Successfully sent transaction to the orderer.');
+			t.comment('******************************************************************');
+			t.comment('To manually run query.js, set the following environment variables:');
+			t.comment('E2E_TX_ID='+'\''+tx_id+'\'');
+			t.comment('******************************************************************');
 		} else {
 			t.fail('Failed to order the transaction. Error code: ' + response.status);
 			throw new Error('Failed to order the transaction. Error code: ' + response.status);

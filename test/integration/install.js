@@ -18,70 +18,74 @@
 // in a happy-path scenario
 'use strict';
 
-process.env.HFC_LOGGING = '{"debug": "console"}';
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var log4js = require('log4js');
-var logger = log4js.getLogger('install');
-logger.setLevel('DEBUG');
-
 var path = require('path');
+var util = require('util');
 
 var hfc = require('fabric-client');
-hfc.setLogger(logger);
-
-var util = require('util');
-var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var Packager = require('fabric-client/lib/Packager.js');
+var testUtil = require('../unit/util.js');
 
-var client = new hfc();
-var Chain = require('fabric-client/lib/Chain.js');
-var chain_id = 'testchainid';
-var orderer = new Orderer('grpc://localhost:7050');
-var peer0 = new Peer('grpc://localhost:7051'),
-	peer1 = new Peer('grpc://localhost:7056');
+var logger = utils.getLogger('install');
+
+var e2e = testUtil.END2END;
+hfc.addConfigFile(path.join(__dirname, './config.json'));
+var ORGS = hfc.getConfigSetting('test-network');
+
+var tx_id = null;
+var nonce = null;
 var the_user = null;
 
 testUtil.setupChaincodeDeploy();
 
 test('\n\n** Test chaincode install using chaincodePath to create chaincodePackage **\n\n', (t) => {
-	var testDesc = null,chaincodePackage = null,chain = null, chainName = null;
-	hfc.newDefaultKeyValueStore({
-		path: testUtil.KVS
-	}).then((store) => {
-		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t);
-	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\'');
-		the_user = admin;
-		return admin;
+	var params = {
+		org: 'org1',
+		testDesc: 'using chaincodePath',
+		chainName: 'testInstall',
+		chaincodeId: 'install',
+		chaincodePath: testUtil.CHAINCODE_PATH,
+		chaincodeVersion: testUtil.getUniqueVersion(),
+		chaincodePackage: ''
+	};
+
+	installChaincode(params, t)
+	.then((info) => {
+		if (info === 'success') {
+			t.pass('success');
+			return true;
+		} else {
+			t.fail(info);
+			t.end();
+		}
 	},
 	(err) => {
-		t.fail('Failed to enroll user \'admin\'. ' + err);
+		t.fail('install reject: '+err);
 		t.end();
-		throw('Error - Failed to enroll user \'admin\'. ' + err);
-	}).then((admin) => {
-		t.comment('chaincodePath: '+testUtil.CHAINCODE_PATH);
-		var request = {
-			chaincodePath: testUtil.CHAINCODE_PATH,
-			chaincodeId: 'install',
-			chaincodeVersion: 'v0',
-		};
-		chainName = 'testInstall';
-		testDesc = 'using chaincodePath';
-		t.comment('installing chainName - '+chainName);
-		return install(the_user,chainName,orderer,[peer0],request,testDesc,t)
+	}).catch((err) => {
+		t.fail('install error');
+		t.comment(err.stack ? err.stack : err);
+		t.end();
+	}).then ((success) => {
+		t.comment('#########################################');
+		t.comment('install same chaincode again, should fail');
+		t.comment('#########################################');
+		params.chainName = params.chainName+'0';
+		params.testDesc = params.testDesc+'0';
+		installChaincode(params, t)
 		.then((info) => {
-			if (info === 'success') {
-				t.pass('success');
-				return the_user;
+			t.comment('Checking for \'install-package.'+params.chaincodeVersion+' exists\'');
+			if (info && info.error && info.error.toString().indexOf('install.'+params.chaincodeVersion+' exists') > 0) {
+				t.pass('passed check for exists');
+				t.end();
 			} else {
-				t.fail(info);
+				t.fail('failed check for exists');
 				t.end();
 			}
 		},
@@ -92,149 +96,158 @@ test('\n\n** Test chaincode install using chaincodePath to create chaincodePacka
 			t.fail('install error');
 			t.comment(err.stack ? err.stack : err);
 			t.end();
-		}).then ((admin) => {
-			t.comment('#########################################');
-			t.comment('install same chaincode again, should fail');
-			t.comment('#########################################');
-			return install(the_user,chainName+'0',orderer,[peer0],request,testDesc+'0',t)
+		});
+	});
+});
+
+test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) => {
+	var params = {
+		org: 'org1',
+		testDesc: 'using chaincodePackage',
+		chainName: 'testInstallPackage',
+		chaincodeId: 'install-package',
+		chaincodePath: testUtil.CHAINCODE_PATH+'_pkg',//not an existing path
+		chaincodeVersion: testUtil.getUniqueVersion()
+	};
+
+	Packager.package(testUtil.CHAINCODE_PATH, null, false) //use good path here to get data
+	.then((data) => {
+		t.comment(params.testDesc+' - Packager.package data: '+data);
+		params.chaincodePackage = data;
+
+		installChaincode(params, t)
+		.then((info) => {
+			if (info === 'success') {
+				t.pass(params.testDesc+' - success');
+				return true;
+			} else {
+				t.fail(params.testDesc+' - '+info);
+				t.end();
+			}
+		},
+		(err) => {
+			t.fail(params.testDesc+' - install reject: '+err);
+			t.end();
+		}).catch((err) => {
+			t.fail(params.testDesc+' - install error');
+			t.comment(err.stack ? err.stack : err);
+			t.end();
+		}).then ((success) => {
+			t.comment('################################################');
+			t.comment('install same chaincodePackage again, should fail');
+			t.comment('################################################');
+			params.chainName = params.chainName+'0';
+			params.testDesc = params.testDesc+'0';
+			installChaincode(params, t)
 			.then((info) => {
-				if (info.toString().indexOf('install.v0 exists') > 0) {
-					t.pass(info);
+				t.comment('Checking for \'install-package.'+params.chaincodeVersion+' exists\'');
+				if (info && info.error && info.error.toString().indexOf('install-package.'+params.chaincodeVersion+' exists') > 0) {
+					t.pass('passed check for exists');
 					t.end();
 				} else {
-					t.fail(info);
+					t.fail('failed check for exists');
 					t.end();
 				}
 			},
 			(err) => {
-				t.fail('install reject: '+err);
+				t.fail(params.testDesc+' - install same chaincode again - reject, error');
+				logger.error(err.stack ? err.stack : err);
 				t.end();
 			}).catch((err) => {
-				t.fail('install error');
-				t.comment(err.stack ? err.stack : err);
+				t.fail(params.testDesc+' - install same chaincode again - error');
+				logger.error(err.stack ? err.stack : err);
 				t.end();
 			});
 		});
 	});
 });
 
-test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) => {
-	var testDesc = null,chaincodePackage = null,chain = null, chainName = null,request=null;
-	hfc.newDefaultKeyValueStore({
-		path: testUtil.KVS
-	}).then((store) => {
-		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t);
-	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\'');
-		the_user = admin;
-		return admin;
-	},
-	(err) => {
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		t.end();
-		throw('Error - Failed to enroll user \'admin\'. ' + err);
-	}).then((admin) => {
-		return Packager.package(testUtil.CHAINCODE_PATH, null, false); //use good path here to get data
-	})
-	.then((data) => {
-		t.comment('Packager.package data: '+data);
-		request = {
-			chaincodePath: testUtil.CHAINCODE_PATH+'pkg',//not an existing path
-			chaincodeId: 'install-package',
-			chaincodeVersion: 'v0',
-			chaincodePackage: data
-		};
-		chainName = 'testInstallPackage';
-		testDesc = 'using chaincodePackage';
-		t.comment('installing chainName - '+chainName);
-		return install(the_user,chainName,orderer,[peer0],request,testDesc,t);
-	})
-	.then((info) => {
-		if (info === 'success') {
-			t.pass(testDesc+' - success');
-			return the_user;
-		} else {
-			t.fail(testDesc+' - '+info);
-			t.end();
+function installChaincode(params, t) {
+	try {
+		var org = params.org;
+		var client = new hfc();
+		var chain = client.newChain(params.chainName);
+		chain.addOrderer(new Orderer(ORGS.orderer));
+
+		var orgName = ORGS[org].name;
+
+		var targets = [];
+		for (let key in ORGS[org]) {
+			if (ORGS[org].hasOwnProperty(key)) {
+				if (key.indexOf('peer') === 0) {
+					let peer = new Peer(ORGS[org][key].requests);
+					targets.push(peer);
+					chain.addPeer(peer);
+				}
+			}
 		}
-	},
-	(err) => {
-		t.fail(testDesc+' - install reject: '+err);
-		t.end();
-	}).catch((err) => {
-		t.fail(testDesc+' - install error');
-		t.comment(err.stack ? err.stack : err);
-		t.end();
-	}).then ((admin) => {
-		t.comment('################################################');
-		t.comment('install same chaincodePackage again, should fail');
-		t.comment('################################################');
-		return install(the_user,chainName+'0',orderer,[peer0],request,testDesc+'0',t)
-		.then((info) => {
-			if (info.toString().indexOf('install-package.v0 exists') > 0) {
-				t.pass(info);
-			} else t.fail(info);
-			t.end();
+
+		return hfc.newDefaultKeyValueStore({
+			path: testUtil.storePathForOrg(orgName)
+		}).then((store) => {
+			client.setStateStore(store);
+			return testUtil.getSubmitter(client, t, org);
+		}).then((admin) => {
+			t.pass(params.testDesc+' - Successfully enrolled user \'admin\'');
+			the_user = admin;
+
+			the_user.mspImpl._id = ORGS[org].mspid;
+
+			nonce = utils.getNonce();
+			tx_id = chain.buildTransactionID(nonce, the_user);
+
+			// send proposal to endorser
+			var request = {
+				targets: targets,
+				chaincodePath: params.chaincodePath,
+				chaincodeId: params.chaincodeId,
+				chaincodeVersion: params.chaincodeVersion,
+				chaincodePackage: params.chaincodePackage,
+				txId: tx_id,
+				nonce: nonce
+			};
+
+			return chain.sendInstallProposal(request);
 		},
 		(err) => {
-			t.fail(testDesc+' - install same chaincode again - reject: '+err);
-			t.end();
-		}).catch((err) => {
-			t.fail(testDesc+' - install same chaincode again - error');
-			t.comment(err.stack ? err.stack : err);
-			t.end();
-		});
-	});
-});
-
-function install(user,chainName,orderer,peers,request,testDesc,t) {
-	t.comment(util.format('function install %s, %s, %s, %s, %s, %s', user,chainName,orderer,peers,request,testDesc));
-	try { // send proposal to endorser
-		var error = null;
-		var chain = client.newChain(chainName, user);
-		chain.addOrderer(orderer);
-		for (let i=0; i<peers.length; i++) {
-			chain.addPeer(peers[i]);
-		}
-		var nonce = utils.getNonce();
-		var tx_id = chain.buildTransactionID(nonce, user);
-		request.txId = tx_id;
-		request.nonce = nonce;
-		t.comment(util.format(testDesc+' - request %s', JSON.stringify(request)));
-
-		return chain.sendInstallProposal(request)
-		.then((results) => {
+			t.fail(params.testDesc+' - Failed to enroll user \'admin\'. ' + err);
+			throw new Error(params.testDesc+' - Failed to enroll user \'admin\'. ' + err);
+		}).then((results) => {
 			var proposalResponses = results[0];
+
 			var proposal = results[1];
 			var header   = results[2];
 			var all_good = true;
+			var error = null;
 			for(var i in proposalResponses) {
 				let one_good = false;
-				if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
+				if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 					one_good = true;
-					logger.info(testDesc+' - install proposal was good');
+					logger.info(params.testDesc+' - install proposal was good');
 				} else {
-					logger.error(testDesc+' - install proposal was bad');
+					logger.error(params.testDesc+' - install proposal was bad');
 					error = proposalResponses[i];
 				}
 				all_good = all_good & one_good;
 			}
 			if (all_good) {
-				t.comment(testDesc+' - Successfully sent install Proposal and received ProposalResponse');
+				t.comment(params.testDesc+' - Successfully sent install Proposal and received ProposalResponse');
 				return 'success';
 			} else {
-				t.comment(testDesc+' - Failed to send install Proposal or receive valid response. Response null or status is not 200.');
-				if (error) return new Error(error.stack ? error.stack : error);
+				t.comment(params.testDesc+' - Failed to send install Proposal or receive valid response. Response null or status is not 200.');
+				if (error) {
+					if (typeof error === 'Error') return new Error(error.stack ? error.stack : error);
+					return error;
+				}
 				else return 'fail';
 			}
 		},
 		(err) => {
-			t.comment(testDesc+' - Error in sendInstallProposal');
+			t.comment(params.testDesc+' - Error in sendInstallProposal');
 			return new Error(err.stack ? err.stack : err);
 		});
 	} catch (err) {
-		t.comment(testDesc+' - Error in install function');
+		t.comment(params.testDesc+' - Error in install function');
 		return Promise.reject(new Error(err.stack ? err.stack : err));
 	};
 }

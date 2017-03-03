@@ -1,6 +1,4 @@
 version: '2'
-networks:
-   bridge:
 
 services:
   ca0:
@@ -39,8 +37,6 @@ services:
     command: orderer
     ports:
       - 7050:7050
-    networks:
-      - bridge
     volumes:
         - ./:/etc/hyperledger/configtx
 
@@ -63,15 +59,11 @@ services:
     ports:
       - 7051:7051
       - 7053:7053
-    links:
-      - orderer
     volumes:
         - /var/run/:/host/var/run/
         - ./:/etc/hyperledger/configtx
     depends_on:
       - orderer
-    networks:
-      - bridge
 
   peer1:
     container_name: peer1
@@ -92,16 +84,12 @@ services:
     ports:
       - 7056:7051
       - 7058:7053
-    links:
-      - orderer
     volumes:
         - /var/run/:/host/var/run/
         - ./:/etc/hyperledger/configtx
     depends_on:
       - orderer
       - peer0
-    networks:
-      - bridge
 
   peer2:
     container_name: peer2
@@ -122,8 +110,6 @@ services:
     ports:
       - 8051:7051
       - 8053:7053
-    links:
-      - orderer:orderer
     volumes:
         - /var/run/:/host/var/run/
         - ./:/etc/hyperledger/configtx
@@ -131,8 +117,6 @@ services:
       - orderer
       - peer0
       - peer1
-    networks:
-      - bridge
 
   peer3:
     container_name: peer3
@@ -153,8 +137,6 @@ services:
     ports:
       - 8056:7051
       - 8058:7053
-    links:
-      - orderer:orderer
     volumes:
         - /var/run/:/host/var/run/
         - ./:/etc/hyperledger/configtx
@@ -163,5 +145,14 @@ services:
       - peer0
       - peer1
       - peer2
-    networks:
-      - bridge
+
+  couchdb:
+    container_name: couchdb
+    image: couchdb
+    ports:
+      - 5984:5984
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: password
+      DB_URL: http://localhost:5984/member_db
+
