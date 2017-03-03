@@ -34,7 +34,6 @@ var Orderer = require('fabric-client/lib/Orderer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var logger = utils.getLogger('GET CONFIG');
 
-
 // Get the proto bufs
 var grpc = require('grpc');
 var _eventsProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/events.proto').protos;

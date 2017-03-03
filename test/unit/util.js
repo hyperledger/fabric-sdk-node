@@ -21,6 +21,7 @@ var os = require('os');
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 
+var hfc = require('fabric-client');
 var copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
 var User = require('fabric-client/lib/User.js');
 var CryptoSuite = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
@@ -29,9 +30,17 @@ var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
 module.exports.CHAINCODE_MARBLES_PATH = 'github.com/marbles_cc';
+module.exports.END2END = {
+	channel: 'mychannel',
+	chaincodeId: 'end2end',
+	chaincodeVersion: 'v0'
+};
 
 // directory for file based KeyValueStore
 module.exports.KVS = '/tmp/hfc-test-kvs';
+module.exports.storePathForOrg = function(org) {
+	return module.exports.KVS + '_' + org;
+};
 
 // temporarily set $GOPATH to the test fixture folder
 module.exports.setupChaincodeDeploy = function() {
@@ -52,7 +61,6 @@ module.exports.cleanupDir = function(keyValStorePath) {
 	}
 };
 
-
 // utility function to check if directory or file exists
 // uses entire / absolute path from root
 module.exports.existsSync = function(absolutePath /*string*/) {
@@ -70,7 +78,12 @@ module.exports.existsSync = function(absolutePath /*string*/) {
 
 module.exports.readFile = readFile;
 
-function getSubmitter(username, password, client, t, loadFromConfig) {
+hfc.addConfigFile(path.join(__dirname, '../integration/e2e/config.json'));
+var ORGS = hfc.getConfigSetting('test-network');
+
+function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
+	var caUrl = ORGS[userOrg].ca;
+
 	return client.getUserContext(username)
 	.then((user) => {
 		return new Promise((resolve, reject) => {
@@ -81,7 +94,7 @@ function getSubmitter(username, password, client, t, loadFromConfig) {
 
 			if (!loadFromConfig) {
 				// need to enroll it with CA server
-				var cop = new copService('http://localhost:7054');
+				var cop = new copService(caUrl);
 
 				var member;
 				return cop.enroll({
@@ -156,6 +169,25 @@ function readFile(path) {
 	});
 }
 
-module.exports.getSubmitter = function(client, test, loadFromConfig) {
-	return getSubmitter('admin', 'adminpw', client, test, loadFromConfig);
+module.exports.getSubmitter = function(client, test, loadFromConfig, org) {
+	if (arguments.length < 2) throw new Error('"client" and "test" are both required parameters');
+
+	var fromConfig, userOrg;
+	if (typeof loadFromConfig === 'boolean') {
+		fromConfig = loadFromConfig;
+	} else {
+		fromConfig = false;
+	}
+
+	if (typeof loadFromConfig === 'string') {
+		userOrg = loadFromConfig;
+	} else {
+		if (typeof org === 'string') {
+			userOrg = org;
+		} else {
+			userOrg = 'peerOrg1';
+		}
+	}
+
+	return getSubmitter('admin', 'adminpw', client, test, fromConfig, userOrg);
 };

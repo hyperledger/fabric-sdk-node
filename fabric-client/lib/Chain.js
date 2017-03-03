@@ -1985,7 +1985,9 @@ var Chain = class {
 				responses.push(result.value());
 			  } else {
 				logger.debug('Chain-sendPeersProposal - Promise is rejected: '+result.reason());
-				responses.push(result.reason());
+				// the reason() would simply return the error object that's difficult to print in logs
+				// wrap it in an object for better visibility
+				responses.push({error: result.reason().toString()});
 			  }
 			});
 			return responses;

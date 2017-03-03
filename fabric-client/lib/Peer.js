@@ -20,6 +20,7 @@ var api = require('./api.js');
 var utils = require('./utils.js');
 var Remote = require('./Remote');
 var grpc = require('grpc');
+var util = require('util');
 
 var _serviceProto = grpc.load(__dirname + '/protos/peer/peer.proto').protos;
 
@@ -187,15 +188,15 @@ var Peer = class extends Remote {
 		return new Promise(function(resolve, reject) {
 			self._endorserClient.processProposal(proposal, function(err, proposalResponse) {
 				if (err) {
-					logger.error('GRPC client got an error response from the peer. %s', err.stack ? err.stack : err);
+					logger.error('GRPC client got an error response from the peer "%s". %s', self._url, err.stack ? err.stack : err);
 					reject(new Error(err));
 				} else {
 					if (proposalResponse) {
-						logger.info('Received proposal response received: status - %s', proposalResponse.response.status);
+						logger.debug('Received proposal response from peer "%s": status - %s', self._url, proposalResponse.response.status);
 						resolve(proposalResponse);
 					} else {
-						logger.error('GRPC client failed to get a proper response from the peer.');
-						reject(new Error('GRPC client failed to get a proper response from the peer.'));
+						logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
+						reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
 					}
 				}
 			});

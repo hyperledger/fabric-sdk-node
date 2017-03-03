@@ -35,7 +35,7 @@ Organizations:
     - &OrdererOrg
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: OrdererOrg
+        Name: OrdererMSP
 
         # ID to load the MSP definition as
         ID: OrdererMSP
@@ -45,7 +45,7 @@ Organizations:
         # FIXME: this path needs to be fixed to point to the actual location of #
         # the project 'fabric-sdk-node' in the file system                      #
         #########################################################################
-        MSPDir: /fabric-sdk-node/test/fixtures/configtx/crypto/orderer/localMspConfig
+        MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/ordererOrganizations/ordererOrg1/msp
 
         # BCCSP (Blockchain crypto provider): Select which crypto implementation or
         # library to use
@@ -62,17 +62,17 @@ Organizations:
     - &Org0
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: Org0MSP
+        Name: Org1MSP
 
         # ID to load the MSP definition as
-        ID: Org0MSP
+        ID: Org1MSP
 
         # MSPDir is the filesystem path which contains the MSP configuration
         #########################################################################
         # FIXME: this path needs to be fixed to point to the actual location of #
         # the project 'fabric-sdk-node' in the file system                      #
         #########################################################################
-        MSPDir: /fabric-sdk-node/test/fixtures/configtx/crypto/peer/peer0/localMspConfig
+        MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/peerOrganizations/peerOrg1/msp/
 
         # BCCSP (Blockchain crypto provider): Select which crypto implementation or
         # library to use
@@ -92,21 +92,23 @@ Organizations:
             # encoded in the genesis block in the Application section context
             - Host: localhost
               Port: 7051
+            - Host: localhost
+              Port: 7056
 
     - &Org1
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
-        Name: Org1MSP
+        Name: Org2MSP
 
         # ID to load the MSP definition as
-        ID: Org1MSP
+        ID: Org2MSP
 
         # MSPDir is the filesystem path which contains the MSP configuration
         #########################################################################
         # FIXME: this path needs to be fixed to point to the actual location of #
         # the project 'fabric-sdk-node' in the file system                      #
         #########################################################################
-        MSPDir: /fabric-sdk-node/test/fixtures/configtx/crypto/peer/peer2/localMspConfig
+        MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/peerOrganizations/peerOrg2/msp/
 
         # BCCSP (Blockchain crypto provider): Select which crypto implementation or
         # library to use
@@ -125,7 +127,9 @@ Organizations:
             # for cross org gossip communication.  Note, this value is only
             # encoded in the genesis block in the Application section context
             - Host: localhost
-              Port: 7056
+              Port: 8051
+            - Host: localhost
+              Port: 8056
 
 ################################################################################
 #

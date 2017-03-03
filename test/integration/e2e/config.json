@@ -1,0 +1,31 @@
+{
+	"test-network": {
+		"orderer": "grpc://localhost:7050",
+		"org1": {
+			"name": "peerOrg1",
+			"mspid": "Org1MSP",
+			"ca": "http://localhost:7054",
+			"peer1": {
+				"requests": "grpc://localhost:7051",
+				"events": "grpc://localhost:7053"
+			},
+			"peer2": {
+				"requests": "grpc://localhost:7056",
+				"events": "grpc://localhost:7058"
+			}
+		},
+		"org2": {
+			"name": "peerOrg2",
+			"mspid": "Org2MSP",
+			"ca": "http://localhost:8054",
+			"peer1": {
+				"requests": "grpc://localhost:8051",
+				"events": "grpc://localhost:8053"
+			},
+			"peer2": {
+				"requests": "grpc://localhost:8056",
+				"events": "grpc://localhost:8058"
+			}
+		}
+	}
+}
