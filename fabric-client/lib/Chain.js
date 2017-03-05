@@ -1655,7 +1655,7 @@ var Chain = class {
 								Buffer.from('deploy', 'utf8'),
 								Buffer.from('default', 'utf8'),
 								chaincodeDeploymentSpec.toBuffer(),
-								self._buildChaincodePolicy(userContext.mspImpl._id)
+								self._buildDefaultEndorsementPolicy()
 							]
 						}
 					};
@@ -1956,33 +1956,46 @@ var Chain = class {
 
 	// internal utility method to build chaincode policy
 	// FIXME: for now always construct a 'Signed By any member of an organization by mspid' policy
-	_buildChaincodePolicy(mspid) {
+	_buildDefaultEndorsementPolicy() {
 		// construct a list of msp principals to select from using the 'n out of' operator
-		var onePrn = new _mspPrProto.MSPPrincipal();
-		onePrn.setPrincipalClassification(_mspPrProto.MSPPrincipal.Classification.ROLE);
+		var msps = this.getMSPManager().getMSPs();
+		var principals = [], signedBys = [];
+		var index = 0;
+		for (let name in msps) {
+			if (msps.hasOwnProperty(name)) {
+				let onePrn = new _mspPrProto.MSPPrincipal();
+				onePrn.setPrincipalClassification(_mspPrProto.MSPPrincipal.Classification.ROLE);
 
-		var memberRole = new _mspPrProto.MSPRole();
-		memberRole.setRole(_mspPrProto.MSPRole.MSPRoleType.MEMBER);
-		memberRole.setMspIdentifier(mspid);
+				let memberRole = new _mspPrProto.MSPRole();
+				memberRole.setRole(_mspPrProto.MSPRole.MSPRoleType.MEMBER);
+				memberRole.setMspIdentifier(name);
 
-		onePrn.setPrincipal(memberRole.toBuffer());
+				onePrn.setPrincipal(memberRole.toBuffer());
 
-		// construct 'signed by msp principal at index 0'
-		var signedBy = new _policiesProto.SignaturePolicy();
-		signedBy.set('signed_by', 0);
+				principals.push(onePrn);
+
+				var signedBy = new _policiesProto.SignaturePolicy();
+				signedBy.set('signed_by', index++);
+				signedBys.push(signedBy);
+			}
+		}
+
+		if (principals.length === 0) {
+			throw new Error('Verifying MSPs not found in the chain object, make sure "intialize()" is called first.');
+		}
 
 		// construct 'one of one' policy
-		var oneOfone = new _policiesProto.SignaturePolicy.NOutOf();
-		oneOfone.setN(1);
-		oneOfone.setPolicies([signedBy]);
+		var oneOfAny = new _policiesProto.SignaturePolicy.NOutOf();
+		oneOfAny.setN(1);
+		oneOfAny.setPolicies(signedBys);
 
 		var noutof = new _policiesProto.SignaturePolicy();
-		noutof.set('n_out_of', oneOfone);
+		noutof.set('n_out_of', oneOfAny);
 
 		var envelope = new _policiesProto.SignaturePolicyEnvelope();
 		envelope.setVersion(0);
 		envelope.setPolicy(noutof);
-		envelope.setIdentities([onePrn]);
+		envelope.setIdentities(principals);
 
 		return envelope.toBuffer();
 	}

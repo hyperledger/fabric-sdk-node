@@ -99,6 +99,17 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
 
 		the_user.mspImpl._id = ORGS[org].mspid;
 
+		// read the config block from the orderer for the chain
+		// and initialize the verify MSPs based on the participating
+		// organizations
+		return chain.initialize();
+	}, (err) => {
+
+		t.fail('Failed to enroll user \'admin\'. ' + err);
+		throw new Error('Failed to enroll user \'admin\'. ' + err);
+
+	}).then((success) => {
+
 		nonce = utils.getNonce();
 		tx_id = chain.buildTransactionID(nonce, the_user);
 
@@ -118,8 +129,8 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
 
 	}, (err) => {
 
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		throw new Error('Failed to enroll user \'admin\'. ' + err);
+		t.fail('Failed to initialize the chain');
+		throw new Error('Failed to initialize the chain');
 
 	}).then((results) => {
 

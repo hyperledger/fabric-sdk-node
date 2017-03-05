@@ -583,6 +583,20 @@ test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
 	);
 });
 
+test('\n\n ** Chain _buildDefaultEndorsementPolicy() tests **\n\n', function (t) {
+	var c = new Chain('does not matter', client);
+
+	t.throws(
+		() => {
+			c._buildDefaultEndorsementPolicy();
+		},
+		/Verifying MSPs not found in the chain object, make sure "intialize\(\)" is called first/,
+		'Checking that "initialize()" must be called before calling "instantiate()" that uses the endorsement policy'
+	);
+
+	t.end();
+});
+
 test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 	var c = new Chain('does not matter', client);
 	var peer = new Peer('grpc://localhost:7051');

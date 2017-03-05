@@ -59,9 +59,11 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
 		};
 	})(t, allEventhubs, t.end);
 
-	// this is a transaction, will just use org1's identity to
-	// submit the request
-	var org = 'org1';
+	// this is a transaction, will just use org2's identity to
+	// submit the request. intentionally we are using a different org
+	// than the one that instantiated the chaincode, although either org
+	// should work properly
+	var org = 'org2';
 	var client = new hfc();
 	var chain = client.newChain(e2e.channel);
 	chain.addOrderer(new Orderer(ORGS.orderer));
