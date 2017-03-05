@@ -1641,20 +1641,25 @@ var Chain = class {
 		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 
-		let lcccSpec = {
-			type: _ccProto.ChaincodeSpec.Type.GOLANG,
-			chaincode_id: {
-				name: 'lccc'
-			},
-			input: {
-				args: [Buffer.from('deploy', 'utf8'), Buffer.from('default', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
-			}
-		};
-
 		var header, proposal;
 		return self._clientContext.getUserContext()
 			.then(
 				function(userContext) {
+					let lcccSpec = {
+						type: _ccProto.ChaincodeSpec.Type.GOLANG,
+						chaincode_id: {
+							name: 'lccc'
+						},
+						input: {
+							args: [
+								Buffer.from('deploy', 'utf8'),
+								Buffer.from('default', 'utf8'),
+								chaincodeDeploymentSpec.toBuffer(),
+								self._buildChaincodePolicy(userContext.mspImpl._id)
+							]
+						}
+					};
+
 					var channelHeader = buildChannelHeader(
 						_commonProto.HeaderType.ENDORSER_TRANSACTION,
 						request.chainId,
@@ -1949,7 +1954,40 @@ var Chain = class {
 		return proposal;
 	}
 
-	 // internal utility method to return one Promise when sending a proposal to many peers
+	// internal utility method to build chaincode policy
+	// FIXME: for now always construct a 'Signed By any member of an organization by mspid' policy
+	_buildChaincodePolicy(mspid) {
+		// construct a list of msp principals to select from using the 'n out of' operator
+		var onePrn = new _mspPrProto.MSPPrincipal();
+		onePrn.setPrincipalClassification(_mspPrProto.MSPPrincipal.Classification.ROLE);
+
+		var memberRole = new _mspPrProto.MSPRole();
+		memberRole.setRole(_mspPrProto.MSPRole.MSPRoleType.MEMBER);
+		memberRole.setMspIdentifier(mspid);
+
+		onePrn.setPrincipal(memberRole.toBuffer());
+
+		// construct 'signed by msp principal at index 0'
+		var signedBy = new _policiesProto.SignaturePolicy();
+		signedBy.set('signed_by', 0);
+
+		// construct 'one of one' policy
+		var oneOfone = new _policiesProto.SignaturePolicy.NOutOf();
+		oneOfone.setN(1);
+		oneOfone.setPolicies([signedBy]);
+
+		var noutof = new _policiesProto.SignaturePolicy();
+		noutof.set('n_out_of', oneOfone);
+
+		var envelope = new _policiesProto.SignaturePolicyEnvelope();
+		envelope.setVersion(0);
+		envelope.setPolicy(noutof);
+		envelope.setIdentities([onePrn]);
+
+		return envelope.toBuffer();
+	}
+
+	// internal utility method to return one Promise when sending a proposal to many peers
 	/**
 	 * @private
 	 */
@@ -2141,10 +2179,6 @@ var Chain = class {
 
 };
 
-function toKeyValueStoreName(name) {
-	return 'member.' + name;
-}
-
 //utility method to build a common chain header
 function buildChannelHeader(type, chain_id, tx_id, epoch, chaincode_id, time_stamp) {
 	logger.debug('buildChannelHeader - type %s chain_id %s tx_id %d epoch % chaincode_id %s',
@@ -2185,62 +2219,6 @@ function buildHeader(creator, channelHeader, nonce) {
 
 	return header;
 }
-
-//utility method to build a signed configuration item
-function buildSignedConfigurationItem(
-		type,
-		last_modified,
-		mod_policy,
-		key,
-		value,
-		signatures) {
-	var configurationItem = new _configtxProto.ConfigurationItem();
-	configurationItem.setType(type); // ConfigurationType
-	configurationItem.setLastModified(last_modified); // uint64
-	configurationItem.setModificationPolicy(mod_policy); // ModificationPolicy
-	configurationItem.setKey(key); // string
-	configurationItem.setValue(value); // bytes
-
-	var signedConfigurationItem = new _configtxProto.SignedConfigurationItem();//to do - this proto has changed drastically
-	signedConfigurationItem.setConfigurationItem(configurationItem.toBuffer());
-	if(signatures) {
-		signedConfigurationItem.setSignatures(signatures);
-	}
-
-	return signedConfigurationItem;
-};
-
-//utility method to build an accept all policy
-function buildAcceptAllPolicy() {
-	return buildPolicyEnvelope(0);
-}
-
-//utility method to build a reject all policy
-function buildRejectAllPolicy() {
-	return buildPolicyEnvelope(1);
-}
-
-//utility method to build a policy with a signature policy envelope
-function buildPolicyEnvelope(nOf) {
-	logger.debug('buildPolicyEnvelope - building policy with nOf::'+nOf);
-	var nOutOf = new _policiesProto.SignaturePolicy.NOutOf();
-	nOutOf.setN(nOf);
-	nOutOf.setPolicies([]);
-	var signaturePolicy = new _policiesProto.SignaturePolicy();
-	signaturePolicy.setFrom(nOutOf);
-	var signaturePolicyEnvelope = new _policiesProto.SignaturePolicyEnvelope();
-	signaturePolicyEnvelope.setVersion(0);
-	signaturePolicyEnvelope.setPolicy(signaturePolicy);
-//	var identity = new _mspPrProto.MSPPrincipal();
-//	identity.setPrincipalClassification(_mspPrProto.MSPPrincipal.Classification.ByIdentity);
-//	identity.setPrincipal(Buffer.from('Admin'));
-	signaturePolicyEnvelope.setIdentities([]);
-
-	var policy = new _policiesProto.Policy();
-	policy.setType(_policiesProto.Policy.PolicyType.SIGNATURE);
-	policy.setPolicy(signaturePolicyEnvelope.toBuffer());
-	return policy;
-};
 
 //utility method to return a timestamp for the current time
 function buildCurrentTimestamp() {

@@ -157,15 +157,14 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
 					let handle = setTimeout(reject, 30000);
 
 					eh.registerTxEvent(deployId.toString(), (tx, code) => {
-						t.pass('The chaincode deploy transaction has been committed on peer '+ eh.ep.addr);
 						clearTimeout(handle);
 						eh.unregisterTxEvent(deployId);
 
 						if (code !== 'VALID') {
-							t.fail('The chaincode deploy transaction was invalid, code = ' + code);
+							t.fail('The balance transfer transaction was invalid, code = ' + code);
 							reject();
 						} else {
-							t.pass('The chaincode deploy transaction was valid.');
+							t.pass('The balance transfer transaction has been committed on peer '+ eh.ep.addr);
 							resolve();
 						}
 					});
