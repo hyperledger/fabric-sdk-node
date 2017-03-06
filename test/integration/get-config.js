@@ -46,8 +46,8 @@ var _ccProposalProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/pe
 var _ccEventProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/chaincodeevent.proto').protos;
 
 var client = new hfc();
-// IMPORTANT ------>>>>> MUST RUN new-chain.js FIRST
-var chain_id = 'foo';
+// IMPORTANT ------>>>>> MUST RUN e2e/create-channel.js FIRST
+var chain_id = 'mychannel';
 var chain = client.newChain(chain_id);
 
 var webUser = null;
@@ -94,8 +94,13 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 					t.pass('Chain was successfully initialized');
 					var orgs = chain.getOrganizationUnits();
 					logger.debug(' Got the following orgs back %j', orgs);
-					t.equals(orgs.length, 1, 'Checking the that we got back the right number of orgs');
-					t.equals(orgs[0].id, 'DEFAULT', 'Checking the org name');
+					t.equals(orgs.length, 2, 'Checking the that we got back the right number of orgs');
+					if(orgs[0].id.indexOf('Org') == 0) {
+						t.pass('Found the org name '+ orgs[0].id);
+					}
+					else {
+						t.fail('Did not find the org name of \'org\' :: found ' + orgs[0].id);
+					}
 					t.end();
 				},
 				function(err) {

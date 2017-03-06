@@ -784,16 +784,11 @@ var Chain = class {
 	 */
 	loadConfigEnvelope(config_envelope) {
 		logger.debug('loadConfigEnvelope - start');
-		logger.debug('loadConfigEnvelope -  Config channel_header.type :: %s', config_envelope.config.header.type);
-		logger.debug('loadConfigEnvelope -  Config channel_header.tx_id :: %s', config_envelope.config.header.tx_id);
-		logger.debug('loadConfigEnvelope -  Config channel_header.version :: %s', config_envelope.config.header.version);
 
-		let channel = config_envelope.config.channel;
-		logger.debug('loadConfigEnvelope -  Channel version :: %s', channel.version);
-		logger.debug('loadConfigEnvelope -  Channel mod policy :: %s', channel.mod_policy);
+		let group = config_envelope.config.channel_group;
 
 		var found_MSPs = []; //save all the MSP's found
-		this.loadConfigGroup(channel, 'base', found_MSPs, true, false);
+		this.loadConfigGroup(group, 'base', found_MSPs, true, false);
 		this._msp_manager.loadMSPs(found_MSPs);
 	}
 

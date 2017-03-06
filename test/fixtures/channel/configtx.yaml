@@ -146,7 +146,7 @@ Orderer: &OrdererDefaults
     OrdererType: solo
 
     Addresses:
-        - 127.0.0.1:7050
+        - orderer:7050
 
     # Batch Timeout: The amount of time to wait before creating a batch
     BatchTimeout: 10s
@@ -170,7 +170,7 @@ Orderer: &OrdererDefaults
         # Brokers: A list of Kafka brokers to which the orderer connects
         # NOTE: Use IP:port notation
         Brokers:
-            - 127.0.0.1:9092
+            - orderer:9092
 
     # Organizations is the list of orgs which are defined as participants on
     # the orderer side of the network
