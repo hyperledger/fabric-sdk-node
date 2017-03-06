@@ -19,7 +19,8 @@ const DEPS = [
 gulp.task('ca', function() {
 	return gulp.src(DEPS, { base: 'fabric-client/' })
 		.pipe(debug())
-		.pipe(gulp.dest('fabric-ca-client/'));
+		.pipe(gulp.dest('fabric-ca-client/'))
+		.pipe(gulp.dest('node_modules/fabric-ca-client'));
 });
 
 module.exports.DEPS = DEPS;

@@ -11,8 +11,8 @@ The following section targets a current or future contributor to this project it
 
 ### Build and Test
 To build and test, the following pre-requisites must be installed first:
-* node runtime version 4.5 or later (which also installs the npm tool)
-* npm tool version 2.15.9 or later
+* node runtime version 6.9.x, note that 7.0 is not supported at this point
+* npm tool version 3.10.x
 * gulp command
 * docker (not required if you only want to run the headless tests with `npm test-headless`, see below)
 
@@ -24,7 +24,7 @@ This project publishes two separate npm packages:
 
 In the project root folder:
 * `npm install` to install dependencies
-* `gulp ca` to copy common dependent modules from the `fabric-client` folder to the `fabric-ca-client` folder
+* `gulp ca` to copy common dependent modules from the `fabric-client` folder to the `fabric-ca-client` folder and the installed fabric-ca-client package under `node_modules`
 * `gulp watch` to set up watch that updates fabric-ca-client's shared dependencies from fabric-client/lib and updates installed fabric-client and fabric-ca-client modules in node_modules. This command does not return, so you should keep it running in a separate command window as you work on the code and test in another command window
 * optionally, `gulp doc` to generate API docs if you want to review the doc content
 * `npm test-headless` to run the headless tests that do not require any additional set up
@@ -33,11 +33,12 @@ The following tests require setting up a local blockchain network as the target.
 * You will need the peers, orderers and fabric-ca server (new implementation of the member service) to run the tests. The first two components are from the *fabric* repository. The fabric-ca server is from the *fabric-ca* repository.
 * git clone both the *fabric* and *fabric-ca* repositories into the $GOPATH/src/github.com/hyperledger folder in your native host (MacOS, Windows or Ubuntu, etc).
 
-If you are using a Mac and would like to build the docker images and run them natively instead of using vagrant, do the following:
-* If docker is installed and it’s not ‘Docker for Mac’, uninstall and follow Docker’s clean up instructions to uninstall completely.
-* Install ‘Docker for Mac’: https://docs.docker.com/docker-for-mac/install
-* Install Brew: http://brew.sh
-* run `brew install gnu-tar —-with-default-names` in order to swap out Mac's default tar command for a gnu-compliant one needed by chaincode execution on the peers
+You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.):
+* If docker is installed and it’s not ‘Docker for Mac/Windows’, uninstall and follow Docker’s clean up instructions to uninstall completely.
+* Install [‘Docker for Mac’](https://docs.docker.com/docker-for-mac/install) or [`Docker for Windows`](https://docs.docker.com/docker-for-windows/install), or [`Docker on linux`](https://docs.docker.com/engine/installation/linux/ubuntu/#install-docker)
+* Only for Mac, you need to install a gnu-compatible version of the `tar` utility:
+  * Install Brew: http://brew.sh
+  * run `brew install gnu-tar —-with-default-names` in order to swap out Mac's default tar command for a gnu-compliant one needed by chaincode execution on the peers
 
 * build fabric-ca docker image (new membership service)
   * cd `$GOPATH/src/github.com/hyperledger/fabric-ca
@@ -45,15 +46,15 @@ If you are using a Mac and would like to build the docker images and run them na
 * build fabric peer and orderer docker images and other ancillary images
   * `cd $GOPATH/src/github.com/hyperledger/fabric`
   * run `make docker` to build the docker images
-* go to fabric-sdk-node/test/fixtures
+* go to fabric-sdk-node/test/fixtures/channel
   * run `docker-compose up --force-recreate` to launch the network
 * Now you are ready to run the tests:
-  * Clear out your previous key value store if needed for fabric-sdk-node (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store)
-  * Run `gulp test` to run the entire test bucket and generate coverage reports (both in console output and HTMLs)
-  * Test user management by member services with the `test/integration/couchdb-fabricca-tests.js` and `test/integration/cloudant-fabricca-tests.js`. This test exercises the KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
-  * Test happy path from end to end, run `node test/integration/end-to-end.js`
-  * Test transaction proposals, run `node test/integration/endorser-tests.js`
-  * Test sending endorsed transactions for consensus, run `node test/integration/orderer-tests.js`
+  * Clear out your previous key value stores that may have cached user enrollment certificates (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`)
+  * Test user management by member services with the following tests that exercise the fabric-ca-client package with a KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
+    * `test/integration/fabric-ca-services-tests.js`
+    * `test/integration/couchdb-fabricca-tests.js`
+    * `test/integration/cloudant-fabricca-tests.js`
+  * Test happy path from end to end, run `node test/integration/e2e.js`
 
 ### Set Up CouchDB Database for couchdb-fabriccop-tests.js
 
