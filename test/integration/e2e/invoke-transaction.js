@@ -43,7 +43,7 @@ var nonce = null;
 var the_user = null;
 var allEventhubs = [];
 
-test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
+test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) => {
 	// override t.end function so it'll always disconnect the event hub
 	t.end = ((context, ehs, f) => {
 		return function() {
