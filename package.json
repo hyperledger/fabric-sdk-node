@@ -7,7 +7,7 @@
     "url": "http://gerrit.hyperledger.org/r/fabric-sdk-node"
   },
   "scripts": {
-    "test": "node test/unit/headless-tests.js"
+    "test": "gulp test-headless"
   },
   "engines": {
     "node": ">=4.5.0",
