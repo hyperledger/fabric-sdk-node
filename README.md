@@ -7,6 +7,10 @@ The Hyperledger Fabric Client SDK makes it easy to use APIs to interact with a H
 
 As an application developer, to learn about how to install and use the Node.js SDK, please visit the [fabric documentation](http://hyperledger-fabric.readthedocs.io/en/latest/Setup/NodeSDK-setup).
 
+This project publishes two separate npm packages:
+* `fabric-client` - main client for the Hyperledger Fabric. Applications can use this package to install and instantiate chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
+* `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](https://github.com/hyperledger/fabric-ca). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, then the application does not need to use this package.
+
 The following section targets a current or future contributor to this project itself.
 
 ### Build and Test
@@ -17,10 +21,6 @@ To build and test, the following pre-requisites must be installed first:
 * docker (not required if you only want to run the headless tests with `npm test-headless`, see below)
 
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
-
-This project publishes two separate npm packages:
-* `fabric-client` - main client for the Hyperledger Fabric. Applications can use this package to install and instantiate chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
-* `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](https://github.com/hyperledger/fabric-ca). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, then the application does not need to use this package.
 
 In the project root folder:
 * `npm install` to install dependencies
