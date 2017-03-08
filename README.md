@@ -5,11 +5,11 @@
 
 The Hyperledger Fabric Client SDK makes it easy to use APIs to interact with a Hyperledger Fabric blockchain.
 
-As an application developer, to learn about how to install and use the Node.js SDK, please visit the [fabric documentation](http://hyperledger-fabric.readthedocs.io/en/latest/Setup/NodeSDK-setup).
+As an application developer, to learn about how to install and use the Node.js SDK, please visit the [SDK documentation](http://fabric-sdk-node.readthedocs.io/en/master).
 
 This project publishes two separate npm packages:
 * `fabric-client` - main client for the Hyperledger Fabric. Applications can use this package to install and instantiate chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
-* `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](https://github.com/hyperledger/fabric-ca). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, then the application does not need to use this package.
+* `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](https://github.com/hyperledger/fabric-ca). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, the application does not need to use this package.
 
 The following section targets a current or future contributor to this project itself.
 
@@ -56,7 +56,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
     * `test/integration/cloudant-fabricca-tests.js`
   * Test happy path from end to end, run `node test/integration/e2e.js`
 
-### Set Up CouchDB Database for couchdb-fabriccop-tests.js
+### Set Up CouchDB Database for couchdb-fabricca-tests.js
 
 The KeyValueStore database implementation is done using [Apache CouchDB](http://couchdb.apache.org/). To quickly set up a database instance on your local machine, pull in the CouchDB Docker image from [Docker hub](https://hub.docker.com/_/couchdb/).
 
@@ -114,19 +114,18 @@ Check the coding styles, run the following command and make sure no ESLint viola
 Run the full unit test bucket and make sure 100% are passing.  Because v1.0 is still in active development, all tests may not pass. You can run each individually to isolate the failure(s):
 * `gulp test`
 
-The gulp test command above also generates code coverage reports. Your new code should be accompanied with unit tests and pass 80% lines coverage or above.
+The gulp test command above also generates code coverage reports. Your new code should be accompanied with unit tests and provide 80% line coverage or higher.
 
 ### HFC objects and reference documentation
 For a high-level design specificiation for Fabric SDKs of all languages, visit [this google doc](https://docs.google.com/document/d/1R5RtIBMW9fZpli37E5Li5_Q9ve3BnQ4q3gWmGZj6Sv4/edit?usp=sharing) (Work-In-Progress).
 
-HFC is written in CommonJS modules and is object-oriented. It's comprised of the following modules.
+fabric-client and fabric-ca-client are written in CommonJS modules and take advantage of ECMAScript 2015 class syntax.
 
-* index.js is the top-level module that provides the main API surface into the HFC package. It's mainly a collection of convenient methods.
-* The main top-level class is **Chain**. It is the client's view of a blockchain network. HFC allows you to interact with multiple chains. Each chain object can be configured with a different member service or share a common member service, depending on how the target blockchain networks are set up. Each chain object has a _KeyValueStore_ to store private keys and certificates for authenticated users. Each chain object can be configured with an ordering service, to which HFC connects to send transactions for consensus and committing to the ledger.
-* The **KeyValueStore** is a very simple interface which HFC uses to store and retrieve all persistent data. This data includes private keys, so it is very important to keep this storage secure. The default implementation is a simple file-based version found in the _FileKeyValueStore_ class.
-* The **FabricCAClientImpl** class provides security and identity related features such as user registration and enrollment, transaction certificate issuance. The Hyperledger Fabric has a built-in implementation that issues _ECerts_ (enrollment certificates) and _TCerts_ (transaction certificates). ECerts are for enrollment identity and TCerts are for transactions.
-* The **User** class represents an end user who transacts on the chain. The user object must have a valid enrollment configured in order to properly sign transaction requests. The enrollment materials can either be obtained from enrolling with fabric-ca or loaded from an MSP configuration directory.
+* The main top-level class is **Chain**. It is the client's view of a fabric [channel](https://docs.google.com/document/d/1eRNxxQ0P8yp4Wh__Vi6ddaN_vhN2RQHP-IruHNUwyhc/). The SDK allows you to interact with multiple channels. A chain object can be configured with a different ordering service or share a common ordering service, depending on how the target blockchain network is set up. A chain object has a _KeyValueStore_ to store private keys and certificates for authenticated users. Through the chain object the application can perform 
+* The **KeyValueStore** is a very simple interface which SDK uses to store and retrieve all persistent data. This data includes private keys, so it is very important to keep this storage secure. The default implementation is a simple file-based version found in the _FileKeyValueStore_ class. The SDK also provides an implementation based on CouchDB which can be configured to use a local CouchDB database or a remote deployment including a Cloudant database.
+* The **User** class represents an end user who transacts on the chain. The user object must have a valid enrollment configured in order to properly sign transaction requests. The enrollment materials can either be obtained from enrolling with fabric-ca or an external Certificate Authority.
 * The **EventHub** class encapsulates the interaction with the network peers' event streams.
+* The **FabricCAClientImpl** class provides security and identity related features such as user registration and enrollment, transaction certificate issuance. The Hyperledger Fabric has a built-in implementation that issues _ECerts_ (enrollment certificates) and _TCerts_ (transaction certificates). ECerts are for enrollment identity and TCerts are for transactions.
 
 ### Pluggability
 HFC defines the following abstract classes for application developers to supply extensions or alternative implementations. For each abstract class, a built-in implementation is included with the ability to load alternative implementations via designated environment variables:
