@@ -917,14 +917,6 @@ var Chain = class {
 				var creation_policy = _ordererConfigurationProto.CreationPolicy.decode(config_value.value.value);
 				logger.debug('loadConfigValue - %s   - CreationPolicy policy value :: %s', group_name, creation_policy.policy);
 				break;
-			case 'IngressPolicyNames':
-				var ingress_policy_names = _ordererConfigurationProto.IngressPolicyNames.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s   - IngressPolicyNames names value :: %s', group_name, ingress_policy_names.names);
-				break;
-			case 'EgressPolicyNames':
-				var egress_policy_names = _ordererConfigurationProto.EgressPolicyNames.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s   - EgressPolicyNames names value :: %s', group_name, egress_policy_names.names);
-				break;
 			case 'ChainCreationPolicyNames':
 				var chain_creation_policy_names = _ordererConfigurationProto.ChainCreationPolicyNames.decode(config_value.value.value);
 				logger.debug('loadConfigValue - %s   - ChainCreationPolicyNames names value :: %s', group_name, chain_creation_policy_names.names);
