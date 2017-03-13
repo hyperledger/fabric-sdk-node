@@ -8,6 +8,8 @@ gulp.task('lint', function () {
 		'fabric-ca-client/lib/*.js',
 		'examples/**/*.js',
 		'!node_modules/**',
+		'!fabric-client/node_modules/**',
+		'!fabric-ca-client/node_modules/**',
 		'!docs/**',
 		'!coverage/**',
 		'!tmp/**'

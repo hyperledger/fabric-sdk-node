@@ -76,7 +76,8 @@ var FabricCAServices = class {
 	 * @param {Object} req Registration request with the following fields:
 	 * <br> - enrollmentID {string}. ID which will be used for enrollment
 	 * <br> - role {string}. An arbitrary string representing a role value for the user
-	 * <br> - group {string}. Group to which this user will be assigned, like a company or an organization
+	 * <br> - affiliation {string}. Affiliation with which this user will be associated, like a company or an organization
+	 * <br> - maxEnrollments {number}. The maximum number of times this user will be permitted to enroll
 	 * <br> - attrs {{@link KeyValueAttribute}[]}. Array of key/value attributes to assign to the user.
 	 * @param registrar {User}. The identity of the registrar (i.e. who is performing the registration)
 	 * @returns {Promise} The enrollment secret to use when this user enrolls
@@ -90,9 +91,15 @@ var FabricCAServices = class {
 			throw new Error('Missing required argument "request.enrollmentID"');
 		}
 
+		if (typeof req.maxEnrollments === 'undefined' || req.maxEnrollments === null) {
+			// set maxEnrollments to 1
+			req.maxEnrollments = 1;
+		}
+
 		checkRegistrar(registrar);
 
-		return this._fabricCAClient.register(req.enrollmentID, req.role, req.group, req.attrs, registrar.getSigningIdentity());
+		return this._fabricCAClient.register(req.enrollmentID, req.role, req.affiliation, req.maxEnrollments, req.attrs,
+			registrar.getSigningIdentity());
 	}
 
 	/**
@@ -128,10 +135,11 @@ var FabricCAServices = class {
 						var csr = privateKey.generateCSR('CN=' + req.enrollmentID);
 						self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr)
 							.then(
-							function (csrPEM) {
+							function (enrollResponse) {
 								return resolve({
 									key: privateKey,
-									certificate: csrPEM
+									certificate: enrollResponse.enrollmentCert,
+									rootCertificate: enrollResponse.caCertChain
 								});
 							},
 							function (err) {
@@ -298,19 +306,20 @@ var FabricCAClient = class {
 	 * Register a new user and return the enrollment secret
 	 * @param {string} enrollmentID ID which will be used for enrollment
 	 * @param {string} role Type of role for this user
-	 * @param {string} group Group to which this user will be assigned
+	 * @param {string} affiliation Affiliation with which this user will be associated
+	 * @param {number} maxEnrollments The maximum number of times the user is permitted to enroll
 	 * @param {KeyValueAttribute[]} attrs Array of key/value attributes to assign to the user
 	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
 	 * signing certificate, hash algorithm and signature algorithm
 	 * @returns {Promise} The enrollment secret to use when this user enrolls
 	 */
-	register(enrollmentID, role, group, attrs, signingIdentity) {
+	register(enrollmentID, role, affiliation, maxEnrollments, attrs, signingIdentity) {
 
 		var self = this;
 		var numArgs = arguments.length;
 		//all arguments are required
 		if (numArgs < 5) {
-			throw new Error('Missing required parameters.  \'enrollmentID\', \'role\', \'group\', \'attrs\', \
+			throw new Error('Missing required parameters.  \'enrollmentID\', \'role\', \'affiliation\', \'attrs\', \
 				and \'signingIdentity\' are all required.');
 		}
 
@@ -318,13 +327,14 @@ var FabricCAClient = class {
 			var regRequest = {
 				'id': enrollmentID,
 				'type': role ? role : 'client',
-				'group': group,
+				'affiliation': affiliation,
+				'max_enrollments': maxEnrollments,
 				'attrs': attrs
 			};
 
 			return self.post('register', regRequest, signingIdentity)
 			.then(function (response) {
-				return resolve(response.result.credential);
+				return resolve(response.result.secret);
 			}).catch(function (err) {
 				return reject(err);
 			});
@@ -358,10 +368,15 @@ var FabricCAClient = class {
 
 		return new Promise(function (resolve, reject) {
 
+			if (serial!=null){
+				if (serial.length < 80){
+					serial = '0' + serial;
+				}
+			}
 			var regRequest = {
 				'id': enrollmentID,
 				'aki': aki,
-				'serial': parseInt(serial, 16) + '', // per CFSSL, serial numbers are saved as decimals instead of hex strings in cert database
+				'serial': serial,
 				'reason': reason
 			};
 
@@ -447,11 +462,18 @@ var FabricCAClient = class {
 	}
 
 	/**
+	 * @typedef {Object} EnrollmentResponse
+	 * @property {string} enrollmentCert PEM-encoded X509 enrollment certificate
+	 * @property {string} caCertChain PEM-encoded X509 certificate chain for the issuing
+	 * certificate authority
+	 */
+
+	/**
 	 * Enroll a registered user in order to receive a signed X509 certificate
 	 * @param {string} enrollmentID The registered ID to use for enrollment
 	 * @param {string} enrollmentSecret The secret associated with the enrollment ID
 	 * @param {string} csr PEM-encoded PKCS#10 certificate signing request
-	 * @returns {Promise} PEM-encoded X509 certificate
+	 * @returns {Promise} {@link EnrollmentResponse}
 	 * @throws Will throw an error if all parameters are not provided
 	 * @throws Will throw an error if calling the enroll API fails for any reason
 	 */
@@ -495,10 +517,14 @@ var FabricCAClient = class {
 					}
 					//response should be JSON
 					try {
-						var enrollResponse = JSON.parse(payload);
-						if (enrollResponse.success) {
+						var res = JSON.parse(payload);
+						if (res.success) {
 							//we want the result field which is Base64-encoded PEM
-							return resolve(new Buffer.from(enrollResponse.result, 'base64').toString());
+							var enrollResponse = new Object();
+							// Cert field is Base64-encoded PEM
+							enrollResponse.enrollmentCert = new Buffer.from(res.result.Cert, 'base64').toString();
+							enrollResponse.caCertChain = new Buffer.from(res.result.ServerInfo.CAChain, 'base64').toString();
+							return resolve(enrollResponse);
 						} else {
 							return reject(new Error(
 								util.format('Enrollment failed with errors [%s]', JSON.stringify(enrollResponse.errors))));

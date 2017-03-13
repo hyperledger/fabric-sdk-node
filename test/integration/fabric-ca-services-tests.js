@@ -85,11 +85,12 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 
 			var signingIdentity = new SigningIdentity('testSigningIdentity', eResult.certificate, pubKey, msp, new Signer(msp.cryptoSuite, eResult.key));
 
-			return cop._fabricCAClient.register(enrollmentID, 'client', 'org1', [], signingIdentity);
+			return cop._fabricCAClient.register(enrollmentID, 'client', 'org1', 1, [], signingIdentity);
 		},(err) => {
 			t.fail('Failed to import the public key from the enrollment certificate. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((secret) => {
+			console.log('secret: ' + JSON.stringify(secret));
 			t.comment(secret);
 			enrollmentSecret = secret; // to be used in the next test case
 
@@ -110,17 +111,16 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 			return member.setEnrollment(eResult.key, eResult.certificate);
 		}).then(() => {
 			t.comment('Successfully constructed a user object based on the enrollment');
-
-			return cop.register({enrollmentID: 'testUserX', group: 'bank_X'}, member);
+			return cop.register({enrollmentID: 'testUserX', affiliation: 'bank_X'}, member);
 		}).then((secret) => {
-			t.fail('Should not have been able to register user of a group "bank_X" because "admin" does not belong to that group');
+			t.fail('Should not have been able to register user of a affiliation "bank_X" because "admin" does not belong to that affiliation');
 			t.end();
 		},(err) => {
-			t.pass('Successfully rejected registration request "testUserX" in group "bank_X"');
+			t.pass('Successfully rejected registration request "testUserX" in affiliation "bank_X"');
 
-			return cop.register({enrollmentID: 'testUserX', group: 'org1'}, member);
+			return cop.register({enrollmentID: 'testUserX', affiliation: 'org1'}, member);
 		}).then((secret) => {
-			t.pass('Successfully registered "testUserX" in group "org1" with enrollment secret returned: ' + secret);
+			t.pass('Successfully registered "testUserX" in affiliation "org1" with enrollment secret returned: ' + secret);
 
 			return cop.revoke({enrollmentID: 'testUserX'}, member);
 		},(err) => {
@@ -129,7 +129,7 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserX"');
 
-			return cop.register({enrollmentID: 'testUserY', group: 'org2.department1'}, member);
+			return cop.register({enrollmentID: 'testUserY', affiliation: 'org2.department1'}, member);
 		},(err) => {
 			t.fail('Failed to revoke "testUserX". ' + err.stack ? err.stack : err);
 			t.end();
@@ -148,11 +148,12 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 			t.comment(util.format('Ready to revoke certificate serial # "%s" with aki "%s"', serial, aki));
 
 			return cop.revoke({serial: serial, aki: aki}, member);
+			//return;
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserY" using serial number and AKI');
 
 			// register a new user 'webAdmin' that can register other users of the role 'client'
-			return cop.register({enrollmentID: 'webAdmin', group: 'org1.department2', attrs: [{name: 'hf.Registrar.Roles', value: 'client'}]}, member);
+			return cop.register({enrollmentID: 'webAdmin', affiliation: 'org1.department2', attrs: [{name: 'hf.Registrar.Roles', value: 'client'}]}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "webAdmin" who can register other users of the "client" role');
 
@@ -175,7 +176,7 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		},(err) => {
 			t.pass('Successfully rejected attempt to register a user of invalid role. ' + err);
 
-			return cop.register({enrollmentID: 'auditor', role: 'client', group: 'org2.department1'}, webAdmin);
+			return cop.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org2.department1'}, webAdmin);
 		}).then(() => {
 			t.pass('Successfully registered "auditor" of role "client" from "webAdmin"');
 			t.end();
@@ -195,12 +196,12 @@ test('FabricCAClient: Test enroll With Static CSR', function (t) {
 
 	t.comment(util.format('Sending enroll request for user %s with enrollment secret %s', enrollmentID, enrollmentSecret));
 	return client.enroll(enrollmentID, enrollmentSecret, csr.toString())
-		.then(function (pem) {
-			t.comment(pem);
+		.then(function (enrollResponse) {
+			t.comment(enrollResponse.enrollmentCert);
 			t.pass('Successfully invoked enroll API with enrollmentID \'' + enrollmentID + '\'');
 			//check that we got back the expected certificate
 			var cert = new X509();
-			cert.readCertPEM(pem);
+			cert.readCertPEM(enrollResponse.enrollmentCert);
 			t.comment(cert.getSubjectString());
 			t.equal(cert.getSubjectString(), '/CN=' + enrollmentID, 'Subject should be /CN=' + enrollmentID);
 			t.end();
