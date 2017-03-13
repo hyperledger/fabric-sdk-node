@@ -189,7 +189,12 @@ var Peer = class extends Remote {
 			self._endorserClient.processProposal(proposal, function(err, proposalResponse) {
 				if (err) {
 					logger.error('GRPC client got an error response from the peer "%s". %s', self._url, err.stack ? err.stack : err);
-					reject(new Error(err));
+					if(err instanceof Error) {
+						reject(err);
+					}
+					else {
+						reject(new Error(err));
+					}
 				} else {
 					if (proposalResponse) {
 						logger.debug('Received proposal response from peer "%s": status - %s', self._url, proposalResponse.response.status);
