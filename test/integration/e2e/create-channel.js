@@ -59,9 +59,6 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		//FIXME: temporary fix until mspid is configured into Chain
-		the_user.mspImpl._id = ORGS.org1.mspid;
-
 		// readin the envelope to send to the orderer
 		return readFile('./test/fixtures/channel/mychannel.tx');
 	}, (err) => {

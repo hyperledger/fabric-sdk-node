@@ -87,8 +87,6 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 					t.pass('Successfully enrolled user ' + admin);
 					the_user = admin;
 
-					the_user.mspImpl._id = ORGS[org].mspid;
-
 					// use default primary peer
 					// send query
 					logger.debug('will initialize the chain');

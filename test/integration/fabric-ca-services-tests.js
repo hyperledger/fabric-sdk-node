@@ -108,10 +108,13 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 			client = new hfc();
 			client.setStateStore(store);
 			member = new User('adminX', client);
-			return member.setEnrollment(eResult.key, eResult.certificate);
+			return member.setEnrollment(eResult.key, eResult.certificate, 'Org1MSP');
 		}).then(() => {
 			t.comment('Successfully constructed a user object based on the enrollment');
 			return cop.register({enrollmentID: 'testUserX', affiliation: 'bank_X'}, member);
+		},(err) => {
+			t.fail('Failed to configuration the user with proper enrollment materials.');
+			t.end();
 		}).then((secret) => {
 			t.fail('Should not have been able to register user of a affiliation "bank_X" because "admin" does not belong to that affiliation');
 			t.end();
@@ -165,7 +168,7 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 			t.pass('Successfully enrolled "webAdmin"');
 
 			webAdmin = new User('webAdmin', client);
-			return webAdmin.setEnrollment(enrollment.key, enrollment.certificate);
+			return webAdmin.setEnrollment(enrollment.key, enrollment.certificate, 'Org1MSP');
 		}).then(() => {
 			t.pass('Successfully constructed User object for "webAdmin"');
 

@@ -132,29 +132,29 @@ const halfOrdersForCurve = {
 
 var _client = new hfc();
 
-test('\n\n** utils.getCryptoSuite tests **\n\n', (t) => {
+test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 	testutil.resetDefaults();
 
 	let config = { path: keyValStorePath };
 
-	let cs = utils.getCryptoSuite({keysize: 384, algorithm: 'EC'}, config);
+	let cs = utils.newCryptoSuite({keysize: 384, algorithm: 'EC'}, config);
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 384, 'Returned instance should have keysize of 384');
 	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
 	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
 
-	cs = utils.getCryptoSuite({keysize: 384}, config);
+	cs = utils.newCryptoSuite({keysize: 384}, config);
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Default test: should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 384, 'Returned instance should have keysize of 384');
 	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
 
-	cs = utils.getCryptoSuite({algorithm: 'EC'}, config);
+	cs = utils.newCryptoSuite({algorithm: 'EC'}, config);
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 256, 'Returned instance should have keysize of 256');
 	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
 
 	let defaultKVSPath = path.join(os.homedir(), '.hfc-key-store');
-	cs = utils.getCryptoSuite({algorithm: 'EC'});
+	cs = utils.newCryptoSuite({algorithm: 'EC'});
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 256, 'Returned instance should have keysize of 256');
 	t.equal(cs._storeConfig.opts.path, defaultKVSPath, util.format('Returned instance should have store config opts.path of %s', defaultKVSPath));
@@ -164,7 +164,7 @@ test('\n\n** utils.getCryptoSuite tests **\n\n', (t) => {
 	utils.setConfigSetting('crypto-hsm', true);
 	t.throws(
 		() => {
-			cs = utils.getCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
+			cs = utils.newCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
 		},
 		/Error:.*\/usr\/local\/lib/,
 		'Should attempt to load the bccsp_pkcs11 module and fail because of the dummy library path'
@@ -173,7 +173,7 @@ test('\n\n** utils.getCryptoSuite tests **\n\n', (t) => {
 	utils.setConfigSetting('crypto-hsm', false);
 	t.doesNotThrow(
 		() => {
-			cs = utils.getCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
+			cs = utils.newCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
 			cs._getKeyStore()
 			.then((store) => {
 				t.fail('Should not have been able to get a valid key store because of invalid store config');
@@ -187,7 +187,7 @@ test('\n\n** utils.getCryptoSuite tests **\n\n', (t) => {
 
 	// make sure the "software: true" setting overrides the config setting
 	utils.setConfigSetting('crypto-hsm', true);
-	cs = utils.getCryptoSuite({software: true, algorithm: 'EC', keysize: 256}, CouchDBKeyValueStore, { name: 'test_db', url: 'http://dummyUrl' });
+	cs = utils.newCryptoSuite({software: true, algorithm: 'EC', keysize: 256}, CouchDBKeyValueStore, { name: 'test_db', url: 'http://dummyUrl' });
 	cs._getKeyStore()
 	.then(() => {
 		t.fail('Should not have been able to get a valid key store because the url was invalid');
@@ -224,7 +224,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
 
 		t.doesNotThrow(
 			() => {
-				cs = utils.getCryptoSuite(keyValStorePath);
+				cs = utils.newCryptoSuite(keyValStorePath);
 			},
 			null,
 			'CryptoSuite_ECDSA_AES constructor tests: pass in a string as kvs path'
@@ -238,7 +238,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
 
 		utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 
-		let cs1 = utils.getCryptoSuite({
+		let cs1 = utils.newCryptoSuite({
 			path: keyValStorePath
 		});
 
@@ -264,7 +264,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	testutil.resetDefaults();
 
-	var cryptoUtils = utils.getCryptoSuite();
+	var cryptoUtils = utils.newCryptoSuite();
 
 	t.equal(true, (typeof cryptoUtils._ecdsaCurve !== 'undefined' && typeof cryptoUtils._ecdsa !== 'undefined'),
 		'CryptoSuite_ECDSA_AES function tests: default instance has "_ecdsaCurve" and "_ecdsa" properties');
@@ -278,13 +278,13 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 	// test SHA384 hash
 	utils.setConfigSetting('crypto-keysize', 384);
-	cryptoUtils = utils.getCryptoSuite();
+	cryptoUtils = utils.newCryptoSuite();
 	t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA384,
 		'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with default key size which should be 384');
 
     //reset to default key size
 	utils.setConfigSetting('crypto-keysize', 256);
-	cryptoUtils = utils.getCryptoSuite();
+	cryptoUtils = utils.newCryptoSuite();
 
 	cryptoUtils.generateKey()
 	.then(function (key) {
@@ -294,7 +294,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		// test curve 256 with SHA3_256
 		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
 		utils.setConfigSetting('crypto-keysize', 256);
-		cryptoUtils = utils.getCryptoSuite();
+		cryptoUtils = utils.newCryptoSuite();
 		return cryptoUtils.generateKey();
 	})
 	.then(function (key) {
@@ -310,7 +310,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		// test SHA3_384
 		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
 		utils.setConfigSetting('crypto-keysize', 384);
-		cryptoUtils = utils.getCryptoSuite();
+		cryptoUtils = utils.newCryptoSuite();
 
 		t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
 			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
@@ -330,7 +330,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
 
 		utils.setConfigSetting('crypto-hash-algo', 'sha3'); //lower or upper case is allowed
-		cryptoUtils = utils.getCryptoSuite();
+		cryptoUtils = utils.newCryptoSuite();
 		t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
 			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
@@ -346,7 +346,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		t.throws(
 			function () {
 				utils.setConfigSetting('crypto-keysize', 123);
-				cryptoUtils = utils.getCryptoSuite();
+				cryptoUtils = utils.newCryptoSuite();
 			},
 			/^Error: Illegal key size/,
 			'CryptoSuite_ECDSA_AES function tests: setting key size 123 should throw Illegal level error'
@@ -356,7 +356,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			function () {
 				utils.setConfigSetting('crypto-keysize', 256);
 				utils.setConfigSetting('crypto-hash-algo', '12345');
-				cryptoUtils = utils.getCryptoSuite();
+				cryptoUtils = utils.newCryptoSuite();
 			},
 			/^Error: Unsupported hash algorithm/,
 			'CryptoSuite_ECDSA_AES function tests: setting hash algo to 12345 should throw Illegal Hash function family'
@@ -364,7 +364,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 		utils.setConfigSetting('crypto-keysize', 256);
 		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
-		cryptoUtils = utils.getCryptoSuite();
+		cryptoUtils = utils.newCryptoSuite();
 		return cryptoUtils.generateKey();
 	})
 	.then(function (key) {
@@ -435,7 +435,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 		utils.setConfigSetting('crypto-keysize', 256);
 		utils.setConfigSetting('crypto-hash-algo', 'SHA2');
-		cryptoUtils = utils.getCryptoSuite();
+		cryptoUtils = utils.newCryptoSuite();
 
 		var testVerify = function (sig, msg, expected) {
 			// manually construct a key based on the saved privKeyHex and pubKeyHex

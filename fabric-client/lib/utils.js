@@ -49,7 +49,7 @@ var sha3_256 = require('js-sha3').sha3_256;
 // KeyValueStore interface.
 // @param {object} opts Implementation-specific option object used in the constructor
 //
-module.exports.getCryptoSuite = function(setting, KVSImplClass, opts) {
+module.exports.newCryptoSuite = function(setting, KVSImplClass, opts) {
 	var csImpl, keysize, algorithm, hashAlgo, haveSettings = false;
 
 	var useHSM = false;
@@ -62,12 +62,12 @@ module.exports.getCryptoSuite = function(setting, KVSImplClass, opts) {
 	csImpl = useHSM ? this.getConfigSetting('crypto-suite-hsm') : this.getConfigSetting('crypto-suite-software');
 
 	// this function supports skipping any of the arguments such that it can be called in any of the following fashions:
-	// - getCryptoSuite({software: true, keysize: 256, algorithm: EC}, CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
-	// - getCryptoSuite(CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
-	// - getCryptoSuite({software: true, keysize: 256, algorithm: EC}, {path: '/tmp/app-state-store'})
-	// - getCryptoSuite({software: false}, {lib: '/usr/local/bin/pkcs11.so', slot: 0, pin: '1234'})
-	// - getCryptoSuite({keysize: 384})
-	// - getCryptoSuite()
+	// - newCryptoSuite({software: true, keysize: 256, algorithm: EC}, CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
+	// - newCryptoSuite(CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
+	// - newCryptoSuite({software: true, keysize: 256, algorithm: EC}, {path: '/tmp/app-state-store'})
+	// - newCryptoSuite({software: false}, {lib: '/usr/local/bin/pkcs11.so', slot: 0, pin: '1234'})
+	// - newCryptoSuite({keysize: 384})
+	// - newCryptoSuite()
 
 	// step 1: what's the cryptosuite impl to use, key size and algo
 	if (setting && setting.keysize && typeof setting === 'object' && typeof setting.keysize === 'number') {

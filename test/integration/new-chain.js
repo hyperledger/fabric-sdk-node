@@ -75,8 +75,6 @@ test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist
 			t.pass('Successfully enrolled user \'admin\'');
 			the_user = admin;
 
-			the_user.mspImpl._id = ORGS[org].mspid;
-
 			// readin the envelope to send to the orderer
 			return readFile('./test/fixtures/channel/mychannel.tx');
 		},

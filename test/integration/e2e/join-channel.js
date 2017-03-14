@@ -120,9 +120,6 @@ function joinChannel(org, t) {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		//FIXME: temporary fix until mspid is configured into Chain
-		the_user.mspImpl._id = ORGS[org].mspid;
-
 		nonce = utils.getNonce();
 		tx_id = chain.buildTransactionID(nonce, the_user);
 		var request = {

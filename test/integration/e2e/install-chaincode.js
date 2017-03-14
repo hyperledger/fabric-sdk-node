@@ -90,8 +90,6 @@ function installChaincode(org, t) {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		the_user.mspImpl._id = ORGS[org].mspid;
-
 		nonce = utils.getNonce();
 		tx_id = chain.buildTransactionID(nonce, the_user);
 

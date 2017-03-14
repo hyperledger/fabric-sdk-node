@@ -206,10 +206,10 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 		rootCerts: [],
 		admins: [],
 		id: 'testMSP',
-		cryptoSuite: utils.getCryptoSuite()
+		cryptoSuite: utils.newCryptoSuite()
 	});
 
-	var cryptoUtils = utils.getCryptoSuite();
+	var cryptoUtils = utils.newCryptoSuite();
 	var pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: api.CryptoAlgorithms.X509Certificate });
 	var identity = new Identity('testIdentity', TEST_CERT_PEM, pubKey, mspImpl);
 

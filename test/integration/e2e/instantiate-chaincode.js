@@ -97,8 +97,6 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		the_user.mspImpl._id = ORGS[org].mspid;
-
 		// read the config block from the orderer for the chain
 		// and initialize the verify MSPs based on the participating
 		// organizations

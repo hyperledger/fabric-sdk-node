@@ -100,6 +100,24 @@ test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 	/Invalid parameter. Must have a valid certificate/,
 	'Test invalid enrollment with empty certificate');
 
+	t.throws(function() {
+		member1.setEnrollment('dummy', 'dummy');
+	},
+	/Invalid parameter. Must have a valid mspId/,
+	'Test invalid enrollment with no mspId');
+
+	t.throws(function() {
+		member1.setEnrollment('dummy', 'dummy', null);
+	},
+	/Invalid parameter. Must have a valid mspId/,
+	'Test invalid enrollment with null mspId');
+
+	t.throws(function() {
+		member1.setEnrollment('dummy', 'dummy', '');
+	},
+	/Invalid parameter. Must have a valid mspId/,
+	'Test invalid enrollment with empty mspId');
+
 	var member2 = new User(memberCfg, _client);
 	if (member2.getName() === enrollmentID)
 		t.pass('User constructor test 2: new User cfg getName was successful');
@@ -114,11 +132,11 @@ test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 		t.fail('User constructor test 2: new User cfg getRoles was not successful');
 
 	// test set enrollment for identity and signing identity
-	var cryptoUtils = utils.getCryptoSuite();
+	var cryptoUtils = utils.newCryptoSuite();
 	cryptoUtils.generateKey()
 	.then(function (key) {
 		// the private key and cert don't match, but it's ok, the code doesn't check
-		return member2.setEnrollment(key, TEST_CERT_PEM);
+		return member2.setEnrollment(key, TEST_CERT_PEM, 'DEFAULT');
 	}).then(() => {
 		var id = member2.getIdentity();
 

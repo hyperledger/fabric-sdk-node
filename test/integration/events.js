@@ -98,8 +98,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				t.pass('Successfully enrolled user \'admin\'');
 				the_user = admin;
 
-				the_user.mspImpl._id = ORGS[org].mspid;
-
 				request = eputil.createRequest(chain, the_user, chaincode_id, '', '');
 				request.chaincodePath = 'github.com/events_cc';
 				request.chaincodeVersion = chaincode_version;

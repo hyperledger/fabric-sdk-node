@@ -110,7 +110,7 @@ function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
 					t.pass('Successfully enrolled user \'' + username + '\'');
 
 					member = new User(username, client);
-					return member.setEnrollment(enrollment.key, enrollment.certificate);
+					return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
 				}).then(() => {
 					return client.setUserContext(member);
 				}).then(() => {
@@ -150,7 +150,7 @@ function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
 					return readFile(certPEM);
 				}).then((data) => {
 					member = new User(username, client);
-					return member.setEnrollment(testKey, data.toString());
+					return member.setEnrollment(testKey, data.toString(), ORGS[userOrg].mspid);
 				}).then(() => {
 					return client.setUserContext(member);
 				}).then((user) => {

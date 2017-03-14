@@ -115,8 +115,6 @@ services:
         - ./:/etc/hyperledger/configtx
     depends_on:
       - orderer
-      - peer0
-      - peer1
 
   peer3:
     container_name: peer3
@@ -142,8 +140,6 @@ services:
         - ./:/etc/hyperledger/configtx
     depends_on:
       - orderer
-      - peer0
-      - peer1
       - peer2
 
   couchdb:

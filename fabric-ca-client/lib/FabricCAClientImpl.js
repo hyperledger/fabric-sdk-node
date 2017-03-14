@@ -55,7 +55,7 @@ var FabricCAServices = class {
 
 		var endpoint = FabricCAServices._parseURL(url);
 
-		this.cryptoPrimitives = utils.getCryptoSuite(cryptoSettings, KVSImplClass, opts);
+		this.cryptoPrimitives = utils.newCryptoSuite(cryptoSettings, KVSImplClass, opts);
 
 		this._fabricCAClient = new FabricCAClient({
 			protocol: endpoint.protocol,

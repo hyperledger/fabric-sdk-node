@@ -72,7 +72,6 @@ test('\n\n***** End-to-end flow: query chaincode *****', (t) => {
 
 	}).then((admin) => {
 		the_user = admin;
-		the_user.mspImpl._id = ORGS[org].mspid;
 
 		nonce = utils.getNonce();
 		tx_id = chain.buildTransactionID(nonce, the_user);

@@ -51,6 +51,7 @@ hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
 
 var the_user = null;
 var tx_id = null;
+
 var nonce = null;
 var peer0 = new Peer(ORGS[org]['peer1'].requests),
 	peer1 = new Peer(ORGS[org]['peer2'].requests);
@@ -93,7 +94,6 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 			.then((admin) => {
 				t.pass('Successfully enrolled user \'admin\'');
 				the_user = admin;
-				the_user.mspImpl._id = ORGS[org].mspid;
 				// read the config block from the orderer for the chain
 				// and initialize the verify MSPs based on the participating
 				// organizations
@@ -416,7 +416,6 @@ test('  ---->>>>> Query Channels working <<<<<-----', function(t) {
 					function(admin) {
 						t.pass('Successfully enrolled user \'admin\'');
 						the_user = admin;
-						the_user.mspImpl._id = ORGS[org].mspid;
 
 						// send query
 						return chain.queryChannels(peer0);

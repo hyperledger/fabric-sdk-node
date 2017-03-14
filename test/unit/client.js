@@ -56,7 +56,7 @@ var testValue = 'secretKeyValue';
 test('\n\n ** lib/Client.js **\n\n', function (t) {
 
 	t.equals(client.getCryptoSuite(), null, 'Client getCryptoSuite should initially be null');
-	client.setCryptoSuite(utils.getCryptoSuite());
+	client.setCryptoSuite(utils.newCryptoSuite());
 	if (client.getCryptoSuite() != null) t.pass('Client getCryptoSuite should not be null after setCryptoSuite');
 
 	client.getUserContext()
@@ -67,7 +67,7 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 
 		return client.saveUserToStateStore();
 	}, function(error){
-		t.fail('Client tests: Unexpected error, getUserContext null name check. ' + error);
+		t.fail('Client tests: Unexpected error, getUserContext null name check. ' + error.stack ? error.stack : error);
 		t.end();
 	}).then(function(response){
 		t.fail('Client tests: got response, but should throw "Cannot save user to state store when userContext is null."');
@@ -75,7 +75,7 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 	}, function(error){
 		if (error.message === 'Cannot save user to state store when userContext is null.')
 			t.pass('Client tests: Should throw "Cannot save user to state store when userContext is null."');
-		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when userContext is null." ' + error);
+		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when userContext is null." ' + error.stack ? error.stack : error);
 
 		return client.setUserContext(null);
 	}).then(function(response){
@@ -84,7 +84,7 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 	}, function(error){
 		if (error.message === 'Cannot save null userContext.')
 			t.pass('Client tests: Should throw "Cannot save null userContext."');
-		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save null userContext." ' + error);
+		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save null userContext." ' + error.stack ? error.stack : error);
 
 		return client.getUserContext('someUser');
 	}).then(function(response){
@@ -94,7 +94,7 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 
 		return client.setUserContext(new User('someUser'), true);
 	}, function(error){
-		t.fail('Client tests: getUserContext with no context in memory or persisted did not returned error. ' + error);
+		t.fail('Client tests: getUserContext with no context in memory or persisted did not returned error. ' + error.stack ? error.stack : error);
 		t.end();
 	}).then(function(response){
 		if (response && response.getName() === 'someUser') {
@@ -105,7 +105,7 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 
 		return client.getUserContext('someUser');
 	}, function(error){
-		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + error);
+		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + error.stack ? error.stack : error);
 		t.end();
 	}).then(function(response){
 		if (response && response.getName() === 'someUser')
@@ -114,7 +114,7 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 
 		return client.setUserContext(new User('someUser'));
 	}, function(error){
-		t.fail('Client tests: Unexpected error, getUserContext not persisted/skipPersistence. ' + error);
+		t.fail('Client tests: Unexpected error, getUserContext not persisted/skipPersistence. ' + error.stack ? error.stack : error);
 		t.end();
 	}).then(function(result){
 		t.fail('Client tests: setUserContext without skipPersistence and no stateStore should not return result.');
@@ -122,7 +122,7 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 	}, function(error){
 		if (error.message === 'Cannot save user to state store when stateStore is null.')
 			t.pass('Client tests: Should throw "Cannot save user to state store when stateStore is null"');
-		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error);
+		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error.stack ? error.stack : error);
 
 		var chain = client.newChain('someChain');
 		t.equals(chain.getName(), 'someChain', 'Checking chain names match');

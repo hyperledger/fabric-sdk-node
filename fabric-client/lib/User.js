@@ -50,10 +50,13 @@ var User = class {
 	/**
 	 * Constructor for a member.
 	 *
-	 * @param {string} cfg - The member name or registration request.
-	 * @param {Client} client - The {@link Client} object associated with this member.
+	 * @param {string} cfg - The member name or an object with the following attributes:
+	 *   - enrollmentID {string}: user name
+	 *   - name {string}: user name, if "enrollmentID" is also specified, the "name" is ignored
+	 *   - roles {string[]}: optional. array of roles
+	 *   - affiliation {string}: optional. affiliation with a group or organization
 	 */
-	constructor(cfg, client) {
+	constructor(cfg) {
 		if (util.isString(cfg)) {
 			this._name = cfg;
 			this._roles = null; //string[]
@@ -68,16 +71,7 @@ var User = class {
 		this._enrollmentSecret = '';
 		this._identity = null;
 		this._signingIdentity = null;
-
-		this._client = client;
-
-		this.cryptoPrimitives = client && client.getCryptoSuite() ? client.getCryptoSuite() : sdkUtils.getCryptoSuite();
-
-		// TODO: this should be using config properties obtained from the environment
-		this.mspImpl = new LocalMSP({
-			id: 'DEFAULT',
-			cryptoSuite: this.cryptoPrimitives
-		});
+		this._mspImpl = null;
 	}
 
 	/**
@@ -140,9 +134,22 @@ var User = class {
 	 * Set the enrollment object for this User instance
 	 * @param {Key} privateKey the private key object
 	 * @param {string} certificate the PEM-encoded string of certificate
+	 * @param {string} mspId The Member Service Provider id for the local signing identity
+	 * @param {object} opts optional. an object with the following attributes, all optional:
+	 *   - cryptoSettings: {object} an object with the following attributes:
+	 *      - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
+	 * default is true (for software based implementation), specific implementation module is specified
+	 * in the setting 'crypto-suite-software'
+	 *      - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
+	 *      - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
+	 *      - hash {string}: 'SHA2' or 'SHA3'
+	 *   - KVSImplClass: {function} the User class persists crypto keys in a {@link CryptoKeyStore}, there is a file-based implementation
+	 * that is provided as the default. Application can use this parameter to override the default, such as saving the keys in a key store
+	 * backed by database. If present, the value must be the class for the alternative implementation.
+	 *   - kvsOpts: {object}: an options object specific to the implementation in KVSImplClass
 	 * @returns {Promise} Promise for successful completion of creating the user's signing Identity
 	 */
-	setEnrollment(privateKey, certificate) {
+	setEnrollment(privateKey, certificate, mspId, opts) {
 		if (typeof privateKey === 'undefined' || privateKey === null || privateKey === '') {
 			throw new Error('Invalid parameter. Must have a valid private key.');
 		}
@@ -151,11 +158,20 @@ var User = class {
 			throw new Error('Invalid parameter. Must have a valid certificate.');
 		}
 
-		return this.cryptoPrimitives.importKey(certificate)
+		if (typeof mspId === 'undefined' || mspId === null || mspId === '') {
+			throw new Error('Invalid parameter. Must have a valid mspId.');
+		}
+
+		this._mspImpl = new LocalMSP({
+			id: mspId,
+			cryptoSuite: opts ? sdkUtils.newCryptoSuite(opts.cryptoSettings, opts.KVSImplClass, opts.kvsOpts) : sdkUtils.newCryptoSuite()
+		});
+
+		return this._mspImpl.cryptoSuite.importKey(certificate)
 		.then((pubKey) => {
-			var identity = new Identity('testIdentity', certificate, pubKey, this.mspImpl);
+			var identity = new Identity('testIdentity', certificate, pubKey, this._mspImpl);
 			this._identity = identity;
-			this._signingIdentity = new SigningIdentity('testSigningIdentity', certificate, pubKey, this.mspImpl, new Signer(this.mspImpl.cryptoSuite, privateKey));
+			this._signingIdentity = new SigningIdentity('testSigningIdentity', certificate, pubKey, this._mspImpl, new Signer(this._mspImpl.cryptoSuite, privateKey));
 		});
 	}
 
@@ -205,19 +221,29 @@ var User = class {
 		this._affiliation = state.affiliation;
 		this._enrollmentSecret = state.enrollmentSecret;
 
+		if (typeof state.mspid === 'undefined' || state.mspid === null || state.mspid === '') {
+			throw new Error('Failed to find "mspid" in the deserialized state object for the user. Likely due to an outdated state store.');
+		}
+
+		// FIXME: need to persist crypto settings, for now use the app-wide config setting
+		this._mspImpl = new LocalMSP({
+			id: state.mspid,
+			cryptoSuite: sdkUtils.newCryptoSuite()
+		});
+
 		var self = this;
 		var pubKey;
 
-		return this.cryptoPrimitives.importKey(state.enrollment.identity.certificate, { algorithm: api.CryptoAlgorithms.X509Certificate })
+		return this._mspImpl.cryptoSuite.importKey(state.enrollment.identity.certificate, { algorithm: api.CryptoAlgorithms.X509Certificate })
 		.then((key) => {
 			pubKey = key;
 
-			var identity = new Identity(state.enrollment.identity.id, state.enrollment.identity.certificate, pubKey, self.mspImpl);
+			var identity = new Identity(state.enrollment.identity.id, state.enrollment.identity.certificate, pubKey, self._mspImpl);
 			self._identity = identity;
 
 			// during serialization (see toString() below) only the key's SKI are saved
 			// swap out that for the real key from the crypto provider
-			return self.cryptoPrimitives.getKey(state.enrollment.signingIdentity);
+			return self._mspImpl.cryptoSuite.getKey(state.enrollment.signingIdentity);
 		}).then((privateKey) => {
 			// the key retrieved from the key store using the SKI could be a public key
 			// or a private key, check to make sure it's a private key
@@ -226,8 +252,8 @@ var User = class {
 					state.enrollment.identity.id,
 					state.enrollment.identity.certificate,
 					pubKey,
-					self.mspImpl,
-					new Signer(self.mspImpl.cryptoSuite, privateKey));
+					self._mspImpl,
+					new Signer(self._mspImpl.cryptoSuite, privateKey));
 
 				return self;
 			} else {
@@ -255,6 +281,7 @@ var User = class {
 
 		var state = {
 			name: this._name,
+			mspid: this._mspImpl ? this._mspImpl.getId() : 'null',
 			roles: this._roles,
 			affiliation: this._affiliation,
 			enrollmentSecret: this._enrollmentSecret,

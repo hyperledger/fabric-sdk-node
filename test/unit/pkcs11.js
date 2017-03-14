@@ -48,7 +48,7 @@ var cryptoUtils;
 test('\n\n**PKCS11 - generate an ephemeral key\n\n', (t) => {
 	utils.setConfigSetting('crypto-hsm', true);
 
-	cryptoUtils = utils.getCryptoSuite({
+	cryptoUtils = utils.newCryptoSuite({
 		lib: libpath,
 		slot: 0,
 		pin: '1234'
@@ -101,7 +101,7 @@ test('\n\n**PKCS11 - generate a non-ephemeral key\n\n', (t) => {
 		existingCrypto._pkcs11.C_CloseSession(existingCrypto._pkcs11Session);
 		existingCrypto._pkcs11.C_Finalize();
 
-		var cryptoUtils = utils.getCryptoSuite({
+		var cryptoUtils = utils.newCryptoSuite({
 			lib: libpath,
 			slot: 0,
 			pin: '1234' });
@@ -208,7 +208,7 @@ test('\n\n**PKCS11 - Test sign and verify with non-ephemeral ECDSA key pair in t
 		existingCrypto._pkcs11.C_CloseSession(existingCrypto._pkcs11Session);
 		existingCrypto._pkcs11.C_Finalize();
 
-		var cryptoUtils = utils.getCryptoSuite({
+		var cryptoUtils = utils.newCryptoSuite({
 			lib: libpath,
 			slot: 0,
 			pin: '1234' });

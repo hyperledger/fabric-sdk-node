@@ -136,7 +136,7 @@ test('\n\n** MSP Tests **\n\n', (t) => {
 		t.equal(typeof mspManagers['chain1'], 'undefined', 'Testing utils.removeMSPManager()');
 
 		// test deserialization using the msp manager
-		var cryptoUtils = utils.getCryptoSuite();
+		var cryptoUtils = utils.newCryptoSuite();
 		var mspImpl = new MSP({
 			rootCerts: [],
 			admins: [],

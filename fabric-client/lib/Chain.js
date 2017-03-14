@@ -96,14 +96,6 @@ var Chain = class {
 		// services to help performance
 		this._preFetchMode = true;//to do - not in doc
 
-		/**
-		 * @member [CryptoSuite]{@link module:api.CryptoSuite} cryptoPrimitives
-		 * The crypto primitives object provides access to the crypto suite
-		 * for functions like sign, encrypt, decrypt, etc.
-		 * @memberof module:api.Chain.prototype
-		 */
-		this.cryptoPrimitives = utils.getCryptoSuite();
-
 		this._peers = [];
 		this._primary_peer = null; // if not set, will use the first peer on the list
 
@@ -1834,11 +1826,7 @@ var Chain = class {
 		var chaincodeActionPayload = new _transProto.ChaincodeActionPayload();
 		chaincodeActionPayload.setAction(chaincodeEndorsedAction);
 		var chaincodeProposalPayloadNoTrans = _proposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
-		//chaincodeProposalPayloadNoTrans.setTransient(null);
-//		var payload_hash = this.cryptoPrimitives.hash(chaincodeProposalPayloadNoTrans.toBuffer());
-//		chaincodeActionPayload.setChaincodeProposalPayload(Buffer.from(payload_hash, 'hex')); //when we want to enforce visibilty
 		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposalPayloadNoTrans.toBuffer());
-//		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposal.getPayload()); //TODO  we should do this but it does not work
 
 		var transactionAction = new _transProto.TransactionAction();
 		transactionAction.setHeader(header.getSignatureHeader());
