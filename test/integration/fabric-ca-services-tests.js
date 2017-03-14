@@ -43,6 +43,22 @@ var enrollmentID = 'testUser';
 var enrollmentSecret;
 var csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabriccop/enroll-csr.pem'));
 
+var tlsOptions;
+var fabricCAProtocol = 'http';
+var fabricCAHost = 'localhost';
+var fabricCAPort = 7054;
+
+// set environment variable FABRIC_CA_TLS=true to run tests with TLS enabled
+if (process.env.FABRIC_CA_TLS=='true'){
+	fabricCAProtocol = 'https';
+	tlsOptions = {
+		trustedRoots: [],
+		verify: false
+	};
+}
+var fabricCAEndpoint = fabricCAProtocol + '://' + fabricCAHost + ':' + fabricCAPort;
+
+
 /**
  * FabricCAServices class tests
  */
@@ -51,7 +67,7 @@ var csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabriccop/enroll-
 
 test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 
-	var cop = new FabricCAServices('http://localhost:7054', {keysize: 256, hash: 'SHA2'});
+	var cop = new FabricCAServices(fabricCAEndpoint,tlsOptions, {keysize: 256, hash: 'SHA2'});
 
 	var req = {
 		enrollmentID: 'admin',
@@ -192,9 +208,10 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 test('FabricCAClient: Test enroll With Static CSR', function (t) {
 
 	var client = new FabricCAClient({
-		protocol: 'http',
-		hostname: '127.0.0.1',
-		port: 7054
+		protocol: fabricCAProtocol,
+		hostname: fabricCAHost,
+		port: fabricCAPort,
+		tlsOptions: tlsOptions
 	});
 
 	t.comment(util.format('Sending enroll request for user %s with enrollment secret %s', enrollmentID, enrollmentSecret));

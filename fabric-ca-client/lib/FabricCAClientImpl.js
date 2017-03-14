@@ -30,6 +30,12 @@ var urlParser = require('url');
 var logger = utils.getLogger('FabricCAClientImpl.js');
 
 /**
+ * @typedef {Object} TLSOptions
+ * @property {string[]} trustedRoots Array of PEM-encoded trusted root certificates
+ * @property {boolean} [verify=true] Determines whether or not to verify the server certificate when using TLS
+ */
+
+/**
  * This is an implementation of the member service client which communicates with the Fabric CA server.
  * @class
  */
@@ -39,6 +45,7 @@ var FabricCAServices = class {
 	 * constructor
 	 *
 	 * @param {string} url The endpoint URL for Fabric CA services of the form: "http://host:port" or "https://host:port"
+	 * @param {TLSOptions} tlsOptions The TLS settings to use when the Fabric CA services endpoint uses "https"
 	 * @param {object} cryptoSetting This optional parameter is an object with the following optional properties:
 	 * - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
 	 *	default is true (for software based implementation), specific implementation module is specified
@@ -51,7 +58,7 @@ var FabricCAServices = class {
 	 * KeyValueStore interface.
 	 * @param {object} opts Implementation-specific options object for the {@link KeyValueStore} class to instantiate an instance
 	 */
-	constructor(url, cryptoSettings, KVSImplClass, opts) {
+	constructor(url, tlsOptions, cryptoSettings, KVSImplClass, opts) {
 
 		var endpoint = FabricCAServices._parseURL(url);
 
@@ -60,7 +67,8 @@ var FabricCAServices = class {
 		this._fabricCAClient = new FabricCAClient({
 			protocol: endpoint.protocol,
 			hostname: endpoint.hostname,
-			port: endpoint.port
+			port: endpoint.port,
+			tlsOptions: tlsOptions
 		}, this.cryptoPrimitives);
 
 		logger.info('Successfully constructed Fabric CA service client: endpoint - %j', endpoint);
@@ -195,7 +203,7 @@ var FabricCAServices = class {
 	}
 
 	/**
-	 * @typedef {Object} FabricCAServices-HTTPEndpoint
+	 * @typedef {Object} HTTPEndpoint
 	 * @property {string} hostname
 	 * @property {number} port
 	 * @property {string} protocol
@@ -204,7 +212,7 @@ var FabricCAServices = class {
 	/**
 	 * Utility function which parses an HTTP URL into its component parts
 	 * @param {string} url HTTP or HTTPS url including protocol, host and port
-	 * @returns {...FabricCAServices-HTTPEndpoint}
+	 * @returns {HTTPEndpoint}
 	 * @throws InvalidURL for malformed URLs
 	 * @ignore
 	 */
@@ -258,19 +266,13 @@ var FabricCAServices = class {
 var FabricCAClient = class {
 
 	/**
-	 * @typedef {Object} FabricCAServices-HTTPEndpoint
-	 * @property {string} hostname
-	 * @property {number} port
-	 * @property {boolean} isSecure
-	 */
-
-	/**
 	 * constructor
 	 *
 	 * @param {object} connect_opts Connection options for communciating with the Fabric CA server
 	 * @param {string} connect_opts.protocol The protocol to use (either HTTP or HTTPS)
 	 * @param {string} connect_opts.hostname The hostname of the Fabric CA server endpoint
 	 * @param {number} connect_opts.port The port of the Fabric CA server endpoint
+	 * @param {TLSOptions} connect_opts.tlsOptions The TLS settings to use when the Fabric CA endpoint uses "https"
 	 * @throws Will throw an error if connection options are missing or invalid
 	 *
 	 */
@@ -284,16 +286,32 @@ var FabricCAClient = class {
 		}
 
 
-		this._httpClient = (connect_opts.protocol = 'http') ? http : https;
+		this._httpClient = (connect_opts.protocol === 'http') ? http : https;
 		this._hostname = connect_opts.hostname;
 		if (connect_opts.port) {
 			this._port = connect_opts.port;
 		} else {
-			this._port = (connect_opts.protocol === 'http' ? 80 : 443);
+			this._port = 7054;
+		}
+		if (typeof connect_opts.tlsOptions==='undefined' || connect_opts.tlsOptions===null){
+			this._tlsOptions = {
+				trustedRoots: [],
+				verify: false
+			};
+		} else {
+			this._tlsOptions = connect_opts.tlsOptions;
+			if (this._tlsOptions.verify==='undefined'){
+				this._tlsOptions.verify = true;
+			}
+			if (this._tlsOptions.trustedRoots==='undefined'){
+				this._tlsOptions.trustedRoots = [];
+			}
 		}
 		this._baseAPI = '/api/v1/cfssl/';
 
 		this._cryptoPrimitives = cryptoPrimitives;
+
+		logger.info('Successfully constructed Fabric CA client from options - %j', connect_opts);
 	}
 
 	/**
@@ -368,15 +386,19 @@ var FabricCAClient = class {
 
 		return new Promise(function (resolve, reject) {
 
+			var serialToSend;
 			if (serial!=null){
 				if (serial.length < 80){
-					serial = '0' + serial;
+					serialToSend = '0' + serial;
+				}
+				else {
+					serialToSend = serial;
 				}
 			}
 			var regRequest = {
 				'id': enrollmentID,
 				'aki': aki,
-				'serial': serial,
+				'serial': serialToSend,
 				'reason': reason
 			};
 
@@ -399,7 +421,9 @@ var FabricCAClient = class {
 				method: 'POST',
 				headers: {
 					Authorization: self.generateAuthToken(requestObj, signingIdentity)
-				}
+				},
+				ca: self._tlsOptions.trustedRoots,
+				rejectUnauthorized: self._tlsOptions.verify
 			};
 
 			var request = self._httpClient.request(requestOptions, function (response) {
@@ -493,7 +517,9 @@ var FabricCAClient = class {
 				port: self._port,
 				path: self._baseAPI + 'enroll',
 				method: 'POST',
-				auth: enrollmentID + ':' + enrollmentSecret
+				auth: enrollmentID + ':' + enrollmentSecret,
+				ca: self._tlsOptions.trustedRoots,
+				rejectUnauthorized: self._tlsOptions.verify
 			};
 
 			var enrollRequest = {
