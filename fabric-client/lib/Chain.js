@@ -1394,7 +1394,7 @@ var Chain = class {
 			}
 		).catch(
 			function(err) {
-				logger.error('Failed Channels Query. Error: %s', err.stack ? err.stack : err);
+				logger.error(util.format('Failed Channels Query. Error: %j', err.stack ? {error: err.stack} : err));
 				return Promise.reject(err);
 			}
 		);

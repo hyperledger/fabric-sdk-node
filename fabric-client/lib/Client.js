@@ -16,8 +16,10 @@
 
 'use strict';
 
-var Chain = require('./Chain.js');
 var sdkUtils = require('./utils.js');
+process.env.GRPC_SSL_CIPHER_SUITES = sdkUtils.getConfigSetting('grpc-ssl-cipher-suites');
+
+var Chain = require('./Chain.js');
 var logger = sdkUtils.getLogger('Client.js');
 var api = require('./api.js');
 var User = require('./User.js');

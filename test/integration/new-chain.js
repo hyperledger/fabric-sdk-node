@@ -31,13 +31,33 @@ var client = new hfc();
 var chain = client.newChain(testUtil.END2END.channel);
 hfc.addConfigFile(path.join(__dirname, './config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
-chain.addOrderer(new Orderer(ORGS.orderer));
+
+var caRootsPath = ORGS.orderer.tls_cacerts;
+let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
+let caroots = Buffer.from(data).toString();
+
+chain.addOrderer(
+	new Orderer(
+		ORGS.orderer.url,
+		{
+			'pem': caroots,
+			'ssl-target-name-override': ORGS.orderer['server-hostname']
+		}
+	)
+);
+
 var org = 'org1';
 var orgName = ORGS[org].name;
 for (let key in ORGS[org]) {
 	if (ORGS[org].hasOwnProperty(key)) {
 		if (key.indexOf('peer') === 0) {
-			let peer = new Peer(ORGS[org][key].requests);
+			let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key]['tls_cacerts']));
+			let peer = new Peer(
+				ORGS[org][key].requests,
+				{
+					pem: Buffer.from(data).toString(),
+					'ssl-target-name-override': ORGS[org][key]['server-hostname']
+				});
 			chain.addPeer(peer);
 		}
 	}

@@ -43,15 +43,27 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 	//
 	var client = new hfc();
 	var chain = client.newChain('mychannel');
-	chain.addOrderer(new Orderer(ORGS.orderer));
+
+	var caRootsPath = ORGS.orderer.tls_cacerts;
+	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
+	let caroots = Buffer.from(data).toString();
+
+	chain.addOrderer(
+		new Orderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		)
+	);
 
 	// Acting as a client in org1 when creating the channel
 	var org = ORGS.org1.name;
 
-	hfc.newDefaultKeyValueStore({
+	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(org)
-	})
-	.then((store) => {
+	}).then((store) => {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, 'org1');
 	})
@@ -60,20 +72,14 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 		the_user = admin;
 
 		// readin the envelope to send to the orderer
-		return readFile('./test/fixtures/channel/mychannel.tx');
-	}, (err) => {
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		t.end();
-	})
-	.then((data) => {
-		t.pass('Successfully read file');
+		data = fs.readFileSync('./test/fixtures/channel/mychannel.tx');
 		var request = {
 			envelope : data
 		};
 		// send to orderer
 		return chain.createChannel(request);
 	}, (err) => {
-		t.fail('Failed to read file for channel template: ' + err);
+		t.fail('Failed to enroll user \'admin\'. ' + err);
 		t.end();
 	})
 	.then((response) => {
@@ -98,18 +104,6 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 		t.end();
 	});
 });
-
-function readFile(path) {
-	return new Promise(function(resolve, reject) {
-		fs.readFile(path, function(err, data) {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(data);
-			}
-		});
-	});
-}
 
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));

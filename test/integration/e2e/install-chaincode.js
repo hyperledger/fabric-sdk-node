@@ -23,6 +23,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var path = require('path');
+var fs = require('fs');
 var util = require('util');
 
 var hfc = require('fabric-client');
@@ -66,7 +67,20 @@ test('\n\n***** End-to-end flow: chaincode install *****\n\n', (t) => {
 function installChaincode(org, t) {
 	var client = new hfc();
 	var chain = client.newChain(testUtil.END2END.channel);
-	chain.addOrderer(new Orderer(ORGS.orderer));
+
+	var caRootsPath = ORGS.orderer.tls_cacerts;
+	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
+	let caroots = Buffer.from(data).toString();
+
+	chain.addOrderer(
+		new Orderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		)
+	);
 
 	var orgName = ORGS[org].name;
 
@@ -74,7 +88,15 @@ function installChaincode(org, t) {
 	for (let key in ORGS[org]) {
 		if (ORGS[org].hasOwnProperty(key)) {
 			if (key.indexOf('peer') === 0) {
-				let peer = new Peer(ORGS[org][key].requests);
+				let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+				let peer = new Peer(
+					ORGS[org][key].requests,
+					{
+						pem: Buffer.from(data).toString(),
+						'ssl-target-name-override': ORGS[org][key]['server-hostname']
+					}
+				);
+
 				targets.push(peer);
 				chain.addPeer(peer);
 			}

@@ -16,10 +16,10 @@
 
 'use strict';
 
-var api = require('./api.js');
-var utils = require('./utils.js');
-
 var grpc = require('grpc');
+var urlParser = require('url');
+
+var utils = require('./utils.js');
 var logger = utils.getLogger('Remote.js');
 
 
@@ -31,45 +31,54 @@ var logger = utils.getLogger('Remote.js');
 var Remote = class {
 
 	/**
-	 * Constructs a Node with the endpoint configuration settings.
+	 * Constructs an object with the endpoint configuration settings.
 	 *
-	 * @param {string} url The orderer URL with format of 'grpcs://host:port'.
-	 * @param {opts} An Object that may contain options to override the global settings
-	 *    pem The certificate file, in PEM format,
-	 *       to use with the gRPC protocol (that is, with TransportCredentials).
-	 *       Required when using the grpcs protocol.
+	 * @param {string} url The orderer URL with format of 'grpc(s)://host:port'.
+	 * @param {object} opts An Object that may contain options to pass to grpcs calls
+	 * <br>- pem {string} The certificate file, in PEM format,
+	 *    to use with the gRPC protocol (that is, with TransportCredentials).
+	 *    Required when using the grpcs protocol.
+	 * <br>- ssl-target-name-override {string} Used in test environment only, when the server certificate's
+	 *    hostname (in the 'CN' field) does not match the actual host endpoint that the server process runs
+	 *    at, the application can work around the client TLS verify failure by setting this property to the
+	 *    value of the server certificate's hostname
+	 * <br>- any other standard grpc call options will be passed to the grpc service calls directly
 	 */
 	constructor(url, opts) {
 		var pem = null;
-		if(opts) {
-			if(opts.pem) {
-				pem = opts.pem;
-			}
+		var ssl_target_name_override = '';
+		var default_authority = '';
+
+		if (opts && opts.pem) {
+			pem = opts.pem;
 		}
 
-		var ssl_target_name_override = 'tlsca';
-		var default_authority = 'tlsca';
-		if(opts && opts['ssl-target-name-override']) {
+		if (opts && opts['ssl-target-name-override']) {
 			ssl_target_name_override = opts['ssl-target-name-override'];
-		}
-		else {
-			ssl_target_name_override = utils.getConfigSetting('ssl-target-name-override','tlsca');
-		}
-		if(opts && opts['default-authority']) {
-			default_authority = opts['default-authority'];
-		}
-		else {
-			default_authority = utils.getConfigSetting('default-authority','tlsca');
+			default_authority = opts['ssl-target-name-override'];
 		}
 
 		// connection options
 		this._options = {};
-		if(ssl_target_name_override) this._options['grpc.ssl_target_name_override'] = ssl_target_name_override;
-		if(default_authority) this._options['grpc.default_authority'] = default_authority;
+		if (ssl_target_name_override !== '') {
+			this._options['grpc.ssl_target_name_override'] = ssl_target_name_override;
+		}
+
+		if (default_authority !== '') {
+			this._options['grpc.default_authority'] = default_authority;
+		}
+
+		for (let key in opts ? opts : {}) {
+			if (opts.hasOwnProperty(key)) {
+				if (key !== 'pem' && key !== 'ssl-target-name-override') {
+					this._options[key] = opts[key];
+				}
+			}
+		}
 
 		// service connection
 		this._url = url;
-		this._endpoint = new utils.Endpoint(url, pem);
+		this._endpoint = new Endpoint(url, pem);
 	}
 
 	/**
@@ -92,3 +101,36 @@ var Remote = class {
 };
 
 module.exports = Remote;
+
+//
+// The Endpoint class represents a remote grpc or grpcs target
+//
+var Endpoint = class {
+	constructor(url /*string*/ , pem /*string*/ ) {
+		var fs = require('fs'),
+			path = require('path');
+
+		var purl = urlParser.parse(url, true);
+		var protocol;
+		if (purl.protocol) {
+			protocol = purl.protocol.toLowerCase().slice(0, -1);
+		}
+		if (protocol === 'grpc') {
+			this.addr = purl.host;
+			this.creds = grpc.credentials.createInsecure();
+		} else if (protocol === 'grpcs') {
+			if(!(typeof pem === 'string')) {
+				throw new Error('PEM encoded certificate is required.');
+			}
+			this.addr = purl.host;
+			this.creds = grpc.credentials.createSsl(new Buffer(pem));
+		} else {
+			var error = new Error();
+			error.name = 'InvalidProtocol';
+			error.message = 'Invalid protocol: ' + protocol + '.  URLs must begin with grpc:// or grpcs://';
+			throw error;
+		}
+	}
+};
+
+module.exports.Endpoint = Endpoint;

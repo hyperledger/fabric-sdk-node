@@ -18,15 +18,18 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
+var path = require('path');
+
 var testUtil = require('../unit/util.js');
 
+var hfc = require('fabric-client');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var Chain = require('fabric-client/lib/Chain.js');
 
 var keyValStorePath = testUtil.KVS;
+var ORGS = hfc.getConfigSetting('test-network');
 
 var client = new hfc();
 
@@ -94,8 +97,19 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 	// Create and configure the test chain
 	//
 	var chain = client.newChain('testChain-orderer-member3');
+	var caRootsPath = ORGS.orderer.tls_cacerts;
+	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
+	let caroots = Buffer.from(data).toString();
 
-	chain.addOrderer(new Orderer('grpc://localhost:7050'));
+	chain.addOrderer(
+		new Orderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		)
+	);
 
 	testUtil.getSubmitter(client, t)
 	.then(
@@ -158,7 +172,19 @@ test('\n\n** TEST ** orderer via member bad request', function(t) {
 	var chain = client.newChain('testChain-orderer-member4');
 
 	// Set bad orderer address here
-	chain.addOrderer(new Orderer('grpc://localhost:5199'));
+	var caRootsPath = ORGS.orderer.tls_cacerts;
+	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
+	let caroots = Buffer.from(data).toString();
+
+	chain.addOrderer(
+		new Orderer(
+			'grpcs://localhost:5199',
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		)
+	);
 
 	testUtil.getSubmitter(client, t)
 	.then(

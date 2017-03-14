@@ -45,16 +45,24 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
   * run `make docker`. For more build instructions see [fabric-ca README](https://github.com/hyperledger/fabric-ca)
 * build fabric peer and orderer docker images and other ancillary images
   * `cd $GOPATH/src/github.com/hyperledger/fabric`
-  * run `make docker` to build the docker images
-* go to fabric-sdk-node/test/fixtures/channel
+  * run `make docker` to build the docker images (you may need to run `make docker-clean` first if you've built before)
+* go to fabric-sdk-node/test/fixtures
   * run `docker-compose up --force-recreate` to launch the network
 * Now you are ready to run the tests:
   * Clear out your previous key value stores that may have cached user enrollment certificates (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`)
+  * run 'gulp test' to execute the entire test suite (495+ test cases), or you can run them individually
   * Test user management by member services with the following tests that exercise the fabric-ca-client package with a KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
     * `test/integration/fabric-ca-services-tests.js`
     * `test/integration/couchdb-fabricca-tests.js`
     * `test/integration/cloudant-fabricca-tests.js`
   * Test happy path from end to end, run `node test/integration/e2e.js`
+  * Test end to end one step at a time, make sure to follow this sequence:
+    * `node test/integration/e2e/create-channel.js`
+    * `node test/integration/e2e/join-channel.js`
+    * `node test/integration/e2e/install-chaincode.js`
+    * `node test/integration/e2e/instantiate-chaincode.js`
+    * `node test/integration/e2e/invoke-transaction.js`
+    * `node test/integration/e2e/query.js`
 
 ### Set Up CouchDB Database for couchdb-fabricca-tests.js
 

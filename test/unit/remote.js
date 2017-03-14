@@ -40,6 +40,11 @@ var aPem = '-----BEGIN CERTIFICATE-----' +
 	'yyDo17Ts0YLyC0pZQFd+GURSOQIwP/XAwoMcbJJtOVeW/UL2EOqmKA2ygmWX5kte' +
 	'9Lngf550S6gPEWuDQOcY95B+x3eH' +
 	'-----END CERTIFICATE-----';
+var defaultCiphers = 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256' +
+	':ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384' +
+	':ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256' +
+	':ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384';
+
 var aHostname = 'atesthostname';
 var aHostnameOverride = 'atesthostnameoverride';
 
@@ -89,10 +94,11 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 	t.equal(aHostname, remote._endpoint.addr, 'GRPC Options tests: new Remote grpc with opts = null _endpoint.addr created');
 	t.ok(remote._endpoint.creds, 'GRPC Options tests: new Remote grpc with opts = null _endpoint.creds created');
 
-	opts = { pem: aPem, 'default-authority': 'some_ca' };
+	opts = { pem: aPem, 'grpc.dummy_property': 'some_value', 'ssl-target-name-override': aHostnameOverride };
 	remote = new Remote(url, opts);
-	t.equal(aHostname, remote._endpoint.addr, 'GRPC Options tests: new Remote grpc with opts _endpoint.addr created');
+	t.equal(aHostnameOverride, remote._options['grpc.ssl_target_name_override'], 'GRPC Options tests: new Remote grpc with opts ssl-target-name-override created');
 	t.ok(remote._endpoint.creds, 'GRPC Options tests: new Remote grpc with opts _endpoint.creds created');
+	t.equal('some_value', remote._options['grpc.dummy_property'], 'GRPC options tests: pass-through option properties');
 	t.equal(remote.getUrl(), url, 'checking that getURL works');
 
 	console.log('\n * PEER *');
@@ -219,6 +225,14 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'GRPCS Options tests: new Peer http should throw ' +
 		'PEM encoded certificate is required.'
 	);
+
+	require('fabric-client/lib/Client.js');
+	t.equal(process.env.GRPC_SSL_CIPHER_SUITES, defaultCiphers, 'Test default ssl cipher suites are properly set');
+
+	utils.setConfigSetting('grpc-ssl-cipher-suites', 'HIGH+ECDSA');
+	delete require.cache[require.resolve('fabric-client/lib/Client.js')];
+	require('fabric-client/lib/Client.js');
+	t.equal(process.env.GRPC_SSL_CIPHER_SUITES, 'HIGH+ECDSA', 'Test overriden cipher suites');
 
 	t.end();
 });

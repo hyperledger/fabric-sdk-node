@@ -17,6 +17,7 @@
 'use strict';
 
 var utils = require('./utils.js');
+var Remote = require('./Remote.js');
 var grpc = require('grpc');
 var HashTable = require('hashtable');
 var logger = utils.getLogger('EventHub.js');
@@ -77,10 +78,8 @@ var EventHub = class {
 		this.blockRegistrants = new Set();
 		// hashtable of clients registered for transactional events
 		this.txRegistrants = new HashTable();
-		// peer addr to connect to
+		// peer node to connect to
 		this.ep = null;
-		// grpc options
-		this.opts = null;
 		// grpc event client interface
 		this._client = null;
 		// grpc chat streaming interface
@@ -95,11 +94,19 @@ var EventHub = class {
 	 * class creates a default eventHub that most Node clients can
 	 * use (see eventHubConnect, eventHubDisconnect and getEventHub).
 	 * @param {string} peeraddr peer url
-	 * @param {object} opts grpc options for peer
+	 * @param {object} opts An Object that may contain options to pass to grpcs calls
+	 * <br>- pem {string} The certificate file, in PEM format,
+	 *    to use with the gRPC protocol (that is, with TransportCredentials).
+	 *    Required when using the grpcs protocol.
+	 * <br>- ssl-target-name-override {string} Used in test environment only, when the server certificate's
+	 *    hostname (in the 'CN' field) does not match the actual host endpoint that the server process runs
+	 *    at, the application can work around the client TLS verify failure by setting this property to the
+	 *    value of the server certificate's hostname
+	 * <br>- any other standard grpc call options will be passed to the grpc service calls directly
 	 */
 
-	setPeerAddr(peerUrl) {
-		this.ep = new utils.Endpoint(peerUrl, null);
+	setPeerAddr(peerUrl, opts) {
+		this.ep = new Remote(peerUrl, opts);
 	}
 
 	/**
@@ -119,7 +126,7 @@ var EventHub = class {
 	connect() {
 		if (this.connected) return;
 		if (!this.ep) throw Error('Must set peer address before connecting.');
-		this._client = new _events.Events(this.ep.addr, this.ep.creds, this.opts);
+		this._client = new _events.Events(this.ep._endpoint.addr, this.ep._endpoint.creds, this.ep._options);
 		this.call = this._client.chat();
 		this.connected = true;
 		// register txCallback to process txid callbacks

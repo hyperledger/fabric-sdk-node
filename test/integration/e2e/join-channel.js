@@ -20,6 +20,7 @@ var test = _test(tape);
 
 var util = require('util');
 var path = require('path');
+var fs = require('fs');
 var grpc = require('grpc');
 
 var hfc = require('fabric-client');
@@ -65,14 +66,14 @@ test('\n\n***** End-to-end flow: join channel *****\n\n', function(t) {
 		t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS['org1'].name));
 		return joinChannel('org2', t);
 	}, (err) => {
-		t.fail(util.format('Failed to join peers in organization "%s" to the channel', ORGS['org1'].name));
+		t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS['org1'].name, err.stack ? err.stack : err));
 		t.end();
 	})
 	.then(() => {
 		t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS['org2'].name));
 		t.end();
 	}, (err) => {
-		t.fail(util.format('Failed to join peers in organization "%s" to the channel', ORGS['org2'].name));
+		t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS['org2'].name), err.stack ? err.stack : err);
 		t.end();
 	})
 	.catch(function(err) {
@@ -89,19 +90,48 @@ function joinChannel(org, t) {
 	//
 	var client = new hfc();
 	var chain = client.newChain(testUtil.END2END.channel);
-	chain.addOrderer(new Orderer(ORGS.orderer));
 
 	var orgName = ORGS[org].name;
 
 	var targets = [],
 		eventhubs = [];
+
+	var caRootsPath = ORGS.orderer.tls_cacerts;
+	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
+	let caroots = Buffer.from(data).toString();
+
+	chain.addOrderer(
+		new Orderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		)
+	);
+
 	for (let key in ORGS[org]) {
 		if (ORGS[org].hasOwnProperty(key)) {
 			if (key.indexOf('peer') === 0) {
-				targets.push(new Peer(ORGS[org][key].requests));
+				data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+				targets.push(
+					new Peer(
+						ORGS[org][key].requests,
+						{
+							pem: Buffer.from(data).toString(),
+							'ssl-target-name-override': ORGS[org][key]['server-hostname']
+						}
+					)
+				);
 
 				let eh = new EventHub();
-				eh.setPeerAddr(ORGS[org][key].events);
+				eh.setPeerAddr(
+					ORGS[org][key].events,
+					{
+						pem: Buffer.from(data).toString(),
+						'ssl-target-name-override': ORGS[org][key]['server-hostname']
+					}
+				);
 				eh.connect();
 				eventhubs.push(eh);
 				allEventhubs.push(eh);
@@ -111,8 +141,7 @@ function joinChannel(org, t) {
 
 	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
-	})
-	.then((store) => {
+	}).then((store) => {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, org);
 	})
@@ -145,7 +174,7 @@ function joinChannel(org, t) {
 						var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
 
 						if (channel_header.channel_id === testUtil.END2END.channel) {
-							t.pass('The new channel has been successfully joined on peer '+ eh.ep.addr);
+							t.pass('The new channel has been successfully joined on peer '+ eh.ep._endpoint.addr);
 							resolve();
 						}
 					}

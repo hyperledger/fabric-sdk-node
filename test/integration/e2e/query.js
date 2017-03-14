@@ -23,6 +23,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var path = require('path');
+var fs = require('fs');
 var util = require('util');
 
 var hfc = require('fabric-client');
@@ -58,7 +59,13 @@ test('\n\n***** End-to-end flow: query chaincode *****', (t) => {
 	// both requests and events
 	for (let key in ORGS) {
 		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-			let peer = new Peer(ORGS[key].peer1.requests);
+			let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+			let peer = new Peer(
+				ORGS[key].peer1.requests,
+				{
+					pem: Buffer.from(data).toString(),
+					'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+				});
 			chain.addPeer(peer);
 		}
 	}

@@ -23,6 +23,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var path = require('path');
+var fs = require('fs');
 var util = require('util');
 
 var hfc = require('fabric-client');
@@ -66,7 +67,20 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) =>
 	var org = 'org2';
 	var client = new hfc();
 	var chain = client.newChain(e2e.channel);
-	chain.addOrderer(new Orderer(ORGS.orderer));
+
+	var caRootsPath = ORGS.orderer.tls_cacerts;
+	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
+	let caroots = Buffer.from(data).toString();
+
+	chain.addOrderer(
+		new Orderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		)
+	);
 
 	var orgName = ORGS[org].name;
 
@@ -76,11 +90,24 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) =>
 	// both requests and events
 	for (let key in ORGS) {
 		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-			let peer = new Peer(ORGS[key].peer1.requests);
+			let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+			let peer = new Peer(
+				ORGS[key].peer1.requests,
+				{
+					pem: Buffer.from(data).toString(),
+					'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+				}
+			);
 			chain.addPeer(peer);
 
 			let eh = new EventHub();
-			eh.setPeerAddr(ORGS[key].peer1.events);
+			eh.setPeerAddr(
+				ORGS[key].peer1.events,
+				{
+					pem: Buffer.from(data).toString(),
+					'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+				}
+			);
 			eh.connect();
 			eventhubs.push(eh);
 			allEventhubs.push(eh);
@@ -165,7 +192,7 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) =>
 							t.fail('The balance transfer transaction was invalid, code = ' + code);
 							reject();
 						} else {
-							t.pass('The balance transfer transaction has been committed on peer '+ eh.ep.addr);
+							t.pass('The balance transfer transaction has been committed on peer '+ eh.ep._endpoint.addr);
 							resolve();
 						}
 					});

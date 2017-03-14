@@ -16,8 +16,6 @@
 
 'use strict';
 
-var grpc = require('grpc');
-var urlParser = require('url');
 var util = require('util');
 var winston = require('winston');
 var fs = require('fs-extra');
@@ -332,34 +330,6 @@ module.exports.addMSPManager = function(chainId, mspm) {
 //
 module.exports.removeMSPManager = function(chainId) {
 	delete mspManagers[chainId];
-};
-
-//
-// The Endpoint class represents a remote grpc or grpcs target
-//
-module.exports.Endpoint = class {
-	constructor(url /*string*/ , pem /*string*/ ) {
-		var purl = urlParser.parse(url, true);
-		var protocol;
-		if (purl.protocol) {
-			protocol = purl.protocol.toLowerCase().slice(0, -1);
-		}
-		if (protocol === 'grpc') {
-			this.addr = purl.host;
-			this.creds = grpc.credentials.createInsecure();
-		} else if (protocol === 'grpcs') {
-			if(!(typeof pem === 'string')) {
-				throw new Error('PEM encoded certificate is required.');
-			}
-			this.addr = purl.host;
-			this.creds = grpc.credentials.createSsl(new Buffer(pem));
-		} else {
-			var error = new Error();
-			error.name = 'InvalidProtocol';
-			error.message = 'Invalid protocol: ' + protocol + '.  URLs must begin with grpc:// or grpcs://';
-			throw error;
-		}
-	}
 };
 
 //

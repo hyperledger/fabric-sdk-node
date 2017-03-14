@@ -21,8 +21,10 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var path = require('path');
-var hfc = require('fabric-client');
 var util = require('util');
+var fs = require('fs');
+
+var hfc = require('fabric-client');
 var testUtil = require('../unit/util.js');
 var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
@@ -37,13 +39,33 @@ var client = new hfc();
 var chain = client.newChain(testUtil.END2END.channel);
 hfc.addConfigFile(path.join(__dirname, './config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
-chain.addOrderer(new Orderer(ORGS.orderer));
+
+var caRootsPath = ORGS.orderer.tls_cacerts;
+let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
+let caroots = Buffer.from(data).toString();
+
+chain.addOrderer(
+	new Orderer(
+		ORGS.orderer.url,
+		{
+			'pem': caroots,
+			'ssl-target-name-override': ORGS.orderer['server-hostname']
+		}
+	)
+);
+
 var org = 'org1';
 var orgName = ORGS[org].name;
 for (let key in ORGS[org]) {
 	if (ORGS[org].hasOwnProperty(key)) {
 		if (key.indexOf('peer') === 0) {
-			let peer = new Peer(ORGS[org][key].requests);
+			let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key]['tls_cacerts']));
+			let peer = new Peer(
+				ORGS[org][key].requests,
+				{
+					pem: Buffer.from(data).toString(),
+					'ssl-target-name-override': ORGS[org][key]['server-hostname']
+				});
 			chain.addPeer(peer);
 		}
 	}
@@ -76,8 +98,14 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		var promise = testUtil.getSubmitter(client, t, org);
 
 		// setup event hub to get notified when transactions are committed
+		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
 		var eh = new EventHub();
-		eh.setPeerAddr(ORGS[org].peer1.events);
+		eh.setPeerAddr(
+			ORGS[org].peer1.events,
+			{
+				pem: Buffer.from(data).toString(),
+				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
+			});
 		eh.connect();
 
 		// override t.end function so it'll always disconnect the event hub
