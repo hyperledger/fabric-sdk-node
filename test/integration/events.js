@@ -67,6 +67,7 @@ for (let key in ORGS[org]) {
 					'ssl-target-name-override': ORGS[org][key]['server-hostname']
 				});
 			chain.addPeer(peer);
+			break; //just add one
 		}
 	}
 }

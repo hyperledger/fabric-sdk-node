@@ -82,11 +82,11 @@ test('\n\n** Test chaincode install using chaincodePath to create chaincodePacka
 		installChaincode(params, t)
 		.then((info) => {
 			t.comment('Checking for \'install-package.'+params.chaincodeVersion+' exists\'');
-			if (info && info.error && info.error.toString().indexOf('install.'+params.chaincodeVersion+' exists') > 0) {
-				t.pass('passed check for exists');
+			if (info && info.toString().indexOf('install.'+params.chaincodeVersion+' exists') > 0) {
+				t.pass('passed check for exists on install again');
 				t.end();
 			} else {
-				t.fail('failed check for exists');
+				t.fail('failed check for exists on install again');
 				t.end();
 			}
 		},
@@ -142,11 +142,11 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 			installChaincode(params, t)
 			.then((info) => {
 				t.comment('Checking for \'install-package.'+params.chaincodeVersion+' exists\'');
-				if (info && info.error && info.error.toString().indexOf('install-package.'+params.chaincodeVersion+' exists') > 0) {
-					t.pass('passed check for exists');
+				if (info && info.toString().indexOf('install-package.'+params.chaincodeVersion+' exists') > 0) {
+					t.pass('passed check for exists same code again');
 					t.end();
 				} else {
-					t.fail('failed check for exists');
+					t.fail('failed check for exists same code again');
 					t.end();
 				}
 			},
