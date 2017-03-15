@@ -185,166 +185,160 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 });
 
 test('  ---->>>>> Query chain failing: GetBlockByNumber <<<<<-----', function(t) {
-	return hfc.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
-	}).then( function (store) {
-		client.setStateStore(store);
-		var promise = testUtil.getSubmitter(client, t, org);
-		var queryAttempts = 0;  // number of queries attempted in this test
-		if (!queryParameters || querys.indexOf('GetBlockByNumber') >= 0) {
-			queryAttempts++;
-			logger.info('Executing GetBlockByNumber');
-			promise = promise.then(
-				function(admin) {
-					t.pass('Successfully enrolled user \'admin\'');
-					the_user = admin;
-					// send query
-					return chain.queryBlock(9999999); //should not find it
-				},
-				function(err) {
-					t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-					t.end();
-				}
-			).then(
-				function(response_payloads) {
-					t.fail('Should not have found a block');
-					t.end();
-				},
-				function(err) {
-					t.pass('Did not find a block with this number ::'+ err);
-					t.end();
-				}
-			).catch(
-				function(err) {
-					t.fail('Failed to query with error:' + err.stack ? err.stack : err);
-					t.end();
-				}
-			);
-		}
-	});
+	if (!queryParameters || querys.indexOf('GetBlockByNumber') >= 0) {
+		logger.info('Executing GetBlockByNumber');
+
+		return hfc.newDefaultKeyValueStore({
+			path: testUtil.storePathForOrg(orgName)
+		}).then(
+			function(store) {
+				client.setStateStore(store);
+				return testUtil.getSubmitter(client, t, org);
+			}
+		).then(
+			function(admin) {
+				t.pass('Successfully enrolled user \'admin\'');
+				the_user = admin;
+				// send query
+				return chain.queryBlock(9999999); //should not find it
+			},
+			function(err) {
+				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+				t.end();
+			}
+		).then(
+			function(response_payloads) {
+				t.fail('Should not have found a block');
+				t.end();
+			},
+			function(err) {
+				t.pass(util.format('Did not find a block with this number : %j', err));
+				t.end();
+			}
+		).catch(
+			function(err) {
+				t.fail('Failed to query with error:' + err.stack ? err.stack : err);
+				t.end();
+			}
+		);
+	} else t.end();
 });
 
 test('  ---->>>>> Query chain failing: GetTransactionByID <<<<<-----', function(t) {
-	return hfc.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
-	}).then( function (store) {
-		client.setStateStore(store);
-		var promise = testUtil.getSubmitter(client, t, org);
-		var queryAttempts = 0;  // number of queries attempted in this test
-		if (!queryParameters || querys.indexOf('GetTransactionByID') >= 0) {
-			queryAttempts++;
-			promise = promise.then(
-				function(admin) {
-					t.pass('Successfully enrolled user \'admin\'');
-					if(admin) the_user = admin;
-					// send query
-					return chain.queryTransaction('99999'); //assumes the end-to-end has run first
-				},
-				function(err) {
-					t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-					t.end();
-				}
-			).then(
-				function(response_payloads) {
-					t.fail('Should not have found a transaction with this ID');
-					t.end();
-				},
-				function(err) {
-					t.pass('Did not find a transaction ::' + err);
-					t.end();
-				}
-			).catch(
-				function(err) {
-					t.fail('Failed to query with error:' + err.stack ? err.stack : err);
-					t.end();
-				}
-			);
-		}
-	});
+	if (!queryParameters || querys.indexOf('GetTransactionByID') >= 0) {
+		return hfc.newDefaultKeyValueStore({
+			path: testUtil.storePathForOrg(orgName)
+		}).then(
+			function(store) {
+				client.setStateStore(store);
+				return testUtil.getSubmitter(client, t, org);
+			}
+		).then(
+			function(admin) {
+				t.pass('Successfully enrolled user \'admin\'');
+				if(admin) the_user = admin;
+				// send query
+				return chain.queryTransaction('99999'); //assumes the end-to-end has run first
+			},
+			function(err) {
+				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+				t.end();
+			}
+		).then(
+			function(response_payloads) {
+				t.fail('Should not have found a transaction with this ID');
+				t.end();
+			},
+			function(err) {
+				t.pass('Did not find a transaction ::' + err);
+				t.end();
+			}
+		).catch(
+			function(err) {
+				t.fail('Failed to query with error:' + err.stack ? err.stack : err);
+				t.end();
+			}
+		);
+	} else t.end();
 });
 
 test('  ---->>>>> Query chain failing: GetChainInfo <<<<<-----', function(t) {
-	return hfc.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
-	}).then( function (store) {
-		client.setStateStore(store);
-		var promise = testUtil.getSubmitter(client, t, org);
-		var queryAttempts = 0;  // number of queries attempted in this test
-		if (!queryParameters || querys.indexOf('GetChainInfo') >= 0) {
-			queryAttempts++;
-			promise = promise.then(
-				function(admin) {
-					t.pass('Successfully enrolled user \'admin\'');
-					if(admin) the_user = admin;
-					// send query
-					chain._name = 'dummy';
-					return chain.queryInfo();
-				},
-				function(err) {
-					t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-					t.end();
-				}
-			).then(
-				function(response_payloads) {
-					t.fail('Should not have found chain info');
-					t.end();
-				},
-				function(err) {
-					t.pass('Did not find chain info ::' + err);
-					t.end();
-				}
-			).catch(
-				function(err) {
-					t.fail('Failed to query with error:' + err.stack ? err.stack : err);
-					t.end();
-				}
-			);
-		}
-	});
+	if (!queryParameters || querys.indexOf('GetChainInfo') >= 0) {
+
+		return hfc.newDefaultKeyValueStore({
+			path: testUtil.storePathForOrg(orgName)
+		}).then(
+			function(store) {
+				client.setStateStore(store);
+				return testUtil.getSubmitter(client, t, org);
+			}
+		).then(
+			function(admin) {
+				t.pass('Successfully enrolled user \'admin\'');
+				if(admin) the_user = admin;
+				// send query
+				chain._name = 'dummy';
+				return chain.queryInfo();
+			},
+			function(err) {
+				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+				t.end();
+			}
+		).then(
+			function(response_payloads) {
+				t.fail('Should not have found chain info');
+				t.end();
+			},
+			function(err) {
+				t.pass(util.format('Did not find chain info : %j', err));
+				t.end();
+			}
+		).catch(
+			function(err) {
+				t.fail('Failed to query with error:' + err.stack ? err.stack : err);
+				t.end();
+			}
+		);
+	} else t.end();
 });
 
 test('  ---->>>>> Query chain failing: GetBlockByHash <<<<<-----', function(t) {
-	return hfc.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
-	}).then( function (store) {
-		client.setStateStore(store);
-		var promise = testUtil.getSubmitter(client, t, org);
-		var queryAttempts = 0;  // number of queries attempted in this test
-		if (!queryParameters || querys.indexOf('GetBlockByHash') >= 0) {
-			queryAttempts++;
-			promise = promise.then(
-				function(admin) {
-					t.pass('Successfully enrolled user \'admin\'');
-					if(admin) the_user = admin;
-					// send query
-					chain._name = chain_id; //put it back
-					return chain.queryBlockByHash(Buffer.from('dummy'));
-				},
-				function(err) {
-					t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-					t.end();
-				}
-			).then(
-				function(response_payloads) {
-					t.fail('Should not have found block data');
-					t.end();
-				},
-				function(err) {
-					t.pass('Did not find block data ::'+ err);
-					t.end();
-				}
-			).catch(
-				function(err) {
-					t.fail('Failed to query with error:' + err.stack ? err.stack : err);
-					t.end();
-				}
-			);
-		};
-		if (queryAttempts == 0) {  				// No query attempts based on querys value
-			t.pass('No queries were attempted!!!');  // therefore, no one issued t.end() yet
-			t.end();
-		};
-	});
+	if (!queryParameters || querys.indexOf('GetBlockByHash') >= 0) {
+		return hfc.newDefaultKeyValueStore({
+			path: testUtil.storePathForOrg(orgName)
+		}).then(
+			function (store) {
+				client.setStateStore(store);
+				return testUtil.getSubmitter(client, t, org);
+			}
+		).then(
+			function(admin) {
+				t.pass('Successfully enrolled user \'admin\'');
+				if(admin) the_user = admin;
+				// send query
+				chain._name = chain_id; //put it back
+				return chain.queryBlockByHash(Buffer.from('dummy'));
+			},
+			function(err) {
+				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+				t.end();
+			}
+		).then(
+			function(response_payloads) {
+				t.fail('Should not have found block data');
+				t.end();
+			},
+			function(err) {
+				t.pass(util.format('Did not find block data : %j', err));
+				t.end();
+			}
+		).catch(
+			function(err) {
+				t.fail('Failed to query with error:' + err.stack ? err.stack : err);
+				t.end();
+			}
+		);
+	} else t.end();
 });
 
 test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
