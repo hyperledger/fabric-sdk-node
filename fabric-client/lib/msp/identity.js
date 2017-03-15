@@ -66,7 +66,7 @@ var Identity = class {
 	 * @returns {boolean}
 	 */
 	isValid() {
-		this._msp.validate(this);
+		return this._msp.validate(this);
 	}
 
 	/**

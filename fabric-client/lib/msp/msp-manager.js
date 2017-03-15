@@ -111,6 +111,13 @@ var MSPManager = class {
 	}
 
 	/**
+	 * Returns a validating MSP
+	 */
+	getMSP(id) {
+		return this._msps[id];
+	}
+
+	/**
 	 * DeserializeIdentity deserializes an identity
 	 * @param {byte[]} serializedIdentity A protobuf-based serialization of an object with
 	 * two fields: mspid and idBytes for certificate PEM bytes

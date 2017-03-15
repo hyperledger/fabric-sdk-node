@@ -214,6 +214,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 	var identity = new Identity('testIdentity', TEST_CERT_PEM, pubKey, mspImpl);
 
 	var serializedID = identity.serialize();
+
 	mspImpl.deserializeIdentity(serializedID)
 	.then((dsID) => {
 		t.equal(dsID._certificate, TEST_CERT_PEM, 'Identity class function tests: deserialized certificate');

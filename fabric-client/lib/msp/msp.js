@@ -102,19 +102,37 @@ var MSP = class {
 
 	/**
 	 * DeserializeIdentity deserializes an identity
-	 * @param {byte[]} serializedIdentity A protobuf-based serialization of an object with
-	 * two fields: mspid and idBytes for certificate PEM bytes
-	 * @returns {Promise} Promise for an {@link Identity} instance
+	 * @param {byte[]} serializedIdentity - A protobuf-based serialization of an object with
+	 * 	      two fields: mspid and idBytes for certificate PEM bytes
+	 * @param {boolean} storeKey - if the user should be stored in the key store. Only when
+	 *        false will a promise not be returned
+	 * @returns {Promise} Promise for an {@link Identity} instance or
+	 *           or the Identity object itself if "storeKey" argument is false
 	 */
-	deserializeIdentity(serializedIdentity) {
+	deserializeIdentity(serializedIdentity, storeKey) {
+		logger.debug('importKey - start');
+		var store_key = true; //default
+		// if storing is not required and therefore a promise will not be returned
+		// then storeKey must be set to false;
+		if(typeof storeKey === 'boolean') {
+			store_key = storeKey;
+		}
 		var sid = identityProto.SerializedIdentity.decode(serializedIdentity);
 		var cert = sid.IdBytes.toBinary();
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
-		return this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate })
-		.then((publicKey) => {
+		if(!store_key) {
+			var publicKey =this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate }, false);
 			// TODO: the id of the new Identity instance should probably be derived from the subject info in the cert?
-			return new Identity('SomeDummyValue', cert, publicKey, this);
-		});
+			var sdk_identity = new Identity('SomeDummyValue', cert, publicKey, this);
+			return sdk_identity;
+		}
+		else {
+			return this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate })
+			.then((publicKey) => {
+				// TODO: the id of the new Identity instance should probably be derived from the subject info in the cert?
+				return new Identity('SomeDummyValue', cert, publicKey, this);
+			});
+		}
 	}
 
 	/**

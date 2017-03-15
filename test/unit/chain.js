@@ -1162,3 +1162,87 @@ test('\n\n** TEST ** orderer via chain set/get bad address', function(t) {
 
 	t.end();
 });
+
+//Verify the verify compareProposalResponseResults method.
+//
+test('\n\n** TEST ** verify compareProposalResponseResults', function(t) {
+	//
+	// Create and configure the test chain
+	//
+	var chain = client.newChain('testChain-compareProposal');
+
+	t.throws(
+		function() {
+			chain.compareProposalResponseResults();
+		},
+		/Error: Missing proposal responses/,
+		'Test compareProposalResponseResults with empty parameter'
+	);
+
+	t.throws(
+		function() {
+			chain.compareProposalResponseResults({});
+		},
+		/Error: Parameter must be an array of ProposalRespone Objects/,
+		'Test compareProposalResponseResults with an object parameter'
+	);
+
+	t.throws(
+		function() {
+			chain.compareProposalResponseResults([]);
+		},
+		/Error: Parameter proposal responses does not contain a PorposalResponse/,
+		'Test compareProposalResponseResults with an empty array parameter'
+	);
+
+	t.throws(
+		function() {
+			chain.compareProposalResponseResults([{}]);
+		},
+		/Error: Parameter must be a ProposalResponse Object/,
+		'Test compareProposalResponseResults with an array without the correct endorsements parameter'
+	);
+	t.end();
+});
+
+//Verify the verify verifyProposalResponse method.
+//
+test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
+	//
+	// Create and configure the test chain
+	//
+	var chain = client.newChain('testChain-compareProposal2');
+
+	t.throws(
+		function() {
+			chain.verifyProposalResponse();
+		},
+		/Error: Missing proposal response/,
+		'Test verifyProposalResponse with empty parameter'
+	);
+
+	t.throws(
+		function() {
+			chain.verifyProposalResponse({});
+		},
+		/Error: Parameter must be a ProposalResponse Object/,
+		'Test verifyProposalResponse with an object parameter'
+	);
+
+	t.throws(
+		function() {
+			chain.verifyProposalResponse([]);
+		},
+		/Error: Parameter must be a ProposalResponse Object/,
+		'Test verifyProposalResponse with an empty array parameter'
+	);
+
+	t.throws(
+		function() {
+			chain.verifyProposalResponse([{}]);
+		},
+		/Error: Parameter must be a ProposalResponse Object/,
+		'Test verifyProposalResponse with an array without the correct endorsements parameter'
+	);
+	t.end();
+});

@@ -126,6 +126,9 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) =>
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
+		return chain.initialize();
+
+	}).then((nothing) => {
 		nonce = utils.getNonce();
 		tx_id = chain.buildTransactionID(nonce, the_user);
 		utils.setConfigSetting('E2E_TX_ID', tx_id);
@@ -158,15 +161,32 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) =>
 		var all_good = true;
 		for(var i in proposalResponses) {
 			let one_good = false;
-			if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
-				one_good = true;
-				logger.info('transaction proposal was good');
+			let proposal_response = proposalResponses[i];
+			if( proposal_response.response && proposal_response.response.status === 200) {
+				t.pass('transaction proposal has response status of good');
+				one_good = chain.verifyProposalResponse(proposal_response);
+				if(one_good) {
+					t.pass(' transaction proposal signature and endorser are valid');
+				}
 			} else {
-				logger.error('transaction proposal was bad');
+				t.fail('transaction proposal was bad');
 			}
 			all_good = all_good & one_good;
 		}
 		if (all_good) {
+			// check all the read/write sets to see if the same, verify that each peer
+			// got the same results on the proposal
+			all_good = chain.compareProposalResponseResults(proposalResponses);
+			t.pass('compareProposalResponseResults exection did not throw an error');
+			if(all_good){
+				t.pass(' All proposals have a matching read/writes sets');
+			}
+			else {
+				t.fail(' All proposals do not have matching read/write sets');
+			}
+		}
+		if (all_good) {
+			// check to see if all the results match
 			t.pass(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 			var request = {
 				proposalResponses: proposalResponses,
