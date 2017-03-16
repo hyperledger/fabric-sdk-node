@@ -201,7 +201,7 @@ test('\n\n ** Config **\n\n', function (t) {
 	process.env.test_6 = 'mapped';
 	// internal call. clearing the cached config.
 	global.hfc.config = undefined;
-	t.equals(hfc.getConfigSetting('request-timeout', 'notfound'), 3000, 'checking that able to get "request-timeout" value from an additional configuration file');
+	t.equals(hfc.getConfigSetting('request-timeout', 'notfound'), 30000, 'checking that able to get "request-timeout" value from an additional configuration file');
 	//try adding another config file
 	hfc.addConfigFile(path.join(__dirname, '../fixtures/local.json'));
 	t.equals(hfc.getConfigSetting('test-2', 'notfound'), 'local', 'checking that able to test-2 value from an additional configuration file');

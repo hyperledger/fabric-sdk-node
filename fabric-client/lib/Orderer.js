@@ -39,18 +39,16 @@ var Orderer = class extends Remote {
 	 *
 	 * @param {string} url The orderer URL with format of 'grpcs://host:port'.
 	 * @param {Object} opts The options for the connection to the orderer.
+	 * <br>- request-timeout {string} A integer value in milliseconds to
+	 *       be used as node.js based timeout. This will break the request
+	 *       operation if the grpc request has not responded within this
+	 *       timeout period.
+	 *   note: other options will be passed to the grpc connection
 	 */
 	constructor(url, opts) {
 		super(url, opts);
 
-		this._request_timeout = 30000;
-		if(opts && opts['request-timeout']) {
-			this._request_timeout = opts['request-timeout'];
-		}
-		else {
-			this._request_timeout = utils.getConfigSetting('request-timeout',30000); //default 30 seconds
-		}
-
+		logger.debug('Orderer.const - url: %s timeout: %s', url, this._request_timeout);
 		this._ordererClient = new _abProto.AtomicBroadcast(this._endpoint.addr, this._endpoint.creds, this._options);
 	}
 
@@ -78,7 +76,7 @@ var Orderer = class extends Remote {
 			var broadcast = self._ordererClient.broadcast();
 
 			var broadcast_timeout = setTimeout(function(){
-				logger.debug('sendBroadcast - timed out after:%s', self._request_timeout);
+				logger.error('sendBroadcast - timed out after:%s', self._request_timeout);
 				broadcast.end();
 				return reject(new Error('REQUEST_TIMEOUT'));
 			}, self._request_timeout);
