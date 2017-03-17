@@ -1,32 +1,22 @@
-# Hyperledger fabric Client (HFC) SDK for Node.js 
+# Hyperledger Fabric SDK for Node.js
 
-The Hyperledger fabric Client (HFC) SDK for Node.js provides a powerful and easy to use API to interact with a Hyperledger fabric blockchain. The HFC is designed to be used in the Node.js JavaScript runtime.
+The Hyperledger Fabric SDK for Node.js provides a powerful API to interact with a Hyperledger Fabric v1.0 blockchain. The SDK is designed to be used in the Node.js JavaScript runtime.
 
-#### Overview and Deep Dive
+#### Overview
+Hyperledger Fabric is the operating system of an enterprise-strength permissioned blockchain network. For a high-level overview of the fabric, visit [http://hyperledger-fabric.readthedocs.io/en/latest/](http://hyperledger-fabric.readthedocs.io/en/latest/).
 
-* [Application Developer's Overview](app-overview.md) for a topological overview of applications and a blockchain.
+Applications can be developed to interact with the blockchain network on behalf of the users. APIs are available to:
+* create [channels](http://hyperledger-fabric.readthedocs.io/en/latest/fabric_model.html#privacy-through-channels)
+* ask [peer nodes](http://hyperledger-fabric.readthedocs.io/en/latest/arch-deep-dive.html#peer) to join the channel
+* install [chaincodes](http://hyperledger-fabric.readthedocs.io/en/latest/fabric_model.html#chaincode) in peers
+* instantiate chaincodes in a channel
+* invoke transactions by calling the chaincode
+* query the [ledger](http://hyperledger-fabric.readthedocs.io/en/latest/fabric_model.html#ledger-features) for transactions or blocks
 
-* [Hyperledger fabric Client (HFC) SDK for Node.js](node-sdk-indepth.md) the Node.js client SDK in more depth
+{@tutorial app-overview} provides a topological overview of applications and a blockchain.
 
-#### Development Environment Choices
-
-* *Recommended:* [Fabric-starter-kit](http://hyperledger-fabric.readthedocs.io/en/latest/#fabric-starter-kit) uses pre-built docker images for the Node.js client application interacting with Hyperledger fabric blockchain. This environment may suffice for a majority of Node.js application developers. The environment contains a built-in standalone sample ready to go.
-
-* [Full Hyperledger fabric development environment](app-developer-env-setup.md) on how to set up an environment for developing chaincode and applications.
-  
-  **Note:** Only recommended for development of the Hyperledger fabric Client SDK itself.
-
-
-#### Sample Code
-
-* [Node.js Standalone Application in Vagrant](sample-standalone-app.md) for a sample standalone Node.js application running in the full development environment within Vagrant.
-
-* [Node.js Web Application](sample-web-app.md) for a sample web application and to see how to use the Node.js client SDK for a sample web app leveraging the client SDK to interact with a blockchain network.
-
-
-
-#### Related information
-
-   * To build the reference documentation for the Node.js client SDK APIs follow the instructions [here](app-developer-env-setup.md).
-
-   * To learn more about chaincode, see [Writing, Building, and Running Chaincode in a Development Environment](http://hyperledger-fabric.readthedocs.io/en/latest/Setup/Chaincode-setup).
+#### API Reference
+The SDK is made up of 3 top-level modules that can be accessed through the navigation menu **Modules**:
+* **api**: pluggable APIs for application developers to supply alternative implementations of key interfaces used by the SDK. For each interface there are built-in default implementations.
+* **fabric-client**: this module provides APIs to interact with the core components of a Hypreledger Fabric-based blockchain network, namely the peers, orderers and event streams.
+* **fabric-ca-client**: this module provides APIs to interact with the optional component, fabric-ca, that contains services for membership management.

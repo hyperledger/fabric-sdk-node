@@ -60,6 +60,7 @@ var _timestampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.p
  * primary orderer to retrieve the configuration settings for this channel.
  *
  * @class
+ * @tutorial app-overview
  */
 var Chain = class {
 

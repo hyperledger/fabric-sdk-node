@@ -19,7 +19,7 @@ var jsdoc = require('gulp-jsdoc3');
 
 gulp.task('doc', function () {
 	gulp.src([
-		'README.md',
+		'docs/index.md',
 		'fabric-client/index.js',
 		'fabric-client/lib/api.js',
 		'fabric-client/lib/impl/FileKeyValueStore.js',
@@ -38,7 +38,15 @@ gulp.task('doc', function () {
 		'fabric-client/lib/X509Certificate.js',
 		'fabric-ca-client/index.js',
 		'fabric-ca-client/lib/FabricCAClientImpl.js'
-	], {read: false})
-	.pipe(jsdoc())
-	.pipe(gulp.dest('./docs/gen'));
+	], { read: false })
+	.pipe(jsdoc({
+		opts: {
+			tutorials: './docs',
+			destination: './docs/gen'
+		},
+		templates: {
+			systemName: 'Hyperledger Fabric SDK for node.js',
+			theme: 'spacelab' //cerulean, cosmo, cyborg, flatly, journal, lumen, paper, readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
+		}
+	}));
 });
