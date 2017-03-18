@@ -42,10 +42,16 @@ var __func = function() {
 		'[' + callsite()[1].getLineNumber() + ']: ';
 };
 
+/**
+ * PKCS#11-compliant implementation to support Hardware Security Modules.
+ *
+ * @class
+ */
 var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 
-	/*
-	 * Option is the form { lib: string, slot: number, pin: string }
+	/**
+	 * @param {number} keySize Length of key (in bytes), a.k.a "security level"
+	 * @param {object} opts Option is the form { lib: string, slot: number, pin: string }
 	 *
 	 * If lib is not specified or null, its value will be taken from the
 	 * CRYPTO_PKCS11_LIB env var, and if the env var is not set, its value will

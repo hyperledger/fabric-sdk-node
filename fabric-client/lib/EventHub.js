@@ -37,13 +37,12 @@ for(var i = 0;i<keys.length;i++) {
 	_validation_codes[new_key] = keys[i];
 }
 
-/**
+/*
  * The ChainCodeCBE is used internal to the EventHub to hold chaincode
  * event registration callbacks.
- * @class
  */
 var ChainCodeCBE = class {
-	/**
+	/*
 	 * Constructs a chaincode callback entry
 	 *
 	 * @param {string} ccid chaincode id

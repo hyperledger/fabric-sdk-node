@@ -72,10 +72,12 @@ var CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
 	}
 };
 
-/*
+/**
  * The main API for this module. Returns an instance of the CryptoKeyStore that uses the
  * api.KeyValueStore implementation class 'KVSImplClass' under the cover to persist keys.
  * 'opts' is specific to the implementation 'KVSImplClass'
+ *
+ * @class
  */
 var CryptoKeyStore = function(KVSImplClass, opts) {
 	var superClass;

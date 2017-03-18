@@ -24,12 +24,14 @@ gulp.task('doc', function () {
 		'fabric-client/lib/api.js',
 		'fabric-client/lib/impl/FileKeyValueStore.js',
 		'fabric-client/lib/impl/CouchDBKeyValueStore.js',
+		'fabric-client/lib/impl/CryptoKeyStore.js',
 		'fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js',
 		'fabric-client/lib/impl/ecdsa/key.js',
 		'fabric-client/lib/impl/bccsp_pkcs11.js',
 		'fabric-client/lib/impl/ecdsa/*',
 		'fabric-client/lib/impl/aes/*',
 		'fabric-client/lib/Chain.js',
+		'fabric-client/lib/Orderer.js',
 		'fabric-client/lib/Peer.js',
 		'fabric-client/lib/User.js',
 		'fabric-client/lib/Client.js',
@@ -46,7 +48,7 @@ gulp.task('doc', function () {
 		},
 		templates: {
 			systemName: 'Hyperledger Fabric SDK for node.js',
-			theme: 'spacelab' //cerulean, cosmo, cyborg, flatly, journal, lumen, paper, readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
+			theme: 'cosmo' //cerulean, cosmo, cyborg, flatly, journal, lumen, paper, readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
 		}
 	}));
 });

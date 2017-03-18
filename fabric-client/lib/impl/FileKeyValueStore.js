@@ -29,7 +29,7 @@ var logger = utils.getLogger('FileKeyValueStore.js');
  *
  * @class
  */
-var KeyValueStore = class extends api.KeyValueStore {
+var FileKeyValueStore = class extends api.KeyValueStore {
 
 	/**
 	 * constructor
@@ -115,4 +115,4 @@ var KeyValueStore = class extends api.KeyValueStore {
 	}
 };
 
-module.exports = KeyValueStore;
+module.exports = FileKeyValueStore;
