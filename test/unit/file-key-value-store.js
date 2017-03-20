@@ -28,6 +28,7 @@ var fs = require('fs-extra');
 var utils = require('fabric-client/lib/utils.js');
 
 var FileKeyValueStore = require('fabric-client/lib/impl/FileKeyValueStore.js');
+testUtil.resetDefaults();
 
 var keyValStorePath = path.join(getUserHome(), 'kvsTemp');
 //Note: unix relative path does not start with '/'

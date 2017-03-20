@@ -19,7 +19,7 @@
 var util = require('util');
 var sdkUtils = require('./utils.js');
 var api = require('./api.js');
-var logger = sdkUtils.getLogger('Client.js');
+var logger = sdkUtils.getLogger('User.js');
 var idModule = require('./msp/identity.js');
 var Identity = idModule.Identity;
 var SigningIdentity = idModule.SigningIdentity;
@@ -72,6 +72,7 @@ var User = class {
 		this._identity = null;
 		this._signingIdentity = null;
 		this._mspImpl = null;
+		this._kvsCryptoOpts = null;
 	}
 
 	/**
@@ -161,10 +162,13 @@ var User = class {
 		if (typeof mspId === 'undefined' || mspId === null || mspId === '') {
 			throw new Error('Invalid parameter. Must have a valid mspId.');
 		}
-
+		logger.debug('setEnrollment opts: %s', JSON.stringify(opts));
+		this._kvsCryptoOpts = opts;
 		this._mspImpl = new LocalMSP({
 			id: mspId,
-			cryptoSuite: opts ? sdkUtils.newCryptoSuite(opts.cryptoSettings, opts.KVSImplClass, opts.kvsOpts) : sdkUtils.newCryptoSuite()
+			cryptoSuite: this._kvsCryptoOpts ? sdkUtils.newCryptoSuite(
+				this._kvsCryptoOpts.cryptoSettings, this._kvsCryptoOpts.KVSImplClass, this._kvsCryptoOpts.kvsOpts) :
+				sdkUtils.newCryptoSuite()
 		});
 
 		return this._mspImpl.cryptoSuite.importKey(certificate)
@@ -209,7 +213,7 @@ var User = class {
 	 * @return {Member} Promise of the unmarshalled Member object represented by the serialized string
 	 */
 	fromString(str) {
-		logger.debug('Member-fromString --start');
+		logger.debug('fromString --start');
 		var state = JSON.parse(str);
 
 		if (state.name !== this.getName()) {
@@ -220,15 +224,17 @@ var User = class {
 		this._roles = state.roles;
 		this._affiliation = state.affiliation;
 		this._enrollmentSecret = state.enrollmentSecret;
+		this._kvsCryptoOpts = state.kvsCryptoOpts;
 
 		if (typeof state.mspid === 'undefined' || state.mspid === null || state.mspid === '') {
 			throw new Error('Failed to find "mspid" in the deserialized state object for the user. Likely due to an outdated state store.');
 		}
 
-		// FIXME: need to persist crypto settings, for now use the app-wide config setting
 		this._mspImpl = new LocalMSP({
 			id: state.mspid,
-			cryptoSuite: sdkUtils.newCryptoSuite()
+			cryptoSuite: this._kvsCryptoOpts ? sdkUtils.newCryptoSuite(
+				this._kvsCryptoOpts.cryptoSettings, this._kvsCryptoOpts.KVSImplClass, this._kvsCryptoOpts.kvsOpts) :
+				sdkUtils.newCryptoSuite()
 		});
 
 		var self = this;
@@ -284,6 +290,7 @@ var User = class {
 			mspid: this._mspImpl ? this._mspImpl.getId() : 'null',
 			roles: this._roles,
 			affiliation: this._affiliation,
+			kvsCryptoOpts: this._kvsCryptoOpts,
 			enrollmentSecret: this._enrollmentSecret,
 			enrollment: serializedEnrollment
 		};

@@ -49,8 +49,8 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
 * go to fabric-sdk-node/test/fixtures
   * run `docker-compose up --force-recreate` to launch the network
 * Now you are ready to run the tests:
-  * Clear out your previous key value stores that may have cached user enrollment certificates (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`)
-  * run 'gulp test' to execute the entire test suite (495+ test cases), or you can run them individually
+  * Clear out your previous key value stores that may have cached user enrollment certificates (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`, `rm $GOPATH/src/github.com/hyperledger/fabric-sdk-node/test/fixtures/fabricca/tlsOrg1/fabric-ca-server.db`, `rm $GOPATH/src/github.com/hyperledger/fabric-sdk-node/test/fixtures/fabricca/tlsOrg2/fabric-ca-server.db`)
+  * run 'gulp test' to execute the entire test suite (535+ test cases), or you can run them individually
   * Test user management by member services with the following tests that exercise the fabric-ca-client package with a KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
     * `test/integration/fabric-ca-services-tests.js`
     * `test/integration/couchdb-fabricca-tests.js`
@@ -63,6 +63,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
     * `node test/integration/e2e/instantiate-chaincode.js`
     * `node test/integration/e2e/invoke-transaction.js`
     * `node test/integration/e2e/query.js`
+  * To re-run `node test/integration/e2e.js` or `fabric-ca-services-tests.js` stop the network (ctrl-c), clear out `fabric-ca-server.db` and restart network.
 
 ### Set Up CouchDB Database for couchdb-fabricca-tests.js
 

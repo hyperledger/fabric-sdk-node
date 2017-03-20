@@ -14,23 +14,25 @@
  *  limitations under the License.
  */
 
+if (global && global.hfc) global.hfc.config = undefined;
+require('nconf').reset();
+var utils = require('fabric-client/lib/utils.js');
+utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
+var logger = utils.getLogger('cloudant-fabricca');
+
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
+var path = require('path');
 var hfc = require('fabric-client');
-
 var Client = hfc;
 var User = require('fabric-client/lib/User.js');
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore');
 
-var utils = require('fabric-client/lib/utils.js');
-var couchdbUtil = require('./couchdb-util.js');
-var logger = utils.getLogger('cloudant-fabricca');
-hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
 
-require('../unit/util.js').resetDefaults();
+var couchdbUtil = require('./couchdb-util.js');
 
 hfc.addConfigFile('test/fixtures/cloudant.json');
 var keyValueStore = hfc.getConfigSetting('key-value-store');
@@ -38,13 +40,22 @@ logger.info('cloudant Key Value Store = ' + keyValueStore);
 
 var cloudantUrl = 'https://1421acc7-6faa-491a-8e10-951e2e190684-bluemix:7179ef7a72602189243deeabe207889bde1c2fada173ae1022b5592e5a79dacc@1421acc7-6faa-491a-8e10-951e2e190684-bluemix.cloudant.com';
 
+hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+var ORGS = hfc.getConfigSetting('test-network');
+var userOrg = 'org1';
+
+var	tlsOptions = {
+	trustedRoots: [],
+	verify: false
+};
+var fabricCAEndpoint = ORGS[userOrg].ca;
+
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
 // FabricCAClientImpl to enroll a user, and saves the enrollment materials into the
 // CouchDB KeyValueStore. Then the test uses the Chain class to load the member
 // from the key value store.
 test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
-
 	//var user = new User();
 	var client = new Client();
 
@@ -55,7 +66,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 	// Clean up the cloudant couchdb test database
 	var dbname = 'member_db';
 
-	var member;
+	var member, opts;
 	couchdbUtil.destroy(dbname, cloudantUrl)
 	.then( function(status) {
 		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
@@ -73,11 +84,11 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 					process.exit(1);
 				}
 				t.comment('Initialize the CA server connection and KeyValueStore');
-				return new FabricCAServices('http://localhost:7054', {name: dbname, url: cloudantUrl});
+				return new FabricCAServices(fabricCAEndpoint, tlsOptions/*cryptoSettings*/, kvs/*KVSImplClass*/, {name: dbname, url: cloudantUrl});
 			},
 			function(err) {
-				logger.error(err);
 				t.fail('Error initializing Cloudant KeyValueStore. Exiting.');
+				logger.error(err.stack ? err.stack : err);
 				t.end();
 				process.exit(1);
 			})
@@ -95,7 +106,8 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				});
 			},
 			function(err) {
-				t.fail('Failed to initilize the Fabric CA service: ' + err);
+				t.fail('Failed to initilize the Fabric CA service. Error:');
+				logger.error(err.stack ? err.stack : err);
 				t.end();
 			}
 		)
@@ -104,11 +116,14 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				t.pass('Successfully enrolled admin2 with CA server');
 
 				// Persist the user state
-				member = new User('admin2', client);
-				return member.setEnrollment(admin2.key, admin2.certificate);
+				member = new User('admin2');
+				opts = {KVSImplClass: keyValueStore, kvsOpts: {name: dbname, url: cloudantUrl}};
+				t.comment('setEnrollment kvs opts: '+JSON.stringify(opts));
+				return member.setEnrollment(admin2.key, admin2.certificate, ORGS[userOrg].mspid, opts);
 			},
 			function(err) {
-				t.fail('Failed to use obtained private key and certificate to construct a User object. Error: ' + err);
+				t.fail('Failed to use obtained private key and certificate to construct a User object. Error:');
+				logger.error(err.stack ? err.stack : err);
 				t.end();
 			}
 		).then(
@@ -121,7 +136,8 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				return client.setUserContext(member);
 			},
 			function(err) {
-				t.fail('Failed to enroll admin2 with CA server. Error: ' + err);
+				t.fail('Failed to enroll admin2 with CA server. Error:');
+				logger.error(err.stack ? err.stack : err);
 				t.end();
 			})
 		.then(
@@ -139,12 +155,14 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				}
 			},
 			function(err) {
-				t.fail('Failed to load the user admin2 from key value store. Error: ' + err);
+				t.fail('Failed to load the user admin2 from key value store. Error:');
+				logger.error(err.stack ? err.stack : err);
 				t.end();
 			}
 		).catch(
 			function(err) {
-				t.fail('Failed cloudant-fabricca-test with error:' + err.stack ? err.stack : err);
+				t.fail('Failed cloudant-fabricca-test with error:');
+				logger.error(err.stack ? err.stack : err);
 				t.end();
 			}
 		);

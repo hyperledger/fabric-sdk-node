@@ -13,6 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+'use strict';
+
+var utils = require('fabric-client/lib/utils.js');
+utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
+var logger = utils.getLogger('E2E create-channel');
 
 var tape = require('tape');
 var _test = require('tape-promise');
@@ -24,12 +29,9 @@ var fs = require('fs');
 var path = require('path');
 
 var testUtil = require('../../unit/util.js');
-var utils = require('fabric-client/lib/utils.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 
 var the_user = null;
-
-var logger = utils.getLogger('create-channel');
 
 hfc.addConfigFile(path.join(__dirname, './config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
@@ -61,6 +63,7 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 	// Acting as a client in org1 when creating the channel
 	var org = ORGS.org1.name;
 
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(org)
 	}).then((store) => {

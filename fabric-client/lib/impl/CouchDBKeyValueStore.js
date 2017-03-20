@@ -41,7 +41,7 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 	 * <li>name - Optional.  Identifies the name of the database if different from the default of 'member_db'.
 	 */
 	constructor(options) {
-		logger.debug('constructor, options: ' + options);
+		logger.debug('constructor, options: ' + JSON.stringify(options));
 
 		if (!options || !options.url) {
 			throw new Error('Must provide the CouchDB database url to store membership data.');

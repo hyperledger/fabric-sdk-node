@@ -38,6 +38,8 @@ var Client = hfc;
 var client = new Client();
 
 testutil.resetDefaults();
+var utils = require('fabric-client/lib/utils.js');
+var logger = utils.getLogger('chain');
 
 // Chain tests /////////////
 test('\n\n ** Chain - constructor test **\n\n', function (t) {
@@ -279,7 +281,7 @@ test('\n\n ** Chain createChannel() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing orderer error');
 		} else {
 			t.fail('Failed to catch the missing orderer error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -293,7 +295,7 @@ test('\n\n ** Chain createChannel() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing request error');
 		} else {
 			t.fail('Failed to catch the missing request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -305,7 +307,7 @@ test('\n\n ** Chain createChannel() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing envelope request error');
 		} else {
 			t.fail('Failed to catch the missing envelope request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -319,7 +321,7 @@ test('\n\n ** Chain createChannel() tests **\n\n', function (t) {
 	).catch(
 		function (err) {
 			t.fail('Chain createChannel() tests, Promise.all: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 			t.end();
 		}
 	);
@@ -337,7 +339,7 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing orderer error');
 		} else {
 			t.fail('Failed to catch the missing orderer error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -351,7 +353,7 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing request error');
 		} else {
 			t.fail('Failed to catch the missing request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -363,7 +365,7 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing targets request error');
 		} else {
 			t.fail('Failed to catch the missing targets request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -375,7 +377,7 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing txId request error');
 		} else {
 			t.fail('Failed to catch the missing txId request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -387,7 +389,7 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing nonce request error');
 		} else {
 			t.fail('Failed to catch the missing nonce request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -399,7 +401,7 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 	).catch(
 		function (err) {
 			t.fail('Chain joinChannel() tests, Promise.all: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 			t.end();
 		}
 	);
@@ -468,7 +470,7 @@ test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing chaincodePath error');
 		} else {
 			t.fail('Failed to catch the missing chaincodePath error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -488,7 +490,7 @@ test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing chaincodeVersion error');
 		} else {
 			t.fail('Failed to catch the missing chaincodeVersion error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -577,7 +579,7 @@ test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
 	).catch(
 		function (err) {
 			t.fail('Chain sendInstallProposal() tests, Promise.all: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 			t.end();
 		}
 	);
@@ -618,7 +620,7 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 			t.pass('Successfully caught missing chaincodeVersion error');
 		} else {
 			t.fail('Failed to catch the missing chaincodeVersion error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
@@ -996,7 +998,7 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 	).catch(
 		function (err) {
 			t.fail('Client queryByChaincode() tests, Promise.all: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 			t.end();
 		}
 	);
@@ -1084,6 +1086,7 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 	//
 	// Create and configure the test chain
 	//
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	hfc.newDefaultKeyValueStore({
 		path: testutil.KVS
 	})

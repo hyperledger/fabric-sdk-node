@@ -18,6 +18,12 @@
 // in a happy-path scenario
 'use strict';
 
+if (global && global.hfc) global.hfc.config = undefined;
+require('nconf').reset();
+var utils = require('fabric-client/lib/utils.js');
+utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
+var logger = utils.getLogger('marbles');
+
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
@@ -25,14 +31,9 @@ var test = _test(tape);
 var path = require('path');
 var http = require('http');
 
-var log4js = require('log4js');
-var logger = log4js.getLogger('E2E');
-logger.setLevel('DEBUG');
-
 var hfc = require('fabric-client');
 var util = require('util');
 var testUtil = require('./util.js');
-var utils = require('fabric-client/lib/utils.js');
 
 var chain = hfc.newChain('testChain-e2e');
 var webUser;
