@@ -179,42 +179,76 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
 	 */
-	importKey(raw, opts) {
+	importKey(raw, opts, storeKey) {
+		logger.debug('importKey - start');
+		var store_key = true; //default
+		// if storing is not required and therefore a promise will not be returned
+		// then storeKey must be set to false;
+		if(typeof storeKey === 'boolean') {
+			store_key = storeKey;
+		}
+
 		var self = this;
-		return new Promise((resolve, reject) => {
-			// attempt to import the raw content, assuming it's one of the following:
-			// X.509v1/v3 PEM certificate (RSA/DSA/ECC)
-			// PKCS#8 PEM RSA/DSA/ECC public key
-			// PKCS#5 plain PEM DSA/RSA private key
-			// PKCS#8 plain PEM RSA/ECDSA private key
-			// TODO: add support for the following passcode-protected PEM formats
-			// - PKCS#5 encrypted PEM RSA/DSA private
-			// - PKCS#8 encrypted PEM RSA/ECDSA private key
-			var pemString = Buffer.from(raw).toString();
-			try {
-				var key = KEYUTIL.getKey(pemString);
-
-				if (key.type && key.type === 'EC') {
-					// save the key in the key store
-					var theKey = new ECDSAKey(key);
-
-					return self._getKeyStore()
-						.then ((store) => {
-							return store.putKey(theKey);
-						}).then(() => {
-							return resolve(theKey);
-						}).catch((err) => {
-							reject(err);
-						});
-				} else {
-					// TODO PEM encoded RSA public keys
-					reject(new Error('Does not understand certificates other than ECDSA public keys'));
-				}
-			} catch(err) {
-				logger.error('Failed to parse key from PEM: ' + err);
-				reject(err);
+		// attempt to import the raw content, assuming it's one of the following:
+		// X.509v1/v3 PEM certificate (RSA/DSA/ECC)
+		// PKCS#8 PEM RSA/DSA/ECC public key
+		// PKCS#5 plain PEM DSA/RSA private key
+		// PKCS#8 plain PEM RSA/ECDSA private key
+		// TODO: add support for the following passcode-protected PEM formats
+		// - PKCS#5 encrypted PEM RSA/DSA private
+		// - PKCS#8 encrypted PEM RSA/ECDSA private key
+		var pemString = Buffer.from(raw).toString();
+		pemString = this.makeRealPem(pemString);
+		var key = null;
+		var theKey = null;
+		var error = null;
+		try {
+			key = KEYUTIL.getKey(pemString);
+			if (key.type && key.type === 'EC') {
+				theKey = new ECDSAKey(key);
+				logger.debug('importKey - have the key %j',theKey);
 			}
-		});
+			else {
+				error = new Error('Does not understand certificates other than ECDSA public keys');
+			}
+		}
+		catch(err) {
+			error = new Error('Failed to parse key from PEM: ' + err);
+		}
+
+		if(!store_key) {
+			if(error) {
+				logger.error('importKey - %s',error);
+				throw error;
+			}
+			return theKey;
+		}
+		else {
+			if(error) {
+				logger.error('importKey - %j',error);
+				return Promise.reject(error);
+			}
+			return new Promise((resolve, reject) => {
+				return self._getKeyStore()
+					.then ((store) => {
+						return store.putKey(theKey);
+					}).then(() => {
+						return resolve(theKey);
+					}).catch((err) => {
+						reject(err);
+					});
+			});
+		}
+	}
+
+	// Utilitly method to make sure the start and end markers are correct
+	makeRealPem(pem) {
+		var result = null;
+		if(typeof pem == 'string') {
+			result = pem.replace(/-----BEGIN -----/, '-----BEGIN CERTIFICATE-----');
+			result = result.replace(/-----END -----/, '-----END CERTIFICATE-----');
+		}
+		return result;
 	}
 
 	/**

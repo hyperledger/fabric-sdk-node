@@ -152,6 +152,8 @@ test('\n\n** MSP Tests **\n\n', (t) => {
 		return mspm.deserializeIdentity(serializedID);
 	}).then((identity) => {
 		t.equal(identity.getId(), 'SomeDummyValue', 'Deserialized identity using MSP manager');
+
+		t.equal(mspm.getMSP('peerOrg0').getId(), 'peerOrg0', 'Checking MSPManager getMSP() method' );
 		t.end();
 	}).catch((err) => {
 		t.fail(err.stack ? err.stack : err);

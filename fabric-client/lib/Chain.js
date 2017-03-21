@@ -48,6 +48,8 @@ var _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configur
 var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
 var _mspConfigProto = grpc.load(__dirname + '/protos/msp/mspconfig.proto').msp;
 var _timestampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.proto').google.protobuf;
+var _identityProto = grpc.load(path.join(__dirname, '/protos/identity.proto')).msp;
+
 
 
 /**
@@ -404,7 +406,7 @@ var Chain = class {
 			errorMsg = 'Missing all required input request parameters for initialize channel';
 		}
 
-		// Verify that a config envolope has been included in the request object
+		// Verify that a config envelope has been included in the request object
 		else if (!request.envelope) {
 			errorMsg = 'Missing envelope input parameter containing the configuration of the new channel';
 		}
@@ -1399,7 +1401,7 @@ var Chain = class {
 			}
 		).catch(
 			function(err) {
-				logger.error(util.format('Failed Channels Query. Error: %j', err.stack ? {error: err.stack} : err));
+				logger.error('Failed Channels Query. Error: %s', err.stack ? err.stack : err);
 				return Promise.reject(err);
 			}
 		);
@@ -1919,6 +1921,128 @@ var Chain = class {
 		);
 	}
 
+	/**
+	 * Utility method to verify a single proposal response.
+	 * Requires that the initialize method of this channel has been
+	 * executed to load this channel's MSPs. The MSPs will have the
+	 * trusted root certificates for this channel.
+	 * The verifications performed are
+	 *   - validate that the proposal endorsement's signer is trusted
+	 *   - verify that the endorsement signature matches the signer's
+	 *     claimed identity
+	 *
+	 * @param {ProposalResponse} The endorsement response from the peer,
+	 *         includes the endorser certificate and signature over the
+	 *         proposal, endorsement result and endorser certificate.
+	 * @see /protos/peer/proposal_reponse.proto
+	 * @returns {boolean} a boolean value of true when both the identity and
+	 *          the signature are valid, false otherwise.
+	 */
+	 verifyProposalResponse(proposal_response) {
+		logger.debug('verifyProposalResponse - start');
+		if(!proposal_response) {
+			throw new Error('Missing proposal response');
+		}
+		if(!proposal_response.endorsement) {
+			throw new Error('Parameter must be a ProposalResponse Object');
+		}
+
+		let endorsement = proposal_response.endorsement;
+
+		var sid = _identityProto.SerializedIdentity.decode(endorsement.endorser);
+		var mspid = sid.getMspid();
+		logger.debug('getMSPbyIdentity - found mspid %s',mspid);
+		var msp = this._msp_manager.getMSP(mspid);
+
+		if (!msp){
+			throw new Error(util.format('Failed to locate an MSP instance matching the endorser identity\'s orgainization %s', mspid));
+		}
+		logger.debug('verifyProposalResponse - found endorser\'s MSP');
+
+		try {
+			var identity = msp.deserializeIdentity(endorsement.endorser, false);
+			if(!identity) {
+				throw new Error('Unable to find the endorser identity');
+			}
+		}
+		catch(error) {
+			logger.error('verifyProposalResponse - getting endorser identity failed with: ', error);
+			return false;
+		}
+
+		try {
+			// see if the identity is trusted
+			if(!identity.isValid()) {
+				logger.error('Endorser identity is not valid');
+				return false;
+			}
+			logger.debug('verifyProposalResponse - have a valid identity');
+
+			// check the signature against the endorser and payload hash
+			var digest = Buffer.concat([proposal_response.payload, endorsement.endorser]);
+			if(!identity.verify(digest, endorsement.signature)) {
+				logger.error('Proposal signature is not valid');
+				return false;
+			}
+		}
+		catch(error) {
+			logger.error('verifyProposalResponse - verify failed with: ', error);
+			return false;
+		}
+
+		logger.debug('verifyProposalResponse - This endorsement has both a valid identity and valid signature');
+		return true;
+	 }
+
+	/**
+	 * Utility method to examine a set of proposals to check they contain
+	 * the same endorsement result write sets.
+	 * This will validate that the endorsing peers all agree on the result
+	 * of the chaincode execution.
+	 * @param {ProposalResponse[]} The proposal responses from all endorsing peers
+	 * @see /protos/peer/proposal_reponse.proto
+	 * @returns {boolean} True when all proposals compare equally, false otherwise.
+	  */
+	compareProposalResponseResults(proposal_responses) {
+		logger.debug('compareProposalResponseResults - start');
+		if(!proposal_responses) {
+			throw new Error('Missing proposal responses');
+		}
+		if(!Array.isArray(proposal_responses)) {
+			throw new Error('Parameter must be an array of ProposalRespone Objects');
+		}
+
+		if(proposal_responses.length == 0) {
+			throw new Error('Parameter proposal responses does not contain a PorposalResponse');
+		}
+		var first_one = this._getProposalResponseResults(proposal_responses[0]);
+		for(var i = 1; i < proposal_responses.length; i++) {
+			var next_one = this._getProposalResponseResults(proposal_responses[i]);
+			if(next_one.equals(first_one)){
+				logger.debug('compareProposalResponseResults - read/writes result sets match index=%s',i);
+			}
+			else {
+				logger.warning('compareProposalResponseResults - read/writes result sets do not match index=%s',i);
+				return false;
+			}
+		}
+
+		return true;
+	 }
+
+	// internal utility method to decode and get the write set
+	// from a proposal response
+	_getProposalResponseResults(proposal_response) {
+		if(!proposal_response.payload) {
+			throw new Error('Parameter must be a ProposalResponse Object');
+		}
+		var payload = _responseProto.ProposalResponsePayload.decode(proposal_response.payload);
+		var extension = _proposalProto.ChaincodeAction.decode(payload.extension);
+		// TODO should we check the status of this action
+		logger.debug('_getWriteSet - chaincode action status:%s message:%s',extension.response.status, extension.response.message);
+		// return a buffer object which has an equals method
+		return extension.results.toBuffer();
+	}
 	// internal utility method to build the proposal
 	/**
 	 * @private
