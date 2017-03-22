@@ -197,7 +197,7 @@ var Peer = class extends Remote {
 		//     rpc ProcessProposal(Proposal) returns (ProposalResponse) {}
 		return new Promise(function(resolve, reject) {
 			var send_timeout = setTimeout(function(){
-				logger.debug('sendProposal - timed out after:%s', self._request_timeout);
+				logger.error('sendProposal - timed out after:%s', self._request_timeout);
 				return reject(new Error('REQUEST_TIMEOUT'));
 			}, self._request_timeout);
 

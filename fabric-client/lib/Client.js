@@ -19,11 +19,18 @@
 var sdkUtils = require('./utils.js');
 process.env.GRPC_SSL_CIPHER_SUITES = sdkUtils.getConfigSetting('grpc-ssl-cipher-suites');
 
-var Chain = require('./Chain.js');
-var logger = sdkUtils.getLogger('Client.js');
 var api = require('./api.js');
 var User = require('./User.js');
+var Chain = require('./Chain.js');
+var Peer = require('./Peer.js');
+var Orderer = require('./Orderer.js');
+var logger = sdkUtils.getLogger('Client.js');
 var util = require('util');
+
+var grpc = require('grpc');
+var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
+var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
+var _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
 
 /**
  * Main interaction handler with end user. A client instance provides a handler to interact
@@ -45,12 +52,16 @@ var util = require('util');
 var Client = class {
 
 	constructor() {
+		logger.debug('const - new Client');
 		this._chains = {};
 		this._stateStore = null;
 		// TODO, assuming a single CrytoSuite implementation per SDK instance for now
 		// change this to be per Client or per Chain
 		this._cryptoSuite = null;
 		this._userContext = null;
+
+		// Is in dev mode or network mode
+		this._devMode = false;
 	}
 
 	setCryptoSuite(cryptoSuite) {
@@ -61,11 +72,25 @@ var Client = class {
 		return this._cryptoSuite;
 	}
 
-    /**
+	/**
+	 * Determine if dev mode is enabled.
+	 */
+	isDevMode() {
+		return this._devMode;
+	}
+
+	/**
+	 * Set dev mode to true or false.
+	 */
+	setDevMode(devMode) {
+		this._devMode = devMode;
+	}
+
+	/**
 	 * Returns a chain instance with the given name. This represents a channel and its associated ledger
-     * (as explained above), and this call returns an empty object. To initialize the chain in the blockchain network,
-     * a list of participating endorsers and orderer peers must be configured first on the returned object.
-     * @param {string} name The name of the chain.  Recommend using namespaces to avoid collision.
+	 * (as explained above), and this call returns an empty object. To initialize the chain in the blockchain network,
+	 * a list of participating endorsers and orderer peers must be configured first on the returned object.
+	 * @param {string} name The name of the chain.  Recommend using namespaces to avoid collision.
 	 * @returns {Chain} The uninitialized chain instance.
 	 * @throws {Error} if the chain by that name already exists in the application's state store
 	 */
@@ -103,6 +128,142 @@ var Client = class {
 		}
 	}
 
+    /**
+	 * Returns a peer instance with the given url.
+	 * @param {string} url - The URL with format of "grpcs://host:port".
+	 * @param {Object} opts - The options for the connection to the peer.
+	 * <br>- request-timeout {string} A integer value in milliseconds to
+	 *       be used as node.js based timeout. This will break the request
+	 *       operation if the grpc request has not responded within this
+	 *       timeout period.
+	 * <br>- pem {string} The certificate file, in PEM format,
+	 *    to use with the gRPC protocol (that is, with TransportCredentials).
+	 *    Required when using the grpcs protocol.
+	 * <br>- ssl-target-name-override {string} Used in test environment only, when the server certificate's
+	 *    hostname (in the 'CN' field) does not match the actual host endpoint that the server process runs
+	 *    at, the application can work around the client TLS verify failure by setting this property to the
+	 *    value of the server certificate's hostname
+	 * <br>- any other standard grpc call options will be passed to the grpc service calls directly
+	 * @returns {Peer} The Peer instance.
+	 */
+	newPeer(url, opts) {
+		var peer = new Peer(url, opts);
+		return peer;
+	}
+
+    /**
+	 * Returns an order instance with the given url.
+	 * @param {string} url The URL with format of "grpcs://host:port".
+	 * @param {Object} opts The options for the connection to the peer.
+	 * <br>- request-timeout {string} A integer value in milliseconds to
+	 *       be used as node.js based timeout. This will break the request
+	 *       operation if the grpc request has not responded within this
+	 *       timeout period.
+	 * <br>- pem {string} The certificate file, in PEM format,
+	 *    to use with the gRPC protocol (that is, with TransportCredentials).
+	 *    Required when using the grpcs protocol.
+	 * <br>- ssl-target-name-override {string} Used in test environment only, when the server certificate's
+	 *    hostname (in the 'CN' field) does not match the actual host endpoint that the server process runs
+	 *    at, the application can work around the client TLS verify failure by setting this property to the
+	 *    value of the server certificate's hostname
+	 * <br>- any other standard grpc call options will be passed to the grpc service calls directly
+	 * @returns {Orderer} The orderer instance.
+	 */
+	newOrderer(url, opts) {
+		var orderer = new Orderer(url, opts);
+		return orderer;
+	}
+
+	/**
+	 * Calls the orderer to start building the new chain.
+	 * Only one of the application instances needs to call this method.
+	 * Once the chain is successfully created, this and other application
+	 * instances only need to call Chain joinChannel() to participate on the channel.
+	 * @param {Object} request - An object containing the following field:
+	 *      <br>`name` : required - The name of the new channel
+	 *      <br>`orderer` : required - Orderer Object to create the channel
+	 *		<br>`envelope` : required - byte[] of the envelope object containing
+	 *                          all required settings to initialize this channel
+	 * @returns {boolean} Whether the chain initialization process was successful.
+	 */
+	createChannel(request) {
+		logger.debug('createChannel - start');
+		var errorMsg = null;
+
+		if(!request) {
+			errorMsg = 'Missing all required input request parameters for initialize channel';
+		}
+		else {
+			// Verify that a config envelope has been included in the request object
+			if (!request.envelope) {
+				errorMsg = 'Missing envelope request parameter containing the configuration of the new channel';
+			}
+			// verify that we have an orderer configured
+			if(!request.orderer) {
+				errorMsg = 'Missing orderer request parameter for the initialize channel';
+			}
+			// verify that we have the name of the new channel
+			if(!request.name) {
+				errorMsg = 'Missing name request parameter for the new channel';
+			}
+		}
+
+		if(errorMsg) {
+			logger.error('createChannel error %s',errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+
+		var self = this;
+		var chain_id = request.name;
+		var orderer = request.orderer;
+		var userContext = null;
+		var chain = null;
+
+		return this.getUserContext()
+		.then(
+			function(foundUserContext) {
+				userContext = foundUserContext;
+
+				// building manually or will get protobuf errors on send
+				var envelope = _commonProto.Envelope.decode(request.envelope);
+				logger.debug('createChannel - about to send envelope');
+
+				var out_envelope = {
+					signature: envelope.signature,
+					payload : envelope.payload
+				};
+
+				return orderer.sendBroadcast(out_envelope);
+			}
+		)
+		.then(
+			function(results) {
+				logger.debug('createChannel - good results from broadcast :: %j',results);
+				chain = self.newChain(chain_id);
+				chain.addOrderer(orderer);
+				return chain.initialize(request.envelope);
+			}
+		)
+		.then(
+			function(results) {
+				logger.debug('createChannel - good results from chain initialize :: %j',results);
+				return Promise.resolve(chain);
+			}
+		)
+		.catch(
+			function(error) {
+				if(error instanceof Error) {
+					logger.debug('createChannel - rejecting with %s', error);
+					return Promise.reject(error);
+				}
+				else {
+					logger.error('createChannel - system error :: %s', error);
+					return Promise.reject(new Error(error));
+				}
+			}
+		);
+	}
+
 	/**
 	 * This is a network call to the designated Peer(s) to discover the chain information.
 	 * The target Peer(s) must be part of the chain to be able to return the requested information.
@@ -113,6 +274,250 @@ var Client = class {
 	 */
 	queryChainInfo(name, peers) {
 		//to do
+	}
+
+	/**
+	 * Queries the names of all the channels that a
+	 * peer has joined.
+	 * @param {Peer} peer
+	 * @returns {Promise} A promise to return a ChannelQueryResponse proto Object
+	 */
+	queryChannels(peer) {
+		logger.debug('queryChannels - start');
+		if(!peer) {
+			return Promise.reject( new Error('Peer is required'));
+		}
+		var self = this;
+		var nonce = sdkUtils.getNonce();
+		return this.getUserContext(nonce)
+		.then(function(userContext) {
+			var txId = Chain.buildTransactionID(nonce, userContext);
+			var request = {
+				targets: [peer],
+				chaincodeId : 'cscc',
+				chainId: '',
+				txId: txId,
+				nonce: nonce,
+				fcn : 'GetChannels',
+				args: []
+			};
+			return Chain.sendTransactionProposal(request, self);
+		})
+		.then(
+			function(results) {
+				var responses = results[0];
+				logger.debug('queryChannels - got response');
+				if(responses && Array.isArray(responses)) {
+					//will only be one response as we are only querying one peer
+					if(responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					let response = responses[0];
+					if(response instanceof Error ) {
+						return Promise.reject(response);
+					}
+					if(response.response) {
+						logger.debug('queryChannels - response status :: %d', response.response.status);
+						var queryTrans = _queryProto.ChannelQueryResponse.decode(response.response.payload);
+						logger.debug('queryChannels - ProcessedTransaction.channelInfo.length :: %s', queryTrans.channels.length);
+						for (let i=0; i<queryTrans.channels.length; i++) {
+							logger.debug('>>> channel id %s ',queryTrans.channels[i].channel_id);
+						}
+						return Promise.resolve(queryTrans);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query'));
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Channels Query. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			}
+		);
+	}
+
+	/**
+	 * Queries the installed chaincodes on a peer
+	 * returning the details of all chaincodes
+	 * installed on a peer.
+	 * @param {Peer} peer
+	 * @returns {object} ChaincodeQueryResponse proto
+	 */
+	queryInstalledChaincodes(peer) {
+		logger.debug('queryInstalledChaincodes - start peer %s',peer);
+		if(!peer) {
+			return Promise.reject( new Error('Peer is required'));
+		}
+		var self = this;
+		var nonce = sdkUtils.getNonce();
+		return self.getUserContext()
+		.then(function(userContext) {
+			var tx_id = Chain.buildTransactionID(nonce, userContext);
+			var request = {
+				targets: [peer],
+				chaincodeId : 'lccc',
+				chainId: 'mychannel',
+				txId: tx_id,
+				nonce: nonce,
+				fcn : 'getinstalledchaincodes',
+				args: []
+			};
+			return Chain.sendTransactionProposal(request, self);
+		})
+		.then(
+			function(results) {
+				var responses = results[0];
+				logger.debug('queryInstalledChaincodes - got response');
+				if(responses && Array.isArray(responses)) {
+					//will only be one response as we are only querying one peer
+					if(responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					let response = responses[0];
+					if(response instanceof Error ) {
+						return Promise.reject(response);
+					}
+					if(response.response) {
+						logger.debug('queryInstalledChaincodes - response status :: %d', response.response.status);
+						var queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+						logger.debug('queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
+						for (let i=0; i<queryTrans.chaincodes.length; i++) {
+							logger.debug('>>> name %s, version %s, path %s',queryTrans.chaincodes[i].name,queryTrans.chaincodes[i].version,queryTrans.chaincodes[i].path);
+						}
+						return Promise.resolve(queryTrans);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query'));
+			}
+		).catch(
+			function(err) {
+				logger.error('Failed Installed Chaincodes Query. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			}
+		);
+	}
+
+	/**
+	 * Sends an install proposal to one or more endorsing peers.
+	 *
+	 * @param {Object} request - An object containing the following fields:
+	 *		<br>`chaincodePath` : required - String of the path to location of
+	 *                            the source code of the chaincode
+	 *		<br>`chaincodeId` : required - String of the name of the chaincode
+	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
+	 *		<br>`chaincodePackage` : optional - Byte array of the archive content for
+	 *                               the chaincode source. The archive must have a 'src'
+	 *                               folder containing subfolders corresponding to the
+	 *                               'chaincodePath' field. For instance, if the chaincodePath
+	 *                               is 'mycompany/myproject', then the archive must contain a
+	 *                               folder at the path 'src/mycompany/myproject', where the
+	 *                               GO source code resides.
+	 *		<br>`chaincodeType` : optional - Type of chaincode ['golang', 'car', 'java']
+	 *                   (default 'golang')
+	 *		<br>`txId` : required - String of the transaction id
+	 *		<br>`nonce` : required - Integer of the once time number
+	 * @returns {Promise} A Promise for a `ProposalResponse`
+	 * @see /protos/peer/proposal_response.proto
+	 */
+	installChaincode(request) {
+		logger.debug('installChaincode - start');
+
+		var errorMsg = null;
+
+		var peers = null;
+		if (request) {
+			peers = request.targets;
+			// Verify that a Peer has been added
+			if (peers && peers.length > 0) {
+				logger.debug('installChaincode - found peers ::%s',peers.length);
+			}
+			else {
+				errorMsg = 'Missing peer objects in install chaincode request';
+			}
+		}
+		else {
+			errorMsg = 'Missing input request object on install chaincode request';
+		}
+
+
+		// modify the request so the following checks will be OK
+		if(request) {
+			request.chainId = 'dummy';
+		}
+
+		if (!errorMsg) errorMsg = Chain._checkProposalRequest(request);
+		if (!errorMsg) errorMsg = Chain._checkInstallRequest(request);
+
+		if (errorMsg) {
+			logger.error('installChaincode error ' + errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+
+		let self = this;
+
+		let ccSpec = {
+			type: Chain._translateCCType(request.chaincodeType),
+			chaincode_id: {
+				name: request.chaincodeId,
+				path: request.chaincodePath,
+				version: request.chaincodeVersion
+			}
+		};
+		logger.debug('installChaincode ccSpec %s ',JSON.stringify(ccSpec));
+
+		// step 2: construct the ChaincodeDeploymentSpec
+		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
+		chaincodeDeploymentSpec.setEffectiveDate(Chain._buildCurrentTimestamp()); //TODO may wish to add this as a request setting
+
+		return Chain._getChaincodePackageData(request, this.isDevMode())
+		.then((data) => {
+			logger.debug('installChaincode data %s ',data);
+			// DATA may or may not be present depending on devmode settings
+			if (data) {
+				chaincodeDeploymentSpec.setCodePackage(data);
+			}
+			logger.debug('installChaincode sending deployment spec %s ',chaincodeDeploymentSpec);
+
+			// TODO add ESCC/VSCC info here ??????
+			let lcccSpec = {
+				type: _ccProto.ChaincodeSpec.Type.GOLANG,
+				chaincode_id: {
+					name: 'lccc'
+				},
+				input: {
+					args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
+				}
+			};
+
+			var header, proposal;
+			return self.getUserContext()
+				.then(
+					function(userContext) {
+						var txId = Chain.buildTransactionID(request.nonce, userContext);
+						var channelHeader = Chain._buildChannelHeader(
+							_commonProto.HeaderType.ENDORSER_TRANSACTION,
+							'', //install does not target a channel
+							txId,
+							null,
+							'lccc'
+						);
+						header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
+						proposal = Chain._buildProposal(lcccSpec, header);
+						let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
+
+						return Chain._sendPeersProposal(peers, signed_proposal);
+					}
+				).then(
+					function(responses) {
+						return [responses, proposal, header];
+					}
+				);
+		});
 	}
 
 	/**
@@ -246,7 +651,7 @@ var Client = class {
 					return resolve(null);
 				}
 
-				// this could be because they application has not set a user context yet for this client, which would
+				// this could be because the application has not set a user context yet for this client, which would
 				// be an error condiditon, or it could be that this app has crashed before and is recovering, so we
 				// should allow the previously saved user context object to be deserialized
 
@@ -324,6 +729,17 @@ var Client = class {
 	 */
 	getStateStore() {
 		return this._stateStore;
+	}
+
+	/**
+	* Utility method to build an unique transaction id
+	* based on a nonce and the user context.
+	* @param {int} nonce - a one time use number
+	* @param {User} userContext - the user context
+	* @returns {string} An unique string
+	*/
+	static buildTransactionID(nonce, userContext) {
+		return Chain.buildTransactionID(nonce, userContext);
 	}
 
 	/**

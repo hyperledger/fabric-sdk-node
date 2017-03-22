@@ -32,8 +32,6 @@ var fs = require('fs');
 
 var hfc = require('fabric-client');
 var testUtil = require('../unit/util.js');
-var Peer = require('fabric-client/lib/Peer.js');
-var Orderer = require('fabric-client/lib/Orderer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var eputil = require('./eventutil.js');
 
@@ -47,7 +45,7 @@ let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 let caroots = Buffer.from(data).toString();
 
 chain.addOrderer(
-	new Orderer(
+	client.newOrderer(
 		ORGS.orderer.url,
 		{
 			'pem': caroots,
@@ -58,17 +56,19 @@ chain.addOrderer(
 
 var org = 'org1';
 var orgName = ORGS[org].name;
+var targets = [];
 for (let key in ORGS[org]) {
 	if (ORGS[org].hasOwnProperty(key)) {
 		if (key.indexOf('peer') === 0) {
 			let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key]['tls_cacerts']));
-			let peer = new Peer(
+			let peer = client.newPeer(
 				ORGS[org][key].requests,
 				{
 					pem: Buffer.from(data).toString(),
 					'ssl-target-name-override': ORGS[org][key]['server-hostname']
 				});
 			chain.addPeer(peer);
+			targets.push(peer);
 			break; //just add one
 		}
 	}
@@ -129,10 +129,10 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				t.pass('Successfully enrolled user \'admin\'');
 				the_user = admin;
 
-				request = eputil.createRequest(chain, the_user, chaincode_id, '', '');
+				request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, '', '');
 				request.chaincodePath = 'github.com/events_cc';
 				request.chaincodeVersion = chaincode_version;
-				return chain.sendInstallProposal(request);
+				return client.installChaincode(request);
 			},
 			(err) => {
 				t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -152,7 +152,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				throw new Error(err.stack ? err.stack : err);
 			}).then((success) => {
 				t.pass('Successfully initialized the chain');
-				request = eputil.createRequest(chain, the_user, chaincode_id, 'init', []);
+				request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'init', []);
 				request.chaincodePath = 'github.com/events_cc';
 				request.chaincodeVersion = chaincode_version;
 				return chain.sendInstantiateProposal(request);
@@ -186,7 +186,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				if(the_user === null) {
 					the_user = admin;
 				}
-				request = eputil.createRequest(chain, the_user, chaincode_id, 'invoke', ['invoke', 'SEVERE']);
+				request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
 				return chain.sendTransactionProposal(request);
 			}).then((results) => {
 				var tmo = 20000;
@@ -215,7 +215,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				if(the_user === null) {
 					the_user = admin;
 				}
-				request = eputil.createRequest(chain, the_user, chaincode_id, 'invoke', ['query']);
+				request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['query']);
 				return chain.queryByChaincode(request);
 			},
 			(err) => {
@@ -251,8 +251,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				if(the_user === null) {
 					the_user = admin;
 				}
-				req1 = eputil.createRequest(chain, the_user, chaincode_id, 'invoke', ['invoke', 'SEVERE']);
-				req2 = eputil.createRequest(chain, the_user, chaincode_id, 'invoke', ['invoke', 'SEVERE']);
+				req1 = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+				req2 = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
 				return Promise.all([chain.sendTransactionProposal(req1),
 					chain.sendTransactionProposal(req2)]);
 			}).then(([results1, results2]) => {

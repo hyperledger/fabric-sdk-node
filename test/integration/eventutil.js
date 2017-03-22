@@ -16,6 +16,7 @@
 
 'use strict';
 
+var hfc = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
 
 module.exports.registerTxEvent = function(eh, txid, timeout) {
@@ -55,10 +56,11 @@ module.exports.registerCCEvent = function(eh, ccid, enregex, timeout) {
 	});
 };
 
-module.exports.createRequest = function(chain, user, chaincode_id, fcn, args) {
+module.exports.createRequest = function(client, chain, user, chaincode_id, targets, fcn, args) {
 	var nonce = utils.getNonce();
-	var tx_id = chain.buildTransactionID(nonce, user);
+	var tx_id = hfc.buildTransactionID(nonce, user);
 	var request = {
+		targets : targets,
 		chaincodeId: chaincode_id,
 		chaincodeVersion: '',
 		fcn: fcn,

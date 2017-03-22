@@ -79,14 +79,6 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 	t.equal(_chain.isPreFetchMode(), true, 'checking prefetchMode');
 	t.doesNotThrow(
 		function () {
-			_chain.setDevMode(true);
-		},
-		null,
-		'checking the set of DevMode'
-	);
-	t.equal(_chain.isDevMode(), true, 'checking DevMode');
-	t.doesNotThrow(
-		function () {
 			_chain.setTCertBatchSize(123);
 		},
 		null,
@@ -269,64 +261,6 @@ test('\n\n ** Chain addPeer() duplicate tests **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n ** Chain createChannel() tests **\n\n', function (t) {
-	var c = new Chain('createChannel', client);
-	var orderer = new Orderer('grpc://localhost:7050');
-
-	var p1 = c.createChannel({}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of orderer missing');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing orderer') >= 0) {
-			t.pass('Successfully caught missing orderer error');
-		} else {
-			t.fail('Failed to catch the missing orderer error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	c.addOrderer(orderer);
-
-	var p2 = c.createChannel(
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing all') >= 0) {
-			t.pass('Successfully caught missing request error');
-		} else {
-			t.fail('Failed to catch the missing request error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	var p3 = c.createChannel({}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of envelope request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing envelope') >= 0) {
-			t.pass('Successfully caught missing envelope request error');
-		} else {
-			t.fail('Failed to catch the missing envelope request error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-
-
-	Promise.all([p1, p2, p3])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Chain createChannel() tests, Promise.all: ');
-			logger.error(err.stack ? err.stack : err);
-			t.end();
-		}
-	);
-});
-
 test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 	var c = new Chain('joinChannel', client);
 	var orderer = new Orderer('grpc://localhost:7050');
@@ -449,142 +383,6 @@ test('\n\n** Packager tests **\n\n', function(t) {
 	});
 });
 
-test('\n\n ** Chain sendInstallProposal() tests **\n\n', function (t) {
-	var c = new Chain('does not matter', client);
-	var peer = new Peer('grpc://localhost:7051');
-	c.addPeer(peer);
-
-	var p1 = c.sendInstallProposal({
-		targets: [new Peer('grpc://localhost:7051')],
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		chainId: 'blah',
-		txId: 'blah',
-		nonce: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing chaincodePath parameter') >= 0) {
-			t.pass('Successfully caught missing chaincodePath error');
-		} else {
-			t.fail('Failed to catch the missing chaincodePath error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	var p1a = c.sendInstallProposal({
-		targets: [new Peer('grpc://localhost:7051')],
-		chaincodeId: 'blah',
-		chaincodePath: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		chainId: 'blah',
-		txId: 'blah',
-		nonce: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodeVersion" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chaincodeVersion" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing chaincodeVersion error');
-		} else {
-			t.fail('Failed to catch the missing chaincodeVersion error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	var p3 = c.sendInstallProposal({
-		targets: [new Peer('grpc://localhost:7051')],
-		chaincodePath: 'blah',
-		chaincodeVersion: 'blah',
-		txId: 'blah',
-		nonce: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chaincodeId" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing chaincodeId error');
-		} else {
-			t.fail('Failed to catch the missing chaincodeId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	c.removePeer(peer);
-	var p4 = c.sendInstallProposal({
-		chaincodePath: 'blah',
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah',
-		txId: 'blah',
-		nonce: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on chain');
-	}).catch(function (err) {
-		var msg = 'Missing peer objects in Install proposal chain';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught error: '+msg);
-		} else {
-			t.fail('Failed to catch error: '+msg+'. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	c.addPeer(peer);
-	var p5 = c.sendInstallProposal({
-		targets: [new Peer('grpc://localhost:7051')],
-		chaincodePath: 'blah',
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah',
-		nonce: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "txId" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "txId" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing txId error');
-		} else {
-			t.fail('Failed to catch the missing txId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	var p6 = c.sendInstallProposal({
-		targets: [new Peer('grpc://localhost:7051')],
-		chaincodePath: 'blah',
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah',
-		txId: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "nonce" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "nonce" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing nonce error');
-		} else {
-			t.fail('Failed to catch the missing nonce error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	var p7 = c.sendInstallProposal().then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
-			t.pass('Successfully caught missing request error');
-		} else {
-			t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	Promise.all([p1, p1a, p3, p4, p6, p7])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Chain sendInstallProposal() tests, Promise.all: ');
-			logger.error(err.stack ? err.stack : err);
-			t.end();
-		}
-	);
-});
-
 test('\n\n ** Chain _buildDefaultEndorsementPolicy() tests **\n\n', function (t) {
 	var c = new Chain('does not matter', client);
 
@@ -675,7 +473,7 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on chain');
 	}).catch(function (err) {
-		var msg = 'Missing peer objects in Instantiate proposal chain';
+		var msg = 'Missing peer objects in Instantiate proposal';
 		if (err.message.indexOf(msg) >= 0) {
 			t.pass('Successfully caught error: '+msg);
 		} else {
@@ -810,7 +608,7 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on chain');
 	}).catch(function (err) {
-		var msg = 'Missing peer objects in Transaction proposal chain';
+		var msg = 'Missing peer objects in Transaction proposal';
 		if (err.message.indexOf(msg) >= 0) {
 			t.pass('Successfully caught error: '+msg);
 		} else {
@@ -854,7 +652,7 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 	var p7 = c.sendTransactionProposal().then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
 	}).catch(function (err) {
-		if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
+		if (err.message.indexOf('Missing request object for this transaction proposal') >= 0) {
 			t.pass('Successfully caught missing request error');
 		} else {
 			t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
@@ -939,7 +737,7 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "peers" on chain in queryByChaincode');
 	}).catch(function (err) {
-		var msg = 'Missing peer objects in Transaction proposal chain';
+		var msg = 'Missing peer objects in Transaction proposal';
 		if (err.message.indexOf(msg) >= 0) {
 			t.pass('Successfully caught error: '+msg);
 		} else {
@@ -983,7 +781,7 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 	var p7 = c.queryByChaincode().then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing request parameter in queryByChaincode');
 	}).catch(function (err) {
-		if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
+		if (err.message.indexOf('Missing request object for this transaction proposal') >= 0) {
 			t.pass('Successfully caught missing request error');
 		} else {
 			t.fail('Failed to catch the queryByChaincode missing request error. Error: ' + err.stack ? err.stack : err);

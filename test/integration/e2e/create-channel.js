@@ -29,7 +29,6 @@ var fs = require('fs');
 var path = require('path');
 
 var testUtil = require('../../unit/util.js');
-var Orderer = require('fabric-client/lib/Orderer.js');
 
 var the_user = null;
 
@@ -44,20 +43,17 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 	// Create and configure the test chain
 	//
 	var client = new hfc();
-	var chain = client.newChain('mychannel');
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	chain.addOrderer(
-		new Orderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
+	var orderer = client.newOrderer(
+		ORGS.orderer.url,
+		{
+			'pem': caroots,
+			'ssl-target-name-override': ORGS.orderer['server-hostname']
+		}
 	);
 
 	// Acting as a client in org1 when creating the channel
@@ -77,19 +73,30 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 		// readin the envelope to send to the orderer
 		data = fs.readFileSync('./test/fixtures/channel/mychannel.tx');
 		var request = {
-			envelope : data
+			envelope : data,
+			name : 'mychannel',
+			orderer : orderer
 		};
 		// send to orderer
-		return chain.createChannel(request);
+		return client.createChannel(request);
 	}, (err) => {
 		t.fail('Failed to enroll user \'admin\'. ' + err);
 		t.end();
 	})
-	.then((response) => {
-		logger.debug(' response ::%j',response);
+	.then((chain) => {
+		logger.debug(' response ::%j',chain);
 
-		if (response && response.status === 'SUCCESS') {
-			t.pass('Successfully created the channel.');
+		if (chain) {
+			var test_orderers = chain.getOrderers();
+			if(test_orderers) {
+				var test_orderer = test_orderers[0];
+				if(test_orderer === orderer) {
+					t.pass('Successfully created the channel.');
+				}
+				else {
+					t.fail('Chain did not have the orderer.');
+				}
+			}
 			return sleep(5000);
 		} else {
 			t.fail('Failed to create the channel. ');

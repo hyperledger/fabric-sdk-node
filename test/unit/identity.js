@@ -214,6 +214,9 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 	var identity = new Identity('testIdentity', TEST_CERT_PEM, pubKey, mspImpl);
 
 	var serializedID = identity.serialize();
+	// deserializeIdentity should work both ways ... with promise and without
+	var identity_g = mspImpl.deserializeIdentity(serializedID, false);
+	t.equals(identity_g.getId(),'SomeDummyValue', 'deserializeIdentity call without promise');
 
 	mspImpl.deserializeIdentity(serializedID)
 	.then((dsID) => {

@@ -31,8 +31,6 @@ var fs = require('fs');
 var util = require('util');
 
 var hfc = require('fabric-client');
-var Peer = require('fabric-client/lib/Peer.js');
-var Orderer = require('fabric-client/lib/Orderer.js');
 var testUtil = require('../../unit/util.js');
 
 var e2e = testUtil.END2END;
@@ -46,6 +44,9 @@ var the_user = null;
 testUtil.setupChaincodeDeploy();
 
 test('\n\n***** End-to-end flow: chaincode install *****\n\n', (t) => {
+	// other test may have adjusted this time
+	hfc.setConfigSetting('request-timeout', 45000);
+
 	installChaincode('org1', t)
 	.then(() => {
 		t.pass('Successfully installed chaincode in peers of organization "org1"');
@@ -74,7 +75,7 @@ function installChaincode(org, t) {
 	let caroots = Buffer.from(data).toString();
 
 	chain.addOrderer(
-		new Orderer(
+		client.newOrderer(
 			ORGS.orderer.url,
 			{
 				'pem': caroots,
@@ -90,7 +91,7 @@ function installChaincode(org, t) {
 		if (ORGS[org].hasOwnProperty(key)) {
 			if (key.indexOf('peer') === 0) {
 				let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
-				let peer = new Peer(
+				let peer = client.newPeer(
 					ORGS[org][key].requests,
 					{
 						pem: Buffer.from(data).toString(),
@@ -114,7 +115,7 @@ function installChaincode(org, t) {
 		the_user = admin;
 
 		nonce = utils.getNonce();
-		tx_id = chain.buildTransactionID(nonce, the_user);
+		tx_id = hfc.buildTransactionID(nonce, the_user);
 
 		// send proposal to endorser
 		var request = {
@@ -126,7 +127,7 @@ function installChaincode(org, t) {
 			nonce: nonce
 		};
 
-		return chain.sendInstallProposal(request);
+		return client.installChaincode(request);
 	},
 	(err) => {
 		t.fail('Failed to enroll user \'admin\'. ' + err);

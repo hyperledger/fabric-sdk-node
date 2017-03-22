@@ -41,15 +41,12 @@ var ORGS = hfc.getConfigSetting('test-network');
 var caRootsPath = ORGS.orderer.tls_cacerts;
 let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 let caroots = Buffer.from(data).toString();
-
-chain.addOrderer(
-	new Orderer(
-		ORGS.orderer.url,
-		{
-			'pem': caroots,
-			'ssl-target-name-override': ORGS.orderer['server-hostname']
-		}
-	)
+var orderer = client.newOrderer(
+	ORGS.orderer.url,
+	{
+		'pem': caroots,
+		'ssl-target-name-override': ORGS.orderer['server-hostname']
+	}
 );
 
 var org = 'org1';
@@ -114,10 +111,12 @@ test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist
 			t.pass('Successfully read file');
 			//console.log('envelope contents ::'+JSON.stringify(data));
 			var request = {
-				envelope : data
+				envelope : data,
+				name : 'mychannel',
+				orderer : orderer
 			};
 			// send to orderer
-			return chain.createChannel(request);
+			return client.createChannel(request);
 		},
 		function(err) {
 			t.fail('Failed to read file :: ' + err);
@@ -126,7 +125,7 @@ test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist
 	)
 	.then(
 		function(response) {
-			t.fail('Failed to get error. Response code: ' + response && response.status ? response.status : '');
+			t.fail('Failed to get error. Response: ' + response);
 			t.end();
 		},
 		function(err) {
