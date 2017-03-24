@@ -544,13 +544,14 @@ var FabricCAClient = class {
 							util.format('fabric-ca request %s failed with HTTP status code %s', api_method, response.statusCode)));
 					}
 					//response should be JSON
+					var responseObj;
 					try {
-						var responseObj = JSON.parse(payload);
+						responseObj = JSON.parse(payload);
 						if (responseObj.success) {
 							return resolve(responseObj);
 						} else {
 							return reject(new Error(
-								util.format('fabric-ca request %s failed with errors [%s]', api_method, JSON.stringify(responseObj.errors))));
+								util.format('fabric-ca request %s failed with errors [%s]', api_method, JSON.stringify(responseObj && responseObj.errors ? responseObj.errors : responseObj))));
 						}
 
 					} catch (err) {
@@ -655,7 +656,7 @@ var FabricCAClient = class {
 							return resolve(enrollResponse);
 						} else {
 							return reject(new Error(
-								util.format('Enrollment failed with errors [%s]', JSON.stringify(enrollResponse.errors))));
+								util.format('Enrollment failed with errors [%s]', JSON.stringify(res.errors))));
 						}
 
 					} catch (err) {

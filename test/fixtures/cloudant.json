@@ -1,5 +1,6 @@
 {
 	"cloudant-username" : "1421acc7-6faa-491a-8e10-951e2e190684-bluemix",
 	"cloudant-password" : "7179ef7a72602189243deeabe207889bde1c2fada173ae1022b5592e5a79dacc",
-	"key-value-store" : "fabric-client/lib/impl/CouchDBKeyValueStore.js"
+	"cloudant-bluemix" : "@1421acc7-6faa-491a-8e10-951e2e190684-bluemix.cloudant.com",
+	"key-value-store" : "fabric-client/lib/impl/CouchDBKeyValueStore.js"	
 }

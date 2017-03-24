@@ -26,6 +26,8 @@ var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
 var logger = sdkUtils.getLogger('Client.js');
 var util = require('util');
+var path = require('path');
+var fs = require('fs-extra');
 
 var grpc = require('grpc');
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
@@ -743,6 +745,108 @@ var Client = class {
 	}
 
 	/**
+	 * Returns an authorized user loaded using the
+	 * private key and pre-enrolled certificate from files
+	 * based on the MSP config directory structure:
+	 * <br>root
+	 * <br>&nbsp;&nbsp;&nbsp;\_ keystore
+	 * <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\_ admin.pem  <<== this is the private key saved in PEM file
+	 * <br>&nbsp;&nbsp;&nbsp;\_ signcerts
+	 * <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\_ admin.pem  <<== this is the signed certificate saved in PEM file
+	 * @param {object} opts
+	 * <br>- username {string} - the user name used for enrollment
+	 * <br>- mspid {string} - the MSP id
+	 * <br>
+	 * <br>- cryptoContent {object}
+	 * <br>---- privateKey {string} - the PEM file name including the root path - required when using the file system
+	 * <br>---- signedCert {string} - the PEM file name including the root path - required when using the file system
+	 * <br>---- or
+	 * <br>---- privateKeyPEM {string} - the PEM string - required when no file system is available
+	 * <br>---- signedCertPEM {string} - the PEM string - required when no file system is available
+	 *
+	 */
+	createUser(opts) {
+		logger.info('opts = %s', JSON.stringify(opts));
+		if (!opts) {
+			return Promise.reject(new Error('Client.createUser missing required \'opts\' parameter.'));
+		}
+		if (this._stateStore == null) {
+			return Promise.reject(new Error('Client.createUser state store must be set on this client instance.'));
+		}
+		if (!opts.username || opts.username && opts.username.length < 1) {
+			return Promise.reject(new Error('Client.createUser parameter \'opts username\' is required.'));
+		}
+		if (!opts.mspid || opts.mspid && opts.mspid.length < 1) {
+			return Promise.reject(new Error('Client.createUser parameter \'opts mspid\' is required.'));
+		}
+		if (opts.cryptoContent) {
+			if ((opts.cryptoContent.privateKey || opts.cryptoContent.signedCert) &&
+				(!opts.cryptoContent.privateKey || !opts.cryptoContent.signedCert)) {
+				return Promise.reject(new Error('Client.createUser both parameters \'opts cryptoContent privateKey and signedCert\' files are required.'));
+			}
+			if ((opts.cryptoContent.privateKeyPEM || opts.cryptoContent.signedCertPEM) &&
+				(!opts.cryptoContent.privateKeyPEM || !opts.cryptoContent.signedCertPEM)) {
+				return Promise.reject(new Error('Client.createUser both parameters \'opts cryptoContent privateKeyPEM and signedCertPEM\' strings are required.'));
+			}
+
+		} else {
+			return Promise.reject(new Error('Client.createUser parameter \'opts cryptoContent\' is required.'));
+		}
+		if (this._cryptoSuite == null) {
+			if (!opts.keyStoreOpts) {
+				return Promise.reject(new Error('Client.createUser parameter \'opts keyStoreOpts\' is required when cryptoSuite has not been set.'));
+			}
+			this._cryptoSuite = sdkUtils.newCryptoSuite(this._stateStore, opts.keyStoreOpts);
+		}
+		var self = this;
+		return new Promise((resolve, reject) => {
+			logger.info('loading submitter from files');
+			// need to load private key and pre-enrolled certificate from files based on the MSP
+			// root MSP config directory structure:
+			// <config>
+			//    \_ keystore
+			//       \_ admin.pem  <<== this is the private key saved in PEM file
+			//    \_ signcerts
+			//       \_ admin.pem  <<== this is the signed certificate saved in PEM file
+
+			// first load the private key and save in the BCCSP's key store
+			var promise, member, importedKey;
+			if (opts.cryptoContent.privateKey) {
+				promise = readFile(opts.cryptoContent.privateKey);
+			} else {
+				promise = Promise.resolve(opts.cryptoContent.privateKeyPEM);
+			}
+			promise.then((data) => {
+				logger.debug('then privateKeyPEM data');
+				return self._cryptoSuite.importKey(data.toString());
+			}).then((key) => {
+				logger.debug('then key');
+				importedKey = key;
+				// next save the certificate in a serialized user enrollment in the state store
+				if (opts.cryptoContent.signedCert) {
+					promise = readFile(opts.cryptoContent.signedCert);
+				} else {
+					promise = Promise.resolve(opts.cryptoContent.signedCertPEM);
+				}
+				return promise;
+			}).then((data) => {
+				logger.debug('then signedCertPEM data');
+				member = new User(opts.username);
+				return member.setEnrollment(importedKey, data.toString(), opts.mspid, { kvsOpts: self._cryptoSuite._storeConfig.opts });
+			}).then(() => {
+				logger.debug('then setUserContext');
+				return self.setUserContext(member);
+			}).then((user) => {
+				logger.debug('then user');
+				return resolve(user);
+			}).catch((err) => {
+				throw new Error('Failed to load key or certificate and save to local stores.');
+				logger.error(err.stack ? err.stack : err);
+			});
+		});
+	}
+
+	/**
 	 * Obtains an instance of the [KeyValueStore]{@link module:api.KeyValueStore} class. By default
 	 * it returns the built-in implementation, which is based on files ([FileKeyValueStore]{@link module:api.FileKeyValueStore}).
 	 * This can be overriden with an environment variable KEY_VALUE_STORE, the value of which is the
@@ -863,5 +967,20 @@ var Client = class {
 		return sdkUtils.getConfigSetting(name, default_value);
 	}
 };
+
+function readFile(path) {
+	return new Promise(function(resolve, reject) {
+		fs.readFile(path, 'utf8', function (err, data) {
+			if (err) {
+				if (err.code !== 'ENOENT') {
+					return reject(err);
+				} else {
+					return resolve(null);
+				}
+			}
+			return resolve(data);
+		});
+	});
+}
 
 module.exports = Client;

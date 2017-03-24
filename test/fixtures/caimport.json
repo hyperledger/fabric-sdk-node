@@ -1,0 +1,26 @@
+{
+	"ca-import" : {
+		"orgs": { 
+			"org1": {
+				"username": "admin",
+				"name": "peerOrg1",
+				"mspid": "Org1MSP",
+				"storePath": "/tmp/hfc-test-kvs_org1",
+				"cryptoContent": {
+					"privateKey": "../fixtures/msp/local/keystore/admin.pem",
+					"signedCert": "../fixtures/msp/local/signcerts/admin.pem"
+				}
+			},
+			"org2": {
+				"username": "admin",
+				"name": "peerOrg2",
+				"mspid": "Org2MSP",
+				"storePath": "/tmp/hfc-test-kvs_org2",
+				"cryptoContent": {
+					"privateKeyPEM": "-----BEGIN PRIVATE KEY-----MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg2HxfPVxvwHYM5X8o/tEoDZ54Rl9uW13U6RElpnFOCruhRANCAATx8pv9DCChfwHoa7IRUf2z7GTmC3k2Tl8e7DWA9fZ4cpL9vdk0ZMgQZKo8Gm61NSTuHMZ8zp3uZn7QOcCmwuDg-----END PRIVATE KEY-----",
+					"signedCertPEM": "-----BEGIN CERTIFICATE-----MIIB8TCCAZegAwIBAgIUasxwoRvBrGrdyg9+HtdJ3brpcuMwCgYIKoZIzj0EAwIwfzELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xHzAdBgNVBAoTFkludGVybmV0IFdpZGdldHMsIEluYy4xDDAKBgNVBAsTA1dXVzEUMBIGA1UEAxMLZXhhbXBsZS5jb20wHhcNMTcwMTE5MTk1NjAwWhcNMTcxMjE5MDM1NjAwWjAQMQ4wDAYDVQQDEwVhZG1pbjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPHym/0MIKF/AehrshFR/bPsZOYLeTZOXx7sNYD19nhykv292TRkyBBkqjwabrU1JO4cxnzOne5mftA5wKbC4OCjYDBeMA4GA1UdDwEB/wQEAwICBDAMBgNVHRMBAf8EAjAAMB0GA1UdDgQWBBQtEfVCvKOzNSiTgpaWzaYVm6eaBzAfBgNVHSMEGDAWgBQXZ0I9qp6CP8TFHZ9bw5nRtZxIEDAKBggqhkjOPQQDAgNIADBFAiEAvGd5YDIBeQZWpP9wEHFmezvSCjrzy8VcvH/7Yuv3vcoCICy5ssNrEHEyWXqBqeKfU/zrPhHsWJFIaJEDQLRQE05l-----END CERTIFICATE-----"
+				}
+			}
+		}
+	}
+}
