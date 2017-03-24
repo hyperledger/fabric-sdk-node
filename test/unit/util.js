@@ -87,6 +87,11 @@ module.exports.readFile = readFile;
 hfc.addConfigFile(path.join(__dirname, '../integration/e2e/config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 
+var	tlsOptions = {
+	trustedRoots: [],
+	verify: false
+};
+
 function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
 	var caUrl = ORGS[userOrg].ca;
 
@@ -100,7 +105,7 @@ function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
 
 			if (!loadFromConfig) {
 				// need to enroll it with CA server
-				var cop = new copService(caUrl);
+				var cop = new copService(caUrl, tlsOptions);
 
 				var member;
 				return cop.enroll({

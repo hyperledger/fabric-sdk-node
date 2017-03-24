@@ -13,6 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+'use strict';
+
+var utils = require('fabric-client/lib/utils.js');
+utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
+var logger = utils.getLogger('E2E join-channel');
 
 var tape = require('tape');
 var _test = require('tape-promise');
@@ -24,7 +29,6 @@ var fs = require('fs');
 var grpc = require('grpc');
 
 var hfc = require('fabric-client');
-var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
@@ -184,7 +188,7 @@ function joinChannel(org, t) {
 			eventPromises.push(txPromise);
 		});
 
-		sendPromise = chain.joinChannel(request);
+		let sendPromise = chain.joinChannel(request);
 		return Promise.all([sendPromise].concat(eventPromises));
 	}, (err) => {
 		t.fail('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);

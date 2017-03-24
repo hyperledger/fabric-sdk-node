@@ -8,7 +8,7 @@
 		"org1": {
 			"name": "peerOrg1",
 			"mspid": "Org1MSP",
-			"ca": "http://localhost:7054",
+			"ca": "https://localhost:7054",
 			"peer1": {
 				"requests": "grpcs://localhost:7051",
 				"events": "grpcs://localhost:7053",
@@ -25,7 +25,7 @@
 		"org2": {
 			"name": "peerOrg2",
 			"mspid": "Org2MSP",
-			"ca": "http://localhost:8054",
+			"ca": "https://localhost:8054",
 			"peer1": {
 				"requests": "grpcs://localhost:8051",
 				"events": "grpcs://localhost:8053",

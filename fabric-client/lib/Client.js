@@ -294,7 +294,7 @@ var Client = class {
 				function(memberStr) {
 					if (memberStr) {
 						// The member was found in the key value store, so restore the state.
-						var newUser = new User(name, self);
+						var newUser = new User(name);
 
 						return newUser.fromString(memberStr);
 					} else {

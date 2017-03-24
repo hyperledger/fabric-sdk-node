@@ -263,6 +263,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	testutil.resetDefaults();
+	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
 
 	var cryptoUtils = utils.newCryptoSuite();
 

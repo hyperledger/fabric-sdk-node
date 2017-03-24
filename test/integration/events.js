@@ -16,6 +16,12 @@
 
 'use strict';
 
+if (global && global.hfc) global.hfc.config = undefined;
+require('nconf').reset();
+var utils = require('fabric-client/lib/utils.js');
+utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
+var logger = utils.getLogger('events');
+
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
@@ -26,18 +32,14 @@ var fs = require('fs');
 
 var hfc = require('fabric-client');
 var testUtil = require('../unit/util.js');
-var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var eputil = require('./eventutil.js');
 
-var logger = utils.getLogger('events');
-hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
-
 var client = new hfc();
 var chain = client.newChain(testUtil.END2END.channel);
-hfc.addConfigFile(path.join(__dirname, './config.json'));
+hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 
 var caRootsPath = ORGS.orderer.tls_cacerts;
@@ -197,7 +199,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				t.end();
 			}).then((results) => {
 				t.pass('Successfully received chaincode event.');
-				if (steps.length === 1 && steps[0] === 'step2') {
+				if (useSteps && steps.length === 1 && steps[0] === 'step2') {
 					t.end();
 				}
 			},
@@ -223,7 +225,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				for (let i = 0; i < response_payloads.length; i++) {
 					t.equal(response_payloads[i].toString('utf8'), '1', 'checking query results are number of events generated');
 				}
-				if (steps.length === 1 && steps[0] === 'step3') {
+				if (useSteps && steps.length === 1 && steps[0] === 'step3') {
 					t.end();
 				}
 			},
@@ -238,7 +240,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		}
 
 		if (!useSteps || steps.indexOf('step4') >= 0) {
-			logger.info('Executing step5');
+			logger.info('Executing step4');
 			// Test invalid transaction
 			// create 2 invoke requests in quick succession that modify
 			// the same state variable which should cause one invoke to

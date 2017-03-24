@@ -122,7 +122,7 @@ test('FabricCAClient: Test constructor', function (t) {
 });
 
 //FabricCAClient _pemToDER tests
-var ecertPEM = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabriccop/ecert.pem'));
+var ecertPEM = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabricca/ecert.pem'));
 
 test('FabricCAClient: Test _pemToDer static method',function(t){
 

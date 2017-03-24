@@ -18,6 +18,12 @@
 // in a happy-path scenario
 'use strict';
 
+if (global && global.hfc) global.hfc.config = undefined;
+require('nconf').reset();
+var utils = require('fabric-client/lib/utils.js');
+utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
+var logger = utils.getLogger('get-config');
+
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
@@ -28,13 +34,9 @@ var util = require('util');
 
 var hfc = require('fabric-client');
 var testUtil = require('../unit/util.js');
-var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
-
-var logger = utils.getLogger('GET CONFIG');
-hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
 
 // Get the proto bufs
 var grpc = require('grpc');
@@ -50,7 +52,7 @@ var _ccEventProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/
 var client = new hfc();
 // IMPORTANT ------>>>>> MUST RUN e2e/create-channel.js FIRST
 var chain = client.newChain(testUtil.END2END.channel);
-hfc.addConfigFile(path.join(__dirname, './config.json'));
+hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 
 var caRootsPath = ORGS.orderer.tls_cacerts;
