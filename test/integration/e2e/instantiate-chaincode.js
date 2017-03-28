@@ -146,7 +146,24 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
 			args: ['a', '100', 'b', '200'],
 			chainId: e2e.channel,
 			txId: tx_id,
-			nonce: nonce
+			nonce: nonce,
+			// use this to demonstrate the following policy:
+			// 'if signed by org1 admin, then that's the only signature required,
+			// but if that signature is missing, then the policy can also be fulfilled
+			// when members (non-admin) from both orgs signed'
+			'endorsement-policy': {
+				identities: [
+					{ role: { name: 'member', mspId: ORGS['org1'].mspid }},
+					{ role: { name: 'member', mspId: ORGS['org2'].mspid }},
+					{ role: { name: 'admin', mspId: ORGS['org1'].mspid }}
+				],
+				policy: {
+					'1-of': [
+						{ 'signed-by': 2},
+						{ '2-of': [{ 'signed-by': 0}, { 'signed-by': 1 }]}
+					]
+				}
+			}
 		};
 
 		return chain.sendInstantiateProposal(request);

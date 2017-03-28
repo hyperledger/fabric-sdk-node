@@ -23,6 +23,9 @@ var test = _test(tape);
 var tar = require('tar-fs');
 var gunzip = require('gunzip-maybe');
 var fs = require('fs-extra');
+var grpc = require('grpc');
+var _policiesProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/policies.proto').common;
+var _mspPrProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/msp_principal.proto').common;
 
 var hfc = require('fabric-client');
 var testutil = require('./util.js');
@@ -30,7 +33,10 @@ var Peer = require('fabric-client/lib/Peer.js');
 var Chain = require('fabric-client/lib/Chain.js');
 var Packager = require('fabric-client/lib/Packager.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
+var MSP = require('fabric-client/lib/msp/msp.js');
 var MSPManager = require('fabric-client/lib/msp/msp-manager.js');
+var idModule = require('fabric-client/lib/msp/identity.js');
+var SigningIdentity = idModule.SigningIdentity;
 
 var _chain = null;
 var chainName = 'testChain';
@@ -383,16 +389,247 @@ test('\n\n** Packager tests **\n\n', function(t) {
 	});
 });
 
+var TWO_ORG_MEMBERS_AND_ADMIN = [{
+	role: {
+		name: 'member',
+		mspId: 'org1'
+	}
+}, {
+	role: {
+		name: 'member',
+		mspId: 'org2'
+	}
+}, {
+	role: {
+		name: 'admin',
+		mspId: 'masterOrg'
+	}
+}];
+
+var ONE_OF_TWO_ORG_MEMBER = {
+	identities: TWO_ORG_MEMBERS_AND_ADMIN,
+	policy: {
+		'1-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }]
+	}
+};
+
+var TWO_OF_TWO_ORG_MEMBER = {
+	identities: TWO_ORG_MEMBERS_AND_ADMIN,
+	policy: {
+		'2-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }]
+	}
+};
+
+var ONE_OF_TWO_ORG_MEMBER_AND_ADMIN = {
+	identities: TWO_ORG_MEMBERS_AND_ADMIN,
+	policy: {
+		'2-of': [{
+			'1-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }]
+		}, {
+			'signed-by': 2
+		}]
+	}
+};
+
+var CRAZY_SPEC = {
+	identities: TWO_ORG_MEMBERS_AND_ADMIN,
+	policy: {
+		'2-of': [{
+			'1-of': [{
+				'signed-by': 0
+			}, {
+				'1-of': [{ 'signed-by': 1 }, { 'signed-by': 2 }]
+			}]
+		}, {
+			'1-of': [{
+				'2-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }, { 'signed-by': 2 }]
+			}, {
+				'2-of': [{ 'signed-by': 2 }, { '1-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }] }]
+			}]
+		}]
+	}
+};
+
 test('\n\n ** Chain _buildDefaultEndorsementPolicy() tests **\n\n', function (t) {
 	var c = new Chain('does not matter', client);
 
 	t.throws(
 		() => {
-			c._buildDefaultEndorsementPolicy();
+			c._buildEndorsementPolicy();
 		},
 		/Verifying MSPs not found in the chain object, make sure "intialize\(\)" is called first/,
 		'Checking that "initialize()" must be called before calling "instantiate()" that uses the endorsement policy'
 	);
+
+	// construct dummy msps and msp manager to test default policy construction
+	var msp1 = new MSP({
+		id: 'msp1',
+		cryptoSuite: 'crypto1'
+	});
+
+	var msp2 = new MSP({
+		id: 'msp2',
+		cryptoSuite: 'crypto2'
+	});
+
+	var mspm = new MSPManager();
+	mspm._msps = {
+		'msp1': msp1,
+		'msp2': msp2
+	};
+
+	c._msp_manager = mspm;
+
+	var policy;
+	t.doesNotThrow(
+		() => {
+			policy = c._buildEndorsementPolicy();
+		},
+		null,
+		'Checking that after initializing the chain with dummy msps and msp manager, _buildEndorsementPolicy() can be called without error'
+	);
+
+	t.equal(Buffer.isBuffer(policy), true, 'Checking default policy has an identities array');
+
+	var env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
+	t.equal(Array.isArray(env.identities), true, 'Checking decoded default policy has an "identities" array');
+	t.equal(env.identities.length, 2, 'Checking decoded default policy has two array items');
+	t.equal(env.identities[0].getPrincipalClassification(), _mspPrProto.MSPPrincipal.Classification.ROLE, 'Checking decoded default policy has a ROLE identity');
+
+	t.equal(typeof env.getPolicy().get('n_out_of'), 'object', 'Checking decoded default policy has an "n_out_of" policy');
+	t.equal(env.getPolicy().get('n_out_of').getN(), 1, 'Checking decoded default policy has an "n_out_of" policy with N = 1');
+
+	t.throws(
+		() => {
+			c._buildEndorsementPolicy({identities: null});
+		},
+		/Invalid policy, missing the "identities" property/,
+		'Checking policy spec: must have identities'
+	);
+
+	t.throws(
+		() => {
+			c._buildEndorsementPolicy({identities: {}});
+		},
+		/Invalid policy, the "identities" property must be an array/,
+		'Checking policy spec: identities must be an array'
+	);
+
+	t.throws(
+		() => {
+			c._buildEndorsementPolicy({identities: []});
+		},
+		/Invalid policy, missing the "policy" property/,
+		'Checking policy spec: must have "policy"'
+	);
+
+	t.throws(
+		() => {
+			c._buildEndorsementPolicy({identities: [{dummy: 'value', dummer: 'value'}], policy: {}});
+		},
+		/Invalid identity type found: must be one of role, organization-unit or identity, but found dummy,dummer/,
+		'Checking policy spec: each identity must be "role", "organization-unit" or "identity"'
+	);
+
+	t.throws(
+		() => {
+			c._buildEndorsementPolicy({identities: [{role: 'value'}], policy: {}});
+		},
+		/Invalid role name found: must be one of "member" or "admin", but found/,
+		'Checking policy spec: value identity type "role" must have valid "name" value'
+	);
+
+	t.throws(
+		() => {
+			c._buildEndorsementPolicy({identities: [{'organization-unit': 'value'}], policy: {}});
+		},
+		/NOT IMPLEMENTED/,
+		'Checking policy spec: value identity type "organization-unit"'
+	);
+
+	t.throws(
+		() => {
+			c._buildEndorsementPolicy({identities: [{identity: 'value'}], policy: {}});
+		},
+		/NOT IMPLEMENTED/,
+		'Checking policy spec: value identity type "identity"'
+	);
+
+	t.throws(
+		() => {
+			c._buildEndorsementPolicy({identities: [{role: {name: 'member', mspId: 'value'}}], policy: {dummy: 'value'}});
+		},
+		/Invalid policy type found: must be one of "n-of" or "signed-by" but found "dummy"/,
+		'Checking policy spec: policy type must be "n-of" or "signed-by"'
+	);
+
+	t.doesNotThrow(
+		() => {
+			policy = c._buildEndorsementPolicy(ONE_OF_TWO_ORG_MEMBER);
+		},
+		null,
+		'Building successfully from valid policy spec ONE_OF_TWO_ORG_MEMBER'
+	);
+
+	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
+	t.equals(Array.isArray(env.identities) &&
+		env.identities.length === 3 &&
+		env.identities[0].getPrincipalClassification() === _mspPrProto.MSPPrincipal.Classification.ROLE,
+		true,
+		'Checking decoded custom policy has two items'
+	);
+
+	t.equals(env.policy['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of"');
+	t.equals(env.policy['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies');
+
+	t.doesNotThrow(
+		() => {
+			policy = c._buildEndorsementPolicy(TWO_OF_TWO_ORG_MEMBER);
+		},
+		null,
+		'Building successfully from valid policy spec TWO_OF_TWO_ORG_MEMBER'
+	);
+
+	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
+	t.equals(env.policy['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
+	t.equals(env.policy['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies');
+
+	t.doesNotThrow(
+		() => {
+			policy = c._buildEndorsementPolicy(ONE_OF_TWO_ORG_MEMBER_AND_ADMIN);
+		},
+		null,
+		'Building successfully from valid policy spec ONE_OF_TWO_ORG_MEMBER_AND_ADMIN'
+	);
+
+	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
+	t.equals(env.policy['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
+	t.equals(env.policy['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.policy['n_out_of'].policies[0]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[0]['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[1]['signed_by'], 2, 'Checking decoded custom policy has "signed-by: 2" inside the "2 out of"');
+
+	t.doesNotThrow(
+		() => {
+			policy = c._buildEndorsementPolicy(CRAZY_SPEC);
+		},
+		null,
+		'Building successfully from valid policy spec CRAZY_SPEC'
+	);
+
+	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
+	t.equals(env.policy['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
+	t.equals(env.policy['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.policy['n_out_of'].policies[0]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[0]['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[0]['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[0]['n_out_of'].getPolicies().length, 3, 'Checking decoded custom policy has 3 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[1]['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[1]['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has 2 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[1]['n_out_of'].getPolicies()[0]['signed_by'], 2, 'Checking decoded custom policy has "signed-by: 2" for "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[1]['n_out_of'].getPolicies()[1]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside "2 out of " inside "1 out of" inside the "2 out of"');
 
 	t.end();
 });

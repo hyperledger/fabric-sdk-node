@@ -31,6 +31,7 @@ var grpc = require('grpc');
 var logger = utils.getLogger('Chain.js');
 var hashPrimitives = require('./hash.js');
 var MSPManager = require('./msp/msp-manager.js');
+var Policy = require('./Policy.js');
 
 var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
@@ -38,7 +39,6 @@ var _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos
 var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
 var _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
 var _peerConfigurationProto = grpc.load(__dirname + '/protos/peer/configuration.proto').protos;
-var _mspPrProto = grpc.load(__dirname + '/protos/common/msp_principal.proto').common;
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
 var _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
 var _policiesProto = grpc.load(__dirname + '/protos/common/policies.proto').common;
@@ -1266,6 +1266,34 @@ var Chain = class {
 	 *                  the chaincode once instantiated (default 'init')
 	 *		<br>`args` : optional - String Array arguments specific to
 	 *                   the chaincode being instantiated
+	 *		<br>`endorsement-policy` : optional - {@link EndorsementPolicy} object for this
+	 *				chaincode. If not specified, a default policy of "a signature by any member
+	 *				from any of the organizations corresponding to the array of member service
+	 *				providers" is used
+	 * @example <caption>"Signed by any member from one of the organizations"</caption>
+	 * {
+	 *   identities: [
+	 *     { role: { name: "member", mspId: "org1" }},
+	 *     { role: { name: "member", mspId: "org2" }}
+	 *   ],
+	 *   policy: {
+	 *     "1-of": [{ "signed-by": 0 }, { "signed-by": 1 }]
+	 *   }
+	 * }
+	 * @example <caption>"Signed by admin of the ordererOrg and any member from one of the peer organizations"</caption>
+	 * {
+	 *   identities: [
+	 *     { role: { name: "member", mspId: "peerOrg1" }},
+	 *     { role: { name: "member", mspId: "peerOrg2" }},
+	 *     { role: { name: "admin", mspId: "ordererOrg" }}
+	 *   ],
+	 *   policy: {
+	 *     "2-of": [
+	 *       { "signed-by": 2},
+	 *       { "1-of": [{ "signed-by": 0 }, { "signed-by": 1 }]}
+	 *     ]
+	 *   }
+	 * }
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 * @see /protos/peer/proposal_response.proto
 	 */
@@ -1345,7 +1373,7 @@ var Chain = class {
 								Buffer.from('deploy', 'utf8'),
 								Buffer.from('default', 'utf8'),
 								chaincodeDeploymentSpec.toBuffer(),
-								self._buildDefaultEndorsementPolicy()
+								self._buildEndorsementPolicy(request['endorsement-policy'])
 							]
 						}
 					};
@@ -1790,49 +1818,8 @@ var Chain = class {
 	}
 
 	// internal utility method to build chaincode policy
-	// FIXME: for now always construct a 'Signed By any member of an organization by mspid' policy
-	_buildDefaultEndorsementPolicy() {
-		// construct a list of msp principals to select from using the 'n out of' operator
-		var msps = this.getMSPManager().getMSPs();
-		var principals = [], signedBys = [];
-		var index = 0;
-		for (let name in msps) {
-			if (msps.hasOwnProperty(name)) {
-				let onePrn = new _mspPrProto.MSPPrincipal();
-				onePrn.setPrincipalClassification(_mspPrProto.MSPPrincipal.Classification.ROLE);
-
-				let memberRole = new _mspPrProto.MSPRole();
-				memberRole.setRole(_mspPrProto.MSPRole.MSPRoleType.MEMBER);
-				memberRole.setMspIdentifier(name);
-
-				onePrn.setPrincipal(memberRole.toBuffer());
-
-				principals.push(onePrn);
-
-				var signedBy = new _policiesProto.SignaturePolicy();
-				signedBy.set('signed_by', index++);
-				signedBys.push(signedBy);
-			}
-		}
-
-		if (principals.length === 0) {
-			throw new Error('Verifying MSPs not found in the chain object, make sure "intialize()" is called first.');
-		}
-
-		// construct 'one of one' policy
-		var oneOfAny = new _policiesProto.SignaturePolicy.NOutOf();
-		oneOfAny.setN(1);
-		oneOfAny.setPolicies(signedBys);
-
-		var noutof = new _policiesProto.SignaturePolicy();
-		noutof.set('n_out_of', oneOfAny);
-
-		var envelope = new _policiesProto.SignaturePolicyEnvelope();
-		envelope.setVersion(0);
-		envelope.setPolicy(noutof);
-		envelope.setIdentities(principals);
-
-		return envelope.toBuffer();
+	_buildEndorsementPolicy(policy) {
+		return Policy.buildPolicy(this.getMSPManager().getMSPs(), policy);
 	}
 
 	// internal utility method to return one Promise when sending a proposal to many peers
