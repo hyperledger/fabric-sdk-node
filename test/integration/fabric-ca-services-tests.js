@@ -198,6 +198,14 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 			return caService.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org2.department1'}, webAdmin);
 		}).then(() => {
 			t.pass('Successfully registered "auditor" of role "client" from "webAdmin"');
+
+			return caService.reenroll(webAdmin);
+		}).then((res) => {
+			t.pass('Successfully re-enrolled "webAdmin" user');
+
+			t.equal(typeof res.key !== 'undefined' && res.key !== null, true, 'Checking re-enroll response has the private key');
+			t.equal(typeof res.certificate !== 'undefined' && res.certificate !== null, true, 'Checking re-enroll response has the certificate');
+
 			t.end();
 		}).catch((err) => {
 			t.fail('Failed at ' + err.stack ? err.stack : err);

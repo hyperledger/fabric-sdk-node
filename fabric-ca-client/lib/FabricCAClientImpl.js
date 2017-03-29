@@ -20,12 +20,10 @@ var api = require('./api.js');
 var utils = require('./utils.js');
 var util = require('util');
 var jsrsa = require('jsrsasign');
-var asn1 = jsrsa.asn1;
 var path = require('path');
 var http = require('http');
 var https = require('https');
 var urlParser = require('url');
-
 
 var logger = utils.getLogger('FabricCAClientImpl.js');
 
@@ -148,6 +146,75 @@ var FabricCAServices = class {
 									key: privateKey,
 									certificate: enrollResponse.enrollmentCert,
 									rootCertificate: enrollResponse.caCertChain
+								});
+							},
+							function (err) {
+								return reject(err);
+							}
+							);
+
+					} catch (err) {
+						return reject(new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err)));
+					}
+				},
+				function (err) {
+					return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]', err)));
+				}
+				);
+
+		});
+	}
+
+	/**
+	 * Re-enroll the member in cases such as the existing enrollment certificate is about to expire, or
+	 * it has been compromised
+	 * @param {User} currentUser The identity of the current user that holds the existing enrollment certificate
+	 * @returns Promise for an object with "key" for private key and "certificate" for the signed certificate
+	 */
+	reenroll(currentUser) {
+		if (!currentUser) {
+			logger.error('Invalid re-enroll request, missing argument "currentUser"');
+			throw new Error('Invalid re-enroll request, missing argument "currentUser"');
+		}
+
+		if (typeof currentUser.getIdentity !== 'function') {
+			logger.error('Invalid re-enroll request, "currentUser" is not a valid User object, missing "getIdentity()" method');
+			throw new Error('Invalid re-enroll request, "currentUser" is not a valid User object, missing "getIdentity()" method');
+		}
+
+		if (typeof currentUser.getSigningIdentity !== 'function') {
+			logger.error('Invalid re-enroll request, "currentUser" is not a valid User object, missing "getSigningIdentity()" method');
+			throw new Error('Invalid re-enroll request, "currentUser" is not a valid User object, missing "getSigningIdentity()" method');
+		}
+
+		var cert = currentUser.getIdentity()._certificate;
+		var x509 = new jsrsa.X509();
+		x509.readCertPEM(cert);
+		var subject = x509.getSubjectString();
+		if (subject === null || subject === '')
+			throw new Error('Failed to parse the enrollment certificate of the current user for its subject');
+
+		var match = subject.match(/CN=([^,\/]+)/);
+		if (!match)
+			throw new Error('Invalid enrollment certificate of the current user: does not contain the "CN" value');
+
+		var self = this;
+
+		return new Promise(function (resolve, reject) {
+			//generate enrollment certificate pair for signing
+			self.cryptoPrimitives.generateKey()
+				.then(
+				function (privateKey) {
+					//generate CSR using the subject of the current user's certificate
+					try {
+						var csr = privateKey.generateCSR('CN=' + match[1]);
+						self._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity())
+							.then(
+							function (response) {
+								return resolve({
+									key: privateKey,
+									certificate: Buffer.from(response.result.Cert, 'base64').toString(),
+									rootCertificate: Buffer.from(response.result.ServerInfo.CAChain, 'base64').toString()
 								});
 							},
 							function (err) {
@@ -411,6 +478,37 @@ var FabricCAClient = class {
 		});
 	}
 
+	/**
+	 * Re-enroll an existing user.
+	 * @param {string} csr PEM-encoded PKCS#10 certificate signing request
+	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
+	 * @returns {Promise} {@link EnrollmentResponse}
+	 */
+	reenroll(csr, signingIdentity) {
+
+		var self = this;
+		var numArgs = arguments.length;
+
+		//all arguments are required
+		if (numArgs < 2) {
+			throw new Error('Missing required parameters.  \'csr\', \'signingIdentity\' are all required.');
+		}
+
+		return new Promise(function (resolve, reject) {
+
+			var request = {
+				certificate_request: csr
+			};
+
+			return self.post('reenroll', request, signingIdentity)
+			.then(function (response) {
+				return resolve(response);
+			}).catch(function (err) {
+				return reject(err);
+			});
+		});
+	}
+
 	post(api_method, requestObj, signingIdentity) {
 		var self = this;
 		return new Promise(function (resolve, reject) {
@@ -548,8 +646,8 @@ var FabricCAClient = class {
 							//we want the result field which is Base64-encoded PEM
 							var enrollResponse = new Object();
 							// Cert field is Base64-encoded PEM
-							enrollResponse.enrollmentCert = new Buffer.from(res.result.Cert, 'base64').toString();
-							enrollResponse.caCertChain = new Buffer.from(res.result.ServerInfo.CAChain, 'base64').toString();
+							enrollResponse.enrollmentCert = Buffer.from(res.result.Cert, 'base64').toString();
+							enrollResponse.caCertChain = Buffer.from(res.result.ServerInfo.CAChain, 'base64').toString();
 							return resolve(enrollResponse);
 						} else {
 							return reject(new Error(
