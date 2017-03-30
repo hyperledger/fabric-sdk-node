@@ -24,11 +24,23 @@ var testutil = require('./util.js');
 var utils = require('fabric-client/lib/utils.js');
 var fs = require('fs');
 var path = require('path');
+var util = require('util');
 
 testutil.resetDefaults();
 
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 var FabricCAClient = FabricCAServices.FabricCAClient;
+
+const SAMPLE_PEM_ENCODED_CERTIFICATE = '-----BEGIN CERTIFICATE-----' +
+	'MIIBbDCCARKgAwIBAwICA+gwCgYIKoZIzj0EAwIwEzERMA8GA1UEAwwIcGVlck9y' +
+	'zAwHhcNMTcwMjIwMTkwNjEwWhcNMTgwMjIwMTkwNjEwWjATMREwDwYDVQQDDAhw' +
+	'ZWVyT3JnMDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABKJfDc/CcaiHRipTG2AB' +
+	'K5fA0LO9SOlbtC9bZcjLo/xsL157p+3QB3UVF3gt7nkwgMs/ul3FhSEFTk2EVNlF' +
+	'1QCjVjBUMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFFQzuQR1RZP/Qn/B' +
+	'NDtGSa8n4eN/MB8GA1UdIwQYMBaAFFQzuQR1RZP/Qn/BNDtGSa8n4eN/MAoGCCqG' +
+	'SM49BAMCA0gAMEUCIAuG+/Fy3x9JXAD1/rFsu3ZpCKbXiXZLGF7P6Gma8is5AiEA' +
+	'pSQpRcdukxe4zvcfRmNBjMbNLWCoWlHSQA2jD678QGE=' +
+	'-----END CERTIFICATE-----';
 
 /**
  * FabricCAClient class tests
@@ -117,6 +129,58 @@ test('FabricCAClient: Test constructor', function (t) {
 		'Integer is a valid type for port'
 	);
 
+	// Add TLS options to the client -- all default values
+	connectOpts.tlsOptions = {};
+	{
+		let client = null;
+		t.doesNotThrow(
+			function () {
+				client = new FabricCAClient(connectOpts);
+				t.comment('client: ' + util.inspect(client, {depth: null}));
+			},
+			/Invalid connection options. /,
+			'Add tlsOptions to client connect_opts -- all default values'
+		);
+		t.true(client._tlsOptions.verify, 'Check default tlsOptions.verify');
+		t.true(client._tlsOptions.trustedRoots.length === 0,
+			'Check default tlsOptions.trustedRoots');
+	}
+
+	// Add TLS options to the client -- specify fields
+	connectOpts.tlsOptions = {verify: true, trustedRoots: [SAMPLE_PEM_ENCODED_CERTIFICATE]};
+	{
+		let client = null;
+		t.doesNotThrow(
+			function () {
+				client = new FabricCAClient(connectOpts);
+				t.comment('client: ' + util.inspect(client, {depth: null}));
+			},
+			/Invalid connection options. /,
+			'Add tlsOptions to client connect_opts -- non default values'
+		);
+		t.true(client._tlsOptions.verify, 'Check specified tlsOptions.verify');
+		t.equal(client._tlsOptions.trustedRoots.length, 1,
+			'Check size of tlsOptions.trustedRoots[]');
+		t.equal(client._tlsOptions.trustedRoots[0], SAMPLE_PEM_ENCODED_CERTIFICATE,
+			'Check specified tlsOptions.trustedRoots[] value');
+	}
+	// Add TLS options to the client -- verify is false
+	connectOpts.tlsOptions = {verify: false, trustedRoots: [SAMPLE_PEM_ENCODED_CERTIFICATE]};
+	{
+		let client = null;
+		t.doesNotThrow(
+			function () {
+				client = new FabricCAClient(connectOpts);
+			},
+			/Invalid connection options. /,
+			'Add tlsOptions to client connect_opts -- non default values'
+		);
+		t.false(client._tlsOptions.verify, 'Check specified tlsOptions.verify');
+		t.equal(client._tlsOptions.trustedRoots.length, 1,
+			'Check size of tlsOptions.trustedRoots[]');
+		t.equal(client._tlsOptions.trustedRoots[0], SAMPLE_PEM_ENCODED_CERTIFICATE,
+			'Check specified tlsOptions.trustedRoots[] value');
+	}
 	t.end();
 
 });
@@ -144,6 +208,20 @@ test('FabricCAClient: Test _pemToDer static method',function(t){
 		t.fail('Failed to convert PEM to DER due to ' + err);
 	}
 
+	t.end();
+});
+
+// Test getCrypto() function
+test('FabricCAServices:  Test getCrypto() function', function(t) {
+	var ca = new FabricCAServices('http://localhost:7054');
+	var crypto = ca.getCrypto();
+
+	if (crypto) {
+		t.pass('Successfully called getCrypto()');
+	}
+	else {
+		t.fail('getCrypto() did not return an object');
+	}
 	t.end();
 });
 
@@ -180,7 +258,7 @@ test('FabricCAServices: Test register() function', function(t) {
 	);
 	t.throws(
 		() => {
-			cop.register({enrollmentID: 'testUser'}, {});
+			cop.register({enrollmentID: 'testUser3', maxEnrollments: null}, {});
 		},
 		/Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity/,
 		'Must fail if registrar argument is not a User object'
@@ -197,8 +275,78 @@ test('FabricCAServices: Test register() function', function(t) {
 	});
 });
 
+
+
+/*
+**
+ * FabricCAServices enroll tests
+ */
+test('FabricCAServices: Test enroll with missing parameters', function (t) {
+
+	var ca = new FabricCAServices('http://localhost:7054');
+	var req = null;
+
+	ca.enroll()
+	.then(
+		function (key, cert) {
+			t.fail('Enroll() must fail when missing required parameters');
+			t.end();
+		},
+		function (err) {
+			t.equal(err.message , 'Missing required argument "request"',
+				'Verify error message returned by enroll()');
+			t.end();
+		}
+	)
+	.catch(function (err) {
+		t.fail('Unexpected result from enroll()');
+		t.end();
+	});
+
+	ca.enroll({})
+	.then(
+		function () {
+			t.fail('Enroll() must fail when req does not specify enrollment ID');
+			t.end();
+		},
+		function (err) {
+			t.equal(err.message , 'req.enrollmentID is not set',
+				'Verify error message returned by enroll(no enrollment ID)');
+			t.end();
+		}
+	)
+	.catch(function (err) {
+		t.fail('Unexpected failure of enroll()');
+		t.end();
+	});
+
+	ca.enroll({enrollmentID: 'testUser'})
+	.then(
+		function () {
+			t.fail('Enroll() must fail when req does not specify enrollment secret');
+			t.end();
+		},
+		function (err) {
+			t.equal(err.message , 'req.enrollmentSecret is not set',
+				'Verify error message returned by enroll(no enrollment secret)');
+			t.end();
+		}
+	)
+	.catch(function (err) {
+		t.fail('Unexpected failure of enroll(no enrollment secret)');
+		t.end();
+	});
+});
+
 test('FabricCAServices: Test revoke() function', function(t) {
 	var cop = new FabricCAServices('http://localhost:7054');
+	t.throws(
+		() => {
+			cop.revoke();
+		},
+		/Missing required argument "request"/,
+		'Test missing request'
+	);
 
 	t.throws(
 		() => {
@@ -362,15 +510,17 @@ test('FabricCAServices: Test _parseURL() function', function (t) {
 	var goodPort = 7054;
 	var goodURL = 'http://' + goodHost + ':' + goodPort;
 	var goodURLSecure = 'https://' + goodHost + ':' + goodPort;
+	var goodUrlNoPort = 'https://' + goodHost;
 
 	var badHost = '';
 	var badURL = 'http://' + badHost + ':' + goodPort;
 	var badURL2 = 'httpD://' + goodHost + ':' + goodPort;
 	var badURL3 = 'httpsD://' + goodHost + ':' + goodPort;
 	var badURL4 = goodHost + ':' + goodPort;
+	var badURL5 = 'ftp://' + goodHost + ':' + goodPort;
 
 
-	t.plan(10);
+	t.plan(12);
 
 	//valid http endpoint
 	var endpointGood = FabricCAServices._parseURL(goodURL);
@@ -383,6 +533,9 @@ test('FabricCAServices: Test _parseURL() function', function (t) {
 	t.equals(endpointGoodSecure.protocol, 'https', 'Check that protocol is set correctly to \'https\'');
 	t.equals(endpointGoodSecure.hostname, goodHost, 'Check that hostname is set correctly');
 	t.equals(endpointGoodSecure.port, goodPort, 'Check that port is set correctly');
+
+	var endpointGoodUrlNoPort = FabricCAServices._parseURL(goodUrlNoPort);
+	t.notOk(endpointGoodUrlNoPort.port, 'Check default port value');
 
 	//check invalid endpoints
 	t.throws(
@@ -417,6 +570,28 @@ test('FabricCAServices: Test _parseURL() function', function (t) {
 		'Throw error for missing protocol'
 	);
 
+	t.throws(
+		function () {
+			FabricCAServices._parseURL(badURL5);
+		},
+		/InvalidURL: url must start with http or https./,
+		'Throw error for invalid protocol'
+	);
+
+	t.end();
+});
+
+test('FabricCAServices: Test toString() function', function(t) {
+	var ca = new FabricCAServices('http://localhost:7054');
+	var printableCa = ca.toString();
+
+	t.comment('printableCa = ' + printableCa);
+	if ((typeof printableCa == 'string') && (printableCa.length > 1)) {
+		t.pass('toString() returned a string of length ' + printableCa.length);
+	}
+	else {
+		t.fail('toString() did not return a string');
+	}
 	t.end();
 });
 
