@@ -114,7 +114,7 @@ registry:
 #############################################################################
 db:
   type: sqlite3
-  datasource: fabric-ca-server.db
+  datasource: /tmp/fabric-ca-server.db
   tls:
       enabled: false
       certfiles: db-server-cert.pem			# Comma Separated (e.g. root.pem, root2.pem)

@@ -95,7 +95,7 @@ var Remote = class {
 	 * @returns {string} Get the URL associated with the Orderer.
 	 */
 	getUrl() {
-		logger.debug('Remote.getUrl::'+this._url);
+		logger.debug('getUrl::'+this._url);
 		return this._url;
 	}
 

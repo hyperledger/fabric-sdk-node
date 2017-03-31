@@ -71,6 +71,7 @@ var EventHub = class {
 	 */
 
 	constructor() {
+		logger.debug('const ');
 		// hashtable of clients registered for chaincode events
 		this.chaincodeRegistrants = new HashTable();
 		// set of clients registered for block events
@@ -105,6 +106,7 @@ var EventHub = class {
 	 */
 
 	setPeerAddr(peerUrl, opts) {
+		logger.debug('setPeerAddr -  %s',peerUrl);
 		this.ep = new Remote(peerUrl, opts);
 	}
 
@@ -123,7 +125,11 @@ var EventHub = class {
 	 * use (see eventHubConnect, eventHubDisconnect and getEventHub).
 	 */
 	connect() {
-		if (this.connected) return;
+		logger.debug('connect - start');
+		if (this.connected) {
+			logger.debug('connect - end - already conneted');
+			return;
+		}
 		if (!this.ep) throw Error('Must set peer address before connecting.');
 		this._client = new _events.Events(this.ep._endpoint.addr, this.ep._endpoint.creds, this.ep._options);
 		this.call = this._client.chat();
@@ -165,6 +171,17 @@ var EventHub = class {
 					}
 				});
 			}
+			else if (event.Event == 'register'){
+				//TODO use this event to verify that eventhub is ready
+				logger.debug('connect - register event received');
+			}
+			else if (event.Event == 'unregister'){
+				// TODO use this event to mark this eventhub not ready
+				logger.debug('connect - unregister event received');
+			}
+			else {
+				logger.debug('connect - unknown event %s',event.Event);
+			}
 		});
 		this.call.on('end', function() {
 			eh.call.end();
@@ -173,6 +190,7 @@ var EventHub = class {
 			eh.blockRegistrants.clear();
 			eh.txRegistrants.clear();
 		});
+		logger.debug('connect - end');
 	}
 
 	/**
@@ -283,6 +301,12 @@ var EventHub = class {
 	 */
 	registerTxEvent(txid, callback) {
 		logger.debug('reg txid ' + txid);
+		if(this.connected) {
+			logger.debug(' this hub %s is connected', this.ep.getUrl());
+		}
+		else {
+			logger.debug('this hub %s is not connected', this.ep.getUrl());
+		}
 		this.txRegistrants.put(txid, callback);
 	}
 
