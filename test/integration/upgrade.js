@@ -174,7 +174,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		t.fail('Got an Error along the way :: '+ err);
 		t.end();
 	});
-
 });
 
 function checkResults(results, error_snip, t) {
