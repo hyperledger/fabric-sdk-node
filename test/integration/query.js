@@ -425,8 +425,8 @@ test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t)
 					', path: '+response.chaincodes[i].path);
 
 					if (response.chaincodes[i].name === e2e.chaincodeId
-						&& response.chaincodes[i].version === e2e.chaincodeVersion
-						&& response.chaincodes[i].path === testUtil.CHAINCODE_PATH) {
+						&& response.chaincodes[i].version === 'v1'
+						&& response.chaincodes[i].path === testUtil.CHAINCODE_UPGRADE_PATH) {
 						found = true;
 					}
 				}

@@ -1250,9 +1250,9 @@ var Chain = class {
 	 * Sends an instantiate proposal to one or more endorsing peers.
 	 *
 	 * @param {Object} request - An object containing the following fields:
-	 *		<br>`targets` : optional -- The peers that will receive this request,
-	 *		              when not provided the peers assigned to this channel will
-	 *		              be used.
+	 *		<br>`targets` : Optional : An array of endorsing {@link Peer} objects as the
+	 *                      targets of the request. The list of endorsing peers will be used if
+	 *                      this parameter is omitted.
 	 *		<br>`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java']
 	 *                            (default 'golang')
 	 *		<br>`chaincodePath` : required - String of the path to location of
@@ -1298,6 +1298,39 @@ var Chain = class {
 	 * @see /protos/peer/proposal_response.proto
 	 */
 	sendInstantiateProposal(request) {
+		return this._sendChaincodeProposal(request, 'deploy');
+	}
+
+	/**
+	 * Sends an upgrade proposal to one or more endorsing peers.
+	 *
+	 * @param {Object} request - An object containing the following fields:
+	 *		<br>`targets` : An array of endorsing {@link Peer} objects as the
+	 *                      targets of the request
+	 *		<br>`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java']
+	 *                            (default 'golang')
+	 *		<br>`chaincodePath` : required - String of the path to location of
+	 *                            the source code of the chaincode
+	 *		<br>`chaincodeId` : required - String of the name of the chaincode
+	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
+	 *		<br>`chainId` : required - String of the name of the chain
+	 *		<br>`txId` : required - String of the transaction id
+	 *		<br>`nonce` : required - Integer of the once time number
+	 *		<br>`fcn` : optional - String of the function to be called on
+	 *                  the chaincode once instantiated (default 'init')
+	 *		<br>`args` : optional - String Array arguments specific to
+	 *                   the chaincode being instantiated
+	 * @returns {Promise} A Promise for a `ProposalResponse`
+	 * @see /protos/peer/proposal_response.proto
+	 */
+	sendUpgradeProposal(request) {
+		return this._sendChaincodeProposal(request, 'upgrade');
+	}
+
+	/*
+	 * Internal method to handle both chaincode calls
+	 */
+	_sendChaincodeProposal(request, command) {
 		var errorMsg = null;
 
 		var peers = null;
@@ -1314,19 +1347,13 @@ var Chain = class {
 			return Promise.reject(new Error(errorMsg));
 		}
 
-		errorMsg = Chain._checkProposalRequest(request);
-		if (errorMsg) {
-			logger.error('Chain.sendInstantiateProposal error ' + errorMsg);
-			return Promise.reject(new Error(errorMsg));
-		}
-		errorMsg = Chain._checkInstallRequest(request);
-		if (errorMsg) {
-			logger.error('Chain.sendInstantiateProposal error ' + errorMsg);
-			return Promise.reject(new Error(errorMsg));
-		}
-		errorMsg = Chain._checkInstantiateRequest(request);
-		if (errorMsg) {
-			logger.error('Chain.sendInstantiateProposal error ' + errorMsg);
+		//validate the incoming request
+		if(!errorMsg) errorMsg = Chain._checkProposalRequest(request);
+		if(!errorMsg) errorMsg = Chain._checkInstallRequest(request);
+		if(!errorMsg) errorMsg = Chain._checkInstantiateRequest(request);
+
+		if(errorMsg) {
+			logger.error('sendChainCodeProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -1370,7 +1397,7 @@ var Chain = class {
 						},
 						input: {
 							args: [
-								Buffer.from('deploy', 'utf8'),
+								Buffer.from( command, 'utf8'),
 								Buffer.from('default', 'utf8'),
 								chaincodeDeploymentSpec.toBuffer(),
 								self._buildEndorsementPolicy(request['endorsement-policy'])
