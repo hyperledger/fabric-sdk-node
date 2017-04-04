@@ -115,7 +115,7 @@ function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
 				}).then((enrollment) => {
 					t.pass('Successfully enrolled user \'' + username + '\'');
 
-					member = new User(username, client);
+					member = new User(username);
 					return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
 				}).then(() => {
 					return client.setUserContext(member);
@@ -155,7 +155,7 @@ function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
 					var certPEM = path.join(__dirname, '../fixtures/msp/local/signcerts/admin.pem');
 					return readFile(certPEM);
 				}).then((data) => {
-					member = new User(username, client);
+					member = new User(username);
 					return member.setEnrollment(testKey, data.toString(), ORGS[userOrg].mspid);
 				}).then(() => {
 					return client.setUserContext(member);

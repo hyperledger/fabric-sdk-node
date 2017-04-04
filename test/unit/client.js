@@ -16,6 +16,12 @@
 
 'use strict';
 
+if (global && global.hfc) global.hfc.config = undefined;
+require('nconf').reset();
+var utils = require('fabric-client/lib/utils.js');
+utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
+var logger = utils.getLogger('unit.client');
+
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
@@ -25,6 +31,8 @@ var hfc = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
 var User = require('fabric-client/lib/User.js');
 var testutil = require('./util.js');
+
+var caImport;
 
 test('\n\n ** index.js **\n\n', function (t) {
 	t.equals(typeof hfc, 'function');
@@ -490,3 +498,334 @@ test('\n\n ** Client createChannel() tests **\n\n', function (t) {
 		}
 	);
 });
+
+test('\n\n ** createUser error path - missing required opt parameter **\n\n', function (t) {
+	hfc.addConfigFile(path.join(__dirname, '../fixtures/caimport.json'));
+	caImport = utils.getConfigSetting('ca-import', 'notfound');
+	logger.debug('caImport = %s', JSON.stringify(caImport));
+
+	var msg = 'Client.createUser missing required \'opts\' parameter.';
+
+	var client = new Client();
+	return client.createUser()
+	.then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required state store **\n\n', function (t) {
+	var msg = 'Client.createUser state store must be set on this client instance.';
+
+	var client = new Client();
+	return client.createUser({username: ''})
+	.then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required username **\n\n', function (t) {
+	var msg = 'Client.createUser parameter \'opts username\' is required.';
+
+	var userOrg = 'org1';
+	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+
+	var client = new Client();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser({username: ''});
+	}, (err) => {
+		logger.error(err.stack ? err.stack : err);
+		throw new Error('Failed createUser.');
+	}).then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required mspid **\n\n', function (t) {
+	var msg = 'Client.createUser parameter \'opts mspid\' is required.';
+
+	var userOrg = 'org1';
+	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+
+	var client = new Client();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser({username: 'anyone'});
+	}, (err) => {
+		logger.error(err.stack ? err.stack : err);
+		throw new Error('Failed createUser.');
+	}).then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required mspid **\n\n', function (t) {
+	var msg = 'Client.createUser parameter \'opts mspid\' is required.';
+
+	var userOrg = 'org1';
+	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+
+	var client = new Client();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser({username: 'anyone'});
+	}, (err) => {
+		logger.error(err.stack ? err.stack : err);
+		throw new Error('Failed createUser.');
+	}).then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required cryptoContent **\n\n', function (t) {
+	var msg = 'Client.createUser parameter \'opts cryptoContent\' is required.';
+
+	var userOrg = 'org1';
+	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+
+	var client = new Client();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser({username: 'anyone', mspid: 'one'});
+	}, (err) => {
+		logger.error(err.stack ? err.stack : err);
+		throw new Error('Failed createUser.');
+	}).then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required cryptoContent signedCertPEM **\n\n', function (t) {
+	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKeyPEM and signedCertPEM\' strings are required.';
+
+	var userOrg = 'org1';
+	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+
+	var client = new Client();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser({cryptoContent: {privateKeyPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
+	}, (err) => {
+		logger.error(err.stack ? err.stack : err);
+		throw new Error('Failed createUser.');
+	}).then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required cryptoContent privateKeyPEM **\n\n', function (t) {
+	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKeyPEM and signedCertPEM\' strings are required.';
+
+	var userOrg = 'org1';
+	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+
+	var client = new Client();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser({cryptoContent: {signedCertPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
+	}, (err) => {
+		logger.error(err.stack ? err.stack : err);
+		throw new Error('Failed createUser.');
+	}).then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required cryptoContent signedCert **\n\n', function (t) {
+	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKey and signedCert\' files are required.';
+
+	var userOrg = 'org1';
+	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+
+	var client = new Client();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser({cryptoContent: {privateKey: 'abcd'}, username: 'anyone', mspid: 'one'});
+	}, (err) => {
+		logger.error(err.stack ? err.stack : err);
+		throw new Error('Failed createUser.');
+	}).then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required cryptoContent privateKeyPEM **\n\n', function (t) {
+	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKey and signedCert\' files are required.';
+
+	var userOrg = 'org1';
+	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+
+	var client = new Client();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser({cryptoContent: {signedCert: 'abcd'}, username: 'anyone', mspid: 'one'});
+	}, (err) => {
+		logger.error(err.stack ? err.stack : err);
+		throw new Error('Failed createUser.');
+	}).then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+
+test('\n\n ** createUser error path - missing required keyStoreOpts **\n\n', function (t) {
+	var msg = 'Client.createUser parameter \'opts keyStoreOpts\' is required when cryptoSuite has not been set.';
+
+	var userOrg = 'org1';
+	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+
+	var client = new Client();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser({cryptoContent: 'abcde', username: 'anyone', mspid: 'one'});
+	}, (err) => {
+		logger.error(err.stack ? err.stack : err);
+		throw new Error('Failed createUser.');
+	}).then((user) => {
+		t.fail('Should not have gotten user.');
+		t.end();
+	}).catch((err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('Should throw '+msg);
+			t.end;
+		} else {
+			t.fail('Expected error message: '+msg+'\n but got '+err.message);
+			t.end;
+		}
+	});
+});
+

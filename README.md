@@ -46,6 +46,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
 * build fabric peer and orderer docker images and other ancillary images
   * `cd $GOPATH/src/github.com/hyperledger/fabric`
   * run `make docker` to build the docker images (you may need to run `make docker-clean` first if you've built before)
+  * run `make couchdb` to build couchdb
 * go to fabric-sdk-node/test/fixtures
   * run `docker-compose up --force-recreate` to launch the network
 * Now you are ready to run the tests:
