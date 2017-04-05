@@ -134,6 +134,14 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 	}).then((block) => {
 		logger.info(' Chain getBlock() returned block number=%s',block.header.number);
 		t.equal(block.header.number.toString(),'0','checking query results are correct that we got zero block back');
+		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Orderer.groups.OrdererMSP.values.MSP.config.name,'OrdererMSP','checking query results are correct that we got the correct orderer MSP name');
+		logger.info('%j',block);
+		return chain.queryBlock(1);
+	}).then((block) => {
+		logger.info(' Chain getBlock() returned block number=%s',block.header.number);
+		t.equal(block.header.number.toString(),'1','checking query results are correct that we got a transaction block back');
+		t.equal(block.data.data[0].payload.data.actions[0].payload.action.endorsements[0].endorser.Mspid,'Org1MSP','checking query results are correct that we got a transaction block back with correct endorsement MSP id');
+		logger.info('%j',block);
 		chain.setPrimaryPeer(peer0);
 
 		tx_id = utils.getConfigSetting('E2E_TX_ID', 'notfound');
