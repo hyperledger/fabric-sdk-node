@@ -117,7 +117,8 @@ db:
   datasource: /tmp/fabric-ca-server.db
   tls:
       enabled: false
-      certfiles: db-server-cert.pem			# Comma Separated (e.g. root.pem, root2.pem)
+      certfiles:
+        - db-server-cert.pem			# Comma Separated (e.g. root.pem, root2.pem)
       client:
         certfile: db-client-cert.pem
         keyfile: db-client-key.pem
