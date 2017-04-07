@@ -291,7 +291,7 @@ var Client = class {
 		}
 		var self = this;
 		var nonce = sdkUtils.getNonce();
-		return this.getUserContext(nonce)
+		return this.getUserContext()
 		.then(function(userContext) {
 			var txId = Chain.buildTransactionID(nonce, userContext);
 			var request = {
@@ -646,7 +646,7 @@ var Client = class {
 		var self = this;
 		var username = name;
 		return new Promise(function(resolve, reject) {
-			if (self._userContext) {
+			if ((self._userContext && name && self._userContext.getName() === name) || (self._userContext && !name)) {
 				return resolve(self._userContext);
 			} else {
 				if (typeof username === 'undefined' || !username) {
