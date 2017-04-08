@@ -409,57 +409,52 @@ var Chain = class {
 		var userContext = null;
 		var orderer = self.getOrderers()[0];
 
-		return this._clientContext.getUserContext()
-		.then(
-			function(foundUserContext) {
-				userContext = foundUserContext;
+		userContext = this._clientContext.getUserContext();
 
-				// now build the seek info , will be used once the chain is created
-				// to get the genesis block back
-				//   build start
-				var seekSpecifiedStart = new _abProto.SeekSpecified();
-				seekSpecifiedStart.setNumber(0);
-				var seekStart = new _abProto.SeekPosition();
-				seekStart.setSpecified(seekSpecifiedStart);
+		// now build the seek info , will be used once the chain is created
+		// to get the genesis block back
+		//   build start
+		var seekSpecifiedStart = new _abProto.SeekSpecified();
+		seekSpecifiedStart.setNumber(0);
+		var seekStart = new _abProto.SeekPosition();
+		seekStart.setSpecified(seekSpecifiedStart);
 
-				//   build stop
-				var seekSpecifiedStop = new _abProto.SeekSpecified();
-				seekSpecifiedStop.setNumber(0);
-				var seekStop = new _abProto.SeekPosition();
-				seekStop.setSpecified(seekSpecifiedStop);
+		//   build stop
+		var seekSpecifiedStop = new _abProto.SeekSpecified();
+		seekSpecifiedStop.setNumber(0);
+		var seekStop = new _abProto.SeekPosition();
+		seekStop.setSpecified(seekSpecifiedStop);
 
-				// seek info with all parts
-				var seekInfo = new _abProto.SeekInfo();
-				seekInfo.setStart(seekStart);
-				seekInfo.setStop(seekStop);
-				seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
+		// seek info with all parts
+		var seekInfo = new _abProto.SeekInfo();
+		seekInfo.setStart(seekStart);
+		seekInfo.setStop(seekStop);
+		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
-				// build the header for use with the seekInfo payload
-				var seekInfoHeader = Chain._buildChannelHeader(
-					_commonProto.HeaderType.DELIVER_SEEK_INFO,
-					self._name,
-					request.txId,
-					self._initial_epoch
-				);
+		// build the header for use with the seekInfo payload
+		var seekInfoHeader = Chain._buildChannelHeader(
+			_commonProto.HeaderType.DELIVER_SEEK_INFO,
+			self._name,
+			request.txId,
+			self._initial_epoch
+		);
 
-				var seekHeader = Chain._buildHeader(userContext.getIdentity(), seekInfoHeader, request.nonce);
-				var seekPayload = new _commonProto.Payload();
-				seekPayload.setHeader(seekHeader);
-				seekPayload.setData(seekInfo.toBuffer());
-				var seekPayloadBytes = seekPayload.toBuffer();
+		var seekHeader = Chain._buildHeader(userContext.getIdentity(), seekInfoHeader, request.nonce);
+		var seekPayload = new _commonProto.Payload();
+		seekPayload.setHeader(seekHeader);
+		seekPayload.setData(seekInfo.toBuffer());
+		var seekPayloadBytes = seekPayload.toBuffer();
 
-				let sig = userContext.getSigningIdentity().sign(seekPayloadBytes);
-				let signature = Buffer.from(sig);
+		let sig = userContext.getSigningIdentity().sign(seekPayloadBytes);
+		let signature = Buffer.from(sig);
 
-				// building manually or will get protobuf errors on send
-				var envelope = {
-					signature: signature,
-					payload : seekPayloadBytes
-				};
+		// building manually or will get protobuf errors on send
+		var envelope = {
+			signature: signature,
+			payload : seekPayloadBytes
+		};
 
-				return orderer.sendDeliver(envelope);
-			}
-		)
+		return orderer.sendDeliver(envelope)
 		.then(
 			function(block) {
 				logger.debug('joinChannel - good results from seek block '); // :: %j',results);
@@ -526,54 +521,49 @@ var Chain = class {
 		var userContext = null;
 		var orderer = self.getOrderers()[0];
 
-		return this._clientContext.getUserContext()
-		.then(
-			function(foundUserContext) {
-				userContext = foundUserContext;
-				var nonce = utils.getNonce();
-				var tx_id = Chain.buildTransactionID(nonce, userContext);
+		userContext = this._clientContext.getUserContext();
+		var nonce = utils.getNonce();
+		var tx_id = Chain.buildTransactionID(nonce, userContext);
 
-				// seek the latest block
-				var seekSpecifiedStart = new _abProto.SeekNewest();
-				var seekStart = new _abProto.SeekPosition();
-				seekStart.setNewest(seekSpecifiedStart);
+		// seek the latest block
+		var seekSpecifiedStart = new _abProto.SeekNewest();
+		var seekStart = new _abProto.SeekPosition();
+		seekStart.setNewest(seekSpecifiedStart);
 
-				var seekSpecifiedStop = new _abProto.SeekNewest();
-				var seekStop = new _abProto.SeekPosition();
-				seekStop.setNewest(seekSpecifiedStop);
+		var seekSpecifiedStop = new _abProto.SeekNewest();
+		var seekStop = new _abProto.SeekPosition();
+		seekStop.setNewest(seekSpecifiedStop);
 
-				// seek info with all parts
-				var seekInfo = new _abProto.SeekInfo();
-				seekInfo.setStart(seekStart);
-				seekInfo.setStop(seekStop);
-				seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
+		// seek info with all parts
+		var seekInfo = new _abProto.SeekInfo();
+		seekInfo.setStart(seekStart);
+		seekInfo.setStop(seekStop);
+		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
-				// build the header for use with the seekInfo payload
-				var seekInfoHeader = Chain._buildChannelHeader(
-					_commonProto.HeaderType.DELIVER_SEEK_INFO,
-					self._name,
-					tx_id,
-					self._initial_epoch
-				);
+		// build the header for use with the seekInfo payload
+		var seekInfoHeader = Chain._buildChannelHeader(
+			_commonProto.HeaderType.DELIVER_SEEK_INFO,
+			self._name,
+			tx_id,
+			self._initial_epoch
+		);
 
-				var seekHeader = Chain._buildHeader(userContext.getIdentity(), seekInfoHeader, nonce);
-				var seekPayload = new _commonProto.Payload();
-				seekPayload.setHeader(seekHeader);
-				seekPayload.setData(seekInfo.toBuffer());
-				var seekPayloadBytes = seekPayload.toBuffer();
+		var seekHeader = Chain._buildHeader(userContext.getIdentity(), seekInfoHeader, nonce);
+		var seekPayload = new _commonProto.Payload();
+		seekPayload.setHeader(seekHeader);
+		seekPayload.setData(seekInfo.toBuffer());
+		var seekPayloadBytes = seekPayload.toBuffer();
 
-				let sig = userContext.getSigningIdentity().sign(seekPayloadBytes);
-				let signature = Buffer.from(sig);
+		let sig = userContext.getSigningIdentity().sign(seekPayloadBytes);
+		let signature = Buffer.from(sig);
 
-				// building manually or will get protobuf errors on send
-				var envelope = {
-					signature: signature,
-					payload : seekPayloadBytes
-				};
-				// This will return us a block
-				return orderer.sendDeliver(envelope);
-			}
-		)
+		// building manually or will get protobuf errors on send
+		var envelope = {
+			signature: signature,
+			payload : seekPayloadBytes
+		};
+		// This will return us a block
+		return orderer.sendDeliver(envelope)
 		.then(
 			function(block) {
 				logger.debug('getChannelConfig - good results from seek block '); // :: %j',results);
@@ -956,20 +946,18 @@ var Chain = class {
 		logger.debug('queryInfo - start');
 		var self = this;
 		var nonce = utils.getNonce();
-		return this._clientContext.getUserContext()
-		.then(function(userContext) {
-			var tx_id = Chain.buildTransactionID(nonce, userContext);
-			var request = {
-				targets: [self.getPrimaryPeer()],
-				chaincodeId : 'qscc',
-				chainId: '',
-				txId: tx_id,
-				nonce: nonce,
-				fcn : 'GetChainInfo',
-				args: [ self._name]
-			};
-			return self.sendTransactionProposal(request);
-		})
+		var userContext = this._clientContext.getUserContext();
+		var tx_id = Chain.buildTransactionID(nonce, userContext);
+		var request = {
+			targets: [self.getPrimaryPeer()],
+			chaincodeId : 'qscc',
+			chainId: '',
+			txId: tx_id,
+			nonce: nonce,
+			fcn : 'GetChainInfo',
+			args: [ self._name]
+		};
+		return self.sendTransactionProposal(request)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -1014,21 +1002,19 @@ var Chain = class {
 		}
 		var self = this;
 		var nonce = utils.getNonce();
-		return this._clientContext.getUserContext()
-		.then(function(userContext) {
-			var tx_id = Chain.buildTransactionID(nonce, userContext);
-			var request = {
-				targets: [self.getPrimaryPeer()],
-				chaincodeId : 'qscc',
-				chainId: '',
-				txId: tx_id,
-				nonce: nonce,
-				fcn : 'GetBlockByHash',
-				args: [ self._name],
-				argbytes : blockHash
-			};
-			return self.sendTransactionProposal(request);
-		})
+		var userContext = this._clientContext.getUserContext();
+		var tx_id = Chain.buildTransactionID(nonce, userContext);
+		var request = {
+			targets: [self.getPrimaryPeer()],
+			chaincodeId : 'qscc',
+			chainId: '',
+			txId: tx_id,
+			nonce: nonce,
+			fcn : 'GetBlockByHash',
+			args: [ self._name],
+			argbytes : blockHash
+		};
+		return self.sendTransactionProposal(request)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -1077,20 +1063,18 @@ var Chain = class {
 		}
 		var self = this;
 		var nonce = utils.getNonce();
-		return self._clientContext.getUserContext()
-		.then(function(userContext) {
-			var tx_id = Chain.buildTransactionID(nonce, userContext);
-			var request = {
-				targets: [self.getPrimaryPeer()],
-				chaincodeId : 'qscc',
-				chainId: '',
-				txId: tx_id,
-				nonce: nonce,
-				fcn : 'GetBlockByNumber',
-				args: [ self._name, block_number]
-			};
-			return self.sendTransactionProposal(request);
-		})
+		var userContext = self._clientContext.getUserContext();
+		var tx_id = Chain.buildTransactionID(nonce, userContext);
+		var request = {
+			targets: [self.getPrimaryPeer()],
+			chaincodeId : 'qscc',
+			chainId: '',
+			txId: tx_id,
+			nonce: nonce,
+			fcn : 'GetBlockByNumber',
+			args: [ self._name, block_number]
+		};
+		return self.sendTransactionProposal(request)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -1139,20 +1123,18 @@ var Chain = class {
 		}
 		var self = this;
 		var nonce = utils.getNonce();
-		return self._clientContext.getUserContext()
-		.then(function(userContext) {
-			var tx_id = Chain.buildTransactionID(nonce, userContext);
-			var request = {
-				targets: [self.getPrimaryPeer()],
-				chaincodeId : 'qscc',
-				chainId: '',
-				txId: tx_id,
-				nonce: nonce,
-				fcn : 'GetTransactionByID',
-				args: [ self._name, transaction_id]
-			};
-			return self.sendTransactionProposal(request);
-		})
+		var userContext = self._clientContext.getUserContext();
+		var tx_id = Chain.buildTransactionID(nonce, userContext);
+		var request = {
+			targets: [self.getPrimaryPeer()],
+			chaincodeId : 'qscc',
+			chainId: '',
+			txId: tx_id,
+			nonce: nonce,
+			fcn : 'GetTransactionByID',
+			args: [ self._name, transaction_id]
+		};
+		return self.sendTransactionProposal(request)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -1196,20 +1178,18 @@ var Chain = class {
 		logger.debug('queryInstantiatedChaincodes - start');
 		var self = this;
 		var nonce = utils.getNonce();
-		return self._clientContext.getUserContext()
-		.then(function(userContext) {
-			var tx_id = Chain.buildTransactionID(nonce, userContext);
-			var request = {
-				targets: [self.getPrimaryPeer()],
-				chaincodeId : 'lccc',
-				chainId: self._name,
-				txId: tx_id,
-				nonce: nonce,
-				fcn : 'getchaincodes',
-				args: []
-			};
-			return self.sendTransactionProposal(request);
-		})
+		var userContext = self._clientContext.getUserContext();
+		var tx_id = Chain.buildTransactionID(nonce, userContext);
+		var request = {
+			targets: [self.getPrimaryPeer()],
+			chaincodeId : 'lccc',
+			chainId: self._name,
+			txId: tx_id,
+			nonce: nonce,
+			fcn : 'getchaincodes',
+			args: []
+		};
+		return self.sendTransactionProposal(request)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -1386,42 +1366,39 @@ var Chain = class {
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 
 		var header, proposal;
-		return self._clientContext.getUserContext()
-			.then(
-				function(userContext) {
-					let lcccSpec = {
-						type: _ccProto.ChaincodeSpec.Type.GOLANG,
-						chaincode_id: {
-							name: 'lccc'
-						},
-						input: {
-							args: [
-								Buffer.from( command, 'utf8'),
-								Buffer.from('default', 'utf8'),
-								chaincodeDeploymentSpec.toBuffer(),
-								self._buildEndorsementPolicy(request['endorsement-policy'])
-							]
-						}
-					};
+		var userContext = self._clientContext.getUserContext();
+		let lcccSpec = {
+			type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			chaincode_id: {
+				name: 'lccc'
+			},
+			input: {
+				args: [
+					Buffer.from( command, 'utf8'),
+					Buffer.from('default', 'utf8'),
+					chaincodeDeploymentSpec.toBuffer(),
+					self._buildEndorsementPolicy(request['endorsement-policy'])
+				]
+			}
+		};
 
-					var channelHeader = Chain._buildChannelHeader(
-						_commonProto.HeaderType.ENDORSER_TRANSACTION,
-						request.chainId,
-						request.txId,
-						null,
-						'lccc'
-					);
-					header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
-					proposal = Chain._buildProposal(lcccSpec, header);
-					let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
+		var channelHeader = Chain._buildChannelHeader(
+			_commonProto.HeaderType.ENDORSER_TRANSACTION,
+			request.chainId,
+			request.txId,
+			null,
+			'lccc'
+		);
+		header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
+		proposal = Chain._buildProposal(lcccSpec, header);
+		let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
 
-					return Chain._sendPeersProposal(peers, signed_proposal);
-				}
-			).then(
-				function(responses) {
-					return [responses, proposal, header];
-				}
-			);
+		return Chain._sendPeersProposal(peers, signed_proposal)
+		.then(
+			function(responses) {
+				return [responses, proposal, header];
+			}
+		);
 	}
 
 	/**
@@ -1511,23 +1488,20 @@ var Chain = class {
 
 		var self = this;
 		var proposal, header;
-		return clientContext.getUserContext()
-		.then(
-			function(userContext) {
-				var channelHeader = self._buildChannelHeader(
-					_commonProto.HeaderType.ENDORSER_TRANSACTION,
-					request.chainId,
-					request.txId,
-					null,
-					request.chaincodeId
-					);
-				header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
-				proposal = self._buildProposal(invokeSpec, header);
-				let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
+		var userContext = clientContext.getUserContext();
+		var channelHeader = self._buildChannelHeader(
+			_commonProto.HeaderType.ENDORSER_TRANSACTION,
+			request.chainId,
+			request.txId,
+			null,
+			request.chaincodeId
+			);
+		header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
+		proposal = self._buildProposal(invokeSpec, header);
+		let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
 
-				return Chain._sendPeersProposal(request.targets, signed_proposal);
-			}
-		).then(
+		return Chain._sendPeersProposal(request.targets, signed_proposal)
+		.then(
 			function(responses) {
 				return Promise.resolve([responses, proposal, header]);
 			}
@@ -1630,22 +1604,18 @@ var Chain = class {
 		let payload_bytes = payload.toBuffer();
 
 		var self = this;
-		return this._clientContext.getUserContext()
-		.then(
-			function(userContext) {
-				let sig = userContext.getSigningIdentity().sign(payload_bytes);
-				let signature = Buffer.from(sig);
+		var userContext = this._clientContext.getUserContext();
+		let sig = userContext.getSigningIdentity().sign(payload_bytes);
+		let signature = Buffer.from(sig);
 
-				// building manually or will get protobuf errors on send
-				var envelope = {
-					signature: signature,
-					payload : payload_bytes
-				};
+		// building manually or will get protobuf errors on send
+		var envelope = {
+			signature: signature,
+			payload : payload_bytes
+		};
 
-				var orderer = self.getOrderers()[0];
-				return orderer.sendBroadcast(envelope);
-			}
-		);
+		var orderer = self.getOrderers()[0];
+		return orderer.sendBroadcast(envelope);
 	}
 
 	/**
