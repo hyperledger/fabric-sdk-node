@@ -457,19 +457,10 @@ var FabricCAClient = class {
 
 		return new Promise(function (resolve, reject) {
 
-			var serialToSend;
-			if (serial!=null){
-				if (serial.length < 80){
-					serialToSend = '0' + serial;
-				}
-				else {
-					serialToSend = serial;
-				}
-			}
 			var regRequest = {
 				'id': enrollmentID,
 				'aki': aki,
-				'serial': serialToSend,
+				'serial': serial,
 				'reason': reason
 			};
 
