@@ -96,7 +96,7 @@ var	tlsOptions = {
 function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
 	var caUrl = ORGS[userOrg].ca;
 
-	return client.getUserContext(username)
+	return client.getUserContext(username, true)
 	.then((user) => {
 		return new Promise((resolve, reject) => {
 			if (user && user.isEnrolled()) {

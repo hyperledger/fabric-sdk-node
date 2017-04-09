@@ -19,13 +19,13 @@
 if (global && global.hfc) global.hfc.config = undefined;
 require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('unit.client');
 
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 var path = require('path');
+var util = require('util');
 
 var hfc = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
@@ -61,23 +61,66 @@ var chainKeyValStorePath = 'tmp/chainKeyValStorePath';
 var testKey = 'keyValFileStoreName';
 var testValue = 'secretKeyValue';
 
-test('\n\n ** lib/Client.js **\n\n', function (t) {
+test('\n\n ** Client.js Tests: getUserContext() method **\n\n', function (t) {
+	t.doesNotThrow(
+		() => {
+			client.getUserContext();
+		},
+		null,
+		'Should not throw an error when argument list is empty'
+	);
+
+	t.equals(client.getUserContext('invalidUser'), null, 'Should return null when requested for an invalid user');
+
+	t.throws(
+		() => {
+			client.getUserContext(true);
+		},
+		/Illegal arguments: "checkPersistence" is truthy but "name" is undefined/,
+		'Check that error condition is properly handled when only a truthy value is passed in'
+	);
+
+	t.throws(
+		() => {
+			client.getUserContext(null, true);
+		},
+		/Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value/,
+		'Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string'
+	);
+
+	t.throws(
+		() => {
+			client.getUserContext('', true);
+		},
+		/Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value/,
+		'Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string'
+	);
+
+	var promise = client.getUserContext('invalidUser', true);
+	t.notEqual(promise, null, 'Should not return null but a promise when "checkPersistence" is true');
+	promise.then((value) => {
+		t.equals(value, null, 'Promise should resolve to a null when using an invalid user name');
+		t.end();
+	}, (err) => {
+		t.fail(util.format('Failed to resolve the requested user name: %s', err));
+		t.end();
+	});
+});
+
+test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t) {
 
 	t.equals(client.getCryptoSuite(), null, 'Client getCryptoSuite should initially be null');
 	client.setCryptoSuite(utils.newCryptoSuite());
 	if (client.getCryptoSuite() != null) t.pass('Client getCryptoSuite should not be null after setCryptoSuite');
 
-	client.getUserContext()
-	.then(function(response){
-		if (response === null)
-			t.pass('Client tests: getUserContext successful null user name.');
-		else t.fail('Client tests: getUserContext failed null name check');
+	var response = client.getUserContext();
+	if (response === null)
+		t.pass('Client tests: getUserContext successful null user name.');
+	else
+		t.fail('Client tests: getUserContext failed null name check');
 
-		return client.saveUserToStateStore();
-	}, function(error){
-		t.fail('Client tests: Unexpected error, getUserContext null name check. ' + error.stack ? error.stack : error);
-		t.end();
-	}).then(function(response){
+	client.saveUserToStateStore()
+	.then(function(response){
 		t.fail('Client tests: got response, but should throw "Cannot save user to state store when userContext is null."');
 		t.end();
 	}, function(error){
@@ -94,35 +137,28 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 			t.pass('Client tests: Should throw "Cannot save null userContext."');
 		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save null userContext." ' + error.stack ? error.stack : error);
 
-		return client.getUserContext('someUser');
-	}).then(function(response){
+		response = client.getUserContext('someUser');
 		if (response == null)
 			t.pass('Client tests: getUserContext with no context in memory or persisted returns null');
-		else t.fail('Client tests: getUserContext with no context in memory or persisted did not return null');
+		else
+			t.fail('Client tests: getUserContext with no context in memory or persisted did not return null');
 
 		return client.setUserContext(new User('someUser'), true);
-	}, function(error){
-		t.fail('Client tests: getUserContext with no context in memory or persisted did not returned error. ' + error.stack ? error.stack : error);
-		t.end();
-	}).then(function(response){
-		if (response && response.getName() === 'someUser') {
-			t.pass('Client tests: successfully setUserContext with skipPersistence.');
-			return response;
-		}
-		else t.fail('Client tests: failed name check after setUserContext with skipPersistence.');
-
-		return client.getUserContext('someUser');
-	}, function(error){
-		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + error.stack ? error.stack : error);
-		t.end();
 	}).then(function(response){
 		if (response && response.getName() === 'someUser')
+			t.pass('Client tests: successfully setUserContext with skipPersistence.');
+		else
+			t.fail('Client tests: failed name check after setUserContext with skipPersistence.');
+
+		response = client.getUserContext('someUser');
+		if (response && response.getName() === 'someUser')
 			t.pass('Client tests: getUserContext not persisted/skipPersistence was successful.');
-		else t.fail('Client tests: getUserContext not persisted/skipPersistence was not successful.');
+		else
+			t.fail('Client tests: getUserContext not persisted/skipPersistence was not successful.');
 
 		return client.setUserContext(new User('someUser'));
 	}, function(error){
-		t.fail('Client tests: Unexpected error, getUserContext not persisted/skipPersistence. ' + error.stack ? error.stack : error);
+		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + error.stack ? error.stack : error);
 		t.end();
 	}).then(function(result){
 		t.fail('Client tests: setUserContext without skipPersistence and no stateStore should not return result.');
@@ -130,7 +166,8 @@ test('\n\n ** lib/Client.js **\n\n', function (t) {
 	}, function(error){
 		if (error.message === 'Cannot save user to state store when stateStore is null.')
 			t.pass('Client tests: Should throw "Cannot save user to state store when stateStore is null"');
-		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error.stack ? error.stack : error);
+		else
+			t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error.stack ? error.stack : error);
 
 		var chain = client.newChain('someChain');
 		t.equals(chain.getName(), 'someChain', 'Checking chain names match');

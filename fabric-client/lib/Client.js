@@ -221,23 +221,18 @@ var Client = class {
 		var userContext = null;
 		var chain = null;
 
-		return this.getUserContext()
-		.then(
-			function(foundUserContext) {
-				userContext = foundUserContext;
+		userContext = this.getUserContext();
 
-				// building manually or will get protobuf errors on send
-				var envelope = _commonProto.Envelope.decode(request.envelope);
-				logger.debug('createChannel - about to send envelope');
+		// building manually or will get protobuf errors on send
+		var envelope = _commonProto.Envelope.decode(request.envelope);
+		logger.debug('createChannel - about to send envelope');
 
-				var out_envelope = {
-					signature: envelope.signature,
-					payload : envelope.payload
-				};
+		var out_envelope = {
+			signature: envelope.signature,
+			payload : envelope.payload
+		};
 
-				return orderer.sendBroadcast(out_envelope);
-			}
-		)
+		return orderer.sendBroadcast(out_envelope)
 		.then(
 			function(results) {
 				logger.debug('createChannel - good results from broadcast :: %j',results);
@@ -291,20 +286,18 @@ var Client = class {
 		}
 		var self = this;
 		var nonce = sdkUtils.getNonce();
-		return this.getUserContext()
-		.then(function(userContext) {
-			var txId = Chain.buildTransactionID(nonce, userContext);
-			var request = {
-				targets: [peer],
-				chaincodeId : 'cscc',
-				chainId: '',
-				txId: txId,
-				nonce: nonce,
-				fcn : 'GetChannels',
-				args: []
-			};
-			return Chain.sendTransactionProposal(request, self);
-		})
+		var userContext = this.getUserContext();
+		var txId = Chain.buildTransactionID(nonce, userContext);
+		var request = {
+			targets: [peer],
+			chaincodeId : 'cscc',
+			chainId: '',
+			txId: txId,
+			nonce: nonce,
+			fcn : 'GetChannels',
+			args: []
+		};
+		return Chain.sendTransactionProposal(request, self)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -354,20 +347,18 @@ var Client = class {
 		}
 		var self = this;
 		var nonce = sdkUtils.getNonce();
-		return self.getUserContext()
-		.then(function(userContext) {
-			var tx_id = Chain.buildTransactionID(nonce, userContext);
-			var request = {
-				targets: [peer],
-				chaincodeId : 'lccc',
-				chainId: 'mychannel',
-				txId: tx_id,
-				nonce: nonce,
-				fcn : 'getinstalledchaincodes',
-				args: []
-			};
-			return Chain.sendTransactionProposal(request, self);
-		})
+		var userContext = self.getUserContext();
+		var tx_id = Chain.buildTransactionID(nonce, userContext);
+		var request = {
+			targets: [peer],
+			chaincodeId : 'lccc',
+			chainId: 'mychannel',
+			txId: tx_id,
+			nonce: nonce,
+			fcn : 'getinstalledchaincodes',
+			args: []
+		};
+		return Chain.sendTransactionProposal(request, self)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -497,28 +488,25 @@ var Client = class {
 			};
 
 			var header, proposal;
-			return self.getUserContext()
-				.then(
-					function(userContext) {
-						var txId = Chain.buildTransactionID(request.nonce, userContext);
-						var channelHeader = Chain._buildChannelHeader(
-							_commonProto.HeaderType.ENDORSER_TRANSACTION,
-							'', //install does not target a channel
-							txId,
-							null,
-							'lccc'
-						);
-						header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
-						proposal = Chain._buildProposal(lcccSpec, header);
-						let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
+			var userContext = self.getUserContext();
+			var txId = Chain.buildTransactionID(request.nonce, userContext);
+			var channelHeader = Chain._buildChannelHeader(
+				_commonProto.HeaderType.ENDORSER_TRANSACTION,
+				'', //install does not target a channel
+				txId,
+				null,
+				'lccc'
+			);
+			header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
+			proposal = Chain._buildProposal(lcccSpec, header);
+			let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
 
-						return Chain._sendPeersProposal(peers, signed_proposal);
-					}
-				).then(
-					function(responses) {
-						return [responses, proposal, header];
-					}
-				);
+			return Chain._sendPeersProposal(peers, signed_proposal)
+			.then(
+				function(responses) {
+					return [responses, proposal, header];
+				}
+			);
 		});
 	}
 
@@ -630,6 +618,10 @@ var Client = class {
 	}
 
 	/**
+	 * Returns the user with the signing identity. This can be a synchronous call or asynchronous call, depending
+	 * on whether "checkPersistent" is truthy or not. If truthy, the method is asynchronous and returns a Promise,
+	 * otherwise it's synchronous.
+	 *
 	 * As explained above, the client instance can have an optional state store. The SDK saves enrolled users
 	 * in the storage which can be accessed by authorized users of the application (authentication is done by
 	 * the application outside of the SDK). This function attempts to load the user by name from the local storage
@@ -639,27 +631,44 @@ var Client = class {
 	 * @param {String} name Optional. If not specified, will only return the in-memory user context object, or null
 	 * if not found in memory. If "name" is specified, will also attempt to load it from the state store if search
 	 * in memory failed.
+	 * @param {boolean} checkPersistence Optional. If specified and truthy, the method returns a Promise and will
+	 * attempt to check the state store for the requested user by the "name". If not specified or falsey, the method
+	 * is synchronous and returns the requested user from memory
 	 * @returns {Promise} The user object corresponding to the name, or null if the user does not exist or if the
 	 * state store has not been set.
 	 */
-	getUserContext(name) {
+	getUserContext(name, checkPersistence) {
+		// first check if only one param is passed in for "checkPersistence"
+		if (typeof name === 'boolean' && name && typeof checkPersistence === 'undefined')
+			throw new Error('Illegal arguments: "checkPersistence" is truthy but "name" is undefined');
+
+		if (typeof checkPersistence === 'boolean' && checkPersistence &&
+			(typeof name !== 'string' || name === null || name === ''))
+			throw new Error('Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value');
+
 		var self = this;
 		var username = name;
-		return new Promise(function(resolve, reject) {
-			if ((self._userContext && name && self._userContext.getName() === name) || (self._userContext && !name)) {
-				return resolve(self._userContext);
-			} else {
-				if (typeof username === 'undefined' || !username) {
-					return resolve(null);
-				}
+		if ((self._userContext && name && self._userContext.getName() === name) || (self._userContext && !name)) {
+			if (typeof checkPersistence === 'boolean' && checkPersistence)
+				return Promise.resolve(self._userContext);
+			else
+				return self._userContext;
+		} else {
+			if (typeof username === 'undefined' || !username) {
+				if (typeof checkPersistence === 'boolean' && checkPersistence)
+					return Promise.resolve(null);
+				else
+					return null;
+			}
 
-				// this could be because the application has not set a user context yet for this client, which would
-				// be an error condiditon, or it could be that this app has crashed before and is recovering, so we
-				// should allow the previously saved user context object to be deserialized
+			// this could be because the application has not set a user context yet for this client, which would
+			// be an error condiditon, or it could be that this app has crashed before and is recovering, so we
+			// should allow the previously saved user context object to be deserialized
 
-				// first check if there is a user context of the specified name in persistence
+			// first check if there is a user context of the specified name in persistence
+			if (typeof checkPersistence === 'boolean' && checkPersistence) {
 				if (self._stateStore) {
-					self.loadUserFromStateStore(username).then(
+					return self.loadUserFromStateStore(username).then(
 						function(userContext) {
 							if (userContext) {
 								logger.debug('Requested user "%s" loaded successfully from the state store on this Client instance: name - %s', name, name);
@@ -671,20 +680,21 @@ var Client = class {
 						}
 					).then(
 						function(userContext) {
-							return resolve(userContext);
+							return Promise.resolve(userContext);
 						}
 					).catch(
 						function(err) {
 							logger.error('Failed to load an instance of requested user "%s" from the state store on this Client instance. Error: %s', name, err.stack ? err.stack : err);
-							reject(err);
+							return Promise.reject(err);
 						}
 					);
 				} else {
 					// we don't have it in memory or persistence, just return null
-					return resolve(null);
+					return Promise.resolve(null);
 				}
-			}
-		});
+			} else
+				return null;
+		}
 	}
 
 	/**
