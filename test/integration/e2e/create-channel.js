@@ -71,7 +71,10 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 		the_user = admin;
 
 		// readin the envelope to send to the orderer
-		data = fs.readFileSync('./test/fixtures/channel/mychannel.tx');
+		let normalPath = path.normalize(
+			path.join(__dirname, '../../fixtures/channel/mychannel.tx'));
+		t.comment('normalPath=' + normalPath);
+		data = fs.readFileSync(normalPath);
 		var request = {
 			envelope : data,
 			name : 'mychannel',
