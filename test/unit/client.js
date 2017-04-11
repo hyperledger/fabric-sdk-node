@@ -866,3 +866,14 @@ test('\n\n ** createUser error path - missing required keyStoreOpts **\n\n', fun
 	});
 });
 
+test('\n\n ** test related APIs for create channel **\n\n', function (t) {
+	var client = new Client();
+
+	t.throws(
+		function () {
+			client.addMSP();
+		},
+		/^Error: MSP definition is missing the "id" field./,
+		'Client tests: MSP definition is missing the "id" field.');
+	t.end();
+});

@@ -22,8 +22,11 @@ process.env.GRPC_SSL_CIPHER_SUITES = sdkUtils.getConfigSetting('grpc-ssl-cipher-
 var api = require('./api.js');
 var User = require('./User.js');
 var Chain = require('./Chain.js');
+var ChannelConfig = require('./ChannelConfig.js');
 var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
+var MSP = require('./msp/msp.js');
+var MSPManager = require('./msp/msp-manager.js');
 var logger = sdkUtils.getLogger('Client.js');
 var util = require('util');
 var path = require('path');
@@ -62,6 +65,8 @@ var Client = class {
 		// change this to be per Client or per Chain
 		this._cryptoSuite = null;
 		this._userContext = null;
+		// keep a collection of MSP's
+		this._msps = new Map();
 
 		// Is in dev mode or network mode
 		this._devMode = false;
@@ -178,6 +183,45 @@ var Client = class {
 	}
 
 	/**
+	 * Add an MSP definition to this client to be available when referenced by the provided id.
+	 * @parm {Object} which has the following the following fields:
+	 *		<br>`id`: {string} value for the identifier of this instance
+	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
+	 *           signing certificates. Required for MSPs used in verifying signatures
+	 *		<br>`intermediateCerts`: array of {@link Identity} representing trust anchors for validating
+	 *           signing certificates. optional for MSPs used in verifying signatures
+	 *		<br>`admins`: array of {@link Identity} representing admin privileges
+	 */
+	addMSP(msp_def) {
+		if(msp_def && msp_def.id) {
+			if(!msp_def.cryptoSuite) {
+				msp_def.cryptoSuite = sdkUtils.newCryptoSuite();
+			}
+			this._msps.set(msp_def.id, new MSP(msp_def));
+		}
+		else {
+			throw new Error('MSP definition is missing the "id" field.');
+		}
+	}
+
+	/**
+	 * Build an configuration envelope that is the channel configuration definition from the
+	 * provide MSPManager and Channel definition input paramaters. The result of the build
+	 * may be used to create a channel.
+	 * @param {MSPManager} The MSP Manager that is managing all the MSPs referrenced in the
+	 *                     channel configuration definition.
+	 * @param {Object} A JSON object that has the following attributes...TODO fill out
+	 * @return {byte[]} A byte buffer object that is the byte array representation of the
+	 *                  Protobuf common.ConfigUpdate
+	 * @see /protos/common/configtx.proto
+	 */
+	buildChannelConfigUpdate(config_definition) {
+		var channel_config = new ChannelConfig(this._msps);
+		var proto_channel_config = channel_config.build(config_definition);
+		return proto_channel_config.toBuffer();
+	}
+
+	/**
 	 * Calls the orderer to start building the new chain.
 	 * Only one of the application instances needs to call this method.
 	 * Once the chain is successfully created, this and other application
@@ -186,7 +230,7 @@ var Client = class {
 	 *      <br>`name` : required - The name of the new channel
 	 *      <br>`orderer` : required - Orderer Object to create the channel
 	 *		<br>`envelope` : required - byte[] of the envelope object containing
-	 *                          all required settings to initialize this channel
+	 *                       all required settings to initialize this channel
 	 * @returns {boolean} Whether the chain initialization process was successful.
 	 */
 	createChannel(request) {

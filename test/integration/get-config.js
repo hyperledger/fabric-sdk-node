@@ -124,9 +124,9 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 				function(result) {
 					t.pass('Chain was successfully initialized');
 					let orgs = chain.getOrganizationUnits();
-					logger.debug(' Got the following orgs back %j', orgs);
-					t.equals(orgs.length, 2, 'Checking the that we got back the right number of orgs');
-					if(orgs[0].id.indexOf('Org') == 0) {
+					logger.info(' Got the following orgs back %j', orgs);
+					t.equals(orgs.length, 3, 'Checking the that we got back the right number of orgs');
+					if(orgs[0].id.indexOf('Or') == 0) {
 						t.pass('Found the org name '+ orgs[0].id);
 					}
 					else {

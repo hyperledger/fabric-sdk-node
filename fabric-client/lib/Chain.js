@@ -100,6 +100,7 @@ var Chain = class {
 		this._primary_peer = null; // if not set, will use the first peer on the list
 		this._anchor_peers = [];
 		this._orderers = [];
+		this._kafka_brokers = [];
 
 		this._clientContext = clientContext;
 
@@ -668,7 +669,7 @@ var Chain = class {
 	 * @see /protos/common/configtx.proto
 	 */
 	loadConfigUpdateEnvelope(data) {
-		logger.debug('loadConfigData - start');
+		logger.debug('loadConfigUpdateEnvelope - start');
 		var envelope = _commonProto.Envelope.decode(data);
 		var payload = _commonProto.Payload.decode(envelope.payload);
 		var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
@@ -677,7 +678,11 @@ var Chain = class {
 		}
 
 		var config_update_envelope = _configtxProto.ConfigUpdateEnvelope.decode(payload.data);
-		var config_update = _configtxProto.ConfigUpdate.decode(config_update_envelope.config_update);
+		return this.loadConfigUpdate(config_update_envelope.config_update);
+	}
+
+	loadConfigUpdate(config_update_bytes) {
+		var config_update = _configtxProto.ConfigUpdate.decode(config_update_bytes);
 		logger.debug('loadConfigData - channel ::'+ config_update.channel_id);
 
 		let read_group = config_update.read_set;
@@ -685,8 +690,10 @@ var Chain = class {
 
 		var config_items = {};
 		config_items.msps = []; //save all the MSP's found
-		config_items.anchor_peers = []; //save all the MSP's found
+		config_items['anchor-peers'] = []; //save all the MSP's found
 		config_items.orderers = [];
+		config_items['kafka-brokers'] = [];
+		config_items.settings = {};
 		this.loadConfigGroup(config_items, read_group, 'read_set', null, true, false);
 		// do the write_set second so they update anything in the read set
 		this.loadConfigGroup(config_items, write_group, 'write_set', null, true, false);
@@ -709,11 +716,13 @@ var Chain = class {
 
 		var config_items = {};
 		config_items.msps = []; //save all the MSP's found
-		config_items.anchor_peers = []; //save all the MSP's found
+		config_items['anchor-peers'] = []; //save all the MSP's found
 		config_items.orderers = [];
-		this.loadConfigGroup(config_items, group, 'base', null, true, false);
+		config_items['kafka-brokers'] = [];
+		config_items.settings = {};
+		this.loadConfigGroup(config_items, group, 'base', null, true, true);
 		this._msp_manager.loadMSPs(config_items.msps);
-		this._anchor_peers =config_items.anchor_peers;
+		this._anchor_peers = config_items.anchor_peers;
 		//TODO should we create orderers and endorsing peers
 		return config_items;
 	}
@@ -725,12 +734,10 @@ var Chain = class {
 	 * @param {string} - name - used to help with the recursive calls
 	 * @param {string} - org - Organizational name
 	 * @param {bool} - top - to handle the  differences in the structure of groups
-	 * @param {bool} - keep_children - once we start keeping a group, want to keep all
-	 *                 children's settings
 	 * @see /protos/common/configtx.proto
 	 */
-	loadConfigGroup(config_items, group, name, org, top, keep_children) {
-		logger.debug('loadConfigGroup - %s - START groups Org:%s  keep:%s', name, org, keep_children);
+	loadConfigGroup(config_items, group, name, org, top) {
+		logger.debug('loadConfigGroup - %s - START groups Org:%s', name, org);
 		if(!group) {
 			logger.debug('loadConfigGroup - %s - no groups', name);
 			logger.debug('loadConfigGroup - %s - END groups', name);
@@ -744,7 +751,7 @@ var Chain = class {
 			groups = group.value.groups;
 		}
 		if(groups) {
-			var keys = Object.keys(groups.map);
+			let keys = Object.keys(groups.map);
 			if(keys.length == 0) {
 				logger.debug('loadConfigGroup - %s - no keys, so no groups', name);
 			}
@@ -752,7 +759,7 @@ var Chain = class {
 				let key = keys[i];
 				logger.debug('loadConfigGroup - %s - found config group ==> %s', name, key);
 				// The Application group is where config settings are that we want to find
-				this.loadConfigGroup(config_items, groups.map[key], name+'.'+key, key, false, (key === 'Application' || keep_children));
+				this.loadConfigGroup(config_items, groups.map[key], name+'.'+key, key, false);
 			}
 		}
 		else {
@@ -768,11 +775,11 @@ var Chain = class {
 			values = group.value.values;
 		}
 		if(values) {
-			var keys = Object.keys(values.map);
+			let keys = Object.keys(values.map);
 			for(let i =0; i < keys.length; i++) {
 				let key = keys[i];
 				var config_value = values.map[key];
-				this.loadConfigValue(config_items, config_value, name, org, keep_children);
+				this.loadConfigValue(config_items, config_value, name, org);
 			}
 		}
 		else {
@@ -789,11 +796,11 @@ var Chain = class {
 			policies = group.value.policies;
 		}
 		if(policies) {
-			var keys = Object.keys(policies.map);
+			let keys = Object.keys(policies.map);
 			for(let i =0; i < keys.length; i++) {
 				let key = keys[i];
 				var config_policy = policies.map[key];
-				this.loadConfigPolicy(config_items, config_policy, name, org, keep_children);
+				this.loadConfigPolicy(config_items, config_policy, name, org);
 			}
 		}
 		else {
@@ -811,8 +818,8 @@ var Chain = class {
 	 * @see /protos/orderer/configuration.proto
 	 * @see /protos/peer/configuration.proto
 	 */
-	loadConfigValue(config_items, config_value, group_name, org, keep_value) {
-		logger.debug('loadConfigValue - %s - START value name: %s  keep:%s', group_name, config_value.key, keep_value);
+	loadConfigValue(config_items, config_value, group_name, org) {
+		logger.debug('loadConfigValue - %s - START value name: %s', group_name, config_value.key);
 		logger.debug('loadConfigValue - %s   - version: %s', group_name, config_value.value.version);
 		logger.debug('loadConfigValue - %s   - mod_policy: %s', group_name, config_value.value.mod_policy);
 		try {
@@ -826,47 +833,55 @@ var Chain = class {
 						port : anchor_peers.anchor_peers[i].port,
 						org  : org
 					};
-					config_items.anchor_peers.push(anchor_peer);
+					config_items['anchor-peers'].push(anchor_peer);
 					logger.debug('loadConfigValue - %s   - AnchorPeer :: %s:%s:%s', group_name, anchor_peer.host, anchor_peer.port, anchor_peer.org);
 				}
 				break;
 			case 'MSP':
 				var msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
 				logger.debug('loadConfigValue - %s   - MSP found', group_name);
-				if(keep_value) config_items.msps.push(msp_value);
+				config_items.msps.push(msp_value);
 				break;
 			case 'ConsensusType':
 				var consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
+				config_items.settings['ConsensusType'] = consensus_type;
 				logger.debug('loadConfigValue - %s   - Consensus type value :: %s', group_name, consensus_type.type);
 				break;
 			case 'BatchSize':
 				var batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
+				config_items.settings['BatchSize'] = batch_size;
 				logger.debug('loadConfigValue - %s   - BatchSize  maxMessageCount :: %s', group_name, batch_size.maxMessageCount);
 				logger.debug('loadConfigValue - %s   - BatchSize  absoluteMaxBytes :: %s', group_name, batch_size.absoluteMaxBytes);
 				logger.debug('loadConfigValue - %s   - BatchSize  preferredMaxBytes :: %s', group_name, batch_size.preferredMaxBytes);
 				break;
 			case 'BatchTimeout':
 				var batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
+				config_items.settings['BatchTimeout'] = batch_timeout;
 				logger.debug('loadConfigValue - %s   - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
 				break;
 			case 'ChannelRestrictions':
 				var channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
+				config_items.settings['ChannelRestrictions'] = channel_restrictions;
 				logger.debug('loadConfigValue - %s   - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
 				break;
 			case 'CreationPolicy':
 				var creation_policy = _ordererConfigurationProto.CreationPolicy.decode(config_value.value.value);
+				config_items.settings['CreationPolicy'] = creation_policy;
 				logger.debug('loadConfigValue - %s   - CreationPolicy policy value :: %s', group_name, creation_policy.policy);
 				break;
 			case 'ChainCreationPolicyNames':
 				var chain_creation_policy_names = _ordererConfigurationProto.ChainCreationPolicyNames.decode(config_value.value.value);
+				config_items.settings['ChainCreationPolicyNames'] = chain_creation_policy_names;
 				logger.debug('loadConfigValue - %s   - ChainCreationPolicyNames names value :: %s', group_name, chain_creation_policy_names.names);
 				break;
 			case 'HashingAlgorithm':
 				var hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
+				config_items.settings['HashingAlgorithm'] = hashing_algorithm_name;
 				logger.debug('loadConfigValue - %s   - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
 				break;
 			case 'BlockDataHashingStructure':
 				var blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
+				config_items.settings['BlockDataHashingStructure'] = blockdata_hashing_structure;
 				logger.debug('loadConfigValue - %s   - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
 				break;
 			case 'OrdererAddresses':
@@ -874,6 +889,13 @@ var Chain = class {
 				logger.debug('loadConfigValue - %s   - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
 				if(orderer_addresses && orderer_addresses.addresses ) for(var i in orderer_addresses.addresses) {
 					config_items.orderers.push(orderer_addresses.addresses[i]);
+				}
+				break;
+			case 'KafkaBrokers':
+				var kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
+				logger.debug('loadConfigValue - %s   - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
+				if(kafka_brokers && kafka_brokers.brokers ) for(var i in kafka_brokers.brokers) {
+					config_items['kafka-brokers'].push(kafka_brokers.brokers[i]);
 				}
 				break;
 			default:
@@ -890,30 +912,27 @@ var Chain = class {
 	 * utility method to load in a config policy
 	 * @see /protos/common/configtx.proto
 	 */
-	loadConfigPolicy(config_items, config_policy, group_name, keep_policy) {
-		logger.debug('loadConfigPolicy - %s - name: %s  keep:%s', group_name, config_policy.key, keep_policy);
+	loadConfigPolicy(config_items, config_policy, group_name, org) {
+		logger.debug('loadConfigPolicy - %s - name: %s', group_name, config_policy.key);
 		logger.debug('loadConfigPolicy - %s - version: %s', group_name, config_policy.value.version);
 		logger.debug('loadConfigPolicy - %s - mod_policy: %s', group_name, config_policy.value.mod_policy);
 		try {
 			switch(config_policy.value.policy.type) {
 			case _policiesProto.Policy.PolicyType.SIGNATURE:
-				var policy = _policiesProto.SignaturePolicyEnvelope.decode(config_policy.value.policy.policy);
-				logger.debug('loadConfigPolicy - %s - policy SIGNATURE :: %s',group_name, policy);
-				break;
-			case _policiesProto.Policy.PolicyType.MSP:
-				//var policy = _policiesProto.Policy.decode(value.value.policy.policy);
-				logger.debug('loadConfigPolicy - %s - policy :: MSP POLICY NOT PARSED ', group_name);
+				let signature_policy = _policiesProto.SignaturePolicyEnvelope.decode(config_policy.value.policy.policy);
+				logger.debug('loadConfigPolicy - %s - policy SIGNATURE :: %s',group_name, signature_policy.encodeJSON());
 				break;
 			case _policiesProto.Policy.PolicyType.IMPLICIT_META:
-				var policy = _policiesProto.ImplicitMetaPolicy.decode(config_policy.value.policy.policy);
-				logger.debug('loadConfigPolicy - %s - policy IMPLICIT_META :: %s',group_name, policy);
+				let implicit_policy = _policiesProto.ImplicitMetaPolicy.decode(config_policy.value.policy.policy);
+				logger.debug('loadConfigPolicy - %s - policy IMPLICIT_META :: %s %s',group_name, implicit_policy.getRule(),implicit_policy.getSubPolicy());
 				break;
 			default:
-				throw new Error('Unknown Policy type');
+				logger.error('loadConfigPolicy - Unknown policy type :: %s',config_policy.value.policy.type);
+				throw new Error('Unknown Policy type ::' +config_policy.value.policy.type);
 			}
 		}
 		catch(err) {
-			logger.debug('loadConfigPolicy - %s - name: %s - unable to parse policy %j', group_name, config_policy.key, err);
+			logger.debug('loadConfigPolicy - %s - name: %s - unable to parse policy %s', group_name, config_policy.key, err);
 		}
 	}
 

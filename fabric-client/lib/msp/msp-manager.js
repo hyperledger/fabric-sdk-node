@@ -99,8 +99,32 @@ var MSPManager = class {
 				cryptoSuite: cs
 			});
 			logger.debug('loadMSPs - found msp=',newMSP.getId());
+			//will eliminate duplicates
 			self._msps[fabricConfig.getName()] = newMSP;
 		});
+	}
+
+	/**
+	 * Create and add MSP instance to this manager according to configuration information
+	 * @param {Object} config A configuration object specific to the implementation. For this
+	 * implementation it uses the following fields:
+	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
+	 *           signing certificates. Required for MSPs used in verifying signatures
+	 *		<br>`intermediateCerts`: array of {@link Identity} representing trust anchors for validating
+	 *           signing certificates. optional for MSPs used in verifying signatures
+	 *		<br>`admins`: array of {@link Identity} representing admin privileges
+	 *		<br>`signer`: {@link SigningIdentity} signing identity. Required for MSPs used in signing
+	 *		<br>`id`: {string} value for the identifier of this instance
+	 *		<br>`orgs`: {string} array of organizational unit identifiers
+	 *		<br>`cryptoSuite': the underlying {@link module:api.CryptoSuite} for crypto primitive operations
+	 *@return {MSP} The newly created MSP instance
+	 */
+	addMSP(config) {
+		if(!config.cryptoSuite) config.cryptoSuite = utils.newCryptoSuite();
+		var msp = new MSP(config);
+		logger.debug('addMSP - msp=',msp.getId());
+		this._msps[msp.getId()] = msp;
+		return msp;
 	}
 
 	/**

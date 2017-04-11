@@ -9,6 +9,8 @@ var logger = utils.getLogger('msp.js');
 
 var grpc = require('grpc');
 var identityProto = grpc.load(__dirname + '/../protos/identity.proto').msp;
+var _mspConfigProto = grpc.load(__dirname + '/../protos/msp/mspconfig.proto').msp;
+
 
 /**
  * MSP is the minimal Membership Service Provider Interface to be implemented
@@ -98,6 +100,28 @@ var MSP = class {
 	 */
 	getDefaultSigningIdentity() {
 		return this._signer;
+	}
+
+	/**
+	 * Returns the Protobuf representation of this MSP Config
+	 */
+	toProtobuf() {
+		var proto_msp_config = new _mspConfigProto.MSPConfig();
+		proto_msp_config.setType(0); //FABRIC
+		var proto_fabric_msp_config = new _mspConfigProto.FabricMSPConfig();
+		proto_fabric_msp_config.setName(this._id);
+		proto_fabric_msp_config.setRootCerts(this._rootCerts);
+		if(this._intermediateCerts) {
+			proto_fabric_msp_config.setIntermediateCerts(this._intermediateCerts);
+		}
+		if(this._admins) {
+			proto_fabric_msp_config.setAdmins(this._admins);
+		}
+		if(this._organization_units) {
+			proto_fabric_msp_config.setOrganizationUnits(this._organization_units);
+		}
+		proto_msp_config.setConfig(proto_fabric_msp_config.toBuffer());
+		return proto_msp_config;
 	}
 
 	/**
