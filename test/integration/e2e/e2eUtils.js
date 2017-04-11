@@ -608,16 +608,16 @@ function queryChaincode(org, version, value, t){
 	var orgName = ORGS[org].name;
 
 	var targets = [];
-	// set up the chain to use each org's 'peer1' for
+	// set up the chain to use each org's 'peer2' for
 	// both requests and events
 	for (let key in ORGS) {
-		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-			let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer2 !== 'undefined') {
+			let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer2['tls_cacerts']));
 			let peer = client.newPeer(
-				ORGS[key].peer1.requests,
+				ORGS[key].peer2.requests,
 				{
 					pem: Buffer.from(data).toString(),
-					'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+					'ssl-target-name-override': ORGS[key].peer2['server-hostname']
 				});
 			chain.addPeer(peer);
 		}
