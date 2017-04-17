@@ -131,7 +131,10 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 	}).then((block) => {
 		logger.info(' Chain getBlock() returned block number=%s',block.header.number);
 		t.equal(block.header.number.toString(),'0','checking query results are correct that we got zero block back');
-		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Orderer.groups.OrdererMSP.values.MSP.config.name,'OrdererMSP','checking query results are correct that we got the correct orderer MSP name');
+		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Orderer.groups.OrdererMSP.values.MSP.value.config.name,'OrdererMSP','checking query results are correct that we got the correct orderer MSP name');
+		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.groups.Org2MSP.policies.Writers.policy.type,'SIGNATURE','checking query results are correct that we got the correct policy type');
+		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.policies.Writers.policy.policy.rule,'ANY','checking query results are correct that we got the correct policy rule');
+		t.equal(block.data.data[0].payload.data.config.channel_group.policies.Admins.mod_policy,'Admins','checking query results are correct that we got the correct mod policy name');
 		logger.info('%j',block);
 		return chain.queryBlock(1);
 	}).then((block) => {
@@ -156,13 +159,61 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 		var grpc = require('grpc');
 		var commonProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/common.proto').common;
 		var transProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/transaction.proto').protos;
+		var proposalProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/proposal.proto').protos;
+		var proposalResponseProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/proposal_response.proto').protos;
+		var identityProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/identity.proto').msp;
 		logger.info(' Chain queryTransaction() returned processed tranaction is valid='+processed_transaction.validationCode);
 		t.equals(transProto.TxValidationCode.VALID,processed_transaction.validationCode,'got back ProcessedTransaction that is a valid transaction');
+		/*
+		 * ProcessedTransaction
+		 *    - int32 validationCode
+		 *    - Envelope
+		 *       - bytes Signature
+		 *       - bytes Payload
+		 *           - Header
+		 *              - bytes SignatureHeader
+		 *              - bytes ChannelHeader
+		 *           - bytes data Transaction
+		 *               - array TransationAction
+		 *                  - bytes header SignatureHeader
+		 *                  - bytes payload ChaincodeActionPayload
+		 *                     - bytes ChaincodeProposalPayload
+		 *                        - bytes ChaincodeProposalPayload
+		 *                            - bytes input args
+		 *                     - action ChaincodeEndorsedAction
+		 *                        - bytes proposal_response_payload
+		 *                        - array Endorsement
+		 *                            - bytes endorser - Identity
+		 *                                    - mspid
+		 *                                    - bytes IdBytes
+		 */
 
 		try {
-			var payload = commonProto.Payload.decode(processed_transaction.transactionEnvelope.payload);
-			var channel_header = commonProto.ChannelHeader.decode(payload.header.channel_header);
-			logger.debug(' Chain queryTransaction - transaction ID :: %s:', channel_header.tx_id);
+			var payload = commonProto.Payload.decode(processed_transaction.transactionEnvelope.getPayload());
+			var channel_header = commonProto.ChannelHeader.decode(payload.header.getChannelHeader());
+			logger.info(' Chain queryTransaction - transaction ID :: %s', channel_header.tx_id);
+
+			var transaction = transProto.Transaction.decode(payload.data);
+			var actions = transaction.getActions();
+			if(actions) for(var i in actions) {
+				let transaction_action = actions[i];
+				var transaction_action_header = commonProto.SignatureHeader.decode(transaction_action.getHeader());
+				var creator = identityProto.SerializedIdentity.decode(transaction_action_header.getCreator());
+				logger.info(' Creator mspid::%s',creator.getMspid());
+
+				var chaincode_action_payload = transProto.ChaincodeActionPayload.decode(transaction_action.getPayload());
+				var chaincode_proposal_payload =
+					proposalProto.ChaincodeProposalPayload.decode(chaincode_action_payload.getChaincodeProposalPayload());
+				logger.info(' ===>>>>> proposal arguments :: ===>>>> %s',chaincode_proposal_payload.getInput().toString('utf8'));
+				var chaincode_endorsed_action = chaincode_action_payload.getAction(); //ChaincodeEndorsedAction
+				var endorsements = chaincode_endorsed_action.getEndorsements();
+				if(endorsements) for(var j in endorsements) {
+					let endorsement = endorsements[j];
+					var endorser = identityProto.SerializedIdentity.decode(endorsement.getEndorser());
+					logger.info(' Endorser mspid::%s',endorser.getMspid());
+					logger.info(' Endorser id::%s',endorser.getIdBytes().toString('utf8'));
+				}
+			}
 		}
 		catch(err) {
 			logger.error(err);

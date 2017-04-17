@@ -60,10 +60,17 @@ var Block = class {
 			throw new Error('Block input data is not a byte buffer');
 		}
 		var block = {};
-		var proto_block = _commonProto.Block.decode(block_bytes);
-		block.header = decodeBlockHeader(proto_block.getHeader());
-		block.data = decodeBlockData(proto_block.getData());
-		block.metadata = decodeBlockMetaData(proto_block.getMetadata());
+		try {
+			var proto_block = _commonProto.Block.decode(block_bytes);
+			block.header = decodeBlockHeader(proto_block.getHeader());
+			block.data = decodeBlockData(proto_block.getData());
+			block.metadata = decodeBlockMetaData(proto_block.getMetadata());
+		}
+		catch(error) {
+			logger.error('decode - ::' + error.stack ? error.stack : error);
+			throw error;
+		}
+
 		return block;
 	};
 };
@@ -96,6 +103,7 @@ function decodeBlockMetaData(proto_block_metadata) {
 		let proto_block_metadata_metadata = proto_block_metadata.metadata[i];
 		metadata.metadata.push(proto_block_metadata_metadata.toBuffer());
 	}
+
 	return metadata;
 };
 
@@ -205,7 +213,7 @@ function decodeConfigGroup(proto_config_group) {
 	config_group.groups = decodeConfigGroups(proto_config_group.getGroups());
 	config_group.values = decodeConfigValues(proto_config_group.getValues());
 	config_group.policies = decodeConfigPolicies(proto_config_group.getPolicies());
-	config_group.mod_policy = proto_config_group.getModPolicy();
+	config_group.mod_policy = proto_config_group.getModPolicy(); //string
 	return config_group;
 };
 
@@ -223,6 +231,9 @@ function decodeConfigValues(config_value_map) {
 function decodeConfigValue(proto_config_value) {
 	var config_value = {};
 	logger.debug(' ======> Config item ::%s', proto_config_value.key);
+	config_value.version = proto_config_value.value.getVersion();
+	config_value.mod_policy = proto_config_value.value.getModPolicy();
+	config_value.value = {};
 	switch(proto_config_value.key) {
 	case 'AnchorPeers':
 		var anchor_peers = [];
@@ -234,7 +245,7 @@ function decodeConfigValue(proto_config_value) {
 			};
 			anchor_peers.push(anchor_peer);
 		}
-		config_value.anchor_peers = anchor_peers;
+		config_value.value.anchor_peers = anchor_peers;
 		break;
 	case 'MSP':
 		var msp_config = {};
@@ -242,30 +253,30 @@ function decodeConfigValue(proto_config_value) {
 		if(proto_msp_config.getType() == 0) {
 			msp_config = decodeFabricMSPConfig(proto_msp_config.getConfig());
 		}
-		config_value.type = proto_msp_config.type;
-		config_value.config = msp_config;
+		config_value.value.type = proto_msp_config.type;
+		config_value.value.config = msp_config;
 		break;
 	case 'ConsensusType':
 		var proto_consensus_type = _ordererConfigurationProto.ConsensusType.decode(proto_config_value.value.value);
-		config_value.type = proto_consensus_type.getType(); // string
+		config_value.value.type = proto_consensus_type.getType(); // string
 		break;
 	case 'BatchSize':
 		var proto_batch_size = _ordererConfigurationProto.BatchSize.decode(proto_config_value.value.value);
-		config_value.maxMessageCount = proto_batch_size.getMaxMessageCount(); //uint32
-		config_value.absoluteMaxBytes = proto_batch_size.getAbsoluteMaxBytes(); //uint32
-		config_value.preferredMaxBytes = proto_batch_size.getPreferredMaxBytes(); //uint32
+		config_value.value.maxMessageCount = proto_batch_size.getMaxMessageCount(); //uint32
+		config_value.value.absoluteMaxBytes = proto_batch_size.getAbsoluteMaxBytes(); //uint32
+		config_value.value.preferredMaxBytes = proto_batch_size.getPreferredMaxBytes(); //uint32
 		break;
 	case 'BatchTimeout':
 		var proto_batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(proto_config_value.value.value);
-		config_value.timeout = proto_batch_timeout.getTimeout(); //string
+		config_value.value.timeout = proto_batch_timeout.getTimeout(); //string
 		break;
 	case 'ChannelRestrictions':
 		var proto_channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(proto_config_value.value.value);
-		config_value.max_count = proto_channel_restrictions.getMaxCount(); //unit64
+		config_value.value.max_count = proto_channel_restrictions.getMaxCount(); //unit64
 		break;
 	case 'CreationPolicy':
 		var proto_creation_policy = _ordererConfigurationProto.CreationPolicy.decode(proto_config_value.value.value);
-		config_value.policy = proto_creation_policy.getPolicy(); //string
+		config_value.value.policy = proto_creation_policy.getPolicy(); //string
 		break;
 	case 'ChainCreationPolicyNames':
 		var proto_chain_creation_policy_names = _ordererConfigurationProto.ChainCreationPolicyNames.decode(proto_config_value.value.value);
@@ -274,15 +285,15 @@ function decodeConfigValue(proto_config_value) {
 		if(proto_names) for(var i in proto_names) {
 			names.push(proto_names[i]); //string
 		}
-		config_value.names = names;
+		config_value.value.names = names;
 		break;
 	case 'HashingAlgorithm':
 		var proto_hashing_algorithm = _commonConfigurationProto.HashingAlgorithm.decode(proto_config_value.value.value);
-		config_value.name = proto_hashing_algorithm.getName();
+		config_value.value.name = proto_hashing_algorithm.getName();
 		break;
 	case 'BlockDataHashingStructure':
 		var proto_blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(proto_config_value.value.value);
-		config_value.width = proto_blockdata_hashing_structure.getWidth(); //
+		config_value.value.width = proto_blockdata_hashing_structure.getWidth(); //
 		break;
 	case 'OrdererAddresses':
 		var orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(proto_config_value.value.value);
@@ -291,7 +302,7 @@ function decodeConfigValue(proto_config_value) {
 		if(proto_addresses) for(var i in proto_addresses) {
 			addresses.push(proto_addresses[i]); //string
 		}
-		config_value.addresses = addresses;
+		config_value.value.addresses = addresses;
 		break;
 	default:
 //		logger.debug('loadConfigValue - %s   - value: %s', group_name, config_value.value.value);
@@ -310,19 +321,24 @@ function decodeConfigPolicies(config_policy_map) {
 	return config_policies;
 };
 
+var Policy_PolicyType = [ 'UNKNOWN','SIGNATURE','MSP','IMPLICIT_META'];
 function decodeConfigPolicy(proto_config_policy) {
 	var config_policy = {};
-	config_policy.policy = proto_config_policy.type;
+	config_policy.version = proto_config_policy.value.getVersion();
+	config_policy.mod_policy = proto_config_policy.value.getModPolicy();
+	config_policy.policy = {};
+	config_policy.policy.type = Policy_PolicyType[proto_config_policy.value.policy.type];
 	logger.debug('decodeConfigPolicy ======> Policy item ::%s', proto_config_policy.key);
 	switch(proto_config_policy.value.policy.type) {
 	case _policiesProto.Policy.PolicyType.SIGNATURE:
-		config_policy.policy = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.policy);
+		config_policy.policy.policy = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.policy);
 		break;
 	case _policiesProto.Policy.PolicyType.MSP:
 		var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.policy);
+		logger.warning('decodeConfigPolicy - found a PolicyType of MSP');
 		break;
 	case _policiesProto.Policy.PolicyType.IMPLICIT_META:
-		var proto_implicit = _policiesProto.ImplicitMetaPolicy.decode(proto_config_policy.value.policy.policy);
+		config_policy.policy.policy = decodeImplicitMetaPolicy(proto_config_policy.value.policy.policy);
 		break;
 	default:
 		throw new Error('Unknown Policy type');
@@ -330,6 +346,15 @@ function decodeConfigPolicy(proto_config_policy) {
 
 	return config_policy;
 };
+
+var ImplicitMetaPolicy_Rule = ['ANY','ALL','MAJORITY'];
+function decodeImplicitMetaPolicy(implicit_meta_policy_bytes) {
+	var implicit_meta_policy = {};
+	var proto_implicit_meta_policy = _policiesProto.ImplicitMetaPolicy.decode(implicit_meta_policy_bytes);
+	implicit_meta_policy.sub_policy = proto_implicit_meta_policy.getSubPolicy();
+	implicit_meta_policy.rule = ImplicitMetaPolicy_Rule[proto_implicit_meta_policy.getRule()];
+	return implicit_meta_policy;
+}
 
 function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 	var signature_policy_envelope = {};
