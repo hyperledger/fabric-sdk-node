@@ -676,3 +676,30 @@ function queryChaincode(org, version, value, t){
 };
 
 module.exports.queryChaincode = queryChaincode;
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+module.exports.sleep = sleep;
+
+function loadMSPConfig(name, mspdir) {
+	var msp = {};
+	msp.id = name;
+	msp.rootCerts = readAllFiles(path.join(__dirname, mspdir, 'cacerts'));
+	msp.admins = readAllFiles(path.join(__dirname, mspdir, 'admincerts'));
+	return msp;
+}
+module.exports.loadMSPConfig = loadMSPConfig;
+
+function readAllFiles(dir) {
+	var files = fs.readdirSync(dir);
+	var certs = [];
+	files.forEach((file_name) => {
+		let file_path = path.join(dir,file_name);
+		console.log(' looking at file ::'+file_path);
+		let data = fs.readFileSync(file_path);
+		certs.push(data);
+	});
+	return certs;
+}
+module.exports.readAllFiles = readAllFiles;

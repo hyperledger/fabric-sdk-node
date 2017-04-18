@@ -16,6 +16,7 @@
 'use strict';
 
 var utils = require('fabric-client/lib/utils.js');
+utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('E2E create-channel');
 
 var tape = require('tape');
@@ -27,20 +28,16 @@ var util = require('util');
 var fs = require('fs');
 var path = require('path');
 
-var testUtil = require('../../unit/util.js');
-var e2eUtils = require('./e2eUtils.js');
+var testUtil = require('../unit/util.js');
 
 var the_user = null;
 
 Client.addConfigFile(path.join(__dirname, './config.json'));
 var ORGS = Client.getConfigSetting('test-network');
 
-var channel_name = 'mychannel';
-// can use "channel=<name>" to control the channel name from command line
+var channel_name = 'mychannel2';
 if (process.argv.length > 2) {
-	if (process.argv[2].indexOf('channel=') === 0) {
-		channel_name = process.argv[2].split('=')[1];
-	}
+	channel_name = process.argv[2];
 }
 
 logger.info('\n\n >>>>>>  Will create new channel with name :: %s <<<<<<< \n\n',channel_name);
@@ -54,7 +51,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	var client = new Client();
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
-	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
+	let data = fs.readFileSync(path.join(__dirname,'/test', caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
 	var orderer = client.newOrderer(
@@ -100,7 +97,6 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	var test_input = {
 		channel : {
 			name : channel_name,
-			version : 3,
 			settings : {
 				'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : '99m',	'preferred-max-bytes' : '512k'},
 				'batch-timeout' : '10s',
@@ -135,7 +131,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 			peers : {
 				organizations : [{
 					mspid : 'Org1MSP',
-					'anchor-peers' : ['peer0:7051'],
+					'anchor-peers' : ['peer0:7051', 'peer1:7056'],
 					policies : {
 						Readers : {signature : ACCEPT_ALL},
 						Writers : {signature : ACCEPT_ALL},
@@ -143,7 +139,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 					}
 				},{
 					mspid : 'Org2MSP',
-					'anchor-peers' : ['peer2:8051'],
+					'anchor-peers' : ['peer2:8051', 'peer3:8056'],
 					policies : {
 						Readers : {signature : ACCEPT_ALL},
 						Writers : {signature : ACCEPT_ALL},
@@ -176,18 +172,18 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		client.addMSP( e2eUtils.loadMSPConfig('OrdererMSP', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/msp/'));
+		client.addMSP( loadMSPConfig('OrdererMSP', 'orderer', 'ordererOrg1'));
 
-		client.addMSP( e2eUtils.loadMSPConfig('Org1MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/msp/'));
+		client.addMSP( loadMSPConfig('Org1MSP', 'peer', 'peerOrg1'));
 
-		client.addMSP( e2eUtils.loadMSPConfig('Org2MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/msp/'));
+		client.addMSP( loadMSPConfig('Org2MSP', 'peer', 'peerOrg2'));
 
 		// have the SDK build the config update object
-		config = client.buildChannelConfig(test_input);
+		config = client.buildChannelConfigUpdate(test_input);
 		t.pass('Successfully built config update');
 
 		// sign the config
-		var signature = client.signChannelConfig(config);
+		var signature = client.signChannelConfigUpdate(config);
 		t.pass('Successfully signed config update');
 
 		// collect all signatures
@@ -197,7 +193,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		let nonce = utils.getNonce();
 		let tx_id = Client.buildTransactionID(nonce, the_user);
 		var request = {
-			config: config,
+			config : config,
 			signatures : signatures,
 			name : channel_name,
 			orderer : orderer,
@@ -212,7 +208,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		logger.debug(' response ::%j',result);
 		t.pass('Successfully created the channel.');
 		if(result.status && result.status === 'SUCCESS') {
-			return e2eUtils.sleep(5000);
+			return sleep(5000);
 		} else {
 			t.fail('Failed to create the channel. ');
 			t.end();
@@ -229,3 +225,27 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		t.end();
 	});
 });
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function loadMSPConfig(name, type, org) {
+	var msp = {};
+	msp.id = name;
+	msp.rootCerts = readAllFiles(path.join(__dirname, '../fixtures/channel/crypto-config/', type +'Organizations/', org, 'msp/cacerts/'));
+	msp.admins = readAllFiles(path.join(__dirname, '../fixtures/channel/crypto-config/', type +'Organizations/', org, 'msp/admincerts/'));
+	return msp;
+}
+
+function readAllFiles(dir) {
+	var files = fs.readdirSync(dir);
+	var certs = [];
+	files.forEach((file_name) => {
+		let file_path = path.join(dir,file_name);
+		console.log(' looking at file ::'+file_path);
+		let data = fs.readFileSync(file_path);
+		certs.push(data);
+	});
+	return certs;
+}

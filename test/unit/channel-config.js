@@ -191,7 +191,8 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 				orderers : {},
 				peers : {}
 			}};
-			var channelConfig = client.buildChannelConfigUpdate(test_input2);
+			var channelConfig = new ChannelConfig(new Map());
+			channelConfig.build(test_input2);
 		},
 		/^Error: Missing orderers organizations array/,
 		'Checking Missing orderers organizations array'
@@ -209,7 +210,8 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 				orderers : {organizations : []},
 				peers : {}
 			}};
-			var channelConfig = client.buildChannelConfigUpdate(test_input1);
+			var channelConfig = new ChannelConfig(new Map());
+			channelConfig.build(test_input1);
 		},
 		/^Error: Missing peers organizations array/,
 		'Checking Missing peers organizations array'
@@ -227,7 +229,8 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 				orderers : {organizations : []},
 				peers : {}
 			}};
-			var channelConfig = client.buildChannelConfigUpdate(test_input);
+			var channelConfig = new ChannelConfig(new Map());
+			channelConfig.build(test_input);
 		},
 		/^Error: ChannelConfig "name" is required/,
 		'Checking ChannelConfig "name" is required'
@@ -246,7 +249,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 				peers : {}
 			}};
 			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
-			var channelConfig = client.buildChannelConfigUpdate(test_input);
+			var channelConfig = client.buildChannelConfig(test_input);
 		},
 		/^Error: Missing "end-points" in orderer organization definition/,
 		'Checking Missing "end-points" in orderer organization definition'
@@ -266,7 +269,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 			}};
 			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
 			client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-			var channelConfig = client.buildChannelConfigUpdate(test_input);
+			var channelConfig = client.buildChannelConfig(test_input);
 		},
 		/^Error: Missing "mspid" value in the organization/,
 		'Checking Missing "mspid" value in the organization'
@@ -287,7 +290,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 			}};
 			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
 			client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-			var channelConfig = client.buildChannelConfigUpdate(test_input);
+			var channelConfig = client.buildChannelConfig(test_input);
 		},
 		/^Error: Missing "anchor-peers" array in peers orgainization definition/,
 		'Checking Missing "anchor-peers" array in peers orgainization definition'
@@ -307,7 +310,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 			}};
 			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
 			client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-			var channelConfig = client.buildChannelConfigUpdate(test_input);
+			var channelConfig = client.buildChannelConfig(test_input);
 		},
 		/^Error: Organization org1MSP has an invalid achor peer address ::host:port/,
 		'Checking Organization org1MSP has an invalid achor peer address ::host:port'
@@ -328,7 +331,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 			}};
 			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
 			client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-			var channelConfig = client.buildChannelConfigUpdate(test_input);
+			var channelConfig = client.buildChannelConfig(test_input);
 		},
 		/^Error: Implicit Rule is not known ::BAD/,
 		'Checking Implicit Rule is not known ::BAD'
@@ -345,7 +348,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 				orderers : {organizations : []},
 				peers : {}
 			}};
-			var channelConfig = client.buildChannelConfigUpdate(test_input1);
+			var channelConfig = client.buildChannelConfig(test_input1);
 		},
 		/^Error: Setting max-message-count is not valid value :: dd/,
 		'Checking Setting max-message-count is not valid value :: dd'
@@ -363,7 +366,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 				orderers : {organizations : []},
 				peers : {}
 			}};
-			var channelConfig = client.buildChannelConfigUpdate(test_input1);
+			var channelConfig = client.buildChannelConfig(test_input1);
 		},
 		/^Error: Setting max-message-count is not valid value :: 10Z/,
 		'Checking Setting max-message-count is not valid value :: 10Z'
@@ -382,7 +385,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 				orderers : {organizations : []},
 				peers : {}
 			}};
-			var channelConfig = client.buildChannelConfigUpdate(test_input1);
+			var channelConfig = client.buildChannelConfig(test_input1);
 		},
 		/^Error: Setting max-message-count is not valid value :: RRK/,
 		'Checking Setting max-message-count is not valid value :: RRK'
@@ -398,7 +401,8 @@ test('\n\n ** ChannelConfig - MSP check **\n\n', function (t) {
 
 	t.throws(
 		function () {
-			var channelConfig = client2.buildChannelConfigUpdate(test_input);
+			var channelConfig = new ChannelConfig(new Map());
+			var channelConfig = client2.buildChannelConfig(test_input);
 		},
 		/^Error: MSP ordererMSP was not found/,
 		'Checking MSP ordererMSP was not found'
@@ -412,7 +416,7 @@ test('\n\n ** ChannelConfig - basic field check tests **\n\n', function (t) {
 			try {
 				client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
 				client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-				var channelConfigUpdate = client.buildChannelConfigUpdate(test_input);
+				var channelConfigUpdate = client.buildChannelConfig(test_input);
 				t.pass('No exceptions building on a good configuration');
 
 				var chain = client.newChain('test');

@@ -1,56 +1,46 @@
 /**
  * Copyright 2016 IBM All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the 'License');
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *    http://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an 'AS IS' BASIS,
+ *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+
+// This is an end-to-end test that focuses on exercising all parts of the fabric APIs
+// in a happy-path scenario
 'use strict';
 
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('E2E create-channel');
-
-var tape = require('tape');
-var _test = require('tape-promise');
-var test = _test(tape);
-
-var Client = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
 var path = require('path');
-
-var testUtil = require('../../unit/util.js');
+var tape = require('tape');
+var _test = require('tape-promise');
+var test = _test(tape);
 var e2eUtils = require('./e2eUtils.js');
+var testUtil = require('../../unit/util.js');
+var Client = require('fabric-client');
+var utils = require('fabric-client/lib/utils.js');
+var logger = utils.getLogger('End to End');
 
 var the_user = null;
 
 Client.addConfigFile(path.join(__dirname, './config.json'));
 var ORGS = Client.getConfigSetting('test-network');
 
-var channel_name = 'mychannel';
-// can use "channel=<name>" to control the channel name from command line
-if (process.argv.length > 2) {
-	if (process.argv[2].indexOf('channel=') === 0) {
-		channel_name = process.argv[2].split('=')[1];
-	}
-}
 
-logger.info('\n\n >>>>>>  Will create new channel with name :: %s <<<<<<< \n\n',channel_name);
-//
-//Attempt to send a request to the orderer with the sendCreateChain method
-//
-test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
+test('\n\n***** U P D A T E C H A N N E L flow: update channel *****\n\n', (t) => {
 	//
 	// Create and configure the test chain
 	//
+	var channel_name = 'mychannel';
 	var client = new Client();
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
@@ -100,7 +90,6 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	var test_input = {
 		channel : {
 			name : channel_name,
-			version : 3,
 			settings : {
 				'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : '99m',	'preferred-max-bytes' : '512k'},
 				'batch-timeout' : '10s',
@@ -135,7 +124,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 			peers : {
 				organizations : [{
 					mspid : 'Org1MSP',
-					'anchor-peers' : ['peer0:7051'],
+					'anchor-peers' : ['peer0:7051', 'peer1:7056'],
 					policies : {
 						Readers : {signature : ACCEPT_ALL},
 						Writers : {signature : ACCEPT_ALL},
@@ -143,7 +132,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 					}
 				},{
 					mspid : 'Org2MSP',
-					'anchor-peers' : ['peer2:8051'],
+					'anchor-peers' : ['peer2:8051', 'peer3:8056'],
 					policies : {
 						Readers : {signature : ACCEPT_ALL},
 						Writers : {signature : ACCEPT_ALL},
@@ -159,7 +148,6 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		}
 	};
 
-	var config = null;
 	var signatures = [];
 
 	// Acting as a client in org1 when creating the channel
@@ -176,28 +164,29 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		client.addMSP( e2eUtils.loadMSPConfig('OrdererMSP', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/msp/'));
-
-		client.addMSP( e2eUtils.loadMSPConfig('Org1MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/msp/'));
-
 		client.addMSP( e2eUtils.loadMSPConfig('Org2MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/msp/'));
+		t.pass('only have to add in the new msps, existing MSPs will be read from the channel');
+
+		var chain = client.newChain(channel_name);
+		chain.addOrderer(orderer);
 
 		// have the SDK build the config update object
-		config = client.buildChannelConfig(test_input);
-		t.pass('Successfully built config update');
+		return client.buildChannelConfigUpdate(test_input, chain);
+	}).then((config_update) => {
+		t.pass('Successfully built config update for the update channel action');
 
 		// sign the config
-		var signature = client.signChannelConfig(config);
+		var signature = client.signChannelConfig(config_update);
 		t.pass('Successfully signed config update');
 
 		// collect all signatures
 		signatures.push(signature);
 
-		// build up the create request
+		// build up the update request
 		let nonce = utils.getNonce();
 		let tx_id = Client.buildTransactionID(nonce, the_user);
 		var request = {
-			config: config,
+			config : config_update,
 			signatures : signatures,
 			name : channel_name,
 			orderer : orderer,
@@ -205,20 +194,20 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 			nonce : nonce
 		};
 
-		// send to create request to orderer
-		return client.createChannel(request);
+		// send to update request to orderer
+		return client.updateChannel(request);
 	})
 	.then((result) => {
 		logger.debug(' response ::%j',result);
-		t.pass('Successfully created the channel.');
+		t.pass('Successfully update the channel.');
 		if(result.status && result.status === 'SUCCESS') {
-			return e2eUtils.sleep(5000);
+			return e2eUtils.sleep(20000);
 		} else {
-			t.fail('Failed to create the channel. ');
+			t.fail('Failed to update the channel. ');
 			t.end();
 		}
 	}, (err) => {
-		t.fail('Failed to create the channel: ' + err.stack ? err.stack : err);
+		t.fail('Failed to update the channel: ' + err.stack ? err.stack : err);
 		t.end();
 	})
 	.then((nothing) => {
@@ -226,6 +215,46 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		t.end();
 	}, (err) => {
 		t.fail('Failed to sleep due to error: ' + err.stack ? err.stack : err);
+		t.end();
+	});
+});
+
+test('\n\n***** U P D A T E C H A N N E L  flow: invoke transaction to move money *****', (t) => {
+	e2eUtils.invokeChaincode('org2', 'v1', t)
+	.then((result) => {
+		if(result){
+			t.pass('Successfully invoke transaction chaincode on the channel');
+			t.end();
+		}
+		else {
+			t.fail('Failed to invoke transaction chaincode ');
+			t.end();
+		}
+	}, (err) => {
+		t.fail('Failed to invoke transaction chaincode on the channel' + err.stack ? err.stack : err);
+		t.end();
+	}).catch((err) => {
+		t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);
+		t.end();
+	});
+});
+
+test('\n\n***** U P D A T E C H A N N E L  flow: query chaincode *****', (t) => {
+	e2eUtils.queryChaincode('org2', 'v1', '520', t)
+	.then((result) => {
+		if(result){
+			t.pass('Successfully query chaincode on the channel');
+			t.end();
+		}
+		else {
+			t.fail('Failed to query chaincode ');
+			t.end();
+		}
+	}, (err) => {
+		t.fail('Failed to query chaincode on the channel' + err.stack ? err.stack : err);
+		t.end();
+	}).catch((err) => {
+		t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);
 		t.end();
 	});
 });

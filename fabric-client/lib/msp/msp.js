@@ -118,7 +118,8 @@ var MSP = class {
 			proto_fabric_msp_config.setAdmins(this._admins);
 		}
 		if(this._organization_units) {
-			proto_fabric_msp_config.setOrganizationUnits(this._organization_units);
+			//organizational_unit_identifiers
+			proto_fabric_msp_config.setOrganizationalUnitIdentifiers(this._organization_units);
 		}
 		proto_msp_config.setConfig(proto_fabric_msp_config.toBuffer());
 		return proto_msp_config;

@@ -1284,3 +1284,35 @@ test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
 	);
 	t.end();
 });
+
+test('\n\n ** test related APIs for update channel **\n\n', function (t) {
+	var chain = client.newChain('testChain-update');
+
+	var p1= chain.buildChannelConfigUpdate(
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise');
+	}).catch(function (err) {
+		if (err.message.indexOf('Channel definition update parameter is required') >= 0) {
+			t.pass('Successfully caught Channel config_definition parameter is required error');
+		} else {
+			t.fail('Failed to catch Channel config_definition parameter is required Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+
+	Promise.all([p1])
+	.then(
+		function (data) {
+			t.end();
+		}
+	).catch(
+		function (err) {
+			t.fail('Client buildChannelConfigUpdate() tests, Promise.all: ');
+			console.log(err.stack ? err.stack : err);
+			t.end();
+		}
+	);
+
+	t.end();
+});

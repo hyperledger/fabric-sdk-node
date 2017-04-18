@@ -5,3 +5,4 @@ require('./e2e/instantiate-chaincode.js');
 require('./e2e/invoke-transaction.js');
 require('./e2e/query.js');
 require('./e2e/upgrade.js');
+require('./e2e/update-channel.js');
