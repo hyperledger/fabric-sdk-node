@@ -312,7 +312,7 @@ function instantiateChaincode(org, chaincode_path, version, upgrade, t){
 			var eventPromises = [];
 			eventhubs.forEach((eh) => {
 				let txPromise = new Promise((resolve, reject) => {
-					let handle = setTimeout(reject, 30000);
+					let handle = setTimeout(reject, 120000);
 
 					eh.registerTxEvent(deployId.toString(), (tx, code) => {
 						t.pass('The chaincode ' + type + ' transaction has been committed on peer '+ eh.ep._endpoint.addr);
@@ -532,7 +532,7 @@ function invokeChaincode(org, version, t){
 			var eventPromises = [];
 			eventhubs.forEach((eh) => {
 				let txPromise = new Promise((resolve, reject) => {
-					let handle = setTimeout(reject, 30000);
+					let handle = setTimeout(reject, 120000);
 
 					eh.registerTxEvent(deployId.toString(), (tx, code) => {
 						clearTimeout(handle);

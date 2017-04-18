@@ -33,6 +33,7 @@ var logger = utils.getLogger('Chain.js');
 var hashPrimitives = require('./hash.js');
 var MSPManager = require('./msp/msp-manager.js');
 var Policy = require('./Policy.js');
+var Constants = require('./Constants.js');
 
 var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
@@ -1182,7 +1183,7 @@ var Chain = class {
 		var tx_id = Chain.buildTransactionID(nonce, userContext);
 		var request = {
 			targets: [self.getPrimaryPeer()],
-			chaincodeId : 'lccc',
+			chaincodeId : Constants.LSCC,
 			chainId: self._name,
 			txId: tx_id,
 			nonce: nonce,
@@ -1370,7 +1371,7 @@ var Chain = class {
 		let lcccSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			chaincode_id: {
-				name: 'lccc'
+				name: Constants.LSCC
 			},
 			input: {
 				args: [
@@ -1387,7 +1388,7 @@ var Chain = class {
 			request.chainId,
 			request.txId,
 			null,
-			'lccc'
+			Constants.LSCC
 		);
 		header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
 		proposal = Chain._buildProposal(lcccSpec, header);

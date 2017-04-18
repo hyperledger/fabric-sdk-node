@@ -28,6 +28,7 @@ var logger = sdkUtils.getLogger('Client.js');
 var util = require('util');
 var path = require('path');
 var fs = require('fs-extra');
+var Constants = require('./Constants.js');
 
 var grpc = require('grpc');
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
@@ -351,7 +352,7 @@ var Client = class {
 		var tx_id = Chain.buildTransactionID(nonce, userContext);
 		var request = {
 			targets: [peer],
-			chaincodeId : 'lccc',
+			chaincodeId : Constants.LSCC,
 			chainId: 'mychannel',
 			txId: tx_id,
 			nonce: nonce,
@@ -480,7 +481,7 @@ var Client = class {
 			let lcccSpec = {
 				type: _ccProto.ChaincodeSpec.Type.GOLANG,
 				chaincode_id: {
-					name: 'lccc'
+					name: Constants.LSCC
 				},
 				input: {
 					args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
@@ -495,7 +496,7 @@ var Client = class {
 				'', //install does not target a channel
 				txId,
 				null,
-				'lccc'
+				Constants.LSCC
 			);
 			header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
 			proposal = Chain._buildProposal(lcccSpec, header);

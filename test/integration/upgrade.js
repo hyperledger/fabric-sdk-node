@@ -119,7 +119,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return chain.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'same version exists', t);
+		checkResults(results, 'version', t);
 
 		return Promise.resolve(true);
 
@@ -145,7 +145,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return chain.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'chaincode not found', t);
+		checkResults(results, 'chaincode', t);
 
 		return Promise.resolve(true);
 
