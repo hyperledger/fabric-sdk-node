@@ -102,14 +102,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 		// setup event hub to get notified when transactions are committed
 		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
-		var eh = new EventHub();
-		eh.setPeerAddr(
-			ORGS[org].peer1.events,
-			{
-				pem: Buffer.from(data).toString(),
-				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
-			});
-		eh.connect();
+		var eh;
 
 		// override t.end function so it'll always disconnect the event hub
 		t.end = ((context, eventhub, f) => {
@@ -128,6 +121,15 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			promise = promise.then((admin) => {
 				t.pass('Successfully enrolled user \'admin\'');
 				the_user = admin;
+
+				eh = new EventHub(client);
+				eh.setPeerAddr(
+					ORGS[org].peer1.events,
+					{
+						pem: Buffer.from(data).toString(),
+						'ssl-target-name-override': ORGS[org].peer1['server-hostname']
+					});
+				eh.connect();
 
 				request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, '', '');
 				request.chaincodePath = 'github.com/events_cc';

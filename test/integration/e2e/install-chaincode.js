@@ -19,7 +19,6 @@
 'use strict';
 
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('E2E install-chaincode');
 
 var tape = require('tape');

@@ -19,7 +19,6 @@
 'use strict';
 
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('E2E instantiate-chaincode');
 
 var tape = require('tape');
@@ -34,7 +33,8 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
 	.then((result) => {
 		if(result){
 			t.pass('Successfully instantiated chaincode on the channel');
-			t.end();
+
+			return sleep(5000);
 		}
 		else {
 			t.fail('Failed to instantiate chaincode ');
@@ -43,8 +43,15 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
 	}, (err) => {
 		t.fail('Failed to instantiate chaincode on the channel. ' + err.stack ? err.stack : err);
 		t.end();
+	}).then(() => {
+		t.comment('Successfully slept 5s to wait for chaincode instantiate to be completed and committed in all peers');
+		t.end();
 	}).catch((err) => {
 		t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);
 		t.end();
 	});
 });
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}

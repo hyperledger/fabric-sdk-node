@@ -16,7 +16,6 @@
 'use strict';
 
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('E2E join-channel');
 
 var tape = require('tape');
@@ -112,35 +111,6 @@ function joinChannel(org, t) {
 		)
 	);
 
-	for (let key in ORGS[org]) {
-		if (ORGS[org].hasOwnProperty(key)) {
-			if (key.indexOf('peer') === 0) {
-				data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
-				targets.push(
-					client.newPeer(
-						ORGS[org][key].requests,
-						{
-							pem: Buffer.from(data).toString(),
-							'ssl-target-name-override': ORGS[org][key]['server-hostname']
-						}
-					)
-				);
-
-				let eh = new EventHub();
-				eh.setPeerAddr(
-					ORGS[org][key].events,
-					{
-						pem: Buffer.from(data).toString(),
-						'ssl-target-name-override': ORGS[org][key]['server-hostname']
-					}
-				);
-				eh.connect();
-				eventhubs.push(eh);
-				allEventhubs.push(eh);
-			}
-		}
-	}
-
 	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
@@ -150,6 +120,35 @@ function joinChannel(org, t) {
 	.then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
+
+		for (let key in ORGS[org]) {
+			if (ORGS[org].hasOwnProperty(key)) {
+				if (key.indexOf('peer') === 0) {
+					data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+					targets.push(
+						client.newPeer(
+							ORGS[org][key].requests,
+							{
+								pem: Buffer.from(data).toString(),
+								'ssl-target-name-override': ORGS[org][key]['server-hostname']
+							}
+						)
+					);
+
+					let eh = new EventHub(client);
+					eh.setPeerAddr(
+						ORGS[org][key].events,
+						{
+							pem: Buffer.from(data).toString(),
+							'ssl-target-name-override': ORGS[org][key]['server-hostname']
+						}
+					);
+					eh.connect();
+					eventhubs.push(eh);
+					allEventhubs.push(eh);
+				}
+			}
+		}
 
 		nonce = utils.getNonce();
 		tx_id = hfc.buildTransactionID(nonce, the_user);

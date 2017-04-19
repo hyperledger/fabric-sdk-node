@@ -36,7 +36,6 @@ var hfc = require('fabric-client');
 var testUtil = require('../unit/util.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
-var EventHub = require('fabric-client/lib/EventHub.js');
 
 // Get the proto bufs
 var grpc = require('grpc');

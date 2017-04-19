@@ -70,7 +70,7 @@ var EventHub = class {
 	 * Constructs an unconnected EventHub
 	 */
 
-	constructor() {
+	constructor(clientContext) {
 		logger.debug('const ');
 		// hashtable of clients registered for chaincode events
 		this.chaincodeRegistrants = new HashTable();
@@ -86,6 +86,17 @@ var EventHub = class {
 		this.call = null;
 		// fabric connection state of this eventhub
 		this.connected = false;
+		// reference to the client instance holding critical context such as signing identity
+		if (typeof clientContext === 'undefined' || clientContext === null || clientContext === '')
+			throw new Error('Missing required argument: clientContext');
+
+		if (typeof clientContext.getUserContext !== 'function')
+			throw new Error('Invalid clientContext argument: missing required function "getUserContext"');
+
+		if (typeof clientContext.getUserContext() === 'undefined' || clientContext.getUserContext() === null)
+			throw new Error('The clientContext has not been properly initialized, missing userContext');
+
+		this._clientContext = clientContext;
 	}
 
 	/**
@@ -134,8 +145,6 @@ var EventHub = class {
 		this._client = new _events.Events(this.ep._endpoint.addr, this.ep._endpoint.creds, this.ep._options);
 		this.call = this._client.chat();
 		this.connected = true;
-		// register txCallback to process txid callbacks
-		this.registerBlockEvent(this.txCallback.bind(this));
 
 		var eh = this; // for callback context
 		this.call.on('data', function(event) {
@@ -190,7 +199,9 @@ var EventHub = class {
 			eh.blockRegistrants.clear();
 			eh.txRegistrants.clear();
 		});
-		logger.debug('connect - end');
+
+		// register txCallback to process txid callbacks
+		this.registerBlockEvent(this.txCallback.bind(this));
 	}
 
 	/**
@@ -253,19 +264,30 @@ var EventHub = class {
 	 * @param {function} callback Function that takes a single parameter
 	 * which is a json object representation of type "message Block"
 	 * from lib/proto/fabric.proto
+	 * @returns {Promise} Promise for a successful registration, no returned values
 	 */
 	registerBlockEvent(callback) {
-		if (!this.connected) return;
+		var user = this._clientContext.getUserContext();
+		if (!this.connected) throw new Error('The event hub has not been connected to the event source');
+
 		this.blockRegistrants.add(callback);
 		if (this.blockRegistrants.size == 1) {
-			var register = {
-				register: {
-					events: [{
-						event_type: 'BLOCK'
-					}]
-				}
-			};
-			this.call.write(register);
+
+			var signedEvent = new _events.SignedEvent();
+
+			var event = new _events.Event();
+			event.setRegister({
+				events: [{
+					event_type: 'BLOCK'
+				}]
+			});
+			event.setCreator(user.getIdentity().serialize());
+
+			signedEvent.setEventBytes(event.toBuffer());
+
+			var sig = user.getSigningIdentity().sign(event.toBuffer());
+			signedEvent.setSignature(Buffer.from(sig));
+			this.call.write(signedEvent);
 		}
 	}
 
@@ -274,16 +296,26 @@ var EventHub = class {
 	 * @param {function} callback Function to unregister
 	 */
 	unregisterBlockEvent(callback) {
+		var user = this._clientContext.getUserContext();
 		if (!this.connected) return;
+
 		if (this.blockRegistrants.size <= 1) {
-			var unregister = {
-				unregister: {
-					events: [{
-						event_type: 'BLOCK'
-					}]
-				}
-			};
-			this.call.write(unregister);
+			var signedEvent = new _events.SignedEvent();
+
+			var event = new _events.Event();
+			event.setUnregister({
+				events: [{
+					event_type: 'BLOCK'
+				}]
+			});
+			event.setCreator(user.getIdentity().serialize());
+
+			signedEvent.setEventBytes(event.toBuffer());
+
+			var sig = user.getSigningIdentity().sign(event.toBuffer());
+			signedEvent.setSignature(Buffer.from(sig));
+
+			this.call.write(signedEvent);
 		}
 		this.blockRegistrants.delete(callback);
 	}

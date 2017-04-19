@@ -29,7 +29,6 @@ var util = require('util');
 
 var hfc = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
-var EventHub = require('fabric-client/lib/EventHub.js');
 var testUtil = require('../unit/util.js');
 var logger = utils.getLogger('upgrade-chaincode');
 

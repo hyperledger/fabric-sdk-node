@@ -27,8 +27,41 @@ testutil.resetDefaults();
 var EventHub = require('fabric-client/lib/EventHub.js');
 
 test('\n\n** EventHub tests\n\n', (t) => {
-	var eh = new EventHub();
+	var eh;
 
+	t.throws(
+		() => {
+			eh = new EventHub();
+		},
+		/Missing required argument: clientContext/,
+		'Must pass in a clientContext'
+	);
+
+	t.throws(
+		() => {
+			eh = new EventHub({});
+		},
+		/Invalid clientContext argument: missing required function "getUserContext"/,
+		'Must pass in a clientContext that has the getUserContext() function'
+	);
+
+	t.throws(
+		() => {
+			eh = new EventHub({ getUserContext: function() {} });
+		},
+		/The clientContext has not been properly initialized, missing userContext/,
+		'Must pass in a clientContext that has the user context already initialized'
+	);
+
+	t.throws(
+		() => {
+			eh = new EventHub({ getUserContext: function() { return null; } });
+		},
+		/The clientContext has not been properly initialized, missing userContext/,
+		'Must pass in a clientContext that has the user context already initialized'
+	);
+
+	eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	t.throws(
 		() => {
 			eh.connect();
@@ -67,6 +100,14 @@ test('\n\n** EventHub tests\n\n', (t) => {
 		},
 		null,
 		'Test valid url connect and disconnect'
+	);
+
+	t.throws(
+		() => {
+			eh.registerBlockEvent();
+		},
+		/The event hub has not been connected to the event source/,
+		'Check the event hub must be connected before the block event listener can be registered'
 	);
 
 	eh.registerTxEvent('dummyId', () => {

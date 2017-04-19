@@ -38,7 +38,6 @@ var testUtil = require('../unit/util.js');
 var hfc = require('fabric-client');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
-var EventHub = require('fabric-client/lib/EventHub.js');
 
 var client = new hfc();
 var chain_id = testUtil.END2END.channel;

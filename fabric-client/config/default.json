@@ -1,5 +1,5 @@
 { 
-	"request-timeout" : 30000,
+	"request-timeout" : 45000,
 	"tcert-batch-size" : 10,
 	"crypto-hash-algo": "SHA2",
 	"crypto-keysize": 256,

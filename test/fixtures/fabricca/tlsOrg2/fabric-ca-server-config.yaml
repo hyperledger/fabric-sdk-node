@@ -63,7 +63,7 @@ tls:
 #############################################################################
 ca:
   # Name of this CA
-  name: 
+  name: ca-org2
   # Key file (default: ca-key.pem)
   keyfile: ca-key.pem
   # Certificate file (default: ca-cert.pem)

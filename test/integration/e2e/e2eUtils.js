@@ -18,7 +18,6 @@
 // in a happy-path scenario
 'use strict';
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('E2E testing');
 
 var tape = require('tape');
@@ -42,8 +41,9 @@ var nonce = null;
 var the_user = null;
 
 function installChaincode(org, chaincode_path, version, t) {
+	hfc.setConfigSetting('request-timeout', 60000);
+
 	var client = new hfc();
-	hfc.setConfigSetting('request-timeout', 30000);
 	var chain = client.newChain(testUtil.END2END.channel);
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
@@ -139,7 +139,8 @@ function installChaincode(org, chaincode_path, version, t) {
 module.exports.installChaincode = installChaincode;
 
 
-function instantiateChaincode(org, chaincode_path, version, upgrade, t){
+function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
+	hfc.setConfigSetting('request-timeout', 60000);
 	var targets = [],
 		eventhubs = [];
 	var type = 'instantiate';
@@ -176,54 +177,53 @@ function instantiateChaincode(org, chaincode_path, version, upgrade, t){
 		)
 	);
 
-	var orgName = ORGS[org].name;
+	var orgName = ORGS[userOrg].name;
 
 	var targets = [];
-	all: for(let org in ORGS) {
-		for (let key in ORGS[org]) {
-			if (ORGS[org].hasOwnProperty(key)) {
-				if (key.indexOf('peer') === 0) {
-					let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
-					logger.info(' create new peer %s', ORGS[org][key].requests);
-					let peer = client.newPeer(
-						ORGS[org][key].requests,
-						{
-							pem: Buffer.from(data).toString(),
-							'ssl-target-name-override': ORGS[org][key]['server-hostname']
-						}
-					);
-
-					targets.push(peer);
-					chain.addPeer(peer);
-					logger.info(' create new eventhub %s', ORGS[org][key].events);
-					let eh = new EventHub();
-					eh.setPeerAddr(
-						ORGS[org][key].events,
-						{
-							pem: Buffer.from(data).toString(),
-							'ssl-target-name-override': ORGS[org][key]['server-hostname']
-						}
-					);
-					eh.connect();
-					eventhubs.push(eh);
-					break all;
-				}
-			}
-		}
-	}
-
 
 	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 
 		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t, org);
+		return testUtil.getSubmitter(client, t, userOrg);
 
 	}).then((admin) => {
 
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
+
+		for(let org in ORGS) {
+			if (ORGS[org].hasOwnProperty('peer1')) {
+				let key = 'peer1';
+				let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+				logger.info(' create new peer %s', ORGS[org][key].requests);
+				let peer = client.newPeer(
+					ORGS[org][key].requests,
+					{
+						pem: Buffer.from(data).toString(),
+						'ssl-target-name-override': ORGS[org][key]['server-hostname']
+					}
+				);
+
+				targets.push(peer);
+				chain.addPeer(peer);
+			}
+		}
+
+		// an event listener can only register with a peer in its own org
+		logger.info(' create new eventhub %s', ORGS[userOrg]['peer1'].events);
+		let data = fs.readFileSync(path.join(__dirname, ORGS[userOrg]['peer1']['tls_cacerts']));
+		let eh = new EventHub(client);
+		eh.setPeerAddr(
+			ORGS[userOrg]['peer1'].events,
+			{
+				pem: Buffer.from(data).toString(),
+				'ssl-target-name-override': ORGS[userOrg]['peer1']['server-hostname']
+			}
+		);
+		eh.connect();
+		eventhubs.push(eh);
 
 		// read the config block from the orderer for the chain
 		// and initialize the verify MSPs based on the participating
@@ -276,7 +276,7 @@ function instantiateChaincode(org, chaincode_path, version, upgrade, t){
 
 	}, (err) => {
 
-		t.fail('Failed to initialize the chain');
+		t.fail(util.format('Failed to initialize the chain. %s', err.stack ? err.stack : err));
 		throw new Error('Failed to initialize the chain');
 
 	}).then((results) => {
@@ -374,7 +374,8 @@ function instantiateChaincode(org, chaincode_path, version, upgrade, t){
 module.exports.instantiateChaincode = instantiateChaincode;
 
 
-function invokeChaincode(org, version, t){
+function invokeChaincode(userOrg, version, t){
+	hfc.setConfigSetting('request-timeout', 60000);
 	var targets = [],
 		eventhubs = [];
 
@@ -414,47 +415,48 @@ function invokeChaincode(org, version, t){
 		)
 	);
 
-	var orgName = ORGS[org].name;
-
-
-	// set up the chain to use each org's 'peer1' for
-	// both requests and events
-	for (let key in ORGS) {
-		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-			let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
-			let peer = client.newPeer(
-				ORGS[key].peer1.requests,
-				{
-					pem: Buffer.from(data).toString(),
-					'ssl-target-name-override': ORGS[key].peer1['server-hostname']
-				}
-			);
-			chain.addPeer(peer);
-
-			let eh = new EventHub();
-			eh.setPeerAddr(
-				ORGS[key].peer1.events,
-				{
-					pem: Buffer.from(data).toString(),
-					'ssl-target-name-override': ORGS[key].peer1['server-hostname']
-				}
-			);
-			eh.connect();
-			eventhubs.push(eh);
-		}
-	}
+	var orgName = ORGS[userOrg].name;
 
 	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 
 		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t, org);
+		return testUtil.getSubmitter(client, t, userOrg);
 
 	}).then((admin) => {
 
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
+
+		// set up the chain to use each org's 'peer1' for
+		// both requests and events
+		for (let key in ORGS) {
+			if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
+				let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+				let peer = client.newPeer(
+					ORGS[key].peer1.requests,
+					{
+						pem: Buffer.from(data).toString(),
+						'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+					}
+				);
+				chain.addPeer(peer);
+			}
+		}
+
+		// an event listener can only register with a peer in its own org
+		let data = fs.readFileSync(path.join(__dirname, ORGS[userOrg].peer1['tls_cacerts']));
+		let eh = new EventHub(client);
+		eh.setPeerAddr(
+			ORGS[userOrg].peer1.events,
+			{
+				pem: Buffer.from(data).toString(),
+				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname']
+			}
+		);
+		eh.connect();
+		eventhubs.push(eh);
 
 		return chain.initialize();
 
@@ -598,6 +600,8 @@ function invokeChaincode(org, version, t){
 module.exports.invokeChaincode = invokeChaincode;
 
 function queryChaincode(org, version, value, t){
+	hfc.setConfigSetting('request-timeout', 60000);
+
 	// this is a transaction, will just use org's identity to
 	// submit the request. intentionally we are using a different org
 	// than the one that submitted the "move" transaction, although either org

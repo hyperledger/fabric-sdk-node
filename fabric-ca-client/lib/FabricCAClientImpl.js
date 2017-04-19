@@ -378,7 +378,7 @@ var FabricCAClient = class {
 				this._tlsOptions.trustedRoots = [];
 			}
 		}
-		this._baseAPI = '/api/v1/cfssl/';
+		this._baseAPI = '/';
 
 		this._cryptoPrimitives = cryptoPrimitives;
 
