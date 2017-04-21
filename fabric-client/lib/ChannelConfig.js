@@ -45,7 +45,6 @@ var _identityProto = grpc.load(path.join(__dirname, '/protos/identity.proto')).m
 
 const ImplicitMetaPolicy_Rule = {ANY:0, ALL:1, MAJORITY:2};
 
-
 /**
  * Builds a Protobuf Channel Config which may be used to create hyperledger/fabric channel
  * @class
@@ -56,7 +55,7 @@ var ChannelConfig = class {
 	 * This will allow the building of a protobuf ConfigUpdate object
 	 * that will be based on the MSPs loaded here using the simplified JSON
 	 * definition of a channel.
-	 * 	@param {Object[]} msps Array of Member Service Provider objects
+	 * 	@param {Object[]} msps Map of Member Service Provider objects
 	 */
 	constructor(msps) {
 		if (typeof msps === 'undefined' || msps === null) {
@@ -69,7 +68,7 @@ var ChannelConfig = class {
 		this._proto_config_update = null;
 		this._orderer_addresses = null;
 		this._kafka_brokers = null;
-		this._version = 0;
+		this._version = 0; //default version
 		this._versions = null;
 	}
 
@@ -85,24 +84,9 @@ var ChannelConfig = class {
 	 */
 	build(config, versions) {
 		logger.debug('build - start');
-		if (typeof config === 'undefined' || config === null) {
-			throw new Error('ChannelConfig definition object is required');
-		}
-		if (typeof config.channel === 'undefined' || config.channel === null) {
-			throw new Error('ChannelConfig "channel" definition object is required');
-		}
-		if (typeof config.channel.settings === 'undefined' || config.channel.settings === null) {
-			throw new Error('ChannelConfig "settings" definition object is required');
-		}
-		if (typeof config.channel.orderers === 'undefined' || config.channel.orderers === null) {
-			throw new Error('ChannelConfig "orderers" definition object is required');
-		}
-		if (typeof config.channel.peers === 'undefined' || config.channel.peers === null) {
-			throw new Error('ChannelConfig "peers" definition object is required');
-		}
-		if (typeof config.channel.name === 'undefined' || config.channel.name === null) {
-			throw new Error('ChannelConfig "name" is required');
-		}
+		ChannelConfig.validate(config);
+
+		logger.debug('build - version map %v',this._versions);
 
 		this._channel = config.channel;
 		this._orderer_addresses = [];
@@ -111,11 +95,7 @@ var ChannelConfig = class {
 		try {
 			this._proto_config_update = new _configtxProto.ConfigUpdate();
 			this._proto_config_update.setChannelId(this._channel.name);
-			// The read set only required when this is an update
-			if(versions) {
-				this._proto_config_update.setReadSet(this.buildReadSetGroup(versions));
-				logger.debug('build - version map %v',this._versions);
-			}
+			this._proto_config_update.setReadSet(this.buildReadSetGroup(versions));
 			this._proto_config_update.setWriteSet(this.buildWriteSetGroup('channel'));
 
 			return this._proto_config_update;
@@ -128,10 +108,41 @@ var ChannelConfig = class {
 		logger.debug('build - end');
 	}
 
-	getVersion(key, update) {
+	static validate(config) {
+		if (typeof config === 'undefined' || config === null) {
+			throw new Error('Channel configuration definition object is required');
+		}
+		if (typeof config.channel === 'undefined' || config.channel === null) {
+			throw new Error('Channel configuration "channel" definition object is required');
+		}
+		if (typeof config.channel.peers === 'undefined' || config.channel.peers === null) {
+			throw new Error('Channel configuration "peers" definition object is required');
+		}
+		if (typeof config.channel.name === 'undefined' || config.channel.name === null) {
+			throw new Error('Channel configuration "name" setting is required');
+		}
+		if (typeof config.channel.consortium === 'undefined' || config.channel.consortium === null) {
+			throw new Error('Channel configuration "consortium" setting is required');
+		}
+	}
+
+	// utility method to set to both the protobuf object but also the easy lookup map
+	setVersion(key, version, item) {
+		if(item) {
+			if(!(typeof version === 'undefined' || typeof version === null )) {
+				logger.debug('setGetVersion - adding %s : %s', key, version);
+				this._versions.set(key, version);
+				item.setVersion(version);
+				return;
+			}
+		}
+		logger.debug('setGetVersion - not adding %s : %s', key, version);
+	}
+
+	getVersion(key, update, increase_by) {
 		if (typeof this._versions === 'undefined' || this._versions === null) {
-			logger.debug('getVersion - no map defauting to  %s for %s',this._version, key);
-			return this._version;
+			logger.debug('getVersion - no map defauting to  %s for %s',this._version + increase_by, key);
+			return this._version + increase_by;
 		}
 		var version = this._versions.get(key);
 		if (typeof version === 'undefined' || version === null) {
@@ -139,7 +150,7 @@ var ChannelConfig = class {
 			return this._version;
 		}
 
-		// since we found it, must be it was from the read set, so we need increase for the writeset
+		// since we found it, must be it was from the read set, so we need to increase for the writeset
 		if(update) {
 			version = version.add(1);
 			logger.debug('getVersion - returning updated %s for %s',version, key);
@@ -155,18 +166,63 @@ var ChannelConfig = class {
 	//  -- build a map of all versions for easy access by the write set group to be able to increment
 	buildReadSetGroup(versions) {
 		logger.debug('buildReadSetGroup - start');
-		this._versions = new Map();
-		let version_key = 'channel';
-		this._versions.set(version_key, versions.channel.version);
-		var proto_read_set_group = new _configtxProto.ConfigGroup();
-		proto_read_set_group.setVersion(this.getVersion(version_key, false));
 
-		this.buildVersionOnlyGroups(proto_read_set_group.getGroups(), versions.channel.groups, version_key + '.groups');
-		this.buildVersionOnlyValues(proto_read_set_group.getValues(), versions.channel.values, version_key + '.values');
-		this.buildVersionOnlyPolicies(proto_read_set_group.getPolicies(), versions.channel.policies, version_key + '.policies');
+		var proto_read_set_group = new _configtxProto.ConfigGroup();
+
+		// with an update lets put in everything we actually have on the channel and
+		// have a easy lookup of those versions
+		if(versions){
+			this._versions = new Map();
+			let version_key = 'channel';
+			this.setVersion(version_key, versions.channel.version, proto_read_set_group);
+			this.buildVersionOnlyGroups(proto_read_set_group.getGroups(), versions.channel.groups, version_key + '.groups');
+			this.buildVersionOnlyValues(proto_read_set_group.getValues(), versions.channel.values, version_key + '.values');
+			this.buildVersionOnlyPolicies(proto_read_set_group.getPolicies(), versions.channel.policies, version_key + '.policies');
+		}
+		// however with a create we have to put in just a limited set which was read from the system channel to
+		// describe the consortium and its organizations
+		// also with a create we will not have current version values
+		else {
+			this.buildCreateReadsetApplicationGroup(proto_read_set_group.getGroups());
+			this.buildCreateReadsetConsortiumValue(proto_read_set_group.getValues());
+		}
 
 		logger.debug('buildReadSetGroup - end - proto_read_set_group :: %j',proto_read_set_group.encodeJSON());
 		return proto_read_set_group;
+	}
+
+	buildCreateReadsetApplicationGroup(proto_top_channel_groups) {
+		logger.debug('buildVersionOnlyApplicationGroup - start');
+		var proto_application_group = new _configtxProto.ConfigGroup();
+		proto_top_channel_groups.set('Application', proto_application_group);
+		//testing
+		proto_application_group.setVersion(0);
+		// add in all the orgs from the new config definition
+		if(Array.isArray(this._channel.peers.organizations)){
+			var keys = Object.keys(this._channel.peers.organizations);
+			for(var i in keys) {
+				var org = this._channel.peers.organizations[keys[i]];
+				var proto_config_group = new _configtxProto.ConfigGroup();//leave empty
+				proto_application_group.getGroups().set(org.id, proto_config_group);
+			}
+		}
+		else {
+			throw new Error('Missing peers organizations array');
+		}
+
+		logger.debug('buildVersionOnlyApplicationGroup - end');
+	}
+
+	buildCreateReadsetConsortiumValue(proto_top_channel_values) {
+		logger.debug('buildCreateReadsetConsortiumValue - start');
+		var proto_value = new _configtxProto.ConfigValue();
+		proto_top_channel_values.set('Consortium', proto_value);
+		var proto_consortium = new _commonConfigurationProto.Consortium();
+		proto_consortium.setName(this._channel.consortium);
+		proto_value.setValue(proto_consortium.toBuffer());
+		proto_value.setVersion(0);
+
+		logger.debug('buildCreateReadsetConsortiumValue - end');
 	}
 
 	buildVersionOnlyGroups(proto_group_groups, groups, version_key) {
@@ -206,10 +262,9 @@ var ChannelConfig = class {
 	}
 
 	buildVersionOnlyGroup(group, version_key) {
-		logger.debug('buildVersionOnlyGroup - start - %s',version_key);
-		this._versions.set(version_key, group.version);
+		logger.debug('buildVersionOnlyGroup - %s',version_key);
 		var proto_read_set_group = new _configtxProto.ConfigGroup();
-		proto_read_set_group.setVersion(this.getVersion(version_key, false));
+		this.setVersion(version_key, group.version, proto_read_set_group);
 		if(group.groups) this.buildVersionOnlyGroups(proto_read_set_group.getGroups(), group.groups, version_key + '.groups');
 		if(group.values) this.buildVersionOnlyValues(proto_read_set_group.getValues(), group.values, version_key + '.values');
 		if(group.policies) this.buildVersionOnlyPolicies(proto_read_set_group.getPolicies(), group.policies, version_key + '.policies');
@@ -217,18 +272,16 @@ var ChannelConfig = class {
 	}
 
 	buildVersionOnlyValue(value, version_key) {
-		logger.debug('buildVersionOnlyValue - start - %s',version_key);
-		this._versions.set(version_key, value.version);
+		logger.debug('buildVersionOnlyValue - %s',version_key);
 		var proto_read_set_value = new _configtxProto.ConfigValue();
-		proto_read_set_value.setVersion(this.getVersion(version_key, false));
+		this.setVersion(version_key, value.version, proto_read_set_value);
 		return proto_read_set_value;
 	}
 
 	buildVersionOnlyPolicy(policy, version_key) {
-		logger.debug('buildVersionOnlyPolicy - start - %s',version_key);
-		this._versions.set(version_key, policy.version);
+		logger.debug('buildVersionOnlyPolicy - %s',version_key);
 		var proto_read_set_policy = new _configtxProto.ConfigPolicy();
-		proto_read_set_policy.setVersion(this.getVersion(version_key, false));
+		this.setVersion(version_key, policy.version, proto_read_set_policy);
 		return proto_read_set_policy;
 	}
 
@@ -236,10 +289,12 @@ var ChannelConfig = class {
 	buildWriteSetGroup(version_key) {
 		logger.debug('buildWriteSetGroup - start - %s',version_key);
 		var write_set_group = new _configtxProto.ConfigGroup();
-		write_set_group.setVersion(this.getVersion(version_key, false));
+		write_set_group.setVersion(this.getVersion(version_key, false, 0));
 
-		var proto_order_group = this.buildOrderConfigGroup(version_key + '.groups.Orderer');
-		write_set_group.getGroups().set('Orderer', proto_order_group);
+		if(this._channel.orderers && this._channel.orderers.organizations && this._channel.orderers.organizations.length > 0) {
+			var proto_order_group = this.buildOrderConfigGroup(version_key + '.groups.Orderer');
+			write_set_group.getGroups().set('Orderer', proto_order_group);
+		}
 
 		var proto_application_group = this.buildApplicationConfigGroup(version_key + '.groups.Application');
 		write_set_group.getGroups().set('Application', proto_application_group);
@@ -247,20 +302,31 @@ var ChannelConfig = class {
 		this.buildConfigValue('HashingAlgorithm', 'hashing-algorithm', write_set_group, version_key + '.values');
 		this.buildConfigValue('BlockDataHashingStructure', 'block-data-hashing-structure', write_set_group, version_key + '.values');
 
-		var proto_orderer_addresses = new _commonConfigurationProto.OrdererAddresses();
-		proto_orderer_addresses.setAddresses(this._orderer_addresses);
-		logger.debug('buildWriteSetGroup - proto_orderer_addresses :: %j',proto_orderer_addresses.encodeJSON());
-		var proto_config_value = new _configtxProto.ConfigValue();
-		proto_config_value.setVersion(this.getVersion(version_key + '.values.OrdererAddresses', true));
-		proto_config_value.setModPolicy(this.buildConfigModPolicy());
-		proto_config_value.setValue(proto_orderer_addresses.toBuffer());
-		write_set_group.getValues().set('OrdererAddresses', proto_config_value);
+		var proto_consortium = new _commonConfigurationProto.Consortium();
+		proto_consortium.setName(this._channel.consortium);
+		logger.debug('buildWriteSetGroup - proto_consortium :: %j',proto_consortium.encodeJSON());
+		let proto_config_value = new _configtxProto.ConfigValue();
+		proto_config_value.setVersion(this.getVersion(version_key + '.values.Consortium', true, 0));
+		//proto_config_value.setModPolicy(this.buildConfigModPolicy());
+		proto_config_value.setValue(proto_consortium.toBuffer());
+		write_set_group.getValues().set('Consortium', proto_config_value);
 
-		if(this._channel.policies) {
-			this.buildConfigPolicies(write_set_group.getPolicies(), this._channel.policies, version_key + '.policies');
+		if(this._orderer_addresses.length > 0) {
+			var proto_orderer_addresses = new _commonConfigurationProto.OrdererAddresses();
+			proto_orderer_addresses.setAddresses(this._orderer_addresses);
+			logger.debug('buildWriteSetGroup - proto_orderer_addresses :: %j',proto_orderer_addresses.encodeJSON());
+			let proto_orderer_config_value = new _configtxProto.ConfigValue();
+			proto_orderer_config_value.setVersion(this.getVersion(version_key + '.values.OrdererAddresses', true, 1));
+			//proto_orderer_config_value.setModPolicy(this.buildConfigModPolicy());
+			proto_orderer_config_value.setValue(proto_orderer_addresses.toBuffer());
+			write_set_group.getValues().set('OrdererAddresses', proto_orderer_config_value);
 		}
 
-		write_set_group.setModPolicy(this.buildConfigModPolicy(this._channel.mod_policy));
+		if(this._channel.policies) {
+			this.buildConfigPolicies(write_set_group.getPolicies(), this._channel.policies, version_key + '.policies', 'Channel');
+		}
+
+		//write_set_group.setModPolicy(this.buildConfigModPolicy(this._channel.mod_policy));
 
 		logger.debug('buildWriteSetGroup - write_set_group :: %j',write_set_group.encodeJSON());
 		return write_set_group;
@@ -269,12 +335,11 @@ var ChannelConfig = class {
 	buildOrderConfigGroup(version_key) {
 		logger.debug('buildOrderConfigGroup - start - %s',version_key);
 		var proto_oderer_group = new _configtxProto.ConfigGroup();
-		proto_oderer_group.setVersion(this.getVersion(version_key, true));
+		proto_oderer_group.setVersion(this.getVersion(version_key, true, 1));
 
 		this.buildConfigValue('ConsensusType', 'consensus-type', proto_oderer_group, version_key + '.values');
 		this.buildConfigValue('BatchSize', 'batch-size', proto_oderer_group, version_key + '.values');
 		this.buildConfigValue('BatchTimeout', 'batch-timeout', proto_oderer_group, version_key + '.values');
-		this.buildConfigValue('CreationPolicy', 'creation-policy', proto_oderer_group, version_key + '.values');
 
 		if(Array.isArray(this._channel.orderers.organizations)){
 			this.buildConfigGroups(proto_oderer_group.getGroups(), this._channel.orderers.organizations, false, version_key + '.groups');
@@ -284,10 +349,10 @@ var ChannelConfig = class {
 		}
 
 		if(this._channel.orderers.policies) {
-			this.buildConfigPolicies(proto_oderer_group.getPolicies(), this._channel.orderers.policies, version_key + '.policies');
+			this.buildConfigPolicies(proto_oderer_group.getPolicies(), this._channel.orderers.policies, version_key + '.policies', 'Orderer');
 		}
 
-		proto_oderer_group.setModPolicy(this.buildConfigModPolicy(this._channel.orderers.mod_policy));
+		//proto_oderer_group.setModPolicy(this.buildConfigModPolicy(this._channel.orderers.mod_policy));
 
 		return proto_oderer_group;
 	}
@@ -296,7 +361,7 @@ var ChannelConfig = class {
 	buildApplicationConfigGroup(version_key) {
 		logger.debug('buildApplicationConfigGroup - start - %s',version_key);
 		var proto_application_group = new _configtxProto.ConfigGroup();
-		proto_application_group.setVersion(this.getVersion(version_key, true));
+		proto_application_group.setVersion(this.getVersion(version_key, true, 1));
 
 		// no values
 
@@ -308,7 +373,7 @@ var ChannelConfig = class {
 		}
 
 		if(this._channel.peers.policies) {
-			this.buildConfigPolicies(proto_application_group.getPolicies(), this._channel.peers.policies, version_key + '.policies');
+			this.buildConfigPolicies(proto_application_group.getPolicies(), this._channel.peers.policies, version_key + '.policies', 'Application');
 		}
 
 		proto_application_group.setModPolicy(this.buildConfigModPolicy(this._channel.peers.mod_policy));
@@ -322,38 +387,36 @@ var ChannelConfig = class {
 		for(var i in keys) {
 			var group = groups[i];
 			logger.debug('buildConfigGroups - found %j', group);
-			var proto_config_group = this.buildOrganizationGroup(group, find_anchor_peers, version_key + '.' + group.mspid);
-			parent_group_groups.set(group.mspid, proto_config_group);
+			var proto_config_group = this.buildOrganizationGroup(group, find_anchor_peers, version_key + '.' + group.id);
+			parent_group_groups.set(group.id, proto_config_group);
 		}
 	}
 
 	buildOrganizationGroup(organization, find_anchor_peers, version_key) {
 		logger.debug('buildOrganizationGroup - start -%s',version_key);
 		var proto_config_group = new _configtxProto.ConfigGroup();
-		proto_config_group.setVersion(this.getVersion(version_key, true));
+		proto_config_group.setVersion(this.getVersion(version_key, true, 0));
 		// msp
-		if(organization.mspid) {
+		if(organization.msp) {
 			let proto_config_value = new _configtxProto.ConfigValue();
-			proto_config_value.setVersion(this.getVersion(version_key + '.values.MSP', true));
-			proto_config_value.setModPolicy(this.buildConfigModPolicy());
+			proto_config_value.setVersion(this.getVersion(version_key + '.values.MSP', true, 1));
+			//proto_config_value.setModPolicy(this.buildConfigModPolicy());
 
-			var msp = this._msps.get(organization.mspid);
+			var msp = this._msps.get(organization.msp.mspid);
 			if(msp) {
 				proto_config_value.setValue(msp.toProtobuf().toBuffer());
+				proto_config_group.getValues().set('MSP', proto_config_value);
 			}
 			else{
-				throw new Error(util.format('MSP %s was not found', organization.mspid));;
+				throw new Error(util.format('MSP %s was not found for ', organization.id));;
 			}
-			proto_config_group.getValues().set('MSP', proto_config_value);
 		}
-		else {
-			throw new Error('Missing "mspid" value in the organization');
-		}
+
 		//anchor peers
 		if(find_anchor_peers){
 			let proto_config_value = new _configtxProto.ConfigValue();
-			proto_config_value.setVersion(this.getVersion(version_key + '.values.AnchorPeers', true));
-			proto_config_value.setModPolicy(this.buildConfigModPolicy());
+			proto_config_value.setVersion(this.getVersion(version_key + '.values.AnchorPeers', true, 0));
+			//proto_config_value.setModPolicy(this.buildConfigModPolicy());
 
 			var anchor_peers = [];
 			var proto_anchor_peers = new _peerConfigurationProto.AnchorPeers();
@@ -371,7 +434,7 @@ var ChannelConfig = class {
 					}
 					catch(err) {
 						logger.error('buildOrganizationGroup problem with anchor peer address::%s - %s', host_port, err.stack ? err.stack : err);
-						throw new Error(util.format('Organization %s has an invalid achor peer address ::%s',organization.mspid,host_port));
+						throw new Error(util.format('Organization %s has an invalid anchor peer address ::%s',organization.id,host_port));
 					}
 
 					anchor_peers.push(proto_anchor_peer);
@@ -379,10 +442,9 @@ var ChannelConfig = class {
 				proto_anchor_peers.setAnchorPeers(anchor_peers);
 				proto_config_value.setValue(proto_anchor_peers.toBuffer());
 			}
-			else {
-				throw new Error('Missing "anchor-peers" array in peers orgainization definition');
+			if(anchor_peers.length > 0) {
+				proto_config_group.getValues().set('AnchorPeers', proto_config_value);
 			}
-			proto_config_group.getValues().set('AnchorPeers', proto_config_value);
 		}
 		// must be an orderer organization
 		else {
@@ -391,16 +453,13 @@ var ChannelConfig = class {
 				logger.debug('buildOrganizationGroup - saving orderers end-point %s',organization['end-points']);
 				this._orderer_addresses = this._orderer_addresses.concat(organization['end-points']);
 			}
-			else {
-				throw new Error('Missing "end-points" in orderer organization definition');
-			}
 			if(organization['kafka-brokers']) {
 				var proto_kafka_brokers = new _ordererConfigurationProto.KafkaBrokers();
 				proto_kafka_brokers.setBrokers(organization['kafka-brokers']);
 				logger.debug('buildChannelGroup - proto_kafka_brokers :: %j',proto_kafka_brokers.encodeJSON());
 				let proto_config_value = new _configtxProto.ConfigValue();
-				proto_config_value.setVersion(this.getVersion(version_key + '.values.KafkaBrokers', true));
-				proto_config_value.setModPolicy(this.buildConfigModPolicy());
+				proto_config_value.setVersion(this.getVersion(version_key + '.values.KafkaBrokers', true, 0));
+				//proto_config_value.setModPolicy(this.buildConfigModPolicy());
 				proto_config_value.setValue(proto_kafka_brokers.toBuffer());
 				proto_config_group.getValues().set('KafkaBrokers', proto_config_value);
 			}
@@ -409,13 +468,10 @@ var ChannelConfig = class {
 		// no groups
 
 		if(organization.policies) {
-			this.buildConfigPolicies(proto_config_group.getPolicies(),organization.policies, version_key + '.policies');
-		}
-		else {
-			throw new Error('Missing "policies" in organization definitions');
+			this.buildConfigPolicies(proto_config_group.getPolicies(),organization.policies, version_key + '.policies', organization);
 		}
 
-		proto_config_group.setModPolicy(this.buildConfigModPolicy(organization.mod_policy));
+		//proto_config_group.setModPolicy(this.buildConfigModPolicy(organization.mod_policy));
 
 		return proto_config_group;
 	}
@@ -434,11 +490,19 @@ var ChannelConfig = class {
 	}
 
 	buildConfigValue(name, config_name, proto_group, version_key) {
+		if(!this._channel.settings) {
+			logger.debug('buildConfigValue - no settings skipping %s ',config_name);
+			return;
+		}
 		var value = this._channel.settings[config_name];
+		if(!value) {
+			logger.debug('buildConfigValue - skipping %s ',config_name);
+			return;
+		}
 		logger.debug('buildConfigValue - start %s :: %s --> %j',name, config_name, value);
 		var proto_config_value = new _configtxProto.ConfigValue();
-		proto_config_value.setVersion(this.getVersion(version_key + '.' + name, true));
-		proto_config_value.setModPolicy(this.buildConfigModPolicy());
+		proto_config_value.setVersion(this.getVersion(version_key + '.' + name, true, 1));
+		//proto_config_value.setModPolicy(this.buildConfigModPolicy());
 		switch(name) {
 		case 'ConsensusType':
 			var proto_consensus_type = new _ordererConfigurationProto.ConsensusType();
@@ -471,20 +535,6 @@ var ChannelConfig = class {
 				proto_config_value.setValue(proto_channel_restrictions.toBuffer());
 			}
 			break;
-		case 'CreationPolicy':
-			var proto_creation_policy = new _ordererConfigurationProto.CreationPolicy();
-			if(value) {
-				proto_creation_policy.setPolicy(value); //string
-				proto_config_value.setValue(proto_creation_policy.toBuffer());
-			}
-			break;
-		case 'ChainCreationPolicyNames':
-			var proto_chain_creation_policy_names = new _ordererConfigurationProto.ChainCreationPolicyNames();
-			if(value  && Array.isArray(value)) {
-				proto_chain_creation_policy_names.setNames(value); //string - already a string array
-				proto_config_value.setValue(proto_chain_creation_policy_names.toBuffer());
-			}
-			break;
 		case 'HashingAlgorithm':
 			var proto_hashing_algorithm = new _commonConfigurationProto.HashingAlgorithm();
 			if(!value) value = 'SHA256';
@@ -505,14 +555,14 @@ var ChannelConfig = class {
 		return ;
 	}
 
-	buildConfigPolicies(proto_group_policies, policies, version_key) {
+	buildConfigPolicies(proto_group_policies, policies, version_key, parent) {
 		logger.debug('buildConfigPolicies - start - %s',version_key);
 		var keys = Object.keys(policies);
 		for(var i in keys) {
 			var key = keys[i];
 			var policy = policies[key];
 			logger.debug('buildConfigPolicies - found %s :: %j',key, policy);
-			var proto_policy = this.buildConfigPolicy(key, policy, version_key);
+			var proto_policy = this.buildConfigPolicy(key, policy, version_key, parent);
 			proto_group_policies.set(key,proto_policy);
 		}
 		return policies;
@@ -529,11 +579,24 @@ var ChannelConfig = class {
 	 *                 Rule - rule [enum-0:ANY, 1:ALL, 2:MAJORITY]
 	 *         string - mod_policy
 	 */
-	buildConfigPolicy(name, policy, version_key) {
-		logger.debug('buildConfigPolicy - start - %s.%s',version_key,name);
+	buildConfigPolicy(name, policy, version_key, parent ) {
+		logger.debug('buildConfigPolicy - start - %s.%s - parent:%s',version_key,name, parent);
 		//build the ConfigPolicy to return
 		var proto_config_policy = new _configtxProto.ConfigPolicy();
-		proto_config_policy.setVersion(this.getVersion(version_key + '.' + name, true));
+		var incoming_version = policy.version;
+		// special case on the policy versions when the policy is a custom policy
+		// they must start at 0 since the system does not know about it
+		var increase_by = 0;
+		if((name === 'Admins' || name === 'Writers' || name === 'Readers' || name === 'BlockValidation')) {
+			increase_by = 0;
+		}
+		// another special- case if the known policies are under an org then they are new
+		var splits = version_key.split('.');
+		if(splits > 3) {
+			increase_by = 0;
+		}
+
+		proto_config_policy.setVersion(this.getVersion(version_key + '.' + name, true, increase_by));
 		var proto_policy = new _policiesProto.Policy();
 
 		// IMPLICIT_META policy type
@@ -566,7 +629,7 @@ var ChannelConfig = class {
 		}
 
 		proto_config_policy.setPolicy(proto_policy);
-		proto_config_policy.setModPolicy(this.buildConfigModPolicy(policy.mod_policy));
+		//proto_config_policy.setModPolicy(this.buildConfigModPolicy(policy.mod_policy));
 
 		return proto_config_policy;
 	}

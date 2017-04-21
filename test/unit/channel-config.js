@@ -28,6 +28,7 @@ var grpc = require('grpc');
 
 var Client = require('fabric-client');
 var client = new Client();
+
 var testutil = require('./util.js');
 var ChannelConfig = rewire('fabric-client/lib/ChannelConfig.js');
 
@@ -73,7 +74,7 @@ var ACCEPT_ALL = {
 var test_input = {
 	channel : {
 		name : 'mychannel',
-		version : 3,
+		consortium : 'test',
 		settings : {
 			'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : '99M',	'preferred-max-bytes' : '512K'},
 			'batch-timeout' : '10s',
@@ -90,7 +91,8 @@ var test_input = {
 		},
 		orderers : {
 			organizations : [{
-				mspid : 'ordererMSP',
+				id : 'ordererMSP',
+				msp : { mspid : 'ordererMSP'},
 				policies : {
 					readers : {n_of_signature : ONE_OF_TWO_ORG_MEMBER},
 					writers : {n_of_signature : ONE_OF_TWO_ORG_MEMBER},
@@ -107,7 +109,8 @@ var test_input = {
 		},
 		peers : {
 			organizations : [{
-				mspid : 'org1MSP',
+				id : 'org1MSP',
+				msp : { mspid : 'org1MSP'},
 				'anchor-peers' : ['host1:7051', 'host2:7056'],
 				policies : {
 					readers : {n_of_signature : ONE_OF_TWO_ORG_MEMBER},
@@ -124,11 +127,17 @@ var test_input = {
 	}
 };
 
+var msps = new Map();
+msps.set('ordererMSP',client.newMSP({rootCerts: [], admins: [], id: 'ordererMSP'}));
+msps.set('org1MSP',client.newMSP({rootCerts: [], admins: [], id: 'org1MSP'}));
+var channelConfig = new ChannelConfig(msps);
+
+
 // error tests /////////////
 test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 	t.throws(
 		function () {
-			var channelConfig = new ChannelConfig();
+			let channelConfig = new ChannelConfig();
 		},
 		/^Error: MSP definitions are required/,
 		'checking MSP definitions are required'
@@ -136,71 +145,31 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 
 	t.throws(
 		function () {
-			var channelConfig = new ChannelConfig(new Map());
 			channelConfig.build();
 		},
-		/^Error: ChannelConfig definition object is required/,
-		'Checking ChannelConfig definition object is required'
+		/^Error: Channel configuration definition object is required/,
+		'Checking Channel configuration definition object is required'
 	);
 
 	t.throws(
 		function () {
-			var channelConfig = new ChannelConfig(new Map());
 			channelConfig.build({});
 		},
-		/^Error: ChannelConfig "channel" definition object is required/,
-		'Checking ChannelConfig "channel" definition object is required'
+		/^Error: Channel configuration "channel" definition object is required/,
+		'Checking Channel configuration "channel" definition object is required'
 	);
 
 	t.throws(
 		function () {
-			var channelConfig = new ChannelConfig(new Map());
-			channelConfig.build({channel : {}});
-		},
-		/^Error: ChannelConfig "settings" definition object is required/,
-		'Checking ChannelConfig "settings" definition object is required'
-	);
-
-	t.throws(
-		function () {
-			var channelConfig = new ChannelConfig(new Map());
-			channelConfig.build({channel : { settings : {}}});
-		},
-		/^Error: ChannelConfig "orderers" definition object is required/,
-		'Checking ChannelConfig "orderers" definition object is required'
-	);
-
-	t.throws(
-		function () {
-			var channelConfig = new ChannelConfig(new Map());
 			channelConfig.build({channel : { settings : {}, orderers : {}}});
 		},
-		/^Error: ChannelConfig "peers" definition object is required/,
-		'Checking ChannelConfig "peers" definition object is required'
+		/^Error: Channel configuration "peers" definition object is required/,
+		'Checking Channel configuration "peers" definition object is required'
 	);
 
 	t.throws(
 		function () {
-			let test_input2 = { channel : {	name : 'mychannel',
-				settings : {
-					'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
-					'batch-timeout' : '10s',
-					'hashing-algorithm' : 'SHA256',
-					'block-data-hashing-structure' : 4294967295,
-					'consensus-type' : 'solo'},
-				orderers : {},
-				peers : {}
-			}};
-			var channelConfig = new ChannelConfig(new Map());
-			channelConfig.build(test_input2);
-		},
-		/^Error: Missing orderers organizations array/,
-		'Checking Missing orderers organizations array'
-	);
-
-	t.throws(
-		function () {
-			let test_input1 = { channel : {	name : 'mychannel',
+			let test_input = { channel : {	name : 'mychannel', consortium : 'test',
 				settings : {
 					'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
 					'batch-timeout' : '10s',
@@ -210,8 +179,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 				orderers : {organizations : []},
 				peers : {}
 			}};
-			var channelConfig = new ChannelConfig(new Map());
-			channelConfig.build(test_input1);
+			channelConfig.build(test_input);
 		},
 		/^Error: Missing peers organizations array/,
 		'Checking Missing peers organizations array'
@@ -219,7 +187,7 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 
 	t.throws(
 		function () {
-			let test_input = { channel : {
+			let test_input = { channel : {  consortium : 'test',
 				settings : {
 					'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
 					'batch-timeout' : '10s',
@@ -229,126 +197,61 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 				orderers : {organizations : []},
 				peers : {}
 			}};
-			var channelConfig = new ChannelConfig(new Map());
 			channelConfig.build(test_input);
 		},
-		/^Error: ChannelConfig "name" is required/,
-		'Checking ChannelConfig "name" is required'
+		/^Error: Channel configuration "name" setting is required/,
+		'Checking Channel configuration "name" setting is required'
 	);
 
 	t.throws(
 		function () {
-			let test_input = { channel : {	name : 'mychannel',
-				settings : {
-					'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
-					'batch-timeout' : '10s',
-					'hashing-algorithm' : 'SHA256',
-					'block-data-hashing-structure' : 4294967295,
-					'consensus-type' : 'solo'},
-				orderers : {organizations : [{mspid : 'ordererMSP'}]},
-				peers : {}
-			}};
-			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
-			var channelConfig = client.buildChannelConfig(test_input);
-		},
-		/^Error: Missing "end-points" in orderer organization definition/,
-		'Checking Missing "end-points" in orderer organization definition'
-	);
-
-	t.throws(
-		function () {
-			let test_input = { channel : {	name : 'mychannel',
-				settings : {
-					'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
-					'batch-timeout' : '10s',
-					'hashing-algorithm' : 'SHA256',
-					'block-data-hashing-structure' : 4294967295,
-					'consensus-type' : 'solo'},
-				orderers : {organizations : [{ 'end-points' :[],policies : { admins : { threshold : 'ALL'}}}]},
-				peers : {organizations : [{mspid : 'org1MSP' ,policies : { admins : { threshold : 'ALL'}}}]}
-			}};
-			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
-			client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-			var channelConfig = client.buildChannelConfig(test_input);
-		},
-		/^Error: Missing "mspid" value in the organization/,
-		'Checking Missing "mspid" value in the organization'
-	);
-
-
-	t.throws(
-		function () {
-			let test_input = { channel : {	name : 'mychannel',
-				settings : {
-					'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
-					'batch-timeout' : '10s',
-					'hashing-algorithm' : 'SHA256',
-					'block-data-hashing-structure' : 4294967295,
-					'consensus-type' : 'solo'	},
-				orderers : {organizations : [{mspid : 'ordererMSP', 'end-points' :[], policies : { admins : { threshold : 'ALL'}}}]},
-				peers : {organizations : [{mspid : 'org1MSP', policies : { admins : { threshold : 'ALL'}}}]}
-			}};
-			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
-			client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-			var channelConfig = client.buildChannelConfig(test_input);
-		},
-		/^Error: Missing "anchor-peers" array in peers orgainization definition/,
-		'Checking Missing "anchor-peers" array in peers orgainization definition'
-	);
-
-	t.throws(
-		function () {
-			let test_input = { channel : {	name : 'mychannel',
+			let test_input = { channel : {	name : 'mychannel', consortium : 'test',
 				settings : {
 					'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
 					'batch-timeout' : '10s',
 					'hashing-algorithm' : 'SHA256',
 					'block-data-hashing-structure' : 4294967295,
 					'consensus-type' : 'solo',},
-				orderers : {organizations : [{mspid : 'ordererMSP', 'end-points' :['somehost:9090'], policies : { admins : { threshold : 'ALL'}}}]},
-				peers : { organizations : [{mspid : 'org1MSP', 'anchor-peers' : ['host:port'], policies : { admins : { threshold : 'ALL'}}}]}
+				orderers : {organizations : [{id : 'ordererMSP', 'end-points' :['somehost:9090'], policies : { admins : { threshold : 'ALL'}}}]},
+				peers : { organizations : [{id : 'org1MSP', 'anchor-peers' : ['host:port'], policies : { admins : { threshold : 'ALL'}}}]}
 			}};
-			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
-			client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-			var channelConfig = client.buildChannelConfig(test_input);
+			channelConfig.build(test_input);
 		},
-		/^Error: Organization org1MSP has an invalid achor peer address ::host:port/,
-		'Checking Organization org1MSP has an invalid achor peer address ::host:port'
+		/^Error: Organization org1MSP has an invalid anchor peer address ::host:port/,
+		'Checking Organization org1MSP has an invalid anchor peer address ::host:port'
 	);
 
 	t.throws(
 		function () {
-			let test_input = { channel : { name: 'mychannel',
+			let test_input = { channel : { name: 'mychannel', consortium : 'test',
 				settings : {
 					'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
 					'batch-timeout' : '10s',
 					'hashing-algorithm' : 'SHA256',
 					'block-data-hashing-structure' : 4294967295,
 					'consensus-type' : 'solo',},
-				orderers : {organizations : [{mspid : 'ordererMSP', 'end-points' :['somehost:9090'], policies : { admins : { threshold : 'BAD'}}}]},
-				peers : { organizations : [{mspid : 'org1MSP', 'anchor-peers' : ['host:port'], policies : { admins : { threshold : 'BAD'}}}]},
+				orderers : {organizations : [{id : 'ordererMSP', 'end-points' :['somehost:9090'], policies : { admins : { threshold : 'BAD'}}}]},
+				peers : { organizations : [{id : 'org1MSP', 'anchor-peers' : ['host:8888'], policies : { admins : { threshold : 'BAD'}}}]},
 				policies : { admins : { threshold : 'BAD'}}
 			}};
-			client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
-			client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-			var channelConfig = client.buildChannelConfig(test_input);
+			channelConfig.build(test_input);
 		},
 		/^Error: Implicit Rule is not known ::BAD/,
 		'Checking Implicit Rule is not known ::BAD'
 	);
 	t.throws(
 		function () {
-			let test_input1 = { channel : {	name : 'mychannel',
+			let test_input = { channel : {	name : 'mychannel', consortium : 'test',
 				settings : {
 					'batch-size' : {'max-message-count' : 'dd', 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
 					'batch-timeout' : '10s',
 					'hashing-algorithm' : 'SHA256',
 					'block-data-hashing-structure' : 4294967295,
 					'consensus-type' : 'solo'},
-				orderers : {organizations : []},
-				peers : {}
+				orderers : {organizations : [{id : 'ordererMSP'}]},
+				peers : { organizations : [{id : 'org1MSP', 'anchor-peers' : ['host:port'], policies : { admins : { threshold : 'ALL'}}}]}
 			}};
-			var channelConfig = client.buildChannelConfig(test_input1);
+			channelConfig.build(test_input);
 		},
 		/^Error: Setting max-message-count is not valid value :: dd/,
 		'Checking Setting max-message-count is not valid value :: dd'
@@ -356,17 +259,17 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 
 	t.throws(
 		function () {
-			let test_input1 = { channel : {	name : 'mychannel',
+			let test_input = { channel : {	name : 'mychannel', consortium : 'test',
 				settings : {
 					'batch-size' : {'max-message-count' : '10Z', 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
 					'batch-timeout' : '10s',
 					'hashing-algorithm' : 'SHA256',
 					'block-data-hashing-structure' : 4294967295,
 					'consensus-type' : 'solo'},
-				orderers : {organizations : []},
-				peers : {}
+				orderers : {organizations : [{id : 'ordererMSP'}]},
+				peers : { organizations : [{id : 'org1MSP', 'anchor-peers' : ['host:port'], policies : { admins : { threshold : 'ALL'}}}]}
 			}};
-			var channelConfig = client.buildChannelConfig(test_input1);
+			channelConfig.build(test_input);
 		},
 		/^Error: Setting max-message-count is not valid value :: 10Z/,
 		'Checking Setting max-message-count is not valid value :: 10Z'
@@ -375,17 +278,17 @@ test('\n\n ** ChannelConfig - parameter test **\n\n', function (t) {
 
 	t.throws(
 		function () {
-			let test_input1 = { channel : {	name : 'mychannel',
+			let test_input = { channel : {	name : 'mychannel', consortium : 'test',
 				settings : {
 					'batch-size' : {'max-message-count' : 'RRK', 'absolute-max-bytes' : 103809024,	'preferred-max-bytes' : 524288},
 					'batch-timeout' : '10s',
 					'hashing-algorithm' : 'SHA256',
 					'block-data-hashing-structure' : 4294967295,
 					'consensus-type' : 'solo'},
-				orderers : {organizations : []},
-				peers : {}
+				orderers : {organizations : [{id : 'ordererMSP'}]},
+				peers : { organizations : [{id : 'org1MSP', 'anchor-peers' : ['host:port'], policies : { admins : { threshold : 'ALL'}}}]}
 			}};
-			var channelConfig = client.buildChannelConfig(test_input1);
+			channelConfig.build(test_input);
 		},
 		/^Error: Setting max-message-count is not valid value :: RRK/,
 		'Checking Setting max-message-count is not valid value :: RRK'
@@ -402,7 +305,7 @@ test('\n\n ** ChannelConfig - MSP check **\n\n', function (t) {
 	t.throws(
 		function () {
 			var channelConfig = new ChannelConfig(new Map());
-			var channelConfig = client2.buildChannelConfig(test_input);
+			channelConfig.build(test_input);
 		},
 		/^Error: MSP ordererMSP was not found/,
 		'Checking MSP ordererMSP was not found'
@@ -414,13 +317,12 @@ test('\n\n ** ChannelConfig - basic field check tests **\n\n', function (t) {
 	t.doesNotThrow(
 		function () {
 			try {
-				client.addMSP({rootCerts: [], admins: [], id: 'ordererMSP'});
-				client.addMSP({rootCerts: [], admins: [], id: 'org1MSP'});
-				var channelConfigUpdate = client.buildChannelConfig(test_input);
+				var channelConfig = new ChannelConfig(msps);
+				var channelConfigUpdate = channelConfig.build(test_input);
 				t.pass('No exceptions building on a good configuration');
 
 				var chain = client.newChain('test');
-				var results = chain.loadConfigUpdate(channelConfigUpdate);
+				var results = chain.loadConfigUpdate(channelConfigUpdate.toBuffer());
 				t.pass('No exceptions reloading the results of the build');
 
 				logger.info(' results found ::%j',results);

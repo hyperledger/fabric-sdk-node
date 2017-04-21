@@ -184,7 +184,7 @@ var Client = class {
 	}
 
 	/**
-	 * Add an MSP definition to this client to be available when referenced by the provided id.
+	 * build an new MSP with the definition.
 	 * @parm {Object} which has the following the following fields:
 	 *		<br>`id`: {string} value for the identifier of this instance
 	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
@@ -192,17 +192,20 @@ var Client = class {
 	 *		<br>`intermediateCerts`: array of {@link Identity} representing trust anchors for validating
 	 *           signing certificates. optional for MSPs used in verifying signatures
 	 *		<br>`admins`: array of {@link Identity} representing admin privileges
+	 *@return {MSP} The newly created MSP object.
 	 */
-	addMSP(msp_def) {
+	newMSP(msp_def) {
+		var msp = null;
 		if(msp_def && msp_def.id) {
 			if(!msp_def.cryptoSuite) {
 				msp_def.cryptoSuite = sdkUtils.newCryptoSuite();
 			}
-			this._msps.set(msp_def.id, new MSP(msp_def));
+			msp = new MSP(msp_def);
 		}
 		else {
 			throw new Error('MSP definition is missing the "id" field.');
 		}
+		return msp;
 	}
 
 	/**
@@ -213,54 +216,54 @@ var Client = class {
 	 * @param {Object} A JSON object that has the following attributes...TODO fill out
 	 * @param {Chain} The Chain instance that represents the channel. An Orderer must assigned
 	 *                to this chain to retrieve the current concurrent configuration.
+	 * @param {MSP[]} An array of MSPs that will be referenced by the configuration definition
 	 * @return {byte[]} A Promise for a byte buffer object that is the byte array representation of the
 	 *                  Protobuf common.ConfigUpdate
 	 * @see /protos/common/configtx.proto
 	 */
-	buildChannelConfigUpdate(config_definition, chain) {
-		if (typeof config_definition === 'undefined' || config_definition === null) {
-			return Promise.reject( new Error('Channel config_definition parameter is required.'));
+	buildChannelConfigUpdate(config_definition, chain, msps) {
+		logger.debug('buildChannelConfigUpdate - start');
+		try {
+			ChannelConfig.validate(config_definition);
 		}
-		if(!(chain instanceof Chain)) {
-			return Promise.reject( new Error('The chain update parameter is requried.'));
-		}
-		return chain.buildChannelConfigUpdate(config_definition, this._msps);
-	}
-
-	/**
-	 * Build an configuration that is the channel configuration definition from the
-	 * provide MSPs added to this client and Channel definition input parameters.
-	 * The result of the build may be used to create a channel.
-	 * @param {Object} A JSON object that has the following attributes...TODO fill out
-	 * @return {byte[]} A byte buffer object that is the byte array representation of the
-	 *                  Protobuf common.ConfigUpdate
-	 * @see /protos/common/configtx.proto
-	 */
-	buildChannelConfig(config_definition) {
-		var channel_config = new ChannelConfig(this._msps);
-		var proto_channel_config = channel_config.build(config_definition);
-		return proto_channel_config.toBuffer();
-	}
-
-	/**
-	 * Build an configuration update that is the channel configuration definition from the
-	 * provide MSPs added to this client, the Channel definition input parameters,
-	 * and the existing channel.
-	 * The result of the build may be used to update a channel.
-	 * @param {Object} A JSON object that has the following attributes...TODO fill out
-	 * @return {byte[]} A byte buffer object that is the byte array representation of the
-	 *                  Protobuf common.ConfigUpdate
-	 * @see /protos/common/configtx.proto
-	 */
-	buildChannelConfigUpdate(config_definition, chain) {
-		if (typeof config_definition === 'undefined' || config_definition === null) {
-			return Promise.reject(new Error('Channel definition update parameter is required.'));
+		catch(err) {
+			logger.error(err);
+			return Promise.reject(err);
 		}
 		if(!(chain instanceof Chain)) {
 			return Promise.reject(
 				new Error('Building a channel configuration update requires an existing "Chain" object'));
 		}
-		return chain.buildChannelConfigUpdate(config_definition, this._msps);
+		return chain.buildChannelConfigUpdate(config_definition, msps);
+	}
+
+	/**
+	 * Build an configuration that is the channel configuration definition from the
+	 * provide MSPs added to this client, the Channel definition input parameters, and
+	 * system information from the provided Orderer.
+	 * The result of the build may be used to create a channel.
+	 * @param {Object} A JSON object that has the following attributes...TODO fill out
+	 * @param {Orderer} An Orderer that will be used to create this channel. This Orderer will be
+	 *                  used to retrieve required system chain settings used in the building of this
+	 *                  channel definition.
+	 * @param {MSP[]} An array of MSPs that will be referenced by the configuration definition
+	 * @return {byte[]} A Promise for a byte buffer object that is the byte array representation of the
+	 *                  Protobuf common.ConfigUpdate
+	 * @see /protos/common/configtx.proto
+	 */
+	buildChannelConfig(config_definition, orderer, msps) {
+		logger.debug('buildChannelConfig - start');
+		try {
+			ChannelConfig.validate(config_definition);
+		}
+		catch(err) {
+			logger.error(err);
+			return Promise.reject(err);
+		}
+
+		var chain = new Chain(config_definition.channel.name, this);
+		chain.addOrderer(orderer);
+		return chain.buildChannelConfig(config_definition, msps);
 	}
 
 	/**

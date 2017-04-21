@@ -69,14 +69,173 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		}
 	);
 
+
+	var TWO_ORG_MEMBERS_AND_ADMIN = [{
+		role: {
+			name: 'member',
+			mspId: 'Org1MSP'
+		}
+	}, {
+		role: {
+			name: 'member',
+			mspId: 'Org2MSP'
+		}
+	}, {
+		role: {
+			name: 'admin',
+			mspId: 'OrdererMSP'
+		}
+	}];
+
+	var ONE_OF_TWO_ORG_MEMBER = {
+		identities: TWO_ORG_MEMBERS_AND_ADMIN,
+		policy: {
+			'1-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }]
+		}
+	};
+
+	var ACCEPT_ALL = {
+		identities: [],
+		policy: {
+			'0-of': []
+		}
+	};
+
+	var test_input = {
+		channel : {
+			name : channel_name,
+			consortium : 'SampleConsortium',
+			settings : {
+				'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : '99m',	'preferred-max-bytes' : '512k'},
+				'batch-timeout' : '10s',
+				'hashing-algorithm' : 'SHA256',
+				'consensus-type' : 'solo'
+			},
+			policies : {
+				Readers : {threshold : 'ANY'},
+				Writers : {threshold : 'ANY'},
+				Admins  : {threshold : 'ANY'},
+				AcceptAllPolicy : {signature : ACCEPT_ALL}
+			},
+			orderers : {
+				organizations : [{
+					mspid : 'OrdererMSP',
+					policies : {
+						Readers : {signature : ACCEPT_ALL},
+						Writers : {signature : ACCEPT_ALL},
+						Admins  : {signature : ACCEPT_ALL}
+					},
+					'end-points' : ['orderer0:7050']
+				}],
+				policies : {
+					Readers : {threshold : 'ANY'},
+					Writers : {threshold : 'ANY'},
+					Admins  : {threshold : 'ANY'},
+					AcceptAllPolicy : {signature : ACCEPT_ALL},
+					BlockValidation : {threshold : 'ANY' , sub_policy : 'Writers'}
+				}
+			},
+			peers : {
+				organizations : [{
+					id : 'Org1MSP',
+					'anchor-peers' : ['peer0:7051'],
+					policies : {
+						Readers : {signature : ACCEPT_ALL},
+						Writers : {signature : ACCEPT_ALL},
+						Admins  : {signature : ACCEPT_ALL}
+					}
+				},{
+					mspid : 'Org2MSP',
+					'anchor-peers' : ['peer2:8051'],
+					policies : {
+						Readers : {signature : ACCEPT_ALL},
+						Writers : {signature : ACCEPT_ALL},
+						Admins  : {signature : ACCEPT_ALL}
+					}
+				}],
+				policies : {
+					Readers : {threshold : 'ANY'},
+					Writers : {threshold : 'ANY'},
+					Admins  : {threshold : 'ANY'}
+				},
+			}
+		}
+	};
+	var test_input2 = {
+		channel : {
+			name : channel_name,
+			consortium : 'SampleConsortium',
+			settings : {
+				'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : '99m',	'preferred-max-bytes' : '512k'},
+				'batch-timeout' : '10s',
+				'hashing-algorithm' : 'SHA256',
+				'consensus-type' : 'solo'
+			},
+			orderers : {
+				organizations :[{
+					id : 'OrdererMSP',
+					msp : { mspid : 'OrdererMSP'},
+				}]
+			},
+			peers : {
+				organizations : [{
+					id : 'Org1MSP',
+					msp : { mspid : 'Org1MSP'},
+					'anchor-peers' : ['peer0:7051'],
+					policies : {
+
+					}
+				},{
+					id : 'Org2MSP',
+					msp : { mspid : 'Org2MSP'},
+					'anchor-peers' : ['peer2:8051'],
+					policies : {
+
+					}
+				}],
+				policies : {
+					Admins  : {threshold : 'ANY'},
+					Writers : {threshold : 'ANY'},
+					Readers : {threshold : 'ANY'},
+				},
+			}
+		}
+	};
+	var test_input3 = {
+		channel : {
+			name : channel_name,
+			consortium : 'SampleConsortium',
+			peers : {
+				organizations : [{
+					id : 'Org1MSP',
+					//msp : { mspid : 'Org1MSP'},
+					policies : {
+
+					}
+				},{
+					id : 'Org2MSP',
+					//msp : { mspid : 'Org2MSP'},
+					policies : {
+
+					}
+				}],
+				policies : {
+					Admins  : {threshold : 'MAJORITY'},
+					Writers : {threshold : 'ANY'},
+					Readers : {threshold : 'ANY'},
+				},
+			}
+		}
+	};
 	var config = null;
 	var signatures = [];
+	var msps = [];
 
-	client.addMSP( e2eUtils.loadMSPConfig('OrdererMSP', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/msp/'));
+	msps.push(client.newMSP( e2eUtils.loadMSPConfig('OrdererMSP', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/msp/')));
 
-	client.addMSP( e2eUtils.loadMSPConfig('Org1MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/msp/'));
+	msps.push(client.newMSP( e2eUtils.loadMSPConfig('Org1MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/msp/')));
 
-	client.addMSP( e2eUtils.loadMSPConfig('Org2MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/msp/'));
+	msps.push(client.newMSP( e2eUtils.loadMSPConfig('Org2MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/msp/')));
 
 	// Acting as a client in org1 when creating the channel
 	var org = ORGS.org1.name;
@@ -88,16 +247,35 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	}).then((store) => {
 		client.setStateStore(store);
 
+		return testUtil.getOrderAdminSubmitter(client, t);
+	}).then((admin) =>{
+		t.pass('Successfully enrolled user \'admin\' for orderer');
+
 		// use this when the config comes from the configtx tool
-		data = fs.readFileSync(path.join(__dirname, '../../fixtures/channel/mychannel.tx'));
-		var envelope = _commonProto.Envelope.decode(data);
-		var payload = _commonProto.Payload.decode(envelope.getPayload().toBuffer());
-		var configtx = _configtxProto.ConfigUpdateEnvelope.decode(payload.getData().toBuffer());
-		config = configtx.getConfigUpdate().toBuffer();
+//		data = fs.readFileSync(path.join(__dirname, '../../fixtures/channel/mychannel.tx'));
+//		var envelope = _commonProto.Envelope.decode(data);
+//		var payload = _commonProto.Payload.decode(envelope.getPayload().toBuffer());
+//		var configtx = _configtxProto.ConfigUpdateEnvelope.decode(payload.getData().toBuffer());
+//		config = configtx.getConfigUpdate().toBuffer();
+//
+//		logger.debug('\n***\n dump the configtx config \n***\n');
+//		var chain = client.newChain('test');
+//		chain.loadConfigUpdate(config);
 
-		logger.debug('\n***\n dump the configtx config \n***\n');
+		 //have the SDK build the config update object
+		 return client.buildChannelConfig(test_input3, orderer, msps);
+	}).then((config_bytes) => {
+		logger.debug('\n***\n built config \n***\n');
+		t.pass('Successfully built config update');
+		// comment the following line out when using the configtx config above
+		config = config_bytes;
 
-		 return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
+//		logger.debug('\n***\n dump the SDK config \n***\n');
+//		var chain = client.newChain('testsdk');
+//		chain.loadConfigUpdate(config_bytes);
+
+		client._userContext = null;
+		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\' for org1');
 

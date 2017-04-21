@@ -17,3 +17,4 @@
 'use strict';
 
 module.exports.LSCC = 'lscc';
+module.exports.SYSTEM_CHANNEL_NAME = 'testchainid';

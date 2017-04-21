@@ -271,7 +271,7 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 	var c = new Chain('joinChannel', client);
 	var orderer = new Orderer('grpc://localhost:7050');
 
-	var p1 = c.joinChannel({}
+	var p1 = c.getGenesisBlock({}
 	).then(function () {
 		t.fail('Should not have been able to resolve the promise because of orderer missing');
 	}).catch(function (err) {
@@ -321,6 +321,18 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 		}
 	});
 
+	var p4a = c.getGenesisBlock({targets: 'targets'}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of txId request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing txId') >= 0) {
+			t.pass('Successfully caught missing txId request error');
+		} else {
+			t.fail('Failed to catch the missing txId request error. Error: ');
+			logger.error(err.stack ? err.stack : err);
+		}
+	});
+
 	var p5 = c.joinChannel({targets: 'targets' , txId : 'txId' }
 	).then(function () {
 		t.fail('Should not have been able to resolve the promise because of nonce request parameter');
@@ -333,7 +345,18 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1, p2, p3, p4, p5])
+	var p5a = c.getGenesisBlock({targets: 'targets' , txId : 'txId' }
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of nonce request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing nonce') >= 0) {
+			t.pass('Successfully caught missing nonce request error');
+		} else {
+			t.fail('Failed to catch the missing nonce request error. Error: ');
+			logger.error(err.stack ? err.stack : err);
+		}
+	});
+	Promise.all([p1, p2, p3, p4, p4a, p5, p5a])
 	.then(
 		function (data) {
 			t.end();
@@ -1288,7 +1311,18 @@ test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
 test('\n\n ** test related APIs for update channel **\n\n', function (t) {
 	var chain = client.newChain('testChain-update');
 
-	var p1= chain.buildChannelConfigUpdate(
+	var p1= chain.buildChannelConfig(
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise');
+	}).catch(function (err) {
+		if (err.message.indexOf('Channel definition parameter is required') >= 0) {
+			t.pass('Successfully caught Channel config_definition parameter is required error');
+		} else {
+			t.fail('Failed to catch Channel config_definition parameter is required Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+	var p2= chain.buildChannelConfigUpdate(
 	).then(function () {
 		t.fail('Should not have been able to resolve the promise');
 	}).catch(function (err) {

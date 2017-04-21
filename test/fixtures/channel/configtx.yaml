@@ -83,6 +83,7 @@ Organizations:
         # FIXME: this path needs to be fixed to point to the actual location of #
         # the project 'fabric-sdk-node' in the file system                      #
         #########################################################################
+        # MSPDir is the filesystem path which contains the MSP configuration
         MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/msp/
 
         # AdminPrincipal dictates the type of principal used for an
@@ -126,6 +127,7 @@ Organizations:
         # FIXME: this path needs to be fixed to point to the actual location of #
         # the project 'fabric-sdk-node' in the file system                      #
         #########################################################################
+        # MSPDir is the filesystem path which contains the MSP configuration
         MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/peerOrganizations/org2.example.com/msp/
 
         # AdminPrincipal dictates the type of principal used for an

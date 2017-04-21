@@ -29,6 +29,7 @@ var grpc = require('grpc');
 
 var hfc = require('fabric-client');
 var EventHub = require('fabric-client/lib/EventHub.js');
+var Block = require('fabric-client/lib/Block.js');
 
 var testUtil = require('../../unit/util.js');
 
@@ -41,8 +42,8 @@ var ORGS = hfc.getConfigSetting('test-network');
 
 var allEventhubs = [];
 
-var _commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
-
+var _commonProto   = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
+var _configtxProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/configtx.proto')).common;
 //
 //Attempt to send a request to the orderer with the sendCreateChain method
 //
@@ -100,6 +101,7 @@ function joinChannel(org, t) {
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
+	var genesis_block = null;
 
 	chain.addOrderer(
 		client.newOrderer(
@@ -115,11 +117,42 @@ function joinChannel(org, t) {
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 		client.setStateStore(store);
+
+		// TODO - remove... checking to see if orderer admin works
+		return testUtil.getOrderAdminSubmitter(client, t);
+	}).then((admin) => {
+		t.pass('Successfully enrolled orderer \'admin\'');
+		nonce = utils.getNonce();
+		tx_id = hfc.buildTransactionID(nonce, admin);
+		let request = {
+			txId : 	tx_id,
+			nonce : nonce
+		};
+		return chain.getGenesisBlock(request);
+	}).then((block) =>{
+		t.pass('Successfully got the genesis block');
+		genesis_block = block;
+
+//		var proto_block = _commonProto.Block.decode(block.toBuffer());
+//		var envelope = _commonProto.Envelope.decode(proto_block.data.data[0]);
+//		var payload = _commonProto.Payload.decode(envelope.payload);
+//		var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
+//		if(channel_header.type != _commonProto.HeaderType.CONFIG) {
+//			logger.error('Block must be of type "CONFIG"');
+//		}
+
+//		var json_block = Block.decode(block.toBuffer());
+//		logger.info('GENESIS BLOCK :: %j',json_block);
+
+//		var config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
+//		chain.loadConfigEnvelope(config_envelope);
+
+
 		// get the peer org's admin required to send join channel requests
+		client._userContext = null;
 		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
-	})
-	.then((admin) => {
-		t.pass('Successfully enrolled user \'admin\'');
+	}).then((admin) => {
+		t.pass('Successfully enrolled org:' + org + ' \'admin\'');
 		the_user = admin;
 
 		for (let key in ORGS[org]) {
@@ -151,14 +184,6 @@ function joinChannel(org, t) {
 			}
 		}
 
-		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, the_user);
-		var request = {
-			targets : targets,
-			txId : 	tx_id,
-			nonce : nonce
-		};
-
 		var eventPromises = [];
 		eventhubs.forEach((eh) => {
 			let txPromise = new Promise((resolve, reject) => {
@@ -185,7 +210,14 @@ function joinChannel(org, t) {
 
 			eventPromises.push(txPromise);
 		});
-
+		nonce = utils.getNonce();
+		tx_id = hfc.buildTransactionID(nonce, the_user);
+		let request = {
+			targets : targets,
+			block : genesis_block,
+			txId : 	tx_id,
+			nonce : nonce
+		};
 		let sendPromise = chain.joinChannel(request);
 		return Promise.all([sendPromise].concat(eventPromises));
 	}, (err) => {

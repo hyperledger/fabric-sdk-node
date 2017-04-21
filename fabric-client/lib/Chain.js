@@ -366,7 +366,55 @@ var Chain = class {
 	}
 
 	/**
-	 * Build an configuration update envelope that is the channel configuration definition
+	 * Build a configuration envelope that is the channel configuration definition
+	 * from the provide MSP's, the Channel definition input parameters, and the current
+	 * configuration as read from the system channel.
+	 * The result of the build will need to be signed and then may be used to create a new
+	 * channel.
+	 * @param {Object} A JSON object that represents the configuration settings to be changed.
+	 * @param {MSP[]} A list of MSPs that may represent new or updates to existing MSPs
+	 * @return {byte[]} A Promise for a byte buffer object that is the byte array representation
+	 *                  of the Protobuf common.ConfigUpdate
+	 * @see /protos/common/configtx.proto
+	 */
+	buildChannelConfig(config_definition, msps) {
+		logger.debug('\n***\nbuildChannelConfig - start\n***\n');
+		if (typeof config_definition === 'undefined' || config_definition === null) {
+			return Promise.reject(new Error('Channel definition parameter is required.'));
+		}
+
+		// force the fetch to be against the system channel
+		this._name = Constants.SYSTEM_CHANNEL_NAME;
+		var self = this;
+
+		return self.getChannelConfig()
+		.then( function(config_envelope) {
+
+			return self.loadConfigEnvelope(config_envelope);
+		}).then( function(config_items) {
+			logger.debug('buildChannelConfig -  version hierarchy  :: %j',config_items.versions);
+			// get all the msps from the current configuration and from existing configuration
+			var updated_msps = _combineMSPs(self._msp_manager.getMSPs(), msps);
+
+			// build the config update protobuf
+			var channel_config = new ChannelConfig(updated_msps);
+			// build a create config which has the minimal readset
+			var proto_channel_config = channel_config.build(config_definition, null);
+
+			return proto_channel_config.toBuffer();
+		}).catch(function(err) {
+			logger.error('Failed buildChannelConfig. :: %s', err.stack ? err.stack : err);
+			if(err instanceof Error) {
+				throw err;
+			}
+			else {
+				throw new Error(err);
+			}
+		});
+	}
+
+	/**
+	 * Build a configuration update envelope that is the channel configuration definition
 	 * from the provide MSP's, the Channel definition input parameters, and the current
 	 * configuration as read from this channel.
 	 * The result of the build will need to be signed and then may be used to update this
@@ -377,7 +425,7 @@ var Chain = class {
 	 *                  of the Protobuf common.ConfigUpdate
 	 * @see /protos/common/configtx.proto
 	 */
-	buildChannelConfigUpdate(config_definition, client_msps) {
+	buildChannelConfigUpdate(config_definition, msps) {
 		logger.debug('buildChannelConfigUpdate - start');
 		if (typeof config_definition === 'undefined' || config_definition === null) {
 			return Promise.reject(new Error('Channel definition update parameter is required.'));
@@ -389,21 +437,8 @@ var Chain = class {
 		.then( function(config_items) {
 			logger.debug('buildChannelConfigUpdate -  version hierarchy  :: %j',config_items.versions);
 			// get all the msps from the current configuration
-			var update_msps = new Map();
-			var msps = self._msp_manager.getMSPs();
-			if(msps) {
-				var keys = Object.keys(msps);
-				for(let key in keys) {
-					let mspid = keys[key];
-					logger.debug('buildChannelConfigUpdate - did not find this config msp in the new msps ::%s',mspid);
-					update_msps.set(mspid, msps[mspid]);
-				}
-			}
-			// overlay or add any the user wanted to add
-			for(let id in client_msps.keys()) {
-				update_msps.set(key, client_msps.get(id));
-			}
-			// build the config update protobuf
+			var updated_msps = _combineMSPs(self._msp_manager.getMSPs(), msps);
+
 			var channel_config = new ChannelConfig(update_msps);
 			var proto_channel_config = channel_config.build(config_definition, config_items.versions);
 			return Promise.resolve( proto_channel_config.toBuffer());
@@ -411,56 +446,41 @@ var Chain = class {
 			logger.error('Failed buildChannelConfigUpdate. :: %s', err.stack ? err.stack : err);
 			return Promise.reject(err);
 		});
-		var channel_config = new ChannelConfig(this._msps);
-		var proto_channel_config = channel_config.build(config_definition);
+		var channel_config = new ChannelConfig(updated_msps);
+		var proto_channel_config = channel_config.build(config_definition, config_items.versions);
 
 		return proto_channel_config.toBuffer();
 	}
 
 	/**
-	 * Sends a join channel proposal to one or more endorsing peers
-	 * Will get the genesis block from the defined orderer to be used
-	 * in the proposal.
+	 * Will get the genesis block from the defined orderer that may be
+	 * used in a join request
 	 * @param {Object} request - An object containing the following fields:
-	 *		<br>`targets` : required - An array of `Peer` objects that will join
-	 *                      this channel
 	 *		<br>`txId` : required - String of the transaction id
 	 *		<br>`nonce` : required - Integer of the once time number
-	 * @returns {Promise} A Promise for a `ProposalResponse`
+	 *
+	 * @returns {Promise} A Promise for a protobuf `Block`
 	 * @see /protos/peer/proposal_response.proto
 	 */
-	joinChannel(request) {
-		logger.debug('joinChannel - start');
+	getGenesisBlock(request) {
+		logger.debug('getGenesisBlock - start');
 		var errorMsg = null;
 
 		// verify that we have an orderer configured
 		if(!this.getOrderers()[0]) {
-			errorMsg = 'Missing orderer object for the join channel proposal';
+			errorMsg = 'Missing orderer assigned to this channel for the getGenesisBlock request';
 		}
-
-		// verify that we have targets (Peers) to join this channel
-		// defined by the caller
-		else if(!request) {
-			errorMsg = 'Missing all required input request parameters';
-		}
-
-		// verify that a Peer(s) has been selected to join this channel
-		else if (!request.targets) {
-			errorMsg = 'Missing targets input parameter with the peer objects for the join channel proposal';
-		}
-
 		// verify that we have transaction id
 		else if(!request.txId) {
 			errorMsg = 'Missing txId input parameter with the required transaction identifier';
 		}
-
 		// verify that we have the nonce
 		else if(!request.nonce) {
 			errorMsg = 'Missing nonce input parameter with the required single use number';
 		}
 
 		if(errorMsg) {
-			logger.error('joinChannel - error '+ errorMsg);
+			logger.error('getGenesisBlock - error '+ errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -513,48 +533,88 @@ var Chain = class {
 			payload : seekPayloadBytes
 		};
 
-		return orderer.sendDeliver(envelope)
+		return orderer.sendDeliver(envelope);
+	}
+
+	/**
+	 * Sends a join channel proposal to one or more endorsing peers
+	 * Will get the genesis block from the defined orderer to be used
+	 * in the proposal.
+	 * @param {Object} request - An object containing the following fields:
+	 *   <br>`targets` : required - An array of `Peer` objects that will join
+	 *                   this channel
+	 *   <br>`block` : the genesis block of the channel
+	 *                 see getGenesisBlock() method
+	 *   <br>`txId` : required - String of the transaction id
+	 *   <br>`nonce` : required - Integer of the once time number
+	 * @returns {Promise} A Promise for a `ProposalResponse`
+	 * @see /protos/peer/proposal_response.proto
+	 */
+	joinChannel(request) {
+		logger.debug('joinChannel - start');
+		var errorMsg = null;
+
+		// verify that we have targets (Peers) to join this channel
+		// defined by the caller
+		if(!request) {
+			errorMsg = 'Missing all required input request parameters';
+		}
+
+		// verify that a Peer(s) has been selected to join this channel
+		else if (!request.targets) {
+			errorMsg = 'Missing targets input parameter with the peer objects for the join channel proposal';
+		}
+
+		// verify that we have transaction id
+		else if(!request.txId) {
+			errorMsg = 'Missing txId input parameter with the required transaction identifier';
+		}
+
+		// verify that we have the nonce
+		else if(!request.nonce) {
+			errorMsg = 'Missing nonce input parameter with the required single use number';
+		}
+
+		else if(!request.block) {
+			errorMsg = 'Missing block input parameter with the required genesis block';
+		}
+
+		if(errorMsg) {
+			logger.error('joinChannel - error '+ errorMsg);
+			return Promise.reject(new Error(errorMsg));
+		}
+
+		var self = this;
+		var userContext = this._clientContext.getUserContext();
+		var chaincodeInput = new _ccProto.ChaincodeInput();
+		var args = [];
+		args.push(Buffer.from('JoinChain', 'utf8'));
+		args.push(request.block.toBuffer());
+
+		chaincodeInput.setArgs(args);
+
+		var chaincodeID = new _ccProto.ChaincodeID();
+		chaincodeID.setName('cscc');
+
+		var chaincodeSpec = new _ccProto.ChaincodeSpec();
+		chaincodeSpec.setType(_ccProto.ChaincodeSpec.Type.GOLANG);
+		chaincodeSpec.setChaincodeId(chaincodeID);
+		chaincodeSpec.setInput(chaincodeInput);
+
+		var channelHeader = Chain._buildChannelHeader(
+			_commonProto.HeaderType.ENDORSER_TRANSACTION,
+			'',
+			request.txId,
+			null, //no epoch
+			'cscc'
+		);
+
+		var header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
+		var proposal = Chain._buildProposal(chaincodeSpec, header);
+		var signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
+
+		return Chain._sendPeersProposal(request.targets, signed_proposal)
 		.then(
-			function(block) {
-				logger.debug('joinChannel - good results from seek block '); // :: %j',results);
-				// verify that we have the genesis block
-				if(block) {
-					logger.debug('joinChannel - found genesis block');
-				}
-				else {
-					logger.error('joinChannel - did not find genesis block');
-					return Promise.reject(new Error('Join Channel failed, no genesis block found'));
-				}
-				var chaincodeInput = new _ccProto.ChaincodeInput();
-				var args = [];
-				args.push(Buffer.from('JoinChain', 'utf8'));
-				args.push(block.toBuffer());
-
-				chaincodeInput.setArgs(args);
-
-				var chaincodeID = new _ccProto.ChaincodeID();
-				chaincodeID.setName('cscc');
-
-				var chaincodeSpec = new _ccProto.ChaincodeSpec();
-				chaincodeSpec.setType(_ccProto.ChaincodeSpec.Type.GOLANG);
-				chaincodeSpec.setChaincodeId(chaincodeID);
-				chaincodeSpec.setInput(chaincodeInput);
-
-				var channelHeader = Chain._buildChannelHeader(
-					_commonProto.HeaderType.ENDORSER_TRANSACTION,
-					'',
-					request.txId,
-					null, //no epoch
-					'cscc'
-				);
-
-				var header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
-				var proposal = Chain._buildProposal(chaincodeSpec, header);
-				var signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
-
-				return Chain._sendPeersProposal(request.targets, signed_proposal);
-			}
-		).then(
 			function(responses) {
 				return Promise.resolve(responses);
 			}
@@ -755,9 +815,9 @@ var Chain = class {
 		config_items.versions.read_group = {};
 		config_items.versions.write_group = {};
 
-		this.loadConfigGroup(config_items, config_items.versions.read_group, read_group, 'read_set', null, true, false);
+		loadConfigGroup(config_items, config_items.versions.read_group, read_group, 'read_set', null, true, false);
 		// do the write_set second so they update anything in the read set
-		this.loadConfigGroup(config_items, config_items.versions.write_group, write_group, 'write_set', null, true, false);
+		loadConfigGroup(config_items, config_items.versions.write_group, write_group, 'write_set', null, true, false);
 		this._msp_manager.loadMSPs(config_items.msps);
 		this._anchor_peers =config_items.anchor_peers;
 
@@ -784,245 +844,12 @@ var Chain = class {
 		config_items.versions = {};
 		config_items.versions.channel = {};
 
-		this.loadConfigGroup(config_items, config_items.versions.channel, group, 'base', null, true, true);
+		loadConfigGroup(config_items, config_items.versions.channel, group, 'base', null, true, true);
 		this._msp_manager.loadMSPs(config_items.msps);
 		this._anchor_peers = config_items.anchor_peers;
 
 		//TODO should we create orderers and endorsing peers
 		return config_items;
-	}
-
-	/*
-	 * utility method to load in a config group
-	 * @param {Object} - config_items - holder of values found in the configuration
-	 * @param {Object} - group - used for recursive calls
-	 * @param {string} - name - used to help with the recursive calls
-	 * @param {string} - org - Organizational name
-	 * @param {bool} - top - to handle the  differences in the structure of groups
-	 * @see /protos/common/configtx.proto
-	 */
-	loadConfigGroup(config_items, versions, group, name, org, top) {
-		logger.debug('loadConfigGroup - %s - > group:%s', name, org);
-		if(!group) {
-			logger.debug('loadConfigGroup - %s - no group', name);
-			logger.debug('loadConfigGroup - %s - < group', name);
-			return;
-		}
-
-		logger.debug('loadConfigGroup - %s   - version %s',name, group.version);
-		logger.debug('loadConfigGroup - %s   - mod policy %s',name, group.mod_policy);
-
-		var groups = null;
-		if(top) {
-			groups = group.groups;
-			versions.version = group.version;
-		}
-		else {
-			groups = group.value.groups;
-			versions.version = group.value.version;
-		}
-		logger.debug('loadConfigGroup - %s - >> groups', name);
-
-		if(groups) {
-			let keys = Object.keys(groups.map);
-			versions.groups = {};
-			if(keys.length == 0) {
-				logger.debug('loadConfigGroup - %s   - no groups', name);
-			}
-			for(let i =0; i < keys.length; i++) {
-				let key = keys[i];
-				logger.debug('loadConfigGroup - %s   - found config group ==> %s', name, key);
-				versions.groups[key] = {};
-				// The Application group is where config settings are that we want to find
-				this.loadConfigGroup(config_items, versions.groups[key], groups.map[key], name+'.'+key, key, false);
-			}
-		}
-		else {
-			logger.debug('loadConfigGroup - %s   - no groups', name);
-		}
-		logger.debug('loadConfigGroup - %s - << groups', name);
-
-		logger.debug('loadConfigGroup - %s - >> values', name);
-		var values = null;
-		if(top) {
-			values = group.values;
-		}
-		else {
-			values = group.value.values;
-		}
-		if(values) {
-			versions.values = {};
-			let keys = Object.keys(values.map);
-			for(let i =0; i < keys.length; i++) {
-				let key = keys[i];
-				versions.values[key] = {};
-				var config_value = values.map[key];
-				this.loadConfigValue(config_items, versions.values[key], config_value, name, org);
-			}
-		}
-		else {
-			logger.debug('loadConfigGroup - %s   - no values', name);
-		}
-		logger.debug('loadConfigGroup - %s - << values', name);
-
-		logger.debug('loadConfigGroup - %s - >> policies', name);
-		var policies = null;
-		if(top) {
-			policies = group.policies;
-		}
-		else {
-			policies = group.value.policies;
-		}
-		if(policies) {
-			versions.policies = {};
-			let keys = Object.keys(policies.map);
-			for(let i =0; i < keys.length; i++) {
-				let key = keys[i];
-				versions.policies[key] = {};
-				var config_policy = policies.map[key];
-				this.loadConfigPolicy(config_items, versions.policies[key], config_policy, name, org);
-			}
-		}
-		else {
-			logger.debug('loadConfigGroup - %s   - no policies', name);
-		}
-		logger.debug('loadConfigGroup - %s - << policies', name);
-
-		logger.debug('loadConfigGroup - %s - < group',name);
-	}
-
-	/*
-	 * utility method to load in a config value
-	 * @see /protos/common/configtx.proto
-	 * @see /protos/msp/mspconfig.proto
-	 * @see /protos/orderer/configuration.proto
-	 * @see /protos/peer/configuration.proto
-	 */
-	loadConfigValue(config_items, versions, config_value, group_name, org) {
-		logger.debug('loadConfigValue - %s -  value name: %s', group_name, config_value.key);
-		logger.debug('loadConfigValue - %s    - version: %s', group_name, config_value.value.version);
-		logger.debug('loadConfigValue - %s    - mod_policy: %s', group_name, config_value.value.mod_policy);
-
-		versions.version = config_value.value.version;
-		try {
-			switch(config_value.key) {
-			case 'AnchorPeers':
-				var anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s    - AnchorPeers :: %s', group_name, anchor_peers);
-				if(anchor_peers && anchor_peers.anchor_peers) for(var i in anchor_peers.anchor_peers) {
-					var anchor_peer = {
-						host : anchor_peers.anchor_peers[i].host,
-						port : anchor_peers.anchor_peers[i].port,
-						org  : org
-					};
-					config_items['anchor-peers'].push(anchor_peer);
-					logger.debug('loadConfigValue - %s    - AnchorPeer :: %s:%s:%s', group_name, anchor_peer.host, anchor_peer.port, anchor_peer.org);
-				}
-				break;
-			case 'MSP':
-				var msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s    - MSP found', group_name);
-				config_items.msps.push(msp_value);
-				break;
-			case 'ConsensusType':
-				var consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
-				config_items.settings['ConsensusType'] = consensus_type;
-				logger.debug('loadConfigValue - %s    - Consensus type value :: %s', group_name, consensus_type.type);
-				break;
-			case 'BatchSize':
-				var batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
-				config_items.settings['BatchSize'] = batch_size;
-				logger.debug('loadConfigValue - %s    - BatchSize  maxMessageCount :: %s', group_name, batch_size.maxMessageCount);
-				logger.debug('loadConfigValue - %s    - BatchSize  absoluteMaxBytes :: %s', group_name, batch_size.absoluteMaxBytes);
-				logger.debug('loadConfigValue - %s    - BatchSize  preferredMaxBytes :: %s', group_name, batch_size.preferredMaxBytes);
-				break;
-			case 'BatchTimeout':
-				var batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
-				config_items.settings['BatchTimeout'] = batch_timeout;
-				logger.debug('loadConfigValue - %s    - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
-				break;
-			case 'ChannelRestrictions':
-				var channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
-				config_items.settings['ChannelRestrictions'] = channel_restrictions;
-				logger.debug('loadConfigValue - %s    - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
-				break;
-			case 'CreationPolicy':
-				var creation_policy = _ordererConfigurationProto.CreationPolicy.decode(config_value.value.value);
-				config_items.settings['CreationPolicy'] = creation_policy;
-				logger.debug('loadConfigValue - %s   - CreationPolicy policy value :: %s', group_name, creation_policy.policy);
-				break;
-			case 'ChainCreationPolicyNames':
-				var chain_creation_policy_names = _ordererConfigurationProto.ChainCreationPolicyNames.decode(config_value.value.value);
-				config_items.settings['ChainCreationPolicyNames'] = chain_creation_policy_names;
-				logger.debug('loadConfigValue - %s   - ChainCreationPolicyNames names value :: %s', group_name, chain_creation_policy_names.names);
-				break;
-			case 'HashingAlgorithm':
-				var hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
-				config_items.settings['HashingAlgorithm'] = hashing_algorithm_name;
-				logger.debug('loadConfigValue - %s    - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
-				break;
-			case 'Consortium':
-				var consortium_algorithm_name = _commonConfigurationProto.Consortium.decode(config_value.value.value);
-				config_items.settings['Consortium'] = consortium_algorithm_name;
-				logger.debug('loadConfigValue - %s    - Consortium name value :: %s', group_name, consortium_algorithm_name.name);
-				break;
-			case 'BlockDataHashingStructure':
-				var blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
-				config_items.settings['BlockDataHashingStructure'] = blockdata_hashing_structure;
-				logger.debug('loadConfigValue - %s    - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
-				break;
-			case 'OrdererAddresses':
-				var orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s    - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
-				if(orderer_addresses && orderer_addresses.addresses ) for(var i in orderer_addresses.addresses) {
-					config_items.orderers.push(orderer_addresses.addresses[i]);
-				}
-				break;
-			case 'KafkaBrokers':
-				var kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s    - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
-				if(kafka_brokers && kafka_brokers.brokers ) for(var i in kafka_brokers.brokers) {
-					config_items['kafka-brokers'].push(kafka_brokers.brokers[i]);
-				}
-				break;
-			default:
-				logger.debug('loadConfigValue - %s    - value: %s', group_name, config_value.value.value);
-			}
-		}
-		catch(err) {
-			logger.debug('loadConfigValue - %s - name: %s - *** unable to parse with error :: %s', group_name, config_value.key, err);
-		}
-		//logger.debug('loadConfigValue - %s -  < value name: %s', group_name, config_value.key);
-	}
-
-	/*
-	 * utility method to load in a config policy
-	 * @see /protos/common/configtx.proto
-	 */
-	loadConfigPolicy(config_items, versions, config_policy, group_name, org) {
-		logger.debug('loadConfigPolicy - %s - policy name: %s', group_name, config_policy.key);
-		logger.debug('loadConfigPolicy - %s   - version: %s', group_name, config_policy.value.version);
-		logger.debug('loadConfigPolicy - %s   - mod_policy: %s', group_name, config_policy.value.mod_policy);
-
-		versions.version = config_policy.value.version;
-		try {
-			switch(config_policy.value.policy.type) {
-			case _policiesProto.Policy.PolicyType.SIGNATURE:
-				let signature_policy = _policiesProto.SignaturePolicyEnvelope.decode(config_policy.value.policy.policy);
-				logger.debug('loadConfigPolicy - %s - policy SIGNATURE :: %s',group_name, signature_policy.encodeJSON());
-				break;
-			case _policiesProto.Policy.PolicyType.IMPLICIT_META:
-				let implicit_policy = _policiesProto.ImplicitMetaPolicy.decode(config_policy.value.policy.policy);
-				logger.debug('loadConfigPolicy - %s - policy IMPLICIT_META :: %s %s',group_name, implicit_policy.getRule(),implicit_policy.getSubPolicy());
-				break;
-			default:
-				logger.error('loadConfigPolicy - Unknown policy type :: %s',config_policy.value.policy.type);
-				throw new Error('Unknown Policy type ::' +config_policy.value.policy.type);
-			}
-		}
-		catch(err) {
-			logger.debug('loadConfigPolicy - %s - name: %s - unable to parse policy %s', group_name, config_policy.key, err);
-		}
 	}
 
 	/**
@@ -1434,7 +1261,7 @@ var Chain = class {
 		//validate the incoming request
 		if(!errorMsg) errorMsg = Chain._checkProposalRequest(request);
 		if(!errorMsg) errorMsg = Chain._checkInstallRequest(request);
-		if(!errorMsg) errorMsg = Chain._checkInstantiateRequest(request);
+		if(!errorMsg) errorMsg = _checkInstantiateRequest(request);
 
 		if(errorMsg) {
 			logger.error('sendChainCodeProposal error ' + errorMsg);
@@ -1867,9 +1694,9 @@ var Chain = class {
 		if(proposal_responses.length == 0) {
 			throw new Error('Parameter proposal responses does not contain a PorposalResponse');
 		}
-		var first_one = this._getProposalResponseResults(proposal_responses[0]);
+		var first_one = _getProposalResponseResults(proposal_responses[0]);
 		for(var i = 1; i < proposal_responses.length; i++) {
-			var next_one = this._getProposalResponseResults(proposal_responses[i]);
+			var next_one = _getProposalResponseResults(proposal_responses[i]);
 			if(next_one.equals(first_one)){
 				logger.debug('compareProposalResponseResults - read/writes result sets match index=%s',i);
 			}
@@ -1882,19 +1709,6 @@ var Chain = class {
 		return true;
 	 }
 
-	// internal utility method to decode and get the write set
-	// from a proposal response
-	_getProposalResponseResults(proposal_response) {
-		if(!proposal_response.payload) {
-			throw new Error('Parameter must be a ProposalResponse Object');
-		}
-		var payload = _responseProto.ProposalResponsePayload.decode(proposal_response.payload);
-		var extension = _proposalProto.ChaincodeAction.decode(payload.extension);
-		// TODO should we check the status of this action
-		logger.debug('_getWriteSet - chaincode action status:%s message:%s',extension.response.status, extension.response.message);
-		// return a buffer object which has an equals method
-		return extension.results.toBuffer();
-	}
 	// internal utility method to build the proposal
 	/**
 	 * @private
@@ -2030,25 +1844,6 @@ var Chain = class {
 		return errorMsg;
 	}
 
-	/*
-	 * @private
-	 */
-	static _checkInstantiateRequest(request) {
-		var errorMsg = null;
-
-		if (request) {
-			var type = this._translateCCType(request.chaincodeType);
-			// FIXME: GOLANG platform on the peer has a bug that requires chaincodePath
-			// during instantiate.  Police this for now until the peer is fixed.
-			if(type === _ccProto.ChaincodeSpec.Type.GOLANG && !request.chaincodePath) {
-				errorMsg = 'Missing "chaincodePath" parameter in the proposal request';
-			}
-		} else {
-			errorMsg = 'Missing input request object on the proposal request';
-		}
-		return errorMsg;
-	}
-
 	/**
 	* Utility method to build an unique transaction id
 	* based on a nonce and this chain's user.
@@ -2143,7 +1938,6 @@ var Chain = class {
 		case 'java':
 			return _ccProto.ChaincodeSpec.Type.JAVA;
 		}
-
 	}
 
 	/**
@@ -2163,5 +1957,307 @@ var Chain = class {
 	}
 
 };
+
+//internal utility method to decode and get the write set
+//from a proposal response
+function _getProposalResponseResults(proposal_response) {
+	if(!proposal_response.payload) {
+		throw new Error('Parameter must be a ProposalResponse Object');
+	}
+	var payload = _responseProto.ProposalResponsePayload.decode(proposal_response.payload);
+	var extension = _proposalProto.ChaincodeAction.decode(payload.extension);
+	// TODO should we check the status of this action
+	logger.debug('_getWriteSet - chaincode action status:%s message:%s',extension.response.status, extension.response.message);
+	// return a buffer object which has an equals method
+	return extension.results.toBuffer();
+};
+
+//internal utility method to combine MSPs
+function _combineMSPs(current, configuration) {
+	var results = new Map();
+	_arrayToMap(results, current);
+	// do these second to replace any of the same name
+	_arrayToMap(results, configuration);
+
+	return results;
+};
+
+//internal utility method to add msps to a map
+function _arrayToMap(map, msps) {
+	if(msps) {
+		var keys = Object.keys(msps);
+		for(let key in keys) {
+			let id = keys[key];
+			let msp = msps[id];
+			let mspid = msp.getId();
+			logger.debug('buildChannelConfig - add msp ::%s',mspid);
+			map.set(mspid, msp);
+		}
+	}
+};
+
+/*
+* @private
+*/
+function _checkInstantiateRequest(request) {
+	var errorMsg = null;
+
+	if (request) {
+		var type = Chain._translateCCType(request.chaincodeType);
+		// FIXME: GOLANG platform on the peer has a bug that requires chaincodePath
+		// during instantiate.  Police this for now until the peer is fixed.
+		if(type === _ccProto.ChaincodeSpec.Type.GOLANG && !request.chaincodePath) {
+			errorMsg = 'Missing "chaincodePath" parameter in the proposal request';
+		}
+	} else {
+		errorMsg = 'Missing input request object on the proposal request';
+	}
+	return errorMsg;
+}
+
+/*
+ * utility method to load in a config group
+ * @param {Object} - config_items - holder of values found in the configuration
+ * @param {Object} - group - used for recursive calls
+ * @param {string} - name - used to help with the recursive calls
+ * @param {string} - org - Organizational name
+ * @param {bool} - top - to handle the  differences in the structure of groups
+ * @see /protos/common/configtx.proto
+ */
+function loadConfigGroup(config_items, versions, group, name, org, top) {
+	logger.debug('loadConfigGroup - %s - > group:%s', name, org);
+	if(!group) {
+		logger.debug('loadConfigGroup - %s - no group', name);
+		logger.debug('loadConfigGroup - %s - < group', name);
+		return;
+	}
+
+	logger.debug('loadConfigGroup - %s   - version %s',name, group.version);
+	logger.debug('loadConfigGroup - %s   - mod policy %s',name, group.mod_policy);
+
+	var groups = null;
+	if(top) {
+		groups = group.groups;
+		versions.version = group.version;
+	}
+	else {
+		groups = group.value.groups;
+		versions.version = group.value.version;
+	}
+	logger.debug('loadConfigGroup - %s - >> groups', name);
+
+	if(groups) {
+		let keys = Object.keys(groups.map);
+		versions.groups = {};
+		if(keys.length == 0) {
+			logger.debug('loadConfigGroup - %s   - no groups', name);
+		}
+		for(let i =0; i < keys.length; i++) {
+			let key = keys[i];
+			logger.debug('loadConfigGroup - %s   - found config group ==> %s', name, key);
+			versions.groups[key] = {};
+			// The Application group is where config settings are that we want to find
+			loadConfigGroup(config_items, versions.groups[key], groups.map[key], name+'.'+key, key, false);
+		}
+	}
+	else {
+		logger.debug('loadConfigGroup - %s   - no groups', name);
+	}
+	logger.debug('loadConfigGroup - %s - << groups', name);
+
+	logger.debug('loadConfigGroup - %s - >> values', name);
+	var values = null;
+	if(top) {
+		values = group.values;
+	}
+	else {
+		values = group.value.values;
+	}
+	if(values) {
+		versions.values = {};
+		let keys = Object.keys(values.map);
+		for(let i =0; i < keys.length; i++) {
+			let key = keys[i];
+			versions.values[key] = {};
+			var config_value = values.map[key];
+			loadConfigValue(config_items, versions.values[key], config_value, name, org);
+		}
+	}
+	else {
+		logger.debug('loadConfigGroup - %s   - no values', name);
+	}
+	logger.debug('loadConfigGroup - %s - << values', name);
+
+	logger.debug('loadConfigGroup - %s - >> policies', name);
+	var policies = null;
+	if(top) {
+		policies = group.policies;
+	}
+	else {
+		policies = group.value.policies;
+	}
+	if(policies) {
+		versions.policies = {};
+		let keys = Object.keys(policies.map);
+		for(let i =0; i < keys.length; i++) {
+			let key = keys[i];
+			versions.policies[key] = {};
+			var config_policy = policies.map[key];
+			loadConfigPolicy(config_items, versions.policies[key], config_policy, name, org);
+		}
+	}
+	else {
+		logger.debug('loadConfigGroup - %s   - no policies', name);
+	}
+	logger.debug('loadConfigGroup - %s - << policies', name);
+
+	logger.debug('loadConfigGroup - %s - < group',name);
+}
+
+/*
+ * utility method to load in a config value
+ * @see /protos/common/configtx.proto
+ * @see /protos/msp/mspconfig.proto
+ * @see /protos/orderer/configuration.proto
+ * @see /protos/peer/configuration.proto
+ */
+function loadConfigValue(config_items, versions, config_value, group_name, org) {
+	logger.debug('loadConfigValue - %s -  value name: %s', group_name, config_value.key);
+	logger.debug('loadConfigValue - %s    - version: %s', group_name, config_value.value.version);
+	logger.debug('loadConfigValue - %s    - mod_policy: %s', group_name, config_value.value.mod_policy);
+
+	versions.version = config_value.value.version;
+	try {
+		switch(config_value.key) {
+		case 'AnchorPeers':
+			var anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
+			logger.debug('loadConfigValue - %s    - AnchorPeers :: %s', group_name, anchor_peers);
+			if(anchor_peers && anchor_peers.anchor_peers) for(var i in anchor_peers.anchor_peers) {
+				var anchor_peer = {
+					host : anchor_peers.anchor_peers[i].host,
+					port : anchor_peers.anchor_peers[i].port,
+					org  : org
+				};
+				config_items['anchor-peers'].push(anchor_peer);
+				logger.debug('loadConfigValue - %s    - AnchorPeer :: %s:%s:%s', group_name, anchor_peer.host, anchor_peer.port, anchor_peer.org);
+			}
+			break;
+		case 'MSP':
+			var msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
+			logger.debug('loadConfigValue - %s    - MSP found', group_name);
+			config_items.msps.push(msp_value);
+			break;
+		case 'ConsensusType':
+			var consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
+			config_items.settings['ConsensusType'] = consensus_type;
+			logger.debug('loadConfigValue - %s    - Consensus type value :: %s', group_name, consensus_type.type);
+			break;
+		case 'BatchSize':
+			var batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
+			config_items.settings['BatchSize'] = batch_size;
+			logger.debug('loadConfigValue - %s    - BatchSize  maxMessageCount :: %s', group_name, batch_size.maxMessageCount);
+			logger.debug('loadConfigValue - %s    - BatchSize  absoluteMaxBytes :: %s', group_name, batch_size.absoluteMaxBytes);
+			logger.debug('loadConfigValue - %s    - BatchSize  preferredMaxBytes :: %s', group_name, batch_size.preferredMaxBytes);
+			break;
+		case 'BatchTimeout':
+			var batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
+			config_items.settings['BatchTimeout'] = batch_timeout;
+			logger.debug('loadConfigValue - %s    - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
+			break;
+		case 'ChannelRestrictions':
+			var channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
+			config_items.settings['ChannelRestrictions'] = channel_restrictions;
+			logger.debug('loadConfigValue - %s    - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
+			break;
+		case 'ChannelCreationPolicy':
+			var creation_policy = _policiesProto.Policy.decode(config_value.value.value);
+			loadPolicy(config_items, versions, config_value.key, creation_policy, group_name, org);
+			break;
+		case 'HashingAlgorithm':
+			var hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
+			config_items.settings['HashingAlgorithm'] = hashing_algorithm_name;
+			logger.debug('loadConfigValue - %s    - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
+			break;
+		case 'Consortium':
+			var consortium_algorithm_name = _commonConfigurationProto.Consortium.decode(config_value.value.value);
+			config_items.settings['Consortium'] = consortium_algorithm_name;
+			logger.debug('loadConfigValue - %s    - Consortium name value :: %s', group_name, consortium_algorithm_name.name);
+			break;
+		case 'BlockDataHashingStructure':
+			var blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
+			config_items.settings['BlockDataHashingStructure'] = blockdata_hashing_structure;
+			logger.debug('loadConfigValue - %s    - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
+			break;
+		case 'OrdererAddresses':
+			var orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
+			logger.debug('loadConfigValue - %s    - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
+			if(orderer_addresses && orderer_addresses.addresses ) for(var i in orderer_addresses.addresses) {
+				config_items.orderers.push(orderer_addresses.addresses[i]);
+			}
+			break;
+		case 'KafkaBrokers':
+			var kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
+			logger.debug('loadConfigValue - %s    - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
+			if(kafka_brokers && kafka_brokers.brokers ) for(var i in kafka_brokers.brokers) {
+				config_items['kafka-brokers'].push(kafka_brokers.brokers[i]);
+			}
+			break;
+		default:
+			logger.debug('loadConfigValue - %s    - value: %s', group_name, config_value.value.value);
+		}
+	}
+	catch(err) {
+		logger.debug('loadConfigValue - %s - name: %s - *** unable to parse with error :: %s', group_name, config_value.key, err);
+	}
+	//logger.debug('loadConfigValue - %s -  < value name: %s', group_name, config_value.key);
+}
+
+/*
+ * utility method to load in a config policy
+ * @see /protos/common/configtx.proto
+ */
+function loadConfigPolicy(config_items, versions, config_policy, group_name, org) {
+	logger.debug('loadConfigPolicy - %s - policy name: %s', group_name, config_policy.key);
+	logger.debug('loadConfigPolicy - %s   - version: %s', group_name, config_policy.value.version);
+	logger.debug('loadConfigPolicy - %s   - mod_policy: %s', group_name, config_policy.value.mod_policy);
+
+	versions.version = config_policy.value.version;
+	loadPolicy(config_items, versions, config_policy.key, config_policy.value.policy, group_name, org);
+}
+
+function loadPolicy(config_items, versions, key, policy, group_name, org) {
+	try {
+		switch(policy.type) {
+		case _policiesProto.Policy.PolicyType.SIGNATURE:
+			let signature_policy = _policiesProto.SignaturePolicyEnvelope.decode(policy.policy);
+			logger.debug('loadPolicy - %s - policy SIGNATURE :: %s %s',group_name, signature_policy.encodeJSON(),this.decodeSignaturePolicy(signature_policy.getIdentities()));
+			break;
+		case _policiesProto.Policy.PolicyType.IMPLICIT_META:
+			let implicit_policy = _policiesProto.ImplicitMetaPolicy.decode(policy.policy);
+			let rule = ImplicitMetaPolicy_Rule[implicit_policy.getRule()];
+			logger.debug('loadPolicy - %s - policy IMPLICIT_META :: %s %s',group_name, rule, implicit_policy.getSubPolicy());
+			break;
+		default:
+			logger.error('loadPolicy - Unknown policy type :: %s',policy.type);
+			throw new Error('Unknown Policy type ::' +policy.type);
+		}
+	}
+	catch(err) {
+		logger.debug('loadPolicy - %s - name: %s - unable to parse policy %s', group_name, key, err);
+	}
+}
+
+function decodeSignaturePolicy(identities) {
+	var results = [];
+	for(let i in identities) {
+		let identity = identities[i];
+		switch(identity.getPrincipalClassification()) {
+		case _mspPrincipalProto.MSPPrincipal.Classification.ROLE:
+			let principal = _mspPrincipalProto.MSPRole.decode(identity.getPrincipal());
+			results.push(principal.encodeJSON());
+		}
+	}
+	return results;
+}
 
 module.exports = Chain;
