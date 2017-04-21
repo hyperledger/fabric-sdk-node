@@ -101,7 +101,7 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 
 			var signingIdentity = new SigningIdentity('testSigningIdentity', eResult.certificate, pubKey, msp, new Signer(msp.cryptoSuite, eResult.key));
 			t.comment('Registering '+enrollmentID);
-			return caService._fabricCAClient.register(enrollmentID, 'client', userOrg, 1, [], signingIdentity);
+			return caService._fabricCAClient.register(enrollmentID, null, 'client', userOrg, 1, [], signingIdentity);
 		},(err) => {
 			t.fail('Failed to import the public key from the enrollment certificate. ' + err.stack ? err.stack : err);
 			t.end();
@@ -148,12 +148,12 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserX"');
 
-			return caService.register({enrollmentID: 'testUserY', affiliation: 'org2.department1'}, member);
+			return caService.register({enrollmentID: 'testUserY', enrollmentSecret: 'testUserYSecret', affiliation: 'org2.department1'}, member);
 		},(err) => {
 			t.fail('Failed to revoke "testUserX". ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((secret) => {
-			t.comment('Successfully registered another user "testUserY"');
+			t.equal(secret, 'testUserYSecret', 'Successfully registered another user "testUserY" with preset enrollment secret');
 
 			return caService.enroll({enrollmentID: 'testUserY', enrollmentSecret: secret});
 		}).then((enrollment) => {

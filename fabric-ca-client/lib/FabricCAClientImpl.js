@@ -81,6 +81,8 @@ var FabricCAServices = class {
 	 * Register the member and return an enrollment secret.
 	 * @param {Object} req Registration request with the following fields:
 	 * <br> - enrollmentID {string}. ID which will be used for enrollment
+	 * <br> - enrollmentSecret {string}. Optional enrollment secret to set for the registered user.
+	 *   If not provided, the server will generate one.
 	 * <br> - role {string}. An arbitrary string representing a role value for the user
 	 * <br> - affiliation {string}. Affiliation with which this user will be associated, like a company or an organization
 	 * <br> - maxEnrollments {number}. The maximum number of times this user will be permitted to enroll
@@ -104,7 +106,7 @@ var FabricCAServices = class {
 
 		checkRegistrar(registrar);
 
-		return this._fabricCAClient.register(req.enrollmentID, req.role, req.affiliation, req.maxEnrollments, req.attrs,
+		return this._fabricCAClient.register(req.enrollmentID, req.enrollmentSecret, req.role, req.affiliation, req.maxEnrollments, req.attrs,
 			registrar.getSigningIdentity());
 	}
 
@@ -394,6 +396,8 @@ var FabricCAClient = class {
 	/**
 	 * Register a new user and return the enrollment secret
 	 * @param {string} enrollmentID ID which will be used for enrollment
+	 * @param {string} enrollmentSecret Optional enrollment secret to set for the registered user.
+	 *   If not provided, the server will generate one.
 	 * @param {string} role Type of role for this user
 	 * @param {string} affiliation Affiliation with which this user will be associated
 	 * @param {number} maxEnrollments The maximum number of times the user is permitted to enroll
@@ -402,12 +406,12 @@ var FabricCAClient = class {
 	 * signing certificate, hash algorithm and signature algorithm
 	 * @returns {Promise} The enrollment secret to use when this user enrolls
 	 */
-	register(enrollmentID, role, affiliation, maxEnrollments, attrs, signingIdentity) {
+	register(enrollmentID, enrollmentSecret, role, affiliation, maxEnrollments, attrs, signingIdentity) {
 
 		var self = this;
 		var numArgs = arguments.length;
 		//all arguments are required
-		if (numArgs < 5) {
+		if (numArgs < 6) {
 			throw new Error('Missing required parameters.  \'enrollmentID\', \'role\', \'affiliation\', \'attrs\', \
 				and \'signingIdentity\' are all required.');
 		}
@@ -420,6 +424,10 @@ var FabricCAClient = class {
 				'max_enrollments': maxEnrollments,
 				'attrs': attrs
 			};
+
+			if (typeof enrollmentSecret === 'string' && enrollmentSecret !== '') {
+				regRequest.secret = enrollmentSecret;
+			}
 
 			return self.post('register', regRequest, signingIdentity)
 			.then(function (response) {
