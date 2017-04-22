@@ -45,7 +45,7 @@ Organizations:
         # FIXME: this path needs to be fixed to point to the actual location of #
         # the project 'fabric-sdk-node' in the file system                      #
         #########################################################################
-        MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/ordererOrganizations/ordererOrg1/msp
+        MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/ordererOrganizations/example.com/msp/
 
         # BCCSP (Blockchain crypto provider): Select which crypto implementation or
         # library to use
@@ -72,7 +72,7 @@ Organizations:
         # FIXME: this path needs to be fixed to point to the actual location of #
         # the project 'fabric-sdk-node' in the file system                      #
         #########################################################################
-        MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/peerOrganizations/peerOrg1/msp/
+        MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/msp/
 
         # BCCSP (Blockchain crypto provider): Select which crypto implementation or
         # library to use
@@ -92,8 +92,6 @@ Organizations:
             # encoded in the genesis block in the Application section context
             - Host: peer0
               Port: 7051
-            - Host: peer1
-              Port: 7056
 
     - &Org1
         # DefaultOrg defines the organization which is used in the sampleconfig
@@ -108,7 +106,7 @@ Organizations:
         # FIXME: this path needs to be fixed to point to the actual location of #
         # the project 'fabric-sdk-node' in the file system                      #
         #########################################################################
-        MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/peerOrganizations/peerOrg2/msp/
+        MSPDir: /fabric-sdk-node/test/fixtures/channel/crypto-config/peerOrganizations/org2.example.com/msp/
 
         # BCCSP (Blockchain crypto provider): Select which crypto implementation or
         # library to use
@@ -128,8 +126,6 @@ Organizations:
             # encoded in the genesis block in the Application section context
             - Host: peer2
               Port: 8051
-            - Host: peer3
-              Port: 8056
 
 ################################################################################
 #

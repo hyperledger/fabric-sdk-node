@@ -22,7 +22,7 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
 var path = require('path');
@@ -31,17 +31,26 @@ var testUtil = require('../../unit/util.js');
 
 var the_user = null;
 
-hfc.addConfigFile(path.join(__dirname, './config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
+Client.addConfigFile(path.join(__dirname, './config.json'));
+var ORGS = Client.getConfigSetting('test-network');
 
+var channel_name = 'mychannel';
+// can use "channel=<name>" to control the channel name from command line
+if (process.argv.length > 2) {
+	if (process.argv[2].indexOf('channel=') === 0) {
+		channel_name = process.argv[2].split('=')[1];
+	}
+}
+
+logger.info('\n\n >>>>>>  Will create new channel with name :: %s <<<<<<< \n\n',channel_name);
 //
 //Attempt to send a request to the orderer with the sendCreateChain method
 //
-test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
+test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	//
 	// Create and configure the test chain
 	//
-	var client = new hfc();
+	var client = new Client();
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
@@ -55,35 +64,148 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 		}
 	);
 
+
+	var TWO_ORG_MEMBERS_AND_ADMIN = [{
+		role: {
+			name: 'member',
+			mspId: 'Org1MSP'
+		}
+	}, {
+		role: {
+			name: 'member',
+			mspId: 'Org2MSP'
+		}
+	}, {
+		role: {
+			name: 'admin',
+			mspId: 'Org1MSP'
+		}
+	}];
+
+	var ONE_OF_TWO_ORG_MEMBER = {
+		identities: TWO_ORG_MEMBERS_AND_ADMIN,
+		policy: {
+			'1-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }]
+		}
+	};
+
+	var ACCEPT_ALL = {
+		identities: [],
+		policy: {
+			'0-of': []
+		}
+	};
+
+	var test_input = {
+		channel : {
+			name : channel_name,
+			version : 3,
+			settings : {
+				'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : '99m',	'preferred-max-bytes' : '512k'},
+				'batch-timeout' : '10s',
+				'hashing-algorithm' : 'SHA256',
+				'consensus-type' : 'solo',
+				'creation-policy' : 'AcceptAllPolicy'
+			},
+			policies : {
+				Readers : {threshold : 'ANY'},
+				Writers : {threshold : 'ANY'},
+				Admins  : {threshold : 'ANY'},
+				AcceptAllPolicy : {signature : ACCEPT_ALL}
+			},
+			orderers : {
+				organizations : [{
+					mspid : 'OrdererMSP',
+					policies : {
+						Readers : {signature : ACCEPT_ALL},
+						Writers : {signature : ACCEPT_ALL},
+						Admins  : {signature : ACCEPT_ALL}
+					},
+					'end-points' : ['orderer0:7050']
+				}],
+				policies : {
+					Readers : {threshold : 'ANY'},
+					Writers : {threshold : 'ANY'},
+					Admins  : {threshold : 'ANY'},
+					AcceptAllPolicy : {signature : ACCEPT_ALL},
+					BlockValidation : {threshold : 'ANY' , sub_policy : 'Writers'}
+				}
+			},
+			peers : {
+				organizations : [{
+					mspid : 'Org1MSP',
+					'anchor-peers' : ['peer0:7051'],
+					policies : {
+						Readers : {signature : ACCEPT_ALL},
+						Writers : {signature : ACCEPT_ALL},
+						Admins  : {signature : ACCEPT_ALL}
+					}
+				},{
+					mspid : 'Org2MSP',
+					'anchor-peers' : ['peer2:8051'],
+					policies : {
+						Readers : {signature : ACCEPT_ALL},
+						Writers : {signature : ACCEPT_ALL},
+						Admins  : {signature : ACCEPT_ALL}
+					}
+				}],
+				policies : {
+					Readers : {threshold : 'ANY'},
+					Writers : {threshold : 'ANY'},
+					Admins  : {threshold : 'ANY'}
+				},
+			}
+		}
+	};
+
+	var config_update = null;
+	var signatures = [];
+
 	// Acting as a client in org1 when creating the channel
 	var org = ORGS.org1.name;
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
-	return hfc.newDefaultKeyValueStore({
+	return Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(org)
 	}).then((store) => {
 		client.setStateStore(store);
+
 		return testUtil.getSubmitter(client, t, 'org1');
-	})
-	.then((admin) => {
+	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		// readin the envelope to send to the orderer
-		let normalPath = path.normalize(
-			path.join(__dirname, '../../fixtures/channel/mychannel.tx'));
-		t.comment('normalPath=' + normalPath);
-		data = fs.readFileSync(normalPath);
+		client.addMSP( loadMSPConfig('OrdererMSP', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/msp/'));
+
+		client.addMSP( loadMSPConfig('Org1MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/msp/'));
+
+		client.addMSP( loadMSPConfig('Org2MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/msp/'));
+
+		// have the SDK build the config update object
+		config_update = client.buildChannelConfigUpdate(test_input);
+		t.pass('Successfully built config update');
+
+		// sign the config
+		var signature = client.signChannelConfigUpdate(config_update);
+		t.pass('Successfully signed config update');
+
+		// collect all signatures
+		signatures.push(signature);
+
+		// build up the create request
+		let nonce = utils.getNonce();
+		let tx_id = Client.buildTransactionID(nonce, the_user);
 		var request = {
-			envelope : data,
-			name : 'mychannel',
-			orderer : orderer
+			config_update : config_update,
+			signatures : signatures,
+			name : channel_name,
+			orderer : orderer,
+			txId  : tx_id,
+			nonce : nonce
 		};
-		// send to orderer
+
+		// send to create request to orderer
 		return client.createChannel(request);
-	}, (err) => {
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		t.end();
 	})
 	.then((chain) => {
 		logger.debug(' response ::%j',chain);
@@ -119,4 +241,24 @@ test('\n\n***** End-to-end flow: create channel *****\n\n', function(t) {
 
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function loadMSPConfig(name, mspdir) {
+	var msp = {};
+	msp.id = name;
+	msp.rootCerts = readAllFiles(path.join(__dirname, mspdir, 'cacerts'));
+	msp.admins = readAllFiles(path.join(__dirname, mspdir, 'admincerts'));
+	return msp;
+}
+
+function readAllFiles(dir) {
+	var files = fs.readdirSync(dir);
+	var certs = [];
+	files.forEach((file_name) => {
+		let file_path = path.join(dir,file_name);
+		console.log(' looking at file ::'+file_path);
+		let data = fs.readFileSync(file_path);
+		certs.push(data);
+	});
+	return certs;
 }

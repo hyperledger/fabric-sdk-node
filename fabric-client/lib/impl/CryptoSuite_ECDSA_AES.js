@@ -198,22 +198,22 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		// - PKCS#5 encrypted PEM RSA/DSA private
 		// - PKCS#8 encrypted PEM RSA/ECDSA private key
 		var pemString = Buffer.from(raw).toString();
-		pemString = this.makeRealPem(pemString);
+		pemString = makeRealPem(pemString);
 		var key = null;
 		var theKey = null;
 		var error = null;
 		try {
 			key = KEYUTIL.getKey(pemString);
-			if (key.type && key.type === 'EC') {
-				theKey = new ECDSAKey(key);
-				logger.debug('importKey - have the key %j',theKey);
-			}
-			else {
-				error = new Error('Does not understand certificates other than ECDSA public keys');
-			}
-		}
-		catch(err) {
+		} catch(err) {
 			error = new Error('Failed to parse key from PEM: ' + err);
+		}
+
+		if (key && key.type && key.type === 'EC') {
+			theKey = new ECDSAKey(key);
+			logger.debug('importKey - have the key %j',theKey);
+		}
+		else {
+			error = new Error('Does not understand PEM contents other than ECDSA private keys and certificates');
 		}
 
 		if(!store_key) {
@@ -239,16 +239,6 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 					});
 			});
 		}
-	}
-
-	// Utilitly method to make sure the start and end markers are correct
-	makeRealPem(pem) {
-		var result = null;
-		if(typeof pem == 'string') {
-			result = pem.replace(/-----BEGIN -----/, '-----BEGIN CERTIFICATE-----');
-			result = result.replace(/-----END -----/, '-----END CERTIFICATE-----');
-		}
-		return result;
 	}
 
 	/**
@@ -435,5 +425,42 @@ function _checkMalleability(sig, curveParams) {
 
 	return true;
 }
+
+// Utilitly method to make sure the start and end markers are correct
+function makeRealPem(pem) {
+	var result = null;
+	if(typeof pem == 'string') {
+		result = pem.replace(/-----BEGIN -----/, '-----BEGIN CERTIFICATE-----');
+		result = result.replace(/-----END -----/, '-----END CERTIFICATE-----');
+		result = result.replace(/-----([^-]+) ECDSA ([^-]+)-----([^-]*)-----([^-]+) ECDSA ([^-]+)-----/, '-----$1 EC $2-----$3-----$4 EC $5-----');
+	}
+	return result;
+}
+
+
+/*
+ * Convert a PEM encoded certificate to DER format
+ * @param {string) pem PEM encoded public or private key
+ * @returns {string} hex Hex-encoded DER bytes
+ * @throws Will throw an error if the conversation fails
+ */
+function pemToDER(pem) {
+
+	//PEM format is essentially a nicely formatted base64 representation of DER encoding
+	//So we need to strip "BEGIN" / "END" header/footer and string line breaks
+	//Then we simply base64 decode it and convert to hex string
+	var contents = pem.toString().trim().split(/\r?\n/);
+	//check for BEGIN and END tags
+	if (!(contents[0].match(/\-\-\-\-\-\s*BEGIN ?([^-]+)?\-\-\-\-\-/) &&
+		contents[contents.length - 1].match(/\-\-\-\-\-\s*END ?([^-]+)?\-\-\-\-\-/))) {
+		throw new Error('Input parameter does not appear to be PEM-encoded.');
+	};
+	contents.shift(); //remove BEGIN
+	contents.pop(); //remove END
+	//base64 decode and encode as hex string
+	var hex = Buffer.from(contents.join(''), 'base64').toString('hex');
+	return hex;
+}
+
 
 module.exports = CryptoSuite_ECDSA_AES;

@@ -118,7 +118,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return chain.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'version', t);
+		checkResults(results, 'exists', t);
 
 		return Promise.resolve(true);
 

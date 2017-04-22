@@ -14,12 +14,6 @@
 				"events": "grpcs://localhost:7053",
 				"server-hostname": "peer0",
 				"tls_cacerts": "../../fixtures/tls/peers/peer0/ca-cert.pem"
-			},
-			"peer2": {
-				"requests": "grpcs://localhost:7056",
-				"events": "grpcs://localhost:7058",
-				"server-hostname": "peer1",
-				"tls_cacerts": "../../fixtures/tls/peers/peer1/ca-cert.pem"
 			}
 		},
 		"org2": {
@@ -31,12 +25,6 @@
 				"events": "grpcs://localhost:8053",
 				"server-hostname": "peer2",
 				"tls_cacerts": "../../fixtures/tls/peers/peer2/ca-cert.pem"
-			},
-			"peer2": {
-				"requests": "grpcs://localhost:8056",
-				"events": "grpcs://localhost:8058",
-				"server-hostname": "peer3",
-				"tls_cacerts": "../../fixtures/tls/peers/peer3/ca-cert.pem"
 			}
 		}
 	}

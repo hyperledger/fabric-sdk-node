@@ -121,12 +121,12 @@ var Chain = class {
 	 * Retrieve the configuration from the primary orderer and initializes this chain (channel)
 	 * with those values. Optionally a configuration may be passed in to initialize this channel
 	 * without making the call to the orderer.
-	 * @param {byte[]} config - Optional - A serialized form of the protobuf configuration update envelope
+	 * @param {byte[]} config_update- Optional - A serialized form of the protobuf configuration update
 	 * @return a Promise that will resolve when the action is complete
 	 */
-	initialize(config) {
-		if(config) {
-			this.loadConfigUpdateEnvelope(config);
+	initialize(config_update) {
+		if(config_update) {
+			this.loadConfigUpdate(config_update);
 			return Promise.resolve(true);
 		}
 
@@ -737,7 +737,7 @@ var Chain = class {
 	 * @see /protos/common/configtx.proto
 	 */
 	loadConfigGroup(config_items, group, name, org, top) {
-		logger.debug('loadConfigGroup - %s - START groups Org:%s', name, org);
+		logger.debug('loadConfigGroup - %s - START Org:%s', name, org);
 		if(!group) {
 			logger.debug('loadConfigGroup - %s - no groups', name);
 			logger.debug('loadConfigGroup - %s - END groups', name);
@@ -753,7 +753,7 @@ var Chain = class {
 		if(groups) {
 			let keys = Object.keys(groups.map);
 			if(keys.length == 0) {
-				logger.debug('loadConfigGroup - %s - no keys, so no groups', name);
+				logger.debug('loadConfigGroup - %s - no groups', name);
 			}
 			for(let i =0; i < keys.length; i++) {
 				let key = keys[i];

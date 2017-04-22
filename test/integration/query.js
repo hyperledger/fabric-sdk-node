@@ -99,11 +99,12 @@ var peer0 = new Peer(
 		pem: Buffer.from(data).toString(),
 		'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 	});
+data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS['org2'].peer1['tls_cacerts']));
 var peer1 = new Peer(
-	ORGS[org].peer2.requests,
+	ORGS['org2'].peer1.requests,
 	{
 		pem: Buffer.from(data).toString(),
-		'ssl-target-name-override': ORGS[org].peer2['server-hostname']
+		'ssl-target-name-override': ORGS['org2'].peer1['server-hostname']
 	});
 
 chain.addPeer(peer0);
@@ -219,7 +220,9 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 			throw new Error(err.stack ? err.stack : err);
 		}
 
-		chain.setPrimaryPeer(peer1);
+		// the "primary peer" must be a peer in the same org as the app
+		// which in this case is "peer0"
+		chain.setPrimaryPeer(peer0);
 		// send query
 		return chain.queryInfo();
 	}).then((blockchainInfo) => {

@@ -19,7 +19,6 @@
 if (global && global.hfc) global.hfc.config = undefined;
 require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('events');
 
 var tape = require('tape');
@@ -94,186 +93,153 @@ logger.info('Found steps: %s', steps);
 testUtil.setupChaincodeDeploy();
 
 test('Test chaincode instantiate with event, transaction invocation with chaincode event, and query number of chaincode events', (t) => {
-	hfc.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
-	}).then((store) => {
-		client.setStateStore(store);
-		var promise = testUtil.getSubmitter(client, t, org);
+	// must use an array to track the event hub instances so that when this gets
+	// passed into the overriden t.end() closure below it will get properly updated
+	// later when the eventhub instances are created
+	var eventhubs = [];
+	var eh;
+	var req1 = null;
+	var req2 = null;
 
-		// setup event hub to get notified when transactions are committed
-		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
-		var eh;
-
-		// override t.end function so it'll always disconnect the event hub
-		t.end = ((context, eventhub, f) => {
-			return function() {
+	// override t.end function so it'll always disconnect the event hub
+	t.end = ((context, ehs, f) => {
+		return function() {
+			for(var key in ehs) {
+				var eventhub = ehs[key];
 				if (eventhub && eventhub.isconnected()) {
 					logger.info('Disconnecting the event hub');
 					eventhub.disconnect();
 				}
-
-				f.apply(context, arguments);
-			};
-		})(t, eh, t.end);
-
-		if (!useSteps || steps.indexOf('step1') >= 0) {
-			logger.info('Executing step1');
-			promise = promise.then((admin) => {
-				t.pass('Successfully enrolled user \'admin\'');
-				the_user = admin;
-
-				eh = new EventHub(client);
-				eh.setPeerAddr(
-					ORGS[org].peer1.events,
-					{
-						pem: Buffer.from(data).toString(),
-						'ssl-target-name-override': ORGS[org].peer1['server-hostname']
-					});
-				eh.connect();
-
-				request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, '', '');
-				request.chaincodePath = 'github.com/events_cc';
-				request.chaincodeVersion = chaincode_version;
-				return client.installChaincode(request);
-			},
-			(err) => {
-				t.fail('Failed to enroll user \'admin\'. ' + err);
-				t.end();
-			}).then((results) => {
-				if ( eputil.checkProposal(results)) {
-					// read the config block from the orderer for the chain
-					// and initialize the verify MSPs based on the participating
-					// organizations
-					return chain.initialize();
-				} else {
-					return Promise.reject('bad install proposal:' + results);
-				}
-			}, (err) => {
-				t.comment(err);
-				t.fail(err);//Failed to initialize the chain or bad install proposal
-				throw new Error(err.stack ? err.stack : err);
-			}).then((success) => {
-				t.pass('Successfully initialized the chain');
-				request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'init', []);
-				request.chaincodePath = 'github.com/events_cc';
-				request.chaincodeVersion = chaincode_version;
-				return chain.sendInstantiateProposal(request);
-			}, (err) => {
-				t.comment('Failed to send instantiate proposal due to error: ');
-				t.fail(err.stack ? err.stack : err);
-				t.end();
-			}).then((results) => {
-				var tmo = 50000;
-				return Promise.all([eputil.registerTxEvent(eh, request.txId.toString(), tmo),
-					eputil.sendTransaction(chain, results)]);
-			},
-			(err) => {
-				t.fail('Failed sending instantiate proposal: ' + err);
-				t.end();
-			}).then((results) => {
-				t.pass('Successfully instantiated chaincode.');
-				if (steps.length === 1 && steps[0] === 'step1') {
-					t.end();
-				}
-			},
-			(err) => {
-				t.fail('Failed instantiate due to error: ' + err);
-				t.end();
-			});
-		}
-
-		if (!useSteps || steps.indexOf('step2') >= 0) {
-			promise = promise.then((admin) => {
-				logger.info('Executing step2');
-				if(the_user === null) {
-					the_user = admin;
-				}
-				request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
-				return chain.sendTransactionProposal(request);
-			}).then((results) => {
-				var tmo = 20000;
-				return Promise.all([eputil.registerCCEvent(eh, chaincode_id.toString(), '^evtsender*', tmo),
-					eputil.sendTransaction(chain, results)
-				]);
-			},
-			(err) => {
-				t.fail('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
-				t.end();
-			}).then((results) => {
-				t.pass('Successfully received chaincode event.');
-				if (useSteps && steps.length === 1 && steps[0] === 'step2') {
-					t.end();
-				}
-			},
-			(err) => {
-				t.fail('Failed to receive chaincode event: ' + err);
-				t.end();
-			});
-		}
-
-		if (!useSteps || steps.indexOf('step3') >= 0) {
-			promise = promise.then((admin) => {
-				logger.info('Executing step3');
-				if(the_user === null) {
-					the_user = admin;
-				}
-				request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['query']);
-				return chain.queryByChaincode(request);
-			},
-			(err) => {
-				t.fail('Failed to get transaction notification within the timeout period');
-				t.end();
-			}).then((response_payloads) => {
-				for (let i = 0; i < response_payloads.length; i++) {
-					t.equal(response_payloads[i].toString('utf8'), '1', 'checking query results are number of events generated');
-				}
-				if (useSteps && steps.length === 1 && steps[0] === 'step3') {
-					t.end();
-				}
-			},
-			(err) => {
-				t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
-				t.end();
 			}
-			).catch((err) => {
-				t.fail('Failed to end to end test with error:' + err.stack ? err.stack : err);
-				t.end();
+
+			f.apply(context, arguments);
+		};
+	})(t, eventhubs, t.end);
+
+	hfc.newDefaultKeyValueStore({
+		path: testUtil.storePathForOrg(orgName)
+	}).then((store) => {
+		client.setStateStore(store);
+		return testUtil.getSubmitter(client, t, org);
+	}).then((admin) => {
+		t.pass('Successfully enrolled user \'admin\'');
+
+		// setup event hub to get notified when transactions are committed
+		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
+
+		the_user = admin;
+
+		eh = new EventHub(client);
+		eh.setPeerAddr(
+			ORGS[org].peer1.events,
+			{
+				pem: Buffer.from(data).toString(),
+				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 			});
+		eh.connect();
+		eventhubs.push(eh);
+
+		request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, '', '');
+		request.chaincodePath = 'github.com/events_cc';
+		request.chaincodeVersion = chaincode_version;
+
+		return client.installChaincode(request);
+	},
+	(err) => {
+		t.fail('Failed to enroll user \'admin\'. ' + err);
+		t.end();
+	}).then((results) => {
+		if ( eputil.checkProposal(results)) {
+			// read the config block from the orderer for the chain
+			// and initialize the verify MSPs based on the participating
+			// organizations
+			return chain.initialize();
+		} else {
+			return Promise.reject('bad install proposal:' + results);
+		}
+	}, (err) => {
+		t.comment(err);
+		t.fail(err);//Failed to initialize the chain or bad install proposal
+		t.end();
+	}).then((success) => {
+		t.pass('Successfully initialized the chain');
+		request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'init', []);
+		request.chaincodePath = 'github.com/events_cc';
+		request.chaincodeVersion = chaincode_version;
+		return chain.sendInstantiateProposal(request);
+	}, (err) => {
+		t.comment('Failed to send instantiate proposal due to error: ');
+		t.fail(err.stack ? err.stack : err);
+		t.end();
+	}).then((results) => {
+		var tmo = 50000;
+		return Promise.all([eputil.registerTxEvent(eh, request.txId.toString(), tmo),
+			eputil.sendTransaction(chain, results)]);
+	},
+	(err) => {
+		t.fail('Failed sending instantiate proposal: ' + err);
+		t.end();
+	}).then((results) => {
+		t.pass('Successfully instantiated chaincode.');
+
+		request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+		return chain.sendTransactionProposal(request);
+	},
+	(err) => {
+		t.fail('Failed instantiate due to error: ' + err);
+		t.end();
+	}).then((results) => {
+		var tmo = 20000;
+		return Promise.all([eputil.registerCCEvent(eh, chaincode_id.toString(), '^evtsender*', tmo),
+			eputil.sendTransaction(chain, results)
+		]);
+	},
+	(err) => {
+		t.fail('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then((results) => {
+		t.pass('Successfully received chaincode event.');
+
+		request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['query']);
+		return chain.queryByChaincode(request);
+	},
+	(err) => {
+		t.fail('Failed to receive chaincode event: ' + err);
+		t.end();
+	}).then((response_payloads) => {
+		for (let i = 0; i < response_payloads.length; i++) {
+			t.equal(response_payloads[i].toString('utf8'), '1', 'checking query results are number of events generated');
 		}
 
-		if (!useSteps || steps.indexOf('step4') >= 0) {
-			logger.info('Executing step4');
-			// Test invalid transaction
-			// create 2 invoke requests in quick succession that modify
-			// the same state variable which should cause one invoke to
-			// be invalid
-			var req1 = null;
-			var req2 = null;
-			promise = promise.then((admin) => {
-				if(the_user === null) {
-					the_user = admin;
-				}
-				req1 = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
-				req2 = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
-				return Promise.all([chain.sendTransactionProposal(req1),
-					chain.sendTransactionProposal(req2)]);
-			}).then(([results1, results2]) => {
-				t.comment('sendTransactionProposal received [results1, results2]');
-				var tmo = 20000;
-				return Promise.all([eputil.registerTxEvent(eh, req1.txId.toString(), tmo),
-					eputil.registerTxEvent(eh, req2.txId.toString(), tmo),
-					eputil.sendTransaction(chain, results1),
-					eputil.sendTransaction(chain, results2)
-				]);
-
-			}).then(([regResult1, regResult2, sendResult1, sendResult2]) => {
-				t.fail('Failed to generate an invalid transaction');
-				t.end();
-			},
-			(err) => {
-				t.equal(err, 'invalid', 'Expecting a rejected promise from the 2nd transaction should be invalid');
-				t.end();
-			});
-		}
+		// Test invalid transaction
+		// create 2 invoke requests in quick succession that modify
+		// the same state variable which should cause one invoke to
+		// be invalid
+		req1 = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+		req2 = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+		return Promise.all([chain.sendTransactionProposal(req1),
+			chain.sendTransactionProposal(req2)]);
+	},
+	(err) => {
+		t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(([results1, results2]) => {
+		t.comment('sendTransactionProposal received [results1, results2]');
+		var tmo = 20000;
+		return Promise.all([eputil.registerTxEvent(eh, req1.txId.toString(), tmo),
+			eputil.registerTxEvent(eh, req2.txId.toString(), tmo),
+			eputil.sendTransaction(chain, results1),
+			eputil.sendTransaction(chain, results2)
+		]);
+	}).then(([regResult1, regResult2, sendResult1, sendResult2]) => {
+		t.fail('Failed to generate an invalid transaction');
+		t.end();
+	},
+	(err) => {
+		t.equal(err, 'invalid', 'Expecting a rejected promise from the 2nd transaction should be invalid');
+		t.end();
+	}).catch((err) => {
+		t.fail('Unexpected error. ' + err.stack ? err.stack : err);
+		t.end();
 	});
 });

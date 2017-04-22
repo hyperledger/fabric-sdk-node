@@ -52,9 +52,10 @@ const ImplicitMetaPolicy_Rule = {ANY:0, ALL:1, MAJORITY:2};
  */
 var ChannelConfig = class {
 	/**
-	 * Construct an utility object that build a fabric channel configuration.
-	 * This will allow the building of a protobuf configurations
-	 * that will be based on the MSPs loaded here.
+	 * Construct an utility object that builds a fabric channel configuration.
+	 * This will allow the building of a protobuf ConfigUpdate object
+	 * that will be based on the MSPs loaded here using the simplified JSON
+	 * definition of a channel.
 	 * 	@param {Object[]} msps Array of Member Service Provider objects
 	 */
 	constructor(msps) {
@@ -335,9 +336,9 @@ var ChannelConfig = class {
 			if(!value) 	value = {};
 			if(!value['max-message-count']) value['max-message-count'] = 10;
 			proto_batch_size.setMaxMessageCount(convert(value['max-message-count'],'max-message-count')); //uint32
-			if(!value['absolute-max-bytes']) value['absolute-max-bytes'] = 103809024;
+			if(!value['absolute-max-bytes']) value['absolute-max-bytes'] = 99 * 1024 * 1024; // 99MB is the recommended value
 			proto_batch_size.setAbsoluteMaxBytes(convert(value['absolute-max-bytes'],'absolute-max-bytes')); //uint32
-			if(!value['preferred-max-bytes']) value['preferred-max-bytes'] = 524288;
+			if(!value['preferred-max-bytes']) value['preferred-max-bytes'] = 512 * 1024; // 512KB is the recommended value
 			proto_batch_size.setPreferredMaxBytes(convert(value['preferred-max-bytes'],'preferred-max-bytes')); //uint32
 			proto_config_value.setValue(proto_batch_size.toBuffer());
 			break;
@@ -376,10 +377,9 @@ var ChannelConfig = class {
 			break;
 		case 'BlockDataHashingStructure':
 			var proto_blockdata_hashing_structure = new _commonConfigurationProto.BlockDataHashingStructure();
-			if(value) {
-				proto_blockdata_hashing_structure.setWidth(convert(value,config_name)); //uint32
-				proto_config_value.setValue(proto_blockdata_hashing_structure.toBuffer());
-			}
+			if(!value) value = Math.pow(2, 32) - 1; // required value by the fabric and required on the API
+			proto_blockdata_hashing_structure.setWidth(convert(value,config_name)); //uint32
+			proto_config_value.setValue(proto_blockdata_hashing_structure.toBuffer());
 			break;
 		default:
 //			logger.debug('loadConfigValue - %s   - value: %s', group_name, config_value.value.value);
@@ -438,7 +438,7 @@ var ChannelConfig = class {
 		}
 
 		// SIGNATURE policy type
-		let n_of = policy.n_of_signature;
+		let n_of = policy.signature;
 		if(n_of) {
 			logger.debug('buildConfigPolicy - found n_of_signature ::%j',n_of);
 			var proto_signature_policy_bytes = Policy.buildPolicy(this._msps_array, n_of);
@@ -487,7 +487,7 @@ function convert(value, setting) {
 		var pieces = working.split('m');
 		var inMeg = Number(pieces[0]);
 		if(Number.isInteger(inMeg)) {
-			return (inMeg * 1048576);
+			return (inMeg * 1024 * 1024);
 		}
 	}
 
@@ -496,7 +496,7 @@ function convert(value, setting) {
 		var pieces = working.split('g');
 		var inGig = Number(pieces[0]);
 		if(Number.isInteger(inGig)) {
-			return (inGig * 1073741824);
+			return (inGig * 1024 * 1024 * 1024);
 		}
 	}
 

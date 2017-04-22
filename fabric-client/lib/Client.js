@@ -35,6 +35,7 @@ var Constants = require('./Constants.js');
 
 var grpc = require('grpc');
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
+var _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
 var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 var _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
 
@@ -222,6 +223,39 @@ var Client = class {
 	}
 
 	/**
+	 * Sign a configuration update
+	 * @param {byte[]} config_update - The Configuration Update in byte form
+	 * @return {ConfigSignature} - The signature of the current on the config_update
+	 */
+	signChannelConfigUpdate(config_update) {
+		logger.debug('signChannelConfigUpdate - start');
+		if (typeof config_update === 'undefined' || config_update === null) {
+			throw new Error('Channel configuration update parameter is required.');
+		}
+		if(!(config_update instanceof Buffer)) {
+			throw new Error('Channel configuration update parameter is not in the correct form.');
+		}
+		var userContext = this.getUserContext();
+
+		// signature is across a signature header and the config update
+		let proto_signature_header = new _commonProto.SignatureHeader();
+		proto_signature_header.setCreator(userContext.getIdentity().serialize());
+		proto_signature_header.setNonce(sdkUtils.getNonce());
+		var signature_header_bytes = proto_signature_header.toBuffer();
+
+		// get all the bytes to be signed together, then sign
+		let signing_bytes = Buffer.concat([signature_header_bytes, config_update]);
+		let sig = userContext.getSigningIdentity().sign(signing_bytes);
+		let signature_bytes = Buffer.from(sig);
+
+		// build the return object
+		let proto_config_signature = new _configtxProto.ConfigSignature();
+		proto_config_signature.setSignatureHeader(signature_header_bytes);
+		proto_config_signature.setSignature(signature_bytes);
+		return proto_config_signature;
+	}
+
+	/**
 	 * Calls the orderer to start building the new chain.
 	 * Only one of the application instances needs to call this method.
 	 * Once the chain is successfully created, this and other application
@@ -231,19 +265,43 @@ var Client = class {
 	 *      <br>`orderer` : required - Orderer Object to create the channel
 	 *		<br>`envelope` : required - byte[] of the envelope object containing
 	 *                       all required settings to initialize this channel
+	 *      <br>`signatures` : {ConfigSignature[]} the list of collected signatures
+	 *                          required by the channel create policy
+	 *      <br>`config_update` : {byte[]} Protobuf ConfigUpdate object
 	 * @returns {boolean} Whether the chain initialization process was successful.
 	 */
 	createChannel(request) {
 		logger.debug('createChannel - start');
 		var errorMsg = null;
+		var need_envelope = false;
 
 		if(!request) {
 			errorMsg = 'Missing all required input request parameters for initialize channel';
 		}
 		else {
-			// Verify that a config envelope has been included in the request object
+			// Verify that a config envelope or config_update has been included in the request object
 			if (!request.envelope) {
-				errorMsg = 'Missing envelope request parameter containing the configuration of the new channel';
+				if(request.config_update) {
+					// doing an update, also need the signatures
+					if(!request.signatures) {
+						errorMsg = 'Missing signatures request parameter for the new channel';
+					}
+					else if(!Array.isArray(request.signatures)) {
+						errorMsg = 'Signatures request parameter must be an array of signatures';
+					}
+					else {
+						need_envelope = true;
+					}
+					if(!request.txId) {
+						errorMsg = 'Missing txId request parameter for the new channel';
+					}
+					if(!request.nonce) {
+						errorMsg = 'Missing nonce request parameter for the new channel';
+					}
+				}
+				else {
+					errorMsg = 'Missing envelope request parameter containing the configuration of the new channel';
+				}
 			}
 			// verify that we have an orderer configured
 			if(!request.orderer) {
@@ -268,22 +326,52 @@ var Client = class {
 
 		userContext = this.getUserContext();
 
-		// building manually or will get protobuf errors on send
-		var envelope = _commonProto.Envelope.decode(request.envelope);
-		logger.debug('createChannel - about to send envelope');
+		var signature = null;
+		var payload = null;
+		if(need_envelope) {
+			var proto_config_Update_envelope = new _configtxProto.ConfigUpdateEnvelope();
+			proto_config_Update_envelope.setConfigUpdate(request.config_update);
+			proto_config_Update_envelope.setSignatures(request.signatures);
 
+			var proto_channel_header = Chain._buildChannelHeader(
+				_commonProto.HeaderType.CONFIG_UPDATE,
+				request.name,
+				request.txId
+			);
+
+			var proto_header = Chain._buildHeader(userContext.getIdentity(), proto_channel_header, request.nonce);
+			var proto_payload = new _commonProto.Payload();
+			proto_payload.setHeader(proto_header);
+			proto_payload.setData(proto_config_Update_envelope.toBuffer());
+			var payload_bytes = proto_payload.toBuffer();
+
+			let sig = userContext.getSigningIdentity().sign(payload_bytes);
+			let signature_bytes = Buffer.from(sig);
+
+			signature = signature_bytes;
+			payload = payload_bytes;
+		}
+		else {
+			var envelope = _commonProto.Envelope.decode(request.envelope);
+			signature = envelope.signature;
+			payload = envelope.payload;
+		}
+
+		// building manually or will get protobuf errors on send
 		var out_envelope = {
-			signature: envelope.signature,
-			payload : envelope.payload
+			signature: signature,
+			payload : payload
 		};
 
+		logger.debug('createChannel - about to send envelope');
 		return orderer.sendBroadcast(out_envelope)
 		.then(
 			function(results) {
 				logger.debug('createChannel - good results from broadcast :: %j',results);
 				chain = self.newChain(chain_id);
 				chain.addOrderer(orderer);
-				return chain.initialize(request.envelope);
+				if(need_envelope) chain.initialize(request.config_update);
+				return chain;
 			}
 		)
 		.then(
@@ -823,12 +911,9 @@ var Client = class {
 	 *
 	 */
 	createUser(opts) {
-		logger.info('opts = %s', JSON.stringify(opts));
+		logger.debug('opts = %s', JSON.stringify(opts));
 		if (!opts) {
 			return Promise.reject(new Error('Client.createUser missing required \'opts\' parameter.'));
-		}
-		if (this._stateStore == null) {
-			return Promise.reject(new Error('Client.createUser state store must be set on this client instance.'));
 		}
 		if (!opts.username || opts.username && opts.username.length < 1) {
 			return Promise.reject(new Error('Client.createUser parameter \'opts username\' is required.'));
@@ -850,10 +935,7 @@ var Client = class {
 			return Promise.reject(new Error('Client.createUser parameter \'opts cryptoContent\' is required.'));
 		}
 		if (this._cryptoSuite == null) {
-			if (!opts.keyStoreOpts) {
-				return Promise.reject(new Error('Client.createUser parameter \'opts keyStoreOpts\' is required when cryptoSuite has not been set.'));
-			}
-			this._cryptoSuite = sdkUtils.newCryptoSuite(this._stateStore, opts.keyStoreOpts);
+			this._cryptoSuite = opts.keyStoreOpts ? sdkUtils.newCryptoSuite(opts.keyStoreOpts) : sdkUtils.newCryptoSuite();
 		}
 		var self = this;
 		return new Promise((resolve, reject) => {
@@ -897,8 +979,8 @@ var Client = class {
 				logger.debug('then user');
 				return resolve(user);
 			}).catch((err) => {
-				throw new Error('Failed to load key or certificate and save to local stores.');
 				logger.error(err.stack ? err.stack : err);
+				return reject(new Error('Failed to load key or certificate and save to local stores.'));
 			});
 		});
 	}

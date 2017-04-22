@@ -19,7 +19,7 @@
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
-process.env.HFC_LOGGING = '{"debug": "console"}';
+var rewire = require('rewire');
 
 var tar = require('tar-fs');
 var gunzip = require('gunzip-maybe');
@@ -29,7 +29,7 @@ var grpc = require('grpc');
 var Client = require('fabric-client');
 var client = new Client();
 var testutil = require('./util.js');
-var ChannelConfig = require('fabric-client/lib/ChannelConfig.js');
+var ChannelConfig = rewire('fabric-client/lib/ChannelConfig.js');
 
 testutil.resetDefaults();
 var utils = require('fabric-client/lib/utils.js');
@@ -446,4 +446,15 @@ test('\n\n ** ChannelConfig - basic field check tests **\n\n', function (t) {
 	t.end();
 });
 
+test('\n\n** ChannelConfig - test convert() function **\n\n', function(t) {
+	// use the special getter provided by rewire to get access to the module-scoped variable
+	var convert = ChannelConfig.__get__('convert');
 
+	t.equals(convert('123k'), 123 * 1024, 'convert 123k');
+	t.equals(convert('123K'), 123 * 1024, 'convert 123M');
+	t.equals(convert('123m'), 123 * 1024 * 1024, 'convert 123m');
+	t.equals(convert('123m'), 123 * 1024 * 1024, 'convert 123M');
+	t.equals(convert('123g'), 123 * 1024 * 1024 * 1024, 'convert 123g');
+	t.equals(convert('123G'), 123 * 1024 * 1024 * 1024, 'convert 123G');
+	t.end();
+});

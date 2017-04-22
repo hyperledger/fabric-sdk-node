@@ -522,7 +522,55 @@ test('\n\n ** Client createChannel() tests **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1, p2, p3, p4])
+	var p5 = c.createChannel({config_update : {}, orderer : orderer, name: 'name', txId : 'fff', nonce : 'fff'}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing signatures request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing signatures') >= 0) {
+			t.pass('Successfully caught missing signatures request error');
+		} else {
+			t.fail('Failed to catch the missing signatures request error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p6 = c.createChannel({config_update : {}, orderer : orderer, name: 'name', signatures : {}, txId : 'fff', nonce : 'fff'}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing signatures request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('must be an array of signatures') >= 0) {
+			t.pass('Successfully caught request parameter must be an array error');
+		} else {
+			t.fail('Failed to catch request parameter must be an array request error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p7 = c.createChannel({config_update : {}, orderer : orderer, name: 'name', signatures : [], nonce : 'fff'}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing txId request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing txId') >= 0) {
+			t.pass('Successfully caught request parameter must have txId error');
+		} else {
+			t.fail('Failed to catch request parameter must have txId error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	var p8 = c.createChannel({config_update : {}, orderer : orderer, name: 'name', signatures : [], txId : 'fff'}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing nonce request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Missing nonce') >= 0) {
+			t.pass('Successfully caught request parameter must have nonce error');
+		} else {
+			t.fail('Failed to catch request parameter must have nonce error. Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3, p4, p5, p6, p7, p8])
 	.then(
 		function (data) {
 			t.end();
@@ -545,25 +593,6 @@ test('\n\n ** createUser error path - missing required opt parameter **\n\n', fu
 
 	var client = new Client();
 	return client.createUser()
-	.then((user) => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
-test('\n\n ** createUser error path - missing required state store **\n\n', function (t) {
-	var msg = 'Client.createUser state store must be set on this client instance.';
-
-	var client = new Client();
-	return client.createUser({username: ''})
 	.then((user) => {
 		t.fail('Should not have gotten user.');
 		t.end();
@@ -835,7 +864,7 @@ test('\n\n ** createUser error path - missing required cryptoContent privateKeyP
 });
 
 test('\n\n ** createUser error path - missing required keyStoreOpts **\n\n', function (t) {
-	var msg = 'Client.createUser parameter \'opts keyStoreOpts\' is required when cryptoSuite has not been set.';
+	var msg = 'Failed to load key or certificate and save to local stores';
 
 	var userOrg = 'org1';
 	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
@@ -875,5 +904,20 @@ test('\n\n ** test related APIs for create channel **\n\n', function (t) {
 		},
 		/^Error: MSP definition is missing the "id" field./,
 		'Client tests: MSP definition is missing the "id" field.');
+
+	t.throws(
+		function () {
+			client.signChannelConfigUpdate();
+		},
+		/^Error: Channel configuration update parameter is required./,
+		'Client tests: Channel configuration update parameter is required.');
+
+	t.throws(
+		function () {
+			client.signChannelConfigUpdate();
+		},
+		/^Error: Channel configuration update parameter is required./,
+		'Client tests: Channel configuration update parameter is required.');
+
 	t.end();
 });
