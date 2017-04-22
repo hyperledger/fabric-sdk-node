@@ -39,6 +39,8 @@ var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
 var _mspConfigProto = grpc.load(__dirname + '/protos/msp/mspconfig.proto').msp;
 var _timestampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.proto').google.protobuf;
 var _identityProto = grpc.load(path.join(__dirname, '/protos/identity.proto')).msp;
+var _rwsetProto = grpc.load(path.join(__dirname, '/protos/ledger/rwset/rwset.proto')).rwset;
+var _kv_rwsetProto = grpc.load(path.join(__dirname, '/protos/ledger/rwset/kvrwset/kv_rwset.proto')).kvrwset;
 
 
 
@@ -49,7 +51,8 @@ var _identityProto = grpc.load(path.join(__dirname, '/protos/identity.proto')).m
  */
 var Block = class {
 	/**
-	 * Constructs a JSON object containing all decoded values from the grpc encoded bytes
+	 * Constructs a JSON object containing all decoded values from the
+	 * grpc encoded `Block` bytes
 	 *
 	 * @param {byte[]} block_bytes - The encode bytes of a hyperledger fabric message Block
 	 * @returns {Object} The JSON representation of the Protobuf common.Block
@@ -73,6 +76,26 @@ var Block = class {
 
 		return block;
 	};
+
+	/**
+	 * Constructs a JSON object containing all decoded values from the
+	 * grpc encoded `Transaction` bytes
+	 *
+	 * @param {byte[]} block_bytes - The encode bytes of a hyperledger fabric message Block
+	 * @returns {Object} The JSON representation of the Protobuf common.Block
+	 * @see /protos/common/common.proto
+	 */
+	static decodeTransaction(processed_transaction_bytes) {
+		if(!(processed_transaction_bytes instanceof Buffer)) {
+			throw new Error('Proccesed transaction data is not a byte buffer');
+		}
+		var processed_transaction = {};
+		var proto_processed_transaction = _transProto.ProcessedTransaction.decode(processed_transaction_bytes);
+		processed_transaction.validationCode = proto_processed_transaction.getValidationCode();
+		processed_transaction.transactionEnvelope
+			= decodeBlockDataEnvelope(proto_processed_transaction.getTransactionEnvelope());
+		return processed_transaction;
+	}
 };
 
 function decodeBlockHeader(proto_block_header) {
@@ -526,7 +549,6 @@ function decodeChaincodeEndorsedAction(proto_chaincode_endorsed_action) {
 		var endorsement = decodeEndorsement(proto_chaincode_endorsed_action.endorsements[i]);
 		action.endorsements.push(endorsement);
 	}
-	action.proposal_response_payload = decodeProposalResponsePayload(proto_chaincode_endorsed_action.getProposalResponsePayload());
 
 	return action;
 };
@@ -551,12 +573,120 @@ function decodeProposalResponsePayload(proposal_response_payload_bytes) {
 function decodeChaincodeAction(action_bytes) {
 	var chaincode_action = {};
 	var proto_chaincode_action = _proposalProto.ChaincodeAction.decode(action_bytes);
-	chaincode_action.results = proto_chaincode_action.getResults(); //TODO is there a way to decode the read/write sets
+	chaincode_action.results = decodeReadWriteSets(proto_chaincode_action.getResults());
 	chaincode_action.events = proto_chaincode_action.getEvents(); //TODO should we decode these
 	chaincode_action.response = decodeResponse(proto_chaincode_action.getResponse());
 
 	return chaincode_action;
 };
+
+function decodeReadWriteSets(rw_sets_bytes) {
+	var proto_tx_read_write_set = _rwsetProto.TxReadWriteSet.decode(rw_sets_bytes);
+	var tx_read_write_set = {};
+	tx_read_write_set.data_model = proto_tx_read_write_set.getDataModel();
+	if(proto_tx_read_write_set.getDataModel() === _rwsetProto.TxReadWriteSet.DataModel.KV) {
+		tx_read_write_set.ns_rwset = [];
+		let proto_ns_rwset = proto_tx_read_write_set.getNsRwset();
+		for(let i in proto_ns_rwset) {
+			let kv_rw_set = {};
+			let proto_kv_rw_set = proto_ns_rwset[i];
+			kv_rw_set.namespace = proto_kv_rw_set.getNamespace();
+			kv_rw_set.rwset = decodeKVRWSet(proto_kv_rw_set.getRwset());
+			tx_read_write_set.ns_rwset.push(kv_rw_set);
+		}
+	}
+	else {
+		// not able to decode this type of rw set, return the array of byte[]
+		tx_read_write_set.ns_rwset = proto_tx_read_write_set.getNsRwset();
+	}
+
+	return tx_read_write_set;
+}
+
+function decodeKVRWSet(kv_bytes) {
+	var proto_kv_rw_set = _kv_rwsetProto.KVRWSet.decode(kv_bytes);
+	var kv_rw_set = {};
+
+	// KV readwrite set has three arrays
+	kv_rw_set.reads = [];
+	kv_rw_set.range_queries_info = [];
+	kv_rw_set.writes = [];
+
+	// build reads
+	let reads = kv_rw_set.reads;
+	var proto_reads = proto_kv_rw_set.getReads();
+	for(let i in proto_reads) {
+		reads.push(decodeKVRead(proto_reads[i]));
+	}
+
+	// build range_queries_info
+	let range_queries_info = kv_rw_set.range_queries_info;
+	var proto_range_queries_info = proto_kv_rw_set.getRangeQueriesInfo();
+	for(let i in proto_range_queries_info) {
+		range_queries_info.push(decodeRangeQueryInfo(proto_range_queries_info[i]));
+	}
+
+	// build writes
+	let writes = kv_rw_set.writes;
+	var proto_writes = proto_kv_rw_set.getWrites();
+	for(let i in proto_writes) {
+		writes.push(decodeKVWrite(proto_writes[i]));
+	}
+
+	return kv_rw_set;
+}
+
+function decodeKVRead(proto_kv_read) {
+	let kv_read = {};
+	kv_read.key = proto_kv_read.getKey();
+	let proto_version = proto_kv_read.getVersion();
+	if(proto_version) {
+		kv_read.version = {};
+		kv_read.version.block_num = proto_version.getBlockNum();
+		kv_read.version.tx_num = proto_version.getTxNum();
+	}
+	else {
+		kv_read.version = null;
+	}
+
+	return kv_read;
+}
+
+function decodeRangeQueryInfo(proto_range_query_info) {
+	let range_query_info = {};
+	range_query_info.start_key = proto_range_query_info.getStartKey();
+	range_query_info.end_key = proto_range_query_info.getEndKey();
+	range_query_info.itr_exhausted = proto_range_query_info.getItrExhausted();
+
+	range_query_info.reads_info = {};
+	// reads_info is one of QueryReads
+	let proto_raw_reads = proto_range_query_info.getRawReads();
+	if(proto_raw_reads.kv_reads) {
+		range_query_info.reads_info.kv_reads = [];
+		for(let i in proto_raw_reads.kv_reads) {
+			range_query_info.reads_info.kv_reads.push(proto_raw_reads.kv_reads[i]);
+		}
+	}
+	// or QueryReadsMerkleSummary
+	let proto_reads_merkle_hashes = proto_range_query_info.getReadsMerkleHashes();
+	if(proto_reads_merkle_hashes.max_degree) {
+		range_query_info.reads_merkle_hashes = {};
+		range_query_info.reads_merkle_hashes.max_degree = proto_reads_merkle_hashes.getMaxDegree();
+		range_query_info.reads_merkle_hashes.max_level = proto_reads_merkle_hashes.getMaxLevel();
+		range_query_info.reads_info.max_level_hashes = proto_reads_merkle_hashes.getMaxLevelHashes();
+	}
+
+	return range_query_info;
+}
+
+function decodeKVWrite(proto_kv_write) {
+	let kv_write = {};
+	kv_write.key = proto_kv_write.getKey();
+	kv_write.is_delete = proto_kv_write.getIsDelete();
+	kv_write.value = proto_kv_write.getValue();
+
+	return kv_write;
+}
 
 function decodeResponse(proto_response) {
 	if(!proto_response) return null;

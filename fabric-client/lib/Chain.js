@@ -1170,11 +1170,7 @@ var Chain = class {
 					}
 					if(response.response) {
 						logger.debug('queryTransaction - response status :: %d', response.response.status);
-						var processTrans = _transProto.ProcessedTransaction.decode(response.response.payload);
-						logger.debug('queryTransaction - ProcessedTransaction.validationCode :: %s', processTrans.validationCode);
-//						var payload = _commonProto.Payload.decode(processTrans.transactionEnvelope.payload);
-//						var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
-//						logger.debug('queryTransaction - transaction ID :: %s:', channel_header.tx_id);
+						var processTrans = Block.decodeTransaction(response.response.payload);
 						return Promise.resolve(processTrans);
 					}
 					// no idea what we have, lets fail it and send it back
