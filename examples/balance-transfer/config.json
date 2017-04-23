@@ -1,68 +1,21 @@
 {
-   "chainName":"fabric-client1",
-   "chaincodeID":"mycc",
-   "channelID":"myc1",
-   "goPath":"../../test/fixtures",
+   "host":"localhost",
+   "port":"4000",
+   "jwt_expiretime": "3600",
+   "chaincodeId":"mycc",
+   "channelName":"mychannel",
+   "chaincodeVersion": "v0",
+   "GOPATH":"../../../test/fixtures",
    "chaincodePath":"github.com/example_cc",
    "keyValueStore":"/tmp/fabric-client-kvs",
-   "waitTime":"30000",
-   "caserver":{
-      "ca_url":"http://localhost:8054"
-   },
-   "orderer":{
-      "orderer_url":"grpc://localhost:8050"
-   },
-   "peers":[
-      {
-         "peer_url":"grpc://localhost:8051"
-      },
-      {
-         "peer_url":"grpc://localhost:8055"
-      },
-      {
-         "peer_url":"grpc://localhost:8056"
-      }
-   ],
-   "events":[
-      {
-         "event_url":"grpc://localhost:8053"
-      },
-      {
-         "event_url":"grpc://localhost:9053"
-      },
-      {
-         "event_url":"grpc://localhost:10053"
-      }
-   ],
+   "orgsList": ["org1","org2"],
+   "eventWaitTime":"30000",
+   "invokeQueryFcnName":"invoke",
+   "orderer":"grpcs://localhost:7050",
    "users":[
       {
          "username":"admin",
          "secret":"adminpw"
       }
-   ],
-   "deployRequest":{
-      "functionName":"init",
-      "args":[
-         "a",
-         "100",
-         "b",
-         "200"
-      ]
-   },
-   "invokeRequest":{
-      "functionName":"invoke",
-      "args":[
-         "move",
-         "a",
-         "b",
-         "100"
-      ]
-   },
-   "queryRequest":{
-      "functionName":"invoke",
-      "args":[
-         "query",
-         "b"
-      ]
-   }
+   ]
 }
