@@ -24,7 +24,7 @@ var helper = require('./helper.js');
 var logger = helper.getLogger('install-chaincode');
 var tx_id = null;
 var nonce = null;
-var adminUser = null;
+var member = null;
 //function installChaincode(org) {
 var installChaincode = function(peers, chaincodeName, chaincodePath,
 	chaincodeVersion, username, org) {
@@ -40,10 +40,10 @@ var installChaincode = function(peers, chaincodeName, chaincodePath,
 		}
 
     logger.info(chain.getPeers());*/
-	return helper.getRegisteredUsers(username, org).then((member) => {
-		adminUser = member;
+	return helper.getRegisteredUsers(username, org).then((user) => {
+		member = user;
 		nonce = utils.getNonce();
-		tx_id = chain.buildTransactionID(nonce, adminUser);
+		tx_id = chain.buildTransactionID(nonce, member);
 		// send proposal to endorser
 		var request = {
 			targets: targets,
@@ -55,8 +55,8 @@ var installChaincode = function(peers, chaincodeName, chaincodePath,
 		};
 		return chain.sendInstallProposal(request);
 	}, (err) => {
-		logger.error('Failed to enroll user \'admin\'. ' + err);
-		throw new Error('Failed to enroll user \'admin\'. ' + err);
+		logger.error('Failed to enroll user \'' + username + '\'. ' + err);
+		throw new Error('Failed to enroll user \'' + username + '\'. ' + err);
 	}).then((results) => {
 		var proposalResponses = results[0];
 		var proposal = results[1];

@@ -113,23 +113,23 @@ var joinChannel = function(channelName, peers, username, org) {
 		let sendPromise = chain.joinChannel(request);
 		return Promise.all([sendPromise].concat(eventPromises));
 	}, (err) => {
-		logger.error('Failed to enroll user \'admin\' due to error: ' + err.stack ?
-			err.stack : err);
-		throw new Error('Failed to enroll user \'admin\' due to error: ' + err.stack ?
-			err.stack : err);
+		logger.error('Failed to enroll user \'' + username + '\' due to error: ' +
+			err.stack ? err.stack : err);
+		throw new Error('Failed to enroll user \'' + username +
+			'\' due to error: ' + err.stack ? err.stack : err);
 	}).then((results) => {
 		logger.debug(util.format('Join Channel R E S P O N S E : %j', results));
 		if (results[0] && results[0][0] && results[0][0].response && results[0][0]
 			.response.status == 200) {
 			logger.info(util.format(
-				'Successfully joined peers in organization %s to the channel \'%s\'', org,
-				channelName));
+				'Successfully joined peers in organization %s to the channel \'%s\'',
+				org, channelName));
 			closeConnections(true);
 			let response = {
 				success: true,
 				message: util.format(
-					'Successfully joined peers in organization %s to the channel \'%s\'', org,
-					channelName)
+					'Successfully joined peers in organization %s to the channel \'%s\'',
+					org, channelName)
 			};
 			return response;
 		} else {

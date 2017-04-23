@@ -20,76 +20,82 @@ var util = require('util');
 var hfc = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
-var EventHub = require('fabric-client/lib/EventHub.js');
 var config = require('../config.json');
 var helper = require('./helper.js');
-var logger = helper.getLogger('instantiate-chaincode');
+var logger = helper.getLogger('invoke-chaincode');
+var EventHub = require('fabric-client/lib/EventHub.js');
 hfc.addConfigFile(path.join(__dirname, 'network-config.json'));
 var ORGS = hfc.getConfigSetting('network-config');
 var tx_id = null;
 var nonce = null;
 var member = null;
-var eventhubs = [];
-var allEventhubs = [];
-var isSuccess = null;
-var instantiateChaincode = function(peers, channelName, chaincodeName,
-	chaincodePath, chaincodeVersion, functionName, args, username, org) {
-	var closeConnections = function(isSuccess) {
-		for (var key in allEventhubs) {
-			var eventhub = allEventhubs[key];
-			if (eventhub && eventhub.isconnected()) {
-				//logger.debug('Disconnecting the event hub');
-				eventhub.disconnect();
+var eventhubs = {};
+
+function getHostnameByPeerAddress(org, peers) {
+	var orgDetails = ORGS[org];
+	var result = [];
+	for (let index in peers) {
+		for (let key in orgDetails) {
+			if (orgDetails.hasOwnProperty(key) && key.indexOf('peer') == 0 && orgDetails[
+					key].requests.indexOf(peers[index]) >= 0) {
+				result.push(key);
 			}
 		}
-	};
-	logger.debug('\n============ Instantiate chaincode on organization ' + org +
+	}
+	return result;
+};
+var registerEventHub = function(org, peers) {
+	var peerHosts = getHostnameByPeerAddress(org, peers);
+	for (var index in peerHosts) {
+		let eh = new EventHub();
+		let data = fs.readFileSync(path.join(__dirname, ORGS[org][peerHosts[index]][
+			'tls_cacerts'
+		]));
+		eh.setPeerAddr(ORGS[org][peerHosts[index]]['events'], {
+			pem: Buffer.from(data).toString(),
+			'ssl-target-name-override': ORGS[org][peerHosts[index]]['server-hostname']
+		});
+		eh.connect();
+		eventhubs[org + peerHosts[index]] = eh;
+	}
+};
+var invokeChaincode = function(peers, channelName, chaincodeName,
+	chaincodeVersion, args, username, org) {
+	logger.debug('\n============ invoke transaction on organization ' + org +
 		' ============\n');
-	helper.setupChaincodeDeploy();
 	var chain = helper.getChainForOrg(org);
 	helper.setupOrderer();
 	var targets = helper.getTargets(peers, org);
 	helper.setupPeers(chain, peers, targets);
-	//FIXME: chanfe this to read peer dynamically
-	let eh = new EventHub();
-	let data = fs.readFileSync(path.join(__dirname, ORGS[org]['peer1'][
-		'tls_cacerts'
-	]));
-	eh.setPeerAddr(ORGS[org]['peer1']['events'], {
-		pem: Buffer.from(data).toString(),
-		'ssl-target-name-override': ORGS[org]['peer1']['server-hostname']
+	var peerHosts = getHostnameByPeerAddress(org, peers);
+	peers.forEach(function(peer) {
+		let peerEh = eventhubs[org + peer];
+		if (!peerEh) {
+			registerEventHub(org, peers);
+		}
 	});
-	eh.connect();
-	eventhubs.push(eh);
-	allEventhubs.push(eh);
 	return helper.getRegisteredUsers(username, org).then((user) => {
 		member = user;
-		// read the config block from the orderer for the chain
-		// and initialize the verify MSPs based on the participating
-		// organizations
-		return chain.initialize();
-	}, (err) => {
-		logger.error('Failed to enroll user \'' + username + '\'. ' + err);
-		throw new Error('Failed to enroll user \'' + username + '\'. ' + err);
-	}).then((success) => {
 		nonce = utils.getNonce();
 		tx_id = chain.buildTransactionID(nonce, member);
+		utils.setConfigSetting('E2E_TX_ID', tx_id);
+		logger.info('setConfigSetting("E2E_TX_ID") = %s', tx_id);
+		logger.debug(util.format('Sending transaction "%s"', tx_id));
 		// send proposal to endorser
 		var request = {
 			targets: targets,
-			chaincodePath: chaincodePath,
 			chaincodeId: chaincodeName,
 			chaincodeVersion: chaincodeVersion,
-			fcn: functionName,
+			fcn: config.invokeQueryFcnName,
 			args: helper.getArgs(args),
 			chainId: channelName,
 			txId: tx_id,
 			nonce: nonce
 		};
-		return chain.sendInstantiateProposal(request);
+		return chain.sendTransactionProposal(request);
 	}, (err) => {
-		logger.error('Failed to initialize the chain');
-		throw new Error('Failed to initialize the chain');
+		logger.error('Failed to enroll user \'' + username + '\'. ' + err);
+		throw new Error('Failed to enroll user \'' + username + '\'. ' + err);
 	}).then((results) => {
 		var proposalResponses = results[0];
 		var proposal = results[1];
@@ -100,14 +106,14 @@ var instantiateChaincode = function(peers, channelName, chaincodeName,
 			if (proposalResponses && proposalResponses[0].response &&
 				proposalResponses[0].response.status === 200) {
 				one_good = true;
-				logger.info('instantiate proposal was good');
+				logger.info('transaction proposal was good');
 			} else {
-				logger.error('instantiate proposal was bad');
+				logger.error('transaction proposal was bad');
 			}
 			all_good = all_good & one_good;
 		}
 		if (all_good) {
-			logger.info(util.format(
+			logger.debug(util.format(
 				'Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s',
 				proposalResponses[0].response.status, proposalResponses[0].response.message,
 				proposalResponses[0].response.payload, proposalResponses[0].endorsement
@@ -120,64 +126,68 @@ var instantiateChaincode = function(peers, channelName, chaincodeName,
 			// set the transaction listener and set a timeout of 30sec
 			// if the transaction did not get committed within the timeout period,
 			// fail the test
-			var deployId = tx_id.toString();
+			var transactionID = tx_id.toString();
 			var eventPromises = [];
-			eventhubs.forEach((eh) => {
+			for (let key in eventhubs) {
+				let eh = eventhubs[key];
 				let txPromise = new Promise((resolve, reject) => {
 					let handle = setTimeout(reject, 30000);
-					eh.registerTxEvent(deployId.toString(), (tx, code) => {
-						logger.info(
-							'The chaincode instantiate transaction has been committed on peer ' +
-							eh.ep._endpoint.addr);
+					eh.registerTxEvent(transactionID.toString(), (tx, code) => {
 						clearTimeout(handle);
-						eh.unregisterTxEvent(deployId);
+						eh.unregisterTxEvent(transactionID);
 						if (code !== 'VALID') {
 							logger.error(
-								'The chaincode instantiate transaction was invalid, code = ' +
-								code);
+								'The balance transfer transaction was invalid, code = ' + code);
 							reject();
 						} else {
-							logger.info('The chaincode instantiate transaction was valid.');
+							logger.info(
+								'The balance transfer transaction has been committed on peer ' +
+								eh.ep._endpoint.addr);
 							resolve();
 						}
 					});
 				});
 				eventPromises.push(txPromise);
-			});
+			};
 			var sendPromise = chain.sendTransaction(request);
 			return Promise.all([sendPromise].concat(eventPromises)).then((results) => {
-				logger.debug('Event promise all complete and testing complete');
+				logger.debug(' event promise all complete and testing complete');
 				return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 			}).catch((err) => {
 				logger.error(
-					'Failed to send instantiate transaction and get notifications within the timeout period.'
+					'Failed to send transaction and get notifications within the timeout period.'
 				);
-				return 'Failed to send instantiate transaction and get notifications within the timeout period.';
+				return 'Failed to send transaction and get notifications within the timeout period.';
 			});
 		} else {
 			logger.error(
-				'Failed to send instantiate Proposal or receive valid response. Response null or status is not 200. exiting...'
+				'Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...'
 			);
-			return 'Failed to send instantiate Proposal or receive valid response. Response null or status is not 200. exiting...';
+			return 'Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...';
 		}
 	}, (err) => {
-		logger.error('Failed to send instantiate proposal due to error: ' + err.stack ?
-			err.stack : err);
-		return 'Failed to send instantiate proposal due to error: ' + err.stack ?
-			err.stack : err;
+		logger.error('Failed to send proposal due to error: ' + err.stack ? err.stack :
+			err);
+		return 'Failed to send proposal due to error: ' + err.stack ? err.stack :
+			err;
 	}).then((response) => {
 		if (response.status === 'SUCCESS') {
 			logger.info('Successfully sent transaction to the orderer.');
-			return 'Chaincode Instantiateion is SUCCESS';
+			logger.debug(
+				'******************************************************************');
+			logger.debug('E2E_TX_ID=' + '\'' + tx_id + '\'');
+			logger.debug(
+				'******************************************************************');
+			return tx_id;
 		} else {
 			logger.error('Failed to order the transaction. Error code: ' + response.status);
 			return 'Failed to order the transaction. Error code: ' + response.status;
 		}
 	}, (err) => {
-		logger.error('Failed to send instantiate due to error: ' + err.stack ? err
+		logger.error('Failed to send transaction due to error: ' + err.stack ? err
 			.stack : err);
-		return 'Failed to send instantiate due to error: ' + err.stack ? err.stack :
+		return 'Failed to send transaction due to error: ' + err.stack ? err.stack :
 			err;
 	});
 };
-exports.instantiateChaincode = instantiateChaincode;
+exports.invokeChaincode = invokeChaincode;

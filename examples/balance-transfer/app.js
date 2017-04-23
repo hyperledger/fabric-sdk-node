@@ -129,13 +129,12 @@ app.post('/channels', function(req, res) {
 				message: 'Failed to authenticate token.'
 			});
 		} else {
-			//res.send(d);
 			logger.debug('User name : ' + decoded.username);
 			logger.debug('Org name  : ' + decoded.orgName);
-			channels.createChannel(channelName, channelConfigPath, decoded.username,
-				decoded.orgName).then(function(message) {
-					res.send(message);
-				});
+			channels.createChannel(channelName, channelConfigPath, decoded.username, decoded.orgName)
+			.then(function(message) {
+				res.send(message);
+			});
 		}
 	});
 });
@@ -212,11 +211,10 @@ app.post('/chaincodes', function(req, res) {
 			//res.send(d);
 			logger.debug('User name : ' + decoded.username);
 			logger.debug('Org name  : ' + decoded.orgName);
-			install.installChaincode(peers, chaincodeName, chaincodePath,
-				chaincodeVersion, decoded.username, decoded.orgName).then(function(
-				message) {
-					res.send(message);
-				});
+			install.installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion, decoded.username, decoded.orgName)
+			.then(function(message) {
+				res.send(message);
+			});
 		}
 	});
 });
@@ -277,11 +275,11 @@ app.post('/channels/:channelName/chaincodes', function(req, res) {
 			//res.send(d);
 			logger.debug('User name : ' + decoded.username);
 			logger.debug('Org name  : ' + decoded.orgName);
-			instantiate.instantiateChaincode(peers, channelName, chaincodeName,
-				chaincodePath, chaincodeVersion, functionName, args, decoded.username,
-				decoded.orgName).then(function(message) {
-					res.send(message);
-				});
+			instantiate.instantiateChaincode(peers, channelName, chaincodeName, chaincodePath,
+				chaincodeVersion, functionName, args, decoded.username, decoded.orgName)
+			.then(function(message) {
+				res.send(message);
+			});
 		}
 	});
 });
@@ -387,9 +385,10 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName', function(req, res) {
 			logger.debug('User name : ' + decoded.username);
 			logger.debug('Org name  : ' + decoded.orgName);
 			query.queryChaincode(peer, channelName, chaincodeName, chaincodeVersion,
-				args, decoded.username, decoded.orgName).then(function(message) {
-					res.send(message);
-				});
+				args, decoded.username, decoded.orgName)
+			.then(function(message) {
+				res.send(message);
+			});
 		}
 	});
 });
@@ -552,10 +551,10 @@ app.get('/chaincodes', function(req, res) {
 		} else {
 			logger.debug('User name : ' + decoded.username);
 			logger.debug('Org name  : ' + decoded.orgName);
-			query.getInstalledChaincodes(peer, installType, decoded.username,
-				decoded.orgName).then(function(message) {
-					res.send(message);
-				});
+			query.getInstalledChaincodes(peer, installType, decoded.username, decoded.orgName)
+			.then(function(message) {
+				res.send(message);
+			});
 		}
 	});
 });

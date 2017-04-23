@@ -1,0 +1,43 @@
+{
+	"network-config": {
+		"orderer": {
+			"url": "grpcs://localhost:7050",
+			"server-hostname": "orderer0",
+			"tls_cacerts": "../artifacts/tls/orderer/ca-cert.pem"
+		},
+		"org1": {
+			"name": "peerOrg1",
+			"mspid": "Org1MSP",
+			"ca": "http://localhost:7054",
+			"peer1": {
+				"requests": "grpcs://localhost:7051",
+				"events": "grpcs://localhost:7053",
+				"server-hostname": "peer0",
+				"tls_cacerts": "../artifacts/tls/peers/peer0/ca-cert.pem"
+			},
+			"peer2": {
+				"requests": "grpcs://localhost:7056",
+				"events": "grpcs://localhost:7058",
+				"server-hostname": "peer1",
+				"tls_cacerts": "../artifacts/tls/peers/peer1/ca-cert.pem"
+			}
+		},
+		"org2": {
+			"name": "peerOrg2",
+			"mspid": "Org2MSP",
+			"ca": "http://localhost:8054",
+			"peer1": {
+				"requests": "grpcs://localhost:8051",
+				"events": "grpcs://localhost:8053",
+				"server-hostname": "peer2",
+				"tls_cacerts": "../artifacts/tls/peers/peer2/ca-cert.pem"
+			},
+			"peer2": {
+				"requests": "grpcs://localhost:8056",
+				"events": "grpcs://localhost:8058",
+				"server-hostname": "peer3",
+				"tls_cacerts": "../artifacts/tls/peers/peer3/ca-cert.pem"
+			}
+		}
+	}
+}
