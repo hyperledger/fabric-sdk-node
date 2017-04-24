@@ -10,7 +10,6 @@ pages:
 - Home: index.md
 - NodeSDK:
   - App-developer-env-setup: app-developer-env-setup.md
-  - App-Overview: app-overview.md
   - Node-SDK-guide: node-sdk-guide.md
   - Node-SDK-indepth: node-sdk-indepth.md
   - Sample-Standalone-app: sample-standalone-app.md
