@@ -115,20 +115,8 @@ function joinChannel(org, t) {
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 		client.setStateStore(store);
-
-		var keyPath = path.join(__dirname, util.format('../../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/keystore', org, org));
-		var keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
-		var certPath = path.join(__dirname, util.format('../../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/signcerts', org, org));
-		var certPEM = readAllFiles(certPath)[0];
-
-		return client.createUser({
-			username: 'channelAdmin',
-			mspid: ORGS[org].mspid,
-			cryptoContent: {
-				privateKeyPEM: keyPEM.toString(),
-				signedCertPEM: certPEM.toString()
-			}
-		});
+		// get the peer org's admin required to send join channel requests
+		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
 	})
 	.then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
@@ -218,14 +206,3 @@ function joinChannel(org, t) {
 	});
 }
 
-function readAllFiles(dir) {
-	var files = fs.readdirSync(dir);
-	var certs = [];
-	files.forEach((file_name) => {
-		let file_path = path.join(dir,file_name);
-		console.log(' looking at file ::'+file_path);
-		let data = fs.readFileSync(file_path);
-		certs.push(data);
-	});
-	return certs;
-}

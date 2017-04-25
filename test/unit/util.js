@@ -17,6 +17,7 @@
 var path = require('path');
 var fs = require('fs-extra');
 var os = require('os');
+var util = require('util');
 
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
@@ -93,7 +94,7 @@ var	tlsOptions = {
 	verify: false
 };
 
-function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
+function getMember(username, password, client, t, userOrg) {
 	var caUrl = ORGS[userOrg].ca;
 
 	return client.getUserContext(username, true)
@@ -104,70 +105,44 @@ function getSubmitter(username, password, client, t, loadFromConfig, userOrg) {
 				return resolve(user);
 			}
 
-			if (!loadFromConfig) {
-				// need to enroll it with CA server
-				var cop = new copService(caUrl, tlsOptions);
+			// need to enroll it with CA server
+			var cop = new copService(caUrl, tlsOptions);
 
-				var member;
-				return cop.enroll({
-					enrollmentID: username,
-					enrollmentSecret: password
-				}).then((enrollment) => {
-					t.pass('Successfully enrolled user \'' + username + '\'');
+			var member;
+			return cop.enroll({
+				enrollmentID: username,
+				enrollmentSecret: password
+			}).then((enrollment) => {
+				t.pass('Successfully enrolled user \'' + username + '\'');
 
-					member = new User(username);
-					return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
-				}).then(() => {
-					return client.setUserContext(member);
-				}).then(() => {
-					return resolve(member);
-				}).catch((err) => {
-					t.fail('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
-					t.end();
-				});
-			} else {
-				// need to load private key and pre-enrolled certificate from files based on the MSP
-				// config directory structure:
-				// <config>
-				//    \_ keystore
-				//       \_ admin.pem  <<== this is the private key saved in PEM file
-				//    \_ signcerts
-				//       \_ admin.pem  <<== this is the signed certificate saved in PEM file
-
-				// first load the private key and save in the BCCSP's key store
-				var privKeyPEM = path.join(__dirname, '../fixtures/msp/local/keystore/admin.pem');
-				var pemData, member;
-				return readFile(privKeyPEM)
-				.then((data) => {
-					pemData = data;
-					// default crypto suite uses $HOME/.hfc-key-store as key store
-					var kspath = CryptoSuite.getDefaultKeyStorePath();
-					var testKey;
-					return new KeyStore({
-						path: kspath
-					});
-				}).then((store) => {
-					var rawKey = KEYUTIL.getKey(pemData.toString());
-					testKey = new ecdsaKey(rawKey);
-					return store.putKey(testKey);
-				}).then((value) => {
-					// next save the certificate in a serialized user enrollment in the state store
-					var certPEM = path.join(__dirname, '../fixtures/msp/local/signcerts/admin.pem');
-					return readFile(certPEM);
-				}).then((data) => {
-					member = new User(username);
-					return member.setEnrollment(testKey, data.toString(), ORGS[userOrg].mspid);
-				}).then(() => {
-					return client.setUserContext(member);
-				}).then((user) => {
-					return resolve(user);
-				}).catch((err) => {
-					reject(new Error('Failed to load key or certificate and save to local stores. ' + err));
-					t.end();
-				});
-			}
+				member = new User(username);
+				return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
+			}).then(() => {
+				return client.setUserContext(member);
+			}).then(() => {
+				return resolve(member);
+			}).catch((err) => {
+				t.fail('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
+				t.end();
+			});
 		});
 	});
+}
+
+function getAdmin(client, t, userOrg) {
+	var keyPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/keystore', userOrg, userOrg));
+	var keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
+	var certPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/signcerts', userOrg, userOrg));
+	var certPEM = readAllFiles(certPath)[0];
+
+	return Promise.resolve(client.createUser({
+		username: 'peerOrgAdmin',
+		mspid: ORGS[userOrg].mspid,
+		cryptoContent: {
+			privateKeyPEM: keyPEM.toString(),
+			signedCertPEM: certPEM.toString()
+		}
+	}));
 }
 
 function readFile(path) {
@@ -181,18 +156,31 @@ function readFile(path) {
 	});
 }
 
-module.exports.getSubmitter = function(client, test, loadFromConfig, org) {
+function readAllFiles(dir) {
+	var files = fs.readdirSync(dir);
+	var certs = [];
+	files.forEach((file_name) => {
+		let file_path = path.join(dir,file_name);
+		console.log(' looking at file ::'+file_path);
+		let data = fs.readFileSync(file_path);
+		certs.push(data);
+	});
+	return certs;
+}
+
+module.exports.getSubmitter = function(client, test, peerOrgAdmin, org) {
 	if (arguments.length < 2) throw new Error('"client" and "test" are both required parameters');
 
-	var fromConfig, userOrg;
-	if (typeof loadFromConfig === 'boolean') {
-		fromConfig = loadFromConfig;
+	var peerAdmin, userOrg;
+	if (typeof peerOrgAdmin === 'boolean') {
+		peerAdmin = peerOrgAdmin;
 	} else {
-		fromConfig = false;
+		peerAdmin = false;
 	}
 
-	if (typeof loadFromConfig === 'string') {
-		userOrg = loadFromConfig;
+	// if the 3rd argument was skipped
+	if (typeof peerOrgAdmin === 'string') {
+		userOrg = peerOrgAdmin;
 	} else {
 		if (typeof org === 'string') {
 			userOrg = org;
@@ -201,5 +189,9 @@ module.exports.getSubmitter = function(client, test, loadFromConfig, org) {
 		}
 	}
 
-	return getSubmitter('admin', 'adminpw', client, test, fromConfig, userOrg);
+	if (peerAdmin) {
+		return getAdmin(client, test, userOrg);
+	} else {
+		return getMember('admin', 'adminpw', client, test, userOrg);
+	}
 };

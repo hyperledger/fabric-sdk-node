@@ -407,7 +407,9 @@ test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
 			path: testUtil.storePathForOrg(orgName)
 		}).then( function (store) {
 			client.setStateStore(store);
-			return testUtil.getSubmitter(client, t, org);
+
+			// get the peer org's admin required to query installed chaincodes
+			return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
 		}).then(
 			function(admin) {
 				t.pass('Successfully enrolled user \'admin\'');
@@ -462,7 +464,8 @@ test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t)
 		}).then( function (store) {
 			client.setStateStore(store);
 
-			return testUtil.getSubmitter(client, t, org);
+			// get the peer org's admin required to query instantiated chaincodes
+			return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
 		}).then(
 			function(admin) {
 				t.pass('Successfully enrolled user \'admin\'');

@@ -85,7 +85,9 @@ function installChaincode(org, chaincode_path, version, t) {
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t, org);
+
+		// get the peer org's admin required to send install chaincode requests
+		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
