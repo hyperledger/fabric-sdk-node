@@ -335,7 +335,7 @@ function decodeConfigPolicy(proto_config_policy) {
 		break;
 	case _policiesProto.Policy.PolicyType.MSP:
 		var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.policy);
-		logger.warning('decodeConfigPolicy - found a PolicyType of MSP');
+		logger.warn('decodeConfigPolicy - found a PolicyType of MSP');
 		break;
 	case _policiesProto.Policy.PolicyType.IMPLICIT_META:
 		config_policy.policy.policy = decodeImplicitMetaPolicy(proto_config_policy.value.policy.policy);
