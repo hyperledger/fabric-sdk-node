@@ -20,8 +20,8 @@
     "express": "^4.15.2",
     "express-jwt": "^5.1.0",
     "express-session": "^1.15.2",
-    "fabric-ca-client": "1.0.0-alpha.0",
-    "fabric-client": "1.0.0-alpha",
+    "fabric-ca-client": ">=1.0.0-alpha <1.0.0-alpha.10",
+    "fabric-client": ">=1.0.0-alpha <1.0.0-alpha.10",
     "log4js": "^0.6.38",
     "jsonwebtoken": "^7.3.0"
   }
