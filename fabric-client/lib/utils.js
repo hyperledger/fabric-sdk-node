@@ -122,7 +122,6 @@ module.exports.newCryptoSuite = function(setting, KVSImplClass, opts) {
 			opts = (typeof setting === 'undefined') ? null : setting;
 		}
 	}
-
 	return new cryptoSuite(keysize, opts, keystoreSuperClass, hashAlgo);
 };
 

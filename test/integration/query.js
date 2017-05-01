@@ -42,6 +42,7 @@ var Orderer = require('fabric-client/lib/Orderer.js');
 var client = new hfc();
 var chain_id = testUtil.END2END.channel;
 var chain = client.newChain(chain_id);
+
 hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 var org = 'org1';
@@ -111,6 +112,8 @@ chain.addPeer(peer0);
 chain.addPeer(peer1);
 
 test('  ---->>>>> Query chain working <<<<<-----', function(t) {
+	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
+	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
 	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then( function (store) {
@@ -119,6 +122,7 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
+
 		// read the config block from the orderer for the chain
 		// and initialize the verify MSPs based on the participating
 		// organizations

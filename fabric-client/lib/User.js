@@ -72,7 +72,7 @@ var User = class {
 		this._identity = null;
 		this._signingIdentity = null;
 		this._mspImpl = null;
-		this._kvsCryptoOpts = null;
+		this._cryptoSuite = null;
 	}
 
 	/**
@@ -131,6 +131,14 @@ var User = class {
 		return this._signingIdentity;
 	}
 
+	getCryptoSuite() {
+		return this._cryptoSuite;
+	}
+
+	setCryptoSuite(cryptoSuite) {
+		this._cryptoSuite = cryptoSuite;
+	}
+
 	/**
 	 * Set the enrollment object for this User instance
 	 * @param {Key} privateKey the private key object
@@ -150,7 +158,7 @@ var User = class {
 	 *   - kvsOpts: {object}: an options object specific to the implementation in KVSImplClass
 	 * @returns {Promise} Promise for successful completion of creating the user's signing Identity
 	 */
-	setEnrollment(privateKey, certificate, mspId, opts) {
+	setEnrollment(privateKey, certificate, mspId) {
 		if (typeof privateKey === 'undefined' || privateKey === null || privateKey === '') {
 			throw new Error('Invalid parameter. Must have a valid private key.');
 		}
@@ -162,13 +170,13 @@ var User = class {
 		if (typeof mspId === 'undefined' || mspId === null || mspId === '') {
 			throw new Error('Invalid parameter. Must have a valid mspId.');
 		}
-		logger.debug('setEnrollment opts: %s', JSON.stringify(opts));
-		this._kvsCryptoOpts = opts;
+
+		if (!this._cryptoSuite) {
+			this._cryptoSuite = sdkUtils.newCryptoSuite();
+		}
 		this._mspImpl = new LocalMSP({
 			id: mspId,
-			cryptoSuite: this._kvsCryptoOpts ? sdkUtils.newCryptoSuite(
-				this._kvsCryptoOpts.cryptoSettings, this._kvsCryptoOpts.KVSImplClass, this._kvsCryptoOpts.kvsOpts) :
-				sdkUtils.newCryptoSuite()
+			cryptoSuite: this._cryptoSuite
 		});
 
 		return this._mspImpl.cryptoSuite.importKey(certificate)
@@ -224,17 +232,18 @@ var User = class {
 		this._roles = state.roles;
 		this._affiliation = state.affiliation;
 		this._enrollmentSecret = state.enrollmentSecret;
-		this._kvsCryptoOpts = state.kvsCryptoOpts;
 
 		if (typeof state.mspid === 'undefined' || state.mspid === null || state.mspid === '') {
 			throw new Error('Failed to find "mspid" in the deserialized state object for the user. Likely due to an outdated state store.');
 		}
 
+		if (!this._cryptoSuite) {
+			this._cryptoSuite = sdkUtils.newCryptoSuite();
+		}
+
 		this._mspImpl = new LocalMSP({
 			id: state.mspid,
-			cryptoSuite: this._kvsCryptoOpts ? sdkUtils.newCryptoSuite(
-				this._kvsCryptoOpts.cryptoSettings, this._kvsCryptoOpts.KVSImplClass, this._kvsCryptoOpts.kvsOpts) :
-				sdkUtils.newCryptoSuite()
+			cryptoSuite: this._cryptoSuite
 		});
 
 		var self = this;
@@ -290,7 +299,6 @@ var User = class {
 			mspid: this._mspImpl ? this._mspImpl.getId() : 'null',
 			roles: this._roles,
 			affiliation: this._affiliation,
-			kvsCryptoOpts: this._kvsCryptoOpts,
 			enrollmentSecret: this._enrollmentSecret,
 			enrollment: serializedEnrollment
 		};

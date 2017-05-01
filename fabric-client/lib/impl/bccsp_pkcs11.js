@@ -76,7 +76,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		/*
 		 * If no lib specified, get it from env var or config file.
 		 */
-		var pkcs11Lib = opts.lib;
+		var pkcs11Lib = opts? opts.lib : null;
 		if (typeof pkcs11Lib === 'undefined' || pkcs11Lib === null)
 			pkcs11Lib = utils.getConfigSetting('crypto-pkcs11-lib');
 		if (typeof pkcs11Lib === 'undefined' || pkcs11Lib === null ||

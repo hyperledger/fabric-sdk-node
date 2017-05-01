@@ -57,7 +57,7 @@ var fabricCAEndpoint = ORGS[userOrg].ca.url;
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
 // FabricCAClientImpl to enroll a user, and saves the enrollment materials into the
-// CouchDB KeyValueStore. Then the test uses the Chain class to load the member
+// CouchDB KeyValueStore. Then the test uses the Client class to load the member
 // from the key value store.
 test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 	var client = new Client();
@@ -69,14 +69,20 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 	// Clean up the couchdb test database
 	var dbname = 'my_member_db';
 
-	var member, opts;
+	var cryptoSuite, member, options;
 	couchdbUtil.destroy(dbname, keyValStorePath)
 	.then( function(status) {
 		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
 		t.comment('Initialize the CouchDB KeyValueStore');
-		utils.newKeyValueStore({name: dbname, url: keyValStorePath})
+		var options = {name: dbname, url: keyValStorePath};
+		utils.newKeyValueStore(options)
 		.then(
 			function(kvs) {
+
+				member = new User('admin2');
+				cryptoSuite = client.newCryptoSuite(options);
+				member.setCryptoSuite(cryptoSuite);
+
 				t.comment('Setting client keyValueStore to: ' +kvs);
 				client.setStateStore(kvs);
 				if (client.getStateStore() === kvs) {
@@ -86,10 +92,9 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 					t.end();
 					process.exit(1);
 				}
-				t.comment('Initialize the CA server connection and KeyValueStore');
-				t.comment('Test optional parameters passed into FabricCAServices of cryptoSettings and KVSImplClass');
+				t.comment('Initialize the CA server connection and cryptoSuite');
 				return new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name,
-					kvs/*KVSImplClass*/, {name: dbname, url: keyValStorePath});
+					cryptoSuite);
 			},
 			function(err) {
 				t.fail('Error initializing CouchDB KeyValueStore. Exiting.');
@@ -102,8 +107,6 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				logger.info('ADD: caService - ' + caService);
 				t.pass('Successfully initialized the Fabric CA service.');
 
-				client.setCryptoSuite(caService.getCrypto());
-				t.comment('Set cryptoSuite on client');
 				t.comment('Begin caService.enroll');
 				return caService.enroll({
 					enrollmentID: 'admin',
@@ -121,10 +124,7 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				t.pass('Successfully enrolled admin2 with CA server');
 
 				// Persist the user state
-				member = new User('admin2');
-				opts = {KVSImplClass: keyValueStore, kvsOpts: {name: dbname, url: keyValStorePath}};
-				t.comment('setEnrollment kvs opts: '+JSON.stringify(opts));
-				return member.setEnrollment(admin2.key, admin2.certificate, ORGS[userOrg].mspid, opts);
+				return member.setEnrollment(admin2.key, admin2.certificate, ORGS[userOrg].mspid);
 			},
 			function(err) {
 				t.fail('Failed to use obtained private key and certificate to construct a User object. Error:');
@@ -148,10 +148,16 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 			})
 		.then(
 			function(user) {
-				t.comment('loading user admin2 from StateStore...');
-				return client.loadUserFromStateStore('admin2');
-			}
-		).then(
+				t.comment('setting UserContext to different user to clear out previous user');
+				return client.setUserContext(new User('userx'));
+			})
+		.then(
+			function(user) {
+				t.comment('getUserContext, loading user admin2 from StateStore...');
+				client.setCryptoSuite(cryptoSuite);
+				return client.getUserContext('admin2', true);
+			})
+		.then(
 			function(user) {
 				if (user && user.getName() === 'admin2') {
 					t.pass('Successfully loaded the user from key value store');

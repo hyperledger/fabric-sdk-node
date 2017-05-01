@@ -66,7 +66,7 @@ var fabricCAEndpoint = ORGS[userOrg].ca.url;
 
 test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 
-	var caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name, {keysize: 256, hash: 'SHA2'});
+	var caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
 
 	var req = {
 		enrollmentID: 'admin',

@@ -211,6 +211,29 @@ test('FabricCAClient: Test _pemToDer static method',function(t){
 	t.end();
 });
 
+// Test newCryptoSuite() function
+test('FabricCAServices:  Test newCryptoSuite() function', function(t) {
+	var	tlsOptions = {
+		trustedRoots: [],
+		verify: false
+	};
+	var CAClient = require('fabric-ca-client');
+
+ 	var crypto = CAClient.newCryptoSuite({software: true, keysize: 384});
+
+ 	var client = new CAClient('http://localhost:7054', tlsOptions, 'peerOrg1', crypto);
+
+	var crypto = client.getCrypto();
+
+	if (crypto) {
+		t.pass('Successfully called getCrypto()');
+	}
+	else {
+		t.fail('getCrypto() did not return an object');
+	}
+	t.end();
+});
+
 // Test getCrypto() function
 test('FabricCAServices:  Test getCrypto() function', function(t) {
 	var ca = new FabricCAServices('http://localhost:7054');

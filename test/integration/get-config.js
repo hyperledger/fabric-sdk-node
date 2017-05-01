@@ -104,6 +104,7 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 		path: testUtil.storePathForOrg(orgName)
 	}).then( function (store) {
 		client.setStateStore(store);
+		client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
 		testUtil.getSubmitter(client, t, org)
 			.then(
 				function(admin) {

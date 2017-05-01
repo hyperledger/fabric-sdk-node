@@ -47,6 +47,9 @@ function installChaincode(org, chaincode_path, version, t) {
 	var client = new hfc();
 	var chain = client.newChain(channel_name);
 
+	var orgName = ORGS[org].name;
+	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
@@ -60,8 +63,6 @@ function installChaincode(org, chaincode_path, version, t) {
 			}
 		)
 	);
-
-	var orgName = ORGS[org].name;
 
 	var targets = [];
 	for (let key in ORGS[org]) {
@@ -170,6 +171,9 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	var client = new hfc();
 	var chain = client.newChain(channel_name);
 
+	var orgName = ORGS[userOrg].name;
+	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
@@ -183,8 +187,6 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			}
 		)
 	);
-
-	var orgName = ORGS[userOrg].name;
 
 	var targets = [];
 
@@ -410,6 +412,9 @@ function invokeChaincode(userOrg, version, t){
 	var client = new hfc();
 	var chain = client.newChain(channel_name);
 
+	var orgName = ORGS[userOrg].name;
+	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
@@ -423,8 +428,6 @@ function invokeChaincode(userOrg, version, t){
 			}
 		)
 	);
-
-	var orgName = ORGS[userOrg].name;
 
 	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
@@ -620,6 +623,7 @@ function queryChaincode(org, version, value, t){
 	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[org].name;
+	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
 
 	var targets = [];
 	// set up the chain to use each org's 'peer1' for

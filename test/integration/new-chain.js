@@ -37,6 +37,9 @@ var client = new hfc();
 var chain = client.newChain(testUtil.END2END.channel);
 hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
+var org = 'org1';
+var orgName = ORGS[org].name;
+client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
 
 var caRootsPath = ORGS.orderer.tls_cacerts;
 let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
@@ -49,8 +52,6 @@ var orderer = client.newOrderer(
 	}
 );
 
-var org = 'org1';
-var orgName = ORGS[org].name;
 for (let key in ORGS[org]) {
 	if (ORGS[org].hasOwnProperty(key)) {
 		if (key.indexOf('peer') === 0) {
@@ -84,12 +85,13 @@ test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist
 	//
 	// Create and configure the test chain
 	//
-
+	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
 	hfc.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)}
 	)
 	.then(
 		function (store) {
 			client.setStateStore(store);
+			client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
 			return testUtil.getSubmitter(client, t, org);
 		}
 	)

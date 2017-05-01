@@ -29,6 +29,7 @@ gulp.task('test', ['lint', 'pre-test'], function() {
 		'test/integration/orderer-chain-tests.js',
 		'test/integration/cloudant-fabricca-tests.js',
 		'test/integration/couchdb-fabricca-tests.js',
+		'test/integration/fileKeyValueStore-fabricca-tests.js',
 		'test/integration/e2e.js',
 		'test/integration/install.js',
 		'test/integration/events.js',
