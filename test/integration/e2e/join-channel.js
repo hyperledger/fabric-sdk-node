@@ -25,11 +25,14 @@ var test = _test(tape);
 var util = require('util');
 var path = require('path');
 var fs = require('fs');
-var grpc = require('grpc');
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var Block = require('fabric-client/lib/Block.js');
+
+var grpc = require('grpc');
+var _commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
+var _configtxProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/configtx.proto')).common;
 
 var testUtil = require('../../unit/util.js');
 
@@ -37,13 +40,11 @@ var the_user = null;
 var tx_id = null;
 var nonce = null;
 
-hfc.addConfigFile(path.join(__dirname, './config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
+Client.addConfigFile(path.join(__dirname, './config.json'));
+var ORGS = Client.getConfigSetting('test-network');
 
 var allEventhubs = [];
 
-var _commonProto   = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
-var _configtxProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/configtx.proto')).common;
 //
 //Attempt to send a request to the orderer with the sendCreateChain method
 //
@@ -87,11 +88,12 @@ test('\n\n***** End-to-end flow: join channel *****\n\n', function(t) {
 function joinChannel(org, t) {
 	t.comment(util.format('Calling peers in organization "%s" to join the channel', org));
 
+	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 	//
 	// Create and configure the test chain
 	//
-	var client = new hfc();
-	var chain = client.newChain(testUtil.END2END.channel);
+	var client = new Client();
+	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[org].name;
 
@@ -113,43 +115,29 @@ function joinChannel(org, t) {
 		)
 	);
 
-	return hfc.newDefaultKeyValueStore({
+	return Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 		client.setStateStore(store);
 
-		// TODO - remove... checking to see if orderer admin works
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) => {
 		t.pass('Successfully enrolled orderer \'admin\'');
 		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, admin);
+		tx_id = Client.buildTransactionID(nonce, admin);
 		let request = {
 			txId : 	tx_id,
 			nonce : nonce
 		};
+
 		return chain.getGenesisBlock(request);
 	}).then((block) =>{
 		t.pass('Successfully got the genesis block');
 		genesis_block = block;
 
-//		var proto_block = _commonProto.Block.decode(block.toBuffer());
-//		var envelope = _commonProto.Envelope.decode(proto_block.data.data[0]);
-//		var payload = _commonProto.Payload.decode(envelope.payload);
-//		var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
-//		if(channel_header.type != _commonProto.HeaderType.CONFIG) {
-//			logger.error('Block must be of type "CONFIG"');
-//		}
-
-//		var json_block = Block.decode(block.toBuffer());
-//		logger.info('GENESIS BLOCK :: %j',json_block);
-
-//		var config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
-//		chain.loadConfigEnvelope(config_envelope);
-
-
 		// get the peer org's admin required to send join channel requests
 		client._userContext = null;
+
 		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
 	}).then((admin) => {
 		t.pass('Successfully enrolled org:' + org + ' \'admin\'');
@@ -200,9 +188,13 @@ function joinChannel(org, t) {
 						var payload = _commonProto.Payload.decode(envelope.payload);
 						var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
 
-						if (channel_header.channel_id === testUtil.END2END.channel) {
+						if (channel_header.channel_id === channel_name) {
 							t.pass('The new channel has been successfully joined on peer '+ eh.ep._endpoint.addr);
 							resolve();
+						}
+						else {
+							t.fail('The new channel has not been succesfully joined');
+							reject();
 						}
 					}
 				});
@@ -211,7 +203,7 @@ function joinChannel(org, t) {
 			eventPromises.push(txPromise);
 		});
 		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, the_user);
+		tx_id = Client.buildTransactionID(nonce, the_user);
 		let request = {
 			targets : targets,
 			block : genesis_block,

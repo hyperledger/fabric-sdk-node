@@ -35,7 +35,12 @@ gulp.task('test', ['lint', 'pre-test'], function() {
 		'test/integration/query.js',
 		'test/integration/upgrade.js',
 		'test/integration/new-chain.js',
-		'test/integration/get-config.js'
+		'test/integration/get-config.js',
+		'test/integration/create-configtx-channel.js',
+		'test/integration/e2e/join-channel.js',
+		'test/integration/e2e/instantiate-chaincode.js',
+		'test/integration/e2e/invoke-transaction.js',
+		'test/integration/e2e/query.js'
 	])
 	.pipe(tape({
 		reporter: tapColorize()
