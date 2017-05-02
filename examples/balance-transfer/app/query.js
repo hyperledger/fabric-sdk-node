@@ -17,7 +17,6 @@ var path = require('path');
 var fs = require('fs');
 var util = require('util');
 var hfc = require('fabric-client');
-var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var config = require('../config.json');
@@ -35,7 +34,7 @@ var queryChaincode = function(peer, channelName, chaincodeName,
 	helper.setupPeers(chain, peers, targets);
 	return helper.getRegisteredUsers(username, org).then((user) => {
 		member = user;
-		nonce = utils.getNonce();
+		nonce = helper.getNonce();
 		tx_id = chain.buildTransactionID(nonce, member);
 		// send query
 		var request = {

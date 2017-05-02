@@ -18,7 +18,6 @@ var path = require('path');
 var fs = require('fs');
 var util = require('util');
 var hfc = require('fabric-client');
-var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var config = require('../config.json');
@@ -72,7 +71,7 @@ var instantiateChaincode = function(peers, channelName, chaincodeName,
 		logger.error('Failed to enroll user \'' + username + '\'. ' + err);
 		throw new Error('Failed to enroll user \'' + username + '\'. ' + err);
 	}).then((success) => {
-		nonce = utils.getNonce();
+		nonce = helper.getNonce();
 		tx_id = chain.buildTransactionID(nonce, member);
 		// send proposal to endorser
 		var request = {
