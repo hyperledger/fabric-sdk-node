@@ -18,7 +18,6 @@
 if (global && global.hfc) global.hfc.config = undefined;
 require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('fabric-ca-services');
 
 var tape = require('tape');
@@ -57,7 +56,7 @@ var	tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
-var fabricCAEndpoint = ORGS[userOrg].ca;
+var fabricCAEndpoint = ORGS[userOrg].ca.url;
 
 /**
  * FabricCAServices class tests
@@ -67,7 +66,7 @@ var fabricCAEndpoint = ORGS[userOrg].ca;
 
 test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 
-	var caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, {keysize: 256, hash: 'SHA2'});
+	var caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name, {keysize: 256, hash: 'SHA2'});
 
 	var req = {
 		enrollmentID: 'admin',
@@ -219,7 +218,8 @@ test('FabricCAClient: Test enroll With Static CSR', function (t) {
 		protocol: endpoint.protocol,
 		hostname: endpoint.hostname,
 		port: endpoint.port,
-		tlsOptions: tlsOptions
+		tlsOptions: tlsOptions,
+		caname: ORGS[userOrg].ca.name
 	});
 
 	t.comment(util.format('Sending enroll request for user %s with enrollment secret %s', enrollmentID, enrollmentSecret));

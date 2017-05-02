@@ -44,6 +44,8 @@ var FabricCAServices = class {
 	 *
 	 * @param {string} url The endpoint URL for Fabric CA services of the form: "http://host:port" or "https://host:port"
 	 * @param {TLSOptions} tlsOptions The TLS settings to use when the Fabric CA services endpoint uses "https"
+	 * @param {string} caName The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
+	 *  a single server. If omitted or null or an empty string, then the default CA is the target of requests
 	 * @param {object} cryptoSetting This optional parameter is an object with the following optional properties:
 	 * - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
 	 *	default is true (for software based implementation), specific implementation module is specified
@@ -56,13 +58,15 @@ var FabricCAServices = class {
 	 * KeyValueStore interface.
 	 * @param {object} opts Implementation-specific options object for the {@link KeyValueStore} class to instantiate an instance
 	 */
-	constructor(url, tlsOptions, cryptoSettings, KVSImplClass, opts) {
+	constructor(url, tlsOptions, caName, cryptoSettings, KVSImplClass, opts) {
 
 		var endpoint = FabricCAServices._parseURL(url);
 
 		this.cryptoPrimitives = utils.newCryptoSuite(cryptoSettings, KVSImplClass, opts);
+		this._caName = caName;
 
 		this._fabricCAClient = new FabricCAClient({
+			caname: caName,
 			protocol: endpoint.protocol,
 			hostname: endpoint.hostname,
 			port: endpoint.port,
@@ -271,7 +275,7 @@ var FabricCAServices = class {
 			request.enrollmentID,
 			request.aki,
 			request.serial,
-			(request.reason) ? request.reason : 0,
+			(request.reason) ? request.reason : null,
 			registrar.getSigningIdentity());
 	}
 
@@ -346,6 +350,8 @@ var FabricCAClient = class {
 	 * @param {string} connect_opts.hostname The hostname of the Fabric CA server endpoint
 	 * @param {number} connect_opts.port The port of the Fabric CA server endpoint
 	 * @param {TLSOptions} connect_opts.tlsOptions The TLS settings to use when the Fabric CA endpoint uses "https"
+	 * @param {string} connect_opts.caname The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
+	 *  a single server. If omitted or null or an empty string, then the default CA is the target of requests
 	 * @throws Will throw an error if connection options are missing or invalid
 	 *
 	 */
@@ -358,7 +364,7 @@ var FabricCAClient = class {
 			throw new Error('Invalid connection options.  ' + err.message);
 		}
 
-
+		this._caName = connect_opts.caname,
 		this._httpClient = (connect_opts.protocol === 'http') ? http : https;
 		this._hostname = connect_opts.hostname;
 		if (connect_opts.port) {
@@ -513,6 +519,8 @@ var FabricCAClient = class {
 	}
 
 	post(api_method, requestObj, signingIdentity) {
+		requestObj.caName = this._caName;
+
 		var self = this;
 		return new Promise(function (resolve, reject) {
 			var requestOptions = {
@@ -625,6 +633,7 @@ var FabricCAClient = class {
 			};
 
 			var enrollRequest = {
+				caName: self._caName,
 				certificate_request: csr
 			};
 

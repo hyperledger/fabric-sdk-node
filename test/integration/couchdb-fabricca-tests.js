@@ -52,7 +52,7 @@ var	tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
-var fabricCAEndpoint = ORGS[userOrg].ca;
+var fabricCAEndpoint = ORGS[userOrg].ca.url;
 
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
@@ -88,7 +88,7 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				}
 				t.comment('Initialize the CA server connection and KeyValueStore');
 				t.comment('Test optional parameters passed into FabricCAServices of cryptoSettings and KVSImplClass');
-				return new FabricCAServices(fabricCAEndpoint, tlsOptions/*cryptoSettings*/,
+				return new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name,
 					kvs/*KVSImplClass*/, {name: dbname, url: keyValStorePath});
 			},
 			function(err) {

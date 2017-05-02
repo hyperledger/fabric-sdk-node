@@ -48,7 +48,7 @@ var	tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
-var fabricCAEndpoint = ORGS[userOrg].ca;
+var fabricCAEndpoint = ORGS[userOrg].ca.url;
 
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
@@ -84,7 +84,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 					process.exit(1);
 				}
 				t.comment('Initialize the CA server connection and KeyValueStore');
-				return new FabricCAServices(fabricCAEndpoint, tlsOptions/*cryptoSettings*/, kvs/*KVSImplClass*/, {name: dbname, url: cloudantUrl});
+				return new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name, kvs, {name: dbname, url: cloudantUrl});
 			},
 			function(err) {
 				t.fail('Error initializing Cloudant KeyValueStore. Exiting.');

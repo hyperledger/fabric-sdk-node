@@ -50,8 +50,12 @@ var _commonConfigurationProto = grpc.load(__dirname + '/protos/common/configurat
 var _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configuration.proto').orderer;
 var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
 var _mspConfigProto = grpc.load(__dirname + '/protos/msp/mspconfig.proto').msp;
+var _mspPrincipalProto = grpc.load(__dirname + '/protos/common/msp_principal.proto').common;
 var _timestampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.proto').google.protobuf;
 var _identityProto = grpc.load(path.join(__dirname, '/protos/identity.proto')).msp;
+
+const ImplicitMetaPolicy_Rule = {0: 'ANY', 1:'ALL', 2:'MAJORITY'};
+var Long = require('long');
 
 /**
  * The class representing a chain with which the client SDK interacts.
@@ -409,6 +413,7 @@ var Chain = class {
 		});
 		var channel_config = new ChannelConfig(this._msps);
 		var proto_channel_config = channel_config.build(config_definition);
+
 		return proto_channel_config.toBuffer();
 	}
 
@@ -632,7 +637,7 @@ var Chain = class {
 
 				logger.debug('getChannelConfig - latest block is block number %s',block.header.number);
 				// get the last config block number
-				var metadata = _commonProto.Metadata.decode(block.metadata.metadata[1]);
+				var metadata = _commonProto.Metadata.decode(block.metadata.metadata[_commonProto.BlockMetadataIndex.LAST_CONFIG]);
 				var last_config = _commonProto.LastConfig.decode(metadata.value);
 				logger.debug('getChannelConfig - latest block has config block of %s',last_config.index);
 
@@ -642,13 +647,13 @@ var Chain = class {
 				// now build the seek info to get the block called out
 				// as the latest config block
 				var seekSpecifiedStart = new _abProto.SeekSpecified();
-				seekSpecifiedStart.setNumber(last_config.index);
+				seekSpecifiedStart.setNumber(0); //FIXME: temporary hack to workaround https://jira.hyperledger.org/browse/FAB-3493
 				var seekStart = new _abProto.SeekPosition();
 				seekStart.setSpecified(seekSpecifiedStart);
 
 				//   build stop
 				var seekSpecifiedStop = new _abProto.SeekSpecified();
-				seekSpecifiedStop.setNumber(last_config.index);
+				seekSpecifiedStop.setNumber(0); //FIXME: temporary hack to workaround https://jira.hyperledger.org/browse/FAB-3493
 				var seekStop = new _abProto.SeekPosition();
 				seekStop.setSpecified(seekSpecifiedStop);
 
@@ -698,7 +703,7 @@ var Chain = class {
 				var payload = _commonProto.Payload.decode(envelope.payload);
 				var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
 				if(channel_header.type != _commonProto.HeaderType.CONFIG) {
-					return Promise.reject(new Error('Block must be of type "CONFIG"'));
+					return Promise.reject(new Error(util.format('Block must be of type "CONFIG" (%s), but got "%s" instead', _commonProto.HeaderType.CONFIG, channel_header.type)));
 				}
 
 				var config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
@@ -797,12 +802,15 @@ var Chain = class {
 	 * @see /protos/common/configtx.proto
 	 */
 	loadConfigGroup(config_items, versions, group, name, org, top) {
-		logger.debug('loadConfigGroup - %s - START Org:%s', name, org);
+		logger.debug('loadConfigGroup - %s - > group:%s', name, org);
 		if(!group) {
-			logger.debug('loadConfigGroup - %s - no groups', name);
-			logger.debug('loadConfigGroup - %s - END groups', name);
+			logger.debug('loadConfigGroup - %s - no group', name);
+			logger.debug('loadConfigGroup - %s - < group', name);
 			return;
 		}
+
+		logger.debug('loadConfigGroup - %s   - version %s',name, group.version);
+		logger.debug('loadConfigGroup - %s   - mod policy %s',name, group.mod_policy);
 
 		var groups = null;
 		if(top) {
@@ -813,25 +821,28 @@ var Chain = class {
 			groups = group.value.groups;
 			versions.version = group.value.version;
 		}
+		logger.debug('loadConfigGroup - %s - >> groups', name);
+
 		if(groups) {
 			let keys = Object.keys(groups.map);
 			versions.groups = {};
 			if(keys.length == 0) {
-				logger.debug('loadConfigGroup - %s - no groups', name);
+				logger.debug('loadConfigGroup - %s   - no groups', name);
 			}
 			for(let i =0; i < keys.length; i++) {
 				let key = keys[i];
-				logger.debug('loadConfigGroup - %s - found config group ==> %s', name, key);
+				logger.debug('loadConfigGroup - %s   - found config group ==> %s', name, key);
 				versions.groups[key] = {};
 				// The Application group is where config settings are that we want to find
 				this.loadConfigGroup(config_items, versions.groups[key], groups.map[key], name+'.'+key, key, false);
 			}
 		}
 		else {
-			logger.debug('loadConfigGroup - %s - no groups', name);
+			logger.debug('loadConfigGroup - %s   - no groups', name);
 		}
+		logger.debug('loadConfigGroup - %s - << groups', name);
 
-		logger.debug('loadConfigGroup - %s - START values', name);
+		logger.debug('loadConfigGroup - %s - >> values', name);
 		var values = null;
 		if(top) {
 			values = group.values;
@@ -850,11 +861,11 @@ var Chain = class {
 			}
 		}
 		else {
-			logger.debug('loadConfigGroup - %s - no values', name);
+			logger.debug('loadConfigGroup - %s   - no values', name);
 		}
-		logger.debug('loadConfigGroup - %s - END values', name);
+		logger.debug('loadConfigGroup - %s - << values', name);
 
-		logger.debug('loadConfigGroup - %s - START policies', name);
+		logger.debug('loadConfigGroup - %s - >> policies', name);
 		var policies = null;
 		if(top) {
 			policies = group.policies;
@@ -873,11 +884,11 @@ var Chain = class {
 			}
 		}
 		else {
-			logger.debug('loadConfigGroup - %s - no policies', name);
+			logger.debug('loadConfigGroup - %s   - no policies', name);
 		}
-		logger.debug('loadConfigGroup - %s - END policies', name);
+		logger.debug('loadConfigGroup - %s - << policies', name);
 
-		logger.debug('loadConfigGroup - %s - END group',name);
+		logger.debug('loadConfigGroup - %s - < group',name);
 	}
 
 	/*
@@ -888,16 +899,16 @@ var Chain = class {
 	 * @see /protos/peer/configuration.proto
 	 */
 	loadConfigValue(config_items, versions, config_value, group_name, org) {
-		logger.debug('loadConfigValue - %s - START value name: %s', group_name, config_value.key);
-		logger.debug('loadConfigValue - %s   - version: %s', group_name, config_value.value.version);
-		logger.debug('loadConfigValue - %s   - mod_policy: %s', group_name, config_value.value.mod_policy);
+		logger.debug('loadConfigValue - %s -  value name: %s', group_name, config_value.key);
+		logger.debug('loadConfigValue - %s    - version: %s', group_name, config_value.value.version);
+		logger.debug('loadConfigValue - %s    - mod_policy: %s', group_name, config_value.value.mod_policy);
 
 		versions.version = config_value.value.version;
 		try {
 			switch(config_value.key) {
 			case 'AnchorPeers':
 				var anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s   - AnchorPeers :: %s', group_name, anchor_peers);
+				logger.debug('loadConfigValue - %s    - AnchorPeers :: %s', group_name, anchor_peers);
 				if(anchor_peers && anchor_peers.anchor_peers) for(var i in anchor_peers.anchor_peers) {
 					var anchor_peer = {
 						host : anchor_peers.anchor_peers[i].host,
@@ -905,35 +916,35 @@ var Chain = class {
 						org  : org
 					};
 					config_items['anchor-peers'].push(anchor_peer);
-					logger.debug('loadConfigValue - %s   - AnchorPeer :: %s:%s:%s', group_name, anchor_peer.host, anchor_peer.port, anchor_peer.org);
+					logger.debug('loadConfigValue - %s    - AnchorPeer :: %s:%s:%s', group_name, anchor_peer.host, anchor_peer.port, anchor_peer.org);
 				}
 				break;
 			case 'MSP':
 				var msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s   - MSP found', group_name);
+				logger.debug('loadConfigValue - %s    - MSP found', group_name);
 				config_items.msps.push(msp_value);
 				break;
 			case 'ConsensusType':
 				var consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
 				config_items.settings['ConsensusType'] = consensus_type;
-				logger.debug('loadConfigValue - %s   - Consensus type value :: %s', group_name, consensus_type.type);
+				logger.debug('loadConfigValue - %s    - Consensus type value :: %s', group_name, consensus_type.type);
 				break;
 			case 'BatchSize':
 				var batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
 				config_items.settings['BatchSize'] = batch_size;
-				logger.debug('loadConfigValue - %s   - BatchSize  maxMessageCount :: %s', group_name, batch_size.maxMessageCount);
-				logger.debug('loadConfigValue - %s   - BatchSize  absoluteMaxBytes :: %s', group_name, batch_size.absoluteMaxBytes);
-				logger.debug('loadConfigValue - %s   - BatchSize  preferredMaxBytes :: %s', group_name, batch_size.preferredMaxBytes);
+				logger.debug('loadConfigValue - %s    - BatchSize  maxMessageCount :: %s', group_name, batch_size.maxMessageCount);
+				logger.debug('loadConfigValue - %s    - BatchSize  absoluteMaxBytes :: %s', group_name, batch_size.absoluteMaxBytes);
+				logger.debug('loadConfigValue - %s    - BatchSize  preferredMaxBytes :: %s', group_name, batch_size.preferredMaxBytes);
 				break;
 			case 'BatchTimeout':
 				var batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
 				config_items.settings['BatchTimeout'] = batch_timeout;
-				logger.debug('loadConfigValue - %s   - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
+				logger.debug('loadConfigValue - %s    - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
 				break;
 			case 'ChannelRestrictions':
 				var channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
 				config_items.settings['ChannelRestrictions'] = channel_restrictions;
-				logger.debug('loadConfigValue - %s   - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
+				logger.debug('loadConfigValue - %s    - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
 				break;
 			case 'CreationPolicy':
 				var creation_policy = _ordererConfigurationProto.CreationPolicy.decode(config_value.value.value);
@@ -948,35 +959,40 @@ var Chain = class {
 			case 'HashingAlgorithm':
 				var hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
 				config_items.settings['HashingAlgorithm'] = hashing_algorithm_name;
-				logger.debug('loadConfigValue - %s   - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
+				logger.debug('loadConfigValue - %s    - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
+				break;
+			case 'Consortium':
+				var consortium_algorithm_name = _commonConfigurationProto.Consortium.decode(config_value.value.value);
+				config_items.settings['Consortium'] = consortium_algorithm_name;
+				logger.debug('loadConfigValue - %s    - Consortium name value :: %s', group_name, consortium_algorithm_name.name);
 				break;
 			case 'BlockDataHashingStructure':
 				var blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
 				config_items.settings['BlockDataHashingStructure'] = blockdata_hashing_structure;
-				logger.debug('loadConfigValue - %s   - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
+				logger.debug('loadConfigValue - %s    - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
 				break;
 			case 'OrdererAddresses':
 				var orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s   - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
+				logger.debug('loadConfigValue - %s    - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
 				if(orderer_addresses && orderer_addresses.addresses ) for(var i in orderer_addresses.addresses) {
 					config_items.orderers.push(orderer_addresses.addresses[i]);
 				}
 				break;
 			case 'KafkaBrokers':
 				var kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
-				logger.debug('loadConfigValue - %s   - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
+				logger.debug('loadConfigValue - %s    - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
 				if(kafka_brokers && kafka_brokers.brokers ) for(var i in kafka_brokers.brokers) {
 					config_items['kafka-brokers'].push(kafka_brokers.brokers[i]);
 				}
 				break;
 			default:
-				logger.debug('loadConfigValue - %s   - value: %s', group_name, config_value.value.value);
+				logger.debug('loadConfigValue - %s    - value: %s', group_name, config_value.value.value);
 			}
 		}
 		catch(err) {
 			logger.debug('loadConfigValue - %s - name: %s - *** unable to parse with error :: %s', group_name, config_value.key, err);
 		}
-		logger.debug('loadConfigValue - %s - END value name: %s', group_name, config_value.key);
+		//logger.debug('loadConfigValue - %s -  < value name: %s', group_name, config_value.key);
 	}
 
 	/*
@@ -984,9 +1000,9 @@ var Chain = class {
 	 * @see /protos/common/configtx.proto
 	 */
 	loadConfigPolicy(config_items, versions, config_policy, group_name, org) {
-		logger.debug('loadConfigPolicy - %s - name: %s', group_name, config_policy.key);
-		logger.debug('loadConfigPolicy - %s - version: %s', group_name, config_policy.value.version);
-		logger.debug('loadConfigPolicy - %s - mod_policy: %s', group_name, config_policy.value.mod_policy);
+		logger.debug('loadConfigPolicy - %s - policy name: %s', group_name, config_policy.key);
+		logger.debug('loadConfigPolicy - %s   - version: %s', group_name, config_policy.value.version);
+		logger.debug('loadConfigPolicy - %s   - mod_policy: %s', group_name, config_policy.value.mod_policy);
 
 		versions.version = config_policy.value.version;
 		try {
