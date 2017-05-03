@@ -15,6 +15,8 @@
  */
 'use strict';
 
+if (global && global.hfc) global.hfc.config = undefined;
+require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('E2E create-channel');
 
@@ -246,6 +248,9 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		path: testUtil.storePathForOrg(org)
 	}).then((store) => {
 		client.setStateStore(store);
+		var cryptoSuite = client.newCryptoSuite();
+		cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(org)}));
+		client.setCryptoSuite(cryptoSuite);
 
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) =>{

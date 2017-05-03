@@ -20,10 +20,12 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
+var util = require('util');
 var testutil = require('./util.js');
 var utils = require('fabric-client/lib/utils.js');
 var fs = require('fs-extra');
 var path = require('path');
+var os = require('os');
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 var CouchdbMock = require('mock-couch');
@@ -234,4 +236,47 @@ function testKeyStore(store, t) {
 		t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
 		t.equal(recoveredKey.isPrivate(), false, 'Test if the recovered key is a public key');
 	});
-}
+};
+
+test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', function(t) {
+	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
+	let keyValStorePath = 'tmp/keyValStore1';
+	let config = { path: keyValStorePath };
+	t.comment('test opts as first parameter');
+	let cs = utils.newCryptoKeyStore(config);
+	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
+	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
+
+	t.comment('test default KVS path');
+	let defaultKVSPath = path.join(os.homedir(), '.hfc-key-store');
+	cs = utils.newCryptoKeyStore();
+	t.equal(cs._storeConfig.opts.path, defaultKVSPath, util.format('Returned instance should have store config opts.path of %s', defaultKVSPath));
+	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
+
+	t.comment('test KVSImplClass as first parameter');
+	let kvsImplClass = require(utils.getConfigSetting('key-value-store'));
+	cs = utils.newCryptoKeyStore(kvsImplClass);
+	t.equal(cs._storeConfig.opts.path, defaultKVSPath, util.format('Returned instance should have store config opts.path of %s', defaultKVSPath));
+	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
+
+	t.comment('test both parameters: (KVSImplClass, opts)');
+	kvsImplClass = require(utils.getConfigSetting('key-value-store'));
+	cs = utils.newCryptoKeyStore(kvsImplClass, config);
+	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
+	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
+
+	t.end();
+});
+
+test('\n\n** CryptoKeyStore tests - getKey error tests **\n\n', function(t) {
+	var cryptoSuite = utils.newCryptoSuite();
+	t.throws(
+		() => {
+			cryptoSuite.getKey('blah');
+		},
+		/getKey requires CryptoKeyStore to be set./,
+		'Test missing cryptoKeyStore: cryptoSuite.getKey'
+	);
+	t.end();
+
+});

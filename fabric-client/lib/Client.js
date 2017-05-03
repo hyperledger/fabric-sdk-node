@@ -27,10 +27,9 @@ var Packager = require('./Packager.js');
 var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
 var MSP = require('./msp/msp.js');
-var MSPManager = require('./msp/msp-manager.js');
+
 var logger = sdkUtils.getLogger('Client.js');
 var util = require('util');
-var path = require('path');
 var fs = require('fs-extra');
 var Constants = require('./Constants.js');
 
@@ -73,7 +72,19 @@ var Client = class {
 	}
 
 	/**
- 	 * Returns a new instance of the CryptoSuite API implementation
+	 * Returns a new instance of the CryptoSuite API implementation.
+	 *
+	 * Creating a new CryptoSuite is optional and should be used if options other than defaults are needed.
+	 * This instance should be set on the User and the Fabric CA Client.
+	 *
+	 * If not specified, an instance of {@link CryptoSuite} will be constructed based on the current configuration settings:
+	 * crypto-hsm: use an implementation for Hardware Security Module (if set to true) or software-based key management (if set to false)
+	 * crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
+	 *  is supported and the valid key sizes are 256 and 384
+	 * crypto-hash-algo: hashing algorithm
+	 * key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A {@link CryptoKeyStore}
+	 *  is provided for this purpose, which can be used on top of any implementation of the {@link KeyValueStore} interface,
+	 *  such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
 	 *
 	 * @param {object} setting This optional parameter is an object with the following optional properties:
 	 * - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
@@ -82,14 +93,10 @@ var Client = class {
 	 * - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
 	 * - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
 	 * - hash {string}: 'SHA2' or 'SHA3'
-	 * @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
-	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
-	 * KeyValueStore interface.
-	 * @param {object} opts Implementation-specific option object used in the constructor
 	 * returns a new instance of the CryptoSuite API implementation
 	 */
-	newCryptoSuite(setting, KVSImplClass, opts) {
-		this._cryptoSuite = sdkUtils.newCryptoSuite(setting, KVSImplClass, opts);
+	newCryptoSuite(setting) {
+		this._cryptoSuite = sdkUtils.newCryptoSuite(setting);
 		return this._cryptoSuite;
 	}
 
@@ -99,6 +106,24 @@ var Client = class {
 
 	getCryptoSuite() {
 		return this._cryptoSuite;
+	}
+
+	/**
+	 * Returns a new instance of the CryptoKeyStore.
+	 *
+	 * When the application needs to use a key store other than the default,
+	 * it should create a new CryptoKeyStore and set it on the CryptoSuite.
+	 *
+	 * cryptosuite.setCryptoKeyStore(client.newCryptoKeyStore(KVSImplClass, opts))
+	 *
+	 * @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
+	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
+	 * KeyValueStore interface.
+	 * @param {object} opts Implementation-specific option object used in the constructor
+	 * returns a new instance of the CryptoKeystore
+	 */
+	newCryptoKeyStore (KVSImplClass, opts) {
+		return sdkUtils.newCryptoKeyStore(KVSImplClass, opts);
 	}
 
 	/**
@@ -1052,14 +1077,19 @@ var Client = class {
 				(!opts.cryptoContent.privateKeyPEM || !opts.cryptoContent.signedCertPEM)) {
 				return Promise.reject(new Error('Client.createUser both parameters \'opts cryptoContent privateKeyPEM and signedCertPEM\' strings are required.'));
 			}
-
 		} else {
 			return Promise.reject(new Error('Client.createUser parameter \'opts cryptoContent\' is required.'));
 		}
 
 		if (this._cryptoSuite == null) {
+			logger.debug('cryptoSuite is null, creating default cryptoSuite and cryptoKeyStore');
 			this._cryptoSuite = sdkUtils.newCryptoSuite();
+			this._cryptoSuite.setCryptoKeyStore(this.newCryptoKeyStore());
+		} else {
+			if (this._cryptoSuite._cryptoKeyStore) logger.debug('cryptoSuite has a cryptoKeyStore');
+			else logger.info('cryptoSuite does not have a cryptoKeyStore');
 		}
+
 		var self = this;
 		return new Promise((resolve, reject) => {
 			logger.info('loading user from files');
@@ -1073,14 +1103,19 @@ var Client = class {
 
 			// first load the private key and save in the BCCSP's key store
 			var promise, member, importedKey;
+
 			if (opts.cryptoContent.privateKey) {
 				promise = readFile(opts.cryptoContent.privateKey);
 			} else {
 				promise = Promise.resolve(opts.cryptoContent.privateKeyPEM);
 			}
 			promise.then((data) => {
-				logger.debug('then privateKeyPEM data');
-				return self._cryptoSuite.importKey(data.toString());
+				if (data) {
+					logger.debug('then privateKeyPEM data');
+					return self._cryptoSuite.importKey(data.toString());
+				} else {
+					throw new Error('failed to load private key data');
+				}
 			}).then((key) => {
 				logger.debug('then key');
 				importedKey = key;

@@ -77,7 +77,9 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 			function(kvs) {
 				t.comment('Setting client keyValueStore to: ' + kvs);
 				member = new User('admin2');
-				cryptoSuite = client.newCryptoSuite(options);
+				cryptoSuite = client.newCryptoSuite();
+				cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(options));
+				client.setCryptoSuite(cryptoSuite);
 				member.setCryptoSuite(cryptoSuite);
 
 				t.comment('Setting client keyValueStore to: ' +kvs);

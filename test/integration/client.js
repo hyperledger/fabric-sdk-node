@@ -50,7 +50,9 @@ test('\n\n ** createUser happy path - file store **\n\n', function (t) {
 
 	var keyStoreOpts = {path: path.join(testUtil.getTempDir(), caImport.orgs[userOrg].storePath)};
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite(keyStoreOpts);
+	var cryptoSuite = client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(keyStoreOpts));
+	client.setCryptoSuite(cryptoSuite);
 
 	logger.info('try to cleanup kvs Path: '+keyStoreOpts.path);
 	// clean up
@@ -107,7 +109,9 @@ test('\n\n ** createUser happy path - CouchDB **\n\n', function (t) {
 	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite(keyStoreOpts);
+	var cryptoSuite = client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(keyStoreOpts));
+	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, keyValStorePath)
 	.then((status) => {
@@ -160,7 +164,10 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', function (t) {
 	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite(keyStoreOpts);
+	var cryptoSuite = client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(keyStoreOpts));
+	client.setCryptoSuite(cryptoSuite);
+
 	couchdbUtil.destroy(dbname, cloudantUrl)
 	.then((status) => {
 		t.comment(tag+'Cleanup of existing ' + dbname + ' returned '+status);
@@ -208,7 +215,10 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', function 
 	logger.info('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
 
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite(keyStoreOpts);
+	var cryptoSuite = client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(keyStoreOpts));
+	client.setCryptoSuite(cryptoSuite);
+
 	couchdbUtil.destroy(dbname, cloudantUrl)
 	.then((status) => {
 		t.comment(tag+'Cleanup of existing ' + dbname + ' returned '+status);

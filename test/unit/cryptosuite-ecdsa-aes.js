@@ -113,13 +113,13 @@ var TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 
 var TEST_USER_ENROLLMENT = {
 	'name': 'admin2',
+	'mspid': 'test',
 	'roles':null,
 	'affiliation':'',
 	'enrollmentSecret':'',
 	'enrollment': {
 		'signingIdentity': '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a',
 		'identity': {
-			'id': 'testIdentity',
 			'certificate': TEST_KEY_PRIVATE_CERT_PEM
 		}
 	}
@@ -135,29 +135,17 @@ var _client = new hfc();
 test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 	testutil.resetDefaults();
 
-	let config = { path: keyValStorePath };
-
-	let cs = utils.newCryptoSuite({keysize: 384, algorithm: 'EC'}, config);
+	let cs = utils.newCryptoSuite({keysize: 384, algorithm: 'EC'});
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 384, 'Returned instance should have keysize of 384');
-	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
-	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
 
-	cs = utils.newCryptoSuite({keysize: 384}, config);
+	cs = utils.newCryptoSuite({keysize: 384});
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Default test: should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 384, 'Returned instance should have keysize of 384');
-	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
 
-	cs = utils.newCryptoSuite({algorithm: 'EC'}, config);
-	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
-	t.equal(cs._keySize, 256, 'Returned instance should have keysize of 256');
-	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
-
-	let defaultKVSPath = path.join(os.homedir(), '.hfc-key-store');
 	cs = utils.newCryptoSuite({algorithm: 'EC'});
 	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
 	t.equal(cs._keySize, 256, 'Returned instance should have keysize of 256');
-	t.equal(cs._storeConfig.opts.path, defaultKVSPath, util.format('Returned instance should have store config opts.path of %s', defaultKVSPath));
 
 	// each app instance is expected to use either HSM or software-based key management, as such this question
 	// is answered with a config setting rather than controlled on a case-by-case basis
@@ -169,101 +157,31 @@ test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 		/Error:.*\/usr\/local\/lib/,
 		'Should attempt to load the bccsp_pkcs11 module and fail because of the dummy library path'
 	);
-
-	utils.setConfigSetting('crypto-hsm', false);
-	t.doesNotThrow(
-		() => {
-			cs = utils.newCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
-			cs._getKeyStore()
-			.then((store) => {
-				t.fail('Should not have been able to get a valid key store because of invalid store config');
-			}).catch((err) => {
-				t.pass('Successfully rejected _getKeyStore() due to invalid config');
-			});
-		},
-		null,
-		'Load the CryptoSuite_ECDSA_AES module and pass in an invalid config object'
-	);
-
-	// make sure the "software: true" setting overrides the config setting
-	utils.setConfigSetting('crypto-hsm', true);
-	cs = utils.newCryptoSuite({software: true, algorithm: 'EC', keysize: 256}, CouchDBKeyValueStore, { name: 'test_db', url: 'http://dummyUrl' });
-	cs._getKeyStore()
-	.then(() => {
-		t.fail('Should not have been able to get a valid key store because the url was invalid');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf('Error creating test_db database to store membership data: Error: getaddrinfo ENOTFOUND dummyurl') >= 0) {
-			t.pass('Successfully loaded CryptoKeyStore based on CouchDBKeyValueStore, but rejected _getKeyStore() because the url was invalid');
-		} else {
-			t.fail(err);
-		}
-
-		t.end();
-	});
+	t.end();
 });
 
-test('\n\n ** CryptoSuite_ECDSA_AES - constructor tests **\n\n', function (t) {
-	cleanupFileKeyValueStore(keyValStorePath);
-
-	var keyValueStore = null;
-	let cs;
-
-	utils.setConfigSetting('crypto-hsm', false);
-
-	cs = new CryptoSuite_ECDSA_AES(256, { name: 'test_db', url: 'http://dummyUrl'}, CouchDBKeyValueStore);
-	cs._getKeyStore()
-	.then(() => {
-		t.fail('Should not have been able to get a valid key store because the url was invalid');
-	}).catch((err) => {
-		if (err.message.indexOf('Error creating test_db database to store membership data: Error: getaddrinfo ENOTFOUND dummyurl') >= 0) {
-			t.pass('Successfully rejected _getKeyStore() because the url was invalid');
-		} else {
-			t.fail(err);
-		}
-
-		t.doesNotThrow(
-			() => {
-				cs = utils.newCryptoSuite(keyValStorePath);
-			},
-			null,
-			'CryptoSuite_ECDSA_AES constructor tests: pass in a string as kvs path'
-		);
-
-		return cs._getKeyStore();
-	}).then(() => {
-		t.fail('Should not have been able to obtain a proper key store due to invalid config');
-	}).catch(() => {
-		t.pass('Successfully rejected attempt to obtain a proper key store');
-
-		utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
-
-		let cs1 = utils.newCryptoSuite({
-			path: keyValStorePath
-		});
-
-		return cs1._getKeyStore();
-	}).then((store) => {
-		t.notEqual(store, null, 'Crypto Key Store successfully initialized by CryptoSuite_ECDSA_AES');
-		t.equal(typeof store.getKey, 'function', 'Crypto key store much have the "getKey()" function');
-		t.equal(typeof store.putKey, 'function', 'Crypto key store much have the "putKey()" function');
-
-		let cs2 = new CryptoSuite_ECDSA_AES(256, {path: keyValStorePath});
-		return cs2._getKeyStore();
-	}).then((store) => {
-		t.notEqual(store, null, 'Crypto Key Store successfully initialized by CryptoSuite_ECDSA_AES');
-		t.equal(typeof store.getKey, 'function', 'Crypto key store much have the "getKey()" function');
-		t.equal(typeof store.putKey, 'function', 'Crypto key store much have the "putKey()" function');
-		t.end();
-	}).catch((err) => {
-		t.fail(err.stack ? err.stack : err);
-		t.end();
-	});
+test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', function (t) {
+	testutil.resetDefaults();
+	var cryptoUtils = utils.newCryptoSuite();
+	t.throws(
+		() => {
+			cryptoUtils.importKey(TEST_CERT_PEM);
+		},
+		/importKey storeKey is true, which requires CryptoKeyStore to be set./,
+		'Test missing cryptoKeyStore: cryptoSuite.importKey'
+	);
+	t.throws(
+		() => {
+			cryptoUtils.generateKey();
+		},
+		/generateKey opts.ephemeral is false, which requires CryptoKeyStore to be set./,
+		'Test missing cryptoKeyStore: cryptoSuite.generateKey'
+	);
+	t.end();
 });
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	testutil.resetDefaults();
-	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
 
 	var cryptoUtils = utils.newCryptoSuite();
 
@@ -285,7 +203,9 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
     //reset to default key size
 	utils.setConfigSetting('crypto-keysize', 256);
+	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');//force for gulp test
 	cryptoUtils = utils.newCryptoSuite();
+	cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
 	cryptoUtils.generateKey()
 	.then(function (key) {
@@ -296,9 +216,12 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
 		utils.setConfigSetting('crypto-keysize', 256);
 		cryptoUtils = utils.newCryptoSuite();
+		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 		return cryptoUtils.generateKey();
-	})
-	.then(function (key) {
+	},(err) => {
+		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(function (key) {
 		t.equal('secp256r1', key.getPublicKey()._key.curveName,
 			'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp256r1');
 
@@ -312,6 +235,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
 		utils.setConfigSetting('crypto-keysize', 384);
 		cryptoUtils = utils.newCryptoSuite();
+		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
 		t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
 			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
@@ -320,8 +244,10 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
 		return cryptoUtils.generateKey();
-	})
-	.then(function (key) {
+	},(err) => {
+		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(function (key) {
 		t.equal('secp384r1', key.getPublicKey()._key.curveName,
 			'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp384r1');
 
@@ -332,13 +258,17 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 		utils.setConfigSetting('crypto-hash-algo', 'sha3'); //lower or upper case is allowed
 		cryptoUtils = utils.newCryptoSuite();
+		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
+
 		t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
 			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
 		// test generation options
 		return cryptoUtils.generateKey({ ephemeral: true });
-	})
-	.then(function (key) {
+	},(err) => {
+		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(function (key) {
 		if (!!key._key)
 			t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
 		else
@@ -366,9 +296,13 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		utils.setConfigSetting('crypto-keysize', 256);
 		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
 		cryptoUtils = utils.newCryptoSuite();
+		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
+
 		return cryptoUtils.generateKey();
-	})
-	.then(function (key) {
+	},(err) => {
+		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(function (key) {
 		t.throws(
 			function () {
 				cryptoUtils.sign();
@@ -437,6 +371,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		utils.setConfigSetting('crypto-keysize', 256);
 		utils.setConfigSetting('crypto-hash-algo', 'SHA2');
 		cryptoUtils = utils.newCryptoSuite();
+		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
 		var testVerify = function (sig, msg, expected) {
 			// manually construct a key based on the saved privKeyHex and pubKeyHex
@@ -456,17 +391,23 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 		// test importKey()
 		return cryptoUtils.importKey(TEST_CERT_PEM);
+	},(err) => {
+		t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+		t.end();
 	}).then((pubKey) => {
 		t.equal(pubKey.isPrivate(), false, 'Test imported public key isPrivate()');
 		t.equal(pubKey.getSKI(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef', 'Test imported public key SKI');
 
 		// verify that the pub key has been saved in the key store by the proper key
 		t.equal(
-			fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef-pub')),
+			fs.existsSync(path.join(utils.getDefaultKeyStorePath(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef-pub')),
 			true,
 			'Check that the imported public key has been saved in the key store');
 
 		return cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM);
+	},(err) => {
+		t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+		t.end();
 	}).then((privKey) => {
 		t.equal(privKey.isPrivate(), true, 'Test imported private key isPrivate');
 		t.equal(privKey.getSKI(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a', 'Test imported private key SKI');
@@ -474,7 +415,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 		// verify that the imported private key has been saved in the key store by the proper key
 		t.equal(
-			fs.existsSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv')),
+			fs.existsSync(path.join(utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv')),
 			true,
 			'Check that the imported private key has been saved in the key store');
 
@@ -487,18 +428,31 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 
 		// manufacture an error condition where the private key does not exist for the SKI, and only the public key does
 		return cryptoUtils.importKey(TEST_KEY_PRIVATE_CERT_PEM);
+	},(err) => {
+		t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+		t.end();
 	}).then((pubKey) => {
-		fs.removeSync(path.join(CryptoSuite_ECDSA_AES.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
+		t.comment('then pubKey of importKey TEST_KEY_PRIVATE_CERT_PEM');
+		fs.removeSync(path.join(utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
 
-		var poorUser = new User('admin2', _client);
+		var poorUser = new User('admin2');
+		poorUser.setCryptoSuite(cryptoUtils);
+
 		return poorUser.fromString(JSON.stringify(TEST_USER_ENROLLMENT));
 	}).then(() => {
 		t.fail('Failed to catch missing private key expected from a user enrollment object');
 		t.end();
 	},(err) => {
-		t.pass('Successfully caught missing private key expected from a user enrollment object');
-		t.end();
+		var msg = 'Private key missing from key store';
+		if (err.message && err.message.indexOf(msg) > -1) {
+			t.pass('Successfully caught missing private key expected from a user enrollment object');
+			t.end();
+		} else {
+			t.fail('Unexpected message.  Expecting "'+msg+'"');
+			t.end();
+		}
 	}).catch((err) => {
+		t.comment('final catch, caught err...');
 		t.fail(err.stack ? err.stack : err);
 		t.end();
 	});

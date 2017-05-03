@@ -137,6 +137,7 @@ test('\n\n** MSP Tests **\n\n', (t) => {
 
 		// test deserialization using the msp manager
 		var cryptoUtils = utils.newCryptoSuite();
+		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 		var mspImpl = new MSP({
 			rootCerts: [],
 			admins: [],
@@ -145,13 +146,12 @@ test('\n\n** MSP Tests **\n\n', (t) => {
 		});
 
 		var pubKey = cryptoUtils.importKey(TEST_CERT_PEM);
-		var identity = new Identity('testIdentity', TEST_CERT_PEM, pubKey, mspImpl);
+		var identity = new Identity(TEST_CERT_PEM, pubKey, mspImpl.getId(), cryptoUtils);
 
 		var serializedID = identity.serialize();
-
 		return mspm.deserializeIdentity(serializedID);
 	}).then((identity) => {
-		t.equal(identity.getId(), 'SomeDummyValue', 'Deserialized identity using MSP manager');
+		t.equal(identity.getMSPId(), 'peerOrg0', 'Deserialized identity using MSP manager');
 
 		t.equal(mspm.getMSP('peerOrg0').getId(), 'peerOrg0', 'Checking MSPManager getMSP() method' );
 		t.end();

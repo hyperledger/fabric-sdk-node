@@ -27,13 +27,10 @@ var KEYUTIL = jsrsa.KEYUTIL;
 var util = require('util');
 var BN = require('bn.js');
 var Signature = require('elliptic/lib/elliptic/ec/signature.js');
-var path = require('path');
-const os = require('os');
 
 var hashPrimitives = require('../hash.js');
 var utils = require('../utils');
 var ECDSAKey = require('./ecdsa/key.js');
-var CKS = require('./CryptoKeyStore.js');
 
 var logger = utils.getLogger('crypto_ecdsa_aes');
 
@@ -49,53 +46,38 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 * constructor
 	 *
 	 * @param {number} keySize Key size for the ECDSA algorithm, can only be 256 or 384
-	 * @param {object} opts Implementation-specific options object for the {@link KeyValueStore} class to instantiate an instance
-	 * @param {string} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
-	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
-	 * KeyValueStore interface.
 	 * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
 	 */
-	constructor(keySize, opts, KVSImplClass, hash) {
-		logger.debug('constructor, keySize: '+keySize+', opts: '+opts);
+	constructor(keySize, hash) {
+		logger.debug('constructor, keySize: '+keySize);
 		super();
 
 		if (keySize !== 256 && keySize !== 384) {
 			throw new Error('Illegal key size: ' + keySize + ' - this crypto suite only supports key sizes 256 or 384');
 		}
-
 		if (typeof hash === 'string' && hash !== null && hash !== '') {
 			this._hashAlgo = hash;
 		} else {
 			this._hashAlgo = utils.getConfigSetting('crypto-hash-algo');
 		}
-
-		if (typeof opts === 'undefined' || opts === null) {
-			opts = {
-				path: CryptoSuite_ECDSA_AES.getDefaultKeyStorePath()
-			};
-		}
-
-		var superClass;
-
-		if (typeof KVSImplClass !== 'undefined' && KVSImplClass !== null) {
-			if (typeof KVSImplClass !== 'function') {
-				throw new Error('Super class for the key store must be a module.');
-			} else {
-				superClass = KVSImplClass;
-			}
-		} else {
-			// no super class specified, use the default key value store implementation
-			superClass = require(utils.getConfigSetting('key-value-store'));
-			logger.debug('constructor, no super class specified, config: '+utils.getConfigSetting('key-value-store'));
-		}
-
 		this._keySize = keySize;
-		this._store = null;
-		this._storeConfig = {
-			superClass: superClass,
-			opts: opts
-		};
+		this._cryptoKeyStore = null;
+
 		this._initialize();
+
+	}
+
+	/**
+	 * Set the cryptoKeyStore.
+	 *
+	 * When the application needs to use a key store other than the default,
+	 * it should use the {@link Client} newCryptoKeyStore to create an instance and
+	 * use this function to set the instance on the CryptoSuite.
+	 *
+	 * @param {CryptoKeyStore} cryptoKeyStore The cryptoKeyStore.
+	 */
+	setCryptoKeyStore(cryptoKeyStore) {
+		this._cryptoKeyStore = cryptoKeyStore;
 	}
 
 	_initialize() {
@@ -141,8 +123,10 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#generateKey}
 	 * Returns an instance of {@link module.api.Key} representing the private key, which also
-	 * encapsulates the public key. It'll also save the private key in the KeyValueStore
+	 * encapsulates the public key. It'll also save the private key in the KeyValueStore.
 	 *
+	 * @param {object} opts Optional.
+	 * *    <br>`ephemeral`: {boolean} Optional. If not set, defaults to saving the key. If true, will not save the key.
 	 * @returns {Key} Promise of an instance of {@link module:ECDSA_KEY} containing the private key and the public key
 	 */
 	generateKey(opts) {
@@ -151,12 +135,15 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
 			return Promise.resolve(new ECDSAKey(pair.prvKeyObj));
 		} else {
+			if (!this._cryptoKeyStore) {
+				throw new Error('generateKey opts.ephemeral is false, which requires CryptoKeyStore to be set.');
+			}
 			// unless "opts.ephemeral" is explicitly set to "true", default to saving the key
 			var key = new ECDSAKey(pair.prvKeyObj);
 
 			var self = this;
 			return new Promise((resolve, reject) => {
-				self._getKeyStore()
+				self._cryptoKeyStore._getKeyStore()
 				.then ((store) => {
 					logger.debug('generateKey, store.setValue');
 					return store.putKey(key)
@@ -166,6 +153,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 							reject(err);
 						});
 				});
+
 			});
 		}
 	}
@@ -188,6 +176,9 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		// then storeKey must be set to false;
 		if(typeof storeKey === 'boolean') {
 			store_key = storeKey;
+		}
+		if (!!store_key && !this._cryptoKeyStore) {
+			throw new Error('importKey storeKey is true, which requires CryptoKeyStore to be set.');
 		}
 
 		var self = this;
@@ -231,7 +222,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 				return Promise.reject(error);
 			}
 			return new Promise((resolve, reject) => {
-				return self._getKeyStore()
+				return self._cryptoKeyStore._getKeyStore()
 					.then ((store) => {
 						return store.putKey(theKey);
 					}).then(() => {
@@ -239,6 +230,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 					}).catch((err) => {
 						reject(err);
 					});
+
 			});
 		}
 	}
@@ -251,8 +243,11 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		var self = this;
 		var store;
 
+		if (!self._cryptoKeyStore) {
+			throw new Error('getKey requires CryptoKeyStore to be set.');
+		}
 		return new Promise((resolve, reject) => {
-			self._getKeyStore()
+			self._cryptoKeyStore._getKeyStore()
 			.then ((st) => {
 				store = st;
 				return store.getKey(ski);
@@ -267,27 +262,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 			}).catch((err) => {
 				reject(err);
 			});
-		});
-	}
 
-	_getKeyStore() {
-		var self = this;
-		return new Promise((resolve, reject) => {
-			if (self._store === null) {
-				logger.info(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', self._storeConfig));
-
-				CKS(self._storeConfig.superClass, self._storeConfig.opts)
-				.then((ks) => {
-					logger.debug('_getKeyStore returning ks');
-					self._store = ks;
-					return resolve(self._store);
-				}).catch((err) => {
-					reject(err);
-				});
-			} else {
-				logger.debug('_getKeyStore resolving store');
-				return resolve(self._store);
-			}
 		});
 	}
 
@@ -367,10 +342,6 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 */
 	decrypt(key, cipherText, opts) {
 		throw new Error('Not implemented yet');
-	}
-
-	static getDefaultKeyStorePath() {
-		return path.join(os.homedir(), '.hfc-key-store');
 	}
 };
 

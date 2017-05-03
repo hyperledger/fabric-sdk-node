@@ -75,7 +75,8 @@ test('Use FabricCAServices with a File KeyValueStore', function(t) {
 		function(kvs) {
 
 			member = new User('admin2');
-			cryptoSuite = client.newCryptoSuite({path: keyValStorePath});
+			cryptoSuite = client.newCryptoSuite();
+			cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: keyValStorePath}));
 			member.setCryptoSuite(cryptoSuite);
 
 			t.comment('Setting client keyValueStore to: ' +kvs);

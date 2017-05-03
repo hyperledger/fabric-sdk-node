@@ -16,14 +16,13 @@ var identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp
  */
 var Identity = class {
 	/**
-	 * @param {string} id Identifier of this identity object
 	 * @param {string} certificate HEX string for the PEM encoded certificate
 	 * @param {Key} publicKey The public key represented by the certificate
-	 * @param {MSP} msp The associated MSP that manages this identity
+	 * @param {string} mspId The associated MSP's mspId that manages this identity
+	 * @param {CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
+	 * signature algorithm
 	 */
-	constructor(id, certificate, publicKey, msp) {
-		if (!id)
-			throw new Error('Missing required parameter "id".');
+	constructor(certificate, publicKey, mspId, cryptoSuite) {
 
 		if (!certificate)
 			throw new Error('Missing required parameter "certificate".');
@@ -31,21 +30,16 @@ var Identity = class {
 		if (!publicKey)
 			throw new Error('Missing required parameter "publicKey".');
 
-		if (!msp)
-			throw new Error('Missing required parameter "msp".');
+		if (!mspId)
+			throw new Error('Missing required parameter "mspId".');
 
-		this._id = id;
+		if (!cryptoSuite)
+			throw new Error('Missing required parameter "cryptoSuite".');
+
 		this._certificate = certificate;
 		this._publicKey = publicKey;
-		this._msp = msp;
-	}
-
-	/**
-	 * Returns the identifier of this identity
-	 * @returns {string}
-	 */
-	getId() {
-		return this._id;
+		this._mspId = mspId;
+		this._cryptoSuite = cryptoSuite;
 	}
 
 	/**
@@ -55,7 +49,7 @@ var Identity = class {
 	 * @returns {string}
 	 */
 	getMSPId() {
-		return this._msp.getId();
+		return this._mspId;
 	}
 
 	/**
@@ -66,7 +60,7 @@ var Identity = class {
 	 * @returns {boolean}
 	 */
 	isValid() {
-		return this._msp.validate(this);
+		return true;
 	}
 
 	/**
@@ -94,7 +88,7 @@ var Identity = class {
 	 * @param {Object} opts Options include 'policy' and 'label'
 	 */
 	verify(msg, signature, opts) {
-		return this._msp.cryptoSuite.verify(this._publicKey, signature, msg);
+		return this._cryptoSuite.verify(this._publicKey, signature, msg);
 	}
 
 	/**
@@ -177,15 +171,16 @@ var Signer = class {
  */
 var SigningIdentity = class extends Identity {
 	/**
-	 * @param {string} id Identifier of this identity object
 	 * @param {string} certificate HEX string for the PEM encoded certificate
 	 * @param {Key} publicKey The public key represented by the certificate
+	 * @param {string} mspId The associated MSP's ID that manages this identity
+	 * @param {CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
+	 * signature algorithm
 	 * @param {Signer} signer The signer object encapsulating the opaque private key and the corresponding
 	 * digital signature algorithm to be used for signing operations
-	 * @param {MSP} msp The associated MSP that manages this identity
 	 */
-	constructor(id, certificate, publicKey, msp, signer) {
-		super(id, certificate, publicKey, msp);
+	constructor(certificate, publicKey, mspId, cryptoSuite, signer) {
+		super(certificate, publicKey, mspId, cryptoSuite);
 
 		if (!signer)
 			throw new Error('Missing required parameter "signer".');
@@ -211,7 +206,7 @@ var SigningIdentity = class extends Identity {
 
 			hashFunction = opts.hashFunction;
 		} else {
-			hashFunction = this._msp.cryptoSuite.hash.bind(this._msp.cryptoSuite);
+			hashFunction = this._cryptoSuite.hash.bind(this._cryptoSuite);
 		}
 
 		var digest = hashFunction(msg);

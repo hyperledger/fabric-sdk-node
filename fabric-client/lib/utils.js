@@ -20,6 +20,8 @@ var util = require('util');
 var winston = require('winston');
 var fs = require('fs-extra');
 var crypto = require('crypto');
+var path = require('path');
+var os = require('os');
 var Config = require('./Config.js');
 
 //
@@ -42,13 +44,9 @@ var sha3_256 = require('js-sha3').sha3_256;
 //  - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
 //  - hash {string}: 'SHA2' or 'SHA3'
 //
-// @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
-// {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
-// KeyValueStore interface.
-// @param {object} opts Implementation-specific option object used in the constructor
 //
-module.exports.newCryptoSuite = function(setting, KVSImplClass, opts) {
-	var csImpl, keysize, algorithm, hashAlgo, haveSettings = false;
+module.exports.newCryptoSuite = function(setting) {
+	var csImpl, keysize, algorithm, hashAlgo, opts = null;
 
 	var useHSM = false;
 	if (setting && typeof setting.software === 'boolean') {
@@ -59,30 +57,25 @@ module.exports.newCryptoSuite = function(setting, KVSImplClass, opts) {
 
 	csImpl = useHSM ? this.getConfigSetting('crypto-suite-hsm') : this.getConfigSetting('crypto-suite-software');
 
-	// this function supports skipping any of the arguments such that it can be called in any of the following fashions:
-	// - newCryptoSuite({software: true, keysize: 256, algorithm: EC}, CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
-	// - newCryptoSuite(CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
-	// - newCryptoSuite({software: true, keysize: 256, algorithm: EC}, {path: '/tmp/app-state-store'})
-	// - newCryptoSuite({software: false}, {lib: '/usr/local/bin/pkcs11.so', slot: 0, pin: '1234'})
+	// this function supports the following:
+	// - newCryptoSuite({software: true, keysize: 256, algorithm: EC})
+	// - newCryptoSuite({software: false, lib: '/usr/local/bin/pkcs11.so', slot: 0, pin: '1234'})
 	// - newCryptoSuite({keysize: 384})
 	// - newCryptoSuite()
 
 	// step 1: what's the cryptosuite impl to use, key size and algo
 	if (setting && setting.keysize && typeof setting === 'object' && typeof setting.keysize === 'number') {
 		keysize = setting.keysize;
-		haveSettings = true;
 	} else
 		keysize = this.getConfigSetting('crypto-keysize');
 
 	if (setting && setting.algorithm && typeof setting === 'object' && typeof setting.algorithm === 'string') {
 		algorithm = setting.algorithm.toUpperCase();
-		haveSettings = true;
 	} else
 		algorithm = 'EC';
 
 	if (setting && setting.hash && typeof setting === 'object' && typeof setting.hash === 'string') {
 		hashAlgo = setting.hash.toUpperCase();
-		haveSettings = true;
 	} else
 		hashAlgo = null;
 
@@ -92,37 +85,13 @@ module.exports.newCryptoSuite = function(setting, KVSImplClass, opts) {
 	if (!csImpl)
 		throw new Error(util.format('Desired CryptoSuite module not found supporting algorithm "%s"', algorithm));
 
-	// expecting a path to an alternative implementation
 	var cryptoSuite = require(csImpl);
 
-	// step 2: what's the super class to use for the crypto key store?
-	var keystoreSuperClass;
+	// the 'opts' argument to be passed or none at all
+	opts = (typeof setting === 'undefined') ? null : setting;
 
-	if (typeof KVSImplClass === 'function') {
-		keystoreSuperClass = KVSImplClass;
-	} else {
-		keystoreSuperClass = null;
-	}
-
-	// step 3: what 'opts' object should be passed to the cryptosuite impl?
-	if (KVSImplClass && typeof opts === 'undefined') {
-		if (typeof KVSImplClass === 'function') {
-			// the super class module was passed in, but not the 'opts'
-			opts = null;
-		} else {
-			// called with only one argument for the 'opts' but KVSImplClass was skipped
-			opts = KVSImplClass;
-		}
-	} else if (typeof KVSImplClass === 'undefined' && typeof opts === 'undefined') {
-		if (haveSettings) {
-			// the function was called with only the 'settings' argument
-			opts = null;
-		} else {
-			// the function was called with only the 'opts' argument or none at all
-			opts = (typeof setting === 'undefined') ? null : setting;
-		}
-	}
-	return new cryptoSuite(keysize, opts, keystoreSuperClass, hashAlgo);
+	//opts Option is the form { lib: string, slot: number, pin: string }
+	return new cryptoSuite(keysize, hashAlgo, opts);
 };
 
 // Provide a Promise-based keyValueStore for couchdb, etc.
@@ -430,4 +399,76 @@ module.exports.readFile = function(path) {
 			}
 		});
 	});
+};
+
+module.exports.getDefaultKeyStorePath = function() {
+	return path.join(os.homedir(), '.hfc-key-store');
+};
+
+var CryptoKeyStore = function(KVSImplClass, opts) {
+	this.logger = module.exports.getLogger('utils.CryptoKeyStore');
+	this.logger.debug('CryptoKeyStore, constructor - start');
+	if (KVSImplClass && typeof opts === 'undefined') {
+		if (typeof KVSImplClass === 'function') {
+			// the super class module was passed in, but not the 'opts'
+			opts = null;
+		} else {
+			// called with only one argument for the 'opts' but KVSImplClass was skipped
+			opts = KVSImplClass;
+			KVSImplClass = null;
+		}
+	}
+
+	if (typeof opts === 'undefined' || opts === null) {
+		opts = {
+			path: module.exports.getDefaultKeyStorePath()
+		};
+	}
+	var superClass;
+	if (typeof KVSImplClass !== 'undefined' && KVSImplClass !== null) {
+		superClass = KVSImplClass;
+	} else {
+		// no super class specified, use the default key value store implementation
+		superClass = require(module.exports.getConfigSetting('key-value-store'));
+		this.logger.debug('constructor, no super class specified, using config: '+module.exports.getConfigSetting('key-value-store'));
+	}
+
+	this._store = null;
+	this._storeConfig = {
+		superClass: superClass,
+		opts: opts
+
+	};
+
+	this._getKeyStore = function() {
+		var CKS = require('./impl/CryptoKeyStore.js');
+
+		var self = this;
+		return new Promise((resolve, reject) => {
+			if (self._store === null) {
+				self.logger.info(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', self._storeConfig));
+
+				CKS(self._storeConfig.superClass, self._storeConfig.opts)
+				.then((ks) => {
+					self.logger.debug('_getKeyStore returning ks');
+					self._store = ks;
+					return resolve(self._store);
+				}).catch((err) => {
+					reject(err);
+				});
+			} else {
+				self.logger.debug('_getKeyStore resolving store');
+				return resolve(self._store);
+			}
+		});
+	};
+
+};
+
+module.exports.newCryptoKeyStore = function(KVSImplClass, opts) {
+	// this function supports skipping any of the arguments such that it can be called in any of the following fashions:
+	// - newCryptoKeyStore(CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
+	// - newCryptoKeyStore({path: '/tmp/app-state-store'})
+	// - newCryptoKeyStore()
+	return new CryptoKeyStore(KVSImplClass, opts);
 };

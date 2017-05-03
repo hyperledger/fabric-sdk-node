@@ -39,7 +39,9 @@ hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 var org = 'org1';
 var orgName = ORGS[org].name;
-client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+var cryptoSuite = client.newCryptoSuite();
+cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+client.setCryptoSuite(cryptoSuite);
 
 var caRootsPath = ORGS.orderer.tls_cacerts;
 let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
@@ -91,7 +93,10 @@ test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist
 	.then(
 		function (store) {
 			client.setStateStore(store);
-			client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+			var cryptoSuite = client.newCryptoSuite();
+			cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+			client.setCryptoSuite(cryptoSuite);
+
 			return testUtil.getSubmitter(client, t, org);
 		}
 	)

@@ -79,6 +79,7 @@ var MSPManager = class {
 			// TODO: for now using application-scope defaults but crypto parameters like key size, hash family
 			// and digital signature algorithm should be from the config itself
 			var cs = utils.newCryptoSuite();
+			cs.setCryptoKeyStore(utils.newCryptoKeyStore());
 
 			// get the application org names
 			var orgs = [];

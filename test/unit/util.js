@@ -128,11 +128,10 @@ function getMember(username, password, client, t, userOrg) {
 			}
 
 			var member = new User(username);
-			var cryptoSuite = null;
+			var cryptoSuite = client.newCryptoSuite();
 			if (userOrg) {
-				cryptoSuite = client.newCryptoSuite({path: module.exports.storePathForOrg(ORGS[userOrg].name)});
-			} else {
-				cryptoSuite = client.newCryptoSuite();
+				cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
+				client.setCryptoSuite(cryptoSuite);
 			}
 			member.setCryptoSuite(cryptoSuite);
 
@@ -164,8 +163,10 @@ function getAdmin(client, t, userOrg) {
 	var certPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/signcerts', userOrg, userOrg));
 	var certPEM = readAllFiles(certPath)[0];
 
+	var cryptoSuite = client.newCryptoSuite();
 	if (userOrg) {
-		client.newCryptoSuite({path: module.exports.storePathForOrg(ORGS[userOrg].name)});
+		cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
+		client.setCryptoSuite(cryptoSuite);
 	}
 
 	return Promise.resolve(client.createUser({

@@ -883,7 +883,7 @@ test('\n\n ** createUser error path - missing required cryptoContent privateKeyP
 	});
 });
 
-test('\n\n ** createUser error path - missing required keyStoreOpts **\n\n', function (t) {
+test('\n\n ** createUser error path - invalid cryptoContent **\n\n', function (t) {
 	var msg = 'Failed to load key or certificate and save to local stores';
 
 	var userOrg = 'org1';

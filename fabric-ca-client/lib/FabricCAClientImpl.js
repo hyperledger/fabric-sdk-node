@@ -64,8 +64,8 @@ var FabricCAServices = class {
 			this.cryptoPrimitives = cryptoSuite;
 		} else {
 			this.cryptoPrimitives = utils.newCryptoSuite();
+			this.cryptoPrimitives.setCryptoKeyStore(utils.newCryptoKeyStore());
 		}
-
 
 		this._fabricCAClient = new FabricCAClient({
 			caname: caName,

@@ -24,7 +24,6 @@ var idModule = require('./msp/identity.js');
 var Identity = idModule.Identity;
 var SigningIdentity = idModule.SigningIdentity;
 var Signer = idModule.Signer;
-var LocalMSP = require('./msp/msp.js');
 
 /**
  * The User class represents users that have been enrolled and represented by
@@ -71,7 +70,7 @@ var User = class {
 		this._enrollmentSecret = '';
 		this._identity = null;
 		this._signingIdentity = null;
-		this._mspImpl = null;
+		this._mspId = '';
 		this._cryptoSuite = null;
 	}
 
@@ -135,6 +134,15 @@ var User = class {
 		return this._cryptoSuite;
 	}
 
+	/**
+	 * Set the cryptoSuite.
+	 *
+	 * When the application needs to use crypto settings or a key store other than the default,
+	 * it needs to set a cryptoSuite instance that was created with the desired CryptoSuite
+	 * settings and CryptoKeyStore options.
+	 *
+	 * @param {CryptoSuite} cryptoSuite The cryptoSuite.
+	 */
 	setCryptoSuite(cryptoSuite) {
 		this._cryptoSuite = cryptoSuite;
 	}
@@ -144,18 +152,6 @@ var User = class {
 	 * @param {Key} privateKey the private key object
 	 * @param {string} certificate the PEM-encoded string of certificate
 	 * @param {string} mspId The Member Service Provider id for the local signing identity
-	 * @param {object} opts optional. an object with the following attributes, all optional:
-	 *   - cryptoSettings: {object} an object with the following attributes:
-	 *      - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
-	 * default is true (for software based implementation), specific implementation module is specified
-	 * in the setting 'crypto-suite-software'
-	 *      - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
-	 *      - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
-	 *      - hash {string}: 'SHA2' or 'SHA3'
-	 *   - KVSImplClass: {function} the User class persists crypto keys in a {@link CryptoKeyStore}, there is a file-based implementation
-	 * that is provided as the default. Application can use this parameter to override the default, such as saving the keys in a key store
-	 * backed by database. If present, the value must be the class for the alternative implementation.
-	 *   - kvsOpts: {object}: an options object specific to the implementation in KVSImplClass
 	 * @returns {Promise} Promise for successful completion of creating the user's signing Identity
 	 */
 	setEnrollment(privateKey, certificate, mspId) {
@@ -171,19 +167,18 @@ var User = class {
 			throw new Error('Invalid parameter. Must have a valid mspId.');
 		}
 
+		this._mspId = mspId;
+
 		if (!this._cryptoSuite) {
 			this._cryptoSuite = sdkUtils.newCryptoSuite();
+			this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
 		}
-		this._mspImpl = new LocalMSP({
-			id: mspId,
-			cryptoSuite: this._cryptoSuite
-		});
 
-		return this._mspImpl.cryptoSuite.importKey(certificate)
+		return this._cryptoSuite.importKey(certificate)
 		.then((pubKey) => {
-			var identity = new Identity('testIdentity', certificate, pubKey, this._mspImpl);
+			var identity = new Identity(certificate, pubKey, mspId, this._cryptoSuite);
 			this._identity = identity;
-			this._signingIdentity = new SigningIdentity('testSigningIdentity', certificate, pubKey, this._mspImpl, new Signer(this._mspImpl.cryptoSuite, privateKey));
+			this._signingIdentity = new SigningIdentity(certificate, pubKey, mspId, this._cryptoSuite, new Signer(this._cryptoSuite, privateKey));
 		});
 	}
 
@@ -215,39 +210,36 @@ var User = class {
 		if (typeof state.mspid === 'undefined' || state.mspid === null || state.mspid === '') {
 			throw new Error('Failed to find "mspid" in the deserialized state object for the user. Likely due to an outdated state store.');
 		}
+		this._mspId = state.mspid;
 
 		if (!this._cryptoSuite) {
 			this._cryptoSuite = sdkUtils.newCryptoSuite();
+			this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
 		}
-
-		this._mspImpl = new LocalMSP({
-			id: state.mspid,
-			cryptoSuite: this._cryptoSuite
-		});
 
 		var self = this;
 		var pubKey;
 
-		return this._mspImpl.cryptoSuite.importKey(state.enrollment.identity.certificate, { algorithm: api.CryptoAlgorithms.X509Certificate })
+		return this._cryptoSuite.importKey(state.enrollment.identity.certificate, { algorithm: api.CryptoAlgorithms.X509Certificate })
 		.then((key) => {
 			pubKey = key;
 
-			var identity = new Identity(state.enrollment.identity.id, state.enrollment.identity.certificate, pubKey, self._mspImpl);
+			var identity = new Identity( state.enrollment.identity.certificate, pubKey, self._mspId, this._cryptoSuite);
 			self._identity = identity;
 
 			// during serialization (see toString() below) only the key's SKI are saved
 			// swap out that for the real key from the crypto provider
-			return self._mspImpl.cryptoSuite.getKey(state.enrollment.signingIdentity);
+			return self._cryptoSuite.getKey(state.enrollment.signingIdentity);
 		}).then((privateKey) => {
 			// the key retrieved from the key store using the SKI could be a public key
 			// or a private key, check to make sure it's a private key
 			if (privateKey.isPrivate()) {
 				self._signingIdentity = new SigningIdentity(
-					state.enrollment.identity.id,
 					state.enrollment.identity.certificate,
 					pubKey,
-					self._mspImpl,
-					new Signer(self._mspImpl.cryptoSuite, privateKey));
+					self._mspId,
+					self._cryptoSuite,
+					new Signer(self._cryptoSuite, privateKey));
 
 				return self;
 			} else {
@@ -268,14 +260,13 @@ var User = class {
 
 		if (this._identity) {
 			serializedEnrollment.identity = {
-				id: this._identity.getId(),
 				certificate: this._identity._certificate
 			};
 		}
 
 		var state = {
 			name: this._name,
-			mspid: this._mspImpl ? this._mspImpl.getId() : 'null',
+			mspid: this._mspId,
 			roles: this._roles,
 			affiliation: this._affiliation,
 			enrollmentSecret: this._enrollmentSecret,

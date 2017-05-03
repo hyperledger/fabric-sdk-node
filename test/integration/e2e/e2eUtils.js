@@ -50,7 +50,9 @@ function installChaincode(org, chaincode_path, version, t) {
 	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[org].name;
-	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+	var cryptoSuite = client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	client.setCryptoSuite(cryptoSuite);
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
@@ -174,7 +176,9 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[userOrg].name;
-	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+	var cryptoSuite = client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	client.setCryptoSuite(cryptoSuite);
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
@@ -465,7 +469,9 @@ function invokeChaincode(userOrg, version, t){
 	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[userOrg].name;
-	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+	var cryptoSuite = client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	client.setCryptoSuite(cryptoSuite);
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
@@ -694,7 +700,9 @@ function queryChaincode(org, version, value, t, transientMap) {
 	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[org].name;
-	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+	var cryptoSuite = client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	client.setCryptoSuite(cryptoSuite);
 
 	var targets = [];
 	// set up the chain to use each org's 'peer1' for

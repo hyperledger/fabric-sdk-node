@@ -81,6 +81,8 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 
 				member = new User('admin2');
 				cryptoSuite = client.newCryptoSuite(options);
+				cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(options));
+				client.setCryptoSuite(cryptoSuite);
 				member.setCryptoSuite(cryptoSuite);
 
 				t.comment('Setting client keyValueStore to: ' +kvs);

@@ -147,15 +147,13 @@ var MSP = class {
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
 		if(!store_key) {
 			var publicKey =this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate }, false);
-			// TODO: the id of the new Identity instance should probably be derived from the subject info in the cert?
-			var sdk_identity = new Identity('SomeDummyValue', cert, publicKey, this);
+			var sdk_identity = new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 			return sdk_identity;
 		}
 		else {
 			return this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate })
 			.then((publicKey) => {
-				// TODO: the id of the new Identity instance should probably be derived from the subject info in the cert?
-				return new Identity('SomeDummyValue', cert, publicKey, this);
+				return new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 			});
 		}
 	}
@@ -168,6 +166,7 @@ var MSP = class {
 	validate(id) {
 		return true;
 	}
+
 };
 
 module.exports = MSP;

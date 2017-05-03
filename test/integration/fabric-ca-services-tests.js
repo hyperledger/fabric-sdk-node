@@ -30,7 +30,7 @@ var hfc = require('fabric-client');
 var X509 = require('x509');
 
 var util = require('util');
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
 var testUtil = require('../unit/util.js');
 var LocalMSP = require('fabric-client/lib/msp/msp.js');
@@ -64,7 +64,10 @@ var fabricCAEndpoint = ORGS[userOrg].ca.url;
 
 //run the enroll test
 
-test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
+test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function (t) {
+
+	utils.getConfigSetting('crypto-keysize', '256');//force for gulp test
+	utils.setConfigSetting('crypto-hash-algo', 'SHA2');//force for gulp test
 
 	var caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
 
@@ -103,7 +106,8 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 				cryptoSuite: caService.cryptoPrimitives
 			});
 
-			var signingIdentity = new SigningIdentity('testSigningIdentity', eResult.certificate, pubKey, msp, new Signer(msp.cryptoSuite, eResult.key));
+			var signingIdentity = new SigningIdentity(eResult.certificate, pubKey, msp.getId(), msp.cryptoSuite,
+				new Signer(msp.cryptoSuite, eResult.key));
 			t.comment('Registering '+enrollmentID);
 			return caService._fabricCAClient.register(enrollmentID, null, 'client', userOrg, 1, [], signingIdentity);
 		},(err) => {
@@ -133,7 +137,7 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 			t.comment('Successfully constructed a user object based on the enrollment');
 			return caService.register({enrollmentID: 'testUserX', affiliation: 'bank_X'}, member);
 		},(err) => {
-			t.fail('Failed to configuration the user with proper enrollment materials.');
+			t.fail('Failed to configure the user with proper enrollment materials.');
 			t.end();
 		}).then((secret) => {
 			t.fail('Should not have been able to register user of a affiliation "bank_X" because "admin" does not belong to that affiliation');
@@ -234,7 +238,7 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		});
 });
 
-test('FabricCAClient: Test enroll With Static CSR', function (t) {
+test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', function (t) {
 	var endpoint = FabricCAServices._parseURL(fabricCAEndpoint);
 	var client = new FabricCAClient({
 		protocol: endpoint.protocol,

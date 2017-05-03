@@ -133,6 +133,7 @@ test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 
 	// test set enrollment for identity and signing identity
 	var cryptoUtils = utils.newCryptoSuite();
+	cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 	cryptoUtils.generateKey()
 	.then(function (key) {
 		// the private key and cert don't match, but it's ok, the code doesn't check

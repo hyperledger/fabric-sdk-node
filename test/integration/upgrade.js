@@ -87,7 +87,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	})
 	.then((store) => {
 		client.setStateStore(store);
-		client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
 
 		return testUtil.getSubmitter(client, t, true /* use peer org admin */, org);
 	})

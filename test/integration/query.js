@@ -113,7 +113,10 @@ chain.addPeer(peer1);
 
 test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
-	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+	var cryptoSuite = client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	client.setCryptoSuite(cryptoSuite);
+
 	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then( function (store) {

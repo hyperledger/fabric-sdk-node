@@ -20,7 +20,7 @@ var jsrsasign = require('jsrsasign');
 var KEYUTIL = jsrsasign.KEYUTIL;
 
 var api = require('../api.js');
-var utils = require('../utils');
+var utils = require('../utils.js');
 var ECDSAKey = require('./ecdsa/key.js');
 
 var logger = utils.getLogger('CryptoKeyStore.js');

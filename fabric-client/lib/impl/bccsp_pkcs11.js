@@ -51,6 +51,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 
 	/**
 	 * @param {number} keySize Length of key (in bytes), a.k.a "security level"
+	 * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
 	 * @param {object} opts Option is the form { lib: string, slot: number, pin: string }
 	 *
 	 * If lib is not specified or null, its value will be taken from the
@@ -65,7 +66,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 	 * CRYPTO_PKCS11_PIN env var, and if the env var is not set, its value will
 	 * be taken from the crypto-pkcs11-pin key in the configuration file.
 	 */
-	constructor(keySize, opts) {
+	constructor(keySize, hash, opts) {
 		if (typeof keySize === 'undefined' || keySize === null)
 			throw new Error(__func() + 'keySize must be specified');
 		if (typeof keySize === 'string') keySize = parseInt(keySize, 10);
