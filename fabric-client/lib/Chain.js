@@ -1701,7 +1701,7 @@ var Chain = class {
 				logger.debug('compareProposalResponseResults - read/writes result sets match index=%s',i);
 			}
 			else {
-				logger.warning('compareProposalResponseResults - read/writes result sets do not match index=%s',i);
+				logger.warn('compareProposalResponseResults - read/writes result sets do not match index=%s',i);
 				return false;
 			}
 		}
