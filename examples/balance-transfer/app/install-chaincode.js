@@ -17,8 +17,6 @@
 var path = require('path');
 var fs = require('fs');
 var util = require('util');
-var utils = require('fabric-client/lib/utils.js');
-var Peer = require('fabric-client/lib/Peer.js');
 var config = require('../config.json');
 var helper = require('./helper.js');
 var logger = helper.getLogger('install-chaincode');
@@ -35,14 +33,10 @@ var installChaincode = function(peers, chaincodeName, chaincodePath,
 	helper.setupOrderer();
 	var targets = helper.getTargets(peers, org);
 	helper.setupPeers(chain, peers, targets);
-	/*for(var index in targets) {
-			chain.addPeer(targets[index]);
-		}
 
-    logger.info(chain.getPeers());*/
 	return helper.getRegisteredUsers(username, org).then((user) => {
 		member = user;
-		nonce = utils.getNonce();
+		nonce = helper.getNonce();
 		tx_id = chain.buildTransactionID(nonce, member);
 		// send proposal to endorser
 		var request = {

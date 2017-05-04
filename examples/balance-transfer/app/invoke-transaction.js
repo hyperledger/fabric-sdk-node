@@ -18,7 +18,6 @@ var path = require('path');
 var fs = require('fs');
 var util = require('util');
 var hfc = require('fabric-client');
-var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var config = require('../config.json');
 var helper = require('./helper.js');
@@ -76,9 +75,9 @@ var invokeChaincode = function(peers, channelName, chaincodeName,
 	});
 	return helper.getRegisteredUsers(username, org).then((user) => {
 		member = user;
-		nonce = utils.getNonce();
+		nonce = helper.getNonce();
 		tx_id = chain.buildTransactionID(nonce, member);
-		utils.setConfigSetting('E2E_TX_ID', tx_id);
+		hfc.setConfigSetting('E2E_TX_ID', tx_id);
 		logger.info('setConfigSetting("E2E_TX_ID") = %s', tx_id);
 		logger.debug(util.format('Sending transaction "%s"', tx_id));
 		// send proposal to endorser

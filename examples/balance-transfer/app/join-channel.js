@@ -17,7 +17,6 @@ var util = require('util');
 var path = require('path');
 var fs = require('fs');
 var grpc = require('grpc');
-var utils = require('fabric-client/lib/utils.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var user = null;
@@ -78,7 +77,7 @@ var joinChannel = function(channelName, peers, username, org) {
 	return helper.getRegisteredUsers(username, org).then((member) => {
 		logger.info('received member object for user : ' + username);
 		user = member;
-		nonce = utils.getNonce();
+		nonce = helper.getNonce();
 		tx_id = chain.buildTransactionID(nonce, user);
 		var request = {
 			targets: targets,
