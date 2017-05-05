@@ -33,7 +33,6 @@ var testUtil = require('../../unit/util.js');
 
 var the_user = null;
 var tx_id = null;
-var nonce = null;
 
 Client.addConfigFile(path.join(__dirname, './config.json'));
 var ORGS = Client.getConfigSetting('test-network');
@@ -118,11 +117,9 @@ function joinChannel(org, t) {
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) => {
 		t.pass('Successfully enrolled orderer \'admin\'');
-		nonce = utils.getNonce();
-		tx_id = Client.buildTransactionID(nonce, admin);
+		tx_id = client.newTransactionID();
 		let request = {
-			txId : 	tx_id,
-			nonce : nonce
+			txId : 	tx_id
 		};
 
 		return chain.getGenesisBlock(request);
@@ -194,13 +191,11 @@ function joinChannel(org, t) {
 
 			eventPromises.push(txPromise);
 		});
-		nonce = utils.getNonce();
-		tx_id = Client.buildTransactionID(nonce, the_user);
+		tx_id = client.newTransactionID();
 		let request = {
 			targets : targets,
 			block : genesis_block,
-			txId : 	tx_id,
-			nonce : nonce
+			txId : 	tx_id
 		};
 		let sendPromise = chain.joinChannel(request);
 		return Promise.all([sendPromise].concat(eventPromises));

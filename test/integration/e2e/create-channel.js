@@ -333,18 +333,16 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		logger.debug('\n***\n done signing \n***\n');
 
 		// build up the create request
-		let nonce = utils.getNonce();
-		let tx_id = Client.buildTransactionID(nonce, the_user);
+		let tx_id = client.newTransactionID();
 		var request = {
 			config: config,
 			signatures : signatures,
 			name : channel_name,
 			orderer : orderer,
-			txId  : tx_id,
-			nonce : nonce
+			txId  : tx_id
 		};
 
-		// send to create request to orderer
+		// send create request to orderer
 		return client.createChannel(request);
 	})
 	.then((result) => {

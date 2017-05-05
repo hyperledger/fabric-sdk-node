@@ -183,15 +183,13 @@ test('\n\n***** U P D A T E C H A N N E L flow: update channel *****\n\n', (t) =
 		signatures.push(signature);
 
 		// build up the update request
-		let nonce = utils.getNonce();
-		let tx_id = Client.buildTransactionID(nonce, the_user);
+		let tx_id = client.newTransactionID();
 		var request = {
 			config : config_update,
 			signatures : signatures,
 			name : channel_name,
 			orderer : orderer,
-			txId  : tx_id,
-			nonce : nonce
+			txId  : tx_id
 		};
 
 		// send to update request to orderer

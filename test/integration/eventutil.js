@@ -57,16 +57,14 @@ module.exports.registerCCEvent = function(eh, ccid, enregex, timeout) {
 };
 
 module.exports.createRequest = function(client, chain, user, chaincode_id, targets, fcn, args) {
-	var nonce = utils.getNonce();
-	var tx_id = hfc.buildTransactionID(nonce, user);
+	var tx_id = client.newTransactionID();
 	var request = {
 		targets : targets,
 		chaincodeId: chaincode_id,
 		chaincodeVersion: '',
 		fcn: fcn,
 		args: args,
-		txId: tx_id.toString(),
-		nonce: nonce
+		txId: tx_id
 	};
 	return request;
 };

@@ -28,25 +28,24 @@ var path = require('path');
 var fs = require('fs');
 var util = require('util');
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var testUtil = require('../../unit/util.js');
 
 var e2e = testUtil.END2END;
-hfc.addConfigFile(path.join(__dirname, './config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
+Client.addConfigFile(path.join(__dirname, './config.json'));
+var ORGS = Client.getConfigSetting('test-network');
 
 var grpc = require('grpc');
 
 var tx_id = null;
-var nonce = null;
 var the_user = null;
 
 function installChaincode(org, chaincode_path, version, t) {
-	hfc.setConfigSetting('request-timeout', 60000);
-	var channel_name = hfc.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	Client.setConfigSetting('request-timeout', 60000);
+	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	var client = new hfc();
+	var client = new Client();
 	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[org].name;
@@ -87,7 +86,7 @@ function installChaincode(org, chaincode_path, version, t) {
 		}
 	}
 
-	return hfc.newDefaultKeyValueStore({
+	return Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 		client.setStateStore(store);
@@ -98,17 +97,12 @@ function installChaincode(org, chaincode_path, version, t) {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, the_user);
-
 		// send proposal to endorser
 		var request = {
 			targets: targets,
 			chaincodePath: chaincode_path,
 			chaincodeId: e2e.chaincodeId,
-			chaincodeVersion: version,
-			txId: tx_id,
-			nonce: nonce
+			chaincodeVersion: version
 		};
 
 		return client.installChaincode(request);
@@ -150,8 +144,8 @@ module.exports.installChaincode = installChaincode;
 
 
 function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
-	hfc.setConfigSetting('request-timeout', 60000);
-	var channel_name = hfc.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	Client.setConfigSetting('request-timeout', 60000);
+	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
 	var targets = [],
 		eventhubs = [];
@@ -172,7 +166,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		};
 	})(t, eventhubs, t.end);
 
-	var client = new hfc();
+	var client = new Client();
 	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[userOrg].name;
@@ -198,7 +192,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	var badTransientMap = { 'test1': 'transientValue' }; // have a different key than what the chaincode example_cc1.go expects in Init()
 	var transientMap = { 'test': 'transientValue' };
 
-	return hfc.newDefaultKeyValueStore({
+	return Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 
@@ -256,9 +250,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		// the v1 chaincode has Init() method that expects a transient map
 		if (upgrade) {
 			// first test that a bad transient map would get the chaincode to return an error
-			let request = buildChaincodeProposal(the_user, chaincode_path, version, upgrade, badTransientMap);
-			tx_id = request.tx_id;
-			request = request.request;
+			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, badTransientMap);
+			tx_id = request.txId;
 
 			return chain.sendUpgradeProposal(request)
 			.then((results) => {
@@ -280,9 +273,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				if (success) {
 					// successfully tested the negative conditions caused by
 					// the bad transient map, now send the good transient map
-					request = buildChaincodeProposal(the_user, chaincode_path, version, upgrade, transientMap);
-					tx_id = request.tx_id;
-					request = request.request;
+					request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
+					tx_id = request.txId;
 
 					return chain.sendUpgradeProposal(request);
 				} else {
@@ -290,9 +282,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				}
 			});
 		} else {
-			let request = buildChaincodeProposal(the_user, chaincode_path, version, upgrade, transientMap);
-			tx_id = request.tx_id;
-			request = request.request;
+			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
+			tx_id = request.txId;
 
 			return chain.sendInstantiateProposal(request);
 		}
@@ -331,7 +322,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			// set the transaction listener and set a timeout of 30sec
 			// if the transaction did not get committed within the timeout period,
 			// fail the test
-			var deployId = tx_id.toString();
+			var deployId = tx_id.getTransactionID();
 
 			var eventPromises = [];
 			eventhubs.forEach((eh) => {
@@ -352,7 +343,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 						}
 					});
 				});
-				logger.info('register eventhub %s with tx=%s',eh.ep._endpoint.addr,tx_id);
+				logger.info('register eventhub %s with tx=%s',eh.ep._endpoint.addr,deployId);
 				eventPromises.push(txPromise);
 			});
 
@@ -395,9 +386,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	});
 };
 
-function buildChaincodeProposal(the_user, chaincode_path, version, upgrade, transientMap) {
-	let nonce = utils.getNonce();
-	let tx_id = hfc.buildTransactionID(nonce, the_user);
+function buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap) {
+	var tx_id = client.newTransactionID(the_user);
 
 	// send proposal to endorser
 	var request = {
@@ -407,7 +397,6 @@ function buildChaincodeProposal(the_user, chaincode_path, version, upgrade, tran
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: tx_id,
-		nonce: nonce,
 		// use this to demonstrate the following policy:
 		// 'if signed by org1 admin, then that's the only signature required,
 		// but if that signature is missing, then the policy can also be fulfilled
@@ -432,15 +421,15 @@ function buildChaincodeProposal(the_user, chaincode_path, version, upgrade, tran
 		request.transientMap = transientMap;
 	}
 
-	return { request: request, tx_id: tx_id };
+	return request;
 }
 
 module.exports.instantiateChaincode = instantiateChaincode;
 
 
 function invokeChaincode(userOrg, version, t){
-	hfc.setConfigSetting('request-timeout', 60000);
-	var channel_name = hfc.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	Client.setConfigSetting('request-timeout', 60000);
+	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
 	var targets = [],
 		eventhubs = [];
@@ -465,7 +454,7 @@ function invokeChaincode(userOrg, version, t){
 	// submit the request. intentionally we are using a different org
 	// than the one that instantiated the chaincode, although either org
 	// should work properly
-	var client = new hfc();
+	var client = new Client();
 	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[userOrg].name;
@@ -487,7 +476,9 @@ function invokeChaincode(userOrg, version, t){
 		)
 	);
 
-	return hfc.newDefaultKeyValueStore({
+	var orgName = ORGS[userOrg].name;
+
+	return Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 
@@ -531,11 +522,10 @@ function invokeChaincode(userOrg, version, t){
 		return chain.initialize();
 
 	}).then((nothing) => {
-		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, the_user);
-		utils.setConfigSetting('E2E_TX_ID', tx_id);
-		logger.info('setConfigSetting("E2E_TX_ID") = %s', tx_id);
-		t.comment(util.format('Sending transaction "%s"', tx_id));
+		tx_id = client.newTransactionID(the_user);
+		utils.setConfigSetting('E2E_TX_ID', tx_id.getTransactionID());
+		logger.info('setConfigSetting("E2E_TX_ID") = %s', tx_id.getTransactionID());
+		t.comment(util.format('Sending transaction "%s"', tx_id.getTransactionID()));
 
 		// send proposal to endorser
 		var request = {
@@ -544,7 +534,6 @@ function invokeChaincode(userOrg, version, t){
 			fcn: 'invoke',
 			args: ['move', 'a', 'b','100'],
 			txId: tx_id,
-			nonce: nonce
 		};
 		return chain.sendTransactionProposal(request);
 
@@ -611,7 +600,7 @@ function invokeChaincode(userOrg, version, t){
 			// set the transaction listener and set a timeout of 30sec
 			// if the transaction did not get committed within the timeout period,
 			// fail the test
-			var deployId = tx_id.toString();
+			var deployId = tx_id.getTransactionID();
 
 			var eventPromises = [];
 			eventhubs.forEach((eh) => {
@@ -671,7 +660,7 @@ function invokeChaincode(userOrg, version, t){
 			t.pass('Successfully sent transaction to the orderer.');
 			t.comment('******************************************************************');
 			t.comment('To manually run /test/integration/query.js, set the following environment variables:');
-			t.comment('export E2E_TX_ID='+'\''+tx_id+'\'');
+			t.comment('export E2E_TX_ID='+'\''+tx_id.getTransactionID()+'\'');
 			t.comment('******************************************************************');
 			return true;
 		} else {
@@ -689,14 +678,14 @@ function invokeChaincode(userOrg, version, t){
 module.exports.invokeChaincode = invokeChaincode;
 
 function queryChaincode(org, version, value, t, transientMap) {
-	hfc.setConfigSetting('request-timeout', 60000);
-	var channel_name = hfc.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	Client.setConfigSetting('request-timeout', 60000);
+	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
 	// this is a transaction, will just use org's identity to
 	// submit the request. intentionally we are using a different org
 	// than the one that submitted the "move" transaction, although either org
 	// should work properly
-	var client = new hfc();
+	var client = new Client();
 	var chain = client.newChain(channel_name);
 
 	var orgName = ORGS[org].name;
@@ -720,7 +709,7 @@ function queryChaincode(org, version, value, t, transientMap) {
 		}
 	}
 
-	return hfc.newDefaultKeyValueStore({
+	return Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 
@@ -730,15 +719,11 @@ function queryChaincode(org, version, value, t, transientMap) {
 	}).then((admin) => {
 		the_user = admin;
 
-		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, the_user);
-
 		// send query
 		var request = {
 			chaincodeId : e2e.chaincodeId,
 			chaincodeVersion : version,
 			txId: tx_id,
-			nonce: nonce,
 			fcn: 'invoke',
 			args: ['query','b']
 		};

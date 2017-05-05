@@ -43,7 +43,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	let caroots = Buffer.from(data).toString();
 
 	var tx_id = null;
-	var nonce = null;
 	var the_user = null;
 	var allEventhubs = [];
 
@@ -99,19 +98,16 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	})
 	.then((nothing) => {
 		t.pass('Successfully initialized channel');
-		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, the_user);
+		tx_id = client.newTransactionID();
 
 		// send proposal to endorser
 		var request = {
 			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId : e2e.chaincodeId,
 			chaincodeVersion : version,
-			chainId: e2e.channel,
 			fcn: 'init',
 			args: ['a', '500', 'b', '600'],
-			txId: tx_id,
-			nonce: nonce
+			txId: tx_id
 		};
 
 		return chain.sendUpgradeProposal(request);
@@ -125,8 +121,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		t.fail('This should not have thrown an Error ::'+ err);
 		return Promise.resolve(true);
 	}).then((nothing) => {
-		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, the_user);
+		tx_id = client.newTransactionID();
 
 		// send proposal to endorser
 		var request = {
@@ -135,9 +130,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 			chaincodeVersion: version,
 			fcn: 'init',
 			args: ['a', '500', 'b', '600'],
-			chainId: e2e.channel,
-			txId: tx_id,
-			nonce: nonce
+			txId: tx_id
 		};
 
 		return chain.sendUpgradeProposal(request);
@@ -148,8 +141,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return Promise.resolve(true);
 
 	}).then((nothing) => {
-		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, the_user);
+		tx_id = client.newTransactionID();
 
 		// send proposal to endorser
 		var request = {
@@ -158,8 +150,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 			chaincodeVersion: 'v333333333',
 			fcn: 'init',
 			args: ['a', '500', 'b', '600'],
-			txId: tx_id,
-			nonce: nonce
+			txId: tx_id
 		};
 
 		return chain.sendUpgradeProposal(request);

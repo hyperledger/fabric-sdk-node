@@ -86,8 +86,6 @@ for (let key in ORGS[org]) {
 }
 
 var the_user = null;
-var tx_id = null;
-var nonce = null;
 
 var querys = [];
 if (process.argv.length > 2) {

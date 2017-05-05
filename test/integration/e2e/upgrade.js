@@ -110,7 +110,6 @@ test('\n\n***** TransientMap Support in Proposals *****', (t) => {
 	var transient = {
 		'test': Buffer.from('dummyValue') // string <-> byte[]
 	};
-
 	e2eUtils.queryChaincode('org2', 'v1', '410', t, transient)
 	.then((result) => {
 		if(result){

@@ -75,7 +75,6 @@ for (let key in ORGS[org]) {
 var chaincode_id = testUtil.getUniqueVersion('events_unit_test');
 var chaincode_version = testUtil.getUniqueVersion();
 var request = null;
-var nonce = null;
 var the_user = null;
 
 var steps = [];
@@ -175,7 +174,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		t.end();
 	}).then((results) => {
 		var tmo = 50000;
-		return Promise.all([eputil.registerTxEvent(eh, request.txId.toString(), tmo),
+		return Promise.all([eputil.registerTxEvent(eh, request.txId.getTransactionID().toString(), tmo),
 			eputil.sendTransaction(chain, results)]);
 	},
 	(err) => {
@@ -228,8 +227,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then(([results1, results2]) => {
 		t.comment('sendTransactionProposal received [results1, results2]');
 		var tmo = 20000;
-		return Promise.all([eputil.registerTxEvent(eh, req1.txId.toString(), tmo),
-			eputil.registerTxEvent(eh, req2.txId.toString(), tmo),
+		return Promise.all([eputil.registerTxEvent(eh, req1.txId.getTransactionID().toString(), tmo),
+			eputil.registerTxEvent(eh, req2.txId.getTransactionID().toString(), tmo),
 			eputil.sendTransaction(chain, results1),
 			eputil.sendTransaction(chain, results2)
 		]);

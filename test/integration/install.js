@@ -41,7 +41,6 @@ hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 
 var tx_id = null;
-var nonce = null;
 var the_user = null;
 
 testUtil.setupChaincodeDeploy();
@@ -214,18 +213,13 @@ function installChaincode(params, t) {
 			t.pass(params.testDesc+' - Successfully enrolled user \'admin\'');
 			the_user = admin;
 
-			nonce = utils.getNonce();
-			tx_id = hfc.buildTransactionID(nonce, the_user);
-
 			// send proposal to endorser
 			var request = {
 				targets: targets,
 				chaincodePath: params.chaincodePath,
 				chaincodeId: params.chaincodeId,
 				chaincodeVersion: params.chaincodeVersion,
-				chaincodePackage: params.chaincodePackage,
-				txId: tx_id,
-				nonce: nonce
+				chaincodePackage: params.chaincodePackage
 			};
 
 			return client.installChaincode(request);

@@ -57,6 +57,8 @@ var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'UWUxIC0CIQDNyHQAwzhw+512meXRwG92GfpzSBssDKLdwlrqiHOu5A==' +
 '-----END CERTIFICATE-----';
 
+module.exports.TEST_CERT_PEM = TEST_CERT_PEM;
+
 test('\n\n ** User - constructor set get tests **\n\n', function (t) {
 	utils.setConfigSetting('crypto-hsm', false);
 

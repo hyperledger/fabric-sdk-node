@@ -116,7 +116,7 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 			}
 		);
 
-		return chain.sendTransactionProposal(buildEchoRequest(admin, peer));
+		return chain.sendTransactionProposal(buildEchoRequest(client, peer));
 
 	}, (err) => {
 
@@ -146,7 +146,7 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 			}
 		);
 
-		return chain.sendTransactionProposal(buildEchoRequest(submitter, peer));
+		return chain.sendTransactionProposal(buildEchoRequest(client, peer));
 	}).then((response) => {
 		if (response[0] && response[0][0] && response[0][0].response && response[0][0].response.status === 200)
 			t.pass('Successfully tested grpc receive message limit');
@@ -160,9 +160,9 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 	});
 });
 
-function buildEchoRequest(submitter, peer) {
+function buildEchoRequest(client, peer) {
 	let nonce = utils.getNonce();
-	let tx_id = hfc.buildTransactionID(nonce, submitter);
+	let tx_id = client.newTransactionID();
 
 	return {
 		targets: [peer],

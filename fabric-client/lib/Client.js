@@ -26,6 +26,7 @@ var ChannelConfig = require('./ChannelConfig.js');
 var Packager = require('./Packager.js');
 var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
+var TransactionID = require('./TransactionID.js');
 var MSP = require('./msp/msp.js');
 
 var logger = sdkUtils.getLogger('Client.js');
@@ -228,7 +229,7 @@ var Client = class {
 	}
 
 	/**
-	 * Build a new MSP with the definition.
+	 * Create a new MSP with the definition.
 	 * @parm {Object} which has the following the following fields:
 	 *		<br>`id`: {string} value for the identifier of this instance
 	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
@@ -250,6 +251,23 @@ var Client = class {
 			throw new Error('MSP definition is missing the "id" field.');
 		}
 		return msp;
+	}
+
+	/**
+	 * Create a new transaction id object with an unique transaction id
+	 * based on included nonce and the user context.
+	 * Requires this client instance to have an assigned user context.
+	 * @returns  {@link TransactionID} An object that contains a transaction id
+	 *           based on the user context and also contains
+	 *           the generated nonce value.
+	 */
+	newTransactionID() {
+		if (typeof this._userContext === 'undefined' || this._userContext === null) {
+			throw new Error('This client instance must be assigned an user context');
+		}
+		let trans_id = new TransactionID(this._userContext);
+
+		return trans_id;
 	}
 
 	/*
@@ -455,9 +473,7 @@ var Client = class {
 			if(!request.txId && !have_envelope) {
 				errorMsg = 'Missing txId request parameter';
 			}
-			if(!request.nonce && !have_envelope) {
-				errorMsg = 'Missing nonce request parameter';
-			}
+
 			// verify that we have an orderer configured
 			if(!request.orderer) {
 				errorMsg = 'Missing orderer request parameter';
@@ -498,10 +514,10 @@ var Client = class {
 			var proto_channel_header = Chain._buildChannelHeader(
 				_commonProto.HeaderType.CONFIG_UPDATE,
 				request.name,
-				request.txId
+				request.txId.getTransactionID()
 			);
 
-			var proto_header = Chain._buildHeader(userContext.getIdentity(), proto_channel_header, request.nonce);
+			var proto_header = Chain._buildHeader(userContext.getIdentity(), proto_channel_header, request.txId.getNonce());
 			var proto_payload = new _commonProto.Payload();
 			proto_payload.setHeader(proto_header);
 			proto_payload.setData(proto_config_Update_envelope.toBuffer());
@@ -567,14 +583,11 @@ var Client = class {
 			return Promise.reject( new Error('Peer is required'));
 		}
 		var self = this;
-		var nonce = sdkUtils.getNonce();
-		var userContext = this.getUserContext();
-		var txId = Chain.buildTransactionID(nonce, userContext);
+		var txId = new TransactionID(this._userContext);
 		var request = {
 			targets: [peer],
-			chaincodeId : 'cscc',
+			chaincodeId : Constants.CSCC,
 			txId: txId,
-			nonce: nonce,
 			fcn : 'GetChannels',
 			args: []
 		};
@@ -627,14 +640,11 @@ var Client = class {
 			return Promise.reject( new Error('Peer is required'));
 		}
 		var self = this;
-		var nonce = sdkUtils.getNonce();
-		var userContext = self.getUserContext();
-		var tx_id = Chain.buildTransactionID(nonce, userContext);
+		var txId = new TransactionID(this._userContext);
 		var request = {
 			targets: [peer],
 			chaincodeId : Constants.LSCC,
-			txId: tx_id,
-			nonce: nonce,
+			txId: txId,
 			fcn : 'getinstalledchaincodes',
 			args: []
 		};
@@ -678,21 +688,19 @@ var Client = class {
 	 * Sends an install proposal to one or more endorsing peers.
 	 *
 	 * @param {Object} request - An object containing the following fields:
-	 *		<br>`chaincodePath` : required - String of the path to location of
-	 *                            the source code of the chaincode
-	 *		<br>`chaincodeId` : required - String of the name of the chaincode
-	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
-	 *		<br>`chaincodePackage` : optional - Byte array of the archive content for
-	 *                               the chaincode source. The archive must have a 'src'
-	 *                               folder containing subfolders corresponding to the
-	 *                               'chaincodePath' field. For instance, if the chaincodePath
-	 *                               is 'mycompany/myproject', then the archive must contain a
-	 *                               folder at the path 'src/mycompany/myproject', where the
-	 *                               GO source code resides.
-	 *		<br>`chaincodeType` : optional - Type of chaincode ['golang', 'car', 'java']
-	 *                   (default 'golang')
-	 *		<br>`txId` : required - String of the transaction id
-	 *		<br>`nonce` : required - Integer of the once time number
+	 *   <br>`chaincodePath` : required - String of the path to location of
+	 *                         the source code of the chaincode
+	 *   <br>`chaincodeId` : required - String of the name of the chaincode
+	 *   <br>`chaincodeVersion` : required - String of the version of the chaincode
+	 *   <br>`chaincodePackage` : optional - Byte array of the archive content for
+	 *                            the chaincode source. The archive must have a 'src'
+	 *                            folder containing subfolders corresponding to the
+	 *                            'chaincodePath' field. For instance, if the chaincodePath
+	 *                            is 'mycompany/myproject', then the archive must contain a
+	 *                            folder at the path 'src/mycompany/myproject', where the
+	 *                            GO source code resides.
+	 *   <br>`chaincodeType` : optional - Type of chaincode ['golang', 'car', 'java']
+	 *                         (default 'golang')
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 * @see /protos/peer/proposal_response.proto
 	 */
@@ -716,8 +724,7 @@ var Client = class {
 			errorMsg = 'Missing input request object on install chaincode request';
 		}
 
-
-		if (!errorMsg) errorMsg = Chain._checkProposalRequest(request);
+		if (!errorMsg) errorMsg = Chain._checkProposalRequest(request, true);
 		if (!errorMsg) errorMsg = Chain._checkInstallRequest(request);
 
 		if (errorMsg) {
@@ -764,15 +771,15 @@ var Client = class {
 
 			var header, proposal;
 			var userContext = self.getUserContext();
-			var txId = Chain.buildTransactionID(request.nonce, userContext);
+			var txId = new TransactionID(userContext);
 			var channelHeader = Chain._buildChannelHeader(
 				_commonProto.HeaderType.ENDORSER_TRANSACTION,
 				'', //install does not target a channel
-				txId,
+				txId.getTransactionID(),
 				null,
 				Constants.LSCC
 			);
-			header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
+			header = Chain._buildHeader(userContext.getIdentity(), channelHeader, txId.getNonce());
 			proposal = Chain._buildProposal(lcccSpec, header);
 			let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
 
@@ -856,7 +863,7 @@ var Client = class {
 	}
 
 	/**
-	 * Sets an instance of the User class as the security context of self client instance. This user’s
+	 * Sets an instance of the User class as the security context of this client instance. This user’s
 	 * credentials (ECert), or special transaction certificates that are derived from the user's ECert,
 	 * will be used to conduct transactions and queries with the blockchain network.
 	 * Upon setting the user context, the SDK saves the object in a persistence cache if the “state store”
@@ -1022,17 +1029,6 @@ var Client = class {
 	 */
 	getStateStore() {
 		return this._stateStore;
-	}
-
-	/**
-	* Utility method to build an unique transaction id
-	* based on a nonce and the user context.
-	* @param {int} nonce - a one time use number
-	* @param {User} userContext - the user context
-	* @returns {string} An unique string
-	*/
-	static buildTransactionID(nonce, userContext) {
-		return Chain.buildTransactionID(nonce, userContext);
 	}
 
 	/**

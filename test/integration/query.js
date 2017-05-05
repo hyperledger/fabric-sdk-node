@@ -53,8 +53,6 @@ var e2e = testUtil.END2END;
 var the_user = null;
 var tx_id = null;
 
-var nonce = null;
-
 var querys = [];
 if (process.argv.length > 2) {
 	for (let i=2; i<process.argv.length; i++) {
