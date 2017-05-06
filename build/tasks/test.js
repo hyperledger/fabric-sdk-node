@@ -58,7 +58,6 @@ gulp.task('test', ['clean-up', 'lint', 'docker-clean', 'pre-test', 'ca'], functi
 		'test/integration/events.js',
 		'test/integration/query.js',
 		'test/integration/upgrade.js',
-		'test/integration/new-channel.js',
 		'test/integration/get-config.js',
 		'test/integration/create-configtx-channel.js',
 		'test/integration/e2e/join-channel.js',

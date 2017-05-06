@@ -62,6 +62,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 
 	var config = null;
 	var signatures = [];
+	var request = null;
 
 	// Acting as a client in org1 when creating the channel
 	var org = ORGS.org1.name;
@@ -132,7 +133,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 
 		// build up the create request
 		let tx_id = client.newTransactionID();
-		var request = {
+		request = {
 			config: config,
 			signatures : signatures,
 			name : channel_name,
@@ -160,9 +161,25 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 	})
 	.then((nothing) => {
 		t.pass('Successfully waited to make sure new channel was created.');
-		t.end();
+
+		logger.info('\n\n >>>>>>  Should fail to create the existing channel again with name :: %s <<<<<<< \n\n',channel_name);
+		return client.createChannel(request);
 	}, (err) => {
 		t.fail('Failed to sleep due to error: ' + err.stack ? err.stack : err);
 		t.end();
+	})
+	.then((result) => {
+		logger.debug(' response ::%j',result);
+		t.fail('Failed to get error. response: ' + result.status);
+		t.end();
+	}, (err) => {
+		if(err.toString().indexOf('BAD_REQUEST') >= 0) {
+			t.pass('Successfully received the error message due to the conflict of channel: ' + err);
+			t.end();
+		}
+		else {
+			t.fail('Got unexpected error: ' + err.stack ? err.stack : err);
+			t.end();
+		}
 	});
 });
