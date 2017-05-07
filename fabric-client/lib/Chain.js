@@ -1306,8 +1306,8 @@ var Chain = class {
 			},
 			input: {
 				args: [
-					Buffer.from( command, 'utf8'),
-					Buffer.from('default', 'utf8'),
+					Buffer.from(command),
+					Buffer.from(request.chainId),
 					chaincodeDeploymentSpec.toBuffer(),
 					self._buildEndorsementPolicy(request['endorsement-policy'])
 				]

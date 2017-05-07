@@ -188,7 +188,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	}).then((store) => {
 
 		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t, userOrg);
+		return testUtil.getSubmitter(client, t, true /* use peer org admin*/, userOrg);
 
 	}).then((admin) => {
 

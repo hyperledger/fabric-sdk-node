@@ -88,7 +88,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	.then((store) => {
 		client.setStateStore(store);
 
-		return testUtil.getSubmitter(client, t, org);
+		return testUtil.getSubmitter(client, t, true /* use peer org admin */, org);
 
 	})
 	.then((admin) => {
@@ -118,7 +118,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return chain.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'exists', t);
+		checkResults(results, 'version already exists', t);
 
 		return Promise.resolve(true);
 
@@ -144,7 +144,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return chain.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'chaincode', t);
+		checkResults(results, 'could not find chaincode with name', t);
 
 		return Promise.resolve(true);
 

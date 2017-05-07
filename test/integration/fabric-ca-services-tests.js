@@ -81,7 +81,12 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 
 			//check that we got back the expected certificate
 			var cert = new X509();
-			cert.readCertPEM(enrollment.certificate);
+			try {
+				cert.readCertPEM(enrollment.certificate);
+			} catch(err) {
+				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollment.certificate, err));
+			}
+
 			t.comment(cert.getSubjectString());
 			t.equal(cert.getSubjectString(), '/CN=' + req.enrollmentID, 'Subject should be /CN=' + req.enrollmentID);
 
@@ -159,7 +164,11 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 			t.comment('Successfully enrolled "testUserY"');
 
 			var cert = new X509();
-			cert.readCertPEM(enrollment.certificate);
+			try {
+				cert.readCertPEM(enrollment.certificate);
+			} catch(err) {
+				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollment.certificate, err));
+			}
 			var aki = X509.getExtAuthorityKeyIdentifier(cert.hex).kid;
 			var serial = cert.getSerialNumberHex();
 
@@ -229,7 +238,11 @@ test('FabricCAClient: Test enroll With Static CSR', function (t) {
 			t.pass('Successfully invoked enroll API with enrollmentID \'' + enrollmentID + '\'');
 			//check that we got back the expected certificate
 			var cert = new X509();
-			cert.readCertPEM(enrollResponse.enrollmentCert);
+			try {
+				cert.readCertPEM(enrollResponse.enrollmentCert);
+			} catch(err) {
+				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollResponse.enrollmentCert, err));
+			}
 			t.comment(cert.getSubjectString());
 			t.equal(cert.getSubjectString(), '/CN=' + enrollmentID, 'Subject should be /CN=' + enrollmentID);
 			t.end();
