@@ -59,7 +59,7 @@ var Block = class {
 	 * @see /protos/common/common.proto
 	 */
 	static decode(block_bytes) {
-		if(!block_bytes && !(block_bytes instanceof Buffer)) {
+		if(!block_bytes || !(block_bytes instanceof Buffer)) {
 			throw new Error('Block input data is not a byte buffer');
 		}
 		var block = {};
@@ -176,11 +176,13 @@ function decodeConfigEnvelope(config_envelope_bytes) {
 	logger.debug('decodeConfigEnvelope - decode complete for config envelope - start config update');
 	config_envelope.last_update = {};
 	var proto_last_update = proto_config_envelope.getLastUpdate();//this is a common.Envelope
-	config_envelope.last_update.payload = {};
-	var proto_payload = _commonProto.Payload.decode(proto_last_update.getPayload().toBuffer());
-	config_envelope.last_update.payload.header = decodeHeader(proto_payload.getHeader());
-	config_envelope.last_update.payload.data = decodeConfigUpdateEnvelope(proto_payload.getData().toBuffer());
-	config_envelope.last_update.signature = proto_last_update.getSignature().toBuffer().toString('hex');//leave as bytes
+	if (proto_last_update !== null) { // the orderer's genesis block may not have this field
+		config_envelope.last_update.payload = {};
+		var proto_payload = _commonProto.Payload.decode(proto_last_update.getPayload().toBuffer());
+		config_envelope.last_update.payload.header = decodeHeader(proto_payload.getHeader());
+		config_envelope.last_update.payload.data = decodeConfigUpdateEnvelope(proto_payload.getData().toBuffer());
+		config_envelope.last_update.signature = proto_last_update.getSignature().toBuffer().toString('hex');//leave as bytes
+	}
 
 	return config_envelope;
 };
