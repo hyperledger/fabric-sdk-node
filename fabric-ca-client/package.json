@@ -13,7 +13,6 @@
   "engine-strict": true,
   "engineStrict": true,
   "dependencies": {
-    "asn1": "https://github.com/mcavage/node-asn1",
     "bn.js": "^4.11.3",
     "elliptic": "^6.2.3",
     "fs-extra": ">=0.30.0 <0.31.0",

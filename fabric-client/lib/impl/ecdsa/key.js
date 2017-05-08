@@ -16,7 +16,6 @@
 
 'use strict';
 
-var Ber = require('asn1').Ber;
 var Hash = require('../../hash.js');
 var utils = require('../../utils.js');
 var jsrsa = require('jsrsasign');
