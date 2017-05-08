@@ -30,12 +30,12 @@ var policiesProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/prot
 var commonProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/common/common.proto')).common;
 
 var rewire = require('rewire');
-var Block = rewire('fabric-client/lib/Block.js');
+var BlockDecoder = rewire('fabric-client/lib/BlockDecoder.js');
 
-test('\n\n*** Block.js tests ***\n\n', (t) => {
+test('\n\n*** BlockDecoder.js tests ***\n\n', (t) => {
 	t.throws(
 		() => {
-			Block.decode(new Uint8Array(2));
+			BlockDecoder.decode(new Uint8Array(2));
 		},
 		/Block input data is not a byte buffer/,
 		'Check input is a Buffer object'
@@ -44,7 +44,7 @@ test('\n\n*** Block.js tests ***\n\n', (t) => {
 	// use the genesis block as input to test the decoders
 	var data = fs.readFileSync(path.join(__dirname, '../fixtures/channel/twoorgs.genesis.block'));
 
-	var block = Block.decode(data);
+	var block = BlockDecoder.decode(data);
 	t.pass('Genesis block parsed without error');
 
 	t.equal(
@@ -60,7 +60,7 @@ test('\n\n*** Block.js tests ***\n\n', (t) => {
 		output += txt;
 	});
 
-	var decodeConfigPolicy = Block.__get__('decodeConfigPolicy');
+	var decodeConfigPolicy = BlockDecoder.__get__('decodeConfigPolicy');
 	var mockPolicy = new policiesProto.Policy();
 	mockPolicy.setType(policiesProto.Policy.PolicyType.SIGNATURE);
 	decodeConfigPolicy({
@@ -76,7 +76,7 @@ test('\n\n*** Block.js tests ***\n\n', (t) => {
 
 	unhook();
 
-	if (output.indexOf('warn') >= 0 && output.indexOf('[Block.js]: decodeConfigPolicy - found a PolicyType of MSP') >= 0) {
+	if (output.indexOf('warn') >= 0 && output.indexOf('[BlockDecoder.js]: decodeConfigPolicy - found a PolicyType of MSP') >= 0) {
 		t.pass('Successfully tested warn logging message about using the "MSP" policy type');
 	} else {
 		t.fail('Failed to warn logging message about using the "MSP" policy type');
