@@ -241,7 +241,7 @@ var Client = class {
 	 * Build an configuration that is the channel configuration definition from the
 	 * provide MSPs added to this client, the Channel definition input parameters, and
 	 * system information from the provided Orderer.
-	 * The result of the build may be used to create a channel.
+	 * The result of the build must be signed and then may be used to create a channel.
 	 * @param {Object} A JSON object that has the following attributes...TODO fill out
 	 * @param {Orderer} An Orderer that will be used to create this channel. This Orderer will be
 	 *                  used to retrieve required system chain settings used in the building of this
@@ -267,9 +267,37 @@ var Client = class {
 	}
 
 	/**
+	 * Extracts the protobuf 'ConfigUpdate' object out of the 'ConfigEnvelope'
+	 * that is produced by the ConfigTX tool. The returned object may then be
+	 * signed using the signChannelConfig() method of this class. Once the all
+	 * signatures have been collected this object and the signatures may be used
+	 * on the updateChannel or createChannel requests.
+	 * @param {byte[]} The bytes of the ConfigEnvelope protopuf
+	 * @returns {byte[]} The bytes of the ConfigUpdate protobuf
+	 */
+	extractChannelConfig(config_envelope) {
+		logger.debug('extractConfigUpdate - start');
+		try {
+			var envelope = _commonProto.Envelope.decode(config_envelope);
+			var payload = _commonProto.Payload.decode(envelope.getPayload().toBuffer());
+			var configtx = _configtxProto.ConfigUpdateEnvelope.decode(payload.getData().toBuffer());
+			return configtx.getConfigUpdate().toBuffer();
+		}
+		catch(err) {
+			if(err instanceof Error) {
+				logger.error('Problem with extracting the config update object :: %s', err.stack ? err.stack : err);
+				throw err;
+			}
+			else {
+				logger.error('Problem with extracting the config update object :: %s',err);
+				throw new Error(err);
+			}
+		}
+	}
+	/**
 	 * Sign a configuration
 	 * @param {byte[]} config - The Configuration Update in byte form
-	 * @return {ConfigSignature} - The signature of the current on the config
+	 * @return {ConfigSignature} - The signature of the current user on the config bytes
 	 */
 	signChannelConfig(config) {
 		logger.debug('signChannelConfigUpdate - start');
@@ -304,22 +332,24 @@ var Client = class {
 	 * Only one of the application instances needs to call this method.
 	 * Once the chain is successfully created, this and other application
 	 * instances only need to call Chain joinChannel() to participate on the channel.
-	 * @param {Object} request - An object containing the following field:
-	 *      <br>`name` : required - The name of the new channel
-	 *      <br>`orderer` : required - Orderer Object to create the channel
-	 *		<br>`envelope` : optional - byte[] of the envelope object containing
-	 *                       all required settings to initialize this channel.
+	 * @param {Object} request - An object containing the following fields:
+	 *      <br>`name` : required - {string} The name of the new channel
+	 *      <br>`orderer` : required - {Orderer} object instance representing the
+	 *                      Orderer to send the create request
+	 *      <br>`envelope` : optional - byte[] of the envelope object containing all
+	 *                       required settings and signatures to initialize this channel.
 	 *                       This envelope would have been created by the command
 	 *                       line tool "configtx".
-	 *      <br>`config` : optional {byte[]} Protobuf ConfigUpdate object built by the
+	 *      <br>`config` : optional - {byte[]} Protobuf ConfigUpdate object built by the
 	 *                     buildChannelConfig() method of this class.
-	 *      <br>`signatures` : {ConfigSignature[]} the list of collected signatures
-	 *                          required by the channel create policy
+	 *      <br>`signatures` : optional - {ConfigSignature[]} the list of collected signatures
+	 *                         required by the channel create policy when using the `config` parameter.
 	 * @returns {Result} Result Object with status on the create process.
 	 */
 	createChannel(request) {
 		var have_envelope = false;
 		if(request && request.envelope) {
+			logger.debug('createChannel - have envelope');
 			have_envelope = true;
 		}
 		return this._createOrUpdateChannel(request, have_envelope);
@@ -328,24 +358,35 @@ var Client = class {
 	/**
 	 * Calls the orderer to update an existing channel.
 	 * Only one of the application instances needs to call this method.
-	 * @param {Object} request - An object containing the following field:
-	 *      <br>`name` : required - The name of the new channel
-	 *      <br>`orderer` : required - Orderer Object to create the channel
-	 *      <br>`signatures` : {ConfigSignature[]} the list of collected signatures
-	 *                          required by the channel create policy
-	 *      <br>`config` : {byte[]} Protobuf ConfigUpdate object built by the
-	 *                     buildChannelConfigUpdate() method of this class.
+	 * @param {Object} request - An object containing the following fields:
+	 *      <br>`name` : required - {string} The name of the new channel
+	 *      <br>`orderer` : required - {Orderer} object instance representing the
+	 *                      Orderer to send the update request
+	 *      <br>`envelope` : optional - byte[] of the envelope object containing all
+	 *                       required settings and signatures to initialize this channel.
+	 *                       This envelope would have been created by the command
+	 *                       line tool "configtx".
+	 *      <br>`config` : optional - {byte[]} Protobuf ConfigUpdate object built by the
+	 *                     buildChannelConfig() method of this class.
+	 *      <br>`signatures` : optional - {ConfigSignature[]} the list of collected signatures
+	 *                         required by the channel create policy when using the `config` parameter.
+	 *                         see signChannelConfig() method of this class
 	 * @returns {Result} Result Object with status on the update process.
 	 */
 	updateChannel(request) {
-		return this._createOrUpdateChannel(request, false);
+		var have_envelope = false;
+		if(request && request.envelope) {
+			logger.debug('createChannel - have envelope');
+			have_envelope = true;
+		}
+		return this._createOrUpdateChannel(request, have_envelope);
 	}
 
 	/*
 	 * internal method to support create or update of a channel
 	 */
 	_createOrUpdateChannel(request, have_envelope) {
-		logger.debug('createChannel - start');
+		logger.debug('_createOrUpdateChannel - start');
 		var errorMsg = null;
 
 		if(!request) {
@@ -379,7 +420,7 @@ var Client = class {
 		}
 
 		if(errorMsg) {
-			logger.error('createChannel error %s',errorMsg);
+			logger.error('_createOrUpdateChannel error %s',errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
@@ -394,11 +435,13 @@ var Client = class {
 		var signature = null;
 		var payload = null;
 		if (have_envelope) {
+			logger.debug('_createOrUpdateChannel - have envelope');
 			var envelope = _commonProto.Envelope.decode(request.envelope);
 			signature = envelope.signature;
 			payload = envelope.payload;
 		}
 		else {
+			logger.debug('_createOrUpdateChannel - have config_update');
 			var proto_config_Update_envelope = new _configtxProto.ConfigUpdateEnvelope();
 			proto_config_Update_envelope.setConfigUpdate(request.config);
 			proto_config_Update_envelope.setSignatures(request.signatures);
@@ -428,11 +471,11 @@ var Client = class {
 			payload : payload
 		};
 
-		logger.debug('createChannel - about to send envelope');
+		logger.debug('_createOrUpdateChannel - about to send envelope');
 		return orderer.sendBroadcast(out_envelope)
 		.then(
 			function(results) {
-				logger.debug('createChannel - good results from broadcast :: %j',results);
+				logger.debug('_createOrUpdateChannel - good results from broadcast :: %j',results);
 
 				return Promise.resolve(results);
 			}
@@ -440,11 +483,11 @@ var Client = class {
 		.catch(
 			function(error) {
 				if(error instanceof Error) {
-					logger.debug('createChannel - rejecting with %s', error);
+					logger.debug('_createOrUpdateChannel - rejecting with %s', error);
 					return Promise.reject(error);
 				}
 				else {
-					logger.error('createChannel - system error :: %s', error);
+					logger.error('_createOrUpdateChannel - system error :: %s', error);
 					return Promise.reject(new Error(error));
 				}
 			}

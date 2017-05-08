@@ -438,7 +438,6 @@ var Chain = class {
 			logger.debug('buildChannelConfigUpdate -  version hierarchy  :: %j',config_items.versions);
 			// get all the msps from the current configuration
 			var updated_msps = _combineMSPs(self._msp_manager.getMSPs(), msps);
-
 			var channel_config = new ChannelConfig(update_msps);
 			var proto_channel_config = channel_config.build(config_definition, config_items.versions);
 			return Promise.resolve( proto_channel_config.toBuffer());
@@ -1701,7 +1700,7 @@ var Chain = class {
 				logger.debug('compareProposalResponseResults - read/writes result sets match index=%s',i);
 			}
 			else {
-				logger.warn('compareProposalResponseResults - read/writes result sets do not match index=%s',i);
+				logger.error('compareProposalResponseResults - read/writes result sets do not match index=%s',i);
 				return false;
 			}
 		}
