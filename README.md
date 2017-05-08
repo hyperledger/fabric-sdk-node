@@ -5,11 +5,11 @@
 
 The Hyperledger Fabric Client SDK makes it easy to use APIs to interact with a Hyperledger Fabric blockchain.
 
-As an application developer, to learn about how to install and use the Node.js SDK, please visit the [SDK documentation](http://fabric-sdk-node.readthedocs.io/en/master).
+As an application developer, to learn about how to install and use the Node.js SDK, please visit the [SDK documentation](https://fabric-sdk-node.github.io/).
 
 This project publishes two separate npm packages:
-* `fabric-client` - main client for the Hyperledger Fabric. Applications can use this package to install and instantiate chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
-* `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](https://github.com/hyperledger/fabric-ca). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, the application does not need to use this package.
+* `fabric-client` - main client for the [Hyperledger Fabric](http://hyperledger-fabric.readthedocs.io/en/latest/). Applications can use this package to install and instantiate chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
+* `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](http://hyperledger-fabric.readthedocs.io/en/latest/Setup/ca-setup.html). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, the application does not need to use this package.
 
 The following section targets a current or future contributor to this project itself.
 
@@ -17,17 +17,17 @@ The following section targets a current or future contributor to this project it
 To build and test, the following pre-requisites must be installed first:
 * node runtime version 6.9.x, note that 7.0 is not supported at this point
 * npm tool version 3.10.x
-* gulp command
-* docker (not required if you only want to run the headless tests with `npm test-headless`, see below)
+* gulp command (must be installed globaly with `npm install -g gulp`)
+* docker (not required if you only want to run the headless tests with `npm test`, see below)
 
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
 
 In the project root folder:
 * `npm install` to install dependencies
 * `gulp ca` to copy common dependent modules from the `fabric-client` folder to the `fabric-ca-client` folder and the installed fabric-ca-client package under `node_modules`
-* `gulp watch` to set up watch that updates fabric-ca-client's shared dependencies from fabric-client/lib and updates installed fabric-client and fabric-ca-client modules in node_modules. This command does not return, so you should keep it running in a separate command window as you work on the code and test in another command window
+* optionally, `gulp watch` to set up watch that updates fabric-ca-client's shared dependencies from fabric-client/lib and updates installed fabric-client and fabric-ca-client modules in node_modules. This command does not return, so you should keep it running in a separate command window as you work on the code and test in another command window. Note that you do NOT need to run this unless you plan to make changes in the fabric-client and fabric-ca-client packages
 * optionally, `gulp doc` to generate API docs if you want to review the doc content
-* `npm test-headless` to run the headless tests that do not require any additional set up
+* `npm test` or `gulp test-headless` to run the headless tests that do not require any additional set up
 
 The following tests require setting up a local blockchain network as the target. Because v1.0 is still in active development, you still need to build the necessary Docker images needed to run the network. Follow the steps below to set it up.
 * You will need the peers, orderers and fabric-ca server (new implementation of the member service) to run the tests. The first two components are from the *fabric* repository. The fabric-ca server is from the *fabric-ca* repository.
@@ -46,11 +46,10 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
 * build fabric peer and orderer docker images and other ancillary images
   * `cd $GOPATH/src/github.com/hyperledger/fabric`
   * run `make docker` to build the docker images (you may need to run `make docker-clean` first if you've built before)
-  * run `make couchdb` to build couchdb
 * go to fabric-sdk-node/test/fixtures
   * run `docker-compose up --force-recreate` to launch the network
 * Now you are ready to run the tests:
-  * Clear out your previous key value stores that may have cached user enrollment certificates (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`, `rm $GOPATH/src/github.com/hyperledger/fabric-sdk-node/test/fixtures/fabricca/tlsOrg1/fabric-ca-server.db`, `rm $GOPATH/src/github.com/hyperledger/fabric-sdk-node/test/fixtures/fabricca/tlsOrg2/fabric-ca-server.db`)
+  * Clear out your previous key value stores that may have cached user enrollment certificates (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`)
   * run 'gulp test' to execute the entire test suite (535+ test cases), or you can run them individually
   * Test user management by member services with the following tests that exercise the fabric-ca-client package with a KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
     * `test/integration/fabric-ca-services-tests.js`
@@ -64,56 +63,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
     * `node test/integration/e2e/instantiate-chaincode.js`
     * `node test/integration/e2e/invoke-transaction.js`
     * `node test/integration/e2e/query.js`
-  * To re-run `node test/integration/e2e.js` or `fabric-ca-services-tests.js` stop the network (ctrl-c), clear out `fabric-ca-server.db` and restart network.
-
-### Set Up CouchDB Database for couchdb-fabricca-tests.js
-
-The KeyValueStore database implementation is done using [Apache CouchDB](http://couchdb.apache.org/). To quickly set up a database instance on your local machine, pull in the CouchDB Docker image from [Docker hub](https://hub.docker.com/_/couchdb/).
-
-	docker pull couchdb
-
-Start up the database instance and expose the default port 5984 on the host.
-
-	docker run -d -p 5984:5984 --name my-couchdb couchdb
-
-Ensure that the Docker container running CouchDB is up.
-
-	docker ps
-
-You will see output similar to the one below:
-
-```
-CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
-33caf5a80fca        couchdb             "tini -- /docker-entr"   47 hours ago        Up 47 hours         0.0.0.0:5984->5984/tcp   my-couchdb
-```
-
-Ensure that CouchDB instance is up and ready for requests.
-
-	curl DOCKER_HOST_IP:5984/
-
-For example, the default `DOCKER_HOST_IP` on Mac is `192.168.99.100` or `localhost', therefore the request becomes:
-
-	curl 192.168.99.100:5984/
-	or
-	curl localhost:5984/
-
-If the database is up and running, you will receive the following response:
-
-	{
-		"couchdb": "Welcome",
-		"uuid": "01b6d4481b7ff9e6e067d90c6d20aa83",
-		"version": "1.6.1",
-		"vendor": {
-			"name": "The Apache Software Foundation",
-			"version":"1.6.1"
-		}
-	}
-
-Configurable settings are encapsulated in test/fixtures/couchdb.json and can be overridden with environment variables or command parameters.
-
-Run the associated unit test with the following command:
-
-	node test/unit/couchdb-fabricca-tests.js
+  * To re-run `node test/integration/e2e.js` or `fabric-ca-services-tests.js` stop the network (ctrl-c), clean up the docker instances (`docker rm $(docker ps -aq)`) and restart the network with docker-compose as described above.
 
 ### Contributor Check-list
 The following check-list is for code contributors to make sure their changesets are compliant to the coding standards and avoid time wasted in rejected changesets:
@@ -126,7 +76,7 @@ Run the full unit test bucket and make sure 100% are passing.  Because v1.0 is s
 
 The gulp test command above also generates code coverage reports. Your new code should be accompanied with unit tests and provide 80% line coverage or higher.
 
-### HFC objects and reference documentation
+### Hyperledger Fabric Client objects and reference documentation
 For a high-level design specificiation for Fabric SDKs of all languages, visit [this google doc](https://docs.google.com/document/d/1R5RtIBMW9fZpli37E5Li5_Q9ve3BnQ4q3gWmGZj6Sv4/edit?usp=sharing) (Work-In-Progress).
 
 fabric-client and fabric-ca-client are written in CommonJS modules and take advantage of ECMAScript 2015 class syntax.
