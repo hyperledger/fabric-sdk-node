@@ -440,6 +440,35 @@ var VALID_CERT = '-----BEGIN CERTIFICATE-----' +
 'BAHpeA==' +
 '-----END CERTIFICATE-----';
 
+var VALID_CERT1 = '-----BEGIN CERTIFICATE-----\n' +
+'MIICEDCCAbagAwIBAgIUXoY6X7jIpHAAgL267xHEpVr6NSgwCgYIKoZIzj0EAwIw' +
+'fzELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNh' +
+'biBGcmFuY2lzY28xHzAdBgNVBAoTFkludGVybmV0IFdpZGdldHMsIEluYy4xDDAK' +
+'BgNVBAsTA1dXVzEUMBIGA1UEAxMLZXhhbXBsZS5jb20wHhcNMTcwMTAzMDEyNDAw' +
+'WhcNMTgwMTAzMDEyNDAwWjAQMQ4wDAYDVQQDEwVhZG1pbjBZMBMGByqGSM49AgEG' +
+'CCqGSM49AwEHA0IABLoGEWBb+rQ/OuTBPlGVZO3jVWBcuC4+/pAq8axbtKorpORw' +
+'J/GxahKPLr+vVLPNMyeLcnyJBGgneug+ajE8srijfzB9MA4GA1UdDwEB/wQEAwIF' +
+'oDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAd' +
+'BgNVHQ4EFgQU9BUt7QfgDXx9g6zpzCyJGxXsNM0wHwYDVR0jBBgwFoAUF2dCPaqe' +
+'gj/ExR2fW8OZ0bWcSBAwCgYIKoZIzj0EAwIDSAAwRQIgcWQbMzluyZsmvQCvGzPg' +
+'f5B7ECxK0kdmXPXIEBiizYACIQD2x39Q4oVwO5uL6m3AVNI98C2LZWa0g2iea8wk' +
+'BAHpeA==\n' +
+'-----END CERTIFICATE-----';
+
+var VALID_CERT2 = '-----BEGIN CERTIFICATE-----\n' +
+'MIIB7TCCAZSgAwIBAgIUWNR5HJQyrzJ0aHgXRrdoBmQoZCUwCgYIKoZIzj0EAwIw\n' +
+'cDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNh\n' +
+'biBGcmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xGTAXBgNVBAMT\n' +
+'EG9yZzEuZXhhbXBsZS5jb20wHhcNMTcwNTEwMDE1NDAwWhcNMTgwNDA4MDk1NDAw\n' +
+'WjAQMQ4wDAYDVQQDEwVhZG1pbjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABDKv\n' +
+'/P/qWWgCmpy/3La1GEtIasDLNmSgXaptmcNJQmLzUC4oqY1hHsdoSqVXl2kC8wWa\n' +
+'37Tt/mR0aa1rUIvC3TmjbDBqMA4GA1UdDwEB/wQEAwICBDAMBgNVHRMBAf8EAjAA\n' +
+'MB0GA1UdDgQWBBRn3bJEh7/z/fcL2tX4v3EfOacd5DArBgNVHSMEJDAigCCiLa81\n' +
+'ayqrV5LqU+NfZvzO8dfxqis6K5Lb+/lqRI6iajAKBggqhkjOPQQDAgNHADBEAiBl\n' +
+'In4FyyFHZVU8uGZDqufNXxQU2skYDZDVYP+y5HTi0wIgHwX3UWwHU/9XEerDLV7M\n' +
+'jTSXP2wxocvyk8upDrUD9XI=\n' +
+'-----END CERTIFICATE-----\n';
+
 test('FabricCAServices: Test reenroll() function', function(t) {
 	var cop = new FabricCAServices('http://localhost_bad:7054');
 
@@ -503,6 +532,21 @@ test('FabricCAServices: Test reenroll() function', function(t) {
 
 	t.end();
 });
+
+test('FabricCAServices: Test static method normalizeX509()', function (t) {
+	testNormalizer(VALID_CERT, t);
+	testNormalizer(VALID_CERT1, t);
+	testNormalizer(VALID_CERT2, t);
+	t.end();
+});
+
+function testNormalizer(cert, t) {
+	var normalized = FabricCAServices.normalizeX509(cert);
+	var matches = normalized.match(/\-\-\-\-\-\s*BEGIN ?[^-]+?\-\-\-\-\-\n/);
+	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone start line');
+	matches = normalized.match(/\n\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-/);
+	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone end line');
+}
 
 test('FabricCAServices: Test _parseURL() function', function (t) {
 

@@ -27,7 +27,7 @@ var test = _test(tape);
 
 var hfc = require('fabric-client');
 
-var X509 = require('jsrsasign').X509;
+var X509 = require('x509');
 
 var util = require('util');
 var fs = require('fs');
@@ -80,15 +80,15 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 			eResult = enrollment;
 
 			//check that we got back the expected certificate
-			var cert = new X509();
+			var subject;
 			try {
-				cert.readCertPEM(enrollment.certificate);
+				subject = X509.getSubject(FabricCAServices.normalizeX509(enrollment.certificate));
 			} catch(err) {
 				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollment.certificate, err));
 			}
 
-			t.comment(cert.getSubjectString());
-			t.equal(cert.getSubjectString(), '/CN=' + req.enrollmentID, 'Subject should be /CN=' + req.enrollmentID);
+			t.comment(util.format('Parsed subject: %j', subject));
+			t.equal(subject.commonName, req.enrollmentID, 'Subject should be /CN=' + req.enrollmentID);
 
 			return caService.cryptoPrimitives.importKey(enrollment.certificate);
 		},(err) => {
@@ -163,14 +163,27 @@ test('FabricCAServices: Test enroll() With Dynamic CSR', function (t) {
 		}).then((enrollment) => {
 			t.comment('Successfully enrolled "testUserY"');
 
-			var cert = new X509();
+			var cert;
 			try {
-				cert.readCertPEM(enrollment.certificate);
+				cert = X509.parseCert(FabricCAServices.normalizeX509(enrollment.certificate));
 			} catch(err) {
 				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollment.certificate, err));
 			}
-			var aki = X509.getExtAuthorityKeyIdentifier(cert.hex).kid;
-			var serial = cert.getSerialNumberHex();
+
+			if (!cert.extensions || !cert.extensions.authorityKeyIdentifier) {
+				t.fail(util.format('Parsed certificate does not contain Authority Key Identifier needed for revoke(): %j', cert));
+			}
+
+			// convert the raw AKI string in the form of 'keyid:HX:HX....' (HX represents a hex-encoded byte) to a hex string
+			var akiString = cert.extensions.authorityKeyIdentifier;
+			var arr = akiString.split(':');
+			if (arr[0] !== 'keyid') {
+				t.fail(util.format('Found an Autheority Key Identifier we do not understand: first segment is not "keyid": %s', akiString));
+			}
+
+			arr.shift(); // remove the 'keyid'
+			var aki = arr.join('');
+			var serial = cert.serial;
 
 			t.comment(util.format('Ready to revoke certificate serial # "%s" with aki "%s"', serial, aki));
 
@@ -237,14 +250,14 @@ test('FabricCAClient: Test enroll With Static CSR', function (t) {
 			t.comment(enrollResponse.enrollmentCert);
 			t.pass('Successfully invoked enroll API with enrollmentID \'' + enrollmentID + '\'');
 			//check that we got back the expected certificate
-			var cert = new X509();
+			var subject;
 			try {
-				cert.readCertPEM(enrollResponse.enrollmentCert);
+				subject = X509.getSubject(FabricCAServices.normalizeX509(enrollResponse.enrollmentCert));
 			} catch(err) {
 				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollResponse.enrollmentCert, err));
 			}
-			t.comment(cert.getSubjectString());
-			t.equal(cert.getSubjectString(), '/CN=' + enrollmentID, 'Subject should be /CN=' + enrollmentID);
+			t.comment(subject);
+			t.equal(subject.commonName, enrollmentID, 'Subject should be /CN=' + enrollmentID);
 			t.end();
 		})
 		.catch(function (err) {
