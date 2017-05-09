@@ -77,7 +77,10 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		// Deletes an entity from its state
 		return t.move(stub, args)
 	}
-	return shim.Error("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'")
+	if args[0] == "echo" {
+		return t.echo(stub, args)
+	}
+	return shim.Error(fmt.Sprintf("Unknown action: %s, check the first argument, must be one of 'delete', 'query', 'echo', or 'move'", args[0]))
 }
 
 func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) pb.Response {
@@ -181,6 +184,13 @@ func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string)
 	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
 	fmt.Printf("Query Response:%s\n", jsonResp)
 	return shim.Success(Avalbytes)
+}
+
+// Used to return what's in the input for testing purposes
+func (t *SimpleChaincode) echo(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	fmt.Print("Echo Response\n")
+	return shim.Success([]byte(args[1]))
 }
 
 func main() {

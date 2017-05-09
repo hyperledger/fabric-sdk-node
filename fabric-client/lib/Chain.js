@@ -26,7 +26,6 @@ var path = require('path');
 var ChannelConfig = require('./ChannelConfig.js');
 var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
-var Packager = require('./Packager.js');
 var Block = require('./Block.js');
 var settle = require('promise-settle');
 var grpc = require('grpc');
@@ -1901,20 +1900,6 @@ var Chain = class {
 		header.setChannelHeader(channelHeader.toBuffer());
 
 		return header;
-	}
-
-	// internal utility method to get the chaincodePackage data in bytes
-	/**
-	 * @private
-	 */
-	static _getChaincodePackageData(request, devMode) {
-		return new Promise((resolve,reject) => {
-			if (!request.chaincodePackage) {
-				resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode));
-			} else {
-				resolve(request.chaincodePackage);
-			}
-		});
 	}
 
 	//utility method to return a timestamp for the current time

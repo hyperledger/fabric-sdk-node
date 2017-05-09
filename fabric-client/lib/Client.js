@@ -23,6 +23,7 @@ var api = require('./api.js');
 var User = require('./User.js');
 var Chain = require('./Chain.js');
 var ChannelConfig = require('./ChannelConfig.js');
+var Packager = require('./Packager.js');
 var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
 var MSP = require('./msp/msp.js');
@@ -700,7 +701,7 @@ var Client = class {
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 		chaincodeDeploymentSpec.setEffectiveDate(Chain._buildCurrentTimestamp()); //TODO may wish to add this as a request setting
 
-		return Chain._getChaincodePackageData(request, this.isDevMode())
+		return _getChaincodePackageData(request, this.isDevMode())
 		.then((data) => {
 			logger.debug('installChaincode data %s ',data);
 			// DATA may or may not be present depending on devmode settings
@@ -1219,6 +1220,20 @@ function readFile(path) {
 			}
 			return resolve(data);
 		});
+	});
+}
+
+// internal utility method to get the chaincodePackage data in bytes
+/**
+ * @private
+ */
+function _getChaincodePackageData(request, devMode) {
+	return new Promise((resolve,reject) => {
+		if (!request.chaincodePackage) {
+			resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode));
+		} else {
+			resolve(request.chaincodePackage);
+		}
 	});
 }
 

@@ -17,6 +17,4 @@ tmp
 .DS_Store
 fabric-client/.DS_Store
 fabric-ca-client/.DS_Store
-test/fixtures/fabricca/tlsOrg1/fabric-ca-server.db
-test/fixtures/fabricca/tlsOrg2/fabric-ca-server.db
-
+test/fixtures/src/github.com/example_cc/junk.go

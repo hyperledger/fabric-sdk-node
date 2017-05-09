@@ -76,6 +76,20 @@ var Remote = class {
 			}
 		}
 
+		let grpc_receive_max = utils.getConfigSetting('grpc-max-receive-message-length');
+		let grpc_send_max = utils.getConfigSetting('grpc-max-send-message-length');
+		// if greater than 0, set to that specific limit
+		// if equal to -1, set to that to have no limit
+		// if 0, do not set anything to use the system default
+		if (grpc_receive_max > 0 || grpc_receive_max === -1)
+			this._options['grpc.max_receive_message_length'] = grpc_receive_max;
+
+		// if greater than 0, set to that specific limit
+		// if equal to -1, set to that to have no limit
+		// if 0, do not set anything to use the system default
+		if (grpc_send_max > 0 || grpc_send_max === -1)
+			this._options['grpc.max_send_message_length'] = grpc_send_max;
+
 		// service connection
 		this._url = url;
 		this._endpoint = new Endpoint(url, pem);

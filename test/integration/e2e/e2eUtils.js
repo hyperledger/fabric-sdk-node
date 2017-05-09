@@ -117,6 +117,7 @@ function installChaincode(org, chaincode_path, version, t) {
 		var proposal = results[1];
 		var header   = results[2];
 		var all_good = true;
+		var errors = [];
 		for(var i in proposalResponses) {
 			let one_good = false;
 			if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
@@ -124,13 +125,14 @@ function installChaincode(org, chaincode_path, version, t) {
 				logger.info('install proposal was good');
 			} else {
 				logger.error('install proposal was bad');
+				errors.push(proposalResponses[0]);
 			}
 			all_good = all_good & one_good;
 		}
 		if (all_good) {
 			t.pass(util.format('Successfully sent install Proposal and received ProposalResponse: Status - %s', proposalResponses[0].response.status));
 		} else {
-			t.fail('Failed to send install Proposal or receive valid response. Response null or status is not 200. exiting...');
+			throw new Error(util.format('Failed to send install Proposal or receive valid response: %s', errors));
 		}
 	},
 	(err) => {
