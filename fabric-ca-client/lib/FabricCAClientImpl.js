@@ -199,7 +199,12 @@ var FabricCAServices = class {
 
 		var cert = currentUser.getIdentity()._certificate;
 		var x509 = new jsrsa.X509();
-		x509.readCertPEM(cert);
+		try {
+			x509.readCertPEM(cert);
+		} catch(err) {
+			logger.error(util.format('Failed to parse enrollment certificate %s. \nError: %s', cert, err));
+		}
+
 		var subject = x509.getSubjectString();
 		if (subject === null || subject === '')
 			throw new Error('Failed to parse the enrollment certificate of the current user for its subject');
