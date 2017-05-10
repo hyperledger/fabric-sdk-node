@@ -46,24 +46,26 @@ var FabricCAServices = class {
 	 * @param {TLSOptions} tlsOptions The TLS settings to use when the Fabric CA services endpoint uses "https"
 	 * @param {string} caName The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
 	 *  a single server. If omitted or null or an empty string, then the default CA is the target of requests
-	 * @param {object} cryptoSetting This optional parameter is an object with the following optional properties:
-	 * - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
-	 *	default is true (for software based implementation), specific implementation module is specified
-	 *	in the setting 'crypto-suite-software'
-	 * - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
-	 * - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
-	 *
-	 * @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
-	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
-	 * KeyValueStore interface.
-	 * @param {object} opts Implementation-specific options object for the {@link KeyValueStore} class to instantiate an instance
+	 * @param {CryptoSuite} cryptoSuite The optional cryptoSuite instance to be used if options other than defaults are needed.
+	 * If not specified, an instance of {@link CryptoSuite} will be constructed based on the current configuration settings:
+	 * crypto-hsm: use an implementation for Hardware Security Module (if set to true) or software-based key management (if set to false)
+	 * crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
+	 *  is supported and the valid key sizes are 256 and 384
+	 * crypto-hash-algo: hashing algorithm
+	 * key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A {@link CryptoKeyStore}
+	 *  is provided for this purpose, which can be used on top of any implementation of the {@link KeyValueStore} interface,
+	 *  such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
 	 */
-	constructor(url, tlsOptions, caName, cryptoSettings, KVSImplClass, opts) {
+	constructor(url, tlsOptions, caName, cryptoSuite) {
 
 		var endpoint = FabricCAServices._parseURL(url);
 
-		this.cryptoPrimitives = utils.newCryptoSuite(cryptoSettings, KVSImplClass, opts);
-		this._caName = caName;
+		if (!!cryptoSuite) {
+			this.cryptoPrimitives = cryptoSuite;
+		} else {
+			this.cryptoPrimitives = utils.newCryptoSuite();
+		}
+
 
 		this._fabricCAClient = new FabricCAClient({
 			caname: caName,
@@ -75,6 +77,26 @@ var FabricCAServices = class {
 
 		logger.info('Successfully constructed Fabric CA service client: endpoint - %j', endpoint);
 
+	}
+
+	/**
+	 * Returns a new instance of the CryptoSuite API implementation
+	 *
+	 * @param {object} setting This optional parameter is an object with the following optional properties:
+	 * - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
+   	 *    default is true (for software based implementation), specific implementation module is specified
+	 *    in the setting 'crypto-suite-software'
+	 * - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
+	 * - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
+	 * - hash {string}: 'SHA2' or 'SHA3'
+	 * @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
+	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
+	 * KeyValueStore interface.
+	 * @param {object} opts Implementation-specific option object used in the constructor
+	 * returns a new instance of the CryptoSuite API implementation
+	 */
+	static newCryptoSuite(setting, KVSImplClass, opts) {
+		return utils.newCryptoSuite(setting, KVSImplClass, opts);
 	}
 
 	getCrypto() {

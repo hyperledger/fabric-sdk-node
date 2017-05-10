@@ -61,6 +61,32 @@ var chainKeyValStorePath = 'tmp/chainKeyValStorePath';
 var testKey = 'keyValFileStoreName';
 var testValue = 'secretKeyValue';
 
+test('\n\n ** Client.js Tests: CryptoSuite() methods **\n\n', function (t) {
+	t.equals(client.getCryptoSuite(), null, 'Should return null when CryptoSuite has not been set');
+
+	var crypto = client.newCryptoSuite();
+	if (crypto) {
+		t.pass('Successfully called newCryptoSuite()');
+	}
+	else {
+		t.fail('newCryptoSuite() did not return an object');
+	}
+
+	crypto = client.getCryptoSuite();
+	if (crypto) {
+		t.pass('Successfully called getCryptoSuite()');
+	}
+	else {
+		t.fail('getCryptoSuite() did not return an object');
+	}
+
+	client.setCryptoSuite(null);
+	t.equals(client.getCryptoSuite(), null, 'Should return null when CryptoSuite has been set to null');
+
+	t.end();
+
+});
+
 test('\n\n ** Client.js Tests: getUserContext() method **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
@@ -108,10 +134,6 @@ test('\n\n ** Client.js Tests: getUserContext() method **\n\n', function (t) {
 });
 
 test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t) {
-
-	t.equals(client.getCryptoSuite(), null, 'Client getCryptoSuite should initially be null');
-	client.setCryptoSuite(utils.newCryptoSuite());
-	if (client.getCryptoSuite() != null) t.pass('Client getCryptoSuite should not be null after setCryptoSuite');
 
 	var response = client.getUserContext();
 	if (response === null)

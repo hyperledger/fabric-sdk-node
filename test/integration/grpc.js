@@ -46,6 +46,8 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 	var orgName = ORGS[userOrg].name;
 	var submitter;
 
+	client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
+
 	var junkpath = path.join(__dirname, '../fixtures/src/github.com/example_cc/junk.go');
 	// create a file of size 1M
 	fs.writeFile(junkpath, crypto.randomBytes(1024 * 1024));

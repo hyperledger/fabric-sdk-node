@@ -63,8 +63,6 @@ var Client = class {
 		logger.debug('const - new Client');
 		this._chains = {};
 		this._stateStore = null;
-		// TODO, assuming a single CrytoSuite implementation per SDK instance for now
-		// change this to be per Client or per Chain
 		this._cryptoSuite = null;
 		this._userContext = null;
 		// keep a collection of MSP's
@@ -72,6 +70,27 @@ var Client = class {
 
 		// Is in dev mode or network mode
 		this._devMode = false;
+	}
+
+	/**
+ 	 * Returns a new instance of the CryptoSuite API implementation
+	 *
+	 * @param {object} setting This optional parameter is an object with the following optional properties:
+	 * - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
+   	 *    default is true (for software based implementation), specific implementation module is specified
+	 *    in the setting 'crypto-suite-software'
+	 * - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
+	 * - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
+	 * - hash {string}: 'SHA2' or 'SHA3'
+	 * @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
+	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
+	 * KeyValueStore interface.
+	 * @param {object} opts Implementation-specific option object used in the constructor
+	 * returns a new instance of the CryptoSuite API implementation
+	 */
+	newCryptoSuite(setting, KVSImplClass, opts) {
+		this._cryptoSuite = sdkUtils.newCryptoSuite(setting, KVSImplClass, opts);
+		return this._cryptoSuite;
 	}
 
 	setCryptoSuite(cryptoSuite) {
@@ -948,6 +967,10 @@ var Client = class {
 					if (memberStr) {
 						// The member was found in the key value store, so restore the state.
 						var newUser = new User(name);
+						if (!self._cryptoSuite) {
+							logger.info('loadUserFromStateStore, cryptoSuite is not set, will load using defaults');
+						}
+						newUser.setCryptoSuite(self._cryptoSuite);
 
 						return newUser.fromString(memberStr);
 					} else {
@@ -1035,12 +1058,13 @@ var Client = class {
 		} else {
 			return Promise.reject(new Error('Client.createUser parameter \'opts cryptoContent\' is required.'));
 		}
+
 		if (this._cryptoSuite == null) {
-			this._cryptoSuite = opts.keyStoreOpts ? sdkUtils.newCryptoSuite(opts.keyStoreOpts) : sdkUtils.newCryptoSuite();
+			this._cryptoSuite = sdkUtils.newCryptoSuite();
 		}
 		var self = this;
 		return new Promise((resolve, reject) => {
-			logger.info('loading submitter from files');
+			logger.info('loading user from files');
 			// need to load private key and pre-enrolled certificate from files based on the MSP
 			// root MSP config directory structure:
 			// <config>
@@ -1072,7 +1096,8 @@ var Client = class {
 			}).then((data) => {
 				logger.debug('then signedCertPEM data');
 				member = new User(opts.username);
-				return member.setEnrollment(importedKey, data.toString(), opts.mspid, { kvsOpts: self._cryptoSuite._storeConfig.opts });
+				member.setCryptoSuite(self._cryptoSuite);
+				return member.setEnrollment(importedKey, data.toString(), opts.mspid);
 			}).then(() => {
 				logger.debug('then setUserContext');
 				return self.setUserContext(member);

@@ -53,6 +53,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	var org = 'org1';
 	var client = new hfc();
 	var chain = client.newChain(e2e.channel);
+	var orgName = ORGS[org].name;
 	chain.addOrderer(
 		client.newOrderer(
 			ORGS.orderer.url,
@@ -62,7 +63,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 			}
 		)
 	);
-	var orgName = ORGS[org].name;
 
 	var targets = [];
 	for (let key in ORGS[org]) {
@@ -87,9 +87,9 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	})
 	.then((store) => {
 		client.setStateStore(store);
+		client.newCryptoSuite({path: testUtil.storePathForOrg(orgName)});
 
 		return testUtil.getSubmitter(client, t, true /* use peer org admin */, org);
-
 	})
 	.then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');

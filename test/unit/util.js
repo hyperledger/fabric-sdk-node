@@ -97,6 +97,8 @@ var	tlsOptions = {
 function getMember(username, password, client, t, userOrg) {
 	var caUrl = ORGS[userOrg].ca.url;
 
+	t.comment('getMember, name: '+username+', client.getUserContext('+username+', true)');
+
 	return client.getUserContext(username, true)
 	.then((user) => {
 		return new Promise((resolve, reject) => {
@@ -105,17 +107,24 @@ function getMember(username, password, client, t, userOrg) {
 				return resolve(user);
 			}
 
-			// need to enroll it with CA server
-			var cop = new copService(caUrl, tlsOptions, ORGS[userOrg].ca.name);
+			var member = new User(username);
+			var cryptoSuite = null;
+			if (userOrg) {
+				cryptoSuite = client.newCryptoSuite({path: module.exports.storePathForOrg(ORGS[userOrg].name)});
+			} else {
+				cryptoSuite = client.newCryptoSuite();
+			}
+			member.setCryptoSuite(cryptoSuite);
 
-			var member;
+			// need to enroll it with CA server
+			var cop = new copService(caUrl, tlsOptions, ORGS[userOrg].ca.name, cryptoSuite);
+
 			return cop.enroll({
 				enrollmentID: username,
 				enrollmentSecret: password
 			}).then((enrollment) => {
 				t.pass('Successfully enrolled user \'' + username + '\'');
 
-				member = new User(username);
 				return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
 			}).then(() => {
 				return client.setUserContext(member);
@@ -134,6 +143,10 @@ function getAdmin(client, t, userOrg) {
 	var keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
 	var certPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/signcerts', userOrg, userOrg));
 	var certPEM = readAllFiles(certPath)[0];
+
+	if (userOrg) {
+		client.newCryptoSuite({path: module.exports.storePathForOrg(ORGS[userOrg].name)});
+	}
 
 	return Promise.resolve(client.createUser({
 		username: 'peer'+userOrg+'Admin',

@@ -50,6 +50,7 @@ test('\n\n ** createUser happy path - file store **\n\n', function (t) {
 
 	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
 	var client = new Client();
+	var cryptoSuite = client.newCryptoSuite(keyStoreOpts);
 
 	logger.info('try to cleanup kvs Path: '+keyStoreOpts.path);
 	// clean up
@@ -67,8 +68,7 @@ test('\n\n ** createUser happy path - file store **\n\n', function (t) {
 		return client.createUser(
 			{username: caImport.orgs[userOrg].username,
 				mspid: caImport.orgs[userOrg].mspid,
-				cryptoContent: { privateKey: prvKey, signedCert: sgnCert },
-				keyStoreOpts: keyStoreOpts
+				cryptoContent: { privateKey: prvKey, signedCert: sgnCert }
 			});
 	}, (err) => {
 		logger.error(err.stack ? err.stack : err);
@@ -107,6 +107,8 @@ test('\n\n ** createUser happy path - CouchDB **\n\n', function (t) {
 	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
 	var client = new Client();
+	var cryptoSuite = client.newCryptoSuite(keyStoreOpts);
+
 	couchdbUtil.destroy(dbname, keyValStorePath)
 	.then((status) => {
 		t.comment(tag+'Cleanup of existing ' + dbname + ' returned '+status);
@@ -158,6 +160,7 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', function (t) {
 	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
 	var client = new Client();
+	var cryptoSuite = client.newCryptoSuite(keyStoreOpts);
 	couchdbUtil.destroy(dbname, cloudantUrl)
 	.then((status) => {
 		t.comment(tag+'Cleanup of existing ' + dbname + ' returned '+status);
@@ -171,8 +174,7 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', function (t) {
 		return client.createUser(
 			{username: caImport.orgs[userOrg].username,
 				mspid: caImport.orgs[userOrg].mspid,
-				cryptoContent: { privateKey: prvKey, signedCert: sgnCert },
-				keyStoreOpts: keyStoreOpts
+				cryptoContent: { privateKey: prvKey, signedCert: sgnCert }
 			});
 	}).then((user) => {
 		if (user) {
@@ -206,6 +208,7 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', function 
 	logger.info('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
 
 	var client = new Client();
+	var cryptoSuite = client.newCryptoSuite(keyStoreOpts);
 	couchdbUtil.destroy(dbname, cloudantUrl)
 	.then((status) => {
 		t.comment(tag+'Cleanup of existing ' + dbname + ' returned '+status);
@@ -219,8 +222,7 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', function 
 		return client.createUser(
 			{username: caImport.orgs[userOrg].username,
 				mspid: caImport.orgs[userOrg].mspid,
-				cryptoContent: caImport.orgs[userOrg].cryptoContent,
-				keyStoreOpts: keyStoreOpts
+				cryptoContent: caImport.orgs[userOrg].cryptoContent
 			});
 	}, (err) => {
 		logger.error(err.stack ? err.stack : err);
