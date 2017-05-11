@@ -263,6 +263,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 //		chain.loadConfigUpdate(config);
 
 		 //have the SDK build the config update object
+		// ------ this is not a supported API ...for test only
 		 return client.buildChannelConfig(test_input3, orderer, msps);
 	}).then((config_bytes) => {
 		logger.debug('\n***\n built config \n***\n');

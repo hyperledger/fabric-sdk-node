@@ -228,7 +228,9 @@ var Client = class {
 		return msp;
 	}
 
-	/**
+	/*
+	 * For test only
+	 *
 	 * Build an configuration update envelope for the provided channel based on
 	 * configuration definition provided and from the MSP's added to this client.
 	 * The result of the build must be signed and then may be used to update
@@ -257,7 +259,9 @@ var Client = class {
 		return chain.buildChannelConfigUpdate(config_definition, msps);
 	}
 
-	/**
+	/*
+	 * For test only
+	 *
 	 * Build an configuration that is the channel configuration definition from the
 	 * provide MSPs added to this client, the Channel definition input parameters, and
 	 * system information from the provided Orderer.
@@ -360,8 +364,9 @@ var Client = class {
 	 *                       required settings and signatures to initialize this channel.
 	 *                       This envelope would have been created by the command
 	 *                       line tool "configtx".
-	 *      <br>`config` : optional - {byte[]} Protobuf ConfigUpdate object built by the
-	 *                     buildChannelConfig() method of this class.
+	 *      <br>`config` : optional - {byte[]} Protobuf ConfigUpdate object extracted from
+	 *                     a ConfigEnvelope created by the ConfigTX tool.
+	 *                     see extractChannelConfig()
 	 *      <br>`signatures` : optional - {ConfigSignature[]} the list of collected signatures
 	 *                         required by the channel create policy when using the `config` parameter.
 	 * @returns {Result} Result Object with status on the create process.
