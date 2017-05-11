@@ -28,7 +28,7 @@ var _ccTransProto = grpc.load(__dirname + '/protos/peer/transaction.proto').prot
 var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
 var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
 var _ccProposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
-var _ccEventProto = grpc.load(__dirname + '/protos/peer/chaincodeevent.proto').protos;
+var _ccEventProto = grpc.load(__dirname + '/protos/peer/chaincode_event.proto').protos;
 
 var _validation_codes = {};
 var keys = Object.keys(_transProto.TxValidationCode);

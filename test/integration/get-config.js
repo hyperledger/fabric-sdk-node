@@ -46,7 +46,7 @@ var _ccTransProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/
 var _transProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/transaction.proto').protos;
 var _responseProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/proposal_response.proto').protos;
 var _ccProposalProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/proposal.proto').protos;
-var _ccEventProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/chaincodeevent.proto').protos;
+var _ccEventProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/chaincode_event.proto').protos;
 
 var client = new hfc();
 // IMPORTANT ------>>>>> MUST RUN e2e/create-channel.js FIRST

@@ -2,7 +2,7 @@
 
 var grpc = require('grpc');
 
-var identityProto = grpc.load(__dirname + '/../protos/identity.proto').msp;
+var identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp;
 
 /**
  * This interface is shared within the peer and client API of the membership service provider.
@@ -111,8 +111,8 @@ var Identity = class {
 	 */
 	serialize() {
 		var serializedIdentity = new identityProto.SerializedIdentity();
-		serializedIdentity.Mspid = this.getMSPId();
-		serializedIdentity.IdBytes = Buffer.from(this._certificate);
+		serializedIdentity.setMspid(this.getMSPId());
+		serializedIdentity.setIdBytes(Buffer.from(this._certificate));
 		return serializedIdentity.toBuffer();
 	}
 };

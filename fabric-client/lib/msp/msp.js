@@ -8,8 +8,8 @@ var utils = require('../utils.js');
 var logger = utils.getLogger('msp.js');
 
 var grpc = require('grpc');
-var identityProto = grpc.load(__dirname + '/../protos/identity.proto').msp;
-var _mspConfigProto = grpc.load(__dirname + '/../protos/msp/mspconfig.proto').msp;
+var identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp;
+var _mspConfigProto = grpc.load(__dirname + '/../protos/msp/msp_config.proto').msp;
 
 
 /**
@@ -143,7 +143,7 @@ var MSP = class {
 			store_key = storeKey;
 		}
 		var sid = identityProto.SerializedIdentity.decode(serializedIdentity);
-		var cert = sid.IdBytes.toBinary();
+		var cert = sid.getIdBytes().toBinary();
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
 		if(!store_key) {
 			var publicKey =this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate }, false);

@@ -31,7 +31,7 @@ var _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos
 var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
 var _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
 var _peerConfigurationProto = grpc.load(__dirname + '/protos/peer/configuration.proto').protos;
-var _mspPrProto = grpc.load(__dirname + '/protos/common/msp_principal.proto').common;
+var _mspPrProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
 var _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
 var _policiesProto = grpc.load(__dirname + '/protos/common/policies.proto').common;
@@ -39,9 +39,9 @@ var _ledgerProto = grpc.load(__dirname + '/protos/common/ledger.proto').common;
 var _commonConfigurationProto = grpc.load(__dirname + '/protos/common/configuration.proto').common;
 var _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configuration.proto').orderer;
 var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
-var _mspConfigProto = grpc.load(__dirname + '/protos/msp/mspconfig.proto').msp;
+var _mspConfigProto = grpc.load(__dirname + '/protos/msp/msp_config.proto').msp;
 var _timestampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.proto').google.protobuf;
-var _identityProto = grpc.load(path.join(__dirname, '/protos/identity.proto')).msp;
+var _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
 
 const ImplicitMetaPolicy_Rule = {ANY:0, ALL:1, MAJORITY:2};
 

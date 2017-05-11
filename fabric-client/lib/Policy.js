@@ -19,7 +19,7 @@
 var grpc = require('grpc');
 var util = require('util');
 
-var _mspPrProto = grpc.load(__dirname + '/protos/common/msp_principal.proto').common;
+var _mspPrProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
 var _policiesProto = grpc.load(__dirname + '/protos/common/policies.proto').common;
 
 var IDENTITY_TYPE = {
