@@ -36,6 +36,8 @@ var e2e = testUtil.END2END;
 hfc.addConfigFile(path.join(__dirname, './config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 
+var grpc = require('grpc');
+
 var tx_id = null;
 var nonce = null;
 var the_user = null;
@@ -189,6 +191,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	);
 
 	var targets = [];
+	var badTransientMap = { 'test1': 'transientValue' }; // have a different key than what the chaincode example_cc1.go expects in Init()
+	var transientMap = { 'test': 'transientValue' };
 
 	return hfc.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
@@ -243,44 +247,50 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		t.fail('Failed to enroll user \'admin\'. ' + err);
 		throw new Error('Failed to enroll user \'admin\'. ' + err);
 
-	}).then((success) => {
+	}).then(() => {
 
-		nonce = utils.getNonce();
-		tx_id = hfc.buildTransactionID(nonce, the_user);
+		// the v1 chaincode has Init() method that expects a transient map
+		if (upgrade) {
+			// first test that a bad transient map would get the chaincode to return an error
+			let request = buildChaincodeProposal(the_user, channel_name, chaincode_path, version, upgrade, badTransientMap);
+			tx_id = request.tx_id;
+			request = request.request;
 
-		// send proposal to endorser
-		var request = {
-			chaincodePath: chaincode_path,
-			chaincodeId: e2e.chaincodeId,
-			chaincodeVersion: version,
-			fcn: 'init',
-			args: ['a', '100', 'b', '200'],
-			chainId: channel_name,
-			txId: tx_id,
-			nonce: nonce,
-			// use this to demonstrate the following policy:
-			// 'if signed by org1 admin, then that's the only signature required,
-			// but if that signature is missing, then the policy can also be fulfilled
-			// when members (non-admin) from both orgs signed'
-			'endorsement-policy': {
-				identities: [
-					{ role: { name: 'member', mspId: ORGS['org1'].mspid }},
-					{ role: { name: 'member', mspId: ORGS['org2'].mspid }},
-					{ role: { name: 'admin', mspId: ORGS['org1'].mspid }}
-				],
-				policy: {
-					'1-of': [
-						{ 'signed-by': 2},
-						{ '2-of': [{ 'signed-by': 0}, { 'signed-by': 1 }]}
-					]
+			return chain.sendUpgradeProposal(request)
+			.then((results) => {
+				let proposalResponses = results[0];
+
+				// expecting both peers to return an Error due to the bad transient map
+				let success = false;
+				if (proposalResponses && proposalResponses.length > 0) {
+					proposalResponses.forEach((response) => {
+						if (response instanceof Error &&
+							response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
+							success = true;
+						} else {
+							success = false;
+						}
+					});
 				}
-			}
-		};
-		if(!upgrade) {
+
+				if (success) {
+					// successfully tested the negative conditions caused by
+					// the bad transient map, now send the good transient map
+					request = buildChaincodeProposal(the_user, channel_name, chaincode_path, version, upgrade, transientMap);
+					tx_id = request.tx_id;
+					request = request.request;
+
+					return chain.sendUpgradeProposal(request);
+				} else {
+					throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
+				}
+			});
+		} else {
+			let request = buildChaincodeProposal(the_user, channel_name, chaincode_path, version, upgrade, transientMap);
+			tx_id = request.tx_id;
+			request = request.request;
+
 			return chain.sendInstantiateProposal(request);
-		}
-		else {
-			return chain.sendUpgradeProposal(request);
 		}
 
 	}, (err) => {
@@ -298,6 +308,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		for(var i in proposalResponses) {
 			let one_good = false;
 			if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
+				// special check only to test transient map support during chaincode upgrade
 				one_good = true;
 				logger.info(type +' proposal was good');
 			} else {
@@ -379,6 +390,47 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		Promise.reject(new Error('Failed to send instantiate due to error: ' + err.stack ? err.stack : err));
 	});
 };
+
+function buildChaincodeProposal(the_user, channelId, chaincode_path, version, upgrade, transientMap) {
+	let nonce = utils.getNonce();
+	let tx_id = hfc.buildTransactionID(nonce, the_user);
+
+	// send proposal to endorser
+	var request = {
+		chaincodePath: chaincode_path,
+		chaincodeId: e2e.chaincodeId,
+		chaincodeVersion: version,
+		fcn: 'init',
+		args: ['a', '100', 'b', '200'],
+		chainId: channelId,
+		txId: tx_id,
+		nonce: nonce,
+		// use this to demonstrate the following policy:
+		// 'if signed by org1 admin, then that's the only signature required,
+		// but if that signature is missing, then the policy can also be fulfilled
+		// when members (non-admin) from both orgs signed'
+		'endorsement-policy': {
+			identities: [
+				{ role: { name: 'member', mspId: ORGS['org1'].mspid }},
+				{ role: { name: 'member', mspId: ORGS['org2'].mspid }},
+				{ role: { name: 'admin', mspId: ORGS['org1'].mspid }}
+			],
+			policy: {
+				'1-of': [
+					{ 'signed-by': 2},
+					{ '2-of': [{ 'signed-by': 0}, { 'signed-by': 1 }]}
+				]
+			}
+		}
+	};
+
+	if(upgrade) {
+		// use this call to test the transient map support during chaincode instantiation
+		request.transientMap = transientMap;
+	}
+
+	return { request: request, tx_id: tx_id };
+}
 
 module.exports.instantiateChaincode = instantiateChaincode;
 
@@ -611,7 +663,7 @@ function invokeChaincode(userOrg, version, t){
 
 module.exports.invokeChaincode = invokeChaincode;
 
-function queryChaincode(org, version, value, t){
+function queryChaincode(org, version, value, t, transientMap) {
 	hfc.setConfigSetting('request-timeout', 60000);
 	var channel_name = hfc.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
@@ -664,6 +716,12 @@ function queryChaincode(org, version, value, t){
 			fcn: 'invoke',
 			args: ['query','b']
 		};
+
+		if (transientMap) {
+			request.transientMap = transientMap;
+			request.args = ['testTransient', ''];
+		}
+
 		return chain.queryByChaincode(request);
 	},
 	(err) => {
@@ -673,7 +731,17 @@ function queryChaincode(org, version, value, t){
 	}).then((response_payloads) => {
 		if (response_payloads) {
 			for(let i = 0; i < response_payloads.length; i++) {
-				t.equal(response_payloads[i].toString('utf8'),value,'checking query results are correct that user b has '+ value + ' now after the move');
+				if (transientMap) {
+					t.equal(
+						response_payloads[i].toString(),
+						transientMap[Object.keys(transientMap)[0]].toString(),
+						'Checking the result has the transientMap value returned by the chaincode');
+				} else {
+					t.equal(
+						response_payloads[i].toString('utf8'),
+						value,
+						'checking query results are correct that user b has '+ value + ' now after the move');
+				}
 			}
 			return true;
 		} else {

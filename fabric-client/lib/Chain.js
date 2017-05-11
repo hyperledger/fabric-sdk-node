@@ -1174,6 +1174,9 @@ var Chain = class {
 	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
 	 *		<br>`chainId` : required - String of the name of the chain
 	 *		<br>`txId` : required - String of the transaction id
+	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
+	 *			the chaincode but not saved in the ledger, such as cryptographic information
+	 *			for encryption
 	 *		<br>`nonce` : required - Integer of the once time number
 	 *		<br>`fcn` : optional - String of the function to be called on
 	 *                  the chaincode once instantiated (default 'init')
@@ -1228,6 +1231,9 @@ var Chain = class {
 	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
 	 *		<br>`chainId` : required - String of the name of the chain
 	 *		<br>`txId` : required - String of the transaction id
+	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
+	 *			the chaincode but not saved in the ledger, such as cryptographic information
+	 *			for encryption
 	 *		<br>`nonce` : required - Integer of the once time number
 	 *		<br>`fcn` : optional - String of the function to be called on
 	 *                  the chaincode once instantiated (default 'init')
@@ -1324,7 +1330,7 @@ var Chain = class {
 			Constants.LSCC
 		);
 		header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
-		proposal = Chain._buildProposal(lcccSpec, header);
+		proposal = Chain._buildProposal(lcccSpec, header, request.transientMap);
 		let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
 
 		return Chain._sendPeersProposal(peers, signed_proposal)
@@ -1346,6 +1352,9 @@ var Chain = class {
 	 *		<br>`chainId` : required - String of the name of the chain
 	 *		<br>`txId` : required - String of the transaction id
 	 *		<br>`nonce` : required - Integer of the once time number
+	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
+	 *			the chaincode but not saved in the ledger, such as cryptographic information
+	 *			for encryption
 	 *		<br>`args` : an array of arguments specific to the chaincode 'invoke'
 	 * @returns {Promise} A Promise for a `ProposalResponse`
 	 */
@@ -1431,7 +1440,7 @@ var Chain = class {
 			request.chaincodeId
 			);
 		header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
-		proposal = self._buildProposal(invokeSpec, header);
+		proposal = self._buildProposal(invokeSpec, header, request.transientMap);
 		let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
 
 		return Chain._sendPeersProposal(request.targets, signed_proposal)
@@ -1488,7 +1497,7 @@ var Chain = class {
 
 		let proposalResponses = request.proposalResponses;
 		let chaincodeProposal = request.proposal;
-		let header            = request.header;
+		let header            = _commonProto.Header.decode(chaincodeProposal.getHeader());
 
 		// verify that we have an orderer configured
 		if(!this.getOrderers()) {
@@ -1517,7 +1526,15 @@ var Chain = class {
 
 		var chaincodeActionPayload = new _transProto.ChaincodeActionPayload();
 		chaincodeActionPayload.setAction(chaincodeEndorsedAction);
-		var chaincodeProposalPayloadNoTrans = _proposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
+
+		// the TransientMap field inside the original proposal payload is only meant for the
+		// endorsers to use from inside the chaincode. This must be taken out before sending
+		// to the orderer, otherwise the transaction will be rejected by the validators when
+		// it compares the proposal hash calculated by the endorsers and returned in the
+		// proposal response, which was calculated without the TransientMap
+		var originalChaincodeProposalPayload = _proposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
+		var chaincodeProposalPayloadNoTrans = new _proposalProto.ChaincodeProposalPayload();
+		chaincodeProposalPayloadNoTrans.setInput(originalChaincodeProposalPayload.input); // only set the input field, skipping the TransientMap
 		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposalPayloadNoTrans.toBuffer());
 
 		var transactionAction = new _transProto.TransactionAction();
@@ -1564,6 +1581,9 @@ var Chain = class {
 	 *		<br>chaincodeId : The id of the chaincode to perform the query
 	 *		<br>`args` : an array of arguments specific to the chaincode 'innvoke'
 	 *             that represent a query invocation on that chaincode
+	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
+	 *			the chaincode but not saved in the ledger, such as cryptographic information
+	 *			for encryption
 	 * @returns {Promise} A Promise for an array of byte array results from the chaincode on all Endorsing Peers
 	 */
 	queryByChaincode(request) {
@@ -1715,21 +1735,22 @@ var Chain = class {
 	/**
 	 * @private
 	 */
-	static _buildProposal(invokeSpec, header) {
+	static _buildProposal(invokeSpec, header, transientMap) {
 		// construct the ChaincodeInvocationSpec
 		let cciSpec = new _ccProto.ChaincodeInvocationSpec();
 		cciSpec.setChaincodeSpec(invokeSpec);
-//		cciSpec.setIdGenerationAlg('');
 
 		let cc_payload = new _proposalProto.ChaincodeProposalPayload();
 		cc_payload.setInput(cciSpec.toBuffer());
-		//cc_payload.setTransient(null); // TODO application-level confidentiality related
+
+		if (typeof transientMap === 'object') {
+			cc_payload.setTransientMap(transientMap);
+		}
 
 		// proposal -- will switch to building the proposal once the signProposal is used
 		let proposal = new _proposalProto.Proposal();
 		proposal.setHeader(header.toBuffer());
 		proposal.setPayload(cc_payload.toBuffer()); // chaincode proposal payload
-		//proposal.setExtension(chaincodeAction); //optional chaincode action
 
 		return proposal;
 	}
