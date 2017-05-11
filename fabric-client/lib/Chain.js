@@ -364,7 +364,9 @@ var Chain = class {
 		return this._orderers;
 	}
 
-	/**
+	/*
+	 * For test only
+	 *
 	 * Build a configuration envelope that is the channel configuration definition
 	 * from the provide MSP's, the Channel definition input parameters, and the current
 	 * configuration as read from the system channel.
@@ -412,7 +414,9 @@ var Chain = class {
 		});
 	}
 
-	/**
+	/*
+	 * For test only
+	 *
 	 * Build a configuration update envelope that is the channel configuration definition
 	 * from the provide MSP's, the Channel definition input parameters, and the current
 	 * configuration as read from this channel.
