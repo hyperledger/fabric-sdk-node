@@ -105,3 +105,27 @@ test('\n\n***** U P G R A D E flow: query chaincode *****', (t) => {
 		t.end();
 	});
 });
+
+test('\n\n***** TransientMap Support in Proposals *****', (t) => {
+	var transient = {
+		'test': Buffer.from('dummyValue') // string <-> byte[]
+	};
+
+	e2eUtils.queryChaincode('org2', 'v1', '410', t, transient)
+	.then((result) => {
+		if(result){
+			t.pass('Successfully verified transient map values');
+			t.end();
+		}
+		else {
+			t.fail('Failed to test transientMap support');
+			t.end();
+		}
+	}, (err) => {
+		t.fail('Failed to query chaincode on the channel' + err.stack ? err.stack : err);
+		t.end();
+	}).catch((err) => {
+		t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);
+		t.end();
+	});
+});
