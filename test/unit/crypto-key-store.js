@@ -64,6 +64,8 @@ var f2 = KEYUTIL.getKey(TEST_KEY_PRIVATE_CERT_PEM);
 var testPubKey = new ecdsaKey(f2);
 
 test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
+	var keystorePath = path.join(testutil.getTempDir(), 'crypto-key-store');
+
 	t.throws(
 		() => {
 			CKS();
@@ -81,14 +83,14 @@ test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
 	);
 
 	var store;
-	CKS({path: '/tmp/hfc-cks'})
+	CKS({path: keystorePath})
 	.then((st) => {
 		store = st;
 		return store.putKey(testPrivKey);
 	}).then((keyPEM) => {
 		t.pass('Successfully saved private key in store');
 
-		t.equal(fs.existsSync(path.join('/tmp/hfc-cks', testPrivKey.getSKI() + '-priv')), true,
+		t.equal(fs.existsSync(path.join(keystorePath, testPrivKey.getSKI() + '-priv')), true,
 			'Check that the private key has been saved with the proper <SKI>-priv index');
 
 		return store.getKey(testPrivKey.getSKI());
@@ -98,7 +100,7 @@ test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
 
 		return store.putKey(testPubKey);
 	}).then((keyPEM) => {
-		t.equal(fs.existsSync(path.join('/tmp/hfc-cks', testPrivKey.getSKI() + '-pub')), true,
+		t.equal(fs.existsSync(path.join(keystorePath, testPrivKey.getSKI() + '-pub')), true,
 			'Check that the public key has been saved with the proper <SKI>-pub index');
 
 		return store.getKey(testPubKey.getSKI());
@@ -107,7 +109,7 @@ test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
 		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
 
 		// delete the private key entry and test if getKey() would return the public key
-		fs.unlinkSync(path.join('/tmp/hfc-cks', testPrivKey.getSKI() + '-priv'));
+		fs.unlinkSync(path.join(keystorePath, testPrivKey.getSKI() + '-priv'));
 		return store.getKey(testPubKey.getSKI());
 	}).then((recoveredKey) => {
 		t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');

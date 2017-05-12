@@ -31,6 +31,7 @@ var log4js = require('log4js');
 var intercept = require('intercept-stdout');
 var fs = require('fs-extra');
 var util = require('util');
+var path = require('path');
 
 // Logger tests /////////
 function testLogger(t, ignoreLevels) {
@@ -166,8 +167,8 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
 		}
 	};
 
-	let debugPath = '/tmp/hfc-log/debug.log';
-	let errorPath = '/tmp/hfc-log/error.log';
+	let debugPath = path.join(testutil.getTempDir(), 'hfc-log/debug.log');
+	let errorPath = path.join(testutil.getTempDir(), 'hfc-log/error.log');
 	prepareEmptyFile(debugPath);
 	prepareEmptyFile(errorPath);
 

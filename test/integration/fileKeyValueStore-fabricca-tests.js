@@ -53,7 +53,7 @@ test('Use FabricCAServices with a File KeyValueStore', function(t) {
 
 	var keyValueStore = hfc.getConfigSetting('key-value-store');
 	logger.info('File Key Value Store = ' + keyValueStore);
-	var keyValStorePath = '/tmp/customKeyValStorePath';
+	var keyValStorePath = path.join(testUtil.getTempDir(), 'customKeyValStorePath');
 	logger.info('keyValStorePath: '+keyValStorePath);
 
 	var client = new Client();

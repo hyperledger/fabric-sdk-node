@@ -5,6 +5,10 @@ var tape = require('gulp-tape');
 var tapColorize = require('tap-colorize');
 var istanbul = require('gulp-istanbul');
 
+var fs = require('fs-extra');
+var shell = require('gulp-shell');
+var testConstants = require('../../test/unit/constants.js');
+
 gulp.task('pre-test', function() {
 	return gulp.src([
 		'node_modules/fabric-client/lib/**/*.js',
@@ -13,7 +17,25 @@ gulp.task('pre-test', function() {
 	.pipe(istanbul.hookRequire());
 });
 
-gulp.task('test', ['lint', 'pre-test'], function() {
+gulp.task('clean-up', function() {
+	// some tests create temporary files or directories
+	// they are all created in the same temp folder
+	return fs.removeSync(testConstants.tempdir);
+});
+
+gulp.task('docker-clean', shell.task([
+	// stop and remove chaincode docker instances
+	'docker kill $(docker ps |grep "^dev-peer0.org[12].example.com-e" |awk "{print $1}")',
+	'docker rm $(docker ps -a|grep "^dev-peer0.org[12].example.com-e" |awk "{print $1}")',
+
+	// remove chaincode images so that they get rebuilt during test
+	'docker rmi $(docker images | grep "^dev-peer0.org[12].example.com-e" | awk "{print $3}")'
+], {
+	verbose: true, // so we can see the docker command output
+	ignoreErrors: true // kill and rm may fail because the containers may have been cleaned up
+}));
+
+gulp.task('test', ['clean-up', 'lint', 'docker-clean', 'pre-test', 'ca'], function() {
 	// use individual tests to control the sequence they get executed
 	// first run the ca-tests that tests all the member registration
 	// and enrollment scenarios (good and bad calls). Then the rest
@@ -22,6 +44,7 @@ gulp.task('test', ['lint', 'pre-test'], function() {
 	// network
 	return gulp.src([
 		'test/unit/**/*.js',
+		'!test/unit/constants.js',
 		'!test/unit/util.js',
 		'!test/unit/pkcs11.js',
 		'test/integration/fabric-ca-services-tests.js',
@@ -53,7 +76,7 @@ gulp.task('test', ['lint', 'pre-test'], function() {
 	}));
 });
 
-gulp.task('test-headless', ['lint', 'pre-test'], function() {
+gulp.task('test-headless', ['clean-up', 'lint', 'pre-test', 'ca'], function() {
 	// this is needed to avoid a problem in tape-promise with adding
 	// too many listeners
 	// to the "unhandledRejection" event
@@ -61,6 +84,7 @@ gulp.task('test-headless', ['lint', 'pre-test'], function() {
 
 	return gulp.src([
 		'test/unit/**/*.js',
+		'!test/unit/constants.js',
 		'!test/unit/util.js',
 		'!test/unit/pkcs11.js'
 	])

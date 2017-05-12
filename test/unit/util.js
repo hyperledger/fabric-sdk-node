@@ -28,6 +28,9 @@ var User = require('fabric-client/lib/User.js');
 var CryptoSuite = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
 var KeyStore = require('fabric-client/lib/impl/CryptoKeyStore.js');
 var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
+var Constants = require('./constants.js');
+
+var logger = require('fabric-client/lib/utils.js').getLogger('TestUtil');
 
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
 module.exports.CHAINCODE_UPGRADE_PATH = 'github.com/example_cc1';
@@ -38,8 +41,25 @@ module.exports.END2END = {
 	chaincodeVersion: 'v0'
 };
 
+// all temporary files and directories are created under here
+var tempdir = Constants.tempdir;
+
+logger.info(util.format(
+	'\n\n*******************************************************************************' +
+	'\n*******************************************************************************' +
+	'\n*                                          ' +
+	'\n* Using temp dir: %s' +
+	'\n*                                          ' +
+	'\n*******************************************************************************' +
+	'\n*******************************************************************************\n', tempdir));
+
+module.exports.getTempDir = function() {
+	fs.ensureDirSync(tempdir);
+	return tempdir;
+};
+
 // directory for file based KeyValueStore
-module.exports.KVS = '/tmp/hfc-test-kvs';
+module.exports.KVS = path.join(tempdir, 'hfc-test-kvs');
 module.exports.storePathForOrg = function(org) {
 	return module.exports.KVS + '_' + org;
 };
