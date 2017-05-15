@@ -25,7 +25,7 @@ var gunzip = require('gunzip-maybe');
 var fs = require('fs-extra');
 var grpc = require('grpc');
 var _policiesProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/policies.proto').common;
-var _mspPrProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/msp_principal.proto').common;
+var _mspPrProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/msp/msp_principal.proto').common;
 
 var hfc = require('fabric-client');
 var testutil = require('./util.js');

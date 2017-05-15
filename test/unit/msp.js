@@ -30,7 +30,7 @@ var MSPM = require('fabric-client/lib/msp/msp-manager.js');
 var idModule = require('fabric-client/lib/msp/identity.js');
 var Identity = idModule.Identity;
 
-var mspProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/msp/mspconfig.proto')).msp;
+var mspProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/msp/msp_config.proto')).msp;
 
 const FABRIC = 0;
 const TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +

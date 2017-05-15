@@ -48,10 +48,10 @@ var _ledgerProto = grpc.load(__dirname + '/protos/common/ledger.proto').common;
 var _commonConfigurationProto = grpc.load(__dirname + '/protos/common/configuration.proto').common;
 var _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configuration.proto').orderer;
 var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
-var _mspConfigProto = grpc.load(__dirname + '/protos/msp/mspconfig.proto').msp;
-var _mspPrincipalProto = grpc.load(__dirname + '/protos/common/msp_principal.proto').common;
+var _mspConfigProto = grpc.load(__dirname + '/protos/msp/msp_config.proto').msp;
+var _mspPrincipalProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
 var _timestampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.proto').google.protobuf;
-var _identityProto = grpc.load(path.join(__dirname, '/protos/identity.proto')).msp;
+var _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
 
 const ImplicitMetaPolicy_Rule = {0: 'ANY', 1:'ALL', 2:'MAJORITY'};
 var Long = require('long');
