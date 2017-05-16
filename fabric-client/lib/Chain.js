@@ -195,7 +195,7 @@ var Chain = class {
 	/**
 	 * Add peer endpoint to chain.
 	 * @param {Peer} peer An instance of the Peer class that has been initialized with URL,
-	 * TLC certificate, and enrollment certificate.
+	 * TLS certificate, and enrollment certificate.
 	 * @throws {Error} if the peer with that url already exists.
 	 */
 	addPeer(peer) {
@@ -811,16 +811,6 @@ var Chain = class {
 	}
 
 	/**
-	 * Calls the orderer(s) to update an existing chain. This allows the addition and
-	 * deletion of Peer nodes to an existing chain, as well as the update of Peer
-	 * certificate information upon certificate renewals.
-	 * @returns {boolean} Whether the chain update process was successful.
-	 */
-	updateChain() {
-		//to do
-	}
-
-	/**
 	 * Get chain status to see if the underlying channel has been terminated,
 	 * making it a read-only chain, where information (transactions and states)
 	 * can be queried but no new transactions can be submitted.
@@ -1128,7 +1118,6 @@ var Chain = class {
 	 *                            the source code of the chaincode
 	 *		<br>`chaincodeId` : required - String of the name of the chaincode
 	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
-	 *		<br>`chainId` : required - String of the name of the chain
 	 *		<br>`txId` : required - String of the transaction id
 	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
 	 *			the chaincode but not saved in the ledger, such as cryptographic information
@@ -1185,7 +1174,6 @@ var Chain = class {
 	 *                            the source code of the chaincode
 	 *		<br>`chaincodeId` : required - String of the name of the chaincode
 	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
-	 *		<br>`chainId` : required - String of the name of the chain
 	 *		<br>`txId` : required - String of the transaction id
 	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
 	 *			the chaincode but not saved in the ledger, such as cryptographic information
@@ -1271,7 +1259,7 @@ var Chain = class {
 			input: {
 				args: [
 					Buffer.from(command),
-					Buffer.from(request.chainId),
+					Buffer.from(self._name),
 					chaincodeDeploymentSpec.toBuffer(),
 					self._buildEndorsementPolicy(request['endorsement-policy'])
 				]
@@ -1280,7 +1268,7 @@ var Chain = class {
 
 		var channelHeader = Chain._buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
-			request.chainId,
+			self._name,
 			request.txId,
 			null,
 			Constants.LSCC
@@ -1305,7 +1293,6 @@ var Chain = class {
 	 *		              when not provided the peers assigned to this channel will
 	 *		              be used.
 	 *		<br>`chaincodeId` : The id of the chaincode to perform the transaction proposal
-	 *		<br>`chainId` : required - String of the name of the chain
 	 *		<br>`txId` : required - String of the transaction id
 	 *		<br>`nonce` : required - Integer of the once time number
 	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
@@ -1328,14 +1315,14 @@ var Chain = class {
 			logger.debug('sendTransactionProposal - request does not have targets using this channels endorsing peers');
 			request.targets = this.getPeers();
 		}
-		return Chain.sendTransactionProposal(request, this._clientContext);
+		return Chain.sendTransactionProposal(request, this._name, this._clientContext);
 	}
 
 	/*
 	 * Internal static method to allow transaction proposals to be called without
 	 * creating a new chain
 	 */
-	static sendTransactionProposal(request, clientContext) {
+	static sendTransactionProposal(request, channelId, clientContext) {
 		// Verify that a Peer has been added
 		var errorMsg = null;
 
@@ -1385,19 +1372,18 @@ var Chain = class {
 			}
 		};
 
-		var self = this;
 		var proposal, header;
 		var userContext = clientContext.getUserContext();
-		var channelHeader = self._buildChannelHeader(
+		var channelHeader = Chain._buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
-			request.chainId,
+			channelId,
 			request.txId,
 			null,
 			request.chaincodeId
 			);
 		header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.nonce);
-		proposal = self._buildProposal(invokeSpec, header, request.transientMap);
-		let signed_proposal = self._signProposal(userContext.getSigningIdentity(), proposal);
+		proposal = Chain._buildProposal(invokeSpec, header, request.transientMap);
+		let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
 
 		return Chain._sendPeersProposal(request.targets, signed_proposal)
 		.then(
@@ -1794,8 +1780,6 @@ var Chain = class {
 			var isQuery = (request.chaincodeId == 'qscc' || request.chaincodeId == 'cscc');
 			if(!request.chaincodeId) {
 				errorMsg = 'Missing "chaincodeId" parameter in the proposal request';
-			} else if(!request.chainId && !isQuery) {
-				errorMsg = 'Missing "chainId" parameter in the proposal request';
 			} else if(!request.txId) {
 				errorMsg = 'Missing "txId" parameter in the proposal request';
 			} else if(!request.nonce) {

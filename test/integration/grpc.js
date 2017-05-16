@@ -168,7 +168,6 @@ function buildEchoRequest(submitter, peer) {
 		chaincodeVersion : 'v1',
 		fcn: 'invoke',
 		args: ['echo', crypto.randomBytes(1024 * 1024)],
-		chainId: e2e.channel,
 		txId: tx_id,
 		nonce: nonce
 	};

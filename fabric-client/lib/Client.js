@@ -549,13 +549,12 @@ var Client = class {
 		var request = {
 			targets: [peer],
 			chaincodeId : 'cscc',
-			chainId: '',
 			txId: txId,
 			nonce: nonce,
 			fcn : 'GetChannels',
 			args: []
 		};
-		return Chain.sendTransactionProposal(request, self)
+		return Chain.sendTransactionProposal(request, '' /* special channel id */, self)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -610,13 +609,12 @@ var Client = class {
 		var request = {
 			targets: [peer],
 			chaincodeId : Constants.LSCC,
-			chainId: 'mychannel',
 			txId: tx_id,
 			nonce: nonce,
 			fcn : 'getinstalledchaincodes',
 			args: []
 		};
-		return Chain.sendTransactionProposal(request, self)
+		return Chain.sendTransactionProposal(request, '' /* special channel id */, self)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -694,11 +692,6 @@ var Client = class {
 			errorMsg = 'Missing input request object on install chaincode request';
 		}
 
-
-		// modify the request so the following checks will be OK
-		if(request) {
-			request.chainId = 'dummy';
-		}
 
 		if (!errorMsg) errorMsg = Chain._checkProposalRequest(request);
 		if (!errorMsg) errorMsg = Chain._checkInstallRequest(request);
