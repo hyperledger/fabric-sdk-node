@@ -74,23 +74,6 @@ test('\n\n ** Chain - constructor test **\n\n', function (t) {
 });
 
 test('\n\n ** Chain - method tests **\n\n', function (t) {
-	t.equal(_chain.isSecurityEnabled(), true, 'checking security setting');
-	t.doesNotThrow(
-		function () {
-			_chain.setPreFetchMode(true);
-		},
-		null,
-		'checking the set of prefetchMode'
-	);
-	t.equal(_chain.isPreFetchMode(), true, 'checking prefetchMode');
-	t.doesNotThrow(
-		function () {
-			_chain.setTCertBatchSize(123);
-		},
-		null,
-		'checking the set of TCertBatchSize'
-	);
-	t.equal(_chain.getTCertBatchSize(), 123, 'checking getTCertBatchSize');
 	t.doesNotThrow(
 		function () {
 			var orderer = new Orderer('grpc://somehost.com:1234');

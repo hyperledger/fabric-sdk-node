@@ -93,13 +93,6 @@ var Chain = class {
 		// Security enabled flag
 		this._securityEnabled = true;//to do
 
-		// The number of tcerts to get in each batch
-		this._tcertBatchSize = utils.getConfigSetting('tcert-batch-size',200);
-
-		// If in prefetch mode, we prefetch tcerts from member
-		// services to help performance
-		this._preFetchMode = true;//to do - not in doc
-
 		this._peers = [];
 		this._primary_peer = null; // if not set, will use the first peer on the list
 		this._anchor_peers = [];
@@ -113,11 +106,9 @@ var Chain = class {
 		//to do update logger
 		logger.debug('Constructed Chain instance: name - %s, ' +
 		    'securityEnabled: %s, ' +
-		    'TCert download batch size: %s, ' +
 		    'network mode: %s',
 			this._name,
 			this._securityEnabled,
-			this._tcertBatchSize,
 			!this._devMode);
 	}
 
@@ -157,41 +148,6 @@ var Chain = class {
 	 */
 	getName() {
 		return this._name;
-	}
-
-	/**
-	 * Determine if security is enabled.
-	 */
-	isSecurityEnabled() {
-		return true;//to do
-	}
-
-	/**
-	 * Determine if pre-fetch mode is enabled to prefetch tcerts.
-	 */
-	isPreFetchMode() {
-		return this._preFetchMode;
-	}
-
-	/**
-	 * Set prefetch mode to true or false.
-	 */
-	setPreFetchMode(preFetchMode) {
-		this._preFetchMode = preFetchMode;
-	}
-
-	/**
-	 * Get the tcert batch size.
-	 */
-	getTCertBatchSize() {
-		return this._tcertBatchSize;
-	}
-
-	/**
-	 * Set the tcert batch size.
-	 */
-	setTCertBatchSize(batchSize) {
-		this._tcertBatchSize = batchSize;
 	}
 
 	/**
