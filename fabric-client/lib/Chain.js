@@ -151,11 +151,11 @@ var Chain = class {
 	}
 
 	/**
-	 * Get organizational unit identifiers from
-	 * the MSP's for this channel
-	 * @returns {string[]}
+	 * Get organization identifiers from the MSP's for this channel
+	 * @returns {string[]} array of MSP identifiers representing the channel's
+	 *   participating organizations
 	 */
-	getOrganizationUnits() {
+	getOrganizations() {
 		logger.debug('getOrganizationUnits - start');
 		var msps = this._msp_manager.getMSPs();
 		var orgs = [];

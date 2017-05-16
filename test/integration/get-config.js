@@ -123,7 +123,7 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 			).then(
 				function(result) {
 					t.pass('Chain was successfully initialized');
-					let orgs = chain.getOrganizationUnits();
+					let orgs = chain.getOrganizations();
 					logger.info(' Got the following orgs back %j', orgs);
 					t.equals(orgs.length, 3, 'Checking the that we got back the right number of orgs');
 					if(orgs[0].id.indexOf('Or') == 0) {

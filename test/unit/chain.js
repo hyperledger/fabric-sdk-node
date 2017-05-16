@@ -101,7 +101,7 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 		null,
 		'checking the chain setMSPManager()'
 	);
-	t.notEquals(_chain.getOrganizationUnits(),null,'checking the chain getOrganizationUnits()');
+	t.notEquals(_chain.getOrganizations(),null,'checking the chain getOrganizations()');
 	t.end();
 });
 
