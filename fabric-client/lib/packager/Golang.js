@@ -95,7 +95,7 @@ function findSource(goPath, filePath) {
 				if (entry.stats.isFile() && isSource(entry.path)) {
 
 					var desc = {
-						name: path.relative(goPath, entry.path),
+						name: path.relative(goPath, entry.path).split('\\').join('/'), // for windows style paths
 						fqp: entry.path
 					};
 
