@@ -440,6 +440,7 @@ function invokeChaincode(userOrg, version, t){
 
 	var targets = [],
 		eventhubs = [];
+	var pass_results = null;
 
 	// override t.end function so it'll always disconnect the event hub
 	t.end = ((context, ehs, f) => {
@@ -545,13 +546,26 @@ function invokeChaincode(userOrg, version, t){
 
 		t.fail('Failed to enroll user \'admin\'. ' + err);
 		throw new Error('Failed to enroll user \'admin\'. ' + err);
+	}).then((results) =>{
+		pass_results = results;
+		var sleep_time = 0;
+		// can use "sleep=30000" to give some time to manually stop and start
+		// the peer so the event hub will also stop and start
+		if (process.argv.length > 2) {
+			if (process.argv[2].indexOf('sleep=') === 0) {
+				sleep_time = process.argv[2].split('=')[1];
+			}
+		}
+		t.comment('*****************************************************************************');
+		t.comment('stop and start the peer event hub ---- N  O  W ----- you have ' + sleep_time + ' millis');
+		t.comment('*****************************************************************************');
+		return sleep(sleep_time);
+	}).then((nothing) => {
 
-	}).then((results) => {
+		var proposalResponses = pass_results[0];
 
-		var proposalResponses = results[0];
-
-		var proposal = results[1];
-		var header   = results[2];
+		var proposal = pass_results[1];
+		var header   = pass_results[2];
 		var all_good = true;
 		for(var i in proposalResponses) {
 			let one_good = false;
@@ -598,18 +612,25 @@ function invokeChaincode(userOrg, version, t){
 				let txPromise = new Promise((resolve, reject) => {
 					let handle = setTimeout(reject, 120000);
 
-					eh.registerTxEvent(deployId.toString(), (tx, code) => {
-						clearTimeout(handle);
-						eh.unregisterTxEvent(deployId);
+					eh.registerTxEvent(deployId.toString(),
+						(tx, code) => {
+							clearTimeout(handle);
+							eh.unregisterTxEvent(deployId);
 
-						if (code !== 'VALID') {
-							t.fail('The balance transfer transaction was invalid, code = ' + code);
-							reject();
-						} else {
-							t.pass('The balance transfer transaction has been committed on peer '+ eh.ep._endpoint.addr);
+							if (code !== 'VALID') {
+								t.fail('The balance transfer transaction was invalid, code = ' + code);
+								reject();
+							} else {
+								t.pass('The balance transfer transaction has been committed on peer '+ eh.ep._endpoint.addr);
+								resolve();
+							}
+						},
+						(err) => {
+							clearTimeout(handle);
+							t.pass('Successfully received notification of the event call back being cancelled for '+ deployId);
 							resolve();
 						}
-					});
+					);
 				});
 
 				eventPromises.push(txPromise);

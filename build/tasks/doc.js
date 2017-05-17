@@ -30,7 +30,7 @@ gulp.task('doc', function () {
 		'fabric-client/lib/impl/bccsp_pkcs11.js',
 		'fabric-client/lib/impl/ecdsa/*',
 		'fabric-client/lib/impl/aes/*',
-		'fabric-client/lib/Block.js',
+		'fabric-client/lib/BlockDecoder.js',
 		'fabric-client/lib/msp/msp.js',
 		'fabric-client/lib/Chain.js',
 		'fabric-client/lib/Orderer.js',

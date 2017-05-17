@@ -26,7 +26,7 @@ var path = require('path');
 var ChannelConfig = require('./ChannelConfig.js');
 var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
-var Block = require('./Block.js');
+var BlockDecoder = require('./BlockDecoder.js');
 var settle = require('promise-settle');
 var grpc = require('grpc');
 var logger = utils.getLogger('Chain.js');
@@ -914,7 +914,7 @@ var Chain = class {
 					}
 					if(response.response) {
 						logger.debug('queryBlockByHash - response status %d:', response.response.status);
-						var block = Block.decode(response.response.payload);
+						var block = BlockDecoder.decode(response.response.payload);
 						logger.debug('queryBlockByHash - looking at block :: %s',block.header.number);
 						return Promise.resolve(block);
 					}
@@ -974,7 +974,7 @@ var Chain = class {
 					}
 					if(response.response) {
 						logger.debug('queryBlock - response status %d:', response.response.status);
-						var block = Block.decode(response.response.payload);
+						var block = BlockDecoder.decode(response.response.payload);
 						logger.debug('queryBlockByHash - looking at block :: %s',block.header.number);
 						return Promise.resolve(block);
 					}
@@ -1034,7 +1034,7 @@ var Chain = class {
 					}
 					if(response.response) {
 						logger.debug('queryTransaction - response status :: %d', response.response.status);
-						var processTrans = Block.decodeTransaction(response.response.payload);
+						var processTrans = BlockDecoder.decodeTransaction(response.response.payload);
 						return Promise.resolve(processTrans);
 					}
 					// no idea what we have, lets fail it and send it back

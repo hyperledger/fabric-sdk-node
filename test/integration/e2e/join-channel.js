@@ -28,11 +28,6 @@ var fs = require('fs');
 
 var Client = require('fabric-client');
 var EventHub = require('fabric-client/lib/EventHub.js');
-var Block = require('fabric-client/lib/Block.js');
-
-var grpc = require('grpc');
-var _commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
-var _configtxProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/configtx.proto')).common;
 
 var testUtil = require('../../unit/util.js');
 
@@ -180,14 +175,11 @@ function joinChannel(org, t) {
 				eh.registerBlockEvent((block) => {
 					clearTimeout(handle);
 
-					// in real-world situations, a peer may have more than one channels so
+					// in real-world situations, a peer may have more than one channel so
 					// we must check that this block came from the channel we asked the peer to join
 					if(block.data.data.length === 1) {
 						// Config block must only contain one transaction
-						var envelope = _commonProto.Envelope.decode(block.data.data[0]);
-						var payload = _commonProto.Payload.decode(envelope.payload);
-						var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
-
+						var channel_header = block.data.data[0].payload.header.channel_header;
 						if (channel_header.channel_id === channel_name) {
 							t.pass('The new channel has been successfully joined on peer '+ eh.ep._endpoint.addr);
 							resolve();

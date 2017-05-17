@@ -106,15 +106,304 @@ test('\n\n** EventHub tests\n\n', (t) => {
 		() => {
 			eh.registerBlockEvent();
 		},
+		/Missing "onEvent" parameter/,
+		'Check the Missing "onEvent" parameter'
+	);
+
+	t.throws(
+		() => {
+			eh.unregisterBlockEvent();
+		},
+		/Missing "block_registration_number" parameter/,
+		'Check the Missing "block_registration_number" parameter'
+	);
+	t.throws(
+		() => {
+			eh.registerTxEvent();
+		},
+		/Missing "txid" parameter/,
+		'Check the Missing "txid" parameter'
+	);
+	t.throws(
+		() => {
+			eh.registerTxEvent('txid');
+		},
+		/Missing "onEvent" parameter/,
+		'Check the Missing "onEvent" parameter'
+	);
+	t.throws(
+		() => {
+			eh.unregisterTxEvent();
+		},
+		/Missing "txid" parameter/,
+		'Check the Missing "txid" parameter'
+	);
+	t.throws(
+		() => {
+			eh.registerChaincodeEvent();
+		},
+		/Missing "ccid" parameter/,
+		'Check the Missing "ccid" parameter'
+	);
+	t.throws(
+		() => {
+			eh.registerChaincodeEvent('ccid');
+		},
+		/Missing "eventname" parameter/,
+		'Check the Missing "eventname" parameter'
+	);
+	t.throws(
+		() => {
+			eh.registerChaincodeEvent('ccid','eventname');
+		},
+		/Missing "onEvent" parameter/,
+		'Check the Missing "onEvent" parameter'
+	);
+	t.throws(
+		() => {
+			eh.unregisterChaincodeEvent();
+		},
+		/Missing "cbe" parameter/,
+		'Check the Missing "cbe" parameter'
+	);
+	t.throws(
+		() => {
+			eh.registerBlockEvent({});
+		},
 		/The event hub has not been connected to the event source/,
 		'Check the event hub must be connected before the block event listener can be registered'
 	);
+	t.throws(
+		() => {
+			eh.registerChaincodeEvent('ccid', 'eventname', {});
+		},
+		/The event hub has not been connected to the event source/,
+		'Check the event hub must be connected before the chaincode event listener can be registered'
+	);
+	t.throws(
+		() => {
+			eh.registerTxEvent('txid', {});
+		},
+		/The event hub has not been connected to the event source/,
+		'Check the event hub must be connected before the tranaction event listener can be registered'
+	);
+	t.end();
+});
 
-	eh.registerTxEvent('dummyId', () => {
-		// dummy function
+test('\n\n** EventHub block callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	eh.registerBlockEvent((block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	}, (error) =>{
+		t.pass('Successfully called error callback');
+		t.end();
 	});
+	t.pass('successfully registered block callbacks');
+	eh.disconnect();
+});
 
-	t.equal(eh.txRegistrants.size(), 1, 'txRegistrants size should be 1 after registering a transaction event listener');
+test('\n\n** EventHub transaction callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
 
+	eh.registerTxEvent('txid', (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	}, (error) =>{
+		t.pass('Successfully called error callback');
+		t.end();
+	});
+	t.pass('successfully registered transaction callbacks');
+	eh.disconnect();
+});
+
+test('\n\n** EventHub chaincode callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	}, (error) =>{
+		t.pass('Successfully called error callback');
+		t.end();
+	});
+	t.pass('successfully registered chaincode callbacks');
+	eh.disconnect();
+});
+
+test('\n\n** EventHub block callback no Error callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	eh.registerBlockEvent((block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	});
+	t.pass('successfully registered block callbacks');
+	eh.disconnect();
+	t.end();
+});
+
+test('\n\n** EventHub transaction callback no Error callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	eh.registerTxEvent('txid', (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	});
+	t.pass('successfully registered transaction callbacks');
+	eh.disconnect();
+	t.end();
+});
+
+test('\n\n** EventHub chaincode callback no Error callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	});
+	t.pass('successfully registered chaincode callbacks');
+	eh.disconnect();
+	t.end();
+});
+
+test('\n\n** EventHub remove block callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	var blockcallback = (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	};
+	var blockerrorcallback = (error) =>{
+		t.fail('Should not have called error callback');
+		t.end();
+	};
+	var brn = eh.registerBlockEvent( blockcallback, blockerrorcallback);
+	t.pass('successfully registered block callbacks');
+	eh.unregisterBlockEvent(brn);
+	t.pass('successfuly unregistered block callback');
+	eh.disconnect();
+	t.pass('successfuly disconnected eventhub');
+	t.end();
+});
+
+test('\n\n** EventHub remove transaction callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	var txid = 'txid';
+	eh.registerTxEvent(txid, (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	}, (error) =>{
+		t.fail('Should not have called error callback');
+		t.end();
+	});
+	t.pass('successfully registered transaction callbacks');
+	eh.unregisterTxEvent(txid);
+	t.pass('successfuly unregistered transaction callback');
+	eh.disconnect();
+	t.pass('successfuly disconnected eventhub');
+	t.end();
+});
+
+test('\n\n** EventHub remove chaincode callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	}, (error) =>{
+		t.fail('Should not have called error callback');
+		t.end();
+	});
+	t.pass('successfully registered chaincode callbacks');
+	eh.unregisterChaincodeEvent(cbe);
+	t.pass('successfuly unregistered chaincode callback');
+	eh.disconnect();
+	t.pass('successfuly disconnected eventhub');
+	t.end();
+});
+
+
+test('\n\n** EventHub remove block callback no Error callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	var blockcallback = (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	};
+	var brn = eh.registerBlockEvent( blockcallback);
+	t.pass('successfully registered block callbacks');
+	eh.unregisterBlockEvent(brn);
+	t.pass('successfuly unregistered block callback');
+	eh.disconnect();
+	t.pass('successfuly disconnected eventhub');
+	t.end();
+});
+
+test('\n\n** EventHub remove transaction callback no Error callback\n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+
+	var txid = 'txid';
+	eh.registerTxEvent(txid, (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	});
+	t.pass('successfully registered transaction callbacks');
+	eh.unregisterTxEvent(txid);
+	t.pass('successfuly unregistered transaction callback');
+	eh.disconnect();
+	t.pass('successfuly disconnected eventhub');
+	t.end();
+});
+
+test('\n\n** EventHub remove chaincode callback no Error callback \n\n', (t) => {
+	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh.setPeerAddr('grpc://localhost:7053');
+	eh.connected = true; //force this into connected state
+	eh.force_reconnect = false;
+	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+		t.fail('Should not have called success callback');
+		t.end();
+	});
+	t.pass('successfully registered chaincode callbacks');
+	eh.unregisterChaincodeEvent(cbe);
+	t.pass('successfuly unregistered chaincode callback');
+	eh.disconnect();
+	t.pass('successfuly disconnected eventhub');
 	t.end();
 });
