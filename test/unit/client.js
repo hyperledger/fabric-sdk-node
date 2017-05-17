@@ -57,7 +57,7 @@ test('\n\n ** index.js **\n\n', function (t) {
 
 var Client = hfc;
 var client = new Client();
-var chainKeyValStorePath = 'tmp/chainKeyValStorePath';
+var chainKeyValStorePath = path.join(testutil.getTempDir(), 'chainKeyValStorePath');
 var testKey = 'keyValFileStoreName';
 var testValue = 'secretKeyValue';
 
@@ -631,7 +631,7 @@ test('\n\n ** createUser error path - missing required username **\n\n', functio
 	var msg = 'Client.createUser parameter \'opts username\' is required.';
 
 	var userOrg = 'org1';
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
 
@@ -663,7 +663,7 @@ test('\n\n ** createUser error path - missing required mspid **\n\n', function (
 	var msg = 'Client.createUser parameter \'opts mspid\' is required.';
 
 	var userOrg = 'org1';
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
 
@@ -695,7 +695,7 @@ test('\n\n ** createUser error path - missing required mspid **\n\n', function (
 	var msg = 'Client.createUser parameter \'opts mspid\' is required.';
 
 	var userOrg = 'org1';
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
 
@@ -727,7 +727,7 @@ test('\n\n ** createUser error path - missing required cryptoContent **\n\n', fu
 	var msg = 'Client.createUser parameter \'opts cryptoContent\' is required.';
 
 	var userOrg = 'org1';
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
 
@@ -759,7 +759,7 @@ test('\n\n ** createUser error path - missing required cryptoContent signedCertP
 	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKeyPEM and signedCertPEM\' strings are required.';
 
 	var userOrg = 'org1';
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
 
@@ -791,7 +791,7 @@ test('\n\n ** createUser error path - missing required cryptoContent privateKeyP
 	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKeyPEM and signedCertPEM\' strings are required.';
 
 	var userOrg = 'org1';
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
 
@@ -823,7 +823,7 @@ test('\n\n ** createUser error path - missing required cryptoContent signedCert 
 	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKey and signedCert\' files are required.';
 
 	var userOrg = 'org1';
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
 
@@ -855,7 +855,7 @@ test('\n\n ** createUser error path - missing required cryptoContent privateKeyP
 	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKey and signedCert\' files are required.';
 
 	var userOrg = 'org1';
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
 
@@ -887,7 +887,7 @@ test('\n\n ** createUser error path - missing required keyStoreOpts **\n\n', fun
 	var msg = 'Failed to load key or certificate and save to local stores';
 
 	var userOrg = 'org1';
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
 

@@ -24,7 +24,6 @@ Clone the project and launch the following commands to install the dependencies 
 
 In the project root folder:
 * `npm install` to install dependencies
-* `gulp ca` to copy common dependent modules from the `fabric-client` folder to the `fabric-ca-client` folder and the installed fabric-ca-client package under `node_modules`
 * optionally, `gulp watch` to set up watch that updates fabric-ca-client's shared dependencies from fabric-client/lib and updates installed fabric-client and fabric-ca-client modules in node_modules. This command does not return, so you should keep it running in a separate command window as you work on the code and test in another command window. Note that you do NOT need to run this unless you plan to make changes in the fabric-client and fabric-ca-client packages
 * optionally, `gulp doc` to generate API docs if you want to review the doc content
 * `npm test` or `gulp test-headless` to run the headless tests that do not require any additional set up
@@ -50,11 +49,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
   * run `docker-compose up --force-recreate` to launch the network
 * Now you are ready to run the tests:
   * Clear out your previous key value stores that may have cached user enrollment certificates (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`)
-  * run 'gulp test' to execute the entire test suite (535+ test cases), or you can run them individually
-  * Test user management by member services with the following tests that exercise the fabric-ca-client package with a KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
-    * `test/integration/fabric-ca-services-tests.js`
-    * `test/integration/couchdb-fabricca-tests.js`
-    * `test/integration/cloudant-fabricca-tests.js`
+  * run `gulp test` to execute the entire test suite (800+ test cases), or you can run them individually
   * Test happy path from end to end, run `node test/integration/e2e.js`
   * Test end to end one step at a time, make sure to follow this sequence:
     * `node test/integration/e2e/create-channel.js`
@@ -63,7 +58,11 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
     * `node test/integration/e2e/instantiate-chaincode.js`
     * `node test/integration/e2e/invoke-transaction.js`
     * `node test/integration/e2e/query.js`
-  * To re-run `node test/integration/e2e.js` or `fabric-ca-services-tests.js` stop the network (ctrl-c), clean up the docker instances (`docker rm $(docker ps -aq)`) and restart the network with docker-compose as described above.
+  * Test user management by member services with the following tests that exercise the fabric-ca-client package with a KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
+    * `test/integration/fabric-ca-services-tests.js`
+    * `test/integration/couchdb-fabricca-tests.js`
+    * `test/integration/cloudant-fabricca-tests.js`
+  * To re-run `node test/integration/e2e.js` or `fabric-ca-services-tests.js` stop the network (ctrl-c), clean up the docker instances (`docker rm $(docker ps -aq)`) and restart the network with `docker-compose up` as described above.
 
 ### Contributor Check-list
 The following check-list is for code contributors to make sure their changesets are compliant to the coding standards and avoid time wasted in rejected changesets:

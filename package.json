@@ -28,6 +28,7 @@
     "gulp-eslint": "^3.0.1",
     "gulp-istanbul": "^1.1.1",
     "gulp-jsdoc3": "^0.3.0",
+    "gulp-shell": "^0.6.3",
     "gulp-tape": "0.0.9",
     "gulp-watch": "^4.3.11",
     "gunzip-maybe": "^1.3.1",

@@ -21,6 +21,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var tar = require('tar-fs');
+var path = require('path');
 var gunzip = require('gunzip-maybe');
 var fs = require('fs-extra');
 var grpc = require('grpc');
@@ -375,8 +376,8 @@ test('\n\n** Packager tests **\n\n', function(t) {
 		return Packager.package(testutil.CHAINCODE_PATH,'',false);
 	}).then((data) => {
 		t.comment('Verify byte data begin');
-		var tmpFile = '/tmp/test-deploy-copy.tar.gz';
-		var destDir = '/tmp/test-deploy-copy-tar-gz';
+		var tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
+		var destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
 		fs.writeFileSync(tmpFile, data);
 		fs.removeSync(destDir);
 		var pipe = fs.createReadStream(tmpFile).pipe(gunzip()).pipe(tar.extract(destDir));

@@ -48,7 +48,7 @@ test('\n\n ** createUser happy path - file store **\n\n', function (t) {
 	var prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
 	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
-	var keyStoreOpts = {path: caImport.orgs[userOrg].storePath};
+	var keyStoreOpts = {path: path.join(testUtil.getTempDir(), caImport.orgs[userOrg].storePath)};
 	var client = new Client();
 	var cryptoSuite = client.newCryptoSuite(keyStoreOpts);
 

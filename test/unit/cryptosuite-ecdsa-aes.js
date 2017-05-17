@@ -42,7 +42,7 @@ var BN = require('bn.js');
 var Signature = require('elliptic/lib/elliptic/ec/signature.js');
 var PKCS11 = require('fabric-client/lib/impl/bccsp_pkcs11.js');
 
-var keyValStorePath = 'tmp/keyValStore1';
+var keyValStorePath = path.join(testutil.getTempDir(), 'keyValStore1');
 
 var TEST_MSG = 'this is a test message';
 var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative effort created to advance cross-industry blockchain technologies. ' +
