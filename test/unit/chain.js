@@ -74,23 +74,6 @@ test('\n\n ** Chain - constructor test **\n\n', function (t) {
 });
 
 test('\n\n ** Chain - method tests **\n\n', function (t) {
-	t.equal(_chain.isSecurityEnabled(), true, 'checking security setting');
-	t.doesNotThrow(
-		function () {
-			_chain.setPreFetchMode(true);
-		},
-		null,
-		'checking the set of prefetchMode'
-	);
-	t.equal(_chain.isPreFetchMode(), true, 'checking prefetchMode');
-	t.doesNotThrow(
-		function () {
-			_chain.setTCertBatchSize(123);
-		},
-		null,
-		'checking the set of TCertBatchSize'
-	);
-	t.equal(_chain.getTCertBatchSize(), 123, 'checking getTCertBatchSize');
 	t.doesNotThrow(
 		function () {
 			var orderer = new Orderer('grpc://somehost.com:1234');
@@ -118,7 +101,7 @@ test('\n\n ** Chain - method tests **\n\n', function (t) {
 		null,
 		'checking the chain setMSPManager()'
 	);
-	t.notEquals(_chain.getOrganizationUnits(),null,'checking the chain getOrganizationUnits()');
+	t.notEquals(_chain.getOrganizations(),null,'checking the chain getOrganizations()');
 	t.end();
 });
 
@@ -668,7 +651,6 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 		chaincodeId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
-		chainId: 'blah',
 		txId: 'blah',
 		nonce: 'blah'
 	}).then(function () {
@@ -682,30 +664,10 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	var p2 = c.sendInstantiateProposal({
-		targets: [new Peer('grpc://localhost:7051')],
-		chaincodePath: 'blah',
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		txId: 'blah',
-		nonce: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chainId" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chainId" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing chainId error');
-		} else {
-			t.fail('Failed to catch the missing chainId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
 	var p3 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
 		chaincodePath: 'blah',
 		chaincodeVersion: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah',
@@ -725,7 +687,6 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		chaincodeVersion: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah',
@@ -747,7 +708,6 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		chaincodeVersion: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		nonce: 'blah'
@@ -766,7 +726,6 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		chaincodeVersion: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah'
@@ -790,7 +749,7 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1, p2, p3, p4, p6, p7])
+	Promise.all([p1, p3, p4, p6, p7])
 	.then(
 		function (data) {
 			t.end();
@@ -811,7 +770,6 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 	var p1 = c.sendTransactionProposal({
 		chaincodeId : 'blah',
 		fcn: 'invoke',
-		chainId: 'blah',
 		txId: 'blah',
 		nonce: 'blah'
 	}).then(function () {
@@ -825,24 +783,7 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	var p2 = c.sendTransactionProposal({
-		chaincodeId: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		txId: 'blah',
-		nonce: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chainId" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chainId" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing chainId error');
-		} else {
-			t.fail('Failed to catch the missing chainId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
 	var p3 = c.sendTransactionProposal({
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah',
@@ -860,7 +801,6 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 	c.removePeer(peer);
 	var p4 = c.sendTransactionProposal({
 		chaincodeId: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah',
@@ -879,7 +819,6 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 	c.addPeer(peer);
 	var p5 = c.sendTransactionProposal({
 		chaincodeId: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		nonce: 'blah'
@@ -895,7 +834,6 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 
 	var p6 = c.sendTransactionProposal({
 		chaincodeId: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah'
@@ -919,7 +857,7 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1, p2, p3, p4, p5, p6, p7])
+	Promise.all([p1, p3, p4, p5, p6, p7])
 	.then(
 		function (data) {
 			t.end();
@@ -940,7 +878,6 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 	var p1 = c.queryByChaincode({
 		chaincodeId : 'blah',
 		fcn: 'invoke',
-		chainId: 'blah',
 		txId: 'blah',
 		nonce: 'blah'
 	}).then(function () {
@@ -954,24 +891,7 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 		}
 	});
 
-	var p2 = c.queryByChaincode({
-		chaincodeId: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		txId: 'blah',
-		nonce: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chainId" parameter in queryByChaincode');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chainId" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing chainId error');
-		} else {
-			t.fail('Failed to catch the queryByChaincode missing chainId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
 	var p3 = c.queryByChaincode({
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah',
@@ -989,7 +909,6 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 	c.removePeer(peer);
 	var p4 = c.queryByChaincode({
 		chaincodeId: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah',
@@ -1008,7 +927,6 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 	c.addPeer(peer);
 	var p5 = c.queryByChaincode({
 		chaincodeId: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		nonce: 'blah'
@@ -1024,7 +942,6 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 
 	var p6 = c.queryByChaincode({
 		chaincodeId: 'blah',
-		chainId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah'
@@ -1048,7 +965,7 @@ test('\n\n ** Client queryByChaincode() tests **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1, p2, p3, p4, p5, p6, p7])
+	Promise.all([p1, p3, p4, p5, p6, p7])
 	.then(
 		function (data) {
 			t.end();

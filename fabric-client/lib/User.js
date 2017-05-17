@@ -188,27 +188,6 @@ var User = class {
 	}
 
 	/**
-	 * Get the transaction certificate (tcert) batch size, which is the number of tcerts retrieved
-	 * from member services each time (i.e. in a single batch).
-	 * @returns {int} The tcert batch size.
-	 */
-	getTCertBatchSize() {
-		if (this._tcertBatchSize === undefined) {
-			return this._chain.getTCertBatchSize();
-		} else {
-			return this._tcertBatchSize;
-		}
-	}
-
-	/**
-	 * Set the transaction certificate (tcert) batch size.
-	 * @param {int} batchSize
-	 */
-	setTCertBatchSize(batchSize) {
-		this._tcertBatchSize = batchSize;
-	}
-
-	/**
 	 * Determine if this name has been enrolled.
 	 * @returns {boolean} True if enrolled; otherwise, false.
 	 */

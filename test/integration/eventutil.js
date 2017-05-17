@@ -65,7 +65,6 @@ module.exports.createRequest = function(client, chain, user, chaincode_id, targe
 		chaincodeVersion: '',
 		fcn: fcn,
 		args: args,
-		chainId: chain.getName(),
 		txId: tx_id.toString(),
 		nonce: nonce
 	};

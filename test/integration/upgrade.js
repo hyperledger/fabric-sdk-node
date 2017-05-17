@@ -159,7 +159,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 			chaincodeVersion: 'v333333333',
 			fcn: 'init',
 			args: ['a', '500', 'b', '600'],
-			chainId: e2e.channel,
 			txId: tx_id,
 			nonce: nonce
 		};

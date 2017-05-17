@@ -369,7 +369,6 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 		chaincodeVersion: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
-		chainId: 'blah',
 		txId: 'blah',
 		nonce: 'blah'
 	}).then(function () {
@@ -389,7 +388,6 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 		chaincodePath: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
-		chainId: 'blah',
 		txId: 'blah',
 		nonce: 'blah'
 	}).then(function () {

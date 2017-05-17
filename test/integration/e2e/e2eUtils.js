@@ -252,7 +252,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		// the v1 chaincode has Init() method that expects a transient map
 		if (upgrade) {
 			// first test that a bad transient map would get the chaincode to return an error
-			let request = buildChaincodeProposal(the_user, channel_name, chaincode_path, version, upgrade, badTransientMap);
+			let request = buildChaincodeProposal(the_user, chaincode_path, version, upgrade, badTransientMap);
 			tx_id = request.tx_id;
 			request = request.request;
 
@@ -276,7 +276,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				if (success) {
 					// successfully tested the negative conditions caused by
 					// the bad transient map, now send the good transient map
-					request = buildChaincodeProposal(the_user, channel_name, chaincode_path, version, upgrade, transientMap);
+					request = buildChaincodeProposal(the_user, chaincode_path, version, upgrade, transientMap);
 					tx_id = request.tx_id;
 					request = request.request;
 
@@ -286,7 +286,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				}
 			});
 		} else {
-			let request = buildChaincodeProposal(the_user, channel_name, chaincode_path, version, upgrade, transientMap);
+			let request = buildChaincodeProposal(the_user, chaincode_path, version, upgrade, transientMap);
 			tx_id = request.tx_id;
 			request = request.request;
 
@@ -391,7 +391,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	});
 };
 
-function buildChaincodeProposal(the_user, channelId, chaincode_path, version, upgrade, transientMap) {
+function buildChaincodeProposal(the_user, chaincode_path, version, upgrade, transientMap) {
 	let nonce = utils.getNonce();
 	let tx_id = hfc.buildTransactionID(nonce, the_user);
 
@@ -402,7 +402,6 @@ function buildChaincodeProposal(the_user, channelId, chaincode_path, version, up
 		chaincodeVersion: version,
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
-		chainId: channelId,
 		txId: tx_id,
 		nonce: nonce,
 		// use this to demonstrate the following policy:
@@ -537,7 +536,6 @@ function invokeChaincode(userOrg, version, t){
 			chaincodeVersion : version,
 			fcn: 'invoke',
 			args: ['move', 'a', 'b','100'],
-			chainId: channel_name,
 			txId: tx_id,
 			nonce: nonce
 		};
@@ -710,7 +708,6 @@ function queryChaincode(org, version, value, t, transientMap) {
 		var request = {
 			chaincodeId : e2e.chaincodeId,
 			chaincodeVersion : version,
-			chainId: channel_name,
 			txId: tx_id,
 			nonce: nonce,
 			fcn: 'invoke',

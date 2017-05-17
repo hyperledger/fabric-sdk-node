@@ -78,7 +78,6 @@ test('End-to-end flow of chaincode instantiate, transaction invocation, and quer
 					chaincodeId: chaincode_id,
 					fcn: 'init',
 					args: ['1'],
-					chainId: chain_id,
 					txId: tx_id,
 					nonce: nonce
 				};
@@ -165,7 +164,6 @@ test('End-to-end flow of chaincode instantiate, transaction invocation, and quer
 					chaincodeId : chaincode_id,
 					fcn: 'init_marble',
 					args: ['marble1','blue','35','tom'],
-					chainId: chain_id,
 					txId: tx_id,
 					nonce: nonce
 				};
