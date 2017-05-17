@@ -78,6 +78,10 @@ var EventHub = class {
 
 	/**
 	 * Constructs an unconnected EventHub
+	 *
+	 * @param {Client} clientContext An instance of the Client class
+	 * which has already been initialzed with a userContext.
+	 *
 	 */
 
 	constructor(clientContext) {
