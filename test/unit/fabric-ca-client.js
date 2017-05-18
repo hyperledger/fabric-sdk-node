@@ -234,6 +234,42 @@ test('FabricCAServices:  Test newCryptoSuite() function', function(t) {
 	t.end();
 });
 
+// Test newCryptoKeyStore() function
+test('FabricCAServices:  Test newCryptoKeyStore() function', function(t) {
+	var	tlsOptions = {
+		trustedRoots: [],
+		verify: false
+	};
+	var CAClient = require('fabric-ca-client');
+
+ 	var crypto = CAClient.newCryptoSuite({software: true, keysize: 384});
+	var keyValStorePath = path.join(testutil.getTempDir(), 'kvsTemp');
+	if (!crypto._cryptoKeyStore) {
+		t.pass('cryptoKeyStore is not set on a new cryptoSuite');
+	} else {
+		t.fail('cryptoKeyStore should not be set on a new cryptoSuite');
+	}
+
+	var cks = CAClient.newCryptoKeyStore({path:keyValStorePath});
+	crypto.setCryptoKeyStore(cks);
+
+ 	var client = new CAClient('http://localhost:7054', tlsOptions, 'peerOrg1', crypto);
+
+	var crypto = client.getCrypto();
+
+	if (crypto && crypto._cryptoKeyStore) {
+		t.pass('Successfully called getCrypto() with cryptoKeyStore set');
+	}
+	else {
+		if (!crypto) {
+			t.fail('getCrypto() did not return an object');
+		} else {
+			t.fail('getCrypto() should contain a cryptoKeyStore');
+		}
+	}
+	t.end();
+});
+
 // Test getCrypto() function
 test('FabricCAServices:  Test getCrypto() function', function(t) {
 	var ca = new FabricCAServices('http://localhost:7054');

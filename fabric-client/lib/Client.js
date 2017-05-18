@@ -75,25 +75,24 @@ var Client = class {
 	 * Returns a new instance of the CryptoSuite API implementation.
 	 *
 	 * Creating a new CryptoSuite is optional and should be used if options other than defaults are needed.
-	 * This instance should be set on the User and the Fabric CA Client.
 	 *
 	 * If not specified, an instance of {@link CryptoSuite} will be constructed based on the current configuration settings:
-	 * crypto-hsm: use an implementation for Hardware Security Module (if set to true) or software-based key management (if set to false)
-	 * crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
+	 * <br> - crypto-hsm: use an implementation for Hardware Security Module (if set to true) or software-based key management (if set to false)
+	 * <br> - crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
 	 *  is supported and the valid key sizes are 256 and 384
-	 * crypto-hash-algo: hashing algorithm
-	 * key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A {@link CryptoKeyStore}
+	 * <br> - crypto-hash-algo: hashing algorithm
+	 * <br> - key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A {@link CryptoKeyStore}
 	 *  is provided for this purpose, which can be used on top of any implementation of the {@link KeyValueStore} interface,
 	 *  such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
 	 *
 	 * @param {object} setting This optional parameter is an object with the following optional properties:
-	 * - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
+	 * <br> - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
    	 *    default is true (for software based implementation), specific implementation module is specified
 	 *    in the setting 'crypto-suite-software'
-	 * - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
-	 * - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
-	 * - hash {string}: 'SHA2' or 'SHA3'
-	 * returns a new instance of the CryptoSuite API implementation
+	 * <br> - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
+	 * <br> - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
+	 * <br> - hash {string}: 'SHA2' or 'SHA3'
+	 * @returns a new instance of the CryptoSuite API implementation
 	 */
 	newCryptoSuite(setting) {
 		this._cryptoSuite = sdkUtils.newCryptoSuite(setting);
@@ -114,13 +113,13 @@ var Client = class {
 	 * When the application needs to use a key store other than the default,
 	 * it should create a new CryptoKeyStore and set it on the CryptoSuite.
 	 *
-	 * cryptosuite.setCryptoKeyStore(client.newCryptoKeyStore(KVSImplClass, opts))
+	 * <br><br><code>cryptosuite.setCryptoKeyStore(client.newCryptoKeyStore(KVSImplClass, opts))</code>
 	 *
 	 * @param {function} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
 	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
 	 * KeyValueStore interface.
 	 * @param {object} opts Implementation-specific option object used in the constructor
-	 * returns a new instance of the CryptoKeystore
+	 * @returns a new instance of the CryptoKeystore
 	 */
 	newCryptoKeyStore (KVSImplClass, opts) {
 		return sdkUtils.newCryptoKeyStore(KVSImplClass, opts);
@@ -229,7 +228,7 @@ var Client = class {
 	}
 
 	/**
-	 * build an new MSP with the definition.
+	 * Build a new MSP with the definition.
 	 * @parm {Object} which has the following the following fields:
 	 *		<br>`id`: {string} value for the identifier of this instance
 	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
