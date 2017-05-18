@@ -1,25 +1,51 @@
 ## Balance transfer
 
-A sample node-based app to demonstrate fabric-client & fabric-ca-client Node SDK APIs
+A sample node-based app to demonstrate **__fabric-client__** & **__fabric-ca-client__** Node SDK APIs
 
 ### Prerequisites and setup: 
 
-Follow the Getting Started [instructions](http://hyperledger-fabric.readthedocs.io/en/latest/getting_started.html#prerequisites-and-setup) in the Hyperledger Fabric documentation.
+* [Docker](https://www.docker.com/products/overview) - v1.12 or higher
+* [Docker Compose](https://docs.docker.com/compose/overview/) - v1.8 or higher
+* [Git client](https://git-scm.com/downloads) - needed for clone commands
+* **Nodejs** v6.2.0 - 6.10.0 ( __Node v7+ is not supported__ )
+* Download docker images
 
-* Additionally install Nodejs v6.2.0 - 6.10.0 (Node v7+ is not supported)
+```
+cd fabric-sdk-node/examples/balance-transfer/
+docker-compose -f artifacts/docker-compose.yaml pull
+```
 
 Once you have completed the above setup, you will be provisioned a local network with following configuration:
 
 * 2 CAs
-* A solo orderer
+* A kafka orderer
 * 4 peers (2 peers per Org)
 
 #### Artifacts
-* Crypto material has been generated using the cryptogen tool from fabric and mounted to all peers, the orderering node and CA org containers.
-* An Orderer genesis block (orderer.block) and channel configuration transaction (mychannel.tx) has been pre generated using the configtxgen tool and placed within the artifacts folder.
+* Crypto material has been generated using the **cryptogen** tool from fabric and mounted to all peers, the orderering node and CA org containers. More details regarding the cryptogen tool are available [here](http://hyperledger-fabric.readthedocs.io/en/latest/getting_started.html#using-the-cryptogen-tool).
+* An Orderer genesis block (orderer.block) and channel configuration transaction (mychannel.tx) has been pre generated using the **configtxgen** tool and placed within the artifacts folder.
+  More details regarding the configtxgen tool are available [here](http://hyperledger-fabric.readthedocs.io/en/latest/getting_started.html#using-the-configtxgen-tool).
+
+## Running the sample program
 
 
-### Running the sample program
+There are two options available for running the balance-transfer sample
+
+### Option 1:
+
+##### Terminal Window 1
+
+* Launch the network using docker-compose 
+
+```
+docker-compose -f artifacts/docker-compose.yaml up
+```
+##### Terminal Window 2
+
+* Execute the REST APIs from the section [Sample REST APIs Requests](https://github.com/hyperledger/fabric-sdk-node/tree/master/examples/balance-transfer#running-the-sample-program)
+
+
+### Option 2:
 
 ##### Terminal Window 1
 
@@ -49,6 +75,8 @@ cd fabric-sdk-node/examples/balance-transfer
 
 ```
 
+## Sample REST APIs Requests
+
 ### Login Request
 
 * Register and enroll new users in Organization - **Org1**:
@@ -66,7 +94,7 @@ cd fabric-sdk-node/examples/balance-transfer
 }
 ```
 
-The response contains the success/failure status, an enrollment Secret and a JSON Web Token (JWT) that is a required string in the Request Headers for subsequent requests.
+The response contains the success/failure status, an **enrollment Secret** and a **JSON Web Token (JWT)** that is a required string in the Request Headers for subsequent requests.
 
 ### Create Channel request
 
