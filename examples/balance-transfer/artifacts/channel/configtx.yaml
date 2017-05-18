@@ -143,7 +143,7 @@ Orderer: &OrdererDefaults
 
     # Orderer Type: The orderer implementation to start
     # Available types are "solo" and "kafka"
-    OrdererType: solo
+    OrdererType: kafka
 
     Addresses:
         - orderer0:7050
@@ -170,7 +170,7 @@ Orderer: &OrdererDefaults
         # Brokers: A list of Kafka brokers to which the orderer connects
         # NOTE: Use IP:port notation
         Brokers:
-            - orderer0:9092
+            - kafka:9092
 
     # Organizations is the list of orgs which are defined as participants on
     # the orderer side of the network
