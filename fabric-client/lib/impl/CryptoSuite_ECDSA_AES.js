@@ -133,6 +133,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		var pair = KEYUTIL.generateKeypair('EC', this._curveName);
 
 		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
+			logger.debug('generateKey, ephemeral true, Promise resolved');
 			return Promise.resolve(new ECDSAKey(pair.prvKeyObj));
 		} else {
 			if (!this._cryptoKeyStore) {
@@ -168,17 +169,15 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
 	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
-	 */
-	importKey(raw, opts, storeKey) {
+	 **/
+	importKey(raw, opts) {
 		logger.debug('importKey - start');
 		var store_key = true; //default
-		// if storing is not required and therefore a promise will not be returned
-		// then storeKey must be set to false;
-		if(typeof storeKey === 'boolean') {
-			store_key = storeKey;
+		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
+			store_key = false;
 		}
 		if (!!store_key && !this._cryptoKeyStore) {
-			throw new Error('importKey storeKey is true, which requires CryptoKeyStore to be set.');
+			throw new Error('importKey opts.ephemeral is false, which requires CryptoKeyStore to be set.');
 		}
 
 		var self = this;

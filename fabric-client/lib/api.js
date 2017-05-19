@@ -100,12 +100,14 @@ module.exports.CryptoSuite = class {
 	 * @param {Object} opts
 	 *      <br>`type`: type of information that 'raw' represents: x509 certificate,
 	 *      <br>`algorithm`: an identifier for the algorithm to be used
-	 *      <br>`ephemeral`: true if the key to generate has to be ephemeral
-	 * @storeKey {boolean} store the key in persistent key store- when false the key will
-	 *           the key will be returned without a Promise
-	 * @returns {Key} Promise of an instance of the Key class wrapping the raw key bytes
+	 *      <br>`ephemeral`: {boolean} Optional.  If true, the key to import will not be persisted
+	 * 			and the key will be returned without a Promise.  If not set or false, defaults to
+	 * 			saving the key in persistent key store.
+	 * @returns {Key} or {Promise} If `ephemeral` is true, the Key class wrapping the raw bytes.
+	 *          If `ephemeral' not set or false, a Promise of an instance of the
+	 *          Key class wrapping the raw key bytes.
 	 */
-	importKey(raw, opts, storeKey) {}
+	importKey(raw, opts) {}
 
 	/**
 	 * Returns the key this CSP associates to the Subject Key Identifier ski.

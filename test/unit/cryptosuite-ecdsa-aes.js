@@ -167,7 +167,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', function (t) {
 		() => {
 			cryptoUtils.importKey(TEST_CERT_PEM);
 		},
-		/importKey storeKey is true, which requires CryptoKeyStore to be set./,
+		/importKey opts.ephemeral is false, which requires CryptoKeyStore to be set./,
 		'Test missing cryptoKeyStore: cryptoSuite.importKey'
 	);
 	t.throws(
@@ -178,6 +178,31 @@ test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', function (t) {
 		'Test missing cryptoKeyStore: cryptoSuite.generateKey'
 	);
 	t.end();
+});
+
+test('\n\n ** CryptoSuite_ECDSA_AES - ephemeral true tests **\n\n', function (t) {
+	testutil.resetDefaults();
+	var cryptoUtils = utils.newCryptoSuite();
+	var key = cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM, {ephemeral: true});
+	if (key && key._key && key._key.type === 'EC') {
+		t.pass('importKey returned key using ephemeral true');
+	} else {
+		t.fail('importKey did not return key using ephemeral true');
+	}
+
+	return cryptoUtils.generateKey({ephemeral: true})
+	.then(function (key) {
+		if (key && key._key && key._key.type === 'EC') {
+			t.pass('generateKey returned key using ephemeral true');
+			t.end();
+		} else {
+			t.fail('generateKey did not return key using ephemeral true');
+			t.end();
+		}
+	},(err) => {
+		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+		t.end();
+	});
 });
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {

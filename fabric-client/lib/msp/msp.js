@@ -146,7 +146,7 @@ var MSP = class {
 		var cert = sid.getIdBytes().toBinary();
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
 		if(!store_key) {
-			var publicKey =this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate }, false);
+			var publicKey =this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate, ephemeral: true });
 			var sdk_identity = new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 			return sdk_identity;
 		}
