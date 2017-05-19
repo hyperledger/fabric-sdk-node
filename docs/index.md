@@ -1,4 +1,3 @@
-# Hyperledger Fabric SDK for Node.js
 
 The Hyperledger Fabric SDK for Node.js provides a powerful API to interact with a Hyperledger Fabric v1.0 blockchain. The SDK is designed to be used in the Node.js JavaScript runtime.
 
