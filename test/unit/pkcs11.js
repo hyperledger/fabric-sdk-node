@@ -17,15 +17,17 @@
 // To run this test case, install SoftHSM2 library at this link:
 // https://wiki.opendnssec.org/display/SoftHSMDOCS/SoftHSM+Documentation+v2
 // After installing the library, you need to initialize at least one token
-// which will be used below. For the 'pin' property in the configuration
-// object below, use the 'user PIN' value (not SO PIN) and please set it to
-// '1234' so the code below can run successfully
+// which will be used below.  The test case assumes you have configured slot 0
+// with user pin = 98765432.
+// Sample configuration using softhsm2-util command line utility:
+// softhsm2-util --init-token --slot 0 --label "My token 1" so pin abcd user pin 98765432
 
 'use strict';
 
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
+var fs = require('fs');
 
 var crypto = require('crypto');
 var util = require('util');
@@ -34,54 +36,90 @@ var path = require('path');
 var utils = require('fabric-client/lib/utils.js');
 
 var libpath;
-switch(process.platform) {
-case 'darwin': // OSX
-case 'linux':  // Ubuntu VM
-	libpath = '/usr/local/lib/softhsm/libsofthsm2.so';
-	break;
-default:
-	libpath = '/usr/lib/libacsp-pkcs11.so'; //LinuxOne
-}
-
+var pin = '98765432'; // user pin not SO pin
+var slot = 0;
 var cryptoUtils;
 
-test('\n\n**PKCS11 - generate an ephemeral key\n\n', (t) => {
-	utils.setConfigSetting('crypto-hsm', true);
+// Common locations of the PKCS11 library.
+// Based on findPKCS11Lib() in fabric/bccsp/pkcs11/impl_test.go
+var common_pkcs_pathnames = [
+	'/usr/lib/softhsm/libsofthsm2.so',								// Ubuntu
+	'/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so',				// Ubuntu  apt-get install
+	'/usr/lib/s390x-linux-gnu/softhsm/libsofthsm2.so',				// Ubuntu
+	'/usr/local/lib/softhsm/libsofthsm2.so',						// Ubuntu, OSX (tar ball install)
+	'/usr/lib/powerpc64le-linux-gnu/softhsm/libsofthsm2.so',		// Power (can't test this)
+	'/usr/lib/libacsp-pkcs11.so'									// LinuxOne
+];
 
-	cryptoUtils = utils.newCryptoSuite({
-		lib: libpath,
-		slot: 0,
-		pin: '1234'
-	});
+test('\n\n**PKCS11 - locate PKCS11 libpath\n\n', (t) => {
 
-	// Test generate AES key, encrypt, and decrypt.
-	cryptoUtils.generateKey({ algorithm: 'AES', ephemeral: true })
-	.then((key) => {
-		t.pass('Successfully generated an ephemeral AES key');
+	if (typeof process.env.PKCS11_LIB === 'string' && process.env.PKCS11_LIB !== '') {
+		libpath = process.env.PKCS11_LIB;
+	} else {
+		//
+		// Check common locations for PKCS library
+		//
+		for (let i = 0; i < common_pkcs_pathnames.length; i++) {
+			t.comment('Looking for ' + common_pkcs_pathnames[i]);
+			if (fs.existsSync(common_pkcs_pathnames[i])) {
+				libpath = common_pkcs_pathnames[i];
+				t.pass('Found a library at ' + libpath);
+				break;
+			}
+		};
+	}
 
-		var ski = key.getSKI();
-		t.comment('AES ski[' + ski.length + ']: ' + ski.toString('hex'));
+	if (typeof process.env.PKCS11_PIN === 'string' && process.env.PKCS11_PIN !== '') {
+		pin = process.env.PKCS11_PIN;
+	}
 
-		return cryptoUtils.getKey(ski);
-	})
-	.then((recoveredKey) => {
-		t.true(!!recoveredKey, 'Successfully recovered key from calculated SKI');
+	if (typeof process.env.PKCS11_SLOT === 'string' && process.env.PKCS11_SLOT !== '') {
+		slot = parseInt(process.env.PKCS11_SLOT);
+	}
 
-		// Encrypt a message.
-		var cipherText = cryptoUtils.encrypt(recoveredKey, Buffer.from('Hello World!!'), {});
 
-		return { recoveredKey, cipherText };
-	})
-	.then(function(param) {
-		// Decrypt a message.
-		var plainText = cryptoUtils.decrypt(param.recoveredKey, param.cipherText, {});
-		t.equal(plainText.toString(), 'Hello World!!', 'Successfully decrypted');
+	if (!libpath) {
+		t.fail('Could not locate a PKCS11 library -- PKCS11 tests will probably fail');
 		t.end();
-	})
-	.catch(function(e) {
-		t.fail('Error during tests. ' + e);
-		t.end();
-	});
+	} else {
+		t.comment('\n\n**PKCS11 - generate an ephemeral key\n\n');
+
+		utils.setConfigSetting('crypto-hsm', true);
+		cryptoUtils = utils.newCryptoSuite({
+			lib: libpath,
+			slot: slot,
+			pin: pin
+		});
+
+		// Test generate AES key, encrypt, and decrypt.
+		return cryptoUtils.generateKey({ algorithm: 'AES', ephemeral: true })
+		.then((key) => {
+			t.pass('Successfully generated an ephemeral AES key');
+
+			var ski = key.getSKI();
+			t.comment('AES ski[' + ski.length + ']: ' + ski.toString('hex'));
+
+			return cryptoUtils.getKey(ski);
+		})
+		.then((recoveredKey) => {
+			t.true(!!recoveredKey, 'Successfully recovered key from calculated SKI');
+
+			// Encrypt a message.
+			var cipherText = cryptoUtils.encrypt(recoveredKey, Buffer.from('Hello World!!'), {});
+
+			return { recoveredKey, cipherText };
+		})
+		.then(function(param) {
+			// Decrypt a message.
+			var plainText = cryptoUtils.decrypt(param.recoveredKey, param.cipherText, {});
+			t.equal(plainText.toString(), 'Hello World!!', 'Successfully decrypted');
+			t.end();
+		})
+		.catch(function(e) {
+			t.fail('Error during tests. ' + e);
+			t.end();
+		});
+	}
 });
 
 test('\n\n**PKCS11 - generate a non-ephemeral key\n\n', (t) => {
@@ -89,7 +127,7 @@ test('\n\n**PKCS11 - generate a non-ephemeral key\n\n', (t) => {
 	// the 'then()' blocks are 'undefined'
 	var existingCrypto = cryptoUtils;
 
-	existingCrypto.generateKey({ algorithm: 'AES', ephemeral: false })
+	return existingCrypto.generateKey({ algorithm: 'AES', ephemeral: false })
 	.then(function(key) {
 		t.pass('Successfully generated a non-ephemeral AES key');
 
@@ -104,7 +142,7 @@ test('\n\n**PKCS11 - generate a non-ephemeral key\n\n', (t) => {
 		var cryptoUtils = utils.newCryptoSuite({
 			lib: libpath,
 			slot: 0,
-			pin: '1234' });
+			pin: '98765432' });
 
 		return cryptoUtils.getKey(ski);
 	})
@@ -136,7 +174,7 @@ const TEST_AES_KEY = '7430b92d84e1e3da82c06aff0801aa45f4a429e73f59bfc5141e205617
 
 test('\n\n**PKCS11 - import an AES key into the crypto card\n\n', (t) => {
 
-	cryptoUtils.importKey(Buffer.from(TEST_AES_KEY, 'hex'), { algorithm: 'AES' })
+	return cryptoUtils.importKey(Buffer.from(TEST_AES_KEY, 'hex'), { algorithm: 'AES' })
 	.then((key) => {
 		t.pass('Successfully imported an AES key into the crypto card');
 
@@ -169,7 +207,7 @@ test('\n\n**PKCS11 - import an AES key into the crypto card\n\n', (t) => {
 });
 
 test('\n\n**PKCS11 - Test generate ephemeral ECDSA key pair, sign, and verify.\n\n', (t) => {
-	cryptoUtils.generateKey({ algorithm: 'ECDSA', ephemeral: true })
+	return cryptoUtils.generateKey({ algorithm: 'ECDSA', ephemeral: true })
 	.then((key) => {
 		t.pass('Successfully generated ECDSA key pair');
 
@@ -194,9 +232,19 @@ test('\n\n**PKCS11 - Test generate ephemeral ECDSA key pair, sign, and verify.\n
 });
 
 test('\n\n**PKCS11 - Test sign and verify with non-ephemeral ECDSA key pair in the crypto card.\n\n', (t) => {
+	// override t.end function so it'll always clear the config settings
+	t.end = ((context, f) => {
+		return function() {
+			if (global && global.hfc) global.hfc.config = undefined;
+			require('nconf').reset();
+
+			f.apply(context, arguments);
+		};
+	})(t, t.end);
+
 	var existingCrypto = cryptoUtils;
 
-	existingCrypto.generateKey({ algorithm: 'ECDSA', ephemeral: false })
+	return existingCrypto.generateKey({ algorithm: 'ECDSA', ephemeral: false })
 	.then((key) => {
 		t.pass('Successfully generated ECDSA key pair');
 
@@ -211,7 +259,7 @@ test('\n\n**PKCS11 - Test sign and verify with non-ephemeral ECDSA key pair in t
 		var cryptoUtils = utils.newCryptoSuite({
 			lib: libpath,
 			slot: 0,
-			pin: '1234' });
+			pin: '98765432' });
 
 		return cryptoUtils.getKey(ski);
 	})

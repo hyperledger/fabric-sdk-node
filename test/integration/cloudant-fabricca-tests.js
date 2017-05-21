@@ -34,10 +34,6 @@ var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore'
 
 var couchdbUtil = require('./couchdb-util.js');
 
-hfc.addConfigFile('test/fixtures/cloudant.json');
-var keyValueStore = hfc.getConfigSetting('key-value-store');
-logger.info('cloudant Key Value Store = ' + keyValueStore);
-
 var cloudantUrl = 'https://1421acc7-6faa-491a-8e10-951e2e190684-bluemix:7179ef7a72602189243deeabe207889bde1c2fada173ae1022b5592e5a79dacc@1421acc7-6faa-491a-8e10-951e2e190684-bluemix.cloudant.com';
 
 hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
@@ -56,6 +52,20 @@ var fabricCAEndpoint = ORGS[userOrg].ca.url;
 // CouchDB KeyValueStore. Then the test uses the Chain class to load the member
 // from the key value store.
 test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
+	hfc.addConfigFile('test/fixtures/cloudant.json');
+	var keyValueStore = hfc.getConfigSetting('key-value-store');
+	logger.info('cloudant Key Value Store = ' + keyValueStore);
+
+	// override t.end function so it'll always clear the config settings
+	t.end = ((context, f) => {
+		return function() {
+			if (global && global.hfc) global.hfc.config = undefined;
+			require('nconf').reset();
+
+			f.apply(context, arguments);
+		};
+	})(t, t.end);
+
 	//var user = new User();
 	var client = new Client();
 
