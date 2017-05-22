@@ -26,7 +26,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var hfc = require('fabric-client');
-var Chain = require('fabric-client/lib/Chain.js');
+var Channel = require('fabric-client/lib/Channel.js');
 
 var grpc = require('grpc');
 var _commonProto   = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/common.proto').common;
@@ -40,7 +40,7 @@ test('\n\n***** READ in the genesis block *****\n\n', function(t) {
 	logger.info('normalPath=' + normalPath);
 	var data = fs.readFileSync(normalPath);
 
-	var chain = new Chain('test', 'fake');
+	var channel = new Channel('test', 'fake');
 
 	var block = _commonProto.Block.decode(data);
 	var envelope = _commonProto.Envelope.decode(block.data.data[0]);
@@ -51,7 +51,7 @@ test('\n\n***** READ in the genesis block *****\n\n', function(t) {
 	}
 
 	var config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
-	chain.loadConfigEnvelope(config_envelope);
+	channel.loadConfigEnvelope(config_envelope);
 	t.pass(' Loaded the geneisis block from the configtx tool');
 	logger.info(' test end');
 	t.end();
@@ -64,9 +64,9 @@ test('\n\n***** READ in the configtx *****\n\n', function(t) {
 	logger.info('normalPath=' + normalPath);
 	var data = fs.readFileSync(normalPath);
 
-	var chain = new Chain('test', 'fake');
+	var channel = new Channel('test', 'fake');
 
-	chain.loadConfigUpdateEnvelope(data);
+	channel.loadConfigUpdateEnvelope(data);
 	t.pass(' Loaded the channel config from the configtx tool');
 	logger.info(' test end');
 	t.end();

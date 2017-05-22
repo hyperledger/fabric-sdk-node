@@ -51,9 +51,9 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	var version = 'v1';
 	var org = 'org1';
 	var client = new hfc();
-	var chain = client.newChain(e2e.channel);
+	var channel = client.newChannel(e2e.channel);
 	var orgName = ORGS[org].name;
-	chain.addOrderer(
+	channel.addOrderer(
 		client.newOrderer(
 			ORGS.orderer.url,
 			{
@@ -76,7 +76,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 					}
 				);
 				targets.push(peer);
-				chain.addPeer(peer);
+				channel.addPeer(peer);
 			}
 		}
 	}
@@ -93,7 +93,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		return chain.initialize();
+		return channel.initialize();
 
 	})
 	.then((nothing) => {
@@ -110,7 +110,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 			txId: tx_id
 		};
 
-		return chain.sendUpgradeProposal(request);
+		return channel.sendUpgradeProposal(request);
 
 	}).then((results) => {
 		checkResults(results, 'version already exists', t);
@@ -133,7 +133,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 			txId: tx_id
 		};
 
-		return chain.sendUpgradeProposal(request);
+		return channel.sendUpgradeProposal(request);
 
 	}).then((results) => {
 		checkResults(results, 'could not find chaincode with name', t);
@@ -153,7 +153,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 			txId: tx_id
 		};
 
-		return chain.sendUpgradeProposal(request);
+		return channel.sendUpgradeProposal(request);
 
 	}).then((results) => {
 		checkResults(results, 'no such file or directory', t);

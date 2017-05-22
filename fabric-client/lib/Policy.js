@@ -97,7 +97,7 @@ var EndorsementPolicy = class {
 			}
 
 			if (principals.length === 0) {
-				throw new Error('Verifying MSPs not found in the chain object, make sure "intialize()" is called first.');
+				throw new Error('Verifying MSPs not found in the channel object, make sure "intialize()" is called first.');
 			}
 
 			// construct 'one of any' policy

@@ -270,34 +270,34 @@ module.exports.getConfig = function() {
 	return config;
 };
 
-// this is a per-application map of msp managers for each chain
+// this is a per-application map of msp managers for each channel
 var mspManagers = {};
 
 //
-// returns the MSP manager responsible for the given chain
+// returns the MSP manager responsible for the given channel
 //
-module.exports.getMSPManager = function(chainId) {
-	var mspm = mspManagers[chainId];
+module.exports.getMSPManager = function(channelId) {
+	var mspm = mspManagers[channelId];
 	if (mspm === null) {
 		// this is a rather catastrophic error, without an MSP manager not much can continue
-		throw new Error(util.format('Can not find an MSP Manager for the given chain ID: %s', chainId));
+		throw new Error(util.format('Can not find an MSP Manager for the given channel ID: %s', channelId));
 	}
 
 	return mspm;
 };
 
 //
-// registers an MSP manager using the chainId as the key
+// registers an MSP manager using the channelId as the key
 //
-module.exports.addMSPManager = function(chainId, mspm) {
-	mspManagers[chainId] = mspm;
+module.exports.addMSPManager = function(channelId, mspm) {
+	mspManagers[channelId] = mspm;
 };
 
 //
-// unregisters the MSP manager for the given chainId
+// unregisters the MSP manager for the given channelId
 //
-module.exports.removeMSPManager = function(chainId) {
-	delete mspManagers[chainId];
+module.exports.removeMSPManager = function(channelId) {
+	delete mspManagers[channelId];
 };
 
 //

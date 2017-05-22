@@ -19,7 +19,7 @@ if (global && global.hfc) global.hfc.config = undefined;
 require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
 utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
-var logger = utils.getLogger('orderer-chain');
+var logger = utils.getLogger('orderer-channel');
 
 
 var tape = require('tape');
@@ -34,7 +34,7 @@ var testUtil = require('../unit/util.js');
 
 var hfc = require('fabric-client');
 var Orderer = require('fabric-client/lib/Orderer.js');
-var Chain = require('fabric-client/lib/Chain.js');
+var Channel = require('fabric-client/lib/Channel.js');
 
 var keyValStorePath = testUtil.KVS;
 hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
@@ -53,9 +53,9 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 	testUtil.resetDefaults();
 	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
-	var chain = client.newChain('testChain-orderer-member2');
+	var channel = client.newChannel('testChannel-orderer-member2');
 
 	hfc.newDefaultKeyValueStore({
 		path: testUtil.KVS
@@ -68,7 +68,7 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 			t.pass('Successfully enrolled user \'admin\'');
 
 			// send to orderer
-			return chain.sendTransaction('data');
+			return channel.sendTransaction('data');
 		},
 		function(err) {
 			t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -78,7 +78,7 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 		function(status) {
 			t.comment('Status: ' + status + ', type: (' + typeof status + ')');
 			if (status === 0) {
-				t.fail('Successfully submitted request, which is bad because the chain is missing orderers.');
+				t.fail('Successfully submitted request, which is bad because the channel is missing orderers.');
 			} else {
 				t.pass('Successfully tested invalid submission due to missing orderers. Error code: ' + status);
 			}
@@ -105,14 +105,14 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 //
 test('\n\n** TEST ** orderer via member null data', function(t) {
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
-	var chain = client.newChain('testChain-orderer-member3');
+	var channel = client.newChannel('testChannel-orderer-member3');
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	chain.addOrderer(
+	channel.addOrderer(
 		new Orderer(
 			ORGS.orderer.url,
 			{
@@ -128,7 +128,7 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 			t.pass('Successfully enrolled user \'admin\'');
 
 			// send to orderer
-			return chain.sendTransaction(null);
+			return channel.sendTransaction(null);
 		},
 		function(err) {
 			t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -142,7 +142,7 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 			} else {
 				t.pass('Successfully tested invalid submission due to null data. Error code: ' + status);
 
-				return chain.sendTransaction('some non-null but still bad data');
+				return channel.sendTransaction('some non-null but still bad data');
 			}
 		},
 		function(err) {
@@ -178,16 +178,16 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 //
 test('\n\n** TEST ** orderer via member bad request', function(t) {
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
-	var chain = client.newChain('testChain-orderer-member4');
+	var channel = client.newChannel('testChannel-orderer-member4');
 
 	// Set bad orderer address here
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	chain.addOrderer(
+	channel.addOrderer(
 		new Orderer(
 			'grpcs://localhost:5199',
 			{
@@ -208,7 +208,7 @@ test('\n\n** TEST ** orderer via member bad request', function(t) {
 				proposal: 'blah',
 				header: 'blah'
 			};
-			return chain.sendTransaction(request);
+			return channel.sendTransaction(request);
 		},
 		function(err) {
 			t.fail('Failed to enroll user \'admin\'. ' + err);

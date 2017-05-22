@@ -50,7 +50,7 @@ var _ccEventProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/
 
 var client = new hfc();
 // IMPORTANT ------>>>>> MUST RUN e2e/create-channel.js FIRST
-var chain = client.newChain(testUtil.END2END.channel);
+var channel = client.newChannel(testUtil.END2END.channel);
 hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 
@@ -58,7 +58,7 @@ var caRootsPath = ORGS.orderer.tls_cacerts;
 let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 let caroots = Buffer.from(data).toString();
 
-chain.addOrderer(
+channel.addOrderer(
 	new Orderer(
 		ORGS.orderer.url,
 		{
@@ -80,7 +80,7 @@ for (let key in ORGS[org]) {
 					pem: Buffer.from(data).toString(),
 					'ssl-target-name-override': ORGS[org][key]['server-hostname']
 				});
-			chain.addPeer(peer);
+			channel.addPeer(peer);
 		}
 	}
 }
@@ -114,8 +114,8 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 
 					// use default primary peer
 					// send query
-					logger.debug('will initialize the chain');
-					return chain.initialize();
+					logger.debug('will initialize the channel');
+					return channel.initialize();
 				},
 				function(err) {
 					t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
@@ -123,8 +123,8 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 				}
 			).then(
 				function(result) {
-					t.pass('Chain was successfully initialized');
-					let orgs = chain.getOrganizations();
+					t.pass('channel was successfully initialized');
+					let orgs = channel.getOrganizations();
 					logger.info(' Got the following orgs back %j', orgs);
 					t.equals(orgs.length, 3, 'Checking the that we got back the right number of orgs');
 					if(orgs[0].id.indexOf('Or') == 0) {

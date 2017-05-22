@@ -120,7 +120,7 @@ var EventHub = class {
 
 	/**
 	 * Set peer url for event source<p>
-	 * Note: Only use this if creating your own EventHub. The chain
+	 * Note: Only use this if creating your own EventHub. The Channel
 	 * class creates a default eventHub that most Node clients can
 	 * use (see eventHubConnect, eventHubDisconnect and getEventHub).
 	 * @param {string} peeraddr peer url

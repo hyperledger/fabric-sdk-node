@@ -32,7 +32,7 @@ gulp.task('doc', function () {
 		'fabric-client/lib/impl/aes/*',
 		'fabric-client/lib/BlockDecoder.js',
 		'fabric-client/lib/msp/msp.js',
-		'fabric-client/lib/Chain.js',
+		'fabric-client/lib/Channel.js',
 		'fabric-client/lib/Orderer.js',
 		'fabric-client/lib/Peer.js',
 		'fabric-client/lib/Policy.js',

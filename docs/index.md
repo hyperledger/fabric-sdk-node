@@ -23,19 +23,19 @@ The Hyperledger Fabric SDK for Node.js is designed in an Object-Oriented program
 The SDK's list of features include:
 * **fabric-client**:
   * [create a new channel]{@link Client#createChannel}
-  * [send channel information to a peer to join]{@link Chain#joinChannel}
+  * [send channel information to a peer to join]{@link Channel#joinChannel}
   * [install chaincode on a peer]{@link Client#installChaincode}
-  * instantiate chaincode in a channel, which involves two steps: [propose]{@link Chain#sendInstantiateProposal} and [transact]{@link Chain#sendTransaction}
-  * submitting a transaction, which also involves two steps: [propose]{@link Chain#sendTransactionProposal} and [transact]{@link Chain#sendTransaction}
-  * [query a chaincode for the latest application state]{@link Chain#queryByChaincode}
+  * instantiate chaincode in a channel, which involves two steps: [propose]{@link Channel#sendInstantiateProposal} and [transact]{@link Channel#sendTransaction}
+  * submitting a transaction, which also involves two steps: [propose]{@link Channel#sendTransactionProposal} and [transact]{@link Channel#sendTransaction}
+  * [query a chaincode for the latest application state]{@link Channel#queryByChaincode}
   * various query capabilities:
-    * [chain height]{@link Chain#queryInfo}
-    * [block-by-number]{@link Chain#queryBlock}, [block-by-hash]{@link Chain#queryBlockByHash}
+    * [channel height]{@link Channel#queryInfo}
+    * [block-by-number]{@link Channel#queryBlock}, [block-by-hash]{@link Channel#queryBlockByHash}
     * [all channels that a peer is part of]{@link Client#queryChannels}
     * [all installed chaincodes in a peer]{@link Client#queryInstalledChaincodes}
-    * [all instantiated chaincodes in a channel]{@link Chain#queryInstantiatedChaincodes}
-    * [transaction-by-id]{@link Chain#queryTransaction}
-    * [channel configuration data]{@link Chain#getChannelConfig}
+    * [all instantiated chaincodes in a channel]{@link Channel#queryInstantiatedChaincodes}
+    * [transaction-by-id]{@link Channel#queryTransaction}
+    * [channel configuration data]{@link Channel#getChannelConfig}
   * monitoring events:
     * [connect to a peer's event stream]{@link EventHub#connect}
     * listen on [block events]{@link EventHub#registerBlockEvent}

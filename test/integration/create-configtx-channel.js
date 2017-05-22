@@ -36,7 +36,7 @@ Client.addConfigFile(path.join(__dirname, './config.json'));
 var ORGS = Client.getConfigSetting('test-network');
 
 //
-//Attempt to send a request to the orderer with the sendCreateChain method
+//Attempt to send a request to the orderer with the createChannel method
 //
 test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 	var channel_name = 'mychanneltx';
@@ -44,7 +44,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 	logger.info('\n\n >>>>>>  Will create new channel with name :: %s <<<<<<< \n\n',channel_name);
 
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
 	var client = new Client();
 

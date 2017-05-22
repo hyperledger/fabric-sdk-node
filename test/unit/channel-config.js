@@ -321,8 +321,8 @@ test('\n\n ** ChannelConfig - basic field check tests **\n\n', function (t) {
 				var channelConfigUpdate = channelConfig.build(test_input);
 				t.pass('No exceptions building on a good configuration');
 
-				var chain = client.newChain('test');
-				var results = chain.loadConfigUpdate(channelConfigUpdate.toBuffer());
+				var channel = client.newChannel('test');
+				var results = channel.loadConfigUpdate(channelConfigUpdate.toBuffer());
 				t.pass('No exceptions reloading the results of the build');
 
 				logger.info(' results found ::%j',results);
@@ -332,8 +332,8 @@ test('\n\n ** ChannelConfig - basic field check tests **\n\n', function (t) {
 				t.equals(results['anchor-peers'][1].port,7056, 'Checking that we found anchor peer port');
 				t.equals(results.orderers[0],'orderer:7050', 'Checking that we found orderer');
 				t.equals(results['kafka-brokers'][0],'orderer:8888', 'Checking that we found kafka broker');
-				t.equals(chain._msp_manager.getMSP('ordererMSP').getId(),'ordererMSP', 'Checking that the msp was loaded by the initialize');
-				t.equals(chain._msp_manager.getMSP('org1MSP').getId(),'org1MSP', 'Checking that the msp was loaded by the initialize');
+				t.equals(channel._msp_manager.getMSP('ordererMSP').getId(),'ordererMSP', 'Checking that the msp was loaded by the initialize');
+				t.equals(channel._msp_manager.getMSP('org1MSP').getId(),'org1MSP', 'Checking that the msp was loaded by the initialize');
 				t.equals(results.settings.ConsensusType.type, 'solo', 'Checking for consensus type setting');
 				t.equals(results.settings.BatchSize.maxMessageCount, 10, 'Checking for BatchSize maxMessageCount setting');
 				t.equals(results.settings.BatchSize.absoluteMaxBytes, 103809024, 'Checking for BatchSize absoluteMaxBytes setting');

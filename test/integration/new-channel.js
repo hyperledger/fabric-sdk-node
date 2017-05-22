@@ -19,7 +19,7 @@ if (global && global.hfc) global.hfc.config = undefined;
 require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
 utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
-var logger = utils.getLogger('new-chain');
+var logger = utils.getLogger('new-channel');
 
 var tape = require('tape');
 var _test = require('tape-promise');
@@ -34,7 +34,7 @@ var Orderer = require('fabric-client/lib/Orderer.js');
 var Peer = require('fabric-client/lib/Peer.js');
 
 var client = new hfc();
-var chain = client.newChain(testUtil.END2END.channel);
+var channel = client.newChannel(testUtil.END2END.channel);
 hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 var org = 'org1';
@@ -64,26 +64,26 @@ for (let key in ORGS[org]) {
 					pem: Buffer.from(data).toString(),
 					'ssl-target-name-override': ORGS[org][key]['server-hostname']
 				});
-			chain.addPeer(peer);
+			channel.addPeer(peer);
 		}
 	}
 }
 
-var logger = utils.getLogger('NEW CHAIN');
+var logger = utils.getLogger('NEW CHANNEL');
 hfc.setConfigSetting('hfc-logging', '{"debug":"console"}');
 
 var keyValStorePath = testUtil.KVS;
 var the_user = null;
 
 //
-//Orderer via member send chain create
+//Orderer via member channel create
 //
-//Attempt to send a request to the orderer with the sendCreateChain method - fail
-// fail due to chain already exist
+//Attempt to send a request to the orderer with the createChannel method - fail
+// fail due to channel already exist
 //
-test('\n\n** TEST ** new chain - chain.createChannel() fail due to already exist', function(t) {
+test('\n\n** TEST ** new channel - channel.createChannel() fail due to already exist', function(t) {
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
 	hfc.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)}

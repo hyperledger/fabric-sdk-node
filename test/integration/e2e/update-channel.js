@@ -38,7 +38,7 @@ var ORGS = Client.getConfigSetting('test-network');
 
 test('\n\n***** U P D A T E C H A N N E L flow: update channel *****\n\n', (t) => {
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
 	var channel_name = 'mychannel';
 	var client = new Client();
@@ -167,11 +167,11 @@ test('\n\n***** U P D A T E C H A N N E L flow: update channel *****\n\n', (t) =
 		client.addMSP( e2eUtils.loadMSPConfig('Org2MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/msp/'));
 		t.pass('only have to add in the new msps, existing MSPs will be read from the channel');
 
-		var chain = client.newChain(channel_name);
-		chain.addOrderer(orderer);
+		var channel = client.newChannel(channel_name);
+		channel.addOrderer(orderer);
 
 		// have the SDK build the config update object
-		return client.buildChannelConfigUpdate(test_input, chain);
+		return client.buildChannelConfigUpdate(test_input, channel);
 	}).then((config_update) => {
 		t.pass('Successfully built config update for the update channel action');
 

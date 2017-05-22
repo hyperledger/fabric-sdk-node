@@ -47,17 +47,17 @@ test('\n\n ** index.js **\n\n', function (t) {
 	t.doesNotThrow(
 		function() {
 			var c = new hfc();
-			var chain = c.newChain('test');
+			var channel = c.newChannel('test');
 		},
 		null,
-		'Should be able to call "newChain" on the new instance of "hfc"');
+		'Should be able to call "newChannel" on the new instance of "hfc"');
 
 	t.end();
 });
 
 var Client = hfc;
 var client = new Client();
-var chainKeyValStorePath = path.join(testutil.getTempDir(), 'chainKeyValStorePath');
+var channelKeyValStorePath = path.join(testutil.getTempDir(), 'channelKeyValStorePath');
 var testKey = 'keyValFileStoreName';
 var testValue = 'secretKeyValue';
 
@@ -191,28 +191,28 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t
 		else
 			t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error.stack ? error.stack : error);
 
-		var chain = client.newChain('someChain');
-		t.equals(chain.getName(), 'someChain', 'Checking chain names match');
+		var channel = client.newChannel('someChannel');
+		t.equals(channel.getName(), 'someChannel', 'Checking channel names match');
 		t.throws(
 			function () {
-				client.newChain('someChain');
+				client.newChannel('someChannel');
 			},
-			/^Error: Chain someChain already exist/,
-			'Client tests: checking that chain already exists.');
+			/^Error: Channel someChannel already exist/,
+			'Client tests: checking that channel already exists.');
 
 		t.doesNotThrow(
 			function() {
-				client.getChain('someChain');
+				client.getChannel('someChannel');
 			},
 			null,
-			'Client tests: getChain()');
+			'Client tests: getChannel()');
 
 		t.throws(
 				function () {
-					client.getChain('someOtherChain');
+					client.getChannel('someOtherChannel');
 				},
-				/^Error: Chain not found for name someOtherChain./,
-				'Client tests: Should throw Error: Chain not found for name someOtherChain.');
+				/^Error: Channel not found for name someOtherChannel./,
+				'Client tests: Should throw Error: Channel not found for name someOtherChannel.');
 
 		t.throws(
 			function() {
@@ -221,18 +221,18 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t
 			/The "keyValueStore" parameter must be an object that implements the following methods, which are missing:/,
 			'Client tests: checking state store parameter implementing required functions');
 
-		testutil.cleanupDir(chainKeyValStorePath);
+		testutil.cleanupDir(channelKeyValStorePath);
 
-		return Client.newDefaultKeyValueStore({ path: chainKeyValStorePath });
+		return Client.newDefaultKeyValueStore({ path: channelKeyValStorePath });
 	}).then (
 		function (kvs) {
 			client.setStateStore(kvs);
 
-			var exists = testutil.existsSync(chainKeyValStorePath);
+			var exists = testutil.existsSync(channelKeyValStorePath);
 			if (exists)
 				t.pass('Client setKeyValueStore test:  Successfully created new directory');
 			else
-				t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + chainKeyValStorePath);
+				t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + channelKeyValStorePath);
 
 			var store = client.getStateStore();
 			return store.setValue('testKey', 'testValue');
@@ -240,7 +240,7 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t
 			function (result) {
 				t.pass('Client getStateStore test:  Successfully set value, result: ' + result);
 
-				var exists = testutil.existsSync(chainKeyValStorePath, testKey);
+				var exists = testutil.existsSync(channelKeyValStorePath, testKey);
 				if (exists)
 					t.pass('Client getStateStore test:  Verified the file for key ' + testKey + ' does exist');
 				else
@@ -301,7 +301,7 @@ test('\n\n ** testing query calls fail without correct parameters on client **\n
 		}
 	).catch(
 		function (err) {
-			t.fail('Chain query calls, Promise.all: ');
+			t.fail('Channel query calls, Promise.all: ');
 			console.log(err.stack ? err.stack : err);
 			t.end();
 		}
@@ -456,7 +456,7 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 		}
 	).catch(
 		function (err) {
-			t.fail('Chain installChaincode() tests, Promise.all: ');
+			t.fail('Channel installChaincode() tests, Promise.all: ');
 			console.log(err.stack ? err.stack : err);
 			t.end();
 		}
@@ -929,10 +929,10 @@ test('\n\n ** test related APIs for create channel **\n\n', function (t) {
 	).then(function () {
 		t.fail('Should not have been able to resolve the promise');
 	}).catch(function (err) {
-		if (err.message.indexOf('requires an existing "Chain" object') >= 0) {
-			t.pass('Successfully caught that chain update parameter is requried');
+		if (err.message.indexOf('requires an existing "Channel" object') >= 0) {
+			t.pass('Successfully caught that channel update parameter is required');
 		} else {
-			t.fail('Failed to catch the chain update parameter is requried Error: ');
+			t.fail('Failed to catch the channel update parameter is required Error: ');
 			console.log(err.stack ? err.stack : err);
 		}
 	});

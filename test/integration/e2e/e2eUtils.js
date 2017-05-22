@@ -46,7 +46,7 @@ function installChaincode(org, chaincode_path, version, t) {
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
 	var client = new Client();
-	var chain = client.newChain(channel_name);
+	var channel = client.newChannel(channel_name);
 
 	var orgName = ORGS[org].name;
 	var cryptoSuite = client.newCryptoSuite();
@@ -57,7 +57,7 @@ function installChaincode(org, chaincode_path, version, t) {
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	chain.addOrderer(
+	channel.addOrderer(
 		client.newOrderer(
 			ORGS.orderer.url,
 			{
@@ -81,7 +81,7 @@ function installChaincode(org, chaincode_path, version, t) {
 				);
 
 				targets.push(peer);
-				chain.addPeer(peer);
+				channel.addPeer(peer);
 			}
 		}
 	}
@@ -167,7 +167,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	})(t, eventhubs, t.end);
 
 	var client = new Client();
-	var chain = client.newChain(channel_name);
+	var channel = client.newChannel(channel_name);
 
 	var orgName = ORGS[userOrg].name;
 	var cryptoSuite = client.newCryptoSuite();
@@ -178,7 +178,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	chain.addOrderer(
+	channel.addOrderer(
 		client.newOrderer(
 			ORGS.orderer.url,
 			{
@@ -218,7 +218,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				);
 
 				targets.push(peer);
-				chain.addPeer(peer);
+				channel.addPeer(peer);
 			}
 		}
 
@@ -236,10 +236,10 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		eh.connect();
 		eventhubs.push(eh);
 
-		// read the config block from the orderer for the chain
+		// read the config block from the orderer for the channel
 		// and initialize the verify MSPs based on the participating
 		// organizations
-		return chain.initialize();
+		return channel.initialize();
 	}, (err) => {
 
 		t.fail('Failed to enroll user \'admin\'. ' + err);
@@ -253,7 +253,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, badTransientMap);
 			tx_id = request.txId;
 
-			return chain.sendUpgradeProposal(request)
+			return channel.sendUpgradeProposal(request)
 			.then((results) => {
 				let proposalResponses = results[0];
 
@@ -276,7 +276,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 					request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
 					tx_id = request.txId;
 
-					return chain.sendUpgradeProposal(request);
+					return channel.sendUpgradeProposal(request);
 				} else {
 					throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
 				}
@@ -285,13 +285,13 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
 			tx_id = request.txId;
 
-			return chain.sendInstantiateProposal(request);
+			return channel.sendInstantiateProposal(request);
 		}
 
 	}, (err) => {
 
-		t.fail(util.format('Failed to initialize the chain. %s', err.stack ? err.stack : err));
-		throw new Error('Failed to initialize the chain');
+		t.fail(util.format('Failed to initialize the channel. %s', err.stack ? err.stack : err));
+		throw new Error('Failed to initialize the channel');
 
 	}).then((results) => {
 
@@ -347,7 +347,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				eventPromises.push(txPromise);
 			});
 
-			var sendPromise = chain.sendTransaction(request);
+			var sendPromise = channel.sendTransaction(request);
 			return Promise.all([sendPromise].concat(eventPromises))
 			.then((results) => {
 
@@ -455,7 +455,7 @@ function invokeChaincode(userOrg, version, t){
 	// than the one that instantiated the chaincode, although either org
 	// should work properly
 	var client = new Client();
-	var chain = client.newChain(channel_name);
+	var channel = client.newChannel(channel_name);
 
 	var orgName = ORGS[userOrg].name;
 	var cryptoSuite = client.newCryptoSuite();
@@ -466,7 +466,7 @@ function invokeChaincode(userOrg, version, t){
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	chain.addOrderer(
+	channel.addOrderer(
 		client.newOrderer(
 			ORGS.orderer.url,
 			{
@@ -490,7 +490,7 @@ function invokeChaincode(userOrg, version, t){
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		// set up the chain to use each org's 'peer1' for
+		// set up the channel to use each org's 'peer1' for
 		// both requests and events
 		for (let key in ORGS) {
 			if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
@@ -502,7 +502,7 @@ function invokeChaincode(userOrg, version, t){
 						'ssl-target-name-override': ORGS[key].peer1['server-hostname']
 					}
 				);
-				chain.addPeer(peer);
+				channel.addPeer(peer);
 			}
 		}
 
@@ -519,7 +519,7 @@ function invokeChaincode(userOrg, version, t){
 		eh.connect();
 		eventhubs.push(eh);
 
-		return chain.initialize();
+		return channel.initialize();
 
 	}).then((nothing) => {
 		tx_id = client.newTransactionID(the_user);
@@ -534,7 +534,7 @@ function invokeChaincode(userOrg, version, t){
 			args: ['move', 'a', 'b','100'],
 			txId: tx_id,
 		};
-		return chain.sendTransactionProposal(request);
+		return channel.sendTransactionProposal(request);
 
 	}, (err) => {
 
@@ -566,7 +566,7 @@ function invokeChaincode(userOrg, version, t){
 			let proposal_response = proposalResponses[i];
 			if( proposal_response.response && proposal_response.response.status === 200) {
 				t.pass('transaction proposal has response status of good');
-				one_good = chain.verifyProposalResponse(proposal_response);
+				one_good = channel.verifyProposalResponse(proposal_response);
 				if(one_good) {
 					t.pass(' transaction proposal signature and endorser are valid');
 				}
@@ -578,7 +578,7 @@ function invokeChaincode(userOrg, version, t){
 		if (all_good) {
 			// check all the read/write sets to see if the same, verify that each peer
 			// got the same results on the proposal
-			all_good = chain.compareProposalResponseResults(proposalResponses);
+			all_good = channel.compareProposalResponseResults(proposalResponses);
 			t.pass('compareProposalResponseResults exection did not throw an error');
 			if(all_good){
 				t.pass(' All proposals have a matching read/writes sets');
@@ -630,7 +630,7 @@ function invokeChaincode(userOrg, version, t){
 				eventPromises.push(txPromise);
 			});
 
-			var sendPromise = chain.sendTransaction(request);
+			var sendPromise = channel.sendTransaction(request);
 			return Promise.all([sendPromise].concat(eventPromises))
 			.then((results) => {
 
@@ -685,7 +685,7 @@ function queryChaincode(org, version, value, t, transientMap) {
 	// than the one that submitted the "move" transaction, although either org
 	// should work properly
 	var client = new Client();
-	var chain = client.newChain(channel_name);
+	var channel = client.newChannel(channel_name);
 
 	var orgName = ORGS[org].name;
 	var cryptoSuite = client.newCryptoSuite();
@@ -693,7 +693,7 @@ function queryChaincode(org, version, value, t, transientMap) {
 	client.setCryptoSuite(cryptoSuite);
 
 	var targets = [];
-	// set up the chain to use each org's 'peer1' for
+	// set up the channel to use each org's 'peer1' for
 	// both requests and events
 	for (let key in ORGS) {
 		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
@@ -704,7 +704,7 @@ function queryChaincode(org, version, value, t, transientMap) {
 					pem: Buffer.from(data).toString(),
 					'ssl-target-name-override': ORGS[key].peer1['server-hostname']
 				});
-			chain.addPeer(peer);
+			channel.addPeer(peer);
 		}
 	}
 
@@ -721,7 +721,6 @@ function queryChaincode(org, version, value, t, transientMap) {
 		// send query
 		var request = {
 			chaincodeId : e2e.chaincodeId,
-			chaincodeVersion : version,
 			txId: tx_id,
 			fcn: 'invoke',
 			args: ['query','b']
@@ -732,7 +731,7 @@ function queryChaincode(org, version, value, t, transientMap) {
 			request.args = ['testTransient', ''];
 		}
 
-		return chain.queryByChaincode(request);
+		return channel.queryByChaincode(request);
 	},
 	(err) => {
 		t.comment('Failed to get submitter \'admin\'');

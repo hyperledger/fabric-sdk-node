@@ -39,7 +39,7 @@ var logger = utils.getLogger('Peer.js');
  * attach transaction event listeners to the event stream.
  *
  * It should be noted that Peer event streams function at the Peer level and not at the
- * chain and chaincode levels.
+ * channel and chaincode levels.
  *
  * @class
  */

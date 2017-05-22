@@ -30,7 +30,7 @@ var BlockDecoder = require('./BlockDecoder.js');
 var TransactionID = require('./TransactionID.js');
 var settle = require('promise-settle');
 var grpc = require('grpc');
-var logger = utils.getLogger('Chain.js');
+var logger = utils.getLogger('Channel.js');
 var hashPrimitives = require('./hash.js');
 var MSPManager = require('./msp/msp-manager.js');
 var Policy = require('./Policy.js');
@@ -58,21 +58,21 @@ const ImplicitMetaPolicy_Rule = {0: 'ANY', 1:'ALL', 2:'MAJORITY'};
 var Long = require('long');
 
 /**
- * The class representing a chain with which the client SDK interacts.
+ * The class representing a channel with which the client SDK interacts.
  *
- * The “Chain” object captures settings for a channel, which is created by
+ * The “Channel” object captures settings for a channel, which is created by
  * the orderers to isolate transactions delivery to peers participating on channel.
- * A chain must be initialized after it has been configured with the list of peers
+ * A channel must be initialized after it has been configured with the list of peers
  * and orderers. The initialization sends a get configuration block request to the
  * primary orderer to retrieve the configuration settings for this channel.
  *
  * @class
  * @tutorial app-overview
  */
-var Chain = class {
+var Channel = class {
 
 	/**
-	 * @param {string} name to identify different chain instances. The naming of chain instances
+	 * @param {string} name to identify different channel instances. The naming of channel instances
 	 * is enforced by the ordering service and must be unique within the blockchain network
 	 * @param {Client} clientContext An instance of {@link Client} that provides operational context
 	 * such as submitting User etc.
@@ -80,13 +80,13 @@ var Chain = class {
 	constructor(name, clientContext) {
 		// name is required
 		if (typeof name === 'undefined' || !name) {
-			logger.error('Failed to create Chain. Missing requirement "name" parameter.');
-			throw new Error('Failed to create Chain. Missing requirement "name" parameter.');
+			logger.error('Failed to create Channel. Missing requirement "name" parameter.');
+			throw new Error('Failed to create Channel. Missing requirement "name" parameter.');
 		}
 
 		if (typeof clientContext === 'undefined' || !clientContext) {
-			logger.error('Failed to create Chain. Missing requirement "clientContext" parameter.');
-			throw new Error('Failed to create Chain. Missing requirement "clientContext" parameter.');
+			logger.error('Failed to create Channel. Missing requirement "clientContext" parameter.');
+			throw new Error('Failed to create Channel. Missing requirement "clientContext" parameter.');
 		}
 
 		this._name = name;
@@ -105,7 +105,7 @@ var Chain = class {
 		this._msp_manager = new MSPManager();
 
 		//to do update logger
-		logger.debug('Constructed Chain instance: name - %s, ' +
+		logger.debug('Constructed Channel instance: name - %s, ' +
 		    'securityEnabled: %s, ' +
 		    'network mode: %s',
 			this._name,
@@ -114,7 +114,7 @@ var Chain = class {
 	}
 
 	/**
-	 * Retrieve the configuration from the primary orderer and initializes this chain (channel)
+	 * Retrieve the configuration from the primary orderer and initializes this channel
 	 * with those values. Optionally a configuration may be passed in to initialize this channel
 	 * without making the call to the orderer.
 	 * @param {byte[]} config_update- Optional - A serialized form of the protobuf configuration update
@@ -144,8 +144,8 @@ var Chain = class {
 	}
 
 	/**
-	 * Get the chain name.
-	 * @returns {string} The name of the chain.
+	 * Get the channel name.
+	 * @returns {string} The name of the channel.
 	 */
 	getName() {
 		return this._name;
@@ -194,7 +194,7 @@ var Chain = class {
 	}
 
 	/**
-	 * Add peer endpoint to chain.
+	 * Add peer endpoint to channel.
 	 * @param {Peer} peer An instance of the Peer class that has been initialized with URL,
 	 * TLS certificate, and enrollment certificate.
 	 * @throws {Error} if the peer with that url already exists.
@@ -214,7 +214,7 @@ var Chain = class {
 	}
 
 	/**
-	 * Remove peer endpoint from chain.
+	 * Remove peer endpoint from channel.
 	 * @param {Peer} peer An instance of the Peer class.
 	 */
 	removePeer(peer) {
@@ -229,8 +229,8 @@ var Chain = class {
 	}
 
 	/**
-	 * Get peers of a chain from local information.
-	 * @returns {Peer[]} The peer list on the chain.
+	 * Get peers of a channel from local information.
+	 * @returns {Peer[]} The peer list on the channel.
 	 */
 	getPeers() {
 		logger.debug('getPeers - list size: %s.', this._peers.length);
@@ -240,7 +240,7 @@ var Chain = class {
 	/**
 	 * Set the primary peer
 	 * The peer to use for doing queries.
-	 * Peer must be a peer on this chain's peer list.
+	 * Peer must be a peer on this channel's peer list.
 	 * Default: When no primary peer has been set the first peer
 	 * on the list will be used.
 	 * @param {Peer} peer An instance of the Peer class.
@@ -255,7 +255,7 @@ var Chain = class {
 				}
 			}
 		}
-		throw new Error('The primary peer must be on this chain\'s peer list');
+		throw new Error('The primary peer must be on this channel\'s peer list');
 	}
 
 	/**
@@ -277,10 +277,10 @@ var Chain = class {
 	}
 
 	/**
-	 * Add orderer endpoint to a chain object, this is a local-only operation.
-	 * A chain instance may choose to use a single orderer node, which will broadcast
+	 * Add orderer endpoint to a channel object, this is a local-only operation.
+	 * A channel instance may choose to use a single orderer node, which will broadcast
 	 * requests to the rest of the orderer network. Or if the application does not trust
-	 * the orderer nodes, it can choose to use more than one by adding them to the chain instance.
+	 * the orderer nodes, it can choose to use more than one by adding them to the channel instance.
 	 * All APIs concerning the orderer will broadcast to all orderers simultaneously.
 	 * @param {Orderer} orderer An instance of the Orderer class.
 	 * @throws {Error} if the orderer with that url already exists.
@@ -300,7 +300,7 @@ var Chain = class {
 	}
 
 	/**
-	 * Remove orderer endpoint from a chain object, this is a local-only operation.
+	 * Remove orderer endpoint from a channel object, this is a local-only operation.
 	 * @param {Orderer} orderer An instance of the Orderer class.
 	 */
 	removeOrderer(orderer) {
@@ -315,7 +315,7 @@ var Chain = class {
 	}
 
 	/**
-	 * Get orderers of a chain.
+	 * Get orderers of a channel.
 	 */
 	getOrderers() {
 		return this._orderers;
@@ -444,7 +444,7 @@ var Chain = class {
 
 		userContext = this._clientContext.getUserContext();
 
-		// now build the seek info , will be used once the chain is created
+		// now build the seek info, will be used once the channel is created
 		// to get the genesis block back
 		//   build start
 		var seekSpecifiedStart = new _abProto.SeekSpecified();
@@ -465,14 +465,14 @@ var Chain = class {
 		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
 		// build the header for use with the seekInfo payload
-		var seekInfoHeader = Chain._buildChannelHeader(
+		var seekInfoHeader = Channel._buildChannelHeader(
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			self._name,
 			request.txId.getTransactionID(),
 			self._initial_epoch
 		);
 
-		var seekHeader = Chain._buildHeader(userContext.getIdentity(), seekInfoHeader, request.txId.getNonce());
+		var seekHeader = Channel._buildHeader(userContext.getIdentity(), seekInfoHeader, request.txId.getNonce());
 		var seekPayload = new _commonProto.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
@@ -549,7 +549,7 @@ var Chain = class {
 		chaincodeSpec.setChaincodeId(chaincodeID);
 		chaincodeSpec.setInput(chaincodeInput);
 
-		var channelHeader = Chain._buildChannelHeader(
+		var channelHeader = Channel._buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			'',
 			request.txId.getTransactionID(),
@@ -557,11 +557,11 @@ var Chain = class {
 			Constants.CSCC
 		);
 
-		var header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
-		var proposal = Chain._buildProposal(chaincodeSpec, header);
-		var signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
+		var header = Channel._buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
+		var proposal = Channel._buildProposal(chaincodeSpec, header);
+		var signed_proposal = Channel._signProposal(userContext.getSigningIdentity(), proposal);
 
-		return Chain._sendPeersProposal(request.targets, signed_proposal)
+		return Channel._sendPeersProposal(request.targets, signed_proposal)
 		.then(
 			function(responses) {
 				return Promise.resolve(responses);
@@ -575,7 +575,7 @@ var Chain = class {
 	}
 
 	/**
-	 * Queries for the current config block for this chain(channel).
+	 * Queries for the current config block for this channel.
 	 * This transaction will be made to the orderer.
 	 * @returns {ConfigEnvelope} Object containing the configuration items.
 	 * @see /protos/orderer/ab.proto
@@ -607,14 +607,14 @@ var Chain = class {
 		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
 		// build the header for use with the seekInfo payload
-		var seekInfoHeader = Chain._buildChannelHeader(
+		var seekInfoHeader = Channel._buildChannelHeader(
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			self._name,
 			txId.getTransactionID(),
 			self._initial_epoch
 		);
 
-		var seekHeader = Chain._buildHeader(userContext.getIdentity(), seekInfoHeader, txId.getNonce());
+		var seekHeader = Channel._buildHeader(userContext.getIdentity(), seekInfoHeader, txId.getNonce());
 		var seekPayload = new _commonProto.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
@@ -668,17 +668,17 @@ var Chain = class {
 				seekInfo.setStart(seekStart);
 				seekInfo.setStop(seekStop);
 				seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
-				//logger.debug('initializeChain - seekInfo ::' + JSON.stringify(seekInfo));
+				//logger.debug('initializeChannel - seekInfo ::' + JSON.stringify(seekInfo));
 
 				// build the header for use with the seekInfo payload
-				var seekInfoHeader = Chain._buildChannelHeader(
+				var seekInfoHeader = Channel._buildChannelHeader(
 					_commonProto.HeaderType.DELIVER_SEEK_INFO,
 					self._name,
 					txId.getTransactionID(),
 					self._initial_epoch
 				);
 
-				var seekHeader = Chain._buildHeader(userContext.getIdentity(), seekInfoHeader, txId.getNonce());
+				var seekHeader = Channel._buildHeader(userContext.getIdentity(), seekInfoHeader, txId.getNonce());
 				var seekPayload = new _commonProto.Payload();
 				seekPayload.setHeader(seekHeader);
 				seekPayload.setData(seekInfo.toBuffer());
@@ -726,7 +726,7 @@ var Chain = class {
 	}
 
 	/*
-	 * Utility method to load this chain with configuration information
+	 * Utility method to load this channel with configuration information
 	 * from an Envelope that contains a Configuration
 	 * @param {byte[]} the envelope with the configuration update items
 	 * @see /protos/common/configtx.proto
@@ -772,7 +772,7 @@ var Chain = class {
 	}
 
 	/*
-	 * Utility method to load this chain with configuration information
+	 * Utility method to load this channel with configuration information
 	 * from a Configuration block
 	 * @param {ConfigEnvelope} the envelope with the configuration items
 	 * @see /protos/common/configtx.proto
@@ -799,8 +799,8 @@ var Chain = class {
 	}
 
 	/**
-	 * Get chain status to see if the underlying channel has been terminated,
-	 * making it a read-only chain, where information (transactions and states)
+	 * Get channel status to see if the underlying channel has been terminated,
+	 * making it a read-only channel, where information (transactions and states)
 	 * can be queried but no new transactions can be submitted.
 	 * @returns {boolean} Is read-only, true or not.
 	 */
@@ -809,7 +809,7 @@ var Chain = class {
 	}
 
 	/**
-	 * Queries for various useful information on the state of the Chain
+	 * Queries for various useful information on the state of the Channel
 	 * (height, known peers).
 	 * This query will be made to the primary peer.
 	 * @returns {object} With height, currently the only useful info.
@@ -849,11 +849,11 @@ var Chain = class {
 					// no idea what we have, lets fail it and send it back
 					return Promise.reject(response);
 				}
-				return Promise.reject(new Error('Payload results are missing from the query chain info'));
+				return Promise.reject(new Error('Payload results are missing from the query channel info'));
 			}
 		).catch(
 			function(err) {
-				logger.error('Failed Query chain info. Error: %s', err.stack ? err.stack : err);
+				logger.error('Failed Query channel info. Error: %s', err.stack ? err.stack : err);
 				return Promise.reject(err);
 			}
 		);
@@ -1182,13 +1182,13 @@ var Chain = class {
 		// Verify that a Peer has been added
 		if (peers.length < 1) {
 			errorMsg = 'Missing peer objects in Instantiate proposal';
-			logger.error('Chain.sendInstantiateProposal error '+ errorMsg);
+			logger.error('Channel.sendInstantiateProposal error '+ errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
 
 		//validate the incoming request
-		if(!errorMsg) errorMsg = Chain._checkProposalRequest(request);
-		if(!errorMsg) errorMsg = Chain._checkInstallRequest(request);
+		if(!errorMsg) errorMsg = Channel._checkProposalRequest(request);
+		if(!errorMsg) errorMsg = Channel._checkInstallRequest(request);
 		if(!errorMsg) errorMsg = _checkInstantiateRequest(request);
 
 		if(errorMsg) {
@@ -1210,7 +1210,7 @@ var Chain = class {
 			args.push(Buffer.from(request.args[i], 'utf8'));
 
 		let ccSpec = {
-			type: Chain._translateCCType(request.chaincodeType),
+			type: Channel._translateCCType(request.chaincodeType),
 			chaincode_id: {
 				name: request.chaincodeId,
 				path: request.chaincodePath,
@@ -1242,18 +1242,18 @@ var Chain = class {
 			}
 		};
 
-		var channelHeader = Chain._buildChannelHeader(
+		var channelHeader = Channel._buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			self._name,
 			request.txId.getTransactionID(),
 			null,
 			Constants.LSCC
 		);
-		header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
-		proposal = Chain._buildProposal(lcccSpec, header, request.transientMap);
-		let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
+		header = Channel._buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
+		proposal = Channel._buildProposal(lcccSpec, header, request.transientMap);
+		let signed_proposal = Channel._signProposal(userContext.getSigningIdentity(), proposal);
 
-		return Chain._sendPeersProposal(peers, signed_proposal)
+		return Channel._sendPeersProposal(peers, signed_proposal)
 		.then(
 			function(responses) {
 				return [responses, proposal, header];
@@ -1289,12 +1289,12 @@ var Chain = class {
 			logger.debug('sendTransactionProposal - request does not have targets using this channels endorsing peers');
 			request.targets = this.getPeers();
 		}
-		return Chain.sendTransactionProposal(request, this._name, this._clientContext);
+		return Channel.sendTransactionProposal(request, this._name, this._clientContext);
 	}
 
 	/*
 	 * Internal static method to allow transaction proposals to be called without
-	 * creating a new chain
+	 * creating a new channel
 	 */
 	static sendTransactionProposal(request, channelId, clientContext) {
 		// Verify that a Peer has been added
@@ -1304,7 +1304,7 @@ var Chain = class {
 		if (request && !request.args) {
 			errorMsg = 'Missing "args" in Transaction proposal request';
 		} else {
-			errorMsg = Chain._checkProposalRequest(request);
+			errorMsg = Channel._checkProposalRequest(request);
 		}
 
 		if (!request.targets || request.targets.length < 1) {
@@ -1347,18 +1347,18 @@ var Chain = class {
 
 		var proposal, header;
 		var userContext = clientContext.getUserContext();
-		var channelHeader = Chain._buildChannelHeader(
+		var channelHeader = Channel._buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			channelId,
 			request.txId.getTransactionID(),
 			null,
 			request.chaincodeId
 			);
-		header = Chain._buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
-		proposal = Chain._buildProposal(invokeSpec, header, request.transientMap);
-		let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
+		header = Channel._buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
+		proposal = Channel._buildProposal(invokeSpec, header, request.transientMap);
+		let signed_proposal = Channel._signProposal(userContext.getSigningIdentity(), proposal);
 
-		return Chain._sendPeersProposal(request.targets, signed_proposal)
+		return Channel._sendPeersProposal(request.targets, signed_proposal)
 		.then(
 			function(responses) {
 				return Promise.resolve([responses, proposal, header]);
@@ -1387,7 +1387,7 @@ var Chain = class {
 	 * @see /protos/orderer/ab.proto
 	 */
 	sendTransaction(request) {
-		logger.debug('sendTransaction - start :: chain %s',this);
+		logger.debug('sendTransaction - start :: channel %s',this);
 		var errorMsg = null;
 
 		if (request) {
@@ -1512,7 +1512,7 @@ var Chain = class {
 		var trans_request = {
 			targets : request.targets,
 			chaincodeId : request.chaincodeId,
-			chainId : request.chainId,
+			chainId : request.channelId,
 			fcn : request.fcn,
 			args : request.args,
 			transientMap :  request.transientMap,
@@ -1712,7 +1712,7 @@ var Chain = class {
 					}
 				).catch(
 					function(err) {
-						logger.error('Chain-sendPeersProposal - Promise is rejected: %s',err.stack ? err.stack : err);
+						logger.error('Channel-sendPeersProposal - Promise is rejected: %s',err.stack ? err.stack : err);
 						return reject(err);
 					}
 				);
@@ -1726,10 +1726,10 @@ var Chain = class {
 		  .then(function (results) {
 			results.forEach(function (result) {
 			  if (result.isFulfilled()) {
-				logger.debug('Chain-sendPeersProposal - Promise is fulfilled: '+result.value());
+				logger.debug('Channel-sendPeersProposal - Promise is fulfilled: '+result.value());
 				responses.push(result.value());
 			  } else {
-				logger.debug('Chain-sendPeersProposal - Promise is rejected: '+result.reason());
+				logger.debug('Channel-sendPeersProposal - Promise is rejected: '+result.reason());
 				if(result.reason() instanceof Error) {
 					responses.push(result.reason());
 				}
@@ -1796,10 +1796,10 @@ var Chain = class {
 		return errorMsg;
 	}
 
-	//utility method to build a common chain header
-	static _buildChannelHeader(type, chain_id, tx_id, epoch, chaincode_id, time_stamp) {
-		logger.debug('buildChannelHeader - type %s chain_id %s tx_id %d epoch % chaincode_id %s',
-				type, chain_id, tx_id, epoch, chaincode_id);
+	//utility method to build a common channel header
+	static _buildChannelHeader(type, channel_id, tx_id, epoch, chaincode_id, time_stamp) {
+		logger.debug('buildChannelHeader - type %s channel_id %s tx_id %d epoch % chaincode_id %s',
+				type, channel_id, tx_id, epoch, chaincode_id);
 		var channelHeader = new _commonProto.ChannelHeader();
 		channelHeader.setType(type); // int32
 		channelHeader.setVersion(1); // int32
@@ -1807,7 +1807,7 @@ var Chain = class {
 			time_stamp = this._buildCurrentTimestamp();
 		}
 		channelHeader.setTimestamp(time_stamp); // google.protobuf.Timestamp
-		channelHeader.setChannelId(chain_id); //string
+		channelHeader.setChannelId(channel_id); //string
 		channelHeader.setTxId(tx_id.toString()); //string
 		if(epoch) {
 			channelHeader.setEpoch(epoch); // uint64
@@ -1922,7 +1922,7 @@ function _checkInstantiateRequest(request) {
 	var errorMsg = null;
 
 	if (request) {
-		var type = Chain._translateCCType(request.chaincodeType);
+		var type = Channel._translateCCType(request.chaincodeType);
 		// FIXME: GOLANG platform on the peer has a bug that requires chaincodePath
 		// during instantiate.  Police this for now until the peer is fixed.
 		if(type === _ccProto.ChaincodeSpec.Type.GOLANG && !request.chaincodePath) {
@@ -2179,4 +2179,4 @@ function decodeSignaturePolicy(identities) {
 	return results;
 }
 
-module.exports = Chain;
+module.exports = Channel;

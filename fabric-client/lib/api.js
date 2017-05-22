@@ -27,7 +27,7 @@ var utils = require('./utils.js');
 var Remote = require('./Remote');
 
 /**
- * Abstract class for a Key-Value store. The Chain class uses this store
+ * Abstract class for a Key-Value store. The Channel class uses this store
  * to save sensitive information such as authenticated user's private keys,
  * certificates, etc.
  *

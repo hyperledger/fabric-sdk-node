@@ -40,7 +40,7 @@ var e2e = testUtil.END2END;
 test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 	// test grpc message size limit
 	var client = new hfc();
-	var chain = client.newChain(e2e.channel);
+	var channel = client.newChannel(e2e.channel);
 	var ORGS = hfc.getConfigSetting('test-network');
 	var userOrg = 'org1';
 	var orgName = ORGS[userOrg].name;
@@ -116,7 +116,7 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 			}
 		);
 
-		return chain.sendTransactionProposal(buildEchoRequest(client, peer));
+		return channel.sendTransactionProposal(buildEchoRequest(client, peer));
 
 	}, (err) => {
 
@@ -146,7 +146,7 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 			}
 		);
 
-		return chain.sendTransactionProposal(buildEchoRequest(client, peer));
+		return channel.sendTransactionProposal(buildEchoRequest(client, peer));
 	}).then((response) => {
 		if (response[0] && response[0][0] && response[0][0].response && response[0][0].response.status === 200)
 			t.pass('Successfully tested grpc receive message limit');

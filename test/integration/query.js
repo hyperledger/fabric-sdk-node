@@ -40,8 +40,8 @@ var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 
 var client = new hfc();
-var chain_id = testUtil.END2END.channel;
-var chain = client.newChain(chain_id);
+var channel_id = testUtil.END2END.channel;
+var channel = client.newChannel(channel_id);
 
 hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
@@ -67,7 +67,7 @@ if (querys.length > 0 ) {
 	// Parameters detected; are these query parameters or gulp parameters?
 	if ((querys.indexOf('GetBlockByNumber') > -1) ||
 		(querys.indexOf('GetTransactionByID') > -1) ||
-		(querys.indexOf('GetChainInfo') > -1) ||
+		(querys.indexOf('GetChannelInfo') > -1) ||
 		(querys.indexOf('GetBlockByHash') > -1) ||
 		(querys.indexOf('GetInstalledChaincodes') > -1) ||
 		(querys.indexOf('GetInstantiatedChaincodes') > -1) ||
@@ -82,7 +82,7 @@ var caRootsPath = ORGS.orderer.tls_cacerts;
 let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 let caroots = Buffer.from(data).toString();
 
-chain.addOrderer(
+channel.addOrderer(
 	new Orderer(
 		ORGS.orderer.url,
 		{
@@ -106,10 +106,10 @@ var peer1 = new Peer(
 		'ssl-target-name-override': ORGS['org2'].peer1['server-hostname']
 	});
 
-chain.addPeer(peer0);
-chain.addPeer(peer1);
+channel.addPeer(peer0);
+channel.addPeer(peer1);
 
-test('  ---->>>>> Query chain working <<<<<-----', function(t) {
+test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
 	var cryptoSuite = client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
@@ -124,31 +124,31 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
-		// read the config block from the orderer for the chain
+		// read the config block from the orderer for the channel
 		// and initialize the verify MSPs based on the participating
 		// organizations
-		return chain.initialize();
+		return channel.initialize();
 	}).then((success) => {
-		t.pass('Successfully initialized chain');
+		t.pass('Successfully initialized channel');
 		// use default primary peer
 		// send query
-		return chain.queryBlock(0);
+		return channel.queryBlock(0);
 	}).then((block) => {
-		logger.info(' Chain getBlock() returned block %j',block);
-		logger.info(' Chain getBlock() returned block number=%s',block.header.number);
+		logger.info(' Channel getBlock() returned block %j',block);
+		logger.info(' Channel getBlock() returned block number=%s',block.header.number);
 		t.equal(block.header.number.toString(),'0','checking query results are correct that we got zero block back');
 		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Orderer.groups.OrdererMSP.values.MSP.value.config.name,'OrdererMSP','checking query results are correct that we got the correct orderer MSP name');
 		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.groups.Org2MSP.policies.Writers.policy.type,'SIGNATURE','checking query results are correct that we got the correct policy type');
 		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.policies.Writers.policy.policy.rule,'ANY','checking query results are correct that we got the correct policy rule');
 		t.equal(block.data.data[0].payload.data.config.channel_group.policies.Admins.mod_policy,'Admins','checking query results are correct that we got the correct mod policy name');
 		logger.info('%j',block);
-		return chain.queryBlock(1);
+		return channel.queryBlock(1);
 	}).then((block) => {
-		logger.info(' Chain getBlock() returned block number=%s',block.header.number);
+		logger.info(' Channel getBlock() returned block number=%s',block.header.number);
 		t.equal(block.header.number.toString(),'1','checking query results are correct that we got a transaction block back');
 		t.equal(block.data.data[0].payload.data.actions[0].payload.action.endorsements[0].endorser.Mspid,'Org1MSP','checking query results are correct that we got a transaction block back with correct endorsement MSP id');
 		logger.info('%j',block);
-		chain.setPrimaryPeer(peer0);
+		channel.setPrimaryPeer(peer0);
 
 		tx_id = utils.getConfigSetting('E2E_TX_ID', 'notfound');
 		logger.info('getConfigSetting("E2E_TX_ID") = %s', tx_id);
@@ -158,7 +158,7 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 		} else {
 			t.pass('Got tx_id from ConfigSetting "E2E_TX_ID"');
 			// send query
-			return chain.queryTransaction(tx_id); //assumes the end-to-end has run first
+			return channel.queryTransaction(tx_id); //assumes the end-to-end has run first
 		}
 	}).then((processed_transaction) => {
 		logger.info(' processed_transaction :: %j',processed_transaction);
@@ -188,29 +188,29 @@ test('  ---->>>>> Query chain working <<<<<-----', function(t) {
 
 		// the "primary peer" must be a peer in the same org as the app
 		// which in this case is "peer0"
-		chain.setPrimaryPeer(peer0);
+		channel.setPrimaryPeer(peer0);
 		// send query
-		return chain.queryInfo();
+		return channel.queryInfo();
 	}).then((blockchainInfo) => {
 		t.pass('got back blockchain info ');
-		logger.info(' Chain queryInfo() returned block height='+blockchainInfo.height);
-		logger.info(' Chain queryInfo() returned block previousBlockHash='+blockchainInfo.previousBlockHash);
-		logger.info(' Chain queryInfo() returned block currentBlockHash='+blockchainInfo.currentBlockHash);
+		logger.info(' Channel queryInfo() returned block height='+blockchainInfo.height);
+		logger.info(' Channel queryInfo() returned block previousBlockHash='+blockchainInfo.previousBlockHash);
+		logger.info(' Channel queryInfo() returned block currentBlockHash='+blockchainInfo.currentBlockHash);
 		var block_hash = blockchainInfo.currentBlockHash;
-		chain.setPrimaryPeer(peer0);
+		channel.setPrimaryPeer(peer0);
 		// send query
-		return chain.queryBlockByHash(block_hash);
+		return channel.queryBlockByHash(block_hash);
 	}).then((block) => {
-		logger.info(' Chain queryBlockByHash() returned block number=%s',block.header.number);
+		logger.info(' Channel queryBlockByHash() returned block number=%s',block.header.number);
 		t.pass('got back block number '+ block.header.number);
 		t.end();
 	}).catch((err) => {
-		t.comment('Failed \'Query chain working\' with error:');
+		t.comment('Failed \'Query channel working\' with error:');
 		throw new Error(err.stack ? err.stack : err);
 	});
 });
 
-test('  ---->>>>> Query chain failing: GetBlockByNumber <<<<<-----', function(t) {
+test('  ---->>>>> Query channel failing: GetBlockByNumber <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetBlockByNumber') >= 0) {
 		logger.info('Executing GetBlockByNumber');
 
@@ -226,7 +226,7 @@ test('  ---->>>>> Query chain failing: GetBlockByNumber <<<<<-----', function(t)
 				t.pass('Successfully enrolled user \'admin\'');
 				the_user = admin;
 				// send query
-				return chain.queryBlock(9999999); //should not find it
+				return channel.queryBlock(9999999); //should not find it
 			},
 			function(err) {
 				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
@@ -250,7 +250,7 @@ test('  ---->>>>> Query chain failing: GetBlockByNumber <<<<<-----', function(t)
 	} else t.end();
 });
 
-test('  ---->>>>> Query chain failing: GetTransactionByID <<<<<-----', function(t) {
+test('  ---->>>>> Query channel failing: GetTransactionByID <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetTransactionByID') >= 0) {
 		return hfc.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
@@ -264,7 +264,7 @@ test('  ---->>>>> Query chain failing: GetTransactionByID <<<<<-----', function(
 				t.pass('Successfully enrolled user \'admin\'');
 				if(admin) the_user = admin;
 				// send query
-				return chain.queryTransaction('99999'); //assumes the end-to-end has run first
+				return channel.queryTransaction('99999'); //assumes the end-to-end has run first
 			},
 			function(err) {
 				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
@@ -288,8 +288,8 @@ test('  ---->>>>> Query chain failing: GetTransactionByID <<<<<-----', function(
 	} else t.end();
 });
 
-test('  ---->>>>> Query chain failing: GetChainInfo <<<<<-----', function(t) {
-	if (!queryParameters || querys.indexOf('GetChainInfo') >= 0) {
+test('  ---->>>>> Query channel failing: GetChannelInfo <<<<<-----', function(t) {
+	if (!queryParameters || querys.indexOf('GetChannelInfo') >= 0) {
 
 		return hfc.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
@@ -303,8 +303,8 @@ test('  ---->>>>> Query chain failing: GetChainInfo <<<<<-----', function(t) {
 				t.pass('Successfully enrolled user \'admin\'');
 				if(admin) the_user = admin;
 				// send query
-				chain._name = 'dummy';
-				return chain.queryInfo();
+				channel._name = 'dummy';
+				return channel.queryInfo();
 			},
 			function(err) {
 				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
@@ -312,11 +312,11 @@ test('  ---->>>>> Query chain failing: GetChainInfo <<<<<-----', function(t) {
 			}
 		).then(
 			function(response_payloads) {
-				t.fail('Should not have found chain info');
+				t.fail('Should not have found channel info');
 				t.end();
 			},
 			function(err) {
-				t.pass(util.format('Did not find chain info : %j', err));
+				t.pass(util.format('Did not find channel info : %j', err));
 				t.end();
 			}
 		).catch(
@@ -328,7 +328,7 @@ test('  ---->>>>> Query chain failing: GetChainInfo <<<<<-----', function(t) {
 	} else t.end();
 });
 
-test('  ---->>>>> Query chain failing: GetBlockByHash <<<<<-----', function(t) {
+test('  ---->>>>> Query channel failing: GetBlockByHash <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetBlockByHash') >= 0) {
 		return hfc.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
@@ -342,8 +342,8 @@ test('  ---->>>>> Query chain failing: GetBlockByHash <<<<<-----', function(t) {
 				t.pass('Successfully enrolled user \'admin\'');
 				if(admin) the_user = admin;
 				// send query
-				chain._name = chain_id; //put it back
-				return chain.queryBlockByHash(Buffer.from('dummy'));
+				channel._name = channel_id; //put it back
+				return channel.queryBlockByHash(Buffer.from('dummy'));
 			},
 			function(err) {
 				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
@@ -436,7 +436,7 @@ test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t)
 			function(admin) {
 				t.pass('Successfully enrolled user \'admin\'');
 				// send query
-				return chain.queryInstantiatedChaincodes();
+				return channel.queryInstantiatedChaincodes();
 			},
 			function(err) {
 				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
@@ -504,7 +504,7 @@ test('  ---->>>>> Query Channels working <<<<<-----', function(t) {
 				for (let i=0; i<response.channels.length; i++) {
 					t.comment('channel id: '+response.channels[i].channel_id);
 				}
-				if (response.channels[0].channel_id === chain_id) {
+				if (response.channels[0].channel_id === channel_id) {
 					t.pass('queryChannels matches e2e');
 					t.end();
 				} else {

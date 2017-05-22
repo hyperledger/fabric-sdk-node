@@ -49,7 +49,7 @@ test('\n\n** Test chaincode install using chaincodePath to create chaincodePacka
 	var params = {
 		org: 'org1',
 		testDesc: 'using chaincodePath',
-		chainName: 'testInstall',
+		channelName: 'testInstall',
 		chaincodeId: 'install',
 		chaincodePath: testUtil.CHAINCODE_PATH,
 		chaincodeVersion: testUtil.getUniqueVersion(),
@@ -77,7 +77,7 @@ test('\n\n** Test chaincode install using chaincodePath to create chaincodePacka
 		t.comment('#########################################');
 		t.comment('install same chaincode again, should fail');
 		t.comment('#########################################');
-		params.chainName = params.chainName+'0';
+		params.channelName = params.channelName+'0';
 		params.testDesc = params.testDesc+'0';
 		installChaincode(params, t)
 		.then((info) => {
@@ -105,7 +105,7 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 	var params = {
 		org: 'org1',
 		testDesc: 'using chaincodePackage',
-		chainName: 'testInstallPackage',
+		channelName: 'testInstallPackage',
 		chaincodeId: 'install-package',
 		chaincodePath: testUtil.CHAINCODE_PATH+'_pkg',//not an existing path
 		chaincodeVersion: testUtil.getUniqueVersion()
@@ -137,7 +137,7 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 			t.comment('################################################');
 			t.comment('install same chaincodePackage again, should fail');
 			t.comment('################################################');
-			params.chainName = params.chainName+'0';
+			params.channelName = params.channelName+'0';
 			params.testDesc = params.testDesc+'0';
 			installChaincode(params, t)
 			.then((info) => {
@@ -167,13 +167,13 @@ function installChaincode(params, t) {
 	try {
 		var org = params.org;
 		var client = new hfc();
-		var chain = client.newChain(params.chainName);
+		var channel = client.newChannel(params.channelName);
 
 		var caRootsPath = ORGS.orderer.tls_cacerts;
 		let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 		let caroots = Buffer.from(data).toString();
 
-		chain.addOrderer(
+		channel.addOrderer(
 			client.newOrderer(
 				ORGS.orderer.url,
 				{
@@ -197,7 +197,7 @@ function installChaincode(params, t) {
 							'ssl-target-name-override': ORGS[org][key]['server-hostname']
 						});
 					targets.push(peer);
-					chain.addPeer(peer);
+					channel.addPeer(peer);
 				}
 			}
 		}

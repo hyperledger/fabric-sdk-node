@@ -31,7 +31,7 @@ var _mspPrProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/msp/msp
 var hfc = require('fabric-client');
 var testutil = require('./util.js');
 var Peer = require('fabric-client/lib/Peer.js');
-var Chain = require('fabric-client/lib/Chain.js');
+var Channel = require('fabric-client/lib/Channel.js');
 var Packager = require('fabric-client/lib/Packager.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var User = require('fabric-client/lib/User.js');
@@ -40,87 +40,87 @@ var MSPManager = require('fabric-client/lib/msp/msp-manager.js');
 var idModule = require('fabric-client/lib/msp/identity.js');
 var SigningIdentity = idModule.SigningIdentity;
 
-var _chain = null;
-var chainName = 'testChain';
+var _channel = null;
+var channelName = 'testChannel';
 var Client = hfc;
 var client = new Client();
 
 testutil.resetDefaults();
 var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('chain');
+var logger = utils.getLogger('channel');
 
-// Chain tests /////////////
-test('\n\n ** Chain - constructor test **\n\n', function (t) {
-	_chain = new Chain(chainName, client);
-	if (_chain.getName() === chainName)
-		t.pass('Chain constructor test: getName successful');
-	else t.fail('Chain constructor test: getName not successful');
+// Channel tests /////////////
+test('\n\n ** Channel - constructor test **\n\n', function (t) {
+	_channel = new Channel(channelName, client);
+	if (_channel.getName() === channelName)
+		t.pass('Channel constructor test: getName successful');
+	else t.fail('Channel constructor test: getName not successful');
 
 	t.throws(
 		function () {
-			_chain = new Chain(null, client);
+			_channel = new Channel(null, client);
 		},
-		/^Error: Failed to create Chain. Missing requirement "name" parameter./,
-		'Chain constructor tests: Missing name parameter'
+		/^Error: Failed to create Channel. Missing requirement "name" parameter./,
+		'Channel constructor tests: Missing name parameter'
 	);
 
 	t.throws(
 		function () {
-			_chain = new Chain(chainName, null);
+			_channel = new Channel(channelName, null);
 		},
-		/^Error: Failed to create Chain. Missing requirement "clientContext" parameter./,
-		'Chain constructor tests: Missing clientContext parameter'
+		/^Error: Failed to create Channel. Missing requirement "clientContext" parameter./,
+		'Channel constructor tests: Missing clientContext parameter'
 	);
 
 	t.end();
 });
 
-test('\n\n ** Chain - method tests **\n\n', function (t) {
+test('\n\n ** Channel - method tests **\n\n', function (t) {
 	t.doesNotThrow(
 		function () {
 			var orderer = new Orderer('grpc://somehost.com:1234');
-			_chain.addOrderer(orderer);
+			_channel.addOrderer(orderer);
 		},
 		null,
-		'checking the chain addOrderer()'
+		'checking the channel addOrderer()'
 	);
-	t.equal(_chain.getOrderers()[0].toString(), ' Orderer : {url:grpc://somehost.com:1234}', 'checking chain getOrderers()');
+	t.equal(_channel.getOrderers()[0].toString(), ' Orderer : {url:grpc://somehost.com:1234}', 'checking channel getOrderers()');
 	t.throws(
 		function () {
 			var orderer = new Orderer('grpc://somehost.com:1234');
-			_chain.addOrderer(orderer);
+			_channel.addOrderer(orderer);
 		},
 		/^DuplicateOrderer: Orderer with URL/,
-		'Chain tests: checking that orderer already exists.'
+		'Channel tests: checking that orderer already exists.'
 	);
-	t.equal(_chain.toString(), '{"name":"testChain","orderers":" Orderer : {url:grpc://somehost.com:1234}|"}', 'checking chain toString');
-	t.notEquals(_chain.getMSPManager(),null,'checking the chain getMSPManager()');
+	t.equal(_channel.toString(), '{"name":"testChannel","orderers":" Orderer : {url:grpc://somehost.com:1234}|"}', 'checking channel toString');
+	t.notEquals(_channel.getMSPManager(),null,'checking the channel getMSPManager()');
 	t.doesNotThrow(
 		function () {
 			var msp_manager = new MSPManager();
-			_chain.setMSPManager(msp_manager);
+			_channel.setMSPManager(msp_manager);
 		},
 		null,
-		'checking the chain setMSPManager()'
+		'checking the channel setMSPManager()'
 	);
-	t.notEquals(_chain.getOrganizations(),null,'checking the chain getOrganizations()');
+	t.notEquals(_channel.getOrganizations(),null,'checking the channel getOrganizations()');
 	t.end();
 });
 
-test('\n\n **  Chain query tests', function(t) {
+test('\n\n **  Channel query tests', function(t) {
 	var peer = new Peer('grpc://localhost:7051');
-	_chain.addPeer(peer);
+	_channel.addPeer(peer);
 	var test_peer = new Peer('grpc://localhost:7051');
 	t.throws(
 		function () {
-			_chain.setPrimaryPeer(test_peer);
+			_channel.setPrimaryPeer(test_peer);
 		},
-		/^Error: The primary peer must be on this chain\'s peer list/,
+		/^Error: The primary peer must be on this channel\'s peer list/,
 		'Not able to set a primary peer even if has the same addresss'
 	);
 	t.doesNotThrow(
 		function () {
-			_chain.setPrimaryPeer(peer);
+			_channel.setPrimaryPeer(peer);
 		},
 		null,
 		'Able to set a primary peer as long as same peer'
@@ -128,20 +128,20 @@ test('\n\n **  Chain query tests', function(t) {
 	test_peer = new Peer('grpc://localhost:7099');
 	t.throws(
 		function () {
-			_chain.setPrimaryPeer(test_peer);
+			_channel.setPrimaryPeer(test_peer);
 		},
-		/^Error: The primary peer must be on this chain\'s peer list/,
+		/^Error: The primary peer must be on this channel\'s peer list/,
 		'Not Able to set a primary peer when not on the list'
 	);
 	t.throws(
 		function () {
-			_chain.setPrimaryPeer();
+			_channel.setPrimaryPeer();
 		},
-		/^Error: The primary peer must be on this chain\'s peer list/,
+		/^Error: The primary peer must be on this channel\'s peer list/,
 		'Not Able to set a primary peer to a null peer'
 	);
 
-	_chain.queryBlockByHash()
+	_channel.queryBlockByHash()
 		.then(
 			function(results) {
 				t.fail('Error: Blockhash bytes are required');
@@ -151,7 +151,7 @@ test('\n\n **  Chain query tests', function(t) {
 				var errMessage = 'Error: Blockhash bytes are required';
 				if(err.toString() == errMessage) t.pass(errMessage);
 				else t.fail(errMessage);
-				return _chain.queryTransaction();
+				return _channel.queryTransaction();
 			}
 		).then(
 			function(results) {
@@ -160,7 +160,7 @@ test('\n\n **  Chain query tests', function(t) {
 			},
 			function(err) {
 				t.pass(err);
-				return _chain.queryBlock('a');
+				return _channel.queryBlock('a');
 			}
 		).then(
 			function(results) {
@@ -171,7 +171,7 @@ test('\n\n **  Chain query tests', function(t) {
 				var errMessage = 'Error: Block number must be a postive integer';
 				if(err.toString() == errMessage) t.pass(errMessage);
 				else t.fail(errMessage);
-				return _chain.queryBlock();
+				return _channel.queryBlock();
 			}
 		).then(
 			function(results) {
@@ -182,7 +182,7 @@ test('\n\n **  Chain query tests', function(t) {
 				var errMessage = 'Error: Block number must be a postive integer';
 				if(err.toString() == errMessage) t.pass(errMessage);
 				else t.fail(errMessage);
-				return _chain.queryBlock(-1);
+				return _channel.queryBlock(-1);
 			}
 		).then(
 			function(results) {
@@ -193,7 +193,7 @@ test('\n\n **  Chain query tests', function(t) {
 				var errMessage = 'Error: Block number must be a postive integer';
 				if(err.toString() == errMessage) t.pass(errMessage);
 				else t.fail(errMessage);
-				return _chain.queryBlock(10.5);
+				return _channel.queryBlock(10.5);
 			}
 		).then(
 			function(results) {
@@ -214,8 +214,8 @@ test('\n\n **  Chain query tests', function(t) {
 		);
 });
 
-test('\n\n ** Chain addPeer() duplicate tests **\n\n', function (t) {
-	var chain_duplicate = new Chain('chain_duplicate', client);
+test('\n\n ** Channel addPeer() duplicate tests **\n\n', function (t) {
+	var channel_duplicate = new Channel('channel_duplicate', client);
 	var peers = [
 		'grpc://localhost:7051',
 		'grpc://localhost:7052',
@@ -228,7 +228,7 @@ test('\n\n ** Chain addPeer() duplicate tests **\n\n', function (t) {
 	peers.forEach(function (peer) {
 		try {
 			var _peer = new Peer(peer);
-			chain_duplicate.addPeer(_peer);
+			channel_duplicate.addPeer(_peer);
 		}
 		catch (err) {
 			if (err.name != 'DuplicatePeer'){
@@ -241,19 +241,19 @@ test('\n\n ** Chain addPeer() duplicate tests **\n\n', function (t) {
 	});
 
 	//check to see we have the correct number of peers
-	if (chain_duplicate.getPeers().length == expected) {
-		t.pass('Duplicate peer not added to the chain(' + expected +
-		' expected | ' + chain_duplicate.getPeers().length + ' found)');
+	if (channel_duplicate.getPeers().length == expected) {
+		t.pass('Duplicate peer not added to the channel(' + expected +
+		' expected | ' + channel_duplicate.getPeers().length + ' found)');
 	}
 	else {
 		t.fail('Failed to detect duplicate peer (' + expected +
-		' expected | ' + chain_duplicate.getPeers().length + ' found)');
+		' expected | ' + channel_duplicate.getPeers().length + ' found)');
 	}
 	t.end();
 });
 
-test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
-	var c = new Chain('joinChannel', client);
+test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
+	var c = new Channel('joinChannel', client);
 	var orderer = new Orderer('grpc://localhost:7050');
 
 	var p1 = c.getGenesisBlock({}
@@ -325,7 +325,7 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 		}
 	).catch(
 		function (err) {
-			t.fail('Chain joinChannel() tests, Promise.all: ');
+			t.fail('Channel joinChannel() tests, Promise.all: ');
 			logger.error(err.stack ? err.stack : err);
 			t.end();
 		}
@@ -335,7 +335,7 @@ test('\n\n ** Chain joinChannel() tests **\n\n', function (t) {
 test('\n\n** Packager tests **\n\n', function(t) {
 	Packager.package('blah','',true)
 	.then((data) => {
-		t.equal(data, null, 'Chain.packageChaincode() should return null for dev mode');
+		t.equal(data, null, 'Channel.packageChaincode() should return null for dev mode');
 		return Packager.package(null,'',false);
 	}).then(() => {
 		t.fail('Packager.package() should have rejected a call that does not have chaincodePath parameter');
@@ -435,14 +435,14 @@ var CRAZY_SPEC = {
 	}
 };
 
-test('\n\n ** Chain _buildDefaultEndorsementPolicy() tests **\n\n', function (t) {
-	var c = new Chain('does not matter', client);
+test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (t) {
+	var c = new Channel('does not matter', client);
 
 	t.throws(
 		() => {
 			c._buildEndorsementPolicy();
 		},
-		/Verifying MSPs not found in the chain object, make sure "intialize\(\)" is called first/,
+		/Verifying MSPs not found in the channel object, make sure "intialize\(\)" is called first/,
 		'Checking that "initialize()" must be called before calling "instantiate()" that uses the endorsement policy'
 	);
 
@@ -471,7 +471,7 @@ test('\n\n ** Chain _buildDefaultEndorsementPolicy() tests **\n\n', function (t)
 			policy = c._buildEndorsementPolicy();
 		},
 		null,
-		'Checking that after initializing the chain with dummy msps and msp manager, _buildEndorsementPolicy() can be called without error'
+		'Checking that after initializing the channel with dummy msps and msp manager, _buildEndorsementPolicy() can be called without error'
 	);
 
 	t.equal(Buffer.isBuffer(policy), true, 'Checking default policy has an identities array');
@@ -619,8 +619,8 @@ test('\n\n ** Chain _buildDefaultEndorsementPolicy() tests **\n\n', function (t)
 	t.end();
 });
 
-test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
-	var c = new Chain('does not matter', client);
+test('\n\n ** Channel sendInstantiateProposal() tests **\n\n', function (t) {
+	var c = new Channel('does not matter', client);
 	var peer = new Peer('grpc://localhost:7051');
 	c.addPeer(peer);
 
@@ -668,7 +668,7 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah'
 	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on chain');
+		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on channel');
 	}).catch(function (err) {
 		var msg = 'Missing peer objects in Instantiate proposal';
 		if (err.message.indexOf(msg) >= 0) {
@@ -713,14 +713,14 @@ test('\n\n ** Chain sendInstantiateProposal() tests **\n\n', function (t) {
 		}
 	).catch(
 		function (err) {
-			t.fail('Chain sendInstantiateProposal() tests, Promise.all: '+err.stack ? err.stack : err);
+			t.fail('Channel sendInstantiateProposal() tests, Promise.all: '+err.stack ? err.stack : err);
 			t.end();
 		}
 	);
 });
 
-test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
-	var c = new Chain('does not matter', client);
+test('\n\n ** Channel sendTransactionProposal() tests **\n\n', function (t) {
+	var c = new Channel('does not matter', client);
 	var peer = new Peer('grpc://localhost:7051');
 	c.addPeer(peer);
 
@@ -760,7 +760,7 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 		args: ['a', '100', 'b', '200'],
 		txId: 'blah'
 	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on chain');
+		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on channel');
 	}).catch(function (err) {
 		var msg = 'Missing peer objects in Transaction proposal';
 		if (err.message.indexOf(msg) >= 0) {
@@ -802,13 +802,13 @@ test('\n\n ** Chain sendTransactionProposal() tests **\n\n', function (t) {
 		}
 	).catch(
 		function (err) {
-			t.fail('Chain sendTransactionProposal() tests, Promise.all: '+err.stack ? err.stack : err);
+			t.fail('Channel sendTransactionProposal() tests, Promise.all: '+err.stack ? err.stack : err);
 			t.end();
 		}
 	);
 });
 
-test('\n\n ** Chain queryByChaincode() tests **\n\n', function (t) {
+test('\n\n ** Channel queryByChaincode() tests **\n\n', function (t) {
 	var TEST_CERT_PEM = require('./user.js').TEST_CERT_PEM;
 	var member = new User('admin');
 
@@ -825,11 +825,11 @@ test('\n\n ** Chain queryByChaincode() tests **\n\n', function (t) {
 		return member.setEnrollment(key, TEST_CERT_PEM, 'DEFAULT');
 	}).then( function () {
 		client.setUserContext(member, true);
-		var chain = client.newChain('any chain goes');
+		var channel = client.newChannel('any channel goes');
 		var peer = client.newPeer('grpc://localhost:7051');
-		chain.addPeer(peer);
+		channel.addPeer(peer);
 
-		var p1 = chain.queryByChaincode({
+		var p1 = channel.queryByChaincode({
 			chaincodeId : 'blah',
 			fcn: 'invoke'
 		}).then(function () {
@@ -843,7 +843,7 @@ test('\n\n ** Chain queryByChaincode() tests **\n\n', function (t) {
 			}
 		});
 
-		var p3 = chain.queryByChaincode({
+		var p3 = channel.queryByChaincode({
 			fcn: 'init',
 			args: ['a', '100', 'b', '200']
 		}).then(function () {
@@ -856,13 +856,13 @@ test('\n\n ** Chain queryByChaincode() tests **\n\n', function (t) {
 			}
 		});
 
-		chain.removePeer(peer);
-		var p4 = chain.queryByChaincode({
+		channel.removePeer(peer);
+		var p4 = channel.queryByChaincode({
 			chaincodeId: 'blah',
 			fcn: 'init',
 			args: ['a', '100', 'b', '200']
 		}).then(function () {
-			t.fail('Should not have been able to resolve the promise because of missing "peers" on chain in queryByChaincode');
+			t.fail('Should not have been able to resolve the promise because of missing "peers" on channel in queryByChaincode');
 		}).catch(function (err) {
 			var msg = 'Missing peer objects in Transaction proposal';
 			if (err.message.indexOf(msg) >= 0) {
@@ -872,9 +872,9 @@ test('\n\n ** Chain queryByChaincode() tests **\n\n', function (t) {
 			}
 		});
 
-		chain.addPeer(peer);
+		channel.addPeer(peer);
 
-		var p7 = chain.queryByChaincode().then(function () {
+		var p7 = channel.queryByChaincode().then(function () {
 			t.fail('Should not have been able to resolve the promise because of missing request parameter in queryByChaincode');
 		}).catch(function (err) {
 			if (err.message.indexOf('Missing request object for this queryByChaincode') >= 0) {
@@ -892,14 +892,14 @@ test('\n\n ** Chain queryByChaincode() tests **\n\n', function (t) {
 			}
 		).catch(
 			function (err) {
-				t.fail('Chain queryByChaincode() tests, Promise.all: ');
+				t.fail('Channel queryByChaincode() tests, Promise.all: ');
 				logger.error(err.stack ? err.stack : err);
 				t.end();
 			}
 		);
 	}).catch(
 		function (err) {
-			t.fail('Chain queryByChaincode() failed ');
+			t.fail('Channel queryByChaincode() failed ');
 			logger.error(err.stack ? err.stack : err);
 			t.end();
 		}
@@ -907,12 +907,12 @@ test('\n\n ** Chain queryByChaincode() tests **\n\n', function (t) {
 
 });
 
-test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
-	let o = _chain.getOrderers();
+test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
+	let o = _channel.getOrderers();
 	for (let i = 0; i < o.length; i++) {
-		_chain.removeOrderer(o[i]);
+		_channel.removeOrderer(o[i]);
 	}
-	var p1 = _chain.sendTransaction()
+	var p1 = _channel.sendTransaction()
 		.then(function () {
 			t.fail('Should not have been able to resolve the promise because of missing parameters');
 		}, function (err) {
@@ -923,7 +923,7 @@ test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
 			}
 		});
 
-	var p2 = _chain.sendTransaction({
+	var p2 = _channel.sendTransaction({
 		proposal: 'blah',
 		header: 'blah'
 	})
@@ -937,7 +937,7 @@ test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
 		}
 	});
 
-	var p3 = _chain.sendTransaction({
+	var p3 = _channel.sendTransaction({
 		proposalResponses: 'blah',
 		header: 'blah'
 	})
@@ -951,7 +951,7 @@ test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
 		}
 	});
 
-	var p4 = _chain.sendTransaction({
+	var p4 = _channel.sendTransaction({
 		proposalResponses: 'blah',
 		proposal: 'blah'
 	})
@@ -972,22 +972,22 @@ test('\n\n ** Chain sendTransaction() tests **\n\n', function (t) {
 		}
 	).catch(
 		function (err) {
-			t.fail('Chain sendTransaction() tests, Promise.all: '+err.stack ? err.stack : err);
+			t.fail('Channel sendTransaction() tests, Promise.all: '+err.stack ? err.stack : err);
 			t.end();
 		}
 	);
 });
 
 //
-// Orderer via chain setOrderer/getOrderer
+// Orderer via channel setOrderer/getOrderer
 //
-// Set the orderer URL through the chain setOrderer method. Verify that the
+// Set the orderer URL through the channel setOrderer method. Verify that the
 // orderer URL was set correctly through the getOrderer method. Repeat the
 // process by updating the orderer URL to a different address.
 //
-test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
+test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', function(t) {
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	hfc.newDefaultKeyValueStore({
@@ -996,32 +996,32 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 	.then ( function (store) {
 		client.setStateStore(store);
 
-		var chain = client.newChain('testChain-orderer-member');
+		var channel = client.newChannel('testChannel-orderer-member');
 		try {
 			var orderer = new Orderer('grpc://localhost:7050');
-			chain.addOrderer(orderer);
+			channel.addOrderer(orderer);
 			t.pass('Successfully set the new orderer URL');
 
-			var orderers = chain.getOrderers();
+			var orderers = channel.getOrderers();
 			if(orderers !== null && orderers.length > 0 && orderers[0].getUrl() === 'grpc://localhost:7050') {
-				t.pass('Successfully retrieved the new orderer URL from the chain');
+				t.pass('Successfully retrieved the new orderer URL from the channel');
 			}
 			else {
-				t.fail('Failed to retieve the new orderer URL from the chain');
+				t.fail('Failed to retieve the new orderer URL from the channel');
 				t.end();
 			}
 
 			try {
 				var orderer2 = new Orderer('grpc://localhost:5152');
-				chain.addOrderer(orderer2);
+				channel.addOrderer(orderer2);
 				t.pass('Successfully updated the orderer URL');
 
-				var orderers = chain.getOrderers();
+				var orderers = channel.getOrderers();
 				if(orderers !== null && orderers.length > 0 && orderers[1].getUrl() === 'grpc://localhost:5152') {
-					t.pass('Successfully retrieved the upated orderer URL from the chain');
+					t.pass('Successfully retrieved the upated orderer URL from the channel');
 				}
 				else {
-					t.fail('Failed to retieve the updated orderer URL from the chain');
+					t.fail('Failed to retieve the updated orderer URL from the channel');
 				}
 
 				t.end();
@@ -1038,21 +1038,21 @@ test('\n\n** TEST ** orderer via chain setOrderer/getOrderer', function(t) {
 });
 
 //
-// Orderer via chain set/get bad address
+// Orderer via channel set/get bad address
 //
-// Set the orderer URL to a bad address through the chain setOrderer method.
+// Set the orderer URL to a bad address through the channel setOrderer method.
 // Verify that an error is reported when trying to set a bad address.
 //
-test('\n\n** TEST ** orderer via chain set/get bad address', function(t) {
+test('\n\n** TEST ** orderer via channel set/get bad address', function(t) {
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
-	var chain = client.newChain('testChain-orderer-member1');
+	var channel = client.newChannel('testChannel-orderer-member1');
 
 	t.throws(
 		function() {
 			var order_address = 'xxx';
-			chain.addOrderer(new Orderer(order_address));
+			channel.addOrderer(new Orderer(order_address));
 		},
 		/InvalidProtocol: Invalid protocol: undefined/,
 		'Test setting a bad orderer address'
@@ -1060,7 +1060,7 @@ test('\n\n** TEST ** orderer via chain set/get bad address', function(t) {
 
 	t.throws(
 		function() {
-			chain.addOrderer(new Orderer());
+			channel.addOrderer(new Orderer());
 		},
 		/TypeError: Parameter "url" must be a string, not undefined/,
 		'Test setting an empty orderer address'
@@ -1073,13 +1073,13 @@ test('\n\n** TEST ** orderer via chain set/get bad address', function(t) {
 //
 test('\n\n** TEST ** verify compareProposalResponseResults', function(t) {
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
-	var chain = client.newChain('testChain-compareProposal');
+	var channel = client.newChannel('testChannel-compareProposal');
 
 	t.throws(
 		function() {
-			chain.compareProposalResponseResults();
+			channel.compareProposalResponseResults();
 		},
 		/Error: Missing proposal responses/,
 		'Test compareProposalResponseResults with empty parameter'
@@ -1087,7 +1087,7 @@ test('\n\n** TEST ** verify compareProposalResponseResults', function(t) {
 
 	t.throws(
 		function() {
-			chain.compareProposalResponseResults({});
+			channel.compareProposalResponseResults({});
 		},
 		/Error: Parameter must be an array of ProposalRespone Objects/,
 		'Test compareProposalResponseResults with an object parameter'
@@ -1095,7 +1095,7 @@ test('\n\n** TEST ** verify compareProposalResponseResults', function(t) {
 
 	t.throws(
 		function() {
-			chain.compareProposalResponseResults([]);
+			channel.compareProposalResponseResults([]);
 		},
 		/Error: Parameter proposal responses does not contain a PorposalResponse/,
 		'Test compareProposalResponseResults with an empty array parameter'
@@ -1103,7 +1103,7 @@ test('\n\n** TEST ** verify compareProposalResponseResults', function(t) {
 
 	t.throws(
 		function() {
-			chain.compareProposalResponseResults([{}]);
+			channel.compareProposalResponseResults([{}]);
 		},
 		/Error: Parameter must be a ProposalResponse Object/,
 		'Test compareProposalResponseResults with an array without the correct endorsements parameter'
@@ -1115,13 +1115,13 @@ test('\n\n** TEST ** verify compareProposalResponseResults', function(t) {
 //
 test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
-	var chain = client.newChain('testChain-compareProposal2');
+	var channel = client.newChannel('testChannel-compareProposal2');
 
 	t.throws(
 		function() {
-			chain.verifyProposalResponse();
+			channel.verifyProposalResponse();
 		},
 		/Error: Missing proposal response/,
 		'Test verifyProposalResponse with empty parameter'
@@ -1129,7 +1129,7 @@ test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
 
 	t.throws(
 		function() {
-			chain.verifyProposalResponse({});
+			channel.verifyProposalResponse({});
 		},
 		/Error: Parameter must be a ProposalResponse Object/,
 		'Test verifyProposalResponse with an object parameter'
@@ -1137,7 +1137,7 @@ test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
 
 	t.throws(
 		function() {
-			chain.verifyProposalResponse([]);
+			channel.verifyProposalResponse([]);
 		},
 		/Error: Parameter must be a ProposalResponse Object/,
 		'Test verifyProposalResponse with an empty array parameter'
@@ -1145,7 +1145,7 @@ test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
 
 	t.throws(
 		function() {
-			chain.verifyProposalResponse([{}]);
+			channel.verifyProposalResponse([{}]);
 		},
 		/Error: Parameter must be a ProposalResponse Object/,
 		'Test verifyProposalResponse with an array without the correct endorsements parameter'
@@ -1154,9 +1154,9 @@ test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
 });
 
 test('\n\n ** test related APIs for update channel **\n\n', function (t) {
-	var chain = client.newChain('testChain-update');
+	var channel = client.newChannel('testChannel-update');
 
-	var p1= chain.buildChannelConfig(
+	var p1= channel.buildChannelConfig(
 	).then(function () {
 		t.fail('Should not have been able to resolve the promise');
 	}).catch(function (err) {
@@ -1167,7 +1167,7 @@ test('\n\n ** test related APIs for update channel **\n\n', function (t) {
 			console.log(err.stack ? err.stack : err);
 		}
 	});
-	var p2= chain.buildChannelConfigUpdate(
+	var p2= channel.buildChannelConfigUpdate(
 	).then(function () {
 		t.fail('Should not have been able to resolve the promise');
 	}).catch(function (err) {

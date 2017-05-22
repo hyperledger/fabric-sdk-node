@@ -56,7 +56,7 @@ module.exports.registerCCEvent = function(eh, ccid, enregex, timeout) {
 	});
 };
 
-module.exports.createRequest = function(client, chain, user, chaincode_id, targets, fcn, args) {
+module.exports.createRequest = function(client, channel, user, chaincode_id, targets, fcn, args) {
 	var tx_id = client.newTransactionID();
 	var request = {
 		targets : targets,
@@ -89,7 +89,7 @@ function checkProposal(results) {
 
 module.exports.checkProposal =  checkProposal;
 
-module.exports.sendTransaction = function(chain, results) {
+module.exports.sendTransaction = function(channel, results) {
 	if (checkProposal(results)) {
 		var proposalResponses = results[0];
 		var proposal = results[1];
@@ -99,7 +99,7 @@ module.exports.sendTransaction = function(chain, results) {
 			proposal: proposal,
 			header: header
 		};
-		return chain.sendTransaction(request);
+		return channel.sendTransaction(request);
 	} else {
 		return Promise.reject('bad result:' + results);
 	}

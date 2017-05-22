@@ -35,10 +35,10 @@ var hfc = require('fabric-client');
 var util = require('util');
 var testUtil = require('./util.js');
 var client = new hfc();
-var chain = hfc.newChain('testChain-e2e');
+var channel = hfc.newChannel('testChain-e2e');
 var webUser;
 var chaincode_id = 'marblescc';
-var chain_id = '**TEST_CHAINID**';
+var channel_id = '**TEST_CHAINID**';
 var tx_id = null;
 
 var steps = [];
@@ -51,11 +51,11 @@ logger.info('Found steps: %s', steps);
 
 testUtil.setupChaincodeDeploy();
 
-chain.setKeyValueStore(hfc.newKeyValueStore({
+channel.setKeyValueStore(hfc.newKeyValueStore({
 	path: testUtil.KVS
 }));
 
-chain.setOrderer('grpc://localhost:7050');
+channel.setOrderer('grpc://localhost:7050');
 
 test('End-to-end flow of chaincode instantiate, transaction invocation, and query', function(t) {
 	var promise = testUtil.getSubmitter(client, t);
@@ -250,7 +250,7 @@ test('End-to-end flow of chaincode instantiate, transaction invocation, and quer
 					chaincodeId : chaincode_id,
 					fcn: 'set_owner',
 					args: ['marble1','jerry'],
-					chainId: chain_id,
+					channelId: channel_id,
 					txId: tx_id
 				};
 				return webUser.sendTransactionProposal(request);

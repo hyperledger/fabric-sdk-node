@@ -30,7 +30,7 @@ var Signer = idModule.Signer;
  * an enrollment certificate (ECert) and a signing key. The ECert must have
  * been signed by one of the CAs the blockchain network has been configured to trust.
  * An enrolled user (having a signing key and ECert) can conduct chaincode instantiate,
- * transactions and queries with the Chain.
+ * transactions and queries with the Channel.
  *
  * User ECerts can be obtained from a CA beforehand as part of installing and instantiating
  * the application, or it can be obtained from the optional Fabric CA service via its

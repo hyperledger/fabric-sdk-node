@@ -51,11 +51,11 @@ if (process.argv.length > 2) {
 
 logger.info('\n\n >>>>>>  Will create new channel with name :: %s <<<<<<< \n\n',channel_name);
 //
-//Attempt to send a request to the orderer with the sendCreateChain method
+//Attempt to send a request to the orderer with the createChannel method
 //
 test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
 	var client = new Client();
 
@@ -264,8 +264,8 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 //		config = configtx.getConfigUpdate().toBuffer();
 //
 //		logger.debug('\n***\n dump the configtx config \n***\n');
-//		var chain = client.newChain('test');
-//		chain.loadConfigUpdate(config);
+//		var channel = client.newChannel('test');
+//		channel.loadConfigUpdate(config);
 
 		 //have the SDK build the config update object
 		// ------ this is not a supported API ...for test only
@@ -277,8 +277,8 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		config = config_bytes;
 
 //		logger.debug('\n***\n dump the SDK config \n***\n');
-//		var chain = client.newChain('testsdk');
-//		chain.loadConfigUpdate(config_bytes);
+//		var channel = client.newChannel('testsdk');
+//		channel.loadConfigUpdate(config_bytes);
 
 		client._userContext = null;
 		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');

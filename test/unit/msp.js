@@ -125,15 +125,15 @@ test('\n\n** MSP Tests **\n\n', (t) => {
 			}
 		}
 
-		utils.addMSPManager('chain1', mspm);
+		utils.addMSPManager('channel1', mspm);
 		// use the special getter provided by rewire to get access to the module-scoped variable
 		var mspManagers = utils.__get__('mspManagers');
-		t.equal(mspManagers['chain1'] instanceof MSPM, true, 'Checking if an instance of MSP exists under key "chain1"');
+		t.equal(mspManagers['channel1'] instanceof MSPM, true, 'Checking if an instance of MSP exists under key "channel1"');
 
-		t.equal(utils.getMSPManager('chain1'), mspm, 'Testing utils.getMSPManager()');
+		t.equal(utils.getMSPManager('channel1'), mspm, 'Testing utils.getMSPManager()');
 
-		utils.removeMSPManager('chain1');
-		t.equal(typeof mspManagers['chain1'], 'undefined', 'Testing utils.removeMSPManager()');
+		utils.removeMSPManager('channel1');
+		t.equal(typeof mspManagers['channel1'], 'undefined', 'Testing utils.removeMSPManager()');
 
 		// test deserialization using the msp manager
 		var cryptoUtils = utils.newCryptoSuite();

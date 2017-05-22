@@ -40,7 +40,7 @@ var ORGS = Client.getConfigSetting('test-network');
 var allEventhubs = [];
 
 //
-//Attempt to send a request to the orderer with the sendCreateChain method
+//Attempt to send a request to the orderer with the createChannel method
 //
 test('\n\n***** End-to-end flow: join channel *****\n\n', function(t) {
 	// override t.end function so it'll always disconnect the event hub
@@ -84,10 +84,10 @@ function joinChannel(org, t) {
 
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 	//
-	// Create and configure the test chain
+	// Create and configure the test channel
 	//
 	var client = new Client();
-	var chain = client.newChain(channel_name);
+	var channel = client.newChannel(channel_name);
 
 	var orgName = ORGS[org].name;
 
@@ -99,7 +99,7 @@ function joinChannel(org, t) {
 	let caroots = Buffer.from(data).toString();
 	var genesis_block = null;
 
-	chain.addOrderer(
+	channel.addOrderer(
 		client.newOrderer(
 			ORGS.orderer.url,
 			{
@@ -122,7 +122,7 @@ function joinChannel(org, t) {
 			txId : 	tx_id
 		};
 
-		return chain.getGenesisBlock(request);
+		return channel.getGenesisBlock(request);
 	}).then((block) =>{
 		t.pass('Successfully got the genesis block');
 		genesis_block = block;
@@ -197,7 +197,7 @@ function joinChannel(org, t) {
 			block : genesis_block,
 			txId : 	tx_id
 		};
-		let sendPromise = chain.joinChannel(request);
+		let sendPromise = channel.joinChannel(request);
 		return Promise.all([sendPromise].concat(eventPromises));
 	}, (err) => {
 		t.fail('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);

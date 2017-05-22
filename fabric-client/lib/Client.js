@@ -21,7 +21,7 @@ process.env.GRPC_SSL_CIPHER_SUITES = sdkUtils.getConfigSetting('grpc-ssl-cipher-
 
 var api = require('./api.js');
 var User = require('./User.js');
-var Chain = require('./Chain.js');
+var Channel = require('./Channel.js');
 var ChannelConfig = require('./ChannelConfig.js');
 var Packager = require('./Packager.js');
 var Peer = require('./Peer.js');
@@ -51,7 +51,7 @@ var _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
  * as part of bootstrapping the application environment. It is also the responsibility of the application
  * to maintain the configuration of a client as the SDK does not persist this object.
  *
- * Each Client instance can maintain several {@link Chain} instances representing channels and the associated
+ * Each Client instance can maintain several {@link Channel} instances representing channels and the associated
  * private ledgers.
  *
  * @class
@@ -61,7 +61,7 @@ var Client = class {
 
 	constructor() {
 		logger.debug('const - new Client');
-		this._chains = {};
+		this._channels = {};
 		this._stateStore = null;
 		this._cryptoSuite = null;
 		this._userContext = null;
@@ -141,44 +141,44 @@ var Client = class {
 	}
 
 	/**
-	 * Returns a chain instance with the given name. This represents a channel and its associated ledger
-	 * (as explained above), and this call returns an empty object. To initialize the chain in the blockchain network,
+	 * Returns a channel instance with the given name. This represents a channel and its associated ledger
+	 * (as explained above), and this call returns an empty object. To initialize the channel in the blockchain network,
 	 * a list of participating endorsers and orderer peers must be configured first on the returned object.
-	 * @param {string} name The name of the chain.  Recommend using namespaces to avoid collision.
-	 * @returns {Chain} The uninitialized chain instance.
-	 * @throws {Error} if the chain by that name already exists in the application's state store
+	 * @param {string} name The name of the channel.  Recommend using namespaces to avoid collision.
+	 * @returns {Channel} The uninitialized channel instance.
+	 * @throws {Error} if the channel by that name already exists in the application's state store
 	 */
-	newChain(name) {
-		var chain = this._chains[name];
+	newChannel(name) {
+		var channel = this._channels[name];
 
-		if (chain)
-			throw new Error(util.format('Chain %s already exists', name));
+		if (channel)
+			throw new Error(util.format('Channel %s already exists', name));
 
-		var chain = new Chain(name, this);
-		this._chains[name] = chain;
-		return chain;
+		var channel = new Channel(name, this);
+		this._channels[name] = channel;
+		return channel;
 	}
 
 	/**
-	 * Get a {@link Chain} instance from the state storage. This allows existing chain instances to be saved
+	 * Get a {@link Channel} instance from the state storage. This allows existing channel instances to be saved
 	 * for retrieval later and to be shared among instances of the application. Note that it’s the
-	 * application/SDK’s responsibility to record the chain information. If an application is not able
-	 * to look up the chain information from storage, it may call another API that queries one or more
+	 * application/SDK’s responsibility to record the channel information. If an application is not able
+	 * to look up the channel information from storage, it may call another API that queries one or more
 	 * Peers for that information.
-	 * @param {string} name The name of the chain.
-	 * @returns {Chain} The chain instance
-	 * @throws {Error} if the state store has not been set or a chain does not exist under that name.
+	 * @param {string} name The name of the channel.
+	 * @returns {Channel} The channel instance
+	 * @throws {Error} if the state store has not been set or a channel does not exist under that name.
 	 */
-	getChain(name) {
-		var ret = this._chains[name];
+	getChannel(name) {
+		var ret = this._channels[name];
 
 		// TODO: integrate reading from state store
 
 		if (ret)
 			return ret;
 		else {
-			logger.error('Chain not found for name '+name+'.');
-			throw new Error('Chain not found for name '+name+'.');
+			logger.error('Channel not found for name '+name+'.');
+			throw new Error('Channel not found for name '+name+'.');
 		}
 	}
 
@@ -278,14 +278,14 @@ var Client = class {
 	 * The result of the build must be signed and then may be used to update
 	 * the channel.
 	 * @param {Object} A JSON object that has the following attributes...TODO fill out
-	 * @param {Chain} The Chain instance that represents the channel. An Orderer must assigned
-	 *                to this chain to retrieve the current concurrent configuration.
+	 * @param {Channel} The Channel instance that represents the channel. An Orderer must assigned
+	 *                to this channel to retrieve the current concurrent configuration.
 	 * @param {MSP[]} An array of MSPs that will be referenced by the configuration definition
 	 * @return {byte[]} A Promise for a byte buffer object that is the byte array representation of the
 	 *                  Protobuf common.ConfigUpdate
 	 * @see /protos/common/configtx.proto
 	 */
-	buildChannelConfigUpdate(config_definition, chain, msps) {
+	buildChannelConfigUpdate(config_definition, channel, msps) {
 		logger.debug('buildChannelConfigUpdate - start');
 		try {
 			ChannelConfig.validate(config_definition);
@@ -294,11 +294,11 @@ var Client = class {
 			logger.error(err);
 			return Promise.reject(err);
 		}
-		if(!(chain instanceof Chain)) {
+		if(!(channel instanceof Channel)) {
 			return Promise.reject(
-				new Error('Building a channel configuration update requires an existing "Chain" object'));
+				new Error('Building a channel configuration update requires an existing "Channel" object'));
 		}
-		return chain.buildChannelConfigUpdate(config_definition, msps);
+		return channel.buildChannelConfigUpdate(config_definition, msps);
 	}
 
 	/*
@@ -310,7 +310,7 @@ var Client = class {
 	 * The result of the build must be signed and then may be used to create a channel.
 	 * @param {Object} A JSON object that has the following attributes...TODO fill out
 	 * @param {Orderer} An Orderer that will be used to create this channel. This Orderer will be
-	 *                  used to retrieve required system chain settings used in the building of this
+	 *                  used to retrieve required system channel settings used in the building of this
 	 *                  channel definition.
 	 * @param {MSP[]} An array of MSPs that will be referenced by the configuration definition
 	 * @return {byte[]} A Promise for a byte buffer object that is the byte array representation of the
@@ -327,9 +327,9 @@ var Client = class {
 			return Promise.reject(err);
 		}
 
-		var chain = new Chain(config_definition.channel.name, this);
-		chain.addOrderer(orderer);
-		return chain.buildChannelConfig(config_definition, msps);
+		var channel = new Channel(config_definition.channel.name, this);
+		channel.addOrderer(orderer);
+		return channel.buildChannelConfig(config_definition, msps);
 	}
 
 	/**
@@ -396,8 +396,8 @@ var Client = class {
 	/**
 	 * Calls the orderer to start building the new channel.
 	 * Only one of the application instances needs to call this method.
-	 * Once the chain is successfully created, this and other application
-	 * instances only need to call Chain joinChannel() to participate on the channel.
+	 * Once the channel is successfully created, this and other application
+	 * instances only need to call Channel joinChannel() to participate on the channel.
 	 * @param {Object} request - An object containing the following fields:
 	 *      <br>`name` : required - {string} The name of the new channel
 	 *      <br>`orderer` : required - {Orderer} object instance representing the
@@ -490,10 +490,10 @@ var Client = class {
 		}
 
 		var self = this;
-		var chain_id = request.name;
+		var channel_id = request.name;
 		var orderer = request.orderer;
 		var userContext = null;
-		var chain = null;
+		var channel = null;
 
 		userContext = this.getUserContext();
 
@@ -511,13 +511,13 @@ var Client = class {
 			proto_config_Update_envelope.setConfigUpdate(request.config);
 			proto_config_Update_envelope.setSignatures(request.signatures);
 
-			var proto_channel_header = Chain._buildChannelHeader(
+			var proto_channel_header = Channel._buildChannelHeader(
 				_commonProto.HeaderType.CONFIG_UPDATE,
 				request.name,
 				request.txId.getTransactionID()
 			);
 
-			var proto_header = Chain._buildHeader(userContext.getIdentity(), proto_channel_header, request.txId.getNonce());
+			var proto_header = Channel._buildHeader(userContext.getIdentity(), proto_channel_header, request.txId.getNonce());
 			var proto_payload = new _commonProto.Payload();
 			proto_payload.setHeader(proto_header);
 			proto_payload.setData(proto_config_Update_envelope.toBuffer());
@@ -560,18 +560,6 @@ var Client = class {
 	}
 
 	/**
-	 * This is a network call to the designated Peer(s) to discover the chain information.
-	 * The target Peer(s) must be part of the chain to be able to return the requested information.
-	 * @param {string} name The name of the chain.
-	 * @param {Peer[]} peers Array of target Peers to query.
-	 * @returns {Chain} The chain instance for the name or error if the target Peer(s) does not know
-	 * anything about the chain.
-	 */
-	queryChainInfo(name, peers) {
-		//to do
-	}
-
-	/**
 	 * Queries the names of all the channels that a
 	 * peer has joined.
 	 * @param {Peer} peer
@@ -591,7 +579,7 @@ var Client = class {
 			fcn : 'GetChannels',
 			args: []
 		};
-		return Chain.sendTransactionProposal(request, '' /* special channel id */, self)
+		return Channel.sendTransactionProposal(request, '' /* special channel id */, self)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -648,7 +636,7 @@ var Client = class {
 			fcn : 'getinstalledchaincodes',
 			args: []
 		};
-		return Chain.sendTransactionProposal(request, '' /* special channel id */, self)
+		return Channel.sendTransactionProposal(request, '' /* special channel id */, self)
 		.then(
 			function(results) {
 				var responses = results[0];
@@ -724,8 +712,8 @@ var Client = class {
 			errorMsg = 'Missing input request object on install chaincode request';
 		}
 
-		if (!errorMsg) errorMsg = Chain._checkProposalRequest(request, true);
-		if (!errorMsg) errorMsg = Chain._checkInstallRequest(request);
+		if (!errorMsg) errorMsg = Channel._checkProposalRequest(request, true);
+		if (!errorMsg) errorMsg = Channel._checkInstallRequest(request);
 
 		if (errorMsg) {
 			logger.error('installChaincode error ' + errorMsg);
@@ -735,7 +723,7 @@ var Client = class {
 		let self = this;
 
 		let ccSpec = {
-			type: Chain._translateCCType(request.chaincodeType),
+			type: Channel._translateCCType(request.chaincodeType),
 			chaincode_id: {
 				name: request.chaincodeId,
 				path: request.chaincodePath,
@@ -747,7 +735,7 @@ var Client = class {
 		// step 2: construct the ChaincodeDeploymentSpec
 		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
-		chaincodeDeploymentSpec.setEffectiveDate(Chain._buildCurrentTimestamp()); //TODO may wish to add this as a request setting
+		chaincodeDeploymentSpec.setEffectiveDate(Channel._buildCurrentTimestamp()); //TODO may wish to add this as a request setting
 
 		return _getChaincodePackageData(request, this.isDevMode())
 		.then((data) => {
@@ -772,18 +760,18 @@ var Client = class {
 			var header, proposal;
 			var userContext = self.getUserContext();
 			var txId = new TransactionID(userContext);
-			var channelHeader = Chain._buildChannelHeader(
+			var channelHeader = Channel._buildChannelHeader(
 				_commonProto.HeaderType.ENDORSER_TRANSACTION,
 				'', //install does not target a channel
 				txId.getTransactionID(),
 				null,
 				Constants.LSCC
 			);
-			header = Chain._buildHeader(userContext.getIdentity(), channelHeader, txId.getNonce());
-			proposal = Chain._buildProposal(lcccSpec, header);
-			let signed_proposal = Chain._signProposal(userContext.getSigningIdentity(), proposal);
+			header = Channel._buildHeader(userContext.getIdentity(), channelHeader, txId.getNonce());
+			proposal = Channel._buildProposal(lcccSpec, header);
+			let signed_proposal = Channel._signProposal(userContext.getSigningIdentity(), proposal);
 
-			return Chain._sendPeersProposal(peers, signed_proposal)
+			return Channel._sendPeersProposal(peers, signed_proposal)
 			.then(
 				function(responses) {
 					return [responses, proposal, header];

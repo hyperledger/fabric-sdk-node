@@ -35,7 +35,7 @@ var EventHub = require('fabric-client/lib/EventHub.js');
 var eputil = require('./eventutil.js');
 
 var client = new hfc();
-var chain = client.newChain(testUtil.END2END.channel);
+var channel = client.newChannel(testUtil.END2END.channel);
 hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 var ORGS = hfc.getConfigSetting('test-network');
 
@@ -43,7 +43,7 @@ var caRootsPath = ORGS.orderer.tls_cacerts;
 let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 let caroots = Buffer.from(data).toString();
 
-chain.addOrderer(
+channel.addOrderer(
 	client.newOrderer(
 		ORGS.orderer.url,
 		{
@@ -66,7 +66,7 @@ for (let key in ORGS[org]) {
 					pem: Buffer.from(data).toString(),
 					'ssl-target-name-override': ORGS[org][key]['server-hostname']
 				});
-			chain.addPeer(peer);
+			channel.addPeer(peer);
 			targets.push(peer);
 			break; //just add one
 		}
@@ -140,7 +140,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		eh.connect();
 		eventhubs.push(eh);
 
-		request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, '', '');
+		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, '', '');
 		request.chaincodePath = 'github.com/events_cc';
 		request.chaincodeVersion = chaincode_version;
 
@@ -151,23 +151,23 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		t.end();
 	}).then((results) => {
 		if ( eputil.checkProposal(results)) {
-			// read the config block from the orderer for the chain
+			// read the config block from the orderer for the channel
 			// and initialize the verify MSPs based on the participating
 			// organizations
-			return chain.initialize();
+			return channel.initialize();
 		} else {
 			return Promise.reject('bad install proposal:' + results);
 		}
 	}, (err) => {
 		t.comment(err);
-		t.fail(err);//Failed to initialize the chain or bad install proposal
+		t.fail(err);//Failed to initialize the channel or bad install proposal
 		t.end();
 	}).then((success) => {
-		t.pass('Successfully initialized the chain');
-		request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'init', []);
+		t.pass('Successfully initialized the channel');
+		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'init', []);
 		request.chaincodePath = 'github.com/events_cc';
 		request.chaincodeVersion = chaincode_version;
-		return chain.sendInstantiateProposal(request);
+		return channel.sendInstantiateProposal(request);
 	}, (err) => {
 		t.comment('Failed to send instantiate proposal due to error: ');
 		t.fail(err.stack ? err.stack : err);
@@ -175,7 +175,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		var tmo = 50000;
 		return Promise.all([eputil.registerTxEvent(eh, request.txId.getTransactionID().toString(), tmo),
-			eputil.sendTransaction(chain, results)]);
+			eputil.sendTransaction(channel, results)]);
 	},
 	(err) => {
 		t.fail('Failed sending instantiate proposal: ' + err);
@@ -183,8 +183,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		t.pass('Successfully instantiated chaincode.');
 
-		request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
-		return chain.sendTransactionProposal(request);
+		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+		return channel.sendTransactionProposal(request);
 	},
 	(err) => {
 		t.fail('Failed instantiate due to error: ' + err);
@@ -192,7 +192,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		var tmo = 20000;
 		return Promise.all([eputil.registerCCEvent(eh, chaincode_id.toString(), '^evtsender*', tmo),
-			eputil.sendTransaction(chain, results)
+			eputil.sendTransaction(channel, results)
 		]);
 	},
 	(err) => {
@@ -201,8 +201,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		t.pass('Successfully received chaincode event.');
 
-		request = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['query']);
-		return chain.queryByChaincode(request);
+		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['query']);
+		return channel.queryByChaincode(request);
 	},
 	(err) => {
 		t.fail('Failed to receive chaincode event: ' + err);
@@ -216,10 +216,10 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		// create 2 invoke requests in quick succession that modify
 		// the same state variable which should cause one invoke to
 		// be invalid
-		req1 = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
-		req2 = eputil.createRequest(client, chain, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
-		return Promise.all([chain.sendTransactionProposal(req1),
-			chain.sendTransactionProposal(req2)]);
+		req1 = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+		req2 = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+		return Promise.all([channel.sendTransactionProposal(req1),
+			channel.sendTransactionProposal(req2)]);
 	},
 	(err) => {
 		t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
@@ -229,8 +229,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		var tmo = 20000;
 		return Promise.all([eputil.registerTxEvent(eh, req1.txId.getTransactionID().toString(), tmo),
 			eputil.registerTxEvent(eh, req2.txId.getTransactionID().toString(), tmo),
-			eputil.sendTransaction(chain, results1),
-			eputil.sendTransaction(chain, results2)
+			eputil.sendTransaction(channel, results1),
+			eputil.sendTransaction(channel, results2)
 		]);
 	}).then(([regResult1, regResult2, sendResult1, sendResult2]) => {
 		t.fail('Failed to generate an invalid transaction');

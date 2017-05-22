@@ -16,7 +16,7 @@
 
 /**
  * This is the main module for the "fabric-client" package. It provides the convenience
- * APIs to the classes of the package including [Chain]{@link module:api.Chain}
+ * APIs to the classes of the package including [Channel]{@link module:api.Channel}
  *
  * @module fabric-client
  */
