@@ -530,7 +530,6 @@ function invokeChaincode(userOrg, version, t){
 		// send proposal to endorser
 		var request = {
 			chaincodeId : e2e.chaincodeId,
-			chaincodeVersion : version,
 			fcn: 'invoke',
 			args: ['move', 'a', 'b','100'],
 			txId: tx_id,

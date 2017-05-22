@@ -1338,8 +1338,7 @@ var Chain = class {
 		let invokeSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			chaincode_id: {
-				name: request.chaincodeId,
-				version: request.chaincodeVersion
+				name: request.chaincodeId
 			},
 			input: {
 				args: args
@@ -1513,7 +1512,6 @@ var Chain = class {
 		var trans_request = {
 			targets : request.targets,
 			chaincodeId : request.chaincodeId,
-			chaincodeVersion : request.chaincodeVersion,
 			chainId : request.chainId,
 			fcn : request.fcn,
 			args : request.args,
