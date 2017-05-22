@@ -119,12 +119,12 @@ function installChaincode(org, chaincode_path, version, t) {
 		var errors = [];
 		for(var i in proposalResponses) {
 			let one_good = false;
-			if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
+			if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
 				one_good = true;
 				logger.info('install proposal was good');
 			} else {
 				logger.error('install proposal was bad');
-				errors.push(proposalResponses[0]);
+				errors.push(proposalResponses[i]);
 			}
 			all_good = all_good & one_good;
 		}
