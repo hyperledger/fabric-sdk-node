@@ -196,14 +196,27 @@ test('\n\n** EventHub block callback \n\n', (t) => {
 	eh.connected = true; //force this into connected state
 	eh.force_reconnect = false;
 
-	eh.registerBlockEvent((block) => {
-		t.fail('Should not have called success callback');
+	var index = eh.registerBlockEvent((block) => {
+		t.fail('Should not have called success callback when disconnect() is called');
 		t.end();
 	}, (error) =>{
-		t.pass('Successfully called error callback');
+		t.pass('Successfully called error callback from disconnect()');
 		t.end();
 	});
+
 	t.pass('successfully registered block callbacks');
+	t.equal(index, 1, 'Check the first block listener is at index 1');
+
+	index = eh.registerBlockEvent(() => {
+		// empty method body
+	}, () => {
+		// empty method body
+	});
+
+	t.equal(index, 2, 'Check the 2nd block listener is at index 2');
+	t.equal(Object.keys(eh.blockOnEvents).length, 2, 'Check the size of the blockOnEvents hash table');
+	t.equal(Object.keys(eh.blockOnErrors).length, 2, 'Check the size of the blockOnErrors hash table');
+
 	eh.disconnect();
 });
 
@@ -213,14 +226,36 @@ test('\n\n** EventHub transaction callback \n\n', (t) => {
 	eh.connected = true; //force this into connected state
 	eh.force_reconnect = false;
 
-	eh.registerTxEvent('txid', (block) => {
+	eh.registerTxEvent('txid1', (block) => {
+		// empty method body
+	}, (error) =>{
+		// empty method body
+	});
+	t.pass('successfully registered transaction callbacks');
+	t.equal(Object.keys(eh.transactionOnEvents).length, 1, 'Check the size of the transactionOnEvents hash table');
+	t.equal(Object.keys(eh.transactionOnErrors).length, 1, 'Check the size of the transactionOnErrors hash table');
+
+	eh.registerTxEvent('txid1', (block) => {
 		t.fail('Should not have called success callback');
 		t.end();
 	}, (error) =>{
 		t.pass('Successfully called error callback');
 		t.end();
 	});
-	t.pass('successfully registered transaction callbacks');
+	t.equal(Object.keys(eh.transactionOnEvents).length, 1,
+		'Size of the transactionOnEvents hash table should still be 1 since the listeners are for the same txId');
+	t.equal(Object.keys(eh.transactionOnErrors).length, 1,
+		'Size of the transactionOnErrors hash table should still be 1 since the listeners are for the same txId');
+
+	eh.registerTxEvent('txid2', (block) => {
+		// empty method body
+	}, (error) =>{
+		// empty method body
+	});
+
+	t.equal(Object.keys(eh.transactionOnEvents).length, 2, 'Check the size of the transactionOnEvents hash table');
+	t.equal(Object.keys(eh.transactionOnErrors).length, 2, 'Check the size of the transactionOnErrors hash table');
+
 	eh.disconnect();
 });
 
@@ -230,7 +265,7 @@ test('\n\n** EventHub chaincode callback \n\n', (t) => {
 	eh.connected = true; //force this into connected state
 	eh.force_reconnect = false;
 
-	eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+	eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
 		t.fail('Should not have called success callback');
 		t.end();
 	}, (error) =>{
@@ -238,6 +273,27 @@ test('\n\n** EventHub chaincode callback \n\n', (t) => {
 		t.end();
 	});
 	t.pass('successfully registered chaincode callbacks');
+
+	t.equal(Object.keys(eh.chaincodeRegistrants).length, 1, 'Check the size of the chaincodeRegistrants hash table');
+
+	eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
+		// empty method body
+	}, (error) =>{
+		// empty method body
+	});
+
+	t.equal(Object.keys(eh.chaincodeRegistrants).length, 1,
+		'Size of the chaincodeRegistrants hash table should still be 1 because both listeners are for the same chaincode');
+
+	eh.registerChaincodeEvent('ccid2', 'eventfilter', (block) => {
+		// empty method body
+	}, (error) =>{
+		// empty method body
+	});
+
+	t.equal(Object.keys(eh.chaincodeRegistrants).length, 2,
+		'Size of the chaincodeRegistrants hash table should still be 2');
+
 	eh.disconnect();
 });
 
@@ -303,6 +359,7 @@ test('\n\n** EventHub remove block callback \n\n', (t) => {
 	var brn = eh.registerBlockEvent( blockcallback, blockerrorcallback);
 	t.pass('successfully registered block callbacks');
 	eh.unregisterBlockEvent(brn);
+	t.equal(Object.keys(eh.blockOnEvents).length, 0, 'Check the size of the blockOnEvents hash table');
 	t.pass('successfuly unregistered block callback');
 	eh.disconnect();
 	t.pass('successfuly disconnected eventhub');
@@ -326,6 +383,7 @@ test('\n\n** EventHub remove transaction callback \n\n', (t) => {
 	t.pass('successfully registered transaction callbacks');
 	eh.unregisterTxEvent(txid);
 	t.pass('successfuly unregistered transaction callback');
+	t.equal(Object.keys(eh.transactionOnEvents).length, 0, 'Check the size of the transactionOnEvents hash table');
 	eh.disconnect();
 	t.pass('successfuly disconnected eventhub');
 	t.end();
@@ -347,6 +405,8 @@ test('\n\n** EventHub remove chaincode callback \n\n', (t) => {
 	t.pass('successfully registered chaincode callbacks');
 	eh.unregisterChaincodeEvent(cbe);
 	t.pass('successfuly unregistered chaincode callback');
+	t.equal(Object.keys(eh.chaincodeRegistrants).length, 0,
+		'Size of the chaincodeRegistrants hash table should be 0');
 	eh.disconnect();
 	t.pass('successfuly disconnected eventhub');
 	t.end();
