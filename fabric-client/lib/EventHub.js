@@ -20,7 +20,6 @@ var utils = require('./utils.js');
 var Remote = require('./Remote.js');
 var BlockDecoder = require('./BlockDecoder.js');
 var grpc = require('grpc');
-var HashTable = require('hashtable');
 var logger = utils.getLogger('EventHub.js');
 
 var _events = grpc.load(__dirname + '/protos/peer/events.proto').protos;
@@ -87,14 +86,14 @@ var EventHub = class {
 	constructor(clientContext) {
 		logger.debug('const ');
 		// hashtable of clients registered for chaincode events
-		this.chaincodeRegistrants = new HashTable();
+		this.chaincodeRegistrants = {};
 		// set of clients registered for block events
 		this.block_registrant_count = 1;
-		this.blockOnEvents = new HashTable();
-		this.blockOnErrors = new HashTable();
+		this.blockOnEvents = {};
+		this.blockOnErrors = {};
 		// hashtable of clients registered for transactional events
-		this.transactionOnEvents = new HashTable();
-		this.transactionOnErrors = new HashTable();
+		this.transactionOnEvents = {};
+		this.transactionOnErrors = {};
 		// peer node to connect to
 		this.ep = null;
 		// grpc event client interface
@@ -265,22 +264,27 @@ var EventHub = class {
 	_closeAllCallbacks(err) {
 		logger.debug('_closeAllCallbacks - start');
 
-		var closer = function(key, cb) {
-			logger.debug('_closeAllCallbacks - closing this callback %s',key);
-			cb(err);
+		var closer = function(list) {
+			for (let key in list) {
+				let cb = list[key];
+				logger.debug('_closeAllCallbacks - closing this callback %s',key);
+				cb(err);
+			}
 		};
 
-		logger.debug('_closeAllCallbacks - blockOnErrors %s',this.blockOnErrors.size());
-		this.blockOnErrors.forEach(closer);
-		this.blockOnEvents.clear();
-		this.blockOnErrors.clear();
+		logger.debug('_closeAllCallbacks - blockOnErrors %s', Object.keys(this.blockOnErrors).length);
+		closer(this.blockOnErrors);
+		this.blockOnEvents = {};
+		this.blockOnErrors = {};
 
-		logger.debug('_closeAllCallbacks - transactionOnErrors %s',this.transactionOnErrors.size());
-		this.transactionOnErrors.forEach(closer);
-		this.transactionOnEvents.clear();
-		this.transactionOnErrors.clear();
+		logger.debug('_closeAllCallbacks - transactionOnErrors %s', Object.keys(this.transactionOnErrors).length);
+		closer(this.transactionOnErrors);
+		this.transactionOnEvents = {};
+		this.transactionOnErrors = {};
 
-		var cc_closer = function(key, cbtable) {
+		var self = this;
+		var cc_closer = function(key) {
+			var cbtable = self.chaincodeRegistrants[key];
 			cbtable.forEach(function(cbe) {
 				logger.debug('_closeAllCallbacks - closing this chaincode event %s %s',cbe.ccid, cbe.eventNameFilter);
 				if(cbe.onError) {
@@ -289,9 +293,9 @@ var EventHub = class {
 			});
 		};
 
-		logger.debug('_closeAllCallbacks - chaincodeRegistrants %s',this.chaincodeRegistrants.size());
-		this.chaincodeRegistrants.forEach(cc_closer);
-		this.chaincodeRegistrants.clear();
+		logger.debug('_closeAllCallbacks - chaincodeRegistrants %s', Object.keys(this.chaincodeRegistrants).length);
+		Object.keys(this.chaincodeRegistrants).forEach(cc_closer);
+		this.chaincodeRegistrants = {};
 	}
 
 	/*
@@ -368,10 +372,10 @@ var EventHub = class {
 		this._checkConnection(!have_error_cb, false);
 
 		var cbe = new ChainCodeCBE(ccid, eventname, onEvent, onError);
-		var cbtable = this.chaincodeRegistrants.get(ccid);
+		var cbtable = this.chaincodeRegistrants[ccid];
 		if (!cbtable) {
 			cbtable = new Set();
-			this.chaincodeRegistrants.put(ccid, cbtable);
+			this.chaincodeRegistrants[ccid] = cbtable;
 		}
 		cbtable.add(cbe);
 
@@ -394,14 +398,14 @@ var EventHub = class {
 		if(!cbe) {
 			throw new Error('Missing "cbe" parameter');
 		}
-		var cbtable = this.chaincodeRegistrants.get(cbe.ccid);
+		var cbtable = this.chaincodeRegistrants[cbe.ccid];
 		if (!cbtable) {
 			logger.debug('No event registration for ccid %s ', cbe.ccid);
 			return;
 		}
 		cbtable.delete(cbe);
 		if (cbtable.size <= 0) {
-			this.chaincodeRegistrants.remove(cbe.ccid);
+			delete this.chaincodeRegistrants[cbe.ccid];
 		}
 	}
 
@@ -430,12 +434,12 @@ var EventHub = class {
 		this._checkConnection(!have_error_cb, false);
 
 		var block_registration_number = this.block_registrant_count++;
-		this.blockOnEvents.put(block_registration_number, onEvent);
+		this.blockOnEvents[block_registration_number] = onEvent;
 
 		// when there is an error callback try to reconnect this
 		// event hub if is not connected
 		if(have_error_cb) {
-			this.blockOnErrors.put(block_registration_number, onError);
+			this.blockOnErrors[block_registration_number] = onError;
 			this._checkConnection(false, this.force_reconnect);
 		}
 
@@ -453,8 +457,8 @@ var EventHub = class {
 		if(!block_registration_number) {
 			throw new Error('Missing "block_registration_number" parameter');
 		}
-		this.blockOnEvents.remove(block_registration_number);
-		this.blockOnErrors.remove(block_registration_number);
+		delete this.blockOnEvents[block_registration_number];
+		delete this.blockOnErrors[block_registration_number];
 	}
 
 	/**
@@ -483,12 +487,12 @@ var EventHub = class {
 		// when this hub is not connected
 		this._checkConnection(!have_error_cb, false);
 
-		this.transactionOnEvents.put(txid, onEvent);
+		this.transactionOnEvents[txid] = onEvent;
 
 		// when there is an onError callback try to reconnect this
 		// event hub if is not connected
 		if(have_error_cb) {
-			this.transactionOnErrors.put(txid, onError);
+			this.transactionOnErrors[txid] = onError;
 			this._checkConnection(false, this.force_reconnect);
 		}
 	}
@@ -502,8 +506,8 @@ var EventHub = class {
 		if(!txid) {
 			throw new Error('Missing "txid" parameter');
 		}
-		this.transactionOnEvents.remove(txid);
-		this.transactionOnErrors.remove(txid);
+		delete this.transactionOnEvents[txid];
+		delete this.transactionOnErrors[txid];
 	}
 
 	/*
@@ -512,13 +516,15 @@ var EventHub = class {
 	 */
 	_processBlockOnEvents(block) {
 		logger.debug('_processBlockOnEvents block=%s', block.header.number);
-		if(this.blockOnEvents.size() == 0) {
+		if(Object.keys(this.blockOnEvents).length == 0) {
 			logger.debug('_processBlockOnEvents - no registered block event "listeners"');
 			return;
 		}
 
 		// send to all registered block listeners
-		this.blockOnEvents.forEach(function(key, cb) {
+		let self = this;
+		Object.keys(this.blockOnEvents).forEach(function(key) {
+			var cb = self.blockOnEvents[key];
 			cb(block);
 		});
 	}
@@ -529,7 +535,7 @@ var EventHub = class {
 	 */
 	_processTxOnEvents(block) {
 		logger.debug('_processTxOnEvents block=%s', block.header.number);
-		if(this.transactionOnEvents.size() == 0) {
+		if(Object.keys(this.transactionOnEvents).length == 0) {
 			logger.debug('_processTxOnEvents - no registered transaction event "listeners"');
 			return;
 		}
@@ -541,7 +547,7 @@ var EventHub = class {
 			var channel_header = block.data.data[index].payload.header.channel_header;
 			var val_code = convertValidationCode(txStatusCodes[index]);
 			logger.debug('_processTxOnEvents - txid=%s  val_code=%s', channel_header.tx_id, val_code);
-			var cb = this.transactionOnEvents.get(channel_header.tx_id);
+			var cb = this.transactionOnEvents[channel_header.tx_id];
 			if (cb){
 				logger.debug('_processTxOnEvents - about to stream the transaction call back for code=%s tx=%s', val_code, channel_header.tx_id);
 				cb(channel_header.tx_id, val_code);
@@ -555,7 +561,7 @@ var EventHub = class {
 	 */
 	_processChainCodeOnEvents(block) {
 		logger.debug('_processChainCodeOnEvents block=%s', block.header.number);
-		if(this.chaincodeRegistrants.size() == 0) {
+		if(Object.keys(this.chaincodeRegistrants).length == 0) {
 			logger.debug('_processChainCodeOnEvents - no registered chaincode event "listeners"');
 			return;
 		}
@@ -573,7 +579,7 @@ var EventHub = class {
 					var caPayload = propRespPayload.extension;
 					var ccEvent = caPayload.events;
 					logger.debug('_processChainCodeOnEvents - ccEvent %s',ccEvent);
-					var cbtable = this.chaincodeRegistrants.get(ccEvent.chaincode_id);
+					var cbtable = this.chaincodeRegistrants[ccEvent.chaincode_id];
 					if (!cbtable) {
 						return;
 					}
