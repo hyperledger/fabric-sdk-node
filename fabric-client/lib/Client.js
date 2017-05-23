@@ -25,6 +25,7 @@ var Channel = require('./Channel.js');
 var ChannelConfig = require('./ChannelConfig.js');
 var Packager = require('./Packager.js');
 var Peer = require('./Peer.js');
+var EventHub = require('./EventHub.js');
 var Orderer = require('./Orderer.js');
 var TransactionID = require('./TransactionID.js');
 var MSP = require('./msp/msp.js');
@@ -203,6 +204,18 @@ var Client = class {
 	newPeer(url, opts) {
 		var peer = new Peer(url, opts);
 		return peer;
+	}
+
+	/**
+	 * Return a EventHub instance associated with this client instance.
+	 * The EventHub instance must be assigned an end point address and
+	 * connection parameters using the "setPeerAddr" method.
+	 * @see {@link EventHub}
+	 * @returns {EventHub} The EventHub instance
+	 */
+	newEventHub() {
+		var event_hub = new EventHub(this);
+		return event_hub;
 	}
 
     /**
@@ -739,10 +752,10 @@ var Client = class {
 
 		return _getChaincodePackageData(request, this.isDevMode())
 		.then((data) => {
-			logger.debug('installChaincode data %s ',data);
 			// DATA may or may not be present depending on devmode settings
 			if (data) {
 				chaincodeDeploymentSpec.setCodePackage(data);
+				logger.debug('installChaincode - found packaged data');
 			}
 			logger.debug('installChaincode sending deployment spec %s ',chaincodeDeploymentSpec);
 

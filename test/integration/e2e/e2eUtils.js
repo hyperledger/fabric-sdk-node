@@ -29,7 +29,6 @@ var fs = require('fs');
 var util = require('util');
 
 var Client = require('fabric-client');
-var EventHub = require('fabric-client/lib/EventHub.js');
 var testUtil = require('../../unit/util.js');
 
 var e2e = testUtil.END2END;
@@ -225,7 +224,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		// an event listener can only register with a peer in its own org
 		logger.info(' create new eventhub %s', ORGS[userOrg]['peer1'].events);
 		let data = fs.readFileSync(path.join(__dirname, ORGS[userOrg]['peer1']['tls_cacerts']));
-		let eh = new EventHub(client);
+		let eh = client.newEventHub();
 		eh.setPeerAddr(
 			ORGS[userOrg]['peer1'].events,
 			{
@@ -330,7 +329,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 					let handle = setTimeout(reject, 120000);
 
 					eh.registerTxEvent(deployId.toString(), (tx, code) => {
-						t.pass('The chaincode ' + type + ' transaction has been committed on peer '+ eh.ep._endpoint.addr);
+						t.pass('The chaincode ' + type + ' transaction has been committed on peer '+ eh.getPeerAddr());
 						clearTimeout(handle);
 						eh.unregisterTxEvent(deployId);
 
@@ -343,7 +342,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 						}
 					});
 				});
-				logger.info('register eventhub %s with tx=%s',eh.ep._endpoint.addr,deployId);
+				logger.info('register eventhub %s with tx=%s',eh.getPeerAddr(),deployId);
 				eventPromises.push(txPromise);
 			});
 
@@ -508,7 +507,7 @@ function invokeChaincode(userOrg, version, t){
 
 		// an event listener can only register with a peer in its own org
 		let data = fs.readFileSync(path.join(__dirname, ORGS[userOrg].peer1['tls_cacerts']));
-		let eh = new EventHub(client);
+		let eh = client.newEventHub();
 		eh.setPeerAddr(
 			ORGS[userOrg].peer1.events,
 			{
@@ -615,7 +614,7 @@ function invokeChaincode(userOrg, version, t){
 								t.fail('The balance transfer transaction was invalid, code = ' + code);
 								reject();
 							} else {
-								t.pass('The balance transfer transaction has been committed on peer '+ eh.ep._endpoint.addr);
+								t.pass('The balance transfer transaction has been committed on peer '+ eh.getPeerAddr());
 								resolve();
 							}
 						},

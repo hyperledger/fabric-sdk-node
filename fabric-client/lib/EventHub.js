@@ -70,7 +70,46 @@ var ChainCodeCBE = class {
 
 /**
  * The EventHub class is used to distribute events from an
- * event source(peer)
+ * event source(peer).
+ * <br><br>Sample usage:
+<br><pre>
+var eh = client.newEventHub();
+eh.setPeerAddr(
+	'grpcs://localhost:9999',
+	{
+		pem: Buffer.from(certdata).toString(),
+		'ssl-target-name-override': 'peer1']
+	}
+);
+eh.connect();
+  eh.registerTxEvent(
+  	transactionId,
+	(tx, code) => {
+		eh.unregisterTxEvent(transactionId);
+		console.log('Transaction ' + transactionId +
+		'has completed');
+	},
+	(err) => {
+		eh.unregisterTxEvent(transactionId);
+		console.log('Transaction listener has been closed on ' +
+		eh.getPeerAddr());
+	}
+);
+</pre><br>
+ * Use the "newEventHub" method on {@link Client} to get a new EventHub instance.
+ * Use the "setPeerAddr" method on EventHub to indicate to the EventHub
+ * instance the Peer's event hub address.
+ * Use the "connect" method on EventHub to connect to the Peer's event
+ * hub. This operation will be asynchronous and as such the call will not
+ * fail if there is an issue with the connection.
+ * Use the "registerTxEvent", "registerChaincodeEvent", or "registerBlockEvent"
+ * calls to register your callback listeners to be notified when this EventHub
+ * receives an event. Notice in the example there is both a callback for processing
+ * the event and one to process error issues. The primary error to watch for is
+ * a network issue that will cause the connection to close. Registering
+ * an error callback will guarantee that you get notified of network issues,
+ * otherwise there is no path available for this EventHub to notify the
+ * listeners.
  * @class
  */
 var EventHub = class {
@@ -86,24 +125,27 @@ var EventHub = class {
 	constructor(clientContext) {
 		logger.debug('const ');
 		// hashtable of clients registered for chaincode events
-		this.chaincodeRegistrants = {};
+		this._chaincodeRegistrants = {};
 		// set of clients registered for block events
-		this.block_registrant_count = 1;
-		this.blockOnEvents = {};
-		this.blockOnErrors = {};
+		this._block_registrant_count = 1;
+		this._blockOnEvents = {};
+		this._blockOnErrors = {};
 		// hashtable of clients registered for transactional events
-		this.transactionOnEvents = {};
-		this.transactionOnErrors = {};
+		this._transactionOnEvents = {};
+		this._transactionOnErrors = {};
 		// peer node to connect to
-		this.ep = null;
+		this._ep = null;
 		// grpc event client interface
-		this._client = null;
+		this._event_client = null;
 		// grpc chat streaming interface
-		this.stream = null;
+		this._stream = null;
 		// fabric connection state of this eventhub
-		this.connected = false;
+		this._connected = false;
+		this._connect_running = false;
 		// should this event hub reconnect on registrations
-		this.force_reconnect = true;
+		this._force_reconnect = true;
+		// connect count for this instance
+		this._current_stream = 0;
 		// reference to the client instance holding critical context such as signing identity
 		if (typeof clientContext === 'undefined' || clientContext === null || clientContext === '')
 			throw new Error('Missing required argument: clientContext');
@@ -119,9 +161,6 @@ var EventHub = class {
 
 	/**
 	 * Set peer url for event source<p>
-	 * Note: Only use this if creating your own EventHub. The Channel
-	 * class creates a default eventHub that most Node clients can
-	 * use (see eventHubConnect, eventHubDisconnect and getEventHub).
 	 * @param {string} peeraddr peer url
 	 * @param {object} opts An Object that may contain options to pass to grpcs calls
 	 * <br>- pem {string} The certificate file, in PEM format,
@@ -133,10 +172,23 @@ var EventHub = class {
 	 *    value of the server certificate's hostname
 	 * <br>- any other standard grpc stream options will be passed to the grpc service calls directly
 	 */
-
 	setPeerAddr(peerUrl, opts) {
 		logger.debug('setPeerAddr -  %s',peerUrl);
-		this.ep = new Remote(peerUrl, opts);
+		//clean up
+		this._disconnect(new Error('EventHub has been shutdown due to new Peer address assignment'));
+		this._ep = new Remote(peerUrl, opts);
+	}
+
+	/**
+	 * Get the peer url for this event source
+	 */
+	getPeerAddr() {
+		var addr = null;
+		if(this._ep) {
+			addr = this._ep._endpoint.addr;
+		}
+
+		return addr;
 	}
 
 	/**
@@ -144,46 +196,66 @@ var EventHub = class {
 	 * @returns true if connected to event source, false otherwise
 	 */
 	isconnected() {
-		return this.connected;
+		return this._connected;
 	}
 
 	/**
-	 * Establishes connection with peer event source
+	 * Establishes a connection with the peer event source
+	 * The peer address must be set using the "setPeerAddr"
+	 * method before calling this method.
+	 *
+	 * The connection will be established asynchronously.
 	 */
 	connect(){
+		logger.debug('connect - start');
+		this._connect_running = false; //override a running connect
 		this._connect();
 	}
 
 	/*
 	 * Internal use only
-	 * Establishes connection with peer event source
+	 * Establishes a connection with the peer event source
 	 * @param {boolean} force - internal use only, will reestablish the
 	 *                  the connection to the peer event hub
 	 */
 	_connect(force) {
-		logger.debug('connect - start');
-		if (!force && this.connected) {
-			logger.debug('connect - end - already conneted');
+		if(this._connect_running) {
+			logger.debug('_connect - connect is running');
 			return;
 		}
-		if (!this.ep) throw Error('Must set peer address before connecting.');
+		if (!force && this._connected) {
+			logger.debug('_connect - end - already conneted');
+			return;
+		}
+		if (!this._ep) throw Error('Must set peer address before connecting.');
 
+		this._connect_running = true;
+		this._current_stream++;
+		var stream_id = this._current_stream;
+		logger.debug('_connect - start stream:',stream_id);
 		var self = this; // for callback context
 
 		var send_timeout = setTimeout(function(){
-			logger.error('connect - timed out after:%s', self.ep._request_timeout);
-			self.disconnect();
-		}, self.ep._request_timeout);
+			logger.error('_connect - timed out after:%s', self._ep._request_timeout);
+			self._connect_running = false;
+			self._disconnect(new Error('Unable to connect to the peer event hub'));
+		}, self._ep._request_timeout);
 
+		this._event_client = new _events.Events(this._ep._endpoint.addr, this._ep._endpoint.creds, this._ep._options);
+		this._stream = this._event_client.chat();
 
-		this._client = new _events.Events(this.ep._endpoint.addr, this.ep._endpoint.creds, this.ep._options);
-		this.stream = this._client.chat();
-		this.connected = true;
-
-		this.stream.on('data', function(event) {
+		this._stream.on('data', function(event) {
+			self._connect_running = false;
 			clearTimeout(send_timeout);
-			var state = self.stream.call.channel_.getConnectivityState();
-			logger.debug('connect - on.data - grpc stream state :%s',state);
+			logger.debug('on.data - event stream:%s _current_stream:%s',stream_id, self._current_stream);
+			if(stream_id != self._current_stream) {
+				logger.debug('on.data - incoming event was from a cancel stream');
+				return;
+			}
+
+			var state = -1;
+			if(self._stream) state = self._stream.call.channel_.getConnectivityState();
+			logger.debug('on.data - grpc stream state :%s',state);
 			if (event.Event == 'block') {
 				var block = BlockDecoder.decodeBlock(event.block);
 				self._processBlockOnEvents(block);
@@ -191,31 +263,55 @@ var EventHub = class {
 				self._processChainCodeOnEvents(block);
 			}
 			else if (event.Event == 'register'){
-				logger.debug('connect - register event received');
+				logger.debug('on.data - register event received');
+				self._connected = true;
 			}
 			else if (event.Event == 'unregister'){
-				if(self.connected) self.disconnect();
-				logger.debug('connect - unregister event received');
+				if(self._connected) self._disconnect(new Error('Peer event hub has disconnected due to an "unregister" event'));
+				logger.debug('on.data - unregister event received');
 			}
 			else {
-				logger.debug('connect - unknown event %s',event.Event);
+				logger.debug('on.data - unknown event %s',event.Event);
 			}
 		});
-		this.stream.on('end', function() {
+
+		this._stream.on('end', function() {
+			self._connect_running = false;
 			clearTimeout(send_timeout);
-			var state = self.stream.call.channel_.getConnectivityState();
-			logger.debug('connect - on.end - grpc stream state :%s',state);
-			if(self.connected) self.disconnect();
+			logger.debug('on.end - event stream:%s _current_stream:%s',stream_id, self._current_stream);
+			if(stream_id != self._current_stream) {
+				logger.debug('on.end - incoming event was from a cancel stream');
+				return;
+			}
+
+			var state = -1;
+			if(self._stream) state = self._stream.call.channel_.getConnectivityState();
+			logger.debug('on.end - grpc stream state :%s',state);
+			self._disconnect(new Error('Peer event hub has disconnected due to an "end" event'));
 		});
-		this.stream.on('error', function() {
+
+		this._stream.on('error', function(err) {
+			self._connect_running = false;
 			clearTimeout(send_timeout);
-			var state = self.stream.call.channel_.getConnectivityState();
-			logger.debug('connect - on.error - grpc stream state :%s',state);
-			if(self.connected) self.disconnect();
+			logger.debug('on.error - event stream:%s _current_stream:%s',stream_id, self._current_stream);
+			if(stream_id != self._current_stream) {
+				logger.debug('on.error - incoming event was from a cancel stream');
+				return;
+			}
+
+			var state = -1;
+			if(self._stream) state = self._stream.call.channel_.getConnectivityState();
+			logger.debug('on.error - grpc stream state :%s',state);
+			if(err instanceof Error) {
+				self._disconnect(err);
+			}
+			else {
+				self._disconnect(new Error(err));
+			}
 		});
 
 		this._sendRegistration(true);
-		logger.debug('connect - end');
+		logger.debug('_connect - end stream:',stream_id);
 	}
 
 	/**
@@ -224,11 +320,23 @@ var EventHub = class {
 	 * all listeners that provided an "onError" callback.
 	 */
 	disconnect() {
-		this.connected = false;
-		this._closeAllCallbacks(new Error('EventHub has been shutdown'));
-		if(this.stream) {
+		this._disconnect(new Error('EventHub has been shutdown'));
+	}
+
+	/* Internal method
+	 * Disconnects the connection to the peer event source.
+	 * Will close all event listeners and send an `Error` to
+	 * all listeners that provided an "onError" callback.
+	 */
+	_disconnect(err) {
+		logger.debug('_disconnect - start -- called due to:: %s',err.message);
+		this._connected = false;
+		this._closeAllCallbacks(err);
+		if(this._stream) {
+			logger.debug('_disconnect - shutdown existing stream');
 			this._sendRegistration(false);
-			this.stream.end();
+			this._stream.end();
+			this._stream = null;
 		}
 	}
 
@@ -254,12 +362,13 @@ var EventHub = class {
 		signedEvent.setEventBytes(event.toBuffer());
 		var sig = user.getSigningIdentity().sign(event.toBuffer());
 		signedEvent.setSignature(Buffer.from(sig));
-		this.stream.write(signedEvent);
+		this._stream.write(signedEvent);
 	}
 
 	/*
-	 * Internal method to close out all callbacks
-	 * Sends an error to all registered event onError callbacks
+	 * Internal method
+	 * Will close out all callbacks
+	 * Sends an error to all registered event "onError" callbacks
 	 */
 	_closeAllCallbacks(err) {
 		logger.debug('_closeAllCallbacks - start');
@@ -272,30 +381,30 @@ var EventHub = class {
 			}
 		};
 
-		logger.debug('_closeAllCallbacks - blockOnErrors %s', Object.keys(this.blockOnErrors).length);
-		closer(this.blockOnErrors);
-		this.blockOnEvents = {};
-		this.blockOnErrors = {};
+		logger.debug('_closeAllCallbacks - blockOnErrors %s', Object.keys(this._blockOnErrors).length);
+		closer(this._blockOnErrors);
+		this._blockOnEvents = {};
+		this._blockOnErrors = {};
 
-		logger.debug('_closeAllCallbacks - transactionOnErrors %s', Object.keys(this.transactionOnErrors).length);
-		closer(this.transactionOnErrors);
-		this.transactionOnEvents = {};
-		this.transactionOnErrors = {};
+		logger.debug('_closeAllCallbacks - transactionOnErrors %s', Object.keys(this._transactionOnErrors).length);
+		closer(this._transactionOnErrors);
+		this._transactionOnEvents = {};
+		this._transactionOnErrors = {};
 
 		var self = this;
 		var cc_closer = function(key) {
-			var cbtable = self.chaincodeRegistrants[key];
+			var cbtable = self._chaincodeRegistrants[key];
 			cbtable.forEach(function(cbe) {
-				logger.debug('_closeAllCallbacks - closing this chaincode event %s %s',cbe.ccid, cbe.eventNameFilter);
+				logger.debug('_closeAllCallbacks - closing this chaincode event ccid:%s eventNameFilter:%s',cbe.ccid, cbe.eventNameFilter);
 				if(cbe.onError) {
 					cbe.onError(err);
 				}
 			});
 		};
 
-		logger.debug('_closeAllCallbacks - chaincodeRegistrants %s', Object.keys(this.chaincodeRegistrants).length);
-		Object.keys(this.chaincodeRegistrants).forEach(cc_closer);
-		this.chaincodeRegistrants = {};
+		logger.debug('_closeAllCallbacks - chaincodeRegistrants %s', Object.keys(this._chaincodeRegistrants).length);
+		Object.keys(this._chaincodeRegistrants).forEach(cc_closer);
+		this._chaincodeRegistrants = {};
 	}
 
 	/*
@@ -303,39 +412,48 @@ var EventHub = class {
 	 * checks for a connection and will restart
 	 */
 	_checkConnection(throw_error, force_reconnect) {
+		logger.debug('_checkConnection - start throw_error %s, force_reconnect %s',throw_error, force_reconnect);
 		var state = 0;
-		if(this.stream) {
-			state = this.stream.call.channel_.getConnectivityState();
+		if(this._stream) {
+			state = this._stream.call.channel_.getConnectivityState();
 		}
-		if(this.connected) {
-			logger.debug('_checkConnection - this hub %s is connected with stream channel state %s', this.ep.getUrl(), state);
+		if(this._connected || this._connect_running) {
+			logger.debug('_checkConnection - this hub %s is connected or trying to connect with stream channel state %s', this._ep.getUrl(), state);
 		}
 		else {
-			logger.debug('_checkConnection - this hub %s is not connected with stream channel state %s', this.ep.getUrl(), state);
-			if(throw_error) {
+			logger.debug('_checkConnection - this hub %s is not connected with stream channel state %s', this._ep.getUrl(), state);
+			if(throw_error && !force_reconnect) {
 				throw new Error('The event hub has not been connected to the event source');
 			}
 		}
 
 		if(force_reconnect) {
 			try {
-				var is_paused = this.stream.isPaused();
-				logger.debug('_checkConnection - grpc isPaused :%s',is_paused);
-				if(is_paused) {
-					this.stream.resume();
-					logger.debug('_checkConnection - grpc resuming ');
+				if(this._stream) {
+					var is_paused = this._stream.isPaused();
+					logger.debug('_checkConnection - grpc isPaused :%s',is_paused);
+					if(is_paused) {
+						this._stream.resume();
+						logger.debug('_checkConnection - grpc resuming ');
+					}
+					var state = this._stream.call.channel_.getConnectivityState();
+					logger.debug('_checkConnection - grpc stream state :%s',state);
+					if(state != 2) {
+						// try to reconnect
+						this._connect(true);
+					}
 				}
-				var state = this.stream.call.channel_.getConnectivityState();
-				logger.debug('_checkConnection - grpc stream state :%s',state);
-				if(state != 2) {
+				else {
+					logger.debug('_checkConnection - stream was shutdown - will reconnected');
 					// try to reconnect
 					this._connect(true);
 				}
 			}
 			catch(error) {
 				logger.error('_checkConnection - error ::' + error.stack ? error.stack : error);
-				this.disconnect();
-				throw new Error('Event hub is not connected ');
+				var err = new Error('Event hub is not connected ');
+				this._disconnect(err);
+				throw err;
 			}
 		}
 	}
@@ -345,13 +463,20 @@ var EventHub = class {
 	 * This EventHub instance must be connected to a remote
 	 * peer's event hub before registering for events by calling
 	 * the "connect()" method.
+	 * An error may be thrown by this call if no "onError" callback
+	 * is provided and this EventHub has noticed that the connection has not been
+	 * established. However since the connection establishment is running
+	 * asynchronously, a register call could be made before this EventHub has been
+	 * notified of the network issue. The best practice would be to provide an
+	 * "onError" callback to be notified when this EventHub has an issue.
 	 * @param {string} ccid - string chaincode id
 	 * @param {string} eventname - string The regex string used to filter events
 	 * @param {function} onEvent - callback function for filter matches
 	 * that takes a single parameter which is a json object representation
 	 * of type "message ChaincodeEvent" from lib/proto/chaincode_event.proto
 	 * @param {function} onError - optional callback function to be notified when this
-	 * event hub is shutdown.
+	 * event hub is shutdown. The shutdown may be caused by a network error or by
+	 * a call to the "disconnect()" method.
 	 * @returns {object} ChainCodeCBE object that should be treated as an opaque
 	 * handle used to unregister (see unregisterChaincodeEvent)
 	 */
@@ -372,17 +497,17 @@ var EventHub = class {
 		this._checkConnection(!have_error_cb, false);
 
 		var cbe = new ChainCodeCBE(ccid, eventname, onEvent, onError);
-		var cbtable = this.chaincodeRegistrants[ccid];
+		var cbtable = this._chaincodeRegistrants[ccid];
 		if (!cbtable) {
 			cbtable = new Set();
-			this.chaincodeRegistrants[ccid] = cbtable;
+			this._chaincodeRegistrants[ccid] = cbtable;
 		}
 		cbtable.add(cbe);
 
 		// when there is an error callback try to reconnect this
 		// event hub if is not connected
 		if(have_error_cb) {
-			this._checkConnection(false, this.force_reconnect);
+			this._checkConnection(false, this._force_reconnect);
 		}
 
 		return cbe;
@@ -398,14 +523,14 @@ var EventHub = class {
 		if(!cbe) {
 			throw new Error('Missing "cbe" parameter');
 		}
-		var cbtable = this.chaincodeRegistrants[cbe.ccid];
+		var cbtable = this._chaincodeRegistrants[cbe.ccid];
 		if (!cbtable) {
 			logger.debug('No event registration for ccid %s ', cbe.ccid);
 			return;
 		}
 		cbtable.delete(cbe);
 		if (cbtable.size <= 0) {
-			delete this.chaincodeRegistrants[cbe.ccid];
+			delete this._chaincodeRegistrants[cbe.ccid];
 		}
 	}
 
@@ -414,6 +539,12 @@ var EventHub = class {
 	 * This EventHub instance must be connected to a remote
 	 * peer's event hub before registering for events by calling
 	 * the "connect()" method.
+	 * An error may be thrown by this call if no "onError" callback
+	 * is provided and this EventHub has noticed that the connection has not been
+	 * established. However since the connection establishment is running
+	 * asynchronously, a register call could be made before this EventHub has been
+	 * notified of the network issue. The best practice would be to provide an
+	 * "onError" callback to be notified when this EventHub has an issue.
 	 * @param {function} onEvent Function that takes a single parameter
 	 * which is a JSON object representation of type GRPC message "Block"
 	 * from lib/proto/common/common.proto.
@@ -433,14 +564,14 @@ var EventHub = class {
 		// when this hub is not connected
 		this._checkConnection(!have_error_cb, false);
 
-		var block_registration_number = this.block_registrant_count++;
-		this.blockOnEvents[block_registration_number] = onEvent;
+		var block_registration_number = this._block_registrant_count++;
+		this._blockOnEvents[block_registration_number] = onEvent;
 
 		// when there is an error callback try to reconnect this
 		// event hub if is not connected
 		if(have_error_cb) {
-			this.blockOnErrors[block_registration_number] = onError;
-			this._checkConnection(false, this.force_reconnect);
+			this._blockOnErrors[block_registration_number] = onError;
+			this._checkConnection(false, this._force_reconnect);
 		}
 
 		return block_registration_number;
@@ -457,8 +588,8 @@ var EventHub = class {
 		if(!block_registration_number) {
 			throw new Error('Missing "block_registration_number" parameter');
 		}
-		delete this.blockOnEvents[block_registration_number];
-		delete this.blockOnErrors[block_registration_number];
+		delete this._blockOnEvents[block_registration_number];
+		delete this._blockOnErrors[block_registration_number];
 	}
 
 	/**
@@ -466,6 +597,12 @@ var EventHub = class {
 	 * This EventHub instance must be connected to a remote
 	 * peer's event hub before registering for events by calling
 	 * the "connect()" method.
+	 * An error may be thrown by this call if no "onError" callback
+	 * is provided and this EventHub has noticed that the connection has not been
+	 * established. However since the connection establishment is running
+	 * asynchronously, a register call could be made before this EventHub has been
+	 * notified of the network issue. The best practice would be to provide an
+	 * "onError" callback to be notified when this EventHub has an issue.
 	 * @param {string} txid string transaction id
 	 * @param {function} onEvent Function that takes a parameter which
 	 * is a json object representation of type "message Transaction"
@@ -487,13 +624,13 @@ var EventHub = class {
 		// when this hub is not connected
 		this._checkConnection(!have_error_cb, false);
 
-		this.transactionOnEvents[txid] = onEvent;
+		this._transactionOnEvents[txid] = onEvent;
 
 		// when there is an onError callback try to reconnect this
 		// event hub if is not connected
 		if(have_error_cb) {
-			this.transactionOnErrors[txid] = onError;
-			this._checkConnection(false, this.force_reconnect);
+			this._transactionOnErrors[txid] = onError;
+			this._checkConnection(false, this._force_reconnect);
 		}
 	}
 
@@ -506,8 +643,8 @@ var EventHub = class {
 		if(!txid) {
 			throw new Error('Missing "txid" parameter');
 		}
-		delete this.transactionOnEvents[txid];
-		delete this.transactionOnErrors[txid];
+		delete this._transactionOnEvents[txid];
+		delete this._transactionOnErrors[txid];
 	}
 
 	/*
@@ -516,15 +653,15 @@ var EventHub = class {
 	 */
 	_processBlockOnEvents(block) {
 		logger.debug('_processBlockOnEvents block=%s', block.header.number);
-		if(Object.keys(this.blockOnEvents).length == 0) {
+		if(Object.keys(this._blockOnEvents).length == 0) {
 			logger.debug('_processBlockOnEvents - no registered block event "listeners"');
 			return;
 		}
 
 		// send to all registered block listeners
 		let self = this;
-		Object.keys(this.blockOnEvents).forEach(function(key) {
-			var cb = self.blockOnEvents[key];
+		Object.keys(this._blockOnEvents).forEach(function(key) {
+			var cb = self._blockOnEvents[key];
 			cb(block);
 		});
 	}
@@ -535,7 +672,7 @@ var EventHub = class {
 	 */
 	_processTxOnEvents(block) {
 		logger.debug('_processTxOnEvents block=%s', block.header.number);
-		if(Object.keys(this.transactionOnEvents).length == 0) {
+		if(Object.keys(this._transactionOnEvents).length == 0) {
 			logger.debug('_processTxOnEvents - no registered transaction event "listeners"');
 			return;
 		}
@@ -547,7 +684,7 @@ var EventHub = class {
 			var channel_header = block.data.data[index].payload.header.channel_header;
 			var val_code = convertValidationCode(txStatusCodes[index]);
 			logger.debug('_processTxOnEvents - txid=%s  val_code=%s', channel_header.tx_id, val_code);
-			var cb = this.transactionOnEvents[channel_header.tx_id];
+			var cb = this._transactionOnEvents[channel_header.tx_id];
 			if (cb){
 				logger.debug('_processTxOnEvents - about to stream the transaction call back for code=%s tx=%s', val_code, channel_header.tx_id);
 				cb(channel_header.tx_id, val_code);
@@ -561,7 +698,7 @@ var EventHub = class {
 	 */
 	_processChainCodeOnEvents(block) {
 		logger.debug('_processChainCodeOnEvents block=%s', block.header.number);
-		if(Object.keys(this.chaincodeRegistrants).length == 0) {
+		if(Object.keys(this._chaincodeRegistrants).length == 0) {
 			logger.debug('_processChainCodeOnEvents - no registered chaincode event "listeners"');
 			return;
 		}
@@ -579,7 +716,7 @@ var EventHub = class {
 					var caPayload = propRespPayload.extension;
 					var ccEvent = caPayload.events;
 					logger.debug('_processChainCodeOnEvents - ccEvent %s',ccEvent);
-					var cbtable = this.chaincodeRegistrants[ccEvent.chaincode_id];
+					var cbtable = this._chaincodeRegistrants[ccEvent.chaincode_id];
 					if (!cbtable) {
 						return;
 					}
