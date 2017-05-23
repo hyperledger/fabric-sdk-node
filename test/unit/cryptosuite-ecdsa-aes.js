@@ -150,11 +150,15 @@ test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 	// each app instance is expected to use either HSM or software-based key management, as such this question
 	// is answered with a config setting rather than controlled on a case-by-case basis
 	utils.setConfigSetting('crypto-hsm', true);
+	let expectedError = '/Error:.*\/usr\/local\/lib/';
+	if (process.platform === 'win32') {
+		expectedError = 'Error: Win32 error 126/';
+	};
 	t.throws(
 		() => {
 			cs = utils.newCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
 		},
-		/Error:.*\/usr\/local\/lib/,
+		expectedError,
 		'Should attempt to load the bccsp_pkcs11 module and fail because of the dummy library path'
 	);
 	t.end();
