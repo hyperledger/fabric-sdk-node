@@ -37,7 +37,7 @@ module.exports.CHAINCODE_UPGRADE_PATH = 'github.com/example_cc1';
 module.exports.CHAINCODE_MARBLES_PATH = 'github.com/marbles_cc';
 module.exports.END2END = {
 	channel: 'mychannel',
-	chaincodeId: 'end2end',
+	chaincodeId: 'end2endnodesdk',
 	chaincodeVersion: 'v0'
 };
 

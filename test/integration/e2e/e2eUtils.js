@@ -253,6 +253,16 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, badTransientMap);
 			tx_id = request.txId;
 
+			t.comment(util.format(
+				'Upgrading chaincode "%s" at path "%s" to version "%s" by passing args "%s" to method "%s" in transaction "%s"',
+				request.chaincodeId,
+				request.chaincodePath,
+				request.chaincodeVersion,
+				request.args,
+				request.fcn,
+				request.txId
+			));
+
 			return channel.sendUpgradeProposal(request)
 			.then((results) => {
 				let proposalResponses = results[0];
