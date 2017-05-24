@@ -16,6 +16,9 @@
 
 'use strict';
 
+if (global && global.hfc) global.hfc.config = undefined;
+require('nconf').reset();
+
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
@@ -269,6 +272,16 @@ test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', function(t)
 });
 
 test('\n\n** CryptoKeyStore tests - getKey error tests **\n\n', function(t) {
+	// override t.end function so it'll always clear the config settings
+	t.end = ((context, f) => {
+		return function() {
+			if (global && global.hfc) global.hfc.config = undefined;
+			require('nconf').reset();
+
+			f.apply(context, arguments);
+		};
+	})(t, t.end);
+
 	var cryptoSuite = utils.newCryptoSuite();
 	t.throws(
 		() => {

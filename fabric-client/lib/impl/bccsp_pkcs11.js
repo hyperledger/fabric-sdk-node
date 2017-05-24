@@ -160,6 +160,8 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 	 * Open pkcs11 session and login.
 	 */
 	_pkcs11OpenSession(pkcs11, pkcs11Lib, pkcs11Slot, pkcs11Pin) {
+		logger.debug(__func() + 'parameters are pkcs11Slot %s pkcs11Pin %s pkcs11Lib %s',
+			pkcs11Slot, pkcs11Pin, pkcs11Lib);
 		pkcs11.load(pkcs11Lib);
 		pkcs11.C_Initialize();
 

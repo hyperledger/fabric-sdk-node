@@ -64,6 +64,25 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
     * `test/integration/cloudant-fabricca-tests.js`
   * To re-run `node test/integration/e2e.js` or `fabric-ca-services-tests.js` stop the network (ctrl-c), clean up the docker instances (`docker rm $(docker ps -aq)`) and restart the network with `docker-compose up` as described above.
 
+### Special Tests for Hardware Security Module support (experimental) via PKCS#11 interface
+The SDK has experimental support for PKCS#11 interface in order to allow applications to make use of HSM devices for key management. Unit tests for this feature are skipped by default. To run these testss:
+
+* set environment variable "PKCS11_TESTS" to "true"
+* install a software emulator of the PKCS#11 interface. The unit tests have been tried with SoftHSM2:
+  * install openssl 1.0.0+ or botan 1.10.0+
+  * download the source code from https://dist.opendnssec.org/source/softhsm-2.2.0.tar.gz
+  * `tar -xvf softhsm-2.2.0.tar.gz`
+  * `cd softhsm-2.2.0`
+  * `./configure --disable-gost` (would require additional libraries, turn it off unless you need gost algorithm support for the Russian market)
+  * `make`
+  * `sudo make install`
+  * create a token to store keys inside slot 0: `softhsm2-util --init-token --slot 0 --label "My token 1"`, you will be prompted two PINs: SO (Security Officer) PIN that can be used to re-initialize the token, and user PIN to be used by applications to access the token for generating and retrieving keys
+
+The unit test assumes slot '0' and user PIN `98765432`. If your configuration is different, use these environment variables to pass in the values:
+* PKCS11_LIB - path to the SoftHSM2 library, if not specified, the test case searches through a list of popular install locations
+* PKCS11_PIN
+* PKCS11_SLOT
+
 ### Contributor Check-list
 The following check-list is for code contributors to make sure their changesets are compliant to the coding standards and avoid time wasted in rejected changesets:
 

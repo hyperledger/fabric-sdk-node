@@ -6,6 +6,7 @@ var tapColorize = require('tap-colorize');
 var istanbul = require('gulp-istanbul');
 
 var fs = require('fs-extra');
+var os = require('os');
 var shell = require('gulp-shell');
 var testConstants = require('../../test/unit/constants.js');
 
@@ -42,11 +43,10 @@ gulp.task('test', ['clean-up', 'lint', 'docker-clean', 'pre-test', 'ca'], functi
 	// of the tests will re-use the same key value store that has
 	// saved the user certificates so they can interact with the
 	// network
-	return gulp.src([
+	return gulp.src(shouldRunPKCS11Tests([
 		'test/unit/**/*.js',
 		'!test/unit/constants.js',
 		'!test/unit/util.js',
-		'!test/unit/pkcs11.js',
 		'test/integration/fabric-ca-services-tests.js',
 		'test/integration/client.js',
 		'test/integration/orderer-channel-tests.js',
@@ -66,7 +66,7 @@ gulp.task('test', ['clean-up', 'lint', 'docker-clean', 'pre-test', 'ca'], functi
 		'test/integration/e2e/invoke-transaction.js',
 		'test/integration/e2e/query.js',
 		'test/integration/grpc.js'
-	])
+	]))
 	.pipe(tape({
 		reporter: tapColorize()
 	}))
@@ -82,12 +82,11 @@ gulp.task('test-headless', ['clean-up', 'lint', 'pre-test', 'ca'], function() {
 	// to the "unhandledRejection" event
 	process.setMaxListeners(0);
 
-	return gulp.src([
+	return gulp.src(shouldRunPKCS11Tests([
 		'test/unit/**/*.js',
 		'!test/unit/constants.js',
 		'!test/unit/util.js',
-		'!test/unit/pkcs11.js'
-	])
+	]))
 	.pipe(tape({
 		reporter: tapColorize()
 	}))
@@ -96,3 +95,17 @@ gulp.task('test-headless', ['clean-up', 'lint', 'pre-test', 'ca'], function() {
 			'text-summary', 'cobertura']
 	}));
 });
+
+// currently only the x64 CI jobs are configured with SoftHSM
+// disable the pkcs11.js test for s390 or other jobs
+// also skip it by default and allow it to be turned on manuall
+// with an environment variable so everyone don't have to
+// install SoftHsm just to run unit tests
+function shouldRunPKCS11Tests(tests) {
+	if (os.arch().match(/(x64|x86)/) === null ||
+		!(typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() == 'true')) {
+		tests.push('!test/unit/pkcs11.js');
+	}
+
+	return tests;
+}
