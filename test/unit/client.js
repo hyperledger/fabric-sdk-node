@@ -55,6 +55,19 @@ test('\n\n ** index.js **\n\n', function (t) {
 	t.end();
 });
 
+test('\n\n ** eventhub **\n\n', function (t) {
+	t.doesNotThrow(
+		function() {
+			var c = new hfc();
+			c._userContext = new User('name');
+			var event_hub = c.newEventHub();
+		},
+		null,
+		'Should be able to call "newEventHub" on the new instance of "hfc"');
+
+	t.end();
+});
+
 var Client = hfc;
 var client = new Client();
 var channelKeyValStorePath = path.join(testutil.getTempDir(), 'channelKeyValStorePath');

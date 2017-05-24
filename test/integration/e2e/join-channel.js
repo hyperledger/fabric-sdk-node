@@ -27,7 +27,6 @@ var path = require('path');
 var fs = require('fs');
 
 var Client = require('fabric-client');
-var EventHub = require('fabric-client/lib/EventHub.js');
 
 var testUtil = require('../../unit/util.js');
 
@@ -149,7 +148,7 @@ function joinChannel(org, t) {
 						)
 					);
 
-					let eh = new EventHub(client);
+					let eh = client.newEventHub();
 					eh.setPeerAddr(
 						ORGS[org][key].events,
 						{
@@ -178,7 +177,7 @@ function joinChannel(org, t) {
 						// Config block must only contain one transaction
 						var channel_header = block.data.data[0].payload.header.channel_header;
 						if (channel_header.channel_id === channel_name) {
-							t.pass('The new channel has been successfully joined on peer '+ eh.ep._endpoint.addr);
+							t.pass('The new channel has been successfully joined on peer '+ eh.getPeerAddr());
 							resolve();
 						}
 						else {

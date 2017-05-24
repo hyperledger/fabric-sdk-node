@@ -193,8 +193,8 @@ test('\n\n** EventHub tests\n\n', (t) => {
 test('\n\n** EventHub block callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	var index = eh.registerBlockEvent((block) => {
 		t.fail('Should not have called success callback when disconnect() is called');
@@ -214,8 +214,8 @@ test('\n\n** EventHub block callback \n\n', (t) => {
 	});
 
 	t.equal(index, 2, 'Check the 2nd block listener is at index 2');
-	t.equal(Object.keys(eh.blockOnEvents).length, 2, 'Check the size of the blockOnEvents hash table');
-	t.equal(Object.keys(eh.blockOnErrors).length, 2, 'Check the size of the blockOnErrors hash table');
+	t.equal(Object.keys(eh._blockOnEvents).length, 2, 'Check the size of the blockOnEvents hash table');
+	t.equal(Object.keys(eh._blockOnErrors).length, 2, 'Check the size of the blockOnErrors hash table');
 
 	eh.disconnect();
 });
@@ -223,8 +223,8 @@ test('\n\n** EventHub block callback \n\n', (t) => {
 test('\n\n** EventHub transaction callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	eh.registerTxEvent('txid1', (block) => {
 		// empty method body
@@ -232,19 +232,19 @@ test('\n\n** EventHub transaction callback \n\n', (t) => {
 		// empty method body
 	});
 	t.pass('successfully registered transaction callbacks');
-	t.equal(Object.keys(eh.transactionOnEvents).length, 1, 'Check the size of the transactionOnEvents hash table');
-	t.equal(Object.keys(eh.transactionOnErrors).length, 1, 'Check the size of the transactionOnErrors hash table');
+	t.equal(Object.keys(eh._transactionOnEvents).length, 1, 'Check the size of the transactionOnEvents hash table');
+	t.equal(Object.keys(eh._transactionOnErrors).length, 1, 'Check the size of the transactionOnErrors hash table');
 
 	eh.registerTxEvent('txid1', (block) => {
 		t.fail('Should not have called success callback');
 		t.end();
 	}, (error) =>{
-		t.pass('Successfully called error callback');
+		t.pass('Successfully called transaction error callback');
 		t.end();
 	});
-	t.equal(Object.keys(eh.transactionOnEvents).length, 1,
+	t.equal(Object.keys(eh._transactionOnEvents).length, 1,
 		'Size of the transactionOnEvents hash table should still be 1 since the listeners are for the same txId');
-	t.equal(Object.keys(eh.transactionOnErrors).length, 1,
+	t.equal(Object.keys(eh._transactionOnErrors).length, 1,
 		'Size of the transactionOnErrors hash table should still be 1 since the listeners are for the same txId');
 
 	eh.registerTxEvent('txid2', (block) => {
@@ -253,8 +253,8 @@ test('\n\n** EventHub transaction callback \n\n', (t) => {
 		// empty method body
 	});
 
-	t.equal(Object.keys(eh.transactionOnEvents).length, 2, 'Check the size of the transactionOnEvents hash table');
-	t.equal(Object.keys(eh.transactionOnErrors).length, 2, 'Check the size of the transactionOnErrors hash table');
+	t.equal(Object.keys(eh._transactionOnEvents).length, 2, 'Check the size of the transactionOnEvents hash table');
+	t.equal(Object.keys(eh._transactionOnErrors).length, 2, 'Check the size of the transactionOnErrors hash table');
 
 	eh.disconnect();
 });
@@ -262,19 +262,19 @@ test('\n\n** EventHub transaction callback \n\n', (t) => {
 test('\n\n** EventHub chaincode callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
 		t.fail('Should not have called success callback');
 		t.end();
 	}, (error) =>{
-		t.pass('Successfully called error callback');
+		t.pass('Successfully called chaincode error callback');
 		t.end();
 	});
 	t.pass('successfully registered chaincode callbacks');
 
-	t.equal(Object.keys(eh.chaincodeRegistrants).length, 1, 'Check the size of the chaincodeRegistrants hash table');
+	t.equal(Object.keys(eh._chaincodeRegistrants).length, 1, 'Check the size of the chaincodeRegistrants hash table');
 
 	eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
 		// empty method body
@@ -282,7 +282,7 @@ test('\n\n** EventHub chaincode callback \n\n', (t) => {
 		// empty method body
 	});
 
-	t.equal(Object.keys(eh.chaincodeRegistrants).length, 1,
+	t.equal(Object.keys(eh._chaincodeRegistrants).length, 1,
 		'Size of the chaincodeRegistrants hash table should still be 1 because both listeners are for the same chaincode');
 
 	eh.registerChaincodeEvent('ccid2', 'eventfilter', (block) => {
@@ -291,7 +291,7 @@ test('\n\n** EventHub chaincode callback \n\n', (t) => {
 		// empty method body
 	});
 
-	t.equal(Object.keys(eh.chaincodeRegistrants).length, 2,
+	t.equal(Object.keys(eh._chaincodeRegistrants).length, 2,
 		'Size of the chaincodeRegistrants hash table should still be 2');
 
 	eh.disconnect();
@@ -300,11 +300,11 @@ test('\n\n** EventHub chaincode callback \n\n', (t) => {
 test('\n\n** EventHub block callback no Error callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	eh.registerBlockEvent((block) => {
-		t.fail('Should not have called success callback');
+		t.fail('Should not have called block no error success callback');
 		t.end();
 	});
 	t.pass('successfully registered block callbacks');
@@ -315,11 +315,11 @@ test('\n\n** EventHub block callback no Error callback \n\n', (t) => {
 test('\n\n** EventHub transaction callback no Error callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	eh.registerTxEvent('txid', (block) => {
-		t.fail('Should not have called success callback');
+		t.fail('Should not have called transaction no error success callback');
 		t.end();
 	});
 	t.pass('successfully registered transaction callbacks');
@@ -330,11 +330,11 @@ test('\n\n** EventHub transaction callback no Error callback \n\n', (t) => {
 test('\n\n** EventHub chaincode callback no Error callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
-		t.fail('Should not have called success callback');
+		t.fail('Should not have called chaincode no error success callback');
 		t.end();
 	});
 	t.pass('successfully registered chaincode callbacks');
@@ -345,21 +345,21 @@ test('\n\n** EventHub chaincode callback no Error callback \n\n', (t) => {
 test('\n\n** EventHub remove block callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	var blockcallback = (block) => {
-		t.fail('Should not have called success callback');
+		t.fail('Should not have called block success callback (on remove)');
 		t.end();
 	};
 	var blockerrorcallback = (error) =>{
-		t.fail('Should not have called error callback');
+		t.fail('Should not have called block error callback (on remove)');
 		t.end();
 	};
 	var brn = eh.registerBlockEvent( blockcallback, blockerrorcallback);
 	t.pass('successfully registered block callbacks');
 	eh.unregisterBlockEvent(brn);
-	t.equal(Object.keys(eh.blockOnEvents).length, 0, 'Check the size of the blockOnEvents hash table');
+	t.equal(Object.keys(eh._blockOnEvents).length, 0, 'Check the size of the blockOnEvents hash table');
 	t.pass('successfuly unregistered block callback');
 	eh.disconnect();
 	t.pass('successfuly disconnected eventhub');
@@ -369,21 +369,21 @@ test('\n\n** EventHub remove block callback \n\n', (t) => {
 test('\n\n** EventHub remove transaction callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	var txid = 'txid';
 	eh.registerTxEvent(txid, (block) => {
-		t.fail('Should not have called success callback');
+		t.fail('Should not have called transaction success callback (on remove)');
 		t.end();
 	}, (error) =>{
-		t.fail('Should not have called error callback');
+		t.fail('Should not have called transaction error callback (on remove)');
 		t.end();
 	});
 	t.pass('successfully registered transaction callbacks');
 	eh.unregisterTxEvent(txid);
 	t.pass('successfuly unregistered transaction callback');
-	t.equal(Object.keys(eh.transactionOnEvents).length, 0, 'Check the size of the transactionOnEvents hash table');
+	t.equal(Object.keys(eh._transactionOnEvents).length, 0, 'Check the size of the transactionOnEvents hash table');
 	eh.disconnect();
 	t.pass('successfuly disconnected eventhub');
 	t.end();
@@ -392,20 +392,20 @@ test('\n\n** EventHub remove transaction callback \n\n', (t) => {
 test('\n\n** EventHub remove chaincode callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
-		t.fail('Should not have called success callback');
+		t.fail('Should not have called chaincode success callback (on remove)');
 		t.end();
 	}, (error) =>{
-		t.fail('Should not have called error callback');
+		t.fail('Should not have called chaincode error callback (on remove)');
 		t.end();
 	});
 	t.pass('successfully registered chaincode callbacks');
 	eh.unregisterChaincodeEvent(cbe);
 	t.pass('successfuly unregistered chaincode callback');
-	t.equal(Object.keys(eh.chaincodeRegistrants).length, 0,
+	t.equal(Object.keys(eh._chaincodeRegistrants).length, 0,
 		'Size of the chaincodeRegistrants hash table should be 0');
 	eh.disconnect();
 	t.pass('successfuly disconnected eventhub');
@@ -416,11 +416,11 @@ test('\n\n** EventHub remove chaincode callback \n\n', (t) => {
 test('\n\n** EventHub remove block callback no Error callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	var blockcallback = (block) => {
-		t.fail('Should not have called success callback');
+		t.fail('Should not have called block success callback (remove with no error callback)');
 		t.end();
 	};
 	var brn = eh.registerBlockEvent( blockcallback);
@@ -435,12 +435,12 @@ test('\n\n** EventHub remove block callback no Error callback \n\n', (t) => {
 test('\n\n** EventHub remove transaction callback no Error callback\n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 
 	var txid = 'txid';
 	eh.registerTxEvent(txid, (block) => {
-		t.fail('Should not have called success callback');
+		t.fail('Should not have called transaction success callback (remove with no error callback)');
 		t.end();
 	});
 	t.pass('successfully registered transaction callbacks');
@@ -454,10 +454,10 @@ test('\n\n** EventHub remove transaction callback no Error callback\n\n', (t) =>
 test('\n\n** EventHub remove chaincode callback no Error callback \n\n', (t) => {
 	var eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
 	eh.setPeerAddr('grpc://localhost:7053');
-	eh.connected = true; //force this into connected state
-	eh.force_reconnect = false;
+	eh._connected = true; //force this into connected state
+	eh._force_reconnect = false;
 	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
-		t.fail('Should not have called success callback');
+		t.fail('Should not have called chaincode success callback (remove with no error callback)');
 		t.end();
 	});
 	t.pass('successfully registered chaincode callbacks');

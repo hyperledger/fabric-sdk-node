@@ -31,7 +31,6 @@ var fs = require('fs');
 
 var hfc = require('fabric-client');
 var testUtil = require('../unit/util.js');
-var EventHub = require('fabric-client/lib/EventHub.js');
 var eputil = require('./eventutil.js');
 
 var client = new hfc();
@@ -99,6 +98,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	var eh;
 	var req1 = null;
 	var req2 = null;
+	var tls_data = null;
 
 	// override t.end function so it'll always disconnect the event hub
 	t.end = ((context, ehs, f) => {
@@ -126,15 +126,79 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		t.pass('Successfully enrolled user \'admin\'');
 
 		// setup event hub to get notified when transactions are committed
-		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
+		tls_data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
 
 		the_user = admin;
 
-		eh = new EventHub(client);
+		eh = client.newEventHub();
+
+		// first do one that fails
+		eh.setPeerAddr(
+			'grpcs://localhost:9999',
+			{
+				pem: Buffer.from(tls_data).toString(),
+				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
+			});
+		try {
+			eh.connect();
+			eh.registerBlockEvent(
+				(block) => {
+					t.fail('this success function should not be called');
+				},
+				(err) => {
+					if(err.toString().indexOf('Connect Failed') >= 0) {
+						t.pass('this error function should be called ' + err);
+					}
+					else {
+						t.fail('Error function was called but found an unknown error '+err);
+					}
+				}
+			);
+		}
+		catch(err) {
+			t.fail('this catch should not have been called');
+		}
+		t.comment(' ------ test about to sleep');
+		return sleep(5000);
+	},
+	(err) => {
+		t.fail('Failed to enroll user \'admin\'. ' + err);
+		t.end();
+	}).then(() =>{
+		t.comment(' ------ test is awake');
+
+		// now one that fails but not wait for it fail
+		eh.setPeerAddr(
+			'grpcs://localhost:9999',
+			{
+				pem: Buffer.from(tls_data).toString(),
+				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
+			});
+		try {
+			eh.connect();
+			eh.registerBlockEvent(
+				(block) => {
+					t.fail('this success function should not be called');
+				},
+				(err) => {
+					if(err.toString().indexOf('Peer address') >= 0) {
+						t.pass('this error function should be called ' + err);
+					}
+					else {
+						t.fail('Error function was called but found an unknown error '+err);
+					}
+				}
+			);
+		}
+		catch(err) {
+			t.fail('this catch should not have been called');
+		}
+
+		// now do one that works
 		eh.setPeerAddr(
 			ORGS[org].peer1.events,
 			{
-				pem: Buffer.from(data).toString(),
+				pem: Buffer.from(tls_data).toString(),
 				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 			});
 		eh.connect();
@@ -145,10 +209,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		request.chaincodeVersion = chaincode_version;
 
 		return client.installChaincode(request);
-	},
-	(err) => {
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		t.end();
 	}).then((results) => {
 		if ( eputil.checkProposal(results)) {
 			// read the config block from the orderer for the channel
@@ -244,3 +304,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		t.end();
 	});
 });
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
