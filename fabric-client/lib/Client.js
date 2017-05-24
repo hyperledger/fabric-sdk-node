@@ -1108,7 +1108,13 @@ var Client = class {
 			promise.then((data) => {
 				if (data) {
 					logger.debug('then privateKeyPEM data');
-					return self._cryptoSuite.importKey(data.toString());
+					var opt1;
+					if (self._cryptoSuite._cryptoKeyStore) {
+						opt1 = {ephemeral: false};
+					} else {
+						opt1 = {ephemeral: true};
+					}
+					return self._cryptoSuite.importKey(data.toString(), opt1);
 				} else {
 					throw new Error('failed to load private key data');
 				}
@@ -1130,6 +1136,10 @@ var Client = class {
 			}).then(() => {
 				logger.debug('then setUserContext');
 				return self.setUserContext(member);
+			}, (err) => {
+				logger.debug('error during setUserContext...');
+				logger.error(err.stack ? err.stack : err);
+				return reject(err);
 			}).then((user) => {
 				logger.debug('then user');
 				return resolve(user);

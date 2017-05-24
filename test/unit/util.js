@@ -128,10 +128,13 @@ function getMember(username, password, client, t, userOrg) {
 			}
 
 			var member = new User(username);
-			var cryptoSuite = client.newCryptoSuite();
-			if (userOrg) {
-				cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
-				client.setCryptoSuite(cryptoSuite);
+			var cryptoSuite = client._cryptoSuite;
+			if (!cryptoSuite) {
+				cryptoSuite = client.newCryptoSuite();
+				if (userOrg) {
+					cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
+					client.setCryptoSuite(cryptoSuite);
+				}
 			}
 			member.setCryptoSuite(cryptoSuite);
 
@@ -146,7 +149,11 @@ function getMember(username, password, client, t, userOrg) {
 
 				return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
 			}).then(() => {
-				return client.setUserContext(member);
+				var skipPersistence = false;
+				if (client._cryptoSuite && !client._cryptoSuite._cryptoKeyStore) {
+					skipPersistence = true;
+				}
+				return client.setUserContext(member, skipPersistence);
 			}).then(() => {
 				return resolve(member);
 			}).catch((err) => {

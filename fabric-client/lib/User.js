@@ -173,8 +173,13 @@ var User = class {
 			this._cryptoSuite = sdkUtils.newCryptoSuite();
 			this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
 		}
-
-		return this._cryptoSuite.importKey(certificate)
+		var promise;
+		if (this._cryptoSuite._cryptoKeyStore) {
+			promise = this._cryptoSuite.importKey(certificate);
+		} else {
+			promise = Promise.resolve(this._cryptoSuite.importKey(certificate, {ephemeral: true}));
+		}
+		return promise
 		.then((pubKey) => {
 			var identity = new Identity(certificate, pubKey, mspId, this._cryptoSuite);
 			this._identity = identity;

@@ -858,7 +858,7 @@ test('\n\n ** createUser error path - missing required cryptoContent privateKeyP
 });
 
 test('\n\n ** createUser error path - invalid cryptoContent **\n\n', function (t) {
-	var msg = 'Failed to load key or certificate and save to local stores';
+	var msg = 'failed to load private key data';
 
 	var userOrg = 'org1';
 	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
@@ -886,6 +886,78 @@ test('\n\n ** createUser error path - invalid cryptoContent **\n\n', function (t
 			t.fail('Expected error message: '+msg+'\n but got '+err.message);
 			t.end;
 		}
+	});
+});
+
+test('\n\n ** createUser error path - no keyValueStore **\n\n', function (t) {
+	var msg = 'Failed to load key or certificate and save to local stores';
+	var userOrg = 'org2';
+	utils.setConfigSetting('crypto-keysize', 256);
+
+	var client = new Client();
+	var cryptoSuite = client.newCryptoSuite();
+
+	client.createUser(
+		{username: caImport.orgs[userOrg].username,
+			mspid: caImport.orgs[userOrg].mspid,
+			cryptoContent: caImport.orgs[userOrg].cryptoContent
+	    })
+	.then((user) => {
+		if (user) {
+			t.fail('createUser, did not expect successful create');
+			t.end();
+		} else {
+			t.fail('createUser, returned null but expected error');
+			t.end();
+		}
+	}, (err) => {
+		if (err.message.indexOf(msg) > -1) {
+			t.pass('createUser, error expected: '+msg);
+			t.end();
+		} else {
+			t.fail('createUser, unexpected error: '+err.message);
+			t.comment(err.stack ? err.stack : err);
+			t.end();
+		}
+	}).catch((err) => {
+		t.fail('createUser, caught unexpected error: '+err.message);
+		t.comment(err.stack ? err.stack : err);
+		t.end();
+	});
+});
+
+test('\n\n ** createUser success path - no cryptoKeyStore **\n\n', function (t) {
+	var userOrg = 'org2';
+	utils.setConfigSetting('crypto-keysize', 256);
+
+	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
+
+	var client = new Client();
+	var cryptoSuite = client.newCryptoSuite();
+
+	return utils.newKeyValueStore(keyStoreOpts)
+	.then((store) => {
+		logger.info('store: %s',store);
+		client.setStateStore(store);
+		return '';
+	}).then(() => {
+		return client.createUser(
+			{username: caImport.orgs[userOrg].username,
+				mspid: caImport.orgs[userOrg].mspid,
+				cryptoContent: caImport.orgs[userOrg].cryptoContent
+			});
+	}).then((user) => {
+		if (user) {
+			t.pass('createUser, got user');
+			t.end();
+		} else {
+			t.fail('createUser, returned null');
+			t.end();
+		}
+	}).catch((err) => {
+		t.fail('createUser, error, did not get user');
+		t.comment(err.stack ? err.stack : err);
+		t.end();
 	});
 });
 

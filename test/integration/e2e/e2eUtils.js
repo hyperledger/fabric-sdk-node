@@ -436,7 +436,8 @@ function buildChaincodeProposal(client, the_user, chaincode_path, version, upgra
 module.exports.instantiateChaincode = instantiateChaincode;
 
 
-function invokeChaincode(userOrg, version, t){
+function invokeChaincode(userOrg, version, t, useStore){
+	logger.debug('invokeChaincode begin');
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
@@ -468,8 +469,10 @@ function invokeChaincode(userOrg, version, t){
 
 	var orgName = ORGS[userOrg].name;
 	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
-	client.setCryptoSuite(cryptoSuite);
+	if (useStore) {
+		cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+		client.setCryptoSuite(cryptoSuite);
+	}
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
@@ -487,13 +490,18 @@ function invokeChaincode(userOrg, version, t){
 
 	var orgName = ORGS[userOrg].name;
 
-	return Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
-	}).then((store) => {
-
-		client.setStateStore(store);
+	var promise;
+	if (useStore) {
+		promise = Client.newDefaultKeyValueStore({
+			path: testUtil.storePathForOrg(orgName)});
+	} else {
+		promise = Promise.resolve(useStore);
+	}
+	return promise.then((store) => {
+		if (store) {
+			client.setStateStore(store);
+		}
 		return testUtil.getSubmitter(client, t, userOrg);
-
 	}).then((admin) => {
 
 		t.pass('Successfully enrolled user \'admin\'');
@@ -670,6 +678,7 @@ function invokeChaincode(userOrg, version, t){
 			t.comment('To manually run /test/integration/query.js, set the following environment variables:');
 			t.comment('export E2E_TX_ID='+'\''+tx_id.getTransactionID()+'\'');
 			t.comment('******************************************************************');
+			logger.debug('invokeChaincode end');
 			return true;
 		} else {
 			t.fail('Failed to order the transaction. Error code: ' + response.status);

@@ -192,7 +192,13 @@ var FabricCAServices = class {
 			var enrollmentSecret = req.enrollmentSecret;
 
 			//generate enrollment certificate pair for signing
-			self.cryptoPrimitives.generateKey()
+			var opts;
+			if (self.cryptoPrimitives._cryptoKeyStore) {
+				opts = {ephemeral: false};
+			} else {
+				opts = {ephemeral: true};
+			}
+			self.cryptoPrimitives.generateKey(opts)
 				.then(
 				function (privateKey) {
 					//generate CSR using enrollmentID for the subject
