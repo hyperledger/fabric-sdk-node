@@ -103,132 +103,6 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		}
 	};
 
-	var test_input = {
-		channel : {
-			name : channel_name,
-			consortium : 'SampleConsortium',
-			settings : {
-				'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : '99m',	'preferred-max-bytes' : '512k'},
-				'batch-timeout' : '10s',
-				'hashing-algorithm' : 'SHA256',
-				'consensus-type' : 'solo'
-			},
-			policies : {
-				Readers : {threshold : 'ANY'},
-				Writers : {threshold : 'ANY'},
-				Admins  : {threshold : 'ANY'},
-				AcceptAllPolicy : {signature : ACCEPT_ALL}
-			},
-			orderers : {
-				organizations : [{
-					mspid : 'OrdererMSP',
-					policies : {
-						Readers : {signature : ACCEPT_ALL},
-						Writers : {signature : ACCEPT_ALL},
-						Admins  : {signature : ACCEPT_ALL}
-					},
-					'end-points' : ['orderer0:7050']
-				}],
-				policies : {
-					Readers : {threshold : 'ANY'},
-					Writers : {threshold : 'ANY'},
-					Admins  : {threshold : 'ANY'},
-					AcceptAllPolicy : {signature : ACCEPT_ALL},
-					BlockValidation : {threshold : 'ANY' , sub_policy : 'Writers'}
-				}
-			},
-			peers : {
-				organizations : [{
-					id : 'Org1MSP',
-					'anchor-peers' : ['peer0:7051'],
-					policies : {
-						Readers : {signature : ACCEPT_ALL},
-						Writers : {signature : ACCEPT_ALL},
-						Admins  : {signature : ACCEPT_ALL}
-					}
-				},{
-					mspid : 'Org2MSP',
-					'anchor-peers' : ['peer2:8051'],
-					policies : {
-						Readers : {signature : ACCEPT_ALL},
-						Writers : {signature : ACCEPT_ALL},
-						Admins  : {signature : ACCEPT_ALL}
-					}
-				}],
-				policies : {
-					Readers : {threshold : 'ANY'},
-					Writers : {threshold : 'ANY'},
-					Admins  : {threshold : 'ANY'}
-				},
-			}
-		}
-	};
-	var test_input2 = {
-		channel : {
-			name : channel_name,
-			consortium : 'SampleConsortium',
-			settings : {
-				'batch-size' : {'max-message-count' : 10, 'absolute-max-bytes' : '99m',	'preferred-max-bytes' : '512k'},
-				'batch-timeout' : '10s',
-				'hashing-algorithm' : 'SHA256',
-				'consensus-type' : 'solo'
-			},
-			orderers : {
-				organizations :[{
-					id : 'OrdererMSP',
-					msp : { mspid : 'OrdererMSP'},
-				}]
-			},
-			peers : {
-				organizations : [{
-					id : 'Org1MSP',
-					msp : { mspid : 'Org1MSP'},
-					'anchor-peers' : ['peer0:7051'],
-					policies : {
-
-					}
-				},{
-					id : 'Org2MSP',
-					msp : { mspid : 'Org2MSP'},
-					'anchor-peers' : ['peer2:8051'],
-					policies : {
-
-					}
-				}],
-				policies : {
-					Admins  : {threshold : 'ANY'},
-					Writers : {threshold : 'ANY'},
-					Readers : {threshold : 'ANY'},
-				},
-			}
-		}
-	};
-	var test_input3 = {
-		channel : {
-			name : channel_name,
-			consortium : 'SampleConsortium',
-			peers : {
-				organizations : [{
-					id : 'Org1MSP',
-					//msp : { mspid : 'Org1MSP'},
-					policies : {
-
-					}
-				},{
-					id : 'Org2MSP',
-					//msp : { mspid : 'Org2MSP'},
-					policies : {
-
-					}
-				}],
-				policies : {
-					Admins  : {threshold : 'MAJORITY'},
-					Writers : {threshold : 'ANY'},
-					Readers : {threshold : 'ANY'},
-				},
-			}
-		}
-	};
 	var config = null;
 	var signatures = [];
 	var msps = [];
@@ -256,29 +130,10 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	}).then((admin) =>{
 		t.pass('Successfully enrolled user \'admin\' for orderer');
 
-		// use this when the config comes from the configtx tool
-//		data = fs.readFileSync(path.join(__dirname, '../../fixtures/channel/mychannel.tx'));
-//		var envelope = _commonProto.Envelope.decode(data);
-//		var payload = _commonProto.Payload.decode(envelope.getPayload().toBuffer());
-//		var configtx = _configtxProto.ConfigUpdateEnvelope.decode(payload.getData().toBuffer());
-//		config = configtx.getConfigUpdate().toBuffer();
-//
-//		logger.debug('\n***\n dump the configtx config \n***\n');
-//		var channel = client.newChannel('test');
-//		channel.loadConfigUpdate(config);
-
-		 //have the SDK build the config update object
-		// ------ this is not a supported API ...for test only
-		 return client.buildChannelConfig(test_input3, orderer, msps);
-	}).then((config_bytes) => {
-		logger.debug('\n***\n built config \n***\n');
-		t.pass('Successfully built config update');
-		// comment the following line out when using the configtx config above
-		config = config_bytes;
-
-//		logger.debug('\n***\n dump the SDK config \n***\n');
-//		var channel = client.newChannel('testsdk');
-//		channel.loadConfigUpdate(config_bytes);
+		// use the config update created by the configtx tool
+		let envelope_bytes = fs.readFileSync(path.join(__dirname, '../../fixtures/channel/mychannel.tx'));
+		config = client.extractChannelConfig(envelope_bytes);
+		t.pass('Successfull extracted the config update from the configtx envelope');
 
 		client._userContext = null;
 		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
