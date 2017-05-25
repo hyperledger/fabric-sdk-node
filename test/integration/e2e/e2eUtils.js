@@ -259,7 +259,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				request.chaincodeVersion,
 				request.args,
 				request.fcn,
-				request.txId
+				request.txId.getTransactionID()
 			));
 
 			return channel.sendUpgradeProposal(request)
