@@ -679,23 +679,6 @@ test('\n\n ** Channel sendInstantiateProposal() tests **\n\n', function (t) {
 	});
 
 	c.addPeer(peer);
-	var p5 = c.sendInstantiateProposal({
-		targets: [new Peer('grpc://localhost:7051')],
-		chaincodePath: 'blah',
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200']
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "txId" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "txId" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing txId error');
-		} else {
-			t.fail('Failed to catch the missing txId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
 	var p7 = c.sendInstantiateProposal().then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
 	}).catch(function (err) {

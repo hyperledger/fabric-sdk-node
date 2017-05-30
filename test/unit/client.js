@@ -393,8 +393,6 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 		targets: [peer],
 		chaincodeId: 'blah',
 		chaincodeVersion: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200']
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
 	}).catch(function (err) {
@@ -410,8 +408,6 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 		targets: [peer],
 		chaincodeId: 'blahp1a',
 		chaincodePath: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200']
 	}).then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing "chaincodeVersion" parameter');
 	}).catch(function (err) {
@@ -665,38 +661,6 @@ test('\n\n ** createUser error path - missing required mspid **\n\n', function (
 	});
 });
 
-test('\n\n ** createUser error path - missing required mspid **\n\n', function (t) {
-	var msg = 'Client.createUser parameter \'opts mspid\' is required.';
-
-	var userOrg = 'org1';
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser({username: 'anyone'});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then((user) => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
 test('\n\n ** createUser error path - missing required cryptoContent **\n\n', function (t) {
 	var msg = 'Client.createUser parameter \'opts cryptoContent\' is required.';
 
@@ -825,7 +789,7 @@ test('\n\n ** createUser error path - missing required cryptoContent signedCert 
 	});
 });
 
-test('\n\n ** createUser error path - missing required cryptoContent privateKeyPEM **\n\n', function (t) {
+test('\n\n ** createUser error path - missing required cryptoContent privateKey **\n\n', function (t) {
 	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKey and signedCert\' files are required.';
 
 	var userOrg = 'org1';
