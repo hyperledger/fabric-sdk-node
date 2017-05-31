@@ -148,7 +148,6 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 		t.equal(block.header.number.toString(),'1','checking query results are correct that we got a transaction block back');
 		t.equal(block.data.data[0].payload.data.actions[0].payload.action.endorsements[0].endorser.Mspid,'Org1MSP','checking query results are correct that we got a transaction block back with correct endorsement MSP id');
 		logger.info('%j',block);
-		channel.setPrimaryPeer(peer0);
 
 		tx_id = utils.getConfigSetting('E2E_TX_ID', 'notfound');
 		logger.info('getConfigSetting("E2E_TX_ID") = %s', tx_id);
@@ -158,7 +157,7 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 		} else {
 			t.pass('Got tx_id from ConfigSetting "E2E_TX_ID"');
 			// send query
-			return channel.queryTransaction(tx_id); //assumes the end-to-end has run first
+			return channel.queryTransaction(tx_id, peer0); //assumes the end-to-end has run first
 		}
 	}).then((processed_transaction) => {
 		logger.info(' processed_transaction :: %j',processed_transaction);
@@ -186,20 +185,18 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 			.rwset.reads[1].version.block_num.toString(),
 			'test for read set block num');
 
-		// the "primary peer" must be a peer in the same org as the app
+		// the "target peer" must be a peer in the same org as the app
 		// which in this case is "peer0"
-		channel.setPrimaryPeer(peer0);
 		// send query
-		return channel.queryInfo();
+		return channel.queryInfo(peer0);
 	}).then((blockchainInfo) => {
 		t.pass('got back blockchain info ');
 		logger.info(' Channel queryInfo() returned block height='+blockchainInfo.height);
 		logger.info(' Channel queryInfo() returned block previousBlockHash='+blockchainInfo.previousBlockHash);
 		logger.info(' Channel queryInfo() returned block currentBlockHash='+blockchainInfo.currentBlockHash);
 		var block_hash = blockchainInfo.currentBlockHash;
-		channel.setPrimaryPeer(peer0);
 		// send query
-		return channel.queryBlockByHash(block_hash);
+		return channel.queryBlockByHash(block_hash, peer0);
 	}).then((block) => {
 		logger.info(' Channel queryBlockByHash() returned block number=%s',block.header.number);
 		t.pass('got back block number '+ block.header.number);

@@ -95,7 +95,6 @@ var Channel = class {
 		this._securityEnabled = true;//to do
 
 		this._peers = [];
-		this._primary_peer = null; // if not set, will use the first peer on the list
 		this._anchor_peers = [];
 		this._orderers = [];
 		this._kafka_brokers = [];
@@ -235,45 +234,6 @@ var Channel = class {
 	getPeers() {
 		logger.debug('getPeers - list size: %s.', this._peers.length);
 		return this._peers;
-	}
-
-	/**
-	 * Set the primary peer
-	 * The peer to use for doing queries.
-	 * Peer must be a peer on this channel's peer list.
-	 * Default: When no primary peer has been set the first peer
-	 * on the list will be used.
-	 * @param {Peer} peer An instance of the Peer class.
-	 * @throws Error when peer is not on the existing peer list
-	 */
-	setPrimaryPeer(peer) {
-		if(peer) {
-			for (let i = 0; i < this._peers.length; i++) {
-				if (this._peers[i] === peer) {
-					this._primary_peer = this._peers[i];
-					return;
-				}
-			}
-		}
-		throw new Error('The primary peer must be on this channel\'s peer list');
-	}
-
-	/**
-	 * Get the primary peer
-	 * The peer to use for doing queries.
-	 * Default: When no primary peer has been set the first peer
-	 * on the list will be used.
-	 * @returns {Peer} peer An instance of the Peer class.
-	 */
-	getPrimaryPeer() {
-		logger.debug('getPrimaryPeer :: start');
-		var result = this._primary_peer;
-		if(!result) {
-			result = this._peers[0];
-			logger.info(' Primary peer was not set, using %s',result);
-		}
-		// return what we found
-		return result;
 	}
 
 	/**
@@ -811,16 +771,21 @@ var Channel = class {
 	/**
 	 * Queries for various useful information on the state of the Channel
 	 * (height, known peers).
-	 * This query will be made to the primary peer.
+	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
+	 * is passed, the query will use the first peer that was added to the channel.
 	 * @returns {object} With height, currently the only useful info.
 	 */
-	queryInfo() {
+	queryInfo(target) {
 		logger.debug('queryInfo - start');
+		var peer = this._getPeerForQuery(target);
+		if (peer instanceof Error) {
+			throw peer;
+		}
 		var self = this;
 		var userContext = this._clientContext.getUserContext();
 		var txId = new TransactionID(userContext);
 		var request = {
-			targets: [self.getPrimaryPeer()],
+			targets: [peer],
 			chaincodeId : Constants.QSCC,
 			chainId: '',
 			txId: txId,
@@ -859,22 +824,43 @@ var Channel = class {
 		);
 	}
 
+	_getPeerForQuery(target) {
+		if (target) {
+			if (Array.isArray(target)) {
+				return new Error('"target" parameter is an array, but should be a singular peer object');
+			}
+			return target;
+		} else {
+			var peers = this.getPeers();
+			if (peers.length < 1) {
+				return new Error('"target" parameter not specified and no peers are set on Channel.');
+			}
+			return peers[0];
+		}
+	}
+
 	/**
 	 * Queries the ledger for Block by block hash.
 	 * This query will be made to the primary peer.
 	 * @param {byte[]} block hash of the Block.
+	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
+	 * is passed, the query will use the first peer that was added to the channel.
 	 * @returns {object} Object containing the block.
 	 */
-	queryBlockByHash(blockHash) {
+	queryBlockByHash(blockHash, target) {
 		logger.debug('queryBlockByHash - start');
 		if(!blockHash) {
 			return Promise.reject( new Error('Blockhash bytes are required'));
+		}
+		var peer = this._getPeerForQuery(target);
+		if (peer instanceof Error) {
+			throw peer;
 		}
 		var self = this;
 		var userContext = this._clientContext.getUserContext();
 		var txId = new TransactionID(userContext);
 		var request = {
-			targets: [self.getPrimaryPeer()],
+			targets: [peer],
 			chaincodeId : Constants.QSCC,
 			chainId: '',
 			txId: txId,
@@ -919,9 +905,11 @@ var Channel = class {
 	 * Queries the ledger for Block by block number.
 	 * This query will be made to the primary peer.
 	 * @param {number} blockNumber The number which is the ID of the Block.
+	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
+	 * is passed, the query will use the first peer that was added to the channel.
 	 * @returns {object} Object containing the block.
 	 */
-	queryBlock(blockNumber) {
+	queryBlock(blockNumber, target) {
 		logger.debug('queryBlock - start blockNumber %s',blockNumber);
 		var block_number = null;
 		if(Number.isInteger(blockNumber) && blockNumber >= 0) {
@@ -929,11 +917,15 @@ var Channel = class {
 		} else {
 			return Promise.reject( new Error('Block number must be a postive integer'));
 		}
+		var peer = this._getPeerForQuery(target);
+		if (peer instanceof Error) {
+			throw peer;
+		}
 		var self = this;
 		var userContext = self._clientContext.getUserContext();
 		var txId = new TransactionID(userContext);
 		var request = {
-			targets: [self.getPrimaryPeer()],
+			targets: [peer],
 			chaincodeId : Constants.QSCC,
 			chainId: '',
 			txId: txId,
@@ -977,9 +969,11 @@ var Channel = class {
 	 * Queries the ledger for Transaction by number.
 	 * This query will be made to the primary peer.
 	 * @param  tx_id The id of the transaction
+	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
+	 * is passed, the query will use the first peer that was added to the channel.
 	 * @returns {object} Transaction information containing the transaction.
 	 */
-	queryTransaction(tx_id) {
+	queryTransaction(tx_id, target) {
 		logger.debug('queryTransaction - start transactionID %s',tx_id);
 		var transaction_id = null;
 		if(tx_id) {
@@ -987,11 +981,15 @@ var Channel = class {
 		} else {
 			return Promise.reject( new Error('Missing "tx_id" parameter'));
 		}
+		var peer = this._getPeerForQuery(target);
+		if (peer instanceof Error) {
+			throw peer;
+		}
 		var self = this;
 		var userContext = self._clientContext.getUserContext();
 		var txId = new TransactionID(userContext);
 		var request = {
-			targets: [self.getPrimaryPeer()],
+			targets: [peer],
 			chaincodeId : Constants.QSCC,
 			chainId: '',
 			txId: txId,
@@ -1032,15 +1030,21 @@ var Channel = class {
 
 	/**
 	 * Queries the instantiated chaincodes on this channel.
+	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
+	 * is passed, the query will use the first peer that was added to the channel.
 	 * @returns {object} ChaincodeQueryResponse proto
 	 */
-	queryInstantiatedChaincodes() {
+	queryInstantiatedChaincodes(target) {
 		logger.debug('queryInstantiatedChaincodes - start');
+		var peer = this._getPeerForQuery(target);
+		if (peer instanceof Error) {
+			throw peer;
+		}
 		var self = this;
 		var userContext = self._clientContext.getUserContext();
 		var txId = new TransactionID(userContext);
 		var request = {
-			targets: [self.getPrimaryPeer()],
+			targets: [peer],
 			chaincodeId : Constants.LSCC,
 			chainId: self._name,
 			txId: txId,

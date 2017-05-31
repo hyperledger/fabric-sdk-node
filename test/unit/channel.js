@@ -107,39 +107,70 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 	t.end();
 });
 
+test('\n\n **  Channel query target parameter tests', function(t) {
+	var msg = '"target" parameter not specified and no peers are set on Channel';
+	t.throws(
+		function () {
+			_channel.queryBlockByHash(Buffer.from('12345'));
+		},
+		/^Error: "target" parameter not specified and no peers are set on Channel./,
+		'Channel tests, queryBlockByHash: "target" parameter not specified and no peers are set on Channel.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryBlockByHash(Buffer.from('12345'), [new Peer('grpc://localhost:7051')]);
+		},
+		/^Error: "target" parameter is an array, but should be a singular peer object/,
+		'Channel tests, queryBlockByHash: checking for "target" parameter is an array, but should be a singular peer object.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryBlockByHash(Buffer.from('12345'), new Peer('grpc://localhost:7051'));
+		},
+		/^[Error: Missing userContext parameter]/,
+		'Channel tests, queryBlockByHash: good target, checking for Missing userContext parameter.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryInfo([new Peer('grpc://localhost:7051')]);
+		},
+		/^Error: "target" parameter is an array, but should be a singular peer object/,
+		'Channel tests, queryInfo: checking for "target" parameter is an array, but should be a singular peer object.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryBlock(123, [new Peer('grpc://localhost:7051')]);
+		},
+		/^Error: "target" parameter is an array, but should be a singular peer object/,
+		'Channel tests, queryBlock: checking for "target" parameter is an array, but should be a singular peer object.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryTransaction('abc', [new Peer('grpc://localhost:7051')]);
+		},
+		/^Error: "target" parameter is an array, but should be a singular peer object/,
+		'Channel tests, queryTransaction: checking for "target" parameter is an array, but should be a singular peer object.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryInstantiatedChaincodes([new Peer('grpc://localhost:7051')]);
+		},
+		/^Error: "target" parameter is an array, but should be a singular peer object/,
+		'Channel tests, queryInstantiatedChaincodes: checking for "target" parameter is an array, but should be a singular peer object.'
+	);
+
+	t.end();
+});
+
 test('\n\n **  Channel query tests', function(t) {
 	var peer = new Peer('grpc://localhost:7051');
 	_channel.addPeer(peer);
-	var test_peer = new Peer('grpc://localhost:7051');
-	t.throws(
-		function () {
-			_channel.setPrimaryPeer(test_peer);
-		},
-		/^Error: The primary peer must be on this channel\'s peer list/,
-		'Not able to set a primary peer even if has the same addresss'
-	);
-	t.doesNotThrow(
-		function () {
-			_channel.setPrimaryPeer(peer);
-		},
-		null,
-		'Able to set a primary peer as long as same peer'
-	);
-	test_peer = new Peer('grpc://localhost:7099');
-	t.throws(
-		function () {
-			_channel.setPrimaryPeer(test_peer);
-		},
-		/^Error: The primary peer must be on this channel\'s peer list/,
-		'Not Able to set a primary peer when not on the list'
-	);
-	t.throws(
-		function () {
-			_channel.setPrimaryPeer();
-		},
-		/^Error: The primary peer must be on this channel\'s peer list/,
-		'Not Able to set a primary peer to a null peer'
-	);
 
 	_channel.queryBlockByHash()
 		.then(
