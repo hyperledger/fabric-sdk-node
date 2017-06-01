@@ -26,8 +26,6 @@ var api = require('fabric-client/lib/api.js');
 var fs = require('fs');
 var path = require('path');
 
-testutil.resetDefaults();
-
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 var idModule = require('fabric-client/lib/msp/identity.js');
@@ -81,6 +79,8 @@ var TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 '-----END CERTIFICATE-----';
 
 test('\n\n ** Identity class tests **\n\n', function (t) {
+	testutil.resetDefaults();
+
 	t.throws(
 		function() {
 			new Identity();

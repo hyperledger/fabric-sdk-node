@@ -32,11 +32,14 @@ var logger = utils.getLogger('End to End');
 
 var the_user = null;
 
-Client.addConfigFile(path.join(__dirname, './config.json'));
-var ORGS = Client.getConfigSetting('test-network');
+var ORGS;
 
 
 test('\n\n***** U P D A T E C H A N N E L flow: update channel *****\n\n', (t) => {
+	testUtil.resetDefaults();
+	Client.addConfigFile(path.join(__dirname, './config.json'));
+	ORGS = Client.getConfigSetting('test-network');
+
 	//
 	// Create and configure the test channel
 	//

@@ -40,12 +40,13 @@ var Peer = require('fabric-client/lib/Peer.js');
 //
 
 test('Peer bad address test', function(t) {
+	testUtil.resetDefaults();
+
 	try {
 		var client = new Peer('xxxxx');
 		t.fail('Peer allowed setting a bad URL.');
 	}
 	catch(err) {
-		console.log('Caught Error: ' + err);
 		t.pass('peer did not allow setting bad URL.');
 	}
 	t.end();
@@ -64,7 +65,6 @@ test('Peer missing address test', function(t) {
 		t.fail('Peer allowed setting a missing address.');
 	}
 	catch(err) {
-		console.log('Caught Error: ' + err);
 		t.pass('Peer did not allow setting a missing address.');
 	}
 	t.end();
@@ -83,12 +83,10 @@ test('Peer missing data test', function(t) {
 	client.sendProposal()
 	.then(
 		function(status) {
-			console.log('response status: ' + JSON.stringify(status));
 			t.fail('Should have noticed missing data.');
 			t.end();
 		},
 		function(err) {
-			console.log('Caught Error: ' + err);
 			t.pass('Successfully found missing data: ' + err);
 			t.end();
 		}
@@ -111,7 +109,6 @@ test('Peer unknown address test', function(t) {
 	client.sendProposal('some data')
 	.then(
 		function(status) {
-			console.log('response status: ' + JSON.stringify(status));
 			t.fail('Should have noticed a bad address.');
 			t.end();
 		},
@@ -142,7 +139,6 @@ test('Peer timeout test', function(t) {
 	client.sendProposal('some data')
 	.then(
 		function(status) {
-			console.log('response status: ' + JSON.stringify(status));
 			t.fail('Should have noticed a timeout.');
 			t.end();
 		},

@@ -14,13 +14,13 @@
  *  limitations under the License.
  */
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var nano = require('nano');
 var Cloudant = require('cloudant');
 
 module.exports.getCloudantClient = function(configFile) {
-	var username = hfc.getConfigSetting('cloudant-username', 'notfound');
-	var password = hfc.getConfigSetting('cloudant-password', 'notfound');
+	var username = Client.getConfigSetting('cloudant-username', 'notfound');
+	var password = Client.getConfigSetting('cloudant-password', 'notfound');
 	console.log('CloudantClient username = ' + username + ', password: ' + password);
 	return Cloudant({account: username, password: password});
 };

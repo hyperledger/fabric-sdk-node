@@ -16,8 +16,6 @@
 
 'use strict';
 
-if (global && global.hfc) global.hfc.config = undefined;
-require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('events');
 
@@ -29,68 +27,60 @@ var path = require('path');
 var util = require('util');
 var fs = require('fs');
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var testUtil = require('../unit/util.js');
 var eputil = require('./eventutil.js');
 
-var client = new hfc();
+var client = new Client();
 var channel = client.newChannel(testUtil.END2END.channel);
-hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
+var ORGS;
 
-var caRootsPath = ORGS.orderer.tls_cacerts;
-let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
-let caroots = Buffer.from(data).toString();
-
-channel.addOrderer(
-	client.newOrderer(
-		ORGS.orderer.url,
-		{
-			'pem': caroots,
-			'ssl-target-name-override': ORGS.orderer['server-hostname']
-		}
-	)
-);
-
-var org = 'org1';
-var orgName = ORGS[org].name;
-var targets = [];
-for (let key in ORGS[org]) {
-	if (ORGS[org].hasOwnProperty(key)) {
-		if (key.indexOf('peer') === 0) {
-			let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key]['tls_cacerts']));
-			let peer = client.newPeer(
-				ORGS[org][key].requests,
-				{
-					pem: Buffer.from(data).toString(),
-					'ssl-target-name-override': ORGS[org][key]['server-hostname']
-				});
-			channel.addPeer(peer);
-			targets.push(peer);
-			break; //just add one
-		}
-	}
-}
 var chaincode_id = testUtil.getUniqueVersion('events_unit_test');
 var chaincode_version = testUtil.getUniqueVersion();
 var request = null;
 var the_user = null;
 
-var steps = [];
-if (process.argv.length > 2) {
-	for (let i = 2; i < process.argv.length; i++) {
-		steps.push(process.argv[i]);
-	}
-}
-var useSteps = false;
-if (steps.length > 0 &&
-	(steps.indexOf('step1') > -1 || steps.indexOf('step2') > -1 || steps.indexOf('step3') > -1 || steps.indexOf('step4') > -1 ))
-	useSteps = true;
-logger.info('Found steps: %s', steps);
-
-testUtil.setupChaincodeDeploy();
-
 test('Test chaincode instantiate with event, transaction invocation with chaincode event, and query number of chaincode events', (t) => {
+	testUtil.resetDefaults();
+	testUtil.setupChaincodeDeploy();
+	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+	var ORGS = Client.getConfigSetting('test-network');
+	Client.setConfigSetting('request-timeout', 30000);
+
+	var caRootsPath = ORGS.orderer.tls_cacerts;
+	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
+	let caroots = Buffer.from(data).toString();
+
+	channel.addOrderer(
+		client.newOrderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		)
+	);
+
+	var org = 'org1';
+	var orgName = ORGS[org].name;
+	var targets = [];
+	for (let key in ORGS[org]) {
+		if (ORGS[org].hasOwnProperty(key)) {
+			if (key.indexOf('peer') === 0) {
+				let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key]['tls_cacerts']));
+				let peer = client.newPeer(
+					ORGS[org][key].requests,
+					{
+						pem: Buffer.from(data).toString(),
+						'ssl-target-name-override': ORGS[org][key]['server-hostname']
+					});
+				channel.addPeer(peer);
+				targets.push(peer);
+				break; //just add one
+			}
+		}
+	}
+
 	// must use an array to track the event hub instances so that when this gets
 	// passed into the overriden t.end() closure below it will get properly updated
 	// later when the eventhub instances are created
@@ -106,7 +96,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			for(var key in ehs) {
 				var eventhub = ehs[key];
 				if (eventhub && eventhub.isconnected()) {
-					logger.info('Disconnecting the event hub');
+					logger.debug('Disconnecting the event hub');
 					eventhub.disconnect();
 				}
 			}
@@ -115,7 +105,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		};
 	})(t, eventhubs, t.end);
 
-	hfc.newDefaultKeyValueStore({
+	Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then((store) => {
 		client.setStateStore(store);
@@ -158,14 +148,12 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		catch(err) {
 			t.fail('this catch should not have been called');
 		}
-		t.comment(' ------ test about to sleep');
 		return sleep(5000);
 	},
 	(err) => {
 		t.fail('Failed to enroll user \'admin\'. ' + err);
 		t.end();
 	}).then(() =>{
-		t.comment(' ------ test is awake');
 
 		// now one that fails but not wait for it fail
 		eh.setPeerAddr(
@@ -229,8 +217,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		request.chaincodeVersion = chaincode_version;
 		return channel.sendInstantiateProposal(request);
 	}, (err) => {
-		t.comment('Failed to send instantiate proposal due to error: ');
-		t.fail(err.stack ? err.stack : err);
+		t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
 		t.end();
 	}).then((results) => {
 		var tmo = 50000;
@@ -247,7 +234,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		return channel.sendTransactionProposal(request);
 	},
 	(err) => {
-		t.fail('Failed instantiate due to error: ' + err);
+		t.fail('Failed instantiate due to error: ' + err.stack ? err.stack : err);
 		t.end();
 	}).then((results) => {
 		var tmo = 20000;
@@ -285,7 +272,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
 		t.end();
 	}).then(([results1, results2]) => {
-		t.comment('sendTransactionProposal received [results1, results2]');
 		var tmo = 20000;
 		return Promise.all([eputil.registerTxEvent(eh, req1.txId.getTransactionID().toString(), tmo),
 			eputil.registerTxEvent(eh, req2.txId.getTransactionID().toString(), tmo),

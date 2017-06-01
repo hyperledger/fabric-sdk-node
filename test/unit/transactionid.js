@@ -23,6 +23,7 @@ var test = _test(tape);
 var TransactionID = require('fabric-client/lib/TransactionID.js');
 var User = require('fabric-client/lib/User.js');
 var utils = require('fabric-client/lib/utils.js');
+var testutil = require('./util.js');
 
 var enrollmentID = 123454321;
 var roles = ['admin', 'user'];
@@ -34,6 +35,8 @@ var memberCfg = {
 var TEST_CERT_PEM = require('./user.js').TEST_CERT_PEM;
 
 test('\n\n ** Transaction - constructor set get tests **\n\n', function (t) {
+	testutil.resetDefaults();
+
 	t.throws(function() {
 		new TransactionID();
 	},

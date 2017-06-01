@@ -6,8 +6,12 @@ fabric-ca-client/node_modules/*
 examples/balance-transfer/node_modules/*
 fabric-ca-client/lib/api.js
 fabric-ca-client/lib/utils.js
+fabric-ca-client/lib/BaseClient.js
 fabric-ca-client/lib/Config.js
 fabric-ca-client/lib/Remote.js
+fabric-ca-client/lib/User.js
+fabric-ca-client/lib/msp/*
+fabric-ca-client/lib/protos/*
 fabric-ca-client/lib/hash.js
 fabric-ca-client/lib/impl/*
 npm-shrinkwrap.json

@@ -251,13 +251,12 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 				store = st;
 				return store.getKey(ski);
 			}).then((key) => {
-				if (key instanceof ECDSAKey)
+				if (ECDSAKey.isInstance(key))
 					return resolve(key);
 
 				if (key !== null) {
 					var pubKey = KEYUTIL.getKey(key);
-					return resolve(new ECDSAKey(pubKey));
-				}
+					return resolve(new ECDSAKey(pubKey));				}
 			}).catch((err) => {
 				reject(err);
 			});

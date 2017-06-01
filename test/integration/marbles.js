@@ -18,6 +18,13 @@
 // in a happy-path scenario
 'use strict';
 
+///////////////////////////////////////////////////////
+//
+//  DO NOT USE - needs to be ported to v1.0
+//
+///////////////////////////////////////////////////////
+
+
 if (global && global.hfc) global.hfc.config = undefined;
 require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');

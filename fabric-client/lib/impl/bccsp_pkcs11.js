@@ -46,6 +46,7 @@ var __func = function() {
  * PKCS#11-compliant implementation to support Hardware Security Modules.
  *
  * @class
+ * @extends module:api.CryptoSuite
  */
 var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 

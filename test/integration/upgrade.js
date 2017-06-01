@@ -18,7 +18,6 @@
 // in a happy-path scenario
 'use strict';
 
-process.env.HFC_LOGGING = '{"debug": "console"}';
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
@@ -27,16 +26,17 @@ var path = require('path');
 var fs = require('fs');
 var util = require('util');
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
 var testUtil = require('../unit/util.js');
 var logger = utils.getLogger('upgrade-chaincode');
 
 test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
+	testUtil.resetDefaults();
 
 	var e2e = testUtil.END2END;
-	hfc.addConfigFile(path.join(__dirname, './e2e/config.json'));
-	var ORGS = hfc.getConfigSetting('test-network');
+	Client.addConfigFile(path.join(__dirname, './e2e/config.json'));
+	var ORGS = Client.getConfigSetting('test-network');
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
@@ -50,7 +50,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 	var version = 'v1';
 	var org = 'org1';
-	var client = new hfc();
+	var client = new Client();
 	var channel = client.newChannel(e2e.channel);
 	var orgName = ORGS[org].name;
 	channel.addOrderer(
@@ -81,7 +81,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		}
 	}
 
-	hfc.newDefaultKeyValueStore({
+	Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	})
 	.then((store) => {

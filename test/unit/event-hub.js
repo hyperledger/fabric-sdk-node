@@ -22,11 +22,11 @@ var test = _test(tape);
 
 var testutil = require('./util.js');
 
-testutil.resetDefaults();
-
 var EventHub = require('fabric-client/lib/EventHub.js');
 
 test('\n\n** EventHub tests\n\n', (t) => {
+	testutil.resetDefaults();
+
 	var eh;
 
 	t.throws(

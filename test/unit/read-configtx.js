@@ -27,7 +27,6 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('fabric-client');
 var Channel = require('fabric-client/lib/Channel.js');
 
 var grpc = require('grpc');
@@ -37,9 +36,10 @@ var _configtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/comm
 var testUtil = require('../unit/util.js');
 
 test('\n\n***** READ in the genesis block *****\n\n', function(t) {
-// readin the envelope to send to the orderer
+	testUtil.resetDefaults();
+
+	// readin the envelope to send to the orderer
 	let normalPath = path.normalize(path.join(__dirname, '../fixtures/channel/twoorgs.genesis.block'));
-	logger.info('normalPath=' + normalPath);
 	var data = fs.readFileSync(normalPath);
 
 	var channel = new Channel('test', 'fake');
@@ -55,7 +55,6 @@ test('\n\n***** READ in the genesis block *****\n\n', function(t) {
 	var config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
 	channel.loadConfigEnvelope(config_envelope);
 	t.pass(' Loaded the geneisis block from the configtx tool');
-	logger.info(' test end');
 	t.end();
 });
 
@@ -63,13 +62,11 @@ test('\n\n***** READ in the genesis block *****\n\n', function(t) {
 test('\n\n***** READ in the configtx *****\n\n', function(t) {
 	// readin the envelope to send to the orderer
 	let normalPath = path.normalize(path.join(__dirname, '../fixtures/channel/mychannel.tx'));
-	logger.info('normalPath=' + normalPath);
 	var data = fs.readFileSync(normalPath);
 
 	var channel = new Channel('test', 'fake');
 
 	channel.loadConfigUpdateEnvelope(data);
 	t.pass(' Loaded the channel config from the configtx tool');
-	logger.info(' test end');
 	t.end();
 });

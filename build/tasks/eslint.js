@@ -7,6 +7,7 @@ gulp.task('lint', function () {
 		'fabric-client/**/*.js',
 		'fabric-ca-client/lib/*.js',
 		'examples/**/*.js',
+		'!examples/balance-transfer/node_modules/**',
 		'!node_modules/**',
 		'!fabric-client/node_modules/**',
 		'!fabric-ca-client/node_modules/**',

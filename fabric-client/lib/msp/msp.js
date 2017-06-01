@@ -47,7 +47,7 @@ var MSP = class {
 
 		if (typeof config.signer !== 'undefined') {
 			// when constructing local msp, a signer property is required and it must be an instance of SigningIdentity
-			if (!(config.signer instanceof SigningIdentity)) {
+			if (!(SigningIdentity.isInstance(config.signer))) {
 				throw new Error('Parameter "signer" must be an instance of SigningIdentity');
 			}
 		}

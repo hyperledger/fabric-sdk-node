@@ -212,6 +212,14 @@ var SigningIdentity = class extends Identity {
 		var digest = hashFunction(msg);
 		return this._signer.sign(Buffer.from(digest, 'hex'), null);
 	}
+
+	static isInstance(object) {
+		return object._certificate &&
+			object._publicKey &&
+			object._mspId &&
+			object._cryptoSuite &&
+			object._signer;
+	}
 };
 
 module.exports.Identity = Identity;

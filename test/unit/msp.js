@@ -55,6 +55,8 @@ const TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 '-----END CERTIFICATE-----';
 
 test('\n\n** MSP Tests **\n\n', (t) => {
+	testutil.resetDefaults();
+
 	// construct MSP config objects for org0 and org1
 	var configs = [];
 	var mspm = new MSPM();

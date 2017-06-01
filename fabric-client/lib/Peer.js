@@ -42,6 +42,7 @@ var logger = utils.getLogger('Peer.js');
  * channel and chaincode levels.
  *
  * @class
+ * @extends Remote
  */
 var Peer = class extends Remote {
 

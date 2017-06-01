@@ -28,6 +28,7 @@ var logger = utils.getLogger('FileKeyValueStore.js');
  * It uses files to store the key values.
  *
  * @class
+ * @extends module:api.KeyValueStore
  */
 var FileKeyValueStore = class extends api.KeyValueStore {
 
@@ -64,12 +65,6 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 		});
 	}
 
-	/**
-	 * Get the value associated with name.
-	 * @param {string} name
-	 * @returns Promise for the value
-	 * @ignore
-	 */
 	getValue(name) {
 		logger.debug('FileKeyValueStore -- getValue');
 
@@ -90,13 +85,6 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 		});
 	}
 
-	/**
-	 * Set the value associated with name.
-	 * @param {string} name
-	 * @param {string} value
-	 * @returns Promise for a "true" value on successful completion
-	 * @ignore
-	 */
 	setValue(name, value) {
 		logger.debug('FileKeyValueStore -- setValue');
 

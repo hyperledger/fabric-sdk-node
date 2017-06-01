@@ -28,7 +28,6 @@ var fs = require('fs-extra');
 var utils = require('fabric-client/lib/utils.js');
 
 var FileKeyValueStore = require('fabric-client/lib/impl/FileKeyValueStore.js');
-testUtil.resetDefaults();
 
 var keyValStorePath = path.join(testUtil.getTempDir(), 'kvsTemp');
 var testKey = 'keyValFileStoreName';
@@ -36,6 +35,8 @@ var testValue = 'secretKeyValue';
 var store1 = '';
 
 test('\n\n ** FileKeyValueStore - read and write test **\n\n', function (t) {
+	testUtil.resetDefaults();
+
 	// clean up
 	if (testUtil.existsSync(keyValStorePath)) {
 		fs.removeSync(keyValStorePath);

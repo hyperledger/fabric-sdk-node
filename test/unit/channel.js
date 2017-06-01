@@ -28,7 +28,7 @@ var grpc = require('grpc');
 var _policiesProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/policies.proto').common;
 var _mspPrProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/msp/msp_principal.proto').common;
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var testutil = require('./util.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Channel = require('fabric-client/lib/Channel.js');
@@ -42,15 +42,15 @@ var SigningIdentity = idModule.SigningIdentity;
 
 var _channel = null;
 var channelName = 'testChannel';
-var Client = hfc;
 var client = new Client();
 
-testutil.resetDefaults();
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('channel');
 
 // Channel tests /////////////
 test('\n\n ** Channel - constructor test **\n\n', function (t) {
+	testutil.resetDefaults();
+
 	_channel = new Channel(channelName, client);
 	if (_channel.getName() === channelName)
 		t.pass('Channel constructor test: getName successful');
@@ -828,7 +828,7 @@ test('\n\n ** Channel queryByChaincode() tests **\n\n', function (t) {
 
 	// do some setup for following test
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
-	hfc.newDefaultKeyValueStore({
+	Client.newDefaultKeyValueStore({
 		path: testutil.KVS
 	}).then ( function (store) {
 		client.setStateStore(store);
@@ -1004,7 +1004,7 @@ test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', function(t) {
 	// Create and configure the test channel
 	//
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
-	hfc.newDefaultKeyValueStore({
+	Client.newDefaultKeyValueStore({
 		path: testutil.KVS
 	})
 	.then ( function (store) {

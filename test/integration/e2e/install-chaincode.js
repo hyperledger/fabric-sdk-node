@@ -28,9 +28,9 @@ var test = _test(tape);
 var e2eUtils = require('./e2eUtils.js');
 var testUtil = require('../../unit/util.js');
 
-testUtil.setupChaincodeDeploy();
-
 test('\n\n***** End-to-end flow: chaincode install *****\n\n', (t) => {
+	testUtil.setupChaincodeDeploy();
+
 	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v0', t)
 	.then(() => {
 		t.pass('Successfully installed chaincode in peers of organization "org1"');

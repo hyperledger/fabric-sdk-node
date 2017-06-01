@@ -22,7 +22,6 @@ var test = _test(tape);
 
 var fs = require('fs');
 var path = require('path');
-var intercept = require('intercept-stdout');
 
 var grpc = require('grpc');
 var configtxProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/common/configtx.proto')).common;
@@ -52,14 +51,6 @@ test('\n\n*** BlockDecoder.js tests ***\n\n', (t) => {
 		'IMPLICIT_META',
 		'Test parsing of channel\'s Writers policy is of IMPLICIT_META type');
 
-	// test that the SDK spits out a warning of the "MSP" policy type
-	// during decode because it's not supported in v1.0 yet
-	var output = '';
-
-	let unhook = intercept(function (txt) {
-		output += txt;
-	});
-
 	var decodeConfigPolicy = BlockDecoder.__get__('decodeConfigPolicy');
 	var mockPolicy = new policiesProto.Policy();
 	mockPolicy.setType(policiesProto.Policy.PolicyType.SIGNATURE);
@@ -73,14 +64,6 @@ test('\n\n*** BlockDecoder.js tests ***\n\n', (t) => {
 			}
 		}
 	});
-
-	unhook();
-
-	if (output.indexOf('warn') >= 0 && output.indexOf('[BlockDecoder.js]: decodeConfigPolicy - found a PolicyType of MSP') >= 0) {
-		t.pass('Successfully tested warn logging message about using the "MSP" policy type');
-	} else {
-		t.fail('Failed to warn logging message about using the "MSP" policy type');
-	}
 
 	var mockPolicy = new policiesProto.Policy();
 	mockPolicy.setType(policiesProto.Policy.PolicyType.SIGNATURE);

@@ -28,9 +28,9 @@ var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 var asn1 = jsrsa.asn1;
 
-testutil.resetDefaults();
-
 test('\n\n ** ECDSA Key Impl tests **\n\n', function (t) {
+	testutil.resetDefaults();
+
 	t.throws(
 		function () {
 			var k = new ecdsaKey();
