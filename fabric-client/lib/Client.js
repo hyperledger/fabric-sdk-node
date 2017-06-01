@@ -403,6 +403,7 @@ var Client = class {
 		let proto_config_signature = new _configtxProto.ConfigSignature();
 		proto_config_signature.setSignatureHeader(signature_header_bytes);
 		proto_config_signature.setSignature(signature_bytes);
+
 		return proto_config_signature;
 	}
 
@@ -522,7 +523,8 @@ var Client = class {
 			logger.debug('_createOrUpdateChannel - have config_update');
 			var proto_config_Update_envelope = new _configtxProto.ConfigUpdateEnvelope();
 			proto_config_Update_envelope.setConfigUpdate(request.config);
-			proto_config_Update_envelope.setSignatures(request.signatures);
+			var signatures = _stringToSignature(request.signatures);
+			proto_config_Update_envelope.setSignatures(signatures);
 
 			var proto_channel_header = Channel._buildChannelHeader(
 				_commonProto.HeaderType.CONFIG_UPDATE,
@@ -1299,6 +1301,25 @@ function _getChaincodePackageData(request, devMode) {
 			resolve(request.chaincodePackage);
 		}
 	});
+}
+
+// internal utility method to check and convert any strings to protobuf signatures
+function _stringToSignature(string_signatures) {
+	var signatures = [];
+	for(var i in string_signatures) {
+		let signature = string_signatures[i];
+		// check for properties rather than object type
+		if(signature && signature.signature_header && signature.signature) {
+			logger.debug('_stringToSignature - signature is protobuf');
+		}
+		else {
+			logger.debug('_stringToSignature - signature is string');
+			var signature_bytes = Buffer.from(signature, 'hex');
+			signature = _configtxProto.ConfigSignature.decode(signature_bytes);
+		}
+		signatures.push(signature);
+	}
+	return signatures;
 }
 
 module.exports = Client;
