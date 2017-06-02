@@ -65,3 +65,6 @@ Now we are ready to put it all together. The easiest way to launch the developme
 
 The above steps give you a development environment. Now before you can ask it to process any transactions, you must first create a channel. Next, we will create a channel in [this tutorial]().
 
+
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+s
