@@ -135,13 +135,16 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 
 		// sign the config
 		var signature = client.signChannelConfig(config);
+		// convert signature to a storable string
+		// fabric-client SDK will convert back during create
+		var string_signature = signature.toBuffer().toString('hex');
 		t.pass('Successfully signed config update');
 		// collect signature from org1 admin
 		// TODO: signature counting against policies on the orderer
 		// at the moment is being investigated, but it requires this
 		// weird double-signature from each org admin
-		signatures.push(signature);
-		signatures.push(signature);
+		signatures.push(string_signature);
+		signatures.push(string_signature);
 
 		// make sure we do not reuse the user
 		client._userContext = null;

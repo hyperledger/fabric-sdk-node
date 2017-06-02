@@ -32,6 +32,11 @@ var testutil = require('./util.js');
 
 var caImport;
 
+var grpc = require('grpc');
+var _configtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/configtx.proto').common;
+var rewire = require('rewire');
+var ClientRewired = rewire('fabric-client/lib/Client.js');
+
 test('\n\n ** index.js **\n\n', function (t) {
 	testutil.resetDefaults();
 
@@ -1074,5 +1079,30 @@ test('\n\n ** test related APIs for create channel **\n\n', function (t) {
 		}
 	);
 
+	t.end();
+});
+
+test('\n\n ** test internal method to rebuild ConfigSignatures **\n\n', function (t) {
+	var some_proto_signatures = [];
+	var proto_config_signature = new _configtxProto.ConfigSignature();
+	proto_config_signature.setSignatureHeader(Buffer.from('signature_header_bytes'));
+	proto_config_signature.setSignature(Buffer.from('signature_bytes'));
+	some_proto_signatures.push(proto_config_signature);
+	var string_config_signature = proto_config_signature.toBuffer().toString('hex');
+	some_proto_signatures.push(string_config_signature);
+
+	var _stringToSignature = ClientRewired.__get__('_stringToSignature');
+	var all_proto_signatures = _stringToSignature(some_proto_signatures);
+	for(let i in all_proto_signatures) {
+		var start_header = proto_config_signature.getSignatureHeader().toBuffer().toString();
+		var start_sig = proto_config_signature.getSignature().toBuffer().toString();
+		var decode_header = all_proto_signatures[i].getSignatureHeader().toBuffer().toString();
+		var decode_sig = all_proto_signatures[i].getSignature().toBuffer().toString();
+		logger.info(' headers  are ==> %s :: %s', start_header, decode_header);
+		logger.info(' signatures are ==> %s :: %s', start_sig, decode_sig);
+
+		t.equals(start_header, decode_header, 'check signature headers are the same');
+		t.equals(start_sig, decode_sig, 'check signatures are the same');
+	}
 	t.end();
 });
