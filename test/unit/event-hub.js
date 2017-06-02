@@ -23,6 +23,7 @@ var test = _test(tape);
 var testutil = require('./util.js');
 
 var EventHub = require('fabric-client/lib/EventHub.js');
+var sdkUtils = require('fabric-client/lib/utils.js');
 
 test('\n\n** EventHub tests\n\n', (t) => {
 	testutil.resetDefaults();
@@ -465,5 +466,28 @@ test('\n\n** EventHub remove chaincode callback no Error callback \n\n', (t) => 
 	t.pass('successfuly unregistered chaincode callback');
 	eh.disconnect();
 	t.pass('successfuly disconnected eventhub');
+	t.end();
+});
+
+test('\n\n** Test the add and remove utilty used by the EventHub to add a setting to the options \n\n', (t) => {
+	var only_options = sdkUtils.checkAndAddConfigSetting('opt1', 'default1', null);
+	t.equals(only_options['opt1'], 'default1', 'Checking that new options has the setting with the incoming value and options are null');
+
+	var options = { opt1 : 'incoming1', opt4 : 'incoming4'};
+
+	// case where incoming options does have the setting
+	var updated_options = sdkUtils.checkAndAddConfigSetting('opt1', 'default1', options);
+	// case where incoming options does not have setting and config does not
+	updated_options = sdkUtils.checkAndAddConfigSetting('opt2', 'default2', updated_options);
+	// case where incoming options does not have setting and config does
+	sdkUtils.setConfigSetting('opt3', 'config3');
+	updated_options = sdkUtils.checkAndAddConfigSetting('opt3', 'default3', updated_options);
+
+	// case where incoming options does not have setting and config does have
+	t.equals(updated_options['opt1'], 'incoming1', 'Checking that new options has the setting with the incoming value');
+	t.equals(updated_options['opt2'], 'default2', 'Checking that new options has the setting with the default value');
+	t.equals(updated_options['opt3'], 'config3', 'Checking that new options has the setting with the value from the config');
+	t.equals(updated_options['opt4'], 'incoming4', 'Checking that new options has setting not looked at');
+
 	t.end();
 });

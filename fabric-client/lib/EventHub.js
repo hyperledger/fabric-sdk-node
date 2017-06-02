@@ -241,6 +241,17 @@ var EventHub = class {
 			self._disconnect(new Error('Unable to connect to the peer event hub'));
 		}, self._ep._request_timeout);
 
+		// check on the keep alive options
+		// the keep alive interval
+		var options = utils.checkAndAddConfigSetting('grpc.http2.keepalive_time', 300, this._ep._options); //grpc 1.2.4
+		options = utils.checkAndAddConfigSetting('grpc.keepalive_time_ms', 300000, options); //grpc 1.3.7
+		// how long should we wait for the keep alive response
+		let request_timeout_ms = utils.getConfigSetting('request-timeout', 3000);
+		let request_timeout = request_timeout_ms / 1000;
+		options = utils.checkAndAddConfigSetting('grpc.http2.keepalive_timeout', request_timeout, options); //grpc 1.2.4
+		options = utils.checkAndAddConfigSetting('grpc.keepalive_timeout_ms', request_timeout_ms, options); //grpc 1.3.7
+
+		logger.info('_connect - options %j',this._ep._options);
 		this._event_client = new _events.Events(this._ep._endpoint.addr, this._ep._endpoint.creds, this._ep._options);
 		this._stream = this._event_client.chat();
 

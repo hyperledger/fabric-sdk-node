@@ -472,3 +472,27 @@ module.exports.newCryptoKeyStore = function(KVSImplClass, opts) {
 	// - newCryptoKeyStore()
 	return new CryptoKeyStore(KVSImplClass, opts);
 };
+
+/*
+ * This function will create a new key value pair type options object based
+ * on the one passed in. The option setting will be added to the options if it
+ * does not exist in the options already. The value of the new setting will be the default
+ * value passed in unless there is a value in the config settings
+ */
+module.exports.checkAndAddConfigSetting = function(option_name, default_value, options) {
+	var return_options = {};
+	return_options[option_name] = module.exports.getConfigSetting(option_name, default_value);
+	var found_option = false;
+	if(options) {
+		var keys = Object.keys(options);
+		for(var i in keys) {
+			let key = keys[i];
+			var value = options[key];
+			if(key === option_name) {
+				found_option = true;
+			}
+			return_options[key] = value;
+		}
+	}
+	return return_options;
+};
