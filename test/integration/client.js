@@ -16,10 +16,7 @@
 
 'use strict';
 
-if (global && global.hfc) global.hfc.config = undefined;
-require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('integration.client');
 
 var tape = require('tape');
@@ -29,18 +26,20 @@ var util = require('util');
 var path = require('path');
 var fs = require('fs-extra');
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var User = require('fabric-client/lib/User.js');
-var Client = require('fabric-client/lib/Client.js');
 var testUtil = require('../unit/util.js');
 var couchdbUtil = require('./couchdb-util.js');
 
 var tag = 'integration.client: ';
-hfc.addConfigFile(path.join(__dirname, '../fixtures/caimport.json'));
-var caImport = utils.getConfigSetting('ca-import', 'notfound');
+var caImport;
 logger.debug('caImport = %s', JSON.stringify(caImport));
 
 test('\n\n ** createUser happy path - file store **\n\n', function (t) {
+	testUtil.resetDefaults();
+	Client.addConfigFile(path.join(__dirname, '../fixtures/caimport.json'));
+	caImport = utils.getConfigSetting('ca-import', 'notfound');
+
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	utils.setConfigSetting('crypto-keysize', 256);
 	var userOrg = 'org1';
@@ -50,20 +49,20 @@ test('\n\n ** createUser happy path - file store **\n\n', function (t) {
 
 	var keyStoreOpts = {path: path.join(testUtil.getTempDir(), caImport.orgs[userOrg].storePath)};
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(keyStoreOpts));
+	var cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(keyStoreOpts));
 	client.setCryptoSuite(cryptoSuite);
 
-	logger.info('try to cleanup kvs Path: '+keyStoreOpts.path);
+	logger.debug('try to cleanup kvs Path: '+keyStoreOpts.path);
 	// clean up
 	if (testUtil.existsSync(keyStoreOpts.path)) {
 		fs.removeSync(keyStoreOpts.path);
-		logger.info('removed kvsPath: '+keyStoreOpts.path);
+		logger.debug('removed kvsPath: '+keyStoreOpts.path);
 	}
 
 	return utils.newKeyValueStore(keyStoreOpts)
 	.then((store) => {
-		logger.info('store: %s',store);
+		logger.debug('store: %s',store);
 		client.setStateStore(store);
 		return '';
 	}).then(() => {
@@ -92,34 +91,32 @@ test('\n\n ** createUser happy path - file store **\n\n', function (t) {
 
 test('\n\n ** createUser happy path - CouchDB **\n\n', function (t) {
 	// Use the CouchDB specific config file
-	hfc.addConfigFile('test/fixtures/couchdb.json');
+	Client.addConfigFile('test/fixtures/couchdb.json');
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');//override
-	var couchdbIPAddr = hfc.getConfigSetting('couchdb-ip-addr', 'notfound');
-	var couchdbPort = hfc.getConfigSetting('couchdb-port', 'notfound');
+	var couchdbIPAddr = Client.getConfigSetting('couchdb-ip-addr', 'notfound');
+	var couchdbPort = Client.getConfigSetting('couchdb-port', 'notfound');
 	var keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
 
 	// Clean up the couchdb test database
 	var userOrg = 'org1';
 	var dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
 	var keyStoreOpts = {name: dbname, url: keyValStorePath};
-	logger.info('couch keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
+	logger.debug('couch keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
 
 	var prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
 	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(keyStoreOpts));
+	var cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(keyStoreOpts));
 	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, keyValStorePath)
 	.then((status) => {
-		t.comment(tag+'Cleanup of existing ' + dbname + ' returned '+status);
-		t.comment(tag+'Initialize the CouchDB KeyValueStore');
 		return utils.newKeyValueStore(keyStoreOpts);
 	}).then((store) => {
-		logger.info('store: %s',store);
+		logger.debug('store: %s',store);
 		client.setStateStore(store);
 		return true;
 	}).then((status) => {
@@ -146,35 +143,33 @@ test('\n\n ** createUser happy path - CouchDB **\n\n', function (t) {
 
 test('\n\n ** createUser happy path - Cloudant  **\n\n', function (t) {
 	// Use the Cloudant specific config file
-	hfc.addConfigFile('test/fixtures/cloudant.json');
+	Client.addConfigFile('test/fixtures/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');//override
-	var cloudantUsername = hfc.getConfigSetting('cloudant-username', 'notfound');
-	var cloudantPassword = hfc.getConfigSetting('cloudant-password', 'notfound');
-	var cloudantBluemix = hfc.getConfigSetting('cloudant-bluemix', 'notfound');
+	var cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
+	var cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
+	var cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');
 	var cloudantUrl = 'https://' + cloudantUsername + ':' + cloudantPassword + cloudantBluemix;
 
 	// Clean up the cloudant test database
 	var userOrg = 'org1';
 	var dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
 	var keyStoreOpts = {name: dbname, url: cloudantUrl};
-	logger.info('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
+	logger.debug('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
 
 	var prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
 	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(keyStoreOpts));
+	var cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(keyStoreOpts));
 	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, cloudantUrl)
 	.then((status) => {
-		t.comment(tag+'Cleanup of existing ' + dbname + ' returned '+status);
-		t.comment(tag+'Initialize the CouchDB KeyValueStore');
 		return utils.newKeyValueStore(keyStoreOpts);
 	}).then((store) => {
-		logger.info('store: %s',store);
+		logger.debug('store: %s',store);
 		client.setStateStore(store);
 		return true;
 	}).then((status) => {
@@ -200,32 +195,30 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', function (t) {
 
 test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', function (t) {
 	// Use the Cloudant specific config file
-	hfc.addConfigFile('test/fixtures/cloudant.json');
+	Client.addConfigFile('test/fixtures/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');//override
-	var cloudantUsername = hfc.getConfigSetting('cloudant-username', 'notfound');
-	var cloudantPassword = hfc.getConfigSetting('cloudant-password', 'notfound');
-	var cloudantBluemix = hfc.getConfigSetting('cloudant-bluemix', 'notfound');
+	var cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
+	var cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
+	var cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');
 	var cloudantUrl = 'https://' + cloudantUsername + ':' + cloudantPassword + cloudantBluemix;
 
 	// Clean up the cloudant test database
 	var userOrg = 'org2';
 	var dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
 	var keyStoreOpts = {name: dbname, url: cloudantUrl};
-	logger.info('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
+	logger.debug('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
 
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(keyStoreOpts));
+	var cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(keyStoreOpts));
 	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, cloudantUrl)
 	.then((status) => {
-		t.comment(tag+'Cleanup of existing ' + dbname + ' returned '+status);
-		t.comment(tag+'Initialize the CouchDB KeyValueStore');
 		return utils.newKeyValueStore(keyStoreOpts);
 	}).then((store) => {
-		logger.info('store: %s',store);
+		logger.debug('store: %s',store);
 		client.setStateStore(store);
 		return true;
 	}).then((status) => {

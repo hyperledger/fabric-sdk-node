@@ -26,8 +26,6 @@ var fs = require('fs');
 var path = require('path');
 var util = require('util');
 
-testutil.resetDefaults();
-
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 var FabricCAClient = FabricCAServices.FabricCAClient;
 
@@ -47,6 +45,7 @@ const SAMPLE_PEM_ENCODED_CERTIFICATE = '-----BEGIN CERTIFICATE-----' +
  */
 //test constructor
 test('FabricCAClient: Test constructor', function (t) {
+	testutil.resetDefaults();
 
 	var connectOpts = {};
 
@@ -136,7 +135,6 @@ test('FabricCAClient: Test constructor', function (t) {
 		t.doesNotThrow(
 			function () {
 				client = new FabricCAClient(connectOpts);
-				t.comment('client: ' + util.inspect(client, {depth: null}));
 			},
 			/Invalid connection options. /,
 			'Add tlsOptions to client connect_opts -- all default values'
@@ -153,7 +151,6 @@ test('FabricCAClient: Test constructor', function (t) {
 		t.doesNotThrow(
 			function () {
 				client = new FabricCAClient(connectOpts);
-				t.comment('client: ' + util.inspect(client, {depth: null}));
 			},
 			/Invalid connection options. /,
 			'Add tlsOptions to client connect_opts -- non default values'
@@ -222,14 +219,15 @@ test('FabricCAServices:  Test newCryptoSuite() function', function(t) {
  	var crypto = CAClient.newCryptoSuite({software: true, keysize: 384});
 
  	var client = new CAClient('http://localhost:7054', tlsOptions, 'peerOrg1', crypto);
+ 	client.setCryptoSuite(crypto);
 
-	var crypto = client.getCrypto();
+	var crypto = client.getCryptoSuite();
 
 	if (crypto) {
-		t.pass('Successfully called getCrypto()');
+		t.pass('Successfully called getCryptoSuite()');
 	}
 	else {
-		t.fail('getCrypto() did not return an object');
+		t.fail('getCryptoSuite() did not return an object');
 	}
 	t.end();
 });
@@ -254,32 +252,33 @@ test('FabricCAServices:  Test newCryptoKeyStore() function', function(t) {
 	crypto.setCryptoKeyStore(cks);
 
  	var client = new CAClient('http://localhost:7054', tlsOptions, 'peerOrg1', crypto);
+ 	client.setCryptoSuite(crypto);
 
-	var crypto = client.getCrypto();
+	var crypto = client.getCryptoSuite();
 
 	if (crypto && crypto._cryptoKeyStore) {
-		t.pass('Successfully called getCrypto() with cryptoKeyStore set');
+		t.pass('Successfully called getCryptoSuite() with cryptoKeyStore set');
 	}
 	else {
 		if (!crypto) {
-			t.fail('getCrypto() did not return an object');
+			t.fail('getCryptoSuite() did not return an object');
 		} else {
-			t.fail('getCrypto() should contain a cryptoKeyStore');
+			t.fail('getCryptoSuite() should contain a cryptoKeyStore');
 		}
 	}
 	t.end();
 });
 
-// Test getCrypto() function
-test('FabricCAServices:  Test getCrypto() function', function(t) {
+// Test getCryptoSuite() function
+test('FabricCAServices:  Test getCryptoSuite() function', function(t) {
 	var ca = new FabricCAServices('http://localhost:7054');
-	var crypto = ca.getCrypto();
+	var crypto = ca.getCryptoSuite();
 
 	if (crypto) {
 		t.pass('Successfully called getCrypto()');
 	}
 	else {
-		t.fail('getCrypto() did not return an object');
+		t.fail('getCryptoSuite() did not return an object');
 	}
 	t.end();
 });
@@ -688,7 +687,6 @@ test('FabricCAServices: Test toString() function', function(t) {
 	var ca = new FabricCAServices('http://localhost:7054');
 	var printableCa = ca.toString();
 
-	t.comment('printableCa = ' + printableCa);
 	if ((typeof printableCa == 'string') && (printableCa.length > 1)) {
 		t.pass('toString() returned a string of length ' + printableCa.length);
 	}

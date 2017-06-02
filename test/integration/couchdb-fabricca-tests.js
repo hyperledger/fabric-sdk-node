@@ -14,10 +14,7 @@
  *  limitations under the License.
  */
 
-if (global && global.hfc) global.hfc.config = undefined;
-require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('couchdb-fabricca');
 
 var tape = require('tape');
@@ -25,23 +22,21 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var path = require('path');
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 
-var Client = hfc;
 var User = require('fabric-client/lib/User.js');
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
+var testUtil = require('../unit/util.js');
 
 var couchdbUtil = require('./couchdb-util.js');
 
-hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
+var ORGS;
 var userOrg = 'org1';
 
 var	tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
-var fabricCAEndpoint = ORGS[userOrg].ca.url;
 
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
@@ -49,14 +44,19 @@ var fabricCAEndpoint = ORGS[userOrg].ca.url;
 // CouchDB KeyValueStore. Then the test uses the Client class to load the member
 // from the key value store.
 test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
-	// Use the CouchDB specific config file
-	hfc.addConfigFile('test/fixtures/couchdb.json');
+	testUtil.resetDefaults();
+	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+	ORGS = Client.getConfigSetting('test-network');
 
-	var keyValueStore = hfc.getConfigSetting('key-value-store');
+	// Use the CouchDB specific config file
+	Client.addConfigFile('test/fixtures/couchdb.json');
+
+	var fabricCAEndpoint = ORGS[userOrg].ca.url;
+	var keyValueStore = Client.getConfigSetting('key-value-store');
 	logger.info('couchdb Key Value Store = ' + keyValueStore);
 
-	var couchdbIPAddr = hfc.getConfigSetting('couchdb-ip-addr', 'notfound');
-	var couchdbPort = hfc.getConfigSetting('couchdb-port', 'notfound');
+	var couchdbIPAddr = Client.getConfigSetting('couchdb-ip-addr', 'notfound');
+	var couchdbPort = Client.getConfigSetting('couchdb-port', 'notfound');
 	var keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
 	logger.info('couch keyValStorePath: '+keyValStorePath);
 
@@ -90,8 +90,8 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 			function(kvs) {
 
 				member = new User('admin2');
-				cryptoSuite = client.newCryptoSuite(options);
-				cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(options));
+				cryptoSuite = Client.newCryptoSuite(options);
+				cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(options));
 				client.setCryptoSuite(cryptoSuite);
 				member.setCryptoSuite(cryptoSuite);
 
@@ -165,7 +165,6 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 			})
 		.then(
 			function(user) {
-				t.comment('getUserContext, loading user admin2 from StateStore...');
 				client.setCryptoSuite(cryptoSuite);
 				return client.getUserContext('admin2', true);
 			})

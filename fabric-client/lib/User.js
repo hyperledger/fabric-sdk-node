@@ -280,6 +280,17 @@ var User = class {
 
 		return JSON.stringify(state);
 	}
+
+	static isInstance(object) {
+		return (typeof object._name !== 'undefined' &&
+			typeof object._roles !== 'undefined' &&
+			typeof object._affiliation !== 'undefined' &&
+			typeof object._enrollmentSecret !== 'undefined' &&
+			typeof object._identity !== 'undefined' &&
+			typeof object._signingIdentity !== 'undefined' &&
+			typeof object._mspId !== 'undefined' &&
+			typeof object._cryptoSuite !== 'undefined');
+	}
 };
 
 module.exports = User;

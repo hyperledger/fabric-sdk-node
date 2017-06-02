@@ -20,7 +20,7 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var testutil = require('./util.js');
 var utils = require('fabric-client/lib/utils.js');
 var path = require('path');
@@ -130,7 +130,7 @@ const halfOrdersForCurve = {
 	'secp384r1': elliptic.curves['p384'].n.shrn(1)
 };
 
-var _client = new hfc();
+var _client = new Client();
 
 test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 	testutil.resetDefaults();
@@ -477,7 +477,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 			t.pass('Successfully caught missing private key expected from a user enrollment object');
 			t.end();
 		} else {
-			t.fail('Unexpected message.  Expecting "'+msg+'"');
+			t.fail(util.format('Unexpected message.  Expecting "%s" but got "%s"', msg, err));
 			t.end();
 		}
 	}).catch((err) => {

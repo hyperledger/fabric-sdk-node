@@ -15,10 +15,7 @@
  */
 'use strict';
 
-if (global && global.hfc) global.hfc.config = undefined;
-require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('orderer-channel');
 
 
@@ -32,15 +29,15 @@ var path = require('path');
 
 var testUtil = require('../unit/util.js');
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var Channel = require('fabric-client/lib/Channel.js');
 
 var keyValStorePath = testUtil.KVS;
-hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
+var ORGS;
 
-var client = new hfc();
+var client = new Client();
+var org = 'org1';
 
 //
 // Orderer via member missing orderer
@@ -52,18 +49,24 @@ var client = new hfc();
 test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 	testUtil.resetDefaults();
 	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
+	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+	ORGS = Client.getConfigSetting('test-network');
+	let orgName = ORGS[org].name;
+
 	//
 	// Create and configure the test channel
 	//
-	var channel = client.newChannel('testChannel-orderer-member2');
+	let channel = client.newChannel('testChannel-orderer-member2');
+	let cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	client.setCryptoSuite(cryptoSuite);
 
-	hfc.newDefaultKeyValueStore({
+	Client.newDefaultKeyValueStore({
 		path: testUtil.KVS
 	}).then((store) => {
 		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t);
-	}
-	).then(
+		return testUtil.getSubmitter(client, t, org);
+	}).then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
 
@@ -122,7 +125,7 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 		)
 	);
 
-	testUtil.getSubmitter(client, t)
+	testUtil.getSubmitter(client, t, org)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
@@ -197,7 +200,7 @@ test('\n\n** TEST ** orderer via member bad request', function(t) {
 		)
 	);
 
-	testUtil.getSubmitter(client, t)
+	testUtil.getSubmitter(client, t, org)
 	.then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');

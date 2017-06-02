@@ -20,7 +20,6 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('fabric-client');
 var testutil = require('./util.js');
 var User = require('fabric-client/lib/User.js');
 var utils = require('fabric-client/lib/utils.js');
@@ -32,9 +31,6 @@ var memberCfg = {
 	'enrollmentID': enrollmentID,
 	'roles': roles
 };
-var Client = hfc;
-
-testutil.resetDefaults();
 
 var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'MIIDVDCCAvqgAwIBAgIBATAKBggqhkjOPQQDAjBOMRMwEQYDVQQKDArOoyBBY21l' +
@@ -60,6 +56,8 @@ var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 module.exports.TEST_CERT_PEM = TEST_CERT_PEM;
 
 test('\n\n ** User - constructor set get tests **\n\n', function (t) {
+	testutil.resetDefaults();
+
 	utils.setConfigSetting('crypto-hsm', false);
 
 	var member1 = new User(memberName);

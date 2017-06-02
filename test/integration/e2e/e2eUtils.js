@@ -32,24 +32,33 @@ var Client = require('fabric-client');
 var testUtil = require('../../unit/util.js');
 
 var e2e = testUtil.END2END;
-Client.addConfigFile(path.join(__dirname, './config.json'));
-var ORGS = Client.getConfigSetting('test-network');
+var ORGS;
 
 var grpc = require('grpc');
 
 var tx_id = null;
 var the_user = null;
 
+function init() {
+	if (!ORGS) {
+		Client.addConfigFile(path.join(__dirname, './config.json'));
+		ORGS = Client.getConfigSetting('test-network');
+	}
+}
+
 function installChaincode(org, chaincode_path, version, t) {
+	init();
+
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
 	var client = new Client();
+	// client.setDevMode(true);
 	var channel = client.newChannel(channel_name);
 
 	var orgName = ORGS[org].name;
-	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	var cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
@@ -143,6 +152,8 @@ module.exports.installChaincode = installChaincode;
 
 
 function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
+	init();
+
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
@@ -156,7 +167,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			for(var key in ehs) {
 				var eventhub = ehs[key];
 				if (eventhub && eventhub.isconnected()) {
-					logger.info('Disconnecting the event hub');
+					logger.debug('Disconnecting the event hub');
 					eventhub.disconnect();
 				}
 			}
@@ -169,8 +180,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	var channel = client.newChannel(channel_name);
 
 	var orgName = ORGS[userOrg].name;
-	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	var cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
@@ -207,7 +218,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			if (ORGS[org].hasOwnProperty('peer1')) {
 				let key = 'peer1';
 				let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
-				logger.info(' create new peer %s', ORGS[org][key].requests);
+				logger.debug(' create new peer %s', ORGS[org][key].requests);
 				let peer = client.newPeer(
 					ORGS[org][key].requests,
 					{
@@ -222,7 +233,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		}
 
 		// an event listener can only register with a peer in its own org
-		logger.info(' create new eventhub %s', ORGS[userOrg]['peer1'].events);
+		logger.debug(' create new eventhub %s', ORGS[userOrg]['peer1'].events);
 		let data = fs.readFileSync(path.join(__dirname, ORGS[userOrg]['peer1']['tls_cacerts']));
 		let eh = client.newEventHub();
 		eh.setPeerAddr(
@@ -252,7 +263,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, badTransientMap);
 			tx_id = request.txId;
 
-			t.comment(util.format(
+			logger.debug(util.format(
 				'Upgrading chaincode "%s" at path "%s" to version "%s" by passing args "%s" to method "%s" in transaction "%s"',
 				request.chaincodeId,
 				request.chaincodePath,
@@ -321,7 +332,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			all_good = all_good & one_good;
 		}
 		if (all_good) {
-			t.pass(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
+			t.pass('Successfully sent Proposal and received ProposalResponse');
+			logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 			var request = {
 				proposalResponses: proposalResponses,
 				proposal: proposal,
@@ -352,7 +364,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 						}
 					});
 				});
-				logger.info('register eventhub %s with tx=%s',eh.getPeerAddr(),deployId);
+				logger.debug('register eventhub %s with tx=%s',eh.getPeerAddr(),deployId);
 				eventPromises.push(txPromise);
 			});
 
@@ -437,6 +449,8 @@ module.exports.instantiateChaincode = instantiateChaincode;
 
 
 function invokeChaincode(userOrg, version, t, useStore){
+	init();
+
 	logger.debug('invokeChaincode begin');
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -451,7 +465,7 @@ function invokeChaincode(userOrg, version, t, useStore){
 			for(var key in ehs) {
 				var eventhub = ehs[key];
 				if (eventhub && eventhub.isconnected()) {
-					logger.info('Disconnecting the event hub');
+					logger.debug('Disconnecting the event hub');
 					eventhub.disconnect();
 				}
 			}
@@ -468,9 +482,9 @@ function invokeChaincode(userOrg, version, t, useStore){
 	var channel = client.newChannel(channel_name);
 
 	var orgName = ORGS[userOrg].name;
-	var cryptoSuite = client.newCryptoSuite();
+	var cryptoSuite = Client.newCryptoSuite();
 	if (useStore) {
-		cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 		client.setCryptoSuite(cryptoSuite);
 	}
 
@@ -541,8 +555,7 @@ function invokeChaincode(userOrg, version, t, useStore){
 	}).then((nothing) => {
 		tx_id = client.newTransactionID(the_user);
 		utils.setConfigSetting('E2E_TX_ID', tx_id.getTransactionID());
-		logger.info('setConfigSetting("E2E_TX_ID") = %s', tx_id.getTransactionID());
-		t.comment(util.format('Sending transaction "%s"', tx_id.getTransactionID()));
+		logger.debug('setConfigSetting("E2E_TX_ID") = %s', tx_id.getTransactionID());
 
 		// send proposal to endorser
 		var request = {
@@ -606,7 +619,8 @@ function invokeChaincode(userOrg, version, t, useStore){
 		}
 		if (all_good) {
 			// check to see if all the results match
-			t.pass(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
+			t.pass('Successfully sent Proposal and received ProposalResponse');
+			logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 			var request = {
 				proposalResponses: proposalResponses,
 				proposal: proposal,
@@ -695,6 +709,8 @@ function invokeChaincode(userOrg, version, t, useStore){
 module.exports.invokeChaincode = invokeChaincode;
 
 function queryChaincode(org, version, value, t, transientMap) {
+	init();
+
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
@@ -706,8 +722,8 @@ function queryChaincode(org, version, value, t, transientMap) {
 	var channel = client.newChannel(channel_name);
 
 	var orgName = ORGS[org].name;
-	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	var cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
 	var targets = [];
@@ -752,7 +768,6 @@ function queryChaincode(org, version, value, t, transientMap) {
 		return channel.queryByChaincode(request);
 	},
 	(err) => {
-		t.comment('Failed to get submitter \'admin\'');
 		t.fail('Failed to get submitter \'admin\'. Error: ' + err.stack ? err.stack : err );
 		throw new Error('Failed to get submitter');
 	}).then((response_payloads) => {
@@ -803,7 +818,7 @@ function readAllFiles(dir) {
 	var certs = [];
 	files.forEach((file_name) => {
 		let file_path = path.join(dir,file_name);
-		console.log(' looking at file ::'+file_path);
+		console.debug(' looking at file ::'+file_path);
 		let data = fs.readFileSync(file_path);
 		certs.push(data);
 	});

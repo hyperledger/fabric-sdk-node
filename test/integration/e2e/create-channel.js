@@ -15,8 +15,6 @@
  */
 'use strict';
 
-if (global && global.hfc) global.hfc.config = undefined;
-require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('E2E create-channel');
 
@@ -38,8 +36,7 @@ var e2eUtils = require('./e2eUtils.js');
 
 var the_user = null;
 
-Client.addConfigFile(path.join(__dirname, './config.json'));
-var ORGS = Client.getConfigSetting('test-network');
+var ORGS;
 
 var channel_name = 'mychannel';
 // can use "channel=<name>" to control the channel name from command line
@@ -49,11 +46,14 @@ if (process.argv.length > 2) {
 	}
 }
 
-logger.info('\n\n >>>>>>  Will create new channel with name :: %s <<<<<<< \n\n',channel_name);
 //
 //Attempt to send a request to the orderer with the createChannel method
 //
 test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
+	testUtil.resetDefaults();
+	Client.addConfigFile(path.join(__dirname, './config.json'));
+	ORGS = Client.getConfigSetting('test-network');
+
 	//
 	// Create and configure the test channel
 	//
@@ -105,13 +105,6 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 
 	var config = null;
 	var signatures = [];
-	var msps = [];
-
-	msps.push(client.newMSP( e2eUtils.loadMSPConfig('OrdererMSP', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/msp/')));
-
-	msps.push(client.newMSP( e2eUtils.loadMSPConfig('Org1MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/msp/')));
-
-	msps.push(client.newMSP( e2eUtils.loadMSPConfig('Org2MSP', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/msp/')));
 
 	// Acting as a client in org1 when creating the channel
 	var org = ORGS.org1.name;
@@ -122,8 +115,8 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		path: testUtil.storePathForOrg(org)
 	}).then((store) => {
 		client.setStateStore(store);
-		var cryptoSuite = client.newCryptoSuite();
-		cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(org)}));
+		var cryptoSuite = Client.newCryptoSuite();
+		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(org)}));
 		client.setCryptoSuite(cryptoSuite);
 
 		return testUtil.getOrderAdminSubmitter(client, t);

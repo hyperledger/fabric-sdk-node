@@ -30,7 +30,7 @@ var crypto = require('crypto');
 
 var e2eUtils = require('./e2e/e2eUtils.js');
 var testUtil = require('../unit/util.js');
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 
 var e2e = testUtil.END2END;
 
@@ -38,16 +38,18 @@ var e2e = testUtil.END2END;
  * The test depends on an existing channel 'mychannel'
  */
 test('\n\n*** GRPC communication tests ***\n\n', (t) => {
+	testUtil.resetDefaults();
+
 	// test grpc message size limit
-	var client = new hfc();
+	var client = new Client();
 	var channel = client.newChannel(e2e.channel);
-	var ORGS = hfc.getConfigSetting('test-network');
+	var ORGS = Client.getConfigSetting('test-network');
 	var userOrg = 'org1';
 	var orgName = ORGS[userOrg].name;
 	var submitter;
 
-	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	var cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
 	var junkpath = path.join(__dirname, '../fixtures/src/github.com/example_cc/junk.go');
@@ -85,9 +87,9 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 	}).then(() => {
 		t.pass('Successfully tested setting grpc send limit');
 
-		hfc.addConfigFile(path.join(__dirname, './e2e/config.json'));
+		Client.addConfigFile(path.join(__dirname, './e2e/config.json'));
 
-		return hfc.newDefaultKeyValueStore({
+		return Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
 		});
 	}, (err) => {
@@ -100,7 +102,6 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 
 	}).then((admin) => {
 
-		t.comment('Successfully enrolled user \'admin\'');
 		submitter = admin;
 
 		// now dial the receive limit back down to reproduce the message size error

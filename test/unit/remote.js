@@ -23,8 +23,6 @@ var test = _test(tape);
 var testutil = require('./util.js');
 var utils = require('fabric-client/lib/utils.js');
 
-testutil.resetDefaults();
-
 var Remote = require('fabric-client/lib/Remote.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
@@ -49,6 +47,8 @@ var aHostname = 'atesthostname';
 var aHostnameOverride = 'atesthostnameoverride';
 
 test('\n\n ** Remote node tests **\n\n', function (t) {
+	testutil.resetDefaults();
+
 	console.log('\n * REMOTE *');
 	//Peer: secure grpcs, requires opts.pem
 	var url = 'grpcs://' + aHostname + ':aport';

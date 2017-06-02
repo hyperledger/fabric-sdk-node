@@ -31,17 +31,18 @@ var testUtil = require('../unit/util.js');
 var e2eUtils = require('./e2e/e2eUtils.js');
 
 var the_user = null;
-
-Client.addConfigFile(path.join(__dirname, './config.json'));
-var ORGS = Client.getConfigSetting('test-network');
+var ORGS;
 
 //
 //Attempt to send a request to the orderer with the createChannel method
 //
 test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
+	testUtil.resetDefaults();
+	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+	ORGS = Client.getConfigSetting('test-network');
+
 	var channel_name = 'mychanneltx';
 	Client.setConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', channel_name);
-	logger.info('\n\n >>>>>>  Will create new channel with name :: %s <<<<<<< \n\n',channel_name);
 
 	//
 	// Create and configure the test channel

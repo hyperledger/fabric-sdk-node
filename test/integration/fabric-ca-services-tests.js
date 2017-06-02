@@ -15,17 +15,17 @@
  */
 'use strict';
 
-if (global && global.hfc) global.hfc.config = undefined;
-require('nconf').reset();
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('fabric-ca-services');
+/////////////////////////////////////////////////////////////////
+// ---------------------- IMPORTANT ----------------------------
+// this test is meant to test the fabric-ca-client
+// package ALONE! do not require anything from the fabric-client
+// package. If anything is required but missing, add them to
+// the fabric-ca-client package by editing build/tasks/ca.js
+/////////////////////////////////////////////////////////////////
 
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
-
-
-var hfc = require('fabric-client');
 
 var X509 = require('x509');
 
@@ -33,30 +33,29 @@ var util = require('util');
 var fs = require('fs-extra');
 var path = require('path');
 var testUtil = require('../unit/util.js');
-var LocalMSP = require('fabric-client/lib/msp/msp.js');
-var idModule = require('fabric-client/lib/msp/identity.js');
+
+var LocalMSP = require('fabric-ca-client/lib/msp/msp.js');
+var idModule = require('fabric-ca-client/lib/msp/identity.js');
 var SigningIdentity = idModule.SigningIdentity;
 var Signer = idModule.Signer;
-var User = require('fabric-client/lib/User.js');
+var User = require('fabric-ca-client/lib/User.js');
 
 var keyValStorePath = testUtil.KVS;
 
-var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
+var FabricCAServices = require('fabric-ca-client');
 var FabricCAClient = FabricCAServices.FabricCAClient;
 
 var enrollmentID = 'testUser';
 var enrollmentSecret;
 var csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabricca/enroll-csr.pem'));
 
-hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
 var userOrg = 'org1';
+var ORGS, fabricCAEndpoint;
 
 var	tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
-var fabricCAEndpoint = ORGS[userOrg].ca.url;
 
 /**
  * FabricCAServices class tests
@@ -65,9 +64,13 @@ var fabricCAEndpoint = ORGS[userOrg].ca.url;
 //run the enroll test
 
 test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function (t) {
+	testUtil.resetDefaults();
+	FabricCAServices.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+	ORGS = FabricCAServices.getConfigSetting('test-network');
+	fabricCAEndpoint = ORGS[userOrg].ca.url;
 
-	utils.getConfigSetting('crypto-keysize', '256');//force for gulp test
-	utils.setConfigSetting('crypto-hash-algo', 'SHA2');//force for gulp test
+	FabricCAServices.getConfigSetting('crypto-keysize', '256');//force for gulp test
+	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2');//force for gulp test
 
 	var caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
 
@@ -90,10 +93,9 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollment.certificate, err));
 			}
 
-			t.comment(util.format('Parsed subject: %j', subject));
 			t.equal(subject.commonName, req.enrollmentID, 'Subject should be /CN=' + req.enrollmentID);
 
-			return caService.cryptoPrimitives.importKey(enrollment.certificate);
+			return caService.getCryptoSuite().importKey(enrollment.certificate);
 		},(err) => {
 			t.fail('Failed to enroll the admin. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 
@@ -103,42 +105,44 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 
 			var msp = new LocalMSP({
 				id: ORGS[userOrg].mspid,
-				cryptoSuite: caService.cryptoPrimitives
+				cryptoSuite: caService.getCryptoSuite()
 			});
 
 			var signingIdentity = new SigningIdentity(eResult.certificate, pubKey, msp.getId(), msp.cryptoSuite,
 				new Signer(msp.cryptoSuite, eResult.key));
-			t.comment('Registering '+enrollmentID);
 			return caService._fabricCAClient.register(enrollmentID, null, 'client', userOrg, 1, [], signingIdentity);
 		},(err) => {
 			t.fail('Failed to import the public key from the enrollment certificate. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((secret) => {
 			console.log('secret: ' + JSON.stringify(secret));
-			t.comment(secret);
 			enrollmentSecret = secret; // to be used in the next test case
 
 			t.pass('testUser \'' + enrollmentID + '\'');
 
-			return hfc.newDefaultKeyValueStore({
-				path: testUtil.KVS
-			});
+			member = new User('adminX');
+			return member.setEnrollment(eResult.key, eResult.certificate, 'Org1MSP');
 		},(err) => {
 			t.fail(util.format('Failed to register "%s". %s', enrollmentID, err.stack ? err.stack : err));
 			t.end();
-		}).then((store) => {
-			t.comment('Successfully constructed a state store');
-
-			client = new hfc();
-			client.setStateStore(store);
-			member = new User('adminX');
-			return member.setEnrollment(eResult.key, eResult.certificate, 'Org1MSP');
 		}).then(() => {
-			t.comment('Successfully constructed a user object based on the enrollment');
-			return caService.register({enrollmentID: 'testUserX', affiliation: 'bank_X'}, member);
+
+			// now test being able to save user to persistence store
+			return FabricCAServices.newDefaultKeyValueStore({
+				path: testUtil.KVS
+			});
 		},(err) => {
 			t.fail('Failed to configure the user with proper enrollment materials.');
 			t.end();
+		}).then((store) => {
+			return store.setValue(member.getName(), member.toString());
+		}, (err) => {
+			t.fail('Failed to obtain a state store from the fabric-ca-client');
+			t.end();
+		}).then(() => {
+			t.pass('Successfully saved user to state store');
+
+			return caService.register({enrollmentID: 'testUserX', affiliation: 'bank_X'}, member);
 		}).then((secret) => {
 			t.fail('Should not have been able to register user of a affiliation "bank_X" because "admin" does not belong to that affiliation');
 			t.end();
@@ -165,7 +169,6 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 
 			return caService.enroll({enrollmentID: 'testUserY', enrollmentSecret: secret});
 		}).then((enrollment) => {
-			t.comment('Successfully enrolled "testUserY"');
 
 			var cert;
 			try {
@@ -248,10 +251,8 @@ test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', function (t) 
 		caname: ORGS[userOrg].ca.name
 	});
 
-	t.comment(util.format('Sending enroll request for user %s with enrollment secret %s', enrollmentID, enrollmentSecret));
 	return client.enroll(enrollmentID, enrollmentSecret, csr.toString())
 		.then(function (enrollResponse) {
-			t.comment(enrollResponse.enrollmentCert);
 			t.pass('Successfully invoked enroll API with enrollmentID \'' + enrollmentID + '\'');
 			//check that we got back the expected certificate
 			var subject;
@@ -260,7 +261,6 @@ test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', function (t) 
 			} catch(err) {
 				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollResponse.enrollmentCert, err));
 			}
-			t.comment(subject);
 			t.equal(subject.commonName, enrollmentID, 'Subject should be /CN=' + enrollmentID);
 			t.end();
 		})

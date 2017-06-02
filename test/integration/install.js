@@ -18,10 +18,7 @@
 // in a happy-path scenario
 'use strict';
 
-if (global && global.hfc) global.hfc.config = undefined;
-require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('install');
 
 var tape = require('tape');
@@ -32,20 +29,22 @@ var path = require('path');
 var fs = require('fs');
 var util = require('util');
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var Packager = require('fabric-client/lib/Packager.js');
 var testUtil = require('../unit/util.js');
 
 var e2e = testUtil.END2END;
-hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
+var ORGS;
 
 var tx_id = null;
 var the_user = null;
 
-testUtil.setupChaincodeDeploy();
-
 test('\n\n** Test chaincode install using chaincodePath to create chaincodePackage **\n\n', (t) => {
+	testUtil.resetDefaults();
+	testUtil.setupChaincodeDeploy();
+	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+	ORGS = Client.getConfigSetting('test-network');
+
 	var params = {
 		org: 'org1',
 		testDesc: 'using chaincodePath',
@@ -70,18 +69,13 @@ test('\n\n** Test chaincode install using chaincodePath to create chaincodePacka
 		t.fail('install reject: '+err);
 		t.end();
 	}).catch((err) => {
-		t.fail('install error');
-		t.comment(err.stack ? err.stack : err);
+		t.fail('install error. ' + err.stack ? err.stack : err);
 		t.end();
 	}).then ((success) => {
-		t.comment('#########################################');
-		t.comment('install same chaincode again, should fail');
-		t.comment('#########################################');
 		params.channelName = params.channelName+'0';
 		params.testDesc = params.testDesc+'0';
 		installChaincode(params, t)
 		.then((info) => {
-			t.comment('Checking for \'install-package.'+params.chaincodeVersion+' exists\'');
 			if (info && info.toString().indexOf('install.'+params.chaincodeVersion+' exists') > 0) {
 				t.pass('passed check for exists on install again');
 				t.end();
@@ -94,8 +88,7 @@ test('\n\n** Test chaincode install using chaincodePath to create chaincodePacka
 			t.fail('install reject: '+err);
 			t.end();
 		}).catch((err) => {
-			t.fail('install error');
-			t.comment(err.stack ? err.stack : err);
+			t.fail('install error. ' + err.stack ? err.stack : err);
 			t.end();
 		});
 	});
@@ -113,7 +106,6 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 
 	Packager.package(testUtil.CHAINCODE_PATH, null, false) //use good path here to get data
 	.then((data) => {
-		t.comment(params.testDesc+' - Packager.package data: '+data);
 		params.chaincodePackage = data;
 
 		installChaincode(params, t)
@@ -130,18 +122,13 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 			t.fail(params.testDesc+' - install reject: '+err);
 			t.end();
 		}).catch((err) => {
-			t.fail(params.testDesc+' - install error');
-			t.comment(err.stack ? err.stack : err);
+			t.fail(params.testDesc+' - install error. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then ((success) => {
-			t.comment('################################################');
-			t.comment('install same chaincodePackage again, should fail');
-			t.comment('################################################');
 			params.channelName = params.channelName+'0';
 			params.testDesc = params.testDesc+'0';
 			installChaincode(params, t)
 			.then((info) => {
-				t.comment('Checking for \'install-package.'+params.chaincodeVersion+' exists\'');
 				if (info && info.toString().indexOf('install-package.'+params.chaincodeVersion+' exists') > 0) {
 					t.pass('passed check for exists same code again');
 					t.end();
@@ -166,7 +153,7 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 function installChaincode(params, t) {
 	try {
 		var org = params.org;
-		var client = new hfc();
+		var client = new Client();
 		var channel = client.newChannel(params.channelName);
 
 		var caRootsPath = ORGS.orderer.tls_cacerts;
@@ -202,7 +189,7 @@ function installChaincode(params, t) {
 			}
 		}
 
-		return hfc.newDefaultKeyValueStore({
+		return Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
 		}).then((store) => {
 			client.setStateStore(store);
@@ -246,10 +233,8 @@ function installChaincode(params, t) {
 				all_good = all_good & one_good;
 			}
 			if (all_good) {
-				t.comment(params.testDesc+' - Successfully sent install Proposal and received ProposalResponse');
 				return 'success';
 			} else {
-				t.comment(params.testDesc+' - Failed to send install Proposal or receive valid response. Response null or status is not 200.');
 				if (error) {
 					if (typeof error === 'Error') return new Error(error.stack ? error.stack : error);
 					return error;
@@ -258,11 +243,9 @@ function installChaincode(params, t) {
 			}
 		},
 		(err) => {
-			t.comment(params.testDesc+' - Error in installChaincode');
 			return new Error(err.stack ? err.stack : err);
 		});
 	} catch (err) {
-		t.comment(params.testDesc+' - Error in install function');
 		return Promise.reject(new Error(err.stack ? err.stack : err));
 	};
 }

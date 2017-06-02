@@ -30,6 +30,7 @@ var logger = utils.getLogger('CouchDBKeyValueStore.js');
  * It uses a local or remote CouchDB database instance to store the keys.
  *
  * @class
+ * @extends module:api.KeyValueStore
  */
 var CouchDBKeyValueStore = class extends api.KeyValueStore {
 
@@ -72,14 +73,14 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 				if (err) {
 					// Database doesn't exist
 					if (err.error == 'not_found') {
-						logger.info(util.format('No %s found, creating %s', self._name, self._name));
+						logger.debug(util.format('No %s found, creating %s', self._name, self._name));
 
 						dbClient.db.create(self._name, function(err, body) {
 							if (err) {
 								return reject(new Error(util.format('Failed to create %s database due to error: %s', self._name, err.stack ? err.stack : err)));
 							}
 
-							logger.info(util.format('Created %s database', self._name));
+							logger.debug(util.format('Created %s database', self._name));
 							// Specify it as the database to use
 							self._database = dbClient.use(self._name);
 							resolve(self);
@@ -90,7 +91,7 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 					}
 				} else {
 					// Database exists
-					logger.info(util.format('%s already exists', self._name));
+					logger.debug(util.format('%s already exists', self._name));
 					// Specify it as the database to use
 					self._database = dbClient.use(self._name);
 					resolve(self);
@@ -99,12 +100,6 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 		});
 	}
 
-	/**
-	 * Get the value associated with name.
-	 * @param {string} name
-	 * @returns Promise for the value
-	 * @ignore
-	 */
 	getValue(name) {
 		logger.debug('getValue: ' + name);
 
@@ -117,7 +112,7 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 						logger.error('getValue: ' + name + ', ERROR: [member_db.get] - ', err.error);
 						return reject(err.error);
 					} else {
-						logger.info('getValue: ' + name + ', Entry does not exist');
+						logger.debug('getValue: ' + name + ', Entry does not exist');
 						return resolve(null);
 					}
 				} else {
@@ -128,13 +123,6 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 		});
 	}
 
-	/**
-	 * Set the value associated with name.
-	 * @param {string} name
-	 * @param {string} value
-	 * @returns Promise for a 'true' value on successful completion
-	 * @ignore
-	 */
 	setValue(name, value) {
 		logger.debug('setValue: ' + name);
 

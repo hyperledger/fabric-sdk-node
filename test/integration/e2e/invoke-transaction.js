@@ -38,7 +38,6 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) =>
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 		t.end();
 	}).then(() => {
-		t.comment('Successfully slept for 5s to wait for the transaction to be committed in all peers');
 		t.end();
 	}).catch((err) => {
 		t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);

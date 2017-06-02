@@ -42,7 +42,7 @@ var TransactionID = class {
 		if (typeof userContext === 'undefined' || userContext === null) {
 			throw new Error('Missing userContext parameter');
 		}
-		if(!(userContext instanceof User)) {
+		if(!(User.isInstance(userContext))) {
 			throw new Error('Parameter "userContext" must be an instance of the "User" class');
 		}
 		this._nonce = sdkUtils.getNonce(); //nonce is in bytes

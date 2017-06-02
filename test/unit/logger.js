@@ -24,8 +24,6 @@ var hfc = require('fabric-client');
 var testutil = require('./util.js');
 var utils = require('fabric-client/lib/utils.js');
 
-testutil.resetDefaults();
-
 var bunyan = require('bunyan');
 var log4js = require('log4js');
 var intercept = require('intercept-stdout');
@@ -63,8 +61,15 @@ function testLogger(t, ignoreLevels) {
 }
 
 test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
-	// test 1: default logging levels for console logging
-	testLogger(t);
+	if (!!process.env.HFC_LOGGING) {
+		delete process.env['HFC_LOGGING'];
+	}
+
+	if (!!global.hfc.logger) {
+		global.hfc.logger = undefined;
+	}
+
+	testutil.resetDefaults();
 
 	// test 2: custom logging levels for console logging
 	var output = '';

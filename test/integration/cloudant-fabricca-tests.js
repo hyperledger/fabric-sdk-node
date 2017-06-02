@@ -14,10 +14,7 @@
  *  limitations under the License.
  */
 
-if (global && global.hfc) global.hfc.config = undefined;
-require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
-utils.setConfigSetting('hfc-logging', '{"debug":"console"}');
 var logger = utils.getLogger('cloudant-fabricca');
 
 var tape = require('tape');
@@ -25,26 +22,23 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var path = require('path');
-var hfc = require('fabric-client');
-var Client = hfc;
+var Client = require('fabric-client');
 var User = require('fabric-client/lib/User.js');
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
 var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore');
-
+var testUtil = require('../unit/util.js');
 
 var couchdbUtil = require('./couchdb-util.js');
 
 var cloudantUrl = 'https://1421acc7-6faa-491a-8e10-951e2e190684-bluemix:7179ef7a72602189243deeabe207889bde1c2fada173ae1022b5592e5a79dacc@1421acc7-6faa-491a-8e10-951e2e190684-bluemix.cloudant.com';
 
-hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
+var ORGS;
 var userOrg = 'org1';
 
 var	tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
-var fabricCAEndpoint = ORGS[userOrg].ca.url;
 
 // This test first checks to see if a user has already been enrolled. If so,
 // the test terminates. If the user is not yet enrolled, the test uses the
@@ -52,9 +46,14 @@ var fabricCAEndpoint = ORGS[userOrg].ca.url;
 // CouchDB KeyValueStore. Then the test uses the Chain class to load the member
 // from the key value store.
 test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
-	hfc.addConfigFile('test/fixtures/cloudant.json');
-	var keyValueStore = hfc.getConfigSetting('key-value-store');
-	logger.info('cloudant Key Value Store = ' + keyValueStore);
+	testUtil.resetDefaults();
+	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+	ORGS = Client.getConfigSetting('test-network');
+	var fabricCAEndpoint = ORGS[userOrg].ca.url;
+
+	Client.addConfigFile('test/fixtures/cloudant.json');
+	var keyValueStore = Client.getConfigSetting('key-value-store');
+	logger.debug('cloudant Key Value Store = ' + keyValueStore);
 
 	// override t.end function so it'll always clear the config settings
 	t.end = ((context, f) => {
@@ -79,20 +78,16 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 	var cryptoSuite, member, options;
 	couchdbUtil.destroy(dbname, cloudantUrl)
 	.then( function(status) {
-		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
-		t.comment('Initilize the Cloudant CouchDB KeyValueStore');
 		options = {name: dbname, url: cloudantUrl};
 		utils.newKeyValueStore(options)
 		.then(
 			function(kvs) {
-				t.comment('Setting client keyValueStore to: ' + kvs);
 				member = new User('admin2');
-				cryptoSuite = client.newCryptoSuite();
-				cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore(options));
+				cryptoSuite = Client.newCryptoSuite();
+				cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(options));
 				client.setCryptoSuite(cryptoSuite);
 				member.setCryptoSuite(cryptoSuite);
 
-				t.comment('Setting client keyValueStore to: ' +kvs);
 				client.setStateStore(kvs);
 				if (client.getStateStore() === kvs) {
 					t.pass('Successfully set Cloudant CouchDB KeyValueStore for client');
@@ -101,7 +96,6 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 					t.end();
 					process.exit(1);
 				}
-				t.comment('Initialize the CA server connection and KeyValueStore');
 				return new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name, cryptoSuite);
 			},
 			function(err) {
@@ -112,10 +106,9 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 			})
 		.then(
 			function(caService) {
-				logger.info('ADD: caService - ' + caService);
+				logger.debug('ADD: caService - ' + caService);
 				t.pass('Successfully initialized the Fabric CA service.');
 
-				t.comment('Begin caService.enroll');
 				return caService.enroll({
 					enrollmentID: 'admin',
 					enrollmentSecret: 'adminpw'
@@ -155,12 +148,10 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 			})
 		.then(
 			function(user) {
-				t.comment('setting UserContext to different user to clear out previous user');
 				return client.setUserContext(new User('userx'));
 			})
 		.then(
 			function(user) {
-				t.comment('getUserContext, loading user admin2 from StateStore...');
 				client.setCryptoSuite(cryptoSuite);
 				return client.getUserContext('admin2', true);
 			}

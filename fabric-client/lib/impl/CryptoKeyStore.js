@@ -52,7 +52,7 @@ var CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
 			// next try the public key entry
 			return self.getValue(_getKeyIndex(ski, false));
 		}).then((key) => {
-			if (key instanceof ECDSAKey)
+			if (ECDSAKey.isInstance(key))
 				return key;
 
 			if (key !== null) {

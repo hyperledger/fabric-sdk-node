@@ -42,12 +42,13 @@ var keyValStorePath = testUtil.KVS;
 //
 
 test('orderer bad address test', function(t) {
+	testUtil.resetDefaults();
+
 	try {
 		var client = new Orderer('xxxxx');
 		t.fail('Orderer allowed setting a bad URL.');
 	}
 	catch(err) {
-		console.log('Caught Error: ' + err);
 		t.pass('Orderer did not allow setting bad URL.');
 	}
 	t.end();
@@ -66,7 +67,6 @@ test('orderer missing address test', function(t) {
 		t.fail('Orderer allowed setting a missing address.');
 	}
 	catch(err) {
-		console.log('Caught Error: ' + err);
 		t.pass('Orderer did not allow setting a missing address.');
 	}
 	t.end();
@@ -85,12 +85,10 @@ test('orderer missing data test', function(t) {
 	client.sendBroadcast()
 	.then(
 		function(status) {
-			console.log('response status: ' + JSON.stringify(status));
 			t.fail('Should have noticed missing data.');
 			t.end();
 		},
 		function(err) {
-			console.log('Caught Error: ' + err);
 			t.pass('Successfully found missing data: ' + err);
 			t.end();
 		}
@@ -113,7 +111,6 @@ test('orderer unknown address test', function(t) {
 	client.sendBroadcast('some data')
 	.then(
 		function(status) {
-			console.log('response status: ' + JSON.stringify(status));
 			t.fail('Should have noticed a bad address.');
 			t.end();
 		},

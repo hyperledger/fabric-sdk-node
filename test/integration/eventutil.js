@@ -16,8 +16,8 @@
 
 'use strict';
 
-var hfc = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
+var util = require('util');
 
 module.exports.registerTxEvent = function(eh, txid, timeout) {
 	return new Promise((resolve, reject) => {
@@ -101,6 +101,7 @@ module.exports.sendTransaction = function(channel, results) {
 		};
 		return channel.sendTransaction(request);
 	} else {
-		return Promise.reject('bad result:' + results);
+		utils.getLogger('eventutil.js').error(util.format('bad result: %j', results));
+		return Promise.reject('Proposal responses returned unsuccessful status');
 	}
 };

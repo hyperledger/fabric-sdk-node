@@ -44,7 +44,7 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****', (t) => {
 		t.fail('Failed to instantiate chaincode on the channel. ' + err.stack ? err.stack : err);
 		t.end();
 	}).then(() => {
-		t.comment('Successfully slept 5s to wait for chaincode instantiate to be completed and committed in all peers');
+		logger.debug('Successfully slept 5s to wait for chaincode instantiate to be completed and committed in all peers');
 		t.end();
 	}).catch((err) => {
 		t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);

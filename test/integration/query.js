@@ -35,20 +35,19 @@ var util = require('util');
 var fs = require('fs');
 
 var testUtil = require('../unit/util.js');
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 
-var client = new hfc();
+var client = new Client();
 var channel_id = testUtil.END2END.channel;
 var channel = client.newChannel(channel_id);
 
-hfc.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-var ORGS = hfc.getConfigSetting('test-network');
 var org = 'org1';
-var orgName = ORGS[org].name;
+var orgName;
 
 var e2e = testUtil.END2END;
+var ORGS, peer0;
 
 var the_user = null;
 var tx_id = null;
@@ -59,7 +58,7 @@ if (process.argv.length > 2) {
 		querys.push(process.argv[i]);
 	}
 }
-logger.info('Found query: %s', querys);
+logger.debug('Found query: %s', querys);
 
 // Second test in query.js has optional parameters; have they been specified?
 var queryParameters = false;    // false = do all queries; true = do some queries
@@ -76,46 +75,51 @@ if (querys.length > 0 ) {
 	}
 }
 
-testUtil.setupChaincodeDeploy();
-
-var caRootsPath = ORGS.orderer.tls_cacerts;
-let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
-let caroots = Buffer.from(data).toString();
-
-channel.addOrderer(
-	new Orderer(
-		ORGS.orderer.url,
-		{
-			'pem': caroots,
-			'ssl-target-name-override': ORGS.orderer['server-hostname']
-		}
-	)
-);
-data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
-var peer0 = new Peer(
-	ORGS[org].peer1.requests,
-	{
-		pem: Buffer.from(data).toString(),
-		'ssl-target-name-override': ORGS[org].peer1['server-hostname']
-	});
-data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS['org2'].peer1['tls_cacerts']));
-var peer1 = new Peer(
-	ORGS['org2'].peer1.requests,
-	{
-		pem: Buffer.from(data).toString(),
-		'ssl-target-name-override': ORGS['org2'].peer1['server-hostname']
-	});
-
-channel.addPeer(peer0);
-channel.addPeer(peer1);
+var data;
 
 test('  ---->>>>> Query channel working <<<<<-----', function(t) {
+	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+	ORGS = Client.getConfigSetting('test-network');
+	orgName = ORGS[org].name;
+	var caRootsPath = ORGS.orderer.tls_cacerts;
+	data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
+
+	let caroots = Buffer.from(data).toString();
+
+	channel.addOrderer(
+		new Orderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		)
+	);
+
+	data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
+	peer0 = new Peer(
+		ORGS[org].peer1.requests,
+		{
+			pem: Buffer.from(data).toString(),
+			'ssl-target-name-override': ORGS[org].peer1['server-hostname']
+		});
+	data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS['org2'].peer1['tls_cacerts']));
+	var peer1 = new Peer(
+		ORGS['org2'].peer1.requests,
+		{
+			pem: Buffer.from(data).toString(),
+			'ssl-target-name-override': ORGS['org2'].peer1['server-hostname']
+		});
+
+	channel.addPeer(peer0);
+	channel.addPeer(peer1);
+
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
-	var cryptoSuite = client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	var cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
-	return hfc.newDefaultKeyValueStore({
+	return Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
 	}).then( function (store) {
 		client.setStateStore(store);
@@ -134,25 +138,22 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 		// send query
 		return channel.queryBlock(0);
 	}).then((block) => {
-		logger.info(' Channel getBlock() returned block %j',block);
-		logger.info(' Channel getBlock() returned block number=%s',block.header.number);
+		logger.debug(' Channel getBlock() returned block number=%s',block.header.number);
 		t.equal(block.header.number.toString(),'0','checking query results are correct that we got zero block back');
 		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Orderer.groups.OrdererMSP.values.MSP.value.config.name,'OrdererMSP','checking query results are correct that we got the correct orderer MSP name');
 		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.groups.Org2MSP.policies.Writers.policy.type,'SIGNATURE','checking query results are correct that we got the correct policy type');
 		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.policies.Writers.policy.policy.rule,'ANY','checking query results are correct that we got the correct policy rule');
 		t.equal(block.data.data[0].payload.data.config.channel_group.policies.Admins.mod_policy,'Admins','checking query results are correct that we got the correct mod policy name');
-		logger.info('%j',block);
 		return channel.queryBlock(1);
 	}).then((block) => {
-		logger.info(' Channel getBlock() returned block number=%s',block.header.number);
+		logger.debug(' Channel getBlock() returned block number=%s',block.header.number);
 		t.equal(block.header.number.toString(),'1','checking query results are correct that we got a transaction block back');
 		t.equal(block.data.data[0].payload.data.actions[0].payload.action.endorsements[0].endorser.Mspid,'Org1MSP','checking query results are correct that we got a transaction block back with correct endorsement MSP id');
-		logger.info('%j',block);
 
 		tx_id = utils.getConfigSetting('E2E_TX_ID', 'notfound');
-		logger.info('getConfigSetting("E2E_TX_ID") = %s', tx_id);
+		logger.debug('getConfigSetting("E2E_TX_ID") = %s', tx_id);
 		if (tx_id === 'notfound') {
-			t.comment('   Did you set the E2E_TX_ID environment variable after running invoke-transaction.js ?');
+			logger.error('   Did you set the E2E_TX_ID environment variable after running invoke-transaction.js ?');
 			throw new Error('Could not get tx_id from ConfigSetting "E2E_TX_ID"');
 		} else {
 			t.pass('Got tx_id from ConfigSetting "E2E_TX_ID"');
@@ -160,7 +161,6 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 			return channel.queryTransaction(tx_id, peer0); //assumes the end-to-end has run first
 		}
 	}).then((processed_transaction) => {
-		logger.info(' processed_transaction :: %j',processed_transaction);
 		t.equals('mychannel', processed_transaction.transactionEnvelope.payload.header.channel_header.channel_id,
 			'test for header channel name');
 		t.equals('Org2MSP', processed_transaction.transactionEnvelope.payload.header.signature_header.creator.Mspid,
@@ -191,27 +191,25 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 		return channel.queryInfo(peer0);
 	}).then((blockchainInfo) => {
 		t.pass('got back blockchain info ');
-		logger.info(' Channel queryInfo() returned block height='+blockchainInfo.height);
-		logger.info(' Channel queryInfo() returned block previousBlockHash='+blockchainInfo.previousBlockHash);
-		logger.info(' Channel queryInfo() returned block currentBlockHash='+blockchainInfo.currentBlockHash);
+		logger.debug(' Channel queryInfo() returned block height='+blockchainInfo.height);
+		logger.debug(' Channel queryInfo() returned block previousBlockHash='+blockchainInfo.previousBlockHash);
+		logger.debug(' Channel queryInfo() returned block currentBlockHash='+blockchainInfo.currentBlockHash);
 		var block_hash = blockchainInfo.currentBlockHash;
 		// send query
 		return channel.queryBlockByHash(block_hash, peer0);
 	}).then((block) => {
-		logger.info(' Channel queryBlockByHash() returned block number=%s',block.header.number);
+		logger.debug(' Channel queryBlockByHash() returned block number=%s',block.header.number);
 		t.pass('got back block number '+ block.header.number);
 		t.end();
 	}).catch((err) => {
-		t.comment('Failed \'Query channel working\' with error:');
 		throw new Error(err.stack ? err.stack : err);
 	});
 });
 
 test('  ---->>>>> Query channel failing: GetBlockByNumber <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetBlockByNumber') >= 0) {
-		logger.info('Executing GetBlockByNumber');
 
-		return hfc.newDefaultKeyValueStore({
+		return Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
 		}).then(
 			function(store) {
@@ -249,7 +247,7 @@ test('  ---->>>>> Query channel failing: GetBlockByNumber <<<<<-----', function(
 
 test('  ---->>>>> Query channel failing: GetTransactionByID <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetTransactionByID') >= 0) {
-		return hfc.newDefaultKeyValueStore({
+		return Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
 		}).then(
 			function(store) {
@@ -288,7 +286,7 @@ test('  ---->>>>> Query channel failing: GetTransactionByID <<<<<-----', functio
 test('  ---->>>>> Query channel failing: GetChannelInfo <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetChannelInfo') >= 0) {
 
-		return hfc.newDefaultKeyValueStore({
+		return Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
 		}).then(
 			function(store) {
@@ -327,7 +325,7 @@ test('  ---->>>>> Query channel failing: GetChannelInfo <<<<<-----', function(t)
 
 test('  ---->>>>> Query channel failing: GetBlockByHash <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetBlockByHash') >= 0) {
-		return hfc.newDefaultKeyValueStore({
+		return Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
 		}).then(
 			function (store) {
@@ -366,7 +364,7 @@ test('  ---->>>>> Query channel failing: GetBlockByHash <<<<<-----', function(t)
 
 test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetInstalledChaincodes') >= 0) {
-		return hfc.newDefaultKeyValueStore({
+		return Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
 		}).then( function (store) {
 			client.setStateStore(store);
@@ -385,11 +383,11 @@ test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
 			}
 		).then(
 			function(response) {
-				t.comment('<<< installed chaincodes >>>');
+				logger.debug('<<< installed chaincodes >>>');
 				let found = false;
 
 				for (let i=0; i<response.chaincodes.length; i++) {
-					t.comment('name: '+response.chaincodes[i].name+
+					logger.debug('name: '+response.chaincodes[i].name+
 					', version: '+response.chaincodes[i].version+
 					', path: '+response.chaincodes[i].path);
 
@@ -422,7 +420,7 @@ test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
 
 test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetInstantiatedChaincodes') >= 0) {
-		return hfc.newDefaultKeyValueStore({
+		return Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
 		}).then( function (store) {
 			client.setStateStore(store);
@@ -441,10 +439,10 @@ test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t)
 			}
 		).then(
 			function(response) {
-				t.comment('<<< instantiated chaincodes >>>');
+				logger.debug('<<< instantiated chaincodes >>>');
 				let found = false;
 				for (let i=0; i<response.chaincodes.length; i++) {
-					t.comment('name: '+response.chaincodes[i].name+
+					logger.debug('name: '+response.chaincodes[i].name+
 					', version: '+response.chaincodes[i].version+
 					', path: '+response.chaincodes[i].path);
 
@@ -477,7 +475,7 @@ test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t)
 
 test('  ---->>>>> Query Channels working <<<<<-----', function(t) {
 	if (!queryParameters || querys.indexOf('GetChannels') >= 0) {
-		return hfc.newDefaultKeyValueStore({
+		return Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)
 		}).then( function (store) {
 			client.setStateStore(store);
@@ -497,9 +495,9 @@ test('  ---->>>>> Query Channels working <<<<<-----', function(t) {
 			}
 		).then(
 			function(response) {
-				t.comment('<<< channels >>>');
+				logger.debug('<<< channels >>>');
 				for (let i=0; i<response.channels.length; i++) {
-					t.comment('channel id: '+response.channels[i].channel_id);
+					logger.debug('channel id: '+response.channels[i].channel_id);
 				}
 				if (response.channels[0].channel_id === channel_id) {
 					t.pass('queryChannels matches e2e');

@@ -16,8 +16,6 @@
 
 'use strict';
 
-if (global && global.hfc) global.hfc.config = undefined;
-require('nconf').reset();
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('unit.client');
 
@@ -27,7 +25,7 @@ var test = _test(tape);
 var path = require('path');
 var util = require('util');
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
 var User = require('fabric-client/lib/User.js');
 var testutil = require('./util.js');
@@ -35,22 +33,24 @@ var testutil = require('./util.js');
 var caImport;
 
 test('\n\n ** index.js **\n\n', function (t) {
-	t.equals(typeof hfc, 'function');
+	testutil.resetDefaults();
+
+	t.equals(typeof Client, 'function');
 
 	t.doesNotThrow(
 		function() {
-			var c = new hfc();
+			var c = new Client();
 		},
 		null,
-		'Should be able to instantiate a new instance of "hfc" require');
+		'Should be able to instantiate a new instance of "Client" require');
 
 	t.doesNotThrow(
 		function() {
-			var c = new hfc();
+			var c = new Client();
 			var channel = c.newChannel('test');
 		},
 		null,
-		'Should be able to call "newChannel" on the new instance of "hfc"');
+		'Should be able to call "newChannel" on the new instance of "Client"');
 
 	t.end();
 });
@@ -58,7 +58,7 @@ test('\n\n ** index.js **\n\n', function (t) {
 test('\n\n ** eventhub **\n\n', function (t) {
 	t.doesNotThrow(
 		function() {
-			var c = new hfc();
+			var c = new Client();
 			c._userContext = new User('name');
 			var event_hub = c.newEventHub();
 		},
@@ -68,7 +68,6 @@ test('\n\n ** eventhub **\n\n', function (t) {
 	t.end();
 });
 
-var Client = hfc;
 var client = new Client();
 var channelKeyValStorePath = path.join(testutil.getTempDir(), 'channelKeyValStorePath');
 var testKey = 'keyValFileStoreName';
@@ -77,7 +76,8 @@ var testValue = 'secretKeyValue';
 test('\n\n ** Client.js Tests: CryptoSuite() methods **\n\n', function (t) {
 	t.equals(client.getCryptoSuite(), null, 'Should return null when CryptoSuite has not been set');
 
-	var crypto = client.newCryptoSuite();
+	var crypto = Client.newCryptoSuite();
+	client.setCryptoSuite(crypto);
 	if (crypto) {
 		t.pass('Successfully called newCryptoSuite()');
 	}
@@ -270,7 +270,7 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t
 });
 
 test('\n\n ** testing devmode set and get calls on client **\n\n', function (t) {
-	t.equals(typeof hfc, 'function');
+	t.equals(typeof Client, 'function');
 	var client = new Client();
 	t.doesNotThrow(
 		function () {
@@ -284,7 +284,7 @@ test('\n\n ** testing devmode set and get calls on client **\n\n', function (t) 
 });
 
 test('\n\n ** testing query calls fail without correct parameters on client **\n\n', function (t) {
-	t.equals(typeof hfc, 'function');
+	t.equals(typeof Client, 'function');
 	var client = new Client();
 
 	var p1 = client.queryInstalledChaincodes().then(function () {
@@ -322,7 +322,7 @@ test('\n\n ** testing query calls fail without correct parameters on client **\n
 });
 
 test('\n\n ** testing get and new peer calls on client **\n\n', function (t) {
-	t.equals(typeof hfc, 'function');
+	t.equals(typeof Client, 'function');
 	var client = new Client();
 
 	t.doesNotThrow(
@@ -336,7 +336,7 @@ test('\n\n ** testing get and new peer calls on client **\n\n', function (t) {
 });
 
 test('\n\n ** testing get and new orderer calls on client **\n\n', function (t) {
-	t.equals(typeof hfc, 'function');
+	t.equals(typeof Client, 'function');
 	var client = new Client();
 
 	t.doesNotThrow(
@@ -350,7 +350,7 @@ test('\n\n ** testing get and new orderer calls on client **\n\n', function (t) 
 });
 
 test('\n\n ** testing get transaction ID call on client **\n\n', function (t) {
-	t.equals(typeof hfc, 'function');
+	t.equals(typeof Client, 'function');
 	var client = new Client();
 
 	t.throws(function() {
@@ -373,16 +373,18 @@ test('\n\n ** Config **\n\n', function (t) {
 	process.env.TEST_3 = 'env';
 	process.env.test_6 = 'mapped';
 	// internal call. clearing the cached config.
-	global.hfc.config = undefined;
-	t.equals(hfc.getConfigSetting('request-timeout', 'notfound'), 45000, 'checking that able to get "request-timeout" value from an additional configuration file');
+	if (global && global.hfc) global.hfc.config = undefined;
+	require('nconf').reset();
+
+	t.equals(Client.getConfigSetting('request-timeout', 'notfound'), 45000, 'checking that able to get "request-timeout" value from an additional configuration file');
 	//try adding another config file
-	hfc.addConfigFile(path.join(__dirname, '../fixtures/local.json'));
-	t.equals(hfc.getConfigSetting('test-2', 'notfound'), 'local', 'checking that able to test-2 value from an additional configuration file');
-	t.equals(hfc.getConfigSetting('test-3', 'notfound'), 'env', 'checking that test-3 environment values are used');
-	t.equals(hfc.getConfigSetting('test-4', 'notfound'), 'argv', 'checking that test-4 argument values are used');
-	hfc.setConfigSetting('test-5', 'program');
-	t.equals(hfc.getConfigSetting('test-5', 'notfound'), 'program', 'checking that test-5 program values are used');
-	t.equals(hfc.getConfigSetting('test-6', 'notfound'), 'mapped', 'checking that test-6 is enviroment mapped value');
+	Client.addConfigFile(path.join(__dirname, '../fixtures/local.json'));
+	t.equals(Client.getConfigSetting('test-2', 'notfound'), 'local', 'checking that able to test-2 value from an additional configuration file');
+	t.equals(Client.getConfigSetting('test-3', 'notfound'), 'env', 'checking that test-3 environment values are used');
+	t.equals(Client.getConfigSetting('test-4', 'notfound'), 'argv', 'checking that test-4 argument values are used');
+	Client.setConfigSetting('test-5', 'program');
+	t.equals(Client.getConfigSetting('test-5', 'notfound'), 'program', 'checking that test-5 program values are used');
+	t.equals(Client.getConfigSetting('test-6', 'notfound'), 'mapped', 'checking that test-6 is enviroment mapped value');
 	t.end();
 });
 
@@ -575,7 +577,7 @@ test('\n\n ** Client createChannel() tests **\n\n', function (t) {
 });
 
 test('\n\n ** createUser error path - missing required opt parameter **\n\n', function (t) {
-	hfc.addConfigFile(path.join(__dirname, '../fixtures/caimport.json'));
+	Client.addConfigFile(path.join(__dirname, '../fixtures/caimport.json'));
 	caImport = utils.getConfigSetting('ca-import', 'notfound');
 	logger.debug('caImport = %s', JSON.stringify(caImport));
 
@@ -859,7 +861,7 @@ test('\n\n ** createUser error path - no keyValueStore **\n\n', function (t) {
 	utils.setConfigSetting('crypto-keysize', 256);
 
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite();
+	var cryptoSuite = Client.newCryptoSuite();
 
 	client.createUser(
 		{username: caImport.orgs[userOrg].username,
@@ -897,7 +899,7 @@ test('\n\n ** createUser success path - no cryptoKeyStore **\n\n', function (t) 
 	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
-	var cryptoSuite = client.newCryptoSuite();
+	var cryptoSuite = Client.newCryptoSuite();
 
 	return utils.newKeyValueStore(keyStoreOpts)
 	.then((store) => {

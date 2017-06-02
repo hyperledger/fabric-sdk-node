@@ -34,8 +34,6 @@ var KEYUTIL = jsrsa.KEYUTIL;
 var CouchdbMock = require('mock-couch');
 var nano = require('nano');
 
-testutil.resetDefaults();
-
 var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 var CKS = require('fabric-client/lib/impl/CryptoKeyStore.js');
 var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
@@ -69,6 +67,8 @@ var f2 = KEYUTIL.getKey(TEST_KEY_PRIVATE_CERT_PEM);
 var testPubKey = new ecdsaKey(f2);
 
 test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
+	testutil.resetDefaults();
+
 	var keystorePath = path.join(testutil.getTempDir(), 'crypto-key-store');
 
 	t.throws(

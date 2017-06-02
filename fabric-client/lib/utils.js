@@ -210,7 +210,7 @@ module.exports.getLogger = function(name) {
 			}
 
 			var logger = new winston.Logger(options);
-			logger.info('Successfully constructed a winston logger with configurations', config);
+			logger.debug('Successfully constructed a winston logger with configurations', config);
 			saveLogger(logger);
 			return insertLoggerName(logger, name);
 		} catch(err) {
@@ -225,7 +225,7 @@ module.exports.getLogger = function(name) {
 
 	var logger = newDefaultLogger();
 	saveLogger(logger);
-	logger.info('Returning a new winston logger with default configurations');
+	logger.debug('Returning a new winston logger with default configurations');
 	return insertLoggerName(logger, name);
 };
 
@@ -446,7 +446,7 @@ var CryptoKeyStore = function(KVSImplClass, opts) {
 		var self = this;
 		return new Promise((resolve, reject) => {
 			if (self._store === null) {
-				self.logger.info(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', self._storeConfig));
+				self.logger.debug(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', self._storeConfig));
 
 				CKS(self._storeConfig.superClass, self._storeConfig.opts)
 				.then((ks) => {

@@ -34,6 +34,7 @@ var util = require('util');
 var path = require('path');
 
 var utils = require('fabric-client/lib/utils.js');
+var testutil = require('./util.js');
 
 var libpath;
 var pin = '98765432'; // user pin not SO pin
@@ -52,6 +53,7 @@ var common_pkcs_pathnames = [
 ];
 
 test('\n\n**PKCS11 - locate PKCS11 libpath\n\n', (t) => {
+	testutil.resetDefaults();
 
 	if (typeof process.env.PKCS11_LIB === 'string' && process.env.PKCS11_LIB !== '') {
 		libpath = process.env.PKCS11_LIB;

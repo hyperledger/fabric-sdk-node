@@ -4,11 +4,21 @@ var gulp = require('gulp');
 var tape = require('gulp-tape');
 var tapColorize = require('tap-colorize');
 var istanbul = require('gulp-istanbul');
+var addsrc = require('gulp-add-src');
 
 var fs = require('fs-extra');
+var path = require('path');
 var os = require('os');
+var util = require('util');
 var shell = require('gulp-shell');
 var testConstants = require('../../test/unit/constants.js');
+
+// by default for running the tests print debug to a file
+var debugPath = path.join(testConstants.tempdir, 'test-log/debug.log');
+process.env.HFC_LOGGING = util.format('{"debug":"%s"}', debugPath);
+console.log('\n####################################################');
+console.log(util.format('# debug log: %s', debugPath));
+console.log('####################################################\n');
 
 gulp.task('pre-test', function() {
 	return gulp.src([
@@ -21,7 +31,8 @@ gulp.task('pre-test', function() {
 gulp.task('clean-up', function() {
 	// some tests create temporary files or directories
 	// they are all created in the same temp folder
-	return fs.removeSync(testConstants.tempdir);
+	fs.removeSync(testConstants.tempdir);
+	return fs.ensureFileSync(debugPath);
 });
 
 gulp.task('docker-clean', shell.task([
@@ -47,16 +58,17 @@ gulp.task('test', ['clean-up', 'lint', 'docker-clean', 'pre-test', 'ca'], functi
 		'test/unit/**/*.js',
 		'!test/unit/constants.js',
 		'!test/unit/util.js',
+		'!test/unit/logger.js',
+		'test/integration/e2e.js',
+		'test/integration/query.js',
 		'test/integration/fabric-ca-services-tests.js',
 		'test/integration/client.js',
 		'test/integration/orderer-channel-tests.js',
 		'test/integration/cloudant-fabricca-tests.js',
 		'test/integration/couchdb-fabricca-tests.js',
 		'test/integration/fileKeyValueStore-fabricca-tests.js',
-		'test/integration/e2e.js',
 		'test/integration/install.js',
 		'test/integration/events.js',
-		'test/integration/query.js',
 		'test/integration/upgrade.js',
 		'test/integration/get-config.js',
 		'test/integration/create-configtx-channel.js',
@@ -66,6 +78,9 @@ gulp.task('test', ['clean-up', 'lint', 'docker-clean', 'pre-test', 'ca'], functi
 		'test/integration/e2e/query.js',
 		'test/integration/grpc.js'
 	]))
+	.pipe(addsrc.append(
+		'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up
+	))
 	.pipe(tape({
 		reporter: tapColorize()
 	}))
@@ -85,7 +100,11 @@ gulp.task('test-headless', ['clean-up', 'lint', 'pre-test', 'ca'], function() {
 		'test/unit/**/*.js',
 		'!test/unit/constants.js',
 		'!test/unit/util.js',
+		'!test/unit/logger.js'
 	]))
+	.pipe(addsrc.append(
+		'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up
+	))
 	.pipe(tape({
 		reporter: tapColorize()
 	}))

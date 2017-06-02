@@ -22,6 +22,13 @@ const _spkiBase = { 256: '3059301306072A8648CE3D020106082A8648CE3D030107034200',
 		    384: '',
 		  };
 
+/**
+ * This module implements the {@link module:api.Key} interface, for ECDSA key management
+ * by Hardware Security Module support via PKCS#11 interface.
+ *
+ * @class PKCS11_ECDSA_KEY
+ * @extends module:api.Key
+ */
 var PKCS11_ECDSA_KEY = class extends api.Key {
 
 	constructor(attr, size) {
