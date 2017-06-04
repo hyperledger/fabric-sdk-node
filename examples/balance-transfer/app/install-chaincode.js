@@ -21,33 +21,23 @@ var config = require('../config.json');
 var helper = require('./helper.js');
 var logger = helper.getLogger('install-chaincode');
 var tx_id = null;
-var nonce = null;
-var member = null;
 //function installChaincode(org) {
 var installChaincode = function(peers, chaincodeName, chaincodePath,
 	chaincodeVersion, username, org) {
 	logger.debug(
 		'\n============ Install chaincode on organizations ============\n');
 	helper.setupChaincodeDeploy();
-	var chain = helper.getChainForOrg(org);
-	helper.setupOrderer();
-	var targets = helper.getTargets(peers, org);
-	helper.setupPeers(chain, peers, targets);
+	var channel = helper.getChannelForOrg(org);
+	var client = helper.getClientForOrg(org);
 
-	return helper.getRegisteredUsers(username, org).then((user) => {
-		member = user;
-		nonce = helper.getNonce();
-		tx_id = chain.buildTransactionID(nonce, member);
-		// send proposal to endorser
+	return helper.getOrgAdmin(org).then((user) => {
 		var request = {
-			targets: targets,
+			targets: helper.newPeers(peers),
 			chaincodePath: chaincodePath,
 			chaincodeId: chaincodeName,
-			chaincodeVersion: chaincodeVersion,
-			txId: tx_id,
-			nonce: nonce
+			chaincodeVersion: chaincodeVersion
 		};
-		return chain.sendInstallProposal(request);
+		return client.installChaincode(request);
 	}, (err) => {
 		logger.error('Failed to enroll user \'' + username + '\'. ' + err);
 		throw new Error('Failed to enroll user \'' + username + '\'. ' + err);

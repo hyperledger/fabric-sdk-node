@@ -22,17 +22,31 @@ var logger = helper.getLogger('Create-Channel');
 //Attempt to send a request to the orderer with the sendCreateChain method
 var createChannel = function(channelName, channelConfigPath, username, orgName) {
 	logger.debug('\n====== Creating Channel \'' + channelName + '\' ======\n');
-	helper.setupOrderer();
-	var chain = helper.getChainForOrg(orgName);
+	var client = helper.getClientForOrg(orgName);
+	var channel = helper.getChannelForOrg(orgName);
+
+	// read in the envelope for the channel config raw bytes
+	var envelope = fs.readFileSync(path.join(__dirname, channelConfigPath));
+	// extract the channel config bytes from the envelope to be signed
+	var channelConfig = client.extractChannelConfig(envelope);
+
 	//Acting as a client in the given organization provided with "orgName" param
-	return helper.getRegisteredUsers(username, orgName).then((member) => {
-		logger.debug('Successfully enrolled user \''+username+'\'');
-		// readin the envelope to send to the orderer
-		var request = {
-			envelope: fs.readFileSync(path.join(__dirname, channelConfigPath))
+	return helper.getOrgAdmin(orgName).then((admin) => {
+		logger.debug(util.format('Successfully acquired admin user for the organization "%s"', orgName));
+		// sign the channel config bytes as "endorsement", this is required by
+		// the orderer's channel creation policy
+		let signature = client.signChannelConfig(channelConfig);
+
+		let request = {
+			config: channelConfig,
+			signatures: [signature],
+			name: channelName,
+			orderer: channel.getOrderers()[0],
+			txId: client.newTransactionID()
 		};
+
 		// send to orderer
-		return chain.createChannel(request);
+		return client.createChannel(request);
 	}, (err) => {
 		logger.error('Failed to enroll user \''+username+'\'. Error: ' + err);
 		throw new Error('Failed to enroll user \''+username+'\'' + err);

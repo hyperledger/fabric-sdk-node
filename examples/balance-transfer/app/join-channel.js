@@ -16,10 +16,9 @@
 var util = require('util');
 var path = require('path');
 var fs = require('fs');
-var grpc = require('grpc');
+
 var Peer = require('fabric-client/lib/Peer.js');
 var EventHub = require('fabric-client/lib/EventHub.js');
-var user = null;
 var tx_id = null;
 var nonce = null;
 var config = require('../config.json');
@@ -28,8 +27,7 @@ var logger = helper.getLogger('Join-Channel');
 //helper.hfc.addConfigFile(path.join(__dirname, 'network-config.json'));
 var ORGS = helper.ORGS;
 var allEventhubs = [];
-var _commonProto = grpc.load(path.join(__dirname,
-	'../node_modules/fabric-client/lib/protos/common/common.proto')).common;
+
 //
 //Attempt to send a request to the orderer with the sendCreateChain method
 //
@@ -53,37 +51,45 @@ var joinChannel = function(channelName, peers, username, org) {
 	//logger.debug('\n============ Join Channel ============\n')
 	logger.info(util.format(
 		'Calling peers in organization "%s" to join the channel', org));
-	helper.setupOrderer();
-	var chain = helper.getChainForOrg(org);
-	var targets = helper.getTargets(peers, org);
+
+	var client = helper.getClientForOrg(org);
+	var channel = helper.getChannelForOrg(org);
 	var eventhubs = [];
-	for (let key in ORGS[org]) {
-		if (ORGS[org].hasOwnProperty(key)) {
-			if (key.indexOf('peer') === 0) {
-				let data = fs.readFileSync(path.join(__dirname, ORGS[org][key][
-					'tls_cacerts'
-				]));
-				let eh = new EventHub();
-				eh.setPeerAddr(ORGS[org][key].events, {
-					pem: Buffer.from(data).toString(),
-					'ssl-target-name-override': ORGS[org][key]['server-hostname']
-				});
-				eh.connect();
-				eventhubs.push(eh);
-				allEventhubs.push(eh);
+
+	return helper.getOrgAdmin(org).then((admin) => {
+		logger.info(util.format('received member object for admin of the organization "%s": ', org));
+		tx_id = client.newTransactionID();
+		let request = {
+			txId : 	tx_id
+		};
+
+		return channel.getGenesisBlock(request);
+	}).then((genesis_block) => {
+		tx_id = client.newTransactionID();
+		var request = {
+			targets: helper.newPeers(peers),
+			txId: tx_id,
+			block: genesis_block
+		};
+
+		for (let key in ORGS[org]) {
+			if (ORGS[org].hasOwnProperty(key)) {
+				if (key.indexOf('peer') === 0) {
+					let data = fs.readFileSync(path.join(__dirname, ORGS[org][key][
+						'tls_cacerts'
+					]));
+					let eh = client.newEventHub();
+					eh.setPeerAddr(ORGS[org][key].events, {
+						pem: Buffer.from(data).toString(),
+						'ssl-target-name-override': ORGS[org][key]['server-hostname']
+					});
+					eh.connect();
+					eventhubs.push(eh);
+					allEventhubs.push(eh);
+				}
 			}
 		}
-	}
-	return helper.getRegisteredUsers(username, org).then((member) => {
-		logger.info('received member object for user : ' + username);
-		user = member;
-		nonce = helper.getNonce();
-		tx_id = chain.buildTransactionID(nonce, user);
-		var request = {
-			targets: targets,
-			txId: tx_id,
-			nonce: nonce
-		};
+
 		var eventPromises = [];
 		eventhubs.forEach((eh) => {
 			let txPromise = new Promise((resolve, reject) => {
@@ -94,22 +100,19 @@ var joinChannel = function(channelName, peers, username, org) {
 					// we must check that this block came from the channel we asked the peer to join
 					if (block.data.data.length === 1) {
 						// Config block must only contain one transaction
-						var envelope = _commonProto.Envelope.decode(block.data.data[0]);
-						var payload = _commonProto.Payload.decode(envelope.payload);
-						var channel_header = _commonProto.ChannelHeader.decode(payload.header
-							.channel_header);
-						if (channel_header.channel_id === config.channelName) {
-							logger.info('The channel \'' + config.channelName +
-								'\' has been successfully joined on peer ' + eh.ep._endpoint.addr
-							);
+						var channel_header = block.data.data[0].payload.header.channel_header;
+						if (channel_header.channel_id === channelName) {
 							resolve();
+						}
+						else {
+							reject();
 						}
 					}
 				});
 			});
 			eventPromises.push(txPromise);
 		});
-		let sendPromise = chain.joinChannel(request);
+		let sendPromise = channel.joinChannel(request);
 		return Promise.all([sendPromise].concat(eventPromises));
 	}, (err) => {
 		logger.error('Failed to enroll user \'' + username + '\' due to error: ' +

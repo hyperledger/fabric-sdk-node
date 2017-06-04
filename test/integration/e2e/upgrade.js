@@ -46,7 +46,7 @@ test('\n\n***** U P G R A D E flow: chaincode install *****\n\n', (t) => {
 	});
 });
 
-test('\n\n***** U P G R A D E flow: upgrade chaincode *****', (t) => {
+test('\n\n***** U P G R A D E flow: upgrade chaincode *****\n\n', (t) => {
 	e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH, 'v1', true, t)
 	.then((result) => {
 		if(result){
@@ -66,7 +66,7 @@ test('\n\n***** U P G R A D E flow: upgrade chaincode *****', (t) => {
 	});
 });
 
-test('\n\n***** U P G R A D E flow: invoke transaction to move money *****', (t) => {
+test('\n\n***** U P G R A D E flow: invoke transaction to move money *****\n\n', (t) => {
 	e2eUtils.invokeChaincode('org2', 'v1', t)
 	.then((result) => {
 		if(result){
@@ -86,7 +86,7 @@ test('\n\n***** U P G R A D E flow: invoke transaction to move money *****', (t)
 	});
 });
 
-test('\n\n***** U P G R A D E flow: query chaincode *****', (t) => {
+test('\n\n***** U P G R A D E flow: query chaincode *****\n\n', (t) => {
 	e2eUtils.queryChaincode('org2', 'v1', '410', t)
 	.then((result) => {
 		if(result){
@@ -106,7 +106,7 @@ test('\n\n***** U P G R A D E flow: query chaincode *****', (t) => {
 	});
 });
 
-test('\n\n***** TransientMap Support in Proposals *****', (t) => {
+test('\n\n***** TransientMap Support in Proposals *****\n\n', (t) => {
 	var transient = {
 		'test': Buffer.from('dummyValue') // string <-> byte[]
 	};

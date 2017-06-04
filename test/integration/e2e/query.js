@@ -23,7 +23,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 var e2eUtils = require('./e2eUtils.js');
 
-test('\n\n***** End-to-end flow: query chaincode *****', (t) => {
+test('\n\n***** End-to-end flow: query chaincode *****\n\n', (t) => {
 	e2eUtils.queryChaincode('org2', 'v0', '300', t)
 	.then((result) => {
 		if(result){

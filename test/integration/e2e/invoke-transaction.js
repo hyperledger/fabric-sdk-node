@@ -23,7 +23,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 var e2eUtils = require('./e2eUtils.js');
 
-test('\n\n***** End-to-end flow: invoke transaction to move money *****', (t) => {
+test('\n\n***** End-to-end flow: invoke transaction to move money *****\n\n', (t) => {
 	e2eUtils.invokeChaincode('org2', 'v0', t, false/*useStore*/)
 	.then((result) => {
 		if(result){

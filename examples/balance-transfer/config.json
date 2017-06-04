@@ -1,7 +1,7 @@
 {
    "host":"localhost",
    "port":"4000",
-   "jwt_expiretime": "3600",
+   "jwt_expiretime": "36000",
    "chaincodeId":"mycc",
    "channelName":"mychannel",
    "chaincodeVersion": "v0",

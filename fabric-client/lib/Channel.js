@@ -1193,7 +1193,6 @@ var Channel = class {
 		//validate the incoming request
 		if(!errorMsg) errorMsg = Channel._checkProposalRequest(request);
 		if(!errorMsg) errorMsg = Channel._checkInstallRequest(request);
-		if(!errorMsg) errorMsg = _checkInstantiateRequest(request);
 
 		if(errorMsg) {
 			logger.error('sendChainCodeProposal error ' + errorMsg);
@@ -1217,7 +1216,6 @@ var Channel = class {
 			type: Channel._translateCCType(request.chaincodeType),
 			chaincode_id: {
 				name: request.chaincodeId,
-				path: request.chaincodePath,
 				version: request.chaincodeVersion
 			},
 			input: {
@@ -1918,25 +1916,6 @@ function _arrayToMap(map, msps) {
 		}
 	}
 };
-
-/*
-* @private
-*/
-function _checkInstantiateRequest(request) {
-	var errorMsg = null;
-
-	if (request) {
-		var type = Channel._translateCCType(request.chaincodeType);
-		// FIXME: GOLANG platform on the peer has a bug that requires chaincodePath
-		// during instantiate.  Police this for now until the peer is fixed.
-		if(type === _ccProto.ChaincodeSpec.Type.GOLANG && !request.chaincodePath) {
-			errorMsg = 'Missing "chaincodePath" parameter in the proposal request';
-		}
-	} else {
-		errorMsg = 'Missing input request object on the proposal request';
-	}
-	return errorMsg;
-}
 
 /*
  * utility method to load in a config group

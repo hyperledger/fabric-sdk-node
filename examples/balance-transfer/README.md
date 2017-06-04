@@ -1,13 +1,13 @@
 ## Balance transfer
 
-A sample node-based app to demonstrate **__fabric-client__** & **__fabric-ca-client__** Node SDK APIs
+A sample Node.js app to demonstrate **__fabric-client__** & **__fabric-ca-client__** Node.js SDK APIs
 
 ### Prerequisites and setup: 
 
 * [Docker](https://www.docker.com/products/overview) - v1.12 or higher
 * [Docker Compose](https://docs.docker.com/compose/overview/) - v1.8 or higher
 * [Git client](https://git-scm.com/downloads) - needed for clone commands
-* **Nodejs** v6.2.0 - 6.10.0 ( __Node v7+ is not supported__ )
+* **Node.js** v6.2.0 - 6.10.0 ( __Node v7+ is not supported__ )
 * Download docker images
 
 ```
@@ -18,16 +18,14 @@ docker-compose -f artifacts/docker-compose.yaml pull
 Once you have completed the above setup, you will be provisioned a local network with following configuration:
 
 * 2 CAs
-* A kafka orderer
+* A SOLO orderer
 * 4 peers (2 peers per Org)
 
 #### Artifacts
-* Crypto material has been generated using the **cryptogen** tool from fabric and mounted to all peers, the orderering node and CA org containers. More details regarding the cryptogen tool are available [here](http://hyperledger-fabric.readthedocs.io/en/latest/getting_started.html#using-the-cryptogen-tool).
-* An Orderer genesis block (orderer.block) and channel configuration transaction (mychannel.tx) has been pre generated using the **configtxgen** tool and placed within the artifacts folder.
-  More details regarding the configtxgen tool are available [here](http://hyperledger-fabric.readthedocs.io/en/latest/getting_started.html#using-the-configtxgen-tool).
+* Crypto material has been generated using the **cryptogen** tool from fabric and mounted to all peers, the orderering node and CA containers. More details regarding the cryptogen tool are available [here](http://hyperledger-fabric.readthedocs.io/en/latest/getting_started.html#using-the-cryptogen-tool).
+* An Orderer genesis block (genesis.block) and channel configuration transaction (mychannel.tx) has been pre generated using the **configtxgen** tool and placed within the artifacts folder. More details regarding the configtxgen tool are available [here](http://hyperledger-fabric.readthedocs.io/en/latest/getting_started.html#using-the-configtxgen-tool).
 
 ## Running the sample program
-
 
 There are two options available for running the balance-transfer sample
 
@@ -81,7 +79,7 @@ cd fabric-sdk-node/examples/balance-transfer
 
 * Register and enroll new users in Organization - **Org1**:
 
-`curl -s -X POST http://localhost:4000/users -H "cache-control: no-cache" -H "content-type: application/x-www-form-urlencoded" -d 'username=Jim&orgName=org1'`
+`curl -s -X POST http://localhost:4000/users -H "content-type: application/x-www-form-urlencoded" -d 'username=Jim&orgName=org1'`
 
 **OUTPUT:**
 
@@ -102,16 +100,14 @@ The response contains the success/failure status, an **enrollment Secret** and a
 curl -s -X POST \
   http://localhost:4000/channels \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
   -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
   -d '{
 	"channelName":"mychannel",
 	"channelConfigPath":"../artifacts/channel/mychannel.tx"
 }'
 ```
 
-Please note that the Headers **x-access-token** and **authorization** must contain the JWT
+Please note that the Header **authorization** must contain the JWT returned from the `POST /users` call
 
 ### Join Channel request
 
@@ -119,9 +115,7 @@ Please note that the Headers **x-access-token** and **authorization** must conta
 curl -s -X POST \
   http://localhost:4000/channels/mychannel/peers \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
   -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
   -d '{
 	"peers": ["localhost:7051","localhost:7056"]
 }'
@@ -132,9 +126,7 @@ curl -s -X POST \
 curl -s -X POST \
   http://localhost:4000/chaincodes \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
   -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
   -d '{
 	"peers": ["localhost:7051","localhost:7056"],
 	"chaincodeName":"mycc",
@@ -149,13 +141,10 @@ curl -s -X POST \
 curl -s -X POST \
   http://localhost:4000/channels/mychannel/chaincodes \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
   -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
   -d '{
 	"peers": ["localhost:7051"],
 	"chaincodeName":"mycc",
-	"chaincodePath":"github.com/example_cc",
 	"chaincodeVersion":"v0",
 	"functionName":"init",
 	"args":["a","100","b","200"]
@@ -168,27 +157,22 @@ curl -s -X POST \
 curl -s -X POST \
   http://localhost:4000/channels/mychannel/chaincodes/mycc \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
   -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
   -d '{
 	"peers": ["localhost:7051", "localhost:7056"],
-	"chaincodeVersion":"v0",
-	"functionName":"invoke",
+	"fcn":"invoke",
 	"args":["move","a","b","10"]
 }'
 ```
-**NOTE:** Ensure that you save the Transaction ID in order to pass this string in the subsequent query transactions. 
+**NOTE:** Ensure that you save the Transaction ID from the response in order to pass this string in the subsequent query transactions. 
 
 ### Chaincode Query
 
 ```
 curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/chaincodes/mycc?peer=peer1&args=%5B%22query%22%2C%22a%22%5D&chaincodeVersion=v0" \
+  "http://localhost:4000/channels/mychannel/chaincodes/mycc?peer=peer1&args=%5B%22query%22%2C%22a%22%5D" \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
-  -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI"
+  -H "content-type: application/json"
 ```
 
 ### Query Block by BlockNumber
@@ -197,9 +181,7 @@ curl -s -X GET \
 curl -s -X GET \
   "http://localhost:4000/channels/mychannel/blocks/1?peer=peer1" \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
-  -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI"
+  -H "content-type: application/json"
 ```
 
 ### Query Transaction by TransactionID
@@ -207,9 +189,7 @@ curl -s -X GET \
 ```
 curl -s -X GET http://localhost:4000/channels/mychannel/transactions/TRX_ID?peer=peer1 \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
-  -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI"
+  -H "content-type: application/json"
 ```
 **NOTE**: Here the TRX_ID can be from any previous invoke transaction
 
@@ -220,9 +200,7 @@ curl -s -X GET http://localhost:4000/channels/mychannel/transactions/TRX_ID?peer
 curl -s -X GET \
   "http://localhost:4000/channels/mychannel?peer=peer1" \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
-  -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI"
+  -H "content-type: application/json"
 ```
 
 ### Query Installed chaincodes
@@ -231,9 +209,7 @@ curl -s -X GET \
 curl -s -X GET \
   "http://localhost:4000/chaincodes?peer=peer1&type=installed" \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
-  -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI"
+  -H "content-type: application/json"
 ```
 
 ### Query Instantiated chaincodes
@@ -242,9 +218,7 @@ curl -s -X GET \
 curl -s -X GET \
   "http://localhost:4000/chaincodes?peer=peer1&type=instantiated" \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
-  -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI"
+  -H "content-type: application/json"
 ```
 
 ### Query Channels
@@ -253,9 +227,7 @@ curl -s -X GET \
 curl -s -X GET \
   "http://localhost:4000/channels?peer=peer1" \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
-  -H "cache-control: no-cache" \
-  -H "content-type: application/json" \
-  -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI"
+  -H "content-type: application/json"
 ```
 
 ### Network configuration considerations
@@ -304,12 +276,10 @@ If you choose to customize your docker-compose yaml file by hardcoding IP Addres
 
 To retrieve the IP Address for one of your network entities, issue the following command:
 
-
-
 ```
 # this will return the IP Address for peer0
 docker inspect peer0 | grep IPAddress
 ```
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
-s
+

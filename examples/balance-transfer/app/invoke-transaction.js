@@ -25,72 +25,27 @@ var logger = helper.getLogger('invoke-chaincode');
 var EventHub = require('fabric-client/lib/EventHub.js');
 hfc.addConfigFile(path.join(__dirname, 'network-config.json'));
 var ORGS = hfc.getConfigSetting('network-config');
-var tx_id = null;
-var nonce = null;
-var member = null;
-var eventhubs = {};
 
-function getHostnameByPeerAddress(org, peers) {
-	var orgDetails = ORGS[org];
-	var result = [];
-	for (let index in peers) {
-		for (let key in orgDetails) {
-			if (orgDetails.hasOwnProperty(key) && key.indexOf('peer') == 0 && orgDetails[
-					key].requests.indexOf(peers[index]) >= 0) {
-				result.push(key);
-			}
-		}
-	}
-	return result;
-};
-var registerEventHub = function(org, peers) {
-	var peerHosts = getHostnameByPeerAddress(org, peers);
-	for (var index in peerHosts) {
-		let eh = new EventHub();
-		let data = fs.readFileSync(path.join(__dirname, ORGS[org][peerHosts[index]][
-			'tls_cacerts'
-		]));
-		eh.setPeerAddr(ORGS[org][peerHosts[index]]['events'], {
-			pem: Buffer.from(data).toString(),
-			'ssl-target-name-override': ORGS[org][peerHosts[index]]['server-hostname']
-		});
-		eh.connect();
-		eventhubs[org + peerHosts[index]] = eh;
-	}
-};
-var invokeChaincode = function(peers, channelName, chaincodeName,
-	chaincodeVersion, args, username, org) {
-	logger.debug('\n============ invoke transaction on organization ' + org +
-		' ============\n');
-	var chain = helper.getChainForOrg(org);
-	helper.setupOrderer();
-	var targets = helper.getTargets(peers, org);
-	helper.setupPeers(chain, peers, targets);
-	var peerHosts = getHostnameByPeerAddress(org, peers);
-	peers.forEach(function(peer) {
-		let peerEh = eventhubs[org + peer];
-		if (!peerEh) {
-			registerEventHub(org, peers);
-		}
-	});
+var invokeChaincode = function(peersUrls, channelName, chaincodeName, fcn, args, username, org) {
+	logger.debug(util.format('\n============ invoke transaction on organization %s ============\n', org));
+	var client = helper.getClientForOrg(org);
+	var channel = helper.getChannelForOrg(org);
+	var targets = helper.newPeers(peersUrls);
+	var tx_id = null;
+
 	return helper.getRegisteredUsers(username, org).then((user) => {
-		member = user;
-		nonce = helper.getNonce();
-		tx_id = chain.buildTransactionID(nonce, member);
-		hfc.setConfigSetting('E2E_TX_ID', tx_id);
-		logger.info('setConfigSetting("E2E_TX_ID") = %s', tx_id);
-		logger.debug(util.format('Sending transaction "%s"', tx_id));
+		tx_id = client.newTransactionID();
+		logger.debug(util.format('Sending transaction "%j"', tx_id));
 		// send proposal to endorser
 		var request = {
 			targets: targets,
 			chaincodeId: chaincodeName,
 			fcn: config.invokeQueryFcnName,
-			args: helper.getArgs(args),
+			args: args,
 			chainId: channelName,
-			txId: tx_id,
-			nonce: nonce
+			txId: tx_id
 		};
-		return chain.sendTransactionProposal(request);
+		return channel.sendTransactionProposal(request);
 	}, (err) => {
 		logger.error('Failed to enroll user \'' + username + '\'. ' + err);
 		throw new Error('Failed to enroll user \'' + username + '\'. ' + err);
@@ -124,15 +79,25 @@ var invokeChaincode = function(peers, channelName, chaincodeName,
 			// set the transaction listener and set a timeout of 30sec
 			// if the transaction did not get committed within the timeout period,
 			// fail the test
-			var transactionID = tx_id.toString();
+			var transactionID = tx_id.getTransactionID();
 			var eventPromises = [];
+
+			var eventhubs = helper.newEventHubs(peersUrls, org);
 			for (let key in eventhubs) {
 				let eh = eventhubs[key];
+				eh.connect();
+
 				let txPromise = new Promise((resolve, reject) => {
-					let handle = setTimeout(reject, 30000);
-					eh.registerTxEvent(transactionID.toString(), (tx, code) => {
+					let handle = setTimeout(() => {
+						eh.disconnect();
+						reject();
+					}, 30000);
+
+					eh.registerTxEvent(transactionID, (tx, code) => {
 						clearTimeout(handle);
 						eh.unregisterTxEvent(transactionID);
+						eh.disconnect();
+
 						if (code !== 'VALID') {
 							logger.error(
 								'The balance transfer transaction was invalid, code = ' + code);
@@ -140,14 +105,14 @@ var invokeChaincode = function(peers, channelName, chaincodeName,
 						} else {
 							logger.info(
 								'The balance transfer transaction has been committed on peer ' +
-								eh.ep._endpoint.addr);
+								eh._ep._endpoint.addr);
 							resolve();
 						}
 					});
 				});
 				eventPromises.push(txPromise);
 			};
-			var sendPromise = chain.sendTransaction(request);
+			var sendPromise = channel.sendTransaction(request);
 			return Promise.all([sendPromise].concat(eventPromises)).then((results) => {
 				logger.debug(' event promise all complete and testing complete');
 				return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
@@ -171,12 +136,7 @@ var invokeChaincode = function(peers, channelName, chaincodeName,
 	}).then((response) => {
 		if (response.status === 'SUCCESS') {
 			logger.info('Successfully sent transaction to the orderer.');
-			logger.debug(
-				'******************************************************************');
-			logger.debug('E2E_TX_ID=' + '\'' + tx_id + '\'');
-			logger.debug(
-				'******************************************************************');
-			return tx_id;
+			return tx_id.getTransactionID();
 		} else {
 			logger.error('Failed to order the transaction. Error code: ' + response.status);
 			return 'Failed to order the transaction. Error code: ' + response.status;
@@ -188,4 +148,5 @@ var invokeChaincode = function(peers, channelName, chaincodeName,
 			err;
 	});
 };
+
 exports.invokeChaincode = invokeChaincode;

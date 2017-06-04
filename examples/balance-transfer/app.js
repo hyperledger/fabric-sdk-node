@@ -21,9 +21,11 @@ var session = require('express-session');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var http = require('http');
+var util = require('util');
 var app = express();
 var expressJWT = require('express-jwt');
 var jwt = require('jsonwebtoken');
+var bearerToken = require('express-bearer-token');
 var cors = require('cors');
 var config = require('./config.json');
 var helper = require('./app/helper.js');
@@ -53,6 +55,33 @@ app.use(expressJWT({
 }).unless({
 	path: ['/users']
 }));
+app.use(bearerToken());
+app.use(function(req, res, next) {
+	if (req.originalUrl.indexOf('/users') >= 0) {
+		return next();
+	}
+
+	var token = req.token;
+	jwt.verify(token, app.get('secret'), function(err, decoded) {
+		if (err) {
+			res.send({
+				success: false,
+				message: 'Failed to authenticate token. Make sure to include the ' +
+					'token returned from /users call in the authorization header ' +
+					' as a Bearer token'
+			});
+			return;
+		} else {
+			// add the decoded user name and org name to the request object
+			// for the downstream code to use
+			req.username = decoded.username;
+			req.orgname = decoded.orgName;
+			logger.debug(util.format('Decoded from JWT token: username - %s, orgname - %s', decoded.username, decoded.orgName));
+			return next();
+		}
+	});
+});
+
 ///////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// START SERVER /////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,6 +98,7 @@ function getErrorMessage(field) {
 	};
 	return response;
 }
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////// REST ENDPOINTS START HERE ///////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -120,22 +150,10 @@ app.post('/channels', function(req, res) {
 		res.json(getErrorMessage('\'channelConfigPath\''));
 		return;
 	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			channels.createChannel(channelName, channelConfigPath, decoded.username, decoded.orgName)
-			.then(function(message) {
-				res.send(message);
-			});
-		}
+
+	channels.createChannel(channelName, channelConfigPath, req.username, req.orgname)
+	.then(function(message) {
+		res.send(message);
 	});
 });
 // Join Channel
@@ -153,23 +171,10 @@ app.post('/channels/:channelName/peers', function(req, res) {
 		res.json(getErrorMessage('\'peers\''));
 		return;
 	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			//res.send(d);
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			join.joinChannel(channelName, peers, decoded.username, decoded.orgName).then(
-				function(message) {
-					res.send(message);
-				});
-		}
+
+	join.joinChannel(channelName, peers, req.username, req.orgname)
+	.then(function(message) {
+		res.send(message);
 	});
 });
 // Install chaincode on target peers
@@ -199,52 +204,27 @@ app.post('/chaincodes', function(req, res) {
 		res.json(getErrorMessage('\'chaincodeVersion\''));
 		return;
 	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			//res.send(d);
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			install.installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion, decoded.username, decoded.orgName)
-			.then(function(message) {
-				res.send(message);
-			});
-		}
+
+	install.installChaincode(peers, chaincodeName, chaincodePath, chaincodeVersion, req.username, req.orgname)
+	.then(function(message) {
+		res.send(message);
 	});
 });
 // Instantiate chaincode on target peers
 app.post('/channels/:channelName/chaincodes', function(req, res) {
 	logger.debug('==================== INSTANTIATE CHAINCODE ==================');
-	var peers = req.body.peers;
 	var chaincodeName = req.body.chaincodeName;
-	var chaincodePath = req.body.chaincodePath;
 	var chaincodeVersion = req.body.chaincodeVersion;
 	var channelName = req.params.channelName;
 	var functionName = req.body.functionName;
 	var args = req.body.args;
 	logger.debug('channelName  : ' + channelName);
-	logger.debug('peers : ' + peers); // target peers list
 	logger.debug('chaincodeName : ' + chaincodeName);
-	logger.debug('chaincodePath  : ' + chaincodePath);
 	logger.debug('chaincodeVersion  : ' + chaincodeVersion);
 	logger.debug('functionName  : ' + functionName);
 	logger.debug('args  : ' + args);
-	if (!peers || peers.length == 0) {
-		res.json(getErrorMessage('\'peers\''));
-		return;
-	}
 	if (!chaincodeName) {
 		res.json(getErrorMessage('\'chaincodeName\''));
-		return;
-	}
-	if (!chaincodePath) {
-		res.json(getErrorMessage('\'chaincodePath\''));
 		return;
 	}
 	if (!chaincodeVersion) {
@@ -263,24 +243,9 @@ app.post('/channels/:channelName/chaincodes', function(req, res) {
 		res.json(getErrorMessage('\'args\''));
 		return;
 	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			//res.send(d);
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			instantiate.instantiateChaincode(peers, channelName, chaincodeName, chaincodePath,
-				chaincodeVersion, functionName, args, decoded.username, decoded.orgName)
-			.then(function(message) {
-				res.send(message);
-			});
-		}
+	instantiate.instantiateChaincode(channelName, chaincodeName, chaincodeVersion, functionName, args, req.username, req.orgname)
+	.then(function(message) {
+		res.send(message);
 	});
 });
 // Invoke transaction on chaincode on target peers
@@ -288,13 +253,12 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName', function(req, res) 
 	logger.debug('==================== INVOKE ON CHAINCODE ==================');
 	var peers = req.body.peers;
 	var chaincodeName = req.params.chaincodeName;
-	var chaincodeVersion = req.body.chaincodeVersion;
 	var channelName = req.params.channelName;
+	var fcn = req.body.fcn;
 	var args = req.body.args;
 	logger.debug('channelName  : ' + channelName);
-	logger.debug('peers : ' + peers); // target peers list
 	logger.debug('chaincodeName : ' + chaincodeName);
-	logger.debug('chaincodeVersion  : ' + chaincodeVersion);
+	logger.debug('fcn  : ' + fcn);
 	logger.debug('args  : ' + args);
 	if (!peers || peers.length == 0) {
 		res.json(getErrorMessage('\'peers\''));
@@ -304,61 +268,38 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName', function(req, res) 
 		res.json(getErrorMessage('\'chaincodeName\''));
 		return;
 	}
-	if (!chaincodeVersion) {
-		res.json(getErrorMessage('\'chaincodeVersion\''));
-		return;
-	}
 	if (!channelName) {
 		res.json(getErrorMessage('\'channelName\''));
+		return;
+	}
+	if (!fcn) {
+		res.json(getErrorMessage('\'fcn\''));
 		return;
 	}
 	if (!args) {
 		res.json(getErrorMessage('\'args\''));
 		return;
 	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			//res.send(d);
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			let promise = invoke.invokeChaincode(peers, channelName, chaincodeName,
-				chaincodeVersion, args, decoded.username, decoded.orgName);
-			promise.then(function(message) {
-				res.send(message);
-			});
-		}
+
+	invoke.invokeChaincode(peers, channelName, chaincodeName, fcn, args, req.username, req.orgname)
+	.then(function(message) {
+		res.send(message);
 	});
 });
 // Query on chaincode on target peers
 app.get('/channels/:channelName/chaincodes/:chaincodeName', function(req, res) {
-	logger.debug('==================== QUERY ON CHAINCODE ==================');
+	logger.debug('==================== QUERY BY CHAINCODE ==================');
 	var channelName = req.params.channelName;
 	var chaincodeName = req.params.chaincodeName;
-	let peer = req.query.peer;
 	let args = req.query.args;
-	let chaincodeVersion = req.query.chaincodeVersion;
+	let peer = req.query.peer;
+
 	logger.debug('channelName : ' + channelName);
 	logger.debug('chaincodeName : ' + chaincodeName);
-	logger.debug('peer : ' + peer);
 	logger.debug('args : ' + args);
-	logger.debug('chaincodeVersion : ' + chaincodeVersion);
-	if (!peer) {
-		res.json(getErrorMessage('\'peer\''));
-		return;
-	}
+
 	if (!chaincodeName) {
 		res.json(getErrorMessage('\'chaincodeName\''));
-		return;
-	}
-	if (!chaincodeVersion) {
-		res.json(getErrorMessage('\'chaincodeVersion\''));
 		return;
 	}
 	if (!channelName) {
@@ -372,30 +313,15 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName', function(req, res) {
 	args = args.replace(/'/g, '"');
 	args = JSON.parse(args);
 	logger.debug(args);
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			//res.send(d);
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			query.queryChaincode(peer, channelName, chaincodeName, chaincodeVersion,
-				args, decoded.username, decoded.orgName)
-			.then(function(message) {
-				res.send(message);
-			});
-		}
+
+	query.queryChaincode(peer, channelName, chaincodeName, args, req.username, req.orgname)
+	.then(function(message) {
+		res.send(message);
 	});
 });
 //  Query Get Block by BlockNumber
 app.get('/channels/:channelName/blocks/:blockId', function(req, res) {
 	logger.debug('==================== GET BLOCK BY NUMBER ==================');
-	//logger.debug('peers : '+req.body.peers);// target peers list
 	let blockId = req.params.blockId;
 	let peer = req.query.peer;
 	logger.debug('channelName : ' + req.params.channelName);
@@ -405,27 +331,11 @@ app.get('/channels/:channelName/blocks/:blockId', function(req, res) {
 		res.json(getErrorMessage('\'blockId\''));
 		return;
 	}
-	if (!peer) {
-		res.json(getErrorMessage('\'peer\''));
-		return;
-	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			query.getBlockByNumber(peer, blockId, decoded.username, decoded.orgName)
-				.then(function(message) {
-					res.send(message);
-				});
-		}
-	});
+
+	query.getBlockByNumber(peer, blockId, req.username, req.orgname)
+		.then(function(message) {
+			res.send(message);
+		});
 });
 // Query Get Transaction by Transaction ID
 app.get('/channels/:channelName/transactions/:trxnId', function(req, res) {
@@ -439,32 +349,15 @@ app.get('/channels/:channelName/transactions/:trxnId', function(req, res) {
 		res.json(getErrorMessage('\'trxnId\''));
 		return;
 	}
-	if (!peer) {
-		res.json(getErrorMessage('\'peer\''));
-		return;
-	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			query.getTransactionByID(peer, trxnId, decoded.username, decoded.orgName)
-				.then(function(message) {
-					res.send(message);
-				});
-		}
-	});
+
+	query.getTransactionByID(peer, trxnId, req.username, req.orgname)
+		.then(function(message) {
+			res.send(message);
+		});
 });
 // Query Get Block by Hash
 app.get('/channels/:channelName/blocks', function(req, res) {
 	logger.debug('================ GET BLOCK BY HASH ======================');
-	//logger.debug('peers : '+req.body.peers);// target peers list
 	logger.debug('channelName : ' + req.params.channelName);
 	let hash = req.query.hash;
 	let peer = req.query.peer;
@@ -472,56 +365,23 @@ app.get('/channels/:channelName/blocks', function(req, res) {
 		res.json(getErrorMessage('\'hash\''));
 		return;
 	}
-	if (!peer) {
-		res.json(getErrorMessage('\'peer\''));
-		return;
-	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			query.getBlockByHash(peer, hash, decoded.username, decoded.orgName).then(
-				function(message) {
-					res.send(message);
-				});
-		}
-	});
+
+	query.getBlockByHash(peer, hash, req.username, req.orgname).then(
+		function(message) {
+			res.send(message);
+		});
 });
 //Query for Channel Information
 app.get('/channels/:channelName', function(req, res) {
 	logger.debug(
 		'================ GET CHANNEL INFORMATION ======================');
-	//logger.debug('peers : '+req.body.peers);// target peers list
 	logger.debug('channelName : ' + req.params.channelName);
 	let peer = req.query.peer;
-	if (!peer) {
-		res.json(getErrorMessage('\'peer\''));
-		return;
-	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			query.getChainInfo(peer, decoded.username, decoded.orgName).then(
-				function(message) {
-					res.send(message);
-				});
-		}
-	});
+
+	query.getChainInfo(peer, req.username, req.orgname).then(
+		function(message) {
+			res.send(message);
+		});
 });
 // Query to fetch all Installed/instantiated chaincodes
 app.get('/chaincodes', function(req, res) {
@@ -535,55 +395,25 @@ app.get('/chaincodes', function(req, res) {
 		logger.debug(
 			'================ GET INSTANTIATED CHAINCODES ======================');
 	}
-	logger.debug('peer: ' + req.query.peer);
-	if (!peer) {
-		res.json(getErrorMessage('\'peer\''));
-		return;
-	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			query.getInstalledChaincodes(peer, installType, decoded.username, decoded.orgName)
-			.then(function(message) {
-				res.send(message);
-			});
-		}
+
+	query.getInstalledChaincodes(peer, installType, req.username, req.orgname)
+	.then(function(message) {
+		res.send(message);
 	});
 });
 // Query to fetch channels
 app.get('/channels', function(req, res) {
 	logger.debug('================ GET CHANNELS ======================');
-	logger.debug('End point : /channels');
-	//logger.debug('peers : '+req.body.peers);// target peers list
 	logger.debug('peer: ' + req.query.peer);
 	var peer = req.query.peer;
 	if (!peer) {
 		res.json(getErrorMessage('\'peer\''));
 		return;
 	}
-	var token = req.body.token || req.query.token || req.headers[
-		'x-access-token'];
-	jwt.verify(token, app.get('secret'), function(err, decoded) {
-		if (err) {
-			res.send({
-				success: false,
-				message: 'Failed to authenticate token.'
-			});
-		} else {
-			logger.debug('User name : ' + decoded.username);
-			logger.debug('Org name  : ' + decoded.orgName);
-			query.getChannels(peer, decoded.username, decoded.orgName).then(function(
-				message) {
-				res.send(message);
-			});
-		}
+
+	query.getChannels(peer, req.username, req.orgname)
+	.then(function(
+		message) {
+		res.send(message);
 	});
 });
