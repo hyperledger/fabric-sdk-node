@@ -569,7 +569,7 @@ function decodeMetadataValueSignatures(proto_meta_signatures) {
 		var metadata_signature = {};
 		var proto_metadata_signature = _commonProto.MetadataSignature.decode(proto_meta_signatures[i].toBuffer());
 		metadata_signature.signature_header = decodeSignatureHeader(proto_metadata_signature.getSignatureHeader());
-		metadata_signature.signature = proto_metadata_signature.getSignature().toBuffer().toString('hex');
+		metadata_signature.signature = proto_metadata_signature.getSignature().toBuffer();
 		signatures.push(metadata_signature);
 	}
 
@@ -578,7 +578,7 @@ function decodeMetadataValueSignatures(proto_meta_signatures) {
 
 function decodeBlockDataEnvelope(proto_envelope) {
 	var envelope = {};
-	envelope.signature = proto_envelope.getSignature().toBuffer().toString('hex'); //leave as bytes
+	envelope.signature = proto_envelope.getSignature().toBuffer(); //leave as bytes
 
 	envelope.payload = {};
 	var proto_payload = _commonProto.Payload.decode(proto_envelope.getPayload().toBuffer());
@@ -627,7 +627,7 @@ function decodeConfigEnvelope(config_envelope_bytes) {
 		var proto_payload = _commonProto.Payload.decode(proto_last_update.getPayload().toBuffer());
 		config_envelope.last_update.payload.header = decodeHeader(proto_payload.getHeader());
 		config_envelope.last_update.payload.data = decodeConfigUpdateEnvelope(proto_payload.getData().toBuffer());
-		config_envelope.last_update.signature = proto_last_update.getSignature().toBuffer().toString('hex');//leave as bytes
+		config_envelope.last_update.signature = proto_last_update.getSignature().toBuffer();//leave as bytes
 	}
 
 	return config_envelope;
@@ -891,7 +891,7 @@ function decodeMSPPrincipal(proto_msp_principal) {
 		proto_principal = _mspPrProto.OrganizationUnit.decode(proto_msp_principal.getPrincipal());
 		msp_principal.msp_identifier = proto_principal.getMspIdendifier();//string
 		msp_principal.organizational_unit_identifier = proto_principal.getOrganizationalUnitIdentifier(); //string
-		msp_principal.certifiers_identifier = proto_principal.getCertifiersIdentifier().toBuffer().toString('hex'); //bytes
+		msp_principal.certifiers_identifier = proto_principal.getCertifiersIdentifier().toBuffer(); //bytes
 		break;
 	case _mspPrProto.MSPPrincipal.Classification.IDENTITY:
 		msp_principal = decodeIdentity(proto_msp_principal.getPrincipal());
@@ -904,7 +904,7 @@ function decodeMSPPrincipal(proto_msp_principal) {
 function decodeConfigSignature(proto_configSignature) {
 	var config_signature = {};
 	config_signature.signature_header = decodeSignatureHeader(proto_configSignature.getSignatureHeader().toBuffer());
-	config_signature.sigature = proto_configSignature.getSignature().toBuffer().toString('hex');
+	config_signature.sigature = proto_configSignature.getSignature().toBuffer();
 
 	return config_signature;
 };
@@ -914,7 +914,7 @@ function decodeSignatureHeader(signature_header_bytes) {
 	var signature_header = {};
 	var proto_signature_header = _commonProto.SignatureHeader.decode(signature_header_bytes);
 	signature_header.creator = decodeIdentity(proto_signature_header.getCreator().toBuffer());
-	signature_header.nonce = proto_signature_header.getNonce().toBuffer().toString('hex');
+	signature_header.nonce = proto_signature_header.getNonce().toBuffer();
 
 	return signature_header;
 };
@@ -1025,7 +1025,7 @@ function decodeChannelHeader(header_bytes){
 	channel_header.tx_id = proto_channel_header.getTxId();
 	channel_header.epoch = proto_channel_header.getEpoch().toInt();
 	//TODO need to decode this
-	channel_header.extension = proto_channel_header.getExtension().toBuffer().toString('hex');;
+	channel_header.extension = proto_channel_header.getExtension().toBuffer();
 
 	return channel_header;
 };
@@ -1069,7 +1069,7 @@ function decodeChaincodeEndorsedAction(proto_chaincode_endorsed_action) {
 function decodeEndorsement(proto_endorsement) {
 	var endorsement = {};
 	endorsement.endorser = decodeIdentity(proto_endorsement.getEndorser());
-	endorsement.signature = proto_endorsement.getSignature().toBuffer().toString('hex');
+	endorsement.signature = proto_endorsement.getSignature().toBuffer();
 
 	return endorsement;
 };
@@ -1099,7 +1099,7 @@ function decodeChaincodeEvents(event_bytes) {
 	events.chaincode_id = proto_events.getChaincodeId();
 	events.tx_id = proto_events.getTxId();
 	events.event_name = proto_events.getEventName();
-	events.payload = proto_events.getPayload().toBuffer().toString('hex');
+	events.payload = proto_events.getPayload().toBuffer();
 	return events;
 }
 
