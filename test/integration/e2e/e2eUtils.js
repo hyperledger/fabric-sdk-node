@@ -544,7 +544,8 @@ function invokeChaincode(userOrg, version, t, useStore){
 			ORGS[userOrg].peer1.events,
 			{
 				pem: Buffer.from(data).toString(),
-				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname']
+				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
+				'grpc.http2.keepalive_time' : 15
 			}
 		);
 		eh.connect();
