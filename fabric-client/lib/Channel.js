@@ -18,17 +18,16 @@
 
 var api = require('./api.js');
 var utils = require('./utils.js');
+var clientUtils = require('./client-utils.js');
 var urlParser = require('url');
 var net = require('net');
 var util = require('util');
 var os = require('os');
 var path = require('path');
-var ChannelConfig = require('./ChannelConfig.js');
 var Peer = require('./Peer.js');
 var Orderer = require('./Orderer.js');
 var BlockDecoder = require('./BlockDecoder.js');
 var TransactionID = require('./TransactionID.js');
-var settle = require('promise-settle');
 var grpc = require('grpc');
 var logger = utils.getLogger('Channel.js');
 var hashPrimitives = require('./hash.js');
@@ -51,7 +50,6 @@ var _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configur
 var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
 var _mspConfigProto = grpc.load(__dirname + '/protos/msp/msp_config.proto').msp;
 var _mspPrincipalProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
-var _timestampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.proto').google.protobuf;
 var _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
 
 const ImplicitMetaPolicy_Rule = {0: 'ANY', 1:'ALL', 2:'MAJORITY'};
@@ -91,9 +89,6 @@ var Channel = class {
 
 		this._name = name;
 
-		// Security enabled flag
-		this._securityEnabled = true;//to do
-
 		this._peers = [];
 		this._anchor_peers = [];
 		this._orderers = [];
@@ -105,10 +100,8 @@ var Channel = class {
 
 		//to do update logger
 		logger.debug('Constructed Channel instance: name - %s, ' +
-		    'securityEnabled: %s, ' +
 		    'network mode: %s',
 			this._name,
-			this._securityEnabled,
 			!this._devMode);
 	}
 
@@ -281,96 +274,6 @@ var Channel = class {
 		return this._orderers;
 	}
 
-	/*
-	 * For test only
-	 *
-	 * Build a configuration envelope that is the channel configuration definition
-	 * from the provide MSP's, the Channel definition input parameters, and the current
-	 * configuration as read from the system channel.
-	 * The result of the build will need to be signed and then may be used to create a new
-	 * channel.
-	 * @param {Object} A JSON object that represents the configuration settings to be changed.
-	 * @param {MSP[]} A list of MSPs that may represent new or updates to existing MSPs
-	 * @return {byte[]} A Promise for a byte buffer object that is the byte array representation
-	 *                  of the Protobuf common.ConfigUpdate
-	 * @see /protos/common/configtx.proto
-	 */
-	buildChannelConfig(config_definition, msps) {
-		logger.debug('\n***\nbuildChannelConfig - start\n***\n');
-		if (typeof config_definition === 'undefined' || config_definition === null) {
-			return Promise.reject(new Error('Channel definition parameter is required.'));
-		}
-
-		// force the fetch to be against the system channel
-		this._name = Constants.SYSTEM_CHANNEL_NAME;
-		var self = this;
-
-		return self.getChannelConfig()
-		.then( function(config_envelope) {
-
-			return self.loadConfigEnvelope(config_envelope);
-		}).then( function(config_items) {
-			logger.debug('buildChannelConfig -  version hierarchy  :: %j',config_items.versions);
-			// get all the msps from the current configuration and from existing configuration
-			var updated_msps = _combineMSPs(self._msp_manager.getMSPs(), msps);
-
-			// build the config update protobuf
-			var channel_config = new ChannelConfig(updated_msps);
-			// build a create config which has the minimal readset
-			var proto_channel_config = channel_config.build(config_definition, null);
-
-			return proto_channel_config.toBuffer();
-		}).catch(function(err) {
-			logger.error('Failed buildChannelConfig. :: %s', err.stack ? err.stack : err);
-			if(err instanceof Error) {
-				throw err;
-			}
-			else {
-				throw new Error(err);
-			}
-		});
-	}
-
-	/*
-	 * For test only
-	 *
-	 * Build a configuration update envelope that is the channel configuration definition
-	 * from the provide MSP's, the Channel definition input parameters, and the current
-	 * configuration as read from this channel.
-	 * The result of the build will need to be signed and then may be used to update this
-	 * channel.
-	 * @param {Object} A JSON object that represents the configuration settings to be changed.
-	 * @param {MSP[]} A list of MSPs that may represent new or updates to existing MSPs
-	 * @return {byte[]} A Promise for a byte buffer object that is the byte array representation
-	 *                  of the Protobuf common.ConfigUpdate
-	 * @see /protos/common/configtx.proto
-	 */
-	buildChannelConfigUpdate(config_definition, msps) {
-		logger.debug('buildChannelConfigUpdate - start');
-		if (typeof config_definition === 'undefined' || config_definition === null) {
-			return Promise.reject(new Error('Channel definition update parameter is required.'));
-		}
-
-		var self = this;
-
-		return self.initialize()
-		.then( function(config_items) {
-			logger.debug('buildChannelConfigUpdate -  version hierarchy  :: %j',config_items.versions);
-			// get all the msps from the current configuration
-			var updated_msps = _combineMSPs(self._msp_manager.getMSPs(), msps);
-			var channel_config = new ChannelConfig(update_msps);
-			var proto_channel_config = channel_config.build(config_definition, config_items.versions);
-			return Promise.resolve( proto_channel_config.toBuffer());
-		}).catch(function(err) {
-			logger.error('Failed buildChannelConfigUpdate. :: %s', err.stack ? err.stack : err);
-			return Promise.reject(err);
-		});
-		var channel_config = new ChannelConfig(updated_msps);
-		var proto_channel_config = channel_config.build(config_definition, config_items.versions);
-
-		return proto_channel_config.toBuffer();
-	}
-
 	/**
 	 * Will get the genesis block from the defined orderer that may be
 	 * used in a join request
@@ -425,14 +328,14 @@ var Channel = class {
 		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
 		// build the header for use with the seekInfo payload
-		var seekInfoHeader = Channel._buildChannelHeader(
+		var seekInfoHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			self._name,
 			request.txId.getTransactionID(),
 			self._initial_epoch
 		);
 
-		var seekHeader = Channel._buildHeader(userContext.getIdentity(), seekInfoHeader, request.txId.getNonce());
+		var seekHeader = clientUtils.buildHeader(userContext.getIdentity(), seekInfoHeader, request.txId.getNonce());
 		var seekPayload = new _commonProto.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
@@ -509,7 +412,7 @@ var Channel = class {
 		chaincodeSpec.setChaincodeId(chaincodeID);
 		chaincodeSpec.setInput(chaincodeInput);
 
-		var channelHeader = Channel._buildChannelHeader(
+		var channelHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			'',
 			request.txId.getTransactionID(),
@@ -517,11 +420,11 @@ var Channel = class {
 			Constants.CSCC
 		);
 
-		var header = Channel._buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
-		var proposal = Channel._buildProposal(chaincodeSpec, header);
-		var signed_proposal = Channel._signProposal(userContext.getSigningIdentity(), proposal);
+		var header = clientUtils.buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
+		var proposal = clientUtils.buildProposal(chaincodeSpec, header);
+		var signed_proposal = clientUtils.signProposal(userContext.getSigningIdentity(), proposal);
 
-		return Channel._sendPeersProposal(request.targets, signed_proposal)
+		return clientUtils.sendPeersProposal(request.targets, signed_proposal)
 		.then(
 			function(responses) {
 				return Promise.resolve(responses);
@@ -567,14 +470,14 @@ var Channel = class {
 		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
 		// build the header for use with the seekInfo payload
-		var seekInfoHeader = Channel._buildChannelHeader(
+		var seekInfoHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			self._name,
 			txId.getTransactionID(),
 			self._initial_epoch
 		);
 
-		var seekHeader = Channel._buildHeader(userContext.getIdentity(), seekInfoHeader, txId.getNonce());
+		var seekHeader = clientUtils.buildHeader(userContext.getIdentity(), seekInfoHeader, txId.getNonce());
 		var seekPayload = new _commonProto.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
@@ -631,14 +534,14 @@ var Channel = class {
 				//logger.debug('initializeChannel - seekInfo ::' + JSON.stringify(seekInfo));
 
 				// build the header for use with the seekInfo payload
-				var seekInfoHeader = Channel._buildChannelHeader(
+				var seekInfoHeader = clientUtils.buildChannelHeader(
 					_commonProto.HeaderType.DELIVER_SEEK_INFO,
 					self._name,
 					txId.getTransactionID(),
 					self._initial_epoch
 				);
 
-				var seekHeader = Channel._buildHeader(userContext.getIdentity(), seekInfoHeader, txId.getNonce());
+				var seekHeader = clientUtils.buildHeader(userContext.getIdentity(), seekInfoHeader, txId.getNonce());
 				var seekPayload = new _commonProto.Payload();
 				seekPayload.setHeader(seekHeader);
 				seekPayload.setData(seekInfo.toBuffer());
@@ -756,16 +659,6 @@ var Channel = class {
 
 		//TODO should we create orderers and endorsing peers
 		return config_items;
-	}
-
-	/**
-	 * Get channel status to see if the underlying channel has been terminated,
-	 * making it a read-only channel, where information (transactions and states)
-	 * can be queried but no new transactions can be submitted.
-	 * @returns {boolean} Is read-only, true or not.
-	 */
-	isReadonly() {
-		return false;//to do
 	}
 
 	/**
@@ -1191,8 +1084,8 @@ var Channel = class {
 		}
 
 		//validate the incoming request
-		if(!errorMsg) errorMsg = Channel._checkProposalRequest(request);
-		if(!errorMsg) errorMsg = Channel._checkInstallRequest(request);
+		if(!errorMsg) errorMsg = clientUtils.checkProposalRequest(request);
+		if(!errorMsg) errorMsg = clientUtils.checkInstallRequest(request);
 
 		if(errorMsg) {
 			logger.error('sendChainCodeProposal error ' + errorMsg);
@@ -1213,7 +1106,7 @@ var Channel = class {
 			args.push(Buffer.from(request.args[i], 'utf8'));
 
 		let ccSpec = {
-			type: Channel._translateCCType(request.chaincodeType),
+			type: clientUtils.translateCCType(request.chaincodeType),
 			chaincode_id: {
 				name: request.chaincodeId,
 				version: request.chaincodeVersion
@@ -1244,18 +1137,18 @@ var Channel = class {
 			}
 		};
 
-		var channelHeader = Channel._buildChannelHeader(
+		var channelHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			self._name,
 			request.txId.getTransactionID(),
 			null,
 			Constants.LSCC
 		);
-		header = Channel._buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
-		proposal = Channel._buildProposal(lcccSpec, header, request.transientMap);
-		let signed_proposal = Channel._signProposal(userContext.getSigningIdentity(), proposal);
+		header = clientUtils.buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
+		proposal = clientUtils.buildProposal(lcccSpec, header, request.transientMap);
+		let signed_proposal = clientUtils.signProposal(userContext.getSigningIdentity(), proposal);
 
-		return Channel._sendPeersProposal(peers, signed_proposal)
+		return clientUtils.sendPeersProposal(peers, signed_proposal)
 		.then(
 			function(responses) {
 				return [responses, proposal, header];
@@ -1306,7 +1199,7 @@ var Channel = class {
 		if (request && !request.args) {
 			errorMsg = 'Missing "args" in Transaction proposal request';
 		} else {
-			errorMsg = Channel._checkProposalRequest(request);
+			errorMsg = clientUtils.checkProposalRequest(request);
 		}
 
 		if (!request.targets || request.targets.length < 1) {
@@ -1349,18 +1242,18 @@ var Channel = class {
 
 		var proposal, header;
 		var userContext = clientContext.getUserContext();
-		var channelHeader = Channel._buildChannelHeader(
+		var channelHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			channelId,
 			request.txId.getTransactionID(),
 			null,
 			request.chaincodeId
 			);
-		header = Channel._buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
-		proposal = Channel._buildProposal(invokeSpec, header, request.transientMap);
-		let signed_proposal = Channel._signProposal(userContext.getSigningIdentity(), proposal);
+		header = clientUtils.buildHeader(userContext.getIdentity(), channelHeader, request.txId.getNonce());
+		proposal = clientUtils.buildProposal(invokeSpec, header, request.transientMap);
+		let signed_proposal = clientUtils.signProposal(userContext.getSigningIdentity(), proposal);
 
-		return Channel._sendPeersProposal(request.targets, signed_proposal)
+		return clientUtils.sendPeersProposal(request.targets, signed_proposal)
 		.then(
 			function(responses) {
 				return Promise.resolve([responses, proposal, header]);
@@ -1663,202 +1556,9 @@ var Channel = class {
 		return true;
 	 }
 
-	// internal utility method to build the proposal
-	/**
-	 * @private
-	 */
-	static _buildProposal(invokeSpec, header, transientMap) {
-		// construct the ChaincodeInvocationSpec
-		let cciSpec = new _ccProto.ChaincodeInvocationSpec();
-		cciSpec.setChaincodeSpec(invokeSpec);
-
-		let cc_payload = new _proposalProto.ChaincodeProposalPayload();
-		cc_payload.setInput(cciSpec.toBuffer());
-
-		if (typeof transientMap === 'object') {
-			logger.debug('_buildProposal - adding in transientMap %j',transientMap);
-			cc_payload.setTransientMap(transientMap);
-		}
-		else {
-			logger.debug('_buildProposal - not adding a transientMap');
-		}
-
-		// proposal -- will switch to building the proposal once the signProposal is used
-		let proposal = new _proposalProto.Proposal();
-		proposal.setHeader(header.toBuffer());
-		proposal.setPayload(cc_payload.toBuffer()); // chaincode proposal payload
-
-		return proposal;
-	}
-
 	// internal utility method to build chaincode policy
 	_buildEndorsementPolicy(policy) {
 		return Policy.buildPolicy(this.getMSPManager().getMSPs(), policy);
-	}
-
-	// internal utility method to return one Promise when sending a proposal to many peers
-	/**
-	 * @private
-	 */
-	 static _sendPeersProposal(peers, proposal) {
-		if(!Array.isArray(peers)) {
-			peers = [peers];
-		}
-		// make function to return an individual promise
-		var fn = function(peer) {
-			return new Promise(function(resolve,reject) {
-				peer.sendProposal(proposal)
-				.then(
-					function(result) {
-						resolve(result);
-					}
-				).catch(
-					function(err) {
-						logger.error('Channel-sendPeersProposal - Promise is rejected: %s',err.stack ? err.stack : err);
-						return reject(err);
-					}
-				);
-			});
-		};
-		// create array of promises mapping peers array to peer parameter
-		// settle all the promises and return array of responses
-		var promises = peers.map(fn);
-		var responses = [];
-		return settle(promises)
-		  .then(function (results) {
-			results.forEach(function (result) {
-			  if (result.isFulfilled()) {
-				logger.debug('Channel-sendPeersProposal - Promise is fulfilled: '+result.value());
-				responses.push(result.value());
-			  } else {
-				logger.debug('Channel-sendPeersProposal - Promise is rejected: '+result.reason());
-				if(result.reason() instanceof Error) {
-					responses.push(result.reason());
-				}
-				else {
-					responses.push(new Error(result.reason()));
-				}
-			  }
-			});
-			return responses;
-		});
-	}
-
-	//internal method to sign a proposal
-	/**
-	 * @private
-	 */
-	static _signProposal(signingIdentity, proposal) {
-		let proposal_bytes = proposal.toBuffer();
-		// sign the proposal
-		let sig = signingIdentity.sign(proposal_bytes);
-		let signature = Buffer.from(sig);
-
-		logger.debug('_signProposal - signature::'+JSON.stringify(signature));
-
-		// build manually for now
-		let signedProposal = {
-			signature :  signature,
-			proposal_bytes : proposal_bytes
-		};
-		return signedProposal;
-	}
-
-	/*
-	 * @private
-	 */
-	static _checkProposalRequest(request, skip) {
-		var errorMsg = null;
-
-		if(request) {
-			if(!request.chaincodeId) {
-				errorMsg = 'Missing "chaincodeId" parameter in the proposal request';
-			} else if(!request.txId && !skip) {
-				errorMsg = 'Missing "txId" parameter in the proposal request';
-			}
-		} else {
-			errorMsg = 'Missing input request object on the proposal request';
-		}
-		return errorMsg;
-	}
-
-	/*
-	 * @private
-	 */
-	static _checkInstallRequest(request) {
-		var errorMsg = null;
-
-		if (request) {
-			if(!request.chaincodeVersion) {
-				errorMsg = 'Missing "chaincodeVersion" parameter in the proposal request';
-			}
-		} else {
-			errorMsg = 'Missing input request object on the proposal request';
-		}
-		return errorMsg;
-	}
-
-	//utility method to build a common channel header
-	static _buildChannelHeader(type, channel_id, tx_id, epoch, chaincode_id, time_stamp) {
-		logger.debug('buildChannelHeader - type %s channel_id %s tx_id %d epoch % chaincode_id %s',
-				type, channel_id, tx_id, epoch, chaincode_id);
-		var channelHeader = new _commonProto.ChannelHeader();
-		channelHeader.setType(type); // int32
-		channelHeader.setVersion(1); // int32
-		if(!time_stamp) {
-			time_stamp = this._buildCurrentTimestamp();
-		}
-		channelHeader.setTimestamp(time_stamp); // google.protobuf.Timestamp
-		channelHeader.setChannelId(channel_id); //string
-		channelHeader.setTxId(tx_id.toString()); //string
-		if(epoch) {
-			channelHeader.setEpoch(epoch); // uint64
-		}
-		if(chaincode_id) {
-			let chaincodeID = new _ccProto.ChaincodeID();
-			chaincodeID.setName(chaincode_id);
-
-			let headerExt = new _proposalProto.ChaincodeHeaderExtension();
-			headerExt.setChaincodeId(chaincodeID);
-
-			channelHeader.setExtension(headerExt.toBuffer());
-		}
-		return channelHeader;
-	};
-
-	// utility method to build the header
-	static _buildHeader(creator, channelHeader, nonce) {
-		let signatureHeader = new _commonProto.SignatureHeader();
-		signatureHeader.setCreator(creator.serialize());
-		signatureHeader.setNonce(nonce);
-
-		let header = new _commonProto.Header();
-		header.setSignatureHeader(signatureHeader.toBuffer());
-		header.setChannelHeader(channelHeader.toBuffer());
-
-		return header;
-	}
-
-	//utility method to return a timestamp for the current time
-	static _buildCurrentTimestamp() {
-		logger.debug('buildCurrentTimestamp - building');
-		var now = new Date();
-		var timestamp = new _timestampProto.Timestamp();
-		timestamp.setSeconds(now.getTime() / 1000);
-		timestamp.setNanos((now.getTime() % 1000) * 1000000);
-		return timestamp;
-	}
-
-	static _translateCCType(type) {
-		switch (type) {
-		case 'golang':
-		default:
-			return _ccProto.ChaincodeSpec.Type.GOLANG;
-		case 'car':
-			return _ccProto.ChaincodeSpec.Type.CAR;
-		case 'java':
-			return _ccProto.ChaincodeSpec.Type.JAVA;
-		}
 	}
 
 	/**
@@ -1911,7 +1611,7 @@ function _arrayToMap(map, msps) {
 			let id = keys[key];
 			let msp = msps[id];
 			let mspid = msp.getId();
-			logger.debug('buildChannelConfig - add msp ::%s',mspid);
+			logger.debug('_arrayToMap - add msp ::%s',mspid);
 			map.set(mspid, msp);
 		}
 	}
