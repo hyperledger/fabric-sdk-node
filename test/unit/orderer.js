@@ -99,10 +99,63 @@ test('orderer missing data test', function(t) {
 });
 
 //
+//Orderer missing data test
+//
+//Send an empty deliver message to an orderer. An error indicating that no
+//data was sent is expected in this case.
+//
+
+test('orderer missing data deliver test', function(t) {
+	var client = new Orderer('grpc://127.0.0.1:5005');
+
+	client.sendDeliver()
+	.then(
+		function(status) {
+			t.fail('Should have noticed missing data.');
+			t.end();
+		},
+		function(err) {
+			t.pass('Successfully found missing data: ' + err);
+			t.end();
+		}
+	).catch(function(err) {
+		t.fail('Caught Error: should not be here if we defined promise error function: ' + err);
+		t.end();
+	});
+});
+
+//
 // Orderer unknown address  test
 //
-// Send a broadcast message to a bad orderer address. An error indicating
+// Send a deliver message to a bad orderer address. An error indicating
 // a connection failure is expected in this case.
+//
+
+test('orderer unknown address test', function(t) {
+	var client = new Orderer('grpc://127.0.0.1:51006');
+
+	client.sendDeliver('some data')
+	.then(
+		function(status) {
+			t.fail('Should have noticed a bad deliver address.');
+			t.end();
+		},
+		function(err) {
+			t.pass('Successfully found bad deliver address!');
+			t.end();
+		}
+	).catch(function(err) {
+		t.fail('Caught Error: should not be here if we defined promise error function: '
+		+ err);
+		t.end();
+	});
+});
+
+//
+//Orderer unknown address  test
+//
+//Send a broadcast message to a bad orderer address. An error indicating
+//a connection failure is expected in this case.
 //
 
 test('orderer unknown address test', function(t) {

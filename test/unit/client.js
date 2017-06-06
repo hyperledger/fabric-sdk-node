@@ -937,13 +937,6 @@ test('\n\n ** test related APIs for create channel **\n\n', function (t) {
 
 	t.throws(
 		function () {
-			client.newMSP();
-		},
-		/^Error: MSP definition is missing the "id" field./,
-		'Client tests: MSP definition is missing the "id" field.');
-
-	t.throws(
-		function () {
 			client.signChannelConfig();
 		},
 		/^Error: Channel configuration update parameter is required./,
@@ -956,42 +949,6 @@ test('\n\n ** test related APIs for create channel **\n\n', function (t) {
 		/^Error: Channel configuration update parameter is required./,
 		'Client tests: Channel configuration update parameter is required.');
 
-
-	var p1= client.buildChannelConfig(
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		if (err.message.indexOf('Channel configuration definition object is required') >= 0) {
-			t.pass('Successfully caught Channel config_definition parameter is required error');
-		} else {
-			t.fail('p1 - Failed to catch Channel config_definition parameter is required Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-
-	var p1a= client.buildChannelConfigUpdate(
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		if (err.message.indexOf('Channel configuration definition object is required') >= 0) {
-			t.pass('Successfully caught Channel config_definition parameter is required error');
-		} else {
-			t.fail('p1a - Failed to catch Channel config_definition parameter is required Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-
-	var p2= client.buildChannelConfigUpdate({ channel : { peers : {}, name : {}, consortium : {}}}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		if (err.message.indexOf('requires an existing "Channel" object') >= 0) {
-			t.pass('Successfully caught that channel update parameter is required');
-		} else {
-			t.fail('Failed to catch the channel update parameter is required Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
 	var p3a= client.updateChannel({config : 'a', txId : 'a', orderer : 'a', name : 'a' }
 	).then(function () {
 		t.fail('Should not have been able to resolve the promise');
@@ -1066,7 +1023,7 @@ test('\n\n ** test related APIs for create channel **\n\n', function (t) {
 			console.log(err.stack ? err.stack : err);
 		}
 	});
-	Promise.all([p1, p1a, p2, p3a, p3b, p4, p6, p7, p8])
+	Promise.all([p3a, p3b, p4, p6, p7, p8])
 	.then(
 		function (data) {
 			t.end();

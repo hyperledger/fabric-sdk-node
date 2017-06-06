@@ -17,13 +17,13 @@
 'use strict';
 
 var sdkUtils = require('./utils.js');
+var clientUtils = require('./client-utils.js');
 process.env.GRPC_SSL_CIPHER_SUITES = sdkUtils.getConfigSetting('grpc-ssl-cipher-suites');
 
 var api = require('./api.js');
 var BaseClient = require('./BaseClient.js');
 var User = require('./User.js');
 var Channel = require('./Channel.js');
-var ChannelConfig = require('./ChannelConfig.js');
 var Packager = require('./Packager.js');
 var Peer = require('./Peer.js');
 var EventHub = require('./EventHub.js');
@@ -191,31 +191,6 @@ var Client = class extends BaseClient {
 	}
 
 	/**
-	 * Create a new MSP with the definition.
-	 * @parm {Object} which has the following the following fields:
-	 *		<br>`id`: {string} value for the identifier of this instance
-	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
-	 *           signing certificates. Required for MSPs used in verifying signatures
-	 *		<br>`intermediateCerts`: array of {@link Identity} representing trust anchors for validating
-	 *           signing certificates. optional for MSPs used in verifying signatures
-	 *		<br>`admins`: array of {@link Identity} representing admin privileges
-	 *@return {MSP} The newly created MSP object.
-	 */
-	newMSP(msp_def) {
-		var msp = null;
-		if(msp_def && msp_def.id) {
-			if(!msp_def.cryptoSuite) {
-				msp_def.cryptoSuite = sdkUtils.newCryptoSuite();
-			}
-			msp = new MSP(msp_def);
-		}
-		else {
-			throw new Error('MSP definition is missing the "id" field.');
-		}
-		return msp;
-	}
-
-	/**
 	 * Create a new transaction id object with an unique transaction id
 	 * based on included nonce and the user context.
 	 * Requires this client instance to have an assigned user context.
@@ -230,68 +205,6 @@ var Client = class extends BaseClient {
 		let trans_id = new TransactionID(this._userContext);
 
 		return trans_id;
-	}
-
-	/*
-	 * For test only
-	 *
-	 * Build an configuration update envelope for the provided channel based on
-	 * configuration definition provided and from the MSP's added to this client.
-	 * The result of the build must be signed and then may be used to update
-	 * the channel.
-	 * @param {Object} A JSON object that has the following attributes...TODO fill out
-	 * @param {Channel} The Channel instance that represents the channel. An Orderer must assigned
-	 *                to this channel to retrieve the current concurrent configuration.
-	 * @param {MSP[]} An array of MSPs that will be referenced by the configuration definition
-	 * @return {byte[]} A Promise for a byte buffer object that is the byte array representation of the
-	 *                  Protobuf common.ConfigUpdate
-	 * @see /protos/common/configtx.proto
-	 */
-	buildChannelConfigUpdate(config_definition, channel, msps) {
-		logger.debug('buildChannelConfigUpdate - start');
-		try {
-			ChannelConfig.validate(config_definition);
-		}
-		catch(err) {
-			logger.error(err);
-			return Promise.reject(err);
-		}
-		if(!(channel instanceof Channel)) {
-			return Promise.reject(
-				new Error('Building a channel configuration update requires an existing "Channel" object'));
-		}
-		return channel.buildChannelConfigUpdate(config_definition, msps);
-	}
-
-	/*
-	 * For test only
-	 *
-	 * Build an configuration that is the channel configuration definition from the
-	 * provide MSPs added to this client, the Channel definition input parameters, and
-	 * system information from the provided Orderer.
-	 * The result of the build must be signed and then may be used to create a channel.
-	 * @param {Object} A JSON object that has the following attributes...TODO fill out
-	 * @param {Orderer} An Orderer that will be used to create this channel. This Orderer will be
-	 *                  used to retrieve required system channel settings used in the building of this
-	 *                  channel definition.
-	 * @param {MSP[]} An array of MSPs that will be referenced by the configuration definition
-	 * @return {byte[]} A Promise for a byte buffer object that is the byte array representation of the
-	 *                  Protobuf common.ConfigUpdate
-	 * @see /protos/common/configtx.proto
-	 */
-	buildChannelConfig(config_definition, orderer, msps) {
-		logger.debug('buildChannelConfig - start');
-		try {
-			ChannelConfig.validate(config_definition);
-		}
-		catch(err) {
-			logger.error(err);
-			return Promise.reject(err);
-		}
-
-		var channel = new Channel(config_definition.channel.name, this);
-		channel.addOrderer(orderer);
-		return channel.buildChannelConfig(config_definition, msps);
 	}
 
 	/**
@@ -322,6 +235,7 @@ var Client = class extends BaseClient {
 			}
 		}
 	}
+
 	/**
 	 * Sign a configuration
 	 * @param {byte[]} config - The Configuration Update in byte form
@@ -475,13 +389,13 @@ var Client = class extends BaseClient {
 			var signatures = _stringToSignature(request.signatures);
 			proto_config_Update_envelope.setSignatures(signatures);
 
-			var proto_channel_header = Channel._buildChannelHeader(
+			var proto_channel_header = clientUtils.buildChannelHeader(
 				_commonProto.HeaderType.CONFIG_UPDATE,
 				request.name,
 				request.txId.getTransactionID()
 			);
 
-			var proto_header = Channel._buildHeader(userContext.getIdentity(), proto_channel_header, request.txId.getNonce());
+			var proto_header = clientUtils.buildHeader(userContext.getIdentity(), proto_channel_header, request.txId.getNonce());
 			var proto_payload = new _commonProto.Payload();
 			proto_payload.setHeader(proto_header);
 			proto_payload.setData(proto_config_Update_envelope.toBuffer());
@@ -676,8 +590,8 @@ var Client = class extends BaseClient {
 			errorMsg = 'Missing input request object on install chaincode request';
 		}
 
-		if (!errorMsg) errorMsg = Channel._checkProposalRequest(request, true);
-		if (!errorMsg) errorMsg = Channel._checkInstallRequest(request);
+		if (!errorMsg) errorMsg = clientUtils.checkProposalRequest(request, true);
+		if (!errorMsg) errorMsg = clientUtils.checkInstallRequest(request);
 
 		if (errorMsg) {
 			logger.error('installChaincode error ' + errorMsg);
@@ -687,7 +601,7 @@ var Client = class extends BaseClient {
 		let self = this;
 
 		let ccSpec = {
-			type: Channel._translateCCType(request.chaincodeType),
+			type: clientUtils.translateCCType(request.chaincodeType),
 			chaincode_id: {
 				name: request.chaincodeId,
 				path: request.chaincodePath,
@@ -699,7 +613,7 @@ var Client = class extends BaseClient {
 		// step 2: construct the ChaincodeDeploymentSpec
 		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
-		chaincodeDeploymentSpec.setEffectiveDate(Channel._buildCurrentTimestamp()); //TODO may wish to add this as a request setting
+		chaincodeDeploymentSpec.setEffectiveDate(clientUtils.buildCurrentTimestamp()); //TODO may wish to add this as a request setting
 
 		return _getChaincodePackageData(request, this.isDevMode())
 		.then((data) => {
@@ -724,18 +638,18 @@ var Client = class extends BaseClient {
 			var header, proposal;
 			var userContext = self.getUserContext();
 			var txId = new TransactionID(userContext);
-			var channelHeader = Channel._buildChannelHeader(
+			var channelHeader = clientUtils.buildChannelHeader(
 				_commonProto.HeaderType.ENDORSER_TRANSACTION,
 				'', //install does not target a channel
 				txId.getTransactionID(),
 				null,
 				Constants.LSCC
 			);
-			header = Channel._buildHeader(userContext.getIdentity(), channelHeader, txId.getNonce());
-			proposal = Channel._buildProposal(lcccSpec, header);
-			let signed_proposal = Channel._signProposal(userContext.getSigningIdentity(), proposal);
+			header = clientUtils.buildHeader(userContext.getIdentity(), channelHeader, txId.getNonce());
+			proposal = clientUtils.buildProposal(lcccSpec, header);
+			let signed_proposal = clientUtils.signProposal(userContext.getSigningIdentity(), proposal);
 
-			return Channel._sendPeersProposal(peers, signed_proposal)
+			return clientUtils.sendPeersProposal(peers, signed_proposal)
 			.then(
 				function(responses) {
 					return [responses, proposal, header];
