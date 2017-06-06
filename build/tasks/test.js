@@ -41,13 +41,21 @@ gulp.task('docker-clean', shell.task([
 	'docker rm $(docker ps -a | grep "dev-peer0.org[12].example.com-e" | awk \'{print $1}\')',
 
 	// remove chaincode images so that they get rebuilt during test
-	'docker rmi $(docker images | grep "^dev-peer0.org[12].example.com-e" | awk \'{print $3}\')'
+	'docker rmi $(docker images | grep "^dev-peer0.org[12].example.com-e" | awk \'{print $3}\')',
+
+	// clean up all the containers created by docker-compose
+	'docker-compose -f test/fixtures/docker-compose.yaml down'
 ], {
 	verbose: true, // so we can see the docker command output
 	ignoreErrors: true // kill and rm may fail because the containers may have been cleaned up
 }));
 
-gulp.task('test', ['clean-up', 'lint', 'docker-clean', 'pre-test', 'ca'], function() {
+gulp.task('docker-ready', ['docker-clean'], shell.task([
+	// make sure that necessary containers are up by docker-compose
+	'docker-compose -f test/fixtures/docker-compose.yaml up -d'
+]));
+
+gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], function() {
 	// use individual tests to control the sequence they get executed
 	// first run the ca-tests that tests all the member registration
 	// and enrollment scenarios (good and bad calls). Then the rest
