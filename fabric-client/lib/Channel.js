@@ -1757,9 +1757,9 @@ function loadConfigValue(config_items, versions, config_value, group_name, org) 
 		case 'BatchSize':
 			var batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
 			config_items.settings['BatchSize'] = batch_size;
-			logger.debug('loadConfigValue - %s    - BatchSize  maxMessageCount :: %s', group_name, batch_size.maxMessageCount);
-			logger.debug('loadConfigValue - %s    - BatchSize  absoluteMaxBytes :: %s', group_name, batch_size.absoluteMaxBytes);
-			logger.debug('loadConfigValue - %s    - BatchSize  preferredMaxBytes :: %s', group_name, batch_size.preferredMaxBytes);
+			logger.debug('loadConfigValue - %s    - BatchSize  max_message_count :: %s', group_name, batch_size.maxMessageCount);
+			logger.debug('loadConfigValue - %s    - BatchSize  absolute_max_bytes :: %s', group_name, batch_size.absoluteMaxBytes);
+			logger.debug('loadConfigValue - %s    - BatchSize  preferred_max_bytes :: %s', group_name, batch_size.preferredMaxBytes);
 			break;
 		case 'BatchTimeout':
 			var batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
