@@ -246,9 +246,9 @@ actions
                   version -- {int}
                   mod_policy -- {string}
                   value
-                     maxMessageCount -- {int}
-                     absoluteMaxBytes -- {int}
-                     preferredMaxBytes -- {int}
+                     max_message_count -- {int}
+                     absolute_max_bytes -- {int}
+                     preferred_max_bytes -- {int}
                BatchTimeout
                   version -- {int}
                   mod_policy -- {string}
@@ -733,9 +733,9 @@ function decodeConfigValue(proto_config_value) {
 		break;
 	case 'BatchSize':
 		var proto_batch_size = _ordererConfigurationProto.BatchSize.decode(proto_config_value.value.value);
-		config_value.value.maxMessageCount = proto_batch_size.getMaxMessageCount(); //uint32
-		config_value.value.absoluteMaxBytes = proto_batch_size.getAbsoluteMaxBytes(); //uint32
-		config_value.value.preferredMaxBytes = proto_batch_size.getPreferredMaxBytes(); //uint32
+		config_value.value.max_message_count = proto_batch_size.getMaxMessageCount(); //uint32
+		config_value.value.absolute_max_bytes = proto_batch_size.getAbsoluteMaxBytes(); //uint32
+		config_value.value.preferred_max_bytes = proto_batch_size.getPreferredMaxBytes(); //uint32
 		break;
 	case 'BatchTimeout':
 		var proto_batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(proto_config_value.value.value);
