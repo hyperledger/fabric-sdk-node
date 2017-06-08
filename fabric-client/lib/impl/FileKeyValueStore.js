@@ -35,7 +35,7 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 	/**
 	 * constructor
 	 *
-	 * @param {Object} options contains a single property 'path' which points to the top-level directory
+	 * @param {Object} options contains a single property <code>path</code> which points to the top-level directory
 	 * for the store
 	 */
 	constructor(options) {

@@ -39,6 +39,7 @@ var logger = utils.getLogger('crypto_ecdsa_aes');
  * This class implements a software-based key generation (as opposed to Hardware Security Module based key management)
  *
  * @class
+ * @extends module:api.CryptoSuite
  */
 var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
@@ -120,15 +121,6 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		this._ecdsa = new EC(this._ecdsaCurve);
 	}
 
-	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#generateKey}
-	 * Returns an instance of {@link module.api.Key} representing the private key, which also
-	 * encapsulates the public key. It'll also save the private key in the KeyValueStore.
-	 *
-	 * @param {object} opts Optional.
-	 * *    <br>`ephemeral`: {boolean} Optional. If not set, defaults to saving the key. If true, will not save the key.
-	 * @returns {Key} Promise of an instance of {@link module:ECDSA_KEY} containing the private key and the public key
-	 */
 	generateKey(opts) {
 		var pair = KEYUTIL.generateKeypair('EC', this._curveName);
 
@@ -160,16 +152,12 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#deriveKey}
 	 * To be implemented
 	 */
 	deriveKey(key, opts) {
 		throw new Error('Not implemented yet');
 	}
 
-	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
-	 **/
 	importKey(raw, opts) {
 		logger.debug('importKey - start');
 		var store_key = true; //default
@@ -234,10 +222,6 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		}
 	}
 
-	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#getKey}
-	 * Returns the key this CSP associates to the Subject Key Identifier ski.
-	 */
 	getKey(ski) {
 		var self = this;
 		var store;
@@ -264,20 +248,10 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		});
 	}
 
-	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#hash}
-	 * Hashes messages msg using options opts.
-	 */
 	hash(msg, opts) {
 		return this._hashFunction(msg);
 	}
 
-	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#sign}
-	 * Signs digest using key k.
-	 *
-	 * The opts argument is not needed.
-	 */
 	sign(key, digest, opts) {
 		if (typeof key === 'undefined' || key === null) {
 			throw new Error('A valid key is required to sign');
@@ -296,11 +270,6 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		return sig.toDER();
 	}
 
-	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#verify}
-	 * Verifies signature against key k and digest
-	 * The opts argument should be appropriate for the algorithm used.
-	 */
 	verify(key, signature, digest) {
 		if (typeof key === 'undefined' || key === null) {
 			throw new Error('A valid key is required to verify');
@@ -325,18 +294,14 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#encrypt}
-	 * Encrypts plaintext using key k.
-	 * The opts argument should be appropriate for the algorithm used.
+	 * To be implemented.
 	 */
 	encrypt(key, plaintext, opts) {
 		throw new Error('Not implemented yet');
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#decrypt}
-	 * Decrypts ciphertext using key k.
-	 * The opts argument should be appropriate for the algorithm used.
+	 * To be implemented.
 	 */
 	decrypt(key, cipherText, opts) {
 		throw new Error('Not implemented yet');

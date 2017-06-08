@@ -19,7 +19,5 @@
  * "fabric-ca" server to manage user certificates lifecycle including register, enroll,
  * renew and revoke, so that the application can use the properly signed certificates to
  * authenticate with the fabric
- *
- * @module fabric-ca-client
  */
 module.exports = require('./lib/FabricCAClientImpl.js');

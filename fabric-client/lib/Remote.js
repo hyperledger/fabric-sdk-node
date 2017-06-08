@@ -34,7 +34,7 @@ var Remote = class {
 	 * Constructs an object with the endpoint configuration settings.
 	 *
 	 * @param {string} url The orderer URL with format of 'grpc(s)://host:port'.
-	 * @param {object} opts An Object that may contain options to pass to grpcs calls
+	 * @param {Object} opts An Object that may contain options to pass to grpcs calls
 	 * <br>- pem {string} The certificate file, in PEM format,
 	 *    to use with the gRPC protocol (that is, with TransportCredentials).
 	 *    Required when using the grpcs protocol.

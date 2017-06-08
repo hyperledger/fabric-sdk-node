@@ -141,7 +141,7 @@ var User = class {
 	 * it needs to set a cryptoSuite instance that was created with the desired CryptoSuite
 	 * settings and CryptoKeyStore options.
 	 *
-	 * @param {CryptoSuite} cryptoSuite The cryptoSuite.
+	 * @param {module:api.CryptoSuite} cryptoSuite The cryptoSuite.
 	 */
 	setCryptoSuite(cryptoSuite) {
 		this._cryptoSuite = cryptoSuite;
@@ -149,7 +149,7 @@ var User = class {
 
 	/**
 	 * Set the enrollment object for this User instance
-	 * @param {Key} privateKey the private key object
+	 * @param {module:api.Key} privateKey the private key object
 	 * @param {string} certificate the PEM-encoded string of certificate
 	 * @param {string} mspId The Member Service Provider id for the local signing identity
 	 * @returns {Promise} Promise for successful completion of creating the user's signing Identity

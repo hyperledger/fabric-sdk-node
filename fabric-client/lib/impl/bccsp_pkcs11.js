@@ -53,7 +53,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 	/**
 	 * @param {number} keySize Length of key (in bytes), a.k.a "security level"
 	 * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
-	 * @param {object} opts Option is the form { lib: string, slot: number, pin: string }
+	 * @param {Object} opts Option is the form { lib: string, slot: number, pin: string }
 	 *
 	 * If lib is not specified or null, its value will be taken from the
 	 * CRYPTO_PKCS11_LIB env var, and if the env var is not set, its value will
@@ -689,7 +689,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 	 * is (are) ephemeral unless opts.ephemeral is set to false, in which case the
 	 * key (keypair) will be saved across PKCS11 sessions by the HSM hardware.
 	 *
-	 * @returns {Key} Promise of an instance of {@link module:PKCS11_ECDSA_KEY}
+	 * @returns {module:api.Key} Promise of an instance of {@link module:PKCS11_ECDSA_KEY}
 	 * containing the private key and the public key.
 	 */
 	generateKey(opts) {

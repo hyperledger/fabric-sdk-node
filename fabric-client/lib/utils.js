@@ -36,7 +36,7 @@ var sha3_256 = require('js-sha3').sha3_256;
 
 // returns a new instance of the CryptoSuite API implementation
 //
-// @param {object} setting This optional parameter is an object with the following optional properties:
+// @param {Object} setting This optional parameter is an object with the following optional properties:
 // 	- software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
 //		default is true (for software based implementation), specific implementation module is specified
 //		in the setting 'crypto-suite-software'
