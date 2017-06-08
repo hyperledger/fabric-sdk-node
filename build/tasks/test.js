@@ -81,7 +81,7 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], functi
 		'test/integration/get-config.js',
 		'test/integration/create-configtx-channel.js',
 		'test/integration/e2e/join-channel.js',
-		'test/integration/e2e/instantiate-chaincode.js',
+		'test/integration/instantiate.js',
 		'test/integration/e2e/invoke-transaction.js',
 		'test/integration/e2e/query.js',
 		'test/integration/grpc.js'
