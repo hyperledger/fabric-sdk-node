@@ -111,6 +111,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		client.setStateStore(store);
 
 		// get the peer org's admin required to send install chaincode requests
+
 		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
@@ -148,11 +149,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		catch(err) {
 			t.fail('this catch should not have been called');
 		}
+
 		return sleep(5000);
-	},
-	(err) => {
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		t.end();
 	}).then(() =>{
 
 		// now one that fails but not wait for it fail
@@ -199,62 +197,57 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		return client.installChaincode(request);
 	}).then((results) => {
 		if ( eputil.checkProposal(results)) {
+			t.pass('Successfully endorsed the installed chaincode proposal');
 			// read the config block from the orderer for the channel
 			// and initialize the verify MSPs based on the participating
 			// organizations
 			return channel.initialize();
 		} else {
-			return Promise.reject('bad install proposal:' + results);
+			t.fail(' Failed to install install chaincode');
+			return Promise.reject('failed to endorse the install chaincode proposal:' + results);
 		}
-	}, (err) => {
-		t.comment(err);
-		t.fail(err);//Failed to initialize the channel or bad install proposal
-		t.end();
 	}).then((success) => {
 		t.pass('Successfully initialized the channel');
 		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'init', []);
 		request.chaincodePath = 'github.com/events_cc';
 		request.chaincodeVersion = chaincode_version;
+
 		return channel.sendInstantiateProposal(request);
-	}, (err) => {
-		t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
-		t.end();
 	}).then((results) => {
-		var tmo = 50000;
-		return Promise.all([eputil.registerTxEvent(eh, request.txId.getTransactionID().toString(), tmo),
-			eputil.sendTransaction(channel, results)]);
-	},
-	(err) => {
-		t.fail('Failed sending instantiate proposal: ' + err);
-		t.end();
+		if ( eputil.checkProposal(results)) {
+			t.pass('Successfully endorsed the instantiate chaincode proposal');
+			var tmo = 50000;
+			return Promise.all([eputil.registerTxEvent(eh, request.txId.getTransactionID().toString(), tmo),
+				eputil.sendTransaction(channel, results)]);
+		} else {
+			t.fail('Failed to endorse the instantiate chaincode proposal');
+			return Promise.reject('Failed to endorse the instatiate chaincode proposal:' + results);
+		}
 	}).then((results) => {
 		t.pass('Successfully instantiated chaincode.');
 
 		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+
 		return channel.sendTransactionProposal(request);
-	},
-	(err) => {
-		t.fail('Failed instantiate due to error: ' + err.stack ? err.stack : err);
-		t.end();
 	}).then((results) => {
+		t.pass('Successfully sent transaction to orderer to instantiate chaincode.');
+
 		var tmo = 20000;
 		return Promise.all([eputil.registerCCEvent(eh, chaincode_id.toString(), '^evtsender*', tmo),
 			eputil.sendTransaction(channel, results)
 		]);
-	},
-	(err) => {
-		t.fail('Failed to send transaction proposal due to error: ' + err.stack ? err.stack : err);
-		t.end();
 	}).then((results) => {
 		t.pass('Successfully received chaincode event.');
 
 		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['query']);
+
 		return channel.queryByChaincode(request);
-	},
-	(err) => {
-		t.fail('Failed to receive chaincode event: ' + err);
-		t.end();
 	}).then((response_payloads) => {
+		t.pass('Successfully queried chaincode.');
+
+		if(!response_payloads) {
+			Promise.reject('No response_payloads returned');
+		}
 		for (let i = 0; i < response_payloads.length; i++) {
 			t.equal(response_payloads[i].toString('utf8'), '1', 'checking query results are number of events generated');
 		}
@@ -267,10 +260,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		req2 = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
 		return Promise.all([channel.sendTransactionProposal(req1),
 			channel.sendTransactionProposal(req2)]);
-	},
-	(err) => {
-		t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
-		t.end();
 	}).then(([results1, results2]) => {
 		var tmo = 20000;
 		return Promise.all([eputil.registerTxEvent(eh, req1.txId.getTransactionID().toString(), tmo),
@@ -281,12 +270,12 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then(([regResult1, regResult2, sendResult1, sendResult2]) => {
 		t.fail('Failed to generate an invalid transaction');
 		t.end();
-	},
-	(err) => {
+	}, (err) => {
 		t.equal(err, 'invalid', 'Expecting a rejected promise from the 2nd transaction should be invalid');
 		t.end();
 	}).catch((err) => {
-		t.fail('Unexpected error. ' + err.stack ? err.stack : err);
+		if(err) t.fail('Unexpected error. ' + err.stack ? err.stack : err);
+		else t.fail('Unexpected error with no error object in catch clause');
 		t.end();
 	});
 });

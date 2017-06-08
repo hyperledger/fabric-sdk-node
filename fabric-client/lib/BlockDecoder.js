@@ -1049,7 +1049,7 @@ function decodeChaincodeActionPayload(payload_bytes) {
 function decodeChaincodeProposalPayload(chaincode_proposal_payload_bytes) {
 	var chaincode_proposal_payload = {};
 	var proto_chaincode_proposal_payload = _proposalProto.ChaincodeProposalPayload.decode(chaincode_proposal_payload_bytes);
-	chaincode_proposal_payload.input = proto_chaincode_proposal_payload.getInput().toBuffer().toString();
+	chaincode_proposal_payload.input = proto_chaincode_proposal_payload.getInput().toBuffer();
 	//TransientMap is not allowed to be included on ledger
 
 	return chaincode_proposal_payload;

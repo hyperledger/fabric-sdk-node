@@ -608,7 +608,7 @@ var Client = class extends BaseClient {
 				version: request.chaincodeVersion
 			}
 		};
-		logger.debug('installChaincode ccSpec %s ',JSON.stringify(ccSpec));
+		logger.debug('installChaincode - ccSpec %s ',JSON.stringify(ccSpec));
 
 		// step 2: construct the ChaincodeDeploymentSpec
 		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
@@ -622,7 +622,7 @@ var Client = class extends BaseClient {
 				chaincodeDeploymentSpec.setCodePackage(data);
 				logger.debug('installChaincode - found packaged data');
 			}
-			logger.debug('installChaincode sending deployment spec %s ',chaincodeDeploymentSpec);
+			logger.debug('installChaincode - sending deployment spec %s ',chaincodeDeploymentSpec);
 
 			// TODO add ESCC/VSCC info here ??????
 			let lcccSpec = {
@@ -648,7 +648,7 @@ var Client = class extends BaseClient {
 			header = clientUtils.buildHeader(userContext.getIdentity(), channelHeader, txId.getNonce());
 			proposal = clientUtils.buildProposal(lcccSpec, header);
 			let signed_proposal = clientUtils.signProposal(userContext.getSigningIdentity(), proposal);
-
+			logger.debug('installChaincode - about to sendPeersProposal');
 			return clientUtils.sendPeersProposal(peers, signed_proposal)
 			.then(
 				function(responses) {
