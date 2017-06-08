@@ -21,8 +21,8 @@
     "express-bearer-token": "^2.1.0",
     "express-jwt": "^5.1.0",
     "express-session": "^1.15.2",
-    "fabric-ca-client": "file:../../fabric-ca-client",
-    "fabric-client": "file:../../fabric-client",
+    "fabric-ca-client": ">=1.0.0-beta <1.0.0-beta.10",
+    "fabric-client": ">=1.0.0-beta <1.0.0-beta.10",
     "fs-extra": "^2.0.0",
     "jsonwebtoken": "^7.3.0",
     "log4js": "^0.6.38"
