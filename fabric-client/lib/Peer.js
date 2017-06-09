@@ -83,7 +83,7 @@ var Peer = class extends Remote {
 
     /**
 	 * Set the Peer’s enrollment certificate.
-	 * @param {object} enrollment Certificate in PEM format signed by the trusted CA
+	 * @param {Object} enrollment Certificate in PEM format signed by the trusted CA
 	 */
 	setEnrollmentCertificate(enrollment) {
 		if (typeof enrollment.privateKey === 'undefined' || enrollment.privateKey === null || enrollment.privateKey === '') {

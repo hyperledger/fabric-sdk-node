@@ -17,9 +17,9 @@ var identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp
 var Identity = class {
 	/**
 	 * @param {string} certificate HEX string for the PEM encoded certificate
-	 * @param {Key} publicKey The public key represented by the certificate
+	 * @param {module:api.Key} publicKey The public key represented by the certificate
 	 * @param {string} mspId The associated MSP's mspId that manages this identity
-	 * @param {CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
+	 * @param {module:api.CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
 	 * signature algorithm
 	 */
 	constructor(certificate, publicKey, mspId, cryptoSuite) {
@@ -118,9 +118,9 @@ var Identity = class {
  */
 var Signer = class {
 	/**
-	 * @param {CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
+	 * @param {module:api.CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
 	 * signature algorithm
-	 * @param {Key} key The private key
+	 * @param {module:api.Key} key The private key
 	 */
 	constructor(cryptoSuite, key) {
 		if (!cryptoSuite)
@@ -136,7 +136,7 @@ var Signer = class {
 	/**
 	 * Returns the public key corresponding to the opaque, private key
 	 *
-	 * @returns {Key} The public key corresponding to the private key
+	 * @returns {module:api.Key} The public key corresponding to the private key
 	 */
 	getPublicKey() {
 		return this._key.getPublicKey();
@@ -172,9 +172,9 @@ var Signer = class {
 var SigningIdentity = class extends Identity {
 	/**
 	 * @param {string} certificate HEX string for the PEM encoded certificate
-	 * @param {Key} publicKey The public key represented by the certificate
+	 * @param {module:api.Key} publicKey The public key represented by the certificate
 	 * @param {string} mspId The associated MSP's ID that manages this identity
-	 * @param {CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
+	 * @param {module:api.CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
 	 * signature algorithm
 	 * @param {Signer} signer The signer object encapsulating the opaque private key and the corresponding
 	 * digital signature algorithm to be used for signing operations
@@ -192,7 +192,7 @@ var SigningIdentity = class extends Identity {
 	 * Signs digest with the private key contained inside the signer.
 	 *
 	 * @param {byte[]} msg The message to sign
-	 * @param {object} opts Options object for the signing, contains one field 'hashFunction' that allows
+	 * @param {Object} opts Options object for the signing, contains one field 'hashFunction' that allows
 	 *   different hashing algorithms to be used. If not present, will default to the hash function
 	 *   configured for the identity's own crypto suite object
 	 */

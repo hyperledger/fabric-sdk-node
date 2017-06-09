@@ -498,7 +498,7 @@ var Client = class extends BaseClient {
 	 * returning the details of all chaincodes
 	 * installed on a peer.
 	 * @param {Peer} peer
-	 * @returns {object} ChaincodeQueryResponse proto
+	 * @returns {Object} ChaincodeQueryResponse proto
 	 */
 	queryInstalledChaincodes(peer) {
 		logger.debug('queryInstalledChaincodes - start peer %s',peer);
@@ -665,7 +665,7 @@ var Client = class extends BaseClient {
 	 * development. Production systems would use a store backed by database for more robust storage and
 	 * clustering, so that multiple app instances can share app state via the database.
 	 * This API makes this pluggable so that different store implementations can be selected by the application.
-	 * @param {KeyValueStore} keyValueStore Instance of an alternative KeyValueStore implementation provided by
+	 * @param {module:api.KeyValueStore} keyValueStore Instance of an alternative KeyValueStore implementation provided by
 	 * the consuming app.
 	 */
 	setStateStore(keyValueStore) {
@@ -891,7 +891,7 @@ var Client = class extends BaseClient {
 
 	/**
 	 * A convenience method for obtaining the state store object in use for this client.
-	 * @return {KeyValueStore} The KeyValueStore implementation object set within this Client, or null if it does not exist.
+	 * @return {module:api.KeyValueStore} The KeyValueStore implementation object set within this Client, or null if it does not exist.
 	 */
 	getStateStore() {
 		return this._stateStore;
@@ -906,11 +906,11 @@ var Client = class extends BaseClient {
 	 * <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\_ admin.pem  <<== this is the private key saved in PEM file
 	 * <br>&nbsp;&nbsp;&nbsp;\_ signcerts
 	 * <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\_ admin.pem  <<== this is the signed certificate saved in PEM file
-	 * @param {object} opts
+	 * @param {Object} opts
 	 * <br>- username {string} - the user name used for enrollment
 	 * <br>- mspid {string} - the MSP id
 	 * <br>
-	 * <br>- cryptoContent {object}
+	 * <br>- cryptoContent {Object}
 	 * <br>---- privateKey {string} - the PEM file name including the root path - required when using the file system
 	 * <br>---- signedCert {string} - the PEM file name including the root path - required when using the file system
 	 * <br>---- or

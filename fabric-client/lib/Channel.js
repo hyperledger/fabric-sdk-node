@@ -666,7 +666,7 @@ var Channel = class {
 	 * (height, known peers).
 	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
 	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {object} With height, currently the only useful info.
+	 * @returns {Object} With height, currently the only useful info.
 	 */
 	queryInfo(target) {
 		logger.debug('queryInfo - start');
@@ -738,7 +738,7 @@ var Channel = class {
 	 * @param {byte[]} block hash of the Block.
 	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
 	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {object} Object containing the block.
+	 * @returns {Object} Object containing the block.
 	 */
 	queryBlockByHash(blockHash, target) {
 		logger.debug('queryBlockByHash - start');
@@ -800,7 +800,7 @@ var Channel = class {
 	 * @param {number} blockNumber The number which is the ID of the Block.
 	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
 	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {object} Object containing the block.
+	 * @returns {Object} Object containing the block.
 	 */
 	queryBlock(blockNumber, target) {
 		logger.debug('queryBlock - start blockNumber %s',blockNumber);
@@ -864,7 +864,7 @@ var Channel = class {
 	 * @param  tx_id The id of the transaction
 	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
 	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {object} Transaction information containing the transaction.
+	 * @returns {Object} Transaction information containing the transaction.
 	 */
 	queryTransaction(tx_id, target) {
 		logger.debug('queryTransaction - start transactionID %s',tx_id);
@@ -925,7 +925,7 @@ var Channel = class {
 	 * Queries the instantiated chaincodes on this channel.
 	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
 	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {object} ChaincodeQueryResponse proto
+	 * @returns {Object} ChaincodeQueryResponse proto
 	 */
 	queryInstantiatedChaincodes(target) {
 		logger.debug('queryInstantiatedChaincodes - start');

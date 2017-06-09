@@ -17,8 +17,7 @@
 'use strict';
 
 /**
- * This module defines the API for the pluggable components of the node.js SDK. The APIs are defined
- * according to the Hyperledger Fabric's [common SDK specification]{@link https://docs.google.com/document/d/1R5RtIBMW9fZpli37E5Li5_Q9ve3BnQ4q3gWmGZj6Sv4/edit?usp=sharing}
+ * This module defines the APIs for the pluggable components of the node.js SDK.
  *
  * @module api
  */
@@ -32,26 +31,26 @@ var Remote = require('./Remote');
  * certificates, etc.
  *
  * The SDK provides a default implementation based on files. An alternative
- * implementation can be specified using the "KEY_VALUE_STORE" environment
- * variable pointing to a full path to the require() package for the module.
+ * implementation can be specified using the "key-value-store" configuration
+ * setting, pointing to a full require() path to package for the module.
  *
  * @class
  */
 module.exports.KeyValueStore = class {
 
 	/**
-	 * Get the value associated with name.
+	 * Get the value associated with <code>name</code>.
 	 *
-	 * @param {string} name of the key
-	 * @returns Promise for the value corresponding to the key. If the value does not exist in the
+	 * @param {string} name Name of the key
+	 * @returns {Promise} Promise for the value corresponding to the key. If the value does not exist in the
 	 * store, returns null without rejecting the promise
 	 */
 	getValue(name) {}
 
 	/**
-	 * Set the value associated with name.
-	 * @param {string} name of the key to save
-	 * @param {string} value to save
+	 * Set the value associated with <code>name</code>.
+	 * @param {string} name Name of the key to save
+	 * @param {string} value The Value to save
 	 * @returns {Promise} Promise for the 'value' object upon successful write operation
 	 */
 	setValue(name, value) {}
@@ -59,68 +58,66 @@ module.exports.KeyValueStore = class {
 };
 
 /**
- * Abstract class for a suite of crypto algorithms used by the SDK to perform encryption,
- * decryption and secure hashing. A complete suite includes libraries for asymmetric
+ * Abstract class for a suite of crypto algorithms used by the SDK to perform digital signing,
+ * encryption/decryption and secure hashing. A complete suite includes support for asymmetric
  * keys (such as ECDSA or RSA), symmetric keys (such as AES) and secure hash (such as
  * SHA2/3).
  *
- * The SDK provides a default implementation based on ECDSA + AES + SHA2/3. An alternative
- * implementation can be specified using the "CRYPTO_SUITE" environment variable, pointing
- * to a full path to the require() package for the module.
+ * The SDK provides a default implementation based on ECDSA + SHA2/3. An alternative
+ * implementation can be specified using the "crypto-suite-software" configuration setting, pointing
+ * to a full require() path to the package for the module.
  *
  * @class
  */
 module.exports.CryptoSuite = class {
+
 	/**
-	 * Generate a key using the opts
+	 * Generate a key using the options in <code>opts</code>. If the <code>opts.ephemeral</code>
+	 * parameter is false, the method, in addition to returning the imported {@link Key}
+	 * instance, also persists the generated key in the key store as PEM files that can be
+	 * retrieved using the <code>getKey()</code> method
 	 *
-	 * @param {Object} opts
-	 *      algorithm: an identifier for the algorithm to be used, such as "ECDSA"
-	 *      ephemeral: true if the key to generate has to be ephemeral
-	 * @returns {Key} Promise of an instance of the Key class
+	 * @param {KeyOpts} opts Optional
+	 * @returns {module:api.Key} Promise for an instance of the Key class
 	 */
 	generateKey(opts) {}
 
 	/**
-	 * Derives a key from k using opts.
-	 * @param {Key} key the source key
-	 * @param {Object} opts
-	 *      algorithm: an identifier for the algorithm to be used
-	 *      ephemeral: true if the key to generate has to be ephemeral
-	 * @returns {Key} derived key
+	 * Derives the new private key from the source public key using the parameters passed in the <code>opts</code>.
+	 * This operation is needed for deriving private keys corresponding to the Transaction Certificates.
+	 *
+	 * @param {module:api.Key} key The source key
+	 * @returns {module:api.Key} Derived key
 	 */
 	deriveKey(key, opts) {}
 
 	/**
-	 * Imports a key from its raw representation using opts. If the `opts.ephemeral`
+	 * Imports a {@link Key} from its raw representation using <code>opts</code>. If the <code>opts.ephemeral</code>
 	 * parameter is false, the method, in addition to returning the imported {@link Key}
 	 * instance, also saves the imported key in the key store as PEM files that can be
 	 * retrieved using the 'getKey()' method
-	 * @param {byte[]} raw Raw bytes of the key to import
-	 * @param {Object} opts
-	 *      <br>`type`: type of information that 'raw' represents: x509 certificate,
-	 *      <br>`algorithm`: an identifier for the algorithm to be used
-	 *      <br>`ephemeral`: {boolean} Optional.  If true, the key to import will not be persisted
-	 * 			and the key will be returned without a Promise.  If not set or false, defaults to
-	 * 			saving the key in persistent key store.
-	 * @returns {Key} or {Promise} If `ephemeral` is true, the Key class wrapping the raw bytes.
-	 *          If `ephemeral' not set or false, a Promise of an instance of the
-	 *          Key class wrapping the raw key bytes.
+	 *
+	 * @param {string} pem PEM string of the key to import
+	 * @param {KeyOpts} opts Optional
+	 * @returns {Key | Promise} If "opts.ephemeral" is true, returns the Key class synchronously.
+	 *          If "opts.ephemeral" not set or false, returns a Promise of an instance of the
+	 *          Key class.
 	 */
-	importKey(raw, opts) {}
+	importKey(pem, opts) {}
 
 	/**
-	 * Returns the key this CSP associates to the Subject Key Identifier ski.
+	 * Returns the {@link Key} this implementation associates to the Subject Key Identifier ski.
 	 *
-	 * @param {byte[]} ski Subject Key Identifier specific to a Crypto Suite implementation
-	 * @returns {Key} Promise of an instance of the Key class corresponding to the ski
+	 * @param {string} ski Subject Key Identifier specific to a Crypto Suite implementation, as the
+	 *    unique index to represent the key
+	 * @returns {module:api.Key} Promise of an instance of the Key class corresponding to the ski
 	 */
 	getKey(ski) {}
 
 	/**
-	 * Hashes messages msg using options opts.
+	 * Produce a hash of the message <code>msg</code> using options <code>opts</code>
 	 *
-	 * @param {byte[]} msg Source message to be hashed
+	 * @param {string} msg Source message to be hashed
 	 * @param {Object} opts
 	 *      algorithm: an identifier for the algorithm to be used, such as "SHA3"
 	 * @returns {string} The hashed digest in hexidecimal string encoding
@@ -128,25 +125,20 @@ module.exports.CryptoSuite = class {
 	hash(msg, opts) {}
 
 	/**
-	 * Signs digest using key k.
-	 * The opts argument should be appropriate for the algorithm used.
+	 * Signs digest using key. The opts argument should be appropriate for the algorithm used.
 	 *
-	 * @param {Key} key Signing key (private key)
+	 * @param {module:api.Key} key Signing key (private key)
 	 * @param {byte[]} digest The message digest to be signed. Note that when a
-	 * signature of a hash of a larger message is needed, the caller is responsible
-	 * for hashing the larger message and passing the hash (as digest) and the hash
-	 * function (as opts) to sign.
-	 * @param {Object} opts
-	 *      hashingFunction: the function to use to hash
+	 * signature of a larger message is needed, the caller is responsible
+	 * for hashing the larger message and passing the hash (as digest) to sign.
 	 * @returns {byte[]} the resulting signature
 	 */
-	sign(key, digest, opts) {}
+	sign(key, digest) {}
 
 	/**
-	 * Verifies signature against key k and digest
-	 * The opts argument should be appropriate for the algorithm used.
+	 * Verifies signature against key and digest
 	 *
-	 * @param {Key} key Signing verification key (public key)
+	 * @param {module:api.Key} key Signing verification key (public key)
 	 * @param {byte[]} signature The signature to verify
 	 * @param {byte[]} digest The digest that the signature was created for
 	 * @returns {boolean} true if the signature verifies successfully
@@ -154,10 +146,10 @@ module.exports.CryptoSuite = class {
 	verify(key, signature, digest) {}
 
 	/**
-	 * Encrypts plaintext using key k.
+	 * Encrypts plaintext using key.
 	 * The opts argument should be appropriate for the algorithm used.
 	 *
-	 * @param {Key} key Encryption key (public key)
+	 * @param {module:api.Key} key Encryption key (public key)
 	 * @param {byte[]} plainText Plain text to encrypt
 	 * @param {Object} opts Encryption options
 	 * @returns {byte[]} Cipher text after encryption
@@ -165,10 +157,10 @@ module.exports.CryptoSuite = class {
 	encrypt(key, plaintext, opts) {}
 
 	/**
-	 * Decrypts ciphertext using key k.
+	 * Decrypts ciphertext using key.
 	 * The opts argument should be appropriate for the algorithm used.
 	 *
-	 * @param {Key} key Decryption key (private key)
+	 * @param {module:api.Key} key Decryption key (private key)
 	 * @param {byte[]} cipherText Cipher text to decrypt
 	 * @param {Object} opts Decrypt options
 	 * @returns {byte[]} Plain text after decryption
@@ -180,16 +172,17 @@ module.exports.CryptoSuite = class {
  * Key represents a cryptographic key. It can be symmetric or asymmetric. In the case of an
  * asymmetric key, the key can be public or private. In the case of a private asymmetric
  * key, the getPublicKey() method allows to retrieve the corresponding public-key.
- * A key can be referenced via the Subject Key Identifier in DER or PEM encoding
+ * A key can be referenced via the Subject Key Identifier (SKI) and resolvable by the
+ * appropriate {@link CryptoSuite} implementation
  *
  * @class
  */
 module.exports.Key = class {
 
 	/**
-	 * Returns the subject key identifier of this key in DER encoding for private keys or PEM encoding for public keys.
+	 * Returns the subject key identifier of this key
 	 *
-	 * @returns {byte[]} the subject key identifier of this key
+	 * @returns {string} The subject key identifier of this key as a hexidecial encoded string
 	 */
 	getSKI() {}
 
@@ -209,17 +202,17 @@ module.exports.Key = class {
 
 	/**
 	 * Returns the corresponding public key if this key is an asymmetric private key.
-	 * If this key is already public, PublicKey returns this key itself.
+	 * If this key is already public, returns this key itself.
 	 *
-	 * @returns {Key} the corresponding public key if this key is an asymmetric private key.
-	 * If this key is already public, PublicKey returns this key itself.
+	 * @returns {module:api.Key} the corresponding public key if this key is an asymmetric private key.
+	 * If this key is already public, returns this key itself.
 	 */
 	getPublicKey() {}
 
 	/**
-	 * Converts this key to its byte representation, if this operation is allowed.
+	 * Converts this key to its PEM representation, if this operation is allowed.
 	 *
-	 * @returns {byte[]} the byte representation of the key
+	 * @returns {string} the PEM string representation of the key
 	 */
 	toBytes() {}
 };

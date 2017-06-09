@@ -162,7 +162,7 @@ var EventHub = class {
 	/**
 	 * Set peer url for event source<p>
 	 * @param {string} peeraddr peer url
-	 * @param {object} opts An Object that may contain options to pass to grpcs calls
+	 * @param {Object} opts An Object that may contain options to pass to grpcs calls
 	 * <br>- pem {string} The certificate file, in PEM format,
 	 *    to use with the gRPC protocol (that is, with TransportCredentials).
 	 *    Required when using the grpcs protocol.
@@ -488,7 +488,7 @@ var EventHub = class {
 	 * @param {function} onError - optional callback function to be notified when this
 	 * event hub is shutdown. The shutdown may be caused by a network error or by
 	 * a call to the "disconnect()" method.
-	 * @returns {object} ChainCodeCBE object that should be treated as an opaque
+	 * @returns {Object} ChainCodeCBE object that should be treated as an opaque
 	 * handle used to unregister (see unregisterChaincodeEvent)
 	 */
 	registerChaincodeEvent(ccid, eventname, onEvent, onError) {
@@ -526,7 +526,7 @@ var EventHub = class {
 
 	/**
 	 * Unregister chaincode event registration
-	 * @param {object} cbe - ChainCodeCBE handle return from call to
+	 * @param {Object} cbe - ChainCodeCBE handle return from call to
 	 * registerChaincodeEvent.
 	 */
 	unregisterChaincodeEvent(cbe) {
@@ -660,7 +660,7 @@ var EventHub = class {
 
 	/*
 	 * private internal method for processing block events
-	 * @param {object} block protobuf object
+	 * @param {Object} block protobuf object
 	 */
 	_processBlockOnEvents(block) {
 		logger.debug('_processBlockOnEvents block=%s', block.header.number);
@@ -679,7 +679,7 @@ var EventHub = class {
 
 	/*
 	 * private internal method for processing tx events
-	 * @param {object} block protobuf object which might contain the tx from the fabric
+	 * @param {Object} block protobuf object which might contain the tx from the fabric
 	 */
 	_processTxOnEvents(block) {
 		logger.debug('_processTxOnEvents block=%s', block.header.number);
@@ -705,7 +705,7 @@ var EventHub = class {
 
 	/*
 	 * private internal method for processing chaincode events
-	 * @param {object} block protobuf object which might contain the chaincode event from the fabric
+	 * @param {Object} block protobuf object which might contain the chaincode event from the fabric
 	 */
 	_processChainCodeOnEvents(block) {
 		logger.debug('_processChainCodeOnEvents block=%s', block.header.number);
