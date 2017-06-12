@@ -1,3 +1,8 @@
+#
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 version: '2'
 
 services:
@@ -125,5 +130,3 @@ services:
       - 5984:5984
     environment:
       DB_URL: http://localhost:5984/member_db
-
-

@@ -1,3 +1,8 @@
+/*
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+*/
 'use strict';
 
 var grpc = require('grpc');
@@ -225,4 +230,3 @@ var SigningIdentity = class extends Identity {
 module.exports.Identity = Identity;
 module.exports.SigningIdentity = SigningIdentity;
 module.exports.Signer = Signer;
-
