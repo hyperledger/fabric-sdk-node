@@ -1,0 +1,66 @@
+{
+  "channel_id": "mychannelator",
+  "read_set": {
+    "groups": {
+      "Application": {
+        "groups": {
+          "Org1MSP": {},
+          "Org2MSP": {}
+        }
+      }
+    },
+    "values": {
+      "Consortium": {
+        "value": {
+          "name": "SampleConsortium"
+        }
+      }
+    }
+  },
+  "write_set": {
+    "groups": {
+      "Application": {
+        "groups": {
+          "Org1MSP": {},
+          "Org2MSP": {}
+        },
+        "mod_policy": "Admins",
+        "policies": {
+          "Admins": {
+            "policy": {
+              "type": 3,
+              "value": {
+                "rule": "MAJORITY",
+                "sub_policy": "Admins"
+              }
+            }
+          },
+          "Readers": {
+            "policy": {
+              "type": 3,
+              "value": {
+                "sub_policy": "Readers"
+              }
+            }
+          },
+          "Writers": {
+            "policy": {
+              "type": 3,
+              "value": {
+                "sub_policy": "Writers"
+              }
+            }
+          }
+        },
+        "version": "1"
+      }
+    },
+    "values": {
+      "Consortium": {
+        "value": {
+          "name": "SampleConsortium"
+        }
+      }
+    }
+  }
+}
