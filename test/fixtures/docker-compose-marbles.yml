@@ -1,3 +1,8 @@
+#
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 orderer:
   image: hyperledger/fabric-orderer
   environment:
@@ -66,4 +71,3 @@ vp1:
   links:
     - vp0
     - couchdb1
-

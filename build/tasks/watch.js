@@ -1,3 +1,8 @@
+/*
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+*/
 var gulp = require('gulp'),
 	watch = require('gulp-watch'),
 	debug = require('gulp-debug'),

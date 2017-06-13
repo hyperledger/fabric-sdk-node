@@ -1,3 +1,8 @@
+/*
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+*/
 var requireDir = require('require-dir');
 var gulp = require('gulp');
 
