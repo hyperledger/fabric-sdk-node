@@ -5,7 +5,7 @@
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
-	  http://www.apache.org/licenses/LICENSE-2.0
+		http://www.apache.org/licenses/LICENSE-2.0
 
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an 'AS IS' BASIS,
@@ -45,381 +45,406 @@ var _kv_rwsetProto = grpc.load(path.join(__dirname, '/protos/ledger/rwset/kvrwse
 
 
 /**
- * Utility class to convert a grpc protobuf encoded byte array into a pure JSON object representing
- * a hyperledger fabric `Block`.
+ * Utility class to convert a protobuf encoded byte array of a Hyperledger Fabric block
+ * message into a pure Javascript object
+ *
  * @class
  */
 var BlockDecoder = class {
 	/**
-	 * The JSON representation of a GRPC message "Block".
-	 * <br>A Block will contain the configuration of the channel or
-	 * transactions on the channel. The description area below shows the
-	 * properties of the "Block" object. When the property name does not have a
-	 * data type next to it (e.g. -- {int}) then assume it is an object and
-	 * the indented names below it are it's properties. Complex properties
-	 * shown within the description area are listed under the "Properties"
-	 * section (e.g. {Header}). Use the links under the "Type" column
-	 * to see the description of that object type.
-	 * <br><br>When assigning the results of a block
-	 * query or block event to a variable called <code>block</code> for example,
-	 * then to get the block number use
-	 * <br><code>var block_num = block.header.number;</code>
-	 * <br>or to see the first transaction id in the block use
-	 * <br><code> var tx_id = block.data.data[0].payload.header.channel_header.tx_id;</code>
-	 * <br><br>A "Block" will have the following JSON layout.
+	 * An object of a fully decoded protobuf message "Block".
+	 * <br><br>
+	 * A Block may contain the configuration of the channel or transactions on the channel.
+	 * <br><br>
+	 * A Block object will have the following object structure.
 <br><pre>
 header
-   number -- {int}
-   previous_hash -- {byte}
-   data_hash -- {byte}
+	number -- {int}
+	previous_hash -- {byte[]}
+	data_hash -- {byte[]}
 data
-   data -- [array]
-      signature -- {byte}
-      payload
-         header -- {Header}
-         data -- {Config | Transaction}
+	data -- {array}
+		signature -- {byte[]}
+		payload
+			header -- {{@link Header}}
+			data -- {{@link Config} | {@link Transaction}}
 metadata
-   metadata -- [array] #each array item has it's own layout
-      [0] #SIGNATURES
-         signatures -- [array]
-            signature_header
-               creator
-                  Mspid -- {string}
-                  IdBytes -- {byte}
-               nonce -- {byte}
-            signature -- {byte}
-      [1] #LAST_CONFIG
-         value
-            index -- {number}
-         signatures -- [array]
-            signature_header
-               creator
-                  Mspid -- {string}
-                  IdBytes -- {byte}
-               nonce -- {byte}
-            signature -- {byte}
-      [2] #TRANSACTIONS_FILTER
-          [int] #see TxValidationCode in proto/peer/transaction.proto
- </pre>
+	metadata -- {array} #each array item has it's own layout
+		[0] #SIGNATURES
+			signatures -- {{@link MetadataSignature[]}}
+		[1] #LAST_CONFIG
+			value
+				index -- {number}
+				signatures -- {{@link MetadataSignature[]}}
+		[2] #TRANSACTIONS_FILTER
+				{int[]} #see TxValidationCode in proto/peer/transaction.proto
+</pre>
+	 *
 	 * @typedef {Object} Block
-	 * @property {Header} header The header of the block
-	 * @property {Config | Transaction} data The data bytes will be based on the block.header.channel_header.type
-	 * @see protos/common/common.proto
+	 *
+	 * @example
+	 * Get the block number:
+	 * var block_num = block.header.number;
+	 *
+	 * @example
+	 * Get the number of transactions, including the invalid transactions:
+	 * var block_num = block.data.data.legnth;
+	 *
+	 * @example
+	 * Get the Id of the first transaction in the block:
+	 * var tx_id = block.data.data[0].payload.header.channel_header.tx_id;
 	 */
 
 	/**
-	 * The JSON representation of a GRPC message "Header".
-	 * <br><br>A "Header" will have the following JSON layout.
+	 * Headers describe basic information about a transaction record, such
+	 * as its type (configuration update, or endorser transaction, etc.),
+	 * the id of the channel it belongs to, the transaction id and so on.
+	 * The header message also contains a common field {@link SignatureHeader}
+	 * that describes critical information about how to verify signatures.
+	 * <br><br>
+	 * A "Header" will have the following object structure.
 <br><pre>
-   channel_header
-      type -- {string}
-      version -- {int}
-      timestamp -- {time}
-      channel_id -- {string}
-      tx_id -- {string}
-      epoch -- {int}
-   signature_header
-      creator
-         Mspid -- {string}
-            IdBytes -- {byte}
-            nonce -- {string}
+channel_header
+	type -- {string}
+	version -- {int}
+	timestamp -- {time}
+	channel_id -- {string}
+	tx_id -- {string}
+	epoch -- {int}
+signature_header -- {{@link SignatureHeader}}
 </pre>
 	 * @typedef {Object} Header
-	 * @see protos/common/common.proto
 	 */
 
 	/**
-	 * The JSON representation of a GRPC message "Config".
-	 * <br>The config object will contain the current channel configuration.
-	 * <br><br>A "Config" will have the following JSON layout.
+	 * A signature over the metadata of a block, to ensure the authenticity of
+	 * the metadata that describes a Block.
+<br><pre>
+signature_header {{@link SignatureHeader}}
+signature -- {byte[]}
+</pre>
+	 *
+	 * @typedef {Object} MetadataSignature
+	 */
+
+	/**
+	 * An object that is part of all signatures in Hyperledger Fabric. The "creator"
+	 * field has two important pieces of information about the identity of the signer,
+	 * the organization (Mspid) that the signer belongs to, and the certificate (IdBytes).
+	 * The "nonce" field is a unique value to guard against replay attacks.
+	 *
+<br><pre>
+creator
+	Mspid -- {string}
+	IdBytes -- {byte[]}
+nonce -- {byte[]}
+</pre>
+	 * @typedef {Object} SignatureHeader
+	 */
+
+	/**
+	 * An object that contains channel configurations.
+	 * <br><br>
+	 * A "Config" will have the following object structure.
 <br><pre>
 config
-   sequence -- {int}
-   channel_group -- {ConfigGroup}
+	sequence -- {int}
+	channel_group -- {{@link ConfigGroup}}
 last_update
-   signature -- {byte}
-   payload
-      header -- {Header}
-      data -- {ConfigUpdate}
+	signature -- {byte[]}
+	payload
+		header -- {{@link Header}}
+		data -- {{@link ConfigUpdate}}
 </pre>
 	 * @typedef {Object} Config
-	 * @property {Header} header
-	 * @property {ConfigGroup} channel_group
-	 * @property {ConfigUpdate} data
-	 * @see protos/common/common.proto
 	 */
 
 	/**
-	 * The JSON representation of a GRPC message "Transaction"
-	 * <br><br>A "Transaction" will have the following JSON layout.
+	 * A Transaction, or "Endorser Transaction", is the result of invoking chaincodes
+	 * to collect endorsements, getting globally ordered in the context of a channel,
+	 * and getting validated by the committer peer as part of a block before finally
+	 * being formally "committed" to the ledger inside a Block. Each transaction contains
+	 * an array of "actions" representing different steps for executing a transaction,
+	 * and those steps will be processed atomically, meaning if any one step failed
+	 * then the whole transaction will be marked as rejected.
+	 * <br><br>
+	 * Each entry of the "actions" array contains a chaincode proposal and corresponding proposal
+	 * responses that encapsulate the endorsing peer's decisions on whether the proposal
+	 * is considered valid. Note that even if a transaction proposal(s) is considered
+	 * valid by the endorsing peers, it may still be rejected by the committers during
+	 * transaction validation. Whether a transaction as a whole is valid or not, is not
+	 * reflected in the transaction record itself, but rather recorded in a separate
+	 * field in the Block's metadata.
+	 * <br><br>
+	 * A "Transaction" will have the following object structure.
 <br><pre>
-actions
-   chaincode_proposal_payload
-      input -- {byte}
-   action
-      proposal_response_payload
-         proposal_hash -- {byte}
-         extension
-            results
-               data_model -- {int}
-               ns_rwset -- [array]
-                  namespace -- {string}
-                  rwset
-                     reads -- [array]
-                        key -- {string}
-                        version
-                           block_num -- {number}
-                           tx_num -- {number}
-                     range_queries_info -- [array]
-                     writes -- [array]
-                        key -- {string}
-                        is_delete -- {boolean}
-                        value -- {string}
-            events
-               chaincode_id --  {string}
-               tx_id -- {string}
-               event_name -- {string}
-               payload -- {byte}
-            response
-               status -- {int}
-               message -- {string}
-               payload -- {byte}
-      endorsements -- [array]
-         endorser
-            Mspid -- {string]
-            IdBytes -- {string}
-         signature -- {byte}
+actions {array}
+	header -- {{@link SignatureHeader}}
+	payload
+		chaincode_proposal_payload
+			input -- {byte[]}
+		action
+			proposal_response_payload
+				proposal_hash -- {byte[]}
+				extension
+					results
+						data_model -- {int}
+						ns_rwset -- {array}
+							namespace -- {string}
+							rwset
+								reads -- {array}
+									key -- {string}
+									version
+										block_num -- {number}
+										tx_num -- {number}
+								range_queries_info -- {array}
+								writes -- {array}
+									key -- {string}
+									is_delete -- {boolean}
+									value -- {string}
+					events
+						chaincode_id --  {string}
+						tx_id -- {string}
+						event_name -- {string}
+						payload -- {byte[]}
+					response
+						status -- {int}
+						message -- {string}
+						payload -- {byte[]}
+			endorsements -- {array}
+				endorser
+					Mspid -- {string]
+					IdBytes -- {byte[]}
+				signature -- {byte[]}
 </pre>
 	 * @typedef {Object} Transaction
-	 * @see protos/peer/transaction.proto
 	 */
 
 	/**
-	 * The JSON representation of a GRPC message "ConfigUpdate".
-	 * <br><br>A "ConfigUpdate" will have the following JSON layout.
+	 * An object of a protobuf message "ConfigUpdate".
+	 * <br><br>
+	 * A "ConfigUpdate" will have the following object structure.
 <br><pre>
-   channel_id -- {string}
-   read_set -- {ConfigGroup}
-   write_set -- {ConfigGroup}
-   signatures -- [array]
-      signature_header
-         creator
-            Mspid -- {string}
-            Idbytes -- {byte}
-         signature -- {byte}
+config_update
+	channel_id -- {string}
+	read_set -- {{@link ChannelConfig}}
+	write_set -- {{@link ChannelConfig}}
+signatures -- {array}
+	signature_header -- {{@link SignatureHeader}}
+	signature -- {byte[]}
 </pre>
 	 * @typedef {Object} ConfigUpdate
-	 * @property {ConfigGroup} read_set A top level GRPC message "ConfigGroup" that
-	 *           represents the current version numbers of the all configuration items
-	 *           being updated
-	 * @property {ConfigGroup} write_set A top level GRPC message "ConfigGroup that
-	 *           represents the all configuration items being updated. Must have a
+	 * @property {ChannelConfig} config_update.read_set A set of the current version numbers of all
+	 *           configuration items being updated
+	 * @property {ChannelConfig} config_update.write_set A set of all configuration items being updated. Must have a
 	 *           version number one greater than the version number of the same item
 	 *           in the read_set along with the new value.
-	 * @see protos/common/configtx.proto
 	 */
 
 	/**
-	 * The JSON representation of a GRPC message "ConfigGroup".
-	 * <br>The "ConfigGroup" described here is one that represents the
-	 * whole configuration of the channel. A "ConfigGroup" object
-	 * is used to describe the current configuration and it is also
-	 * used to describe the updates to a configuration.
-	 * Only those fields being updated will be present when used to describe
-	 * a configuration update.
-	 * <br><br>A channel level "ConfigGroup" will have the following JSON layout.
-<br><pre>
-      version -- {int}
-      mod_policy -- {string}
-      groups
-         Orderer
-            version -- {int}
-            groups -- [array]
-               &ltorderer&gt -- {Organization}
-            values
-               ConsensusType
-                  version -- {int}
-                  mod_policy -- {string}
-                  value
-                     type -- {string}
-               BatchSize
-                  version -- {int}
-                  mod_policy -- {string}
-                  value
-                     max_message_count -- {int}
-                     absolute_max_bytes -- {int}
-                     preferred_max_bytes -- {int}
-               BatchTimeout
-                  version -- {int}
-                  mod_policy -- {string}
-                  value
-                     timeout -- {duration}
-               ChannelRestrictions
-                  version -- {int}
-                  mod_policy -- {string}
-                  value
-                     max_count -- {int}
-            policies
-               Admins
-                  version -- {int}
-                  mod_policy -- {string}
-                  policy -- {ImplicitMetaPolicy}
-               Writers
-                  version -- {int}
-                  mod_policy -- {string}
-                  policy -- {ImplicitMetaPolicy}
-               Readers
-                  version -- {int}
-                  mod_policy -- {string}
-                  policy -- {ImplicitMetaPolicy}
-               BlockValidation
-                  version -- {int}
-                  mod_policy -- {string}
-                  policy -- {SignaturePolicy}
-         Application
-            version -- {int}
-            groups
-               &ltpeer&gt -- {Organization}
-            values
-            policies
-               Admins -- {ImplicitMetaPolicy}
-                  version -- {int}
-                  mod_policy -- {string}
-                  policy -- {ImplicitMetaPolicy}
-               Writers -- {ImplicitMetaPolicy}
-                  version -- {int}
-                  mod_policy -- {string}
-                  policy -- {ImplicitMetaPolicy}
-               Readers -- {ImplicitMetaPolicy}
-                  version -- {int}
-                  mod_policy -- {string}
-                  policy -- {ImplicitMetaPolicy}
-      values
-         OrdererAddresses
-            version -- {int}
-            mod_policy -- {string}
-            value
-               addresses -- [array]
-                   {string - host:port}
-         HashingAlgorithm
-            version -- {int}
-            mod_policy -- {string}
-            value
-               name -- {string}
-         BlockDataHashingStructure
-            version -- {int}
-            mod_policy -- {string}
-            value
-               width -- {int}
-         Consortium
-            version -- {int}
-            mod_policy -- {string}
-            value
-               name -- {string}
-</pre>
-	 * @typedef {Object} ConfigGroup
-	 * @property {Organization} &ltorderer&gt These are the defined "Orderer"s on the network
-	 * @property {Organization} &ltpeer&gt These are the defined "Peer"s on the network
-	 * @property {ImplicitMetaPolicy} policy These policies point to other policies
-	 * @property {SignaturePolicy} policy
-	 * @see protos/common/configtx.proto
-	 */
-
-	/**
-	 * The JSON representation of a GRPC message "ConfigGroup".
-	 * <br>The "ConfigGroup" described here is one that a single
-	 * Organization on the Channel.
-	 * <br><br>A organizational "ConfigGroup" will have the following JSON layout.
+	 * The configuration settings that govern how the fabric should maintain
+	 * a channel are included in the blocks of the channel itself. When a block contains
+	 * the channel configuration, the channel configuration record is the only item in
+	 * the block's data array. Every block, including the configuration blocks themselves,
+	 * has a pointer to the latest configuration block, making it easy to query for the
+	 * latest channel configuration settings.
+	 * <br><br>
+	 * A channel configuration record will have the following object structure.
 <br><pre>
 version -- {int}
 mod_policy -- {string}
 groups
+	Orderer
+		version -- {int}
+		groups
+			&ltorderer_org_name&gt -- {{@link OrganizationConfig}}
+		values
+			ConsensusType
+				version -- {int}
+				mod_policy -- {string}
+				value
+					type -- {string}
+			BatchSize
+				version -- {int}
+				mod_policy -- {string}
+				value
+					max_message_count -- {int}
+					absolute_max_bytes -- {int}
+					preferred_max_bytes -- {int}
+			BatchTimeout
+				version -- {int}
+				mod_policy -- {string}
+				value
+					timeout -- {duration}
+			ChannelRestrictions
+				version -- {int}
+				mod_policy -- {string}
+				value
+					max_count -- {int}
+		policies
+			Admins
+				version -- {int}
+				mod_policy -- {string}
+				policy -- {{@link ImplicitMetaPolicy}}
+			Writers
+				version -- {int}
+				mod_policy -- {string}
+				policy -- {{@link ImplicitMetaPolicy}}
+			Readers
+				version -- {int}
+				mod_policy -- {string}
+				policy -- {{@link ImplicitMetaPolicy}}
+			BlockValidation
+				version -- {int}
+				mod_policy -- {string}
+				policy -- {{@link SignaturePolicy}}
+	Application
+		version -- {int}
+		groups
+			&ltpeer_org_name&gt -- {{@link OrganizationConfig}}
+		values
+		policies
+			Admins
+				version -- {int}
+				mod_policy -- {string}
+				policy -- {{@link ImplicitMetaPolicy}}
+			Writers
+				version -- {int}
+				mod_policy -- {string}
+				policy -- {{@link ImplicitMetaPolicy}}
+			Readers
+				version -- {int}
+				mod_policy -- {string}
+				policy -- {{@link ImplicitMetaPolicy}}
 values
-   MSP
-      version -- {int}
-      mod_policy -- {string}
-      value
-         type -- {int}
-         config
-            name -- {string}
-            root_certs -- [array]
-                {string}
-            intermediate_certs -- [array]
-                {string}
-            admins -- [array]
-                {string}
-            revocation_list -- [array]
-                {string}
-            signing_identity -- {byte}
-            organizational_unit_identifiers -- [array]
-                {string}
-policies
-   Admins
-      version -- {int}
-      mod_policy -- {string}
-      policy -- {SignaturePolicy}
-   Writers
-      version -- {int}
-      mod_policy -- {string}
-      policy -- {SignaturePolicy}
-   Readers
-      version -- {int}
-      mod_policy -- {string}
-      policy -- {SignaturePolicy}
+	OrdererAddresses
+		version -- {int}
+		mod_policy -- {string}
+		value
+			addresses -- {array}
+				{string - host:port}
+	HashingAlgorithm
+		version -- {int}
+		mod_policy -- {string}
+		value
+			name -- {string}
+	BlockDataHashingStructure
+		version -- {int}
+		mod_policy -- {string}
+		value
+			width -- {int}
+	Consortium
+		version -- {int}
+		mod_policy -- {string}
+		value
+			name -- {string}
 </pre>
-	 * @typedef {Object} Organization
-	 * @property {SignaturePolicy} policy These are the polices that have been pointed to by the implicit policies
-	 * @see protos/common/configtx.proto
+	 * @typedef {Object} ChannelConfig
+	 * @property {OrganizationConfig} groups.Orderer.groups.&ltorderer_org_name&gt These are the orderer organizatoin names defined on the network
+	 * @property {OrganizationConfig} groups.Application.groups.&ltpeer_org_name&gt These are the peer organization names defined on the network
+	 * @property {ImplicitMetaPolicy} policy These policies point to other policies and specify a threshold as in "ANY", "MAJORITY" or "ALL"
 	 */
 
 	/**
-	 * The JSON representation of a GRPC message "Policy" that are
-	 * of type "ImplicitMetaPolicy".
-	 * <br><br>A "ImplicitMetaPolicy" will have the following JSON layout.
+	 * Each participating organization of the channel gets represented in a section
+	 * in the configuration block as described below. Critical information about the
+	 * organzation such as its Membership Service Provider (MSP) content and its pre-defined
+	 * policies that form the basis of the channel's access control policies (Admins, Writers
+	 * and Readers) are contained in these sections.
+	 * <br><br>
+	 * A organizational configuration will have the following object structure.
+<br><pre>
+version -- {int}
+mod_policy -- {string}
+values
+	MSP
+		version -- {int}
+		mod_policy -- {string}
+		value
+			type -- {int}
+			config
+				name -- {string}
+				root_certs -- {string[]}
+				intermediate_certs -- {string[]}
+				admins -- {string[]}
+				revocation_list -- {string[]}
+				signing_identity -- {byte[]}
+				organizational_unit_identifiers -- {string[]}
+policies
+	 Admins
+			version -- {int}
+			mod_policy -- {string}
+			policy -- {{@link SignaturePolicy}}
+	 Writers
+			version -- {int}
+			mod_policy -- {string}
+			policy -- {{@link SignaturePolicy}}
+	 Readers
+			version -- {int}
+			mod_policy -- {string}
+			policy -- {{@link SignaturePolicy}}
+</pre>
+	 * @typedef {Object} OrganizationConfig
+	 */
+
+	/**
+	 * ImplicitMetaPolicy is a policy type which depends on the hierarchical nature of the configuration
+	 * It is implicit because the rule is generate implicitly based on the number of sub policies
+	 * It is meta because it depends only on the result of other policies
+	 * <br><br>
+	 * When evaluated, this policy iterates over all immediate child sub-groups, retrieves the policy
+	 * of name sub_policy, evaluates the collection and applies the rule.
+	 * <br><br>
+	 * For example, with 4 sub-groups, and a policy name of "Readers", ImplicitMetaPolicy retrieves
+	 * each sub-group, retrieves policy "Readers" for each subgroup, evaluates it, and, in the case of ANY
+	 * 1 satisfied is sufficient, ALL would require 4 signatures, and MAJORITY would require 3 signatures.
+	 * <br><br>
+	 * An "ImplicitMetaPolicy" will have the following object structure.
 <br><pre>
 type -- IMPLICIT_META
 policy
-   policy
-      sub_policy -- {string}
-      rule -- ANY | ALL | MAJORITY
+	sub_policy -- {string}
+	rule -- ANY | ALL | MAJORITY
 </pre>
 	 * @typedef {Object} ImplicitMetaPolicy
-	 * @see protos/common/policies
 	 */
 
 	/**
-	 * The JSON representation of a GRPC message "Policy" that are
-	 * of type "SignaturePolicy".
-	 * <br><br>A "SignaturePolicy" will have the following JSON layout.
+	 * SignaturePolicy is a recursive message structure which defines a featherweight DSL for describing
+	 * policies which are more complicated than 'exactly this signature'.  The NOutOf operator is sufficent
+	 * to express AND as well as OR, as well as of course N out of the following M policies.
+	 * <br><br>
+	 * SignedBy implies that the signature is from a valid certificate which is signed by the trusted
+	 * authority specified in the bytes.  This will be the certificate itself for a self-signed certificate
+	 * and will be the CA for more traditional certificates
+	 * <br><br>
+	 * A "SignaturePolicy" will have the following object structure.
 <br><pre>
 type -- SIGNATURE
 policy
-   policy
-      Type -- n_out_of
-      n_out_of
-         N -- {int}
-         policies -- [array]
-            Type -- signed_by
-            signed_by -- {int}
-      identities -- [array]
-         principal_classification -- {int}
-         msp_identifier -- {string}
-         Role -- MEMBER | ADMIN
+	Type -- n_out_of
+	n_out_of
+		N -- {int}
+		policies -- {array}
+			Type -- signed_by
+			signed_by -- {int}
+	identities -- {array}
+		principal_classification -- {int}
+		msp_identifier -- {string}
+		Role -- MEMBER | ADMIN
 </pre>
 	 * @typedef {Object} SignaturePolicy
-	 * @see protos/common/policies
 	 */
 
 	/**
 	 * Constructs a JSON object containing all decoded values from the
-	 * grpc encoded `Block` bytes
+	 * protobuf encoded `Block` bytes.
 	 *
-	 * @param {byte[]} block_bytes - The encode bytes of a hyperledger fabric message Block
-	 * @returns {Block} The JSON representation of the Protobuf common.Block
-	 * @see /protos/common/common.proto
+	 * @param {byte[]} block_bytes - The encoded bytes of a Block protobuf message
+	 * @returns {Block} An object of the Block
 	 */
 	static decode(block_bytes) {
-		if(!block_bytes || !(block_bytes instanceof Buffer)) {
+		if (!block_bytes || !(block_bytes instanceof Buffer)) {
 			throw new Error('Block input data is not a byte buffer');
 		}
 		var block = {};
@@ -428,8 +453,7 @@ policy
 			block.header = decodeBlockHeader(proto_block.getHeader());
 			block.data = decodeBlockData(proto_block.getData());
 			block.metadata = decodeBlockMetaData(proto_block.getMetadata());
-		}
-		catch(error) {
+		} catch (error) {
 			logger.error('decode - ::' + error.stack ? error.stack : error);
 			throw error;
 		}
@@ -438,28 +462,26 @@ policy
 	};
 
 	/**
-	 * Constructs a JSON object containing all decoded values from the
-	 * grpc encoded `Block` object
+	 * Constructs an object containing all decoded values from the
+	 * protobuf encoded `Block` object
 	 *
-	 * @param {Object} block - a Protobuf common.Block object
-	 * @returns {Block} The JSON representation of the Protobuf common.Block
-	 * @see /protos/common/common.proto
+	 * @param {Object} block - a protobuf common.Block object
+	 * @returns {Block} An object of the fully decoded protobuf common.Block
 	 */
 	static decodeBlock(proto_block) {
-		if(!proto_block) {
+		if (!proto_block) {
 			throw new Error('Block input data is not a protobuf Block');
 		}
 		var block = {};
 		try {
 			block.header = {
-				number : proto_block.header.number,
-				previous_hash : proto_block.header.previous_hash.toString('hex'),
-				data_hash : proto_block.header.data_hash.toString('hex')
+				number: proto_block.header.number,
+				previous_hash: proto_block.header.previous_hash.toString('hex'),
+				data_hash: proto_block.header.data_hash.toString('hex')
 			};
 			block.data = decodeBlockData(proto_block.data, true);
 			block.metadata = decodeBlockMetaData(proto_block.metadata);
-		}
-		catch(error) {
+		} catch (error) {
 			logger.error('decode - ::' + error.stack ? error.stack : error);
 			throw error;
 		}
@@ -468,23 +490,21 @@ policy
 	};
 
 	/**
-	 * Constructs a JSON object containing all decoded values from the
-	 * grpc encoded `Transaction` bytes
+	 * Constructs an object containing all decoded values from the
+	 * protobuf encoded `ProcessedTransaction` bytes
 	 *
-	 * @param {byte[]} processed_transaction_bytes - The encode bytes of a hyperledger
-	 *        fabric message ProcessedTransaction
-	 * @returns {Object} The JSON representation of the Protobuf transaction.ProcessedTransaction
-	 * @see /protos/peer/transaction.proto
+	 * @param {byte[]} processed_transaction_bytes - The encode bytes of a protobuf
+	 *         message ProcessedTransaction
+	 * @returns {Object} An object of the fully decoded transaction.ProcessedTransaction
 	 */
 	static decodeTransaction(processed_transaction_bytes) {
-		if(!(processed_transaction_bytes instanceof Buffer)) {
+		if (!(processed_transaction_bytes instanceof Buffer)) {
 			throw new Error('Proccesed transaction data is not a byte buffer');
 		}
 		var processed_transaction = {};
 		var proto_processed_transaction = _transProto.ProcessedTransaction.decode(processed_transaction_bytes);
 		processed_transaction.validationCode = proto_processed_transaction.getValidationCode();
-		processed_transaction.transactionEnvelope
-			= decodeBlockDataEnvelope(proto_processed_transaction.getTransactionEnvelope());
+		processed_transaction.transactionEnvelope = decodeBlockDataEnvelope(proto_processed_transaction.getTransactionEnvelope());
 		return processed_transaction;
 	}
 };
@@ -501,12 +521,11 @@ function decodeBlockHeader(proto_block_header) {
 function decodeBlockData(proto_block_data, not_proto) {
 	var data = {};
 	data.data = [];
-	for(var i in proto_block_data.data) {
+	for (var i in proto_block_data.data) {
 		var proto_envelope = null;
-		if(not_proto) {
+		if (not_proto) {
 			proto_envelope = _commonProto.Envelope.decode(proto_block_data.data[i]);
-		}
-		else {
+		} else {
 			proto_envelope = _commonProto.Envelope.decode(proto_block_data.data[i].toBuffer());
 		}
 		var envelope = decodeBlockDataEnvelope(proto_envelope);
@@ -519,7 +538,7 @@ function decodeBlockData(proto_block_data, not_proto) {
 function decodeBlockMetaData(proto_block_metadata) {
 	var metadata = {};
 	metadata.metadata = [];
-	if(proto_block_metadata && proto_block_metadata.metadata) {
+	if (proto_block_metadata && proto_block_metadata.metadata) {
 		var signatures = decodeMetadataSignatures(proto_block_metadata.metadata[0]);
 		metadata.metadata.push(signatures);
 
@@ -535,7 +554,7 @@ function decodeBlockMetaData(proto_block_metadata) {
 
 function decodeTransactionFilter(metadata_bytes) {
 	var transaction_filter = [];
-	for(let i=0; i<metadata_bytes.length; i++) {
+	for (let i = 0; i < metadata_bytes.length; i++) {
 		let value = parseInt(metadata_bytes[i]);
 		transaction_filter.push(value);
 	}
@@ -545,7 +564,7 @@ function decodeTransactionFilter(metadata_bytes) {
 function decodeLastConfigSequenceNumber(metadata_bytes) {
 	var last_config = {};
 	last_config.value = {};
-	if(metadata_bytes) {
+	if (metadata_bytes) {
 		var proto_metadata = _commonProto.Metadata.decode(metadata_bytes);
 		var proto_last_config = _commonProto.LastConfig.decode(proto_metadata.getValue());
 		last_config.value.index = proto_last_config.getIndex();
@@ -565,13 +584,14 @@ function decodeMetadataSignatures(metadata_bytes) {
 
 function decodeMetadataValueSignatures(proto_meta_signatures) {
 	var signatures = [];
-	if(proto_meta_signatures) for(let i in proto_meta_signatures) {
-		var metadata_signature = {};
-		var proto_metadata_signature = _commonProto.MetadataSignature.decode(proto_meta_signatures[i].toBuffer());
-		metadata_signature.signature_header = decodeSignatureHeader(proto_metadata_signature.getSignatureHeader());
-		metadata_signature.signature = proto_metadata_signature.getSignature().toBuffer();
-		signatures.push(metadata_signature);
-	}
+	if (proto_meta_signatures)
+		for (let i in proto_meta_signatures) {
+			var metadata_signature = {};
+			var proto_metadata_signature = _commonProto.MetadataSignature.decode(proto_meta_signatures[i].toBuffer());
+			metadata_signature.signature_header = decodeSignatureHeader(proto_metadata_signature.getSignatureHeader());
+			metadata_signature.signature = proto_metadata_signature.getSignature().toBuffer();
+			signatures.push(metadata_signature);
+		}
 
 	return signatures;
 }
@@ -584,16 +604,15 @@ function decodeBlockDataEnvelope(proto_envelope) {
 	var proto_payload = _commonProto.Payload.decode(proto_envelope.getPayload().toBuffer());
 	envelope.payload.header = decodeHeader(proto_payload.getHeader());
 
-	if(envelope.payload.header.channel_header.type === HeaderType[1]) { // CONFIG
+	if (envelope.payload.header.channel_header.type === HeaderType[1]) { // CONFIG
 		envelope.payload.data = decodeConfigEnvelope(proto_payload.getData().toBuffer());
 	}
-//	else if(envelope.payload.header.channel_header.type === HeaderType[2]) { // CONFIG_UPDATE
-//		envelope.payload.data = decodeConfigUpdateEnvelope(proto_payload.getData().toBuffer());
-//	}
-	else if(envelope.payload.header.channel_header.type === HeaderType[3]) { //ENDORSER_TRANSACTION
+	//  else if(envelope.payload.header.channel_header.type === HeaderType[2]) { // CONFIG_UPDATE
+	//    envelope.payload.data = decodeConfigUpdateEnvelope(proto_payload.getData().toBuffer());
+	//  }
+	else if (envelope.payload.header.channel_header.type === HeaderType[3]) { //ENDORSER_TRANSACTION
 		envelope.payload.data = decodeEndorserTransaction(proto_payload.getData().toBuffer());
-	}
-	else {
+	} else {
 		throw new Error('Only able to decode ENDORSER_TRANSACTION and CONFIG type blocks');
 	}
 
@@ -604,12 +623,13 @@ function decodeEndorserTransaction(trans_bytes) {
 	var data = {};
 	var transaction = _transProto.Transaction.decode(trans_bytes);
 	data.actions = [];
-	if(transaction && transaction.actions) for(let i in transaction.actions) {
-		var action = {};
-		action.header = decodeSignatureHeader(transaction.actions[i].header);
-		action.payload = decodeChaincodeActionPayload(transaction.actions[i].payload);
-		data.actions.push(action);
-	}
+	if (transaction && transaction.actions)
+		for (let i in transaction.actions) {
+			var action = {};
+			action.header = decodeSignatureHeader(transaction.actions[i].header);
+			action.payload = decodeChaincodeActionPayload(transaction.actions[i].payload);
+			data.actions.push(action);
+		}
 
 	return data;
 };
@@ -621,13 +641,13 @@ function decodeConfigEnvelope(config_envelope_bytes) {
 
 	logger.debug('decodeConfigEnvelope - decode complete for config envelope - start config update');
 	config_envelope.last_update = {};
-	var proto_last_update = proto_config_envelope.getLastUpdate();//this is a common.Envelope
+	var proto_last_update = proto_config_envelope.getLastUpdate(); //this is a common.Envelope
 	if (proto_last_update !== null) { // the orderer's genesis block may not have this field
 		config_envelope.last_update.payload = {};
 		var proto_payload = _commonProto.Payload.decode(proto_last_update.getPayload().toBuffer());
 		config_envelope.last_update.payload.header = decodeHeader(proto_payload.getHeader());
 		config_envelope.last_update.payload.data = decodeConfigUpdateEnvelope(proto_payload.getData().toBuffer());
-		config_envelope.last_update.signature = proto_last_update.getSignature().toBuffer();//leave as bytes
+		config_envelope.last_update.signature = proto_last_update.getSignature().toBuffer(); //leave as bytes
 	}
 
 	return config_envelope;
@@ -646,7 +666,7 @@ function decodeConfigUpdateEnvelope(config_update_envelope_bytes) {
 	var proto_config_update_envelope = _configtxProto.ConfigUpdateEnvelope.decode(config_update_envelope_bytes);
 	config_update_envelope.config_update = decodeConfigUpdate(proto_config_update_envelope.getConfigUpdate().toBuffer());
 	var signatures = [];
-	for(var i in proto_config_update_envelope.signatures) {
+	for (var i in proto_config_update_envelope.signatures) {
 		let proto_configSignature = proto_config_update_envelope.signatures[i];
 		var config_signature = decodeConfigSignature(proto_configSignature);
 		signatures.push(config_signature);
@@ -669,7 +689,7 @@ function decodeConfigUpdate(config_update_bytes) {
 function decodeConfigGroups(config_group_map) {
 	var config_groups = {};
 	var keys = Object.keys(config_group_map.map);
-	for(let i =0; i < keys.length; i++) {
+	for (let i = 0; i < keys.length; i++) {
 		let key = keys[i];
 		config_groups[key] = decodeConfigGroup(config_group_map.map[key].value);
 	}
@@ -678,7 +698,7 @@ function decodeConfigGroups(config_group_map) {
 };
 
 function decodeConfigGroup(proto_config_group) {
-	if(!proto_config_group) return null;
+	if (!proto_config_group) return null;
 	var config_group = {};
 	config_group.version = decodeVersion(proto_config_group.getVersion());
 	config_group.groups = decodeConfigGroups(proto_config_group.getGroups());
@@ -691,7 +711,7 @@ function decodeConfigGroup(proto_config_group) {
 function decodeConfigValues(config_value_map) {
 	var config_values = {};
 	var keys = Object.keys(config_value_map.map);
-	for(let i =0; i < keys.length; i++) {
+	for (let i = 0; i < keys.length; i++) {
 		let key = keys[i];
 		config_values[key] = decodeConfigValue(config_value_map.map[key]);
 	}
@@ -788,7 +808,7 @@ function decodeConfigValue(proto_config_value) {
 function decodeConfigPolicies(config_policy_map) {
 	var config_policies = {};
 	var keys = Object.keys(config_policy_map.map);
-	for(let i =0; i < keys.length; i++) {
+	for (let i = 0; i < keys.length; i++) {
 		let key = keys[i];
 		config_policies[key] = decodeConfigPolicy(config_policy_map.map[key]);
 	}
@@ -796,16 +816,17 @@ function decodeConfigPolicies(config_policy_map) {
 	return config_policies;
 };
 
-var Policy_PolicyType = [ 'UNKNOWN','SIGNATURE','MSP','IMPLICIT_META'];
+var Policy_PolicyType = ['UNKNOWN', 'SIGNATURE', 'MSP', 'IMPLICIT_META'];
+
 function decodeConfigPolicy(proto_config_policy) {
 	var config_policy = {};
 	config_policy.version = decodeVersion(proto_config_policy.value.getVersion());
 	config_policy.mod_policy = proto_config_policy.value.getModPolicy();
 	config_policy.policy = {};
-	if(proto_config_policy.value.policy) {
+	if (proto_config_policy.value.policy) {
 		config_policy.policy.type = Policy_PolicyType[proto_config_policy.value.policy.type];
 		logger.debug('decodeConfigPolicy ======> Policy item ::%s', proto_config_policy.key);
-		switch(proto_config_policy.value.policy.type) {
+		switch (proto_config_policy.value.policy.type) {
 		case _policiesProto.Policy.PolicyType.SIGNATURE:
 			config_policy.policy.policy = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.policy);
 			break;
@@ -824,7 +845,8 @@ function decodeConfigPolicy(proto_config_policy) {
 	return config_policy;
 };
 
-var ImplicitMetaPolicy_Rule = ['ANY','ALL','MAJORITY'];
+var ImplicitMetaPolicy_Rule = ['ANY', 'ALL', 'MAJORITY'];
+
 function decodeImplicitMetaPolicy(implicit_meta_policy_bytes) {
 	var implicit_meta_policy = {};
 	var proto_implicit_meta_policy = _policiesProto.ImplicitMetaPolicy.decode(implicit_meta_policy_bytes);
@@ -840,10 +862,11 @@ function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 	signature_policy_envelope.policy = decodeSignaturePolicy(porto_signature_policy_envelope.getPolicy());
 	var identities = [];
 	var proto_identities = porto_signature_policy_envelope.getIdentities();
-	if(proto_identities) for(var i in proto_identities) {
-		var msp_principal = decodeMSPPrincipal(proto_identities[i]);
-		identities.push(msp_principal); //string
-	}
+	if (proto_identities)
+		for (var i in proto_identities) {
+			var msp_principal = decodeMSPPrincipal(proto_identities[i]);
+			identities.push(msp_principal); //string
+		}
 	signature_policy_envelope.identities = identities;
 
 	return signature_policy_envelope;
@@ -852,20 +875,18 @@ function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 function decodeSignaturePolicy(proto_signature_policy) {
 	var signature_policy = {};
 	signature_policy.Type = proto_signature_policy.Type;
-	if(signature_policy.Type == 'n_out_of') {
+	if (signature_policy.Type == 'n_out_of') {
 		signature_policy.n_out_of = {};
 		signature_policy.n_out_of.N = proto_signature_policy.n_out_of.getN();
 		signature_policy.n_out_of.policies = [];
-		for(var i in proto_signature_policy.n_out_of.policies){
+		for (var i in proto_signature_policy.n_out_of.policies) {
 			var proto_policy = proto_signature_policy.n_out_of.policies[i];
 			var policy = decodeSignaturePolicy(proto_policy);
 			signature_policy.n_out_of.policies.push(policy);
 		}
-	}
-	else if(signature_policy.Type == 'signed_by') {
+	} else if (signature_policy.Type == 'signed_by') {
 		signature_policy.signed_by = proto_signature_policy.getSignedBy();
-	}
-	else {
+	} else {
 		throw new Error('unknown signature policy type');
 	}
 
@@ -876,20 +897,19 @@ function decodeMSPPrincipal(proto_msp_principal) {
 	var msp_principal = {};
 	msp_principal.principal_classification = proto_msp_principal.getPrincipalClassification();
 	var proto_principal = null;
-	switch(msp_principal.principal_classification) {
+	switch (msp_principal.principal_classification) {
 	case _mspPrProto.MSPPrincipal.Classification.ROLE:
 		proto_principal = _mspPrProto.MSPRole.decode(proto_msp_principal.getPrincipal());
 		msp_principal.msp_identifier = proto_principal.getMspIdentifier();
-		if(proto_principal.getRole() === 0) {
+		if (proto_principal.getRole() === 0) {
 			msp_principal.Role = 'MEMBER';
-		}
-		else if(proto_principal.getRole() === 1){
+		} else if (proto_principal.getRole() === 1) {
 			msp_principal.Role = 'ADMIN';
 		}
 		break;
 	case _mspPrProto.MSPPrincipal.Classification.ORGANIZATION_UNIT:
 		proto_principal = _mspPrProto.OrganizationUnit.decode(proto_msp_principal.getPrincipal());
-		msp_principal.msp_identifier = proto_principal.getMspIdendifier();//string
+		msp_principal.msp_identifier = proto_principal.getMspIdendifier(); //string
 		msp_principal.organizational_unit_identifier = proto_principal.getOrganizationalUnitIdentifier(); //string
 		msp_principal.certifiers_identifier = proto_principal.getCertifiersIdentifier().toBuffer(); //bytes
 		break;
@@ -926,8 +946,7 @@ function decodeIdentity(id_bytes) {
 		var proto_identity = _identityProto.SerializedIdentity.decode(id_bytes);
 		identity.Mspid = proto_identity.getMspid();
 		identity.IdBytes = proto_identity.getIdBytes().toBuffer().toString();
-	}
-	catch(err) {
+	} catch (err) {
 		logger.error('Failed to decode the identity: %s', err.stack ? err.stack : err);
 	}
 
@@ -951,8 +970,8 @@ function decodeFabricMSPConfig(msp_config_bytes) {
 
 function decodeFabricOUIdentifier(proto_organizational_unit_identitfiers) {
 	var organizational_unit_identitfiers = [];
-	if(proto_organizational_unit_identitfiers) {
-		for(let i = 0; i < proto_organizational_unit_identitfiers.length; i++) {
+	if (proto_organizational_unit_identitfiers) {
+		for (let i = 0; i < proto_organizational_unit_identitfiers.length; i++) {
 			var proto_organizational_unit_identitfier = proto_organizational_unit_identitfiers[i];
 			var organizational_unit_identitfier = {};
 			organizational_unit_identitfier.certificate =
@@ -968,7 +987,7 @@ function decodeFabricOUIdentifier(proto_organizational_unit_identitfiers) {
 
 function toPEMcerts(buffer_array_in) {
 	var buffer_array_out = [];
-	for(var i in buffer_array_in) {
+	for (var i in buffer_array_in) {
 		buffer_array_out.push(buffer_array_in[i].toBuffer().toString());
 	}
 
@@ -977,7 +996,7 @@ function toPEMcerts(buffer_array_in) {
 
 function decodeSigningIdentityInfo(signing_identity_info_bytes) {
 	var signing_identity_info = {};
-	if(signing_identity_info_bytes) {
+	if (signing_identity_info_bytes) {
 		var proto_signing_identity_info = _mspConfigProto.SigningIdentityInfo.decode(signing_identity_info_bytes);
 		signing_identity_info.public_signer = proto_signing_identity_info.getPublicSigner().toBuffer().toString();
 		signing_identity_info.private_signer = decodeKeyInfo(proto_signing_identity_info.getPrivateSigner());
@@ -988,7 +1007,7 @@ function decodeSigningIdentityInfo(signing_identity_info_bytes) {
 
 function decodeKeyInfo(key_info_bytes) {
 	var key_info = {};
-	if(key_info_bytes) {
+	if (key_info_bytes) {
 		var proto_key_info = _mspConfigProto.KeyInfo.decode(key_info_bytes);
 		key_info.key_identifier = proto_key_info.getKeyIdentitier();
 		key_info.key_material = 'private'; //should not show this
@@ -1006,16 +1025,16 @@ function decodeHeader(proto_header) {
 };
 
 var HeaderType = {
-	0 : 'MESSAGE',              // Used for messages which are signed but opaque
-	1 : 'CONFIG',               // Used for messages which express the channel config
-	2 : 'CONFIG_UPDATE',        // Used for transactions which update the channel config
-	3 : 'ENDORSER_TRANSACTION', // Used by the SDK to submit endorser based transactions
-	4 : 'ORDERER_TRANSACTION',  // Used internally by the orderer for management
-	5 : 'DELIVER_SEEK_INFO',    // Used as the type for Envelope messages submitted to instruct the Deliver API to seek
-	6 : 'CHAINCODE_PACKAGE'     // Used for packaging chaincode artifacts for install
+	0: 'MESSAGE', // Used for messages which are signed but opaque
+	1: 'CONFIG', // Used for messages which express the channel config
+	2: 'CONFIG_UPDATE', // Used for transactions which update the channel config
+	3: 'ENDORSER_TRANSACTION', // Used by the SDK to submit endorser based transactions
+	4: 'ORDERER_TRANSACTION', // Used internally by the orderer for management
+	5: 'DELIVER_SEEK_INFO', // Used as the type for Envelope messages submitted to instruct the Deliver API to seek
+	6: 'CHAINCODE_PACKAGE' // Used for packaging chaincode artifacts for install
 };
 
-function decodeChannelHeader(header_bytes){
+function decodeChannelHeader(header_bytes) {
 	var channel_header = {};
 	var proto_channel_header = _commonProto.ChannelHeader.decode(header_bytes);
 	channel_header.type = HeaderType[proto_channel_header.getType()];
@@ -1032,7 +1051,7 @@ function decodeChannelHeader(header_bytes){
 
 function timeStampToDate(time_stamp) {
 	var millis = time_stamp.seconds * 1000 + time_stamp.nanos / 1000000;
-	var	date = new Date(millis);
+	var date = new Date(millis);
 
 	return date;
 };
@@ -1054,11 +1073,12 @@ function decodeChaincodeProposalPayload(chaincode_proposal_payload_bytes) {
 
 	return chaincode_proposal_payload;
 }
+
 function decodeChaincodeEndorsedAction(proto_chaincode_endorsed_action) {
 	var action = {};
 	action.proposal_response_payload = decodeProposalResponsePayload(proto_chaincode_endorsed_action.getProposalResponsePayload());
 	action.endorsements = [];
-	for(var i in proto_chaincode_endorsed_action.endorsements) {
+	for (var i in proto_chaincode_endorsed_action.endorsements) {
 		var endorsement = decodeEndorsement(proto_chaincode_endorsed_action.endorsements[i]);
 		action.endorsements.push(endorsement);
 	}
@@ -1107,18 +1127,17 @@ function decodeReadWriteSets(rw_sets_bytes) {
 	var proto_tx_read_write_set = _rwsetProto.TxReadWriteSet.decode(rw_sets_bytes);
 	var tx_read_write_set = {};
 	tx_read_write_set.data_model = proto_tx_read_write_set.getDataModel();
-	if(proto_tx_read_write_set.getDataModel() === _rwsetProto.TxReadWriteSet.DataModel.KV) {
+	if (proto_tx_read_write_set.getDataModel() === _rwsetProto.TxReadWriteSet.DataModel.KV) {
 		tx_read_write_set.ns_rwset = [];
 		let proto_ns_rwset = proto_tx_read_write_set.getNsRwset();
-		for(let i in proto_ns_rwset) {
+		for (let i in proto_ns_rwset) {
 			let kv_rw_set = {};
 			let proto_kv_rw_set = proto_ns_rwset[i];
 			kv_rw_set.namespace = proto_kv_rw_set.getNamespace();
 			kv_rw_set.rwset = decodeKVRWSet(proto_kv_rw_set.getRwset());
 			tx_read_write_set.ns_rwset.push(kv_rw_set);
 		}
-	}
-	else {
+	} else {
 		// not able to decode this type of rw set, return the array of byte[]
 		tx_read_write_set.ns_rwset = proto_tx_read_write_set.getNsRwset();
 	}
@@ -1138,21 +1157,21 @@ function decodeKVRWSet(kv_bytes) {
 	// build reads
 	let reads = kv_rw_set.reads;
 	var proto_reads = proto_kv_rw_set.getReads();
-	for(let i in proto_reads) {
+	for (let i in proto_reads) {
 		reads.push(decodeKVRead(proto_reads[i]));
 	}
 
 	// build range_queries_info
 	let range_queries_info = kv_rw_set.range_queries_info;
 	var proto_range_queries_info = proto_kv_rw_set.getRangeQueriesInfo();
-	for(let i in proto_range_queries_info) {
+	for (let i in proto_range_queries_info) {
 		range_queries_info.push(decodeRangeQueryInfo(proto_range_queries_info[i]));
 	}
 
 	// build writes
 	let writes = kv_rw_set.writes;
 	var proto_writes = proto_kv_rw_set.getWrites();
-	for(let i in proto_writes) {
+	for (let i in proto_writes) {
 		writes.push(decodeKVWrite(proto_writes[i]));
 	}
 
@@ -1163,12 +1182,11 @@ function decodeKVRead(proto_kv_read) {
 	let kv_read = {};
 	kv_read.key = proto_kv_read.getKey();
 	let proto_version = proto_kv_read.getVersion();
-	if(proto_version) {
+	if (proto_version) {
 		kv_read.version = {};
 		kv_read.version.block_num = proto_version.getBlockNum();
 		kv_read.version.tx_num = proto_version.getTxNum();
-	}
-	else {
+	} else {
 		kv_read.version = null;
 	}
 
@@ -1184,15 +1202,15 @@ function decodeRangeQueryInfo(proto_range_query_info) {
 	range_query_info.reads_info = {};
 	// reads_info is one of QueryReads
 	let proto_raw_reads = proto_range_query_info.getRawReads();
-	if(proto_raw_reads.kv_reads) {
+	if (proto_raw_reads.kv_reads) {
 		range_query_info.reads_info.kv_reads = [];
-		for(let i in proto_raw_reads.kv_reads) {
+		for (let i in proto_raw_reads.kv_reads) {
 			range_query_info.reads_info.kv_reads.push(proto_raw_reads.kv_reads[i]);
 		}
 	}
 	// or QueryReadsMerkleSummary
 	let proto_reads_merkle_hashes = proto_range_query_info.getReadsMerkleHashes();
-	if(proto_reads_merkle_hashes.max_degree) {
+	if (proto_reads_merkle_hashes.max_degree) {
 		range_query_info.reads_merkle_hashes = {};
 		range_query_info.reads_merkle_hashes.max_degree = proto_reads_merkle_hashes.getMaxDegree();
 		range_query_info.reads_merkle_hashes.max_level = proto_reads_merkle_hashes.getMaxLevel();
@@ -1212,7 +1230,7 @@ function decodeKVWrite(proto_kv_write) {
 }
 
 function decodeResponse(proto_response) {
-	if(!proto_response) return null;
+	if (!proto_response) return null;
 	var response = {};
 	response.status = proto_response.getStatus();
 	response.message = proto_response.getMessage();
