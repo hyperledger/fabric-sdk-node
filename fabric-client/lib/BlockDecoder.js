@@ -67,7 +67,7 @@ data
 		signature -- {byte[]}
 		payload
 			header -- {{@link Header}}
-			data -- {{@link Config} | {@link Transaction}}
+			data -- {{@link ConfigEnvelope} | {@link Transaction}}
 metadata
 	metadata -- {array} #each array item has it's own layout
 		[0] #SIGNATURES
@@ -83,15 +83,15 @@ metadata
 	 * @typedef {Object} Block
 	 *
 	 * @example
-	 * Get the block number:
+	 * <caption>Get the block number:</caption>
 	 * var block_num = block.header.number;
 	 *
 	 * @example
-	 * Get the number of transactions, including the invalid transactions:
+	 * <caption>Get the number of transactions, including the invalid transactions:</caption>
 	 * var block_num = block.data.data.legnth;
 	 *
 	 * @example
-	 * Get the Id of the first transaction in the block:
+	 * <caption>Get the Id of the first transaction in the block:</caption>
 	 * var tx_id = block.data.data[0].payload.header.channel_header.tx_id;
 	 */
 
@@ -143,9 +143,12 @@ nonce -- {byte[]}
 	 */
 
 	/**
-	 * An object that contains channel configurations.
+	 * A ConfigEnvelope contains the channel configurations data and is the
+	 * main content of a configuration block. Another type of blocks are those
+	 * that contain endorser transactions, where the main content is an array
+	 * of {@link Transaction}.
 	 * <br><br>
-	 * A "Config" will have the following object structure.
+	 * A "ConfigEnvelope" will have the following object structure.
 <br><pre>
 config
 	sequence -- {int}
@@ -154,9 +157,9 @@ last_update
 	signature -- {byte[]}
 	payload
 		header -- {{@link Header}}
-		data -- {{@link ConfigUpdate}}
+		data -- {{@link ConfigUpdateEnvelope}}
 </pre>
-	 * @typedef {Object} Config
+	 * @typedef {Object} ConfigEnvelope
 	 */
 
 	/**
@@ -211,32 +214,28 @@ actions {array}
 						status -- {int}
 						message -- {string}
 						payload -- {byte[]}
-			endorsements -- {array}
-				endorser
-					Mspid -- {string]
-					IdBytes -- {byte[]}
-				signature -- {byte[]}
+			endorsements -- {{@link Endorsement}[]}
 </pre>
 	 * @typedef {Object} Transaction
 	 */
 
 	/**
-	 * An object of a protobuf message "ConfigUpdate".
+	 * An object of a protobuf message "ConfigUpdateEnvelope".
 	 * <br><br>
-	 * A "ConfigUpdate" will have the following object structure.
+	 * A "ConfigUpdateEnvelope" will have the following object structure.
 <br><pre>
 config_update
 	channel_id -- {string}
-	read_set -- {{@link ChannelConfig}}
-	write_set -- {{@link ChannelConfig}}
+	read_set -- {{@link ChannelConfigGroup}}
+	write_set -- {{@link ChannelConfigGroup}}
 signatures -- {array}
 	signature_header -- {{@link SignatureHeader}}
 	signature -- {byte[]}
 </pre>
-	 * @typedef {Object} ConfigUpdate
-	 * @property {ChannelConfig} config_update.read_set A set of the current version numbers of all
+	 * @typedef {Object} ConfigUpdateEnvelope
+	 * @property {ChannelConfigGroup} config_update.read_set A set of the current version numbers of all
 	 *           configuration items being updated
-	 * @property {ChannelConfig} config_update.write_set A set of all configuration items being updated. Must have a
+	 * @property {ChannelConfigGroup} config_update.write_set A set of all configuration items being updated. Must have a
 	 *           version number one greater than the version number of the same item
 	 *           in the read_set along with the new value.
 	 */
@@ -257,7 +256,7 @@ groups
 	Orderer
 		version -- {int}
 		groups
-			&ltorderer_org_name&gt -- {{@link OrganizationConfig}}
+			&ltorderer_org_name&gt -- {{@link OrganizationConfigGroup}}
 		values
 			ConsensusType
 				version -- {int}
@@ -301,7 +300,7 @@ groups
 	Application
 		version -- {int}
 		groups
-			&ltpeer_org_name&gt -- {{@link OrganizationConfig}}
+			&ltpeer_org_name&gt -- {{@link OrganizationConfigGroup}}
 		values
 		policies
 			Admins
@@ -339,10 +338,13 @@ values
 		value
 			name -- {string}
 </pre>
-	 * @typedef {Object} ChannelConfig
-	 * @property {OrganizationConfig} groups.Orderer.groups.&ltorderer_org_name&gt These are the orderer organizatoin names defined on the network
-	 * @property {OrganizationConfig} groups.Application.groups.&ltpeer_org_name&gt These are the peer organization names defined on the network
-	 * @property {ImplicitMetaPolicy} policy These policies point to other policies and specify a threshold as in "ANY", "MAJORITY" or "ALL"
+	 * @typedef {Object} ChannelConfigGroup
+	 * @property {OrganizationConfigGroup} groups.Orderer.groups.&ltorderer_org_name&gt These are the
+	 *                                              orderer organizatoin names defined on the network
+	 * @property {OrganizationConfigGroup} groups.Application.groups.&ltpeer_org_name&gt These are the
+	 *                                              peer organization names defined on the network
+	 * @property {ImplicitMetaPolicy} policy These policies point to other policies and specify a
+	 *                                              threshold as in "ANY", "MAJORITY" or "ALL"
 	 */
 
 	/**
@@ -384,7 +386,26 @@ policies
 			mod_policy -- {string}
 			policy -- {{@link SignaturePolicy}}
 </pre>
-	 * @typedef {Object} OrganizationConfig
+	 * @typedef {Object} OrganizationConfigGroup
+	 */
+
+
+	/**
+	 * An endorsement is a signature of an endorser over a proposal response.  By
+	 * producing an endorsement message, an endorser implicitly "approves" that
+	 * proposal response and the actions contained therein. When enough
+	 * endorsements have been collected, a transaction can be generated out of a
+	 * set of proposal responses
+	 * <br><br>
+	 * An endorsement message has the following structure:
+<br><pre>
+endorser
+	Mspid -- {string]
+	IdBytes -- {byte[]}
+signature -- {byte[]}
+</pre>
+	 *
+	 * @typedef {Object} Endorsement
 	 */
 
 	/**
@@ -490,12 +511,26 @@ policy
 	};
 
 	/**
+	 * @typedef {Object} ProcessedTransaction
+	 * @property {number} validationCode - See [this list]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/transaction.proto#L125}
+	 *                                     for all the defined validation codes
+	 * @property {Object} transactionEnvelope - Encapsulates the transaction and the signature over it.
+	 *                                          It has the following structure:
+<br><pre>
+signature -- {byte[]}
+payload -- {}
+	header -- {{@link Header}}
+	data -- {{@link Transaction}}
+</pre>
+	 */
+
+	/**
 	 * Constructs an object containing all decoded values from the
-	 * protobuf encoded `ProcessedTransaction` bytes
+	 * protobuf encoded "ProcessedTransaction" bytes
 	 *
 	 * @param {byte[]} processed_transaction_bytes - The encode bytes of a protobuf
-	 *         message ProcessedTransaction
-	 * @returns {Object} An object of the fully decoded transaction.ProcessedTransaction
+	 *                                               message "ProcessedTransaction"
+	 * @returns {ProcessedTransaction} A fully decoded ProcessedTransaction object
 	 */
 	static decodeTransaction(processed_transaction_bytes) {
 		if (!(processed_transaction_bytes instanceof Buffer)) {

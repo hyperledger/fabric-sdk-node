@@ -965,21 +965,7 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 		}
 	});
 
-	var p4 = _channel.sendTransaction({
-		proposalResponses: 'blah',
-		proposal: 'blah'
-	})
-	.then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing parameters');
-	}, function (err) {
-		if (err.message.indexOf('Missing "header" parameter in transaction request') >= 0) {
-			t.pass('Successfully caught missing header error');
-		} else {
-			t.fail('Failed to catch the missing header error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	Promise.all([p1, p2, p3, p4])
+	Promise.all([p1, p2, p3])
 	.then(
 		function (data) {
 			t.end();

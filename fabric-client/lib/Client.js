@@ -637,13 +637,17 @@ var Client = class extends BaseClient {
 	 *                            folder 'src/mycompany.com/myproject/mypackage/mychaincode', where the
 	 *                            GO source code resides.
 	 * @property {string} chaincodeType - Optional. Type of chaincode. One of 'golang', 'car' or 'java'.
-	 *                                    Default is 'golang'.
+	 *                                    Default is 'golang'. Note that 'java' is not supported as of v1.0.
 	 */
 
 	/**
-	 * @typedef {array} ProposalReponseObject
+	 * All calls to the endorsing peers for proposal endorsement return this standard
+	 * array of objects.
+	 *
+	 * @typedef {array} ProposalResponseObject
 	 * @property {array} index:0 - Array of ProposalResponse objects from the endorsing peers
-	 * @property {Object} index:1 - The original Proposal object
+	 * @property {Object} index:1 - The original Proposal object needed when sending the transaction
+	 *                              request to the orderer
 	 */
 
 	/**

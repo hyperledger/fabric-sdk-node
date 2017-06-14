@@ -56,24 +56,37 @@ const ImplicitMetaPolicy_Rule = {0: 'ANY', 1:'ALL', 2:'MAJORITY'};
 var Long = require('long');
 
 /**
- * The class representing a channel with which the client SDK interacts.
- *
- * The “Channel” object captures settings for a channel, which is created by
- * the orderers to isolate transactions delivery to peers participating on channel.
- * A channel must be initialized after it has been configured with the list of peers
- * and orderers. The initialization sends a get configuration block request to the
- * primary orderer to retrieve the configuration settings for this channel.
+ * In fabric v1.0, channels are the recommended way to isolate data and maintain privacy.
+ * <br><br>
+ * A Channel object captures the settings needed to interact with a fabric backend in the
+ * context of a channel. These settings including the list of participating organizations,
+ * represented by instances of Membership Service Providers (MSP), the list of endorsing peers,
+ * and an orderer.
+ * <br><br>
+ * A client application can use the Channel object to create new channels with the orderer,
+ * update an existing channel, send various channel-aware requests to the peers such as
+ * invoking chaincodes to process transactions or queries.
+ * <br><br>
+ * A Channel object is also responsible for verifying endorsement signatures in transaction
+ * proposal responses. A channel object must be initialized after it has been configured with
+ * the list of peers and orderers. The initialization sends a get configuration block request
+ * to the primary orderer to retrieve the configuration settings for this channel.
  *
  * @class
- * @tutorial app-overview
  */
 var Channel = class {
 
 	/**
-	 * @param {string} name to identify different channel instances. The naming of channel instances
-	 * is enforced by the ordering service and must be unique within the blockchain network
-	 * @param {Client} clientContext An instance of {@link Client} that provides operational context
-	 * such as submitting User etc.
+	 * Returns a new instance of the class. This is a client-side-only call. To create a new channel
+	 * in the fabric, call [createChannel()]{@link Client#createChannel}.
+	 *
+	 * @param {string} name - Name to identify the channel. This value is used as the identifier
+	 *                        of the channel when making channel-aware requests with the fabric,
+	 *                        such as invoking chaincodes to endorse transactions. The naming of
+	 *                        channels is enforced by the ordering service and must be unique within
+	 *                        the fabric backend
+	 * @param {Client} clientContext - The client instance, which provides operational context
+	 *                                 such as the signing identity
 	 */
 	constructor(name, clientContext) {
 		// name is required
@@ -106,11 +119,19 @@ var Channel = class {
 	}
 
 	/**
-	 * Retrieve the configuration from the primary orderer and initializes this channel
-	 * with those values. Optionally a configuration may be passed in to initialize this channel
-	 * without making the call to the orderer.
-	 * @param {byte[]} config_update- Optional - A serialized form of the protobuf configuration update
-	 * @return a Promise that will resolve when the action is complete
+	 * Initializes the channel object with the Membership Service Providers (MSPs). The channel's
+	 * MSPs are critical in providing applications the ability to validate certificates and verify
+	 * signatures in messages received from the fabric backend. For instance, after calling
+	 * [sendTransactionProposal()]{@link Channel#sendTransactionProposal}, the application can
+	 * verify the signatures in the proposal response's endorsements to ensure they have not been
+	 * tampered with.
+	 * <br><br>
+	 * This method retrieves the configuration from the orderer if no "config" parameter is passed in.
+	 * Optionally a configuration may be passed in to initialize this channel without making the call
+	 * to the orderer.
+	 *
+	 * @param {byte[]} config - Optional. An encoded (a.k.a un-decoded) byte array of the protobuf "ConfigUpdate"
+	 * @return {Promise} A Promise that will resolve when the action is complete
 	 */
 	initialize(config_update) {
 		if(config_update) {
@@ -145,8 +166,8 @@ var Channel = class {
 
 	/**
 	 * Get organization identifiers from the MSP's for this channel
-	 * @returns {string[]} array of MSP identifiers representing the channel's
-	 *   participating organizations
+	 * @returns {string[]} Array of MSP identifiers representing the channel's
+	 *                     participating organizations
 	 */
 	getOrganizations() {
 		logger.debug('getOrganizationUnits - start');
@@ -166,12 +187,12 @@ var Channel = class {
 	}
 
 	/**
-	 * Set the MSP Manager for this channel
-	 * This utility method will not normally be use as the
-	 * `initialize()` method will read this channel's
-	 * current configuration and reset MSPManager with
-	 * the MSP's found.
-	 * @param {MSPManager} the msp manager for this channel
+	 * Set the MSP Manager for this channel. This utility method will
+	 * not normally be use as the [initialize()]{@link Channel#initialize}
+	 * method will read this channel's current configuration and reset
+	 * MSPManager with the MSP's found in the channel configuration.
+	 *
+	 * @param {MSPManager} msp_manager - The msp manager for this channel
 	 */
 	setMSPManager(msp_manager) {
 		this._msp_manager = msp_manager;
@@ -186,10 +207,14 @@ var Channel = class {
 	}
 
 	/**
-	 * Add peer endpoint to channel.
-	 * @param {Peer} peer An instance of the Peer class that has been initialized with URL,
-	 * TLS certificate, and enrollment certificate.
-	 * @throws {Error} if the peer with that url already exists.
+	 * Add the peer object to the channel object. A channel object can be optionally
+	 * configured with a list of peer objects, which will be used when calling certain
+	 * methods such as [sendInstantiateProposal()]{@link Channel#sendInstantiateProposal},
+	 * [sendUpgradeProposal()]{@link Channel#sendUpgradeProposal},
+	 * [sendTransactionProposal]{@link Channel#sendTransactionProposal}.
+	 *
+	 * @param {Peer} peer - An instance of the Peer class that has been initialized with URL
+	 *                      and other gRPC options such as TLS credentials and request timeout.
 	 */
 	addPeer(peer) {
 		var url = peer.getUrl();
@@ -206,8 +231,11 @@ var Channel = class {
 	}
 
 	/**
-	 * Remove peer endpoint from channel.
-	 * @param {Peer} peer An instance of the Peer class.
+	 * Remove the first peer object in the channel object's list of peers
+	 * whose endpoint url property matches the url of the peer that is
+	 * passed in.
+	 *
+	 * @param {Peer} peer - An instance of the Peer class.
 	 */
 	removePeer(peer) {
 		var url = peer.getUrl();
@@ -221,7 +249,7 @@ var Channel = class {
 	}
 
 	/**
-	 * Get peers of a channel from local information.
+	 * Returns the list of peers of this channel object.
 	 * @returns {Peer[]} The peer list on the channel.
 	 */
 	getPeers() {
@@ -230,13 +258,12 @@ var Channel = class {
 	}
 
 	/**
-	 * Add orderer endpoint to a channel object, this is a local-only operation.
-	 * A channel instance may choose to use a single orderer node, which will broadcast
-	 * requests to the rest of the orderer network. Or if the application does not trust
-	 * the orderer nodes, it can choose to use more than one by adding them to the channel instance.
-	 * All APIs concerning the orderer will broadcast to all orderers simultaneously.
-	 * @param {Orderer} orderer An instance of the Orderer class.
-	 * @throws {Error} if the orderer with that url already exists.
+	 * Add the orderer object to the channel object, this is a client-side-only operation.
+	 * An application may add more than one orderer object to the channel object, however
+	 * the SDK only uses the first one in the list to send broadcast messages to the
+	 * orderer backend.
+	 *
+	 * @param {Orderer} orderer - An instance of the Orderer class.
 	 */
 	addOrderer(orderer) {
 		var url = orderer.getUrl();
@@ -253,8 +280,11 @@ var Channel = class {
 	}
 
 	/**
-	 * Remove orderer endpoint from a channel object, this is a local-only operation.
-	 * @param {Orderer} orderer An instance of the Orderer class.
+	 * Remove the first orderer object in the channel object's list of orderers
+	 * whose endpoint url property matches the url of the orderer that is
+	 * passed in.
+	 *
+	 * @param {Orderer} orderer - An instance of the Orderer class.
 	 */
 	removeOrderer(orderer) {
 		var url = orderer.getUrl();
@@ -268,20 +298,27 @@ var Channel = class {
 	}
 
 	/**
-	 * Get orderers of a channel.
+	 * Returns the orderers of this channel object.
+	 * @returns {Orderer[]} The list of orderers in the channel object
 	 */
 	getOrderers() {
 		return this._orderers;
 	}
 
 	/**
-	 * Will get the genesis block from the defined orderer that may be
-	 * used in a join request
-	 * @param {Object} request - An object containing the following fields:
-	 *    <br>`txId` : required -  {@link TransactionID} object with the transaction id and nonce
+	 * @typedef {Object} OrdererRequest
+	 * @property {TransactionId} txId
+	 */
+
+	/**
+	 * A channel's first block is called the "genesis block". This block captures the
+	 * initial channel configuration. For a peer node to join the channel, it must be
+	 * provided the genesis block. The method [joinChannel()]{@link Channel#joinChannel}
+	 * calls this method under the covers to automate the acquisition of the genesis block
+	 * and sending it to the target peer to join.
 	 *
-	 * @returns {Promise} A Promise for a protobuf `Block`
-	 * @see /protos/peer/proposal_response.proto
+	 * @param {OrdererRequest} request - A transaction ID object
+	 * @returns {Promise} A Promise for an encoded protobuf "Block"
 	 */
 	getGenesisBlock(request) {
 		logger.debug('getGenesisBlock - start');
@@ -354,17 +391,49 @@ var Channel = class {
 	}
 
 	/**
-	 * Sends a join channel proposal to one or more endorsing peers
-	 * Will get the genesis block from the defined orderer to be used
-	 * in the proposal.
-	 * @param {Object} request - An object containing the following fields:
-	 *   <br>`targets` : required - An array of `Peer` objects that will join
-	 *                   this channel
-	 *   <br>`block` : the genesis block of the channel
-	 *                 see getGenesisBlock() method
-	 *   <br>`txId` : required -  {@link TransactionID} object with the transaction id and nonce
-	 * @returns {Promise} A Promise for a `ProposalResponse`
-	 * @see /protos/peer/proposal_response.proto
+	 * A protobuf message that gets returned by endorsing peers on proposal requests.
+	 * The peer node runs the target chaincode, as designated by the proposal, and
+	 * decides on whether to endorse the proposal or not, and sends back the endorsement
+	 * result along with the [read and write sets]{@link http://hyperledger-fabric.readthedocs.io/en/latest/arch-deep-dive.html?highlight=readset#the-endorsing-peer-simulates-a-transaction-and-produces-an-endorsement-signature}
+	 * inside the proposal response message.
+	 *
+	 * @typedef {Object} ProposalResponse
+	 * @property {number} version
+	 * @property {Timestamp} timestamp - Time the proposal was created by the submitter
+	 * @property {Response} response
+	 * @property {byte[]} payload - The payload of the response. It is the encoded bytes of
+	 *                              the "ProposalResponsePayload" protobuf message
+	 * @property {Endorsement} endorsement - The endorsement of the proposal, basically the
+	 *                                       endorser's signature over the payload
+	 */
+
+	/**
+	 * A response message indicating whether the endorsement of the proposal was successful
+	 *
+	 * @typedef {Object} Response
+	 * @property {number} status - Status code. Follows [HTTP status code definitions]{@link https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html}
+	 * @property {string} message - A message associated with the response status code
+	 * @property {byte[]} payload - A payload that can be used to include metadata with this response
+	 */
+
+	/**
+	 * @typedef {Object} JoinChannelRequest
+	 * @property {Peer[]} targets - Required. An array of Peer objects that will
+	 *                              be asked to join this channel
+	 * @property {byte[]} block - The encoded bytes of the channel's genesis block.
+	 *                            See [getGenesisBlock()]{@link Channel#getGenesisBlock} method
+	 * @property {TransactionID} txId - Required. TransactionID object with the transaction id and nonce
+	 */
+
+	/**
+	 * For a peer node to become part of a channel, it must be sent the genesis
+	 * block, as explained [here]{@link Channel#getGenesisBlock}. This method
+	 * sends a join channel proposal to one or more endorsing peers. It automatically
+	 * acquires the channel's genesis block from the channel object's orderer and
+	 * includes the block in the proposal request.
+	 *
+	 * @param {JoinChannelRequest} request
+	 * @returns {Promise} A Promise for an array of {@link ProposalResponse} from the target peers
 	 */
 	joinChannel(request) {
 		logger.debug('joinChannel - start');
@@ -438,11 +507,12 @@ var Channel = class {
 	}
 
 	/**
-	 * Queries for the current config block for this channel.
-	 * This transaction will be made to the orderer.
+	 * Asks the orderer for the current (latest) configuration block for this channel.
+	 * This is similar to [getGenesisBlock()]{@link Channel#getGenesisBlock}, except
+	 * that instead of getting block number 0 it gets the latest block that contains
+	 * the channel configuration, and only returns the decoded {@link ConfigEnvelope}.
+	 *
 	 * @returns {ConfigEnvelope} Object containing the configuration items.
-	 * @see /protos/orderer/ab.proto
-	 * @see /protos/common/configtx.proto
 	 */
 	getChannelConfig() {
 		logger.debug('getChannelConfig - start for channel %s',this._name);
@@ -662,11 +732,22 @@ var Channel = class {
 	}
 
 	/**
+	 * @typedef {Object} BlockchainInfo
+	 * @property {number} height - How many blocks exist on the channel's ledger
+	 * @property {byte[]} currentBlockHash - A block hash is calculated by hashing over the concatenated
+	 *                                       ASN.1 encoded bytes of: the block number, previous block hash,
+	 *                                       and current block data hash. It's the chain of the block
+	 *                                       hashs that guarantees the immutability of the ledger
+	 * @property {byte[]} previousBlockHash - The block hash of the previous block.
+	 */
+
+	/**
 	 * Queries for various useful information on the state of the Channel
 	 * (height, known peers).
-	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
-	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {Object} With height, currently the only useful info.
+	 *
+	 * @param {Peer} target - Optional. The peer that is the target for this query.  If no target is passed,
+	 *                        the query will use the first peer that was added to the channel object.
+	 * @returns {BlockchainInfo} With blockchain height, current block hash and previous block hash.
 	 */
 	queryInfo(target) {
 		logger.debug('queryInfo - start');
@@ -733,12 +814,12 @@ var Channel = class {
 	}
 
 	/**
-	 * Queries the ledger for Block by block hash.
-	 * This query will be made to the primary peer.
-	 * @param {byte[]} block hash of the Block.
-	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
-	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {Object} Object containing the block.
+	 * Queries the ledger on the target peer for a Block by block hash.
+	 *
+	 * @param {byte[]} block hash of the Block in question.
+	 * @param {Peer} target - Optional. The peer to send the query to. If no target is passed,
+	 *                        the query is sent to the first peer that was added to the channel object.
+	 * @returns {Block} The block matching the hash, fully decoded into an object.
 	 */
 	queryBlockByHash(blockHash, target) {
 		logger.debug('queryBlockByHash - start');
@@ -795,12 +876,12 @@ var Channel = class {
 	}
 
 	/**
-	 * Queries the ledger for Block by block number.
-	 * This query will be made to the primary peer.
-	 * @param {number} blockNumber The number which is the ID of the Block.
-	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
-	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {Object} Object containing the block.
+	 * Queries the ledger on the target peer for Block by block number.
+	 *
+	 * @param {number} blockNumber - The number of the Block in question.
+	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
+	 *                        the query is sent to the first peer that was added to the channel object.
+	 * @returns {Block} The block at the blockNumber slot in the ledger, fully decoded into an object.
 	 */
 	queryBlock(blockNumber, target) {
 		logger.debug('queryBlock - start blockNumber %s',blockNumber);
@@ -859,12 +940,12 @@ var Channel = class {
 	}
 
 	/**
-	 * Queries the ledger for Transaction by number.
-	 * This query will be made to the primary peer.
-	 * @param  tx_id The id of the transaction
-	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
-	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {Object} Transaction information containing the transaction.
+	 * Queries the ledger on the target peer for Transaction by id.
+	 *
+	 * @param {string} tx_id - The id of the transaction
+	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
+	 *                        the query is sent to the first peer that was added to the channel object.
+	 * @returns {ProcessedTransaction} The fully decoded ProcessedTransaction object.
 	 */
 	queryTransaction(tx_id, target) {
 		logger.debug('queryTransaction - start transactionID %s',tx_id);
@@ -922,10 +1003,11 @@ var Channel = class {
 	}
 
 	/**
-	 * Queries the instantiated chaincodes on this channel.
-	 * @param {Peer} target Optional.  The peer that is the target for this query.  If no target
-	 * is passed, the query will use the first peer that was added to the channel.
-	 * @returns {Object} ChaincodeQueryResponse proto
+	 * Queries the ledger on the target peer for instantiated chaincodes on this channel.
+	 *
+	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
+	 *                        the query is sent to the first peer that was added to the channel object.
+	 * @returns {ChaincodeQueryResponse} A fully decoded ChaincodeQueryResponse object
 	 */
 	queryInstantiatedChaincodes(target) {
 		logger.debug('queryInstantiatedChaincodes - start');
@@ -981,31 +1063,25 @@ var Channel = class {
 	}
 
 	/**
-	 * Sends an instantiate proposal to one or more endorsing peers.
-	 *
-	 * @param {Object} request - An object containing the following fields:
-	 *		<br>`targets` : Optional : An array of endorsing {@link Peer} objects as the
-	 *                      targets of the request. The list of endorsing peers will be used if
-	 *                      this parameter is omitted.
-	 *		<br>`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java']
-	 *                            (default 'golang')
-	 *		<br>`chaincodePath` : required - String of the path to location of
-	 *                            the source code of the chaincode
-	 *		<br>`chaincodeId` : required - String of the name of the chaincode
-	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
-	 *		<br>`txId` : required -  {@link TransactionID} object with the transaction id and nonce
-	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
-	 *			the chaincode but not saved in the ledger, such as cryptographic information
-	 *			for encryption
-	 *		<br>`fcn` : optional - String of the function to be called on
-	 *                  the chaincode once instantiated (default 'init')
-	 *		<br>`args` : optional - String Array arguments specific to
-	 *                   the chaincode being instantiated
-	 *		<br>`endorsement-policy` : optional - {@link EndorsementPolicy} object for this
-	 *				chaincode. If not specified, a default policy of "a signature by any member
-	 *				from any of the organizations corresponding to the array of member service
-	 *				providers" is used
-	 * @example <caption>"Signed by any member from one of the organizations"</caption>
+	 * @typedef {Object} ChaincodeInstantiateUpgradeRequest
+	 * @property {Peer[]} targets - Optional. An array of endorsing {@link Peer} objects as the targets of the
+	 *                              request. The list of endorsing peers in the channel object will be used
+	 *                              if this parameter is omitted.
+	 * @property {string} chaincodeType - Optional. Type of chaincode. One of 'golang', 'car' or 'java'.
+	 *                                    Default is 'golang'. Note that 'java' is not supported as of v1.0.
+	 * @property {string} chaincodeId - Required. The name of the chaincode
+	 * @property {string} chaincodeVersion - Required. Version string of the chaincode, such as 'v1'
+	 * @property {TransactionID} txId - Required. Object with the transaction id and nonce
+	 * @property {map} transientMap - Optional. <string, byte[]> map that can be used by the chaincode during
+	 *			                      intialization, but not saved in the ledger. Data such as cryptographic information
+	 *			                      for encryption can be passed to the chaincode using this technique
+	 * @property {string} fcn - Optional. The function name to be returned when calling <code>stub.GetFunctionAndParameters()</code>
+	 *                          in the target chaincode. Default is 'init'
+	 * @property {string[]} args - Optional. Array of string arguments to pass to the function identified by the <code>fcn</code> value
+	 * @property {Object} endorsement-policy - Optional. EndorsementPolicy object for this chaincode (see examples below). If not specified,
+	 *				                           a default policy of "a signature by any member from any of the organizations
+	 *				                           corresponding to the array of member service providers" is used
+	 * @example <caption>Endorsement policy: "Signed by any member from one of the organizations"</caption>
 	 * {
 	 *   identities: [
 	 *     { role: { name: "member", mspId: "org1" }},
@@ -1015,7 +1091,7 @@ var Channel = class {
 	 *     "1-of": [{ "signed-by": 0 }, { "signed-by": 1 }]
 	 *   }
 	 * }
-	 * @example <caption>"Signed by admin of the ordererOrg and any member from one of the peer organizations"</caption>
+	 * @example <caption>Endorsement policy: "Signed by admin of the ordererOrg and any member from one of the peer organizations"</caption>
 	 * {
 	 *   identities: [
 	 *     { role: { name: "member", mspId: "peerOrg1" }},
@@ -1029,35 +1105,40 @@ var Channel = class {
 	 *     ]
 	 *   }
 	 * }
-	 * @returns {Promise} A Promise for a `ProposalResponse`
-	 * @see /protos/peer/proposal_response.proto
+	 */
+
+	/**
+	 * Sends a chaincode instantiate proposal to one or more endorsing peers.
+	 *
+	 * A chaincode must be instantiated on a channel-by-channel basis before it can
+	 * be used. The chaincode must first be installed on the endorsing peers where
+	 * this chaincode is expected to run, by calling [client.installChaincode()]{@link Client#installChaincode}.
+	 * <br><br>
+	 * Instantiating a chaincode is a full transaction operation, meaning it must be
+	 * first endorsed as a proposal, then the endorsements are sent to the orderer
+	 * to be processed for ordering and validation. When the transaction finally gets
+	 * committed to the channel's ledger on the peers, the chaincode is then considered
+	 * activated and the peers are ready to take requests to process transactions.
+	 *
+	 * @param {ChaincodeInstantiateUpgradeRequest} request
+	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}
 	 */
 	sendInstantiateProposal(request) {
 		return this._sendChaincodeProposal(request, 'deploy');
 	}
 
 	/**
-	 * Sends an upgrade proposal to one or more endorsing peers.
+	 * Sends a chaincode upgrade proposal to one or more endorsing peers.
 	 *
-	 * @param {Object} request - An object containing the following fields:
-	 *		<br>`targets` : An array of endorsing {@link Peer} objects as the
-	 *                      targets of the request
-	 *		<br>`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java']
-	 *                            (default 'golang')
-	 *		<br>`chaincodePath` : required - String of the path to location of
-	 *                            the source code of the chaincode
-	 *		<br>`chaincodeId` : required - String of the name of the chaincode
-	 *		<br>`chaincodeVersion` : required - String of the version of the chaincode
-	 *		<br>`txId` : required -  {@link TransactionID} object with the transaction id and nonce
-	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
-	 *			the chaincode but not saved in the ledger, such as cryptographic information
-	 *			for encryption
-	 *		<br>`fcn` : optional - String of the function to be called on
-	 *                  the chaincode once instantiated (default 'init')
-	 *		<br>`args` : optional - String Array arguments specific to
-	 *                   the chaincode being instantiated
-	 * @returns {Promise} A Promise for a `ProposalResponse`
-	 * @see /protos/peer/proposal_response.proto
+	 * Upgrading a chaincode involves steps similar to instantiating a chaincode.
+	 * The new chaincode must first be installed on the endorsing peers where
+	 * this chaincode is expected to run.
+	 * <br><br>
+	 * Similar to instantiating a chaincode, upgrading chaincodes is also a full transaction
+	 * operation.
+	 *
+	 * @param {ChaincodeInstantiateUpgradeRequest} request
+	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}
 	 */
 	sendUpgradeProposal(request) {
 		return this._sendChaincodeProposal(request, 'upgrade');
@@ -1157,18 +1238,30 @@ var Channel = class {
 	}
 
 	/**
+	 * @typedef {Object} ChaincodeInvokeRequest
+	 * @property {Peer[]} targets - Optional. The peers that will receive this request,
+	 *				                when not provided the list of peers added to this channel object will be used.
+	 * @property {string} chaincodeId - Required. The id of the chaincode to process the transaction proposal
+	 * @property {TransactionID} txId - Required. TransactionID object with the transaction id and nonce
+	 * @property {map} transientMap - Optional. <string, byte[]> map that can be used by the chaincode but not
+	 *			                      saved in the ledger, such as cryptographic information for encryption
+	 * @property {string} fcn - Optional. The function name to be returned when calling <code>stub.GetFunctionAndParameters()</code>
+	 *                          in the target chaincode. Default is 'invoke'
+	 * @property {string[]} args - An array of string arguments specific to the chaincode's 'Invoke' method
+	 */
+
+	/**
 	 * Sends a transaction proposal to one or more endorsing peers.
 	 *
-	 * @param {Object} request
-	 *		<br>`targets` : optional -- The peers that will receive this request,
-	 *				when not provided the peers assigned to this channel will be used.
-	 *		<br>`chaincodeId` : The id of the chaincode to perform the transaction proposal
-	 *		<br>`txId` : required -  {@link TransactionID} object with the transaction id and nonce
-	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
-	 *			the chaincode but not saved in the ledger, such as cryptographic information
-	 *			for encryption
-	 *		<br>`args` : an array of arguments specific to the chaincode 'invoke'
-	 * @returns {Promise} A Promise for a `ProposalResponse`
+	 * After a chaincode gets [installed]{@link Client#installChaincode} and
+	 * [instantiated]{@link Channel#instantiateChaincode}, it's ready to take endorsement
+	 * proposals and participating in transaction processing. A chaincode transaction
+	 * starts with a proposal that gets sent to the endorsing peers, which executes
+	 * the target chaincode and decides whether the proposal should be endorsed (if it
+	 * executes successfully) or not (if the chaincode returns an error).
+	 *
+	 * @param {ChaincodeInvokeRequest} request
+	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}
 	 */
 	sendTransactionProposal(request) {
 		logger.debug('sendTransactionProposal - start');
@@ -1214,7 +1307,6 @@ var Channel = class {
 		}
 
 		var args = [];
-		// leaving this for now... but this call is always an invoke and we are not telling caller to include 'fcn' any longer
 		args.push(Buffer.from(request.fcn ? request.fcn : 'invoke', 'utf8'));
 		logger.debug('sendTransactionProposal - adding function arg:%s', request.fcn ? request.fcn : 'invoke');
 
@@ -1267,19 +1359,37 @@ var Channel = class {
 	}
 
 	/**
-	 * Sends the orderer an endorsed proposal.
-	 * The caller must use the proposal response returned from the endorser along
-	 * with the original proposal request sent to the endorser.
+	 * @typedef {Object} TransactionRequest
+	 * @property {array} proposalResponses - An array or a single {@link ProposalResponse} objects
+	 *                                       containing the response from the
+	 *                                       [endorsement]{@link Channel#sendTransactionProposal} call
+	 * @Property {Object} chaincodeProposal - A Proposal object containing the original
+	 *                                        request for endorsement(s)
+	 */
+
+	/**
+	 * Send the proposal responses that contain the endorsements of a transaction proposal
+	 * to the orderer for further processing. This is the 2nd phase of the transaction
+	 * lifecycle in the fabric. The orderer will globally order the transactions in the
+	 * context of this channel and deliver the resulting blocks to the committing peers for
+	 * validation against the chaincode's endorsement policy. When the committering peers
+	 * successfully validate the transactions, it will mark the transaction as valid inside
+	 * the block. After all transactions in a block have been validated, and marked either as
+	 * valid or invalid (with a [reason code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/transaction.proto#L125}),
+	 * the block will be appended (committed) to the channel's ledger on the peer.
+	 * <br><br>
+	 * The caller of this method must use the proposal responses returned from the endorser along
+	 * with the original proposal that was sent to the endorser. Both of these objects are contained
+	 * in the {@link ProposalResponseObject} returned by calls to any of the following methods:
+	 * <li>[installChaincode()]{@link Client#installChaincode}
+	 * <li>[sendInstantiateProposal()]{@link Channel#sendInstantiateProposal}
+	 * <li>[sendUpgradeProposal()]{@link Channel#sendUpgradeProposal}
+	 * <li>[sendTransactionProposal()]{@link Channel#sendTransactionProposal}
 	 *
-	 * @param {Array} proposalResponses - An array or single {ProposalResponse} objects containing
-	 *        the response from the endorsement
-	 * @see /protos/peer/proposal_response.proto
-	 * @param {Proposal} chaincodeProposal - A Proposal object containing the original
-	 *        request for endorsement(s)
-	 * @see /protos/peer/proposal.proto
-	 * @returns {Promise} A Promise for a `BroadcastResponse`.
-	 *         This will be an acknowledgement from the orderer of successfully submitted transaction.
-	 * @see /protos/orderer/ab.proto
+	 * @param {TransactionRequest} request
+	 * @returns {Promise} A Promise for a "BroadcastResponse" message returned by the orderer that contains a
+	 *                    single "status" field for a standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/common.proto#L27}.
+	 *                    This will be an acknowledgement from the orderer of successfully submitted transaction.
 	 */
 	sendTransaction(request) {
 		logger.debug('sendTransaction - start :: channel %s',this);
@@ -1292,9 +1402,6 @@ var Channel = class {
 			}
 			if (!request.proposal) {
 				errorMsg = 'Missing "proposal" parameter in transaction request';
-			}
-			if (!request.header) {
-				errorMsg = 'Missing "header" parameter in transaction request';
 			}
 		} else {
 			errorMsg = 'Missing input request object on the proposal request';
@@ -1381,20 +1488,25 @@ var Channel = class {
 
 	/**
 	 * Sends a proposal to one or more endorsing peers that will be handled by the chaincode.
-	 * This request will be presented to the chaincode 'invoke' and must understand
-	 * from the arguments that this is a query request. The chaincode must also return
+	 * In fabric v1.0, there is no difference in how the endorsing peers process a request
+	 * to invoke a chaincode for transaction vs. to invoke a chaincode for query. All requests
+	 * will be presented to the target chaincode's 'Invoke' method which must be implemented to
+	 * understand from the arguments that this is a query request. The chaincode must also return
 	 * results in the byte array format and the caller will have to be able to decode
-	 * these results
+	 * these results.
 	 *
-	 * @param {Object} request A JSON object with the following
-	 *		<br>targets : An array or single Endorsing {@link Peer} objects as the targets of the request
-	 *		<br>chaincodeId : The id of the chaincode to perform the query
-	 *		<br>`args` : an array of arguments specific to the chaincode 'innvoke'
-	 *             that represent a query invocation on that chaincode
-	 *   	<br>`transientMap` : optional - <string, byte[]> map that can be used by
-	 *			the chaincode but not saved in the ledger, such as cryptographic information
-	 *			for encryption
-	 * @returns {Promise} A Promise for an array of byte array results from the chaincode on all Endorsing Peers
+	 * @param {ChaincodeInvokeRequest} request - Query requests use the same request objects as for
+	 *                                           transaction invocation requests
+	 * @returns {Promise} A Promise for an array of byte array results returned from the chaincode
+	 *                    on all Endorsing Peers
+	 * @example
+	 * <caption>Get the list of query results returned by the chaincode</caption>
+	 * channel.queryByChaincode(request)
+	 * .then((response_payloads) => {
+	 *		for(let i = 0; i < response_payloads.length; i++) {
+	 *			console.log(util.format('Query result from peer [%s]: %s', i, response_payloads[i].toString('utf8')));
+	 *		}
+	 *	});
 	 */
 	queryByChaincode(request) {
 		logger.debug('queryByChaincodel - start');
@@ -1448,21 +1560,22 @@ var Channel = class {
 	}
 
 	/**
-	 * Utility method to verify a single proposal response.
-	 * Requires that the initialize method of this channel has been
-	 * executed to load this channel's MSPs. The MSPs will have the
+	 * Utility method to verify a single proposal response. It checks the
+	 * following aspects:
+	 * <li>The endorser's identity belongs to a legitimate MSP of the channel
+	 *     and can be successfully deserialized
+	 * <li>The endorsement signature can be successfully verified with the
+	 *     endorser's identity certificate
+	 * <br><br>
+	 * This method requires that the initialize method of this channel object
+	 * has been called to load this channel's MSPs. The MSPs will have the
 	 * trusted root certificates for this channel.
-	 * The verifications performed are
-	 *   - validate that the proposal endorsement's signer is trusted
-	 *   - verify that the endorsement signature matches the signer's
-	 *     claimed identity
 	 *
-	 * @param {ProposalResponse} The endorsement response from the peer,
-	 *         includes the endorser certificate and signature over the
-	 *         proposal, endorsement result and endorser certificate.
-	 * @see /protos/peer/proposal_reponse.proto
-	 * @returns {boolean} a boolean value of true when both the identity and
-	 *          the signature are valid, false otherwise.
+	 * @param {ProposalResponse} proposal_response - The endorsement response from the peer,
+	 *                             includes the endorser certificate and signature over the
+	 *                             proposal + endorsement result + endorser certificate.
+	 * @returns {boolean} A boolean value of true when both the identity and
+	 *                    the signature are valid, false otherwise.
 	 */
 	 verifyProposalResponse(proposal_response) {
 		logger.debug('verifyProposalResponse - start');
@@ -1525,8 +1638,8 @@ var Channel = class {
 	 * the same endorsement result write sets.
 	 * This will validate that the endorsing peers all agree on the result
 	 * of the chaincode execution.
+	 *
 	 * @param {ProposalResponse[]} The proposal responses from all endorsing peers
-	 * @see /protos/peer/proposal_reponse.proto
 	 * @returns {boolean} True when all proposals compare equally, false otherwise.
 	  */
 	compareProposalResponseResults(proposal_responses) {
@@ -1562,8 +1675,8 @@ var Channel = class {
 	}
 
 	/**
-	* return a printable representation of this object
-	*/
+	 * return a printable representation of this channel object
+	 */
 	toString() {
 		let orderers = '';
 		for (let i = 0; i < this._orderers.length; i++) {
