@@ -131,7 +131,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 			});
 		try {
-			eh.connect();
 			eh.registerBlockEvent(
 				(block) => {
 					t.fail('this success function should not be called');
@@ -145,6 +144,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 					}
 				}
 			);
+			eh.connect();
 		}
 		catch(err) {
 			t.fail('this catch should not have been called');
@@ -161,7 +161,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 			});
 		try {
-			eh.connect();
 			eh.registerBlockEvent(
 				(block) => {
 					t.fail('this success function should not be called');
@@ -175,6 +174,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 					}
 				}
 			);
+			eh.connect();
 		}
 		catch(err) {
 			t.fail('this catch should not have been called');

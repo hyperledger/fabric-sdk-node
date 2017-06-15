@@ -171,6 +171,7 @@ var EventHub = class {
 		// grpc chat streaming interface
 		this._stream = null;
 		// fabric connection state of this eventhub
+		this._connect_called = false;
 		this._connected = false;
 		this._connect_running = false;
 		// should this event hub reconnect on registrations
@@ -254,6 +255,7 @@ var EventHub = class {
 	 *                  the connection to the peer event hub
 	 */
 	_connect(force) {
+		this._connect_called = true;
 		if(this._connect_running) {
 			logger.debug('_connect - connect is running');
 			return;
@@ -385,6 +387,7 @@ var EventHub = class {
 			this._stream.end();
 			this._stream = null;
 		}
+		this._connect_called = false; //we can turn off since we closed out all callbacks
 	}
 
 	/*
@@ -474,7 +477,7 @@ var EventHub = class {
 			}
 		}
 
-		if(force_reconnect) {
+		if(force_reconnect && this._connect_called) {
 			try {
 				if(this._stream) {
 					var is_paused = this._stream.isPaused();
