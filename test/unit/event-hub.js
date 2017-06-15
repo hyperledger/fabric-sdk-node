@@ -164,8 +164,8 @@ test('\n\n** EventHub tests\n\n', (t) => {
 		() => {
 			eh.unregisterChaincodeEvent();
 		},
-		/Missing "cbe" parameter/,
-		'Check the Missing "cbe" parameter'
+		/Missing "listener_handle" parameter/,
+		'Check the Missing "listener_handle" parameter'
 	);
 	t.throws(
 		() => {
