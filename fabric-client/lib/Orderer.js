@@ -27,23 +27,28 @@ var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
 var _common = grpc.load(__dirname + '/protos/common/common.proto').common;
 
 /**
- * The Orderer class represents a peer in the target blockchain network to which
- * HFC sends a block of transactions of endorsed proposals requiring ordering.
+ * The Orderer class encapsulates the client capabilities to interact with
+ * an Orderer node in the target blockchain network. The orderer node exposes
+ * two APIs: broadcast() and deliver(). Both are streaming APIs so there's
+ * a persistent grpc streaming connection between the client and the orderer
+ * where messages are exchanged in both directions. The broadcast() API is
+ * for sending transactions to the orderer for processing. The deliver() API
+ * is for asking the orderer for information such as channel configurations.
  *
  * @class
  */
 var Orderer = class extends Remote {
 
 	/**
-	 * Constructs an Orderer given its endpoint configuration settings.
+	 * Constructs an Orderer object with the given url and opts. An orderer object
+	 * encapsulates the properties of an orderer node and the interactions with it via
+	 * the grpc stream API. Orderer objects are used by the {@link Client} objects to broadcast
+	 * requests for creating and updating channels. They are also used by the {@link Channel}
+	 * objects to broadcast requests for ordering transactions.
 	 *
-	 * @param {string} url The orderer URL with format of 'grpcs://host:port'.
-	 * @param {Object} opts The options for the connection to the orderer.
-	 * <br>- request-timeout {string} A integer value in milliseconds to
-	 *       be used as node.js based timeout. This will break the request
-	 *       operation if the grpc request has not responded within this
-	 *       timeout period.
-	 *   note: other options will be passed to the grpc connection
+	 * @param {string} url The URL with format of "grpc(s)://host:port".
+	 * @param {ConnectionOpts} opts The options for the connection to the orderer.
+	 * @returns {Orderer} The Orderer instance.
 	 */
 	constructor(url, opts) {
 		super(url, opts);
@@ -53,12 +58,20 @@ var Orderer = class extends Remote {
 	}
 
 	/**
+	 * @typedef {Object} BroadcastResponse
+	 * @property {string} status - Value is 'SUCCESS' or a descriptive error string
+	 */
+
+	/**
 	 * Send a Broadcast message to the orderer service.
 	 *
-	 * @param {byte} envelope - Byte data to be included in the Broadcast
-	 *        @see the ./proto/orderer/ab.proto
-	 * @returns {Promise} A Promise for a BroadcastResponse
-	 *        @see the ./proto/orderer/ab.proto
+	 * @param {byte[]} envelope - Byte data to be included in the broadcast. This must
+	 *                            be a protobuf encoded byte array of the
+	 *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/common.proto#L132}
+	 *                            that contains either a [ConfigUpdateEnvelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/configtx.proto#L70}
+	 *                            or a [Transaction]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/transaction.proto#L70}
+	 *                            in the <code>payload.data</code> property of the envelope.
+	 * @returns {Promise} A Promise for a {@link BroadcastResponse} object
 	 */
 	sendBroadcast(envelope) {
 		logger.debug('sendBroadcast - start');
@@ -133,10 +146,21 @@ var Orderer = class extends Remote {
 	/**
 	 * Send a Deliver message to the orderer service.
 	 *
-	 * @param {byte} envelope - Byte data to be included in the Deliver
-	 *        @see the ./proto/orderer/ab.proto
-	 * @returns {Promise} A Promise for a Block
-	 *        @see the ./proto/orderer/common.proto
+	 * @param {byte[]} envelope - Byte data to be included in the broadcast. This must
+	 *                            be a protobuf encoded byte array of the
+	 *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/common.proto#L132}
+	 *                            that contains a [SeekInfo]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/orderer/ab.proto#L54}
+	 *                            in the <code>payload.data</code> property of the envelope.
+	 *                            The <code>header.channelHeader.type</code> must be set to
+	 *                            [common.HeaderType.DELIVER_SEEK_INFO]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/common.proto#L44}
+	 * @returns {Promise} A Promise for a protobuf object of type common.Block. Note that this
+	 *                    is <b>NOT</b> the same type of object as the {@link Block} returned by the
+	 *                    [BlockDecoder.decode()]{@link BlockDecode.decode} method and various
+	 *                    other methods. A {@link Block} is a pure javascript object, whereas
+	 *                    the object returned by this method is a protobuf object that contains
+	 *                    accessor methods, getters and setters, and toBuffer() for each property
+	 *                    to be used for further manipulating the object and convert to and from
+	 *                    byte arrays.
 	 */
 	sendDeliver(envelope) {
 		logger.debug('sendDeliver - start');

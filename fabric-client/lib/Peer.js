@@ -27,19 +27,9 @@ var _serviceProto = grpc.load(__dirname + '/protos/peer/peer.proto').protos;
 var logger = utils.getLogger('Peer.js');
 
 /**
- * The Peer class represents a peer in the target blockchain network to which
- * HFC sends endorsement proposals, transaction ordering or query requests.
- *
- * The Peer class represents the remote Peer node and its network membership materials,
- * aka the ECert used to verify signatures. Peer membership represents organizations,
- * unlike User membership which represents individuals.
- *
- * When constructed, a Peer instance can be designated as an event source, in which case
- * a “eventSourceUrl” attribute should be configured. This allows the SDK to automatically
- * attach transaction event listeners to the event stream.
- *
- * It should be noted that Peer event streams function at the Peer level and not at the
- * channel and chaincode levels.
+ * The Peer class represents an endorsing peer in the target blockchain network.
+ * The application can send endorsement proposals, and query requests through this
+ * class.
  *
  * @class
  * @extends Remote
@@ -47,15 +37,17 @@ var logger = utils.getLogger('Peer.js');
 var Peer = class extends Remote {
 
 	/**
-	 * Constructs a Peer given its endpoint configuration settings.
+	 * Construct a Peer object with the given url and opts. A peer object
+	 * encapsulates the properties of an endorsing peer and the interactions with it
+	 * via the grpc service API. Peer objects are used by the {@link Client} objects to
+	 * send channel-agnostic requests such as installing chaincode, querying peers for
+	 * installed chaincodes, etc. They are also used by the {@link Channel} objects to
+	 * send channel-aware requests such as instantiating chaincodes, and invoking
+	 * transactions.
 	 *
-	 * @param {string} url The URL with format of "grpcs://host:port".
-	 * @param {Object} opts The options for the connection to the peer.
-	 * <br>- request-timeout {string} A integer value in milliseconds to
-	 *       be used as node.js based timeout. This will break the request
-	 *       operation if the grpc request has not responded within this
-	 *       timeout period.
-	 *   note: other options will be passed to the grpc connection
+	 * @param {string} url - The URL with format of "grpc(s)://host:port".
+	 * @param {ConnectionOpts} opts - The options for the connection to the peer.
+	 * @returns {Peer} The Peer instance.
 	 */
 	constructor(url, opts) {
 		super(url, opts);
@@ -66,43 +58,30 @@ var Peer = class extends Remote {
 	}
 
 	/**
-	 * Get the Peer name. Required property for the instance objects.
-	 * @returns {string} The name of the Peer
+	 * Get the Peer name. This is a client-side only identifier for this
+	 * Peer object.
+	 * @returns {string} The name of the Peer object
 	 */
 	getName() {
 		return this._name;
 	}
 
 	/**
-	 * Set the Peer name / id.
+	 * Set the Peer name as a client-side only identifier of this Peer object.
 	 * @param {string} name
 	 */
 	setName(name) {
 		this._name = name;
 	}
 
-    /**
-	 * Set the Peer’s enrollment certificate.
-	 * @param {Object} enrollment Certificate in PEM format signed by the trusted CA
-	 */
-	setEnrollmentCertificate(enrollment) {
-		if (typeof enrollment.privateKey === 'undefined' || enrollment.privateKey === null || enrollment.privateKey === '') {
-			throw new Error('Invalid enrollment object. Must have a valid private key.');
-		}
-
-		if (typeof enrollment.certificate === 'undefined' || enrollment.certificate === null || enrollment.certificate === '') {
-			throw new Error('Invalid enrollment object. Must have a valid certificate.');
-		}
-
-		this._enrollment = enrollment;
-	}
-
 	/**
-	 * Send an endorsement proposal to an endorser.
+	 * Send an endorsement proposal to an endorser. This is used to call an
+	 * endorsing peer to execute a chaincode to process a transaction proposal,
+	 * or runs queries.
 	 *
-	 * @param {Proposal} proposal A proposal of type Proposal
-	 * @see /protos/peer/fabric_proposal.proto
-	 * @returns Promise for a ProposalResponse
+	 * @param {Proposal} proposal - A protobuf encoded byte array of type
+	 *                              [Proposal]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/proposal.proto#L134}
+	 * @returns {Promise} A Promise for a {@link ProposalResponse}
 	 */
 	sendProposal(proposal) {
 		logger.debug('Peer.sendProposal - Start');
@@ -145,8 +124,8 @@ var Peer = class extends Remote {
 	}
 
 	/**
-	* return a printable representation of this object
-	*/
+	 * return a printable representation of this object
+	 */
 	toString() {
 		return ' Peer : {' +
 			'url:' + this._url +

@@ -37,27 +37,7 @@ test('Peer test', function(t) {
 		'checking the peer setName()'
 	);
 	t.equals('name', peer.getName(), 'checking getName on Peer');
-	t.throws(
-		function () {
-			peer.setEnrollmentCertificate({});
-		},
-		/^Error: Invalid enrollment object. Must have a valid private key./,
-		'Peer checking 	setEnrollmentCertificate(enrollment)'
-	);
-	t.throws(
-		function () {
-			peer.setEnrollmentCertificate({privateKey :'some key'});
-		},
-		/^Error: Invalid enrollment object. Must have a valid certificate./,
-		'Peer checking 	setEnrollmentCertificate(enrollment)'
-	);
-	t.doesNotThrow(
-		function () {
-			peer.setEnrollmentCertificate({privateKey :'some key', certificate : 'some cert'});
-		},
-		null,
-		'checking the peer setEnrollmentCertificate()'
-	);
+
 	t.end();
 });
 

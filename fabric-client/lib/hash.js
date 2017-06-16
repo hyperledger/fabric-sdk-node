@@ -16,9 +16,6 @@
 
 /**
  * Implement hash primitives.
- * Currently SHA3 is implemented, but needs to also add SHA2.
- *
- * NOTE: This is in pure java script to be compatible with the sjcl.hmac function.
  */
 var sjcl = require('sjcl');
 var sjcl_codec = require('sjcl-codec');
@@ -142,7 +139,7 @@ hash_sha3_384.prototype = {
 	}
 };
 
-/**
+/*
  * Convert from a bitArray to bytes (using SJCL's codec)
  * @param {bits} a bitArray to convert from
  * @return {bytes} the bytes converted from the bitArray
@@ -151,7 +148,7 @@ bitsToBytes = function (bits) {
 	return sjcl_codec.bytes.fromBits(bits);
 };
 
-/**
+/*
  * Convert from bytes to a bitArray (using SJCL's codec)
  * @param {bytes} a bytes to convert from
  * @return {bitArray} the bitArray converted from bytes

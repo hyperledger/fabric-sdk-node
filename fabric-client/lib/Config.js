@@ -14,31 +14,6 @@
  *  limitations under the License.
  */
 
-/**
- * This is the configuration class for the "fabric-client" package.
- * It provides all configuration settings using "config" node.js package to retrieve the
- * settings from JSON based files, environment settings, and command line startup settings
- *
- * configuration settings will be overridden in this order
- *  first files are loaded in this order
- *    $NODE_CONFIG_DIR/default.json
- *    $NODE_CONFIG_DIR/$NODE_ENV.json
- *
- *  NODE_CONFIG_DIR defaults to './config'  the configuration directory is relative to where the application is started
- *  NODE_ENV        defaults to 'development'
- *
- * then then following environment setting will override file settings
- *     $NODE_CONFIG
- *  $ export NODE_CONFIG='{"request-timeout": 3000 }'
- *
- * then the command line setting will override all
- *     node myapp.js --NODE_CONFIG='{"request-timeout": 7000 }'
- *
- *
- *   see the following for complete information on the configuration settings
- *         https://www.npmjs.com/package/config
- */
-
 'use strict';
 
 var nconf = require('nconf');
@@ -47,18 +22,9 @@ var path  = require('path');
 //
 // The class representing the hierarchy of configuration settings.
 //
-//
 
 var Config = class {
 
-	//	 Setup nconf to use (search order):
-	//	  1. in memory - all settings added with utils.setConfigSetting(name,value)
-	//	  2. Command-line arguments
-	//	  3. Environment variables (names will be change from AAA-BBB to aaa-bbb)
-	//	  4. user Files - all files added with the addConfigFile(path)
-	//	     will be ordered by when added, were last one added will override previously added files
-	//	  5. The file located at 'config/default.json' with default settings
-	//
 	constructor() {
 		nconf.use('memory');
 		nconf.argv();
@@ -82,10 +48,6 @@ var Config = class {
 			var value = settings[key];
 			key = key.toLowerCase();
 			key = key.replace(/_/g, '-');
-//			if(store.get(key)) {
-//				throw new Error('Unable to map environment variable to configuration setting.
-//				There is another config setting with the same converted name:'+key);
-//			}
 			store.set(key,value);
 		}
 	}
