@@ -168,8 +168,8 @@ function buildEchoRequest(client, peer) {
 	return {
 		targets: [peer],
 		chaincodeId : e2e.chaincodeId,
-		fcn: 'invoke',
-		args: ['echo', crypto.randomBytes(1024 * 1024)],
+		fcn: 'echo',
+		args: [crypto.randomBytes(1024 * 1024)],
 		txId: tx_id,
 		nonce: nonce
 	};

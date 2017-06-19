@@ -561,8 +561,8 @@ function invokeChaincode(userOrg, version, t, useStore){
 		// send proposal to endorser
 		var request = {
 			chaincodeId : e2e.chaincodeId,
-			fcn: 'invoke',
-			args: ['move', 'a', 'b','100'],
+			fcn: 'move',
+			args: ['a', 'b','100'],
 			txId: tx_id,
 		};
 		return channel.sendTransactionProposal(request);
@@ -757,13 +757,13 @@ function queryChaincode(org, version, value, t, transientMap) {
 		var request = {
 			chaincodeId : e2e.chaincodeId,
 			txId: tx_id,
-			fcn: 'invoke',
-			args: ['query','b']
+			fcn: 'query',
+			args: ['b']
 		};
 
 		if (transientMap) {
 			request.transientMap = transientMap;
-			request.args = ['testTransient', ''];
+			request.fcn = 'testTransient';
 		}
 
 		return channel.queryByChaincode(request);
