@@ -296,9 +296,9 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 
 var getOrgAdmin = function(userOrg) {
 	var admin = ORGS[userOrg].admin;
-	var keyPath = path.join(__dirname, util.format('../artifacts/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/msp/keystore', userOrg, userOrg));
+	var keyPath = path.join(__dirname, admin.key);
 	var keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
-	var certPath = path.join(__dirname, util.format('../artifacts/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/msp//signcerts', userOrg, userOrg));
+	var certPath = path.join(__dirname, admin.cert);
 	var certPEM = readAllFiles(certPath)[0].toString();
 
 	var client = getClientForOrg(userOrg);

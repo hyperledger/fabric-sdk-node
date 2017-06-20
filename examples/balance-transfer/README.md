@@ -55,7 +55,7 @@ cd fabric-sdk-node/examples/balance-transfer
 ```
  
 * This lauches the required network on your local machine
-* Installs the "alpha" tagged node modules 
+* Installs the "beta" tagged node modules 
 * And, starts the node app on PORT 4000
 
 ##### Terminal Window 2
@@ -160,8 +160,8 @@ curl -s -X POST \
   -H "content-type: application/json" \
   -d '{
 	"peers": ["localhost:7051", "localhost:7056"],
-	"fcn":"invoke",
-	"args":["move","a","b","10"]
+	"fcn":"move",
+	"args":["a","b","10"]
 }'
 ```
 **NOTE:** Ensure that you save the Transaction ID from the response in order to pass this string in the subsequent query transactions. 
@@ -170,7 +170,7 @@ curl -s -X POST \
 
 ```
 curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/chaincodes/mycc?peer=peer1&args=%5B%22query%22%2C%22a%22%5D" \
+  "http://localhost:4000/channels/mychannel/chaincodes/mycc?peer=peer1&fcn=query&args=%5B%22a%22%5D" \
   -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0OTQ4NjU1OTEsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE0OTQ4NjE5OTF9.yWaJhFDuTvMQRaZIqg20Is5t-JJ_1BP58yrNLOKxtNI" \
   -H "content-type: application/json"
 ```

@@ -23,18 +23,17 @@ var config = require('../config.json');
 var helper = require('./helper.js');
 var logger = helper.getLogger('Query');
 
-var queryChaincode = function(peer, channelName, chaincodeName, args, username, org) {
+var queryChaincode = function(peer, channelName, chaincodeName, args, fcn, username, org) {
 	var channel = helper.getChannelForOrg(org);
 	var client = helper.getClientForOrg(org);
 	var target = buildTarget(peer, org);
-
 	return helper.getRegisteredUsers(username, org).then((user) => {
 		tx_id = client.newTransactionID();
 		// send query
 		var request = {
 			chaincodeId: chaincodeName,
 			txId: tx_id,
-			fcn: config.functionName,
+			fcn: fcn,
 			args: args
 		};
 		return channel.queryByChaincode(request, target);
@@ -45,9 +44,9 @@ var queryChaincode = function(peer, channelName, chaincodeName, args, username, 
 	}).then((response_payloads) => {
 		if (response_payloads) {
 			for (let i = 0; i < response_payloads.length; i++) {
-				logger.info('User b now has ' + response_payloads[i].toString('utf8') +
+				logger.info(args[0]+' now has ' + response_payloads[i].toString('utf8') +
 					' after the move');
-				return 'User b now has ' + response_payloads[i].toString('utf8') +
+				return args[0]+' now has ' + response_payloads[i].toString('utf8') +
 					' after the move';
 			}
 		} else {

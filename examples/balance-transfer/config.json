@@ -2,15 +2,10 @@
    "host":"localhost",
    "port":"4000",
    "jwt_expiretime": "36000",
-   "chaincodeId":"mycc",
    "channelName":"mychannel",
-   "chaincodeVersion": "v0",
    "GOPATH":"../../../test/fixtures",
-   "chaincodePath":"github.com/example_cc",
    "keyValueStore":"/tmp/fabric-client-kvs",
-   "orgsList": ["org1","org2"],
    "eventWaitTime":"30000",
-   "invokeQueryFcnName":"invoke",
    "orderer":"grpcs://localhost:7050",
    "users":[
       {

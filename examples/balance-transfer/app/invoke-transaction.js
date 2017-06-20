@@ -40,7 +40,7 @@ var invokeChaincode = function(peersUrls, channelName, chaincodeName, fcn, args,
 		var request = {
 			targets: targets,
 			chaincodeId: chaincodeName,
-			fcn: config.invokeQueryFcnName,
+			fcn: fcn,
 			args: args,
 			chainId: channelName,
 			txId: tx_id
