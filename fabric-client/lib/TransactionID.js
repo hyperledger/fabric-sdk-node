@@ -34,7 +34,7 @@ var TransactionID = class {
 	/**
 	 * Builds a new tranaction Id based on a user's certificate and an automatically
 	 * generated nonce value.
-	 * @param {Client} clientContext An instance of {@link Client} that provides an unique
+	 * @param {User} userContext - An instance of {@link User} that provides an unique
 	 *                 base for this transaction id.
 	 */
 	constructor(userContext) {
