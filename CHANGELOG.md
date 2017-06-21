@@ -1,3 +1,33 @@
+## v1.0.0-rc1
+Fri Jun 23 13:06:19 EDT 2017
+
+* [b064869](https://github.com/hyperledger/fabric-sdk-node/commit/b064869) FAB-4521 prepare for v1.0.0-rc1 release
+* [50d39ba](https://github.com/hyperledger/fabric-sdk-node/commit/50d39ba) [FAB-4923](https://jira.hyperledger.org/browse/FAB-4923) Enable balance-transfer for rc1
+* [47a9286](https://github.com/hyperledger/fabric-sdk-node/commit/47a9286) [fab-4912] Modify e2e fixtures to support new MSP
+* [9dc6490](https://github.com/hyperledger/fabric-sdk-node/commit/9dc6490) [FAB-4918](https://jira.hyperledger.org/browse/FAB-4918) NodeSDK - remove workaround
+* [1b3d8a7](https://github.com/hyperledger/fabric-sdk-node/commit/1b3d8a7) [FAB-4852](https://jira.hyperledger.org/browse/FAB-4852) NodeSDK - fix doc broken links
+* [7cf6176](https://github.com/hyperledger/fabric-sdk-node/commit/7cf6176) [FAB-4615](https://jira.hyperledger.org/browse/FAB-4615) NodeSDK - TransactionID doc
+* [ada7f75](https://github.com/hyperledger/fabric-sdk-node/commit/ada7f75) [FAB-4882](https://jira.hyperledger.org/browse/FAB-4882) Bug fix in e2e query test
+* [9e7d7ac](https://github.com/hyperledger/fabric-sdk-node/commit/9e7d7ac) [FAB-4878](https://jira.hyperledger.org/browse/FAB-4878) fcn name handling in sample app
+* [9b8c6a0](https://github.com/hyperledger/fabric-sdk-node/commit/9b8c6a0) [FAB-4870](https://jira.hyperledger.org/browse/FAB-4870) Confusing fcn name handling in tests
+* [9f9659f](https://github.com/hyperledger/fabric-sdk-node/commit/9f9659f) [FAB-4860](https://jira.hyperledger.org/browse/FAB-4860) BaseClient.js missing 'use strict'
+* [2868120](https://github.com/hyperledger/fabric-sdk-node/commit/2868120) [FAB-4643](https://jira.hyperledger.org/browse/FAB-4643) NodeSDK - Work with the configtxlator
+* [164b777](https://github.com/hyperledger/fabric-sdk-node/commit/164b777) [FAB-4456](https://jira.hyperledger.org/browse/FAB-4456) JSDoc cleanup and enhancement - part VI
+* [dd49adb](https://github.com/hyperledger/fabric-sdk-node/commit/dd49adb) [FAB-4794](https://jira.hyperledger.org/browse/FAB-4794) NodeSDK - eventhub connect
+* [08f55c3](https://github.com/hyperledger/fabric-sdk-node/commit/08f55c3) [FAB-4456](https://jira.hyperledger.org/browse/FAB-4456) JSDoc cleanup and enhancement - part V
+* [8fb2968](https://github.com/hyperledger/fabric-sdk-node/commit/8fb2968) [FAB-4456](https://jira.hyperledger.org/browse/FAB-4456) JSDoc cleanup - part IV
+* [6c3bfe6](https://github.com/hyperledger/fabric-sdk-node/commit/6c3bfe6) [FAB-4456](https://jira.hyperledger.org/browse/FAB-4456) JSDoc cleanup - part III
+* [9ed6451](https://github.com/hyperledger/fabric-sdk-node/commit/9ed6451) [FAB-4456](https://jira.hyperledger.org/browse/FAB-4456) Fixup jsdoc - part II
+* [0eeaa61](https://github.com/hyperledger/fabric-sdk-node/commit/0eeaa61) FAB-4573 add missing license headers
+* [7185cdb](https://github.com/hyperledger/fabric-sdk-node/commit/7185cdb) [FAB-4483](https://jira.hyperledger.org/browse/FAB-4483) NodeSDK - intermittent errors
+* [811474c](https://github.com/hyperledger/fabric-sdk-node/commit/811474c) [FAB-4486](https://jira.hyperledger.org/browse/FAB-4486)Improve integration test for "instantiate CC"
+* [443bbef](https://github.com/hyperledger/fabric-sdk-node/commit/443bbef) [FAB-4456](https://jira.hyperledger.org/browse/FAB-4456) Fixup jsdoc - part I
+* [84ebeb4](https://github.com/hyperledger/fabric-sdk-node/commit/84ebeb4) [FAB-4395](https://jira.hyperledger.org/browse/FAB-4395) Prepare for rc1 development
+* [d8f52a8](https://github.com/hyperledger/fabric-sdk-node/commit/d8f52a8) [FAB-4446](https://jira.hyperledger.org/browse/FAB-4446) NodeSDK - test code invalid
+* [a05c55c](https://github.com/hyperledger/fabric-sdk-node/commit/a05c55c) [FAB-4441](https://jira.hyperledger.org/browse/FAB-4441) NodeSDK update protos to current
+* [a156a23](https://github.com/hyperledger/fabric-sdk-node/commit/a156a23) [FAB-4435](https://jira.hyperledger.org/browse/FAB-4435) gulp test recreates containers
+* [2717d9b](https://github.com/hyperledger/fabric-sdk-node/commit/2717d9b) Fix indexing bug in installChaincode e2e test
+
 ## v1.0.0-beta
 Thu Jun  8 07:11:33 EDT 2017
 
