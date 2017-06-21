@@ -396,10 +396,10 @@ test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
 						&& response.chaincodes[i].path === testUtil.CHAINCODE_PATH) {
 						found = true;
 					}
-					t.end();
 				}
 				if (found) {
 					t.pass('queryInstalledChaincodes - found match for e2e');
+					t.end();
 				} else {
 					t.fail('queryInstalledChaincodes - did not find match for e2e');
 					t.end();
