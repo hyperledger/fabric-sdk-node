@@ -586,13 +586,13 @@ var Channel = class {
 				// now build the seek info to get the block called out
 				// as the latest config block
 				var seekSpecifiedStart = new _abProto.SeekSpecified();
-				seekSpecifiedStart.setNumber(0); //FIXME: temporary hack to workaround https://jira.hyperledger.org/browse/FAB-3493
+				seekSpecifiedStart.setNumber(last_config.index);
 				var seekStart = new _abProto.SeekPosition();
 				seekStart.setSpecified(seekSpecifiedStart);
 
 				//   build stop
 				var seekSpecifiedStop = new _abProto.SeekSpecified();
-				seekSpecifiedStop.setNumber(0); //FIXME: temporary hack to workaround https://jira.hyperledger.org/browse/FAB-3493
+				seekSpecifiedStop.setNumber(last_config.index);
 				var seekStop = new _abProto.SeekPosition();
 				seekStop.setSpecified(seekSpecifiedStop);
 
