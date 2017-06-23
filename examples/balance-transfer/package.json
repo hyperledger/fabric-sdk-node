@@ -1,6 +1,6 @@
 {
   "name": "balance-transfer",
-  "version": "1.0.0-rc1",
+  "version": "1.0.0-snapshot",
   "description": "A balance-transfer example node program to demonstrate using node.js SDK APIs",
   "main": "app/app.js",
   "keywords": [
