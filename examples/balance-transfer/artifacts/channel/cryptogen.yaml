@@ -86,8 +86,8 @@ PeerOrgs:
       Count: 2
       # Start: 5
       # Hostname: {{.Prefix}}{{.Index}} # default
-      # SANS:
-      #   - "{{.Hostname}}.alt.{{.Domain}}"
+      SANS:
+        - "localhost"
 
     # ---------------------------------------------------------------------------
     # "Users"
@@ -107,5 +107,7 @@ PeerOrgs:
 
     Template:
       Count: 2
+      SANS:
+        - "localhost"
     Users:
       Count: 1
