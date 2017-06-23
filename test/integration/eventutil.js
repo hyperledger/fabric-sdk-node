@@ -93,11 +93,9 @@ module.exports.sendTransaction = function(channel, results) {
 	if (checkProposal(results)) {
 		var proposalResponses = results[0];
 		var proposal = results[1];
-		var header = results[2];
 		var request = {
 			proposalResponses: proposalResponses,
-			proposal: proposal,
-			header: header
+			proposal: proposal
 		};
 		return channel.sendTransaction(request);
 	} else {

@@ -44,7 +44,6 @@ var installChaincode = function(peers, chaincodeName, chaincodePath,
 	}).then((results) => {
 		var proposalResponses = results[0];
 		var proposal = results[1];
-		var header = results[2];
 		var all_good = true;
 		for (var i in proposalResponses) {
 			let one_good = false;

@@ -218,7 +218,6 @@ function installChaincode(params, t) {
 			var proposalResponses = results[0];
 
 			var proposal = results[1];
-			var header   = results[2];
 			var all_good = true;
 			var error = null;
 			for(var i in proposalResponses) {

@@ -122,7 +122,6 @@ function installChaincode(org, chaincode_path, version, t) {
 		var proposalResponses = results[0];
 
 		var proposal = results[1];
-		var header   = results[2];
 		var all_good = true;
 		var errors = [];
 		for(var i in proposalResponses) {
@@ -318,7 +317,6 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		var proposalResponses = results[0];
 
 		var proposal = results[1];
-		var header   = results[2];
 		var all_good = true;
 		for(var i in proposalResponses) {
 			let one_good = false;
@@ -336,8 +334,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 			var request = {
 				proposalResponses: proposalResponses,
-				proposal: proposal,
-				header: header
+				proposal: proposal
 			};
 
 			// set the transaction listener and set a timeout of 30sec
@@ -590,7 +587,6 @@ function invokeChaincode(userOrg, version, t, useStore){
 		var proposalResponses = pass_results[0];
 
 		var proposal = pass_results[1];
-		var header   = pass_results[2];
 		var all_good = true;
 		for(var i in proposalResponses) {
 			let one_good = false;
@@ -624,8 +620,7 @@ function invokeChaincode(userOrg, version, t, useStore){
 			logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 			var request = {
 				proposalResponses: proposalResponses,
-				proposal: proposal,
-				header: header
+				proposal: proposal
 			};
 
 			// set the transaction listener and set a timeout of 30sec
