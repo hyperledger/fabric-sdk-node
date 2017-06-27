@@ -3,7 +3,6 @@ docs/gen
 node_modules/*
 fabric-client/node_modules/*
 fabric-ca-client/node_modules/*
-examples/balance-transfer/node_modules/*
 fabric-ca-client/lib/api.js
 fabric-ca-client/lib/utils.js
 fabric-ca-client/lib/BaseClient.js
