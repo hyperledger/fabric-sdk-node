@@ -813,6 +813,67 @@ var Channel = class {
 		}
 	}
 
+    /**
+     * Queries the ledger on the target peer for a Block TransactionID.
+     *
+     * @param {string} targetTxId - The TransactionID of the Block in question.
+     * @param {Peer} target - Optional. The peer to send the query to. If no target is passed,
+     *                        the query is sent to the first peer that was added to the channel object.
+     * @returns {Block} The block matching the TransactionID, fully decoded into an object.
+     */
+    queryBlockByTxID(targetTxId, target) {
+        logger.debug('queryBlockByTxID - start');
+        if(!targetTxId) {
+            return Promise.reject( new Error('TxId bytes are required'));
+        }
+        var peer = this._getPeerForQuery(target);
+        if (peer instanceof Error) {
+            throw peer;
+        }
+        var self = this;
+        var userContext = this._clientContext.getUserContext();
+        var txId = new TransactionID(userContext);
+        var request = {
+            targets: [peer],
+            chaincodeId : Constants.QSCC,
+            chainId: '',
+            txId: txId,
+            fcn : 'GetBlockByTxID',
+            args: [ self._name,targetTxId]
+        };
+        return self.sendTransactionProposal(request)
+            .then(
+                function(results) {
+                    var responses = results[0];
+                    logger.debug('queryBlockByTxID - got response');
+                    if(responses && Array.isArray(responses)) {
+                        //will only be one response as we are only querying the primary peer
+                        if(responses.length > 1) {
+                            return Promise.reject(new Error('Too many results returned'));
+                        }
+                        let response = responses[0];
+                        if(response instanceof Error ) {
+                            return Promise.reject(response);
+                        }
+                        if(response.response) {
+                            logger.debug('queryBlockByTxID - response status %d:', response.response.status);
+                            var block = BlockDecoder.decode(response.response.payload);
+                            logger.debug('queryBlockByTxID - looking at block :: %s',block.header.number);
+                            return Promise.resolve(block);
+                        }
+                        // no idea what we have, lets fail it and send it back
+                        return Promise.reject(response);
+                    }
+                    return Promise.reject(new Error('Payload results are missing from the query'));
+                }
+            ).catch(
+                function(err) {
+                    logger.error('Failed Query block. Error: %s', err.stack ? err.stack : err);
+                    return Promise.reject(err);
+                }
+            );
+    }
+
 	/**
 	 * Queries the ledger on the target peer for a Block by block hash.
 	 *
