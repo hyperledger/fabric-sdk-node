@@ -67,9 +67,9 @@ var Orderer = class extends Remote {
 	 *
 	 * @param {byte[]} envelope - Byte data to be included in the broadcast. This must
 	 *                            be a protobuf encoded byte array of the
-	 *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/common.proto#L132}
-	 *                            that contains either a [ConfigUpdateEnvelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/configtx.proto#L70}
-	 *                            or a [Transaction]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/transaction.proto#L70}
+	 *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L132}
+	 *                            that contains either a [ConfigUpdateEnvelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/configtx.proto#L70}
+	 *                            or a [Transaction]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L70}
 	 *                            in the <code>payload.data</code> property of the envelope.
 	 * @returns {Promise} A Promise for a {@link BroadcastResponse} object
 	 */
@@ -148,11 +148,11 @@ var Orderer = class extends Remote {
 	 *
 	 * @param {byte[]} envelope - Byte data to be included in the broadcast. This must
 	 *                            be a protobuf encoded byte array of the
-	 *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/common.proto#L132}
-	 *                            that contains a [SeekInfo]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/orderer/ab.proto#L54}
+	 *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L132}
+	 *                            that contains a [SeekInfo]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/orderer/ab.proto#L54}
 	 *                            in the <code>payload.data</code> property of the envelope.
 	 *                            The <code>header.channelHeader.type</code> must be set to
-	 *                            [common.HeaderType.DELIVER_SEEK_INFO]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/common.proto#L44}
+	 *                            [common.HeaderType.DELIVER_SEEK_INFO]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L44}
 	 * @returns {Promise} A Promise for a protobuf object of type common.Block. Note that this
 	 *                    is <b>NOT</b> the same type of object as the {@link Block} returned by the
 	 *                    [BlockDecoder.decode()]{@link BlockDecode.decode} method and various

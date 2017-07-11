@@ -1375,7 +1375,7 @@ var Channel = class {
 	 * validation against the chaincode's endorsement policy. When the committering peers
 	 * successfully validate the transactions, it will mark the transaction as valid inside
 	 * the block. After all transactions in a block have been validated, and marked either as
-	 * valid or invalid (with a [reason code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/transaction.proto#L125}),
+	 * valid or invalid (with a [reason code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L125}),
 	 * the block will be appended (committed) to the channel's ledger on the peer.
 	 * <br><br>
 	 * The caller of this method must use the proposal responses returned from the endorser along
@@ -1388,7 +1388,7 @@ var Channel = class {
 	 *
 	 * @param {TransactionRequest} request
 	 * @returns {Promise} A Promise for a "BroadcastResponse" message returned by the orderer that contains a
-	 *                    single "status" field for a standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/common.proto#L27}.
+	 *                    single "status" field for a standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
 	 *                    This will be an acknowledgement from the orderer of successfully submitted transaction.
 	 */
 	sendTransaction(request) {

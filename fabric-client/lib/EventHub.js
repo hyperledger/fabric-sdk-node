@@ -88,10 +88,10 @@ var ChainCodeCBE = class {
  *     will be passed a fully decoded {@link Block} object. See [registerBlockEvent]{@link EventHub#registerBlockEvent}
  * <li>register a "transaction listener" to get called when the specific transaction
  *     by id is committed (discovered inside a block event). The listener will be
- *     passed the transaction id and the [validation code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/transaction.proto#L125}.
+ *     passed the transaction id and the [validation code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L125}.
  *     See [registerTxEvent]{@link EventHub#registerTxEvent}
  * <li>register a "chaincode event listener" to get called when a specific
- *     [chaincode event]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/examples/chaincode/go/eventsender/eventsender.go}
+ *     [chaincode event]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/examples/chaincode/go/eventsender/eventsender.go#L65}
  *     has arrived. The listener will be passed the {@link ChaincodeEvent}. See
  *     [registerChaincodeEvent]{@link EventHub#registerChaincodeEvent}
  * <br><br>
@@ -108,9 +108,9 @@ var ChainCodeCBE = class {
  *     implementations can be used as reference to write the necessary glue code between
  *     the fabric event stream and a message queue:
  * <ul>
- *     <li>Node.js: this class. Source code can be found [here]{@link https://github.com/hyperledger/fabric-sdk-node/blob/v1.0.0-beta/fabric-client/lib/EventHub.js}
- *     <li>Java: part of the Java SDK for Hyperledger Fabric. Source code can be found [here]{@link https://github.com/hyperledger/fabric-sdk-java/blob/v1.0.0-beta/src/main/java/org/hyperledger/fabric/sdk/EventHub.java}
- *     <li>Golang: an example event listener client can be found [here]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/examples/events/block-listener/block-listener.go}
+ *     <li>Node.js: this class. Source code can be found [here]{@link https://github.com/hyperledger/fabric-sdk-node/blob/v1.0.0/fabric-client/lib/EventHub.js}
+ *     <li>Java: part of the Java SDK for Hyperledger Fabric. Source code can be found [here]{@link https://github.com/hyperledger/fabric-sdk-java/blob/v1.0.0/src/main/java/org/hyperledger/fabric/sdk/EventHub.java}
+ *     <li>Golang: an example event listener client can be found [here]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/examples/events/block-listener/block-listener.go}
  * </ul>
  *
  * @example
