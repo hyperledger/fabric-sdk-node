@@ -1,3 +1,10 @@
+## v1.0.0
+Tue Jul 11 12:19:53 EDT 2017
+
+* [a865121](https://github.com/hyperledger/fabric-sdk-node/commit/a865121) [FAB-4996](https://jira.hyperledger.org/browse/FAB-4996) NodeSDK - move sample - part 2
+* [95502b6](https://github.com/hyperledger/fabric-sdk-node/commit/95502b6) [FAB-4964](https://jira.hyperledger.org/browse/FAB-4964) NodeSDK - update test cases
+* [16c9318](https://github.com/hyperledger/fabric-sdk-node/commit/16c9318) FAB-4525 prepare for rc2 development
+
 ## v1.0.0-rc1
 Fri Jun 23 13:06:19 EDT 2017
 

@@ -1,0 +1,23 @@
+v1.0.0 July 11, 2017
+-------------------------
+
+Release Notes
+-------------
+Bug fixes and documentation.
+Moved the sample application to the fabric-samples repository.
+
+Known Vulnerabilities
+---------------------
+none
+
+Resolved Vulnerabilities
+------------------------
+none
+
+Known Issues & Workarounds
+--------------------------
+none
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/master/CHANGELOG.md#v100
