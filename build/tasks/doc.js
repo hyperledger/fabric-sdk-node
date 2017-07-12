@@ -35,7 +35,7 @@ gulp.task('doc', ['clean'], function () {
 	], { read: false })
 	.pipe(jsdoc({
 		opts: {
-			tutorials: './docs',
+			tutorials: './docs/tutorials',
 			destination: './docs/gen'
 		},
 		templates: {
