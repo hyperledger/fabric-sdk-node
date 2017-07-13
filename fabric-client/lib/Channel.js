@@ -907,8 +907,8 @@ var Channel = class {
 			.then(
 				function (results) {
 					var responses = results[0];
-					logger.debug('queryInfo - got responses=' + responses.length);
 					if (responses && Array.isArray(responses)) {
+						logger.debug('queryInfo - got responses=' + responses.length);
 						//will only be one response as we are only querying the primary peer
 						if (responses.length > 1) {
 							return Promise.reject(new Error('Too many results returned'));
@@ -933,6 +933,62 @@ var Channel = class {
 					return Promise.reject(err);
 				}
 			);
+	}
+
+	/**
+	 * Queries the ledger on the target peer for a Block TransactionID.
+	 *
+	 * @param {string} tx_id - The TransactionID of the Block in question.
+	 * @param {Peer} target - Optional. The peer to send the query to. If no target is passed,
+	 *                        the query is sent to the first peer that was added to the channel object.
+	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
+	 *                  this call to the peer.
+	 * @returns {Promise} A Promise for a {@link Block} matching the tx_id, fully decoded into an object.
+	 */
+	queryBlockByTxID(tx_id, target, useAdmin) {
+		logger.debug('queryBlockByTxID - start');
+		if (!tx_id || !(typeof tx_id === 'string')) {
+			throw new Error('tx_id as string is required');
+		}
+
+		const args = [this._name,tx_id];
+		const targets = this._getTargetForQuery(target);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+
+		const request = {
+			targets,
+			chaincodeId: Constants.QSCC,
+			txId: new TransactionID(signer,useAdmin),
+			fcn: 'GetBlockByTxID',
+			args
+		};
+		return this.sendTransactionProposal(request)
+			.then((results)=> {
+				const responses = results[0];
+				if (responses && Array.isArray(responses)) {
+					logger.debug('queryBlockByTxID - got response',responses.length);
+					//will only be one response as we are only querying the primary peer
+					if (responses.length > 1) {
+						return Promise.reject(new Error('Too many results returned'));
+					}
+					const response = responses[0];
+					if (response instanceof Error) {
+						return Promise.reject(response);
+					}
+					if (response.response) {
+						logger.debug('queryBlockByTxID - response status %d:', response.response.status);
+						const block = BlockDecoder.decode(response.response.payload);
+						logger.debug('queryBlockByTxID - looking at block :: %s', block.header.number);
+						return Promise.resolve(block);
+					}
+					// no idea what we have, lets fail it and send it back
+					return Promise.reject(response);
+				}
+				return Promise.reject(new Error('Payload results are missing from the query'));
+			}).catch((err)=> {
+				logger.error('Failed Query block. Error: %s', err.stack ? err.stack : err);
+				return Promise.reject(err);
+			});
 	}
 
 	/**

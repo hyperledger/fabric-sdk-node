@@ -361,6 +361,7 @@ declare class Channel {
   queryBlock(blockNumber: number, target?: Peer, useAdmin?: boolean): Promise<any>;
   queryBlockByHash(block : Buffer, target?: Peer, useAdmin?: boolean): Promise<any>;
   queryTransaction(txId: string, target?: Peer, useAdmin?: boolean): Promise<any>;
+  queryBlockByTxID(txId: string, target?: Peer, useAdmin?: boolean): Promise<any>;
   queryInstantiatedChaincodes(target: Peer, useAdmin?: boolean): Promise<ChaincodeQueryResponse>;
   queryInfo(target: Peer, useAdmin?: boolean): Promise<any>;
   getOrderers(): Orderer[];

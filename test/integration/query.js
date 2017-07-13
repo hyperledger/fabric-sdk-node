@@ -50,35 +50,10 @@ var orgName;
 var e2e = testUtil.END2END;
 var ORGS, peer0;
 
-var the_user = null;
-var tx_id = null;
-
-var querys = [];
-if (process.argv.length > 2) {
-	for (let i=2; i<process.argv.length; i++) {
-		querys.push(process.argv[i]);
-	}
-}
-logger.debug('Found query: %s', querys);
-
-// Second test in query.js has optional parameters; have they been specified?
-var queryParameters = false;    // false = do all queries; true = do some queries
-if (querys.length > 0 ) {
-	// Parameters detected; are these query parameters or gulp parameters?
-	if ((querys.indexOf('GetBlockByNumber') > -1) ||
-		(querys.indexOf('GetTransactionByID') > -1) ||
-		(querys.indexOf('GetChannelInfo') > -1) ||
-		(querys.indexOf('GetBlockByHash') > -1) ||
-		(querys.indexOf('GetInstalledChaincodes') > -1) ||
-		(querys.indexOf('GetInstantiatedChaincodes') > -1) ||
-		(querys.indexOf('GetChannels') > -1)) {
-		queryParameters = true;  // at least one query parameter specified
-	}
-}
+let tx_id = null;
 
 var data;
-
-test('  ---->>>>> Query channel working <<<<<-----', function(t) {
+test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 	orgName = ORGS[org].name;
@@ -88,22 +63,20 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 	let caroots = Buffer.from(data).toString();
 	let tlsInfo = null;
 
-	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	var cryptoSuite = Client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: testUtil.storePathForOrg(orgName) }));
 	client.setCryptoSuite(cryptoSuite);
 
-	return e2eUtils.tlsEnroll(org)
-	.then((enrollment) => {
+	return e2eUtils.tlsEnroll(org).then((enrollment) => {
 		t.pass('Successfully retrieved TLS certificate');
 		tlsInfo = enrollment;
-		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
-	}).then( function (store) {
+		return Client.newDefaultKeyValueStore({ path: testUtil.storePathForOrg(orgName) });
+	}).then((store) => {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, org);
-	}).then((admin) => {
+	}).then(() => {
 		t.pass('Successfully enrolled user \'admin\'');
-		the_user = admin;
 
 		channel.addOrderer(
 			new Orderer(
@@ -143,27 +116,27 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 		// and initialize the verify MSPs based on the participating
 		// organizations
 		return channel.initialize();
-	}).then((success) => {
+	}).then(() => {
 		t.pass('Successfully initialized channel');
 		// use default primary peer
 		// send query
 		return channel.queryBlock(0);
 	}).then((block) => {
-		logger.debug(' Channel getBlock() returned block number=%s',block.header.number);
-		t.equal(block.header.number.toString(),'0','checking query results are correct that we got zero block back');
-		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Orderer.groups.OrdererMSP.values.MSP.value.config.name,'OrdererMSP','checking query results are correct that we got the correct orderer MSP name');
-		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.groups.Org2MSP.policies.Writers.policy.type,'SIGNATURE','checking query results are correct that we got the correct policy type');
-		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.policies.Writers.policy.value.rule,'ANY','checking query results are correct that we got the correct policy rule');
-		t.equal(block.data.data[0].payload.data.config.channel_group.policies.Admins.mod_policy,'Admins','checking query results are correct that we got the correct mod policy name');
+		logger.debug(' Channel getBlock() returned block number=%s', block.header.number);
+		t.equal(block.header.number.toString(), '0', 'checking query results are correct that we got zero block back');
+		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Orderer.groups.OrdererMSP.values.MSP.value.config.name, 'OrdererMSP', 'checking query results are correct that we got the correct orderer MSP name');
+		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.groups.Org2MSP.policies.Writers.policy.type, 'SIGNATURE', 'checking query results are correct that we got the correct policy type');
+		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.policies.Writers.policy.value.rule, 'ANY', 'checking query results are correct that we got the correct policy rule');
+		t.equal(block.data.data[0].payload.data.config.channel_group.policies.Admins.mod_policy, 'Admins', 'checking query results are correct that we got the correct mod policy name');
 		return channel.queryBlock(1);
 	}).then((block) => {
-		logger.debug(' Channel getBlock() returned block number=%s',block.header.number);
-		t.equal(block.header.number.toString(),'1','checking query results are correct that we got a transaction block back');
-		t.equal(block.data.data[0].payload.data.actions[0].payload.action.endorsements[0].endorser.Mspid,'Org1MSP','checking query results are correct that we got a transaction block back with correct endorsement MSP id');
+		logger.debug(' Channel getBlock() returned block number=%s', block.header.number);
+		t.equal(block.header.number.toString(), '1', 'checking query results are correct that we got a transaction block back');
+		t.equal(block.data.data[0].payload.data.actions[0].payload.action.endorsements[0].endorser.Mspid, 'Org1MSP', 'checking query results are correct that we got a transaction block back with correct endorsement MSP id');
 
-		tx_id = utils.getConfigSetting('E2E_TX_ID', 'notfound');
+		tx_id = utils.getConfigSetting('E2E_TX_ID');
 		logger.debug('getConfigSetting("E2E_TX_ID") = %s', tx_id);
-		if (tx_id === 'notfound') {
+		if (!tx_id) {
 			logger.error('   Did you set the E2E_TX_ID environment variable after running invoke-transaction.js ?');
 			throw new Error('Could not get tx_id from ConfigSetting "E2E_TX_ID"');
 		} else {
@@ -202,331 +175,276 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 		return channel.queryInfo(peer0);
 	}).then((blockchainInfo) => {
 		t.pass('got back blockchain info ');
-		logger.debug(' Channel queryInfo() returned block height='+blockchainInfo.height);
-		logger.debug(' Channel queryInfo() returned block previousBlockHash='+blockchainInfo.previousBlockHash);
-		logger.debug(' Channel queryInfo() returned block currentBlockHash='+blockchainInfo.currentBlockHash);
+		logger.debug(' Channel queryInfo() returned block height=' + blockchainInfo.height);
+		logger.debug(' Channel queryInfo() returned block previousBlockHash=' + blockchainInfo.previousBlockHash);
+		logger.debug(' Channel queryInfo() returned block currentBlockHash=' + blockchainInfo.currentBlockHash);
 		var block_hash = blockchainInfo.currentBlockHash;
 		// send query
 		return channel.queryBlockByHash(block_hash, peer0);
 	}).then((block) => {
-		logger.debug(' Channel queryBlockByHash() returned block number=%s',block.header.number);
-		t.pass('got back block number '+ block.header.number);
+		logger.debug(' Channel queryBlockByHash() returned block number=%s', block.header.number);
+		t.pass('got back block number ' + block.header.number);
+		return channel.queryBlockByTxID(tx_id);
+	}).then((block) => {
+		t.pass(util.format('Should find block[%s] by txid: %s', block.header.number, tx_id));
 		t.end();
 	}).catch((err) => {
-		throw new Error(err.stack ? err.stack : err);
+		t.fail('Query channel failed:%j', err);
+		t.end();
 	});
 });
 
-test('  ---->>>>> Query channel failing: GetBlockByNumber <<<<<-----', function(t) {
-	if (!queryParameters || querys.indexOf('GetBlockByNumber') >= 0) {
+test('  ---->>>>> Query channel failing: GetBlockByNumber <<<<<-----', (t) => {
 
-		return Client.newDefaultKeyValueStore({
-			path: testUtil.storePathForOrg(orgName)
-		}).then(
-			function(store) {
-				client.setStateStore(store);
-				return testUtil.getSubmitter(client, t, org);
-			}
-		).then(
-			function(admin) {
-				t.pass('Successfully enrolled user \'admin\'');
-				the_user = admin;
-				// send query
-				return channel.queryBlock(9999999); //should not find it
-			},
-			function(err) {
-				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-				t.end();
-			}
-		).then(
-			function(response_payloads) {
-				t.fail('Should not have found a block');
-				t.end();
-			},
-			function(err) {
-				t.pass(util.format('Did not find a block with this number : %j', err));
-				t.end();
-			}
-		).catch(
-			function(err) {
-				t.fail('Failed to query with error:' + err.stack ? err.stack : err);
-				t.end();
-			}
-		);
-	} else t.end();
+	return Client.newDefaultKeyValueStore({
+		path: testUtil.storePathForOrg(orgName)
+	}).then((store) => {
+		client.setStateStore(store);
+		return testUtil.getSubmitter(client, t, org);
+	}).then(() => {
+		t.pass('Successfully enrolled user \'admin\'');
+		// send query
+		return channel.queryBlock(9999999); //should not find it
+	}, (err) => {
+		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(() => {
+		t.fail('Should not have found a block');
+		t.end();
+	}, (err) => {
+		t.pass(util.format('Did not find a block with this number : %j', err));
+		t.end();
+	}).catch((err) => {
+		t.fail('Failed to query with error:' + err.stack ? err.stack : err);
+		t.end();
+	});
 });
 
-test('  ---->>>>> Query channel failing: GetTransactionByID <<<<<-----', function(t) {
-	if (!queryParameters || querys.indexOf('GetTransactionByID') >= 0) {
-		return Client.newDefaultKeyValueStore({
-			path: testUtil.storePathForOrg(orgName)
-		}).then(
-			function(store) {
-				client.setStateStore(store);
-				return testUtil.getSubmitter(client, t, org);
-			}
-		).then(
-			function(admin) {
-				t.pass('Successfully enrolled user \'admin\'');
-				if(admin) the_user = admin;
-				// send query
-				return channel.queryTransaction('99999'); //assumes the end-to-end has run first
-			},
-			function(err) {
-				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-				t.end();
-			}
-		).then(
-			function(response_payloads) {
-				t.fail('Should not have found a transaction with this ID');
-				t.end();
-			},
-			function(err) {
-				t.pass('Did not find a transaction ::' + err);
-				t.end();
-			}
-		).catch(
-			function(err) {
-				t.fail('Failed to query with error:' + err.stack ? err.stack : err);
-				t.end();
-			}
-		);
-	} else t.end();
+test('  ---->>>>> Query channel failing: GetBlockByTxID <<<<<-----', (t) => {
+
+	return Client.newDefaultKeyValueStore({
+		path: testUtil.storePathForOrg(orgName)
+	}).then((store) => {
+		client.setStateStore(store);
+		return testUtil.getSubmitter(client, t, org);
+	}).then(() => {
+		return channel.queryBlockByTxID(client.newTransactionID()); //should not find this txid
+	}, (err) => {
+		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(() => {
+		t.fail('Should not have found a block');
+		t.end();
+	}, (err) => {
+		t.pass(util.format('Did not find a block with this txid : %j', err));
+		t.end();
+	}).catch((err) => {
+		t.fail('Failed to query with error:' + err.stack ? err.stack : err);
+		t.end();
+	});
 });
 
-test('  ---->>>>> Query channel failing: GetChannelInfo <<<<<-----', function(t) {
-	if (!queryParameters || querys.indexOf('GetChannelInfo') >= 0) {
-
-		return Client.newDefaultKeyValueStore({
-			path: testUtil.storePathForOrg(orgName)
-		}).then(
-			function(store) {
-				client.setStateStore(store);
-				return testUtil.getSubmitter(client, t, org);
-			}
-		).then(
-			function(admin) {
-				t.pass('Successfully enrolled user \'admin\'');
-				if(admin) the_user = admin;
-				// send query
-				channel._name = 'dummy';
-				return channel.queryInfo();
-			},
-			function(err) {
-				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-				t.end();
-			}
-		).then(
-			function(response_payloads) {
-				t.fail('Should not have found channel info');
-				t.end();
-			},
-			function(err) {
-				t.pass(util.format('Did not find channel info : %j', err));
-				t.end();
-			}
-		).catch(
-			function(err) {
-				t.fail('Failed to query with error:' + err.stack ? err.stack : err);
-				t.end();
-			}
-		);
-	} else t.end();
+test('  ---->>>>> Query channel failing: GetTransactionByID <<<<<-----', (t) => {
+	return Client.newDefaultKeyValueStore({
+		path: testUtil.storePathForOrg(orgName)
+	}).then((store) => {
+		client.setStateStore(store);
+		return testUtil.getSubmitter(client, t, org);
+	}).then(() => {
+		t.pass('Successfully enrolled user \'admin\'');
+		// send query
+		return channel.queryTransaction('99999'); //assumes the end-to-end has run first
+	}, (err) => {
+		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(() => {
+		t.fail('Should not have found a transaction with this ID');
+		t.end();
+	}, (err) => {
+		t.pass('Did not find a transaction ::' + err);
+		t.end();
+	}).catch((err) => {
+		t.fail('Failed to query with error:' + err.stack ? err.stack : err);
+		t.end();
+	});
 });
 
-test('  ---->>>>> Query channel failing: GetBlockByHash <<<<<-----', function(t) {
-	if (!queryParameters || querys.indexOf('GetBlockByHash') >= 0) {
-		return Client.newDefaultKeyValueStore({
-			path: testUtil.storePathForOrg(orgName)
-		}).then(
-			function (store) {
-				client.setStateStore(store);
-				return testUtil.getSubmitter(client, t, org);
-			}
-		).then(
-			function(admin) {
-				t.pass('Successfully enrolled user \'admin\'');
-				if(admin) the_user = admin;
-				// send query
-				channel._name = channel_id; //put it back
-				return channel.queryBlockByHash(Buffer.from('dummy'));
-			},
-			function(err) {
-				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-				t.end();
-			}
-		).then(
-			function(response_payloads) {
-				t.fail('Should not have found block data');
-				t.end();
-			},
-			function(err) {
-				t.pass(util.format('Did not find block data : %j', err));
-				t.end();
-			}
-		).catch(
-			function(err) {
-				t.fail('Failed to query with error:' + err.stack ? err.stack : err);
-				t.end();
-			}
-		);
-	} else t.end();
+test('  ---->>>>> Query channel failing: GetChannelInfo <<<<<-----', (t) => {
+
+	return Client.newDefaultKeyValueStore({
+		path: testUtil.storePathForOrg(orgName)
+	}).then((store) => {
+		client.setStateStore(store);
+		return testUtil.getSubmitter(client, t, org);
+	}).then(() => {
+		t.pass('Successfully enrolled user \'admin\'');
+		// send query
+		channel._name = 'dummy';
+		return channel.queryInfo();
+	}, (err) => {
+		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(() => {
+		t.fail('Should not have found channel info');
+		t.end();
+	}, (err) => {
+		t.pass(util.format('Did not find channel info : %j', err));
+		t.end();
+	}).catch((err) => {
+		t.fail('Failed to query with error:' + err.stack ? err.stack : err);
+		t.end();
+	});
 });
 
-test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', function(t) {
-	if (!queryParameters || querys.indexOf('GetInstalledChaincodes') >= 0) {
-		return Client.newDefaultKeyValueStore({
-			path: testUtil.storePathForOrg(orgName)
-		}).then( function (store) {
-			client.setStateStore(store);
-
-			// get the peer org's admin required to query installed chaincodes
-			return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
-		}).then(
-			function(admin) {
-				t.pass('Successfully enrolled user \'admin\'');
-				// send query
-				return client.queryInstalledChaincodes(peer0);
-			},
-			function(err) {
-				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-				t.end();
-			}
-		).then(
-			function(response) {
-				logger.debug('<<< installed chaincodes >>>');
-				let found = false;
-
-				for (let i=0; i<response.chaincodes.length; i++) {
-					logger.debug('name: '+response.chaincodes[i].name+
-					', version: '+response.chaincodes[i].version+
-					', path: '+response.chaincodes[i].path);
-
-					if (response.chaincodes[i].name === e2e.chaincodeId
-						&& response.chaincodes[i].version === e2e.chaincodeVersion
-						&& response.chaincodes[i].path === testUtil.CHAINCODE_PATH) {
-						found = true;
-					}
-				}
-				if (found) {
-					t.pass('queryInstalledChaincodes - found match for e2e');
-					t.end();
-				} else {
-					t.fail('queryInstalledChaincodes - did not find match for e2e');
-					t.end();
-				}
-			},
-			function(err) {
-				t.fail('Failed to send queryInstalledChaincodes due to error: ' + err.stack ? err.stack : err);
-				t.end();
-			}
-		).catch(
-			function(err) {
-				t.fail('Failed to queryInstalledChaincodes with error:' + err.stack ? err.stack : err);
-				t.end();
-			}
-		);
-	} else t.end();
+test('  ---->>>>> Query channel failing: GetBlockByHash <<<<<-----', (t) => {
+	return Client.newDefaultKeyValueStore({
+		path: testUtil.storePathForOrg(orgName)
+	}).then((store) => {
+		client.setStateStore(store);
+		return testUtil.getSubmitter(client, t, org);
+	}).then(() => {
+		t.pass('Successfully enrolled user \'admin\'');
+		// send query
+		channel._name = channel_id; //put it back
+		return channel.queryBlockByHash(Buffer.from('dummy'));
+	}, (err) => {
+		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(() => {
+		t.fail('Should not have found block data');
+		t.end();
+	}, (err) => {
+		t.pass(util.format('Did not find block data : %j', err));
+		t.end();
+	}).catch((err) => {
+		t.fail('Failed to query with error:' + err.stack ? err.stack : err);
+		t.end();
+	});
 });
 
-test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', function(t) {
-	if (!queryParameters || querys.indexOf('GetInstantiatedChaincodes') >= 0) {
-		return Client.newDefaultKeyValueStore({
-			path: testUtil.storePathForOrg(orgName)
-		}).then( function (store) {
-			client.setStateStore(store);
+test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', (t) => {
+	return Client.newDefaultKeyValueStore({
+		path: testUtil.storePathForOrg(orgName)
+	}).then((store) => {
+		client.setStateStore(store);
 
-			// get the peer org's admin required to query instantiated chaincodes
-			return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
-		}).then(
-			function(admin) {
-				t.pass('Successfully enrolled user \'admin\'');
-				// send query
-				return channel.queryInstantiatedChaincodes();
-			},
-			function(err) {
-				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-				t.end();
-			}
-		).then(
-			function(response) {
-				logger.debug('<<< instantiated chaincodes >>>');
-				let found = false;
-				for (let i=0; i<response.chaincodes.length; i++) {
-					logger.debug('name: '+response.chaincodes[i].name+
-					', version: '+response.chaincodes[i].version+
-					', path: '+response.chaincodes[i].path);
+		// get the peer org's admin required to query installed chaincodes
+		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
+	}).then(() => {
+		t.pass('Successfully enrolled user \'admin\'');
+		// send query
+		return client.queryInstalledChaincodes(peer0);
+	}, (err) => {
+		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then((response) => {
+		logger.debug('<<< installed chaincodes >>>');
+		let found = false;
 
-					if (response.chaincodes[i].name === e2e.chaincodeId
-						&& response.chaincodes[i].version === 'v1'
-						&& response.chaincodes[i].path === testUtil.CHAINCODE_UPGRADE_PATH) {
-						found = true;
-					}
-				}
-				if (found) {
-					t.pass('queryInstantiatedChaincodes - found match for e2e');
-					t.end();
-				} else {
-					t.fail('queryInstantiatedChaincodes - did not find match for e2e');
-					t.end();
-				}
-			},
-			function(err) {
-				t.fail('Failed to send queryInstantiatedChaincodes due to error: ' + err.stack ? err.stack : err);
-				t.end();
+		for (let i = 0; i < response.chaincodes.length; i++) {
+			logger.debug('name: ' + response.chaincodes[i].name +
+				', version: ' + response.chaincodes[i].version +
+				', path: ' + response.chaincodes[i].path);
+
+			if (response.chaincodes[i].name === e2e.chaincodeId
+				&& response.chaincodes[i].version === e2e.chaincodeVersion
+				&& response.chaincodes[i].path === testUtil.CHAINCODE_PATH) {
+				found = true;
 			}
-		).catch(
-			function(err) {
-				t.fail('Failed to queryInstantiatedChaincodes with error:' + err.stack ? err.stack : err);
-				t.end();
-			}
-		);
-	} else t.end();
+		}
+		if (found) {
+			t.pass('queryInstalledChaincodes - found match for e2e');
+			t.end();
+		} else {
+			t.fail('queryInstalledChaincodes - did not find match for e2e');
+			t.end();
+		}
+	}, (err) => {
+		t.fail('Failed to send queryInstalledChaincodes due to error: ' + err.stack ? err.stack : err);
+		t.end();
+	}).catch((err) => {
+		t.fail('Failed to queryInstalledChaincodes with error:' + err.stack ? err.stack : err);
+		t.end();
+	});
 });
 
-test('  ---->>>>> Query Channels working <<<<<-----', function(t) {
-	if (!queryParameters || querys.indexOf('GetChannels') >= 0) {
-		return Client.newDefaultKeyValueStore({
-			path: testUtil.storePathForOrg(orgName)
-		}).then( function (store) {
-			client.setStateStore(store);
+test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', (t) => {
+	return Client.newDefaultKeyValueStore({
+		path: testUtil.storePathForOrg(orgName)
+	}).then((store) => {
+		client.setStateStore(store);
 
-			return testUtil.getSubmitter(client, t, org);
-		}).then(
-			function(admin) {
-				t.pass('Successfully enrolled user \'admin\'');
-				the_user = admin;
+		// get the peer org's admin required to query instantiated chaincodes
+		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
+	}).then(() => {
+		t.pass('Successfully enrolled user \'admin\'');
+		// send query
+		return channel.queryInstantiatedChaincodes();
+	}, (err) => {
+		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then((response) => {
+		logger.debug('<<< instantiated chaincodes >>>');
+		let found = false;
+		for (let i = 0; i < response.chaincodes.length; i++) {
+			logger.debug('name: ' + response.chaincodes[i].name +
+				', version: ' + response.chaincodes[i].version +
+				', path: ' + response.chaincodes[i].path);
 
-				// send query
-				return client.queryChannels(peer0);
-			},
-			function(err) {
-				t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
-				t.end();
+			if (response.chaincodes[i].name === e2e.chaincodeId
+				&& response.chaincodes[i].version === 'v1'
+				&& response.chaincodes[i].path === testUtil.CHAINCODE_UPGRADE_PATH) {
+				found = true;
 			}
-		).then(
-			function(response) {
-				logger.debug('<<< channels >>>');
-				for (let i=0; i<response.channels.length; i++) {
-					logger.debug('channel id: '+response.channels[i].channel_id);
-				}
-				if (response.channels[0].channel_id === channel_id) {
-					t.pass('queryChannels matches e2e');
-					t.end();
-				} else {
-					t.fail('queryChannels does not match e2e');
-					t.end();
-				}
-			},
-			function(err) {
-				t.fail('Failed to send queryChannels due to error: ' + err.stack ? err.stack : err);
-				t.end();
-			}
-		).catch(
-			function(err) {
-				t.fail('Failed to queryChannels with error:' + err.stack ? err.stack : err);
-				t.end();
-			}
-		);
-	} else t.end();
+		}
+		if (found) {
+			t.pass('queryInstantiatedChaincodes - found match for e2e');
+			t.end();
+		} else {
+			t.fail('queryInstantiatedChaincodes - did not find match for e2e');
+			t.end();
+		}
+	}, (err) => {
+		t.fail('Failed to send queryInstantiatedChaincodes due to error: ' + err.stack ? err.stack : err);
+		t.end();
+	}).catch((err) => {
+		t.fail('Failed to queryInstantiatedChaincodes with error:' + err.stack ? err.stack : err);
+		t.end();
+	});
+});
+
+test('  ---->>>>> Query Channels working <<<<<-----', (t) => {
+	return Client.newDefaultKeyValueStore({
+		path: testUtil.storePathForOrg(orgName)
+	}).then((store) => {
+		client.setStateStore(store);
+
+		return testUtil.getSubmitter(client, t, org);
+	}).then(() => {
+		t.pass('Successfully enrolled user \'admin\'');
+
+		// send query
+		return client.queryChannels(peer0);
+	}, (err) => {
+		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
+		t.end();
+	}).then((response) => {
+		logger.debug('<<< channels >>>');
+		for (let i = 0; i < response.channels.length; i++) {
+			logger.debug('channel id: ' + response.channels[i].channel_id);
+		}
+		if (response.channels[0].channel_id === channel_id) {
+			t.pass('queryChannels matches e2e');
+			t.end();
+		} else {
+			t.fail('queryChannels does not match e2e');
+			t.end();
+		}
+	}, (err) => {
+		t.fail('Failed to send queryChannels due to error: ' + err.stack ? err.stack : err);
+		t.end();
+	}).catch((err) => {
+		t.fail('Failed to queryChannels with error:' + err.stack ? err.stack : err);
+		t.end();
+	});
 });
