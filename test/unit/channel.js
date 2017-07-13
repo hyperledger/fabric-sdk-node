@@ -965,7 +965,22 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1, p2, p3])
+	var p4 = _channel.sendTransaction({
+		proposal: 'blah',
+		proposalResponses: {response : { status : 500}},
+		header: 'blah'
+	})
+	.then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing endorsement');
+	}, function (err) {
+		if (err.message.indexOf('no valid endorsements found') >= 0) {
+			t.pass('Successfully caught missing endorsement error');
+		} else {
+			t.fail('Failed to catch the missing endorsement error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3, p4])
 	.then(
 		function (data) {
 			t.end();

@@ -1414,7 +1414,6 @@ var Channel = class {
 
 		let proposalResponses = request.proposalResponses;
 		let chaincodeProposal = request.proposal;
-		let header            = _commonProto.Header.decode(chaincodeProposal.getHeader());
 
 		// verify that we have an orderer configured
 		if(!this.getOrderers()) {
@@ -1434,8 +1433,17 @@ var Channel = class {
 				}
 			}
 		} else {
-			endorsements.push(proposalResponse.endorsement);
+			if (proposalResponse && proposalResponse.response && proposalResponse.response.status === 200) {
+				endorsements.push(proposalResponse.endorsement);
+			}
 		}
+
+		if(endorsements.length < 1) {
+			logger.error('sendTransaction - no valid endorsements found');
+			return Promise.reject(new Error('no valid endorsements found'));
+		}
+
+		let header = _commonProto.Header.decode(chaincodeProposal.getHeader());
 
 		var chaincodeEndorsedAction = new _transProto.ChaincodeEndorsedAction();
 		chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);
