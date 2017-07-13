@@ -1152,7 +1152,7 @@ var Channel = class {
 
 		var peers = null;
 		if (request) {
-			let peers = request.targets;
+			peers = request.targets;
 		}
 		if (!peers || peers.length < 1) {
 			peers = this.getPeers();
