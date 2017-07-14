@@ -27,10 +27,10 @@ var testUtil = require('../../unit/util.js');
 test('\n\n***** U P G R A D E flow: chaincode install *****\n\n', (t) => {
 	testUtil.setupChaincodeDeploy();
 
-	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH, 'v1', t)
+	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH, 'v1', t, true)
 	.then(() => {
 		t.pass('Successfully installed chaincode in peers of organization "org1"');
-		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_UPGRADE_PATH, 'v1', t);
+		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_UPGRADE_PATH, 'v1', t, true);
 	}, (err) => {
 		t.fail('Failed to install chaincode in peers of organization "org1". ' + err.stack ? err.stack : err);
 		t.end();

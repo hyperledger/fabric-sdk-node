@@ -46,9 +46,8 @@ function init() {
 	}
 }
 
-function installChaincode(org, chaincode_path, version, t) {
+function installChaincode(org, chaincode_path, version, t, get_admin) {
 	init();
-
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
@@ -88,8 +87,11 @@ function installChaincode(org, chaincode_path, version, t) {
 					}
 				);
 
-				targets.push(peer);
-				channel.addPeer(peer);
+				targets.push(peer);    // a peer can be the target this way
+				channel.addPeer(peer); // or a peer can be the target this way
+				                       // you do not have to do both, just one, when there are
+				                       // 'targets' in the request, those will be used and not
+				                       // the peers added to the channel
 			}
 		}
 	}
@@ -100,7 +102,7 @@ function installChaincode(org, chaincode_path, version, t) {
 		client.setStateStore(store);
 
 		// get the peer org's admin required to send install chaincode requests
-		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
+		return testUtil.getSubmitter(client, t, get_admin /* get peer org admin */, org);
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
