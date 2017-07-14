@@ -589,8 +589,18 @@ function decodeBlockMetaData(proto_block_metadata) {
 
 function decodeTransactionFilter(metadata_bytes) {
 	var transaction_filter = [];
+	if(!metadata_bytes) {
+		logger.debug('decodeTransactionFilter - no metadata');
+		return null;
+	}
+	if(!(metadata_bytes instanceof Buffer)) {
+		metadata_bytes = metadata_bytes.toBuffer();
+	}
+	logger.debug('decodeTransactionFilter - metadata length:%s',metadata_bytes.length);
+
 	for (let i = 0; i < metadata_bytes.length; i++) {
 		let value = parseInt(metadata_bytes[i]);
+		logger.debug('decodeTransactionFilter - looking at index:%s with value:%s',i,value);
 		transaction_filter.push(value);
 	}
 	return transaction_filter;
