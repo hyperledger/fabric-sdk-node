@@ -102,7 +102,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		// send proposal to endorser
 		var request = {
-			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId : e2e.chaincodeId,
 			chaincodeVersion : version,
 			fcn: 'init',
@@ -125,7 +124,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		// send proposal to endorser
 		var request = {
-			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId: 'dummy',
 			chaincodeVersion: version,
 			fcn: 'init',
@@ -145,7 +143,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		// send proposal to endorser
 		var request = {
-			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId: e2e.chaincodeId,
 			chaincodeVersion: 'v333333333',
 			fcn: 'init',

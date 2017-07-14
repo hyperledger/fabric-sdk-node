@@ -657,7 +657,6 @@ test('\n\n ** Channel sendInstantiateProposal() tests **\n\n', function (t) {
 
 	var p1 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
-		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
@@ -675,7 +674,6 @@ test('\n\n ** Channel sendInstantiateProposal() tests **\n\n', function (t) {
 
 	var p3 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
-		chaincodePath: 'blah',
 		chaincodeVersion: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
@@ -692,7 +690,6 @@ test('\n\n ** Channel sendInstantiateProposal() tests **\n\n', function (t) {
 
 	c.removePeer(peer);
 	var p4 = c.sendInstantiateProposal({
-		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		chaincodeVersion: 'blah',
 		fcn: 'init',

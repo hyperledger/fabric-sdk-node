@@ -150,7 +150,7 @@ function installChaincode(org, chaincode_path, version, t) {
 module.exports.installChaincode = installChaincode;
 
 
-function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
+function instantiateChaincode(userOrg, version, upgrade, t){
 	init();
 
 	Client.setConfigSetting('request-timeout', 60000);
@@ -259,13 +259,12 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		// the v1 chaincode has Init() method that expects a transient map
 		if (upgrade) {
 			// first test that a bad transient map would get the chaincode to return an error
-			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, badTransientMap);
+			let request = buildChaincodeProposal(client, the_user, version, upgrade, badTransientMap);
 			tx_id = request.txId;
 
 			logger.debug(util.format(
 				'Upgrading chaincode "%s" at path "%s" to version "%s" by passing args "%s" to method "%s" in transaction "%s"',
 				request.chaincodeId,
-				request.chaincodePath,
 				request.chaincodeVersion,
 				request.args,
 				request.fcn,
@@ -292,7 +291,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				if (success) {
 					// successfully tested the negative conditions caused by
 					// the bad transient map, now send the good transient map
-					request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
+					request = buildChaincodeProposal(client, the_user, version, upgrade, transientMap);
 					tx_id = request.txId;
 
 					return channel.sendUpgradeProposal(request);
@@ -301,7 +300,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				}
 			});
 		} else {
-			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
+			let request = buildChaincodeProposal(client, the_user, version, upgrade, transientMap);
 			tx_id = request.txId;
 
 			return channel.sendInstantiateProposal(request);
@@ -404,12 +403,11 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	});
 };
 
-function buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap) {
+function buildChaincodeProposal(client, the_user, version, upgrade, transientMap) {
 	var tx_id = client.newTransactionID();
 
 	// send proposal to endorser
 	var request = {
-		chaincodePath: chaincode_path,
 		chaincodeId: e2e.chaincodeId,
 		chaincodeVersion: version,
 		fcn: 'init',
