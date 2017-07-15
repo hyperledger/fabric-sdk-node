@@ -317,6 +317,7 @@ var Client = class extends BaseClient {
 	 *                             The ConfigUpdate object may also be created by the configtxlator tool.
 	 * @property {ConfigSignature[]} signatures - Required. The list of signatures required by the
 	 *                               channel creation or update policy when using the `config` parameter.
+	 * @property {TransactionID} txId - Required. TransactionID object with the transaction id and nonce
 	 */
 
 	/**
