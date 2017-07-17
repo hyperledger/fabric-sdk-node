@@ -81,8 +81,6 @@ test('\n\n***** End-to-end flow: join channel *****\n\n', function(t) {
 });
 
 function joinChannel(org, t) {
-	t.comment(util.format('Calling peers in organization "%s" to join the channel', org));
-
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 	//
 	// Create and configure the test channel

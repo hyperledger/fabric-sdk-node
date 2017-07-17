@@ -384,7 +384,6 @@ test('\n\n** Packager tests **\n\n', function(t) {
 		testutil.setupChaincodeDeploy();
 		return Packager.package(testutil.CHAINCODE_PATH,'',false);
 	}).then((data) => {
-		t.comment('Verify byte data begin');
 		var tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
 		var destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
 		fs.writeFileSync(tmpFile, data);
@@ -394,9 +393,7 @@ test('\n\n** Packager tests **\n\n', function(t) {
 		pipe.on('close', function() {
 			var checkPath = path.join(destDir, 'src', 'github.com', 'example_cc');
 			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/github.com/example_cc" folder');
-			t.comment('Verify byte data on close');
 		});
-		t.comment('Verify byte data end');
 		t.end();
 	}).catch((err) => {
 		t.fail('Caught error in Package.package tests');
@@ -657,6 +654,7 @@ test('\n\n ** Channel sendInstantiateProposal() tests **\n\n', function (t) {
 
 	var p1 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
+		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
@@ -674,6 +672,7 @@ test('\n\n ** Channel sendInstantiateProposal() tests **\n\n', function (t) {
 
 	var p3 = c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051')],
+		chaincodePath: 'blah',
 		chaincodeVersion: 'blah',
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
@@ -690,6 +689,7 @@ test('\n\n ** Channel sendInstantiateProposal() tests **\n\n', function (t) {
 
 	c.removePeer(peer);
 	var p4 = c.sendInstantiateProposal({
+		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		chaincodeVersion: 'blah',
 		fcn: 'init',

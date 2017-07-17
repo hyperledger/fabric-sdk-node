@@ -14,8 +14,6 @@
  *  limitations under the License.
  */
 
-// This is an end-to-end test that focuses on exercising all parts of the fabric APIs
-// in a happy-path scenario
 'use strict';
 
 var tape = require('tape');
@@ -29,14 +27,17 @@ var util = require('util');
 var Client = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
 var testUtil = require('../unit/util.js');
+var e2eUtils = require('./e2e/e2eUtils.js');
 var logger = utils.getLogger('upgrade-chaincode');
+
+var client, channel, e2e, ORGS;
 
 test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	testUtil.resetDefaults();
 
-	var e2e = testUtil.END2END;
+	e2e = testUtil.END2END;
 	Client.addConfigFile(path.join(__dirname, './e2e/config.json'));
-	var ORGS = Client.getConfigSetting('test-network');
+	ORGS = Client.getConfigSetting('test-network');
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
@@ -50,8 +51,8 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 	var version = 'v1';
 	var org = 'org1';
-	var client = new Client();
-	var channel = client.newChannel(e2e.channel);
+	client = new Client();
+	channel = client.newChannel(e2e.channel);
 	var orgName = ORGS[org].name;
 	channel.addOrderer(
 		client.newOrderer(
@@ -102,6 +103,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		// send proposal to endorser
 		var request = {
+			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId : e2e.chaincodeId,
 			chaincodeVersion : version,
 			fcn: 'init',
@@ -124,6 +126,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		// send proposal to endorser
 		var request = {
+			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId: 'dummy',
 			chaincodeVersion: version,
 			fcn: 'init',
@@ -143,6 +146,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		// send proposal to endorser
 		var request = {
+			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId: e2e.chaincodeId,
 			chaincodeVersion: 'v333333333',
 			fcn: 'init',
@@ -157,6 +161,57 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		t.end();
 	}).catch((err) => {
 		t.fail('Got an Error along the way :: '+ err);
+		t.end();
+	});
+});
+
+test('\n\n **** Testing re-initializing states during upgrade ****', (t) => {
+	let eventhubs = [];
+	// override t.end function so it'll always disconnect the event hub
+	t.end = ((context, ehs, f) => {
+		return function() {
+			for(var key in ehs) {
+				var eventhub = ehs[key];
+				if (eventhub && eventhub.isconnected()) {
+					logger.debug('Disconnecting the event hub');
+					eventhub.disconnect();
+				}
+			}
+
+			f.apply(context, arguments);
+		};
+	})(t, eventhubs, t.end);
+
+	let tx_id = client.newTransactionID();
+	let VER = 'v3';
+
+	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH_V2, VER, t, true)
+	.then(() => {
+		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_UPGRADE_PATH_V2, VER, t, true);
+	}, (err) => {
+		t.fail('Failed to install chaincode in peers of organization "org1". ' + err.stack ? err.stack : err);
+		t.end();
+	}).then(() => {
+		return e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH_V2, VER, true, t);
+	}).then((results) => {
+
+		logger.debug('Successfully upgraded chaincode to version v3');
+		return 	e2eUtils.queryChaincode('org1', VER, '1000', t);
+
+	}).then((result) => {
+		if(result){
+			t.pass('Successfully query chaincode on the channel after re-initializing chaincode states during upgrade');
+			t.end();
+		}
+		else {
+			t.fail('Failed to query chaincode to verify re-initialized state information');
+			t.end();
+		}
+	}, (err) => {
+		t.fail('Failed to query chaincode on the channel. ' + err.stack ? err.stack : err);
+		t.end();
+	}).catch((err) => {
+		t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);
 		t.end();
 	});
 });

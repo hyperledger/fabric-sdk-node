@@ -82,8 +82,6 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 	var cryptoSuite, member, options;
 	couchdbUtil.destroy(dbname, keyValStorePath)
 	.then( function(status) {
-		t.comment('Cleanup of existing ' + dbname + ' returned '+status);
-		t.comment('Initialize the CouchDB KeyValueStore');
 		var options = {name: dbname, url: keyValStorePath};
 		utils.newKeyValueStore(options)
 		.then(
@@ -95,7 +93,6 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				client.setCryptoSuite(cryptoSuite);
 				member.setCryptoSuite(cryptoSuite);
 
-				t.comment('Setting client keyValueStore to: ' +kvs);
 				client.setStateStore(kvs);
 				if (client.getStateStore() === kvs) {
 					t.pass('Successfully set CouchDB KeyValueStore for client');
@@ -104,7 +101,6 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 					t.end();
 					process.exit(1);
 				}
-				t.comment('Initialize the CA server connection and cryptoSuite');
 				return new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name,
 					cryptoSuite);
 			},
@@ -119,7 +115,6 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				logger.info('ADD: caService - ' + caService);
 				t.pass('Successfully initialized the Fabric CA service.');
 
-				t.comment('Begin caService.enroll');
 				return caService.enroll({
 					enrollmentID: 'admin',
 					enrollmentSecret: 'adminpw'
@@ -150,7 +145,6 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				} else {
 					t.fail('Member isEnrolled failed.');
 				}
-				t.comment('setting UserContext...');
 				return client.setUserContext(member);
 			},
 			function(err) {
@@ -160,7 +154,6 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 			})
 		.then(
 			function(user) {
-				t.comment('setting UserContext to different user to clear out previous user');
 				return client.setUserContext(new User('userx'));
 			})
 		.then(

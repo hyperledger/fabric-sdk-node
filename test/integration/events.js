@@ -210,6 +210,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((success) => {
 		t.pass('Successfully initialized the channel');
 		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'init', []);
+		request.chaincodePath = 'github.com/events_cc';
 		request.chaincodeVersion = chaincode_version;
 
 		return channel.sendInstantiateProposal(request);
