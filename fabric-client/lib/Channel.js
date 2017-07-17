@@ -512,7 +512,7 @@ var Channel = class {
 	 * that instead of getting block number 0 it gets the latest block that contains
 	 * the channel configuration, and only returns the decoded {@link ConfigEnvelope}.
 	 *
-	 * @returns {ConfigEnvelope} Object containing the configuration items.
+	 * @returns {Promise} A Promise for a {@link ConfigEnvelope} object containing the configuration items.
 	 */
 	getChannelConfig() {
 		logger.debug('getChannelConfig - start for channel %s',this._name);
