@@ -935,8 +935,7 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 		});
 
 	var p2 = _channel.sendTransaction({
-		proposal: 'blah',
-		header: 'blah'
+		proposal: 'blah'
 	})
 	.then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing parameters');
@@ -949,8 +948,7 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 	});
 
 	var p3 = _channel.sendTransaction({
-		proposalResponses: 'blah',
-		header: 'blah'
+		proposalResponses: 'blah'
 	})
 	.then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing parameters');
@@ -964,8 +962,7 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 
 	var p4 = _channel.sendTransaction({
 		proposal: 'blah',
-		proposalResponses: {response : { status : 500}},
-		header: 'blah'
+		proposalResponses: {response : { status : 500}}
 	})
 	.then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing endorsement');
