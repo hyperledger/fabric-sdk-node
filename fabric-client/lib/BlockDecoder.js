@@ -512,7 +512,7 @@ policy
 
 	/**
 	 * @typedef {Object} ProcessedTransaction
-	 * @property {number} validationCode - See [this list]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/transaction.proto#L125}
+	 * @property {number} validationCode - See [this list]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L125}
 	 *                                     for all the defined validation codes
 	 * @property {Object} transactionEnvelope - Encapsulates the transaction and the signature over it.
 	 *                                          It has the following structure:
