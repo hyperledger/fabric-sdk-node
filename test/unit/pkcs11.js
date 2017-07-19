@@ -62,7 +62,6 @@ test('\n\n**PKCS11 - locate PKCS11 libpath\n\n', (t) => {
 		// Check common locations for PKCS library
 		//
 		for (let i = 0; i < common_pkcs_pathnames.length; i++) {
-			t.comment('Looking for ' + common_pkcs_pathnames[i]);
 			if (fs.existsSync(common_pkcs_pathnames[i])) {
 				libpath = common_pkcs_pathnames[i];
 				t.pass('Found a library at ' + libpath);
@@ -84,7 +83,6 @@ test('\n\n**PKCS11 - locate PKCS11 libpath\n\n', (t) => {
 		t.fail('Could not locate a PKCS11 library -- PKCS11 tests will probably fail');
 		t.end();
 	} else {
-		t.comment('\n\n**PKCS11 - generate an ephemeral key\n\n');
 
 		utils.setConfigSetting('crypto-hsm', true);
 		cryptoUtils = utils.newCryptoSuite({

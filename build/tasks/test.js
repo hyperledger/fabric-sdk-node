@@ -72,6 +72,7 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], functi
 		'!test/unit/constants.js',
 		'!test/unit/util.js',
 		'!test/unit/logger.js',
+		// channel: mychannel, chaincode: end2endnodesdk:v0/v1
 		'test/integration/e2e.js',
 		'test/integration/query.js',
 		'test/integration/fabric-ca-services-tests.js',
@@ -82,15 +83,18 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], functi
 		'test/integration/fileKeyValueStore-fabricca-tests.js',
 		'test/integration/install.js',
 		'test/integration/events.js',
+		// channel: mychannel, chaincode: end2endnodesdk:v2
+		'test/integration/grpc.js',
+		// channel: mychannel, chaincode: end2endnodesdk:v3
 		'test/integration/upgrade.js',
 		'test/integration/get-config.js',
+		// channel: mychanneltx, chaincode: end2endnodesdk:v0
 		'test/integration/create-configtx-channel.js',
 		'test/integration/e2e/join-channel.js',
 		'test/integration/instantiate.js',
 		'test/integration/e2e/invoke-transaction.js',
 		'test/integration/e2e/query.js',
-		'test/integration/invoke.js',
-		'test/integration/grpc.js'
+		'test/integration/invoke.js'
 	]))
 	.pipe(addsrc.append(
 		'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up

@@ -152,7 +152,7 @@ function installChaincode(org, chaincode_path, version, t, get_admin) {
 module.exports.installChaincode = installChaincode;
 
 
-function instantiateChaincode(userOrg, version, upgrade, t){
+function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	init();
 
 	Client.setConfigSetting('request-timeout', 60000);
@@ -261,12 +261,13 @@ function instantiateChaincode(userOrg, version, upgrade, t){
 		// the v1 chaincode has Init() method that expects a transient map
 		if (upgrade) {
 			// first test that a bad transient map would get the chaincode to return an error
-			let request = buildChaincodeProposal(client, the_user, version, upgrade, badTransientMap);
+			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, badTransientMap);
 			tx_id = request.txId;
 
 			logger.debug(util.format(
 				'Upgrading chaincode "%s" at path "%s" to version "%s" by passing args "%s" to method "%s" in transaction "%s"',
 				request.chaincodeId,
+				request.chaincodePath,
 				request.chaincodeVersion,
 				request.args,
 				request.fcn,
@@ -277,32 +278,36 @@ function instantiateChaincode(userOrg, version, upgrade, t){
 			.then((results) => {
 				let proposalResponses = results[0];
 
-				// expecting both peers to return an Error due to the bad transient map
-				let success = false;
-				if (proposalResponses && proposalResponses.length > 0) {
-					proposalResponses.forEach((response) => {
-						if (response instanceof Error &&
-							response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
-							success = true;
-						} else {
-							success = false;
-						}
-					});
-				}
+				if (version === 'v1') {
+					// expecting both peers to return an Error due to the bad transient map
+					let success = false;
+					if (proposalResponses && proposalResponses.length > 0) {
+						proposalResponses.forEach((response) => {
+							if (response instanceof Error &&
+								response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
+								success = true;
+							} else {
+								success = false;
+							}
+						});
+					}
 
-				if (success) {
-					// successfully tested the negative conditions caused by
-					// the bad transient map, now send the good transient map
-					request = buildChaincodeProposal(client, the_user, version, upgrade, transientMap);
-					tx_id = request.txId;
+					if (success) {
+						// successfully tested the negative conditions caused by
+						// the bad transient map, now send the good transient map
+						request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
+						tx_id = request.txId;
 
-					return channel.sendUpgradeProposal(request);
-				} else {
-					throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
+						return channel.sendUpgradeProposal(request);
+					} else {
+						throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
+					}
+				} else if (version === 'v3') {
+					return Promise.resolve(results);
 				}
 			});
 		} else {
-			let request = buildChaincodeProposal(client, the_user, version, upgrade, transientMap);
+			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
 			tx_id = request.txId;
 
 			return channel.sendInstantiateProposal(request);
@@ -405,11 +410,12 @@ function instantiateChaincode(userOrg, version, upgrade, t){
 	});
 };
 
-function buildChaincodeProposal(client, the_user, version, upgrade, transientMap) {
+function buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap) {
 	var tx_id = client.newTransactionID();
 
 	// send proposal to endorser
 	var request = {
+		chaincodePath: chaincode_path,
 		chaincodeId: e2e.chaincodeId,
 		chaincodeVersion: version,
 		fcn: 'init',
@@ -433,6 +439,9 @@ function buildChaincodeProposal(client, the_user, version, upgrade, transientMap
 			}
 		}
 	};
+
+	if (version === 'v3')
+		request.args = ['b', '1000'];
 
 	if(upgrade) {
 		// use this call to test the transient map support during chaincode instantiation

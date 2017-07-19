@@ -227,7 +227,6 @@ function testKeyStore(store, t) {
 		return new Promise((resolve, reject) => {
 			dbclient.use(dbname).destroy(testPrivKey.getSKI() + '-priv', docRev, function(err, body) {
 				if (!err) {
-					t.comment('Successfully deleted entry for private key');
 					return resolve(store.getKey(testPubKey.getSKI()));
 				} else {
 					t.fail('Failed to delete private key in couchdb. ' + err.stack ? err.stack : err);
@@ -245,24 +244,20 @@ test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', function(t)
 	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
 	let keyValStorePath = 'tmp/keyValStore1';
 	let config = { path: keyValStorePath };
-	t.comment('test opts as first parameter');
 	let cs = utils.newCryptoKeyStore(config);
 	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
 	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
 
-	t.comment('test default KVS path');
 	let defaultKVSPath = path.join(os.homedir(), '.hfc-key-store');
 	cs = utils.newCryptoKeyStore();
 	t.equal(cs._storeConfig.opts.path, defaultKVSPath, util.format('Returned instance should have store config opts.path of %s', defaultKVSPath));
 	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
 
-	t.comment('test KVSImplClass as first parameter');
 	let kvsImplClass = require(utils.getConfigSetting('key-value-store'));
 	cs = utils.newCryptoKeyStore(kvsImplClass);
 	t.equal(cs._storeConfig.opts.path, defaultKVSPath, util.format('Returned instance should have store config opts.path of %s', defaultKVSPath));
 	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
 
-	t.comment('test both parameters: (KVSImplClass, opts)');
 	kvsImplClass = require(utils.getConfigSetting('key-value-store'));
 	cs = utils.newCryptoKeyStore(kvsImplClass, config);
 	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
