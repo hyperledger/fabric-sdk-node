@@ -67,7 +67,7 @@ var BaseClient = class {
 	 *
 	 * @param {Object} options Specific to the implementation, for initializing the instance. For the built-in
 	 * file-based implementation, this requires a single property <code>path</code> to the top-level folder for the store
-	 * @returns {module:api.KeyValueStore} An instance of the KeyValueStore implementation
+	 * @returns {Promise} A Promise for a {@link module:api.KeyValueStore} instance of the KeyValueStore implementation
 	 */
 	static newDefaultKeyValueStore(options) {
 		return sdkUtils.newKeyValueStore(options);
