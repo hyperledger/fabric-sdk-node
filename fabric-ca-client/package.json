@@ -24,8 +24,7 @@
     "sjcl-codec": "0.1.1",
     "url": "^0.11.0",
     "util": "^0.10.3",
-    "winston": "^2.2.0",
-    "x509": "^0.3.2"
+    "winston": "^2.2.0"
   },
   "license": "Apache-2.0",
   "licenses": [
