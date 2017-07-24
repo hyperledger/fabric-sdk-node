@@ -1363,7 +1363,7 @@ var Channel = class {
 	 * @property {array} proposalResponses - An array or a single {@link ProposalResponse} objects
 	 *                                       containing the response from the
 	 *                                       [endorsement]{@link Channel#sendTransactionProposal} call
-	 * @Property {Object} chaincodeProposal - A Proposal object containing the original
+	 * @Property {Object} proposal - A Proposal object containing the original
 	 *                                        request for endorsement(s)
 	 */
 
