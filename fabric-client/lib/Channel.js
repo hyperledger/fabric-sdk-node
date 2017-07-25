@@ -1496,6 +1496,18 @@ var Channel = class {
 	}
 
 	/**
+	 * @typedef {Object} ChaincodeQueryRequest
+	 * @property {Peer[]} targets - Optional. The peers that will receive this request,
+	 *				                when not provided the list of peers added to this channel object will be used.
+	 * @property {string} chaincodeId - Required. The id of the chaincode to process the transaction proposal
+	 * @property {map} transientMap - Optional. <string, byte[]> map that can be used by the chaincode but not
+	 *			                      saved in the ledger, such as cryptographic information for encryption
+	 * @property {string} fcn - Optional. The function name to be returned when calling <code>stub.GetFunctionAndParameters()</code>
+	 *                          in the target chaincode. Default is 'invoke'
+	 * @property {string[]} args - An array of string arguments specific to the chaincode's 'Invoke' method
+	 */
+
+	/**
 	 * Sends a proposal to one or more endorsing peers that will be handled by the chaincode.
 	 * In fabric v1.0, there is no difference in how the endorsing peers process a request
 	 * to invoke a chaincode for transaction vs. to invoke a chaincode for query. All requests
@@ -1504,8 +1516,7 @@ var Channel = class {
 	 * results in the byte array format and the caller will have to be able to decode
 	 * these results.
 	 *
-	 * @param {ChaincodeInvokeRequest} request - Query requests use the same request objects as for
-	 *                                           transaction invocation requests
+	 * @param {ChaincodeQueryRequest} request
 	 * @returns {Promise} A Promise for an array of byte array results returned from the chaincode
 	 *                    on all Endorsing Peers
 	 * @example
