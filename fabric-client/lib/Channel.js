@@ -747,7 +747,8 @@ var Channel = class {
 	 *
 	 * @param {Peer} target - Optional. The peer that is the target for this query.  If no target is passed,
 	 *                        the query will use the first peer that was added to the channel object.
-	 * @returns {BlockchainInfo} With blockchain height, current block hash and previous block hash.
+	 * @returns {Promise} A Promise for a {@link BlockchainInfo} object with blockchain height,
+	 *                        current block hash and previous block hash.
 	 */
 	queryInfo(target) {
 		logger.debug('queryInfo - start');
@@ -819,7 +820,7 @@ var Channel = class {
 	 * @param {byte[]} block hash of the Block in question.
 	 * @param {Peer} target - Optional. The peer to send the query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @returns {Block} The block matching the hash, fully decoded into an object.
+	 * @returns {Promise} A Promise for a {@link Block} matching the hash, fully decoded into an object.
 	 */
 	queryBlockByHash(blockHash, target) {
 		logger.debug('queryBlockByHash - start');
@@ -881,7 +882,7 @@ var Channel = class {
 	 * @param {number} blockNumber - The number of the Block in question.
 	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @returns {Block} The block at the blockNumber slot in the ledger, fully decoded into an object.
+	 * @returns {Promise} A Promise for a {@link Block} at the blockNumber slot in the ledger, fully decoded into an object.
 	 */
 	queryBlock(blockNumber, target) {
 		logger.debug('queryBlock - start blockNumber %s',blockNumber);
@@ -945,7 +946,7 @@ var Channel = class {
 	 * @param {string} tx_id - The id of the transaction
 	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @returns {ProcessedTransaction} The fully decoded ProcessedTransaction object.
+	 * @returns {Promise} A Promise for a fully decoded {@link ProcessedTransaction} object.
 	 */
 	queryTransaction(tx_id, target) {
 		logger.debug('queryTransaction - start transactionID %s',tx_id);
@@ -1007,7 +1008,7 @@ var Channel = class {
 	 *
 	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @returns {ChaincodeQueryResponse} A fully decoded ChaincodeQueryResponse object
+	 * @returns {Promise} A Promise for a fully decoded {@link ChaincodeQueryResponse} object.
 	 */
 	queryInstantiatedChaincodes(target) {
 		logger.debug('queryInstantiatedChaincodes - start');
