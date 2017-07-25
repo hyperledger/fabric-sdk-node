@@ -76,7 +76,7 @@ var ChainCodeCBE = class {
  * transaction lifecyle in an asynchrous fashion. After the transaction proposal
  * has been successfully [endorsed]{@link Channel#sendTransactionProposal}, and before
  * the transaction message has been successfully [broadcast]{@link Channel#sendTransaction}
- * to the orderer, the application should register a listener to be nofified of
+ * to the orderer, the application should register a listener to be notified of
  * the event when the transaction achieves finality, which is when the block
  * containing the transaction gets added to the peer's ledger/blockchain.
  * <br><br>
