@@ -257,7 +257,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		throw new Error('Failed to enroll user \'admin\'. ' + err);
 
 	}).then(() => {
-
+		logger.debug(' orglist:: ', channel.getOrganizations());
 		// the v1 chaincode has Init() method that expects a transient map
 		if (upgrade) {
 			// first test that a bad transient map would get the chaincode to return an error
@@ -560,6 +560,8 @@ function invokeChaincode(userOrg, version, t, useStore){
 		return channel.initialize();
 
 	}).then((nothing) => {
+		logger.debug(' orglist:: ', channel.getOrganizations());
+
 		tx_id = client.newTransactionID();
 		utils.setConfigSetting('E2E_TX_ID', tx_id.getTransactionID());
 		logger.debug('setConfigSetting("E2E_TX_ID") = %s', tx_id.getTransactionID());
