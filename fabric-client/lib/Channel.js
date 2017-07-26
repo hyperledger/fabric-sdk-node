@@ -1767,6 +1767,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 		return;
 	}
 
+	var isOrderer = (name.indexOf('base.Orderer') > -1);
 	logger.debug('loadConfigGroup - %s   - version %s',name, group.version);
 	logger.debug('loadConfigGroup - %s   - mod policy %s',name, group.mod_policy);
 
@@ -1815,7 +1816,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 			let key = keys[i];
 			versions.values[key] = {};
 			var config_value = values.map[key];
-			loadConfigValue(config_items, versions.values[key], config_value, name, org);
+			loadConfigValue(config_items, versions.values[key], config_value, name, org, isOrderer);
 		}
 	}
 	else {
@@ -1856,7 +1857,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
  * @see /protos/orderer/configuration.proto
  * @see /protos/peer/configuration.proto
  */
-function loadConfigValue(config_items, versions, config_value, group_name, org) {
+function loadConfigValue(config_items, versions, config_value, group_name, org, isOrderer) {
 	logger.debug('loadConfigValue - %s -  value name: %s', group_name, config_value.key);
 	logger.debug('loadConfigValue - %s    - version: %s', group_name, config_value.value.version);
 	logger.debug('loadConfigValue - %s    - mod_policy: %s', group_name, config_value.value.mod_policy);
@@ -1880,7 +1881,7 @@ function loadConfigValue(config_items, versions, config_value, group_name, org) 
 		case 'MSP':
 			var msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - MSP found', group_name);
-			config_items.msps.push(msp_value);
+			if(!isOrderer) config_items.msps.push(msp_value);
 			break;
 		case 'ConsensusType':
 			var consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
