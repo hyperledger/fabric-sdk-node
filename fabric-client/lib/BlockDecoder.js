@@ -1247,7 +1247,7 @@ function decodeRangeQueryInfo(proto_range_query_info) {
 	range_query_info.reads_info = {};
 	// reads_info is one of QueryReads
 	let proto_raw_reads = proto_range_query_info.getRawReads();
-	if (proto_raw_reads.kv_reads) {
+	if (proto_raw_reads) {
 		range_query_info.reads_info.kv_reads = [];
 		for (let i in proto_raw_reads.kv_reads) {
 			range_query_info.reads_info.kv_reads.push(proto_raw_reads.kv_reads[i]);
@@ -1255,11 +1255,11 @@ function decodeRangeQueryInfo(proto_range_query_info) {
 	}
 	// or QueryReadsMerkleSummary
 	let proto_reads_merkle_hashes = proto_range_query_info.getReadsMerkleHashes();
-	if (proto_reads_merkle_hashes.max_degree) {
+	if (proto_reads_merkle_hashes) {
 		range_query_info.reads_merkle_hashes = {};
 		range_query_info.reads_merkle_hashes.max_degree = proto_reads_merkle_hashes.getMaxDegree();
 		range_query_info.reads_merkle_hashes.max_level = proto_reads_merkle_hashes.getMaxLevel();
-		range_query_info.reads_info.max_level_hashes = proto_reads_merkle_hashes.getMaxLevelHashes();
+		range_query_info.reads_merkle_hashes.max_level_hashes = proto_reads_merkle_hashes.getMaxLevelHashes();
 	}
 
 	return range_query_info;
