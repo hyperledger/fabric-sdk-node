@@ -199,7 +199,7 @@ test('\n\n **  Channel query tests', function(t) {
 				t.end();
 			},
 			function(err) {
-				var errMessage = 'Error: Block number must be a postive integer';
+				var errMessage = 'Error: Block number must be a positive integer';
 				if(err.toString() == errMessage) t.pass(errMessage);
 				else t.fail(errMessage);
 				return _channel.queryBlock();
@@ -210,7 +210,7 @@ test('\n\n **  Channel query tests', function(t) {
 				t.end();
 			},
 			function(err) {
-				var errMessage = 'Error: Block number must be a postive integer';
+				var errMessage = 'Error: Block number must be a positive integer';
 				if(err.toString() == errMessage) t.pass(errMessage);
 				else t.fail(errMessage);
 				return _channel.queryBlock(-1);
@@ -221,7 +221,7 @@ test('\n\n **  Channel query tests', function(t) {
 				t.end();
 			},
 			function(err) {
-				var errMessage = 'Error: Block number must be a postive integer';
+				var errMessage = 'Error: Block number must be a positive integer';
 				if(err.toString() == errMessage) t.pass(errMessage);
 				else t.fail(errMessage);
 				return _channel.queryBlock(10.5);
@@ -232,7 +232,7 @@ test('\n\n **  Channel query tests', function(t) {
 				t.end();
 			},
 			function(err) {
-				var errMessage = 'Error: Block number must be a postive integer';
+				var errMessage = 'Error: Block number must be a positive integer';
 				if(err.toString() == errMessage) t.pass(errMessage);
 				else t.fail(errMessage);
 				t.end();

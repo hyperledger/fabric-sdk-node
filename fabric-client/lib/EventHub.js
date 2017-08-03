@@ -130,7 +130,7 @@ var ChainCodeCBE = class {
  *   transactionId,
  * 	 (tx, code) => {
  * 	   eh.unregisterTxEvent(transactionId);
- * 	   console.log(util.format('Transaction %s has completed', transactionId);
+ * 	   console.log(util.format('Transaction %s has completed', transactionId));
  * 	 },
  * 	 (err) => {
  * 	   eh.unregisterTxEvent(transactionId);

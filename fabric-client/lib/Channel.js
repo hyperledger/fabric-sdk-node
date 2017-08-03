@@ -890,7 +890,7 @@ var Channel = class {
 		if(Number.isInteger(blockNumber) && blockNumber >= 0) {
 			block_number = blockNumber.toString();
 		} else {
-			return Promise.reject( new Error('Block number must be a postive integer'));
+			return Promise.reject( new Error('Block number must be a positive integer'));
 		}
 		var peer = this._getPeerForQuery(target);
 		if (peer instanceof Error) {
