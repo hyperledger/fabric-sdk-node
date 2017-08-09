@@ -79,7 +79,6 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 		}
 	).then(
 		function(status) {
-			t.comment('Status: ' + status + ', type: (' + typeof status + ')');
 			if (status === 0) {
 				t.fail('Successfully submitted request, which is bad because the channel is missing orderers.');
 			} else {
@@ -219,7 +218,6 @@ test('\n\n** TEST ** orderer via member bad request', function(t) {
 		}
 	).then(
 		function(status) {
-			t.comment('Status: ' + status + ', type: (' + typeof status + ')');
 			if (status === 0) {
 				t.fail('Successfully submitted request, which is bad because request is invalid');
 			} else {

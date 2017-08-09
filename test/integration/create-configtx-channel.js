@@ -89,10 +89,6 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 		var signature = client.signChannelConfig(config);
 		t.pass('Successfully signed config update');
 		// collect signature from org1 admin
-		// TODO: signature counting against policies on the orderer
-		// at the moment is being investigated, but it requires this
-		// weird double-signature from each org admin
-		signatures.push(signature);
 		signatures.push(signature);
 
 		// make sure we do not reuse the user
@@ -106,10 +102,6 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 		t.pass('Successfully signed config update');
 
 		// collect signature from org2 admin
-		// TODO: signature counting against policies on the orderer
-		// at the moment is being investigated, but it requires this
-		// weird double-signature from each org admin
-		signatures.push(signature);
 		signatures.push(signature);
 
 		// make sure we do not reuse the user
@@ -124,10 +116,6 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 		t.pass('Successfully signed config update');
 
 		// collect signature from orderer org admin
-		// TODO: signature counting against policies on the orderer
-		// at the moment is being investigated, but it requires this
-		// weird double-signature from each org admin
-		signatures.push(signature);
 		signatures.push(signature);
 
 		logger.debug('\n***\n done signing \n***\n');

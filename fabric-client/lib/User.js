@@ -130,6 +130,10 @@ var User = class {
 		return this._signingIdentity;
 	}
 
+	/**
+	 * Get the {@link module:api.CryptoSuite} cryptoSuite object for this User instance.
+	 * @returns {module:api.CryptoSuite} the cryptoSuite used to store crypto and key store settings
+	 */
 	getCryptoSuite() {
 		return this._cryptoSuite;
 	}

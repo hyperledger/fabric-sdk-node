@@ -27,6 +27,7 @@
         "mod_policy": "Admins",
         "policies": {
           "Admins": {
+            "mod_policy": "Admins",
             "policy": {
               "type": 3,
               "value": {
@@ -36,6 +37,7 @@
             }
           },
           "Readers": {
+            "mod_policy": "Admins",
             "policy": {
               "type": 3,
               "value": {
@@ -44,6 +46,7 @@
             }
           },
           "Writers": {
+            "mod_policy": "Admins",
             "policy": {
               "type": 3,
               "value": {

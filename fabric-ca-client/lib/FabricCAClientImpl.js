@@ -24,7 +24,9 @@ var path = require('path');
 var http = require('http');
 var https = require('https');
 var urlParser = require('url');
-var x509 = require('x509');
+var jsrsasign = require('jsrsasign');
+var x509 = jsrsasign.X509;
+var ASN1HEX = jsrsasign.ASN1HEX;
 
 var logger = utils.getLogger('FabricCAClientImpl.js');
 
@@ -205,18 +207,15 @@ var FabricCAServices = class extends BaseClient {
 		}
 
 		var cert = currentUser.getIdentity()._certificate;
-		var subject;
+		var subject = null;
 		try {
-			subject = x509.getSubject(FabricCAServices.normalizeX509(cert));
+			subject = getSubjectCommonName(FabricCAServices.normalizeX509(cert));
 		} catch(err) {
 			logger.error(util.format('Failed to parse enrollment certificate %s for Subject. \nError: %s', cert, err));
 		}
 
-		if (subject === null || subject === {})
+		if (subject === null)
 			throw new Error('Failed to parse the enrollment certificate of the current user for its subject');
-
-		if (!subject.commonName)
-			throw new Error('Invalid enrollment certificate of the current user: does not contain the "CN" value');
 
 		var self = this;
 
@@ -227,7 +226,7 @@ var FabricCAServices = class extends BaseClient {
 				function (privateKey) {
 					//generate CSR using the subject of the current user's certificate
 					try {
-						var csr = privateKey.generateCSR('CN=' + subject.commonName);
+						var csr = privateKey.generateCSR('CN=' + subject);
 						self._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity())
 							.then(
 							function (response) {
@@ -781,6 +780,21 @@ function checkRegistrar(registrar) {
 	if (typeof registrar.getSigningIdentity !== 'function') {
 		throw new Error('Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity()"');
 	}
+}
+
+// This utility is based on jsrsasign.X509.getSubjectString() implementation
+// we can not use that method directly because it requires calling readCertPEM()
+// first which as of jsrsasign@6.2.3 always assumes RSA based certificates and
+// fails to parse certs that includes ECDSA keys.
+function getSubjectCommonName(pem) {
+	var hex = x509.pemToHex(pem);
+	var d = ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0, 5]);
+	var subject = x509.hex2dn(d); // format: '/C=US/ST=California/L=San Francisco/CN=Admin@org1.example.com/emailAddress=admin@org1.example.com'
+	var m = subject.match(/CN=.+[^\/]/);
+	if (!m)
+		throw new Error('Certificate PEM does not seem to contain a valid subject with common name "CN"');
+	else
+		return m[0].substring(3);
 }
 
 module.exports = FabricCAServices;

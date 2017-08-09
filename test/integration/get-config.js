@@ -125,7 +125,7 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 					t.pass('channel was successfully initialized');
 					let orgs = channel.getOrganizations();
 					logger.debug(' Got the following orgs back %j', orgs);
-					t.equals(orgs.length, 3, 'Checking the that we got back the right number of orgs');
+					t.equals(orgs.length, 2, 'Checking the that we got back the right number of orgs');
 					if(orgs[0].id.indexOf('Or') == 0) {
 						t.pass('Found the org name '+ orgs[0].id);
 					}

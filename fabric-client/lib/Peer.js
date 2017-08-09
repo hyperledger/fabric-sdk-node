@@ -80,7 +80,7 @@ var Peer = class extends Remote {
 	 * or runs queries.
 	 *
 	 * @param {Proposal} proposal - A protobuf encoded byte array of type
-	 *                              [Proposal]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/proposal.proto#L134}
+	 *                              [Proposal]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/proposal.proto#L134}
 	 * @returns {Promise} A Promise for a {@link ProposalResponse}
 	 */
 	sendProposal(proposal) {

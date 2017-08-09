@@ -512,7 +512,7 @@ var Channel = class {
 	 * that instead of getting block number 0 it gets the latest block that contains
 	 * the channel configuration, and only returns the decoded {@link ConfigEnvelope}.
 	 *
-	 * @returns {ConfigEnvelope} Object containing the configuration items.
+	 * @returns {Promise} A Promise for a {@link ConfigEnvelope} object containing the configuration items.
 	 */
 	getChannelConfig() {
 		logger.debug('getChannelConfig - start for channel %s',this._name);
@@ -747,7 +747,8 @@ var Channel = class {
 	 *
 	 * @param {Peer} target - Optional. The peer that is the target for this query.  If no target is passed,
 	 *                        the query will use the first peer that was added to the channel object.
-	 * @returns {BlockchainInfo} With blockchain height, current block hash and previous block hash.
+	 * @returns {Promise} A Promise for a {@link BlockchainInfo} object with blockchain height,
+	 *                        current block hash and previous block hash.
 	 */
 	queryInfo(target) {
 		logger.debug('queryInfo - start');
@@ -819,7 +820,7 @@ var Channel = class {
 	 * @param {byte[]} block hash of the Block in question.
 	 * @param {Peer} target - Optional. The peer to send the query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @returns {Block} The block matching the hash, fully decoded into an object.
+	 * @returns {Promise} A Promise for a {@link Block} matching the hash, fully decoded into an object.
 	 */
 	queryBlockByHash(blockHash, target) {
 		logger.debug('queryBlockByHash - start');
@@ -881,7 +882,7 @@ var Channel = class {
 	 * @param {number} blockNumber - The number of the Block in question.
 	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @returns {Block} The block at the blockNumber slot in the ledger, fully decoded into an object.
+	 * @returns {Promise} A Promise for a {@link Block} at the blockNumber slot in the ledger, fully decoded into an object.
 	 */
 	queryBlock(blockNumber, target) {
 		logger.debug('queryBlock - start blockNumber %s',blockNumber);
@@ -945,7 +946,7 @@ var Channel = class {
 	 * @param {string} tx_id - The id of the transaction
 	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @returns {ProcessedTransaction} The fully decoded ProcessedTransaction object.
+	 * @returns {Promise} A Promise for a fully decoded {@link ProcessedTransaction} object.
 	 */
 	queryTransaction(tx_id, target) {
 		logger.debug('queryTransaction - start transactionID %s',tx_id);
@@ -1007,7 +1008,7 @@ var Channel = class {
 	 *
 	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @returns {ChaincodeQueryResponse} A fully decoded ChaincodeQueryResponse object
+	 * @returns {Promise} A Promise for a fully decoded {@link ChaincodeQueryResponse} object.
 	 */
 	queryInstantiatedChaincodes(target) {
 		logger.debug('queryInstantiatedChaincodes - start');
@@ -1152,7 +1153,7 @@ var Channel = class {
 
 		var peers = null;
 		if (request) {
-			let peers = request.targets;
+			peers = request.targets;
 		}
 		if (!peers || peers.length < 1) {
 			peers = this.getPeers();
@@ -1363,7 +1364,7 @@ var Channel = class {
 	 * @property {array} proposalResponses - An array or a single {@link ProposalResponse} objects
 	 *                                       containing the response from the
 	 *                                       [endorsement]{@link Channel#sendTransactionProposal} call
-	 * @Property {Object} chaincodeProposal - A Proposal object containing the original
+	 * @Property {Object} proposal - A Proposal object containing the original
 	 *                                        request for endorsement(s)
 	 */
 
@@ -1375,7 +1376,7 @@ var Channel = class {
 	 * validation against the chaincode's endorsement policy. When the committering peers
 	 * successfully validate the transactions, it will mark the transaction as valid inside
 	 * the block. After all transactions in a block have been validated, and marked either as
-	 * valid or invalid (with a [reason code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/transaction.proto#L125}),
+	 * valid or invalid (with a [reason code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L125}),
 	 * the block will be appended (committed) to the channel's ledger on the peer.
 	 * <br><br>
 	 * The caller of this method must use the proposal responses returned from the endorser along
@@ -1388,7 +1389,7 @@ var Channel = class {
 	 *
 	 * @param {TransactionRequest} request
 	 * @returns {Promise} A Promise for a "BroadcastResponse" message returned by the orderer that contains a
-	 *                    single "status" field for a standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/common/common.proto#L27}.
+	 *                    single "status" field for a standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
 	 *                    This will be an acknowledgement from the orderer of successfully submitted transaction.
 	 */
 	sendTransaction(request) {
@@ -1414,7 +1415,6 @@ var Channel = class {
 
 		let proposalResponses = request.proposalResponses;
 		let chaincodeProposal = request.proposal;
-		let header            = _commonProto.Header.decode(chaincodeProposal.getHeader());
 
 		// verify that we have an orderer configured
 		if(!this.getOrderers()) {
@@ -1434,8 +1434,17 @@ var Channel = class {
 				}
 			}
 		} else {
-			endorsements.push(proposalResponse.endorsement);
+			if (proposalResponse && proposalResponse.response && proposalResponse.response.status === 200) {
+				endorsements.push(proposalResponse.endorsement);
+			}
 		}
+
+		if(endorsements.length < 1) {
+			logger.error('sendTransaction - no valid endorsements found');
+			return Promise.reject(new Error('no valid endorsements found'));
+		}
+
+		let header = _commonProto.Header.decode(chaincodeProposal.getHeader());
 
 		var chaincodeEndorsedAction = new _transProto.ChaincodeEndorsedAction();
 		chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);
@@ -1487,6 +1496,18 @@ var Channel = class {
 	}
 
 	/**
+	 * @typedef {Object} ChaincodeQueryRequest
+	 * @property {Peer[]} targets - Optional. The peers that will receive this request,
+	 *				                when not provided the list of peers added to this channel object will be used.
+	 * @property {string} chaincodeId - Required. The id of the chaincode to process the transaction proposal
+	 * @property {map} transientMap - Optional. <string, byte[]> map that can be used by the chaincode but not
+	 *			                      saved in the ledger, such as cryptographic information for encryption
+	 * @property {string} fcn - Optional. The function name to be returned when calling <code>stub.GetFunctionAndParameters()</code>
+	 *                          in the target chaincode. Default is 'invoke'
+	 * @property {string[]} args - An array of string arguments specific to the chaincode's 'Invoke' method
+	 */
+
+	/**
 	 * Sends a proposal to one or more endorsing peers that will be handled by the chaincode.
 	 * In fabric v1.0, there is no difference in how the endorsing peers process a request
 	 * to invoke a chaincode for transaction vs. to invoke a chaincode for query. All requests
@@ -1495,8 +1516,7 @@ var Channel = class {
 	 * results in the byte array format and the caller will have to be able to decode
 	 * these results.
 	 *
-	 * @param {ChaincodeInvokeRequest} request - Query requests use the same request objects as for
-	 *                                           transaction invocation requests
+	 * @param {ChaincodeQueryRequest} request
 	 * @returns {Promise} A Promise for an array of byte array results returned from the chaincode
 	 *                    on all Endorsing Peers
 	 * @example
@@ -1747,6 +1767,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 		return;
 	}
 
+	var isOrderer = (name.indexOf('base.Orderer') > -1);
 	logger.debug('loadConfigGroup - %s   - version %s',name, group.version);
 	logger.debug('loadConfigGroup - %s   - mod policy %s',name, group.mod_policy);
 
@@ -1795,7 +1816,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 			let key = keys[i];
 			versions.values[key] = {};
 			var config_value = values.map[key];
-			loadConfigValue(config_items, versions.values[key], config_value, name, org);
+			loadConfigValue(config_items, versions.values[key], config_value, name, org, isOrderer);
 		}
 	}
 	else {
@@ -1836,7 +1857,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
  * @see /protos/orderer/configuration.proto
  * @see /protos/peer/configuration.proto
  */
-function loadConfigValue(config_items, versions, config_value, group_name, org) {
+function loadConfigValue(config_items, versions, config_value, group_name, org, isOrderer) {
 	logger.debug('loadConfigValue - %s -  value name: %s', group_name, config_value.key);
 	logger.debug('loadConfigValue - %s    - version: %s', group_name, config_value.value.version);
 	logger.debug('loadConfigValue - %s    - mod_policy: %s', group_name, config_value.value.mod_policy);
@@ -1860,7 +1881,7 @@ function loadConfigValue(config_items, versions, config_value, group_name, org) 
 		case 'MSP':
 			var msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - MSP found', group_name);
-			config_items.msps.push(msp_value);
+			if(!isOrderer) config_items.msps.push(msp_value);
 			break;
 		case 'ConsensusType':
 			var consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);

@@ -461,7 +461,6 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 		t.end();
 	}).then((pubKey) => {
-		t.comment('then pubKey of importKey TEST_KEY_PRIVATE_CERT_PEM');
 		fs.removeSync(path.join(utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
 
 		var poorUser = new User('admin2');

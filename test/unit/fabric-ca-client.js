@@ -25,8 +25,9 @@ var utils = require('fabric-client/lib/utils.js');
 var fs = require('fs');
 var path = require('path');
 var util = require('util');
+var rewire = require('rewire');
 
-var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
+var FabricCAServices = rewire('fabric-ca-client/lib/FabricCAClientImpl');
 var FabricCAClient = FabricCAServices.FabricCAClient;
 
 const SAMPLE_PEM_ENCODED_CERTIFICATE = '-----BEGIN CERTIFICATE-----' +
@@ -563,8 +564,26 @@ test('FabricCAServices: Test reenroll() function', function(t) {
 				getSigningIdentity: function() {}
 			});
 		},
-		/Invalid enrollment certificate of the current user: does not contain the "CN" value/,
+		/Failed to parse the enrollment certificate of the current user for its subject/,
 		'Must throw error when current user enrollment certificate does not have a "CN" value'
+	);
+
+	var getSubjectCommonName = FabricCAServices.__get__('getSubjectCommonName');
+
+	t.throws(
+		() => {
+			getSubjectCommonName(CERT_WITHOUT_CN);
+		},
+		/Certificate PEM does not seem to contain a valid subject with common name "CN"/,
+		'Must throw error when target certificate does not contain a common name'
+	);
+
+	t.doesNotThrow(
+		() => {
+			getSubjectCommonName(VALID_CERT);
+		},
+		null,
+		'Must not throw error when target certificate is valid and contains a common name'
 	);
 
 	t.doesNotThrow(

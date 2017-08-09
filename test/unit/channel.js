@@ -384,7 +384,6 @@ test('\n\n** Packager tests **\n\n', function(t) {
 		testutil.setupChaincodeDeploy();
 		return Packager.package(testutil.CHAINCODE_PATH,'',false);
 	}).then((data) => {
-		t.comment('Verify byte data begin');
 		var tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
 		var destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
 		fs.writeFileSync(tmpFile, data);
@@ -394,9 +393,7 @@ test('\n\n** Packager tests **\n\n', function(t) {
 		pipe.on('close', function() {
 			var checkPath = path.join(destDir, 'src', 'github.com', 'example_cc');
 			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/github.com/example_cc" folder');
-			t.comment('Verify byte data on close');
 		});
-		t.comment('Verify byte data end');
 		t.end();
 	}).catch((err) => {
 		t.fail('Caught error in Package.package tests');
@@ -938,8 +935,7 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 		});
 
 	var p2 = _channel.sendTransaction({
-		proposal: 'blah',
-		header: 'blah'
+		proposal: 'blah'
 	})
 	.then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing parameters');
@@ -952,8 +948,7 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 	});
 
 	var p3 = _channel.sendTransaction({
-		proposalResponses: 'blah',
-		header: 'blah'
+		proposalResponses: 'blah'
 	})
 	.then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing parameters');
@@ -965,7 +960,21 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1, p2, p3])
+	var p4 = _channel.sendTransaction({
+		proposal: 'blah',
+		proposalResponses: {response : { status : 500}}
+	})
+	.then(function () {
+		t.fail('Should not have been able to resolve the promise because of missing endorsement');
+	}, function (err) {
+		if (err.message.indexOf('no valid endorsements found') >= 0) {
+			t.pass('Successfully caught missing endorsement error');
+		} else {
+			t.fail('Failed to catch the missing endorsement error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	Promise.all([p1, p2, p3, p4])
 	.then(
 		function (data) {
 			t.end();

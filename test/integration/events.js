@@ -193,6 +193,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, '', '');
 		request.chaincodePath = 'github.com/events_cc';
 		request.chaincodeVersion = chaincode_version;
+		Client.setConfigSetting('request-timeout', 60000);
 
 		return client.installChaincode(request);
 	}).then((results) => {
@@ -216,7 +217,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		if ( eputil.checkProposal(results)) {
 			t.pass('Successfully endorsed the instantiate chaincode proposal');
-			var tmo = 50000;
+			var tmo = 60000;
 			return Promise.all([eputil.registerTxEvent(eh, request.txId.getTransactionID().toString(), tmo),
 				eputil.sendTransaction(channel, results)]);
 		} else {

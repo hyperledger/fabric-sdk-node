@@ -45,7 +45,8 @@
     "tape": "^4.5.1",
     "tape-promise": "^1.1.0",
     "tar-fs": "^1.13.0",
-    "winston": "^2.2.0"
+    "winston": "^2.2.0",
+    "x509": "^0.3.2"
   },
   "license": "Apache-2.0",
   "licenses": [

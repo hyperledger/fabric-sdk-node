@@ -238,12 +238,14 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 	}).then((response) => {
 		t.pass('Successfully decoded the current configuration config proto into JSON');
 		original_config_json = response.text.toString();
-		// now we can edit the JSON, save to file in case you want to see it
-		fs.writeFileSync(path.join(__dirname, '../fixtures/channel/original_config.json'), original_config_json);
-
-		// lets pretend we edited the above... we will read one we already edited
-		updated_config_json = fs.readFileSync(path.join(__dirname, '../fixtures/channel/updated_config.json'));
-		t.pass('Successfully read in the udpated JSON config');
+		logger.info(' original_config_json :: %s',original_config_json);
+		// make a copy of the original so we can edit it
+		updated_config_json = original_config_json;
+		var updated_config = JSON.parse(updated_config_json);
+		// now edit the config -- remove one of the organizations
+		delete updated_config.channel_group.groups.Application.groups.Org1MSP;
+		updated_config_json = JSON.stringify(updated_config);
+		logger.info(' updated_config_json :: %s',updated_config_json);
 
 		// lets get the updated JSON encoded
 		return agent.post('http://127.0.0.1:7059/protolator/encode/common.Config',

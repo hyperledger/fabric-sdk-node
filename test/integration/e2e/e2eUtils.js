@@ -46,9 +46,8 @@ function init() {
 	}
 }
 
-function installChaincode(org, chaincode_path, version, t) {
+function installChaincode(org, chaincode_path, version, t, get_admin) {
 	init();
-
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
@@ -88,8 +87,11 @@ function installChaincode(org, chaincode_path, version, t) {
 					}
 				);
 
-				targets.push(peer);
-				channel.addPeer(peer);
+				targets.push(peer);    // a peer can be the target this way
+				channel.addPeer(peer); // or a peer can be the target this way
+				                       // you do not have to do both, just one, when there are
+				                       // 'targets' in the request, those will be used and not
+				                       // the peers added to the channel
 			}
 		}
 	}
@@ -100,7 +102,7 @@ function installChaincode(org, chaincode_path, version, t) {
 		client.setStateStore(store);
 
 		// get the peer org's admin required to send install chaincode requests
-		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
+		return testUtil.getSubmitter(client, t, get_admin /* get peer org admin */, org);
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
@@ -255,7 +257,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		throw new Error('Failed to enroll user \'admin\'. ' + err);
 
 	}).then(() => {
-
+		logger.debug(' orglist:: ', channel.getOrganizations());
 		// the v1 chaincode has Init() method that expects a transient map
 		if (upgrade) {
 			// first test that a bad transient map would get the chaincode to return an error
@@ -276,28 +278,32 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			.then((results) => {
 				let proposalResponses = results[0];
 
-				// expecting both peers to return an Error due to the bad transient map
-				let success = false;
-				if (proposalResponses && proposalResponses.length > 0) {
-					proposalResponses.forEach((response) => {
-						if (response instanceof Error &&
-							response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
-							success = true;
-						} else {
-							success = false;
-						}
-					});
-				}
+				if (version === 'v1') {
+					// expecting both peers to return an Error due to the bad transient map
+					let success = false;
+					if (proposalResponses && proposalResponses.length > 0) {
+						proposalResponses.forEach((response) => {
+							if (response instanceof Error &&
+								response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
+								success = true;
+							} else {
+								success = false;
+							}
+						});
+					}
 
-				if (success) {
-					// successfully tested the negative conditions caused by
-					// the bad transient map, now send the good transient map
-					request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
-					tx_id = request.txId;
+					if (success) {
+						// successfully tested the negative conditions caused by
+						// the bad transient map, now send the good transient map
+						request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
+						tx_id = request.txId;
 
-					return channel.sendUpgradeProposal(request);
-				} else {
-					throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
+						return channel.sendUpgradeProposal(request);
+					} else {
+						throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
+					}
+				} else if (version === 'v3') {
+					return Promise.resolve(results);
 				}
 			});
 		} else {
@@ -434,6 +440,9 @@ function buildChaincodeProposal(client, the_user, chaincode_path, version, upgra
 		}
 	};
 
+	if (version === 'v3')
+		request.args = ['b', '1000'];
+
 	if(upgrade) {
 		// use this call to test the transient map support during chaincode instantiation
 		request.transientMap = transientMap;
@@ -551,6 +560,8 @@ function invokeChaincode(userOrg, version, t, useStore){
 		return channel.initialize();
 
 	}).then((nothing) => {
+		logger.debug(' orglist:: ', channel.getOrganizations());
+
 		tx_id = client.newTransactionID();
 		utils.setConfigSetting('E2E_TX_ID', tx_id.getTransactionID());
 		logger.debug('setConfigSetting("E2E_TX_ID") = %s', tx_id.getTransactionID());

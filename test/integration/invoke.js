@@ -46,13 +46,11 @@ var peers = [];
 init();
 
 test('\n\n***** E R R O R  T E S T I N G: invoke transaction with one endorsement *****\n\n', (t) => {
-	t.comment('# Sending a proposal only to org1.');
 	invokeChaincode('org2', 'v0', t, 'ENDORSEMENT_POLICY_FAILURE', [peers[0]])
 	.then((result) => {
 		if(result){
 			t.pass('Successfully tested failure to invoke transaction chaincode due to insufficient endorsement');
 
-			t.comment('# Sending a proposal only to org2.');
 			return invokeChaincode('org2', 'v0', t, 'ENDORSEMENT_POLICY_FAILURE', [peers[1]]);
 		}
 		else {
@@ -78,7 +76,6 @@ test('\n\n***** E R R O R  T E S T I N G: invoke transaction with one endorsemen
 });
 
 test('\n\n***** invoke transaction with inverted order of endorsements *****\n\n', (t) => {
-	t.comment('# Sending a proposal to org2 and org1.');
 	invokeChaincode('org2', 'v0', t, false, [peers[1], peers[0]])
 	.then((result) => {
 		t.pass('Successfully invoke transaction chaincode on channel');

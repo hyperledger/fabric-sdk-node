@@ -317,6 +317,7 @@ var Client = class extends BaseClient {
 	 *                             The ConfigUpdate object may also be created by the configtxlator tool.
 	 * @property {ConfigSignature[]} signatures - Required. The list of signatures required by the
 	 *                               channel creation or update policy when using the `config` parameter.
+	 * @property {TransactionID} txId - Required. TransactionID object with the transaction id and nonce
 	 */
 
 	/**
@@ -624,6 +625,8 @@ var Client = class extends BaseClient {
 
 	/**
 	 * @typedef {Object} ChaincodeInstallRequest
+	 * @property {Peer[]} targets - Required. An array of Peer objects that the chaincode will
+	 *                              be installed on
 	 * @property {string} chaincodePath - Required. The path to the location of the source code
 	 *                                    of the chaincode. If the chaincode type is golang, then
 	 *                                    this path is the fully qualified package name, such as

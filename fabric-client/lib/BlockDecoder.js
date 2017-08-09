@@ -512,7 +512,7 @@ policy
 
 	/**
 	 * @typedef {Object} ProcessedTransaction
-	 * @property {number} validationCode - See [this list]{@link https://github.com/hyperledger/fabric/blob/v1.0.0-beta/protos/peer/transaction.proto#L125}
+	 * @property {number} validationCode - See [this list]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L125}
 	 *                                     for all the defined validation codes
 	 * @property {Object} transactionEnvelope - Encapsulates the transaction and the signature over it.
 	 *                                          It has the following structure:
@@ -589,8 +589,18 @@ function decodeBlockMetaData(proto_block_metadata) {
 
 function decodeTransactionFilter(metadata_bytes) {
 	var transaction_filter = [];
+	if(!metadata_bytes) {
+		logger.debug('decodeTransactionFilter - no metadata');
+		return null;
+	}
+	if(!(metadata_bytes instanceof Buffer)) {
+		metadata_bytes = metadata_bytes.toBuffer();
+	}
+	logger.debug('decodeTransactionFilter - metadata length:%s',metadata_bytes.length);
+
 	for (let i = 0; i < metadata_bytes.length; i++) {
 		let value = parseInt(metadata_bytes[i]);
+		logger.debug('decodeTransactionFilter - looking at index:%s with value:%s',i,value);
 		transaction_filter.push(value);
 	}
 	return transaction_filter;
@@ -1237,7 +1247,7 @@ function decodeRangeQueryInfo(proto_range_query_info) {
 	range_query_info.reads_info = {};
 	// reads_info is one of QueryReads
 	let proto_raw_reads = proto_range_query_info.getRawReads();
-	if (proto_raw_reads.kv_reads) {
+	if (proto_raw_reads) {
 		range_query_info.reads_info.kv_reads = [];
 		for (let i in proto_raw_reads.kv_reads) {
 			range_query_info.reads_info.kv_reads.push(proto_raw_reads.kv_reads[i]);
@@ -1245,11 +1255,11 @@ function decodeRangeQueryInfo(proto_range_query_info) {
 	}
 	// or QueryReadsMerkleSummary
 	let proto_reads_merkle_hashes = proto_range_query_info.getReadsMerkleHashes();
-	if (proto_reads_merkle_hashes.max_degree) {
+	if (proto_reads_merkle_hashes) {
 		range_query_info.reads_merkle_hashes = {};
 		range_query_info.reads_merkle_hashes.max_degree = proto_reads_merkle_hashes.getMaxDegree();
 		range_query_info.reads_merkle_hashes.max_level = proto_reads_merkle_hashes.getMaxLevel();
-		range_query_info.reads_info.max_level_hashes = proto_reads_merkle_hashes.getMaxLevelHashes();
+		range_query_info.reads_merkle_hashes.max_level_hashes = proto_reads_merkle_hashes.getMaxLevelHashes();
 	}
 
 	return range_query_info;
