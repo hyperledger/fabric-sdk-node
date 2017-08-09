@@ -1,3 +1,31 @@
+## v1.0.1
+Wed Aug  9 15:58:10 EDT 2017
+
+* [f426239](https://github.com/hyperledger/fabric-sdk-node/commit/f426239) [FAB-5409](https://jira.hyperledger.org/browse/FAB-5409) JSDoc, Add targets to installChaincode() req
+* [4a5afa2](https://github.com/hyperledger/fabric-sdk-node/commit/4a5afa2) [FAB-5457](https://jira.hyperledger.org/browse/FAB-5457) NodeSDK - block decode fails
+* [3fed45a](https://github.com/hyperledger/fabric-sdk-node/commit/3fed45a) [FAB-5447](https://jira.hyperledger.org/browse/FAB-5447) NodeSDK - do not include orderer msp
+* [608c05c](https://github.com/hyperledger/fabric-sdk-node/commit/608c05c) [FAB-5410](https://jira.hyperledger.org/browse/FAB-5410) JSDoc, Change chaincodeProposal to proposal
+* [7a7db13](https://github.com/hyperledger/fabric-sdk-node/commit/7a7db13) [FAB-5403](https://jira.hyperledger.org/browse/FAB-5403) JSDoc, Remove txId from queryByChaincode
+* [64fb795](https://github.com/hyperledger/fabric-sdk-node/commit/64fb795) [FAB-5395](https://jira.hyperledger.org/browse/FAB-5395) Fix a misspelled word
+* [34dd649](https://github.com/hyperledger/fabric-sdk-node/commit/34dd649) [FAB-4847](https://jira.hyperledger.org/browse/FAB-4847) remove node-x509 dependency
+* [326d0b1](https://github.com/hyperledger/fabric-sdk-node/commit/326d0b1) [FAB-5382](https://jira.hyperledger.org/browse/FAB-5382) Add a promise return to method's JSDoc
+* [8ff1bf7](https://github.com/hyperledger/fabric-sdk-node/commit/8ff1bf7) [FAB-5248](https://jira.hyperledger.org/browse/FAB-5248) Basic performance tests
+* [f56a124](https://github.com/hyperledger/fabric-sdk-node/commit/f56a124) [FAB-5338](https://jira.hyperledger.org/browse/FAB-5338) Add test for upgrade CC with state changes
+* [7ced8d8](https://github.com/hyperledger/fabric-sdk-node/commit/7ced8d8) [Fab-5309] NodeSDK - regen artifacts
+* [bf2f388](https://github.com/hyperledger/fabric-sdk-node/commit/bf2f388) [FAB-5026](https://jira.hyperledger.org/browse/FAB-5026) NodeSDK - verify install error
+* [328e7c4](https://github.com/hyperledger/fabric-sdk-node/commit/328e7c4) [FAB-5324](https://jira.hyperledger.org/browse/FAB-5324) Minor jsdoc fixes
+* [24777e1](https://github.com/hyperledger/fabric-sdk-node/commit/24777e1) [FAB-5321](https://jira.hyperledger.org/browse/FAB-5321) NodeSDK - trans status missing
+* [12184fc](https://github.com/hyperledger/fabric-sdk-node/commit/12184fc) fix /lib/channel.js error
+* [aed892f](https://github.com/hyperledger/fabric-sdk-node/commit/aed892f) [FAB-2538](https://jira.hyperledger.org/browse/FAB-2538) NodeSDK - endorsement error msg
+* [4b7ec2f](https://github.com/hyperledger/fabric-sdk-node/commit/4b7ec2f) [FAB-5048-medium] NodeSDK - add to package.json
+* [d11bd77](https://github.com/hyperledger/fabric-sdk-node/commit/d11bd77) [FAB-4453](https://jira.hyperledger.org/browse/FAB-4453) Remove unused chaincodePath from test codes
+* [12160fb](https://github.com/hyperledger/fabric-sdk-node/commit/12160fb) [FAB-5212](https://jira.hyperledger.org/browse/FAB-5212)[node-sdk]Fix tls_cacerts path in e2e test
+* [e60a3dc](https://github.com/hyperledger/fabric-sdk-node/commit/e60a3dc) [FAB-4587](https://jira.hyperledger.org/browse/FAB-4587) Add test cases for "invoke chaincode"
+* [9522ad6](https://github.com/hyperledger/fabric-sdk-node/commit/9522ad6) [FAB-5255](https://jira.hyperledger.org/browse/FAB-5255) Update jsdoc links
+* [8271ca6](https://github.com/hyperledger/fabric-sdk-node/commit/8271ca6) [FAB-5072](https://jira.hyperledger.org/browse/FAB-5072) prepare fabric-sdk-node for next release
+* [974bafc](https://github.com/hyperledger/fabric-sdk-node/commit/974bafc) [FAB-5068](https://jira.hyperledger.org/browse/FAB-5068) prepare fabric-sdk-node for release
+* [b9542f3](https://github.com/hyperledger/fabric-sdk-node/commit/b9542f3) [FAB-2818](https://jira.hyperledger.org/browse/FAB-2818) NodeSDK - add tutorials
+
 ## v1.0.0
 Tue Jul 11 12:19:53 EDT 2017
 

@@ -1,0 +1,22 @@
+v1.0.1 August 9, 2017
+-------------------------
+
+Release Notes
+-------------
+Bug fixes and documentation.
+
+Known Vulnerabilities
+---------------------
+none
+
+Resolved Vulnerabilities
+------------------------
+none
+
+Known Issues & Workarounds
+--------------------------
+none
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/master/CHANGELOG.md#v101
