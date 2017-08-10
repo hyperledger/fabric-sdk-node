@@ -1,6 +1,6 @@
 {
   "name": "fabric-sdk-node",
-  "version": "1.0.0-snapshot",
+  "version": "1.0.2-snapshot",
   "main": "index.js",
   "repository": {
     "type": "gerrit",
