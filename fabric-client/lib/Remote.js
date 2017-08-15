@@ -45,6 +45,7 @@ var Remote = class {
 	 * <br>- any other standard grpc call options will be passed to the grpc service calls directly
 	 */
 	constructor(url, opts) {
+		var _name = null;
 		var pem = null;
 		var ssl_target_name_override = '';
 		var default_authority = '';
@@ -103,10 +104,26 @@ var Remote = class {
 			this._request_timeout = utils.getConfigSetting('request-timeout',30000); //default 30 seconds
 		}
 	}
+	/**
+	 * Get the name. This is a client-side only identifier for this
+	 * object.
+	 * @returns {string} The name of the object
+	 */
+	getName() {
+		return this._name;
+	}
 
 	/**
-	 * Get the URL of the orderer.
-	 * @returns {string} Get the URL associated with the Orderer.
+	 * Set the name as a client-side only identifier of this object.
+	 * @param {string} name
+	 */
+	setName(name) {
+		this._name = name;
+	}
+
+	/**
+	 * Get the URL of this object.
+	 * @returns {string} Get the URL associated with the object.
 	 */
 	getUrl() {
 		logger.debug('getUrl::'+this._url);

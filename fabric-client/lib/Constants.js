@@ -20,3 +20,14 @@ module.exports.LSCC = 'lscc';
 module.exports.QSCC = 'qscc';
 module.exports.CSCC = 'cscc';
 module.exports.SYSTEM_CHANNEL_NAME = 'testchainid';
+module.exports.NetworkConfig = {};
+module.exports.NetworkConfig.ENDORSING_PEER_ROLE = 'endorsingPeer';
+module.exports.NetworkConfig.CHAINCODE_QUERY_ROLE = 'chaincodeQuery';
+module.exports.NetworkConfig.LEDGER_QUERY_ROLE = 'ledgerQuery';
+module.exports.NetworkConfig.EVENT_SOURCE_ROLE = 'eventSource';
+module.exports.NetworkConfig.ROLES = [
+	module.exports.NetworkConfig.ENDORSING_PEER_ROLE,
+	module.exports.NetworkConfig.CHAINCODE_QUERY_ROLE,
+	module.exports.NetworkConfig.LEDGER_QUERY_ROLE,
+	module.exports.NetworkConfig.EVENT_SOURCE_ROLE
+];

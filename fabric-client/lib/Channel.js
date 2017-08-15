@@ -818,6 +818,57 @@ var Channel = class {
 		}
 	}
 
+	/*
+ 	*  utility method to decide on the target for queries that only need ledger access
+ 	*/
+	_getTargetForQuery(target) {
+		if (Array.isArray(target)) {
+			return new Error('"target" parameter is an array, but should be a singular peer object');
+		}
+
+		var targets = this._getTargets(target, Constants.NetworkConfig.LEDGER_QUERY_ROLE);
+		if(Array.isArray(targets)) {
+			targets = targets[0];
+		}
+
+		return targets;
+	}
+
+	/*
+	 * utility method to decide on the targets for requests
+	 */
+	_getTargets(request_targets, role) {
+		var targets = null;
+		if (request_targets) {
+			// first check to see if they have passed a peer or peer name
+			try {
+				targets = this._clientContext.getTargetPeers(request_targets);
+			} catch(err) {
+				return err;
+			}
+		}
+		// so nothing passed in
+		// see if we can find in the network configuration
+		if (!targets || targets.length < 1 ) try {
+			targets = this._getTargetsFromConfig(role);
+		} catch(err) {
+			return err;
+		}
+
+		// nothing yet
+		// maybe there are peers on the channel
+		if (!targets || targets.length < 1 ) {
+			var targets = this.getPeers();
+			if (this.getPeers().length < 1) {
+				return new Error('"targets" parameter not specified and no peers are set on Channel.');
+			} else {
+				targets = this.getPeers();
+			}
+		}
+
+		return targets;
+	}
+
 	/**
 	 * Queries the ledger on the target peer for a Block by block hash.
 	 *
@@ -1703,7 +1754,96 @@ var Channel = class {
 		}
 
 		return true;
-	 }
+	}
+
+	/*
+	 * Utility method to return a list of targets from the network configuration
+	 * that are in this role of operation
+	 */
+	_getTargetsFromConfig(role) {
+		var method = '_getTargetsFromConfig';
+		logger.debug('%s - start  ::role %s',method,role);
+		var targets = [];
+		if(role) {
+			var found = false;
+			for(let i in Constants.NetworkConfig.ROLES) {
+				if(role === Constants.NetworkConfig.ROLES[i]) {
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
+				throw Error('Target role is unknown');
+			}
+		}
+
+		/*
+		 * Need to list all the organizations from the network configuration.
+		 * Check each peer in each organization to see if it is on the channel.
+		 * If peer is on the channel and in the role, add this peer to a new list
+		 * of peers for this organization. Keep all these new lists in a list keyed
+		 * by the organization name. Once we have all the peers on the channel
+		 * sorted by organization, then we can randomly take one of those peers
+		 * for each organization and add it to the final target list.
+		 */
+		if (this._clientContext._network_config) {
+			var orgs = this._clientContext._network_config.getOrganizations();
+			if(orgs) {
+				//first get all the peers on the channel divided up by orgs
+				var peers_by_org = {};
+				for(let i in orgs) {
+					let org = orgs[i];
+					var peers_in_org_and_in_channel = [];
+					peers_by_org[org.getName()] = peers_in_org_and_in_channel;
+					var org_peers = org.getPeers();
+					logger.debug('%s - org:%s has %s peers',method,org.getName(), org_peers.length);
+					for(let j in org_peers) {
+						let org_peer = org_peers[j];
+						var channel_peers = this.getPeers();
+						for(let k in channel_peers) {
+							let channel_peer = channel_peers[k];
+							if(!channel_peer) {
+								logger.debug('%s - no peers on this channel',method);
+								break;
+							}
+							if(!org_peer) {
+								logger.debug('%s - null peer on this org',method);
+								break;
+							}
+							logger.debug('%s - comparing channel peer:%s to org peer:%s',method, channel_peer.getName(), org_peer.getName());
+							if(channel_peer.getName() === org_peer.getName()) {
+								// only peers in the request role get added
+								if(channel_peer.isInRole(role)) {
+									peers_in_org_and_in_channel.push(channel_peer);
+									logger.debug('%s - added peer %s',method,channel_peer.toString());
+								}
+								break;
+							}
+						}
+					}
+				}
+				// now add just one peer from each org to targets if in role
+				for(let org_name in peers_by_org) {
+					let peers_org = peers_by_org[org_name];
+					if(peers_org && peers_org.length > 0) {
+						logger.debug('%s - orgs %s has %s peers',method, org_name, peers_org.length);
+						let which_peer = Math.floor(Math.random() * peers_org.length);
+						logger.debug('%s - peer index:%s',method,which_peer);
+						let peer_org = peers_org[which_peer];
+						targets.push(peer_org);
+						logger.debug('%s - added target peer %s',method,peer_org.toString());
+					} else {
+						logger.debug('%s - no peers in this org %s',method,org_name);
+					}
+				}
+			}
+
+			if(targets.length == 0) {
+				logger.warn('No peers found in the loaded network configuration that can be used as the target of this operation');
+			}
+			return targets;
+		}
+	}
 
 	// internal utility method to build chaincode policy
 	_buildEndorsementPolicy(policy) {

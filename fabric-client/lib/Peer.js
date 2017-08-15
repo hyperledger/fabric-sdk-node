@@ -1,5 +1,5 @@
 /*
- Copyright 2016 IBM All Rights Reserved.
+ Copyright 2016, 2017 IBM All Rights Reserved.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ var _serviceProto = grpc.load(__dirname + '/protos/peer/peer.proto').protos;
 var logger = utils.getLogger('Peer.js');
 
 /**
- * The Peer class represents an endorsing peer in the target blockchain network.
+ * The Peer class represents a peer in the target blockchain network.
  * The application can send endorsement proposals, and query requests through this
  * class.
  *
@@ -54,24 +54,31 @@ var Peer = class extends Remote {
 
 		logger.debug('Peer.const - url: %s timeout: %s', url, this._request_timeout);
 		this._endorserClient = new _serviceProto.Endorser(this._endpoint.addr, this._endpoint.creds, this._options);
-		this._name = null;
+		this._roles = {};
 	}
 
 	/**
-	 * Get the Peer name. This is a client-side only identifier for this
-	 * Peer object.
-	 * @returns {string} The name of the Peer object
+	 * Set a role for this peer.
+	 * @param {string} role - The name of the role
+	 * @param {boolean} isIn - The boolean value of does this peer have this role
 	 */
-	getName() {
-		return this._name;
+	setRole(role, isIn) {
+		this._roles[role] = isIn;
 	}
 
 	/**
-	 * Set the Peer name as a client-side only identifier of this Peer object.
-	 * @param {string} name
+	 * Checks if this peer is in the specified role.
+	 * The default is true when the incoming role is not defined.
+	 * The default will be true when this peer does not have the role defined.
 	 */
-	setName(name) {
-		this._name = name;
+	isInRole(role) {
+		if(!role) {
+			return true;
+		} else if(typeof this._roles[role] === 'undefined') {
+			return true;
+		} else {
+			return this._roles[role];
+		}
 	}
 
 	/**

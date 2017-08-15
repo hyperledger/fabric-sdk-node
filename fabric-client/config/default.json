@@ -1,4 +1,4 @@
-{ 
+{
 	"request-timeout" : 45000,
 	"crypto-hash-algo": "SHA2",
 	"crypto-keysize": 256,
@@ -10,8 +10,12 @@
 		"EC": "fabric-client/lib/impl/bccsp_pkcs11.js"
 	},
 	"key-value-store": "fabric-client/lib/impl/FileKeyValueStore.js",
+	"certificate-authority-client": "fabric-ca-client",
 	"nonce-size" : 24,
 	"grpc-ssl-cipher-suites": "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384",
 	"grpc-max-receive-message-length": 0,
-	"grpc-max-send-message-length": 0
+	"grpc-max-send-message-length": 0,
+	"network-config-schema" : {
+		"1.0": "./impl/NetworkConfig_1_0.js"
+	}
 }
