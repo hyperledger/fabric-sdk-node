@@ -180,7 +180,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 		return channel.initialize();
 
 	}).then((nothing) => {
-		tx_id = client.newTransactionID(the_user);
+		tx_id = client.newTransactionID();
 
 		// send proposal to endorser
 		var request = {

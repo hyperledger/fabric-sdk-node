@@ -39,7 +39,7 @@ var TLS_CACERTS = 'tlsCACerts';
 var ADMIN_PRIVATE_KEY = 'adminPrivateKey';
 var ADMIN_CERT = 'signedCert';
 var GRPC_CONNECTION_OPTIONS = 'grpcOptions';
-var HTTP_CONNECTION_OPTIONS = 'grpcOptions';
+var HTTP_CONNECTION_OPTIONS = 'httpOptions';
 var URL = 'url';
 var EVENT_URL = 'eventUrl';
 var NAME = 'name';
@@ -91,6 +91,14 @@ var NetworkConfig_1_0 = class {
 				this._network_config.certificateAuthorities = additions._network_config.certificateAuthorities;
 			}
 		}
+	}
+
+	hasClient() {
+		if(this._network_config && this._network_config.client) {
+			return true;
+		}
+
+		return false;
 	}
 
 	getClientConfig() {

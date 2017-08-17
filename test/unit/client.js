@@ -30,6 +30,7 @@ var Client = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
 var User = require('fabric-client/lib/User.js');
 var Peer = require('fabric-client/lib/Peer.js');
+var NetworkConfig = require('fabric-client/lib/impl/NetworkConfig_1_0.js');
 var testutil = require('./util.js');
 
 var caImport;
@@ -304,6 +305,16 @@ test('\n\n ** testing query calls fail without correct parameters on client **\n
 		}
 	});
 
+	var p1a = client.queryInstalledChaincodes('somename').then(function () {
+		t.fail('Should not have been able to resolve the promise because of No network configuraton loaded');
+	}).catch(function (err) {
+		if (err.message.indexOf('No network configuraton loaded') >= 0) {
+			t.pass('Successfully caught No network configuraton loaded error');
+		} else {
+			t.fail('Failed to catch the No network configuraton loaded error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
 	var p2 = client.queryChannels().then(function () {
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
 	}).catch(function (err) {
@@ -314,7 +325,47 @@ test('\n\n ** testing query calls fail without correct parameters on client **\n
 		}
 	});
 
-	Promise.all([p1, p2])
+	var p3 = client.queryChannels('somename').then(function () {
+		t.fail('Should not have been able to resolve the promise because of no network loaded');
+	}).catch(function (err) {
+		if (err.message.indexOf('No network configuraton loaded') >= 0) {
+			t.pass('Successfully caught no network loaded error');
+		} else {
+			t.fail('Failed to catch the no network loaded error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	client._network_config = new NetworkConfig({}, client);
+	var p4 = client.queryChannels('somename').then(function () {
+		t.fail('Should not have been able to resolve the promise because of wrong request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Target peer name was not found') >= 0) {
+			t.pass('Successfully caught wrong request error');
+		} else {
+			t.fail('Failed to catch the wrong request error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	var p4a = client.queryInstalledChaincodes('somename').then(function () {
+		t.fail('Should not have been able to resolve the promise because of wrong request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Target peer name was not found') >= 0) {
+			t.pass('Successfully caught wrong request error');
+		} else {
+			t.fail('Failed to catch the wrong request error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+
+	var p5 = client.queryChannels({}).then(function () {
+		t.fail('Should not have been able to resolve the promise because of wrong object request parameter');
+	}).catch(function (err) {
+		if (err.message.indexOf('Target peer is not a valid peer object instance') >= 0) {
+			t.pass('Successfully caught wrong object request error');
+		} else {
+			t.fail('Failed to catch the wrong object request error. Error: ' + err.stack ? err.stack : err);
+		}
+	});
+	Promise.all([p1, p1a, p2, p3, p4, p4a, p5])
 	.then(
 		function (data) {
 			t.end();
@@ -363,8 +414,8 @@ test('\n\n ** testing get transaction ID call on client **\n\n', function (t) {
 	t.throws(function() {
 		client.newTransactionID();
 	},
-	/This client instance must be assigned an user context/,
-	'Test This client instance must be assigned an user context');
+	/No identity has been assigned to this client/,
+	'Test - No identity has been assigned to this client');
 
 	t.end();
 });
@@ -467,7 +518,35 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1, p2, p3, p4, p5])
+	var p6 = client.installChaincode({
+		targets : ['somename'],
+		chaincodePath: 'blahp4',
+		chaincodeId: 'blah',
+		chaincodeVersion: 'blah'}).then(function () {
+			t.fail('p6 - Should not have been able to resolve the promise because of bad request parameter');
+		}).catch(function (err) {
+			if (err.message.indexOf('No network configuraton loaded') >= 0) {
+				t.pass('p6 - Successfully caught bad request error');
+			} else {
+				t.fail('p6 - Failed to catch the bad request error. Error: ' + err.stack ? err.stack : err);
+			}
+		});
+
+	var p7 = client.installChaincode({
+		targets : [{}],
+		chaincodePath: 'blahp4',
+		chaincodeId: 'blah',
+		chaincodeVersion: 'blah'}).then(function () {
+			t.fail('p7 - Should not have been able to resolve the promise because of bad request parameter');
+		}).catch(function (err) {
+			if (err.message.indexOf('Target peer is not a valid peer object') >= 0) {
+				t.pass('p7 - Successfully caught bad request error');
+			} else {
+				t.fail('p7 - Failed to catch the bad request error. Error: ' + err.stack ? err.stack : err);
+			}
+		});
+
+	Promise.all([p1, p2, p3, p4, p5, p6])
 	.then(
 		function (data) {
 			t.end();
@@ -489,7 +568,7 @@ test('\n\n ** Client createChannel() tests **\n\n', function (t) {
 	).then(function () {
 		t.fail('Should not have been able to resolve the promise because of orderer missing');
 	}).catch(function (err) {
-		if (err.message.indexOf('Missing orderer') >= 0) {
+		if (err.message.indexOf('Missing "orderer"') >= 0) {
 			t.pass('Successfully caught missing orderer error');
 		} else {
 			t.fail('Failed to catch the missing orderer error. Error: ');
@@ -993,7 +1072,19 @@ test('\n\n ** test related APIs for create channel **\n\n', function (t) {
 	).then(function () {
 		t.fail('Should not have been able to resolve the promise');
 	}).catch(function (err) {
-		let msg = 'Missing orderer request parameter';
+		let msg = 'Missing "orderer" request parameter';
+		if (err.message.indexOf(msg) >= 0) {
+			t.pass('Successfully caught the ' + msg );
+		} else {
+			t.fail('Failed to catch the ' + msg + ' Error: ');
+			console.log(err.stack ? err.stack : err);
+		}
+	});
+	var p6a= client.updateChannel({config : 'a', signatures : [], txId : 'a', name : 'a', orderer : {}}
+	).then(function () {
+		t.fail('Should not have been able to resolve the promise');
+	}).catch(function (err) {
+		let msg = '"orderer" request parameter is not valid';
 		if (err.message.indexOf(msg) >= 0) {
 			t.pass('Successfully caught the ' + msg );
 		} else {
@@ -1025,7 +1116,7 @@ test('\n\n ** test related APIs for create channel **\n\n', function (t) {
 			console.log(err.stack ? err.stack : err);
 		}
 	});
-	Promise.all([p3a, p3b, p4, p6, p7, p8])
+	Promise.all([p3a, p3b, p4, p6, p6a, p7, p8])
 	.then(
 		function (data) {
 			t.end();
@@ -1089,7 +1180,11 @@ test('\n\n*** Test per-call timeout support ***\n', function(t) {
 			serialize: function() { return Buffer.from(''); }
 		};
 	};
-	client._userContext.getSigningIdentity = function() { return ''; };
+	client._userContext.getSigningIdentity = function() {
+		return {
+			serialize: function() { return Buffer.from(''); }
+		};
+	};
 
 	let p = client.installChaincode({
 		targets: [new Peer('grpc://localhost:7051'), new Peer('grpc://localhost:7052')],
