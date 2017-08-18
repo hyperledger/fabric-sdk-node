@@ -64,6 +64,8 @@ var MSP = class {
 		this.cryptoSuite = config.cryptoSuite;
 		this._id = config.id;
 		this._organization_units = config.orgs;
+		this._tls_root_certs = config.tls_root_certs;
+		this._tls_intermediate_certs = config.tls_intermediate_certs;
 	}
 
 	/**
@@ -125,6 +127,12 @@ var MSP = class {
 		if(this._organization_units) {
 			//organizational_unit_identifiers
 			proto_fabric_msp_config.setOrganizationalUnitIdentifiers(this._organization_units);
+		}
+		if(this._tls_root_certs) {
+			proto_fabric_msp_config.setTlsRootCerts(this._tls_root_certs);
+		}
+		if(this._tls_intermediate_certs) {
+			proto_fabric_msp_config.getTlsIntermediateCerts(this._tls_intermediate_certs);
 		}
 		proto_msp_config.setConfig(proto_fabric_msp_config.toBuffer());
 		return proto_msp_config;

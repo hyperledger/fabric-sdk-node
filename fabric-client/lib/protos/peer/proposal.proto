@@ -240,6 +240,7 @@ message ChaincodeProposalPayload {
 
 	// Input contains the arguments for this invocation. If this invocation
 	// deploys a new chaincode, ESCC/VSCC are part of this field.
+	// This is usually a marshaled ChaincodeInvocationSpec
 	bytes input  = 1;
 
 	// TransientMap contains data (e.g. cryptographic material) that might be used
@@ -263,4 +264,11 @@ message ChaincodeAction {
 
 	// This field contains the result of executing this invocation.
 	Response response = 3;
+
+	// This field contains the ChaincodeID of executing this invocation. Endorser
+	// will set it with the ChaincodeID called by endorser while simulating proposal.
+	// Committer will validate the version matching with latest chaincode version.
+	// Adding ChaincodeID to keep version opens up the possibility of multiple
+	// ChaincodeAction per transaction.
+	ChaincodeID chaincode_id = 4;
 }

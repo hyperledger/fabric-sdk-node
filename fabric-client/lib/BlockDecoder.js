@@ -153,6 +153,7 @@ nonce -- {byte[]}
 config
 	sequence -- {int}
 	channel_group -- {{@link ConfigGroup}}
+	type -- {int}
 last_update
 	signature -- {byte[]}
 	payload
@@ -228,6 +229,7 @@ config_update
 	channel_id -- {string}
 	read_set -- {{@link ChannelConfigGroup}}
 	write_set -- {{@link ChannelConfigGroup}}
+	type -- {int}
 signatures -- {array}
 	signature_header -- {{@link SignatureHeader}}
 	signature -- {byte[]}
@@ -442,11 +444,11 @@ policy
 	 * A "SignaturePolicy" will have the following object structure.
 <br><pre>
 type -- SIGNATURE
-policy
+rule
 	Type -- n_out_of
 	n_out_of
 		N -- {int}
-		policies -- {array}
+		rules -- {array}
 			Type -- signed_by
 			signed_by -- {int}
 	identities -- {array}
@@ -683,7 +685,6 @@ function decodeConfigEnvelope(config_envelope_bytes) {
 	var config_envelope = {};
 	var proto_config_envelope = _configtxProto.ConfigEnvelope.decode(config_envelope_bytes);
 	config_envelope.config = decodeConfig(proto_config_envelope.getConfig());
-
 	logger.debug('decodeConfigEnvelope - decode complete for config envelope - start config update');
 	config_envelope.last_update = {};
 	var proto_last_update = proto_config_envelope.getLastUpdate(); //this is a common.Envelope
@@ -702,6 +703,7 @@ function decodeConfig(proto_config) {
 	var config = {};
 	config.sequence = proto_config.getSequence();
 	config.channel_group = decodeConfigGroup(proto_config.getChannelGroup());
+	config.type = proto_config.getType();
 
 	return config;
 };
@@ -727,6 +729,7 @@ function decodeConfigUpdate(config_update_bytes) {
 	config_update.channel_id = proto_config_update.getChannelId();
 	config_update.read_set = decodeConfigGroup(proto_config_update.getReadSet());
 	config_update.write_set = decodeConfigGroup(proto_config_update.getWriteSet());
+	config_update.type = proto_config_update.getType();
 
 	return config_update;
 };
@@ -873,14 +876,14 @@ function decodeConfigPolicy(proto_config_policy) {
 		logger.debug('decodeConfigPolicy ======> Policy item ::%s', proto_config_policy.key);
 		switch (proto_config_policy.value.policy.type) {
 		case _policiesProto.Policy.PolicyType.SIGNATURE:
-			config_policy.policy.policy = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.policy);
+			config_policy.policy.value = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.value);
 			break;
 		case _policiesProto.Policy.PolicyType.MSP:
-			var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.policy);
+			var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.value);
 			logger.warn('decodeConfigPolicy - found a PolicyType of MSP. This policy type has not been implemented yet.');
 			break;
 		case _policiesProto.Policy.PolicyType.IMPLICIT_META:
-			config_policy.policy.policy = decodeImplicitMetaPolicy(proto_config_policy.value.policy.policy);
+			config_policy.policy.value = decodeImplicitMetaPolicy(proto_config_policy.value.policy.value);
 			break;
 		default:
 			throw new Error('Unknown Policy type');
@@ -904,7 +907,7 @@ function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 	var signature_policy_envelope = {};
 	var porto_signature_policy_envelope = _policiesProto.SignaturePolicyEnvelope.decode(signature_policy_envelope_bytes);
 	signature_policy_envelope.version = decodeVersion(porto_signature_policy_envelope.getVersion());
-	signature_policy_envelope.policy = decodeSignaturePolicy(porto_signature_policy_envelope.getPolicy());
+	signature_policy_envelope.rule = decodeSignaturePolicy(porto_signature_policy_envelope.getRule());
 	var identities = [];
 	var proto_identities = porto_signature_policy_envelope.getIdentities();
 	if (proto_identities)
@@ -923,11 +926,11 @@ function decodeSignaturePolicy(proto_signature_policy) {
 	if (signature_policy.Type == 'n_out_of') {
 		signature_policy.n_out_of = {};
 		signature_policy.n_out_of.N = proto_signature_policy.n_out_of.getN();
-		signature_policy.n_out_of.policies = [];
-		for (var i in proto_signature_policy.n_out_of.policies) {
-			var proto_policy = proto_signature_policy.n_out_of.policies[i];
+		signature_policy.n_out_of.rules = [];
+		for (var i in proto_signature_policy.n_out_of.rules) {
+			var proto_policy = proto_signature_policy.n_out_of.rules[i];
 			var policy = decodeSignaturePolicy(proto_policy);
-			signature_policy.n_out_of.policies.push(policy);
+			signature_policy.n_out_of.rules.push(policy);
 		}
 	} else if (signature_policy.Type == 'signed_by') {
 		signature_policy.signed_by = proto_signature_policy.getSignedBy();
@@ -1009,6 +1012,8 @@ function decodeFabricMSPConfig(msp_config_bytes) {
 	msp_config.revocation_list = toPEMcerts(proto_msp_config.getRevocationList());
 	msp_config.signing_identity = decodeSigningIdentityInfo(proto_msp_config.getSigningIdentity());
 	msp_config.organizational_unit_identifiers = decodeFabricOUIdentifier(proto_msp_config.getOrganizationalUnitIdentifiers());
+	msp_config.tls_root_certs = toPEMcerts(proto_msp_config.getTlsRootCerts());
+	msp_config.tls_intermediate_certs = toPEMcerts(proto_msp_config.getTlsIntermediateCerts());
 
 	return msp_config;
 };
@@ -1149,11 +1154,13 @@ function decodeProposalResponsePayload(proposal_response_payload_bytes) {
 };
 
 function decodeChaincodeAction(action_bytes) {
+	logger.debug('decodeChaincodeAction - start');
 	var chaincode_action = {};
 	var proto_chaincode_action = _proposalProto.ChaincodeAction.decode(action_bytes);
 	chaincode_action.results = decodeReadWriteSets(proto_chaincode_action.getResults());
 	chaincode_action.events = decodeChaincodeEvents(proto_chaincode_action.getEvents());
 	chaincode_action.response = decodeResponse(proto_chaincode_action.getResponse());
+	chaincode_action.chaincode_id = decodeChaincodeID(proto_chaincode_action.getChaincodeId());
 
 	return chaincode_action;
 };
@@ -1165,7 +1172,22 @@ function decodeChaincodeEvents(event_bytes) {
 	events.tx_id = proto_events.getTxId();
 	events.event_name = proto_events.getEventName();
 	events.payload = proto_events.getPayload().toBuffer();
+
 	return events;
+}
+
+function decodeChaincodeID(proto_chaincode_id) {
+	var chaincode_id = {};
+	if(!proto_chaincode_id) {
+		logger.debug('decodeChaincodeID - no proto_chaincode_id found');
+		return chaincode_id;
+	}
+	logger.debug('decodeChaincodeID - start');
+	chaincode_id.path = proto_chaincode_id.getPath();
+	chaincode_id.name = proto_chaincode_id.getName();
+	chaincode_id.version = proto_chaincode_id.getVersion();
+
+	return chaincode_id;
 }
 
 function decodeReadWriteSets(rw_sets_bytes) {

@@ -189,7 +189,7 @@ test('\n\n*** BlockDecoder.js tests ***\n\n', (t) => {
 			getModPolicy: function() { return {}; },
 			policy: {
 				type: policiesProto.Policy.PolicyType.MSP,
-				policy: mockPolicy.toBuffer()
+				value: mockPolicy.toBuffer()
 			}
 		}
 	});
@@ -204,7 +204,7 @@ test('\n\n*** BlockDecoder.js tests ***\n\n', (t) => {
 					getModPolicy: function() { return {}; },
 					policy: {
 						type: policiesProto.Policy.PolicyType.MSB, // setting to an invalid type
-						policy: mockPolicy.toBuffer()
+						value: mockPolicy.toBuffer()
 					}
 				}
 			});
