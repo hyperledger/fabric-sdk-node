@@ -155,7 +155,6 @@ module.exports.installChaincode = installChaincode;
 function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 	init();
 
-	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
 	var targets = [],
@@ -274,7 +273,9 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 				request.txId.getTransactionID()
 			));
 
-			return channel.sendUpgradeProposal(request)
+			// this is the longest response delay in the test, sometimes
+			// x86 CI times out. set the per-request timeout to a super-long value
+			return channel.sendUpgradeProposal(request, 120000)
 			.then((results) => {
 				let proposalResponses = results[0];
 
@@ -298,7 +299,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 						request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
 						tx_id = request.txId;
 
-						return channel.sendUpgradeProposal(request);
+						return channel.sendUpgradeProposal(request, 120000);
 					} else {
 						throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
 					}
@@ -310,7 +311,9 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
 			tx_id = request.txId;
 
-			return channel.sendInstantiateProposal(request);
+			// this is the longest response delay in the test, sometimes
+			// x86 CI times out. set the per-request timeout to a super-long value
+			return channel.sendInstantiateProposal(request, 120000);
 		}
 
 	}, (err) => {

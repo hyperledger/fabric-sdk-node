@@ -63,14 +63,14 @@ module.exports.buildProposal = function(invokeSpec, header, transientMap) {
 /*
  * This function will return one Promise when sending a proposal to many peers
  */
-module.exports.sendPeersProposal = function(peers, proposal) {
+module.exports.sendPeersProposal = function(peers, proposal, timeout) {
 	if(!Array.isArray(peers)) {
 		peers = [peers];
 	}
 	// make function to return an individual promise
 	var fn = function(peer) {
 		return new Promise(function(resolve,reject) {
-			peer.sendProposal(proposal)
+			peer.sendProposal(proposal, timeout)
 			.then(
 				function(result) {
 					resolve(result);

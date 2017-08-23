@@ -433,9 +433,13 @@ var Channel = class {
 	 * includes the block in the proposal request.
 	 *
 	 * @param {JoinChannelRequest} request
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *                              response before rejecting the promise with a
+	 *                              timeout error. This overrides the default timeout
+	 *                              of the {@link Peer} instance(s) and the global timeout in the config settings.
 	 * @returns {Promise} A Promise for an array of {@link ProposalResponse} from the target peers
 	 */
-	joinChannel(request) {
+	joinChannel(request, timeout) {
 		logger.debug('joinChannel - start');
 		var errorMsg = null;
 
@@ -493,7 +497,7 @@ var Channel = class {
 		var proposal = clientUtils.buildProposal(chaincodeSpec, header);
 		var signed_proposal = clientUtils.signProposal(userContext.getSigningIdentity(), proposal);
 
-		return clientUtils.sendPeersProposal(request.targets, signed_proposal)
+		return clientUtils.sendPeersProposal(request.targets, signed_proposal, timeout)
 		.then(
 			function(responses) {
 				return Promise.resolve(responses);
@@ -1122,10 +1126,14 @@ var Channel = class {
 	 * activated and the peers are ready to take requests to process transactions.
 	 *
 	 * @param {ChaincodeInstantiateUpgradeRequest} request
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *                              response before rejecting the promise with a
+	 *                              timeout error. This overrides the default timeout
+	 *                              of the Peer instance and the global timeout in the config settings.
 	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}
 	 */
-	sendInstantiateProposal(request) {
-		return this._sendChaincodeProposal(request, 'deploy');
+	sendInstantiateProposal(request, timeout) {
+		return this._sendChaincodeProposal(request, 'deploy', timeout);
 	}
 
 	/**
@@ -1139,16 +1147,20 @@ var Channel = class {
 	 * operation.
 	 *
 	 * @param {ChaincodeInstantiateUpgradeRequest} request
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *                              response before rejecting the promise with a
+	 *                              timeout error. This overrides the default timeout
+	 *                              of the Peer instance and the global timeout in the config settings.
 	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}
 	 */
-	sendUpgradeProposal(request) {
-		return this._sendChaincodeProposal(request, 'upgrade');
+	sendUpgradeProposal(request, timeout) {
+		return this._sendChaincodeProposal(request, 'upgrade', timeout);
 	}
 
 	/*
 	 * Internal method to handle both chaincode calls
 	 */
-	_sendChaincodeProposal(request, command) {
+	_sendChaincodeProposal(request, command, timeout) {
 		var errorMsg = null;
 
 		var peers = null;
@@ -1230,7 +1242,7 @@ var Channel = class {
 		proposal = clientUtils.buildProposal(lcccSpec, header, request.transientMap);
 		let signed_proposal = clientUtils.signProposal(userContext.getSigningIdentity(), proposal);
 
-		return clientUtils.sendPeersProposal(peers, signed_proposal)
+		return clientUtils.sendPeersProposal(peers, signed_proposal, timeout)
 		.then(
 			function(responses) {
 				return [responses, proposal, header];
@@ -1262,9 +1274,13 @@ var Channel = class {
 	 * executes successfully) or not (if the chaincode returns an error).
 	 *
 	 * @param {ChaincodeInvokeRequest} request
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *                              response before rejecting the promise with a
+	 *                              timeout error. This overrides the default timeout
+	 *                              of the Peer instance and the global timeout in the config settings.
 	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}
 	 */
-	sendTransactionProposal(request) {
+	sendTransactionProposal(request, timeout) {
 		logger.debug('sendTransactionProposal - start');
 
 		if(!request) {
@@ -1285,7 +1301,7 @@ var Channel = class {
 	 * Internal static method to allow transaction proposals to be called without
 	 * creating a new channel
 	 */
-	static sendTransactionProposal(request, channelId, clientContext) {
+	static sendTransactionProposal(request, channelId, clientContext, timeout) {
 		// Verify that a Peer has been added
 		var errorMsg = null;
 
@@ -1346,7 +1362,7 @@ var Channel = class {
 		proposal = clientUtils.buildProposal(invokeSpec, header, request.transientMap);
 		let signed_proposal = clientUtils.signProposal(userContext.getSigningIdentity(), proposal);
 
-		return clientUtils.sendPeersProposal(request.targets, signed_proposal)
+		return clientUtils.sendPeersProposal(request.targets, signed_proposal, timeout)
 		.then(
 			function(responses) {
 				return Promise.resolve([responses, proposal, header]);

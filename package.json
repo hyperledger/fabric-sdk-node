@@ -41,6 +41,7 @@
     "nano": "^6.2.0",
     "require-dir": "^0.3.0",
     "rewire": "^2.5.2",
+    "sinon": "^3.2.1",
     "tap-colorize": "^1.2.0",
     "tape": "^4.5.1",
     "tape-promise": "^1.1.0",

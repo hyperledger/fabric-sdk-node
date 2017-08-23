@@ -663,9 +663,13 @@ var Client = class extends BaseClient {
 	 * identities are allowed to perform this operation.
 	 *
 	 * @param {ChaincodeInstallRequest} request - The request object
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *                              response before rejecting the promise with a
+	 *                              timeout error. This overrides the default timeout
+	 *                              of the Peer instance and the global timeout in the config settings.
 	 * @returns {Promise} A Promise for a {@link ProposalResponseObject}
 	 */
-	installChaincode(request) {
+	installChaincode(request, timeout) {
 		logger.debug('installChaincode - start');
 
 		var errorMsg = null;
@@ -744,7 +748,7 @@ var Client = class extends BaseClient {
 			proposal = clientUtils.buildProposal(lcccSpec, header);
 			let signed_proposal = clientUtils.signProposal(userContext.getSigningIdentity(), proposal);
 			logger.debug('installChaincode - about to sendPeersProposal');
-			return clientUtils.sendPeersProposal(peers, signed_proposal)
+			return clientUtils.sendPeersProposal(peers, signed_proposal, timeout)
 			.then(
 				function(responses) {
 					return [responses, proposal, header];

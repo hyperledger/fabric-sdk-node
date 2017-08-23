@@ -81,11 +81,18 @@ var Peer = class extends Remote {
 	 *
 	 * @param {Proposal} proposal - A protobuf encoded byte array of type
 	 *                              [Proposal]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/proposal.proto#L134}
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *                              response before rejecting the promise with a
+	 *                              timeout error. This overrides the default timeout
+	 *                              of the Peer instance and the global timeout in the config settings.
 	 * @returns {Promise} A Promise for a {@link ProposalResponse}
 	 */
-	sendProposal(proposal) {
+	sendProposal(proposal, timeout) {
 		logger.debug('Peer.sendProposal - Start');
-		var self = this;
+		let self = this;
+		let rto = self._request_timeout;
+		if (typeof timeout === 'number')
+			rto = timeout;
 
 		if(!proposal) {
 			return Promise.reject(new Error('Missing proposal to send to peer'));
@@ -96,9 +103,9 @@ var Peer = class extends Remote {
 		//     rpc ProcessProposal(Proposal) returns (ProposalResponse) {}
 		return new Promise(function(resolve, reject) {
 			var send_timeout = setTimeout(function(){
-				logger.error('sendProposal - timed out after:%s', self._request_timeout);
+				logger.error('sendProposal - timed out after:%s', rto);
 				return reject(new Error('REQUEST_TIMEOUT'));
-			}, self._request_timeout);
+			}, rto);
 
 			self._endorserClient.processProposal(proposal, function(err, proposalResponse) {
 				clearTimeout(send_timeout);
