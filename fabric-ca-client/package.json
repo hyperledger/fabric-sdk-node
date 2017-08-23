@@ -7,11 +7,9 @@
     "url": "http://gerrit.hyperledger.org/r/fabric-sdk-node"
   },
   "engines": {
-    "node": ">=6.9.0 <7.0",
+    "node": ">=6.9.0",
     "npm": ">=3.10.0"
   },
-  "engine-strict": true,
-  "engineStrict": true,
   "dependencies": {
     "bn.js": "^4.11.3",
     "elliptic": "^6.2.3",

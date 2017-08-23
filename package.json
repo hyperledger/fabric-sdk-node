@@ -9,14 +9,8 @@
   "scripts": {
     "test": "gulp test-headless"
   },
-  "engines": {
-    "node": ">=4.5.0",
-    "npm": ">=2.15.9"
-  },
-  "engine-strict": true,
-  "engineStrict": true,
   "devDependencies": {
-    "bn.js": "^4.11.6",
+    "bn.js": "^4.11.8",
     "bunyan": "^1.8.10",
     "cloudant": "^1.7.0",
     "del": "^2.2.2",
@@ -37,7 +31,7 @@
     "intercept-stdout": "^0.1.2",
     "jsrsasign": "6.2.2",
     "log4js": "^0.6.38",
-    "mock-couch": "https://github.com/jimthematrix/mock-couch.git",
+    "mock-couch": "git+https://github.com/jimthematrix/mock-couch.git",
     "nano": "^6.2.0",
     "require-dir": "^0.3.0",
     "rewire": "^2.5.2",

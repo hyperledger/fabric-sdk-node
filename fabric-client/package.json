@@ -10,11 +10,9 @@
     "test": "node test/unit/headless-tests.js"
   },
   "engines": {
-    "node": ">=6.9.0 <7.0",
+    "node": ">=6.9.0",
     "npm": ">=3.10.0"
   },
-  "engine-strict": true,
-  "engineStrict": true,
   "dependencies": {
     "bn.js": "^4.11.3",
     "callsite": "^1.0.0",
