@@ -1136,7 +1136,11 @@ var Channel = class {
 	 * @property {string[]} args - Optional. Array of string arguments to pass to the function identified by the <code>fcn</code> value
 	 * @property {Object} endorsement-policy - Optional. EndorsementPolicy object for this chaincode (see examples below). If not specified,
 	 *				                           a default policy of "a signature by any member from any of the organizations
-	 *				                           corresponding to the array of member service providers" is used
+	 *				                           corresponding to the array of member service providers" is used. <b>WARNING:</b> The
+	 *										   default policy is NOT recommended for production, because this allows an application to
+	 *										   bypass the proposal endorsement and send a manually constructed transaction, with arbitrary
+	 *										   output in the write set, to the orderer directly. An application's own signature would allow
+	 *										   the transaction to be successfully validated and committed to the ledger.
 	 * @example <caption>Endorsement policy: "Signed by any member from one of the organizations"</caption>
 	 * {
 	 *   identities: [
