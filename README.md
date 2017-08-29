@@ -1,7 +1,6 @@
 ## Hyperledger Fabric Client SDK for Node.js
 
-[![Build Status](https://jenkins.hyperledger.org/buildStatus/icon?job=fabric-sdk-node-merge-x86_64)](https://jenkins.hyperledger.org/view/fabric-sdk-node/job/fabric-sdk-node-merge-x86_64/)
-[![Documentation Status](https://readthedocs.org/projects/fabric-sdk-node/badge/?version=master)](http://fabric-sdk-node.readthedocs.io/en/master/?badge=master)
+[![Build Status](https://jenkins.hyperledger.org/buildStatus/icon?job=fabric-sdk-node6-merge-x86_64)](https://jenkins.hyperledger.org/job/fabric-sdk-node6-merge-x86_64)
 
 The Hyperledger Fabric Client SDK makes it easy to use APIs to interact with a Hyperledger Fabric blockchain.
 
