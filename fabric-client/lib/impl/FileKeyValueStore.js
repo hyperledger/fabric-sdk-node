@@ -54,11 +54,7 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 			fs.mkdirs(self._dir, function (err) {
 				if (err) {
 					logger.debug('FileKeyValueStore.js - constructor, error creating directory, code: ' + err.code);
-					if (err.code == 'EEXIST') {
-						return resolve(self);
-					} else {
-						return reject(err.code);
-					}
+					return reject(err);
 				}
 				return resolve(self);
 			});
