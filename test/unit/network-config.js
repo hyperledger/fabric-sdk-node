@@ -80,7 +80,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			var client = Client.loadFromConfig('test/fixtures/network.json');
-			var channel = client.newChannel('mychannel');
+			var channel = client.newChannel('mychannel2');
 			client.loadFromConfig('test/fixtures/network.json');
 		},
 		null,
@@ -103,7 +103,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('Org1', client._network_config._network_config.client.organization, ' org should be Org1');
 			client.loadFromConfig({ version:'1.0.0', client : {organization : 'Org2'}});
 			t.equals('Org2', client._network_config._network_config.client.organization, ' org should be Org2');
-			var channel = client.getChannel('mychannel');
+			var channel = client.getChannel('mychannel2');
 		},
 		null,
 		'2 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
@@ -115,7 +115,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			var file_data = fs.readFileSync(config_loc);
 			var network_data = yaml.safeLoad(file_data);
 			var client = Client.loadFromConfig(network_data);
-			var channel = client.newChannel('mychannel');
+			var channel = client.newChannel('mychannel2');
 			client.loadFromConfig(network_data);
 		},
 		null,
@@ -402,7 +402,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 
 			},
 			null,
-			'Should not get an error'
+			'Should not get an error when working with credentialStore settings'
 		);
 
 	t.doesNotThrow(
@@ -474,25 +474,53 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			checkTarget(channel._getTargets(null, 'ledgerQuery'), '7053', 'finding a default ledger query', t);
 			checkTarget(channel._getTargetForQuery('peer1'), '7051', 'finding a string target for ledger query', t);
 			checkTarget(channel._getTargets('peer1'), '7051', 'finding a string target', t);
-			checkTarget(channel._getTargetForQuery(['peer1']), 'array', 'should get an error back when passing an array', t);
-			checkTarget(channel._getTargetForQuery(['peer1']), 'array', 'should get an error back when passing an array', t);
-			checkTarget(channel._getTargets('bad'), 'found', 'should get an error back when passing a bad name', t);
 			checkTarget(channel._getTargetForQuery(peer1), '9999', 'should get back the same target if a good peer', t);
 			checkTarget(channel._getTargets(peer1), '9999', 'should get back the same target if a good peer', t);
-			client._network_config = null;
-			checkTarget(channel._getTargetForQuery(), '7051', 'finding a default ledger query without networkconfig', t);
-			checkTarget(channel._getTargets(), '7051', 'finding a default targets without networkconfig', t);
+			client = new Client();
+			channel = client.newChannel('mychannel');
+			channel.addPeer(peer1);
+			checkTarget(channel._getTargetForQuery(), '9999', 'finding a default ledger query without networkconfig', t);
+			checkTarget(channel._getTargets(), '9999', 'finding a default targets without networkconfig', t);
 		},
 		null,
 		'Should be able to run channel target methods'
 	);
 
+	t.throws(
+		() => {
+			var client = new Client();
+			var channel = client.newChannel('mychannel');
+			channel._getTargetForQuery();
+		},
+		/"target" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network/,
+		'Should get an error back when no targets are available'
+	);
+
+	t.throws(
+		() => {
+			var client = Client.loadFromConfig(network_config);
+			var channel = client.getChannel('mychannel');
+			channel._getTargetForQuery(['peer1']);
+		},
+		/array/,
+		'Should get an error back when passing an array'
+	);
+
+	t.throws(
+			() => {
+				var client = Client.loadFromConfig(network_config);
+				var channel = client.getChannel('mychannel');
+				channel._getTargets('bad');
+			},
+			/found/,
+			'Should get an error back when passing a bad name'
+		);
 
 	t.throws(
 		() => {
 			var client = new Client();
 			client._network_config = new NetworkConfig({}, client);
-			var targets = client_utils.getOrderer('someorderer', client, 'somechannel');
+			client.getTargetOrderer('someorderer');
 		},
 		/Orderer name was not found in the network configuration/,
 		'Should get an error when the request orderer name is not found'
@@ -502,9 +530,9 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		() => {
 			var client = new Client();
 			client._network_config = new NetworkConfig({}, client);
-			var targets = client_utils.getOrderer({}, client, 'somechannel');
+			client.getTargetOrderer({});
 		},
-		/request parameter is not valid/,
+		/"orderer" request parameter is not valid. Must be an orderer name or "Orderer" object./,
 		'Should get an error when the request orderer is not a valid object'
 	);
 
@@ -512,9 +540,9 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		() => {
 			var client = new Client();
 			client._network_config = new NetworkConfig({ channels : {somechannel : {}}}, client);
-			var targets = client_utils.getOrderer(null, client, 'somechannel');
+			client.getTargetOrderer(null, null, 'somechannel');
 		},
-		/"orderer" request parameter is missing and there is no orderer defined on this channel in the network configuration/,
+		/"orderer" request parameter is missing and there are no orderers defined on this channel in the network configuration/,
 		'Should get an error when the request orderer is not defined and the channel does not have any orderers'
 	);
 
@@ -523,17 +551,21 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			var client = new Client();
 			client._network_config = new NetworkConfig(network_config, client);
 
-			var orderer = client_utils.getOrderer('orderer0', client);
+			var orderer = client.getTargetOrderer('orderer0');
 			if(orderer instanceof Orderer) t.pass('orderer has a orderer ');
 			else t.fail('orderer does not have a orderer');
 
 			var orderer1 = new Orderer('grpcs://localhost:9999', {pem : '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'});
 
-			orderer = client_utils.getOrderer(orderer1, client);
+			orderer = client.getTargetOrderer(orderer1);
 			if(orderer instanceof Orderer) t.pass('orderer has a orderer ');
 			else t.fail('orderer does not have a orderer');
 
-			orderer = client_utils.getOrderer(null, client, 'mychannel');
+			orderer = client.getTargetOrderer(null, null, 'mychannel');
+			if(orderer instanceof Orderer) t.pass('orderer has a orderer ');
+			else t.fail('orderer does not have a orderer');
+
+			orderer = client.getTargetOrderer(null, [orderer1]);
 			if(orderer instanceof Orderer) t.pass('orderer has a orderer ');
 			else t.fail('orderer does not have a orderer');
 		},
@@ -587,17 +619,17 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		'Should be able to run all methods of CertificateAuthority'
 	);
 
-	var client = new Client();
-	var p1 = client.setStoresFromConfig().then(function () {
-		t.fail('p1 Should not have been able to resolve the promise');
+	var clientpr1 = new Client();
+	var pr1 = clientpr1.initCredentialStores().then(function () {
+		t.fail('pr1 Should not have been able to resolve the promise');
 	}).catch(function (err) {
 		if (err.message.indexOf('No network configuration settings found') >= 0) {
-			t.pass('p1 Successfully caught error');
+			t.pass('pr1 Successfully caught error');
 		} else {
-			t.fail('p1 Failed to catch error. Error: ' + err.stack ? err.stack : err);
+			t.fail('pr1 Failed to catch error. Error: ' + err.stack ? err.stack : err);
 		}
 	});
-	Promise.all([p1])
+	Promise.all([pr1])
 	.then(
 		function (data) {
 			t.end();
@@ -605,7 +637,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	).catch(
 		function (err) {
 			t.fail('Channel query calls, Promise.all: ');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 			t.end();
 		}
 	);
@@ -613,7 +645,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.throws(
 		() => {
 			var client = new Client();
-			client.setAdminFromConfig();
+			client._setAdminFromConfig();
 		},
 		/No network configuration has been loaded/,
 		'Should get an error No network configuration has been loaded'
@@ -649,53 +681,48 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.throws(
 		() => {
 			var client = new Client();
-			client.setAdminSigningIdentity('privateKey','cert', 'msipid');
-		},
-		/A crypto suite must be assigned to this client/,
-		'Should get an error A crypto suite must be assigned to this client'
-	);
-
-	t.throws(
-		() => {
-			var client = new Client();
-			client.getAdminSigningIdentity();
+			client._getSigningIdentity();
 		},
 		/No identity has been assigned to this client/,
 		'Should get an error No identity has been assigned to this client'
 	);
 
+	try {
+		var client = Client.loadFromConfig('test/fixtures/network.yaml');
+		t.pass('Successfully loaded a network configuration');
+		t.pass('Should be able to try to load an admin from the config');
 
-	var client = Client.loadFromConfig('test/fixtures/network.yaml');
+		client.loadFromConfig('test/fixtures/org1.yaml');
+		t.pass('Should be able to load an additional config ...this one has the client section');
+		t.pass('Should be able to try to load an admin from the config');
+	} catch(err) {
+		t.fail('Fail - caught an error while trying to load a config and run the set admin');
+	}
+
+	var clientp1 = Client.loadFromConfig('test/fixtures/network.yaml');
 	t.pass('Successfully loaded a network configuration');
+	clientp1.loadFromConfig('test/fixtures/org1.yaml');
+	t.pass('Should be able to load an additional config ...this one has the client section');
 
-	var p1 = client.setStoresFromConfig().then(()=> {
+	var p1 = clientp1.initCredentialStores().then(()=> {
 		t.pass('Should be able to load the stores from the config');
-		client.setAdminFromConfig();
+		clientp1._setAdminFromConfig();
 		t.pass('Should be able to load an admin from the config');
-		client.getAdminSigningIdentity();
+		clientp1._getSigningIdentity(true);
 		t.pass('Should be able to get the loaded admin identity');
 	}).catch(function (err) {
-		t.fail('Should not get an error');
+		t.fail('Should not get an error when doing get signer ');
+		logger.error(err.stack ? err.stack : err);
 	});
 
-	var p2 = client.setStoresFromConfig().then(()=> {
+	var clientp2 = Client.loadFromConfig('test/fixtures/network.yaml');
+	t.pass('Successfully loaded a network configuration');
+	clientp2.loadFromConfig('test/fixtures/org1.yaml');
+	t.pass('Should be able to load an additional config ...this one has the client section');
+	var p2 = clientp2.initCredentialStores().then(()=> {
 		t.pass('Should be able to load the stores from the config');
-		client._network_config._network_config.client = {};
-		client.setAdminFromConfig();
-		t.fail('Should not be able to load an admin from the config');
-	}).catch(function (err) {
-		if (err.message.indexOf('No admin defined for the current organization') >= 0) {
-			t.pass('Successfully caught No admin defined for the current organization');
-		} else {
-			t.fail('Failed to catch No admin defined for the current organization');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-
-	var p3 = client.setStoresFromConfig().then(()=> {
-		t.pass('Should be able to load the stores from the config');
-		client._network_config._network_config.client = {};
-		return client.setUserFromConfig();
+		clientp2._network_config._network_config.client = {};
+		return clientp2.setUserFromConfig();
 	}).then((user)=>{
 		t.fail('Should not be able to load an user based on the config');
 	}).catch(function (err) {
@@ -703,14 +730,18 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.pass('Successfully caught Missing parameter. Must have a username.');
 		} else {
 			t.fail('Failed to catch Missing parameter. Must have a username.');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
-	var p4 = client.setStoresFromConfig().then(()=> {
+	var clientp3 = Client.loadFromConfig('test/fixtures/network.yaml');
+	t.pass('Successfully loaded a network configuration');
+	clientp3.loadFromConfig('test/fixtures/org1.yaml');
+	t.pass('Should be able to load an additional config ...this one has the client section');
+	var p3 = clientp3.initCredentialStores().then(()=> {
 		t.pass('Should be able to load the stores from the config');
-		client._network_config._network_config.client = {};
-		return client.setUserFromConfig('username');
+		clientp4._network_config._network_config.client = {};
+		return clientp3.setUserFromConfig('username');
 	}).then((user)=>{
 		t.fail('Should not be able to load an user based on the config');
 	}).catch(function (err) {
@@ -718,23 +749,24 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.pass('Successfully caught Missing parameter. Must have a password.');
 		} else {
 			t.fail('Failed to catch Missing parameter. Must have a password.');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
-	var other_client = new Client();
-	var p5 = other_client.setUserFromConfig('username', 'password').then(()=> {
+	var clientp4 = Client.loadFromConfig('test/fixtures/network.yaml');
+	t.pass('Successfully loaded a network configuration');
+	var p4 = clientp4.setUserFromConfig('username', 'password').then(()=> {
 		t.fail('Should not be able to load an user based on the config');
 	}).catch(function (err) {
 		if (err.message.indexOf('Client requires a network configuration loaded, stores attached, and crypto suite.') >= 0) {
 			t.pass('Successfully caught Client requires a network configuration loaded, stores attached, and crypto suite.');
 		} else {
 			t.fail('Failed to catch Client requires a network configuration loaded, stores attached, and crypto suite.');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 		}
 	});
 
-	Promise.all([p1,p2, p3, p4, p5])
+	Promise.all([p1,p2, p3, p4])
 	.then(
 		function (data) {
 			t.end();
@@ -742,7 +774,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	).catch(
 		function (err) {
 			t.fail('Client network config calls failed during the Promise.all');
-			console.log(err.stack ? err.stack : err);
+			logger.error(err.stack ? err.stack : err);
 			t.end();
 		}
 	);

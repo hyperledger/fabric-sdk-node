@@ -96,7 +96,8 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], functi
 		'test/integration/e2e/query.js',
 		'test/integration/invoke.js',
 		'test/integration/perf/orderer.js',
-		'test/integration/perf/peer.js'
+		'test/integration/perf/peer.js',
+		'test/integration/network-config.js'
 	]))
 	.pipe(addsrc.append(
 		'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up

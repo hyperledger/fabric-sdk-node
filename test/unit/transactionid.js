@@ -40,14 +40,8 @@ test('\n\n ** Transaction - constructor set get tests **\n\n', function (t) {
 	t.throws(function() {
 		new TransactionID();
 	},
-	/Missing userContext parameter/,
-	'Test Missing userContext parameter');
-
-	t.throws(function() {
-		new TransactionID({});
-	},
-	/Parameter "userContext" must be an instance of the "User" class/,
-	'Test Parameter "userContext" must be an instance of the "User" class');
+	/Missing userContext or signing identity parameter/,
+	'Test Missing signer parameter');
 
 	var member = new User('admin');
 	// test set enrollment for identity and signing identity
@@ -57,8 +51,12 @@ test('\n\n ** Transaction - constructor set get tests **\n\n', function (t) {
 		// the private key and cert don't match, but it's ok, the code doesn't check
 		return member.setEnrollment(key, TEST_CERT_PEM, 'DEFAULT');
 	}).then(() =>{
-		var trans_id = new TransactionID(member);
+		var trans_id = new TransactionID(member.getSigningIdentity());
 		t.pass('Successfully created a new TransactionID');
+		t.equals(trans_id.isAdmin(), false, ' should have false admin');
+		trans_id = new TransactionID(member.getSigningIdentity(), true);
+		t.equals(trans_id.isAdmin(), true, ' should have true admin');
+
 		t.end();
 	}).catch((err) => {
 		t.fail(err.stack ? err.stack : err);

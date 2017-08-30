@@ -88,7 +88,9 @@ var CryptoKeyStore = function(KVSImplClass, opts) {
 	var superClass;
 
 	if (typeof KVSImplClass !== 'function') {
-		superClass = require(utils.getConfigSetting('key-value-store'));
+		let impl_class = utils.getConfigSetting('crypto-value-store');
+		if(!impl_class) impl_class = utils.getConfigSetting('key-value-store');
+		superClass = require(impl_class);
 	} else {
 		superClass = KVSImplClass;
 	}

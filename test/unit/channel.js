@@ -43,18 +43,15 @@ var MSPManager = require('fabric-client/lib/msp/msp-manager.js');
 var idModule = require('fabric-client/lib/msp/identity.js');
 var SigningIdentity = idModule.SigningIdentity;
 
-var _channel = null;
-var channelName = 'testChannel';
-var client = new Client();
-
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('channel');
 
 // Channel tests /////////////
 test('\n\n ** Channel - constructor test **\n\n', function (t) {
 	testutil.resetDefaults();
-
-	_channel = new Channel(channelName, client);
+	var channelName = 'testChannel';
+	var client = new Client();
+	var _channel = new Channel(channelName, client);
 	if (_channel.getName() === channelName)
 		t.pass('Channel constructor test: getName successful');
 	else t.fail('Channel constructor test: getName not successful');
@@ -79,6 +76,9 @@ test('\n\n ** Channel - constructor test **\n\n', function (t) {
 });
 
 test('\n\n ** Channel - method tests **\n\n', function (t) {
+	var client = new Client();
+	var _channel = new Channel('testChannel', client);
+
 	t.doesNotThrow(
 		function () {
 			var orderer = new Orderer('grpc://somehost.com:1234');
@@ -111,13 +111,23 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 });
 
 test('\n\n **  Channel query target parameter tests', function(t) {
-	var msg = '"target" parameter not specified and no peers are set on Channel';
+	var client = new Client();
+	var _channel = new Channel('testChannel', client);
+
+	t.throws(
+		function () {
+			_channel.queryBlockByHash();
+		},
+		/Blockhash bytes are required/,
+		'Channel tests, queryBlockByHash(): checking for Blockhash bytes are required.'
+	);
+
 	t.throws(
 		function () {
 			_channel.queryBlockByHash(Buffer.from('12345'));
 		},
-		/^Error: "target" parameter not specified and no peers are set on Channel./,
-		'Channel tests, queryBlockByHash: "target" parameter not specified and no peers are set on Channel.'
+		/^Error: "target" parameter not specified and no peers are set on this Channel./,
+		'Channel tests, queryBlockByHash(): "target" parameter not specified and no peers are set on Channel.'
 	);
 
 	t.throws(
@@ -125,7 +135,7 @@ test('\n\n **  Channel query target parameter tests', function(t) {
 			_channel.queryBlockByHash(Buffer.from('12345'), [new Peer('grpc://localhost:7051')]);
 		},
 		/^Error: "target" parameter is an array, but should be a singular peer object/,
-		'Channel tests, queryBlockByHash: checking for "target" parameter is an array, but should be a singular peer object.'
+		'Channel tests, queryBlockByHash(): checking for "target" parameter is an array, but should be a singular peer object.'
 	);
 
 	t.throws(
@@ -133,7 +143,15 @@ test('\n\n **  Channel query target parameter tests', function(t) {
 			_channel.queryBlockByHash(Buffer.from('12345'), new Peer('grpc://localhost:7051'));
 		},
 		/^[Error: Missing userContext parameter]/,
-		'Channel tests, queryBlockByHash: good target, checking for Missing userContext parameter.'
+		'Channel tests, queryBlockByHash(): good target, checking for Missing userContext parameter.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryInfo();
+		},
+		/^Error: "target" parameter not specified and no peers are set on this Channel./,
+		'Channel tests, queryInfo(): "target" parameter not specified and no peers are set on Channel.'
 	);
 
 	t.throws(
@@ -146,18 +164,82 @@ test('\n\n **  Channel query target parameter tests', function(t) {
 
 	t.throws(
 		function () {
+			_channel.queryBlock();
+		},
+		/Block number must be a positive integer/,
+		'Channel tests, queryBlock(): Block number must be a positive integer with nothing specified'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryBlock('abc');
+		},
+		/Block number must be a positive integer/,
+		'Channel tests, queryBlock(): Block number must be a positive integer with "abc" specified'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryBlock(1.1);
+		},
+		/Block number must be a positive integer/,
+		'Channel tests, queryBlock(): Block number must be a positive integer with "1.1" specified'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryBlock(-1);
+		},
+		/Block number must be a positive integer/,
+		'Channel tests, queryBlock(): Block number must be a positive integer with "-1" specified'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryBlock(123);
+		},
+		/^Error: "target" parameter not specified and no peers are set on this Channel./,
+		'Channel tests, queryBlock(): "target" parameter not specified and no peers are set on Channel.'
+	);
+
+	t.throws(
+		function () {
 			_channel.queryBlock(123, [new Peer('grpc://localhost:7051')]);
 		},
 		/^Error: "target" parameter is an array, but should be a singular peer object/,
-		'Channel tests, queryBlock: checking for "target" parameter is an array, but should be a singular peer object.'
+		'Channel tests, queryBlock(): checking for "target" parameter is an array, but should be a singular peer object.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryTransaction();
+		},
+		/Missing "tx_id" parameter/,
+		'Channel tests, queryTransaction(): checking for Missing "tx_id" parameter.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryTransaction('abc');
+		},
+		/"target" parameter not specified and no peers are set/,
+		'Channel tests, queryTransaction(): "target" parameter not specified and no peers are set'
 	);
 
 	t.throws(
 		function () {
 			_channel.queryTransaction('abc', [new Peer('grpc://localhost:7051')]);
 		},
-		/^Error: "target" parameter is an array, but should be a singular peer object/,
-		'Channel tests, queryTransaction: checking for "target" parameter is an array, but should be a singular peer object.'
+		/target" parameter is an array/,
+		'Channel tests, queryTransaction(): checking for "target" parameter is an array'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryInstantiatedChaincodes();
+		},
+		/"target" parameter not specified and no peers are set/,
+		'Channel tests, queryInstantiatedChaincodes(): checking for "target" parameter not specified and no peers are set'
 	);
 
 	t.throws(
@@ -165,90 +247,14 @@ test('\n\n **  Channel query target parameter tests', function(t) {
 			_channel.queryInstantiatedChaincodes([new Peer('grpc://localhost:7051')]);
 		},
 		/^Error: "target" parameter is an array, but should be a singular peer object/,
-		'Channel tests, queryInstantiatedChaincodes: checking for "target" parameter is an array, but should be a singular peer object.'
+		'Channel tests, queryInstantiatedChaincodes(): checking for "target" parameter is an array, but should be a singular peer object.'
 	);
 
 	t.end();
 });
 
-test('\n\n **  Channel query tests', function(t) {
-	var peer = new Peer('grpc://localhost:7051');
-	_channel.addPeer(peer);
-
-	_channel.queryBlockByHash()
-		.then(
-			function(results) {
-				t.fail('Error: Blockhash bytes are required');
-				t.end();
-			},
-			function(err) {
-				var errMessage = 'Error: Blockhash bytes are required';
-				if(err.toString() == errMessage) t.pass(errMessage);
-				else t.fail(errMessage);
-				return _channel.queryTransaction();
-			}
-		).then(
-			function(results) {
-				t.fail('Error: Transaction id is required');
-				t.end();
-			},
-			function(err) {
-				t.pass(err);
-				return _channel.queryBlock('a');
-			}
-		).then(
-			function(results) {
-				t.fail('Error: block id must be integer');
-				t.end();
-			},
-			function(err) {
-				var errMessage = 'Error: Block number must be a positive integer';
-				if(err.toString() == errMessage) t.pass(errMessage);
-				else t.fail(errMessage);
-				return _channel.queryBlock();
-			}
-		).then(
-			function(results) {
-				t.fail('Error: block id is required');
-				t.end();
-			},
-			function(err) {
-				var errMessage = 'Error: Block number must be a positive integer';
-				if(err.toString() == errMessage) t.pass(errMessage);
-				else t.fail(errMessage);
-				return _channel.queryBlock(-1);
-			}
-		).then(
-			function(results) {
-				t.fail('Error: block id must be postive integer');
-				t.end();
-			},
-			function(err) {
-				var errMessage = 'Error: Block number must be a positive integer';
-				if(err.toString() == errMessage) t.pass(errMessage);
-				else t.fail(errMessage);
-				return _channel.queryBlock(10.5);
-			}
-		).then(
-			function(results) {
-				t.fail('Error: block id must be integer');
-				t.end();
-			},
-			function(err) {
-				var errMessage = 'Error: Block number must be a positive integer';
-				if(err.toString() == errMessage) t.pass(errMessage);
-				else t.fail(errMessage);
-				t.end();
-			}
-		).catch(
-			function(err) {
-				t.fail('should not have gotten the catch ' + err);
-				t.end();
-			}
-		);
-});
-
 test('\n\n ** Channel addPeer() duplicate tests **\n\n', function (t) {
+	var client = new Client();
 	var channel_duplicate = new Channel('channel_duplicate', client);
 	var peers = [
 		'grpc://localhost:7051',
@@ -287,83 +293,66 @@ test('\n\n ** Channel addPeer() duplicate tests **\n\n', function (t) {
 });
 
 test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
-	var c = new Channel('joinChannel', client);
-	var orderer = new Orderer('grpc://localhost:7050');
+	var client = new Client();
+	var channel = new Channel('joinChannel', client);
 
-	var p1 = c.getGenesisBlock({}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of orderer missing');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing orderer') >= 0) {
-			t.pass('Successfully caught missing orderer error');
-		} else {
-			t.fail('Failed to catch the missing orderer error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	c.addOrderer(orderer);
-
-	var p2 = c.joinChannel(
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing all') >= 0) {
-			t.pass('Successfully caught missing request error');
-		} else {
-			t.fail('Failed to catch the missing request error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	var p3 = c.joinChannel({}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of targets request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing targets') >= 0) {
-			t.pass('Successfully caught missing targets request error');
-		} else {
-			t.fail('Failed to catch the missing targets request error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	var p4 = c.joinChannel({targets: 'targets'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of txId request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing txId') >= 0) {
-			t.pass('Successfully caught missing txId request error');
-		} else {
-			t.fail('Failed to catch the missing txId request error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	var p4a = c.getGenesisBlock({targets: 'targets'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of txId request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing txId') >= 0) {
-			t.pass('Successfully caught missing txId request error');
-		} else {
-			t.fail('Failed to catch the missing txId request error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	Promise.all([p1, p2, p3, p4, p4a])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Channel joinChannel() tests, Promise.all: ');
-			logger.error(err.stack ? err.stack : err);
-			t.end();
-		}
+	t.throws(
+		() => {
+			channel.getGenesisBlock();
+		},
+		/Missing "orderer" request parameter/,
+		'Checking getGenesisBlock(): Missing "orderer" request parameter'
 	);
+
+	t.throws(
+		() => {
+			channel.joinChannel();
+		},
+		/Missing all/,
+		'Checking joinChannel(): Missing all'
+	);
+
+	t.throws(
+		() => {
+			channel.joinChannel({});
+		},
+		/Missing txId/,
+		'Checking joinChannel(): Missing txId'
+	);
+
+	t.throws(
+		() => {
+			channel.joinChannel({txId : 'txid'});
+		},
+		/Missing block input parameter/,
+		'Checking joinChannel(): Missing block input parameter'
+	);
+
+	t.throws(
+		() => {
+			channel.joinChannel({txId : 'txid', block : 'something'});
+		},
+		/"targets" parameter not specified and no peers are set on this Channel/,
+		'Checking joinChannel(): "targets" parameter not specified and no peers are set on this Channel'
+	);
+
+	t.throws(
+		() => {
+			channel.joinChannel({txId : 'txid', block : 'something', targets : [{}]});
+		},
+		/Target peer is not a valid peer object instance/,
+		'Checking joinChannel(): Target peer is not a valid peer object instance'
+	);
+
+	t.throws(
+		() => {
+			channel.joinChannel({txId : 'txid', block : 'something', targets : 'somename'});
+		},
+		/No network configuraton loaded/,
+		'Checking joinChannel(): No network configuraton loaded'
+	);
+
+	t.end();
 });
 
 test('\n\n** Packager tests **\n\n', function(t) {
@@ -467,6 +456,7 @@ var CRAZY_SPEC = {
 };
 
 test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (t) {
+	var client = new Client();
 	var c = new Channel('does not matter', client);
 
 	t.throws(
@@ -650,181 +640,96 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 	t.end();
 });
 
-test('\n\n ** Channel sendInstantiateProposal() tests **\n\n', function (t) {
-	var c = new Channel('does not matter', client);
-	var peer = new Peer('grpc://localhost:7051');
-	c.addPeer(peer);
-
-	var p1 = c.sendInstantiateProposal({
-		targets: [new Peer('grpc://localhost:7051')],
-		chaincodePath: 'blah',
-		chaincodeId: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		txId: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodeVersion" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chaincodeVersion" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing chaincodeVersion error');
-		} else {
-			t.fail('Failed to catch the missing chaincodeVersion error. Error: ');
-			logger.error(err.stack ? err.stack : err);
-		}
-	});
-
-	var p3 = c.sendInstantiateProposal({
-		targets: [new Peer('grpc://localhost:7051')],
-		chaincodePath: 'blah',
-		chaincodeVersion: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		txId: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chaincodeId" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing chaincodeId error');
-		} else {
-			t.fail('Failed to catch the missing chaincodeId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	c.removePeer(peer);
-	var p4 = c.sendInstantiateProposal({
-		chaincodePath: 'blah',
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		txId: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on channel');
-	}).catch(function (err) {
-		var msg = 'Missing peer objects in Instantiate proposal';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught error: '+msg);
-		} else {
-			t.fail('Failed to catch error: '+msg+'. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	c.addPeer(peer);
-	var p7 = c.sendInstantiateProposal().then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
-			t.pass('Successfully caught missing request error');
-		} else {
-			t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	Promise.all([p1, p3, p4, p7])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Channel sendInstantiateProposal() tests, Promise.all: '+err.stack ? err.stack : err);
-			t.end();
-		}
-	);
-});
-
 test('\n\n ** Channel sendTransactionProposal() tests **\n\n', function (t) {
-	var c = new Channel('does not matter', client);
+	var client = new Client();
+	var channel = new Channel('does not matter', client);
 	var peer = new Peer('grpc://localhost:7051');
-	c.addPeer(peer);
 
-	var p1 = c.sendTransactionProposal({
-		chaincodeId : 'blah',
-		fcn: 'invoke',
-		txId: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "args" parameter');
-	}).catch(function (err) {
-		var msg = 'Missing "args" in Transaction proposal request';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught error: '+msg);
-		} else {
-			t.fail('Failed to catch error: '+msg+'. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	var p3 = c.sendTransactionProposal({
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		txId: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chaincodeId" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing chaincodeId error');
-		} else {
-			t.fail('Failed to catch the missing chaincodeId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	c.removePeer(peer);
-	var p4 = c.sendTransactionProposal({
-		chaincodeId: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200'],
-		txId: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on channel');
-	}).catch(function (err) {
-		var msg = 'Missing peer objects in Transaction proposal';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught error: '+msg);
-		} else {
-			t.fail('Failed to catch error: '+msg+'. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	c.addPeer(peer);
-	var p5 = c.sendTransactionProposal({
-		chaincodeId: 'blah',
-		fcn: 'init',
-		args: ['a', '100', 'b', '200']
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "txId" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "txId" parameter in the proposal request') >= 0) {
-			t.pass('Successfully caught missing txId error');
-		} else {
-			t.fail('Failed to catch the missing txId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	var p7 = c.sendTransactionProposal().then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing request object for this transaction proposal') >= 0) {
-			t.pass('Successfully caught missing request error');
-		} else {
-			t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	Promise.all([p1, p3, p4, p5, p7])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Channel sendTransactionProposal() tests, Promise.all: '+err.stack ? err.stack : err);
-			t.end();
-		}
+	t.throws(
+		function () {
+			channel.sendTransactionProposal({
+				chaincodeId: 'blah',
+				fcn: 'init',
+				args: ['a', '100', 'b', '200'],
+				txId: 'blah'
+			});
+		},
+		/"targets" parameter not specified and no peers are set on this Channel/,
+		'Channel tests, sendTransactionProposal(): "targets" parameter not specified and no peers are set on this Channel'
 	);
+
+	channel.addPeer(peer);
+
+	t.throws(
+		function () {
+			channel.sendTransactionProposal();
+		},
+		/Missing request object for this transaction proposal/,
+		'Channel tests, sendTransactionProposal(): Missing request object for this transaction proposal'
+	);
+
+	t.throws(
+		function () {
+			channel.sendTransactionProposal({
+				chaincodeId : 'blah',
+				fcn: 'invoke',
+				txId: 'blah'
+			});
+		},
+		/Missing "args" in Transaction/,
+		'Channel tests, sendTransactionProposal(): Missing "args" in Transaction'
+	);
+
+	t.throws(
+		function () {
+			channel.sendTransactionProposal({
+				fcn: 'init',
+				args: ['a', '100', 'b', '200'],
+				txId: 'blah'
+			});
+		},
+		/Missing "chaincodeId" parameter/,
+		'Channel tests, sendTransactionProposal(): Missing "chaincodeId" parameter'
+	);
+
+	t.throws(
+		function () {
+			channel.sendTransactionProposal({
+				chaincodeId: 'blah',
+				fcn: 'init',
+				args: ['a', '100', 'b', '200']
+			});
+		},
+		/Missing "txId" parameter in the proposal request/,
+		'Channel tests, sendTransactionProposal(): Missing "txId" parameter in the proposal request'
+	);
+
+	t.end();
 });
 
 test('\n\n ** Channel queryByChaincode() tests **\n\n', function (t) {
+	var client = new Client();
+	var _channel = new Channel('testChannel', client);
+
+	t.throws(
+		function () {
+			_channel.queryByChaincode();
+		},
+		/Missing request object for this queryByChaincode call/,
+		'Channel tests, queryByChaincode(): Missing request object for this queryByChaincode call.'
+	);
+
+	t.throws(
+		function () {
+			_channel.queryByChaincode({});
+		},
+		/"targets" parameter not specified and no peers are set/,
+		'Channel tests, queryByChaincode(): "targets" parameter not specified and no peers are set.'
+	);
+
 	var TEST_CERT_PEM = require('./user.js').TEST_CERT_PEM;
 	var member = new User('admin');
+	var client = new Client();
 
 	// do some setup for following test
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
@@ -843,74 +748,28 @@ test('\n\n ** Channel queryByChaincode() tests **\n\n', function (t) {
 		var peer = client.newPeer('grpc://localhost:7051');
 		channel.addPeer(peer);
 
-		var p1 = channel.queryByChaincode({
-			chaincodeId : 'blah',
-			fcn: 'invoke'
-		}).then(function () {
-			t.fail('Should not have been able to resolve the promise because of missing "args" parameter in queryByChaincode');
-		}).catch(function (err) {
-			var msg = 'Missing "args" in Transaction proposal request';
-			if (err.message.indexOf(msg) >= 0 ) {
-				t.pass('Successfully caught error: '+msg);
-			} else {
-				t.fail('Failed to catch queryByChaincode error: '+msg+'. Error: ' + err.stack ? err.stack : err);
-			}
-		});
-
-		var p3 = channel.queryByChaincode({
-			fcn: 'init',
-			args: ['a', '100', 'b', '200']
-		}).then(function () {
-			t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter in queryByChaincode');
-		}).catch(function (err) {
-			if (err.message.indexOf('Missing "chaincodeId" parameter in the proposal request') >= 0) {
-				t.pass('Successfully caught missing chaincodeId error');
-			} else {
-				t.fail('Failed to catch the queryByChaincode missing chaincodeId error. Error: ' + err.stack ? err.stack : err);
-			}
-		});
-
-		channel.removePeer(peer);
-		var p4 = channel.queryByChaincode({
-			chaincodeId: 'blah',
-			fcn: 'init',
-			args: ['a', '100', 'b', '200']
-		}).then(function () {
-			t.fail('Should not have been able to resolve the promise because of missing "peers" on channel in queryByChaincode');
-		}).catch(function (err) {
-			var msg = 'Missing peer objects in Transaction proposal';
-			if (err.message.indexOf(msg) >= 0) {
-				t.pass('Successfully caught error: '+msg);
-			} else {
-				t.fail('Failed to catch queryByChaincode error: '+msg+'. Error: ' + err.stack ? err.stack : err);
-			}
-		});
-
-		channel.addPeer(peer);
-
-		var p7 = channel.queryByChaincode().then(function () {
-			t.fail('Should not have been able to resolve the promise because of missing request parameter in queryByChaincode');
-		}).catch(function (err) {
-			if (err.message.indexOf('Missing request object for this queryByChaincode') >= 0) {
-				t.pass('Successfully caught missing request error');
-			} else {
-				t.fail('Failed to catch the queryByChaincode missing request error. Error: ' + err.stack ? err.stack : err);
-			}
-		});
-
-		Promise.all([p1, p3, p4, p7])
-		.then(
-			function (data) {
-				t.pass('all test done');
-				t.end();
-			}
-		).catch(
-			function (err) {
-				t.fail('Channel queryByChaincode() tests, Promise.all: ');
-				logger.error(err.stack ? err.stack : err);
-				t.end();
-			}
+		t.throws(
+			function () {
+				channel.queryByChaincode({
+					chaincodeId : 'blah',
+					fcn: 'invoke'
+				});
+			},
+			/Missing "args" in Transaction/,
+			'Channel tests, queryByChaincode(): Missing "args" in Transaction'
 		);
+
+		t.throws(
+			function () {
+				channel.queryByChaincode({
+					fcn: 'init',
+					args: ['a', '100', 'b', '200']
+				});
+			},
+			/Missing "chaincodeId" parameter/,
+			'Channel tests, queryByChaincode(): Missing "chaincodeId" parameter'
+		);
+		t.end();
 	}).catch(
 		function (err) {
 			t.fail('Channel queryByChaincode() failed ');
@@ -918,76 +777,47 @@ test('\n\n ** Channel queryByChaincode() tests **\n\n', function (t) {
 			t.end();
 		}
 	);
-
 });
 
 test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
-	let o = _channel.getOrderers();
-	for (let i = 0; i < o.length; i++) {
-		_channel.removeOrderer(o[i]);
-	}
-	var p1 = _channel.sendTransaction()
-		.then(function () {
-			t.fail('Should not have been able to resolve the promise because of missing parameters');
-		}, function (err) {
-			if (err.message.indexOf('Missing input request object on the proposal request') >= 0) {
-				t.pass('Successfully caught missing request error');
-			} else {
-				t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
-			}
-		});
+	var client = new Client();
+	var _channel = new Channel('testChannel', client);
 
-	var p2 = _channel.sendTransaction({
-		proposal: 'blah'
-	})
-	.then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing parameters');
-	}, function (err) {
-		if (err.message.indexOf('Missing "proposalResponses" parameter in transaction request') >= 0) {
-			t.pass('Successfully caught missing proposalResponses error');
-		} else {
-			t.fail('Failed to catch the missing proposalResponses error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	var p3 = _channel.sendTransaction({
-		proposalResponses: 'blah'
-	})
-	.then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing parameters');
-	}, function (err) {
-		if (err.message.indexOf('Missing "proposal" parameter in transaction request') >= 0) {
-			t.pass('Successfully caught missing proposal error');
-		} else {
-			t.fail('Failed to catch the missing proposal error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	var p4 = _channel.sendTransaction({
-		proposal: 'blah',
-		proposalResponses: {response : { status : 500}}
-	})
-	.then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing endorsement');
-	}, function (err) {
-		if (err.message.indexOf('no valid endorsements found') >= 0) {
-			t.pass('Successfully caught missing endorsement error');
-		} else {
-			t.fail('Failed to catch the missing endorsement error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	Promise.all([p1, p2, p3, p4])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Channel sendTransaction() tests, Promise.all: '+err.stack ? err.stack : err);
-			t.end();
-		}
+	t.throws(
+		function () {
+			_channel.sendTransaction();
+		},
+		/Missing input request/,
+		'Channel tests, sendTransaction: Missing request object.'
 	);
+
+	t.throws(
+		function () {
+			_channel.sendTransaction({proposal: 'blah'});
+		},
+		/Missing "proposalResponses"/,
+		'Channel tests, sendTransaction: Missing "proposalResponses" object.'
+	);
+
+	t.throws(
+		function () {
+			_channel.sendTransaction({proposalResponses: 'blah'});
+		},
+		/Missing "proposal"/,
+		'Channel tests, sendTransaction: Missing "proposal" object.'
+	);
+
+	t.throws(
+		function () {
+			_channel.sendTransaction({
+				proposal: 'blah',
+				proposalResponses: {response : { status : 500}}
+			});
+		},
+		/no valid endorsements found/,
+		'Channel tests, sendTransaction: no valid endorsements found.'
+	);
+	t.end();
 });
 
 //
@@ -998,6 +828,7 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 // process by updating the orderer URL to a different address.
 //
 test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', function(t) {
+	var client = new Client();
 	//
 	// Create and configure the test channel
 	//
@@ -1036,6 +867,11 @@ test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', function(t) {
 					t.fail('Failed to retieve the updated orderer URL from the channel');
 				}
 
+				for (let i = 0; i < orderers.length; i++) {
+					channel.removeOrderer(orderers[i]);
+					t.pass('Successfully removed orderer');
+				}
+
 				t.end();
 			} catch(err2) {
 				t.fail('Failed to update the order URL ' + err2);
@@ -1056,6 +892,7 @@ test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', function(t) {
 // Verify that an error is reported when trying to set a bad address.
 //
 test('\n\n** TEST ** orderer via channel set/get bad address', function(t) {
+	var client = new Client();
 	//
 	// Create and configure the test channel
 	//
@@ -1084,6 +921,7 @@ test('\n\n** TEST ** orderer via channel set/get bad address', function(t) {
 //Verify the verify compareProposalResponseResults method.
 //
 test('\n\n** TEST ** verify compareProposalResponseResults', function(t) {
+	var client = new Client();
 	//
 	// Create and configure the test channel
 	//
@@ -1126,6 +964,7 @@ test('\n\n** TEST ** verify compareProposalResponseResults', function(t) {
 //Verify the verify verifyProposalResponse method.
 //
 test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
+	var client = new Client();
 	//
 	// Create and configure the test channel
 	//
@@ -1166,6 +1005,7 @@ test('\n\n** TEST ** verify verifyProposalResponse', function(t) {
 });
 
 test('\n\n*** Test per-call timeout support ***\n', function(t) {
+	var client = new Client();
 	let sandbox = sinon.sandbox.create();
 	let stub = sandbox.stub(Peer.prototype, 'sendProposal');
 	sandbox.stub(Policy, 'buildPolicy').returns(Buffer.from('dummyPolicy'));
@@ -1192,6 +1032,7 @@ test('\n\n*** Test per-call timeout support ***\n', function(t) {
 		args: ['a', '100', 'b', '200'],
 		txId: {
 			getTransactionID: function() { return '1234567'; },
+			isAdmin: function() { return false;},
 			getNonce: function() { return Buffer.from('dummyNonce'); } }
 	}, 12345).then(function () {
 		t.equal(stub.calledTwice, true, 'Peer.sendProposal() is called exactly twice');
@@ -1207,4 +1048,3 @@ test('\n\n*** Test per-call timeout support ***\n', function(t) {
 		t.end();
 	});
 });
-
