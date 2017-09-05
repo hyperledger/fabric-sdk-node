@@ -25,6 +25,27 @@ console.log('\n####################################################');
 console.log(util.format('# debug log: %s', debugPath));
 console.log('####################################################\n');
 
+let arch = process.arch;
+let dockerImageTag = '';
+let release = require(path.join(__dirname, '../../fabric-client/package.json')).version;
+if (!/-snapshot/.test(release)) {
+	// this is a release build, need to build the proper docker image tag
+	// to run the tests against the corresponding fabric released docker images
+	if (arch.indexOf('x64') === 0)
+		dockerImageTag = ':x86_64';
+	else if (arch.indexOf('s390') === 0)
+		dockerImageTag = ':s390x';
+	else if (arch.indexOf('ppc64') === 0)
+		dockerImageTag = ':ppc64le';
+	else
+		throw new Error('Unknown architecture: ' + arch);
+
+	dockerImageTag += '-' + release;
+}
+
+process.env.DOCKER_IMG_TAG = dockerImageTag;
+
+
 gulp.task('pre-test', function() {
 	return gulp.src([
 		'node_modules/fabric-client/lib/**/*.js',

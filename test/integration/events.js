@@ -213,7 +213,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		request.chaincodePath = 'github.com/events_cc';
 		request.chaincodeVersion = chaincode_version;
 
-		return channel.sendInstantiateProposal(request);
+		return channel.sendInstantiateProposal(request, 120000);
 	}).then((results) => {
 		if ( eputil.checkProposal(results)) {
 			t.pass('Successfully endorsed the instantiate chaincode proposal');

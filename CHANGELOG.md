@@ -1,3 +1,13 @@
+## 1.0.2
+Tue Sep  5 15:14:46 EDT 2017
+
+* [1667327](https://github.com/hyperledger/fabric-sdk-node/commit/1667327) [FAB-5879](https://jira.hyperledger.org/browse/FAB-5879) Add support for node 8 in addition to 6
+* [bdd97f3](https://github.com/hyperledger/fabric-sdk-node/commit/bdd97f3) Clean deadcode in FileKeyValueStore.js
+* [79d5bc9](https://github.com/hyperledger/fabric-sdk-node/commit/79d5bc9) [FAB-5896](https://jira.hyperledger.org/browse/FAB-5896) Security implications documentation
+* [a4be9ba](https://github.com/hyperledger/fabric-sdk-node/commit/a4be9ba) [FAB-5885](https://jira.hyperledger.org/browse/FAB-5885) per-request timeout
+* [66a8eef](https://github.com/hyperledger/fabric-sdk-node/commit/66a8eef) [[FAB-5597](https://jira.hyperledger.org/browse/FAB-5597)] typos in doc and log messages
+* [9e003be](https://github.com/hyperledger/fabric-sdk-node/commit/9e003be) [[FAB-5775](https://jira.hyperledger.org/browse/FAB-5775)] Update grpc module >= 1.3.5
+
 ## v1.0.1
 Wed Aug  9 15:58:10 EDT 2017
 

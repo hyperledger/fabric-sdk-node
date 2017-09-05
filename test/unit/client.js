@@ -24,10 +24,12 @@ var _test = require('tape-promise');
 var test = _test(tape);
 var path = require('path');
 var util = require('util');
+var sinon = require('sinon');
 
 var Client = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
 var User = require('fabric-client/lib/User.js');
+var Peer = require('fabric-client/lib/Peer.js');
 var testutil = require('./util.js');
 
 var caImport;
@@ -1062,4 +1064,49 @@ test('\n\n ** test internal method to rebuild ConfigSignatures **\n\n', function
 		t.equals(start_sig, decode_sig, 'check signatures are the same');
 	}
 	t.end();
+});
+
+test('\n\n*** Test per-call timeout support ***\n', function(t) {
+	let sandbox = sinon.sandbox.create();
+	let stub = sandbox.stub(Peer.prototype, 'sendProposal');
+
+	// stub out the calls that requires getting MSPs from the orderer, or
+	// a valid user context
+	let clientUtils = ClientRewired.__get__('clientUtils');
+	sandbox.stub(clientUtils, 'buildHeader').returns(Buffer.from('dummyHeader'));
+	sandbox.stub(clientUtils, 'buildProposal').returns(Buffer.from('dummyProposal'));
+	sandbox.stub(clientUtils, 'signProposal').returns(Buffer.from('dummyProposal'));
+	let _getChaincodePackageData = ClientRewired.__set__(
+		'_getChaincodePackageData',
+		function() {
+			return Promise.resolve(Buffer.from('dummyChaincodePackage'));
+		});
+
+	let client = new ClientRewired();
+	client._userContext = new User('somebody');
+	client._userContext.getIdentity = function() {
+		return {
+			serialize: function() { return Buffer.from(''); }
+		};
+	};
+	client._userContext.getSigningIdentity = function() { return ''; };
+
+	let p = client.installChaincode({
+		targets: [new Peer('grpc://localhost:7051'), new Peer('grpc://localhost:7052')],
+		chaincodePath: 'blah',
+		chaincodeId: 'blah',
+		chaincodeVersion: 'v0'
+	}, 12345).then(function () {
+		t.equal(stub.calledTwice, true, 'Peer.sendProposal() is called exactly twice');
+		t.equal(stub.firstCall.args.length, 2, 'Peer.sendProposal() is called first time with exactly 2 arguments');
+		t.equal(stub.firstCall.args[1], 12345, 'Peer.sendProposal() is called first time with a overriding timeout of 12345 (milliseconds)');
+		t.equal(stub.secondCall.args.length, 2, 'Peer.sendProposal() is called 2nd time with exactly 2 arguments');
+		t.equal(stub.secondCall.args[1], 12345, 'Peer.sendProposal() is called 2nd time with a overriding timeout of 12345 (milliseconds)');
+		sandbox.restore();
+		t.end();
+	}).catch(function (err) {
+		t.fail('Failed to catch the missing chaincodeVersion error. Error: ' + err.stack ? err.stack : err);
+		sandbox.restore();
+		t.end();
+	});
 });
