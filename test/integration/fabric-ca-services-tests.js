@@ -225,6 +225,13 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 
 			return caService.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org2.department1'}, webAdmin);
 		}).then(() => {
+			t.fail('Failed to capture the error when registering "auditor" of role "client" from "webAdmin" but using invalid affiliation');
+		},(err) => {
+			if (err.toString().indexOf('Registration of \'auditor\' failed in affiliation validation'))
+				t.pass('Successfully captured the error when registering "auditor" of role "client" from "webAdmin" but using invalid affiliation');
+
+			return caService.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org1.department2'}, webAdmin);
+		}).then(() => {
 			t.pass('Successfully registered "auditor" of role "client" from "webAdmin"');
 
 			return caService.reenroll(webAdmin);
