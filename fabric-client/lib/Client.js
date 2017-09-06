@@ -1025,31 +1025,28 @@ var Client = class extends BaseClient {
 			this.setAdminSigningIdentity(admin_key, admin_cert, mspid);
 		}
 	}
-	/**
+
+	/*
+	 * Utility Method
 	 * Sets the user context based on the passed in username and password
 	 * and the organization in the client section of the network configuration
 	 * settings.
 	 *
-	 * @param {string} username - username of the user
-	 * @param {string} password - password of the user
-	 * @param {boolean} clear_existing_user - to clear out any current
-	 *                  user context of this client. The default will
-	 *                  be to use the current user if they have the same
-	 *                  username.
+	 * @param {Object} opts - contains
+	 *                  - username [required] - username of the user
+	 *                  - password [optional] - password of the user
 	 */
-	setUserFromConfig(username, password, clear_existing_user) {
+	_setUserFromConfig(opts) {
 		var mspid = null;
-		if (typeof username === 'undefined' || username === null || username === '') {
+		if (!opts || typeof opts.username === 'undefined' || opts.username === null || opts.username === '') {
 			return Promise.reject( new Error('Missing parameter. Must have a username.'));
 		}
 		if(!this._network_config || !this._stateStore || !this._cryptoSuite ) {
 			return Promise.reject(new Error('Client requires a network configuration loaded, stores attached, and crypto suite.'));
 		}
-		if(clear_existing_user) {
-			this._userContext = null;
-		}
+		this._userContext = null;
 		var self = this;
-		return self.getUserContext(username, true)
+		return self.getUserContext(opts.username, true)
 		.then((user) => {
 			return new Promise((resolve, reject) => {
 				if (user && user.isEnrolled()) {
@@ -1057,7 +1054,7 @@ var Client = class extends BaseClient {
 					return resolve(user);
 				}
 
-				if (typeof password === 'undefined' || password === null || password === '') {
+				if (typeof opts.password === 'undefined' || opts. password === null || opts. password === '') {
 					return reject( new Error('Missing parameter. Must have a password.'));
 				}
 
@@ -1086,24 +1083,20 @@ var Client = class extends BaseClient {
 
 				let ca_service_class = Client.getConfigSetting('certificate-authority-client');
 				var ca_service_impl = require(ca_service_class);
-				var ca_service = new ca_service_impl(ca_url, tls_options, ca_name, crypto_suite);
-
-				var member = new User(username);
-				var crypto_suite = self.getCryptoSuite();
-				member.setCryptoSuite(crypto_suite);
+				var ca_service = new ca_service_impl(ca_url, tls_options, ca_name, self._crypto_suite);
 
 				return ca_service.enroll({
-					enrollmentID: username,
-					enrollmentSecret: password
+					enrollmentID: opts.username,
+					enrollmentSecret: opts.password
 				}).then((enrollment) => {
-					logger.debug('Successfully enrolled user \'' + username + '\'');
+					logger.debug('Successfully enrolled user \'' + opts.username + '\'');
 
-					return member.setEnrollment(enrollment.key, enrollment.certificate, mspid);
-				}).then(() => {
-
-					return self.setUserContext(member, false);
-				}).then(() => {
-
+					return self.createUser(
+						{username: opts.username,
+							mspid: mspid,
+							cryptoContent: { privateKeyPEM: enrollment.key.toBytes(), signedCertPEM: enrollment.certificate }
+						});
+				}).then((member) => {
 					return resolve(member);
 				}).catch((err) => {
 					logger.error('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
@@ -1154,6 +1147,15 @@ var Client = class extends BaseClient {
 			}
 		});
 	}
+	/**
+	 * An alternate object to use on the 'setUserContext' call in place of the 'User' object.
+	 * When using this object it is assumed that the current 'Client' instance has been loaded
+	 * with a network configuration.
+	 *
+	 * @typedef {Object} UserNamePasswordObject
+	 * @property {string} username - A string representing the user name of the user
+	 * @property {string} password - A string repsesenting the password of the user
+	 */
 
 	/**
 	 * Sets an instance of the {@link User} class as the security context of this client instance. This user’s
@@ -1164,29 +1166,47 @@ var Client = class extends BaseClient {
 	 * has been set on the Client instance. If no state store has been set, this cache will not be established
 	 * and the application is responsible for setting the user context again if the application crashes and is recovered.
 	 *
-	 * @param {User} user - An instance of the User class encapsulating the authenticated user’s signing materials
-	 *                      (private key and enrollment certificate)
+	 * @param {User | UserNamePasswordObject} user - An instance of the User class encapsulating the authenticated
+	 *                      user’s signing materials (private key and enrollment certificate).
+	 *                      The parameter may also be a {@link UserNamePasswordObject} that contains the username
+	 *                      and optionaly the password. A network configuration must has been loaded to use the
+	 *                      {@link UserNamePasswordObject} which will also create the user context and set it on
+	 *                      this client instance. The created user context will be based on the current network
+	 *                      configuration( i.e. the current organization's CA, current persistence stores).
 	 * @param {boolean} skipPersistence - Whether to skip saving the user object into persistence. Default is false and the
-	 *                                    method will attempt to save the user object to the state store.
+	 *                                    method will attempt to save the user object to the state store. When using a
+	 *                                    network configuration and {@link UserNamePasswordObject}, the user object will
+	 *                                    always be stored to the persistence store.
 	 * @returns {Promise} Promise of the 'user' object upon successful persistence of the user to the state store
 	 */
 	setUserContext(user, skipPersistence) {
-		logger.debug('setUserContext, user: ' + user + ', skipPersistence: ' + skipPersistence);
+		logger.debug('setUserContext - user: ' + user + ', skipPersistence: ' + skipPersistence);
 		var self = this;
 		return new Promise((resolve, reject) => {
 			if (user) {
-				self._userContext = user;
-				if (!skipPersistence) {
-					logger.debug('setUserContext begin promise to saveUserToStateStore');
-					self.saveUserToStateStore()
-					.then((user) => {
+				if(user.constructor && user.constructor.name === 'User') {
+					self._userContext = user;
+					if (!skipPersistence) {
+						logger.debug('setUserContext - begin promise to saveUserToStateStore');
+						self.saveUserToStateStore()
+						.then((return_user) => {
+							return resolve(return_user);
+						}).catch((err) => {
+							reject(err);
+						});
+					} else {
+						logger.debug('setUserContext - resolved user');
 						return resolve(user);
+					}
+				} else {
+					// must be they have passed in an object
+					logger.debug('setUserContext - will try to use network configuration to set the user');
+					self._setUserFromConfig(user)
+					.then((return_user) => {
+						return resolve(return_user);
 					}).catch((err) => {
 						reject(err);
 					});
-				} else {
-					logger.debug('setUserContext, resolved user');
-					return resolve(user);
 				}
 			} else {
 				logger.debug('setUserContext, Cannot save null userContext');
@@ -1362,7 +1382,7 @@ var Client = class extends BaseClient {
 	 * @returns {Promise} Promise for the user object.
 	 */
 	createUser(opts) {
-		logger.debug('opts = %s', JSON.stringify(opts));
+		logger.debug('opts = %j', opts);
 		if (!opts) {
 			return Promise.reject(new Error('Client.createUser missing required \'opts\' parameter.'));
 		}
