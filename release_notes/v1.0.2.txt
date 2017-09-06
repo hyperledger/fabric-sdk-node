@@ -1,0 +1,24 @@
+v1.0.2 September 5, 2017
+-------------------------
+
+Release Notes
+-------------
+# gRPC dependency has been upgraded
+# Added node.js 8.4 engine support
+# Bug fixes and documentation
+
+Known Vulnerabilities
+---------------------
+none
+
+Resolved Vulnerabilities
+------------------------
+none
+
+Known Issues & Workarounds
+--------------------------
+none
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/master/CHANGELOG.md#v102

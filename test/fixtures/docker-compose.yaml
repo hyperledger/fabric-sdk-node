@@ -7,7 +7,7 @@ version: '2'
 
 services:
   ca0:
-    image: hyperledger/fabric-ca
+    image: hyperledger/fabric-ca${DOCKER_IMG_TAG}
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-org1
@@ -24,7 +24,7 @@ services:
     container_name: ca_peerOrg1
 
   ca1:
-    image: hyperledger/fabric-ca
+    image: hyperledger/fabric-ca${DOCKER_IMG_TAG}
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-org2
@@ -42,7 +42,7 @@ services:
 
   orderer.example.com:
     container_name: orderer.example.com
-    image: hyperledger/fabric-orderer
+    image: hyperledger/fabric-orderer${DOCKER_IMG_TAG}
     environment:
       - ORDERER_GENERAL_LOGLEVEL=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
@@ -66,7 +66,7 @@ services:
 
   peer0.org1.example.com:
     container_name: peer0.org1.example.com
-    image: hyperledger/fabric-peer
+    image: hyperledger/fabric-peer${DOCKER_IMG_TAG}
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org1.example.com
@@ -97,7 +97,7 @@ services:
 
   peer0.org2.example.com:
     container_name: peer0.org2.example.com
-    image: hyperledger/fabric-peer
+    image: hyperledger/fabric-peer${DOCKER_IMG_TAG}
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org2.example.com
@@ -125,7 +125,7 @@ services:
 
   couchdb:
     container_name: couchdb
-    image: hyperledger/fabric-couchdb
+    image: hyperledger/fabric-couchdb${DOCKER_IMG_TAG}
     ports:
       - 5984:5984
     environment:
