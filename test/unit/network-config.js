@@ -722,7 +722,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	var p2 = clientp2.initCredentialStores().then(()=> {
 		t.pass('Should be able to load the stores from the config');
 		clientp2._network_config._network_config.client = {};
-		return clientp2.setUserFromConfig();
+		return clientp2._setUserFromConfig();
 	}).then((user)=>{
 		t.fail('Should not be able to load an user based on the config');
 	}).catch(function (err) {
@@ -741,7 +741,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	var p3 = clientp3.initCredentialStores().then(()=> {
 		t.pass('Should be able to load the stores from the config');
 		clientp4._network_config._network_config.client = {};
-		return clientp3.setUserFromConfig('username');
+		return clientp3._setUserFromConfig({username:'username'});
 	}).then((user)=>{
 		t.fail('Should not be able to load an user based on the config');
 	}).catch(function (err) {
@@ -755,7 +755,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 
 	var clientp4 = Client.loadFromConfig('test/fixtures/network.yaml');
 	t.pass('Successfully loaded a network configuration');
-	var p4 = clientp4.setUserFromConfig('username', 'password').then(()=> {
+	var p4 = clientp4._setUserFromConfig({username:'username', password:'password'}).then(()=> {
 		t.fail('Should not be able to load an user based on the config');
 	}).catch(function (err) {
 		if (err.message.indexOf('Client requires a network configuration loaded, stores attached, and crypto suite.') >= 0) {
