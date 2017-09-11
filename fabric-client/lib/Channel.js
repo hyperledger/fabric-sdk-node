@@ -2084,7 +2084,7 @@ function loadPolicy(config_items, versions, key, policy, group_name, org) {
 			logger.debug('loadPolicy - %s - policy SIGNATURE :: %s %s',group_name, signature_policy.encodeJSON(),this.decodeSignaturePolicy(signature_policy.getIdentities()));
 			break;
 		case _policiesProto.Policy.PolicyType.IMPLICIT_META:
-			let implicit_policy = _policiesProto.ImplicitMetaPolicy.decode(policy.policy);
+			let implicit_policy = _policiesProto.ImplicitMetaPolicy.decode(policy.value);
 			let rule = ImplicitMetaPolicy_Rule[implicit_policy.getRule()];
 			logger.debug('loadPolicy - %s - policy IMPLICIT_META :: %s %s',group_name, rule, implicit_policy.getSubPolicy());
 			break;

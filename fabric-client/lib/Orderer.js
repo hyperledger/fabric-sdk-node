@@ -97,6 +97,9 @@ var Orderer = class extends Remote {
 			broadcast.on('data', function (response) {
 				logger.debug('sendBroadcast - on data response: %j', response);
 				broadcast.end();
+				if(response.info) {
+					logger.debug('sendBroadcast - response info :: %s', response.info);
+				}
 				if(response.status) {
 					if (response.status === 'SUCCESS') {
 						logger.debug('sendBroadcast - resolve with %s', response.status);

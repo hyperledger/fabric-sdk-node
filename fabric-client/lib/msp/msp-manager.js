@@ -97,7 +97,9 @@ var MSPManager = class {
 				admins: fabricConfig.getAdmins(),
 				id: fabricConfig.getName(),
 				orgs : orgs,
-				cryptoSuite: cs
+				cryptoSuite: cs,
+				tls_root_certs: fabricConfig.getTlsRootCerts(),
+				tls_intermediate_certs: fabricConfig.getTlsIntermediateCerts()
 			});
 			logger.debug('loadMSPs - found msp=',newMSP.getId());
 			//will eliminate duplicates

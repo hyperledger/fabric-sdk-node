@@ -142,7 +142,7 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 		t.equal(block.header.number.toString(),'0','checking query results are correct that we got zero block back');
 		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Orderer.groups.OrdererMSP.values.MSP.value.config.name,'OrdererMSP','checking query results are correct that we got the correct orderer MSP name');
 		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.groups.Org2MSP.policies.Writers.policy.type,'SIGNATURE','checking query results are correct that we got the correct policy type');
-		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.policies.Writers.policy.policy.rule,'ANY','checking query results are correct that we got the correct policy rule');
+		t.equal(block.data.data[0].payload.data.config.channel_group.groups.Application.policies.Writers.policy.value.rule,'ANY','checking query results are correct that we got the correct policy rule');
 		t.equal(block.data.data[0].payload.data.config.channel_group.policies.Admins.mod_policy,'Admins','checking query results are correct that we got the correct mod policy name');
 		return channel.queryBlock(1);
 	}).then((block) => {

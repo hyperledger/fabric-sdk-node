@@ -502,8 +502,8 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 	t.equal(env.identities.length, 2, 'Checking decoded default policy has two array items');
 	t.equal(env.identities[0].getPrincipalClassification(), _mspPrProto.MSPPrincipal.Classification.ROLE, 'Checking decoded default policy has a ROLE identity');
 
-	t.equal(typeof env.getPolicy().get('n_out_of'), 'object', 'Checking decoded default policy has an "n_out_of" policy');
-	t.equal(env.getPolicy().get('n_out_of').getN(), 1, 'Checking decoded default policy has an "n_out_of" policy with N = 1');
+	t.equal(typeof env.getRule().get('n_out_of'), 'object', 'Checking decoded default policy has an "n_out_of" policy');
+	t.equal(env.getRule().get('n_out_of').getN(), 1, 'Checking decoded default policy has an "n_out_of" policy with N = 1');
 
 	t.throws(
 		() => {
@@ -585,8 +585,8 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 		'Checking decoded custom policy has two items'
 	);
 
-	t.equals(env.policy['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of"');
-	t.equals(env.policy['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.rule['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of"');
+	t.equals(env.rule['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies');
 
 	t.doesNotThrow(
 		() => {
@@ -597,8 +597,8 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 	);
 
 	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
-	t.equals(env.policy['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
-	t.equals(env.policy['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.rule['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
+	t.equals(env.rule['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies');
 
 	t.doesNotThrow(
 		() => {
@@ -609,11 +609,11 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 	);
 
 	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
-	t.equals(env.policy['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
-	t.equals(env.policy['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies');
-	t.equals(env.policy['n_out_of'].policies[0]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[0]['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[1]['signed_by'], 2, 'Checking decoded custom policy has "signed-by: 2" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
+	t.equals(env.rule['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.rule['n_out_of'].rules[0]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[0]['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[1]['signed_by'], 2, 'Checking decoded custom policy has "signed-by: 2" inside the "2 out of"');
 
 	t.doesNotThrow(
 		() => {
@@ -624,18 +624,18 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 	);
 
 	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
-	t.equals(env.policy['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
-	t.equals(env.policy['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies');
-	t.equals(env.policy['n_out_of'].policies[0]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[0]['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[0]['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[0]['n_out_of'].getPolicies().length, 3, 'Checking decoded custom policy has 3 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[1]['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[1]['n_out_of'].getPolicies().length, 2, 'Checking decoded custom policy has 2 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[1]['n_out_of'].getPolicies()[0]['signed_by'], 2, 'Checking decoded custom policy has "signed-by: 2" for "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.policy['n_out_of'].policies[1]['n_out_of'].getPolicies()[1]['n_out_of'].getPolicies()[1]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
+	t.equals(env.rule['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.rule['n_out_of'].rules[0]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[0]['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[0]['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[0]['n_out_of'].getRules().length, 3, 'Checking decoded custom policy has 3 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[1]['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[1]['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has 2 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[1]['n_out_of'].getRules()[0]['signed_by'], 2, 'Checking decoded custom policy has "signed-by: 2" for "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[1]['n_out_of'].getRules()[1]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside "2 out of " inside "1 out of" inside the "2 out of"');
 
 	t.end();
 });

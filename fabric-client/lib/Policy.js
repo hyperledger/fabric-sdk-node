@@ -103,14 +103,14 @@ var EndorsementPolicy = class {
 			// construct 'one of any' policy
 			var oneOfAny = new _policiesProto.SignaturePolicy.NOutOf();
 			oneOfAny.setN(1);
-			oneOfAny.setPolicies(signedBys);
+			oneOfAny.setRules(signedBys);
 
 			var noutof = new _policiesProto.SignaturePolicy();
 			noutof.set('n_out_of', oneOfAny);
 
 			var envelope = new _policiesProto.SignaturePolicyEnvelope();
 			envelope.setVersion(0);
-			envelope.setPolicy(noutof);
+			envelope.setRule(noutof);
 			envelope.setIdentities(principals);
 
 			return envelope.toBuffer();
@@ -136,7 +136,7 @@ var EndorsementPolicy = class {
 
 			var envelope = new _policiesProto.SignaturePolicyEnvelope();
 			envelope.setVersion(0);
-			envelope.setPolicy(thePolicy);
+			envelope.setRule(thePolicy);
 			envelope.setIdentities(principals);
 
 			return envelope.toBuffer();
@@ -232,7 +232,7 @@ function parsePolicy(spec) {
 			subs.push(subPolicy);
 		});
 
-		nOutOf.setPolicies(subs);
+		nOutOf.setRules(subs);
 
 		let nOf = new _policiesProto.SignaturePolicy();
 		nOf.set('n_out_of', nOutOf);
