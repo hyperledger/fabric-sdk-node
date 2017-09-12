@@ -322,7 +322,6 @@ test('FabricCAServices: Test register() function', function(t) {
 		/Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity/,
 		'Must fail if registrar argument is not a User object'
 	);
-
 	return cop.register({enrollmentID: 'testUser'}, { getSigningIdentity: function() { return 'dummy'; } })
 	.then(() => {
 		t.fail('Should not have been able to resolve this request');
@@ -388,6 +387,40 @@ test('FabricCAServices: Test enroll with missing parameters', function (t) {
 		function (err) {
 			t.equal(err.message , 'req.enrollmentSecret is not set',
 				'Verify error message returned by enroll(no enrollment secret)');
+			t.end();
+		}
+	)
+	.catch(function (err) {
+		t.fail('Unexpected failure of enroll(no enrollment secret)');
+		t.end();
+	});
+
+	ca.enroll({enrollmentID: 'testUser', enrollmentSecret: 'testsecret', attr_reqs : {}})
+	.then(
+		function () {
+			t.fail('Enroll() must fail when req attr_reqs is not an array');
+			t.end();
+		},
+		function (err) {
+			t.equal(err.message , 'req.attr_reqs is not an array',
+				'Verify error message returned by enroll(req.attr_reqs is not an array)');
+			t.end();
+		}
+	)
+	.catch(function (err) {
+		t.fail('Unexpected failure of enroll(no enrollment secret)');
+		t.end();
+	});
+
+	ca.enroll({enrollmentID: 'testUser', enrollmentSecret: 'testsecret', attr_reqs : [{notname : 'not a name'}]})
+	.then(
+		function () {
+			t.fail('Enroll() must fail when req.att_regs is missing the attribute name');
+			t.end();
+		},
+		function (err) {
+			t.equal(err.message , 'req.att_regs is missing the attribute name',
+				'Verify error message returned by enroll(req.att_regs is missing the attribute name)');
 			t.end();
 		}
 	)
@@ -553,6 +586,22 @@ test('FabricCAServices: Test reenroll() function', function(t) {
 		},
 		/Invalid re-enroll request, "currentUser" is not a valid User object, missing "getSigningIdentity\(\)" method/,
 		'Must throw error when current user is not a valid User object'
+	);
+
+	t.throws(
+		() => {
+			cop.reenroll({ getIdentity: function() {}, getSigningIdentity: function() {}}, {});
+		},
+		/Invalid re-enroll request, attr_reqs must be an array of AttributeRequest objects/,
+		'Must throw error when Invalid re-enroll request, attr_reqs must be an array of AttributeRequest objects'
+	);
+
+	t.throws(
+		() => {
+			cop.reenroll({ getIdentity: function() {}, getSigningIdentity: function() {}}, [{}]);
+		},
+		/Invalid re-enroll request, attr_reqs object is missing the name of the attribute/,
+		'Must throw error when Invalid re-enroll request, attr_reqs object is missing the name of the attribute'
 	);
 
 	t.throws(

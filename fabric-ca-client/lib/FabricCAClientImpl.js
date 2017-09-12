@@ -83,17 +83,21 @@ var FabricCAServices = class extends BaseClient {
 		logger.debug('Successfully constructed Fabric CA service client: endpoint - %j', endpoint);
 
 	}
+	/**
+	 * @typedef {Object} RegisterRequest
+	 * @property {string} enrollmentID - ID which will be used for enrollment
+	 * @property {string} enrollmentSecret - Optional enrollment secret to set for the registered user.
+	 *                    If not provided, the server will generate one.
+	 * @property {string} role - An arbitrary string representing a role value for the user
+	 * @property {string} affiliation - Affiliation with which this user will be associated,
+	 *                    like a company or an organization
+	 * @property {number} maxEnrollments - The maximum number of times this user will be permitted to enroll
+	 * @property {KeyValueAttribute[]} attrs - Array of {@link KeyValueAttribute} attributes to assign to the user
+	 */
 
 	/**
 	 * Register the member and return an enrollment secret.
-	 * @param {Object} req Registration request with the following fields:
-	 * <br> - enrollmentID {string}. ID which will be used for enrollment
-	 * <br> - enrollmentSecret {string}. Optional enrollment secret to set for the registered user.
-	 *   If not provided, the server will generate one.
-	 * <br> - role {string}. An arbitrary string representing a role value for the user
-	 * <br> - affiliation {string}. Affiliation with which this user will be associated, like a company or an organization
-	 * <br> - maxEnrollments {number}. The maximum number of times this user will be permitted to enroll
-	 * <br> - attrs {{@link KeyValueAttribute}[]}. Array of key/value attributes to assign to the user.
+	 * @param {RegisterRequest} req - The {@link RegisterRequest}
 	 * @param registrar {User}. The identity of the registrar (i.e. who is performing the registration)
 	 * @returns {Promise} The enrollment secret to use when this user enrolls
 	 */
@@ -118,10 +122,15 @@ var FabricCAServices = class extends BaseClient {
 	}
 
 	/**
+	 * @typedef {Object} EnrollmentRequest
+	 * @property {string} enrollmentID - The registered ID to use for enrollment
+	 * @property {string} enrollmentSecret - The secret associated with the enrollment ID
+	 * @property {AttributeRequest[]} attr_reqs - An array of {@link AttributeRequest}
+	 */
+
+	/**
 	 * Enroll the member and return an opaque member object.
-	 * @param req Enrollment request
-	 * @param {string} req.enrollmentID The registered ID to use for enrollment
-	 * @param {string} req.enrollmentSecret The secret associated with the enrollment ID
+	 * @param req the {@link EnrollmentRequest}
 	 * @returns Promise for an object with "key" for private key and "certificate" for the signed certificate
 	 */
 	enroll(req) {
@@ -142,8 +151,20 @@ var FabricCAServices = class extends BaseClient {
 				return reject(new Error('req.enrollmentSecret is not set'));
 			}
 
-			var enrollmentID = req.enrollmentID;
-			var enrollmentSecret = req.enrollmentSecret;
+			if(req.attr_reqs) {
+				if(!Array.isArray(req.attr_reqs)) {
+					logger.error('Invalid enroll request, attr_reqs must be an array of AttributeRequest objects');
+					return reject(new Error('req.attr_reqs is not an array'));
+				} else {
+					for(let i in req.attr_reqs) {
+						let attr_req = req.attr_reqs[i];
+						if(!attr_req.name) {
+							logger.error('Invalid enroll request, attr_reqs object is missing the name of the attribute');
+							return reject(new Error('req.att_regs is missing the attribute name'));
+						}
+					}
+				}
+			}
 
 			//generate enrollment certificate pair for signing
 			var opts;
@@ -158,7 +179,7 @@ var FabricCAServices = class extends BaseClient {
 					//generate CSR using enrollmentID for the subject
 					try {
 						var csr = privateKey.generateCSR('CN=' + req.enrollmentID);
-						self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr)
+						self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.attr_reqs)
 							.then(
 							function (enrollResponse) {
 								return resolve({
@@ -188,9 +209,11 @@ var FabricCAServices = class extends BaseClient {
 	 * Re-enroll the member in cases such as the existing enrollment certificate is about to expire, or
 	 * it has been compromised
 	 * @param {User} currentUser The identity of the current user that holds the existing enrollment certificate
+	 * @param {AttributeRequest[]} Optional an array of {@link AttributeRequest} that indicate attributes to
+	 *                             be included in the certificate
 	 * @returns Promise for an object with "key" for private key and "certificate" for the signed certificate
 	 */
-	reenroll(currentUser) {
+	reenroll(currentUser, attr_reqs) {
 		if (!currentUser) {
 			logger.error('Invalid re-enroll request, missing argument "currentUser"');
 			throw new Error('Invalid re-enroll request, missing argument "currentUser"');
@@ -204,6 +227,20 @@ var FabricCAServices = class extends BaseClient {
 		if (typeof currentUser.getSigningIdentity !== 'function') {
 			logger.error('Invalid re-enroll request, "currentUser" is not a valid User object, missing "getSigningIdentity()" method');
 			throw new Error('Invalid re-enroll request, "currentUser" is not a valid User object, missing "getSigningIdentity()" method');
+		}
+		if(attr_reqs) {
+			if(!Array.isArray(attr_reqs)) {
+				logger.error('Invalid re-enroll request, attr_reqs must be an array of AttributeRequest objects');
+				throw new Error('Invalid re-enroll request, attr_reqs must be an array of AttributeRequest objects');
+			} else {
+				for(let i in attr_reqs) {
+					let attr_req = attr_reqs[i];
+					if(!attr_req.name) {
+						logger.error('Invalid re-enroll request, attr_reqs object is missing the name of the attribute');
+						throw new Error('Invalid re-enroll request, attr_reqs object is missing the name of the attribute');
+					}
+				}
+			}
 		}
 
 		var cert = currentUser.getIdentity()._certificate;
@@ -227,7 +264,7 @@ var FabricCAServices = class extends BaseClient {
 					//generate CSR using the subject of the current user's certificate
 					try {
 						var csr = privateKey.generateCSR('CN=' + subject);
-						self._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity())
+						self._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity(), attr_reqs)
 							.then(
 							function (response) {
 								return resolve({
@@ -523,9 +560,10 @@ var FabricCAClient = class {
 	 * Re-enroll an existing user.
 	 * @param {string} csr PEM-encoded PKCS#10 certificate signing request
 	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
+	 * @param {AttributeRequest[]} attr_reqs An array of {@link AttributeRequest}
 	 * @returns {Promise} {@link EnrollmentResponse}
 	 */
-	reenroll(csr, signingIdentity) {
+	reenroll(csr, signingIdentity, attr_reqs) {
 
 		var self = this;
 		var numArgs = arguments.length;
@@ -540,6 +578,10 @@ var FabricCAClient = class {
 			var request = {
 				certificate_request: csr
 			};
+
+			if(attr_reqs) {
+				request.attr_reqs = attr_reqs;
+			}
 
 			return self.post('reenroll', request, signingIdentity)
 			.then(function (response) {
@@ -628,6 +670,12 @@ var FabricCAClient = class {
 	}
 
 	/**
+	 * @typedef {Object} AttributeRequest
+	 * @property {string} name - The name of the attribute to include in the certificate
+	 * @property {boolean} required - throw an error if the identity does not have the attribute
+	 */
+
+	/**
 	 * @typedef {Object} EnrollmentResponse
 	 * @property {string} enrollmentCert PEM-encoded X509 enrollment certificate
 	 * @property {string} caCertChain PEM-encoded X509 certificate chain for the issuing
@@ -639,11 +687,12 @@ var FabricCAClient = class {
 	 * @param {string} enrollmentID The registered ID to use for enrollment
 	 * @param {string} enrollmentSecret The secret associated with the enrollment ID
 	 * @param {string} csr PEM-encoded PKCS#10 certificate signing request
+	 * @param {AttributeRequest[]} attr_reqs An array of {@link AttributeRequest}
 	 * @returns {Promise} {@link EnrollmentResponse}
 	 * @throws Will throw an error if all parameters are not provided
 	 * @throws Will throw an error if calling the enroll API fails for any reason
 	 */
-	enroll(enrollmentID, enrollmentSecret, csr) {
+	enroll(enrollmentID, enrollmentSecret, csr, attr_reqs) {
 
 		var self = this;
 		var numArgs = arguments.length;
@@ -668,6 +717,10 @@ var FabricCAClient = class {
 				caName: self._caName,
 				certificate_request: csr
 			};
+
+			if(attr_reqs) {
+				enrollRequest.attr_reqs = attr_reqs;
+			}
 
 			var request = self._httpClient.request(requestOptions, function (response) {
 
