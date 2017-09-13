@@ -88,7 +88,7 @@ var FabricCAServices = class extends BaseClient {
 	 * @property {string} enrollmentID - ID which will be used for enrollment
 	 * @property {string} enrollmentSecret - Optional enrollment secret to set for the registered user.
 	 *                    If not provided, the server will generate one.
-	 * @property {string} role - An arbitrary string representing a role value for the user
+	 * @property {string} role - Optional arbitrary string representing a role value for the user
 	 * @property {string} affiliation - Affiliation with which this user will be associated,
 	 *                    like a company or an organization
 	 * @property {number} maxEnrollments - The maximum number of times this user will be permitted to enroll
@@ -472,8 +472,10 @@ var FabricCAClient = class {
 	 * Register a new user and return the enrollment secret
 	 * @param {string} enrollmentID ID which will be used for enrollment
 	 * @param {string} enrollmentSecret Optional enrollment secret to set for the registered user.
-	 *   If not provided, the server will generate one.
-	 * @param {string} role Type of role for this user
+	 *        If not provided, the server will generate one.
+	 *        When not including, use a null for this parameter.
+	 * @param {string} role Optional type of role for this user.
+	 *        When not including, use a null for this parameter.
 	 * @param {string} affiliation Affiliation with which this user will be associated
 	 * @param {number} maxEnrollments The maximum number of times the user is permitted to enroll
 	 * @param {KeyValueAttribute[]} attrs Array of key/value attributes to assign to the user
@@ -486,19 +488,25 @@ var FabricCAClient = class {
 		var self = this;
 		var numArgs = arguments.length;
 		//all arguments are required
-		if (numArgs < 6) {
-			throw new Error('Missing required parameters.  \'enrollmentID\', \'role\', \'affiliation\', \'attrs\', \
+		if (!enrollmentID || !affiliation || !maxEnrollments || !signingIdentity) {
+			throw new Error('Missing required parameters.  \'enrollmentID\', \'affiliation\', \
 				and \'signingIdentity\' are all required.');
 		}
 
 		return new Promise(function (resolve, reject) {
 			var regRequest = {
 				'id': enrollmentID,
-				'type': role ? role : 'client',
 				'affiliation': affiliation,
-				'max_enrollments': maxEnrollments,
-				'attrs': attrs
+				'max_enrollments': maxEnrollments
 			};
+
+			if(role) {
+				regRequest.type = role;
+			}
+
+			if(attrs) {
+				regRequest.attrs = attrs;
+			}
 
 			if (typeof enrollmentSecret === 'string' && enrollmentSecret !== '') {
 				regRequest.secret = enrollmentSecret;

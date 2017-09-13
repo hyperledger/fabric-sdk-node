@@ -322,15 +322,14 @@ test('FabricCAServices: Test register() function', function(t) {
 		/Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity/,
 		'Must fail if registrar argument is not a User object'
 	);
-	return cop.register({enrollmentID: 'testUser'}, { getSigningIdentity: function() { return 'dummy'; } })
-	.then(() => {
-		t.fail('Should not have been able to resolve this request');
-		t.end();
-	}).catch((err) => {
-		t.pass('Successfully rejected register call due to invalid parameters');
-
-		t.end();
-	});
+	t.throws(
+		() => {
+			cop.register({enrollmentID: 'testUser3'}, { getSigningIdentity: function() { return 'dummy'; } });
+		},
+		/Missing required parameters/,
+		'Must fail if missing arguments'
+	);
+	t.end();
 });
 
 
