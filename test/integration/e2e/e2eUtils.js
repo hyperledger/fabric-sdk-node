@@ -736,7 +736,7 @@ function queryChaincode(org, version, value, t, transientMap) {
 	var targets = [];
 	// set up the channel to use each org's 'peer1' for
 	// both requests and events
-	for (let key in ORGS) {
+	/*for (let key in ORGS) {
 		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
 			let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
 			let peer = client.newPeer(
@@ -747,7 +747,17 @@ function queryChaincode(org, version, value, t, transientMap) {
 				});
 			channel.addPeer(peer);
 		}
-	}
+	}*/
+    // set up the channel to use each org's 'peer1' for
+    // both requests and events  set a peer
+    let data = fs.readFileSync(path.join(__dirname, ORGS[org].peer1['tls_cacerts']));
+    let peer = client.newPeer(
+        ORGS[org].peer1.requests,
+        {
+            pem: Buffer.from(data).toString(),
+            'ssl-target-name-override': ORGS[org].peer1['server-hostname']
+        });
+    channel.addPeer(peer);
 
 	return Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg(orgName)
