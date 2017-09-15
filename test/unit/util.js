@@ -37,7 +37,7 @@ module.exports.CHAINCODE_UPGRADE_PATH = 'github.com/example_cc1';
 module.exports.CHAINCODE_UPGRADE_PATH_V2 = 'github.com/example_cc2';
 module.exports.END2END = {
 	channel: 'mychannel',
-	chaincodeId: 'end2endnodesdk',
+	chaincodeId: 'end2endnodesdk22',
 	chaincodeVersion: 'v0'
 };
 
@@ -121,7 +121,8 @@ function getMember(username, password, client, t, userOrg) {
 	.then((user) => {
 		return new Promise((resolve, reject) => {
 			if (user && user.isEnrolled()) {
-				t.pass('Successfully loaded member from persistence');
+
+                logger.info('Successfully loaded member from persistence');
 				return resolve(user);
 			}
 
@@ -143,7 +144,7 @@ function getMember(username, password, client, t, userOrg) {
 				enrollmentID: username,
 				enrollmentSecret: password
 			}).then((enrollment) => {
-				t.pass('Successfully enrolled user \'' + username + '\'');
+                logger.info('Successfully enrolled user \'' + username + '\'');
 
 				return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
 			}).then(() => {
@@ -155,8 +156,8 @@ function getMember(username, password, client, t, userOrg) {
 			}).then(() => {
 				return resolve(member);
 			}).catch((err) => {
-				t.fail('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
-				t.end();
+                logger.info('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
+
 			});
 		});
 	});

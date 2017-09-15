@@ -17,6 +17,13 @@
   "engineStrict": true,
   "devDependencies": {
     "bn.js": "^4.11.6",
+
+    "body-parser": "~1.17.1",
+    "cookie-parser": "~1.4.3",
+    "express": "~4.15.2",
+    "morgan": "~1.8.1",
+    "jade": "~1.11.0",
+
     "bunyan": "^1.8.10",
     "cloudant": "^1.7.0",
     "del": "^2.2.2",
@@ -54,5 +61,8 @@
       "type": "Apache-2.0",
       "url": "https://github.com/hyperledger/fabric/blob/master/LICENSE"
     }
-  ]
+  ],
+  "dependencies": {
+    "npm": "^5.4.0"
+  }
 }
