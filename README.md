@@ -116,8 +116,8 @@ HFC defines the following abstract classes for application developers to supply 
 s
 
 #add interface
-*install express
-*update app.js prot and req.headers.origin
-*node bin/www
+* install express
+* update app.js prot and req.headers.origin
+* node bin/www
 
 
