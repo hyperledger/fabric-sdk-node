@@ -23,6 +23,8 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"encoding/json"
+	"bytes"
 )
 
 var logger = shim.NewLogger("example_cc0")
@@ -30,170 +32,173 @@ var logger = shim.NewLogger("example_cc0")
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
-
+type Land struct {
+	Id int
+	Name string
+}
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
-	logger.Info("########### example_cc0 Init ###########")
-
+	logger.Info("########### test Init ###########")
 	_, args := stub.GetFunctionAndParameters()
-	var A, B string    // Entities
-	var Aval, Bval int // Asset holdings
-	var err error
-
-	// Initialize the chaincode
-	A = args[0]
-	Aval, err = strconv.Atoi(args[1])
-	if err != nil {
-		return shim.Error("Expecting integer value for asset holding")
-	}
-	B = args[2]
-	Bval, err = strconv.Atoi(args[3])
-	if err != nil {
-		return shim.Error("Expecting integer value for asset holding")
-	}
-	logger.Info("Aval = %d, Bval = %d\n", Aval, Bval)
-
-	// Write the state to the ledger
-	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	err = stub.PutState(B, []byte(strconv.Itoa(Bval)))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	return shim.Success(nil)
-
+	logger.Info(args)
+	return  shim.Success(nil)
 
 }
 
-// Transaction makes payment of X units from A to B
+
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("########### example_cc0 Invoke ###########")
+	logger.Info("########### test Invoke ###########")
 
 	function, args := stub.GetFunctionAndParameters()
-	
-	if function == "delete" {
-		// Deletes an entity from its state
-		return t.delete(stub, args)
-	}
-
+	logger.Infof("args:",args)
+	logger.Infof("function:",function)
 	if function == "query" {
 		// queries an entity state
 		return t.query(stub, args)
 	}
-	if function == "move" {
-		// Deletes an entity from its state
-		return t.move(stub, args)
+	if function == "add" {
+		// add an entity from its state
+		return t.add(stub, args)
 	}
-
-	logger.Errorf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0])
+	if function == "testRichQuery" {
+		// testRichQuery an entity from its state
+		return t.testRichQuery(stub, args)
+	}
+	//logger.Errorf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0])
 	return shim.Error(fmt.Sprintf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0]))
 }
 
-func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	// must be an invoke
-	var A, B string    // Entities
-	var Aval, Bval int // Asset holdings
-	var X int          // Transaction value
-	var err error
-
-	if len(args) != 3 {
-		return shim.Error("Incorrect number of arguments. Expecting 4, function followed by 2 names and 1 value")
-	}
-
-	A = args[0]
-	B = args[1]
-
-	// Get the state from the ledger
-	// TODO: will be nice to have a GetAllState call to ledger
-	Avalbytes, err := stub.GetState(A)
-	if err != nil {
-		return shim.Error("Failed to get state")
-	}
-	if Avalbytes == nil {
-		return shim.Error("Entity not found")
-	}
-	Aval, _ = strconv.Atoi(string(Avalbytes))
-
-	Bvalbytes, err := stub.GetState(B)
-	if err != nil {
-		return shim.Error("Failed to get state")
-	}
-	if Bvalbytes == nil {
-		return shim.Error("Entity not found")
-	}
-	Bval, _ = strconv.Atoi(string(Bvalbytes))
-
-	// Perform the execution
-	X, err = strconv.Atoi(args[2])
-	if err != nil {
-		return shim.Error("Invalid transaction amount, expecting a integer value")
-	}
-	Aval = Aval - X
-	Bval = Bval + X
-	logger.Infof("Aval = %d, Bval = %d\n", Aval, Bval)
-
-	// Write the state back to the ledger
-	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
+func (t *SimpleChaincode) add(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	id,err:=strconv.Atoi(args[0])
+	student1:=Land{id,args[1]}
+	key:="Land:"+args[0]//Key格式为 Land:{Id}
+	logger.Infof("add key:",key)
+	studentJsonBytes, err := json.Marshal(student1)//Json序列号
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-
-	err = stub.PutState(B, []byte(strconv.Itoa(Bval)))
-	if err != nil {
+	logger.Infof("add studentJsonBytes:",studentJsonBytes)
+	err= stub.PutState(key,studentJsonBytes)
+	if(err!=nil){
 		return shim.Error(err.Error())
 	}
-
-        return shim.Success(nil);
+	return shim.Success([]byte("Saved Land!"))
 }
 
-// Deletes an entity from state
-func (t *SimpleChaincode) delete(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting 1")
-	}
-
-	A := args[0]
-
-	// Delete the key from the state in ledger
-	err := stub.DelState(A)
-	if err != nil {
-		return shim.Error("Failed to delete state")
-	}
-
-	return shim.Success(nil)
-}
 
 // Query callback representing the query of a chaincode
 func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	key:="Land:"+args[0]//Key格式为 Student:{Id}
+	dbStudentBytes,err:= stub.GetState(key)
+	logger.Infof("add key:",key)
 
-	var A string // Entities
-	var err error
-
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting name of the person to query")
-	}
-
-	A = args[0]
-
-	// Get the state from the ledger
-	Avalbytes, err := stub.GetState(A)
+	var land Land;
+	err=json.Unmarshal(dbStudentBytes,&land)//反序列化
+	logger.Infof("add dbStudentBytes:",dbStudentBytes)
 	if err != nil {
-		jsonResp := "{\"Error\":\"Failed to get state for " + A + "\"}"
-		return shim.Error(jsonResp)
+		return shim.Error("{\"Error\":\"Failed to decode JSON of: " + string(dbStudentBytes)+ "\" to land}")
 	}
 
-	if Avalbytes == nil {
-		jsonResp := "{\"Error\":\"Nil amount for " + A + "\"}"
-		return shim.Error(jsonResp)
-	}
+	fmt.Println("Read land from DB, name:"+land.Name)
 
-	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
-	logger.Infof("Query Response:%s\n", jsonResp)
-	return shim.Success(Avalbytes)
+	return shim.Success(dbStudentBytes)
 }
+//模糊查询 富查询GetQueryResult(query string) (StateQueryIteratorInterface, error)
+func (t *SimpleChaincode) testRichQuery(stub shim.ChaincodeStubInterface, args []string) pb.Response{
+	name:=args[0]//这里按理来说应该是参数传入
+	queryString := fmt.Sprintf("{\"selector\":{\"Name\":\"%s\"}}", name)
+	logger.Infof("query queryString:",queryString)
+	resultsIterator,err:= stub.GetQueryResult(queryString)//必须是CouchDB才行
+	if err!=nil{
+		return shim.Error("Rich query failed")
+	}
+	lands,err:=getListResult(resultsIterator)
+	if err!=nil{
+		return shim.Error("Rich query failed")
+	}
+	return shim.Success(lands)
+}
+//历史数据查询GetHistoryForKey(key string) (HistoryQueryIteratorInterface, error)
+func (t *SimpleChaincode) testHistoryQuery(stub shim.ChaincodeStubInterface, args []string) pb.Response{
+	student1:=Land{1,"Devin Zeng"}
+	key:="Student:"+strconv.Itoa(student1.Id)
+	it,err:= stub.GetHistoryForKey(key)
+	if err!=nil{
+		return shim.Error(err.Error())
+	}
+	var result,_= getHistoryListResult(it)
+	return shim.Success(result)
+}
+func getHistoryListResult(resultsIterator shim.HistoryQueryIteratorInterface) ([]byte,error){
+
+	defer resultsIterator.Close()
+	// buffer is a JSON array containing QueryRecords
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+
+	bArrayMemberAlreadyWritten := false
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return nil, err
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		item,_:= json.Marshal( queryResponse)
+		buffer.Write(item)
+		bArrayMemberAlreadyWritten = true
+	}
+	buffer.WriteString("]")
+	fmt.Printf("queryResult:\n%s\n", buffer.String())
+	return buffer.Bytes(), nil
+}
+//范围查询比如我们要查询编号从1号到3号的所有学生，那么我们的查询代码可以这么写：
+func (t *SimpleChaincode) testRangeQuery(stub shim.ChaincodeStubInterface, args []string) pb.Response{
+	resultsIterator,err:= stub.GetStateByRange("Land:1","Land:3")
+	if err!=nil{
+		return shim.Error("Query by Range failed")
+	}
+	students,err:=getListResult(resultsIterator)
+	if err!=nil{
+		return shim.Error("getListResult failed")
+	}
+	return shim.Success(students)
+}
+//Key区间查询GetStateByRange(startKey, endKey string) (StateQueryIteratorInterface, error)
+func getListResult(resultsIterator shim.StateQueryIteratorInterface) ([]byte,error){
+
+	defer resultsIterator.Close()
+	// buffer is a JSON array containing QueryRecords
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+
+	bArrayMemberAlreadyWritten := false
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return nil, err
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString("{\"Key\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(queryResponse.Key)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Record\":")
+		// Record is a JSON object, so we write as-is
+		buffer.WriteString(string(queryResponse.Value))
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	}
+	buffer.WriteString("]")
+	fmt.Printf("queryResult:\n%s\n", buffer.String())
+	return buffer.Bytes(), nil
+}
+
 
 func main() {
 	err := shim.Start(new(SimpleChaincode))
