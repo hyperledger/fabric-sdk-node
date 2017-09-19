@@ -1142,7 +1142,7 @@ var Channel = class {
 			logger.error('sendChainCodeProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
-		var peers = this._getTargets(request.targets, Constants.ENDORSING_PEER_ROLE);
+		var peers = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
 
 		// args is optional because some chaincode may not need any input parameters during initialization
 		if (!request.args) {
@@ -1243,9 +1243,9 @@ var Channel = class {
 		if(!request) {
 			throw new Error('Missing request object for this transaction proposal');
 		}
-		request.targets = this._getTargets(request.targets, Constants.ENDORSING_PEER_ROLE);
+		request.targets = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
 
-		return Channel.sendTransactionProposal(request, this._name, this._clientContext);
+		return Channel.sendTransactionProposal(request, this._name, this._clientContext, timeout);
 	}
 
 	/*
@@ -1502,7 +1502,7 @@ var Channel = class {
 			throw new Error('Missing request object for this queryByChaincode call.');
 		}
 
-		var targets = this._getTargets(request.targets, Constants.CHAINCODE_QUERY_ROLE);
+		var targets = this._getTargets(request.targets, Constants.NetworkConfig.CHAINCODE_QUERY_ROLE);
 		var signer = this._clientContext._getSigningIdentity(useAdmin);
 		var txId = new TransactionID(signer, useAdmin);
 

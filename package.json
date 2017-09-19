@@ -32,7 +32,7 @@
     "jsrsasign": "6.2.2",
     "log4js": "^0.6.38",
     "mock-couch": "git+https://github.com/jimthematrix/mock-couch.git",
-    "nano": "^6.2.0",
+    "nano": "6.4.0",
     "require-dir": "^0.3.0",
     "rewire": "^2.5.2",
     "sinon": "^3.2.1",

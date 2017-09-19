@@ -312,10 +312,42 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 		/*
 		 *  S T A R T   U S I N G
 		 */
+		 /*
+ 		 * switch to organization org1
+ 		 */
+ 		client.loadFromConfig('test/fixtures/org1.yaml');
+ 		t.pass('Successfully loaded \'admin\' for org1');
+
+ 		return client.initCredentialStores();
+ 	}).then((nothing) => {
+ 		t.pass('Successfully created the key value store  and crypto store based on the config and network');
+
 		return client.setUserContext({username:'admin', password:'adminpw'});
 	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\' for org2');
+		t.pass('Successfully enrolled user \'admin\' for org1');
 
+		let tx_id = client.newTransactionID(); // get a non admin transaction ID
+		var request = {
+			chaincodeId : 'example',
+			fcn: 'move',
+			args: ['a', 'b','100'],
+			txId: tx_id
+			//targets - Letting default to all endorsing peers defined on the channel in the network configuration
+		};
+
+		return channel.sendTransactionProposal(request, 1); //logged in as org1 user
+	}).then((results) => {
+		var proposalResponses = results[0];
+		for(var i in proposalResponses) {
+			let proposal_response = proposalResponses[i];
+			if( proposal_response instanceof Error && proposal_response.toString().indexOf('REQUEST_TIMEOUT') > 0) {
+				t.pass('Successfully cause a timeout error by setting the timeout setting to 1');
+			} else {
+				t.fail('Failed to get the timeout error');
+			}
+		}
+
+		// try again ...this time use a longer timeout
 		let tx_id = client.newTransactionID(); // get a non admin transaction ID
 		query_tx_id = tx_id.getTransactionID();
 		var request = {
@@ -326,13 +358,17 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 			//targets - Letting default to all endorsing peers defined on the channel in the network configuration
 		};
 
-		return channel.sendTransactionProposal(request); //logged in as org2 user
+		return channel.sendTransactionProposal(request, 3000); //logged in as org1 user
 	}).then((results) => {
 		var proposalResponses = results[0];
 		var proposal = results[1];
 		var all_good = true;
+		// Will check to be sure that we see two responses as there are two peers defined on this
+		// channel that are endorsing peers
+		var endorsed_responses = 0;
 		for(var i in proposalResponses) {
 			let one_good = false;
+			endorsed_responses++;
 			let proposal_response = proposalResponses[i];
 			if( proposal_response.response && proposal_response.response.status === 200) {
 				t.pass('transaction proposal has response status of good');
@@ -342,7 +378,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 			}
 			all_good = all_good & one_good;
 		}
-
+		t.equals(endorsed_responses, 2, 'Checking that there are the correct number of endorsed responses');
 		if (!all_good) {
 			t.fail('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
 			throw new Error('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
@@ -357,7 +393,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 		promises.push(channel.sendTransaction(request));
 
 		// be sure to get an eventhub the current user is authorized to use
-		var eventhub = client.getEventHub('peer0.org2.example.com');
+		var eventhub = client.getEventHub('peer0.org1.example.com');
 		eventhub.connect();
 
 		let txPromise = new Promise((resolve, reject) => {
@@ -402,7 +438,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 		// when using a network config
 		return client.setUserContext({username:'admin'});
 	}).then((admin) => {
-		t.pass('Successfully loaded user \'admin\' from store for org2');
+		t.pass('Successfully loaded user \'admin\' from store for org1');
 
 		var request = {
 			chaincodeId : 'example',
@@ -412,8 +448,11 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 
 		return channel.queryByChaincode(request); //logged in as user on org1
 	}).then((response_payloads) => {
+		// should only be one response ...as only one peer is defined as CHAINCODE_QUERY_ROLE
+		var query_responses = 0;
 		if (response_payloads) {
 			for(let i = 0; i < response_payloads.length; i++) {
+				query_responses++;
 				t.equal(
 					response_payloads[i].toString('utf8'),
 					'300',
@@ -423,11 +462,11 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 			t.fail('response_payloads is null');
 			throw new Error('Failed to get response on query');
 		}
-
+		t.equals(query_responses,1,'Checking that only one response was seen');
 		var memoryUsage = process.memoryUsage();
 		logger.debug(' Memory usage :: %j',memoryUsage);
 
-		return client.queryChannels('peer0.org2.example.com');
+		return client.queryChannels('peer0.org1.example.com');
 	}).then((results) => {
 		logger.debug(' queryChannels ::%j',results);
 		let found = false;
@@ -443,7 +482,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 			t.fail('Failed to find our channel in the result list');
 		}
 
-		return client.queryInstalledChaincodes('peer0.org2.example.com', true); // use admin
+		return client.queryInstalledChaincodes('peer0.org1.example.com', true); // use admin
 	}).then((results) => {
 		logger.debug(' queryInstalledChaincodes ::%j',results);
 		let found = false;
