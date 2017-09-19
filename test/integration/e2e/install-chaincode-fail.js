@@ -31,14 +31,14 @@ var testUtil = require('../../unit/util.js');
 test('\n\n***** End-to-end flow: chaincode install *****\n\n', (t) => {
 	testUtil.setupChaincodeDeploy();
 
-	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v0', t, false)
+	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v0', 'golang', t, false)
 	.then(() => {
 		t.fail('Successfully installed chaincode in peers of organization "org1"');
-		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_PATH, 'v0', t, false);
+		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_PATH, 'v0', 'golang', t, false);
 	}, (err) => {
 		t.pass('Failed to install chaincode in peers of organization "org1". ' + err.stack ? err.stack : err);
 		logger.error('Failed to install chaincode in peers of organization "org1". ');
-		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_PATH, 'v0', t, false);
+		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_PATH, 'v0', 'golang', t, false);
 	}).then(() => {
 		t.fail('Successfully installed chaincode in peers of organization "org2"');
 		t.end();

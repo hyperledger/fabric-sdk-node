@@ -750,7 +750,7 @@ var Client = class extends BaseClient {
 	 *                            'mycompany.com/myproject/mypackage/mychaincode', then the archive must contain a
 	 *                            folder 'src/mycompany.com/myproject/mypackage/mychaincode', where the
 	 *                            GO source code resides.
-	 * @property {string} chaincodeType - Optional. Type of chaincode. One of 'golang', 'car' or 'java'.
+	 * @property {string} chaincodeType - Optional. Type of chaincode. One of 'golang', 'car', 'node' or 'java'.
 	 *                                    Default is 'golang'. Note that 'java' is not supported as of v1.0.
 	 */
 
@@ -841,7 +841,7 @@ var Client = class extends BaseClient {
 
 			// TODO add ESCC/VSCC info here ??????
 			let lcccSpec = {
-				type: _ccProto.ChaincodeSpec.Type.GOLANG,
+				type: ccSpec.type,
 				chaincode_id: {
 					name: Constants.LSCC
 				},

@@ -18,13 +18,14 @@ gulp.task('lint', function () {
 		'!fabric-ca-client/node_modules/**',
 		'!docs/**',
 		'!coverage/**',
-		'!tmp/**'
+		'!tmp/**',
 	])
 	.pipe(eslint(
 		{
 			env: ['es6', 'node'],
 			extends: 'eslint:recommended',
 			parserOptions: {
+				ecmaVersion: 2017,
 				sourceType: 'module'
 			},
 			rules: {
@@ -41,10 +42,11 @@ gulp.task('lint', function () {
 						'ignoreUrls': true,
 						'ignoreStrings': true,
 						'ignoreTemplateLiterals': true,
-						'ignoreRegExpLiterals': true
-					}
-				]
-			}
+						'ignoreRegExpLiterals': true,
+					},
+				],
+			},
+			fix: true,
 		}
 	))
 	.pipe(eslint.format())

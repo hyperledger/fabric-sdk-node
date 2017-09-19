@@ -41,6 +41,18 @@ module.exports.END2END = {
 	chaincodeVersion: 'v0'
 };
 
+module.exports.NODE_CHAINCODE_PATH = path.resolve(__dirname, '../fixtures/src/node_cc/example_cc');
+module.exports.NODE_CHAINCODE_UPGRADE_PATH = path.resolve(__dirname, '../fixtures/src/node_cc/example_cc1');
+module.exports.NODE_CHAINCODE_UPGRADE_PATH_V2 = path.resolve(__dirname, '../fixtures/src/node_cc/example_cc2');
+
+
+module.exports.NODE_END2END = {
+    channel: 'mychannel',
+    chaincodeId: 'e2enodecc',
+    chaincodeLanguage: 'node',
+    chaincodeVersion: 'v0'
+};
+
 // all temporary files and directories are created under here
 var tempdir = Constants.tempdir;
 

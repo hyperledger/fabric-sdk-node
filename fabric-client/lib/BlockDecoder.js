@@ -825,7 +825,7 @@ function decodeConfigValue(proto_config_value) {
 		var proto_chain_creation_policy_names = _ordererConfigurationProto.ChainCreationPolicyNames.decode(proto_config_value.value.value);
 		var names = [];
 		var proto_names = proto_chain_creation_policy_names.getNames();
-		if(proto_names) for(var i in proto_names) {
+		if(proto_names) for(let i in proto_names) {
 			names.push(proto_names[i]); //string
 		}
 		config_value.value.names = names;
@@ -842,7 +842,7 @@ function decodeConfigValue(proto_config_value) {
 		var orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(proto_config_value.value.value);
 		var addresses = [];
 		var proto_addresses = orderer_addresses.getAddresses();
-		if(proto_addresses) for(var i in proto_addresses) {
+		if(proto_addresses) for(let i in proto_addresses) {
 			addresses.push(proto_addresses[i]); //string
 		}
 		config_value.value.addresses = addresses;

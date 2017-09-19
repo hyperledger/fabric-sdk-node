@@ -21,11 +21,11 @@
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
-var e2eUtils = require('./e2eUtils.js');
+var e2eUtils = require('../e2e/e2eUtils.js');
 var testUtils = require('../../unit/util');
-var chaincodeId = testUtils.END2END.chaincodeId;
+var chaincodeId = testUtils.NODE_END2END.chaincodeId;
 
-test('\n\n***** End-to-end flow: query chaincode *****\n\n', (t) => {
+test('\n\n***** Node-Chaincode End-to-end flow: query chaincode *****\n\n', (t) => {
 	e2eUtils.queryChaincode('org2', 'v0', '300', chaincodeId, t)
 		.then((result) => {
 			if(result){

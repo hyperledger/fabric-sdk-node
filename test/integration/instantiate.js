@@ -60,7 +60,7 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-exist
 });
 
 test('\n\n***** End-to-end flow: instantiate chaincode *****\n\n', (t) => {
-	e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_PATH, 'v0', false, t)
+	e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_PATH, 'v0', 'golang', false, t)
 	.then((result) => {
 		if(result){
 			t.pass('Successfully instantiated chaincode on the channel');

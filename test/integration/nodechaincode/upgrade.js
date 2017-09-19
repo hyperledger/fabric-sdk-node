@@ -21,17 +21,16 @@
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
-var e2eUtils = require('./e2eUtils.js');
+var e2eUtils = require('../e2e/e2eUtils.js');
 var testUtil = require('../../unit/util.js');
-var chaincodeId = testUtil.END2END.chaincodeId;
+var chaincodeId = testUtil.NODE_END2END.chaincodeId;
+var version = 'v1';
 
-test('\n\n***** U P G R A D E flow: chaincode install *****\n\n', (t) => {
-	testUtil.setupChaincodeDeploy();
-
-	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH, 'v1', 'golang', t, true)
+test('\n\n***** Node-Chaincode U P G R A D E flow: chaincode install *****\n\n', (t) => {
+	e2eUtils.installChaincode('org1', testUtil.NODE_CHAINCODE_UPGRADE_PATH, version, 'node', t, true)
 		.then(() => {
 			t.pass('Successfully installed chaincode in peers of organization "org1"');
-			return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_UPGRADE_PATH, 'v1', 'golang', t, true);
+			return e2eUtils.installChaincode('org2', testUtil.NODE_CHAINCODE_UPGRADE_PATH, version, 'node', t, true);
 		}, (err) => {
 			t.fail('Failed to install chaincode in peers of organization "org1". ' + err.stack ? err.stack : err);
 			t.end();
@@ -47,10 +46,10 @@ test('\n\n***** U P G R A D E flow: chaincode install *****\n\n', (t) => {
 		});
 });
 
-test('\n\n***** U P G R A D E flow: upgrade chaincode *****\n\n', (t) => {
-	e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH, 'v1', 'golang', true, t)
+test('\n\n***** Node-Chaincode U P G R A D E flow: upgrade chaincode *****\n\n', (t) => {
+	e2eUtils.instantiateChaincode('org1', testUtil.NODE_CHAINCODE_UPGRADE_PATH, version, 'node', true, t)
 		.then((result) => {
-			if(result){
+			if (result) {
 				t.pass('Successfully upgrade chaincode on the channel');
 				t.end();
 			}
@@ -67,7 +66,7 @@ test('\n\n***** U P G R A D E flow: upgrade chaincode *****\n\n', (t) => {
 		});
 });
 
-test('\n\n***** U P G R A D E flow: invoke transaction to move money *****\n\n', (t) => {
+test('\n\n***** Node-Chaincode U P G R A D E flow: invoke transaction to move money *****\n\n', (t) => {
 	e2eUtils.invokeChaincode('org2', 'v1', chaincodeId, t)
 		.then((result) => {
 			if(result){
@@ -87,7 +86,7 @@ test('\n\n***** U P G R A D E flow: invoke transaction to move money *****\n\n',
 		});
 });
 
-test('\n\n***** U P G R A D E flow: query chaincode *****\n\n', (t) => {
+test('\n\n***** Node-Chaincode U P G R A D E flow: query chaincode *****\n\n', (t) => {
 	e2eUtils.queryChaincode('org2', 'v1', '410', chaincodeId, t)
 		.then((result) => {
 			if(result){
@@ -107,7 +106,7 @@ test('\n\n***** U P G R A D E flow: query chaincode *****\n\n', (t) => {
 		});
 });
 
-test('\n\n***** TransientMap Support in Proposals *****\n\n', (t) => {
+test('\n\n***** Node-Chaincode TransientMap Support in Proposals *****\n\n', (t) => {
 	var transient = {
 		'test': Buffer.from('dummyValue') // string <-> byte[]
 	};

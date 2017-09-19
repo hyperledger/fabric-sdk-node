@@ -1,4 +1,4 @@
- /**
+/**
  * Copyright 2016 IBM All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,14 +33,16 @@ var Orderer = require('./Orderer.js');
 
 var grpc = require('grpc');
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-var _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
+var _proposalProto = grpc.load(__dirname +
+	'/protos/peer/proposal.proto').protos;
 var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
-var _timestampProto = grpc.load(__dirname + '/protos/google/protobuf/timestamp.proto').google.protobuf;
+var _timestampProto = grpc.load(__dirname +
+	'/protos/google/protobuf/timestamp.proto').google.protobuf;
 
 /*
  * This function will build the proposal
  */
-module.exports.buildProposal = function(invokeSpec, header, transientMap) {
+module.exports.buildProposal = function (invokeSpec, header, transientMap) {
 	// construct the ChaincodeInvocationSpec
 	let cciSpec = new _ccProto.ChaincodeInvocationSpec();
 	cciSpec.setChaincodeSpec(invokeSpec);
@@ -49,7 +51,7 @@ module.exports.buildProposal = function(invokeSpec, header, transientMap) {
 	cc_payload.setInput(cciSpec.toBuffer());
 
 	if (typeof transientMap === 'object') {
-		logger.debug('buildProposal - adding in transientMap %j',transientMap);
+		logger.debug('buildProposal - adding in transientMap %j', transientMap);
 		cc_payload.setTransientMap(transientMap);
 	}
 	else {
@@ -67,21 +69,21 @@ module.exports.buildProposal = function(invokeSpec, header, transientMap) {
 /*
  * This function will return one Promise when sending a proposal to many peers
  */
-module.exports.sendPeersProposal = function(peers, proposal, timeout) {
-	if(!Array.isArray(peers)) {
+module.exports.sendPeersProposal = function (peers, proposal, timeout) {
+	if (!Array.isArray(peers)) {
 		peers = [peers];
 	}
 	// make function to return an individual promise
-	var fn = function(peer) {
-		return new Promise(function(resolve,reject) {
-			peer.sendProposal(proposal, timeout)
-			.then(
-				function(result) {
+	var fn = function (peer) {
+		return new Promise(function (resolve, reject) {
+			peer.sendProposal(proposal, timeout).then(
+				function (result) {
 					resolve(result);
 				}
 			).catch(
-				function(err) {
-					logger.error('sendPeersProposal - Promise is rejected: %s',err.stack ? err.stack : err);
+				function (err) {
+					logger.error('sendPeersProposal - Promise is rejected: %s',
+						err.stack ? err.stack : err);
 					return reject(err);
 				}
 			);
@@ -91,21 +93,22 @@ module.exports.sendPeersProposal = function(peers, proposal, timeout) {
 	// settle all the promises and return array of responses
 	var promises = peers.map(fn);
 	var responses = [];
-	return settle(promises)
-	  .then(function (results) {
+	return settle(promises).then(function (results) {
 		results.forEach(function (result) {
-		  if (result.isFulfilled()) {
-			logger.debug('sendPeersProposal - Promise is fulfilled: '+result.value());
-			responses.push(result.value());
-		  } else {
-			logger.debug('sendPeersProposal - Promise is rejected: '+result.reason());
-			if(result.reason() instanceof Error) {
-				responses.push(result.reason());
+			if (result.isFulfilled()) {
+				logger.debug('sendPeersProposal - Promise is fulfilled: ' +
+					result.value());
+				responses.push(result.value());
+			} else {
+				logger.debug('sendPeersProposal - Promise is rejected: ' +
+					result.reason());
+				if (result.reason() instanceof Error) {
+					responses.push(result.reason());
+				}
+				else {
+					responses.push(new Error(result.reason()));
+				}
 			}
-			else {
-				responses.push(new Error(result.reason()));
-			}
-		  }
 		});
 		return responses;
 	});
@@ -114,7 +117,7 @@ module.exports.sendPeersProposal = function(peers, proposal, timeout) {
 /*
  * This function will sign the proposal
  */
-module.exports.signProposal = function(signingIdentity, proposal) {
+module.exports.signProposal = function (signingIdentity, proposal) {
 	let proposal_bytes = proposal.toBuffer();
 	// sign the proposal
 	let sig = signingIdentity.sign(proposal_bytes);
@@ -122,8 +125,8 @@ module.exports.signProposal = function(signingIdentity, proposal) {
 
 	// build manually for now
 	let signedProposal = {
-		signature :  signature,
-		proposal_bytes : proposal_bytes
+		signature: signature,
+		proposal_bytes: proposal_bytes
 	};
 	return signedProposal;
 };
@@ -131,22 +134,24 @@ module.exports.signProposal = function(signingIdentity, proposal) {
 /*
  * This function will build a common channel header
  */
-module.exports.buildChannelHeader = function(type, channel_id, tx_id, epoch, chaincode_id, time_stamp) {
-	logger.debug('buildChannelHeader - type %s channel_id %s tx_id %d epoch % chaincode_id %s',
-			type, channel_id, tx_id, epoch, chaincode_id);
+module.exports.buildChannelHeader = function (
+	type, channel_id, tx_id, epoch, chaincode_id, time_stamp) {
+	logger.debug(
+		'buildChannelHeader - type %s channel_id %s tx_id %d epoch % chaincode_id %s',
+		type, channel_id, tx_id, epoch, chaincode_id);
 	var channelHeader = new _commonProto.ChannelHeader();
 	channelHeader.setType(type); // int32
 	channelHeader.setVersion(1); // int32
-	if(!time_stamp) {
+	if (!time_stamp) {
 		time_stamp = module.exports.buildCurrentTimestamp();
 	}
 	channelHeader.setTimestamp(time_stamp); // google.protobuf.Timestamp
 	channelHeader.setChannelId(channel_id); //string
 	channelHeader.setTxId(tx_id.toString()); //string
-	if(epoch) {
+	if (epoch) {
 		channelHeader.setEpoch(epoch); // uint64
 	}
-	if(chaincode_id) {
+	if (chaincode_id) {
 		let chaincodeID = new _ccProto.ChaincodeID();
 		chaincodeID.setName(chaincode_id);
 
@@ -161,7 +166,7 @@ module.exports.buildChannelHeader = function(type, channel_id, tx_id, epoch, cha
 /*
  * This function will build the common header
  */
-module.exports.buildHeader = function(creator, channelHeader, nonce) {
+module.exports.buildHeader = function (creator, channelHeader, nonce) {
 	let signatureHeader = new _commonProto.SignatureHeader();
 	signatureHeader.setCreator(creator.serialize());
 	signatureHeader.setNonce(nonce);
@@ -173,13 +178,13 @@ module.exports.buildHeader = function(creator, channelHeader, nonce) {
 	return header;
 };
 
-module.exports.checkProposalRequest = function(request, skip) {
+module.exports.checkProposalRequest = function (request, skip) {
 	var errorMsg = null;
 
-	if(request) {
-		if(!request.chaincodeId) {
+	if (request) {
+		if (!request.chaincodeId) {
 			errorMsg = 'Missing "chaincodeId" parameter in the proposal request';
-		} else if(!request.txId && !skip) {
+		} else if (!request.txId && !skip) {
 			errorMsg = 'Missing "txId" parameter in the proposal request';
 		}
 	} else {
@@ -188,11 +193,11 @@ module.exports.checkProposalRequest = function(request, skip) {
 	return errorMsg;
 };
 
-module.exports.checkInstallRequest = function(request) {
+module.exports.checkInstallRequest = function (request) {
 	var errorMsg = null;
 
 	if (request) {
-		if(!request.chaincodeVersion) {
+		if (!request.chaincodeVersion) {
 			errorMsg = 'Missing "chaincodeVersion" parameter in the proposal request';
 		}
 	} else {
@@ -201,8 +206,10 @@ module.exports.checkInstallRequest = function(request) {
 	return errorMsg;
 };
 
-module.exports.translateCCType = function(type) {
-	switch (type) {
+module.exports.translateCCType = function (type) {
+	let chaincodeType = type ? type : 'golang';
+
+	switch (chaincodeType.toLowerCase()) {
 	case 'golang':
 	default:
 		return _ccProto.ChaincodeSpec.Type.GOLANG;
@@ -210,13 +217,15 @@ module.exports.translateCCType = function(type) {
 		return _ccProto.ChaincodeSpec.Type.CAR;
 	case 'java':
 		return _ccProto.ChaincodeSpec.Type.JAVA;
+	case 'node':
+		return _ccProto.ChaincodeSpec.Type.NODE;
 	}
 };
 
 /*
  * This function will create a timestamp from the current time
  */
-module.exports.buildCurrentTimestamp = function() {
+module.exports.buildCurrentTimestamp = function () {
 	var now = new Date();
 	var timestamp = new _timestampProto.Timestamp();
 	timestamp.setSeconds(now.getTime() / 1000);
