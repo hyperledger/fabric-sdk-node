@@ -32,6 +32,7 @@ var Client = require('fabric-client');
 var testUtil = require('../../unit/util.js');
 
 var e2e = testUtil.END2END;
+var e2e_node = testUtil.NODE_END2END;
 var ORGS;
 
 var grpc = require('grpc');
@@ -46,7 +47,7 @@ function init() {
 	}
 }
 
-function installChaincode(org, chaincode_path, version, t, get_admin) {
+function installChaincode(org, chaincode_path, version, language, t, get_admin) {
 	init();
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -107,11 +108,19 @@ function installChaincode(org, chaincode_path, version, t, get_admin) {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
 
+		let cc_id;
+		if(language && language==='node'){
+			cc_id = e2e_node.chaincodeId;
+		}else{
+			cc_id = e2e.chaincodeId;
+		}
+
 		// send proposal to endorser
 		var request = {
 			targets: targets,
 			chaincodePath: chaincode_path,
-			chaincodeId: e2e.chaincodeId,
+			chaincodeId: cc_id,
+			chaincodeType: language,
 			chaincodeVersion: version
 		};
 
@@ -152,7 +161,7 @@ function installChaincode(org, chaincode_path, version, t, get_admin) {
 module.exports.installChaincode = installChaincode;
 
 
-function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
+function instantiateChaincode(userOrg, chaincode_path, version, language, upgrade, t){
 	init();
 
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -198,7 +207,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		)
 	);
 
-	var targets = [];
+	targets = [];
 	var badTransientMap = { 'test1': 'transientValue' }; // have a different key than what the chaincode example_cc1.go expects in Init()
 	var transientMap = { 'test': 'transientValue' };
 
@@ -260,7 +269,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		// the v1 chaincode has Init() method that expects a transient map
 		if (upgrade) {
 			// first test that a bad transient map would get the chaincode to return an error
-			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, badTransientMap);
+			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, badTransientMap);
 			tx_id = request.txId;
 
 			logger.debug(util.format(
@@ -276,39 +285,39 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 			// this is the longest response delay in the test, sometimes
 			// x86 CI times out. set the per-request timeout to a super-long value
 			return channel.sendUpgradeProposal(request, 120000)
-			.then((results) => {
-				let proposalResponses = results[0];
+				.then((results) => {
+					let proposalResponses = results[0];
 
-				if (version === 'v1') {
+					if (version === 'v1') {
 					// expecting both peers to return an Error due to the bad transient map
-					let success = false;
-					if (proposalResponses && proposalResponses.length > 0) {
-						proposalResponses.forEach((response) => {
-							if (response instanceof Error &&
+						let success = false;
+						if (proposalResponses && proposalResponses.length > 0) {
+							proposalResponses.forEach((response) => {
+								if (response instanceof Error &&
 								response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
-								success = true;
-							} else {
-								success = false;
-							}
-						});
-					}
+									success = true;
+								} else {
+									success = false;
+								}
+							});
+						}
 
-					if (success) {
+						if (success) {
 						// successfully tested the negative conditions caused by
 						// the bad transient map, now send the good transient map
-						request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
-						tx_id = request.txId;
+							request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, transientMap);
+							tx_id = request.txId;
 
-						return channel.sendUpgradeProposal(request, 120000);
-					} else {
-						throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
+							return channel.sendUpgradeProposal(request, 120000);
+						} else {
+							throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
+						}
+					} else if (version === 'v3') {
+						return Promise.resolve(results);
 					}
-				} else if (version === 'v3') {
-					return Promise.resolve(results);
-				}
-			});
+				});
 		} else {
-			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap);
+			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, transientMap);
 			tx_id = request.txId;
 
 			// this is the longest response delay in the test, sometimes
@@ -376,17 +385,17 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 
 			var sendPromise = channel.sendTransaction(request);
 			return Promise.all([sendPromise].concat(eventPromises))
-			.then((results) => {
+				.then((results) => {
 
-				logger.debug('Event promise all complete and testing complete');
-				return results[0]; // just first results are from orderer, the rest are from the peer events
+					logger.debug('Event promise all complete and testing complete');
+					return results[0]; // just first results are from orderer, the rest are from the peer events
 
-			}).catch((err) => {
+				}).catch((err) => {
 
-				t.fail('Failed to send ' + type + ' transaction and get notifications within the timeout period.');
-				throw new Error('Failed to send ' + type + ' transaction and get notifications within the timeout period.');
+					t.fail('Failed to send ' + type + ' transaction and get notifications within the timeout period.');
+					throw new Error('Failed to send ' + type + ' transaction and get notifications within the timeout period.');
 
-			});
+				});
 
 		} else {
 			t.fail('Failed to send ' + type + ' Proposal or receive valid response. Response null or status is not 200. exiting...');
@@ -411,19 +420,27 @@ function instantiateChaincode(userOrg, chaincode_path, version, upgrade, t){
 		t.fail('Failed to send ' + type + ' due to error: ' + err.stack ? err.stack : err);
 		Promise.reject(new Error('Failed to send instantiate due to error: ' + err.stack ? err.stack : err));
 	});
-};
+}
 
-function buildChaincodeProposal(client, the_user, chaincode_path, version, upgrade, transientMap) {
+function buildChaincodeProposal(client, the_user, chaincode_path, version, type, upgrade, transientMap) {
 	var tx_id = client.newTransactionID();
+
+	let cc_id;
+	if(type && type==='node'){
+		cc_id = e2e_node.chaincodeId;
+	} else {
+		cc_id = e2e.chaincodeId;
+	}
 
 	// send proposal to endorser
 	var request = {
 		chaincodePath: chaincode_path,
-		chaincodeId: e2e.chaincodeId,
+		chaincodeId: cc_id,
 		chaincodeVersion: version,
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: tx_id,
+		chaincodeType: type,
 		// use this to demonstrate the following policy:
 		// 'if signed by org1 admin, then that's the only signature required,
 		// but if that signature is missing, then the policy can also be fulfilled
@@ -457,7 +474,7 @@ function buildChaincodeProposal(client, the_user, chaincode_path, version, upgra
 module.exports.instantiateChaincode = instantiateChaincode;
 
 
-function invokeChaincode(userOrg, version, t, useStore){
+function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 	init();
 
 	logger.debug('invokeChaincode begin');
@@ -511,7 +528,7 @@ function invokeChaincode(userOrg, version, t, useStore){
 		)
 	);
 
-	var orgName = ORGS[userOrg].name;
+	orgName = ORGS[userOrg].name;
 
 	var promise;
 	if (useStore) {
@@ -571,7 +588,7 @@ function invokeChaincode(userOrg, version, t, useStore){
 
 		// send proposal to endorser
 		var request = {
-			chaincodeId : e2e.chaincodeId,
+			chaincodeId : chaincodeId,
 			fcn: 'move',
 			args: ['a', 'b','100'],
 			txId: tx_id,
@@ -673,17 +690,17 @@ function invokeChaincode(userOrg, version, t, useStore){
 
 			var sendPromise = channel.sendTransaction(request);
 			return Promise.all([sendPromise].concat(eventPromises))
-			.then((results) => {
+				.then((results) => {
 
-				logger.debug(' event promise all complete and testing complete');
-				return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
+					logger.debug(' event promise all complete and testing complete');
+					return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 
-			}).catch((err) => {
+				}).catch((err) => {
 
-				t.fail('Failed to send transaction and get notifications within the timeout period.');
-				throw new Error('Failed to send transaction and get notifications within the timeout period.');
+					t.fail('Failed to send transaction and get notifications within the timeout period.');
+					throw new Error('Failed to send transaction and get notifications within the timeout period.');
 
-			});
+				});
 
 		} else {
 			t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
@@ -714,11 +731,11 @@ function invokeChaincode(userOrg, version, t, useStore){
 		throw new Error('Failed to send transaction due to error: ' + err.stack ? err.stack : err);
 
 	});
-};
+}
 
 module.exports.invokeChaincode = invokeChaincode;
 
-function queryChaincode(org, version, value, t, transientMap) {
+function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
 	init();
 
 	Client.setConfigSetting('request-timeout', 60000);
@@ -764,7 +781,7 @@ function queryChaincode(org, version, value, t, transientMap) {
 
 		// send query
 		var request = {
-			chaincodeId : e2e.chaincodeId,
+			chaincodeId : chaincodeId,
 			txId: tx_id,
 			fcn: 'query',
 			args: ['b']
@@ -805,7 +822,7 @@ function queryChaincode(org, version, value, t, transientMap) {
 		t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
 		throw new Error('Failed, got error on query');
 	});
-};
+}
 
 module.exports.queryChaincode = queryChaincode;
 
@@ -828,7 +845,6 @@ function readAllFiles(dir) {
 	var certs = [];
 	files.forEach((file_name) => {
 		let file_path = path.join(dir,file_name);
-		console.debug(' looking at file ::'+file_path);
 		let data = fs.readFileSync(file_path);
 		certs.push(data);
 	});

@@ -21,26 +21,32 @@
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
-var e2eUtils = require('./e2eUtils.js');
+var e2eUtils = require('../e2e/e2eUtils.js');
 var testUtils = require('../../unit/util');
-var chaincodeId = testUtils.END2END.chaincodeId;
+var chaincodeId = testUtils.NODE_END2END.chaincodeId;
 
-test('\n\n***** End-to-end flow: query chaincode *****\n\n', (t) => {
-	e2eUtils.queryChaincode('org2', 'v0', '300', chaincodeId, t)
+test('\n\n***** Node-Chaincode End-to-end flow: invoke transaction to move money *****\n\n', (t) => {
+	e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/)
 		.then((result) => {
 			if(result){
-				t.pass('Successfully query chaincode on the channel');
-				t.end();
+				t.pass('Successfully invoke transaction chaincode on channel');
+				return sleep(5000);
 			}
 			else {
-				t.fail('Failed to query chaincode ');
+				t.fail('Failed to invoke transaction chaincode ');
 				t.end();
 			}
 		}, (err) => {
-			t.fail('Failed to query chaincode on the channel. ' + err.stack ? err.stack : err);
+			t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+			t.end();
+		}).then(() => {
 			t.end();
 		}).catch((err) => {
 			t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);
 			t.end();
 		});
 });
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}

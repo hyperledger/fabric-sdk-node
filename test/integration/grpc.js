@@ -69,7 +69,7 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 
 	// limit the send message size to 1M
 	utils.setConfigSetting('grpc-max-send-message-length', 1024 * 1024);
-	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v2', t, true)
+	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v2', 'golang', t, true)
 	.then(() => {
 		t.fail('Should have failed because the file size is too big for grpc send messages');
 		t.end();
@@ -83,7 +83,7 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 		// now dial the send limit up
 		utils.setConfigSetting('grpc-max-send-message-length', 1024 * 1024 * 2);
 
-		return e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v2', t, true);
+		return e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v2', 'golang', t, true);
 	}).then(() => {
 		t.pass('Successfully tested setting grpc send limit');
 

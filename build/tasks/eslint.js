@@ -18,7 +18,7 @@ gulp.task('lint', function () {
 		'!fabric-ca-client/node_modules/**',
 		'!docs/**',
 		'!coverage/**',
-		'!tmp/**'
+		'!tmp/**',
 	])
 	.pipe(eslint(
 		{
@@ -42,10 +42,11 @@ gulp.task('lint', function () {
 						'ignoreUrls': true,
 						'ignoreStrings': true,
 						'ignoreTemplateLiterals': true,
-						'ignoreRegExpLiterals': true
-					}
-				]
-			}
+						'ignoreRegExpLiterals': true,
+					},
+				],
+			},
+			fix: true,
 		}
 	))
 	.pipe(eslint.format())

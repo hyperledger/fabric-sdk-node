@@ -16,6 +16,7 @@
 
 var Golang = require('./packager/Golang.js');
 var Car = require('./packager/Car.js');
+var Node = require('./packager/Node.js');
 var utils = require('./utils.js');
 
 var logger = utils.getLogger('packager');
@@ -26,7 +27,7 @@ var logger = utils.getLogger('packager');
  * @param {Object} chaincodePath required - String of the path to location of
  *                the source code of the chaincode
  * @param {Object} chaincodeType optional - String of the type of chaincode
- *                 ['golang', 'car', 'java'] (default 'golang')
+ *                 ['golang', 'node', 'car', 'java'] (default 'golang')
  * @param {boolean} devmode optional - True if using dev mode
  * @returns {Promise} A promise for the data as a byte array
  */
@@ -48,14 +49,17 @@ module.exports.package = function(chaincodePath, chaincodeType, devmode) {
 
 		let handler;
 
-		switch (type) {
+		switch (type.toLowerCase()) {
 		case 'car':
-			handler = Car.package;
+			handler = new Car();
+			break;
+		case 'node':
+			handler = new Node();
 			break;
 		default:
-			handler = Golang.package;
+			handler = new Golang();
 		}
 
-		return resolve(handler(chaincodePath));
+		return resolve(handler.package(chaincodePath));
 	});
 };

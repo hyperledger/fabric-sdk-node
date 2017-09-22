@@ -113,7 +113,7 @@ var Channel = class {
 
 		//to do update logger
 		logger.debug('Constructed Channel instance: name - %s, ' +
-		    'network mode: %s',
+			'network mode: %s',
 			this._name,
 			!this._devMode);
 	}
@@ -1183,7 +1183,8 @@ var Channel = class {
 		}
 
 		let lcccSpec = {
-			type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			// type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			type: clientUtils.translateCCType(request.chaincodeType),
 			chaincode_id: {	name: Constants.LSCC },
 			input: { args : lcccSpec_args}
 		};
@@ -1525,7 +1526,7 @@ var Channel = class {
 				var proposal = results[1];
 				logger.debug('queryByChaincode - results received');
 				if(responses && Array.isArray(responses)) {
-					var results = [];
+					let results = [];
 					for(let i = 0; i < responses.length; i++) {
 						let response = responses[i];
 						if(response instanceof Error) {
@@ -1569,7 +1570,7 @@ var Channel = class {
 	 * @returns {boolean} A boolean value of true when both the identity and
 	 *                    the signature are valid, false otherwise.
 	 */
-	 verifyProposalResponse(proposal_response) {
+	verifyProposalResponse(proposal_response) {
 		logger.debug('verifyProposalResponse - start');
 		if(!proposal_response) {
 			throw new Error('Missing proposal response');
@@ -1623,7 +1624,7 @@ var Channel = class {
 
 		logger.debug('verifyProposalResponse - This endorsement has both a valid identity and valid signature');
 		return true;
-	 }
+	}
 
 	/**
 	 * Utility method to examine a set of proposals to check they contain

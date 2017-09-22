@@ -14,47 +14,43 @@
 
 'use strict';
 
-var fs = require('fs-extra');
 var klaw = require('klaw');
-var tar = require('tar-stream');
 var path = require('path');
-var zlib = require('zlib');
 var sbuf = require('stream-buffers');
 var utils = require('../utils.js');
-var BasePackager = require('./BasePackager');
 
-var logger = utils.getLogger('packager/Golang.js');
+var logger = utils.getLogger('packager/Node.js');
+
+var BasePackager = require('./BasePackager');
 
 // A list of file extensions that should be packaged into the .tar.gz.
 // Files with all other file extenstions will be excluded to minimize the size
 // of the install payload.
 var keep = [
-	'.go',
-	'.c',
-	'.h'
+	'.js',
+	'.json',
+	'.proto',
+	'.yaml',
+	'.yml',
 ];
 
-class GolangPackager extends BasePackager {
+class NodePackager extends BasePackager {
 
 	constructor () {
 		super(keep);
 	}
 
 	/**
-	 * All of the files in the directory of the environment variable
-	 * GOPATH joined to the request.chaincodePath will be included
-	 * in an archive file.
+	 * All of the files in the directory of request.chaincodePath will be
+	 * included in an archive file.
 	 * @param chaincodePath
 	 * @returns {Promise.<TResult>}
 	 */
 	package (chaincodePath) {
-		logger.info('packaging GOLANG from %s', chaincodePath);
-
-		// Determine the user's $GOPATH
-		let goPath = process.env['GOPATH'];
+		logger.info('packaging Node from %s', chaincodePath);
 
 		// Compose the path to the chaincode project directory
-		let projDir = path.join(goPath, 'src', chaincodePath);
+		let projDir = chaincodePath;
 
 		// We generate the tar in two phases: First grab a list of descriptors,
 		// and then pack them into an archive.  While the two phases aren't
@@ -63,32 +59,31 @@ class GolangPackager extends BasePackager {
 
 		var buffer = new sbuf.WritableStreamBuffer();
 
-		return this.findSource(goPath, projDir).then((descriptors) => {
+		return this.findSource(projDir).then((descriptors) => {
 			return super.generateTarGz(descriptors, buffer);
 		}).then(() => {
 			return buffer.getContents();
 		});
-	};
+	}
 
 	/**
 	 * Given an input 'filePath', recursively parse the filesystem for any files
-	 * that fit the criteria for being valid golang source (ISREG + (*.(go|c|h)))
-	 * As a convenience, we also formulate a tar-friendly "name" for each file
-	 * based on relative position to 'goPath'.
-	 * @param goPath
+	 * that fit the criteria for being valid node chaincode source
+	 *
 	 * @param filePath
 	 * @returns {Promise}
 	 */
-	findSource (goPath, filePath) {
+	findSource (filePath) {
 		return new Promise((resolve, reject) => {
 			var descriptors = [];
 			klaw(filePath).on('data', (entry) => {
 
 				if (entry.stats.isFile() && super.isSource(entry.path)) {
 
+					// TOOD: remove 'src'
 					var desc = {
-						name: path.relative(goPath, entry.path).split('\\').join('/'), // for windows style paths
-						fqp: entry.path
+						name: 'src/' + path.relative(filePath, entry.path).split('\\').join('/'), // for windows style paths
+						fqp: entry.path,
 					};
 
 					logger.debug('adding entry', desc);
@@ -102,6 +97,4 @@ class GolangPackager extends BasePackager {
 	}
 }
 
-module.exports = GolangPackager;
-
-
+module.exports = NodePackager;

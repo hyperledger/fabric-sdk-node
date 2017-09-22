@@ -28,17 +28,19 @@ var test = _test(tape);
 var e2eUtils = require('./e2eUtils.js');
 var testUtil = require('../../unit/util.js');
 
+var version = 'v0'
+
 test('\n\n***** End-to-end flow: chaincode install *****\n\n', (t) => {
 	testUtil.setupChaincodeDeploy();
 
-	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v0', t, true)
+	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, version, 'golang', t, true)
 	.then(() => {
 		t.pass('Successfully installed chaincode in peers of organization "org1"');
-		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_PATH, 'v0', t, true);
+		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_PATH, version, 'golang', t, true);
 	}, (err) => {
 		t.fail('Failed to install chaincode in peers of organization "org1". ' + err.stack ? err.stack : err);
 		logger.error('Failed to install chaincode in peers of organization "org1". ');
-		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_PATH, 'v0', t, true);
+		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_PATH, version, 'golang', t, true);
 	}).then(() => {
 		t.pass('Successfully installed chaincode in peers of organization "org2"');
 		t.end();
