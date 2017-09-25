@@ -23,11 +23,15 @@
 // the fabric-ca-client package by editing build/tasks/ca.js
 /////////////////////////////////////////////////////////////////
 
+var utils = require('fabric-client/lib/utils.js');
+var logger = utils.getLogger('integration.client');
+
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
 var X509 = require('x509');
+var rs = require('jsrsasign');
 
 var util = require('util');
 var fs = require('fs-extra');
@@ -200,16 +204,18 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 			t.equal(response.success, true, 'Successfully revoked "testUserY" using serial number and AKI');
 
 			// register a new user 'webAdmin' that can register other users of the role 'client'
-			return caService.register({enrollmentID: 'webAdmin', affiliation: 'org1.department2', attrs: [{name: 'hf.Registrar.Roles', value: 'client'}]}, member);
+			return caService.register({enrollmentID: 'webAdmin', affiliation: 'org1.department2', attrs: [{name: 'hf.Registrar.Roles', value: 'client'}, {name:'myattrib',value:'somevalue and lots of other information'}]}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "webAdmin" who can register other users with no role');
 
-			return caService.enroll({enrollmentID: 'webAdmin', enrollmentSecret: secret});
+			return caService.enroll({enrollmentID: 'webAdmin', enrollmentSecret: secret, attr_reqs :[{name:'myattrib', require : true}]});
 		},(err) => {
 			t.fail('Failed to register "webAdmin". ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((enrollment) => {
 			t.pass('Successfully enrolled "webAdmin"');
+
+			checkoutCertForAttributes(t, enrollment.certificate);
 
 			webAdmin = new User('webAdmin');
 			return webAdmin.setEnrollment(enrollment.key, enrollment.certificate, 'Org1MSP');
@@ -241,12 +247,38 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 			t.equal(typeof res.key !== 'undefined' && res.key !== null, true, 'Checking re-enroll response has the private key');
 			t.equal(typeof res.certificate !== 'undefined' && res.certificate !== null, true, 'Checking re-enroll response has the certificate');
 
+			return caService.reenroll(webAdmin, [{name:'myattrib', require : true}]);
+		}).then((res) => {
+			t.pass('Successfully re-enrolled "webAdmin" user with the request for attributes');
+			checkoutCertForAttributes(t, res.certificate);
+
 			t.end();
 		}).catch((err) => {
 			t.fail('Failed at ' + err.stack ? err.stack : err);
 			t.end();
 		});
 });
+
+function checkoutCertForAttributes(t, pem) {
+	var attr = null;
+	let cert = new rs.X509();
+	cert.readCertPEM(pem);
+	var ext_list = rs.X509.getV3ExtInfoListOfCertHex(cert.hex);
+	for (var i in ext_list) {
+		var ext_item = ext_list[i];
+		logger.debug('ext_item :: %j',ext_item);
+		if(ext_item.oid === '1.2.3.4.5.6.7.8.1') {
+			var attr_hex = rs.ASN1HEX.getHexOfTLV_AtObj(cert.hex, ext_item.posTLV);
+			attr = Buffer.from(attr_hex,'hex').toString();
+		}
+	}
+	if(attr && attr.indexOf('myattrib') > -1) {
+		t.pass('Successfully received the enrolled certificate with the added attribute');
+	} else {
+		t.fail('Failed to receive the enrolled certificate with the added attribute');
+	}
+}
+
 
 test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', function (t) {
 	var endpoint = FabricCAServices._parseURL(fabricCAEndpoint);
@@ -276,3 +308,16 @@ test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', function (t) 
 			t.end();
 		});
 });
+
+function savePem(pem) {
+	logger.info(' saving  :: %j',pem);
+	let file_path = path.join(__dirname, '../attribute.pem');
+	fs.writeFileSync(file_path, pem);
+}
+
+function readPem() {
+	logger.info(' reading pem');
+	let file_path = path.join(__dirname, '../attribute.pem');
+	var pem = fs.readFileSync(file_path);
+	return pem;
+}

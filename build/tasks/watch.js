@@ -16,8 +16,8 @@ gulp.task('watch', function () {
 
 	// only do the following if node_modules/fabric-client and
 	// node_modules/fabric-ca-client are NOT created as sym links
-	let statsA = lstatSync('node_modules/fabric-client');
-	let statsB = lstatSync('node_modules/fabric-ca-client');
+	let statsA = fs.lstatSync('node_modules/fabric-client');
+	let statsB = fs.lstatSync('node_modules/fabric-ca-client');
 	if (!statsA.isSymbolicLink() && !statsB.isSymbolicLink()) {
 		watch([
 			'fabric-client/index.js',

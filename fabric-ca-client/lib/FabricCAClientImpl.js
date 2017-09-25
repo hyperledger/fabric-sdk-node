@@ -772,7 +772,8 @@ var FabricCAClient = class {
 				reject(new Error(util.format('Calling enrollment endpoint failed with error [%s]', err)));
 			});
 
-			request.write(JSON.stringify(enrollRequest));
+			let body = JSON.stringify(enrollRequest);
+			request.write(body);
 			request.end();
 
 		});
