@@ -20,9 +20,7 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var tar = require('tar-fs');
 var path = require('path');
-var gunzip = require('gunzip-maybe');
 var fs = require('fs-extra');
 var sinon = require('sinon');
 var rewire = require('rewire');
@@ -35,7 +33,6 @@ var testutil = require('./util.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Policy = require('fabric-client/lib/Policy.js');
 var Channel = rewire('fabric-client/lib/Channel.js');
-var Packager = require('fabric-client/lib/Packager.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 var User = require('fabric-client/lib/User.js');
 var MSP = require('fabric-client/lib/msp/msp.js');
@@ -353,45 +350,6 @@ test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
 	);
 
 	t.end();
-});
-
-test('\n\n** Packager tests **\n\n', function(t) {
-	Packager.package('blah','',true)
-	.then((data) => {
-		t.equal(data, null, 'Channel.packageChaincode() should return null for dev mode');
-		return Packager.package(null,'',false);
-	}).then(() => {
-		t.fail('Packager.package() should have rejected a call that does not have chaincodePath parameter');
-		t.end();
-	},
-	(err) => {
-		var msg = 'Missing chaincodePath parameter';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Should throw error: '+msg);
-		} else {
-			t.fail(err.message+' should be '+msg);
-			t.end();
-		}
-
-		testutil.setupChaincodeDeploy();
-		return Packager.package(testutil.CHAINCODE_PATH,'',false);
-	}).then((data) => {
-		var tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
-		var destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
-		fs.writeFileSync(tmpFile, data);
-		fs.removeSync(destDir);
-		var pipe = fs.createReadStream(tmpFile).pipe(gunzip()).pipe(tar.extract(destDir));
-
-		pipe.on('close', function() {
-			var checkPath = path.join(destDir, 'src', 'github.com', 'example_cc');
-			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/github.com/example_cc" folder');
-		});
-		t.end();
-	}).catch((err) => {
-		t.fail('Caught error in Package.package tests');
-		t.comment(err.stack ? err.stack : err);
-		t.end();
-	});
 });
 
 var TWO_ORG_MEMBERS_AND_ADMIN = [{

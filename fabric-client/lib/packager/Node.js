@@ -14,30 +14,19 @@
 
 'use strict';
 
-var klaw = require('klaw');
-var path = require('path');
-var sbuf = require('stream-buffers');
-var utils = require('../utils.js');
+const path = require('path');
+const sbuf = require('stream-buffers');
+const utils = require('../utils.js');
+const walk = require('ignore-walk');
 
-var logger = utils.getLogger('packager/Node.js');
+let logger = utils.getLogger('packager/Node.js');
 
-var BasePackager = require('./BasePackager');
-
-// A list of file extensions that should be packaged into the .tar.gz.
-// Files with all other file extenstions will be excluded to minimize the size
-// of the install payload.
-var keep = [
-	'.js',
-	'.json',
-	'.proto',
-	'.yaml',
-	'.yml',
-];
+let BasePackager = require('./BasePackager');
 
 class NodePackager extends BasePackager {
 
 	constructor () {
-		super(keep);
+		super([]);
 	}
 
 	/**
@@ -57,7 +46,7 @@ class NodePackager extends BasePackager {
 		// strictly necessary yet, they pave the way for the future where we
 		// will need to assemble sources from multiple packages
 
-		var buffer = new sbuf.WritableStreamBuffer();
+		let buffer = new sbuf.WritableStreamBuffer();
 
 		return this.findSource(projDir).then((descriptors) => {
 			return super.generateTarGz(descriptors, buffer);
@@ -74,25 +63,31 @@ class NodePackager extends BasePackager {
 	 * @returns {Promise}
 	 */
 	findSource (filePath) {
-		return new Promise((resolve, reject) => {
-			var descriptors = [];
-			klaw(filePath).on('data', (entry) => {
+		return walk({
+			path: filePath,
+			// applies filtering based on the same rules as "npm publish":
+			// if .npmignore exists, uses rules it specifies
+			ignoreFiles: ['.npmignore'],
+			// follow symlink dirs
+			follow: true
+		}).then((files) => {
+			let descriptors = [];
 
-				if (entry.stats.isFile() && super.isSource(entry.path)) {
+			if (!files) {
+				files = [];
+			}
 
-					// TOOD: remove 'src'
-					var desc = {
-						name: 'src/' + path.relative(filePath, entry.path).split('\\').join('/'), // for windows style paths
-						fqp: entry.path,
-					};
+			files.forEach((entry) => {
+				let desc = {
+					name: path.join('src', entry).split('\\').join('/'), // for windows style paths
+					fqp: path.join(filePath, entry)
+				};
 
-					logger.debug('adding entry', desc);
-					descriptors.push(desc);
-				}
-
-			}).on('end', () => {
-				resolve(descriptors);
+				logger.debug('adding entry', desc);
+				descriptors.push(desc);
 			});
+
+			return descriptors;
 		});
 	}
 }
