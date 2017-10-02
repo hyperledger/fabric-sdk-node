@@ -21,7 +21,11 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var testutil = require('./util.js');
+var User = require('fabric-client/lib/User.js');
+var utils = require('fabric-client/lib/utils.js');
+var test_user = require('./user.js');
 
+var Client = require('fabric-client');
 var EventHub = require('fabric-client/lib/EventHub.js');
 var sdkUtils = require('fabric-client/lib/utils.js');
 
@@ -491,3 +495,352 @@ test('\n\n** Test the add and remove utilty used by the EventHub to add a settin
 
 	t.end();
 });
+
+// test actions after connect fails
+// 1. register for event with no delay and no error callback
+// 2. register for event with no delay and error callback
+// 3. register for event with delay and no error callback
+// 4. register for event with delay and error callback
+test('\n\n** EventHub test actions when connect failures on transaction registration \n\n', (t) => {
+	var client = new Client();
+	var event_hub = null;
+	var member = new User('user1');
+	var crypto_suite = utils.newCryptoSuite();
+	crypto_suite.setCryptoKeyStore(utils.newCryptoKeyStore());
+	member.setCryptoSuite(crypto_suite);
+	crypto_suite.generateKey()
+	.then(function (key) {
+		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
+	}).then(() => {
+		var id = member.getIdentity();
+		client.setUserContext(member, true);
+
+		// tx test 1
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9999');
+		event_hub.connect();
+		t.doesNotThrow(
+			() => {
+				event_hub.registerTxEvent('123', (tx_id, code) => {
+					t.fail('Failed callback should not have been called - tx test 1')
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - tx test 1'
+		);
+
+		// tx test 2
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9999');
+		event_hub.connect();
+		t.doesNotThrow(
+			() => {
+				event_hub.registerTxEvent('123',
+				(tx_id, code) => {
+					t.fail('Failed callback should not have been called - tx test 2')
+				},
+				(error) =>{
+					if(error.toString().indexOf('Connect Failed')) {
+						t.pass('Successfully got the error call back tx test 2 ::'+error);
+					} else {
+						t.failed('Failed to get connection failed error tx test 2 ::'+error);
+					}
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - tx test 2'
+		);
+
+		// tx test 3
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9999');
+		event_hub.connect();
+
+		let sleep_time = 3000;
+		t.comment('about to sleep '+sleep_time);
+		return sleep(sleep_time);
+	}).then((nothing) => {
+		t.pass('Sleep complete');
+		// eventhub is now actually not connected
+
+		t.throws(
+			() => {
+				event_hub.registerTxEvent('123', (tx_id, code) => {
+					t.fail('Failed callback should not have been called - tx test 3')
+				});
+			},
+			/The event hub has not been connected to the event source/,
+			'Check for The event hub has not been connected to the event source - tx test 3'
+		);
+
+		// test 4
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9999');
+		event_hub.connect();
+
+		let sleep_time = 3000;
+		t.comment('about to sleep '+sleep_time);
+		return sleep(sleep_time);
+	}).then((nothing) => {
+		t.pass('Sleep complete');
+		// eventhub is now actually not connected
+
+		t.doesNotThrow(
+			() => {
+				event_hub.registerTxEvent('123',
+				(tx_id, code) => {
+					t.fail('Failed callback should not have been called - tx test 4')
+				},
+				(error) =>{
+					if(error.toString().indexOf('Connect Failed')) {
+						t.pass('Successfully got the error call back tx test 4 ::'+error);
+					} else {
+						t.failed('Failed to get connection failed error tx test 4 :: '+error);
+					}
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - tx test 4'
+		);
+
+		t.end();
+	}).catch((err) => {
+		t.fail(err.stack ? err.stack : err);
+		t.end();
+	});
+
+});
+
+// test actions after connect fails
+// 1. register for event with no delay and no error callback
+// 2. register for event with no delay and error callback
+// 3. register for event with delay and no error callback
+// 4. register for event with delay and error callback
+test('\n\n** EventHub test actions when connect failures on block registration \n\n', (t) => {
+	var client = new Client();
+	var event_hub = null;
+	var member = new User('user1');
+	var crypto_suite = utils.newCryptoSuite();
+	crypto_suite.setCryptoKeyStore(utils.newCryptoKeyStore());
+	member.setCryptoSuite(crypto_suite);
+	crypto_suite.generateKey()
+	.then(function (key) {
+		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
+	}).then(() => {
+		var id = member.getIdentity();
+		client.setUserContext(member, true);
+
+		// test 1
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9997');
+		event_hub.connect();
+		t.doesNotThrow(
+			() => {
+				event_hub.registerBlockEvent((tx_id, code) => {
+					t.fail('Failed callback should not have been called - block test 1')
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - block test 1'
+		);
+
+		// block test 2
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9997');
+		event_hub.connect();
+		t.doesNotThrow(
+			() => {
+				event_hub.registerBlockEvent(
+				(tx_id, code) => {
+					t.fail('Failed callback should not have been called - block test 2')
+				},
+				(error) =>{
+					if(error.toString().indexOf('Connect Failed')) {
+						t.pass('Successfully got the error call back block test 2 ::'+error);
+					} else {
+						t.failed('Failed to get connection failed error block test 2 ::'+error);
+					}
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - block test 2'
+		);
+
+		// block test 3
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9997');
+		event_hub.connect();
+
+		let sleep_time = 3000;
+		t.comment('about to sleep '+sleep_time);
+		return sleep(sleep_time);
+	}).then((nothing) => {
+		t.pass('Sleep complete');
+		// eventhub is now actually not connected
+
+		t.throws(
+			() => {
+				event_hub.registerBlockEvent((tx_id, code) => {
+					t.fail('Failed callback should not have been called - block test 3')
+				});
+			},
+			/The event hub has not been connected to the event source/,
+			'Check for The event hub has not been connected to the event source - block test 3'
+		);
+
+		// block test 4
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9997');
+		event_hub.connect();
+
+		let sleep_time = 3000;
+		t.comment('about to sleep '+sleep_time);
+		return sleep(sleep_time);
+	}).then((nothing) => {
+		t.pass('Sleep complete');
+		// eventhub is now actually not connected
+
+		t.doesNotThrow(
+			() => {
+				event_hub.registerBlockEvent(
+				(tx_id, code) => {
+					t.fail('Failed callback should not have been called - block test 4')
+				},
+				(error) =>{
+					if(error.toString().indexOf('Connect Failed')) {
+						t.pass('Successfully got the error call back block test 4 ::'+error);
+					} else {
+						t.failed('Failed to get connection failed error block test 4 :: '+error);
+					}
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - block test 4'
+		);
+
+		t.end();
+	}).catch((err) => {
+		t.fail(err.stack ? err.stack : err);
+		t.end();
+	});
+
+});
+
+// chaincode test actions after connect fails
+// 1. register for event with no delay and no error callback
+// 2. register for event with no delay and error callback
+// 3. register for event with delay and no error callback
+// 4. register for event with delay and error callback
+test('\n\n** EventHub test actions when connect failures on chaincode registration \n\n', (t) => {
+	var client = new Client();
+	var event_hub = null;
+	var member = new User('user1');
+	var crypto_suite = utils.newCryptoSuite();
+	crypto_suite.setCryptoKeyStore(utils.newCryptoKeyStore());
+	member.setCryptoSuite(crypto_suite);
+	crypto_suite.generateKey()
+	.then(function (key) {
+		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
+	}).then(() => {
+		var id = member.getIdentity();
+		client.setUserContext(member, true);
+
+		// chaincode test 1
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9998');
+		event_hub.connect();
+		t.doesNotThrow(
+			() => {
+				event_hub.registerChaincodeEvent('123', 'event', (tx_id, code) => {
+					t.fail('Failed callback should not have been called - chaincode test 1')
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - chaincode test 1'
+		);
+
+		// chaincode test 2
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9998');
+		event_hub.connect();
+		t.doesNotThrow(
+			() => {
+				event_hub.registerChaincodeEvent('123', 'event',
+				(tx_id, code) => {
+					t.fail('Failed callback should not have been called - chaincode test 2')
+				},
+				(error) =>{
+					if(error.toString().indexOf('Connect Failed')) {
+						t.pass('Successfully got the error call back chaincode test 2 ::'+error);
+					} else {
+						t.failed('Failed to get connection failed error chaincode test 2 ::'+error);
+					}
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - chaincode test 2'
+		);
+
+		// chaincode test 3
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9998');
+		event_hub.connect();
+
+		let sleep_time = 3000;
+		t.comment('about to sleep '+sleep_time);
+		return sleep(sleep_time);
+	}).then((nothing) => {
+		t.pass('Sleep complete');
+		// eventhub is now actually not connected
+
+		t.throws(
+			() => {
+				event_hub.registerChaincodeEvent('123', 'event', (tx_id, code) => {
+					t.fail('Failed callback should not have been called - chaincode test 3')
+				});
+			},
+			/The event hub has not been connected to the event source/,
+			'Check for The event hub has not been connected to the event source - chaincode test 3'
+		);
+
+		// chaincode test 4
+		event_hub = client.newEventHub();
+		event_hub.setPeerAddr('grpc://localhost:9998');
+		event_hub.connect();
+
+		let sleep_time = 3000;
+		t.comment('about to sleep '+sleep_time);
+		return sleep(sleep_time);
+	}).then((nothing) => {
+		t.pass('Sleep complete');
+		// eventhub is now actually not connected
+
+		t.doesNotThrow(
+			() => {
+				event_hub.registerChaincodeEvent('123', 'event',
+				(tx_id, code) => {
+					t.fail('Failed callback should not have been called - chaincode test 4')
+				},
+				(error) =>{
+					if(error.toString().indexOf('Connect Failed')) {
+						t.pass('Successfully got the error call back chaincode test 4 ::'+error);
+					} else {
+						t.failed('Failed to get connection failed error chaincode test 4 :: '+error);
+					}
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - chaincode test 4'
+		);
+
+		t.end();
+	}).catch((err) => {
+		t.fail(err.stack ? err.stack : err);
+		t.end();
+	});
+
+});
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}

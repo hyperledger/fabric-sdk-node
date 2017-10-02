@@ -171,7 +171,6 @@ var EventHub = class {
 		// grpc chat streaming interface
 		this._stream = null;
 		// fabric connection state of this eventhub
-		this._connect_called = false;
 		this._connected = false;
 		this._connect_running = false;
 		// should this event hub reconnect on registrations
@@ -255,7 +254,7 @@ var EventHub = class {
 	 *                  the connection to the peer event hub
 	 */
 	_connect(force) {
-		this._connect_called = true;
+		logger.debug('_connect - start - %s', new Date());
 		if(this._connect_running) {
 			logger.debug('_connect - connect is running');
 			return;
@@ -344,6 +343,7 @@ var EventHub = class {
 			logger.debug('on.error - event stream:%s _current_stream:%s',stream_id, self._current_stream);
 			if(stream_id != self._current_stream) {
 				logger.debug('on.error - incoming event was from a canceled stream');
+				logger.debug('on.error - %s %s',new Date(),err);
 				return;
 			}
 
@@ -387,7 +387,6 @@ var EventHub = class {
 			this._stream.end();
 			this._stream = null;
 		}
-		this._connect_called = false; //we can turn off since we closed out all callbacks
 	}
 
 	/*
@@ -477,7 +476,8 @@ var EventHub = class {
 			}
 		}
 
-		if(force_reconnect && this._connect_called) {
+		//reconnect will only happen when there is error callback
+		if(force_reconnect) {
 			try {
 				if(this._stream) {
 					var is_paused = this._stream.isPaused();
@@ -503,7 +503,6 @@ var EventHub = class {
 				logger.error('_checkConnection - error ::' + error.stack ? error.stack : error);
 				var err = new Error('Event hub is not connected ');
 				this._disconnect(err);
-				throw err;
 			}
 		}
 	}

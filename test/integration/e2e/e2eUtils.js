@@ -377,6 +377,10 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 							t.pass('The chaincode ' + type + ' transaction was valid.');
 							resolve();
 						}
+					}, (err) => {
+						t.fail('The was a problem with the instantiate event '+err);
+						clearTimeout(handle);
+						eh.unregisterTxEvent(deployId);
 					});
 				});
 				logger.debug('register eventhub %s with tx=%s',eh.getPeerAddr(),deployId);
@@ -571,7 +575,8 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 			{
 				pem: Buffer.from(data).toString(),
 				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
-				'grpc.http2.keepalive_time' : 15
+				'grpc.keepalive_timeout_ms' : 3000, // time to respond to the ping, 3 seconds
+				'grpc.keepalive_time_ms' : 360000, // time to wait for ping response, 6 minutes
 			}
 		);
 		eh.connect();
@@ -610,7 +615,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 			}
 		}
 		t.comment('*****************************************************************************');
-		t.comment('stop and start the peer event hub ---- N  O  W ----- you have ' + sleep_time + ' millis');
+		t.comment('stop and start the peer event hub ---- N  O  W ----- you have ' + sleep_time + ' millis ' + (new Date()).toString());
 		t.comment('*****************************************************************************');
 		return sleep(sleep_time);
 	}).then((nothing) => {
