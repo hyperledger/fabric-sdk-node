@@ -1271,7 +1271,7 @@ var Client = class extends BaseClient {
 						function(userContext) {
 							if (userContext) {
 								logger.debug('Requested user "%s" loaded successfully from the state store on this Client instance: name - %s', name, name);
-								return self.setUserContext(userContext, false);
+								return self.setUserContext(userContext, true); //skipPersistence as we just got it from there
 							} else {
 								logger.debug('Requested user "%s" not loaded from the state store on this Client instance: name - %s', name, name);
 								return null;
