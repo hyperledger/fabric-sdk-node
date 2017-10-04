@@ -10,6 +10,7 @@
     "test": "gulp test-headless"
   },
   "devDependencies": {
+    "@types/bytebuffer": "^5.0.34",
     "bn.js": "^4.11.8",
     "bunyan": "^1.8.10",
     "cloudant": "^1.7.0",
@@ -44,7 +45,8 @@
     "tar-fs": "^1.13.0",
     "targz": "^1.0.1",
     "winston": "^2.2.0",
-    "x509": "^0.3.2"
+    "x509": "^0.3.2",
+    "typescript": "^2.5.2"
   },
   "license": "Apache-2.0",
   "licenses": [
