@@ -31,7 +31,6 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var X509 = require('x509');
-var rs = require('jsrsasign');
 
 var util = require('util');
 var fs = require('fs-extra');
@@ -203,8 +202,72 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserY" using serial number and AKI');
 
+			// register a new user 'test1'
+			return caService.register({
+				enrollmentID: 'test1',
+				affiliation: 'org1.department2',
+				attrs: [
+					{name: 'hf.Registrar.Roles', value: 'client'},
+					{name:'ecert',value:'default', ecert:true},
+					{name:'test1attr',value:'test1attr'}
+				]}, member);
+		}).then((secret) => {
+			t.pass('Successfully registered "test1" ');
+
+			return caService.enroll({enrollmentID: 'test1', enrollmentSecret: secret, attr_reqs :[]});
+		}).then((enrollment) => {
+			t.pass('Successfully enrolled "test1"');
+
+			checkoutCertForAttributes(t, enrollment.certificate, false, 'test1attr');
+			checkoutCertForAttributes(t, enrollment.certificate, false, 'ecert');
+
+			// register a new user 'test2'
+			return caService.register({
+				enrollmentID: 'test2',
+				affiliation: 'org1.department2',
+				attrs: [
+					{name: 'hf.Registrar.Roles', value: 'client'},
+					{name:'ecert',value:'default', ecert:true},
+					{name:'test2attr',value:'test2attr'}
+				]}, member);
+		}).then((secret) => {
+			t.pass('Successfully registered "test2" ');
+
+			return caService.enroll({enrollmentID: 'test2', enrollmentSecret: secret});
+		}).then((enrollment) => {
+			t.pass('Successfully enrolled "test2"');
+
+			checkoutCertForAttributes(t, enrollment.certificate, false, 'test2attr');
+			checkoutCertForAttributes(t, enrollment.certificate, true, 'ecert');
+
+			// register a new user 'test3'
+			return caService.register({
+				enrollmentID: 'test3',
+				affiliation: 'org1.department2',
+				attrs: [
+					{name: 'hf.Registrar.Roles', value: 'client'},
+					{name:'ecert',value:'default', ecert:true},
+					{name:'test3attr',value:'test3attr'}
+				]}, member);
+		}).then((secret) => {
+			t.pass('Successfully registered "test3" ');
+
+			return caService.enroll({enrollmentID: 'test3', enrollmentSecret: secret,  attr_reqs :[{name:'test3attr'}, {name:'ecert'}]});
+		}).then((enrollment) => {
+			t.pass('Successfully enrolled "test3"');
+
+			checkoutCertForAttributes(t, enrollment.certificate, true, 'test3attr');
+			checkoutCertForAttributes(t, enrollment.certificate, true, 'ecert');
+
 			// register a new user 'webAdmin' that can register other users of the role 'client'
-			return caService.register({enrollmentID: 'webAdmin', affiliation: 'org1.department2', attrs: [{name: 'hf.Registrar.Roles', value: 'client'}, {name:'myattrib',value:'somevalue and lots of other information'}]}, member);
+			return caService.register({
+				enrollmentID: 'webAdmin',
+				affiliation: 'org1.department2',
+				attrs: [
+					{name: 'hf.Registrar.Roles', value: 'client'},
+					{name:'dfattrib',value:'default', ecert:true},
+					{name:'myattrib',value:'somevalue and lots of other information'}
+				]}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "webAdmin" who can register other users with no role');
 
@@ -215,7 +278,8 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 		}).then((enrollment) => {
 			t.pass('Successfully enrolled "webAdmin"');
 
-			checkoutCertForAttributes(t, enrollment.certificate);
+			checkoutCertForAttributes(t, enrollment.certificate, true, 'myattrib');
+			checkoutCertForAttributes(t, enrollment.certificate, false, 'dfattrib');
 
 			webAdmin = new User('webAdmin');
 			return webAdmin.setEnrollment(enrollment.key, enrollment.certificate, 'Org1MSP');
@@ -243,6 +307,8 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 			return caService.reenroll(webAdmin);
 		}).then((res) => {
 			t.pass('Successfully re-enrolled "webAdmin" user');
+			checkoutCertForAttributes(t, res.certificate, false, 'myattrib');
+			checkoutCertForAttributes(t, res.certificate, true, 'dfattrib');
 
 			t.equal(typeof res.key !== 'undefined' && res.key !== null, true, 'Checking re-enroll response has the private key');
 			t.equal(typeof res.certificate !== 'undefined' && res.certificate !== null, true, 'Checking re-enroll response has the certificate');
@@ -250,8 +316,20 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 			return caService.reenroll(webAdmin, [{name:'myattrib', require : true}]);
 		}).then((res) => {
 			t.pass('Successfully re-enrolled "webAdmin" user with the request for attributes');
-			checkoutCertForAttributes(t, res.certificate);
+			checkoutCertForAttributes(t, res.certificate, true, 'myattrib');
+			checkoutCertForAttributes(t, res.certificate, false, 'dfattrib');
 
+			return caService.reenroll(webAdmin, [{name:'myattrib', require : true}, {name:'dfattrib'}]);
+		}).then((res) => {
+			t.pass('Successfully re-enrolled "webAdmin" user with the request for attributes');
+			checkoutCertForAttributes(t, res.certificate, true, 'myattrib');
+			checkoutCertForAttributes(t, res.certificate, true, 'dfattrib');
+
+			return caService.reenroll(webAdmin, []);
+		}).then((res) => {
+			t.pass('Successfully re-enrolled "webAdmin" user with the request for attributes');
+			checkoutCertForAttributes(t, res.certificate, false, 'myattrib');
+			checkoutCertForAttributes(t, res.certificate, false, 'dfattrib');
 			t.end();
 		}).catch((err) => {
 			t.fail('Failed at ' + err.stack ? err.stack : err);
@@ -259,24 +337,34 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 		});
 });
 
-function checkoutCertForAttributes(t, pem) {
+function checkoutCertForAttributes(t, pem, should_find, attr_name) {
 	var attr = null;
-	let cert = new rs.X509();
-	cert.readCertPEM(pem);
-	var ext_list = rs.X509.getV3ExtInfoListOfCertHex(cert.hex);
-	for (var i in ext_list) {
-		var ext_item = ext_list[i];
-		logger.debug('ext_item :: %j',ext_item);
-		if(ext_item.oid === '1.2.3.4.5.6.7.8.1') {
-			var attr_hex = rs.ASN1HEX.getHexOfTLV_AtObj(cert.hex, ext_item.posTLV);
-			attr = Buffer.from(attr_hex,'hex').toString();
+	let cert = X509.parseCert(pem);
+	let found = false;
+	if(cert && cert.extensions && cert.extensions['1.2.3.4.5.6.7.8.1']) {
+		let attr_string = cert.extensions['1.2.3.4.5.6.7.8.1'];
+		let attr_object = JSON.parse(attr_string);
+		let attrs = attr_object.attrs;
+		if(attrs && attrs[attr_name]) {
+			logger.debug(' Found attribute %s with value of %s',attr_name, attrs[attr_name]);
+			found = true;
 		}
 	}
-	if(attr && attr.indexOf('myattrib') > -1) {
-		t.pass('Successfully received the enrolled certificate with the added attribute');
+
+	if(should_find) {
+		if(found) {
+			t.pass('Successfully received the enrolled certificate with the added attribute ::'+attr_name);
+		} else {
+			t.fail('Failed to receive the enrolled certificate with the added attribute ::'+attr_name);
+		}
 	} else {
-		t.fail('Failed to receive the enrolled certificate with the added attribute');
+		if(found) {
+			t.fail('Failed with the enrolled certificate that has the added attribute ::'+attr_name);
+		} else {
+			t.pass('Successfully enrolled with certificate without the added attribute ::'+attr_name);
+		}
 	}
+
 }
 
 
