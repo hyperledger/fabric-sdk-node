@@ -279,8 +279,8 @@ var EventHub = class {
 
 		// check on the keep alive options
 		// the keep alive interval
-		var options = utils.checkAndAddConfigSetting('grpc.http2.keepalive_time', 300, this._ep._options); //grpc 1.2.4
-		options = utils.checkAndAddConfigSetting('grpc.keepalive_time_ms', 300000, options); //grpc 1.3.7
+		var options = utils.checkAndAddConfigSetting('grpc.http2.keepalive_time', 360, this._ep._options); //grpc 1.2.4
+		options = utils.checkAndAddConfigSetting('grpc.keepalive_time_ms', 360000, options); //grpc 1.3.7
 		// how long should we wait for the keep alive response
 		let request_timeout_ms = utils.getConfigSetting('request-timeout', 3000);
 		let request_timeout = request_timeout_ms / 1000;
