@@ -48,8 +48,8 @@ process.env.DOCKER_IMG_TAG = dockerImageTag;
 
 gulp.task('pre-test', function() {
 	return gulp.src([
-		'node_modules/fabric-client/lib/**/*.js',
-		'node_modules/fabric-ca-client/lib/FabricCAClientImpl.js'])
+		'fabric-client/lib/**/*.js',
+		'fabric-ca-client/lib/FabricCAClientImpl.js'])
 	.pipe(istanbul())
 	.pipe(istanbul.hookRequire());
 });
