@@ -207,8 +207,7 @@ test('\n\n** TEST ** orderer via member bad request', function(t) {
 			// send to orderer
 			var request = {
 				proposalResponses: 'blah',
-				proposal: 'blah',
-				header: 'blah'
+				proposal: 'blah'
 			};
 			return channel.sendTransaction(request);
 		},
@@ -236,4 +235,3 @@ test('\n\n** TEST ** orderer via member bad request', function(t) {
 		t.end();
 	});
 });
-

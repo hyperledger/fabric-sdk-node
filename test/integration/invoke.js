@@ -197,9 +197,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 
 	}).then((results) => {
 		var proposalResponses = results[0];
-
 		var proposal = results[1];
-		var header   = results[2];
 		var all_good = true;
 
 		for(var i in proposalResponses) {
@@ -235,8 +233,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 
 			var request = {
 				proposalResponses: proposalResponses,
-				proposal: proposal,
-				header: header
+				proposal: proposal
 			};
 
 			// set the transaction listener and set a timeout of 30sec
