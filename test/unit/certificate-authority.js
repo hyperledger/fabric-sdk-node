@@ -42,13 +42,14 @@ test('\n\n ** CertificateAuthority - constructor set get tests **\n\n', function
 	'Test Missing url parameter');
 
 	t.doesNotThrow(()=>{
-		new CertificateAuthority('name', 'url');
+		new CertificateAuthority('name', 'caname', 'url');
 	},
 	null,
 	'Test good construction');
 
-	var ca = new CertificateAuthority('name','url','opts', 'certs', 'user');
+	var ca = new CertificateAuthority('name', 'caname', 'url','opts', 'certs', 'user');
 	t.equals('name',ca.getName(),'test method getName');
+	t.equals('caname',ca.getCaName(),'test method getCaName');
 	t.equals('url',ca.getUrl(),'test method getUrl');
 	t.equals('opts',ca.getConnectionOptions(),'test method getConnectionOptions');
 	t.equals('certs',ca.getTlsCACerts(),'test method getTlsCACerts');

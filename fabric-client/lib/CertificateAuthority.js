@@ -36,7 +36,7 @@ var CertificateAuthority = class {
 
 	 * @returns {CertificateAuthority} The CertificateAuthority instance.
 	 */
-	constructor(name, url, connection_options, tlsCACerts, registrar) {
+	constructor(name, caname, url, connection_options, tlsCACerts, registrar) {
 		logger.debug('CertificateAuthority.const ');
 		logger.debug('Organization.const ');
 		if (typeof name === 'undefined' || name === null) {
@@ -46,6 +46,11 @@ var CertificateAuthority = class {
 			throw new Error('Missing url parameter');
 		}
 		this._name = name;
+		if(caname) {
+			this._caname = caname;
+		} else {
+			this._caname = name;
+		}
 		this._url = url;
 		this._connection_options = connection_options;
 		this._tlsCACerts = tlsCACerts;;
@@ -59,6 +64,15 @@ var CertificateAuthority = class {
 	 */
 	getName() {
 		return this._name;
+	}
+
+	/**
+	 * Gets the name of this CertificateAuthority to use in request
+	 *
+	 * @returns {string} The ca name of this CertificateAuthority
+	 */
+	getCaName() {
+		return this._caname;
 	}
 
 	/**

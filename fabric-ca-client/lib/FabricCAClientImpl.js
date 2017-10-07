@@ -46,7 +46,8 @@ var FabricCAServices = class extends BaseClient {
 	/**
 	 * constructor
 	 *
-	 * @param {string} url The endpoint URL for Fabric CA services of the form: "http://host:port" or "https://host:port"
+	 * @param {string | object} url The endpoint URL for Fabric CA services of the form: "http://host:port" or "https://host:port"
+	 	When this parameter is an object then it must include the parameters listed as key value pairs.
 	 * @param {TLSOptions} tlsOptions The TLS settings to use when the Fabric CA services endpoint uses "https"
 	 * @param {string} caName The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
 	 *  a single server. If omitted or null or an empty string, then the default CA is the target of requests
@@ -60,8 +61,20 @@ var FabricCAServices = class extends BaseClient {
 	 *  is provided for this purpose, which can be used on top of any implementation of the {@link KeyValueStore} interface,
 	 *  such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
 	 */
-	constructor(url, tlsOptions, caName, cryptoSuite) {
+	constructor(url_p, tlsOptions_p, caName_p, cryptoSuite_p) {
 		super();
+		let url, tlsOptions, caName, cryptoSuite;
+		if(typeof url_p === 'object') {
+			url = url_p.url;
+			tlsOptions = url_p.tlsOptions;
+			caName = url_p.caName;
+			cryptoSuite = url_p.cryptoSuite
+		} else {
+			url = url_p;
+			tlsOptions = tlsOptions_p;
+			caName = caName_p;
+			cryptoSuite = cryptoSuite_p;
+		}
 
 		var endpoint = FabricCAServices._parseURL(url);
 

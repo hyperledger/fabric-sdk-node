@@ -94,6 +94,8 @@ var Client = class extends BaseClient {
 		// an admin defined for the current user's organization.
 		// This will get set during the setUserFromConfig
 		this._adminSigningIdentity = null;
+
+		this._certificate_authority = null;
 	}
 
 	/**
@@ -108,6 +110,7 @@ var Client = class extends BaseClient {
 		if(client._network_config.hasClient()) {
 			client._setAdminFromConfig();
 		}
+
 		return client;
 	}
 
@@ -126,7 +129,10 @@ var Client = class extends BaseClient {
 		}
 		if(this._network_config.hasClient()) {
 			this._setAdminFromConfig();
+			// reset the CA incase the org changed
+			this._certificate_authority = null;
 		}
+
 	}
 
 	/**
@@ -277,6 +283,48 @@ var Client = class extends BaseClient {
 		var orderer = new Orderer(url, opts);
 		return orderer;
 	}
+
+	/**
+	 * Returns a CertificateAuthority implementation as defined by the settings in the
+	 * currently loaded network configuration and the client configuration. A network
+	 * configuration must be loaded for this get method to return a Certificate Authority.
+	 */
+	 getCertificateAuthority() {
+		 if(this._certificate_authority) {
+			 return this._certificate_authority;
+		 }
+		 if(!this._network_config) {
+			 throw new Error('No network configuration has been loaded');
+		 }
+		 let ca_url, tls_options, ca_name = null;
+		 let client_config = this._network_config.getClientConfig();
+		 if(client_config && client_config.organization) {
+			 let organization_config = this._network_config.getOrganization(client_config.organization);
+			 if(organization_config) {
+				 let cas = organization_config.getCertificateAuthorities();
+				 if(cas.length > 0) {
+					 let ca = cas[0];
+					 tls_options = {
+						 trustedRoots: [ca.getTlsCACerts()], //TODO handle non existent
+						 verify: ca.getConnectionOptions().verify //TODO handle non existent
+					 };
+					 ca_url = ca.getUrl();
+					 ca_name = ca.getCaName();
+				 }
+			 }
+		 }
+
+		 if(!ca_url) {
+			 throw new Error('Network configuration is missing this client\'s organization and certificate authority');
+		 }
+
+		 let ca_service_class = Client.getConfigSetting('certificate-authority-client');
+		 let ca_service_impl = require(ca_service_class);
+		 let ca_service = new ca_service_impl( {url : ca_url, tlsOptions : tls_options, caName : ca_name, cryptoSuite : this._crypto_suite});
+		 this._certificate_authority = ca_service;
+
+		 return ca_service;
+	 }
 
 	/**
 	 * Returns a new {@link TransactionID} object. Fabric transaction ids are constructed
@@ -1058,32 +1106,22 @@ var Client = class extends BaseClient {
 					return reject( new Error('Missing parameter. Must have a password.'));
 				}
 
-				let ca_url, tls_options, ca_name = null;
-				let client_config = self._network_config.getClientConfig();
-				if(client_config && client_config.organization) {
-					let organization_config = self._network_config.getOrganization(client_config.organization);
-					if(organization_config) {
-						mspid = organization_config.getMspid();
-						let cas = organization_config.getCertificateAuthorities();
-						if(cas.length > 0) {
-							let ca = cas[0];
-							tls_options = {
-								trustedRoots: [ca.getTlsCACerts()], //TODO handle non existent
-								verify: ca.getConnectionOptions().verify //TODO handle non existent
-							};
-							ca_url = ca.getUrl();
-							ca_name = ca.getName();
+				let ca_service, mspid = null;
+				try {
+					let client_config = this._network_config.getClientConfig();
+					if(client_config && client_config.organization) {
+						let organization_config = this._network_config.getOrganization(client_config.organization);
+						if(organization_config) {
+							mspid = organization_config.getMspid();
 						}
 					}
+					if(!mspid) {
+						throw new Error('Network configuration is missing this client\'s organization and mspid');
+					}
+					ca_service = self.getCertificateAuthority();
+				} catch(err) {
+					reject(err);
 				}
-
-				if(!ca_url || !tls_options || !mspid) {
-					return reject(new Error('Configuration is missing this client\'s organization and certificate authority'));
-				}
-
-				let ca_service_class = Client.getConfigSetting('certificate-authority-client');
-				var ca_service_impl = require(ca_service_class);
-				var ca_service = new ca_service_impl(ca_url, tls_options, ca_name, self._crypto_suite);
 
 				return ca_service.enroll({
 					enrollmentID: opts.username,

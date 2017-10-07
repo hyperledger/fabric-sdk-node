@@ -313,10 +313,27 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 		 *  S T A R T   U S I N G
 		 */
 		 /*
+ 		 * switch to organization org2
+ 		 */
+
+ 		client.loadFromConfig('test/fixtures/org2.yaml');
+
+ 		return client.initCredentialStores();
+ 	}).then((nothing) => {
+ 		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
+
+		let ca = client.getCertificateAuthority();
+		if(ca) {
+			t.equals(ca._fabricCAClient._caName,'ca-org2', 'checking that caname is correct for the newly created ca');
+		} else {
+			t.fail('Failed - CertificateAuthority should have been created');
+		}
+
+		 /*
  		 * switch to organization org1
  		 */
  		client.loadFromConfig('test/fixtures/org1.yaml');
- 		t.pass('Successfully loaded \'admin\' for org1');
+ 		t.pass('Successfully loaded config for org1');
 
  		return client.initCredentialStores();
  	}).then((nothing) => {
@@ -325,6 +342,21 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 		return client.setUserContext({username:'admin', password:'adminpw'});
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\' for org1');
+
+		let ca = client.getCertificateAuthority();
+		if(ca) {
+			t.equals(ca._fabricCAClient._caName,'ca-org1', 'checking that caname is correct after resetting the config');
+		} else {
+			t.fail('Failed - CertificateAuthority should have been created');
+		}
+
+		return ca.register({enrollmentID: 'user1', affiliation: 'org1'}, admin);
+	}).then((secret) => {
+		t.pass('Successfully registered user \'user1\' for org1');
+
+		return client.setUserContext({username:'user1', password:secret});
+	}).then((user)=> {
+		t.pass('Successfully enrolled user \'user1\' for org1');
 
 		let tx_id = client.newTransactionID(); // get a non admin transaction ID
 		var request = {

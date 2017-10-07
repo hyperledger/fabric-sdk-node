@@ -1205,3 +1205,17 @@ test('\n\n*** Test per-call timeout support ***\n', function(t) {
 		t.end();
 	});
 });
+
+test('\n\n*** Test per-call timeout support ***\n', function(t) {
+	let client = new Client();
+	t.throws(
+		() => {
+
+			client.getCertificateAuthority();
+		},
+		/No network configuration has been loaded/,
+		'Check that No network configuration has been loaded'
+	);
+
+	t.end();
+});
