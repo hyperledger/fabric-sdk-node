@@ -287,8 +287,7 @@ function makeEnvelope(signer, type) {
 			// send to orderer
 	// 		var request = {
 	// 			proposalResponses: 'blah',
-	// 			proposal: 'blah',
-	// 			header: 'blah'
+	// 			proposal: 'blah'
 	// 		};
 	// 		return channel.sendTransaction(request);
 	// ).then(
@@ -311,4 +310,3 @@ function makeEnvelope(signer, type) {
 	// 	t.pass('Error: ' + err);
 	// 	t.end();
 	// });
-

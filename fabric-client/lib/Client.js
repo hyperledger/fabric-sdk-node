@@ -873,7 +873,7 @@ var Client = class extends BaseClient {
 			return clientUtils.sendPeersProposal(peers, signed_proposal, timeout)
 			.then(
 				function(responses) {
-					return [responses, proposal, header];
+					return [responses, proposal];
 				}
 			);
 		});

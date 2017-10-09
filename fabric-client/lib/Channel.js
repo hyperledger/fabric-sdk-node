@@ -1203,7 +1203,7 @@ var Channel = class {
 		return clientUtils.sendPeersProposal(peers, signed_proposal, timeout)
 		.then(
 			function(responses) {
-				return [responses, proposal, header];
+				return [responses, proposal];
 			}
 		);
 	}
@@ -1318,7 +1318,7 @@ var Channel = class {
 		return clientUtils.sendPeersProposal(request.targets, signed_proposal, timeout)
 		.then(
 			function(responses) {
-				return Promise.resolve([responses, proposal, header]);
+				return Promise.resolve([responses, proposal]);
 			}
 		).catch(
 			function(err) {
