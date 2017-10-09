@@ -979,10 +979,13 @@ var Channel = class {
 	/**
 	 * Queries the ledger on the target peer for instantiated chaincodes on this channel.
 	 *
-	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
-	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
-	 *                  this call to the peer.
+	 * @param {Peer} target - Optional. The peer to send this query to. If no
+	 *        target is passed, the query is sent to the first peer that was
+	 *        added to the channel object.
+	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials
+	 *        should be used in making this call to the peer. An administrative
+	 *        identity must have been loaded by network configuration or by
+	 *        using the 'setAdminSigningIdentity' method.
 	 * @returns {Promise} A Promise for a fully decoded {@link ChaincodeQueryResponse} object.
 	 */
 	queryInstantiatedChaincodes(target, useAdmin) {
@@ -1340,11 +1343,16 @@ var Channel = class {
 
 	/**
 	 * @typedef {Object} TransactionRequest
-	 * @property {array} proposalResponses - An array or a single {@link ProposalResponse} objects
-	 *                                       containing the response from the
-	 *                                       [endorsement]{@link Channel#sendTransactionProposal} call
-	 * @Property {Object} proposal - A Proposal object containing the original
-	 *                                        request for endorsement(s)
+	 * @property {array} proposalResponses - An array of or a single
+	 *           {@link ProposalResponse} object containing the response from the
+	 *           [endorsement]{@link Channel#sendTransactionProposal} call
+	 * @property {Object} proposal - A Proposal object containing the original
+	 *           request for endorsement(s)
+	 * @property {Object} txID - Optional. - Must be the transaction ID object
+	 *           used in the proposal endorsement. The transactionID will
+	 *           only be used to determine if the signing of the request
+	 *           should be done by the admin identity or the user assigned
+	 *           to the client instance.
 	 */
 
 	/**

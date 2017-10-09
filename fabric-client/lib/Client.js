@@ -285,7 +285,7 @@ var Client = class extends BaseClient {
 	 * the peers in the organization that have the "eventUrl" setting.
 	 *
 	 * @param {string} org_name - Optional - The name of an organization
-	 * @returns {[EventHub]} An array of EventHub instances that are defined for this organization
+	 * @returns {EventHub[]} An array of EventHub instances that are defined for this organization
 	 */
 	 getEventHubsForOrg(org_name) {
 		 var event_hubs = [];
@@ -312,7 +312,7 @@ var Client = class extends BaseClient {
  	 * configuration's client section will be used.
  	 *
  	 * @param {string} org_name - Optional - The name of an organization
- 	 * @returns {[Peer]} An array of Peer instances that are defined for this organization
+ 	 * @returns {Peer[]} An array of Peer instances that are defined for this organization
  	 */
  	 getPeersForOrg(org_name) {
  		 var peers = [];
@@ -747,7 +747,9 @@ var Client = class extends BaseClient {
 	 *
 	 * @param {Peer} peer - The target peer to send the query
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials
-	 *        should be used in making this call to the peer.
+	 *        should be used in making this call to the peer. An administrative
+	 *        identity must have been loaded by network configuration or by
+	 *        using the 'setAdminSigningIdentity' method.
 	 * @returns {Promise} A promise to return a {@link ChannelQueryResponse}
 	 */
 	queryChannels(peer, useAdmin) {
@@ -833,7 +835,9 @@ var Client = class extends BaseClient {
 	 *
 	 * @param {Peer} peer - The target peer
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials
-	 *        should be used in making this call to the peer.
+	 *        should be used in making this call to the peer. An administrative
+	 *        identity must have been loaded by network configuration or by
+	 *        using the 'setAdminSigningIdentity' method.
 	 * @returns {Promise} Promise for a {@link ChaincodeQueryResponse} object
 	 */
 	queryInstalledChaincodes(peer, useAdmin) {
@@ -900,7 +904,7 @@ var Client = class extends BaseClient {
 	 * @property {Peer[]} targets - Optional. An array of Peer objects where the
 	 *           chaincode will be installed. When excluded, the peers assigned
 	 *           to this client's organization will be used as defined in the
-	 *           network configuration. If the 'channels' property is included,
+	 *           network configuration. If the 'channelNames' property is included,
 	 *           the target peers will be based the peers defined in the channels.
 	 * @property {string} chaincodePath - Required. The path to the location of
 	 *           the source code of the chaincode. If the chaincode type is golang,
@@ -1057,10 +1061,11 @@ var Client = class extends BaseClient {
 	}
 
 	/**
-	 * Sets the state and crypto stores for use by this client.
+	 * Sets the state and crypto suite for use by this client.
 	 * This requires that a network config has been loaded. Will use the settings
 	 * from the network configuration along with the system configuration to build
-	 * instances of the stores and assign them to this client.
+	 * instances of the stores and assign them to this client and the crypto suites
+	 * if needed.
 	 *
 	 * @returns {Promise} - A promise to build a key value store and crypto store.
 	 */
