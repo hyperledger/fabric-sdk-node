@@ -23,7 +23,6 @@
  */
 
 var utils = require('./utils.js');
-var Remote = require('./Remote');
 
 /**
  * Abstract class for a Key-Value store. The Channel class uses this store
