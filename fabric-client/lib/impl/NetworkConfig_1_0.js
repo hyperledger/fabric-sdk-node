@@ -43,6 +43,7 @@ var HTTP_CONNECTION_OPTIONS = 'httpOptions';
 var URL = 'url';
 var EVENT_URL = 'eventUrl';
 var NAME = 'name';
+var CANAME = 'caName';
 var PEM = 'pem';
 var PATH = 'path';
 var REGISTRAR = 'registrar';
@@ -271,6 +272,7 @@ var NetworkConfig_1_0 = class {
 			if(certificateAuthority_config) {
 				certificateAuthority = new CertificateAuthority(
 					name,
+					certificateAuthority_config[CANAME],
 					certificateAuthority_config[URL],
 					certificateAuthority_config[HTTP_CONNECTION_OPTIONS],
 					getTLSCACert(certificateAuthority_config),

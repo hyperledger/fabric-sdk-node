@@ -134,6 +134,16 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		'Should be able to instantiate a new instance of "Channel" with blank definition in the network configuration'
 	);
 
+	t.throws(
+		() => {
+			var client = new Client();
+			client._network_config = new NetworkConfig({}, client);
+			client.getCertificateAuthority();
+		},
+		/Network configuration is missing this client\'s organization and certificate authority/,
+		'Check for Network configuration is missing this client\'s organization and certificate authority'
+	);
+
 	network_config.version = '1.0.0';
 	network_config.channels = {
 		'mychannel' : {
@@ -607,8 +617,9 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 
 	t.doesNotThrow(
 		() => {
-			var certificateAuthority = new CertificateAuthority('name', 'url', 'connection', 'tlscert', 'registrar');
+			var certificateAuthority = new CertificateAuthority('name', 'caname', 'url', 'connection', 'tlscert', 'registrar');
 			t.equals('name',certificateAuthority.getName(), 'check name');
+			t.equals('caname',certificateAuthority.getCaName(), 'check caname');
 			t.equals('url',certificateAuthority.getUrl(), 'check url');
 			t.equals('connection',certificateAuthority.getConnectionOptions(), 'check connection options');
 			t.equals('tlscert',certificateAuthority.getTlsCACerts(), 'check tlscert');

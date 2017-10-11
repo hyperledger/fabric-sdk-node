@@ -216,7 +216,7 @@ certificateAuthorities:
       - enrollId: admin
         enrollSecret: adminpw
     # [Optional] The optional name of the CA.
-    caName: caNameHere
+    caName: ca-org1
 
   ca-org2:
     url: https://localhost:8054
@@ -228,4 +228,4 @@ certificateAuthorities:
       - enrollId: admin
         enrollSecret: adminpw
     # [Optional] The optional name of the CA.
-    caName: caNameHere
+    caName: ca-org2
