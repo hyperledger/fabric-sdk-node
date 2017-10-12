@@ -78,13 +78,6 @@ interface UserOptions {
   cryptoContent: IdentityFiles | IdentityPEMs;
 }
 
-interface UserConfig {
-  enrollmentID: string;
-  name: string
-  roles?: string[];
-  affiliation?: string;
-}
-
 interface ICryptoSuite {
   decrypt(key: ICryptoKey, cipherText: Buffer, opts: any): Buffer;
   deriveKey(key: ICryptoKey): ICryptoKey;
@@ -172,8 +165,16 @@ interface ChaincodeInfo {
   vscc: string;
 }
 
+interface ChannelInfo {
+  channel_id: string;
+}
+
 interface ChaincodeQueryResponse {
   chaincodes: ChaincodeInfo[];
+}
+
+interface ChannelQueryResponse {
+  channels: ChannelInfo[];
 }
 
 interface OrdererRequest {
@@ -213,23 +214,12 @@ interface ProposalResponse {
 
 type ProposalResponseObject = [Array<ProposalResponse>, Proposal, Header];
 
-declare class User {
-  getName(): string;
-  getRoles(): string[];
-  setRoles(roles: string[]): void;
-  getAffiliation(): string;
-  setAffiliation(affiliation: string): void;
-  getIdentity(): IIdentity;
-  getSigningIdentity(): ISigningIdentity;
-  setCryptoSuite(suite: ICryptoSuite): void;
-  setEnrollment(privateKey: ICryptoKey, certificate: string, mspId: string): Promise<void>;
-}
-
 declare class Orderer {
 }
 
 declare class Peer {
-
+  setName(name: string): void;
+  getName(): string;
 }
 
 declare class EventHub {
@@ -237,8 +227,10 @@ declare class EventHub {
   disconnect(): void;
   getPeerAddr(): string;
   setPeerAddr(url: string, opts: ConnectionOptions): void;
-  isConnected(): boolean;
+  isconnected(): boolean;
   registerBlockEvent(onEvent: (b: any) => void, onError?: (err: Error) => void): number;
+  registerTxEvent(txId: string, onEvent: (txId: any, code: string) => void, onError?: (err: Error) => void): void;
+  unregisterTxEvent(txId: string): void;
 }
 
 declare class Channel {
@@ -252,9 +244,16 @@ declare class Channel {
   sendTransactionProposal(request: ChaincodeInvokeRequest): Promise<ProposalResponseObject>;
   sendTransaction(request: TransactionRequest): Promise<BroadcastResponse>;
   queryByChaincode(request: ChaincodeQueryRequest): Promise<Buffer[]>;
+  queryBlock(blockNumber: number, target: Peer): Promise<any>;
+  queryTransaction(txId: string, target: Peer): Promise<any>;
+  queryInstantiatedChaincodes(target: Peer): Promise<ChaincodeQueryResponse>;
+  queryInfo(target: Peer): Promise<any>;
+  getOrderers(): Orderer[];
+  getPeers(): Peer[];
 }
 
 declare abstract class BaseClient {
+  static setLogger(logger: any): void;
   static addConfigFile(path: string): void;
   static getConfigSetting(name: string, default_value?: any): any;
   static newCryptoSuite(): ICryptoSuite;
@@ -265,11 +264,33 @@ declare abstract class BaseClient {
 }
 
 declare class TransactionId {
-  getTransactionId(): string;
+  getTransactionID(): string;
+}
+
+interface UserConfig {
+  enrollmentID: string;
+  name: string
+  roles?: string[];
+  affiliation?: string;
+}
+
+declare class User {
+  isEnrolled(): boolean;
+  getName(): string;
+  getRoles(): string[];
+  setRoles(roles: string[]): void;
+  getAffiliation(): string;
+  setAffiliation(affiliation: string): void;
+  getIdentity(): IIdentity;
+  getSigningIdentity(): ISigningIdentity;
+  setCryptoSuite(suite: ICryptoSuite): void;
+  setEnrollment(privateKey: ICryptoKey, certificate: string, mspId: string): Promise<void>;
 }
 
 declare class Client extends BaseClient {
   isDevMode(): boolean;
+  getUserContext(name: string, checkPersistence: boolean): Promise<User> | User;
+  setUserContext(user: User, skipPersistence?: boolean): Promise<User>;
   setDevMode(mode: boolean): void;
   newOrderer(url: string, opts: ConnectionOptions): Orderer;
   newChannel(name: string): Channel;
@@ -281,7 +302,9 @@ declare class Client extends BaseClient {
   createUser(opts: UserOptions): Promise<User>;
   signChannelConfig(config: Buffer): ConfigSignature;
   setStateStore(store: IKeyValueStore): void;
-  installChaincode(request: ChaincodeInstallRequest): Promise<ProposalResponse>;
+  installChaincode(request: ChaincodeInstallRequest): Promise<ProposalResponseObject>;
+  queryInstalledChaincodes(target: Peer): Promise<ChaincodeQueryResponse>;
+  queryChannels(target: Peer): Promise<ChannelQueryResponse>;
 }
 
 declare module 'fabric-client' {
