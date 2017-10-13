@@ -269,8 +269,8 @@ test('FabricCAServices:  Test newCryptoKeyStore() function', function(t) {
 	}
 	t.end();
 });
-// Test optional consturctor
-test('FabricCAServices:  Test optional consturctor', function(t) {
+// Test optional constructor
+test('FabricCAServices:  Test optional constructor', function(t) {
 	let opts = {
 		url : 'http://localhost:7054'
 	}
@@ -280,7 +280,7 @@ test('FabricCAServices:  Test optional consturctor', function(t) {
 			let service = new FabricCAServices(opts);
 		},
 		null,
-		'FabricCAServices consturctor with object and just url'
+		'FabricCAServices constructor with object and just url'
 	);
 
 	opts.caName = 'someca';
@@ -290,7 +290,7 @@ test('FabricCAServices:  Test optional consturctor', function(t) {
 			t.equals(service._fabricCAClient._caName,'someca','Caname should have been passed correctly');
 		},
 		null,
-		'FabricCAServices consturctor with object and just url'
+		'FabricCAServices constructor with object and just url'
 	);
 
 	opts.cryptoSuite = 'somesuite';
@@ -300,7 +300,7 @@ test('FabricCAServices:  Test optional consturctor', function(t) {
 			t.equals(service._fabricCAClient._cryptoPrimitives,'somesuite','CryptoSuite should have been passed correctly');
 		},
 		null,
-		'FabricCAServices consturctor with object and just url'
+		'FabricCAServices constructor with object and just url'
 	);
 
 	opts.tlsOptions = {verify : 'someverify'};
@@ -310,7 +310,7 @@ test('FabricCAServices:  Test optional consturctor', function(t) {
 			t.equals(service._fabricCAClient._tlsOptions.verify,'someverify','tlsOptions should have been passed correctly');
 		},
 		null,
-		'FabricCAServices consturctor with object and just url'
+		'FabricCAServices constructor with object and just url'
 	);
 
 	t.end();
