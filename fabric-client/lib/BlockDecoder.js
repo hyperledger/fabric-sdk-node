@@ -498,7 +498,7 @@ rule
 		var block = {};
 		try {
 			block.header = {
-				number: proto_block.header.number,
+				number: proto_block.header.number.toString(),
 				previous_hash: proto_block.header.previous_hash.toString('hex'),
 				data_hash: proto_block.header.data_hash.toString('hex')
 			};
@@ -548,7 +548,7 @@ payload -- {}
 
 function decodeBlockHeader(proto_block_header) {
 	var block_header = {};
-	block_header.number = proto_block_header.getNumber();
+	block_header.number = proto_block_header.getNumber().toString();
 	block_header.previous_hash = proto_block_header.getPreviousHash().toBuffer().toString('hex');
 	block_header.data_hash = proto_block_header.getDataHash().toBuffer().toString('hex');
 
@@ -614,7 +614,7 @@ function decodeLastConfigSequenceNumber(metadata_bytes) {
 	if (metadata_bytes) {
 		var proto_metadata = _commonProto.Metadata.decode(metadata_bytes);
 		var proto_last_config = _commonProto.LastConfig.decode(proto_metadata.getValue());
-		last_config.value.index = proto_last_config.getIndex();
+		last_config.value.index = proto_last_config.getIndex().toString(); //unit64
 		last_config.signatures = decodeMetadataValueSignatures(proto_metadata.signatures);
 	}
 	return last_config;
@@ -701,7 +701,7 @@ function decodeConfigEnvelope(config_envelope_bytes) {
 
 function decodeConfig(proto_config) {
 	var config = {};
-	config.sequence = proto_config.getSequence();
+	config.sequence = proto_config.getSequence().toString(); //unit64
 	config.channel_group = decodeConfigGroup(proto_config.getChannelGroup());
 	config.type = proto_config.getType();
 
@@ -811,7 +811,7 @@ function decodeConfigValue(proto_config_value) {
 		break;
 	case 'ChannelRestrictions':
 		var proto_channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(proto_config_value.value.value);
-		config_value.value.max_count = proto_channel_restrictions.getMaxCount(); //unit64
+		config_value.value.max_count = proto_channel_restrictions.getMaxCount().toString(); //unit64
 		break;
 	case 'CreationPolicy':
 		var proto_creation_policy = _ordererConfigurationProto.CreationPolicy.decode(proto_config_value.value.value);
@@ -1092,7 +1092,7 @@ function decodeChannelHeader(header_bytes) {
 	channel_header.timestamp = timeStampToDate(proto_channel_header.getTimestamp()).toString();
 	channel_header.channel_id = proto_channel_header.getChannelId();
 	channel_header.tx_id = proto_channel_header.getTxId();
-	channel_header.epoch = proto_channel_header.getEpoch().toInt();
+	channel_header.epoch = proto_channel_header.getEpoch().toString(); //unit64
 	//TODO need to decode this
 	channel_header.extension = proto_channel_header.getExtension().toBuffer();
 
@@ -1251,8 +1251,8 @@ function decodeKVRead(proto_kv_read) {
 	let proto_version = proto_kv_read.getVersion();
 	if (proto_version) {
 		kv_read.version = {};
-		kv_read.version.block_num = proto_version.getBlockNum();
-		kv_read.version.tx_num = proto_version.getTxNum();
+		kv_read.version.block_num = proto_version.getBlockNum().toString();
+		kv_read.version.tx_num = proto_version.getTxNum().toString();
 	} else {
 		kv_read.version = null;
 	}
@@ -1272,7 +1272,8 @@ function decodeRangeQueryInfo(proto_range_query_info) {
 	if (proto_raw_reads) {
 		range_query_info.reads_info.kv_reads = [];
 		for (let i in proto_raw_reads.kv_reads) {
-			range_query_info.reads_info.kv_reads.push(proto_raw_reads.kv_reads[i]);
+			let kv_read = decodeKVRead(proto_raw_reads.kv_reads[i]);
+			range_query_info.reads_info.kv_reads.push(kv_read);
 		}
 	}
 	// or QueryReadsMerkleSummary

@@ -84,8 +84,8 @@ test('\n\n*** BlockDecoder test for readwrite sets', (t) => {
 
 	t.equal('test1',results_json.ns_rwset[0].namespace, ' check results_json.ns_rwset[0].namespace');
 	t.equal('read key',results_json.ns_rwset[0].rwset.reads[0].key, ' check results_json.ns_rwset[0].rwset.reads[0].key');
-	t.equal(12,results_json.ns_rwset[0].rwset.reads[0].version.block_num.low, ' check results_json.ns_rwset[0].rwset.reads[0].version.block_num');
-	t.equal(21,results_json.ns_rwset[0].rwset.reads[0].version.tx_num.low, ' check results_json.ns_rwset[0].rwset.reads[0].version.tx_num');
+	t.equal('12',results_json.ns_rwset[0].rwset.reads[0].version.block_num, ' check results_json.ns_rwset[0].rwset.reads[0].version.block_num');
+	t.equal('21',results_json.ns_rwset[0].rwset.reads[0].version.tx_num, ' check results_json.ns_rwset[0].rwset.reads[0].version.tx_num');
 
 	t.equal('start',results_json.ns_rwset[0].rwset.range_queries_info[0].start_key, ' check results_json.ns_rwset[0].rwset.range_queries_info[0].start_key');
 	t.equal('end',results_json.ns_rwset[0].rwset.range_queries_info[0].end_key, ' check results_json.ns_rwset[0].rwset.range_queries_info[0].end_key');
@@ -121,11 +121,11 @@ test('\n\n*** BlockDecoder test for readwrite sets', (t) => {
 
 	t.equal('test2',results_json.ns_rwset[0].namespace, ' check results_json.ns_rwset[0].namespace');
 	t.equal('read key',results_json.ns_rwset[0].rwset.reads[0].key, ' check results_json.ns_rwset[0].rwset.reads[0].key');
-	t.equal(12,results_json.ns_rwset[0].rwset.reads[0].version.block_num.low, ' check results_json.ns_rwset[0].rwset.reads[0].version.block_num');
-	t.equal(21,results_json.ns_rwset[0].rwset.reads[0].version.tx_num.low, ' check results_json.ns_rwset[0].rwset.reads[0].version.tx_num');
+	t.equal('12',results_json.ns_rwset[0].rwset.reads[0].version.block_num, ' check results_json.ns_rwset[0].rwset.reads[0].version.block_num');
+	t.equal('21',results_json.ns_rwset[0].rwset.reads[0].version.tx_num, ' check results_json.ns_rwset[0].rwset.reads[0].version.tx_num');
 	t.equal('range query key',results_json.ns_rwset[0].rwset.range_queries_info[0].reads_info.kv_reads[0].key,' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].key');
-	t.equal(13,results_json.ns_rwset[0].rwset.range_queries_info[0].reads_info.kv_reads[0].version.block_num.low, ' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].version.tx_num');
-	t.equal(31,results_json.ns_rwset[0].rwset.range_queries_info[0].reads_info.kv_reads[0].version.tx_num.low, ' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].version.tx_num.');
+	t.equal('13',results_json.ns_rwset[0].rwset.range_queries_info[0].reads_info.kv_reads[0].version.block_num, ' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].version.block_num');
+	t.equal('31',results_json.ns_rwset[0].rwset.range_queries_info[0].reads_info.kv_reads[0].version.tx_num, ' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].version.tx_num.');
 
 	// take range query with query reads out and add range query with QueryReadsMerkleSummary
 	range_query_info_proto.setRawReads(null);
@@ -150,8 +150,8 @@ test('\n\n*** BlockDecoder test for readwrite sets', (t) => {
 
 	t.equal('test3',results_json.ns_rwset[0].namespace, ' check results_json.ns_rwset[0].namespace');
 	t.equal('read key',results_json.ns_rwset[0].rwset.reads[0].key, ' check results_json.ns_rwset[0].rwset.reads[0].key');
-	t.equal(12,results_json.ns_rwset[0].rwset.reads[0].version.block_num.low, ' check results_json.ns_rwset[0].rwset.reads[0].version.block_num');
-	t.equal(21,results_json.ns_rwset[0].rwset.reads[0].version.tx_num.low, ' check results_json.ns_rwset[0].rwset.reads[0].version.tx_num');
+	t.equal('12',results_json.ns_rwset[0].rwset.reads[0].version.block_num, ' check results_json.ns_rwset[0].rwset.reads[0].version.block_num');
+	t.equal('21',results_json.ns_rwset[0].rwset.reads[0].version.tx_num, ' check results_json.ns_rwset[0].rwset.reads[0].version.tx_num');
 	t.equal(44,results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_degree,' check results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_degree');
 	t.equal(33,results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_level,' check results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_level');
 	t.equal('some hash',results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_level_hashes[0].toString('utf8'),' check results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_level_hashes[0]');
