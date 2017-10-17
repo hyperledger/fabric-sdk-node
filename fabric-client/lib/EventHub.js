@@ -181,12 +181,6 @@ var EventHub = class {
 		if (typeof clientContext === 'undefined' || clientContext === null || clientContext === '')
 			throw new Error('Missing required argument: clientContext');
 
-		if (typeof clientContext.getUserContext !== 'function')
-			throw new Error('Invalid clientContext argument: missing required function "getUserContext"');
-
-		if (typeof clientContext.getUserContext() === 'undefined' || clientContext.getUserContext() === null)
-			throw new Error('The clientContext has not been properly initialized, missing userContext');
-
 		this._clientContext = clientContext;
 	}
 
@@ -244,6 +238,13 @@ var EventHub = class {
 	connect(){
 		logger.debug('connect - start');
 		this._connect_running = false; //override a running connect
+
+		if (typeof this._clientContext.getUserContext !== 'function')
+			throw new Error('Invalid clientContext argument: missing required function "getUserContext"');
+
+		if (typeof this._clientContext.getUserContext() === 'undefined' || this._clientContext.getUserContext() === null)
+			throw new Error('The clientContext has not been properly initialized, missing userContext');
+
 		this._connect();
 	}
 
