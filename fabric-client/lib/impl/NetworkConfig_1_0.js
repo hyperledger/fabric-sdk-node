@@ -134,6 +134,9 @@ var NetworkConfig_1_0 = class {
 					}
 				}
 			}
+			if(result.organization) {
+				result.mspid = this._network_config.organizations[result.organization].mspid;
+			}
 		}
 
 		return result;

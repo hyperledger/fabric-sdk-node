@@ -375,6 +375,24 @@ var Client = class extends BaseClient {
 
 		 return result;
 	 }
+
+	/**
+	 * Returns the mspid of the currently loaded client's organization
+	 * as defined in the network configuration.
+	 *
+	 * @returns {string} the mspid of the organization defined in the client
+	 *          section of the loaded network configuration
+	 */
+	 getMspid() {
+		 let result = null;
+		 let client_config = this.getClientConfig();
+		 if(client_config) {
+			 result = client_config.mspid;
+		 }
+
+		 return result;
+	 }
+
 	/**
 	 * Returns a new {@link TransactionID} object. Fabric transaction ids are constructed
 	 * as a hash of a nonce concatenated with the signing identity's serialized bytes. The
