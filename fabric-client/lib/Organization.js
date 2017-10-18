@@ -46,6 +46,7 @@ var Organization = class {
 		this._name = name;
 		this._mspid = mspid;
 		this._peers = [];
+		this._event_hubs = [];
 		this._certificateAuthorities = [];
 		this._adminPrivateKeyPEM = null;
 		this._adminCertPEM = null;
@@ -85,6 +86,24 @@ var Organization = class {
 	 */
 	getPeers() {
 		return this._peers;
+	}
+
+	/**
+	 * Add a {@link EventHub} to this organizations
+	 *
+	 * @param {EventHub} event_hub - The event hub instance to add to this organizations list of event hubs
+	 */
+	addEventHub(event_hub) {
+		this._event_hubs.push(event_hub);
+	}
+
+	/**
+	 * Gets the list of this organizations {@link EventHub}
+	 *
+	 * @returns [{EventHub}] An array of {@link EventHub} objects
+	 */
+	getEventHubs() {
+		return this._event_hubs;
 	}
 
 	/**
@@ -137,12 +156,15 @@ var Organization = class {
 	toString() {
 		var peers = '';
 		this._peers.forEach((peer) => {peers = peers + peer.toString() + ',';});
+		var ehs = ''
+		this._event_hubs.forEach((event_hub) => {ehs = ehs + event_hub.toString() + ',';});
 		var cas = '';
 		this._certificateAuthorities.forEach((ca) => {cas = cas + ca.toString() + ',';});
 		return ' Organization : {' +
 			'name : ' +  this._name +
 			', mspid : ' +  this._mspid +
 			', peers : [' +  peers + ']' +
+			', event hubs : [' +  ehs + ']' +
 			', certificateAuthorities : [' +  cas + ']' +
 		'}';
 	}

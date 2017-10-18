@@ -183,7 +183,7 @@ var NetworkConfig_1_0 = class {
 		var event_hub = null;
 		if(this._network_config && this._network_config[PEERS_CONFIG]) {
 			let peer_config = this._network_config[PEERS_CONFIG][name];
-			if(peer_config) {
+			if(peer_config && peer_config[EVENT_URL]) {
 				let opts = {};
 				opts.pem = getTLSCACert(peer_config);
 				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
@@ -225,7 +225,13 @@ var NetworkConfig_1_0 = class {
 					for(let i in organization_config[PEERS_CONFIG]) {
 						let peer_name = organization_config[PEERS_CONFIG][i];
 						let peer = this.getPeer(peer_name);
-						if(peer) organization.addPeer(peer);
+						if(peer) {
+							organization.addPeer(peer);
+							let event_hub = this.getEventHub(peer_name);
+							if(event_hub) {
+								organization.addEventHub(event_hub);
+							}
+						}
 					}
 				}
 				if(organization_config[CAS_CONFIG]) {

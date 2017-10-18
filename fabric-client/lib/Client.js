@@ -259,15 +259,51 @@ var Client = class extends BaseClient {
 		return event_hub;
 	}
 
-	getEventHub(name) {
+	/**
+	 * Returns and {@link EventHub} object based on the event hub address
+	 * as defined in the currently loaded network configuration for the
+	 * peer by the name parameter. The named peer must have the "eventUrl"
+	 * setting or a null will be returned.
+	 *
+	 * @param {string} peer_name - The name of the peer that has an event hub defined
+	 * @returns {EventHub} The EventHub instance that has had the event hub address assigned
+	 */
+	getEventHub(peer_name) {
 		var event_hub = null;
 		if(this._network_config) {
-			event_hub = this._network_config.getEventHub(name);
+			event_hub = this._network_config.getEventHub(peer_name);
 		}
 
 		return event_hub;
 	}
 
+	/**
+	 * Returns a list of {@link EventHub} for the named organization as defined
+	 * in the currently loaded network configuration. If no organization is
+	 * provided then the organization named in the currently active network
+	 * configuration's client section will be used. The list will be based on
+	 * the peers in the organization that have the "eventUrl" setting.
+	 *
+	 * @param {string} org_name - Optional - The name of an organization
+	 * @returns {[EventHub]} An array of EventHub instances that are defined for this organization
+	 */
+	 getEventHubsForOrg(org_name) {
+		 var event_hubs = [];
+		 if(this._network_config) {
+			 if(!org_name && this._network_config.hasClient()) {
+				 let client = this._network_config.getClientConfig();
+				 org_name = client.organization;
+			 }
+			 if(org_name) {
+				 let organization = this._network_config.getOrganization(org_name);
+				 if(organization) {
+					 event_hubs = organization.getEventHubs();
+				 }
+			 }
+		 }
+
+		 return event_hubs;
+	 }
     /**
 	 * Returns an {@link Orderer} object with the given url and opts. An orderer object
 	 * encapsulates the properties of an orderer node and the interactions with it via
