@@ -271,7 +271,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 		}).then((secret) => {
 			t.pass('Successfully registered "webAdmin" who can register other users with no role');
 
-			return caService.enroll({enrollmentID: 'webAdmin', enrollmentSecret: secret, attr_reqs :[{name:'myattrib', require : true}]});
+			return caService.enroll({enrollmentID: 'webAdmin', enrollmentSecret: secret, attr_reqs :[{name:'myattrib', optional : false}]});
 		},(err) => {
 			t.fail('Failed to register "webAdmin". ' + err.stack ? err.stack : err);
 			t.end();

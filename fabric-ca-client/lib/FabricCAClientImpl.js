@@ -693,7 +693,7 @@ var FabricCAClient = class {
 	/**
 	 * @typedef {Object} AttributeRequest
 	 * @property {string} name - The name of the attribute to include in the certificate
-	 * @property {boolean} required - throw an error if the identity does not have the attribute
+	 * @property {boolean} optional - throw an error if the identity does not have the attribute
 	 */
 
 	/**
