@@ -99,15 +99,17 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			var client = Client.loadFromConfig('test/fixtures/network.yaml');
-			client.loadFromConfig({ version:'1.0.0', client : {organization : 'Org1'}});
+			client.loadFromConfig('test/fixtures/org1.yaml');
 			t.equals('Org1', client._network_config._network_config.client.organization, ' org should be Org1');
-			client.loadFromConfig({ version:'1.0.0', client : {organization : 'Org2'}});
+			client.loadFromConfig('test/fixtures/org2.yaml');
 			t.equals('Org2', client._network_config._network_config.client.organization, ' org should be Org2');
 			var channel = client.getChannel('mychannel2');
 			let event_hubs = client.getEventHubsForOrg();
-			t.equals('localhost:8053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub');
+			t.equals('localhost:8053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org2 by default');
 			event_hubs = client.getEventHubsForOrg('Org1');
-			t.equals('localhost:7053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub');
+			t.equals('localhost:7053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org1 by specifically asking for org1');
+			let client_config = client.getClientConfig();
+			t.equals('wallet-name', client_config.credentialStore.wallet, ' check to see if we can get the wallet name from the client config');
 		},
 		null,
 		'2 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'

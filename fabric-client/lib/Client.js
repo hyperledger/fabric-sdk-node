@@ -363,6 +363,19 @@ var Client = class extends BaseClient {
 	 }
 
 	/**
+	 * Returns the "client" section of the network configuration.
+	 *
+	 * @returns {object} The cleint section from the configuration
+	 */
+	 getClientConfig() {
+		 let result = null;
+		 if(this._network_config && this._network_config.hasClient()) {
+			 result = this._network_config.getClientConfig();
+		 }
+
+		 return result;
+	 }
+	/**
 	 * Returns a new {@link TransactionID} object. Fabric transaction ids are constructed
 	 * as a hash of a nonce concatenated with the signing identity's serialized bytes. The
 	 * TransactionID object keeps the nonce and the resulting id string bundled together
