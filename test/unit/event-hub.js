@@ -45,6 +45,7 @@ test('\n\n** EventHub tests\n\n', (t) => {
 	t.throws(
 		() => {
 			eh = new EventHub({});
+			eh.connect();
 		},
 		/Invalid clientContext argument: missing required function "getUserContext"/,
 		'Must pass in a clientContext that has the getUserContext() function'
@@ -53,6 +54,7 @@ test('\n\n** EventHub tests\n\n', (t) => {
 	t.throws(
 		() => {
 			eh = new EventHub({ getUserContext: function() {} });
+			eh.connect();
 		},
 		/The clientContext has not been properly initialized, missing userContext/,
 		'Must pass in a clientContext that has the user context already initialized'
@@ -61,6 +63,7 @@ test('\n\n** EventHub tests\n\n', (t) => {
 	t.throws(
 		() => {
 			eh = new EventHub({ getUserContext: function() { return null; } });
+			eh.connect();
 		},
 		/The clientContext has not been properly initialized, missing userContext/,
 		'Must pass in a clientContext that has the user context already initialized'
