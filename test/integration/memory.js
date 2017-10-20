@@ -57,8 +57,8 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 });
 
 async function looper(t) {
-	global.gc();
-	heapdump.writeSnapshot();
+	//global.gc();
+	//heapdump.writeSnapshot();
 	var skip = getArg('skipcreate', false);
 	if(skip === 'true') skip = true;
 
@@ -72,12 +72,12 @@ async function looper(t) {
 		logger.info('*********************************************\n');
 		await actions(t);
 		if(i==0) {
-			global.gc();
-			heapdump.writeSnapshot();
+			//global.gc();
+			//heapdump.writeSnapshot();
 		}
 	}
-	global.gc();
-	heapdump.writeSnapshot();
+	//global.gc();
+	//heapdump.writeSnapshot();
 }
 
 function getArg(arg_name, default_value) {
@@ -496,17 +496,21 @@ async function actions(t) {
 			t.fail('Failed to find our chaincode in the result list');
 		}
 
+		results = await channel.queryBlock(0);
+		logger.debug(' queryBlock ::%j',results);
+		t.equals('0', results.header.number, 'Should be able to find our block number');
+
 		results = await channel.queryBlock(1);
 		logger.debug(' queryBlock ::%j',results);
-		t.equals(1, results.header.number.low, 'Should be able to find our block number');
+		t.equals('1', results.header.number, 'Should be able to find our block number');
 
 		results = await channel.queryInfo();
 		logger.debug(' queryInfo ::%j',results);
-		t.pass('Successfully got the block height :: '+ results.height.low);
+		t.pass('Successfully got the block height :: '+ results.height);
 
 		results = await channel.queryBlockByHash(results.previousBlockHash);
 		logger.debug(' queryBlockHash ::%j',results);
-		t.pass('Successfully got block by hash ::'+ results.header.number.low);
+		t.pass('Successfully got block by hash ::'+ results.header.number);
 
 		results = await channel.queryTransaction(query_tx_id);
 		logger.debug(' queryTransaction ::%j',results);
@@ -514,15 +518,15 @@ async function actions(t) {
 
 		results = await channel.queryBlock(1,'peer0.org1.example.com');
 		logger.debug(' queryBlock ::%j',results);
-		t.equals(1, results.header.number.low, 'Should be able to find our block number with string peer name');
+		t.equals('1', results.header.number, 'Should be able to find our block number with string peer name');
 
 		results = await channel.queryInfo('peer0.org1.example.com');
 		logger.info(' queryInfo ::%j',results);
-		t.pass('Successfully got the block height :: '+ results.height.low);
+		t.pass('Successfully got the block height :: '+ results.height);
 
 		results = await channel.queryBlockByHash(results.previousBlockHash, 'peer0.org1.example.com');
 		logger.debug(' queryBlockHash ::%j',results);
-		t.pass('Successfully got block by hash ::'+ results.header.number.low);
+		t.pass('Successfully got block by hash ::'+ results.header.number);
 
 		results = await channel.queryTransaction(query_tx_id,'peer0.org1.example.com');
 		logger.debug(' queryTransaction ::%j',results);
@@ -530,15 +534,15 @@ async function actions(t) {
 
 		results = await channel.queryBlock(1,'peer0.org1.example.com', true);
 		logger.debug(' queryBlock ::%j',results);
-		t.equals(1, results.header.number.low, 'Should be able to find our block number by admin');
+		t.equals('1', results.header.number, 'Should be able to find our block number by admin');
 
 		results = await channel.queryInfo('peer0.org1.example.com', true);
 		logger.debug(' queryInfo ::%j',results);
-		t.pass('Successfully got the block height by admin:: '+ results.height.low);
+		t.pass('Successfully got the block height by admin:: '+ results.height);
 
 		results = await channel.queryBlockByHash(results.previousBlockHash, 'peer0.org1.example.com', true);
 		logger.debug(' queryBlockHash ::%j',results);
-		t.pass('Successfully got block by hash by admin ::' + results.header.number.low);
+		t.pass('Successfully got block by hash by admin ::' + results.header.number);
 
 		results = await channel.queryTransaction(query_tx_id,'peer0.org1.example.com', true);
 		logger.debug(' queryTransaction ::%j',results);
