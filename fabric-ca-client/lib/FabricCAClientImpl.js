@@ -76,6 +76,8 @@ var FabricCAServices = class extends BaseClient {
 			cryptoSuite = cryptoSuite_p;
 		}
 
+		this.caName = caName;
+
 		var endpoint = FabricCAServices._parseURL(url);
 
 		if (!!cryptoSuite) {
@@ -96,6 +98,15 @@ var FabricCAServices = class extends BaseClient {
 		logger.debug('Successfully constructed Fabric CA service client: endpoint - %j', endpoint);
 
 	}
+	/**
+	 * Returns the name of the certificate authority.
+	 *
+	 * @returns {string} caName
+	 */
+	getCaName() {
+		return this.caName;
+	}
+
 	/**
 	 * @typedef {Object} RegisterRequest
 	 * @property {string} enrollmentID - ID which will be used for enrollment

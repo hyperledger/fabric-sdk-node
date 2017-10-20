@@ -288,6 +288,7 @@ test('FabricCAServices:  Test optional constructor', function(t) {
 		function () {
 			let service = new FabricCAServices(opts);
 			t.equals(service._fabricCAClient._caName,'someca','Caname should have been passed correctly');
+			t.equals(service.getCaName(), 'someca', 'checket getter method for caname');
 		},
 		null,
 		'FabricCAServices constructor with object and just url'
