@@ -20,7 +20,13 @@ var testConstants = require('../../test/unit/constants.js');
 
 // by default for running the tests print debug to a file
 var debugPath = path.join(testConstants.tempdir, 'test-log/debug.log');
-process.env.HFC_LOGGING = util.format('{"debug":"%s"}', debugPath);
+process.env.HFC_LOGGING = util.format('{"debug":"%s"}', escapeWindowsPath(debugPath));
+
+function escapeWindowsPath(p) {
+	if (path.sep == "/") return p
+	return p.replace(/\\/g, "\\\\")
+}
+
 console.log('\n####################################################');
 console.log(util.format('# debug log: %s', debugPath));
 console.log('####################################################\n');
