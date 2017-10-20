@@ -104,6 +104,10 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.loadFromConfig({ version:'1.0.0', client : {organization : 'Org2'}});
 			t.equals('Org2', client._network_config._network_config.client.organization, ' org should be Org2');
 			var channel = client.getChannel('mychannel2');
+			let event_hubs = client.getEventHubsForOrg();
+			t.equals('localhost:8053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub');
+			event_hubs = client.getEventHubsForOrg('Org1');
+			t.equals('localhost:7053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub');
 		},
 		null,
 		'2 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
@@ -427,6 +431,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			var organization = client._network_config.getOrganization(organizations[0].getName());
 			var ca = organization.getCertificateAuthorities()[0];
 			t.equals('ca1',ca.getName(),'check the ca name');
+			t.equals(organization.getEventHubs().length,0,'Check that there are no event hubs');
 			organization = client._network_config.getOrganization(organizations[1].getName());
 			ca = organization.getCertificateAuthorities()[0];
 			t.equals('ca2',ca.getName(),'check the ca name');
