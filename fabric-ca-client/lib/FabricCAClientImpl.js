@@ -512,9 +512,11 @@ var FabricCAClient = class {
 		var self = this;
 		var numArgs = arguments.length;
 		//all arguments are required
-		if (!enrollmentID || !affiliation || !maxEnrollments || !signingIdentity) {
+		if (!enrollmentID || !affiliation || !signingIdentity) {
 			throw new Error('Missing required parameters.  \'enrollmentID\', \'affiliation\', \
 				and \'signingIdentity\' are all required.');
+		} else if (!(typeof maxEnrollments === 'number')) {
+			throw new Error('Missing required parameter. \'maxEnrollments\' must be a number');
 		}
 
 		return new Promise(function (resolve, reject) {

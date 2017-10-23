@@ -856,6 +856,24 @@ test('FabricCAClient: Test register with missing parameters', function (t) {
 		'Test missing all parameters'
 	);
 
+	t.throws(
+		() => {
+			//	register(enrollmentID, enrollmentSecret, role, affiliation, maxEnrollments, attrs, signingIdentity) {
+			client.register('enrollmentID', 'enrollmentSecret','role','affiliation', null, null, 'signingIdentity');
+		},
+		/Missing required parameter. \'maxEnrollments\' must be a number/,
+		'Test missing maxEnrollments parameter'
+	);
+
+	t.throws(
+		() => {
+			//	register(enrollmentID, enrollmentSecret, role, affiliation, maxEnrollments, attrs, signingIdentity) {
+			client.register('enrollmentID', 'enrollmentSecret','role','affiliation', 'a', null, 'signingIdentity');
+		},
+		/Missing required parameter. \'maxEnrollments\' must be a number/,
+		'Test wrong typeof maxEnrollments parameter'
+	);
+
 	t.end();
 });
 
