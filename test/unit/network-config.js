@@ -155,6 +155,10 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			let eventHub = client._network_config.getEventHub('peer0.org1.example.com');
 			t.equals(eventHub._ep._options['request-timeout'],3000, ' check that we get this eventHub timeout set');
 
+			delete client._network_config._network_config.certificateAuthorities['ca-org1'].tlsCACerts;
+			delete client._network_config._network_config.certificateAuthorities['ca-org1'].httpOptions;
+			let certificate_authority = client.getCertificateAuthority();
+
 		},
 		null,
 		'2 Should be able to run a number of test without error'

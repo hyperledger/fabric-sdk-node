@@ -53,7 +53,7 @@ var CertificateAuthority = class {
 		}
 		this._url = url;
 		this._connection_options = connection_options;
-		this._tlsCACerts = tlsCACerts;;
+		this._tlsCACerts = tlsCACerts;
 		this._registrar = registrar;
 	}
 

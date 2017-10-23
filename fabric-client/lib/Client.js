@@ -368,9 +368,20 @@ var Client = class extends BaseClient {
 				 let cas = organization_config.getCertificateAuthorities();
 				 if(cas.length > 0) {
 					 let ca = cas[0];
+					 let tlsCACerts = ca.getTlsCACerts();
+					 if(tlsCACerts) {
+						 tlsCACerts = [tlsCACerts];
+					 } else {
+						 tlsCACerts = [];
+					 }
+					 let connection_options = ca.getConnectionOptions();
+					 let verify = true; //default if not found
+					 if(connection_options && typeof connection_options.verify === 'boolean') {
+						 verify = connection_options.verify
+					 }
 					 tls_options = {
-						 trustedRoots: [ca.getTlsCACerts()], //TODO handle non existent
-						 verify: ca.getConnectionOptions().verify //TODO handle non existent
+						 trustedRoots: tlsCACerts,
+						 verify: verify
 					 };
 					 ca_url = ca.getUrl();
 					 ca_name = ca.getCaName();
