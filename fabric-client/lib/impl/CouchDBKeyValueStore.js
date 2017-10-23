@@ -35,7 +35,7 @@ var logger = utils.getLogger('CouchDBKeyValueStore.js');
 var CouchDBKeyValueStore = class extends api.KeyValueStore {
 	/**
 	 * @typedef {Object} CouchDBOpts
-	 * @property {stirng} url The CouchDB instance url, in the form of http(s)://<user>:<password>@host:port
+	 * @property {string} url The CouchDB instance url, in the form of http(s)://<user>:<password>@host:port
 	 * @property {string} name Optional. Identifies the name of the database to use. Default: <code>member_db</code>.
 	 */
 
