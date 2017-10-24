@@ -304,6 +304,34 @@ var Client = class extends BaseClient {
 
 		 return event_hubs;
 	 }
+
+	 /**
+ 	 * Returns a list of {@link Peer} for the named organization as defined
+ 	 * in the currently loaded network configuration. If no organization is
+ 	 * provided then the organization named in the currently active network
+ 	 * configuration's client section will be used.
+ 	 *
+ 	 * @param {string} org_name - Optional - The name of an organization
+ 	 * @returns {[Peer]} An array of Peer instances that are defined for this organization
+ 	 */
+ 	 getPeersForOrg(org_name) {
+ 		 var peers = [];
+ 		 if(this._network_config) {
+ 			 if(!org_name && this._network_config.hasClient()) {
+ 				 let client = this._network_config.getClientConfig();
+ 				 org_name = client.organization;
+ 			 }
+ 			 if(org_name) {
+ 				 let organization = this._network_config.getOrganization(org_name);
+ 				 if(organization) {
+ 					 peers = organization.getPeers();
+ 				 }
+ 			 }
+ 		 }
+
+ 		 return peers;
+ 	 }
+
     /**
 	 * Returns an {@link Orderer} object with the given url and opts. An orderer object
 	 * encapsulates the properties of an orderer node and the interactions with it via
@@ -851,22 +879,35 @@ var Client = class extends BaseClient {
 
 	/**
 	 * @typedef {Object} ChaincodeInstallRequest
-	 * @property {Peer[]} targets - Required. An array of Peer objects that the chaincode will
-	 *                              be installed on
-	 * @property {string} chaincodePath - Required. The path to the location of the source code
-	 *                                    of the chaincode. If the chaincode type is golang, then
-	 *                                    this path is the fully qualified package name, such as
-	 *                                    'mycompany.com/myproject/mypackage/mychaincode'
+	 * @property {Peer[]} targets - Optional. An array of Peer objects that the
+	 *           chaincode will be installed on. When excluded, the peers assigned
+	 *           to this client's organization will be used as defined in the
+	 *           network configuration. If the 'channels' property is included,
+	 *           the target peers will be based the peers defined in the channels.
+	 * @property {string} chaincodePath - Required. The path to the location of
+	 *           the source code of the chaincode. If the chaincode type is golang,
+	 *           then this path is the fully qualified package name, such as
+	 *           'mycompany.com/myproject/mypackage/mychaincode'
 	 * @property {string} chaincodeId - Required. Name of the chaincode
-	 * @property {string} chaincodeVersion - Required. Version string of the chaincode, such as 'v1'
-	 * @property {byte[]} chaincodePackage - Optional. Byte array of the archive content for the chaincode
-	 *                            source. The archive must have a 'src' folder containing subfolders corresponding
-	 *                            to the 'chaincodePath' field. For instance, if the chaincodePath is
-	 *                            'mycompany.com/myproject/mypackage/mychaincode', then the archive must contain a
-	 *                            folder 'src/mycompany.com/myproject/mypackage/mychaincode', where the
-	 *                            GO source code resides.
-	 * @property {string} chaincodeType - Optional. Type of chaincode. One of 'golang', 'car', 'node' or 'java'.
-	 *                                    Default is 'golang'. Note that 'java' is not supported as of v1.0.
+	 * @property {string} chaincodeVersion - Required. Version string of the
+	 *           chaincode, such as 'v1'
+	 * @property {byte[]} chaincodePackage - Optional. Byte array of the archive
+	 *           content for the chaincode source. The archive must have a 'src'
+	 *           folder containing subfolders corresponding to the 'chaincodePath'
+	 *           field. For instance, if the chaincodePath is
+	 *           'mycompany.com/myproject/mypackage/mychaincode',
+	 *           then the archive must contain a
+	 *           folder 'src/mycompany.com/myproject/mypackage/mychaincode',
+	 *           where the chaincode source code resides.
+	 * @property {string} chaincodeType - Optional. Type of chaincode. One of
+	 *           'golang', 'car', 'node' or 'java'.
+	 *           Default is 'golang'. Note that 'java' is not supported as of v1.0.
+	 * @property {string[] | string} channelNames - Optional. When no targets are
+	 *           provided. The loaded network configuration will be searched for
+	 *           suitable target peers. Peers that are defined in the channels named
+	 *           by this property and in this client's organization and that are
+	 *           in the endorsing or chain code query role on the named channel
+	 *           will be selected.
 	 */
 
 	/**
@@ -904,6 +945,9 @@ var Client = class extends BaseClient {
 		if (request) {
 			try {
 				peers = this.getTargetPeers(request.targets);
+				if(!peers) {
+					peers = this.getPeersForOrgOnChannel(request.channelNames);
+				}
 			} catch (err) {
 				return Promise.reject(err);
 			}
@@ -1670,6 +1714,61 @@ var Client = class extends BaseClient {
 
 		return orderer;
 	};
+
+	/*
+	 * Utility method to get target peers from the network configuration
+	 * Will get the list of all peers for the current organization of this
+	 * client. If channel names are provided, the list will be filtered
+	 * down to be just the endorsing or chain code query peers as defined
+	 * in the channels. If no channels are provided the full org list
+	 * will be returned.
+	 */
+	getPeersForOrgOnChannel(channels) {
+		let method = 'getPeersForOrgOnChannel';
+		logger.debug('%s - starting',method);
+		let peers = [];
+		if(this._network_config && this._network_config.hasClient()) {
+			let org_peers = this.getPeersForOrg();
+			logger.debug('%s - have client config and an org_peers list with %s',method,org_peers.length);
+			if(channels) {
+				logger.debug('%s - have channels %s',method,channels);
+				if(!Array.isArray(channels)) {
+					channels = [channels];
+				}
+				peers = [];
+				let found_peers = {};
+				for(let i in channels) {
+					logger.debug('%s - looking at channel:%s',method,channels[i]);
+					let channel = this._network_config.getChannel(channels[i]);
+					let channel_peers = channel.getPeers();
+					for(let j in channel_peers) {
+						let channel_peer = channel_peers[j];
+						logger.debug('%s - looking at channel peer:%s',method,channel_peer.getName());
+						if(channel_peer.isInRole(Constants.NetworkConfig.ENDORSING_PEER_ROLE)
+						|| channel_peer.isInRole(Constants.NetworkConfig.CHAINCODE_QUERY_ROLE)) {
+							for(let k in org_peers) {
+								let org_peer = org_peers[i];
+								logger.debug('%s - looking at org peer:%s',method,org_peer.getName());
+								if(org_peer.getName() === channel_peer.getName()) {
+									found_peers[org_peer.getName()] = org_peer;//to avoid Duplicate Peers
+									logger.debug('%s - adding peer to list:%s',method,org_peer.getName());
+								}
+							}
+						}
+					}
+				}
+				for(let name in found_peers) {
+					logger.debug('%s - final list has:%s',method,name);
+					peers.push(found_peers[name]);
+				}
+			} else {
+				logger.debug('%s - return org list',method);
+				peers = org_peers;
+			}
+		}
+
+		return peers;
+	}
 };
 
 function readFile(path) {

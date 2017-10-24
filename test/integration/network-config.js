@@ -25,14 +25,45 @@ var test = _test(tape);
 var Client = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
+var fsx = require('fs-extra');
+
 var path = require('path');
 var grpc = require('grpc');
 
 var testUtil = require('../unit/util.js');
 
-var channel_name = 'mychannel2';
+
+test('\n\n***** clean up the connection profile stores  *****\n\n', function(t) {
+	let client = Client.loadFromConfig('test/fixtures/org1.yaml');
+	let client_config = client.getClientConfig();
+
+	let store_path = client_config.credentialStore.path;
+	logger.debug('removing org1 credentialStore %s',store_path);
+	fsx.removeSync(store_path);
+
+	let crypto_path = client_config.credentialStore.cryptoStore.path;
+	logger.debug('removing org1 cryptoStore %s',crypto_path);
+	fsx.removeSync(store_path);
+
+	client.loadFromConfig('test/fixtures/org2.yaml');
+	client_config = client.getClientConfig();
+
+	store_path = client_config.credentialStore.path;
+	logger.debug('removing org2 credentialStore %s',store_path);
+	fsx.removeSync(store_path);
+
+	crypto_path = client_config.credentialStore.cryptoStore.path;
+	logger.debug('removing org2 cryptoStore %s',crypto_path);
+	fsx.removeSync(store_path);
+
+	t.pass('Successfully removed all connection profile stores');
+
+	t.end();
+});
 
 test('\n\n***** use the network configuration file  *****\n\n', function(t) {
+	var channel_name = 'mychannel2';
+
 	var memoryUsage = process.memoryUsage();
 	logger.debug(' Memory usage :: %j',memoryUsage);
 	testUtil.resetDefaults();
@@ -212,11 +243,12 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 		let tx_id = client.newTransactionID(true);
 		// send proposal to endorser
 		var request = {
-			targets: ['peer0.org1.example.com'],
+			//targets: ['peer0.org1.example.com']
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
 			chaincodeVersion: 'v1',
 			chaincodePackage: '',
+			channelNames : 'mychannel2', //targets will based on peers in this channel
 			txId : tx_id
 		};
 

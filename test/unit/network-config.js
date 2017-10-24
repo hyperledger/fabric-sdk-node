@@ -108,9 +108,25 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('localhost:8053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org2 by default');
 			event_hubs = client.getEventHubsForOrg('Org1');
 			t.equals('localhost:7053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org1 by specifically asking for org1');
+			let peers = client.getPeersForOrg();
+			t.equals('grpcs://localhost:8051', peers[0].getUrl(),  ' Check to see if we got the right peer for org2 by default');
+			peers = client.getPeersForOrg('Org1');
+			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 by specifically asking for org1');
 			let client_config = client.getClientConfig();
 			t.equals('wallet-name', client_config.credentialStore.wallet, ' check to see if we can get the wallet name from the client config');
 			t.equals('Org2MSP', client.getMspid(), ' check to see if we can get the mspid of the current clients organization');
+			peers = client.getPeersForOrgOnChannel('mychannel2');
+			t.equals('grpcs://localhost:8051', peers[0].getUrl(),  ' Check to see if we got the right peer for org2 that is endorsing and on the channel');
+			client.loadFromConfig('test/fixtures/org1.yaml');
+			peers = client.getPeersForOrgOnChannel(['mychannel2']);
+			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 that is endorsing and on the channel');
+			peers = client.getPeersForOrgOnChannel([]);
+			t.equals(0, peers.length,  ' Check to see that we got no peers');
+			peers = client.getPeersForOrgOnChannel();
+			t.equals(1, peers.length,  ' Check to see that we got 1 peer');
+			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 that is endorsing and on the channel');
+
+
 		},
 		null,
 		'2 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
@@ -122,8 +138,10 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			var file_data = fs.readFileSync(config_loc);
 			var network_data = yaml.safeLoad(file_data);
 			var client = Client.loadFromConfig(network_data);
-			var channel = client.newChannel('mychannel2');
 			client.loadFromConfig(network_data);
+			var channel = client.getChannel('mychannel2');
+			t.equals(channel.getPeers()[0].getUrl(),'grpcs://localhost:7051',' check to see that the peer has been added to the channel');
+			t.equals(channel.getPeers()[1].getUrl(),'grpcs://localhost:8051',' check to see that the peer has been added to the channel');
 		},
 		null,
 		'3 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'

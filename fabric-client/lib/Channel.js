@@ -1037,27 +1037,37 @@ var Channel = class {
 
 	/**
 	 * @typedef {Object} ChaincodeInstantiateUpgradeRequest
-	 * @property {Peer[]} targets - Optional. An array of endorsing {@link Peer} objects as the targets of the
-	 *                              request. The list of endorsing peers in the channel object will be used
-	 *                              if this parameter is omitted.
-	 * @property {string} chaincodeType - Optional. Type of chaincode. One of 'golang', 'car' or 'java'.
-	 *                                    Default is 'golang'. Note that 'java' is not supported as of v1.0.
+	 * @property {Peer[]} targets - Optional. An array of endorsing
+	 *           {@link Peer} objects as the targets of the request. When this
+	 *           parameter is omitted the target list will include peers assigned
+	 *           to this channel instance that are in the endorsing role.
+	 * @property {string} chaincodeType - Optional. Type of chaincode. One of
+	 *           'golang', 'car' or 'java'. Default is 'golang'. Note that 'java'
+	 *           is not supported as of v1.0.
 	 * @property {string} chaincodeId - Required. The name of the chaincode
-	 * @property {string} chaincodeVersion - Required. Version string of the chaincode, such as 'v1'
-	 * @property {TransactionID} txId - Required. Object with the transaction id and nonce
-	 * @property {map} transientMap - Optional. <string, byte[]> map that can be used by the chaincode during
-	 *			                      intialization, but not saved in the ledger. Data such as cryptographic information
-	 *			                      for encryption can be passed to the chaincode using this technique
-	 * @property {string} fcn - Optional. The function name to be returned when calling <code>stub.GetFunctionAndParameters()</code>
-	 *                          in the target chaincode. Default is 'init'
-	 * @property {string[]} args - Optional. Array of string arguments to pass to the function identified by the <code>fcn</code> value
-	 * @property {Object} endorsement-policy - Optional. EndorsementPolicy object for this chaincode (see examples below). If not specified,
-	 *				                           a default policy of "a signature by any member from any of the organizations
-	 *				                           corresponding to the array of member service providers" is used. <b>WARNING:</b> The
-	 *										   default policy is NOT recommended for production, because this allows an application to
-	 *										   bypass the proposal endorsement and send a manually constructed transaction, with arbitrary
-	 *										   output in the write set, to the orderer directly. An application's own signature would allow
-	 *										   the transaction to be successfully validated and committed to the ledger.
+	 * @property {string} chaincodeVersion - Required. Version string of the chaincode,
+	 *           such as 'v1'
+	 * @property {TransactionID} txId - Required. Object with the transaction id
+	 *           and nonce
+	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
+	 *           used by the chaincode during intialization, but not saved in the
+	 *           ledger. Data such as cryptographic information for encryption can
+	 *           be passed to the chaincode using this technique.
+	 * @property {string} fcn - Optional. The function name to be returned when
+	 *           calling <code>stub.GetFunctionAndParameters()</code> in the target
+	 *           chaincode. Default is 'init'.
+	 * @property {string[]} args - Optional. Array of string arguments to pass to
+	 *           the function identified by the <code>fcn</code> value.
+	 * @property {Object} endorsement -policy - Optional. EndorsementPolicy object
+	 *           for this chaincode (see examples below). If not specified, a default
+	 *           policy of "a signature by any member from any of the organizations
+	 *           corresponding to the array of member service providers" is used.
+	 *           <b>WARNING:</b> The default policy is NOT recommended for production,
+	 *           because this allows an application to bypass the proposal endorsement
+	 *           and send a manually constructed transaction, with arbitrary output
+	 *           in the write set, to the orderer directly. An application's own
+	 *           signature would allow the transaction to be successfully validated
+	 *           and committed to the ledger.
 	 * @example <caption>Endorsement policy: "Signed by any member from one of the organizations"</caption>
 	 * {
 	 *   identities: [
