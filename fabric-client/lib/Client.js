@@ -181,9 +181,11 @@ var Client = class extends BaseClient {
 	 * will be created and populated with {@link Orderer} objects and {@link Peer} objects
 	 * as defined in the network configuration.
 	 *
-	 * @param {string} name - The name of the channel.
-	 * @param {boolean} throwError - Indicates if this method will throw an error if the channel
-	 *                  is not found. Default is true.
+	 * @param {string} name - Optional. The name of the channel. When omitted the
+	 *        first channel defined in the loaded network configuration will be
+	 *        returned
+	 * @param {boolean} throwError - Indicates if this method will throw an error
+	 *        if the channel is not found. Default is true.
 	 * @returns {Channel} The channel instance
 	 */
 	getChannel(name, throwError) {
@@ -194,6 +196,12 @@ var Client = class extends BaseClient {
 		else {
 			// maybe it is defined in the network config
 			if(this._network_config) {
+				if(!name) {
+					let channel_names = Object.keys(this._network_config._network_config.channels);
+					if(channel_names) {
+						name = channel_names[0];
+					}
+				}
 				channel = this._network_config.getChannel(name);
 				this._channels[name] = channel;
 			}

@@ -163,6 +163,12 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals(orderer._options['request-timeout'],30000, ' check that we get this orderer timeout set');
 			let eventHub = client._network_config.getEventHub('peer0.org1.example.com');
 			t.equals(eventHub._ep._options['request-timeout'],3000, ' check that we get this eventHub timeout set');
+			let first_channel = client.getChannel();
+			if(first_channel && first_channel.getName() === 'mychannel2') {
+				t.pass('Successfully got the first channel without specifying the name');
+			} else {
+				t.fail('Failed to get the first channel');
+			}
 
 			delete client._network_config._network_config.certificateAuthorities['ca-org1'].tlsCACerts;
 			delete client._network_config._network_config.certificateAuthorities['ca-org1'].httpOptions;
@@ -177,6 +183,15 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		},
 		null,
 		'2 Should be able to run a number of test without error'
+	);
+
+	t.throws(
+		() => {
+			var client = new Client();
+			client.getChannel();
+		},
+		/Channel not found for name undefined./,
+		'Check for Channel not found for name undefined.'
 	);
 
 	t.doesNotThrow(
