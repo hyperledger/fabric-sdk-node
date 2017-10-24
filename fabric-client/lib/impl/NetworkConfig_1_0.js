@@ -106,8 +106,11 @@ var NetworkConfig_1_0 = class {
 		var result = {};
 		if(this._network_config && this._network_config.client) {
 			let client_config = this._network_config.client;
-			if(client_config.organization) {
-				result.organization = client_config.organization;
+			for(let setting in client_config) {
+				// copy all except credentialStore, special case to handle paths
+				if(setting !== 'credentialStore') {
+					result[setting] = client_config[setting];
+				}
 			}
 			if(client_config.credentialStore) {
 				result.credentialStore = {};
