@@ -110,6 +110,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('localhost:7053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org1 by specifically asking for org1');
 			let client_config = client.getClientConfig();
 			t.equals('wallet-name', client_config.credentialStore.wallet, ' check to see if we can get the wallet name from the client config');
+			t.equals('Org2MSP', client.getMspid(), ' check to see if we can get the mspid of the current clients organization');
 		},
 		null,
 		'2 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
