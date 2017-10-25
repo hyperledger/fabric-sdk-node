@@ -95,7 +95,12 @@ class GolangPackager extends BasePackager {
 					descriptors.push(desc);
 				}
 
-			}).on('end', () => {
+			})
+			.on('error', (error, item) => {
+				logger.error(`error while packaging ${item.path}`);
+				reject(error);
+			})
+			.on('end', () => {
 				resolve(descriptors);
 			});
 		});

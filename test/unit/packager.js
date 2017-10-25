@@ -38,6 +38,20 @@ test('\n\n** Golang Packager tests **\n\n', function(t) {
 		return Packager.package(testutil.CHAINCODE_PATH,'',true);
 	}).then((data) => {
 		t.equal(data, null, 'Should return null when packaging for dev mode');
+		return Packager.package('blah','',false);
+	}).then((data) => {
+		t.fail('Packager.package() should have rejected a call that does not have valid chaincodePath parameter');
+		t.end();
+	},
+	(err)=>{
+		let msg = 'ENOENT: no such file or directory';
+		if (err.message.indexOf(msg) >= 0) {
+			t.pass('Should throw error: ' + msg);
+		} else {
+			t.fail(err.message + 'should be' + msg);
+			t.end();
+		}
+
 		return Packager.package(testutil.CHAINCODE_PATH,'',false);
 	}).then((data) => {
 		let tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
@@ -89,15 +103,28 @@ test('\n\n** Node.js Packager tests **\n\n', function(t) {
 	Packager.package(testutil.NODE_CHAINCODE_PATH, 'node', true)
 	.then((data) => {
 		t.equal(data, null, 'Should return null when packaging for dev mode');
+        return Packager.package('blah', 'node', false);
+    }).then((data)=>{
+		t.fail('Packager.package() should have rejected a call that does not have valid chaincodePath parameter');
+		t.end();
+    },(err)=>{
+        let msg = 'ENOENT: no such file or directory';
+		if (err.message.indexOf(msg) >= 0) {
+			t.pass('Should throw error: ' + msg);
+		} else {
+			t.fail(err.message + 'should be' + msg);
+			t.end();
+		}
 
-		fs.removeSync(destDir);
-		fs.copySync(testutil.NODE_CHAINCODE_PATH, destDir);
+        fs.removeSync(destDir);
+        fs.copySync(testutil.NODE_CHAINCODE_PATH, destDir);
 
-		fs.outputFileSync(path.join(destDir, '.npmignore'), npmignore1);
-		fs.outputFileSync(path.join(destDir, 'node_modules/dummy/package.json'), 'dummy package.json content');
+        fs.outputFileSync(path.join(destDir, '.npmignore'), npmignore1);
+        fs.outputFileSync(path.join(destDir, 'node_modules/dummy/package.json'), 'dummy package.json content');
 
-		return Packager.package(destDir, 'node', false);
-	}).then((data) => {
+        return Packager.package(destDir, 'node', false);
+
+    }).then((data) => {
 		return check(data, () => {
 			let checkPath = path.join(targzDir, 'src', 'chaincode.js');
 			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/chaincode.js" file');
