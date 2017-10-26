@@ -216,7 +216,7 @@ async function createChannel(t) {
 			txId : 	tx_id
 		};
 
-		results = await channel.joinChannel(request); //admin from org2
+		results = await channel.joinChannel(request, 30000); //admin from org2
 		logger.debug(util.format('Join Channel R E S P O N S E using default targets: %j', results));
 
 		// first of the results should not have good status as submitter does not have permission
@@ -252,7 +252,7 @@ async function createChannel(t) {
 			txId : 	tx_id
 		};
 
-		results = await channel.joinChannel(request); //logged in as org1
+		results = await channel.joinChannel(request, 30000); //logged in as org1
 		logger.debug(util.format('Join Channel R E S P O N S E  for a string target: %j', results));
 
 		if(results && results[0] && results[0].response && results[0].response.status == 200) {

@@ -378,7 +378,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 							resolve();
 						}
 					}, (err) => {
-						t.fail('The was a problem with the instantiate event '+err);
+						t.fail('There was a problem with the instantiate event '+err);
 						clearTimeout(handle);
 						eh.unregisterTxEvent(deployId);
 					});

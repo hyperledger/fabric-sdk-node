@@ -879,8 +879,8 @@ var Client = class extends BaseClient {
 
 	/**
 	 * @typedef {Object} ChaincodeInstallRequest
-	 * @property {Peer[]} targets - Optional. An array of Peer objects that the
-	 *           chaincode will be installed on. When excluded, the peers assigned
+	 * @property {Peer[]} targets - Optional. An array of Peer objects where the
+	 *           chaincode will be installed. When excluded, the peers assigned
 	 *           to this client's organization will be used as defined in the
 	 *           network configuration. If the 'channels' property is included,
 	 *           the target peers will be based the peers defined in the channels.

@@ -422,7 +422,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 			//targets - Letting default to all endorsing peers defined on the channel in the network configuration
 		};
 
-		return channel.sendTransactionProposal(request, 3000); //logged in as org1 user
+		return channel.sendTransactionProposal(request); //logged in as org1 user
 	}).then((results) => {
 		var proposalResponses = results[0];
 		var proposal = results[1];
@@ -439,6 +439,13 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 				one_good = true;
 			} else {
 				t.fail('transaction proposal was bad');
+				if( proposal_response.response && proposal_response.response.status) {
+					t.comment(' response status:' + proposal_response.response.status +
+					' message:' + proposal_response.response.message);
+				} else {
+					t.fail('transaction response was unknown' );
+					logger.error('transaction response was unknown %s', proposal_response)
+				}
 			}
 			all_good = all_good & one_good;
 		}

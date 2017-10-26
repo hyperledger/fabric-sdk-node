@@ -30,23 +30,29 @@ var CertificateAuthority = require('../CertificateAuthority.js');
 var FabricCA = require('fabric-ca-client');
 
 var logger = utils.getLogger('NetworkConfig101.js');
-var CHANNELS_CONFIG = 'channels';
-var ORGS_CONFIG = 'organizations';
-var PEERS_CONFIG = 'peers';
-var ORDERERS_CONFIG = 'orderers';
-var CAS_CONFIG = 'certificateAuthorities';
-var TLS_CACERTS = 'tlsCACerts';
-var ADMIN_PRIVATE_KEY = 'adminPrivateKey';
-var ADMIN_CERT = 'signedCert';
-var GRPC_CONNECTION_OPTIONS = 'grpcOptions';
-var HTTP_CONNECTION_OPTIONS = 'httpOptions';
-var URL = 'url';
-var EVENT_URL = 'eventUrl';
-var NAME = 'name';
-var CANAME = 'caName';
-var PEM = 'pem';
-var PATH = 'path';
-var REGISTRAR = 'registrar';
+const CHANNELS_CONFIG = 'channels';
+const ORGS_CONFIG = 'organizations';
+const PEERS_CONFIG = 'peers';
+const ORDERERS_CONFIG = 'orderers';
+const CAS_CONFIG = 'certificateAuthorities';
+const TLS_CACERTS = 'tlsCACerts';
+const ADMIN_PRIVATE_KEY = 'adminPrivateKey';
+const ADMIN_CERT = 'signedCert';
+const GRPC_CONNECTION_OPTIONS = 'grpcOptions';
+const HTTP_CONNECTION_OPTIONS = 'httpOptions';
+const URL = 'url';
+const EVENT_URL = 'eventUrl';
+const NAME = 'name';
+const CANAME = 'caName';
+const PEM = 'pem';
+const PATH = 'path';
+const REGISTRAR = 'registrar';
+const ENDORSER = 1;
+const ORDERER = 2;
+const EVENTHUB = 3;
+const EVENTREG = 4;
+const TYPES = ['unknown', 'endorser', 'orderer', 'eventHub', 'eventReg'];
+const REQUEST_TIMEOUT = 'request-timeout';
 var ROLES = Constants.NetworkConfig.ROLES;
 
 /**
@@ -170,6 +176,7 @@ var NetworkConfig_1_0 = class {
 				let opts = {};
 				opts.pem = getTLSCACert(peer_config);
 				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
+				this.addTimeout(opts, ENDORSER);
 				peer = new Peer(peer_config[URL], opts);
 				peer.setName(name);
 				if(channel_org) {
@@ -185,6 +192,36 @@ var NetworkConfig_1_0 = class {
 		return peer;
 	}
 
+	addTimeout(opts, type) {
+		var method = 'addTimeout';
+		if(opts && opts[REQUEST_TIMEOUT]) {
+			logger.debug('%s - request-timeout exist',method);
+			return;
+		}
+		if(opts && this.hasClient() &&
+		this._network_config.client.connection &&
+		this._network_config.client.connection.timeout) {
+			let timeouts = this._network_config.client.connection.timeout;
+			let timeout = '';
+			if(type === ENDORSER && timeouts.peer && timeouts.peer.endorser) {
+				timeout = timeouts.peer.endorser;
+			} else if(type === ORDERER && timeouts.orderer) {
+				timeout = timeouts.orderer;
+			} else if(type === EVENTHUB && timeouts.peer && timeouts.peer.eventHub) {
+				timeout = timeouts.peer.eventHub;
+			} else if(type === EVENTREG && timeouts.peer && timeouts.peer.eventReg) {
+				timeout = timeouts.peer.eventReg;
+			}
+
+			if(!isNaN(timeout)) {
+				timeout = timeout * 1000;
+				opts[REQUEST_TIMEOUT] = timeout;
+			} else {
+				logger.warn('%s - timeout value is not a number for the %s : %s',method, TYPES[type], timeout);
+			}
+		}
+	}
+
 	getEventHub(name) {
 		var method = 'getEventHub';
 		logger.debug('%s - name %s',method, name);
@@ -195,6 +232,7 @@ var NetworkConfig_1_0 = class {
 				let opts = {};
 				opts.pem = getTLSCACert(peer_config);
 				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
+				this.addTimeout(opts, EVENTREG);
 				event_hub = new EventHub(this._client_context);
 				event_hub.setPeerAddr(peer_config[EVENT_URL], opts);
 			}
@@ -213,6 +251,7 @@ var NetworkConfig_1_0 = class {
 				let opts = {};
 				opts.pem = getTLSCACert(orderer_config);
 				Object.assign(opts, orderer_config[GRPC_CONNECTION_OPTIONS]);
+				this.addTimeout(opts, ORDERER);
 				orderer = new Orderer(orderer_config[URL], opts);
 				orderer.setName(orderer_config[NAME]);
 			}

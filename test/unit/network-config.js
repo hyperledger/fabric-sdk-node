@@ -126,10 +126,38 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals(1, peers.length,  ' Check to see that we got 1 peer');
 			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 that is endorsing and on the channel');
 
+			let opts = {somesetting : 4};
+			client._network_config.addTimeout(opts,1);
+			t.equals(opts['somesetting'], 4, 'check that existing settings are still there');
+			t.equals(opts['request-timeout'], 120000, 'check that endorser timeout was added');
+			opts = {};
+			client._network_config.addTimeout(opts,2);
+			t.equals(opts['request-timeout'], 30000, 'check that orderer timeout was added');
+			opts = {};
+			client._network_config.addTimeout(opts,3);
+			t.equals(opts['request-timeout'], 60000, 'check that eventHub timeout was added');
+			opts = {};
+			client._network_config.addTimeout(opts,4);
+			t.equals(opts['request-timeout'], 3000, 'check that eventReg timeout was added');
+			opts = {};
+			opts['request-timeout'] = 5000;
+			client._network_config.addTimeout(opts,4);
+			t.equals(opts['request-timeout'], 5000, 'check that timeout did not change');
+			client._network_config._network_config.client.connection.timeout.peer.eventHub = '2s';
+			opts = {};
+			client._network_config.addTimeout(opts,3);
+			t.equals(opts['request-timeout'], undefined, 'check that timeout did not change');
+
+			let peer = client._network_config.getPeer('peer0.org1.example.com');
+			t.equals(peer._options['request-timeout'],120000, ' check that we get this peer endorser timeout set');
+			let orderer = client._network_config.getOrderer('orderer.example.com');
+			t.equals(orderer._options['request-timeout'],30000, ' check that we get this orderer timeout set');
+			let eventHub = client._network_config.getEventHub('peer0.org1.example.com');
+			t.equals(eventHub._ep._options['request-timeout'],3000, ' check that we get this eventHub timeout set');
 
 		},
 		null,
-		'2 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
+		'2 Should be able to run a number of test without error'
 	);
 
 	t.doesNotThrow(
