@@ -1503,6 +1503,7 @@ var Client = class extends BaseClient {
 	 * @property {string} username {string} - the user name used for enrollment
 	 * @property {string} mspid {string} - the MSP id
 	 * @property {IdentityFiles | IdentityPEMs} cryptoContent - the private key and certificate
+	 * @property {boolean} skipPersistence - whether to save this new user object into persistence.
 	 */
 
 	/**
@@ -1611,7 +1612,7 @@ var Client = class extends BaseClient {
 				return member.setEnrollment(importedKey, data.toString(), opts.mspid);
 			}).then(() => {
 				logger.debug('then setUserContext');
-				return self.setUserContext(member);
+				return self.setUserContext(member, opts.skipPersistence);
 			}, (err) => {
 				logger.debug('error during setUserContext...');
 				logger.error(err.stack ? err.stack : err);
