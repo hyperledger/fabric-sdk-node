@@ -96,6 +96,15 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		'Should not be able to instantiate a new instance of "Channel" with a bad channel'
 	);
 
+	t.throws(
+		() => {
+			var client = Client.loadFromConfig('test/fixtures/network.json');
+			var ca = client.getCertificateAuthority();
+		},
+		/A crypto suite has not been assigned to this client/,
+		'Should not be able to instantiate a new instance of a certificate authority until a crypto suite is assigned'
+	);
+
 	t.doesNotThrow(
 		() => {
 			var client = Client.loadFromConfig('test/fixtures/network.yaml');
@@ -157,7 +166,13 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 
 			delete client._network_config._network_config.certificateAuthorities['ca-org1'].tlsCACerts;
 			delete client._network_config._network_config.certificateAuthorities['ca-org1'].httpOptions;
+			client.setCryptoSuite({cryptoSuite : 'cryptoSuite'});
 			let certificate_authority = client.getCertificateAuthority();
+			if(certificate_authority && certificate_authority._cryptoSuite && certificate_authority._cryptoSuite.cryptoSuite === 'cryptoSuite') {
+				t.pass('Successfully got the certificate_authority');
+			} else {
+				t.fail('Failed to get the certificate_authority');
+			}
 
 		},
 		null,
@@ -195,6 +210,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		() => {
 			var client = new Client();
 			client._network_config = new NetworkConfig({}, client);
+			client.setCryptoSuite({cryptoSuite : 'cryptoSuite'});
 			client.getCertificateAuthority();
 		},
 		/Network configuration is missing this client\'s organization and certificate authority/,

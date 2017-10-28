@@ -369,7 +369,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 
  		return client.initCredentialStores();
  	}).then((nothing) => {
- 		t.pass('Successfully created the key value store  and crypto store based on the config and network');
+ 		t.pass('Successfully created the key value store and crypto store based on the config and network');
 
 		return client.setUserContext({username:'admin', password:'adminpw'});
 	}).then((admin) => {
