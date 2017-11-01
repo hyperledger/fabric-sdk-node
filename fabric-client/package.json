@@ -1,6 +1,6 @@
 {
   "name": "fabric-client",
-  "version": "1.1.0-preview",
+  "version": "1.1.0-snapshot",
   "main": "index.js",
   "repository": {
     "type": "gerrit",
