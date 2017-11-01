@@ -1,0 +1,23 @@
+v1.1.0-preview November 1, 2017
+-------------------------------
+
+Release Notes
+-------------
+# Add connection profile support for client applications
+# Bug fixes and documentation
+
+Known Vulnerabilities
+---------------------
+none
+
+Resolved Vulnerabilities
+------------------------
+none
+
+Known Issues & Workarounds
+--------------------------
+none
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/master/CHANGELOG.md#v110-preview
