@@ -496,3 +496,27 @@ module.exports.checkAndAddConfigSetting = function(option_name, default_value, o
 	}
 	return return_options;
 };
+
+/*
+ * Make sure there's a start line with '-----BEGIN CERTIFICATE-----'
+ * and end line with '-----END CERTIFICATE-----', so as to be compliant
+ * with x509 parsers
+ */
+module.exports.normalizeX509 = function(raw) {
+	var regex = /(\-\-\-\-\-\s*BEGIN ?[^-]+?\-\-\-\-\-)([\s\S]*)(\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-)/;
+	var matches = raw.match(regex);
+	if (!matches || matches.length !== 4) {
+		throw new Error('Failed to find start line or end line of the certificate.');
+	}
+
+	// remove the first element that is the whole match
+	matches.shift();
+	// remove LF or CR
+	matches = matches.map((element) => {
+		return element.trim();
+	});
+
+	// make sure '-----BEGIN CERTIFICATE-----' and '-----END CERTIFICATE-----' are in their own lines
+	// and that it ends in a new line
+	return matches.join('\n') + '\n';
+};

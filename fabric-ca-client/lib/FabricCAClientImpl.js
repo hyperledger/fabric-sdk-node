@@ -270,7 +270,7 @@ var FabricCAServices = class extends BaseClient {
 		var cert = currentUser.getIdentity()._certificate;
 		var subject = null;
 		try {
-			subject = getSubjectCommonName(FabricCAServices.normalizeX509(cert));
+			subject = getSubjectCommonName(BaseClient.normalizeX509(cert));
 		} catch(err) {
 			logger.error(util.format('Failed to parse enrollment certificate %s for Subject. \nError: %s', cert, err));
 		}
@@ -402,29 +402,6 @@ var FabricCAServices = class extends BaseClient {
 			'hostname: ' + this._fabricCAClient._hostname +
 			', port: ' + this._fabricCAClient._port +
 			'}';
-	}
-
-	/**
-	 * Make sure there's a start line with '-----BEGIN CERTIFICATE-----'
-	 * and end line with '-----END CERTIFICATE-----', so as to be compliant
-	 * with x509 parsers
-	 */
-	static normalizeX509(raw) {
-		var regex = /(\-\-\-\-\-\s*BEGIN ?[^-]+?\-\-\-\-\-)([\s\S]*)(\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-)/;
-		var matches = raw.match(regex);
-		if (matches.length !== 4) {
-			throw new Error('Failed to find start line or end line of the certificate.');
-		}
-
-		// remove the first element that is the whole match
-		matches.shift();
-		// remove LF or CR
-		matches = matches.map((element) => {
-			return element.trim();
-		});
-
-		// make sure '-----BEGIN CERTIFICATE-----' and '-----END CERTIFICATE-----' are in their own lines
-		return matches.join('\n');
 	}
 };
 
