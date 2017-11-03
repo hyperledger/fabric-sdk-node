@@ -58,6 +58,16 @@ var Peer = class extends Remote {
 	}
 
 	/**
+	 * Close the service connection.
+	 */
+	 close() {
+		 if(this._endorserClient) {
+			 logger.info('close - closing peer connection ' + this._endpoint.addr);
+			 this._endorserClient.close();
+		 }
+	 }
+
+	/**
 	 * Set a role for this peer.
 	 * @param {string} role - The name of the role
 	 * @param {boolean} isIn - The boolean value of does this peer have this role

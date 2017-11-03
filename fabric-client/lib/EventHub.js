@@ -388,6 +388,9 @@ var EventHub = class {
 			this._stream.end();
 			this._stream = null;
 		}
+		if(this._event_client) {
+			this._event_client.close();
+		}
 	}
 
 	/*

@@ -90,6 +90,7 @@ test('orderer missing data test', function(t) {
 		},
 		function(err) {
 			t.pass('Successfully found missing data: ' + err);
+			client.close();
 			t.end();
 		}
 	).catch(function(err) {
@@ -176,4 +177,20 @@ test('orderer unknown address test', function(t) {
 		+ err);
 		t.end();
 	});
+});
+
+test('Orderer test', function(t) {
+	var orderer = new Orderer('grpc://127.0.0.1:5005');
+
+	t.doesNotThrow(
+		function () {
+			orderer.setName('name');
+			orderer.close();
+		},
+		null,
+		'checking the orderer setName() and close()'
+	);
+	t.equals('name', orderer.getName(), 'checking getName on orderer');
+
+	t.end();
 });

@@ -32,9 +32,10 @@ test('Peer test', function(t) {
 	t.doesNotThrow(
 		function () {
 			peer.setName('name');
+			peer.close();
 		},
 		null,
-		'checking the peer setName()'
+		'checking the peer setName() and close()'
 	);
 	t.equals('name', peer.getName(), 'checking getName on Peer');
 
@@ -94,7 +95,6 @@ test('Peer missing address test', function(t) {
 
 test('Peer missing data test', function(t) {
 	var client = new Peer('grpc://127.0.0.1:5005');
-
 	client.sendProposal()
 	.then(
 		function(status) {
@@ -103,6 +103,7 @@ test('Peer missing data test', function(t) {
 		},
 		function(err) {
 			t.pass('Successfully found missing data: ' + err);
+			client.close();
 			t.end();
 		}
 	).catch(function(err) {

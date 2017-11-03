@@ -548,6 +548,9 @@ async function actions(t) {
 		logger.debug(' queryTransaction ::%j',results);
 		t.equals(0, results.validationCode, 'Should be able to find our transaction validationCode by admin');
 
+		// close out connection
+		channel.close();
+
 		logMemory();
 		//await sleep(2000);
 		logger.info('***********  pass all done *************');

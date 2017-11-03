@@ -79,7 +79,9 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 	t.doesNotThrow(
 		function () {
 			var orderer = new Orderer('grpc://somehost.com:1234');
+			_channel.close();
 			_channel.addOrderer(orderer);
+			_channel.close();
 		},
 		null,
 		'checking the channel addOrderer()'
@@ -286,6 +288,15 @@ test('\n\n ** Channel addPeer() duplicate tests **\n\n', function (t) {
 		t.fail('Failed to detect duplicate peer (' + expected +
 		' expected | ' + channel_duplicate.getPeers().length + ' found)');
 	}
+
+	t.doesNotThrow(
+		function () {
+			channel_duplicate.close();
+		},
+		null,
+		'checking the channel close()'
+	);
+
 	t.end();
 });
 
