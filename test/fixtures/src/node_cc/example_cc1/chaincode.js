@@ -33,7 +33,7 @@ var Chaincode = class {
 	}
 
 	async Invoke(stub) {
-		logger.info('########### example_cc0 Invoke ###########');
+		logger.info('########### example_cc1 Invoke ###########');
 		let ret = stub.getFunctionAndParameters();
 		let fcn = ret.fcn;
 		let args = ret.params;
@@ -106,7 +106,7 @@ var Chaincode = class {
 		try {
 			await stub.putState(A, Buffer.from(Aval.toString()));
 			await stub.putState(B, Buffer.from(Bval.toString()));
-			return shim.success();
+			return shim.success(Buffer.from('move succeed'));
 		} catch (e) {
 			return shim.error(e);
 		}

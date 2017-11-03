@@ -39,6 +39,10 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	var Aval, Bval int // Asset holdings
 	var err error
 
+    if len(args) != 4 {
+		return shim.Error("Incorrect number of arguments. Expecting 4")
+	}
+
 	// Initialize the chaincode
 	A = args[0]
 	Aval, err = strconv.Atoi(args[1])
@@ -50,7 +54,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	if err != nil {
 		return shim.Error("Expecting integer value for asset holding")
 	}
-	logger.Info("Aval = %d, Bval = %d\n", Aval, Bval)
+	logger.Infof("Aval = %d, Bval = %d\n", Aval, Bval)
 
 	// Write the state to the ledger
 	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
@@ -64,8 +68,6 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	}
 
 	return shim.Success(nil)
-
-
 }
 
 // Transaction makes payment of X units from A to B
@@ -83,6 +85,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		// queries an entity state
 		return t.query(stub, args)
 	}
+
 	if function == "move" {
 		// Deletes an entity from its state
 		return t.move(stub, args)
@@ -146,7 +149,7 @@ func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) 
 		return shim.Error(err.Error())
 	}
 
-        return shim.Success(nil);
+    return shim.Success([]byte("move succeed"))
 }
 
 // Deletes an entity from state

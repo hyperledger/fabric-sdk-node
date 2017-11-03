@@ -129,7 +129,7 @@ var Chaincode = class {
 		try {
 			await stub.putState(A, Buffer.from(Aval.toString()));
 			await stub.putState(B, Buffer.from(Bval.toString()));
-			return shim.success();
+			return shim.success(Buffer.from('move succeed'));
 		} catch (e) {
 			return shim.error(e);
 		}

@@ -25,7 +25,7 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-var logger = shim.NewLogger("example_cc1")
+var logger = shim.NewLogger("example_cc2")
 
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {

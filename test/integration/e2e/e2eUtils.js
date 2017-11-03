@@ -631,7 +631,17 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 				t.pass('transaction proposal has response status of good');
 				one_good = channel.verifyProposalResponse(proposal_response);
 				if(one_good) {
-					t.pass(' transaction proposal signature and endorser are valid');
+					t.pass('transaction proposal signature and endorser are valid');
+				}
+
+				// check payload
+				let payload = proposal_response.response.payload.toString();
+				// 'move success' is the expected payload from 'move' invoke
+				if(payload === 'move succeed'){
+					t.pass('transaction proposal payloads are valid');
+				} else {
+					one_good = false;
+					t.fail('transaction proposal payloads are invalid');
 				}
 			} else {
 				t.fail('transaction proposal was bad');
