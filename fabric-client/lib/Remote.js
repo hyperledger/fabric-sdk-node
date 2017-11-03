@@ -38,6 +38,12 @@ var Remote = class {
 	 * <br>- pem {string} The certificate file, in PEM format,
 	 *    to use with the gRPC protocol (that is, with TransportCredentials).
 	 *    Required when using the grpcs protocol.
+	 * <br>- clientKey {string} The private key file, in PEM format,
+	 *    to use with the gRPC protocol (that is, with TransportCredentials).
+	 *    Required when using the grpcs protocol with client certificates.
+	 * <br>- clientCert {string} The public certificate file, in PEM format,
+	 *    to use with the gRPC protocol (that is, with TransportCredentials).
+	 *    Required when using the grpcs protocol with client certificates.
 	 * <br>- ssl-target-name-override {string} Used in test environment only, when the server certificate's
 	 *    hostname (in the 'CN' field) does not match the actual host endpoint that the server process runs
 	 *    at, the application can work around the client TLS verify failure by setting this property to the
@@ -47,11 +53,21 @@ var Remote = class {
 	constructor(url, opts) {
 		var _name = null;
 		var pem = null;
+		var clientKey = null;
+		var clientCert = null;
 		var ssl_target_name_override = '';
 		var default_authority = '';
 
 		if (opts && opts.pem) {
 			pem = opts.pem;
+		}
+
+		if (opts && opts.clientKey) {
+			clientKey = opts.clientKey;
+		}
+
+		if (opts && opts.clientCert) {
+			clientCert = opts.clientCert;
 		}
 
 		if (opts && opts['ssl-target-name-override']) {
@@ -93,7 +109,7 @@ var Remote = class {
 
 		// service connection
 		this._url = url;
-		this._endpoint = new Endpoint(url, pem);
+		this._endpoint = new Endpoint(url, pem, clientKey, clientCert);
 
 		// node.js based timeout
 		this._request_timeout = 30000;
@@ -146,7 +162,7 @@ module.exports = Remote;
 // The Endpoint class represents a remote grpc or grpcs target
 //
 var Endpoint = class {
-	constructor(url /*string*/ , pem /*string*/ ) {
+	constructor(url /*string*/ , pem /*string*/ , clientKey /*string*/ , clientCert /*string*/) {
 		var fs = require('fs'),
 			path = require('path');
 
@@ -162,8 +178,22 @@ var Endpoint = class {
 			if(!(typeof pem === 'string')) {
 				throw new Error('PEM encoded certificate is required.');
 			}
+			if (clientKey || clientCert){
+				// must have both clientKey and clientCert if either is defined
+				if (clientKey && clientCert){
+					if ((typeof clientKey === 'string') && (typeof clientCert === 'string')) {
+						this.creds = grpc.credentials.createSsl(new Buffer(pem),
+							new Buffer(clientKey), new Buffer(clientCert));
+					} else {
+						throw new Error('PEM encoded clientKey and clientCert are required.');
+					}
+				} else {
+					throw new Error('clientKey and clientCert are both required.')
+				}
+			} else {
+				this.creds = grpc.credentials.createSsl(new Buffer(pem));
+			}
 			this.addr = purl.host;
-			this.creds = grpc.credentials.createSsl(new Buffer(pem));
 		} else {
 			var error = new Error();
 			error.name = 'InvalidProtocol';
