@@ -1,17 +1,7 @@
 /*
-Copyright IBM Corp. 2016 All Rights Reserved.
+Copyright IBM Corp. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-                 http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+SPDX-License-Identifier: Apache-2.0
 */
 
 syntax = "proto3";
@@ -92,6 +82,10 @@ message FabricMSPConfig {
     // List of TLS intermediate certificates trusted by this MSP;
     // They are returned by GetTLSIntermediateCerts.
     repeated bytes tls_intermediate_certs = 10;
+
+    // FabricNodeOUs contains the configuration to distinguish clients from peers from orderers
+    // based on the OUs.
+    FabricNodeOUs FabricNodeOUs = 11;
 }
 
 // FabricCryptoConfig contains configuration parameters
@@ -109,6 +103,34 @@ message FabricCryptoConfig {
     // Allowed values are "SHA256", "SHA384" and "SHA3_256", "SHA3_384".
     string identity_identifier_hash_function = 2;
 
+}
+
+// IdemixMSPConfig collects all the configuration information for
+// an Idemix MSP.
+message IdemixMSPConfig {
+    // Name holds the identifier of the MSP
+    string name = 1;
+
+    // IPk represents the (serialized) issuer public key
+    bytes IPk = 2;
+
+    // signer may contain crypto material to configure a default signer
+    IdemixMSPSignerConfig signer = 3;
+}
+
+// IdemixMSPSIgnerConfig contains the crypto material to set up an idemix signing identity
+message IdemixMSPSignerConfig {
+    // Cred represents the serialized idemix credential of the default signer
+    bytes Cred = 1;
+
+    // Sk is the secret key of the default signer, corresponding to credential Cred
+    bytes Sk = 2;
+
+    // organizational_unit_identifier defines the organizational unit the default signer is in
+    string organizational_unit_identifier = 3;
+
+    // is_admin defines whether the default signer is admin or not
+    bool is_admin = 4;
 }
 
 // SigningIdentityInfo represents the configuration information
@@ -150,10 +172,27 @@ message FabricOUIdentifier {
     // It must correspond to the certificate of root or intermediate CA
     // recognized by the MSP this message belongs to.
     // Starting from this certificate, a certification chain is computed
-    // and boud to the OrganizationUnitIdentifier specified
+    // and bound to the OrganizationUnitIdentifier specified
     bytes certificate = 1;
 
     // OrganizationUnitIdentifier defines the organizational unit under the
     // MSP identified with MSPIdentifier
     string organizational_unit_identifier = 2;
+}
+
+// FabricNodeOUs contains configuration to tell apart clients from peers from orderers
+// based on OUs. If NodeOUs recognition is enabled then an msp identity
+// that does not contain any of the specified OU will be considered invalid.
+message FabricNodeOUs {
+    // If true then an msp identity that does not contain any of the specified OU will be considered invalid.
+    bool   Enable = 1;
+
+    // OU Identifier of the clients
+    FabricOUIdentifier clientOUIdentifier = 2;
+
+    // OU Identifier of the peers
+    FabricOUIdentifier peerOUIdentifier = 3;
+
+    // OU Identifier of the orderers
+    FabricOUIdentifier ordererOUIdentifier = 4;
 }

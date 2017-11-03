@@ -17,6 +17,7 @@ limitations under the License.
 syntax = "proto3";
 
 import "../common/common.proto";
+import "../google/protobuf/timestamp.proto";
 import "chaincode_event.proto";
 import "transaction.proto";
 
@@ -30,10 +31,11 @@ package protos;
 //----Event objects----
 
 enum EventType {
-        REGISTER = 0;
-        BLOCK = 1;
-	CHAINCODE = 2;
-	REJECTION = 3;
+    REGISTER = 0;
+    BLOCK = 1;
+    CHAINCODE = 2;
+    REJECTION = 3;
+    FILTEREDBLOCK = 4;
 }
 
 //ChaincodeReg is used for registering chaincode Interests
@@ -74,6 +76,29 @@ message Unregister {
     repeated Interest events = 1;
 }
 
+//FilteredBlock is sent by producers and contains minimal information
+//about the block.
+message FilteredBlock {
+    string channel_id = 1;
+    uint64 number = 2; // The position in the blockchain
+    common.HeaderType type = 3;
+    repeated FilteredTransaction filtered_tx = 4;
+}
+
+//FilteredTransaction is a minimal set of information about a transaction
+//within a block.
+message FilteredTransaction {
+    string txid = 1;
+    TxValidationCode tx_validation_code = 2;
+    repeated FilteredAction filtered_action = 3;
+}
+
+//FilteredAction is a minimal set of information about an action within a
+//transaction.
+message FilteredAction {
+    ChaincodeEvent ccEvent = 1;
+}
+
 // SignedEvent is used for any communication between consumer and producer
 message SignedEvent {
     // Signature over the event bytes
@@ -86,8 +111,6 @@ message SignedEvent {
 //  - consumers (adapters) to send Register
 //  - producer to advertise supported types and events
 message Event {
-    //TODO need timestamp
-
     oneof Event {
         //Register consumer sent event
         Register register = 1;
@@ -99,9 +122,13 @@ message Event {
 
         //Unregister consumer sent events
         Unregister unregister = 5;
+
+	FilteredBlock filtered_block = 7;
     }
     // Creator of the event, specified as a certificate chain
     bytes creator = 6;
+    // Timestamp of the client - used to mitigate replay attacks
+    google.protobuf.Timestamp timestamp = 8;
 }
 
 // Interface exported by the events server
