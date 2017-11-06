@@ -202,6 +202,15 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserY" using serial number and AKI');
 
+			// generate CRL
+			return caService.generateCRL({}, member);
+		}).then((CRL) => {
+			if(CRL){
+				t.pass('Successfully generated CRL');
+			} else {
+				t.fail('Unable to generate CRL');
+			}
+
 			// register a new user 'test1'
 			return caService.register({
 				enrollmentID: 'test1',
