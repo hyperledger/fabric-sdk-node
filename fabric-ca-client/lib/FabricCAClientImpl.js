@@ -350,6 +350,35 @@ var FabricCAServices = class extends BaseClient {
 	}
 
 	/**
+	 * @typedef {Object} Restriction
+	 * @property {Date} revokedBefore - Include certificates that were revoked before this UTC timestamp (in RFC3339 format) in the CRL
+	 * @property {Date} revokedAfter - Include certificates that were revoked after this UTC timestamp (in RFC3339 format) in the CRL
+	 * @property {Date} expireBefore - Include revoked certificates that expire before this UTC timestamp (in RFC3339 format) in the CRL
+	 * @property {Date} expireAfter - Include revoked certificates that expire after this UTC timestamp (in RFC3339 format) in the CRL
+	 */
+
+	/**
+	 *
+	 * @param {Restriction} request
+	 * @param {User} registrar The identity of the registrar (i.e. who is performing the revocation)
+	 * @returns {Promise} The Certificate Revocation List (CRL)
+	 */
+	generateCRL(request, registrar) {
+		if (typeof request === 'undefined' || request === null) {
+			throw new Error('Missing required argument "request"');
+		}
+
+		checkRegistrar(registrar);
+
+		return this._fabricCAClient.generateCRL(
+			request.revokedBefore ? request.revokedBefore.toISOString() : null,
+			request.revokedAfter ? request.revokedAfter.toISOString() : null,
+			request.expireBefore ? request.expireBefore.toISOString() : null,
+			request.expireAfter ? request.expireAfter.toISOString() : null,
+			registrar.getSigningIdentity());
+	}
+
+	/**
 	 * @typedef {Object} HTTPEndpoint
 	 * @property {string} hostname
 	 * @property {number} port
@@ -781,6 +810,46 @@ var FabricCAClient = class {
 
 		});
 
+	}
+
+	generateCRL(revokedBefore, revokedAfter, expireBefore, expireAfter, signingIdentity) {
+		let self = this;
+		let numArgs = arguments.length;
+
+		return new Promise(function (resolve, reject) {
+			if(numArgs !== 5) {
+				return reject(new Error('Missing required parameters. \'revokedBefore\', \'revokedAfter\', \
+					\'expireBefore\', \'expireAfter\' and \'signingIdentity\' are all required.'));
+			}
+
+			let request = {};
+			if (!revokedBefore) {
+				request.revokedBefore = revokedBefore;
+			}
+			if (!revokedAfter) {
+				request.revokedAfter = revokedAfter;
+			}
+			if (!expireBefore) {
+				request.expireBefore = expireBefore;
+			}
+			if (!expireAfter) {
+				request.expireAfter = expireAfter;
+			}
+			if (!self._caName) {
+				request.caname = self._caName;
+			}
+
+			return self.post('gencrl', request, signingIdentity)
+				.then(function (response) {
+					if (response.success && response.result) {
+						return resolve(response.result.CRL);
+					} else {
+						return reject(response.errors);
+					}
+				}).catch(function (err) {
+					return reject(err);
+				});
+		});
 	}
 
 	/**
