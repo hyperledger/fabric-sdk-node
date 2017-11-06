@@ -1206,7 +1206,7 @@ test('\n\n*** Test per-call timeout support ***\n', function(t) {
 	});
 });
 
-test('\n\n*** Test per-call timeout support ***\n', function(t) {
+test('\n\n*** Test error condition on network config ***\n', function(t) {
 	let client = new Client();
 	t.throws(
 		() => {
@@ -1216,6 +1216,29 @@ test('\n\n*** Test per-call timeout support ***\n', function(t) {
 		/No network configuration has been loaded/,
 		'Check that No network configuration has been loaded'
 	);
+
+	t.end();
+});
+
+test('\n\n*** Test normalizeX509 ***\n', function(t) {
+	t.throws(
+		() => {
+
+			Client.normalizeX509('cause error');
+		},
+		/Failed to find start line or end line of the certificate./,
+		'Check that a bad strean will throw error'
+	);
+
+	var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
+	'MIICEDCCAbagAwIBAgIUXoY6X7jIpHAAgL267xHEpVr6NSgwCgYIKoZIzj0EAwIw' +
+	'-----END CERTIFICATE-----';
+
+	var normalized = Client.normalizeX509(TEST_CERT_PEM);
+	var matches = normalized.match(/\-\-\-\-\-\s*BEGIN ?[^-]+?\-\-\-\-\-\n/);
+	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone start line');
+	matches = normalized.match(/\n\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-\n/);
+	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone end line');
 
 	t.end();
 });

@@ -326,7 +326,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 	}).then((response) => {
 		if (!(response instanceof Error) && response.status === 'SUCCESS') {
 			t.pass('Successfully sent transaction to instantiate the chaincode to the orderer.');
-			return sleep(10000); // use sleep for now until the eventhub is integrated into the network config changes
+			return sleep(20000); // use sleep for now until the eventhub is integrated into the network config changes
 		} else {
 			t.fail('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
 			throw new Error('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);

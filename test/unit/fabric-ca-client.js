@@ -709,6 +709,15 @@ test('FabricCAServices: Test static method normalizeX509()', function (t) {
 	testNormalizer(VALID_CERT, t);
 	testNormalizer(VALID_CERT1, t);
 	testNormalizer(VALID_CERT2, t);
+
+	t.throws(
+		() => {
+			FabricCAServices.normalizeX509('somestring');
+		},
+		/Failed to find start line or end line of the certificate/,
+		'Must throw error when target certificate does not contain a begin and end'
+	);
+
 	t.end();
 });
 

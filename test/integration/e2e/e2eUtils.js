@@ -64,6 +64,8 @@ function installChaincode(org, chaincode_path, version, language, t, get_admin) 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
+	// make sure the cert is OK
+	caroots = Client.normalizeX509(caroots);
 
 	channel.addOrderer(
 		client.newOrderer(

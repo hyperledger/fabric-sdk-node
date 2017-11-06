@@ -199,6 +199,21 @@ var BaseClient = class {
 	getCryptoSuite() {
 		return this._cryptoSuite;
 	}
+
+	/**
+	 * Fixes a certificate string that may not be in the correct format.
+	 * Make sure there's a start line with '-----BEGIN CERTIFICATE-----'
+	 * and end line with '-----END CERTIFICATE-----', so as to be compliant
+	 * with x509 parsers.
+	 * Will remove or add required linefeeds and carriage returns.
+	 *
+	 * @param {string} raw - a string that contains a X509 certiicate
+	 * @throws {Error} An error indicating that the begining and end parts are
+	 *         not correct.
+	 */
+	static normalizeX509(raw) {
+		return sdkUtils.normalizeX509(raw);
+	}
 };
 
 module.exports = BaseClient;

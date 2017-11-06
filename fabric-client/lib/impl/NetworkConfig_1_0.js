@@ -391,8 +391,7 @@ function getPEMfromConfig(config) {
 		} else if(config[PATH]) {
 			// cert value is in a file
 			result = readFileSync(config[PATH]);
-			result = FabricCA.normalizeX509(result); //This removes line feed at end
-			result = result + '\n';
+			result = utils.normalizeX509(result);
 		}
 	}
 
