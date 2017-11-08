@@ -71,6 +71,15 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		}
 	);
 
+	var orderer_bad = client.newOrderer(
+		ORGS.orderer.url,
+		{
+			'pem': caroots,
+			'ssl-target-name-override': ORGS.orderer['server-hostname'],
+			'grpc.max_send_message_length': 6800
+		}
+	);
+
 
 	var TWO_ORG_MEMBERS_AND_ADMIN = [{
 		role: {
@@ -183,6 +192,35 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 
 		logger.debug('\n***\n done signing \n***\n');
 
+		// build up a create request to include
+		// an orderer that will fail
+		let tx_id = client.newTransactionID();
+		var request = {
+			config: config,
+			signatures : signatures,
+			name : channel_name,
+			orderer : orderer_bad,
+			txId  : tx_id
+		};
+
+		// send create request to bad orderer
+		return client.createChannel(request);
+	}).then((result) => {
+		logger.debug('\n***\n completed the create \n***\n');
+
+		logger.debug(' response ::%j',result);
+		t.fail('Failed when this Successfully created the channel.');
+		t.end();
+		throw new Error('Failed to get max send error');
+	}, (err) => {
+		if(err.toString().indexOf('Sent message larger than max') > -1) {
+			t.pass('Successfully failed with max error on the create channel: ' + err.toString());
+		} else {
+			t.fail('Failed to fail with max error on the create channel: ' + err.stack ? err.stack : err);
+		}
+
+		return true;
+	}).then((nothing) => {
 		// build up the create request
 		let tx_id = client.newTransactionID();
 		var request = {
@@ -195,8 +233,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 
 		// send create request to orderer
 		return client.createChannel(request);
-	})
-	.then((result) => {
+	}).then((result) => {
 		logger.debug('\n***\n completed the create \n***\n');
 
 		logger.debug(' response ::%j',result);
@@ -210,8 +247,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	}, (err) => {
 		t.fail('Failed to create the channel: ' + err.stack ? err.stack : err);
 		t.end();
-	})
-	.then((nothing) => {
+	}).then((nothing) => {
 		t.pass('Successfully waited to make sure new channel was created.');
 		t.end();
 	}, (err) => {

@@ -123,10 +123,10 @@ var Orderer = class extends Remote {
 			});
 
 			broadcast.on('error', function (err) {
+				clearTimeout(broadcast_timeout);
 				broadcast.end();
 				if(err && err.code) {
 					if(err.code == 14) {
-						clearTimeout(broadcast_timeout);
 						logger.error('sendBroadcast - on error: %j',err.stack ? err.stack : err);
 						return reject(new Error('SERVICE_UNAVAILABLE'));
 					}
@@ -251,8 +251,8 @@ var Orderer = class extends Remote {
 
 				deliver.on('error', function (err) {
 					logger.debug('sendDeliver - on error');
+					clearTimeout(deliver_timeout);
 					if(connect) {
-						clearTimeout(deliver_timeout);
 						deliver.end();
 						connect = false;
 						if(err && err.code) {
