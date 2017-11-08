@@ -34,9 +34,6 @@ var Config = class {
 		this._fileStores = [];
 		// reference to configuration settings
 		this._config = nconf;
-		// setup the location of the default config shipped with code
-		var default_config = path.resolve( __dirname, '../config/default.json');
-		this.reorderFileStores(default_config);
 	}
 
 	//
@@ -55,14 +52,22 @@ var Config = class {
 	//
 	//	 utility method to reload the file based stores so
 	//	 the last one added is on the top of the files hierarchy
+	//	 unless the bottom flag indicates to add otherwise
 	//
-	reorderFileStores(path) {
+	reorderFileStores(path, bottom) {
 		// first remove all the file stores
 		for(var x in this._fileStores) {
 			this._config.remove(this._fileStores[x]);
 		}
-		// now add this new file store to the front of the list
-		this._fileStores.unshift(path);
+
+		if(bottom) {
+			// add to the bottom of the list
+			this._fileStores.push(path);
+		} else {
+			// add this new file to the front of the list
+			this._fileStores.unshift(path);
+		}
+
 		// now load all the file stores
 		for(var x in this._fileStores) {
 			var name = this._fileStores[x];

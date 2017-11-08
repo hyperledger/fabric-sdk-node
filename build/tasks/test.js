@@ -95,6 +95,7 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], functi
 	// saved the user certificates so they can interact with the
 	// network
 	return gulp.src(shouldRunPKCS11Tests([
+		'test/unit/config.js', // needs to be first
 		'test/unit/**/*.js',
 		'!test/unit/constants.js',
 		'!test/unit/util.js',
