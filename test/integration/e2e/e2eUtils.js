@@ -737,6 +737,10 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 			t.comment('export E2E_TX_ID='+'\''+tx_id.getTransactionID()+'\'');
 			t.comment('******************************************************************');
 			logger.debug('invokeChaincode end');
+
+			// close the connections
+			channel.close();
+			t.pass('Successfully closed all connections');
 			return true;
 		} else {
 			t.fail('Failed to order the transaction. Error code: ' + response.status);

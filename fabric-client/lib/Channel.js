@@ -119,6 +119,18 @@ var Channel = class {
 	}
 
 	/**
+	 * Close the service connection off all assigned peers and orderers
+	 */
+	 close() {
+		 logger.info('close - closing connections');
+		var closer = function (ep) {
+			ep.close();
+		}
+		this._peers.map(closer);
+		this._orderers.map(closer);
+	 }
+
+	/**
 	 * Initializes the channel object with the Membership Service Providers (MSPs). The channel's
 	 * MSPs are critical in providing applications the ability to validate certificates and verify
 	 * signatures in messages received from the fabric backend. For instance, after calling

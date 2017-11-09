@@ -58,6 +58,16 @@ var Orderer = class extends Remote {
 	}
 
 	/**
+	 * Close the service connection.
+	 */
+	 close() {
+		 if(this._ordererClient) {
+			 logger.info('close - closing orderer connection ' + this._endpoint.addr);
+			 this._ordererClient.close();
+		 }
+	 }
+
+	/**
 	 * @typedef {Object} BroadcastResponse
 	 * @property {string} status - Value is 'SUCCESS' or a descriptive error string
 	 */
