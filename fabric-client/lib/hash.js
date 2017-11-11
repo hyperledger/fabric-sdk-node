@@ -161,7 +161,8 @@ exports.hash_sha3_256 = hash_sha3_256;
 exports.hash_sha3_384 = hash_sha3_384;
 exports.hash_sha2_256 = hash_sha2_256;
 exports.sha2_256 = function (data) {
-	return sjcl_codec.hex.fromBits(new sjcl.hash.sha256().update(bytesToBits(Buffer.from(data, 'utf8'))).finalize());
+	var sha256 = crypto.createHash('sha256');
+	return sha256.update(data).digest('hex');
 };
 exports.sha3_256 = sha3_256;
 exports.sha2_384 = function (data){
