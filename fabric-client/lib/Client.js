@@ -35,7 +35,6 @@ var Identity = idModule.Identity;
 var SigningIdentity = idModule.SigningIdentity;
 var Signer = idModule.Signer;
 
-var logger = sdkUtils.getLogger('Client.js');
 var util = require('util');
 var fs = require('fs-extra');
 var path = require('path');
@@ -47,6 +46,13 @@ var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
 var _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
 var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 var _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
+
+var config = sdkUtils.getConfig();
+// setup the location of the default config shipped with code
+var default_config = path.resolve( __dirname, '../config/default.json');
+config.reorderFileStores(default_config); //make sure this default has precedences
+
+var logger = sdkUtils.getLogger('Client.js');
 
 /**
  * A client instance provides the main API surface to interact with a network of

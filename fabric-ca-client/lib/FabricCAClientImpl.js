@@ -28,6 +28,11 @@ var jsrsasign = require('jsrsasign');
 var x509 = jsrsasign.X509;
 var ASN1HEX = jsrsasign.ASN1HEX;
 
+var config = utils.getConfig();
+// setup the location of the default config shipped with code
+var default_config = path.resolve( __dirname, '../config/default.json');
+config.reorderFileStores(default_config, true); //make sure this one is under the fabric-client
+
 var logger = utils.getLogger('FabricCAClientImpl.js');
 
 /**
