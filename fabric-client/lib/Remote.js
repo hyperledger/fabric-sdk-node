@@ -182,8 +182,8 @@ var Endpoint = class {
 				// must have both clientKey and clientCert if either is defined
 				if (clientKey && clientCert){
 					if ((typeof clientKey === 'string') && (typeof clientCert === 'string')) {
-						this.creds = grpc.credentials.createSsl(new Buffer(pem),
-							new Buffer(clientKey), new Buffer(clientCert));
+						this.creds = grpc.credentials.createSsl(Buffer.from(pem),
+						Buffer.from(clientKey), Buffer.from(clientCert));
 					} else {
 						throw new Error('PEM encoded clientKey and clientCert are required.');
 					}
@@ -191,7 +191,7 @@ var Endpoint = class {
 					throw new Error('clientKey and clientCert are both required.')
 				}
 			} else {
-				this.creds = grpc.credentials.createSsl(new Buffer(pem));
+				this.creds = grpc.credentials.createSsl(Buffer.from(pem));
 			}
 			this.addr = purl.host;
 		} else {
