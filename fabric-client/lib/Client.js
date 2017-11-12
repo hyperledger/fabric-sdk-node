@@ -18,7 +18,6 @@
 
 var sdkUtils = require('./utils.js');
 var clientUtils = require('./client-utils.js');
-process.env.GRPC_SSL_CIPHER_SUITES = sdkUtils.getConfigSetting('grpc-ssl-cipher-suites');
 
 var api = require('./api.js');
 var BaseClient = require('./BaseClient.js');
@@ -51,6 +50,8 @@ var config = sdkUtils.getConfig();
 // setup the location of the default config shipped with code
 var default_config = path.resolve( __dirname, '../config/default.json');
 config.reorderFileStores(default_config); //make sure this default has precedences
+// set default SSL ciphers for gRPC
+process.env.GRPC_SSL_CIPHER_SUITES = sdkUtils.getConfigSetting('grpc-ssl-cipher-suites');
 
 var logger = sdkUtils.getLogger('Client.js');
 
