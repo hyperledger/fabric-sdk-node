@@ -152,7 +152,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 		logger.debug(' response ::%j',result);
 		t.pass('Successfully created the channel.');
 		if(result.status && result.status === 'SUCCESS') {
-			return sleep(5000);
+			return sleep(10000);
 		} else {
 			t.fail('Failed to create the channel. ');
 			throw new Error('Failed to create the channel. ');
@@ -383,28 +383,6 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 	}).then((user)=> {
 		t.pass('Successfully enrolled user \'user1\' for org1');
 
-		let tx_id = client.newTransactionID(); // get a non admin transaction ID
-		var request = {
-			chaincodeId : 'example',
-			fcn: 'move',
-			args: ['a', 'b','100'],
-			txId: tx_id
-			//targets - Letting default to all endorsing peers defined on the channel in the network configuration
-		};
-
-		// put in a very small timeout to force a failure, thereby checking that the timeout value was being used
-		return channel.sendTransactionProposal(request, 1); //logged in as org1 user
-	}).then((results) => {
-		var proposalResponses = results[0];
-		for(var i in proposalResponses) {
-			let proposal_response = proposalResponses[i];
-			if( proposal_response instanceof Error && proposal_response.toString().indexOf('REQUEST_TIMEOUT') > 0) {
-				t.pass('Successfully cause a timeout error by setting the timeout setting to 1');
-			} else {
-				t.fail('Failed to get the timeout error');
-			}
-		}
-
 		// try again ...this time use a longer timeout
 		let tx_id = client.newTransactionID(); // get a non admin transaction ID
 		query_tx_id = tx_id.getTransactionID();
@@ -620,6 +598,28 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 	}).then((results) => {
 		logger.debug(' queryTransaction ::%j',results);
 		t.equals(0, results.validationCode, 'Should be able to find our transaction validationCode by admin');
+
+		let tx_id = client.newTransactionID(); // get a non admin transaction ID
+		var request = {
+			chaincodeId : 'example',
+			fcn: 'move',
+			args: ['a', 'b','100'],
+			txId: tx_id
+			//targets - Letting default to all endorsing peers defined on the channel in the network configuration
+		};
+
+		// put in a very small timeout to force a failure, thereby checking that the timeout value was being used
+		return channel.sendTransactionProposal(request, 1); //logged in as org1 user
+	}).then((results) => {
+		var proposalResponses = results[0];
+		for(var i in proposalResponses) {
+			let proposal_response = proposalResponses[i];
+			if( proposal_response instanceof Error && proposal_response.toString().indexOf('REQUEST_TIMEOUT') > 0) {
+				t.pass('Successfully cause a timeout error by setting the timeout setting to 1');
+			} else {
+				t.fail('Failed to get the timeout error');
+			}
+		}
 
 		return true;
 	}).then((results) => {
