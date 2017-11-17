@@ -114,7 +114,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'clientKey and clientCert are both required.'
 	);
 
-	opts = { pem: aPem, clientKey: new Buffer(aPem), clientCert: aPem};
+	opts = { pem: aPem, clientKey: Buffer.alloc(1), clientCert: aPem};
 	t.throws(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';
@@ -125,7 +125,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'PEM encoded clientKey and clientCert are required.'
 	);
 
-	opts = { pem: aPem, clientKey: aPem, clientCert: new Buffer(aPem)};
+	opts = { pem: aPem, clientKey: aPem, clientCert: Buffer.alloc(1)};
 	t.throws(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';

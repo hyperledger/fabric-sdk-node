@@ -335,9 +335,7 @@ module.exports.bytesToBits = function(bytes) {
 };
 
 module.exports.zeroBuffer = function(length) {
-	var buf = new Buffer(length);
-	buf.fill(0);
-	return buf;
+	return Buffer.alloc(length);
 };
 
 // utility function to convert Node buffers to Javascript arraybuffer

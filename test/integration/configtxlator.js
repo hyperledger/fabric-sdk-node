@@ -282,7 +282,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 					t.fail('Failed to get the updated configuration ::'+err);
 					reject(err);
 				} else {
-					var proto = new Buffer(body, 'binary');
+					var proto = Buffer.from(body, 'binary');
 					resolve(proto);
 				}
 			});
