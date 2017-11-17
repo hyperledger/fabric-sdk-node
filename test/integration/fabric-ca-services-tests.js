@@ -274,6 +274,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 				affiliation: 'org1.department2',
 				attrs: [
 					{name: 'hf.Registrar.Roles', value: 'client'},
+					{name: 'hf.Registrar.Attributes', value: '*'},
 					{name:'dfattrib',value:'default', ecert:true},
 					{name:'myattrib',value:'somevalue and lots of other information'}
 				]}, member);
