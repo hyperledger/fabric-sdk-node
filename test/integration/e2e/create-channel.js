@@ -80,6 +80,19 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		}
 	);
 
+	// set something to fail to test that the code picks up values from the config
+	let keep = Client.getConfigSetting('grpc.max_send_message_length');
+	Client.setConfigSetting('grpc.max_send_message_length', 6800);
+	var orderer_bad2 = client.newOrderer(
+		ORGS.orderer.url,
+		{
+			'pem': caroots,
+			'ssl-target-name-override': ORGS.orderer['server-hostname'],
+			'grpc.max_send_message_length': 6800
+		}
+	);
+	// put back the setting
+	Client.setConfigSetting('grpc.max_send_message_length',keep);
 
 	var TWO_ORG_MEMBERS_AND_ADMIN = [{
 		role: {
@@ -193,13 +206,44 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		logger.debug('\n***\n done signing \n***\n');
 
 		// build up a create request to include
-		// an orderer that will fail
+		// an orderer that will fail because the
+		// orderer is defined with a bad options value
 		let tx_id = client.newTransactionID();
 		var request = {
 			config: config,
 			signatures : signatures,
 			name : channel_name,
 			orderer : orderer_bad,
+			txId  : tx_id
+		};
+
+		// send create request to bad orderer
+		return client.createChannel(request);
+	}).then((result) => {
+		logger.debug('\n***\n completed the create \n***\n');
+
+		logger.debug(' response ::%j',result);
+		t.fail('Failed when this Successfully created the channel.');
+		t.end();
+		throw new Error('Failed to get max send error');
+	}, (err) => {
+		if(err.toString().indexOf('Sent message larger than max') > -1) {
+			t.pass('Successfully failed with max error on the create channel: ' + err.toString());
+		} else {
+			t.fail('Failed to fail with max error on the create channel: ' + err.stack ? err.stack : err);
+		}
+
+		return true;
+	}).then((nothing) => {
+		// build up a create request to
+		// an orderer that will fail
+
+		let tx_id = client.newTransactionID();
+		var request = {
+			config: config,
+			signatures : signatures,
+			name : channel_name,
+			orderer : orderer_bad2,
 			txId  : tx_id
 		};
 
