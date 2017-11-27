@@ -195,7 +195,8 @@ var Endpoint = class {
 					throw new Error('clientKey and clientCert are both required.')
 				}
 			} else {
-				this.creds = grpc.credentials.createSsl(Buffer.from(pem));
+				var pembuf = Buffer.concat([Buffer.from(pem), Buffer.from('\0')]);
+				this.creds = grpc.credentials.createSsl(pembuf);
 			}
 			this.addr = purl.host;
 		} else {
