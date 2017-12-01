@@ -19,6 +19,7 @@
 var utils = require('./utils.js');
 var Remote = require('./Remote.js');
 var BlockDecoder = require('./BlockDecoder.js');
+var clientUtils = require('./client-utils.js');
 var grpc = require('grpc');
 var logger = utils.getLogger('EventHub.js');
 
@@ -412,6 +413,7 @@ var EventHub = class {
 		}
 
 		event.setCreator(user.getIdentity().serialize());
+		event.setTimestamp(clientUtils.buildCurrentTimestamp());
 		signedEvent.setEventBytes(event.toBuffer());
 		var sig = user.getSigningIdentity().sign(event.toBuffer());
 		signedEvent.setSignature(Buffer.from(sig));
