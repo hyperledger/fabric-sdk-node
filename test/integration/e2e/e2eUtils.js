@@ -298,6 +298,9 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 								if (response instanceof Error &&
 								response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
 									success = true;
+								} else if (response &&
+								response.response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
+									success = true;
 								} else {
 									success = false;
 								}
