@@ -25,6 +25,7 @@ var util = require('util');
 var os = require('os');
 var path = require('path');
 var Peer = require('./Peer.js');
+var ChannelEventHub = require('./ChannelEventHub.js');
 var Orderer = require('./Orderer.js');
 var BlockDecoder = require('./BlockDecoder.js');
 var TransactionID = require('./TransactionID.js');
@@ -315,6 +316,19 @@ var Channel = class {
 	 */
 	getOrderers() {
 		return this._orderers;
+	}
+
+	/**
+	 * Returns an {@link ChannelEventHub} object. An event hub object encapsulates the
+	 * properties of an event stream on a peer node, through which the peer publishes
+	 * notifications of blocks being committed in the channel's ledger.
+	 *
+	 * @returns {ChannelEventHub} The ChannnelEventHub instance
+	 */
+	newChannelEventHub(peer) {
+		peer = this._getPeerForEvents(peer);
+		var event_hub = new ChannelEventHub(this, peer);
+		return event_hub;
 	}
 
 	/**
@@ -1691,6 +1705,23 @@ var Channel = class {
 
 		return true;
 	}
+
+	/*
+	 *  utility method to decide on the peer for events
+	 */
+	_getPeerForEvents(peer) {
+		if (!peer) {
+			throw new Error('"peer" parameter is missing');
+		}
+		var peers = this._getTargets(peer, Constants.NetworkConfig.EVENT_SOURCE_ROLE, true);
+		// only want to return one peer
+		if(peers && peers.length > 0) {
+			return peers[0];
+		}
+
+		throw new Error('No Peers available to be an event source');
+	}
+
 	/*
 	 *  utility method to decide on the target for queries that only need ledger access
 	 */
@@ -1738,6 +1769,7 @@ var Channel = class {
 		if (!targets || targets.length < 1 ) {
 			let target_msg = 'targets';
 			if(isTarget) target_msg = 'target';
+			if(role === Constants.NetworkConfig.EVENT_SOURCE_ROLE) target_msg = 'peer';
 			throw new Error(util.format('"%s" parameter not specified and no peers'
 				+ ' ' + 'are set on this Channel instance'
 				+ ' ' + 'or specfied for this channel in the network ',target_msg));

@@ -7,5 +7,8 @@
 	},
 	"network-config" : {
 		"title": "How to use a common network configuration file"
+	},
+	"channel-events" : {
+		"title": "How to use the channel-based event service"
 	}
 }

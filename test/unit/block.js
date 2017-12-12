@@ -215,3 +215,20 @@ test('\n\n*** BlockDecoder.js tests ***\n\n', (t) => {
 
 	t.end();
 });
+
+test('\n\n*** BlockDecoder.js test HeaderType ***\n\n', (t) => {
+
+	t.equals(BlockDecoder.HeaderType.convertToString(99),'UNKNOWN_TYPE', 'Check HeaderType for UNKNOWN_TYPE type ');
+	t.equals(BlockDecoder.HeaderType.convertToString(1),'CONFIG', 'Check HeaderType for CONFIG type ');
+	t.equals(BlockDecoder.HeaderType.convertToString(2),'CONFIG_UPDATE', 'Check HeaderType for CONFIG_UPDATE type ');
+	t.equals(BlockDecoder.HeaderType.convertToString(3),'ENDORSER_TRANSACTION', 'Check HeaderType for ENDORSER_TRANSACTION type ');
+
+	t.doesNotThrow(
+		() => {
+			BlockDecoder.HeaderType.decodePayloadBasedOnType(null,99);
+		},
+		null,
+		'checking the HeaderType decodePayloadBasedOnType()'
+	);
+	t.end();
+});

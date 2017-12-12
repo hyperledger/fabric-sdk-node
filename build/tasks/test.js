@@ -111,6 +111,7 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], functi
 		'test/integration/fileKeyValueStore-fabricca-tests.js',
 		'test/integration/install.js',
 		'test/integration/events.js',
+		'test/integration/channel-event-hub.js',
 		// channel: mychannel, chaincode: end2endnodesdk:v2
 		'test/integration/grpc.js',
 		// channel: mychannel, chaincode: end2endnodesdk:v3
