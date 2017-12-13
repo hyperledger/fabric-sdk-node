@@ -42,7 +42,7 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-exist
 		txId: ''
 	};
 
-	var error_snip = 'cannot get package for the chaincode to be instantiated (' + e2e.chaincodeId + ':v333333333' + ')';
+	var error_snip = 'no such file or directory';
 	instantiateChaincodeForError(request, error_snip, t);
 });
 
@@ -55,7 +55,7 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-exist
 		txId: ''
 	};
 
-	var error_snip = 'cannot get package for the chaincode to be instantiated (dummy:' + version + ')';
+	var error_snip = 'no such file or directory';
 	instantiateChaincodeForError(request, error_snip, t);
 });
 

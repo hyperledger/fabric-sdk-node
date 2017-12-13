@@ -137,7 +137,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return channel.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'could not find chaincode with name', t);
+		checkResults(results, 'no such file or directory', t);
 
 		return Promise.resolve(true);
 
@@ -234,4 +234,3 @@ function checkResults(results, error_snip, t) {
 		}
 	}
 }
-
