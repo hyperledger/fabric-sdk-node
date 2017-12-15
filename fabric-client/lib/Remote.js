@@ -146,7 +146,8 @@ var Endpoint = class {
 				throw new Error('PEM encoded certificate is required.');
 			}
 			this.addr = purl.host;
-			this.creds = grpc.credentials.createSsl(new Buffer(pem));
+			var pembuf = Buffer.concat([Buffer.from(pem), Buffer.from('\0')]);
+			this.creds = grpc.credentials.createSsl(pembuf);
 		} else {
 			var error = new Error();
 			error.name = 'InvalidProtocol';
