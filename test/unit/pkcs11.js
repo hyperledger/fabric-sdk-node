@@ -136,13 +136,13 @@ test('\n\n**PKCS11 - generate a non-ephemeral key\n\n', (t) => {
 		// re-construct a new instance of the CryptoSuite so that when "getKey()"
 		// is called it'll not have the previously generated key in memory but
 		// have to retrieve it from persistence store
-		existingCrypto._pkcs11.C_CloseSession(existingCrypto._pkcs11Session);
-		existingCrypto._pkcs11.C_Finalize();
+		existingCrypto.closeSession();
+		existingCrypto.finalize();
 
-		var cryptoUtils = utils.newCryptoSuite({
+		cryptoUtils = utils.newCryptoSuite({
 			lib: libpath,
 			slot: 0,
-			pin: '98765432' });
+			pin: pin });
 
 		return cryptoUtils.getKey(ski);
 	})
@@ -253,13 +253,13 @@ test('\n\n**PKCS11 - Test sign and verify with non-ephemeral ECDSA key pair in t
 		// re-construct a new instance of the CryptoSuite so that when "getKey()"
 		// is called it'll not have the previously generated key in memory but
 		// have to retrieve it from persistence store
-		existingCrypto._pkcs11.C_CloseSession(existingCrypto._pkcs11Session);
-		existingCrypto._pkcs11.C_Finalize();
+		existingCrypto.closeSession();
+		existingCrypto.finalize();
 
-		var cryptoUtils = utils.newCryptoSuite({
+		cryptoUtils = utils.newCryptoSuite({
 			lib: libpath,
 			slot: 0,
-			pin: '98765432' });
+			pin: pin });
 
 		return cryptoUtils.getKey(ski);
 	})
