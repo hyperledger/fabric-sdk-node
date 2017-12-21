@@ -17,6 +17,12 @@
 'use strict';
 
 var api = require('../../api.js');
+var jsrsa = require('jsrsasign');
+var asn1 = jsrsa.asn1;
+var crypto = jsrsa.crypto;
+
+var elliptic = require('elliptic');
+var EC = elliptic.ec;
 
 const _spkiBase = { 256: '3059301306072A8648CE3D020106082A8648CE3D030107034200',
 		    384: '',
@@ -76,8 +82,69 @@ var PKCS11_ECDSA_KEY = class extends api.Key {
 		}
 	}
 
+	signCSR(csr, sigAlgName) {
+
+		csr.asn1SignatureAlg =
+			new asn1.x509.AlgorithmIdentifier({'name': sigAlgName});
+
+		var digest = this._cryptoSuite.hash(Buffer.from(csr.asn1CSRInfo.getEncodedHex(), 'hex'));
+		var sig = this._cryptoSuite.sign(this, Buffer.from(digest, 'hex'));
+		csr.hexSig = sig.toString('hex');
+
+		csr.asn1Sig = new asn1.DERBitString({'hex': '00' + csr.hexSig});
+		var seq = new asn1.DERSequence({'array': [csr.asn1CSRInfo, csr.asn1SignatureAlg, csr.asn1Sig]});
+		csr.hTLV = seq.getEncodedHex();
+		csr.isModified = false;
+	}
+
+	newCSRPEM(param) {
+		var _KJUR_asn1_csr = asn1.csr;
+		if (param.subject === undefined) throw 'parameter subject undefined';
+		if (param.sbjpubkey === undefined) throw 'parameter sbjpubkey undefined';
+		if (param.sigalg === undefined) throw 'parameter sigalg undefined';
+		if (param.sbjprvkey === undefined) throw 'parameter sbjpubkey undefined';
+		var ecdsa = new EC(this._cryptoSuite._ecdsaCurve);
+		var pubKey = ecdsa.keyFromPublic(this._pub._ecpt);
+		var csri = new _KJUR_asn1_csr.CertificationRequestInfo();
+		csri.setSubjectByParam(param.subject);
+		csri.setSubjectPublicKeyByGetKey({xy: pubKey.getPublic('hex'), curve: 'secp256r1'});
+		if (param.ext !== undefined && param.ext.length !== undefined) {
+			for (var i = 0; i < param.ext.length; i++) {
+				for (key in param.ext[i]) {
+					csri.appendExtensionByName(key, param.ext[i][key]);
+				}
+			}
+		}
+
+		var csr = new _KJUR_asn1_csr.CertificationRequest({'csrinfo': csri});
+		this.signCSR(csr, param.sigalg);
+
+		var pem = csr.getPEMString();
+		return pem;
+
+	}
+
+	generateCSR(subjectDN) {
+		//check to see if this is a private key
+		if (!this.isPrivate()){
+			throw new Error('A CSR cannot be generated from a public key');
+		};
+
+		try {
+			var csr = this.newCSRPEM({
+				subject: { str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
+				sbjpubkey: this._pub,
+				sigalg: 'SHA256withECDSA',
+				sbjprvkey: this
+			});
+			return csr;
+		} catch (err) {
+			throw err;
+		}
+	}
+
 	getSKI() {
-		return this._ski;
+		return this._ski.toString('hex');
 	}
 
 	isSymmetric() {
