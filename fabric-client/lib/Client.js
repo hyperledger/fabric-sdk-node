@@ -1786,7 +1786,7 @@ var Client = class extends BaseClient {
 						if(channel_peer.isInRole(Constants.NetworkConfig.ENDORSING_PEER_ROLE)
 						|| channel_peer.isInRole(Constants.NetworkConfig.CHAINCODE_QUERY_ROLE)) {
 							for(let k in org_peers) {
-								let org_peer = org_peers[i];
+								let org_peer = org_peers[k];
 								logger.debug('%s - looking at org peer:%s',method,org_peer.getName());
 								if(org_peer.getName() === channel_peer.getName()) {
 									found_peers[org_peer.getName()] = org_peer;//to avoid Duplicate Peers
