@@ -1,8 +1,11 @@
 
-This tutorial illustrates the use of channel-based events. These events are similar to the existing events, however are specific to a single channel. channel-based events are a new feature of the Hyperledger Fabric Node.js client as of 1.1.
+This tutorial illustrates the use of channel-based events. These events are
+similar to the existing events, however are specific to a single channel.
+The client handling of channel-based events has a few new options when setting
+up a listener. Channel-based events are a new feature of the
+Hyperledger Fabric Node.js client as of 1.1.
 
-For more information on:
-* getting started with Hyperledger Fabric see
+For more information on getting started with Hyperledger Fabric see
 [Building your first network](http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html).
 
 The following assumes an understanding of the Hyperledger Fabric network
@@ -11,35 +14,109 @@ and of Node application development, including the use of the
 Javascript `Promise`.
 
 ### Overview
-Channel-based events occur when there is a new block added to the channel ledger. A client application may use the Fabric Node.js client to register a listener to receive new blocks as they are added to the channel ledger. The Fabric Node.js client will also assist client applications by processing the incoming blocks and looking for specific transactions or chaincode events. This allows a client application to be notified of transaction completion or arbitrary chaincode events without having to perform multiple queries or search through blocks.
+Channel-based events occur when there is a new block added to the channel ledger.
+A client application may use the Fabric Node.js client to register a listener
+to receive blocks as they are added to the channel ledger.
+Channel-based events also allows a client to receive blocks from a specific
+block number, thus allowing the event processing to run normally on blocks that
+may have been missed. The Fabric Node.js client will also assist client
+applications by processing the incoming blocks and looking for specific
+transactions or chaincode events. This allows a client application to be
+notified of transaction completion or arbitrary chaincode events without having
+to perform multiple queries or search through blocks. If you register for a
+block event and then submit a transaction, you should not make any assumptions
+about which block contains your transaction. In particular, you should not
+assume that your transaction is in the block associated with the first block
+event received after registration. Instead, you may simply register for a
+transaction event.
 
 ### new API on the Channel
-* `newChannelEventHub(peer)` - A Channel instance method to get a new instance of a ChannelEventHub.
+* `newChannelEventHub(peer)` - A Channel instance method to get a new instance
+of a ChannelEventHub.
 
 ### new class ChannelEventHub and new APIs
-* `registerBlockEvent(eventCallBack, errorCallBack, start_block)` - To register for block events.
+* `registerBlockEvent(eventCallBack, errorCallBack, options)` - To register for
+block events.
 * `unregisterBlockEvent(reg_num)` - To remove a block registration.
-* `registerTxEvent(tx_id, eventCallBack, errorCallBack, start_block)` - To register for a specific transaction event.
+* `registerTxEvent(tx_id, eventCallBack, errorCallBack, options)` - To register
+for a specific transaction event.
 * `unregisterTxEvent(tx_id)` - To remove a specific transaction registration.
-* `registerChaincodeEvent(ccid, eventCallBack, errorCallBack, start_block)` - To register for chaincode events.
-* `unregisterChaincodeEvent(cc_handle)` - To remove a chaincode event registration.
-* `connect()` - To have the client channel event hub connect with the fabric network channel base event service. This call must be made before events will be received by your instance of a ChannelEventHub. This call may be made before or after the registrations of events.
-* `disconnect()` - To have the client channel event hub shutdown the connection to the fabric network channel-based event service and notify all current channel event registrations of the shutdown by using the registered errorCallBacks.
+* `registerChaincodeEvent(ccid, eventCallBack, errorCallBack, options)` - To
+register for chaincode events.
+* `unregisterChaincodeEvent(cc_handle)` - To remove a chaincode event
+registration.
+* `connect()` - To have the client channel event hub connect with the fabric
+network channel base event service. This call must be made before events will be
+received by your instance of a ChannelEventHub.
+* `disconnect()` - To have the client channel event hub shutdown the connection
+to the fabric network channel-based event service and notify all current channel
+event registrations of the shutdown by using the registered `errorCallBack`s.
 
-##### `peer` parameter
-This parameter must be included when getting a new instance of the ChannelEventHub. The value may be a `Peer` instance or the name of a peer when using a `connection profile` see [How to use a common network configuration file](tutorial-network-config.html).
+#### `peer` parameter
+This parameter must be included when getting a new instance of the
+ChannelEventHub. The value may be a `Peer` instance or the name of a peer when
+using a `connection profile`
+see [How to use a common network configuration file](tutorial-network-config.html).
 
-##### `eventCallback` parameter
-This parameter must be included. This is the callback function to be notified when this channel receives a new block, when listening for a specific transaction or chaincode events.
+#### `eventCallback` parameter
+This parameter must be included. This is the callback function to be notified
+when this channel receives a new block, when listening for a specific
+transaction or chaincode events.
 
-##### `errorCallback` parameter
-This is an optional parameter. This is the callback function to be notified when this channel event hub is shutdown. The shutdown may be caused by a fabric network error, network connection problem or by a call to the "disconnect()" method.
+#### `errorCallback` parameter
+This is an optional parameter. This is the callback function to be notified when
+this channel event hub is shutdown. The shutdown may be caused by a fabric
+network error, network connection problem or by a call to the "disconnect()"
+method.
 
-##### `start_block` parameter
-This is an optional parameter. This is is the starting block number for event checking. When included, the fabric channel-based event service will be asked to start sending blocks from this point. This could be used to resume and replay missed blocks that were added to the ledger. Since replaying events may confuse other event listeners, only one listener will be allowed on a ChannelEventHub when a start_block is included. When this parameter is excluded, which would be the normal situation, the fabric channel-based event service will be asked to start sending blocks from the last block on the ledger.
+#### `options` parameter
+This is an optional parameter. This parameter will contain the following optional
+properties:
+1. {integer} `startBlock` - Optional - The starting block number for event
+checking. When included, the peer's channel-based event service will be asked to start
+sending blocks from this block number.
 
-### Get a Channel Event Hub
-A new method has been added to the fabric channel object to simplify setting up of an ChannelEventHub object. Use the following to get a ChannelEventHub instance that will be setup to work with the peer's channel-based event service. The ChannelEventHub instance will use all the same endpoint configuration settings that the peer instance is using, like the tls certs and the host and port address.
+This is how to resume listening or replay missed
+blocks that were added to the ledger.
+The default value is the block number of the last block on the ledger.
+Replaying events may confuse other event listeners; therefore, only one listener
+will be allowed on a ChannelEventHub when startBlock and/or endBlock are used.
+When this parameter is excluded, which would be the normal situation,
+the fabric channel-based event service will be asked to start sending blocks
+from the last block on the ledger.
+2. {integer} `endBlock` - Optional - The ending block number
+for event checking. When included, the peer's channel-based event service
+will be asked to stop sending blocks once this block is delivered.
+
+This is how to replay missed blocks that were added
+to the ledger. When a startBlock is not included, the endBlock
+must be equal to or larger than the current channel block height.
+Replaying events may confuse other event listeners; therefore, only one listener
+will be allowed on a ChannelEventHub when startBlock and/or endBlock are used.
+3. {boolean} `unregister` - Optional - This options setting indicates
+the registration should be removed (unregister) when the event
+is seen. When the application is using a timeout to only wait a
+specified amount of time for the transaction to be seen, the timeout
+processing should include the manual 'unregister' of the transaction
+event listener to avoid the event callbacks being called unexpectedly.
+The default for this setting is different for the different types of
+event listeners. For block listeners the default is true when
+an end_block was set as a option. For transaction listeners the default is true.
+For chaincode listeners the default will be false as the match filter might be
+intended for many transactions.
+4. {boolean} `disconnect` - Optional - This option setting Indicates
+to the ChannelEventHub instance to automatically disconnect itself
+from the peer's channel-based event service once the event has been seen.
+The default is false unless the endBlock has been set, then it
+it will be true.
+
+### Get a Channel-based Event Hub
+A new method has been added to the fabric `Channel` object to simplify setting
+up of an ChannelEventHub object. Use the following to get a ChannelEventHub
+instance that will be setup to work with the peer's channel-based event service.
+The ChannelEventHub instance will use all the same endpoint configuration
+settings that the peer instance is using, like the tls certs and the host
+and port address.
 
 call by peer name
 ```
@@ -60,7 +137,17 @@ let channelEventHub = channel.newChannelEventHub(peer);
 channelEventHub.connect();
 ```
 ### Block Listener
-When there is a need to monitor for new blocks being added to the channel ledger, use a block event listener. The fabric client Node.js will be notified when a new block is committed to the ledger on the fabric peer. The fabric client Node.js will then call the registered callback of the application program. The callback will be passed a JSON representation of the newly added block. When there is a need to see previously added blocks, the registration of the callback may include a starting block number. The callback will start receiving blocks from this number and continue to receive new blocks as they are added to the ledger. This is a way for the application to resume and replay events that may have been lost if the application were to be offline. The application should remember the last block it has processed to avoid replaying the entire ledger.
+When there is a need to monitor for new blocks being added to the channel ledger,
+use a block event listener. The fabric client Node.js will be notified when a
+new block is committed to the ledger on the fabric peer. The fabric client
+Node.js will then call the registered callback of the application program.
+The callback will be passed a JSON representation of the newly added block.
+When there is a need to see previously added blocks, the registration of the
+callback may include a starting block number. The callback will start receiving
+blocks from this number and continue to receive new blocks as they are added to
+the ledger. This is a way for the application to resume and replay events that
+may have been lost if the application were to be offline. The application should
+remember the last block it has processed to avoid replaying the entire ledger.
 
 The following example will register a block listener to start receiving blocks.
 ```
@@ -74,7 +161,11 @@ block_reg = channelEventHub.registerBlockEvent((block) => {
 });
 ```
 
-The following example will register with a start block number because this application needs to resume at a specific block and replay the missed blocks. The application callback will handle the replayed blocks in the same manor like current events. The block listener will continue to receive blocks as they are committed to the ledger on the fabric peer.
+The following example will register with a start block number because this
+application needs to resume at a specific block and replay the missed blocks.
+The application callback will handle the replayed blocks in the same manor like
+current events. The block listener will continue to receive blocks as they are
+committed to the ledger on the fabric peer.
 ```
 // keep the block_reg to unregister with later if needed
 block_reg = channelEventHub.registerBlockEvent((block) => {
@@ -84,14 +175,43 @@ block_reg = channelEventHub.registerBlockEvent((block) => {
 	console.log('Failed to receive the block event ::'+error);
 	<do something with the error>
 },
-	resume_point
+	{startBlock:23}
 );
 ```
-
+The following example will register with a start block number and an end block.
+The application needs to replay the missed blocks.
+The application callback will handle the replayed blocks in the same manor as
+current events. The block listener will be automatically unregistered and the
+ChannelEventHub shutdown when the end block event is seen by the listener.
+The application will not have to handle this housekeeping.
+```
+block_reg = channelEventHub.registerBlockEvent((block) => {
+	console.log('Successfully received the block event');
+	<do something with the block>
+}, (error)=> {
+	console.log('Failed to receive the block event ::'+error);
+	<do something with the error>
+},
+	// for block listeners, the defaults for unregister and disconnect are true,
+	// so the they are not required to be set in the following example
+	{startBlock:23, endBlock:30, unregister: true, disconnect: true}
+);
+```
 ### Transaction listener
-When there is a need to monitor for the completion of a transaction on your organization's peer, use a transaction listener. The fabric client Node.js will be notified when a new block is committed to the ledger on the fabric peer. The fabric client Node.js will then check the block for registered transaction identifiers. If a transaction is found then the callback will be notified with the transaction ID, the transaction status, and the block number.
+When there is a need to monitor for the completion of a transaction on your
+organization's peer, use a transaction listener. The fabric client Node.js will
+be notified when a new block is committed to the ledger on the fabric peer.
+The fabric client Node.js will then check the block for registered transaction
+identifiers. If a transaction is found then the callback will be notified with
+the transaction ID, the transaction status, and the block number.
 
-The following example will show registering a transaction ID within a javascript promise and building another promise for sending the transaction to the orderer. Both promises will be executed together so that the results will be received for both actions together.
+The following example will show registering a transaction ID within a javascript
+promise and building another promise for sending the transaction to the orderer.
+Both promises will be executed together so that the results will be received for
+both actions together. The default optional setting of `unregister` is true with
+a transaction listener. Therefore in the following example the listener that is
+registered will be automatically unregistered after the listener sees the
+transaction.
 
 ```
 let tx_object = client.newTransactionID();
@@ -117,6 +237,7 @@ let start_block = getBlockFromSomewhere();
 
 let event_monitor = new Promise((resolve, reject) => {
 	let handle = setTimeout(() => {
+		// do the housekeeping when there is a problem
 		channelEventHub.unregisterTxEvent(tx_id);
 		console.log('Timeout - Failed to receive the transaction event');
 		reject(new Error('Timed out waiting for block event'));
@@ -124,18 +245,20 @@ let event_monitor = new Promise((resolve, reject) => {
 
 	channelEventHub.registerTxEvent((event_tx_id, status, block_num) => {
 		clearTimeout(handle);
-		channelEventHub.unregisterTxEvent(event_tx_id);
+		//channelEventHub.unregisterTxEvent(event_tx_id); let the default do this
 		console.log('Successfully received the transaction event');
 		storeBlockNumForLater(block_num);
 		resolve(status);
 	}, (error)=> {
 		clearTimeout(handle);
-		channelEventHub.unregisterTxEvent(tx_id);
 		console.log('Failed to receive the transaction event ::'+error);
 		reject(error);
 	},
-		start_block // when this value is null (the normal case) transaction
-		            // checking will start with the latest block
+		// when this `startBlock` is null (the normal case) transaction
+		// checking will start with the latest block
+		{startBlock:start_block}
+		// notice that `unregister` is not specified, so it will default to true
+		// `disconnect` is also not specified and will default to false
 	);
 });
 let send_trans = channel.sendTransaction({proposalResponses: results[0], proposal: results[1]});
@@ -145,9 +268,21 @@ return Promise.all([event_monitor, send_trans]);
 ```
 
 ### Chaincode event listener
-When there is a need to monitor for events that will be posted from within your chaincode, use a chaincode event listener. The fabric client Node.js will be notified when a new block is committed to the ledger on the fabric peer. The fabric client Node.js will then check for registered chaincode patterns within the chaincode events of the block. If a chaincode event is found then the callback will be notified with the chaincode event object and the block number.
+When there is a need to monitor for events that will be posted from within your
+chaincode, use a chaincode event listener. The fabric client Node.js will be
+notified when a new block is committed to the ledger on the fabric peer.
+The fabric client Node.js will then check for registered chaincode patterns
+within the chaincode event's name field. The registration of the listener includes
+a regular expression to be used in the check against a chaincode event name.
+If a chaincode event name is found to match the listener's regular expression then
+the listener's callback will be notified with the chaincode event object, the
+block number, transaction id, and transaction status.
 
-The following example will show registering a chaincode event listener within a javascript promise and building another promise for sending the transaction to the orderer. Both promises will be executed together so that the results will be received for both actions together. If a chaincode event listener is needed for long term monitoring,  follow the block listener example above.
+The following example demonstrates registering a chaincode event listener within a
+javascript promise and building another promise for sending the transaction to
+the orderer. Both promises will be executed together so that the results will
+be received for both actions together. If a chaincode event listener is needed
+for long term monitoring,  follow the block listener example above.
 
 ```
 let tx_object = client.newTransactionID();
@@ -164,32 +299,60 @@ return channel.sendTransactionProposal(request);
 // a real application would check the proposal results
 console.log('Successfully endorsed proposal to invoke chaincode');
 
+// Build the promise to register a event listener with the NodeSDK.
+// The NodeSDK will then send a request to the peer's channel-based event
+// service to start sending blocks. The blocks will be inspected to see if
+// there is a match with a chaincode event listener.
 let event_monitor = new Promise((resolve, reject) => {
 	let regid = null;
 	let handle = setTimeout(() => {
 		if (regid) {
+			// might need to do the clean up this listener
 			channelEventHub.unregisterChaincodeEvent(regid);
 			console.log('Timeout - Failed to receive the chaincode event');
 		}
 		reject(new Error('Timed out waiting for chaincode event'));
 	}, 20000);
 
-	regid = channelEventHub.registerChaincodeEvent(chaincode_id.toString(), '^evtsender*',
-		(event, block_num) => {
-		clearTimeout(handle);
-		channelEventHub.unregisterChaincodeEvent(regid);
-		console.log('Successfully received the chaincode event');
+	regid = eh.registerChaincodeEvent(chaincode_id.toString(), '^evtsender*', (event, block_num, txnid, status) => {
+		// This callback will be called when there is a chaincode event name
+		// within a block that will match on the second parameter in the registration
+		// from the chaincode with the ID of the first parameter.
+		console.log('Successfully got a chaincode event with transid:'+ txnid + ' with status:'+status);
+
+		// might be good to store the block number to be able to resume if offline
 		storeBlockNumForLater(block_num);
-		resolve();
+
+		let event_payload = event.payload.toString('utf8');
+		if(event_payload.indexOf('CHAINCODE') > -1) {
+			clearTimeout(handle);
+			// Chaincode event listeners are meant to run continuously
+			// Therefore the default to automatically unregister is false
+			// So in this case we want to shutdown the event listener once
+			// we see the event with the correct payload
+			eh.unregisterChaincodeEvent(regid);
+			console.log('Successfully received the chaincode event on block number '+ block_num);
+			resolve('RECEIVED');
+		} else {
+			console.log('Successfully got chaincode event ... just not the one we are looking for on block number '+ block_num);
+		}
 	}, (error)=> {
 		clearTimeout(handle);
-		channelEventHub.unregisterChaincodeEvent(regid);
 		console.log('Failed to receive the chaincode event ::'+error);
 		reject(error);
-	});
+	}
+		// no options specified
+		// startBlock will default to latest
+		// endBlock will default to MAX
+		// unregister will default to false
+		// disconnect will default to false
+	);
 });
+
+// build the promise to send the proposals to the orderer
 let send_trans = channel.sendTransaction({proposalResponses: results[0], proposal: results[1]});
 
+// now that we have two promises all set to go... execute them
 return Promise.all([event_monitor, send_trans]);
 }).then((results) => {
 ```

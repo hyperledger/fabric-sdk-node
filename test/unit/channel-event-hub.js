@@ -16,6 +16,7 @@
 
 'use strict';
 
+var Long = require('long');
 var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
@@ -62,6 +63,7 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 	t.throws(
 		() => {
 			eh = new ChannelEventHub(channel, peer);
+			eh.registerBlockEvent({});
 			eh.connect();
 		},
 		/The clientContext has not been properly initialized, missing userContext/,
@@ -69,6 +71,7 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 	);
 
 	client._userContext = {};
+	eh = new ChannelEventHub(channel, peer);
 
 	t.throws(
 		() => {
@@ -80,10 +83,10 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 
 	t.throws(
 		() => {
-			eh.unregisterBlockEvent();
+			eh.unregisterBlockEvent(999, true);
 		},
-		/Missing "block_registration_number" parameter/,
-		'Check the Missing "block_registration_number" parameter'
+		/Block listener for block registration number/,
+		'Check the Block listener for block registration number'
 	);
 	t.throws(
 		() => {
@@ -101,10 +104,10 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 	);
 	t.throws(
 		() => {
-			eh.unregisterTxEvent();
+			eh.unregisterTxEvent('bad', true);
 		},
-		/Missing "txid" parameter/,
-		'Check the Missing "txid" parameter'
+		/Transaction listener for transaction id/,
+		'Check the Transaction listener for transaction id'
 	);
 	t.throws(
 		() => {
@@ -136,11 +139,89 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 	);
 	t.throws(
 		() => {
-			eh._checkStartBlock('aaaa');
+			eh.unregisterChaincodeEvent('bad', true);
 		},
-		/start_block parameter must be valid integer/,
+		/No event registration for chaincode id/,
+		'Check the No event registration for chaincode id'
+	);
+	t.throws(
+		() => {
+			eh._checkReplay({startBlock:'aaaa'});
+		},
+		/Problem with the startBlock parameter/,
 		'Check that we able to see start block is not a number'
 	);
+	t.throws(
+		() => {
+			eh._checkReplay({startBlock:'1', endBlock:'bbbb'});
+		},
+		/Problem with the endBlock parameter/,
+		'Check that we able to see end block is not a number'
+	);
+
+	let converted = utils.convertToLong('1');
+	if(converted.equals(Long.fromValue(1))) {
+		t.pass('Successfully utils.convertToLong strings to long');
+	} else {
+		t.fail('utils.convertToLong did not work for strings')
+	}
+
+	t.throws(
+		() => {
+			converted = utils.convertToLong('aaa');
+		},
+		/is not a valid number/,
+		'Check that we able to see an error with a bad value on the convert'
+	);
+
+	t.throws(
+		() => {
+			converted = utils.convertToLong();
+		},
+		/value parameter is missing/,
+		'Check that we able to see an error with a bad value on the convert'
+	);
+
+	t.throws(
+		() => {
+			converted = utils.convertToLong(null);
+		},
+		/value parameter is missing/,
+		'Check that we able to see an error with a bad value on the convert'
+	);
+
+	converted = utils.convertToLong(1);
+	if(converted.equals(Long.fromValue(1))) {
+		t.pass('Successfully utils.convertToLong integer to long');
+	} else {
+		t.fail('utils.convertToLong did not work for integer')
+	}
+
+
+
+	let some_long = Long.fromValue(2)
+	converted = utils.convertToLong(some_long);
+	if(converted.equals(Long.fromValue(2))) {
+		t.pass('Successfully utils.convertToLong a long');
+	} else {
+		t.fail('utils.convertToLong did not work for long')
+	}
+
+	some_long = Long.fromValue(0)
+	converted = utils.convertToLong(some_long);
+	if(converted.equals(Long.fromValue(0))) {
+		t.pass('Successfully utils.convertToLong a long');
+	} else {
+		t.fail('utils.convertToLong did not work for long')
+	}
+
+	some_long = Long.fromValue('0')
+	converted = utils.convertToLong(some_long);
+	if(converted.equals(Long.fromValue(0))) {
+		t.pass('Successfully utils.convertToLong a long');
+	} else {
+		t.fail('utils.convertToLong did not work for long')
+	}
 
 	t.end();
 });
@@ -150,9 +231,6 @@ test('\n\n** ChannelEventHub block callback \n\n', (t) => {
 	let peer = new Peer('grpc://127.0.0.1:7051');
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
-
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
 
 	var index = eh.registerBlockEvent((block) => {
 		t.fail('Should not have called success callback when disconnect() is called');
@@ -172,8 +250,7 @@ test('\n\n** ChannelEventHub block callback \n\n', (t) => {
 	});
 
 	t.equal(index, 2, 'Check the 2nd block listener is at index 2');
-	t.equal(Object.keys(eh._blockOnEvents).length, 2, 'Check the size of the blockOnEvents hash table');
-	t.equal(Object.keys(eh._blockOnErrors).length, 2, 'Check the size of the blockOnErrors hash table');
+	t.equal(Object.keys(eh._blockRegistrations).length, 2, 'Check the size of the blockOnEvents hash table');
 
 	eh.disconnect();
 });
@@ -183,7 +260,6 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 	let peer = new Peer('grpc://127.0.0.1:7051');
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
-	eh._force_reconnect = false;
 
 	var index = eh.registerBlockEvent((block) => {
 		t.fail('Should not have called success callback');
@@ -202,7 +278,9 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 		}, (error) =>{
 			t.fail('Should not have called error callback');
 			t.end();
-		}, 1);
+		},
+			{startBlock: 1}
+		);
 		t.fail('Failed if the block event with a replay is registered after another block event');
 	} catch(error) {
 		if(error.toString().indexOf('Only one event registration is allowed')) {
@@ -221,15 +299,16 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 		}, (error) =>{
 			t.fail('Should not have called error callback');
 			t.end();
-		}, 1);
+		},
+			{startBlock: 1}
+		);
 		t.pass('Successfully registered a playback block event');
 	} catch(error) {
 		t.fail( 'Failed - Should be able to register with replay')
 	}
 
 	t.equal(index, 2, 'Check the first block listener is at index 2');
-	t.equal(Object.keys(eh._blockOnEvents).length, 1, 'Check the size of the blockOnEvents');
-	t.equal(Object.keys(eh._blockOnErrors).length, 1, 'Check the size of the blockOnErrors');
+	t.equal(Object.keys(eh._blockRegistrations).length, 1, 'Check the size of the blockOnEvents');
 
 	t.end();
 });
@@ -240,39 +319,39 @@ test('\n\n** ChannelEventHub transaction callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh._force_reconnect = false;
-
-	eh.registerTxEvent('txid1', (block) => {
+	eh.registerTxEvent('txid1', (transid, status) => {
 		// empty method body
 	}, (error) =>{
 		// empty method body
 	});
 	t.pass('successfully registered transaction callbacks');
-	t.equal(Object.keys(eh._transactionOnEvents).length, 1, 'Check the size of the transactionOnEvents hash table');
-	t.equal(Object.keys(eh._transactionOnErrors).length, 1, 'Check the size of the transactionOnErrors hash table');
+	t.equal(Object.keys(eh._transactionRegistrations).length, 1, 'Check the size of the transactionOnEvents hash table');
 
-	eh.registerTxEvent('txid1', (block) => {
+	t.throws(
+	 	() => {
+			eh.registerTxEvent('txid1', (transid, status) => {
+				t.fail('Should not have called success callback');
+				t.end();
+			}, (error) =>{
+				t.fail('Should not have called error callback');
+				t.end();
+			});
+	 	},
+	 	/has already been registered/,
+	 	'Checking for TransactionId (%s) has already been registered'
+	 );
+
+	eh.registerTxEvent('txid2', (transid, status) => {
 		t.fail('Should not have called success callback');
 		t.end();
 	}, (error) =>{
-		t.pass('Successfully called transaction error callback');
+		t.pass('Should have called error callback');
 		t.end();
 	});
-	t.equal(Object.keys(eh._transactionOnEvents).length, 1,
-		'Size of the transactionOnEvents hash table should still be 1 since the listeners are for the same txId');
-	t.equal(Object.keys(eh._transactionOnErrors).length, 1,
-		'Size of the transactionOnErrors hash table should still be 1 since the listeners are for the same txId');
 
-	eh.registerTxEvent('txid2', (block) => {
-		// empty method body
-	}, (error) =>{
-		// empty method body
-	});
+	t.equal(Object.keys(eh._transactionRegistrations).length, 2, 'Check the size of the transactionOnEvents hash table');
 
-	t.equal(Object.keys(eh._transactionOnEvents).length, 2, 'Check the size of the transactionOnEvents hash table');
-	t.equal(Object.keys(eh._transactionOnErrors).length, 2, 'Check the size of the transactionOnErrors hash table');
-
-	eh.disconnect();
+	eh.disconnect(); //should call the t.end() in the txid1 error callback
 });
 
 test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
@@ -282,7 +361,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 	let eh = channel.newChannelEventHub(peer);
 	eh._force_reconnect = false;
 
-	eh.registerTxEvent('transid', (block) => {
+	eh.registerTxEvent('transid', (transid, status) => {
 		t.fail('Should not have called success callback');
 		t.end();
 	}, (error) =>{
@@ -292,13 +371,15 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 
 	t.pass('Successfully registered transaction callbacks');
 	try {
-		eh.registerTxEvent('transid', (block) => {
+		eh.registerTxEvent('transid', (transid, status) => {
 			t.fail('Should not have called success callback');
 			t.end();
 		}, (error) =>{
 			t.fail('Should not have called error callback');
 			t.end();
-		}, 1);
+		},
+			{startBlock: 1, endBlock: 2}
+		);
 		t.fail('Failed if the transaction event with a replay is registered after another transaction event');
 	} catch(error) {
 		if(error.toString().indexOf('Only one event registration is allowed')) {
@@ -311,7 +392,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 	eh.unregisterTxEvent('transid');
 
 	try {
-		eh.registerTxEvent('transid', (block) => {
+		eh.registerTxEvent('transid', (transid, status) => {
 			t.fail('Should not have called success callback');
 			t.end();
 		}, (error) =>{
@@ -323,8 +404,24 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 		t.fail( 'Failed - Should be able to register with replay')
 	}
 
-	t.equal(Object.keys(eh._transactionOnEvents).length, 1, 'Check the size of the transactionOnEvents');
-	t.equal(Object.keys(eh._transactionOnErrors).length, 1, 'Check the size of the transactionOnErrors');
+	t.equal(Object.keys(eh._transactionRegistrations).length, 1, 'Check the size of the transactionOnEvents');
+
+	t.throws(
+	 	() => {
+			eh = channel.newChannelEventHub(peer);
+			eh.registerTxEvent('txid3', (transid, status) => {
+				t.fail('Should not have called success callback');
+				t.end();
+			}, (error) =>{
+				t.fail('Should not have called error callback');
+				t.end();
+			},
+				{startBlock: 2, endBlock: 1}
+			);
+	 	},
+	 	/must not be larger than/,
+	 	'Checking for "startBlock" (%s) must not be larger than "endBlock" (%s)'
+	 );
 
 	t.end();
 });
@@ -334,9 +431,6 @@ test('\n\n** ChannelEventHub chaincode callback \n\n', (t) => {
 	let peer = new Peer('grpc://127.0.0.1:7051');
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
-
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
 
 	eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
 		t.fail('Should not have called success callback');
@@ -394,7 +488,9 @@ test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
 		}, (error) =>{
 			t.fail('Should not have called error callback');
 			t.end();
-		}, 1);
+		},
+			{startBlock: 1}
+		);
 		t.fail('Failed if the chaincode event with a replay is registered after another chaincode event');
 	} catch(error) {
 		if(error.toString().indexOf('Only one event registration is allowed')) {
@@ -413,7 +509,9 @@ test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
 		}, (error) =>{
 			t.fail('Should not have called error callback');
 			t.end();
-		}, 1);
+		},
+			{startBlock: 1}
+		);
 		t.pass('Successfully registered a playback chaincode event');
 	} catch(error) {
 		t.fail( 'Failed - Should be able to register with replay')
@@ -431,9 +529,6 @@ test('\n\n** ChannelEventHub block callback no Error callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
-
 	eh.registerBlockEvent((block) => {
 		t.fail('Should not have called block no error success callback');
 		t.end();
@@ -449,10 +544,7 @@ test('\n\n** ChannelEventHub transaction callback no Error callback \n\n', (t) =
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
-
-	eh.registerTxEvent('txid', (block) => {
+	eh.registerTxEvent('txid', (txid, status) => {
 		t.fail('Should not have called transaction no error success callback');
 		t.end();
 	});
@@ -466,9 +558,6 @@ test('\n\n** ChannelEventHub chaincode callback no Error callback \n\n', (t) => 
 	let peer = new Peer('grpc://127.0.0.1:7051');
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
-
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
 
 	eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
 		t.fail('Should not have called chaincode no error success callback');
@@ -485,9 +574,6 @@ test('\n\n** ChannelEventHub remove block callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
-
 	var blockcallback = (block) => {
 		t.fail('Should not have called block success callback (on remove)');
 		t.end();
@@ -499,7 +585,7 @@ test('\n\n** ChannelEventHub remove block callback \n\n', (t) => {
 	var brn = eh.registerBlockEvent( blockcallback, blockerrorcallback);
 	t.pass('successfully registered block callbacks');
 	eh.unregisterBlockEvent(brn);
-	t.equal(Object.keys(eh._blockOnEvents).length, 0, 'Check the size of the blockOnEvents hash table');
+	t.equal(Object.keys(eh._blockRegistrations).length, 0, 'Check the size of the blockOnEvents hash table');
 	t.pass('successfuly unregistered block callback');
 	eh.disconnect();
 	t.pass('successfuly disconnected ChannelEventHub');
@@ -512,11 +598,8 @@ test('\n\n** ChannelEventHub remove transaction callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
-
 	var txid = 'txid';
-	eh.registerTxEvent(txid, (block) => {
+	eh.registerTxEvent(txid, (transid, status) => {
 		t.fail('Should not have called transaction success callback (on remove)');
 		t.end();
 	}, (error) =>{
@@ -526,7 +609,7 @@ test('\n\n** ChannelEventHub remove transaction callback \n\n', (t) => {
 	t.pass('successfully registered transaction callbacks');
 	eh.unregisterTxEvent(txid);
 	t.pass('successfuly unregistered transaction callback');
-	t.equal(Object.keys(eh._transactionOnEvents).length, 0, 'Check the size of the transactionOnEvents hash table');
+	t.equal(Object.keys(eh._transactionRegistrations).length, 0, 'Check the size of the transactionOnEvents hash table');
 	eh.disconnect();
 	t.pass('successfuly disconnected ChannelEventHub');
 	t.end();
@@ -537,9 +620,6 @@ test('\n\n** ChannelEventHub remove chaincode callback \n\n', (t) => {
 	let peer = new Peer('grpc://127.0.0.1:7051');
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
-
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
 
 	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
 		t.fail('Should not have called chaincode success callback (on remove)');
@@ -565,9 +645,6 @@ test('\n\n** ChannelEventHub remove block callback no Error callback \n\n', (t) 
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
-
 	var blockcallback = (block) => {
 		t.fail('Should not have called block success callback (remove with no error callback)');
 		t.end();
@@ -587,11 +664,8 @@ test('\n\n** ChannelEventHub remove transaction callback no Error callback\n\n',
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
-
 	var txid = 'txid';
-	eh.registerTxEvent(txid, (block) => {
+	eh.registerTxEvent(txid, (transid, status) => {
 		t.fail('Should not have called transaction success callback (remove with no error callback)');
 		t.end();
 	});
@@ -609,8 +683,6 @@ test('\n\n** ChannelEventHub remove chaincode callback no Error callback \n\n', 
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh._connected = true; //force this into connected state
-	eh._force_reconnect = false;
 	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
 		t.fail('Should not have called chaincode success callback (remove with no error callback)');
 		t.end();
@@ -646,238 +718,7 @@ test('\n\n** Test the add and remove utilty used by the ChannelEventHub to add a
 	t.end();
 });
 
-// test actions after connect fails
-// 1. register for event with no delay and no error callback
-// 2. register for event with no delay and error callback
-// 3. register for event with delay and no error callback
-// 4. register for event with delay and error callback
-test('\n\n** ChannelEventHub test actions when connect failures on transaction registration \n\n', (t) => {
-	var client = new Client();
-	var channel = client.newChannel('mychannel');
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	var event_hub = null;
-	var member = new User('user1');
-	var crypto_suite = utils.newCryptoSuite();
-	crypto_suite.setCryptoKeyStore(utils.newCryptoKeyStore());
-	member.setCryptoSuite(crypto_suite);
-	crypto_suite.generateKey()
-	.then(function (key) {
-		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
-	}).then(() => {
-		var id = member.getIdentity();
-		client.setUserContext(member, true);
-
-		// tx test 1
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-		t.doesNotThrow(
-			() => {
-				event_hub.registerTxEvent('123', (tx_id, code) => {
-					t.fail('Failed callback should not have been called - tx test 1')
-				});
-			},
-			null,
-			'Check for The event hub has not been connected to the event source - tx test 1'
-		);
-
-		// tx test 2
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-		t.doesNotThrow(
-			() => {
-				event_hub.registerTxEvent('123',
-				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - tx test 2')
-				},
-				(error) =>{
-					if(error.toString().indexOf('Connect Failed')) {
-						t.pass('Successfully got the error call back tx test 2 ::'+error);
-					} else {
-						t.failed('Failed to get connection failed error tx test 2 ::'+error);
-					}
-				});
-			},
-			null,
-			'Check for The event hub has not been connected to the event source - tx test 2'
-		);
-
-		// tx test 3
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-
-		let sleep_time = 3000;
-		t.comment('about to sleep '+sleep_time);
-		return sleep(sleep_time);
-	}).then((nothing) => {
-		t.pass('Sleep complete');
-		// eventhub is now actually not connected
-
-		t.throws(
-			() => {
-				event_hub.registerTxEvent('123', (tx_id, code) => {
-					t.fail('Failed callback should not have been called - tx test 3')
-				});
-			},
-			/The event hub has not been connected to the event source/,
-			'Check for The event hub has not been connected to the event source - tx test 3'
-		);
-
-		// test 4
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-
-		let sleep_time = 3000;
-		t.comment('about to sleep '+sleep_time);
-		return sleep(sleep_time);
-	}).then((nothing) => {
-		t.pass('Sleep complete');
-		// eventhub is now actually not connected
-
-		t.doesNotThrow(
-			() => {
-				event_hub.registerTxEvent('123',
-				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - tx test 4')
-				},
-				(error) =>{
-					if(error.toString().indexOf('Connect Failed')) {
-						t.pass('Successfully got the error call back tx test 4 ::'+error);
-					} else {
-						t.failed('Failed to get connection failed error tx test 4 :: '+error);
-					}
-				});
-			},
-			null,
-			'Check for The event hub has not been connected to the event source - tx test 4'
-		);
-
-		t.end();
-	}).catch((err) => {
-		t.fail(err.stack ? err.stack : err);
-		t.end();
-	});
-
-});
-
-// test actions after connect fails
-// 1. register for event with no delay and no error callback
-// 2. register for event with no delay and error callback
-// 3. register for event with delay and no error callback
-// 4. register for event with delay and error callback
-test('\n\n** EventHub test actions when connect failures on block registration \n\n', (t) => {
-	var client = new Client();
-	var channel = client.newChannel('mychannel');
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	var event_hub = null;
-	var member = new User('user1');
-	var crypto_suite = utils.newCryptoSuite();
-	crypto_suite.setCryptoKeyStore(utils.newCryptoKeyStore());
-	member.setCryptoSuite(crypto_suite);
-	crypto_suite.generateKey()
-	.then(function (key) {
-		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
-	}).then(() => {
-		var id = member.getIdentity();
-		client.setUserContext(member, true);
-
-		// test 1
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-		t.doesNotThrow(
-			() => {
-				event_hub.registerBlockEvent((tx_id, code) => {
-					t.fail('Failed callback should not have been called - block test 1')
-				});
-			},
-			null,
-			'Check for The event hub has not been connected to the event source - block test 1'
-		);
-
-		// block test 2
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-		t.doesNotThrow(
-			() => {
-				event_hub.registerBlockEvent(
-				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - block test 2')
-				},
-				(error) =>{
-					if(error.toString().indexOf('Connect Failed')) {
-						t.pass('Successfully got the error call back block test 2 ::'+error);
-					} else {
-						t.failed('Failed to get connection failed error block test 2 ::'+error);
-					}
-				});
-			},
-			null,
-			'Check for The event hub has not been connected to the event source - block test 2'
-		);
-
-		// block test 3
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-
-		let sleep_time = 3000;
-		t.comment('about to sleep '+sleep_time);
-		return sleep(sleep_time);
-	}).then((nothing) => {
-		t.pass('Sleep complete');
-		// eventhub is now actually not connected
-
-		t.throws(
-			() => {
-				event_hub.registerBlockEvent((tx_id, code) => {
-					t.fail('Failed callback should not have been called - block test 3')
-				});
-			},
-			/The event hub has not been connected to the event source/,
-			'Check for The event hub has not been connected to the event source - block test 3'
-		);
-
-		// block test 4
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-
-		let sleep_time = 3000;
-		t.comment('about to sleep '+sleep_time);
-		return sleep(sleep_time);
-	}).then((nothing) => {
-		t.pass('Sleep complete');
-		// eventhub is now actually not connected
-
-		t.doesNotThrow(
-			() => {
-				event_hub.registerBlockEvent(
-				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - block test 4')
-				},
-				(error) =>{
-					if(error.toString().indexOf('Connect Failed')) {
-						t.pass('Successfully got the error call back block test 4 ::'+error);
-					} else {
-						t.failed('Failed to get connection failed error block test 4 :: '+error);
-					}
-				});
-			},
-			null,
-			'Check for The event hub has not been connected to the event source - block test 4'
-		);
-
-		t.end();
-	}).catch((err) => {
-		t.fail(err.stack ? err.stack : err);
-		t.end();
-	});
-
-});
-
-// chaincode test actions after connect fails
-// 1. register for event with no delay and no error callback
-// 2. register for event with no delay and error callback
-// 3. register for event with delay and no error callback
-// 4. register for event with delay and error callback
-test('\n\n** EventHub test actions when connect failures on chaincode registration \n\n', (t) => {
+test('\n\n** ChannelEventHub test connect failure on transaction registration \n\n', (t) => {
 	var client = new Client();
 	var channel = client.newChannel('mychannel');
 	let peer = new Peer('grpc://127.0.0.1:9999');
@@ -893,95 +734,99 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 		var id = member.getIdentity();
 		client.setUserContext(member, true);
 
-		// chaincode test 1
+		// tx test
 		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-		t.doesNotThrow(
-			() => {
-				event_hub.registerChaincodeEvent('123', 'event', (tx_id, code) => {
-					t.fail('Failed callback should not have been called - chaincode test 1')
-				});
+		event_hub.registerTxEvent('123',
+			(tx_id, code) => {
+				t.fail('Failed callback should not have been called - tx test 2')
+				t.end();
 			},
-			null,
-			'Check for The event hub has not been connected to the event source - chaincode test 1'
+			(error) => {
+				if(error.toString().indexOf('Connect Failed')) {
+					t.pass('Successfully got the error call back tx test 2 ::'+error);
+				} else {
+					t.failed('Failed to get connection failed error tx test 2 ::'+error);
+				}
+				t.end();
+			}
 		);
 
-		// chaincode test 2
-		event_hub = channel.newChannelEventHub(peer);
 		event_hub.connect();
-		t.doesNotThrow(
-			() => {
-				event_hub.registerChaincodeEvent('123', 'event',
-				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - chaincode test 2')
-				},
-				(error) =>{
-					if(error.toString().indexOf('Connect Failed')) {
-						t.pass('Successfully got the error call back chaincode test 2 ::'+error);
-					} else {
-						t.failed('Failed to get connection failed error chaincode test 2 ::'+error);
-					}
-				});
-			},
-			null,
-			'Check for The event hub has not been connected to the event source - chaincode test 2'
-		);
-
-		// chaincode test 3
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-
 		let sleep_time = 3000;
 		t.comment('about to sleep '+sleep_time);
+
 		return sleep(sleep_time);
 	}).then((nothing) => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
-
-		t.throws(
-			() => {
-				event_hub.registerChaincodeEvent('123', 'event', (tx_id, code) => {
-					t.fail('Failed callback should not have been called - chaincode test 3')
-				});
-			},
-			/The event hub has not been connected to the event source/,
-			'Check for The event hub has not been connected to the event source - chaincode test 3'
-		);
-
-		// chaincode test 4
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.connect();
-
-		let sleep_time = 3000;
-		t.comment('about to sleep '+sleep_time);
-		return sleep(sleep_time);
-	}).then((nothing) => {
-		t.pass('Sleep complete');
-		// eventhub is now actually not connected
-
-		t.doesNotThrow(
-			() => {
-				event_hub.registerChaincodeEvent('123', 'event',
-				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - chaincode test 4')
-				},
-				(error) =>{
-					if(error.toString().indexOf('Connect Failed')) {
-						t.pass('Successfully got the error call back chaincode test 4 ::'+error);
-					} else {
-						t.failed('Failed to get connection failed error chaincode test 4 :: '+error);
-					}
-				});
-			},
-			null,
-			'Check for The event hub has not been connected to the event source - chaincode test 4'
-		);
-
-		t.end();
 	}).catch((err) => {
 		t.fail(err.stack ? err.stack : err);
 		t.end();
 	});
+});
+
+test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
+	var client = new Client();
+	var channel = client.newChannel('mychannel');
+	let peer = new Peer('grpc://127.0.0.1:9999');
+	var event_hub = null;
+	var member = new User('user1');
+	var crypto_suite = utils.newCryptoSuite();
+	crypto_suite.setCryptoKeyStore(utils.newCryptoKeyStore());
+	member.setCryptoSuite(crypto_suite);
+	crypto_suite.generateKey()
+	.then(function (key) {
+		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
+	}).then(() => {
+		var id = member.getIdentity();
+		client.setUserContext(member, true);
+
+		event_hub = channel.newChannelEventHub(peer);
+		t.doesNotThrow(
+			() => {
+				event_hub.registerBlockEvent((tx_id, code) => {
+					t.fail('Failed callback should not have been called - block test 1')
+				});
+			},
+			null,
+			'Check for The event hub has not been connected to the event source - block test 1'
+		);
+
+		event_hub = channel.newChannelEventHub(peer);
+		event_hub.registerBlockEvent(
+			(tx_id, code) => {
+				t.fail('Failed callback should not have been called - block test 2')
+				t.end();
+			},
+			(error) =>{
+				if(error.toString().indexOf('Connect Failed')) {
+					t.pass('Successfully got the error call back block test 2 ::'+error);
+				} else {
+					t.failed('Failed to get connection failed error block test 2 ::'+error);
+				}
+				t.end();
+			}
+		);
+
+		let state = event_hub.checkConnection();
+		t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
+
+		// force the connections
+		// runs asynchronously, must be an error callback registered to get the
+		// failure will be reported to an error callback
+		state = event_hub.checkConnection(true);
+		t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
+		let sleep_time = 5000; //need to sleep longer than request timeout
+		t.comment('about to sleep '+sleep_time);
+		return sleep(sleep_time);
+	}).then((nothing) => {
+		t.pass('Sleep complete');
+		// t.end() should come from the callback
+	}).catch((err) => {
+		t.fail(err.stack ? err.stack : err);
+		t.end();
+	});
+
 });
 
 test('\n\n** Test the state conversion\n\n', (t) => {

@@ -1542,7 +1542,7 @@ var Channel = class {
 	 *	});
 	 */
 	queryByChaincode(request, useAdmin) {
-		logger.debug('queryByChaincodel - start');
+		logger.debug('queryByChaincode - start');
 		if(!request) {
 			throw new Error('Missing request object for this queryByChaincode call.');
 		}

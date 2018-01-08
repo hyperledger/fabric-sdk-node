@@ -40,15 +40,14 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 	let chaincode_version = testUtil.getUniqueVersion();
 	let chaincode_id = 'events_unit_test_' + chaincode_version;
-	let request = null;
 	let the_user = null;
 	let targets = [];
-	let eh;
 	let req1 = null;
 	let req2 = null;
 	let tls_data = null;
 	let txid = null;
 	let block_reg = null;
+	let event_hub = null;
 
 	// using an array to track the event hub instances so that when this gets
 	// passed into the overriden t.end() closure below it will get updated
@@ -60,7 +59,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			for(let key in ehs) {
 				let eventhub = ehs[key];
 				if (eventhub && eventhub.isconnected()) {
-					logger.debug('Disconnecting the event hub');
+					logger.debug('Disconnecting the event hub from the modified test end method');
 					eventhub.disconnect();
 				}
 			}
@@ -92,9 +91,10 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	);
 	channel.addPeer(peer);
 	targets.push(peer);
-	eh = channel.newChannelEventHub(peer);
+
+	event_hub = channel.newChannelEventHub(peer);
 	t.pass('Successfully created new channel event hub for peer');
-	eventhubs.push(eh);
+	eventhubs.push(event_hub); //add to list so we can shutdown at end of test
 
 	Client.newDefaultKeyValueStore({
 		path: testUtil.storePathForOrg('peerOrg1')
@@ -107,15 +107,16 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		t.pass('Successfully enrolled admin user \'admin\'');
 		the_user = admin;
 
-		// now that the user has been assigned to the client instance , we are able to
-		// try to connect to the peer's new channel based event service on the peer.
-		// This will setup the stream and blocks will start to be returned asynchrously.
-		eh.connect();
+		// Now that the user has been assigned to the client instance we can
+		// have the channel event hub connect to the peer's channel-based event
+		// service. This connect can be done anytime after the user has been
+		// assigned to the client and before the transaction is submitted
+		event_hub.connect();
 
 		// get a transaction ID object based on the current user assigned
 		// to the client instance
 		let tx_id = client.newTransactionID();
-		let request = {
+		let req = {
 			targets : targets,
 			chaincodePath: 'github.com/events_cc',
 			chaincodeId: chaincode_id,
@@ -123,7 +124,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			txId: tx_id
 		};
 
-		return client.installChaincode(request, 30000);
+		return client.installChaincode(req, 30000);
 	}).then((results) => {
 		let proposalResponses = results[0];
 		let proposal = results[1];
@@ -148,7 +149,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			let tx_id = client.newTransactionID();
 			txid = tx_id.getTransactionID(); //save the transaction id string
 
-			request = {
+			let req = {
 				targets : targets,
 				chaincodeId: chaincode_id,
 				chaincodeVersion: chaincode_version,
@@ -158,7 +159,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			};
 
 			// the instantiate proposal can take a longer
-			return channel.sendInstantiateProposal(request, 120000);
+			return channel.sendInstantiateProposal(req, 120000);
 		} else {
 			t.fail('Failed to install chaincode');
 			throw new Error('failed to endorse the install chaincode proposal:' + results);
@@ -183,14 +184,15 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 			let event_monitor =  new Promise((resolve, reject) => {
 				let handle = setTimeout(() => {
-					eh.unregisterTxEvent(txid); //use the transaction id string saved above during edorsement
+					// this is required to avoid the error callback being called
+					// when the event hub is disconnected
+					eh.unregisterTxEvent(txid); //use the transaction id string saved above during endorsement
 					t.fail('Failed to receive the event for transaction ::'+req)
 					reject('timeout');
 				}, 60000);
 
-				eh.registerTxEvent(txid, (txnid, code) => {
+				event_hub.registerTxEvent(txid, (txnid, code) => {
 					clearTimeout(handle);
-					eh.unregisterTxEvent(txnid);
 					if (code !== 'VALID') {
 						t.fail('Failed to instantiate event for transaction '+ txnid + ' was not valid');
 						reject('invalid');
@@ -200,10 +202,11 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 					}
 				}, (error) => {
 					clearTimeout(handle);
-					eh.unregisterTxEvent(txid);
 					t.fail('Instantiate event failed to due to :'+error);
 					reject(error);
-				});
+				},
+					{unregister: true} //not needed as this is the default setting
+				);
 			});
 			let send_trans = channel.sendTransaction({proposalResponses: proposalResponses,	proposal: proposal});
 
@@ -214,46 +217,49 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			throw new Error('Failed to endorse the instatiate chaincode proposal:' + results);
 		}
 	}).then((results) => {
-		// a real application would check the results here
-		t.pass('Successfully instantiated chaincode, however we need to sleep for a bit.');
-
-		return sleep(10000);
-	}).then((nothing) => {
 		t.pass('Successfully slept for awhile waiting for chaincode to start');
 
 		// need to always get a new transaction id for every transaction
 		let tx_id = client.newTransactionID();
-		let request = {
+		txid = tx_id.getTransactionID(); //save the transaction id string
+		let req = {
 			targets : targets,
 			chaincodeId: chaincode_id,
 			fcn: 'invoke',
 			args: ['invoke', 'BLOCK'],
 			txId: tx_id
 		};
+		t.pass('Successfully built transaction proposal request with txid:'+txid);
 
-		return channel.sendTransactionProposal(request);
+		return channel.sendTransactionProposal(req);
 	}).then((results) => {
 		// a real application would check the proposal results
 		t.pass('Successfully endorsed proposal to invoke chaincode');
 
 		let event_monitor = new Promise((resolve, reject) => {
-			let regid = null;
+			let block_reg = null;
 			let handle = setTimeout(() => {
-				if (regid) {
-					eh.unregisterBlockEvent(block_reg);
+				if (block_reg) {
+					event_hub.unregisterBlockEvent(block_reg);
 					t.fail('Timeout - Failed to receive the block event');
 				}
 				reject(new Error('Timed out waiting for block event'));
 			}, 20000);
 
-			block_reg = eh.registerBlockEvent((block) => {
+			block_reg = event_hub.registerBlockEvent((block) => {
 				clearTimeout(handle);
-				eh.unregisterBlockEvent(block_reg);
-				t.pass('Successfully received the block event');
-				resolve(block);
+				event_hub.unregisterBlockEvent(block_reg);
+				t.pass('Successfully received the block event for block_num:' + block.header.number);
 			}, (error)=> {
 				clearTimeout(handle);
-				eh.unregisterBlockEvent(block_reg);
+				t.fail('Failed to receive the block event ::'+error);
+			});
+
+			event_hub.registerTxEvent(txid, (txid, status, block_num) => {
+				t.pass('Successfully got transaction event with txid:'+txid);
+				t.pass('Successfully received the transaction status:'+ status + ' for block num:'+block_num);
+				resolve(block_num);
+			}, (error)=> {
 				t.fail('Failed to receive the block event ::'+error);
 				reject(error);
 			});
@@ -262,23 +268,24 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 		return Promise.all([event_monitor, send_trans]);
 	}).then((results) => {
-		//a real application would check the results of both the block event and send transaction
-		t.pass('Successfully received block event.');
+		t.pass('Successfully got the block ::'+ results[0]);
+		t.pass('Successfully got send transaction status of :'+ results[1].status);
 
-		return sleep(10000);
-	}).then((nothing) => {
-		t.pass('Successfully slept for awhile waiting for block to get here');
+		// the query target will be the peer added to the channel
+		return channel.queryBlock(Long.fromValue(results[0]).toNumber());
+	}).then((results) => {
+		t.pass('Successfully queried for block: '+results.header.number);
 
 		let request = {
-			targets : targets,
 			chaincodeId: chaincode_id,
 			fcn: 'invoke',
 			args: ['query']
 		};
 
+		// the query target will be the peer added to the channel
 		return channel.queryByChaincode(request);
 	}).then((results) => {
-		t.pass('Successfully queried chaincode.');
+		t.pass('Successfully queried chaincode again...');
 
 		for (let i = 0; i < results.length; i++) {
 			t.pass('Got results back ' + results[i].toString('utf8') );
@@ -287,7 +294,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 		// need to always get a new transaction id for every transaction
 		let tx_id = client.newTransactionID();
-		let request = {
+		txid = tx_id.getTransactionID(); //save the transaction id string
+		let req = {
 			targets : targets,
 			chaincodeId: chaincode_id,
 			fcn: 'invoke',
@@ -295,7 +303,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			txId: tx_id
 		};
 
-		return channel.sendTransactionProposal(request);
+		return channel.sendTransactionProposal(req);
 	}).then((results) => {
 		// a real application would check the proposal results
 		t.pass('Successfully endorsed proposal to invoke chaincode');
@@ -304,21 +312,29 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			let regid = null;
 			let handle = setTimeout(() => {
 				if (regid) {
-					eh.unregisterChaincodeEvent(regid);
+					event_hub.unregisterChaincodeEvent(regid);
 					t.fail('Timeout - Failed to receive the chaincode event');
 				}
 				reject(new Error('Timed out waiting for chaincode event'));
-			}, 20000);
+			}, 40000);
 
-			regid = eh.registerChaincodeEvent(chaincode_id.toString(), '^evtsender*',
-				(event, block_num) => {
-				clearTimeout(handle);
-				eh.unregisterChaincodeEvent(regid);
-				t.pass('Successfully received the chaincode event on block number '+ block_num);
-				resolve('RECEIVED');
+			regid = event_hub.registerChaincodeEvent(chaincode_id.toString(), '^evtsender*', (event, block_num, txnid, status) => {
+				t.pass('Successfully got a chaincode event with transid:'+ txnid + ' with status:'+status);
+				let event_payload = event.payload.toString('utf8');
+				if(event_payload.indexOf('CHAINCODE') > -1) {
+					clearTimeout(handle);
+					// Chaincode event listeners are meant to run continuously
+					// Therefore the default to automatically unregister is false
+					// So in this case we want to shutdown the event listener once
+					// we see the event with the correct payload
+					event_hub.unregisterChaincodeEvent(regid);
+					t.pass('Successfully received the chaincode event on block number '+ block_num);
+					resolve('RECEIVED');
+				} else {
+					t.pass('Successfully got chaincode event ... just not the one we are looking for on block number '+ block_num);
+				}
 			}, (error)=> {
 				clearTimeout(handle);
-				eh.unregisterChaincodeEvent(regid);
 				t.fail('Failed to receive the chaincode event ::'+error);
 				reject(error);
 			});
@@ -337,7 +353,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 		if(sendResults.status && sendResults.status === 'SUCCESS') {
 			all_good = true;
-			t.pass('Successfully send transaction to get chaincode event');
+			t.pass('Successfully sent transaction to get chaincode event');
 		} else {
 			t.fail('Failed to send transaction to get chaincode event ');
 		}
@@ -363,17 +379,13 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			throw new Error('Failed to get proper results');
 		}
 
-		return sleep(10000);
-	}).then((nothing) => {
-		t.pass('Successfully slept for awhile waiting for block to get here');
-
 		let request = {
-			targets : targets,
 			chaincodeId: chaincode_id,
 			fcn: 'invoke',
 			args: ['query']
 		};
 
+		// the query target will be the peer added to the channel
 		return channel.queryByChaincode(request);
 	}).then((results) => {
 		t.pass('Successfully queried chaincode.');
@@ -419,9 +431,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				reject('timeout');
 			}, 200000);
 
-			eh.registerTxEvent(req1.txId.getTransactionID(), (txnid, code, block_num) => {
+			event_hub.registerTxEvent(req1.txId.getTransactionID(), (txnid, code, block_num) => {
 				clearTimeout(handle);
-				eh.unregisterTxEvent(txnid);
 				t.pass('Event1 has transaction code:'+ code
 					+ ' for transactionID:'+txnid + ' block number:'
 					+ block_num);
@@ -434,29 +445,28 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				resolve(code);
 			}, (error) => {
 				clearTimeout(handle);
-				eh.unregisterTxEvent(req1.txId.getTransactionID());
-				t.fail('Failed to receive event for Event1 for transaction id ::'+txid);
+				t.fail('Failed to receive event for Event1 for transaction id ::'+req1.txId.getTransactionID());
 				// send back error
 				reject(error);
 			});
+
 		});
 		let event_monitor_2 =  new Promise((resolve, reject) => {
 			let handle = setTimeout(() => {
 				t.fail('Timeout - Failed to receive the event for event2');
-				eh.unregisterTxEvent(req2.txId.getTransactionID());
+				// still have to unregister to clean up the channelEventHub instance
+				event_hub.unregisterTxEvent(req2.txId.getTransactionID());
 				reject('timeout');
 			}, 200000);
 
-			eh.registerTxEvent(req2.txId.getTransactionID(), (txnid, code) => {
+			event_hub.registerTxEvent(req2.txId.getTransactionID(), (txnid, code) => {
 				clearTimeout(handle);
-				eh.unregisterTxEvent(txnid);
 				t.pass('Event2 has transaction code:'+ code + ' for transaction id ::'+txnid);
 				// send back what we got... look at it later
 				resolve(code);
 			}, (error) => {
 				clearTimeout(handle);
-				eh.unregisterTxEvent(req2.txId.getTransactionID());
-				t.fail('Failed to receive event for Event2 for transaction id ::'+txnid);
+				t.fail('Failed to receive event2 for Event2 for transaction id ::'+req2.txId.getTransactionID());
 				// send back error
 				reject(error);
 			});
@@ -482,7 +492,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		logger.debug(' queryInfo ::%j',results);
 		t.pass('Successfully received channel info');
 		return new Promise((resolve, reject) => {
-			let channel_height = Long.fromValue(results.height); //this is a long object
+			let channel_height = Long.fromValue(results.height);
 
 			// will use the following number as way to know when to stop the replay
 			let current_block = channel_height.subtract(1);
@@ -490,12 +500,16 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 			let eh2 = channel.newChannelEventHub(peer);
 			eventhubs.push(eh2); //putting on this list will have it closed on the test end
+			let block_reg_num = null;
 
+			// a real application would not want to have a timeout if the application
+			// wanted to continuously listen to block events
 			let handle = setTimeout(() => {
 				t.fail('Timeout - Failed to replay all the block events in a reasonable amount of time');
+				eh2.unregisterBlockEvent(block_reg_num); // using unregister set to false
 				throw new Error('Timeout -  block replay has not completed');
 			}, 60000);
-			let block_reg_num = null;
+
 			// register to replay all block events
 			block_reg_num = eh2.registerBlockEvent((block) => {
 				// block number is decoded into human readable form
@@ -503,61 +517,124 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				let event_block = Long.fromValue(block.header.number);
 				if(event_block.equals(current_block)) {
 					clearTimeout(handle);
+					// This registation must be done before the connect since
+					// the listener being register will be doing replay/resume
 					eh2.unregisterBlockEvent(block_reg_num);
-					// we do not remove the registration
+					// using unregister set to false, just to show how to use
+					// if we do not remove the registration
 					// the error callback will get called
-					// when the disconnect gets called on test end
+					// when the disconnect gets called at the test end
 					t.pass('Successfully had all blocks replayed ');
-					resolve();
+					resolve('all blocks replayed');
 				} else {
 					t.pass('Replay block event '+block.header.number);
+					// keep going...do not resolve this promise yet
 				}
 			}, (error) => {
 				clearTimeout(handle);
 				t.fail('Failed to replay all the block events');
 				throw new Error('Replay Error callback was called with ::' + error);
-			}, 0); // a real application would have remembered that last block event
-			       // received and used that value hear to start the replay
+			},
+				// a real application would have remembered the last block event
+				// received and used that value here to start the replay
+				// setting the unregister here, so application code will handle it
+				{start_block : 0, endBlock : current_block, unregister : false}
+			);
 			t.pass('Successfully registered block replay with reg number of :'+block_reg_num);
+
+			// this connect must be done after the registration of listener
+			// doing resume/replay so that the peer's channel-base event service
+			// will know to which blocks to send.
 			eh2.connect();
 			t.pass('Successfully called connect on the replay');
 		});
 	}).then((results) => {
-		let eh2 = channel.newChannelEventHub(peer);
-		eventhubs.push(eh2); //putting on this list will have it closed on the test end
+		t.pass('Successfully got results :'+results);
+		return new Promise((resolve, reject) => {
+			// need to create a new ChannelEventHub when registering a listener
+			// that will have a startBlock or endBlock -- doing a replay/resume
+			// The ChannelEventHub must not have been connected or have other
+			// listeners.
+			let eh2 = channel.newChannelEventHub(peer);
+			eventhubs.push(eh2); //putting on this list will have it closed on the test end
 
-		let handle = setTimeout(() => {
-			t.fail('Timeout - Failed to receive replay the event for event1');
-			eh2.unregisterTxEvent(req1.txId.getTransactionID());
-			t.end();
-		}, 10000);
+			// a real application would not want to have a timeout if the application
+			// wanted to continuously listen to block events
+			let handle = setTimeout(() => {
+				t.fail('Timeout - Failed to replay all the block events in a reasonable amount of time');
+				throw new Error('Timeout -  block replay has not completed');
+			}, 10000);
+			let block_reg_num = null;
 
-		eh2.registerTxEvent(req1.txId.getTransactionID(), (txnid, code) => {
-			clearTimeout(handle);
-			eh2.unregisterTxEvent(txnid);
-			t.pass('Event1 has been replayed with transaction code:'+ code + ' for transaction id ::'+txnid);
-			// send back what we got... look at it later
-			t.end();
-		}, (error) => {
-			clearTimeout(handle);
-			eh2.unregisterTxEvent(req1.txId.getTransactionID());
-			t.fail('Failed to receive event replay for Event1 for transaction id ::'+req1.txId.getTransactionID());
-			t.end();
-		}, 0); // a real application would know the last event block received
-		t.pass('Successfully registered transaction replay for'+req1.txId.getTransactionID());
-		eh2.connect();
-		t.pass('Successfully called connect on the transaction replay event hub');
+			// register to replay block events
+			block_reg_num = eh2.registerBlockEvent((block) => {
+				// block number is decoded into human readable form
+				// let's put it back into a long
+				let event_block = Long.fromValue(block.header.number);
+				if(event_block.equals(0)) {
+					clearTimeout(handle);
+					t.fail('Successfully had all blocks replayed with only endBlock defined');
+					reject('all blocks replayed with only endBlock defined');
+				} else {
+					t.pass('Replay block event '+block.header.number);
+					// keep going...do not resolve this promise yet
+				}
+			}, (error) => {
+				clearTimeout(handle);
+				t.pass('Failed to replay the block events');
+				resolve('Replay Error callback was called with ::' + error);
+			},
+				// a real application would have remembered that last block event
+				// received and used that value hear to start the replay
+				{endBlock : 0}
+			);
+			t.pass('Successfully registered block replay with reg number of :'+block_reg_num);
 
-		return Promise.resolve();
-	}).then(() => {
-		t.pass('Successfully finished testing');
+			eh2.connect();
+			t.pass('Successfully called connect on the replay');
+		});
+	}).then((results) => {
+		t.pass('Successfully got results :'+results);
+
+		return new Promise((resolve, reject) => {
+			// need to create a new ChannelEventHub when registering a listener
+			// that will have a startBlock or endBlock -- doing a replay/resume
+			// The ChannelEventHub must not have been connected or have other
+			// listeners.
+			let eh2 = channel.newChannelEventHub(peer);
+			eventhubs.push(eh2); //putting on this list will have it closed on the test end
+
+			let handle = setTimeout(() => {
+				t.fail('Timeout - Failed to receive replay the event for event1');
+				eh2.unregisterTxEvent(req1.txId.getTransactionID());
+				t.end();
+			}, 10000);
+
+			eh2.registerTxEvent(req1.txId.getTransactionID(), (txnid, code, block_num) => {
+				clearTimeout(handle);
+				t.pass('Event has been replayed with transaction code:'+ code + ' for transaction id:'+ txnid + ' for block_num:' + block_num);
+				// send back what we got... look at it later
+				resolve('Got the replayed transaction');
+			}, (error) => {
+				clearTimeout(handle);
+				t.fail('Failed to receive event replay for Event for transaction id ::'+req1.txId.getTransactionID());
+				throw(error);
+			},
+				// a real application would have remembered that last block event
+				// received and used that value to start the replay
+				{start_block : 0}
+			);
+			t.pass('Successfully registered transaction replay for'+req1.txId.getTransactionID());
+
+			eh2.connect();
+			t.pass('Successfully called connect on the transaction replay event hub');
+		});
+	}).then((result) => {
+		t.pass('Successfully finished testing with '+result);
+		t.end();
 	}).catch((err) => {
 		if(err) t.fail('Unexpected error. ' + err.stack ? err.stack : err);
 		else t.fail('Unexpected error with no error object in catch clause');
 		t.end();
 	});
 });
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}

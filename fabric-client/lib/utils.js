@@ -22,6 +22,8 @@ var fs = require('fs-extra');
 var crypto = require('crypto');
 var path = require('path');
 var os = require('os');
+var Long = require('long');
+
 var Config = require('./Config.js');
 
 //
@@ -515,3 +517,32 @@ module.exports.normalizeX509 = function(raw) {
 	// and that it ends in a new line
 	return matches.join('\n') + '\n';
 };
+
+/*
+ * Converts to a Long number
+ * Returns a null if the incoming value is not a string that represents a
+ * number or an actual javasript number. Also allows for a Long object to be
+ * passed in as the value to convert
+ */
+module.exports.convertToLong = function(value) {
+	let result;
+	if(Long.isLong(value)) {
+		result = value; //already a long
+	} else if(typeof value !== 'undefined' && value != null) {
+		result = Long.fromValue(value);
+		// Long will return a zero for invalid strings so make sure we did
+		// not get a real zero as the incoming value
+		if(result.equals(Long.ZERO)) {
+			if(Number.isInteger(value) || value === '0') {
+				// all good
+			} else {
+				// anything else must be a string that is not a valid number
+				throw new Error(util.format('value:%s is not a valid number ',value));
+			}
+		}
+	} else {
+		throw new Error('value parameter is missing');
+	}
+
+	return result;
+}
