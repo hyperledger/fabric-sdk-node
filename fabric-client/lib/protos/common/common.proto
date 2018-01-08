@@ -32,6 +32,7 @@ enum Status {
     NOT_FOUND = 404;
     REQUEST_ENTITY_TOO_LARGE = 413;
     INTERNAL_SERVER_ERROR = 500;
+    NOT_IMPLEMENTED = 501;
     SERVICE_UNAVAILABLE = 503;
 }
 
@@ -43,6 +44,7 @@ enum HeaderType {
     ORDERER_TRANSACTION = 4;       // Used internally by the orderer for management
     DELIVER_SEEK_INFO = 5;         // Used as the type for Envelope messages submitted to instruct the Deliver API to seek
     CHAINCODE_PACKAGE = 6;         // Used for packaging chaincode artifacts for install
+    PEER_RESOURCE_UPDATE = 7;      // Used for encoding updates to the peer resource configuration
 }
 
 // This enum enlists indexes of the block metadata array

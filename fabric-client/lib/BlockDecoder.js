@@ -506,7 +506,7 @@ rule
 			block.metadata = decodeBlockMetaData(proto_block.metadata);
 		} catch (error) {
 			logger.error('decode - ::' + error.stack ? error.stack : error);
-			throw error;
+			throw new Error('Block decode has failed with ' + error.toString());
 		}
 
 		return block;
@@ -650,18 +650,9 @@ function decodeBlockDataEnvelope(proto_envelope) {
 	envelope.payload = {};
 	var proto_payload = _commonProto.Payload.decode(proto_envelope.getPayload().toBuffer());
 	envelope.payload.header = decodeHeader(proto_payload.getHeader());
-
-	if (envelope.payload.header.channel_header.type === HeaderType[1]) { // CONFIG
-		envelope.payload.data = decodeConfigEnvelope(proto_payload.getData().toBuffer());
-	}
-	//  else if(envelope.payload.header.channel_header.type === HeaderType[2]) { // CONFIG_UPDATE
-	//    envelope.payload.data = decodeConfigUpdateEnvelope(proto_payload.getData().toBuffer());
-	//  }
-	else if (envelope.payload.header.channel_header.type === HeaderType[3]) { //ENDORSER_TRANSACTION
-		envelope.payload.data = decodeEndorserTransaction(proto_payload.getData().toBuffer());
-	} else {
-		throw new Error('Only able to decode ENDORSER_TRANSACTION and CONFIG type blocks');
-	}
+	envelope.payload.data = HeaderType.decodePayloadBasedOnType(proto_payload.getData().toBuffer(), envelope.payload.header.channel_header.type);
+	// let's also have the type as the enum string value so it is easier to read
+	envelope.payload.header.channel_header.typeString = HeaderType.convertToString(envelope.payload.header.channel_header.type);
 
 	return envelope;
 };
@@ -670,13 +661,14 @@ function decodeEndorserTransaction(trans_bytes) {
 	var data = {};
 	var transaction = _transProto.Transaction.decode(trans_bytes);
 	data.actions = [];
-	if (transaction && transaction.actions)
+	if (transaction && transaction.actions) {
 		for (let i in transaction.actions) {
 			var action = {};
 			action.header = decodeSignatureHeader(transaction.actions[i].header);
 			action.payload = decodeChaincodeActionPayload(transaction.actions[i].payload);
 			data.actions.push(action);
 		}
+	}
 
 	return data;
 };
@@ -1074,22 +1066,13 @@ function decodeHeader(proto_header) {
 	return header;
 };
 
-var HeaderType = {
-	0: 'MESSAGE', // Used for messages which are signed but opaque
-	1: 'CONFIG', // Used for messages which express the channel config
-	2: 'CONFIG_UPDATE', // Used for transactions which update the channel config
-	3: 'ENDORSER_TRANSACTION', // Used by the SDK to submit endorser based transactions
-	4: 'ORDERER_TRANSACTION', // Used internally by the orderer for management
-	5: 'DELIVER_SEEK_INFO', // Used as the type for Envelope messages submitted to instruct the Deliver API to seek
-	6: 'CHAINCODE_PACKAGE' // Used for packaging chaincode artifacts for install
-};
-
 function decodeChannelHeader(header_bytes) {
 	var channel_header = {};
 	var proto_channel_header = _commonProto.ChannelHeader.decode(header_bytes);
-	channel_header.type = HeaderType[proto_channel_header.getType()];
-	channel_header.version = decodeVersion(proto_channel_header.getType());
-	channel_header.timestamp = timeStampToDate(proto_channel_header.getTimestamp()).toString();
+	channel_header.type = proto_channel_header.getType();
+	logger.debug('decodeChannelHeader - looking at type:%s',channel_header.type);
+	channel_header.version = decodeVersion(proto_channel_header.getVersion());
+	channel_header.timestamp = timeStampToDate(proto_channel_header.getTimestamp());
 	channel_header.channel_id = proto_channel_header.getChannelId();
 	channel_header.tx_id = proto_channel_header.getTxId();
 	channel_header.epoch = proto_channel_header.getEpoch().toString(); //unit64
@@ -1100,10 +1083,13 @@ function decodeChannelHeader(header_bytes) {
 };
 
 function timeStampToDate(time_stamp) {
+	if(!time_stamp) {
+		return 'null';
+	}
 	var millis = time_stamp.seconds * 1000 + time_stamp.nanos / 1000000;
 	var date = new Date(millis);
 
-	return date;
+	return date.toString();
 };
 
 function decodeChaincodeActionPayload(payload_bytes) {
@@ -1316,4 +1302,52 @@ function decodeVersion(version_long) {
 	return version_int;
 }
 
+const type_as_string = {
+	0: 'MESSAGE', // Used for messages which are signed but opaque
+	1: 'CONFIG', // Used for messages which express the channel config
+	2: 'CONFIG_UPDATE', // Used for transactions which update the channel config
+	3: 'ENDORSER_TRANSACTION', // Used by the SDK to submit endorser based transactions
+	4: 'ORDERER_TRANSACTION', // Used internally by the orderer for management
+	5: 'DELIVER_SEEK_INFO', // Used as the type for Envelope messages submitted to instruct the Deliver API to seek
+	6: 'CHAINCODE_PACKAGE' // Used for packaging chaincode artifacts for install
+};
+
+var HeaderType = class {
+	static convertToString(type) {
+		let result = null;
+		try {
+			result = type_as_string[type];
+		} catch(error) {
+			logger.error('HeaderType conversion - unknown headertype - %s',type);
+		}
+		if(!result) {
+			result = 'UNKNOWN_TYPE';
+		}
+		return result;
+	}
+
+	static decodePayloadBasedOnType(proto_data, type) {
+		let result = null;
+		switch(type) {
+			case 1:
+				result = decodeConfigEnvelope(proto_data);
+				break;
+			case 2:
+				result = decodeConfigUpdateEnvelope(proto_data);
+				break;
+			case 3:
+				result = decodeEndorserTransaction(proto_data);
+				break;
+			default:
+				// return empty data on types we do not know so that
+				// event processing may continue on blocks we do not
+				// care about
+				result = {};
+		}
+
+		return result;
+	}
+}
+
 module.exports = BlockDecoder;
+module.exports.HeaderType = HeaderType;
