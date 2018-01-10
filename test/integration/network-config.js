@@ -16,7 +16,7 @@
 'use strict';
 
 var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('Network Config');
+var logger = utils.getLogger('connection profile');
 
 var tape = require('tape');
 var _test = require('tape-promise');
@@ -33,7 +33,11 @@ var grpc = require('grpc');
 var testUtil = require('../unit/util.js');
 
 
-test('\n\n***** clean up the connection profile stores  *****\n\n', function(t) {
+test('\n\n***** clean up the connection profile testing stores  *****\n\n', function(t) {
+	/*
+	 * The following is just testing housekeeping... cleanup from the last time
+	 * this test was run, a real application would not do this.
+	 */
 	let client = Client.loadFromConfig('test/fixtures/org1.yaml');
 	let client_config = client.getClientConfig();
 
@@ -43,7 +47,7 @@ test('\n\n***** clean up the connection profile stores  *****\n\n', function(t) 
 
 	let crypto_path = client_config.credentialStore.cryptoStore.path;
 	logger.debug('removing org1 cryptoStore %s',crypto_path);
-	fsx.removeSync(store_path);
+	fsx.removeSync(crypto_path);
 
 	client.loadFromConfig('test/fixtures/org2.yaml');
 	client_config = client.getClientConfig();
@@ -54,24 +58,23 @@ test('\n\n***** clean up the connection profile stores  *****\n\n', function(t) 
 
 	crypto_path = client_config.credentialStore.cryptoStore.path;
 	logger.debug('removing org2 cryptoStore %s',crypto_path);
-	fsx.removeSync(store_path);
+	fsx.removeSync(crypto_path);
 
-	t.pass('Successfully removed all connection profile stores');
+	t.pass('Successfully removed all connection profile stores from previous testing');
 
 	t.end();
 });
 
-test('\n\n***** use the network configuration file  *****\n\n', function(t) {
+test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 	var channel_name = 'mychannel2';
 	testUtil.resetDefaults();
-	Client.setConfigSetting('request-timeout', 60000);
 
-	// build a 'Client' instance that knows the network
-	//  this network config does not have the client information, we will
+	// build a 'Client' instance that knows the connection profile
+	//  this connection profile does not have the client information, we will
 	//  load that later so that we can switch this client to be in a different
-	//  organization
+	//  organization.
 	var client = Client.loadFromConfig('test/fixtures/network.yaml');
-	t.pass('Successfully loaded a network configuration');
+	t.pass('Successfully loaded a connection profile');
 
 	var config = null;
 	var signatures = [];
@@ -80,13 +83,14 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 	var query_tx_id = null;
 	var instansiate_tx_id = null;
 
-	// lets load the client information for this organization
-	// the file only has the client section
+	// Load the client information for an organization.
+	// The file only has the client section.
+	// A real application might do this when a new user logs in.
 	client.loadFromConfig('test/fixtures/org1.yaml');
 	// tell this client instance where the state and key stores are located
 	client.initCredentialStores()
 	.then((nothing) => {
-		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
+		t.pass('Successfully created the key value store and crypto store based on the sdk config and connection profile');
 
 		// get the config envelope created by the configtx tool
 		let envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/mychannel2.tx'));
@@ -96,42 +100,53 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 		config = client.extractChannelConfig(envelope_bytes);
 		t.pass('Successfully extracted the config update from the configtx envelope');
 
-		// sign the config by admin from org1
-		var signature = client.signChannelConfig(config);
+		// Sign the config bytes
+		// ---- the signChannelConfig() will have the admin identity sign the
+		//      config if the client instance has been assigned an admin otherwise
+		//      it will use the currently user context assigned. When loading a
+		//      connection profile that has a client section that also has
+		//      an admin defined for the organization defined in that client
+		//      section it will be automatically assigned to the client instance.
+		let signature = client.signChannelConfig(config);
 		// convert signature to a storable string
 		// fabric-client SDK will convert any strings it finds back
 		// to GRPC protobuf objects during the channel create
-		var string_signature = signature.toBuffer().toString('hex');
+		let string_signature = signature.toBuffer().toString('hex');
 		t.pass('Successfully signed config update by org1');
 		// collect signature from org1 admin
 		signatures.push(string_signature);
 
 		/*
-		 * switch to organization org2
+		 * Switch to organization org2 by loading a different connection profile.
+		 * The file only has the client section.
+		 * A real application might do this when a new user logs in to put
+		 * the client instance in that user's organization. Note that
+		 * the loadFromConfig() can also take a JSON object rather than a file
+		 * location.
 		 */
 
 		return client.loadFromConfig('test/fixtures/org2.yaml');
 	}).then((nothing) =>{
 		t.pass('Successfully loaded the client configuration for org2');
 
-		// reset the stores to be using the ones for this organization
+		// reset the stores to the loaded organization's locations
 		return client.initCredentialStores();
 	}).then((nothing) =>{
 		t.pass('Successfully set the stores for org2');
 
 		// sign the config by admin from org2
-		var signature = client.signChannelConfig(config);
+		let signature = client.signChannelConfig(config);
 		t.pass('Successfully signed config update for org2');
 
-		// collect signature from org2 admin
+		// collect the signature from org2's admin
 		signatures.push(signature);
 
 		// now we have enough signatures...
 
 		// get an admin based transaction
-		// in this case we are assuming that the network configuration
+		// in this case we are assuming that the connection profile
 		// has an admin defined for the current organization defined in the
-		// client part of the network configuration, otherwise the setAdminSigningIdentity()
+		// client part of the connection profile, otherwise the setAdminSigningIdentity()
 		// method would need to be called to setup the admin. If no admin is in the config
 		// or has been assigned the transaction will based on the current user.
 		let tx_id = client.newTransactionID(true);
@@ -140,7 +155,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 			config: config,
 			signatures : signatures,
 			name : channel_name,
-			orderer : 'orderer.example.com', //this assumes we have loaded a network config
+			orderer : 'orderer.example.com', //this assumes we have loaded a connection profile
 			txId  : tx_id
 		};
 
@@ -211,12 +226,12 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 
 		return client.initCredentialStores();
 	}).then((nothing) => {
-		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
+		t.pass('Successfully created the key value store  and crypto store based on the config and connection profile');
 
 		let tx_id = client.newTransactionID(true);
 		let request = {
 			targets: ['peer0.org1.example.com'], // this does assume that we have loaded a
-			                                     // network config with a peer by this name
+			                                     // connection profile with a peer by this name
 			block : genesis_block,
 			txId : 	tx_id
 		};
@@ -238,7 +253,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 		process.env.GOPATH = path.join(__dirname, '../fixtures');
 		let tx_id = client.newTransactionID(true);
 		// send proposal to endorser
-		var request = {
+		let request = {
 			//targets: ['peer0.org1.example.com']
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
@@ -265,11 +280,11 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 
 		return client.initCredentialStores();
 	}).then((nothing) => {
-		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
+		t.pass('Successfully created the key value store  and crypto store based on the config and connection profile');
 
 		let tx_id = client.newTransactionID(true); // be sure to get a admin transaction ID
 		// send proposal to endorser
-		var request = {
+		let request = {
 			targets: ['peer0.org2.example.com'],
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
@@ -300,7 +315,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 			args: ['a', '100', 'b', '200'],
 			txId: tx_id
 			// targets is not required, however the logged in user may not have
-			// admin access to all the peers defined in the network configuration
+			// admin access to all the peers defined in the connection profile
 			//targets: ['peer0.org1.example.com'],
 		};
 
@@ -315,7 +330,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 				proposal: proposal,
 				txId : instansiate_tx_id //required to indicate that this is an admin transaction
 				//orderer : not specifying, the first orderer defined in the
-				//          network configuration for this channel will be used
+				//          connection profile for this channel will be used
 			};
 
 			return channel.sendTransaction(request); // still have org2 admin as signer
@@ -326,13 +341,13 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 	}).then((response) => {
 		if (!(response instanceof Error) && response.status === 'SUCCESS') {
 			t.pass('Successfully sent transaction to instantiate the chaincode to the orderer.');
-			return sleep(20000); // use sleep for now until the eventhub is integrated into the network config changes
+			return sleep(10000);
 		} else {
 			t.fail('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
 			throw new Error('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
 		}
 	}).then((results) => {
-		t.pass('Successfully waited for chaincodes to startup');
+		t.pass('Successfully waited for chaincode to startup');
 
 		/*
 		 *  S T A R T   U S I N G
@@ -345,7 +360,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 
  		return client.initCredentialStores();
  	}).then((nothing) => {
- 		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
+ 		t.pass('Successfully created the key value store  and crypto store based on the config and connection profile');
 
 		let ca = client.getCertificateAuthority();
 		if(ca) {
@@ -385,24 +400,24 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 
 		// try again ...this time use a longer timeout
 		let tx_id = client.newTransactionID(); // get a non admin transaction ID
-		query_tx_id = tx_id.getTransactionID();
-		var request = {
+		query_tx_id = tx_id.getTransactionID(); //save transaction string for later
+		let request = {
 			chaincodeId : 'example',
 			fcn: 'move',
 			args: ['a', 'b','100'],
 			txId: tx_id
-			//targets - Letting default to all endorsing peers defined on the channel in the network configuration
+			//targets - Letting default to all endorsing peers defined on the channel in the connection profile
 		};
 
 		return channel.sendTransactionProposal(request); //logged in as org1 user
 	}).then((results) => {
-		var proposalResponses = results[0];
-		var proposal = results[1];
-		var all_good = true;
+		let proposalResponses = results[0];
+		let proposal = results[1];
+		let all_good = true;
 		// Will check to be sure that we see two responses as there are two peers defined on this
 		// channel that are endorsing peers
-		var endorsed_responses = 0;
-		for(var i in proposalResponses) {
+		let endorsed_responses = 0;
+		for(let i in proposalResponses) {
 			let one_good = false;
 			endorsed_responses++;
 			let proposal_response = proposalResponses[i];
@@ -426,59 +441,146 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 			t.fail('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
 			throw new Error('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
 		}
-		var request = {
+		let request = {
 			proposalResponses: proposalResponses,
 			proposal: proposal,
 			admin : true
 		};
 
-		var promises = [];
-		promises.push(channel.sendTransaction(request));
+		let promises = [];
 
-		// be sure to get an eventhub the current user is authorized to use
-		var eventhub = client.getEventHub('peer0.org1.example.com');
-		eventhub.connect();
+		// be sure to get an channel event hub the current user is authorized to use
+		let eventhub = channel.newChannelEventHub('peer0.org1.example.com');
 
 		let txPromise = new Promise((resolve, reject) => {
 			let handle = setTimeout(() => {
+				eventhub.unregisterTxEvent(query_tx_id);
 				eventhub.disconnect();
 				t.fail('REQUEST_TIMEOUT --- eventhub did not report back');
 				reject(new Error('REQUEST_TIMEOUT:' + eventhub._ep._endpoint.addr));
 			}, 30000);
 
-			eventhub.registerTxEvent(query_tx_id, (tx, code) => {
+			eventhub.registerTxEvent(query_tx_id, (tx, code, block_num) => {
 				clearTimeout(handle);
-				eventhub.disconnect();
-
 				if (code !== 'VALID') {
 					t.fail('transaction was invalid, code = ' + code);
 					reject(new Error('INVALID:' + code));
 				} else {
-					t.pass('transaction has been committed on peer ' + eventhub._ep._endpoint.addr);
-					resolve();
+					t.pass('transaction has been committed on peer ' + eventhub.getPeerAddr());
+					resolve('COMMITTED');
 				}
-			});
+			}, (error) => {
+				clearTimeout(handle);
+				t.fail('transaction event failed:' + error);
+				reject(error);
+			},
+				{disconnect: true} //since this is a test and we will not be using later
+			);
 		});
+		// connect(true) to receive full blocks (user must have read rights to the channel)
+		// should connect after registrations so that there is an error callback
+		// to receive errors if there is a problem on the connect.
+		eventhub.connect(true);
+
 		promises.push(txPromise);
+		promises.push(channel.sendTransaction(request));
 
 		return Promise.all(promises);
 	}).then((results) => {
-		return results[0]; // the first returned value is from the 'sendTransaction()' call
-	}).then((response) => {
-		if (!(response instanceof Error) && response.status === 'SUCCESS') {
+		let event_results = results[0]; // Promise all will return the results in order of the of Array
+		let sendTransaction_results = results[1];
+		if (sendTransaction_results instanceof Error) {
+			t.fail('Failed to order the transaction: ' + sendTransaction_results);
+			throw sendTransaction_results;
+		} else if (sendTransaction_results.status === 'SUCCESS') {
 			t.pass('Successfully sent transaction to invoke the chaincode to the orderer.');
-
-			return;
 		} else {
-			t.fail('Failed to order the transaction to invoke the chaincode. Error code: ' + response.status);
-			throw new Error('Failed to order the transaction to invoke the chaincode. Error code: ' + response.status);
+			t.fail('Failed to order the transaction to invoke the chaincode. Error code: ' + sendTransaction_results.status);
+			throw new Error('Failed to order the transaction to invoke the chaincode. Error code: ' + sendTransaction_results.status);
 		}
-	}).then((results) => {
-		t.pass('Successfully moved to take place');
 
+		return new Promise((resolve, reject) => {
+			// get a new ChannelEventHub when registering a listener
+			// with startBlock or endBlock when doing a replay
+			// The ChannelEventHub must not have been connected or have other
+			// listeners.
+			let channel_event_hub = channel.newChannelEventHub('peer0.org1.example.com');
+
+			let handle = setTimeout(() => {
+				t.fail('Timeout - Failed to receive replay the event for event1');
+				channel_event_hub.unregisterTxEvent(query_tx_id);
+				channel_event_hub.disconnect(); //shutdown down since we are done
+			}, 10000);
+
+			channel_event_hub.registerTxEvent(query_tx_id, (txnid, code, block_num) => {
+				clearTimeout(handle);
+				t.pass('Event has been replayed with transaction code:'+ code + ' for transaction id:'+ txnid + ' for block_num:' + block_num);
+				resolve('Got the replayed transaction');
+			}, (error) => {
+				clearTimeout(handle);
+				t.fail('Failed to receive event replay for Event for transaction id ::'+query_tx_id);
+				throw(error);
+			},
+				// a real application would have remembered the last block number
+				// received and used that value to start the replay
+				// Setting the disconnect to true as we do not want to use this
+				// ChannelEventHub after the event we are looking for comes in
+				{startBlock : 0, disconnect: true}
+			);
+			t.pass('Successfully registered transaction replay for '+query_tx_id);
+
+			channel_event_hub.connect(); //connect to receive filtered blocks
+			t.pass('Successfully called connect on the transaction replay event hub for filtered blocks');
+		});
+	}).then((results) => {
+		t.pass('Successfully checked channel event hub replay');
+
+		return new Promise((resolve, reject) => {
+			// Get the list of channel event hubs for the current organization.
+			// These will be peers with the "eventSource" role setting of true
+			// and not the peers that have an "eventURL" defined. Peers with the
+			// eventURL defined are peers with the legacy Event Hub that is on
+			// a different port than the peer services. The peers with the
+			// "eventSource" tag are running the channel-based event service
+			// on the same port as the other peer services.
+			let channel_event_hubs = channel.getChannelEventHubsForOrg();
+			// we should have the an channel event hub defined on the "peer0.org1.example.com"
+			t.equals(channel_event_hubs.length,1,'Checking that the channel event hubs has just one');
+
+			let channel_event_hub = channel_event_hubs[0];
+			t.equals(channel_event_hub.getPeerAddr(),'localhost:7051',' channel event hub address ');
+
+			let handle = setTimeout(() => {
+				t.fail('Timeout - Failed to receive replay the event for event1');
+				channel_event_hub.unregisterTxEvent(query_tx_id);
+				channel_event_hub.disconnect(); //shutdown down since we are done
+			}, 10000);
+
+			channel_event_hub.registerTxEvent(query_tx_id, (txnid, code, block_num) => {
+				clearTimeout(handle);
+				t.pass('Event has been replayed with transaction code:'+ code + ' for transaction id:'+ txnid + ' for block_num:' + block_num);
+				resolve('Got the replayed transaction');
+			}, (error) => {
+				clearTimeout(handle);
+				t.fail('Failed to receive event replay for Event for transaction id ::'+query_tx_id);
+				throw(error);
+			},
+				// a real application would have remembered the last block number
+				// received and used that value to start the replay
+				// Setting the disconnect to true as we do not want to use this
+				// ChannelEventHub after the event we are looking for comes in
+				{startBlock : 0, disconnect: true}
+			);
+			t.pass('Successfully registered transaction replay for '+query_tx_id);
+
+			channel_event_hub.connect(); //connect to receive filtered blocks
+			t.pass('Successfully called connect on the transaction replay event hub for filtered blocks');
+		});
+	}).then((results) => {
+		t.pass('Successfully checked replay');
 		// check that we can get the user again without password
 		// also verifies that we can get a complete user properly stored
-		// when using a network config
+		// when using a connection profile
 		return client.setUserContext({username:'admin'});
 	}).then((admin) => {
 		t.pass('Successfully loaded user \'admin\' from store for org1');
@@ -605,7 +707,7 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 			fcn: 'move',
 			args: ['a', 'b','100'],
 			txId: tx_id
-			//targets - Letting default to all endorsing peers defined on the channel in the network configuration
+			//targets - Letting default to all endorsing peers defined on the channel in the connection profile
 		};
 
 		// put in a very small timeout to force a failure, thereby checking that the timeout value was being used
@@ -623,11 +725,11 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 
 		return true;
 	}).then((results) => {
-		t.pass('Testing has complete successfully');
+		t.pass('Testing has completed successfully');
 
 		t.end();
 	}).catch((error) =>{
-		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
+		logger.error('catch connection profile test error:: %s', error.stack ? error.stack : error);
 		t.fail('Test failed with '+ error);
 		t.end();
 	});

@@ -19,6 +19,7 @@
 var api = require('./api.js');
 var utils = require('./utils.js');
 var util = require('util');
+var Constants = require('./Constants.js');
 
 var logger = utils.getLogger('Organization.js');
 
@@ -91,20 +92,41 @@ var Organization = class {
 	/**
 	 * Add a {@link EventHub} to this organizations
 	 *
-	 * @param {EventHub} event_hub - The event hub instance to add to this organizations list of event hubs
+	 * @param {EventHub} event_hub - The event hub instance to add to this
+	 *        organization's list of event hubs
 	 */
 	addEventHub(event_hub) {
 		this._event_hubs.push(event_hub);
 	}
 
 	/**
-	 * Gets the list of this organizations {@link EventHub}
+	 * Gets the list of this organization's {@link EventHub}
 	 *
 	 * @returns [{EventHub}] An array of {@link EventHub} objects
 	 */
 	getEventHubs() {
 		return this._event_hubs;
 	}
+
+	/**
+	 * Gets the list of this organization's {@link ChannelEventHub} as undefined
+	 * by the 'endorsingPeer' setting on the peers defined in the channel that
+	 * are in this orgranization.
+	 *
+	 * @param {Channel} channel - The {@link Channel} the channel instance that
+	 *        the peers that are defined as channel event hubs are associated.
+	 * @returns [{ChannelEventHub}] An array of {@link ChannelEventHub} objects
+	 */
+	 getChannelEventHubs(channel) {
+		 let _channel_event_hubs = [];
+		 for(let peer in this._peers) {
+			 if(peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
+				 let channel_event_hub = new ChannelEventHub(channel, peer);
+				 _channel_event_hubs.push(channel_event_hub);
+			 }
+		 }
+		 return this._channel_event_hubs;
+	 }
 
 	/**
 	 * Add a {@link CertificateAuthority} to this organization

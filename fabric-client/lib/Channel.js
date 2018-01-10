@@ -332,6 +332,70 @@ var Channel = class {
 	}
 
 	/**
+	 * Returns a list of {@link ChannelEventHub} based on the peers that are
+	 * defined in this channel that are in the named orgainization of the
+	 * currently loaded connection profile. If no connetion profile is loaded,
+	 * an error will be thrown.
+	 * When called with no organization name, the organization named in the
+	 * currently active connection profile configuration's client section will
+	 * be used. A peer with the "eventSource" role setting of true will be added
+	 * to the list (a role will default to true if not defined).
+	 *
+	 * @param {string} org_name - Optional - The name of an organization
+	 * @returns {ChannelEventHub[]} An array of ChannelEventHub instances
+	 */
+	 getChannelEventHubsForOrg(org_name) {
+		 let method = 'getChannelEventHubsForOrg';
+		 logger.debug('%s - starting',method);
+		 var channel_event_hubs = [];
+		 let working_org_name = null;
+		 let found_peers = {};
+		 if(this._clientContext && this._clientContext._network_config) {
+			 if(!org_name && this._clientContext._network_config.hasClient()) {
+				 let client = this._clientContext._network_config.getClientConfig();
+				 working_org_name = client.organization;
+			 } else {
+				 working_org_name = org_name;
+			 }
+			 if(working_org_name) {
+				 let organization = this._clientContext._network_config.getOrganization(working_org_name);
+				 if(organization) {
+					 let channel_peers = this.getPeers();
+					 let org_peers = organization.getPeers();
+ 					for(let j in channel_peers) {
+ 						let channel_peer = channel_peers[j];
+ 						logger.debug('%s - looking at channel peer:%s',method,channel_peer.getName());
+ 						if(channel_peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
+ 							for(let k in org_peers) {
+ 								let org_peer = org_peers[k];
+ 								logger.debug('%s - looking at org peer:%s',method,org_peer.getName());
+ 								if(org_peer.getName() === channel_peer.getName()) {
+ 									found_peers[org_peer.getName()] = org_peer;//to avoid Duplicate Peers
+ 									logger.debug('%s - adding peer to list:%s',method,org_peer.getName());
+ 								}
+ 							}
+ 						}
+ 					}
+				 } else {
+					 throw new Error(util.format('Organization definition not found for %s', working_org_name));
+				 }
+			 } else {
+				 throw new Error('No organization name provided');
+			 }
+		 } else {
+			 throw new Error('No connecton profile has been loaded');
+		 }
+
+		 for(let name in found_peers) {
+			 logger.debug('%s - final list has:%s',method,name);
+			 let peer = found_peers[name];
+			 let channel_event_hub = new ChannelEventHub(this, peer);
+			 channel_event_hubs.push(channel_event_hub);
+		 }
+		 return channel_event_hubs;
+	 }
+
+	/**
 	 * @typedef {Object} OrdererRequest
 	 * @property {TransactionID} txId - Optional. Object with the transaction id and nonce
 	 * @property {Orderer} orderer - Optional. The orderer instance or string name

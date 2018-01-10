@@ -48,7 +48,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	let txid = null;
 	let block_reg = null;
 	let event_hub = null;
-	let last_block = null;
 
 	// using an array to track the event hub instances so that when this gets
 	// passed into the overriden t.end() closure below it will get updated
@@ -614,8 +613,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			eh2.registerTxEvent(req1.txId.getTransactionID(), (txnid, code, block_num) => {
 				clearTimeout(handle);
 				t.pass('Event has been replayed with transaction code:'+ code + ' for transaction id:'+ txnid + ' for block_num:' + block_num);
-				last_block =
-				// send back what we got... look at it later
 				resolve('Got the replayed transaction');
 			}, (error) => {
 				clearTimeout(handle);

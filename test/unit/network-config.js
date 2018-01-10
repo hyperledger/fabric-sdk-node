@@ -45,7 +45,7 @@ var _configtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/comm
 var rewire = require('rewire');
 var ClientRewired = rewire('fabric-client/lib/Client.js');
 
-test('\n\n ** configuration testing **\n\n', function (t) {
+test.skip('\n\n ** configuration testing **\n\n', function (t) {
 	testutil.resetDefaults();
 
 	t.throws(
@@ -887,6 +887,51 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.end();
 		}
 	);
+
+	t.end();
+});
+
+test('\n\n ** channel testing **\n\n', function (t) {
+	let client = new Client();
+
+	t.throws(
+		function () {
+			let channel = client.newChannel('somechannel');
+			channel.getChannelEventHubsForOrg();
+		},
+		/No connecton profile has been loaded/,
+		'Checking for No connecton profile has been loaded'
+	);
+
+	client = Client.loadFromConfig('test/fixtures/network.yaml');
+
+	t.throws(
+		function () {
+			let channel = client.getChannel('mychannel2');
+			channel.getChannelEventHubsForOrg();
+		},
+		/No organization name provided/,
+		'Checking for No organization name provided'
+	);
+
+	t.throws(
+		function () {
+			let channel = client.getChannel('mychannel2');
+			channel.getChannelEventHubsForOrg('bad');
+		},
+		/Organization definition not found for/,
+		'Checking for Organization definition not found for'
+	);
+
+
+	let channel = client.getChannel('mychannel2');
+	let channelEventHubs = channel.getChannelEventHubsForOrg('Org2');
+	t.equals(channelEventHubs[0]._peer.getName(),'peer0.org2.example.com','Checking that we got the correct peer in the list');
+	client.loadFromConfig('test/fixtures/org1.yaml');
+	let channelEventHubs2 = channel.getChannelEventHubsForOrg();
+	t.equals(channelEventHubs2[0]._peer.getName(),'peer0.org1.example.com','Checking that we got the correct peer in the list');
+
+
 
 	t.end();
 });
