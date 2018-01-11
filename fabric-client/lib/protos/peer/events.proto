@@ -27,7 +27,6 @@ option go_package = "github.com/hyperledger/fabric/protos/peer";
 
 package protos;
 
-
 //----Event objects----
 
 enum EventType {
@@ -123,16 +122,41 @@ message Event {
         //Unregister consumer sent events
         Unregister unregister = 5;
 
-	FilteredBlock filtered_block = 7;
+        FilteredBlock filtered_block = 7;
     }
     // Creator of the event, specified as a certificate chain
     bytes creator = 6;
     // Timestamp of the client - used to mitigate replay attacks
     google.protobuf.Timestamp timestamp = 8;
+
+    // If mutual TLS is employed, this represents
+    // the hash of the client's TLS certificate
+    bytes tls_cert_hash = 9;
 }
 
 // Interface exported by the events server
 service Events {
     // event chatting using Event
-    rpc Chat(stream SignedEvent) returns (stream Event) {}
+    rpc Chat (stream SignedEvent) returns (stream Event) {
+    }
+}
+
+// DeliverResponse
+message DeliverResponse {
+    oneof Type {
+        common.Status status = 1;
+        common.Block block = 2;
+        FilteredBlock filtered_block = 3;
+    }
+}
+
+service Deliver {
+    // deliver first requires an Envelope of type ab.DELIVER_SEEK_INFO with Payload data as a marshaled orderer.SeekInfo message,
+    // then a stream of block replies is received.
+    rpc Deliver (stream common.Envelope) returns (stream DeliverResponse) {
+    }
+    // deliver first requires an Envelope of type ab.DELIVER_SEEK_INFO with Payload data as a marshaled orderer.SeekInfo message,
+    // then a stream of **filtered** block replies is received.
+    rpc DeliverFiltered (stream common.Envelope) returns (stream DeliverResponse) {
+    }
 }

@@ -25,6 +25,7 @@ var BlockDecoder = require('./BlockDecoder.js');
 
 var grpc = require('grpc');
 var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
+var _eventsProto = grpc.load(__dirname + '/protos/peer/events.proto').protos;
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
 var _ccTransProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
 var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
@@ -259,7 +260,7 @@ var ChannelEventHub = class {
 		options = utils.checkAndAddConfigSetting('grpc.keepalive_timeout_ms', request_timeout_ms, options);
 
 		logger.info('_connect - options %j',this._peer._options);
-		this._event_client = new _abProto.AtomicBroadcast(this._peer._endpoint.addr, this._peer._endpoint.creds, this._peer._options);
+		this._event_client = new _eventsProto.Deliver(this._peer._endpoint.addr, this._peer._endpoint.creds, this._peer._options);
 		this._stream = this._event_client.deliver();
 
 		this._stream.on('data', function(event) {

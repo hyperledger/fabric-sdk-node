@@ -35,29 +35,12 @@ var tx_id = null;
 
 var ORGS;
 
-var allEventhubs = [];
-
 //
 //Attempt to send a request to the orderer with the createChannel method
 //
 test('\n\n***** End-to-end flow: join channel *****\n\n', function(t) {
 	Client.addConfigFile(path.join(__dirname, './config.json'));
 	ORGS = Client.getConfigSetting('test-network');
-
-	// override t.end function so it'll always disconnect the event hub
-	t.end = ((context, ehs, f) => {
-		return function() {
-			for(var key in ehs) {
-				var eventhub = ehs[key];
-				if (eventhub && eventhub.isconnected()) {
-					logger.debug('Disconnecting the event hub');
-					eventhub.disconnect();
-				}
-			}
-
-			f.apply(context, arguments);
-		};
-	})(t, allEventhubs, t.end);
 
 	joinChannel('org1', t)
 	.then(() => {
@@ -90,8 +73,7 @@ function joinChannel(org, t) {
 
 	var orgName = ORGS[org].name;
 
-	var targets = [],
-		eventhubs = [];
+	var targets = [];
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
@@ -147,57 +129,18 @@ function joinChannel(org, t) {
 							}
 						)
 					);
-
-					let eh = client.newEventHub();
-					eh.setPeerAddr(
-						ORGS[org][key].events,
-						{
-							pem: Buffer.from(data).toString(),
-							'ssl-target-name-override': ORGS[org][key]['server-hostname']
-						}
-					);
-					eh.connect();
-					eventhubs.push(eh);
-					allEventhubs.push(eh);
 				}
 			}
 		}
 
-		var eventPromises = [];
-		eventhubs.forEach((eh) => {
-			let txPromise = new Promise((resolve, reject) => {
-				let handle = setTimeout(reject, 30000);
-
-				eh.registerBlockEvent((block) => {
-					clearTimeout(handle);
-
-					// in real-world situations, a peer may have more than one channel so
-					// we must check that this block came from the channel we asked the peer to join
-					if(block.data.data.length === 1) {
-						// Config block must only contain one transaction
-						var channel_header = block.data.data[0].payload.header.channel_header;
-						if (channel_header.channel_id === channel_name) {
-							t.pass('The new channel has been successfully joined on peer '+ eh.getPeerAddr());
-							resolve();
-						}
-						else {
-							t.fail('The new channel has not been succesfully joined');
-							reject();
-						}
-					}
-				});
-			});
-
-			eventPromises.push(txPromise);
-		});
 		tx_id = client.newTransactionID();
 		let request = {
 			targets : targets,
 			block : genesis_block,
 			txId : 	tx_id
 		};
-		let sendPromise = channel.joinChannel(request, 30000);
-		return Promise.all([sendPromise].concat(eventPromises));
+
+		return channel.joinChannel(request, 30000);
 	}, (err) => {
 		t.fail('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
 		throw new Error('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
@@ -205,7 +148,7 @@ function joinChannel(org, t) {
 	.then((results) => {
 		logger.debug(util.format('Join Channel R E S P O N S E : %j', results));
 
-		if(results[0] && results[0][0] && results[0][0].response && results[0][0].response.status == 200) {
+		if(results && results[0] && results[0].response && results[0].response.status == 200) {
 			t.pass(util.format('Successfully joined peers in organization %s to join the channel', orgName));
 		} else {
 			t.fail(' Failed to join channel');
