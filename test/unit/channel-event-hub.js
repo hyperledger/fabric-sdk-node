@@ -148,15 +148,23 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 		() => {
 			eh._checkReplay({startBlock:'aaaa'});
 		},
-		/Problem with the startBlock parameter/,
+		/is not a valid number/,
 		'Check that we able to see start block is not a number'
 	);
 	t.throws(
 		() => {
 			eh._checkReplay({startBlock:'1', endBlock:'bbbb'});
 		},
-		/Problem with the endBlock parameter/,
+		/is not a valid number/,
 		'Check that we able to see end block is not a number'
+	);
+
+	t.throws(
+		() => {
+			eh.lastBlockNumber();
+		},
+		/This ChannelEventHub has not had an event from the peer/,
+		'Check that we able to see: This ChannelEventHub has not had an event from the peer'
 	);
 
 	let converted = utils.convertToLong('1');
@@ -398,13 +406,19 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 		}, (error) =>{
 			t.fail('Should not have called error callback');
 			t.end();
-		}, 1);
+		},
+			{startBlock: 1, endBlock: 2}
+		);
 		t.pass('Successfully registered a playback transaction event');
 	} catch(error) {
 		t.fail( 'Failed - Should be able to register with replay')
 	}
-
 	t.equal(Object.keys(eh._transactionRegistrations).length, 1, 'Check the size of the transactionOnEvents');
+
+	eh._last_block_seen = Long.fromValue(2);
+	eh._checkReplayEnd();
+	t.equals(Object.keys(eh._transactionRegistrations).length, 0 ,'Check that the checkReplayEnd removes the startstop registered listener');
+
 
 	t.throws(
 	 	() => {

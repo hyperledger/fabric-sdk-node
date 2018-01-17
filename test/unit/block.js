@@ -123,9 +123,9 @@ test('\n\n*** BlockDecoder test for readwrite sets', (t) => {
 	t.equal('read key',results_json.ns_rwset[0].rwset.reads[0].key, ' check results_json.ns_rwset[0].rwset.reads[0].key');
 	t.equal('12',results_json.ns_rwset[0].rwset.reads[0].version.block_num, ' check results_json.ns_rwset[0].rwset.reads[0].version.block_num');
 	t.equal('21',results_json.ns_rwset[0].rwset.reads[0].version.tx_num, ' check results_json.ns_rwset[0].rwset.reads[0].version.tx_num');
-	t.equal('range query key',results_json.ns_rwset[0].rwset.range_queries_info[0].reads_info.kv_reads[0].key,' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].key');
-	t.equal('13',results_json.ns_rwset[0].rwset.range_queries_info[0].reads_info.kv_reads[0].version.block_num, ' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].version.block_num');
-	t.equal('31',results_json.ns_rwset[0].rwset.range_queries_info[0].reads_info.kv_reads[0].version.tx_num, ' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].version.tx_num.');
+	t.equal('range query key',results_json.ns_rwset[0].rwset.range_queries_info[0].raw_reads.kv_reads[0].key,' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].key');
+	t.equal('13',results_json.ns_rwset[0].rwset.range_queries_info[0].raw_reads.kv_reads[0].version.block_num, ' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].version.block_num');
+	t.equal('31',results_json.ns_rwset[0].rwset.range_queries_info[0].raw_reads.kv_reads[0].version.tx_num, ' check results_json.ns_rwset[0].rwset.reads[0].range_queries_info[0].reads_info.kv_reads[0].version.tx_num.');
 
 	// take range query with query reads out and add range query with QueryReadsMerkleSummary
 	range_query_info_proto.setRawReads(null);
@@ -167,6 +167,14 @@ test('\n\n*** BlockDecoder.js tests ***\n\n', (t) => {
 		},
 		/Block input data is not a byte buffer/,
 		'Check input is a Buffer object'
+	);
+
+	t.throws(
+		() => {
+			BlockDecoder.decodeBlock();
+		},
+		/Block input data is missing/,
+		'Check input exist'
 	);
 
 	// use the genesis block as input to test the decoders

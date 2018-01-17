@@ -488,22 +488,22 @@ rule
 	 * Constructs an object containing all decoded values from the
 	 * protobuf encoded `Block` object
 	 *
-	 * @param {Object} block - a protobuf common.Block object
+	 * @param {Object} block_data - an object that represents the protobuf common.Block
 	 * @returns {Block} An object of the fully decoded protobuf common.Block
 	 */
-	static decodeBlock(proto_block) {
-		if (!proto_block) {
-			throw new Error('Block input data is not a protobuf Block');
+	static decodeBlock(block_data) {
+		if (!block_data) {
+			throw new Error('Block input data is missing');
 		}
 		var block = {};
 		try {
 			block.header = {
-				number: proto_block.header.number.toString(),
-				previous_hash: proto_block.header.previous_hash.toString('hex'),
-				data_hash: proto_block.header.data_hash.toString('hex')
+				number: block_data.header.number.toString(),
+				previous_hash: block_data.header.previous_hash.toString('hex'),
+				data_hash: block_data.header.data_hash.toString('hex')
 			};
-			block.data = decodeBlockData(proto_block.data, true);
-			block.metadata = decodeBlockMetaData(proto_block.metadata);
+			block.data = decodeBlockData(block_data.data, true);
+			block.metadata = decodeBlockMetaData(block_data.metadata);
 		} catch (error) {
 			logger.error('decode - ::' + error.stack ? error.stack : error);
 			throw new Error('Block decode has failed with ' + error.toString());
@@ -538,10 +538,11 @@ payload -- {}
 		if (!(processed_transaction_bytes instanceof Buffer)) {
 			throw new Error('Proccesed transaction data is not a byte buffer');
 		}
-		var processed_transaction = {};
-		var proto_processed_transaction = _transProto.ProcessedTransaction.decode(processed_transaction_bytes);
+		let processed_transaction = {};
+		let proto_processed_transaction = _transProto.ProcessedTransaction.decode(processed_transaction_bytes);
 		processed_transaction.validationCode = proto_processed_transaction.getValidationCode();
 		processed_transaction.transactionEnvelope = decodeBlockDataEnvelope(proto_processed_transaction.getTransactionEnvelope());
+
 		return processed_transaction;
 	}
 };
@@ -659,15 +660,19 @@ function decodeBlockDataEnvelope(proto_envelope) {
 
 function decodeEndorserTransaction(trans_bytes) {
 	var data = {};
-	var transaction = _transProto.Transaction.decode(trans_bytes);
-	data.actions = [];
-	if (transaction && transaction.actions) {
-		for (let i in transaction.actions) {
-			var action = {};
-			action.header = decodeSignatureHeader(transaction.actions[i].header);
-			action.payload = decodeChaincodeActionPayload(transaction.actions[i].payload);
-			data.actions.push(action);
+	try {
+		var transaction = _transProto.Transaction.decode(trans_bytes);
+		data.actions = [];
+		if (transaction && transaction.actions) {
+			for (let i in transaction.actions) {
+				var action = {};
+				action.header = decodeSignatureHeader(transaction.actions[i].header);
+				action.payload = decodeChaincodeActionPayload(transaction.actions[i].payload);
+				data.actions.push(action);
+			}
 		}
+	} catch(error) {
+		logger.error(' Unable to decodeEndorserTransaction :: %s',error);
 	}
 
 	return data;
@@ -1252,14 +1257,14 @@ function decodeRangeQueryInfo(proto_range_query_info) {
 	range_query_info.end_key = proto_range_query_info.getEndKey();
 	range_query_info.itr_exhausted = proto_range_query_info.getItrExhausted();
 
-	range_query_info.reads_info = {};
 	// reads_info is one of QueryReads
 	let proto_raw_reads = proto_range_query_info.getRawReads();
 	if (proto_raw_reads) {
-		range_query_info.reads_info.kv_reads = [];
+		range_query_info.raw_reads = {};
+		range_query_info.raw_reads.kv_reads = [];
 		for (let i in proto_raw_reads.kv_reads) {
 			let kv_read = decodeKVRead(proto_raw_reads.kv_reads[i]);
-			range_query_info.reads_info.kv_reads.push(kv_read);
+			range_query_info.raw_reads.kv_reads.push(kv_read);
 		}
 	}
 	// or QueryReadsMerkleSummary
@@ -1339,6 +1344,7 @@ var HeaderType = class {
 				result = decodeEndorserTransaction(proto_data);
 				break;
 			default:
+				logger.debug(' ***** found a header type of %s :: %s', type, HeaderType.convertToString(type));
 				// return empty data on types we do not know so that
 				// event processing may continue on blocks we do not
 				// care about
