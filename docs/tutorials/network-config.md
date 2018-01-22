@@ -28,8 +28,8 @@ A connection profile contain entries that describe the Hyperledger Fabric networ
 
 #### new API's
 * `client.initCredentialStores()` - A fabric client instance method to create a state store and assign it to the fabric client instance based on the current settings in the loaded connection profile configuration. It will also create the crypto suite and assign it to the fabric client instance. A crypto store will be created and assigned to crypto suite if needed. (HSM based crypto suites do not require a crypto store).
-* `client.getEventHub()` - A fabric client instance method to create an event hub based on the current settings in the loaded connection profile configuration of the named peer.
-* `client.getEventHubsForOrg()` - A fabric client instance method to return a list of event hubs that are associated with an organizations. Peers in an organizations that have the `eventUrl` defined will be returned.
+* `channel.newChannelEventHub()` - A fabric channel instance method to create an channel-based event hub based on the current settings in the loaded connection profile configuration of the named peer.
+* `channel.getChannelEventHubsForOrg()` - A fabric channel instance method to return a list of channel-based event hubs that are associated with an organizations. Peers in an organizations that have the `eventSource` set to true will be returned.
 * `client.getPeersForOrg()` - A fabric client instance method to return a list of peer objects that are associated with an organizations.
 
 #### Modified API's that will use the connection profile configuration if one has been loaded
@@ -280,29 +280,28 @@ When there is a connection profile configuration loaded and the query call is no
   - queryByChaincode
 
 
-### Get an EventHub
-Working with an event hub will not changed when a connection profile configuration has been loaded. A new method has been added to the fabric client to simplify setting up of an EventHub object. Use the following to get an EventHub object that will be setup to work with the named peer's event hub as defined in the connection profile configuration.
+### When monitoring for events
+Working with an channel-based event hub will not changed when a connection profile configuration has been loaded. A new method has been added to the fabric client to simplify setting up of an ChannelEventHub object. Use the following to get an ChannelEventHub object that will be setup to work with the named peer's channel-based event hub.
 ```
-var eventhub = client.getEventHub('peer0.org1.example.com');
+var chanel_event_hub = channel.newChannelEventHub('peer0.org1.example.com');
 ```
-Notice how the parameter to the call is the name of the peer. All other settings to create an event hub are defined by the connection profile configuration under the peer by that name.
+Notice how the parameter to the call is the name of the peer. All settings to create an channel-based event hub are defined by the connection profile configuration under the peer by that name.
 ```
 peer0.org1.example.com:
   url: grpcs://localhost:7051
-  eventUrl: grpcs://localhost:7053
   grpcOptions:
 	ssl-target-name-override: peer0.org1.example.com
 	grpc.keepalive_time_ms: 600000
   tlsCACerts:
 	path: test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem
 ```
-The following will be a list of event hubs that are within the 'Org1' organization. All peers referenced by an organization that have the `eventUrl` defined will be returned in the list.
+The following will be a list of event hubs that are within the 'Org1' organization. All peers referenced by an organization that the 'eventSource' set to true.
 ```
-var event_hubs = client.getEventHubsForOrg('Org1');
+var channel_event_hubs = channel.getChannelEventHubsForOrg('Org1');
 ```
 
-The following will be a list of event hubs that are within the organization of the client section of the connection profile.
+The following will be a list of channel-based event hubs that are within the organization defined in the client section of the connection profile.
 ```
-var event_hubs = client.getEventHubsForOrg();
+var channel_event_hubs = channel.getChannelEventHubsForOrg();
 ```
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
