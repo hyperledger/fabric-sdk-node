@@ -25,6 +25,8 @@ var http = require('http');
 var https = require('https');
 var urlParser = require('url');
 var jsrsasign = require('jsrsasign');
+const IdentityService = require('./IdentityService');
+
 var x509 = jsrsasign.X509;
 var ASN1HEX = jsrsasign.ASN1HEX;
 
@@ -384,6 +386,15 @@ var FabricCAServices = class extends BaseClient {
 	}
 
 	/**
+	 * Creates a new {@link IdentityService} object
+	 *
+	 * @returns {IdentityService} object
+	 */
+	newIdentityService() {
+		return this._fabricCAClient.newIdentityService();
+	}
+
+	/**
 	 * @typedef {Object} HTTPEndpoint
 	 * @property {string} hostname
 	 * @property {number} port
@@ -501,6 +512,8 @@ var FabricCAClient = class {
 	 * @typedef {Object} KeyValueAttribute
 	 * @property {string} name The key used to reference the attribute
 	 * @property {string} value The value of the attribute
+	 * @property {boolean} ecert Optional, A value of true indicates that this attribute
+	 *  should be included in an enrollment certificate by default
 	 */
 
 	/**
@@ -521,7 +534,6 @@ var FabricCAClient = class {
 	register(enrollmentID, enrollmentSecret, role, affiliation, maxEnrollments, attrs, signingIdentity) {
 
 		var self = this;
-		var numArgs = arguments.length;
 		//all arguments are required
 		if (!enrollmentID || !affiliation || !signingIdentity) {
 			throw new Error('Missing required parameters.  \'enrollmentID\', \'affiliation\', \
@@ -637,8 +649,36 @@ var FabricCAClient = class {
 		});
 	}
 
+	/**
+	 * Creates a new {@link IdentityService} object
+	 *
+	 * @param enrollmentID The enrollment ID associated for this identity
+	 * @returns {IdentityService} object
+	 */
+	newIdentityService() {
+		return new IdentityService(this);
+	}
+
 	post(api_method, requestObj, signingIdentity) {
-		requestObj.caName = this._caName;
+		return this.request('POST', api_method, signingIdentity, requestObj);
+	}
+
+	delete(api_method, signingIdentity) {
+		return this.request('DELETE', api_method, signingIdentity);
+	}
+
+	get(api_method, signingIdentity) {
+		return this.request('GET', api_method, signingIdentity);
+	}
+
+	put(api_method, requestObj, signingIdentity) {
+		return this.request('PUT', api_method, signingIdentity, requestObj);
+	}
+
+	request(http_method, api_method, signingIdentity, requestObj){
+		if (requestObj) {
+			requestObj.caName = this._caName;
+		}
 
 		var self = this;
 		return new Promise(function (resolve, reject) {
@@ -646,7 +686,7 @@ var FabricCAClient = class {
 				hostname: self._hostname,
 				port: self._port,
 				path: self._baseAPI + api_method,
-				method: 'POST',
+				method: http_method,
 				headers: {
 					Authorization: self.generateAuthToken(requestObj, signingIdentity)
 				},
@@ -692,7 +732,9 @@ var FabricCAClient = class {
 				reject(new Error(util.format('Calling %s endpoint failed with error [%s]', api_method, err)));
 			});
 
-			request.write(JSON.stringify(requestObj));
+			if (requestObj) {
+				request.write(JSON.stringify(requestObj));
+			}
 			request.end();
 		});
 	}
@@ -703,14 +745,19 @@ var FabricCAClient = class {
 	generateAuthToken(reqBody, signingIdentity) {
 		// specific signing procedure is according to:
 		// https://github.com/hyperledger/fabric-ca/blob/master/util/util.go#L213
-		var cert = Buffer.from(signingIdentity._certificate).toString('base64');
-		var body = Buffer.from(JSON.stringify(reqBody)).toString('base64');
+		let cert = Buffer.from(signingIdentity._certificate).toString('base64');
+		let bodyAndcert;
+		if (reqBody) {
+			let body = Buffer.from(JSON.stringify(reqBody)).toString('base64');
+			bodyAndcert = body + '.' + cert;
+		} else {
+			bodyAndcert = '.' + cert;
+		}
 
-		var bodyAndcert = body + '.' + cert;
-		var sig = signingIdentity.sign(bodyAndcert, { hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives) });
+		let sig = signingIdentity.sign(bodyAndcert, { hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives) });
 		logger.debug(util.format('bodyAndcert: %s', bodyAndcert));
 
-		var b64Sign = Buffer.from(sig, 'hex').toString('base64');
+		let b64Sign = Buffer.from(sig, 'hex').toString('base64');
 		return cert + '.' + b64Sign;
 	}
 

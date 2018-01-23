@@ -24,3 +24,5 @@ fabric-ca-client/.DS_Store
 test/fixtures/src/github.com/example_cc/junk.go
 *.csv
 *.heapsnapshot
+.vscode
+.idea

@@ -49,8 +49,10 @@ if (!/-snapshot/.test(release)) {
 	dockerImageTag += '-' + release;
 }
 
+// these environment variables would be read at test/fixtures/docker-compose.yaml
 process.env.DOCKER_IMG_TAG = dockerImageTag;
-
+process.env.V11_IDENTITIES_ALLOWREMOVE = '--cfg.identities.allowremove';
+process.env.V11_AFFILIATIONS_ALLOWREMOVE = '--cfg.affiliations.allowremove';
 
 gulp.task('pre-test', function() {
 	return gulp.src([
@@ -103,6 +105,7 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], functi
 		// channel: mychannel, chaincode: end2endnodesdk:v0/v1
 		'test/integration/e2e.js',
 		'test/integration/query.js',
+		'test/integration/fabric-ca-identity-service-tests.js',
 		'test/integration/fabric-ca-services-tests.js',
 		'test/integration/client.js',
 		'test/integration/orderer-channel-tests.js',
@@ -129,7 +132,6 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], functi
 		'test/integration/network-config.js',
 		// channel: mychannel, chaincode: e2enodecc:v0
 		'test/integration/nodechaincode/e2e.js'
-
 	]))
 	.pipe(addsrc.append(
 		'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up
