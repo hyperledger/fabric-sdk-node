@@ -75,6 +75,16 @@ var Peer = class extends Remote {
 	}
 
 	/**
+	 * Close the service connection.
+	 */
+	close() {
+		if(this._endorserClient) {
+			logger.debug('close - closing peer connection ' + this._endpoint.addr);
+			this._endorserClient.close();
+		}
+	}
+
+	/**
 	 * Send an endorsement proposal to an endorser. This is used to call an
 	 * endorsing peer to execute a chaincode to process a transaction proposal,
 	 * or runs queries.

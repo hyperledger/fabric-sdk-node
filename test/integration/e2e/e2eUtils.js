@@ -475,7 +475,7 @@ function invokeChaincode(userOrg, version, t, useStore){
 				var eventhub = ehs[key];
 				if (eventhub && eventhub.isconnected()) {
 					logger.debug('Disconnecting the event hub');
-					eventhub.disconnect();
+					eventhub.disconnect(); //this will also close the connection
 				}
 			}
 
@@ -707,6 +707,17 @@ function invokeChaincode(userOrg, version, t, useStore){
 		} else {
 			t.fail('Failed to order the transaction. Error code: ' + response.status);
 			throw new Error('Failed to order the transaction. Error code: ' + response.status);
+		}
+		// all done, shutdown connections on all
+		let peers = channel.getPeers();
+		for(let i in peers) {
+			let peer = peers[i];
+			peer.close();
+		}
+		let orderers = channel.getOrderers();
+		for(let i in orderers) {
+			let orderer = orderers[i];
+			orderer.close();
 		}
 	}, (err) => {
 
