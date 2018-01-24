@@ -210,14 +210,14 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 	_fixEcpt(ecpt) {
 		if ((ecpt.length & 1) == 0 &&
 			(ecpt[0] == 0x04) && (ecpt[ecpt.length - 1] == 0x04)) {
-			console.log(__func() +
+			logger.debug(__func() +
 				'workaround opencryptoki EC point wrong length: ' +
 				ecpt.length);
 			ecpt = ecpt.slice(0, ecpt.length - 1);
 		} else if (ecpt[0] == 0x04 && ecpt[2] == 0x04) {
-			console.log('trimming leading 0x04 0xXX', ecpt);
+			logger.debug('trimming leading 0x04 0xXX', ecpt);
 			ecpt = ecpt.slice(2);
-			console.log(ecpt);
+			logger.debug(ecpt);
 		}
 		return ecpt;
 	}
