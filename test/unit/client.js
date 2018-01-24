@@ -781,8 +781,8 @@ test('\n\n ** createUser error path - missing required cryptoContent **\n\n', fu
 	});
 });
 
-test('\n\n ** createUser error path - missing required cryptoContent signedCertPEM **\n\n', function (t) {
-	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKeyPEM and signedCertPEM\' strings are required.';
+test('\n\n ** createUser error path - missing required cryptoContent signedCert or signedCertPEM **\n\n', function (t) {
+	var msg = 'Client.createUser either \'opts cryptoContent signedCert or signedCertPEM\' is required.';
 
 	var userOrg = 'org1';
 	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
@@ -813,8 +813,8 @@ test('\n\n ** createUser error path - missing required cryptoContent signedCertP
 	});
 });
 
-test('\n\n ** createUser error path - missing required cryptoContent privateKeyPEM **\n\n', function (t) {
-	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKeyPEM and signedCertPEM\' strings are required.';
+test('\n\n ** createUser error path - missing required cryptoContent privateKey or privateKeyPEM **\n\n', function (t) {
+	var msg = 'Client.createUser one of \'opts cryptoContent privateKey, privateKeyPEM or privateKeyObj\' is required.';
 
 	var userOrg = 'org1';
 	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
@@ -828,102 +828,6 @@ test('\n\n ** createUser error path - missing required cryptoContent privateKeyP
 		return '';
 	}).then(() => {
 		return client.createUser({cryptoContent: {signedCertPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then((user) => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
-test('\n\n ** createUser error path - missing required cryptoContent signedCert **\n\n', function (t) {
-	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKey and signedCert\' files are required.';
-
-	var userOrg = 'org1';
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser({cryptoContent: {privateKey: 'abcd'}, username: 'anyone', mspid: 'one'});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then((user) => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
-test('\n\n ** createUser error path - missing required cryptoContent privateKey **\n\n', function (t) {
-	var msg = 'Client.createUser both parameters \'opts cryptoContent privateKey and signedCert\' files are required.';
-
-	var userOrg = 'org1';
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser({cryptoContent: {signedCert: 'abcd'}, username: 'anyone', mspid: 'one'});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then((user) => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
-test('\n\n ** createUser error path - invalid cryptoContent **\n\n', function (t) {
-	var msg = 'failed to load private key data';
-
-	var userOrg = 'org1';
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser({cryptoContent: 'abcde', username: 'anyone', mspid: 'one'});
 	}, (err) => {
 		logger.error(err.stack ? err.stack : err);
 		throw new Error('Failed createUser.');
