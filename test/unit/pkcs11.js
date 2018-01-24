@@ -33,7 +33,9 @@ var crypto = require('crypto');
 var util = require('util');
 var path = require('path');
 
+var Client = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
+var KVSStore = require('fabric-client/lib/impl/FileKeyValueStore.js');
 var testutil = require('./util.js');
 
 var libpath;
@@ -232,16 +234,6 @@ test('\n\n**PKCS11 - Test generate ephemeral ECDSA key pair, sign, and verify.\n
 });
 
 test('\n\n**PKCS11 - Test sign and verify with non-ephemeral ECDSA key pair in the crypto card.\n\n', (t) => {
-	// override t.end function so it'll always clear the config settings
-	t.end = ((context, f) => {
-		return function() {
-			if (global && global.hfc) global.hfc.config = undefined;
-			require('nconf').reset();
-
-			f.apply(context, arguments);
-		};
-	})(t, t.end);
-
 	var existingCrypto = cryptoUtils;
 
 	return existingCrypto.generateKey({ algorithm: 'ECDSA', ephemeral: false })
@@ -275,6 +267,71 @@ test('\n\n**PKCS11 - Test sign and verify with non-ephemeral ECDSA key pair in t
 					   Buffer.from('Hello World!'));
 		t.equal(v, true, 'Successfully verified signature');
 		t.end();
+	})
+	.catch(function(e) {
+		t.fail('Failed. ' + e);
+		t.end();
+	});
+});
+
+test('\n\n**PKCS11 - Test Client.createUser with existing PKCS11 key.\n\n', (t) => {
+	// override t.end function so it'll always clear the config settings
+	t.end = ((context, f) => {
+		return function () {
+			if (global && global.hfc) global.hfc.config = undefined;
+			require('nconf').reset();
+
+			f.apply(context, arguments);
+		};
+	})(t, t.end);
+
+	var existingCrypto = cryptoUtils;
+	var storePath = path.join(testutil.getTempDir(), 'pkcs11store');
+	return existingCrypto.generateKey({ algorithm: 'ECDSA', ephemeral: false })
+	.then((key) => {
+		t.pass('Successfully generated ECDSA key pair');
+
+		var ski = key.getSKI();
+
+		// re-construct a new instance of the CryptoSuite so that when "getKey()"
+		// is called it'll not have the previously generated key in memory but
+		// have to retrieve it from persistence store
+		existingCrypto.closeSession();
+		existingCrypto.finalize();
+
+		return ski;
+	})
+	.then((ski) => {
+		cryptoUtils = utils.newCryptoSuite({
+			lib: libpath,
+			slot: 0,
+			pin: pin });
+
+		var pkcs11Key = cryptoUtils.getKey(ski);
+		var client = new Client();
+		return Promise.resolve(new KVSStore({path: storePath}))
+		.then((store)=> {
+			client.setStateStore(store);
+			client.setCryptoSuite(cryptoUtils);
+			return client.createUser(
+				{
+					username: 'pkcs11user',
+					mspid: 'pkcs11MSP',
+					cryptoContent: {
+						privateKeyObj: pkcs11Key,
+						signedCertPEM: '-----BEGIN CERTIFICATE-----MIIB8TCCAZegAwIBAgIUasxwoRvBrGrdyg9+HtdJ3brpcuMwCgYIKoZIzj0EAwIwfzELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xHzAdBgNVBAoTFkludGVybmV0IFdpZGdldHMsIEluYy4xDDAKBgNVBAsTA1dXVzEUMBIGA1UEAxMLZXhhbXBsZS5jb20wHhcNMTcwMTE5MTk1NjAwWhcNMTcxMjE5MDM1NjAwWjAQMQ4wDAYDVQQDEwVhZG1pbjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABPHym/0MIKF/AehrshFR/bPsZOYLeTZOXx7sNYD19nhykv292TRkyBBkqjwabrU1JO4cxnzOne5mftA5wKbC4OCjYDBeMA4GA1UdDwEB/wQEAwICBDAMBgNVHRMBAf8EAjAAMB0GA1UdDgQWBBQtEfVCvKOzNSiTgpaWzaYVm6eaBzAfBgNVHSMEGDAWgBQXZ0I9qp6CP8TFHZ9bw5nRtZxIEDAKBggqhkjOPQQDAgNIADBFAiEAvGd5YDIBeQZWpP9wEHFmezvSCjrzy8VcvH/7Yuv3vcoCICy5ssNrEHEyWXqBqeKfU/zrPhHsWJFIaJEDQLRQE05l-----END CERTIFICATE-----'
+					}
+				});
+		});
+	})
+	.then((user) => {
+		if (user) {
+			t.pass('createUser, got user');
+			t.end();
+		} else {
+			t.fail('createUser, returned null');
+			t.end();
+		}
 	})
 	.catch(function(e) {
 		t.fail('Failed. ' + e);

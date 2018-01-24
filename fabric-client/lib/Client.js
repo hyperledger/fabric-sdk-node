@@ -1007,19 +1007,16 @@ var Client = class extends BaseClient {
 	 * @typedef {Object} UserOpts
 	 * @property {string} username {string} - the user name used for enrollment
 	 * @property {string} mspid {string} - the MSP id
-	 * @property {IdentityFiles | IdentityPEMs} cryptoContent - the private key and certificate
+	 * @property {CryptoContent} cryptoContent - the private key and certificate
 	 */
 
 	/**
-	 * @typedef {Object} IdentityFiles
+	 * @typedef {Object} CryptoContent
 	 * @property {string} privateKey - the PEM file path for the private key
+	 * @property {string} privateKeyPEM - the PEM string for the private key (not required if privateKey or privateKeyObj is set)
+	 * @property {module:api.Key} privateKeyObj - private key object (not required if privateKey or privateKeyPEM is set)
 	 * @property {string} signedCert - the PEM file path for the certificate
-	 */
-
-	/**
-	 * @typedef {Object} IdentityPEMs
-	 * @property {string} privateKeyPEM - the PEM string for the private key
-	 * @property {string} signedCertPEM - the PEM string for the certificate
+	 * @property {string} signedCertPEM - the PEM string for the certificate (not required if signedCert is set)
 	 */
 
 	/**
@@ -1047,13 +1044,11 @@ var Client = class extends BaseClient {
 			return Promise.reject(new Error('Client.createUser parameter \'opts mspid\' is required.'));
 		}
 		if (opts.cryptoContent) {
-			if ((opts.cryptoContent.privateKey || opts.cryptoContent.signedCert) &&
-				(!opts.cryptoContent.privateKey || !opts.cryptoContent.signedCert)) {
-				return Promise.reject(new Error('Client.createUser both parameters \'opts cryptoContent privateKey and signedCert\' files are required.'));
+			if (!opts.cryptoContent.privateKey && !opts.cryptoContent.privateKeyPEM && !opts.cryptoContent.privateKeyObj) {
+				return Promise.reject(new Error('Client.createUser one of \'opts cryptoContent privateKey, privateKeyPEM or privateKeyObj\' is required.'));
 			}
-			if ((opts.cryptoContent.privateKeyPEM || opts.cryptoContent.signedCertPEM) &&
-				(!opts.cryptoContent.privateKeyPEM || !opts.cryptoContent.signedCertPEM)) {
-				return Promise.reject(new Error('Client.createUser both parameters \'opts cryptoContent privateKeyPEM and signedCertPEM\' strings are required.'));
+			if (!opts.cryptoContent.signedCert && !opts.cryptoContent.signedCertPEM) {
+				return Promise.reject(new Error('Client.createUser either \'opts cryptoContent signedCert or signedCertPEM\' is required.'));
 			}
 		} else {
 			return Promise.reject(new Error('Client.createUser parameter \'opts cryptoContent\' is required.'));
@@ -1083,21 +1078,24 @@ var Client = class extends BaseClient {
 
 			if (opts.cryptoContent.privateKey) {
 				promise = readFile(opts.cryptoContent.privateKey);
-			} else {
+			} else if (opts.cryptoContent.privateKeyPEM){
 				promise = Promise.resolve(opts.cryptoContent.privateKeyPEM);
+			} else {
+				importedKey = opts.cryptoContent.privateKeyObj;
+				promise = Promise.resolve();
 			}
 			promise.then((data) => {
 				if (data) {
 					logger.debug('then privateKeyPEM data');
 					var opt1;
 					if (self.getCryptoSuite()._cryptoKeyStore) {
-						opt1 = {ephemeral: false};
+						opt1 = { ephemeral: false };
 					} else {
-						opt1 = {ephemeral: true};
+						opt1 = { ephemeral: true };
 					}
 					return self.getCryptoSuite().importKey(data.toString(), opt1);
 				} else {
-					throw new Error('failed to load private key data');
+					return importedKey;
 				}
 			}).then((key) => {
 				logger.debug('then key');
