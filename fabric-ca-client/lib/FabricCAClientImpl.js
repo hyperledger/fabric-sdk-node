@@ -1,5 +1,5 @@
 /*
- Copyright 2016 IBM All Rights Reserved.
+ Copyright 2018 IBM All Rights Reserved.
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ var https = require('https');
 var urlParser = require('url');
 var jsrsasign = require('jsrsasign');
 const IdentityService = require('./IdentityService');
+const AffiliationService = require('./AffiliationService');
+const checkRegistrar = require('./helper').checkRegistrar;
 
 var x509 = jsrsasign.X509;
 var ASN1HEX = jsrsasign.ASN1HEX;
@@ -395,6 +397,15 @@ var FabricCAServices = class extends BaseClient {
 	}
 
 	/**
+	 * Create a new {@link AffiliationService} object
+	 *
+	 * @returns {AffiliationService} object
+	 */
+	newAffiliationService() {
+		return this._fabricCAClient.newAffiliationService();
+	}
+
+	/**
 	 * @typedef {Object} HTTPEndpoint
 	 * @property {string} hostname
 	 * @property {number} port
@@ -657,6 +668,15 @@ var FabricCAClient = class {
 	 */
 	newIdentityService() {
 		return new IdentityService(this);
+	}
+
+	/**
+	 * Create a new {@link AffiliationService} object
+	 *
+	 * @returns {AffiliationService} object
+	 */
+	newAffiliationService() {
+		return new AffiliationService(this);
 	}
 
 	post(api_method, requestObj, signingIdentity) {
@@ -957,16 +977,6 @@ var FabricCAClient = class {
 
 	}
 };
-
-function checkRegistrar(registrar) {
-	if (typeof registrar === 'undefined' || registrar === null) {
-		throw new Error('Missing required argument "registrar"');
-	}
-
-	if (typeof registrar.getSigningIdentity !== 'function') {
-		throw new Error('Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity()"');
-	}
-}
 
 // This utility is based on jsrsasign.X509.getSubjectString() implementation
 // we can not use that method directly because it requires calling readCertPEM()

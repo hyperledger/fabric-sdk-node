@@ -31,7 +31,9 @@ gulp.task('doc', ['clean'], function () {
 		'!fabric-client/lib/hash.js',
 		'!fabric-client/lib/utils.js',
 		'fabric-ca-client/index.js',
-		'fabric-ca-client/lib/FabricCAClientImpl.js'
+		'fabric-ca-client/lib/FabricCAClientImpl.js',
+		'fabric-ca-client/lib/AffiliationService.js',
+		'fabric-ca-client/lib/IdentityService.js',
 	], { read: false })
 	.pipe(jsdoc({
 		opts: {

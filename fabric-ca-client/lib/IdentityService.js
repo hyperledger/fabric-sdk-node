@@ -1,4 +1,23 @@
+/*
+ Copyright 2018 IBM All Rights Reserved.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+	  http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
+'use strict';
+
 const logger = require('./utils').getLogger('IdentityService');
+const checkRegistrar = require('./helper').checkRegistrar;
 
 /**
  * PEER indicates that an identity is acting as a peer
@@ -48,6 +67,11 @@ const HFAFFILIATIONMGR = 'hf.AffiliationMgr';
  */
 const HFGENCRL = 'hf.GenCRL';
 
+/**
+ * This is an implementation of the Identity service which communicates with
+ * the Fabric CA server using the Fabric CA client {@link FabricCAClient}.
+ * @class
+ */
 class IdentityService {
 	constructor(client) {
 		this.client = client;
@@ -64,21 +88,21 @@ class IdentityService {
 	 *    If 0, use the configured max_enrollments of the fabric-ca-server;
 	 *    If > 0 and <= configured max enrollments of the fabric-ca-server, use max_enrollments;
 	 *    If > configured max enrollments of the fabric-ca-server, error.
-	 * @property {string} caname - Optional. Name of the CA to direct traffic to within server
+	 * @property {string} caname - Optional. Name of the CA to send the request to within the Fabric CA server
 	 */
 
 	/**
-	 * @typedef {Object} IdentityServiceResponseMessage
+	 * @typedef {Object} ServiceResponseMessage
 	 * @property {number} code - Integer code denoting the type of message
 	 * @property {string} message - A more specific message
 	 */
 
 	/**
-	 * @typedef {Object} IdentityServiceResponse
+	 * @typedef {Object} ServiceResponse
 	 * @property {boolean} Success - Boolean indicating if the request was successful
 	 * @property {Object} Result - The result of this request
-	 * @property {IdentityServiceResponseMessage[]} Errors - An array of error messages (code and message)
-	 * @property {IdentityServiceResponseMessage[]} Messages - An array of information messages (code and message)
+	 * @property {ServiceResponseMessage[]} Errors - An array of error messages (code and message)
+	 * @property {ServiceResponseMessage[]} Messages - An array of information messages (code and message)
 	 */
 
 	/**
@@ -136,7 +160,7 @@ class IdentityService {
 	 *
 	 * @param {string} enrollmentID - Required. The enrollment ID which uniquely identifies an identity
 	 * @param {User} registrar - Required. The identity of the registrar (i.e. who is performing the registration).
-	 * @return {Promise} {@link IdentityServiceResponse}
+	 * @return {Promise} {@link ServiceResponse}
 	 */
 	getOne(enrollmentID, registrar) {
 		if (!enrollmentID || typeof enrollmentID !== 'string') {
@@ -144,21 +168,20 @@ class IdentityService {
 		}
 		checkRegistrar(registrar);
 
-		let self = this;
 		let signingIdentity = registrar.getSigningIdentity();
 		if (!signingIdentity) {
 			throw new Error('Can not get signingIdentity from registrar');
 		}
 
 		const url = 'identities/' + enrollmentID;
-		return self.client.get(url, signingIdentity);
+		return this.client.get(url, signingIdentity);
 	}
 
 	/**
 	 * Get all identities that the registrar is entitled to see.
 	 *
 	 * @param {User} registrar - Required. The identity of the registrar (i.e. who is performing the registration).
-	 * @return {Promise} {@link IdentityServiceResponse}
+	 * @return {Promise} {@link ServiceResponse}
 	 */
 	getAll(registrar) {
 		checkRegistrar(registrar);
@@ -176,7 +199,7 @@ class IdentityService {
 	 *
 	 * @param {string} enrollmentID
 	 * @param {User} registrar
-	 * @return {Promise} {@link IdentityServiceResponse}
+	 * @return {Promise} {@link ServiceResponse}
 	 */
 	delete(enrollmentID, registrar) {
 		if (!enrollmentID || typeof enrollmentID !== 'string') {
@@ -199,7 +222,7 @@ class IdentityService {
 	 * @param {string} enrollmentID
 	 * @param {IdentityRequest} req
 	 * @param {User} registrar
-	 * @return {Promise} {@link IdentityServiceResponse}
+	 * @return {Promise} {@link ServiceResponse}
 	 */
 	update(enrollmentID, req, registrar) {
 		if (!enrollmentID || typeof enrollmentID !== 'string') {
@@ -233,16 +256,6 @@ class IdentityService {
 		}
 
 		return this.client.put(url, request, signingIdentity);
-	}
-}
-
-function checkRegistrar(registrar) {
-	if (typeof registrar === 'undefined' || registrar === null) {
-		throw new Error('Missing required argument "registrar"');
-	}
-
-	if (typeof registrar.getSigningIdentity !== 'function') {
-		throw new Error('Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity()"');
 	}
 }
 

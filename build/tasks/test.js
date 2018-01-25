@@ -59,7 +59,11 @@ process.env.THIRDPARTY_IMG_TAG = thirdpartyImageTag;
 gulp.task('pre-test', function() {
 	return gulp.src([
 		'fabric-client/lib/**/*.js',
-		'fabric-ca-client/lib/FabricCAClientImpl.js'])
+		'fabric-ca-client/lib/FabricCAClientImpl.js',
+		'fabric-ca-client/lib/helper.js',
+		'fabric-ca-client/lib/IdentityService.js',
+		'fabric-ca-client/lib/AffiliationService.js',
+	])
 	.pipe(istanbul())
 	.pipe(istanbul.hookRequire());
 });
@@ -107,6 +111,7 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], functi
 		// channel: mychannel, chaincode: end2endnodesdk:v0/v1
 		'test/integration/e2e.js',
 		'test/integration/query.js',
+		'test/integration/fabric-ca-affiliation-service-tests.js',
 		'test/integration/fabric-ca-identity-service-tests.js',
 		'test/integration/fabric-ca-services-tests.js',
 		'test/integration/client.js',
