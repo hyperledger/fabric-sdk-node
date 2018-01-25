@@ -16,7 +16,7 @@ let tlsOptions = {
 
 let ORGS;
 
-test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
+test('\n\n ** FabricCAServices - IdentityService Test **\n\n', (t) => {
 
 	FabricCAServices.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 	ORGS = FabricCAServices.getConfigSetting('test-network');
@@ -30,20 +30,18 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 
 	let bootstrapUser = {
 		enrollmentID: 'admin',
-		enrollmentSecret: 'adminpw',
+		enrollmentSecret: 'adminpw'
 	};
 
 	let admin;
 	let testIdentity = {
 		enrollmentID: 'user_' + Math.random().toFixed(2).toString(),
 		enrollmentSecret: 'userpw',
-		affiliation: 'org1',
+		affiliation: 'org1'
 	};
 	let update = {
-		info: {
-			affiliation: 'org2'
-		},
-		secret: 'mysecret',
+		affiliation: 'org2',
+		enrollmentSecret: 'mysecret'
 	};
 	let hfcaIdentityService;
 
@@ -72,8 +70,8 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 
 			return hfcaIdentityService.update(testIdentity.enrollmentID, update, admin);
 		}).then((resp) => {
-			t.equal(resp.result.secret, update.secret);
-			t.equal(resp.result.affiliation, update.info.affiliation);
+			t.equal(resp.result.secret, update.enrollmentSecret);
+			t.equal(resp.result.affiliation, update.affiliation);
 			t.pass('Successfully updated indentity ' + testIdentity.enrollmentID);
 
 			return hfcaIdentityService.getAll(admin);

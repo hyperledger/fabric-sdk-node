@@ -51,8 +51,6 @@ if (!/-snapshot/.test(release)) {
 
 // these environment variables would be read at test/fixtures/docker-compose.yaml
 process.env.DOCKER_IMG_TAG = dockerImageTag;
-process.env.V11_IDENTITIES_ALLOWREMOVE = '--cfg.identities.allowremove';
-process.env.V11_AFFILIATIONS_ALLOWREMOVE = '--cfg.affiliations.allowremove';
 
 gulp.task('pre-test', function() {
 	return gulp.src([

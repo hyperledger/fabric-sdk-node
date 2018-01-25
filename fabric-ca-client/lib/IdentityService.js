@@ -113,13 +113,11 @@ class IdentityService {
 
 		return new Promise(function (resolve, reject) {
 			const request = {
-				info: {
-					id: req.enrollmentID,
-					type: req.type || null,
-					affiliation: req.affiliation,
-					attrs: req.attrs || [],
-					max_enrollments: maxEnrollments,
-				},
+				id: req.enrollmentID,
+				type: req.type || null,
+				affiliation: req.affiliation,
+				attrs: req.attrs || [],
+				max_enrollments: maxEnrollments,
 				secret: req.enrollmentSecret || null,
 				caname: req.caname || null,
 			};
@@ -213,7 +211,28 @@ class IdentityService {
 			throw new Error('Can not get signingIdentity from registrar');
 		}
 		const url = 'identities/' + enrollmentID;
-		return this.client.put(url, req, signingIdentity);
+
+		let request = {};
+		if(req.type) {
+			request.type = req.type;
+		}
+		if(req.affiliation) {
+			request.affiliation = req.affiliation;
+		}
+		if (Number.isInteger(req.maxEnrollments)) {
+			request.maxEnrollments = req.maxEnrollments;
+		}
+		if(req.attrs) {
+			request.attrs = req.attrs;
+		}
+		if(req.enrollmentSecret) {
+			request.secret = req.enrollmentSecret;
+		}
+		if(req.caname) {
+			request.caname = req.caname;
+		}
+
+		return this.client.put(url, request, signingIdentity);
 	}
 }
 
