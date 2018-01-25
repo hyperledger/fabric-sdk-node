@@ -1,0 +1,22 @@
+v1.1.0-alpha January 25, 2018
+-----------------------------
+
+Release Notes
+-------------
+Added support for filtered events.  Various bug fixes and documentation.
+
+Known Vulnerabilities
+---------------------
+none
+
+Resolved Vulnerabilities
+------------------------
+none
+
+Known Issues & Workarounds
+--------------------------
+none
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/master/CHANGELOG.md#v110-alpha

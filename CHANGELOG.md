@@ -1,3 +1,46 @@
+## v1.1.0-alpha
+Fri Jan 26 19:09:53 EST 2018
+
+* [111ce4f](https://github.com/hyperledger/fabric-sdk-node/commit/111ce4f) [FAB-7784](https://jira.hyperledger.org/browse/FAB-7784) prepare fabric-sdk-node for 1.1.0-alpha
+* [097c1e0](https://github.com/hyperledger/fabric-sdk-node/commit/097c1e0) [[FAB-6628](https://jira.hyperledger.org/browse/FAB-6628)] 2. Support affiliation REST API
+* [a149e0e](https://github.com/hyperledger/fabric-sdk-node/commit/a149e0e) [FAB-7925](https://jira.hyperledger.org/browse/FAB-7925) fix couchdb version
+* [bdab3b5](https://github.com/hyperledger/fabric-sdk-node/commit/bdab3b5) [FAB-7642](https://jira.hyperledger.org/browse/FAB-7642) NodeSDK update doc
+* [31fe394](https://github.com/hyperledger/fabric-sdk-node/commit/31fe394) [FAB-6628](https://jira.hyperledger.org/browse/FAB-6628) NodeSDK - identitiesy REST change
+* [95d4f48](https://github.com/hyperledger/fabric-sdk-node/commit/95d4f48) [[FAB-7860](https://jira.hyperledger.org/browse/FAB-7860)] Replace console.log with logger.debug
+* [7ce03e2](https://github.com/hyperledger/fabric-sdk-node/commit/7ce03e2) [[FAB-7859](https://jira.hyperledger.org/browse/FAB-7859)] Client.createUser does not support PKCS11
+* [1d48529](https://github.com/hyperledger/fabric-sdk-node/commit/1d48529) [[FAB-6628](https://jira.hyperledger.org/browse/FAB-6628)] 1. Support identities REST API
+* [749873a](https://github.com/hyperledger/fabric-sdk-node/commit/749873a) [FAB-7642](https://jira.hyperledger.org/browse/FAB-7642) NodeSDK - connection profile events
+* [9b5f32b](https://github.com/hyperledger/fabric-sdk-node/commit/9b5f32b) [FAB-6400](https://jira.hyperledger.org/browse/FAB-6400) NodeSDK - add filtered event doc
+* [20bdc4d](https://github.com/hyperledger/fabric-sdk-node/commit/20bdc4d) [FAB-5481](https://jira.hyperledger.org/browse/FAB-5481) - NodeSDK - Filtered events
+* [283cdd4](https://github.com/hyperledger/fabric-sdk-node/commit/283cdd4) [[FAB-7726](https://jira.hyperledger.org/browse/FAB-7726)] Fix PKCS11 implementation
+* [2ce1ece](https://github.com/hyperledger/fabric-sdk-node/commit/2ce1ece) [[FAB-7514](https://jira.hyperledger.org/browse/FAB-7514)] NodeSDK add unability to channel events
+* [945fa8b](https://github.com/hyperledger/fabric-sdk-node/commit/945fa8b) [FAB-6400](https://jira.hyperledger.org/browse/FAB-6400) NodeSDK - filtered events
+* [ef0c3f7](https://github.com/hyperledger/fabric-sdk-node/commit/ef0c3f7) [[FAB-7504](https://jira.hyperledger.org/browse/FAB-7504)] Fix Client.getPeersForOrgOnChannela fcn
+* [f2a3fd6](https://github.com/hyperledger/fabric-sdk-node/commit/f2a3fd6) [FAB-6390](https://jira.hyperledger.org/browse/FAB-6390)] NodeSDK - Channel Event Service
+* [115548f](https://github.com/hyperledger/fabric-sdk-node/commit/115548f) [[FAB-7447](https://jira.hyperledger.org/browse/FAB-7447)] NodeSDK - fabric message change
+* [4d1256f](https://github.com/hyperledger/fabric-sdk-node/commit/4d1256f) [[FAB-6387](https://jira.hyperledger.org/browse/FAB-6387)] Temporary fix response value
+* [f752608](https://github.com/hyperledger/fabric-sdk-node/commit/f752608) [[FAB-4824](https://jira.hyperledger.org/browse/FAB-4824)] NodeSDK - event replay
+* [88e6b90](https://github.com/hyperledger/fabric-sdk-node/commit/88e6b90) [FAB-6266](https://jira.hyperledger.org/browse/FAB-6266): fix SSL errors with multiple peers
+* [4d4d939](https://github.com/hyperledger/fabric-sdk-node/commit/4d4d939) Establish node SDK's own list of maintainers
+* [1941ef8](https://github.com/hyperledger/fabric-sdk-node/commit/1941ef8) [[FAB-5117](https://jira.hyperledger.org/browse/FAB-5117)] NodeSDK - grpc dflt send/receive size
+* [cfd6815](https://github.com/hyperledger/fabric-sdk-node/commit/cfd6815) [[FAB-7010](https://jira.hyperledger.org/browse/FAB-7010)] NodeSDK - handle fabric-ca change
+* [ea6d167](https://github.com/hyperledger/fabric-sdk-node/commit/ea6d167) [[FAB-6968](https://jira.hyperledger.org/browse/FAB-6968)] Replace deprecated Buffer constructors
+* [1f03242](https://github.com/hyperledger/fabric-sdk-node/commit/1f03242) [[FAB-6971](https://jira.hyperledger.org/browse/FAB-6971)] GRPC_SSL_CIPHER_SUITES not correctly set
+* [70a7b13](https://github.com/hyperledger/fabric-sdk-node/commit/70a7b13) [[FAB-6958](https://jira.hyperledger.org/browse/FAB-6958)] Use built-in SHA256 implementation
+* [a157dce](https://github.com/hyperledger/fabric-sdk-node/commit/a157dce) [[FAB-6960](https://jira.hyperledger.org/browse/FAB-6960)] Update sjcl to latest version
+* [0fc518d](https://github.com/hyperledger/fabric-sdk-node/commit/0fc518d) [[FAB-5805](https://jira.hyperledger.org/browse/FAB-5805)] NodeSDK - fix config load
+* [1815caf](https://github.com/hyperledger/fabric-sdk-node/commit/1815caf) [[FAB-5117](https://jira.hyperledger.org/browse/FAB-5117)] NodeSDK - grpc dflt send/receive size
+* [a5934f7](https://github.com/hyperledger/fabric-sdk-node/commit/a5934f7) [FAB-6909](https://jira.hyperledger.org/browse/FAB-6909) upgrade support to 8.9.0 (new LTS)
+* [6214f05](https://github.com/hyperledger/fabric-sdk-node/commit/6214f05) [[FAB-6062](https://jira.hyperledger.org/browse/FAB-6062)] NodeSDK - add close method
+* [431df8a](https://github.com/hyperledger/fabric-sdk-node/commit/431df8a) [[FAB-6412](https://jira.hyperledger.org/browse/FAB-6412)] Add Node SDK support for gencrl endpoint
+* [588553a](https://github.com/hyperledger/fabric-sdk-node/commit/588553a) [[FAB-6820](https://jira.hyperledger.org/browse/FAB-6820)] Support mutual TLS for peer/orderer
+* [faca928](https://github.com/hyperledger/fabric-sdk-node/commit/faca928) [[FAB-6468](https://jira.hyperledger.org/browse/FAB-6468)] NodeSDK - normalize certs
+* [99129bc](https://github.com/hyperledger/fabric-sdk-node/commit/99129bc) [[FAB-6709](https://jira.hyperledger.org/browse/FAB-6709)] NodeSDK get default channel
+* [2010fda](https://github.com/hyperledger/fabric-sdk-node/commit/2010fda) [[FAB-6882](https://jira.hyperledger.org/browse/FAB-6882)] NodeSDK - update protos
+* [43fb29d](https://github.com/hyperledger/fabric-sdk-node/commit/43fb29d) [FAB-6827](https://jira.hyperledger.org/browse/FAB-6827) prepare fabric-sdk-node for next release
+* [2425eab](https://github.com/hyperledger/fabric-sdk-node/commit/2425eab) [[FAB-6551](https://jira.hyperledger.org/browse/FAB-6551)] NodeSDK - maxEnrollment
+* [7e7d0f0](https://github.com/hyperledger/fabric-sdk-node/commit/7e7d0f0) [[FAB-5377](https://jira.hyperledger.org/browse/FAB-5377)] response with payload in fabric-sdk-node
+
 ## v1.1.0-preview
 Wed Nov  1 10:28:19 EDT 2017
 
