@@ -126,7 +126,7 @@ services:
 
   couchdb:
     container_name: couchdb
-    image: hyperledger/fabric-couchdb${DOCKER_IMG_TAG}
+    image: hyperledger/fabric-couchdb${THIRDPARTY_IMG_TAG}
     ports:
       - 5984:5984
     environment:
