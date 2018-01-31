@@ -1173,7 +1173,7 @@ var Client = class extends BaseClient {
 	 * the identity.
 	 * @param {string} private_key - the private key PEM string
 	 * @param {string} certificate the PEM-encoded string of certificate
-	 * @param {string} mpsid The Member Service Provider id for the local signing identity
+	 * @param {string} mspid The Member Service Provider id for the local signing identity
 	 */
 	setAdminSigningIdentity(private_key, certificate, mspid) {
 		logger.debug('setAdminSigningIdentity - start mspid:%s',mspid);

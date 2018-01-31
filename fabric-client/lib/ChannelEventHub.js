@@ -137,6 +137,7 @@ var ChannelEventHub = class {
 	 *
 	 * @param {Channel} channel - An instance of the Channel class
 	 * were this event hub will receive blocks from
+	 * @param {Peer} peer An instance of the Peer class this event hub connects to.
 	 * @returns {ChannelEventHub} An instance of this class
 	 */
 
@@ -775,8 +776,10 @@ var ChannelEventHub = class {
 	 *                             regular expression string to match more than one
 	 *                             event by this chaincode.
 	 * @param {function} onEvent - callback function for matched events. It gets passed
-	 *                             a two parameters, a {@link ChaincodeEvent} object and
-	 *                             the block number this transaction was committed to the ledger
+	 *                             four parameters, a {@link ChaincodeEvent} object,
+	 *                             the block number this transaction was committed to the ledger,
+	 *                             the transaction ID, and a string representing the status of
+	 *                             the transaction.
 	 * @param {function} onError - Optional callback function to be notified when this event hub
 	 *                             is shutdown. The shutdown may be caused by a network error or by
 	 *                             a call to the "disconnect()" method or a connection error.

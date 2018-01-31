@@ -1135,7 +1135,7 @@ var Channel = class {
 	 *           parameter is omitted the target list will include peers assigned
 	 *           to this channel instance that are in the endorsing role.
 	 * @property {string} chaincodeType - Optional. Type of chaincode. One of
-	 *           'golang', 'car' or 'java'. Default is 'golang'. Note that 'java'
+	 *           'golang', 'car', 'java' or 'node'. Default is 'golang'. Note that 'java'
 	 *           is not supported as of v1.0.
 	 * @property {string} chaincodeId - Required. The name of the chaincode
 	 * @property {string} chaincodeVersion - Required. Version string of the chaincode,
@@ -1151,7 +1151,7 @@ var Channel = class {
 	 *           chaincode. Default is 'init'.
 	 * @property {string[]} args - Optional. Array of string arguments to pass to
 	 *           the function identified by the <code>fcn</code> value.
-	 * @property {Object} endorsement -policy - Optional. EndorsementPolicy object
+	 * @property {Object} endorsement-policy - Optional. EndorsementPolicy object
 	 *           for this chaincode (see examples below). If not specified, a default
 	 *           policy of "a signature by any member from any of the organizations
 	 *           corresponding to the array of member service providers" is used.
