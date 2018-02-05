@@ -111,6 +111,8 @@ const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];
 
 //
 // Internal API.
+// Notice this API is only used at the SDK scope. For the client application, do not use
+// this api.
 //
 // Get the standard logger to use throughout the SDK code. If the client application has
 // configured a logger, then that'll be returned.
