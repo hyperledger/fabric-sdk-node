@@ -18,7 +18,7 @@
 /*
  *   This test case requires that the 'configtxlator' tool be running locally and on port 7059
  *   see:
- *   https://github.com/jyellick/fabric-gerrit/tree/configtxlator/examples/configtxupdate
+ *   https://github.com/hyperledger/fabric/tree/master/examples/configtxupdate
  *
  *   This test case also requires two node packages to make it easier to make REST calls to
  *   the 'configtxlator'
