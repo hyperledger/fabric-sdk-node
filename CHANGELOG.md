@@ -1,4 +1,14 @@
-## 1.0.2
+## 1.0.3
+Mon Feb  5 20:11:04 EDT 2018
+ 
+* [7ae294e](https://github.com/hyperledger/fabric-sdk-node/commit/7ae294e) [FAB-7689](https://jira.hyperledger.org/browse/FAB-7689) NodeSDK add close method
+* [ab42ddb](https://github.com/hyperledger/fabric-sdk-node/commit/ab42ddb) [FAB-7860](https://jira.hyperledger.org/browse/FAB-7860) Replace console.log with logger.debug
+* [8d80f0a](https://github.com/hyperledger/fabric-sdk-node/commit/8d80f0a) [FAB-7859](https://jira.hyperledger.org/browse/FAB-7859) Client.createUser does not support PKCS11
+* [b3681a9](https://github.com/hyperledger/fabric-sdk-node/commit/b3681a9) [FAB-7726](https://jira.hyperledger.org/browse/FAB-7726) Fix PKCS11 implementation
+* [1d3facb](https://github.com/hyperledger/fabric-sdk-node/commit/1d3facb) [FAB-6266](https://jira.hyperledger.org/browse/FAB-6266) NodeSDK - SSL errors with PEM /0
+* [b02c179](https://github.com/hyperledger/fabric-sdk-node/commit/b02c179) [FAB-6958](https://jira.hyperledger.org/browse/FAB-6958) Use built-in SHA256 implementation
+* [feccc00](https://github.com/hyperledger/fabric-sdk-node/commit/feccc00) [FAB-6960](https://jira.hyperledger.org/browse/FAB-6960) Update sjcl to latest version
+
 Tue Sep  5 15:14:46 EDT 2017
 
 * [1667327](https://github.com/hyperledger/fabric-sdk-node/commit/1667327) [FAB-5879](https://jira.hyperledger.org/browse/FAB-5879) Add support for node 8 in addition to 6
