@@ -399,7 +399,7 @@ var Client = class extends BaseClient {
 					 let connection_options = ca.getConnectionOptions();
 					 let verify = true; //default if not found
 					 if(connection_options && typeof connection_options.verify === 'boolean') {
-						 verify = connection_options.verify
+						 verify = connection_options.verify;
 					 }
 					 tls_options = {
 						 trustedRoots: tlsCACerts,

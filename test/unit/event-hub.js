@@ -525,7 +525,7 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 		t.doesNotThrow(
 			() => {
 				event_hub.registerTxEvent('123', (tx_id, code) => {
-					t.fail('Failed callback should not have been called - tx test 1')
+					t.fail('Failed callback should not have been called - tx test 1');
 				});
 			},
 			null,
@@ -540,7 +540,7 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 			() => {
 				event_hub.registerTxEvent('123',
 				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - tx test 2')
+					t.fail('Failed callback should not have been called - tx test 2');
 				},
 				(error) =>{
 					if(error.toString().indexOf('Connect Failed')) {
@@ -569,7 +569,7 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 		t.throws(
 			() => {
 				event_hub.registerTxEvent('123', (tx_id, code) => {
-					t.fail('Failed callback should not have been called - tx test 3')
+					t.fail('Failed callback should not have been called - tx test 3');
 				});
 			},
 			/The event hub has not been connected to the event source/,
@@ -592,7 +592,7 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 			() => {
 				event_hub.registerTxEvent('123',
 				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - tx test 4')
+					t.fail('Failed callback should not have been called - tx test 4');
 				},
 				(error) =>{
 					if(error.toString().indexOf('Connect Failed')) {
@@ -640,7 +640,7 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 		t.doesNotThrow(
 			() => {
 				event_hub.registerBlockEvent((tx_id, code) => {
-					t.fail('Failed callback should not have been called - block test 1')
+					t.fail('Failed callback should not have been called - block test 1');
 				});
 			},
 			null,
@@ -655,7 +655,7 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 			() => {
 				event_hub.registerBlockEvent(
 				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - block test 2')
+					t.fail('Failed callback should not have been called - block test 2');
 				},
 				(error) =>{
 					if(error.toString().indexOf('Connect Failed')) {
@@ -684,7 +684,7 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 		t.throws(
 			() => {
 				event_hub.registerBlockEvent((tx_id, code) => {
-					t.fail('Failed callback should not have been called - block test 3')
+					t.fail('Failed callback should not have been called - block test 3');
 				});
 			},
 			/The event hub has not been connected to the event source/,
@@ -707,7 +707,7 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 			() => {
 				event_hub.registerBlockEvent(
 				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - block test 4')
+					t.fail('Failed callback should not have been called - block test 4');
 				},
 				(error) =>{
 					if(error.toString().indexOf('Connect Failed')) {
@@ -755,7 +755,7 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 		t.doesNotThrow(
 			() => {
 				event_hub.registerChaincodeEvent('123', 'event', (tx_id, code) => {
-					t.fail('Failed callback should not have been called - chaincode test 1')
+					t.fail('Failed callback should not have been called - chaincode test 1');
 				});
 			},
 			null,
@@ -770,7 +770,7 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 			() => {
 				event_hub.registerChaincodeEvent('123', 'event',
 				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - chaincode test 2')
+					t.fail('Failed callback should not have been called - chaincode test 2');
 				},
 				(error) =>{
 					if(error.toString().indexOf('Connect Failed')) {
@@ -799,7 +799,7 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 		t.throws(
 			() => {
 				event_hub.registerChaincodeEvent('123', 'event', (tx_id, code) => {
-					t.fail('Failed callback should not have been called - chaincode test 3')
+					t.fail('Failed callback should not have been called - chaincode test 3');
 				});
 			},
 			/The event hub has not been connected to the event source/,
@@ -822,7 +822,7 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 			() => {
 				event_hub.registerChaincodeEvent('123', 'event',
 				(tx_id, code) => {
-					t.fail('Failed callback should not have been called - chaincode test 4')
+					t.fail('Failed callback should not have been called - chaincode test 4');
 				},
 				(error) =>{
 					if(error.toString().indexOf('Connect Failed')) {

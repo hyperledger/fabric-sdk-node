@@ -619,7 +619,7 @@ var ChannelEventHub = class {
 
 		if(have_end_block) {
 			if(have_start_block && converted_options.start_block.greaterThan(converted_options.end_block)) {
-				throw new Error(util.format('"startBlock" (%s) must not be larger than "endBlock" (%s)',converted_options.start_block,converted_options.end_block))
+				throw new Error(util.format('"startBlock" (%s) must not be larger than "endBlock" (%s)', converted_options.start_block, converted_options.end_block));
 			}
 			this._ending_block_number = converted_options.end_block;
 			this._allowRegistration = false;
@@ -821,7 +821,7 @@ var ChannelEventHub = class {
 				self.unregisterChaincodeEvent(chaincode_reg);
 			};
 		}
-		this._checkConnection()
+		this._checkConnection();
 
 		return chaincode_reg;
 	}
@@ -912,8 +912,7 @@ var ChannelEventHub = class {
 				self.unregisterBlockEvent(block_registration_number);
 			};
 		}
-		this._checkConnection()
-
+		this._checkConnection();
 
 		return block_registration_number;
 	}
@@ -988,7 +987,7 @@ var ChannelEventHub = class {
 				self.unregisterTxEvent(txid);
 			};
 		}
-		this._checkConnection()
+		this._checkConnection();
 
 		return txid;
 	}
@@ -1136,7 +1135,7 @@ var ChannelEventHub = class {
 							logger.debug('_processChaincodeEvents - no transactions or transaction actions');
 						}
 					} else {
-						logger.debug('_processChaincodeEvents - block is not endorser transaction type')
+						logger.debug('_processChaincodeEvents - block is not endorser transaction type');
 					}
 				} catch (err) {
 					logger.error('on.data - Error unmarshalling transaction=', err);
@@ -1226,18 +1225,18 @@ function getStreamState(self) {
 /*
  * Utility method to get the string state from an integer
  */
- function getStateText(state) {
-	 let result = null;
-	 try {
-		 result = CONNECTION_STATE[state];
-	 } catch(error) {
-		 logger.error('Connection state conversion - unknown state - %s',state);
-	 }
-	 if(!result) {
-		 result = 'UNKNOWN_STATE';
-	 }
-	 return result;
- }
+function getStateText(state) {
+	let result = null;
+	try {
+		result = CONNECTION_STATE[state];
+	} catch(error) {
+		logger.error('Connection state conversion - unknown state - %s',state);
+	}
+	if(!result) {
+		result = 'UNKNOWN_STATE';
+	}
+	return result;
+}
 /*
  * The ChaincodeRegistration is used internal to the ChannelEventHub to hold chaincode
  * event registration callbacks.

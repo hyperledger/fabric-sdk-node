@@ -58,7 +58,7 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 	ORGS = FabricCAServices.getConfigSetting('test-network');
 
 	let fabricCAEndpoint = ORGS[userOrg].ca.url;
-	
+
 	FabricCAServices.getConfigSetting('crypto-keysize', '256'); //force for gulp test
 	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); //force for gulp test
 
@@ -85,7 +85,7 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 	const forceUpdatedAffiliation = {
 		name: 'org4',
 		force: true,
-	}
+	};
 
 	// If there are any child affiliations or any identities are associated with
 	// this affiliation or child affiliations, force causes these identities and
@@ -148,7 +148,7 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 			return affiliationService.update('org3', forceUpdatedAffiliation, admin);
 		}).then((resp) => {
 			checkResponse(resp, forceUpdatedAffiliation.name, t);
-			t.pass(`Successfully force updated affiliation 'org3' to 'org4', now check all its children have been updated too`);
+			t.pass('Successfully force updated affiliation \'org3\' to \'org4\', now check all its children have been updated too');
 
 			return affiliationService.getAll(admin);
 		}).then((resp) => {
@@ -156,7 +156,7 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 			const org4 = resp.result.affiliations.find((affiliation) => affiliation.name === 'org4');
 			checkExist(org4, 'org4.department1', t);
 			checkNotExist(resp.result, 'org3', t);
-			t.pass(`After force update, 'org3' has been renamed to 'org4', 'org3.department1' has been renamed to 'org4.department1'`);
+			t.pass('After force update, \'org3\' has been renamed to \'org4\', \'org3.department1\' has been renamed to \'org4.department1\'');
 
 			return affiliationService.delete(updatedAffiliation, admin);
 		}).then((resp) => {
@@ -172,7 +172,7 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 		}).then((resp) => {
 			t.equal(resp.success, true);
 			checkNotExist(resp.result, 'org4', t);
-			t.pass(`After force delete, 'org4' and all its child affiliations are deleted`);
+			t.pass('After force delete, \'org4\' and all its child affiliations are deleted');
 
 			t.end();
 		})

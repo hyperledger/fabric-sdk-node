@@ -23,8 +23,8 @@ var debugPath = path.join(testConstants.tempdir, 'test-log/debug.log');
 process.env.HFC_LOGGING = util.format('{"debug":"%s"}', escapeWindowsPath(debugPath));
 
 function escapeWindowsPath(p) {
-	if (path.sep == "/") return p
-	return p.replace(/\\/g, "\\\\")
+	if (path.sep == '/') return p;
+	return p.replace(/\\/g, '\\\\');
 }
 
 console.log('\n####################################################');
