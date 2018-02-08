@@ -39,7 +39,7 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 	 * for the store
 	 */
 	constructor(options) {
-		logger.debug('FileKeyValueStore.js - constructor');
+		logger.debug('constructor', { options: options });
 
 		if (!options || !options.path) {
 			throw new Error('Must provide the path to the directory to hold files for the store.');
@@ -50,10 +50,10 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 
 		var self = this;
 		this._dir = options.path;
-		return new Promise(function(resolve, reject) {
+		return new Promise(function (resolve, reject) {
 			fs.mkdirs(self._dir, function (err) {
 				if (err) {
-					logger.debug('FileKeyValueStore.js - constructor, error creating directory, code: ' + err.code);
+					logger.error('constructor, error creating directory, code: %s' , err.code);
 					return reject(err);
 				}
 				return resolve(self);
@@ -62,11 +62,11 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 	}
 
 	getValue(name) {
-		logger.debug('FileKeyValueStore -- getValue');
+		logger.debug('getValue', { key: name });
 
 		var self = this;
 
-		return new Promise(function(resolve, reject) {
+		return new Promise(function (resolve, reject) {
 			var p = path.join(self._dir, name);
 			fs.readFile(p, 'utf8', function (err, data) {
 				if (err) {
@@ -82,13 +82,13 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 	}
 
 	setValue(name, value) {
-		logger.debug('FileKeyValueStore -- setValue');
+		logger.debug('setValue', { key: name });
 
 		var self = this;
 
-		return new Promise(function(resolve, reject) {
+		return new Promise(function (resolve, reject) {
 			var p = path.join(self._dir, name);
-			fs.writeFile(p, value, function(err) {
+			fs.writeFile(p, value, function (err) {
 				if (err) {
 					reject(err);
 				} else {
