@@ -178,7 +178,7 @@ var Organization = class {
 	toString() {
 		var peers = '';
 		this._peers.forEach((peer) => {peers = peers + peer.toString() + ',';});
-		var ehs = ''
+		var ehs = '';
 		this._event_hubs.forEach((event_hub) => {ehs = ehs + event_hub.toString() + ',';});
 		var cas = '';
 		this._certificateAuthorities.forEach((ca) => {cas = cas + ca.toString() + ',';});

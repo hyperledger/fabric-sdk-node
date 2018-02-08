@@ -77,7 +77,7 @@ var FabricCAServices = class extends BaseClient {
 			url = url_p.url;
 			tlsOptions = url_p.tlsOptions;
 			caName = url_p.caName;
-			cryptoSuite = url_p.cryptoSuite
+			cryptoSuite = url_p.cryptoSuite;
 		} else {
 			url = url_p;
 			tlsOptions = tlsOptions_p;

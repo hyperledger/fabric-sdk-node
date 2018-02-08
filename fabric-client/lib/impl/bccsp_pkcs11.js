@@ -108,7 +108,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		if (typeof pkcs11Lib === 'undefined' || pkcs11Lib === null)
 			pkcs11Lib = utils.getConfigSetting('crypto-pkcs11-lib');
 		if (typeof pkcs11Lib === 'undefined' || pkcs11Lib === null ||
-		    typeof pkcs11Lib !== 'string')
+			typeof pkcs11Lib !== 'string')
 			throw new Error(__func() + 'PKCS11 library path must be specified');
 		logger.info(__func() + 'PKCS11 library: ' + pkcs11Lib);
 		/*
@@ -130,7 +130,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		if (typeof pkcs11Pin === 'undefined' || pkcs11Pin === null)
 			pkcs11Pin = utils.getConfigSetting('crypto-pkcs11-pin');
 		if (typeof pkcs11Pin === 'undefined' || pkcs11Pin === null ||
-		    typeof pkcs11Pin !== 'string')
+			typeof pkcs11Pin !== 'string')
 			throw new Error(__func() + 'PKCS11 PIN must be set');
 
 
@@ -153,21 +153,21 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		}
 
 		switch (this._hashAlgo.toLowerCase() + '-' + this._keySize) {
-			case 'sha3-256':
-				this._hashFunction = hashPrimitives.sha3_256;
-				break;
-			case 'sha3-384':
-				this._hashFunction = hashPrimitives.sha3_384;
-				break;
-			case 'sha2-256':
-				this._hashFunction = hashPrimitives.sha2_256;
-				break;
-			case 'sha2-384':
-				this._hashFunction = hashPrimitives.sha2_384;
-				break;
-			default:
-				throw Error(util.format('Unsupported hash algorithm and key size pair: %s-%s', this._hashAlgo, this._keySize));
-                }
+		case 'sha3-256':
+			this._hashFunction = hashPrimitives.sha3_256;
+			break;
+		case 'sha3-384':
+			this._hashFunction = hashPrimitives.sha3_384;
+			break;
+		case 'sha2-256':
+			this._hashFunction = hashPrimitives.sha2_256;
+			break;
+		case 'sha2-384':
+			this._hashFunction = hashPrimitives.sha2_384;
+			break;
+		default:
+			throw Error(util.format('Unsupported hash algorithm and key size pair: %s-%s', this._hashAlgo, this._keySize));
+		}
 
 		/*
 		 * Load native PKCS11 library, open PKCS11 session and login.
@@ -237,7 +237,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		try {
 			// Getting info about PKCS11 Module
 			logger.debug(__func() + 'C_GetInfo: ' +
-				     util.inspect(pkcs11.C_GetInfo(), {depth: null}));
+					 util.inspect(pkcs11.C_GetInfo(), {depth: null}));
 
 			// Getting list of slots
 			var slots = pkcs11.C_GetSlotList(true);
@@ -245,18 +245,18 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 				throw new Error(__func() + 'PKCS11 slot number non-exist');
 			var slot = slots[pkcs11Slot];
 			logger.debug(__func() + 'C_GetSlotList: ' +
-				     util.inspect(slots, {depth: null}));
+					 util.inspect(slots, {depth: null}));
 			// Getting info about slot
 			logger.debug(__func() + 'C_GetSlotInfo(' + pkcs11Slot + '): ' +
-				     util.inspect(pkcs11.C_GetSlotInfo(slot),
+					 util.inspect(pkcs11.C_GetSlotInfo(slot),
 						  {depth: null}));
 			// Getting info about token
 			logger.debug(__func() + 'C_GetTokenInfo(' + pkcs11Slot + '): ' +
-				     util.inspect(pkcs11.C_GetTokenInfo(slot),
+					 util.inspect(pkcs11.C_GetTokenInfo(slot),
 						  {depth: null}));
 			// Getting info about Mechanism
 			logger.debug(__func() + 'C_GetMechanismList(' + pkcs11Slot + '): ' +
-				     util.inspect(pkcs11.C_GetMechanismList(slot),
+					 util.inspect(pkcs11.C_GetMechanismList(slot),
 						  {depth: null}));
 			/*
 			 * Open session.
@@ -265,16 +265,16 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 				slot, pkcs11js.CKF_RW_SESSION|pkcs11js.CKF_SERIAL_SESSION);
 			// Getting info about Session
 			logger.debug(__func() + 'C_GetSessionInfo(' +
-				     util.inspect(
-					     this._pkcs11Session, {depth: null}) + '): ' +
-				     util.inspect(pkcs11.C_GetSessionInfo(
-					     this._pkcs11Session), {depth: null}));
+					 util.inspect(
+						 this._pkcs11Session, {depth: null}) + '): ' +
+					 util.inspect(pkcs11.C_GetSessionInfo(
+						 this._pkcs11Session), {depth: null}));
 
 			/*
 			 * Login with PIN. Error will be thrown if wrong PIN.
 			 */
 			pkcs11.C_Login(this._pkcs11Session,
-				       1/*pkcs11js.CKU_USER*/, pkcs11Pin);
+					   1/*pkcs11js.CKU_USER*/, pkcs11Pin);
 			this._pkcs11Login = true;
 			logger.info(__func() + 'session login successful');
 
@@ -414,15 +414,15 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			 * Get the public key EC point.
 			 */
 			var ecpt =
-			    (this._pkcs11GetAttributeValue(
-				    pkcs11, pkcs11Session, handles.publicKey,
-				    [{ type:pkcs11js.CKA_EC_POINT }]))[0].value;
+				(this._pkcs11GetAttributeValue(
+					pkcs11, pkcs11Session, handles.publicKey,
+					[{ type:pkcs11js.CKA_EC_POINT }]))[0].value;
 			/*
 			 * Workaround for opencryptoki bug reporting wrong ecpt length.
 			 */
 			ecpt = this._fixEcpt(ecpt);
 			logger.debug(__func() + 'ecpt[' + ecpt.length + ']: ' +
-				     util.inspect(ecpt, { depth: null }));
+					 util.inspect(ecpt, { depth: null }));
 			/*
 			 * Set CKA_ID of public and private key to be SKI.
 			 */
@@ -502,13 +502,13 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			 * Get EC params (to derive key size) and EC point.
 			 */
 			var attribs =
-			    this._pkcs11GetAttributeValue(
-				    this._pkcs11, this._pkcs11Session, publicKey,
-				    [ { type:pkcs11js.CKA_EC_PARAMS },
-				      { type:pkcs11js.CKA_EC_POINT },
-				    ]);
+				this._pkcs11GetAttributeValue(
+					this._pkcs11, this._pkcs11Session, publicKey,
+					[ { type:pkcs11js.CKA_EC_PARAMS },
+					  { type:pkcs11js.CKA_EC_POINT },
+					]);
 			logger.debug(__func() + 'attribuites: ' +
-				     util.inspect(attribs, { depth: null} ));
+					 util.inspect(attribs, { depth: null} ));
 
 			var ecparams, ecpt;
 			if (attribs[0].type == pkcs11js.CKA_EC_PARAMS) {
@@ -543,7 +543,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			var sig = pkcs11.C_Sign(pkcs11Session, digest,
 						Buffer.alloc(this._keySize));
 			logger.debug(__func() + 'ECDSA RAW signature: ' +
-				    util.inspect(sig, {depth: null}));
+					util.inspect(sig, {depth: null}));
 			/*
 			 * ASN1 DER encoding against malleability.
 			 */
@@ -552,7 +552,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			var sig = _preventMalleability({r: r, s: s}, this._ecdsaCurve);
 			var der = (new ecsig({ r: sig.r, s: sig.s})).toDER();
 			logger.debug(__func() + 'ECDSA DER signature: ' +
-				     util.inspect(Buffer.from(der), {depth: null}));
+					 util.inspect(Buffer.from(der), {depth: null}));
 			return Buffer.from(der);
 		}
 		catch(e) {
@@ -571,17 +571,17 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			 */
 			var rns = new ecsig(signature, 'hex');
 			logger.debug(__func() + 'ECDSA R+S signature: ' +
-				     util.inspect(rns, {depth: null}));
+					 util.inspect(rns, {depth: null}));
 			var sig = Buffer.concat([ rns.r.toArrayLike(Buffer, '', 0),
 						  rns.s.toArrayLike(Buffer, '', 0)]);
 			logger.debug(__func() + 'ECDSA RAW signature: ' +
-				     util.inspect(sig, {depth: null}));
+					 util.inspect(sig, {depth: null}));
 			/*
 			 * key can be either a private or a public key.
 			 */
 			pkcs11.C_VerifyInit(pkcs11Session,
-					    { mechanism: pkcs11js.CKM_ECDSA },
-					    key._handle);
+						{ mechanism: pkcs11js.CKM_ECDSA },
+						key._handle);
 			return pkcs11.C_Verify(pkcs11Session, digest, sig);
 		}
 		catch(e) {
@@ -604,9 +604,9 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			var iv = pkcs11.C_GenerateRandom(pkcs11Session, Buffer.alloc(16));
 
 			pkcs11.C_EncryptInit(pkcs11Session,
-					     { mechanism: pkcs11js.CKM_AES_CBC_PAD,
-					       parameter: iv },
-					     key._handle);
+						 { mechanism: pkcs11js.CKM_AES_CBC_PAD,
+						   parameter: iv },
+						 key._handle);
 			/*
 			 * Prepend iv to ciphertext.
 			 */
@@ -632,9 +632,9 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			var iv = cipherText.slice(0, 16);
 
 			pkcs11.C_DecryptInit(pkcs11Session,
-					     { mechanism: pkcs11js.CKM_AES_CBC_PAD,
-					       parameter: iv },
-					     key._handle);
+						 { mechanism: pkcs11js.CKM_AES_CBC_PAD,
+						   parameter: iv },
+						 key._handle);
 
 			return pkcs11.C_Decrypt(pkcs11Session,
 						cipherText.slice(16, cipherText.length),
@@ -666,9 +666,9 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 				pkcs11Session,
 				{ mechanism: pkcs11js.CKM_ECDH1_DERIVE,
 				  parameter: { type: pkcs11js.CK_PARAMS_EC_DH,
-					       kdf: pkcs11js.CKD_SHA256_KDF,
-					       publicData: pub._ecpt,
-					     }
+						   kdf: pkcs11js.CKD_SHA256_KDF,
+						   publicData: pub._ecpt,
+						 }
 				},
 				key._handle, derivedKeyTemplate);
 		}
@@ -737,10 +737,10 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 				{ type: pkcs11js.CKA_ID },
 			];
 			logger.debug(__func() + 'obj:  ' +
-				     util.inspect(obj, { depth: null }));
+					 util.inspect(obj, { depth: null }));
 			logger.debug(__func() + 'attr: ' + util.inspect(
 				this._pkcs11GetAttributeValue(pkcs11, pkcs11Session, obj,
-							      objectTemplate)));
+								  objectTemplate)));
 			objs.push(obj);
 			obj = pkcs11.C_FindObjects(pkcs11Session);
 		}
@@ -771,13 +771,13 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			opts.algorithm = 'ECDSA';
 		}
 		if (typeof opts === 'undefined' || opts === null ||
-		    typeof opts.algorithm === 'undefined' || opts.algorithm === null ||
-		    typeof opts.algorithm !== 'string')
+			typeof opts.algorithm === 'undefined' || opts.algorithm === null ||
+			typeof opts.algorithm !== 'string')
 			return Promise.reject(Error(__func() +
-						    'opts.algorithm must be String type'));
+							'opts.algorithm must be String type'));
 
 		var token = (opts.ephemeral !== 'undefined' &&
-			     opts.ephemeral === false) ? true : false;
+				 opts.ephemeral === false) ? true : false;
 		var self = this;
 
 		switch (opts.algorithm.toUpperCase()) {
@@ -840,7 +840,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		var hit = this._skiToKey[ski.toString('hex')];
 		if (hit !== undefined) {
 			logger.debug(__func() + 'cache hit ' +
-				     util.inspect(hit, { depth: null }));
+					 util.inspect(hit, { depth: null }));
 			return Promise.resolve(hit);
 		}
 		if (typeof ski == 'string') {
@@ -876,12 +876,12 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 						attr.ecparams.toString('hex').
 							toUpperCase()];
 					if (keySize === undefined ||
-					    keySize != self._keySize) {
+						keySize != self._keySize) {
 						throw new Error(__func() + 'key size mismatch, class: ' + self._keySize + ', ski: ' + keySize);
 					}
 					key = new ecdsaKey({ ski: ski, ecpt: attr.ecpt,
-							     pub: handle.publicKey,
-							     priv: handle.privateKey },
+								 pub: handle.publicKey,
+								 priv: handle.privateKey },
 							   self._keySize);
 				}
 				/*
@@ -905,11 +905,11 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 	 */
 	sign(key, digest, opts) {
 		if (typeof key === 'undefined' || key === null ||
-		    !(key instanceof ecdsaKey) || !key.isPrivate())
+			!(key instanceof ecdsaKey) || !key.isPrivate())
 			throw new Error(__func() +
 					'key must be PKCS11_ECDSA_KEY type private key');
 		if (typeof digest === 'undefined' || digest === null ||
-		    !(digest instanceof Buffer))
+			!(digest instanceof Buffer))
 			throw new Error(__func() + 'digest must be Buffer type');
 
 		return this._pkcs11Sign(this._pkcs11, this._pkcs11Session, key, digest);
@@ -921,13 +921,13 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 	 */
 	verify(key, signature, digest) {
 		if (typeof key === 'undefined' || key === null ||
-		    !(key instanceof ecdsaKey || key instanceof ECDSAKey))
+			!(key instanceof ecdsaKey || key instanceof ECDSAKey))
 			throw new Error(__func() + 'key must be PKCS11_ECDSA_KEY type or ECDSA_KEY type');
 		if (typeof signature === 'undefined' || signature === null ||
-		    !(signature instanceof Buffer))
+			!(signature instanceof Buffer))
 			throw new Error(__func() + 'signature must be Buffer type');
 		if (typeof digest === 'undefined' || digest === null ||
-		    !(digest instanceof Buffer))
+			!(digest instanceof Buffer))
 			throw new Error(__func() + 'digest must be Buffer type');
 
 		if (key instanceof ECDSAKey) {
@@ -949,7 +949,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		if (typeof key === 'undefined' || key === null || !(key instanceof aesKey))
 			throw new Error(__func() + 'key must be PKCS11_AES_KEY type');
 		if (typeof plainText === 'undefined' || plainText === null ||
-		    !(plainText instanceof Buffer))
+			!(plainText instanceof Buffer))
 			throw new Error(__func() + 'plainText must be Buffer type');
 
 		return this._pkcs11Encrypt(this._pkcs11, this._pkcs11Session, key,
@@ -965,7 +965,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		if (typeof key === 'undefined' || key === null || !(key instanceof aesKey))
 			throw new Error(__func() + 'key must be PKCS11_AES_KEY type');
 		if (typeof cipherText === 'undefined' || cipherText === null ||
-		    !(cipherText instanceof Buffer))
+			!(cipherText instanceof Buffer))
 			throw new Error(__func() + 'cipherText must be Buffer type');
 
 		return this._pkcs11Decrypt(this._pkcs11, this._pkcs11Session, key,
@@ -992,19 +992,19 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		if (typeof raw === 'undefined' || raw === null || !(raw instanceof Buffer || typeof raw === 'string'))
 			return Promise.reject(Error(__func() + 'raw must be Buffer type or String type'));
 		if (typeof opts === 'undefined' || opts === null ||
-		    typeof opts.algorithm === 'undefined' || opts.algorithm === null ||
-		    typeof opts.algorithm !== 'string')
+			typeof opts.algorithm === 'undefined' || opts.algorithm === null ||
+			typeof opts.algorithm !== 'string')
 			return Promise.reject(Error(__func() +
-						    'opts.algorithm must be String type'));
+							'opts.algorithm must be String type'));
 
 		var token = (typeof opts.ephemeral !== 'undefined' &&
-			     opts.ephemeral) ? false : true;
+				 opts.ephemeral) ? false : true;
 		var self = this;
 
 		switch (opts.algorithm.toUpperCase()) {
 		case 'X509CERTIFICATE':
 			var key = KEYUTIL.getKey(raw);
-	                var theKey = new ECDSAKey(key);
+			var theKey = new ECDSAKey(key);
 			if (token) {
 				return Promise.resolve(theKey);
 			} else {
@@ -1033,10 +1033,10 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			});
 		case 'ECDSA':
 			return Promise.reject(Error(__func() +
-						    'ECDSA key not yet supported'));
+							'ECDSA key not yet supported'));
 		default:
 			return Promise.reject(Error(__func() +
-						    'only AES or ECDSA key supported'));
+							'only AES or ECDSA key supported'));
 		}
 	}
 

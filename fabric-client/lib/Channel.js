@@ -126,7 +126,7 @@ var Channel = class {
 		 logger.info('close - closing connections');
 		var closer = function (ep) {
 			ep.close();
-		}
+		};
 		this._peers.map(closer);
 		this._orderers.map(closer);
 	 }

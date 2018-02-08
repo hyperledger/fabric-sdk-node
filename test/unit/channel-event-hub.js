@@ -171,7 +171,7 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 	if(converted.equals(Long.fromValue(1))) {
 		t.pass('Successfully utils.convertToLong strings to long');
 	} else {
-		t.fail('utils.convertToLong did not work for strings')
+		t.fail('utils.convertToLong did not work for strings');
 	}
 
 	t.throws(
@@ -202,33 +202,33 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 	if(converted.equals(Long.fromValue(1))) {
 		t.pass('Successfully utils.convertToLong integer to long');
 	} else {
-		t.fail('utils.convertToLong did not work for integer')
+		t.fail('utils.convertToLong did not work for integer');
 	}
 
 
 
-	let some_long = Long.fromValue(2)
+	let some_long = Long.fromValue(2);
 	converted = utils.convertToLong(some_long);
 	if(converted.equals(Long.fromValue(2))) {
 		t.pass('Successfully utils.convertToLong a long');
 	} else {
-		t.fail('utils.convertToLong did not work for long')
+		t.fail('utils.convertToLong did not work for long');
 	}
 
-	some_long = Long.fromValue(0)
+	some_long = Long.fromValue(0);
 	converted = utils.convertToLong(some_long);
 	if(converted.equals(Long.fromValue(0))) {
 		t.pass('Successfully utils.convertToLong a long');
 	} else {
-		t.fail('utils.convertToLong did not work for long')
+		t.fail('utils.convertToLong did not work for long');
 	}
 
-	some_long = Long.fromValue('0')
+	some_long = Long.fromValue('0');
 	converted = utils.convertToLong(some_long);
 	if(converted.equals(Long.fromValue(0))) {
 		t.pass('Successfully utils.convertToLong a long');
 	} else {
-		t.fail('utils.convertToLong did not work for long')
+		t.fail('utils.convertToLong did not work for long');
 	}
 
 	t.end();
@@ -292,7 +292,7 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 		t.fail('Failed if the block event with a replay is registered after another block event');
 	} catch(error) {
 		if(error.toString().indexOf('Only one event registration is allowed')) {
-			t.pass('Should not be able to register for more than one with replay')
+			t.pass('Should not be able to register for more than one with replay');
 		} else {
 			t.fail('Should have gotten the only one event registration error ::'+error.toString());
 		}
@@ -312,7 +312,7 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 		);
 		t.pass('Successfully registered a playback block event');
 	} catch(error) {
-		t.fail( 'Failed - Should be able to register with replay')
+		t.fail( 'Failed - Should be able to register with replay');
 	}
 
 	t.equal(index, 2, 'Check the first block listener is at index 2');
@@ -391,7 +391,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 		t.fail('Failed if the transaction event with a replay is registered after another transaction event');
 	} catch(error) {
 		if(error.toString().indexOf('Only one event registration is allowed')) {
-			t.pass('Should not be able to register for more than one with replay')
+			t.pass('Should not be able to register for more than one with replay');
 		} else {
 			t.fail('Should have gotten the only one event registration error ::'+error.toString());
 		}
@@ -411,7 +411,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 		);
 		t.pass('Successfully registered a playback transaction event');
 	} catch(error) {
-		t.fail( 'Failed - Should be able to register with replay')
+		t.fail( 'Failed - Should be able to register with replay');
 	}
 	t.equal(Object.keys(eh._transactionRegistrations).length, 1, 'Check the size of the transactionOnEvents');
 
@@ -508,7 +508,7 @@ test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
 		t.fail('Failed if the chaincode event with a replay is registered after another chaincode event');
 	} catch(error) {
 		if(error.toString().indexOf('Only one event registration is allowed')) {
-			t.pass('Should not be able to register for more than one with replay')
+			t.pass('Should not be able to register for more than one with replay');
 		} else {
 			t.fail('Should have gotten the only one event registration error ::'+error.toString());
 		}
@@ -528,7 +528,7 @@ test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
 		);
 		t.pass('Successfully registered a playback chaincode event');
 	} catch(error) {
-		t.fail( 'Failed - Should be able to register with replay')
+		t.fail( 'Failed - Should be able to register with replay');
 	}
 
 	t.equal(Object.keys(eh._chaincodeRegistrants).length, 1, 'Check the size of the _chaincodeRegistrants');
@@ -752,7 +752,7 @@ test('\n\n** ChannelEventHub test connect failure on transaction registration \n
 		event_hub = channel.newChannelEventHub(peer);
 		event_hub.registerTxEvent('123',
 			(tx_id, code) => {
-				t.fail('Failed callback should not have been called - tx test 2')
+				t.fail('Failed callback should not have been called - tx test 2');
 				t.end();
 			},
 			(error) => {
@@ -799,7 +799,7 @@ test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
 		t.doesNotThrow(
 			() => {
 				event_hub.registerBlockEvent((tx_id, code) => {
-					t.fail('Failed callback should not have been called - block test 1')
+					t.fail('Failed callback should not have been called - block test 1');
 				});
 			},
 			null,
@@ -809,7 +809,7 @@ test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
 		event_hub = channel.newChannelEventHub(peer);
 		event_hub.registerBlockEvent(
 			(tx_id, code) => {
-				t.fail('Failed callback should not have been called - block test 2')
+				t.fail('Failed callback should not have been called - block test 2');
 				t.end();
 			},
 			(error) =>{

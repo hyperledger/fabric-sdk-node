@@ -547,4 +547,4 @@ module.exports.convertToLong = function(value) {
 	}
 
 	return result;
-}
+};

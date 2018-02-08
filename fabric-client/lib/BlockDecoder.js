@@ -1334,26 +1334,26 @@ var HeaderType = class {
 	static decodePayloadBasedOnType(proto_data, type) {
 		let result = null;
 		switch(type) {
-			case 1:
-				result = decodeConfigEnvelope(proto_data);
-				break;
-			case 2:
-				result = decodeConfigUpdateEnvelope(proto_data);
-				break;
-			case 3:
-				result = decodeEndorserTransaction(proto_data);
-				break;
-			default:
-				logger.debug(' ***** found a header type of %s :: %s', type, HeaderType.convertToString(type));
-				// return empty data on types we do not know so that
-				// event processing may continue on blocks we do not
-				// care about
-				result = {};
+		case 1:
+			result = decodeConfigEnvelope(proto_data);
+			break;
+		case 2:
+			result = decodeConfigUpdateEnvelope(proto_data);
+			break;
+		case 3:
+			result = decodeEndorserTransaction(proto_data);
+			break;
+		default:
+			logger.debug(' ***** found a header type of %s :: %s', type, HeaderType.convertToString(type));
+			// return empty data on types we do not know so that
+			// event processing may continue on blocks we do not
+			// care about
+			result = {};
 		}
 
 		return result;
 	}
-}
+};
 
 module.exports = BlockDecoder;
 module.exports.HeaderType = HeaderType;

@@ -47,10 +47,10 @@ module.exports.NODE_CHAINCODE_UPGRADE_PATH_V2 = path.resolve(__dirname, '../fixt
 
 
 module.exports.NODE_END2END = {
-    channel: 'mychannel',
-    chaincodeId: 'e2enodecc',
-    chaincodeLanguage: 'node',
-    chaincodeVersion: 'v0'
+	channel: 'mychannel',
+	chaincodeId: 'e2enodecc',
+	chaincodeLanguage: 'node',
+	chaincodeVersion: 'v0'
 };
 
 // all temporary files and directories are created under here

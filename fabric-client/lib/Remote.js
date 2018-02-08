@@ -192,7 +192,7 @@ var Endpoint = class {
 						throw new Error('PEM encoded clientKey and clientCert are required.');
 					}
 				} else {
-					throw new Error('clientKey and clientCert are both required.')
+					throw new Error('clientKey and clientCert are both required.');
 				}
 			} else {
 				var pembuf = Buffer.concat([Buffer.from(pem), Buffer.from('\0')]);

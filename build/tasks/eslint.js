@@ -11,8 +11,6 @@ gulp.task('lint', function () {
 		'**/*.js',
 		'fabric-client/**/*.js',
 		'fabric-ca-client/lib/*.js',
-		'examples/**/*.js',
-		'!examples/balance-transfer/node_modules/**',
 		'!node_modules/**',
 		'!fabric-client/node_modules/**',
 		'!fabric-ca-client/node_modules/**',
@@ -45,8 +43,7 @@ gulp.task('lint', function () {
 						'ignoreRegExpLiterals': true,
 					},
 				],
-			},
-			fix: true,
+			}
 		}
 	))
 	.pipe(eslint.format())

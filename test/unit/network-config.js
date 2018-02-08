@@ -128,7 +128,7 @@ test.skip('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('grpcs://localhost:8051', peers[0].getUrl(),  ' Check to see if we got the right peer for org2 that is endorsing and on the channel');
 			client.loadFromConfig('test/fixtures/org1.yaml');
 			peers = client.getPeersForOrgOnChannel(['mychannel2']);
-			t.equals(1, peers.length, 'Check to see that we got 1 peer')
+			t.equals(1, peers.length, 'Check to see that we got 1 peer');
 			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 that is endorsing and on the channel');
 			peers = client.getPeersForOrgOnChannel([]);
 			t.equals(0, peers.length,  ' Check to see that we got no peers');
@@ -136,13 +136,13 @@ test.skip('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals(1, peers.length,  ' Check to see that we got 1 peer');
 			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 that is endorsing and on the channel');
 
-			var client2 = Client.loadFromConfig('test/fixtures/network2.yaml')
-			client2.loadFromConfig('test/fixtures/org1.yaml')
-			t.equals(client2.getPeersForOrg().length, 3, ' Check to see that we got 3 peers for Org1')
-			t.equals(client2.getPeersForOrgOnChannel(['mychannel3']).length, 2, ' Check to see that we got 2 peers for Org2 on "mychannel3"')
-			client2.loadFromConfig('test/fixtures/org2.yaml')
-			t.equals(client2.getPeersForOrg().length, 1, ' Check to see that we got 1 peer for Org2')
-			t.equals(client2.getPeersForOrgOnChannel(['mychannel3']).length, 1, ' Check to see that we got 1 peers for Org2 on "mychannel3"')
+			var client2 = Client.loadFromConfig('test/fixtures/network2.yaml');
+			client2.loadFromConfig('test/fixtures/org1.yaml');
+			t.equals(client2.getPeersForOrg().length, 3, ' Check to see that we got 3 peers for Org1');
+			t.equals(client2.getPeersForOrgOnChannel(['mychannel3']).length, 2, ' Check to see that we got 2 peers for Org2 on "mychannel3"');
+			client2.loadFromConfig('test/fixtures/org2.yaml');
+			t.equals(client2.getPeersForOrg().length, 1, ' Check to see that we got 1 peer for Org2');
+			t.equals(client2.getPeersForOrgOnChannel(['mychannel3']).length, 1, ' Check to see that we got 1 peers for Org2 on "mychannel3"');
 
 			let opts = {somesetting : 4};
 			client._network_config.addTimeout(opts,1);

@@ -28,7 +28,7 @@ var test = _test(tape);
 var e2eUtils = require('./e2eUtils.js');
 var testUtil = require('../../unit/util.js');
 
-var version = 'v0'
+var version = 'v0';
 
 test('\n\n***** End-to-end flow: chaincode install *****\n\n', (t) => {
 	testUtil.setupChaincodeDeploy();

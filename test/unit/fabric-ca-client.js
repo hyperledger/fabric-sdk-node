@@ -273,7 +273,7 @@ test('FabricCAServices:  Test newCryptoKeyStore() function', function(t) {
 test('FabricCAServices:  Test optional constructor', function(t) {
 	let opts = {
 		url : 'http://localhost:7054'
-	}
+	};
 
 	t.doesNotThrow(
 		function () {

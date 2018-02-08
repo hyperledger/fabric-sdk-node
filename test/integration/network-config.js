@@ -431,7 +431,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 					' message:' + proposal_response.response.message);
 				} else {
 					t.fail('transaction response was unknown' );
-					logger.error('transaction response was unknown %s', proposal_response)
+					logger.error('transaction response was unknown %s', proposal_response);
 				}
 			}
 			all_good = all_good & one_good;
