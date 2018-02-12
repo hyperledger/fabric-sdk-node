@@ -45,7 +45,7 @@ var _configtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/comm
 var rewire = require('rewire');
 var ClientRewired = rewire('fabric-client/lib/Client.js');
 
-test.skip('\n\n ** configuration testing **\n\n', function (t) {
+test('\n\n ** configuration testing **\n\n', function (t) {
 	testutil.resetDefaults();
 
 	t.throws(
@@ -121,6 +121,8 @@ test.skip('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('grpcs://localhost:8051', peers[0].getUrl(),  ' Check to see if we got the right peer for org2 by default');
 			peers = client.getPeersForOrg('Org1');
 			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 by specifically asking for org1');
+			let orderers = channel.getOrderers();
+			t.equals('grpcs://localhost:7050', orderers[0].getUrl(), ' Check to see if we got the right orderer for mychannel2');
 			let client_config = client.getClientConfig();
 			t.equals('wallet-name', client_config.credentialStore.wallet, ' check to see if we can get the wallet name from the client config');
 			t.equals('Org2MSP', client.getMspid(), ' check to see if we can get the mspid of the current clients organization');
@@ -282,6 +284,7 @@ test.skip('\n\n ** configuration testing **\n\n', function (t) {
 			var orderer = channel.getOrderers()[0];
 			if(orderer instanceof Orderer) t.pass('Successfully got an orderer');
 			else t.fail('Failed to get an orderer');
+			t.equals('orderer0', orderer.getName(), 'Orderer should be named');
 		},
 		null,
 		'Should be able to instantiate a new instance of "Channel" with only orderer definition in the network configuration'

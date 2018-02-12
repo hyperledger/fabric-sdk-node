@@ -42,7 +42,6 @@ const GRPC_CONNECTION_OPTIONS = 'grpcOptions';
 const HTTP_CONNECTION_OPTIONS = 'httpOptions';
 const URL = 'url';
 const EVENT_URL = 'eventUrl';
-const NAME = 'name';
 const CANAME = 'caName';
 const PEM = 'pem';
 const PATH = 'path';
@@ -253,7 +252,7 @@ var NetworkConfig_1_0 = class {
 				Object.assign(opts, orderer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, ORDERER);
 				orderer = new Orderer(orderer_config[URL], opts);
-				orderer.setName(orderer_config[NAME]);
+				orderer.setName(name);
 			}
 		}
 
