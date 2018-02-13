@@ -769,7 +769,7 @@ var Client = class extends BaseClient {
 	 */
 	queryChannels(peer, useAdmin) {
 		logger.debug('queryChannels - start');
-		var targets = null;
+		let targets = null;
 		if(!peer) {
 			return Promise.reject( new Error('Peer is required'));
 		} else {
@@ -779,10 +779,10 @@ var Client = class extends BaseClient {
 				return Promise.reject(err);
 			}
 		}
-		var self = this;
-		var signer = this._getSigningIdentity(useAdmin);
-		var txId = new TransactionID(signer, useAdmin);
-		var request = {
+		const self = this;
+		const signer = this._getSigningIdentity(useAdmin);
+		const txId = new TransactionID(signer, useAdmin);
+		const request = {
 			targets: targets,
 			chaincodeId : Constants.CSCC,
 			txId: txId,
@@ -793,23 +793,23 @@ var Client = class extends BaseClient {
 		return Channel.sendTransactionProposal(request, '' /* special channel id */, self)
 		.then(
 			function(results) {
-				var responses = results[0];
+				const responses = results[0];
 				logger.debug('queryChannels - got response');
 				if(responses && Array.isArray(responses)) {
 					//will only be one response as we are only querying one peer
 					if(responses.length > 1) {
 						return Promise.reject(new Error('Too many results returned'));
 					}
-					let response = responses[0];
+					const response = responses[0];
 					if(response instanceof Error ) {
 						return Promise.reject(response);
 					}
 					if(response.response) {
 						logger.debug('queryChannels - response status :: %d', response.response.status);
-						var queryTrans = _queryProto.ChannelQueryResponse.decode(response.response.payload);
+						const queryTrans = _queryProto.ChannelQueryResponse.decode(response.response.payload);
 						logger.debug('queryChannels - ProcessedTransaction.channelInfo.length :: %s', queryTrans.channels.length);
-						for (let i=0; i<queryTrans.channels.length; i++) {
-							logger.debug('>>> channel id %s ',queryTrans.channels[i].channel_id);
+						for (let channel of queryTrans.channels) {
+							logger.debug('>>> channel id %s ',channel.channel_id);
 						}
 						return Promise.resolve(queryTrans);
 					}
@@ -857,7 +857,7 @@ var Client = class extends BaseClient {
 	 */
 	queryInstalledChaincodes(peer, useAdmin) {
 		logger.debug('queryInstalledChaincodes - start peer %s',peer);
-		var targets = null;
+		let targets = null;
 		if(!peer) {
 			return Promise.reject( new Error('Peer is required'));
 		} else {
@@ -867,10 +867,10 @@ var Client = class extends BaseClient {
 				return Promise.reject(err);
 			}
 		}
-		var self = this;
-		var signer = this._getSigningIdentity(useAdmin);
-		var txId = new TransactionID(signer, useAdmin);
-		var request = {
+		const self = this;
+		const signer = this._getSigningIdentity(useAdmin);
+		const txId = new TransactionID(signer, useAdmin);
+		const request = {
 			targets: targets,
 			chaincodeId : Constants.LSCC,
 			txId: txId,
@@ -881,23 +881,23 @@ var Client = class extends BaseClient {
 		return Channel.sendTransactionProposal(request, '' /* special channel id */, self)
 		.then(
 			function(results) {
-				var responses = results[0];
+				const responses = results[0];
 				logger.debug('queryInstalledChaincodes - got response');
 				if(responses && Array.isArray(responses)) {
 					//will only be one response as we are only querying one peer
 					if(responses.length > 1) {
 						return Promise.reject(new Error('Too many results returned'));
 					}
-					let response = responses[0];
+					const response = responses[0];
 					if(response instanceof Error ) {
 						return Promise.reject(response);
 					}
 					if(response.response) {
 						logger.debug('queryInstalledChaincodes - response status :: %d', response.response.status);
-						var queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+						const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
 						logger.debug('queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
-						for (let i=0; i<queryTrans.chaincodes.length; i++) {
-							logger.debug('>>> name %s, version %s, path %s',queryTrans.chaincodes[i].name,queryTrans.chaincodes[i].version,queryTrans.chaincodes[i].path);
+						for (let chaincode of queryTrans.chaincodes) {
+							logger.debug('>>> name %s, version %s, path %s',chaincode.name,chaincode.version,chaincode.path);
 						}
 						return Promise.resolve(queryTrans);
 					}
@@ -976,9 +976,9 @@ var Client = class extends BaseClient {
 	installChaincode(request, timeout) {
 		logger.debug('installChaincode - start');
 
-		var error_msg = null;
+		let error_msg = null;
 
-		var peers = null;
+		let peers = null;
 		if (request) {
 			try {
 				peers = this.getTargetPeers(request.targets);
@@ -1009,9 +1009,9 @@ var Client = class extends BaseClient {
 			return Promise.reject(new Error(error_msg));
 		}
 
-		let self = this;
+		const self = this;
 
-		let ccSpec = {
+		const ccSpec = {
 			type: clientUtils.translateCCType(request.chaincodeType),
 			chaincode_id: {
 				name: request.chaincodeId,
@@ -1022,7 +1022,7 @@ var Client = class extends BaseClient {
 		logger.debug('installChaincode - ccSpec %s ',JSON.stringify(ccSpec));
 
 		// step 2: construct the ChaincodeDeploymentSpec
-		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+		const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 		chaincodeDeploymentSpec.setEffectiveDate(clientUtils.buildCurrentTimestamp()); //TODO may wish to add this as a request setting
 
@@ -1036,7 +1036,7 @@ var Client = class extends BaseClient {
 			logger.debug('installChaincode - sending deployment spec %s ',chaincodeDeploymentSpec);
 
 			// TODO add ESCC/VSCC info here ??????
-			let lcccSpec = {
+			const lcccSpec = {
 				type: ccSpec.type,
 				chaincode_id: {
 					name: Constants.LSCC
@@ -1046,8 +1046,8 @@ var Client = class extends BaseClient {
 				}
 			};
 
-			var header, proposal, signer;
-			var tx_id = request.txId;
+			let signer;
+			let tx_id = request.txId;
 			if(!tx_id) {
 				signer = self._getSigningIdentity(true);
 				tx_id = new TransactionID(signer, true);
@@ -1055,16 +1055,16 @@ var Client = class extends BaseClient {
 				signer = self._getSigningIdentity(tx_id.isAdmin());
 			}
 
-			var channelHeader = clientUtils.buildChannelHeader(
+			const channelHeader = clientUtils.buildChannelHeader(
 				_commonProto.HeaderType.ENDORSER_TRANSACTION,
 				'', //install does not target a channel
 				tx_id.getTransactionID(),
 				null,
 				Constants.LSCC
 			);
-			header = clientUtils.buildHeader(signer, channelHeader, tx_id.getNonce());
-			proposal = clientUtils.buildProposal(lcccSpec, header);
-			let signed_proposal = clientUtils.signProposal(signer, proposal);
+			const header = clientUtils.buildHeader(signer, channelHeader, tx_id.getNonce());
+			const proposal = clientUtils.buildProposal(lcccSpec, header);
+			const signed_proposal = clientUtils.signProposal(signer, proposal);
 			logger.debug('installChaincode - about to sendPeersProposal');
 			return clientUtils.sendPeersProposal(peers, signed_proposal, timeout)
 			.then(
@@ -1088,11 +1088,11 @@ var Client = class extends BaseClient {
 		if(this._network_config) {
 			let client_config = this._network_config.getClientConfig();
 			if(client_config && client_config.credentialStore) {
-				var self = this;
+				const self = this;
 				return BaseClient.newDefaultKeyValueStore(client_config.credentialStore)
 				.then((key_value_store) =>{
 					self.setStateStore(key_value_store);
-					var crypto_suite = BaseClient.newCryptoSuite();
+					const crypto_suite = BaseClient.newCryptoSuite();
 					// not all crypto suites require a crypto store
 					if (typeof crypto_suite.setCryptoKeyStore == 'function') {
 						crypto_suite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(client_config.credentialStore.cryptoStore));
@@ -1122,9 +1122,9 @@ var Client = class extends BaseClient {
 	 * @param {module:api.KeyValueStore} keyValueStore Instance of a KeyValueStore implementation
 	 */
 	setStateStore(keyValueStore) {
-		var err = '';
+		let err = '';
 
-		var methods = sdkUtils.getClassMethods(api.KeyValueStore);
+		const methods = sdkUtils.getClassMethods(api.KeyValueStore);
 		methods.forEach(function(m) {
 			if (typeof keyValueStore[m] !== 'function') {
 				err += m + '() ';
@@ -1150,12 +1150,7 @@ var Client = class extends BaseClient {
 	 *          the private key for signing
 	 */
 	_getSigningIdentity(admin) {
-		if(typeof admin === 'boolean') {
-			logger.debug('_getSigningIdentity - admin parameter is boolean :%s',admin);
-		} else {
-			admin = false;
-			logger.debug('_getSigningIdentity - admin parameter missing, default is false');
-		}
+		logger.debug('_getSigningIdentity - admin parameter is %s :%s',(typeof admin),admin);
 		if(admin && this._adminSigningIdentity) {
 			return this._adminSigningIdentity;
 		} else {
@@ -1190,8 +1185,8 @@ var Client = class extends BaseClient {
 		if(!crypto_suite) {
 			crypto_suite = BaseClient.newCryptoSuite();
 		}
-		let key = crypto_suite.importKey(private_key, {ephemeral : true});
-		var public_key = crypto_suite.importKey(certificate, {ephemeral: true});
+		const key = crypto_suite.importKey(private_key, {ephemeral : true});
+		const public_key = crypto_suite.importKey(certificate, {ephemeral: true});
 
 		this._adminSigningIdentity = new SigningIdentity(certificate, public_key, mspid, crypto_suite, new Signer(crypto_suite, key));
 	}
@@ -1234,7 +1229,6 @@ var Client = class extends BaseClient {
 	 *                  - password [optional] - password of the user
 	 */
 	_setUserFromConfig(opts) {
-		var mspid = null;
 		if (!opts || typeof opts.username === 'undefined' || opts.username === null || opts.username === '') {
 			return Promise.reject( new Error('Missing parameter. Must have a username.'));
 		}
@@ -1242,7 +1236,7 @@ var Client = class extends BaseClient {
 			return Promise.reject(new Error('Client requires a network configuration loaded, stores attached, and crypto suite.'));
 		}
 		this._userContext = null;
-		var self = this;
+		const self = this;
 		return self.getUserContext(opts.username, true)
 		.then((user) => {
 			return new Promise((resolve, reject) => {
@@ -1257,9 +1251,9 @@ var Client = class extends BaseClient {
 
 				let ca_service, mspid = null;
 				try {
-					let client_config = this._network_config.getClientConfig();
+					const client_config = this._network_config.getClientConfig();
 					if(client_config && client_config.organization) {
-						let organization_config = this._network_config.getOrganization(client_config.organization);
+						const organization_config = this._network_config.getOrganization(client_config.organization);
 						if(organization_config) {
 							mspid = organization_config.getMspid();
 						}
@@ -1276,7 +1270,7 @@ var Client = class extends BaseClient {
 					enrollmentID: opts.username,
 					enrollmentSecret: opts.password
 				}).then((enrollment) => {
-					logger.debug('Successfully enrolled user \'' + opts.username + '\'');
+					logger.debug('Successfully enrolled user "%s"',opts.username);
 
 					return self.createUser(
 						{username: opts.username,
@@ -1299,7 +1293,7 @@ var Client = class extends BaseClient {
 	 * @returns {Promise} A Promise for the userContext object upon successful persistence
 	 */
 	saveUserToStateStore() {
-		var self = this;
+		const self = this;
 		logger.debug('saveUserToStateStore, userContext: ' + self._userContext);
 		return new Promise(function(resolve, reject) {
 			if (self._userContext && self._userContext._name && self._stateStore) {
@@ -1321,10 +1315,10 @@ var Client = class extends BaseClient {
 					}
 				);
 			} else {
-				if (self._userContext == null) {
+				if (!self._userContext) {
 					logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when userContext is null.');
 					reject(new Error('Cannot save user to state store when userContext is null.'));
-				} else if (self._userContext._name == null) {
+				} else if (!self._userContext._name) {
 					logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when userContext has no name.');
 					reject(new Error('Cannot save user to state store when userContext has no name.'));
 				} else {
@@ -1368,7 +1362,7 @@ var Client = class extends BaseClient {
 	 */
 	setUserContext(user, skipPersistence) {
 		logger.debug('setUserContext - user: ' + user + ', skipPersistence: ' + skipPersistence);
-		var self = this;
+		const self = this;
 		return new Promise((resolve, reject) => {
 			if (user) {
 				if(user.constructor && user.constructor.name === 'User') {
@@ -1432,15 +1426,15 @@ var Client = class extends BaseClient {
 			(typeof name !== 'string' || name === null || name === ''))
 			throw new Error('Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value');
 
-		var self = this;
-		var username = name;
+		const self = this;
+		const username = name;
 		if ((self._userContext && name && self._userContext.getName() === name) || (self._userContext && !name)) {
 			if (typeof checkPersistence === 'boolean' && checkPersistence)
 				return Promise.resolve(self._userContext);
 			else
 				return self._userContext;
 		} else {
-			if (typeof username === 'undefined' || !username) {
+			if (!username) {
 				if (typeof checkPersistence === 'boolean' && checkPersistence)
 					return Promise.resolve(null);
 				else
@@ -1491,7 +1485,7 @@ var Client = class extends BaseClient {
 	 *                    does not exist in the state store, returns null without rejecting the promise
 	 */
 	loadUserFromStateStore(name) {
-		var self = this;
+		const self = this;
 
 		return new Promise(function(resolve, reject) {
 			self._stateStore.getValue(name)
@@ -1499,7 +1493,7 @@ var Client = class extends BaseClient {
 				function(memberStr) {
 					if (memberStr) {
 						// The member was found in the key value store, so restore the state.
-						var newUser = new User(name);
+						const newUser = new User(name);
 						if (!self.getCryptoSuite()) {
 							logger.debug('loadUserFromStateStore, cryptoSuite is not set, will load using defaults');
 						}
@@ -1597,7 +1591,7 @@ var Client = class extends BaseClient {
 			else logger.debug('cryptoSuite does not have a cryptoKeyStore');
 		}
 
-		var self = this;
+		const self = this;
 		return new Promise((resolve, reject) => {
 			// need to load private key and pre-enrolled certificate from files based on the MSP
 			// root MSP config directory structure:
@@ -1667,18 +1661,17 @@ var Client = class extends BaseClient {
 	 * utility method to get the peer targets
 	 */
 	getTargetPeers(request_targets) {
-		var method = 'getTargetPeers';
-		logger.debug('%s - start',method);
-		var targets = [];
+		logger.debug('%s - start','getTargetPeers');
+		const targets = [];
+		let targetsTemp = request_targets;
 		if(request_targets) {
 			if(!Array.isArray(request_targets)) {
-				request_targets = [request_targets];
+				targetsTemp = [request_targets];
 			}
-			for(let i in request_targets) {
-				let target_peer = request_targets[i];
+			for(let target_peer of targetsTemp) {
 				if(typeof target_peer === 'string') {
 					if(this._network_config) {
-						let peer = this._network_config.getPeer(target_peer);
+						const peer = this._network_config.getPeer(target_peer);
 						if(peer) {
 							targets.push(peer);
 						} else {
@@ -1713,9 +1706,8 @@ var Client = class extends BaseClient {
 	 *    will throw an error in all cases if there is not a valid orderer to return
 	 */
 	getTargetOrderer(request_orderer, channel_orderers, channel_name) {
-		var method = 'getTargetOrderer';
-		logger.debug('%s - start',method);
-		var orderer = null;
+		logger.debug('%s - start','getTargetOrderer');
+		let orderer = null;
 		if(request_orderer) {
 			if(typeof request_orderer === 'string') {
 				if(this._network_config) {
@@ -1732,9 +1724,9 @@ var Client = class extends BaseClient {
 		} else if(channel_orderers && Array.isArray(channel_orderers) && channel_orderers[0]) {
 			orderer = channel_orderers[0];
 		} else if(channel_name && this._network_config) {
-			let temp_channel = this.getChannel(channel_name, false);
+			const temp_channel = this.getChannel(channel_name, false);
 			if(temp_channel) {
-				let temp_orderers = temp_channel.getOrderers();
+				const temp_orderers = temp_channel.getOrderers();
 				if(temp_orderers && temp_orderers.length > 0) {
 					orderer = temp_orderers[0];
 				}
@@ -1836,16 +1828,15 @@ function _getChaincodePackageData(request, devMode) {
 
 // internal utility method to check and convert any strings to protobuf signatures
 function _stringToSignature(string_signatures) {
-	var signatures = [];
-	for(var i in string_signatures) {
-		let signature = string_signatures[i];
+	const signatures = [];
+	for(let signature of string_signatures) {
 		// check for properties rather than object type
 		if(signature && signature.signature_header && signature.signature) {
 			logger.debug('_stringToSignature - signature is protobuf');
 		}
 		else {
 			logger.debug('_stringToSignature - signature is string');
-			var signature_bytes = Buffer.from(signature, 'hex');
+			const signature_bytes = Buffer.from(signature, 'hex');
 			signature = _configtxProto.ConfigSignature.decode(signature_bytes);
 		}
 		signatures.push(signature);
@@ -1855,14 +1846,13 @@ function _stringToSignature(string_signatures) {
 
 //internal utility method to get a NetworkConfig
 function _getNetworkConfig(config, client) {
-	var method = '_getNetworkConfig';
-	var network_config = null;
-	var network_data = null;
+	let network_config = null;
+	let network_data = null;
 	if(typeof config === 'string') {
-		var config_loc = path.resolve(config);
-		logger.debug('%s - looking at absolute path of ==>%s<==',method,config_loc);
-		var file_data = fs.readFileSync(config_loc);
-		let file_ext = path.extname(config_loc);
+		const config_loc = path.resolve(config);
+		logger.debug('%s - looking at absolute path of ==>%s<==','_getNetworkConfig',config_loc);
+		const file_data = fs.readFileSync(config_loc);
+		const file_ext = path.extname(config_loc);
 		// maybe the file is yaml else has to be JSON
 		if(file_ext.indexOf('y') > -1) {
 			network_data = yaml.safeLoad(file_data);
@@ -1873,15 +1863,15 @@ function _getNetworkConfig(config, client) {
 		network_data = config;
 	}
 
-	var error_msg = null;
+	let error_msg = null;
 	if(network_data) {
 		if(network_data.version) {
-			let parsing = Client.getConfigSetting('network-config-schema');
+			const parsing = Client.getConfigSetting('network-config-schema');
 			if(parsing) {
-				let pieces = network_data.version.toString().split('.');
-				let version = pieces[0] + '.' + pieces[1];
+				const pieces = network_data.version.toString().split('.');
+				const version = pieces[0] + '.' + pieces[1];
 				if(parsing[version]) {
-					var NetworkConfig = require(parsing[version]);
+					const NetworkConfig = require(parsing[version]);
 					network_config = new NetworkConfig(network_data, client);
 				} else {
 					error_msg = 'network configuration has an unknown "version"';
@@ -1897,9 +1887,7 @@ function _getNetworkConfig(config, client) {
 	}
 
 	if(error_msg) {
-		let out_message = util.format('Invalid network configuration due to %s',error_msg);
-		logger.error(out_message);
-		throw new Error(out_message);
+		throw new Error(util.format('Invalid network configuration due to %s',error_msg));
 	}
 
 	return network_config;
