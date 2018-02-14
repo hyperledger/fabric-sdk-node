@@ -16,22 +16,15 @@
 
 'use strict';
 
-var api = require('./api.js');
 var utils = require('./utils.js');
 var clientUtils = require('./client-utils.js');
-var urlParser = require('url');
-var net = require('net');
 var util = require('util');
-var os = require('os');
 var path = require('path');
-var Peer = require('./Peer.js');
 var ChannelEventHub = require('./ChannelEventHub.js');
-var Orderer = require('./Orderer.js');
 var BlockDecoder = require('./BlockDecoder.js');
 var TransactionID = require('./TransactionID.js');
 var grpc = require('grpc');
 var logger = utils.getLogger('Channel.js');
-var hashPrimitives = require('./hash.js');
 var MSPManager = require('./msp/msp-manager.js');
 var Policy = require('./Policy.js');
 var Constants = require('./Constants.js');
@@ -53,8 +46,7 @@ var _mspConfigProto = grpc.load(__dirname + '/protos/msp/msp_config.proto').msp;
 var _mspPrincipalProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
 var _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
 
-const ImplicitMetaPolicy_Rule = {0: 'ANY', 1:'ALL', 2:'MAJORITY'};
-var Long = require('long');
+const ImplicitMetaPolicy_Rule = { 0: 'ANY', 1: 'ALL', 2: 'MAJORITY' };
 
 /**
  * In fabric v1.0, channels are the recommended way to isolate data and maintain privacy.
@@ -115,21 +107,21 @@ var Channel = class {
 		//to do update logger
 		logger.debug('Constructed Channel instance: name - %s, ' +
 			'network mode: %s',
-			this._name,
-			!this._devMode);
+		this._name,
+		!this._devMode);
 	}
 
 	/**
 	 * Close the service connection off all assigned peers and orderers
 	 */
-	 close() {
-		 logger.info('close - closing connections');
+	close() {
+		logger.info('close - closing connections');
 		var closer = function (ep) {
 			ep.close();
 		};
 		this._peers.map(closer);
 		this._orderers.map(closer);
-	 }
+	}
 
 	/**
 	 * Initializes the channel object with the Membership Service Providers (MSPs). The channel's
@@ -147,26 +139,26 @@ var Channel = class {
 	 * @return {Promise} A Promise that will resolve when the action is complete
 	 */
 	initialize(config_update) {
-		if(config_update) {
+		if (config_update) {
 			this.loadConfigUpdate(config_update);
 			return Promise.resolve(true);
 		}
 
 		var self = this;
 		return this.getChannelConfig()
-		.then(
-			function(config_envelope) {
-				logger.debug('initialize - got config envelope from getChannelConfig :: %j',config_envelope);
-				var config_items = self.loadConfigEnvelope(config_envelope);
-				return Promise.resolve(config_items);
-			}
-		)
-		.catch(
-			function(error) {
-				logger.error('initialize - system error ::' + error.stack ? error.stack : error);
-				return Promise.reject(new Error(error));
-			}
-		);
+			.then(
+				function (config_envelope) {
+					logger.debug('initialize - got config envelope from getChannelConfig :: %j', config_envelope);
+					var config_items = self.loadConfigEnvelope(config_envelope);
+					return Promise.resolve(config_items);
+				}
+			)
+			.catch(
+				function (error) {
+					logger.error('initialize - system error ::' + error.stack ? error.stack : error);
+					return Promise.reject(new Error(error));
+				}
+			);
 	}
 
 	/**
@@ -186,12 +178,12 @@ var Channel = class {
 		logger.debug('getOrganizationUnits - start');
 		var msps = this._msp_manager.getMSPs();
 		var orgs = [];
-		if(msps) {
+		if (msps) {
 			var keys = Object.keys(msps);
-			for(var key in keys) {
+			for (var key in keys) {
 				var msp = msps[keys[key]];
-				var msp_org = { id : msp.getId()};
-				logger.debug('getOrganizationUnits - found %j',msp_org);
+				var msp_org = { id: msp.getId() };
+				logger.debug('getOrganizationUnits - found %j', msp_org);
 				orgs.push(msp_org);
 			}
 		}
@@ -344,56 +336,56 @@ var Channel = class {
 	 * @param {string} org_name - Optional - The name of an organization
 	 * @returns {ChannelEventHub[]} An array of ChannelEventHub instances
 	 */
-	 getChannelEventHubsForOrg(org_name) {
-		 let method = 'getChannelEventHubsForOrg';
-		 logger.debug('%s - starting',method);
-		 var channel_event_hubs = [];
-		 let working_org_name = null;
-		 let found_peers = {};
-		 if(this._clientContext && this._clientContext._network_config) {
-			 if(!org_name && this._clientContext._network_config.hasClient()) {
-				 let client = this._clientContext._network_config.getClientConfig();
-				 working_org_name = client.organization;
-			 } else {
-				 working_org_name = org_name;
-			 }
-			 if(working_org_name) {
-				 let organization = this._clientContext._network_config.getOrganization(working_org_name);
-				 if(organization) {
-					 let channel_peers = this.getPeers();
-					 let org_peers = organization.getPeers();
- 					for(let j in channel_peers) {
- 						let channel_peer = channel_peers[j];
- 						logger.debug('%s - looking at channel peer:%s',method,channel_peer.getName());
- 						if(channel_peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
- 							for(let k in org_peers) {
- 								let org_peer = org_peers[k];
- 								logger.debug('%s - looking at org peer:%s',method,org_peer.getName());
- 								if(org_peer.getName() === channel_peer.getName()) {
- 									found_peers[org_peer.getName()] = org_peer;//to avoid Duplicate Peers
- 									logger.debug('%s - adding peer to list:%s',method,org_peer.getName());
- 								}
- 							}
- 						}
- 					}
-				 } else {
-					 throw new Error(util.format('Organization definition not found for %s', working_org_name));
-				 }
-			 } else {
-				 throw new Error('No organization name provided');
-			 }
-		 } else {
-			 throw new Error('No connecton profile has been loaded');
-		 }
+	getChannelEventHubsForOrg(org_name) {
+		let method = 'getChannelEventHubsForOrg';
+		logger.debug('%s - starting', method);
+		var channel_event_hubs = [];
+		let working_org_name = null;
+		let found_peers = {};
+		if (this._clientContext && this._clientContext._network_config) {
+			if (!org_name && this._clientContext._network_config.hasClient()) {
+				let client = this._clientContext._network_config.getClientConfig();
+				working_org_name = client.organization;
+			} else {
+				working_org_name = org_name;
+			}
+			if (working_org_name) {
+				let organization = this._clientContext._network_config.getOrganization(working_org_name);
+				if (organization) {
+					let channel_peers = this.getPeers();
+					let org_peers = organization.getPeers();
+					for (let j in channel_peers) {
+						let channel_peer = channel_peers[j];
+						logger.debug('%s - looking at channel peer:%s', method, channel_peer.getName());
+						if (channel_peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
+							for (let k in org_peers) {
+								let org_peer = org_peers[k];
+								logger.debug('%s - looking at org peer:%s', method, org_peer.getName());
+								if (org_peer.getName() === channel_peer.getName()) {
+									found_peers[org_peer.getName()] = org_peer;//to avoid Duplicate Peers
+									logger.debug('%s - adding peer to list:%s', method, org_peer.getName());
+								}
+							}
+						}
+					}
+				} else {
+					throw new Error(util.format('Organization definition not found for %s', working_org_name));
+				}
+			} else {
+				throw new Error('No organization name provided');
+			}
+		} else {
+			throw new Error('No connecton profile has been loaded');
+		}
 
-		 for(let name in found_peers) {
-			 logger.debug('%s - final list has:%s',method,name);
-			 let peer = found_peers[name];
-			 let channel_event_hub = new ChannelEventHub(this, peer);
-			 channel_event_hubs.push(channel_event_hub);
-		 }
-		 return channel_event_hubs;
-	 }
+		for (let name in found_peers) {
+			logger.debug('%s - final list has:%s', method, name);
+			let peer = found_peers[name];
+			let channel_event_hub = new ChannelEventHub(this, peer);
+			channel_event_hubs.push(channel_event_hub);
+		}
+		return channel_event_hubs;
+	}
 
 	/**
 	 * @typedef {Object} OrdererRequest
@@ -414,7 +406,7 @@ var Channel = class {
 	getGenesisBlock(request) {
 		logger.debug('getGenesisBlock - start');
 
-		if(!request) {
+		if (!request) {
 			request = {};
 		}
 
@@ -422,7 +414,7 @@ var Channel = class {
 		var orderer = this._clientContext.getTargetOrderer(request.orderer, this._orderers, this._name);
 		var signer = null;
 		var tx_id = request.txId;
-		if(!tx_id) {
+		if (!tx_id) {
 			signer = this._clientContext._getSigningIdentity(true);
 			tx_id = new TransactionID(signer, true);
 		} else {
@@ -469,7 +461,7 @@ var Channel = class {
 		// building manually or will get protobuf errors on send
 		var envelope = {
 			signature: signature,
-			payload : seekPayloadBytes
+			payload: seekPayloadBytes
 		};
 
 		return orderer.sendDeliver(envelope);
@@ -531,19 +523,19 @@ var Channel = class {
 
 		// verify that we have targets (Peers) to join this channel
 		// defined by the caller
-		if(!request) {
+		if (!request) {
 			errorMsg = 'Missing all required input request parameters';
 		}
 		// verify that we have transaction id
-		else if(!request.txId) {
+		else if (!request.txId) {
 			errorMsg = 'Missing txId input parameter with the required transaction identifier';
 		}
-		else if(!request.block) {
+		else if (!request.block) {
 			errorMsg = 'Missing block input parameter with the required genesis block';
 		}
 
-		if(errorMsg) {
-			logger.error('joinChannel - error '+ errorMsg);
+		if (errorMsg) {
+			logger.error('joinChannel - error ' + errorMsg);
 			throw new Error(errorMsg);
 		}
 
@@ -577,16 +569,16 @@ var Channel = class {
 		var signed_proposal = clientUtils.signProposal(signer, proposal);
 
 		return clientUtils.sendPeersProposal(targets, signed_proposal, timeout)
-		.then(
-			function(responses) {
-				return Promise.resolve(responses);
-			}
-		).catch(
-			function(err) {
-				logger.error('joinChannel - Failed Proposal. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			.then(
+				function (responses) {
+					return Promise.resolve(responses);
+				}
+			).catch(
+				function (err) {
+					logger.error('joinChannel - Failed Proposal. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -598,7 +590,7 @@ var Channel = class {
 	 * @returns {Promise} A Promise for a {@link ConfigEnvelope} object containing the configuration items.
 	 */
 	getChannelConfig() {
-		logger.debug('getChannelConfig - start for channel %s',this._name);
+		logger.debug('getChannelConfig - start for channel %s', this._name);
 
 		var self = this;
 		var orderer = this._clientContext.getTargetOrderer(null, this._orderers, this._name);
@@ -641,103 +633,103 @@ var Channel = class {
 		// building manually or will get protobuf errors on send
 		var envelope = {
 			signature: signature,
-			payload : seekPayloadBytes
+			payload: seekPayloadBytes
 		};
 		// This will return us a block
 		return orderer.sendDeliver(envelope)
-		.then(
-			function(block) {
-				logger.debug('getChannelConfig - good results from seek block '); // :: %j',results);
-				// verify that we have the genesis block
-				if(block) {
-					logger.debug('getChannelConfig - found latest block');
+			.then(
+				function (block) {
+					logger.debug('getChannelConfig - good results from seek block '); // :: %j',results);
+					// verify that we have the genesis block
+					if (block) {
+						logger.debug('getChannelConfig - found latest block');
+					}
+					else {
+						logger.error('getChannelConfig - did not find latest block');
+						return Promise.reject(new Error('Failed to retrieve latest block'));
+					}
+
+					logger.debug('getChannelConfig - latest block is block number %s', block.header.number);
+					// get the last config block number
+					var metadata = _commonProto.Metadata.decode(block.metadata.metadata[_commonProto.BlockMetadataIndex.LAST_CONFIG]);
+					var last_config = _commonProto.LastConfig.decode(metadata.value);
+					logger.debug('getChannelConfig - latest block has config block of %s', last_config.index);
+
+					var txId = new TransactionID(signer);
+
+					// now build the seek info to get the block called out
+					// as the latest config block
+					var seekSpecifiedStart = new _abProto.SeekSpecified();
+					seekSpecifiedStart.setNumber(last_config.index);
+					var seekStart = new _abProto.SeekPosition();
+					seekStart.setSpecified(seekSpecifiedStart);
+
+					//   build stop
+					var seekSpecifiedStop = new _abProto.SeekSpecified();
+					seekSpecifiedStop.setNumber(last_config.index);
+					var seekStop = new _abProto.SeekPosition();
+					seekStop.setSpecified(seekSpecifiedStop);
+
+					// seek info with all parts
+					var seekInfo = new _abProto.SeekInfo();
+					seekInfo.setStart(seekStart);
+					seekInfo.setStop(seekStop);
+					seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
+					//logger.debug('initializeChannel - seekInfo ::' + JSON.stringify(seekInfo));
+
+					// build the header for use with the seekInfo payload
+					var seekInfoHeader = clientUtils.buildChannelHeader(
+						_commonProto.HeaderType.DELIVER_SEEK_INFO,
+						self._name,
+						txId.getTransactionID(),
+						self._initial_epoch
+					);
+
+					var seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, txId.getNonce());
+					var seekPayload = new _commonProto.Payload();
+					seekPayload.setHeader(seekHeader);
+					seekPayload.setData(seekInfo.toBuffer());
+					var seekPayloadBytes = seekPayload.toBuffer();
+
+					let sig = signer.sign(seekPayloadBytes);
+					let signature = Buffer.from(sig);
+
+					// building manually or will get protobuf errors on send
+					var envelope = {
+						signature: signature,
+						payload: seekPayloadBytes
+					};
+					// this will return us a block
+					return orderer.sendDeliver(envelope);
 				}
-				else {
-					logger.error('getChannelConfig - did not find latest block');
-					return Promise.reject(new Error('Failed to retrieve latest block'));
+			).then(
+				function (block) {
+					if (!block) {
+						return Promise.reject(new Error('Config block was not found'));
+					}
+					// lets have a look at the block
+					logger.debug('getChannelConfig -  config block number ::%s  -- numberof tx :: %s', block.header.number, block.data.data.length);
+					if (block.data.data.length != 1) {
+						return Promise.reject(new Error('Config block must only contain one transaction'));
+					}
+					var envelope = _commonProto.Envelope.decode(block.data.data[0]);
+					var payload = _commonProto.Payload.decode(envelope.payload);
+					var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
+					if (channel_header.type != _commonProto.HeaderType.CONFIG) {
+						return Promise.reject(new Error(util.format('Block must be of type "CONFIG" (%s), but got "%s" instead', _commonProto.HeaderType.CONFIG, channel_header.type)));
+					}
+
+					var config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
+
+					// send back the envelope
+					return Promise.resolve(config_envelope);
 				}
-
-				logger.debug('getChannelConfig - latest block is block number %s',block.header.number);
-				// get the last config block number
-				var metadata = _commonProto.Metadata.decode(block.metadata.metadata[_commonProto.BlockMetadataIndex.LAST_CONFIG]);
-				var last_config = _commonProto.LastConfig.decode(metadata.value);
-				logger.debug('getChannelConfig - latest block has config block of %s',last_config.index);
-
-				var txId = new TransactionID(signer);
-
-				// now build the seek info to get the block called out
-				// as the latest config block
-				var seekSpecifiedStart = new _abProto.SeekSpecified();
-				seekSpecifiedStart.setNumber(last_config.index);
-				var seekStart = new _abProto.SeekPosition();
-				seekStart.setSpecified(seekSpecifiedStart);
-
-				//   build stop
-				var seekSpecifiedStop = new _abProto.SeekSpecified();
-				seekSpecifiedStop.setNumber(last_config.index);
-				var seekStop = new _abProto.SeekPosition();
-				seekStop.setSpecified(seekSpecifiedStop);
-
-				// seek info with all parts
-				var seekInfo = new _abProto.SeekInfo();
-				seekInfo.setStart(seekStart);
-				seekInfo.setStop(seekStop);
-				seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
-				//logger.debug('initializeChannel - seekInfo ::' + JSON.stringify(seekInfo));
-
-				// build the header for use with the seekInfo payload
-				var seekInfoHeader = clientUtils.buildChannelHeader(
-					_commonProto.HeaderType.DELIVER_SEEK_INFO,
-					self._name,
-					txId.getTransactionID(),
-					self._initial_epoch
-				);
-
-				var seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, txId.getNonce());
-				var seekPayload = new _commonProto.Payload();
-				seekPayload.setHeader(seekHeader);
-				seekPayload.setData(seekInfo.toBuffer());
-				var seekPayloadBytes = seekPayload.toBuffer();
-
-				let sig = signer.sign(seekPayloadBytes);
-				let signature = Buffer.from(sig);
-
-				// building manually or will get protobuf errors on send
-				var envelope = {
-					signature: signature,
-					payload : seekPayloadBytes
-				};
-				// this will return us a block
-				return orderer.sendDeliver(envelope);
-			}
-		).then(
-			function(block) {
-				if(!block) {
-					return Promise.reject(new Error('Config block was not found'));
+			).catch(
+				function (err) {
+					logger.error('getChannelConfig - Failed Proposal. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
 				}
-				// lets have a look at the block
-				logger.debug('getChannelConfig -  config block number ::%s  -- numberof tx :: %s', block.header.number, block.data.data.length);
-				if(block.data.data.length != 1) {
-					return Promise.reject(new Error('Config block must only contain one transaction'));
-				}
-				var envelope = _commonProto.Envelope.decode(block.data.data[0]);
-				var payload = _commonProto.Payload.decode(envelope.payload);
-				var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
-				if(channel_header.type != _commonProto.HeaderType.CONFIG) {
-					return Promise.reject(new Error(util.format('Block must be of type "CONFIG" (%s), but got "%s" instead', _commonProto.HeaderType.CONFIG, channel_header.type)));
-				}
-
-				var config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
-
-				// send back the envelope
-				return Promise.resolve(config_envelope);
-			}
-		).catch(
-			function(err) {
-				logger.error('getChannelConfig - Failed Proposal. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			);
 	}
 
 	/*
@@ -751,7 +743,7 @@ var Channel = class {
 		var envelope = _commonProto.Envelope.decode(data);
 		var payload = _commonProto.Payload.decode(envelope.payload);
 		var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
-		if(channel_header.type != _commonProto.HeaderType.CONFIG_UPDATE) {
+		if (channel_header.type != _commonProto.HeaderType.CONFIG_UPDATE) {
 			return new Error('Data must be of type "CONFIG_UPDATE"');
 		}
 
@@ -761,7 +753,7 @@ var Channel = class {
 
 	loadConfigUpdate(config_update_bytes) {
 		var config_update = _configtxProto.ConfigUpdate.decode(config_update_bytes);
-		logger.debug('loadConfigData - channel ::'+ config_update.channel_id);
+		logger.debug('loadConfigData - channel ::' + config_update.channel_id);
 
 		let read_group = config_update.read_set;
 		let write_group = config_update.write_set;
@@ -780,7 +772,7 @@ var Channel = class {
 		// do the write_set second so they update anything in the read set
 		loadConfigGroup(config_items, config_items.versions.write_group, write_group, 'write_set', null, true, false);
 		this._msp_manager.loadMSPs(config_items.msps);
-		this._anchor_peers =config_items.anchor_peers;
+		this._anchor_peers = config_items.anchor_peers;
 
 		//TODO should we create orderers and endorsing peers
 		return config_items;
@@ -841,43 +833,43 @@ var Channel = class {
 		var tx_id = new TransactionID(signer, useAdmin);
 		var request = {
 			targets: targets,
-			chaincodeId : Constants.QSCC,
+			chaincodeId: Constants.QSCC,
 			chainId: '',
 			txId: tx_id,
 			signer: signer,
-			fcn : 'GetChainInfo',
-			args: [ this._name]
+			fcn: 'GetChainInfo',
+			args: [this._name]
 		};
 		return this.sendTransactionProposal(request)
-		.then(
-			function(results) {
-				var responses = results[0];
-				logger.debug('queryInfo - got responses=' + responses.length);
-				if(responses && Array.isArray(responses)) {
-					//will only be one response as we are only querying the primary peer
-					if(responses.length > 1) {
-						return Promise.reject(new Error('Too many results returned'));
-					}
-					let response = responses[0];
-					if(response instanceof Error ) {
+			.then(
+				function (results) {
+					var responses = results[0];
+					logger.debug('queryInfo - got responses=' + responses.length);
+					if (responses && Array.isArray(responses)) {
+						//will only be one response as we are only querying the primary peer
+						if (responses.length > 1) {
+							return Promise.reject(new Error('Too many results returned'));
+						}
+						let response = responses[0];
+						if (response instanceof Error) {
+							return Promise.reject(response);
+						}
+						if (response.response) {
+							logger.debug('queryInfo - response status %d:', response.response.status);
+							var chain_info = _ledgerProto.BlockchainInfo.decode(response.response.payload);
+							return Promise.resolve(chain_info);
+						}
+						// no idea what we have, lets fail it and send it back
 						return Promise.reject(response);
 					}
-					if(response.response) {
-						logger.debug('queryInfo - response status %d:', response.response.status);
-						var chain_info = _ledgerProto.BlockchainInfo.decode(response.response.payload);
-						return Promise.resolve(chain_info);
-					}
-					// no idea what we have, lets fail it and send it back
-					return Promise.reject(response);
+					return Promise.reject(new Error('Payload results are missing from the query channel info'));
 				}
-				return Promise.reject(new Error('Payload results are missing from the query channel info'));
-			}
-		).catch(
-			function(err) {
-				logger.error('Failed Query channel info. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			).catch(
+				function (err) {
+					logger.error('Failed Query channel info. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -892,7 +884,7 @@ var Channel = class {
 	 */
 	queryBlockByHash(blockHash, target, useAdmin) {
 		logger.debug('queryBlockByHash - start');
-		if(!blockHash) {
+		if (!blockHash) {
 			throw new Error('Blockhash bytes are required');
 		}
 		var targets = this._getTargetForQuery(target);
@@ -900,45 +892,45 @@ var Channel = class {
 		var txId = new TransactionID(signer, useAdmin);
 		var request = {
 			targets: targets,
-			chaincodeId : Constants.QSCC,
+			chaincodeId: Constants.QSCC,
 			chainId: '',
 			txId: txId,
 			signer: signer,
-			fcn : 'GetBlockByHash',
-			args: [ this._name],
-			argbytes : blockHash
+			fcn: 'GetBlockByHash',
+			args: [this._name],
+			argbytes: blockHash
 		};
 		return this.sendTransactionProposal(request)
-		.then(
-			function(results) {
-				var responses = results[0];
-				logger.debug('queryBlockByHash - got response');
-				if(responses && Array.isArray(responses)) {
-					//will only be one response as we are only querying the primary peer
-					if(responses.length > 1) {
-						return Promise.reject(new Error('Too many results returned'));
-					}
-					let response = responses[0];
-					if(response instanceof Error ) {
+			.then(
+				function (results) {
+					var responses = results[0];
+					logger.debug('queryBlockByHash - got response');
+					if (responses && Array.isArray(responses)) {
+						//will only be one response as we are only querying the primary peer
+						if (responses.length > 1) {
+							return Promise.reject(new Error('Too many results returned'));
+						}
+						let response = responses[0];
+						if (response instanceof Error) {
+							return Promise.reject(response);
+						}
+						if (response.response) {
+							logger.debug('queryBlockByHash - response status %d:', response.response.status);
+							var block = BlockDecoder.decode(response.response.payload);
+							logger.debug('queryBlockByHash - looking at block :: %s', block.header.number);
+							return Promise.resolve(block);
+						}
+						// no idea what we have, lets fail it and send it back
 						return Promise.reject(response);
 					}
-					if(response.response) {
-						logger.debug('queryBlockByHash - response status %d:', response.response.status);
-						var block = BlockDecoder.decode(response.response.payload);
-						logger.debug('queryBlockByHash - looking at block :: %s',block.header.number);
-						return Promise.resolve(block);
-					}
-					// no idea what we have, lets fail it and send it back
-					return Promise.reject(response);
+					return Promise.reject(new Error('Payload results are missing from the query'));
 				}
-				return Promise.reject(new Error('Payload results are missing from the query'));
-			}
-		).catch(
-			function(err) {
-				logger.error('Failed Query block. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			).catch(
+				function (err) {
+					logger.error('Failed Query block. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -952,9 +944,9 @@ var Channel = class {
 	 * @returns {Promise} A Promise for a {@link Block} at the blockNumber slot in the ledger, fully decoded into an object.
 	 */
 	queryBlock(blockNumber, target, useAdmin) {
-		logger.debug('queryBlock - start blockNumber %s',blockNumber);
+		logger.debug('queryBlock - start blockNumber %s', blockNumber);
 		var block_number = null;
-		if(Number.isInteger(blockNumber) && blockNumber >= 0) {
+		if (Number.isInteger(blockNumber) && blockNumber >= 0) {
 			block_number = blockNumber.toString();
 		} else {
 			throw new Error('Block number must be a positive integer');
@@ -964,44 +956,44 @@ var Channel = class {
 		var txId = new TransactionID(signer, useAdmin);
 		var request = {
 			targets: targets,
-			chaincodeId : Constants.QSCC,
+			chaincodeId: Constants.QSCC,
 			chainId: '',
 			txId: txId,
-			signer, signer,
-			fcn : 'GetBlockByNumber',
-			args: [ this._name, block_number]
+			signer,
+			fcn: 'GetBlockByNumber',
+			args: [this._name, block_number]
 		};
 		return this.sendTransactionProposal(request)
-		.then(
-			function(results) {
-				var responses = results[0];
-				logger.debug('queryBlock - got response');
-				if(responses && Array.isArray(responses)) {
-					//will only be one response as we are only querying the primary peer
-					if(responses.length > 1) {
-						return Promise.reject(new Error('Too many results returned'));
-					}
-					let response = responses[0];
-					if(response instanceof Error ) {
+			.then(
+				function (results) {
+					var responses = results[0];
+					logger.debug('queryBlock - got response');
+					if (responses && Array.isArray(responses)) {
+						//will only be one response as we are only querying the primary peer
+						if (responses.length > 1) {
+							return Promise.reject(new Error('Too many results returned'));
+						}
+						let response = responses[0];
+						if (response instanceof Error) {
+							return Promise.reject(response);
+						}
+						if (response.response) {
+							logger.debug('queryBlock - response status %d:', response.response.status);
+							var block = BlockDecoder.decode(response.response.payload);
+							logger.debug('queryBlockByHash - looking at block :: %s', block.header.number);
+							return Promise.resolve(block);
+						}
+						// no idea what we have, lets fail it and send it back
 						return Promise.reject(response);
 					}
-					if(response.response) {
-						logger.debug('queryBlock - response status %d:', response.response.status);
-						var block = BlockDecoder.decode(response.response.payload);
-						logger.debug('queryBlockByHash - looking at block :: %s',block.header.number);
-						return Promise.resolve(block);
-					}
-					// no idea what we have, lets fail it and send it back
-					return Promise.reject(response);
+					return Promise.reject(new Error('Payload results are missing from the query'));
 				}
-				return Promise.reject(new Error('Payload results are missing from the query'));
-			}
-		).catch(
-			function(err) {
-				logger.error('Failed Query block. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			).catch(
+				function (err) {
+					logger.error('Failed Query block. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -1015,9 +1007,8 @@ var Channel = class {
 	 * @returns {Promise} A Promise for a fully decoded {@link ProcessedTransaction} object.
 	 */
 	queryTransaction(tx_id, target, useAdmin) {
-		logger.debug('queryTransaction - start transactionID %s',tx_id);
-		var transaction_id = null;
-		if(tx_id) {
+		logger.debug('queryTransaction - start transactionID %s', tx_id);
+		if (tx_id) {
 			tx_id = tx_id.toString();
 		} else {
 			throw new Error('Missing "tx_id" parameter');
@@ -1027,43 +1018,43 @@ var Channel = class {
 		var txId = new TransactionID(signer, useAdmin);
 		var request = {
 			targets: targets,
-			chaincodeId : Constants.QSCC,
+			chaincodeId: Constants.QSCC,
 			chainId: '',
 			txId: txId,
 			signer: signer,
-			fcn : 'GetTransactionByID',
-			args: [ this._name, tx_id]
+			fcn: 'GetTransactionByID',
+			args: [this._name, tx_id]
 		};
 		return this.sendTransactionProposal(request)
-		.then(
-			function(results) {
-				var responses = results[0];
-				logger.debug('queryTransaction - got response');
-				if(responses && Array.isArray(responses)) {
-					//will only be one response as we are only querying the primary peer
-					if(responses.length > 1) {
-						return Promise.reject(new Error('Too many results returned'));
+			.then(
+				function (results) {
+					var responses = results[0];
+					logger.debug('queryTransaction - got response');
+					if (responses && Array.isArray(responses)) {
+						//will only be one response as we are only querying the primary peer
+						if (responses.length > 1) {
+							return Promise.reject(new Error('Too many results returned'));
+						}
+						let response = responses[0];
+						if (response instanceof Error) {
+							return Promise.reject(response);
+						}
+						if (response.response) {
+							logger.debug('queryTransaction - response status :: %d', response.response.status);
+							var processTrans = BlockDecoder.decodeTransaction(response.response.payload);
+							return Promise.resolve(processTrans);
+						}
+						// no idea what we have, lets fail it and send it back
+						return Promise.reject(processTrans);
 					}
-					let response = responses[0];
-					if(response instanceof Error ) {
-						return Promise.reject(response);
-					}
-					if(response.response) {
-						logger.debug('queryTransaction - response status :: %d', response.response.status);
-						var processTrans = BlockDecoder.decodeTransaction(response.response.payload);
-						return Promise.resolve(processTrans);
-					}
-					// no idea what we have, lets fail it and send it back
-					return Promise.reject(processTrans);
+					return Promise.reject(new Error('Payload results are missing from the query'));
 				}
-				return Promise.reject(new Error('Payload results are missing from the query'));
-			}
-		).catch(
-			function(err) {
-				logger.error('Failed Transaction Query. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			).catch(
+				function (err) {
+					logger.error('Failed Transaction Query. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -1080,52 +1071,52 @@ var Channel = class {
 	 */
 	queryInstantiatedChaincodes(target, useAdmin) {
 		logger.debug('queryInstantiatedChaincodes - start');
-		var targets = this._getTargetForQuery(target);
-		var signer = this._clientContext._getSigningIdentity(useAdmin);
-		var txId = new TransactionID(signer, useAdmin);
-		var request = {
+		const targets = this._getTargetForQuery(target);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = new TransactionID(signer, useAdmin);
+		const request = {
 			targets: targets,
-			chaincodeId : Constants.LSCC,
+			chaincodeId: Constants.LSCC,
 			chainId: this._name,
 			txId: txId,
 			signer: signer,
-			fcn : 'getchaincodes',
+			fcn: 'getchaincodes',
 			args: []
 		};
 		return this.sendTransactionProposal(request)
-		.then(
-			function(results) {
-				var responses = results[0];
-				logger.debug('queryInstantiatedChaincodes - got response');
-				if(responses && Array.isArray(responses)) {
-					//will only be one response as we are only querying one peer
-					if(responses.length > 1) {
-						return Promise.reject(new Error('Too many results returned'));
-					}
-					let response = responses[0];
-					if(response instanceof Error ) {
+			.then(
+				function (results) {
+					const responses = results[0];
+					logger.debug('queryInstantiatedChaincodes - got response');
+					if (responses && Array.isArray(responses)) {
+						//will only be one response as we are only querying one peer
+						if (responses.length > 1) {
+							return Promise.reject(new Error('Too many results returned'));
+						}
+						const response = responses[0];
+						if (response instanceof Error) {
+							return Promise.reject(response);
+						}
+						if (response.response) {
+							logger.debug('queryInstantiatedChaincodes - response status :: %d', response.response.status);
+							const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+							logger.debug('queryInstantiatedChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
+							for (let chaincode of queryTrans.chaincodes) {
+								logger.debug('queryInstantiatedChaincodes - name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
+							}
+							return Promise.resolve(queryTrans);
+						}
+						// no idea what we have, lets fail it and send it back
 						return Promise.reject(response);
 					}
-					if(response.response) {
-						logger.debug('queryInstantiatedChaincodes - response status :: %d', response.response.status);
-						var queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
-						logger.debug('queryInstantiatedChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
-						for (let i=0; i<queryTrans.chaincodes.length; i++) {
-							logger.debug('queryInstantiatedChaincodes - name %s, version %s, path %s',queryTrans.chaincodes[i].name,queryTrans.chaincodes[i].version,queryTrans.chaincodes[i].path);
-						}
-						return Promise.resolve(queryTrans);
-					}
-					// no idea what we have, lets fail it and send it back
-					return Promise.reject(response);
+					return Promise.reject(new Error('Payload results are missing from the query'));
 				}
-				return Promise.reject(new Error('Payload results are missing from the query'));
-			}
-		).catch(
-			function(err) {
-				logger.error('Failed Instantiated Chaincodes Query. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			).catch(
+				function (err) {
+					logger.error('Failed Instantiated Chaincodes Query. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -1236,16 +1227,16 @@ var Channel = class {
 	 * Internal method to handle both chaincode calls
 	 */
 	_sendChaincodeProposal(request, command, timeout) {
-		var errorMsg = null;
+		let errorMsg = null;
 
 		//validate the incoming request
-		if(!errorMsg) errorMsg = clientUtils.checkProposalRequest(request);
-		if(!errorMsg) errorMsg = clientUtils.checkInstallRequest(request);
-		if(errorMsg) {
+		if (!errorMsg) errorMsg = clientUtils.checkProposalRequest(request);
+		if (!errorMsg) errorMsg = clientUtils.checkInstallRequest(request);
+		if (errorMsg) {
 			logger.error('sendChainCodeProposal error ' + errorMsg);
 			return Promise.reject(new Error(errorMsg));
 		}
-		var peers = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		const peers = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
 
 		// args is optional because some chaincode may not need any input parameters during initialization
 		if (!request.args) {
@@ -1253,13 +1244,13 @@ var Channel = class {
 		}
 
 		// step 1: construct a ChaincodeSpec
-		var args = [];
+		const args = [];
 		args.push(Buffer.from(request.fcn ? request.fcn : 'init', 'utf8'));
 
-		for (let i = 0; i < request.args.length; i++)
-			args.push(Buffer.from(request.args[i], 'utf8'));
+		for (let arg of request.args)
+			args.push(Buffer.from(arg, 'utf8'));
 
-		let ccSpec = {
+		const ccSpec = {
 			type: clientUtils.translateCCType(request.chaincodeType),
 			chaincode_id: {
 				name: request.chaincodeId,
@@ -1271,44 +1262,43 @@ var Channel = class {
 		};
 
 		// step 2: construct the ChaincodeDeploymentSpec
-		let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+		const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 
-		var header, proposal;
-		var signer = this._clientContext._getSigningIdentity(request.txId.isAdmin());
-		let lcccSpec_args = [
+		const signer = this._clientContext._getSigningIdentity(request.txId.isAdmin());
+		const lcccSpec_args = [
 			Buffer.from(command),
 			Buffer.from(this._name),
 			chaincodeDeploymentSpec.toBuffer()
 		];
-		if(request['endorsement-policy']) {
+		if (request['endorsement-policy']) {
 			lcccSpec_args[3] = this._buildEndorsementPolicy(request['endorsement-policy']);
 		}
 
-		let lcccSpec = {
+		const lcccSpec = {
 			// type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			type: clientUtils.translateCCType(request.chaincodeType),
-			chaincode_id: {	name: Constants.LSCC },
-			input: { args : lcccSpec_args}
+			chaincode_id: { name: Constants.LSCC },
+			input: { args: lcccSpec_args }
 		};
 
-		var channelHeader = clientUtils.buildChannelHeader(
+		const channelHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			this._name,
 			request.txId.getTransactionID(),
 			null,
 			Constants.LSCC
 		);
-		header = clientUtils.buildHeader(signer, channelHeader, request.txId.getNonce());
-		proposal = clientUtils.buildProposal(lcccSpec, header, request.transientMap);
-		let signed_proposal = clientUtils.signProposal(signer, proposal);
+		const header = clientUtils.buildHeader(signer, channelHeader, request.txId.getNonce());
+		const proposal = clientUtils.buildProposal(lcccSpec, header, request.transientMap);
+		const signed_proposal = clientUtils.signProposal(signer, proposal);
 
 		return clientUtils.sendPeersProposal(peers, signed_proposal, timeout)
-		.then(
-			function(responses) {
-				return [responses, proposal];
-			}
-		);
+			.then(
+				function (responses) {
+					return [responses, proposal];
+				}
+			);
 	}
 
 	/**
@@ -1344,7 +1334,7 @@ var Channel = class {
 	sendTransactionProposal(request, timeout) {
 		logger.debug('sendTransactionProposal - start');
 
-		if(!request) {
+		if (!request) {
 			throw new Error('Missing request object for this transaction proposal');
 		}
 		request.targets = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
@@ -1360,7 +1350,7 @@ var Channel = class {
 		// Verify that a Peer has been added
 		var errorMsg = clientUtils.checkProposalRequest(request);
 
-		if (errorMsg){
+		if (errorMsg) {
 			// do nothing so we skip the rest of the checks
 		} else if (!request.args) {
 			// args is not optional because we need for transaction to execute
@@ -1369,8 +1359,8 @@ var Channel = class {
 			errorMsg = 'Missing peer objects in Transaction proposal';
 		}
 
-		if(errorMsg) {
-			logger.error('sendTransactionProposal error '+ errorMsg);
+		if (errorMsg) {
+			logger.error('sendTransactionProposal error ' + errorMsg);
 			throw new Error(errorMsg);
 		}
 
@@ -1378,12 +1368,12 @@ var Channel = class {
 		args.push(Buffer.from(request.fcn ? request.fcn : 'invoke', 'utf8'));
 		logger.debug('sendTransactionProposal - adding function arg:%s', request.fcn ? request.fcn : 'invoke');
 
-		for (let i=0; i<request.args.length; i++) {
+		for (let i = 0; i < request.args.length; i++) {
 			logger.debug('sendTransactionProposal - adding arg:%s', request.args[i]);
 			args.push(Buffer.from(request.args[i], 'utf8'));
 		}
 		//special case to support the bytes argument of the query by hash
-		if(request.argbytes) {
+		if (request.argbytes) {
 			logger.debug('sendTransactionProposal - adding the argument :: argbytes');
 			args.push(request.argbytes);
 		}
@@ -1402,7 +1392,7 @@ var Channel = class {
 
 		var proposal, header;
 		var signer = null;
-		if(request.signer) {
+		if (request.signer) {
 			signer = request.signer;
 		} else {
 			signer = clientContext._getSigningIdentity(request.txId.isAdmin());
@@ -1413,22 +1403,22 @@ var Channel = class {
 			request.txId.getTransactionID(),
 			null,
 			request.chaincodeId
-			);
+		);
 		header = clientUtils.buildHeader(signer, channelHeader, request.txId.getNonce());
 		proposal = clientUtils.buildProposal(invokeSpec, header, request.transientMap);
 		let signed_proposal = clientUtils.signProposal(signer, proposal);
 
 		return clientUtils.sendPeersProposal(request.targets, signed_proposal, timeout)
-		.then(
-			function(responses) {
-				return Promise.resolve([responses, proposal]);
-			}
-		).catch(
-			function(err) {
-				logger.error('Failed Proposal. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			.then(
+				function (responses) {
+					return Promise.resolve([responses, proposal]);
+				}
+			).catch(
+				function (err) {
+					logger.error('Failed Proposal. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -1470,7 +1460,7 @@ var Channel = class {
 	 *                    This will be an acknowledgement from the orderer of successfully submitted transaction.
 	 */
 	sendTransaction(request) {
-		logger.debug('sendTransaction - start :: channel %s',this);
+		logger.debug('sendTransaction - start :: channel %s', this);
 		var errorMsg = null;
 
 		if (request) {
@@ -1485,8 +1475,8 @@ var Channel = class {
 			errorMsg = 'Missing input request object on the transaction request';
 		}
 
-		if(errorMsg) {
-			logger.error('sendTransaction error '+ errorMsg);
+		if (errorMsg) {
+			logger.error('sendTransaction error ' + errorMsg);
 			throw new Error(errorMsg);
 		}
 
@@ -1495,8 +1485,8 @@ var Channel = class {
 
 		var endorsements = [];
 		let proposalResponse = proposalResponses;
-		if(Array.isArray(proposalResponses)) {
-			for(let i=0; i<proposalResponses.length; i++) {
+		if (Array.isArray(proposalResponses)) {
+			for (let i = 0; i < proposalResponses.length; i++) {
 				// make sure only take the valid responses to set on the consolidated response object
 				// to use in the transaction object
 				if (proposalResponses[i].response && proposalResponses[i].response.status === 200) {
@@ -1510,7 +1500,7 @@ var Channel = class {
 			}
 		}
 
-		if(endorsements.length < 1) {
+		if (endorsements.length < 1) {
 			logger.error('sendTransaction - no valid endorsements found');
 			throw new Error('no valid endorsements found');
 		}
@@ -1519,7 +1509,7 @@ var Channel = class {
 		var orderer = this._clientContext.getTargetOrderer(request.orderer, this._orderers, this._name);
 
 		var use_admin_signer = false;
-		if(request.txId) {
+		if (request.txId) {
 			use_admin_signer = request.txId.isAdmin();
 		}
 
@@ -1566,7 +1556,7 @@ var Channel = class {
 		// building manually or will get protobuf errors on send
 		var envelope = {
 			signature: signature,
-			payload : payload_bytes
+			payload: payload_bytes
 		};
 
 		return orderer.sendBroadcast(envelope);
@@ -1607,7 +1597,7 @@ var Channel = class {
 	 */
 	queryByChaincode(request, useAdmin) {
 		logger.debug('queryByChaincode - start');
-		if(!request) {
+		if (!request) {
 			throw new Error('Missing request object for this queryByChaincode call.');
 		}
 
@@ -1617,47 +1607,47 @@ var Channel = class {
 
 		// make a new request object so we can add in the txId and not change the user's
 		var trans_request = {
-			targets : targets,
-			chaincodeId : request.chaincodeId,
-			chainId : request.channelId,
-			fcn : request.fcn,
-			args : request.args,
-			transientMap :  request.transientMap,
-			txId : txId,
-			signer : signer
+			targets: targets,
+			chaincodeId: request.chaincodeId,
+			chainId: request.channelId,
+			fcn: request.fcn,
+			args: request.args,
+			transientMap: request.transientMap,
+			txId: txId,
+			signer: signer
 		};
 
 		return this.sendTransactionProposal(trans_request)
-		.then(
-			function(results) {
-				var responses = results[0];
-				var proposal = results[1];
-				logger.debug('queryByChaincode - results received');
-				if(responses && Array.isArray(responses)) {
-					let results = [];
-					for(let i = 0; i < responses.length; i++) {
-						let response = responses[i];
-						if(response instanceof Error) {
-							results.push(response);
+			.then(
+				function (results) {
+					var responses = results[0];
+					// var proposal = results[1];
+					logger.debug('queryByChaincode - results received');
+					if (responses && Array.isArray(responses)) {
+						let results = [];
+						for (let i = 0; i < responses.length; i++) {
+							let response = responses[i];
+							if (response instanceof Error) {
+								results.push(response);
+							}
+							else if (response.response && response.response.payload) {
+								results.push(response.response.payload);
+							}
+							else {
+								logger.error('queryByChaincode - unknown or missing results in query ::' + results);
+								results.push(new Error(response));
+							}
 						}
-						else if(response.response && response.response.payload) {
-							results.push(response.response.payload);
-						}
-						else {
-							logger.error('queryByChaincode - unknown or missing results in query ::'+results);
-							results.push(new Error(response));
-						}
+						return Promise.resolve(results);
 					}
-					return Promise.resolve(results);
+					return Promise.reject(new Error('Payload results are missing from the chaincode query'));
 				}
-				return Promise.reject(new Error('Payload results are missing from the chaincode query'));
-			}
-		).catch(
-			function(err) {
-				logger.error('Failed Query by chaincode. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			).catch(
+				function (err) {
+					logger.error('Failed Query by chaincode. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -1680,10 +1670,10 @@ var Channel = class {
 	 */
 	verifyProposalResponse(proposal_response) {
 		logger.debug('verifyProposalResponse - start');
-		if(!proposal_response) {
+		if (!proposal_response) {
 			throw new Error('Missing proposal response');
 		}
-		if(!proposal_response.endorsement) {
+		if (!proposal_response.endorsement) {
 			throw new Error('Parameter must be a ProposalResponse Object');
 		}
 
@@ -1691,28 +1681,28 @@ var Channel = class {
 
 		var sid = _identityProto.SerializedIdentity.decode(endorsement.endorser);
 		var mspid = sid.getMspid();
-		logger.debug('getMSPbyIdentity - found mspid %s',mspid);
+		logger.debug('getMSPbyIdentity - found mspid %s', mspid);
 		var msp = this._msp_manager.getMSP(mspid);
 
-		if (!msp){
+		if (!msp) {
 			throw new Error(util.format('Failed to locate an MSP instance matching the endorser identity\'s orgainization %s', mspid));
 		}
 		logger.debug('verifyProposalResponse - found endorser\'s MSP');
 
 		try {
 			var identity = msp.deserializeIdentity(endorsement.endorser, false);
-			if(!identity) {
+			if (!identity) {
 				throw new Error('Unable to find the endorser identity');
 			}
 		}
-		catch(error) {
+		catch (error) {
 			logger.error('verifyProposalResponse - getting endorser identity failed with: ', error);
 			return false;
 		}
 
 		try {
 			// see if the identity is trusted
-			if(!identity.isValid()) {
+			if (!identity.isValid()) {
 				logger.error('Endorser identity is not valid');
 				return false;
 			}
@@ -1720,12 +1710,12 @@ var Channel = class {
 
 			// check the signature against the endorser and payload hash
 			var digest = Buffer.concat([proposal_response.payload, endorsement.endorser]);
-			if(!identity.verify(digest, endorsement.signature)) {
+			if (!identity.verify(digest, endorsement.signature)) {
 				logger.error('Proposal signature is not valid');
 				return false;
 			}
 		}
-		catch(error) {
+		catch (error) {
 			logger.error('verifyProposalResponse - verify failed with: ', error);
 			return false;
 		}
@@ -1745,24 +1735,24 @@ var Channel = class {
 	  */
 	compareProposalResponseResults(proposal_responses) {
 		logger.debug('compareProposalResponseResults - start');
-		if(!proposal_responses) {
+		if (!proposal_responses) {
 			throw new Error('Missing proposal responses');
 		}
-		if(!Array.isArray(proposal_responses)) {
+		if (!Array.isArray(proposal_responses)) {
 			throw new Error('Parameter must be an array of ProposalRespone Objects');
 		}
 
-		if(proposal_responses.length == 0) {
+		if (proposal_responses.length == 0) {
 			throw new Error('Parameter proposal responses does not contain a PorposalResponse');
 		}
 		var first_one = _getProposalResponseResults(proposal_responses[0]);
-		for(var i = 1; i < proposal_responses.length; i++) {
+		for (var i = 1; i < proposal_responses.length; i++) {
 			var next_one = _getProposalResponseResults(proposal_responses[i]);
-			if(next_one.equals(first_one)){
-				logger.debug('compareProposalResponseResults - read/writes result sets match index=%s',i);
+			if (next_one.equals(first_one)) {
+				logger.debug('compareProposalResponseResults - read/writes result sets match index=%s', i);
 			}
 			else {
-				logger.error('compareProposalResponseResults - read/writes result sets do not match index=%s',i);
+				logger.error('compareProposalResponseResults - read/writes result sets do not match index=%s', i);
 				return false;
 			}
 		}
@@ -1779,7 +1769,7 @@ var Channel = class {
 		}
 		var peers = this._getTargets(peer, Constants.NetworkConfig.EVENT_SOURCE_ROLE, true);
 		// only want to return one peer
-		if(peers && peers.length > 0) {
+		if (peers && peers.length > 0) {
 			return peers[0];
 		}
 
@@ -1794,9 +1784,9 @@ var Channel = class {
 			throw new Error('"target" parameter is an array, but should be a singular peer object' +
 				' ' + 'or peer name according to the network configuration loaded by the client instance');
 		}
-		var targets = this._getTargets(target, Constants.NetworkConfig.LEDGER_QUERY_ROLE, true);
+		let targets = this._getTargets(target, Constants.NetworkConfig.LEDGER_QUERY_ROLE, true);
 		// only want to query one peer
-		if(targets.length > 1) {
+		if (targets.length > 1) {
 			targets = [targets[0]];
 		}
 
@@ -1807,7 +1797,7 @@ var Channel = class {
 	 * utility method to decide on the targets for requests
 	 */
 	_getTargets(request_targets, role, isTarget) {
-		var targets = null;
+		let targets = null;
 		if (request_targets) {
 			// first check to see if they have passed a peer or peer name
 			targets = this._clientContext.getTargetPeers(request_targets);
@@ -1815,28 +1805,28 @@ var Channel = class {
 
 		// nothing yet, maybe there are peers on the channel
 		if (!targets || targets.length < 1) {
-			let peers = this.getPeers();
+			const peers = this.getPeers();
 			targets = [];
-			for(let i in peers) {
-				if(peers[i].isInRole(role)){
-					targets.push(peers[i]);
+			for (let peer of peers) {
+				if (peer.isInRole(role)) {
+					targets.push(peer);
 				}
 			}
 		}
 
 		// so nothing passed in or set on channel, let's
 		// see if we can find in the network configuration
-		if (!targets || targets.length < 1 ) {
+		if (!targets || targets.length < 1) {
 			targets = this._getTargetsFromConfig(role);
 		}
 
-		if (!targets || targets.length < 1 ) {
+		if (!targets || targets.length < 1) {
 			let target_msg = 'targets';
-			if(isTarget) target_msg = 'target';
-			if(role === Constants.NetworkConfig.EVENT_SOURCE_ROLE) target_msg = 'peer';
+			if (isTarget) target_msg = 'target';
+			if (role === Constants.NetworkConfig.EVENT_SOURCE_ROLE) target_msg = 'peer';
 			throw new Error(util.format('"%s" parameter not specified and no peers'
 				+ ' ' + 'are set on this Channel instance'
-				+ ' ' + 'or specfied for this channel in the network ',target_msg));
+				+ ' ' + 'or specfied for this channel in the network ', target_msg));
 		}
 
 		return targets;
@@ -1848,17 +1838,17 @@ var Channel = class {
 	 */
 	_getTargetsFromConfig(role) {
 		var method = '_getTargetsFromConfig';
-		logger.debug('%s - start  ::role %s',method,role);
+		logger.debug('%s - start  ::role %s', method, role);
 		var targets = [];
-		if(role) {
+		if (role) {
 			var found = false;
-			for(let i in Constants.NetworkConfig.ROLES) {
-				if(role === Constants.NetworkConfig.ROLES[i]) {
+			for (let i in Constants.NetworkConfig.ROLES) {
+				if (role === Constants.NetworkConfig.ROLES[i]) {
 					found = true;
 					break;
 				}
 			}
-			if(!found) {
+			if (!found) {
 				throw Error('Target role is unknown');
 			}
 		}
@@ -1874,34 +1864,34 @@ var Channel = class {
 		 */
 		if (this._clientContext._network_config) {
 			var orgs = this._clientContext._network_config.getOrganizations();
-			if(orgs) {
+			if (orgs) {
 				//first get all the peers on the channel divided up by orgs
 				var peers_by_org = {};
-				for(let i in orgs) {
+				for (let i in orgs) {
 					let org = orgs[i];
 					var peers_in_org_and_in_channel = [];
 					peers_by_org[org.getName()] = peers_in_org_and_in_channel;
 					var org_peers = org.getPeers();
-					logger.debug('%s - org:%s has %s peers',method,org.getName(), org_peers.length);
-					for(let j in org_peers) {
+					logger.debug('%s - org:%s has %s peers', method, org.getName(), org_peers.length);
+					for (let j in org_peers) {
 						let org_peer = org_peers[j];
 						var channel_peers = this.getPeers();
-						for(let k in channel_peers) {
+						for (let k in channel_peers) {
 							let channel_peer = channel_peers[k];
-							if(!channel_peer) {
-								logger.debug('%s - no peers on this channel',method);
+							if (!channel_peer) {
+								logger.debug('%s - no peers on this channel', method);
 								break;
 							}
-							if(!org_peer) {
-								logger.debug('%s - null peer on this org',method);
+							if (!org_peer) {
+								logger.debug('%s - null peer on this org', method);
 								break;
 							}
-							logger.debug('%s - comparing channel peer:%s to org peer:%s',method, channel_peer.getName(), org_peer.getName());
-							if(channel_peer.getName() === org_peer.getName()) {
+							logger.debug('%s - comparing channel peer:%s to org peer:%s', method, channel_peer.getName(), org_peer.getName());
+							if (channel_peer.getName() === org_peer.getName()) {
 								// only peers in the request role get added
-								if(channel_peer.isInRole(role)) {
+								if (channel_peer.isInRole(role)) {
 									peers_in_org_and_in_channel.push(channel_peer);
-									logger.debug('%s - added peer %s',method,channel_peer.toString());
+									logger.debug('%s - added peer %s', method, channel_peer.toString());
 								}
 								break;
 							}
@@ -1909,22 +1899,22 @@ var Channel = class {
 					}
 				}
 				// now add just one peer from each org to targets if in role
-				for(let org_name in peers_by_org) {
+				for (let org_name in peers_by_org) {
 					let peers_org = peers_by_org[org_name];
-					if(peers_org && peers_org.length > 0) {
-						logger.debug('%s - orgs %s has %s peers',method, org_name, peers_org.length);
+					if (peers_org && peers_org.length > 0) {
+						logger.debug('%s - orgs %s has %s peers', method, org_name, peers_org.length);
 						let which_peer = Math.floor(Math.random() * peers_org.length);
-						logger.debug('%s - peer index:%s',method,which_peer);
+						logger.debug('%s - peer index:%s', method, which_peer);
 						let peer_org = peers_org[which_peer];
 						targets.push(peer_org);
-						logger.debug('%s - added target peer %s',method,peer_org.toString());
+						logger.debug('%s - added target peer %s', method, peer_org.toString());
 					} else {
-						logger.debug('%s - no peers in this org %s',method,org_name);
+						logger.debug('%s - no peers in this org %s', method, org_name);
 					}
 				}
 			}
 
-			if(targets.length == 0) {
+			if (targets.length == 0) {
 				logger.warn('No peers found in the loaded network configuration that can be used as the target of this operation');
 			}
 			return targets;
@@ -1957,16 +1947,16 @@ var Channel = class {
 //internal utility method to decode and get the write set
 //from a proposal response
 function _getProposalResponseResults(proposal_response) {
-	if(!proposal_response.payload) {
+	if (!proposal_response.payload) {
 		throw new Error('Parameter must be a ProposalResponse Object');
 	}
 	var payload = _responseProto.ProposalResponsePayload.decode(proposal_response.payload);
 	var extension = _proposalProto.ChaincodeAction.decode(payload.extension);
 	// TODO should we check the status of this action
-	logger.debug('_getWriteSet - chaincode action status:%s message:%s',extension.response.status, extension.response.message);
+	logger.debug('_getWriteSet - chaincode action status:%s message:%s', extension.response.status, extension.response.message);
 	// return a buffer object which has an equals method
 	return extension.results.toBuffer();
-};
+}
 
 //internal utility method to combine MSPs
 function _combineMSPs(current, configuration) {
@@ -1976,21 +1966,21 @@ function _combineMSPs(current, configuration) {
 	_arrayToMap(results, configuration);
 
 	return results;
-};
+}
 
 //internal utility method to add msps to a map
 function _arrayToMap(map, msps) {
-	if(msps) {
+	if (msps) {
 		var keys = Object.keys(msps);
-		for(let key in keys) {
+		for (let key in keys) {
 			let id = keys[key];
 			let msp = msps[id];
 			let mspid = msp.getId();
-			logger.debug('_arrayToMap - add msp ::%s',mspid);
+			logger.debug('_arrayToMap - add msp ::%s', mspid);
 			map.set(mspid, msp);
 		}
 	}
-};
+}
 
 /*
  * utility method to load in a config group
@@ -2003,18 +1993,18 @@ function _arrayToMap(map, msps) {
  */
 function loadConfigGroup(config_items, versions, group, name, org, top) {
 	logger.debug('loadConfigGroup - %s - > group:%s', name, org);
-	if(!group) {
+	if (!group) {
 		logger.debug('loadConfigGroup - %s - no group', name);
 		logger.debug('loadConfigGroup - %s - < group', name);
 		return;
 	}
 
 	var isOrderer = (name.indexOf('base.Orderer') > -1);
-	logger.debug('loadConfigGroup - %s   - version %s',name, group.version);
-	logger.debug('loadConfigGroup - %s   - mod policy %s',name, group.mod_policy);
+	logger.debug('loadConfigGroup - %s   - version %s', name, group.version);
+	logger.debug('loadConfigGroup - %s   - mod policy %s', name, group.mod_policy);
 
 	var groups = null;
-	if(top) {
+	if (top) {
 		groups = group.groups;
 		versions.version = group.version;
 	}
@@ -2024,18 +2014,18 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	}
 	logger.debug('loadConfigGroup - %s - >> groups', name);
 
-	if(groups) {
+	if (groups) {
 		let keys = Object.keys(groups.map);
 		versions.groups = {};
-		if(keys.length == 0) {
+		if (keys.length == 0) {
 			logger.debug('loadConfigGroup - %s   - no groups', name);
 		}
-		for(let i =0; i < keys.length; i++) {
+		for (let i = 0; i < keys.length; i++) {
 			let key = keys[i];
 			logger.debug('loadConfigGroup - %s   - found config group ==> %s', name, key);
 			versions.groups[key] = {};
 			// The Application group is where config settings are that we want to find
-			loadConfigGroup(config_items, versions.groups[key], groups.map[key], name+'.'+key, key, false);
+			loadConfigGroup(config_items, versions.groups[key], groups.map[key], name + '.' + key, key, false);
 		}
 	}
 	else {
@@ -2045,16 +2035,16 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 
 	logger.debug('loadConfigGroup - %s - >> values', name);
 	var values = null;
-	if(top) {
+	if (top) {
 		values = group.values;
 	}
 	else {
 		values = group.value.values;
 	}
-	if(values) {
+	if (values) {
 		versions.values = {};
 		let keys = Object.keys(values.map);
-		for(let i =0; i < keys.length; i++) {
+		for (let i = 0; i < keys.length; i++) {
 			let key = keys[i];
 			versions.values[key] = {};
 			var config_value = values.map[key];
@@ -2068,16 +2058,16 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 
 	logger.debug('loadConfigGroup - %s - >> policies', name);
 	var policies = null;
-	if(top) {
+	if (top) {
 		policies = group.policies;
 	}
 	else {
 		policies = group.value.policies;
 	}
-	if(policies) {
+	if (policies) {
 		versions.policies = {};
 		let keys = Object.keys(policies.map);
-		for(let i =0; i < keys.length; i++) {
+		for (let i = 0; i < keys.length; i++) {
 			let key = keys[i];
 			versions.policies[key] = {};
 			var config_policy = policies.map[key];
@@ -2089,7 +2079,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	}
 	logger.debug('loadConfigGroup - %s - << policies', name);
 
-	logger.debug('loadConfigGroup - %s - < group',name);
+	logger.debug('loadConfigGroup - %s - < group', name);
 }
 
 /*
@@ -2106,15 +2096,15 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 
 	versions.version = config_value.value.version;
 	try {
-		switch(config_value.key) {
+		switch (config_value.key) {
 		case 'AnchorPeers':
 			var anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - AnchorPeers :: %s', group_name, anchor_peers);
-			if(anchor_peers && anchor_peers.anchor_peers) for(var i in anchor_peers.anchor_peers) {
+			if (anchor_peers && anchor_peers.anchor_peers) for (var i in anchor_peers.anchor_peers) {
 				var anchor_peer = {
-					host : anchor_peers.anchor_peers[i].host,
-					port : anchor_peers.anchor_peers[i].port,
-					org  : org
+					host: anchor_peers.anchor_peers[i].host,
+					port: anchor_peers.anchor_peers[i].port,
+					org: org
 				};
 				config_items['anchor-peers'].push(anchor_peer);
 				logger.debug('loadConfigValue - %s    - AnchorPeer :: %s:%s:%s', group_name, anchor_peer.host, anchor_peer.port, anchor_peer.org);
@@ -2123,7 +2113,7 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 		case 'MSP':
 			var msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - MSP found', group_name);
-			if(!isOrderer) config_items.msps.push(msp_value);
+			if (!isOrderer) config_items.msps.push(msp_value);
 			break;
 		case 'ConsensusType':
 			var consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
@@ -2169,22 +2159,26 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 		case 'OrdererAddresses':
 			var orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
-			if(orderer_addresses && orderer_addresses.addresses ) for(var i in orderer_addresses.addresses) {
-				config_items.orderers.push(orderer_addresses.addresses[i]);
+			if (orderer_addresses && orderer_addresses.addresses) {
+				for (let address of orderer_addresses.addresses) {
+					config_items.orderers.push(address);
+				}
 			}
 			break;
 		case 'KafkaBrokers':
 			var kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
-			if(kafka_brokers && kafka_brokers.brokers ) for(var i in kafka_brokers.brokers) {
-				config_items['kafka-brokers'].push(kafka_brokers.brokers[i]);
+			if (kafka_brokers && kafka_brokers.brokers) {
+				for (let broker of kafka_brokers.brokers) {
+					config_items['kafka-brokers'].push(broker);
+				}
 			}
 			break;
 		default:
 			logger.debug('loadConfigValue - %s    - value: %s', group_name, config_value.value.value);
 		}
 	}
-	catch(err) {
+	catch (err) {
 		logger.debug('loadConfigValue - %s - name: %s - *** unable to parse with error :: %s', group_name, config_value.key, err);
 	}
 	//logger.debug('loadConfigValue - %s -  < value name: %s', group_name, config_value.key);
@@ -2203,36 +2197,32 @@ function loadConfigPolicy(config_items, versions, config_policy, group_name, org
 	loadPolicy(config_items, versions, config_policy.key, config_policy.value.policy, group_name, org);
 }
 
-function loadPolicy(config_items, versions, key, policy, group_name, org) {
+function loadPolicy(config_items, versions, key, policy, group_name) {
 	try {
-		switch(policy.type) {
-		case _policiesProto.Policy.PolicyType.SIGNATURE:
+		if(policy.type === _policiesProto.Policy.PolicyType.SIGNATURE){
 			let signature_policy = _policiesProto.SignaturePolicyEnvelope.decode(policy.policy);
-			logger.debug('loadPolicy - %s - policy SIGNATURE :: %s %s',group_name, signature_policy.encodeJSON(),this.decodeSignaturePolicy(signature_policy.getIdentities()));
-			break;
-		case _policiesProto.Policy.PolicyType.IMPLICIT_META:
+			logger.debug('loadPolicy - %s - policy SIGNATURE :: %s %s', group_name, signature_policy.encodeJSON(), this.decodeSignaturePolicy(signature_policy.getIdentities()));
+		}else if(policy.type === _policiesProto.Policy.PolicyType.IMPLICIT_META){
 			let implicit_policy = _policiesProto.ImplicitMetaPolicy.decode(policy.value);
 			let rule = ImplicitMetaPolicy_Rule[implicit_policy.getRule()];
-			logger.debug('loadPolicy - %s - policy IMPLICIT_META :: %s %s',group_name, rule, implicit_policy.getSubPolicy());
-			break;
-		default:
-			logger.error('loadPolicy - Unknown policy type :: %s',policy.type);
-			throw new Error('Unknown Policy type ::' +policy.type);
+			logger.debug('loadPolicy - %s - policy IMPLICIT_META :: %s %s', group_name, rule, implicit_policy.getSubPolicy());
+		}else{
+			logger.error('loadPolicy - Unknown policy type :: %s', policy.type);
+			throw new Error('Unknown Policy type ::' + policy.type);
 		}
 	}
-	catch(err) {
+	catch (err) {
 		logger.debug('loadPolicy - %s - name: %s - unable to parse policy %s', group_name, key, err);
 	}
 }
 
 function decodeSignaturePolicy(identities) {
 	var results = [];
-	for(let i in identities) {
+	for (let i in identities) {
 		let identity = identities[i];
-		switch(identity.getPrincipalClassification()) {
+		switch (identity.getPrincipalClassification()) {
 		case _mspPrincipalProto.MSPPrincipal.Classification.ROLE:
-			let principal = _mspPrincipalProto.MSPRole.decode(identity.getPrincipal());
-			results.push(principal.encodeJSON());
+			results.push(_mspPrincipalProto.MSPRole.decode(identity.getPrincipal()).encodeJSON());
 		}
 	}
 	return results;

@@ -44,10 +44,10 @@ var _timestampProto = grpc.load(__dirname +
  */
 module.exports.buildProposal = function (invokeSpec, header, transientMap) {
 	// construct the ChaincodeInvocationSpec
-	let cciSpec = new _ccProto.ChaincodeInvocationSpec();
+	const cciSpec = new _ccProto.ChaincodeInvocationSpec();
 	cciSpec.setChaincodeSpec(invokeSpec);
 
-	let cc_payload = new _proposalProto.ChaincodeProposalPayload();
+	const cc_payload = new _proposalProto.ChaincodeProposalPayload();
 	cc_payload.setInput(cciSpec.toBuffer());
 
 	if (typeof transientMap === 'object') {
@@ -59,7 +59,7 @@ module.exports.buildProposal = function (invokeSpec, header, transientMap) {
 	}
 
 	// proposal -- will switch to building the proposal once the signProposal is used
-	let proposal = new _proposalProto.Proposal();
+	const proposal = new _proposalProto.Proposal();
 	proposal.setHeader(header.toBuffer());
 	proposal.setPayload(cc_payload.toBuffer()); // chaincode proposal payload
 
@@ -70,11 +70,12 @@ module.exports.buildProposal = function (invokeSpec, header, transientMap) {
  * This function will return one Promise when sending a proposal to many peers
  */
 module.exports.sendPeersProposal = function (peers, proposal, timeout) {
+	let targets = peers;
 	if (!Array.isArray(peers)) {
-		peers = [peers];
+		targets = [peers];
 	}
 	// make function to return an individual promise
-	var fn = function (peer) {
+	const fn = function (peer) {
 		return new Promise(function (resolve, reject) {
 			peer.sendProposal(proposal, timeout).then(
 				function (result) {
@@ -91,8 +92,8 @@ module.exports.sendPeersProposal = function (peers, proposal, timeout) {
 	};
 	// create array of promises mapping peers array to peer parameter
 	// settle all the promises and return array of responses
-	var promises = peers.map(fn);
-	var responses = [];
+	const promises = targets.map(fn);
+	const responses = [];
 	return settle(promises).then(function (results) {
 		results.forEach(function (result) {
 			if (result.isFulfilled()) {
@@ -118,13 +119,13 @@ module.exports.sendPeersProposal = function (peers, proposal, timeout) {
  * This function will sign the proposal
  */
 module.exports.signProposal = function (signingIdentity, proposal) {
-	let proposal_bytes = proposal.toBuffer();
+	const proposal_bytes = proposal.toBuffer();
 	// sign the proposal
-	let sig = signingIdentity.sign(proposal_bytes);
-	let signature = Buffer.from(sig);
+	const sig = signingIdentity.sign(proposal_bytes);
+	const signature = Buffer.from(sig);
 
 	// build manually for now
-	let signedProposal = {
+	const signedProposal = {
 		signature: signature,
 		proposal_bytes: proposal_bytes
 	};
@@ -167,11 +168,11 @@ module.exports.buildChannelHeader = function (
  * This function will build the common header
  */
 module.exports.buildHeader = function (creator, channelHeader, nonce) {
-	let signatureHeader = new _commonProto.SignatureHeader();
+	const signatureHeader = new _commonProto.SignatureHeader();
 	signatureHeader.setCreator(creator.serialize());
 	signatureHeader.setNonce(nonce);
 
-	let header = new _commonProto.Header();
+	const header = new _commonProto.Header();
 	header.setSignatureHeader(signatureHeader.toBuffer());
 	header.setChannelHeader(channelHeader.toBuffer());
 
