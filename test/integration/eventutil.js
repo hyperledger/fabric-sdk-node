@@ -56,7 +56,7 @@ module.exports.registerCCEvent = function(eh, ccid, enregex, timeout) {
 	});
 };
 
-module.exports.createRequest = function(client, channel, user, chaincode_id, targets, fcn, args) {
+module.exports.createRequest = function(client, chaincode_id, targets, fcn, args) {
 	var tx_id = client.newTransactionID();
 	var request = {
 		targets : targets,

@@ -834,7 +834,6 @@ var Channel = class {
 		var request = {
 			targets: targets,
 			chaincodeId: Constants.QSCC,
-			chainId: '',
 			txId: tx_id,
 			signer: signer,
 			fcn: 'GetChainInfo',
@@ -893,7 +892,6 @@ var Channel = class {
 		var request = {
 			targets: targets,
 			chaincodeId: Constants.QSCC,
-			chainId: '',
 			txId: txId,
 			signer: signer,
 			fcn: 'GetBlockByHash',
@@ -957,9 +955,8 @@ var Channel = class {
 		var request = {
 			targets: targets,
 			chaincodeId: Constants.QSCC,
-			chainId: '',
 			txId: txId,
-			signer,
+			signer: signer,
 			fcn: 'GetBlockByNumber',
 			args: [this._name, block_number]
 		};
@@ -1019,7 +1016,6 @@ var Channel = class {
 		var request = {
 			targets: targets,
 			chaincodeId: Constants.QSCC,
-			chainId: '',
 			txId: txId,
 			signer: signer,
 			fcn: 'GetTransactionByID',
@@ -1077,7 +1073,6 @@ var Channel = class {
 		const request = {
 			targets: targets,
 			chaincodeId: Constants.LSCC,
-			chainId: this._name,
 			txId: txId,
 			signer: signer,
 			fcn: 'getchaincodes',
@@ -1609,7 +1604,6 @@ var Channel = class {
 		var trans_request = {
 			targets: targets,
 			chaincodeId: request.chaincodeId,
-			chainId: request.channelId,
 			fcn: request.fcn,
 			args: request.args,
 			transientMap: request.transientMap,
