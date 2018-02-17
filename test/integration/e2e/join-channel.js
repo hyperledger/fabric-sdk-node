@@ -196,7 +196,7 @@ function joinChannel(org, t) {
 			block : genesis_block,
 			txId : 	tx_id
 		};
-		let sendPromise = channel.joinChannel(request);
+		let sendPromise = channel.joinChannel(request, 20000); //join channel takes longer then average
 		return Promise.all([sendPromise].concat(eventPromises));
 	}, (err) => {
 		t.fail('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
@@ -215,4 +215,3 @@ function joinChannel(org, t) {
 		t.fail('Failed to join channel due to error: ' + err.stack ? err.stack : err);
 	});
 }
-
