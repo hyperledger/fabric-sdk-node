@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 IBM All Rights Reserved.
+ * Copyright 2017, 2018 IBM All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,19 +79,45 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 	/**
 	 * @param {number} keySize Length of key (in bytes), a.k.a "security level"
 	 * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
-	 * @param {Object} opts Option is the form { lib: string, slot: number, pin: string }
-	 *
-	 * If lib is not specified or null, its value will be taken from the
+	 * @param {Object} opts Options are of the form
+	 * <pre>
+	 *   {
+	 *     lib: string,       // the library package to support this implementation
+	 *     slot: number,      // the hardware slot number
+	 *     pin: string,       // the user's PIN
+	 *     usertype: number,  // the user type
+	 *     readwrite: boolean // true if the session is read/write or false if read-only
+ 	 *   }
+	 * </pre>
+	 * If 'lib' is not specified or null, its value will be taken from the
 	 * CRYPTO_PKCS11_LIB env var, and if the env var is not set, its value will
 	 * be taken from the crypto-pkcs11-lib key in the configuration file.
-	 *
-	 * If slot is not specified or null, its value will be taken from the
+	 *<br><br>
+	 * If 'slot' is not specified or null, its value will be taken from the
 	 * CRYPTO_PKCS11_SLOT env var, and if the env var is not set, its value will
 	 * be taken from the crypto-pkcs11-slot key in the configuration file.
-	 *
-	 * If pin is not specified or null, its value will be taken from the
+	 *<br><br>
+	 * If 'pin' is not specified or null, its value will be taken from the
 	 * CRYPTO_PKCS11_PIN env var, and if the env var is not set, its value will
 	 * be taken from the crypto-pkcs11-pin key in the configuration file.
+	 *<br><br>
+	 * If 'usertype' is not specified or null, its value will be taken from the
+	 * CRYPTO_PKCS11_USERTYPE env var, if the env var is not set, its value will
+	 * be taken from the crypto-pkcs11-usertype key in the configuration file,
+	 * if the config value is not set, its value will default to 1.
+	 * The value will not be validated, assumes the C_Login will validate.
+	 * --- from http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html
+	 *<pre>
+	 * 0          CKU_SO                          0UL
+	 * 1          CKU_USER                        1UL
+	 * 2          CKU_CONTEXT_SPECIFIC            2UL
+	 * 4294967295 max allowed            0xFFFFFFFFUL
+	 *</pre>
+	 *<br>
+	 * If 'readwrite' is not specified or null, its value will be taken from the
+	 * CRYPTO_PKCS11_READWRITE env var, if the env var is not set, its value will
+	 * be taken from the crypto-pkcs11-readwrite key in the configuration file,
+	 * if the config value is not set, its value will default to true.
 	 */
 	constructor(keySize, hash, opts) {
 		if (typeof keySize === 'undefined' || keySize === null)
@@ -100,7 +126,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		if (keySize != 256 && keySize != 384)
 			throw new Error(__func() +
 					'only 256 or 384 bits key sizes are supported');
-		logger.info(__func() + 'keySize: ' + keySize);
+		logger.debug(__func() + 'keySize: ' + keySize);
 		/*
 		 * If no lib specified, get it from env var or config file.
 		 */
@@ -110,7 +136,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		if (typeof pkcs11Lib === 'undefined' || pkcs11Lib === null ||
 			typeof pkcs11Lib !== 'string')
 			throw new Error(__func() + 'PKCS11 library path must be specified');
-		logger.info(__func() + 'PKCS11 library: ' + pkcs11Lib);
+		logger.debug(__func() + 'PKCS11 library: ' + pkcs11Lib);
 		/*
 		 * If no slot specified, get it from env var or config file.
 		 */
@@ -122,7 +148,27 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		if (typeof pkcs11Slot === 'string') pkcs11Slot = parseInt(pkcs11Slot, 10);
 		if (isNaN(pkcs11Slot))
 			throw new Error(__func() + 'PKCS11 slot number invalid');
-		logger.info(__func() + 'PKCS11 slot: ' + pkcs11Slot);
+		logger.debug(__func() + 'PKCS11 slot: ' + pkcs11Slot);
+		/*
+		 * If no user type is specified, check env var or config file, then
+		 * default to 1 (pkcs11js.CKU_USER)
+		 */
+		var pkcs11UserType = opts ? opts.usertype: null;
+		if (typeof pkcs11UserType === 'undefined' || pkcs11UserType === null)
+			pkcs11UserType = utils.getConfigSetting('crypto-pkcs11-usertype', 1);
+		if(!Number.isInteger(pkcs11UserType)) {
+			throw new Error(__func() + 'PKCS11 usertype number invalid');
+		}
+		/*
+		 * If no read write specified, check env var or config file, then
+		 * default to true
+		 */
+		var pkcs11ReadWrite = opts ? opts.readwrite: null;
+		if (typeof pkcs11ReadWrite === 'undefined' || pkcs11ReadWrite === null)
+			pkcs11ReadWrite = utils.getConfigSetting('crypto-pkcs11-readwrite', true);
+		if (typeof pkcs11ReadWrite !== 'boolean') {
+			throw new Error(__func() + 'PKCS11 readwrite is invalid');
+		}
 		/*
 		 * If no pin specified, get it from env var or config file.
 		 */
@@ -177,7 +223,7 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		}
 		this._pkcs11 = _pkcs11;
 
-		this._pkcs11OpenSession(this._pkcs11, pkcs11Lib, pkcs11Slot, pkcs11Pin);
+		this._pkcs11OpenSession(this._pkcs11, pkcs11Lib, pkcs11Slot, pkcs11Pin, pkcs11UserType, pkcs11ReadWrite);
 		/*
 		 * SKI to key cache for getKey(ski) function.
 		 */
@@ -225,9 +271,9 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 	/*
 	 * Open pkcs11 session and login.
 	 */
-	_pkcs11OpenSession(pkcs11, pkcs11Lib, pkcs11Slot, pkcs11Pin) {
-		logger.debug(__func() + 'parameters are pkcs11Slot %s pkcs11Pin %s pkcs11Lib %s',
-			pkcs11Slot, pkcs11Pin, pkcs11Lib);
+	_pkcs11OpenSession(pkcs11, pkcs11Lib, pkcs11Slot, pkcs11Pin, pkcs11UserType, pkcs11ReadWrite) {
+		logger.debug(__func() + 'parameters are pkcs11Slot %s pkcs11Lib %s', pkcs11Slot, pkcs11Lib);
+
 		if (!_initialized) {
 			pkcs11.load(pkcs11Lib);
 			pkcs11.C_Initialize();
@@ -261,8 +307,12 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			/*
 			 * Open session.
 			 */
-			this._pkcs11Session = pkcs11.C_OpenSession(
-				slot, pkcs11js.CKF_RW_SESSION|pkcs11js.CKF_SERIAL_SESSION);
+			let flags = pkcs11js.CKF_SERIAL_SESSION;
+			if(pkcs11ReadWrite) {
+				flags = flags | pkcs11js.CKF_RW_SESSION;
+			}
+			this._pkcs11Session = pkcs11.C_OpenSession(slot, flags);
+
 			// Getting info about Session
 			logger.debug(__func() + 'C_GetSessionInfo(' +
 					 util.inspect(
@@ -273,10 +323,9 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 			/*
 			 * Login with PIN. Error will be thrown if wrong PIN.
 			 */
-			pkcs11.C_Login(this._pkcs11Session,
-					   1/*pkcs11js.CKU_USER*/, pkcs11Pin);
+			pkcs11.C_Login(this._pkcs11Session, pkcs11UserType, pkcs11Pin);
 			this._pkcs11Login = true;
-			logger.info(__func() + 'session login successful');
+			logger.debug(__func() + 'session login successful');
 
 			//pkcs11.C_Logout(session);
 			//pkcs11.C_CloseSession(session);
