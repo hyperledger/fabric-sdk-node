@@ -51,7 +51,7 @@ module.exports.buildProposal = function (invokeSpec, header, transientMap) {
 	cc_payload.setInput(cciSpec.toBuffer());
 
 	if (typeof transientMap === 'object') {
-		logger.debug('buildProposal - adding in transientMap %j', transientMap);
+		logger.debug('buildProposal - adding in transientMap %s', util.inspect(transientMap));
 		cc_payload.setTransientMap(transientMap);
 	}
 	else {
