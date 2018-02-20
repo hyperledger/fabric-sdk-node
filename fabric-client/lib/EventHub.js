@@ -30,6 +30,7 @@ var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos
 var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
 var _ccProposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
 var _ccEventProto = grpc.load(__dirname + '/protos/peer/chaincode_event.proto').protos;
+const five_minutes_ms = 5*60*1000;
 
 var _validation_codes = {};
 var keys = Object.keys(_transProto.TxValidationCode);
@@ -288,6 +289,7 @@ var EventHub = class {
 		let request_timeout = request_timeout_ms / 1000;
 		options = utils.checkAndAddConfigSetting('grpc.http2.keepalive_timeout', request_timeout, options); //grpc 1.2.4
 		options = utils.checkAndAddConfigSetting('grpc.keepalive_timeout_ms', request_timeout_ms, options); //grpc 1.3.7
+		options = utils.checkAndAddConfigSetting('grpc.http2.min_time_between_pings_ms', five_minutes_ms, options); //default 5
 
 		logger.info('_connect - options %j',this._ep._options);
 		this._event_client = new _events.Events(this._ep._endpoint.addr, this._ep._endpoint.creds, this._ep._options);
