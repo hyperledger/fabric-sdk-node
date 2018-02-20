@@ -1,11 +1,11 @@
 
-" (¼ÑfS:ş_oàW¡0c§4ÜıĞ‡vìPl·“…oÔ‹
-Ğ‹
-Ì‹
+" JÄÅnÆÄ‡]K{³DÀ\±ûÂİf«æ‰iĞŞ®ûó Œ
+œŒ
+˜Œ
 y
-[……·Ô"testchainid*@6139abcac1327189f1b388dcdd1366ac84100dbea4c63afacef4e5e74c644f6d|HOY¡NdPU2Ç†"BƒzvË@MÍŠ
-ÉŠÅŠ’S
-Orderer†SÛP
+[ Û·Ô"testchainid*@5752eea4e1aef66177dc2c40cbae60cb87e2485543f37e6c0090813c2b38bf42Õ1½¶ç)aôÙôW´G`Ëô«ŠKî™‹
+•‹‘‹¸S
+Orderer¬SÛP
 
 OrdererMSPÌP¡O
 MSP™OO‹O
@@ -187,32 +187,36 @@ BPdjC4N80Yys3wJ9i4/mxz1ikCFJ890EMAoGCCqGSM49BAMCA0cAMEQCID4dOXH8
 6ginPTS17oyyowkdM34Z5ATPdA7WytfA8IW+AiA0jguTMYimuWEWuTulOgyNZ3ai
 hzFkzY/dm7duN86yJQ==
 -----END CERTIFICATE-----
-Admins"4
+Admins"3
+Writers( 
+
+OrdererMSPAdmins"4
 Admins*  
 
 OrdererMSPAdmins"3
 Readers( 
 
-OrdererMSPAdmins"3
-Writers( 
+OrdererMSPAdmins*Admins
+ChannelRestrictionsAdmins$
+Capabilities
 
-OrdererMSPAdmins*Admins!
+
+V1_1 Admins!
 ConsensusType
 soloAdmins"
 	BatchSize
 €€€1€€ Admins
 BatchTimeout
-2sAdmins
-ChannelRestrictionsAdmins""
-Admins
-
-AdminsAdmins""
+2sAdmins""
 Readers	
 ReadersAdmins""
 Writers	
 WritersAdmins"*
 BlockValidation	
-WritersAdmins*Admins—5
+WritersAdmins""
+Admins
+
+AdminsAdmins*Admins—5
 Consortiums‡5¼4
 SampleConsortium§4
 Org1MSP„â
@@ -350,14 +354,18 @@ nM2KGw+XJ5/pm/Q=
 SHA256Admins-
 BlockDataHashingStructureÿÿÿÿAdminsI
 OrdererAddresses5
-orderer.example.com:7050/Channel/Orderer/Admins""
-Writers	
-WritersAdmins""
+orderer.example.com:7050/Channel/Orderer/Admins$
+Capabilities
+
+
+V1_1 Admins""
 Admins
 
 AdminsAdmins""
 Readers	
-ReadersAdmins*Admins
+ReadersAdmins""
+Writers	
+WritersAdmins*Admins
  
  
  
