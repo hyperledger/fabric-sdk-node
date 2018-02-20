@@ -29,6 +29,7 @@ var fs = require('fs');
 var Client = require('fabric-client');
 
 var testUtil = require('../../unit/util.js');
+var e2eUtils = require('./e2eUtils.js');
 
 var the_user = null;
 var tx_id = null;
@@ -79,25 +80,30 @@ function joinChannel(org, t) {
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 	var genesis_block = null;
+	var tlsInfo = null;
 
-	channel.addOrderer(
-		client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
-
-	return Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
+	return e2eUtils.tlsEnroll(org)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then((store) => {
 		client.setStateStore(store);
 
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) => {
-		t.pass('Successfully enrolled orderer \'admin\'');
+		t.pass('Successfully enrolled orderer \'admin\' (joined_channel 1)');
+		channel.addOrderer(
+			client.newOrderer(
+				ORGS.orderer.url,
+				{
+					'pem': caroots,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
+					'ssl-target-name-override': ORGS.orderer['server-hostname']
+				}
+			)
+		);
 		tx_id = client.newTransactionID();
 		let request = {
 			txId : 	tx_id
@@ -113,7 +119,7 @@ function joinChannel(org, t) {
 
 		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
 	}).then((admin) => {
-		t.pass('Successfully enrolled org:' + org + ' \'admin\'');
+		t.pass('Successfully enrolled org (join_channel):' + org + ' \'admin\'');
 		the_user = admin;
 
 		for (let key in ORGS[org]) {
@@ -125,6 +131,8 @@ function joinChannel(org, t) {
 							ORGS[org][key].requests,
 							{
 								pem: Buffer.from(data).toString(),
+								'clientCert': tlsInfo.certificate,
+								'clientKey': tlsInfo.key,
 								'ssl-target-name-override': ORGS[org][key]['server-hostname']
 							}
 						)

@@ -30,6 +30,7 @@ let Long = require('long');
 
 let Client = require('fabric-client');
 let testUtil = require('../unit/util.js');
+var e2eUtils = require('./e2e/e2eUtils.js');
 
 // When running this as a standalone test, be sure to create and join a channel called 'mychannel'
 test('Test chaincode instantiate with event, transaction invocation with chaincode event, and query number of chaincode events', (t) => {
@@ -71,33 +72,15 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 	let data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'));
 	let caroots = Buffer.from(data).toString();
+	var tlsInfo = null;
+	let orderer = null;
+	let peer = null;
 
-	let orderer = client.newOrderer(
-		'grpcs://localhost:7050',
-		{
-			'pem': caroots,
-			'ssl-target-name-override': 'orderer.example.com'
-		}
-	);
-	channel.addOrderer(orderer);
-
-	data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem'));
-	let peer = client.newPeer(
-		'grpcs://localhost:7051',
-		{
-			pem: Buffer.from(data).toString(),
-			'ssl-target-name-override': 'peer0.org1.example.com'
-		}
-	);
-	channel.addPeer(peer);
-	targets.push(peer);
-
-	event_hub = channel.newChannelEventHub(peer);
-	t.pass('Successfully created new channel event hub for peer');
-	eventhubs.push(event_hub); //add to list so we can shutdown at end of test
-
-	Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg('peerOrg1')
+	e2eUtils.tlsEnroll('org1')
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg('peerOrg1')});
 	}).then((store) => {
 		client.setStateStore(store);
 
@@ -106,6 +89,34 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((admin) => {
 		t.pass('Successfully enrolled admin user \'admin\'');
 		the_user = admin;
+
+		orderer = client.newOrderer(
+			'grpcs://localhost:7050',
+			{
+				'pem': caroots,
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': 'orderer.example.com'
+			}
+		);
+		channel.addOrderer(orderer);
+
+		data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem'));
+		peer = client.newPeer(
+			'grpcs://localhost:7051',
+			{
+				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': 'peer0.org1.example.com'
+			}
+		);
+		channel.addPeer(peer);
+		targets.push(peer);
+
+		event_hub = channel.newChannelEventHub(peer);
+		t.pass('Successfully created new channel event hub for peer');
+		eventhubs.push(event_hub); //add to list so we can shutdown at end of test
 
 		// Now that the user has been assigned to the client instance we can
 		// have the channel event hub connect to the peer's channel-based event

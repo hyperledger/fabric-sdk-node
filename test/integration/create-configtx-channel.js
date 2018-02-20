@@ -53,31 +53,38 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 	let data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	var orderer = client.newOrderer(
-		ORGS.orderer.url,
-		{
-			'pem': caroots,
-			'ssl-target-name-override': ORGS.orderer['server-hostname']
-		}
-	);
-
 	var config = null;
 	var signatures = [];
 	var request = null;
+	var orderer = null;
+	var tlsInfo = null;
 
 	// Acting as a client in org1 when creating the channel
 	var org = ORGS.org1.name;
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 
-	return Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(org)
+	return e2eUtils.tlsEnroll('org1')
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
 	}).then((store) => {
 		client.setStateStore(store);
 
 		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
 	}).then((admin) =>{
-		t.pass('Successfully enrolled user \'admin\' for orderer');
+		t.pass('Successfully enrolled user \'admin\' for orderer (create-configtx-channel 1)');
+
+		orderer = client.newOrderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		);
 
 		logger.info('\n\n***** Get the configtx config update configuration  *****\n\n');
 		// use the config update created by the configtx tool
@@ -108,7 +115,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 		client._userContext = null;
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\' for orderer');
+		t.pass('Successfully enrolled user \'admin\' for orderer (create-configtx-channel 2)');
 		the_user = admin;
 
 		// sign the config

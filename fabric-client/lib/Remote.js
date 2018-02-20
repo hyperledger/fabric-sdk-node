@@ -18,9 +18,12 @@
 
 var grpc = require('grpc');
 var urlParser = require('url');
+var crypto = require('crypto');
+var util = require('util');
 
 var utils = require('./utils.js');
 var logger = utils.getLogger('Remote.js');
+var Hash = require('./hash.js');
 
 
 /**
@@ -54,7 +57,7 @@ var Remote = class {
 		var _name = null;
 		var pem = null;
 		var clientKey = null;
-		var clientCert = null;
+		this.clientCert = null;
 		var ssl_target_name_override = '';
 		var default_authority = '';
 
@@ -67,7 +70,7 @@ var Remote = class {
 		}
 
 		if (opts && opts.clientCert) {
-			clientCert = opts.clientCert;
+			this.clientCert = opts.clientCert;
 		}
 
 		if (opts && opts['ssl-target-name-override']) {
@@ -119,7 +122,7 @@ var Remote = class {
 
 		// service connection
 		this._url = url;
-		this._endpoint = new Endpoint(url, pem, clientKey, clientCert);
+		this._endpoint = new Endpoint(url, pem, clientKey, this.clientCert);
 
 		// node.js based timeout
 		this._request_timeout = 30000;
@@ -154,6 +157,19 @@ var Remote = class {
 	getUrl() {
 		logger.debug('getUrl::'+this._url);
 		return this._url;
+	}
+
+	/**
+	 * Get the client certificate hash
+	 * @returns {byte[]} The hash of the client certificate
+	 */
+	getClientCertHash() {
+		let hash = null;
+		if(this.clientCert) {
+			let der_cert = utils.pemToDER(this.clientCert);
+			hash = computeHash(der_cert);
+		}
+		return hash;
 	}
 
 	/**
@@ -213,5 +229,11 @@ var Endpoint = class {
 		}
 	}
 };
+
+// Compute hash for replay protection
+function computeHash(data) {
+	var sha256 = crypto.createHash('sha256');
+	return sha256.update(data).digest();
+}
 
 module.exports.Endpoint = Endpoint;

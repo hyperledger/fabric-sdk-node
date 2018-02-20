@@ -87,10 +87,27 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 	// The file only has the client section.
 	// A real application might do this when a new user logs in.
 	client.loadFromConfig('test/fixtures/org1.yaml');
+
 	// tell this client instance where the state and key stores are located
 	client.initCredentialStores()
 	.then((nothing) => {
 		t.pass('Successfully created the key value store and crypto store based on the sdk config and connection profile');
+
+		// get the CA associated with this client's organization
+		let caService = client.getCertificateAuthority();
+		let request = {
+			enrollmentID: 'admin',
+			enrollmentSecret: 'adminpw',
+			profile: 'tls'
+		};
+		return caService.enroll(request);
+	}).then((enrollment) => {
+		t.pass('Successfully called the CertificateAuthority to get the TLS material');
+		let key = enrollment.key.toBytes();
+		let cert = enrollment.certificate;
+
+		// set the material on the client to be used when building endpoints for the user
+		client.setTlsClientCertAndKey(cert, key);
 
 		// get the config envelope created by the configtx tool
 		let envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/mychannel2.tx'));

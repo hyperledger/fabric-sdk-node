@@ -47,6 +47,7 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 	var userOrg = 'org1';
 	var orgName = ORGS[userOrg].name;
 	var submitter;
+	var tlsInfo = null;
 
 	var cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
@@ -73,8 +74,12 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 	utils.setConfigSetting('grpc-max-send-message-length', 1024 * 1024);
 	// now that we have set the config setting, create a new peer so that it will
 	// pick up the settings which are only done when the peer is created.
-	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, null, 'v2', 'golang', t, true)
-	.then(() => {
+	e2eUtils.tlsEnroll(userOrg)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return e2eUtils.installChaincode(userOrg, testUtil.CHAINCODE_PATH, null, 'v2', 'golang', t, true);
+	}).then(() => {
 		t.fail('Should have failed because the file size is too big for grpc send messages');
 		t.end();
 	}, (err) => {
@@ -112,6 +117,8 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 			ORGS[userOrg].peer1.requests,
 			{
 				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
 			}
 		);
@@ -137,6 +144,8 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 			ORGS[userOrg].peer1.requests,
 			{
 				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname']
 			}
 		);
@@ -154,6 +163,8 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 			ORGS[userOrg].peer1.requests,
 			{
 				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
 				// now dial the receive limit back down to reproduce the message size error
 				// notice this is another way to set a grpc setting, this will override
@@ -177,12 +188,17 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 		utils.setConfigSetting('grpc.max_receive_message_length', -1);
 		utils.setConfigSetting('grpc.max_send_message_length', -1);
 
+		let submitterCert = submitter.getIdentity()._certificate;
+		let submitterKey = submitter.getSigningIdentity()._key;
+
 		// must re-construct a new peer instance to pick up the new setting
 		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
 		let peer = client.newPeer(
 			ORGS[userOrg].peer1.requests,
 			{
 				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname']
 			}
 		);

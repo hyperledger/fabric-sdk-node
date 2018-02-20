@@ -169,3 +169,11 @@ test('Peer timeout test', function(t) {
 	});
 	hfc.setConfigSetting('request-timeout', 30000);
 });
+
+test('Peer clientCert est', function(t) {
+	var peer = new Peer('grpc://127.0.0.1:5005', {clientCert: 'some cert'});
+
+	t.equals('some cert', peer.clientCert, 'checking client certificate on peer');
+
+	t.end();
+});

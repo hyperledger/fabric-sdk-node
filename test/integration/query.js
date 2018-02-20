@@ -32,6 +32,7 @@ var test = _test(tape);
 
 var path = require('path');
 var util = require('util');
+var e2eUtils = require('./e2e/e2eUtils.js');
 var fs = require('fs');
 
 var testUtil = require('../unit/util.js');
@@ -85,48 +86,58 @@ test('  ---->>>>> Query channel working <<<<<-----', function(t) {
 	data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 
 	let caroots = Buffer.from(data).toString();
-
-	channel.addOrderer(
-		new Orderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
-
-	data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
-	peer0 = new Peer(
-		ORGS[org].peer1.requests,
-		{
-			pem: Buffer.from(data).toString(),
-			'ssl-target-name-override': ORGS[org].peer1['server-hostname']
-		});
-	data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS['org2'].peer1['tls_cacerts']));
-	var peer1 = new Peer(
-		ORGS['org2'].peer1.requests,
-		{
-			pem: Buffer.from(data).toString(),
-			'ssl-target-name-override': ORGS['org2'].peer1['server-hostname']
-		});
-
-	channel.addPeer(peer0);
-	channel.addPeer(peer1);
+	let tlsInfo = null;
 
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
 	var cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
-	return Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
+	return e2eUtils.tlsEnroll(org)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then( function (store) {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, org);
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
+
+		channel.addOrderer(
+			new Orderer(
+				ORGS.orderer.url,
+				{
+					'pem': caroots,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
+					'ssl-target-name-override': ORGS.orderer['server-hostname']
+				}
+			)
+		);
+
+		data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
+		peer0 = new Peer(
+			ORGS[org].peer1.requests,
+			{
+				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
+			});
+		data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS['org2'].peer1['tls_cacerts']));
+		var peer1 = new Peer(
+			ORGS['org2'].peer1.requests,
+			{
+				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': ORGS['org2'].peer1['server-hostname']
+			});
+
+		channel.addPeer(peer0);
+		channel.addPeer(peer1);
 
 		// read the config block from the orderer for the channel
 		// and initialize the verify MSPs based on the participating

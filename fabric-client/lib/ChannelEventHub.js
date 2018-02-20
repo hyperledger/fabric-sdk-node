@@ -507,7 +507,10 @@ var ChannelEventHub = class {
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			this._channel._name,
 			tx_id.getTransactionID(),
-			this._initial_epoch
+			this._initial_epoch,
+			null,
+			clientUtils.buildCurrentTimestamp(),
+			this._peer.getClientCertHash()
 		);
 
 		let seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, tx_id.getNonce());

@@ -18,14 +18,18 @@
 
 var tape = require('tape');
 var _test = require('tape-promise');
+var crypto = require('crypto');
 var test = _test(tape);
 
 var testutil = require('./util.js');
-var utils = require('fabric-client/lib/utils.js');
+var hash = require('fabric-client/lib/hash.js');
 
+var Client = require('fabric-client');
 var Remote = require('fabric-client/lib/Remote.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
+var utils = require('fabric-client/lib/utils.js');
+
 var aPem = '-----BEGIN CERTIFICATE-----' +
 	'MIIBwTCCAUegAwIBAgIBATAKBggqhkjOPQQDAzApMQswCQYDVQQGEwJVUzEMMAoG' +
 	'A1UEChMDSUJNMQwwCgYDVQQDEwNPQkMwHhcNMTYwMTIxMjI0OTUxWhcNMTYwNDIw' +
@@ -351,6 +355,14 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 	delete require.cache[require.resolve('fabric-client/lib/Client.js')];
 	require('fabric-client/lib/Client.js');
 	t.equal(process.env.GRPC_SSL_CIPHER_SUITES, 'HIGH+ECDSA', 'Test overriden cipher suites');
+
+	t.end();
+});
+
+test('Orderer clientCert test', function(t) {
+	var orderer = new Orderer('grpc://127.0.0.1:5005', {clientCert: aPem});
+
+	t.equals(orderer.getClientCertHash().toString('hex'), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'checking the default client certificate hash');
 
 	t.end();
 });

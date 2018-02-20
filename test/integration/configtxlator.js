@@ -63,14 +63,6 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 	let data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	var orderer = client.newOrderer(
-		ORGS.orderer.url,
-		{
-			'pem': caroots,
-			'ssl-target-name-override': ORGS.orderer['server-hostname']
-		}
-	);
-
 	var config_proto = null;
 	var original_config_proto = null;
 	var original_config_json = null;
@@ -78,14 +70,18 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 	var updated_config_json = null;
 	var signatures = [];
 	var request = null;
+	var tlsInfo = null;
 
 	// Acting as a client in org1 when creating the channel
 	var org = ORGS.org1.name;
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 
-	return Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(org)
+	return e2eUtils.tlsEnroll(org)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
 	}).then((store) => {
 		client.setStateStore(store);
 
@@ -112,6 +108,16 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 	}).then((admin) =>{
 		t.pass('Successfully enrolled user \'admin\' for org1');
 		let config_json = fs.readFileSync(path.join(__dirname, '../fixtures/channel/' + channel_name + '.json'));
+
+		var orderer = client.newOrderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		);
 
 		// the following is an example of how to make the call without a promise
 		var response = superagent.post('http://127.0.0.1:7059/protolator/encode/common.ConfigUpdate',
@@ -156,7 +162,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\' for orderer');
+		t.pass('Successfully enrolled user \'admin\' for orderer (configtxlator 1)');
 		the_user = admin;
 
 		// sign the config
@@ -323,7 +329,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 		client._userContext = null;
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\' for orderer');
+		t.pass('Successfully enrolled user \'admin\' for orderer (configtxlator 2)');
 		the_user = admin;
 
 		// sign the config

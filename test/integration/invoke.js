@@ -29,6 +29,7 @@ var Client = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
 var testUtil = require('../unit/util.js');
 var e2e = testUtil.END2END;
+var e2eUtils = require('./e2e/e2eUtils.js');
 
 var path = require('path');
 var fs = require('fs');
@@ -137,27 +138,36 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
+	let tlsInfo = null;
 
-	channel.addOrderer(
-		client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
-
-	return testUtil.getSubmitter(client, t, userOrg)
-	.then((admin) => {
+	return e2eUtils.tlsEnroll(userOrg)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return testUtil.getSubmitter(client, t, userOrg);
+	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
+
+		channel.addOrderer(
+			client.newOrderer(
+				ORGS.orderer.url,
+				{
+					'pem': caroots,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
+					'ssl-target-name-override': ORGS.orderer['server-hostname']
+				}
+			)
+		);
 
 		for (let key in peers) {
 			let peer = client.newPeer(
 				peers[key].requests,
 				{
 					pem: peers[key].pem,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
 					'ssl-target-name-override': peers[key]['server-hostname'],
 				});
 			channel.addPeer(peer);
@@ -170,6 +180,8 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 			ORGS[userOrg].peer1.events,
 			{
 				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
 				'grpc.http2.keepalive_time' : 15
 			}

@@ -18,7 +18,7 @@ var tape = require('tape');
 var _test = require('tape-promise');
 var test = _test(tape);
 
-var hfc = require('fabric-client');
+var Client = require('fabric-client');
 var sdkUtil = require('fabric-client/lib/utils.js');
 var util = require('util');
 var fs = require('fs');
@@ -191,6 +191,14 @@ test('Orderer test', function(t) {
 		'checking the orderer setName() and close()'
 	);
 	t.equals('name', orderer.getName(), 'checking getName on orderer');
+
+	t.end();
+});
+
+test('Orderer clientCert test', function(t) {
+	var orderer = new Orderer('grpc://127.0.0.1:5005', {clientCert: 'TEST_CERT_PEM'});
+
+	t.equals(orderer.clientCert, 'TEST_CERT_PEM', 'checking client certificate on orderer');
 
 	t.end();
 });

@@ -63,37 +63,6 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	var orderer = client.newOrderer(
-		ORGS.orderer.url,
-		{
-			'pem': caroots,
-			'ssl-target-name-override': ORGS.orderer['server-hostname']
-		}
-	);
-
-	var orderer_bad = client.newOrderer(
-		ORGS.orderer.url,
-		{
-			'pem': caroots,
-			'ssl-target-name-override': ORGS.orderer['server-hostname'],
-			'grpc.max_send_message_length': 6800
-		}
-	);
-
-	// set something to fail to test that the code picks up values from the config
-	let keep = Client.getConfigSetting('grpc.max_send_message_length');
-	Client.setConfigSetting('grpc.max_send_message_length', 6800);
-	var orderer_bad2 = client.newOrderer(
-		ORGS.orderer.url,
-		{
-			'pem': caroots,
-			'ssl-target-name-override': ORGS.orderer['server-hostname'],
-			'grpc.max_send_message_length': 6800
-		}
-	);
-	// put back the setting
-	Client.setConfigSetting('grpc.max_send_message_length',keep);
-
 	var TWO_ORG_MEMBERS_AND_ADMIN = [{
 		role: {
 			name: 'member',
@@ -127,14 +96,21 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 
 	var config = null;
 	var signatures = [];
+	var orderer = null;
+	var orderer_bad = null;
+	var orderer_bad2 = null;
+	var tlsInfo = null;
 
 	// Acting as a client in org1 when creating the channel
 	var org = ORGS.org1.name;
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 
-	return Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(org)
+	return e2eUtils.tlsEnroll('org1')
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
 	}).then((store) => {
 		client.setStateStore(store);
 		var cryptoSuite = Client.newCryptoSuite();
@@ -143,7 +119,44 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) =>{
-		t.pass('Successfully enrolled user \'admin\' for orderer');
+		t.pass('Successfully enrolled user \'admin\' for orderer (create_channel 1)');
+
+		orderer = client.newOrderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		);
+
+		orderer_bad = client.newOrderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': ORGS.orderer['server-hostname'],
+				'grpc.max_send_message_length': 6800
+			}
+		);
+
+		// set something to fail to test that the code picks up values from the config
+		let keep = Client.getConfigSetting('grpc.max_send_message_length');
+		Client.setConfigSetting('grpc.max_send_message_length', 6800);
+		orderer_bad2 = client.newOrderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': ORGS.orderer['server-hostname'],
+				'grpc.max_send_message_length': 6800
+			}
+		);
+		// put back the setting
+		Client.setConfigSetting('grpc.max_send_message_length',keep);
 
 		// use the config update created by the configtx tool
 		let envelope_bytes = fs.readFileSync(path.join(__dirname, '../../fixtures/channel/mychannel.tx'));
@@ -189,7 +202,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		client._userContext = null;
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\' for orderer');
+		t.pass('Successfully enrolled user \'admin\' for orderer (create_channel 2)');
 		the_user = admin;
 
 		// sign the config

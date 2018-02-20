@@ -24,6 +24,7 @@ var _test = require('tape-promise');
 var test = _test(tape);
 
 var util = require('util');
+var e2eUtils = require('./e2e/e2eUtils.js');
 var fs = require('fs');
 var path = require('path');
 
@@ -113,21 +114,28 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
+	let tlsInfo = null;
 
-	channel.addOrderer(
-		new Orderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
-
-	testUtil.getSubmitter(client, t, org)
-	.then(
+	e2eUtils.tlsEnroll(org)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return testUtil.getSubmitter(client, t, org);
+	}).then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
+
+			channel.addOrderer(
+				new Orderer(
+					ORGS.orderer.url,
+					{
+						'pem': caroots,
+						'clientCert': tlsInfo.certificate,
+						'clientKey': tlsInfo.key,
+						'ssl-target-name-override': ORGS.orderer['server-hostname']
+					}
+				)
+			);
 
 			// send to orderer
 			return channel.sendTransaction(null);
@@ -188,21 +196,28 @@ test('\n\n** TEST ** orderer via member bad request', function(t) {
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
+	let tlsInfo = null;
 
-	channel.addOrderer(
-		new Orderer(
-			'grpcs://localhost:5199',
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
-
-	testUtil.getSubmitter(client, t, org)
-	.then(
+	e2eUtils.tlsEnroll(org)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return testUtil.getSubmitter(client, t, org);
+	}).then(
 		function(admin) {
 			t.pass('Successfully enrolled user \'admin\'');
+
+			channel.addOrderer(
+				new Orderer(
+					'grpcs://localhost:5199',
+					{
+						'pem': caroots,
+						'clientCert': tlsInfo.certificate,
+						'clientKey': tlsInfo.key,
+						'ssl-target-name-override': ORGS.orderer['server-hostname']
+					}
+				)
+			);
 
 			// send to orderer
 			var request = {

@@ -144,6 +144,11 @@ var NetworkConfig_1_0 = class {
 					result.mspid = this._network_config.organizations[result.organization].mspid;
 				}
 			}
+			if(client_config.tlsClient) {
+				if(client_config.tlsClient.clientCert && client_config.tlsClient.clientKey) {
+
+				}
+			}
 		}
 
 		return result;
@@ -176,6 +181,7 @@ var NetworkConfig_1_0 = class {
 				opts.pem = getTLSCACert(peer_config);
 				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, ENDORSER);
+				this._client_context.addTlsClientCertAndKey(opts);
 				peer = new Peer(peer_config[URL], opts);
 				peer.setName(name);
 				if(channel_org) {
@@ -251,6 +257,7 @@ var NetworkConfig_1_0 = class {
 				opts.pem = getTLSCACert(orderer_config);
 				Object.assign(opts, orderer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, ORDERER);
+				this._client_context.addTlsClientCertAndKey(opts);
 				orderer = new Orderer(orderer_config[URL], opts);
 				orderer.setName(name);
 			}

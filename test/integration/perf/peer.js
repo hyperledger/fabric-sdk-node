@@ -15,6 +15,7 @@ var util = require('util');
 var fs = require('fs');
 var path = require('path');
 var grpc = require('grpc');
+var e2eUtils = require('../e2e/e2eUtils.js');
 
 var Client = require('fabric-client');
 
@@ -34,6 +35,11 @@ var proposals = [];
 var DESC = '\n\n** gRPC peer client low-level API performance **';
 
 test(DESC, function(t) {
+	perfTest3(t);
+	t.end();
+});
+
+async function perfTest3(t) {
 	testUtil.resetDefaults();
 	Client.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
 	Client.addConfigFile(path.join(__dirname, '../e2e', 'config.json'));
@@ -48,10 +54,14 @@ test(DESC, function(t) {
 	let data = fs.readFileSync(path.join(__dirname, '../e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
+	let tlsInfo = await e2eUtils.tlsEnroll(org);
+
 	let peer = client.newPeer(
 		ORGS[org].peer1.requests,
 		{
 			'pem': caroots,
+			'clientCert': tlsInfo.certificate,
+			'clientKey': tlsInfo.key,
 			'ssl-target-name-override': ORGS[org].peer1['server-hostname'],
 			'request-timeout': 120000
 		}
@@ -135,7 +145,7 @@ test(DESC, function(t) {
 		t.fail('Failed request. ' + err);
 		t.end();
 	});
-});
+}
 
 function makeProposal(signer, client) {
 	let tx_id = client.newTransactionID();

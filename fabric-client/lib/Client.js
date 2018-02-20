@@ -102,7 +102,9 @@ var Client = class extends BaseClient {
 		// This will get set during the setUserFromConfig
 		this._adminSigningIdentity = null;
 
-		this._certificate_authority = null;
+		// When using a network configuration (connection profile) the client
+		// side mutual tls cert and key must be stored here
+		this._tls_mutual = {};
 	}
 
 	/**
@@ -136,11 +138,38 @@ var Client = class extends BaseClient {
 		}
 		if(this._network_config.hasClient()) {
 			this._setAdminFromConfig();
-			// reset the CA incase the org changed
-			this._certificate_authority = null;
 		}
 
 	}
+
+	/**
+	 * Sets the mutual TLS client side certificate and key necessary to build
+	 * network endpoints when working with a network configuration (connection profile).
+	 * This must be called before a peer, orderer, or channel eventhub is needed.
+	 *
+	 * @param {string} clientCert - The pem encoded client certificate.
+	 * @param {byte[]} clientKey - The client key.
+	 */
+	setTlsClientCertAndKey(clientCert, clientKey) {
+		logger.debug('setTlsClientCertAndKey - start');
+		this._tls_mutual.clientCert = clientCert;
+		this._tls_mutual.clientKey = clientKey;
+	}
+
+	/**
+	 * Utility method to add the mutual tls client material to a set of options
+	 * @param {object} opts - The options object holding the connection settings
+	 *        that will be updated with the mutual TLS clientCert and clientKey.
+	 */
+	 addTlsClientCertAndKey(opts) {
+		 if(this._tls_mutual.clientCert) {
+			 opts.clientCert = this._tls_mutual.clientCert;
+		 }
+		 if(this._tls_mutual.clientKey) {
+			 opts.clientKey = this._tls_mutual.clientKey;
+		 }
+	 }
+
 
 	/**
 	 * Determine if the fabric backend is started in
@@ -371,55 +400,70 @@ var Client = class extends BaseClient {
 	 * A crypto suite must be assigned to this client instance. Running the
 	 * 'initCredentialStores' method will build the stores and create a crypto
 	 * suite as defined in the network configuration.
+	 *
+	 * @param {string} name - Optional - the name of the Certificate Authority
+	 *        defined in the loaded connection profile.
+	 * @returns {CertificateAuthority}
 	 */
-	 getCertificateAuthority() {
-		 if(this._certificate_authority) {
-			 return this._certificate_authority;
-		 }
+	 getCertificateAuthority(name) {
 		 if(!this._network_config) {
 			 throw new Error('No network configuration has been loaded');
 		 }
 		 if(!this._cryptoSuite) {
 			 throw new Error('A crypto suite has not been assigned to this client');
 		 }
-		 let ca_url, tls_options, ca_name = null;
-		 let client_config = this._network_config.getClientConfig();
-		 if(client_config && client_config.organization) {
-			 let organization_config = this._network_config.getOrganization(client_config.organization);
-			 if(organization_config) {
-				 let cas = organization_config.getCertificateAuthorities();
-				 if(cas.length > 0) {
-					 let ca = cas[0];
-					 let tlsCACerts = ca.getTlsCACerts();
-					 if(tlsCACerts) {
-						 tlsCACerts = [tlsCACerts];
-					 } else {
-						 tlsCACerts = [];
-					 }
-					 let connection_options = ca.getConnectionOptions();
-					 let verify = true; //default if not found
-					 if(connection_options && typeof connection_options.verify === 'boolean') {
-						 verify = connection_options.verify;
-					 }
-					 tls_options = {
-						 trustedRoots: tlsCACerts,
-						 verify: verify
-					 };
-					 ca_url = ca.getUrl();
-					 ca_name = ca.getCaName();
-				 }
-			 }
+		 let ca_info = null;
+		 let ca_service = null;
+
+		 if(name) {
+			 ca_info = this._network_config.getCertificateAuthority(name);
+		 } else {
+			 let client_config = this._network_config.getClientConfig();
+			 if(client_config && client_config.organization) {
+			 	let organization_config = this._network_config.getOrganization(client_config.organization);
+			 	if(organization_config) {
+				 	let ca_infos = organization_config.getCertificateAuthorities();
+				 	if(ca_infos.length > 0) {
+					 	ca_info = ca_infos[0];
+				 	}
+			 	}
+			}
 		 }
 
-		 if(!ca_url) {
+		 if(ca_info) {
+			 ca_service = this._buildCAfromConfig(ca_info);
+		 } else {
 			 throw new Error('Network configuration is missing this client\'s organization and certificate authority');
 		 }
+
+		 return ca_service;
+	 }
+
+	 /*
+	  * utility method to build a ca from a connection profile ca settings
+	  */
+	 _buildCAfromConfig(ca_info) {
+		 let tlsCACerts = ca_info.getTlsCACerts();
+		 if(tlsCACerts) {
+			 tlsCACerts = [tlsCACerts];
+		 } else {
+			 tlsCACerts = [];
+		 }
+		 let connection_options = ca_info.getConnectionOptions();
+		 let verify = true; //default if not found
+		 if(connection_options && typeof connection_options.verify === 'boolean') {
+			 verify = connection_options.verify;
+		 }
+		 let tls_options = {
+			 trustedRoots: tlsCACerts,
+			 verify: verify
+		 };
+		 let ca_url = ca_info.getUrl();
+		 let ca_name = ca_info.getCaName();
 
 		 let ca_service_class = Client.getConfigSetting('certificate-authority-client');
 		 let ca_service_impl = require(ca_service_class);
 		 let ca_service = new ca_service_impl( {url : ca_url, tlsOptions : tls_options, caName : ca_name, cryptoSuite : this._cryptoSuite});
-		 this._certificate_authority = ca_service;
-
 		 return ca_service;
 	 }
 

@@ -114,42 +114,52 @@ function instantiateChaincodeForError(request, error_snip, t) {
 	logger.debug(' channel_name %s', channel_name);
 	var channel = client.newChannel(channel_name);
 	var orgName = ORGS[userOrg].name;
-	channel.addOrderer(
-		client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
+	var tlsInfo = null;
 
-	var targets = [];
-	for (let org in ORGS) {
-		if (ORGS[org].hasOwnProperty('peer1')) {
-			let key = 'peer1';
-			let data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key]['tls_cacerts']));
-			logger.debug(' create new peer %s', ORGS[org][key].requests);
-			let peer = client.newPeer(
-				ORGS[org][key].requests,
-				{
-					pem: Buffer.from(data).toString(),
-					'ssl-target-name-override': ORGS[org][key]['server-hostname']
-				}
-			);
-			targets.push(peer);
-			channel.addPeer(peer);
-		}
-	}
-
-	Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
+	e2eUtils.tlsEnroll(userOrg)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then((store) => {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, true /* use peer org admin */, userOrg);
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
+
+		channel.addOrderer(
+			client.newOrderer(
+				ORGS.orderer.url,
+				{
+					'pem': caroots,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
+					'ssl-target-name-override': ORGS.orderer['server-hostname']
+				}
+			)
+		);
+
+		var targets = [];
+		for (let org in ORGS) {
+			if (ORGS[org].hasOwnProperty('peer1')) {
+				let key = 'peer1';
+				let data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key]['tls_cacerts']));
+				logger.debug(' create new peer %s', ORGS[org][key].requests);
+				let peer = client.newPeer(
+					ORGS[org][key].requests,
+					{
+						pem: Buffer.from(data).toString(),
+						'clientCert': tlsInfo.certificate,
+						'clientKey': tlsInfo.key,
+						'ssl-target-name-override': ORGS[org][key]['server-hostname']
+					}
+				);
+				targets.push(peer);
+				channel.addPeer(peer);
+			}
+		}
+
 		return channel.initialize();
 	}, (err) => {
 		t.fail('Failed to enroll user \'admin\'. ' + err);

@@ -136,7 +136,7 @@ module.exports.signProposal = function (signingIdentity, proposal) {
  * This function will build a common channel header
  */
 module.exports.buildChannelHeader = function (
-	type, channel_id, tx_id, epoch, chaincode_id, time_stamp) {
+	type, channel_id, tx_id, epoch, chaincode_id, time_stamp, client_cert_hash) {
 	logger.debug(
 		'buildChannelHeader - type %s channel_id %s tx_id %d epoch % chaincode_id %s',
 		type, channel_id, tx_id, epoch, chaincode_id);
@@ -146,7 +146,6 @@ module.exports.buildChannelHeader = function (
 	if (!time_stamp) {
 		time_stamp = module.exports.buildCurrentTimestamp();
 	}
-	channelHeader.setTimestamp(time_stamp); // google.protobuf.Timestamp
 	channelHeader.setChannelId(channel_id); //string
 	channelHeader.setTxId(tx_id.toString()); //string
 	if (epoch) {
@@ -160,6 +159,12 @@ module.exports.buildChannelHeader = function (
 		headerExt.setChaincodeId(chaincodeID);
 
 		channelHeader.setExtension(headerExt.toBuffer());
+	}
+	if(time_stamp) {
+		channelHeader.setTimestamp(time_stamp); // google.protobuf.Timestamp
+	}
+	if(client_cert_hash) {
+		channelHeader.setTlsCertHash(client_cert_hash);
 	}
 	return channelHeader;
 };

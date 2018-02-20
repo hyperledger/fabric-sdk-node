@@ -158,6 +158,8 @@ var FabricCAServices = class extends BaseClient {
 	 * @typedef {Object} EnrollmentRequest
 	 * @property {string} enrollmentID - The registered ID to use for enrollment
 	 * @property {string} enrollmentSecret - The secret associated with the enrollment ID
+	 * @property {string} profile - The profile name.  Specify the 'tls' profile for a TLS certificate;
+	 *                   otherwise, an enrollment certificate is issued.
 	 * @property {AttributeRequest[]} attr_reqs - An array of {@link AttributeRequest}
 	 */
 
@@ -212,7 +214,7 @@ var FabricCAServices = class extends BaseClient {
 					//generate CSR using enrollmentID for the subject
 					try {
 						var csr = privateKey.generateCSR('CN=' + req.enrollmentID);
-						self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.attr_reqs)
+						self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.profile, req.attr_reqs)
 							.then(
 							function (enrollResponse) {
 								return resolve({
@@ -799,12 +801,13 @@ var FabricCAClient = class {
 	 * @param {string} enrollmentID The registered ID to use for enrollment
 	 * @param {string} enrollmentSecret The secret associated with the enrollment ID
 	 * @param {string} csr PEM-encoded PKCS#10 certificate signing request
+	 * @param {string} profile The profile name.  Specify the 'tls' profile for a TLS certificate; otherwise, an enrollment certificate is issued.
 	 * @param {AttributeRequest[]} attr_reqs An array of {@link AttributeRequest}
 	 * @returns {Promise} {@link EnrollmentResponse}
 	 * @throws Will throw an error if all parameters are not provided
 	 * @throws Will throw an error if calling the enroll API fails for any reason
 	 */
-	enroll(enrollmentID, enrollmentSecret, csr, attr_reqs) {
+	enroll(enrollmentID, enrollmentSecret, csr, profile, attr_reqs) {
 
 		var self = this;
 		var numArgs = arguments.length;
@@ -829,6 +832,10 @@ var FabricCAClient = class {
 				caName: self._caName,
 				certificate_request: csr
 			};
+
+			if(profile) {
+				enrollRequest.profile = profile;
+			}
 
 			if(attr_reqs) {
 				enrollRequest.attr_reqs = attr_reqs;

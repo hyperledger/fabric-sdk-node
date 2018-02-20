@@ -30,6 +30,7 @@ var fs = require('fs');
 var Client = require('fabric-client');
 var testUtil = require('../unit/util.js');
 var eputil = require('./eventutil.js');
+var e2eUtils = require('./e2e/e2eUtils.js');
 
 var client = new Client();
 var channel = client.newChannel(testUtil.END2END.channel);
@@ -49,36 +50,9 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
-
-	channel.addOrderer(
-		client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
-
-	var org = 'org1';
-	var orgName = ORGS[org].name;
-	var targets = [];
-	for (let key in ORGS[org]) {
-		if (ORGS[org].hasOwnProperty(key)) {
-			if (key.indexOf('peer') === 0) {
-				let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key]['tls_cacerts']));
-				let peer = client.newPeer(
-					ORGS[org][key].requests,
-					{
-						pem: Buffer.from(data).toString(),
-						'ssl-target-name-override': ORGS[org][key]['server-hostname']
-					});
-				channel.addPeer(peer);
-				targets.push(peer);
-				break; //just add one
-			}
-		}
-	}
+	let org = 'org1';
+	let orgName = ORGS[org].name;
+	let targets = [];
 
 	// must use an array to track the event hub instances so that when this gets
 	// passed into the overriden t.end() closure below it will get properly updated
@@ -88,6 +62,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	var req1 = null;
 	var req2 = null;
 	var tls_data = null;
+	var tlsInfo = null;
 
 	// override t.end function so it'll always disconnect the event hub
 	t.end = ((context, ehs, f) => {
@@ -104,8 +79,11 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		};
 	})(t, eventhubs, t.end);
 
-	Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
+	e2eUtils.tlsEnroll(org)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then((store) => {
 		client.setStateStore(store);
 
@@ -114,6 +92,37 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
+
+		channel.addOrderer(
+			client.newOrderer(
+				ORGS.orderer.url,
+				{
+					'pem': caroots,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
+					'ssl-target-name-override': ORGS.orderer['server-hostname']
+				}
+			)
+		);
+
+		for (let key in ORGS[org]) {
+			if (ORGS[org].hasOwnProperty(key)) {
+				if (key.indexOf('peer') === 0) {
+					let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key]['tls_cacerts']));
+					let peer = client.newPeer(
+						ORGS[org][key].requests,
+						{
+							pem: Buffer.from(data).toString(),
+							'clientCert': tlsInfo.certificate,
+							'clientKey': tlsInfo.key,
+							'ssl-target-name-override': ORGS[org][key]['server-hostname']
+						});
+					channel.addPeer(peer);
+					targets.push(peer);
+					break; //just add one
+				}
+			}
+		}
 
 		// setup event hub to get notified when transactions are committed
 		tls_data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
@@ -125,6 +134,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			'grpcs://localhost:9999',
 			{
 				pem: Buffer.from(tls_data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 			});
 		try {
@@ -155,6 +166,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			'grpcs://localhost:9999',
 			{
 				pem: Buffer.from(tls_data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 			});
 		try {
@@ -182,6 +195,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			ORGS[org].peer1.events,
 			{
 				pem: Buffer.from(tls_data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 			});
 		eh.connect();

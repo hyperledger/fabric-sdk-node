@@ -54,38 +54,14 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	client = new Client();
 	channel = client.newChannel(e2e.channel);
 	var orgName = ORGS[org].name;
-	channel.addOrderer(
-		client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
+	let tlsInfo = null;
 
-	var targets = [];
-	for (let key in ORGS[org]) {
-		if (ORGS[org].hasOwnProperty(key)) {
-			if (key.indexOf('peer1') === 0) {
-				let data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key]['tls_cacerts']));
-				let peer = client.newPeer(
-					ORGS[org][key].requests,
-					{
-						pem: Buffer.from(data).toString(),
-						'ssl-target-name-override': ORGS[org][key]['server-hostname']
-					}
-				);
-				targets.push(peer);
-				channel.addPeer(peer);
-			}
-		}
-	}
-
-	Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
-	})
-	.then((store) => {
+	e2eUtils.tlsEnroll(org)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
+	}).then((store) => {
 		client.setStateStore(store);
 
 		return testUtil.getSubmitter(client, t, true /* use peer org admin */, org);
@@ -93,6 +69,38 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	.then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
 		the_user = admin;
+
+		channel.addOrderer(
+			client.newOrderer(
+				ORGS.orderer.url,
+				{
+					'pem': caroots,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
+					'ssl-target-name-override': ORGS.orderer['server-hostname']
+				}
+			)
+		);
+
+		var targets = [];
+		for (let key in ORGS[org]) {
+			if (ORGS[org].hasOwnProperty(key)) {
+				if (key.indexOf('peer1') === 0) {
+					let data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key]['tls_cacerts']));
+					let peer = client.newPeer(
+						ORGS[org][key].requests,
+						{
+							pem: Buffer.from(data).toString(),
+							'clientCert': tlsInfo.certificate,
+							'clientKey': tlsInfo.key,
+							'ssl-target-name-override': ORGS[org][key]['server-hostname']
+						}
+					);
+					targets.push(peer);
+					channel.addPeer(peer);
+				}
+			}
+		}
 
 		return channel.initialize();
 

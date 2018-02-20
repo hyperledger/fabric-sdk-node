@@ -416,6 +416,10 @@ var EventHub = class {
 
 		event.setCreator(user.getIdentity().serialize());
 		event.setTimestamp(clientUtils.buildCurrentTimestamp());
+		let client_cert_hash = this._ep.getClientCertHash();
+		if(client_cert_hash) {
+			event.setTlsCertHash(client_cert_hash);
+		}
 		signedEvent.setEventBytes(event.toBuffer());
 		var sig = user.getSigningIdentity().sign(event.toBuffer());
 		signedEvent.setSignature(Buffer.from(sig));

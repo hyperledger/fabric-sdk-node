@@ -446,7 +446,10 @@ var Channel = class {
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			this._name,
 			tx_id.getTransactionID(),
-			this._initial_epoch
+			this._initial_epoch,
+			null,
+			clientUtils.buildCurrentTimestamp(),
+			orderer.getClientCertHash()
 		);
 
 		var seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, tx_id.getNonce());
@@ -561,7 +564,9 @@ var Channel = class {
 			'',
 			request.txId.getTransactionID(),
 			null, //no epoch
-			Constants.CSCC
+			Constants.CSCC,
+			clientUtils.buildCurrentTimestamp(),
+			targets[0].getClientCertHash()
 		);
 
 		var header = clientUtils.buildHeader(signer, channelHeader, request.txId.getNonce());
@@ -618,7 +623,10 @@ var Channel = class {
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			self._name,
 			txId.getTransactionID(),
-			self._initial_epoch
+			self._initial_epoch,
+			null,
+			clientUtils.buildCurrentTimestamp(),
+			orderer.getClientCertHash()
 		);
 
 		var seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, txId.getNonce());
@@ -682,7 +690,10 @@ var Channel = class {
 						_commonProto.HeaderType.DELIVER_SEEK_INFO,
 						self._name,
 						txId.getTransactionID(),
-						self._initial_epoch
+						self._initial_epoch,
+						null,
+						clientUtils.buildCurrentTimestamp(),
+						orderer.getClientCertHash()
 					);
 
 					var seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, txId.getNonce());
@@ -1282,7 +1293,9 @@ var Channel = class {
 			this._name,
 			request.txId.getTransactionID(),
 			null,
-			Constants.LSCC
+			Constants.LSCC,
+			clientUtils.buildCurrentTimestamp(),
+			peers[0].getClientCertHash()
 		);
 		const header = clientUtils.buildHeader(signer, channelHeader, request.txId.getNonce());
 		const proposal = clientUtils.buildProposal(lcccSpec, header, request.transientMap);
@@ -1397,7 +1410,9 @@ var Channel = class {
 			channelId,
 			request.txId.getTransactionID(),
 			null,
-			request.chaincodeId
+			request.chaincodeId,
+			clientUtils.buildCurrentTimestamp(),
+			request.targets[0].getClientCertHash()
 		);
 		header = clientUtils.buildHeader(signer, channelHeader, request.txId.getNonce());
 		proposal = clientUtils.buildProposal(invokeSpec, header, request.transientMap);

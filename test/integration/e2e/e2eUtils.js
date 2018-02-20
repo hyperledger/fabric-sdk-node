@@ -17,7 +17,9 @@
 // This is an end-to-end test that focuses on exercising all parts of the fabric APIs
 // in a happy-path scenario
 'use strict';
+var FabricCAServices = require('../../../fabric-ca-client');
 var utils = require('fabric-client/lib/utils.js');
+var KEYUTIL = require('jsrsasign').KEYUTIL;
 var logger = utils.getLogger('E2E testing');
 
 var tape = require('tape');
@@ -30,6 +32,7 @@ var util = require('util');
 
 var Client = require('fabric-client');
 var testUtil = require('../../unit/util.js');
+var e2eUtils = require('./e2eUtils.js');
 
 var e2e = testUtil.END2END;
 var e2e_node = testUtil.NODE_END2END;
@@ -66,49 +69,57 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 	let caroots = Buffer.from(data).toString();
 	// make sure the cert is OK
 	caroots = Client.normalizeX509(caroots);
+	let tlsInfo = null;
 
-	channel.addOrderer(
-		client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
-
-	var targets = [];
-	for (let key in ORGS[org]) {
-		if (ORGS[org].hasOwnProperty(key)) {
-			if (key.indexOf('peer') === 0) {
-				let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
-				let peer = client.newPeer(
-					ORGS[org][key].requests,
-					{
-						pem: Buffer.from(data).toString(),
-						'ssl-target-name-override': ORGS[org][key]['server-hostname']
-					}
-				);
-
-				targets.push(peer);    // a peer can be the target this way
-				channel.addPeer(peer); // or a peer can be the target this way
-				                       // you do not have to do both, just one, when there are
-				                       // 'targets' in the request, those will be used and not
-				                       // the peers added to the channel
-			}
-		}
-	}
-
-	return Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
+	return e2eUtils.tlsEnroll(org)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then((store) => {
 		client.setStateStore(store);
 
 		// get the peer org's admin required to send install chaincode requests
 		return testUtil.getSubmitter(client, t, get_admin /* get peer org admin */, org);
 	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\'');
+		t.pass('Successfully enrolled user \'admin\' (e2eUtil 1)');
 		the_user = admin;
+
+		channel.addOrderer(
+			client.newOrderer(
+				ORGS.orderer.url,
+				{
+					'pem': caroots,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
+					'ssl-target-name-override': ORGS.orderer['server-hostname']
+				}
+			)
+		);
+
+		var targets = [];
+		for (let key in ORGS[org]) {
+			if (ORGS[org].hasOwnProperty(key)) {
+				if (key.indexOf('peer') === 0) {
+					let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+					let peer = client.newPeer(
+						ORGS[org][key].requests,
+						{
+							pem: Buffer.from(data).toString(),
+							'clientCert': tlsInfo.certificate,
+							'clientKey': tlsInfo.key,
+							'ssl-target-name-override': ORGS[org][key]['server-hostname']
+						}
+					);
+
+					targets.push(peer);    // a peer can be the target this way
+					channel.addPeer(peer); // or a peer can be the target this way
+				                       	// you do not have to do both, just one, when there are
+				                       	// 'targets' in the request, those will be used and not
+				                       	// the peers added to the channel
+				}
+			}
+		}
 
 		let cc_id;
 		if(language && language==='node'){
@@ -200,22 +211,16 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	channel.addOrderer(
-		client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
-
 	targets = [];
 	var badTransientMap = { 'test1': 'transientValue' }; // have a different key than what the chaincode example_cc1.go expects in Init()
 	var transientMap = { 'test': 'transientValue' };
+	let tlsInfo = null;
 
-	return Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
+	return e2eUtils.tlsEnroll(userOrg)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then((store) => {
 
 		client.setStateStore(store);
@@ -223,8 +228,20 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 
 	}).then((admin) => {
 
-		t.pass('Successfully enrolled user \'admin\'');
+		t.pass('Successfully enrolled user \'admin\' (e2eUtil 2)');
 		the_user = admin;
+
+		channel.addOrderer(
+			client.newOrderer(
+				ORGS.orderer.url,
+				{
+					'pem': caroots,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
+					'ssl-target-name-override': ORGS.orderer['server-hostname']
+				}
+			)
+		);
 
 		for(let org in ORGS) {
 			if (ORGS[org].hasOwnProperty('peer1')) {
@@ -235,6 +252,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 					ORGS[org][key].requests,
 					{
 						pem: Buffer.from(data).toString(),
+						'clientCert': tlsInfo.certificate,
+						'clientKey': tlsInfo.key,
 						'ssl-target-name-override': ORGS[org][key]['server-hostname']
 					}
 				);
@@ -252,6 +271,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 			ORGS[userOrg]['peer1'].events,
 			{
 				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[userOrg]['peer1']['server-hostname']
 			}
 		);
@@ -527,16 +548,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
-
-	channel.addOrderer(
-		client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		)
-	);
+	let tlsInfo = null;
 
 	orgName = ORGS[userOrg].name;
 
@@ -547,15 +559,34 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 	} else {
 		promise = Promise.resolve(useStore);
 	}
-	return promise.then((store) => {
+
+
+	return e2eUtils.tlsEnroll(userOrg)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return promise;
+	}).then((store) => {
 		if (store) {
 			client.setStateStore(store);
 		}
 		return testUtil.getSubmitter(client, t, userOrg);
 	}).then((admin) => {
 
-		t.pass('Successfully enrolled user \'admin\'');
+		t.pass('Successfully enrolled user \'admin\' (e2eUtil 3)');
 		the_user = admin;
+
+		channel.addOrderer(
+			client.newOrderer(
+				ORGS.orderer.url,
+				{
+					'pem': caroots,
+					'clientCert': tlsInfo.certificate,
+					'clientKey': tlsInfo.key,
+					'ssl-target-name-override': ORGS.orderer['server-hostname']
+				}
+			)
+		);
 
 		// set up the channel to use each org's 'peer1' for
 		// both requests and events
@@ -566,6 +597,8 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 					ORGS[key].peer1.requests,
 					{
 						pem: Buffer.from(data).toString(),
+						'clientCert': tlsInfo.certificate,
+						'clientKey': tlsInfo.key,
 						'ssl-target-name-override': ORGS[key].peer1['server-hostname']
 					}
 				);
@@ -580,6 +613,8 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 			ORGS[userOrg].peer1.events,
 			{
 				pem: Buffer.from(data).toString(),
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
 				'grpc.keepalive_timeout_ms' : 3000, // time to respond to the ping, 3 seconds
 				'grpc.keepalive_time_ms' : 360000, // time to wait for ping response, 6 minutes
@@ -777,25 +812,13 @@ function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
 	var cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
+	let tlsInfo = null;
 
-	var targets = [];
-	// set up the channel to use each org's 'peer1' for
-	// both requests and events
-	for (let key in ORGS) {
-		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-			let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
-			let peer = client.newPeer(
-				ORGS[key].peer1.requests,
-				{
-					pem: Buffer.from(data).toString(),
-					'ssl-target-name-override': ORGS[key].peer1['server-hostname']
-				});
-			channel.addPeer(peer);
-		}
-	}
-
-	return Client.newDefaultKeyValueStore({
-		path: testUtil.storePathForOrg(orgName)
+	return e2eUtils.tlsEnroll(org)
+	.then((enrollment) => {
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then((store) => {
 
 		client.setStateStore(store);
@@ -803,6 +826,26 @@ function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
 
 	}).then((admin) => {
 		the_user = admin;
+
+		t.pass('Successfully enrolled user \'admin\' (e2eUtil 4)');
+
+		var targets = [];
+		// set up the channel to use each org's 'peer1' for
+		// both requests and events
+		for (let key in ORGS) {
+			if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
+				let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+				let peer = client.newPeer(
+					ORGS[key].peer1.requests,
+					{
+						pem: Buffer.from(data).toString(),
+						'clientCert': tlsInfo.certificate,
+						'clientKey': tlsInfo.key,
+						'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+					});
+				channel.addPeer(peer);
+			}
+		}
 
 		// send query
 		var request = {
@@ -876,3 +919,34 @@ function readAllFiles(dir) {
 	return certs;
 }
 module.exports.readAllFiles = readAllFiles;
+
+function tlsEnroll(orgName) {
+	return new Promise(function (resolve, reject) {
+		FabricCAServices.addConfigFile(path.join(__dirname, 'config.json'));
+		let orgs = FabricCAServices.getConfigSetting('test-network');
+		if (!orgs[orgName]) {
+			throw new Error('Invalid org name: ' + orgName);
+		}
+		let fabricCAEndpoint = orgs[orgName].ca.url;
+		let tlsOptions = {
+			trustedRoots: [],
+			verify: false
+		};
+		let caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, orgs[orgName].ca.name);
+		let req = {
+			enrollmentID: 'admin',
+			enrollmentSecret: 'adminpw',
+			profile: 'tls'
+		};
+		caService.enroll(req).then(
+			function(enrollment) {
+				enrollment.key = enrollment.key.toBytes();
+				return resolve(enrollment);
+			},
+			function(err) {
+				return reject(err);
+			}
+		);
+	});
+}
+module.exports.tlsEnroll = tlsEnroll;

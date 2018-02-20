@@ -51,9 +51,11 @@ services:
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
       - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/msp/orderer
       - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_CLIENTAUTHREQUIRED=true
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/msp/orderer/keystore/e8a4fdaacf1ef1d925686f19f56eb558b6c71f0116d85916299fc1368de2d58a_sk
       - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/msp/orderer/signcerts/orderer.example.com-cert.pem
       - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/msp/orderer/cacerts/example.com-cert.pem, /etc/hyperledger/msp/peerOrg1/cacerts/org1.example.com-cert.pem, /etc/hyperledger/msp/peerOrg2/cacerts/org2.example.com-cert.pem]
+      - ORDERER_GENERAL_TLS_CLIENTROOTCAS=[/etc/hyperledger/msp/orderer/cacerts/example.com-cert.pem, /etc/hyperledger/msp/peerOrg1/cacerts/org1.example.com-cert.pem, /etc/hyperledger/msp/peerOrg2/cacerts/org2.example.com-cert.pem]
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
     command: orderer
     ports:
@@ -77,9 +79,11 @@ services:
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
       - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
       - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/keystore/ecd9f80eb183352d5d4176eeb692e30bbfba4c38813ff9a0b6b799b546dda1d8_sk
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/signcerts/peer0.org1.example.com-cert.pem
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/tls/key.pem
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/tls/cert.pem
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
+      - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
       # # https://docs.docker.com/compose/networking/
@@ -106,9 +110,11 @@ services:
       - CORE_PEER_ADDRESS=peer0.org2.example.com:7051
       #- CORE_LOGGING_LEVEL=debug
       - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/keystore/81c71fd393054571c8d789f302a10390e0e83eb079b02a26a162ee26f02ff796_sk
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/signcerts/peer0.org2.example.com-cert.pem
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/tls/key.pem
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/tls/cert.pem
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org2.example.com-cert.pem
+      - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/cacerts/org2.example.com-cert.pem
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
       # # https://docs.docker.com/compose/networking/

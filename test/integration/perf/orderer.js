@@ -17,6 +17,7 @@ var grpc = require('grpc');
 var Client = require('fabric-client');
 
 var testUtil = require('../../unit/util.js');
+var e2eUtils = require('../e2e/e2eUtils.js');
 var keyValStorePath = testUtil.KVS;
 var ORGS;
 
@@ -34,6 +35,11 @@ var DESC = 	'\n\n************************************************' +
 			'\n\n** gRPC orderer client low-level API performance **';
 
 test(DESC, function(t) {
+	perfTest1(t);
+	t.end();
+});
+
+async function perfTest1(t) {
 	testUtil.resetDefaults();
 	Client.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
 	Client.addConfigFile(path.join(__dirname, '../e2e', 'config.json'));
@@ -48,10 +54,14 @@ test(DESC, function(t) {
 	let data = fs.readFileSync(path.join(__dirname, '../e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
+	let tlsInfo = await e2eUtils.tlsEnroll(org);
+
 	let orderer = client.newOrderer(
 		ORGS.orderer.url,
 		{
 			'pem': caroots,
+			'clientCert': tlsInfo.certificate,
+			'clientKey': tlsInfo.key,
 			'ssl-target-name-override': ORGS.orderer['server-hostname'],
 			'request-timeout': 120000
 		}
@@ -162,17 +172,26 @@ test(DESC, function(t) {
 		t.fail('Failed request. ' + err);
 		t.end();
 	});
-});
+}
 
 test('\n\n** Orderer.js class sendBroadcast() API performance **', function(t) {
+	perfTest2(t);
+	t.end();
+});
+
+async function perfTest2(t) {
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, '../e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
+
+	let tlsInfo = await e2eUtils.tlsEnroll(org);
 
 	let orderer = client.newOrderer(
 		ORGS.orderer.url,
 		{
 			'pem': caroots,
+			'clientCert': tlsInfo.certificate,
+			'clientKey': tlsInfo.key,
 			'ssl-target-name-override': ORGS.orderer['server-hostname'],
 			'request-timeout': 120000
 		}
@@ -249,7 +268,7 @@ test('\n\n** Orderer.js class sendBroadcast() API performance **', function(t) {
 		t.fail('Failed request. ' + err);
 		t.end();
 	});
-});
+}
 
 function makeTransactionEnvelope(signer) {
 	return makeEnvelope(signer, commonProto.HeaderType.ENDORSER_TRANSACTION);
