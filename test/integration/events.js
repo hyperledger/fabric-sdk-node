@@ -38,7 +38,6 @@ var ORGS;
 var chaincode_id = testUtil.getUniqueVersion('events_unit_test');
 var chaincode_version = testUtil.getUniqueVersion();
 var request = null;
-var the_user = null;
 
 test('Test chaincode instantiate with event, transaction invocation with chaincode event, and query number of chaincode events', (t) => {
 	testUtil.resetDefaults();
@@ -119,8 +118,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		// setup event hub to get notified when transactions are committed
 		tls_data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
 
-		the_user = admin;
-
 		eh = client.newEventHub();
 
 		// first do one that fails
@@ -190,7 +187,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		eh.connect();
 		eventhubs.push(eh);
 
-		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, '', '');
+		request = eputil.createRequest(client, chaincode_id, targets, '', '');
 		request.chaincodePath = 'github.com/events_cc';
 		request.chaincodeVersion = chaincode_version;
 		Client.setConfigSetting('request-timeout', 60000);
@@ -209,7 +206,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		}
 	}).then((success) => {
 		t.pass('Successfully initialized the channel');
-		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'init', []);
+		request = eputil.createRequest(client, chaincode_id, targets, 'init', []);
 		request.chaincodePath = 'github.com/events_cc';
 		request.chaincodeVersion = chaincode_version;
 
@@ -227,7 +224,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		t.pass('Successfully instantiated chaincode.');
 
-		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+		request = eputil.createRequest(client, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
 
 		return channel.sendTransactionProposal(request);
 	}).then((results) => {
@@ -240,7 +237,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		t.pass('Successfully received chaincode event.');
 
-		request = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['query']);
+		request = eputil.createRequest(client, chaincode_id, targets, 'invoke', ['query']);
 
 		return channel.queryByChaincode(request);
 	}).then((response_payloads) => {
@@ -257,8 +254,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		// create 2 invoke requests in quick succession that modify
 		// the same state variable which should cause one invoke to
 		// be invalid
-		req1 = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
-		req2 = eputil.createRequest(client, channel, the_user, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+		req1 = eputil.createRequest(client, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
+		req2 = eputil.createRequest(client, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
 		return Promise.all([channel.sendTransactionProposal(req1),
 			channel.sendTransactionProposal(req2)]);
 	}).then(([results1, results2]) => {
