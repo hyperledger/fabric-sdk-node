@@ -365,7 +365,7 @@ test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
 
 var TWO_ORG_MEMBERS_AND_ADMIN = [{
 	role: {
-		name: 'member',
+		name: 'peer',
 		mspId: 'org1'
 	}
 }, {
@@ -510,7 +510,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 		() => {
 			c._buildEndorsementPolicy({identities: [{role: 'value'}], policy: {}});
 		},
-		/Invalid role name found: must be one of "member" or "admin", but found/,
+		/Invalid role name found: must be one of "peer", "member" or "admin", but found/,
 		'Checking policy spec: value identity type "role" must have valid "name" value'
 	);
 

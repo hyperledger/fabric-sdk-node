@@ -151,19 +151,23 @@ function buildPrincipal(identity) {
 	switch (principalType) {
 	case IDENTITY_TYPE.Role:
 		newPrincipal.setPrincipalClassification(_mspPrProto.MSPPrincipal.Classification.ROLE);
+		let newRole = new _mspPrProto.MSPRole();
 
 		let roleName = identity[principalType].name;
-		if ('member' !== roleName && 'admin' !== roleName) {
-			throw new Error(util.format('Invalid role name found: must be one of "member" or "admin", but found "%s"', roleName));
+		if(roleName === 'peer') {
+			newRole.setRole(_mspPrProto.MSPRole.MSPRoleType.PEER);
+		} else if(roleName === 'member') {
+			newRole.setRole(_mspPrProto.MSPRole.MSPRoleType.MEMBER);
+		} else if (roleName === 'admin') {
+			newRole.setRole(_mspPrProto.MSPRole.MSPRoleType.ADMIN);
+		} else {
+			throw new Error(util.format('Invalid role name found: must be one of "peer", "member" or "admin", but found "%s"', roleName));
 		}
 
 		let mspid = identity[principalType].mspId;
 		if (typeof mspid !== 'string' || mspid === null || mspid === '') {
 			throw new Error(util.format('Invalid mspid found: must be a non-empty string, but found "%s"', mspid));
 		}
-
-		let newRole = new _mspPrProto.MSPRole();
-		newRole.setRole((roleName === 'member') ? _mspPrProto.MSPRole.MSPRoleType.MEMBER : _mspPrProto.MSPRole.MSPRoleType.ADMIN);
 		newRole.setMspIdentifier(identity[principalType].mspId);
 
 		newPrincipal.setPrincipal(newRole.toBuffer());
