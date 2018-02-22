@@ -64,6 +64,9 @@ const START_ONLY    = 1;
 const END_ONLY      = 2;
 const START_AND_END = 3;
 
+const five_minutes_ms = 5*60*1000;
+
+
 /**
  * Transaction processing in fabric v1.1 is a long operation spanning multiple
  * components (application, endorsing peer, orderer, committing peer) and takes
@@ -314,6 +317,7 @@ var ChannelEventHub = class {
 		let request_timeout_ms = utils.getConfigSetting('request-timeout', 3000);
 		let request_timeout = request_timeout_ms / 1000;
 		options = utils.checkAndAddConfigSetting('grpc.keepalive_timeout_ms', request_timeout_ms, options);
+		options = utils.checkAndAddConfigSetting('grpc.http2.min_time_between_pings_ms', five_minutes_ms, options);
 
 		logger.info('_connect - options %j',this._peer._options);
 		this._event_client = new _eventsProto.Deliver(this._peer._endpoint.addr, this._peer._endpoint.creds, this._peer._options);
