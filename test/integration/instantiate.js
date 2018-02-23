@@ -43,7 +43,8 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-exist
 	};
 
 	var error_snip = 'cannot get package for the chaincode to be instantiated (' + e2e.chaincodeId + ':v333333333' + ')';
-	instantiateChaincodeForError(request, error_snip, t);
+	let error_snip2 = 'no such file or directory';
+	instantiateChaincodeForError(request, error_snip, t, error_snip2);
 });
 
 test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-existent Chaincode name', (t) => {
@@ -56,7 +57,8 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-exist
 	};
 
 	var error_snip = 'cannot get package for the chaincode to be instantiated (dummy:' + version + ')';
-	instantiateChaincodeForError(request, error_snip, t);
+	let error_snip2 = 'no such file or directory';
+	instantiateChaincodeForError(request, error_snip, t, error_snip2);
 });
 
 test('\n\n***** End-to-end flow: instantiate chaincode *****\n\n', (t) => {
@@ -96,7 +98,7 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails by instantiati
 	instantiateChaincodeForError(request, error_snip, t);
 });
 
-function instantiateChaincodeForError(request, error_snip, t) {
+function instantiateChaincodeForError(request, error_snip, t, error_snip2) {
 
 	Client.addConfigFile(path.join(__dirname, './e2e/config.json'));
 	var ORGS = Client.getConfigSetting('test-network');
@@ -162,7 +164,7 @@ function instantiateChaincodeForError(request, error_snip, t) {
 		t.fail(util.format('Failed to initialize the channel. %s', err.stack ? err.stack : err));
 		throw new Error('Failed to initialize the channel');
 	}).then((results) => {
-		checkResults(results, error_snip, t);
+		testUtil.checkResults(results, error_snip, t, error_snip2);
 		t.end();
 	}, (err) => {
 		t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
@@ -171,23 +173,4 @@ function instantiateChaincodeForError(request, error_snip, t) {
 		t.fail('Test failed due to unexpected reasons. ' + err);
 		t.end();
 	});
-}
-
-function checkResults(results, error_snip, t) {
-	var proposalResponses = results[0];
-	for(var i in proposalResponses) {
-		let proposal_response = proposalResponses[i];
-		if(proposal_response instanceof Error) {
-			logger.info(' Got the error ==>%s<== when looking for %s', proposal_response,error_snip);
-			if(proposal_response.toString().indexOf(error_snip) > 0) {
-				t.pass(' Successfully got the error '+ error_snip);
-			}
-			else {
-				t.fail(' Failed to get error '+ error_snip);
-			}
-		}
-		else {
-			t.fail(' Failed to get an error returned :: No Error returned , should have had an error with '+ error_snip);
-		}
-	}
 }
