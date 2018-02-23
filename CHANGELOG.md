@@ -1,6 +1,12 @@
+## 1.0.4
+Fri Feb 23 14:00:03 EDT 2018
+* [121e6d9](https://github.com/hyperledger/fabric-sdk-node/commit/121e6d9) [FAB-8351](https://jira.hyperledger.org/browse/FAB-8351) NodeSDK - add parms to PKCS11
+* [148a709](https://github.com/hyperledger/fabric-sdk-node/commit/148a709) [FAB-8415](https://jira.hyperledger.org/browse/FAB-8415) update the TLS certs that have expired
+* [148a709](https://github.com/hyperledger/fabric-sdk-node/commit/148a709) [FAB-8438](https://jira.hyperledger.org/browse/FAB-8438) update the cloudant version causing NPM to not find it
+
 ## 1.0.3
 Mon Feb  5 20:11:04 EDT 2018
- 
+
 * [7ae294e](https://github.com/hyperledger/fabric-sdk-node/commit/7ae294e) [FAB-7689](https://jira.hyperledger.org/browse/FAB-7689) NodeSDK add close method
 * [ab42ddb](https://github.com/hyperledger/fabric-sdk-node/commit/ab42ddb) [FAB-7860](https://jira.hyperledger.org/browse/FAB-7860) Replace console.log with logger.debug
 * [8d80f0a](https://github.com/hyperledger/fabric-sdk-node/commit/8d80f0a) [FAB-7859](https://jira.hyperledger.org/browse/FAB-7859) Client.createUser does not support PKCS11

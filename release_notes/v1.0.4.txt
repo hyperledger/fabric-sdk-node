@@ -1,0 +1,22 @@
+v1.0.4 February 23, 2018
+-------------------------
+
+Release Notes
+-------------
+# Bug fixes
+
+Known Vulnerabilities
+---------------------
+none
+
+Resolved Vulnerabilities
+------------------------
+none
+
+Known Issues & Workarounds
+--------------------------
+none
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/master/CHANGELOG.md#v104
