@@ -319,8 +319,8 @@ var ChannelEventHub = class {
 		options = utils.checkAndAddConfigSetting('grpc.keepalive_timeout_ms', request_timeout_ms, options);
 		options = utils.checkAndAddConfigSetting('grpc.http2.min_time_between_pings_ms', five_minutes_ms, options);
 
-		logger.info('_connect - options %j',this._peer._options);
-		this._event_client = new _eventsProto.Deliver(this._peer._endpoint.addr, this._peer._endpoint.creds, this._peer._options);
+		logger.debug('_connect - options %j', options);
+		this._event_client = new _eventsProto.Deliver(this._peer._endpoint.addr, this._peer._endpoint.creds, options);
 		if(this._filtered_stream) {
 			this._stream = this._event_client.deliverFiltered();
 		} else {

@@ -291,8 +291,8 @@ var EventHub = class {
 		options = utils.checkAndAddConfigSetting('grpc.keepalive_timeout_ms', request_timeout_ms, options); //grpc 1.3.7
 		options = utils.checkAndAddConfigSetting('grpc.http2.min_time_between_pings_ms', five_minutes_ms, options); //default 5
 
-		logger.info('_connect - options %j',this._ep._options);
-		this._event_client = new _events.Events(this._ep._endpoint.addr, this._ep._endpoint.creds, this._ep._options);
+		logger.debug('_connect - options %j', options);
+		this._event_client = new _events.Events(this._ep._endpoint.addr, this._ep._endpoint.creds, options);
 		this._stream = this._event_client.chat();
 
 		this._stream.on('data', function(event) {
