@@ -160,7 +160,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserX"');
 
-			return caService.register({enrollmentID: 'testUserY', enrollmentSecret: 'testUserYSecret', affiliation: 'org2.department1'}, member);
+			return caService.register({enrollmentID: 'testUserY', enrollmentSecret: 'testUserYSecret', affiliation: 'org1.department1'}, member);
 		},(err) => {
 			t.fail('Failed to revoke "testUserX". ' + err.stack ? err.stack : err);
 			t.end();
@@ -223,7 +223,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 		},(err) => {
 			t.pass('Successfully rejected attempt to register a user of invalid role. ' + err);
 
-			return caService.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org2.department1'}, webAdmin);
+			return caService.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org1.department1'}, webAdmin);
 		}).then(() => {
 			t.pass('Successfully registered "auditor" of role "client" from "webAdmin"');
 
