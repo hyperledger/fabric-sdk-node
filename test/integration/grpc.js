@@ -80,8 +80,8 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 			t.fail(util.format('Unexpected error: %s' + err.stack ? err.stack : err));
 		}
 
-		// now dial the send limit up
-		utils.setConfigSetting('grpc-max-send-message-length', 1024 * 1024 * 2);
+		// now dial the send limit up using the other way to configure it
+		utils.setConfigSetting('grpc.max_send_message_length', 1024 * 1024 * 2);
 
 		return e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v2', t, true);
 	}).then(() => {
@@ -134,8 +134,8 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 			t.end();
 		}
 
-		// now dial the send limit up by setting to -1 for unlimited
-		utils.setConfigSetting('grpc-max-receive-message-length', -1);
+		// now dial the send limit up by setting to -1 for unlimited using the other way to configure it
+		utils.setConfigSetting('grpc.max_receive_message_length', -1);
 
 		// must re-construct a new peer instance to pick up the new setting
 		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
