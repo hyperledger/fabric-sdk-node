@@ -166,7 +166,7 @@ function joinChannel(org, t) {
 		var eventPromises = [];
 		eventhubs.forEach((eh) => {
 			let txPromise = new Promise((resolve, reject) => {
-				let handle = setTimeout(reject, 30000);
+				let handle = setTimeout(reject, 40000);
 
 				eh.registerBlockEvent((block) => {
 					clearTimeout(handle);
@@ -196,7 +196,7 @@ function joinChannel(org, t) {
 			block : genesis_block,
 			txId : 	tx_id
 		};
-		let sendPromise = channel.joinChannel(request, 20000); //join channel takes longer then average
+		let sendPromise = channel.joinChannel(request, 40000); //join channel takes longer then average
 		return Promise.all([sendPromise].concat(eventPromises));
 	}, (err) => {
 		t.fail('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
