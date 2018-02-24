@@ -873,14 +873,14 @@ function decodeConfigPolicy(proto_config_policy) {
 		logger.debug('decodeConfigPolicy ======> Policy item ::%s', proto_config_policy.key);
 		switch (proto_config_policy.value.policy.type) {
 		case _policiesProto.Policy.PolicyType.SIGNATURE:
-			config_policy.policy.policy = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.policy);
+			config_policy.policy.value = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.value);
 			break;
 		case _policiesProto.Policy.PolicyType.MSP:
-			var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.policy);
+			var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.value);
 			logger.warn('decodeConfigPolicy - found a PolicyType of MSP. This policy type has not been implemented yet.');
 			break;
 		case _policiesProto.Policy.PolicyType.IMPLICIT_META:
-			config_policy.policy.policy = decodeImplicitMetaPolicy(proto_config_policy.value.policy.policy);
+			config_policy.policy.value = decodeImplicitMetaPolicy(proto_config_policy.value.policy.value);
 			break;
 		default:
 			throw new Error('Unknown Policy type');
@@ -904,7 +904,7 @@ function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 	var signature_policy_envelope = {};
 	var porto_signature_policy_envelope = _policiesProto.SignaturePolicyEnvelope.decode(signature_policy_envelope_bytes);
 	signature_policy_envelope.version = decodeVersion(porto_signature_policy_envelope.getVersion());
-	signature_policy_envelope.policy = decodeSignaturePolicy(porto_signature_policy_envelope.getPolicy());
+	signature_policy_envelope.rule = decodeSignaturePolicy(porto_signature_policy_envelope.getRule());
 	var identities = [];
 	var proto_identities = porto_signature_policy_envelope.getIdentities();
 	if (proto_identities)
@@ -1084,7 +1084,9 @@ function decodeChannelHeader(header_bytes) {
 	var proto_channel_header = _commonProto.ChannelHeader.decode(header_bytes);
 	channel_header.type = HeaderType[proto_channel_header.getType()];
 	channel_header.version = decodeVersion(proto_channel_header.getType());
-	channel_header.timestamp = timeStampToDate(proto_channel_header.getTimestamp()).toString();
+	if(proto_channel_header.getTimestamp()){
+		channel_header.timestamp = timeStampToDate(proto_channel_header.getTimestamp()).toString();
+	}
 	channel_header.channel_id = proto_channel_header.getChannelId();
 	channel_header.tx_id = proto_channel_header.getTxId();
 	channel_header.epoch = proto_channel_header.getEpoch().toInt();
