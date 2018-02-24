@@ -95,6 +95,9 @@ var Remote = class {
 
 		if(!this._options['grpc.max_receive_message_length']) {
 			let grpc_receive_max = utils.getConfigSetting('grpc.max_receive_message_length');
+			if(!grpc_receive_max) {
+				grpc_receive_max = utils.getConfigSetting('grpc-max-receive-message-length');
+			}
 			// if greater than 0, set to that specific limit
 			// if equal to -1, set to that to have no limit
 			// if 0, do not set anything to use the system default
@@ -104,6 +107,9 @@ var Remote = class {
 
 		if(!this._options['grpc.max_send_message_length']) {
 			let grpc_send_max = utils.getConfigSetting('grpc.max_send_message_length');
+			if(!grpc_send_max) {
+				grpc_send_max = utils.getConfigSetting('grpc-max-send-message-length');
+			}
 			// if greater than 0, set to that specific limit
 			// if equal to -1, set to that to have no limit
 			// if 0, do not set anything to use the system default

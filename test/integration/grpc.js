@@ -67,8 +67,10 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 
 	testUtil.setupChaincodeDeploy();
 
+	//force the use of the old v1.0 way
+	utils.setConfigSetting('grpc.max_send_message_length', 0);
 	// limit the send message size to 1M
-	utils.setConfigSetting('grpc.max_send_message_length', 1024 * 1024);
+	utils.setConfigSetting('grpc-max-send-message-length', 1024 * 1024);
 	// now that we have set the config setting, create a new peer so that it will
 	// pick up the settings which are only done when the peer is created.
 	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, 'v2', 'golang', t, true)
@@ -100,6 +102,51 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 	}).then((admin) => {
 
 		submitter = admin;
+		//force the use of the old v1.0 way
+		utils.setConfigSetting('grpc.max_receive_message_length', 0);
+		// limit the send message size to 1M
+		utils.setConfigSetting('grpc-max-receive-message-length', 10);
+		// for this test we only need to send to one of the peers in org1
+		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
+		let peer = client.newPeer(
+			ORGS[userOrg].peer1.requests,
+			{
+				pem: Buffer.from(data).toString(),
+				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
+			}
+		);
+
+		return channel.sendTransactionProposal(buildEchoRequest(client, peer));
+	}).then((response) => {
+		var err = (response[0] && response[0][0] && response[0][0] instanceof Error) ? response[0][0] : {};
+
+		if (err.message && err.message.indexOf('Received message larger than max') >= 0) {
+			t.pass('Successfully received the error message due to large message size set using old v1.0 type setting');
+		} else {
+			t.fail(util.format('Unexpected error: %s' + err.stack ? err.stack : err));
+			t.end();
+			throw new Error('Test Failed');
+		}
+
+		// now dial the send limit up by setting to -1 for unlimited
+		utils.setConfigSetting('grpc.max_receive_message_length', -1);
+
+		// must re-construct a new peer instance to pick up the new setting
+		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
+		let peer = client.newPeer(
+			ORGS[userOrg].peer1.requests,
+			{
+				pem: Buffer.from(data).toString(),
+				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname']
+			}
+		);
+
+		return channel.sendTransactionProposal(buildEchoRequest(client, peer));
+	}).then((response) => {
+		if (response[0] && response[0][0] && response[0][0].response && response[0][0].response.status === 200)
+			t.pass('Successfully tested grpc receive message limit reset after it was set too low');
+		else
+			t.fail(util.format('Failed to effectively use config setting to control grpc receive message limit. %s', response[0][0]));
 
 		// for this test we only need to send to one of the peers in org1
 		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
@@ -120,13 +167,12 @@ test('\n\n*** GRPC communication tests ***\n\n', (t) => {
 		var err = (response[0] && response[0][0] && response[0][0] instanceof Error) ? response[0][0] : {};
 
 		if (err.message && err.message.indexOf('Received message larger than max') >= 0) {
-			t.pass('Successfully received the error message due to large message size');
+			t.pass('Successfully received the error message due to large message size set into the options');
 		} else {
 			t.fail(util.format('Unexpected error: %s' + err.stack ? err.stack : err));
 			t.end();
 			throw new Error('Test Failed');
 		}
-
 		// now dial the send limit up by setting to -1 for unlimited
 		utils.setConfigSetting('grpc.max_receive_message_length', -1);
 		utils.setConfigSetting('grpc.max_send_message_length', -1);

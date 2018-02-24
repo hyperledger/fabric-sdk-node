@@ -4,6 +4,15 @@ v1.1.0 Febuary 22, 2018
 Release Notes
 -------------
 
+FAB-8470
+Users that have been using the 'grpc-max-send-message-length' configuration setting
+may wish to use 'grpc.max_send_message_length' to avoid confusion with the actual
+grpc settings.
+Users that have been using the 'grpc-max-receive-message-length' configuration setting
+may wish to use 'grpc.max_receive_message_length' to avoid confusion with the actual
+grpc settings.
+
+
 Known Vulnerabilities
 ---------------------
 
