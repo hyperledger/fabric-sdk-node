@@ -244,7 +244,7 @@ var Client = class extends BaseClient {
 	 * @property {any} &lt;any&gt; - any other standard grpc call options will be passed to the grpc service calls directly
 	 */
 
-    /**
+	/**
 	 * Returns a {@link Peer} object with the given url and opts. A peer object
 	 * encapsulates the properties of an endorsing peer and the interactions with it
 	 * via the grpc service API. Peer objects are used by the {@link Client} objects to
@@ -347,7 +347,7 @@ var Client = class extends BaseClient {
  		 return peers;
  	 }
 
-    /**
+	/**
 	 * Returns an {@link Orderer} object with the given url and opts. An orderer object
 	 * encapsulates the properties of an orderer node and the interactions with it via
 	 * the grpc stream API. Orderer objects are used by the {@link Client} objects to broadcast
@@ -725,25 +725,25 @@ var Client = class extends BaseClient {
 
 		logger.debug('_createOrUpdateChannel - about to send envelope');
 		return orderer.sendBroadcast(out_envelope)
-		.then(
-			function(results) {
-				logger.debug('_createOrUpdateChannel - good results from broadcast :: %j',results);
+			.then(
+				function(results) {
+					logger.debug('_createOrUpdateChannel - good results from broadcast :: %j',results);
 
-				return Promise.resolve(results);
-			}
-		)
-		.catch(
-			function(error) {
-				if(error instanceof Error) {
-					logger.debug('_createOrUpdateChannel - rejecting with %s', error);
-					return Promise.reject(error);
+					return Promise.resolve(results);
 				}
-				else {
-					logger.error('_createOrUpdateChannel - system error :: %s', error);
-					return Promise.reject(new Error(error));
+			)
+			.catch(
+				function(error) {
+					if(error instanceof Error) {
+						logger.debug('_createOrUpdateChannel - rejecting with %s', error);
+						return Promise.reject(error);
+					}
+					else {
+						logger.error('_createOrUpdateChannel - system error :: %s', error);
+						return Promise.reject(new Error(error));
+					}
 				}
-			}
-		);
+			);
 	}
 
 	/**
@@ -791,39 +791,39 @@ var Client = class extends BaseClient {
 			args: []
 		};
 		return Channel.sendTransactionProposal(request, '' /* special channel id */, self)
-		.then(
-			function(results) {
-				const responses = results[0];
-				logger.debug('queryChannels - got response');
-				if(responses && Array.isArray(responses)) {
+			.then(
+				function(results) {
+					const responses = results[0];
+					logger.debug('queryChannels - got response');
+					if(responses && Array.isArray(responses)) {
 					//will only be one response as we are only querying one peer
-					if(responses.length > 1) {
-						return Promise.reject(new Error('Too many results returned'));
-					}
-					const response = responses[0];
-					if(response instanceof Error ) {
+						if(responses.length > 1) {
+							return Promise.reject(new Error('Too many results returned'));
+						}
+						const response = responses[0];
+						if(response instanceof Error ) {
+							return Promise.reject(response);
+						}
+						if(response.response) {
+							logger.debug('queryChannels - response status :: %d', response.response.status);
+							const queryTrans = _queryProto.ChannelQueryResponse.decode(response.response.payload);
+							logger.debug('queryChannels - ProcessedTransaction.channelInfo.length :: %s', queryTrans.channels.length);
+							for (let channel of queryTrans.channels) {
+								logger.debug('>>> channel id %s ',channel.channel_id);
+							}
+							return Promise.resolve(queryTrans);
+						}
+						// no idea what we have, lets fail it and send it back
 						return Promise.reject(response);
 					}
-					if(response.response) {
-						logger.debug('queryChannels - response status :: %d', response.response.status);
-						const queryTrans = _queryProto.ChannelQueryResponse.decode(response.response.payload);
-						logger.debug('queryChannels - ProcessedTransaction.channelInfo.length :: %s', queryTrans.channels.length);
-						for (let channel of queryTrans.channels) {
-							logger.debug('>>> channel id %s ',channel.channel_id);
-						}
-						return Promise.resolve(queryTrans);
-					}
-					// no idea what we have, lets fail it and send it back
-					return Promise.reject(response);
+					return Promise.reject(new Error('Payload results are missing from the query'));
 				}
-				return Promise.reject(new Error('Payload results are missing from the query'));
-			}
-		).catch(
-			function(err) {
-				logger.error('Failed Channels Query. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			).catch(
+				function(err) {
+					logger.error('Failed Channels Query. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -879,39 +879,39 @@ var Client = class extends BaseClient {
 			args: []
 		};
 		return Channel.sendTransactionProposal(request, '' /* special channel id */, self)
-		.then(
-			function(results) {
-				const responses = results[0];
-				logger.debug('queryInstalledChaincodes - got response');
-				if(responses && Array.isArray(responses)) {
+			.then(
+				function(results) {
+					const responses = results[0];
+					logger.debug('queryInstalledChaincodes - got response');
+					if(responses && Array.isArray(responses)) {
 					//will only be one response as we are only querying one peer
-					if(responses.length > 1) {
-						return Promise.reject(new Error('Too many results returned'));
-					}
-					const response = responses[0];
-					if(response instanceof Error ) {
+						if(responses.length > 1) {
+							return Promise.reject(new Error('Too many results returned'));
+						}
+						const response = responses[0];
+						if(response instanceof Error ) {
+							return Promise.reject(response);
+						}
+						if(response.response) {
+							logger.debug('queryInstalledChaincodes - response status :: %d', response.response.status);
+							const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+							logger.debug('queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
+							for (let chaincode of queryTrans.chaincodes) {
+								logger.debug('>>> name %s, version %s, path %s',chaincode.name,chaincode.version,chaincode.path);
+							}
+							return Promise.resolve(queryTrans);
+						}
+						// no idea what we have, lets fail it and send it back
 						return Promise.reject(response);
 					}
-					if(response.response) {
-						logger.debug('queryInstalledChaincodes - response status :: %d', response.response.status);
-						const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
-						logger.debug('queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
-						for (let chaincode of queryTrans.chaincodes) {
-							logger.debug('>>> name %s, version %s, path %s',chaincode.name,chaincode.version,chaincode.path);
-						}
-						return Promise.resolve(queryTrans);
-					}
-					// no idea what we have, lets fail it and send it back
-					return Promise.reject(response);
+					return Promise.reject(new Error('Payload results are missing from the query'));
 				}
-				return Promise.reject(new Error('Payload results are missing from the query'));
-			}
-		).catch(
-			function(err) {
-				logger.error('Failed Installed Chaincodes Query. Error: %s', err.stack ? err.stack : err);
-				return Promise.reject(err);
-			}
-		);
+			).catch(
+				function(err) {
+					logger.error('Failed Installed Chaincodes Query. Error: %s', err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
 	}
 
 	/**
@@ -1027,52 +1027,52 @@ var Client = class extends BaseClient {
 		chaincodeDeploymentSpec.setEffectiveDate(clientUtils.buildCurrentTimestamp()); //TODO may wish to add this as a request setting
 
 		return _getChaincodePackageData(request, this.isDevMode())
-		.then((data) => {
+			.then((data) => {
 			// DATA may or may not be present depending on devmode settings
-			if (data) {
-				chaincodeDeploymentSpec.setCodePackage(data);
-				logger.debug('installChaincode - found packaged data');
-			}
-			logger.debug('installChaincode - sending deployment spec %s ',chaincodeDeploymentSpec);
-
-			// TODO add ESCC/VSCC info here ??????
-			const lcccSpec = {
-				type: ccSpec.type,
-				chaincode_id: {
-					name: Constants.LSCC
-				},
-				input: {
-					args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
+				if (data) {
+					chaincodeDeploymentSpec.setCodePackage(data);
+					logger.debug('installChaincode - found packaged data');
 				}
-			};
+				logger.debug('installChaincode - sending deployment spec %s ',chaincodeDeploymentSpec);
 
-			let signer;
-			let tx_id = request.txId;
-			if(!tx_id) {
-				signer = self._getSigningIdentity(true);
-				tx_id = new TransactionID(signer, true);
-			} else {
-				signer = self._getSigningIdentity(tx_id.isAdmin());
-			}
+				// TODO add ESCC/VSCC info here ??????
+				const lcccSpec = {
+					type: ccSpec.type,
+					chaincode_id: {
+						name: Constants.LSCC
+					},
+					input: {
+						args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
+					}
+				};
 
-			const channelHeader = clientUtils.buildChannelHeader(
-				_commonProto.HeaderType.ENDORSER_TRANSACTION,
-				'', //install does not target a channel
-				tx_id.getTransactionID(),
-				null,
-				Constants.LSCC
-			);
-			const header = clientUtils.buildHeader(signer, channelHeader, tx_id.getNonce());
-			const proposal = clientUtils.buildProposal(lcccSpec, header);
-			const signed_proposal = clientUtils.signProposal(signer, proposal);
-			logger.debug('installChaincode - about to sendPeersProposal');
-			return clientUtils.sendPeersProposal(peers, signed_proposal, timeout)
-			.then(
-				function(responses) {
-					return [responses, proposal];
+				let signer;
+				let tx_id = request.txId;
+				if(!tx_id) {
+					signer = self._getSigningIdentity(true);
+					tx_id = new TransactionID(signer, true);
+				} else {
+					signer = self._getSigningIdentity(tx_id.isAdmin());
 				}
-			);
-		});
+
+				const channelHeader = clientUtils.buildChannelHeader(
+					_commonProto.HeaderType.ENDORSER_TRANSACTION,
+					'', //install does not target a channel
+					tx_id.getTransactionID(),
+					null,
+					Constants.LSCC
+				);
+				const header = clientUtils.buildHeader(signer, channelHeader, tx_id.getNonce());
+				const proposal = clientUtils.buildProposal(lcccSpec, header);
+				const signed_proposal = clientUtils.signProposal(signer, proposal);
+				logger.debug('installChaincode - about to sendPeersProposal');
+				return clientUtils.sendPeersProposal(peers, signed_proposal, timeout)
+					.then(
+						function(responses) {
+							return [responses, proposal];
+						}
+					);
+			});
 	}
 
 	/**
@@ -1090,18 +1090,18 @@ var Client = class extends BaseClient {
 			if(client_config && client_config.credentialStore) {
 				const self = this;
 				return BaseClient.newDefaultKeyValueStore(client_config.credentialStore)
-				.then((key_value_store) =>{
-					self.setStateStore(key_value_store);
-					const crypto_suite = BaseClient.newCryptoSuite();
-					// not all crypto suites require a crypto store
-					if (typeof crypto_suite.setCryptoKeyStore == 'function') {
-						crypto_suite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(client_config.credentialStore.cryptoStore));
-					}
-					self.setCryptoSuite(crypto_suite);
-					return Promise.resolve(true);
-				}).catch((err)=>{
-					return Promise.reject(err);
-				});
+					.then((key_value_store) =>{
+						self.setStateStore(key_value_store);
+						const crypto_suite = BaseClient.newCryptoSuite();
+						// not all crypto suites require a crypto store
+						if (typeof crypto_suite.setCryptoKeyStore == 'function') {
+							crypto_suite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(client_config.credentialStore.cryptoStore));
+						}
+						self.setCryptoSuite(crypto_suite);
+						return Promise.resolve(true);
+					}).catch((err)=>{
+						return Promise.reject(err);
+					});
 			} else {
 				return Promise.reject(new Error('No credentialStore settings found'));
 			}
@@ -1238,53 +1238,53 @@ var Client = class extends BaseClient {
 		this._userContext = null;
 		const self = this;
 		return self.getUserContext(opts.username, true)
-		.then((user) => {
-			return new Promise((resolve, reject) => {
-				if (user && user.isEnrolled()) {
-					logger.debug('Successfully loaded member from persistence');
-					return resolve(user);
-				}
+			.then((user) => {
+				return new Promise((resolve, reject) => {
+					if (user && user.isEnrolled()) {
+						logger.debug('Successfully loaded member from persistence');
+						return resolve(user);
+					}
 
-				if (typeof opts.password === 'undefined' || opts. password === null || opts. password === '') {
-					return reject( new Error('Missing parameter. Must have a password.'));
-				}
+					if (typeof opts.password === 'undefined' || opts. password === null || opts. password === '') {
+						return reject( new Error('Missing parameter. Must have a password.'));
+					}
 
-				let ca_service, mspid = null;
-				try {
-					const client_config = this._network_config.getClientConfig();
-					if(client_config && client_config.organization) {
-						const organization_config = this._network_config.getOrganization(client_config.organization);
-						if(organization_config) {
-							mspid = organization_config.getMspid();
+					let ca_service, mspid = null;
+					try {
+						const client_config = this._network_config.getClientConfig();
+						if(client_config && client_config.organization) {
+							const organization_config = this._network_config.getOrganization(client_config.organization);
+							if(organization_config) {
+								mspid = organization_config.getMspid();
+							}
 						}
+						if(!mspid) {
+							throw new Error('Network configuration is missing this client\'s organization and mspid');
+						}
+						ca_service = self.getCertificateAuthority();
+					} catch(err) {
+						reject(err);
 					}
-					if(!mspid) {
-						throw new Error('Network configuration is missing this client\'s organization and mspid');
-					}
-					ca_service = self.getCertificateAuthority();
-				} catch(err) {
-					reject(err);
-				}
 
-				return ca_service.enroll({
-					enrollmentID: opts.username,
-					enrollmentSecret: opts.password
-				}).then((enrollment) => {
-					logger.debug('Successfully enrolled user "%s"',opts.username);
+					return ca_service.enroll({
+						enrollmentID: opts.username,
+						enrollmentSecret: opts.password
+					}).then((enrollment) => {
+						logger.debug('Successfully enrolled user "%s"',opts.username);
 
-					return self.createUser(
-						{username: opts.username,
-							mspid: mspid,
-							cryptoContent: { privateKeyPEM: enrollment.key.toBytes(), signedCertPEM: enrollment.certificate }
-						});
-				}).then((member) => {
-					return resolve(member);
-				}).catch((err) => {
-					logger.error('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
-					reject(err);
+						return self.createUser(
+							{username: opts.username,
+								mspid: mspid,
+								cryptoContent: { privateKeyPEM: enrollment.key.toBytes(), signedCertPEM: enrollment.certificate }
+							});
+					}).then((member) => {
+						return resolve(member);
+					}).catch((err) => {
+						logger.error('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
+						reject(err);
+					});
 				});
 			});
-		});
 	}
 
 	/**
@@ -1299,21 +1299,21 @@ var Client = class extends BaseClient {
 			if (self._userContext && self._userContext._name && self._stateStore) {
 				logger.debug('saveUserToStateStore, begin promise stateStore.setValue');
 				self._stateStore.setValue(self._userContext._name, self._userContext.toString())
-				.then(
-					function(result) {
-						logger.debug('saveUserToStateStore, store.setValue, result = ' + result);
-						resolve(self._userContext);
-					},
-					function (reason) {
-						logger.debug('saveUserToStateStore, store.setValue, reject reason = ' + reason);
-						reject(reason);
-					}
-				).catch(
-					function(err) {
-						logger.debug('saveUserToStateStore, store.setValue, error: ' +err);
-						reject(new Error(err));
-					}
-				);
+					.then(
+						function(result) {
+							logger.debug('saveUserToStateStore, store.setValue, result = ' + result);
+							resolve(self._userContext);
+						},
+						function (reason) {
+							logger.debug('saveUserToStateStore, store.setValue, reject reason = ' + reason);
+							reject(reason);
+						}
+					).catch(
+						function(err) {
+							logger.debug('saveUserToStateStore, store.setValue, error: ' +err);
+							reject(new Error(err));
+						}
+					);
 			} else {
 				if (!self._userContext) {
 					logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when userContext is null.');
@@ -1370,11 +1370,11 @@ var Client = class extends BaseClient {
 					if (!skipPersistence) {
 						logger.debug('setUserContext - begin promise to saveUserToStateStore');
 						self.saveUserToStateStore()
-						.then((return_user) => {
-							return resolve(return_user);
-						}).catch((err) => {
-							reject(err);
-						});
+							.then((return_user) => {
+								return resolve(return_user);
+							}).catch((err) => {
+								reject(err);
+							});
 					} else {
 						logger.debug('setUserContext - resolved user');
 						return resolve(user);
@@ -1383,11 +1383,11 @@ var Client = class extends BaseClient {
 					// must be they have passed in an object
 					logger.debug('setUserContext - will try to use network configuration to set the user');
 					self._setUserFromConfig(user)
-					.then((return_user) => {
-						return resolve(return_user);
-					}).catch((err) => {
-						reject(err);
-					});
+						.then((return_user) => {
+							return resolve(return_user);
+						}).catch((err) => {
+							reject(err);
+						});
 				}
 			} else {
 				logger.debug('setUserContext, Cannot save null userContext');
@@ -1489,35 +1489,35 @@ var Client = class extends BaseClient {
 
 		return new Promise(function(resolve, reject) {
 			self._stateStore.getValue(name)
-			.then(
-				function(memberStr) {
-					if (memberStr) {
+				.then(
+					function(memberStr) {
+						if (memberStr) {
 						// The member was found in the key value store, so restore the state.
-						const newUser = new User(name);
-						if (!self.getCryptoSuite()) {
-							logger.debug('loadUserFromStateStore, cryptoSuite is not set, will load using defaults');
-						}
-						newUser.setCryptoSuite(self.getCryptoSuite());
+							const newUser = new User(name);
+							if (!self.getCryptoSuite()) {
+								logger.debug('loadUserFromStateStore, cryptoSuite is not set, will load using defaults');
+							}
+							newUser.setCryptoSuite(self.getCryptoSuite());
 
-						return newUser.fromString(memberStr);
+							return newUser.fromString(memberStr);
+						} else {
+							return null;
+						}
+					})
+				.then(function(data) {
+					if (data) {
+						logger.debug('Successfully loaded user "%s" from local key value store', name);
+						return resolve(data);
 					} else {
-						return null;
+						logger.debug('Failed to load user "%s" from local key value store', name);
+						return resolve(null);
 					}
-				})
-			.then(function(data) {
-				if (data) {
-					logger.debug('Successfully loaded user "%s" from local key value store', name);
-					return resolve(data);
-				} else {
-					logger.debug('Failed to load user "%s" from local key value store', name);
-					return resolve(null);
-				}
-			}).catch(
-				function(err) {
-					logger.error('Failed to load user "%s" from local key value store. Error: %s', name, err.stack ? err.stack : err);
-					reject(err);
-				}
-			);
+				}).catch(
+					function(err) {
+						logger.error('Failed to load user "%s" from local key value store. Error: %s', name, err.stack ? err.stack : err);
+						reject(err);
+					}
+				);
 		});
 	}
 
@@ -1693,7 +1693,7 @@ var Client = class extends BaseClient {
 		} else {
 			return null;
 		}
-	};
+	}
 
 	/*
 	 * Utility method to get the orderer for the request
@@ -1742,7 +1742,7 @@ var Client = class extends BaseClient {
 		}
 
 		return orderer;
-	};
+	}
 
 	/*
 	 * Utility method to get target peers from the network configuration

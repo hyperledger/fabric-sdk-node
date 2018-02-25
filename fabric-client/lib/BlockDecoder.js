@@ -477,7 +477,7 @@ rule
 		}
 
 		return block;
-	};
+	}
 
 	/**
 	 * Constructs an object containing all decoded values from the
@@ -505,7 +505,7 @@ rule
 		}
 
 		return block;
-	};
+	}
 
 	/**
 	 * @typedef {Object} ProcessedTransaction
@@ -549,7 +549,7 @@ function decodeBlockHeader(proto_block_header) {
 	block_header.data_hash = proto_block_header.getDataHash().toBuffer().toString('hex');
 
 	return block_header;
-};
+}
 
 function decodeBlockData(proto_block_data, not_proto) {
 	var data = {};
@@ -566,7 +566,7 @@ function decodeBlockData(proto_block_data, not_proto) {
 	}
 
 	return data;
-};
+}
 
 function decodeBlockMetaData(proto_block_metadata) {
 	var metadata = {};
@@ -583,7 +583,7 @@ function decodeBlockMetaData(proto_block_metadata) {
 	}
 
 	return metadata;
-};
+}
 
 function decodeTransactionFilter(metadata_bytes) {
 	var transaction_filter = [];
@@ -651,7 +651,7 @@ function decodeBlockDataEnvelope(proto_envelope) {
 	envelope.payload.header.channel_header.typeString = HeaderType.convertToString(envelope.payload.header.channel_header.type);
 
 	return envelope;
-};
+}
 
 function decodeEndorserTransaction(trans_bytes) {
 	var data = {};
@@ -671,7 +671,7 @@ function decodeEndorserTransaction(trans_bytes) {
 	}
 
 	return data;
-};
+}
 
 function decodeConfigEnvelope(config_envelope_bytes) {
 	var config_envelope = {};
@@ -689,7 +689,7 @@ function decodeConfigEnvelope(config_envelope_bytes) {
 	}
 
 	return config_envelope;
-};
+}
 
 function decodeConfig(proto_config) {
 	var config = {};
@@ -698,7 +698,7 @@ function decodeConfig(proto_config) {
 	config.type = proto_config.getType();
 
 	return config;
-};
+}
 
 function decodeConfigUpdateEnvelope(config_update_envelope_bytes) {
 	var config_update_envelope = {};
@@ -713,7 +713,7 @@ function decodeConfigUpdateEnvelope(config_update_envelope_bytes) {
 	config_update_envelope.signatures = signatures;
 
 	return config_update_envelope;
-};
+}
 
 function decodeConfigUpdate(config_update_bytes) {
 	var config_update = {};
@@ -724,7 +724,7 @@ function decodeConfigUpdate(config_update_bytes) {
 	config_update.type = proto_config_update.getType();
 
 	return config_update;
-};
+}
 
 function decodeConfigGroups(config_group_map) {
 	var config_groups = {};
@@ -735,7 +735,7 @@ function decodeConfigGroups(config_group_map) {
 	}
 
 	return config_groups;
-};
+}
 
 function decodeConfigGroup(proto_config_group) {
 	if (!proto_config_group) return null;
@@ -746,7 +746,7 @@ function decodeConfigGroup(proto_config_group) {
 	config_group.policies = decodeConfigPolicies(proto_config_group.getPolicies());
 	config_group.mod_policy = proto_config_group.getModPolicy(); //string
 	return config_group;
-};
+}
 
 function decodeConfigValues(config_value_map) {
 	var config_values = {};
@@ -757,7 +757,7 @@ function decodeConfigValues(config_value_map) {
 	}
 
 	return config_values;
-};
+}
 
 function decodeConfigValue(proto_config_value) {
 	var config_value = {};
@@ -843,7 +843,7 @@ function decodeConfigValue(proto_config_value) {
 //		logger.debug('loadConfigValue - %s   - value: %s', group_name, config_value.value.value);
 	}
 	return config_value;
-};
+}
 
 function decodeConfigPolicies(config_policy_map) {
 	var config_policies = {};
@@ -854,7 +854,7 @@ function decodeConfigPolicies(config_policy_map) {
 	}
 
 	return config_policies;
-};
+}
 
 var Policy_PolicyType = ['UNKNOWN', 'SIGNATURE', 'MSP', 'IMPLICIT_META'];
 
@@ -883,7 +883,7 @@ function decodeConfigPolicy(proto_config_policy) {
 	}
 
 	return config_policy;
-};
+}
 
 var ImplicitMetaPolicy_Rule = ['ANY', 'ALL', 'MAJORITY'];
 
@@ -910,7 +910,7 @@ function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 	signature_policy_envelope.identities = identities;
 
 	return signature_policy_envelope;
-};
+}
 
 function decodeSignaturePolicy(proto_signature_policy) {
 	var signature_policy = {};
@@ -931,7 +931,7 @@ function decodeSignaturePolicy(proto_signature_policy) {
 	}
 
 	return signature_policy;
-};
+}
 
 function decodeMSPPrincipal(proto_msp_principal) {
 	var msp_principal = {};
@@ -959,7 +959,7 @@ function decodeMSPPrincipal(proto_msp_principal) {
 	}
 
 	return msp_principal;
-};
+}
 
 function decodeConfigSignature(proto_configSignature) {
 	var config_signature = {};
@@ -967,7 +967,7 @@ function decodeConfigSignature(proto_configSignature) {
 	config_signature.sigature = proto_configSignature.getSignature().toBuffer();
 
 	return config_signature;
-};
+}
 
 function decodeSignatureHeader(signature_header_bytes) {
 	//logger.debug('decodeSignatureHeader - %s',signature_header_bytes);
@@ -977,7 +977,7 @@ function decodeSignatureHeader(signature_header_bytes) {
 	signature_header.nonce = proto_signature_header.getNonce().toBuffer();
 
 	return signature_header;
-};
+}
 
 function decodeIdentity(id_bytes) {
 	//logger.debug('decodeIdentity - %s',id_bytes);
@@ -991,7 +991,7 @@ function decodeIdentity(id_bytes) {
 	}
 
 	return identity;
-};
+}
 
 function decodeFabricMSPConfig(msp_config_bytes) {
 	var msp_config = {};
@@ -1008,7 +1008,7 @@ function decodeFabricMSPConfig(msp_config_bytes) {
 	msp_config.tls_intermediate_certs = toPEMcerts(proto_msp_config.getTlsIntermediateCerts());
 
 	return msp_config;
-};
+}
 
 function decodeFabricOUIdentifier(proto_organizational_unit_identitfiers) {
 	var organizational_unit_identitfiers = [];
@@ -1034,7 +1034,7 @@ function toPEMcerts(buffer_array_in) {
 	}
 
 	return buffer_array_out;
-};
+}
 
 function decodeSigningIdentityInfo(signing_identity_info_bytes) {
 	var signing_identity_info = {};
@@ -1064,7 +1064,7 @@ function decodeHeader(proto_header) {
 	header.signature_header = decodeSignatureHeader(proto_header.getSignatureHeader().toBuffer());
 
 	return header;
-};
+}
 
 function decodeChannelHeader(header_bytes) {
 	var channel_header = {};
@@ -1080,7 +1080,7 @@ function decodeChannelHeader(header_bytes) {
 	channel_header.extension = proto_channel_header.getExtension().toBuffer();
 
 	return channel_header;
-};
+}
 
 function timeStampToDate(time_stamp) {
 	if(!time_stamp) {
@@ -1090,7 +1090,7 @@ function timeStampToDate(time_stamp) {
 	var date = new Date(millis);
 
 	return date.toString();
-};
+}
 
 function decodeChaincodeActionPayload(payload_bytes) {
 	var payload = {};
@@ -1099,7 +1099,7 @@ function decodeChaincodeActionPayload(payload_bytes) {
 	payload.action = decodeChaincodeEndorsedAction(proto_chaincode_action_payload.getAction());
 
 	return payload;
-};
+}
 
 function decodeChaincodeProposalPayload(chaincode_proposal_payload_bytes) {
 	var chaincode_proposal_payload = {};
@@ -1120,7 +1120,7 @@ function decodeChaincodeEndorsedAction(proto_chaincode_endorsed_action) {
 	}
 
 	return action;
-};
+}
 
 function decodeEndorsement(proto_endorsement) {
 	var endorsement = {};
@@ -1128,7 +1128,7 @@ function decodeEndorsement(proto_endorsement) {
 	endorsement.signature = proto_endorsement.getSignature().toBuffer();
 
 	return endorsement;
-};
+}
 
 function decodeProposalResponsePayload(proposal_response_payload_bytes) {
 	var proposal_response_payload = {};
@@ -1137,7 +1137,7 @@ function decodeProposalResponsePayload(proposal_response_payload_bytes) {
 	proposal_response_payload.extension = decodeChaincodeAction(proto_proposal_response_payload.getExtension());
 
 	return proposal_response_payload;
-};
+}
 
 function decodeChaincodeAction(action_bytes) {
 	logger.debug('decodeChaincodeAction - start');
@@ -1149,7 +1149,7 @@ function decodeChaincodeAction(action_bytes) {
 	chaincode_action.chaincode_id = decodeChaincodeID(proto_chaincode_action.getChaincodeId());
 
 	return chaincode_action;
-};
+}
 
 function decodeChaincodeEvents(event_bytes) {
 	var events = {};
@@ -1291,7 +1291,7 @@ function decodeResponse(proto_response) {
 	response.payload = proto_response.getPayload().toBuffer().toString();
 
 	return response;
-};
+}
 
 // version numbers should not get that big
 // so lets just return an Integer (32bits)
