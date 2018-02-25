@@ -137,7 +137,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return channel.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'no such file or directory', t);
+		checkResults(results, 'cannot get package for chaincode', t);
 
 		return Promise.resolve(true);
 
@@ -157,7 +157,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return channel.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'no such file or directory', t);
+		checkResults(results, 'cannot get package for chaincode', t);
 		t.end();
 	}).catch((err) => {
 		t.fail('Got an Error along the way :: '+ err);
