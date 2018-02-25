@@ -782,7 +782,7 @@ var EventHub = class {
 				cb(channel_header.tx_id, val_code);
 			}
 		}
-	};
+	}
 
 	/*
 	 * private internal method for processing chaincode events
@@ -822,7 +822,7 @@ var EventHub = class {
 				logger.error('on.data - Error unmarshalling transaction=', err);
 			}
 		}
-	};
+	}
 };
 
 function convertValidationCode(code) {

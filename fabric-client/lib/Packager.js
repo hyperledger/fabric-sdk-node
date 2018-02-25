@@ -44,7 +44,7 @@ module.exports.package = function(chaincodePath, chaincodeType, devmode) {
 			return reject(new Error('Missing chaincodePath parameter'));
 		}
 
-		let type = !!chaincodeType ? chaincodeType : 'golang';
+		let type = chaincodeType ? chaincodeType : 'golang';
 		logger.debug('packager: type %s ',type);
 
 		let handler;

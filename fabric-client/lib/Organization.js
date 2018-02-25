@@ -16,11 +16,9 @@
 
 'use strict';
 
-var api = require('./api.js');
 var utils = require('./utils.js');
-var util = require('util');
 var Constants = require('./Constants.js');
-
+const ChannelEventHub = require('./ChannelEventHub');
 var logger = utils.getLogger('Organization.js');
 
 /**
@@ -117,16 +115,16 @@ var Organization = class {
 	 *        the peers that are defined as channel event hubs are associated.
 	 * @returns [{ChannelEventHub}] An array of {@link ChannelEventHub} objects
 	 */
-	 getChannelEventHubs(channel) {
-		 let _channel_event_hubs = [];
-		 for(let peer in this._peers) {
-			 if(peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
-				 let channel_event_hub = new ChannelEventHub(channel, peer);
-				 _channel_event_hubs.push(channel_event_hub);
-			 }
-		 }
-		 return this._channel_event_hubs;
-	 }
+	getChannelEventHubs(channel) {
+		const _channel_event_hubs = [];
+		for(let peer of this._peers) {
+			if(peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
+				let channel_event_hub = new ChannelEventHub(channel, peer);
+				_channel_event_hubs.push(channel_event_hub);
+			}
+		}
+		return _channel_event_hubs;
+	}
 
 	/**
 	 * Add a {@link CertificateAuthority} to this organization
