@@ -25,17 +25,14 @@ let BasePackager = require('./BasePackager');
 
 class NodePackager extends BasePackager {
 
-	constructor () {
-		super([]);
-	}
-
 	/**
-	 * All of the files in the directory of request.chaincodePath will be
-	 * included in an archive file.
-	 * @param chaincodePath
+	 * Package chaincode source and metadata for deployment.
+	 * @param {string} chaincodePath The path to the top-level directory containing the source code
+	 * and package.json.
+	 * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors
 	 * @returns {Promise.<TResult>}
 	 */
-	package (chaincodePath) {
+	package (chaincodePath, metadataPath) {
 		logger.info('packaging Node from %s', chaincodePath);
 
 		// Compose the path to the chaincode project directory
@@ -47,8 +44,16 @@ class NodePackager extends BasePackager {
 		// will need to assemble sources from multiple packages
 
 		let buffer = new sbuf.WritableStreamBuffer();
-
-		return this.findSource(projDir).then((descriptors) => {
+		return this.findSource(projDir).then((srcDescriptors) => {
+			if (metadataPath){
+				return super.findMetadataDescriptors(metadataPath)
+				.then((metaDescriptors) => {
+					return srcDescriptors.concat(metaDescriptors);
+				});
+			} else {
+				return srcDescriptors;
+			}
+		}).then((descriptors) => {
 			return super.generateTarGz(descriptors, buffer);
 		}).then(() => {
 			return buffer.getContents();

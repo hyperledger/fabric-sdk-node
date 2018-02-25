@@ -15,11 +15,18 @@
 'use strict';
 
 var fs = require('fs-extra');
+var klaw = require('klaw');
 var tar = require('tar-stream');
 var path = require('path');
 var zlib = require('zlib');
 
 var BasePackager = class {
+
+	/**
+	 * Constructor
+	 *
+	 * @param {*} [keep] Array of valid source file extensions
+	 */
 	constructor (keep) {
 		if (this.constructor === BasePackager) {
 			// BasePackager can not be constructed.
@@ -37,8 +44,9 @@ var BasePackager = class {
 	 * included in an archive file.
 	 *
 	 * @param chaincodePath
+	 * @param metadataPath
 	 */
-	package (chaincodePath) {
+	package (chaincodePath, metadataPath) {
 		throw new TypeError('Please implement method package from child class');
 	}
 
@@ -50,6 +58,48 @@ var BasePackager = class {
 	 */
 	findSource (filepath) {
 		throw new Error('abstract function called');
+	}
+
+	/**
+	 * Find the metadata descriptor files.
+	 *
+	 * @param filePath The top-level directory containing the metadata descriptors.
+	 * Only files with a ".json" extension will be included in the results.
+	 * @returns {Promise}
+	 */
+	findMetadataDescriptors (filePath) {
+		return new Promise((resolve, reject) => {
+			var descriptors = [];
+			klaw(filePath).on('data', (entry) => {
+				if (entry.stats.isFile() && this.isMetadata(entry.path)) {
+
+					var desc = {
+						name: path.join('META-INF', path.relative(filePath, entry.path).split('\\').join('/')), // for windows style paths
+						fqp: entry.path
+					};
+					descriptors.push(desc);
+				}
+			})
+			.on('error', (error, item) => {
+				logger.error(`error while packaging ${item.path}`);
+				reject(error);
+			})
+			.on('end', () => {
+				resolve(descriptors);
+			});
+		});
+	}
+
+	/**
+	 * Predicate function for determining whether a given path should be
+	 * considered a valid metadata descriptor based entirely on the
+	 * file extension.
+	 * @param filePath The top-level directory containing the metadata descriptors.
+	 * @returns {boolean} Returns true for valid metadata descriptors.
+	 */
+	isMetadata (filePath) {
+		var extensions = ['.json'];
+		return (extensions.indexOf(path.extname(filePath)) != -1);
 	}
 
 	/**

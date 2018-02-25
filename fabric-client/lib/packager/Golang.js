@@ -25,29 +25,16 @@ var BasePackager = require('./BasePackager');
 
 var logger = utils.getLogger('packager/Golang.js');
 
-// A list of file extensions that should be packaged into the .tar.gz.
-// Files with all other file extenstions will be excluded to minimize the size
-// of the install payload.
-var keep = [
-	'.go',
-	'.c',
-	'.h'
-];
-
 class GolangPackager extends BasePackager {
 
-	constructor () {
-		super(keep);
-	}
-
 	/**
-	 * All of the files in the directory of the environment variable
-	 * GOPATH joined to the request.chaincodePath will be included
-	 * in an archive file.
-	 * @param chaincodePath
+	 * Package chaincode source and metadata for deployment.
+	 * @param {string} chaincodePath The Go package name.  The GOPATH environment variable must be set
+	 * and the package must be located under GOPATH/src.
+	 * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors.
 	 * @returns {Promise.<TResult>}
 	 */
-	package (chaincodePath) {
+	package (chaincodePath, metadataPath) {
 		logger.info('packaging GOLANG from %s', chaincodePath);
 
 		// Determine the user's $GOPATH
@@ -63,7 +50,16 @@ class GolangPackager extends BasePackager {
 
 		var buffer = new sbuf.WritableStreamBuffer();
 
-		return this.findSource(goPath, projDir).then((descriptors) => {
+		return this.findSource(goPath, projDir).then((srcDescriptors) => {
+			if (metadataPath){
+				return super.findMetadataDescriptors(metadataPath)
+				.then((metaDescriptors) => {
+					return srcDescriptors.concat(metaDescriptors);
+				});
+			} else {
+				return srcDescriptors;
+			}
+		}).then((descriptors) => {
 			return super.generateTarGz(descriptors, buffer);
 		}).then(() => {
 			return buffer.getContents();

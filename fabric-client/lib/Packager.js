@@ -24,14 +24,15 @@ var logger = utils.getLogger('packager');
 /**
  * Utility function to package a chaincode. The contents will be returned as a byte array.
  *
- * @param {Object} chaincodePath required - String of the path to location of
+ * @param {string} chaincodePath required - String of the path to location of
  *                the source code of the chaincode
- * @param {Object} chaincodeType optional - String of the type of chaincode
+ * @param {string} [chaincodeType]  String of the type of chaincode
  *                 ['golang', 'node', 'car', 'java'] (default 'golang')
- * @param {boolean} devmode optional - True if using dev mode
+ * @param {boolean} [devmode] Set to true to use chaincode development mode
+ * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors
  * @returns {Promise} A promise for the data as a byte array
  */
-module.exports.package = function(chaincodePath, chaincodeType, devmode) {
+module.exports.package = function(chaincodePath, chaincodeType, devmode, metadataPath) {
 	logger.debug('packager: chaincodePath: %s, chaincodeType: %s, devmode: %s',chaincodePath,chaincodeType,devmode);
 	return new Promise(function(resolve, reject) {
 		if (devmode) {
@@ -57,9 +58,14 @@ module.exports.package = function(chaincodePath, chaincodeType, devmode) {
 			handler = new Node();
 			break;
 		default:
-			handler = new Golang();
+			let keep = [
+				'.go',
+				'.c',
+				'.h'
+			];
+			handler = new Golang(keep);
 		}
 
-		return resolve(handler.package(chaincodePath));
+		return resolve(handler.package(chaincodePath, metadataPath));
 	});
 };
