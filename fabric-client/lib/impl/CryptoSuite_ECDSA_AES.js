@@ -19,7 +19,6 @@
 // requires
 var api = require('../api.js');
 
-var crypto = require('crypto');
 var elliptic = require('elliptic');
 var EC = elliptic.ec;
 var jsrsa = require('jsrsasign');
@@ -50,7 +49,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	 * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
 	 */
 	constructor(keySize, hash) {
-		logger.debug('constructor, keySize: '+keySize);
+		logger.debug('constructor, keySize: ' + keySize);
 		super();
 
 		if (keySize !== 256 && keySize !== 384) {
@@ -137,28 +136,34 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 			var self = this;
 			return new Promise((resolve, reject) => {
 				self._cryptoKeyStore._getKeyStore()
-				.then ((store) => {
-					logger.debug('generateKey, store.setValue');
-					return store.putKey(key)
-						.then(() => {
-							return resolve(key);
-						}).catch((err) => {
-							reject(err);
-						});
-				});
+					.then((store) => {
+						logger.debug('generateKey, store.setValue');
+						return store.putKey(key)
+							.then(() => {
+								return resolve(key);
+							}).catch((err) => {
+								reject(err);
+							});
+					});
 
 			});
 		}
 	}
 
 	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#deriveKey}
 	 * To be implemented
 	 */
 	deriveKey(key, opts) {
+		if (key || opts);
 		throw new Error('Not implemented yet');
 	}
 
-	importKey(raw, opts) {
+	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
+	 * To be implemented
+	 */
+	importKey(pem, opts) {
 		logger.debug('importKey - start');
 		var store_key = true; //default
 		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
@@ -177,40 +182,40 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		// TODO: add support for the following passcode-protected PEM formats
 		// - PKCS#5 encrypted PEM RSA/DSA private
 		// - PKCS#8 encrypted PEM RSA/ECDSA private key
-		var pemString = Buffer.from(raw).toString();
+		var pemString = Buffer.from(pem).toString();
 		pemString = makeRealPem(pemString);
 		var key = null;
 		var theKey = null;
 		var error = null;
 		try {
 			key = KEYUTIL.getKey(pemString);
-		} catch(err) {
+		} catch (err) {
 			error = new Error('Failed to parse key from PEM: ' + err);
 		}
 
 		if (key && key.type && key.type === 'EC') {
 			theKey = new ECDSAKey(key);
-			logger.debug('importKey - have the key %j',theKey);
+			logger.debug('importKey - have the key %j', theKey);
 		}
 		else {
 			error = new Error('Does not understand PEM contents other than ECDSA private keys and certificates');
 		}
 
-		if(!store_key) {
-			if(error) {
-				logger.error('importKey - %s',error);
+		if (!store_key) {
+			if (error) {
+				logger.error('importKey - %s', error);
 				throw error;
 			}
 			return theKey;
 		}
 		else {
-			if(error) {
-				logger.error('importKey - %j',error);
+			if (error) {
+				logger.error('importKey - %j', error);
 				return Promise.reject(error);
 			}
 			return new Promise((resolve, reject) => {
 				return self._cryptoKeyStore._getKeyStore()
-					.then ((store) => {
+					.then((store) => {
 						return store.putKey(theKey);
 					}).then(() => {
 						return resolve(theKey);
@@ -231,28 +236,38 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		}
 		return new Promise((resolve, reject) => {
 			self._cryptoKeyStore._getKeyStore()
-			.then ((st) => {
-				store = st;
-				return store.getKey(ski);
-			}).then((key) => {
-				if (ECDSAKey.isInstance(key))
-					return resolve(key);
+				.then((st) => {
+					store = st;
+					return store.getKey(ski);
+				}).then((key) => {
+					if (ECDSAKey.isInstance(key))
+						return resolve(key);
 
-				if (key !== null) {
-					var pubKey = KEYUTIL.getKey(key);
-					return resolve(new ECDSAKey(pubKey));				}
-			}).catch((err) => {
-				reject(err);
-			});
+					if (key !== null) {
+						var pubKey = KEYUTIL.getKey(key);
+						return resolve(new ECDSAKey(pubKey));
+					}
+				}).catch((err) => {
+					reject(err);
+				});
 
 		});
 	}
 
+	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#hash}
+	 * The opts argument is not supported.
+	 */
 	hash(msg, opts) {
+		if (opts);
 		return this._hashFunction(msg);
 	}
 
-	sign(key, digest, opts) {
+	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#sign}
+	 * Signs digest using key k.
+	 */
+	sign(key, digest) {
 		if (typeof key === 'undefined' || key === null) {
 			throw new Error('A valid key is required to sign');
 		}
@@ -294,16 +309,20 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	}
 
 	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#encrypt}
 	 * To be implemented.
 	 */
-	encrypt(key, plaintext, opts) {
+	encrypt(key, plainText, opts) {
+		if (key || plainText || opts);
 		throw new Error('Not implemented yet');
 	}
 
 	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#decrypt}
 	 * To be implemented.
 	 */
 	decrypt(key, cipherText, opts) {
+		if (key || cipherText || opts);
 		throw new Error('Not implemented yet');
 	}
 };
@@ -327,7 +346,7 @@ const halfOrdersForCurve = {
 function _preventMalleability(sig, curveParams) {
 	var halfOrder = halfOrdersForCurve[curveParams.name];
 	if (!halfOrder) {
-		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curve);
+		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curveParams.name);
 	}
 
 	// in order to guarantee 's' falls in the lower range of the order, as explained in the above link,
@@ -344,7 +363,7 @@ function _preventMalleability(sig, curveParams) {
 function _checkMalleability(sig, curveParams) {
 	var halfOrder = halfOrdersForCurve[curveParams.name];
 	if (!halfOrder) {
-		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curve);
+		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curveParams.name);
 	}
 
 	// first need to unmarshall the signature bytes into the object with r and s values
@@ -365,38 +384,12 @@ function _checkMalleability(sig, curveParams) {
 // Utilitly method to make sure the start and end markers are correct
 function makeRealPem(pem) {
 	var result = null;
-	if(typeof pem == 'string') {
+	if (typeof pem == 'string') {
 		result = pem.replace(/-----BEGIN -----/, '-----BEGIN CERTIFICATE-----');
 		result = result.replace(/-----END -----/, '-----END CERTIFICATE-----');
 		result = result.replace(/-----([^-]+) ECDSA ([^-]+)-----([^-]*)-----([^-]+) ECDSA ([^-]+)-----/, '-----$1 EC $2-----$3-----$4 EC $5-----');
 	}
 	return result;
 }
-
-
-/*
- * Convert a PEM encoded certificate to DER format
- * @param {string) pem PEM encoded public or private key
- * @returns {string} hex Hex-encoded DER bytes
- * @throws Will throw an error if the conversation fails
- */
-function pemToDER(pem) {
-
-	//PEM format is essentially a nicely formatted base64 representation of DER encoding
-	//So we need to strip "BEGIN" / "END" header/footer and string line breaks
-	//Then we simply base64 decode it and convert to hex string
-	var contents = pem.toString().trim().split(/\r?\n/);
-	//check for BEGIN and END tags
-	if (!(contents[0].match(/\-\-\-\-\-\s*BEGIN ?([^-]+)?\-\-\-\-\-/) &&
-		contents[contents.length - 1].match(/\-\-\-\-\-\s*END ?([^-]+)?\-\-\-\-\-/))) {
-		throw new Error('Input parameter does not appear to be PEM-encoded.');
-	};
-	contents.shift(); //remove BEGIN
-	contents.pop(); //remove END
-	//base64 decode and encode as hex string
-	var hex = Buffer.from(contents.join(''), 'base64').toString('hex');
-	return hex;
-}
-
 
 module.exports = CryptoSuite_ECDSA_AES;
