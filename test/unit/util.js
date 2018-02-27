@@ -32,6 +32,8 @@ var Constants = require('./constants.js');
 
 var logger = require('fabric-client/lib/utils.js').getLogger('TestUtil');
 
+module.exports.METADATA_PATH = path.resolve(__dirname, '../fixtures/metadata');
+
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
 module.exports.CHAINCODE_UPGRADE_PATH = 'github.com/example_cc1';
 module.exports.CHAINCODE_UPGRADE_PATH_V2 = 'github.com/example_cc2';

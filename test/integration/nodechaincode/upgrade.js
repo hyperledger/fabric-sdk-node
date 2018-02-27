@@ -27,10 +27,10 @@ var chaincodeId = testUtil.NODE_END2END.chaincodeId;
 var version = 'v1';
 
 test('\n\n***** Node-Chaincode U P G R A D E flow: chaincode install *****\n\n', (t) => {
-	e2eUtils.installChaincode('org1', testUtil.NODE_CHAINCODE_UPGRADE_PATH, version, 'node', t, true)
+	e2eUtils.installChaincode('org1', testUtil.NODE_CHAINCODE_UPGRADE_PATH, null, version, 'node', t, true)
 		.then(() => {
 			t.pass('Successfully installed chaincode in peers of organization "org1"');
-			return e2eUtils.installChaincode('org2', testUtil.NODE_CHAINCODE_UPGRADE_PATH, version, 'node', t, true);
+			return e2eUtils.installChaincode('org2', testUtil.NODE_CHAINCODE_UPGRADE_PATH, null, version, 'node', t, true);
 		}, (err) => {
 			t.fail('Failed to install chaincode in peers of organization "org1". ' + err.stack ? err.stack : err);
 			t.end();

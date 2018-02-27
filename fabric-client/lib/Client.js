@@ -925,6 +925,8 @@ var Client = class extends BaseClient {
 	 *           the source code of the chaincode. If the chaincode type is golang,
 	 *           then this path is the fully qualified package name, such as
 	 *           'mycompany.com/myproject/mypackage/mychaincode'
+	 * @property {string} metadataPath - Optional. The path to the top-level
+	 *           directory containing metadata descriptors.
 	 * @property {string} chaincodeId - Required. Name of the chaincode
 	 * @property {string} chaincodeVersion - Required. Version string of the
 	 *           chaincode, such as 'v1'
@@ -1819,8 +1821,11 @@ function readFile(path) {
 function _getChaincodePackageData(request, devMode) {
 	return new Promise((resolve,reject) => {
 		if (!request.chaincodePackage) {
-			resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode));
+			logger.debug('_getChaincodePackageData -  build package with chaincodepath %s, chaincodeType %s, devMode %s, metadataPath %s',
+				request.chaincodePath, request.chaincodeType, devMode, request.metadataPath);
+			resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath));
 		} else {
+			logger.debug('_getChaincodePackageData - working with included chaincodePackage');
 			resolve(request.chaincodePackage);
 		}
 	});

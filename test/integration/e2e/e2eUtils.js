@@ -47,7 +47,7 @@ function init() {
 	}
 }
 
-function installChaincode(org, chaincode_path, version, language, t, get_admin) {
+function installChaincode(org, chaincode_path, metadata_path, version, language, t, get_admin) {
 	init();
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -121,6 +121,7 @@ function installChaincode(org, chaincode_path, version, language, t, get_admin) 
 		var request = {
 			targets: targets,
 			chaincodePath: chaincode_path,
+			metadataPath: metadata_path,
 			chaincodeId: cc_id,
 			chaincodeType: language,
 			chaincodeVersion: version

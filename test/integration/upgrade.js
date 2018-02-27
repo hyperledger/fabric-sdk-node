@@ -185,9 +185,9 @@ test('\n\n **** Testing re-initializing states during upgrade ****', (t) => {
 	let tx_id = client.newTransactionID();
 	let VER = 'v3';
 
-	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH_V2, VER, 'golang', t, true)
+	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH_V2, null, VER, 'golang', t, true)
 	.then(() => {
-		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_UPGRADE_PATH_V2, VER, 'golang', t, true);
+		return e2eUtils.installChaincode('org2', testUtil.CHAINCODE_UPGRADE_PATH_V2, null, VER, 'golang', t, true);
 	}, (err) => {
 		t.fail('Failed to install chaincode in peers of organization "org1". ' + err.stack ? err.stack : err);
 		t.end();
