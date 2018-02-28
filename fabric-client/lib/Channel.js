@@ -585,6 +585,58 @@ var Channel = class {
 				}
 			);
 	}
+	/**
+	 * Asks the peer for the current (latest) configuration block for this channel.
+	 * @param {string | Peer} target - Optional. The peer to be used to make the
+	 *        request.
+	 * @returns {Promise} A Promise for a {@link ConfigEnvelope} object containing the configuration items.
+	 */
+	getChannelConfig(target) {
+		let method = 'getChannelConfig';
+		logger.debug('%s - start for channel %s', method, this._name);
+		var targets = this._getTargetForQuery(target);
+		var signer = this._clientContext._getSigningIdentity(true);
+		var tx_id = new TransactionID(signer, true);
+		var request = {
+			targets: targets,
+			chaincodeId: Constants.CSCC,
+			txId: tx_id,
+			signer: signer,
+			fcn: 'GetConfigBlock',
+			args: [this._name]
+		};
+		return this.sendTransactionProposal(request)
+			.then(
+				function (results) {
+					var responses = results[0];
+					// var proposal = results[1];
+					logger.debug('%s - results received', method);
+					if (responses && Array.isArray(responses)) {
+						let response = responses[0];
+						if (response instanceof Error) {
+							return Promise.reject(response);
+						}
+						else if (response.response && response.response.payload) {
+							let block = _commonProto.Block.decode(response.response.payload);
+							let envelope = _commonProto.Envelope.decode(block.data.data[0]);
+							let payload = _commonProto.Payload.decode(envelope.payload);
+							let config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
+							return Promise.resolve(config_envelope);
+						}
+						else {
+							logger.error('%s - unknown response ::%s', method, response);
+							return Promise.reject(new Error(response));
+						}
+					}
+					return Promise.reject(new Error('Payload results are missing from the get channel config'));
+				}
+			).catch(
+				function (err) {
+					logger.error('%s - Failed getting channel config. Error: %s', method, err.stack ? err.stack : err);
+					return Promise.reject(err);
+				}
+			);
+	}
 
 	/**
 	 * Asks the orderer for the current (latest) configuration block for this channel.
@@ -594,8 +646,9 @@ var Channel = class {
 	 *
 	 * @returns {Promise} A Promise for a {@link ConfigEnvelope} object containing the configuration items.
 	 */
-	getChannelConfig() {
-		logger.debug('getChannelConfig - start for channel %s', this._name);
+	getChannelConfigFromOrderer() {
+		let method = 'getChannelConfigFromOrderer';
+		logger.debug('%s - start for channel %s', method, this._name);
 
 		var self = this;
 		var orderer = this._clientContext.getTargetOrderer(null, this._orderers, this._name);
@@ -647,21 +700,21 @@ var Channel = class {
 		return orderer.sendDeliver(envelope)
 			.then(
 				function (block) {
-					logger.debug('getChannelConfig - good results from seek block '); // :: %j',results);
+					logger.debug('%s - good results from seek block ', method); // :: %j',results);
 					// verify that we have the genesis block
 					if (block) {
-						logger.debug('getChannelConfig - found latest block');
+						logger.debug('%s - found latest block', method);
 					}
 					else {
-						logger.error('getChannelConfig - did not find latest block');
-						return Promise.reject(new Error('Failed to retrieve latest block'));
+						logger.error('%s - did not find latest block', method);
+						return Promise.reject(new Error('Failed to retrieve latest block', method));
 					}
 
-					logger.debug('getChannelConfig - latest block is block number %s', block.header.number);
+					logger.debug('%s - latest block is block number %s', block.header.number);
 					// get the last config block number
 					var metadata = _commonProto.Metadata.decode(block.metadata.metadata[_commonProto.BlockMetadataIndex.LAST_CONFIG]);
 					var last_config = _commonProto.LastConfig.decode(metadata.value);
-					logger.debug('getChannelConfig - latest block has config block of %s', last_config.index);
+					logger.debug('%s - latest block has config block of %s', method, last_config.index);
 
 					var txId = new TransactionID(signer);
 
@@ -719,7 +772,7 @@ var Channel = class {
 						return Promise.reject(new Error('Config block was not found'));
 					}
 					// lets have a look at the block
-					logger.debug('getChannelConfig -  config block number ::%s  -- numberof tx :: %s', block.header.number, block.data.data.length);
+					logger.debug('%s -  config block number ::%s  -- numberof tx :: %s', method, block.header.number, block.data.data.length);
 					if (block.data.data.length != 1) {
 						return Promise.reject(new Error('Config block must only contain one transaction'));
 					}
@@ -737,7 +790,7 @@ var Channel = class {
 				}
 			).catch(
 				function (err) {
-					logger.error('getChannelConfig - Failed Proposal. Error: %s', err.stack ? err.stack : err);
+					logger.error('%s - Failed Proposal. Error: %s', method, err.stack ? err.stack : err);
 					return Promise.reject(err);
 				}
 			);

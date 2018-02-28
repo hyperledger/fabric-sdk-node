@@ -211,7 +211,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		if ( eputil.checkProposal(results)) {
 			t.pass('Successfully endorsed the installed chaincode proposal');
-			// read the config block from the orderer for the channel
+			// read the config block from the peer for the channel
 			// and initialize the verify MSPs based on the participating
 			// organizations
 			return channel.initialize();
