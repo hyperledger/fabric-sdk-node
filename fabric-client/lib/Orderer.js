@@ -107,17 +107,12 @@ var Orderer = class extends Remote {
 			broadcast.on('data', function (response) {
 				logger.debug('sendBroadcast - on data response: %j', response);
 				broadcast.end();
-				if(response.info) {
+				if(response && response.info) {
 					logger.debug('sendBroadcast - response info :: %s', response.info);
 				}
-				if(response.status) {
-					if (response.status === 'SUCCESS') {
-						logger.debug('sendBroadcast - resolve with %s', response.status);
-						return resolve(response);
-					} else {
-						logger.error('sendBroadcast - reject with %s', response.status);
-						return reject(new Error(response.status));
-					}
+				if(response && response.status) {
+					logger.debug('sendBroadcast - response status %s', response.status);
+					return resolve(response);
 				}
 				else {
 					logger.error('sendBroadcast ERROR - reject with invalid response from the orderer');

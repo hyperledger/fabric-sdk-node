@@ -166,16 +166,14 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 	})
 	.then((result) => {
 		logger.debug(' response ::%j',result);
-		t.fail('Failed to get error. response: ' + result.status);
+		if(result && result.status && result.status.toString().indexOf('BAD_REQUEST') >= 0) {
+			t.pass('Successfully received the error message due to the conflict of channel: ' + result.info);
+		} else {
+			t.fail('Failed to get error. response: ' + result.status);
+		}
 		t.end();
 	}, (err) => {
-		if(err.toString().indexOf('BAD_REQUEST') >= 0) {
-			t.pass('Successfully received the error message due to the conflict of channel: ' + err);
-			t.end();
-		}
-		else {
-			t.fail('Got unexpected error: ' + err.stack ? err.stack : err);
-			t.end();
-		}
+		t.fail('Got unexpected error: ' + err.stack ? err.stack : err);
+		t.end();
 	});
 });
