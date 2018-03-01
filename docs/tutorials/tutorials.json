@@ -6,7 +6,7 @@
 		"title": "How to create a Hyperledger Fabric channel"
 	},
 	"network-config" : {
-		"title": "How to use a common network configuration file"
+		"title": "How to use a common connection profile"
 	},
 	"channel-events" : {
 		"title": "How to use the channel-based event service"
