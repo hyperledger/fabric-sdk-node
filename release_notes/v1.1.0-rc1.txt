@@ -12,6 +12,14 @@ Users that have been using the 'grpc-max-receive-message-length' configuration s
 may wish to use 'grpc.max_receive_message_length' to avoid confusion with the actual
 grpc settings.
 
+FAB-5398
+Users trying to install globally the fabric-client or fabric-ca-client packages
+may have issues. There are issues with a few dependent packages stopping the
+installation prematurely. The fabric-client and fabric-ca-client packages are
+able to be installed locally without issue. The only known solution to install
+globally is to add the --unsafe-perm option.
+     sudo npm install -g fabric-client --unsafe-perm
+
 
 Known Vulnerabilities
 ---------------------
