@@ -13,5 +13,8 @@
 	},
 	"mutual-tls" : {
 		"title": "How to configure mutual TLS"
+	},
+	"metadata-chaincode" : {
+		"title": "How to add CouchDB indexes during chaincode installation"
 	}
 }
