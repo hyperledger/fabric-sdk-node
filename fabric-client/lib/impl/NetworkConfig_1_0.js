@@ -27,7 +27,6 @@ var EventHub = require('../EventHub.js');
 var Orderer = require('../Orderer.js');
 var Organization = require('../Organization.js');
 var CertificateAuthority = require('../CertificateAuthority.js');
-var FabricCA = require('fabric-ca-client');
 
 var logger = utils.getLogger('NetworkConfig101.js');
 const CHANNELS_CONFIG = 'channels';
