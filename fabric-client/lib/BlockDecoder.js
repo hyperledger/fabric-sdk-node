@@ -1051,7 +1051,7 @@ function decodeKeyInfo(key_info_bytes) {
 	var key_info = {};
 	if (key_info_bytes) {
 		var proto_key_info = _mspConfigProto.KeyInfo.decode(key_info_bytes);
-		key_info.key_identifier = proto_key_info.getKeyIdentitier();
+		key_info.key_identifier = proto_key_info.getKeyIdentifier();
 		key_info.key_material = 'private'; //should not show this
 	}
 
