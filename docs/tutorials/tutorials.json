@@ -10,5 +10,8 @@
 	},
 	"channel-events" : {
 		"title": "How to use the channel-based event service"
+	},
+	"mutual-tls" : {
+		"title": "How to configure mutual TLS"
 	}
 }
