@@ -58,6 +58,13 @@ test('\n\n** BasePackager tests **\n\n', function(t) {
 		t.comment(err.stack ? err.stack : err);
 	});
 
+	golang.findMetadataDescriptors('/somepath')
+	.then((descriptors) => {
+		t.fail('Should have thrown an exception');
+	}).catch((err) => {
+		t.pass('Golang.findMetadataDescriptors() pass with expected error');
+		t.comment(err.stack ? err.stack : err);
+	});
 	t.end();
 });
 
