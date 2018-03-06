@@ -19,6 +19,9 @@ var klaw = require('klaw');
 var tar = require('tar-stream');
 var path = require('path');
 var zlib = require('zlib');
+const utils = require('../utils.js');
+
+let logger = utils.getLogger('packager/BasePackager.js');
 
 var BasePackager = class {
 
@@ -69,6 +72,7 @@ var BasePackager = class {
 	 */
 	findMetadataDescriptors (filePath) {
 		return new Promise((resolve, reject) => {
+			logger.debug('findMetadataDescriptors : start');
 			var descriptors = [];
 			klaw(filePath).on('data', (entry) => {
 				if (entry.stats.isFile() && this.isMetadata(entry.path)) {
@@ -77,11 +81,12 @@ var BasePackager = class {
 						name: path.join('META-INF', path.relative(filePath, entry.path).split('\\').join('/')), // for windows style paths
 						fqp: entry.path
 					};
+					logger.debug(' findMetadataDescriptors  :: %j', desc);
 					descriptors.push(desc);
 				}
 			})
 			.on('error', (error, item) => {
-				logger.error(`error while packaging ${item.path}`);
+				logger.error('error while packaging item %j :: %s', item, error);
 				reject(error);
 			})
 			.on('end', () => {
