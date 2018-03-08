@@ -156,6 +156,9 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		var pkcs11UserType = opts ? opts.usertype: null;
 		if (typeof pkcs11UserType === 'undefined' || pkcs11UserType === null)
 			pkcs11UserType = utils.getConfigSetting('crypto-pkcs11-usertype', 1);
+		if (typeof pkcs11UserType === 'string') {
+			pkcs11UserType = Number.parseInt(pkcs11UserType);
+		}
 		if(!Number.isInteger(pkcs11UserType)) {
 			throw new Error(__func() + 'PKCS11 usertype number invalid');
 		}
@@ -166,8 +169,17 @@ var CryptoSuite_PKCS11 = class extends api.CryptoSuite {
 		var pkcs11ReadWrite = opts ? opts.readwrite: null;
 		if (typeof pkcs11ReadWrite === 'undefined' || pkcs11ReadWrite === null)
 			pkcs11ReadWrite = utils.getConfigSetting('crypto-pkcs11-readwrite', true);
+		if (typeof pkcs11ReadWrite === 'string') {
+			if(pkcs11ReadWrite.toLowerCase() === 'true') {
+				pkcs11ReadWrite = true;
+			} else if(pkcs11ReadWrite.toLowerCase() === 'false') {
+				pkcs11ReadWrite = false;
+			} else {
+				throw new Error(__func() + 'PKCS11 readwrite setting must be "true" or "false"');
+			}
+		}
 		if (typeof pkcs11ReadWrite !== 'boolean') {
-			throw new Error(__func() + 'PKCS11 readwrite is invalid');
+			throw new Error(__func() + 'PKCS11 readwrite setting must be a boolean value');
 		}
 		/*
 		 * If no pin specified, get it from env var or config file.
