@@ -897,11 +897,11 @@ function decodeImplicitMetaPolicy(implicit_meta_policy_bytes) {
 
 function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 	var signature_policy_envelope = {};
-	var porto_signature_policy_envelope = _policiesProto.SignaturePolicyEnvelope.decode(signature_policy_envelope_bytes);
-	signature_policy_envelope.version = decodeVersion(porto_signature_policy_envelope.getVersion());
-	signature_policy_envelope.rule = decodeSignaturePolicy(porto_signature_policy_envelope.getRule());
+	var proto_signature_policy_envelope = _policiesProto.SignaturePolicyEnvelope.decode(signature_policy_envelope_bytes);
+	signature_policy_envelope.version = decodeVersion(proto_signature_policy_envelope.getVersion());
+	signature_policy_envelope.rule = decodeSignaturePolicy(proto_signature_policy_envelope.getRule());
 	var identities = [];
-	var proto_identities = porto_signature_policy_envelope.getIdentities();
+	var proto_identities = proto_signature_policy_envelope.getIdentities();
 	if (proto_identities)
 		for (var i in proto_identities) {
 			var msp_principal = decodeMSPPrincipal(proto_identities[i]);
