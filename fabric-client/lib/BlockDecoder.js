@@ -949,7 +949,7 @@ function decodeMSPPrincipal(proto_msp_principal) {
 		break;
 	case _mspPrProto.MSPPrincipal.Classification.ORGANIZATION_UNIT:
 		proto_principal = _mspPrProto.OrganizationUnit.decode(proto_msp_principal.getPrincipal());
-		msp_principal.msp_identifier = proto_principal.getMspIdendifier(); //string
+		msp_principal.msp_identifier = proto_principal.getMspIdentifier(); //string
 		msp_principal.organizational_unit_identifier = proto_principal.getOrganizationalUnitIdentifier(); //string
 		msp_principal.certifiers_identifier = proto_principal.getCertifiersIdentifier().toBuffer(); //bytes
 		break;
@@ -1044,7 +1044,7 @@ function decodeSigningIdentityInfo(signing_identity_info_bytes) {
 		signing_identity_info.private_signer = decodeKeyInfo(proto_signing_identity_info.getPrivateSigner());
 	}
 
-	return signing_identity_info_bytes;
+	return signing_identity_info;
 }
 
 function decodeKeyInfo(key_info_bytes) {
