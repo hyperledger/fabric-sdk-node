@@ -805,22 +805,9 @@ function decodeConfigValue(proto_config_value) {
 		var proto_channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(proto_config_value.value.value);
 		config_value.value.max_count = proto_channel_restrictions.getMaxCount().toString(); //unit64
 		break;
-	case 'CreationPolicy':
-		var proto_creation_policy = _ordererConfigurationProto.CreationPolicy.decode(proto_config_value.value.value);
-		config_value.value.policy = proto_creation_policy.getPolicy(); //string
-		break;
 	case 'Consortium':
 		var consortium_name = _commonConfigurationProto.Consortium.decode(proto_config_value.value.value);
 		config_value.value.name = consortium_name.getName(); //string
-		break;
-	case 'ChainCreationPolicyNames':
-		var proto_chain_creation_policy_names = _ordererConfigurationProto.ChainCreationPolicyNames.decode(proto_config_value.value.value);
-		var names = [];
-		var proto_names = proto_chain_creation_policy_names.getNames();
-		if(proto_names) for(let i in proto_names) {
-			names.push(proto_names[i]); //string
-		}
-		config_value.value.names = names;
 		break;
 	case 'HashingAlgorithm':
 		var proto_hashing_algorithm = _commonConfigurationProto.HashingAlgorithm.decode(proto_config_value.value.value);
