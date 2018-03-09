@@ -1,3 +1,11 @@
+## 1.0.5
+Fri Mar  9 09:10:59 EST 2018
+* [6572011](https://github.com/hyperledger/fabric-sdk-node/commit/6572011) [FAB-8723](https://jira.hyperledger.org/browse/FAB-8723) NodeSDK V1.0 - string env vars
+* [33e1825](https://github.com/hyperledger/fabric-sdk-node/commit/33e1825) [FAB-8470](https://jira.hyperledger.org/browse/FAB-8470) NodeSDK - grpc settings
+* [e630166](https://github.com/hyperledger/fabric-sdk-node/commit/e630166) [FAB-8469](https://jira.hyperledger.org/browse/FAB-8469) NodeSDK - update policies.proto
+* [65aa0d1](https://github.com/hyperledger/fabric-sdk-node/commit/65aa0d1) [FAB-8467](https://jira.hyperledger.org/browse/FAB-8467) NodeSDK use CA correctly
+* [473af31](https://github.com/hyperledger/fabric-sdk-node/commit/473af31) [FAB-8465](https://jira.hyperledger.org/browse/FAB-8465) NodeSDK Handle error messages
+
 ## 1.0.4
 Fri Feb 23 14:00:03 EDT 2018
 * [121e6d9](https://github.com/hyperledger/fabric-sdk-node/commit/121e6d9) [FAB-8351](https://jira.hyperledger.org/browse/FAB-8351) NodeSDK - add parms to PKCS11
