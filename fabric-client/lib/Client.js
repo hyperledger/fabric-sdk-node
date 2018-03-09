@@ -673,7 +673,7 @@ var Client = class extends BaseClient {
 	updateChannel(request) {
 		var have_envelope = false;
 		if(request && request.envelope) {
-			logger.debug('createChannel - have envelope');
+			logger.debug('updateChannel - have envelope');
 			have_envelope = true;
 		}
 		return this._createOrUpdateChannel(request, have_envelope);

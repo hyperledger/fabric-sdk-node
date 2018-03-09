@@ -1097,7 +1097,7 @@ var Channel = class {
 						if (response.response) {
 							logger.debug('queryBlock - response status %d:', response.response.status);
 							var block = BlockDecoder.decode(response.response.payload);
-							logger.debug('queryBlockByHash - looking at block :: %s', block.header.number);
+							logger.debug('queryBlock - looking at block :: %s', block.header.number);
 							return Promise.resolve(block);
 						}
 						// no idea what we have, lets fail it and send it back
