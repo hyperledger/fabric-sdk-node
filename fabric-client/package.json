@@ -36,7 +36,6 @@
     "promise-settle": "^0.3.0",
     "restify": "6.3.4",
     "sjcl": "1.0.7",
-    "sjcl-codec": "0.1.1",
     "stream-buffers": "3.0.1",
     "tar-stream": "1.5.2",
     "url": "^0.11.0",
