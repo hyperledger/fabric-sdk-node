@@ -1,5 +1,7 @@
 ## Hyperledger Fabric Client for Node.js
 
+[![NPM](https://nodei.co/npm/fabric-client.svg?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/fabric-fabric-client/)
+
 SDK for writing node.js applications to interact with [Hyperledger Fabric](http://hyperledger-fabric.readthedocs.io/en/latest/).
 
 This package encapsulates the APIs to interact with Peers and Orderers of the Fabric network to install and instantiate chaincodes, send transaction invocations and perform chaincode queries. 
