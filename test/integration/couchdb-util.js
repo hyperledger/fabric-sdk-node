@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 IBM All Rights Reserved.
+ * Copyright 2017, 2018 IBM All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 var Client = require('fabric-client');
 var nano = require('nano');
-var Cloudant = require('cloudant');
+var Cloudant = require('@cloudant/cloudant');
 
 module.exports.getCloudantClient = function(configFile) {
 	var username = Client.getConfigSetting('cloudant-username', 'notfound');
@@ -44,5 +44,3 @@ module.exports.destroy = function(name, url) {
 		});
 	});
 };
-
-
