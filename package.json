@@ -13,7 +13,7 @@
     "@types/bytebuffer": "^5.0.34",
     "bn.js": "^4.11.8",
     "bunyan": "^1.8.10",
-    "cloudant": "^1.10.0",
+    "@cloudant/cloudant": "^2.1.0",
     "del": "^2.2.2",
     "elliptic": "^6.3.2",
     "eslint": "^4.6.1",

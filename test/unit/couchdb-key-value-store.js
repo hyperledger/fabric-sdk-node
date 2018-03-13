@@ -42,15 +42,16 @@ test('\n\n** CouchDBKeyValueStore tests', (t) => {
 
 	var store;
 
-	new CDBKVS({url: 'http://dummyUrl'})
+	new CDBKVS({url: 'http://localhost:9999'})
 	.then(() => {
-		t.fail('Should not have been able to successfully constructed a store from an invalid URL');
-		t.end();
-	}).catch((err) => {
-		if (err.message && err.message.indexOf('Error: getaddrinfo ENOTFOUND dummyurl') > 0) {
+		t.fail('Should not have been able to successfully construct a store from an invalid URL');
+		throw new Error('Failed');
+	},(err) => {
+		if (err.message && err.message.indexOf('ECONNREFUSED') > 0) {
 			t.pass('Successfully rejected the construction request due to invalid URL');
 		} else {
 			t.fail('Store construction failed for unknown reason: ' + err.stack ? err.stack : err);
+			throw new Error('Failed');
 		}
 
 		var couchdb = CouchdbMock.createServer();
