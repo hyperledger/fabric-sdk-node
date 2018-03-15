@@ -139,7 +139,6 @@ var Client = class extends BaseClient {
 		if(this._network_config.hasClient()) {
 			this._setAdminFromConfig();
 		}
-
 	}
 
 	/**
@@ -189,6 +188,7 @@ var Client = class extends BaseClient {
 
 	/**
 	 * Set dev mode to true or false to reflect the mode of the fabric backend. See {@link Client#isDevMode} for details.
+	 * @param {boolean} devMode
 	 */
 	setDevMode(devMode) {
 		this._devMode = devMode;
@@ -470,7 +470,7 @@ var Client = class extends BaseClient {
 	/**
 	 * Returns the "client" section of the network configuration.
 	 *
-	 * @returns {object} The cleint section from the configuration
+	 * @returns {object} The client section from the configuration
 	 */
 	 getClientConfig() {
 		 let result = null;
@@ -1460,7 +1460,7 @@ var Client = class extends BaseClient {
 	 *                                     attempt to check the state store for the requested user by the "name". If not
 	 *                                     specified or falsey, the method is synchronous and returns the requested user from memory
 	 * @returns {Promise | User} Promise for the user object corresponding to the name, or null if the user does not exist or if the
-	 *                           state store has not been set. If "checkPersistence" is not specified or falsey, then the user object
+	 *                           state store has not been set. If "checkPersistence" is not specified or false, then the user object
 	 *                           is returned synchronously.
 	 */
 	getUserContext(name, checkPersistence) {

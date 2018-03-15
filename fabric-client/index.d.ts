@@ -14,6 +14,8 @@
  *  limitations under the License.
  */
 
+import { FabricCAServices } from 'fabric-ca-client';
+
 declare enum Status {
   UNKNOWN = 0,
   SUCCESS = 200,
@@ -420,38 +422,39 @@ declare abstract class BaseClient {
 declare class Client extends BaseClient {
   constructor();
   static loadFromConfig(config: any): Client;
+  loadFromConfig(config: any): void;
+  setTlsClientCertAndKey(clientCert: string, clientKey: Buffer): void;
+  addTlsClientCertAndKey(opts: any): void;
   isDevMode(): boolean;
-  getUserContext(name: string, checkPersistence: boolean): Promise<User> | User;
-  setUserContext(user: User, skipPersistence?: boolean): Promise<User>;
   setDevMode(mode: boolean): void;
-  newOrderer(url: string, opts: ConnectionOptions): Orderer;
   newChannel(name: string): Channel;
+  getChannel(name?: string, throwError?: boolean): Channel;
   newPeer(url: string, opts: ConnectionOptions): Peer;
   newEventHub(): EventHub;
-  newTransactionID(admin?: boolean): TransactionId;
-  extractChannelConfig(envelope: Buffer): Buffer;
-  createChannel(request: ChannelRequest): Promise<BroadcastResponse>;
-  createUser(opts: UserOptions): Promise<User>;
-  signChannelConfig(config: Buffer): ConfigSignature;
-  getStateStore(): IKeyValueStore;
-  setStateStore(store: IKeyValueStore): void;
-  installChaincode(request: ChaincodeInstallRequest): Promise<ProposalResponseObject>;
-  queryInstalledChaincodes(target: Peer): Promise<ChaincodeQueryResponse>;
-  queryChannels(target: Peer): Promise<ChannelQueryResponse>;
-  initCredentialStores(): Promise<boolean>;
-  loadFromConfig(config: any): void;
-  loadUserFromStateStore(name: string): Promise<User>;
-  saveUserToStateStore(): Promise<any>;
-  setAdminSigningIdentity(private_key: string, certificate: string, mspid: string): void;
-  updateChannel(request: ChannelRequest): Promise<BroadcastResponse>;
-
-  getCertificateAuthority(): any;
-  getChannel(name?: string, throwError?: boolean): Channel;
-  getClientConfig(): any;
   getEventHub(peer_name: string): EventHub;
   getEventHubsForOrg(org_name: string): EventHub[];
-  getMspid(): string;
   getPeersForOrg(org_name: string): Peer[];
+  newOrderer(url: string, opts: ConnectionOptions): Orderer;
+  getCertificateAuthority(): FabricCAServices;
+  getClientConfig(): any;
+  getMspid(): string;
+  newTransactionID(admin?: boolean): TransactionId;
+  extractChannelConfig(envelope: Buffer): Buffer;
+  signChannelConfig(config: Buffer): ConfigSignature;
+  createChannel(request: ChannelRequest): Promise<BroadcastResponse>;
+  updateChannel(request: ChannelRequest): Promise<BroadcastResponse>;
+  queryChannels(peer: Peer, useAdmin: boolean): Promise<ChannelQueryResponse>;
+  queryInstalledChaincodes(peer: Peer, useAdmin: boolean): Promise<ChaincodeQueryResponse>;
+  installChaincode(request: ChaincodeInstallRequest, timeout: number): Promise<ProposalResponseObject>;
+  initCredentialStores(): Promise<boolean>;
+  setStateStore(store: IKeyValueStore): void;
+  setAdminSigningIdentity(private_key: string, certificate: string, mspid: string): void;
+  saveUserToStateStore(): Promise<User>;
+  setUserContext(user: User, skipPersistence?: boolean): Promise<User>;
+  getUserContext(name: string, checkPersistence?: boolean): Promise<User> | User;
+  loadUserFromStateStore(name: string): Promise<User>;
+  getStateStore(): IKeyValueStore;
+  createUser(opts: UserOptions): Promise<User>;
 }
 
 declare module 'fabric-client' {
