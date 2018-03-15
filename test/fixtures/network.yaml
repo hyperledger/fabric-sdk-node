@@ -112,7 +112,6 @@ organizations:
 
     peers:
       - peer0.org1.example.com
-      - peer1.org1.example.com
 
     # [Optional]. Certificate Authorities issue certificates for identification purposes in a Fabric based
     # network. Typically certificates provisioning is done in a separate process outside of the
