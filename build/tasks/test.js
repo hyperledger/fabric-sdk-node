@@ -145,11 +145,12 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'c
 		'test/integration/e2e/invoke-transaction.js',
 		'test/integration/e2e/query.js',
 		'test/integration/invoke.js',
-		'test/integration/perf/orderer.js',
-		'test/integration/perf/peer.js',
 		'test/integration/network-config.js',
 		// channel: mychannel, chaincode: e2enodecc:v0
-		'test/integration/nodechaincode/e2e.js'
+		'test/integration/nodechaincode/e2e.js',
+		'test/integration/only-admin.js',
+		'test/integration/perf/orderer.js',
+		'test/integration/perf/peer.js'
 	]))
 	.pipe(addsrc.append(
 		'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up
