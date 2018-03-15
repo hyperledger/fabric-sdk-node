@@ -1,35 +1,10 @@
-v1.1.0 Febuary 22, 2018
+v1.1.0 March 15, 2018
 -----------------------
 
 Release Notes
 -------------
-
-FAB-5398
-Users trying to install globally the fabric-client or fabric-ca-client packages
-may have issues. There are issues with a few dependent packages stopping the
-installation prematurely. The fabric-client and fabric-ca-client packages are
-able to be installed locally without issue. The only known solution to install
-globally is to add the --unsafe-perm option.
-     sudo npm install -g fabric-client --unsafe-perm
-
-FAB-8470
-Users that have been using the 'grpc-max-send-message-length' configuration setting
-may wish to use 'grpc.max_send_message_length' to avoid confusion with the actual
-grpc settings.
-Users that have been using the 'grpc-max-receive-message-length' configuration setting
-may wish to use 'grpc.max_receive_message_length' to avoid confusion with the actual
-grpc settings.
-
-FAB-8592
-Responses from submitting transactions to the orderer will now include an info field
-to indicate any issues the orderer may have had with the submission along with the
-the status field returned previously. All status states will now be returned in
-the promise.resolve(response) rather than a error object in the promise.reject(error)
-returned previously for states other than 'SUCCESS'. This allows the application
-to evaluate the status and info of responses from the orderer and determine for
-itself the results of the submission. Network and connection errors will continue
-to be returned in the promise.reject(error) to indicate issues where the orderer
-was unable to respond.
+Support added for mutual TLS and chaincode packaging of CouchDB indexes.
+Bug fixes and documentation improvements.
 
 Known Vulnerabilities
 ---------------------
@@ -83,7 +58,33 @@ none
 
 Known Issues & Workarounds
 --------------------------
-none
+https://jira.hyperledger.org/browse/FAB-5398
+Users trying to install globally the fabric-client or fabric-ca-client packages
+may have issues. There are issues with a few dependent packages stopping the
+installation prematurely. The fabric-client and fabric-ca-client packages are
+able to be installed locally without issue. The only known solution to install
+globally is to add the --unsafe-perm option.
+     sudo npm install -g fabric-client --unsafe-perm
+
+https://jira.hyperledger.org/browse/FAB-8470
+Users that have been using the 'grpc-max-send-message-length' configuration setting
+may wish to use 'grpc.max_send_message_length' to avoid confusion with the actual
+grpc settings.
+Users that have been using the 'grpc-max-receive-message-length' configuration setting
+may wish to use 'grpc.max_receive_message_length' to avoid confusion with the actual
+grpc settings.
+
+https://jira.hyperledger.org/browse/FAB-8592
+Responses from submitting transactions to the orderer will now include an info field
+to indicate any issues the orderer may have had with the submission along with the
+the status field returned previously. All status states will now be returned in
+the promise.resolve(response) rather than a error object in the promise.reject(error)
+returned previously for states other than 'SUCCESS'. This allows the application
+to evaluate the status and info of responses from the orderer and determine for
+itself the results of the submission. Network and connection errors will continue
+to be returned in the promise.reject(error) to indicate issues where the orderer
+was unable to respond.
 
 Change Log
 ----------
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.1/CHANGELOG.md#v110
