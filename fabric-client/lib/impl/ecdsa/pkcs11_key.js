@@ -19,14 +19,10 @@
 var api = require('../../api.js');
 var jsrsa = require('jsrsasign');
 var asn1 = jsrsa.asn1;
-var crypto = jsrsa.crypto;
 
 var elliptic = require('elliptic');
 var EC = elliptic.ec;
 
-const _spkiBase = { 256: '3059301306072A8648CE3D020106082A8648CE3D030107034200',
-		    384: '',
-		  };
 
 /**
  * This module implements the {@link module:api.Key} interface, for ECDSA key management
@@ -45,14 +41,14 @@ var PKCS11_ECDSA_KEY = class extends api.Key {
 		if (!(attr.ski instanceof Buffer))
 			throw new Error('constructor: key SKI must be Buffer type');
 		if ((typeof attr.priv === 'undefined' || attr.priv === null) &&
-		    (typeof attr.pub  === 'undefined' || attr.pub  === null))
+			(typeof attr.pub === 'undefined' || attr.pub === null))
 			throw new Error('constructor: invalid key handles');
 		if (typeof attr.priv !== 'undefined' && attr.priv !== null &&
-		    !(attr.priv instanceof Buffer)) throw new Error(
-			    'constructor: private key handle must be Buffer type');
-		if (typeof attr.pub  !== 'undefined' && attr.pub  !== null &&
-		    !(attr.pub  instanceof Buffer)) throw new Error(
-			    'constructor: public key handle must be Buffer type');
+			!(attr.priv instanceof Buffer))
+			throw new Error('constructor: private key handle must be Buffer type');
+		if (typeof attr.pub !== 'undefined' && attr.pub !== null &&
+			!(attr.pub instanceof Buffer))
+			throw new Error('constructor: public key handle must be Buffer type');
 		if (size === 'undefined')
 			throw new Error('constructor: size parameter must be specified');
 		if (size != 256 && size != 384) throw new Error(
@@ -109,9 +105,9 @@ var PKCS11_ECDSA_KEY = class extends api.Key {
 		csri.setSubjectByParam(param.subject);
 		csri.setSubjectPublicKeyByGetKey({xy: pubKey.getPublic('hex'), curve: 'secp256r1'});
 		if (param.ext !== undefined && param.ext.length !== undefined) {
-			for (var i = 0; i < param.ext.length; i++) {
-				for (key in param.ext[i]) {
-					csri.appendExtensionByName(key, param.ext[i][key]);
+			for (let ext of param.ext) {
+				for (let key in ext) {
+					csri.appendExtensionByName(key, ext[key]);
 				}
 			}
 		}
@@ -128,7 +124,7 @@ var PKCS11_ECDSA_KEY = class extends api.Key {
 		//check to see if this is a private key
 		if (!this.isPrivate()){
 			throw new Error('A CSR cannot be generated from a public key');
-		};
+		}
 
 		try {
 			var csr = this.newCSRPEM({
