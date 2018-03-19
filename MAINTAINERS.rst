@@ -14,10 +14,10 @@ Maintainers
 +---------------------------+---------------------+------------------+----------------+-------------------------------------+
 | Jim Zhang                 | jimthematrix        | jimthematrix     | jimthematrix   | jim\_the\_matrix@hotmail.com        |
 +---------------------------+---------------------+------------------+----------------+-------------------------------------+
-| Jonathan Levi             | JonathanLevi        | JonathanLevi     | JonathanLevi   | jonathan@hacera.com                 |
+| Jonathan Levi             | JonathanLevi        | hacera           | JonathanLevi   | jonathan@hacera.com                 |
 +---------------------------+---------------------+------------------+----------------+-------------------------------------+
 | Keith Smith               | smithbk             | smithbk          | smithbk        | bksmith@us.ibm.com                  |
 +---------------------------+---------------------+------------------+----------------+-------------------------------------+
 
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
-s
+Licensed under Creative Commons Attribution 4.0 International License
+  https://creativecommons.org/licenses/by/4.0/
