@@ -10,7 +10,7 @@
     "node": "^8.9.0",
     "npm": "^5.5.1"
   },
-  "types": "./index.d.ts",
+  "types": "./types/index.d.ts",
   "dependencies": {
     "bn.js": "^4.11.3",
     "elliptic": "^6.2.3",

@@ -11,6 +11,7 @@ gulp.task('lint', function () {
 		'**/*.js',
 		'fabric-client/**/*.js',
 		'fabric-ca-client/lib/*.js',
+		'!test/typescript/test.js',
 		'!node_modules/**',
 		'!fabric-client/node_modules/**',
 		'!fabric-ca-client/node_modules/**',

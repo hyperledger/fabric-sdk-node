@@ -20,7 +20,8 @@
     }
   },
   "files": [
-      "index.d.ts"
+      "index.d.ts",
+      "base.d.ts"
   ],
   "formatCodeOptions": {
     "indentSize": 2,

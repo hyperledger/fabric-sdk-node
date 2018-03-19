@@ -99,7 +99,14 @@ gulp.task('docker-ready', ['docker-clean'], shell.task([
 	'docker-compose -f test/fixtures/docker-compose.yaml up -d'
 ]));
 
-gulp.task('test', ['clean-up', 'lint', 'pre-test', 'docker-ready', 'ca'], function() {
+gulp.task('compile', shell.task([
+	'npm run compile',
+], {
+	verbose: true, // so we can see the docker command output
+	ignoreErrors: false // once compile failed, throw error
+}));
+
+gulp.task('test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'ca'], function() {
 	// use individual tests to control the sequence they get executed
 	// first run the ca-tests that tests all the member registration
 	// and enrollment scenarios (good and bad calls). Then the rest
