@@ -2076,30 +2076,6 @@ function _getProposalResponseResults(proposal_response) {
 	return extension.results.toBuffer();
 }
 
-//internal utility method to combine MSPs
-function _combineMSPs(current, configuration) {
-	var results = new Map();
-	_arrayToMap(results, current);
-	// do these second to replace any of the same name
-	_arrayToMap(results, configuration);
-
-	return results;
-}
-
-//internal utility method to add msps to a map
-function _arrayToMap(map, msps) {
-	if (msps) {
-		var keys = Object.keys(msps);
-		for (let key in keys) {
-			let id = keys[key];
-			let msp = msps[id];
-			let mspid = msp.getId();
-			logger.debug('_arrayToMap - add msp ::%s', mspid);
-			map.set(mspid, msp);
-		}
-	}
-}
-
 /*
  * utility method to load in a config group
  * @param {Object} - config_items - holder of values found in the configuration
@@ -2319,7 +2295,7 @@ function loadPolicy(config_items, versions, key, policy, group_name) {
 	try {
 		if(policy.type === _policiesProto.Policy.PolicyType.SIGNATURE){
 			let signature_policy = _policiesProto.SignaturePolicyEnvelope.decode(policy.policy);
-			logger.debug('loadPolicy - %s - policy SIGNATURE :: %s %s', group_name, signature_policy.encodeJSON(), this.decodeSignaturePolicy(signature_policy.getIdentities()));
+			logger.debug('loadPolicy - %s - policy SIGNATURE :: %s %s', group_name, signature_policy.encodeJSON(), decodeSignaturePolicy(signature_policy.getIdentities()));
 		}else if(policy.type === _policiesProto.Policy.PolicyType.IMPLICIT_META){
 			let implicit_policy = _policiesProto.ImplicitMetaPolicy.decode(policy.value);
 			let rule = ImplicitMetaPolicy_Rule[implicit_policy.getRule()];

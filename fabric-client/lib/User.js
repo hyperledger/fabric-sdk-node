@@ -184,11 +184,11 @@ var User = class {
 			promise = Promise.resolve(this._cryptoSuite.importKey(certificate, {ephemeral: true}));
 		}
 		return promise
-		.then((pubKey) => {
-			var identity = new Identity(certificate, pubKey, mspId, this._cryptoSuite);
-			this._identity = identity;
-			this._signingIdentity = new SigningIdentity(certificate, pubKey, mspId, this._cryptoSuite, new Signer(this._cryptoSuite, privateKey));
-		});
+			.then((pubKey) => {
+				var identity = new Identity(certificate, pubKey, mspId, this._cryptoSuite);
+				this._identity = identity;
+				this._signingIdentity = new SigningIdentity(certificate, pubKey, mspId, this._cryptoSuite, new Signer(this._cryptoSuite, privateKey));
+			});
 	}
 
 	/**
@@ -230,31 +230,31 @@ var User = class {
 		var pubKey;
 
 		return this._cryptoSuite.importKey(state.enrollment.identity.certificate, { algorithm: api.CryptoAlgorithms.X509Certificate })
-		.then((key) => {
-			pubKey = key;
+			.then((key) => {
+				pubKey = key;
 
-			var identity = new Identity( state.enrollment.identity.certificate, pubKey, self._mspId, this._cryptoSuite);
-			self._identity = identity;
+				var identity = new Identity( state.enrollment.identity.certificate, pubKey, self._mspId, this._cryptoSuite);
+				self._identity = identity;
 
-			// during serialization (see toString() below) only the key's SKI are saved
-			// swap out that for the real key from the crypto provider
-			return self._cryptoSuite.getKey(state.enrollment.signingIdentity);
-		}).then((privateKey) => {
+				// during serialization (see toString() below) only the key's SKI are saved
+				// swap out that for the real key from the crypto provider
+				return self._cryptoSuite.getKey(state.enrollment.signingIdentity);
+			}).then((privateKey) => {
 			// the key retrieved from the key store using the SKI could be a public key
 			// or a private key, check to make sure it's a private key
-			if (privateKey.isPrivate()) {
-				self._signingIdentity = new SigningIdentity(
-					state.enrollment.identity.certificate,
-					pubKey,
-					self._mspId,
-					self._cryptoSuite,
-					new Signer(self._cryptoSuite, privateKey));
+				if (privateKey.isPrivate()) {
+					self._signingIdentity = new SigningIdentity(
+						state.enrollment.identity.certificate,
+						pubKey,
+						self._mspId,
+						self._cryptoSuite,
+						new Signer(self._cryptoSuite, privateKey));
 
-				return self;
-			} else {
-				throw new Error(util.format('Private key missing from key store. Can not establish the signing identity for user %s', state.name));
-			}
-		});
+					return self;
+				} else {
+					throw new Error(util.format('Private key missing from key store. Can not establish the signing identity for user %s', state.name));
+				}
+			});
 	}
 
 	/**

@@ -28,9 +28,7 @@ var Peer = require('./Peer.js');
 var EventHub = require('./EventHub.js');
 var Orderer = require('./Orderer.js');
 var TransactionID = require('./TransactionID.js');
-var MSP = require('./msp/msp.js');
 var idModule = require('./msp/identity.js');
-var Identity = idModule.Identity;
 var SigningIdentity = idModule.SigningIdentity;
 var Signer = idModule.Signer;
 
@@ -160,14 +158,14 @@ var Client = class extends BaseClient {
 	 * @param {object} opts - The options object holding the connection settings
 	 *        that will be updated with the mutual TLS clientCert and clientKey.
 	 */
-	 addTlsClientCertAndKey(opts) {
-		 if(this._tls_mutual.clientCert) {
-			 opts.clientCert = this._tls_mutual.clientCert;
-		 }
-		 if(this._tls_mutual.clientKey) {
-			 opts.clientKey = this._tls_mutual.clientKey;
-		 }
-	 }
+	addTlsClientCertAndKey(opts) {
+		if(this._tls_mutual.clientCert) {
+			opts.clientCert = this._tls_mutual.clientCert;
+		}
+		if(this._tls_mutual.clientKey) {
+			opts.clientKey = this._tls_mutual.clientKey;
+		}
+	}
 
 
 	/**
@@ -331,25 +329,25 @@ var Client = class extends BaseClient {
 	 * @param {string} org_name - Optional - The name of an organization
 	 * @returns {EventHub[]} An array of EventHub instances that are defined for this organization
 	 */
-	 getEventHubsForOrg(org_name) {
-		 var event_hubs = [];
-		 if(this._network_config) {
-			 if(!org_name && this._network_config.hasClient()) {
-				 let client = this._network_config.getClientConfig();
-				 org_name = client.organization;
-			 }
-			 if(org_name) {
-				 let organization = this._network_config.getOrganization(org_name);
-				 if(organization) {
-					 event_hubs = organization.getEventHubs();
-				 }
-			 }
-		 }
+	getEventHubsForOrg(org_name) {
+		var event_hubs = [];
+		if(this._network_config) {
+			if(!org_name && this._network_config.hasClient()) {
+				let client = this._network_config.getClientConfig();
+				org_name = client.organization;
+			}
+			if(org_name) {
+				let organization = this._network_config.getOrganization(org_name);
+				if(organization) {
+					event_hubs = organization.getEventHubs();
+				}
+			}
+		}
 
-		 return event_hubs;
-	 }
+		return event_hubs;
+	}
 
-	 /**
+	/**
  	 * Returns a list of {@link Peer} for the named organization as defined
  	 * in the currently loaded network configuration. If no organization is
  	 * provided then the organization named in the currently active network
@@ -358,23 +356,21 @@ var Client = class extends BaseClient {
  	 * @param {string} org_name - Optional - The name of an organization
  	 * @returns {Peer[]} An array of Peer instances that are defined for this organization
  	 */
- 	 getPeersForOrg(org_name) {
- 		 var peers = [];
- 		 if(this._network_config) {
- 			 if(!org_name && this._network_config.hasClient()) {
- 				 let client = this._network_config.getClientConfig();
- 				 org_name = client.organization;
- 			 }
- 			 if(org_name) {
- 				 let organization = this._network_config.getOrganization(org_name);
- 				 if(organization) {
- 					 peers = organization.getPeers();
- 				 }
- 			 }
- 		 }
-
- 		 return peers;
- 	 }
+	getPeersForOrg(org_name) {
+		if(this._network_config) {
+			if(!org_name && this._network_config.hasClient()) {
+				let client = this._network_config.getClientConfig();
+				org_name = client.organization;
+			}
+			if(org_name) {
+				let organization = this._network_config.getOrganization(org_name);
+				if(organization) {
+					return organization.getPeers();
+				}
+			}
+		}
+		return [];
+	}
 
 	/**
 	 * Returns an {@link Orderer} object with the given url and opts. An orderer object
@@ -405,81 +401,79 @@ var Client = class extends BaseClient {
 	 *        defined in the loaded connection profile.
 	 * @returns {CertificateAuthority}
 	 */
-	 getCertificateAuthority(name) {
-		 if(!this._network_config) {
-			 throw new Error('No network configuration has been loaded');
-		 }
-		 if(!this._cryptoSuite) {
-			 throw new Error('A crypto suite has not been assigned to this client');
-		 }
-		 let ca_info = null;
-		 let ca_service = null;
+	getCertificateAuthority(name) {
+		if(!this._network_config) {
+			throw new Error('No network configuration has been loaded');
+		}
+		if(!this._cryptoSuite) {
+			throw new Error('A crypto suite has not been assigned to this client');
+		}
+		let ca_info = null;
+		let ca_service = null;
 
-		 if(name) {
-			 ca_info = this._network_config.getCertificateAuthority(name);
-		 } else {
-			 let client_config = this._network_config.getClientConfig();
-			 if(client_config && client_config.organization) {
-			 	let organization_config = this._network_config.getOrganization(client_config.organization);
-			 	if(organization_config) {
-				 	let ca_infos = organization_config.getCertificateAuthorities();
-				 	if(ca_infos.length > 0) {
-					 	ca_info = ca_infos[0];
-				 	}
-			 	}
+		if(name) {
+			ca_info = this._network_config.getCertificateAuthority(name);
+		} else {
+			let client_config = this._network_config.getClientConfig();
+			if(client_config && client_config.organization) {
+				let organization_config = this._network_config.getOrganization(client_config.organization);
+				if(organization_config) {
+					let ca_infos = organization_config.getCertificateAuthorities();
+					if(ca_infos.length > 0) {
+						ca_info = ca_infos[0];
+					}
+				}
 			}
-		 }
+		}
 
-		 if(ca_info) {
-			 ca_service = this._buildCAfromConfig(ca_info);
-		 } else {
-			 throw new Error('Network configuration is missing this client\'s organization and certificate authority');
-		 }
+		if(ca_info) {
+			ca_service = this._buildCAfromConfig(ca_info);
+		} else {
+			throw new Error('Network configuration is missing this client\'s organization and certificate authority');
+		}
 
-		 return ca_service;
-	 }
+		return ca_service;
+	}
 
-	 /*
+	/*
 	  * utility method to build a ca from a connection profile ca settings
 	  */
-	 _buildCAfromConfig(ca_info) {
-		 let tlsCACerts = ca_info.getTlsCACerts();
-		 if(tlsCACerts) {
-			 tlsCACerts = [tlsCACerts];
-		 } else {
-			 tlsCACerts = [];
-		 }
-		 let connection_options = ca_info.getConnectionOptions();
-		 let verify = true; //default if not found
-		 if(connection_options && typeof connection_options.verify === 'boolean') {
-			 verify = connection_options.verify;
-		 }
-		 let tls_options = {
-			 trustedRoots: tlsCACerts,
-			 verify: verify
-		 };
-		 let ca_url = ca_info.getUrl();
-		 let ca_name = ca_info.getCaName();
+	_buildCAfromConfig(ca_info) {
+		let tlsCACerts = ca_info.getTlsCACerts();
+		if(tlsCACerts) {
+			tlsCACerts = [tlsCACerts];
+		} else {
+			tlsCACerts = [];
+		}
+		let connection_options = ca_info.getConnectionOptions();
+		let verify = true; //default if not found
+		if(connection_options && typeof connection_options.verify === 'boolean') {
+			verify = connection_options.verify;
+		}
+		let tls_options = {
+			trustedRoots: tlsCACerts,
+			verify
+		};
+		let ca_url = ca_info.getUrl();
+		let ca_name = ca_info.getCaName();
 
-		 let ca_service_class = Client.getConfigSetting('certificate-authority-client');
-		 let ca_service_impl = require(ca_service_class);
-		 let ca_service = new ca_service_impl( {url : ca_url, tlsOptions : tls_options, caName : ca_name, cryptoSuite : this._cryptoSuite});
-		 return ca_service;
-	 }
+		let ca_service_class = Client.getConfigSetting('certificate-authority-client');
+		let ca_service_impl = require(ca_service_class);
+		let ca_service = new ca_service_impl( {url : ca_url, tlsOptions : tls_options, caName : ca_name, cryptoSuite : this._cryptoSuite});
+		return ca_service;
+	}
 
 	/**
 	 * Returns the "client" section of the network configuration.
 	 *
 	 * @returns {object} The client section from the configuration
 	 */
-	 getClientConfig() {
-		 let result = null;
-		 if(this._network_config && this._network_config.hasClient()) {
-			 result = this._network_config.getClientConfig();
-		 }
-
-		 return result;
-	 }
+	getClientConfig() {
+		if(this._network_config && this._network_config.hasClient()) {
+			return this._network_config.getClientConfig();
+		}
+		return null;
+	}
 
 	/**
 	 * Returns the mspid of the currently loaded client's organization
@@ -488,15 +482,10 @@ var Client = class extends BaseClient {
 	 * @returns {string} the mspid of the organization defined in the client
 	 *          section of the loaded network configuration
 	 */
-	 getMspid() {
-		 let result = null;
-		 let client_config = this.getClientConfig();
-		 if(client_config) {
-			 result = client_config.mspid;
-		 }
-
-		 return result;
-	 }
+	getMspid() {
+		const client_config = this.getClientConfig();
+		return client_config?client_config.mspid:null;
+	}
 
 	/**
 	 * Returns a new {@link TransactionID} object. Fabric transaction ids are constructed
@@ -718,10 +707,6 @@ var Client = class extends BaseClient {
 		} catch (err) {
 			return Promise.reject(err);
 		}
-
-		var self = this;
-		var channel_id = request.name;
-		var channel = null;
 
 		// caller should have gotten a admin based TransactionID
 		// but maybe not, so go with whatever they have decided
@@ -1863,16 +1848,14 @@ function readFile(path) {
 
 // internal utility method to get the chaincodePackage data in bytes
 function _getChaincodePackageData(request, devMode) {
-	return new Promise((resolve,reject) => {
-		if (!request.chaincodePackage) {
-			logger.debug('_getChaincodePackageData -  build package with chaincodepath %s, chaincodeType %s, devMode %s, metadataPath %s',
-				request.chaincodePath, request.chaincodeType, devMode, request.metadataPath);
-			resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath));
-		} else {
-			logger.debug('_getChaincodePackageData - working with included chaincodePackage');
-			resolve(request.chaincodePackage);
-		}
-	});
+	if (!request.chaincodePackage) {
+		logger.debug('_getChaincodePackageData -  build package with chaincodepath %s, chaincodeType %s, devMode %s, metadataPath %s',
+			request.chaincodePath, request.chaincodeType, devMode, request.metadataPath);
+		return Promise.resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath));
+	} else {
+		logger.debug('_getChaincodePackageData - working with included chaincodePackage');
+		return Promise.resolve(request.chaincodePackage);
+	}
 }
 
 // internal utility method to check and convert any strings to protobuf signatures

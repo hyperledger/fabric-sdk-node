@@ -25,11 +25,7 @@ var logger = utils.getLogger('EventHub.js');
 
 var _events = grpc.load(__dirname + '/protos/peer/events.proto').protos;
 var _common = grpc.load(__dirname + '/protos/common/common.proto').common;
-var _ccTransProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
 var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
-var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
-var _ccProposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
-var _ccEventProto = grpc.load(__dirname + '/protos/peer/chaincode_event.proto').protos;
 const five_minutes_ms = 5*60*1000;
 
 var _validation_codes = {};
@@ -304,7 +300,7 @@ var EventHub = class {
 				return;
 			}
 
-			var state = -1;
+			let state = -1;
 			if(self._stream) state = self._stream.call.channel_.getConnectivityState();
 			logger.debug('on.data - grpc stream state :%s',state);
 			if (event.Event == 'block') {
@@ -335,7 +331,7 @@ var EventHub = class {
 				return;
 			}
 
-			var state = -1;
+			let state = -1;
 			if(self._stream) state = self._stream.call.channel_.getConnectivityState();
 			logger.debug('on.end - grpc stream state :%s',state);
 			self._disconnect(new Error('Peer event hub has disconnected due to an "end" event'));
@@ -351,7 +347,7 @@ var EventHub = class {
 				return;
 			}
 
-			var state = -1;
+			let state = -1;
 			if(self._stream) state = self._stream.call.channel_.getConnectivityState();
 			logger.debug('on.error - grpc stream state :%s',state);
 			if(err instanceof Error) {
@@ -474,7 +470,7 @@ var EventHub = class {
 	 */
 	_checkConnection(throw_error, force_reconnect) {
 		logger.debug('_checkConnection - start throw_error %s, force_reconnect %s',throw_error, force_reconnect);
-		var state = 0;
+		let state = 0;
 		if(this._stream) {
 			state = this._stream.call.channel_.getConnectivityState();
 		}
@@ -498,7 +494,7 @@ var EventHub = class {
 						this._stream.resume();
 						logger.debug('_checkConnection - grpc resuming ');
 					}
-					var state = this._stream.call.channel_.getConnectivityState();
+					let state = this._stream.call.channel_.getConnectivityState();
 					logger.debug('_checkConnection - grpc stream state :%s',state);
 					if(state != 2) {
 						// try to reconnect

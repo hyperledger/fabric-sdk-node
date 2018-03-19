@@ -98,6 +98,7 @@ var MSP = class {
 	 * @returns {SigningIdentity}
 	 */
 	getSigningIdentity(identifier) {
+		if(identifier);
 		throw new Error('Not implemented yet');
 	}
 
@@ -165,9 +166,9 @@ var MSP = class {
 		}
 		else {
 			return this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate })
-			.then((publicKey) => {
-				return new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
-			});
+				.then((publicKey) => {
+					return new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
+				});
 		}
 	}
 
@@ -177,6 +178,7 @@ var MSP = class {
 	 * @returns {boolean}
 	 */
 	validate(id) {
+		if(id);//TODO no checking yet
 		return true;
 	}
 

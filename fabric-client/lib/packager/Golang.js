@@ -14,11 +14,8 @@
 
 'use strict';
 
-var fs = require('fs-extra');
 var klaw = require('klaw');
-var tar = require('tar-stream');
 var path = require('path');
-var zlib = require('zlib');
 var sbuf = require('stream-buffers');
 var utils = require('../utils.js');
 var BasePackager = require('./BasePackager');
@@ -53,9 +50,9 @@ class GolangPackager extends BasePackager {
 		return this.findSource(goPath, projDir).then((srcDescriptors) => {
 			if (metadataPath){
 				return super.findMetadataDescriptors(metadataPath)
-				.then((metaDescriptors) => {
-					return srcDescriptors.concat(metaDescriptors);
-				});
+					.then((metaDescriptors) => {
+						return srcDescriptors.concat(metaDescriptors);
+					});
 			} else {
 				return srcDescriptors;
 			}
@@ -64,7 +61,7 @@ class GolangPackager extends BasePackager {
 		}).then(() => {
 			return buffer.getContents();
 		});
-	};
+	}
 
 	/**
 	 * Given an input 'filePath', recursively parse the filesystem for any files
@@ -92,13 +89,13 @@ class GolangPackager extends BasePackager {
 				}
 
 			})
-			.on('error', (error, item) => {
-				logger.error(`error while packaging ${item.path}`);
-				reject(error);
-			})
-			.on('end', () => {
-				resolve(descriptors);
-			});
+				.on('error', (error, item) => {
+					logger.error(`error while packaging ${item.path}`);
+					reject(error);
+				})
+				.on('end', () => {
+					resolve(descriptors);
+				});
 		});
 	}
 }

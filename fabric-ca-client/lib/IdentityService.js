@@ -16,7 +16,6 @@
 
 'use strict';
 
-const logger = require('./utils').getLogger('IdentityService');
 const checkRegistrar = require('./helper').checkRegistrar;
 
 /**
@@ -115,7 +114,7 @@ class IdentityService {
 	 * @return {Promise} Return the secret of this new identity
 	 */
 	create(req, registrar) {
-		if (typeof req === 'undefined' || req === null) {
+		if (!req) {
 			throw new Error('Missing required argument "req"');
 		}
 

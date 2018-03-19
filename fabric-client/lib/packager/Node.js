@@ -47,9 +47,9 @@ class NodePackager extends BasePackager {
 		return this.findSource(projDir).then((srcDescriptors) => {
 			if (metadataPath){
 				return super.findMetadataDescriptors(metadataPath)
-				.then((metaDescriptors) => {
-					return srcDescriptors.concat(metaDescriptors);
-				});
+					.then((metaDescriptors) => {
+						return srcDescriptors.concat(metaDescriptors);
+					});
 			} else {
 				return srcDescriptors;
 			}

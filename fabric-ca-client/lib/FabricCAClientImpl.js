@@ -16,7 +16,6 @@
 
 'use strict';
 
-var api = require('./api.js');
 var utils = require('./utils.js');
 var BaseClient = require('./BaseClient.js');
 var util = require('util');
@@ -89,7 +88,7 @@ var FabricCAServices = class extends BaseClient {
 
 		var endpoint = FabricCAServices._parseURL(url);
 
-		if (!!cryptoSuite) {
+		if (cryptoSuite) {
 			this.setCryptoSuite(cryptoSuite);
 		} else {
 			this.setCryptoSuite(utils.newCryptoSuite());
@@ -210,31 +209,31 @@ var FabricCAServices = class extends BaseClient {
 			}
 			self.getCryptoSuite().generateKey(opts)
 				.then(
-				function (privateKey) {
+					function (privateKey) {
 					//generate CSR using enrollmentID for the subject
-					try {
-						var csr = privateKey.generateCSR('CN=' + req.enrollmentID);
-						self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.profile, req.attr_reqs)
-							.then(
-							function (enrollResponse) {
-								return resolve({
-									key: privateKey,
-									certificate: enrollResponse.enrollmentCert,
-									rootCertificate: enrollResponse.caCertChain
-								});
-							},
-							function (err) {
-								return reject(err);
-							}
-							);
+						try {
+							var csr = privateKey.generateCSR('CN=' + req.enrollmentID);
+							self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.profile, req.attr_reqs)
+								.then(
+									function (enrollResponse) {
+										return resolve({
+											key: privateKey,
+											certificate: enrollResponse.enrollmentCert,
+											rootCertificate: enrollResponse.caCertChain
+										});
+									},
+									function (err) {
+										return reject(err);
+									}
+								);
 
-					} catch (err) {
-						return reject(new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err)));
+						} catch (err) {
+							return reject(new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err)));
+						}
+					},
+					function (err) {
+						return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]', err)));
 					}
-				},
-				function (err) {
-					return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]', err)));
-				}
 				);
 
 		});
@@ -295,31 +294,31 @@ var FabricCAServices = class extends BaseClient {
 			//generate enrollment certificate pair for signing
 			self.getCryptoSuite().generateKey()
 				.then(
-				function (privateKey) {
+					function (privateKey) {
 					//generate CSR using the subject of the current user's certificate
-					try {
-						var csr = privateKey.generateCSR('CN=' + subject);
-						self._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity(), attr_reqs)
-							.then(
-							function (response) {
-								return resolve({
-									key: privateKey,
-									certificate: Buffer.from(response.result.Cert, 'base64').toString(),
-									rootCertificate: Buffer.from(response.result.ServerInfo.CAChain, 'base64').toString()
-								});
-							},
-							function (err) {
-								return reject(err);
-							}
-							);
+						try {
+							var csr = privateKey.generateCSR('CN=' + subject);
+							self._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity(), attr_reqs)
+								.then(
+									function (response) {
+										return resolve({
+											key: privateKey,
+											certificate: Buffer.from(response.result.Cert, 'base64').toString(),
+											rootCertificate: Buffer.from(response.result.ServerInfo.CAChain, 'base64').toString()
+										});
+									},
+									function (err) {
+										return reject(err);
+									}
+								);
 
-					} catch (err) {
-						return reject(new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err)));
+						} catch (err) {
+							return reject(new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err)));
+						}
+					},
+					function (err) {
+						return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]', err)));
 					}
-				},
-				function (err) {
-					return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]', err)));
-				}
 				);
 
 		});
@@ -575,11 +574,11 @@ var FabricCAClient = class {
 			}
 
 			return self.post('register', regRequest, signingIdentity)
-			.then(function (response) {
-				return resolve(response.result.secret);
-			}).catch(function (err) {
-				return reject(err);
-			});
+				.then(function (response) {
+					return resolve(response.result.secret);
+				}).catch(function (err) {
+					return reject(err);
+				});
 		});
 	}
 
@@ -618,11 +617,11 @@ var FabricCAClient = class {
 			};
 
 			return self.post('revoke', regRequest, signingIdentity)
-			.then(function (response) {
-				return resolve(response);
-			}).catch(function (err) {
-				return reject(err);
-			});
+				.then(function (response) {
+					return resolve(response);
+				}).catch(function (err) {
+					return reject(err);
+				});
 		});
 	}
 
@@ -654,11 +653,11 @@ var FabricCAClient = class {
 			}
 
 			return self.post('reenroll', request, signingIdentity)
-			.then(function (response) {
-				return resolve(response);
-			}).catch(function (err) {
-				return reject(err);
-			});
+				.then(function (response) {
+					return resolve(response);
+				}).catch(function (err) {
+					return reject(err);
+				});
 		});
 	}
 
@@ -947,7 +946,7 @@ var FabricCAClient = class {
 		if (!(contents[0].match(/-----\s*BEGIN ?([^-]+)?-----/) &&
 			contents[contents.length - 1].match(/-----\s*END ?([^-]+)?-----/))) {
 			throw new Error('Input parameter does not appear to be PEM-encoded.');
-		};
+		}
 		contents.shift(); //remove BEGIN
 		contents.pop(); //remove END
 		//base64 decode and encode as hex string
@@ -964,17 +963,17 @@ var FabricCAClient = class {
 		//check for protocol
 		if (!connect_opts.protocol) {
 			throw new Error('Protocol must be set to \'http\' or \'https\'');
-		};
+		}
 
 		if (connect_opts.protocol != 'http') {
 			if (connect_opts.protocol != 'https') {
 				throw new Error('Protocol must be set to \'http\' or \'https\'');
 			}
-		};
+		}
 
 		if (!connect_opts.hostname) {
 			throw new Error('Hostname must be set');
-		};
+		}
 
 		if (connect_opts.port) {
 			if (!Number.isInteger(connect_opts.port)) {
@@ -993,7 +992,7 @@ function getSubjectCommonName(pem) {
 	var hex = x509.pemToHex(pem);
 	var d = ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0, 5]);
 	var subject = x509.hex2dn(d); // format: '/C=US/ST=California/L=San Francisco/CN=Admin@org1.example.com/emailAddress=admin@org1.example.com'
-	var m = subject.match(/CN=.+[^\/]/);
+	var m = subject.match(/CN=.+[^/]/);
 	if (!m)
 		throw new Error('Certificate PEM does not seem to contain a valid subject with common name "CN"');
 	else

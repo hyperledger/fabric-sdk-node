@@ -16,7 +16,6 @@
 
 'use strict';
 
-var api = require('./api.js');
 var utils = require('./utils.js');
 var Remote = require('./Remote');
 var grpc = require('grpc');
@@ -60,12 +59,12 @@ var Peer = class extends Remote {
 	/**
 	 * Close the service connection.
 	 */
-	 close() {
-		 if(this._endorserClient) {
-			 logger.info('close - closing peer connection ' + this._endpoint.addr);
-			 this._endorserClient.close();
-		 }
-	 }
+	close() {
+		if(this._endorserClient) {
+			logger.info('close - closing peer connection ' + this._endpoint.addr);
+			this._endorserClient.close();
+		}
+	}
 
 	/**
 	 * Set a role for this peer.

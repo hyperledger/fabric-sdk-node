@@ -50,6 +50,7 @@ var BasePackager = class {
 	 * @param metadataPath
 	 */
 	package (chaincodePath, metadataPath) {
+		if(chaincodePath||metadataPath);
 		throw new TypeError('Please implement method package from child class');
 	}
 
@@ -60,6 +61,7 @@ var BasePackager = class {
 	 * @param filepath
 	 */
 	findSource (filepath) {
+		if(filepath);
 		throw new Error('abstract function called');
 	}
 
@@ -85,13 +87,13 @@ var BasePackager = class {
 					descriptors.push(desc);
 				}
 			})
-			.on('error', (error, item) => {
-				logger.error('error while packaging item %j :: %s', item, error);
-				reject(error);
-			})
-			.on('end', () => {
-				resolve(descriptors);
-			});
+				.on('error', (error, item) => {
+					logger.error('error while packaging item %j :: %s', item, error);
+					reject(error);
+				})
+				.on('end', () => {
+					resolve(descriptors);
+				});
 		});
 	}
 

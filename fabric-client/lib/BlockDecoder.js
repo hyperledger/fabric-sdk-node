@@ -17,7 +17,6 @@
 'use strict';
 
 var grpc = require('grpc');
-var util = require('util');
 var path = require('path');
 var utils = require('./utils.js');
 var logger = utils.getLogger('BlockDecoder.js');
@@ -858,7 +857,7 @@ function decodeConfigPolicy(proto_config_policy) {
 			config_policy.policy.value = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.value);
 			break;
 		case _policiesProto.Policy.PolicyType.MSP:
-			var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.value);
+			// var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.value);
 			logger.warn('decodeConfigPolicy - found a PolicyType of MSP. This policy type has not been implemented yet.');
 			break;
 		case _policiesProto.Policy.PolicyType.IMPLICIT_META:
