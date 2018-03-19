@@ -26,7 +26,9 @@ const DEPS = [
 	'fabric-client/lib/msp/identity.js',
 	'fabric-client/lib/msp/msp.js',
 	'fabric-client/lib/protos/msp/identities.proto',
-	'fabric-client/lib/protos/msp/msp_config.proto'
+	'fabric-client/lib/protos/msp/msp_config.proto',
+	'fabric-client/types/tsconfig.json',
+	'fabric-client/types/base.d.ts'
 ];
 
 gulp.task('ca', function() {
