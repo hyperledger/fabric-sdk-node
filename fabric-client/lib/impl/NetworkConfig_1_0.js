@@ -143,9 +143,7 @@ var NetworkConfig_1_0 = class {
 				}
 			}
 			if(client_config.tlsClient) {
-				if(client_config.tlsClient.clientCert && client_config.tlsClient.clientKey) {
-
-				}
+				if(client_config.tlsClient.clientCert && client_config.tlsClient.clientKey);//TODO
 			}
 		}
 

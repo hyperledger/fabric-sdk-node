@@ -23,10 +23,6 @@ var grpc = require('grpc');
 var MSP = require('./msp.js');
 var utils = require('../utils.js');
 var logger = utils.getLogger('MSPManager.js');
-var idModule = require('./identity.js');
-
-var SigningIdentity = idModule.SigningIdentity;
-var Signer = idModule.Signer;
 
 var mspProto = grpc.load(path.join(__dirname, '../protos/msp/msp_config.proto')).msp;
 var identityProto = grpc.load(path.join(__dirname, '../protos/msp/identities.proto')).msp;

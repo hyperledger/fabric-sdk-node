@@ -90,9 +90,10 @@ var Identity = class {
 	 * Verify a signature over some message using this identity as reference
 	 * @param {byte[]} msg The message to be verified
 	 * @param {byte[]} signature The signature generated against the message "msg"
-	 * @param {Object} opts Options include 'policy' and 'label'
+	 * @param {Object} opts Options include 'policy' and 'label' TODO (not implemented yet)
 	 */
 	verify(msg, signature, opts) {
+		if(opts);
 		return this._cryptoSuite.verify(this._publicKey, signature, msg);
 	}
 
@@ -101,6 +102,7 @@ var Identity = class {
 	 * TODO: when this method's design is finalized
 	 */
 	verifyAttributes(proof, attributeProofSpec) {
+		if(proof||attributeProofSpec);
 		return true;
 	}
 

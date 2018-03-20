@@ -17,7 +17,6 @@
 'use strict';
 
 var nconf = require('nconf');
-var path  = require('path');
 
 //
 // The class representing the hierarchy of configuration settings.
@@ -56,7 +55,7 @@ var Config = class {
 	//
 	reorderFileStores(path, bottom) {
 		// first remove all the file stores
-		for(var x in this._fileStores) {
+		for(let x in this._fileStores) {
 			this._config.remove(this._fileStores[x]);
 		}
 
@@ -69,7 +68,7 @@ var Config = class {
 		}
 
 		// now load all the file stores
-		for(var x in this._fileStores) {
+		for(let x in this._fileStores) {
 			var name = this._fileStores[x];
 			this._config.file(name, name);
 		}

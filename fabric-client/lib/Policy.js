@@ -72,10 +72,12 @@ var EndorsementPolicy = class {
 	 * see the type definition of {@link Policy} for details.
 	 */
 	static buildPolicy(msps, policy) {
+		const principals = [];
+		const envelope = new _policiesProto.SignaturePolicyEnvelope();
 		if (typeof policy === 'undefined' || policy === null) {
 			// no policy was passed in, construct a 'Signed By any member of an organization by mspid' policy
 			// construct a list of msp principals to select from using the 'n out of' operator
-			var principals = [], signedBys = [];
+			var signedBys = [];
 			var index = 0;
 			for (let name in msps) {
 				if (msps.hasOwnProperty(name)) {
@@ -108,7 +110,6 @@ var EndorsementPolicy = class {
 			var noutof = new _policiesProto.SignaturePolicy();
 			noutof.set('n_out_of', oneOfAny);
 
-			var envelope = new _policiesProto.SignaturePolicyEnvelope();
 			envelope.setVersion(0);
 			envelope.setRule(noutof);
 			envelope.setIdentities(principals);
@@ -126,7 +127,6 @@ var EndorsementPolicy = class {
 				throw new Error('Invalid policy, missing the "policy" property');
 			}
 
-			var principals = [];
 			policy.identities.forEach((identity) => {
 				let newPrincipal = buildPrincipal(identity);
 				principals.push(newPrincipal);
@@ -134,7 +134,6 @@ var EndorsementPolicy = class {
 
 			var thePolicy = new parsePolicy(policy.policy);
 
-			var envelope = new _policiesProto.SignaturePolicyEnvelope();
 			envelope.setVersion(0);
 			envelope.setRule(thePolicy);
 			envelope.setIdentities(principals);
@@ -145,18 +144,16 @@ var EndorsementPolicy = class {
 };
 
 function buildPrincipal(identity) {
-	let principalType = getIdentityType(identity);
-	let newPrincipal = new _mspPrProto.MSPPrincipal();
+	const principalType = getIdentityType(identity);
+	const newPrincipal = new _mspPrProto.MSPPrincipal();
 
-	switch (principalType) {
-	case IDENTITY_TYPE.Role:
+	if (principalType===IDENTITY_TYPE.Role) {
 		newPrincipal.setPrincipalClassification(_mspPrProto.MSPPrincipal.Classification.ROLE);
-		let newRole = new _mspPrProto.MSPRole();
-
-		let roleName = identity[principalType].name;
-		if(roleName === 'peer') {
+		const newRole = new _mspPrProto.MSPRole();
+		const roleName = identity[principalType].name;
+		if (roleName === 'peer') {
 			newRole.setRole(_mspPrProto.MSPRole.MSPRoleType.PEER);
-		} else if(roleName === 'member') {
+		} else if (roleName === 'member') {
 			newRole.setRole(_mspPrProto.MSPRole.MSPRoleType.MEMBER);
 		} else if (roleName === 'admin') {
 			newRole.setRole(_mspPrProto.MSPRole.MSPRoleType.ADMIN);
@@ -165,15 +162,14 @@ function buildPrincipal(identity) {
 		}
 
 		let mspid = identity[principalType].mspId;
-		if (typeof mspid !== 'string' || mspid === null || mspid === '') {
-			throw new Error(util.format('Invalid mspid found: must be a non-empty string, but found "%s"', mspid));
+		if (typeof mspid !== 'string' || !mspid ) {
+			throw new Error(util.format('Invalid mspid found: "%j"', mspid));
 		}
 		newRole.setMspIdentifier(identity[principalType].mspId);
 
 		newPrincipal.setPrincipal(newRole.toBuffer());
-		break;
-	case IDENTITY_TYPE.OrganizationUnit:
-	case IDENTITY_TYPE.Identity:
+	}
+	else {
 		throw new Error('NOT IMPLEMENTED');
 	}
 
@@ -206,7 +202,7 @@ function getPolicyType(spec) {
 	for (var key in spec) {
 		if (spec.hasOwnProperty(key)) {
 			// each policy spec has exactly one property of one of these two forms: 'n-of' or 'signed-by'
-			if (key === 'signed-by' || key.match(/^\d+\-of$/)) {
+			if (key === 'signed-by' || key.match(/^\d+-of$/)) {
 				return key;
 			} else {
 				invalidTypes.push(key);
@@ -224,7 +220,7 @@ function parsePolicy(spec) {
 		signedBy.set('signed_by', spec[type]);
 		return signedBy;
 	} else {
-		let n = type.match(/^(\d+)\-of$/)[1];
+		let n = type.match(/^(\d+)-of$/)[1];
 		let array = spec[type];
 
 		let nOutOf = new _policiesProto.SignaturePolicy.NOutOf();

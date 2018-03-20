@@ -16,7 +16,6 @@
 
 'use strict';
 
-var api = require('./api.js');
 var utils = require('./utils.js');
 var Remote = require('./Remote');
 
@@ -40,16 +39,16 @@ var _common = grpc.load(__dirname + '/protos/common/common.proto').common;
 var Orderer = class extends Remote {
 
 	/**
-	 * Constructs an Orderer object with the given url and opts. An orderer object
-	 * encapsulates the properties of an orderer node and the interactions with it via
-	 * the grpc stream API. Orderer objects are used by the {@link Client} objects to broadcast
-	 * requests for creating and updating channels. They are also used by the {@link Channel}
-	 * objects to broadcast requests for ordering transactions.
-	 *
-	 * @param {string} url The URL with format of "grpc(s)://host:port".
-	 * @param {ConnectionOpts} opts The options for the connection to the orderer.
-	 * @returns {Orderer} The Orderer instance.
-	 */
+     * Constructs an Orderer object with the given url and opts. An orderer object
+     * encapsulates the properties of an orderer node and the interactions with it via
+     * the grpc stream API. Orderer objects are used by the {@link Client} objects to broadcast
+     * requests for creating and updating channels. They are also used by the {@link Channel}
+     * objects to broadcast requests for ordering transactions.
+     *
+     * @param {string} url The URL with format of "grpc(s)://host:port".
+     * @param {ConnectionOpts} opts The options for the connection to the orderer.
+     * @returns {Orderer} The Orderer instance.
+     */
 	constructor(url, opts) {
 		super(url, opts);
 
@@ -58,35 +57,35 @@ var Orderer = class extends Remote {
 	}
 
 	/**
-	 * Close the service connection.
-	 */
-	 close() {
-		 if(this._ordererClient) {
-			 logger.info('close - closing orderer connection ' + this._endpoint.addr);
-			 this._ordererClient.close();
-		 }
-	 }
+     * Close the service connection.
+     */
+	close() {
+		if (this._ordererClient) {
+			logger.info('close - closing orderer connection ' + this._endpoint.addr);
+			this._ordererClient.close();
+		}
+	}
 
 	/**
-	 * @typedef {Object} BroadcastResponse
-	 * @property {string} status - Value is 'SUCCESS' or a descriptive error string
-	 */
+     * @typedef {Object} BroadcastResponse
+     * @property {string} status - Value is 'SUCCESS' or a descriptive error string
+     */
 
 	/**
-	 * Send a Broadcast message to the orderer service.
-	 *
-	 * @param {byte[]} envelope - Byte data to be included in the broadcast. This must
-	 *                            be a protobuf encoded byte array of the
-	 *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L132}
-	 *                            that contains either a [ConfigUpdateEnvelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/configtx.proto#L70}
-	 *                            or a [Transaction]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L70}
-	 *                            in the <code>payload.data</code> property of the envelope.
-	 * @returns {Promise} A Promise for a {@link BroadcastResponse} object
-	 */
+     * Send a Broadcast message to the orderer service.
+     *
+     * @param {byte[]} envelope - Byte data to be included in the broadcast. This must
+     *                            be a protobuf encoded byte array of the
+     *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L132}
+     *                            that contains either a [ConfigUpdateEnvelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/configtx.proto#L70}
+     *                            or a [Transaction]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L70}
+     *                            in the <code>payload.data</code> property of the envelope.
+     * @returns {Promise} A Promise for a {@link BroadcastResponse} object
+     */
 	sendBroadcast(envelope) {
 		logger.debug('sendBroadcast - start');
 
-		if(!envelope || envelope == '') {
+		if (!envelope || envelope == '') {
 			logger.debug('sendBroadcast ERROR - missing envelope');
 			var err = new Error('Missing data - Nothing to broadcast');
 			return Promise.reject(err);
@@ -95,10 +94,10 @@ var Orderer = class extends Remote {
 		var self = this;
 
 		// Send the envelope to the orderer via grpc
-		return new Promise(function(resolve, reject) {
+		return new Promise(function (resolve, reject) {
 			var broadcast = self._ordererClient.broadcast();
 
-			var broadcast_timeout = setTimeout(function(){
+			var broadcast_timeout = setTimeout(function () {
 				logger.error('sendBroadcast - timed out after:%s', self._request_timeout);
 				broadcast.end();
 				return reject(new Error('REQUEST_TIMEOUT'));
@@ -107,10 +106,10 @@ var Orderer = class extends Remote {
 			broadcast.on('data', function (response) {
 				logger.debug('sendBroadcast - on data response: %j', response);
 				broadcast.end();
-				if(response && response.info) {
+				if (response && response.info) {
 					logger.debug('sendBroadcast - response info :: %s', response.info);
 				}
-				if(response && response.status) {
+				if (response && response.status) {
 					logger.debug('sendBroadcast - response status %s', response.status);
 					return resolve(response);
 				}
@@ -121,7 +120,7 @@ var Orderer = class extends Remote {
 
 			});
 
-			broadcast.on('end', function (response) {
+			broadcast.on('end', () => {
 				logger.debug('sendBroadcast - on end:');
 				clearTimeout(broadcast_timeout);
 				broadcast.cancel();
@@ -130,14 +129,14 @@ var Orderer = class extends Remote {
 			broadcast.on('error', function (err) {
 				clearTimeout(broadcast_timeout);
 				broadcast.end();
-				if(err && err.code) {
-					if(err.code == 14) {
-						logger.error('sendBroadcast - on error: %j',err.stack ? err.stack : err);
+				if (err && err.code) {
+					if (err.code == 14) {
+						logger.error('sendBroadcast - on error: %j', err.stack ? err.stack : err);
 						return reject(new Error('SERVICE_UNAVAILABLE'));
 					}
 				}
-				logger.debug('sendBroadcast - on error: %j',err.stack ? err.stack : err);
-				if(err instanceof Error) {
+				logger.debug('sendBroadcast - on error: %j', err.stack ? err.stack : err);
+				if (err instanceof Error) {
 					return reject(err);
 				}
 				else {
@@ -146,34 +145,34 @@ var Orderer = class extends Remote {
 			});
 
 			broadcast.write(envelope);
-//			broadcast.end();
+			//			broadcast.end();
 			logger.debug('sendBroadcast - sent message');
 		});
 	}
 
 	/**
-	 * Send a Deliver message to the orderer service.
-	 *
-	 * @param {byte[]} envelope - Byte data to be included in the broadcast. This must
-	 *                            be a protobuf encoded byte array of the
-	 *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L132}
-	 *                            that contains a [SeekInfo]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/orderer/ab.proto#L54}
-	 *                            in the <code>payload.data</code> property of the envelope.
-	 *                            The <code>header.channelHeader.type</code> must be set to
-	 *                            [common.HeaderType.DELIVER_SEEK_INFO]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L44}
-	 * @returns {Promise} A Promise for a protobuf object of type common.Block. Note that this
-	 *                    is <b>NOT</b> the same type of object as the {@link Block} returned by the
-	 *                    [BlockDecoder.decode()]{@link BlockDecode.decode} method and various
-	 *                    other methods. A {@link Block} is a pure javascript object, whereas
-	 *                    the object returned by this method is a protobuf object that contains
-	 *                    accessor methods, getters and setters, and toBuffer() for each property
-	 *                    to be used for further manipulating the object and convert to and from
-	 *                    byte arrays.
-	 */
+     * Send a Deliver message to the orderer service.
+     *
+     * @param {byte[]} envelope - Byte data to be included in the broadcast. This must
+     *                            be a protobuf encoded byte array of the
+     *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L132}
+     *                            that contains a [SeekInfo]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/orderer/ab.proto#L54}
+     *                            in the <code>payload.data</code> property of the envelope.
+     *                            The <code>header.channelHeader.type</code> must be set to
+     *                            [common.HeaderType.DELIVER_SEEK_INFO]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L44}
+     * @returns {Promise} A Promise for a protobuf object of type common.Block. Note that this
+     *                    is <b>NOT</b> the same type of object as the {@link Block} returned by the
+     *                    [BlockDecoder.decode()]{@link BlockDecode.decode} method and various
+     *                    other methods. A {@link Block} is a pure javascript object, whereas
+     *                    the object returned by this method is a protobuf object that contains
+     *                    accessor methods, getters and setters, and toBuffer() for each property
+     *                    to be used for further manipulating the object and convert to and from
+     *                    byte arrays.
+     */
 	sendDeliver(envelope) {
 		logger.debug('sendDeliver - start');
 
-		if(!envelope || envelope == '') {
+		if (!envelope || envelope == '') {
 			logger.debug('sendDeliver ERROR - missing envelope');
 			var err = new Error('Missing data - Nothing to deliver');
 			return Promise.reject(err);
@@ -182,13 +181,13 @@ var Orderer = class extends Remote {
 		var self = this;
 
 		// Send the seek info to the orderer via grpc
-		return new Promise(function(resolve, reject) {
+		return new Promise(function (resolve, reject) {
 			try {
 				var deliver = self._ordererClient.deliver();
 				var return_block = null;
 				var connect = false;
 
-				var deliver_timeout = setTimeout(function(){
+				var deliver_timeout = setTimeout(function () {
 					logger.debug('sendDeliver - timed out after:%s', self._request_timeout);
 					deliver.end();
 					return reject(new Error('REQUEST_TIMEOUT'));
@@ -197,7 +196,7 @@ var Orderer = class extends Remote {
 				deliver.on('data', function (response) {
 					logger.debug('sendDeliver - on data'); //response: %j', response);
 					// check the type of the response
-					if(response.Type === 'block') {
+					if (response.Type === 'block') {
 						var blockHeader = new _common.BlockHeader();
 						blockHeader.setNumber(response.block.header.number);
 						blockHeader.setPreviousHash(response.block.header.previous_hash);
@@ -211,11 +210,11 @@ var Orderer = class extends Remote {
 						block.setHeader(blockHeader);
 						block.setData(blockData);
 						block.setMetadata(blockMetadata);
-						return_block  = block;
+						return_block = block;
 
-						logger.debug('sendDeliver - wait for success, keep this block number %s',return_block.header.number);
+						logger.debug('sendDeliver - wait for success, keep this block number %s', return_block.header.number);
 					}
-					else if(response.Type === 'status') {
+					else if (response.Type === 'status') {
 						clearTimeout(deliver_timeout);
 						connect = false;
 						deliver.end();
@@ -226,12 +225,12 @@ var Orderer = class extends Remote {
 						}
 						else {
 							logger.error('sendDeliver - rejecting - status:%s', response.status);
-							return reject(new Error('Invalid results returned ::' +response.status));
+							return reject(new Error('Invalid results returned ::' + response.status));
 						}
 					}
 					else {
 						logger.error('sendDeliver ERROR - reject with invalid response from the orderer');
-						if(connect) {
+						if (connect) {
 							clearTimeout(deliver_timeout);
 							deliver.end();
 							connect = false;
@@ -241,12 +240,12 @@ var Orderer = class extends Remote {
 				});
 
 				deliver.on('status', function (response) {
-					logger.debug('sendDeliver - on status:%j',response);
+					logger.debug('sendDeliver - on status:%j', response);
 				});
 
-				deliver.on('end', function (response) {
+				deliver.on('end', () => {
 					logger.debug('sendDeliver - on end');
-					if(connect) {
+					if (connect) {
 						clearTimeout(deliver_timeout);
 						deliver.cancel();
 						connect = false;
@@ -257,17 +256,17 @@ var Orderer = class extends Remote {
 				deliver.on('error', function (err) {
 					logger.debug('sendDeliver - on error');
 					clearTimeout(deliver_timeout);
-					if(connect) {
+					if (connect) {
 						deliver.end();
 						connect = false;
-						if(err && err.code) {
-							if(err.code == 14) {
-								logger.error('sendDeliver - on error code 14: %j',err.stack ? err.stack : err);
+						if (err && err.code) {
+							if (err.code == 14) {
+								logger.error('sendDeliver - on error code 14: %j', err.stack ? err.stack : err);
 								return reject(new Error('SERVICE_UNAVAILABLE'));
 							}
 						}
 					}
-					if(err instanceof Error) {
+					if (err instanceof Error) {
 						return reject(err);
 					}
 					else {
@@ -277,12 +276,12 @@ var Orderer = class extends Remote {
 
 				deliver.write(envelope);
 				connect = true;
-//				deliver.end();
+				//				deliver.end();
 				logger.debug('sendDeliver - sent envelope');
 			}
-			catch(error) {
+			catch (error) {
 				logger.error('sendDeliver - system error ::' + error.stack ? error.stack : error);
-				if(error instanceof Error) {
+				if (error instanceof Error) {
 					return reject(error);
 				}
 				else {
@@ -293,12 +292,12 @@ var Orderer = class extends Remote {
 	}
 
 	/**
-	* return a printable representation of this object
-	*/
+     * return a printable representation of this object
+     */
 	toString() {
 		return ' Orderer : {' +
-			'url:' + this._url +
-		'}';
+            'url:' + this._url +
+            '}';
 	}
 };
 

@@ -16,10 +16,7 @@
 
 'use strict';
 
-var api = require('./api.js');
 var utils = require('./utils.js');
-var util = require('util');
-
 var logger = utils.getLogger('CertificateAuthority.js');
 
 /**

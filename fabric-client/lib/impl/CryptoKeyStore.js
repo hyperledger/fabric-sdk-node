@@ -22,8 +22,6 @@ var KEYUTIL = jsrsasign.KEYUTIL;
 var utils = require('../utils.js');
 var ECDSAKey = require('./ecdsa/key.js');
 
-var logger = utils.getLogger('CryptoKeyStore.js');
-
 /*
  * The mixin enforces the special indexing mechanism with private and public
  * keys on top of a standard implementation of the KeyValueStore interface

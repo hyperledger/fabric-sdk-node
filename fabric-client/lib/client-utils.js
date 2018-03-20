@@ -17,19 +17,9 @@
 'use strict';
 
 var util = require('util');
-var winston = require('winston');
-var fs = require('fs-extra');
-var crypto = require('crypto');
-var path = require('path');
-var os = require('os');
 var settle = require('promise-settle');
 var utils = require('./utils.js');
 var logger = utils.getLogger('client-utils.js');
-var Config = require('./Config.js');
-var Constants = require('./Constants.js');
-var Peer = require('./Peer.js');
-var EventHub = require('./EventHub.js');
-var Orderer = require('./Orderer.js');
 
 var grpc = require('grpc');
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;

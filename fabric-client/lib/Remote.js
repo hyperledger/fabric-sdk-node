@@ -19,11 +19,9 @@
 var grpc = require('grpc');
 var urlParser = require('url');
 var crypto = require('crypto');
-var util = require('util');
 
 var utils = require('./utils.js');
 var logger = utils.getLogger('Remote.js');
-var Hash = require('./hash.js');
 
 
 /**
@@ -54,7 +52,6 @@ var Remote = class {
 	 * <br>- any other standard grpc call options will be passed to the grpc service calls directly
 	 */
 	constructor(url, opts) {
-		var _name = null;
 		var pem = null;
 		var clientKey = null;
 		this.clientCert = null;
@@ -189,8 +186,6 @@ module.exports = Remote;
 //
 var Endpoint = class {
 	constructor(url /*string*/ , pem /*string*/ , clientKey /*string*/ , clientCert /*string*/) {
-		var fs = require('fs'),
-			path = require('path');
 
 		var purl = urlParser.parse(url, true);
 		var protocol;
@@ -209,7 +204,7 @@ var Endpoint = class {
 				if (clientKey && clientCert){
 					if ((typeof clientKey === 'string') && (typeof clientCert === 'string')) {
 						this.creds = grpc.credentials.createSsl(Buffer.from(pem),
-						Buffer.from(clientKey), Buffer.from(clientCert));
+							Buffer.from(clientKey), Buffer.from(clientCert));
 					} else {
 						throw new Error('PEM encoded clientKey and clientCert are required.');
 					}
