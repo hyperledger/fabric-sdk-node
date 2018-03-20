@@ -178,43 +178,30 @@ module.exports.installChaincode = installChaincode;
 function instantiateChaincode(userOrg, chaincode_path, version, language, upgrade, t){
 	init();
 
-	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	var targets = [],
-		eventhubs = [];
-	var type = 'instantiate';
+	let targets = [];
+	let eventhubs = [];
+
+	let type = 'instantiate';
 	if(upgrade) type = 'upgrade';
-	// override t.end function so it'll always disconnect the event hub
-	t.end = ((context, ehs, f) => {
-		return function() {
-			for(var key in ehs) {
-				var eventhub = ehs[key];
-				if (eventhub && eventhub.isconnected()) {
-					logger.debug('Disconnecting the event hub');
-					eventhub.disconnect();
-				}
-			}
 
-			f.apply(context, arguments);
-		};
-	})(t, eventhubs, t.end);
+	let client = new Client();
+	let channel = client.newChannel(channel_name);
 
-	var client = new Client();
-	var channel = client.newChannel(channel_name);
-
-	var orgName = ORGS[userOrg].name;
-	var cryptoSuite = Client.newCryptoSuite();
+	const orgName = ORGS[userOrg].name;
+	let cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
-	var caRootsPath = ORGS.orderer.tls_cacerts;
+	const caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	targets = [];
-	var badTransientMap = { 'test1': 'transientValue' }; // have a different key than what the chaincode example_cc1.go expects in Init()
-	var transientMap = { 'test': 'transientValue' };
+	const badTransientMap = { 'test1': 'transientValue' }; // have a different key than what the chaincode example_cc1.go expects in Init()
+	const transientMap = { 'test': 'transientValue' };
 	let tlsInfo = null;
+	let request = null;
 
 	return e2eUtils.tlsEnroll(userOrg)
 	.then((enrollment) => {
@@ -260,24 +247,11 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 
 				targets.push(peer);
 				channel.addPeer(peer);
+
+				let eh = channel.newChannelEventHub(peer);
+				eventhubs.push(eh);
 			}
 		}
-
-		// an event listener can only register with a peer in its own org
-		logger.debug(' create new eventhub %s', ORGS[userOrg]['peer1'].events);
-		let data = fs.readFileSync(path.join(__dirname, ORGS[userOrg]['peer1']['tls_cacerts']));
-		let eh = client.newEventHub();
-		eh.setPeerAddr(
-			ORGS[userOrg]['peer1'].events,
-			{
-				pem: Buffer.from(data).toString(),
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS[userOrg]['peer1']['server-hostname']
-			}
-		);
-		eh.connect();
-		eventhubs.push(eh);
 
 		// read the config block from the peer for the channel
 		// and initialize the verify MSPs based on the participating
@@ -359,97 +333,75 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 
 	}).then((results) => {
 
-		var proposalResponses = results[0];
+		let proposalResponses = results[0];
 
-		var proposal = results[1];
-		var all_good = true;
+		let proposal = results[1];
+		let all_good = true;
 		for(var i in proposalResponses) {
-			let one_good = false;
 			if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
-				// special check only to test transient map support during chaincode upgrade
-				one_good = true;
 				logger.info(type +' proposal was good');
 			} else {
 				logger.error(type +' proposal was bad');
+				all_good = false;
 			}
-			all_good = all_good & one_good;
 		}
 		if (all_good) {
 			t.pass('Successfully sent Proposal and received ProposalResponse');
 			logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-			var request = {
+			request = {
 				proposalResponses: proposalResponses,
 				proposal: proposal
 			};
-
-			// set the transaction listener and set a timeout of 30sec
-			// if the transaction did not get committed within the timeout period,
-			// fail the test
-			var deployId = tx_id.getTransactionID();
-
-			var eventPromises = [];
-			eventhubs.forEach((eh) => {
-				let txPromise = new Promise((resolve, reject) => {
-					let handle = setTimeout(reject, 120000);
-
-					eh.registerTxEvent(deployId.toString(), (tx, code) => {
-						t.pass('The chaincode ' + type + ' transaction has been committed on peer '+ eh.getPeerAddr());
-						clearTimeout(handle);
-						eh.unregisterTxEvent(deployId);
-
-						if (code !== 'VALID') {
-							t.fail('The chaincode ' + type + ' transaction was invalid, code = ' + code);
-							reject();
-						} else {
-							t.pass('The chaincode ' + type + ' transaction was valid.');
-							resolve();
-						}
-					}, (err) => {
-						t.fail('There was a problem with the instantiate event '+err);
-						clearTimeout(handle);
-						eh.unregisterTxEvent(deployId);
-					});
-				});
-				logger.debug('register eventhub %s with tx=%s',eh.getPeerAddr(),deployId);
-				eventPromises.push(txPromise);
-			});
-
-			var sendPromise = channel.sendTransaction(request);
-			return Promise.all([sendPromise].concat(eventPromises))
-				.then((results) => {
-
-					logger.debug('Event promise all complete and testing complete');
-					return results[0]; // just first results are from orderer, the rest are from the peer events
-
-				}).catch((err) => {
-
-					t.fail('Failed to send ' + type + ' transaction and get notifications within the timeout period.');
-					throw new Error('Failed to send ' + type + ' transaction and get notifications within the timeout period.');
-
-				});
-
 		} else {
-			t.fail('Failed to send ' + type + ' Proposal or receive valid response. Response null or status is not 200. exiting...');
-			throw new Error('Failed to send ' + type + ' Proposal or receive valid response. Response null or status is not 200. exiting...');
+			throw new Error('All proposals were not good');
 		}
-	}, (err) => {
 
-		t.fail('Failed to send ' + type + ' proposal due to error: ' + err.stack ? err.stack : err);
-		throw new Error('Failed to send ' + type + ' proposal due to error: ' + err.stack ? err.stack : err);
+		let deployId = tx_id.getTransactionID();
+		let eventPromises = [];
+		eventPromises.push(channel.sendTransaction(request));
 
-	}).then((response) => {
-		//TODO should look into the event responses
-		if (!(response instanceof Error) && response.status === 'SUCCESS') {
+		eventhubs.forEach((eh) => {
+			let txPromise = new Promise((resolve, reject) => {
+				let handle = setTimeout(() => {
+					t.fail('Timeout - Failed to receive the event for instantiate:  waiting on '+ eh.getPeerAddr());
+					eh.disconnect();
+					reject('TIMEOUT waiting on '+ eh.getPeerAddr());
+				}, 120000);
+
+				eh.registerTxEvent(deployId.toString(), (tx, code) => {
+					t.pass('The chaincode ' + type + ' transaction has been committed on peer '+ eh.getPeerAddr());
+					clearTimeout(handle);
+					if (code !== 'VALID') {
+						t.fail('The chaincode ' + type + ' transaction was invalid, code = ' + code);
+						reject();
+					} else {
+						t.pass('The chaincode ' + type + ' transaction was valid.');
+						resolve();
+					}
+				}, (err) => {
+					t.fail('There was a problem with the instantiate event '+err);
+					clearTimeout(handle);
+					reject();
+				}, {
+					disconnect: true
+				});
+				eh.connect();
+			});
+			logger.debug('register eventhub %s with tx=%s',eh.getPeerAddr(),deployId);
+			eventPromises.push(txPromise);
+		});
+
+		return Promise.all(eventPromises);
+	}).then((results) => {
+		if (results && !(results[0] instanceof Error) && results[0].status === 'SUCCESS') {
 			t.pass('Successfully sent ' + type + 'transaction to the orderer.');
 			return true;
 		} else {
-			t.fail('Failed to order the ' + type + 'transaction. Error code: ' + response.status);
-			Promise.reject(new Error('Failed to order the ' + type + 'transaction. Error code: ' + response.status));
+			t.fail('Failed to order the ' + type + 'transaction. Error code: ' + results[0].status);
+			Promise.reject(new Error('Failed to order the ' + type + 'transaction. Error code: ' + results[0].status));
 		}
-	}, (err) => {
-
-		t.fail('Failed to send ' + type + ' due to error: ' + err.stack ? err.stack : err);
-		Promise.reject(new Error('Failed to send instantiate due to error: ' + err.stack ? err.stack : err));
+	}).catch((err) => {
+		t.fail('Failed to instantiate ' + type + ' due to error: ' + err.stack ? err.stack : err);
 	});
 }
 
@@ -512,24 +464,9 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	var targets = [],
-		eventhubs = [];
+	var targets = [];
+	let eventhubs = [];
 	var pass_results = null;
-
-	// override t.end function so it'll always disconnect the event hub
-	t.end = ((context, ehs, f) => {
-		return function() {
-			for(var key in ehs) {
-				var eventhub = ehs[key];
-				if (eventhub && eventhub.isconnected()) {
-					logger.debug('Disconnecting the event hub');
-					eventhub.disconnect();
-				}
-			}
-
-			f.apply(context, arguments);
-		};
-	})(t, eventhubs, t.end);
 
 	// this is a transaction, will just use org's identity to
 	// submit the request. intentionally we are using a different org
@@ -559,7 +496,6 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 	} else {
 		promise = Promise.resolve(useStore);
 	}
-
 
 	return e2eUtils.tlsEnroll(userOrg)
 	.then((enrollment) => {
@@ -603,25 +539,9 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 					}
 				);
 				channel.addPeer(peer);
+				eventhubs.push(channel.newChannelEventHub(peer));
 			}
 		}
-
-		// an event listener can only register with a peer in its own org
-		let data = fs.readFileSync(path.join(__dirname, ORGS[userOrg].peer1['tls_cacerts']));
-		let eh = client.newEventHub();
-		eh.setPeerAddr(
-			ORGS[userOrg].peer1.events,
-			{
-				pem: Buffer.from(data).toString(),
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
-				'grpc.keepalive_timeout_ms' : 3000, // time to respond to the ping, 3 seconds
-				'grpc.keepalive_time_ms' : 360000, // time to wait for ping response, 6 minutes
-			}
-		);
-		eh.connect();
-		eventhubs.push(eh);
 
 		return channel.initialize();
 
@@ -718,29 +638,30 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 			var eventPromises = [];
 			eventhubs.forEach((eh) => {
 				let txPromise = new Promise((resolve, reject) => {
-					let handle = setTimeout(reject, 120000);
+					let handle = setTimeout(() => {
+						t.fail('Timeout - Failed to receive the event for commit:  waiting on '+ eh.getPeerAddr());
+						eh.disconnect(); // will not be using this event hub
+						reject('TIMEOUT waiting on '+ eh.getPeerAddr());
+					}, 30000);
 
-					eh.registerTxEvent(deployId.toString(),
-						(tx, code) => {
-							clearTimeout(handle);
-							eh.unregisterTxEvent(deployId);
-
-							if (code !== 'VALID') {
-								t.fail('The balance transfer transaction was invalid, code = ' + code);
-								reject();
-							} else {
-								t.pass('The balance transfer transaction has been committed on peer '+ eh.getPeerAddr());
-								resolve();
-							}
-						},
-						(err) => {
-							clearTimeout(handle);
-							t.pass('Successfully received notification of the event call back being cancelled for '+ deployId);
+					eh.registerTxEvent(deployId.toString(), (tx, code) => {
+						clearTimeout(handle);
+						if (code !== 'VALID') {
+							t.fail('The balance transfer transaction was invalid, code = ' + code);
+							reject();
+						} else {
+							t.pass('The balance transfer transaction has been committed on peer '+ eh.getPeerAddr());
 							resolve();
 						}
-					);
+					}, (err) => {
+						clearTimeout(handle);
+						t.pass('Successfully received notification of the event call back being cancelled for '+ deployId);
+						resolve();
+					},{
+						disconnect: true // will not be using this event hub
+					});
+					eh.connect();
 				});
-
 				eventPromises.push(txPromise);
 			});
 
