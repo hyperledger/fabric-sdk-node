@@ -31,6 +31,7 @@ var logger = shim.NewLogger("example_cc0")
 type SimpleChaincode struct {
 }
 
+// Init - initialize the state
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	logger.Info("########### example_cc0 Init ###########")
 
@@ -70,12 +71,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	return shim.Success(nil)
 }
 
-// Transaction makes payment of X units from A to B
+// Invoke - Transaction makes payment of X units from A to B
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Info("########### example_cc0 Invoke ###########")
 
 	function, args := stub.GetFunctionAndParameters()
-	
+
 	if function == "delete" {
 		// Deletes an entity from its state
 		return t.delete(stub, args)

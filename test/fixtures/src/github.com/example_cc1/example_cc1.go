@@ -31,6 +31,7 @@ var logger = shim.NewLogger("example_cc1")
 type SimpleChaincode struct {
 }
 
+//Init - instantiation of the state
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
 	logger.Info("########### example_cc1 Init ###########")
@@ -39,7 +40,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	return t.testTransient(stub)
 }
 
-// Transaction makes payment of X units from A to B
+// Invoke - Transaction makes payment of X units from A to B
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Info("########### example_cc1 Invoke ###########")
 
@@ -109,7 +110,7 @@ func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) 
 		return shim.Error("Invalid transaction amount, expecting a integer value")
 	}
 	Aval = Aval - X
-	Bval = Bval + X + 10 //new version chaincode gives a bonus 
+	Bval = Bval + X + 10 //new version chaincode gives a bonus
 	logger.Infof("Aval = %d, Bval = %d\n", Aval, Bval)
 
 	// Write the state back to the ledger
