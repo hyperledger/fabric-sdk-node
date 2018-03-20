@@ -189,11 +189,9 @@ module.exports = Remote;
 //
 var Endpoint = class {
 	constructor(url /*string*/ , pem /*string*/ , clientKey /*string*/ , clientCert /*string*/) {
-		var fs = require('fs'),
-			path = require('path');
 
-		var purl = urlParser.parse(url, true);
-		var protocol;
+		const purl = urlParser.parse(url, true);
+		let protocol;
 		if (purl.protocol) {
 			protocol = purl.protocol.toLowerCase().slice(0, -1);
 		}
@@ -204,12 +202,14 @@ var Endpoint = class {
 			if(!(typeof pem === 'string')) {
 				throw new Error('PEM encoded certificate is required.');
 			}
+			const pembuf = Buffer.concat([Buffer.from(pem), Buffer.from('\0')]);
 			if (clientKey || clientCert){
 				// must have both clientKey and clientCert if either is defined
 				if (clientKey && clientCert){
 					if ((typeof clientKey === 'string') && (typeof clientCert === 'string')) {
-						this.creds = grpc.credentials.createSsl(Buffer.from(pem),
-						Buffer.from(clientKey), Buffer.from(clientCert));
+						const clientKeyBuf = Buffer.from(clientKey);
+						const clientCertBuf = Buffer.concat([Buffer.from(clientCert), Buffer.from('\0')]);
+						this.creds = grpc.credentials.createSsl(pembuf, clientKeyBuf, clientCertBuf);
 					} else {
 						throw new Error('PEM encoded clientKey and clientCert are required.');
 					}
@@ -217,12 +217,11 @@ var Endpoint = class {
 					throw new Error('clientKey and clientCert are both required.');
 				}
 			} else {
-				var pembuf = Buffer.concat([Buffer.from(pem), Buffer.from('\0')]);
 				this.creds = grpc.credentials.createSsl(pembuf);
 			}
 			this.addr = purl.host;
 		} else {
-			var error = new Error();
+			let error = new Error();
 			error.name = 'InvalidProtocol';
 			error.message = 'Invalid protocol: ' + protocol + '.  URLs must begin with grpc:// or grpcs://';
 			throw error;
