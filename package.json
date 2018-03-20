@@ -7,13 +7,15 @@
     "url": "http://gerrit.hyperledger.org/r/fabric-sdk-node"
   },
   "scripts": {
-    "test": "gulp test-headless"
+    "test": "gulp test-headless",
+    "compile": "tsc --project test/typescript",
+    "compile:w": "tsc --project test/typescript --watch"
   },
   "devDependencies": {
+    "@cloudant/cloudant": "^2.1.0",
     "@types/bytebuffer": "^5.0.34",
     "bn.js": "^4.11.8",
     "bunyan": "^1.8.10",
-    "@cloudant/cloudant": "^2.1.0",
     "del": "^2.2.2",
     "elliptic": "^6.3.2",
     "eslint": "^4.6.1",
@@ -44,9 +46,9 @@
     "tape-promise": "^1.1.0",
     "tar-fs": "^1.13.0",
     "targz": "^1.0.1",
+    "typescript": "2.7.2",
     "winston": "^2.2.0",
-    "x509": "^0.3.2",
-    "typescript": "^2.5.2"
+    "x509": "^0.3.2"
   },
   "license": "Apache-2.0",
   "licenses": [
