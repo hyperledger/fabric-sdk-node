@@ -1,4 +1,4 @@
- /**
+/**
  * Copyright 2016 IBM All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,12 +25,7 @@ var os = require('os');
 var Long = require('long');
 
 var Config = require('./Config.js');
-
-//
-// Load required crypto stuff.
-//
-
-var sha3_256 = require('js-sha3').sha3_256;
+const sjcl = require('sjcl');
 
 //
 // The following methods are for loading the proper implementation of an extensible APIs.
@@ -99,12 +94,9 @@ module.exports.newCryptoSuite = function(setting) {
 // Provide a Promise-based keyValueStore for couchdb, etc.
 module.exports.newKeyValueStore = function(options) {
 	// initialize the correct KeyValueStore
-	var self = this;
-	return new Promise(function(resolve, reject) {
-		var kvsEnv = self.getConfigSetting('key-value-store');
-		var store = require(kvsEnv);
-		return resolve(new store(options));
-	});
+	var kvsEnv = this.getConfigSetting('key-value-store');
+	var store = require(kvsEnv);
+	return Promise.resolve(new store(options));
 };
 
 const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];
@@ -146,7 +138,7 @@ module.exports.getLogger = function(name) {
 	};
 
 	var insertLoggerName = function(originalLogger, lname) {
-		var logger = Object.assign({}, originalLogger);
+		const logger = Object.assign({}, originalLogger);
 
 		['debug', 'info', 'warn', 'error'].forEach(function(method) {
 			var func = originalLogger[method];
@@ -213,21 +205,21 @@ module.exports.getLogger = function(name) {
 				}
 			}
 
-			var logger = new winston.Logger(options);
+			const logger = new winston.Logger(options);
 			logger.debug('Successfully constructed a winston logger with configurations', config);
 			saveLogger(logger);
 			return insertLoggerName(logger, name);
 		} catch(err) {
 			// the user's configuration from environment variable failed to parse.
 			// construct the default logger, log a warning and return it
-			var logger = newDefaultLogger();
+			const logger = newDefaultLogger();
 			saveLogger(logger);
 			logger.log('warn', 'Failed to parse environment variable "HFC_LOGGING". Returned a winston logger with default configurations. Error: %s', err.stack ? err.stack : err);
 			return insertLoggerName(logger, name);
 		}
 	}
 
-	var logger = newDefaultLogger();
+	const logger = newDefaultLogger();
 	saveLogger(logger);
 	logger.debug('Returning a new winston logger with default configurations');
 	return insertLoggerName(logger, name);
@@ -308,6 +300,11 @@ module.exports.removeMSPManager = function(channelId) {
 // Other miscellaneous methods
 //
 
+/**
+ * Convert from a bitArray to bytes (refer to SJCL's codec)
+ * @param {number[]} arr a bitArray to convert from
+ * @returns the bytes converted from the bitArray
+ */
 module.exports.bitsToBytes = function(arr) {
 	var out = [],
 		bl = sjcl.bitArray.bitLength(arr),
@@ -322,6 +319,11 @@ module.exports.bitsToBytes = function(arr) {
 	return out;
 };
 
+/**
+ * Convert from bytes to a bitArray (refer to SJCL's codec)
+ * @param {number[]} bytes a bytes to convert from
+ * @returns the bitArray converted from bytes
+ */
 module.exports.bytesToBits = function(bytes) {
 	var out = [],
 		i, tmp = 0;
@@ -379,7 +381,7 @@ module.exports.getClassMethods = function(clazz) {
 		});
 };
 
-module.exports.getBufferBit = function(buf, idx, val) {
+module.exports.getBufferBit = function(buf, idx) {
 	// return error=true if bit to mask exceeds buffer length
 	if ((parseInt(idx/8) + 1) > buf.length) {
 		return { error: true, invalid: 0} ;
@@ -451,13 +453,13 @@ var CryptoKeyStore = function(KVSImplClass, opts) {
 				self.logger.debug(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', self._storeConfig));
 
 				CKS(self._storeConfig.superClass, self._storeConfig.opts)
-				.then((ks) => {
-					self.logger.debug('_getKeyStore returning ks');
-					self._store = ks;
-					return resolve(self._store);
-				}).catch((err) => {
-					reject(err);
-				});
+					.then((ks) => {
+						self.logger.debug('_getKeyStore returning ks');
+						self._store = ks;
+						return resolve(self._store);
+					}).catch((err) => {
+						reject(err);
+					});
 			} else {
 				self.logger.debug('_getKeyStore resolving store');
 				return resolve(self._store);
@@ -502,7 +504,7 @@ module.exports.checkAndAddConfigSetting = function(option_name, default_value, o
  * with x509 parsers
  */
 module.exports.normalizeX509 = function(raw) {
-	var regex = /(\-\-\-\-\-\s*BEGIN ?[^-]+?\-\-\-\-\-)([\s\S]*)(\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-)/;
+	var regex = /(-----\s*BEGIN ?[^-]+?-----)([\s\S]*)(-----\s*END ?[^-]+?-----)/;
 	var matches = raw.match(regex);
 	if (!matches || matches.length !== 4) {
 		throw new Error('Failed to find start line or end line of the certificate.');
@@ -533,10 +535,10 @@ module.exports.pemToDER = function(pem) {
 	//Then we simply base64 decode it and convert to hex string
 	var contents = pem.toString().trim().split(/\r?\n/);
 	//check for BEGIN and END tags
-	if (!(contents[0].match(/\-\-\-\-\-\s*BEGIN ?([^-]+)?\-\-\-\-\-/) &&
-		contents[contents.length - 1].match(/\-\-\-\-\-\s*END ?([^-]+)?\-\-\-\-\-/))) {
+	if (!(contents[0].match(/-----\s*BEGIN ?([^-]+)?-----/) &&
+		contents[contents.length - 1].match(/-----\s*END ?([^-]+)?-----/))) {
 		throw new Error('Input parameter does not appear to be PEM-encoded.');
-	};
+	}
 	contents.shift(); //remove BEGIN
 	contents.pop(); //remove END
 	//base64 decode and encode as hex string

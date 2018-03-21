@@ -17,8 +17,6 @@
 'use strict';
 
 var api = require('../api.js');
-var fs = require('fs-extra');
-var path = require('path');
 var util = require('util');
 var utils = require('../utils');
 var nano = require('nano');
@@ -68,14 +66,14 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 			// Initialize the CouchDB database client
 			var dbClient = nano(self._url);
 			// Check if the database already exists. If not, create it.
-			dbClient.db.get(self._name, function (err, body) {
+			dbClient.db.get(self._name, function (err) {
 				// Check for error
 				if (err) {
 					// Database doesn't exist
 					if (err.error == 'not_found') {
 						logger.debug('No %s found, creating %s', self._name, self._name);
 
-						dbClient.db.create(self._name, function (err, body) {
+						dbClient.db.create(self._name, function (err) {
 							if (err) {
 								return reject(new Error(util.format('Failed to create %s database due to error: %s', self._name, err.stack ? err.stack : err)));
 							}
@@ -166,7 +164,7 @@ var CouchDBKeyValueStore = class extends api.KeyValueStore {
 		logger.debug('setValue, _dbInsert', { options: options });
 		var self = this;
 		return new Promise(function (resolve, reject) {
-			self._database.insert(options, function (err, body, header) {
+			self._database.insert(options, function (err) {
 				if (err) {
 					logger.error('setValue, _dbInsert, ERROR: [%s.insert] - ', self._name, err.error);
 					reject(new Error(err.error));

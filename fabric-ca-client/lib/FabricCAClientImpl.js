@@ -944,8 +944,8 @@ var FabricCAClient = class {
 		//Then we simply base64 decode it and convert to hex string
 		var contents = pem.toString().trim().split(/\r?\n/);
 		//check for BEGIN and END tags
-		if (!(contents[0].match(/\-\-\-\-\-\s*BEGIN ?([^-]+)?\-\-\-\-\-/) &&
-			contents[contents.length - 1].match(/\-\-\-\-\-\s*END ?([^-]+)?\-\-\-\-\-/))) {
+		if (!(contents[0].match(/-----\s*BEGIN ?([^-]+)?-----/) &&
+			contents[contents.length - 1].match(/-----\s*END ?([^-]+)?-----/))) {
 			throw new Error('Input parameter does not appear to be PEM-encoded.');
 		};
 		contents.shift(); //remove BEGIN

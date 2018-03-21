@@ -13,6 +13,8 @@ fabric-ca-client/lib/msp/*
 fabric-ca-client/lib/protos/*
 fabric-ca-client/lib/hash.js
 fabric-ca-client/lib/impl/*
+fabric-ca-client/types/base.d.ts
+fabric-ca-client/types/tsconfig.json
 npm-shrinkwrap.json
 package-lock.json
 npm-debug.log
@@ -26,3 +28,5 @@ test/fixtures/src/github.com/example_cc/junk.go
 *.heapsnapshot
 .vscode
 .idea
+test/typescript/**/*.js
+test/typescript/**/*.js.map

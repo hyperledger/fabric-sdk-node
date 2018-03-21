@@ -326,7 +326,6 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 		let tx_id = client.newTransactionID(true);
 		instansiate_tx_id = tx_id;
 		let request = {
-			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
 			chaincodeVersion: 'v1',
 			args: ['a', '100', 'b', '200'],

@@ -18,7 +18,6 @@
 
 var fs = require('fs-extra');
 var path = require('path');
-var util = require('util');
 var utils = require('../utils');
 var Constants = require('../Constants.js');
 var Channel = require('../Channel.js');

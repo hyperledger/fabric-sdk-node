@@ -19,7 +19,6 @@
 var jsrsasign = require('jsrsasign');
 var KEYUTIL = jsrsasign.KEYUTIL;
 
-var api = require('../api.js');
 var utils = require('../utils.js');
 var ECDSAKey = require('./ecdsa/key.js');
 
@@ -31,44 +30,40 @@ var logger = utils.getLogger('CryptoKeyStore.js');
  * with the getKey() and putKey() methods
  */
 var CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
-	constructor(options) {
-		return super(options);
-	}
-
 	getKey(ski) {
 		var self = this;
 
 		// first try the private key entry, since it encapsulates both
 		// the private key and public key
 		return this.getValue(_getKeyIndex(ski, true))
-		.then((raw) => {
-			if (raw !== null) {
-				var privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
-				// TODO: for now assuming ECDSA keys only, need to add support for RSA keys
-				return new ECDSAKey(privKey);
-			}
+			.then((raw) => {
+				if (raw !== null) {
+					var privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
+					// TODO: for now assuming ECDSA keys only, need to add support for RSA keys
+					return new ECDSAKey(privKey);
+				}
 
-			// didn't find the private key entry matching the SKI
-			// next try the public key entry
-			return self.getValue(_getKeyIndex(ski, false));
-		}).then((key) => {
-			if (ECDSAKey.isInstance(key))
-				return key;
+				// didn't find the private key entry matching the SKI
+				// next try the public key entry
+				return self.getValue(_getKeyIndex(ski, false));
+			}).then((key) => {
+				if (ECDSAKey.isInstance(key))
+					return key;
 
-			if (key !== null) {
-				var pubKey = KEYUTIL.getKey(key);
-				return new ECDSAKey(pubKey);
-			}
-		});
+				if (key !== null) {
+					var pubKey = KEYUTIL.getKey(key);
+					return new ECDSAKey(pubKey);
+				}
+			});
 	}
 
 	putKey(key) {
 		var idx = _getKeyIndex(key.getSKI(), key.isPrivate());
 		var pem = key.toBytes();
 		return this.setValue(idx, pem)
-		.then(() => {
-			return key;
-		});
+			.then(() => {
+				return key;
+			});
 	}
 };
 

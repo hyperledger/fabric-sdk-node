@@ -124,7 +124,7 @@ module.exports = class ECDSA_KEY {
 		//check to see if this is a private key
 		if (!this.isPrivate()){
 			throw new Error('A CSR cannot be generated from a public key');
-		};
+		}
 
 		try {
 			var csr = asn1.csr.CSRUtil.newCSRPEM({
