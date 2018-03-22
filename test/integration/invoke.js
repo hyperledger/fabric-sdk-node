@@ -298,8 +298,8 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 				logger.debug('event promise all complete and testing complete');
 				return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 			}).catch((err) => {
-				t.fail('Failed to send transaction and get notifications within the timeout period.');
-				throw new Error('Failed to send transaction and get notifications within the timeout period.');
+				t.fail('Failed transaction ::'+ err);
+				throw new Error('Failed transaction ::'+ err);
 			});
 		} else {
 			t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
