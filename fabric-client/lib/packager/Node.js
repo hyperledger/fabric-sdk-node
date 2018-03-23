@@ -33,7 +33,7 @@ class NodePackager extends BasePackager {
 	 * @returns {Promise.<TResult>}
 	 */
 	package (chaincodePath, metadataPath) {
-		logger.info('packaging Node from %s', chaincodePath);
+		logger.info('packaging Node Chaincode from %s', chaincodePath);
 
 		// Compose the path to the chaincode project directory
 		let projDir = chaincodePath;

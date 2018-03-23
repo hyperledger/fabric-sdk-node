@@ -7,9 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node chaincode.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "IBM",
+  "license": "Apache-2.0",
   "dependencies": {
-    "fabric-shim": "unstable"
+    "fabric-shim": "~1.1.0"
   }
 }
