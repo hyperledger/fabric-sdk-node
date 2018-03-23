@@ -31,7 +31,7 @@ var logger = shim.NewLogger("example_cc2")
 type SimpleChaincode struct {
 }
 
-// Re-initialize one of the parties' asset holdings
+// Init - Re-initialize one of the parties' asset holdings
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
 	logger.Info("########### example_cc2 Init ###########")
@@ -58,7 +58,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	return shim.Success(nil)
 }
 
-// Transaction makes payment of X units from A to B
+// Invoke - Transaction makes payment of X units from A to B
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Info("########### example_cc1 Invoke ###########")
 
