@@ -753,8 +753,8 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 
 				}).catch((err) => {
 
-					t.fail('Failed to send transaction and get notifications within the timeout period.');
-					throw new Error('Failed to send transaction and get notifications within the timeout period.');
+					t.fail('Failed transaction ::'+ err);
+					throw new Error('Failed transaction ::'+ err);
 
 				});
 
