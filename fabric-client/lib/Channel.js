@@ -653,8 +653,8 @@ var Channel = class {
 		var self = this;
 		var orderer = this._clientContext.getTargetOrderer(null, this._orderers, this._name);
 
-		var signer = this._clientContext._getSigningIdentity();
-		var txId = new TransactionID(signer);
+		var signer = this._clientContext._getSigningIdentity(true);
+		var txId = new TransactionID(signer, true);
 
 		// seek the latest block
 		var seekSpecifiedStart = new _abProto.SeekNewest();
