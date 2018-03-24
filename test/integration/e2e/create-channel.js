@@ -26,15 +26,9 @@ var Client = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
 var path = require('path');
-var grpc = require('grpc');
-
-var _commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
-var _configtxProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/configtx.proto')).common;
 
 var testUtil = require('../../unit/util.js');
 var e2eUtils = require('./e2eUtils.js');
-
-var the_user = null;
 
 var ORGS;
 
@@ -54,51 +48,15 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 	Client.addConfigFile(path.join(__dirname, './config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 
-	//
-	// Create and configure the test channel
-	//
 	var client = new Client();
 
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	var TWO_ORG_MEMBERS_AND_ADMIN = [{
-		role: {
-			name: 'member',
-			mspId: 'Org1MSP'
-		}
-	}, {
-		role: {
-			name: 'member',
-			mspId: 'Org2MSP'
-		}
-	}, {
-		role: {
-			name: 'admin',
-			mspId: 'OrdererMSP'
-		}
-	}];
-
-	var ONE_OF_TWO_ORG_MEMBER = {
-		identities: TWO_ORG_MEMBERS_AND_ADMIN,
-		policy: {
-			'1-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }]
-		}
-	};
-
-	var ACCEPT_ALL = {
-		identities: [],
-		policy: {
-			'0-of': []
-		}
-	};
-
 	var config = null;
 	var signatures = [];
 	var orderer = null;
-	var orderer_bad = null;
-	var orderer_bad2 = null;
 	var tlsInfo = null;
 
 	// Acting as a client in org1 when creating the channel
@@ -117,53 +75,11 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(org)}));
 		client.setCryptoSuite(cryptoSuite);
 
-		return testUtil.getOrderAdminSubmitter(client, t);
-	}).then((admin) =>{
-		t.pass('Successfully enrolled user \'admin\' for orderer (create_channel 1)');
-
-		orderer = client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS.orderer['server-hostname']
-			}
-		);
-
-		orderer_bad = client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS.orderer['server-hostname'],
-				'grpc.max_send_message_length': 6800
-			}
-		);
-
-		// set something to fail to test that the code picks up values from the config
-		let keep = Client.getConfigSetting('grpc.max_send_message_length');
-		Client.setConfigSetting('grpc.max_send_message_length', 6800);
-		orderer_bad2 = client.newOrderer(
-			ORGS.orderer.url,
-			{
-				'pem': caroots,
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS.orderer['server-hostname'],
-				'grpc.max_send_message_length': 6800
-			}
-		);
-		// put back the setting
-		Client.setConfigSetting('grpc.max_send_message_length',keep);
-
 		// use the config update created by the configtx tool
 		let envelope_bytes = fs.readFileSync(path.join(__dirname, '../../fixtures/channel/mychannel.tx'));
 		config = client.extractChannelConfig(envelope_bytes);
 		t.pass('Successfull extracted the config update from the configtx envelope');
 
-		client._userContext = null;
 		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\' for org1');
@@ -174,15 +90,10 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		// fabric-client SDK will convert back during create
 		var string_signature = signature.toBuffer().toString('hex');
 		t.pass('Successfully signed config update');
+
 		// collect signature from org1 admin
-		// TODO: signature counting against policies on the orderer
-		// at the moment is being investigated, but it requires this
-		// weird double-signature from each org admin
-		signatures.push(string_signature);
 		signatures.push(string_signature);
 
-		// make sure we do not reuse the user
-		client._userContext = null;
 		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\' for org2');
@@ -192,35 +103,23 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		t.pass('Successfully signed config update');
 
 		// collect signature from org2 admin
-		// TODO: signature counting against policies on the orderer
-		// at the moment is being investigated, but it requires this
-		// weird double-signature from each org admin
-		signatures.push(signature);
 		signatures.push(signature);
 
-		// make sure we do not reuse the user
-		client._userContext = null;
 		return testUtil.getOrderAdminSubmitter(client, t);
 	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\' for orderer (create_channel 2)');
-		the_user = admin;
+		t.pass('Successfully enrolled user \'admin\' for orderer');
 
-		// sign the config
-		var signature = client.signChannelConfig(config);
-		t.pass('Successfully signed config update');
+		let orderer_bad = client.newOrderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': ORGS.orderer['server-hostname'],
+				'grpc.max_send_message_length': 1000 //something too small for the request
+			}
+		);
 
-		// collect signature from orderer org admin
-		// TODO: signature counting against policies on the orderer
-		// at the moment is being investigated, but it requires this
-		// weird double-signature from each org admin
-		signatures.push(signature);
-		signatures.push(signature);
-
-		logger.debug('\n***\n done signing \n***\n');
-
-		// build up a create request to include
-		// an orderer that will fail because the
-		// orderer is defined with a bad options value
 		let tx_id = client.newTransactionID();
 		var request = {
 			config: config,
@@ -233,51 +132,40 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		// send create request to bad orderer
 		return client.createChannel(request);
 	}).then((result) => {
-		logger.debug('\n***\n completed the create \n***\n');
+		logger.debug('\n***\n completed the create successfully with an orderer with a bad max send size  \n***\n');
 
 		logger.debug(' response ::%j',result);
-		t.fail('Failed when this Successfully created the channel.');
-		t.end();
+		t.fail('Failed when successfully created the channel with a bad max send size');
 		throw new Error('Failed to get max send error');
 	}, (err) => {
 		if(err.toString().indexOf('Sent message larger than max') > -1) {
 			t.pass('Successfully failed with max error on the create channel: ' + err.toString());
 		} else {
 			t.fail('Failed to fail with max error on the create channel: ' + err.stack ? err.stack : err);
+			throw new Error('Failed');
 		}
 
 		return true;
 	}).then((nothing) => {
-		// build up a create request to
-		// an orderer that will fail
 
-		let tx_id = client.newTransactionID();
-		var request = {
-			config: config,
-			signatures : signatures,
-			name : channel_name,
-			orderer : orderer_bad2,
-			txId  : tx_id
-		};
+		orderer = client.newOrderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'clientCert': tlsInfo.certificate,
+				'clientKey': tlsInfo.key,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		);
 
-		// send create request to bad orderer
-		return client.createChannel(request);
-	}).then((result) => {
-		logger.debug('\n***\n completed the create \n***\n');
+		// let's try to get some info from the orderer
+		// Get the system channel config decoded
+		let sys_channel = client.newChannel('testchainid');
+		sys_channel.addOrderer(orderer);
+		return sys_channel.getChannelConfigFromOrderer();
+	}).then((config_envelope) => {
+		t.pass('Successfully received the configuration');
 
-		logger.debug(' response ::%j',result);
-		t.fail('Failed when this Successfully created the channel.');
-		t.end();
-		throw new Error('Failed to get max send error');
-	}, (err) => {
-		if(err.toString().indexOf('Sent message larger than max') > -1) {
-			t.pass('Successfully failed with max error on the create channel: ' + err.toString());
-		} else {
-			t.fail('Failed to fail with max error on the create channel: ' + err.stack ? err.stack : err);
-		}
-
-		return true;
-	}).then((nothing) => {
 		// build up the create request
 		let tx_id = client.newTransactionID();
 		var request = {
@@ -299,16 +187,13 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 			return e2eUtils.sleep(5000);
 		} else {
 			t.fail('Failed to create the channel. ');
-			t.end();
+			throw new Error('Failed');
 		}
-	}, (err) => {
-		t.fail('Failed to create the channel: ' + err.stack ? err.stack : err);
-		t.end();
 	}).then((nothing) => {
 		t.pass('Successfully waited to make sure new channel was created.');
 		t.end();
-	}, (err) => {
-		t.fail('Failed to sleep due to error: ' + err.stack ? err.stack : err);
+	}).catch((err)=> {
+		t.fail('Failed error: ' + err.stack ? err.stack : err);
 		t.end();
 	});
 });

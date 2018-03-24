@@ -256,8 +256,8 @@ var ChannelEventHub = class {
 	 */
 	connect(full_block){
 		logger.debug('connect - start');
-		if (!this._clientContext._userContext) {
-			throw new Error('The clientContext has not been properly initialized, missing userContext');
+		if (!this._clientContext._userContext && !this._clientContext._adminSigningIdentity) {
+			throw new Error('The clientContext has not been properly initialized, missing userContext or admin identity');
 		}
 
 		if(typeof full_block === 'boolean') {
@@ -499,8 +499,8 @@ var ChannelEventHub = class {
 		//     the blocks come in
 		// FAIL_IF_NOT_READY will mean if the block is not there throw an error
 		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
-		let tx_id = this._clientContext.newTransactionID();
-		let signer = this._clientContext._getSigningIdentity();
+		let tx_id = this._clientContext.newTransactionID(true);
+		let signer = this._clientContext._getSigningIdentity(true);
 
 		// build the header for use with the seekInfo payload
 		let seekInfoHeader = clientUtils.buildChannelHeader(
