@@ -147,7 +147,8 @@ test('\n\n** Golang Packager tests **\n\n', function(t) {
 	});
 });
 
-const npmignore1 = '**/node_modules';
+// ignore the dummy.js
+const npmignore1 = 'dummy.js';
 const destDir = path.join(testutil.getTempDir(), 'test-node-chaincode');
 const tmpFile = path.join(testutil.getTempDir(), 'test-node-chaincode.tar.gz');
 const targzDir = path.join(testutil.getTempDir(), 'test-node-chaincode-tar-gz');
@@ -189,11 +190,25 @@ test('\n\n** Node.js Packager tests **\n\n', function(t) {
 		fs.removeSync(destDir);
 		fs.copySync(testutil.NODE_CHAINCODE_PATH, destDir);
 
-		fs.outputFileSync(path.join(destDir, '.npmignore'), npmignore1);
 		fs.outputFileSync(path.join(destDir, 'node_modules/dummy/package.json'), 'dummy package.json content');
+		fs.outputFileSync(path.join(destDir, 'dummy.js'), 'this is the content of dummy.js');
 
 		return Packager.package(destDir, 'node', false);
-
+	}).then((data) => {
+		return check(data, () => {
+			let checkPath = path.join(targzDir, 'src', 'chaincode.js');
+			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/chaincode.js" file');
+			checkPath = path.join(targzDir, 'src', 'package.json');
+			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/package.json" file');
+			checkPath = path.join(targzDir, 'src', 'dummy.js');
+			t.equal(fs.existsSync(checkPath), true, 'dummy.js should exist this time, because we does not ignore it');
+			checkPath = path.join(targzDir, 'src', 'node_modules');
+			t.equal(fs.existsSync(checkPath), false, 'The tar.gz file produced by Packager.package() does not have the "node_modules" folder');
+		});
+	}).then(() => {
+		// ignore the dummy.js
+		fs.outputFileSync(path.join(destDir, '.npmignore'), npmignore1);
+		return Packager.package(destDir, 'node', false);
 	}).then((data) => {
 		return check(data, () => {
 			let checkPath = path.join(targzDir, 'src', 'chaincode.js');
@@ -217,7 +232,7 @@ test('\n\n** Node.js Packager tests **\n\n', function(t) {
 			checkPath = path.join(targzDir, 'src', 'some.other.file');
 			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/some.other.file" file');
 			checkPath = path.join(targzDir, 'src', 'node_modules');
-			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "node_modules" folder');
+			t.equal(fs.existsSync(checkPath), false, 'The tar.gz file produced by Packager.package() does not has the "node_modules" folder');
 		});
 	}).then(()=>{
 		return Packager.package(destDir, 'node', false, testutil.METADATA_PATH);

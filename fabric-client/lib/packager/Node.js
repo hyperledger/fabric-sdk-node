@@ -82,6 +82,9 @@ class NodePackager extends BasePackager {
 				files = [];
 			}
 
+			// ignore the node_modules folder by default
+			files = files.filter(f => f.indexOf('node_modules') !== 0);
+
 			files.forEach((entry) => {
 				let desc = {
 					name: path.join('src', entry).split('\\').join('/'), // for windows style paths
