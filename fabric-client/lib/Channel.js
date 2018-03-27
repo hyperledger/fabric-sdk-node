@@ -77,18 +77,28 @@ var Channel = class {
 	 *                        of the channel when making channel-aware requests with the fabric,
 	 *                        such as invoking chaincodes to endorse transactions. The naming of
 	 *                        channels is enforced by the ordering service and must be unique within
-	 *                        the fabric backend
+	 *                        the fabric backend.Channel name in fabric network is subject to a pattern
+	 * 						  revealed in configuration <code>channel-name-regx-checker</code>
 	 * @param {Client} clientContext - The client instance, which provides operational context
 	 *                                 such as the signing identity
 	 */
 	constructor(name, clientContext) {
-		// name is required
-		if (typeof name === 'undefined' || !name) {
+		if (!name) {
 			logger.error('Failed to create Channel. Missing requirement "name" parameter.');
 			throw new Error('Failed to create Channel. Missing requirement "name" parameter.');
 		}
-
-		if (typeof clientContext === 'undefined' || !clientContext) {
+		if (typeof name !== 'string') {
+			throw new Error('Failed to create Channel. channel name should be a string');
+		}
+		const channelNameRegxChecker = utils.getConfigSetting('channel-name-regx-checker');
+		if (channelNameRegxChecker) {
+			const { pattern, flags } = channelNameRegxChecker;
+			const namePattern = new RegExp(pattern ? pattern : '', flags ? flags : '');
+			if (!(name.match(namePattern))) {
+				throw new Error(util.format('Failed to create Channel. channel name should match Regex %s, but got %j', namePattern, name));
+			}
+		}
+		if (!clientContext) {
 			logger.error('Failed to create Channel. Missing requirement "clientContext" parameter.');
 			throw new Error('Failed to create Channel. Missing requirement "clientContext" parameter.');
 		}
@@ -951,22 +961,22 @@ var Channel = class {
 			throw new Error('tx_id as string is required');
 		}
 
-		const args = [this._name,tx_id];
+		const args = [this._name, tx_id];
 		const targets = this._getTargetForQuery(target);
 		const signer = this._clientContext._getSigningIdentity(useAdmin);
 
 		const request = {
 			targets,
 			chaincodeId: Constants.QSCC,
-			txId: new TransactionID(signer,useAdmin),
+			txId: new TransactionID(signer, useAdmin),
 			fcn: 'GetBlockByTxID',
 			args
 		};
 		return this.sendTransactionProposal(request)
-			.then((results)=> {
+			.then((results) => {
 				const responses = results[0];
 				if (responses && Array.isArray(responses)) {
-					logger.debug('queryBlockByTxID - got response',responses.length);
+					logger.debug('queryBlockByTxID - got response', responses.length);
 					//will only be one response as we are only querying the primary peer
 					if (responses.length > 1) {
 						return Promise.reject(new Error('Too many results returned'));
@@ -985,7 +995,7 @@ var Channel = class {
 					return Promise.reject(response);
 				}
 				return Promise.reject(new Error('Payload results are missing from the query'));
-			}).catch((err)=> {
+			}).catch((err) => {
 				logger.error('Failed Query block. Error: %s', err.stack ? err.stack : err);
 				return Promise.reject(err);
 			});
@@ -2293,14 +2303,14 @@ function loadConfigPolicy(config_items, versions, config_policy, group_name, org
 
 function loadPolicy(config_items, versions, key, policy, group_name) {
 	try {
-		if(policy.type === _policiesProto.Policy.PolicyType.SIGNATURE){
+		if (policy.type === _policiesProto.Policy.PolicyType.SIGNATURE) {
 			let signature_policy = _policiesProto.SignaturePolicyEnvelope.decode(policy.policy);
 			logger.debug('loadPolicy - %s - policy SIGNATURE :: %s %s', group_name, signature_policy.encodeJSON(), decodeSignaturePolicy(signature_policy.getIdentities()));
-		}else if(policy.type === _policiesProto.Policy.PolicyType.IMPLICIT_META){
+		} else if (policy.type === _policiesProto.Policy.PolicyType.IMPLICIT_META) {
 			let implicit_policy = _policiesProto.ImplicitMetaPolicy.decode(policy.value);
 			let rule = ImplicitMetaPolicy_Rule[implicit_policy.getRule()];
 			logger.debug('loadPolicy - %s - policy IMPLICIT_META :: %s %s', group_name, rule, implicit_policy.getSubPolicy());
-		}else{
+		} else {
 			logger.error('loadPolicy - Unknown policy type :: %s', policy.type);
 			throw new Error('Unknown Policy type ::' + policy.type);
 		}

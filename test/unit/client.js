@@ -212,18 +212,18 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t
 		else
 			t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error.stack ? error.stack : error);
 
-		var channel = client.newChannel('someChannel');
-		t.equals(channel.getName(), 'someChannel', 'Checking channel names match');
+		var channel = client.newChannel('somechannel');
+		t.equals(channel.getName(), 'somechannel', 'Checking channel names match');
 		t.throws(
 			function () {
-				client.newChannel('someChannel');
+				client.newChannel('somechannel');
 			},
-			/^Error: Channel someChannel already exist/,
+			/^Error: Channel somechannel already exist/,
 			'Client tests: checking that channel already exists.');
 
 		t.doesNotThrow(
 			function() {
-				client.getChannel('someChannel');
+				client.getChannel('somechannel');
 			},
 			null,
 			'Client tests: getChannel()');

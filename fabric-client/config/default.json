@@ -9,6 +9,10 @@
 	"crypto-suite-hsm": {
 		"EC": "fabric-client/lib/impl/bccsp_pkcs11.js"
 	},
+	"channel-name-regx-checker":{
+		"pattern":"^[a-z][a-z0-9.-]*$",
+		"flags":""
+	},
 	"key-value-store": "fabric-client/lib/impl/FileKeyValueStore.js",
 	"certificate-authority-client": "fabric-ca-client",
 	"nonce-size" : 24,
