@@ -172,7 +172,7 @@ class IdentityService {
 			throw new Error('Can not get signingIdentity from registrar');
 		}
 
-		const url = 'identities/' + enrollmentID;
+		const url = 'identities/' + enrollmentID + '?ca='+this.client._caName;;
 		return this.client.get(url, signingIdentity);
 	}
 
@@ -190,7 +190,7 @@ class IdentityService {
 			throw new Error('Can not get signingIdentity from registrar');
 		}
 
-		return this.client.get('identities', signingIdentity);
+		return this.client.get('identities?ca=' + this.client._caName, signingIdentity);
 	}
 
 	/**
@@ -198,9 +198,10 @@ class IdentityService {
 	 *
 	 * @param {string} enrollmentID
 	 * @param {User} registrar
+	 * @param {boolean} force - Optional. With force, some identity can delete itself
 	 * @return {Promise} {@link ServiceResponse}
 	 */
-	delete(enrollmentID, registrar) {
+	delete(enrollmentID, registrar, force) {
 		if (!enrollmentID || typeof enrollmentID !== 'string') {
 			throw new Error('Missing required argument "enrollmentID", or argument "enrollmentID" is not a valid string');
 		}
@@ -211,7 +212,10 @@ class IdentityService {
 			throw new Error('Can not get signingIdentity from registrar');
 		}
 
-		const url = 'identities/' + enrollmentID;
+		let url = 'identities/' + enrollmentID;
+		if (force === true) {
+			url = url + '?force=true';
+		}
 		return this.client.delete(url, signingIdentity);
 	}
 
