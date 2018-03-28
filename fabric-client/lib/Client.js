@@ -494,8 +494,8 @@ var Client = class extends BaseClient {
 	 * as a coherent pair.
 	 * <br><br>
 	 * This method requires the client instance to have been assigned a userContext.
-	 * @param {boolean} If this transactionID should be built based on the admin credentials
-	 *                  Default is a non admin TransactionID
+	 * @param {boolean} admin - If true, this transactionID should be built based on the admin credentials
+	 *                  Default is a non admin TransactionID based on the userContext.
 	 * @returns {TransactionID} An object that contains a transaction id based on the
 	 *           client's userContext and a randomly generated nonce value.
 	 */
