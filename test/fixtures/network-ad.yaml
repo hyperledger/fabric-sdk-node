@@ -40,26 +40,27 @@ organizations:
       path: test/fixtures/channel/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/keystore/5a983ddcbefe52a7f9b8ee5b85a590c3e3a43c4ccd70c7795bec504e7f74848d_sk
     signedCert:
       path: test/fixtures/channel/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/signcerts/Admin@org2.example.com-cert.pem
+
 orderers:
   orderer.example.com:
     url: grpcs://localhost:7050
     grpcOptions:
       ssl-target-name-override: orderer.example.com
-      grpc-max-send-message-length: 15
-
     tlsCACerts:
       path: test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem
+
 peers:
   peer0.org1.example.com:
     url: grpcs://localhost:7051
+    eventUrl: grpcs://localhost:7053
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
-      grpc.http2.keepalive_time: 15
     tlsCACerts:
       path: test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem
 
   peer0.org2.example.com:
     url: grpcs://localhost:8051
+    eventUrl: grpcs://localhost:8053
     grpcOptions:
       ssl-target-name-override: peer0.org2.example.com
     tlsCACerts:

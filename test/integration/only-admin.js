@@ -166,21 +166,36 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 		let genesis_block = await channel_org1.getGenesisBlock(request);
 		t.pass('Successfully got the genesis block');
 
+		let promises = [];
+		let join_monitor = buildJoinEventMonitor(t, client_org1, channel_name, 'peer0.org1.example.com');
+		promises.push(join_monitor);
+
 		let join_tx_id = client_org1.newTransactionID(true);
 		request = {
 			targets: ['peer0.org1.example.com'],
 			block : genesis_block,
 			txId : 	join_tx_id
 		};
+		// join request to peer on org1 as admin of org1
+		let join_promise = channel_org1.joinChannel(request, 30000);
+		promises.push(join_promise);
 
-		// send join request to peer on org2 as admin of org2
-		let join_results = await channel_org1.joinChannel(request, 30000);
-		if(join_results && join_results[0] && join_results[0].response && join_results[0].response.status == 200) {
+		let join_results = await Promise.all(promises);
+		logger.debug(util.format('Join Channel R E S P O N S E : %j', join_results));
+
+		// lets check the results of sending to the peers which is
+		// last in the results array
+		let peer_results = join_results.pop();
+		if(peer_results && peer_results[0] && peer_results[0].response && peer_results[0].response.status == 200) {
 			t.pass('Successfully joined channnel on org1');
 		} else {
 			t.fail('Failed to join channel on org1');
 			throw new Error('Failed to join channel on org1');
 		}
+
+		promises = [];
+		join_monitor = buildJoinEventMonitor(t, client_org2, channel_name, 'peer0.org2.example.com');
+		promises.push(join_monitor);
 
 		join_tx_id = client_org2.newTransactionID(true);
 		request = {
@@ -188,18 +203,22 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 			block : genesis_block,
 			txId : 	join_tx_id
 		};
+		// join request to peer on org2 as admin of org2
+		join_promise = channel_org2.joinChannel(request, 30000);
+		promises.push(join_promise);
 
-		// send join request to peer on org2 as admin of org2
-		join_results = await channel_org2.joinChannel(request, 30000);
-		if(join_results && join_results[0] && join_results[0].response && join_results[0].response.status == 200) {
+		join_results = await Promise.all(promises);
+		logger.debug(util.format('Join Channel R E S P O N S E : %j', join_results));
+
+		// lets check the results of sending to the peers which is
+		// last in the results array
+		peer_results = join_results.pop();
+		if(peer_results && peer_results[0] && peer_results[0].response && peer_results[0].response.status == 200) {
 			t.pass('Successfully joined channnel on org2');
 		} else {
 			t.fail('Failed to join channel on org2');
 			throw new Error('Failed to join channel on org2');
 		}
-
-		await sleep(10000);
-		t.pass('Successfully waited for peers to join the channel');
 
 		/*
 		 *  I N S T A L L   C H A I N C O D E
@@ -290,6 +309,49 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 
 	// just return the one channel instance
 	return channel_org1;
+}
+
+
+function buildJoinEventMonitor(t, client, channel_name, peer_name) {
+	let event_hub = client.getEventHub(peer_name);
+	let event_block_promise = new Promise((resolve, reject) => {
+		let registration_id = null;
+		let event_timeout = setTimeout(() => {
+			let message = 'REQUEST_TIMEOUT:' + event_hub._ep._endpoint.addr;
+			logger.error(message);
+			event_hub.disconnect();
+			reject(new Error(message));
+		}, 30000);
+		registration_id = event_hub.registerBlockEvent((block) => {
+			clearTimeout(event_timeout);
+			// A peer may have more than one channel, check that this block came
+			// is from the channel that is being joined.
+			// ... also this will be the first block channel, and the channel may
+			// have many more blocks
+			if (block.data.data.length === 1) {
+				var channel_header = block.data.data[0].payload.header.channel_header;
+				if (channel_header.channel_id === channel_name) {
+					let message = util.format('EventHub %s has reported a block update for channel %s',event_hub._ep._endpoint.addr,channel_name);
+					t.pass(message);
+					event_hub.unregisterBlockEvent(registration_id);
+					event_hub.disconnect();
+					t.pass(util.format('EventHub %s has been disconnected',event_hub._ep._endpoint.addr));
+					resolve(message);
+				} else {
+					t.pass('Keep waiting for the right block');
+				}
+			}
+		}, (err) => {
+			clearTimeout(event_timeout);
+			let message = 'Problem setting up the event hub :'+ err.toString();
+			t.fail(message);
+			event_hub.disconnect();
+			reject(new Error(message));
+		});
+		event_hub.connect();
+	});
+
+	return event_block_promise;
 }
 
 async function invoke(t, client, channel) {
@@ -453,6 +515,8 @@ async function queries(t, client, channel, tx_id_string) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
 		t.fail('Test failed with '+ error);
 	}
+
+	return true;
 }
 
 async function manually(t, client) {
@@ -511,6 +575,8 @@ async function manually(t, client) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
 		t.fail('Test failed with '+ error);
 	}
+
+	return true;
 }
 
 function sleep(ms) {

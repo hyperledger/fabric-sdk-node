@@ -240,8 +240,8 @@ var EventHub = class {
 		if (typeof this._clientContext.getUserContext !== 'function')
 			throw new Error('Invalid clientContext argument: missing required function "getUserContext"');
 
-		if (typeof this._clientContext.getUserContext() === 'undefined' || this._clientContext.getUserContext() === null)
-			throw new Error('The clientContext has not been properly initialized, missing userContext');
+		if (typeof this._clientContext._getSigningIdentity(true) === 'undefined')
+			throw new Error('The clientContext has not been properly initialized, missing identity');
 
 		this._connect();
 	}
@@ -263,6 +263,12 @@ var EventHub = class {
 			return;
 		}
 		if (!this._ep) throw Error('Must set peer address before connecting.');
+
+		// close out the old stream
+		if(this._stream) {
+			this._stream.end();
+			this._stream = null;
+		}
 
 		this._connect_running = true;
 		this._current_stream++;
@@ -369,7 +375,14 @@ var EventHub = class {
 	 * all listeners that provided an "onError" callback.
 	 */
 	disconnect() {
-		this._disconnect(new Error('EventHub has been shutdown'));
+		let err = new Error('EventHub has been shutdown');
+		if(this._connected || this._connect_running) {
+			this._disconnect(err);
+		} else {
+			// close and report to all the listeners
+			this._closeAllCallbacks(err);
+			logger.debug('disconnect - EventHub is not connected');
+		}
 	}
 
 	/* Internal method
@@ -398,7 +411,7 @@ var EventHub = class {
 	 * and sends it to the peer's event hub.
 	 */
 	_sendRegistration(register) {
-		var user = this._clientContext.getUserContext();
+		var identity = this._clientContext._getSigningIdentity(true);
 		var signedEvent = new _events.SignedEvent();
 		var event = new _events.Event();
 		var reg = {events: [{event_type: 'BLOCK'}]};
@@ -410,14 +423,14 @@ var EventHub = class {
 			event.setUnregister(reg);
 		}
 
-		event.setCreator(user.getIdentity().serialize());
+		event.setCreator(identity.serialize());
 		event.setTimestamp(clientUtils.buildCurrentTimestamp());
 		let client_cert_hash = this._ep.getClientCertHash();
 		if(client_cert_hash) {
 			event.setTlsCertHash(client_cert_hash);
 		}
 		signedEvent.setEventBytes(event.toBuffer());
-		var sig = user.getSigningIdentity().sign(event.toBuffer());
+		var sig = identity.sign(event.toBuffer());
 		signedEvent.setSignature(Buffer.from(sig));
 		this._stream.write(signedEvent);
 	}
@@ -473,8 +486,13 @@ var EventHub = class {
 		let state = 0;
 		if(this._stream) {
 			state = this._stream.call.channel_.getConnectivityState();
+			logger.debug('_checkConnection - grpc stream state :%s',state);
+		} else {
+			// when there is no stream, then wait for the user to do a 'connect'
+			return;
 		}
-		if(this._connected || this._connect_running) {
+
+		if(this._connected || this._connect_running || state == 2) {
 			logger.debug('_checkConnection - this hub %s is connected or trying to connect with stream channel state %s', this._ep.getUrl(), state);
 		}
 		else {
@@ -487,23 +505,14 @@ var EventHub = class {
 		//reconnect will only happen when there is error callback
 		if(force_reconnect) {
 			try {
-				if(this._stream) {
-					var is_paused = this._stream.isPaused();
-					logger.debug('_checkConnection - grpc isPaused :%s',is_paused);
-					if(is_paused) {
-						this._stream.resume();
-						logger.debug('_checkConnection - grpc resuming ');
-					}
-					let state = this._stream.call.channel_.getConnectivityState();
-					logger.debug('_checkConnection - grpc stream state :%s',state);
-					if(state != 2) {
-						// try to reconnect
-						this._connect(true);
-					}
-				}
-				else {
-					logger.debug('_checkConnection - stream was shutdown - will reconnected');
+				var is_paused = this._stream.isPaused();
+				logger.debug('_checkConnection - grpc isPaused :%s',is_paused);
+				if(is_paused) {
+					this._stream.resume();
+					logger.debug('_checkConnection - grpc resuming ');
+				} else if(state != 2) {
 					// try to reconnect
+					this._connected = false;
 					this._connect(true);
 				}
 			}

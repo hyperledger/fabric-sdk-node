@@ -232,6 +232,7 @@ var NetworkConfig_1_0 = class {
 			if(peer_config && peer_config[EVENT_URL]) {
 				let opts = {};
 				opts.pem = getTLSCACert(peer_config);
+				this._client_context.addTlsClientCertAndKey(opts);
 				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, EVENTREG);
 				event_hub = new EventHub(this._client_context);

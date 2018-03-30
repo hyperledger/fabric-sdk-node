@@ -53,23 +53,14 @@ test('\n\n** EventHub tests\n\n', (t) => {
 
 	t.throws(
 		() => {
-			eh = new EventHub({ getUserContext: function() {} });
+			eh = new EventHub({ getUserContext: function() {}, _getSigningIdentity: function() {} });
 			eh.connect();
 		},
-		/The clientContext has not been properly initialized, missing userContext/,
+		/The clientContext has not been properly initialized, missing identity/,
 		'Must pass in a clientContext that has the user context already initialized'
 	);
 
-	t.throws(
-		() => {
-			eh = new EventHub({ getUserContext: function() { return null; } });
-			eh.connect();
-		},
-		/The clientContext has not been properly initialized, missing userContext/,
-		'Must pass in a clientContext that has the user context already initialized'
-	);
-
-	eh = new EventHub({ getUserContext: function() { return 'dummyUser'; } });
+	eh = new EventHub({ getUserContext: function() {}, _getSigningIdentity: function() { return 'dummyUser'; } });
 	t.throws(
 		() => {
 			eh.connect();
@@ -173,27 +164,6 @@ test('\n\n** EventHub tests\n\n', (t) => {
 		},
 		/Missing "listener_handle" parameter/,
 		'Check the Missing "listener_handle" parameter'
-	);
-	t.throws(
-		() => {
-			eh.registerBlockEvent({});
-		},
-		/The event hub has not been connected to the event source/,
-		'Check the event hub must be connected before the block event listener can be registered'
-	);
-	t.throws(
-		() => {
-			eh.registerChaincodeEvent('ccid', 'eventname', {});
-		},
-		/The event hub has not been connected to the event source/,
-		'Check the event hub must be connected before the chaincode event listener can be registered'
-	);
-	t.throws(
-		() => {
-			eh.registerTxEvent('txid', {});
-		},
-		/The event hub has not been connected to the event source/,
-		'Check the event hub must be connected before the tranaction event listener can be registered'
 	);
 	t.end();
 });
@@ -566,24 +536,24 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
 
-		t.throws(
+		t.doesNotThrow(
 			() => {
-				event_hub.registerTxEvent('123', (tx_id, code) => {
+				event_hub.registerTxEvent('123',
+				(tx_id, code) => {
 					t.fail('Failed callback should not have been called - tx test 3');
+				},
+				(error) =>{
+					if(error.toString().indexOf('Shutdown')) {
+						t.pass('Successfully got the error call back tx test 3 ::'+error);
+					} else {
+						t.failed('Failed to get shutdown error tx test 3 :: '+error);
+					}
 				});
 			},
-			/The event hub has not been connected to the event source/,
-			'Check for The event hub has not been connected to the event source - tx test 3'
+			null,
+			'Check for The event hub has been shutdown - tx test 3'
 		);
-
-		// test 4
-		event_hub = client.newEventHub();
-		event_hub.setPeerAddr('grpc://localhost:9999');
-		event_hub.connect();
-
-		let sleep_time = 3000;
-		t.comment('about to sleep '+sleep_time);
-		return sleep(sleep_time);
+		event_hub.disconnect();
 	}).then((nothing) => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
@@ -681,24 +651,24 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
 
-		t.throws(
+		t.doesNotThrow(
 			() => {
-				event_hub.registerBlockEvent((tx_id, code) => {
+				event_hub.registerBlockEvent(
+				(tx_id, code) => {
 					t.fail('Failed callback should not have been called - block test 3');
+				},
+				(error) =>{
+					if(error.toString().indexOf('Shutdown')) {
+						t.pass('Successfully got the error call back block test 3 ::'+error);
+					} else {
+						t.failed('Failed to get Shutdown error block test 3 :: '+error);
+					}
 				});
 			},
-			/The event hub has not been connected to the event source/,
-			'Check for The event hub has not been connected to the event source - block test 3'
+			null,
+			'Check for The event hub disconnect - block test 3'
 		);
-
-		// block test 4
-		event_hub = client.newEventHub();
-		event_hub.setPeerAddr('grpc://localhost:9997');
-		event_hub.connect();
-
-		let sleep_time = 3000;
-		t.comment('about to sleep '+sleep_time);
-		return sleep(sleep_time);
+		event_hub.disconnect();
 	}).then((nothing) => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
@@ -796,24 +766,25 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
 
-		t.throws(
+		t.doesNotThrow(
 			() => {
-				event_hub.registerChaincodeEvent('123', 'event', (tx_id, code) => {
+				event_hub.registerChaincodeEvent('123', 'event',
+				(tx_id, code) => {
 					t.fail('Failed callback should not have been called - chaincode test 3');
+				},
+				(error) =>{
+					if(error.toString().indexOf('Shutdown')) {
+						t.pass('Successfully got the error call back chaincode test 3 ::'+error);
+					} else {
+						t.failed('Failed to get Shutdown error chaincode test 3:: '+error);
+					}
 				});
 			},
-			/The event hub has not been connected to the event source/,
-			'Check for The event hub has not been connected to the event source - chaincode test 3'
+			null,
+			'Check for The event hub disconnect- chaincode test 4'
 		);
+		event_hub.disconnect();
 
-		// chaincode test 4
-		event_hub = client.newEventHub();
-		event_hub.setPeerAddr('grpc://localhost:9998');
-		event_hub.connect();
-
-		let sleep_time = 3000;
-		t.comment('about to sleep '+sleep_time);
-		return sleep(sleep_time);
 	}).then((nothing) => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
