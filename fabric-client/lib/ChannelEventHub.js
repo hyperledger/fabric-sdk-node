@@ -45,6 +45,7 @@ const CONNECTION_STATE = {
 	5: 'SHUTDOWN'
 };
 
+// internal use only
 const NO_START_STOP = 0;
 const START_ONLY    = 1;
 const END_ONLY      = 2;
@@ -156,6 +157,7 @@ var ChannelEventHub = class {
 		// fabric connection state of this ChannelEventHub
 		this._connected = false;
 		this._connect_running = false;
+		this._disconnect_running = false;
 
 		// using filtered blocks
 		this._filtered_stream = true; // the default
@@ -173,6 +175,14 @@ var ChannelEventHub = class {
 		if (typeof peer === 'undefined' || peer === null || peer === '')
 			throw new Error('Missing required argument: peer');
 		this._peer = peer;
+	}
+
+	/**
+	 * Return the name of this channel event hub, will be the name of the
+	 * peer associated with this channel event hub.
+	 */
+	getName() {
+		return this._peer.getName();
 	}
 
 	/**
@@ -427,7 +437,23 @@ var ChannelEventHub = class {
 	 * all listeners that provided an "onError" callback.
 	 */
 	disconnect() {
-		this._disconnect(new Error('ChannelEventHub has been shutdown'));
+		if(this._disconnect_running) {
+			logger.debug('disconnect - disconnect is running');
+		} else {
+			this._disconnect_running = true;
+			this._disconnect(new Error('ChannelEventHub has been shutdown'));
+			this._disconnect_running = false;
+		}
+	}
+
+	/**
+	 * Disconnects the event hub from the peer event source.
+	 * Will close all event listeners and send an Error object
+	 * with the message "ChannelEventHub has been shutdown" to
+	 * all listeners that provided an "onError" callback.
+	 */
+	close() {
+		this.disconnect();
 	}
 
 	/* Internal method
@@ -446,7 +472,7 @@ var ChannelEventHub = class {
 
 	_shutdown() {
 		if(this._stream) {
-			logger.debug('_disconnect - shutdown existing stream');
+			logger.debug('_shutdown - shutdown existing stream');
 			this._stream.cancel();
 			this._stream.end();
 			this._stream = null;

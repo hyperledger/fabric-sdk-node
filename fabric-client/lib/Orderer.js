@@ -282,9 +282,9 @@ var Orderer = class extends Remote {
 	 * return a printable representation of this object
 	 */
 	toString() {
-		return ' Orderer : {' +
-			'url:' + this._url +
-			'}';
+		return 'Orderer:{' +
+            'url:' + this._url +
+            '}';
 	}
 };
 

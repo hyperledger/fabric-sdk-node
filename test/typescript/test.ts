@@ -490,7 +490,7 @@ test('use the connection profile file', (t) => {
 				// on the same port as the other peer services.
 				let channel_event_hubs: ChannelEventHub[] = channel.getChannelEventHubsForOrg();
 				// we should have the an channel event hub defined on the "peer0.org1.example.com"
-				t.equals(channel_event_hubs.length, 1, 'Checking that the channel event hubs has just one');
+				t.equals(channel_event_hubs.length, 2, 'Checking that the channel event hubs has two');
 
 				let channel_event_hub = channel_event_hubs[0];
 				t.equals(channel_event_hub.getPeerAddr(), 'localhost:7051', ' channel event hub address ');

@@ -44,40 +44,18 @@ var Peer = class extends Remote {
 
 		logger.debug('Peer.const - url: %s timeout: %s', url, this._request_timeout);
 		this._endorserClient = new _serviceProto.Endorser(this._endpoint.addr, this._endpoint.creds, this._options);
-		this._roles = {};
 	}
 
 	/**
-	 * Close the service connection.
+	 * Close the service connections.
 	 */
 	close() {
 		if(this._endorserClient) {
 			logger.info('close - closing peer connection ' + this._endpoint.addr);
 			this._endorserClient.close();
 		}
-	}
-
-	/**
-	 * Set a role for this peer.
-	 * @param {string} role - The name of the role
-	 * @param {boolean} isIn - The boolean value of does this peer have this role
-	 */
-	setRole(role, isIn) {
-		this._roles[role] = isIn;
-	}
-
-	/**
-	 * Checks if this peer is in the specified role.
-	 * The default is true when the incoming role is not defined.
-	 * The default will be true when this peer does not have the role defined.
-	 */
-	isInRole(role) {
-		if(!role) {
-			return true;
-		} else if(typeof this._roles[role] === 'undefined') {
-			return true;
-		} else {
-			return this._roles[role];
+		if(this._channel_event_hub) {
+			this._channel_event_hub.close();
 		}
 	}
 
@@ -140,7 +118,7 @@ var Peer = class extends Remote {
 	 * return a printable representation of this object
 	 */
 	toString() {
-		return ' Peer : {' +
+		return 'Peer:{' +
 			'url:' + this._url +
 		'}';
 	}

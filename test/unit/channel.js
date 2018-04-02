@@ -73,6 +73,13 @@ test('\n\n ** Channel - constructor test **\n\n', (t) => {
 		/^Error: Failed to create Channel. Missing requirement "name" parameter./,
 		'Channel constructor tests: Missing name parameter'
 	);
+	t.throws(
+		() => {
+			_channel = new Channel({}, client);
+		},
+		/^Error: Failed to create Channel. channel name should be a string/,
+		'Channel constructor tests: Wrong name parameter'
+	);
 
 	t.throws(
 		() => {
@@ -100,22 +107,64 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 			var orderer = new Orderer('grpc://somehost.com:1234');
 			_channel.close();
 			_channel.addOrderer(orderer);
+			_channel.getOrderer(orderer.getName());
 			_channel.close();
 		},
 		null,
 		'checking the channel addOrderer()'
 	);
-	t.equal(_channel.getOrderers()[0].toString(), ' Orderer : {url:grpc://somehost.com:1234}', 'checking channel getOrderers()');
+	t.doesNotThrow(
+		function () {
+			let peer = new Peer('grpc://somehost.com:1234');
+			_channel.close();
+			_channel.addPeer(peer);
+			_channel.removePeer(peer);
+			peer = new Peer('grpc://somehost.com:1234', {name:'peer1'});
+			_channel.addPeer(peer);
+			const cp = _channel.getChannelPeer('peer1');
+			cp.getOrganizationName();
+			t.equals(cp.getName(), 'peer1', 'Checking channel peer getName');
+			cp.getUrl();
+			cp.getClientCertHash();
+			cp.setRole('role',false);
+			t.equals(cp.isInRole('role'), false, 'Checking isInRole');
+			t.equals(cp.isInRole('unknown'), true, 'Checking isInRole');
+			t.equals(cp.isInOrg('org2'), true, 'checking isInOrg');
+			cp._org_name = 'org1';
+			t.equals(cp.isInOrg('org2'), false, 'checking isInOrg');
+			t.equals(cp.isInOrg('org1'), true, 'checking isInOrg');
+			_channel.getChannelEventHub(peer.getName());
+			_channel.close();
+		},
+		null,
+		'checking the peer and channel peer methods'
+	);
+	t.throws(
+		function () {
+			const cp = _channel.getChannelPeer('peer1');
+			t.equals(cp.isInRole(), true, 'Checking isInRole');
+		},
+		/Missing "role" parameter/,
+		'checking Missing role parameter.'
+	);
+	t.equal(_channel.getOrderers()[0].toString(), 'Orderer:{url:grpc://somehost.com:1234}', 'checking channel getOrderers()');
+	t.equal(_channel.getPeers()[0].toString(), 'Peer:{url:grpc://somehost.com:1234}', 'checking channel getPeers()');
 	t.throws(
 		function () {
 			var orderer = new Orderer('grpc://somehost.com:1234');
 			_channel.addOrderer(orderer);
 		},
-		/^DuplicateOrderer: Orderer with URL/,
+		/^DuplicateOrderer: Orderer/,
 		'Channel tests: checking that orderer already exists.'
 	);
-	t.equal(_channel.toString(), '{"name":"testchannel","orderers":" Orderer : {url:grpc://somehost.com:1234}|"}', 'checking channel toString');
-	t.notEquals(_channel.getMSPManager(), null, 'checking the channel getMSPManager()');
+	let test_string = Buffer.from('{"name":"testchannel","orderers":["Orderer:{url:grpc://somehost.com:1234}"],"peers":["Peer:{url:grpc://somehost.com:1234}"]}');
+	let channel_string = Buffer.from(_channel.toString());
+	if(test_string.equals(channel_string)) {
+		t.pass('Successfully tested Channel toString()');
+	} else {
+		t.fail('Failed Channel toString() test');
+	}
+	t.notEquals(_channel.getMSPManager(),null,'checking the channel getMSPManager()');
 	t.doesNotThrow(
 		function () {
 			var msp_manager = new MSPManager();
@@ -124,7 +173,8 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 		null,
 		'checking the channel setMSPManager()'
 	);
-	t.notEquals(_channel.getOrganizations(), null, 'checking the channel getOrganizations()');
+	t.notEquals(_channel.getOrganizations(),null,'checking the channel getOrganizations()');
+
 	t.end();
 });
 
@@ -375,8 +425,8 @@ test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
 		() => {
 			channel.joinChannel({ txId: 'txid', block: 'something', targets: 'somename' });
 		},
-		/No network configuraton loaded/,
-		'Checking joinChannel(): No network configuraton loaded'
+		/not assigned/,
+		'Checking joinChannel(): not found'
 	);
 
 	t.end();

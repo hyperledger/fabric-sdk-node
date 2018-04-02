@@ -98,26 +98,6 @@ var Organization = class {
 	}
 
 	/**
-	 * Gets the list of this organization's {@link ChannelEventHub} as undefined
-	 * by the 'endorsingPeer' setting on the peers defined in the channel that
-	 * are in this orgranization.
-	 *
-	 * @param {Channel} channel - The {@link Channel} the channel instance that
-	 *        the peers that are defined as channel event hubs are associated.
-	 * @returns [{ChannelEventHub}] An array of {@link ChannelEventHub} objects
-	 */
-	getChannelEventHubs(channel) {
-		const _channel_event_hubs = [];
-		for(let peer of this._peers) {
-			if(peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
-				let channel_event_hub = new ChannelEventHub(channel, peer);
-				_channel_event_hubs.push(channel_event_hub);
-			}
-		}
-		return _channel_event_hubs;
-	}
-
-	/**
 	 * Add a {@link CertificateAuthority} to this organization
 	 *
 	 * @param {CertificateAuthority} certificateAuthority - The CertificateAuthority

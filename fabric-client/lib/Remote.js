@@ -120,6 +120,13 @@ var Remote = class {
 		}
 		this._options[MAX_SEND] = grpc_send_max;
 
+		// what shall we call this remote object
+		if(opts && opts.name) {
+			this._name = opts.name;
+		} else {
+			this._name = url;
+		}
+
 		// service connection
 		this._url = url;
 		this._endpoint = new Endpoint(url, pem, clientKey, this.clientCert);

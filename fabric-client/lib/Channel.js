@@ -10,7 +10,9 @@ var utils = require('./utils.js');
 var clientUtils = require('./client-utils.js');
 var util = require('util');
 var path = require('path');
+var Peer = require('./Peer.js');
 var ChannelEventHub = require('./ChannelEventHub.js');
+var Orderer = require('./Orderer.js');
 var BlockDecoder = require('./BlockDecoder.js');
 var TransactionID = require('./TransactionID.js');
 var grpc = require('grpc');
@@ -38,6 +40,9 @@ var _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.prot
 
 const ImplicitMetaPolicy_Rule = { 0: 'ANY', 1: 'ALL', 2: 'MAJORITY' };
 
+const PEER_NOT_ASSIGNED_MSG = 'Peer with name "%s" not assigned to this channel';
+const ORDERER_NOT_ASSIGNED_MSG = 'Orderer with name "%s" not assigned to this channel';
+
 /**
  * In fabric v1.0, channels are the recommended way to isolate data and maintain privacy.
  * <br><br>
@@ -60,21 +65,21 @@ const ImplicitMetaPolicy_Rule = { 0: 'ANY', 1: 'ALL', 2: 'MAJORITY' };
 var Channel = class {
 
 	/**
-	 * Returns a new instance of the class. This is a client-side-only call. To create a new channel
-	 * in the fabric, call [createChannel()]{@link Client#createChannel}.
+	 * Returns a new instance of the class. This is a client-side-only call. To
+	 * create a new channel in the fabric, call [createChannel()]{@link Client#createChannel}.
 	 *
-	 * @param {string} name - Name to identify the channel. This value is used as the identifier
-	 *                        of the channel when making channel-aware requests with the fabric,
-	 *                        such as invoking chaincodes to endorse transactions. The naming of
-	 *                        channels is enforced by the ordering service and must be unique within
-	 *                        the fabric backend.Channel name in fabric network is subject to a pattern
-	 * 						  revealed in configuration <code>channel-name-regx-checker</code>
-	 * @param {Client} clientContext - The client instance, which provides operational context
-	 *                                 such as the signing identity
+	 * @param {string} name - Name to identify the channel. This value is used
+	 *        as the identifier of the channel when making channel-aware requests
+	 *        with the fabric, such as invoking chaincodes to endorse transactions.
+	 *        The naming of channels is enforced by the ordering service and must
+	 *        be unique within the fabric backend. Channel name in fabric network
+	 *        is subject to a pattern revealed in the configuration setting
+	 *        <code>channel-name-regx-checker</code>.
+	 * @param {Client} clientContext - The client instance, which provides
+	 *        operational context such as the signing identity
 	 */
 	constructor(name, clientContext) {
 		if (!name) {
-			logger.error('Failed to create Channel. Missing requirement "name" parameter.');
 			throw new Error('Failed to create Channel. Missing requirement "name" parameter.');
 		}
 		if (typeof name !== 'string') {
@@ -89,38 +94,27 @@ var Channel = class {
 			}
 		}
 		if (!clientContext) {
-			logger.error('Failed to create Channel. Missing requirement "clientContext" parameter.');
 			throw new Error('Failed to create Channel. Missing requirement "clientContext" parameter.');
 		}
 
 		this._name = name;
-
-		this._peers = [];
+		this._channel_peers = new Map();
 		this._anchor_peers = [];
-		this._orderers = [];
+		this._orderers = new Map();
 		this._kafka_brokers = [];
-
 		this._clientContext = clientContext;
-
 		this._msp_manager = new MSPManager();
 
-		//to do update logger
-		logger.debug('Constructed Channel instance: name - %s, ' +
-			'network mode: %s',
-		this._name,
-		!this._devMode);
+		logger.debug('Constructed Channel instance: name - %s, network mode: %s', this._name, !this._devMode);
 	}
 
 	/**
-	 * Close the service connection off all assigned peers and orderers
+	 * Close the service connections of all assigned peers and orderers
 	 */
 	close() {
-		logger.info('close - closing connections');
-		var closer = function (ep) {
-			ep.close();
-		};
-		this._peers.map(closer);
-		this._orderers.map(closer);
+		logger.debug('close - closing connections');
+		this._channel_peers.forEach((channel_peer) => {channel_peer.close();});
+		this._orderers.forEach((orderer) => {orderer.close();});
 	}
 
 	/**
@@ -145,20 +139,14 @@ var Channel = class {
 		}
 
 		var self = this;
-		return this.getChannelConfig()
-			.then(
-				function (config_envelope) {
-					logger.debug('initialize - got config envelope from getChannelConfig :: %j', config_envelope);
-					var config_items = self.loadConfigEnvelope(config_envelope);
-					return Promise.resolve(config_items);
-				}
-			)
-			.catch(
-				function (error) {
-					logger.error('initialize - system error ::' + error.stack ? error.stack : error);
-					return Promise.reject(new Error(error));
-				}
-			);
+		return this.getChannelConfig().then((config_envelope) => {
+			logger.debug('initialize - got config envelope from getChannelConfig :: %j', config_envelope);
+			const config_items = self.loadConfigEnvelope(config_envelope);
+			return Promise.resolve(config_items);
+		}).catch((error) => {
+			logger.error('initialize - system error ::' + error.stack ? error.stack : error);
+			return Promise.reject(new Error(error));
+		});
 	}
 
 	/**
@@ -172,12 +160,12 @@ var Channel = class {
 	/**
 	 * Get organization identifiers from the MSP's for this channel
 	 * @returns {string[]} Array of MSP identifiers representing the channel's
-	 *                     participating organizations
+	 *          participating organizations
 	 */
 	getOrganizations() {
 		logger.debug('getOrganizationUnits - start');
-		var msps = this._msp_manager.getMSPs();
-		var orgs = [];
+		const msps = this._msp_manager.getMSPs();
+		const orgs = [];
 		if (msps) {
 			var keys = Object.keys(msps);
 			for (var key in keys) {
@@ -219,47 +207,81 @@ var Channel = class {
 	 * [sendTransactionProposal]{@link Channel#sendTransactionProposal}.
 	 *
 	 * @param {Peer} peer - An instance of the Peer class that has been initialized with URL
-	 *                      and other gRPC options such as TLS credentials and request timeout.
+	 *        and other gRPC options such as TLS credentials and request timeout.
+	 * @param {ChannelPeerRoles} roles - Optional. The roles this peer will perform
+	 *        on this channel.  A role that is not defined will default to true
 	 */
-	addPeer(peer) {
-		var url = peer.getUrl();
-		for (let i = 0; i < this._peers.length; i++) {
-			if (this._peers[i].getUrl() === url) {
-				var error = new Error();
-				error.name = 'DuplicatePeer';
-				error.message = 'Peer with URL ' + url + ' already exists';
-				logger.error(error.message);
-				throw error;
-			}
+	addPeer(peer, org_name, roles) {
+		const name = peer.getName();
+		const check = this._channel_peers.get(name);
+		if(check) {
+			var error = new Error();
+			error.name = 'DuplicatePeer';
+			error.message = 'Peer ' + name + ' already exists';
+			logger.error(error.message);
+			throw error;
 		}
-		this._peers.push(peer);
+		const channel_peer = new ChannelPeer(org_name, this, peer, roles);
+		this._channel_peers.set(name, channel_peer);
 	}
 
 	/**
-	 * Remove the first peer object in the channel object's list of peers
-	 * whose endpoint url property matches the url of the peer that is
+	 * Remove the peer object in the channel object's list of peers
+	 * whose endpoint url property matches the url or name of the peer that is
 	 * passed in.
 	 *
 	 * @param {Peer} peer - An instance of the Peer class.
 	 */
 	removePeer(peer) {
-		var url = peer.getUrl();
-		for (let i = 0; i < this._peers.length; i++) {
-			if (this._peers[i].getUrl() === url) {
-				this._peers.splice(i, 1);
-				logger.debug('Removed peer with url "%s".', url);
-				return;
-			}
-		}
+		this._channel_peers.delete(peer.getName());
 	}
 
 	/**
-	 * Returns the list of peers of this channel object.
+	 * This method will return a {@link Peer} instance if assigned to this
+	 * channel. Peers that have been created by the {@link Client} {@link newPeer}
+	 * method and then added to this channel may be reference by the url if no
+	 * name was provided in the options during the create.
+	 *
+	 * @param {string} name - The name of the peer
+	 * @returns {Peer} The Peer instance.
+	 */
+	getPeer(name) {
+		const channel_peer = this._channel_peers.get(name);
+
+		if(!channel_peer){
+			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
+		}
+
+		return channel_peer.getPeer();
+	}
+
+	/**
+	 * This method will return a {@link ChannelPeer}. This object holds a reference
+	 * to the {@link Peer} and the {@link ChannelEventHub} objects and the attributes
+	 * of how the peer is defined on the channel.
+	 *
+	 * @param {string} name - The name of the peer assigned to this channel
+	 * @returns {ChannelPeer} The ChannelPeer instance
+	 */
+	 getChannelPeer(name) {
+		 const channel_peer = this._channel_peers.get(name);
+
+		 if(!channel_peer){
+			 throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
+		 }
+
+		 return channel_peer;
+	 }
+
+	/**
+	 * Returns a list of peers assigned to this channel instance.
 	 * @returns {Peer[]} The peer list on the channel.
 	 */
 	getPeers() {
-		logger.debug('getPeers - list size: %s.', this._peers.length);
-		return this._peers;
+		logger.debug('getPeers - list size: %s.', this._channel_peers.size);
+		const peers = [];
+		this._channel_peers.forEach((channel_peer)=>{peers.push(channel_peer.getPeer());});
+		return peers;
 	}
 
 	/**
@@ -271,17 +293,16 @@ var Channel = class {
 	 * @param {Orderer} orderer - An instance of the Orderer class.
 	 */
 	addOrderer(orderer) {
-		var url = orderer.getUrl();
-		for (let i = 0; i < this._orderers.length; i++) {
-			if (this._orderers[i].getUrl() === url) {
-				var error = new Error();
-				error.name = 'DuplicateOrderer';
-				error.message = 'Orderer with URL ' + url + ' already exists';
-				logger.error(error.message);
-				throw error;
-			}
+		const name = orderer.getName();
+		const check = this._orderers.get(name);
+		if(check) {
+			var error = new Error();
+			error.name = 'DuplicateOrderer';
+			error.message = 'Orderer ' + name + ' already exists';
+			logger.error(error.message);
+			throw error;
 		}
-		this._orderers.push(orderer);
+		this._orderers.set(name, orderer);
 	}
 
 	/**
@@ -292,14 +313,26 @@ var Channel = class {
 	 * @param {Orderer} orderer - An instance of the Orderer class.
 	 */
 	removeOrderer(orderer) {
-		var url = orderer.getUrl();
-		for (let i = 0; i < this._orderers.length; i++) {
-			if (this._orderers[i].getUrl() === url) {
-				this._orderers.splice(i, 1);
-				logger.debug('Removed orderer with url "%s".', url);
-				return;
-			}
+		this._orderers.delete(orderer.getName());
+	}
+
+	/**
+	 * This method will return a {@link Orderer} instance if assigned to this
+	 * channel. Peers that have been created by the {@link Client} {@link newOrderer}
+	 * method and then added to this channel may be reference by the url if no
+	 * name was provided in the options during the create.
+	 *
+	 * @param {string} name - The name or url of the orderer
+	 * @returns {Orderer} The Orderer instance.
+	 */
+	getOrderer(name) {
+		const orderer = this._orderers.get(name);
+
+		if(!orderer) {
+			throw new Error(util.format(ORDERER_NOT_ASSIGNED_MSG, name));
 		}
+
+		return orderer;
 	}
 
 	/**
@@ -307,84 +340,101 @@ var Channel = class {
 	 * @returns {Orderer[]} The list of orderers in the channel object
 	 */
 	getOrderers() {
-		return this._orderers;
+		logger.debug('getOrderers - list size: %s.', this._orderers.size);
+		let orderers = [];
+		this._orderers.forEach((orderer)=>{orderers.push(orderer);});
+		return orderers;
 	}
 
 	/**
 	 * Returns an {@link ChannelEventHub} object. An event hub object encapsulates the
 	 * properties of an event stream on a peer node, through which the peer publishes
 	 * notifications of blocks being committed in the channel's ledger.
+	 * This method will create a new ChannelEventHub and not save a reference.
+ 	 * Use the {getChannelEventHub} to reuse a ChannelEventHub.
 	 *
-	 * @returns {ChannelEventHub} The ChannnelEventHub instance
+	 * @param {Peer | string} peer A Peer instance or the name of a peer that has
+	 *        been assigned to the channel.
+	 * @returns {ChannelEventHub} The ChannelEventHub instance
 	 */
 	newChannelEventHub(peer) {
-		peer = this._getPeerForEvents(peer);
-		var event_hub = new ChannelEventHub(this, peer);
-		return event_hub;
+		const peers = this._getTargets(peer, Constants.NetworkConfig.EVENT_SOURCE_ROLE, true);
+		// will only return one
+		if (peers && peers.length > 0) {
+			const channel_event_hub = new ChannelEventHub(this, peers[0]);
+			return channel_event_hub;
+		} else {
+			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, peer));
+		}
+	}
+
+	/**
+	 * Returns an {@link ChannelEventHub} object. An event hub object encapsulates the
+	 * properties of an event stream on a peer node, through which the peer publishes
+	 * notifications of blocks being committed in the channel's ledger.
+	 * This method will create a new ChannelEventHub if one does not exist.
+	 *
+	 * @param {string} name - The peer name associated with this channel event hub.
+	 *        Use the {@link Peer}{@link getName} method to get the name of a
+	 *        peer instance that has been added to this channel.
+	 * @returns {ChannelEventHub} - The ChannelEventHub associated with the peer.
+	 */
+	getChannelEventHub(name) {
+		if(!(typeof name === 'string')) {
+			throw new Error('"name" parameter must be a Peer name.');
+		}
+		let _channel_peer = this._channel_peers.get(name);
+		if(!_channel_peer) {
+			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
+		}
+
+		return _channel_peer.getChannelEventHub();
 	}
 
 	/**
 	 * Returns a list of {@link ChannelEventHub} based on the peers that are
-	 * defined in this channel that are in the named orgainization of the
-	 * currently loaded connection profile. If no connetion profile is loaded,
-	 * an error will be thrown.
-	 * When called with no organization name, the organization named in the
-	 * currently active connection profile configuration's client section will
-	 * be used. A peer with the "eventSource" role setting of true will be added
-	 * to the list (a role will default to true if not defined).
+	 * defined in this channel that are in the named organization.
 	 *
 	 * @param {string} org_name - Optional - The name of an organization
 	 * @returns {ChannelEventHub[]} An array of ChannelEventHub instances
 	 */
 	getChannelEventHubsForOrg(org_name) {
-		let method = 'getChannelEventHubsForOrg';
+		const method = 'getChannelEventHubsForOrg';
 		logger.debug('%s - starting', method);
-		var channel_event_hubs = [];
-		let working_org_name = null;
-		let found_peers = {};
-		if (this._clientContext && this._clientContext._network_config) {
-			if (!org_name && this._clientContext._network_config.hasClient()) {
-				let client = this._clientContext._network_config.getClientConfig();
-				working_org_name = client.organization;
-			} else {
-				working_org_name = org_name;
-			}
-			if (working_org_name) {
-				let organization = this._clientContext._network_config.getOrganization(working_org_name);
-				if (organization) {
-					let channel_peers = this.getPeers();
-					let org_peers = organization.getPeers();
-					for (let j in channel_peers) {
-						let channel_peer = channel_peers[j];
-						logger.debug('%s - looking at channel peer:%s', method, channel_peer.getName());
-						if (channel_peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
-							for (let k in org_peers) {
-								let org_peer = org_peers[k];
-								logger.debug('%s - looking at org peer:%s', method, org_peer.getName());
-								if (org_peer.getName() === channel_peer.getName()) {
-									found_peers[org_peer.getName()] = org_peer;//to avoid Duplicate Peers
-									logger.debug('%s - adding peer to list:%s', method, org_peer.getName());
-								}
-							}
-						}
-					}
-				} else {
-					throw new Error(util.format('Organization definition not found for %s', working_org_name));
-				}
-			} else {
-				throw new Error('No organization name provided');
-			}
-		} else {
-			throw new Error('No connecton profile has been loaded');
-		}
 
-		for (let name in found_peers) {
-			logger.debug('%s - final list has:%s', method, name);
-			let peer = found_peers[name];
-			let channel_event_hub = new ChannelEventHub(this, peer);
-			channel_event_hubs.push(channel_event_hub);
-		}
+		const channel_event_hubs = [];
+		this._channel_peers.forEach((channel_peer) =>{
+			if(channel_peer.isInOrg(org_name)) {
+				if(channel_peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)){
+					channel_event_hubs.push(channel_peer.getChannelEventHub());
+				} else {
+					logger.debug('%s - channel peer:%s is not an event source', method, channel_peer.getName());
+				}
+			}
+		});
+
 		return channel_event_hubs;
+	}
+
+	/**
+	 * Returns a list of {@link Peer} that are
+	 * defined in this channel that are in the named organization.
+	 *
+	 * @param {string} org_name - Optional - The name of an organization
+	 * @returns {Peer[]} An array of Peer instances
+	 */
+	getPeersForOrg(org_name) {
+		const method = 'getPeersForOrg';
+		logger.debug('%s - starting', method);
+
+		const peers = [];
+		this._channel_peers.forEach((channel_peer) =>{
+			if(channel_peer.isInOrg(org_name)) {
+				peers.push(channel_peer.getPeer());
+			}
+		});
+
+		return peers;
 	}
 
 	/**
@@ -411,9 +461,9 @@ var Channel = class {
 		}
 
 		// verify that we have an orderer configured
-		var orderer = this._clientContext.getTargetOrderer(request.orderer, this._orderers, this._name);
-		var signer = null;
-		var tx_id = request.txId;
+		const orderer = this._clientContext.getTargetOrderer(request.orderer, this.getOrderers(), this._name);
+		let signer = null;
+		let tx_id = request.txId;
 		if (!tx_id) {
 			signer = this._clientContext._getSigningIdentity(true);
 			tx_id = new TransactionID(signer, true);
@@ -424,25 +474,25 @@ var Channel = class {
 		// now build the seek info, will be used once the channel is created
 		// to get the genesis block back
 		//   build start
-		var seekSpecifiedStart = new _abProto.SeekSpecified();
+		const seekSpecifiedStart = new _abProto.SeekSpecified();
 		seekSpecifiedStart.setNumber(0);
-		var seekStart = new _abProto.SeekPosition();
+		const seekStart = new _abProto.SeekPosition();
 		seekStart.setSpecified(seekSpecifiedStart);
 
 		//   build stop
-		var seekSpecifiedStop = new _abProto.SeekSpecified();
+		const seekSpecifiedStop = new _abProto.SeekSpecified();
 		seekSpecifiedStop.setNumber(0);
-		var seekStop = new _abProto.SeekPosition();
+		const seekStop = new _abProto.SeekPosition();
 		seekStop.setSpecified(seekSpecifiedStop);
 
 		// seek info with all parts
-		var seekInfo = new _abProto.SeekInfo();
+		const seekInfo = new _abProto.SeekInfo();
 		seekInfo.setStart(seekStart);
 		seekInfo.setStop(seekStop);
 		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
 		// build the header for use with the seekInfo payload
-		var seekInfoHeader = clientUtils.buildChannelHeader(
+		const seekInfoHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			this._name,
 			tx_id.getTransactionID(),
@@ -452,14 +502,14 @@ var Channel = class {
 			orderer.getClientCertHash()
 		);
 
-		var seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, tx_id.getNonce());
-		var seekPayload = new _commonProto.Payload();
+		const seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, tx_id.getNonce());
+		const seekPayload = new _commonProto.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
-		var seekPayloadBytes = seekPayload.toBuffer();
+		const seekPayloadBytes = seekPayload.toBuffer();
 
-		let sig = signer.sign(seekPayloadBytes);
-		let signature = Buffer.from(sig);
+		const sig = signer.sign(seekPayloadBytes);
+		const signature = Buffer.from(sig);
 
 		// building manually or will get protobuf errors on send
 		var envelope = {
@@ -522,7 +572,7 @@ var Channel = class {
 	 */
 	joinChannel(request, timeout) {
 		logger.debug('joinChannel - start');
-		var errorMsg = null;
+		let errorMsg = null;
 
 		// verify that we have targets (Peers) to join this channel
 		// defined by the caller
@@ -542,24 +592,24 @@ var Channel = class {
 			throw new Error(errorMsg);
 		}
 
-		var targets = this._getTargets(request.targets); //no role, will get all peers
-		var signer = this._clientContext._getSigningIdentity(request.txId.isAdmin());
-		var chaincodeInput = new _ccProto.ChaincodeInput();
-		var args = [];
+		const targets = this._getTargets(request.targets, 'ALL ROLES');
+		const signer = this._clientContext._getSigningIdentity(request.txId.isAdmin());
+		const chaincodeInput = new _ccProto.ChaincodeInput();
+		const args = [];
 		args.push(Buffer.from('JoinChain', 'utf8'));
 		args.push(request.block.toBuffer());
 
 		chaincodeInput.setArgs(args);
 
-		var chaincodeID = new _ccProto.ChaincodeID();
+		const chaincodeID = new _ccProto.ChaincodeID();
 		chaincodeID.setName(Constants.CSCC);
 
-		var chaincodeSpec = new _ccProto.ChaincodeSpec();
+		const chaincodeSpec = new _ccProto.ChaincodeSpec();
 		chaincodeSpec.setType(_ccProto.ChaincodeSpec.Type.GOLANG);
 		chaincodeSpec.setChaincodeId(chaincodeID);
 		chaincodeSpec.setInput(chaincodeInput);
 
-		var channelHeader = clientUtils.buildChannelHeader(
+		const channelHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			'',
 			request.txId.getTransactionID(),
@@ -569,9 +619,9 @@ var Channel = class {
 			targets[0].getClientCertHash()
 		);
 
-		var header = clientUtils.buildHeader(signer, channelHeader, request.txId.getNonce());
-		var proposal = clientUtils.buildProposal(chaincodeSpec, header);
-		var signed_proposal = clientUtils.signProposal(signer, proposal);
+		const header = clientUtils.buildHeader(signer, channelHeader, request.txId.getNonce());
+		const proposal = clientUtils.buildProposal(chaincodeSpec, header);
+		const signed_proposal = clientUtils.signProposal(signer, proposal);
 
 		return clientUtils.sendPeersProposal(targets, signed_proposal, timeout)
 			.then(
@@ -592,12 +642,12 @@ var Channel = class {
 	 * @returns {Promise} A Promise for a {@link ConfigEnvelope} object containing the configuration items.
 	 */
 	getChannelConfig(target) {
-		let method = 'getChannelConfig';
+		const method = 'getChannelConfig';
 		logger.debug('%s - start for channel %s', method, this._name);
-		var targets = this._getTargetForQuery(target);
-		var signer = this._clientContext._getSigningIdentity(true);
-		var tx_id = new TransactionID(signer, true);
-		var request = {
+		const targets = this._getTargetForQuery(target);
+		const signer = this._clientContext._getSigningIdentity(true);
+		const tx_id = new TransactionID(signer, true);
+		const request = {
 			targets: targets,
 			chaincodeId: Constants.CSCC,
 			txId: tx_id,
@@ -608,19 +658,19 @@ var Channel = class {
 		return this.sendTransactionProposal(request)
 			.then(
 				function (results) {
-					var responses = results[0];
+					const responses = results[0];
 					// var proposal = results[1];
 					logger.debug('%s - results received', method);
 					if (responses && Array.isArray(responses)) {
-						let response = responses[0];
+						const response = responses[0];
 						if (response instanceof Error) {
 							return Promise.reject(response);
 						}
 						else if (response.response && response.response.payload) {
-							let block = _commonProto.Block.decode(response.response.payload);
-							let envelope = _commonProto.Envelope.decode(block.data.data[0]);
-							let payload = _commonProto.Payload.decode(envelope.payload);
-							let config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
+							const block = _commonProto.Block.decode(response.response.payload);
+							const envelope = _commonProto.Envelope.decode(block.data.data[0]);
+							const payload = _commonProto.Payload.decode(envelope.payload);
+							const config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
 							return Promise.resolve(config_envelope);
 						}
 						else {
@@ -647,32 +697,32 @@ var Channel = class {
 	 * @returns {Promise} A Promise for a {@link ConfigEnvelope} object containing the configuration items.
 	 */
 	getChannelConfigFromOrderer() {
-		let method = 'getChannelConfigFromOrderer';
+		const method = 'getChannelConfigFromOrderer';
 		logger.debug('%s - start for channel %s', method, this._name);
 
-		var self = this;
-		var orderer = this._clientContext.getTargetOrderer(null, this._orderers, this._name);
+		const self = this;
+		const orderer = this._clientContext.getTargetOrderer(null, this.getOrderers(), this._name);
 
-		var signer = this._clientContext._getSigningIdentity(true);
-		var txId = new TransactionID(signer, true);
+		const signer = this._clientContext._getSigningIdentity(true);
+		const txId = new TransactionID(signer, true);
 
 		// seek the latest block
-		var seekSpecifiedStart = new _abProto.SeekNewest();
-		var seekStart = new _abProto.SeekPosition();
+		const seekSpecifiedStart = new _abProto.SeekNewest();
+		const seekStart = new _abProto.SeekPosition();
 		seekStart.setNewest(seekSpecifiedStart);
 
-		var seekSpecifiedStop = new _abProto.SeekNewest();
-		var seekStop = new _abProto.SeekPosition();
+		const seekSpecifiedStop = new _abProto.SeekNewest();
+		const seekStop = new _abProto.SeekPosition();
 		seekStop.setNewest(seekSpecifiedStop);
 
 		// seek info with all parts
-		var seekInfo = new _abProto.SeekInfo();
+		const seekInfo = new _abProto.SeekInfo();
 		seekInfo.setStart(seekStart);
 		seekInfo.setStop(seekStop);
 		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
 		// build the header for use with the seekInfo payload
-		var seekInfoHeader = clientUtils.buildChannelHeader(
+		const seekInfoHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			self._name,
 			txId.getTransactionID(),
@@ -682,17 +732,17 @@ var Channel = class {
 			orderer.getClientCertHash()
 		);
 
-		var seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, txId.getNonce());
-		var seekPayload = new _commonProto.Payload();
+		const seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, txId.getNonce());
+		const seekPayload = new _commonProto.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
-		var seekPayloadBytes = seekPayload.toBuffer();
+		const seekPayloadBytes = seekPayload.toBuffer();
 
-		let sig = signer.sign(seekPayloadBytes);
-		let signature = Buffer.from(sig);
+		const sig = signer.sign(seekPayloadBytes);
+		const signature = Buffer.from(sig);
 
 		// building manually or will get protobuf errors on send
-		var envelope = {
+		const envelope = {
 			signature: signature,
 			payload: seekPayloadBytes
 		};
@@ -712,34 +762,34 @@ var Channel = class {
 
 					logger.debug('%s - latest block is block number %s', block.header.number);
 					// get the last config block number
-					var metadata = _commonProto.Metadata.decode(block.metadata.metadata[_commonProto.BlockMetadataIndex.LAST_CONFIG]);
-					var last_config = _commonProto.LastConfig.decode(metadata.value);
+					const metadata = _commonProto.Metadata.decode(block.metadata.metadata[_commonProto.BlockMetadataIndex.LAST_CONFIG]);
+					const last_config = _commonProto.LastConfig.decode(metadata.value);
 					logger.debug('%s - latest block has config block of %s', method, last_config.index);
 
-					var txId = new TransactionID(signer);
+					const txId = new TransactionID(signer);
 
 					// now build the seek info to get the block called out
 					// as the latest config block
-					var seekSpecifiedStart = new _abProto.SeekSpecified();
+					const seekSpecifiedStart = new _abProto.SeekSpecified();
 					seekSpecifiedStart.setNumber(last_config.index);
-					var seekStart = new _abProto.SeekPosition();
+					const seekStart = new _abProto.SeekPosition();
 					seekStart.setSpecified(seekSpecifiedStart);
 
 					//   build stop
-					var seekSpecifiedStop = new _abProto.SeekSpecified();
+					const seekSpecifiedStop = new _abProto.SeekSpecified();
 					seekSpecifiedStop.setNumber(last_config.index);
-					var seekStop = new _abProto.SeekPosition();
+					const seekStop = new _abProto.SeekPosition();
 					seekStop.setSpecified(seekSpecifiedStop);
 
 					// seek info with all parts
-					var seekInfo = new _abProto.SeekInfo();
+					const seekInfo = new _abProto.SeekInfo();
 					seekInfo.setStart(seekStart);
 					seekInfo.setStop(seekStop);
 					seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 					//logger.debug('initializeChannel - seekInfo ::' + JSON.stringify(seekInfo));
 
 					// build the header for use with the seekInfo payload
-					var seekInfoHeader = clientUtils.buildChannelHeader(
+					const seekInfoHeader = clientUtils.buildChannelHeader(
 						_commonProto.HeaderType.DELIVER_SEEK_INFO,
 						self._name,
 						txId.getTransactionID(),
@@ -749,17 +799,17 @@ var Channel = class {
 						orderer.getClientCertHash()
 					);
 
-					var seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, txId.getNonce());
-					var seekPayload = new _commonProto.Payload();
+					const seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, txId.getNonce());
+					const seekPayload = new _commonProto.Payload();
 					seekPayload.setHeader(seekHeader);
 					seekPayload.setData(seekInfo.toBuffer());
-					var seekPayloadBytes = seekPayload.toBuffer();
+					const seekPayloadBytes = seekPayload.toBuffer();
 
-					let sig = signer.sign(seekPayloadBytes);
-					let signature = Buffer.from(sig);
+					const sig = signer.sign(seekPayloadBytes);
+					const signature = Buffer.from(sig);
 
 					// building manually or will get protobuf errors on send
-					var envelope = {
+					const envelope = {
 						signature: signature,
 						payload: seekPayloadBytes
 					};
@@ -776,14 +826,14 @@ var Channel = class {
 					if (block.data.data.length != 1) {
 						return Promise.reject(new Error('Config block must only contain one transaction'));
 					}
-					var envelope = _commonProto.Envelope.decode(block.data.data[0]);
-					var payload = _commonProto.Payload.decode(envelope.payload);
-					var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
+					const envelope = _commonProto.Envelope.decode(block.data.data[0]);
+					const payload = _commonProto.Payload.decode(envelope.payload);
+					const channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
 					if (channel_header.type != _commonProto.HeaderType.CONFIG) {
 						return Promise.reject(new Error(util.format('Block must be of type "CONFIG" (%s), but got "%s" instead', _commonProto.HeaderType.CONFIG, channel_header.type)));
 					}
 
-					var config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
+					const config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
 
 					// send back the envelope
 					return Promise.resolve(config_envelope);
@@ -804,25 +854,25 @@ var Channel = class {
 	 */
 	loadConfigUpdateEnvelope(data) {
 		logger.debug('loadConfigUpdateEnvelope - start');
-		var envelope = _commonProto.Envelope.decode(data);
-		var payload = _commonProto.Payload.decode(envelope.payload);
-		var channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
+		const envelope = _commonProto.Envelope.decode(data);
+		const payload = _commonProto.Payload.decode(envelope.payload);
+		const channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
 		if (channel_header.type != _commonProto.HeaderType.CONFIG_UPDATE) {
 			return new Error('Data must be of type "CONFIG_UPDATE"');
 		}
 
-		var config_update_envelope = _configtxProto.ConfigUpdateEnvelope.decode(payload.data);
+		const config_update_envelope = _configtxProto.ConfigUpdateEnvelope.decode(payload.data);
 		return this.loadConfigUpdate(config_update_envelope.config_update);
 	}
 
 	loadConfigUpdate(config_update_bytes) {
-		var config_update = _configtxProto.ConfigUpdate.decode(config_update_bytes);
+		const config_update = _configtxProto.ConfigUpdate.decode(config_update_bytes);
 		logger.debug('loadConfigData - channel ::' + config_update.channel_id);
 
-		let read_group = config_update.read_set;
-		let write_group = config_update.write_set;
+		const read_group = config_update.read_set;
+		const write_group = config_update.write_set;
 
-		var config_items = {};
+		const config_items = {};
 		config_items.msps = []; //save all the MSP's found
 		config_items['anchor-peers'] = []; //save all the MSP's found
 		config_items.orderers = [];
@@ -851,9 +901,9 @@ var Channel = class {
 	loadConfigEnvelope(config_envelope) {
 		logger.debug('loadConfigEnvelope - start');
 
-		let group = config_envelope.config.channel_group;
+		const group = config_envelope.config.channel_group;
 
-		var config_items = {};
+		const config_items = {};
 		config_items.msps = []; //save all the MSP's found
 		config_items['anchor-peers'] = []; //save all the MSP's found
 		config_items.orderers = [];
@@ -892,10 +942,10 @@ var Channel = class {
 	 */
 	queryInfo(target, useAdmin) {
 		logger.debug('queryInfo - start');
-		var targets = this._getTargetForQuery(target);
-		var signer = this._clientContext._getSigningIdentity(useAdmin);
-		var tx_id = new TransactionID(signer, useAdmin);
-		var request = {
+		const targets = this._getTargetForQuery(target);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const tx_id = new TransactionID(signer, useAdmin);
+		const request = {
 			targets: targets,
 			chaincodeId: Constants.QSCC,
 			txId: tx_id,
@@ -906,20 +956,20 @@ var Channel = class {
 		return this.sendTransactionProposal(request)
 			.then(
 				function (results) {
-					var responses = results[0];
+					const responses = results[0];
 					if (responses && Array.isArray(responses)) {
 						logger.debug('queryInfo - got responses=' + responses.length);
 						//will only be one response as we are only querying the primary peer
 						if (responses.length > 1) {
 							return Promise.reject(new Error('Too many results returned'));
 						}
-						let response = responses[0];
+						const response = responses[0];
 						if (response instanceof Error) {
 							return Promise.reject(response);
 						}
 						if (response.response) {
 							logger.debug('queryInfo - response status %d:', response.response.status);
-							var chain_info = _ledgerProto.BlockchainInfo.decode(response.response.payload);
+							const chain_info = _ledgerProto.BlockchainInfo.decode(response.response.payload);
 							return Promise.resolve(chain_info);
 						}
 						// no idea what we have, lets fail it and send it back
@@ -1006,10 +1056,10 @@ var Channel = class {
 		if (!blockHash) {
 			throw new Error('Blockhash bytes are required');
 		}
-		var targets = this._getTargetForQuery(target);
-		var signer = this._clientContext._getSigningIdentity(useAdmin);
-		var txId = new TransactionID(signer, useAdmin);
-		var request = {
+		const targets = this._getTargetForQuery(target);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = new TransactionID(signer, useAdmin);
+		const request = {
 			targets: targets,
 			chaincodeId: Constants.QSCC,
 			txId: txId,
@@ -1028,7 +1078,7 @@ var Channel = class {
 						if (responses.length > 1) {
 							return Promise.reject(new Error('Too many results returned'));
 						}
-						let response = responses[0];
+						const response = responses[0];
 						if (response instanceof Error) {
 							return Promise.reject(response);
 						}
@@ -1069,10 +1119,10 @@ var Channel = class {
 		} else {
 			throw new Error('Block number must be a positive integer');
 		}
-		var targets = this._getTargetForQuery(target);
-		var signer = this._clientContext._getSigningIdentity(useAdmin);
-		var txId = new TransactionID(signer, useAdmin);
-		var request = {
+		const targets = this._getTargetForQuery(target);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = new TransactionID(signer, useAdmin);
+		const request = {
 			targets: targets,
 			chaincodeId: Constants.QSCC,
 			txId: txId,
@@ -1090,7 +1140,7 @@ var Channel = class {
 						if (responses.length > 1) {
 							return Promise.reject(new Error('Too many results returned'));
 						}
-						let response = responses[0];
+						const response = responses[0];
 						if (response instanceof Error) {
 							return Promise.reject(response);
 						}
@@ -1130,10 +1180,10 @@ var Channel = class {
 		} else {
 			throw new Error('Missing "tx_id" parameter');
 		}
-		var targets = this._getTargetForQuery(target);
-		var signer = this._clientContext._getSigningIdentity(useAdmin);
-		var txId = new TransactionID(signer, useAdmin);
-		var request = {
+		const targets = this._getTargetForQuery(target);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = new TransactionID(signer, useAdmin);
+		const request = {
 			targets: targets,
 			chaincodeId: Constants.QSCC,
 			txId: txId,
@@ -1151,13 +1201,13 @@ var Channel = class {
 						if (responses.length > 1) {
 							return Promise.reject(new Error('Too many results returned'));
 						}
-						let response = responses[0];
+						const response = responses[0];
 						if (response instanceof Error) {
 							return Promise.reject(response);
 						}
 						if (response.response) {
 							logger.debug('queryTransaction - response status :: %d', response.response.status);
-							var processTrans = BlockDecoder.decodeTransaction(response.response.payload);
+							const processTrans = BlockDecoder.decodeTransaction(response.response.payload);
 							return Promise.resolve(processTrans);
 						}
 						// no idea what we have, lets fail it and send it back
@@ -1249,7 +1299,7 @@ var Channel = class {
 	 * @property {TransactionID} txId - Required. Object with the transaction id
 	 *           and nonce
 	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
-	 *           used by the chaincode during intialization, but not saved in the
+	 *           used by the chaincode during initialization, but not saved in the
 	 *           ledger. Data such as cryptographic information for encryption can
 	 *           be passed to the chaincode using this technique.
 	 * @property {string} fcn - Optional. The function name to be returned when
@@ -1474,6 +1524,8 @@ var Channel = class {
 			errorMsg = 'Missing "args" in Transaction proposal request';
 		} else if (!request.targets || request.targets.length < 1) {
 			errorMsg = 'Missing peer objects in Transaction proposal';
+		} else if (!request.chaincodeId) {
+			errorMsg = 'Missing "chaincodeId" parameter in Transaction proposal request';
 		}
 
 		if (errorMsg) {
@@ -1507,14 +1559,14 @@ var Channel = class {
 			}
 		};
 
-		var proposal, header;
-		var signer = null;
+		let proposal, header;
+		let signer = null;
 		if (request.signer) {
 			signer = request.signer;
 		} else {
 			signer = clientContext._getSigningIdentity(request.txId.isAdmin());
 		}
-		var channelHeader = clientUtils.buildChannelHeader(
+		const channelHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			channelId,
 			request.txId.getTransactionID(),
@@ -1525,7 +1577,7 @@ var Channel = class {
 		);
 		header = clientUtils.buildHeader(signer, channelHeader, request.txId.getNonce());
 		proposal = clientUtils.buildProposal(invokeSpec, header, request.transientMap);
-		let signed_proposal = clientUtils.signProposal(signer, proposal);
+		const signed_proposal = clientUtils.signProposal(signer, proposal);
 
 		return clientUtils.sendPeersProposal(request.targets, signed_proposal, timeout)
 			.then(
@@ -1580,7 +1632,7 @@ var Channel = class {
 	 */
 	sendTransaction(request) {
 		logger.debug('sendTransaction - start :: channel %s', this);
-		var errorMsg = null;
+		let errorMsg = null;
 
 		if (request) {
 			// Verify that data is being passed in
@@ -1602,7 +1654,7 @@ var Channel = class {
 		let proposalResponses = request.proposalResponses;
 		let chaincodeProposal = request.proposal;
 
-		var endorsements = [];
+		const endorsements = [];
 		let proposalResponse = proposalResponses;
 		if (Array.isArray(proposalResponses)) {
 			for (let i = 0; i < proposalResponses.length; i++) {
@@ -1625,20 +1677,20 @@ var Channel = class {
 		}
 
 		// verify that we have an orderer configured
-		var orderer = this._clientContext.getTargetOrderer(request.orderer, this._orderers, this._name);
+		const orderer = this._clientContext.getTargetOrderer(request.orderer, this.getOrderers(), this._name);
 
-		var use_admin_signer = false;
+		let use_admin_signer = false;
 		if (request.txId) {
 			use_admin_signer = request.txId.isAdmin();
 		}
 
-		let header = _commonProto.Header.decode(chaincodeProposal.getHeader());
+		const header = _commonProto.Header.decode(chaincodeProposal.getHeader());
 
-		var chaincodeEndorsedAction = new _transProto.ChaincodeEndorsedAction();
+		const chaincodeEndorsedAction = new _transProto.ChaincodeEndorsedAction();
 		chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);
 		chaincodeEndorsedAction.setEndorsements(endorsements);
 
-		var chaincodeActionPayload = new _transProto.ChaincodeActionPayload();
+		const chaincodeActionPayload = new _transProto.ChaincodeActionPayload();
 		chaincodeActionPayload.setAction(chaincodeEndorsedAction);
 
 		// the TransientMap field inside the original proposal payload is only meant for the
@@ -1646,34 +1698,34 @@ var Channel = class {
 		// to the orderer, otherwise the transaction will be rejected by the validators when
 		// it compares the proposal hash calculated by the endorsers and returned in the
 		// proposal response, which was calculated without the TransientMap
-		var originalChaincodeProposalPayload = _proposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
-		var chaincodeProposalPayloadNoTrans = new _proposalProto.ChaincodeProposalPayload();
+		const originalChaincodeProposalPayload = _proposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
+		const chaincodeProposalPayloadNoTrans = new _proposalProto.ChaincodeProposalPayload();
 		chaincodeProposalPayloadNoTrans.setInput(originalChaincodeProposalPayload.input); // only set the input field, skipping the TransientMap
 		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposalPayloadNoTrans.toBuffer());
 
-		var transactionAction = new _transProto.TransactionAction();
+		const transactionAction = new _transProto.TransactionAction();
 		transactionAction.setHeader(header.getSignatureHeader());
 		transactionAction.setPayload(chaincodeActionPayload.toBuffer());
 
-		var actions = [];
+		const actions = [];
 		actions.push(transactionAction);
 
-		var transaction = new _transProto.Transaction();
+		const transaction = new _transProto.Transaction();
 		transaction.setActions(actions);
 
 
-		var payload = new _commonProto.Payload();
+		const payload = new _commonProto.Payload();
 		payload.setHeader(header);
 		payload.setData(transaction.toBuffer());
 
-		let payload_bytes = payload.toBuffer();
+		const payload_bytes = payload.toBuffer();
 
-		var signer = this._clientContext._getSigningIdentity(use_admin_signer);
-		let sig = signer.sign(payload_bytes);
-		let signature = Buffer.from(sig);
+		const signer = this._clientContext._getSigningIdentity(use_admin_signer);
+		const sig = signer.sign(payload_bytes);
+		const signature = Buffer.from(sig);
 
 		// building manually or will get protobuf errors on send
-		var envelope = {
+		const envelope = {
 			signature: signature,
 			payload: payload_bytes
 		};
@@ -1720,12 +1772,12 @@ var Channel = class {
 			throw new Error('Missing request object for this queryByChaincode call.');
 		}
 
-		var targets = this._getTargets(request.targets, Constants.NetworkConfig.CHAINCODE_QUERY_ROLE);
-		var signer = this._clientContext._getSigningIdentity(useAdmin);
-		var txId = new TransactionID(signer, useAdmin);
+		const targets = this._getTargets(request.targets, Constants.NetworkConfig.CHAINCODE_QUERY_ROLE);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = new TransactionID(signer, useAdmin);
 
 		// make a new request object so we can add in the txId and not change the user's
-		var trans_request = {
+		const trans_request = {
 			targets: targets,
 			chaincodeId: request.chaincodeId,
 			fcn: request.fcn,
@@ -1738,13 +1790,13 @@ var Channel = class {
 		return this.sendTransactionProposal(trans_request)
 			.then(
 				function (results) {
-					var responses = results[0];
+					const responses = results[0];
 					// var proposal = results[1];
 					logger.debug('queryByChaincode - results received');
 					if (responses && Array.isArray(responses)) {
-						let results = [];
+						const results = [];
 						for (let i = 0; i < responses.length; i++) {
-							let response = responses[i];
+							const response = responses[i];
 							if (response instanceof Error) {
 								results.push(response);
 							}
@@ -1795,20 +1847,21 @@ var Channel = class {
 			throw new Error('Parameter must be a ProposalResponse Object');
 		}
 
-		let endorsement = proposal_response.endorsement;
+		const endorsement = proposal_response.endorsement;
+		let identity;
 
-		var sid = _identityProto.SerializedIdentity.decode(endorsement.endorser);
-		var mspid = sid.getMspid();
+		const sid = _identityProto.SerializedIdentity.decode(endorsement.endorser);
+		const mspid = sid.getMspid();
 		logger.debug('getMSPbyIdentity - found mspid %s', mspid);
-		var msp = this._msp_manager.getMSP(mspid);
+		const msp = this._msp_manager.getMSP(mspid);
 
 		if (!msp) {
-			throw new Error(util.format('Failed to locate an MSP instance matching the endorser identity\'s orgainization %s', mspid));
+			throw new Error(util.format('Failed to locate an MSP instance matching the endorser identity\'s organization %s', mspid));
 		}
 		logger.debug('verifyProposalResponse - found endorser\'s MSP');
 
 		try {
-			var identity = msp.deserializeIdentity(endorsement.endorser, false);
+			identity = msp.deserializeIdentity(endorsement.endorser, false);
 			if (!identity) {
 				throw new Error('Unable to find the endorser identity');
 			}
@@ -1827,7 +1880,7 @@ var Channel = class {
 			logger.debug('verifyProposalResponse - have a valid identity');
 
 			// check the signature against the endorser and payload hash
-			var digest = Buffer.concat([proposal_response.payload, endorsement.endorser]);
+			const digest = Buffer.concat([proposal_response.payload, endorsement.endorser]);
 			if (!identity.verify(digest, endorsement.signature)) {
 				logger.error('Proposal signature is not valid');
 				return false;
@@ -1863,7 +1916,7 @@ var Channel = class {
 		if (proposal_responses.length == 0) {
 			throw new Error('Parameter proposal responses does not contain a PorposalResponse');
 		}
-		var first_one = _getProposalResponseResults(proposal_responses[0]);
+		const first_one = _getProposalResponseResults(proposal_responses[0]);
 		for (var i = 1; i < proposal_responses.length; i++) {
 			var next_one = _getProposalResponseResults(proposal_responses[i]);
 			if (next_one.equals(first_one)) {
@@ -1879,22 +1932,6 @@ var Channel = class {
 	}
 
 	/*
-	 *  utility method to decide on the peer for events
-	 */
-	_getPeerForEvents(peer) {
-		if (!peer) {
-			throw new Error('"peer" parameter is missing');
-		}
-		var peers = this._getTargets(peer, Constants.NetworkConfig.EVENT_SOURCE_ROLE, true);
-		// only want to return one peer
-		if (peers && peers.length > 0) {
-			return peers[0];
-		}
-
-		throw new Error('No Peers available to be an event source');
-	}
-
-	/*
 	 *  utility method to decide on the target for queries that only need ledger access
 	 */
 	_getTargetForQuery(target) {
@@ -1904,7 +1941,7 @@ var Channel = class {
 		}
 		let targets = this._getTargets(target, Constants.NetworkConfig.LEDGER_QUERY_ROLE, true);
 		// only want to query one peer
-		if (targets.length > 1) {
+		if (targets && targets.length > 1) {
 			targets = [targets[0]];
 		}
 
@@ -1915,30 +1952,35 @@ var Channel = class {
 	 * utility method to decide on the targets for requests
 	 */
 	_getTargets(request_targets, role, isTarget) {
-		let targets = null;
+		const targets = [];
 		if (request_targets) {
-			// first check to see if they have passed a peer or peer name
-			targets = this._clientContext.getTargetPeers(request_targets);
-		}
-
-		// nothing yet, maybe there are peers on the channel
-		if (!targets || targets.length < 1) {
-			const peers = this.getPeers();
-			targets = [];
-			for (let peer of peers) {
-				if (peer.isInRole(role)) {
-					targets.push(peer);
+			let targetsTemp = request_targets;
+			if(!Array.isArray(request_targets)) {
+				targetsTemp = [request_targets];
+			}
+			for(let target_peer of targetsTemp) {
+				if(typeof target_peer === 'string') {
+					const channel_peer = this._channel_peers.get(target_peer);
+					if(channel_peer) {
+						targets.push(channel_peer.getPeer());
+					} else {
+						throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, target_peer));
+					}
+				} else if(target_peer && target_peer.constructor && target_peer.constructor.name === 'Peer') {
+					targets.push(target_peer);
+				} else {
+					throw new Error('Target peer is not a valid peer object instance');
 				}
 			}
+		} else {
+			this._channel_peers.forEach((channel_peer) => {
+				if (channel_peer.isInRole(role)) {
+					targets.push(channel_peer.getPeer());
+				}
+			});
 		}
 
-		// so nothing passed in or set on channel, let's
-		// see if we can find in the network configuration
-		if (!targets || targets.length < 1) {
-			targets = this._getTargetsFromConfig(role);
-		}
-
-		if (!targets || targets.length < 1) {
+		if (targets.length == 0) {
 			let target_msg = 'targets';
 			if (isTarget) target_msg = 'target';
 			if (role === Constants.NetworkConfig.EVENT_SOURCE_ROLE) target_msg = 'peer';
@@ -1950,95 +1992,6 @@ var Channel = class {
 		return targets;
 	}
 
-	/*
-	 * Utility method to return a list of targets from the network configuration
-	 * that are in this role of operation
-	 */
-	_getTargetsFromConfig(role) {
-		var method = '_getTargetsFromConfig';
-		logger.debug('%s - start  ::role %s', method, role);
-		var targets = [];
-		if (role) {
-			var found = false;
-			for (let i in Constants.NetworkConfig.ROLES) {
-				if (role === Constants.NetworkConfig.ROLES[i]) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				throw Error('Target role is unknown');
-			}
-		}
-
-		/*
-		 * Need to list all the organizations from the network configuration.
-		 * Check each peer in each organization to see if it is on the channel.
-		 * If peer is on the channel and in the role, add this peer to a new list
-		 * of peers for this organization. Keep all these new lists in a list keyed
-		 * by the organization name. Once we have all the peers on the channel
-		 * sorted by organization, then we can randomly take one of those peers
-		 * for each organization and add it to the final target list.
-		 */
-		if (this._clientContext._network_config) {
-			var orgs = this._clientContext._network_config.getOrganizations();
-			if (orgs) {
-				//first get all the peers on the channel divided up by orgs
-				var peers_by_org = {};
-				for (let i in orgs) {
-					let org = orgs[i];
-					var peers_in_org_and_in_channel = [];
-					peers_by_org[org.getName()] = peers_in_org_and_in_channel;
-					var org_peers = org.getPeers();
-					logger.debug('%s - org:%s has %s peers', method, org.getName(), org_peers.length);
-					for (let j in org_peers) {
-						let org_peer = org_peers[j];
-						var channel_peers = this.getPeers();
-						for (let k in channel_peers) {
-							let channel_peer = channel_peers[k];
-							if (!channel_peer) {
-								logger.debug('%s - no peers on this channel', method);
-								break;
-							}
-							if (!org_peer) {
-								logger.debug('%s - null peer on this org', method);
-								break;
-							}
-							logger.debug('%s - comparing channel peer:%s to org peer:%s', method, channel_peer.getName(), org_peer.getName());
-							if (channel_peer.getName() === org_peer.getName()) {
-								// only peers in the request role get added
-								if (channel_peer.isInRole(role)) {
-									peers_in_org_and_in_channel.push(channel_peer);
-									logger.debug('%s - added peer %s', method, channel_peer.toString());
-								}
-								break;
-							}
-						}
-					}
-				}
-				// now add just one peer from each org to targets if in role
-				for (let org_name in peers_by_org) {
-					let peers_org = peers_by_org[org_name];
-					if (peers_org && peers_org.length > 0) {
-						logger.debug('%s - orgs %s has %s peers', method, org_name, peers_org.length);
-						let which_peer = Math.floor(Math.random() * peers_org.length);
-						logger.debug('%s - peer index:%s', method, which_peer);
-						let peer_org = peers_org[which_peer];
-						targets.push(peer_org);
-						logger.debug('%s - added target peer %s', method, peer_org.toString());
-					} else {
-						logger.debug('%s - no peers in this org %s', method, org_name);
-					}
-				}
-			}
-
-			if (targets.length == 0) {
-				logger.warn('No peers found in the loaded network configuration that can be used as the target of this operation');
-			}
-			return targets;
-		}
-	}
-
 	// internal utility method to build chaincode policy
 	_buildEndorsementPolicy(policy) {
 		return Policy.buildPolicy(this.getMSPManager().getMSPs(), policy);
@@ -2048,16 +2001,23 @@ var Channel = class {
 	 * return a printable representation of this channel object
 	 */
 	toString() {
-		let orderers = '';
-		for (let i = 0; i < this._orderers.length; i++) {
-			orderers = orderers + this._orderers[i].toString() + '|';
+		const orderers = [];
+		for (let orderer of this.getOrderers()) {
+			orderers.push(orderer.toString());
 		}
-		var state = {
+
+		const peers = [];
+		for (let peer of this.getPeers()) {
+			peers.push(peer.toString());
+		}
+
+		const state = {
 			name: this._name,
-			orderers: this._orderers ? orderers : 'N/A'
+			orderers: orderers.length > 0 ? orderers : 'N/A',
+			peers: peers.length > 0 ? peers : 'N/A'
 		};
 
-		return JSON.stringify(state);
+		return JSON.stringify(state).toString();
 	}
 
 };
@@ -2068,8 +2028,8 @@ function _getProposalResponseResults(proposal_response) {
 	if (!proposal_response.payload) {
 		throw new Error('Parameter must be a ProposalResponse Object');
 	}
-	var payload = _responseProto.ProposalResponsePayload.decode(proposal_response.payload);
-	var extension = _proposalProto.ChaincodeAction.decode(payload.extension);
+	const payload = _responseProto.ProposalResponsePayload.decode(proposal_response.payload);
+	const extension = _proposalProto.ChaincodeAction.decode(payload.extension);
 	// TODO should we check the status of this action
 	logger.debug('_getWriteSet - chaincode action status:%s message:%s', extension.response.status, extension.response.message);
 	// return a buffer object which has an equals method
@@ -2093,11 +2053,11 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 		return;
 	}
 
-	var isOrderer = (name.indexOf('base.Orderer') > -1);
+	const isOrderer = (name.indexOf('base.Orderer') > -1);
 	logger.debug('loadConfigGroup - %s   - version %s', name, group.version);
 	logger.debug('loadConfigGroup - %s   - mod policy %s', name, group.mod_policy);
 
-	var groups = null;
+	let groups = null;
 	if (top) {
 		groups = group.groups;
 		versions.version = group.version;
@@ -2109,13 +2069,13 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	logger.debug('loadConfigGroup - %s - >> groups', name);
 
 	if (groups) {
-		let keys = Object.keys(groups.map);
+		const keys = Object.keys(groups.map);
 		versions.groups = {};
 		if (keys.length == 0) {
 			logger.debug('loadConfigGroup - %s   - no groups', name);
 		}
 		for (let i = 0; i < keys.length; i++) {
-			let key = keys[i];
+			const key = keys[i];
 			logger.debug('loadConfigGroup - %s   - found config group ==> %s', name, key);
 			versions.groups[key] = {};
 			// The Application group is where config settings are that we want to find
@@ -2128,7 +2088,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	logger.debug('loadConfigGroup - %s - << groups', name);
 
 	logger.debug('loadConfigGroup - %s - >> values', name);
-	var values = null;
+	let values = null;
 	if (top) {
 		values = group.values;
 	}
@@ -2137,11 +2097,11 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	}
 	if (values) {
 		versions.values = {};
-		let keys = Object.keys(values.map);
+		const keys = Object.keys(values.map);
 		for (let i = 0; i < keys.length; i++) {
-			let key = keys[i];
+			const key = keys[i];
 			versions.values[key] = {};
-			var config_value = values.map[key];
+			const config_value = values.map[key];
 			loadConfigValue(config_items, versions.values[key], config_value, name, org, isOrderer);
 		}
 	}
@@ -2160,11 +2120,11 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	}
 	if (policies) {
 		versions.policies = {};
-		let keys = Object.keys(policies.map);
+		const keys = Object.keys(policies.map);
 		for (let i = 0; i < keys.length; i++) {
-			let key = keys[i];
+			const key = keys[i];
 			versions.policies[key] = {};
-			var config_policy = policies.map[key];
+			const config_policy = policies.map[key];
 			loadConfigPolicy(config_items, versions.policies[key], config_policy, name, org);
 		}
 	}
@@ -2192,10 +2152,10 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 	try {
 		switch (config_value.key) {
 		case 'AnchorPeers':
-			var anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
+			const anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - AnchorPeers :: %s', group_name, anchor_peers);
 			if (anchor_peers && anchor_peers.anchor_peers) for (var i in anchor_peers.anchor_peers) {
-				var anchor_peer = {
+				const anchor_peer = {
 					host: anchor_peers.anchor_peers[i].host,
 					port: anchor_peers.anchor_peers[i].port,
 					org: org
@@ -2205,53 +2165,53 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 			}
 			break;
 		case 'MSP':
-			var msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
+			const msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - MSP found', group_name);
 			if (!isOrderer) config_items.msps.push(msp_value);
 			break;
 		case 'ConsensusType':
-			var consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
+			const consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
 			config_items.settings['ConsensusType'] = consensus_type;
 			logger.debug('loadConfigValue - %s    - Consensus type value :: %s', group_name, consensus_type.type);
 			break;
 		case 'BatchSize':
-			var batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
+			const batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
 			config_items.settings['BatchSize'] = batch_size;
 			logger.debug('loadConfigValue - %s    - BatchSize  max_message_count :: %s', group_name, batch_size.maxMessageCount);
 			logger.debug('loadConfigValue - %s    - BatchSize  absolute_max_bytes :: %s', group_name, batch_size.absoluteMaxBytes);
 			logger.debug('loadConfigValue - %s    - BatchSize  preferred_max_bytes :: %s', group_name, batch_size.preferredMaxBytes);
 			break;
 		case 'BatchTimeout':
-			var batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
+			const batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
 			config_items.settings['BatchTimeout'] = batch_timeout;
 			logger.debug('loadConfigValue - %s    - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
 			break;
 		case 'ChannelRestrictions':
-			var channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
+			const channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
 			config_items.settings['ChannelRestrictions'] = channel_restrictions;
 			logger.debug('loadConfigValue - %s    - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
 			break;
 		case 'ChannelCreationPolicy':
-			var creation_policy = _policiesProto.Policy.decode(config_value.value.value);
+			const creation_policy = _policiesProto.Policy.decode(config_value.value.value);
 			loadPolicy(config_items, versions, config_value.key, creation_policy, group_name, org);
 			break;
 		case 'HashingAlgorithm':
-			var hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
+			const hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
 			config_items.settings['HashingAlgorithm'] = hashing_algorithm_name;
 			logger.debug('loadConfigValue - %s    - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
 			break;
 		case 'Consortium':
-			var consortium_algorithm_name = _commonConfigurationProto.Consortium.decode(config_value.value.value);
+			const consortium_algorithm_name = _commonConfigurationProto.Consortium.decode(config_value.value.value);
 			config_items.settings['Consortium'] = consortium_algorithm_name;
 			logger.debug('loadConfigValue - %s    - Consortium name value :: %s', group_name, consortium_algorithm_name.name);
 			break;
 		case 'BlockDataHashingStructure':
-			var blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
+			const blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
 			config_items.settings['BlockDataHashingStructure'] = blockdata_hashing_structure;
 			logger.debug('loadConfigValue - %s    - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
 			break;
 		case 'OrdererAddresses':
-			var orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
+			const orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
 			if (orderer_addresses && orderer_addresses.addresses) {
 				for (let address of orderer_addresses.addresses) {
@@ -2260,7 +2220,7 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 			}
 			break;
 		case 'KafkaBrokers':
-			var kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
+			const kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
 			if (kafka_brokers && kafka_brokers.brokers) {
 				for (let broker of kafka_brokers.brokers) {
@@ -2278,14 +2238,197 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 	//logger.debug('loadConfigValue - %s -  < value name: %s', group_name, config_value.key);
 }
 
+/**
+ * @typedef {Object} ChannelPeerRoles
+ * @property {boolean} endorsingPeer - Optional. This peer may be sent transaction
+ *           proposals for endorsements. The peer must have the chaincode installed.
+ *           The app can also use this property to decide which peers to send the
+ *           chaincode install request.
+ *           Default: true
+ *
+ * @property {boolean} chaincodeQuery - Optional. This peer may be sent transaction
+ *           proposals meant only as a query. The peer must have the chaincode
+ *           installed. The app can also use this property to decide which peers
+ *           to send the chaincode install request.
+ *           Default: true
+ *
+ * @property {boolean} ledgerQuery - Optional. This peer may be sent query proposals
+ *           that do not require chaincodes, like queryBlock(), queryTransaction(), etc.
+ *           Default: true
+ *
+ * @property {boolean} eventSource - Optional. This peer may be the target of a
+ *           event listener registration? All peers can produce events, but the
+ *           appliatiion typically only needs to connect to one.
+ *           Default: true
+ */
+
+/**
+ * The ChannelPeer class represents a peer in the target blockchain network on this channel.
+ *
+ * @class
+ */
+var ChannelPeer = class {
+	/**
+	 * Construct a ChannelPeer object with the given Peer and opts.
+	 * A channel peer object holds channel based references:
+	 *   Organization name this peer belongs.
+	 *   {@link Channel} object used to know the channel this peer is interacting.
+	 *   {@link Peer} object used for interacting with the Hyperledger fabric network.
+	 *   {@link ChannelEventHub} object used for listening to block changes on the channel.
+	 *   List of {@link ChannelPeerRoles} to indicate the roles this peer performs on the channel.
+	 *
+	 * The roles this Peer performs on this channel are indicated with is object.
+	 *
+	 * @param {string} org_name - The organization name this peer belongs.
+	 * @param {Channel} channel - The Channel instance.
+	 * @param {Peer} peer - The Peer instance.
+	 * @param {ChannelPeerRoles} roles - The roles for this peer.
+	 */
+	constructor(org_name, channel, peer, roles) {
+		this._org_name = org_name; // if null, then peer belongs to all organizations
+		if(channel && channel.constructor && channel.constructor.name === 'Channel') {
+			if(peer && peer.constructor && peer.constructor.name === 'Peer') {
+				this._channel = channel;
+				this._name = peer.getName();
+				this._chaincodes = new Map();
+				this._peer = peer;
+				this._roles = {};
+				logger.debug('ChannelPeer.const - url: %s', peer.getUrl());
+				if(roles && typeof roles === 'object') {
+					this._roles = Object.assign(roles, this._roles);
+				}
+			} else {
+				throw new Error('Missing Peer parameter');
+			}
+		} else {
+			throw new Error('Missing Channel parameter');
+		}
+	}
+
+	/**
+	 * Close the associated peer service connections.
+	 */
+	close() {
+		this._peer.close();
+		if(this._channel_event_hub) {
+			this._channel_event_hub.close();
+		}
+	}
+
+	/**
+	 * Get the organization name.
+	 *
+	 * @returns {string} The organization name.
+	 */
+	 getOrganizationName() {
+		 return this._org_name;
+	 }
+
+	/**
+	 * Get the name. This is a client-side only identifier for this
+	 * object.
+	 *
+	 * @returns {string} The name of the object
+	 */
+	getName() {
+		return this._name;
+	}
+
+	/**
+	 * Get the URL of this object.
+	 *
+	 * @returns {string} Get the URL associated with the peer object.
+	 */
+	getUrl() {
+		return this._peer.getUrl();
+	}
+
+	/**
+	 * Get the client certificate hash
+	 * @returns {byte[]} The hash of the client certificate
+	 */
+	getClientCertHash() {
+		return this._peer.getClientCertHash();
+	}
+
+	/**
+	 * Set a role for this peer.
+	 *
+	 * @param {string} role - The name of the role
+	 * @param {boolean} isIn - The boolean value of does this peer have this role
+	 */
+	setRole(role, isIn) {
+		this._roles[role] = isIn;
+	}
+
+	/**
+	 * Checks if this peer is in the specified role.
+	 * The default is true when the incoming role is not defined.
+	 * The default will be true when this peer does not have the role defined.
+	 *
+	 * @returns {boolean} If this peer has this role.
+	 */
+	isInRole(role) {
+		if(!role) {
+			throw new Error('Missing "role" parameter');
+		} else if(typeof this._roles[role] === 'undefined') {
+			return true;
+		} else {
+			return this._roles[role];
+		}
+	}
+
+	/**
+	 * Checks if this peer is in the specified organization.
+	 * The default is true when the incoming organization name is not defined.
+	 * The default will be true when this peer does not have the organization name defined.
+	 *
+	 * @returns {boolean} If this peer belongs to the organization.
+	 */
+	isInOrg(org_name) {
+		if(!org_name) {
+			return true;
+		} else if(typeof this._org_name === 'undefined' || this._org_name == null) {
+			return true;
+		} else {
+			return org_name === this._org_name;
+		}
+	}
+
+	/**
+	 * Get the channel event hub for this channel peer. The ChannelEventHub instance will
+	 * be assigned when using the {@link Channel} newChannelEventHub() method. When using
+	 * a common connection profile, the ChannelEventHub will be automatically assigned
+	 * on the Channel Peers as they are created and added to the channel.
+	 *
+	 * @return {ChannelEventHub} - The ChannelEventHub instance associated with this {@link Peer} instance.
+	 */
+	getChannelEventHub() {
+		if(!this._channel_event_hub) {
+			this._channel_event_hub = new ChannelEventHub(this._channel, this._peer);
+		}
+
+		return this._channel_event_hub;
+	}
+
+	/**
+	 * Get the Peer instance this ChannelPeer represents on the channel.
+	 *
+	 * @returns {Peer} The associated Peer instance.
+	 */
+	getPeer() {
+		return this._peer;
+	}
+}; //endof ChannelPeer
+
 /*
  * utility method to load in a config policy
  * @see /protos/common/configtx.proto
  */
 function loadConfigPolicy(config_items, versions, config_policy, group_name, org) {
 	logger.debug('loadConfigPolicy - %s - policy name: %s', group_name, config_policy.key);
-	logger.debug('loadConfigPolicy - %s   - version: %s', group_name, config_policy.value.version);
-	logger.debug('loadConfigPolicy - %s   - mod_policy: %s', group_name, config_policy.value.mod_policy);
+	logger.debug('loadConfigPolicy - %s - version: %s', group_name, config_policy.value.version);
+	logger.debug('loadConfigPolicy - %s - mod_policy: %s', group_name, config_policy.value.mod_policy);
 
 	versions.version = config_policy.value.version;
 	loadPolicy(config_items, versions, config_policy.key, config_policy.value.policy, group_name, org);

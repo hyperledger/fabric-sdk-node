@@ -297,8 +297,7 @@ var EventHub = class {
 				return;
 			}
 
-			let state = -1;
-			if(self._stream) state = self._stream.call.channel_.getConnectivityState();
+			let state = getStreamState(self);
 			logger.debug('on.data - grpc stream state :%s',state);
 			if (event.Event == 'block') {
 				var block = BlockDecoder.decodeBlock(event.block);
@@ -328,8 +327,7 @@ var EventHub = class {
 				return;
 			}
 
-			let state = -1;
-			if(self._stream) state = self._stream.call.channel_.getConnectivityState();
+			let state = getStreamState(self);
 			logger.debug('on.end - grpc stream state :%s',state);
 			self._disconnect(new Error('Peer event hub has disconnected due to an "end" event'));
 		});
@@ -344,8 +342,7 @@ var EventHub = class {
 				return;
 			}
 
-			let state = -1;
-			if(self._stream) state = self._stream.call.channel_.getConnectivityState();
+			let state = getStreamState(self);
 			logger.debug('on.error - grpc stream state :%s',state);
 			if(err instanceof Error) {
 				self._disconnect(err);
@@ -474,15 +471,11 @@ var EventHub = class {
 	 */
 	_checkConnection(throw_error, force_reconnect) {
 		logger.debug('_checkConnection - start throw_error %s, force_reconnect %s',throw_error, force_reconnect);
-		let state = 0;
-		if(this._stream) {
-			state = this._stream.call.channel_.getConnectivityState();
-			logger.debug('_checkConnection - grpc stream state :%s',state);
-		} else {
+		if(!this._stream) {
 			// when there is no stream, then wait for the user to do a 'connect'
 			return;
 		}
-
+		let state = getStreamState(this);
 		if(this._connected || this._connect_running || state == 2) {
 			logger.debug('_checkConnection - this hub %s is connected or trying to connect with stream channel state %s', this._ep.getUrl(), state);
 		}
@@ -824,6 +817,18 @@ var EventHub = class {
 		}
 	}
 };
+
+/*
+ * Utility method to get the state of the GRPC stream
+ */
+function getStreamState(self) {
+	let state = -1;
+	if(self._stream && self._stream.call && self._stream.call.channel_) {
+		state = self._stream.call.channel_.getConnectivityState();
+	}
+
+	return state;
+}
 
 function convertValidationCode(code) {
 	return _validation_codes[code];

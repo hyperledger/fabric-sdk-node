@@ -78,7 +78,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		// use the config update created by the configtx tool
 		let envelope_bytes = fs.readFileSync(path.join(__dirname, '../../fixtures/channel/mychannel.tx'));
 		config = client.extractChannelConfig(envelope_bytes);
-		t.pass('Successfull extracted the config update from the configtx envelope');
+		t.pass('Successfully extracted the config update from the configtx envelope');
 
 		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
 	}).then((admin) => {
@@ -112,6 +112,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		let orderer_bad = client.newOrderer(
 			ORGS.orderer.url,
 			{
+				name: 'bad orderer',
 				'pem': caroots,
 				'clientCert': tlsInfo.certificate,
 				'clientKey': tlsInfo.key,
@@ -151,6 +152,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		orderer = client.newOrderer(
 			ORGS.orderer.url,
 			{
+				name: 'new orderer',
 				'pem': caroots,
 				'clientCert': tlsInfo.certificate,
 				'clientKey': tlsInfo.key,

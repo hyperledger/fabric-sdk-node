@@ -149,8 +149,8 @@ var NetworkConfig_1_0 = class {
 			var channel_config = this._network_config[CHANNELS_CONFIG][name];
 			if(channel_config) {
 				channel = new Channel(name, this._client_context);
-				this._addPeers(channel);
-				this._addOrderers(channel);
+				this._addPeersToChannel(channel);
+				this._addOrderersToChannel(channel);
 			}
 		}
 
@@ -164,20 +164,12 @@ var NetworkConfig_1_0 = class {
 		if(this._network_config && this._network_config[PEERS_CONFIG]) {
 			let peer_config = this._network_config[PEERS_CONFIG][name];
 			if(peer_config) {
-				let opts = {};
+				let opts = {name: name};
 				opts.pem = getTLSCACert(peer_config);
 				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, ENDORSER);
 				this._client_context.addTlsClientCertAndKey(opts);
 				peer = new Peer(peer_config[URL], opts);
-				peer.setName(name);
-				if(channel_org) {
-					for(let i in ROLES) {
-						if(typeof channel_org[ROLES[i]] === 'boolean') {
-							peer.setRole(ROLES[i], channel_org[ROLES[i]]);
-						}
-					}
-				}
 			}
 		}
 
@@ -241,13 +233,12 @@ var NetworkConfig_1_0 = class {
 		if(this._network_config && this._network_config[ORDERERS_CONFIG]) {
 			let orderer_config = this._network_config[ORDERERS_CONFIG][name];
 			if(orderer_config) {
-				let opts = {};
+				let opts = {name: name};
 				opts.pem = getTLSCACert(orderer_config);
 				Object.assign(opts, orderer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, ORDERER);
 				this._client_context.addTlsClientCertAndKey(opts);
 				orderer = new Orderer(orderer_config[URL], opts);
-				orderer.setName(name);
 			}
 		}
 
@@ -335,7 +326,7 @@ var NetworkConfig_1_0 = class {
 	 * Internal method to add orderer instances to a channel as defined
 	 * by the network configuration
 	 */
-	_addOrderers(channel) {
+	_addOrderersToChannel(channel) {
 		// get the organization list for this channel
 		if(this._network_config &&
 			this._network_config[CHANNELS_CONFIG] &&
@@ -350,10 +341,10 @@ var NetworkConfig_1_0 = class {
 	}
 
 	/*
-	 * Internal method to add orderer instances to a channel as defined
+	 * Internal method to configure a channel as defined
 	 * by the network configuration
 	 */
-	_addPeers(channel) {
+	_addPeersToChannel(channel) {
 		// get the organization list for this channel
 		if(this._network_config &&
 			this._network_config[CHANNELS_CONFIG] &&
@@ -361,12 +352,37 @@ var NetworkConfig_1_0 = class {
 			let channel_peers = this._network_config[CHANNELS_CONFIG][channel.getName()][PEERS_CONFIG];
 			if(channel_peers) for(let peer_name in channel_peers) {
 				let channel_peer = channel_peers[peer_name];
-				let peer = this.getPeer(peer_name, channel_peer);
-				if(peer) channel.addPeer(peer);
+				let peer = this.getPeer(peer_name);
+				let roles = {};
+				for(let i in ROLES) {
+					if(typeof channel_peer[ROLES[i]] === 'boolean') {
+						roles[ROLES[i]] = channel_peer[ROLES[i]];
+					}
+				}
+				if(peer) {
+					const org_name = this._getOrganizationForPeer(peer_name);
+					channel.addPeer(peer, org_name, roles);
+				}
 			}
 		}
 
 	}
+
+	/*
+	 * Internal utility method to get the organization the peer belongs
+	 */
+	 _getOrganizationForPeer(peer_name) {
+		if(this._network_config && this._network_config[ORGS_CONFIG]) {
+			for(let organization_name in  this._network_config[ORGS_CONFIG]) {
+				let organization = this.getOrganization(organization_name);
+				for(let i in organization._peers) {
+					if(peer_name === organization._peers[i].getName()) {
+						return organization_name;
+					}
+				}
+			}
+		}
+	 }
 };
 
 function getTLSCACert(config) {

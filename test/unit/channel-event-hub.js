@@ -54,7 +54,6 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 	t.throws(
 		() => {
 			eh = new ChannelEventHub(channel);
-			eh = new ChannelEventHub();
 		},
 		/Missing required argument: peer/,
 		'Must pass in a peer'

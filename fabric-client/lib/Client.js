@@ -76,8 +76,8 @@ var Client = class extends BaseClient {
 
 	constructor() {
 		super();
+		this._mspid = null; // The organization name
 
-		this._channels = {};
 		this._stateStore = null;
 		this._userContext = null;
 		this._network_config = null;
@@ -95,6 +95,10 @@ var Client = class extends BaseClient {
 		// When using a network configuration (connection profile) the client
 		// side mutual tls cert and key must be stored here
 		this._tls_mutual = {};
+
+		this._organizations = new Map();
+		this._certificateAuthorities = new Map();
+		this._channels = new Map();
 	}
 
 	/**
@@ -108,6 +112,7 @@ var Client = class extends BaseClient {
 		client._network_config = _getNetworkConfig(config, client);
 		if(client._network_config.hasClient()) {
 			client._setAdminFromConfig();
+			client._setMspidFromConfig();
 		}
 
 		return client;
@@ -128,6 +133,7 @@ var Client = class extends BaseClient {
 		}
 		if(this._network_config.hasClient()) {
 			this._setAdminFromConfig();
+			this._setMspidFromConfig();
 		}
 	}
 
@@ -191,13 +197,13 @@ var Client = class extends BaseClient {
 	 * @returns {Channel} The uninitialized channel instance.
 	 */
 	newChannel(name) {
-		var channel = this._channels[name];
+		let channel = this._channels.get(name);
 
 		if (channel)
 			throw new Error(util.format('Channel %s already exists', name));
 
 		channel = new Channel(name, this);
-		this._channels[name] = channel;
+		this._channels.set(name, channel);
 		return channel;
 	}
 
@@ -215,23 +221,17 @@ var Client = class extends BaseClient {
 	 * @returns {Channel} The channel instance
 	 */
 	getChannel(name, throwError) {
-		var channel = this._channels[name];
+		let channel = this._channels.get(name);
 
 		if (channel)
 			return channel;
 		else {
 			// maybe it is defined in the network config
 			if(this._network_config) {
-				if(!name) {
-					let channel_names = Object.keys(this._network_config._network_config.channels);
-					if(channel_names) {
-						name = channel_names[0];
-					}
-				}
 				channel = this._network_config.getChannel(name);
-				this._channels[name] = channel;
 			}
 			if(channel) {
+				this._channels.set(name, channel);
 				return channel;
 			}
 
@@ -250,6 +250,8 @@ var Client = class extends BaseClient {
 
 	/**
 	 * @typedef {Object} ConnectionOpts
+	 * @property {string} name - Optional. To gives this remote endpoint a name.
+	 *           The endpoint will be known by its URL if no name is provided.
 	 * @property {string} request-timeout - An integer value in milliseconds to
 	 *    be used as maximum amount of time to wait on the request to respond.
 	 * @property {string} pem - The certificate file, in PEM format,
@@ -272,13 +274,104 @@ var Client = class extends BaseClient {
 	 * send channel-aware requests such as instantiating chaincodes, and invoking
 	 * transactions.
 	 *
+	 * This method will return a new {@link Peer} object.
+	 *
 	 * @param {string} url - The URL with format of "grpc(s)://host:port".
 	 * @param {ConnectionOpts} opts - The options for the connection to the peer.
 	 * @returns {Peer} The Peer instance.
 	 */
 	newPeer(url, opts) {
-		var peer = new Peer(url, opts);
+		let	peer = new Peer(url, opts);
+
 		return peer;
+	}
+
+	/**
+	 * This method will create a {@link Peer} instance. This method is only able to
+	 * create an instance of a peer if there is a loaded connection profile that
+	 * contains a peer with the name.
+	 *
+	 * @param {string} name - The name of the peer
+	 * @returns {Peer} The Peer instance.
+	 */
+	getPeer(name) {
+		let peer = null;
+		if(this._network_config) {
+			peer = this._network_config.getPeer(name);
+		}
+		if(!peer) {
+			throw new Error('Peer with name:'+ name + ' not found');
+		}
+
+		return peer;
+	}
+
+	/**
+	 * Returns a list of {@link Peer} for the named organization as defined
+	 * in the currently loaded network configuration. If no organization is
+	 * provided then the organization named in the currently active network
+	 * configuration's client section will be used.
+	 *
+	 * @param {string} org_name - Optional - The name of an organization
+	 * @returns {Peer[]} An array of Peer instances that are defined for this organization
+	 */
+	getPeersForOrg(org_name) {
+		if(this._network_config) {
+			if(!org_name && this._network_config.hasClient()) {
+				let client = this._network_config.getClientConfig();
+				org_name = client.organization;
+			}
+			if(org_name) {
+				let organization = this._network_config.getOrganization(org_name);
+				if(organization) {
+					return organization.getPeers();
+				}
+			}
+		}
+
+		return [];
+	}
+
+	/**
+	 * Returns an {@link Orderer} object with the given url and opts. An orderer object
+	 * encapsulates the properties of an orderer node and the interactions with it via
+	 * the grpc stream API. Orderer objects are used by the {@link Client} objects to broadcast
+	 * requests for creating and updating channels. They are used by the {@link Channel}
+	 * objects to broadcast requests for ordering transactions.
+	 *
+	 * This method will create the orderer.
+	 *
+	 * @param {string} url The URL with format of "grpc(s)://host:port".
+	 * @param {ConnectionOpts} opts The options for the connection to the orderer.
+	 * @returns {Orderer} The Orderer instance.
+	 */
+	newOrderer(url, opts) {
+		let orderer = new Orderer(url, opts);
+
+		return orderer;
+	}
+
+	/**
+	 * This method will create the {@link Orderer} if it does not exist and hold a
+	 * reference to the instance object by name. This method is only able to
+	 * create an instance of an orderer if there is a loaded connection profile that
+	 * contains an orderer with the name. Orderers that have been created by the
+	 * {@link newOrderer} method may be reference by the url if no name was provided
+	 * in the options.
+	 *
+	 * @param {string} name - The name or url of the orderer
+	 * @returns {Orderer} The Orderer instance.
+	 */
+	getOrderer(name) {
+		let orderer = null;
+		if(this._network_config) {
+			orderer = this._network_config.getOrderer(name);
+		}
+		if(!orderer) {
+			throw new Error('Orderer with name:'+ name + ' not found');
+		}
+
+		return orderer;
 	}
 
 	/**
@@ -294,7 +387,7 @@ var Client = class extends BaseClient {
 	}
 
 	/**
-	 * Returns and {@link EventHub} object based on the event hub address
+	 * Returns an {@link EventHub} object based on the event hub address
 	 * as defined in the currently loaded network configuration for the
 	 * peer by the name parameter. The named peer must have the "eventUrl"
 	 * setting or a null will be returned.
@@ -337,47 +430,6 @@ var Client = class extends BaseClient {
 		}
 
 		return event_hubs;
-	}
-
-	/**
- 	 * Returns a list of {@link Peer} for the named organization as defined
- 	 * in the currently loaded network configuration. If no organization is
- 	 * provided then the organization named in the currently active network
- 	 * configuration's client section will be used.
- 	 *
- 	 * @param {string} org_name - Optional - The name of an organization
- 	 * @returns {Peer[]} An array of Peer instances that are defined for this organization
- 	 */
-	getPeersForOrg(org_name) {
-		if(this._network_config) {
-			if(!org_name && this._network_config.hasClient()) {
-				let client = this._network_config.getClientConfig();
-				org_name = client.organization;
-			}
-			if(org_name) {
-				let organization = this._network_config.getOrganization(org_name);
-				if(organization) {
-					return organization.getPeers();
-				}
-			}
-		}
-		return [];
-	}
-
-	/**
-	 * Returns an {@link Orderer} object with the given url and opts. An orderer object
-	 * encapsulates the properties of an orderer node and the interactions with it via
-	 * the grpc stream API. Orderer objects are used by the {@link Client} objects to broadcast
-	 * requests for creating and updating channels. They are used by the {@link Channel}
-	 * objects to broadcast requests for ordering transactions.
-	 *
-	 * @param {string} url The URL with format of "grpc(s)://host:port".
-	 * @param {ConnectionOpts} opts The options for the connection to the orderer.
-	 * @returns {Orderer} The Orderer instance.
-	 */
-	newOrderer(url, opts) {
-		var orderer = new Orderer(url, opts);
-		return orderer;
 	}
 
 	/**
@@ -475,8 +527,7 @@ var Client = class extends BaseClient {
 	 *          section of the loaded network configuration
 	 */
 	getMspid() {
-		const client_config = this.getClientConfig();
-		return client_config?client_config.mspid:null;
+		return this._mspid;
 	}
 
 	/**
@@ -971,13 +1022,14 @@ var Client = class extends BaseClient {
 	 */
 
 	/**
-	 * All calls to the endorsing peers for proposal endorsement return this standard
-	 * array of objects.
+	 * All calls to the endorsing peers for proposal endorsement return this
+	 * standard array of objects.
 	 *
 	 * @typedef {array} ProposalResponseObject
-	 * @property {array} index:0 - Array of ProposalResponse objects from the endorsing peers
-	 * @property {Object} index:1 - The original Proposal object needed when sending the transaction
-	 *                              request to the orderer
+	 * @property {array} index:0 - Array of ProposalResponse objects from the
+	 *           endorsing peers
+	 * @property {Object} index:1 - The original Proposal object needed when
+	 *           sending the transaction request to the orderer
 	 */
 
 	/**
@@ -991,22 +1043,42 @@ var Client = class extends BaseClient {
 	 *
 	 * @param {ChaincodeInstallRequest} request - The request object
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
-	 *                              response before rejecting the promise with a
-	 *                              timeout error. This overrides the default timeout
-	 *                              of the Peer instance and the global timeout in the config settings.
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Peer instance and the global
+	 *        timeout in the config settings.
 	 * @returns {Promise} A Promise for a {@link ProposalResponseObject}
 	 */
 	installChaincode(request, timeout) {
 		logger.debug('installChaincode - start');
 
 		let error_msg = null;
-
 		let peers = null;
 		if (request) {
 			try {
 				peers = this.getTargetPeers(request.targets);
-				if(!peers) {
-					peers = this.getPeersForOrgOnChannel(request.channelNames);
+				if(!peers && request.channelNames) {
+					let channel_names = request.channelNames;
+					if(!Array.isArray(channel_names)) {
+						channel_names = [request.channelNames];
+					}
+					peers = [];
+					const temp_peers = {};
+					for(let i in channel_names) {
+						const channel = this.getChannel(channel_names[i]);
+						let org_name = null;
+						if(this._network_config.hasClient()) {
+							const client = this._network_config.getClientConfig();
+							org_name = client.organization;
+						}
+						const channel_peers = channel.getPeersForOrg();
+						for(let j in channel_peers) {
+							const peer = channel_peers[j];
+							temp_peers[peer.getName()] = peer; // will remove duplicates
+						}
+					}
+					for (let name in temp_peers) {
+						peers.push(temp_peers[name]);
+					}
 				}
 			} catch (err) {
 				return Promise.reject(err);
@@ -1226,9 +1298,9 @@ var Client = class extends BaseClient {
 			throw new Error('No network configuration has been loaded');
 		}
 
-		let client_config = this._network_config.getClientConfig();
+		const client_config = this._network_config.getClientConfig();
 		if(client_config && client_config.organization) {
-			let organization_config = this._network_config.getOrganization(client_config.organization);
+			const organization_config = this._network_config.getOrganization(client_config.organization);
 			if(organization_config) {
 				mspid = organization_config.getMspid();
 				admin_key = organization_config.getAdminPrivateKey();
@@ -1238,6 +1310,25 @@ var Client = class extends BaseClient {
 		// if we found all we need then set the admin
 		if(admin_key && admin_cert && mspid) {
 			this.setAdminSigningIdentity(admin_key, admin_cert, mspid);
+		}
+	}
+
+	/*
+	 * Utility method to set the mspid from current network configuration.
+	 * A network configuration be must loaded and defines both an organization
+	 * and the client.
+	 */
+	_setMspidFromConfig() {
+		if(!this._network_config) {
+			throw new Error('No network configuration has been loaded');
+		}
+
+		const client_config = this._network_config.getClientConfig();
+		if(client_config && client_config.organization) {
+			let organization_config = this._network_config.getOrganization(client_config.organization);
+			if(organization_config) {
+				this._mspid = organization_config.getMspid();
+			}
 		}
 	}
 
@@ -1693,16 +1784,7 @@ var Client = class extends BaseClient {
 			}
 			for(let target_peer of targetsTemp) {
 				if(typeof target_peer === 'string') {
-					if(this._network_config) {
-						const peer = this._network_config.getPeer(target_peer);
-						if(peer) {
-							targets.push(peer);
-						} else {
-							throw new Error('Target peer name was not found');
-						}
-					} else {
-						throw new Error('No network configuraton loaded');
-					}
+					targets.push(this.getPeer(target_peer));
 				} else if(target_peer && target_peer.constructor && target_peer.constructor.name === 'Peer') {
 					targets.push(target_peer);
 				} else {
@@ -1720,7 +1802,7 @@ var Client = class extends BaseClient {
 
 	/*
 	 * Utility method to get the orderer for the request
-	 * Will find the orderer is this sequence:
+	 * Will find the orderer in this sequence:
 	 *    if request_orderer is an object, will check that it is an orderer
 	 *    if request_orderer is a string will look up in the network configuration the orderer by that name
 	 *    if channel_orderers is not null then this index 0 will be used
@@ -1733,12 +1815,7 @@ var Client = class extends BaseClient {
 		let orderer = null;
 		if(request_orderer) {
 			if(typeof request_orderer === 'string') {
-				if(this._network_config) {
-					orderer = this._network_config.getOrderer(request_orderer);
-					if(!orderer) {
-						throw new Error('Orderer name was not found in the network configuration');
-					}
-				}
+				orderer = this.getOrderer(request_orderer);
 			} else if(request_orderer && request_orderer.constructor && request_orderer.constructor.name === 'Orderer') {
 				orderer = request_orderer;
 			} else {
@@ -1765,61 +1842,6 @@ var Client = class extends BaseClient {
 		}
 
 		return orderer;
-	}
-
-	/*
-	 * Utility method to get target peers from the network configuration
-	 * Will get the list of all peers for the current organization of this
-	 * client. If channel names are provided, the list will be filtered
-	 * down to be just the endorsing or chain code query peers as defined
-	 * in the channels. If no channels are provided the full org list
-	 * will be returned.
-	 */
-	getPeersForOrgOnChannel(channels) {
-		let method = 'getPeersForOrgOnChannel';
-		logger.debug('%s - starting',method);
-		let peers = [];
-		if(this._network_config && this._network_config.hasClient()) {
-			let org_peers = this.getPeersForOrg();
-			logger.debug('%s - have client config and an org_peers list with %s',method,org_peers.length);
-			if(channels) {
-				logger.debug('%s - have channels %s',method,channels);
-				if(!Array.isArray(channels)) {
-					channels = [channels];
-				}
-				peers = [];
-				let found_peers = {};
-				for(let i in channels) {
-					logger.debug('%s - looking at channel:%s',method,channels[i]);
-					let channel = this._network_config.getChannel(channels[i]);
-					let channel_peers = channel.getPeers();
-					for(let j in channel_peers) {
-						let channel_peer = channel_peers[j];
-						logger.debug('%s - looking at channel peer:%s',method,channel_peer.getName());
-						if(channel_peer.isInRole(Constants.NetworkConfig.ENDORSING_PEER_ROLE)
-						|| channel_peer.isInRole(Constants.NetworkConfig.CHAINCODE_QUERY_ROLE)) {
-							for(let k in org_peers) {
-								let org_peer = org_peers[k];
-								logger.debug('%s - looking at org peer:%s',method,org_peer.getName());
-								if(org_peer.getName() === channel_peer.getName()) {
-									found_peers[org_peer.getName()] = org_peer;//to avoid Duplicate Peers
-									logger.debug('%s - adding peer to list:%s',method,org_peer.getName());
-								}
-							}
-						}
-					}
-				}
-				for(let name in found_peers) {
-					logger.debug('%s - final list has:%s',method,name);
-					peers.push(found_peers[name]);
-				}
-			} else {
-				logger.debug('%s - return org list',method);
-				peers = org_peers;
-			}
-		}
-
-		return peers;
 	}
 };
 

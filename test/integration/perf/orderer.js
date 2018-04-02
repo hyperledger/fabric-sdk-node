@@ -59,6 +59,7 @@ async function perfTest1(t) {
 	let orderer = client.newOrderer(
 		ORGS.orderer.url,
 		{
+			name: 'perfTest1',
 			'pem': caroots,
 			'clientCert': tlsInfo.certificate,
 			'clientKey': tlsInfo.key,
@@ -189,6 +190,7 @@ async function perfTest2(t) {
 	let orderer = client.newOrderer(
 		ORGS.orderer.url,
 		{
+			name: 'perfTest2',
 			'pem': caroots,
 			'clientCert': tlsInfo.certificate,
 			'clientKey': tlsInfo.key,

@@ -122,7 +122,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		// have the channel event hub connect to the peer's channel-based event
 		// service. This connect can be done anytime after the user has been
 		// assigned to the client and before the transaction is submitted
-		event_hub.connect();
+		//event_hub.connect();
 
 		// get a transaction ID object based on the current user assigned
 		// to the client instance
@@ -210,10 +210,11 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				resolve(code);
 			}, (error) => {
 				clearTimeout(handle);
-				t.fail('Failed to receive event for instantiate');
+				t.fail('Failed to receive event for instantiate ::'+ error.toString());
 				// send back error
 				reject(error);
 			});
+			event_hub.connect();
 		});
 
 		let send_trans = channel.sendTransaction({proposalResponses: proposalResponses,	proposal: proposal});

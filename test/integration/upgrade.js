@@ -49,7 +49,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 	testUtil.setupChaincodeDeploy();
 
-	var version = 'v1';
 	var org = 'org1';
 	client = new Client();
 	channel = client.newChannel(e2e.channel);
@@ -111,18 +110,18 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		// send proposal to endorser
 		var request = {
-			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId : e2e.chaincodeId,
-			chaincodeVersion : version,
+			chaincodeVersion : 'v1',
 			fcn: 'init',
 			args: ['a', '500', 'b', '600'],
-			txId: tx_id
+			txId: tx_id,
+			transientMap: { 'test': 'transientValue' }
 		};
 
 		return channel.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'version already exists', t);
+		testUtil.checkResults(results, 'version already exists', t);
 
 		return Promise.resolve(true);
 
@@ -134,18 +133,18 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		// send proposal to endorser
 		var request = {
-			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId: 'dummy',
-			chaincodeVersion: version,
+			chaincodeVersion: 'v1',
 			fcn: 'init',
 			args: ['a', '500', 'b', '600'],
-			txId: tx_id
+			txId: tx_id,
+			transientMap: { 'test': 'transientValue' }
 		};
 
 		return channel.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'cannot get package for chaincode', t);
+		testUtil.checkResults(results, 'cannot get package for chaincode', t);
 
 		return Promise.resolve(true);
 
@@ -154,18 +153,18 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		// send proposal to endorser
 		var request = {
-			chaincodePath: testUtil.CHAINCODE_UPGRADE_PATH,
 			chaincodeId: e2e.chaincodeId,
 			chaincodeVersion: 'v333333333',
 			fcn: 'init',
 			args: ['a', '500', 'b', '600'],
-			txId: tx_id
+			txId: tx_id,
+			transientMap: { 'test': 'transientValue' }
 		};
 
 		return channel.sendUpgradeProposal(request);
 
 	}).then((results) => {
-		checkResults(results, 'cannot get package for chaincode', t);
+		testUtil.checkResults(results, 'cannot get package for chaincode', t);
 		t.end();
 	}).catch((err) => {
 		t.fail('Got an Error along the way :: '+ err);
@@ -223,22 +222,3 @@ test('\n\n **** Testing re-initializing states during upgrade ****', (t) => {
 		t.end();
 	});
 });
-
-function checkResults(results, error_snip, t) {
-	var proposalResponses = results[0];
-	for(var i in proposalResponses) {
-		let proposal_response = proposalResponses[i];
-		if(proposal_response instanceof Error) {
-			logger.info(' Got the error ==>%s<== when looking for %s', proposal_response,error_snip);
-			if(proposal_response.toString().indexOf(error_snip) > 0) {
-				t.pass(' Successfully got the error '+ error_snip);
-			}
-			else {
-				t.fail(' Failed to get error '+ error_snip);
-			}
-		}
-		else {
-			t.fail(' Failed to get an error returned :: No Error returned , should have had an error with '+ error_snip);
-		}
-	}
-}

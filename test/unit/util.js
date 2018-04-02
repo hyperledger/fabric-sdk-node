@@ -268,3 +268,22 @@ module.exports.getSubmitter = function(client, test, peerOrgAdmin, org) {
 		return getMember('admin', 'adminpw', client, test, userOrg);
 	}
 };
+
+module.exports.checkResults = function(results, error_snip, t) {
+	var proposalResponses = results[0];
+	for(var i in proposalResponses) {
+		let proposal_response = proposalResponses[i];
+		if(proposal_response instanceof Error
+			&& proposal_response.toString().indexOf(error_snip) > -1) {
+			t.pass(' Successfully got the error '+ error_snip);
+		}
+		else if(proposal_response.response
+			&& proposal_response.response.message
+			&& proposal_response.response.message.indexOf(error_snip) > -1) {
+			t.pass('Successfully got the error' + error_snip);
+		}
+		else {
+			t.fail(' Failed  :: should have had an error with '+ error_snip);
+		}
+	}
+};

@@ -172,7 +172,7 @@ function instantiateChaincodeForError(request, error_snip, t) {
 		t.fail(util.format('Failed to initialize the channel. %s', err.stack ? err.stack : err));
 		throw new Error('Failed to initialize the channel');
 	}).then((results) => {
-		checkResults(results, error_snip, t);
+		testUtil.checkResults(results, error_snip, t);
 		t.end();
 	}, (err) => {
 		t.fail('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err);
@@ -181,23 +181,4 @@ function instantiateChaincodeForError(request, error_snip, t) {
 		t.fail('Test failed due to unexpected reasons. ' + err);
 		t.end();
 	});
-}
-
-function checkResults(results, error_snip, t) {
-	var proposalResponses = results[0];
-	for(var i in proposalResponses) {
-		let proposal_response = proposalResponses[i];
-		if(proposal_response instanceof Error) {
-			logger.info(' Got the error ==>%s<== when looking for %s', proposal_response,error_snip);
-			if(proposal_response.toString().indexOf(error_snip) > 0) {
-				t.pass(' Successfully got the error '+ error_snip);
-			}
-			else {
-				t.fail(' Failed to get error '+ error_snip);
-			}
-		}
-		else {
-			t.fail(' Failed to get an error returned :: No Error returned , should have had an error with '+ error_snip);
-		}
-	}
 }

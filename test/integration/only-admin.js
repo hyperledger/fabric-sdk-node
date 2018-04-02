@@ -15,19 +15,19 @@
  */
 'use strict';
 
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('ONLY-ADMIN');
+const utils = require('fabric-client/lib/utils.js');
+const logger = utils.getLogger('ONLY-ADMIN');
 
-var tape = require('tape');
-var _test = require('tape-promise');
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise');
+const test = _test(tape);
 
-var Client = require('fabric-client');
-var util = require('util');
-var fs = require('fs');
-var path = require('path');
+const Client = require('fabric-client');
+const util = require('util');
+const fs = require('fs');
+const path = require('path');
 
-var testUtil = require('../unit/util.js');
+const testUtil = require('../unit/util.js');
 
 // Testing will demostrate how the connetion profile configuration may hold a
 // admin user identity and it will be used for all fabric interactions.
@@ -42,14 +42,13 @@ var testUtil = require('../unit/util.js');
 test('\n\n***** use only admin identity  *****\n\n', async function(t) {
 	const channel_name = 'adminconfig';
 
-	let client_org1 = await getClientForOrg(t, 'org1');
-	let client_org2 = await getClientForOrg(t, 'org2');
+	const client_org1 = await getClientForOrg(t, 'org1');
+	const client_org2 = await getClientForOrg(t, 'org2');
 
-	let channel = await setupChannel(t, client_org1, client_org2, channel_name);
+	const channel = await setupChannel(t, client_org1, client_org2, channel_name);
+	const tx_id_string = await invoke(t, client_org1, channel);
 
-	let tx_id_string = await invoke(t, client_org1, channel);
 	await queries(t, client_org1, channel, tx_id_string);
-
 	await manually(t, client_org1);
 
 	t.end();
@@ -60,7 +59,7 @@ async function getClientForOrg(t, org) {
 	//  this network config does not have the client information, we will
 	//  load that later so that we can switch this client to be in a different
 	//  organization
-	var client = Client.loadFromConfig('test/fixtures/network-ad.yaml');
+	const client = Client.loadFromConfig('test/fixtures/network-ad.yaml');
 	t.pass('Successfully loaded a network configuration');
 
 	// load the client information for this organization
@@ -78,7 +77,7 @@ async function getClientForOrg(t, org) {
 	t.pass('Successfully created the key value store  and crypto store based on the config and network config');
 
 	// the network is using mutual TLS, get the client side certs from the CA
-	await getTlsCACerts(t, client);
+	await getTlsCACerts(t, client, org);
 
 	return client;
 }
@@ -87,19 +86,19 @@ async function getTlsCACerts(t, client) {
 	// get the CA associated with this client's organization
 	// ---- this must only be run after the client has been loaded with a
 	// client section of the connection profile
-	let caService = client.getCertificateAuthority();
+	const caService = client.getCertificateAuthority();
 	t.pass('Successfully got the CertificateAuthority from the client');
 
-	let request = {
+	const request = {
 		enrollmentID: 'admin',
 		enrollmentSecret: 'adminpw',
 		profile: 'tls'
 	};
-	let enrollment = await caService.enroll(request);
+	const enrollment = await caService.enroll(request);
 
 	t.pass('Successfully called the CertificateAuthority to get the TLS material');
-	let key = enrollment.key.toBytes();
-	let cert = enrollment.certificate;
+	const key = enrollment.key.toBytes();
+	const cert = enrollment.certificate;
 
 	// set the material on the client to be used when building endpoints for the user
 	client.setTlsClientCertAndKey(cert, key);
@@ -112,35 +111,35 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 	let channel_org2 = null;
 	try {
 		// get the config envelope created by the configtx tool
-		let envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/adminconfig.tx'));
+		const envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/adminconfig.tx'));
 		// Have the sdk get the config update object from the envelope.
 		// the config update object is what is required to be signed by all
 		// participating organizations
-		let config = client_org1.extractChannelConfig(envelope_bytes);
+		const config = client_org1.extractChannelConfig(envelope_bytes);
 		t.pass('Successfully extracted the config update from the configtx envelope');
 
-		let signatures = [];
+		const signatures = [];
 		// sign the config by the  admins
-		let signature1 = client_org1.signChannelConfig(config);
+		const signature1 = client_org1.signChannelConfig(config);
 		signatures.push(signature1);
 		t.pass('Successfully signed config update for org1');
-		let signature2 = client_org2.signChannelConfig(config);
+		const signature2 = client_org2.signChannelConfig(config);
 		signatures.push(signature2);
 		t.pass('Successfully signed config update for org2');
 		// now we have enough signatures...
 
 		// get an admin based transaction
-		let create_tx_id = client_org1.newTransactionID(true);
+		let tx_id = client_org1.newTransactionID(true);
 
-		let create_request = {
+		let request = {
 			config: config,
 			signatures : signatures,
 			name : channel_name,
 			orderer : 'orderer.example.com',
-			txId  : create_tx_id
+			txId  : tx_id
 		};
 
-		let create_results = await client_org1.createChannel(create_request);
+		const create_results = await client_org1.createChannel(request);
 		if(create_results.status && create_results.status === 'SUCCESS') {
 			t.pass('Successfully created the channel.');
 			await sleep(5000);
@@ -158,9 +157,9 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 		channel_org2 = client_org2.getChannel(channel_name);
 
 		// get an admin based transaction
-		let gen_tx_id = client_org1.newTransactionID(true);
+		tx_id = client_org1.newTransactionID(true);
 		request = {
-			txId : 	gen_tx_id
+			txId : 	tx_id
 		};
 
 		let genesis_block = await channel_org1.getGenesisBlock(request);
@@ -170,11 +169,11 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 		let join_monitor = buildJoinEventMonitor(t, client_org1, channel_name, 'peer0.org1.example.com');
 		promises.push(join_monitor);
 
-		let join_tx_id = client_org1.newTransactionID(true);
+		tx_id = client_org1.newTransactionID(true);
 		request = {
 			targets: ['peer0.org1.example.com'],
 			block : genesis_block,
-			txId : 	join_tx_id
+			txId : 	tx_id
 		};
 		// join request to peer on org1 as admin of org1
 		let join_promise = channel_org1.joinChannel(request, 30000);
@@ -197,11 +196,11 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 		join_monitor = buildJoinEventMonitor(t, client_org2, channel_name, 'peer0.org2.example.com');
 		promises.push(join_monitor);
 
-		join_tx_id = client_org2.newTransactionID(true);
+		tx_id = client_org2.newTransactionID(true);
 		request = {
 			targets: ['peer0.org2.example.com'],
 			block : genesis_block,
-			txId : 	join_tx_id
+			txId : 	tx_id
 		};
 		// join request to peer on org2 as admin of org2
 		join_promise = channel_org2.joinChannel(request, 30000);
@@ -224,13 +223,13 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 		 *  I N S T A L L   C H A I N C O D E
 		 */
 		process.env.GOPATH = path.join(__dirname, '../fixtures');
-		let install_tx_id = client_org1.newTransactionID(true);//get an admin transaction ID
-		var request = {
+		tx_id = client_org1.newTransactionID(true);//get an admin transaction ID
+		request = {
 			targets: ['peer0.org1.example.com'],
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
 			chaincodeVersion: 'v2',
-			txId : install_tx_id
+			txId : tx_id
 		};
 
 		// send install request as admin of org1
@@ -242,13 +241,13 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 			throw new Error('Failed to install chain code on org1');
 		}
 
-		install_tx_id = client_org2.newTransactionID(true); //get an admin transaction ID
-		var request = {
+		tx_id = client_org2.newTransactionID(true); //get an admin transaction ID
+		request = {
 			targets: ['peer0.org2.example.com'],
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
 			chaincodeVersion: 'v2',
-			txId : install_tx_id
+			txId : tx_id
 		};
 
 		// send install as org2 admin
@@ -264,20 +263,20 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 		 *  I N S T A N S I A T E
 		 */
 
-		let instan_tx_id = client_org1.newTransactionID(true);
+		tx_id = client_org1.newTransactionID(true);
 		request = {
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
 			chaincodeVersion: 'v2',
 			args: ['a', '100', 'b', '200'],
-			txId: instan_tx_id,
+			txId: tx_id,
 			targets: ['peer0.org1.example.com','peer0.org2.example.com'],
 		};
 
 		// send proposal
 		let instan_results = await channel_org1.sendInstantiateProposal(request);
-		var proposalResponses = instan_results[0];
-		var proposal = instan_results[1];
+		const proposalResponses = instan_results[0];
+		const proposal = instan_results[1];
 		if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 			t.pass('Successfully sent Proposal and received ProposalResponse');
 		} else {
@@ -285,14 +284,14 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 			throw new Error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
 		}
 
-		let commit_request = {
+		request = {
 			proposalResponses: proposalResponses,
 			proposal: proposal,
-			txId : instan_tx_id
+			txId : tx_id
 		};
 
 		// submit the transaction to the orderer
-		let commit_response = await channel_org1.sendTransaction(commit_request);
+		const commit_response = await channel_org1.sendTransaction(request);
 		if (!(commit_response instanceof Error) && commit_response.status === 'SUCCESS') {
 			t.pass('Successfully sent transaction to instantiate the chaincode to the orderer.');
 			await sleep(10000); // use sleep for now until the eventhub is integrated into the network config changes
@@ -313,10 +312,10 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 
 
 function buildJoinEventMonitor(t, client, channel_name, peer_name) {
-	let event_hub = client.getEventHub(peer_name);
-	let event_block_promise = new Promise((resolve, reject) => {
+	const event_hub = client.getEventHub(peer_name);
+	const event_block_promise = new Promise((resolve, reject) => {
 		let registration_id = null;
-		let event_timeout = setTimeout(() => {
+		const event_timeout = setTimeout(() => {
 			let message = 'REQUEST_TIMEOUT:' + event_hub._ep._endpoint.addr;
 			logger.error(message);
 			event_hub.disconnect();
@@ -329,9 +328,9 @@ function buildJoinEventMonitor(t, client, channel_name, peer_name) {
 			// ... also this will be the first block channel, and the channel may
 			// have many more blocks
 			if (block.data.data.length === 1) {
-				var channel_header = block.data.data[0].payload.header.channel_header;
+				const channel_header = block.data.data[0].payload.header.channel_header;
 				if (channel_header.channel_id === channel_name) {
-					let message = util.format('EventHub %s has reported a block update for channel %s',event_hub._ep._endpoint.addr,channel_name);
+					const message = util.format('EventHub %s has reported a block update for channel %s',event_hub._ep._endpoint.addr,channel_name);
 					t.pass(message);
 					event_hub.unregisterBlockEvent(registration_id);
 					event_hub.disconnect();
@@ -343,7 +342,7 @@ function buildJoinEventMonitor(t, client, channel_name, peer_name) {
 			}
 		}, (err) => {
 			clearTimeout(event_timeout);
-			let message = 'Problem setting up the event hub :'+ err.toString();
+			const message = 'Problem setting up the event hub :'+ err.toString();
 			t.fail(message);
 			event_hub.disconnect();
 			reject(new Error(message));
@@ -358,7 +357,7 @@ async function invoke(t, client, channel) {
 	let tx_id_string = null;
 	try {
 		// get a admin based transaction id
-		let tx_id = client.newTransactionID(true);
+		const tx_id = client.newTransactionID(true);
 		tx_id_string = tx_id.getTransactionID();
 		let request = {
 			chaincodeId : 'example',
@@ -367,13 +366,13 @@ async function invoke(t, client, channel) {
 			txId: tx_id
 		};
 
-		let results = await channel.sendTransactionProposal(request);
-		let proposalResponses = results[0];
-		let proposal = results[1];
+		const results = await channel.sendTransactionProposal(request);
+		const proposalResponses = results[0];
+		const proposal = results[1];
 		let all_good = true;
-		for(var i in proposalResponses) {
+		for(let i in proposalResponses) {
 			let one_good = false;
-			let proposal_response = proposalResponses[i];
+			const proposal_response = proposalResponses[i];
 			if( proposal_response.response && proposal_response.response.status === 200) {
 				t.pass('transaction proposal has response status of good');
 				one_good = true;
@@ -394,7 +393,7 @@ async function invoke(t, client, channel) {
 			             // that was created for the proposal that was based on the admin Identity
 		};
 
-		let responses = await send_and_wait_on_events(t, channel, request, tx_id_string);
+		const responses = await send_and_wait_on_events(t, channel, request, tx_id_string);
 		if (!(responses[0] instanceof Error) && responses[0].status === 'SUCCESS') {
 			t.pass('Successfully committed transaction ' + tx_id_string);
 			await sleep(5000);
@@ -411,13 +410,13 @@ async function invoke(t, client, channel) {
 }
 
 async function send_and_wait_on_events(t, channel, request, tx_id) {
-	let promises = [];
+	const promises = [];
 	promises.push(channel.sendTransaction(request));
 
 	let channel_event_hubs = channel.getChannelEventHubsForOrg();
 	for(let i in channel_event_hubs) {
-		let channel_event_hub = channel_event_hubs[i];
-		let event_monitor = transaction_monitor(t, channel_event_hub, tx_id);
+		const channel_event_hub = channel_event_hubs[i];
+		const event_monitor = transaction_monitor(t, channel_event_hub, tx_id);
 		promises.push(event_monitor);
 	}
 
@@ -425,8 +424,8 @@ async function send_and_wait_on_events(t, channel, request, tx_id) {
 }
 
 function transaction_monitor(t, channel_event_hub, tx_id) {
-	let a_promise = new Promise((resolve, reject) => {
-		let handle = setTimeout(() => {
+	const a_promise = new Promise((resolve, reject) => {
+		const handle = setTimeout(() => {
 			t.fail('Timeout - Failed to receive event for tx_id '+ tx_id);
 			channel_event_hub.disconnect(); //shutdown
 			throw new Error('TIMEOUT - no event received');
@@ -445,7 +444,7 @@ function transaction_monitor(t, channel_event_hub, tx_id) {
 			// ChannelEventHub after the event we are looking for comes in
 			{disconnect: true}
 		);
-		t.pass('Successfully registered event for '+tx_id);
+		t.pass('Successfully registered event for ' + tx_id);
 
 		// this connect will send a request to the peer event service that has
 		// been signed by the admin identity
@@ -458,13 +457,13 @@ function transaction_monitor(t, channel_event_hub, tx_id) {
 
 async function queries(t, client, channel, tx_id_string) {
 	try {
-		let request = {
+		const request = {
 			chaincodeId : 'example',
 			fcn: 'query',
 			args: ['b']
 		};
 
-		let response_payloads = await channel.queryByChaincode(request, true);
+		const response_payloads = await channel.queryByChaincode(request, true);
 		if (response_payloads) {
 			for(let i = 0; i < response_payloads.length; i++) {
 				t.pass('Successfully got query results :: '+ response_payloads[i].toString('utf8'));
@@ -522,20 +521,20 @@ async function queries(t, client, channel, tx_id_string) {
 async function manually(t, client) {
 	try {
 		let data = fs.readFileSync(path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/keystore/ef8e88d28a86f23466ad378003d819561adbedc77fe90cc250424ce4de179a3c_sk'));
-		let key = data;
-		let keyPem = Buffer.from(data).toString();
+		const key = data;
+		const keyPem = Buffer.from(data).toString();
 		data = fs.readFileSync(path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/signcerts/Admin@example.com-cert.pem'));
-		let cert = Buffer.from(data).toString();
+		const cert = Buffer.from(data).toString();
 		data = fs.readFileSync(path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'));
-		let pem = Buffer.from(data).toString();
+		const pem = Buffer.from(data).toString();
 		t.pass('Successfully read all crypto material');
 
 		client.setAdminSigningIdentity(key, cert, 'OrdererMSP');
 		t.pass('Successfully set the client with admin signing identity');
 
-		let sys_channel = client.newChannel('testchainid');
+		const sys_channel = client.newChannel('testchainid');
 
-		let options = {
+		const options = {
 			pem: pem,
 			'ssl-target-name-override': 'orderer.example.com'
 		};
@@ -544,7 +543,7 @@ async function manually(t, client) {
 		// information into the options object used to create the orderer
 		client.addTlsClientCertAndKey(options);
 
-		let orderer = client.newOrderer(
+		const orderer = client.newOrderer(
 			'grpcs://localhost:7050',
 			options
 		);
@@ -560,7 +559,7 @@ async function manually(t, client) {
 
 		// this will create the user and also assign it to client instance
 		// as a userContext
-		let user = await client.createUser({
+		const user = await client.createUser({
 			username: 'ordererAdmin',
 			mspid: 'OrdererMSP',
 			cryptoContent: { privateKeyPEM: keyPem, signedCertPEM: cert }
