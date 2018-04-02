@@ -819,7 +819,7 @@ var EventHub = class {
 					logger.debug('_processChainCodeOnEvents - ccEvent %s',ccEvent);
 					var cbtable = this._chaincodeRegistrants[ccEvent.chaincode_id];
 					if (!cbtable) {
-						return;
+						continue;
 					}
 					cbtable.forEach(function(cbe) {
 						if (cbe.eventNameFilter.test(ccEvent.event_name)) {
