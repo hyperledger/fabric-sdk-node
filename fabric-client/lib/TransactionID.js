@@ -7,10 +7,10 @@
 
 'use strict';
 
-var sdkUtils = require('./utils.js');
-var logger = sdkUtils.getLogger('TransactionID.js');
-var User = require('./User.js');
-var hashPrimitives = require('./hash.js');
+const sdkUtils = require('./utils.js');
+const logger = sdkUtils.getLogger('TransactionID.js');
+const User = require('./User.js');
+const hashPrimitives = require('./hash.js');
 
 
 /**
@@ -20,61 +20,61 @@ var hashPrimitives = require('./hash.js');
  *
  * @class
  */
-var TransactionID = class {
+class TransactionID {
 
 	/**
-	 * Builds a new tranaction Id based on a user's certificate and an automatically
-	 * generates a nonce value.
-	 * @param {Identity} signer_or_userContext - An instance of {@link Identity} that provides an unique
-	 *                 base for this transaction id. This also may be an instance of a {@User}.
-	 * @param {boolean} admin - Indicates that this instance will be used for administrative  transactions.
-	 */
+     * Builds a new transaction Id based on a user's certificate and an automatically
+     * generates a nonce value.
+     * @param {Identity} signer_or_userContext - An instance of {@link Identity} that provides an unique
+     *                 base for this transaction id. This also may be an instance of a {@User}.
+     * @param {boolean} admin - Indicates that this instance will be used for administrative  transactions.
+     */
 	constructor(signer_or_userContext, admin) {
-		logger.debug('const - start');
-		if (typeof signer_or_userContext === 'undefined' || signer_or_userContext === null) {
+		logger.debug('constructor - start');
+		if (!signer_or_userContext) {
 			throw new Error('Missing userContext or signing identity parameter');
 		}
-		var signer = null;
-		if((User.isInstance(signer_or_userContext))) {
+		let signer = null;
+		if ((User.isInstance(signer_or_userContext))) {
 			signer = signer_or_userContext.getSigningIdentity();
 		} else {
 			signer = signer_or_userContext;
 		}
 
 		this._nonce = sdkUtils.getNonce(); //nonce is in bytes
-		let creator_bytes = signer.serialize();//same as signatureHeader.Creator
-		let trans_bytes = Buffer.concat([this._nonce, creator_bytes]);
-		let trans_hash = hashPrimitives.sha2_256(trans_bytes);
+		const creator_bytes = signer.serialize();//same as signatureHeader.Creator
+		const trans_bytes = Buffer.concat([this._nonce, creator_bytes]);
+		const trans_hash = hashPrimitives.SHA2_256(trans_bytes);
 		this._transaction_id = Buffer.from(trans_hash).toString();
-		logger.debug('const - transaction_id %s',this._transaction_id);
+		logger.debug('const - transaction_id %s', this._transaction_id);
 
 		this._admin = admin;
 	}
 
 	/**
-	 * The transaction ID
-	 */
+     * The transaction ID
+     */
 	getTransactionID() {
 		return this._transaction_id;
 	}
 
 	/**
-	 * The nonce value
-	 */
+     * The nonce value
+     */
 	getNonce() {
 		return this._nonce;
 	}
 
 	/**
-	 * indicates if this transactionID was generated for an admin
-	 */
+     * indicates if this transactionID was generated for an admin
+     */
 	isAdmin() {
-		if(this._admin) {
+		if (this._admin) {
 			return true;
 		} else {
 			return false;
 		}
 	}
-};
+}
 
 module.exports = TransactionID;

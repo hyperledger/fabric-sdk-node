@@ -7,14 +7,14 @@
 
 'use strict';
 
-var Hash = require('../../hash.js');
-var utils = require('../../utils.js');
-var jsrsa = require('jsrsasign');
-var asn1 = jsrsa.asn1;
-var KEYUTIL = jsrsa.KEYUTIL;
-var ECDSA = jsrsa.ECDSA;
+const Hash = require('../../hash.js');
+const utils = require('../../utils.js');
+const jsrsa = require('jsrsasign');
+const asn1 = jsrsa.asn1;
+const KEYUTIL = jsrsa.KEYUTIL;
+const ECDSA = jsrsa.ECDSA;
 
-var logger = utils.getLogger('ecdsa/key.js');
+const logger = utils.getLogger('ecdsa/key.js');
 
 /**
  * This module implements the {@link module:api.Key} interface, for ECDSA.
@@ -53,15 +53,15 @@ module.exports = class ECDSA_KEY {
 	 * @returns {string} a string representation of the hash from a sequence based on the private key bytes
 	 */
 	getSKI() {
-		var buff;
+		let buff;
 
-		var pointToOctet = function(key) {
-			var byteLen = (key.ecparams.keylen + 7) >> 3;
-			let buff = Buffer.allocUnsafe(1 + 2 * byteLen);
+		const pointToOctet = function(key) {
+			const byteLen = (key.ecparams.keylen + 7) >> 3;
+			const buff = Buffer.allocUnsafe(1 + 2 * byteLen);
 			buff[0] = 4; // uncompressed point (https://www.security-audit.com/files/x9-62-09-20-98.pdf, section 4.3.6)
-			var xyhex = key.getPublicKeyXYHex();
-			var xBuffer = Buffer.from(xyhex.x, 'hex');
-			var yBuffer = Buffer.from(xyhex.y, 'hex');
+			const xyhex = key.getPublicKeyXYHex();
+			const xBuffer = Buffer.from(xyhex.x, 'hex');
+			const yBuffer = Buffer.from(xyhex.y, 'hex');
 			logger.debug('ECDSA curve param X: %s', xBuffer.toString('hex'));
 			logger.debug('ECDSA curve param Y: %s', yBuffer.toString('hex'));
 			xBuffer.copy(buff, 1 + byteLen - xBuffer.length);
@@ -77,7 +77,7 @@ module.exports = class ECDSA_KEY {
 		}
 
 		// always use SHA256 regardless of the key size in effect
-		return Hash.sha2_256(buff);
+		return Hash.SHA2_256(buff);
 	}
 
 	isSymmetric() {
@@ -95,7 +95,7 @@ module.exports = class ECDSA_KEY {
 		if (this._key.isPublic)
 			return this;
 		else {
-			var f = new ECDSA({ curve: this._key.curveName });
+			const f = new ECDSA({ curve: this._key.curveName });
 			f.setPublicKeyHex(this._key.pubKeyHex);
 			f.isPrivate = false;
 			f.isPublic = true;
@@ -118,7 +118,7 @@ module.exports = class ECDSA_KEY {
 		}
 
 		try {
-			var csr = asn1.csr.CSRUtil.newCSRPEM({
+			const csr = asn1.csr.CSRUtil.newCSRPEM({
 				subject: { str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
 				sbjpubkey: this.getPublicKey()._key,
 				sigalg: 'SHA256withECDSA',
@@ -145,7 +145,7 @@ module.exports = class ECDSA_KEY {
 			return false;
 		}
 
-		let key = object._key;
+		const key = object._key;
 		return (key.type && key.type === 'EC' &&
 			typeof key.prvKeyHex !== 'undefined' && // prvKeyHex value can be null for public keys, so need to check typeof here
 			typeof key.pubKeyHex === 'string'); // pubKeyHex must have a non-null value

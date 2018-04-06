@@ -281,9 +281,7 @@ var Client = class extends BaseClient {
 	 * @returns {Peer} The Peer instance.
 	 */
 	newPeer(url, opts) {
-		let	peer = new Peer(url, opts);
-
-		return peer;
+		return new Peer(url, opts);
 	}
 
 	/**

@@ -87,17 +87,6 @@ The unit test assumes slot '0' and user PIN `98765432`. If your configuration is
 * PKCS11_PIN
 * PKCS11_SLOT
 
-### Contributor Check-list
-The following check-list is for code contributors to make sure their changesets are compliant to the coding standards and avoid time wasted in rejected changesets:
-
-Check the coding styles, run the following command and make sure no ESLint violations are present:
-* `gulp`
-
-Run the full unit test bucket and make sure 100% are passing.  Because v1.0 is still in active development, all tests may not pass. You can run each individually to isolate the failure(s):
-* `gulp test`
-
-The gulp test command above also generates code coverage reports. Your new code should be accompanied with unit tests and provide 80% line coverage or higher.
-
 ### Hyperledger Fabric Client objects and reference documentation
 For a high-level design specificiation for Fabric SDKs of all languages, visit [this google doc](https://docs.google.com/document/d/1R5RtIBMW9fZpli37E5Li5_Q9ve3BnQ4q3gWmGZj6Sv4/edit?usp=sharing) (Work-In-Progress).
 
@@ -117,6 +106,10 @@ HFC defines the following abstract classes for application developers to supply 
 2. The cryptography suite used by the default implementation uses ECDSA for asymmetric keys cryptography, AES for encryption and SHA2/3 for secure hashes. A different suite can be plugged in with "CRYPTO_SUITE" environment variable specifying full require() path to the alternative implementation of the api.CrytoSuite abstract class.
 
 3. If the user application uses an alternative membership service than the one provided by the component `fabric-ca`, the client code will likely need to use an alternative client to `fabric-ca-client` to interact with that membership service.
+
+### Contributing
+
+Check [the documentation](./CONTRIBUTING.md) on how to contribute to this project for the full details.
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
 s

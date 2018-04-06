@@ -270,6 +270,10 @@ module.exports.CryptoAlgorithms = {
 	SHA256: 'SHA256',
 	// SHA384
 	SHA384: 'SHA384',
+	// SHA256
+	SHA2_256: 'SHA256',
+	// SHA384
+	SHA2_384: 'SHA384',
 	// SHA3_256
 	SHA3_256: 'SHA3_256',
 	// SHA3_384
@@ -277,4 +281,31 @@ module.exports.CryptoAlgorithms = {
 
 	// X509Certificate Label for X509 certificate related operation
 	X509Certificate: 'X509Certificate'
+};
+
+/**
+ * Base class for hash primitives.
+ * @type {Hash}
+ */
+module.exports.Hash = class {
+	constructor(blockSize) {
+		this._blockSize = blockSize;
+		this.reset();
+	}
+
+	hash(data) {
+		return this.reset().update(data).finalize();
+	}
+
+	reset() {
+		return this;
+	}
+
+	update(data) {
+		this._hash.update(data);
+		return this;
+	}
+
+	finalize() {
+	}
 };

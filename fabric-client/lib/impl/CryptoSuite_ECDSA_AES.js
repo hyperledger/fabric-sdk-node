@@ -8,21 +8,21 @@
 'use strict';
 
 // requires
-var api = require('../api.js');
+const api = require('../api.js');
 
-var elliptic = require('elliptic');
-var EC = elliptic.ec;
-var jsrsa = require('jsrsasign');
-var KEYUTIL = jsrsa.KEYUTIL;
-var util = require('util');
-var BN = require('bn.js');
-var Signature = require('elliptic/lib/elliptic/ec/signature.js');
+const elliptic = require('elliptic');
+const EC = elliptic.ec;
+const jsrsa = require('jsrsasign');
+const {KEYUTIL} = jsrsa;
+const util = require('util');
+const BN = require('bn.js');
+const Signature = require('elliptic/lib/elliptic/ec/signature.js');
 
-var hashPrimitives = require('../hash.js');
-var utils = require('../utils');
-var ECDSAKey = require('./ecdsa/key.js');
+const hashPrimitives = require('../hash.js');
+const utils = require('../utils');
+const ECDSAKey = require('./ecdsa/key.js');
 
-var logger = utils.getLogger('crypto_ecdsa_aes');
+const logger = utils.getLogger('crypto_ecdsa_aes');
 
 /**
  * The {@link module:api.CryptoSuite} implementation for ECDSA, and AES algorithms using software key generation.
@@ -31,84 +31,67 @@ var logger = utils.getLogger('crypto_ecdsa_aes');
  * @class
  * @extends module:api.CryptoSuite
  */
-var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
+class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 
 	/**
-	 * constructor
-	 *
-	 * @param {number} keySize Key size for the ECDSA algorithm, can only be 256 or 384
-	 * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
-	 */
+     * constructor
+     *
+     * @param {number} keySize Key size for the ECDSA algorithm, can only be 256 or 384
+     * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
+     */
 	constructor(keySize, hash) {
-		logger.debug('constructor, keySize: ' + keySize);
-		super();
-
+		if (!keySize) throw new Error('keySize must be specified');
 		if (keySize !== 256 && keySize !== 384) {
 			throw new Error('Illegal key size: ' + keySize + ' - this crypto suite only supports key sizes 256 or 384');
 		}
-		if (typeof hash === 'string' && hash !== null && hash !== '') {
-			this._hashAlgo = hash;
+		let hashAlgo;
+		if (hash && typeof hash === 'string') {
+			hashAlgo = hash;
 		} else {
-			this._hashAlgo = utils.getConfigSetting('crypto-hash-algo');
+			hashAlgo = utils.getConfigSetting('crypto-hash-algo');
 		}
+		if (!hashAlgo || typeof hashAlgo !== 'string')
+			throw new Error(util.format('Unsupported hash algorithm: %j', hashAlgo));
+		hashAlgo = hashAlgo.toUpperCase();
+		const hashPair = `${hashAlgo}_${keySize}`;
+		if (!api.CryptoAlgorithms[hashPair] || !hashPrimitives[hashPair])
+			throw Error(util.format('Unsupported hash algorithm and key size pair: %s', hashPair));
+		super();
 		this._keySize = keySize;
+		this._hashAlgo = hashAlgo;
 		this._cryptoKeyStore = null;
 
-		this._initialize();
-
-	}
-
-	/**
-	 * Set the cryptoKeyStore.
-	 *
-	 * When the application needs to use a key store other than the default,
-	 * it should use the {@link Client} newCryptoKeyStore to create an instance and
-	 * use this function to set the instance on the CryptoSuite.
-	 *
-	 * @param {CryptoKeyStore} cryptoKeyStore The cryptoKeyStore.
-	 */
-	setCryptoKeyStore(cryptoKeyStore) {
-		this._cryptoKeyStore = cryptoKeyStore;
-	}
-
-	_initialize() {
-		if (this._keySize === 256) {
-			this._curveName = 'secp256r1';
-			this._ecdsaCurve = elliptic.curves['p256'];
-		} else if (this._keySize === 384) {
-			this._curveName = 'secp384r1';
-			this._ecdsaCurve = elliptic.curves['p384'];
-		}
+		this._curveName = `secp${keySize}r1`;
+		this._ecdsaCurve = elliptic.curves[`p${keySize}`];
 
 		// hash function must be set carefully to produce the hash size compatible with the key algorithm
 		// https://www.ietf.org/rfc/rfc5480.txt (see page 9 "Recommended key size, digest algorithm and curve")
 
 		logger.debug('Hash algorithm: %s, hash output size: %s', this._hashAlgo, this._keySize);
 
-		switch (this._hashAlgo.toLowerCase() + '-' + this._keySize) {
-		case 'sha3-256':
-			this._hashFunction = hashPrimitives.sha3_256;
-			break;
-		case 'sha3-384':
-			this._hashFunction = hashPrimitives.sha3_384;
-			break;
-		case 'sha2-256':
-			this._hashFunction = hashPrimitives.sha2_256;
-			break;
-		case 'sha2-384':
-			this._hashFunction = hashPrimitives.sha2_384;
-			break;
-		default:
-			throw Error(util.format('Unsupported hash algorithm and key size pair: %s-%s', this._hashAlgo, this._keySize));
-		}
+		this._hashFunction = hashPrimitives[hashPair];
 
 		this._hashOutputSize = this._keySize / 8;
 
 		this._ecdsa = new EC(this._ecdsaCurve);
+
+	}
+
+	/**
+     * Set the cryptoKeyStore.
+     *
+     * When the application needs to use a key store other than the default,
+     * it should use the {@link Client} newCryptoKeyStore to create an instance and
+     * use this function to set the instance on the CryptoSuite.
+     *
+     * @param {CryptoKeyStore} cryptoKeyStore The cryptoKeyStore.
+     */
+	setCryptoKeyStore(cryptoKeyStore) {
+		this._cryptoKeyStore = cryptoKeyStore;
 	}
 
 	generateKey(opts) {
-		var pair = KEYUTIL.generateKeypair('EC', this._curveName);
+		const pair = KEYUTIL.generateKeypair('EC', this._curveName);
 
 		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
 			logger.debug('generateKey, ephemeral true, Promise resolved');
@@ -118,9 +101,9 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 				throw new Error('generateKey opts.ephemeral is false, which requires CryptoKeyStore to be set.');
 			}
 			// unless "opts.ephemeral" is explicitly set to "true", default to saving the key
-			var key = new ECDSAKey(pair.prvKeyObj);
+			const key = new ECDSAKey(pair.prvKeyObj);
 
-			var self = this;
+			const self = this;
 			return new Promise((resolve, reject) => {
 				self._cryptoKeyStore._getKeyStore()
 					.then((store) => {
@@ -138,21 +121,21 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#deriveKey}
-	 * To be implemented
-	 */
+     * This is an implementation of {@link module:api.CryptoSuite#deriveKey}
+     * To be implemented
+     */
 	deriveKey(key, opts) {
-		if (key || opts);
+		if (key || opts) ;
 		throw new Error('Not implemented yet');
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
-	 * To be implemented
-	 */
+     * This is an implementation of {@link module:api.CryptoSuite#importKey}
+     * To be implemented
+     */
 	importKey(pem, opts) {
 		logger.debug('importKey - start');
-		var store_key = true; //default
+		let store_key = true; //default
 		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
 			store_key = false;
 		}
@@ -160,7 +143,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 			throw new Error('importKey opts.ephemeral is false, which requires CryptoKeyStore to be set.');
 		}
 
-		var self = this;
+		const self = this;
 		// attempt to import the raw content, assuming it's one of the following:
 		// X.509v1/v3 PEM certificate (RSA/DSA/ECC)
 		// PKCS#8 PEM RSA/DSA/ECC public key
@@ -169,11 +152,11 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		// TODO: add support for the following passcode-protected PEM formats
 		// - PKCS#5 encrypted PEM RSA/DSA private
 		// - PKCS#8 encrypted PEM RSA/ECDSA private key
-		var pemString = Buffer.from(pem).toString();
+		let pemString = Buffer.from(pem).toString();
 		pemString = makeRealPem(pemString);
-		var key = null;
-		var theKey = null;
-		var error = null;
+		let key = null;
+		let theKey = null;
+		let error = null;
 		try {
 			key = KEYUTIL.getKey(pemString);
 		} catch (err) {
@@ -215,8 +198,8 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	}
 
 	getKey(ski) {
-		var self = this;
-		var store;
+		const self = this;
+		let store;
 
 		if (!self._cryptoKeyStore) {
 			throw new Error('getKey requires CryptoKeyStore to be set.');
@@ -231,7 +214,7 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 						return resolve(key);
 
 					if (key !== null) {
-						var pubKey = KEYUTIL.getKey(key);
+						const pubKey = KEYUTIL.getKey(key);
 						return resolve(new ECDSAKey(pubKey));
 					}
 				}).catch((err) => {
@@ -242,18 +225,18 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#hash}
-	 * The opts argument is not supported.
-	 */
+     * This is an implementation of {@link module:api.CryptoSuite#hash}
+     * The opts argument is not supported.
+     */
 	hash(msg, opts) {
-		if (opts);
+		if (opts) ;
 		return this._hashFunction(msg);
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#sign}
-	 * Signs digest using key k.
-	 */
+     * This is an implementation of {@link module:api.CryptoSuite#sign}
+     * Signs digest using key k.
+     */
 	sign(key, digest) {
 		if (typeof key === 'undefined' || key === null) {
 			throw new Error('A valid key is required to sign');
@@ -265,8 +248,8 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 
 		// Note that the statement below uses internal implementation specific to the
 		// module './ecdsa/key.js'
-		var signKey = this._ecdsa.keyFromPrivate(key._key.prvKeyHex, 'hex');
-		var sig = this._ecdsa.sign(digest, signKey);
+		const signKey = this._ecdsa.keyFromPrivate(key._key.prvKeyHex, 'hex');
+		let sig = this._ecdsa.sign(digest, signKey);
 		sig = _preventMalleability(sig, key._key.ecparams);
 		logger.debug('ecdsa signature: ', sig);
 		return sig.toDER();
@@ -290,29 +273,29 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 			return false;
 		}
 
-		var pubKey = this._ecdsa.keyFromPublic(key.getPublicKey()._key.pubKeyHex, 'hex');
+		const pubKey = this._ecdsa.keyFromPublic(key.getPublicKey()._key.pubKeyHex, 'hex');
 		// note that the signature is generated on the hash of the message, not the message itself
 		return pubKey.verify(this.hash(digest), signature);
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#encrypt}
-	 * To be implemented.
-	 */
+     * This is an implementation of {@link module:api.CryptoSuite#encrypt}
+     * To be implemented.
+     */
 	encrypt(key, plainText, opts) {
-		if (key || plainText || opts);
+		if (key || plainText || opts) ;
 		throw new Error('Not implemented yet');
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#decrypt}
-	 * To be implemented.
-	 */
+     * This is an implementation of {@link module:api.CryptoSuite#decrypt}
+     * To be implemented.
+     */
 	decrypt(key, cipherText, opts) {
-		if (key || cipherText || opts);
+		if (key || cipherText || opts) ;
 		throw new Error('Not implemented yet');
 	}
-};
+}
 
 // [Angelo De Caro] ECDSA signatures do not have unique representation and this can facilitate
 // replay attacks and more. In order to have a unique representation,
@@ -331,16 +314,16 @@ const halfOrdersForCurve = {
 };
 
 function _preventMalleability(sig, curveParams) {
-	var halfOrder = halfOrdersForCurve[curveParams.name];
+	const halfOrder = halfOrdersForCurve[curveParams.name];
 	if (!halfOrder) {
 		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curveParams.name);
 	}
 
 	// in order to guarantee 's' falls in the lower range of the order, as explained in the above link,
 	// first see if 's' is larger than half of the order, if so, it needs to be specially treated
-	if (sig.s.cmp(halfOrder) == 1) { // module 'bn.js', file lib/bn.js, method cmp()
+	if (sig.s.cmp(halfOrder) === 1) { // module 'bn.js', file lib/bn.js, method cmp()
 		// convert from BigInteger used by jsrsasign Key objects and bn.js used by elliptic Signature objects
-		var bigNum = new BN(curveParams.n.toString(16), 16);
+		const bigNum = new BN(curveParams.n.toString(16), 16);
 		sig.s = bigNum.sub(sig.s);
 	}
 
@@ -348,20 +331,20 @@ function _preventMalleability(sig, curveParams) {
 }
 
 function _checkMalleability(sig, curveParams) {
-	var halfOrder = halfOrdersForCurve[curveParams.name];
+	const halfOrder = halfOrdersForCurve[curveParams.name];
 	if (!halfOrder) {
 		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curveParams.name);
 	}
 
 	// first need to unmarshall the signature bytes into the object with r and s values
-	var sigObject = new Signature(sig, 'hex');
+	const sigObject = new Signature(sig, 'hex');
 	if (!sigObject.r || !sigObject.s) {
 		throw new Error('Failed to load the signature object from the bytes.');
 	}
 
 	// in order to guarantee 's' falls in the lower range of the order, as explained in the above link,
 	// first see if 's' is larger than half of the order, if so, it is considered invalid in this context
-	if (sigObject.s.cmp(halfOrder) == 1) { // module 'bn.js', file lib/bn.js, method cmp()
+	if (sigObject.s.cmp(halfOrder) === 1) { // module 'bn.js', file lib/bn.js, method cmp()
 		return false;
 	}
 
@@ -370,8 +353,8 @@ function _checkMalleability(sig, curveParams) {
 
 // Utilitly method to make sure the start and end markers are correct
 function makeRealPem(pem) {
-	var result = null;
-	if (typeof pem == 'string') {
+	let result = null;
+	if (typeof pem === 'string') {
 		result = pem.replace(/-----BEGIN -----/, '-----BEGIN CERTIFICATE-----');
 		result = result.replace(/-----END -----/, '-----END CERTIFICATE-----');
 		result = result.replace(/-----([^-]+) ECDSA ([^-]+)-----([^-]*)-----([^-]+) ECDSA ([^-]+)-----/, '-----$1 EC $2-----$3-----$4 EC $5-----');
