@@ -47,7 +47,7 @@ test('\n\n***** Node-Chaincode U P G R A D E flow: chaincode install *****\n\n',
 });
 
 test('\n\n***** Node-Chaincode U P G R A D E flow: upgrade chaincode *****\n\n', (t) => {
-	e2eUtils.instantiateChaincode('org1', testUtil.NODE_CHAINCODE_UPGRADE_PATH, version, 'node', true, t)
+	e2eUtils.instantiateChaincode('org1', testUtil.NODE_CHAINCODE_UPGRADE_PATH, version, 'node', true, true, t)
 		.then((result) => {
 			if (result) {
 				t.pass('Successfully upgrade chaincode on the channel');

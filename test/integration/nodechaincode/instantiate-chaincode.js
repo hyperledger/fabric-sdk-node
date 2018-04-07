@@ -32,7 +32,7 @@ var testUtil = require('../../unit/util.js');
 
 
 test('\n\n***** Node-Chaincode End-to-end flow: instantiate chaincode *****\n\n', (t) => {
-	e2eUtils.instantiateChaincode('org1', testUtil.NODE_CHAINCODE_PATH, 'v0', 'node', false, t)
+	e2eUtils.instantiateChaincode('org1', testUtil.NODE_CHAINCODE_PATH, 'v0', 'node', false, false, t)
 		.then((result) => {
 			if(result){
 				t.pass('Successfully instantiated chaincode on the channel');

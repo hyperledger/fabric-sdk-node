@@ -32,201 +32,199 @@ var e2eUtils = require('./e2e/e2eUtils.js');
 var testUtil = require('../unit/util.js');
 var Client = require('fabric-client');
 
-var e2e = testUtil.END2END;
+const GRPC_SEND = 'grpc.max_send_message_length';
+const GRPC_RECEIVE = 'grpc.max_receive_message_length';
+const SDK_SEND = 'grpc-max-send-message-length'; //legacy v1.0 way of setting the max
+const SDK_RECEIVE = 'grpc-max-receive-message-length'; //legacy v1.0 way of setting the max
 
 /*
  * The test depends on an existing channel 'mychannel'
  */
-test('\n\n*** GRPC communication tests ***\n\n', (t) => {
+test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 	testUtil.resetDefaults();
-
-	// test grpc message size limit
-	var client = new Client();
-	var channel = client.newChannel(e2e.channel);
-	var ORGS = Client.getConfigSetting('test-network');
-	var userOrg = 'org1';
-	var orgName = ORGS[userOrg].name;
-	var submitter;
-	var tlsInfo = null;
-
-	var cryptoSuite = Client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
-	client.setCryptoSuite(cryptoSuite);
-
-	var junkpath = path.join(__dirname, '../fixtures/src/github.com/example_cc/junk.go');
-	// create a file of size 1M
-	fs.writeFile(junkpath, crypto.randomBytes(1024 * 1024));
-
-	// override t.end function so it'll always disconnect the event hub
-	t.end = ((context, file, f) => {
-		return function() {
-			fs.unlinkSync(file);
-
-			f.apply(context, arguments);
-		};
-	})(t, junkpath, t.end);
-
 	testUtil.setupChaincodeDeploy();
 
-	//force the use of the old v1.0 way
-	utils.setConfigSetting('grpc.max_send_message_length', 0);
-	// limit the send message size to 1M
-	utils.setConfigSetting('grpc-max-send-message-length', 1024 * 1024);
-	// now that we have set the config setting, create a new peer so that it will
-	// pick up the settings which are only done when the peer is created.
-	e2eUtils.tlsEnroll(userOrg)
-	.then((enrollment) => {
-		t.pass('Successfully retrieved TLS certificate');
-		tlsInfo = enrollment;
-		return e2eUtils.installChaincode(userOrg, testUtil.CHAINCODE_PATH, null, 'v2', 'golang', t, true);
-	}).then(() => {
-		t.fail('Should have failed because the file size is too big for grpc send messages');
-		t.end();
-	}, (err) => {
-		if (err.message && err.message.indexOf('Sent message larger than max') >= 0) {
-			t.pass('Successfully received the error message due to large message size');
-		} else {
-			t.fail(util.format('Unexpected error: %s' + err.stack ? err.stack : err));
-		}
-
-		// now dial the send limit up
-		utils.setConfigSetting('grpc.max_send_message_length', 1024 * 1024 * 2);
-		// be sure to create a new peer to pick up the new settings
-
-		return e2eUtils.installChaincode('org1', testUtil.CHAINCODE_PATH, null, 'v2', 'golang', t, true);
-	}).then(() => {
-		t.pass('Successfully tested setting grpc send limit');
-
-		Client.addConfigFile(path.join(__dirname, './e2e/config.json'));
-
-		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
-	}).then((store) => {
+	try {
+		// setup client , including user and tls mutual certs
+		const client = new Client();
+		const channel_name = testUtil.END2END.channel;
+		const channel = client.newChannel(channel_name);
+		const ORGS = Client.getConfigSetting('test-network');
+		const userOrg = 'org1';
+		const orgName = ORGS[userOrg].name;
+		const url = ORGS[userOrg].peer1.requests;
+		const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
+		const cryptoSuite = Client.newCryptoSuite();
+		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+		client.setCryptoSuite(cryptoSuite);
+		const tlsInfo = await e2eUtils.tlsEnroll(userOrg);
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		client.setStateStore(store);
+		await testUtil.getSubmitter(client, t, userOrg, true);
 
-		return testUtil.getSubmitter(client, t, userOrg, true);
-	}).then((admin) => {
+		// make sure chaincode is installed that has the echo function
+		const go_cc = testUtil.END2END.chaincodeId;
+		const node_cc = testUtil.NODE_END2END.chaincodeId;
+		const version = 'v'+ (new Date()).getTime();
+		await e2eUtils.installChaincode(userOrg, testUtil.CHAINCODE_UPGRADE_PATH, testUtil.METADATA_PATH, version, 'golang', t, true);
+		await e2eUtils.installChaincode('org2', testUtil.CHAINCODE_UPGRADE_PATH, testUtil.METADATA_PATH, version, 'golang', t, true);
+		await e2eUtils.instantiateChaincode(userOrg, testUtil.CHAINCODE_UPGRADE_PATH, version, 'golang', true, false, t);
+		await e2eUtils.installChaincode(userOrg, testUtil.NODE_CHAINCODE_UPGRADE_PATH, testUtil.METADATA_PATH, version, 'node', t, true);
+		await e2eUtils.installChaincode('org2', testUtil.NODE_CHAINCODE_UPGRADE_PATH, testUtil.METADATA_PATH, version, 'node', t, true);
+		await e2eUtils.instantiateChaincode(userOrg, testUtil.NODE_CHAINCODE_UPGRADE_PATH, version, 'node', true, false, t);
 
-		submitter = admin;
-		//force the use of the old v1.0 way
-		utils.setConfigSetting('grpc.max_receive_message_length', 0);
-		// limit the send message size to 1M
-		utils.setConfigSetting('grpc-max-receive-message-length', 10);
-		// for this test we only need to send to one of the peers in org1
-		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
-		let peer = client.newPeer(
-			ORGS[userOrg].peer1.requests,
-			{
-				pem: Buffer.from(data).toString(),
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
+		const connection_profile = {
+			version: '1.0',
+			organizations: {
+				Org1: {
+					mspid: 'Org1MSP',
+					peers: [
+						'peer_cp'
+					]
+				}
+			},
+			peers: {
+				peer_cp: {
+					url: url,
+					grpcOptions: {
+						'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
+						'grpc.max_receive_message_length': 1024,
+					},
+					'tlsCACerts': {
+						path: path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts'])
+					}
+				}
 			}
-		);
+		};
 
-		return channel.sendTransactionProposal(buildEchoRequest(client, peer));
-	}).then((response) => {
-		var err = (response[0] && response[0][0] && response[0][0] instanceof Error) ? response[0][0] : {};
+		// setup reusable artificates
+		const opts = {
+			pem: Buffer.from(data).toString(),
+			clientCert: tlsInfo.certificate,
+			clientKey: tlsInfo.key,
+			'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname']
+		};
+		let response;
 
-		if (err.message && err.message.indexOf('Received message larger than max') >= 0) {
-			t.pass('Successfully received the error message due to large message size set using old v1.0 type setting');
-		} else {
-			t.fail(util.format('Unexpected error: %s' + err.stack ? err.stack : err));
-			t.end();
-			throw new Error('Test Failed');
-		}
+		t.pass('Successfully setup to testing environment');
 
-		// now dial the send limit up by setting to -1 for unlimited
-		utils.setConfigSetting('grpc.max_receive_message_length', -1);
+		// use the connection profile defined peer which includes a GRPC max setting
+		response = await sendToConnectionProfile(client, channel, connection_profile, go_cc, 1);
+		checkResponse(t, response, 'Test golang cc able to use connection profile set with grpc max receive', 'Received|max|1024');
+		response = await sendToConnectionProfile(client, channel, connection_profile, node_cc, 1);
+		checkResponse(t, response, 'Test node cc able to use connection profile set with grpc max receive', 'Received|max|1024');
 
-		// must re-construct a new peer instance to pick up the new setting
-		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
-		let peer = client.newPeer(
-			ORGS[userOrg].peer1.requests,
-			{
-				pem: Buffer.from(data).toString(),
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname']
-			}
-		);
+		// use the NodeSDK configuration to set the sizes
+		response = await send(client, channel, url, go_cc, opts, 1, -1, 1024, null, null);
+		checkResponse(t, response, 'Test golang cc able to set config for grpc max receive', 'Received|max|1024');
+		response = await send(client, channel, url, node_cc, opts, 1, -1, 1024, null, null);
+		checkResponse(t, response, 'Test node cc able to set config for grpc max receive', 'Received|max|1024');
 
-		return channel.sendTransactionProposal(buildEchoRequest(client, peer));
-	}).then((response) => {
-		if (response[0] && response[0][0] && response[0][0].response && response[0][0].response.status === 200)
-			t.pass('Successfully tested grpc receive message limit reset after it was set too low');
-		else
-			t.fail(util.format('Failed to effectively use config setting to control grpc receive message limit. %s', response[0][0]));
+		response = await send(client, channel, url, go_cc, opts, 1, 1024, -1, null, null);
+		checkResponse(t, response, 'Test golang cc able to set config for grpc max send', 'Sent|max|1024');
+		response = await send(client, channel, url, node_cc, opts, 1, 1024, -1, null, null);
+		checkResponse(t, response, 'Test node cc able to set config for grpc max send', 'Sent|max|1024');
 
-		// for this test we only need to send to one of the peers in org1
-		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
-		let peer = client.newPeer(
-			ORGS[userOrg].peer1.requests,
-			{
-				pem: Buffer.from(data).toString(),
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
-				// now dial the receive limit back down to reproduce the message size error
-				// notice this is another way to set a grpc setting, this will override
-				// what is in the config setting.
-				'grpc.max_receive_message_length': 10
-			}
-		);
+		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, null, 1024);
+		checkResponse(t, response, 'Test golang cc able to set config for legacy sdk max receive', 'Received|max|1024');
+		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, null, 1024);
+		checkResponse(t, response, 'Test node cc able to set config for legacy sdk max receive', 'Received|max|1024');
 
-		return channel.sendTransactionProposal(buildEchoRequest(client, peer));
-	}).then((response) => {
-		var err = (response[0] && response[0][0] && response[0][0] instanceof Error) ? response[0][0] : {};
+		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, 1024, null);
+		checkResponse(t, response, 'Test golang cc able to set config for legacy sdk max send', 'Sent|max|1024');
+		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, 1024, null);
+		checkResponse(t, response, 'Test node cc able to set config for legacy sdk max send', 'Sent|max|1024');
 
-		if (err.message && err.message.indexOf('Received message larger than max') >= 0) {
-			t.pass('Successfully received the error message due to large message size set into the options');
-		} else {
-			t.fail(util.format('Unexpected error: %s' + err.stack ? err.stack : err));
-			t.end();
-			throw new Error('Test Failed');
-		}
-		// now dial the send limit up by setting to -1 for unlimited
-		utils.setConfigSetting('grpc.max_receive_message_length', -1);
-		utils.setConfigSetting('grpc.max_send_message_length', -1);
+		// pass the size setting on the create of the peer instance as an option
+		opts[GRPC_RECEIVE] = 1024;
+		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, -1, -1);
+		checkResponse(t, response, 'Test golang cc able to set peer for grpc max receive', 'Received|max|1024');
+		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, -1, -1);
+		checkResponse(t, response, 'Test node cc able to set peer for grpc max receive', 'Received|max|1024');
+		delete opts[GRPC_RECEIVE];
 
-		let submitterCert = submitter.getIdentity()._certificate;
-		let submitterKey = submitter.getSigningIdentity()._key;
+		opts[GRPC_SEND] = 1024;
+		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, -1, -1);
+		checkResponse(t, response, 'Test golang cc able to set peer for grpc max send', 'Sent|max|1024');
+		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, -1, -1);
+		checkResponse(t, response, 'Test node cc able to set peer for grpc max send', 'Sent|max|1024');
+		delete opts[GRPC_SEND];
 
-		// must re-construct a new peer instance to pick up the new setting
-		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
-		let peer = client.newPeer(
-			ORGS[userOrg].peer1.requests,
-			{
-				pem: Buffer.from(data).toString(),
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname']
-			}
-		);
+		opts[SDK_RECEIVE] = 1024;
+		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, -1, -1);
+		checkResponse(t, response, 'Test golang cc able to set peer for legacy sdk max receive', 'Received|max|1024');
+		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, -1, -1);
+		checkResponse(t, response, 'Test node cc able to set peer for legacy sdk max receive', 'Received|max|1024');
+		delete opts[SDK_RECEIVE];
 
-		return channel.sendTransactionProposal(buildEchoRequest(client, peer));
-	}).then((response) => {
-		if (response[0] && response[0][0] && response[0][0].response && response[0][0].response.status === 200)
-			t.pass('Successfully tested grpc receive message limit');
-		else
-			t.fail(util.format('Failed to effectively use config setting to control grpc receive message limit. %s', response[0][0]));
+		opts[SDK_SEND] = 1024;
+		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, -1, -1);
+		checkResponse(t, response, 'Test golang cc able to set peer for legacy sdk max send', 'Sent|max|1024');
+		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, -1, -1);
+		checkResponse(t, response, 'Test node cc able to set peer for legacy sdk max send', 'Sent|max|1024');
 
-		t.end();
-	}).catch((err) => {
-		t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);
-		t.end();
-	});
+	} catch(error) {
+		t.fail('Failed -- '+ error);
+	}
+
+	t.end();
 });
 
-function buildEchoRequest(client, peer) {
-	let nonce = utils.getNonce();
-	let tx_id = client.newTransactionID();
+async function send(client, channel, url, cc, opts, megs, grpc_send_max, grpc_receive_max, sdk_send_max, sdk_receive_max) {
+	if(grpc_send_max !== null) utils.setConfigSetting('grpc.max_send_message_length', grpc_send_max);
+	if(grpc_receive_max !== null) utils.setConfigSetting('grpc.max_receive_message_length', grpc_receive_max);
+	if(sdk_send_max !== null) utils.setConfigSetting('grpc-max-send-message-length', sdk_send_max);
+	if(sdk_receive_max !== null) utils.setConfigSetting('grpc-max-receive-message-length', sdk_receive_max);
 
-	return {
+	let peer = client.newPeer(
+		url,
+		opts
+	);
+
+	let request = {
 		targets: [peer],
-		chaincodeId : e2e.chaincodeId,
+		chaincodeId : cc,
 		fcn: 'echo',
-		args: [crypto.randomBytes(1024 * 1024)],
-		txId: tx_id,
-		nonce: nonce
+		args: [crypto.randomBytes(megs * 1024 * 1024)],
+		txId: client.newTransactionID()
 	};
+
+	return channel.sendTransactionProposal(request);
+}
+
+async function sendToConnectionProfile(client, channel, config, cc, megs) {
+	client.loadFromConfig(config);
+	let peer = client.getPeersForOrg('Org1')[0]; // will only be one
+
+	let request = {
+		targets: [peer],
+		chaincodeId : cc,
+		fcn: 'echo',
+		args: [crypto.randomBytes(megs * 1024 * 1024)],
+		txId: client.newTransactionID()
+	};
+
+	return channel.sendTransactionProposal(request);
+}
+
+function checkResponse(t, response, message, error_message) {
+	var err = (response[0] && response[0][0] && response[0][0] instanceof Error) ? response[0][0] : {};
+	let pattern = new RegExp('\\b(' + error_message + ')', 'g');
+	let error_words_length = error_message.split('|').length;
+
+	if(err.message) {
+		if(pattern.test(err.message) && err.message.match(pattern).length == error_words_length) {
+			t.pass('Successfully ' + message);
+		} else {
+			t.fail('Failed message not match ' + error_message + ' for ' + message );
+			t.comment('Failed with error of '+ err.message);
+		}
+	} else {
+		t.fail('Failed to get an error message for '+ message);
+	}
+}
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }

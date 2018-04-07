@@ -135,8 +135,6 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'c
 		'test/integration/install.js',
 		'test/integration/events.js',
 		'test/integration/channel-event-hub.js',
-		// channel: mychannel, chaincode: end2endnodesdk:v2
-		'test/integration/grpc.js',
 		// channel: mychannel, chaincode: end2endnodesdk:v3
 		'test/integration/upgrade.js',
 		'test/integration/get-config.js',
@@ -149,6 +147,7 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'c
 		'test/integration/invoke.js',
 		'test/integration/network-config.js',
 		'test/integration/only-admin.js',
+		'test/integration/grpc.js',
 		'test/integration/perf/orderer.js',
 		'test/integration/perf/peer.js'
 	]))

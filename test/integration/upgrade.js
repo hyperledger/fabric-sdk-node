@@ -200,7 +200,7 @@ test('\n\n **** Testing re-initializing states during upgrade ****', (t) => {
 		t.fail('Failed to install chaincode in peers of organization "org1". ' + err.stack ? err.stack : err);
 		t.end();
 	}).then(() => {
-		return e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH_V2, VER, 'golang', true, t);
+		return e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH_V2, VER, 'golang', true, true, t);
 	}).then((results) => {
 		let chaincodeId = testUtil.END2END.chaincodeId;
 		logger.debug('Successfully upgraded chaincode to version v3');

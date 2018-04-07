@@ -175,7 +175,7 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 module.exports.installChaincode = installChaincode;
 
 
-function instantiateChaincode(userOrg, chaincode_path, version, language, upgrade, t){
+function instantiateChaincode(userOrg, chaincode_path, version, language, upgrade, badTransient, t){
 	init();
 
 	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -266,7 +266,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 		t.pass('Successfully initialized Channel');
 		logger.debug(' orglist:: ', channel.getOrganizations());
 		// the v1 chaincode has Init() method that expects a transient map
-		if (upgrade) {
+		if (upgrade && badTransient) {
 			// first test that a bad transient map would get the chaincode to return an error
 			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, badTransientMap);
 			tx_id = request.txId;
@@ -324,7 +324,11 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 
 			// this is the longest response delay in the test, sometimes
 			// x86 CI times out. set the per-request timeout to a super-long value
-			return channel.sendInstantiateProposal(request, 120000);
+			if(upgrade) {
+				return channel.sendUpgradeProposal(request, 120000);
+			} else {
+				return channel.sendInstantiateProposal(request, 120000);
+			}
 		}
 
 	}, (err) => {

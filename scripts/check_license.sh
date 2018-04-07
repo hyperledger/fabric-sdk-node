@@ -23,6 +23,8 @@ function filterExcludedFiles {
 		| grep -v "^Gopkg\.lock$" \
 		| grep -v "\.md$" \
 		| grep -v "\.pb\.go$" \
+		| grep -v "\.yaml$" \
+		| grep -v "\.json$" \
 		| sort -u`
 }
 

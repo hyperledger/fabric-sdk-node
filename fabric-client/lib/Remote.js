@@ -1,17 +1,8 @@
 /*
- Copyright 2016 IBM All Rights Reserved.
+ Copyright 2016, 2018 IBM All Rights Reserved.
 
- Licensed under the Apache License, Version 2.0 (the 'License');
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+ SPDX-License-Identifier: Apache-2.0
 
-		http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an 'AS IS' BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
 */
 
 'use strict';
@@ -23,6 +14,10 @@ var crypto = require('crypto');
 var utils = require('./utils.js');
 var logger = utils.getLogger('Remote.js');
 
+const MAX_SEND = 'grpc.max_send_message_length';
+const MAX_RECEIVE = 'grpc.max_receive_message_length';
+const MAX_SEND_V10 = 'grpc-max-send-message-length';
+const MAX_RECEIVE_V10 = 'grpc-max-receive-message-length';
 
 /**
  * The Remote class represents a the base class for all remote nodes, Peer, Orderer , and MemberServicespeer.
@@ -93,29 +88,37 @@ var Remote = class {
 			}
 		}
 
-		if(!this._options['grpc.max_receive_message_length']) {
-			let grpc_receive_max = utils.getConfigSetting('grpc.max_receive_message_length');
-			if(!grpc_receive_max) {
-				grpc_receive_max = utils.getConfigSetting('grpc-max-receive-message-length');
+		let grpc_receive_max;
+		if(opts && opts[MAX_RECEIVE_V10]) {
+			grpc_receive_max = opts[MAX_RECEIVE_V10];
+		}else if(opts && opts[MAX_RECEIVE]) {
+			grpc_receive_max = opts[MAX_RECEIVE];
+		} else {
+			grpc_receive_max = utils.getConfigSetting(MAX_RECEIVE_V10);
+			if(typeof grpc_receive_max === 'undefined') {
+				grpc_receive_max = utils.getConfigSetting(MAX_RECEIVE);
 			}
-			// if greater than 0, set to that specific limit
-			// if equal to -1, set to that to have no limit
-			// if 0, do not set anything to use the system default
-			if (grpc_receive_max > 0 || grpc_receive_max === -1)
-				this._options['grpc.max_receive_message_length'] = grpc_receive_max;
 		}
+		if(typeof grpc_receive_max === 'undefined') {
+			grpc_receive_max = -1; //default is unlimited
+		}
+		this._options[MAX_RECEIVE] = grpc_receive_max;
 
-		if(!this._options['grpc.max_send_message_length']) {
-			let grpc_send_max = utils.getConfigSetting('grpc.max_send_message_length');
-			if(!grpc_send_max) {
-				grpc_send_max = utils.getConfigSetting('grpc-max-send-message-length');
+		let grpc_send_max;
+		if(opts && opts[MAX_SEND_V10]) {
+			grpc_send_max = opts[MAX_SEND_V10];
+		}else if(opts && opts[MAX_SEND]) {
+			grpc_send_max = opts[MAX_SEND];
+		} else {
+			grpc_send_max = utils.getConfigSetting(MAX_SEND_V10);
+			if(typeof grpc_send_max === 'undefined') {
+				grpc_send_max = utils.getConfigSetting(MAX_SEND);
 			}
-			// if greater than 0, set to that specific limit
-			// if equal to -1, set to that to have no limit
-			// if 0, do not set anything to use the system default
-			if (grpc_send_max > 0 || grpc_send_max === -1)
-				this._options['grpc.max_send_message_length'] = grpc_send_max;
 		}
+		if(typeof grpc_send_max === 'undefined') {
+			grpc_send_max = -1; //default is unlimited
+		}
+		this._options[MAX_SEND] = grpc_send_max;
 
 		// service connection
 		this._url = url;

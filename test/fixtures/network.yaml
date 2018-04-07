@@ -162,7 +162,6 @@ orderers:
     # they will be passed in as-is to gRPC client constructor
     grpcOptions:
       ssl-target-name-override: orderer.example.com
-      grpc-max-send-message-length: 15
 
     tlsCACerts:
       path: test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem
@@ -181,7 +180,6 @@ peers:
 
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
-      grpc.http2.keepalive_time: 15
 
     tlsCACerts:
       path: test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem

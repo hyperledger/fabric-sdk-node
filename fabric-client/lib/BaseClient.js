@@ -143,6 +143,11 @@ var BaseClient = class {
 
 		return sdkUtils.getConfigSetting(name, default_value);
 	}
+	// make available from the client instance
+	getConfigSetting(name, default_value) {
+
+		return BaseClient.getConfigSetting(name, default_value);
+	}
 
 	/**
 	 * Adds a file to the top of the list of configuration setting files that are
@@ -169,8 +174,11 @@ var BaseClient = class {
 	 * @param {Object} value - The value of a setting
 	 */
 	static setConfigSetting(name, value) {
-
 		sdkUtils.setConfigSetting(name, value);
+	}
+	// make available from the client instance
+	setConfigSetting(name, value) {
+		BaseClient.setConfigSetting(name, value);
 	}
 
 	/**

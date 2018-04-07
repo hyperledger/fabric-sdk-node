@@ -61,8 +61,7 @@
     "orderer.example.com":{
       "url":"grpcs://localhost:7050",
       "grpcOptions":{
-        "ssl-target-name-override":"orderer.example.com",
-        "grpc-max-send-message-length":15
+        "ssl-target-name-override":"orderer.example.com"
       },
       "tlsCACerts":{
         "path":"test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem"
@@ -74,8 +73,7 @@
       "url":"grpcs://localhost:7051",
       "eventUrl":"grpcs://localhost:7053",
       "grpcOptions":{
-        "ssl-target-name-override":"peer0.org1.example.com",
-        "grpc.http2.keepalive_time":15
+        "ssl-target-name-override":"peer0.org1.example.com"
       },
       "tlsCACerts":{
         "path":"test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem"
