@@ -16,21 +16,22 @@
 
 'use strict';
 
-var sdkUtils = require('./utils.js');
-var clientUtils = require('./client-utils.js');
+const sdkUtils = require('./utils.js');
+const clientUtils = require('./client-utils.js');
 
-var api = require('./api.js');
-var BaseClient = require('./BaseClient.js');
-var User = require('./User.js');
-var Channel = require('./Channel.js');
-var Packager = require('./Packager.js');
-var Peer = require('./Peer.js');
-var EventHub = require('./EventHub.js');
-var Orderer = require('./Orderer.js');
-var TransactionID = require('./TransactionID.js');
-var idModule = require('./msp/identity.js');
-var SigningIdentity = idModule.SigningIdentity;
-var Signer = idModule.Signer;
+const api = require('./api.js');
+const BaseClient = require('./BaseClient.js');
+const User = require('./User.js');
+const Channel = require('./Channel.js');
+const Packager = require('./Packager.js');
+const Peer = require('./Peer.js');
+const EventHub = require('./EventHub.js');
+const ChannelEventHub = require('./ChannelEventHub');
+const Orderer = require('./Orderer.js');
+const TransactionID = require('./TransactionID.js');
+const idModule = require('./msp/identity.js');
+const SigningIdentity = idModule.SigningIdentity;
+const Signer = idModule.Signer;
 
 var util = require('util');
 var fs = require('fs-extra');
@@ -1926,3 +1927,9 @@ function _getNetworkConfig(config, client) {
 }
 
 module.exports = Client;
+module.exports.Peer = Peer;
+module.exports.EventHub = EventHub;
+module.exports.ChannelEventHub = ChannelEventHub;
+module.exports.Orderer = Orderer;
+module.exports.Channel = Channel;
+module.exports.User = User;

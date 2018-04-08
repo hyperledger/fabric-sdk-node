@@ -119,10 +119,10 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'c
 		'!test/unit/constants.js',
 		'!test/unit/util.js',
 		'!test/unit/logger.js',
-		// channel: mychannel, chaincode: end2endnodesdk:v0/v1
-		'test/integration/e2e.js',
 		// channel: mychannel, chaincode: e2enodecc:v0
 		'test/integration/nodechaincode/e2e.js',
+		// channel: mychannel, chaincode: end2endnodesdk:v0/v1
+		'test/integration/e2e.js',
 		'test/integration/query.js',
 		'test/integration/fabric-ca-affiliation-service-tests.js',
 		'test/integration/fabric-ca-identity-service-tests.js',
@@ -148,8 +148,6 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'c
 		'test/integration/e2e/query.js',
 		'test/integration/invoke.js',
 		'test/integration/network-config.js',
-		// channel: mychannel, chaincode: e2enodecc:v0
-		'test/integration/nodechaincode/e2e.js',
 		'test/integration/only-admin.js',
 		'test/integration/perf/orderer.js',
 		'test/integration/perf/peer.js'

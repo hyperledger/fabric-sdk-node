@@ -1,3 +1,9 @@
+/**
+ * Copyright Zhao Chaoyi. All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import * as path from 'path';
 import * as test from 'tape';
 import * as fs from 'fs-extra';
@@ -30,7 +36,10 @@ import {
 	ChaincodeQueryRequest,
 	ChannelQueryResponse,
 	ChaincodeQueryResponse,
-	BlockchainInfo
+	BlockchainInfo,
+	Peer,
+	Orderer,
+	EventHub,
 } from 'fabric-client';
 import { IEnrollmentRequest } from 'fabric-ca-client';
 
@@ -38,6 +47,38 @@ const config_network: string = path.resolve(__dirname, 'test/fixtures/network.ya
 const config_org1: string = path.resolve(__dirname, 'test/fixtures/org1.yaml');
 const config_org2: string = path.resolve(__dirname, 'test/fixtures/org2.yaml');
 const channel_name: string = 'mychannel';
+
+test('test Peer', (t) => {
+	let client: Client = new Client();
+	t.equal(client.constructor.name, 'Client');
+
+	let p: Peer = client.newPeer('grpc://localhost:7051');
+	t.equal(p.constructor.name, 'Peer');
+
+	p = new Peer('grpc://localhost:7051');
+	t.equal(p.constructor.name, 'Peer');
+
+	let u: User = new User('testUser');
+	t.equal(u.constructor.name, 'User');
+
+	let o: Orderer = new Orderer('grpc://localhost:7050');
+	t.equal(o.constructor.name, 'Orderer');
+
+	o = client.newOrderer('grpc://localhost:7050');
+	t.equal(o.constructor.name, 'Orderer');
+
+	let channel: Channel = new Channel('mychannel', client);
+	t.equal(channel.constructor.name, 'Channel');
+
+	let eh = new EventHub(client);
+	t.equal(eh.constructor.name, 'EventHub');
+
+	let ceh = new ChannelEventHub(channel, p);
+	t.equal(ceh.constructor.name, 'ChannelEventHub');
+
+	t.pass('Pass all Class check');
+	t.end();
+});
 
 test('use the connection profile file', (t) => {
 	const client = Client.loadFromConfig(config_network);

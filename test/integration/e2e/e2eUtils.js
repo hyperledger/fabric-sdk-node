@@ -263,6 +263,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 		throw new Error('Failed to enroll user \'admin\'. ' + err);
 
 	}).then(() => {
+		t.pass('Successfully initialized Channel');
 		logger.debug(' orglist:: ', channel.getOrganizations());
 		// the v1 chaincode has Init() method that expects a transient map
 		if (upgrade) {
@@ -353,6 +354,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 				proposal: proposal
 			};
 		} else {
+			console.log(JSON.stringify(proposalResponses));
 			throw new Error('All proposals were not good');
 		}
 
