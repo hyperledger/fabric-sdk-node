@@ -45,12 +45,12 @@ declare class Client extends BaseClient {
   setDevMode(mode: boolean): void;
   newChannel(name: string): Client.Channel;
   getChannel(name?: string, throwError?: boolean): Client.Channel;
-  newPeer(url: string, opts: Client.ConnectionOptions): Client.Peer;
+  newPeer(url: string, opts?: Client.ConnectionOptions): Client.Peer;
   newEventHub(): Client.EventHub;
   getEventHub(peer_name: string): Client.EventHub;
   getEventHubsForOrg(org_name: string): Client.EventHub[];
   getPeersForOrg(org_name: string): Client.Peer[];
-  newOrderer(url: string, opts: Client.ConnectionOptions): Client.Orderer;
+  newOrderer(url: string, opts?: Client.ConnectionOptions): Client.Orderer;
   getCertificateAuthority(): FabricCAServices;
   getClientConfig(): any;
   getMspid(): string;

@@ -26,6 +26,7 @@ var Channel = require('./Channel.js');
 var Packager = require('./Packager.js');
 var Peer = require('./Peer.js');
 var EventHub = require('./EventHub.js');
+const ChannelEventHub = require('./ChannelEventHub');
 var Orderer = require('./Orderer.js');
 var TransactionID = require('./TransactionID.js');
 var MSP = require('./msp/msp.js');
@@ -1943,3 +1944,9 @@ function _getNetworkConfig(config, client) {
 }
 
 module.exports = Client;
+module.exports.Peer = Peer;
+module.exports.EventHub = EventHub;
+module.exports.ChannelEventHub = ChannelEventHub;
+module.exports.Orderer = Orderer;
+module.exports.Channel = Channel;
+module.exports.User = User;
