@@ -38,10 +38,11 @@ module.exports.registerTxEvent = function(eh, txid, timeout) {
 	});
 };
 
-module.exports.registerCCEvent = function(eh, ccid, enregex, timeout) {
+module.exports.registerCCEvent = function(eh, ccid, enregex, timeout, t, message) {
 	return new Promise((resolve, reject) => {
 		var regid = null;
 		var handle = setTimeout(() => {
+			t.fail('Failed to receive '+ message);
 			reject();
 			if (regid) {
 				eh.unregisterChaincodeEvent(regid);
@@ -49,6 +50,7 @@ module.exports.registerCCEvent = function(eh, ccid, enregex, timeout) {
 		}, timeout);
 
 		regid = eh.registerChaincodeEvent(ccid, enregex, (event) => {
+			t.pass('Successfully received '+ message);
 			resolve();
 			clearTimeout(handle);
 			eh.unregisterChaincodeEvent(regid);
