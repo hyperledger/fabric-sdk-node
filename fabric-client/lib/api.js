@@ -155,6 +155,20 @@ module.exports.CryptoSuite = class {
 	 * @returns {byte[]} Plain text after decryption
 	 */
 	decrypt(key, ciphertext, opts) {if(key||ciphertext||opts);}
+
+	/**
+	 * Set the cryptoKeyStore.
+	 *
+	 * When the application needs to use a key store other than the default,
+	 * it should use the {@link Client} newCryptoKeyStore to create an instance and
+	 * use this function to set the instance on the CryptoSuite.
+	 *
+	 * @param {CryptoKeyStore} cryptoKeyStore The cryptoKeyStore.
+	 * @abstract
+	 */
+	setCryptoKeyStore(cryptoKeyStore) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 };
 
 /**
