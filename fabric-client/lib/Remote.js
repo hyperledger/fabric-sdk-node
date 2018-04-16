@@ -126,13 +126,37 @@ var Remote = class {
 
 		// node.js based timeout
 		this._request_timeout = 30000;
-		if(opts && opts['request-timeout']) {
+		if(utils.checkIntegerConfig(opts, 'request-timeout')) {
 			this._request_timeout = opts['request-timeout'];
-		}
-		else {
+		} else {
 			this._request_timeout = utils.getConfigSetting('request-timeout',30000); //default 30 seconds
 		}
+
+		if(utils.checkIntegerConfig(opts, 'grpc-wait-for-ready-timeout')) {
+			this._grpc_wait_for_ready_timeout = opts['grpc-wait-for-ready-timeout'];
+		} else {
+			this._grpc_wait_for_ready_timeout = utils.getConfigSetting('grpc-wait-for-ready-timeout', 3000); //default 3 seconds
+		}
 	}
+
+	waitForReady(client) {
+		if(!client) {
+			throw new Error('Missing required gRPC client');
+		}
+
+		const timeout = new Date().getTime() + this._grpc_wait_for_ready_timeout;
+		return new Promise((resolve, reject) => {
+			client.waitForReady(timeout, (err) => {
+				if(err) {
+					logger.error(err);
+					return reject(err);
+				}
+				logger.debug('Successfully connected to remote gRPC server');
+				resolve();
+			});
+		});
+	}
+
 	/**
 	 * Get the name. This is a client-side only identifier for this
 	 * object.

@@ -21,5 +21,6 @@
 	"grpc.max_send_message_length": -1,
 	"network-config-schema" : {
 		"1.0": "./impl/NetworkConfig_1_0.js"
-	}
+	},
+	"grpc-wait-for-ready-timeout": 3000
 }

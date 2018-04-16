@@ -142,6 +142,8 @@ test('orderer unknown address test', function(t) {
 			t.end();
 		},
 		function(err) {
+			t.equal(err.message, 'Failed to connect before the deadline',
+				'sendDeliver to unreachable orderer should response connection failed');
 			t.pass('Successfully found bad deliver address!');
 			t.end();
 		}
@@ -169,6 +171,8 @@ test('orderer unknown address test', function(t) {
 			t.end();
 		},
 		function(err) {
+			t.equal(err.message, 'Failed to connect before the deadline',
+				'sendBroadcast to unreachable orderer should response connection failed');
 			t.pass('Successfully found bad address!');
 			t.end();
 		}

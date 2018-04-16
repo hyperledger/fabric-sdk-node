@@ -140,11 +140,21 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'PEM encoded clientKey and clientCert are required.'
 	);
 
+	opts = { pem: aPem, 'grpc-wait-for-ready-timeout': '1000'};
+	t.throws(
+		function () {
+			url = 'grpcs://' + aHostname + ':aport';
+			remote = new Remote(url, opts);
+		},
+		/^Error: Expect an integer value of grpc-wait-for-ready-timeout, found string/,
+		'Should throw error if timeout is not an integer'
+	);
 
 	opts = { pem: aPem, 'ssl-target-name-override': aHostnameOverride };
 	remote = new Remote(url, opts);
 	t.equal(aHostname, remote._endpoint.addr, 'GRPC Options tests: new Remote grpcs with opts created');
 	t.equal(remote.toString(), ' Remote : {url:grpcs://' + aHostname + ':aport}', 'Checking that peer.toString() reports correctly');
+	t.equal(remote._grpc_wait_for_ready_timeout, 3000, 'Remote should have grpc waitForReady timeout default to 3000');
 
 	url = 'grpc://' + aHostname + ':aport';
 	opts = null;
@@ -152,12 +162,13 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 	t.equal(aHostname, remote._endpoint.addr, 'GRPC Options tests: new Remote grpc with opts = null _endpoint.addr created');
 	t.ok(remote._endpoint.creds, 'GRPC Options tests: new Remote grpc with opts = null _endpoint.creds created');
 
-	opts = { pem: aPem, 'grpc.dummy_property': 'some_value', 'ssl-target-name-override': aHostnameOverride };
+	opts = { pem: aPem, 'grpc.dummy_property': 'some_value', 'ssl-target-name-override': aHostnameOverride, 'grpc-wait-for-ready-timeout': 500 };
 	remote = new Remote(url, opts);
 	t.equal(aHostnameOverride, remote._options['grpc.ssl_target_name_override'], 'GRPC Options tests: new Remote grpc with opts ssl-target-name-override created');
 	t.ok(remote._endpoint.creds, 'GRPC Options tests: new Remote grpc with opts _endpoint.creds created');
 	t.equal('some_value', remote._options['grpc.dummy_property'], 'GRPC options tests: pass-through option properties');
 	t.equal(remote.getUrl(), url, 'checking that getURL works');
+	t.equal(remote._grpc_wait_for_ready_timeout, 500, 'Remote should have grpc waitForReady timeout equals 500');
 
 	console.log('\n * PEER *');
 	//Peer: secure grpcs, requires opts.pem
@@ -181,6 +192,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 	opts = null;
 	peer = new Peer(url, opts);
 	t.equal(aHostname, peer._endpoint.addr, 'GRPC Options tests: new Peer grpc with opts = null _endpoint.addr created');
+	t.equal(peer._grpc_wait_for_ready_timeout, 3000, 'Peer should have _grpc_wait_for_ready_timeout equals 3000');
 	t.ok(peer._endpoint.creds, 'GRPC Options tests: new Peer grpc with opts = null _endpoint.creds created');
 
 	opts = { pem: aPem, 'ssl-target-name-override': aHostnameOverride };
@@ -269,7 +281,9 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 	orderer = new Orderer(url, opts);
 	t.equal(aHostname, orderer._endpoint.addr, 'GRPC Options tests: new Orderer grpcs with opts created');
 	t.equal(orderer.toString(), ' Orderer : {url:grpcs://' + aHostname + ':aport}', 'Checking that orderer.toString() reports correctly');
-	//Peer: insecure grpc, opts.pem optional
+	t.equal(orderer._grpc_wait_for_ready_timeout, 3000, 'orderer should have _grpc_wait_for_ready_timeout equals 3000');
+
+	//Orderer: insecure grpc, opts.pem optional
 	url = 'grpc://' + aHostname + ':aport';
 	opts = null;
 	orderer = new Orderer(url, opts);

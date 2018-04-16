@@ -129,6 +129,8 @@ test('Peer unknown address test', function(t) {
 			t.end();
 		},
 		function(err) {
+			t.equal(err.message, 'Failed to connect before the deadline',
+			 'sendProposal to unreachable peer should response connection failed');
 			t.pass('Successfully found bad address!' + err);
 			t.end();
 		}

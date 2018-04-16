@@ -105,34 +105,33 @@ var Peer = class extends Remote {
 			return Promise.reject(new Error('Missing proposal to send to peer'));
 		}
 
-		// Send the transaction to the peer node via grpc
-		// The rpc specification on the peer side is:
-		//     rpc ProcessProposal(Proposal) returns (ProposalResponse) {}
-		return new Promise(function(resolve, reject) {
-			var send_timeout = setTimeout(function(){
-				logger.error('sendProposal - timed out after:%s', rto);
-				return reject(new Error('REQUEST_TIMEOUT'));
-			}, rto);
+		return this.waitForReady(this._endorserClient).then(() => {
+			return new Promise(function(resolve, reject) {
+				var send_timeout = setTimeout(function(){
+					logger.error('sendProposal - timed out after:%s', rto);
+					return reject(new Error('REQUEST_TIMEOUT'));
+				}, rto);
 
-			self._endorserClient.processProposal(proposal, function(err, proposalResponse) {
-				clearTimeout(send_timeout);
-				if (err) {
-					logger.debug('Received proposal response from: %s status: %s',self._url, err);
-					if(err instanceof Error) {
-						reject(err);
-					}
-					else {
-						reject(new Error(err));
-					}
-				} else {
-					if (proposalResponse) {
-						logger.debug('Received proposal response from peer "%s": status - %s', self._url, proposalResponse.response.status);
-						resolve(proposalResponse);
+				self._endorserClient.processProposal(proposal, function(err, proposalResponse) {
+					clearTimeout(send_timeout);
+					if (err) {
+						logger.debug('Received proposal response from: %s status: %s',self._url, err);
+						if(err instanceof Error) {
+							reject(err);
+						}
+						else {
+							reject(new Error(err));
+						}
 					} else {
-						logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
-						reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
+						if (proposalResponse) {
+							logger.debug('Received proposal response from peer "%s": status - %s', self._url, proposalResponse.response.status);
+							resolve(proposalResponse);
+						} else {
+							logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
+							reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
+						}
 					}
-				}
+				});
 			});
 		});
 	}

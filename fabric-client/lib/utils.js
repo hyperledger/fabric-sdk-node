@@ -567,3 +567,14 @@ module.exports.convertToLong = function(value) {
 
 	return result;
 };
+
+module.exports.checkIntegerConfig = function(opts, configName) {
+	let result = false;
+	if(opts && opts[configName]) {
+		if (!Number.isInteger(opts[configName])) {
+			throw new Error(`Expect an integer value of ${configName}, found ${typeof configName}`);
+		}
+		result = true;
+	}
+	return result;
+};
