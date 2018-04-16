@@ -40,6 +40,8 @@ import {
 	Peer,
 	Orderer,
 	EventHub,
+	ICryptoSuite,
+	ICryptoKeyStore,
 } from 'fabric-client';
 import { IEnrollmentRequest } from 'fabric-ca-client';
 
@@ -79,6 +81,13 @@ test('test Peer', (t) => {
 	t.pass('Pass all Class check');
 	t.end();
 });
+
+test('test-crypto-key-store', (t) => {
+	const store:ICryptoKeyStore = Client.newCryptoKeyStore();
+	const cryptoSuite: ICryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(store);
+	t.end()
+})
 
 test('use the connection profile file', (t) => {
 	const client = Client.loadFromConfig(config_network);

@@ -79,7 +79,9 @@ module.exports.CryptoSuite = class {
 	 * @param {KeyOpts} opts Optional
 	 * @returns {module:api.Key} Promise for an instance of the Key class
 	 */
-	generateKey(opts) {}
+	generateKey(opts) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 
 	/**
 	 * Derives the new private key from the source public key using the parameters passed in the <code>opts</code>.
@@ -88,7 +90,9 @@ module.exports.CryptoSuite = class {
 	 * @param {module:api.Key} key The source key
 	 * @returns {module:api.Key} Derived key
 	 */
-	deriveKey(key, opts) {}
+	deriveKey(key, opts) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 
 	/**
 	 * Imports a {@link Key} from its raw representation using <code>opts</code>. If the <code>opts.ephemeral</code>
@@ -102,7 +106,9 @@ module.exports.CryptoSuite = class {
 	 *          If "opts.ephemeral" not set or false, returns a Promise of an instance of the
 	 *          Key class.
 	 */
-	importKey(pem, opts) {}
+	importKey(pem, opts) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 
 	/**
 	 * Returns the {@link Key} this implementation associates to the Subject Key Identifier ski.
@@ -111,7 +117,9 @@ module.exports.CryptoSuite = class {
 	 *    unique index to represent the key
 	 * @returns {module:api.Key} Promise of an instance of the Key class corresponding to the ski
 	 */
-	getKey(ski) {}
+	getKey(ski) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 
 	/**
 	 * Produce a hash of the message <code>msg</code> using options <code>opts</code>
@@ -121,7 +129,9 @@ module.exports.CryptoSuite = class {
 	 *      algorithm: an identifier for the algorithm to be used, such as "SHA3"
 	 * @returns {string} The hashed digest in hexidecimal string encoding
 	 */
-	hash(msg, opts) {}
+	hash(msg, opts) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 
 	/**
 	 * Signs digest using key. The opts argument should be appropriate for the algorithm used.
@@ -132,7 +142,9 @@ module.exports.CryptoSuite = class {
 	 * for hashing the larger message and passing the hash (as digest) to sign.
 	 * @returns {byte[]} the resulting signature
 	 */
-	sign(key, digest) {}
+	sign(key, digest) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 
 	/**
 	 * Verifies signature against key and digest
@@ -142,7 +154,9 @@ module.exports.CryptoSuite = class {
 	 * @param {byte[]} digest The digest that the signature was created for
 	 * @returns {boolean} true if the signature verifies successfully
 	 */
-	verify(key, signature, digest) {}
+	verify(key, signature, digest) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 
 	/**
 	 * Encrypts plaintext using key.
@@ -153,7 +167,9 @@ module.exports.CryptoSuite = class {
 	 * @param {Object} opts Encryption options
 	 * @returns {byte[]} Cipher text after encryption
 	 */
-	encrypt(key, plaintext, opts) {}
+	encrypt(key, plaintext, opts) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 
 	/**
 	 * Decrypts ciphertext using key.
@@ -164,7 +180,23 @@ module.exports.CryptoSuite = class {
 	 * @param {Object} opts Decrypt options
 	 * @returns {byte[]} Plain text after decryption
 	 */
-	decrypt(key, ciphertext, opts) {}
+	decrypt(key, ciphertext, opts) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
+
+	/**
+	 * Set the cryptoKeyStore.
+	 *
+	 * When the application needs to use a key store other than the default,
+	 * it should use the {@link Client} newCryptoKeyStore to create an instance and
+	 * use this function to set the instance on the CryptoSuite.
+	 *
+	 * @param {CryptoKeyStore} cryptoKeyStore The cryptoKeyStore.
+	 * @abstract
+	 */
+	setCryptoKeyStore(cryptoKeyStore) {
+		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+	}
 };
 
 /**

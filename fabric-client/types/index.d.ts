@@ -102,14 +102,15 @@ declare namespace Client {
 
   export interface ICryptoSuite {
     decrypt(key: ICryptoKey, cipherText: Buffer, opts: any): Buffer;
-    deriveKey(key: ICryptoKey): ICryptoKey;
+    deriveKey(key: ICryptoKey, opts?: KeyOpts): ICryptoKey;
     encrypt(key: ICryptoKey, plainText: Buffer, opts: any): Buffer;
     getKey(ski: string): Promise<ICryptoKey>;
-    generateKey(opts: KeyOpts): Promise<ICryptoKey>;
+    generateKey(opts?: KeyOpts): Promise<ICryptoKey>;
     hash(msg: string, opts: any): string;
-    importKey(pem: string, opts: KeyOpts): ICryptoKey | Promise<ICryptoKey>;
+    importKey(pem: string, opts?: KeyOpts): ICryptoKey | Promise<ICryptoKey>;
     sign(key: ICryptoKey, digest: Buffer): Buffer;
     verify(key: ICryptoKey, signature: Buffer, digest: Buffer): boolean;
+    setCryptoKeyStore(cryptoKeyStore: ICryptoKeyStore): void;
   }
   export interface UserConfig {
     enrollmentID: string;
