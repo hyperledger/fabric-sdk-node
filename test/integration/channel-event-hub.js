@@ -318,77 +318,25 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		// a real application would check the proposal results
 		t.pass('Successfully endorsed proposal to invoke chaincode');
 
-		let event_monitor = new Promise((resolve, reject) => {
-			let regid = null;
-			let handle = setTimeout(() => {
-				if (regid) {
-					event_hub.unregisterChaincodeEvent(regid);
-					t.fail('Timeout - Failed to receive the chaincode event');
-				}
-				reject(new Error('Timed out waiting for chaincode event'));
-			}, 40000);
-
-			regid = event_hub.registerChaincodeEvent(chaincode_id.toString(), '^evtsender*', (event, block_num, txnid, status) => {
-				t.pass('Successfully got a chaincode event with transid:'+ txnid + ' with status:'+status);
-				// --- With filtered events there is no chaincode event payload,
-				// --- the chaincode event does have the chaincode event name.
-				// --- To get the payload you must call the connect(true) to get full blocks
-				// --- and you must have the access rights to get those blocks that
-				// --- contain your chaincode events with the payload
-				clearTimeout(handle);
-				// Chaincode event listeners are meant to run continuously
-				// Therefore the default to automatically unregister is false
-				// So in this case we want to shutdown the event listener
-				event_hub.unregisterChaincodeEvent(regid);
-				t.pass('Successfully received the chaincode event on block number '+ block_num);
-				resolve('RECEIVED');
-			}, (error)=> {
-				clearTimeout(handle);
-				t.fail('Failed to receive the chaincode event ::'+error);
-				reject(error);
-			});
-		});
+		let event_monitor1 = createChaincodeRegistration(t, 'first chaincode', event_hub, chaincode_id, '^evtsender*');
+		let event_monitor2 = createChaincodeRegistration(t, 'second chaincode', event_hub, chaincode_id, '^evtsender*');
 		let send_trans = channel.sendTransaction({proposalResponses: results[0],	proposal: results[1]});
 
-		return Promise.all([event_monitor, send_trans]);
+		return Promise.all([event_monitor1, event_monitor2, send_trans]);
 	}).then((results) => {
 		t.pass('Successfully submitted the transaction to be committed');
 
-		t.equals(results[0], 'RECEIVED', 'Checking that we got the correct resolve string from our event callback');
+		t.equals(results[0], 'RECEIVEDfirst chaincode', 'Checking that we got the correct resolve string from our first event callback');
+		t.equals(results[1], 'RECEIVEDsecond chaincode', 'Checking that we got the correct resolve string from our second event callback');
+
 		//check the status of the sendTransaction
-		let sendResults = results[1];
-		// notice that we are using index 1, the orderer is based on the order of
-		// the promise all array , where the send transaction was second
-
-		// overall status
-		let all_good = false;
-
-		if(sendResults.status && sendResults.status === 'SUCCESS') {
-			all_good = true;
+		//   notice that we are using index 2, these are based on the order of
+		//   the promise all array , where the send transaction was third
+		let sendResults = results[2];
+		if(sendResults && sendResults.status && sendResults.status === 'SUCCESS') {
 			t.pass('Successfully sent transaction to get chaincode event');
 		} else {
 			t.fail('Failed to send transaction to get chaincode event ');
-		}
-		// now check the chaincode results, should see xxx
-		let eventResults = results[0];
-		if(eventResults instanceof Error) {
-			t.fail('Failed to get proper event status from chaincode event');
-			all_good = all_good & false;
-		} else {
-			if(eventResults === 'RECEIVED') {
-				t.pass('Successfully received chaincode event');
-				all_good = all_good & true;
-			} else {
-				t.fail('Failed to get proper chaincode event status');
-				all_good = all_good & false;
-			}
-		}
-
-		if(all_good) {
-			t.pass('Successfully received chaincode event.');
-		} else {
-			t.failed('Failed to get the results required');
-			throw new Error('Failed to get proper results');
 		}
 
 		let request = {
@@ -696,6 +644,41 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		t.end();
 	});
 });
+
+
+function createChaincodeRegistration(t, message, event_hub, chaincode_id, chaincode_eventname) {
+	let event_monitor = new Promise((resolve, reject) => {
+		let regid = null;
+		let timeout_handle = setTimeout(() => {
+			if (regid) {
+				event_hub.unregisterChaincodeEvent(regid);
+				t.fail('Timeout - Failed to receive the ' + message);
+			}
+			reject(new Error('Timed out waiting for chaincode event ' + message));
+		}, 40000);
+
+		regid = event_hub.registerChaincodeEvent(chaincode_id.toString(), chaincode_eventname, (event, block_num, txnid, status) => {
+			t.pass('Successfully got a chaincode event with transid:'+ txnid + ' with status:'+status);
+			// --- With filtered events there is no chaincode event payload,
+			// --- the chaincode event does have the chaincode event name.
+			// --- To get the payload you must call the connect(true) to get full blocks
+			// --- and you must have the access rights to get those blocks that
+			// --- contain your chaincode events with the payload
+			clearTimeout(timeout_handle);
+			// Chaincode event listeners are meant to run continuously
+			// Therefore the default to automatically unregister is false
+			// So in this case we want to shutdown the event listener
+			event_hub.unregisterChaincodeEvent(regid);
+			t.pass('Successfully received the chaincode event on block number '+ block_num + ' for ' + message);
+			resolve('RECEIVED'+ message);
+		}, (error)=> {
+			clearTimeout(timeout_handle);
+			t.fail('Failed to receive the ' + message + ' ::' + error);
+			reject(error);
+		});
+	});
+	return event_monitor;
+}
 
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));

@@ -246,11 +246,13 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		t.pass('Successfully sent transaction to orderer to instantiate chaincode.');
 
 		var tmo = 20000;
-		return Promise.all([eputil.registerCCEvent(eh, chaincode_id.toString(), '^evtsender*', tmo),
+		return Promise.all([
+			eputil.registerCCEvent(eh, chaincode_id.toString(), '^evtsender*', tmo, t, 'first chaincode event'),
+			eputil.registerCCEvent(eh, chaincode_id.toString(), '^evtsender*', tmo, t, 'second chaincode event'),
 			eputil.sendTransaction(channel, results)
 		]);
 	}).then((results) => {
-		t.pass('Successfully received chaincode event.');
+		t.pass('Successfully received chaincode events.');
 
 		request = eputil.createRequest(client, chaincode_id, targets, 'invoke', ['query']);
 
