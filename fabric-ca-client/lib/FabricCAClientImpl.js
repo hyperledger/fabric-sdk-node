@@ -691,6 +691,15 @@ var FabricCAClient = class {
 		if (requestObj) {
 			requestObj.caName = this._caName;
 		}
+		// establish socket timeout
+		// default: 3000ms
+		const CONNECTION_TIMEOUT = config.get('connection-timeout', 3000);
+		// SO_TIMEOUT is the timeout that a read() call will block,
+		// it means that if no data arrives within SO_TIMEOUT,
+		// socket will throw an error
+		// default: infinite
+		const SO_TIMEOUT = config.get('socket-operation-timeout');
+		logger.debug('CONNECTION_TIMEOUT = %s, SO_TIMEOUT = %s', CONNECTION_TIMEOUT, SO_TIMEOUT? SO_TIMEOUT: 'infinite');
 
 		var self = this;
 		return new Promise(function (resolve, reject) {
@@ -703,7 +712,8 @@ var FabricCAClient = class {
 					Authorization: self.generateAuthToken(requestObj, signingIdentity)
 				},
 				ca: self._tlsOptions.trustedRoots,
-				rejectUnauthorized: self._tlsOptions.verify
+				rejectUnauthorized: self._tlsOptions.verify,
+				timeout: CONNECTION_TIMEOUT
 			};
 
 			var request = self._httpClient.request(requestOptions, function (response) {
@@ -714,7 +724,6 @@ var FabricCAClient = class {
 				});
 
 				response.on('end', function () {
-
 					var payload = responseBody.join('');
 
 					if (!payload) {
@@ -737,10 +746,24 @@ var FabricCAClient = class {
 							util.format('Could not parse %s response [%s] as JSON due to error [%s]', api_method, payload, err)));
 					}
 				});
-
 			});
 
-			request.on('error', function (err) {
+			request.on('socket', (socket) => {
+				socket.setTimeout(CONNECTION_TIMEOUT);
+				socket.on('timeout', () => {
+					request.abort();
+		  			reject(new Error(util.format('Calling %s endpoint failed, CONNECTION Timeout', api_method)));
+				});
+			});
+
+			// If socket-operation-timeout is not set, read operations will not time out (infinite timeout).
+			if(SO_TIMEOUT && Number.isInteger(SO_TIMEOUT) && SO_TIMEOUT > 0) {
+				request.setTimeout(SO_TIMEOUT, () => {
+					reject(new Error(util.format('Calling %s endpoint failed, READ Timeout', api_method)));
+				});
+	  		}
+
+	  		request.on('error', function (err) {
 				reject(new Error(util.format('Calling %s endpoint failed with error [%s]', api_method, err)));
 			});
 

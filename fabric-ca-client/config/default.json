@@ -1,4 +1,4 @@
-{ 
+{
 	"request-timeout" : 3000,
 	"tcert-batch-size" : 10,
 	"crypto-hash-algo": "SHA2",
@@ -10,5 +10,6 @@
 	"crypto-suite-hsm": {
 		"EC": "fabric-ca-client/lib/impl/bccsp_pkcs11.js"
 	},
-	"key-value-store": "fabric-ca-client/lib/impl/FileKeyValueStore.js"
+	"key-value-store": "fabric-ca-client/lib/impl/FileKeyValueStore.js",
+	"connection-timeout": 3000
 }
