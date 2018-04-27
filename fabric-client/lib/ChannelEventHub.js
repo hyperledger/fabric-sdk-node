@@ -1064,8 +1064,8 @@ var ChannelEventHub = class {
 
 		if(block.number) {
 			logger.debug('_processTxEvents filtered block num=%s', block.number);
-			if(block.filtered_tx) for(let index in block.filtered_tx) {
-				let filtered_transaction = block.filtered_tx[index];
+			if(block.filtered_transactions) for(let index in block.filtered_transactions) {
+				let filtered_transaction = block.filtered_transactions[index];
 				this._callTransactionListener(filtered_transaction.txid,
 					filtered_transaction.tx_validation_code,
 					block.number);
@@ -1113,14 +1113,14 @@ var ChannelEventHub = class {
 		}
 
 		if(block.number) {
-			if(block.filtered_tx) for(let index in block.filtered_tx) {
-				let filtered_transaction = block.filtered_tx[index];
+			if(block.filtered_transactions) for(let index in block.filtered_transactions) {
+				let filtered_transaction = block.filtered_transactions[index];
 				if(filtered_transaction.transaction_actions) {
 					if(filtered_transaction.transaction_actions.chaincode_actions) {
 						for(let index in filtered_transaction.transaction_actions.chaincode_actions) {
 							let chaincode_action = filtered_transaction.transaction_actions.chaincode_actions[index];
 
-							this._callChaincodeListener(chaincode_action.ccEvent,
+							this._callChaincodeListener(chaincode_action.chaincode_event,
 								block.number,
 								filtered_transaction.txid,
 								filtered_transaction.tx_validation_code,
@@ -1143,14 +1143,14 @@ var ChannelEventHub = class {
 								let chaincodeActionPayload = tx.actions[action_index].payload;
 								let propRespPayload = chaincodeActionPayload.action.proposal_response_payload;
 								let caPayload = propRespPayload.extension;
-								let ccEvent = caPayload.events;
-								logger.debug('_processChaincodeEvents - ccEvent %s',ccEvent);
+								let chaincode_event = caPayload.events;
+								logger.debug('_processChaincodeEvents - chaincode_event %s',chaincode_event);
 
 								let txStatusCodes = block.metadata.metadata[_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER];
 								let channel_header = block.data.data[index].payload.header.channel_header;
 								let val_code = txStatusCodes[index];
 
-								this._callChaincodeListener(ccEvent,
+								this._callChaincodeListener(chaincode_event,
 									block.header.number,
 									channel_header.tx_id,
 									val_code,
@@ -1170,7 +1170,7 @@ var ChannelEventHub = class {
 	}
 
 	_callChaincodeListener(chaincode_event, block_num, tx_id, val_code, filtered) {
-		logger.debug('_callChaincodeListener - ccEvent %s',chaincode_event);
+		logger.debug('_callChaincodeListener - chaincode_event %s',chaincode_event);
 		let cbtable = this._chaincodeRegistrants[chaincode_event.chaincode_id];
 		if (!cbtable) {
 			logger.debug('_callChaincodeListener - no chaincode listeners found');
