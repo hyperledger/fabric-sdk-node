@@ -5,14 +5,15 @@
  */
 
 let utils = require('fabric-client/lib/utils.js');
-let logger = utils.getLogger('integration.client');
+let logger = utils.getLogger('integration.ca.identity-service');
 
 let tape = require('tape');
 let _test = require('tape-promise').default;
 let test = _test(tape);
 const path = require('path');
 let FabricCAServices = require('../../fabric-ca-client');
-const HFCAIdentityAttributes = require('../../fabric-ca-client/lib/IdentityService').HFCAIdentityAttributes;
+const { HFCAIdentityAttributes, HFCAIdentityType } = require('../../fabric-ca-client/lib/IdentityService');
+
 const User = require('../../fabric-ca-client/lib/User');
 
 let userOrg1 = 'org1';
@@ -50,7 +51,7 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 		enrollmentSecret: 'userpw',
 		affiliation: 'org1',
 		// set this identity can manage identities of the role client
-		attrs: [{ name: HFCAIdentityAttributes.HFREGISTRARROLES, value: 'client' }]
+		attrs: [{ name: HFCAIdentityAttributes.HFREGISTRARROLES, value: HFCAIdentityType.CLIENT }]
 	};
 
 	// update the enrollment secret for testIdentity

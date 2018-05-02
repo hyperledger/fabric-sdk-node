@@ -7,27 +7,27 @@
 
 'use strict';
 
-var utils = require('./utils.js');
-var BaseClient = require('./BaseClient.js');
-var util = require('util');
-var path = require('path');
-var http = require('http');
-var https = require('https');
-var urlParser = require('url');
-var jsrsasign = require('jsrsasign');
+const utils = require('./utils.js');
+const BaseClient = require('./BaseClient.js');
+const util = require('util');
+const path = require('path');
+const http = require('http');
+const https = require('https');
+const urlParser = require('url');
+const jsrsasign = require('jsrsasign');
 const IdentityService = require('./IdentityService');
 const AffiliationService = require('./AffiliationService');
-const checkRegistrar = require('./helper').checkRegistrar;
+const CertificateService = require('./CertificateService');
+const { checkRegistrar } = require('./helper');
 
-var x509 = jsrsasign.X509;
-var ASN1HEX = jsrsasign.ASN1HEX;
+const { X509, ASN1HEX } = jsrsasign;
 
-var config = utils.getConfig();
+const config = utils.getConfig();
 // setup the location of the default config shipped with code
-var default_config = path.resolve( __dirname, '../config/default.json');
+const default_config = path.resolve( __dirname, '../config/default.json');
 config.reorderFileStores(default_config, true); //make sure this one is under the fabric-client
 
-var logger = utils.getLogger('FabricCAClientImpl.js');
+const logger = utils.getLogger('FabricCAClientImpl.js');
 
 /**
  * @typedef {Object} TLSOptions
@@ -40,7 +40,7 @@ var logger = utils.getLogger('FabricCAClientImpl.js');
  * @class
  * @extends BaseClient
  */
-var FabricCAServices = class extends BaseClient {
+const FabricCAServices = class extends BaseClient {
 
 	/**
 	 * constructor
@@ -379,6 +379,10 @@ var FabricCAServices = class extends BaseClient {
 			registrar.getSigningIdentity());
 	}
 
+	newCertificateService() {
+		return this._fabricCAClient.newCertificateService();
+	}
+
 	/**
 	 * Creates a new {@link IdentityService} object
 	 *
@@ -620,6 +624,7 @@ var FabricCAClient = class {
 	 * Re-enroll an existing user.
 	 * @param {string} csr PEM-encoded PKCS#10 certificate signing request
 	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
+	 * signing certificate, hash algorithm and signature algorithm
 	 * @param {AttributeRequest[]} attr_reqs An array of {@link AttributeRequest}
 	 * @returns {Promise} {@link EnrollmentResponse}
 	 */
@@ -653,22 +658,30 @@ var FabricCAClient = class {
 	}
 
 	/**
-	 * Creates a new {@link IdentityService} object
+	 * Creates a new {@link IdentityService} instance
 	 *
-	 * @param enrollmentID The enrollment ID associated for this identity
-	 * @returns {IdentityService} object
+	 * @returns {IdentityService} instance
 	 */
 	newIdentityService() {
 		return new IdentityService(this);
 	}
 
 	/**
-	 * Create a new {@link AffiliationService} object
+	 * Create a new {@link AffiliationService} instance
 	 *
-	 * @returns {AffiliationService} object
+	 * @returns {AffiliationService} instance
 	 */
 	newAffiliationService() {
 		return new AffiliationService(this);
+	}
+
+	/**
+	 * Create a new {@link CertificateService} instance
+	 *
+	 * @returns {CertificateService} instance
+	 */
+	newCertificateService() {
+		return new CertificateService(this);
 	}
 
 	post(api_method, requestObj, signingIdentity) {
@@ -1003,9 +1016,9 @@ var FabricCAClient = class {
 // first which as of jsrsasign@6.2.3 always assumes RSA based certificates and
 // fails to parse certs that includes ECDSA keys.
 function getSubjectCommonName(pem) {
-	var hex = x509.pemToHex(pem);
+	var hex = X509.pemToHex(pem);
 	var d = ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0, 5]);
-	var subject = x509.hex2dn(d); // format: '/C=US/ST=California/L=San Francisco/CN=Admin@org1.example.com/emailAddress=admin@org1.example.com'
+	var subject = X509.hex2dn(d); // format: '/C=US/ST=California/L=San Francisco/CN=Admin@org1.example.com/emailAddress=admin@org1.example.com'
 	var m = subject.match(/CN=.+[^/]/);
 	if (!m)
 		throw new Error('Certificate PEM does not seem to contain a valid subject with common name "CN"');
