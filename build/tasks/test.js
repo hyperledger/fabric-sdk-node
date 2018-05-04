@@ -53,9 +53,13 @@ if (arch.indexOf('x64') === 0) {
 thirdpartyImageTag = docker_arch + '-' + thirparty_release;
 
 // release check
-if (!/-snapshot/.test(release)) {
-	dockerImageTag = docker_arch + '-' + release;
-}
+// if (!/-snapshot/.test(release)) {
+// 	dockerImageTag = docker_arch + '-' + release;
+// }
+
+// This will lock down the fabric release being used
+dockerImageTag = docker_arch + '-' + '1.1.0';
+
 // these environment variables would be read at test/fixtures/docker-compose.yaml
 process.env.DOCKER_IMG_TAG = dockerImageTag;
 process.env.THIRDPARTY_IMG_TAG = thirdpartyImageTag;

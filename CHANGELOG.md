@@ -1,3 +1,20 @@
+## v1.1.1
+Fri May  4 09:04:06 EDT 2018
+
+* [b65eafc](https://github.com/hyperledger/fabric-sdk-node/commit/b65eafc) [FAB-9846](https://jira.hyperledger.org/browse/FAB-9846) NodeSDK - update GRPC level
+* [bf2dfb5](https://github.com/hyperledger/fabric-sdk-node/commit/bf2dfb5) [[FAB-9500](https://jira.hyperledger.org/browse/FAB-9500)] Add missing setCryptoKeyStore function
+* [20c7da9](https://github.com/hyperledger/fabric-sdk-node/commit/20c7da9) [[FAB-9364](https://jira.hyperledger.org/browse/FAB-9364)] fix Typescript error
+* [22a5260](https://github.com/hyperledger/fabric-sdk-node/commit/22a5260) [FAB-9353](https://jira.hyperledger.org/browse/FAB-9353) add CODE_OF_CONDUCT.md
+* [afd5902](https://github.com/hyperledger/fabric-sdk-node/commit/afd5902) [FAB-9063](https://jira.hyperledger.org/browse/FAB-9063) Provide link to Fabric committers
+* [ba1ef09](https://github.com/hyperledger/fabric-sdk-node/commit/ba1ef09) [FAB-8749](https://jira.hyperledger.org/browse/FAB-8749) NodeSDK - allow admin identity
+* [67dc522](https://github.com/hyperledger/fabric-sdk-node/commit/67dc522) [[FAB-9071](https://jira.hyperledger.org/browse/FAB-9071)] update test chaincode to use release shim
+* [9046411](https://github.com/hyperledger/fabric-sdk-node/commit/9046411) [[FAB-8942](https://jira.hyperledger.org/browse/FAB-8942)] fix type definition for 1.1 release
+* [67ad1f6](https://github.com/hyperledger/fabric-sdk-node/commit/67ad1f6) [FAB-8969](https://jira.hyperledger.org/browse/FAB-8969) NodeSDK - '/0' fix missing on mutual tls
+* [e35e4ec](https://github.com/hyperledger/fabric-sdk-node/commit/e35e4ec) [FAB-8952](https://jira.hyperledger.org/browse/FAB-8952) Rename maintainers file
+* [907e33e](https://github.com/hyperledger/fabric-sdk-node/commit/907e33e) [[FAB-8791](https://jira.hyperledger.org/browse/FAB-8791)] refactor:using ES6 class in hash.js
+* [c1c04b7](https://github.com/hyperledger/fabric-sdk-node/commit/c1c04b7) [FAB-8893](https://jira.hyperledger.org/browse/FAB-8893) NodeSDK - prepare for v1.2.0
+* [a8abc65](https://github.com/hyperledger/fabric-sdk-node/commit/a8abc65) [[FAB-8515](https://jira.hyperledger.org/browse/FAB-8515)] eslint fix in /lib/impl/
+
 ## v1.1.0
 Thu Mar 15 17:05:00 EDT 2018
 
