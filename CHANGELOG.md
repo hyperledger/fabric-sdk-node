@@ -1,3 +1,10 @@
+## v1.0.6
+Fri May  4 10:06:48 EDT 2018
+
+* [e7e04e8](https://github.com/hyperledger/fabric-sdk-node/commit/e7e04e8) [FAB-9846](https://jira.hyperledger.org/browse/FAB-9846) NodeSDK v1.0 - update GRPC level
+* [7765f1b](https://github.com/hyperledger/fabric-sdk-node/commit/7765f1b) [FAB-9353](https://jira.hyperledger.org/browse/FAB-9353) add CODE_OF_CONDUCT.md
+* [cda30ec](https://github.com/hyperledger/fabric-sdk-node/commit/cda30ec) [FAB-8826](https://jira.hyperledger.org/browse/FAB-8826) NodeSDK Update cloudant ver
+
 ## 1.0.5
 Fri Mar  9 09:10:59 EST 2018
 * [6572011](https://github.com/hyperledger/fabric-sdk-node/commit/6572011) [FAB-8723](https://jira.hyperledger.org/browse/FAB-8723) NodeSDK V1.0 - string env vars
