@@ -158,6 +158,7 @@ declare namespace Client {
     sendInstantiateProposal(request: ChaincodeInstantiateUpgradeRequest, timeout?: number): Promise<ProposalResponseObject>;
     sendTransactionProposal(request: ChaincodeInvokeRequest, timeout?: number): Promise<ProposalResponseObject>;
     sendTransaction(request: TransactionRequest): Promise<BroadcastResponse>;
+    executeTransaction(request: ChaincodeInvokeRequest): Promise<BroadcastResponse[]>;
     sendUpgradeProposal(request: ChaincodeInstantiateUpgradeRequest, timeout?: number): Promise<ProposalResponseObject>;
     queryByChaincode(request: ChaincodeQueryRequest): Promise<Buffer[]>;
     queryBlock(blockNumber: number, target?: Peer | string, useAdmin?: boolean): Promise<Block>;
@@ -360,6 +361,8 @@ declare namespace Client {
     transientMap?: any;
     fcn?: string;
     args: string[];
+    eventHubs?: string[];
+    timeout?: string;
   }
 
   export interface ChaincodeQueryRequest {

@@ -1087,3 +1087,60 @@ test('\n\n*** Test per-call timeout support ***\n', function (t) {
 		t.end();
 	});
 });
+
+test('\n\n ** Channel executeTransaction() tests **\n\n', function (t) {
+	var client = new Client();
+	var channel = new Channel('does-not-matter', client);
+
+	t.throws(
+		function () {
+			channel.executeTransaction();
+		},
+		/Missing input request object on the proposal request/,
+		'Channel tests, executeTransaction(): empty parameter'
+	);
+
+	t.throws(
+		function () {
+			channel.executeTransaction({
+				eventHubs: 'blah',
+				// no chaincodeId
+				fcn: 'blah',
+				args: ['blah'],
+				txId: 'blah'
+			});
+		},
+		/Error: Missing "chaincodeId" parameter in the proposal request/,
+		'Channel tests, executeTransaction(): Missing "chaincodeId" parameter'
+	);
+
+	t.throws(
+		function () {
+			channel.executeTransaction({
+				eventHubs: 'blah',
+				chaincodeId: 'blah',
+				fcn: 'blah',
+				args: ['blah']
+				// no txId
+			});
+		},
+		/Error: Missing "txId" parameter in the proposal request/,
+		'Channel tests, executeTransaction(): Missing "txId" parameter'
+	);
+
+	t.throws(
+		function () {
+			channel.executeTransaction({
+				eventHubs: 'blah',
+				chaincodeId: 'blah',
+				fcn: 'blah',
+				// no args
+				txId: 'blah'
+			});
+		},
+		/Error: Missing "args" in Transaction proposal request/,
+		'Channel tests, executeTransaction(): Missing "args" parameter'
+	);
+
+	t.end();
+});
