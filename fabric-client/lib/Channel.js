@@ -6,37 +6,38 @@
 
 'use strict';
 
-var utils = require('./utils.js');
-var clientUtils = require('./client-utils.js');
-var util = require('util');
-var path = require('path');
-var Peer = require('./Peer.js');
-var ChannelEventHub = require('./ChannelEventHub.js');
-var Orderer = require('./Orderer.js');
-var BlockDecoder = require('./BlockDecoder.js');
-var TransactionID = require('./TransactionID.js');
-var grpc = require('grpc');
-var logger = utils.getLogger('Channel.js');
-var MSPManager = require('./msp/msp-manager.js');
-var Policy = require('./Policy.js');
-var Constants = require('./Constants.js');
+const utils = require('./utils.js');
+const clientUtils = require('./client-utils.js');
+const util = require('util');
+const path = require('path');
+const Peer = require('./Peer.js');
+const ChannelEventHub = require('./ChannelEventHub.js');
+const Orderer = require('./Orderer.js');
+const BlockDecoder = require('./BlockDecoder.js');
+const TransactionID = require('./TransactionID.js');
+const grpc = require('grpc');
+const logger = utils.getLogger('Channel.js');
+const MSPManager = require('./msp/msp-manager.js');
+const Policy = require('./Policy.js');
+const Constants = require('./Constants.js');
+const CollectionConfig = require('./SideDB').CollectionConfig;
 
-var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
-var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
-var _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
-var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
-var _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
-var _peerConfigurationProto = grpc.load(__dirname + '/protos/peer/configuration.proto').protos;
-var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-var _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
-var _policiesProto = grpc.load(__dirname + '/protos/common/policies.proto').common;
-var _ledgerProto = grpc.load(__dirname + '/protos/common/ledger.proto').common;
-var _commonConfigurationProto = grpc.load(__dirname + '/protos/common/configuration.proto').common;
-var _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configuration.proto').orderer;
-var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
-var _mspConfigProto = grpc.load(__dirname + '/protos/msp/msp_config.proto').msp;
-var _mspPrincipalProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
-var _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
+const _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
+const _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
+const _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
+const _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
+const _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
+const _peerConfigurationProto = grpc.load(__dirname + '/protos/peer/configuration.proto').protos;
+const _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
+const _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
+const _policiesProto = grpc.load(__dirname + '/protos/common/policies.proto').common;
+const _ledgerProto = grpc.load(__dirname + '/protos/common/ledger.proto').common;
+const _commonConfigurationProto = grpc.load(__dirname + '/protos/common/configuration.proto').common;
+const _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configuration.proto').orderer;
+const _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
+const _mspConfigProto = grpc.load(__dirname + '/protos/msp/msp_config.proto').msp;
+const _mspPrincipalProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
+const _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
 
 const ImplicitMetaPolicy_Rule = { 0: 'ANY', 1: 'ALL', 2: 'MAJORITY' };
 
@@ -62,7 +63,7 @@ const ORDERER_NOT_ASSIGNED_MSG = 'Orderer with name "%s" not assigned to this ch
  *
  * @class
  */
-var Channel = class {
+const Channel = class {
 
 	/**
 	 * Returns a new instance of the class. This is a client-side-only call. To
@@ -1431,13 +1432,32 @@ var Channel = class {
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 
 		const signer = this._clientContext._getSigningIdentity(request.txId.isAdmin());
+		/**
+		 * lcccSpec_args:
+		 * args[0] is the command
+		 * args[1] is the channel name
+		 * args[2] is the ChaincodeDeploymentSpec
+		 *
+		 * the following optional arguments here (they can each be nil and may or may not be present)
+		 * args[3] is a marshalled SignaturePolicyEnvelope representing the endorsement policy
+		 * args[4] is the name of escc
+		 * args[5] is the name of vscc
+		 * args[6] is a marshalled CollectionConfigPackage struct
+		*/
 		const lcccSpec_args = [
 			Buffer.from(command),
 			Buffer.from(this._name),
-			chaincodeDeploymentSpec.toBuffer()
+			chaincodeDeploymentSpec.toBuffer(),
+			Buffer.from(''),
+			Buffer.from(''),
+			Buffer.from(''),
 		];
 		if (request['endorsement-policy']) {
 			lcccSpec_args[3] = this._buildEndorsementPolicy(request['endorsement-policy']);
+		}
+		if (request['collections-config']) {
+			const collectionConfigPackage = this._buildCollectionsConfigPackage(request['collections-config']);
+			lcccSpec_args[6] = collectionConfigPackage.toBuffer();
 		}
 
 		const lcccSpec = {
@@ -2081,6 +2101,10 @@ var Channel = class {
 	// internal utility method to build chaincode policy
 	_buildEndorsementPolicy(policy) {
 		return Policy.buildPolicy(this.getMSPManager().getMSPs(), policy);
+	}
+
+	_buildCollectionsConfigPackage(collectionsConfig) {
+		return CollectionConfig.buildCollectionConfigPackage(collectionsConfig);
 	}
 
 	/**

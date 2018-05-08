@@ -114,9 +114,9 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 
 					targets.push(peer);    // a peer can be the target this way
 					channel.addPeer(peer); // or a peer can be the target this way
-				                       	// you do not have to do both, just one, when there are
-				                       	// 'targets' in the request, those will be used and not
-				                       	// the peers added to the channel
+									   	// you do not have to do both, just one, when there are
+									   	// 'targets' in the request, those will be used and not
+									   	// the peers added to the channel
 				}
 			}
 		}
@@ -418,6 +418,7 @@ function buildChaincodeProposal(client, the_user, chaincode_path, version, type,
 		cc_id = e2e.chaincodeId;
 	}
 
+  	const collectionsConfigPath = path.resolve(__dirname, './collections-config.json');
 	// send proposal to endorser
 	var request = {
 		chaincodePath: chaincode_path,
@@ -443,7 +444,8 @@ function buildChaincodeProposal(client, the_user, chaincode_path, version, type,
 					{ '2-of': [{ 'signed-by': 0}, { 'signed-by': 1 }]}
 				]
 			}
-		}
+		},
+		'collections-config': collectionsConfigPath
 	};
 
 	if (version === 'v3')

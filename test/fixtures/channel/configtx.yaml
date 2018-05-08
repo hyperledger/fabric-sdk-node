@@ -113,7 +113,7 @@ Orderer: &OrdererDefaults
         - orderer.example.com:7050
 
     # Batch Timeout: The amount of time to wait before creating a batch
-    BatchTimeout: 2s
+    BatchTimeout: 0.5s
 
     # Batch Size: Controls the number of messages batched into a block
     BatchSize:
@@ -186,4 +186,25 @@ Capabilities:
         # determined to be desired for all peers running v1.0.x, but the
         # modification of which would cause incompatibilities.  Users should
         # leave this flag set to true.
-        V1_1: true
+        # V1_1: true
+
+        # V1.2 for Application enables the new non-backwards compatible
+        # features and fixes of fabric v1.2, it implies V1_1.
+        V1_2: true
+        # V1_1_PVTDATA_EXPERIMENTAL is an Application capability to enable the
+        # private data capability.  It is only supported when using peers built
+        # with experimental build tag.  When set to true, private data
+        # collections can be configured upon chaincode instantiation and
+        # utilized within chaincode Invokes.
+        # NOTE: Use of this feature with non "experimental" binaries on the
+        # network may cause a fork.
+        V1_1_PVTDATA_EXPERIMENTAL: true
+        # V1_1_RESOURCETREE_EXPERIMENTAL is an Application capability to enable
+        # the resources capability. Currently this is needed for defining
+        # resource-based access control (RBAC). RBAC helps set fine-grained
+        # access control on system resources such as the endorser and various
+        # system chaincodes. Default is v1.0-based access control based on
+        # CHANNEL_READERS and CHANNEL_WRITERS.
+        # NOTE: Use of this feature with non "experimental" binaries on
+        # the network may cause a fork.
+        V1_1_RESOURCETREE_EXPERIMENTAL: true
