@@ -1,4 +1,4 @@
-## v1.1.1
+## v1.1.2
 Fri May  4 09:04:06 EDT 2018
 
 * [b65eafc](https://github.com/hyperledger/fabric-sdk-node/commit/b65eafc) [FAB-9846](https://jira.hyperledger.org/browse/FAB-9846) NodeSDK - update GRPC level

@@ -1,9 +1,10 @@
-v1.1.1 May 04, 2018
+v1.1.2 May 09, 2018
 -----------------------
 
 Release Notes
 -------------
-Do not use this version, it has missing file.
+Build issue addressed, FAB-9967 (https://jira.hyperledger.org/browse/FAB-9967).
+V1.1.1 has missing files, this version corrects that.
 
 Known Vulnerabilities
 ---------------------
