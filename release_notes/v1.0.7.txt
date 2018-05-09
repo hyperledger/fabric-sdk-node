@@ -1,9 +1,10 @@
-v1.0.6 May 4, 2018
+v1.0.7 May 9, 2018
 -------------------------
 
 Release Notes
 -------------
-Do not use this version, it has missing files.
+Replaces v1.0.6
+v1.0.6 has missing files and is unusable.
 
 Known Vulnerabilities
 ---------------------
@@ -19,4 +20,4 @@ none
 
 Change Log
 ----------
-https://github.com/hyperledger/fabric-sdk-node/blob/release-1.0/CHANGELOG.md#v106
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.0/CHANGELOG.md#v107

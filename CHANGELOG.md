@@ -1,4 +1,4 @@
-## v1.0.6
+## v1.0.7
 Fri May  4 10:06:48 EDT 2018
 
 * [e7e04e8](https://github.com/hyperledger/fabric-sdk-node/commit/e7e04e8) [FAB-9846](https://jira.hyperledger.org/browse/FAB-9846) NodeSDK v1.0 - update GRPC level

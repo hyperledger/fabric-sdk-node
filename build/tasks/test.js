@@ -40,7 +40,7 @@ if (!/-snapshot/.test(release)) {
 	else
 		throw new Error('Unknown architecture: ' + arch);
 
-	dockerImageTag += '-' + release;
+	dockerImageTag += '-' + '1.0.6'; //update as needed
 }
 
 process.env.DOCKER_IMG_TAG = dockerImageTag;
