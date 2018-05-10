@@ -84,12 +84,7 @@ module.exports.sendPeersProposal = function (peers, proposal, timeout) {
 			} else {
 				logger.debug('sendPeersProposal - Promise is rejected: ' +
 					result.reason());
-				if (result.reason() instanceof Error) {
-					responses.push(result.reason());
-				}
-				else {
-					responses.push(new Error(result.reason()));
-				}
+				responses.push(result.reason());
 			}
 		});
 		return responses;

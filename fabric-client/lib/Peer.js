@@ -103,7 +103,11 @@ var Peer = class extends Remote {
 					} else {
 						if (proposalResponse) {
 							logger.debug('Received proposal response from peer "%s": status - %s', self._url, proposalResponse.response.status);
-							resolve(proposalResponse);
+							if (proposalResponse.response.status >= 500) {
+								reject(proposalResponse);
+							} else {
+								resolve(proposalResponse);
+							}
 						} else {
 							logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
 							reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
