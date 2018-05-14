@@ -7,14 +7,15 @@
 
 'use strict';
 
-var utils = require('./utils.js');
-var Remote = require('./Remote');
-var grpc = require('grpc');
-var util = require('util');
+const utils = require('./utils.js');
+const Remote = require('./Remote');
+const grpc = require('grpc');
+const util = require('util');
 
-var _serviceProto = grpc.load(__dirname + '/protos/peer/peer.proto').protos;
+const _serviceProto = grpc.load(__dirname + '/protos/peer/peer.proto').protos;
+const _discoveryProto = grpc.load(__dirname + '/protos/discovery/protocol.proto').discovery;
 
-var logger = utils.getLogger('Peer.js');
+const logger = utils.getLogger('Peer.js');
 
 /**
  * The Peer class represents a peer in the target blockchain network.
@@ -42,8 +43,9 @@ var Peer = class extends Remote {
 	constructor(url, opts) {
 		super(url, opts);
 
-		logger.debug('Peer.const - url: %s timeout: %s', url, this._request_timeout);
+		logger.debug('Peer.const - url: %s timeout: %s name:%s', url, this._request_timeout, this.getName());
 		this._endorserClient = new _serviceProto.Endorser(this._endpoint.addr, this._endpoint.creds, this._options);
+		this._discoveryClient = new _discoveryProto.Discovery(this._endpoint.addr, this._endpoint.creds, this._options);
 	}
 
 	/**
@@ -51,11 +53,12 @@ var Peer = class extends Remote {
 	 */
 	close() {
 		if(this._endorserClient) {
-			logger.info('close - closing peer connection ' + this._endpoint.addr);
+			logger.debug('close - closing peer endorser connection ' + this._endpoint.addr);
 			this._endorserClient.close();
 		}
-		if(this._channel_event_hub) {
-			this._channel_event_hub.close();
+		if(this._discoveryClient) {
+			logger.debug('close - closing peer discovery connection ' + this._endpoint.addr);
+			this._discoveryClient.close();
 		}
 	}
 
@@ -65,16 +68,17 @@ var Peer = class extends Remote {
 	 * or runs queries.
 	 *
 	 * @param {Proposal} proposal - A protobuf encoded byte array of type
-	 *                              [Proposal]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/proposal.proto#L134}
+	 *        [Proposal]{@link https://github.com/hyperledger/fabric/blob/v1.2.0/protos/peer/proposal.proto}
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
-	 *                              response before rejecting the promise with a
-	 *                              timeout error. This overrides the default timeout
-	 *                              of the Peer instance and the global timeout in the config settings.
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Peer instance and the global
+	 *        timeout in the config settings.
 	 * @returns {Promise} A Promise for a {@link ProposalResponse}
 	 */
 	sendProposal(proposal, timeout) {
-		logger.debug('Peer.sendProposal - Start');
-		let self = this;
+		const method = 'sendProposal';
+		logger.debug('%s - Start ----%s %s', method, this.getName(), this.getUrl());
+		const self = this;
 		let rto = self._request_timeout;
 		if (typeof timeout === 'number')
 			rto = timeout;
@@ -85,15 +89,15 @@ var Peer = class extends Remote {
 
 		return this.waitForReady(this._endorserClient).then(() => {
 			return new Promise(function(resolve, reject) {
-				var send_timeout = setTimeout(function(){
-					logger.error('sendProposal - timed out after:%s', rto);
+				const send_timeout = setTimeout(function(){
+					logger.error('%s - timed out after:%s', method, rto);
 					return reject(new Error('REQUEST_TIMEOUT'));
 				}, rto);
 
 				self._endorserClient.processProposal(proposal, function(err, proposalResponse) {
 					clearTimeout(send_timeout);
 					if (err) {
-						logger.debug('Received proposal response from: %s status: %s',self._url, err);
+						logger.debug('%s - Received proposal response from: %s status: %s', method, self._url, err);
 						if(err instanceof Error) {
 							reject(err);
 						}
@@ -102,12 +106,62 @@ var Peer = class extends Remote {
 						}
 					} else {
 						if (proposalResponse) {
-							logger.debug('Received proposal response from peer "%s": status - %s', self._url, proposalResponse.response.status);
-							if (proposalResponse.response.status >= 500) {
-								reject(proposalResponse);
-							} else {
-								resolve(proposalResponse);
-							}
+							logger.debug('%s - Received proposal response from peer "%s": status - %s', method, self._url, proposalResponse.response.status);
+							resolve(proposalResponse);
+						} else {
+							logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
+							reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
+						}
+					}
+				});
+			});
+		});
+	}
+
+	/**
+	 * Send an discovery request to this peer.
+	 *
+	 * @param {SignedRequest} request - A protobuf encoded byte array of type
+	 *        [Proposal]{@link https://github.com/hyperledger/fabric/blob/v1.2.0/protos/discovery/protocol.proto}
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Peer instance and the global
+	 *        timeout in the config settings.
+	 * @returns {Promise} A Promise for a {@link DiscoveryResponse}
+	 */
+	sendDiscovery(request, timeout) {
+		const method = 'sendDiscovery';
+		logger.debug('%s - Start', method);
+		const self = this;
+		let rto = self._request_timeout;
+		if (typeof timeout === 'number')
+			rto = timeout;
+
+		if(!request) {
+			return Promise.reject(new Error('Missing request to send to peer discovery service'));
+		}
+
+		return this.waitForReady(this._discoveryClient).then(() => {
+			return new Promise(function(resolve, reject) {
+				const send_timeout = setTimeout(function(){
+					logger.error('%s - timed out after:%s', method, rto);
+					return reject(new Error('REQUEST_TIMEOUT'));
+				}, rto);
+
+				self._discoveryClient.discover(request, function(err, response) {
+					clearTimeout(send_timeout);
+					if (err) {
+						logger.debug('%s - Received discovery response from: %s status: %s', method, self._url, err);
+						if(err instanceof Error) {
+							reject(err);
+						}
+						else {
+							reject(new Error(err));
+						}
+					} else {
+						if (response) {
+							logger.debug('%s - Received discovery response from peer "%s"', method, self._url);
+							resolve(response);
 						} else {
 							logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
 							reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));

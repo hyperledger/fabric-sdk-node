@@ -1,17 +1,7 @@
 /**
  * Copyright 2018 IBM All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the 'License');
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an 'AS IS' BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 'use strict';
 
@@ -51,6 +41,74 @@ test('\n\n***** use only admin identity  *****\n\n', async function(t) {
 	await queries(t, client_org1, channel, tx_id_string);
 	await manually(t, client_org1);
 
+	t.end();
+});
+
+test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
+	const client = await getClientForOrg(t, 'org1');
+	const channel = client.getChannel('adminconfig');
+
+	let q_results = await channel.queryInstantiatedChaincodes('peer0.org1.example.com', true);
+	const chaincode_id = q_results.chaincodes[0].name;
+	const version = q_results.chaincodes[0].version;
+
+	let results = await channel._discover({
+		target:'peer0.org1.example.com',
+		chaincodeId: chaincode_id //to get a chaincode query
+	});
+
+	t.equals(results.config.msps.OrdererMSP.id, 'OrdererMSP', 'Checking MSP ID');
+	t.equals(results.config.msps.Org1MSP.id, 'Org1MSP', 'Checking MSP ID');
+	t.equals(results.config.msps.Org2MSP.id, 'Org2MSP', 'Checking MSP ID');
+	t.equals(results.config.orderers.OrdererMSP.endpoints[0].host, 'orderer.example.com', 'Checking orderer host');
+	t.equals(results.config.orderers.OrdererMSP.endpoints[0].port, 7050, 'Checking orderer port');
+	t.equals(results.peers_by_org.Org1MSP.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
+	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
+	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
+	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, 'v2', 'Checking peer chaincode version');
+	t.equals(results.endorsement_targets.example.groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
+	t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
+	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, chaincode_id, 'Checking peer chaincode name');
+	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, version, 'Checking peer chaincode version');
+	t.equals(results.endorsement_targets.example.layouts[0].quantities_by_group.G0, 1, 'Checking layout quantities_by_group');
+	//logger.info('D I S C O V E R Y   R E S U L T S \n %j', results);
+
+	// try without the target specfied
+	results = await channel._discover({
+		chaincodeId: chaincode_id //to get a chaincode query
+	});
+
+	t.equals(results.config.msps.OrdererMSP.id, 'OrdererMSP', 'Checking MSP ID');
+	t.equals(results.config.msps.Org1MSP.id, 'Org1MSP', 'Checking MSP ID');
+	t.equals(results.config.msps.Org2MSP.id, 'Org2MSP', 'Checking MSP ID');
+	t.equals(results.config.orderers.OrdererMSP.endpoints[0].host, 'orderer.example.com', 'Checking orderer host');
+	t.equals(results.config.orderers.OrdererMSP.endpoints[0].port, 7050, 'Checking orderer port');
+	t.equals(results.peers_by_org.Org1MSP.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
+	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
+	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
+	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, 'v2', 'Checking peer chaincode version');
+	t.equals(results.endorsement_targets.example.groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
+	t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
+	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
+	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, 'v2', 'Checking peer chaincode version');
+	t.equals(results.endorsement_targets.example.layouts[0].quantities_by_group.G0, 1, 'Checking layout quantities_by_group');
+
+	results = await channel._discover({
+		chaincodeId: chaincode_id,
+		target_names: true,
+		hostname: 'localhost'
+	});
+	t.equals(channel.getOrderers()[0].getUrl(), 'grpcs://localhost:7050', 'Checking orderer url');
+	t.equals(channel.getPeers()[0].getUrl(), 'grpcs://localhost:7051', 'Checking peer url');
+
+	q_results = await channel.queryInstantiatedChaincodes(null, true);
+	t.equals(q_results.chaincodes[0].name, chaincode_id, 'Checking able to query using a discovered peer');
+
+	const tx_id_string = await invoke(t, client, channel);
+
+	await queries(t, client, channel, tx_id_string);
+
+	t.pass('Successfully completed testing');
 	t.end();
 });
 
@@ -139,14 +197,20 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 			txId  : tx_id
 		};
 
-		const create_results = await client_org1.createChannel(request);
-		if(create_results.status && create_results.status === 'SUCCESS') {
-			t.pass('Successfully created the channel.');
-			await sleep(5000);
-		} else {
-			t.fail('Failed to create the channel. ');
+		try {
+			const create_results = await client_org1.createChannel(request);
+			if(create_results.status && create_results.status === 'SUCCESS') {
+				t.pass('Successfully created the channel.');
+				await sleep(10000);
+			} else {
+				t.fail('Failed to create the channel. ' + create_results.status + ' :: ' + create_results.info);
+				throw new Error('Failed to create the channel. ');
+			}
+		} catch(error) {
+			t.fail('Failed to create channel :'+ error);
 			throw new Error('Failed to create the channel. ');
 		}
+
 
 		// have the client build a channel instance with all peers and orderers
 		// as defined in the loaded connection profile

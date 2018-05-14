@@ -13,7 +13,7 @@ var logger = utils.getLogger('packager/Car.js');
 
 class Car {
 	package (path) {
-		logger.info('Packaging CAR file from %s', path);
+		logger.debug('Packaging CAR file from %s', path);
 		return utils.readFile(path);
 	}
 }

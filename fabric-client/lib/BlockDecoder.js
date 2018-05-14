@@ -685,7 +685,6 @@ function decodeConfig(proto_config) {
 	var config = {};
 	config.sequence = proto_config.getSequence().toString(); //unit64
 	config.channel_group = decodeConfigGroup(proto_config.getChannelGroup());
-	config.type = proto_config.getType();
 
 	return config;
 }
@@ -711,7 +710,6 @@ function decodeConfigUpdate(config_update_bytes) {
 	config_update.channel_id = proto_config_update.getChannelId();
 	config_update.read_set = decodeConfigGroup(proto_config_update.getReadSet());
 	config_update.write_set = decodeConfigGroup(proto_config_update.getWriteSet());
-	config_update.type = proto_config_update.getType();
 
 	return config_update;
 }

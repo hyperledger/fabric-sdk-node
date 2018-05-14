@@ -38,6 +38,8 @@ const _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
 const _mspConfigProto = grpc.load(__dirname + '/protos/msp/msp_config.proto').msp;
 const _mspPrincipalProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
 const _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
+const _discoveryProto = grpc.load(__dirname + '/protos/discovery/protocol.proto').discovery;
+const _gossipProto = grpc.load(__dirname + '/protos/gossip/message.proto').gossip;
 
 const ImplicitMetaPolicy_Rule = { 0: 'ANY', 1: 'ALL', 2: 'MAJORITY' };
 
@@ -209,19 +211,30 @@ const Channel = class {
 	 *
 	 * @param {Peer} peer - An instance of the Peer class that has been initialized with URL
 	 *        and other gRPC options such as TLS credentials and request timeout.
+	 * @param {string} org_name - The organization this peer belongs.
 	 * @param {ChannelPeerRoles} roles - Optional. The roles this peer will perform
 	 *        on this channel.  A role that is not defined will default to true
+	 * @param {boolean} replace - If an orderer exist with the same name, replace
+	 *        with this one.
 	 */
-	addPeer(peer, org_name, roles) {
+	addPeer(peer, org_name, roles, replace) {
 		const name = peer.getName();
 		const check = this._channel_peers.get(name);
 		if(check) {
-			var error = new Error();
-			error.name = 'DuplicatePeer';
-			error.message = 'Peer ' + name + ' already exists';
-			logger.error(error.message);
-			throw error;
+			if(replace) {
+				logger.debug('/n removing old peer  --name: %s --URL: %s',peer.getName(),peer.getUrl());
+
+				this.removePeer(check);
+			} else {
+				var error = new Error();
+				error.name = 'DuplicatePeer';
+				error.message = 'Peer ' + name + ' already exists';
+				logger.error(error.message);
+				throw error;
+			}
 		}
+		logger.debug('/n adding a new peer  --name: %s --URL: %s',peer.getName(),peer.getUrl());
+
 		const channel_peer = new ChannelPeer(org_name, this, peer, roles);
 		this._channel_peers.set(name, channel_peer);
 	}
@@ -292,16 +305,22 @@ const Channel = class {
 	 * orderer backend.
 	 *
 	 * @param {Orderer} orderer - An instance of the Orderer class.
+	 * @param {boolean} replace - If an orderer exist with the same name, replace
+	 *        with this one.
 	 */
-	addOrderer(orderer) {
+	addOrderer(orderer, replace) {
 		const name = orderer.getName();
 		const check = this._orderers.get(name);
 		if(check) {
-			var error = new Error();
-			error.name = 'DuplicateOrderer';
-			error.message = 'Orderer ' + name + ' already exists';
-			logger.error(error.message);
-			throw error;
+			if(replace) {
+				this.removeOrderer(check);
+			} else {
+				var error = new Error();
+				error.name = 'DuplicateOrderer';
+				error.message = 'Orderer ' + name + ' already exists';
+				logger.error(error.message);
+				throw error;
+			}
 		}
 		this._orderers.set(name, orderer);
 	}
@@ -519,6 +538,426 @@ const Channel = class {
 		};
 
 		return orderer.sendDeliver(envelope);
+	}
+	/*
+	 * Internal use only
+	 *
+	 * @typedef {Object} DiscoveryRequest
+	 * @property {Peer | string} target - Optional. A Peer object or Peer name that
+	 *           will be asked to discovery information about this channel.
+	 *           Default is the first peer assigned to this channel that has the
+	 *           'discovery' role.
+	 * @property {chaincode} else - Required. Description
+	 */
+
+	/**
+	 * Send a request to a known peer to discover information about the fabric
+	 * network.
+	 *
+	 * @param {DiscoveryRequest} request -
+	 * @returns {DiscoveryResponse} The results of the discover
+	 */
+	_discover(request) {
+		const method = 'discover';
+		const self = this;
+		logger.debug('%s - start', method);
+		const results = {};
+		if(!request) {
+			request = {};
+		}
+		const target_peer = this._getTargetForDiscovery(request.target);
+		const signer = this._clientContext._getSigningIdentity(true); //use the admin if assigned
+		const discovery_request = new _discoveryProto.Request();
+
+		const authentication = new _discoveryProto.AuthInfo();
+		authentication.setClientIdentity(signer.serialize());
+		if(target_peer.getClientCertHash()) {
+			authentication.setClientTlsCertHash(target_peer.getClientCertHash());
+		}
+		discovery_request.setAuthentication(authentication);
+
+		// be sure to add all entries to this array before setting into the
+		// grpc object
+		const queries = [];
+
+		// always add ConfigQuery
+		{
+			const query = new _discoveryProto.Query();
+			queries.push(query);
+			query.setChannel(this.getName());
+
+			const config_query = new _discoveryProto.ConfigQuery();
+			query.setConfigQuery(config_query);
+			logger.debug('%s - adding config query', method);
+		}
+
+		// always add PeerMembershipQuery
+		{
+			const query = new _discoveryProto.Query();
+			queries.push(query);
+			query.setChannel(this.getName());
+
+			const peer_query = new _discoveryProto.PeerMembershipQuery();
+			query.setPeerQuery(peer_query);
+			logger.debug('%s - adding peer query', method);
+		}
+
+		// add a chaincode query to get endorsement layouts if chaincodeId set
+		if(request.chaincodeId) {
+			const query = new _discoveryProto.Query();
+			queries.push(query);
+			query.setChannel(this.getName());
+
+			const chaincode_call = new _discoveryProto.ChaincodeCall();
+			chaincode_call.setName(request.chaincodeId);
+			// TODO - handle collection names
+			// chaincode_call.setCollectionNames(request.collectionNames);
+
+			const interest1 = new _discoveryProto.ChaincodeInterest();
+			const chaincodes = [];
+			chaincodes.push(chaincode_call);
+			interest1.setChaincodes(chaincodes);
+
+			const cc_query = new _discoveryProto.ChaincodeQuery();
+			const interests = [];
+			interests.push(interest1);
+			// be sure to set the array after completely building it
+			cc_query.setInterests(interests);
+			query.setCcQuery(cc_query);
+			logger.debug('%s - adding chaincode query', method);
+		}
+
+		// be sure to set the array after completely building it
+		discovery_request.setQueries(queries);
+
+		// build up the outbound request object
+		const payload = discovery_request.toBuffer();
+		const signature = Buffer.from(signer.sign(payload));
+		const signed_request = {
+			payload: payload,
+			signature: signature
+		};
+
+		return target_peer.sendDiscovery(signed_request).then((response) => {
+			logger.debug('%s - processing discovery response', method);
+			if(response && response.results) {
+				let error_msg = null;
+				logger.debug('%s - parse discovery response', method);
+				for(let index in response.results) {
+					let result = response.results[index];
+					if(!result) {
+						error_msg = 'Discover results are missing';
+						break;
+					} else if(result.result === 'error') {
+						logger.error('Channel:%s received discovery error:%s', self.getName(), result.error.content);
+						error_msg = result.error.content;
+						break;
+					} else {
+						logger.debug('%s - process results', method);
+						if (result.config_result) {
+							results.config = self._processDiscoveryConfigResults(result.config_result);
+						}
+						if (result.members) {
+							results.peers_by_org = self._processDiscoveryMembershipResults(result.members);
+						}
+						if (result.cc_query_res) {
+							results.endorsement_targets = self._processDiscoveryChaincodeResults(result.cc_query_res);
+						}
+						logger.debug('%s - completed processing results', method);
+					}
+				}
+
+				if(error_msg) {
+					return Promise.reject('Channel:' + self.getName() + ' Discovery error:' + error_msg);
+				} else {
+					if(request.target_names) {
+						logger.debug('%s - return target names', method);
+						// add orderers names
+						if(results.config && results.config.orderers){
+							for(let msp_id in results.config.orderers) {
+								logger.debug('%s - orderers msp:%s', method, msp_id);
+								const endpoints = results.config.orderers[msp_id].endpoints;
+								for(let index in endpoints) {
+									const endpoint = endpoints[index];
+									logger.debug('%s - orderer mspid:%s endpoint:%s:%s', method, msp_id, endpoint.host, endpoint.port);
+									endpoint.name = self._buildOrdererName(
+										msp_id,
+										endpoint.host,
+										endpoint.port,
+										results.config.msps,
+										request
+									);
+								}
+							}
+						}
+						// add peer names
+						if(results.peers_by_org){
+							for(let msp_id in results.peers_by_org) {
+								logger.debug('%s - peers msp:%s', method, msp_id);
+								const peers = results.peers_by_org[msp_id].peers;
+								for(let index in peers) {
+									const peer = peers[index];
+									peer.name = self._buildPeerName(
+										peer.endpoint,
+										peer.mspid,
+										results.config.msps,
+										request
+									);
+									logger.debug('%s - peer:%j', method, peer);
+								}
+							}
+						}
+						//add peer names for setEndorsements
+						if(results.endorsement_targets) {
+							for(let chaincode_name in results.endorsement_targets){
+								const chaincode = results.endorsement_targets[chaincode_name];
+								for(let group_name in chaincode.groups) {
+									logger.debug('%s - endorsing peer group %s', method, group_name);
+									const peers = chaincode.groups[group_name].peers;
+									for(let index in peers) {
+										const peer = peers[index];
+										peer.name = self._buildPeerName(
+											peer.endpoint,
+											peer.mspid,
+											results.config.msps,
+											request
+										);
+										logger.debug('%s - peer:%j', method, peer);
+									}
+								}
+							}
+
+						}
+					}
+					return Promise.resolve(results);
+				}
+			} else {
+				return Promise.reject(new Error('Discovery has failed to return results'));
+			}
+		});
+	}
+
+	_processDiscoveryChaincodeResults(q_chaincodes) {
+		const method = '_processDiscoveryChaincodeResults';
+		logger.debug('%s - start', method);
+		const by_chaincode = {};
+		if(q_chaincodes && q_chaincodes.content) {
+			if(Array.isArray(q_chaincodes.content)) {
+				for(let index in q_chaincodes.content) {
+					const q_endors_desc = q_chaincodes.content[index];
+					const endorsement_descriptor = {};
+					by_chaincode[q_endors_desc.chaincode] = endorsement_descriptor;
+
+					// GROUPS
+					endorsement_descriptor.groups ={};
+					for(let group_name in q_endors_desc.endorsers_by_groups) {
+						logger.debug('%s - found group: %s', method, group_name);
+						const group = {};
+						group.peers = this._processPeers(q_endors_desc.endorsers_by_groups[group_name].peers);
+						//all done with this group
+						endorsement_descriptor.groups[group_name] = group;
+					}
+
+					// LAYOUTS
+					endorsement_descriptor.layouts = [];
+					for(let index in q_endors_desc.layouts){
+						const q_layout = q_endors_desc.layouts[index];
+						const layout = {};
+						layout.quantities_by_group = {};
+						for(let group_name in q_layout.quantities_by_group) {
+							layout.quantities_by_group[group_name] = q_layout.quantities_by_group[group_name];
+						}
+						logger.debug('%s - layout :%j', method, layout);
+						endorsement_descriptor.layouts.push(layout);
+					}
+				}
+			}
+		}
+
+		return by_chaincode;
+	}
+
+	_processDiscoveryConfigResults(q_config){
+		const method = '_processDiscoveryConfigResults';
+		logger.debug('%s - start', method);
+		const config = {};
+		if(q_config) try {
+			if(q_config.msps) {
+				config.msps = {};
+				for(let id in q_config.msps) {
+					logger.debug('%s - found organization %s', method, id);
+					let q_msp = q_config.msps[id];
+					const msp_config = {
+						id: id,
+						orgs : q_msp.organizational_unit_identifiers,
+						rootCerts: utils.convertBytetoString(q_msp.root_certs),
+						intermediateCerts: utils.convertBytetoString(q_msp.intermediate_certs),
+						admins: utils.convertBytetoString(q_msp.admins),
+						tls_root_certs: utils.convertBytetoString(q_msp.tls_root_certs),
+						tls_intermediate_certs: utils.convertBytetoString(q_msp.tls_intermediate_certs)
+					};
+					config.msps[id] = msp_config;
+				}
+			}
+			/*
+			"orderers":{"OrdererMSP":{"endpoint":[{"host":"orderer.example.com","port":7050}]}}}
+			*/
+			if(q_config.orderers) {
+				config.orderers = {};
+				for(let org_name in q_config.orderers) {
+					logger.debug('%s - found orderer org: ', method, org_name);
+					config.orderers[org_name] = {};
+					config.orderers[org_name].endpoints = [];
+					for(let index in q_config.orderers[org_name].endpoint){
+						config.orderers[org_name].endpoints.push(q_config.orderers[org_name].endpoint[index]);
+					}
+				}
+			}
+		} catch(err) {
+			logger.error('Problem with discovery config: %s', err);
+		}
+
+		return config;
+	}
+
+	_processDiscoveryMembershipResults(q_members) {
+		const method = '_processDiscoveryChannelMembershipResults';
+		logger.debug('%s - start', method);
+		const peers_by_org = {};
+		if(q_members && q_members.peers_by_org) {
+			for(let org_name in q_members.peers_by_org) {
+				logger.debug('%s - found org:%s', method, org_name);
+				peers_by_org[org_name] = {};
+				peers_by_org[org_name].peers = this._processPeers(q_members.peers_by_org[org_name].peers);
+			}
+		}
+		return peers_by_org;
+	}
+
+	_processPeers(q_peers) {
+		const method = '_processPeers';
+		const peers = [];
+		q_peers.forEach((q_peer)=>{
+			const peer = {};
+			// IDENTITY
+			const q_identity = _identityProto.SerializedIdentity.decode(q_peer.identity);
+			peer.mspid = q_identity.mspid;
+
+			// MEMBERSHIP
+			const q_membership_message = _gossipProto.GossipMessage.decode(q_peer.membership_info.payload);
+			peer.endpoint = q_membership_message.alive_msg.membership.endpoint;
+			logger.debug('%s - found peer :%s', method, peer.endpoint);
+
+			// STATE
+			const message_s = _gossipProto.GossipMessage.decode(q_peer.state_info.payload);
+			peer.ledger_height = message_s.state_info.properties.ledger_height;
+			logger.debug('%s - found ledger_height :%s', method, peer.ledger_height);
+			peer.chaincodes = [];
+			for(let index in message_s.state_info.properties.chaincodes) {
+				const q_chaincode = message_s.state_info.properties.chaincodes[index];
+				const chaincode = {};
+				chaincode.name = q_chaincode.getName();
+				chaincode.version = q_chaincode.getVersion();
+				//TODO metadata ?
+				logger.debug('%s - found chaincode :%j', method, chaincode);
+				peer.chaincodes.push(chaincode);
+			}
+
+			//all done with this peer
+			peers.push(peer);
+		});
+
+		return peers;
+	}
+
+	_buildOrdererName(msp_id, host, port, msps, request) {
+		const method = '_buildOrdererName';
+		logger.debug('%s - start', method);
+
+		const name = 'grpcs://' + host + ':' + port;
+		const url = this._buildUrl(host, port, request);
+		let found = null;
+		this._orderers.forEach((orderer)=>{if(orderer.getUrl() === url){
+			logger.debug('%s - found existing orderer %s', method, url);
+			found = orderer;
+		}});
+		if(!found) {
+			if(msps[msp_id]) {
+				logger.debug('%s - create a new orderer %s', method, url);
+				found = new Orderer(url, this._buildOptions(name, url, host, msps[msp_id]));
+				this.addOrderer(found, true);
+			} else {
+				throw new Error('No TLS cert information available');
+			}
+		}
+
+		return found.getName();
+	}
+
+	_buildPeerName(endpoint, msp_id, msps, request) {
+		const method = '_buildPeerName';
+		logger.debug('%s - start', method);
+
+		const name = 'grpcs://' + endpoint;
+		const host_port = endpoint.split(':');
+		const url = this._buildUrl(host_port[0], host_port[1], request);
+		let found = null;
+		this._channel_peers.forEach((peer)=>{if(peer.getUrl() === url){
+			logger.debug('%s - found existing peer %s', method, url);
+			found = peer;
+		}});
+		if(!found) {
+			if(msp_id && msps && msps[msp_id]) {
+				logger.debug('%s - create a new peer %s', method, url);
+				found = new Peer(url, this._buildOptions(name, url, host_port[0], msps[msp_id]));
+				this.addPeer(found, msp_id, null, true);
+			} else {
+				throw new Error('No TLS cert information available');
+			}
+		}
+
+		return found.getName();
+	}
+
+	_buildUrl(hostname, port, request) {
+		const method = '_buildUrl';
+		logger.debug('%s - start', method);
+
+		let t_hostname = hostname;
+
+		if(request && request.hostname) {
+			t_hostname = request.hostname;
+		}
+		const url = 'grpcs://' + t_hostname + ':' + port;
+
+		return url;
+	}
+
+	_buildOptions(name, url, host, msp) {
+		const method = '_buildOptions';
+		logger.debug('%s - start', method);
+
+		const caroots = this._buildTlsRootCerts(msp);
+		const opts = {
+			'pem': caroots,
+			'ssl-target-name-override': host,
+			'name': name
+		};
+		this._clientContext.addTlsClientCertAndKey(opts);
+
+		return opts;
+	}
+
+	_buildTlsRootCerts(msp) {
+		let caroots = '';
+		if(msp.tls_root_certs) {
+			caroots = caroots + msp.tls_root_certs;
+		}
+		if(msp.tls_intermediate_certs) {
+			caroots = caroots + msp.tls_intermediate_certs;
+		}
+
+		return caroots;
 	}
 
 	/**
@@ -2052,6 +2491,15 @@ const Channel = class {
 		}
 
 		return targets;
+	}
+
+	/*
+	 *  utility method to decide on the target for discovery
+	 */
+	_getTargetForDiscovery(target) {
+		let targets = this._getTargets(target, Constants.NetworkConfig.DISCOVERY_ROLE, true);
+		// only want one peer
+		return targets[0];
 	}
 
 	/*

@@ -6,6 +6,8 @@ syntax = "proto3";
 
 option go_package = "github.com/hyperledger/fabric/protos/gossip" ;
 
+import "../common/collection.proto";
+
 package gossip;
 
 
@@ -254,6 +256,8 @@ message PrivatePayload {
     string namespace            = 2;
     string tx_id                = 3;
     bytes private_rwset         = 4;
+    uint64 private_sim_height  = 5;
+    common.CollectionConfigPackage collection_configs = 6;
 }
 
 // Membership messages

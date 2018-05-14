@@ -52,7 +52,7 @@ var Orderer = class extends Remote {
 	 */
 	close() {
 		if (this._ordererClient) {
-			logger.info('close - closing orderer connection ' + this._endpoint.addr);
+			logger.debug('close - closing orderer connection ' + this._endpoint.addr);
 			this._ordererClient.close();
 		}
 	}

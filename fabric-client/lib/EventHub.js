@@ -162,6 +162,7 @@ var EventHub = class {
 		// fabric connection state of this eventhub
 		this._connected = false;
 		this._connect_running = false;
+		this._disconnect_running = false;
 		// should this event hub reconnect on registrations
 		this._force_reconnect = true;
 		// connect count for this instance
@@ -363,6 +364,13 @@ var EventHub = class {
 	 * all listeners that provided an "onError" callback.
 	 */
 	disconnect() {
+		if(this._disconnect_running) {
+			logger.debug('disconnect - is running, exit');
+			return;
+		}
+		// to be sure applications do not call again as sometimes the disconnect
+		// has been placed in the callback causing an endless loop
+		this._disconnect_running = true;
 		let err = new Error('EventHub has been shutdown');
 		if(this._connected || this._connect_running) {
 			this._disconnect(err);
@@ -371,6 +379,7 @@ var EventHub = class {
 			this._closeAllCallbacks(err);
 			logger.debug('disconnect - EventHub is not connected');
 		}
+		this._disconnect_running = false;
 	}
 
 	/* Internal method

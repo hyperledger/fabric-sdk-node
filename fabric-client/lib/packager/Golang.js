@@ -25,7 +25,7 @@ class GolangPackager extends BasePackager {
 	 * @returns {Promise.<TResult>}
 	 */
 	package (chaincodePath, metadataPath) {
-		logger.info('packaging GOLANG from %s', chaincodePath);
+		logger.debug('packaging GOLANG from %s', chaincodePath);
 
 		// Determine the user's $GOPATH
 		let goPath = process.env['GOPATH'];

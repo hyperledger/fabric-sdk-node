@@ -578,3 +578,24 @@ module.exports.checkIntegerConfig = function(opts, configName) {
 	}
 	return result;
 };
+
+module.exports.convertBytetoString = function(buffer_array, encoding) {
+	let result;
+	let decode_as = 'utf8';
+	if(!encoding) {
+		decode_as = encoding;
+	}
+	if(Array.isArray(buffer_array)) {
+		const a_strings = [];
+		for(let index in buffer_array) {
+			const buffer = buffer_array[index];
+			const hex_string = buffer.toString(decode_as);
+			a_strings.push(hex_string);
+		}
+		result = a_strings.join('');
+	} else {
+		result = buffer_array.toString(decode_as);
+	}
+
+	return result;
+};

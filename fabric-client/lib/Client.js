@@ -458,7 +458,7 @@ var Client = class extends BaseClient {
 		} else {
 			let client_config = this._network_config.getClientConfig();
 			if(client_config && client_config.organization) {
-				let organization_config = this._network_config.getOrganization(client_config.organization);
+				let organization_config = this._network_config.getOrganization(client_config.organization, true);
 				if(organization_config) {
 					let ca_infos = organization_config.getCertificateAuthorities();
 					if(ca_infos.length > 0) {
@@ -1117,7 +1117,6 @@ var Client = class extends BaseClient {
 		// step 2: construct the ChaincodeDeploymentSpec
 		const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
-		chaincodeDeploymentSpec.setEffectiveDate(clientUtils.buildCurrentTimestamp()); //TODO may wish to add this as a request setting
 
 		return _getChaincodePackageData(request, this.isDevMode())
 			.then((data) => {
@@ -1298,7 +1297,7 @@ var Client = class extends BaseClient {
 
 		const client_config = this._network_config.getClientConfig();
 		if(client_config && client_config.organization) {
-			const organization_config = this._network_config.getOrganization(client_config.organization);
+			const organization_config = this._network_config.getOrganization(client_config.organization, true);
 			if(organization_config) {
 				mspid = organization_config.getMspid();
 				admin_key = organization_config.getAdminPrivateKey();
@@ -1323,7 +1322,7 @@ var Client = class extends BaseClient {
 
 		const client_config = this._network_config.getClientConfig();
 		if(client_config && client_config.organization) {
-			let organization_config = this._network_config.getOrganization(client_config.organization);
+			let organization_config = this._network_config.getOrganization(client_config.organization, true);
 			if(organization_config) {
 				this._mspid = organization_config.getMspid();
 			}
@@ -1365,7 +1364,7 @@ var Client = class extends BaseClient {
 					try {
 						const client_config = this._network_config.getClientConfig();
 						if(client_config && client_config.organization) {
-							const organization_config = this._network_config.getOrganization(client_config.organization);
+							const organization_config = this._network_config.getOrganization(client_config.organization, true);
 							if(organization_config) {
 								mspid = organization_config.getMspid();
 							}

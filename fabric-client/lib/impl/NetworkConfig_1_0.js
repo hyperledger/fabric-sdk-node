@@ -61,6 +61,9 @@ var NetworkConfig_1_0 = class {
 		logger.debug('constructor, network_config: ' + JSON.stringify(network_config));
 		this._network_config = network_config;
 		this._client_context = client_context;
+		this._peers = new Map();
+		this._channel = new Map();
+		this._orderers = new Map();
 	}
 
 	mergeSettings(additions) {
@@ -160,8 +163,8 @@ var NetworkConfig_1_0 = class {
 	getPeer(name, channel_org) {
 		var method = 'getPeer';
 		logger.debug('%s - name %s',method, name);
-		var peer = null;
-		if(this._network_config && this._network_config[PEERS_CONFIG]) {
+		var peer = this._peers.get(name);
+		if(!peer && this._network_config && this._network_config[PEERS_CONFIG]) {
 			let peer_config = this._network_config[PEERS_CONFIG][name];
 			if(peer_config) {
 				let opts = {name: name};
@@ -170,6 +173,7 @@ var NetworkConfig_1_0 = class {
 				this.addTimeout(opts, ENDORSER);
 				this._client_context.addTlsClientCertAndKey(opts);
 				peer = new Peer(peer_config[URL], opts);
+				this._peers.set(name, peer);
 			}
 		}
 
@@ -245,7 +249,7 @@ var NetworkConfig_1_0 = class {
 		return orderer;
 	}
 
-	getOrganization(name) {
+	getOrganization(name, only_client) {
 		var method = 'getOrganization';
 		logger.debug('%s - name %s',method, name);
 		var organization = null;
@@ -253,7 +257,7 @@ var NetworkConfig_1_0 = class {
 			var organization_config = this._network_config[ORGS_CONFIG][name];
 			if(organization_config) {
 				organization = new Organization(name, organization_config.mspid);
-				if(organization_config[PEERS_CONFIG]) {
+				if(organization_config[PEERS_CONFIG] && !only_client) {
 					for(let i in organization_config[PEERS_CONFIG]) {
 						let peer_name = organization_config[PEERS_CONFIG][i];
 						let peer = this.getPeer(peer_name);
@@ -361,6 +365,7 @@ var NetworkConfig_1_0 = class {
 				}
 				if(peer) {
 					const org_name = this._getOrganizationForPeer(peer_name);
+					logger.debug('_addPeersToChannel - %s - %s', peer.getName(), peer.getUrl());
 					channel.addPeer(peer, org_name, roles);
 				}
 			}
