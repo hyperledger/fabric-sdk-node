@@ -709,7 +709,7 @@ var FabricCAClient = class {
 				path: self._baseAPI + api_method,
 				method: http_method,
 				headers: {
-					Authorization: self.generateAuthToken(requestObj, signingIdentity)
+					Authorization: self.generateAuthToken(http_method, self._baseAPI + api_method, requestObj, signingIdentity)
 				},
 				ca: self._tlsOptions.trustedRoots,
 				rejectUnauthorized: self._tlsOptions.verify,
@@ -777,16 +777,17 @@ var FabricCAClient = class {
 	/*
 	 * Generate authorization token required for accessing fabric-ca APIs
 	 */
-	generateAuthToken(reqBody, signingIdentity) {
+	generateAuthToken(method, uri, reqBody, signingIdentity) {
 		// specific signing procedure is according to:
-		// https://github.com/hyperledger/fabric-ca/blob/master/util/util.go#L213
+		// https://github.com/hyperledger/fabric-ca/blob/master/util/util.go#L271
 		let cert = Buffer.from(signingIdentity._certificate).toString('base64');
-		let bodyAndcert;
+		let b64Uri = Buffer.from(uri).toString('base64');
+		let bodyAndcert = method + '.' + b64Uri + '.';
 		if (reqBody) {
 			let body = Buffer.from(JSON.stringify(reqBody)).toString('base64');
-			bodyAndcert = body + '.' + cert;
+			bodyAndcert += body + '.' + cert;
 		} else {
-			bodyAndcert = '.' + cert;
+			bodyAndcert += '.' + cert;
 		}
 
 		let sig = signingIdentity.sign(bodyAndcert, { hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives) });
