@@ -11,7 +11,7 @@ const client_utils = require('fabric-client/lib/client-utils.js');
 const logger = utils.getLogger('unit.client');
 
 const tape = require('tape');
-const _test = require('tape-promise');
+const _test = require('tape-promise').default;
 const test = _test(tape);
 const path = require('path');
 const fs = require('fs-extra');

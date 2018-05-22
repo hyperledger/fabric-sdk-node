@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 const tape = require('tape');
-const _test = require('tape-promise');
+const _test = require('tape-promise').default;
 const test = _test(tape);
 const { hash_sha2_256, hash_sha3_256, hash_sha2_384, hash_sha3_384 } = require('../../fabric-client/lib/hash');
 const { SHA2_256, SHA3_256, SHA2_384, SHA3_384, } = require('../../fabric-client/lib/hash');
