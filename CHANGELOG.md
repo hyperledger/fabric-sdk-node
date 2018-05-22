@@ -1,3 +1,8 @@
+## v1.0.8
+Tue May 22 15:44:04 EDT 2018
+
+* [fe67740](https://github.com/hyperledger/fabric-sdk-node/commit/fe67740) [FAB-10045](https://jira.hyperledger.org/browse/FAB-10045) NodeSDK do not read db on user load
+
 ## v1.0.7
 Fri May  4 10:06:48 EDT 2018
 
