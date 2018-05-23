@@ -6,7 +6,7 @@
 */
 
 const tape = require('tape');
-const tapePromise = require('tape-promise');
+const tapePromise = require('tape-promise').default;
 const test = tapePromise(tape);
 const { checkPolicy } = require('fabric-client/lib/Policy');
 

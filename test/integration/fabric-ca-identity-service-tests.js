@@ -1,8 +1,14 @@
+/**
+ * Copyright 2017 IBM All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 let utils = require('fabric-client/lib/utils.js');
 let logger = utils.getLogger('integration.client');
 
 let tape = require('tape');
-let _test = require('tape-promise');
+let _test = require('tape-promise').default;
 let test = _test(tape);
 const path = require('path');
 let FabricCAServices = require('../../fabric-ca-client');
