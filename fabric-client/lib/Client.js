@@ -1338,6 +1338,7 @@ var Client = class extends BaseClient {
 	 * @param {Object} opts - contains
 	 *                  - username [required] - username of the user
 	 *                  - password [optional] - password of the user
+	 *                  - caName [optional] - name of the Certificate Authority
 	 */
 	_setUserFromConfig(opts) {
 		if (!opts || typeof opts.username === 'undefined' || opts.username === null || opts.username === '') {
@@ -1372,7 +1373,7 @@ var Client = class extends BaseClient {
 						if(!mspid) {
 							throw new Error('Network configuration is missing this client\'s organization and mspid');
 						}
-						ca_service = self.getCertificateAuthority();
+						ca_service = self.getCertificateAuthority(opts.caName);
 					} catch(err) {
 						reject(err);
 					}
@@ -1445,8 +1446,10 @@ var Client = class extends BaseClient {
 	 * with a network configuration.
 	 *
 	 * @typedef {Object} UserNamePasswordObject
-	 * @property {string} username - A string representing the user name of the user
-	 * @property {string} password - A string repsesenting the password of the user
+	 * @property {string} username - Required. A string representing the user name of the user
+	 * @property {string} password - Optional. A string repsesenting the password of the user
+	 * @property {string} caName - Optional. A string repsesenting the name of the Certificate Authority.
+		If not specified, will use the first Certifcate Authority on the list.
 	 */
 
 	/**
@@ -1461,7 +1464,7 @@ var Client = class extends BaseClient {
 	 * @param {User | UserNamePasswordObject} user - An instance of the User class encapsulating the authenticated
 	 *                      user’s signing materials (private key and enrollment certificate).
 	 *                      The parameter may also be a {@link UserNamePasswordObject} that contains the username
-	 *                      and optionaly the password. A network configuration must has been loaded to use the
+	 *                      and optionally the password and caName. A network configuration must has been loaded to use the
 	 *                      {@link UserNamePasswordObject} which will also create the user context and set it on
 	 *                      this client instance. The created user context will be based on the current network
 	 *                      configuration( i.e. the current organization's CA, current persistence stores).

@@ -689,13 +689,128 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 		return true;
 	}).then((results) => {
 		t.pass('Testing has completed successfully');
-
 		t.end();
 	}).catch((error) =>{
 		logger.error('catch connection profile test error:: %s', error.stack ? error.stack : error);
 		t.fail('Test failed with '+ error);
 		t.end();
 	});
+});
+
+test('\n\n***** Enroll user and set user context using a specified caName *****\n\n', async function(t) {
+	try {
+		// ca_name and org_name must match network configuration
+		const ca_name = 'ca-org1';
+		const org_name = 'org1';
+		const testuser = 'test_caname';
+
+		testUtil.resetDefaults();
+
+		// Build a 'Client' instance that knows the network
+		// then load org1.yaml to the same instance
+		let client_org1 = Client.loadFromConfig('test/fixtures/network.yaml');
+		client_org1.loadFromConfig('test/fixtures/org1.yaml');
+		t.pass('Successfully loaded client section of network config');
+
+		// tell this client instance where the state and key stores are located
+		await client_org1.initCredentialStores();
+		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
+
+		let caService = client_org1.getCertificateAuthority();
+		t.equals(caService._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
+
+		const admin = await client_org1.setUserContext({username:'admin', password: 'adminpw'});
+		t.pass('Successfully set user context \'admin\' for ' + org_name);
+
+		// register another user and enroll it with a specified caName
+		const ca1 = client_org1.getCertificateAuthority();
+		const secret = await ca1.register({enrollmentID: testuser, affiliation: org_name}, admin);
+		t.pass('Successfully registerred user ' + testuser + ' for ' + org_name);
+
+		let user = await client_org1.setUserContext({username: testuser, password: secret, caName: ca_name});
+		t.pass('Successfully enrolled user and set user context using username, password, and caName');
+
+		user = client_org1.getUserContext();
+		if (user && user.getName() === testuser) {
+			t.pass('Successfully get user from context');
+		} else {
+			t.fail('Failed to get user from context');
+		}
+
+		// register another user and enroll it without a caName. SDK will pick the first CA on the list
+		const testuser2 = testuser + '2';
+		const secret2 = await ca1.register({enrollmentID: testuser2, affiliation: org_name}, admin);
+		t.pass('Successfully registerred user ' + testuser2 + ' for ' + org_name);
+
+		user = await client_org1.setUserContext({username: testuser2, password: secret2});
+		t.pass('Successfully enrolled user and set user context using username and password');
+
+		user = client_org1.getUserContext(testuser2);
+		if (user) {
+			t.pass('Successfully get user context for the specified username');
+		} else {
+			t.fail('Failed to get user context for the specified username');
+		}
+	} catch (err) {
+		logger.error(err);
+		t.fail('Got unexpected error when testing setUserContext with caName. Error: ' + err.message);
+	}
+
+	t.end();
+});
+
+test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', async function(t) {
+	try {
+		// ca_name and org_name must match network configuration
+		const ca_name = 'ca-org1';
+		const ca_bad_name = 'ca-badname'; // non existent ca
+		const ca_wrong_name = 'ca-org2'; // ca in another org
+		const org_name = 'org1';
+		const testuser = 'user_ca_badname';
+
+		testUtil.resetDefaults();
+
+		// Build a 'Client' instance that knows the network
+		// then load org1.yaml to the same instance
+		let client_org1 = Client.loadFromConfig('test/fixtures/network.yaml');
+		client_org1.loadFromConfig('test/fixtures/org1.yaml');
+		t.pass('Successfully loaded client section of network config');
+
+		// tell this client instance where the state and key stores are located
+		await client_org1.initCredentialStores();
+		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
+
+		let caService = client_org1.getCertificateAuthority();
+		t.equals(caService._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
+
+		const admin = await client_org1.setUserContext({username:'admin', password: 'adminpw'});
+		t.pass('Successfully set user context \'admin\' for ' + org_name);
+
+		const ca1 = client_org1.getCertificateAuthority();
+		const secret = await ca1.register({enrollmentID: testuser, affiliation: org_name}, admin);
+
+		try {
+			const user = await client_org1.setUserContext({username: testuser, password: secret, caName: ca_bad_name});
+			t.fail('Should throw error when setting user context using a bad caName');
+		} catch (err) {
+			// Expected error should include missing this client\'s organization and certificate authority
+			t.equal(err.message.includes('missing this client\'s organization and certificate authority'), true,
+				'Got expected error to enroll user using a bad caName. Error: ' + err.message);
+		}
+
+		try {
+			const user = await client_org1.setUserContext({username: testuser, password: secret, caName: ca_wrong_name});
+			t.fail('Should throw error when setting user context using a caName in another org');
+		} catch (err) {
+			// Expected error should include Authorization failure
+			t.equal(err.message.includes('Authorization failure'), true,
+				'Got expected error to enroll user using a caName in another org. Error: ' + err.message);
+		}
+	} catch (err) {
+		t.fail('Got unexpected error when testing setUserContext with bad caName. Error: ' + err.message);
+	}
+
+	t.end();
 });
 
 function sleep(ms) {
