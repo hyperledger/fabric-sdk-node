@@ -20,6 +20,7 @@ var commonProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos
 var kv_query_resultProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/ledger/queryresult/kv_query_result.proto')).queryresult;
 var rwsetProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/ledger/rwset/rwset.proto')).rwset;
 var kvrwsetProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/ledger/rwset/kvrwset/kv_rwset.proto')).kvrwset;
+var chaincodeProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/peer/chaincode.proto')).protos;
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('BlockDecoder');
 
@@ -228,5 +229,45 @@ test('\n\n*** BlockDecoder.js test HeaderType ***\n\n', (t) => {
 		null,
 		'checking the HeaderType decodePayloadBasedOnType()'
 	);
+	t.end();
+});
+
+test('\n\n*** BlockDecoder.js test ChaincodeSpec ***\n\n', (t) => {
+	let chaincodeTypeToString = BlockDecoder.__get__('chaincodeTypeToString');
+	t.equals(chaincodeTypeToString(0), 'UNDEFINED', 'Check ChaincodeType for UNDEFINED');
+	t.equals(chaincodeTypeToString(1), 'GOLANG', 'Check ChaincodeType for GOLANG');
+	t.equals(chaincodeTypeToString(2), 'NODE', 'Check ChaincodeType for NODE');
+	t.equals(chaincodeTypeToString(99), 'UNKNOWN', 'Check ChaincodeType for UNKNOWN');
+
+	let decodeChaincodeInput = BlockDecoder.__get__('decodeChaincodeInput');
+	let input_proto = new chaincodeProto.ChaincodeInput();
+	input_proto.setArgs([Buffer.from('Hello'), Buffer.from('World')]);
+	input_proto.setDecorations({ test: Buffer.from('Good') });
+
+	let chaincodeid_proto = new chaincodeProto.ChaincodeID();
+	chaincodeid_proto.setPath('');
+	chaincodeid_proto.setName('test-chaincode');
+	chaincodeid_proto.setVersion('v111');
+
+	let decodeChaincodeSpec = BlockDecoder.__get__('decodeChaincodeSpec');
+	let spec_proto = new chaincodeProto.ChaincodeSpec();
+	spec_proto.setType(chaincodeProto.ChaincodeSpec.Type.GOLANG);
+	spec_proto.setChaincodeId(chaincodeid_proto);
+	spec_proto.setInput(input_proto);
+	spec_proto.setTimeout(888);
+
+	let spec_decoded = decodeChaincodeSpec(spec_proto.toBuffer());
+	t.equals(spec_decoded.type, chaincodeProto.ChaincodeSpec.Type.GOLANG, 'Check ChaincodeSpec.type');
+	t.equals(spec_decoded.typeString, 'GOLANG', 'Check string for ChaincodeSpec.type');
+	t.equals(spec_decoded.chaincode_id.path, '', 'Check ChaincodeSpec.chaincode_id.path');
+	t.equals(spec_decoded.chaincode_id.name, 'test-chaincode', 'Check ChaincodeSpec.chaincode_id.name');
+	t.equals(spec_decoded.chaincode_id.version, 'v111', 'Check ChaincodeSpec.chaincode_id.version');
+	t.equals(spec_decoded.timeout, 888, 'Check ChaincodeSpec.timeout');
+
+	let input_decoded = spec_decoded.input;
+	t.equals(input_decoded.args[0].toString('utf8'), 'Hello', 'Check ChaincodeSpec.input.Args[0]');
+	t.equals(input_decoded.args[1].toString('utf8'), 'World', 'Check ChaincodeSpec.input.Args[1]');
+	t.equals(input_decoded.decorations.test.toString('utf8'), 'Good', 'Check ChaincodeSpec.input.decorations[test]');
+
 	t.end();
 });

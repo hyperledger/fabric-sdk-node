@@ -17,6 +17,7 @@ var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos
 var _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
 var _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
 var _peerConfigurationProto = grpc.load(__dirname + '/protos/peer/configuration.proto').protos;
+var _chaincodeProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 var _mspPrProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
 var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
 var _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
@@ -171,7 +172,7 @@ actions {array}
 	header -- {{@link SignatureHeader}}
 	payload
 		chaincode_proposal_payload
-			input -- {byte[]}
+			input -- {{@link ChaincodeInvocationSpec}} for a endorser transaction
 		action
 			proposal_response_payload
 				proposal_hash -- {byte[]}
@@ -203,6 +204,27 @@ actions {array}
 			endorsements -- {{@link Endorsement}[]}
 </pre>
 	 * @typedef {Object} Transaction
+	 */
+
+	/**
+	 * An endorsement proposal, which includes the name of the chaincode
+	 * to be invoked and the arguments to be passed to the chaincode.
+	 * <br><br>
+	 * A "ChaincodeInvocationSpec" has the following object structure.
+<br><pre>
+chaincode_spec
+	type -- {int}
+	chaincode_id
+		path -- {string}
+		name -- {string}
+		version -- {string}
+	input
+		args -- {byte[][]}
+		decorations -- {map of string to byte[]}
+	timeout -- {int}
+</pre>
+	 *
+	 * @typedef {Object} ChaincodeInvocationSpec
 	 */
 
 	/**
@@ -1079,10 +1101,69 @@ function decodeChaincodeActionPayload(payload_bytes) {
 function decodeChaincodeProposalPayload(chaincode_proposal_payload_bytes) {
 	var chaincode_proposal_payload = {};
 	var proto_chaincode_proposal_payload = _proposalProto.ChaincodeProposalPayload.decode(chaincode_proposal_payload_bytes);
-	chaincode_proposal_payload.input = proto_chaincode_proposal_payload.getInput().toBuffer();
+	chaincode_proposal_payload.input = decodeChaincodeProposalPayloadInput(proto_chaincode_proposal_payload.getInput());
 	//TransientMap is not allowed to be included on ledger
 
 	return chaincode_proposal_payload;
+}
+
+function decodeChaincodeProposalPayloadInput(chaincode_proposal_payload_input_bytes) {
+	var chaincode_proposal_payload_input = {};
+
+	// For a normal transaction, input is ChaincodeInvocationSpec.
+	var proto_chaincode_invocation_spec = _chaincodeProto.ChaincodeInvocationSpec.decode(chaincode_proposal_payload_input_bytes);
+	chaincode_proposal_payload_input.chaincode_spec = decodeChaincodeSpec(proto_chaincode_invocation_spec.getChaincodeSpec().toBuffer());
+
+	return chaincode_proposal_payload_input;
+}
+
+const chaincode_type_as_string = {
+	0: 'UNDEFINED',
+	1: 'GOLANG',
+	2: 'NODE',
+	3: 'CAR',
+	4: 'JAVA'
+};
+
+function chaincodeTypeToString(type) {
+	let type_str = chaincode_type_as_string[type];
+	if (typeof type_str == 'undefined') {
+		return 'UNKNOWN';
+	} else {
+		return type_str;
+	}
+}
+
+function decodeChaincodeSpec(chaincode_spec_bytes) {
+	var chaincode_spec = {};
+	var proto_chaincode_spec = _chaincodeProto.ChaincodeSpec.decode(chaincode_spec_bytes);
+	chaincode_spec.type = proto_chaincode_spec.getType();
+	// Add a string for the chaincode type (GOLANG, NODE, etc.)
+	chaincode_spec.typeString = chaincodeTypeToString(chaincode_spec.type);
+	chaincode_spec.input = decodeChaincodeInput(proto_chaincode_spec.getInput().toBuffer());
+	chaincode_spec.chaincode_id = proto_chaincode_spec.getChaincodeId();
+	chaincode_spec.timeout = proto_chaincode_spec.getTimeout();
+
+	return chaincode_spec;
+}
+
+function decodeChaincodeInput(chaincode_spec_input_bytes) {
+	var input = {};
+	var proto_chaincode_input = _chaincodeProto.ChaincodeInput.decode(chaincode_spec_input_bytes);
+	var args = proto_chaincode_input.getArgs();
+
+	input.args = [];
+	for (let i in args) {
+		input.args.push(args[i].toBuffer());
+	}
+	let decorations = proto_chaincode_input.getDecorations();
+	let keys = Object.keys(decorations.map);
+	input.decorations = {};
+	for (let i in keys) {
+		input.decorations[keys[i]] = decorations.map[keys[i]].value.toBuffer();
+	}
+
+	return input;
 }
 
 function decodeChaincodeEndorsedAction(proto_chaincode_endorsed_action) {
