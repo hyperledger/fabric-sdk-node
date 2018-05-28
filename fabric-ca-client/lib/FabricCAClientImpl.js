@@ -752,7 +752,7 @@ var FabricCAClient = class {
 				socket.setTimeout(CONNECTION_TIMEOUT);
 				socket.on('timeout', () => {
 					request.abort();
-		  			reject(new Error(util.format('Calling %s endpoint failed, CONNECTION Timeout', api_method)));
+					reject(new Error(util.format('Calling %s endpoint failed, CONNECTION Timeout', api_method)));
 				});
 			});
 
@@ -761,9 +761,9 @@ var FabricCAClient = class {
 				request.setTimeout(SO_TIMEOUT, () => {
 					reject(new Error(util.format('Calling %s endpoint failed, READ Timeout', api_method)));
 				});
-	  		}
+			}
 
-	  		request.on('error', function (err) {
+			request.on('error', function (err) {
 				reject(new Error(util.format('Calling %s endpoint failed with error [%s]', api_method, err)));
 			});
 

@@ -104,9 +104,9 @@ var TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 var TEST_USER_ENROLLMENT = {
 	'name': 'admin2',
 	'mspid': 'test',
-	'roles':null,
-	'affiliation':'',
-	'enrollmentSecret':'',
+	'roles': null,
+	'affiliation': '',
+	'enrollmentSecret': '',
 	'enrollment': {
 		'signingIdentity': '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a',
 		'identity': {
@@ -119,8 +119,6 @@ const halfOrdersForCurve = {
 	'secp256r1': elliptic.curves['p256'].n.shrn(1),
 	'secp384r1': elliptic.curves['p384'].n.shrn(1)
 };
-
-var _client = new Client();
 
 test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 	testutil.resetDefaults();
@@ -143,10 +141,10 @@ test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 	let expectedError = '/Error:.*\/usr\/local\/lib/';
 	if (process.platform === 'win32') {
 		expectedError = 'Error: Win32 error 126/';
-	};
+	}
 	t.throws(
 		() => {
-			cs = utils.newCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234' });
+			cs = utils.newCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234'});
 		},
 		expectedError,
 		'Should attempt to load the bccsp_pkcs11 module and fail because of the dummy library path'
@@ -154,7 +152,7 @@ test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 	t.end();
 });
 
-test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', function (t) {
+test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', (t) => {
 	testutil.resetDefaults();
 	var cryptoUtils = utils.newCryptoSuite();
 	t.throws(
@@ -164,14 +162,14 @@ test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', function (t) {
 		/importKey opts.ephemeral is false, which requires CryptoKeyStore to be set./,
 		'Test missing cryptoKeyStore: cryptoSuite.importKey'
 	);
-	t.throws(
-		() => {
-			cryptoUtils.generateKey();
-		},
-		/generateKey opts.ephemeral is false, which requires CryptoKeyStore to be set./,
-		'Test missing cryptoKeyStore: cryptoSuite.generateKey'
-	);
-	t.end();
+	cryptoUtils.generateKey().catch(err => {
+		t.ok(err.toString()
+			.includes('generateKey opts.ephemeral is false, which requires CryptoKeyStore to be set.'),
+		'Test missing cryptoKeyStore: cryptoSuite.generateKey');
+
+		t.end();
+	});
+
 });
 
 test('\n\n ** CryptoSuite_ECDSA_AES - ephemeral true tests **\n\n', function (t) {
@@ -220,9 +218,9 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA384,
 		'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with default key size which should be 384');
 
-    //reset to default key size
+	//reset to default key size
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');//force for gulp test
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');//force for gulp test
 	cryptoUtils = utils.newCryptoSuite();
 	cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 

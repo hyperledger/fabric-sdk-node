@@ -277,15 +277,15 @@ const Channel = class {
 	 * @param {string} name - The name of the peer assigned to this channel
 	 * @returns {ChannelPeer} The ChannelPeer instance
 	 */
-	 getChannelPeer(name) {
-		 const channel_peer = this._channel_peers.get(name);
+	getChannelPeer(name) {
+		const channel_peer = this._channel_peers.get(name);
 
-		 if(!channel_peer){
-			 throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
-		 }
+		if(!channel_peer){
+			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
+		}
 
-		 return channel_peer;
-	 }
+		return channel_peer;
+	}
 
 	/**
 	 * Returns a list of peers assigned to this channel instance.
@@ -2273,8 +2273,6 @@ const Channel = class {
 						return Promise.all(promises);
 					}
 					return Promise.reject('Failed to execute transaction: ' + errorMsg);
-				}).catch(error => {
-					return Promise.reject(error);
 				});
 	}
 
@@ -2878,9 +2876,9 @@ var ChannelPeer = class {
 	 *
 	 * @returns {string} The organization name.
 	 */
-	 getOrganizationName() {
-		 return this._org_name;
-	 }
+	getOrganizationName() {
+		return this._org_name;
+	}
 
 	/**
 	 * Get the name. This is a client-side only identifier for this

@@ -163,7 +163,7 @@ class IdentityService {
 			throw new Error('Can not get signingIdentity from registrar');
 		}
 
-		const url = 'identities/' + enrollmentID + '?ca='+this.client._caName;;
+		const url = 'identities/' + enrollmentID + '?ca='+this.client._caName;
 		return this.client.get(url, signingIdentity);
 	}
 

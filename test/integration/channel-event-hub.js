@@ -378,7 +378,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		let event_monitor_1 =  new Promise((resolve, reject) => {
 			let handle = setTimeout(() => {
 				t.fail('Timeout - Failed to receive the event for event1');
-				eh.unregisterTxEvent(req1.txId.getTransactionID());
+				event_hub.unregisterTxEvent(req1.txId.getTransactionID());
 				reject('timeout');
 			}, 200000);
 

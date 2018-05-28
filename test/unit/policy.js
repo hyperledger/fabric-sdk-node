@@ -50,17 +50,17 @@ test('Test Policy.checkPolicy()', async (t) => {
 	policy = {
 		identities: [{
 			role: {
-			  name: 'member',
-			  mspId: 'Org1MSP'
+				name: 'member',
+				mspId: 'Org1MSP'
 			}
-		  }
+		}
 		],
 		policy: {
-		  '1-of': [
-			{
-			  'signed-by': 0
-			}
-		  ]
+			'1-of': [
+				{
+					'signed-by': 0
+				}
+			]
 		}
 	};
 	t.doesNotThrow(()=>{
