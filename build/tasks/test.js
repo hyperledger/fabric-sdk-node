@@ -8,7 +8,6 @@
 var gulp = require('gulp');
 var tape = require('gulp-tape');
 var tapColorize = require('tap-colorize');
-var istanbul = require('gulp-istanbul');
 var addsrc = require('gulp-add-src');
 
 var fs = require('fs-extra');
@@ -67,9 +66,7 @@ gulp.task('pre-test', function() {
 		'fabric-ca-client/lib/helper.js',
 		'fabric-ca-client/lib/IdentityService.js',
 		'fabric-ca-client/lib/AffiliationService.js',
-	])
-	.pipe(istanbul())
-	.pipe(istanbul.hookRequire());
+	]);
 });
 
 gulp.task('clean-up', function() {
@@ -106,7 +103,17 @@ gulp.task('compile', shell.task([
 	ignoreErrors: false // once compile failed, throw error
 }));
 
-gulp.task('test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'ca'], function() {
+// Use nyc instead of gulp-istanbul to generate coverage report
+// Cannot use gulp-istabul because it throws "unexpected identifier" for async/await functions
+gulp.task('test', shell.task(
+	'./node_modules/nyc/bin/nyc.js gulp run-test'
+));
+
+gulp.task('test-headless', shell.task(
+	'./node_modules/nyc/bin/nyc.js gulp run-test-headless'
+));
+
+gulp.task('run-test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'ca'], function() {
 	// use individual tests to control the sequence they get executed
 	// first run the ca-tests that tests all the member registration
 	// and enrollment scenarios (good and bad calls). Then the rest
@@ -156,14 +163,10 @@ gulp.task('test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'c
 	))
 	.pipe(tape({
 		reporter: tapColorize()
-	}))
-	.pipe(istanbul.writeReports({
-		reporters: ['lcov', 'json', 'text',
-			'text-summary', 'cobertura']
 	}));
 });
 
-gulp.task('test-headless', ['clean-up', 'lint', 'pre-test', 'ca'], function() {
+gulp.task('run-test-headless', ['clean-up', 'lint', 'pre-test', 'ca'], function() {
 	// this is needed to avoid a problem in tape-promise with adding
 	// too many listeners
 	// to the "unhandledRejection" event
@@ -180,10 +183,6 @@ gulp.task('test-headless', ['clean-up', 'lint', 'pre-test', 'ca'], function() {
 	))
 	.pipe(tape({
 		reporter: tapColorize()
-	}))
-	.pipe(istanbul.writeReports({
-		reporters: ['lcov', 'json', 'text',
-			'text-summary', 'cobertura']
 	}));
 });
 

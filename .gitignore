@@ -29,5 +29,6 @@ test/fixtures/src/github.com/example_cc/junk.go
 *.heapsnapshot
 .vscode
 .idea
+.nyc_output/*
 test/typescript/**/*.js
 test/typescript/**/*.js.map

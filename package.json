@@ -26,7 +26,6 @@
     "gulp-add-src": "^1.0.0",
     "gulp-debug": "^4.0.0",
     "gulp-eslint": "^3.0.1",
-    "gulp-istanbul": "^1.1.1",
     "gulp-jsdoc3": "^2.0.0",
     "gulp-shell": "^0.6.3",
     "gulp-tape": "0.0.9",
@@ -38,6 +37,7 @@
     "log4js": "^2.6.1",
     "mock-couch": "git+https://github.com/jimthematrix/mock-couch.git",
     "nano": "^6.4.4",
+    "nyc": "^11.8.0",
     "require-dir": "^1.0.0",
     "rewire": "^4.0.1",
     "sinon": "^5.0.7",
@@ -49,6 +49,23 @@
     "typescript": "2.8.3",
     "winston": "^2.2.0",
     "x509": "^0.3.2"
+  },
+  "nyc": {
+    "include": [
+      "fabric-client/lib/**/*.js",
+      "fabric-ca-client/lib/FabricCAClientImpl.js",
+      "fabric-ca-client/lib/helper.js",
+      "fabric-ca-client/lib/IdentityService.js",
+      "fabric-ca-client/lib/AffiliationService.js"
+    ],
+    "reporter": [
+      "lcov",
+      "json",
+      "text",
+      "text-summary",
+      "cobertura"
+    ],
+    "cache": true
   },
   "license": "Apache-2.0",
   "licenses": [
