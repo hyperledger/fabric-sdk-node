@@ -103,8 +103,59 @@ test('Test SideDB.checkCollectionConfig()', async (t) => {
 		maxPeerCount: 123,
 		requiredPeerCount: 100
 	};
+	t.throws(()=>{
+		checkCollectionConfig(config);
+	},
+	/CollectionConfig Requires Param "blockToLive" of type unsigned int64, found undefined\(type: undefined\)/,
+	'collectionConfig without valid blockToLive should throw error');
+
+	config = {
+		name: 'test',
+		policy: policy,
+		maxPeerCount: 123,
+		requiredPeerCount: 100
+	};
+	t.throws(()=>{
+		checkCollectionConfig(config);
+	},
+	/CollectionConfig Requires Param "blockToLive" of type unsigned int64, found undefined\(type: undefined\)/,
+	'collectionConfig without valid blockToLive should throw error');
+
+	config = {
+		name: 'test',
+		policy: policy,
+		maxPeerCount: 123,
+		requiredPeerCount: 100,
+		blockToLive: 'abcdef'
+	};
+	t.throws(()=>{
+		checkCollectionConfig(config);
+	},
+	/CollectionConfig Requires Param "blockToLive" of type unsigned int64, found "abcdef"\(type: string\)/,
+	'collectionConfig without valid blockToLive should throw error');
+
+	config = {
+		name: 'test',
+		policy: policy,
+		maxPeerCount: 123,
+		requiredPeerCount: 100,
+		blockToLive: '28446744073709551615'
+	};
+	t.throws(()=>{
+		checkCollectionConfig(config);
+	},
+	/CollectionConfig Requires Param "blockToLive" of type unsigned int64, found "28446744073709551615"\(type: string\)/,
+	'collectionConfig without valid blockToLive should throw error');
+
+	config = {
+		name: 'test',
+		policy: policy,
+		maxPeerCount: 123,
+		requiredPeerCount: 100,
+		blockToLive: '18446744073709551615'
+	};
 	t.doesNotThrow(()=>{
 		checkCollectionConfig(config);
 	},
-	'collectionConfig with valid config should throw error');
+	'collectionConfig with valid config should not throw error');
 });

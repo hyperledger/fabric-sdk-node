@@ -26,7 +26,8 @@
       }
     },
     "requiredPeerCount": 1,
-    "maxPeerCount": 2
+    "maxPeerCount": 2,
+    "blockToLive": 100
   },
   {
     "name": "collectionMarblePrivateDetails",
@@ -44,6 +45,7 @@
       }
     },
     "requiredPeerCount": 1,
-    "maxPeerCount": 1
+    "maxPeerCount": 1,
+    "blockToLive": 100
   }
 ]

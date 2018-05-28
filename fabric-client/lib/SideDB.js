@@ -7,6 +7,7 @@
 
 const grpc = require('grpc');
 const fs = require('fs');
+const Long = require('long');
 const Policy = require('./Policy.js');
 const _collectionProto = grpc.load(__dirname + '/protos/common/collection.proto').common;
 
@@ -51,7 +52,8 @@ function checkCollectionConfig(collectionConfig) {
 		name,
 		policy,
 		maxPeerCount,
-		requiredPeerCount
+		requiredPeerCount,
+		blockToLive
 	} = collectionConfig;
 	if (!name || typeof name !== 'string') {
 		throw new Error(format('CollectionConfig Requires Param "name" of type string, found %j(type: %s)', name, typeof name));
@@ -66,6 +68,10 @@ function checkCollectionConfig(collectionConfig) {
 	if (!Number.isInteger(requiredPeerCount)) {
 		throw new Error(format('CollectionConfig Requires Param "requiredPeerCount" of type number, found %j(type: %s)', requiredPeerCount, typeof requiredPeerCount));
 	}
+	if (blockToLive == null || Number.isNaN(Number.parseInt(blockToLive)) ||
+		Long.fromValue(blockToLive, true).isNegative() || Long.fromValue(blockToLive, true) > Long.MAX_UNSIGNED_VALUE) {
+		throw new Error(format('CollectionConfig Requires Param "blockToLive" of type unsigned int64, found %j(type: %s)', blockToLive, typeof blockToLive));
+	}
 }
 
 function buildCollectionConfig(collectionConfig) {
@@ -76,14 +82,16 @@ function buildCollectionConfig(collectionConfig) {
 			name,
 			policy,
 			maxPeerCount,
-			requiredPeerCount
+			requiredPeerCount,
+			blockToLive
 		} = collectionConfig;
 
 		let static_collection_config = {
 			name,
 			member_orgs_policy: {},
 			required_peer_count: requiredPeerCount,
-			maximum_peer_count: maxPeerCount
+			maximum_peer_count: maxPeerCount,
+			block_to_live: blockToLive
 		};
 
 		let principals = [];
