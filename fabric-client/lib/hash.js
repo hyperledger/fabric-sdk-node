@@ -18,17 +18,17 @@ class hash_sha2_256 extends Hash {
 		super(512);
 	}
 
+	hash(data) {
+		return this.reset().update(data).finalize('hex');
+	}
+
 	reset() {
 		this._hash = crypto.createHash('sha256');
 		return super.reset();
 	}
-	update(data) {
-		//logger.debug(`update(${typeof data})`);
-		this._hash.update(data);
-		return this;
-	}
-	finalize() {
-		const hash = this._hash.digest('hex');
+
+	finalize(encoding) {
+		const hash = this._hash.digest(encoding);
 		this.reset();
 		return hash;
 	}
@@ -39,13 +39,17 @@ class hash_sha2_384 extends Hash {
 		super(1024);
 	}
 
+	hash(data) {
+		return this.reset().update(data).finalize('hex');
+	}
+
 	reset() {
 		this._hash = crypto.createHash('sha384');
 		return super.reset();
 	}
 
-	finalize() {
-		const hash = this._hash.digest('hex');
+	finalize(encoding) {
+		const hash = this._hash.digest(encoding);
 		this.reset();
 		return hash;
 	}

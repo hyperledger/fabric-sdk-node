@@ -8,13 +8,10 @@
 
 var tape = require('tape');
 var _test = require('tape-promise').default;
-var crypto = require('crypto');
 var test = _test(tape);
 
 var testutil = require('./util.js');
-var hash = require('fabric-client/lib/hash.js');
 
-var Client = require('fabric-client');
 var Remote = require('fabric-client/lib/Remote.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
@@ -48,89 +45,64 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 	var url = 'grpcs://' + aHostname + ':aport';
 	var opts = { pem: aPem };
 	var remote = null;
+	t.throws(
+		function () {
+			remote = new Remote(url);
+		},
+		/^Error: PEM encoded certificate is required./,
+		'GRPCS Options tests: new Remote should throw PEM encoded certificate is required.'
+	);
+
 	t.doesNotThrow(
 		function () {
-			remote = new Remote(url, opts);
+			remote = new Remote(url, {pem: aPem});
 		},
 		null,
 		'Check not passing any GRPC options.'
 	);
 
-	opts = {};
 	t.throws(
 		function () {
-			url = 'grpcs://' + aHostname + ':aport';
-			remote = new Remote(url, opts);
+			remote = new Remote(url, {pem: aPem, clientKey: aPem});
 		},
-		/^Error: PEM encoded certificate is required./,
-		'GRPCS Options tests: new Remote should throw ' +
-		'PEM encoded certificate is required.'
+		/^Error: clientKey and clientCert are both required./,
+		'GRPCS Options tests: new Remote should throw clientKey and clientCert are both required.'
 	);
 
 	t.throws(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';
-			remote = new Remote(url);
+			remote = new Remote(url, {pem: aPem, clientCert: aPem});
 		},
-		/^Error: PEM encoded certificate is required./,
-		'GRPCS Options tests: new Remote should throw ' +
-		'PEM encoded certificate is required.'
+		/^Error: clientKey and clientCert are both required./,
+		'GRPCS Options tests: new Remote should throw clientKey and clientCert are both required.'
 	);
 
-	opts = { pem: aPem, clientKey: aPem, clientCert: aPem};
 	t.doesNotThrow(
 		function () {
-			remote = new Remote(url, opts);
+			remote = new Remote(url, {pem: aPem, clientKey: aPem, clientCert: aPem});
 		},
 		null,
 		'Pass valid client certificate options.'
 	);
 
-	opts = { pem: aPem, clientKey: aPem};
 	t.throws(
 		function () {
-			url = 'grpcs://' + aHostname + ':aport';
-			remote = new Remote(url, opts);
+			remote = new Remote(url, {pem: aPem, anyStringKey: Buffer.alloc(1)});
 		},
-		/^Error: clientKey and clientCert are both required./,
-		'GRPCS Options tests: new Remote should throw ' +
-		'clientKey and clientCert are both required.'
+		/invalid grpc option value/,
+		'GRPC Options tests: invalid grpc option value.'
 	);
 
-	opts = { pem: aPem, clientCert: aPem};
-	t.throws(
+	t.doesNotThrow(
 		function () {
-			url = 'grpcs://' + aHostname + ':aport';
-			remote = new Remote(url, opts);
+			remote = new Remote(url, {pem: aPem, [Symbol(1)]: ''});
 		},
-		/^Error: clientKey and clientCert are both required./,
-		'GRPCS Options tests: new Remote should throw ' +
-		'clientKey and clientCert are both required.'
+		null,
+		'GRPC Options tests: non-string option key is allowed but ignored'
 	);
 
-	opts = { pem: aPem, clientKey: Buffer.alloc(1), clientCert: aPem};
-	t.throws(
-		function () {
-			url = 'grpcs://' + aHostname + ':aport';
-			remote = new Remote(url, opts);
-		},
-		/^Error: PEM encoded clientKey and clientCert are required./,
-		'GRPCS Options tests: new Remote should throw ' +
-		'PEM encoded clientKey and clientCert are required.'
-	);
-
-	opts = { pem: aPem, clientKey: aPem, clientCert: Buffer.alloc(1)};
-	t.throws(
-		function () {
-			url = 'grpcs://' + aHostname + ':aport';
-			remote = new Remote(url, opts);
-		},
-		/^Error: PEM encoded clientKey and clientCert are required./,
-		'GRPCS Options tests: new Remote should throw ' +
-		'PEM encoded clientKey and clientCert are required.'
-	);
-
-	opts = { pem: aPem, 'grpc-wait-for-ready-timeout': '1000'};
+	opts = {pem: aPem, 'grpc-wait-for-ready-timeout': '1000'};
 	t.throws(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';
@@ -147,12 +119,16 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 	t.equal(remote._grpc_wait_for_ready_timeout, 3000, 'Remote should have grpc waitForReady timeout default to 3000');
 
 	url = 'grpc://' + aHostname + ':aport';
-	opts = null;
-	remote = new Remote(url, opts);
+	remote = new Remote(url);
 	t.equal(aHostname, remote._endpoint.addr, 'GRPC Options tests: new Remote grpc with opts = null _endpoint.addr created');
 	t.ok(remote._endpoint.creds, 'GRPC Options tests: new Remote grpc with opts = null _endpoint.creds created');
 
-	opts = { pem: aPem, 'grpc.dummy_property': 'some_value', 'ssl-target-name-override': aHostnameOverride, 'grpc-wait-for-ready-timeout': 500 };
+	opts = {
+		pem: aPem,
+		'grpc.dummy_property': 'some_value',
+		'ssl-target-name-override': aHostnameOverride,
+		'grpc-wait-for-ready-timeout': 500
+	};
 	remote = new Remote(url, opts);
 	t.equal(aHostnameOverride, remote._options['grpc.ssl_target_name_override'], 'GRPC Options tests: new Remote grpc with opts ssl-target-name-override created');
 	t.ok(remote._endpoint.creds, 'GRPC Options tests: new Remote grpc with opts _endpoint.creds created');
@@ -179,8 +155,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 	t.equal(peer.toString(), 'Peer:{url:grpcs://' + aHostname + ':aport}', 'Checking that peer.toString() reports correctly');
 	//Peer: insecure grpc, opts.pem optional
 	url = 'grpc://' + aHostname + ':aport';
-	opts = null;
-	peer = new Peer(url, opts);
+	peer = new Peer(url);
 	t.equal(aHostname, peer._endpoint.addr, 'GRPC Options tests: new Peer grpc with opts = null _endpoint.addr created');
 	t.equal(peer._grpc_wait_for_ready_timeout, 3000, 'Peer should have _grpc_wait_for_ready_timeout equals 3000');
 	t.ok(peer._endpoint.creds, 'GRPC Options tests: new Peer grpc with opts = null _endpoint.creds created');
@@ -222,7 +197,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'PEM encoded certificate is required.'
 	);
 
-	opts = { pem: aPem, clientKey: aPem, clientCert: aPem};
+	opts = {pem: aPem, clientKey: aPem, clientCert: aPem};
 	t.doesNotThrow(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';
@@ -232,7 +207,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'Pass valid client certificate options.'
 	);
 
-	opts = { pem: aPem, clientKey: aPem};
+	opts = {pem: aPem, clientKey: aPem};
 	t.throws(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';
@@ -243,7 +218,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'clientKey and clientCert are both required.'
 	);
 
-	opts = { pem: aPem, clientCert: aPem};
+	opts = {pem: aPem, clientCert: aPem};
 	t.throws(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';
@@ -275,8 +250,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 
 	//Orderer: insecure grpc, opts.pem optional
 	url = 'grpc://' + aHostname + ':aport';
-	opts = null;
-	orderer = new Orderer(url, opts);
+	orderer = new Orderer(url);
 	t.equal(aHostname, orderer._endpoint.addr, 'GRPC Options tests: new Orederer grpc with opts = null _endpoint.addr created');
 	t.ok(orderer._endpoint.creds, 'GRPC Options tests: new Orderer grpc with opts = null _endpoint.creds created');
 
@@ -320,7 +294,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'PEM encoded certificate is required.'
 	);
 
-	opts = { pem: aPem, clientKey: aPem, clientCert: aPem};
+	opts = {pem: aPem, clientKey: aPem, clientCert: aPem};
 	t.doesNotThrow(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';
@@ -330,7 +304,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'Pass valid client certificate options.'
 	);
 
-	opts = { pem: aPem, clientKey: aPem};
+	opts = {pem: aPem, clientKey: aPem};
 	t.throws(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';
@@ -341,7 +315,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'clientKey and clientCert are both required.'
 	);
 
-	opts = { pem: aPem, clientCert: aPem};
+	opts = {pem: aPem, clientCert: aPem};
 	t.throws(
 		function () {
 			url = 'grpcs://' + aHostname + ':aport';

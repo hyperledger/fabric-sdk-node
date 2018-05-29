@@ -226,9 +226,8 @@ class CryptoSuite_PKCS11 extends api.CryptoSuite {
 	 * sha256 of tod as SKI.
 	 */
 	_ski() {
-		const hash = crypto.createHash('sha256');
-		hash.update(this._tod());
-		return hash.digest();
+		const hash = new hashPrimitives.hash_sha2_256();
+		return hash.reset().update(this._tod()).finalize();
 	}
 
 	/*
