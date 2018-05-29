@@ -483,7 +483,7 @@ var FabricCAClient = class {
 		try {
 			this._validateConnectionOpts(connect_opts);
 		} catch (err) {
-			throw new Error('Invalid connection options.  ' + err.message);
+			throw new Error('Invalid connection options. ' + err.message);
 		}
 
 		this._caName = connect_opts.caname,
@@ -543,7 +543,7 @@ var FabricCAClient = class {
 		var self = this;
 		//all arguments are required
 		if (!enrollmentID || !affiliation || !signingIdentity) {
-			throw new Error('Missing required parameters.  \'enrollmentID\', \'affiliation\', \
+			throw new Error('Missing required parameters. \'enrollmentID\', \'affiliation\', \
 				and \'signingIdentity\' are all required.');
 		} else if (!(typeof maxEnrollments === 'number')) {
 			throw new Error('Missing required parameter. \'maxEnrollments\' must be a number');
@@ -598,7 +598,7 @@ var FabricCAClient = class {
 
 		//all arguments are required
 		if (numArgs < 5) {
-			throw new Error('Missing required parameters.  \'enrollmentID\', \'aki\', \'serial\', \'reason\', \
+			throw new Error('Missing required parameters. \'enrollmentID\', \'aki\', \'serial\', \'reason\', \
 				\'callerID\' and \'signingIdentity\' are all required.');
 		}
 

@@ -208,9 +208,11 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 
 		let tx_id = client_org2.newTransactionID(true);
 		let request = {
-			//targets: // this time we will leave blank so that we can use
-				       // all the peers assigned to the channel ...some may fail
-				       // if the submitter is not allowed, let's see what we get
+			/**
+			 * targets: this time we will leave blank so that we can use
+			 *          all the peers assigned to the channel ...some may fail
+			 *          if the submitter is not allowed, let's see what we get
+			 */
 			block : genesis_block,
 			txId : 	tx_id
 		};
@@ -238,8 +240,9 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 
 		let tx_id = client_org1.newTransactionID(true);
 		let request = {
-			targets: ['peer0.org1.example.com'], // this does assume that we have loaded a
-			                                     // connection profile with a peer by this name
+			// this does assume that we have loaded a
+			// connection profile with a peer by this name
+			targets: ['peer0.org1.example.com'],
 			block : genesis_block,
 			txId : 	tx_id
 		};

@@ -228,7 +228,7 @@ function testKeyStore(store, t) {
 		t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
 		t.equal(recoveredKey.isPrivate(), false, 'Test if the recovered key is a public key');
 	});
-};
+}
 
 test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', function(t) {
 	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'

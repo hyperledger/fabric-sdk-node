@@ -51,11 +51,11 @@ function testLogger(t, ignoreLevels) {
 }
 
 test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
-	if (!!process.env.HFC_LOGGING) {
+	if (process.env.HFC_LOGGING) {
 		delete process.env['HFC_LOGGING'];
 	}
 
-	if (!!global.hfc.logger) {
+	if (global.hfc.logger) {
 		global.hfc.logger = undefined;
 	}
 

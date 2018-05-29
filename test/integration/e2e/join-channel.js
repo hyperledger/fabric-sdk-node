@@ -21,7 +21,6 @@ var Client = require('fabric-client');
 var testUtil = require('../../unit/util.js');
 var e2eUtils = require('./e2eUtils.js');
 
-var the_user = null;
 var tx_id = null;
 
 var ORGS;
@@ -34,24 +33,24 @@ test('\n\n***** End-to-end flow: join channel *****\n\n', function(t) {
 	ORGS = Client.getConfigSetting('test-network');
 
 	joinChannel('org1', t)
-	.then(() => {
-		t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS['org1'].name));
-		return joinChannel('org2', t);
-	}, (err) => {
-		t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS['org1'].name, err.stack ? err.stack : err));
-		t.end();
-	})
-	.then(() => {
-		t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS['org2'].name));
-		t.end();
-	}, (err) => {
-		t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS['org2'].name), err.stack ? err.stack : err);
-		t.end();
-	})
-	.catch(function(err) {
-		t.fail('Failed request. ' + err);
-		t.end();
-	});
+		.then(() => {
+			t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS['org1'].name));
+			return joinChannel('org2', t);
+		}, (err) => {
+			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS['org1'].name, err.stack ? err.stack : err));
+			t.end();
+		})
+		.then(() => {
+			t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS['org2'].name));
+			t.end();
+		}, (err) => {
+			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS['org2'].name), err.stack ? err.stack : err);
+			t.end();
+		})
+		.catch(function(err) {
+			t.fail('Failed request. ' + err);
+			t.end();
+		});
 });
 
 function joinChannel(org, t) {
@@ -73,86 +72,85 @@ function joinChannel(org, t) {
 	var tlsInfo = null;
 
 	return e2eUtils.tlsEnroll(org)
-	.then((enrollment) => {
-		t.pass('Successfully retrieved TLS certificate');
-		tlsInfo = enrollment;
-		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
-	}).then((store) => {
-		client.setStateStore(store);
+		.then((enrollment) => {
+			t.pass('Successfully retrieved TLS certificate');
+			tlsInfo = enrollment;
+			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
+		}).then((store) => {
+			client.setStateStore(store);
 
-		return testUtil.getOrderAdminSubmitter(client, t);
-	}).then((admin) => {
-		t.pass('Successfully enrolled orderer \'admin\' (joined_channel 1)');
-		channel.addOrderer(
-			client.newOrderer(
-				ORGS.orderer.url,
-				{
-					'pem': caroots,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
-					'ssl-target-name-override': ORGS.orderer['server-hostname']
-				}
-			)
-		);
-		tx_id = client.newTransactionID();
-		let request = {
-			txId : 	tx_id
-		};
+			return testUtil.getOrderAdminSubmitter(client, t);
+		}).then(() => {
+			t.pass('Successfully enrolled orderer \'admin\' (joined_channel 1)');
+			channel.addOrderer(
+				client.newOrderer(
+					ORGS.orderer.url,
+					{
+						'pem': caroots,
+						'clientCert': tlsInfo.certificate,
+						'clientKey': tlsInfo.key,
+						'ssl-target-name-override': ORGS.orderer['server-hostname']
+					}
+				)
+			);
+			tx_id = client.newTransactionID();
+			let request = {
+				txId : 	tx_id
+			};
 
-		return channel.getGenesisBlock(request);
-	}).then((block) =>{
-		t.pass('Successfully got the genesis block');
-		genesis_block = block;
+			return channel.getGenesisBlock(request);
+		}).then((block) =>{
+			t.pass('Successfully got the genesis block');
+			genesis_block = block;
 
-		// get the peer org's admin required to send join channel requests
-		client._userContext = null;
+			// get the peer org's admin required to send join channel requests
+			client._userContext = null;
 
-		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
-	}).then((admin) => {
-		t.pass('Successfully enrolled org (join_channel):' + org + ' \'admin\'');
-		the_user = admin;
+			return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
+		}).then(() => {
+			t.pass('Successfully enrolled org (join_channel):' + org + ' \'admin\'');
 
-		for (let key in ORGS[org]) {
-			if (ORGS[org].hasOwnProperty(key)) {
-				if (key.indexOf('peer') === 0) {
-					data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
-					targets.push(
-						client.newPeer(
-							ORGS[org][key].requests,
-							{
-								pem: Buffer.from(data).toString(),
-								'clientCert': tlsInfo.certificate,
-								'clientKey': tlsInfo.key,
-								'ssl-target-name-override': ORGS[org][key]['server-hostname']
-							}
-						)
-					);
+			for (let key in ORGS[org]) {
+				if (ORGS[org].hasOwnProperty(key)) {
+					if (key.indexOf('peer') === 0) {
+						data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+						targets.push(
+							client.newPeer(
+								ORGS[org][key].requests,
+								{
+									pem: Buffer.from(data).toString(),
+									'clientCert': tlsInfo.certificate,
+									'clientKey': tlsInfo.key,
+									'ssl-target-name-override': ORGS[org][key]['server-hostname']
+								}
+							)
+						);
+					}
 				}
 			}
-		}
 
-		tx_id = client.newTransactionID();
-		let request = {
-			targets : targets,
-			block : genesis_block,
-			txId : 	tx_id
-		};
+			tx_id = client.newTransactionID();
+			let request = {
+				targets : targets,
+				block : genesis_block,
+				txId : 	tx_id
+			};
 
-		return channel.joinChannel(request, 30000);
-	}, (err) => {
-		t.fail('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
-		throw new Error('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
-	})
-	.then((results) => {
-		logger.debug(util.format('Join Channel R E S P O N S E : %j', results));
+			return channel.joinChannel(request, 30000);
+		}, (err) => {
+			t.fail('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
+			throw new Error('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
+		})
+		.then((results) => {
+			logger.debug(util.format('Join Channel R E S P O N S E : %j', results));
 
-		if(results && results[0] && results[0].response && results[0].response.status == 200) {
-			t.pass(util.format('Successfully joined peers in organization %s to join the channel', orgName));
-		} else {
-			t.fail(' Failed to join channel');
-			throw new Error('Failed to join channel');
-		}
-	}, (err) => {
-		t.fail('Failed to join channel due to error: ' + err.stack ? err.stack : err);
-	});
+			if(results && results[0] && results[0].response && results[0].response.status == 200) {
+				t.pass(util.format('Successfully joined peers in organization %s to join the channel', orgName));
+			} else {
+				t.fail(' Failed to join channel');
+				throw new Error('Failed to join channel');
+			}
+		}, (err) => {
+			t.fail('Failed to join channel due to error: ' + err.stack ? err.stack : err);
+		});
 }

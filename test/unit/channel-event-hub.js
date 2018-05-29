@@ -325,7 +325,7 @@ test('\n\n** ChannelEventHub transaction callback \n\n', (t) => {
 	t.equal(Object.keys(eh._transactionRegistrations).length, 1, 'Check the size of the transactionOnEvents hash table');
 
 	t.throws(
-	 	() => {
+		() => {
 			eh.registerTxEvent('txid1', (transid, status) => {
 				t.fail('Should not have called success callback');
 				t.end();
@@ -333,10 +333,10 @@ test('\n\n** ChannelEventHub transaction callback \n\n', (t) => {
 				t.fail('Should not have called error callback');
 				t.end();
 			});
-	 	},
-	 	/has already been registered/,
-	 	'Checking for TransactionId (%s) has already been registered'
-	 );
+		},
+		/has already been registered/,
+		'Checking for TransactionId (%s) has already been registered'
+	);
 
 	eh.registerTxEvent('txid2', (transid, status) => {
 		t.fail('Should not have called success callback');
@@ -410,7 +410,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 
 
 	t.throws(
-	 	() => {
+		() => {
 			eh = channel.newChannelEventHub(peer);
 			eh.registerTxEvent('txid3', (transid, status) => {
 				t.fail('Should not have called success callback');
@@ -421,10 +421,10 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 			},
 				{startBlock: 2, endBlock: 1}
 			);
-	 	},
-	 	/must not be larger than/,
-	 	'Checking for "startBlock" (%s) must not be larger than "endBlock" (%s)'
-	 );
+		},
+		/must not be larger than/,
+		'Checking for "startBlock" (%s) must not be larger than "endBlock" (%s)'
+	);
 
 	t.end();
 });

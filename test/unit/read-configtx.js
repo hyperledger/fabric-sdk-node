@@ -10,7 +10,6 @@ require('nconf').reset();
 
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('E2E create-channel');
-var util = require('util');
 var fs = require('fs');
 var path = require('path');
 var tape = require('tape');

@@ -8,15 +8,10 @@ var tape = require('tape');
 var _test = require('tape-promise').default;
 var test = _test(tape);
 
-var Client = require('fabric-client');
-var sdkUtil = require('fabric-client/lib/utils.js');
-var util = require('util');
-var fs = require('fs');
 var testUtil = require('./util.js');
 
 var Orderer = require('fabric-client/lib/Orderer.js');
 
-var keyValStorePath = testUtil.KVS;
 
 //
 // Orderer happy path test are implemented as part of the end-to-end tests only
@@ -35,7 +30,7 @@ test('orderer bad address test', function(t) {
 	testUtil.resetDefaults();
 
 	try {
-		var client = new Orderer('xxxxx');
+		new Orderer('xxxxx');
 		t.fail('Orderer allowed setting a bad URL.');
 	}
 	catch(err) {
@@ -53,7 +48,7 @@ test('orderer bad address test', function(t) {
 
 test('orderer missing address test', function(t) {
 	try {
-		var client = new Orderer();
+		new Orderer();
 		t.fail('Orderer allowed setting a missing address.');
 	}
 	catch(err) {
@@ -73,20 +68,20 @@ test('orderer missing data test', function(t) {
 	var client = new Orderer('grpc://127.0.0.1:5005');
 
 	client.sendBroadcast()
-	.then(
-		function(status) {
-			t.fail('Should have noticed missing data.');
+		.then(
+			function() {
+				t.fail('Should have noticed missing data.');
+				t.end();
+			},
+			function(err) {
+				t.pass('Successfully found missing data: ' + err);
+				client.close();
+				t.end();
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined promise error function: ' + err);
 			t.end();
-		},
-		function(err) {
-			t.pass('Successfully found missing data: ' + err);
-			client.close();
-			t.end();
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined promise error function: ' + err);
-		t.end();
-	});
+		});
 });
 
 //
@@ -100,19 +95,19 @@ test('orderer missing data deliver test', function(t) {
 	var client = new Orderer('grpc://127.0.0.1:5005');
 
 	client.sendDeliver()
-	.then(
-		function(status) {
-			t.fail('Should have noticed missing data.');
+		.then(
+			function() {
+				t.fail('Should have noticed missing data.');
+				t.end();
+			},
+			function(err) {
+				t.pass('Successfully found missing data: ' + err);
+				t.end();
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined promise error function: ' + err);
 			t.end();
-		},
-		function(err) {
-			t.pass('Successfully found missing data: ' + err);
-			t.end();
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined promise error function: ' + err);
-		t.end();
-	});
+		});
 });
 
 //
@@ -126,22 +121,22 @@ test('orderer unknown address test', function(t) {
 	var client = new Orderer('grpc://127.0.0.1:51006');
 
 	client.sendDeliver('some data')
-	.then(
-		function(status) {
-			t.fail('Should have noticed a bad deliver address.');
-			t.end();
-		},
-		function(err) {
-			t.equal(err.message, 'Failed to connect before the deadline',
-				'sendDeliver to unreachable orderer should response connection failed');
-			t.pass('Successfully found bad deliver address!');
-			t.end();
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined promise error function: '
+		.then(
+			function() {
+				t.fail('Should have noticed a bad deliver address.');
+				t.end();
+			},
+			function(err) {
+				t.equal(err.message, 'Failed to connect before the deadline',
+					'sendDeliver to unreachable orderer should response connection failed');
+				t.pass('Successfully found bad deliver address!');
+				t.end();
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
-		t.end();
-	});
+			t.end();
+		});
 });
 
 //
@@ -155,22 +150,22 @@ test('orderer unknown address test', function(t) {
 	var client = new Orderer('grpc://127.0.0.1:51006');
 
 	client.sendBroadcast('some data')
-	.then(
-		function(status) {
-			t.fail('Should have noticed a bad address.');
-			t.end();
-		},
-		function(err) {
-			t.equal(err.message, 'Failed to connect before the deadline',
-				'sendBroadcast to unreachable orderer should response connection failed');
-			t.pass('Successfully found bad address!');
-			t.end();
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined promise error function: '
+		.then(
+			function() {
+				t.fail('Should have noticed a bad address.');
+				t.end();
+			},
+			function(err) {
+				t.equal(err.message, 'Failed to connect before the deadline',
+					'sendBroadcast to unreachable orderer should response connection failed');
+				t.pass('Successfully found bad address!');
+				t.end();
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
-		t.end();
-	});
+			t.end();
+		});
 });
 
 test('Orderer test', function(t) {

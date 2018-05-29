@@ -193,7 +193,7 @@ test('\n\n*** BlockDecoder.js tests ***\n\n', (t) => {
 		}
 	});
 
-	var mockPolicy = new policiesProto.Policy();
+	mockPolicy = new policiesProto.Policy();
 	mockPolicy.setType(policiesProto.Policy.PolicyType.SIGNATURE);
 	t.throws(
 		() => {

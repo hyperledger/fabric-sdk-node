@@ -18,7 +18,6 @@ var Client = require('fabric-client');
 
 var testUtil = require('../../unit/util.js');
 var e2eUtils = require('../e2e/e2eUtils.js');
-var keyValStorePath = testUtil.KVS;
 var ORGS;
 
 var commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
@@ -105,7 +104,7 @@ async function perfTest1(t) {
 				}
 			});
 
-			broadcast.on('end', function (response) {
+			broadcast.on('end', function () {
 				t.comment('Ending the broadcast stream');
 				broadcast.cancel();
 			});
@@ -305,29 +304,29 @@ function makeEnvelope(signer, type) {
 	return envelope;
 }
 
-			// send to orderer
-	// 		var request = {
-	// 			proposalResponses: 'blah',
-	// 			proposal: 'blah'
-	// 		};
-	// 		return channel.sendTransaction(request);
-	// ).then(
-	// 	function(status) {
-	// 		t.comment('Status: ' + status + ', type: (' + typeof status + ')');
-	// 		if (status === 0) {
-	// 			t.fail('Successfully submitted request, which is bad because request is invalid');
-	// 		} else {
-	// 			t.pass('Successfully tested invalid submission due to the invalid request. Error code: ' + status);
-	// 		}
-	// 		t.end();
-	// 	},
-	// 	function(err) {
-	// 		t.comment('Failed to submit. Error: ');
-	// 		t.pass('Error :' + err.stack ? err.stack : err);
-	// 		t.end();
-	// 	}
-	// ).catch(function(err) {
-	// 	t.comment('Failed to submit orderer request.  Error: ');
-	// 	t.pass('Error: ' + err);
-	// 	t.end();
-	// });
+// send to orderer
+// 		var request = {
+// 			proposalResponses: 'blah',
+// 			proposal: 'blah'
+// 		};
+// 		return channel.sendTransaction(request);
+// ).then(
+// 	function(status) {
+// 		t.comment('Status: ' + status + ', type: (' + typeof status + ')');
+// 		if (status === 0) {
+// 			t.fail('Successfully submitted request, which is bad because request is invalid');
+// 		} else {
+// 			t.pass('Successfully tested invalid submission due to the invalid request. Error code: ' + status);
+// 		}
+// 		t.end();
+// 	},
+// 	function(err) {
+// 		t.comment('Failed to submit. Error: ');
+// 		t.pass('Error :' + err.stack ? err.stack : err);
+// 		t.end();
+// 	}
+// ).catch(function(err) {
+// 	t.comment('Failed to submit orderer request.  Error: ');
+// 	t.pass('Error: ' + err);
+// 	t.end();
+// });

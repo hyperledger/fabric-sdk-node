@@ -27,7 +27,7 @@ test('AffiliationService: Test create() function', function (t) {
 	t.throws(()=> {
 		affiliation.create({name: null});
 	},
-	/Missing required parameters.  "req.name" is required./,
+	/Missing required parameters. "req.name" is required./,
 	'Must fail if missing req.name argument');
 
 	t.throws(()=> {

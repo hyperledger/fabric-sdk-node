@@ -162,7 +162,7 @@ var NetworkConfig_1_0 = class {
 
 	getPeer(name, channel_org) {
 		var method = 'getPeer';
-		logger.debug('%s - name %s',method, name);
+		logger.debug('%s - name %s, channel_org: %j',method, name, channel_org);
 		var peer = this._peers.get(name);
 		if(!peer && this._network_config && this._network_config[PEERS_CONFIG]) {
 			let peer_config = this._network_config[PEERS_CONFIG][name];

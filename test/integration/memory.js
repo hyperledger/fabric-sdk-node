@@ -152,7 +152,7 @@ async function createChannel(t) {
 		t.pass('Successfully set the stores for org2');
 
 		// sign the config by admin from org2
-		var signature = client.signChannelConfig(config);
+		signature = client.signChannelConfig(config);
 		t.pass('Successfully signed config update for org2');
 
 		// collect signature from org2 admin
@@ -257,7 +257,7 @@ async function createChannel(t) {
 		process.env.GOPATH = path.join(__dirname, '../fixtures');
 		tx_id = client.newTransactionID(true);
 		// send proposal to endorser
-		var request = {
+		request = {
 			targets: ['peer0.org1.example.com'],
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
@@ -285,7 +285,7 @@ async function createChannel(t) {
 
 		tx_id = client.newTransactionID(true); // be sure to get a admin transaction ID
 		// send proposal to endorser
-		var request = {
+		request = {
 			targets: ['peer0.org2.example.com'],
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
@@ -324,7 +324,7 @@ async function createChannel(t) {
 		var proposal = results[1];
 		if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 			t.pass('Successfully sent Proposal and received ProposalResponse');
-			var request = {
+			request = {
 				proposalResponses: proposalResponses,
 				proposal: proposal,
 				txId : instansiate_tx_id //required to indicate that this is an admin transaction
@@ -396,7 +396,7 @@ async function actions(t) {
 
 		tx_id = client.newTransactionID(); // get a non admin transaction ID
 		query_tx_id = tx_id.getTransactionID();
-		var request = {
+		request = {
 			chaincodeId : 'example',
 			fcn: 'move',
 			args: ['a', 'b','100'],
@@ -424,7 +424,7 @@ async function actions(t) {
 			t.fail('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
 			throw new Error('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
 		}
-		var request = {
+		request = {
 			proposalResponses: proposalResponses,
 			proposal: proposal,
 			admin : false
@@ -440,7 +440,7 @@ async function actions(t) {
 			throw new Error('Failed to order the transaction to invoke the chaincode. Error code: ' + response.status);
 		}
 
-		var request = {
+		request = {
 			chaincodeId : 'example',
 			fcn: 'query',
 			args: ['b']

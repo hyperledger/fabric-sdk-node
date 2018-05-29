@@ -310,7 +310,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 		t.fail('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
 		throw new Error('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
 	});
-};
+}
 
 function invokeChaincodeSingleCall(userOrg, version, t, shouldFail, peers){
 	logger.debug('invokeChaincodeSingleCall begin');
@@ -411,7 +411,7 @@ function invokeChaincodeSingleCall(userOrg, version, t, shouldFail, peers){
 			if (response.status === 'SUCCESS') {
 				t.pass('Successfully executed transaction.');
 			} else {
-				errorMsg = util.format('error code: %s', response.status);
+				const errorMsg = util.format('error code: %s', response.status);
 				t.fail(errorMsg);
 				return Promise.reject(errorMsg);
 			}
@@ -431,4 +431,4 @@ function invokeChaincodeSingleCall(userOrg, version, t, shouldFail, peers){
 			t.fail('Failed to execute transaction: ' + err.stack ? err.stack : err);
 			throw new Error('Failed to execute transaction: ' + err.stack ? err.stack : err);
 		});
-};
+}

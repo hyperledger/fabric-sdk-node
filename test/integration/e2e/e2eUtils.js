@@ -9,12 +9,7 @@
 'use strict';
 var FabricCAServices = require('../../../fabric-ca-client');
 var utils = require('fabric-client/lib/utils.js');
-var KEYUTIL = require('jsrsasign').KEYUTIL;
 var logger = utils.getLogger('E2E testing');
-
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
 
 var path = require('path');
 var fs = require('fs');
@@ -27,8 +22,6 @@ var e2eUtils = require('./e2eUtils.js');
 var e2e = testUtil.END2END;
 var e2e_node = testUtil.NODE_END2END;
 var ORGS;
-
-var grpc = require('grpc');
 
 var tx_id = null;
 var the_user = null;
@@ -62,104 +55,103 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 	let tlsInfo = null;
 
 	return e2eUtils.tlsEnroll(org)
-	.then((enrollment) => {
-		t.pass('Successfully retrieved TLS certificate');
-		tlsInfo = enrollment;
-		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
-	}).then((store) => {
-		client.setStateStore(store);
+		.then((enrollment) => {
+			t.pass('Successfully retrieved TLS certificate');
+			tlsInfo = enrollment;
+			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
+		}).then((store) => {
+			client.setStateStore(store);
 
-		// get the peer org's admin required to send install chaincode requests
-		return testUtil.getSubmitter(client, t, get_admin /* get peer org admin */, org);
-	}).then((admin) => {
-		t.pass('Successfully enrolled user \'admin\' (e2eUtil 1)');
-		the_user = admin;
+			// get the peer org's admin required to send install chaincode requests
+			return testUtil.getSubmitter(client, t, get_admin /* get peer org admin */, org);
+		}).then((admin) => {
+			t.pass('Successfully enrolled user \'admin\' (e2eUtil 1)');
+			the_user = admin;
 
-		channel.addOrderer(
-			client.newOrderer(
-				ORGS.orderer.url,
-				{
-					'pem': caroots,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
-					'ssl-target-name-override': ORGS.orderer['server-hostname']
-				}
-			)
-		);
+			channel.addOrderer(
+				client.newOrderer(
+					ORGS.orderer.url,
+					{
+						'pem': caroots,
+						'clientCert': tlsInfo.certificate,
+						'clientKey': tlsInfo.key,
+						'ssl-target-name-override': ORGS.orderer['server-hostname']
+					}
+				)
+			);
 
-		var targets = [];
-		for (let key in ORGS[org]) {
-			if (ORGS[org].hasOwnProperty(key)) {
-				if (key.indexOf('peer') === 0) {
-					let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
-					let peer = client.newPeer(
-						ORGS[org][key].requests,
-						{
-							pem: Buffer.from(data).toString(),
-							'clientCert': tlsInfo.certificate,
-							'clientKey': tlsInfo.key,
-							'ssl-target-name-override': ORGS[org][key]['server-hostname']
-						}
-					);
+			var targets = [];
+			for (let key in ORGS[org]) {
+				if (ORGS[org].hasOwnProperty(key)) {
+					if (key.indexOf('peer') === 0) {
+						let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+						let peer = client.newPeer(
+							ORGS[org][key].requests,
+							{
+								pem: Buffer.from(data).toString(),
+								'clientCert': tlsInfo.certificate,
+								'clientKey': tlsInfo.key,
+								'ssl-target-name-override': ORGS[org][key]['server-hostname']
+							}
+						);
 
-					targets.push(peer);    // a peer can be the target this way
-					channel.addPeer(peer); // or a peer can be the target this way
-									   	// you do not have to do both, just one, when there are
-									   	// 'targets' in the request, those will be used and not
-									   	// the peers added to the channel
+						targets.push(peer);    // a peer can be the target this way
+						channel.addPeer(peer); // or a peer can be the target this way
+						// you do not have to do both, just one, when there are
+						// 'targets' in the request, those will be used and not
+						// the peers added to the channel
+					}
 				}
 			}
-		}
 
-		let cc_id;
-		if(language && language==='node'){
-			cc_id = e2e_node.chaincodeId;
-		}else{
-			cc_id = e2e.chaincodeId;
-		}
+			let cc_id;
+			if(language && language==='node'){
+				cc_id = e2e_node.chaincodeId;
+			}else{
+				cc_id = e2e.chaincodeId;
+			}
 
-		// send proposal to endorser
-		var request = {
-			targets: targets,
-			chaincodePath: chaincode_path,
-			metadataPath: metadata_path,
-			chaincodeId: cc_id,
-			chaincodeType: language,
-			chaincodeVersion: version
-		};
+			// send proposal to endorser
+			var request = {
+				targets: targets,
+				chaincodePath: chaincode_path,
+				metadataPath: metadata_path,
+				chaincodeId: cc_id,
+				chaincodeType: language,
+				chaincodeVersion: version
+			};
 
-		return client.installChaincode(request);
-	},
-	(err) => {
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		throw new Error('Failed to enroll user \'admin\'. ' + err);
-	}).then((results) => {
-		var proposalResponses = results[0];
+			return client.installChaincode(request);
+		},
+		(err) => {
+			t.fail('Failed to enroll user \'admin\'. ' + err);
+			throw new Error('Failed to enroll user \'admin\'. ' + err);
+		}).then((results) => {
+			var proposalResponses = results[0];
 
-		var proposal = results[1];
-		var all_good = true;
-		var errors = [];
-		for(var i in proposalResponses) {
-			let one_good = false;
-			if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
-				one_good = true;
-				logger.info('install proposal was good');
+			var all_good = true;
+			var errors = [];
+			for(var i in proposalResponses) {
+				let one_good = false;
+				if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
+					one_good = true;
+					logger.info('install proposal was good');
+				} else {
+					logger.error('install proposal was bad');
+					errors.push(proposalResponses[i]);
+				}
+				all_good = all_good & one_good;
+			}
+			if (all_good) {
+				t.pass(util.format('Successfully sent install Proposal and received ProposalResponse: Status - %s', proposalResponses[0].response.status));
 			} else {
-				logger.error('install proposal was bad');
-				errors.push(proposalResponses[i]);
+				throw new Error(util.format('Failed to send install Proposal or receive valid response: %s', errors));
 			}
-			all_good = all_good & one_good;
-		}
-		if (all_good) {
-			t.pass(util.format('Successfully sent install Proposal and received ProposalResponse: Status - %s', proposalResponses[0].response.status));
-		} else {
-			throw new Error(util.format('Failed to send install Proposal or receive valid response: %s', errors));
-		}
-	},
-	(err) => {
-		t.fail('Failed to send install proposal due to error: ' + err.stack ? err.stack : err);
-		throw new Error('Failed to send install proposal due to error: ' + err.stack ? err.stack : err);
-	});
+		},
+		(err) => {
+			t.fail('Failed to send install proposal due to error: ' + err.stack ? err.stack : err);
+			throw new Error('Failed to send install proposal due to error: ' + err.stack ? err.stack : err);
+		});
 }
 
 module.exports.installChaincode = installChaincode;
@@ -194,208 +186,208 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 	let request = null;
 
 	return e2eUtils.tlsEnroll(userOrg)
-	.then((enrollment) => {
-		t.pass('Successfully retrieved TLS certificate');
-		tlsInfo = enrollment;
-		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
-	}).then((store) => {
+		.then((enrollment) => {
+			t.pass('Successfully retrieved TLS certificate');
+			tlsInfo = enrollment;
+			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
+		}).then((store) => {
 
-		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t, true /* use peer org admin*/, userOrg);
+			client.setStateStore(store);
+			return testUtil.getSubmitter(client, t, true /* use peer org admin*/, userOrg);
 
-	}).then((admin) => {
+		}).then((admin) => {
 
-		t.pass('Successfully enrolled user \'admin\' (e2eUtil 2)');
-		the_user = admin;
+			t.pass('Successfully enrolled user \'admin\' (e2eUtil 2)');
+			the_user = admin;
 
-		channel.addOrderer(
-			client.newOrderer(
-				ORGS.orderer.url,
-				{
-					'pem': caroots,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
-					'ssl-target-name-override': ORGS.orderer['server-hostname']
-				}
-			)
-		);
-
-		for(let org in ORGS) {
-			if (ORGS[org].hasOwnProperty('peer1')) {
-				let key = 'peer1';
-				let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
-				logger.debug(' create new peer %s', ORGS[org][key].requests);
-				let peer = client.newPeer(
-					ORGS[org][key].requests,
+			channel.addOrderer(
+				client.newOrderer(
+					ORGS.orderer.url,
 					{
-						pem: Buffer.from(data).toString(),
+						'pem': caroots,
 						'clientCert': tlsInfo.certificate,
 						'clientKey': tlsInfo.key,
-						'ssl-target-name-override': ORGS[org][key]['server-hostname']
+						'ssl-target-name-override': ORGS.orderer['server-hostname']
 					}
-				);
+				)
+			);
 
-				targets.push(peer);
-				channel.addPeer(peer);
+			for(let org in ORGS) {
+				if (ORGS[org].hasOwnProperty('peer1')) {
+					let key = 'peer1';
+					let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+					logger.debug(' create new peer %s', ORGS[org][key].requests);
+					let peer = client.newPeer(
+						ORGS[org][key].requests,
+						{
+							pem: Buffer.from(data).toString(),
+							'clientCert': tlsInfo.certificate,
+							'clientKey': tlsInfo.key,
+							'ssl-target-name-override': ORGS[org][key]['server-hostname']
+						}
+					);
 
-				let eh = channel.newChannelEventHub(peer);
-				eventhubs.push(eh);
+					targets.push(peer);
+					channel.addPeer(peer);
+
+					let eh = channel.newChannelEventHub(peer);
+					eventhubs.push(eh);
+				}
 			}
-		}
 
-		// read the config block from the peer for the channel
-		// and initialize the verify MSPs based on the participating
-		// organizations
-		return channel.initialize();
-	}, (err) => {
+			// read the config block from the peer for the channel
+			// and initialize the verify MSPs based on the participating
+			// organizations
+			return channel.initialize();
+		}, (err) => {
 
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		throw new Error('Failed to enroll user \'admin\'. ' + err);
+			t.fail('Failed to enroll user \'admin\'. ' + err);
+			throw new Error('Failed to enroll user \'admin\'. ' + err);
 
-	}).then(() => {
-		t.pass('Successfully initialized Channel');
-		logger.debug(' orglist:: ', channel.getOrganizations());
-		// the v1 chaincode has Init() method that expects a transient map
-		if (upgrade && badTransient) {
+		}).then(() => {
+			t.pass('Successfully initialized Channel');
+			logger.debug(' orglist:: ', channel.getOrganizations());
+			// the v1 chaincode has Init() method that expects a transient map
+			if (upgrade && badTransient) {
 			// first test that a bad transient map would get the chaincode to return an error
-			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, badTransientMap);
-			tx_id = request.txId;
+				let request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, badTransientMap);
+				tx_id = request.txId;
 
-			logger.debug(util.format(
-				'Upgrading chaincode "%s" at path "%s" to version "%s" by passing args "%s" to method "%s" in transaction "%s"',
-				request.chaincodeId,
-				request.chaincodePath,
-				request.chaincodeVersion,
-				request.args,
-				request.fcn,
-				request.txId.getTransactionID()
-			));
+				logger.debug(util.format(
+					'Upgrading chaincode "%s" at path "%s" to version "%s" by passing args "%s" to method "%s" in transaction "%s"',
+					request.chaincodeId,
+					request.chaincodePath,
+					request.chaincodeVersion,
+					request.args,
+					request.fcn,
+					request.txId.getTransactionID()
+				));
 
-			// this is the longest response delay in the test, sometimes
-			// x86 CI times out. set the per-request timeout to a super-long value
-			return channel.sendUpgradeProposal(request, 5*60*1000)
-				.then((results) => {
-					let proposalResponses = results[0];
+				// this is the longest response delay in the test, sometimes
+				// x86 CI times out. set the per-request timeout to a super-long value
+				return channel.sendUpgradeProposal(request, 5*60*1000)
+					.then((results) => {
+						let proposalResponses = results[0];
 
-					if (version === 'v1') {
-					// expecting both peers to return an Error due to the bad transient map
-						let success = false;
-						if (proposalResponses && proposalResponses.length > 0) {
-							proposalResponses.forEach((response) => {
-								if (response &&
-								    response.response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
-									success = true;
-								} else {
-									success = false;
-								}
-							});
+						if (version === 'v1') {
+							// expecting both peers to return an Error due to the bad transient map
+							let success = false;
+							if (proposalResponses && proposalResponses.length > 0) {
+								proposalResponses.forEach((response) => {
+									if (response &&
+                    response.response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
+										success = true;
+									} else {
+										success = false;
+									}
+								});
+							}
+
+							if (success) {
+								// successfully tested the negative conditions caused by
+								// the bad transient map, now send the good transient map
+								request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, transientMap);
+								tx_id = request.txId;
+
+								return channel.sendUpgradeProposal(request, 5*60*1000);
+							} else {
+								throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
+							}
+						} else if (version === 'v3') {
+							return Promise.resolve(results);
 						}
+					});
+			} else {
+				let request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, transientMap);
+				tx_id = request.txId;
 
-						if (success) {
-						// successfully tested the negative conditions caused by
-						// the bad transient map, now send the good transient map
-							request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, transientMap);
-							tx_id = request.txId;
+				// this is the longest response delay in the test, sometimes
+				// x86 CI times out. set the per-request timeout to a super-long value
+				if(upgrade) {
+					return channel.sendUpgradeProposal(request, 5*60*1000);
+				} else {
+					return channel.sendInstantiateProposal(request, 5*60*1000);
+				}
+			}
 
-							return channel.sendUpgradeProposal(request, 5*60*1000);
+		}, (err) => {
+
+			t.fail(util.format('Failed to initialize the channel. %s', err.stack ? err.stack : err));
+			throw new Error('Failed to initialize the channel');
+
+		}).then((results) => {
+
+			let proposalResponses = results[0];
+
+			let proposal = results[1];
+			let all_good = true;
+			for(var i in proposalResponses) {
+				if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
+					logger.info(type +' proposal was good');
+				} else {
+					logger.error(type +' proposal was bad');
+					all_good = false;
+				}
+			}
+			if (all_good) {
+				t.pass('Successfully sent Proposal and received ProposalResponse');
+				logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
+				request = {
+					proposalResponses: proposalResponses,
+					proposal: proposal
+				};
+			} else {
+				console.log(JSON.stringify(proposalResponses));
+				throw new Error('All proposals were not good');
+			}
+
+			let deployId = tx_id.getTransactionID();
+			let eventPromises = [];
+			eventPromises.push(channel.sendTransaction(request));
+
+			eventhubs.forEach((eh) => {
+				let txPromise = new Promise((resolve, reject) => {
+					let handle = setTimeout(() => {
+						t.fail('Timeout - Failed to receive the event for instantiate:  waiting on '+ eh.getPeerAddr());
+						eh.disconnect();
+						reject('TIMEOUT waiting on '+ eh.getPeerAddr());
+					}, 120000);
+
+					eh.registerTxEvent(deployId.toString(), (tx, code) => {
+						t.pass('The chaincode ' + type + ' transaction has been committed on peer '+ eh.getPeerAddr());
+						clearTimeout(handle);
+						if (code !== 'VALID') {
+							t.fail('The chaincode ' + type + ' transaction was invalid, code = ' + code);
+							reject();
 						} else {
-							throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
+							t.pass('The chaincode ' + type + ' transaction was valid.');
+							resolve();
 						}
-					} else if (version === 'v3') {
-						return Promise.resolve(results);
-					}
-				});
-		} else {
-			let request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, transientMap);
-			tx_id = request.txId;
-
-			// this is the longest response delay in the test, sometimes
-			// x86 CI times out. set the per-request timeout to a super-long value
-			if(upgrade) {
-				return channel.sendUpgradeProposal(request, 5*60*1000);
-			} else {
-				return channel.sendInstantiateProposal(request, 5*60*1000);
-			}
-		}
-
-	}, (err) => {
-
-		t.fail(util.format('Failed to initialize the channel. %s', err.stack ? err.stack : err));
-		throw new Error('Failed to initialize the channel');
-
-	}).then((results) => {
-
-		let proposalResponses = results[0];
-
-		let proposal = results[1];
-		let all_good = true;
-		for(var i in proposalResponses) {
-			if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
-				logger.info(type +' proposal was good');
-			} else {
-				logger.error(type +' proposal was bad');
-				all_good = false;
-			}
-		}
-		if (all_good) {
-			t.pass('Successfully sent Proposal and received ProposalResponse');
-			logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-			request = {
-				proposalResponses: proposalResponses,
-				proposal: proposal
-			};
-		} else {
-			console.log(JSON.stringify(proposalResponses));
-			throw new Error('All proposals were not good');
-		}
-
-		let deployId = tx_id.getTransactionID();
-		let eventPromises = [];
-		eventPromises.push(channel.sendTransaction(request));
-
-		eventhubs.forEach((eh) => {
-			let txPromise = new Promise((resolve, reject) => {
-				let handle = setTimeout(() => {
-					t.fail('Timeout - Failed to receive the event for instantiate:  waiting on '+ eh.getPeerAddr());
-					eh.disconnect();
-					reject('TIMEOUT waiting on '+ eh.getPeerAddr());
-				}, 120000);
-
-				eh.registerTxEvent(deployId.toString(), (tx, code) => {
-					t.pass('The chaincode ' + type + ' transaction has been committed on peer '+ eh.getPeerAddr());
-					clearTimeout(handle);
-					if (code !== 'VALID') {
-						t.fail('The chaincode ' + type + ' transaction was invalid, code = ' + code);
+					}, (err) => {
+						t.fail('There was a problem with the instantiate event '+err);
+						clearTimeout(handle);
 						reject();
-					} else {
-						t.pass('The chaincode ' + type + ' transaction was valid.');
-						resolve();
-					}
-				}, (err) => {
-					t.fail('There was a problem with the instantiate event '+err);
-					clearTimeout(handle);
-					reject();
-				}, {
-					disconnect: true
+					}, {
+						disconnect: true
+					});
+					eh.connect();
 				});
-				eh.connect();
+				logger.debug('register eventhub %s with tx=%s',eh.getPeerAddr(),deployId);
+				eventPromises.push(txPromise);
 			});
-			logger.debug('register eventhub %s with tx=%s',eh.getPeerAddr(),deployId);
-			eventPromises.push(txPromise);
-		});
 
-		return Promise.all(eventPromises);
-	}).then((results) => {
-		if (results && !(results[0] instanceof Error) && results[0].status === 'SUCCESS') {
-			t.pass('Successfully sent ' + type + 'transaction to the orderer.');
-			return true;
-		} else {
-			t.fail('Failed to order the ' + type + 'transaction. Error code: ' + results[0].status);
-			Promise.reject(new Error('Failed to order the ' + type + 'transaction. Error code: ' + results[0].status));
-		}
-	}).catch((err) => {
-		t.fail('Failed to instantiate ' + type + ' due to error: ' + err.stack ? err.stack : err);
-	});
+			return Promise.all(eventPromises);
+		}).then((results) => {
+			if (results && !(results[0] instanceof Error) && results[0].status === 'SUCCESS') {
+				t.pass('Successfully sent ' + type + 'transaction to the orderer.');
+				return true;
+			} else {
+				t.fail('Failed to order the ' + type + 'transaction. Error code: ' + results[0].status);
+				Promise.reject(new Error('Failed to order the ' + type + 'transaction. Error code: ' + results[0].status));
+			}
+		}).catch((err) => {
+			t.fail('Failed to instantiate ' + type + ' due to error: ' + err.stack ? err.stack : err);
+		});
 }
 
 function buildChaincodeProposal(client, the_user, chaincode_path, version, type, upgrade, transientMap) {
@@ -408,7 +400,7 @@ function buildChaincodeProposal(client, the_user, chaincode_path, version, type,
 		cc_id = e2e.chaincodeId;
 	}
 
-  	const collectionsConfigPath = path.resolve(__dirname, './collections-config.json');
+	const collectionsConfigPath = path.resolve(__dirname, './collections-config.json');
 	// send proposal to endorser
 	var request = {
 		chaincodePath: chaincode_path,
@@ -459,7 +451,6 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	var targets = [];
 	let eventhubs = [];
 	var pass_results = null;
 
@@ -493,220 +484,220 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 	}
 
 	return e2eUtils.tlsEnroll(userOrg)
-	.then((enrollment) => {
-		t.pass('Successfully retrieved TLS certificate');
-		tlsInfo = enrollment;
-		return promise;
-	}).then((store) => {
-		if (store) {
-			client.setStateStore(store);
-		}
-		return testUtil.getSubmitter(client, t, userOrg);
-	}).then((admin) => {
+		.then((enrollment) => {
+			t.pass('Successfully retrieved TLS certificate');
+			tlsInfo = enrollment;
+			return promise;
+		}).then((store) => {
+			if (store) {
+				client.setStateStore(store);
+			}
+			return testUtil.getSubmitter(client, t, userOrg);
+		}).then((admin) => {
 
-		t.pass('Successfully enrolled user \'admin\' (e2eUtil 3)');
-		the_user = admin;
+			t.pass('Successfully enrolled user \'admin\' (e2eUtil 3)');
+			the_user = admin;
 
-		channel.addOrderer(
-			client.newOrderer(
-				ORGS.orderer.url,
-				{
-					'pem': caroots,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
-					'ssl-target-name-override': ORGS.orderer['server-hostname']
-				}
-			)
-		);
-
-		// set up the channel to use each org's 'peer1' for
-		// both requests and events
-		for (let key in ORGS) {
-			if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-				let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
-				let peer = client.newPeer(
-					ORGS[key].peer1.requests,
+			channel.addOrderer(
+				client.newOrderer(
+					ORGS.orderer.url,
 					{
-						pem: Buffer.from(data).toString(),
+						'pem': caroots,
 						'clientCert': tlsInfo.certificate,
 						'clientKey': tlsInfo.key,
-						'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+						'ssl-target-name-override': ORGS.orderer['server-hostname']
 					}
-				);
-				channel.addPeer(peer);
-				eventhubs.push(channel.newChannelEventHub(peer));
-			}
-		}
+				)
+			);
 
-		return channel.initialize();
-
-	}).then((nothing) => {
-		logger.debug(' orglist:: ', channel.getOrganizations());
-
-		tx_id = client.newTransactionID();
-		utils.setConfigSetting('E2E_TX_ID', tx_id.getTransactionID());
-		logger.debug('setConfigSetting("E2E_TX_ID") = %s', tx_id.getTransactionID());
-
-		// send proposal to endorser
-		var request = {
-			chaincodeId : chaincodeId,
-			fcn: 'move',
-			args: ['a', 'b','100'],
-			txId: tx_id,
-		};
-		return channel.sendTransactionProposal(request);
-
-	}, (err) => {
-
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		throw new Error('Failed to enroll user \'admin\'. ' + err);
-	}).then((results) =>{
-		pass_results = results;
-		var sleep_time = 0;
-		// can use "sleep=30000" to give some time to manually stop and start
-		// the peer so the event hub will also stop and start
-		if (process.argv.length > 2) {
-			if (process.argv[2].indexOf('sleep=') === 0) {
-				sleep_time = process.argv[2].split('=')[1];
-			}
-		}
-		t.comment('*****************************************************************************');
-		t.comment('stop and start the peer event hub ---- N  O  W ----- you have ' + sleep_time + ' millis ' + (new Date()).toString());
-		t.comment('*****************************************************************************');
-		return sleep(sleep_time);
-	}).then((nothing) => {
-
-		var proposalResponses = pass_results[0];
-
-		var proposal = pass_results[1];
-		var all_good = true;
-		for(var i in proposalResponses) {
-			let one_good = false;
-			let proposal_response = proposalResponses[i];
-			if( proposal_response.response && proposal_response.response.status === 200) {
-				t.pass('transaction proposal has response status of good');
-				one_good = channel.verifyProposalResponse(proposal_response);
-				if(one_good) {
-					t.pass('transaction proposal signature and endorser are valid');
+			// set up the channel to use each org's 'peer1' for
+			// both requests and events
+			for (let key in ORGS) {
+				if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
+					let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+					let peer = client.newPeer(
+						ORGS[key].peer1.requests,
+						{
+							pem: Buffer.from(data).toString(),
+							'clientCert': tlsInfo.certificate,
+							'clientKey': tlsInfo.key,
+							'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+						}
+					);
+					channel.addPeer(peer);
+					eventhubs.push(channel.newChannelEventHub(peer));
 				}
+			}
 
-				// check payload
-				let payload = proposal_response.response.payload.toString();
-				// 'move success' is the expected payload from 'move' invoke
-				if(payload === 'move succeed'){
-					t.pass('transaction proposal payloads are valid');
+			return channel.initialize();
+
+		}).then(() => {
+			logger.debug(' orglist:: ', channel.getOrganizations());
+
+			tx_id = client.newTransactionID();
+			utils.setConfigSetting('E2E_TX_ID', tx_id.getTransactionID());
+			logger.debug('setConfigSetting("E2E_TX_ID") = %s', tx_id.getTransactionID());
+
+			// send proposal to endorser
+			var request = {
+				chaincodeId : chaincodeId,
+				fcn: 'move',
+				args: ['a', 'b','100'],
+				txId: tx_id,
+			};
+			return channel.sendTransactionProposal(request);
+
+		}, (err) => {
+
+			t.fail('Failed to enroll user \'admin\'. ' + err);
+			throw new Error('Failed to enroll user \'admin\'. ' + err);
+		}).then((results) =>{
+			pass_results = results;
+			var sleep_time = 0;
+			// can use "sleep=30000" to give some time to manually stop and start
+			// the peer so the event hub will also stop and start
+			if (process.argv.length > 2) {
+				if (process.argv[2].indexOf('sleep=') === 0) {
+					sleep_time = process.argv[2].split('=')[1];
+				}
+			}
+			t.comment('*****************************************************************************');
+			t.comment('stop and start the peer event hub ---- N  O  W ----- you have ' + sleep_time + ' millis ' + (new Date()).toString());
+			t.comment('*****************************************************************************');
+			return sleep(sleep_time);
+		}).then(() => {
+
+			var proposalResponses = pass_results[0];
+
+			var proposal = pass_results[1];
+			var all_good = true;
+			for(var i in proposalResponses) {
+				let one_good = false;
+				let proposal_response = proposalResponses[i];
+				if( proposal_response.response && proposal_response.response.status === 200) {
+					t.pass('transaction proposal has response status of good');
+					one_good = channel.verifyProposalResponse(proposal_response);
+					if(one_good) {
+						t.pass('transaction proposal signature and endorser are valid');
+					}
+
+					// check payload
+					let payload = proposal_response.response.payload.toString();
+					// 'move success' is the expected payload from 'move' invoke
+					if(payload === 'move succeed'){
+						t.pass('transaction proposal payloads are valid');
+					} else {
+						one_good = false;
+						t.fail('transaction proposal payloads are invalid');
+					}
 				} else {
-					one_good = false;
-					t.fail('transaction proposal payloads are invalid');
+					t.fail('transaction proposal was bad');
 				}
-			} else {
-				t.fail('transaction proposal was bad');
+				all_good = all_good & one_good;
 			}
-			all_good = all_good & one_good;
-		}
-		if (all_good) {
+			if (all_good) {
 			// check all the read/write sets to see if the same, verify that each peer
 			// got the same results on the proposal
-			all_good = channel.compareProposalResponseResults(proposalResponses);
-			t.pass('compareProposalResponseResults exection did not throw an error');
-			if(all_good){
-				t.pass(' All proposals have a matching read/writes sets');
+				all_good = channel.compareProposalResponseResults(proposalResponses);
+				t.pass('compareProposalResponseResults exection did not throw an error');
+				if(all_good){
+					t.pass(' All proposals have a matching read/writes sets');
+				}
+				else {
+					t.fail(' All proposals do not have matching read/write sets');
+				}
 			}
-			else {
-				t.fail(' All proposals do not have matching read/write sets');
-			}
-		}
-		if (all_good) {
+			if (all_good) {
 			// check to see if all the results match
-			t.pass('Successfully sent Proposal and received ProposalResponse');
-			logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-			var request = {
-				proposalResponses: proposalResponses,
-				proposal: proposal
-			};
+				t.pass('Successfully sent Proposal and received ProposalResponse');
+				logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
+				var request = {
+					proposalResponses: proposalResponses,
+					proposal: proposal
+				};
 
-			// set the transaction listener and set a timeout of 30sec
-			// if the transaction did not get committed within the timeout period,
-			// fail the test
-			var deployId = tx_id.getTransactionID();
+				// set the transaction listener and set a timeout of 30sec
+				// if the transaction did not get committed within the timeout period,
+				// fail the test
+				var deployId = tx_id.getTransactionID();
 
-			var eventPromises = [];
-			eventhubs.forEach((eh) => {
-				let txPromise = new Promise((resolve, reject) => {
-					let handle = setTimeout(() => {
-						t.fail('Timeout - Failed to receive the event for commit:  waiting on '+ eh.getPeerAddr());
-						eh.disconnect(); // will not be using this event hub
-						reject('TIMEOUT waiting on '+ eh.getPeerAddr());
-					}, 30000);
+				var eventPromises = [];
+				eventhubs.forEach((eh) => {
+					let txPromise = new Promise((resolve, reject) => {
+						let handle = setTimeout(() => {
+							t.fail('Timeout - Failed to receive the event for commit:  waiting on '+ eh.getPeerAddr());
+							eh.disconnect(); // will not be using this event hub
+							reject('TIMEOUT waiting on '+ eh.getPeerAddr());
+						}, 30000);
 
-					eh.registerTxEvent(deployId.toString(), (tx, code) => {
-						clearTimeout(handle);
-						if (code !== 'VALID') {
-							t.fail('The balance transfer transaction was invalid, code = ' + code);
-							reject();
-						} else {
-							t.pass('The balance transfer transaction has been committed on peer '+ eh.getPeerAddr());
+						eh.registerTxEvent(deployId.toString(), (tx, code) => {
+							clearTimeout(handle);
+							if (code !== 'VALID') {
+								t.fail('The balance transfer transaction was invalid, code = ' + code);
+								reject();
+							} else {
+								t.pass('The balance transfer transaction has been committed on peer '+ eh.getPeerAddr());
+								resolve();
+							}
+						}, () => {
+							clearTimeout(handle);
+							t.pass('Successfully received notification of the event call back being cancelled for '+ deployId);
 							resolve();
-						}
-					}, (err) => {
-						clearTimeout(handle);
-						t.pass('Successfully received notification of the event call back being cancelled for '+ deployId);
-						resolve();
-					},{
-						disconnect: true // will not be using this event hub
+						},{
+							disconnect: true // will not be using this event hub
+						});
+						eh.connect();
 					});
-					eh.connect();
-				});
-				eventPromises.push(txPromise);
-			});
-
-			var sendPromise = channel.sendTransaction(request);
-			return Promise.all([sendPromise].concat(eventPromises))
-				.then((results) => {
-
-					logger.debug(' event promise all complete and testing complete');
-					return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
-
-				}).catch((err) => {
-
-					t.fail('Failed transaction ::'+ err);
-					throw new Error('Failed transaction ::'+ err);
-
+					eventPromises.push(txPromise);
 				});
 
-		} else {
-			t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
-			throw new Error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
-		}
-	}, (err) => {
+				var sendPromise = channel.sendTransaction(request);
+				return Promise.all([sendPromise].concat(eventPromises))
+					.then((results) => {
 
-		t.fail('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
-		throw new Error('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
+						logger.debug(' event promise all complete and testing complete');
+						return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 
-	}).then((response) => {
+					}).catch((err) => {
 
-		if (response.status === 'SUCCESS') {
-			t.pass('Successfully sent transaction to the orderer.');
-			t.comment('******************************************************************');
-			t.comment('To manually run /test/integration/query.js, set the following environment variables:');
-			t.comment('export E2E_TX_ID='+'\''+tx_id.getTransactionID()+'\'');
-			t.comment('******************************************************************');
-			logger.debug('invokeChaincode end');
+						t.fail('Failed transaction ::'+ err);
+						throw new Error('Failed transaction ::'+ err);
 
-			// close the connections
-			channel.close();
-			t.pass('Successfully closed all connections');
-			return true;
-		} else {
-			t.fail('Failed to order the transaction. Error code: ' + response.status);
-			throw new Error('Failed to order the transaction. Error code: ' + response.status);
-		}
-	}, (err) => {
+					});
 
-		t.fail('Failed to send transaction due to error: ' + err.stack ? err.stack : err);
-		throw new Error('Failed to send transaction due to error: ' + err.stack ? err.stack : err);
+			} else {
+				t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
+				throw new Error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
+			}
+		}, (err) => {
 
-	});
+			t.fail('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
+			throw new Error('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
+
+		}).then((response) => {
+
+			if (response.status === 'SUCCESS') {
+				t.pass('Successfully sent transaction to the orderer.');
+				t.comment('******************************************************************');
+				t.comment('To manually run /test/integration/query.js, set the following environment variables:');
+				t.comment('export E2E_TX_ID='+'\''+tx_id.getTransactionID()+'\'');
+				t.comment('******************************************************************');
+				logger.debug('invokeChaincode end');
+
+				// close the connections
+				channel.close();
+				t.pass('Successfully closed all connections');
+				return true;
+			} else {
+				t.fail('Failed to order the transaction. Error code: ' + response.status);
+				throw new Error('Failed to order the transaction. Error code: ' + response.status);
+			}
+		}, (err) => {
+
+			t.fail('Failed to send transaction due to error: ' + err.stack ? err.stack : err);
+			throw new Error('Failed to send transaction due to error: ' + err.stack ? err.stack : err);
+
+		});
 }
 
 module.exports.invokeChaincode = invokeChaincode;
@@ -731,81 +722,80 @@ function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
 	let tlsInfo = null;
 
 	return e2eUtils.tlsEnroll(org)
-	.then((enrollment) => {
-		t.pass('Successfully retrieved TLS certificate');
-		tlsInfo = enrollment;
-		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
-	}).then((store) => {
+		.then((enrollment) => {
+			t.pass('Successfully retrieved TLS certificate');
+			tlsInfo = enrollment;
+			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
+		}).then((store) => {
 
-		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t, org);
+			client.setStateStore(store);
+			return testUtil.getSubmitter(client, t, org);
 
-	}).then((admin) => {
-		the_user = admin;
+		}).then((admin) => {
+			the_user = admin;
 
-		t.pass('Successfully enrolled user \'admin\' (e2eUtil 4)');
+			t.pass('Successfully enrolled user \'admin\' (e2eUtil 4)');
 
-		var targets = [];
-		// set up the channel to use each org's 'peer1' for
-		// both requests and events
-		for (let key in ORGS) {
-			if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-				let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
-				let peer = client.newPeer(
-					ORGS[key].peer1.requests,
-					{
-						pem: Buffer.from(data).toString(),
-						'clientCert': tlsInfo.certificate,
-						'clientKey': tlsInfo.key,
-						'ssl-target-name-override': ORGS[key].peer1['server-hostname']
-					});
-				channel.addPeer(peer);
-			}
-		}
-
-		// send query
-		var request = {
-			chaincodeId : chaincodeId,
-			txId: tx_id,
-			fcn: 'query',
-			args: ['b']
-		};
-
-		if (transientMap) {
-			request.transientMap = transientMap;
-			request.fcn = 'testTransient';
-		}
-
-		return channel.queryByChaincode(request);
-	},
-	(err) => {
-		t.fail('Failed to get submitter \'admin\'. Error: ' + err.stack ? err.stack : err );
-		throw new Error('Failed to get submitter');
-	}).then((response_payloads) => {
-		if (response_payloads) {
-			for(let i = 0; i < response_payloads.length; i++) {
-				if (transientMap) {
-					t.equal(
-						response_payloads[i].toString(),
-						transientMap[Object.keys(transientMap)[0]].toString(),
-						'Checking the result has the transientMap value returned by the chaincode');
-				} else {
-					t.equal(
-						response_payloads[i].toString('utf8'),
-						value,
-						'checking query results are correct that user b has '+ value + ' now after the move');
+			// set up the channel to use each org's 'peer1' for
+			// both requests and events
+			for (let key in ORGS) {
+				if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
+					let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+					let peer = client.newPeer(
+						ORGS[key].peer1.requests,
+						{
+							pem: Buffer.from(data).toString(),
+							'clientCert': tlsInfo.certificate,
+							'clientKey': tlsInfo.key,
+							'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+						});
+					channel.addPeer(peer);
 				}
 			}
-			return true;
-		} else {
-			t.fail('response_payloads is null');
-			throw new Error('Failed to get response on query');
-		}
-	},
-	(err) => {
-		t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
-		throw new Error('Failed, got error on query');
-	});
+
+			// send query
+			var request = {
+				chaincodeId : chaincodeId,
+				txId: tx_id,
+				fcn: 'query',
+				args: ['b']
+			};
+
+			if (transientMap) {
+				request.transientMap = transientMap;
+				request.fcn = 'testTransient';
+			}
+
+			return channel.queryByChaincode(request);
+		},
+		(err) => {
+			t.fail('Failed to get submitter \'admin\'. Error: ' + err.stack ? err.stack : err );
+			throw new Error('Failed to get submitter');
+		}).then((response_payloads) => {
+			if (response_payloads) {
+				for(let i = 0; i < response_payloads.length; i++) {
+					if (transientMap) {
+						t.equal(
+							response_payloads[i].toString(),
+							transientMap[Object.keys(transientMap)[0]].toString(),
+							'Checking the result has the transientMap value returned by the chaincode');
+					} else {
+						t.equal(
+							response_payloads[i].toString('utf8'),
+							value,
+							'checking query results are correct that user b has '+ value + ' now after the move');
+					}
+				}
+				return true;
+			} else {
+				t.fail('response_payloads is null');
+				throw new Error('Failed to get response on query');
+			}
+		},
+		(err) => {
+			t.fail('Failed to send query due to error: ' + err.stack ? err.stack : err);
+			throw new Error('Failed, got error on query');
+		});
 }
 
 module.exports.queryChaincode = queryChaincode;
