@@ -201,11 +201,13 @@ var User = class {
 
 	/**
 	 * Set the current state of this member from a string based JSON object
+	 * @param {string} str - the member state serialized
+	 * @param {boolean} no_save - to indicate that the cryptoSuite should not save
 	 * @return {Member} Promise of the unmarshalled Member object represented by the serialized string
 	 */
-	fromString(str) {
+	fromString(str, no_save) {
 		logger.debug('fromString --start');
-		var state = JSON.parse(str);
+		const state = JSON.parse(str);
 
 		if (state.name !== this.getName()) {
 			throw new Error('name mismatch: \'' + state.name + '\' does not equal \'' + this.getName() + '\'');
@@ -226,10 +228,27 @@ var User = class {
 			this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
 		}
 
-		var self = this;
-		var pubKey;
+		const self = this;
+		let pubKey;
 
-		return this._cryptoSuite.importKey(state.enrollment.identity.certificate, { algorithm: api.CryptoAlgorithms.X509Certificate })
+		let import_promise = null;
+		const opts = { algorithm: api.CryptoAlgorithms.X509Certificate };
+		if (no_save) {
+			opts.ephemeral = true;
+			import_promise = new Promise((resolve, reject) => {
+				// create Promise because importKey does not return Promise when ephemeral is true
+				const key = this._cryptoSuite.importKey(state.enrollment.identity.certificate, opts);
+				if (key) {
+					resolve(key);
+				} else {
+					reject(new Error('Import of saved user has failed'));
+				}
+			});
+		} else {
+			import_promise = this._cryptoSuite.importKey(state.enrollment.identity.certificate, opts);
+		}
+
+		return import_promise
 		.then((key) => {
 			pubKey = key;
 

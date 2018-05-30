@@ -1536,35 +1536,32 @@ var Client = class extends BaseClient {
 
 		return new Promise(function(resolve, reject) {
 			self._stateStore.getValue(name)
-				.then(
-					function(memberStr) {
-						if (memberStr) {
-						// The member was found in the key value store, so restore the state.
-							const newUser = new User(name);
-							if (!self.getCryptoSuite()) {
-								logger.debug('loadUserFromStateStore, cryptoSuite is not set, will load using defaults');
-							}
-							newUser.setCryptoSuite(self.getCryptoSuite());
+			.then((memberStr) => {
+				if (memberStr) {
+					// The member was found in the key value store, so restore the state.
+					const newUser = new User(name);
+					if (!self.getCryptoSuite()) {
+						logger.debug('loadUserFromStateStore, cryptoSuite is not set, will load using defaults');
+					}
+					newUser.setCryptoSuite(self.getCryptoSuite());
 
-							return newUser.fromString(memberStr);
-						} else {
-							return null;
-						}
-					})
-				.then(function(data) {
-					if (data) {
-						logger.debug('Successfully loaded user "%s" from local key value store', name);
-						return resolve(data);
-					} else {
-						logger.debug('Failed to load user "%s" from local key value store', name);
-						return resolve(null);
-					}
-				}).catch(
-					function(err) {
-						logger.error('Failed to load user "%s" from local key value store. Error: %s', name, err.stack ? err.stack : err);
-						reject(err);
-					}
-				);
+					return newUser.fromString(memberStr, true);
+				} else {
+					logger.debug('Failed to find "%s" in local key value store', name);
+					return resolve(null);
+				}
+			}).then((data) => {
+				if (data) {
+					logger.debug('Successfully loaded user "%s" from local key value store', name);
+					return resolve(data);
+				} else {
+					logger.debug('Failed to load user "%s" from local key value store', name);
+					return resolve(null);
+				}
+			}).catch((err) => {
+				logger.error('Failed to load user "%s" from local key value store. Error: %s', name, err.stack ? err.stack : err);
+				reject(err);
+			});
 		});
 	}
 
