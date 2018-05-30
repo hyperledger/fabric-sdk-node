@@ -26,6 +26,7 @@ var _common = grpc.load(__dirname + '/protos/common/common.proto').common;
  * is for asking the orderer for information such as channel configurations.
  *
  * @class
+ * @extends Remote
  */
 var Orderer = class extends Remote {
 
