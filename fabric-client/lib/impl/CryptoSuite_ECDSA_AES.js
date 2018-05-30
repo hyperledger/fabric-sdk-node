@@ -33,11 +33,11 @@ const logger = utils.getLogger('crypto_ecdsa_aes');
 class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 
 	/**
-     * constructor
-     *
-     * @param {number} keySize Key size for the ECDSA algorithm, can only be 256 or 384
-     * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
-     */
+	 * constructor
+	 *
+	 * @param {number} keySize Key size for the ECDSA algorithm, can only be 256 or 384
+	 * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
+	 */
 	constructor(keySize, hash) {
 		if (!keySize) throw new Error('keySize must be specified');
 		if (keySize !== 256 && keySize !== 384) {
@@ -77,24 +77,24 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 	}
 
 	/**
-     * Set the cryptoKeyStore.
-     *
-     * When the application needs to use a key store other than the default,
-     * it should use the {@link Client} newCryptoKeyStore to create an instance and
-     * use this function to set the instance on the CryptoSuite.
-     *
-     * @param {CryptoKeyStore} cryptoKeyStore The cryptoKeyStore.
-     */
+	 * Set the cryptoKeyStore.
+	 *
+	 * When the application needs to use a key store other than the default,
+	 * it should use the {@link Client} newCryptoKeyStore to create an instance and
+	 * use this function to set the instance on the CryptoSuite.
+	 *
+	 * @param {CryptoKeyStore} cryptoKeyStore The cryptoKeyStore.
+	 */
 	setCryptoKeyStore(cryptoKeyStore) {
 		this._cryptoKeyStore = cryptoKeyStore;
 	}
 
-	generateKey(opts) {
+	async generateKey(opts) {
 		const pair = KEYUTIL.generateKeypair('EC', this._curveName);
 
 		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
 			logger.debug('generateKey, ephemeral true, Promise resolved');
-			return Promise.resolve(new ECDSAKey(pair.prvKeyObj));
+			return new ECDSAKey(pair.prvKeyObj);
 		} else {
 			if (!this._cryptoKeyStore) {
 				throw new Error('generateKey opts.ephemeral is false, which requires CryptoKeyStore to be set.');
@@ -102,43 +102,32 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 			// unless "opts.ephemeral" is explicitly set to "true", default to saving the key
 			const key = new ECDSAKey(pair.prvKeyObj);
 
-			const self = this;
-			return new Promise((resolve, reject) => {
-				self._cryptoKeyStore._getKeyStore()
-					.then((store) => {
-						logger.debug('generateKey, store.setValue');
-						return store.putKey(key)
-							.then(() => {
-								return resolve(key);
-							}).catch((err) => {
-								reject(err);
-							});
-					});
-
-			});
+			const store = await this._cryptoKeyStore._getKeyStore();
+			logger.debug('generateKey, store.setValue');
+			await store.putKey(key);
+			return key;
 		}
 	}
 
 	/**
-     * This is an implementation of {@link module:api.CryptoSuite#deriveKey}
-     * To be implemented
-     */
+	 * This is an implementation of {@link module:api.CryptoSuite#deriveKey}
+	 * To be implemented
+	 */
 	deriveKey(key, opts) {
 		if (key || opts) ;
 		throw new Error('Not implemented yet');
 	}
 
 	/**
-     * This is an implementation of {@link module:api.CryptoSuite#importKey}
-     * To be implemented
-     */
+	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
+	 */
 	importKey(pem, opts) {
 		logger.debug('importKey - start');
 		let store_key = true; //default
 		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
 			store_key = false;
 		}
-		if (!!store_key && !this._cryptoKeyStore) {
+		if (store_key && !this._cryptoKeyStore) {
 			throw new Error('importKey opts.ephemeral is false, which requires CryptoKeyStore to be set.');
 		}
 
@@ -196,46 +185,35 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 		}
 	}
 
-	getKey(ski) {
-		const self = this;
-		let store;
+	async getKey(ski) {
 
-		if (!self._cryptoKeyStore) {
+		if (!this._cryptoKeyStore) {
 			throw new Error('getKey requires CryptoKeyStore to be set.');
 		}
-		return new Promise((resolve, reject) => {
-			self._cryptoKeyStore._getKeyStore()
-				.then((st) => {
-					store = st;
-					return store.getKey(ski);
-				}).then((key) => {
-					if (ECDSAKey.isInstance(key))
-						return resolve(key);
+		const store = await this._cryptoKeyStore._getKeyStore();
+		const key = await store.getKey(ski);
+		if (key instanceof ECDSAKey)
+			return key;
 
-					if (key !== null) {
-						const pubKey = KEYUTIL.getKey(key);
-						return resolve(new ECDSAKey(pubKey));
-					}
-				}).catch((err) => {
-					reject(err);
-				});
-
-		});
+		if (key !== null) {
+			const pubKey = KEYUTIL.getKey(key);
+			return new ECDSAKey(pubKey);
+		}
 	}
 
 	/**
-     * This is an implementation of {@link module:api.CryptoSuite#hash}
-     * The opts argument is not supported.
-     */
+	 * This is an implementation of {@link module:api.CryptoSuite#hash}
+	 * The opts argument is not supported.
+	 */
 	hash(msg, opts) {
 		if (opts) ;
 		return this._hashFunction(msg);
 	}
 
 	/**
-     * This is an implementation of {@link module:api.CryptoSuite#sign}
-     * Signs digest using key k.
-     */
+	 * This is an implementation of {@link module:api.CryptoSuite#sign}
+	 * Signs digest using key k.
+	 */
 	sign(key, digest) {
 		if (typeof key === 'undefined' || key === null) {
 			throw new Error('A valid key is required to sign');
@@ -278,18 +256,18 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 	}
 
 	/**
-     * This is an implementation of {@link module:api.CryptoSuite#encrypt}
-     * To be implemented.
-     */
+	 * This is an implementation of {@link module:api.CryptoSuite#encrypt}
+	 * To be implemented.
+	 */
 	encrypt(key, plainText, opts) {
 		if (key || plainText || opts) ;
 		throw new Error('Not implemented yet');
 	}
 
 	/**
-     * This is an implementation of {@link module:api.CryptoSuite#decrypt}
-     * To be implemented.
-     */
+	 * This is an implementation of {@link module:api.CryptoSuite#decrypt}
+	 * To be implemented.
+	 */
 	decrypt(key, cipherText, opts) {
 		if (key || cipherText || opts) ;
 		throw new Error('Not implemented yet');

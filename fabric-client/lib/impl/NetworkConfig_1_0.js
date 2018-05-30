@@ -376,7 +376,7 @@ var NetworkConfig_1_0 = class {
 	/*
 	 * Internal utility method to get the organization the peer belongs
 	 */
-	 _getOrganizationForPeer(peer_name) {
+	_getOrganizationForPeer(peer_name) {
 		if(this._network_config && this._network_config[ORGS_CONFIG]) {
 			for(let organization_name in  this._network_config[ORGS_CONFIG]) {
 				let organization = this.getOrganization(organization_name);
@@ -387,7 +387,7 @@ var NetworkConfig_1_0 = class {
 				}
 			}
 		}
-	 }
+	}
 };
 
 function getTLSCACert(config) {

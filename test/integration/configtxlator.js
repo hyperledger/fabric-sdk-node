@@ -15,64 +15,58 @@
  *        superagent
  *        superagent-promise
  */
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('configinator');
+const utils = require('fabric-client/lib/utils.js');
+const logger = utils.getLogger('configinator');
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
-var superagent = require('superagent');
-var agent = require('superagent-promise')(require('superagent'), Promise);
-var requester = require('request');
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
+const superagent = require('superagent');
+const agent = require('superagent-promise')(require('superagent'), Promise);
+const requester = require('request');
 
-var Client = require('fabric-client');
-var util = require('util');
-var fs = require('fs');
-var path = require('path');
+const Client = require('fabric-client');
+const util = require('util');
+const fs = require('fs');
+const path = require('path');
 
-var testUtil = require('../unit/util.js');
-var e2eUtils = require('./e2e/e2eUtils.js');
+const testUtil = require('../unit/util.js');
+const e2eUtils = require('./e2e/e2eUtils.js');
 
-var the_user = null;
-var ORGS;
 
-test('\n\n***** configtxlator flow for create and then update  *****\n\n', function(t) {
+test('\n\n***** configtxlator flow for create and then update  *****\n\n', async (t) => {
 	testUtil.resetDefaults();
 	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-	ORGS = Client.getConfigSetting('test-network');
+	const ORGS = Client.getConfigSetting('test-network');
 
-	var channel_name = 'mychannelator';
-	var channel = null;
+	const channel_name = 'mychannelator';
 
 	//
 	// Create and configure the test channel
 	//
-	var client = new Client();
+	const client = new Client();
 
-	var caRootsPath = ORGS.orderer.tls_cacerts;
-	let data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
-	let caroots = Buffer.from(data).toString();
+	const caRootsPath = ORGS.orderer.tls_cacerts;
+	const data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
+	const caroots = Buffer.from(data).toString();
 
-	var config_proto = null;
-	var original_config_proto = null;
-	var original_config_json = null;
-	var updated_config_proto = null;
-	var updated_config_json = null;
-	var signatures = [];
-	var request = null;
-	var tlsInfo = null;
+	let config_proto = null;
+	let original_config_proto = null;
+	let original_config_json = null;
+	let updated_config_proto = null;
+	let updated_config_json = null;
+	let signatures = [];
+	let request = null;
 
 	// Acting as a client in org1 when creating the channel
-	var org = ORGS.org1.name;
+	const org = ORGS.org1.name;
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
+	try {
 
-	return e2eUtils.tlsEnroll(org)
-	.then((enrollment) => {
+		const tlsInfo = await e2eUtils.tlsEnroll(org);
 		t.pass('Successfully retrieved TLS certificate');
-		tlsInfo = enrollment;
-		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
-	}).then((store) => {
+		let store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
 		client.setStateStore(store);
 
 		/*
@@ -94,12 +88,11 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 		 *    the "ConfigUpdate" object.
 		 */
 
-		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
-	}).then((admin) =>{
+		let admin = await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
 		t.pass('Successfully enrolled user \'admin\' for org1');
-		let config_json = fs.readFileSync(path.join(__dirname, '../fixtures/channel/' + channel_name + '.json'));
+		const config_json = fs.readFileSync(path.join(__dirname, '../fixtures/channel/' + channel_name + '.json'));
 
-		var orderer = client.newOrderer(
+		const orderer = client.newOrderer(
 			ORGS.orderer.url,
 			{
 				'pem': caroots,
@@ -110,11 +103,11 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 		);
 
 		// the following is an example of how to make the call without a promise
-		var response = superagent.post('http://127.0.0.1:7059/protolator/encode/common.ConfigUpdate',
+		superagent.post('http://127.0.0.1:7059/protolator/encode/common.ConfigUpdate',
 			config_json.toString())
 			.buffer()
 			.end((err, res) => {
-				if(err) {
+				if (err) {
 					logger.error(err);
 					return;
 				}
@@ -122,71 +115,59 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 				//logger.info('config_proto %s',config_proto.toString());
 			});
 		// and here is an example of how to use it with a promise
-		return agent.post('http://127.0.0.1:7059/protolator/encode/common.ConfigUpdate', config_json.toString())
+		const config = await agent.post('http://127.0.0.1:7059/protolator/encode/common.ConfigUpdate', config_json.toString())
 			.buffer();
-	}).then((config) =>{
 		config_proto = config.body;
 		t.pass('Successfully built the config create from the json input');
 
-		// sign the config
-		var signature = client.signChannelConfig(config_proto);
+		// sign and collect signature
+		signatures.push(client.signChannelConfig(config_proto));
 		t.pass('Successfully signed config create by org1');
-		// collect signature
-		signatures.push(signature);
 
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
-	}).then((admin) => {
+		admin = await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
 		t.pass('Successfully enrolled user \'admin\' for org2');
 
-		// sign the config
-		var signature = client.signChannelConfig(config_proto);
+		// sign and collect signature
+		signatures.push(client.signChannelConfig(config_proto));
 		t.pass('Successfully signed config create by org2');
-		// collect signature
-		signatures.push(signature);
 
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		return testUtil.getOrderAdminSubmitter(client, t);
-	}).then((admin) => {
+		admin = await testUtil.getOrderAdminSubmitter(client, t);
 		t.pass('Successfully enrolled user \'admin\' for orderer (configtxlator 1)');
-		the_user = admin;
 
 		// sign the config
-		var signature = client.signChannelConfig(config_proto);
 		t.pass('Successfully signed config create by orderer');
 		// collect signature
-		signatures.push(signature);
+		signatures.push(client.signChannelConfig(config_proto));
 
 		// build up the create request
-		let tx_id = client.newTransactionID();
 		request = {
 			config: config_proto,
-			signatures : signatures,
-			name : channel_name,
-			orderer : orderer,
-			txId  : tx_id
+			signatures: signatures,
+			name: channel_name,
+			orderer: orderer,
+			txId: client.newTransactionID()
 		};
 
 		// this will send the create request to the orderer
-		return client.createChannel(request);
-	}).then((result) => {
+		let result = await client.createChannel(request);
 		logger.debug('\n***\n completed the create \n***\n');
 
-		logger.debug(' response ::%j',result);
-		if(result.status && result.status === 'SUCCESS') {
+		logger.debug(' response ::%j', result);
+		if (result.status && result.status === 'SUCCESS') {
 			t.pass('Successfully created the channel.');
 
-			return e2eUtils.sleep(5000);
+			await e2eUtils.sleep(5000);
 		} else {
 			t.fail('Failed to create the channel. ');
 
-			Promise.reject('Failed to create the channel');
+			throw 'Failed to create the channel';
 		}
-	}).then((nothing) => {
 		t.pass('Successfully waited to make sure new channel was created.');
 
 		/*
@@ -216,11 +197,10 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 		 *    the "ConfigUpdate" object.
 		 */
 
-		var channel = client.newChannel(channel_name);
+		const channel = client.newChannel(channel_name);
 		channel.addOrderer(orderer);
 
-		return channel.getChannelConfig();
-	}).then((config_envelope) => {
+		const config_envelope = await channel.getChannelConfig();
 		t.pass('Successfully read the current channel configuration');
 		// we just need the config from the envelope and configtxlator
 		// works with bytes
@@ -228,30 +208,28 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 
 		// lets get the config converted into JSON, so we can edit JSON to
 		// make our changes
-		return agent.post('http://127.0.0.1:7059/protolator/decode/common.Config',
+		let response = await agent.post('http://127.0.0.1:7059/protolator/decode/common.Config',
 			original_config_proto)
 			.buffer();
-	}).then((response) => {
 		t.pass('Successfully decoded the current configuration config proto into JSON');
 		original_config_json = response.text.toString();
-		logger.info(' original_config_json :: %s',original_config_json);
+		logger.info(' original_config_json :: %s', original_config_json);
 		// make a copy of the original so we can edit it
 		updated_config_json = original_config_json;
-		var updated_config = JSON.parse(updated_config_json);
+		const updated_config = JSON.parse(updated_config_json);
 		// now edit the config -- remove one of the organizations
 		delete updated_config.channel_group.groups.Application.groups.Org1MSP;
 		updated_config_json = JSON.stringify(updated_config);
-		logger.info(' updated_config_json :: %s',updated_config_json);
+		logger.info(' updated_config_json :: %s', updated_config_json);
 
 		// lets get the updated JSON encoded
-		return agent.post('http://127.0.0.1:7059/protolator/encode/common.Config',
+		response = await agent.post('http://127.0.0.1:7059/protolator/encode/common.Config',
 			updated_config_json.toString())
 			.buffer();
-	}).then((response) =>{
 		t.pass('Successfully encoded the updated config from the JSON input');
 		updated_config_proto = response.body;
 
-		var formData = {
+		const formData = {
 			channel: channel_name,
 			original: {
 				value: original_config_proto,
@@ -269,21 +247,20 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 			}
 		};
 
-		return new Promise((resolve, reject) =>{
+		response = await new Promise((resolve, reject) => {
 			requester.post({
 				url: 'http://127.0.0.1:7059/configtxlator/compute/update-from-configs',
 				formData: formData
-			}, function optionalCallback(err, res, body) {
+			}, (err, res, body) => {
 				if (err) {
-					t.fail('Failed to get the updated configuration ::'+err);
+					t.fail('Failed to get the updated configuration ::' + err);
 					reject(err);
 				} else {
-					var proto = Buffer.from(body, 'binary');
+					const proto = Buffer.from(body, 'binary');
 					resolve(proto);
 				}
 			});
 		});
-	}).then((response) =>{
 		t.pass('Successfully had configtxlator compute the updated config object');
 		config_proto = response;
 
@@ -292,69 +269,57 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', funct
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
-	}).then((admin) => {
+		admin = await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
 		t.pass('Successfully enrolled user \'admin\' for org1');
 
-		// sign the config
-		var signature = client.signChannelConfig(config_proto);
+		// sign and collect signature
+		signatures.push(client.signChannelConfig(config_proto));
 		t.pass('Successfully signed config update by org1');
-		// collect signature
-		signatures.push(signature);
-
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
-	}).then((admin) => {
+		admin = await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
 		t.pass('Successfully enrolled user \'admin\' for org2');
 
-		// sign the config
-		var signature = client.signChannelConfig(config_proto);
+		// sign and collect signature
+		signatures.push(client.signChannelConfig(config_proto));
 		t.pass('Successfully signed config update by org2');
-		// collect signature
-		signatures.push(signature);
 
 		// make sure we do not reuse the user
 		client._userContext = null;
-		return testUtil.getOrderAdminSubmitter(client, t);
-	}).then((admin) => {
+		admin = await testUtil.getOrderAdminSubmitter(client, t);
 		t.pass('Successfully enrolled user \'admin\' for orderer (configtxlator 2)');
-		the_user = admin;
 
-		// sign the config
-		var signature = client.signChannelConfig(config_proto);
+		// sign and collect signature
+		signatures.push(client.signChannelConfig(config_proto));
 		t.pass('Successfully signed config update by orderer');
-		// collect signature
-		signatures.push(signature);
 
 		// build up the create request
-		let tx_id = client.newTransactionID();
 		request = {
 			config: config_proto,
-			signatures : signatures,
-			name : channel_name,
-			orderer : orderer,
-			txId  : tx_id
+			signatures: signatures,
+			name: channel_name,
+			orderer: orderer,
+			txId: client.newTransactionID()
 		};
 
 		// this will send the update request to the orderer
-		return client.updateChannel(request);
-	}).then((result) => {
-		if(result.status && result.status === 'SUCCESS') {
+		result = await client.updateChannel(request);
+		if (result.status && result.status === 'SUCCESS') {
 			t.pass('Successfully updated the channel.');
 
-			return e2eUtils.sleep(5000);
+			await e2eUtils.sleep(5000);
 		} else {
 			t.fail('Failed to update the channel. ');
 
-			Promise.reject('Failed to update the channel');
+			throw 'Failed to update the channel';
 		}
-	}).then((nothing) => {
 		t.pass('Successfully waited to make sure new channel was updated.');
 		t.end();
-	}).catch((err) =>{
-		t.fail('Unexpected error '+err);
+
+	} catch (err) {
+		t.fail('Unexpected error ' + err);
 		t.end();
-	});
+	}
+
 });

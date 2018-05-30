@@ -256,25 +256,14 @@ test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', function(t)
 	t.end();
 });
 
-test('\n\n** CryptoKeyStore tests - getKey error tests **\n\n', function(t) {
+test('\n\n** CryptoKeyStore tests - getKey error tests **\n\n', function (t) {
 	// override t.end function so it'll always clear the config settings
-	t.end = ((context, f) => {
-		return function() {
-			if (global && global.hfc) global.hfc.config = undefined;
-			require('nconf').reset();
-
-			f.apply(context, arguments);
-		};
-	})(t, t.end);
-
+	testutil.resetDefaults();
 	var cryptoSuite = utils.newCryptoSuite();
-	t.throws(
-		() => {
-			cryptoSuite.getKey('blah');
-		},
-		/getKey requires CryptoKeyStore to be set./,
-		'Test missing cryptoKeyStore: cryptoSuite.getKey'
-	);
-	t.end();
+	cryptoSuite.getKey('blah').catch(err => {
+		t.ok(err.toString().includes('getKey requires CryptoKeyStore to be set.'),
+			'Test missing cryptoKeyStore: cryptoSuite.getKey');
+		t.end();
+	});
 
 });
