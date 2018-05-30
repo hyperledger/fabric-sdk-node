@@ -12,6 +12,7 @@
   },
   "types": "./types/index.d.ts",
   "dependencies": {
+    "@types/bytebuffer": "^5.0.34",
     "bn.js": "^4.11.3",
     "elliptic": "^6.2.3",
     "fs-extra": "^6.0.1",

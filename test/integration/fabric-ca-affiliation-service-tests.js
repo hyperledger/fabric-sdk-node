@@ -5,7 +5,7 @@
  */
 
 let utils = require('fabric-client/lib/utils.js');
-let logger = utils.getLogger('integration.client');
+let logger = utils.getLogger('integration.ca.affiliation-service');
 
 let tape = require('tape');
 let _test = require('tape-promise').default;

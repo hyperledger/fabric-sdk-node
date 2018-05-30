@@ -13,7 +13,6 @@
   },
   "devDependencies": {
     "@cloudant/cloudant": "^2.1.0",
-    "@types/bytebuffer": "^5.0.34",
     "bn.js": "^4.11.8",
     "bunyan": "^1.8.10",
     "del": "^3.0.0",
