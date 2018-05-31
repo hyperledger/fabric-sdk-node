@@ -77,7 +77,7 @@ function checkProposal(results) {
 		all_good = all_good & one_good;
 	}
 	return all_good;
-};
+}
 
 module.exports.checkProposal =  checkProposal;
 

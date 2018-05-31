@@ -113,8 +113,8 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', function (t) {
 
 	//test CSR generation
 	var pair3 = KEYUTIL.generateKeypair('EC', 'secp256r1');
-	var key3 = new ecdsaKey(pair3.prvKeyObj);
-	var key4 = new ecdsaKey(pair3.pubKeyObj);
+	key3 = new ecdsaKey(pair3.prvKeyObj);
+	key4 = new ecdsaKey(pair3.pubKeyObj);
 
 	t.throws(
 		function () {
@@ -131,18 +131,18 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', function (t) {
 	}
 	catch (err) {
 		t.pass('Checking that CSR is not generated for a malformed subject');
-	};
+	}
 
 	//valid CSR tests
 	var csrObject;
 	var subjectDN = 'CN=dummy';
 	try {
-		var csrPEM = key3.generateCSR(subjectDN);
+		csrPEM = key3.generateCSR(subjectDN);
 		csrObject = asn1.csr.CSRUtil.getInfo(csrPEM);
 	}
 	catch (err) {
 		t.fail('Failed to generate a CSR: ' + err.stack ? err.stack : err);
-	};
+	}
 
 	t.equal(asn1.x509.X500Name.onelineToLDAP(csrObject.subject.name), subjectDN,
 		'Checking CSR subject matches subject from request');

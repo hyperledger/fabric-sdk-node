@@ -110,7 +110,7 @@ class IdentityService {
 		}
 
 		if (!req.enrollmentID || !req.affiliation) {
-			throw new Error('Missing required parameters.  "req.enrollmentID", "req.affiliation" are all required.');
+			throw new Error('Missing required parameters. "req.enrollmentID", "req.affiliation" are all required.');
 		}
 		checkRegistrar(registrar);
 		// set default maxEnrollments to 1

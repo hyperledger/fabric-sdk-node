@@ -1645,9 +1645,10 @@ const Channel = class {
 						if (response instanceof Error) {
 							return Promise.reject(response);
 						}
+						let processTrans;
 						if (response.response) {
 							logger.debug('queryTransaction - response status :: %d', response.response.status);
-							const processTrans = BlockDecoder.decodeTransaction(response.response.payload);
+							processTrans = BlockDecoder.decodeTransaction(response.response.payload);
 							return Promise.resolve(processTrans);
 						}
 						// no idea what we have, lets fail it and send it back
@@ -2707,7 +2708,7 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 	versions.version = config_value.value.version;
 	try {
 		switch (config_value.key) {
-		case 'AnchorPeers':
+		case 'AnchorPeers': {
 			const anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - AnchorPeers :: %s', group_name, anchor_peers);
 			if (anchor_peers && anchor_peers.anchor_peers) for (var i in anchor_peers.anchor_peers) {
@@ -2720,53 +2721,63 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 				logger.debug('loadConfigValue - %s    - AnchorPeer :: %s:%s:%s', group_name, anchor_peer.host, anchor_peer.port, anchor_peer.org);
 			}
 			break;
-		case 'MSP':
+		}
+		case 'MSP': {
 			const msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - MSP found', group_name);
 			if (!isOrderer) config_items.msps.push(msp_value);
 			break;
-		case 'ConsensusType':
+		}
+		case 'ConsensusType': {
 			const consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
 			config_items.settings['ConsensusType'] = consensus_type;
 			logger.debug('loadConfigValue - %s    - Consensus type value :: %s', group_name, consensus_type.type);
 			break;
-		case 'BatchSize':
+		}
+		case 'BatchSize': {
 			const batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
 			config_items.settings['BatchSize'] = batch_size;
 			logger.debug('loadConfigValue - %s    - BatchSize  max_message_count :: %s', group_name, batch_size.maxMessageCount);
 			logger.debug('loadConfigValue - %s    - BatchSize  absolute_max_bytes :: %s', group_name, batch_size.absoluteMaxBytes);
 			logger.debug('loadConfigValue - %s    - BatchSize  preferred_max_bytes :: %s', group_name, batch_size.preferredMaxBytes);
 			break;
-		case 'BatchTimeout':
+		}
+		case 'BatchTimeout': {
 			const batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
 			config_items.settings['BatchTimeout'] = batch_timeout;
 			logger.debug('loadConfigValue - %s    - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
 			break;
-		case 'ChannelRestrictions':
+		}
+		case 'ChannelRestrictions': {
 			const channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
 			config_items.settings['ChannelRestrictions'] = channel_restrictions;
 			logger.debug('loadConfigValue - %s    - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
 			break;
-		case 'ChannelCreationPolicy':
+		}
+		case 'ChannelCreationPolicy': {
 			const creation_policy = _policiesProto.Policy.decode(config_value.value.value);
 			loadPolicy(config_items, versions, config_value.key, creation_policy, group_name, org);
 			break;
-		case 'HashingAlgorithm':
+		}
+		case 'HashingAlgorithm': {
 			const hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
 			config_items.settings['HashingAlgorithm'] = hashing_algorithm_name;
 			logger.debug('loadConfigValue - %s    - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
 			break;
-		case 'Consortium':
+		}
+		case 'Consortium': {
 			const consortium_algorithm_name = _commonConfigurationProto.Consortium.decode(config_value.value.value);
 			config_items.settings['Consortium'] = consortium_algorithm_name;
 			logger.debug('loadConfigValue - %s    - Consortium name value :: %s', group_name, consortium_algorithm_name.name);
 			break;
-		case 'BlockDataHashingStructure':
+		}
+		case 'BlockDataHashingStructure': {
 			const blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
 			config_items.settings['BlockDataHashingStructure'] = blockdata_hashing_structure;
 			logger.debug('loadConfigValue - %s    - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
 			break;
-		case 'OrdererAddresses':
+		}
+		case 'OrdererAddresses': {
 			const orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
 			if (orderer_addresses && orderer_addresses.addresses) {
@@ -2775,7 +2786,8 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 				}
 			}
 			break;
-		case 'KafkaBrokers':
+		}
+		case 'KafkaBrokers': {
 			const kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
 			logger.debug('loadConfigValue - %s    - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
 			if (kafka_brokers && kafka_brokers.brokers) {
@@ -2784,6 +2796,7 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 				}
 			}
 			break;
+		}
 		default:
 			logger.debug('loadConfigValue - %s    - value: %s', group_name, config_value.value.value);
 		}

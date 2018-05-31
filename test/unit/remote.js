@@ -231,8 +231,8 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 
 	console.log('\n * ORDERER *');
 	//Peer: secure grpcs, requires opts.pem
-	var url = 'grpcs://' + aHostname + ':aport';
-	var opts = { pem: aPem };
+	url = 'grpcs://' + aHostname + ':aport';
+	opts = { pem: aPem };
 	var orderer = null;
 	t.doesNotThrow(
 		function () {

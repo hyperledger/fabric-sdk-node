@@ -44,7 +44,7 @@ test('FabricCAClient: Test constructor', function (t) {
 		function () {
 			let client = new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options.  Protocol must be set to 'http' or 'https'/,
+		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'Throw error for missing protocol'
 	);
 
@@ -54,7 +54,7 @@ test('FabricCAClient: Test constructor', function (t) {
 		function () {
 			let client = new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options.  Protocol must be set to 'http' or 'https'/,
+		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'Throw error for invalid protocol'
 	);
 
@@ -65,7 +65,7 @@ test('FabricCAClient: Test constructor', function (t) {
 		function () {
 			let client = new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options.  Protocol must be set to 'http' or 'https'/,
+		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'HTTP is a valid protocol'
 	);
 
@@ -75,7 +75,7 @@ test('FabricCAClient: Test constructor', function (t) {
 		function () {
 			let client = new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options.  Protocol must be set to 'http' or 'https'/,
+		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'HTTPS is a valid protocol'
 	);
 
@@ -85,7 +85,7 @@ test('FabricCAClient: Test constructor', function (t) {
 		function () {
 			let client = new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options.  Hostname must be set/,
+		/Invalid connection options. Hostname must be set/,
 		'Throw error for missing hostname'
 	);
 
@@ -95,7 +95,7 @@ test('FabricCAClient: Test constructor', function (t) {
 		function () {
 			let client = new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options.  Port must be an integer/,
+		/Invalid connection options. Port must be an integer/,
 		'Should not throw error if port is not set'
 	);
 
@@ -105,7 +105,7 @@ test('FabricCAClient: Test constructor', function (t) {
 		function () {
 			let client = new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options.  Port must be an integer/,
+		/Invalid connection options. Port must be an integer/,
 		'Throw error for invalid port'
 	);
 
@@ -115,7 +115,7 @@ test('FabricCAClient: Test constructor', function (t) {
 		function () {
 			let client = new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options.  Port must be an integer/,
+		/Invalid connection options. Port must be an integer/,
 		'Integer is a valid type for port'
 	);
 
@@ -207,12 +207,12 @@ test('FabricCAServices:  Test newCryptoSuite() function', function(t) {
 	};
 	var CAClient = require('fabric-ca-client');
 
- 	var crypto = CAClient.newCryptoSuite({software: true, keysize: 384});
+	var crypto = CAClient.newCryptoSuite({software: true, keysize: 384});
 
- 	var client = new CAClient('http://localhost:7054', tlsOptions, 'peerOrg1', crypto);
- 	client.setCryptoSuite(crypto);
+	var client = new CAClient('http://localhost:7054', tlsOptions, 'peerOrg1', crypto);
+	client.setCryptoSuite(crypto);
 
-	var crypto = client.getCryptoSuite();
+	crypto = client.getCryptoSuite();
 
 	if (crypto) {
 		t.pass('Successfully called getCryptoSuite()');
@@ -231,7 +231,7 @@ test('FabricCAServices:  Test newCryptoKeyStore() function', function(t) {
 	};
 	var CAClient = require('fabric-ca-client');
 
- 	var crypto = CAClient.newCryptoSuite({software: true, keysize: 384});
+	var crypto = CAClient.newCryptoSuite({software: true, keysize: 384});
 	var keyValStorePath = path.join(testutil.getTempDir(), 'kvsTemp');
 	if (!crypto._cryptoKeyStore) {
 		t.pass('cryptoKeyStore is not set on a new cryptoSuite');
@@ -242,10 +242,10 @@ test('FabricCAServices:  Test newCryptoKeyStore() function', function(t) {
 	var cks = CAClient.newCryptoKeyStore({path:keyValStorePath});
 	crypto.setCryptoKeyStore(cks);
 
- 	var client = new CAClient('http://localhost:7054', tlsOptions, 'peerOrg1', crypto);
- 	client.setCryptoSuite(crypto);
+	var client = new CAClient('http://localhost:7054', tlsOptions, 'peerOrg1', crypto);
+	client.setCryptoSuite(crypto);
 
-	var crypto = client.getCryptoSuite();
+	crypto = client.getCryptoSuite();
 
 	if (crypto && crypto._cryptoKeyStore) {
 		t.pass('Successfully called getCryptoSuite() with cryptoKeyStore set');

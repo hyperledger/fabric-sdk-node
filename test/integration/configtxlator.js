@@ -60,6 +60,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 
 	// Acting as a client in org1 when creating the channel
 	const org = ORGS.org1.name;
+	let orderer;
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	try {

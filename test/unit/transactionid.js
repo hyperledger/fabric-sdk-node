@@ -15,13 +15,6 @@ var User = require('fabric-client/lib/User.js');
 var utils = require('fabric-client/lib/utils.js');
 var testutil = require('./util.js');
 
-var enrollmentID = 123454321;
-var roles = ['admin', 'user'];
-var memberCfg = {
-	'enrollmentID': enrollmentID,
-	'roles': roles
-};
-
 var TEST_CERT_PEM = require('./user.js').TEST_CERT_PEM;
 
 test('\n\n ** Transaction - constructor set get tests **\n\n', function (t) {

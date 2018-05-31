@@ -268,7 +268,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		t.equal('secp384r1', key.getPublicKey()._key.curveName,
 			'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp384r1');
 
-		if (!!key._key)
+		if (key._key)
 			t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
 		else
 			t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
@@ -286,7 +286,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 		t.end();
 	}).then(function (key) {
-		if (!!key._key)
+		if (key._key)
 			t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
 		else
 			t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');

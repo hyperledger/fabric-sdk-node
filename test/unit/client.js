@@ -5,7 +5,6 @@
  */
 
 'use strict';
-
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('unit.client');
 
@@ -17,7 +16,6 @@ var util = require('util');
 var sinon = require('sinon');
 
 var Client = require('fabric-client');
-var utils = require('fabric-client/lib/utils.js');
 var User = require('fabric-client/lib/User.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var NetworkConfig = require('fabric-client/lib/impl/NetworkConfig_1_0.js');
@@ -862,7 +860,7 @@ test('\n\n ** createUser error path - no keyValueStore **\n\n', function (t) {
 		{username: caImport.orgs[userOrg].username,
 			mspid: caImport.orgs[userOrg].mspid,
 			cryptoContent: caImport.orgs[userOrg].cryptoContent
-	    })
+		})
 	.then((user) => {
 		if (user) {
 			t.fail('createUser, did not expect successful create');

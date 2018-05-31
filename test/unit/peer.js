@@ -9,9 +9,6 @@ var _test = require('tape-promise').default;
 var test = _test(tape);
 
 var Client = require('fabric-client');
-var sdkUtil = require('fabric-client/lib/utils.js');
-var util = require('util');
-var fs = require('fs');
 var testUtil = require('./util.js');
 
 var Peer = require('fabric-client/lib/Peer.js');
@@ -86,32 +83,32 @@ test('Peer missing address test', function(t) {
 test('Peer missing data test', function(t) {
 	let peer = new Peer('grpc://127.0.0.1:5005');
 	peer.sendProposal()
-	.then(
-		function(status) {
-			t.fail('Should have noticed missing data.');
-		},
-		function(err) {
-			t.pass('Successfully found missing data: ' + err);
-			peer.close();
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined promise error function: ' + err);
-	});
+		.then(
+			function() {
+				t.fail('Should have noticed missing data.');
+			},
+			function(err) {
+				t.pass('Successfully found missing data: ' + err);
+				peer.close();
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined promise error function: ' + err);
+		});
 	peer.sendDiscovery()
-	.then(
-		function(status) {
-			t.fail('Should have noticed missing discovery data.');
+		.then(
+			function() {
+				t.fail('Should have noticed missing discovery data.');
+				t.end();
+			},
+			function(err) {
+				t.pass('Successfully found missing discovery data: ' + err);
+				peer.close();
+				t.end();
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined discovery promise error function: ' + err);
 			t.end();
-		},
-		function(err) {
-			t.pass('Successfully found missing discovery data: ' + err);
-			peer.close();
-			t.end();
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined discovery promise error function: ' + err);
-		t.end();
-	});
+		});
 });
 
 //
@@ -125,37 +122,37 @@ test('Peer unknown address test', function(t) {
 	let peer = new Peer('grpc://127.0.0.1:51006');
 
 	peer.sendProposal('some data')
-	.then(
-		function(status) {
-			t.fail('Should have noticed a bad address.');
-		},
-		function(err) {
-			t.equal(err.message, 'Failed to connect before the deadline',
-			 'sendProposal to unreachable peer should response connection failed');
-			t.pass('Successfully found bad address!' + err);
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined promise error function: '
+		.then(
+			function() {
+				t.fail('Should have noticed a bad address.');
+			},
+			function(err) {
+				t.equal(err.message, 'Failed to connect before the deadline',
+					'sendProposal to unreachable peer should response connection failed');
+				t.pass('Successfully found bad address!' + err);
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
-	});
+		});
 
 	peer.sendDiscovery('some data')
-	.then(
-		function(status) {
-			t.fail('Should have noticed a bad address.');
-			t.end();
-		},
-		function(err) {
-			t.equal(err.message, 'Failed to connect before the deadline',
-			 'sendProposal to unreachable peer should response connection failed');
-			t.pass('Successfully found bad address!' + err);
-			t.end();
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined promise error function: '
+		.then(
+			function() {
+				t.fail('Should have noticed a bad address.');
+				t.end();
+			},
+			function(err) {
+				t.equal(err.message, 'Failed to connect before the deadline',
+					'sendProposal to unreachable peer should response connection failed');
+				t.pass('Successfully found bad address!' + err);
+				t.end();
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
-		t.end();
-	});
+			t.end();
+		});
 });
 
 //
@@ -171,62 +168,62 @@ test('Peer timeout test', function(t) {
 	let peer = new Peer('grpc://localhost:7051');
 
 	peer.sendProposal('some data', 1)
-	.then(
-		function(status) {
-			t.fail('Should have noticed a timeout.');
-		},
-		function(err) {
-			t.pass('Successfully got the timeout' + err);
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined promise error function: '
+		.then(
+			function() {
+				t.fail('Should have noticed a timeout.');
+			},
+			function(err) {
+				t.pass('Successfully got the timeout' + err);
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
-	});
+		});
 	peer.sendDiscovery('some data', 1)
-	.then(
-		function(status) {
-			t.fail('Should have noticed a discovery timeout.');
-		},
-		function(err) {
-			t.pass('Successfully got the discovery timeout' + err);
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined discovery promise error function: '
+		.then(
+			function() {
+				t.fail('Should have noticed a discovery timeout.');
+			},
+			function(err) {
+				t.pass('Successfully got the discovery timeout' + err);
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined discovery promise error function: '
 		+ err);
-	});
+		});
 
 	const backup = Client.getConfigSetting('request-timeout');
 	Client.setConfigSetting('request-timeout', 1);
 	peer = new Peer('grpc://localhost:7051');
 
 	peer.sendProposal('some data')
-	.then(
-		function(status) {
-			t.fail('Should have noticed a timeout.');
-		},
-		function(err) {
-			t.pass('Successfully got the timeout' + err);
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined promise error function: '
+		.then(
+			function() {
+				t.fail('Should have noticed a timeout.');
+			},
+			function(err) {
+				t.pass('Successfully got the timeout' + err);
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
-	});
+		});
 
 	peer.sendDiscovery('some data')
-	.then(
-		function(status) {
-			t.fail('Should have noticed a discovery timeout.');
-			t.end();
-		},
-		function(err) {
-			t.pass('Successfully got the discovery timeout' + err);
-			t.end();
-		}
-	).catch(function(err) {
-		t.fail('Caught Error: should not be here if we defined discovery promise error function: '
+		.then(
+			function() {
+				t.fail('Should have noticed a discovery timeout.');
+				t.end();
+			},
+			function(err) {
+				t.pass('Successfully got the discovery timeout' + err);
+				t.end();
+			}
+		).catch(function(err) {
+			t.fail('Caught Error: should not be here if we defined discovery promise error function: '
 		+ err);
-		t.end();
-	});
+			t.end();
+		});
 
 	// put back the setting
 	Client.setConfigSetting('request-timeout', backup);

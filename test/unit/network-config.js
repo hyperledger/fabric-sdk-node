@@ -7,7 +7,6 @@
 'use strict';
 
 const utils = require('fabric-client/lib/utils.js');
-const client_utils = require('fabric-client/lib/client-utils.js');
 const logger = utils.getLogger('unit.client');
 
 const tape = require('tape');
@@ -19,7 +18,6 @@ const yaml = require('js-yaml');
 const util = require('util');
 
 const Client = require('fabric-client');
-const User = require('fabric-client/lib/User.js');
 const Peer = require('fabric-client/lib/Peer.js');
 const Orderer = require('fabric-client/lib/Orderer.js');
 const Organization = require('fabric-client/lib/Organization.js');
@@ -27,12 +25,6 @@ const CertificateAuthority = require('fabric-client/lib/CertificateAuthority.js'
 const NetworkConfig = require('fabric-client/lib/impl/NetworkConfig_1_0.js');
 const testutil = require('./util.js');
 
-let caImport;
-
-const grpc = require('grpc');
-const _configtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/configtx.proto').common;
-const rewire = require('rewire');
-const ClientRewired = rewire('fabric-client/lib/Client.js');
 
 test('\n\n ** configuration testing **\n\n', function (t) {
 	testutil.resetDefaults();
@@ -54,28 +46,28 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 
 	t.throws(
 		function() {
-			const c = Client.loadFromConfig();
+			Client.loadFromConfig();
 		},
 		/Invalid network configuration/,
 		'Should not be able to instantiate a new instance of "Client" without a valid path to the configuration');
 
 	t.throws(
 		function() {
-			const c = Client.loadFromConfig('/');
+			Client.loadFromConfig('/');
 		},
 		/EISDIR: illegal operation on a directory/,
 		'Should not be able to instantiate a new instance of "Client" without an actual configuration file');
 
 	t.throws(
 		function() {
-			const c = Client.loadFromConfig('something');
+			Client.loadFromConfig('something');
 		},
 		/ENOENT: no such file or directory/,
 		'Should not be able to instantiate a new instance of "Client" without an actual configuration file');
 
 	t.doesNotThrow(
 		() => {
-			const c = Client.loadFromConfig('test/fixtures/network.json');
+			Client.loadFromConfig('test/fixtures/network.json');
 		},
 		null,
 		'Should be able to instantiate a new instance of "Client" with a valid path to the configuration'
@@ -84,7 +76,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = Client.loadFromConfig('test/fixtures/network.json');
-			const channel = client.newChannel('mychannel2');
+			client.newChannel('mychannel2');
 			client.loadFromConfig('test/fixtures/network.json');
 		},
 		null,
@@ -94,7 +86,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.throws(
 		() => {
 			const client = Client.loadFromConfig('test/fixtures/network.json');
-			const channel = client.getChannel('dummy');
+			client.getChannel('dummy');
 		},
 		/Channel not found for name/,
 		'Should not be able to instantiate a new instance of "Channel" with a bad channel'
@@ -470,35 +462,35 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	);
 
 	t.doesNotThrow(
-			() => {
-				const client = new Client();
-				let network_config_impl = new NetworkConfig(network_config, client);
-				let client_config = network_config_impl.getClientConfig();
-				if(typeof client_config.credentialStore === 'undefined') {
-					t.pass('client config should be empty');
-				} else {
-					t.fail('client config is not correct');
-				}
-				network_config.client = {};
-				network_config.client.credentialStore = {path : '/tmp/something', cryptoStore : { path : 'relative/something'}};
-				network_config_impl = new NetworkConfig(network_config, client);
-				client_config = network_config_impl.getClientConfig();
-				t.equals(client_config.credentialStore.path, '/tmp/something','client config store path should be something');
-				if(client_config.credentialStore.cryptoStore.path.indexOf('relative/something') > 1) {
-					t.pass('client config cryptoStore store path should be something relative');
-				} else {
-					t.fail('client config cryptoStore store path should be something relative');
-				}
-				network_config.client.credentialStore = {dbsetting : '/tmp/something', cryptoStore : { dbsetting : 'relative/something'}};
-				network_config_impl = new NetworkConfig(network_config, client);
-				client_config = network_config_impl.getClientConfig();
-				t.equals(client_config.credentialStore.dbsetting, '/tmp/something','client config store path should be something');
-				t.equals(client_config.credentialStore.cryptoStore.dbsetting, 'relative/something','client config cryptoStore store path should be something');
+		() => {
+			const client = new Client();
+			let network_config_impl = new NetworkConfig(network_config, client);
+			let client_config = network_config_impl.getClientConfig();
+			if(typeof client_config.credentialStore === 'undefined') {
+				t.pass('client config should be empty');
+			} else {
+				t.fail('client config is not correct');
+			}
+			network_config.client = {};
+			network_config.client.credentialStore = {path : '/tmp/something', cryptoStore : { path : 'relative/something'}};
+			network_config_impl = new NetworkConfig(network_config, client);
+			client_config = network_config_impl.getClientConfig();
+			t.equals(client_config.credentialStore.path, '/tmp/something','client config store path should be something');
+			if(client_config.credentialStore.cryptoStore.path.indexOf('relative/something') > 1) {
+				t.pass('client config cryptoStore store path should be something relative');
+			} else {
+				t.fail('client config cryptoStore store path should be something relative');
+			}
+			network_config.client.credentialStore = {dbsetting : '/tmp/something', cryptoStore : { dbsetting : 'relative/something'}};
+			network_config_impl = new NetworkConfig(network_config, client);
+			client_config = network_config_impl.getClientConfig();
+			t.equals(client_config.credentialStore.dbsetting, '/tmp/something','client config store path should be something');
+			t.equals(client_config.credentialStore.cryptoStore.dbsetting, 'relative/something','client config cryptoStore store path should be something');
 
-			},
-			null,
-			'Should not get an error when working with credentialStore settings'
-		);
+		},
+		null,
+		'Should not get an error when working with credentialStore settings'
+	);
 
 	t.doesNotThrow(
 		() => {
@@ -575,14 +567,14 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	);
 
 	t.throws(
-			() => {
-				const client = Client.loadFromConfig(network_config);
-				const channel = client.getChannel('mychannel');
-				channel._getTargets('bad');
-			},
-			/not assigned/,
-			'Should get an error back when passing a bad name'
-		);
+		() => {
+			const client = Client.loadFromConfig(network_config);
+			const channel = client.getChannel('mychannel');
+			channel._getTargets('bad');
+		},
+		/not assigned/,
+		'Should get an error back when passing a bad name'
+	);
 
 	t.throws(
 		() => {
@@ -699,17 +691,17 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		}
 	});
 	Promise.all([pr1])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Channel query calls, Promise.all: ');
-			logger.error(err.stack ? err.stack : err);
-			t.end();
-		}
-	);
+		.then(
+			function (data) {
+				t.end();
+			}
+		).catch(
+			function (err) {
+				t.fail('Channel query calls, Promise.all: ');
+				logger.error(err.stack ? err.stack : err);
+				t.end();
+			}
+		);
 
 	t.throws(
 		() => {
@@ -835,17 +827,17 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	});
 
 	Promise.all([p1,p2, p3, p4])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Client network config calls failed during the Promise.all');
-			logger.error(err.stack ? err.stack : err);
-			t.end();
-		}
-	);
+		.then(
+			function (data) {
+				t.end();
+			}
+		).catch(
+			function (err) {
+				t.fail('Client network config calls failed during the Promise.all');
+				logger.error(err.stack ? err.stack : err);
+				t.end();
+			}
+		);
 
 	t.end();
 });

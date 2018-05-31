@@ -360,8 +360,8 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 			t.pass('Successfully sent transaction to instantiate the chaincode to the orderer.');
 			await sleep(10000); // use sleep for now until the eventhub is integrated into the network config changes
 		} else {
-			t.fail('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
-			throw new Error('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
+			t.fail('Failed to order the transaction to instantiate the chaincode. Error code: ' + commit_response.status);
+			throw new Error('Failed to order the transaction to instantiate the chaincode. Error code: ' + commit_response.status);
 		}
 
 		t.pass('Successfully waited for chaincodes to startup');
@@ -453,8 +453,9 @@ async function invoke(t, client, channel) {
 		request = {
 			proposalResponses: proposalResponses,
 			proposal: proposal,
-			txId : tx_id // to use the admin idenity must include the transactionID
-			             // that was created for the proposal that was based on the admin Identity
+			// to use the admin idenity must include the transactionID
+			// that was created for the proposal that was based on the admin Identity
+			txId : tx_id
 		};
 
 		const responses = await send_and_wait_on_events(t, channel, request, tx_id_string);

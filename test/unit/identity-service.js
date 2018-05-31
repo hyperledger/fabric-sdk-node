@@ -27,7 +27,7 @@ test('IdentityService: Test create() function', function (t) {
 	t.throws(()=> {
 		identity.create({enrollmentID: null});
 	},
-	/Missing required parameters.  "req.enrollmentID", "req.affiliation" are all required./,
+	/Missing required parameters. "req.enrollmentID", "req.affiliation" are all required./,
 	'Must fail if missing req.enrollmentID and req.affiliation argument');
 
 	t.throws(()=> {

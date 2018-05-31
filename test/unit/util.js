@@ -6,18 +6,12 @@
 
 var path = require('path');
 var fs = require('fs-extra');
-var os = require('os');
 var util = require('util');
 
-var jsrsa = require('jsrsasign');
-var KEYUTIL = jsrsa.KEYUTIL;
 
 var Client = require('fabric-client');
 var copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
 var User = require('fabric-client/lib/User.js');
-var CryptoSuite = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
-var KeyStore = require('fabric-client/lib/impl/CryptoKeyStore.js');
-var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 var Constants = require('./constants.js');
 
 var logger = require('fabric-client/lib/utils.js').getLogger('TestUtil');
@@ -122,48 +116,49 @@ function getMember(username, password, client, t, userOrg) {
 	var caUrl = ORGS[userOrg].ca.url;
 
 	return client.getUserContext(username, true)
-	.then((user) => {
-		return new Promise((resolve, reject) => {
-			if (user && user.isEnrolled()) {
-				t.pass('Successfully loaded member from persistence');
-				return resolve(user);
-			}
-
-			var member = new User(username);
-			var cryptoSuite = client.getCryptoSuite();
-			if (!cryptoSuite) {
-				cryptoSuite = Client.newCryptoSuite();
-				if (userOrg) {
-					cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
-					client.setCryptoSuite(cryptoSuite);
+		.then((user) => {
+			// eslint-disable-next-line no-unused-vars
+			return new Promise((resolve, reject) => {
+				if (user && user.isEnrolled()) {
+					t.pass('Successfully loaded member from persistence');
+					return resolve(user);
 				}
-			}
-			member.setCryptoSuite(cryptoSuite);
 
-			// need to enroll it with CA server
-			var cop = new copService(caUrl, tlsOptions, ORGS[userOrg].ca.name, cryptoSuite);
-
-			return cop.enroll({
-				enrollmentID: username,
-				enrollmentSecret: password
-			}).then((enrollment) => {
-				t.pass('Successfully enrolled user \'' + username + '\'');
-
-				return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
-			}).then(() => {
-				var skipPersistence = false;
-				if (!client.getStateStore()) {
-					skipPersistence = true;
+				var member = new User(username);
+				var cryptoSuite = client.getCryptoSuite();
+				if (!cryptoSuite) {
+					cryptoSuite = Client.newCryptoSuite();
+					if (userOrg) {
+						cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
+						client.setCryptoSuite(cryptoSuite);
+					}
 				}
-				return client.setUserContext(member, skipPersistence);
-			}).then(() => {
-				return resolve(member);
-			}).catch((err) => {
-				t.fail('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
-				t.end();
+				member.setCryptoSuite(cryptoSuite);
+
+				// need to enroll it with CA server
+				var cop = new copService(caUrl, tlsOptions, ORGS[userOrg].ca.name, cryptoSuite);
+
+				return cop.enroll({
+					enrollmentID: username,
+					enrollmentSecret: password
+				}).then((enrollment) => {
+					t.pass('Successfully enrolled user \'' + username + '\'');
+
+					return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
+				}).then(() => {
+					var skipPersistence = false;
+					if (!client.getStateStore()) {
+						skipPersistence = true;
+					}
+					return client.setUserContext(member, skipPersistence);
+				}).then(() => {
+					return resolve(member);
+				}).catch((err) => {
+					t.fail('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
+					t.end();
+				});
 			});
 		});
-	});
 }
 
 function getAdmin(client, t, userOrg) {
@@ -193,6 +188,7 @@ function getOrdererAdmin(client, t) {
 	var keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
 	var certPath = path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/signcerts');
 	var certPEM = readAllFiles(certPath)[0];
+	t.comment('getOrdererAdmin');
 
 	return Promise.resolve(client.createUser({
 		username: 'ordererAdmin',
@@ -207,7 +203,7 @@ function getOrdererAdmin(client, t) {
 function readFile(path) {
 	return new Promise((resolve, reject) => {
 		fs.readFile(path, (err, data) => {
-			if (!!err)
+			if (err)
 				reject(new Error('Failed to read file ' + path + ' due to error: ' + err));
 			else
 				resolve(data);

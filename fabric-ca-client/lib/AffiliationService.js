@@ -56,7 +56,7 @@ class AffiliationService {
 		}
 
 		if (!req.name) {
-			throw new Error('Missing required parameters.  "req.name" is required.');
+			throw new Error('Missing required parameters. "req.name" is required.');
 		}
 		checkRegistrar(registrar);
 

@@ -20,11 +20,9 @@ var e2eUtils = require('../e2e/e2eUtils.js');
 var Client = require('fabric-client');
 
 var testUtil = require('../../unit/util.js');
-var keyValStorePath = testUtil.KVS;
 var ORGS;
 
 var commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
-var proposalProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/peer/proposal.proto')).protos;
 var ccProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/peer/chaincode.proto')).protos;
 
 var client = new Client();
@@ -79,6 +77,7 @@ async function perfTest3(t) {
 		start = Date.now();
 		let count = 0;
 		return new Promise((resolve, reject) => {
+			// eslint-disable-next-line no-constant-condition
 			while(true) {
 				let proposal = proposals.pop();
 				if(!proposal){

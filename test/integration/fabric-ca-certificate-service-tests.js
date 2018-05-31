@@ -26,7 +26,7 @@ const tlsOptions = {
 test('\n\n ** FabricCAServices - CertificateService Test **\n\n', async (t) => {
 	try {
 		FabricCAServices.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-		ORGS = FabricCAServices.getConfigSetting('test-network');
+		const ORGS = FabricCAServices.getConfigSetting('test-network');
 
 		const fabricCAEndpoint1 = ORGS[userOrg1].ca.url;
 		const fabricCAEndpoint2 = ORGS[userOrg2].ca.url;
