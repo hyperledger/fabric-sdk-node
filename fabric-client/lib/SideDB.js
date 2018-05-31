@@ -68,9 +68,18 @@ function checkCollectionConfig(collectionConfig) {
 	if (!Number.isInteger(requiredPeerCount)) {
 		throw new Error(format('CollectionConfig Requires Param "requiredPeerCount" of type number, found %j(type: %s)', requiredPeerCount, typeof requiredPeerCount));
 	}
-	if (blockToLive == null || Number.isNaN(Number.parseInt(blockToLive)) ||
-		Long.fromValue(blockToLive, true).isNegative() || Long.fromValue(blockToLive, true) > Long.MAX_UNSIGNED_VALUE) {
+
+	if (blockToLive == null ||
+		Number.isNaN(Number.parseInt(blockToLive)) ||
+		Long.fromValue(blockToLive, true).isNegative()) {
 		throw new Error(format('CollectionConfig Requires Param "blockToLive" of type unsigned int64, found %j(type: %s)', blockToLive, typeof blockToLive));
+	} else {
+		const test = Long.fromValue(blockToLive, true);
+		logger.debug('checkCollectionConfig blockToLive parse from %j and parsed to %s)', blockToLive, test);
+
+		if(test.toString() !== blockToLive.toString()) {
+			throw new Error(format('CollectionConfig Requires Param "blockToLive" to be a valid unsigned int64, input is %j and parsed to %s)', blockToLive, test));
+		}
 	}
 }
 

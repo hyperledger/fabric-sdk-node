@@ -144,7 +144,20 @@ test('Test SideDB.checkCollectionConfig()', async (t) => {
 	t.throws(()=>{
 		checkCollectionConfig(config);
 	},
-	/CollectionConfig Requires Param "blockToLive" of type unsigned int64, found "28446744073709551615"\(type: string\)/,
+	/CollectionConfig Requires Param "blockToLive" to be a valid unsigned int64/,
+	'collectionConfig without valid blockToLive should throw error');
+
+	config = {
+		name: 'test',
+		policy: policy,
+		maxPeerCount: 123,
+		requiredPeerCount: 100,
+		blockToLive: 18446744073709551615
+	};
+	t.throws(()=>{
+		checkCollectionConfig(config);
+	},
+	/CollectionConfig Requires Param "blockToLive" to be a valid unsigned int64/,
 	'collectionConfig without valid blockToLive should throw error');
 
 	config = {
