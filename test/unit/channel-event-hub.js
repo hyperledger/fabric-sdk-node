@@ -755,12 +755,10 @@ test('\n\n** ChannelEventHub test connect failure on transaction registration \n
 		);
 
 		event_hub.connect();
-		let sleep_time = 3000;
-		t.comment('about to sleep '+sleep_time);
 
-		return sleep(sleep_time);
+		return true;
 	}).then((nothing) => {
-		t.pass('Sleep complete');
+		t.pass('#2 call back tx test complete ');
 		// eventhub is now actually not connected
 	}).catch((err) => {
 		t.fail(err.stack ? err.stack : err);
@@ -798,14 +796,14 @@ test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
 		event_hub = channel.newChannelEventHub(peer);
 		event_hub.registerBlockEvent(
 			(tx_id, code) => {
-				t.fail('Failed callback should not have been called - block test 2');
+				t.fail('Failed callback should not have been called - block test 3');
 				t.end();
 			},
 			(error) =>{
 				if(error.toString().indexOf('Connect Failed')) {
-					t.pass('Successfully got the error call back block test 2 ::'+error);
+					t.pass('Successfully got the error call back block test 3 ::'+error);
 				} else {
-					t.failed('Failed to get connection failed error block test 2 ::'+error);
+					t.failed('Failed to get connection failed error block test 3 ::'+error);
 				}
 				t.end();
 			}
@@ -819,11 +817,10 @@ test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
 		// failure will be reported to an error callback
 		state = event_hub.checkConnection(true);
 		t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
-		let sleep_time = 5000; //need to sleep longer than request timeout
-		t.comment('about to sleep '+sleep_time);
-		return sleep(sleep_time);
+
+		return true;
 	}).then((nothing) => {
-		t.pass('Sleep complete');
+		t.pass('#3 callback block test complete');
 		// t.end() should come from the callback
 	}).catch((err) => {
 		t.fail(err.stack ? err.stack : err);
@@ -845,7 +842,3 @@ test('\n\n** Test the state conversion\n\n', (t) => {
 
 	t.end();
 });
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}

@@ -53,13 +53,12 @@ async function perfTest3(t) {
 	let caroots = Buffer.from(data).toString();
 
 	let tlsInfo = await e2eUtils.tlsEnroll(org);
+	client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 
 	let peer = client.newPeer(
 		ORGS[org].peer1.requests,
 		{
 			'pem': caroots,
-			'clientCert': tlsInfo.certificate,
-			'clientKey': tlsInfo.key,
 			'ssl-target-name-override': ORGS[org].peer1['server-hostname'],
 			'request-timeout': 120000
 		}

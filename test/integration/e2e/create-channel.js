@@ -57,6 +57,8 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 		.then((enrollment) => {
 			t.pass('Successfully retrieved TLS certificate');
 			tlsInfo = enrollment;
+			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+
 			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
 		}).then((store) => {
 			client.setStateStore(store);
@@ -103,8 +105,6 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 				{
 					name: 'bad orderer',
 					'pem': caroots,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
 					'ssl-target-name-override': ORGS.orderer['server-hostname'],
 					'grpc.max_send_message_length': 1000 //something too small for the request
 				}
@@ -143,8 +143,6 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', function(t) {
 				{
 					name: 'new orderer',
 					'pem': caroots,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
 					'ssl-target-name-override': ORGS.orderer['server-hostname']
 				}
 			);

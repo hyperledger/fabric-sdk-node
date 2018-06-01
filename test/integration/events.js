@@ -73,6 +73,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	.then((enrollment) => {
 		t.pass('Successfully retrieved TLS certificate');
 		tlsInfo = enrollment;
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then((store) => {
 		client.setStateStore(store);
@@ -88,8 +89,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 				ORGS.orderer.url,
 				{
 					'pem': caroots,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
 					'ssl-target-name-override': ORGS.orderer['server-hostname']
 				}
 			)
@@ -103,8 +102,6 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 						ORGS[org][key].requests,
 						{
 							pem: Buffer.from(data).toString(),
-							'clientCert': tlsInfo.certificate,
-							'clientKey': tlsInfo.key,
 							'ssl-target-name-override': ORGS[org][key]['server-hostname']
 						});
 					channel.addPeer(peer);

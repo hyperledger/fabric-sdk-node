@@ -61,6 +61,7 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 	return e2eUtils.tlsEnroll(org).then((enrollment) => {
 		t.pass('Successfully retrieved TLS certificate');
 		tlsInfo = enrollment;
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return Client.newDefaultKeyValueStore({ path: testUtil.storePathForOrg(orgName) });
 	}).then((store) => {
 		client.setStateStore(store);

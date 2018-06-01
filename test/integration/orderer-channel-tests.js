@@ -110,6 +110,7 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 	.then((enrollment) => {
 		t.pass('Successfully retrieved TLS certificate');
 		tlsInfo = enrollment;
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return testUtil.getSubmitter(client, t, org);
 	}).then(
 		function(admin) {
@@ -120,8 +121,6 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 					ORGS.orderer.url,
 					{
 						'pem': caroots,
-						'clientCert': tlsInfo.certificate,
-						'clientKey': tlsInfo.key,
 						'ssl-target-name-override': ORGS.orderer['server-hostname']
 					}
 				)
@@ -192,6 +191,7 @@ test('\n\n** TEST ** orderer via member bad request', function(t) {
 	.then((enrollment) => {
 		t.pass('Successfully retrieved TLS certificate');
 		tlsInfo = enrollment;
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return testUtil.getSubmitter(client, t, org);
 	}).then(
 		function(admin) {

@@ -23,27 +23,28 @@ const TransactionID = require('./TransactionID.js');
 const idModule = require('./msp/identity.js');
 const SigningIdentity = idModule.SigningIdentity;
 const Signer = idModule.Signer;
+const crypto = require('crypto');
 
-var util = require('util');
-var fs = require('fs-extra');
-var path = require('path');
-var yaml = require('js-yaml');
-var Constants = require('./Constants.js');
+const util = require('util');
+const fs = require('fs-extra');
+const path = require('path');
+const yaml = require('js-yaml');
+const Constants = require('./Constants.js');
 
-var grpc = require('grpc');
-var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-var _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
-var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
-var _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
+const grpc = require('grpc');
+const _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
+const _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
+const _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
+const _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
 
-var config = sdkUtils.getConfig();
+const config = sdkUtils.getConfig();
 // setup the location of the default config shipped with code
-var default_config = path.resolve( __dirname, '../config/default.json');
+const default_config = path.resolve( __dirname, '../config/default.json');
 config.reorderFileStores(default_config); //make sure this default has precedences
 // set default SSL ciphers for gRPC
 process.env.GRPC_SSL_CIPHER_SUITES = sdkUtils.getConfigSetting('grpc-ssl-cipher-suites');
 
-var logger = sdkUtils.getLogger('Client.js');
+const logger = sdkUtils.getLogger('Client.js');
 
 /**
  * A client instance provides the main API surface to interact with a network of
@@ -72,7 +73,7 @@ var logger = sdkUtils.getLogger('Client.js');
  * @extends BaseClient
  *
  */
-var Client = class extends BaseClient {
+const Client = class extends BaseClient {
 
 	constructor() {
 		super();
@@ -108,7 +109,7 @@ var Client = class extends BaseClient {
 	 * @return {Client} An instance of this class initialized with the network end points.
 	 */
 	static loadFromConfig(config) {
-		var client = new Client();
+		const client = new Client();
 		client._network_config = _getNetworkConfig(config, client);
 		if(client._network_config.hasClient()) {
 			client._setAdminFromConfig();
@@ -125,7 +126,7 @@ var Client = class extends BaseClient {
 	 * @param {object | string} config - This may be the config object or a path to the configuration file
 	 */
 	loadFromConfig(config) {
-		var additional_network_config = _getNetworkConfig(config, this);
+		const additional_network_config = _getNetworkConfig(config, this);
 		if(!this._network_config) {
 			this._network_config = additional_network_config;
 		} else {
@@ -146,7 +147,9 @@ var Client = class extends BaseClient {
 	 * @param {byte[]} clientKey - The client key.
 	 */
 	setTlsClientCertAndKey(clientCert, clientKey) {
-		logger.debug('setTlsClientCertAndKey - start');
+		const method = 'setTlsClientCertAndKey';
+		logger.debug('%s - start');
+
 		this._tls_mutual.clientCert = clientCert;
 		this._tls_mutual.clientKey = clientKey;
 	}
@@ -281,7 +284,7 @@ var Client = class extends BaseClient {
 	 * @returns {Peer} The Peer instance.
 	 */
 	newPeer(url, opts) {
-		return new Peer(url, opts);
+		return new Peer(url, this._checkTLScert_n_key(opts));
 	}
 
 	/**
@@ -344,7 +347,7 @@ var Client = class extends BaseClient {
 	 * @returns {Orderer} The Orderer instance.
 	 */
 	newOrderer(url, opts) {
-		let orderer = new Orderer(url, opts);
+		let orderer = new Orderer(url, this._checkTLScert_n_key(opts));
 
 		return orderer;
 	}
@@ -380,7 +383,7 @@ var Client = class extends BaseClient {
 	 * @returns {EventHub} The EventHub instance
 	 */
 	newEventHub() {
-		var event_hub = new EventHub(this);
+		const event_hub = new EventHub(this);
 		return event_hub;
 	}
 
@@ -394,7 +397,7 @@ var Client = class extends BaseClient {
 	 * @returns {EventHub} The EventHub instance that has had the event hub address assigned
 	 */
 	getEventHub(peer_name) {
-		var event_hub = null;
+		let event_hub = null;
 		if(this._network_config) {
 			event_hub = this._network_config.getEventHub(peer_name);
 		}
@@ -413,7 +416,7 @@ var Client = class extends BaseClient {
 	 * @returns {EventHub[]} An array of EventHub instances that are defined for this organization
 	 */
 	getEventHubsForOrg(org_name) {
-		var event_hubs = [];
+		let event_hubs = [];
 		if(this._network_config) {
 			if(!org_name && this._network_config.hasClient()) {
 				let client = this._network_config.getClientConfig();
@@ -487,21 +490,21 @@ var Client = class extends BaseClient {
 		} else {
 			tlsCACerts = [];
 		}
-		let connection_options = ca_info.getConnectionOptions();
+		const connection_options = ca_info.getConnectionOptions();
 		let verify = true; //default if not found
 		if(connection_options && typeof connection_options.verify === 'boolean') {
 			verify = connection_options.verify;
 		}
-		let tls_options = {
+		const tls_options = {
 			trustedRoots: tlsCACerts,
 			verify
 		};
-		let ca_url = ca_info.getUrl();
-		let ca_name = ca_info.getCaName();
+		const ca_url = ca_info.getUrl();
+		const ca_name = ca_info.getCaName();
 
-		let ca_service_class = Client.getConfigSetting('certificate-authority-client');
-		let ca_service_impl = require(ca_service_class);
-		let ca_service = new ca_service_impl( {url : ca_url, tlsOptions : tls_options, caName : ca_name, cryptoSuite : this._cryptoSuite});
+		const ca_service_class = Client.getConfigSetting('certificate-authority-client');
+		const ca_service_impl = require(ca_service_class);
+		const ca_service = new ca_service_impl( {url : ca_url, tlsOptions : tls_options, caName : ca_name, cryptoSuite : this._cryptoSuite});
 		return ca_service;
 	}
 
@@ -571,9 +574,9 @@ var Client = class extends BaseClient {
 	extractChannelConfig(config_envelope) {
 		logger.debug('extractConfigUpdate - start');
 		try {
-			var envelope = _commonProto.Envelope.decode(config_envelope);
-			var payload = _commonProto.Payload.decode(envelope.getPayload().toBuffer());
-			var configtx = _configtxProto.ConfigUpdateEnvelope.decode(payload.getData().toBuffer());
+			const envelope = _commonProto.Envelope.decode(config_envelope);
+			const payload = _commonProto.Payload.decode(envelope.getPayload().toBuffer());
+			const configtx = _configtxProto.ConfigUpdateEnvelope.decode(payload.getData().toBuffer());
 			return configtx.getConfigUpdate().toBuffer();
 		}
 		catch(err) {
@@ -620,21 +623,21 @@ var Client = class extends BaseClient {
 		}
 		// should try to use the admin signer if assigned
 		// then use the assigned user
-		var signer = this._getSigningIdentity(true);
+		const signer = this._getSigningIdentity(true);
 
 		// signature is across a signature header and the config update
-		let proto_signature_header = new _commonProto.SignatureHeader();
+		const proto_signature_header = new _commonProto.SignatureHeader();
 		proto_signature_header.setCreator(signer.serialize());
 		proto_signature_header.setNonce(sdkUtils.getNonce());
-		var signature_header_bytes = proto_signature_header.toBuffer();
+		const signature_header_bytes = proto_signature_header.toBuffer();
 
 		// get all the bytes to be signed together, then sign
-		let signing_bytes = Buffer.concat([signature_header_bytes, config]);
-		let sig = signer.sign(signing_bytes);
-		let signature_bytes = Buffer.from(sig);
+		const signing_bytes = Buffer.concat([signature_header_bytes, config]);
+		const sig = signer.sign(signing_bytes);
+		const signature_bytes = Buffer.from(sig);
 
 		// build the return object
-		let proto_config_signature = new _configtxProto.ConfigSignature();
+		const proto_config_signature = new _configtxProto.ConfigSignature();
 		proto_config_signature.setSignatureHeader(signature_header_bytes);
 		proto_config_signature.setSignature(signature_bytes);
 
@@ -678,7 +681,7 @@ var Client = class extends BaseClient {
 	 *                    the channel has been created completely or not.
 	 */
 	createChannel(request) {
-		var have_envelope = false;
+		let have_envelope = false;
 		if(request && request.envelope) {
 			logger.debug('createChannel - have envelope');
 			have_envelope = true;
@@ -701,7 +704,7 @@ var Client = class extends BaseClient {
 	 *                    to connect to the peers and register a block listener.
 	 */
 	updateChannel(request) {
-		var have_envelope = false;
+		let have_envelope = false;
 		if(request && request.envelope) {
 			logger.debug('updateChannel - have envelope');
 			have_envelope = true;
@@ -714,8 +717,8 @@ var Client = class extends BaseClient {
 	 */
 	_createOrUpdateChannel(request, have_envelope) {
 		logger.debug('_createOrUpdateChannel - start');
-		var error_msg = null;
-		var orderer = null;
+		let error_msg = null;
+		let orderer = null;
 
 		if(!request) {
 			error_msg = 'Missing all required input request parameters for initialize channel';
@@ -751,44 +754,44 @@ var Client = class extends BaseClient {
 
 		// caller should have gotten a admin based TransactionID
 		// but maybe not, so go with whatever they have decided
-		var signer = this._getSigningIdentity(request.txId.isAdmin());
+		const signer = this._getSigningIdentity(request.txId.isAdmin());
 
-		var signature = null;
-		var payload = null;
+		let signature = null;
+		let payload = null;
 		if (have_envelope) {
 			logger.debug('_createOrUpdateChannel - have envelope');
-			var envelope = _commonProto.Envelope.decode(request.envelope);
+			const envelope = _commonProto.Envelope.decode(request.envelope);
 			signature = envelope.signature;
 			payload = envelope.payload;
 		}
 		else {
 			logger.debug('_createOrUpdateChannel - have config_update');
-			var proto_config_Update_envelope = new _configtxProto.ConfigUpdateEnvelope();
+			const proto_config_Update_envelope = new _configtxProto.ConfigUpdateEnvelope();
 			proto_config_Update_envelope.setConfigUpdate(request.config);
-			var signatures = _stringToSignature(request.signatures);
+			const signatures = _stringToSignature(request.signatures);
 			proto_config_Update_envelope.setSignatures(signatures);
 
-			var proto_channel_header = clientUtils.buildChannelHeader(
+			const proto_channel_header = clientUtils.buildChannelHeader(
 				_commonProto.HeaderType.CONFIG_UPDATE,
 				request.name,
 				request.txId.getTransactionID()
 			);
 
-			var proto_header = clientUtils.buildHeader(signer, proto_channel_header, request.txId.getNonce());
-			var proto_payload = new _commonProto.Payload();
+			const proto_header = clientUtils.buildHeader(signer, proto_channel_header, request.txId.getNonce());
+			const proto_payload = new _commonProto.Payload();
 			proto_payload.setHeader(proto_header);
 			proto_payload.setData(proto_config_Update_envelope.toBuffer());
-			var payload_bytes = proto_payload.toBuffer();
+			const payload_bytes = proto_payload.toBuffer();
 
-			let sig = signer.sign(payload_bytes);
-			let signature_bytes = Buffer.from(sig);
+			const sig = signer.sign(payload_bytes);
+			const signature_bytes = Buffer.from(sig);
 
 			signature = signature_bytes;
 			payload = payload_bytes;
 		}
 
 		// building manually or will get protobuf errors on send
-		var out_envelope = {
+		const out_envelope = {
 			signature: signature,
 			payload : payload
 		};
@@ -1094,7 +1097,7 @@ var Client = class extends BaseClient {
 			error_msg = 'Missing input request object on install chaincode request';
 		}
 
-		if (!error_msg) error_msg = clientUtils.checkProposalRequest(request, true);
+		if (!error_msg) error_msg = clientUtils.checkProposalRequest(request, false);
 		if (!error_msg) error_msg = clientUtils.checkInstallRequest(request);
 
 		if (error_msg) {
@@ -1790,8 +1793,10 @@ var Client = class extends BaseClient {
 		}
 
 		if(targets.length > 0) {
+
 			return targets;
 		} else {
+
 			return null;
 		}
 	}
@@ -1839,7 +1844,43 @@ var Client = class extends BaseClient {
 
 		return orderer;
 	}
+
+	/**
+	 * Get the client certificate hash
+	 * @returns {byte[]} The hash of the client certificate
+	 */
+	getClientCertHash() {
+		const method = 'getClientCertHash';
+		logger.debug('%s - start', method);
+
+		let hash = null;
+		if(this._tls_mutual.clientCert) {
+			logger.debug('%s - using clientCert %s', method, this._tls_mutual.clientCert);
+			let der_cert = sdkUtils.pemToDER(this._tls_mutual.clientCert);
+			hash = computeHash(der_cert);
+		} else {
+			logger.debug('%s - no tls client cert', method);
+		}
+
+		return hash;
+	}
+
+	_checkTLScert_n_key(opts) {
+		const new_opts = Object.assign({},opts);
+		if(opts && !opts.clientCert) {
+			this.addTlsClientCertAndKey(new_opts);
+		}
+
+		return new_opts;
+	}
 };
+
+// Compute hash for replay protection
+function computeHash(data) {
+	const sha256 = crypto.createHash('sha256');
+
+	return sha256.update(data).digest();
+}
 
 function readFile(path) {
 	return new Promise(function(resolve, reject) {
@@ -1851,6 +1892,7 @@ function readFile(path) {
 					return resolve(null);
 				}
 			}
+
 			return resolve(data);
 		});
 	});
@@ -1861,9 +1903,11 @@ function _getChaincodePackageData(request, devMode) {
 	if (!request.chaincodePackage) {
 		logger.debug('_getChaincodePackageData -  build package with chaincodepath %s, chaincodeType %s, devMode %s, metadataPath %s',
 			request.chaincodePath, request.chaincodeType, devMode, request.metadataPath);
+
 		return Promise.resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath));
 	} else {
 		logger.debug('_getChaincodePackageData - working with included chaincodePackage');
+
 		return Promise.resolve(request.chaincodePackage);
 	}
 }
@@ -1883,6 +1927,7 @@ function _stringToSignature(string_signatures) {
 		}
 		signatures.push(signature);
 	}
+
 	return signatures;
 }
 

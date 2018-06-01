@@ -49,6 +49,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	.then((enrollment) => {
 		t.pass('Successfully retrieved TLS certificate');
 		tlsInfo = enrollment;
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then((store) => {
 		client.setStateStore(store);
@@ -64,8 +65,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 				ORGS.orderer.url,
 				{
 					'pem': caroots,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
 					'ssl-target-name-override': ORGS.orderer['server-hostname']
 				}
 			)
@@ -80,8 +79,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 						ORGS[org][key].requests,
 						{
 							pem: Buffer.from(data).toString(),
-							'clientCert': tlsInfo.certificate,
-							'clientKey': tlsInfo.key,
 							'ssl-target-name-override': ORGS[org][key]['server-hostname']
 						}
 					);

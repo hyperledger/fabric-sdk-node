@@ -115,7 +115,6 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 			cp.getOrganizationName();
 			t.equals(cp.getName(), 'peer1', 'Checking channel peer getName');
 			cp.getUrl();
-			cp.getClientCertHash();
 			cp.setRole('role',false);
 			t.equals(cp.isInRole('role'), false, 'Checking isInRole');
 			t.equals(cp.isInRole('unknown'), true, 'Checking isInRole');
@@ -671,20 +670,8 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 test('\n\n ** Channel sendTransactionProposal() tests **\n\n', function (t) {
 	var client = new Client();
 	var channel = new Channel('does-not-matter', client);
+	channel._use_discovery = false;
 	var peer = new Peer('grpc://localhost:7051');
-
-	t.throws(
-		function () {
-			channel.sendTransactionProposal({
-				chaincodeId: 'blah',
-				fcn: 'init',
-				args: ['a', '100', 'b', '200'],
-				txId: 'blah'
-			});
-		},
-		/"targets" parameter not specified and no peers are set on this Channel/,
-		'Channel tests, sendTransactionProposal(): "targets" parameter not specified and no peers are set on this Channel'
-	);
 
 	channel.addPeer(peer);
 
@@ -692,8 +679,8 @@ test('\n\n ** Channel sendTransactionProposal() tests **\n\n', function (t) {
 		function () {
 			channel.sendTransactionProposal();
 		},
-		/Missing request object for this transaction proposal/,
-		'Channel tests, sendTransactionProposal(): Missing request object for this transaction proposal'
+		/Missing input request object on the proposal request/,
+		'Channel tests, sendTransactionProposal(): Missing input request object on the proposal request'
 	);
 
 	t.throws(
@@ -735,7 +722,7 @@ test('\n\n ** Channel sendTransactionProposal() tests **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n ** Channel queryByChaincode() tests **\n\n', function (t) {
+test('\n\n ** Channel queryByChaincode() tests **\n\n', async function (t) {
 	let client = new Client();
 	var _channel = new Channel('testchannel', client);
 
@@ -755,56 +742,35 @@ test('\n\n ** Channel queryByChaincode() tests **\n\n', function (t) {
 		'Channel tests, queryByChaincode(): "targets" parameter not specified and no peers are set.'
 	);
 
-	var TEST_CERT_PEM = require('./user.js').TEST_CERT_PEM;
-	var member = new User('admin');
 	client = new Client();
+	await setMember(client);
 
-	// do some setup for following test
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
-	Client.newDefaultKeyValueStore({
-		path: testutil.KVS
-	}).then(function (store) {
-		client.setStateStore(store);
-		var cryptoUtils = utils.newCryptoSuite();
-		return cryptoUtils.generateKey({ ephemeral: true });
-	}).then(function (key) {
-		// the private key and cert don't match, but it's ok, the code doesn't check
-		return member.setEnrollment(key, TEST_CERT_PEM, 'DEFAULT');
-	}).then(function () {
-		client.setUserContext(member, true);
-		var channel = client.newChannel('any-channel-goes');
-		var peer = client.newPeer('grpc://localhost:7051');
-		channel.addPeer(peer);
+	var channel = client.newChannel('any-channel-goes');
+	var peer = client.newPeer('grpc://localhost:7051');
+	channel.addPeer(peer);
 
-		t.throws(
-			function () {
-				channel.queryByChaincode({
-					chaincodeId: 'blah',
-					fcn: 'invoke'
-				});
-			},
-			/Missing "args" in Transaction/,
-			'Channel tests, queryByChaincode(): Missing "args" in Transaction'
-		);
-
-		t.throws(
-			function () {
-				channel.queryByChaincode({
-					fcn: 'init',
-					args: ['a', '100', 'b', '200']
-				});
-			},
-			/Missing "chaincodeId" parameter/,
-			'Channel tests, queryByChaincode(): Missing "chaincodeId" parameter'
-		);
-		t.end();
-	}).catch(
-		function (err) {
-			t.fail('Channel queryByChaincode() failed ');
-			logger.error(err.stack ? err.stack : err);
-			t.end();
-		}
+	t.throws(
+		function () {
+			channel.queryByChaincode({
+				chaincodeId: 'blah',
+				fcn: 'invoke'
+			});
+		},
+		/Missing "args" in Transaction/,
+		'Channel tests, queryByChaincode(): Missing "args" in Transaction'
 	);
+
+	t.throws(
+		function () {
+			channel.queryByChaincode({
+				fcn: 'init',
+				args: ['a', '100', 'b', '200']
+			});
+		},
+		/Missing "chaincodeId" parameter/,
+		'Channel tests, queryByChaincode(): Missing "chaincodeId" parameter'
+	);
+	t.end();
 });
 
 test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
@@ -1040,10 +1006,10 @@ test('\n\n*** Test per-call timeout support ***\n', function (t) {
 
 	// stub out the calls that requires getting MSPs from the orderer, or
 	// a valid user context
-	let clientUtils = Channel.__get__('clientUtils');
-	sandbox.stub(clientUtils, 'buildHeader').returns(Buffer.from('dummyHeader'));
-	sandbox.stub(clientUtils, 'buildProposal').returns(Buffer.from('dummyProposal'));
-	sandbox.stub(clientUtils, 'signProposal').returns(Buffer.from('dummyProposal'));
+	let client_utils = Channel.__get__('client_utils');
+	sandbox.stub(client_utils, 'buildHeader').returns(Buffer.from('dummyHeader'));
+	sandbox.stub(client_utils, 'buildProposal').returns(Buffer.from('dummyProposal'));
+	sandbox.stub(client_utils, 'signProposal').returns(Buffer.from('dummyProposal'));
 	client._userContext = {
 		getIdentity: function () { return ''; },
 		getSigningIdentity: function () { return ''; }
@@ -1134,3 +1100,98 @@ test('\n\n ** Channel executeTransaction() tests **\n\n', function (t) {
 
 	t.end();
 });
+
+test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
+	const client = new Client();
+	const channel = new Channel('does-not-matter', client);
+	channel._use_discovery = true;
+	t.throws(
+		function () {
+			channel.initialize();
+		},
+		/"target" parameter not specified and no peers are set on this Channel/,
+		'Channel tests, sendTransactionProposal(): "target" parameter not specified and no peers are set on this Channeln'
+	);
+
+
+	var peer = new Peer('grpc://localhost:9999');
+
+	channel.addPeer(peer);
+
+	t.throws(
+		function () {
+			channel.initialize({
+				target: peer
+			});
+		},
+		/No identity has been assigned to this client/,
+		'Channel tests, sendTransactionProposal(): No identity has been assigned to this client'
+	);
+
+	t.throws(
+		function () {
+			channel.initialize({
+				discover: 'BAD'
+			});
+		},
+		/Reqauest parameter "discover" must be boolean/,
+		'Channel tests, Reqauest parameter "discover" must be boolean'
+	);
+
+	await setMember(client);
+
+	try {
+		await channel.initialize({
+			target: peer
+		});
+	} catch(error) {
+		if(error.message.includes('deadline')) {
+			t.pass('Check Failed to connect before the deadline');
+		} else {
+			t.fail('Did not get Failed to connect before the deadline');
+		}
+	}
+
+	try {
+		await channel.initialize({
+			target: peer,
+			endorsementHandler: 'no.where'
+		});
+		t.fail('able to initialize channel with a bad endorsement handler path');
+	} catch(error) {
+		if(error.message.includes('Cannot find module')) {
+			t.pass('Check Failed to initialize channel with bad endorsement handler path');
+		} else {
+			t.fail('Receive other failure '+ error.toString());
+		}
+	}
+
+	const handler_path_temp = client.getConfigSetting('endorsement-handler-path');
+	try {
+		client.setConfigSetting('endorsement-handler-path', 'bad.path');
+		client.newChannel('test-channel');
+		t.fail('able to create channel with a bad endorsement handler path');
+	} catch(error) {
+		if(error.message.includes('Cannot find module')) {
+			t.pass('Check Failed to create channel with bad endorsement handler path');
+		} else {
+			t.fail('Receive other failure '+ error.toString());
+		}
+	}
+	client.setConfigSetting('endorsement-handler-path', handler_path_temp);
+
+	t.end();
+});
+
+async function setMember(client) {
+	// do some setup for following test
+	var member = new User('admin');
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
+	const store = await Client.newDefaultKeyValueStore({path: testutil.KVS});
+	client.setStateStore(store);
+	const cryptoUtils = utils.newCryptoSuite();
+	const key = await cryptoUtils.generateKey({ ephemeral: true });
+	var TEST_CERT_PEM = require('./user.js').TEST_CERT_PEM;
+	await member.setEnrollment(key, TEST_CERT_PEM, 'DEFAULT');
+	client.setUserContext(member, true);
+}

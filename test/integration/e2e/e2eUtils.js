@@ -58,6 +58,8 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 		.then((enrollment) => {
 			t.pass('Successfully retrieved TLS certificate');
 			tlsInfo = enrollment;
+			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+
 			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		}).then((store) => {
 			client.setStateStore(store);
@@ -73,8 +75,6 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 					ORGS.orderer.url,
 					{
 						'pem': caroots,
-						'clientCert': tlsInfo.certificate,
-						'clientKey': tlsInfo.key,
 						'ssl-target-name-override': ORGS.orderer['server-hostname']
 					}
 				)
@@ -89,8 +89,6 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 							ORGS[org][key].requests,
 							{
 								pem: Buffer.from(data).toString(),
-								'clientCert': tlsInfo.certificate,
-								'clientKey': tlsInfo.key,
 								'ssl-target-name-override': ORGS[org][key]['server-hostname']
 							}
 						);
@@ -189,6 +187,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 		.then((enrollment) => {
 			t.pass('Successfully retrieved TLS certificate');
 			tlsInfo = enrollment;
+			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+
 			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		}).then((store) => {
 
@@ -205,8 +205,6 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 					ORGS.orderer.url,
 					{
 						'pem': caroots,
-						'clientCert': tlsInfo.certificate,
-						'clientKey': tlsInfo.key,
 						'ssl-target-name-override': ORGS.orderer['server-hostname']
 					}
 				)
@@ -221,8 +219,6 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 						ORGS[org][key].requests,
 						{
 							pem: Buffer.from(data).toString(),
-							'clientCert': tlsInfo.certificate,
-							'clientKey': tlsInfo.key,
 							'ssl-target-name-override': ORGS[org][key]['server-hostname']
 						}
 					);
@@ -487,6 +483,8 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 		.then((enrollment) => {
 			t.pass('Successfully retrieved TLS certificate');
 			tlsInfo = enrollment;
+			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+
 			return promise;
 		}).then((store) => {
 			if (store) {
@@ -503,8 +501,6 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 					ORGS.orderer.url,
 					{
 						'pem': caroots,
-						'clientCert': tlsInfo.certificate,
-						'clientKey': tlsInfo.key,
 						'ssl-target-name-override': ORGS.orderer['server-hostname']
 					}
 				)
@@ -519,8 +515,6 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 						ORGS[key].peer1.requests,
 						{
 							pem: Buffer.from(data).toString(),
-							'clientCert': tlsInfo.certificate,
-							'clientKey': tlsInfo.key,
 							'ssl-target-name-override': ORGS[key].peer1['server-hostname']
 						}
 					);
@@ -725,6 +719,8 @@ function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
 		.then((enrollment) => {
 			t.pass('Successfully retrieved TLS certificate');
 			tlsInfo = enrollment;
+			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+
 			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		}).then((store) => {
 
@@ -745,8 +741,6 @@ function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
 						ORGS[key].peer1.requests,
 						{
 							pem: Buffer.from(data).toString(),
-							'clientCert': tlsInfo.certificate,
-							'clientKey': tlsInfo.key,
 							'ssl-target-name-override': ORGS[key].peer1['server-hostname']
 						});
 					channel.addPeer(peer);
