@@ -4,8 +4,8 @@
   "thirdparty": "0.4.6",
   "main": "index.js",
   "repository": {
-    "type": "gerrit",
-    "url": "http://gerrit.hyperledger.org/r/fabric-sdk-node"
+    "type": "github (read mirror)",
+    "url": "https://github.com/hyperledger/fabric-sdk-node"
   },
   "scripts": {
     "test": "node test/unit/headless-tests.js"

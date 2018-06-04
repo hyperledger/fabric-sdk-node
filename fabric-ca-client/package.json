@@ -3,8 +3,8 @@
   "version": "1.2.0-snapshot",
   "main": "index.js",
   "repository": {
-    "type": "gerrit",
-    "url": "http://gerrit.hyperledger.org/r/fabric-sdk-node"
+    "type": "github (read mirror)",
+    "url": "https://github.com/hyperledger/fabric-sdk-node"
   },
   "engines": {
     "node": "^8.9.0",
