@@ -26,5 +26,5 @@
 	"initialize-with-discovery": false,
 	"discovery-cache-life": 300000,
 	"discovery-protocol": "grpcs",
-	"endorsement-handler-path": "fabric-client/lib/impl/DiscoveryEndorsementHandler.js"
+	"endorsement-handler": "fabric-client/lib/impl/DiscoveryEndorsementHandler.js"
 }

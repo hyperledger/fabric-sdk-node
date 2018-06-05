@@ -1166,9 +1166,9 @@ test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 		}
 	}
 
-	const handler_path_temp = client.getConfigSetting('endorsement-handler-path');
+	const handler_path_temp = client.getConfigSetting('endorsement-handler');
 	try {
-		client.setConfigSetting('endorsement-handler-path', 'bad.path');
+		client.setConfigSetting('endorsement-handler', 'bad.path');
 		client.newChannel('test-channel');
 		t.fail('able to create channel with a bad endorsement handler path');
 	} catch(error) {
@@ -1178,7 +1178,7 @@ test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 			t.fail('Receive other failure '+ error.toString());
 		}
 	}
-	client.setConfigSetting('endorsement-handler-path', handler_path_temp);
+	client.setConfigSetting('endorsement-handler', handler_path_temp);
 
 	t.end();
 });

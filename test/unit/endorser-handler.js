@@ -19,101 +19,115 @@
 const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
+const Long = require('long');
 
 
 
 const Client = require('fabric-client');
-const testutil = require('./util.js');
+const Channel = require('fabric-client/lib/Channel.js');
+const TestUtil = require('./util.js');
 
 const utils = require('fabric-client/lib/utils.js');
-const logger = utils.getLogger('channel');
+const logger = utils.getLogger('ENDORSEMENT-HANDLER');
 const DiscoveryEndorsementHandler = require('fabric-client/lib/impl/DiscoveryEndorsementHandler.js');
+const pem = '-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n';
+const org1 = [
+	'Org1MSP',
+	'peer1.org1.example.com:7001',
+	'peer2.org1.example.com:7002'
+];
+const org2 = [
+	'Org2MSP',
+	'peer1.org2.example.com:8001',
+	'peer2.org2.example.com:8002'
+];
+const org3 = [
+	'Org3MSP',
+	'peer1.org3.example.com:9001',
+	'peer2.org3.example.com:9002',
+	'peer3.org3.example.com:9003'
+];
 
-const results = {
-	msps:{
-		OrdererMSP:{
-			id:'OrdererMSP',
-			orgs:[ ],
-			rootCerts:'-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n',
-			intermediateCerts:'',
-			admins:'-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n',
-			tls_intermediate_certs:''
+const chaincodes = [{name: 'example',version: 'v2'}];
+const ledger_height = Long.fromValue(4);
+
+const discovery_plan = {
+	msps: {
+		OrdererMSP: {
+			id: 'OrdererMSP',
+			orgs: [ ],
+			rootCerts: pem,
+			intermediateCerts: '',
+			admins: pem,
+			tls_intermediate_certs: ''
 		},
-		Org2MSP:{
-			id:'Org2MSP',
-			orgs:[ ],
-			rootCerts:'-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n',
-			intermediateCerts:'',
-			admins:'-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n',
-			tls_intermediate_certs:''
+		Org2MSP: {
+			id: org2[0],
+			orgs: [ ],
+			rootCerts: pem,
+			intermediateCerts: '',
+			admins: pem,
+			tls_intermediate_certs: ''
 		},
-		Org1MSP:{
-			id:'Org1MSP',
-			orgs:[ ],
-			rootCerts:'-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n',
-			intermediateCerts:'',
-			admins:'-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n',
-			tls_intermediate_certs:''
+		Org1MSP: {
+			id: org1[0],
+			orgs: [ ],
+			rootCerts: pem,
+			intermediateCerts: '',
+			admins: pem,
+			tls_intermediate_certs: ''
 		},
 	},
-	orderers:{
-		OrdererMSP:{
-			endpoints:[
-				{
-					host:'orderer.example.com',
-					port:7050,
-					name:'orderer.example.com'
-				}
+	orderers: {
+		OrdererMSP: {endpoints: [{host: 'orderer.example.com', port: 7150, name: 'orderer.example.com'}]}
+	},
+	peers_by_org: {
+		Org1MSP: {
+			peers: [
+				{mspid: org1[0], endpoint: org1[1], ledger_height, chaincodes, name: org1[1]},
+				{mspid: org1[0], endpoint: org1[2], ledger_height, chaincodes, name: org1[2]}
+			]
+		},
+		Org2MSP: {
+			peers: [
+				{mspid: org2[0], endpoint: org2[1], ledger_height, chaincodes, name: org2[1]},
+				{mspid: org2[0], endpoint: org2[2], ledger_height, chaincodes, name: org2[2]}
+			]
+		},
+		Org3MSP: {
+			peers: [
+				{mspid: org3[0], endpoint: org3[1], ledger_height, chaincodes, name: org3[1]},
+				{mspid: org3[0], endpoint: org3[2], ledger_height, chaincodes, name: org3[2]},
+				{mspid: org3[0], endpoint: org3[3], ledger_height, chaincodes, name: org3[3]}
 			]
 		}
 	},
-	peers_by_org:{
-		Org1MSP:{
-			peers:[
-				{
-					mspid:'Org1MSP',
-					endpoint:'peer0.org1.example.com:7051',
-					ledger_height:4,
-					chaincodes:[{name:'example',version:'v2'}],
-					name:'peer0.org1.example.com'
-				}
-			]
-		},
-		Org2MSP:{
-			peers:[
-				{
-					mspid:'Org2MSP',
-					endpoint:'peer0.org2.example.com:7051',
-					ledger_height:4,
-					chaincodes:[{name:'example',version:'v2'}],
-					name:'peer0.org2.example.com'
-				}
-			]
-		}
-	},
-	endorsement_targets:{
-		example:{
-			groups:{
-				G0:{
-					peers:[
-						{
-							mspid:'Org1MSP',
-							endpoint:'peer0.org1.example.com:7051',
-							ledger_height:4,
-							chaincodes:[{name:'example',version:'v2'}],
-							name:'peer0.org1.example.com'
-						},
-						{
-							mspid:'Org2MSP',
-							endpoint:'peer0.org2.example.com:7051',
-							ledger_height:4,
-							chaincodes:[{name:'example',version:'v2'}],
-							name:'peer0.org2.example.com'
-						},
+	endorsement_targets: {
+		example: {
+			groups: {
+				G0: {
+					peers: [
+						{mspid: org1[0], endpoint: org1[1], ledger_height, chaincodes, name: org1[1]},
+						{mspid: org1[0], endpoint: org1[2], ledger_height, chaincodes, name: org1[2]}
+					]
+				},
+				G1: {
+					peers: [
+						{mspid: org2[0], endpoint: org2[1], ledger_height, chaincodes, name: org2[1]},
+						{mspid: org2[0], endpoint: org2[2], ledger_height, chaincodes, name: org2[2]}
+					]
+				},
+				G3: {
+					peers: [
+						{mspid: org1[0], endpoint: org1[1], ledger_height, chaincodes, name: org1[1]},
+						{mspid: org2[0], endpoint: org2[1], ledger_height, chaincodes, name: org2[1]},
+						{mspid: org3[0], endpoint: org3[1], ledger_height, chaincodes, name: org3[1]},
+						{mspid: org3[0], endpoint: org3[2], ledger_height, chaincodes, name: org3[2]},
+						{mspid: org3[0], endpoint: org3[3], ledger_height, chaincodes, name: org3[3]}
 					]
 				}
 			},
-			layouts:[{G0:1}]
+			layouts: [{G0: 1, G1: 1},{G3: 3, G1: 1}]
 		}
 	}
 };
@@ -121,10 +135,15 @@ const results = {
 
 test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 
+	const temp = Client.getConfigSetting('endorsement-handler');
+	Client.setConfigSetting('endorsement-handler', 'fabric-client/lib/impl/DiscoveryEndorsementHandler.js');
+
 	const client = new Client();
-	const temp = client.getConfigSetting('endorsement-handler-path');
-	client.setConfigSetting('endorsement-handler-path', 'fabric-client/lib/impl/DiscoveryEndorsementHandler.js');
+	const store = await Client.newDefaultKeyValueStore({path: TestUtil.storePathForOrg('org1')});
+	client.setStateStore(store);
+	await TestUtil.setAdmin(client, 'org1');
 	const channel = client.newChannel('handlertest');
+
 	const handler = channel._endorsement_handler;
 	if(handler && handler.endorse) {
 		t.pass('Able to have the channel create the handler');
@@ -146,9 +165,52 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 	parameters.request.txId = 'someid';
 	await errorChecker(t, handler, parameters, 'Missing "args"');
 
-	if(temp) client.setConfigSetting('endorsement-handler-path', temp);
+	const test_array = ['a', 'b', 'c'];
+	const map_test_array = handler._create_map(test_array);
+	t.equals(map_test_array[test_array[0]], test_array[0], 'Check that internal method _create_map is working');
+	t.equals(map_test_array[test_array[1]], test_array[1], 'Check that internal method _create_map is working');
+	t.equals(map_test_array[test_array[2]], test_array[2], 'Check that internal method _create_map is working');
+
+	const preferred = handler._create_map([org3[3]]);
+	const remove = handler._create_map([org2[1]]);
+
+	handler._modify_groups(preferred, remove, discovery_plan.endorsement_targets['example']);
+	t.equal(discovery_plan.endorsement_targets['example'].groups['G1'].peers.length, 1, 'Checking that one peer was removed');
+	t.equal(discovery_plan.endorsement_targets['example'].groups['G3'].peers[0].name, org3[3], 'Checking that peer was moved to top of list');
+
+	channel.addPeer(client.newPeer('grpcs://' + org1[1], {pem}));
+	channel.addPeer(client.newPeer('grpcs://' + org1[2], {pem}));
+	channel.addPeer(client.newPeer('grpcs://' + org2[1], {pem}));
+	channel.addPeer(client.newPeer('grpcs://' + org2[2], {pem}));
+	channel.addPeer(client.newPeer('grpcs://' + org3[1], {pem}));
+	channel.addPeer(client.newPeer('grpcs://' + org3[2], {pem}));
+	channel.addPeer(client.newPeer('grpcs://' + org3[3], {pem}));
+
+	const txId = client.newTransactionID();
+	const request = {
+		args: [],
+		chaincodeId: 'example',
+		txId: txId
+	};
+	const proposal = Channel._buildSignedProposal(request, 'handlert', client);
+
+	try {
+		await handler._endorse(discovery_plan, request, proposal);
+	} catch(error) {
+		if(error instanceof Error) {
+			t.fail('Should have received endorsment array');
+		} if(Array.isArray(error)) {
+			t.pass('So far so good');
+		} else {
+			t.fail('Unknow endorsement results returned');
+		}
+	}
+
+	if(temp) Client.setConfigSetting('endorsement-handler-path', temp);
 	t.end();
 });
+
+
 
 async function errorChecker(t, handler, parameters, error_text) {
 	try {
