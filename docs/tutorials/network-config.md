@@ -188,7 +188,7 @@ var fabric_ca_client = client.getCertificateAuthority();
 ```
 Then once we have a fabric-ca-client, we will be able to register new users. We could also use the fabric-ca-client to enroll users and make a few calls to the fabric client to create a user object and then assign that user object to the fabric client, but it will be much easier to just use the convenience method of the fabric client instance. Notice how we have to use the 'admin' user object returned from the client.setUserContext() to do the register. The admin user object has the credentials needed to the register. Then notice we called the same setUserContext method as we did with the admin above, this will have the fabric client object assigned with the 'user1' user context thus providing the credentials to interact with the fabric network. Note that the setUserContext also stores the user context which contains the signed certificate from the certificate authority and newly created public and private keys of the now enrolled user.
 ```
-ca.fabric_ca_client({enrollmentID: 'user1', affiliation: 'org1'}, admin)
+fabric_ca_client.register({enrollmentID: 'user1', affiliation: 'org1'}, admin)
 .then((secret) => {
 	return client.setUserContext({username:'user1', password:secret});
 }).then((user)=> {

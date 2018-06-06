@@ -309,3 +309,54 @@ module.exports.Hash = class {
 	finalize() {
 	}
 };
+
+/**
+ * Base class for endorsement handling
+ * @class
+ */
+module.exports.EndorsementHandler = class {
+
+	/**
+	 * @typedef {Object} EndorsementHandlerParameters
+	 * @property {Peer[]} request - {@link ChaincodeInvokeRequest}
+	 * @property {Object} signed_proposal - the encoded protobuf "SignedProposal"
+	 *           created by the sendTransactionProposal method before calling the
+	 *           handler. Will be the object to be endorsed by the target peers.
+	 * @property {Number} timeout - the timeout setting passed on sendTransactionProposal
+	 *           method.
+	 */
+
+	/**
+	 * This method will process the request object to calculate the target peers.
+	 * Once the targets have been determined, the channel to send the endorsement
+	 * transaction to all targets. The results will be analized to see if
+	 * enough good endorsments have been received.
+	 *
+	 * @param {EndorsementHandlerRequest} params - A {@link EndorsementHandlerParameters}
+	 *        that contains enough information to determine the targets and contains
+	 *        a {@link ChaincodeInvokeRequest} to be sent using the included channel
+	 *        with the {@link Channel} 'sendTransactionProposal' method.
+	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}, the
+	 *        same results as calling the {@link Channel} 'sendTransactionProposal'
+	 *        method directly.
+	 */
+	endorse(params) {
+		throw new Error('The "endorse" method must be implemented');
+	}
+
+	/**
+	 * This method will be called by the channel when the channel is initialzied.
+	 */
+	initialize() {
+		throw new Error('The "initialize" method must be implemented');
+	}
+
+	/**
+	 * This static method will be called by the channel to create an instance of
+	 * this handler. It will be passed the channel object this handler is working
+	 * with.
+	 */
+	static create(channel) {
+		throw new Error('The "create" method must be implemented');
+	}
+};

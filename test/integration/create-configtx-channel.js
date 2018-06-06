@@ -58,6 +58,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 	.then((enrollment) => {
 		t.pass('Successfully retrieved TLS certificate');
 		tlsInfo = enrollment;
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
 	}).then((store) => {
 		client.setStateStore(store);
@@ -70,8 +71,6 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 			ORGS.orderer.url,
 			{
 				'pem': caroots,
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS.orderer['server-hostname']
 			}
 		);

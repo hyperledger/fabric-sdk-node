@@ -101,12 +101,17 @@ class Remote {
 		}
 		this._options[MAX_SEND] = grpc_send_max;
 
-		// what shall we call this remote object
-		this._name = name ? name : url;
-
 		// service connection
 		this._url = url;
 		this._endpoint = new Endpoint(url, pem, clientKey, this.clientCert);
+
+		// what shall we call this remote object
+		if(opts && opts.name) {
+			this._name = opts.name;
+		} else {
+			const split = url.split('//');
+			this._name = split[1];
+		}
 
 		// node.js based timeout
 		if (utils.checkIntegerConfig(opts, 'request-timeout')) {

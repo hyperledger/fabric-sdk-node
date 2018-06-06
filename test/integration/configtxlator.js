@@ -66,6 +66,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 	try {
 
 		const tlsInfo = await e2eUtils.tlsEnroll(org);
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		t.pass('Successfully retrieved TLS certificate');
 		let store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
 		client.setStateStore(store);
@@ -97,8 +98,6 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 			ORGS.orderer.url,
 			{
 				'pem': caroots,
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS.orderer['server-hostname']
 			}
 		);

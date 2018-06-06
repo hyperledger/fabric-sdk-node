@@ -422,7 +422,7 @@ var EventHub = class {
 
 		event.setCreator(identity.serialize());
 		event.setTimestamp(clientUtils.buildCurrentTimestamp());
-		let client_cert_hash = this._ep.getClientCertHash();
+		let client_cert_hash = this._clientContext.getClientCertHash();
 		if(client_cert_hash) {
 			event.setTlsCertHash(client_cert_hash);
 		}

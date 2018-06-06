@@ -28,6 +28,19 @@ var _configtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/comm
 var rewire = require('rewire');
 var ClientRewired = rewire('fabric-client/lib/Client.js');
 
+var aPem = '-----BEGIN CERTIFICATE-----' +
+	'MIIBwTCCAUegAwIBAgIBATAKBggqhkjOPQQDAzApMQswCQYDVQQGEwJVUzEMMAoG' +
+	'A1UEChMDSUJNMQwwCgYDVQQDEwNPQkMwHhcNMTYwMTIxMjI0OTUxWhcNMTYwNDIw' +
+	'MjI0OTUxWjApMQswCQYDVQQGEwJVUzEMMAoGA1UEChMDSUJNMQwwCgYDVQQDEwNP' +
+	'QkMwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAAR6YAoPOwMzIVi+P83V79I6BeIyJeaM' +
+	'meqWbmwQsTRlKD6g0L0YvczQO2vp+DbxRN11okGq3O/ctcPzvPXvm7Mcbb3whgXW' +
+	'RjbsX6wn25tF2/hU6fQsyQLPiJuNj/yxknSjQzBBMA4GA1UdDwEB/wQEAwIChDAP' +
+	'BgNVHRMBAf8EBTADAQH/MA0GA1UdDgQGBAQBAgMEMA8GA1UdIwQIMAaABAECAwQw' +
+	'CgYIKoZIzj0EAwMDaAAwZQIxAITGmq+x5N7Q1jrLt3QFRtTKsuNIosnlV4LR54l3' +
+	'yyDo17Ts0YLyC0pZQFd+GURSOQIwP/XAwoMcbJJtOVeW/UL2EOqmKA2ygmWX5kte' +
+	'9Lngf550S6gPEWuDQOcY95B+x3eH' +
+	'-----END CERTIFICATE-----';
+
 test('\n\n ** index.js **\n\n', function (t) {
 	testutil.resetDefaults();
 
@@ -1134,7 +1147,7 @@ test('\n\n*** Test normalizeX509 ***\n', function(t) {
 			Client.normalizeX509('cause error');
 		},
 		/Failed to find start line or end line of the certificate./,
-		'Check that a bad strean will throw error'
+		'Check that a bad stream will throw error'
 	);
 
 	var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
@@ -1146,6 +1159,20 @@ test('\n\n*** Test normalizeX509 ***\n', function(t) {
 	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone start line');
 	matches = normalized.match(/\n\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-\n/);
 	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone end line');
+
+	t.end();
+});
+
+test('\n\n*** Test TLS ClientCert ***\n', function(t) {
+	let client = new Client();
+	client.setTlsClientCertAndKey(aPem, aPem);
+	t.pass('Able to set the client cert and client key');
+	const tls_cert_key = {};
+	client.addTlsClientCertAndKey(tls_cert_key);
+	t.equals(tls_cert_key.clientCert, aPem, 'Checking being able to update an options object with the client cert');
+	t.equals(tls_cert_key.clientKey, aPem, 'Checking being able to update an options object with the client key');
+
+	t.equals(client.getClientCertHash().toString('hex'), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'checking the client certificate hash');
 
 	t.end();
 });

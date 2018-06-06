@@ -67,7 +67,7 @@ var NetworkConfig_1_0 = class {
 	}
 
 	mergeSettings(additions) {
-		var method = 'mergeSettings';
+		const method = 'mergeSettings';
 		logger.debug('%s - additions start',method);
 		if(additions && additions._network_config) {
 			if(additions._network_config.client) {
@@ -100,9 +100,9 @@ var NetworkConfig_1_0 = class {
 	}
 
 	getClientConfig() {
-		var result = {};
+		const result = {};
 		if(this._network_config && this._network_config.client) {
-			let client_config = this._network_config.client;
+			const client_config = this._network_config.client;
 			for(let setting in client_config) {
 				// copy all except credentialStore, special case to handle paths
 				if(setting !== 'credentialStore') {
@@ -137,7 +137,7 @@ var NetworkConfig_1_0 = class {
 				}
 			}
 			if(client_config.tlsClient) {
-				if(client_config.tlsClient.clientCert && client_config.tlsClient.clientKey);//TODO
+				if(client_config.tlsClient.clientCert && client_config.tlsClient.clientKey);
 			}
 		}
 
@@ -145,11 +145,11 @@ var NetworkConfig_1_0 = class {
 	}
 
 	getChannel(name) {
-		var method = 'getChannel';
+		const method = 'getChannel';
 		logger.debug('%s - name %s',method, name);
-		var channel = null;
+		let channel = null;
 		if(name && this._network_config && this._network_config[CHANNELS_CONFIG]) {
-			var channel_config = this._network_config[CHANNELS_CONFIG][name];
+			const channel_config = this._network_config[CHANNELS_CONFIG][name];
 			if(channel_config) {
 				channel = new Channel(name, this._client_context);
 				this._addPeersToChannel(channel);
@@ -161,18 +161,17 @@ var NetworkConfig_1_0 = class {
 	}
 
 	getPeer(name, channel_org) {
-		var method = 'getPeer';
+		const method = 'getPeer';
 		logger.debug('%s - name %s, channel_org: %j',method, name, channel_org);
-		var peer = this._peers.get(name);
+		let peer = this._peers.get(name);
 		if(!peer && this._network_config && this._network_config[PEERS_CONFIG]) {
-			let peer_config = this._network_config[PEERS_CONFIG][name];
+			const peer_config = this._network_config[PEERS_CONFIG][name];
 			if(peer_config) {
-				let opts = {name: name};
+				const opts = {name: name};
 				opts.pem = getTLSCACert(peer_config);
 				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, ENDORSER);
-				this._client_context.addTlsClientCertAndKey(opts);
-				peer = new Peer(peer_config[URL], opts);
+				peer = this._client_context.newPeer(peer_config[URL], opts);
 				this._peers.set(name, peer);
 			}
 		}
@@ -181,7 +180,7 @@ var NetworkConfig_1_0 = class {
 	}
 
 	addTimeout(opts, type) {
-		var method = 'addTimeout';
+		const method = 'addTimeout';
 		if(opts && opts[REQUEST_TIMEOUT]) {
 			logger.debug('%s - request-timeout exist',method);
 			return;
@@ -189,7 +188,7 @@ var NetworkConfig_1_0 = class {
 		if(opts && this.hasClient() &&
 		this._network_config.client.connection &&
 		this._network_config.client.connection.timeout) {
-			let timeouts = this._network_config.client.connection.timeout;
+			const timeouts = this._network_config.client.connection.timeout;
 			let timeout = '';
 			if(type === ENDORSER && timeouts.peer && timeouts.peer.endorser) {
 				timeout = timeouts.peer.endorser;
@@ -211,13 +210,13 @@ var NetworkConfig_1_0 = class {
 	}
 
 	getEventHub(name) {
-		var method = 'getEventHub';
+		const method = 'getEventHub';
 		logger.debug('%s - name %s',method, name);
-		var event_hub = null;
+		let event_hub = null;
 		if(this._network_config && this._network_config[PEERS_CONFIG]) {
-			let peer_config = this._network_config[PEERS_CONFIG][name];
+			const peer_config = this._network_config[PEERS_CONFIG][name];
 			if(peer_config && peer_config[EVENT_URL]) {
-				let opts = {};
+				const opts = {};
 				opts.pem = getTLSCACert(peer_config);
 				this._client_context.addTlsClientCertAndKey(opts);
 				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
@@ -231,18 +230,17 @@ var NetworkConfig_1_0 = class {
 	}
 
 	getOrderer(name) {
-		var method = 'getOrderer';
+		const method = 'getOrderer';
 		logger.debug('%s - name %s',method, name);
-		var orderer = null;
+		let orderer = null;
 		if(this._network_config && this._network_config[ORDERERS_CONFIG]) {
-			let orderer_config = this._network_config[ORDERERS_CONFIG][name];
+			const orderer_config = this._network_config[ORDERERS_CONFIG][name];
 			if(orderer_config) {
-				let opts = {name: name};
+				const opts = {name: name};
 				opts.pem = getTLSCACert(orderer_config);
 				Object.assign(opts, orderer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, ORDERER);
-				this._client_context.addTlsClientCertAndKey(opts);
-				orderer = new Orderer(orderer_config[URL], opts);
+				orderer = this._client_context.newOrderer(orderer_config[URL], opts);
 			}
 		}
 
@@ -250,20 +248,20 @@ var NetworkConfig_1_0 = class {
 	}
 
 	getOrganization(name, only_client) {
-		var method = 'getOrganization';
+		const method = 'getOrganization';
 		logger.debug('%s - name %s',method, name);
-		var organization = null;
+		let organization = null;
 		if(name && this._network_config && this._network_config[ORGS_CONFIG]) {
-			var organization_config = this._network_config[ORGS_CONFIG][name];
+			const organization_config = this._network_config[ORGS_CONFIG][name];
 			if(organization_config) {
 				organization = new Organization(name, organization_config.mspid);
 				if(organization_config[PEERS_CONFIG] && !only_client) {
 					for(let i in organization_config[PEERS_CONFIG]) {
-						let peer_name = organization_config[PEERS_CONFIG][i];
-						let peer = this.getPeer(peer_name);
+						const peer_name = organization_config[PEERS_CONFIG][i];
+						const peer = this.getPeer(peer_name);
 						if(peer) {
 							organization.addPeer(peer);
-							let event_hub = this.getEventHub(peer_name);
+							const event_hub = this.getEventHub(peer_name);
 							if(event_hub) {
 								organization.addEventHub(event_hub);
 							}
@@ -272,17 +270,17 @@ var NetworkConfig_1_0 = class {
 				}
 				if(organization_config[CAS_CONFIG]) {
 					for(let i in organization_config[CAS_CONFIG]) {
-						let ca_name = organization_config[CAS_CONFIG][i];
-						let ca = this.getCertificateAuthority(ca_name);
+						const ca_name = organization_config[CAS_CONFIG][i];
+						const ca = this.getCertificateAuthority(ca_name);
 						if(ca) organization.addCertificateAuthority(ca);
 					}
 				}
 				if(organization_config[ADMIN_PRIVATE_KEY]) {
-					let key = getPEMfromConfig(organization_config[ADMIN_PRIVATE_KEY]);
+					const key = getPEMfromConfig(organization_config[ADMIN_PRIVATE_KEY]);
 					organization.setAdminPrivateKey(key);
 				}
 				if(organization_config[ADMIN_CERT]) {
-					let cert = getPEMfromConfig(organization_config[ADMIN_CERT]);
+					const cert = getPEMfromConfig(organization_config[ADMIN_CERT]);
 					organization.setAdminCert(cert);
 				}
 			}
@@ -292,12 +290,12 @@ var NetworkConfig_1_0 = class {
 	}
 
 	getOrganizations() {
-		var method = 'getOrganizations';
+		const method = 'getOrganizations';
 		logger.debug('%s - start',method);
-		var organizations = [];
+		const organizations = [];
 		if(this._network_config && this._network_config[ORGS_CONFIG]) {
 			for(let organization_name in  this._network_config[ORGS_CONFIG]) {
-				let organization = this.getOrganization(organization_name);
+				const organization = this.getOrganization(organization_name);
 				organizations.push(organization);
 			}
 		}
@@ -306,11 +304,11 @@ var NetworkConfig_1_0 = class {
 	}
 
 	getCertificateAuthority(name) {
-		var method = 'getCertificateAuthority';
+		const method = 'getCertificateAuthority';
 		logger.debug('%s - name %s',method, name);
-		var certificateAuthority = null;
+		let certificateAuthority = null;
 		if(name && this._network_config && this._network_config[CAS_CONFIG]) {
-			var certificateAuthority_config = this._network_config[CAS_CONFIG][name];
+			const certificateAuthority_config = this._network_config[CAS_CONFIG][name];
 			if(certificateAuthority_config) {
 				certificateAuthority = new CertificateAuthority(
 					name,
@@ -337,8 +335,8 @@ var NetworkConfig_1_0 = class {
 			this._network_config[CHANNELS_CONFIG][channel.getName()] ) {
 			let orderer_names = this._network_config[CHANNELS_CONFIG][channel.getName()][ORDERERS_CONFIG];
 			if(Array.isArray(orderer_names)) for(let i in orderer_names){
-				let orderer_name = orderer_names[i];
-				let orderer = this.getOrderer(orderer_name);
+				const orderer_name = orderer_names[i];
+				const orderer = this.getOrderer(orderer_name);
 				if(orderer) channel.addOrderer(orderer);
 			}
 		}
@@ -355,9 +353,9 @@ var NetworkConfig_1_0 = class {
 			this._network_config[CHANNELS_CONFIG][channel.getName()] ) {
 			let channel_peers = this._network_config[CHANNELS_CONFIG][channel.getName()][PEERS_CONFIG];
 			if(channel_peers) for(let peer_name in channel_peers) {
-				let channel_peer = channel_peers[peer_name];
-				let peer = this.getPeer(peer_name);
-				let roles = {};
+				const channel_peer = channel_peers[peer_name];
+				const peer = this.getPeer(peer_name);
+				const roles = {};
 				for(let i in ROLES) {
 					if(typeof channel_peer[ROLES[i]] === 'boolean') {
 						roles[ROLES[i]] = channel_peer[ROLES[i]];
@@ -376,7 +374,7 @@ var NetworkConfig_1_0 = class {
 	/*
 	 * Internal utility method to get the organization the peer belongs
 	 */
-	_getOrganizationForPeer(peer_name) {
+	 _getOrganizationForPeer(peer_name) {
 		if(this._network_config && this._network_config[ORGS_CONFIG]) {
 			for(let organization_name in  this._network_config[ORGS_CONFIG]) {
 				let organization = this.getOrganization(organization_name);
@@ -387,7 +385,7 @@ var NetworkConfig_1_0 = class {
 				}
 			}
 		}
-	}
+	 }
 };
 
 function getTLSCACert(config) {
@@ -398,7 +396,7 @@ function getTLSCACert(config) {
 }
 
 function getPEMfromConfig(config) {
-	var result = null;
+	let result = null;
 	if(config) {
 		if(config[PEM]) {
 			// cert value is directly in the configuration

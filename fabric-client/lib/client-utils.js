@@ -160,13 +160,13 @@ module.exports.buildHeader = function (creator, channelHeader, nonce) {
 	return header;
 };
 
-module.exports.checkProposalRequest = function (request, skip) {
+module.exports.checkProposalRequest = function (request, all) {
 	var errorMsg = null;
 
 	if (request) {
 		if (!request.chaincodeId) {
 			errorMsg = 'Missing "chaincodeId" parameter in the proposal request';
-		} else if (!request.txId && !skip) {
+		} else if (!request.txId && all) {
 			errorMsg = 'Missing "txId" parameter in the proposal request';
 		}
 	} else {

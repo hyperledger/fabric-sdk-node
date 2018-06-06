@@ -35,7 +35,9 @@ test('\n\n***** use only admin identity  *****\n\n', async function(t) {
 	const client_org1 = await getClientForOrg(t, 'org1');
 	const client_org2 = await getClientForOrg(t, 'org2');
 
+	client_org2.setConfigSetting('initialize-with-discovery', false);
 	const channel = await setupChannel(t, client_org1, client_org2, channel_name);
+	channel._endorsement_handler = null;
 	const tx_id_string = await invoke(t, client_org1, channel);
 
 	await queries(t, client_org1, channel, tx_id_string);
@@ -46,6 +48,8 @@ test('\n\n***** use only admin identity  *****\n\n', async function(t) {
 
 test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	const client = await getClientForOrg(t, 'org1');
+	client.setConfigSetting('initialize-with-discovery', true);
+
 	const channel = client.getChannel('adminconfig');
 
 	let q_results = await channel.queryInstantiatedChaincodes('peer0.org1.example.com', true);
@@ -54,14 +58,15 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 
 	let results = await channel._discover({
 		target:'peer0.org1.example.com',
-		chaincodeId: chaincode_id //to get a chaincode query
+		chaincodes: [chaincode_id],
+		config: true
 	});
 
-	t.equals(results.config.msps.OrdererMSP.id, 'OrdererMSP', 'Checking MSP ID');
-	t.equals(results.config.msps.Org1MSP.id, 'Org1MSP', 'Checking MSP ID');
-	t.equals(results.config.msps.Org2MSP.id, 'Org2MSP', 'Checking MSP ID');
-	t.equals(results.config.orderers.OrdererMSP.endpoints[0].host, 'orderer.example.com', 'Checking orderer host');
-	t.equals(results.config.orderers.OrdererMSP.endpoints[0].port, 7050, 'Checking orderer port');
+	t.equals(results.msps.OrdererMSP.id, 'OrdererMSP', 'Checking MSP ID');
+	t.equals(results.msps.Org1MSP.id, 'Org1MSP', 'Checking MSP ID');
+	t.equals(results.msps.Org2MSP.id, 'Org2MSP', 'Checking MSP ID');
+	t.equals(results.orderers.OrdererMSP.endpoints[0].host, 'orderer.example.com', 'Checking orderer host');
+	t.equals(results.orderers.OrdererMSP.endpoints[0].port, 7050, 'Checking orderer port');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
@@ -70,19 +75,20 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
 	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, chaincode_id, 'Checking peer chaincode name');
 	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, version, 'Checking peer chaincode version');
-	t.equals(results.endorsement_targets.example.layouts[0].quantities_by_group.G0, 1, 'Checking layout quantities_by_group');
+	t.equals(results.endorsement_targets.example.layouts[0].G0, 1, 'Checking layout quantities_by_group');
 	//logger.info('D I S C O V E R Y   R E S U L T S \n %j', results);
 
 	// try without the target specfied
 	results = await channel._discover({
-		chaincodeId: chaincode_id //to get a chaincode query
+		chaincodes: [chaincode_id],
+		config: true
 	});
 
-	t.equals(results.config.msps.OrdererMSP.id, 'OrdererMSP', 'Checking MSP ID');
-	t.equals(results.config.msps.Org1MSP.id, 'Org1MSP', 'Checking MSP ID');
-	t.equals(results.config.msps.Org2MSP.id, 'Org2MSP', 'Checking MSP ID');
-	t.equals(results.config.orderers.OrdererMSP.endpoints[0].host, 'orderer.example.com', 'Checking orderer host');
-	t.equals(results.config.orderers.OrdererMSP.endpoints[0].port, 7050, 'Checking orderer port');
+	t.equals(results.msps.OrdererMSP.id, 'OrdererMSP', 'Checking MSP ID');
+	t.equals(results.msps.Org1MSP.id, 'Org1MSP', 'Checking MSP ID');
+	t.equals(results.msps.Org2MSP.id, 'Org2MSP', 'Checking MSP ID');
+	t.equals(results.orderers.OrdererMSP.endpoints[0].host, 'orderer.example.com', 'Checking orderer host');
+	t.equals(results.orderers.OrdererMSP.endpoints[0].port, 7050, 'Checking orderer port');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
@@ -91,13 +97,22 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
 	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
 	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, 'v2', 'Checking peer chaincode version');
-	t.equals(results.endorsement_targets.example.layouts[0].quantities_by_group.G0, 1, 'Checking layout quantities_by_group');
+	t.equals(results.endorsement_targets.example.layouts[0].G0, 1, 'Checking layout quantities_by_group');
 
-	results = await channel._discover({
-		chaincodeId: chaincode_id,
-		target_names: true,
-		hostname: 'localhost'
-	});
+	// This will call the discovery under the covers and load the channel with msps, orderers, and peers
+	results = await channel.initialize({asLocalhost: true});
+
+	// check orgs ... actually gets names from the msps loaded
+	const orgs = channel.getOrganizations();
+	for(let index in orgs) {
+		const org = orgs[index].id;
+		if(org === 'Org1MSP' || org === 'Org2MSP' || org === 'OrdererMSP') {
+			t.pass('Checking call to get organizations on the channel after using the discovery service for ' + org);
+		} else {
+			t.fail('Checking call to get organizations on the channel after using the discovery service for '+ org);
+		}
+	}
+
 	t.equals(channel.getOrderers()[0].getUrl(), 'grpcs://localhost:7050', 'Checking orderer url');
 	t.equals(channel.getPeers()[0].getUrl(), 'grpcs://localhost:7051', 'Checking peer url');
 
@@ -108,7 +123,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 
 	await queries(t, client, channel, tx_id_string);
 
-	t.pass('Successfully completed testing');
+	t.pass('End discovery testing');
 	t.end();
 });
 
@@ -207,6 +222,7 @@ async function setupChannel(t, client_org1, client_org2, channel_name) {
 				throw new Error('Failed to create the channel. ');
 			}
 		} catch(error) {
+			logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
 			t.fail('Failed to create channel :'+ error);
 			throw new Error('Failed to create the channel. ');
 		}
@@ -521,6 +537,7 @@ function transaction_monitor(t, channel_event_hub, tx_id) {
 }
 
 async function queries(t, client, channel, tx_id_string) {
+	logger.info('\n\nStart queries\n\n\n');
 	try {
 		const request = {
 			chaincodeId : 'example',

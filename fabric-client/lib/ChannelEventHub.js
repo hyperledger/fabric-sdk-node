@@ -528,7 +528,7 @@ var ChannelEventHub = class {
 			this._initial_epoch,
 			null,
 			clientUtils.buildCurrentTimestamp(),
-			this._peer.getClientCertHash()
+			this._clientContext.getClientCertHash()
 		);
 
 		let seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, tx_id.getNonce());

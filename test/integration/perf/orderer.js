@@ -54,14 +54,13 @@ async function perfTest1(t) {
 	let caroots = Buffer.from(data).toString();
 
 	let tlsInfo = await e2eUtils.tlsEnroll(org);
+	client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 
 	let orderer = client.newOrderer(
 		ORGS.orderer.url,
 		{
 			name: 'perfTest1',
 			'pem': caroots,
-			'clientCert': tlsInfo.certificate,
-			'clientKey': tlsInfo.key,
 			'ssl-target-name-override': ORGS.orderer['server-hostname'],
 			'request-timeout': 120000
 		}
@@ -185,14 +184,13 @@ async function perfTest2(t) {
 	let caroots = Buffer.from(data).toString();
 
 	let tlsInfo = await e2eUtils.tlsEnroll(org);
+	client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 
 	let orderer = client.newOrderer(
 		ORGS.orderer.url,
 		{
 			name: 'perfTest2',
 			'pem': caroots,
-			'clientCert': tlsInfo.certificate,
-			'clientKey': tlsInfo.key,
 			'ssl-target-name-override': ORGS.orderer['server-hostname'],
 			'request-timeout': 120000
 		}

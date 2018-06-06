@@ -145,6 +145,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 	.then((enrollment) => {
 		t.pass('Successfully retrieved TLS certificate');
 		tlsInfo = enrollment;
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return testUtil.getSubmitter(client, t, userOrg);
 	}).then((admin) => {
 		t.pass('Successfully enrolled user \'admin\'');
@@ -348,6 +349,7 @@ function invokeChaincodeSingleCall(userOrg, version, t, shouldFail, peers){
 		.then((enrollment) => {
 			t.pass('Successfully retrieved TLS certificate');
 			tlsInfo = enrollment;
+			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 			return testUtil.getSubmitter(client, t, userOrg);
 		}).then((admin) => {
 			t.pass('Successfully enrolled user \'admin\'');
@@ -358,8 +360,6 @@ function invokeChaincodeSingleCall(userOrg, version, t, shouldFail, peers){
 					ORGS.orderer.url,
 					{
 						'pem': caroots,
-						'clientCert': tlsInfo.certificate,
-						'clientKey': tlsInfo.key,
 						'ssl-target-name-override': ORGS.orderer['server-hostname']
 					}
 				)
@@ -370,8 +370,6 @@ function invokeChaincodeSingleCall(userOrg, version, t, shouldFail, peers){
 					peers[key].requests,
 					{
 						'pem': peers[key].pem,
-						'clientCert': tlsInfo.certificate,
-						'clientKey': tlsInfo.key,
 						'ssl-target-name-override': peers[key]['server-hostname'],
 					});
 				channel.addPeer(peer);
