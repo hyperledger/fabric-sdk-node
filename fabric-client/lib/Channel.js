@@ -111,11 +111,11 @@ const Channel = class {
 		this._discovery_results = null;
 		this._last_discover_timestamp = null;
 		this._discovery_peer = null;
-		this._use_discovery = sdk_utils.getConfigSetting('initialize-with-discovery', true);
+		this._use_discovery = sdk_utils.getConfigSetting('initialize-with-discovery', false);
 
 		// setup the endorsement handler
 		this._endorsement_handler = null;
-		const handler_path = sdk_utils.getConfigSetting('endorsement-handler-path');
+		const handler_path = sdk_utils.getConfigSetting('endorsement-handler');
 		if(handler_path) {
 			this._endorsement_handler = require(handler_path).create(this);
 			this._endorsement_handler.initialize();
@@ -515,15 +515,15 @@ const Channel = class {
 	 * @param {string} name - The name of the peer assigned to this channel
 	 * @returns {ChannelPeer} The ChannelPeer instance
 	 */
-	getChannelPeer(name) {
-		const channel_peer = this._channel_peers.get(name);
+	 getChannelPeer(name) {
+		 const channel_peer = this._channel_peers.get(name);
 
-		if(!channel_peer){
-			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
-		}
+		 if(!channel_peer){
+			 throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
+		 }
 
-		return channel_peer;
-	}
+		 return channel_peer;
+	 }
 
 	/**
 	 * Returns a list of peers assigned to this channel instance.
@@ -2153,14 +2153,28 @@ const Channel = class {
 	/**
 	 * @typedef {Object} ChaincodeInvokeRequest
 	 * @property {Peer[]} targets - Optional. The peers that will receive this request,
-	 *				                when not provided the list of peers added to this channel object will be used.
-	 * @property {string} chaincodeId - Required. The id of the chaincode to process the transaction proposal
-	 * @property {TransactionID} txId - Required. TransactionID object with the transaction id and nonce
-	 * @property {map} transientMap - Optional. <string, byte[]> map that can be used by the chaincode but not
-	 *			                      saved in the ledger, such as cryptographic information for encryption
-	 * @property {string} fcn - Optional. The function name to be returned when calling <code>stub.GetFunctionAndParameters()</code>
-	 *                          in the target chaincode. Default is 'invoke'
-	 * @property {string[]} args - An array of string arguments specific to the chaincode's 'Invoke' method
+	 *           when not provided the list of peers added to this channel object will
+	 *           be used. When this channel has been initialized using the discovery
+	 *           service the proposal will be sent to the peers on the list provided
+	 *           discovery service if no targets are specified.
+	 * @property {string} chaincodeId - Required. The id of the chaincode to process
+	 *           the transaction proposal
+	 * @property {TransactionID} txId - Required. TransactionID object with the
+	 *           transaction id and nonce
+	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
+	 *           used by the chaincode but not
+	 *           saved in the ledger, such as cryptographic information for encryption
+	 * @property {string} fcn - Optional. The function name to be returned when
+	 *           calling <code>stub.GetFunctionAndParameters()</code>
+	 *           in the target chaincode. Default is 'invoke'
+	 * @property {string[]} args - An array of string arguments specific to the
+	 *           chaincode's 'Invoke' method
+	 * @property {string[]} ignore - Optional. An array of strings that represent
+	 *           the names of peers that should be ignored by the endorsement.
+	 *           This list only applies to endorsements using the discovery service.
+	 * @property {string[]} preferred - Optional. An array of strings that represent
+	 *           the names of peers that should be given priority by the endorsement.
+	 *           This list only applies to endorsements using the discovery service.
 	 */
 
 	/**

@@ -155,6 +155,7 @@ gulp.task('run-test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready'
 		'test/integration/invoke.js',
 		'test/integration/network-config.js',
 		'test/integration/only-admin.js',
+		'test/integration/discovery.js',
 		'test/integration/grpc.js',
 		'test/integration/perf/orderer.js',
 		'test/integration/perf/peer.js'
