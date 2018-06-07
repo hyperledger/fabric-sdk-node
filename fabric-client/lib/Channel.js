@@ -20,7 +20,7 @@ const logger = sdk_utils.getLogger('Channel.js');
 const MSPManager = require('./msp/msp-manager.js');
 const Policy = require('./Policy.js');
 const Constants = require('./Constants.js');
-const CollectionConfig = require('./SideDB').CollectionConfig;
+const CollectionConfig = require('./SideDB.js');
 
 const _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 const _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
