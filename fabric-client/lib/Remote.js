@@ -125,12 +125,12 @@ var Remote = class {
 		this._endpoint = new Endpoint(url, pem, clientKey, this.clientCert);
 
 		// node.js based timeout
-		this._request_timeout = 30000;
+		this._request_timeout = 60000;
 		if(opts && opts['request-timeout']) {
 			this._request_timeout = opts['request-timeout'];
 		}
 		else {
-			this._request_timeout = utils.getConfigSetting('request-timeout',30000); //default 30 seconds
+			this._request_timeout = utils.getConfigSetting('request-timeout',60000); //default 30 seconds
 		}
 	}
 	/**
