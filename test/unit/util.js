@@ -263,13 +263,15 @@ module.exports.checkResults = function(results, error_snip, t) {
 	var proposalResponses = results[0];
 	for(var i in proposalResponses) {
 		let proposal_response = proposalResponses[i];
-		if(proposal_response.response
-			&& proposal_response.response.message
-			&& proposal_response.response.message.indexOf(error_snip) > -1) {
-			t.pass('Successfully got the error' + error_snip);
+		if(proposal_response.response && proposal_response.response.message) {
+			if(proposal_response.response.message.indexOf(error_snip) > -1) {
+				t.pass('Successfully got the error' + error_snip);
+			} else {
+				t.fail( 'Failed to get error with ' + error_snip + ' :: response message ' + proposal_response.response.message);
+			}
 		}
 		else {
-			t.fail(' Failed  :: should have had an error with '+ error_snip);
+			t.fail(' Failed  :: no response message found and should have had an error with '+ error_snip);
 		}
 	}
 };

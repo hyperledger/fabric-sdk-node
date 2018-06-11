@@ -181,6 +181,21 @@ var BaseClient = class {
 		BaseClient.setConfigSetting(name, value);
 	}
 
+
+	/**
+	 * Use this method to get a logger that will add entries to the same location
+	 * being used by the Hyperledger Fabric client.
+	 *
+	 * @param {string} name - The name of the label to be added to the log entries.
+	 *        To help identify the source of the log entry.
+	 * @returns {Logger} The logger that may be used to log entires with
+	 *         'info()', 'warn()', 'error()' and 'debug()' methods to mark the
+	 *         the type of the log entries.
+	 */
+	static getLogger(name) {
+		return sdkUtils.getLogger(name);
+	}
+
 	/**
 	 * Sets the client instance to use the CryptoSuite object for signing and hashing
 	 *

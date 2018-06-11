@@ -16,5 +16,8 @@
 	},
 	"metadata-chaincode" : {
 		"title": "How to add CouchDB indexes during chaincode installation"
+	},
+	"logging" : {
+		"title": "How to use logging"
 	}
 }

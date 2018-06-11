@@ -82,7 +82,7 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails by instantiati
 		txId: ''
 	};
 
-	var error_snip = 'chaincode exists ' + e2e.chaincodeId;
+	var error_snip = 'already exists';
 	instantiateChaincodeForError(request, error_snip, t);
 });
 
