@@ -163,7 +163,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			delete client._network_config._network_config.certificateAuthorities['ca-org1'].httpOptions;
 			client.setCryptoSuite({cryptoSuite : 'cryptoSuite'});
 			let certificate_authority = client.getCertificateAuthority();
-			if(certificate_authority && certificate_authority._cryptoSuite && certificate_authority._cryptoSuite.cryptoSuite === 'cryptoSuite') {
+			if(certificate_authority && certificate_authority.fabricCAServices._cryptoSuite && certificate_authority.fabricCAServices._cryptoSuite.cryptoSuite === 'cryptoSuite') {
 				t.pass('Successfully got the certificate_authority');
 			} else {
 				t.fail('Failed to get the certificate_authority');

@@ -11,7 +11,13 @@ var utils = require('./utils.js');
 var logger = utils.getLogger('CertificateAuthority.js');
 
 /**
- * The CertificateAuthority class represents an Certificate Authority in the target blockchain network.
+ * The CertificateAuthority class represents a Certificate Authority configuration
+ * as defined in a Connection Profile. This class will wrapper a FabricCAClientImpl
+ * fabric-ca-client implementation as a FabricCAServices instance when this class
+ * is returned from the {@link Client#getCertificateAuthority} method. This class
+ * has all the same methods as the {@link FabricCAServices} so that this class
+ * may be used directly or use this class's {@link CertificateAuthority#getFabricCAServices}
+ * method to get the actual FabricCAServices instance.
  *
  * @class
  */
@@ -43,6 +49,8 @@ var CertificateAuthority = class {
 		this._connection_options = connection_options;
 		this._tlsCACerts = tlsCACerts;
 		this._registrar = registrar;
+
+		this.fabricCAServices = null;
 	}
 
 	/**
@@ -97,6 +105,80 @@ var CertificateAuthority = class {
 	 */
 	getRegistrar() {
 		return this._registrar;
+	}
+
+	/**
+	 * Set the FabricCAServices implementation
+	 *
+	 * @param {FabricCAServices} ca_services {@link FabricCAServices}
+	 */
+	setFabricCAServices(ca_services) {
+		this.fabricCAServices = ca_services;
+	}
+
+	/**
+	 * Get the FabricCAServices implementation
+	 *
+	 * @return  {@link FabricCAServices}
+	 */
+	getFabricCAServices() {
+		return this.fabricCAServices;
+	}
+
+	/**
+	 * see {@link FabricCAServices#register}
+	 */
+	register(req, registrar) {
+		return this.fabricCAServices.register(req, registrar);
+	}
+
+	/**
+	 * see {@link FabricCAServices#enroll}
+	 */
+	enroll(req) {
+		return this.fabricCAServices.enroll(req);
+	}
+
+	/**
+	 * see {@link FabricCAServices#reenroll}
+	 */
+	reenroll(currentUser, attr_reqs) {
+		return this.fabricCAServices.reenroll(currentUser, attr_reqs);
+	}
+
+	/**
+	 * see {@link FabricCAServices#revoke}
+	 */
+	revoke(request, registrar) {
+		return this.fabricCAServices.revoke(request, registrar);
+	}
+
+	/**
+	 * see {@link FabricCAServices#generateCRL}
+	 */
+	generateCRL(request, registrar) {
+		return this.fabricCAServices.generateCRL(request, registrar);
+	}
+
+	/**
+	 * see {@link FabricCAServices#newCertificateService}
+	 */
+	newCertificateService() {
+		return this.fabricCAServices.newCertificateService();
+	}
+
+	/**
+	 * see {@link FabricCAServices#newIdentityService}
+	 */
+	newIdentityService() {
+		return this.fabricCAServices.newIdentityService();
+	}
+
+	/**
+	 * see {@link FabricCAServices#newAffiliationService}
+	 */
+	newAffiliationService() {
+		return this.fabricCAServices.newAffiliationService();
 	}
 
 	/**

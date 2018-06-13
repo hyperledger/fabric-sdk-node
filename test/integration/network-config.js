@@ -88,7 +88,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 
 		// get the CA associated with this client's organization
 		let caService = client_org1.getCertificateAuthority();
-		t.equals(caService._fabricCAClient._caName,'ca-org1', 'checking that caname is correct after resetting the config');
+		t.equals(caService.fabricCAServices._fabricCAClient._caName,'ca-org1', 'checking that caname is correct after resetting the config');
 
 		let request = {
 			enrollmentID: 'admin',
@@ -111,7 +111,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 
 		// get the CA associated with this client's organization
 		let caService = client_org2.getCertificateAuthority();
-		t.equals(caService._fabricCAClient._caName,'ca-org2', 'checking that caname is correct after resetting the config');
+		t.equals(caService.fabricCAServices._fabricCAClient._caName,'ca-org2', 'checking that caname is correct after resetting the config');
 		let request = {
 			enrollmentID: 'admin',
 			enrollmentSecret: 'adminpw',
@@ -720,7 +720,7 @@ test('\n\n***** Enroll user and set user context using a specified caName *****\
 		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
 
 		let caService = client_org1.getCertificateAuthority();
-		t.equals(caService._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
+		t.equals(caService.fabricCAServices._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
 
 		const admin = await client_org1.setUserContext({username:'admin', password: 'adminpw'});
 		t.pass('Successfully set user context \'admin\' for ' + org_name);
@@ -784,7 +784,7 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
 
 		let caService = client_org1.getCertificateAuthority();
-		t.equals(caService._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
+		t.equals(caService.fabricCAServices._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
 
 		const admin = await client_org1.setUserContext({username:'admin', password: 'adminpw'});
 		t.pass('Successfully set user context \'admin\' for ' + org_name);

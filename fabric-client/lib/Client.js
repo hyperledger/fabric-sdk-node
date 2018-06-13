@@ -454,7 +454,6 @@ const Client = class extends BaseClient {
 			throw new Error('A crypto suite has not been assigned to this client');
 		}
 		let ca_info = null;
-		let ca_service = null;
 
 		if(name) {
 			ca_info = this._network_config.getCertificateAuthority(name);
@@ -472,12 +471,13 @@ const Client = class extends BaseClient {
 		}
 
 		if(ca_info) {
-			ca_service = this._buildCAfromConfig(ca_info);
+			const ca_service = this._buildCAfromConfig(ca_info);
+			ca_info.setFabricCAServices(ca_service);
 		} else {
 			throw new Error('Network configuration is missing this client\'s organization and certificate authority');
 		}
 
-		return ca_service;
+		return ca_info;
 	}
 
 	/*

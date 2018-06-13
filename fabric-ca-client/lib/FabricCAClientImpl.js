@@ -379,6 +379,11 @@ const FabricCAServices = class extends BaseClient {
 			registrar.getSigningIdentity());
 	}
 
+	/**
+	 * Create a new {@link CertificateService} instance
+	 *
+	 * @returns {CertificateService} object
+	 */
 	newCertificateService() {
 		return this._fabricCAClient.newCertificateService();
 	}
