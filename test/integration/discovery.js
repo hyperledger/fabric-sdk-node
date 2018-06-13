@@ -102,9 +102,15 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	channel.removePeer(discovery_peer);
 
 	t.equal(channel.getPeers().length, 0, 'Checking that there are no peers assigned to the channel');
+	t.equal(channel.getOrderers().length, 0, 'Checking that there are no orderers assigned to the channel');
+
+	const bad_orderer = client.newOrderer('grpc://somebadhost:1000');
+	channel.addOrderer(bad_orderer); //will put this orderer first on the list
 
 	// This will call the discovery under the covers and load the channel with msps, orderers, and peers
 	results = await channel.initialize({asLocalhost: true, discovery: true, target: discovery_peer});
+
+	t.equal(channel.getOrderers().length, 2, 'Checking that there are two orderers assigned to the channel');
 
 	// check orgs ... actually gets names from the msps loaded
 	const orgs = channel.getOrganizations();
@@ -117,7 +123,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 		}
 	}
 
-	t.equals(channel.getOrderers()[0].getUrl(), 'grpcs://localhost:7050', 'Checking orderer url');
+	t.equals(channel.getOrderers()[1].getUrl(), 'grpcs://localhost:7050', 'Checking orderer url');
 	t.equals(channel.getPeers()[0].getUrl(), 'grpcs://localhost:7051', 'Checking peer url');
 
 	q_results = await channel.queryInstantiatedChaincodes(null, true);

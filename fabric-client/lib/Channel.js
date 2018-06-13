@@ -115,10 +115,18 @@ const Channel = class {
 
 		// setup the endorsement handler
 		this._endorsement_handler = null;
-		const handler_path = sdk_utils.getConfigSetting('endorsement-handler');
+		let handler_path = sdk_utils.getConfigSetting('endorsement-handler');
 		if(handler_path) {
 			this._endorsement_handler = require(handler_path).create(this);
 			this._endorsement_handler.initialize();
+		}
+
+		// setup the commit handler
+		this._commit_handler = null;
+		handler_path = sdk_utils.getConfigSetting('commit-handler');
+		if(handler_path) {
+			this._commit_handler = require(handler_path).create(this);
+			this._commit_handler.initialize();
 		}
 
 
@@ -2189,9 +2197,9 @@ const Channel = class {
 	 *
 	 * @param {ChaincodeInvokeRequest} request
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
-	 *                              response before rejecting the promise with a
-	 *                              timeout error. This overrides the default timeout
-	 *                              of the Peer instance and the global timeout in the config settings.
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Peer instance and the global
+	 *        timeout in the config settings.
 	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}
 	 */
 	sendTransactionProposal(request, timeout) {
@@ -2359,12 +2367,18 @@ const Channel = class {
 	 * <li>[sendUpgradeProposal()]{@link Channel#sendUpgradeProposal}
 	 * <li>[sendTransactionProposal()]{@link Channel#sendTransactionProposal}
 	 *
-	 * @param {TransactionRequest} request
-	 * @returns {Promise} A Promise for a "BroadcastResponse" message returned by the orderer that contains a
-	 *                    single "status" field for a standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
-	 *                    This will be an acknowledgement from the orderer of successfully submitted transaction.
+	 * @param {TransactionRequest} request - {@link TransactionRequest}
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Orderer instance and the global
+	 *        timeout in the config settings.
+	 * @returns {Promise} A Promise for a "BroadcastResponse" message returned by
+	 *          the orderer that contains a single "status" field for a
+	 *          standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
+	 *          This will be an acknowledgement from the orderer of a successfully
+	 *          submitted transaction.
 	 */
-	sendTransaction(request) {
+	sendTransaction(request, timeout) {
 		logger.debug('sendTransaction - start :: channel %s', this);
 		let errorMsg = null;
 
@@ -2409,9 +2423,6 @@ const Channel = class {
 			logger.error('sendTransaction - no valid endorsements found');
 			throw new Error('no valid endorsements found');
 		}
-
-		// verify that we have an orderer configured
-		const orderer = this._clientContext.getTargetOrderer(request.orderer, this.getOrderers(), this._name);
 
 		let use_admin_signer = false;
 		if (request.txId) {
@@ -2464,7 +2475,19 @@ const Channel = class {
 			payload: payload_bytes
 		};
 
-		return orderer.sendBroadcast(envelope);
+		if(this._commit_handler) {
+			const params = {
+				signed_envelope: envelope,
+				request: request,
+				timeout: timeout
+			};
+			return this._commit_handler.commit(params);
+
+		} else {
+			// verify that we have an orderer configured
+			const orderer = this._clientContext.getTargetOrderer(request.orderer, this.getOrderers(), this._name);
+			return orderer.sendBroadcast(envelope);
+		}
 	}
 
 	/**
@@ -2831,6 +2854,33 @@ const Channel = class {
 		}
 
 		return targets;
+	}
+
+	/*
+	 * utility method to decide on the orderer
+	 */
+	_getOrderer(request_orderer) {
+		let orderer = null;
+		if(request_orderer) {
+			if(typeof request_orderer === 'string') {
+				orderer = this._orderers.get(request_orderer);
+				if(!orderer) {
+					throw new Error(util.format('Orderer %s not assigned to the channel', request_orderer));
+				}
+			} else if(request_orderer && request_orderer.constructor && request_orderer.constructor.name === 'Orderer') {
+				orderer = request_orderer;
+			} else {
+				throw new Error('Orderer is not a valid orderer object instance');
+			}
+		} else {
+			const orderers = this.getOrderers();
+			orderer = orderers[0];
+			if(!orderer) {
+				throw new Error('No Orderers assigned to this channel');
+			}
+		}
+
+		return orderer;
 	}
 
 	// internal utility method to build chaincode policy

@@ -202,7 +202,7 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 		} if(Array.isArray(error)) {
 			t.pass('So far so good');
 		} else {
-			t.fail('Unknow endorsement results returned');
+			t.fail('Unknown endorsement results returned');
 		}
 	}
 

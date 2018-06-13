@@ -66,15 +66,19 @@ var Orderer = class extends Remote {
 	/**
 	 * Send a Broadcast message to the orderer service.
 	 *
-	 * @param {byte[]} envelope - Byte data to be included in the broadcast. This must
-	 *                            be a protobuf encoded byte array of the
-	 *                            [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L132}
-	 *                            that contains either a [ConfigUpdateEnvelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/configtx.proto#L70}
-	 *                            or a [Transaction]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L70}
-	 *                            in the <code>payload.data</code> property of the envelope.
+	 * @param {byte[]} envelope - Byte data to be included in the broadcast.
+	 *        This must be a protobuf encoded byte array of the
+	 *        [common.Envelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L132}
+	 *        that contains either a [ConfigUpdateEnvelope]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/configtx.proto#L70}
+	 *        or a [Transaction]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L70}
+	 *        in the <code>payload.data</code> property of the envelope.
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Peer instance and the global
+	 *        timeout in the config settings.
 	 * @returns {Promise} A Promise for a {@link BroadcastResponse} object
 	 */
-	sendBroadcast(envelope) {
+	sendBroadcast(envelope, timeout) {
 		logger.debug('sendBroadcast - start');
 
 		if (!envelope || envelope == '') {
@@ -84,6 +88,9 @@ var Orderer = class extends Remote {
 		}
 
 		var self = this;
+		let rto = self._request_timeout;
+		if (typeof timeout === 'number')
+			rto = timeout;
 
 		return this.waitForReady(this._ordererClient).then(() => {
 			// Send the envelope to the orderer via grpc
@@ -91,10 +98,10 @@ var Orderer = class extends Remote {
 				var broadcast = self._ordererClient.broadcast();
 
 				var broadcast_timeout = setTimeout(function () {
-					logger.error('sendBroadcast - timed out after:%s', self._request_timeout);
+					logger.error('sendBroadcast - timed out after:%s', rto);
 					broadcast.end();
 					return reject(new Error('REQUEST_TIMEOUT'));
-				}, self._request_timeout);
+				}, rto);
 
 				broadcast.on('data', function (response) {
 					logger.debug('sendBroadcast - on data response: %j', response);
@@ -139,6 +146,11 @@ var Orderer = class extends Remote {
 				//			broadcast.end();
 				logger.debug('sendBroadcast - sent message');
 			});
+		},
+		(error) =>{
+			logger.error('Orderer %s has an error %s ', self.getUrl(), error.toString());
+			self.close();
+			return Promise.reject(error);
 		});
 	}
 

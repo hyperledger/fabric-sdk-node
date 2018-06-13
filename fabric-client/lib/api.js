@@ -318,7 +318,7 @@ module.exports.EndorsementHandler = class {
 
 	/**
 	 * @typedef {Object} EndorsementHandlerParameters
-	 * @property {Peer[]} request - {@link ChaincodeInvokeRequest}
+	 * @property {Object} request - {@link ChaincodeInvokeRequest}
 	 * @property {Object} signed_proposal - the encoded protobuf "SignedProposal"
 	 *           created by the sendTransactionProposal method before calling the
 	 *           handler. Will be the object to be endorsed by the target peers.
@@ -332,7 +332,7 @@ module.exports.EndorsementHandler = class {
 	 * transaction to all targets. The results will be analized to see if
 	 * enough good endorsments have been received.
 	 *
-	 * @param {EndorsementHandlerRequest} params - A {@link EndorsementHandlerParameters}
+	 * @param {EndorsementHandlerParameters} params - A {@link EndorsementHandlerParameters}
 	 *        that contains enough information to determine the targets and contains
 	 *        a {@link ChaincodeInvokeRequest} to be sent using the included channel
 	 *        with the {@link Channel} 'sendTransactionProposal' method.
@@ -342,6 +342,54 @@ module.exports.EndorsementHandler = class {
 	 */
 	endorse(params) {
 		throw new Error('The "endorse" method must be implemented');
+	}
+
+	/**
+	 * This method will be called by the channel when the channel is initialzied.
+	 */
+	initialize() {
+		throw new Error('The "initialize" method must be implemented');
+	}
+
+	/**
+	 * This static method will be called by the channel to create an instance of
+	 * this handler. It will be passed the channel object this handler is working
+	 * with.
+	 */
+	static create(channel) {
+		throw new Error('The "create" method must be implemented');
+	}
+};
+
+/**
+ * Base class for commit handling
+ * @class
+ */
+module.exports.CommitHandler = class {
+
+	/**
+	 * @typedef {Object} CommitHandlerParameters
+	 * @property {Object} request - {@link TransactionRequest}
+	 * @property {Object} signed_envelope - An object that will be sent to the
+	 *           orderer that contains the encoded endorsed proposals and the
+	 *           signature of the sender.
+	 * @property {Number} timeout - the timeout setting passed on sendTransaction
+	 *           method.
+	 */
+
+	/**
+	 * This method will process the parameters to determine the orderers.
+	 * The handler will use the provided orderers or use the orderers assigned to
+	 * the channel. The handler is expected to preform failover and use all available
+	 * orderers to send the endorsed transaction.
+	 *
+	 * @param {CommitHandlerParameters} params - A {@link EndorsementHandlerParameters}
+	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}, the
+	 *        same results as calling the {@link Channel} 'sendTransactionProposal'
+	 *        method directly.
+	 */
+	commit(params) {
+		throw new Error('The "commit" method must be implemented');
 	}
 
 	/**

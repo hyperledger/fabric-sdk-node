@@ -34,7 +34,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 	/**
 	 * constructor
 	 *
-	 * @param {Object} parm1 - Something
+	 * @param {Channel} channel - The channel for this handler.
 	 */
 	constructor(channel) {
 		super();
@@ -220,7 +220,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 							const endorsement = await peer.sendProposal(proposal, timeout);
 							// if the endorsement is OK, then return it and quit
 							plan.endorsements[peer_info.name] = {endorsement, success: true};
-							logger.debug('%s - endorsement completed - %s', method, endorsement.response.status);
+							logger.debug('%s - endorsement completed to %s - %s', method, peer_info.name, endorsement.response.status);
 							resolve(endorsement);
 							return;
 						} catch(caught_error) {

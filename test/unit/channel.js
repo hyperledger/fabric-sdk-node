@@ -1183,6 +1183,65 @@ test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 	t.end();
 });
 
+test('\n\n ** Channel _getOrderer tests **\n\n', function (t) {
+	const client = new Client();
+	const channel = new Channel('does-not-matter', client);
+
+
+	t.throws(
+		function () {
+			channel._getOrderer();
+		},
+		/No Orderers assigned to this channel/,
+		'Channel _getOrderer test: no params and no orderers assigned to channel'
+	);
+
+	t.throws(
+		function () {
+			channel._getOrderer('bad');
+		},
+		/Orderer bad not assigned to the channel/,
+		'Channel _getOrderer test: using bad name and no orderers assigned to channel'
+	);
+
+	t.throws(
+		function () {
+			channel._getOrderer({});
+		},
+		/Orderer is not a valid orderer object instance/,
+		'Channel _getOrderer test: using bad object and no orderers assigned to channel'
+	);
+
+	const orderer = new Orderer('grpc://somehost.com:1234');
+	t.doesNotThrow(
+		() => {
+			const test_orderer = channel._getOrderer(orderer);
+			t.equal(test_orderer.getName(), 'somehost.com:1234', 'Checking able to get correct name');
+		},
+		null,
+		'Channel _getOrderer: checking able to find orderer by name'
+	);
+
+	channel.addOrderer(orderer);
+	t.doesNotThrow(
+		() => {
+			channel._getOrderer('somehost.com:1234');
+		},
+		null,
+		'Channel _getOrderer: checking able to find orderer by name'
+	);
+
+	t.doesNotThrow(
+		() => {
+			const test_orderer = channel._getOrderer();
+			t.equal(test_orderer.getName(), 'somehost.com:1234', 'Checking able to get correct name');
+		},
+		null,
+		'Channel _getOrderer: checking able to find orderer by name'
+	);
+
+	t.end();
+});
 async function setMember(client) {
 	// do some setup for following test
 	var member = new User('admin');
