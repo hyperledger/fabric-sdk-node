@@ -29,6 +29,7 @@ var testUtil = require('../unit/util.js');
 var Client = require('fabric-client');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
+var BlockDecoder = require('fabric-client/lib/BlockDecoder.js');
 
 var client = new Client();
 var channel_id = testUtil.END2END.channel;
@@ -52,6 +53,8 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 
 	let caroots = Buffer.from(data).toString();
 	let tlsInfo = null;
+	let bcInfo = null;
+	let tx_block = null;
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	var cryptoSuite = Client.newCryptoSuite();
@@ -169,6 +172,7 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 		logger.debug(' Channel queryInfo() returned block height=' + blockchainInfo.height);
 		logger.debug(' Channel queryInfo() returned block previousBlockHash=' + blockchainInfo.previousBlockHash);
 		logger.debug(' Channel queryInfo() returned block currentBlockHash=' + blockchainInfo.currentBlockHash);
+		bcInfo = blockchainInfo;
 		var block_hash = blockchainInfo.currentBlockHash;
 		// send query
 		return channel.queryBlockByHash(block_hash, peer0);
@@ -178,6 +182,69 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 		return channel.queryBlockByTxID(tx_id);
 	}).then((block) => {
 		t.pass(util.format('Should find block[%s] by txid: %s', block.header.number, tx_id));
+		tx_block = block.header.number;
+
+		// query block skipping decoder
+		return channel.queryBlock(1, null, null, true);
+	}).then((binaryBlock) => {
+		if (!(binaryBlock instanceof Buffer)) {
+			t.fail('queryBlock(skipDecode = true) did not return a binary block');
+		} else {
+			let block = BlockDecoder.decode(binaryBlock);
+			if (block && block.header && block.header.number) {
+				t.pass('queryBlock(skipDecode = true) returned a decodable binary block');
+				t.equals(block.header.number, '1', 'block number is correct');
+			} else {
+				t.fail('queryBlock(skipDecode = true) did not return decodable binary block');
+			}
+		}
+
+		var block_hash = bcInfo.currentBlockHash;
+		// query by hash skipping decoder
+		return channel.queryBlockByHash(block_hash, peer0, null, true);
+	}).then((binaryBlock) => {
+		if (!(binaryBlock instanceof Buffer)) {
+			t.fail('queryBlockByHash(skipDecode = true) did not return a binary block');
+		} else {
+			let block = BlockDecoder.decode(binaryBlock);
+			if (block && block.header && block.header.number) {
+				t.pass('queryBlockByHash(skipDecode = true) returned a decodable binary block');
+				t.equals(block.header.number, (bcInfo.height - 1).toString(), 'block number is correct');
+			} else {
+				t.fail('queryBlockByHash(skipDecode = true) did not return decodable binary block');
+			}
+		}
+
+		// query by txid skipping decoder
+		return channel.queryBlockByTxID(tx_id, null, null, true);
+	}).then((binaryBlock) => {
+		if (!(binaryBlock instanceof Buffer)) {
+			t.fail('queryBlockByTxID(skipDecode = true) did not return a binary block');
+		} else {
+			let block = BlockDecoder.decode(binaryBlock);
+			if (block && block.header && block.header.number) {
+				t.pass('queryBlockByTxID(skipDecode = true) returned a decodable binary block');
+				t.equals(block.header.number, tx_block,'block number is correct');
+			} else {
+				t.fail('queryBlockByTxID(skipDecode = true) did not return decodable binary block');
+			}
+		}
+
+		// query tx skipping decoder
+		return channel.queryTransaction(tx_id, peer0, null, true); //assumes the end-to-end has run first
+	}).then((binaryTx) => {
+		if (!(binaryTx instanceof Buffer)) {
+			t.fail('queryTransaction(skipDecode = true) did not return a binary transaction');
+		} else {
+			let tx = BlockDecoder.decodeTransaction(binaryTx);
+			if (tx && tx.transactionEnvelope && tx.transactionEnvelope.payload
+				&& tx.transactionEnvelope.payload.header && tx.transactionEnvelope.payload.header.channel_header) {
+				t.pass(util.format('queryTransaction(skipDecode = true) returned binary transaction which is decodable'));
+				t.equals(tx_id, tx.transactionEnvelope.payload.header.channel_header.tx_id, 'tx_id is correct');
+			} else {
+				t.fail('queryTransaction did not return a decodable binary transaction');
+			}
+		}
 		t.end();
 	}).catch((err) => {
 		t.fail('Query channel failed:%j', err);

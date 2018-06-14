@@ -161,10 +161,14 @@ declare namespace Client {
     executeTransaction(request: ChaincodeInvokeRequest): Promise<BroadcastResponse[]>;
     sendUpgradeProposal(request: ChaincodeInstantiateUpgradeRequest, timeout?: number): Promise<ProposalResponseObject>;
     queryByChaincode(request: ChaincodeQueryRequest): Promise<Buffer[]>;
-    queryBlock(blockNumber: number, target?: Peer | string, useAdmin?: boolean): Promise<Block>;
-    queryBlockByHash(block: Buffer, target?: Peer | string, useAdmin?: boolean): Promise<Block>;
-    queryTransaction(txId: string, target?: Peer | string, useAdmin?: boolean): Promise<any>;
-    queryBlockByTxID(txId: string, target?: Peer | string, useAdmin?: boolean): Promise<Block>;
+    queryBlock(blockNumber: number, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<Block>;
+    queryBlock(blockNumber: number, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
+    queryBlockByHash(block: Buffer, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<Block>;
+    queryBlockByHash(block: Buffer, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
+    queryTransaction(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<any>;
+    queryTransaction(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
+    queryBlockByTxID(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<Block>;
+    queryBlockByTxID(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
     queryInstantiatedChaincodes(target: Peer | string, useAdmin?: boolean): Promise<ChaincodeQueryResponse>;
     queryInfo(target?: Peer | string, useAdmin?: boolean): Promise<BlockchainInfo>;
     getOrderers(): Orderer[];

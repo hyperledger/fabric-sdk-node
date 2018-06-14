@@ -1654,9 +1654,10 @@ const Channel = class {
 	 *                        the query is sent to the first peer that was added to the channel object.
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
 	 *                  this call to the peer.
+	 * @param {boolean} skipDecode - Optional. If true, this function returns an encoded block.
 	 * @returns {Promise} A Promise for a {@link Block} matching the tx_id, fully decoded into an object.
 	 */
-	queryBlockByTxID(tx_id, target, useAdmin) {
+	queryBlockByTxID(tx_id, target, useAdmin, skipDecode) {
 		logger.debug('queryBlockByTxID - start');
 		if (!tx_id || !(typeof tx_id === 'string')) {
 			throw new Error('tx_id as string is required');
@@ -1689,9 +1690,13 @@ const Channel = class {
 					}
 					if (response.response && response.response.status && response.response.status == 200) {
 						logger.debug('queryBlockByTxID - response status %d:', response.response.status);
-						const block = BlockDecoder.decode(response.response.payload);
-						logger.debug('queryBlockByTxID - looking at block :: %s', block.header.number);
-						return Promise.resolve(block);
+						if (skipDecode) {
+							return Promise.resolve(response.response.payload);
+						} else {
+							const block = BlockDecoder.decode(response.response.payload);
+							logger.debug('queryBlockByTxID - looking at block :: %s', block.header.number);
+							return Promise.resolve(block);
+						}
 					} else if (response.response && response.response.status) {
 						// no idea what we have, lets fail it and send it back
 						return Promise.reject(new Error(response.response.message));
@@ -1712,9 +1717,10 @@ const Channel = class {
 	 *                        the query is sent to the first peer that was added to the channel object.
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
 	 *                  this call to the peer.
+	 * @param {boolean} skipDecode - Optional. If true, this function returns an encoded block.
 	 * @returns {Promise} A Promise for a {@link Block} matching the hash, fully decoded into an object.
 	 */
-	queryBlockByHash(blockHash, target, useAdmin) {
+	queryBlockByHash(blockHash, target, useAdmin, skipDecode) {
 		logger.debug('queryBlockByHash - start');
 		if (!blockHash) {
 			throw new Error('Blockhash bytes are required');
@@ -1748,9 +1754,13 @@ const Channel = class {
 						}
 						if (response.response && response.response.status && response.response.status == 200) {
 							logger.debug('queryBlockByHash - response status %d:', response.response.status);
-							const block = BlockDecoder.decode(response.response.payload);
-							logger.debug('queryBlockByHash - looking at block :: %s', block.header.number);
-							return Promise.resolve(block);
+							if (skipDecode) {
+								return Promise.resolve(response.response.payload);
+							} else {
+								const block = BlockDecoder.decode(response.response.payload);
+								logger.debug('queryBlockByHash - looking at block :: %s', block.header.number);
+								return Promise.resolve(block);
+							}
 						} else if (response.response && response.response.status) {
 							// no idea what we have, lets fail it and send it back
 							return Promise.reject(new Error(response.response.message));
@@ -1774,9 +1784,10 @@ const Channel = class {
 	 *                        the query is sent to the first peer that was added to the channel object.
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
 	 *                  this call to the peer.
+	 * @param {boolean} skipDecode - Optional. If true, this function returns an encoded block.
 	 * @returns {Promise} A Promise for a {@link Block} at the blockNumber slot in the ledger, fully decoded into an object.
 	 */
-	queryBlock(blockNumber, target, useAdmin) {
+	queryBlock(blockNumber, target, useAdmin, skipDecode) {
 		logger.debug('queryBlock - start blockNumber %s', blockNumber);
 		let block_number = null;
 		if (Number.isInteger(blockNumber) && blockNumber >= 0) {
@@ -1812,9 +1823,13 @@ const Channel = class {
 						}
 						if (response.response && response.response.status && response.response.status == 200) {
 							logger.debug('queryBlock - response status %d:', response.response.status);
-							const block = BlockDecoder.decode(response.response.payload);
-							logger.debug('queryBlock - looking at block :: %s', block.header.number);
-							return Promise.resolve(block);
+							if (skipDecode) {
+								return Promise.resolve(response.response.payload);
+							} else {
+								const block = BlockDecoder.decode(response.response.payload);
+								logger.debug('queryBlock - looking at block :: %s', block.header.number);
+								return Promise.resolve(block);
+							}
 						} else if (response.response && response.response.status) {
 							// no idea what we have, lets fail it and send it back
 							return Promise.reject(new Error(response.response.message));
@@ -1838,9 +1853,10 @@ const Channel = class {
 	 *                        the query is sent to the first peer that was added to the channel object.
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
 	 *                  this call to the peer.
+	 * @param {boolean} skipDecode - Optional. If true, this function returns an encoded transaction.
 	 * @returns {Promise} A Promise for a fully decoded {@link ProcessedTransaction} object.
 	 */
-	queryTransaction(tx_id, target, useAdmin) {
+	queryTransaction(tx_id, target, useAdmin, skipDecode) {
 		logger.debug('queryTransaction - start transactionID %s', tx_id);
 		if (tx_id) {
 			tx_id = tx_id.toString();
@@ -1875,8 +1891,12 @@ const Channel = class {
 						}
 						if (response.response && response.response.status && response.response.status == 200) {
 							logger.debug('queryTransaction - response status :: %d', response.response.status);
-							const processTrans = BlockDecoder.decodeTransaction(response.response.payload);
-							return Promise.resolve(processTrans);
+							if (skipDecode) {
+								return Promise.resolve(response.response.payload);
+							} else {
+								const processTrans = BlockDecoder.decodeTransaction(response.response.payload);
+								return Promise.resolve(processTrans);
+							}
 						} else if (response.response && response.response.status) {
 							// no idea what we have, lets fail it and send it back
 							return Promise.reject(new Error(response.response.message));
