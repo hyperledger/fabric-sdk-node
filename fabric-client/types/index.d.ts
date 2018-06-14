@@ -340,7 +340,7 @@ declare namespace Client {
   }
 
   export interface ChaincodeInstantiateUpgradeRequest {
-    targets?: Peer[];
+    targets?: Peer[] | string[];
     chaincodeType?: ChaincodeType;
     chaincodeId: string;
     chaincodeVersion: string;
@@ -352,7 +352,7 @@ declare namespace Client {
   }
 
   export interface ChaincodeInvokeRequest {
-    targets?: Peer[];
+    targets?: Peer[] | string[];
     chaincodeId: string;
     txId: TransactionId;
     transientMap?: any;
@@ -361,7 +361,7 @@ declare namespace Client {
   }
 
   export interface ChaincodeQueryRequest {
-    targets?: Peer[];
+    targets?: Peer[] | string[];
     chaincodeId: string;
     transientMap?: any;
     fcn?: string;
