@@ -307,44 +307,44 @@ test('\n\n ** testing devmode set and get calls on client **\n\n', function (t) 
 	t.end();
 });
 
-test('\n\n ** testing query calls fail without correct parameters on client **\n\n', function (t) {
+test('\n\n ** testing query calls fail without correct parameters on client **\n\n', (t) => {
 	t.equals(typeof Client, 'function');
-	var client = new Client();
+	const client = new Client();
 
-	var p1 = client.queryInstalledChaincodes().then(function () {
+	const p1 = client.queryInstalledChaincodes().then(() => {
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Peer is required') >= 0) {
+	}).catch((err) => {
+		if (err.message.includes('Peer is required')) {
 			t.pass('p1 - Successfully caught missing request error');
 		} else {
 			t.fail('p1 - Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
 		}
 	});
 
-	var p1a = client.queryInstalledChaincodes('somename').then(function () {
+	const p1a = client.queryInstalledChaincodes('somename').then(() => {
 		t.fail('Should not have been able to resolve the promise because of No network configuraton loaded');
-	}).catch(function (err) {
-		if (err.message.indexOf('not found') >= 0) {
+	}).catch((err) => {
+		if (err.message.includes('not found')) {
 			t.pass('Successfully caught No network configuraton loaded error');
 		} else {
 			t.fail('Failed to catch the No network configuraton loaded error. Error: ' + err.stack ? err.stack : err);
 		}
 	});
 
-	var p2 = client.queryChannels().then(function () {
+	const p2 = client.queryChannels().then(() => {
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Peer is required') >= 0) {
+	}).catch((err) => {
+		if (err.message.includes('Peer is required')) {
 			t.pass('p2 - Successfully caught missing request error');
 		} else {
 			t.fail('p2 - Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
 		}
 	});
 
-	var p3 = client.queryChannels('somename').then(function () {
+	const p3 = client.queryChannels('somename').then(() => {
 		t.fail('Should not have been able to resolve the promise because of no network loaded');
-	}).catch(function (err) {
-		if (err.message.indexOf('not found') >= 0) {
+	}).catch((err) => {
+		if (err.message.includes('not found')) {
 			t.pass('Successfully caught no network loaded error');
 		} else {
 			t.fail('Failed to catch the no network loaded error. Error: ' + err.stack ? err.stack : err);
@@ -352,47 +352,41 @@ test('\n\n ** testing query calls fail without correct parameters on client **\n
 	});
 
 	client._network_config = new NetworkConfig({}, client);
-	var p4 = client.queryChannels('somename').then(function () {
+	const p4 = client.queryChannels('somename').then(() => {
 		t.fail('Should not have been able to resolve the promise because of wrong request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('not found') >= 0) {
+	}).catch((err) => {
+		if (err.message.includes('not found')) {
 			t.pass('Successfully caught wrong request error');
 		} else {
 			t.fail('Failed to catch the wrong request error. Error: ' + err.stack ? err.stack : err);
 		}
 	});
 
-	var p4a = client.queryInstalledChaincodes('somename').then(function () {
+	const p4a = client.queryInstalledChaincodes('somename').then(() => {
 		t.fail('Should not have been able to resolve the promise because of wrong request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('not found') >= 0) {
+	}).catch((err) => {
+		if (err.message.includes('not found')) {
 			t.pass('Successfully caught wrong request error');
 		} else {
 			t.fail('Failed to catch the wrong request error. Error: ' + err.stack ? err.stack : err);
 		}
 	});
 
-	var p5 = client.queryChannels({}).then(function () {
+	const p5 = client.queryChannels({}).then(() => {
 		t.fail('Should not have been able to resolve the promise because of wrong object request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Target peer is not a valid peer object instance') >= 0) {
+	}).catch((err) => {
+		if (err.message.includes('Target peer is not a valid peer object instance')) {
 			t.pass('Successfully caught wrong object request error');
 		} else {
 			t.fail('Failed to catch the wrong object request error. Error: ' + err.stack ? err.stack : err);
 		}
 	});
-	Promise.all([p1, p1a, p2, p3, p4, p4a, p5])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Channel query calls, Promise.all: ');
-			console.log(err.stack ? err.stack : err);
-			t.end();
-		}
-	);
+	Promise.all([p1, p1a, p2, p3, p4, p4a, p5]).then(() => {
+		t.end();
+	}).catch((err) => {
+		t.fail(`Channel query calls, Promise.all: ${err}`);
+		t.end();
+	});
 });
 
 test('\n\n ** testing get and new peer calls on client **\n\n', function (t) {
@@ -562,120 +556,122 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 			}
 		});
 
-	Promise.all([p1, p2, p3, p4, p5, p6])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Channel installChaincode() tests, Promise.all: ');
-			console.log(err.stack ? err.stack : err);
-			t.end();
-		}
-	);
+	Promise.all([p1, p2, p3, p4, p5, p6]).then(() => {
+		t.end();
+	}).catch((err) => {
+		t.fail(`Channel installChaincode() tests, Promise.all: ${err}`);
+		t.end();
+	});
 });
 
-test('\n\n ** Client createChannel() tests **\n\n', function (t) {
-	var c = new Client();
-	var orderer = c.newOrderer('grpc://localhost:7050');
+test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) => {
+	const client = new Client();
+	const orderer = client.newOrderer('grpc://localhost:7050');
 
-	var p1 = c.createChannel({ envelope : {} , name : 'name'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of orderer missing');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "orderer"') >= 0) {
-			t.pass('Successfully caught missing orderer error');
-		} else {
-			t.fail('Failed to catch the missing orderer error. Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
+	t.throws(() => {
+		client.signChannelConfig();
+	}, /^Error: Channel configuration update parameter is required./,
+	'Client tests: Channel configuration update parameter is required.');
 
-	var p2 = c.createChannel(
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing all') >= 0) {
-			t.pass('Successfully caught missing request error');
-		} else {
-			t.fail('Failed to catch the missing request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+	for (const action of ['createChannel', 'updateChannel']) {
+		try {
+			await client[action]();
+			t.fail('Should not have been able to resolve the promise because of missing request parameter');
+		} catch (err) {
+			if (err.message.includes('Missing all')) {
+				t.pass('Successfully caught missing request error');
+			} else {
+				t.fail(`Failed to catch the missing request error. Error: ${err}`);
+			}
 		}
-	});
 
-	var p3 = c.createChannel({orderer : orderer, name : 'name', txId : '777', signatures : []}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of envelope request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing config') >= 0) {
-			t.pass('Successfully caught missing config request error');
-		} else {
-			t.fail('Failed to catch the missing config request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+		try {
+			await client[action]({envelope: {}, name: 'name', txId: '77'});
+			t.fail('Should not have been able to resolve the promise because of orderer missing');
+		} catch (err) {
+			if (err.message.includes('Missing "orderer" request parameter')) {
+				t.pass('Successfully caught missing orderer error');
+			} else {
+				t.fail(`Failed to catch the missing orderer error. : ${err}`);
+			}
 		}
-	});
+		try {
+			await client[action]({config: 'a', signatures: [], txId: 'a', name: 'a', orderer: {}});
+			t.fail('Should not have been able to resolve the promise');
+		} catch (err) {
+			const msg = '"orderer" request parameter is not valid';
+			if (err.message.includes(msg)) {
+				t.pass('Successfully caught invalid "orderer" parameter');
+			} else {
+				t.fail(`Failed to catch invalid "orderer" parameter: ${err}`);
+			}
+		}
 
-	var p4 = c.createChannel({envelope : {} , orderer : orderer}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of name request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing name') >= 0) {
-			t.pass('Successfully caught missing name request error');
-		} else {
-			t.fail('Failed to catch the missing name request error. Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
 
-	var p5 = c.createChannel({config : {}, orderer : orderer, name: 'name', txId : 'fff'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing signatures request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing signatures') >= 0) {
-			t.pass('Successfully caught missing signatures request error');
-		} else {
-			t.fail('Failed to catch the missing signatures request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+		try {
+			await client[action]({orderer: orderer, name: 'name', txId: '777', signatures: []});
+			t.fail('Should not have been able to resolve the promise because of envelope request parameter');
+		} catch (err) {
+			if (err.message.includes('Missing config')) {
+				t.pass('Successfully caught missing config request error');
+			} else {
+				t.fail(`Failed to catch the missing config request error. Error: ${err}`);
+			}
 		}
-	});
 
-	var p6 = c.createChannel({config : {}, orderer : orderer, name: 'name', signatures : {}, txId : 'fff'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing signatures request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('must be an array of signatures') >= 0) {
-			t.pass('Successfully caught request parameter must be an array error');
-		} else {
-			t.fail('Failed to catch request parameter must be an array request error. Error: ');
-			console.log(err.stack ? err.stack : err);
+		try {
+			await client[action]({envelope: {}, orderer, config: 'a', signatures: [], txId: 'a'});
+			t.fail('Should not have been able to resolve the promise because of name request parameter');
+		} catch (err) {
+			if (err.message.includes('Missing name request parameter')) {
+				t.pass('Successfully caught missing name request error');
+			} else {
+				t.fail(`Failed to catch the missing name request error. Error: ${err}`);
+			}
 		}
-	});
 
-	var p7 = c.createChannel({config : {}, orderer : orderer, name: 'name', signatures : []}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing txId request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing txId') >= 0) {
-			t.pass('Successfully caught request parameter must have txId error');
-		} else {
-			t.fail('Failed to catch request parameter must have txId error. Error: ');
-			console.log(err.stack ? err.stack : err);
+		try {
+			await client[action]({config: {}, orderer: orderer, name: 'name', txId: 'fff'});
+			t.fail('Should not have been able to resolve the promise because of missing signatures request parameter');
+		} catch (err) {
+			if (err.message.includes('Missing signatures request parameter for the new channel')) {
+				t.pass('Successfully caught missing signatures request error');
+			} else {
+				t.fail(`Failed to catch the missing signatures request error. Error: ${err}`);
+			}
 		}
-	});
 
-	Promise.all([p1, p2, p3, p4, p5, p6, p7])
-	.then(
-		function (data) {
-			t.end();
+		try {
+			await client[action]({
+				config: {},
+				orderer: orderer,
+				name: 'name',
+				signatures: {},
+				txId: 'fff'
+			});
+			t.fail('Should not have been able to resolve the promise because of missing signatures request parameter');
+		} catch (err) {
+			if (err.message.includes('Signatures request parameter must be an array of signatures')) {
+				t.pass('Successfully caught Signatures must be an array error');
+			} else {
+				t.fail(`Failed to catch Signatures must be an array. Error: ${err}`);
+			}
 		}
-	).catch(
-		function (err) {
-			t.fail('Client createChannel() tests, Promise.all: ');
-			console.log(err.stack ? err.stack : err);
-			t.end();
+
+		try {
+			await client[action]({config: {}, orderer: orderer, name: 'name', signatures: []});
+			t.fail('Should not have been able to resolve the promise because of missing txId request parameter');
+		} catch (err) {
+			if (err.message.includes('Missing txId request parameter')) {
+				t.pass('Successfully caught request parameter must have txId error');
+			} else {
+				t.fail(`Failed to catch request parameter must have txId error. Error: ${err}`);
+			}
 		}
-	);
+	}
+
+
+	t.end();
 });
 
 test('\n\n ** createUser error path - missing required opt parameter **\n\n', function (t) {
@@ -861,41 +857,32 @@ test('\n\n ** createUser error path - missing required cryptoContent privateKey 
 	});
 });
 
-test('\n\n ** createUser error path - no keyValueStore **\n\n', function (t) {
-	var msg = 'Failed to load key or certificate and save to local stores';
-	var userOrg = 'org2';
+test('\n\n ** createUser error path - no keyValueStore **\n\n', async (t) => {
+	const msg = 'Cannot save user to state store when stateStore is null.';
+	const userOrg = 'org2';
 	utils.setConfigSetting('crypto-keysize', 256);
 
-	var client = new Client();
-	var cryptoSuite = Client.newCryptoSuite();
+	const client = new Client();
 
-	client.createUser(
-		{username: caImport.orgs[userOrg].username,
-			mspid: caImport.orgs[userOrg].mspid,
-			cryptoContent: caImport.orgs[userOrg].cryptoContent
-		})
-	.then((user) => {
-		if (user) {
-			t.fail('createUser, did not expect successful create');
+	try {
+		await client.createUser(
+			{
+				username: caImport.orgs[userOrg].username,
+				mspid: caImport.orgs[userOrg].mspid,
+				cryptoContent: caImport.orgs[userOrg].cryptoContent
+			});
+		t.fail('createUser, did not expect successful create');
+		t.end();
+	} catch (err) {
+		if (err.message.includes(msg)) {
+			t.pass('createUser, error expected: ' + msg);
 			t.end();
 		} else {
-			t.fail('createUser, returned null but expected error');
-			t.end();
-		}
-	}, (err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('createUser, error expected: '+msg);
-			t.end();
-		} else {
-			t.fail('createUser, unexpected error: '+err.message);
+			t.fail('createUser, unexpected error: ' + err.message);
 			t.comment(err.stack ? err.stack : err);
 			t.end();
 		}
-	}).catch((err) => {
-		t.fail('createUser, caught unexpected error: '+err.message);
-		t.comment(err.stack ? err.stack : err);
-		t.end();
-	});
+	}
 });
 
 test('\n\n ** createUser success path - no cryptoKeyStore **\n\n', function (t) {
@@ -905,7 +892,6 @@ test('\n\n ** createUser success path - no cryptoKeyStore **\n\n', function (t) 
 	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 
 	var client = new Client();
-	var cryptoSuite = Client.newCryptoSuite();
 
 	return utils.newKeyValueStore(keyStoreOpts)
 	.then((store) => {
@@ -933,124 +919,6 @@ test('\n\n ** createUser success path - no cryptoKeyStore **\n\n', function (t) 
 	});
 });
 
-test('\n\n ** test related APIs for create channel **\n\n', function (t) {
-	var client = new Client();
-
-	t.throws(
-		function () {
-			client.signChannelConfig();
-		},
-		/^Error: Channel configuration update parameter is required./,
-		'Client tests: Channel configuration update parameter is required.');
-
-	t.throws(
-		function () {
-			client.signChannelConfig();
-		},
-		/^Error: Channel configuration update parameter is required./,
-		'Client tests: Channel configuration update parameter is required.');
-
-	var p3a= client.updateChannel({config : 'a', txId : 'a', orderer : 'a', name : 'a' }
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		let msg = 'Missing signatures request parameter for the new channel';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught the ' + msg );
-		} else {
-			t.fail('Failed to catch the ' + msg + ' Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-	var p3b= client.updateChannel({config : 'a', signatures : 'a', txId : 'a', orderer : 'a', name : 'a'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		let msg = 'Signatures request parameter must be an array of signatures';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught the ' + msg );
-		} else {
-			t.fail('Failed to catch the ' + msg + ' Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-
-	var p4= client.updateChannel({config : 'a', signatures : [], orderer : 'a', name : 'a'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		let msg = 'Missing txId request parameter';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught the ' + msg );
-		} else {
-			t.fail('Failed to catch the ' + msg + ' Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-
-	var p6= client.updateChannel({config : 'a', signatures : [], txId : 'a', name : 'a'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		let msg = 'Missing "orderer" request parameter';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught the ' + msg );
-		} else {
-			t.fail('Failed to catch the ' + msg + ' Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-	var p6a= client.updateChannel({config : 'a', signatures : [], txId : 'a', name : 'a', orderer : {}}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		let msg = '"orderer" request parameter is not valid';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught the ' + msg );
-		} else {
-			t.fail('Failed to catch the ' + msg + ' Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-	var p7= client.updateChannel({config : 'a', signatures : [], txId : 'a', orderer : 'a'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		let msg = 'Missing name request parameter';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught the ' + msg );
-		} else {
-			t.fail('Failed to catch the ' + msg + ' Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-	var p8= client.createChannel({envelope : 'a'}
-	).then(function () {
-		t.fail('Should not have been able to resolve the promise');
-	}).catch(function (err) {
-		let msg = 'Missing name request parameter';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('Successfully caught the ' + msg );
-		} else {
-			t.fail('Failed to catch the ' + msg + ' Error: ');
-			console.log(err.stack ? err.stack : err);
-		}
-	});
-	Promise.all([p3a, p3b, p4, p6, p6a, p7, p8])
-	.then(
-		function (data) {
-			t.end();
-		}
-	).catch(
-		function (err) {
-			t.fail('Client buildChannelConfigUpdate() tests, Promise.all: ');
-			console.log(err.stack ? err.stack : err);
-			t.end();
-		}
-	);
-
-	t.end();
-});
 
 test('\n\n ** test internal method to rebuild ConfigSignatures **\n\n', function (t) {
 	var some_proto_signatures = [];
@@ -1077,8 +945,8 @@ test('\n\n ** test internal method to rebuild ConfigSignatures **\n\n', function
 	t.end();
 });
 
-test('\n\n*** Test per-call timeout support ***\n', function(t) {
-	let sandbox = sinon.sandbox.create();
+test('\n\n ** Test per-call timeout support [client] **\n', function (t) {
+	const sandbox = sinon.sandbox.create();
 	let stub = sandbox.stub(Peer.prototype, 'sendProposal');
 
 	// stub out the calls that requires getting MSPs from the orderer, or

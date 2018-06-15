@@ -41,7 +41,7 @@ const _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.pr
 const _discoveryProto = grpc.load(__dirname + '/protos/discovery/protocol.proto').discovery;
 const _gossipProto = grpc.load(__dirname + '/protos/gossip/message.proto').gossip;
 
-const ImplicitMetaPolicy_Rule = { 0: 'ANY', 1: 'ALL', 2: 'MAJORITY' };
+const ImplicitMetaPolicy_Rule = {0: 'ANY', 1: 'ALL', 2: 'MAJORITY'};
 
 const PEER_NOT_ASSIGNED_MSG = 'Peer with name "%s" not assigned to this channel';
 const ORDERER_NOT_ASSIGNED_MSG = 'Orderer with name "%s" not assigned to this channel';
@@ -138,8 +138,12 @@ const Channel = class {
 	 */
 	close() {
 		logger.debug('close - closing connections');
-		this._channel_peers.forEach((channel_peer) => {channel_peer.close();});
-		this._orderers.forEach((orderer) => {orderer.close();});
+		this._channel_peers.forEach((channel_peer) => {
+			channel_peer.close();
+		});
+		this._orderers.forEach((orderer) => {
+			orderer.close();
+		});
 	}
 
 	/**
@@ -373,37 +377,37 @@ const Channel = class {
 	 * Discovery results are only available if this channel has been initialized.
 	 * If the results are too old, they will be refreshed
 	 */
-	 getDiscoveryResults() {
-		 if(this._discovery_results) {
-			 const allowed_age = sdk_utils.getConfigSetting('discovery-cache-age', 300000); //default is 5 minutes
-			 const now = Date.now();
-			 if(now - this._last_discover_timestamp > allowed_age) {
-				 return this.refresh();
-			 } else {
-				 return Promise.resolve(this._discovery_results);
-			 }
-		 } else {
-			 // not working with discovery or we have not been initialized
-			 return Promise.reject(new Error('This Channel has not been initialized or not initialized with discovery support'));
-		 }
-	 }
+	getDiscoveryResults() {
+		if (this._discovery_results) {
+			const allowed_age = sdk_utils.getConfigSetting('discovery-cache-age', 300000); //default is 5 minutes
+			const now = Date.now();
+			if (now - this._last_discover_timestamp > allowed_age) {
+				return this.refresh();
+			} else {
+				return Promise.resolve(this._discovery_results);
+			}
+		} else {
+			// not working with discovery or we have not been initialized
+			return Promise.reject(new Error('This Channel has not been initialized or not initialized with discovery support'));
+		}
+	}
 
-	 /**
-	  * Refresh the channel's configuration.  The MSP configurations, peers,
-	  * orderers, and endorsement plans will be queired from the peer using
-	  * the Discover Service. The queries will be made to the peer used previously
-	  * for discovery if the 'target' parameter is not provided.
-	  *
-	  * @param {DiscoveryRequest} request - {@link DiscoveryRequest}
-	  * @return {DiscoveryResults} - The results of refreshing
-	  */
-	  refresh(request) {
-		  if(!request) {
-			  request = this._last_refresh_request;
-		  }
+	/**
+	 * Refresh the channel's configuration.  The MSP configurations, peers,
+	 * orderers, and endorsement plans will be queired from the peer using
+	 * the Discover Service. The queries will be made to the peer used previously
+	 * for discovery if the 'target' parameter is not provided.
+	 *
+	 * @param {DiscoveryRequest} request - {@link DiscoveryRequest}
+	 * @return {DiscoveryResults} - The results of refreshing
+	 */
+	refresh(request) {
+		if (!request) {
+			request = this._last_refresh_request;
+		}
 
-		  return this.initialize(request);
-	  }
+		return this.initialize(request);
+	}
 
 	/**
 	 * Get organization identifiers from the MSP's for this channel
@@ -508,7 +512,7 @@ const Channel = class {
 	getPeer(name) {
 		const channel_peer = this._channel_peers.get(name);
 
-		if(!channel_peer){
+		if (!channel_peer) {
 			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
 		}
 
@@ -523,15 +527,15 @@ const Channel = class {
 	 * @param {string} name - The name of the peer assigned to this channel
 	 * @returns {ChannelPeer} The ChannelPeer instance
 	 */
-	 getChannelPeer(name) {
-		 const channel_peer = this._channel_peers.get(name);
+	getChannelPeer(name) {
+		const channel_peer = this._channel_peers.get(name);
 
-		 if(!channel_peer){
-			 throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
-		 }
+		if (!channel_peer) {
+			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
+		}
 
-		 return channel_peer;
-	 }
+		return channel_peer;
+	}
 
 	/**
 	 * Returns a list of peers assigned to this channel instance.
@@ -540,7 +544,9 @@ const Channel = class {
 	getPeers() {
 		logger.debug('getPeers - list size: %s.', this._channel_peers.size);
 		const peers = [];
-		this._channel_peers.forEach((channel_peer)=>{peers.push(channel_peer.getPeer());});
+		this._channel_peers.forEach((channel_peer) => {
+			peers.push(channel_peer.getPeer());
+		});
 		return peers;
 	}
 
@@ -557,8 +563,8 @@ const Channel = class {
 	addOrderer(orderer, replace) {
 		const name = orderer.getName();
 		const check = this._orderers.get(name);
-		if(check) {
-			if(replace) {
+		if (check) {
+			if (replace) {
 				this.removeOrderer(check);
 			} else {
 				const error = new Error();
@@ -594,7 +600,7 @@ const Channel = class {
 	getOrderer(name) {
 		const orderer = this._orderers.get(name);
 
-		if(!orderer) {
+		if (!orderer) {
 			throw new Error(util.format(ORDERER_NOT_ASSIGNED_MSG, name));
 		}
 
@@ -608,7 +614,9 @@ const Channel = class {
 	getOrderers() {
 		logger.debug('getOrderers - list size: %s.', this._orderers.size);
 		let orderers = [];
-		this._orderers.forEach((orderer)=>{orderers.push(orderer);});
+		this._orderers.forEach((orderer) => {
+			orderers.push(orderer);
+		});
 		return orderers;
 	}
 
@@ -617,7 +625,7 @@ const Channel = class {
 	 * properties of an event stream on a peer node, through which the peer publishes
 	 * notifications of blocks being committed in the channel's ledger.
 	 * This method will create a new ChannelEventHub and not save a reference.
- 	 * Use the {getChannelEventHub} to reuse a ChannelEventHub.
+	 * Use the {getChannelEventHub} to reuse a ChannelEventHub.
 	 *
 	 * @param {Peer | string} peer A Peer instance or the name of a peer that has
 	 *        been assigned to the channel.
@@ -646,11 +654,11 @@ const Channel = class {
 	 * @returns {ChannelEventHub} - The ChannelEventHub associated with the peer.
 	 */
 	getChannelEventHub(name) {
-		if(!(typeof name === 'string')) {
+		if (!(typeof name === 'string')) {
 			throw new Error('"name" parameter must be a Peer name.');
 		}
 		let _channel_peer = this._channel_peers.get(name);
-		if(!_channel_peer) {
+		if (!_channel_peer) {
 			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
 		}
 
@@ -669,9 +677,9 @@ const Channel = class {
 		logger.debug('%s - starting', method);
 
 		const channel_event_hubs = [];
-		this._channel_peers.forEach((channel_peer) =>{
-			if(channel_peer.isInOrg(org_name)) {
-				if(channel_peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)){
+		this._channel_peers.forEach((channel_peer) => {
+			if (channel_peer.isInOrg(org_name)) {
+				if (channel_peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
 					channel_event_hubs.push(channel_peer.getChannelEventHub());
 				} else {
 					logger.debug('%s - channel peer:%s is not an event source', method, channel_peer.getName());
@@ -694,8 +702,8 @@ const Channel = class {
 		logger.debug('%s - starting', method);
 
 		const peers = [];
-		this._channel_peers.forEach((channel_peer) =>{
-			if(channel_peer.isInOrg(org_name)) {
+		this._channel_peers.forEach((channel_peer) => {
+			if (channel_peer.isInOrg(org_name)) {
 				peers.push(channel_peer.getPeer());
 			}
 		});
@@ -819,7 +827,7 @@ const Channel = class {
 		const self = this;
 		logger.debug('%s - start', method);
 		const results = {};
-		if(!request) {
+		if (!request) {
 			request = {};
 		}
 		const target_peer = this._getTargetForDiscovery(request.target);
@@ -829,7 +837,7 @@ const Channel = class {
 		const authentication = new _discoveryProto.AuthInfo();
 		authentication.setClientIdentity(signer.serialize());
 		const cert_hash = this._clientContext.getClientCertHash();
-		if(cert_hash) {
+		if (cert_hash) {
 			authentication.setClientTlsCertHash(cert_hash);
 		}
 		discovery_request.setAuthentication(authentication);
@@ -839,7 +847,7 @@ const Channel = class {
 		const queries = [];
 
 		// if doing local it will be index 0 of the results
-		if(request.local) {
+		if (request.local) {
 			const query = new _discoveryProto.Query();
 			queries.push(query);
 
@@ -848,7 +856,7 @@ const Channel = class {
 			logger.debug('%s - adding local peers query', method);
 		}
 
-		if(request.config){
+		if (request.config) {
 			let query = new _discoveryProto.Query();
 			queries.push(query);
 			query.setChannel(this.getName());
@@ -867,13 +875,13 @@ const Channel = class {
 		}
 
 		// add a chaincode query to get endorsement layouts if chaincodeId is set
-		if(request.chaincodes && request.chaincodes.length > 0) {
+		if (request.chaincodes && request.chaincodes.length > 0) {
 			const query = new _discoveryProto.Query();
 			queries.push(query);
 			query.setChannel(this.getName());
 
 			const interests = [];
-			for(let index in request.chaincodes) {
+			for (let index in request.chaincodes) {
 				const chaincodes = [];
 				const chaincode_name = request.chaincodes[index];
 				const chaincode_call = new _discoveryProto.ChaincodeCall();
@@ -903,15 +911,15 @@ const Channel = class {
 
 		return target_peer.sendDiscovery(signed_request).then((response) => {
 			logger.debug('%s - processing discovery response', method);
-			if(response && response.results) {
+			if (response && response.results) {
 				let error_msg = null;
 				logger.debug('%s - parse discovery response', method);
-				for(let index in response.results) {
+				for (let index in response.results) {
 					let result = response.results[index];
-					if(!result) {
+					if (!result) {
 						error_msg = 'Discover results are missing';
 						break;
-					} else if(result.result === 'error') {
+					} else if (result.result === 'error') {
 						logger.error('Channel:%s received discovery error:%s', self.getName(), result.error.content);
 						error_msg = result.error.content;
 						break;
@@ -923,7 +931,7 @@ const Channel = class {
 							results.orderers = config.orderers;
 						}
 						if (result.members) {
-							if(request.local && index == 0) {
+							if (request.local && index == 0) {
 								results.local_peers = self._processDiscoveryMembershipResults(result.members);
 							} else {
 								results.peers_by_org = self._processDiscoveryMembershipResults(result.members);
@@ -936,7 +944,7 @@ const Channel = class {
 					}
 				}
 
-				if(error_msg) {
+				if (error_msg) {
 
 					return Promise.reject('Channel:' + self.getName() + ' Discovery error:' + error_msg);
 				} else {
@@ -954,16 +962,16 @@ const Channel = class {
 		const method = '_processDiscoveryChaincodeResults';
 		logger.debug('%s - start', method);
 		const by_chaincode = {};
-		if(q_chaincodes && q_chaincodes.content) {
-			if(Array.isArray(q_chaincodes.content)) {
-				for(let index in q_chaincodes.content) {
+		if (q_chaincodes && q_chaincodes.content) {
+			if (Array.isArray(q_chaincodes.content)) {
+				for (let index in q_chaincodes.content) {
 					const q_endors_desc = q_chaincodes.content[index];
 					const endorsement_descriptor = {};
 					by_chaincode[q_endors_desc.chaincode] = endorsement_descriptor;
 
 					// GROUPS
-					endorsement_descriptor.groups ={};
-					for(let group_name in q_endors_desc.endorsers_by_groups) {
+					endorsement_descriptor.groups = {};
+					for (let group_name in q_endors_desc.endorsers_by_groups) {
 						logger.debug('%s - found group: %s', method, group_name);
 						const group = {};
 						group.peers = this._processPeers(q_endors_desc.endorsers_by_groups[group_name].peers);
@@ -973,10 +981,10 @@ const Channel = class {
 
 					// LAYOUTS
 					endorsement_descriptor.layouts = [];
-					for(let index in q_endors_desc.layouts){
+					for (let index in q_endors_desc.layouts) {
 						const q_layout = q_endors_desc.layouts[index];
 						const layout = {};
-						for(let group_name in q_layout.quantities_by_group) {
+						for (let group_name in q_layout.quantities_by_group) {
 							layout[group_name] = q_layout.quantities_by_group[group_name];
 						}
 						logger.debug('%s - layout :%j', method, layout);
@@ -989,19 +997,19 @@ const Channel = class {
 		return by_chaincode;
 	}
 
-	_processDiscoveryConfigResults(q_config){
+	_processDiscoveryConfigResults(q_config) {
 		const method = '_processDiscoveryConfigResults';
 		logger.debug('%s - start', method);
 		const config = {};
-		if(q_config) try {
-			if(q_config.msps) {
+		if (q_config) try {
+			if (q_config.msps) {
 				config.msps = {};
-				for(let id in q_config.msps) {
+				for (let id in q_config.msps) {
 					logger.debug('%s - found organization %s', method, id);
 					let q_msp = q_config.msps[id];
 					const msp_config = {
 						id: id,
-						orgs : q_msp.organizational_unit_identifiers,
+						orgs: q_msp.organizational_unit_identifiers,
 						rootCerts: sdk_utils.convertBytetoString(q_msp.root_certs),
 						intermediateCerts: sdk_utils.convertBytetoString(q_msp.intermediate_certs),
 						admins: sdk_utils.convertBytetoString(q_msp.admins),
@@ -1014,18 +1022,18 @@ const Channel = class {
 			/*
 			"orderers":{"OrdererMSP":{"endpoint":[{"host":"orderer.example.com","port":7050}]}}}
 			*/
-			if(q_config.orderers) {
+			if (q_config.orderers) {
 				config.orderers = {};
-				for(let org_name in q_config.orderers) {
+				for (let org_name in q_config.orderers) {
 					logger.debug('%s - found orderer org: ', method, org_name);
 					config.orderers[org_name] = {};
 					config.orderers[org_name].endpoints = [];
-					for(let index in q_config.orderers[org_name].endpoint){
+					for (let index in q_config.orderers[org_name].endpoint) {
 						config.orderers[org_name].endpoints.push(q_config.orderers[org_name].endpoint[index]);
 					}
 				}
 			}
-		} catch(err) {
+		} catch (err) {
 			logger.error('Problem with discovery config: %s', err);
 		}
 
@@ -1036,8 +1044,8 @@ const Channel = class {
 		const method = '_processDiscoveryChannelMembershipResults';
 		logger.debug('%s - start', method);
 		const peers_by_org = {};
-		if(q_members && q_members.peers_by_org) {
-			for(let org_name in q_members.peers_by_org) {
+		if (q_members && q_members.peers_by_org) {
+			for (let org_name in q_members.peers_by_org) {
 				logger.debug('%s - found org:%s', method, org_name);
 				peers_by_org[org_name] = {};
 				peers_by_org[org_name].peers = this._processPeers(q_members.peers_by_org[org_name].peers);
@@ -1049,7 +1057,7 @@ const Channel = class {
 	_processPeers(q_peers) {
 		const method = '_processPeers';
 		const peers = [];
-		q_peers.forEach((q_peer)=>{
+		q_peers.forEach((q_peer) => {
 			const peer = {};
 			// IDENTITY
 			const q_identity = _identityProto.SerializedIdentity.decode(q_peer.identity);
@@ -1061,12 +1069,12 @@ const Channel = class {
 			logger.debug('%s - found peer :%s', method, peer.endpoint);
 
 			// STATE
-			if(q_peer.state_info) {
+			if (q_peer.state_info) {
 				const message_s = _gossipProto.GossipMessage.decode(q_peer.state_info.payload);
 				peer.ledger_height = message_s.state_info.properties.ledger_height;
 				logger.debug('%s - found ledger_height :%s', method, peer.ledger_height);
 				peer.chaincodes = [];
-				for(let index in message_s.state_info.properties.chaincodes) {
+				for (let index in message_s.state_info.properties.chaincodes) {
 					const q_chaincode = message_s.state_info.properties.chaincodes[index];
 					const chaincode = {};
 					chaincode.name = q_chaincode.getName();
@@ -1091,12 +1099,14 @@ const Channel = class {
 		const name = host + ':' + port;
 		const url = this._buildUrl(host, port, request);
 		let found = null;
-		this._orderers.forEach((orderer)=>{if(orderer.getUrl() === url){
-			logger.debug('%s - found existing orderer %s', method, url);
-			found = orderer;
-		}});
-		if(!found) {
-			if(msps[msp_id]) {
+		this._orderers.forEach((orderer) => {
+			if (orderer.getUrl() === url) {
+				logger.debug('%s - found existing orderer %s', method, url);
+				found = orderer;
+			}
+		});
+		if (!found) {
+			if (msps[msp_id]) {
 				logger.debug('%s - create a new orderer %s', method, url);
 				found = new Orderer(url, this._buildOptions(name, url, host, msps[msp_id]));
 				this.addOrderer(found, true);
@@ -1116,12 +1126,14 @@ const Channel = class {
 		const host_port = endpoint.split(':');
 		const url = this._buildUrl(host_port[0], host_port[1], request);
 		let found = null;
-		this._channel_peers.forEach((peer)=>{if(peer.getUrl() === url){
-			logger.debug('%s - found existing peer %s', method, url);
-			found = peer;
-		}});
-		if(!found) {
-			if(msp_id && msps && msps[msp_id]) {
+		this._channel_peers.forEach((peer) => {
+			if (peer.getUrl() === url) {
+				logger.debug('%s - found existing peer %s', method, url);
+				found = peer;
+			}
+		});
+		if (!found) {
+			if (msp_id && msps && msps[msp_id]) {
 				logger.debug('%s - create a new peer %s', method, url);
 				found = new Peer(url, this._buildOptions(name, url, host_port[0], msps[msp_id]));
 				this.addPeer(found, msp_id, null, true);
@@ -1140,7 +1152,7 @@ const Channel = class {
 		let t_hostname = hostname;
 
 		// endpoints may be running in containers on the local system
-		if(request && request.asLocalhost) {
+		if (request && request.asLocalhost) {
 			t_hostname = 'localhost';
 		}
 
@@ -1167,10 +1179,10 @@ const Channel = class {
 
 	_buildTlsRootCerts(msp) {
 		let caroots = '';
-		if(msp.tls_root_certs) {
+		if (msp.tls_root_certs) {
 			caroots = caroots + msp.tls_root_certs;
 		}
-		if(msp.tls_intermediate_certs) {
+		if (msp.tls_intermediate_certs) {
 			caroots = caroots + msp.tls_intermediate_certs;
 		}
 
@@ -1292,6 +1304,7 @@ const Channel = class {
 				}
 			);
 	}
+
 	/**
 	 * Asks the peer for the current (latest) configuration block for this channel.
 	 * @param {string | Peer} target - Optional. The peer to be used to make the
@@ -2241,7 +2254,7 @@ const Channel = class {
 		}
 
 
-		if(this._endorsement_handler) {
+		if (this._endorsement_handler) {
 			logger.debug('%s - running with endorsement handler');
 			const proposal = Channel._buildSignedProposal(request, this._name, this._clientContext);
 
@@ -2351,7 +2364,7 @@ const Channel = class {
 		const proposal = client_utils.buildProposal(invokeSpec, header, request.transientMap);
 		const signed_proposal = client_utils.signProposal(signer, proposal);
 
-		return {signed :signed_proposal, source: proposal};
+		return {signed: signed_proposal, source: proposal};
 	}
 
 	/**
@@ -2521,79 +2534,65 @@ const Channel = class {
 	 *          a single "status" field for a starndard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
 	 *          It will be an acknowledgement from the orderer of successfully submitted transaction.
 	 */
-	executeTransaction(request) {
-		let errorMsg = client_utils.checkProposalRequest(request, true);
+	async executeTransaction(request) {
+		let errorMsg =client_utils.checkProposalRequest(request, true);
 		if (errorMsg) {
-			throw new Error(errorMsg);
-		} else if (!request.args) {
+			throw Error(errorMsg);
+		}
+		if (!request.args) {
 			// args is not optional because we need for transaction to execute
-			throw new Error('Missing "args" in Transaction proposal request');
+			throw Error('Missing "args" in Transaction proposal request');
 		}
 
-		const self = this;
 		const eventHubs = request.eventHubs;
 		const txId = request.txId;
 		const timeout = request.timeout;
 
-		return this.sendTransactionProposal(request)
-			.then(
-				function (results) {
-					let proposalResponses = results[0];
-					let proposal = results[1];
-					let allGood = true;
+		const results = await this.sendTransactionProposal(request);
+		const proposalResponses = results[0];
+		const proposal = results[1];
+		let allGood = true;
 
-					for (let i in proposalResponses) {
-						if (!proposalResponses || !proposalResponses[i].response) {
-							errorMsg = 'failed to get proposalResponse';
-							allGood = false;
-							break;
-						}
+		for (let i in proposalResponses) {
+			if (!proposalResponses || !proposalResponses[i].response) {
+				throw Error('failed to get proposalResponse');
+			}
 
-						if (proposalResponses[i].response.status !== 200) {
-							errorMsg = 'got bad proposalResponse';
-							allGood = false;
-							break;
-						}
+			if (proposalResponses[i].response.status !== 200) {
+				throw Error('got bad proposalResponse');
+			}
 
-						if (!self.verifyProposalResponse(proposalResponses[i])) {
-							errorMsg = 'failed to verify proposalResponse';
-							allGood = false;
-							break;
-						}
-					}
+			if (!this.verifyProposalResponse(proposalResponses[i])) {
+				throw Error('failed to verify proposalResponse');
+			}
+		}
 
-					if (allGood) {
-						let ok = self.compareProposalResponseResults(proposalResponses);
-						if (ok) {
-							logger.debug('All proposals have a matching read/writes sets');
-						} else {
-							errorMsg = 'All proposals do not have matching read/write sets';
-							allGood = false;
-						}
-					}
+		if (allGood) {
+			if (this.compareProposalResponseResults(proposalResponses)) {
+				logger.debug('All proposals have a matching read/writes sets');
+			} else {
+				throw Error('All proposals do not have matching read/write sets');
+			}
+		}
 
-					if (allGood) {
-						logger.debug(util.format(
-							'Successfully sent Proposal and received ProposalResponse: ' +
-							'Status - %s, message - "%s", metadata - "%s", endorsement signature: %s',
-							proposalResponses[0].response.status, proposalResponses[0].response.message,
-							proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
+		if (allGood) {
+			logger.debug(util.format(
+				'Successfully sent Proposal and received ProposalResponse: ' +
+				'Status - %s, message - "%s", metadata - "%s", endorsement signature: %s',
+				proposalResponses[0].response.status, proposalResponses[0].response.message,
+				proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 
-						let promises = eventHubPromises(eventHubs, txId, timeout);
+			const promises = eventHubPromises(eventHubs, txId, timeout);
 
-						let ordererRequest = {
-							proposalResponses: proposalResponses,
-							proposal: proposal
-						};
-						let sendPromise = self.sendTransaction(ordererRequest);
+			const ordererRequest = {
+				proposalResponses: proposalResponses,
+				proposal: proposal
+			};
+			const sendPromise = this.sendTransaction(ordererRequest);
 
-						promises.push(sendPromise);
-						return Promise.all(promises);
-					}
-					return Promise.reject('Failed to execute transaction: ' + errorMsg);
-				}).catch(error => {
-					return Promise.reject(error);
-				});
+			promises.push(sendPromise);
+			return Promise.all(promises);
+		}
 	}
 
 	/**
@@ -2765,7 +2764,7 @@ const Channel = class {
 	 *
 	 * @param {ProposalResponse[]} The proposal responses from all endorsing peers
 	 * @returns {boolean} True when all proposals compare equally, false otherwise.
-	  */
+	 */
 	compareProposalResponseResults(proposal_responses) {
 		logger.debug('compareProposalResponseResults - start');
 		if (!proposal_responses) {
@@ -2986,7 +2985,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	if (groups) {
 		const keys = Object.keys(groups.map);
 		versions.groups = {};
-		if (keys.length == 0) {
+		if (keys.length === 0) {
 			logger.debug('loadConfigGroup - %s   - no groups', name);
 		}
 		for (let i = 0; i < keys.length; i++) {
@@ -3051,7 +3050,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	logger.debug('loadConfigGroup - %s - < group', name);
 }
 
-/*
+/**
  * utility method to load in a config value
  * @see /protos/common/configtx.proto
  * @see /protos/msp/mspconfig.proto

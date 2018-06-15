@@ -109,13 +109,13 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 			_channel.close();
 			_channel.addPeer(peer);
 			_channel.removePeer(peer);
-			peer = new Peer('grpc://somehost.com:1234', {name:'peer1'});
+			peer = new Peer('grpc://somehost.com:1234', {name: 'peer1'});
 			_channel.addPeer(peer);
 			const cp = _channel.getChannelPeer('peer1');
 			cp.getOrganizationName();
 			t.equals(cp.getName(), 'peer1', 'Checking channel peer getName');
 			cp.getUrl();
-			cp.setRole('role',false);
+			cp.setRole('role', false);
 			t.equals(cp.isInRole('role'), false, 'Checking isInRole');
 			t.equals(cp.isInRole('unknown'), true, 'Checking isInRole');
 			t.equals(cp.isInOrg('org2'), true, 'checking isInOrg');
@@ -148,12 +148,12 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 	);
 	let test_string = Buffer.from('{"name":"testchannel","orderers":["Orderer:{url:grpc://somehost.com:1234}"],"peers":["Peer:{url:grpc://somehost.com:1234}"]}');
 	let channel_string = Buffer.from(_channel.toString());
-	if(test_string.equals(channel_string)) {
+	if (test_string.equals(channel_string)) {
 		t.pass('Successfully tested Channel toString()');
 	} else {
 		t.fail('Failed Channel toString() test');
 	}
-	t.notEquals(_channel.getMSPManager(),null,'checking the channel getMSPManager()');
+	t.notEquals(_channel.getMSPManager(), null, 'checking the channel getMSPManager()');
 	t.doesNotThrow(
 		function () {
 			var msp_manager = new MSPManager();
@@ -162,7 +162,7 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 		null,
 		'checking the channel setMSPManager()'
 	);
-	t.notEquals(_channel.getOrganizations(),null,'checking the channel getOrganizations()');
+	t.notEquals(_channel.getOrganizations(), null, 'checking the channel getOrganizations()');
 
 	t.end();
 });
@@ -590,7 +590,10 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({ identities: [{ role: { name: 'member', mspId: 'value' } }], policy: { dummy: 'value' } });
+			c._buildEndorsementPolicy({
+				identities: [{role: {name: 'member', mspId: 'value'}}],
+				policy: {dummy: 'value'}
+			});
 		},
 		/Invalid policy type found: must be one of "n-of" or "signed-by" but found "dummy"/,
 		'Checking policy spec: policy type must be "n-of" or "signed-by"'
@@ -1011,8 +1014,8 @@ test('\n\n*** Test per-call timeout support ***\n', function (t) {
 	sandbox.stub(client_utils, 'buildProposal').returns(Buffer.from('dummyProposal'));
 	sandbox.stub(client_utils, 'signProposal').returns(Buffer.from('dummyProposal'));
 	client._userContext = {
-		getIdentity: function () { return ''; },
-		getSigningIdentity: function () { return ''; }
+		getIdentity: ()=>'',
+		getSigningIdentity: ()=>''
 	};
 
 	let c = new Channel('does-not-matter', client);
@@ -1025,9 +1028,9 @@ test('\n\n*** Test per-call timeout support ***\n', function (t) {
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: {
-			getTransactionID: function () { return '1234567'; },
-			isAdmin: function () { return false; },
-			getNonce: function () { return Buffer.from('dummyNonce'); }
+			getTransactionID: () =>'1234567',
+			isAdmin: () =>false,
+			getNonce: () =>Buffer.from('dummyNonce')
 		}
 	}, 12345).then(function () {
 		t.equal(stub.calledTwice, true, 'Peer.sendProposal() is called exactly twice');
@@ -1044,59 +1047,57 @@ test('\n\n*** Test per-call timeout support ***\n', function (t) {
 	});
 });
 
-test('\n\n ** Channel executeTransaction() tests **\n\n', function (t) {
-	var client = new Client();
-	var channel = new Channel('does-not-matter', client);
+test('\n\n ** Channel executeTransaction() tests **\n\n', async (t) => {
+	const client = new Client();
+	const channel = new Channel('does-not-matter', client);
 
-	t.throws(
-		function () {
-			channel.executeTransaction();
-		},
-		/Missing input request object on the proposal request/,
-		'Channel tests, executeTransaction(): empty parameter'
-	);
+	try {
+		await channel.executeTransaction();
+	} catch (err) {
+		const regx = /Missing input request object on the proposal request/;
+		t.ok(err.toString().match(regx), 'Channel tests, executeTransaction(): empty parameter');
+	}
 
-	t.throws(
-		function () {
-			channel.executeTransaction({
-				eventHubs: 'blah',
-				// no chaincodeId
-				fcn: 'blah',
-				args: ['blah'],
-				txId: 'blah'
-			});
-		},
-		/Error: Missing "chaincodeId" parameter in the proposal request/,
-		'Channel tests, executeTransaction(): Missing "chaincodeId" parameter'
-	);
+	try {
+		await channel.executeTransaction({
+			eventHubs: 'blah',
+			// no chaincodeId
+			fcn: 'blah',
+			args: ['blah'],
+			txId: 'blah'
+		});
+	} catch (err) {
+		const regx = /Error: Missing "chaincodeId" parameter in the proposal request/;
+		t.ok(err.toString().match(regx), 'Channel tests, executeTransaction(): Missing "chaincodeId" parameter');
+	}
 
-	t.throws(
-		function () {
-			channel.executeTransaction({
-				eventHubs: 'blah',
-				chaincodeId: 'blah',
-				fcn: 'blah',
-				args: ['blah']
-				// no txId
-			});
-		},
-		/Error: Missing "txId" parameter in the proposal request/,
-		'Channel tests, executeTransaction(): Missing "txId" parameter'
-	);
 
-	t.throws(
-		function () {
-			channel.executeTransaction({
-				eventHubs: 'blah',
-				chaincodeId: 'blah',
-				fcn: 'blah',
-				// no args
-				txId: 'blah'
-			});
-		},
-		/Error: Missing "args" in Transaction proposal request/,
-		'Channel tests, executeTransaction(): Missing "args" parameter'
-	);
+	try {
+		await channel.executeTransaction({
+			eventHubs: 'blah',
+			chaincodeId: 'blah',
+			fcn: 'blah',
+			args: ['blah']
+			// no txId
+		});
+	} catch (err) {
+		const regx = /Error: Missing "txId" parameter in the proposal request/;
+		t.ok(err.toString().match(regx), 'Channel tests, executeTransaction(): Missing "txId" parameter');
+	}
+
+
+	try {
+		await channel.executeTransaction({
+			eventHubs: 'blah',
+			chaincodeId: 'blah',
+			fcn: 'blah',
+			// no args
+			txId: 'blah'
+		});
+	} catch (err) {
+		const regx = /Error: Missing "args" in Transaction proposal request/;
+		t.ok(err.toString().match(regx), 'Channel tests, executeTransaction(): Missing "args" parameter');
+	}
 
 	t.end();
 });
