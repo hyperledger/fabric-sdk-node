@@ -22,8 +22,7 @@ setting up the development environment. For a comprehensive description of
 the concepts, the architecture, please visit the official
 [Hyperledger Fabric documentation](http://hyperledger-fabric.readthedocs.io/en/latest).
 
-First of all, you will need an
-[orderer](http://hyperledger-fabric.readthedocs.io/en/latest/orderingservice.html).
+First of all, you will need an orderer.
 But isn't an orderer responsible for the consensus?
 Why start here? It's true that the main responsibility of the ordering service
 of a Hyperledger Fabric blockchain network is to provide consensus on a
