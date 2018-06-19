@@ -104,7 +104,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 			logger.debug('%s - no discovery results %s', method, error);
 		}
 		if(discovery_results && !request.targets) {
-			const working_discovery = Object.assign({}, discovery_results);
+			const working_discovery = JSON.parse(JSON.stringify(discovery_results));
 
 			return this._endorse(working_discovery, request, params.signed_proposal);
 		} else {
