@@ -199,7 +199,7 @@ const Channel = class {
 					if(typeof request.discover === 'boolean') {
 						use_discovery = request.discover;
 					} else {
-						throw new Error('Reqauest parameter "discover" must be boolean');
+						throw new Error('Request parameter "discover" must be boolean');
 					}
 				}
 				if(request.target) {
