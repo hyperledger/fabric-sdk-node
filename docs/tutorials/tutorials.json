@@ -19,5 +19,8 @@
 	},
 	"logging" : {
 		"title": "How to use logging"
+	},
+	"private-data" : {
+		"title": "How to use private data"
 	}
 }
