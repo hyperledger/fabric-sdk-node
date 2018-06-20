@@ -2524,78 +2524,6 @@ const Channel = class {
 	}
 
 	/**
-	 * Execute whole transaction lifecycle in a single call, i.e. sending
-	 * transaction proposals, receiving/verifying proposalResponses, and
-	 * send endorsed transaction to the orderer.
-	 *
-	 * @param {ChaincodeInvokeRequest} request
-	 * @returns An array of Promise instances, the last one of which comes
-	 *          from "BroadcastResponse" message returned by the orderer that contains
-	 *          a single "status" field for a starndard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
-	 *          It will be an acknowledgement from the orderer of successfully submitted transaction.
-	 */
-	async executeTransaction(request) {
-		let errorMsg =client_utils.checkProposalRequest(request, true);
-		if (errorMsg) {
-			throw Error(errorMsg);
-		}
-		if (!request.args) {
-			// args is not optional because we need for transaction to execute
-			throw Error('Missing "args" in Transaction proposal request');
-		}
-
-		const eventHubs = request.eventHubs;
-		const txId = request.txId;
-		const timeout = request.timeout;
-
-		const results = await this.sendTransactionProposal(request);
-		const proposalResponses = results[0];
-		const proposal = results[1];
-		let allGood = true;
-
-		for (let i in proposalResponses) {
-			if (!proposalResponses || !proposalResponses[i].response) {
-				throw Error('failed to get proposalResponse');
-			}
-
-			if (proposalResponses[i].response.status !== 200) {
-				throw Error('got bad proposalResponse');
-			}
-
-			if (!this.verifyProposalResponse(proposalResponses[i])) {
-				throw Error('failed to verify proposalResponse');
-			}
-		}
-
-		if (allGood) {
-			if (this.compareProposalResponseResults(proposalResponses)) {
-				logger.debug('All proposals have a matching read/writes sets');
-			} else {
-				throw Error('All proposals do not have matching read/write sets');
-			}
-		}
-
-		if (allGood) {
-			logger.debug(util.format(
-				'Successfully sent Proposal and received ProposalResponse: ' +
-				'Status - %s, message - "%s", metadata - "%s", endorsement signature: %s',
-				proposalResponses[0].response.status, proposalResponses[0].response.message,
-				proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-
-			const promises = eventHubPromises(eventHubs, txId, timeout);
-
-			const ordererRequest = {
-				proposalResponses: proposalResponses,
-				proposal: proposal
-			};
-			const sendPromise = this.sendTransaction(ordererRequest);
-
-			promises.push(sendPromise);
-			return Promise.all(promises);
-		}
-	}
-
-	/**
 	 * @typedef {Object} ChaincodeQueryRequest
 	 * @property {Peer[]} targets - Optional. The peers that will receive this request,
 	 *				                when not provided the list of peers added to this channel object will be used.
@@ -3381,51 +3309,6 @@ function decodeSignaturePolicy(identities) {
 		}
 	}
 	return results;
-}
-
-function eventHubPromises(eventHubs, txId, timeout) {
-	let message = '';
-	const promises = [];
-
-	if (!eventHubs) {
-		return promises;
-	}
-	if (!timeout) {
-		timeout = sdk_utils.getConfigSetting('request-timeout', 30000);
-	}
-
-	eventHubs.forEach((eh) => {
-		let eventPromise = new Promise((resolve, reject) => {
-			let event_timeout = setTimeout(() => {
-				message = 'REQUEST_TIMEOUT:' + eh.getPeerAddr();
-				logger.error(message);
-				eh.disconnect();
-				reject(new Error(message));
-			}, timeout);
-
-			let txIdString = txId.getTransactionID();
-			eh.registerTxEvent(txIdString, (tx, code, block_num) => {
-				clearTimeout(event_timeout);
-
-				if (code !== 'VALID') {
-					message = util.format('The invoke chaincode transaction was invalid, code:%s',code);
-					logger.error(message);
-					reject(new Error(message));
-				} else {
-					message = 'The invoke chaincode transaction was valid.';
-					logger.debug(message);
-					resolve({message, block_num});
-				}
-			}, (err) => {
-				clearTimeout(event_timeout);
-				logger.error(err);
-				reject(new Error(err));
-			});
-			eh.connect();
-		});
-		promises.push(eventPromise);
-	});
-	return promises;
 }
 
 module.exports = Channel;

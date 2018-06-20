@@ -1047,61 +1047,6 @@ test('\n\n*** Test per-call timeout support ***\n', function (t) {
 	});
 });
 
-test('\n\n ** Channel executeTransaction() tests **\n\n', async (t) => {
-	const client = new Client();
-	const channel = new Channel('does-not-matter', client);
-
-	try {
-		await channel.executeTransaction();
-	} catch (err) {
-		const regx = /Missing input request object on the proposal request/;
-		t.ok(err.toString().match(regx), 'Channel tests, executeTransaction(): empty parameter');
-	}
-
-	try {
-		await channel.executeTransaction({
-			eventHubs: 'blah',
-			// no chaincodeId
-			fcn: 'blah',
-			args: ['blah'],
-			txId: 'blah'
-		});
-	} catch (err) {
-		const regx = /Error: Missing "chaincodeId" parameter in the proposal request/;
-		t.ok(err.toString().match(regx), 'Channel tests, executeTransaction(): Missing "chaincodeId" parameter');
-	}
-
-
-	try {
-		await channel.executeTransaction({
-			eventHubs: 'blah',
-			chaincodeId: 'blah',
-			fcn: 'blah',
-			args: ['blah']
-			// no txId
-		});
-	} catch (err) {
-		const regx = /Error: Missing "txId" parameter in the proposal request/;
-		t.ok(err.toString().match(regx), 'Channel tests, executeTransaction(): Missing "txId" parameter');
-	}
-
-
-	try {
-		await channel.executeTransaction({
-			eventHubs: 'blah',
-			chaincodeId: 'blah',
-			fcn: 'blah',
-			// no args
-			txId: 'blah'
-		});
-	} catch (err) {
-		const regx = /Error: Missing "args" in Transaction proposal request/;
-		t.ok(err.toString().match(regx), 'Channel tests, executeTransaction(): Missing "args" parameter');
-	}
-
-	t.end();
-});
-
 test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 	const client = new Client();
 	const channel = new Channel('does-not-matter', client);
