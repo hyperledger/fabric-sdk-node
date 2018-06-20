@@ -1135,8 +1135,8 @@ test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 				discover: 'BAD'
 			});
 		},
-		/Reqauest parameter "discover" must be boolean/,
-		'Channel tests, Reqauest parameter "discover" must be boolean'
+		/Request parameter "discover" must be boolean/,
+		'Channel tests, Request parameter "discover" must be boolean'
 	);
 
 	await setMember(client);
