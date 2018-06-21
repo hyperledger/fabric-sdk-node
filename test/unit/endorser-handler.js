@@ -49,7 +49,7 @@ const org3 = [
 ];
 
 const chaincodes = [{name: 'example',version: 'v2'}];
-const ledger_height = Long.fromValue(4);
+const ledger_height = {low: 4, high: 0, unsigned: true};
 
 const discovery_plan = {
 	msps: {

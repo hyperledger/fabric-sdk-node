@@ -16,6 +16,7 @@ const Orderer = require('./Orderer.js');
 const BlockDecoder = require('./BlockDecoder.js');
 const TransactionID = require('./TransactionID.js');
 const grpc = require('grpc');
+const Long = require('long');
 const logger = sdk_utils.getLogger('Channel.js');
 const MSPManager = require('./msp/msp-manager.js');
 const Policy = require('./Policy.js');
@@ -1071,7 +1072,12 @@ const Channel = class {
 			// STATE
 			if (q_peer.state_info) {
 				const message_s = _gossipProto.GossipMessage.decode(q_peer.state_info.payload);
-				peer.ledger_height = message_s.state_info.properties.ledger_height;
+				if(message_s && message_s.state_info && message_s.state_info.properties && message_s.state_info.properties.ledger_height) {
+					peer.ledger_height = Long.fromValue(message_s.state_info.properties.ledger_height);
+				} else {
+					logger.debug('%s - did not find ledger_height', method);
+					peer.ledger_height =Long.fromValue(0);
+				}
 				logger.debug('%s - found ledger_height :%s', method, peer.ledger_height);
 				peer.chaincodes = [];
 				for (let index in message_s.state_info.properties.chaincodes) {

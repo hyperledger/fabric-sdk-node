@@ -268,12 +268,42 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 					found = preferred[peer.endpoint];
 					if(found) {
 						peer.ledger_height = Long.MAX_VALUE;
+					} else {
+						peer.ledger_height = new Long(peer.ledger_height);
 					}
 					un_sorted.push(peer);
 				}
 			}
+			logger.debug('%s - about to sort');
 			const sorted = un_sorted.sort((a,b)=>{
-				return -1 * a.ledger_height.compare(b.ledger_height);
+				logger.debug('%s - sorting descending');
+				if(!a || !b) {
+					return 0;
+				}
+				if(a.ledger_height && !b.ledger_height) {
+					logger.debug('%s - a exist (%s) - b does not exist', method, a.ledger_height);
+
+					return -1;
+				}
+				if( !a.ledger_height && b.ledger_height ) {
+					logger.debug('%s - a does not exist - b exist (%s)', method, b.ledger_height);
+
+					return 1;
+				}
+				if(!a && !b) {
+					logger.debug('%s - a does not exist - b does not exist', method);
+
+					return 0;
+				}
+				if(a.ledger_height && a.ledger_height.compare) {
+					const result = -1 * a.ledger_height.compare(b.ledger_height);
+					logger.debug('%s - compare result: %s for a:(%s) b:(%s) ', method, result, a.ledger_height.toString(), b.ledger_height.toString());
+
+					return result;
+				}
+				logger.debug('%s - compare not available (%s) (%s)', method, typeof(a.ledger_height), typeof(b.ledger_height));
+
+				return 1;
 			});
 			group.peers = sorted;
 		}
