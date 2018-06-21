@@ -5,30 +5,29 @@
  */
 
 'use strict';
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('unit.client');
+const utils = require('fabric-client/lib/utils.js');
+const logger = utils.getLogger('unit.client');
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
-var path = require('path');
-var util = require('util');
-var sinon = require('sinon');
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
+const path = require('path');
+const sinon = require('sinon');
 
-var Client = require('fabric-client');
-var User = require('fabric-client/lib/User.js');
-var Peer = require('fabric-client/lib/Peer.js');
-var NetworkConfig = require('fabric-client/lib/impl/NetworkConfig_1_0.js');
-var testutil = require('./util.js');
+const Client = require('fabric-client');
+const User = require('fabric-client/lib/User.js');
+const Peer = require('fabric-client/lib/Peer.js');
+const NetworkConfig = require('fabric-client/lib/impl/NetworkConfig_1_0.js');
+const testutil = require('./util.js');
 
-var caImport;
+let caImport;
 
-var grpc = require('grpc');
-var _configtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/configtx.proto').common;
-var rewire = require('rewire');
-var ClientRewired = rewire('fabric-client/lib/Client.js');
+const grpc = require('grpc');
+const _configtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/configtx.proto').common;
+const rewire = require('rewire');
+const ClientRewired = rewire('fabric-client/lib/Client.js');
 
-var aPem = '-----BEGIN CERTIFICATE-----' +
+const aPem = '-----BEGIN CERTIFICATE-----' +
 	'MIIBwTCCAUegAwIBAgIBATAKBggqhkjOPQQDAzApMQswCQYDVQQGEwJVUzEMMAoG' +
 	'A1UEChMDSUJNMQwwCgYDVQQDEwNPQkMwHhcNMTYwMTIxMjI0OTUxWhcNMTYwNDIw' +
 	'MjI0OTUxWjApMQswCQYDVQQGEwJVUzEMMAoGA1UEChMDSUJNMQwwCgYDVQQDEwNP' +
@@ -41,21 +40,21 @@ var aPem = '-----BEGIN CERTIFICATE-----' +
 	'9Lngf550S6gPEWuDQOcY95B+x3eH' +
 	'-----END CERTIFICATE-----';
 
-test('\n\n ** index.js **\n\n', function (t) {
+test('\n\n ** index.js **\n\n', (t) => {
 	testutil.resetDefaults();
 
 	t.equals(typeof Client, 'function');
 
 	t.doesNotThrow(
-		function() {
+		() => {
 			new Client();
 		},
 		null,
 		'Should be able to instantiate a new instance of "Client" require');
 
 	t.doesNotThrow(
-		function() {
-			var c = new Client();
+		() => {
+			const c = new Client();
 			c.newChannel('test');
 		},
 		null,
@@ -64,10 +63,10 @@ test('\n\n ** index.js **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n ** eventhub **\n\n', function (t) {
+test('\n\n ** eventhub **\n\n', (t) => {
 	t.doesNotThrow(
-		function() {
-			var c = new Client();
+		() => {
+			const c = new Client();
 			c._userContext = new User('name');
 			c.newEventHub();
 		},
@@ -77,18 +76,23 @@ test('\n\n ** eventhub **\n\n', function (t) {
 	t.end();
 });
 
-var client = new Client();
-var channelKeyValStorePath = path.join(testutil.getTempDir(), 'channelKeyValStorePath');
-var testKey = 'keyValFileStoreName';
-//var testValue = 'secretKeyValue';
+const channelKeyValStorePath = path.join(testutil.getTempDir(), 'channelKeyValStorePath');
+const testKey = 'keyValFileStoreName';
 
-test('\n\n ** config **\n\n', function (t) {
+const prepareClient = () => {
+	const client = new Client();
+	const cryptoSuite = Client.newCryptoSuite();
+	client.setCryptoSuite(cryptoSuite);
+	return client;
+};
+
+test('\n\n ** config **\n\n', (t) => {
 	t.doesNotThrow(
-		function() {
-			var c = new Client();
-			t.equals(c.getConfigSetting('something','ABC'), 'ABC', 'Check getting default config setting value');
-			c.setConfigSetting('something','DEF');
-			t.equals(c.getConfigSetting('something','ABC'), 'DEF', 'Check getting a set config setting value');
+		() => {
+			const c = new Client();
+			t.equals(c.getConfigSetting('something', 'ABC'), 'ABC', 'Check getting default config setting value');
+			c.setConfigSetting('something', 'DEF');
+			t.equals(c.getConfigSetting('something', 'ABC'), 'DEF', 'Check getting a set config setting value');
 			c.newEventHub();
 		},
 		null,
@@ -97,10 +101,11 @@ test('\n\n ** config **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n ** Client.js Tests: CryptoSuite() methods **\n\n', function (t) {
+test('\n\n ** Client.js Tests: CryptoSuite() methods **\n\n', (t) => {
+	const client = new Client();
 	t.equals(client.getCryptoSuite(), null, 'Should return null when CryptoSuite has not been set');
 
-	var crypto = Client.newCryptoSuite();
+	let crypto = Client.newCryptoSuite();
 	client.setCryptoSuite(crypto);
 	if (crypto) {
 		t.pass('Successfully called newCryptoSuite()');
@@ -124,180 +129,160 @@ test('\n\n ** Client.js Tests: CryptoSuite() methods **\n\n', function (t) {
 
 });
 
-test('\n\n ** Client.js Tests: getUserContext() method **\n\n', function (t) {
-	t.doesNotThrow(
-		() => {
-			client.getUserContext();
-		},
-		null,
-		'Should not throw an error when argument list is empty'
-	);
+test('\n\n ** Client.js Tests: getUserContext() method **\n\n', async (t) => {
+	const client = prepareClient();
+	try {
+		await client.getUserContext();
+	} catch (e) {
+		t.fail('Should not throw an error when argument list is empty');
+	}
 
-	t.equals(client.getUserContext('invalidUser'), null, 'Should return null when requested for an invalid user');
+	let invalidUser = await client.getUserContext('invalidUser');
+	t.notOk(invalidUser, 'Should return null when requested for an invalid user');
 
-	t.throws(
-		() => {
-			client.getUserContext(true);
-		},
-		/Illegal arguments: "checkPersistence" is truthy but "name" is undefined/,
-		'Check that error condition is properly handled when only a truthy value is passed in'
-	);
+	invalidUser = await client.getUserContext('invalidUser', true);
+	t.notOk(invalidUser, 'return null when using invalid user and "checkPersistence" is true');
 
-	t.throws(
-		() => {
-			client.getUserContext(null, true);
-		},
-		/Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value/,
-		'Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string'
-	);
+	try {
+		await client.getUserContext(true);
+	} catch (e) {
+		if (!(e.message.includes('Illegal arguments: "checkPersistence" is truthy but "name" is undefined'))) {
+			t.fail(`Check that error condition is properly handled when only a truthy value is passed in ${e}`);
+		}
+	}
 
-	t.throws(
-		() => {
-			client.getUserContext('', true);
-		},
-		/Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value/,
-		'Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string'
-	);
+	try {
+		await client.getUserContext(null, true);
+	} catch (e) {
+		if (!(e.message.includes('Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value'))) {
+			t.fail(`Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string ${e}`);
+		}
+	}
 
-	var promise = client.getUserContext('invalidUser', true);
-	t.notEqual(promise, null, 'Should not return null but a promise when "checkPersistence" is true');
-	promise.then((value) => {
-		t.equals(value, null, 'Promise should resolve to a null when using an invalid user name');
-		t.end();
-	}, (err) => {
-		t.fail(util.format('Failed to resolve the requested user name: %s', err));
-		t.end();
-	});
+	try {
+		await client.getUserContext('', true);
+	} catch (e) {
+		if (!(e.message.includes('Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value'))) {
+			t.fail(`Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string ${e}`);
+		}
+	}
+
+	t.end();
 });
 
-test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t) {
+test('\n\n ** Client.js Tests: user persistence and loading **\n\n', async (t) => {
 
-	var response = client.getUserContext();
-	if (response === null)
-		t.pass('Client tests: getUserContext successful null user name.');
-	else
-		t.fail('Client tests: getUserContext failed null name check');
+	const client = prepareClient();
+	let response;
 
-	client.saveUserToStateStore()
-	.then(function(){
+	try {
+		await client.saveUserToStateStore();
 		t.fail('Client tests: got response, but should throw "Cannot save user to state store when userContext is null."');
-		t.end();
-	}, function(error){
+	} catch (error) {
 		if (error.message === 'Cannot save user to state store when userContext is null.')
 			t.pass('Client tests: Should throw "Cannot save user to state store when userContext is null."');
 		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when userContext is null." ' + error.stack ? error.stack : error);
-
-		return client.setUserContext(null);
-	}).then(function(){
+	}
+	try {
+		await client.setUserContext(null);
 		t.fail('Client tests: got response, but should throw "Cannot save null userContext."');
-		t.end();
-	}, function(error){
-		if (error.message === 'Cannot save null userContext.')
+	} catch (e) {
+		if (e.message === 'Cannot save null userContext.')
 			t.pass('Client tests: Should throw "Cannot save null userContext."');
-		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save null userContext." ' + error.stack ? error.stack : error);
+		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save null userContext." ' + e.stack ? e.stack : e);
+	}
 
-		response = client.getUserContext('someUser');
-		if (response == null)
-			t.pass('Client tests: getUserContext with no context in memory or persisted returns null');
-		else
-			t.fail('Client tests: getUserContext with no context in memory or persisted did not return null');
 
-		return client.setUserContext(new User('someUser'), true);
-	}).then(function(response){
-		if (response && response.getName() === 'someUser')
-			t.pass('Client tests: successfully setUserContext with skipPersistence.');
-		else
-			t.fail('Client tests: failed name check after setUserContext with skipPersistence.');
+	try {
+		response = await client.setUserContext(new User('someUser'), true);
+	} catch (e) {
+		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + e.stack ? e.stack : e);
+	}
 
-		response = client.getUserContext('someUser');
-		if (response && response.getName() === 'someUser')
-			t.pass('Client tests: getUserContext not persisted/skipPersistence was successful.');
-		else
-			t.fail('Client tests: getUserContext not persisted/skipPersistence was not successful.');
+	if (response && response.getName() === 'someUser')
+		t.pass('Client tests: successfully setUserContext with skipPersistence.');
+	else
+		t.fail('Client tests: failed name check after setUserContext with skipPersistence.');
 
-		return client.setUserContext(new User('someUser'));
-	}, function(error){
-		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + error.stack ? error.stack : error);
-		t.end();
-	}).then(function(){
+
+	try {
+		await client.setUserContext(new User('someUser'));
 		t.fail('Client tests: setUserContext without skipPersistence and no stateStore should not return result.');
-		t.end();
-	}, function(error){
-		if (error.message === 'Cannot save user to state store when stateStore is null.')
+	} catch (e) {
+		if (e.message === 'Cannot save user to state store when stateStore is null.')
 			t.pass('Client tests: Should throw "Cannot save user to state store when stateStore is null"');
 		else
-			t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error.stack ? error.stack : error);
+			t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + e.stack ? e.stack : e);
+	}
 
-		var channel = client.newChannel('somechannel');
-		t.equals(channel.getName(), 'somechannel', 'Checking channel names match');
-		t.throws(
-			function () {
-				client.newChannel('somechannel');
-			},
-			/^Error: Channel somechannel already exist/,
-			'Client tests: checking that channel already exists.');
 
-		t.doesNotThrow(
-			function() {
-				client.getChannel('somechannel');
-			},
-			null,
-			'Client tests: getChannel()');
+	t.throws(
+		() => {
+			client.setStateStore({});
+		},
+		/The "keyValueStore" parameter must be an object that implements the following methods, which are missing:/,
+		'Client tests: checking state store parameter implementing required functions');
 
-		t.throws(
-				function () {
-					client.getChannel('someOtherChannel');
-				},
-				/^Error: Channel not found for name someOtherChannel./,
-				'Client tests: Should throw Error: Channel not found for name someOtherChannel.');
+	testutil.cleanupDir(channelKeyValStorePath);
+	try {
+		const kvs = await Client.newDefaultKeyValueStore({path: channelKeyValStorePath});
+		client.setStateStore(kvs);
+		let exists = testutil.existsSync(channelKeyValStorePath);
+		if (exists)
+			t.pass('Client setKeyValueStore test:  Successfully created new directory');
+		else
+			t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + channelKeyValStorePath);
 
-		t.throws(
-			function() {
-				client.setStateStore({});
-			},
-			/The "keyValueStore" parameter must be an object that implements the following methods, which are missing:/,
-			'Client tests: checking state store parameter implementing required functions');
+		const store = client.getStateStore();
+		const result = await store.setValue('testKey', 'testValue');
+		t.pass('Client getStateStore test:  Successfully set value, result: ' + result);
 
-		testutil.cleanupDir(channelKeyValStorePath);
+		exists = testutil.existsSync(channelKeyValStorePath, testKey);
+		if (exists)
+			t.pass('Client getStateStore test:  Verified the file for key ' + testKey + ' does exist');
+		else
+			t.fail('Client getStateStore test:  Failed to create file for key ' + testKey);
 
-		return Client.newDefaultKeyValueStore({ path: channelKeyValStorePath });
-	}).then (
-		function (kvs) {
-			client.setStateStore(kvs);
 
-			var exists = testutil.existsSync(channelKeyValStorePath);
-			if (exists)
-				t.pass('Client setKeyValueStore test:  Successfully created new directory');
-			else
-				t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + channelKeyValStorePath);
+	} catch (e) {
+		t.fail(`Client StateStore tests:  Error ${e}`);
+	}
+	t.end();
+});
+test('\n\n ** testing channel operation on client **\n\n', async (t) => {
 
-			var store = client.getStateStore();
-			return store.setValue('testKey', 'testValue');
-		}).then(
-			function (result) {
-				t.pass('Client getStateStore test:  Successfully set value, result: ' + result);
+	const client = prepareClient();
+	await client.setUserContext(new User('someUser'), true);
+	const channelName = 'somechannel';
+	client.newChannel(channelName);
+	t.throws(
+		() => {
+			client.newChannel(channelName);
+		},
+		/^Error: Channel somechannel already exist/,
+		'Client tests: checking that channel already exists.');
 
-				var exists = testutil.existsSync(channelKeyValStorePath, testKey);
-				if (exists)
-					t.pass('Client getStateStore test:  Verified the file for key ' + testKey + ' does exist');
-				else
-					t.fail('Client getStateStore test:  Failed to create file for key ' + testKey);
+	t.doesNotThrow(
+		() => {
+			client.getChannel(channelName);
+		},
+		null,
+		'Client tests: getChannel()');
 
-				t.end();
-			}
-		).catch(
-			function (reason) {
-				t.fail('Client getStateStore test:  Failed to set value, reason: ' + reason);
-				t.end();
-			}
-		);
+	t.throws(
+		() => {
+			client.getChannel('someOtherChannel');
+		},
+		/^Error: Channel not found for name someOtherChannel./,
+		'Client tests: Should throw Error: Channel not found for name someOtherChannel.');
+
+	t.end();
 });
 
-test('\n\n ** testing devmode set and get calls on client **\n\n', function (t) {
-	t.equals(typeof Client, 'function');
-	var client = new Client();
+test('\n\n ** testing devmode set and get calls on client **\n\n', (t) => {
+	const client = new Client();
 	t.doesNotThrow(
-		function () {
+		() => {
 			client.setDevMode(true);
 		},
 		null,
@@ -307,94 +292,94 @@ test('\n\n ** testing devmode set and get calls on client **\n\n', function (t) 
 	t.end();
 });
 
-test('\n\n ** testing query calls fail without correct parameters on client **\n\n', (t) => {
-	t.equals(typeof Client, 'function');
+test('\n\n ** testing query calls fail without correct parameters on client **\n\n', async (t) => {
 	const client = new Client();
 
-	const p1 = client.queryInstalledChaincodes().then(() => {
+	try {
+		await client.queryInstalledChaincodes();
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch((err) => {
-		if (err.message.includes('Peer is required')) {
+	} catch (e) {
+		if (e.message.includes('Peer is required')) {
 			t.pass('p1 - Successfully caught missing request error');
 		} else {
-			t.fail('p1 - Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
+			t.fail('p1 - Failed to catch the missing request error. Error: ' + e.stack ? e.stack : e);
 		}
-	});
+	}
 
-	const p1a = client.queryInstalledChaincodes('somename').then(() => {
+	try {
+		await client.queryInstalledChaincodes('somename');
 		t.fail('Should not have been able to resolve the promise because of No network configuraton loaded');
-	}).catch((err) => {
-		if (err.message.includes('not found')) {
+	} catch (e) {
+		if (e.message.includes('not found')) {
 			t.pass('Successfully caught No network configuraton loaded error');
 		} else {
-			t.fail('Failed to catch the No network configuraton loaded error. Error: ' + err.stack ? err.stack : err);
+			t.fail('Failed to catch the No network configuraton loaded error. Error: ' + e.stack ? e.stack : e);
 		}
-	});
+	}
 
-	const p2 = client.queryChannels().then(() => {
+	try {
+		await client.queryChannels();
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch((err) => {
-		if (err.message.includes('Peer is required')) {
+	} catch (e) {
+		if (e.message.includes('Peer is required')) {
 			t.pass('p2 - Successfully caught missing request error');
 		} else {
-			t.fail('p2 - Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
+			t.fail('p2 - Failed to catch the missing request error. Error: ' + e.stack ? e.stack : e);
 		}
-	});
+	}
 
-	const p3 = client.queryChannels('somename').then(() => {
+	try {
+		await client.queryChannels('somename');
 		t.fail('Should not have been able to resolve the promise because of no network loaded');
-	}).catch((err) => {
-		if (err.message.includes('not found')) {
+	} catch (e) {
+		if (e.message.includes('not found')) {
 			t.pass('Successfully caught no network loaded error');
 		} else {
-			t.fail('Failed to catch the no network loaded error. Error: ' + err.stack ? err.stack : err);
+			t.fail('Failed to catch the no network loaded error. Error: ' + e.stack ? e.stack : e);
 		}
-	});
+	}
 
 	client._network_config = new NetworkConfig({}, client);
-	const p4 = client.queryChannels('somename').then(() => {
+	try {
+		await client.queryChannels('somename');
 		t.fail('Should not have been able to resolve the promise because of wrong request parameter');
-	}).catch((err) => {
-		if (err.message.includes('not found')) {
+	} catch (e) {
+		if (e.message.includes('not found')) {
 			t.pass('Successfully caught wrong request error');
 		} else {
-			t.fail('Failed to catch the wrong request error. Error: ' + err.stack ? err.stack : err);
+			t.fail('Failed to catch the wrong request error. Error: ' + e.stack ? e.stack : e);
 		}
-	});
+	}
 
-	const p4a = client.queryInstalledChaincodes('somename').then(() => {
+	try {
+		await client.queryInstalledChaincodes('somename');
 		t.fail('Should not have been able to resolve the promise because of wrong request parameter');
-	}).catch((err) => {
-		if (err.message.includes('not found')) {
+	} catch (e) {
+		if (e.message.includes('not found')) {
 			t.pass('Successfully caught wrong request error');
 		} else {
-			t.fail('Failed to catch the wrong request error. Error: ' + err.stack ? err.stack : err);
+			t.fail('Failed to catch the wrong request error. Error: ' + e.stack ? e.stack : e);
 		}
-	});
+	}
 
-	const p5 = client.queryChannels({}).then(() => {
+	try {
+		await client.queryChannels({});
 		t.fail('Should not have been able to resolve the promise because of wrong object request parameter');
-	}).catch((err) => {
-		if (err.message.includes('Target peer is not a valid peer object instance')) {
+	} catch (e) {
+		if (e.message.includes('Target peer is not a valid peer object instance')) {
 			t.pass('Successfully caught wrong object request error');
 		} else {
-			t.fail('Failed to catch the wrong object request error. Error: ' + err.stack ? err.stack : err);
+			t.fail('Failed to catch the wrong object request error. Error: ' + e.stack ? e.stack : e);
 		}
-	});
-	Promise.all([p1, p1a, p2, p3, p4, p4a, p5]).then(() => {
-		t.end();
-	}).catch((err) => {
-		t.fail(`Channel query calls, Promise.all: ${err}`);
-		t.end();
-	});
+	}
+	t.end();
 });
 
-test('\n\n ** testing get and new peer calls on client **\n\n', function (t) {
-	t.equals(typeof Client, 'function');
-	var client = new Client();
+test('\n\n ** testing get and new peer calls on client **\n\n', (t) => {
+	const client = new Client();
 
 	t.doesNotThrow(
-		function() {
+		() => {
 			client.newPeer('grpc://somehost:9090');
 		},
 		null,
@@ -403,12 +388,11 @@ test('\n\n ** testing get and new peer calls on client **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n ** testing get and new orderer calls on client **\n\n', function (t) {
-	t.equals(typeof Client, 'function');
-	var client = new Client();
+test('\n\n ** testing get and new orderer calls on client **\n\n', (t) => {
+	const client = new Client();
 
 	t.doesNotThrow(
-		function() {
+		() => {
 			client.newOrderer('grpc://somehost:9090');
 		},
 		null,
@@ -417,15 +401,15 @@ test('\n\n ** testing get and new orderer calls on client **\n\n', function (t) 
 	t.end();
 });
 
-test('\n\n ** testing get transaction ID call on client **\n\n', function (t) {
-	t.equals(typeof Client, 'function');
-	var client = new Client();
+test('\n\n ** testing get transaction ID call on client **\n\n', (t) => {
+	const client = new Client();
 
-	t.throws(function() {
-		client.newTransactionID();
-	},
-	/No identity has been assigned to this client/,
-	'Test - No identity has been assigned to this client');
+	t.throws(
+		() => {
+			client.newTransactionID();
+		},
+		/No identity has been assigned to this client/,
+		'Test - No identity has been assigned to this client');
 
 	t.end();
 });
@@ -434,7 +418,7 @@ test('\n\n ** testing get transaction ID call on client **\n\n', function (t) {
  * This test assumes that there is a ./config directory from the running location
  * and that there is file called 'config.json'.
  */
-test('\n\n ** Config **\n\n', function (t) {
+test('\n\n ** Config **\n\n', (t) => {
 	// setup the environment
 	process.argv.push('--test-4=argv');
 	process.argv.push('--test-5=argv');
@@ -456,122 +440,130 @@ test('\n\n ** Config **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n ** client installChaincode() tests **\n\n', function (t) {
-	var peer = client.newPeer('grpc://localhost:7051');
+test('\n\n ** client installChaincode() tests **\n\n', async (t) => {
+	const client = prepareClient();
+	const peer = client.newPeer('grpc://localhost:7051');
 
-	var p1 = client.installChaincode({
-		targets: [peer],
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah',
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing chaincodePath parameter') >= 0) {
-			t.pass('P1 - Successfully caught missing chaincodePath error');
-		} else {
-			t.fail('Failed to catch the missing chaincodePath error. Error: ');
-			t.comment(err.stack ? err.stack : err);
-		}
-	});
-
-	var p2 = client.installChaincode({
-		targets: [peer],
-		chaincodeId: 'blahp1a',
-		chaincodePath: 'blah',
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodeVersion" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chaincodeVersion" parameter in the proposal request') >= 0) {
-			t.pass('P2 - Successfully caught missing chaincodeVersion error');
-		} else {
-			t.fail('Failed to catch the missing chaincodeVersion error. Error: ');
-			t.comment(err.stack ? err.stack : err);
-		}
-	});
-
-	var p3 = client.installChaincode({
-		targets: [peer],
-		chaincodePath: 'blahp3',
-		chaincodeVersion: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing "chaincodeId" parameter in the proposal request') >= 0) {
-			t.pass('P3 - Successfully caught missing chaincodeId error');
-		} else {
-			t.fail('Failed to catch the missing chaincodeId error. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	var p4 = client.installChaincode({
-		chaincodePath: 'blahp4',
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah'
-	}).then(function () {
-		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on request');
-	}).catch(function (err) {
-		var msg = 'Missing peer objects in install chaincode request';
-		if (err.message.indexOf(msg) >= 0) {
-			t.pass('P4 - Successfully caught error: '+msg);
-		} else {
-			t.fail('Failed to catch error: '+msg+'. Error: ' + err.stack ? err.stack : err);
-		}
-	});
-
-	var p5 = client.installChaincode().then(function () {
+	try {
+		await client.installChaincode();
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing input request object on install chaincode request') >= 0) {
-			t.pass('P5 - Successfully caught missing request error');
+	}catch (e) {
+		if (e.message.includes('Missing input request object on install chaincode request')) {
+			t.pass('Successfully caught missing request error');
 		} else {
-			t.fail('Failed to catch the missing request error. Error: ' + err.stack ? err.stack : err);
+			t.fail('Failed to catch the missing request error. Error: ' + e.stack ? e.stack : e);
 		}
-	});
+	}
 
-	var p6 = client.installChaincode({
-		targets : ['somename'],
-		chaincodePath: 'blahp4',
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah'}).then(function () {
-			t.fail('p6 - Should not have been able to resolve the promise because of bad request parameter');
-		}).catch(function (err) {
-			if (err.message.indexOf('not found') >= 0) {
-				t.pass('p6 - Successfully caught bad request error');
-			} else {
-				t.fail('p6 - Failed to catch the bad request error. Error: ' + err.stack ? err.stack : err);
-			}
+	try {
+		await client.installChaincode({
+			targets: [peer],
+			chaincodeId: 'blah',
+			chaincodeVersion: 'blah',
 		});
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodePath" parameter');
 
-	var p7 = client.installChaincode({
-		targets : [{}],
-		chaincodePath: 'blahp4',
-		chaincodeId: 'blah',
-		chaincodeVersion: 'blah'}).then(function () {
-			t.fail('p7 - Should not have been able to resolve the promise because of bad request parameter');
-		}).catch(function (err) {
-			if (err.message.indexOf('Target peer is not a valid peer object') >= 0) {
-				t.pass('p7 - Successfully caught bad request error');
-			} else {
-				t.fail('p7 - Failed to catch the bad request error. Error: ' + err.stack ? err.stack : err);
-			}
+	} catch (err) {
+		if (err.message.includes('Missing chaincodePath parameter')) {
+			t.pass('Successfully caught missing chaincodePath error');
+		} else {
+			t.fail(`Failed to catch the missing chaincodePath error. Error: ${err.stack ? err.stack : err}`);
+		}
+	}
+
+	try {
+		await client.installChaincode({
+			targets: [peer],
+			chaincodeId: 'blahp1a',
+			chaincodePath: 'blah',
 		});
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodeVersion" parameter');
+	} catch (err) {
+		if (err.message.includes('Missing "chaincodeVersion" parameter in the proposal request')) {
+			t.pass('Successfully caught missing chaincodeVersion error');
+		} else {
+			t.fail(`Failed to catch the missing chaincodeVersion error. Error: ${err.stack ? err.stack : err}`);
+		}
+	}
 
-	Promise.all([p1, p2, p3, p4, p5, p6, p7]).then(() => {
-		t.end();
-	}).catch((err) => {
-		t.fail(`Channel installChaincode() tests, Promise.all: ${err}`);
-		t.end();
-	});
+	try {
+		await client.installChaincode({
+			targets: [peer],
+			chaincodePath: 'blahp3',
+			chaincodeVersion: 'blah'
+		});
+		t.fail('Should not have been able to resolve the promise because of missing "chaincodeId" parameter');
+	} catch (e) {
+		if (e.message.includes('Missing "chaincodeId" parameter in the proposal request')) {
+			t.pass('Successfully caught missing chaincodeId error');
+		} else {
+			t.fail('Failed to catch the missing chaincodeId error. Error: ' + e.stack ? e.stack : e);
+		}
+	}
+
+	try {
+		await client.installChaincode({
+			chaincodePath: 'blahp4',
+			chaincodeId: 'blah',
+			chaincodeVersion: 'blah'
+		});
+		t.fail('Should not have been able to resolve the promise because of missing "peer" objects on request');
+	} catch (e) {
+		const msg = 'Missing peer objects in install chaincode request';
+		if (e.message.includes(msg)) {
+			t.pass('Successfully caught error: ' + msg);
+		} else {
+			t.fail(`Failed to catch : ${msg}. Error: ${e.stack ? e.stack : e}`);
+		}
+	}
+
+
+
+
+	try {
+		await client.installChaincode({
+			targets: ['somename'],
+			chaincodePath: 'blahp4',
+			chaincodeId: 'blah',
+			chaincodeVersion: 'blah'
+		});
+		t.fail('Should not have been able to resolve the promise because of "targets"');
+	}catch (e) {
+		if (e.message.includes('not found')) {
+			t.pass('Successfully caught bad request param "targets"');
+		} else {
+			t.fail('Failed to catch the bad request param "targets". Error: ' + e.stack ? e.stack : e);
+		}
+	}
+
+	try {
+		await client.installChaincode({
+			targets: [{}],
+			chaincodePath: 'blahp4',
+			chaincodeId: 'blah',
+			chaincodeVersion: 'blah'
+		});
+		t.fail('Should not have been able to resolve the promise because of "targets" including non-peer Object');
+	}catch (e) {
+		if (e.message.includes('Target peer is not a valid peer object')) {
+			t.pass('Successfully caught bad request param "targets" including non-peer Object');
+		} else {
+			t.fail('Failed to catch the bad request param "targets" including non-peer Object. Error: ' + e.stack ? e.stack : e);
+		}
+	}
+
+	t.end();
 });
 
 test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) => {
 	const client = new Client();
 	const orderer = client.newOrderer('grpc://localhost:7050');
 
-	t.throws(() => {
-		client.signChannelConfig();
-	}, /^Error: Channel configuration update parameter is required./,
-	'Client tests: Channel configuration update parameter is required.');
+	t.throws(
+		() => {
+			client.signChannelConfig();
+		}, /^Error: Channel configuration update parameter is required./,
+		'Client tests: Channel configuration update parameter is required.');
 
 	for (const action of ['createChannel', 'updateChannel']) {
 		try {
@@ -674,191 +666,78 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 	t.end();
 });
 
-test('\n\n ** createUser error path - missing required opt parameter **\n\n', function (t) {
+test('\n\n ** createUser tests **\n\n', async (t) => {
 	Client.addConfigFile(path.join(__dirname, '../fixtures/caimport.json'));
 	caImport = utils.getConfigSetting('ca-import', 'notfound');
 	logger.debug('caImport = %s', JSON.stringify(caImport));
 
-	var msg = 'Client.createUser missing required \'opts\' parameter.';
 
-	var client = new Client();
-	return client.createUser()
-	.then(() => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
+	const client = new Client();
+	const errorHandler = (e,msg)=>{
+		if (e.message.includes(msg)) {
+			t.pass(`Should throw ${msg}`);
 		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
+			t.fail(`Expected error message: ${msg}; but got ${e.message}`);
 		}
-	});
+	};
+	try {
+		await client.createUser();
+		t.fail('Should not have gotten user.');
+	}catch(e){
+		const msg = 'Client.createUser missing required \'opts\' parameter.';
+		errorHandler(e,msg);
+	}
+
+	const org1KeyStore = {path: path.join(testutil.getTempDir(), caImport.orgs['org1'].storePath)};
+
+	const store = await utils.newKeyValueStore(org1KeyStore);
+	logger.info('store: %s', store);
+	client.setStateStore(store);
+
+	try {
+		await client.createUser({username: ''});
+		t.fail('Should not have gotten user.');
+	}catch (e) {
+		const msg = 'Client.createUser parameter \'opts username\' is required.';
+		errorHandler(e,msg);
+	}
+
+	try {
+		await client.createUser({username: 'anyone'});
+		t.fail('Should not have gotten user.');
+	}catch (e) {
+		const msg = 'Client.createUser parameter \'opts mspid\' is required.';
+		errorHandler(e,msg);
+	}
+
+	try {
+		await client.createUser({username: 'anyone', mspid: 'one'});
+		t.fail('Should not have gotten user.');
+	}catch (e) {
+		const msg = 'Client.createUser parameter \'opts cryptoContent\' is required.';
+		errorHandler(e,msg);
+	}
+	try {
+		await client.createUser({cryptoContent: {privateKeyPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
+		t.fail('Should not have gotten user.');
+	}catch (e) {
+		const msg = 'Client.createUser either \'opts cryptoContent signedCert or signedCertPEM\' is required.';
+		errorHandler(e,msg);
+	}
+
+	try {
+		await client.createUser({cryptoContent: {signedCertPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
+		t.fail('Should not have gotten user.');
+	}catch (e) {
+		const msg = 'Client.createUser one of \'opts cryptoContent privateKey, privateKeyPEM or privateKeyObj\' is required.';
+		errorHandler(e,msg);
+	}
+
+	t.end();
 });
 
-test('\n\n ** createUser error path - missing required username **\n\n', function (t) {
-	var msg = 'Client.createUser parameter \'opts username\' is required.';
 
-	var userOrg = 'org1';
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser({username: ''});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then(() => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
-test('\n\n ** createUser error path - missing required mspid **\n\n', function (t) {
-	var msg = 'Client.createUser parameter \'opts mspid\' is required.';
-
-	var userOrg = 'org1';
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser({username: 'anyone'});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then(() => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
-test('\n\n ** createUser error path - missing required cryptoContent **\n\n', function (t) {
-	var msg = 'Client.createUser parameter \'opts cryptoContent\' is required.';
-
-	var userOrg = 'org1';
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser({username: 'anyone', mspid: 'one'});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then(() => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
-test('\n\n ** createUser error path - missing required cryptoContent signedCert or signedCertPEM **\n\n', function (t) {
-	var msg = 'Client.createUser either \'opts cryptoContent signedCert or signedCertPEM\' is required.';
-
-	var userOrg = 'org1';
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser({cryptoContent: {privateKeyPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then(() => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
-test('\n\n ** createUser error path - missing required cryptoContent privateKey or privateKeyPEM **\n\n', function (t) {
-	var msg = 'Client.createUser one of \'opts cryptoContent privateKey, privateKeyPEM or privateKeyObj\' is required.';
-
-	var userOrg = 'org1';
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser({cryptoContent: {signedCertPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then(() => {
-		t.fail('Should not have gotten user.');
-		t.end();
-	}).catch((err) => {
-		if (err.message.indexOf(msg) > -1) {
-			t.pass('Should throw '+msg);
-			t.end;
-		} else {
-			t.fail('Expected error message: '+msg+'\n but got '+err.message);
-			t.end;
-		}
-	});
-});
-
-test('\n\n ** createUser error path - no keyValueStore **\n\n', async (t) => {
-	const msg = 'Cannot save user to state store when stateStore is null.';
+test('\n\n ** createUser tests 2 **\n\n', async (t) => {
 	const userOrg = 'org2';
 	utils.setConfigSetting('crypto-keysize', 256);
 
@@ -872,70 +751,57 @@ test('\n\n ** createUser error path - no keyValueStore **\n\n', async (t) => {
 				cryptoContent: caImport.orgs[userOrg].cryptoContent
 			});
 		t.fail('createUser, did not expect successful create');
-		t.end();
 	} catch (err) {
+		const msg = 'Cannot save user to state store when stateStore is null.';
 		if (err.message.includes(msg)) {
-			t.pass('createUser, error expected: ' + msg);
-			t.end();
+			t.pass(`createUser, error expected: ${msg}`);
 		} else {
-			t.fail('createUser, unexpected error: ' + err.message);
-			t.comment(err.stack ? err.stack : err);
-			t.end();
+			t.fail(`createUser, unexpected error: ${err.message}`);
 		}
 	}
-});
+	const org2KeyStore = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
+	t.comment('createUser success path - no cryptoKeyStore');
+	const store = await utils.newKeyValueStore(org2KeyStore);
 
-test('\n\n ** createUser success path - no cryptoKeyStore **\n\n', function (t) {
-	var userOrg = 'org2';
-	utils.setConfigSetting('crypto-keysize', 256);
+	logger.info('store: %s', store);
+	client.setStateStore(store);
 
-	var keyStoreOpts = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
-
-	var client = new Client();
-
-	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.info('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser(
-			{username: caImport.orgs[userOrg].username,
+	try {
+		const user = await client.createUser(
+			{
+				username: caImport.orgs[userOrg].username,
 				mspid: caImport.orgs[userOrg].mspid,
 				cryptoContent: caImport.orgs[userOrg].cryptoContent
 			});
-	}).then((user) => {
 		if (user) {
 			t.pass('createUser, got user');
-			t.end();
 		} else {
 			t.fail('createUser, returned null');
-			t.end();
 		}
-	}).catch((err) => {
-		t.fail('createUser, error, did not get user');
-		t.comment(err.stack ? err.stack : err);
-		t.end();
-	});
+	}catch (e) {
+		t.fail(`createUser, error, did not get user ${e.message}`);
+	}
+	t.end();
+
 });
 
 
-test('\n\n ** test internal method to rebuild ConfigSignatures **\n\n', function (t) {
-	var some_proto_signatures = [];
-	var proto_config_signature = new _configtxProto.ConfigSignature();
+test('\n\n ** test internal method to rebuild ConfigSignatures **\n\n', (t) => {
+	const some_proto_signatures = [];
+	const proto_config_signature = new _configtxProto.ConfigSignature();
 	proto_config_signature.setSignatureHeader(Buffer.from('signature_header_bytes'));
 	proto_config_signature.setSignature(Buffer.from('signature_bytes'));
 	some_proto_signatures.push(proto_config_signature);
-	var string_config_signature = proto_config_signature.toBuffer().toString('hex');
+	const string_config_signature = proto_config_signature.toBuffer().toString('hex');
 	some_proto_signatures.push(string_config_signature);
 
-	var _stringToSignature = ClientRewired.__get__('_stringToSignature');
-	var all_proto_signatures = _stringToSignature(some_proto_signatures);
-	for(let i in all_proto_signatures) {
-		var start_header = proto_config_signature.getSignatureHeader().toBuffer().toString();
-		var start_sig = proto_config_signature.getSignature().toBuffer().toString();
-		var decode_header = all_proto_signatures[i].getSignatureHeader().toBuffer().toString();
-		var decode_sig = all_proto_signatures[i].getSignature().toBuffer().toString();
+	const _stringToSignature = ClientRewired.__get__('_stringToSignature');
+	const all_proto_signatures = _stringToSignature(some_proto_signatures);
+	for (const i in all_proto_signatures) {
+		const start_header = proto_config_signature.getSignatureHeader().toBuffer().toString();
+		const start_sig = proto_config_signature.getSignature().toBuffer().toString();
+		const decode_header = all_proto_signatures[i].getSignatureHeader().toBuffer().toString();
+		const decode_sig = all_proto_signatures[i].getSignature().toBuffer().toString();
 		logger.info(' headers  are ==> %s :: %s', start_header, decode_header);
 		logger.info(' signatures are ==> %s :: %s', start_sig, decode_sig);
 
@@ -945,32 +811,36 @@ test('\n\n ** test internal method to rebuild ConfigSignatures **\n\n', function
 	t.end();
 });
 
-test('\n\n ** Test per-call timeout support [client] **\n', function (t) {
+test('\n\n ** Test per-call timeout support [client] **\n', (t) => {
 	const sandbox = sinon.sandbox.create();
-	let stub = sandbox.stub(Peer.prototype, 'sendProposal');
+	const stub = sandbox.stub(Peer.prototype, 'sendProposal');
 
 	// stub out the calls that requires getting MSPs from the orderer, or
 	// a valid user context
-	let clientUtils = ClientRewired.__get__('clientUtils');
+	const clientUtils = ClientRewired.__get__('clientUtils');
 	sandbox.stub(clientUtils, 'buildHeader').returns(Buffer.from('dummyHeader'));
 	sandbox.stub(clientUtils, 'buildProposal').returns(Buffer.from('dummyProposal'));
 	sandbox.stub(clientUtils, 'signProposal').returns(Buffer.from('dummyProposal'));
 	ClientRewired.__set__(
 		'_getChaincodePackageData',
-		function() {
+		() => {
 			return Promise.resolve(Buffer.from('dummyChaincodePackage'));
 		});
 
-	let client = new ClientRewired();
+	const client = new ClientRewired();
 	client._userContext = new User('somebody');
-	client._userContext.getIdentity = function() {
+	client._userContext.getIdentity = function () {
 		return {
-			serialize: function() { return Buffer.from(''); }
+			serialize: function () {
+				return Buffer.from('');
+			}
 		};
 	};
-	client._userContext.getSigningIdentity = function() {
+	client._userContext.getSigningIdentity = function () {
 		return {
-			serialize: function() { return Buffer.from(''); }
+			serialize: function () {
+				return Buffer.from('');
+			}
 		};
 	};
 
@@ -979,7 +849,7 @@ test('\n\n ** Test per-call timeout support [client] **\n', function (t) {
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',
 		chaincodeVersion: 'v0'
-	}, 12345).then(function () {
+	}, 12345).then(() => {
 		t.equal(stub.calledTwice, true, 'Peer.sendProposal() is called exactly twice');
 		t.equal(stub.firstCall.args.length, 2, 'Peer.sendProposal() is called first time with exactly 2 arguments');
 		t.equal(stub.firstCall.args[1], 12345, 'Peer.sendProposal() is called first time with a overriding timeout of 12345 (milliseconds)');
@@ -987,15 +857,15 @@ test('\n\n ** Test per-call timeout support [client] **\n', function (t) {
 		t.equal(stub.secondCall.args[1], 12345, 'Peer.sendProposal() is called 2nd time with a overriding timeout of 12345 (milliseconds)');
 		sandbox.restore();
 		t.end();
-	}).catch(function (err) {
+	}).catch((err) => {
 		t.fail('Failed to catch the missing chaincodeVersion error. Error: ' + err.stack ? err.stack : err);
 		sandbox.restore();
 		t.end();
 	});
 });
 
-test('\n\n*** Test error condition on network config ***\n', function(t) {
-	let client = new Client();
+test('\n\n*** Test error condition on network config ***\n', (t) => {
+	const client = new Client();
 	t.throws(
 		() => {
 
@@ -1008,7 +878,7 @@ test('\n\n*** Test error condition on network config ***\n', function(t) {
 	t.end();
 });
 
-test('\n\n*** Test normalizeX509 ***\n', function(t) {
+test('\n\n*** Test normalizeX509 ***\n', (t) => {
 	t.throws(
 		() => {
 
@@ -1018,14 +888,12 @@ test('\n\n*** Test normalizeX509 ***\n', function(t) {
 		'Check that a bad stream will throw error'
 	);
 
-	var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
-	'MIICEDCCAbagAwIBAgIUXoY6X7jIpHAAgL267xHEpVr6NSgwCgYIKoZIzj0EAwIw' +
-	'-----END CERTIFICATE-----';
+	const TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----MIICEDCCAbagAwIBAgIUXoY6X7jIpHAAgL267xHEpVr6NSgwCgYIKoZIzj0EAwIw-----END CERTIFICATE-----';
 
-	var normalized = Client.normalizeX509(TEST_CERT_PEM);
-	var matches = normalized.match(/\-\-\-\-\-\s*BEGIN ?[^-]+?\-\-\-\-\-\n/);
+	const normalized = Client.normalizeX509(TEST_CERT_PEM);
+	let matches = normalized.match(/-----\s*BEGIN ?[^-]+?-----\n/);
 	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone start line');
-	matches = normalized.match(/\n\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-\n/);
+	matches = normalized.match(/\n-----\s*END ?[^-]+?-----\n/);
 	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone end line');
 
 	t.end();

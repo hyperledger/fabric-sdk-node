@@ -111,12 +111,7 @@ const Client = class extends BaseClient {
 	 */
 	static loadFromConfig(config) {
 		const client = new Client();
-		client._network_config = _getNetworkConfig(config, client);
-		if (client._network_config.hasClient()) {
-			client._setAdminFromConfig();
-			client._setMspidFromConfig();
-		}
-
+		client.loadFromConfig(config);
 		return client;
 	}
 
@@ -210,8 +205,7 @@ const Client = class extends BaseClient {
 	 * @returns {Channel} The uninitialized channel instance.
 	 */
 	newChannel(name) {
-		if (this._channels.get(name)) throw new Error(util.format('Channel %s already exists', name));
-
+		if (this._channels.get(name)) throw new Error(`Channel ${name} already exists`);
 		const channel = new Channel(name, this);
 		this._channels.set(name, channel);
 		return channel;
@@ -245,7 +239,7 @@ const Client = class extends BaseClient {
 			if (this._network_config) {
 				if (!name) {
 					let channel_names = Object.keys(this._network_config._network_config.channels);
-					if(channel_names) {
+					if (channel_names) {
 						name = channel_names[0];
 					}
 				}
@@ -258,10 +252,10 @@ const Client = class extends BaseClient {
 				return channel;
 			}
 
-			logger.error('Channel not found for name ' + name + '.');
+			logger.error(`Channel not found for name ${name}`);
 
 			if (throwError) {
-				throw new Error('Channel not found for name ' + name + '.');
+				throw new Error(`Channel not found for name ${name}.`);
 			} else {
 				return null;
 			}
@@ -335,7 +329,7 @@ const Client = class extends BaseClient {
 	 */
 	getPeersForOrg(mspid) {
 		let _mspid = mspid;
-		if (!mspid ) {
+		if (!mspid) {
 			_mspid = this._mspid;
 		}
 		if (_mspid && this._network_config) {
@@ -429,7 +423,7 @@ const Client = class extends BaseClient {
 	getEventHubsForOrg(mspid) {
 		let event_hubs = [];
 		let _mspid = mspid;
-		if (!mspid ) {
+		if (!mspid) {
 			_mspid = this._mspid;
 		}
 		if (_mspid && this._network_config) {
@@ -905,19 +899,14 @@ const Client = class extends BaseClient {
 	 *        using the 'setAdminSigningIdentity' method.
 	 * @returns {Promise} Promise for a {@link ChaincodeQueryResponse} object
 	 */
-	queryInstalledChaincodes(peer, useAdmin) {
+	async queryInstalledChaincodes(peer, useAdmin) {
 		logger.debug('queryInstalledChaincodes - start peer %s', peer);
 		let targets = null;
 		if (!peer) {
-			return Promise.reject(new Error('Peer is required'));
+			throw new Error('Peer is required');
 		} else {
-			try {
-				targets = this.getTargetPeers(peer);
-			} catch (err) {
-				return Promise.reject(err);
-			}
+			targets = this.getTargetPeers(peer);
 		}
-		const self = this;
 		const signer = this._getSigningIdentity(useAdmin);
 		const txId = new TransactionID(signer, useAdmin);
 		const request = {
@@ -928,40 +917,31 @@ const Client = class extends BaseClient {
 			fcn: 'getinstalledchaincodes',
 			args: []
 		};
-		return Channel.sendTransactionProposal(request, '' /* special channel id */, self)
-			.then(
-				function (results) {
-					const responses = results[0];
-					logger.debug('queryInstalledChaincodes - got response');
-					if (responses && Array.isArray(responses)) {
-						//will only be one response as we are only querying one peer
-						if (responses.length > 1) {
-							return Promise.reject(new Error('Too many results returned'));
-						}
-						const response = responses[0];
-						if (response instanceof Error) {
-							return Promise.reject(response);
-						}
-						if (response.response) {
-							logger.debug('queryInstalledChaincodes - response status :: %d', response.response.status);
-							const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
-							logger.debug('queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
-							for (let chaincode of queryTrans.chaincodes) {
-								logger.debug('>>> name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
-							}
-							return Promise.resolve(queryTrans);
-						}
-						// no idea what we have, lets fail it and send it back
-						return Promise.reject(response);
-					}
-					return Promise.reject(new Error('Payload results are missing from the query'));
+		const results = await Channel.sendTransactionProposal(request, '' /* special channel id */, this);
+		const responses = results[0];
+		logger.debug('queryInstalledChaincodes - got response');
+		if (responses && Array.isArray(responses)) {
+			//will only be one response as we are only querying one peer
+			if (responses.length > 1) {
+				throw new Error('Too many results returned');
+			}
+			const response = responses[0];
+			if (response instanceof Error) {
+				throw response;
+			}
+			if (response.response) {
+				logger.debug('queryInstalledChaincodes - response status :: %d', response.response.status);
+				const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+				logger.debug('queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
+				for (let chaincode of queryTrans.chaincodes) {
+					logger.debug('>>> name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
 				}
-			).catch(
-				function (err) {
-					logger.error('Failed Installed Chaincodes Query. Error: %s', err.stack ? err.stack : err);
-					return Promise.reject(err);
-				}
-			);
+				return queryTrans;
+			}
+			// no idea what we have, lets fail it and send it back
+			throw response;
+		}
+		throw new Error('Payload results are missing from the query');
 	}
 
 	/**
@@ -1026,24 +1006,20 @@ const Client = class extends BaseClient {
 	 *        timeout in the config settings.
 	 * @returns {Promise} A Promise for a {@link ProposalResponseObject}
 	 */
-	installChaincode(request, timeout) {
+	async installChaincode(request, timeout) {
 		logger.debug('installChaincode - start');
 
 		let error_msg = null;
 		let peers = null;
 		if (request) {
-			try {
-				peers = this.getTargetPeers(request.targets);
-				if (!peers && request.channelNames) {
-					peers = this.getPeersForOrgOnChannel(request.channelNames);
-				}
-			} catch (err) {
-				return Promise.reject(err);
+			peers = this.getTargetPeers(request.targets);
+			if (!peers && request.channelNames) {
+				peers = this.getPeersForOrgOnChannel(request.channelNames);
 			}
 
 			// Verify that a Peer has been added
 			if (peers && peers.length > 0) {
-				logger.debug('installChaincode - found peers ::%s', peers.length);
+				logger.debug(`installChaincode - found peers ::${peers.length}`);
 			}
 			else {
 				error_msg = 'Missing peer objects in install chaincode request';
@@ -1057,11 +1033,9 @@ const Client = class extends BaseClient {
 		if (!error_msg) error_msg = clientUtils.checkInstallRequest(request);
 
 		if (error_msg) {
-			logger.error('installChaincode error ' + error_msg);
-			return Promise.reject(new Error(error_msg));
+			logger.error(`installChaincode error ${error_msg}`);
+			throw new Error(error_msg);
 		}
-
-		const self = this;
 
 		const ccSpec = {
 			type: clientUtils.translateCCType(request.chaincodeType),
@@ -1071,59 +1045,53 @@ const Client = class extends BaseClient {
 				version: request.chaincodeVersion
 			}
 		};
-		logger.debug('installChaincode - ccSpec %s ', JSON.stringify(ccSpec));
+		logger.debug(`installChaincode - ccSpec ${JSON.stringify(ccSpec)} `);
 
 		// step 2: construct the ChaincodeDeploymentSpec
 		const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 
-		return _getChaincodePackageData(request, this.isDevMode())
-			.then((data) => {
-				// DATA may or may not be present depending on devmode settings
-				if (data) {
-					chaincodeDeploymentSpec.setCodePackage(data);
-					logger.debug('installChaincode - found packaged data');
-				}
-				logger.debug('installChaincode - sending deployment spec %s ', chaincodeDeploymentSpec);
+		const data = await _getChaincodePackageData(request, this.isDevMode());
+		// DATA may or may not be present depending on devmode settings
+		if (data) {
+			chaincodeDeploymentSpec.setCodePackage(data);
+			logger.debug('installChaincode - found packaged data');
+		}
+		logger.debug(`installChaincode - sending deployment spec ${chaincodeDeploymentSpec} `);
 
-				// TODO add ESCC/VSCC info here ??????
-				const lcccSpec = {
-					type: ccSpec.type,
-					chaincode_id: {
-						name: Constants.LSCC
-					},
-					input: {
-						args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
-					}
-				};
+		// TODO add ESCC/VSCC info here ??????
+		const lcccSpec = {
+			type: ccSpec.type,
+			chaincode_id: {
+				name: Constants.LSCC
+			},
+			input: {
+				args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
+			}
+		};
 
-				let signer;
-				let tx_id = request.txId;
-				if (!tx_id) {
-					signer = self._getSigningIdentity(true);
-					tx_id = new TransactionID(signer, true);
-				} else {
-					signer = self._getSigningIdentity(tx_id.isAdmin());
-				}
+		let signer;
+		let tx_id = request.txId;
+		if (!tx_id) {
+			signer = this._getSigningIdentity(true);
+			tx_id = new TransactionID(signer, true);
+		} else {
+			signer = this._getSigningIdentity(tx_id.isAdmin());
+		}
 
-				const channelHeader = clientUtils.buildChannelHeader(
-					_commonProto.HeaderType.ENDORSER_TRANSACTION,
-					'', //install does not target a channel
-					tx_id.getTransactionID(),
-					null,
-					Constants.LSCC
-				);
-				const header = clientUtils.buildHeader(signer, channelHeader, tx_id.getNonce());
-				const proposal = clientUtils.buildProposal(lcccSpec, header);
-				const signed_proposal = clientUtils.signProposal(signer, proposal);
-				logger.debug('installChaincode - about to sendPeersProposal');
-				return clientUtils.sendPeersProposal(peers, signed_proposal, timeout)
-					.then(
-						function (responses) {
-							return [responses, proposal];
-						}
-					);
-			});
+		const channelHeader = clientUtils.buildChannelHeader(
+			_commonProto.HeaderType.ENDORSER_TRANSACTION,
+			'', //install does not target a channel
+			tx_id.getTransactionID(),
+			null,
+			Constants.LSCC
+		);
+		const header = clientUtils.buildHeader(signer, channelHeader, tx_id.getNonce());
+		const proposal = clientUtils.buildProposal(lcccSpec, header);
+		const signed_proposal = clientUtils.signProposal(signer, proposal);
+		logger.debug('installChaincode - about to sendPeersProposal');
+		const responses = await clientUtils.sendPeersProposal(peers, signed_proposal, timeout);
+		return [responses, proposal];
 	}
 
 	/**
@@ -1135,29 +1103,21 @@ const Client = class extends BaseClient {
 	 *
 	 * @returns {Promise} - A promise to build a key value store and crypto store.
 	 */
-	initCredentialStores() {
-		if (this._network_config) {
-			let client_config = this._network_config.getClientConfig();
-			if (client_config && client_config.credentialStore) {
-				const self = this;
-				return BaseClient.newDefaultKeyValueStore(client_config.credentialStore)
-					.then((key_value_store) => {
-						self.setStateStore(key_value_store);
-						const crypto_suite = BaseClient.newCryptoSuite();
-						// not all crypto suites require a crypto store
-						if (typeof crypto_suite.setCryptoKeyStore == 'function') {
-							crypto_suite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(client_config.credentialStore.cryptoStore));
-						}
-						self.setCryptoSuite(crypto_suite);
-						return Promise.resolve(true);
-					}).catch((err) => {
-						return Promise.reject(err);
-					});
-			} else {
-				return Promise.reject(new Error('No credentialStore settings found'));
-			}
+	async initCredentialStores() {
+		if (!this._network_config) {
+			throw new Error('No network configuration settings found');
+		}
+		let client_config = this._network_config.getClientConfig();
+		if (client_config && client_config.credentialStore) {
+			const key_value_store = await BaseClient.newDefaultKeyValueStore(client_config.credentialStore);
+			this.setStateStore(key_value_store);
+			const crypto_suite = BaseClient.newCryptoSuite();
+			// all crypto suites should extends api.CryptoSuite
+			crypto_suite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(client_config.credentialStore.cryptoStore));
+			this.setCryptoSuite(crypto_suite);
+			return true;
 		} else {
-			return Promise.reject(new Error('No network configuration settings found'));
+			throw new Error('No credentialStore settings found');
 		}
 	}
 
@@ -1288,7 +1248,7 @@ const Client = class extends BaseClient {
 		}
 	}
 
-	/*
+	/**
 	 * Utility Method
 	 * Sets the user context based on the passed in username and password
 	 * and the organization in the client section of the network configuration
@@ -1299,66 +1259,52 @@ const Client = class extends BaseClient {
 	 *                  - password [optional] - password of the user
 	 *                  - caName [optional] - name of the Certificate Authority
 	 */
-	_setUserFromConfig(opts) {
-		if (!opts || typeof opts.username === 'undefined' || opts.username === null || opts.username === '') {
-			return Promise.reject(new Error('Missing parameter. Must have a username.'));
+	async _setUserFromConfig(opts = {}) {
+		if (!opts.username) {
+			throw new Error('Missing parameter. Must have a username.');
 		}
 		if (!this._network_config || !this._stateStore || !this._cryptoSuite) {
-			return Promise.reject(new Error('Client requires a network configuration loaded, stores attached, and crypto suite.'));
+			throw new Error('Client requires a network configuration loaded, stores attached, and crypto suite.');
 		}
 		this._userContext = null;
-		const self = this;
-		return self.getUserContext(opts.username, true)
-			.then((user) => {
-				return new Promise((resolve, reject) => {
-					if (user && user.isEnrolled()) {
-						logger.debug('Successfully loaded member from persistence');
-						return resolve(user);
-					}
 
-					if (typeof opts.password === 'undefined' || opts.password === null || opts.password === '') {
-						return reject(new Error('Missing parameter. Must have a password.'));
-					}
+		const user = await this.getUserContext(opts.username, true);
+		if (user && user.isEnrolled()) {
+			logger.debug('Successfully loaded member from persistence');
+			return user;
+		}
 
-					let ca_service, mspid = null;
-					try {
-						const client_config = this._network_config.getClientConfig();
-						if (client_config && client_config.organization) {
-							const organization_config = this._network_config.getOrganization(client_config.organization, true);
-							if (organization_config) {
-								mspid = organization_config.getMspid();
-							}
-						}
-						if (!mspid) {
-							throw new Error('Network configuration is missing this client\'s organization and mspid');
-						}
-						ca_service = self.getCertificateAuthority(opts.caName);
-					} catch (err) {
-						reject(err);
-					}
+		if (!opts.password) {
+			throw new Error('Missing parameter. Must have a password.');
+		}
 
-					return ca_service.enroll({
-						enrollmentID: opts.username,
-						enrollmentSecret: opts.password
-					}).then((enrollment) => {
-						logger.debug('Successfully enrolled user "%s"', opts.username);
+		let mspid = null;
+		const client_config = this._network_config.getClientConfig();
+		if (client_config && client_config.organization) {
+			const organization_config = this._network_config.getOrganization(client_config.organization, true);
+			if (organization_config) {
+				mspid = organization_config.getMspid();
+			}
+		}
+		if (!mspid) {
+			throw new Error('Network configuration is missing this client\'s organization and mspid');
+		}
+		const ca_service = this.getCertificateAuthority(opts.caName);
 
-						return self.createUser(
-							{
-								username: opts.username,
-								mspid: mspid,
-								cryptoContent: {
-									privateKeyPEM: enrollment.key.toBytes(),
-									signedCertPEM: enrollment.certificate
-								}
-							});
-					}).then((member) => {
-						return resolve(member);
-					}).catch((err) => {
-						logger.error('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
-						reject(err);
-					});
-				});
+		const enrollment = await ca_service.enroll({
+			enrollmentID: opts.username,
+			enrollmentSecret: opts.password
+		});
+		logger.debug(`Successfully enrolled user "${opts.username}"`);
+
+		return this.createUser(
+			{
+				username: opts.username,
+				mspid: mspid,
+				cryptoContent: {
+					privateKeyPEM: enrollment.key.toBytes(),
+					signedCertPEM: enrollment.certificate
+				}
 			});
 	}
 
@@ -1367,41 +1313,26 @@ const Client = class extends BaseClient {
 	 *
 	 * @returns {Promise} A Promise for the userContext object upon successful persistence
 	 */
-	saveUserToStateStore() {
-		const self = this;
-		logger.debug('saveUserToStateStore, userContext: ' + self._userContext);
-		return new Promise(function (resolve, reject) {
-			if (self._userContext && self._userContext._name && self._stateStore) {
-				logger.debug('saveUserToStateStore, begin promise stateStore.setValue');
-				self._stateStore.setValue(self._userContext._name, self._userContext.toString())
-					.then(
-						function (result) {
-							logger.debug('saveUserToStateStore, store.setValue, result = ' + result);
-							resolve(self._userContext);
-						},
-						function (reason) {
-							logger.debug('saveUserToStateStore, store.setValue, reject reason = ' + reason);
-							reject(reason);
-						}
-					).catch(
-						function (err) {
-							logger.debug('saveUserToStateStore, store.setValue, error: ' + err);
-							reject(new Error(err));
-						}
-					);
-			} else {
-				if (!self._userContext) {
-					logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when userContext is null.');
-					reject(new Error('Cannot save user to state store when userContext is null.'));
-				} else if (!self._userContext._name) {
-					logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when userContext has no name.');
-					reject(new Error('Cannot save user to state store when userContext has no name.'));
-				} else {
-					logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when stateStore is null.');
-					reject(new Error('Cannot save user to state store when stateStore is null.'));
-				}
-			}
-		});
+	async saveUserToStateStore() {
+		logger.debug(`saveUserToStateStore, userContext: ${this._userContext}`);
+
+		if (!this._userContext) {
+			logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when userContext is null.');
+			throw new Error('Cannot save user to state store when userContext is null.');
+		}
+		if (!this._userContext._name) {
+			logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when userContext has no name.');
+			throw new Error('Cannot save user to state store when userContext has no name.');
+		}
+		if (!this._stateStore) {
+			logger.debug('saveUserToStateStore Promise rejected, Cannot save user to state store when stateStore is null.');
+			throw new Error('Cannot save user to state store when stateStore is null.');
+		}
+
+		logger.debug('saveUserToStateStore, begin promise stateStore.setValue');
+		const result = await this._stateStore.setValue(this._userContext._name, this._userContext.toString());
+		logger.debug(`saveUserToStateStore, store.setValue, result = ${result}`);
+		return this._userContext;
 	}
 
 	/**
@@ -1438,40 +1369,27 @@ const Client = class extends BaseClient {
 	 *                                    always be stored to the persistence store.
 	 * @returns {Promise} Promise of the 'user' object upon successful persistence of the user to the state store
 	 */
-	setUserContext(user, skipPersistence) {
-		logger.debug('setUserContext - user: ' + user + ', skipPersistence: ' + skipPersistence);
-		const self = this;
-		return new Promise((resolve, reject) => {
-			if (user) {
-				if (user.constructor && user.constructor.name === 'User') {
-					self._userContext = user;
-					if (!skipPersistence) {
-						logger.debug('setUserContext - begin promise to saveUserToStateStore');
-						self.saveUserToStateStore()
-							.then((return_user) => {
-								return resolve(return_user);
-							}).catch((err) => {
-								reject(err);
-							});
-					} else {
-						logger.debug('setUserContext - resolved user');
-						return resolve(user);
-					}
+	async setUserContext(user, skipPersistence) {
+		logger.debug(`setUserContext - user: ${user}, skipPersistence: ${skipPersistence}`);
+		if (user) {
+			if (user instanceof User) {
+				this._userContext = user;
+				if (!skipPersistence) {
+					logger.debug('setUserContext - begin promise to saveUserToStateStore');
+					return this.saveUserToStateStore();
 				} else {
-					// must be they have passed in an object
-					logger.debug('setUserContext - will try to use network configuration to set the user');
-					self._setUserFromConfig(user)
-						.then((return_user) => {
-							return resolve(return_user);
-						}).catch((err) => {
-							reject(err);
-						});
+					logger.debug('setUserContext - resolved user');
+					return user;
 				}
 			} else {
-				logger.debug('setUserContext, Cannot save null userContext');
-				reject(new Error('Cannot save null userContext.'));
+				// must be they have passed in an object
+				logger.debug('setUserContext - will try to use network configuration to set the user');
+				return this._setUserFromConfig(user);
 			}
-		});
+		} else {
+			logger.debug('setUserContext, Cannot save null userContext');
+			throw new Error('Cannot save null userContext.');
+		}
 	}
 
 	/**
@@ -1485,17 +1403,16 @@ const Client = class extends BaseClient {
 	 * (via the KeyValueStore interface). The loaded user object must represent an enrolled user with a valid
 	 * enrollment certificate signed by a trusted CA (such as the CA server).
 	 *
-	 * @param {String} name - Optional. If not specified, will only return the current in-memory user context object, or null
+	 * @param {string} name - Optional. If not specified, will only return the current in-memory user context object, or null
 	 *                        if none has been set. If "name" is specified, will also attempt to load it from the state store
 	 *                        if search in memory failed.
 	 * @param {boolean} checkPersistence - Optional. If specified and truthy, the method returns a Promise and will
 	 *                                     attempt to check the state store for the requested user by the "name". If not
 	 *                                     specified or falsey, the method is synchronous and returns the requested user from memory
-	 * @returns {Promise | User} Promise for the user object corresponding to the name, or null if the user does not exist or if the
-	 *                           state store has not been set. If "checkPersistence" is not specified or false, then the user object
-	 *                           is returned synchronously.
+	 * @returns {Promise<User>} Promise for the user object corresponding to the name, or null if the user does not exist or if the
+	 *                           state store has not been set.
 	 */
-	getUserContext(name, checkPersistence) {
+	async getUserContext(name, checkPersistence) {
 		// first check if only one param is passed in for "checkPersistence"
 		if (typeof name === 'boolean' && name && typeof checkPersistence === 'undefined')
 			throw new Error('Illegal arguments: "checkPersistence" is truthy but "name" is undefined');
@@ -1504,19 +1421,12 @@ const Client = class extends BaseClient {
 			(typeof name !== 'string' || name === null || name === ''))
 			throw new Error('Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value');
 
-		const self = this;
 		const username = name;
-		if ((self._userContext && name && self._userContext.getName() === name) || (self._userContext && !name)) {
-			if (typeof checkPersistence === 'boolean' && checkPersistence)
-				return Promise.resolve(self._userContext);
-			else
-				return self._userContext;
+		if ((this._userContext && name && this._userContext.getName() === name) || (this._userContext && !name)) {
+			return this._userContext;
 		} else {
 			if (!username) {
-				if (typeof checkPersistence === 'boolean' && checkPersistence)
-					return Promise.resolve(null);
-				else
-					return null;
+				return null;
 			}
 
 			// this could be because the application has not set a user context yet for this client, which would
@@ -1525,33 +1435,22 @@ const Client = class extends BaseClient {
 
 			// first check if there is a user context of the specified name in persistence
 			if (typeof checkPersistence === 'boolean' && checkPersistence) {
-				if (self._stateStore) {
-					return self.loadUserFromStateStore(username).then(
-						function (userContext) {
-							if (userContext) {
-								logger.debug('Requested user "%s" loaded successfully from the state store on this Client instance: name - %s', name, name);
-								return self.setUserContext(userContext, true); //skipPersistence as we just got it from there
-							} else {
-								logger.debug('Requested user "%s" not loaded from the state store on this Client instance: name - %s', name, name);
-								return null;
-							}
-						}
-					).then(
-						function (userContext) {
-							return Promise.resolve(userContext);
-						}
-					).catch(
-						function (err) {
-							logger.error('Failed to load an instance of requested user "%s" from the state store on this Client instance. Error: %s', name, err.stack ? err.stack : err);
-							return Promise.reject(err);
-						}
-					);
-				} else {
+				if (!this._stateStore) {
 					// we don't have it in memory or persistence, just return null
-					return Promise.resolve(null);
+					return null;
 				}
-			} else
+				const userContext = await this.loadUserFromStateStore(username);
+
+				if (userContext) {
+					logger.debug(`Requested user "${name}" loaded successfully from the state store on this Client instance`);
+					return this.setUserContext(userContext, true); //skipPersistence as we just got it from there
+				} else {
+					logger.debug(`Requested user "${name}" not loaded from the state store on this Client instance`);
+					return null;
+				}
+			} else {
 				return null;
+			}
 		}
 	}
 
@@ -1562,37 +1461,26 @@ const Client = class extends BaseClient {
 	 * @returns {Promise} A Promise for a {User} object upon successful restore, or if the user by the name
 	 *                    does not exist in the state store, returns null without rejecting the promise
 	 */
-	loadUserFromStateStore(name) {
-		const self = this;
+	async loadUserFromStateStore(name) {
+		const memberStr = await this._stateStore.getValue(name);
+		if (!memberStr) {
+			logger.debug(`Failed to find "${name}" in local key value store`);
+			return null;
+		}
 
-		return new Promise(function (resolve, reject) {
-			self._stateStore.getValue(name)
-				.then((memberStr) => {
-					if (memberStr) {
-						// The member was found in the key value store, so restore the state.
-						const newUser = new User(name);
-						if (!self.getCryptoSuite()) {
-							logger.debug('loadUserFromStateStore, cryptoSuite is not set, will load using defaults');
-						}
-						newUser.setCryptoSuite(self.getCryptoSuite());
-						return newUser.fromString(memberStr, true);
-					} else {
-						logger.debug('Failed to find "%s" in local key value store', name);
-						return resolve(null);
-					}
-				}).then((data) => {
-					if (data) {
-						logger.debug('Successfully loaded user "%s" from local key value store', name);
-						return resolve(data);
-					} else {
-						logger.debug('Failed to load user "%s" from local key value store', name);
-						return resolve(null);
-					}
-				}).catch((err) => {
-					logger.error('Failed to load user "%s" from local key value store. Error: %s', name, err.stack ? err.stack : err);
-					reject(err);
-				});
-		});
+		// The member was found in the key value store, so restore the state.
+		const newUser = new User(name);
+		if (!this.getCryptoSuite()) {
+			logger.debug('loadUserFromStateStore, cryptoSuite is not set, will load using defaults');
+		}
+		newUser.setCryptoSuite(this.getCryptoSuite());
+		const data = await newUser.fromString(memberStr, true);
+		if (!data) {
+			logger.debug(`Failed to load user "${name}" from local key value store`);
+			return null;
+		}
+		logger.debug(`Successfully load user "${name}" from local key value store`);
+		return data;
 	}
 
 	/**
@@ -1790,10 +1678,10 @@ const Client = class extends BaseClient {
 	getClientCertHash(create) {
 		const method = 'getClientCertHash';
 		logger.debug('%s - start', method);
-		if(this._tls_mutual.clientCertHash) {
+		if (this._tls_mutual.clientCertHash) {
 			return this._tls_mutual.clientCertHash;
 		}
-		if(!this._tls_mutual.clientCert && create) {
+		if (!this._tls_mutual.clientCert && create) {
 			// this will create the cert and key from the current user if available
 			this.addTlsClientCertAndKey({});
 		}
@@ -1843,16 +1731,14 @@ function readFile(path) {
 }
 
 // internal utility method to get the chaincodePackage data in bytes
-function _getChaincodePackageData(request, devMode) {
+async function _getChaincodePackageData(request, devMode) {
 	if (!request.chaincodePackage) {
 		logger.debug('_getChaincodePackageData -  build package with chaincodepath %s, chaincodeType %s, devMode %s, metadataPath %s',
 			request.chaincodePath, request.chaincodeType, devMode, request.metadataPath);
-
-		return Promise.resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath));
+		return Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath);
 	} else {
 		logger.debug('_getChaincodePackageData - working with included chaincodePackage');
-
-		return Promise.resolve(request.chaincodePackage);
+		return request.chaincodePackage;
 	}
 }
 

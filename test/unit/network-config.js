@@ -825,8 +825,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		return clientp2._setUserFromConfig();
 	}).then(()=>{
 		t.fail('Should not be able to load an user based on the config');
-	}).catch(function (err) {
-		if (err.message.indexOf('Missing parameter. Must have a username.') >= 0) {
+	}).catch((err) =>{
+		if (err.message.includes('Missing parameter. Must have a username.')) {
 			t.pass('Successfully caught Missing parameter. Must have a username.');
 		} else {
 			t.fail('Failed to catch Missing parameter. Must have a username.');
@@ -858,7 +858,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	const p4 = clientp4._setUserFromConfig({username:'username', password:'password'}).then(()=> {
 		t.fail('Should not be able to load an user based on the config');
 	}).catch(function (err) {
-		if (err.message.indexOf('Client requires a network configuration loaded, stores attached, and crypto suite.') >= 0) {
+		if (err.message.includes('Client requires a network configuration loaded, stores attached, and crypto suite.')) {
 			t.pass('Successfully caught Client requires a network configuration loaded, stores attached, and crypto suite.');
 		} else {
 			t.fail('Failed to catch Client requires a network configuration loaded, stores attached, and crypto suite.');
