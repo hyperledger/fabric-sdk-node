@@ -13,6 +13,7 @@ const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 const KEYUTIL = jsrsa.KEYUTIL;
 const ECDSA = jsrsa.ECDSA;
+const jws = jsrsa.jws;
 const api = require('../../api');
 const logger = utils.getLogger('ecdsa/key.js');
 
@@ -21,7 +22,7 @@ const logger = utils.getLogger('ecdsa/key.js');
  * @class ECDSA_KEY
  * @extends module:api.Key
  */
-module.exports = class ECDSA_KEY extends api.Key{
+module.exports = class ECDSA_KEY extends api.Key {
 	/**
 	 * this class represents the private or public key of an ECDSA key pair.
 	 *
@@ -53,7 +54,7 @@ module.exports = class ECDSA_KEY extends api.Key{
 	getSKI() {
 		let buff;
 
-		const pointToOctet = function(key) {
+		const pointToOctet = function (key) {
 			const byteLen = (key.ecparams.keylen + 7) >> 3;
 			const buff = Buffer.allocUnsafe(1 + 2 * byteLen);
 			buff[0] = 4; // uncompressed point (https://www.security-audit.com/files/x9-62-09-20-98.pdf, section 4.3.6)
@@ -111,18 +112,72 @@ module.exports = class ECDSA_KEY extends api.Key{
 	generateCSR(subjectDN) {
 
 		//check to see if this is a private key
-		if (!this.isPrivate()){
+		if (!this.isPrivate()) {
 			throw new Error('A CSR cannot be generated from a public key');
 		}
 
 		try {
 			const csr = asn1.csr.CSRUtil.newCSRPEM({
-				subject: { str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
+				subject: { str: asn1.x509.X500Name.ldapToOneline(subjectDN) },
 				sbjpubkey: this.getPublicKey()._key,
 				sigalg: 'SHA256withECDSA',
 				sbjprvkey: this._key
 			});
 			return csr;
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	/**
+	 * Generates a self-signed X.509 certificate
+	 * @param {string} [commonName] The common name to use as the subject for the X509 certificate
+	 * @returns {string} PEM-encoded X.509 certificate
+	 * @throws Will throw an error if this is not a private key
+	 * @throws Will throw an error if X.509 certificate generation fails for any other reason
+	 */
+	generateX509Certificate(commonName) {
+
+		var subjectDN = '/CN=self';
+		if (commonName) {
+			subjectDN = '/CN=' + commonName;
+		}
+		//check to see if this is a private key
+		if (!this.isPrivate()) {
+			throw new Error('An X509 certificate cannot be generated from a public key');
+		}
+
+		try {
+			var before = Date.now() - 60000;
+			var after = Date.now() + 60000;
+			var certPEM = asn1.x509.X509Util.newCertPEM({
+				serial: { int: 4 },
+				sigalg: { name: 'SHA256withECDSA' },
+				issuer: { str: subjectDN },
+				notbefore: { 'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() - 5000) },
+				notafter: { 'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() + 60000) },
+				subject: { str: subjectDN },
+				sbjpubkey: this.getPublicKey()._key,
+				ext: [
+					{
+						basicConstraints: {
+							cA: false,
+							critical: true
+						}
+					},
+					{
+						keyUsage: { bin: '11'}
+					},
+					{
+						extKeyUsage: {
+							array: [{name: 'clientAuth'}]
+						}
+					}
+				],
+				cakey: this._key
+			});
+			return certPEM;
+
 		} catch (err) {
 			throw err;
 		}

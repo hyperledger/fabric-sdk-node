@@ -17,6 +17,7 @@ var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
 var asn1 = jsrsa.asn1;
+var X509 = require('x509');
 
 test('\n\n ** ECDSA Key Impl tests **\n\n', function (t) {
 	testutil.resetDefaults();
@@ -149,6 +150,35 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', function (t) {
 
 	t.equal(csrObject.pubkey.obj.pubKeyHex, key3.getPublicKey()._key.pubKeyHex,
 		'Checking CSR public key matches requested public key');
+
+	//test X509 generation
+	var x509PEM;
+	var cert;
+	try {
+		x509PEM = key3.generateX509Certificate();
+		cert = X509.parseCert(x509PEM);
+		console.log(JSON.stringify(cert,'',2));
+		t.equal(cert.subject.commonName,'self', 'Checking common name set to default');
+	} catch (err) {
+		t.fail('Failed to generate an X509 Certificate: ' + err.stack ? err.stack : err);
+	}
+
+	try {
+		x509PEM = key3.generateX509Certificate('testUser');
+		cert = X509.parseCert(x509PEM);
+		console.log(JSON.stringify(cert,'',2));
+		t.equal(cert.subject.commonName,'testUser', 'Checking common name set to "testUser"');
+	} catch (err) {
+		t.fail('Failed to generate an X509 Certificate: ' + err.stack ? err.stack : err);
+	}
+
+	t.throws(
+		function () {
+			key3.getPublicKey().generateX509Certificate();
+		},
+		/An X509 certificate cannot be generated from a public key/,
+		'Checking that an X509 cannot be generated from a public key'
+	);
 
 	t.end();
 });
