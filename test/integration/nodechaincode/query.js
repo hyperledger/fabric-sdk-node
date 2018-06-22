@@ -16,7 +16,11 @@ var testUtils = require('../../unit/util');
 var chaincodeId = testUtils.NODE_END2END.chaincodeId;
 
 test('\n\n***** Node-Chaincode End-to-end flow: query chaincode *****\n\n', (t) => {
-	e2eUtils.queryChaincode('org2', 'v0', '300', chaincodeId, t)
+	const fcn = 'query';
+	const args = ['b'];
+	const expectedResult = '300';
+	const targets = [];  // empty array, meaning client will get the peers from the channel
+	e2eUtils.queryChaincode('org2', 'v0', targets, fcn, args, expectedResult, chaincodeId, t)
 		.then((result) => {
 			if(result){
 				t.pass('Successfully query chaincode on the channel');

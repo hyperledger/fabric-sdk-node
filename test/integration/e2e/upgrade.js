@@ -58,7 +58,10 @@ test('\n\n***** U P G R A D E flow: upgrade chaincode *****\n\n', (t) => {
 });
 
 test('\n\n***** U P G R A D E flow: invoke transaction to move money *****\n\n', (t) => {
-	e2eUtils.invokeChaincode('org2', 'v1', chaincodeId, t)
+	const fcn = 'move';
+	const args = ['a', 'b','100'];
+	const expectedResult = 'move succeed';
+	e2eUtils.invokeChaincode('org2', 'v1', chaincodeId, t, false/*useStore*/, fcn, args, expectedResult)
 		.then((result) => {
 			if(result){
 				t.pass('Successfully invoke transaction chaincode on the channel');
@@ -78,7 +81,11 @@ test('\n\n***** U P G R A D E flow: invoke transaction to move money *****\n\n',
 });
 
 test('\n\n***** U P G R A D E flow: query chaincode *****\n\n', (t) => {
-	e2eUtils.queryChaincode('org2', 'v1', '410', chaincodeId, t)
+	const fcn = 'query';
+	const args = ['b'];
+	const expectedResult = '410';
+	const targets = [];  // empty array, meaning client will discover the peers
+	e2eUtils.queryChaincode('org2', 'v1', targets, fcn, args, expectedResult, chaincodeId, t)
 		.then((result) => {
 			if(result){
 				t.pass('Successfully query chaincode on the channel');
@@ -98,10 +105,14 @@ test('\n\n***** U P G R A D E flow: query chaincode *****\n\n', (t) => {
 });
 
 test('\n\n***** TransientMap Support in Proposals *****\n\n', (t) => {
-	var transient = {
+	const transient = {
 		'test': Buffer.from('dummyValue') // string <-> byte[]
 	};
-	e2eUtils.queryChaincode('org2', 'v1', '410', chaincodeId, t, transient)
+	const fcn = 'query';
+	const args = ['b'];
+	const expectedResult = '410';
+	const targets = [];  // empty array, meaning client will discover the peers
+	e2eUtils.queryChaincode('org2', 'v1', targets, fcn, args, expectedResult, chaincodeId, t, transient)
 		.then((result) => {
 			if(result){
 				t.pass('Successfully verified transient map values');

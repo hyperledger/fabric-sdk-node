@@ -34,6 +34,18 @@ function init() {
 }
 
 function installChaincode(org, chaincode_path, metadata_path, version, language, t, get_admin) {
+	// Set chaincode_id based on language
+	let chaincode_id;
+	if(language && language==='node'){
+		chaincode_id = e2e_node.chaincodeId;
+	} else {
+		chaincode_id = e2e.chaincodeId;
+	}
+
+	return installChaincodeWithId(org, chaincode_id, chaincode_path, metadata_path, version, language, t, get_admin);
+}
+
+function installChaincodeWithId(org, chaincode_id, chaincode_path, metadata_path, version, language, t, get_admin) {
 	init();
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -102,19 +114,12 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 				}
 			}
 
-			let cc_id;
-			if(language && language==='node'){
-				cc_id = e2e_node.chaincodeId;
-			}else{
-				cc_id = e2e.chaincodeId;
-			}
-
 			// send proposal to endorser
-			var request = {
+			let request = {
 				targets: targets,
 				chaincodePath: chaincode_path,
 				metadataPath: metadata_path,
-				chaincodeId: cc_id,
+				chaincodeId: chaincode_id,
 				chaincodeType: language,
 				chaincodeVersion: version
 			};
@@ -153,9 +158,21 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 }
 
 module.exports.installChaincode = installChaincode;
+module.exports.installChaincodeWithId = installChaincodeWithId;
 
+function instantiateChaincode(userOrg, chaincode_path, version, language, upgrade, badTransient, t) {
+	// Set chaincode_id based on language
+	let chaincode_id;
+	if(language && language==='node'){
+		chaincode_id = e2e_node.chaincodeId;
+	} else {
+		chaincode_id = e2e.chaincodeId;
+	}
 
-function instantiateChaincode(userOrg, chaincode_path, version, language, upgrade, badTransient, t){
+	return instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, version, language, upgrade, badTransient, t);
+}
+
+function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, version, language, upgrade, badTransient, t) {
 	init();
 
 	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -246,7 +263,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 			// the v1 chaincode has Init() method that expects a transient map
 			if (upgrade && badTransient) {
 			// first test that a bad transient map would get the chaincode to return an error
-				let request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, badTransientMap);
+				let request = buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path, version, language, upgrade, badTransientMap);
 				tx_id = request.txId;
 
 				logger.debug(util.format(
@@ -282,7 +299,8 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 							if (success) {
 								// successfully tested the negative conditions caused by
 								// the bad transient map, now send the good transient map
-								request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, transientMap);
+								request = buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path,
+									version, language, upgrade, transientMap);
 								tx_id = request.txId;
 
 								return channel.sendUpgradeProposal(request, 5*60*1000);
@@ -294,7 +312,7 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 						}
 					});
 			} else {
-				let request = buildChaincodeProposal(client, the_user, chaincode_path, version, language, upgrade, transientMap);
+				const request = buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path, version, language, upgrade, transientMap);
 				tx_id = request.txId;
 
 				// this is the longest response delay in the test, sometimes
@@ -386,21 +404,13 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 		});
 }
 
-function buildChaincodeProposal(client, the_user, chaincode_path, version, type, upgrade, transientMap) {
+function buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path, version, type, upgrade, transientMap) {
 	var tx_id = client.newTransactionID();
 
-	let cc_id;
-	if(type && type==='node'){
-		cc_id = e2e_node.chaincodeId;
-	} else {
-		cc_id = e2e.chaincodeId;
-	}
-
-	const collectionsConfigPath = path.resolve(__dirname, './collections-config.json');
 	// send proposal to endorser
-	var request = {
+	let request = {
 		chaincodePath: chaincode_path,
-		chaincodeId: cc_id,
+		chaincodeId: chaincode_id,
 		chaincodeVersion: version,
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
@@ -423,7 +433,7 @@ function buildChaincodeProposal(client, the_user, chaincode_path, version, type,
 				]
 			}
 		},
-		'collections-config': collectionsConfigPath
+		'collections-config': testUtil.COLLECTIONS_CONFIG_PATH
 	};
 
 	if (version === 'v3')
@@ -438,9 +448,9 @@ function buildChaincodeProposal(client, the_user, chaincode_path, version, type,
 }
 
 module.exports.instantiateChaincode = instantiateChaincode;
+module.exports.instantiateChaincodeWithId = instantiateChaincodeWithId;
 
-
-function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
+function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, expectedResult) {
 	init();
 
 	logger.debug('invokeChaincode begin');
@@ -533,10 +543,10 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 			logger.debug('setConfigSetting("E2E_TX_ID") = %s', tx_id.getTransactionID());
 
 			// send proposal to endorser
-			var request = {
+			let request = {
 				chaincodeId : chaincodeId,
-				fcn: 'move',
-				args: ['a', 'b','100'],
+				fcn: fcn,
+				args: args,
 				txId: tx_id,
 			};
 			return channel.sendTransactionProposal(request);
@@ -561,13 +571,13 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 			return sleep(sleep_time);
 		}).then(() => {
 
-			var proposalResponses = pass_results[0];
-
-			var proposal = pass_results[1];
-			var all_good = true;
-			for(var i in proposalResponses) {
+			let proposalResponses = pass_results[0];
+			let proposal = pass_results[1];
+			let all_good = true;
+			for(let i in proposalResponses) {
 				let one_good = false;
 				let proposal_response = proposalResponses[i];
+				logger.debug('invoke chaincode, proposal response: ' + util.inspect(proposal_response, {depth: null}));
 				if( proposal_response.response && proposal_response.response.status === 200) {
 					t.pass('transaction proposal has response status of good');
 					one_good = channel.verifyProposalResponse(proposal_response);
@@ -577,15 +587,15 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 
 					// check payload
 					let payload = proposal_response.response.payload.toString();
-					// 'move success' is the expected payload from 'move' invoke
-					if(payload === 'move succeed'){
+					// verify payload is equal to expectedResult
+					if (payload === expectedResult){
 						t.pass('transaction proposal payloads are valid');
 					} else {
 						one_good = false;
-						t.fail('transaction proposal payloads are invalid');
+						t.fail('transaction proposal payloads are invalid, expect ' + expectedResult + ', but got ' + payload);
 					}
 				} else {
-					t.fail('transaction proposal was bad');
+					t.fail('invokeChaincode: transaction proposal was bad');
 				}
 				all_good = all_good & one_good;
 			}
@@ -605,7 +615,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 			// check to see if all the results match
 				t.pass('Successfully sent Proposal and received ProposalResponse');
 				logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-				var request = {
+				let request = {
 					proposalResponses: proposalResponses,
 					proposal: proposal
 				};
@@ -696,7 +706,9 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore){
 
 module.exports.invokeChaincode = invokeChaincode;
 
-function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
+// Targets parameter is needed to query private data that are only available on a subset of peers based on collection policy.
+// pass [] to targets when you don't want to query a specific peer
+function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t, transientMap) {
 	init();
 
 	Client.setConfigSetting('request-timeout', 60000);
@@ -748,12 +760,22 @@ function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
 			}
 
 			// send query
-			var request = {
+			let request = {
 				chaincodeId : chaincodeId,
 				txId: tx_id,
-				fcn: 'query',
-				args: ['b']
+				fcn: fcn,
+				args: args
 			};
+
+			// find the peers that match the targets
+			if (targets && targets.length != 0) {
+				const targetPeers = getTargetPeers(channel, targets);
+				if (targetPeers.length < targets.length) {
+					t.fail('Failed to get all peers for targets: ' + targets);
+				} else {
+					request.targets = targetPeers;
+				}
+			}
 
 			if (transientMap) {
 				request.transientMap = transientMap;
@@ -767,6 +789,7 @@ function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
 			throw new Error('Failed to get submitter');
 		}).then((response_payloads) => {
 			if (response_payloads) {
+				logger.debug('query chaincode, response_payloads: ' + util.inspect(response_payloads, {depth: null}));
 				for(let i = 0; i < response_payloads.length; i++) {
 					if (transientMap) {
 						t.equal(
@@ -777,7 +800,7 @@ function queryChaincode(org, version, value, chaincodeId, t, transientMap) {
 						t.equal(
 							response_payloads[i].toString('utf8'),
 							value,
-							'checking query results are correct that user b has '+ value + ' now after the move');
+							'checking query results are correct that value is '+ value);
 					}
 				}
 				return true;
@@ -850,3 +873,27 @@ function tlsEnroll(orgName) {
 	});
 }
 module.exports.tlsEnroll = tlsEnroll;
+
+// return an array of peer objects for targets which are a array of peer urls in string (e.g., localhost:7051)
+function getTargetPeers(channel, targets) {
+	// get all the peers and then find what peer matches a target
+	let targetPeers = [];
+	if (targets && targets.length != 0) {
+		const peers = channel.getPeers();
+		for (let i in targets) {
+			let found = false;
+			for (let j in peers) {
+				logger.debug('channel has peer ' + peers[j].getName());
+				if (targets[i] === peers[j].getName()) {
+					targetPeers.push(peers[j]);
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				logger.Error('Cannot find the target peer for ' + targets[i]);
+			}
+		}
+	}
+	return targetPeers;
+}

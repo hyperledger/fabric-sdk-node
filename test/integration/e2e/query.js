@@ -8,15 +8,19 @@
 // in a happy-path scenario
 'use strict';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
-var e2eUtils = require('./e2eUtils.js');
-var testUtils = require('../../unit/util');
-var chaincodeId = testUtils.END2END.chaincodeId;
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
+const e2eUtils = require('./e2eUtils.js');
+const testUtils = require('../../unit/util');
+const chaincodeId = testUtils.END2END.chaincodeId;
 
 test('\n\n***** End-to-end flow: query chaincode *****\n\n', (t) => {
-	e2eUtils.queryChaincode('org2', 'v0', '300', chaincodeId, t)
+	const fcn = 'query';
+	const args = ['b'];
+	const expectedResult = '300';
+	const targets = [];  // empty array, meaning client will discover the peers
+	e2eUtils.queryChaincode('org2', 'v0', targets, fcn, args, expectedResult, chaincodeId, t)
 		.then((result) => {
 			if(result){
 				t.pass('Successfully query chaincode on the channel');

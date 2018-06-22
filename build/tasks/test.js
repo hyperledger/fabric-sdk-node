@@ -152,6 +152,7 @@ gulp.task('run-test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready'
 		'test/integration/instantiate.js',
 		'test/integration/e2e/invoke-transaction.js',
 		'test/integration/e2e/query.js',
+		'test/integration/e2e/private-data.js',
 		'test/integration/invoke.js',
 		'test/integration/network-config.js',
 		'test/integration/only-admin.js',
