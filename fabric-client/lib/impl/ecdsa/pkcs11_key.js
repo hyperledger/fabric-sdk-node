@@ -111,6 +111,14 @@ var PKCS11_ECDSA_KEY = class extends api.Key {
 
 	}
 
+	generateKey(opts) {
+		throw new Error('Not implemented');
+	}
+
+	generateEphemeralKey() {
+		throw new Error('Not implemented');
+	}
+
 	generateCSR(subjectDN) {
 		//check to see if this is a private key
 		if (!this.isPrivate()){

@@ -1031,7 +1031,37 @@ test('\n\n*** Test normalizeX509 ***\n', function(t) {
 	t.end();
 });
 
-test('\n\n*** Test TLS ClientCert ***\n', function(t) {
+test('\n\n*** Test Add TLS ClientCert ***\n', function (t) {
+	var testClient = new Client();
+	t.throws(
+		() => {
+			testClient.addTlsClientCertAndKey({});
+		},
+		/A crypto suite has not been assigned to this client/,
+		'Check that error is thrown when crypto suite is not set'
+	);
+	testClient.setCryptoSuite(Client.newCryptoSuite());
+	t.throws(
+		() => {
+			testClient.addTlsClientCertAndKey({});
+		},
+		/A user context has not been assigned to this client/,
+		'Check that error is thrown when user context is not set'
+	);
+	testClient.setUserContext(new User('testUser'), true);
+	try {
+		const tls_cert_key = {};
+		testClient.addTlsClientCertAndKey(tls_cert_key);
+		t.ok(tls_cert_key.clientCert, 'Check that clientCert exists');
+		t.ok(tls_cert_key.clientKey, 'Check that clientKey exists');
+	} catch (err) {
+		t.fail('addTlsClientCertandKey failed: ' + err);
+	}
+
+	t.end();
+});
+
+test('\n\n*** Test Set and Add TLS ClientCert ***\n', function(t) {
 	let client = new Client();
 	client.setTlsClientCertAndKey(aPem, aPem);
 	t.pass('Able to set the client cert and client key');

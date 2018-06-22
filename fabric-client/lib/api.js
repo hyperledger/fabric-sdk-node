@@ -67,8 +67,17 @@ module.exports.CryptoSuite = class {
 	 *
 	 * @param {KeyOpts} opts Optional
 	 * @returns {module:api.Key} Promise for an instance of the Key class
+	 * @throws Will throw an error if not implemented
 	 */
 	generateKey(opts) {if(opts);}
+
+	/**
+	 * Generate an ephemeral key.
+	 *
+	 * @returns {module:api.Key} An instance of the Key class
+	 * @throws Will throw an error if not implemented
+	 */
+	generateEphemeralKey() {}
 
 	/**
 	 * Derives the new private key from the source public key using the parameters passed in the <code>opts</code>.

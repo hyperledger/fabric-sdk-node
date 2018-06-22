@@ -18,6 +18,7 @@ const yaml = require('js-yaml');
 const util = require('util');
 
 const Client = require('fabric-client');
+const User = require('fabric-client/lib/User.js');
 const Peer = require('fabric-client/lib/Peer.js');
 const Orderer = require('fabric-client/lib/Orderer.js');
 const Organization = require('fabric-client/lib/Organization.js');
@@ -108,6 +109,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('Org1', client._network_config._network_config.client.organization, ' org should be Org1');
 			client.loadFromConfig('test/fixtures/org2.yaml');
 			t.equals('Org2', client._network_config._network_config.client.organization, ' org should be Org2');
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			const channel = client.getChannel('mychannel2');
 			let event_hubs = client.getEventHubsForOrg();
 			t.equals('localhost:8053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org2 by default');
@@ -124,6 +127,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('Org2MSP', client.getMspid(), ' check to see if we can get the mspid of the current clients organization');
 
 			const client2 = Client.loadFromConfig('test/fixtures/network2.yaml');
+			client2.setCryptoSuite(Client.newCryptoSuite());
+			client2.setUserContext(new User('testUser'), true);
 			client2.loadFromConfig('test/fixtures/org1.yaml');
 			t.equals(client2.getPeersForOrg().length, 3, ' Check to see that we got 3 peers for Org1');
 			const channel3 = client2.getChannel('mychannel3');
@@ -188,6 +193,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			const file_data = fs.readFileSync(config_loc);
 			const network_data = yaml.safeLoad(file_data);
 			const client = Client.loadFromConfig(network_data);
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client.loadFromConfig(network_data);
 			const channel = client.getChannel('mychannel2');
 			t.equals(channel.getPeers()[0].getUrl(),'grpcs://localhost:7051',' check to see that the peer has been added to the channel');
@@ -212,6 +219,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.throws(
 		() => {
 			const client = new Client();
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig({}, client);
 			client.setCryptoSuite({cryptoSuite : 'cryptoSuite'});
 			client.getCertificateAuthority();
@@ -229,6 +238,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = new Client();
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.newChannel('mychannel');
 			t.equals('mychannel',channel.getName(),'Channel should be named');
@@ -255,6 +266,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = new Client();
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.getChannel('mychannel');
 			t.equals('mychannel',channel.getName(),'Channel should be named');
@@ -283,6 +296,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = new Client();
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.getChannel('mychannel');
 			t.equals('mychannel',channel.getName(),'Channel should be named');
@@ -311,6 +326,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = new Client();
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.getChannel('mychannel');
 			t.equals('mychannel',channel.getName(),'Channel should be named');
@@ -371,6 +388,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = new Client();
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.getChannel('mychannel');
 			t.equals('mychannel',channel.getName(),'Channel should be named');
@@ -388,6 +407,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = new Client();
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 
 			let targets = client.getTargetPeers('peer1', client);
@@ -495,6 +516,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = new Client();
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const organizations = client._network_config.getOrganizations();
 			if(Array.isArray(organizations)) t.pass('organizations is an array');
@@ -528,6 +551,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			let client = Client.loadFromConfig(network_config);
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			let channel = client.getChannel('mychannel');
 
 			checkTarget(channel._getTargetForQuery(), '7053', 'finding a default ledger query', t);
@@ -559,6 +584,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.throws(
 		() => {
 			const client = Client.loadFromConfig(network_config);
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			const channel = client.getChannel('mychannel');
 			channel._getTargetForQuery(['peer1']);
 		},
@@ -569,6 +596,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.throws(
 		() => {
 			const client = Client.loadFromConfig(network_config);
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			const channel = client.getChannel('mychannel');
 			channel._getTargets('bad');
 		},
@@ -609,6 +638,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = new Client();
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 
 			let orderer = client.getTargetOrderer('orderer0');
@@ -636,6 +667,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const client = Client.loadFromConfig(network_config);
+			client.setCryptoSuite(Client.newCryptoSuite());
+			client.setUserContext(new User('testUser'), true);
 			let channel = client.getChannel('mychannel');
 			client.loadFromConfig({ version: '1.0.0',
 				channels : {
@@ -844,6 +877,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 
 test('\n\n ** channel testing **\n\n', function (t) {
 	const client = new Client();
+	client.setCryptoSuite(Client.newCryptoSuite());
+	client.setUserContext(new User('testUser'), true);
 	client.loadFromConfig('test/fixtures/network.yaml');
 
 	const channel = client.getChannel('mychannel2');

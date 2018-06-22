@@ -153,19 +153,31 @@ const Client = class extends BaseClient {
 	}
 
 	/**
-	 * Utility method to add the mutual tls client material to a set of options
+	 * Utility method to add the mutual tls client material to a set of options.
+	 * If the tls client material has not been set for the client, it will be generated.
 	 * @param {object} opts - The options object holding the connection settings
 	 *        that will be updated with the mutual TLS clientCert and clientKey.
+	 * @throws Will throw an error if generating the tls client material fails
 	 */
 	addTlsClientCertAndKey(opts) {
-		if (this._tls_mutual.clientCert) {
+		// use client cert pair if it exists
+		if (this._tls_mutual.clientCert && this._tls_mutual.clientKey) {
 			opts.clientCert = this._tls_mutual.clientCert;
-		}
-		if (this._tls_mutual.clientKey) {
 			opts.clientKey = this._tls_mutual.clientKey;
+		} else {
+			if (!this._cryptoSuite) {
+				throw new Error('A crypto suite has not been assigned to this client');
+			}
+			if (!this._userContext) {
+				throw new Error('A user context has not been assigned to this client');
+			}
+			logger.debug('addTlsClientCertAndKey - generating self-signed TLS client certificate');
+			// generate X509 cert pair
+			let key = this._cryptoSuite.generateEphemeralKey();
+			opts.clientKey = key.toBytes();
+			opts.clientCert = key.generateX509Certificate(this._userContext.getName());
 		}
 	}
-
 
 	/**
 	 * Determine if the fabric backend is started in
@@ -1203,8 +1215,8 @@ const Client = class extends BaseClient {
 		if (!crypto_suite) {
 			crypto_suite = BaseClient.newCryptoSuite();
 		}
-		const key = crypto_suite.importKey(private_key, {ephemeral: true});
-		const public_key = crypto_suite.importKey(certificate, {ephemeral: true});
+		const key = crypto_suite.importKey(private_key, { ephemeral: true });
+		const public_key = crypto_suite.importKey(certificate, { ephemeral: true });
 
 		this._adminSigningIdentity = new SigningIdentity(certificate, public_key, mspid, crypto_suite, new Signer(crypto_suite, key));
 	}
@@ -1643,19 +1655,19 @@ const Client = class extends BaseClient {
 		// first load the private key and save in the BCCSP's key store
 
 		let importedKey;
-		const user = new User(opts.username) ;
+		const user = new User(opts.username);
 		let privateKeyPEM = opts.cryptoContent.privateKeyPEM;
 		if (opts.cryptoContent.privateKey) {
 			privateKeyPEM = await readFile(opts.cryptoContent.privateKey);
 		}
-		if(privateKeyPEM){
+		if (privateKeyPEM) {
 			logger.debug('then privateKeyPEM data');
-			importedKey = await this.getCryptoSuite().importKey(privateKeyPEM.toString(), {ephemeral: !this.getCryptoSuite()._cryptoKeyStore});
-		}else {
+			importedKey = await this.getCryptoSuite().importKey(privateKeyPEM.toString(), { ephemeral: !this.getCryptoSuite()._cryptoKeyStore });
+		} else {
 			importedKey = opts.cryptoContent.privateKeyObj;
 		}
 		let signedCertPEM = opts.cryptoContent.signedCertPEM;
-		if(opts.cryptoContent.signedCert){
+		if (opts.cryptoContent.signedCert) {
 			signedCertPEM = await readFile(opts.cryptoContent.signedCert);
 		}
 		logger.debug('then signedCertPEM data');
