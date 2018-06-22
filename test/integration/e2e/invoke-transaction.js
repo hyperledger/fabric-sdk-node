@@ -8,15 +8,18 @@
 // in a happy-path scenario
 'use strict';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
-var e2eUtils = require('./e2eUtils.js');
-var testUtils = require('../../unit/util');
-var chaincodeId = testUtils.END2END.chaincodeId;
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
+const e2eUtils = require('./e2eUtils.js');
+const testUtils = require('../../unit/util');
+const chaincodeId = testUtils.END2END.chaincodeId;
 
 test('\n\n***** End-to-end flow: invoke transaction to move money *****\n\n', (t) => {
-	e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/)
+	const fcn = 'move';
+	const args = ['a', 'b','100'];
+	const expectedResult = 'move succeed';
+	e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/, fcn, args, expectedResult)
 		.then((result) => {
 			if(result){
 				t.pass('Successfully invoke transaction chaincode on channel');

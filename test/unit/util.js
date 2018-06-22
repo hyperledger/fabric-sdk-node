@@ -16,14 +16,15 @@ var Constants = require('./constants.js');
 
 var logger = require('fabric-client/lib/utils.js').getLogger('TestUtil');
 
-module.exports.METADATA_PATH = path.resolve(__dirname, '../fixtures/metadata');
-
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
 module.exports.CHAINCODE_UPGRADE_PATH = 'github.com/example_cc1';
 module.exports.CHAINCODE_UPGRADE_PATH_V2 = 'github.com/example_cc2';
+module.exports.CHAINCODE_PATH_PRIVATE_DATA = 'github.com/example_cc_private';
+
 module.exports.END2END = {
 	channel: 'mychannel',
 	chaincodeId: 'end2endnodesdk',
+	chaincodeIdPrivateData: 'end2endnodesdk_privatedata',
 	chaincodeVersion: 'v0'
 };
 
@@ -31,6 +32,8 @@ module.exports.NODE_CHAINCODE_PATH = path.resolve(__dirname, '../fixtures/src/no
 module.exports.NODE_CHAINCODE_UPGRADE_PATH = path.resolve(__dirname, '../fixtures/src/node_cc/example_cc1');
 module.exports.NODE_CHAINCODE_UPGRADE_PATH_V2 = path.resolve(__dirname, '../fixtures/src/node_cc/example_cc2');
 module.exports.METADATA_PATH = path.resolve(__dirname, '../fixtures/metadata');
+module.exports.METADATA_PATH_PRIVATE_DATA = path.resolve(__dirname, '../fixtures/src/github.com/example_cc_private/META-INF');
+module.exports.COLLECTIONS_CONFIG_PATH = path.resolve(__dirname, '../fixtures/src/github.com/example_cc_private/collections_config.json');
 
 module.exports.NODE_END2END = {
 	channel: 'mychannel',

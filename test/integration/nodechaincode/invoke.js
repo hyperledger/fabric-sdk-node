@@ -16,7 +16,10 @@ var testUtils = require('../../unit/util');
 var chaincodeId = testUtils.NODE_END2END.chaincodeId;
 
 test('\n\n***** Node-Chaincode End-to-end flow: invoke transaction to move money *****\n\n', (t) => {
-	e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/)
+	const fcn = 'move';
+	const args = ['a', 'b','100'];
+	const expectedResult = 'move succeed';
+	e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/, fcn, args, expectedResult)
 		.then((result) => {
 			if(result){
 				t.pass('Successfully invoke transaction chaincode on channel');

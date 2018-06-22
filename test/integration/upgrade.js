@@ -188,9 +188,13 @@ test('\n\n **** Testing re-initializing states during upgrade ****', (t) => {
 	}).then(() => {
 		return e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH_V2, VER, 'golang', true, true, t);
 	}).then((results) => {
-		let chaincodeId = testUtil.END2END.chaincodeId;
+		const fcn = 'query';
+		const args = ['b'];
+		const expectedResult = '1000';
+		const targets = [];  // empty array, meaning client will get the peers from the channel
+		const chaincodeId = testUtil.END2END.chaincodeId;
 		logger.debug('Successfully upgraded chaincode to version v3');
-		return 	e2eUtils.queryChaincode('org1', VER, '1000', chaincodeId, t);
+		return 	e2eUtils.queryChaincode('org1', VER, targets, fcn, args, expectedResult, chaincodeId, t);
 
 	}).then((result) => {
 		if(result){
