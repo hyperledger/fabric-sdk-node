@@ -172,6 +172,20 @@ test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', (t) => {
 
 });
 
+test('\n\n ** CryptoSuite_ECDSA_AES - generateEphemeralKey tests **\n\n', function (t) {
+	testutil.resetDefaults();
+	var cryptoUtils = utils.newCryptoSuite();
+	var key = cryptoUtils.generateEphemeralKey();
+	if (key && key._key && key._key.type === 'EC') {
+		t.pass('generateEphemeralKey returned key');
+		t.end();
+	} else {
+		t.fail('generateEphemeralKey did not return key');
+		t.end();
+	}
+
+});
+
 test('\n\n ** CryptoSuite_ECDSA_AES - ephemeral true tests **\n\n', function (t) {
 	testutil.resetDefaults();
 	var cryptoUtils = utils.newCryptoSuite();

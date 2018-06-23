@@ -89,6 +89,11 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 		this._cryptoKeyStore = cryptoKeyStore;
 	}
 
+	generateEphemeralKey() {
+		const pair = KEYUTIL.generateKeypair('EC', this._curveName);
+		return new ECDSAKey(pair.prvKeyObj);
+	}
+
 	async generateKey(opts) {
 		const pair = KEYUTIL.generateKeypair('EC', this._curveName);
 
