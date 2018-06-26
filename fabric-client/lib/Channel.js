@@ -229,8 +229,8 @@ const Channel = class {
 			return self._discover(discover_request).then((discover_results) => {
 				// chaincode names are in each peer
 				if(discover_results && discover_results.peers_by_org) {
-					for(let org_name in discover_results.peers_by_org) {
-						const org = discover_results.peers_by_org[org_name];
+					for(let mspid in discover_results.peers_by_org) {
+						const org = discover_results.peers_by_org[mspid];
 						for(let peer_index in org.peers) {
 							const peer = org.peers[peer_index];
 							for(let chaincode_index in peer.chaincodes) {
@@ -462,13 +462,14 @@ const Channel = class {
 	 *
 	 * @param {Peer} peer - An instance of the Peer class that has been initialized with URL
 	 *        and other gRPC options such as TLS credentials and request timeout.
-	 * @param {string} org_name - The organization this peer belongs.
+	 * @param {string} mspid - The mpsid of the organization this peer belongs.
+	 * @param {string} mspid - The MSP this peer is using.
 	 * @param {ChannelPeerRoles} roles - Optional. The roles this peer will perform
 	 *        on this channel.  A role that is not defined will default to true
 	 * @param {boolean} replace - If an orderer exist with the same name, replace
 	 *        with this one.
 	 */
-	addPeer(peer, org_name, roles, replace) {
+	addPeer(peer, mspid, roles, replace) {
 		const name = peer.getName();
 		const check = this._channel_peers.get(name);
 		if(check) {
@@ -486,7 +487,7 @@ const Channel = class {
 		}
 		logger.debug('/n adding a new peer  --name: %s --URL: %s',peer.getName(),peer.getUrl());
 
-		const channel_peer = new ChannelPeer(org_name, this, peer, roles);
+		const channel_peer = new ChannelPeer(mspid, this, peer, roles);
 		this._channel_peers.set(name, channel_peer);
 	}
 
@@ -668,18 +669,25 @@ const Channel = class {
 
 	/**
 	 * Returns a list of {@link ChannelEventHub} based on the peers that are
-	 * defined in this channel that are in the named organization.
+	 * defined in this channel that are in the organization.
 	 *
-	 * @param {string} org_name - Optional - The name of an organization
+	 * @param {string} mspid - Optional - The mspid of an organization
 	 * @returns {ChannelEventHub[]} An array of ChannelEventHub instances
 	 */
-	getChannelEventHubsForOrg(org_name) {
+	getChannelEventHubsForOrg(mspid) {
 		const method = 'getChannelEventHubsForOrg';
-		logger.debug('%s - starting', method);
+		let _mspid = null;
+		if(!mspid) {
+			_mspid = this._clientContext.getMspid();
+			logger.debug('%s - starting - using client mspid: %s', method, _mspid);
+		} else {
+			_mspid = mspid;
+			logger.debug('%s - starting - mspid: %s', method, _mspid);
+		}
 
 		const channel_event_hubs = [];
 		this._channel_peers.forEach((channel_peer) => {
-			if (channel_peer.isInOrg(org_name)) {
+			if (channel_peer.isInOrg(_mspid)) {
 				if (channel_peer.isInRole(Constants.NetworkConfig.EVENT_SOURCE_ROLE)) {
 					channel_event_hubs.push(channel_peer.getChannelEventHub());
 				} else {
@@ -695,16 +703,23 @@ const Channel = class {
 	 * Returns a list of {@link Peer} that are
 	 * defined in this channel that are in the named organization.
 	 *
-	 * @param {string} org_name - Optional - The name of an organization
+	 * @param {string} mspid - Optional - The name of an organization
 	 * @returns {Peer[]} An array of Peer instances
 	 */
-	getPeersForOrg(org_name) {
+	getPeersForOrg(mspid) {
 		const method = 'getPeersForOrg';
-		logger.debug('%s - starting', method);
+		let _mspid = null;
+		if(!mspid) {
+			_mspid = this._clientContext._mspid;
+			logger.debug('%s - starting - using client mspid: %s', method, _mspid);
+		} else {
+			_mspid = mspid;
+			logger.debug('%s - starting - mspid: %s', method, _mspid);
+		}
 
 		const peers = [];
 		this._channel_peers.forEach((channel_peer) => {
-			if (channel_peer.isInOrg(org_name)) {
+			if (channel_peer.isInOrg(_mspid)) {
 				peers.push(channel_peer.getPeer());
 			}
 		});
@@ -1025,12 +1040,12 @@ const Channel = class {
 			*/
 			if (q_config.orderers) {
 				config.orderers = {};
-				for (let org_name in q_config.orderers) {
-					logger.debug('%s - found orderer org: ', method, org_name);
-					config.orderers[org_name] = {};
-					config.orderers[org_name].endpoints = [];
-					for (let index in q_config.orderers[org_name].endpoint) {
-						config.orderers[org_name].endpoints.push(q_config.orderers[org_name].endpoint[index]);
+				for (let mspid in q_config.orderers) {
+					logger.debug('%s - found orderer org: ', method, mspid);
+					config.orderers[mspid] = {};
+					config.orderers[mspid].endpoints = [];
+					for (let index in q_config.orderers[mspid].endpoint) {
+						config.orderers[mspid].endpoints.push(q_config.orderers[mspid].endpoint[index]);
 					}
 				}
 			}
@@ -1046,10 +1061,10 @@ const Channel = class {
 		logger.debug('%s - start', method);
 		const peers_by_org = {};
 		if (q_members && q_members.peers_by_org) {
-			for (let org_name in q_members.peers_by_org) {
-				logger.debug('%s - found org:%s', method, org_name);
-				peers_by_org[org_name] = {};
-				peers_by_org[org_name].peers = this._processPeers(q_members.peers_by_org[org_name].peers);
+			for (let mspid in q_members.peers_by_org) {
+				logger.debug('%s - found org:%s', method, mspid);
+				peers_by_org[mspid] = {};
+				peers_by_org[mspid].peers = this._processPeers(q_members.peers_by_org[mspid].peers);
 			}
 		}
 		return peers_by_org;
@@ -3131,7 +3146,7 @@ const ChannelPeer = class {
 	/**
 	 * Construct a ChannelPeer object with the given Peer and opts.
 	 * A channel peer object holds channel based references:
-	 *   Organization name this peer belongs.
+	 *   MSP ID of the Organization this peer belongs.
 	 *   {@link Channel} object used to know the channel this peer is interacting.
 	 *   {@link Peer} object used for interacting with the Hyperledger fabric network.
 	 *   {@link ChannelEventHub} object used for listening to block changes on the channel.
@@ -3139,13 +3154,13 @@ const ChannelPeer = class {
 	 *
 	 * The roles this Peer performs on this channel are indicated with is object.
 	 *
-	 * @param {string} org_name - The organization name this peer belongs.
+	 * @param {string} mspid - The mspid of the organization this peer belongs.
 	 * @param {Channel} channel - The Channel instance.
 	 * @param {Peer} peer - The Peer instance.
 	 * @param {ChannelPeerRoles} roles - The roles for this peer.
 	 */
-	constructor(org_name, channel, peer, roles) {
-		this._org_name = org_name; // if null, then peer belongs to all organizations
+	constructor(mspid, channel, peer, roles) {
+		this._mspid = mspid;
 		if(channel && channel.constructor && channel.constructor.name === 'Channel') {
 			if(peer && peer.constructor && peer.constructor.name === 'Peer') {
 				this._channel = channel;
@@ -3175,13 +3190,14 @@ const ChannelPeer = class {
 		}
 	}
 
+
 	/**
-	 * Get the organization name.
+	 * Get the MSP ID.
 	 *
-	 * @returns {string} The organization name.
+	 * @returns {string} The mspId.
 	 */
-	getOrganizationName() {
-		return this._org_name;
+	getMspid() {
+		return this._mspid;
 	}
 
 	/**
@@ -3235,15 +3251,14 @@ const ChannelPeer = class {
 	 * The default is true when the incoming organization name is not defined.
 	 * The default will be true when this peer does not have the organization name defined.
 	 *
+	 * @param {string} mspid - The mspid of the organnization
 	 * @returns {boolean} If this peer belongs to the organization.
 	 */
-	isInOrg(org_name) {
-		if(!org_name) {
-			return true;
-		} else if(typeof this._org_name === 'undefined' || this._org_name == null) {
+	isInOrg(mspid) {
+		if(!mspid || !this._mspid) {
 			return true;
 		} else {
-			return org_name === this._org_name;
+			return mspid === this._mspid;
 		}
 	}
 

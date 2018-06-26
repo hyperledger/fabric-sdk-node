@@ -23,6 +23,7 @@ var ORGS;
 var commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
 
 var client = new Client();
+
 var org = 'org1';
 var total = 1000;
 
@@ -44,6 +45,8 @@ async function perfTest1(t) {
 	Client.addConfigFile(path.join(__dirname, '../e2e', 'config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 	let orgName = ORGS[org].name;
+
+	client.setConfigSetting('grpc-wait-for-ready-timeout', 10000);
 
 	let cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));

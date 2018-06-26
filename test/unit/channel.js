@@ -107,19 +107,19 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 		function () {
 			let peer = new Peer('grpc://somehost.com:1234');
 			_channel.close();
-			_channel.addPeer(peer);
+			_channel.addPeer(peer, 'ANY');
 			_channel.removePeer(peer);
 			peer = new Peer('grpc://somehost.com:1234', {name: 'peer1'});
-			_channel.addPeer(peer);
+			_channel.addPeer(peer, 'OrgMSP');
 			const cp = _channel.getChannelPeer('peer1');
-			cp.getOrganizationName();
 			t.equals(cp.getName(), 'peer1', 'Checking channel peer getName');
+			t.equals(cp.getMspid(), 'OrgMSP', 'Checking channel peer getMspid');
 			cp.getUrl();
 			cp.setRole('role', false);
 			t.equals(cp.isInRole('role'), false, 'Checking isInRole');
 			t.equals(cp.isInRole('unknown'), true, 'Checking isInRole');
-			t.equals(cp.isInOrg('org2'), true, 'checking isInOrg');
-			cp._org_name = 'org1';
+			t.equals(cp.isInOrg('OrgMSP'), true, 'checking isInOrg');
+			cp._mspid = 'org1';
 			t.equals(cp.isInOrg('org2'), false, 'checking isInOrg');
 			t.equals(cp.isInOrg('org1'), true, 'checking isInOrg');
 			_channel.getChannelEventHub(peer.getName());
@@ -1185,6 +1185,39 @@ test('\n\n ** Channel _getOrderer tests **\n\n', function (t) {
 		null,
 		'Channel _getOrderer: checking able to find orderer by name'
 	);
+
+	t.end();
+});
+test('\n\n ** Channel mspid tests **\n\n', function (t) {
+	const client = new Client();
+	client._mspid = 'Org1MSP';
+	const channel = new Channel('does-not-matter', client);
+	const peer1 = client.newPeer('grpc://localhost:7051');
+	channel.addPeer(peer1, 'Org1MSP');
+	const peer2 = client.newPeer('grpc://localhost:7052');
+	channel.addPeer(peer2, 'Org2MSP');
+	const peer3 = client.newPeer('grpc://localhost:7053');
+	channel.addPeer(peer3);
+
+	let peers = channel.getPeersForOrg();
+	t.equals(peers.length, 2, 'Checking that the number of peers is correct for default org');
+	t.equals(peers[0].getUrl(), 'grpc://localhost:7051', 'Checking that the peer is correct by organization name');
+	t.equals(peers[1].getUrl(), 'grpc://localhost:7053', 'Checking that the peer is correct by organization name');
+
+	peers = channel.getPeersForOrg('Org2MSP');
+	t.equals(peers.length, 2, 'Checking that the number of peers is correct for default org');
+	t.equals(peers[0].getUrl(), 'grpc://localhost:7052', 'Checking that the peer is correct by organization name');
+	t.equals(peers[1].getUrl(), 'grpc://localhost:7053', 'Checking that the peer is correct by organization name');
+
+	let channel_event_hubs = channel.getChannelEventHubsForOrg();
+	t.equals(channel_event_hubs.length, 2, 'Checking that the number of channel_event_hubs is correct for default org');
+	t.equals(channel_event_hubs[0].getPeerAddr(), 'localhost:7051', 'Checking that the channel_event_hubs is correct by organization name');
+	t.equals(channel_event_hubs[1].getPeerAddr(), 'localhost:7053', 'Checking that the channel_event_hubs is correct by organization name');
+
+	channel_event_hubs = channel.getChannelEventHubsForOrg('Org2MSP');
+	t.equals(channel_event_hubs.length, 2, 'Checking that the number of channel_event_hubs is correct for default org');
+	t.equals(channel_event_hubs[0].getPeerAddr(), 'localhost:7052', 'Checking that the channel_event_hubs is correct by organization name');
+	t.equals(channel_event_hubs[1].getPeerAddr(), 'localhost:7053', 'Checking that the channel_event_hubs is correct by organization name');
 
 	t.end();
 });

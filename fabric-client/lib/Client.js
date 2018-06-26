@@ -77,7 +77,7 @@ const Client = class extends BaseClient {
 
 	constructor() {
 		super();
-		this._mspid = null; // The organization name
+		this._mspid = null; // The mspid id and the organization id
 
 		this._stateStore = null;
 		this._userContext = null;
@@ -311,25 +311,23 @@ const Client = class extends BaseClient {
 	}
 
 	/**
-	 * Returns a list of {@link Peer} for the named organization as defined
-	 * in the currently loaded network configuration. If no organization is
+	 * Returns a list of {@link Peer} for the mspid of an organization as defined
+	 * in the currently loaded network configuration. If no id is
 	 * provided then the organization named in the currently active network
 	 * configuration's client section will be used.
 	 *
-	 * @param {string} org_name - Optional - The name of an organization
+	 * @param {string} mspid - Optional - The mspid of an organization
 	 * @returns {Peer[]} An array of Peer instances that are defined for this organization
 	 */
-	getPeersForOrg(org_name) {
-		if (this._network_config) {
-			if (!org_name && this._network_config.hasClient()) {
-				const client = this._network_config.getClientConfig();
-				org_name = client.organization;
-			}
-			if (org_name) {
-				const organization = this._network_config.getOrganization(org_name);
-				if (organization) {
-					return organization.getPeers();
-				}
+	getPeersForOrg(mspid) {
+		let _mspid = mspid;
+		if (!mspid ) {
+			_mspid = this._mspid;
+		}
+		if (_mspid && this._network_config) {
+			const organization = this._network_config.getOrganizationByMspId(_mspid);
+			if (organization) {
+				return organization.getPeers();
 			}
 		}
 
@@ -405,27 +403,25 @@ const Client = class extends BaseClient {
 	}
 
 	/**
-	 * Returns a list of {@link EventHub} for the named organization as defined
-	 * in the currently loaded network configuration. If no organization is
-	 * provided then the organization named in the currently active network
+	 * Returns a list of {@link EventHub} for an organization as defined
+	 * in the currently loaded network configuration. If no organization mspid is
+	 * provided then the organization referenced in the currently active network
 	 * configuration's client section will be used. The list will be based on
 	 * the peers in the organization that have the "eventUrl" setting.
 	 *
-	 * @param {string} org_name - Optional - The name of an organization
+	 * @param {string} mspid - Optional - The mspid of an organization
 	 * @returns {EventHub[]} An array of EventHub instances that are defined for this organization
 	 */
-	getEventHubsForOrg(org_name) {
+	getEventHubsForOrg(mspid) {
 		let event_hubs = [];
-		if (this._network_config) {
-			if (!org_name && this._network_config.hasClient()) {
-				let client = this._network_config.getClientConfig();
-				org_name = client.organization;
-			}
-			if (org_name) {
-				let organization = this._network_config.getOrganization(org_name);
-				if (organization) {
-					event_hubs = organization.getEventHubs();
-				}
+		let _mspid = mspid;
+		if (!mspid ) {
+			_mspid = this._mspid;
+		}
+		if (_mspid && this._network_config) {
+			const organization = this._network_config.getOrganizationByMspId(_mspid);
+			if (organization) {
+				event_hubs = organization.getEventHubs();
 			}
 		}
 
@@ -525,8 +521,8 @@ const Client = class extends BaseClient {
 	}
 
 	/**
-	 * Returns the mspid of the currently loaded client's organization
-	 * as defined in the network configuration.
+	 * Returns the mspid of the client. The mspid is also used as the
+	 * reference to the organization.
 	 *
 	 * @returns {string} the mspid of the organization defined in the client
 	 *          section of the loaded network configuration
@@ -534,6 +530,7 @@ const Client = class extends BaseClient {
 	getMspid() {
 		return this._mspid;
 	}
+
 
 	/**
 	 * Returns a new {@link TransactionID} object. Fabric transaction ids are constructed
