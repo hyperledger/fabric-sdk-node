@@ -9,13 +9,13 @@ http://hyperledger-fabric.readthedocs.io/en/latest/private-data-arch.html), and 
 http://hyperledger-fabric.readthedocs.io/en/latest/private_data_tutorial.html).
 
 ### Overview
-The following are the steps to use private data with the Node.js SDK.
+The following are the steps to use private data with the Node.js SDK. Check out below sections for the details of these steps.
 
-1. [Create a collection definition json file](#create-a-collection-definition-json-file)
-2. [Implement chaincode to store and query private data](#implement-chaincode-to-store-and-query-private-data)
-3. [Install and instantiate chaincode with a collection definition](#install-and-instantiate-chaincode-with-a-collection-definition)
-4. [Invoke chaincode to store and query private data](#invoke-chaincode-to-store-and-query-private-data)
-5. [Purge private data](#purge-private-data)
+1. Create a collection definition json file
+2. Implement chaincode to store and query private data
+3. Install and instantiate chaincode with a collection definition
+4. Invoke chaincode to store and query private data
+5. Purge private data
 
 ### Create a collection definition json file
 A collection definition describes who can persist data, how many peers the data is distributed to, how many peers are
