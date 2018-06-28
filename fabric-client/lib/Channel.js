@@ -149,9 +149,9 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} InitializeRequest
-	 * @property {string | Peer} target - Optional. The target peer to be used
+	 * @property {string | Peer | ChannelPeer} target - Optional. The target peer to be used
 	 *           to make the initialization requests for configuration information.
-	 *           Default is to use the first {@link Peer} assigned to this channel.
+	 *           Default is to use the first ChannelPeer assigned to this channel.
 	 * @property {boolean} discover - Optional. Use the discovery service on the
 	 *           the target peer to load the configuration and network information.
 	 *           Default is true. When set to false the target peer will use
@@ -503,13 +503,15 @@ const Channel = class {
 	}
 
 	/**
-	 * This method will return a {@link Peer} instance if assigned to this
-	 * channel. Peers that have been created by the {@link Client} {@link newPeer}
+	 * This method will return a {@link ChannelPeer} instance if assigned to this
+	 * channel. Peers that have been created by the {@link Client#newPeer}
 	 * method and then added to this channel may be reference by the url if no
 	 * name was provided in the options during the create.
+	 * A {@link ChannelPeer} provides a reference to peer and channel event hub along
+	 * with how this peer is being used on this channel.
 	 *
 	 * @param {string} name - The name of the peer
-	 * @returns {Peer} The Peer instance.
+	 * @returns {ChannelPeer} The ChannelPeer instance.
 	 */
 	getPeer(name) {
 		const channel_peer = this._channel_peers.get(name);
@@ -518,7 +520,7 @@ const Channel = class {
 			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, name));
 		}
 
-		return channel_peer.getPeer();
+		return channel_peer;
 	}
 
 	/**
@@ -540,17 +542,29 @@ const Channel = class {
 	}
 
 	/**
-	 * Returns a list of peers assigned to this channel instance.
-	 * @returns {Peer[]} The peer list on the channel.
+	 * Returns a list of {@link ChannelPeer} assigned to this channel instance.
+	 * A {@link ChannelPeer} provides a reference to peer and channel event hub along
+	 * with how this peer is being used on this channel.
+	 * @returns {ChannelPeer[]} The channel peer list on the channel.
 	 */
 	getPeers() {
 		logger.debug('getPeers - list size: %s.', this._channel_peers.size);
 		const peers = [];
 		this._channel_peers.forEach((channel_peer) => {
-			peers.push(channel_peer.getPeer());
+			peers.push(channel_peer);
 		});
 		return peers;
 	}
+
+	/**
+	 * Returns a list of {@link ChannelPeer} assigned to this channel instance.
+	 * A {@link ChannelPeer} provides a reference to peer and channel event hub along
+	 * with how this peer is being used on this channel.
+	 * @returns {ChannelPeer[]} The channel peer list on the channel.
+	 */
+	 getChannelPeers() {
+		 return this.getPeers();
+	 }
 
 	/**
 	 * Add the orderer object to the channel object, this is a client-side-only operation.
@@ -592,7 +606,7 @@ const Channel = class {
 
 	/**
 	 * This method will return a {@link Orderer} instance if assigned to this
-	 * channel. Peers that have been created by the {@link Client} {@link newOrderer}
+	 * channel. Peers that have been created by the {@link Client#newOrderer}
 	 * method and then added to this channel may be reference by the url if no
 	 * name was provided in the options during the create.
 	 *
@@ -651,7 +665,7 @@ const Channel = class {
 	 * This method will create a new ChannelEventHub if one does not exist.
 	 *
 	 * @param {string} name - The peer name associated with this channel event hub.
-	 *        Use the {@link Peer}{@link getName} method to get the name of a
+	 *        Use the {@link Peer#getName} method to get the name of a
 	 *        peer instance that has been added to this channel.
 	 * @returns {ChannelEventHub} - The ChannelEventHub associated with the peer.
 	 */
@@ -2800,6 +2814,8 @@ const Channel = class {
 					}
 				} else if(target_peer && target_peer.constructor && target_peer.constructor.name === 'Peer') {
 					targets.push(target_peer);
+				} else if(target_peer && target_peer.constructor && target_peer.constructor.name === 'ChannelPeer') {
+					targets.push(target_peer.getPeer());
 				} else {
 					throw new Error('Target peer is not a valid peer object instance');
 				}
@@ -3182,6 +3198,8 @@ const ChannelPeer = class {
 
 	/**
 	 * Close the associated peer service connections.
+	 * <br>see {@link Peer#close}
+	 * <br>see {@link ChannelEventHub#close}
 	 */
 	close() {
 		this._peer.close();
@@ -3285,6 +3303,26 @@ const ChannelPeer = class {
 	 */
 	getPeer() {
 		return this._peer;
+	}
+
+	/**
+	 * Wrapper method for the associated peer so this object may be used as a {@link Peer}
+	 * {@link Peer#sendProposal}
+	 */
+	 sendProposal(proposal, timeout) {
+		 return this._peer.sendProposal(proposal, timeout);
+	 }
+
+	/**
+	 * Wrapper method for the associated peer so this object may be used as a {@link Peer}
+	 * {@link Peer#sendDiscovery}
+	 */
+	sendDiscovery(request, timeout) {
+		return this._peer.sendDiscovery(request, timeout);
+	}
+
+	toString() {
+		return this._peer.toString();
 	}
 }; //endof ChannelPeer
 

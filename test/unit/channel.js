@@ -138,6 +138,13 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 	);
 	t.equal(_channel.getOrderers()[0].toString(), 'Orderer:{url:grpc://somehost.com:1234}', 'checking channel getOrderers()');
 	t.equal(_channel.getPeers()[0].toString(), 'Peer:{url:grpc://somehost.com:1234}', 'checking channel getPeers()');
+	t.equal(_channel.getChannelPeers()[0].toString(), 'Peer:{url:grpc://somehost.com:1234}', 'checking channel getPeers()');
+	let peer = _channel.getPeer('peer1');
+	t.ok(peer, 'Check that peer was returned');
+	t.equal(peer.toString(), 'Peer:{url:grpc://somehost.com:1234}', 'checking channel peer is the same one');
+	peer = _channel.getChannelPeer('peer1');
+	t.ok(peer, 'Check that peer was returned');
+	t.equal(peer.toString(), 'Peer:{url:grpc://somehost.com:1234}', 'checking channel peer is the same one');
 	t.throws(
 		function () {
 			var orderer = new Orderer('grpc://somehost.com:1234');

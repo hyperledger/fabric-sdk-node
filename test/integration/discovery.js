@@ -137,6 +137,12 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 
 	await testUtil.queryChannelAsAdmin(t, client, channel, tx_id_string, );
 
+	const discovered_peers = channel.getPeers();
+	const force_target_request = {
+		target: discovered_peers[0]
+	};
+	await testUtil.invokeAsAdmin(t, client, channel, force_target_request);
+
 	t.pass('End discovery testing');
 	t.end();
 });

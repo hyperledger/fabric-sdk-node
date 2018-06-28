@@ -395,8 +395,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('mychannel',channel.getName(),'Channel should be named');
 			t.equals(channel.getPeers().length, 4, 'Peers should be four');
 			const peer =  channel.getPeers()[0];
-			if(peer instanceof Peer) t.pass('Successfully got a peer');
-			else t.fail('Failed to get a peer');
+			if(peer && peer.constructor && peer.constructor.name === 'ChannelPeer') t.pass('Successfully got a channel peer');
+			else t.fail('Failed to get a channel peer');
 		},
 		null,
 		'Should be able to instantiate a new instance of "Channel" with orderer, org and peer defined in the network configuration'
