@@ -1074,3 +1074,67 @@ test('\n\n*** Test Set and Add TLS ClientCert ***\n', function(t) {
 
 	t.end();
 });
+
+test('\n\n*** Test channel selection if no channel name provided ***\n', (t) => {
+	let config = {
+		'name': 'test',
+		'version': '1.0.0',
+		'channels': {
+			'testchannel': {
+				'orderers': [
+					'orderer.example.com'
+				],
+				'peers': {
+					'peer0.org1.example.com': {}
+				}
+			},
+			'anotherchannel': {
+				'orderers': [
+					'orderer.example.com'
+				],
+				'peers': {
+					'peer0.org1.example.com': {}
+				}
+			}
+		},
+		'organizations': {
+			'Org1': {
+				'mspid': 'Org1MSP',
+				'peers': [
+					'peer0.org1.example.com'
+				]
+			}
+		},
+		'orderers': {
+			'orderer.example.com': {
+				'url': 'grpc://localhost:7050'
+			}
+		},
+		'peers': {
+			'peer0.org1.example.com': {
+				'url': 'grpc://localhost:7051',
+				'eventUrl': 'grpc://localhost:7053'
+			}
+		}
+	};
+
+	let client = Client.loadFromConfig(config);
+	t.doesNotThrow(() => {
+		// TODO: really ? have to set this even if it's not used
+		client.setTlsClientCertAndKey(aPem, aPem);
+		let channel = client.getChannel();
+		t.equals(channel.getName(), 'testchannel', 'correct channel is returned from network config');
+	});
+
+	client = new Client();
+	client._channels.set('aChannel', 'SomeChannelObject');
+	t.doesNotThrow(() => {
+		client.setTlsClientCertAndKey(aPem, aPem);
+		let channel = client.getChannel();
+		t.equals(channel, 'SomeChannelObject', 'correct channel is returned from channel map');
+	});
+
+
+	t.pass('Should get default channel if no channel name provided defined');
+	t.end();
+});

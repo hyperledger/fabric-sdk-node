@@ -231,13 +231,27 @@ const Client = class extends BaseClient {
 	 * @returns {Channel} The channel instance
 	 */
 	getChannel(name, throwError = true) {
-		let channel = this._channels.get(name);
+		let channel;
+		if (name) {
+			channel = this._channels.get(name);
+		} else if (this._channels.size > 0) {
+			// not sure it's deterministic which channel would be returned if more than 1.
+			channel = this._channels.values().next().value;
+		}
 
 		if (channel) return channel;
 		else {
 			// maybe it is defined in the network config
 			if (this._network_config) {
-				channel = this._network_config.getChannel(name);
+				if (!name) {
+					let channel_names = Object.keys(this._network_config._network_config.channels);
+					if(channel_names) {
+						name = channel_names[0];
+					}
+				}
+				if (name) {
+					channel = this._network_config.getChannel(name);
+				}
 			}
 			if (channel) {
 				this._channels.set(name, channel);
