@@ -278,7 +278,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 
 				// this is the longest response delay in the test, sometimes
 				// x86 CI times out. set the per-request timeout to a super-long value
-				return channel.sendUpgradeProposal(request, 5*60*1000)
+				return channel.sendUpgradeProposal(request, 10*60*1000)
 					.then((results) => {
 						let proposalResponses = results[0];
 
@@ -303,7 +303,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 									version, language, upgrade, transientMap);
 								tx_id = request.txId;
 
-								return channel.sendUpgradeProposal(request, 5*60*1000);
+								return channel.sendUpgradeProposal(request, 10*60*1000);
 							} else {
 								throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
 							}
@@ -318,9 +318,9 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 				// this is the longest response delay in the test, sometimes
 				// x86 CI times out. set the per-request timeout to a super-long value
 				if(upgrade) {
-					return channel.sendUpgradeProposal(request, 5*60*1000);
+					return channel.sendUpgradeProposal(request, 10*60*1000);
 				} else {
-					return channel.sendInstantiateProposal(request, 5*60*1000);
+					return channel.sendInstantiateProposal(request, 10*60*1000);
 				}
 			}
 

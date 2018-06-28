@@ -95,6 +95,7 @@ const Client = class extends BaseClient {
 
 		// When using a network configuration (connection profile) the client
 		// side mutual tls cert and key must be stored here
+		//  -- also store the hash after computing
 		this._tls_mutual = {};
 
 		this._organizations = new Map();
@@ -150,32 +151,31 @@ const Client = class extends BaseClient {
 		logger.debug('setTlsClientCertAndKey - start');
 		this._tls_mutual.clientCert = clientCert;
 		this._tls_mutual.clientKey = clientKey;
+		this._tls_mutual.clientCertHash = null;
 	}
 
 	/**
 	 * Utility method to add the mutual tls client material to a set of options.
-	 * If the tls client material has not been set for the client, it will be generated.
+	 * If the tls client material has not been set for the client, it will be
+	 * generated if the user and crypto suite has been assigned to this client.
 	 * @param {object} opts - The options object holding the connection settings
 	 *        that will be updated with the mutual TLS clientCert and clientKey.
 	 * @throws Will throw an error if generating the tls client material fails
 	 */
 	addTlsClientCertAndKey(opts) {
+		if (!this._tls_mutual.clientCert || !this._tls_mutual.clientKey) {
+			if (this._cryptoSuite && this._userContext) {
+				logger.debug('addTlsClientCertAndKey - generating self-signed TLS client certificate');
+				// generate X509 cert pair
+				let key = this._cryptoSuite.generateEphemeralKey();
+				this._tls_mutual.clientKey = key.toBytes();
+				this._tls_mutual.clientCert = key.generateX509Certificate(this._userContext.getName());
+			}
+		}
 		// use client cert pair if it exists
 		if (this._tls_mutual.clientCert && this._tls_mutual.clientKey) {
 			opts.clientCert = this._tls_mutual.clientCert;
 			opts.clientKey = this._tls_mutual.clientKey;
-		} else {
-			if (!this._cryptoSuite) {
-				throw new Error('A crypto suite has not been assigned to this client');
-			}
-			if (!this._userContext) {
-				throw new Error('A user context has not been assigned to this client');
-			}
-			logger.debug('addTlsClientCertAndKey - generating self-signed TLS client certificate');
-			// generate X509 cert pair
-			let key = this._cryptoSuite.generateEphemeralKey();
-			opts.clientKey = key.toBytes();
-			opts.clientCert = key.generateX509Certificate(this._userContext.getName());
 		}
 	}
 
@@ -1776,22 +1776,30 @@ const Client = class extends BaseClient {
 
 	/**
 	 * Get the client certificate hash
+	 * @param {boolean} create - Optional. Create the hash based on the current
+	 *        user if the cleint cert has not been assigned to this client
 	 * @returns {byte[]} The hash of the client certificate
 	 */
-	getClientCertHash() {
+	getClientCertHash(create) {
 		const method = 'getClientCertHash';
 		logger.debug('%s - start', method);
+		if(this._tls_mutual.clientCertHash) {
+			return this._tls_mutual.clientCertHash;
+		}
+		if(!this._tls_mutual.clientCert && create) {
+			// this will create the cert and key from the current user if available
+			this.addTlsClientCertAndKey({});
+		}
 
-		let hash = null;
 		if (this._tls_mutual.clientCert) {
 			logger.debug('%s - using clientCert %s', method, this._tls_mutual.clientCert);
 			let der_cert = sdkUtils.pemToDER(this._tls_mutual.clientCert);
-			hash = computeHash(der_cert);
+			this._tls_mutual.clientCertHash = computeHash(der_cert);
 		} else {
 			logger.debug('%s - no tls client cert', method);
 		}
 
-		return hash;
+		return this._tls_mutual.clientCertHash;
 	}
 
 	_checkTLScert_n_key(opts) {
