@@ -89,7 +89,7 @@ is responsible for managing the user certificates.
 You will need the following software:
 * [Docker and Docker Compose](http://hyperledger-fabric.readthedocs.io/en/latest/prereqs.html#docker-and-docker-compose) - see Hyperledger Fabric for details
 * [Nodejs](https://nodejs.org/en/download/)
-v6.2.0 - 6.10.0, 8.4.0+ ( __Node v7+ is not supported__ )
+v8.9.0 or higher, up to 9.0 ( __Node v9.0+ is not supported__ )
 
 ## Prepare crypto materials
 
