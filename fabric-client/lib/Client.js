@@ -442,6 +442,37 @@ const Client = class extends BaseClient {
 		return event_hubs;
 	}
 
+	/*
+	 * Private utility method to get target peers. The peers will be in the organization of this client,
+	 * (meaning the peer has the same mspid). If this client is not assigned a mspid, then all
+	 * peers will be returned defined on the channel. The returned list may be empty if no channels
+	 * are provide, a channel is not found on the list or channel does not have any peers defined.
+	 *
+	 * @param {string||string[]} channel_names channel name or array of channel names
+	 * @returns {ChannelPeer[]} array of channel peers
+	 * @private
+	 */
+	getPeersForOrgOnChannel(channel_names) {
+		if (!Array.isArray(channel_names)) {
+			channel_names = [channel_names];
+		}
+		let peers = [];
+		const temp_peers = {};
+		for (let i in channel_names) {
+			const channel = this.getChannel(channel_names[i]);
+			const channel_peers = channel.getPeersForOrg(this._mspid);
+			for (let j in channel_peers) {
+				const peer = channel_peers[j];
+				temp_peers[peer.getName()] = peer; // will remove duplicates
+			}
+		}
+		for (let name in temp_peers) {
+			//TODO: Need to check the roles but cannot do so at present awaiting fix
+			peers.push(temp_peers[name]);
+		}
+		return peers;
+	}
+
 	/**
 	 * Returns a CertificateAuthority implementation as defined by the settings
 	 * in the currently loaded network configuration and the client configuration.
@@ -1004,28 +1035,7 @@ const Client = class extends BaseClient {
 			try {
 				peers = this.getTargetPeers(request.targets);
 				if (!peers && request.channelNames) {
-					let channel_names = request.channelNames;
-					if (!Array.isArray(channel_names)) {
-						channel_names = [request.channelNames];
-					}
-					peers = [];
-					const temp_peers = {};
-					for (let i in channel_names) {
-						const channel = this.getChannel(channel_names[i]);
-						let org_name = null;
-						if (this._network_config.hasClient()) {
-							const client = this._network_config.getClientConfig();
-							org_name = client.organization;
-						}
-						const channel_peers = channel.getPeersForOrg();
-						for (let j in channel_peers) {
-							const peer = channel_peers[j];
-							temp_peers[peer.getName()] = peer; // will remove duplicates
-						}
-					}
-					for (let name in temp_peers) {
-						peers.push(temp_peers[name]);
-					}
+					peers = this.getPeersForOrgOnChannel(request.channelNames);
 				}
 			} catch (err) {
 				return Promise.reject(err);

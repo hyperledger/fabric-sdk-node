@@ -1144,7 +1144,94 @@ test('\n\n*** Test channel selection if no channel name provided ***\n', (t) => 
 		t.equals(channel, 'SomeChannelObject', 'correct channel is returned from channel map');
 	});
 
+	t.end();
+});
 
-	t.pass('Should get default channel if no channel name provided defined');
+test('\n\n*** Test Client.getPeersForOrgOnChannel ***\n', (t) => {
+	let config = {
+		'name': 'test',
+		'version': '1.0.0',
+		'client': {
+			'organization': 'Org1'
+		},
+		'channels': {
+			'testchannel': {
+				'orderers': [
+					'orderer.example.com'
+				],
+				'peers': {
+					'peer0.org1.example.com': {}
+				}
+			},
+			'anotherchannel': {
+				'orderers': [
+					'orderer.example.com'
+				],
+				'peers': {
+					'peer0.org1.example.com': {},
+					'peer0.org2.example.com': {}
+				}
+			}
+		},
+		'organizations': {
+			'Org1': {
+				'mspid': 'Org1MSP',
+				'peers': [
+					'peer0.org1.example.com'
+				]
+			},
+			'Org2': {
+				'mspid': 'Org2MSP',
+				'peers': [
+					'peer0.org2.example.com'
+				]
+			}
+		},
+		'orderers': {
+			'orderer.example.com': {
+				'url': 'grpc://localhost:7050'
+			}
+		},
+		'peers': {
+			'peer0.org1.example.com': {
+				'url': 'grpc://localhost:7051',
+				'eventUrl': 'grpc://localhost:7053'
+			},
+			'peer0.org2.example.com': {
+				'url': 'grpc://localhost:8051',
+				'eventUrl': 'grpc://localhost:8053'
+			}
+		}
+	};
+
+	let client = Client.loadFromConfig(config);
+	client.setTlsClientCertAndKey(aPem, aPem);
+	client._mspid = 'Org1MSP';
+	let peer_results = client.getPeersForOrgOnChannel();
+	t.equals(peer_results.length, 1, 'correct number of peers returned when no channel specified');
+	t.equals(peer_results[0].getName(), 'peer0.org1.example.com', 'correct peer for Org1 returned');
+
+	peer_results = client.getPeersForOrgOnChannel('testchannel');
+	t.equals(peer_results.length, 1, 'correct number of peers returned when testchannel specified');
+	t.equals(peer_results[0].getName(), 'peer0.org1.example.com', 'correct peer for Org1 returned');
+
+	peer_results = client.getPeersForOrgOnChannel('anotherchannel');
+	t.equals(peer_results.length, 1, 'correct number of peers returned when anotherchannel specified');
+	t.equals(peer_results[0].getName(), 'peer0.org1.example.com', 'correct peer for Org1 returned');
+
+	config.client.organization = 'Org2';
+	client = Client.loadFromConfig(config);
+	client._mspid = 'Org2MSP';
+	client.setTlsClientCertAndKey(aPem, aPem);
+	peer_results = client.getPeersForOrgOnChannel();
+	t.equals(peer_results.length, 0, 'correct number of peers returned when no channel specified');
+
+	peer_results = client.getPeersForOrgOnChannel('testchannel');
+	t.equals(peer_results.length, 0, 'correct number of peers returned when testchannel specified');
+
+	peer_results = client.getPeersForOrgOnChannel('anotherchannel');
+	t.equals(peer_results.length, 1, 'correct number of peers returned when anotherchannel specified');
+	t.equals(peer_results[0].getName(), 'peer0.org2.example.com', 'correct peer for Org2 returned');
+
 	t.end();
 });
