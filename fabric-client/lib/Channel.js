@@ -852,7 +852,7 @@ const Channel = class {
 
 		const authentication = new _discoveryProto.AuthInfo();
 		authentication.setClientIdentity(signer.serialize());
-		const cert_hash = this._clientContext.getClientCertHash();
+		const cert_hash = this._clientContext.getClientCertHash(true);
 		if (cert_hash) {
 			authentication.setClientTlsCertHash(cert_hash);
 		}

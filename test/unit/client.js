@@ -1033,27 +1033,36 @@ test('\n\n*** Test normalizeX509 ***\n', function(t) {
 
 test('\n\n*** Test Add TLS ClientCert ***\n', function (t) {
 	var testClient = new Client();
-	t.throws(
+	t.doesNotThrow(
 		() => {
 			testClient.addTlsClientCertAndKey({});
 		},
 		/A crypto suite has not been assigned to this client/,
-		'Check that error is thrown when crypto suite is not set'
+		'Check that error is not thrown when crypto suite is not set'
 	);
 	testClient.setCryptoSuite(Client.newCryptoSuite());
-	t.throws(
+	t.doesNotThrow(
 		() => {
 			testClient.addTlsClientCertAndKey({});
 		},
 		/A user context has not been assigned to this client/,
-		'Check that error is thrown when user context is not set'
+		'Check that error is not thrown when user context is not set'
 	);
 	testClient.setUserContext(new User('testUser'), true);
 	try {
+		t.notOk(testClient._tls_mutual.clientKey, 'Check that client key is not there');
+		t.notOk(testClient._tls_mutual.clientCert, 'Check that client certain is not there');
+		t.notOk(testClient._tls_mutual.clientCertHash, 'Check that cert hash was not cached');
+
+		t.ok(testClient.getClientCertHash(true), 'Check forcing the hash to be based off the user');
+		t.ok(testClient._tls_mutual.clientCertHash, 'Check that cert hash was cached');
+
 		const tls_cert_key = {};
 		testClient.addTlsClientCertAndKey(tls_cert_key);
 		t.ok(tls_cert_key.clientCert, 'Check that clientCert exists');
 		t.ok(tls_cert_key.clientKey, 'Check that clientKey exists');
+		t.ok(testClient._tls_mutual.clientKey, 'Check that client key is there');
+		t.ok(testClient._tls_mutual.clientCert, 'Check that client cert is there');
 	} catch (err) {
 		t.fail('addTlsClientCertandKey failed: ' + err);
 	}
@@ -1063,6 +1072,7 @@ test('\n\n*** Test Add TLS ClientCert ***\n', function (t) {
 
 test('\n\n*** Test Set and Add TLS ClientCert ***\n', function(t) {
 	let client = new Client();
+	t.notOk(client.getClientCertHash(), 'Check getting null hash when no client cert assigned');
 	client.setTlsClientCertAndKey(aPem, aPem);
 	t.pass('Able to set the client cert and client key');
 	const tls_cert_key = {};
