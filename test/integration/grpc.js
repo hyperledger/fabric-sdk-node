@@ -97,7 +97,7 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 		};
 		let response;
 
-		t.pass('Successfully setup to testing environment');
+		t.pass('Successfully setup grpc testing environment');
 
 		// use the connection profile defined peer which includes a GRPC max setting
 		response = await sendToConnectionProfile(client, channel, connection_profile, go_cc, 1);
@@ -185,7 +185,7 @@ async function send(client, channel, url, cc, opts, megs, grpc_send_max, grpc_re
 
 async function sendToConnectionProfile(client, channel, config, cc, megs) {
 	client.loadFromConfig(config);
-	let peer = client.getPeersForOrg('Org1')[0]; // will only be one
+	let peer = client.getPeersForOrg('Org1MSP')[0]; // will only be one
 
 	let request = {
 		targets: [peer],

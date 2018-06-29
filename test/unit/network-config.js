@@ -114,12 +114,12 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			const channel = client.getChannel('mychannel2');
 			let event_hubs = client.getEventHubsForOrg();
 			t.equals('localhost:8053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org2 by default');
-			event_hubs = client.getEventHubsForOrg('Org1');
-			t.equals('localhost:7053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org1 by specifically asking for org1');
+			event_hubs = client.getEventHubsForOrg('Org1MSP');
+			t.equals('localhost:7053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org1 by specifically asking for mspid of org1');
 			let peers = client.getPeersForOrg();
 			t.equals('grpcs://localhost:8051', peers[0].getUrl(),  ' Check to see if we got the right peer for org2 by default');
-			peers = client.getPeersForOrg('Org1');
-			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 by specifically asking for org1');
+			peers = client.getPeersForOrg('Org1MSP');
+			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 by specifically asking for mspid of org1');
 			let orderers = channel.getOrderers();
 			t.equals('grpcs://localhost:7050', orderers[0].getUrl(), ' Check to see if we got the right orderer for mychannel2');
 			let client_config = client.getClientConfig();
@@ -524,13 +524,20 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			else t.fail('organizations is not an array');
 			if(organizations[0] instanceof Organization) t.pass('organizations has a organization ');
 			else t.fail('organizations does not have a organization');
+
 			let organization = client._network_config.getOrganization(organizations[0].getName());
 			let ca = organization.getCertificateAuthorities()[0];
 			t.equals('ca1',ca.getName(),'check the ca name');
 			t.equals(organization.getEventHubs().length,0,'Check that there are no event hubs');
+
 			organization = client._network_config.getOrganization(organizations[1].getName());
 			ca = organization.getCertificateAuthorities()[0];
 			t.equals('ca2',ca.getName(),'check the ca name');
+
+			organization = client._network_config.getOrganizationByMspId(organizations[0].getMspid());
+			ca = organization.getCertificateAuthorities()[0];
+			t.equals('ca1',ca.getName(),'check the ca name');
+			t.equals(organization.getEventHubs().length,0,'Check that there are no event hubs');
 		},
 		null,
 		'Should be able to get organizations'
@@ -884,7 +891,7 @@ test('\n\n ** channel testing **\n\n', function (t) {
 	const channel = client.getChannel('mychannel2');
 	let channelEventHubs = channel.getChannelEventHubsForOrg('bad');
 	t.equals(channelEventHubs.length, 0, 'Checking that we got the correct number of peers in the list');
-	channelEventHubs = channel.getChannelEventHubsForOrg('Org2');
+	channelEventHubs = channel.getChannelEventHubsForOrg('Org2MSP');
 	t.equals(channelEventHubs[0].getName(), 'peer0.org2.example.com', 'Checking that we got the correct peer in the list');
 	client.loadFromConfig('test/fixtures/org1.yaml');
 	channelEventHubs = channel.getChannelEventHubsForOrg();

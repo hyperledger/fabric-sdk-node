@@ -267,9 +267,9 @@ peer0.org2.example.com:
 ```
 Notice that we have left off the targets parameter of the request object. This will have the fabric client do a lookup of peers on this channel in the connection profile configuration. The fabric client will be looking for peers defined in the role of `endorsingPeer`. The fabric client will then send the proposal to the located peers and return all the endorsements in the `results` object.
 
-There may be a need to have only the peers in a specific organization.
+There may be a need to have only the peers in a specific organization. Use the mspid of the organization.
 ```
-var peers = getPeersForOrg('Org1');
+var peers = getPeersForOrg('Org1MSP');
 ```
 Or maybe for the organization that is defined in the client section of the connection profile.
 ```
@@ -293,13 +293,13 @@ When there is a connection profile configuration loaded and the query call is no
 * These are fabric client based queries and require the user have an admin role or indicate that the admin identity should be used. These queries do not use the connection profile config lookup to find a peer to use and must be passed the target peer.
   - queryChannels
   - queryInstalledChaincodes
-* These queries are channel based queries that require a peer with the ledgerQuery role.
+* These queries are channel based queries that require a peer with the `ledgerQuery` role.
   - queryInstantiatedChaincodes (user must be an admin or indicate that the assigned admin identity should be used)
   - queryInfo
   - queryBlockByHash
   - queryBlock
   - queryTransaction
-* this is a channel based query and requires a peer with the chaincodeQuery role.
+* this is a channel based query and requires a peer with the `chaincodeQuery` role.
   - queryByChaincode
 
 
@@ -318,9 +318,11 @@ peer0.org1.example.com:
   tlsCACerts:
 	path: test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem
 ```
-The following will be a list of event hubs that are within the 'Org1' organization. All peers referenced by an organization that the 'eventSource' set to true.
+The following will be a list of event hubs that are within the 'Org1' organization.
+All peers referenced by an organization that the 'eventSource' set to true.
+Use the mspid of the organization.
 ```
-var channel_event_hubs = channel.getChannelEventHubsForOrg('Org1');
+var channel_event_hubs = channel.getChannelEventHubsForOrg('Org1MSP');
 ```
 
 The following will be a list of channel-based event hubs that are within the organization defined in the client section of the connection profile.

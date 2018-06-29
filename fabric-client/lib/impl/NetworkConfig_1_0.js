@@ -50,7 +50,7 @@ var ROLES = Constants.NetworkConfig.ROLES;
  * @class
  * @extends module:api.NetworkConfig
  */
-var NetworkConfig_1_0 = class {
+const NetworkConfig_1_0 = class {
 
 	/**
 	 * constructor
@@ -247,6 +247,18 @@ var NetworkConfig_1_0 = class {
 		return orderer;
 	}
 
+	getOrganizationByMspId(mspid, only_client) {
+		const method = 'getOrganization';
+		logger.debug('%s - mspid %s',method, mspid);
+		if(mspid && this._network_config && this._network_config[ORGS_CONFIG]) {
+			for(let name in this._network_config[ORGS_CONFIG]) {
+				const organization_config = this._network_config[ORGS_CONFIG][name];
+				if(organization_config.mspid === mspid) {
+					return this.getOrganization(name, only_client);
+				}
+			}
+		}
+	}
 	getOrganization(name, only_client) {
 		const method = 'getOrganization';
 		logger.debug('%s - name %s',method, name);
@@ -363,8 +375,9 @@ var NetworkConfig_1_0 = class {
 				}
 				if(peer) {
 					const org_name = this._getOrganizationForPeer(peer_name);
+					const mspid = this._getMspIdForOrganization(org_name);
 					logger.debug('_addPeersToChannel - %s - %s', peer.getName(), peer.getUrl());
-					channel.addPeer(peer, org_name, roles);
+					channel.addPeer(peer, mspid, roles);
 				}
 			}
 		}
@@ -374,7 +387,7 @@ var NetworkConfig_1_0 = class {
 	/*
 	 * Internal utility method to get the organization the peer belongs
 	 */
-	 _getOrganizationForPeer(peer_name) {
+	_getOrganizationForPeer(peer_name) {
 		if(this._network_config && this._network_config[ORGS_CONFIG]) {
 			for(let organization_name in  this._network_config[ORGS_CONFIG]) {
 				let organization = this.getOrganization(organization_name);
@@ -385,7 +398,23 @@ var NetworkConfig_1_0 = class {
 				}
 			}
 		}
-	 }
+
+		return null;
+	}
+
+	/*
+	 * Internal method to get the MSP id for an organization nam
+	 */
+	_getMspIdForOrganization(org_name) {
+		if(this._network_config && this._network_config[ORGS_CONFIG]) {
+			let organization = this.getOrganization(org_name);
+			if(organization) {
+				return organization.getMspid();
+			}
+		}
+
+		return null;
+	}
 };
 
 function getTLSCACert(config) {
