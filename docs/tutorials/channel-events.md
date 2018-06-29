@@ -364,7 +364,7 @@ let event_monitor = new Promise((resolve, reject) => {
 		// might be good to store the block number to be able to resume if offline
 		storeBlockNumForLater(block_num);
 
-		// to see the event payload, the channel_event_hub must be conneted(true)
+		// to see the event payload, the channel_event_hub must be connected(true)
 		let event_payload = event.payload.toString('utf8');
 		if(event_payload.indexOf('CHAINCODE') > -1) {
 			clearTimeout(handle);

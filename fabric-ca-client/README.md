@@ -2,7 +2,7 @@
 
 [![NPM](https://nodei.co/npm/fabric-ca-client.svg?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/fabric-fabric-ca-client/)
 
-SDK for writing node.js applications to interact with [Hyperledger Fabric CA](http://hyperledger-fabric.readthedocs.io/en/latest/Setup/ca-setup.html).
+SDK for writing node.js applications to interact with [Hyperledger Fabric CA](http://hyperledger-fabric-ca.readthedocs.io/en/latest/users-guide.html).
 
 This package encapsulates the APIs to interact with the Fabric CA to manage user certificates lifecycle such as register, enroll, renew and revoke. 
 

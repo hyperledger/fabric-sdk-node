@@ -3,7 +3,7 @@ This tutorial illustrates how to use the Hyperledger Fabric Node.js client loggi
 ### Overview
 
 Hyperledger Fabric Node.js client logging uses the Node.js 'winston' package.
-The logging is initialized when the Node.js applicatiion first loads the Hyperledger
+The logging is initialized when the Node.js application first loads the Hyperledger
 Fabric package. All Hyperledger Fabric client objects will use the same settings (Peer, Orderer, ChannelEventHub).
 ```
 const Client = require('fabric-client');
@@ -52,7 +52,7 @@ const logger = Client.getLogger('APPLICATION');
 
 prior to 1.2
 ```
-const sdkUtils = = require('fabric-client/lib/utils.js');
+const sdkUtils = require('fabric-client/lib/utils.js');
 const logger = sdkUtils.getLogger('APPLICATION');
 ```
 

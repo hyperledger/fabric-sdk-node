@@ -26,7 +26,7 @@ A connection profile contain entries that describe the Hyperledger Fabric networ
 * `Client.loadFromConfig()` - A static utility method to get a fabric client instance loaded with the connection profile configuration.
 * `client.loadFromConfig()` - A fabric client instance method to load a connection profile configuration, overriding any existing connection profile configuration settings that may have been set when this client object was created by the call above.
 
-#### new API's that use a loaded connetion profile
+#### new API's that use a loaded connection profile
 * `client.initCredentialStores()` - A fabric client instance method to create a state store and assign it to the fabric client instance based on the current settings in the loaded connection profile configuration. It will also create the crypto suite and assign it to the fabric client instance. A crypto store will be created and assigned to crypto suite if needed. (HSM based crypto suites do not require a crypto store).
 * `client.setTlsClientCertAndKey(clientCert, clientKey)` -A fabric client instance method that will set a certificate and the corresponding private key on the client instance. Mutual TLS client settings are not stored within the connection profile. When a peer or orderer instance is created for the user from the endpoints defined in the connection profile, these settings will be used as the client mutual TLS settings. When using mutual TLS and a connection profile, this method must be called before endpoints are required. Calling this method is only required when using mutual TLS and a connection profile.
 * `channel.newChannelEventHub()` - A fabric channel instance method to create an channel-based event hub based on the current settings in the loaded connection profile configuration of the named peer.
@@ -146,7 +146,7 @@ certificateAuthorities:
     caName: caorg2
 ```
 
-The following example will have an existing fabric client load a connection profile configuration. The definition will only contain client side definitions and no fabric network definitions. Calling for a load on an existing fabric client does an overlay of the top level sections in the file being loaded replacing the sections on those previously loaded. In this case the file being loaded only has a client section, therefore the loaded definition will now have the perviously loaded channels, organizations, peers, orderers, and certificateAuthorities section definitions and the newly loaded client section definition. This allows for an existing fabric client to be able to work within different organization.
+The following example will have an existing fabric client load a connection profile configuration. The definition will only contain client side definitions and no fabric network definitions. Calling for a load on an existing fabric client does an overlay of the top level sections in the file being loaded replacing the sections on those previously loaded. In this case the file being loaded only has a client section, therefore the loaded definition will now have the previously loaded channels, organizations, peers, orderers, and certificateAuthorities section definitions and the newly loaded client section definition. This allows for an existing fabric client to be able to work within different organization.
 ```
 client.loadFromConfig('test/fixtures/org1.yaml');
 ```
@@ -306,7 +306,7 @@ When there is a connection profile configuration loaded and the query call is no
 ### When monitoring for events
 Working with an channel-based event hub will not changed when a connection profile configuration has been loaded. A new method has been added to the fabric client to simplify setting up of an ChannelEventHub object. Use the following to get an ChannelEventHub object that will be setup to work with the named peer's channel-based event hub.
 ```
-var chanel_event_hub = channel.newChannelEventHub('peer0.org1.example.com');
+var channel_event_hub = channel.newChannelEventHub('peer0.org1.example.com');
 ```
 Notice how the parameter to the call is the name of the peer. All settings to create an channel-based event hub are defined by the connection profile configuration under the peer by that name.
 ```

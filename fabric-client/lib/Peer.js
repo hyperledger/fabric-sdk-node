@@ -68,7 +68,7 @@ var Peer = class extends Remote {
 	 * or runs queries.
 	 *
 	 * @param {Proposal} proposal - A protobuf encoded byte array of type
-	 *        [Proposal]{@link https://github.com/hyperledger/fabric/blob/v1.2.0/protos/peer/proposal.proto}
+	 *        [Proposal]{@link https://github.com/hyperledger/fabric/blob/release-1.2/protos/peer/proposal.proto}
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Peer instance and the global
@@ -122,7 +122,7 @@ var Peer = class extends Remote {
 	 * Send an discovery request to this peer.
 	 *
 	 * @param {SignedRequest} request - A protobuf encoded byte array of type
-	 *        [Proposal]{@link https://github.com/hyperledger/fabric/blob/v1.2.0/protos/discovery/protocol.proto}
+	 *        [Proposal]{@link https://github.com/hyperledger/fabric/blob/release-1.2/protos/discovery/protocol.proto}
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Peer instance and the global

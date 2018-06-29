@@ -131,7 +131,7 @@ a time until it receives a successful submission of the transaction. Sending
 a transaction (a set of endorsements) to an orderer does not mean that the transaction
 will be committed, it means that the request was built properly and that the
 sender has the authority to send the request. The response from the orderer
-will indicate that the orderer has excepted the request. The `sendTransaction`
+will indicate that the orderer has accepted the request. The `sendTransaction`
 has an optional parameter `orderer` that indicates the orderer to send the
 transaction. The handler will use the orderer as specified with the `orderer`
 parameter and send to any other orderers. If no orderer is specified the handler
