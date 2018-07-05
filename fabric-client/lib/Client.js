@@ -1823,7 +1823,7 @@ var Client = class extends BaseClient {
 								let org_peer = org_peers[k];
 								logger.debug('%s - looking at org peer:%s',method,org_peer.getName());
 								if(org_peer.getName() === channel_peer.getName()) {
-									found_peers[org_peer.getName()] = org_peer;//to avoid Duplicate Peers
+									found_peers[org_peer.getName()] = channel_peer;//to avoid Duplicate Peers
 									logger.debug('%s - adding peer to list:%s',method,org_peer.getName());
 								}
 							}
