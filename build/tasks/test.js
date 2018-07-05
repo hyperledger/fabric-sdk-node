@@ -40,7 +40,7 @@ let thirparty_release = require(path.join(__dirname, '../../fabric-client/packag
 // this is a release build, need to build the proper docker image tag
 // to run the tests against the corresponding fabric released docker images
 if (arch.indexOf('x64') === 0) {
-	docker_arch = ':x86_64';
+	docker_arch = ':amd64';
 } else if (arch.indexOf('s390') === 0) {
 	docker_arch = ':s390x';
 } else if (arch.indexOf('ppc64') === 0) {
