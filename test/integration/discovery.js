@@ -50,11 +50,16 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, 'v2', 'Checking peer chaincode version');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, chaincode_id, 'Checking peer chaincode name');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, version, 'Checking peer chaincode version');
-	t.equals(results.endorsement_targets.example.layouts[0].G0, 1, 'Checking layout quantities_by_group');
+	if(results.endorsement_targets.example.groups.G0) {
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, chaincode_id, 'Checking peer chaincode name');
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, version, 'Checking peer chaincode version');
+		t.equals(results.endorsement_targets.example.layouts[0].G0, 1, 'Checking layout quantities_by_group');
+	} else {
+		logger.info('MISSING group: %j',results);
+	}
+
 
 	// try with target name
 	results = await channel._discover({
@@ -72,11 +77,15 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, 'v2', 'Checking peer chaincode version');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, chaincode_id, 'Checking peer chaincode name');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, version, 'Checking peer chaincode version');
-	t.equals(results.endorsement_targets.example.layouts[0].G0, 1, 'Checking layout quantities_by_group');
+	if(results.endorsement_targets.example.groups.G0) {
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, chaincode_id, 'Checking peer chaincode name');
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, version, 'Checking peer chaincode version');
+		t.equals(results.endorsement_targets.example.layouts[0].G0, 1, 'Checking layout quantities_by_group');
+	} else {
+		logger.info('MISSING group: %j',results);
+	}
 
 	// try without the target specfied
 	results = await channel._discover({
@@ -93,11 +102,15 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, 'v2', 'Checking peer chaincode version');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
-	t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, 'v2', 'Checking peer chaincode version');
-	t.equals(results.endorsement_targets.example.layouts[0].G0, 1, 'Checking layout quantities_by_group');
+	if(results.endorsement_targets.example.groups.G0) {
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking peer endpoint');
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].ledger_height.low, 3, 'Checking peer ledger_height');
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].name, 'example', 'Checking peer chaincode name');
+		t.equals(results.endorsement_targets.example.groups.G0.peers[0].chaincodes[0].version, 'v2', 'Checking peer chaincode version');
+		t.equals(results.endorsement_targets.example.layouts[0].G0, 1, 'Checking layout quantities_by_group');
+	} else {
+		logger.info('MISSING group: %j',results);
+	}
 
 	channel.removePeer(discovery_peer);
 	channel._use_discovery = false;

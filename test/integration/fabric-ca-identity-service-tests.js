@@ -98,7 +98,7 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 			t.fail('should throw error if we enroll this new identity at ca_Org2');
 			t.end();
 		} catch (e) {
-			t.equal(e.message.indexOf('"message":"Authorization failure"') >= 0, true);
+			t.equal(e.message.indexOf('failure') >= 0, true);
 			t.pass('should throw error if we enroll this new identity at ca_Org2');
 		}
 

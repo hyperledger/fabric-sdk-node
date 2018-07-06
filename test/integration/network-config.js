@@ -805,8 +805,8 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 			const user = await client_org1.setUserContext({username: testuser, password: secret, caName: ca_wrong_name});
 			t.fail('Should throw error when setting user context using a caName in another org');
 		} catch (err) {
-			// Expected error should include Authorization failure
-			t.equal(err.message.includes('Authorization failure'), true,
+			// Expected error should include Authorization failure or Authentication failure
+			t.equal(err.message.includes('failure'), true,
 				'Got expected error to enroll user using a caName in another org. Error: ' + err.message);
 		}
 	} catch (err) {
