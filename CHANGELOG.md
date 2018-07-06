@@ -1,3 +1,91 @@
+## v1.2.0
+Fri Jul  6 08:14:31 EDT 2018
+
+* [0087554](https://github.com/hyperledger/fabric-sdk-node/commit/0087554) Prepare for release v1.2.0
+* [65675e4](https://github.com/hyperledger/fabric-sdk-node/commit/65675e4) [[FAB-10958](https://jira.hyperledger.org/browse/FAB-10958)]Fix typos and broken links
+* [b0b4c49](https://github.com/hyperledger/fabric-sdk-node/commit/b0b4c49) [FAB-10917](https://jira.hyperledger.org/browse/FAB-10917) NodeSDK - return channel methods
+* [acf0e04](https://github.com/hyperledger/fabric-sdk-node/commit/acf0e04) [FAB-10940](https://jira.hyperledger.org/browse/FAB-10940) installChaincode doesn’t restrict to org
+* [6607f7f](https://github.com/hyperledger/fabric-sdk-node/commit/6607f7f) [FAB-10916](https://jira.hyperledger.org/browse/FAB-10916) NodeSDK - allow create peers without TLS
+* [8bb7f22](https://github.com/hyperledger/fabric-sdk-node/commit/8bb7f22) [[FAB-10919](https://jira.hyperledger.org/browse/FAB-10919)]Fix the version of Node.js in tutorial
+* [9f32dbd](https://github.com/hyperledger/fabric-sdk-node/commit/9f32dbd) [FAB-10910](https://jira.hyperledger.org/browse/FAB-10910) default channel not returned
+* [4293680](https://github.com/hyperledger/fabric-sdk-node/commit/4293680) [FAB-10856](https://jira.hyperledger.org/browse/FAB-10856)  NodeSDK getByOrg not working
+* [20da621](https://github.com/hyperledger/fabric-sdk-node/commit/20da621) [FAB-10902](https://jira.hyperledger.org/browse/FAB-10902) NodeSDK - remove anchor links to sections
+* [3948c22](https://github.com/hyperledger/fabric-sdk-node/commit/3948c22) update maintainers
+* [cce2a38](https://github.com/hyperledger/fabric-sdk-node/commit/cce2a38) [FAB-10808](https://jira.hyperledger.org/browse/FAB-10808) NodeSDK - add private-data.js to e2e.js
+* [23ec52f](https://github.com/hyperledger/fabric-sdk-node/commit/23ec52f) [[FAB-10682](https://jira.hyperledger.org/browse/FAB-10682)] Use self-signed TLS certs
+* [ac81154](https://github.com/hyperledger/fabric-sdk-node/commit/ac81154) [FAB-10808](https://jira.hyperledger.org/browse/FAB-10808) NodeSDK - add e2e tests for private data
+* [a4ec564](https://github.com/hyperledger/fabric-sdk-node/commit/a4ec564) [FAB-10793](https://jira.hyperledger.org/browse/FAB-10793) NodeSDK Update Mutual TLS doc
+* [71d4ef4](https://github.com/hyperledger/fabric-sdk-node/commit/71d4ef4) [FAB-10745](https://jira.hyperledger.org/browse/FAB-10745) NodeSDK Handle missing ledger_height
+* [e146ad5](https://github.com/hyperledger/fabric-sdk-node/commit/e146ad5) [[FAB-10740](https://jira.hyperledger.org/browse/FAB-10740)] remove executeTransaction
+* [29fbf11](https://github.com/hyperledger/fabric-sdk-node/commit/29fbf11) [[FAB-10681](https://jira.hyperledger.org/browse/FAB-10681)] Generate self-signed X509 cert
+* [9375d2b](https://github.com/hyperledger/fabric-sdk-node/commit/9375d2b) [[FAB-8232](https://jira.hyperledger.org/browse/FAB-8232)] simplify promise chain with async/await
+* [24d43c4](https://github.com/hyperledger/fabric-sdk-node/commit/24d43c4) [FAB-10672](https://jira.hyperledger.org/browse/FAB-10672) NodeSDK - service discovery tutorial
+* [b351453](https://github.com/hyperledger/fabric-sdk-node/commit/b351453) [FAB-10717](https://jira.hyperledger.org/browse/FAB-10717) NodeSDK - SD endorsements fail
+* [4f80b2d](https://github.com/hyperledger/fabric-sdk-node/commit/4f80b2d) [FAB-10721](https://jira.hyperledger.org/browse/FAB-10721) NodeSDK - Fix broken link
+* [127de22](https://github.com/hyperledger/fabric-sdk-node/commit/127de22) [FAB-10684](https://jira.hyperledger.org/browse/FAB-10684) NodeSDK - update private data tutorial
+* [dd33c49](https://github.com/hyperledger/fabric-sdk-node/commit/dd33c49) [[FAB-8232](https://jira.hyperledger.org/browse/FAB-8232)] simplify promise chain with async/await
+* [0617b9a](https://github.com/hyperledger/fabric-sdk-node/commit/0617b9a) [FAB-10684](https://jira.hyperledger.org/browse/FAB-10684) NodeSDK - add private data tutorial
+* [0891df6](https://github.com/hyperledger/fabric-sdk-node/commit/0891df6) [[FAB-10656](https://jira.hyperledger.org/browse/FAB-10656)] Add option to skip decoding blocks/txs
+* [e48c3b7](https://github.com/hyperledger/fabric-sdk-node/commit/e48c3b7) [FAB-10627](https://jira.hyperledger.org/browse/FAB-10627) NodeSDK - use multiple orderers
+* [f1340c8](https://github.com/hyperledger/fabric-sdk-node/commit/f1340c8) [[FAB-10636](https://jira.hyperledger.org/browse/FAB-10636)] update fabric-client type definitions
+* [5dc8931](https://github.com/hyperledger/fabric-sdk-node/commit/5dc8931) [FAB-10298](https://jira.hyperledger.org/browse/FAB-10298) NodeSDK Client to return proper CA
+* [b6e6109](https://github.com/hyperledger/fabric-sdk-node/commit/b6e6109) [FAB-10602](https://jira.hyperledger.org/browse/FAB-10602) NodeSDK - tutorial on logging
+* [95fbcec](https://github.com/hyperledger/fabric-sdk-node/commit/95fbcec) [FAB-10497](https://jira.hyperledger.org/browse/FAB-10497) - NodeSDK - sidedb fix
+* [7438a71](https://github.com/hyperledger/fabric-sdk-node/commit/7438a71) [FAB-8806](https://jira.hyperledger.org/browse/FAB-8806) NodeSDK - Discovery part 3
+* [c0913d2](https://github.com/hyperledger/fabric-sdk-node/commit/c0913d2) [FAB-8806](https://jira.hyperledger.org/browse/FAB-8806) NodeSDK - Discovery part 2
+* [bd559eb](https://github.com/hyperledger/fabric-sdk-node/commit/bd559eb) [[FAB-10522](https://jira.hyperledger.org/browse/FAB-10522)] Fix repository url
+* [acce409](https://github.com/hyperledger/fabric-sdk-node/commit/acce409) [FAB-10497](https://jira.hyperledger.org/browse/FAB-10497) NodeSDK blockToLive error
+* [8e217df](https://github.com/hyperledger/fabric-sdk-node/commit/8e217df) [[FAB-10429](https://jira.hyperledger.org/browse/FAB-10429)] split eslint config from gulp task
+* [123302e](https://github.com/hyperledger/fabric-sdk-node/commit/123302e) [FAB-8806](https://jira.hyperledger.org/browse/FAB-8806) NodeSDK - update protos
+* [b4231dd](https://github.com/hyperledger/fabric-sdk-node/commit/b4231dd) [FAB-10045](https://jira.hyperledger.org/browse/FAB-10045) NodeSDK do not read db on user load
+* [3a9087f](https://github.com/hyperledger/fabric-sdk-node/commit/3a9087f) [[FAB-9402](https://jira.hyperledger.org/browse/FAB-9402)] key.js extends api.js explicitly
+* [4cdffce](https://github.com/hyperledger/fabric-sdk-node/commit/4cdffce) [[FAB-9020](https://jira.hyperledger.org/browse/FAB-9020)] Simplify Remote.js
+* [fb75164](https://github.com/hyperledger/fabric-sdk-node/commit/fb75164) [[FAB-9374](https://jira.hyperledger.org/browse/FAB-9374)] Add support for Certificates API on Node SDK
+* [a851829](https://github.com/hyperledger/fabric-sdk-node/commit/a851829) [FAB-10434](https://jira.hyperledger.org/browse/FAB-10434) NodeSDK - use nyc for code coverage
+* [daaf7b7](https://github.com/hyperledger/fabric-sdk-node/commit/daaf7b7) [[FAB-10397](https://jira.hyperledger.org/browse/FAB-10397)] Add blockToLive to collection config
+* [8127cac](https://github.com/hyperledger/fabric-sdk-node/commit/8127cac) [[FAB-10402](https://jira.hyperledger.org/browse/FAB-10402)] BlockDecoder decodes chaincode input
+* [e9f8201](https://github.com/hyperledger/fabric-sdk-node/commit/e9f8201) [FAB-9928](https://jira.hyperledger.org/browse/FAB-9928) NodeSDK - Add caName option to setUserContext
+* [a23064a](https://github.com/hyperledger/fabric-sdk-node/commit/a23064a) [FAB-10350](https://jira.hyperledger.org/browse/FAB-10350) NodeSDK - update fabric-ca-services-tests
+* [679921e](https://github.com/hyperledger/fabric-sdk-node/commit/679921e) [FAB-10257](https://jira.hyperledger.org/browse/FAB-10257) NodeSDK - update packages
+* [f6a96d2](https://github.com/hyperledger/fabric-sdk-node/commit/f6a96d2) [[FAB-10233](https://jira.hyperledger.org/browse/FAB-10233)]Reduce duplicate creating big number
+* [ea00937](https://github.com/hyperledger/fabric-sdk-node/commit/ea00937) Revert "[[FAB-10241](https://jira.hyperledger.org/browse/FAB-10241)]"
+* [c0bd09c](https://github.com/hyperledger/fabric-sdk-node/commit/c0bd09c) [FAB-8806](https://jira.hyperledger.org/browse/FAB-8806) NodeSDK - discovery part 1
+* [19d3ddd](https://github.com/hyperledger/fabric-sdk-node/commit/19d3ddd) [[FAB-10241](https://jira.hyperledger.org/browse/FAB-10241)] update fabric-sdk-node by fabric-ca changes
+* [61b5493](https://github.com/hyperledger/fabric-sdk-node/commit/61b5493) [[FAB-9679](https://jira.hyperledger.org/browse/FAB-9679)] Private Data Support
+* [ca90c97](https://github.com/hyperledger/fabric-sdk-node/commit/ca90c97) [[FAB-8791](https://jira.hyperledger.org/browse/FAB-8791)] Optimize hash primitive and CryptoSuite impl
+* [e55f817](https://github.com/hyperledger/fabric-sdk-node/commit/e55f817) [[FAB-9963](https://jira.hyperledger.org/browse/FAB-9963)] Fix some test which received an error
+* [c4eebe9](https://github.com/hyperledger/fabric-sdk-node/commit/c4eebe9) [[FAB-7670](https://jira.hyperledger.org/browse/FAB-7670)] introduce new API executeTransaction()
+* [2c127cb](https://github.com/hyperledger/fabric-sdk-node/commit/2c127cb) [FAB-9769](https://jira.hyperledger.org/browse/FAB-9769) NodeSDK - update protos
+* [7401007](https://github.com/hyperledger/fabric-sdk-node/commit/7401007) [FAB-8830](https://jira.hyperledger.org/browse/FAB-8830) NodeSDK Prepare for service discovery
+* [211c4a8](https://github.com/hyperledger/fabric-sdk-node/commit/211c4a8) [[FAB-9529](https://jira.hyperledger.org/browse/FAB-9529)] add check for grpc connection establish
+* [2d81c17](https://github.com/hyperledger/fabric-sdk-node/commit/2d81c17) [[FAB-9335](https://jira.hyperledger.org/browse/FAB-9335)] add timeout for fabric-ca-client request
+* [9bc92d1](https://github.com/hyperledger/fabric-sdk-node/commit/9bc92d1) [[FAB-9500](https://jira.hyperledger.org/browse/FAB-9500)] Add missing setCryptoKeyStore function
+* [82cfb26](https://github.com/hyperledger/fabric-sdk-node/commit/82cfb26) [FAB-9493](https://jira.hyperledger.org/browse/FAB-9493) NodeSDK - add test for multiple CCevent
+* [d80de86](https://github.com/hyperledger/fabric-sdk-node/commit/d80de86) [FAB-9337](https://jira.hyperledger.org/browse/FAB-9337) NodeSDK - use legacy grpc max settings
+* [624f69c](https://github.com/hyperledger/fabric-sdk-node/commit/624f69c) [[FAB-9364](https://jira.hyperledger.org/browse/FAB-9364)] fix Typescript compiling error
+* [d85d349](https://github.com/hyperledger/fabric-sdk-node/commit/d85d349) [FAB-3676](https://jira.hyperledger.org/browse/FAB-3676) add check_license
+* [5aeda42](https://github.com/hyperledger/fabric-sdk-node/commit/5aeda42) [FAB-9353](https://jira.hyperledger.org/browse/FAB-9353) add CODE_OF_CONDUCT.md
+* [104f099](https://github.com/hyperledger/fabric-sdk-node/commit/104f099) [[FAB-8687](https://jira.hyperledger.org/browse/FAB-8687)] Channel name Regex verify
+* [1cc0c83](https://github.com/hyperledger/fabric-sdk-node/commit/1cc0c83) [[FAB-9284](https://jira.hyperledger.org/browse/FAB-9284)] Fix loss of custom even
+* [4815f5e](https://github.com/hyperledger/fabric-sdk-node/commit/4815f5e) [FAB-8749](https://jira.hyperledger.org/browse/FAB-8749) NodeSDK - all EventHub to use admin
+* [1223f39](https://github.com/hyperledger/fabric-sdk-node/commit/1223f39) [[FAB-9175](https://jira.hyperledger.org/browse/FAB-9175)] update fabric-ca-client IdentityService
+* [a2efd26](https://github.com/hyperledger/fabric-sdk-node/commit/a2efd26) [[FAB-7539](https://jira.hyperledger.org/browse/FAB-7539)] Cleanup channel event doc
+* [2de44f4](https://github.com/hyperledger/fabric-sdk-node/commit/2de44f4) [FAB-5755](https://jira.hyperledger.org/browse/FAB-5755) NodeSDK - update doc on transID
+* [763dc5d](https://github.com/hyperledger/fabric-sdk-node/commit/763dc5d) [[FAB-9072](https://jira.hyperledger.org/browse/FAB-9072)] unconditionally ignore node_modules folder
+* [54488fe](https://github.com/hyperledger/fabric-sdk-node/commit/54488fe) [FAB-8751](https://jira.hyperledger.org/browse/FAB-8751) NodeSDK - e2e use channel event hub
+* [93df558](https://github.com/hyperledger/fabric-sdk-node/commit/93df558) [FAB-9063](https://jira.hyperledger.org/browse/FAB-9063) Provide link to Fabric committers
+* [65d12c5](https://github.com/hyperledger/fabric-sdk-node/commit/65d12c5) [FAB-5622](https://jira.hyperledger.org/browse/FAB-5622) NodeSDK - improve test error msg
+* [0bc73ac](https://github.com/hyperledger/fabric-sdk-node/commit/0bc73ac) [FAB-8749](https://jira.hyperledger.org/browse/FAB-8749) NodeSDK - allow admin identity
+* [66d5e96](https://github.com/hyperledger/fabric-sdk-node/commit/66d5e96) [FAB-8326](https://jira.hyperledger.org/browse/FAB-8326) NodeSDK - fix golang lint issues
+* [ab2c8e8](https://github.com/hyperledger/fabric-sdk-node/commit/ab2c8e8) [FAB-8969](https://jira.hyperledger.org/browse/FAB-8969) NodeSDK - '/0' fix missing on mutual tls
+* [e3f9043](https://github.com/hyperledger/fabric-sdk-node/commit/e3f9043) [[FAB-8942](https://jira.hyperledger.org/browse/FAB-8942)] fix type definition for 1.1 release
+* [2a5f8cb](https://github.com/hyperledger/fabric-sdk-node/commit/2a5f8cb) [[FAB-8973](https://jira.hyperledger.org/browse/FAB-8973)]Remove node 6 badge
+* [c12930b](https://github.com/hyperledger/fabric-sdk-node/commit/c12930b) [[FAB-8953](https://jira.hyperledger.org/browse/FAB-8953)] Fix eslint error
+* [bd59ae5](https://github.com/hyperledger/fabric-sdk-node/commit/bd59ae5) [FAB-8952](https://jira.hyperledger.org/browse/FAB-8952) Rename maintainers file
+* [907e33e](https://github.com/hyperledger/fabric-sdk-node/commit/907e33e) [[FAB-8791](https://jira.hyperledger.org/browse/FAB-8791)] refactor:using ES6 class in hash.js
+* [c1c04b7](https://github.com/hyperledger/fabric-sdk-node/commit/c1c04b7) [FAB-8893](https://jira.hyperledger.org/browse/FAB-8893) NodeSDK - prepare for v1.2.0
+* [a8abc65](https://github.com/hyperledger/fabric-sdk-node/commit/a8abc65) [[FAB-8515](https://jira.hyperledger.org/browse/FAB-8515)] eslint fix in /lib/impl/
+
 ## v1.1.0
 Thu Mar 15 17:05:00 EDT 2018
 

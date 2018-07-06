@@ -1,0 +1,24 @@
+v1.2.0 July 8, 2018
+-----------------------
+
+Release Notes
+-------------
+Add support for private data.
+Add support for self-signed TLS certificates.
+Add support for generating self-signed x509 certificates.
+Bug fixes and documentation improvements.
+
+Known Vulnerabilities
+---------------------
+none
+
+Resolved Vulnerabilities
+------------------------
+none
+
+Known Issues & Workarounds
+--------------------------
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.2/CHANGELOG.md#v120
