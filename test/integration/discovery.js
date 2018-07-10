@@ -100,6 +100,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	t.equals(results.endorsement_targets.example.layouts[0].G0, 1, 'Checking layout quantities_by_group');
 
 	channel.removePeer(discovery_peer);
+	channel._use_discovery = false;
 
 	t.equal(channel.getPeers().length, 0, 'Checking that there are no peers assigned to the channel');
 	t.equal(channel.getOrderers().length, 0, 'Checking that there are no orderers assigned to the channel');
@@ -108,7 +109,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	channel.addOrderer(bad_orderer); //will put this orderer first on the list
 
 	// This will call the discovery under the covers and load the channel with msps, orderers, and peers
-	results = await channel.initialize({asLocalhost: true, discovery: true, target: discovery_peer});
+	results = await channel.initialize({asLocalhost: true, discover: true, target: discovery_peer});
 
 	t.equal(channel.getOrderers().length, 2, 'Checking that there are two orderers assigned to the channel');
 
