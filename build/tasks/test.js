@@ -5,20 +5,22 @@
 */
 'use strict';
 
-var gulp = require('gulp');
-var tape = require('gulp-tape');
-var tapColorize = require('tap-colorize');
-var addsrc = require('gulp-add-src');
+const addsrc = require('gulp-add-src');
+const gulp = require('gulp');
+const mocha = require('gulp-mocha');
+const tape = require('gulp-tape');
 
-var fs = require('fs-extra');
-var path = require('path');
-var os = require('os');
-var util = require('util');
-var shell = require('gulp-shell');
-var testConstants = require('../../test/unit/constants.js');
+const tapColorize = require('tap-colorize');
+
+const fs = require('fs-extra');
+const path = require('path');
+const os = require('os');
+const util = require('util');
+const shell = require('gulp-shell');
+const testConstants = require('../../test/unit/constants.js');
 
 // by default for running the tests print debug to a file
-var debugPath = path.join(testConstants.tempdir, 'test-log/debug.log');
+const debugPath = path.join(testConstants.tempdir, 'test-log/debug.log');
 process.env.HFC_LOGGING = util.format('{"debug":"%s"}', escapeWindowsPath(debugPath));
 
 function escapeWindowsPath(p) {
@@ -30,12 +32,12 @@ console.log('\n####################################################');
 console.log(util.format('# debug log: %s', debugPath));
 console.log('####################################################\n');
 
-let arch = process.arch;
+const arch = process.arch;
+const release = require(path.join(__dirname, '../../fabric-client/package.json')).version;
+const thirparty_release = require(path.join(__dirname, '../../fabric-client/package.json')).thirdparty;
 let dockerImageTag = '';
 let thirdpartyImageTag = '';
 let docker_arch = '';
-let release = require(path.join(__dirname, '../../fabric-client/package.json')).version;
-let thirparty_release = require(path.join(__dirname, '../../fabric-client/package.json')).thirdparty;
 
 // this is a release build, need to build the proper docker image tag
 // to run the tests against the corresponding fabric released docker images
@@ -59,7 +61,7 @@ if (!/-snapshot/.test(release)) {
 process.env.DOCKER_IMG_TAG = dockerImageTag;
 process.env.THIRDPARTY_IMG_TAG = thirdpartyImageTag;
 
-gulp.task('pre-test', function() {
+gulp.task('pre-test', () => {
 	return gulp.src([
 		'fabric-client/lib/**/*.js',
 		'fabric-ca-client/lib/FabricCAClientImpl.js',
@@ -69,7 +71,7 @@ gulp.task('pre-test', function() {
 	]);
 });
 
-gulp.task('clean-up', function() {
+gulp.task('clean-up', () => {
 	// some tests create temporary files or directories
 	// they are all created in the same temp folder
 	fs.removeSync(testConstants.tempdir);
@@ -113,80 +115,96 @@ gulp.task('test-headless', shell.task(
 	'./node_modules/nyc/bin/nyc.js gulp run-test-headless'
 ));
 
-gulp.task('run-test', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'ca'], function() {
-	// use individual tests to control the sequence they get executed
-	// first run the ca-tests that tests all the member registration
-	// and enrollment scenarios (good and bad calls). Then the rest
-	// of the tests will re-use the same key value store that has
-	// saved the user certificates so they can interact with the
-	// network
-	return gulp.src(shouldRunPKCS11Tests([
-		'test/unit/config.js', // needs to be first
-		'test/unit/**/*.js',
-		'!test/unit/constants.js',
-		'!test/unit/util.js',
-		'!test/unit/logger.js',
-		// channel: mychannel, chaincode: e2enodecc:v0
-		'test/integration/nodechaincode/e2e.js',
-		// channel: mychannel, chaincode: end2endnodesdk:v0/v1
-		'test/integration/e2e.js',
-		'test/integration/query.js',
-		'test/integration/fabric-ca-affiliation-service-tests.js',
-		'test/integration/fabric-ca-identity-service-tests.js',
-		'test/integration/fabric-ca-certificate-service-tests.js',
-		'test/integration/fabric-ca-services-tests.js',
-		'test/integration/client.js',
-		'test/integration/orderer-channel-tests.js',
-		'test/integration/cloudant-fabricca-tests.js',
-		'test/integration/couchdb-fabricca-tests.js',
-		'test/integration/fileKeyValueStore-fabricca-tests.js',
-		'test/integration/install.js',
-		'test/integration/events.js',
-		'test/integration/channel-event-hub.js',
-		// channel: mychannel, chaincode: end2endnodesdk:v3
-		'test/integration/upgrade.js',
-		'test/integration/get-config.js',
-		// channel: mychanneltx, chaincode: end2endnodesdk:v0
-		'test/integration/create-configtx-channel.js',
-		'test/integration/e2e/join-channel.js',
-		'test/integration/instantiate.js',
-		'test/integration/e2e/invoke-transaction.js',
-		'test/integration/e2e/query.js',
-		'test/integration/invoke.js',
-		'test/integration/network-config.js',
-		'test/integration/only-admin.js',
-		'test/integration/discovery.js',
-		'test/integration/grpc.js',
-		'test/integration/perf/orderer.js',
-		'test/integration/perf/peer.js'
-	]))
-	.pipe(addsrc.append(
-		'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up
-	))
-	.pipe(tape({
-		reporter: tapColorize()
-	}));
-});
+gulp.task('run-test', ['run-full'],
+	() => {
+		return gulp.src(['./fabric-ca-client/test/**/*.js', './fabric-client/test/**/*.js'], { read: false })
+			.pipe(mocha({ reporter: 'list', exit: true }));
+	}
+);
 
-gulp.task('run-test-headless', ['clean-up', 'lint', 'pre-test', 'ca'], function() {
-	// this is needed to avoid a problem in tape-promise with adding
-	// too many listeners
-	// to the "unhandledRejection" event
-	process.setMaxListeners(0);
+gulp.task('run-test-headless', ['run-headless'],
+	() => {
+		return gulp.src(['./fabric-ca-client/test/**/*.js', './fabric-client/test/**/*.js'], { read: false })
+			.pipe(mocha({ reporter: 'list', exit: true }));
+	}
+);
 
-	return gulp.src(shouldRunPKCS11Tests([
-		'test/unit/**/*.js',
-		'!test/unit/constants.js',
-		'!test/unit/util.js',
-		'!test/unit/logger.js'
-	]))
-	.pipe(addsrc.append(
-		'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up
-	))
-	.pipe(tape({
-		reporter: tapColorize()
-	}));
-});
+gulp.task('run-full', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready', 'ca'],
+	() => {
+		// use individual tests to control the sequence they get executed
+		// first run the ca-tests that tests all the member registration
+		// and enrollment scenarios (good and bad calls). Then the rest
+		// of the tests will re-use the same key value store that has
+		// saved the user certificates so they can interact with the
+		// network
+		return gulp.src(shouldRunPKCS11Tests([
+			'test/unit/config.js', // needs to be first
+			'test/unit/**/*.js',
+			'!test/unit/constants.js',
+			'!test/unit/util.js',
+			'!test/unit/logger.js',
+			// channel: mychannel, chaincode: e2enodecc:v0
+			'test/integration/nodechaincode/e2e.js',
+			// channel: mychannel, chaincode: end2endnodesdk:v0/v1
+			'test/integration/e2e.js',
+			'test/integration/query.js',
+			'test/integration/fabric-ca-affiliation-service-tests.js',
+			'test/integration/fabric-ca-identity-service-tests.js',
+			'test/integration/fabric-ca-certificate-service-tests.js',
+			'test/integration/fabric-ca-services-tests.js',
+			'test/integration/client.js',
+			'test/integration/orderer-channel-tests.js',
+			'test/integration/cloudant-fabricca-tests.js',
+			'test/integration/couchdb-fabricca-tests.js',
+			'test/integration/fileKeyValueStore-fabricca-tests.js',
+			'test/integration/install.js',
+			'test/integration/events.js',
+			'test/integration/channel-event-hub.js',
+			// channel: mychannel, chaincode: end2endnodesdk:v3
+			'test/integration/upgrade.js',
+			'test/integration/get-config.js',
+			// channel: mychanneltx, chaincode: end2endnodesdk:v0
+			'test/integration/create-configtx-channel.js',
+			'test/integration/e2e/join-channel.js',
+			'test/integration/instantiate.js',
+			'test/integration/e2e/invoke-transaction.js',
+			'test/integration/e2e/query.js',
+			'test/integration/invoke.js',
+			'test/integration/network-config.js',
+			'test/integration/only-admin.js',
+			'test/integration/discovery.js',
+			'test/integration/grpc.js',
+			'test/integration/perf/orderer.js',
+			'test/integration/perf/peer.js'
+		]))
+			.pipe(addsrc.append(
+				'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up
+			))
+			.pipe(tape({
+				reporter: tapColorize()
+			}));
+	});
+
+gulp.task('run-headless', ['clean-up', 'lint', 'pre-test', 'ca'],
+	() => {
+		// this is needed to avoid a problem in tape-promise with adding
+		// too many listeners
+		// to the "unhandledRejection" event
+		process.setMaxListeners(0);
+
+		return gulp.src(shouldRunPKCS11Tests([
+			'test/unit/**/*.js',
+			'!test/unit/constants.js',
+			'!test/unit/util.js',
+			'!test/unit/logger.js'
+		]))
+			.pipe(addsrc.append(
+				'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up
+			))
+			.pipe(tape({
+				reporter: tapColorize()
+			}));
+	});
 
 // currently only the x64 CI jobs are configured with SoftHSM
 // disable the pkcs11.js test for s390 or other jobs

@@ -23,10 +23,10 @@ const testUtil = require('../unit/util.js');
 
 
 test('\n\n***** clean up the connection profile testing stores  *****\n\n', (t) => {
-	/*
-	 * The following is just testing housekeeping... cleanup from the last time
-	 * this test was run, a real application would not do this.
-	 */
+/*
+	* The following is just testing housekeeping... cleanup from the last time
+	* this test was run, a real application would not do this.
+	*/
 	const client = Client.loadFromConfig('test/fixtures/org1.yaml');
 	let client_config = client.getClientConfig();
 
@@ -292,8 +292,8 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		}
 
 		/*
-	 *  I N S T A N S I A T E
-	 */
+		*  I N S T A N S I A T E
+		*/
 
 		tx_id = client_org1.newTransactionID(true);
 		instansiate_tx_id = tx_id;
@@ -337,14 +337,14 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 
 		// this will enroll the user using the ca as defined in the connection profile
 		// for this organization and then set in on the client as the current user context
-		const admin = await client_org1.setUserContext({username: 'admin', password: 'adminpw'});
+		const admin = await client_org1.setUserContext({ username: 'admin', password: 'adminpw' });
 		t.pass('Successfully enrolled user \'admin\' for org1');
 
 		const ca1 = client_org1.getCertificateAuthority();
-		const secret = await ca1.register({enrollmentID: 'user1', affiliation: 'org1'}, admin);
+		const secret = await ca1.register({ enrollmentID: 'user1', affiliation: 'org1' }, admin);
 		t.pass('Successfully registered user \'user1\' for org1');
 
-		await client_org1.setUserContext({username: 'user1', password: secret});
+		await client_org1.setUserContext({ username: 'user1', password: secret });
 		t.pass('Successfully enrolled user \'user1\' for org1');
 
 		// try again ...this time use a longer timeout
@@ -411,7 +411,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			eventhub.registerTxEvent(query_tx_id, (tx, code, block_num) => {
 				clearTimeout(handle);
 				if (code !== 'VALID') {
-					t.fail('transaction was invalid, code = ' + code + ' with block_num ' + block_num );
+					t.fail('transaction was invalid, code = ' + code + ' with block_num ' + block_num);
 					reject(new Error('INVALID:' + code));
 				} else {
 					t.pass('transaction has been committed on peer ' + eventhub.getPeerAddr());
@@ -422,7 +422,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 				t.fail('transaction event failed:' + error);
 				reject(error);
 			},
-				{disconnect: true} //since this is a test and we will not be using later
+			{ disconnect: true } //since this is a test and we will not be using later
 			);
 		});
 		// connect(true) to receive full blocks (user must have read rights to the channel)
@@ -472,7 +472,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 				// received and used that value to start the replay
 				// Setting the disconnect to true as we do not want to use this
 				// ChannelEventHub after the event we are looking for comes in
-				{startBlock: 0, disconnect: true}
+				{ startBlock: 0, disconnect: true }
 			);
 			t.pass('Successfully registered transaction replay for ' + query_tx_id);
 
@@ -491,7 +491,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			// on the same port as the other peer services.
 			const channel_event_hubs = channel_on_org1.getChannelEventHubsForOrg();
 			// we should have the an channel event hub defined on the "peer0.org1.example.com"
-			t.equals(channel_event_hubs.length, 1,'Checking that the channel event hubs has 1');
+			t.equals(channel_event_hubs.length, 1, 'Checking that the channel event hubs has 1');
 
 			const channel_event_hub = channel_event_hubs[0];
 			t.equals(channel_event_hub.getPeerAddr(), 'localhost:7051', ' channel event hub address ');
@@ -516,7 +516,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 				// received and used that value to start the replay
 				// Setting the disconnect to true as we do not want to use this
 				// ChannelEventHub after the event we are looking for comes in
-				{startBlock: 0, disconnect: true}
+				{ startBlock: 0, disconnect: true }
 			);
 			t.pass('Successfully registered transaction replay for ' + query_tx_id);
 
@@ -527,7 +527,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		// check that we can get the user again without password
 		// also verifies that we can get a complete user properly stored
 		// when using a connection profile
-		await client_org1.setUserContext({username: 'admin'});
+		await client_org1.setUserContext({ username: 'admin' });
 		t.pass('Successfully loaded user \'admin\' from store for org1');
 
 		request = {
@@ -682,15 +682,15 @@ test('\n\n***** Enroll user and set user context using a specified caName *****\
 		const caService = client_org1.getCertificateAuthority();
 		t.equals(caService.fabricCAServices._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
 
-		const admin = await client_org1.setUserContext({username: 'admin', password: 'adminpw'});
+		const admin = await client_org1.setUserContext({ username: 'admin', password: 'adminpw' });
 		t.pass('Successfully set user context \'admin\' for ' + org_name);
 
 		// register another user and enroll it with a specified caName
 		const ca1 = client_org1.getCertificateAuthority();
-		const secret = await ca1.register({enrollmentID: testuser, affiliation: org_name}, admin);
+		const secret = await ca1.register({ enrollmentID: testuser, affiliation: org_name }, admin);
 		t.pass('Successfully registerred user ' + testuser + ' for ' + org_name);
 
-		await client_org1.setUserContext({username: testuser, password: secret, caName: ca_name});
+		await client_org1.setUserContext({ username: testuser, password: secret, caName: ca_name });
 		t.pass('Successfully enrolled user and set user context using username, password, and caName');
 
 		let user = await client_org1.getUserContext();
@@ -702,10 +702,10 @@ test('\n\n***** Enroll user and set user context using a specified caName *****\
 
 		// register another user and enroll it without a caName. SDK will pick the first CA on the list
 		const testuser2 = testuser + '2';
-		const secret2 = await ca1.register({enrollmentID: testuser2, affiliation: org_name}, admin);
+		const secret2 = await ca1.register({ enrollmentID: testuser2, affiliation: org_name }, admin);
 		t.pass('Successfully registerred user ' + testuser2 + ' for ' + org_name);
 
-		await client_org1.setUserContext({username: testuser2, password: secret2});
+		await client_org1.setUserContext({ username: testuser2, password: secret2 });
 		t.pass('Successfully enrolled user and set user context using username and password');
 
 		user = await client_org1.getUserContext(testuser2);
@@ -746,14 +746,14 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 		const caService = client_org1.getCertificateAuthority();
 		t.equals(caService.fabricCAServices._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
 
-		const admin = await client_org1.setUserContext({username: 'admin', password: 'adminpw'});
+		const admin = await client_org1.setUserContext({ username: 'admin', password: 'adminpw' });
 		t.pass('Successfully set user context \'admin\' for ' + org_name);
 
 		const ca1 = client_org1.getCertificateAuthority();
-		const secret = await ca1.register({enrollmentID: testuser, affiliation: org_name}, admin);
+		const secret = await ca1.register({ enrollmentID: testuser, affiliation: org_name }, admin);
 
 		try {
-			await client_org1.setUserContext({username: testuser, password: secret, caName: ca_bad_name});
+			await client_org1.setUserContext({ username: testuser, password: secret, caName: ca_bad_name });
 			t.fail('Should throw error when setting user context using a bad caName');
 		} catch (err) {
 			// Expected error should include missing this client\'s organization and certificate authority
@@ -762,7 +762,7 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 		}
 
 		try {
-			await client_org1.setUserContext({username: testuser, password: secret, caName: ca_wrong_name});
+			await client_org1.setUserContext({ username: testuser, password: secret, caName: ca_wrong_name });
 			t.fail('Should throw error when setting user context using a caName in another org');
 		} catch (err) {
 			// Expected error should include Authorization failure or Authentication failure

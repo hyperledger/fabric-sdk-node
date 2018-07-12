@@ -60,10 +60,7 @@ class AffiliationService {
 		}
 		checkRegistrar(registrar);
 
-		let signingIdentity = registrar.getSigningIdentity();
-		if (!signingIdentity) {
-			throw new Error('Can not get signingIdentity from registrar');
-		}
+		const signingIdentity = registrar.getSigningIdentity();
 
 		let url = 'affiliations';
 		if (req.force === true) {
@@ -91,10 +88,7 @@ class AffiliationService {
 		}
 		checkRegistrar(registrar);
 
-		let signingIdentity = registrar.getSigningIdentity();
-		if (!signingIdentity) {
-			throw new Error('Can not get signingIdentity from registrar');
-		}
+		const signingIdentity = registrar.getSigningIdentity();
 
 		const url = 'affiliations/' + affiliation;
 		return this.client.get(url, signingIdentity);
@@ -110,10 +104,7 @@ class AffiliationService {
 	getAll(registrar) {
 		checkRegistrar(registrar);
 
-		let signingIdentity = registrar.getSigningIdentity();
-		if (!signingIdentity) {
-			throw new Error('Can not get signingIdentity from registrar');
-		}
+		const signingIdentity = registrar.getSigningIdentity();
 
 		return this.client.get('affiliations', signingIdentity);
 	}
@@ -134,12 +125,10 @@ class AffiliationService {
 		if (!req.name || typeof req.name !== 'string') {
 			throw new Error('Missing required argument "req.name", or argument "req.name" is not a valid string');
 		}
+
 		checkRegistrar(registrar);
 
-		let signingIdentity = registrar.getSigningIdentity();
-		if (!signingIdentity) {
-			throw new Error('Can not get signingIdentity from registrar');
-		}
+		const signingIdentity = registrar.getSigningIdentity();
 
 		let url = 'affiliations/' + req.name;
 		if (req.force === true) {
@@ -170,10 +159,7 @@ class AffiliationService {
 		}
 		checkRegistrar(registrar);
 
-		let signingIdentity = registrar.getSigningIdentity();
-		if (!signingIdentity) {
-			throw new Error('Can not get signingIdentity from registrar');
-		}
+		const signingIdentity = registrar.getSigningIdentity();
 
 		let url = 'affiliations/' + affiliation;
 		if (req.force === true) {

@@ -3,14 +3,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 */
-var gulp = require('gulp');
-var eslint = require('gulp-eslint');
+const gulp = require('gulp');
+const eslint = require('gulp-eslint');
 
-gulp.task('lint', function () {
+gulp.task('lint', () => {
 	return gulp.src([
 		'**/*.js',
 		'fabric-client/**/*.js',
 		'fabric-ca-client/lib/*.js',
+		'!fabric-ca-client/coverage/**',
 		'!test/typescript/*.js',
 		'!node_modules/**',
 		'!fabric-client/node_modules/**',

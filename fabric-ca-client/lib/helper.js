@@ -8,12 +8,21 @@
 'use strict';
 
 function checkRegistrar(registrar) {
-	if (typeof registrar === 'undefined' || registrar === null) {
+
+	if (!registrar) {
 		throw new Error('Missing required argument "registrar"');
 	}
 
+	if (!registrar.constructor || registrar.constructor.name !== 'User') {
+		throw new Error('Argument "registrar" must be an instance of the class "User" but is of type: ' + registrar.constructor.name);
+	}
+
 	if (typeof registrar.getSigningIdentity !== 'function') {
-		throw new Error('Argument "registrar" must be an instance of the class "User", but is found to be missing a method "getSigningIdentity()"');
+		throw new Error('Argument "registrar" is found to be missing a method "getSigningIdentity()"');
+	}
+
+	if (!registrar.getSigningIdentity()) {
+		throw new Error('Can not get signingIdentity from registrar');
 	}
 }
 
