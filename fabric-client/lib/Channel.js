@@ -734,7 +734,7 @@ const Channel = class {
 		const peers = [];
 		this._channel_peers.forEach((channel_peer) => {
 			if (channel_peer.isInOrg(_mspid)) {
-				peers.push(channel_peer.getPeer());
+				peers.push(channel_peer);
 			}
 		});
 
