@@ -562,9 +562,9 @@ const Channel = class {
 	 * with how this peer is being used on this channel.
 	 * @returns {ChannelPeer[]} The channel peer list on the channel.
 	 */
-	 getChannelPeers() {
-		 return this.getPeers();
-	 }
+	getChannelPeers() {
+		return this.getPeers();
+	}
 
 	/**
 	 * Add the orderer object to the channel object, this is a client-side-only operation.
@@ -3309,9 +3309,9 @@ const ChannelPeer = class {
 	 * Wrapper method for the associated peer so this object may be used as a {@link Peer}
 	 * {@link Peer#sendProposal}
 	 */
-	 sendProposal(proposal, timeout) {
-		 return this._peer.sendProposal(proposal, timeout);
-	 }
+	sendProposal(proposal, timeout) {
+		return this._peer.sendProposal(proposal, timeout);
+	}
 
 	/**
 	 * Wrapper method for the associated peer so this object may be used as a {@link Peer}

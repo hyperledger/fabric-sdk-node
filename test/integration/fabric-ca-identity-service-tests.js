@@ -4,9 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-let utils = require('fabric-client/lib/utils.js');
-let logger = utils.getLogger('integration.ca.identity-service');
-
 let tape = require('tape');
 let _test = require('tape-promise').default;
 let test = _test(tape);

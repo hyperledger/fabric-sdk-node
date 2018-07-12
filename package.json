@@ -22,7 +22,7 @@
     "bunyan": "^1.8.10",
     "del": "^3.0.0",
     "elliptic": "^6.3.2",
-    "eslint": "^4.6.1",
+    "eslint": "^5.1.0",
     "fabric-ca-client": "file:./fabric-ca-client",
     "fabric-client": "file:./fabric-client",
     "fs-extra": "^6.0.1",

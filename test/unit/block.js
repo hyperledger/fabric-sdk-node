@@ -14,10 +14,7 @@ var fs = require('fs');
 var path = require('path');
 
 var grpc = require('grpc');
-var configtxProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/common/configtx.proto')).common;
 var policiesProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/common/policies.proto')).common;
-var commonProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/common/common.proto')).common;
-var kv_query_resultProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/ledger/queryresult/kv_query_result.proto')).queryresult;
 var rwsetProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/ledger/rwset/rwset.proto')).rwset;
 var kvrwsetProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/ledger/rwset/kvrwset/kv_rwset.proto')).kvrwset;
 var chaincodeProto = grpc.load(path.join(__dirname, '../../fabric-client/lib/protos/peer/chaincode.proto')).protos;
@@ -239,7 +236,6 @@ test('\n\n*** BlockDecoder.js test ChaincodeSpec ***\n\n', (t) => {
 	t.equals(chaincodeTypeToString(2), 'NODE', 'Check ChaincodeType for NODE');
 	t.equals(chaincodeTypeToString(99), 'UNKNOWN', 'Check ChaincodeType for UNKNOWN');
 
-	let decodeChaincodeInput = BlockDecoder.__get__('decodeChaincodeInput');
 	let input_proto = new chaincodeProto.ChaincodeInput();
 	input_proto.setArgs([Buffer.from('Hello'), Buffer.from('World')]);
 	input_proto.setDecorations({ test: Buffer.from('Good') });

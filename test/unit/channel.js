@@ -25,11 +25,8 @@ var Orderer = require('fabric-client/lib/Orderer.js');
 var User = require('fabric-client/lib/User.js');
 var MSP = require('fabric-client/lib/msp/msp.js');
 var MSPManager = require('fabric-client/lib/msp/msp-manager.js');
-var idModule = require('fabric-client/lib/msp/identity.js');
-var SigningIdentity = idModule.SigningIdentity;
 
 var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('channel');
 
 // Channel tests /////////////
 test('\n\n ** Channel - constructor test **\n\n', (t) => {
@@ -1027,7 +1024,7 @@ test('\n\n*** Test per-call timeout support ***\n', function (t) {
 
 	let c = new Channel('does-not-matter', client);
 
-	let p = c.sendInstantiateProposal({
+	c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051'), new Peer('grpc://localhost:7052')],
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',

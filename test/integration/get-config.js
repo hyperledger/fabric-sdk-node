@@ -17,7 +17,6 @@ var test = _test(tape);
 
 var path = require('path');
 var fs = require('fs');
-var util = require('util');
 var e2eUtils = require('./e2e/e2eUtils.js');
 
 var Client = require('fabric-client');
@@ -25,23 +24,11 @@ var testUtil = require('../unit/util.js');
 var Peer = require('fabric-client/lib/Peer.js');
 var Orderer = require('fabric-client/lib/Orderer.js');
 
-// Get the proto bufs
-var grpc = require('grpc');
-var _eventsProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/events.proto').protos;
-var _commonProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/common.proto').common;
-var _conigtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/configtx.proto').common;
-var _ccTransProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/transaction.proto').protos;
-var _transProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/transaction.proto').protos;
-var _responseProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/proposal_response.proto').protos;
-var _ccProposalProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/proposal.proto').protos;
-var _ccEventProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/peer/chaincode_event.proto').protos;
 
 var client = new Client();
 // IMPORTANT ------>>>>> MUST RUN e2e/create-channel.js FIRST
 var channel = client.newChannel(testUtil.END2END.channel);
 var ORGS;
-
-var the_user = null;
 
 var querys = [];
 if (process.argv.length > 2) {
@@ -78,9 +65,8 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 
 		testUtil.getSubmitter(client, t, org)
 			.then(
-				function(admin) {
+				function() {
 					t.pass('Successfully enrolled user');
-					the_user = admin;
 
 					channel.addOrderer(
 						new Orderer(
@@ -121,7 +107,7 @@ test('  ---->>>>> get config <<<<<-----', function(t) {
 					t.end();
 				}
 			).then(
-				function(result) {
+				function() {
 					t.pass('channel was successfully initialized');
 					let orgs = channel.getOrganizations();
 					logger.debug(' Got the following orgs back %j', orgs);

@@ -148,8 +148,8 @@ module.exports = class ECDSA_KEY extends api.Key {
 		}
 
 		try {
-			var before = Date.now() - 60000;
-			var after = Date.now() + 60000;
+			//var before = Date.now() - 60000;
+			//var after = Date.now() + 60000;
 			var certPEM = asn1.x509.X509Util.newCertPEM({
 				serial: { int: 4 },
 				sigalg: { name: 'SHA256withECDSA' },

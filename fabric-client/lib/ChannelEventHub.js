@@ -49,7 +49,7 @@ const CONNECTION_STATE = {
 const NO_START_STOP = 0;
 const START_ONLY    = 1;
 const END_ONLY      = 2;
-const START_AND_END = 3;
+//const START_AND_END = 3;
 
 const five_minutes_ms = 5*60*1000;
 

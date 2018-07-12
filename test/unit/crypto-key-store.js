@@ -82,7 +82,7 @@ test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
 	.then((st) => {
 		store = st;
 		return store.putKey(testPrivKey);
-	}).then((keyPEM) => {
+	}).then(() => {
 		t.pass('Successfully saved private key in store');
 
 		t.equal(fs.existsSync(path.join(keystorePath, testPrivKey.getSKI() + '-priv')), true,
@@ -94,7 +94,7 @@ test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
 		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
 
 		return store.putKey(testPubKey);
-	}).then((keyPEM) => {
+	}).then(() => {
 		t.equal(fs.existsSync(path.join(keystorePath, testPrivKey.getSKI() + '-pub')), true,
 			'Check that the public key has been saved with the proper <SKI>-pub index');
 
@@ -127,7 +127,7 @@ test('\n\n** CryptoKeyStore tests - couchdb based store tests - use configSettin
 	t.end = ((context, mockdb, f) => {
 		return function() {
 			if (mockdb) {
-				console.log('Disconnecting the mock couchdb server');
+				t.comment('Disconnecting the mock couchdb server');
 				mockdb.close();
 			}
 
@@ -154,7 +154,7 @@ test('\n\n** CryptoKeyStore tests - couchdb based store tests - use constructor 
 	t.end = ((context, mockdb, f) => {
 		return function() {
 			if (mockdb) {
-				console.log('Disconnecting the mock couchdb server');
+				t.comment('Disconnecting the mock couchdb server');
 				mockdb.close();
 			}
 
@@ -177,10 +177,10 @@ function testKeyStore(store, t) {
 	var docRev;
 
 	return store.putKey(testPrivKey)
-	.then((keyPEM) => {
+	.then(() => {
 		t.pass('Successfully saved private key in store based on couchdb');
 
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			dbclient.use(dbname).get(testPrivKey.getSKI() + '-priv', function(err, body) {
 				if (!err) {
 					t.pass('Successfully verified private key persisted in couchdb');
@@ -197,9 +197,9 @@ function testKeyStore(store, t) {
 		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
 
 		return store.putKey(testPubKey);
-	}).then((keyPEM) => {
-		return new Promise((resolve, reject) => {
-			dbclient.use(dbname).get(testPrivKey.getSKI() + '-pub', function(err, body) {
+	}).then(() => {
+		return new Promise((resolve) => {
+			dbclient.use(dbname).get(testPrivKey.getSKI() + '-pub', function(err) {
 				if (!err) {
 					t.pass('Successfully verified public key persisted in couchdb');
 					return resolve(store.getKey(testPubKey.getSKI()));
@@ -214,8 +214,8 @@ function testKeyStore(store, t) {
 		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
 
 		// delete the private key entry and test if getKey() would return the public key
-		return new Promise((resolve, reject) => {
-			dbclient.use(dbname).destroy(testPrivKey.getSKI() + '-priv', docRev, function(err, body) {
+		return new Promise((resolve) => {
+			dbclient.use(dbname).destroy(testPrivKey.getSKI() + '-priv', docRev, function(err) {
 				if (!err) {
 					return resolve(store.getKey(testPubKey.getSKI()));
 				} else {

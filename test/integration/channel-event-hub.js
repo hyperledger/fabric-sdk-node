@@ -14,7 +14,6 @@ let _test = require('tape-promise').default;
 let test = _test(tape);
 
 let path = require('path');
-let util = require('util');
 let fs = require('fs');
 let Long = require('long');
 
@@ -31,13 +30,10 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 	let chaincode_version = testUtil.getUniqueVersion();
 	let chaincode_id = 'events_unit_test_' + chaincode_version;
-	let the_user = null;
 	let targets = [];
 	let req1 = null;
 	let req2 = null;
-	let tls_data = null;
 	let txid = null;
-	let block_reg = null;
 	let event_hub = null;
 
 	// using an array to track the event hub instances so that when this gets
@@ -77,9 +73,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 		// get the peer org's admin user identity
 		return testUtil.getSubmitter(client, t, true /* get peer org admin */, 'org1');
-	}).then((admin) => {
+	}).then(() => {
 		t.pass('Successfully enrolled admin user \'admin\'');
-		the_user = admin;
 
 		orderer = client.newOrderer(
 			'grpcs://localhost:7050',
@@ -125,15 +120,15 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		return client.installChaincode(req, 30000);
 	}).then((results) => {
 		let proposalResponses = results[0];
-		let proposal = results[1];
+		//let proposal = results[1];
 		let all_good = true;
 
 		for (let i in proposalResponses) {
 			let one_good = false;
 
 			if (proposalResponses &&
-				proposalResponses[0].response &&
-				proposalResponses[0].response.status === 200) {
+				proposalResponses[i].response &&
+				proposalResponses[i].response.status === 200) {
 
 				one_good = true;
 			}
@@ -193,7 +188,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 
 			event_hub.registerTxEvent(txid, (txnid, code, block_num) => {
 				clearTimeout(handle);
-				t.pass('instantiate has transaction code:'+ code + ' for transaction id ::'+txnid);
+				t.pass('instantiate has transaction code:'+ code + ' for transaction id ::'+txnid+ ' block_num:'+block_num);
 				resolve(code);
 			}, (error) => {
 				clearTimeout(handle);
@@ -431,6 +426,8 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		t.pass('Successfully got back event and transaction results');
 		// lets see what we have
 		let fail = false;
+		if(!sendResult1) fail = true;
+		if(!sendResult2) fail = true;
 		if(regResult1 !== 'Valid') fail = true;
 		if(regResult2 !== 'Valid') fail = true;
 		t.equals(fail, true, 'Checking that we had a failure when sending two transactions that try to do the same thing');
@@ -439,7 +436,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		logger.debug(' queryInfo ::%j',results);
 		t.pass('Successfully received channel info');
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			let channel_height = Long.fromValue(results.height);
 
 			// will use the following number as way to know when to stop the replay
@@ -524,7 +521,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			let block_reg_num = null;
 
 			// register to replay block events
-			block_reg_num = eh2.registerBlockEvent((block) => {
+			block_reg_num = eh2.registerBlockEvent(() => {
 				t.fail('Failed - the error callback should get called when only endBlock defined lower than chain height');
 				reject('all blocks replayed with only endBlock defined');
 			}, (error) => {
@@ -543,7 +540,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 	}).then((results) => {
 		t.pass('Successfully got results :'+results);
 
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			// need to create a new ChannelEventHub when registering a listener
 			// that will have a startBlock or endBlock -- doing a replay/resume
 			// The ChannelEventHub must not have been connected or have other
@@ -666,8 +663,4 @@ function createChaincodeRegistration(t, message, event_hub, chaincode_id, chainc
 		});
 	});
 	return event_monitor;
-}
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
 }

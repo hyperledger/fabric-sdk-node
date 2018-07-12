@@ -17,18 +17,13 @@ var test = _test(tape);
 
 var path = require('path');
 var fs = require('fs');
-var util = require('util');
 var e2eUtils = require('./e2e/e2eUtils.js');
 
 var Client = require('fabric-client');
 var Packager = require('fabric-client/lib/Packager.js');
 var testUtil = require('../unit/util.js');
 
-var e2e = testUtil.END2END;
 var ORGS;
-
-var tx_id = null;
-var the_user = null;
 
 test('\n\n** Test chaincode install using chaincodePath to create chaincodePackage **\n\n', (t) => {
 	testUtil.resetDefaults();
@@ -62,7 +57,7 @@ test('\n\n** Test chaincode install using chaincodePath to create chaincodePacka
 		}).catch((err) => {
 			t.fail('install error. ' + err.stack ? err.stack : err);
 			t.end();
-		}).then ((success) => {
+		}).then (() => {
 			params.channelName = params.channelName+'0';
 			params.testDesc = params.testDesc+'0';
 			installChaincode(params, t)
@@ -115,7 +110,7 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 				}).catch((err) => {
 					t.fail(params.testDesc+' - install error. ' + err.stack ? err.stack : err);
 					t.end();
-				}).then ((success) => {
+				}).then (() => {
 					params.channelName = params.channelName+'0';
 					params.testDesc = params.testDesc+'0';
 					installChaincode(params, t)
@@ -164,9 +159,8 @@ function installChaincode(params, t) {
 
 				// get the peer org's admin required to send install chaincode requests
 				return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
-			}).then((admin) => {
+			}).then(() => {
 				t.pass(params.testDesc+' - Successfully enrolled user \'admin\'');
-				the_user = admin;
 
 				channel.addOrderer(
 					client.newOrderer(
@@ -216,7 +210,7 @@ function installChaincode(params, t) {
 			}).then((results) => {
 				var proposalResponses = results[0];
 
-				var proposal = results[1];
+				//var proposal = results[1];
 				var all_good = true;
 				var error = null;
 				for(var i in proposalResponses) {

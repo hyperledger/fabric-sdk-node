@@ -26,7 +26,6 @@ const agent = require('superagent-promise')(require('superagent'), Promise);
 const requester = require('request');
 
 const Client = require('fabric-client');
-const util = require('util');
 const fs = require('fs');
 const path = require('path');
 
@@ -60,7 +59,6 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 
 	// Acting as a client in org1 when creating the channel
 	const org = ORGS.org1.name;
-	let orderer;
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	try {
@@ -90,7 +88,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		 *    the "ConfigUpdate" object.
 		 */
 
-		let admin = await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
+		await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
 		t.pass('Successfully enrolled user \'admin\' for org1');
 		const config_json = fs.readFileSync(path.join(__dirname, '../fixtures/channel/' + channel_name + '.json'));
 
@@ -127,7 +125,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		admin = await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
+		await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
 		t.pass('Successfully enrolled user \'admin\' for org2');
 
 		// sign and collect signature
@@ -137,7 +135,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		admin = await testUtil.getOrderAdminSubmitter(client, t);
+		await testUtil.getOrderAdminSubmitter(client, t);
 		t.pass('Successfully enrolled user \'admin\' for orderer (configtxlator 1)');
 
 		// sign the config
@@ -269,7 +267,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		admin = await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
+		await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
 		t.pass('Successfully enrolled user \'admin\' for org1');
 
 		// sign and collect signature
@@ -278,7 +276,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		admin = await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
+		await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
 		t.pass('Successfully enrolled user \'admin\' for org2');
 
 		// sign and collect signature
@@ -287,7 +285,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 
 		// make sure we do not reuse the user
 		client._userContext = null;
-		admin = await testUtil.getOrderAdminSubmitter(client, t);
+		await testUtil.getOrderAdminSubmitter(client, t);
 		t.pass('Successfully enrolled user \'admin\' for orderer (configtxlator 2)');
 
 		// sign and collect signature

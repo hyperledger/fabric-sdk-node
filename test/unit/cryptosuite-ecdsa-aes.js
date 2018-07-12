@@ -10,29 +10,29 @@ var tape = require('tape');
 var _test = require('tape-promise').default;
 var test = _test(tape);
 
-var Client = require('fabric-client');
+//var Client = require('fabric-client');
 var testutil = require('./util.js');
 var utils = require('fabric-client/lib/utils.js');
 var path = require('path');
 var fs = require('fs-extra');
 var util = require('util');
-var os = require('os');
+//var os = require('os');
 
 var jsrsa = require('jsrsasign');
-var KEYUTIL = jsrsa.KEYUTIL;
+//var KEYUTIL = jsrsa.KEYUTIL;
 var ECDSA = jsrsa.ECDSA;
 
-var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
+//var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
 var CryptoSuite_ECDSA_AES = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
 var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
-var api = require('fabric-client/lib/api.js');
+//var api = require('fabric-client/lib/api.js');
 var User = require('fabric-client/lib/User.js');
 var elliptic = require('elliptic');
-var BN = require('bn.js');
+//var BN = require('bn.js');
 var Signature = require('elliptic/lib/elliptic/ec/signature.js');
-var PKCS11 = require('fabric-client/lib/impl/bccsp_pkcs11.js');
+//var PKCS11 = require('fabric-client/lib/impl/bccsp_pkcs11.js');
 
-var keyValStorePath = path.join(testutil.getTempDir(), 'keyValStore1');
+//var keyValStorePath = path.join(testutil.getTempDir(), 'keyValStore1');
 
 var TEST_MSG = 'this is a test message';
 var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative effort created to advance cross-industry blockchain technologies. ' +
@@ -47,7 +47,7 @@ var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative eff
 	'is what Hyperledger is about – communities of software developers building blockchain frameworks and platforms.';
 
 var HASH_MSG_SHA384 = '6247065855a812ecd182476576c02d46a675845ef4b0056e973ca42dcf8191d3adabc8c6c4b909f20f96136032ab723a';
-var HASH_LONG_MSG_SHA384 = 'e647ea97fec64412a34f522b5d80cbba9a293f89d4dc63802c79bf485078ecbaed59a0d53cd7ab08a9ae983e64f886a6';
+//var HASH_LONG_MSG_SHA384 = 'e647ea97fec64412a34f522b5d80cbba9a293f89d4dc63802c79bf485078ecbaed59a0d53cd7ab08a9ae983e64f886a6';
 var HASH_MSG_SHA3_384 = '9e9c2e5edf6cbc0b512807a8efa2917daff71b83e04dee28fcc00b1a1dd935fb5afc5eafa06bf55bd64792a597e2a8f3';
 var HASH_LONG_MSG_SHA3_384 = '47a90d6721523682e09b81da0a60e6ee1faf839f0503252316638daf038cf682c0a842edaf310eb0f480a2e181a07af0';
 var HASH_MSG_SHA256 = '4e4aa09b6d80efbd684e80f54a70c1d8605625c3380f4cb012b32644a002b5be';
@@ -462,7 +462,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	},(err) => {
 		t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 		t.end();
-	}).then((pubKey) => {
+	}).then(() => {
 		fs.removeSync(path.join(utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
 
 		var poorUser = new User('admin2');
@@ -488,30 +488,30 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	});
 });
 
-function cleanupFileKeyValueStore(keyValStorePath) {
-	var absPath = getAbsolutePath(keyValStorePath);
-	var exists = testutil.existsSync(absPath);
-	if (exists) {
-		fs.removeSync(absPath);
-	}
-}
+// function cleanupFileKeyValueStore(keyValStorePath) {
+// 	var absPath = getAbsolutePath(keyValStorePath);
+// 	var exists = testutil.existsSync(absPath);
+// 	if (exists) {
+// 		fs.removeSync(absPath);
+// 	}
+// }
 
 // prepend absolute path where this test is running, then join to the relative path
-function getAbsolutePath(dir) {
-	return path.join(process.cwd(), getRelativePath(dir));
-}
+// function getAbsolutePath(dir) {
+// 	return path.join(process.cwd(), getRelativePath(dir));
+// }
 
 // get relative file path for either Unix or Windows
 // unix relative path does not start with '/'
 // windows relative path starts with '/'
-function getRelativePath(dir /*string*/) {
-	if (/^win/.test(process.platform)) {
-		if (!(dir.toString().substr(0, 1) === '/')) dir = '/' + dir;
-		dir = path.resolve(dir);
-		dir = dir.replace(/([A-Z]:[\\\/]).*?/gi, '');
-		return dir;
-	} else {
-		if (dir.toString().substr(0, 1) === '/') dir = dir.substr(1);
-		return dir;
-	}
-}
+// function getRelativePath(dir /*string*/) {
+// 	if (/^win/.test(process.platform)) {
+// 		if (!(dir.toString().substr(0, 1) === '/')) dir = '/' + dir;
+// 		dir = path.resolve(dir);
+// 		dir = dir.replace(/([A-Z]:[\\\/]).*?/gi, '');
+// 		return dir;
+// 	} else {
+// 		if (dir.toString().substr(0, 1) === '/') dir = dir.substr(1);
+// 		return dir;
+// 	}
+// }

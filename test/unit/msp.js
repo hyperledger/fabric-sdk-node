@@ -156,7 +156,7 @@ test('\n\n** MSP Tests **\n\n', (t) => {
 function loadMSPConfig(name, org) {
 	var mspConfig, fConfig;
 
-	return new Promise((resolve, reject) => {
+	return new Promise((resolve) => {
 		mspConfig = new mspProto.MSPConfig();
 		mspConfig.setType(FABRIC); // type: FABRIC
 

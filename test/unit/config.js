@@ -9,12 +9,9 @@
 var tape = require('tape');
 var _test = require('tape-promise').default;
 var test = _test(tape);
-var util = require('util');
-var path = require('path');
-var fs = require('fs-extra');
 
 var Client = require('fabric-client');
-var CA_Client = require('fabric-ca-client');
+
 
 // THIS TEST FILE MUST BE RUN FIRST so that node.js will not load the two clients in this order
 

@@ -14,7 +14,6 @@ var _test = require('tape-promise').default;
 var test = _test(tape);
 
 var path = require('path');
-var util = require('util');
 var fs = require('fs');
 
 var Client = require('fabric-client');
@@ -24,7 +23,6 @@ var e2eUtils = require('./e2e/e2eUtils.js');
 
 var client = new Client();
 var channel = client.newChannel(testUtil.END2END.channel);
-var ORGS;
 
 var chaincode_id = testUtil.getUniqueVersion('events_unit_test');
 var chaincode_version = testUtil.getUniqueVersion();
@@ -81,7 +79,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 		// get the peer org's admin required to send install chaincode requests
 
 		return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
-	}).then((admin) => {
+	}).then(() => {
 		t.pass('Successfully enrolled user \'admin\'');
 
 		channel.addOrderer(
@@ -127,7 +125,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			});
 		try {
 			eh.registerBlockEvent(
-				(block) => {
+				() => {
 					t.fail('this success function should not be called');
 				},
 				(err) => {
@@ -159,7 +157,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			});
 		try {
 			eh.registerBlockEvent(
-				(block) => {
+				() => {
 					t.fail('this success function should not be called');
 				},
 				(err) => {
@@ -206,7 +204,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			t.fail(' Failed to install install chaincode');
 			return Promise.reject('failed to endorse the install chaincode proposal:' + results);
 		}
-	}).then((success) => {
+	}).then(() => {
 		t.pass('Successfully initialized the channel');
 		request = eputil.createRequest(client, chaincode_id, targets, 'init', []);
 		request.chaincodePath = 'github.com/events_cc';
@@ -223,7 +221,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			t.fail('Failed to endorse the instantiate chaincode proposal');
 			return Promise.reject('Failed to endorse the instatiate chaincode proposal:' + results);
 		}
-	}).then((results) => {
+	}).then(() => {
 		t.pass('Successfully instantiated chaincode.');
 
 		request = eputil.createRequest(client, chaincode_id, targets, 'invoke', ['invoke', 'SEVERE']);
@@ -238,7 +236,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			eputil.registerCCEvent(eh, chaincode_id.toString(), '^evtsender*', tmo, t, 'second chaincode event'),
 			eputil.sendTransaction(channel, results)
 		]);
-	}).then((results) => {
+	}).then(() => {
 		t.pass('Successfully received chaincode events.');
 
 		request = eputil.createRequest(client, chaincode_id, targets, 'invoke', ['query']);
@@ -269,7 +267,7 @@ test('Test chaincode instantiate with event, transaction invocation with chainco
 			eputil.sendTransaction(channel, results1),
 			eputil.sendTransaction(channel, results2)
 		]);
-	}).then(([regResult1, regResult2, sendResult1, sendResult2]) => {
+	}).then(() => {
 		t.fail('Failed to generate an invalid transaction');
 		t.end();
 	}, (err) => {

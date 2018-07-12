@@ -69,9 +69,9 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 	// Clean up the couchdb test database
 	var dbname = 'my_member_db';
 
-	var cryptoSuite, member, options;
+	var cryptoSuite, member;
 	couchdbUtil.destroy(dbname, keyValStorePath)
-	.then( function(status) {
+	.then( function() {
 		var options = {name: dbname, url: keyValStorePath};
 		utils.newKeyValueStore(options)
 		.then(
@@ -143,11 +143,11 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 				t.end();
 			})
 		.then(
-			function(user) {
+			function() {
 				return client.setUserContext(new User('userx'));
 			})
 		.then(
-			function(user) {
+			function() {
 				client.setCryptoSuite(cryptoSuite);
 				return client.getUserContext('admin2', true);
 			})
@@ -169,7 +169,7 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', function(t) {
 		).catch(
 			function(err) {
 				t.fail('Failed couchdb-fabricca-test with error:');
-				 logger.error(err.stack ? err.stack : err);
+				logger.error(err.stack ? err.stack : err);
 				t.end();
 			}
 		);

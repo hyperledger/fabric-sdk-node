@@ -96,7 +96,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.throws(
 		() => {
 			const client = Client.loadFromConfig('test/fixtures/network.json');
-			const ca = client.getCertificateAuthority();
+			client.getCertificateAuthority();
 		},
 		/A crypto suite has not been assigned to this client/,
 		'Should not be able to instantiate a new instance of a certificate authority until a crypto suite is assigned'
@@ -131,7 +131,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client2.setUserContext(new User('testUser'), true);
 			client2.loadFromConfig('test/fixtures/org1.yaml');
 			t.equals(client2.getPeersForOrg().length, 3, ' Check to see that we got 3 peers for Org1');
-			const channel3 = client2.getChannel('mychannel3');
+			client2.getChannel('mychannel3');
 			client2.loadFromConfig('test/fixtures/org2.yaml');
 			t.equals(client2.getPeersForOrg().length, 1, ' Check to see that we got 1 peer for Org2');
 
@@ -210,7 +210,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		() => {
 			const client = new Client();
 			client._network_config = new NetworkConfig(network_config, client);
-			const channel = client.newChannel('mychannel');
+			client.newChannel('mychannel');
 		},
 		null,
 		'Should be able to instantiate a new instance of "Channel" with blank definition in the network configuration'
@@ -455,7 +455,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		() => {
 			const client = new Client();
 			client._network_config = new NetworkConfig({}, client);
-			const targets = client.getTargetPeers({}, client);
+			client.getTargetPeers({}, client);
 		},
 		/Target peer is not a valid peer object instance/,
 		'Should not be able to get targets when targets is not a peer object'
@@ -465,7 +465,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		() => {
 			const client = new Client();
 			client._network_config = new NetworkConfig({}, client);
-			const targets = client.getTargetPeers('somepeer', client);
+			client.getTargetPeers('somepeer', client);
 		},
 		/not found/,
 		'Should not be able to get targets when targets is not a peer object'
@@ -676,7 +676,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			const client = Client.loadFromConfig(network_config);
 			client.setCryptoSuite(Client.newCryptoSuite());
 			client.setUserContext(new User('testUser'), true);
-			let channel = client.getChannel('mychannel');
+			client.getChannel('mychannel');
 			client.loadFromConfig({ version: '1.0.0',
 				channels : {
 					'otherchannel' : {
@@ -684,7 +684,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 					}
 				}
 			});
-			let otherchannel = client.getChannel('otherchannel');
+			client.getChannel('otherchannel');
 		},
 		null,
 		'Should be able to load additional configurations'
@@ -732,7 +732,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	});
 	Promise.all([pr1])
 		.then(
-			function (data) {
+			function () {
 				t.end();
 			}
 		).catch(
@@ -823,7 +823,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		t.pass('Should be able to load the stores from the config');
 		clientp2._network_config._network_config.client = {};
 		return clientp2._setUserFromConfig();
-	}).then((user)=>{
+	}).then(()=>{
 		t.fail('Should not be able to load an user based on the config');
 	}).catch(function (err) {
 		if (err.message.indexOf('Missing parameter. Must have a username.') >= 0) {
@@ -842,7 +842,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		t.pass('Should be able to load the stores from the config');
 		clientp4._network_config._network_config.client = {};
 		return clientp3._setUserFromConfig({username:'username'});
-	}).then((user)=>{
+	}).then(()=>{
 		t.fail('Should not be able to load an user based on the config');
 	}).catch(function (err) {
 		if (err.message.indexOf('Missing parameter. Must have a password.') >= 0) {
@@ -868,7 +868,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 
 	Promise.all([p1,p2, p3, p4])
 		.then(
-			function (data) {
+			function () {
 				t.end();
 			}
 		).catch(

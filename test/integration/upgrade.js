@@ -12,7 +12,6 @@ var test = _test(tape);
 
 var path = require('path');
 var fs = require('fs');
-var util = require('util');
 
 var Client = require('fabric-client');
 var utils = require('fabric-client/lib/utils.js');
@@ -34,8 +33,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	let caroots = Buffer.from(data).toString();
 
 	var tx_id = null;
-	var the_user = null;
-	var allEventhubs = [];
 
 	testUtil.setupChaincodeDeploy();
 
@@ -56,9 +53,8 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		return testUtil.getSubmitter(client, t, true /* use peer org admin */, org);
 	})
-	.then((admin) => {
+	.then(() => {
 		t.pass('Successfully enrolled user \'admin\'');
-		the_user = admin;
 
 		channel.addOrderer(
 			client.newOrderer(
@@ -91,7 +87,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 		return channel.initialize();
 
 	})
-	.then((nothing) => {
+	.then(() => {
 		t.pass('Successfully initialized channel');
 		tx_id = client.newTransactionID();
 
@@ -115,7 +111,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 	}, (err) => {
 		t.fail('This should not have thrown an Error ::'+ err);
 		return Promise.resolve(true);
-	}).then((nothing) => {
+	}).then(() => {
 		tx_id = client.newTransactionID();
 
 		// send proposal to endorser
@@ -135,7 +131,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 
 		return Promise.resolve(true);
 
-	}).then((nothing) => {
+	}).then(() => {
 		tx_id = client.newTransactionID();
 
 		// send proposal to endorser
@@ -176,7 +172,6 @@ test('\n\n **** Testing re-initializing states during upgrade ****', (t) => {
 		};
 	})(t, eventhubs, t.end);
 
-	let tx_id = client.newTransactionID();
 	let VER = 'v3';
 
 	e2eUtils.installChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH_V2, null, VER, 'golang', t, true)
@@ -187,7 +182,7 @@ test('\n\n **** Testing re-initializing states during upgrade ****', (t) => {
 		t.end();
 	}).then(() => {
 		return e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_UPGRADE_PATH_V2, VER, 'golang', true, true, t);
-	}).then((results) => {
+	}).then(() => {
 		const fcn = 'query';
 		const args = ['b'];
 		const expectedResult = '1000';

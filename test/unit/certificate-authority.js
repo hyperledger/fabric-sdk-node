@@ -11,8 +11,6 @@ var _test = require('tape-promise').default;
 var test = _test(tape);
 
 var CertificateAuthority = require('fabric-client/lib/CertificateAuthority.js');
-var User = require('fabric-client/lib/User.js');
-var utils = require('fabric-client/lib/utils.js');
 var testutil = require('./util.js');
 
 

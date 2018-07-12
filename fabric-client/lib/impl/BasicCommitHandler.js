@@ -7,16 +7,8 @@
 
 'use strict';
 
-const fs = require('fs-extra');
-const path = require('path');
-const Long = require('long');
 const utils = require('../utils');
-const client_utils = require('../client-utils.js');
 const Constants = require('../Constants.js');
-const Channel = require('../Channel.js');
-const Peer = require('../Peer.js');
-const ChannelEventHub = require('../ChannelEventHub.js');
-const Orderer = require('../Orderer.js');
 const api = require('../api.js');
 const logger = utils.getLogger('BasicCommitHandler');
 
@@ -93,13 +85,13 @@ class BasicCommitHandler extends api.CommitHandler {
 			}
 
 			// Orderers will be assigned to the channel by this point
-			return this._commit(params.signed_envelope, params.timeout);
+			return this._commit(params.signed_envelope, timeout);
 		} else {
 			logger.debug('%s - using single orderer', method);
 			const orderer = this._channel._getOrderer(request.orderer, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
 			try {
 
-				return orderer.sendBroadcast(params.signed_envelope, params.timeout);
+				return orderer.sendBroadcast(params.signed_envelope, timeout);
 			} catch(error) {
 				logger.error(error.stack);
 			}

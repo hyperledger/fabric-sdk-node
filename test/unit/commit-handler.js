@@ -19,18 +19,8 @@
 const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
-const Long = require('long');
-
 const Client = require('fabric-client');
-const Channel = require('fabric-client/lib/Channel.js');
 const TestUtil = require('./util.js');
-
-const utils = require('fabric-client/lib/utils.js');
-const logger = utils.getLogger('COMMIT-HANDLER');
-const DiscoveryEndorsementHandler = require('fabric-client/lib/impl/BasicCommitHandler.js');
-const pem = '-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n';
-
-
 
 test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 

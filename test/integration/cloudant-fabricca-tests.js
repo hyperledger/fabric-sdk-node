@@ -15,7 +15,6 @@ var path = require('path');
 var Client = require('fabric-client');
 var User = require('fabric-client/lib/User.js');
 var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
-var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore');
 var testUtil = require('../unit/util.js');
 
 var couchdbUtil = require('./couchdb-util.js');
@@ -67,7 +66,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 
 	var cryptoSuite, member, options;
 	couchdbUtil.destroy(dbname, cloudantUrl)
-	.then( function(status) {
+	.then( function() {
 		options = {name: dbname, url: cloudantUrl};
 		utils.newKeyValueStore(options)
 		.then(
@@ -137,11 +136,11 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', function(t) {
 				t.end();
 			})
 		.then(
-			function(user) {
+			function() {
 				return client.setUserContext(new User('userx'));
 			})
 		.then(
-			function(user) {
+			function() {
 				client.setCryptoSuite(cryptoSuite);
 				return client.getUserContext('admin2', true);
 			}

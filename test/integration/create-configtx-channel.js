@@ -13,14 +13,12 @@ var _test = require('tape-promise').default;
 var test = _test(tape);
 
 var Client = require('fabric-client');
-var util = require('util');
 var fs = require('fs');
 var path = require('path');
 
 var testUtil = require('../unit/util.js');
 var e2eUtils = require('./e2e/e2eUtils.js');
 
-var the_user = null;
 var ORGS;
 
 //
@@ -64,7 +62,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 		client.setStateStore(store);
 
 		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
-	}).then((admin) =>{
+	}).then(() =>{
 		t.pass('Successfully enrolled user \'admin\' for orderer (create-configtx-channel 1)');
 
 		orderer = client.newOrderer(
@@ -90,7 +88,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 		// make sure we do not reuse the user
 		client._userContext = null;
 		return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
-	}).then((admin) => {
+	}).then(() => {
 		t.pass('Successfully enrolled user \'admin\' for org2');
 
 		// sign the config
@@ -103,9 +101,8 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 		// make sure we do not reuse the user
 		client._userContext = null;
 		return testUtil.getOrderAdminSubmitter(client, t);
-	}).then((admin) => {
+	}).then(() => {
 		t.pass('Successfully enrolled user \'admin\' for orderer (create-configtx-channel 2)');
-		the_user = admin;
 
 		// sign the config
 		var signature = client.signChannelConfig(config);
@@ -144,7 +141,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', function(t) {
 		t.fail('Failed to create the channel: ' + err.stack ? err.stack : err);
 		t.end();
 	})
-	.then((nothing) => {
+	.then(() => {
 		t.pass('Successfully waited to make sure new channel was created.');
 
 		logger.info('\n\n >>>>>>  Should fail to create the existing channel again with name :: %s <<<<<<< \n\n',channel_name);

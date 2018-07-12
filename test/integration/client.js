@@ -12,12 +12,10 @@ var logger = utils.getLogger('integration.client');
 var tape = require('tape');
 var _test = require('tape-promise').default;
 var test = _test(tape);
-var util = require('util');
 var path = require('path');
 var fs = require('fs-extra');
 
 var Client = require('fabric-client');
-var User = require('fabric-client/lib/User.js');
 var testUtil = require('../unit/util.js');
 var couchdbUtil = require('./couchdb-util.js');
 
@@ -103,13 +101,13 @@ test('\n\n ** createUser happy path - CouchDB **\n\n', function (t) {
 	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, keyValStorePath)
-	.then((status) => {
+	.then(() => {
 		return utils.newKeyValueStore(keyStoreOpts);
 	}).then((store) => {
 		logger.debug('store: %s',store);
 		client.setStateStore(store);
 		return true;
-	}).then((status) => {
+	}).then(() => {
 		return client.createUser(
 			{username: caImport.orgs[userOrg].username,
 				mspid: caImport.orgs[userOrg].mspid,
@@ -156,13 +154,13 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', function (t) {
 	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, cloudantUrl)
-	.then((status) => {
+	.then(() => {
 		return utils.newKeyValueStore(keyStoreOpts);
 	}).then((store) => {
 		logger.debug('store: %s',store);
 		client.setStateStore(store);
 		return true;
-	}).then((status) => {
+	}).then(() => {
 		return client.createUser(
 			{username: caImport.orgs[userOrg].username,
 				mspid: caImport.orgs[userOrg].mspid,
@@ -205,13 +203,13 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', function 
 	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, cloudantUrl)
-	.then((status) => {
+	.then(() => {
 		return utils.newKeyValueStore(keyStoreOpts);
 	}).then((store) => {
 		logger.debug('store: %s',store);
 		client.setStateStore(store);
 		return true;
-	}).then((status) => {
+	}).then(() => {
 		return client.createUser(
 			{username: caImport.orgs[userOrg].username,
 				mspid: caImport.orgs[userOrg].mspid,

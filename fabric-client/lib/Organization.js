@@ -8,8 +8,6 @@
 'use strict';
 
 var utils = require('./utils.js');
-var Constants = require('./Constants.js');
-const ChannelEventHub = require('./ChannelEventHub');
 var logger = utils.getLogger('Organization.js');
 
 /**

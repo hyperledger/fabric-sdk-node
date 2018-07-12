@@ -41,7 +41,7 @@ const aHostnameOverride = 'atesthostnameoverride';
 test('\n\n ** Remote node tests **\n\n', function (t) {
 	testutil.resetDefaults();
 
-	console.log('\n * REMOTE *');
+	t.comment('\n * REMOTE *');
 	//Peer: secure grpcs, requires opts.pem
 	let opts = { pem: aPem };
 	let remote = null;
@@ -134,7 +134,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 	t.equal(remote.getUrl(), url, 'checking that getURL works');
 	t.equal(remote._grpc_wait_for_ready_timeout, 500, 'Remote should have grpc waitForReady timeout equals 500');
 
-	console.log('\n * PEER *');
+	t.comment('\n * PEER *');
 	//Peer: secure grpcs, requires opts.pem
 	opts = { pem: aPem };
 	let peer = null;
@@ -216,7 +216,7 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		'clientKey and clientCert are both required.'
 	);
 
-	console.log('\n * ORDERER *');
+	t.comment('\n * ORDERER *');
 	//Peer: secure grpcs, requires opts.pem
 	opts = { pem: aPem };
 	let orderer = null;

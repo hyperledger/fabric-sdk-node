@@ -51,7 +51,7 @@ test('\n\n** CouchDBKeyValueStore tests', (t) => {
 		t.end = ((context, mockdb, f) => {
 			return function() {
 				if (mockdb) {
-					console.log('Disconnecting the mock couchdb server');
+					t.comment('Disconnecting the mock couchdb server');
 					mockdb.close();
 				}
 

@@ -176,6 +176,9 @@ module.exports.CryptoSuite = class {
 	 * @abstract
 	 */
 	setCryptoKeyStore(cryptoKeyStore) {
+		if(cryptoKeyStore) {
+			throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
+		}
 		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
 	}
 };
@@ -350,6 +353,9 @@ module.exports.EndorsementHandler = class {
 	 *        method directly.
 	 */
 	endorse(params) {
+		if(params) {
+			throw new Error('The "endorse" method must be implemented');
+		}
 		throw new Error('The "endorse" method must be implemented');
 	}
 
@@ -366,6 +372,9 @@ module.exports.EndorsementHandler = class {
 	 * with.
 	 */
 	static create(channel) {
+		if(channel) {
+			throw new Error('The "create" method must be implemented');
+		}
 		throw new Error('The "create" method must be implemented');
 	}
 };
@@ -398,6 +407,9 @@ module.exports.CommitHandler = class {
 	 *        method directly.
 	 */
 	commit(params) {
+		if(params) {
+			throw new Error('The "commit" method must be implemented');
+		}
 		throw new Error('The "commit" method must be implemented');
 	}
 
@@ -414,6 +426,9 @@ module.exports.CommitHandler = class {
 	 * with.
 	 */
 	static create(channel) {
+		if(channel) {
+			throw new Error('The "create" method must be implemented');
+		}
 		throw new Error('The "create" method must be implemented');
 	}
 };

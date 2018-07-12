@@ -12,9 +12,7 @@ var path = require('path');
 var utils = require('../utils');
 var Constants = require('../Constants.js');
 var Channel = require('../Channel.js');
-var Peer = require('../Peer.js');
 var EventHub = require('../EventHub.js');
-var Orderer = require('../Orderer.js');
 var Organization = require('../Organization.js');
 var CertificateAuthority = require('../CertificateAuthority.js');
 

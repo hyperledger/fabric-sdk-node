@@ -226,7 +226,7 @@ test('\n\n ** Logging utility tests - test setting an external logger based on l
 test('\n\n ** Logging utility tests - test setting an invalid external logger **\n\n', function (t) {
 	// construct an invalid logger
 	var logger = {
-		inf: function () { console.log('info'); },
+		inf: function () { t.comment('info'); },
 	};
 
 	try {

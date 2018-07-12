@@ -48,7 +48,7 @@ test('\n\n ** index.js **\n\n', function (t) {
 
 	t.doesNotThrow(
 		function() {
-			var c = new Client();
+			new Client();
 		},
 		null,
 		'Should be able to instantiate a new instance of "Client" require');
@@ -56,7 +56,7 @@ test('\n\n ** index.js **\n\n', function (t) {
 	t.doesNotThrow(
 		function() {
 			var c = new Client();
-			var channel = c.newChannel('test');
+			c.newChannel('test');
 		},
 		null,
 		'Should be able to call "newChannel" on the new instance of "Client"');
@@ -69,7 +69,7 @@ test('\n\n ** eventhub **\n\n', function (t) {
 		function() {
 			var c = new Client();
 			c._userContext = new User('name');
-			var event_hub = c.newEventHub();
+			c.newEventHub();
 		},
 		null,
 		'Should be able to call "newEventHub" on the new instance of "hfc"');
@@ -80,7 +80,7 @@ test('\n\n ** eventhub **\n\n', function (t) {
 var client = new Client();
 var channelKeyValStorePath = path.join(testutil.getTempDir(), 'channelKeyValStorePath');
 var testKey = 'keyValFileStoreName';
-var testValue = 'secretKeyValue';
+//var testValue = 'secretKeyValue';
 
 test('\n\n ** config **\n\n', function (t) {
 	t.doesNotThrow(
@@ -89,7 +89,7 @@ test('\n\n ** config **\n\n', function (t) {
 			t.equals(c.getConfigSetting('something','ABC'), 'ABC', 'Check getting default config setting value');
 			c.setConfigSetting('something','DEF');
 			t.equals(c.getConfigSetting('something','ABC'), 'DEF', 'Check getting a set config setting value');
-			var event_hub = c.newEventHub();
+			c.newEventHub();
 		},
 		null,
 		'Should be able to call "newEventHub" on the new instance of "hfc"');
@@ -179,7 +179,7 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t
 		t.fail('Client tests: getUserContext failed null name check');
 
 	client.saveUserToStateStore()
-	.then(function(response){
+	.then(function(){
 		t.fail('Client tests: got response, but should throw "Cannot save user to state store when userContext is null."');
 		t.end();
 	}, function(error){
@@ -188,7 +188,7 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t
 		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when userContext is null." ' + error.stack ? error.stack : error);
 
 		return client.setUserContext(null);
-	}).then(function(response){
+	}).then(function(){
 		t.fail('Client tests: got response, but should throw "Cannot save null userContext."');
 		t.end();
 	}, function(error){
@@ -219,7 +219,7 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', function (t
 	}, function(error){
 		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + error.stack ? error.stack : error);
 		t.end();
-	}).then(function(result){
+	}).then(function(){
 		t.fail('Client tests: setUserContext without skipPersistence and no stateStore should not return result.');
 		t.end();
 	}, function(error){
@@ -395,7 +395,7 @@ test('\n\n ** testing get and new peer calls on client **\n\n', function (t) {
 
 	t.doesNotThrow(
 		function() {
-			var peer = client.newPeer('grpc://somehost:9090');
+			client.newPeer('grpc://somehost:9090');
 		},
 		null,
 		'Should be able to call "newPeer" with a valid URL');
@@ -409,7 +409,7 @@ test('\n\n ** testing get and new orderer calls on client **\n\n', function (t) 
 
 	t.doesNotThrow(
 		function() {
-			var orderer = client.newOrderer('grpc://somehost:9090');
+			client.newOrderer('grpc://somehost:9090');
 		},
 		null,
 		'Should be able to call "newOrderer" with a valid URL');
@@ -470,7 +470,7 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 			t.pass('P1 - Successfully caught missing chaincodePath error');
 		} else {
 			t.fail('Failed to catch the missing chaincodePath error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			t.comment(err.stack ? err.stack : err);
 		}
 	});
 
@@ -485,7 +485,7 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 			t.pass('P2 - Successfully caught missing chaincodeVersion error');
 		} else {
 			t.fail('Failed to catch the missing chaincodeVersion error. Error: ');
-			console.log(err.stack ? err.stack : err);
+			t.comment(err.stack ? err.stack : err);
 		}
 	});
 
@@ -556,7 +556,7 @@ test('\n\n ** client installChaincode() tests **\n\n', function (t) {
 			}
 		});
 
-	Promise.all([p1, p2, p3, p4, p5, p6]).then(() => {
+	Promise.all([p1, p2, p3, p4, p5, p6, p7]).then(() => {
 		t.end();
 	}).catch((err) => {
 		t.fail(`Channel installChaincode() tests, Promise.all: ${err}`);
@@ -683,7 +683,7 @@ test('\n\n ** createUser error path - missing required opt parameter **\n\n', fu
 
 	var client = new Client();
 	return client.createUser()
-	.then((user) => {
+	.then(() => {
 		t.fail('Should not have gotten user.');
 		t.end();
 	}).catch((err) => {
@@ -715,7 +715,7 @@ test('\n\n ** createUser error path - missing required username **\n\n', functio
 	}, (err) => {
 		logger.error(err.stack ? err.stack : err);
 		throw new Error('Failed createUser.');
-	}).then((user) => {
+	}).then(() => {
 		t.fail('Should not have gotten user.');
 		t.end();
 	}).catch((err) => {
@@ -747,7 +747,7 @@ test('\n\n ** createUser error path - missing required mspid **\n\n', function (
 	}, (err) => {
 		logger.error(err.stack ? err.stack : err);
 		throw new Error('Failed createUser.');
-	}).then((user) => {
+	}).then(() => {
 		t.fail('Should not have gotten user.');
 		t.end();
 	}).catch((err) => {
@@ -779,7 +779,7 @@ test('\n\n ** createUser error path - missing required cryptoContent **\n\n', fu
 	}, (err) => {
 		logger.error(err.stack ? err.stack : err);
 		throw new Error('Failed createUser.');
-	}).then((user) => {
+	}).then(() => {
 		t.fail('Should not have gotten user.');
 		t.end();
 	}).catch((err) => {
@@ -811,7 +811,7 @@ test('\n\n ** createUser error path - missing required cryptoContent signedCert 
 	}, (err) => {
 		logger.error(err.stack ? err.stack : err);
 		throw new Error('Failed createUser.');
-	}).then((user) => {
+	}).then(() => {
 		t.fail('Should not have gotten user.');
 		t.end();
 	}).catch((err) => {
@@ -843,7 +843,7 @@ test('\n\n ** createUser error path - missing required cryptoContent privateKey 
 	}, (err) => {
 		logger.error(err.stack ? err.stack : err);
 		throw new Error('Failed createUser.');
-	}).then((user) => {
+	}).then(() => {
 		t.fail('Should not have gotten user.');
 		t.end();
 	}).catch((err) => {
@@ -955,7 +955,7 @@ test('\n\n ** Test per-call timeout support [client] **\n', function (t) {
 	sandbox.stub(clientUtils, 'buildHeader').returns(Buffer.from('dummyHeader'));
 	sandbox.stub(clientUtils, 'buildProposal').returns(Buffer.from('dummyProposal'));
 	sandbox.stub(clientUtils, 'signProposal').returns(Buffer.from('dummyProposal'));
-	let _getChaincodePackageData = ClientRewired.__set__(
+	ClientRewired.__set__(
 		'_getChaincodePackageData',
 		function() {
 			return Promise.resolve(Buffer.from('dummyChaincodePackage'));
@@ -974,7 +974,7 @@ test('\n\n ** Test per-call timeout support [client] **\n', function (t) {
 		};
 	};
 
-	let p = client.installChaincode({
+	client.installChaincode({
 		targets: [new Peer('grpc://localhost:7051'), new Peer('grpc://localhost:7052')],
 		chaincodePath: 'blah',
 		chaincodeId: 'blah',

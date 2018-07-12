@@ -39,7 +39,7 @@ module.exports.registerCCEvent = function(eh, ccid, enregex, timeout, t, message
 			}
 		}, timeout);
 
-		regid = eh.registerChaincodeEvent(ccid, enregex, (event) => {
+		regid = eh.registerChaincodeEvent(ccid, enregex, () => {
 			t.pass('Successfully received '+ message);
 			resolve();
 			clearTimeout(handle);
@@ -69,8 +69,8 @@ function checkProposal(results) {
 		let one_good = false;
 
 		if (proposalResponses &&
-			proposalResponses[0].response &&
-			proposalResponses[0].response.status === 200) {
+			proposalResponses[i].response &&
+			proposalResponses[i].response.status === 200) {
 
 			one_good = true;
 		}

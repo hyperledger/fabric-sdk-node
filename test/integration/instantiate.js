@@ -95,9 +95,6 @@ function instantiateChaincodeForError(request, error_snip, t) {
 	let data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
 	let caroots = Buffer.from(data).toString();
 
-	var tx_id = null;
-	var the_user = null;
-
 	var userOrg = 'org1';
 	var client = new Client();
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -115,9 +112,8 @@ function instantiateChaincodeForError(request, error_snip, t) {
 	}).then((store) => {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, true /* use peer org admin */, userOrg);
-	}).then((admin) => {
+	}).then(() => {
 		t.pass('Successfully enrolled user \'admin\'');
-		the_user = admin;
 
 		channel.addOrderer(
 			client.newOrderer(
@@ -155,7 +151,7 @@ function instantiateChaincodeForError(request, error_snip, t) {
 	}, (err) => {
 		t.fail('Failed to enroll user \'admin\'. ' + err);
 		throw new Error('Failed to enroll user \'admin\'. ' + err);
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('Successfully initialized channel');
 		request.txId = client.newTransactionID();
 		return channel.sendInstantiateProposal(request);

@@ -674,7 +674,7 @@ module.exports.transaction_monitor = function(t, channel_event_hub, tx_id) {
 		}, (error) => {
 			clearTimeout(handle);
 			t.fail('Failed to receive event replay for Event for transaction id ::'+tx_id);
-			throw(error);
+			reject(error);
 		},
 			// Setting the disconnect to true as we do not want to use this
 			// ChannelEventHub after the event we are looking for comes in

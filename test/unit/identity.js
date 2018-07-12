@@ -13,8 +13,6 @@ var test = _test(tape);
 var testutil = require('./util.js');
 var utils = require('fabric-client/lib/utils.js');
 var api = require('fabric-client/lib/api.js');
-var fs = require('fs');
-var path = require('path');
 
 var jsrsa = require('jsrsasign');
 var KEYUTIL = jsrsa.KEYUTIL;
@@ -97,7 +95,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 
 	t.throws(
 		function() {
-			var mspImpl = new MSP();
+			new MSP();
 		},
 		/Missing required parameter "config"/,
 		'Checking required config parameter for MSP constructor'
@@ -105,7 +103,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 
 	t.throws(
 		function() {
-			var mspImpl = new MSP({admins: [], cryptoSuite: 'blah'});
+			new MSP({admins: [], cryptoSuite: 'blah'});
 		},
 		/Parameter "config" missing required field "id"/,
 		'Checking required config parameter "id" for MSP constructor'
@@ -113,7 +111,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 
 	t.throws(
 		function() {
-			var mspImpl = new MSP({admins: [], id: 'blah'});
+			new MSP({admins: [], id: 'blah'});
 		},
 		/Parameter "config" missing required field "cryptoSuite"/,
 		'Checking required config parameter "cryptoSuite" for MSP constructor'
@@ -121,7 +119,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 
 	t.throws(
 		function() {
-			var mspImpl = new MSP({signer: 'blah', id: 'blah', cryptoSuite: 'blah'});
+			new MSP({signer: 'blah', id: 'blah', cryptoSuite: 'blah'});
 		},
 		/Error: Parameter "signer" must be an instance of SigningIdentity/,
 		'Checking required config parameter "admins" for MSP constructor'
@@ -129,7 +127,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 
 	t.throws(
 		function() {
-			var signer = new Signer();
+			new Signer();
 		},
 		/Missing required parameter "cryptoSuite"/,
 		'Checking required parameter "cryptoSuite"'
@@ -137,7 +135,7 @@ test('\n\n ** Identity class tests **\n\n', function (t) {
 
 	t.throws(
 		function() {
-			var signer = new Signer('blah');
+			new Signer('blah');
 		},
 		/Missing required parameter "key" for private key/,
 		'Checking required parameter "key"'

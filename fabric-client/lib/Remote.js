@@ -58,7 +58,7 @@ class Remote {
 			}
 		}
 
-		const {pem, clientKey, clientCert, ['ssl-target-name-override']: ssl_target_name_override, name} = opts;
+		const {pem, clientKey, clientCert, ['ssl-target-name-override']: ssl_target_name_override} = opts;
 
 		this.clientCert = clientCert;
 

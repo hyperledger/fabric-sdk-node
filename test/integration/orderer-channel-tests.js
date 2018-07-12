@@ -6,14 +6,12 @@
 'use strict';
 
 var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('orderer-channel');
 
 
 var tape = require('tape');
 var _test = require('tape-promise').default;
 var test = _test(tape);
 
-var util = require('util');
 var e2eUtils = require('./e2e/e2eUtils.js');
 var fs = require('fs');
 var path = require('path');
@@ -22,9 +20,7 @@ var testUtil = require('../unit/util.js');
 
 var Client = require('fabric-client');
 var Orderer = require('fabric-client/lib/Orderer.js');
-var Channel = require('fabric-client/lib/Channel.js');
 
-var keyValStorePath = testUtil.KVS;
 var ORGS;
 
 var client = new Client();
@@ -58,7 +54,7 @@ test('\n\n** TEST ** orderer via member missing orderer', function(t) {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, org);
 	}).then(
-		function(admin) {
+		function() {
 			t.pass('Successfully enrolled user \'admin\'');
 
 			// send to orderer
@@ -113,7 +109,7 @@ test('\n\n** TEST ** orderer via member null data', function(t) {
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return testUtil.getSubmitter(client, t, org);
 	}).then(
-		function(admin) {
+		function() {
 			t.pass('Successfully enrolled user \'admin\'');
 
 			channel.addOrderer(
@@ -194,7 +190,7 @@ test('\n\n** TEST ** orderer via member bad request', function(t) {
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return testUtil.getSubmitter(client, t, org);
 	}).then(
-		function(admin) {
+		function() {
 			t.pass('Successfully enrolled user \'admin\'');
 
 			channel.addOrderer(

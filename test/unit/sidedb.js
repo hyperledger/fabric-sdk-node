@@ -239,7 +239,7 @@ test('Test SideDB.checkCollectionConfig()', async (t) => {
 		blockToLive: '0'
 	};
 	t.doesNotThrow(()=>{
-		const col_config = CollectionConfig.checkCollectionConfig(config);
+		CollectionConfig.checkCollectionConfig(config);
 	},
 	'checkCollectionConfig checkCollectionConfig::check blocktolive as string of 0');
 

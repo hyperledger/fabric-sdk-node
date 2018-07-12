@@ -7,16 +7,10 @@
 
 'use strict';
 
-const fs = require('fs-extra');
-const path = require('path');
 const Long = require('long');
 const utils = require('../utils');
 const client_utils = require('../client-utils.js');
 const Constants = require('../Constants.js');
-const Channel = require('../Channel.js');
-const Peer = require('../Peer.js');
-const ChannelEventHub = require('../ChannelEventHub.js');
-const Orderer = require('../Orderer.js');
 const api = require('../api.js');
 const logger = utils.getLogger('DiscoveryEndorsementHandler');
 
@@ -148,6 +142,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 
 	async _endorse_layout(layout_index, chaincodeId, chaincode_plan, proposal, timeout) {
 		const method = '_endorse_layout';
+		logger.debug('%s - start', method);
 		const results = {};
 		results.endorsements = [];
 		results.successful = true;
@@ -199,7 +194,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 		logger.debug('%s - start', method);
 		let error = null;
 		const self = this;
-		return new Promise(async (resolve, reject) => {
+		return new Promise(async (resolve) => {
 			for(let peer_info of group.peers) {
 				const previous_endorsement = plan.endorsements[peer_info.name];
 				if(previous_endorsement && previous_endorsement.endorsement) {

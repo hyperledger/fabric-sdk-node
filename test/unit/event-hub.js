@@ -164,10 +164,10 @@ test('\n\n** EventHub block callback \n\n', (t) => {
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
 
-	var index = eh.registerBlockEvent((block) => {
+	var index = eh.registerBlockEvent(() => {
 		t.fail('Should not have called success callback when disconnect() is called');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.pass('Successfully called error callback from disconnect()');
 		t.end();
 	});
@@ -194,19 +194,19 @@ test('\n\n** EventHub transaction callback \n\n', (t) => {
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
 
-	eh.registerTxEvent('txid1', (block) => {
+	eh.registerTxEvent('txid1', () => {
 		// empty method body
-	}, (error) =>{
+	}, () =>{
 		// empty method body
 	});
 	t.pass('successfully registered transaction callbacks');
 	t.equal(Object.keys(eh._transactionOnEvents).length, 1, 'Check the size of the transactionOnEvents hash table');
 	t.equal(Object.keys(eh._transactionOnErrors).length, 1, 'Check the size of the transactionOnErrors hash table');
 
-	eh.registerTxEvent('txid1', (block) => {
+	eh.registerTxEvent('txid1', () => {
 		t.fail('Should not have called success callback');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.pass('Successfully called transaction error callback');
 		t.end();
 	});
@@ -215,9 +215,9 @@ test('\n\n** EventHub transaction callback \n\n', (t) => {
 	t.equal(Object.keys(eh._transactionOnErrors).length, 1,
 		'Size of the transactionOnErrors hash table should still be 1 since the listeners are for the same txId');
 
-	eh.registerTxEvent('txid2', (block) => {
+	eh.registerTxEvent('txid2', () => {
 		// empty method body
-	}, (error) =>{
+	}, () =>{
 		// empty method body
 	});
 
@@ -233,10 +233,10 @@ test('\n\n** EventHub chaincode callback \n\n', (t) => {
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
 
-	eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
+	eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
 		t.fail('Should not have called success callback');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.pass('Successfully called chaincode error callback');
 		t.end();
 	});
@@ -244,18 +244,18 @@ test('\n\n** EventHub chaincode callback \n\n', (t) => {
 
 	t.equal(Object.keys(eh._chaincodeRegistrants).length, 1, 'Check the size of the chaincodeRegistrants hash table');
 
-	eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
+	eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
 		// empty method body
-	}, (error) =>{
+	}, () =>{
 		// empty method body
 	});
 
 	t.equal(Object.keys(eh._chaincodeRegistrants).length, 1,
 		'Size of the chaincodeRegistrants hash table should still be 1 because both listeners are for the same chaincode');
 
-	eh.registerChaincodeEvent('ccid2', 'eventfilter', (block) => {
+	eh.registerChaincodeEvent('ccid2', 'eventfilter', () => {
 		// empty method body
-	}, (error) =>{
+	}, () =>{
 		// empty method body
 	});
 
@@ -271,7 +271,7 @@ test('\n\n** EventHub block callback no Error callback \n\n', (t) => {
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
 
-	eh.registerBlockEvent((block) => {
+	eh.registerBlockEvent(() => {
 		t.fail('Should not have called block no error success callback');
 		t.end();
 	});
@@ -286,7 +286,7 @@ test('\n\n** EventHub transaction callback no Error callback \n\n', (t) => {
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
 
-	eh.registerTxEvent('txid', (block) => {
+	eh.registerTxEvent('txid', () => {
 		t.fail('Should not have called transaction no error success callback');
 		t.end();
 	});
@@ -301,7 +301,7 @@ test('\n\n** EventHub chaincode callback no Error callback \n\n', (t) => {
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
 
-	eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+	eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
 		t.fail('Should not have called chaincode no error success callback');
 		t.end();
 	});
@@ -316,11 +316,11 @@ test('\n\n** EventHub remove block callback \n\n', (t) => {
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
 
-	var blockcallback = (block) => {
+	var blockcallback = () => {
 		t.fail('Should not have called block success callback (on remove)');
 		t.end();
 	};
-	var blockerrorcallback = (error) =>{
+	var blockerrorcallback = () =>{
 		t.fail('Should not have called block error callback (on remove)');
 		t.end();
 	};
@@ -341,10 +341,10 @@ test('\n\n** EventHub remove transaction callback \n\n', (t) => {
 	eh._force_reconnect = false;
 
 	var txid = 'txid';
-	eh.registerTxEvent(txid, (block) => {
+	eh.registerTxEvent(txid, () => {
 		t.fail('Should not have called transaction success callback (on remove)');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.fail('Should not have called transaction error callback (on remove)');
 		t.end();
 	});
@@ -363,10 +363,10 @@ test('\n\n** EventHub remove chaincode callback \n\n', (t) => {
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
 
-	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
 		t.fail('Should not have called chaincode success callback (on remove)');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.fail('Should not have called chaincode error callback (on remove)');
 		t.end();
 	});
@@ -387,7 +387,7 @@ test('\n\n** EventHub remove block callback no Error callback \n\n', (t) => {
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
 
-	var blockcallback = (block) => {
+	var blockcallback = () => {
 		t.fail('Should not have called block success callback (remove with no error callback)');
 		t.end();
 	};
@@ -407,7 +407,7 @@ test('\n\n** EventHub remove transaction callback no Error callback\n\n', (t) =>
 	eh._force_reconnect = false;
 
 	var txid = 'txid';
-	eh.registerTxEvent(txid, (block) => {
+	eh.registerTxEvent(txid, () => {
 		t.fail('Should not have called transaction success callback (remove with no error callback)');
 		t.end();
 	});
@@ -424,7 +424,7 @@ test('\n\n** EventHub remove chaincode callback no Error callback \n\n', (t) => 
 	eh.setPeerAddr('grpc://localhost:7053');
 	eh._connected = true; //force this into connected state
 	eh._force_reconnect = false;
-	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
 		t.fail('Should not have called chaincode success callback (remove with no error callback)');
 		t.end();
 	});
@@ -475,7 +475,7 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 	.then(function (key) {
 		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
 	}).then(() => {
-		var id = member.getIdentity();
+		//var id = member.getIdentity();
 		client.setUserContext(member, true);
 
 		// tx test 1
@@ -484,7 +484,7 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 		event_hub.connect();
 		t.doesNotThrow(
 			() => {
-				event_hub.registerTxEvent('123', (tx_id, code) => {
+				event_hub.registerTxEvent('123', () => {
 					t.fail('Failed callback should not have been called - tx test 1');
 				});
 			},
@@ -499,7 +499,7 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 		t.doesNotThrow(
 			() => {
 				event_hub.registerTxEvent('123',
-				(tx_id, code) => {
+				() => {
 					t.fail('Failed callback should not have been called - tx test 2');
 				},
 				(error) =>{
@@ -522,14 +522,14 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 		let sleep_time = 3000;
 		t.comment('about to sleep '+sleep_time);
 		return sleep(sleep_time);
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
 
 		t.doesNotThrow(
 			() => {
 				event_hub.registerTxEvent('123',
-				(tx_id, code) => {
+				() => {
 					t.fail('Failed callback should not have been called - tx test 3');
 				},
 				(error) =>{
@@ -544,14 +544,14 @@ test('\n\n** EventHub test actions when connect failures on transaction registra
 			'Check for The event hub has been shutdown - tx test 3'
 		);
 		event_hub.disconnect();
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
 
 		t.doesNotThrow(
 			() => {
 				event_hub.registerTxEvent('123',
-				(tx_id, code) => {
+				() => {
 					t.fail('Failed callback should not have been called - tx test 4');
 				},
 				(error) =>{
@@ -590,7 +590,7 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 	.then(function (key) {
 		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
 	}).then(() => {
-		var id = member.getIdentity();
+		//var id = member.getIdentity();
 		client.setUserContext(member, true);
 
 		// test 1
@@ -599,7 +599,7 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 		event_hub.connect();
 		t.doesNotThrow(
 			() => {
-				event_hub.registerBlockEvent((tx_id, code) => {
+				event_hub.registerBlockEvent(() => {
 					t.fail('Failed callback should not have been called - block test 1');
 				});
 			},
@@ -614,7 +614,7 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 		t.doesNotThrow(
 			() => {
 				event_hub.registerBlockEvent(
-				(tx_id, code) => {
+				() => {
 					t.fail('Failed callback should not have been called - block test 2');
 				},
 				(error) =>{
@@ -637,14 +637,14 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 		let sleep_time = 3000;
 		t.comment('about to sleep '+sleep_time);
 		return sleep(sleep_time);
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
 
 		t.doesNotThrow(
 			() => {
 				event_hub.registerBlockEvent(
-				(tx_id, code) => {
+				() => {
 					t.fail('Failed callback should not have been called - block test 3');
 				},
 				(error) =>{
@@ -659,14 +659,14 @@ test('\n\n** EventHub test actions when connect failures on block registration \
 			'Check for The event hub disconnect - block test 3'
 		);
 		event_hub.disconnect();
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
 
 		t.doesNotThrow(
 			() => {
 				event_hub.registerBlockEvent(
-				(tx_id, code) => {
+				() => {
 					t.fail('Failed callback should not have been called - block test 4');
 				},
 				(error) =>{
@@ -705,7 +705,7 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 	.then(function (key) {
 		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
 	}).then(() => {
-		var id = member.getIdentity();
+		//var id = member.getIdentity();
 		client.setUserContext(member, true);
 
 		// chaincode test 1
@@ -714,7 +714,7 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 		event_hub.connect();
 		t.doesNotThrow(
 			() => {
-				event_hub.registerChaincodeEvent('123', 'event', (tx_id, code) => {
+				event_hub.registerChaincodeEvent('123', 'event', () => {
 					t.fail('Failed callback should not have been called - chaincode test 1');
 				});
 			},
@@ -729,7 +729,7 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 		t.doesNotThrow(
 			() => {
 				event_hub.registerChaincodeEvent('123', 'event',
-				(tx_id, code) => {
+				() => {
 					t.fail('Failed callback should not have been called - chaincode test 2');
 				},
 				(error) =>{
@@ -752,14 +752,14 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 		let sleep_time = 3000;
 		t.comment('about to sleep '+sleep_time);
 		return sleep(sleep_time);
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
 
 		t.doesNotThrow(
 			() => {
 				event_hub.registerChaincodeEvent('123', 'event',
-				(tx_id, code) => {
+				() => {
 					t.fail('Failed callback should not have been called - chaincode test 3');
 				},
 				(error) =>{
@@ -775,14 +775,14 @@ test('\n\n** EventHub test actions when connect failures on chaincode registrati
 		);
 		event_hub.disconnect();
 
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('Sleep complete');
 		// eventhub is now actually not connected
 
 		t.doesNotThrow(
 			() => {
 				event_hub.registerChaincodeEvent('123', 'event',
-				(tx_id, code) => {
+				() => {
 					t.fail('Failed callback should not have been called - chaincode test 4');
 				},
 				(error) =>{

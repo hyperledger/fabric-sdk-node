@@ -35,7 +35,7 @@ var SigningIdentity = idModule.SigningIdentity;
 var Signer = idModule.Signer;
 var User = require('fabric-ca-client/lib/User.js');
 
-var keyValStorePath = testUtil.KVS;
+//var keyValStorePath = testUtil.KVS;
 
 var FabricCAServices = require('fabric-ca-client');
 var FabricCAClient = FabricCAServices.FabricCAClient;
@@ -67,14 +67,14 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 	FabricCAServices.getConfigSetting('crypto-keysize', '256');//force for gulp test
 	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2');//force for gulp test
 
-  	var caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
+	var caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
 
 	var req = {
 		enrollmentID: 'admin',
 		enrollmentSecret: 'adminpw'
 	};
 
-	let eResult, client, member, webAdmin, signingIdentity;
+	let eResult, member, webAdmin, signingIdentity;
 	return caService.enroll(req)
 		.then((enrollment) => {
 			t.pass('Successfully enrolled \'' + req.enrollmentID + '\'.');
@@ -110,9 +110,9 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 			t.fail('Failed to import the public key from the enrollment certificate. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then(() => {
-	  		return caService._fabricCAClient.register(enrollmentID, null, 'client', userOrg, 1, [], signingIdentity);
+			return caService._fabricCAClient.register(enrollmentID, null, 'client', userOrg, 1, [], signingIdentity);
 		}).then((secret) => {
-	  		console.log('secret: ' + JSON.stringify(secret));
+			t.comment('secret: ' + JSON.stringify(secret));
 			enrollmentSecret = secret; // to be used in the next test case
 
 			t.pass('testUser \'' + enrollmentID + '\'');
@@ -128,22 +128,22 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 			return FabricCAServices.newDefaultKeyValueStore({
 				path: testUtil.KVS
 			});
-		},(err) => {
+		},() => {
 			t.fail('Failed to configure the user with proper enrollment materials.');
 			t.end();
 		}).then((store) => {
 			return store.setValue(member.getName(), member.toString());
-		}, (err) => {
+		}, () => {
 			t.fail('Failed to obtain a state store from the fabric-ca-client');
 			t.end();
 		}).then(() => {
 			t.pass('Successfully saved user to state store');
 
 			return caService.register({enrollmentID: 'testUserX', affiliation: 'bank_X'}, member);
-		}).then((secret) => {
+		}).then(() => {
 			t.fail('Should not have been able to register user of a affiliation "bank_X" because "admin" does not belong to that affiliation');
 			t.end();
-		},(err) => {
+		},() => {
 			t.pass('Successfully rejected registration request "testUserX" in affiliation "bank_X"');
 
 			return caService.register({enrollmentID: 'testUserX', affiliation: userOrg}, member);
@@ -342,7 +342,6 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 });
 
 function checkoutCertForAttributes(t, pem, should_find, attr_name) {
-	var attr = null;
 	let cert = X509.parseCert(pem);
 	let found = false;
 	if(cert && cert.extensions && cert.extensions['1.2.3.4.5.6.7.8.1']) {
@@ -399,34 +398,34 @@ test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', function (t) 
 		});
 });
 
-function savePem(pem) {
-	logger.info(' saving  :: %j',pem);
-	let file_path = path.join(__dirname, '../attribute.pem');
-	fs.writeFileSync(file_path, pem);
-}
-
-function readPem() {
-	logger.info(' reading pem');
-	let file_path = path.join(__dirname, '../attribute.pem');
-	var pem = fs.readFileSync(file_path);
-	return pem;
-}
+// function savePem(pem) {
+// 	logger.info(' saving  :: %j',pem);
+// 	let file_path = path.join(__dirname, '../attribute.pem');
+// 	fs.writeFileSync(file_path, pem);
+// }
+//
+// function readPem() {
+// 	logger.info(' reading pem');
+// 	let file_path = path.join(__dirname, '../attribute.pem');
+// 	var pem = fs.readFileSync(file_path);
+// 	return pem;
+// }
 
 async function timeOutTest(signingIdentity, t) {
-  	const CONNECTION_TIMEOUT = FabricCAServices.getConfigSetting('connection-timeout');
-  	t.equal(CONNECTION_TIMEOUT, 3000, 'connection-timeout should have default value 3000');
-  	const SO_TIMEOUT = FabricCAServices.getConfigSetting('socket-operation-timeout');
-  	t.equal(SO_TIMEOUT, undefined, 'socket-operation-timeout should have default value undefined');
+	const CONNECTION_TIMEOUT = FabricCAServices.getConfigSetting('connection-timeout');
+	t.equal(CONNECTION_TIMEOUT, 3000, 'connection-timeout should have default value 3000');
+	const SO_TIMEOUT = FabricCAServices.getConfigSetting('socket-operation-timeout');
+	t.equal(SO_TIMEOUT, undefined, 'socket-operation-timeout should have default value undefined');
 
-  	let start, end;
-  	// test CONNECTION_TIMEOUT
-  	// Connect to a non-routable IP address should throw error connection_timeout
-  	try {
-   		const caClient = new FabricCAServices('http://10.255.255.1:3000')._fabricCAClient;
+	let start, end;
+	// test CONNECTION_TIMEOUT
+	// Connect to a non-routable IP address should throw error connection_timeout
+	try {
+		const caClient = new FabricCAServices('http://10.255.255.1:3000')._fabricCAClient;
 		start = Date.now();
-		const response = await caClient.request('GET', '/aMethod', signingIdentity);
+		await caClient.request('GET', '/aMethod', signingIdentity);
 		t.fail('Should throw error by CONNECTION_TIMEOUT');
-  	} catch(e) {
+	} catch(e) {
 		end = Date.now();
 		logger.debug('Conection failed with error ' + e.toString());
 		if (e.message === 'Calling /aMethod endpoint failed, CONNECTION Timeout') {
@@ -441,17 +440,17 @@ async function timeOutTest(signingIdentity, t) {
 		else {
 			t.fail('Calling non-routable endpoint failed with unexpected error: ' + e.toString());
 		}
-  	}
+	}
 
-  	// create a mock server, the mock server wait for 10 seconds until send response
-  	const mockServer = http.createServer((req, res) => {
+	// create a mock server, the mock server wait for 10 seconds until send response
+	const mockServer = http.createServer((req, res) => {
 		setTimeout(() => {
 			res.writeHead(200, {'Content-Type': 'text/plain'});
 			res.write('Response');
 			res.end();
 		}, 10000);
-  	});
-  	mockServer.listen(3000);
+	});
+	mockServer.listen(3000);
 
 	// set SO_TIMEOUT to 5000
 	FabricCAServices.setConfigSetting('socket-operation-timeout', 5000);
@@ -460,7 +459,7 @@ async function timeOutTest(signingIdentity, t) {
 	try {
 		const caClient = new FabricCAServices('http://localhost:3000')._fabricCAClient;
 		start = Date.now();
-		const response = await caClient.request('GET', '/aMethod', signingIdentity);
+		await caClient.request('GET', '/aMethod', signingIdentity);
 		t.fail('Should throw error by SO_TIMEOUT');
 	} catch(e) {
 		end = Date.now();

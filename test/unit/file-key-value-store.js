@@ -9,10 +9,8 @@
 var tape = require('tape');
 var _test = require('tape-promise').default;
 var test = _test(tape);
-var rewire = require('rewire');
 
 var path = require('path');
-var util = require('util');
 var testUtil = require('./util.js');
 var fs = require('fs-extra');
 var utils = require('fabric-client/lib/utils.js');
@@ -105,7 +103,7 @@ test('\n\n ** FileKeyValueStore - read and write test **\n\n', function (t) {
 			return store.setValue(testKey, testValue);
 		})
 	.then(
-		function (result) {
+		function () {
 			t.fail('FileKeyValueStore error check tests:  Delete store & setValue test.  setValue() should have failed.');
 			t.end();
 		},

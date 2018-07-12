@@ -351,7 +351,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 					proposal: proposal
 				};
 			} else {
-				console.log(JSON.stringify(proposalResponses));
+				logger.debug(JSON.stringify(proposalResponses));
 				throw new Error('All proposals were not good');
 			}
 

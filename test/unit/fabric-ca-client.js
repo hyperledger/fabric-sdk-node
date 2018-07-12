@@ -11,10 +11,10 @@ var _test = require('tape-promise').default;
 var test = _test(tape);
 
 var testutil = require('./util.js');
-var utils = require('fabric-client/lib/utils.js');
+// var utils = require('fabric-client/lib/utils.js');
 var fs = require('fs');
 var path = require('path');
-var util = require('util');
+// var util = require('util');
 var rewire = require('rewire');
 
 var FabricCAServices = rewire('fabric-ca-client/lib/FabricCAClientImpl');
@@ -42,7 +42,7 @@ test('FabricCAClient: Test constructor', function (t) {
 
 	t.throws(
 		function () {
-			let client = new FabricCAClient(connectOpts);
+			new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'Throw error for missing protocol'
@@ -52,7 +52,7 @@ test('FabricCAClient: Test constructor', function (t) {
 
 	t.throws(
 		function () {
-			let client = new FabricCAClient(connectOpts);
+			new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'Throw error for invalid protocol'
@@ -63,7 +63,7 @@ test('FabricCAClient: Test constructor', function (t) {
 
 	t.doesNotThrow(
 		function () {
-			let client = new FabricCAClient(connectOpts);
+			new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'HTTP is a valid protocol'
@@ -73,7 +73,7 @@ test('FabricCAClient: Test constructor', function (t) {
 
 	t.doesNotThrow(
 		function () {
-			let client = new FabricCAClient(connectOpts);
+			new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'HTTPS is a valid protocol'
@@ -83,7 +83,7 @@ test('FabricCAClient: Test constructor', function (t) {
 
 	t.throws(
 		function () {
-			let client = new FabricCAClient(connectOpts);
+			new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options. Hostname must be set/,
 		'Throw error for missing hostname'
@@ -93,7 +93,7 @@ test('FabricCAClient: Test constructor', function (t) {
 
 	t.doesNotThrow(
 		function () {
-			let client = new FabricCAClient(connectOpts);
+			new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options. Port must be an integer/,
 		'Should not throw error if port is not set'
@@ -103,7 +103,7 @@ test('FabricCAClient: Test constructor', function (t) {
 
 	t.throws(
 		function () {
-			let client = new FabricCAClient(connectOpts);
+			new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options. Port must be an integer/,
 		'Throw error for invalid port'
@@ -113,7 +113,7 @@ test('FabricCAClient: Test constructor', function (t) {
 
 	t.doesNotThrow(
 		function () {
-			let client = new FabricCAClient(connectOpts);
+			new FabricCAClient(connectOpts);
 		},
 		/Invalid connection options. Port must be an integer/,
 		'Integer is a valid type for port'
@@ -183,14 +183,14 @@ test('FabricCAClient: Test _pemToDer static method',function(t){
 	//call function with garbage
 	t.throws(
 		function(){
-			var hex = FabricCAClient.pemToDER('garbage');
+			FabricCAClient.pemToDER('garbage');
 		},
 		/Input parameter does not appear to be PEM-encoded./,
 		'Throw an error when input is not PEM-encoded'
 	);
 
 	try {
-		var hex = FabricCAClient.pemToDER(ecertPEM.toString());
+		FabricCAClient.pemToDER(ecertPEM.toString());
 		t.pass('Sucessfully converted ecert from PEM to DER');
 	} catch(err) {
 		t.fail('Failed to convert PEM to DER due to ' + err);
@@ -267,7 +267,7 @@ test('FabricCAServices:  Test optional constructor', function(t) {
 
 	t.doesNotThrow(
 		function () {
-			let service = new FabricCAServices(opts);
+			new FabricCAServices(opts);
 		},
 		null,
 		'FabricCAServices constructor with object and just url'
@@ -378,21 +378,21 @@ test('FabricCAServices: Test register() function', function(t) {
 test('FabricCAServices: Test enroll with missing parameters', function (t) {
 
 	var ca = new FabricCAServices('http://localhost:7054');
-	var req = null;
+	//var req = null;
 
 	ca.enroll()
 	.then(
-		function (key, cert) {
+		function () {
 			t.fail('Enroll() must fail when missing required parameters');
 			t.end();
 		},
 		function (err) {
 			t.equal(err.message , 'Missing required argument "request"',
-				'Verify error message returned by enroll()');
+				'Verify error message returned by enroll() ' + err);
 			t.end();
 		}
 	)
-	.catch(function (err) {
+	.catch(function () {
 		t.fail('Unexpected result from enroll()');
 		t.end();
 	});
@@ -405,12 +405,12 @@ test('FabricCAServices: Test enroll with missing parameters', function (t) {
 		},
 		function (err) {
 			t.equal(err.message , 'req.enrollmentID is not set',
-				'Verify error message returned by enroll(no enrollment ID)');
+				'Verify error message returned by enroll(no enrollment ID) ' + err);
 			t.end();
 		}
 	)
 	.catch(function (err) {
-		t.fail('Unexpected failure of enroll()');
+		t.fail('Unexpected failure of enroll() ' + err);
 		t.end();
 	});
 
@@ -422,12 +422,12 @@ test('FabricCAServices: Test enroll with missing parameters', function (t) {
 		},
 		function (err) {
 			t.equal(err.message , 'req.enrollmentSecret is not set',
-				'Verify error message returned by enroll(no enrollment secret)');
+				'Verify error message returned by enroll(no enrollment secret) ' + err);
 			t.end();
 		}
 	)
 	.catch(function (err) {
-		t.fail('Unexpected failure of enroll(no enrollment secret)');
+		t.fail('Unexpected failure of enroll(no enrollment secret) ' + err);
 		t.end();
 	});
 
@@ -439,12 +439,12 @@ test('FabricCAServices: Test enroll with missing parameters', function (t) {
 		},
 		function (err) {
 			t.equal(err.message , 'req.attr_reqs is not an array',
-				'Verify error message returned by enroll(req.attr_reqs is not an array)');
+				'Verify error message returned by enroll(req.attr_reqs is not an array) ' + err);
 			t.end();
 		}
 	)
 	.catch(function (err) {
-		t.fail('Unexpected failure of enroll(no enrollment secret)');
+		t.fail('Unexpected failure of enroll(no enrollment secret) ' + err);
 		t.end();
 	});
 
@@ -461,7 +461,7 @@ test('FabricCAServices: Test enroll with missing parameters', function (t) {
 		}
 	)
 	.catch(function (err) {
-		t.fail('Unexpected failure of enroll(no enrollment secret)');
+		t.fail('Unexpected failure of enroll(no enrollment secret)::' + err);
 		t.end();
 	});
 });
@@ -681,7 +681,7 @@ test('FabricCAServices: Test reenroll() function', function(t) {
 					return { _certificate: VALID_CERT };
 				}
 			}).catch((err) => {
-				var msg = err.message ? err.message : err;
+				//var msg = err.message ? err.message : err;
 				if (err.message && err.message.indexOf('signingIdentity.sign is not a function') >= 0)
 					t.pass('Properly failed due to mockup user object missing signer');
 				else
@@ -731,7 +731,7 @@ test('FabricCAServices: Test _parseURL() function', function (t) {
 	var badURL = 'http://' + badHost + ':' + goodPort;
 	var badURL2 = 'httpD://' + goodHost + ':' + goodPort;
 	var badURL3 = 'httpsD://' + goodHost + ':' + goodPort;
-	var badURL4 = goodHost + ':' + goodPort;
+	//var badURL4 = goodHost + ':' + goodPort;
 	var badURL5 = 'ftp://' + goodHost + ':' + goodPort;
 
 
@@ -821,7 +821,7 @@ test('FabricCAClient: Test enroll with missing parameters', function (t) {
 	});
 
 	return client.enroll()
-	.then(function (csr) {
+	.then(function () {
 		t.fail('Enrollment must fail when missing required parameters');
 		t.end();
 	})

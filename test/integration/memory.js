@@ -16,10 +16,8 @@ var Client = require('fabric-client');
 var util = require('util');
 var fs = require('fs');
 var path = require('path');
-var grpc = require('grpc');
-var heapdump = require('heapdump');
+//var heapdump = require('heapdump');
 
-var testUtil = require('../unit/util.js');
 
 /*
 	This is a test that may be used to check on memory usage.
@@ -105,13 +103,11 @@ async function createChannel(t) {
 	var signatures = [];
 	var genesis_block = null;
 	var channel = null;
-	var query_tx_id = null;
 	var instansiate_tx_id = null;
 	var results = null;
 	var response = null;
 	var request = null;
 	var tx_id = null;
-	var found = null;
 	try {
 		// lets load the client information for this organization
 		// the file only has the client section
@@ -199,9 +195,10 @@ async function createChannel(t) {
 
 		tx_id = client.newTransactionID(true);
 		request = {
-			//targets: // this time we will leave blank so that we can use
-				       // all the peers assigned to the channel ...some may fail
-				       // if the submitter is not allowed, let's see what we get
+			//targets:
+			// this time we will leave blank so that we can use
+			// all the peers assigned to the channel ...some may fail
+			// if the submitter is not allowed, let's see what we get
 			block : genesis_block,
 			txId : 	tx_id
 		};
@@ -236,8 +233,9 @@ async function createChannel(t) {
 
 		tx_id = client.newTransactionID(true);
 		request = {
-			targets: ['peer0.org1.example.com'], // this does assume that we have loaded a
-			                                     // network config with a peer by this name
+			// this does assume that we have loaded a
+			// network config with a peer by this name
+			targets: ['peer0.org1.example.com'],
 			block : genesis_block,
 			txId : 	tx_id
 		};
@@ -368,12 +366,8 @@ async function actions(t) {
 	t.pass('Successfully loaded a network configuration');
 
 	var channel_name = 'mychannel2';
-	var config = null;
-	var signatures = [];
-	var genesis_block = null;
 	var channel = null;
 	var query_tx_id = null;
-	var instansiate_tx_id = null;
 	var results = null;
 	var response = null;
 	var request = null;
@@ -391,7 +385,7 @@ async function actions(t) {
 		/*
 		 *  S T A R T   U S I N G
 		 */
-		let admin = await client.setUserContext({username:'admin', password: 'adminpw'});
+		await client.setUserContext({username:'admin', password: 'adminpw'});
 		t.pass('Successfully enrolled user \'admin\' for org1');
 
 		tx_id = client.newTransactionID(); // get a non admin transaction ID

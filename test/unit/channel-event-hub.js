@@ -229,10 +229,10 @@ test('\n\n** ChannelEventHub block callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	var index = eh.registerBlockEvent((block) => {
+	var index = eh.registerBlockEvent(() => {
 		t.fail('Should not have called success callback when disconnect() is called');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.pass('Successfully called error callback from disconnect()');
 		t.end();
 	});
@@ -258,10 +258,10 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	var index = eh.registerBlockEvent((block) => {
+	var index = eh.registerBlockEvent(() => {
 		t.fail('Should not have called success callback');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.fail('Error callback should not be called');
 		t.end();
 	});
@@ -269,10 +269,10 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 	t.pass('Successfully registered block callbacks');
 	t.equal(index, 1, 'Check the first block listener is at index 1');
 	try {
-		index = eh.registerBlockEvent((block) => {
+		index = eh.registerBlockEvent(() => {
 			t.fail('Should not have called success callback');
 			t.end();
-		}, (error) =>{
+		}, () =>{
 			t.fail('Should not have called error callback');
 			t.end();
 		},
@@ -290,10 +290,10 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 	eh.unregisterBlockEvent(index);
 
 	try {
-		index = eh.registerBlockEvent((block) => {
+		index = eh.registerBlockEvent(() => {
 			t.fail('Should not have called success callback');
 			t.end();
-		}, (error) =>{
+		}, () =>{
 			t.fail('Should not have called error callback');
 			t.end();
 		},
@@ -316,9 +316,9 @@ test('\n\n** ChannelEventHub transaction callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh.registerTxEvent('txid1', (transid, status) => {
+	eh.registerTxEvent('txid1', () => {
 		// empty method body
-	}, (error) =>{
+	}, () =>{
 		// empty method body
 	});
 	t.pass('successfully registered transaction callbacks');
@@ -326,10 +326,10 @@ test('\n\n** ChannelEventHub transaction callback \n\n', (t) => {
 
 	t.throws(
 		() => {
-			eh.registerTxEvent('txid1', (transid, status) => {
+			eh.registerTxEvent('txid1', () => {
 				t.fail('Should not have called success callback');
 				t.end();
-			}, (error) =>{
+			}, () =>{
 				t.fail('Should not have called error callback');
 				t.end();
 			});
@@ -338,10 +338,10 @@ test('\n\n** ChannelEventHub transaction callback \n\n', (t) => {
 		'Checking for TransactionId (%s) has already been registered'
 	);
 
-	eh.registerTxEvent('txid2', (transid, status) => {
+	eh.registerTxEvent('txid2', () => {
 		t.fail('Should not have called success callback');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.pass('Should have called error callback');
 		t.end();
 	});
@@ -358,20 +358,20 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 	let eh = channel.newChannelEventHub(peer);
 	eh._force_reconnect = false;
 
-	eh.registerTxEvent('transid', (transid, status) => {
+	eh.registerTxEvent('transid', () => {
 		t.fail('Should not have called success callback');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.fail('Error callback should not be called');
 		t.end();
 	});
 
 	t.pass('Successfully registered transaction callbacks');
 	try {
-		eh.registerTxEvent('transid', (transid, status) => {
+		eh.registerTxEvent('transid', () => {
 			t.fail('Should not have called success callback');
 			t.end();
-		}, (error) =>{
+		}, () =>{
 			t.fail('Should not have called error callback');
 			t.end();
 		},
@@ -389,10 +389,10 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 	eh.unregisterTxEvent('transid');
 
 	try {
-		eh.registerTxEvent('transid', (transid, status) => {
+		eh.registerTxEvent('transid', () => {
 			t.fail('Should not have called success callback');
 			t.end();
-		}, (error) =>{
+		}, () =>{
 			t.fail('Should not have called error callback');
 			t.end();
 		},
@@ -412,10 +412,10 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 	t.throws(
 		() => {
 			eh = channel.newChannelEventHub(peer);
-			eh.registerTxEvent('txid3', (transid, status) => {
+			eh.registerTxEvent('txid3', () => {
 				t.fail('Should not have called success callback');
 				t.end();
-			}, (error) =>{
+			}, () =>{
 				t.fail('Should not have called error callback');
 				t.end();
 			},
@@ -435,10 +435,10 @@ test('\n\n** ChannelEventHub chaincode callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
+	eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
 		t.fail('Should not have called success callback');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.pass('Successfully called chaincode error callback');
 		t.end();
 	});
@@ -446,18 +446,18 @@ test('\n\n** ChannelEventHub chaincode callback \n\n', (t) => {
 
 	t.equal(Object.keys(eh._chaincodeRegistrants).length, 1, 'Check the size of the chaincodeRegistrants hash table');
 
-	eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
+	eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
 		// empty method body
-	}, (error) =>{
+	}, () =>{
 		// empty method body
 	});
 
 	t.equal(Object.keys(eh._chaincodeRegistrants).length, 1,
 		'Size of the chaincodeRegistrants hash table should still be 1 because both listeners are for the same chaincode');
 
-	eh.registerChaincodeEvent('ccid2', 'eventfilter', (block) => {
+	eh.registerChaincodeEvent('ccid2', 'eventfilter', () => {
 		// empty method body
-	}, (error) =>{
+	}, () =>{
 		// empty method body
 	});
 
@@ -475,20 +475,20 @@ test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
 	let eh = channel.newChannelEventHub(peer);
 	eh._force_reconnect = false;
 
-	let handle = eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
+	let handle = eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
 		t.fail('Should not have called success callback');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.fail('Error callback should not be called');
 		t.end();
 	});
 
 	t.pass('Successfully registered chaincode callbacks');
 	try {
-		eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
+		eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
 			t.fail('Should not have called success callback');
 			t.end();
-		}, (error) =>{
+		}, () =>{
 			t.fail('Should not have called error callback');
 			t.end();
 		},
@@ -506,10 +506,10 @@ test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
 	eh.unregisterChaincodeEvent(handle);
 
 	try {
-		eh.registerChaincodeEvent('ccid1', 'eventfilter', (block) => {
+		eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
 			t.fail('Should not have called success callback');
 			t.end();
-		}, (error) =>{
+		}, () =>{
 			t.fail('Should not have called error callback');
 			t.end();
 		},
@@ -532,7 +532,7 @@ test('\n\n** ChannelEventHub block callback no Error callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh.registerBlockEvent((block) => {
+	eh.registerBlockEvent(() => {
 		t.fail('Should not have called block no error success callback');
 		t.end();
 	});
@@ -547,7 +547,7 @@ test('\n\n** ChannelEventHub transaction callback no Error callback \n\n', (t) =
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh.registerTxEvent('txid', (txid, status) => {
+	eh.registerTxEvent('txid', () => {
 		t.fail('Should not have called transaction no error success callback');
 		t.end();
 	});
@@ -562,7 +562,7 @@ test('\n\n** ChannelEventHub chaincode callback no Error callback \n\n', (t) => 
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+	eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
 		t.fail('Should not have called chaincode no error success callback');
 		t.end();
 	});
@@ -577,11 +577,11 @@ test('\n\n** ChannelEventHub remove block callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	var blockcallback = (block) => {
+	var blockcallback = () => {
 		t.fail('Should not have called block success callback (on remove)');
 		t.end();
 	};
-	var blockerrorcallback = (error) =>{
+	var blockerrorcallback = () =>{
 		t.fail('Should not have called block error callback (on remove)');
 		t.end();
 	};
@@ -602,10 +602,10 @@ test('\n\n** ChannelEventHub remove transaction callback \n\n', (t) => {
 	let eh = channel.newChannelEventHub(peer);
 
 	var txid = 'txid';
-	eh.registerTxEvent(txid, (transid, status) => {
+	eh.registerTxEvent(txid, () => {
 		t.fail('Should not have called transaction success callback (on remove)');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.fail('Should not have called transaction error callback (on remove)');
 		t.end();
 	});
@@ -624,10 +624,10 @@ test('\n\n** ChannelEventHub remove chaincode callback \n\n', (t) => {
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
 		t.fail('Should not have called chaincode success callback (on remove)');
 		t.end();
-	}, (error) =>{
+	}, () =>{
 		t.fail('Should not have called chaincode error callback (on remove)');
 		t.end();
 	});
@@ -648,7 +648,7 @@ test('\n\n** ChannelEventHub remove block callback no Error callback \n\n', (t) 
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	var blockcallback = (block) => {
+	var blockcallback = () => {
 		t.fail('Should not have called block success callback (remove with no error callback)');
 		t.end();
 	};
@@ -668,7 +668,7 @@ test('\n\n** ChannelEventHub remove transaction callback no Error callback\n\n',
 	let eh = channel.newChannelEventHub(peer);
 
 	var txid = 'txid';
-	eh.registerTxEvent(txid, (transid, status) => {
+	eh.registerTxEvent(txid, () => {
 		t.fail('Should not have called transaction success callback (remove with no error callback)');
 		t.end();
 	});
@@ -686,7 +686,7 @@ test('\n\n** ChannelEventHub remove chaincode callback no Error callback \n\n', 
 	let channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 
-	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', (block) => {
+	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
 		t.fail('Should not have called chaincode success callback (remove with no error callback)');
 		t.end();
 	});
@@ -734,13 +734,12 @@ test('\n\n** ChannelEventHub test connect failure on transaction registration \n
 	.then(function (key) {
 		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
 	}).then(() => {
-		var id = member.getIdentity();
 		client.setUserContext(member, true);
 
 		// tx test
 		event_hub = channel.newChannelEventHub(peer);
 		event_hub.registerTxEvent('123',
-			(tx_id, code) => {
+			() => {
 				t.fail('Failed callback should not have been called - tx test 2');
 				t.end();
 			},
@@ -757,7 +756,7 @@ test('\n\n** ChannelEventHub test connect failure on transaction registration \n
 		event_hub.connect();
 
 		return true;
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('#2 call back tx test complete ');
 		// eventhub is now actually not connected
 	}).catch((err) => {
@@ -779,13 +778,12 @@ test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
 	.then(function (key) {
 		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
 	}).then(() => {
-		var id = member.getIdentity();
 		client.setUserContext(member, true);
 
 		event_hub = channel.newChannelEventHub(peer);
 		t.doesNotThrow(
 			() => {
-				event_hub.registerBlockEvent((tx_id, code) => {
+				event_hub.registerBlockEvent(() => {
 					t.fail('Failed callback should not have been called - block test 1');
 				});
 			},
@@ -795,7 +793,7 @@ test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
 
 		event_hub = channel.newChannelEventHub(peer);
 		event_hub.registerBlockEvent(
-			(tx_id, code) => {
+			() => {
 				t.fail('Failed callback should not have been called - block test 3');
 				t.end();
 			},
@@ -819,7 +817,7 @@ test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
 		t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
 
 		return true;
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('#3 callback block test complete');
 		// t.end() should come from the callback
 	}).catch((err) => {

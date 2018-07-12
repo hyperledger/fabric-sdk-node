@@ -12,8 +12,6 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 
-const Client = require('fabric-client');
-const util = require('util');
 const fs = require('fs');
 const path = require('path');
 

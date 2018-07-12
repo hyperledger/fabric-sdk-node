@@ -18,7 +18,6 @@ var fs = require('fs');
 var fsx = require('fs-extra');
 
 var path = require('path');
-var grpc = require('grpc');
 
 var testUtil = require('../unit/util.js');
 
@@ -83,7 +82,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 
 	// tell this client instance where the state and key stores are located
 	client_org1.initCredentialStores()
-	.then((nothing) => {
+	.then(() => {
 		t.pass('Successfully created the key value store and crypto store based on the sdk config and connection profile');
 
 		// get the CA associated with this client's organization
@@ -106,7 +105,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 
 		// tell this client instance where the state and key stores are located
 		return client_org2.initCredentialStores();
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('Successfully created the key value store and crypto store based on the sdk config and connection profile');
 
 		// get the CA associated with this client's organization
@@ -188,7 +187,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 			t.fail('Failed to create the channel. ');
 			throw new Error('Failed to create the channel. ');
 		}
-	}).then((nothing) => {
+	}).then(() => {
 		t.pass('Successfully waited to make sure new channel was created on orderer.');
 
 		// have the clients build a channel with all peers and orderers
@@ -346,7 +345,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 			t.fail('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
 			throw new Error('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
 		}
-	}).then((results) => {
+	}).then(() => {
 		t.pass('Successfully waited for chaincode to startup');
 
 		// this will enroll the user using the ca as defined in the connection profile
@@ -361,7 +360,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 		t.pass('Successfully registered user \'user1\' for org1');
 
 		return client_org1.setUserContext({username:'user1', password:secret});
-	}).then((user)=> {
+	}).then(()=> {
 		t.pass('Successfully enrolled user \'user1\' for org1');
 
 		// try again ...this time use a longer timeout
@@ -429,7 +428,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 			eventhub.registerTxEvent(query_tx_id, (tx, code, block_num) => {
 				clearTimeout(handle);
 				if (code !== 'VALID') {
-					t.fail('transaction was invalid, code = ' + code);
+					t.fail('transaction was invalid, code = ' + code + ' with block_num ' + block_num );
 					reject(new Error('INVALID:' + code));
 				} else {
 					t.pass('transaction has been committed on peer ' + eventhub.getPeerAddr());
@@ -453,7 +452,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 
 		return Promise.all(promises);
 	}).then((results) => {
-		let event_results = results[0]; // Promise all will return the results in order of the of Array
+		//let event_results = results[0]; // Promise all will return the results in order of the of Array
 		let sendTransaction_results = results[1];
 		if (sendTransaction_results instanceof Error) {
 			t.fail('Failed to order the transaction: ' + sendTransaction_results);
@@ -465,7 +464,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 			throw new Error('Failed to order the transaction to invoke the chaincode. Error code: ' + sendTransaction_results.status);
 		}
 
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			// get a new ChannelEventHub when registering a listener
 			// with startBlock or endBlock when doing a replay
 			// The ChannelEventHub must not have been connected or have other
@@ -498,10 +497,10 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 			channel_event_hub.connect(); //connect to receive filtered blocks
 			t.pass('Successfully called connect on the transaction replay event hub for filtered blocks');
 		});
-	}).then((results) => {
+	}).then(() => {
 		t.pass('Successfully checked channel event hub replay');
 
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			// Get the list of channel event hubs for the current organization.
 			// These will be peers with the "eventSource" role setting of true
 			// and not the peers that have an "eventURL" defined. Peers with the
@@ -542,13 +541,13 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 			channel_event_hub.connect(); //connect to receive filtered blocks
 			t.pass('Successfully called connect on the transaction replay event hub for filtered blocks');
 		});
-	}).then((results) => {
+	}).then(() => {
 		t.pass('Successfully checked replay');
 		// check that we can get the user again without password
 		// also verifies that we can get a complete user properly stored
 		// when using a connection profile
 		return client_org1.setUserContext({username:'admin'});
-	}).then((admin) => {
+	}).then(() => {
 		t.pass('Successfully loaded user \'admin\' from store for org1');
 
 		var request = {
@@ -690,7 +689,7 @@ test('\n\n***** use the connection profile file  *****\n\n', function(t) {
 		}
 
 		return true;
-	}).then((results) => {
+	}).then(() => {
 		t.pass('Testing has completed successfully');
 		t.end();
 	}).catch((error) =>{
@@ -793,7 +792,7 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 		const secret = await ca1.register({enrollmentID: testuser, affiliation: org_name}, admin);
 
 		try {
-			const user = await client_org1.setUserContext({username: testuser, password: secret, caName: ca_bad_name});
+			await client_org1.setUserContext({username: testuser, password: secret, caName: ca_bad_name});
 			t.fail('Should throw error when setting user context using a bad caName');
 		} catch (err) {
 			// Expected error should include missing this client\'s organization and certificate authority
@@ -802,7 +801,7 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 		}
 
 		try {
-			const user = await client_org1.setUserContext({username: testuser, password: secret, caName: ca_wrong_name});
+			await client_org1.setUserContext({username: testuser, password: secret, caName: ca_wrong_name});
 			t.fail('Should throw error when setting user context using a caName in another org');
 		} catch (err) {
 			// Expected error should include Authorization failure or Authentication failure

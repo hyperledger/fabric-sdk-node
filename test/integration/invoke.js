@@ -28,10 +28,7 @@ var util = require('util');
 var logger = utils.getLogger('E2E testing');
 
 var ORGS;
-
 var tx_id = null;
-var the_user = null;
-
 var peers = [];
 
 init();
@@ -68,7 +65,7 @@ test('\n\n***** E R R O R  T E S T I N G: invoke transaction with one endorsemen
 
 test('\n\n***** invoke transaction with inverted order of endorsements *****\n\n', (t) => {
 	invokeChaincode('org2', 'v0', t, false, [peers[1], peers[0]])
-	.then((result) => {
+	.then(() => {
 		t.pass('Successfully invoke transaction chaincode on channel');
 		t.end();
 	}, (err) => {
@@ -98,7 +95,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 	Client.setConfigSetting('request-timeout', 60000);
 	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	var targets = [], eventhubs = [];
+	var eventhubs = [];
 
 	// override t.end function so it'll always disconnect the event hub
 	t.end = ((context, ehs, f) => {
@@ -122,9 +119,6 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 	var client = new Client();
 	var channel = client.newChannel(channel_name);
 
-	var orgName = ORGS[userOrg].name;
-	var cryptoSuite = Client.newCryptoSuite();
-
 	var caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 	let caroots = Buffer.from(data).toString();
@@ -136,9 +130,8 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 		tlsInfo = enrollment;
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		return testUtil.getSubmitter(client, t, userOrg);
-	}).then((admin) => {
+	}).then(() => {
 		t.pass('Successfully enrolled user \'admin\'');
-		the_user = admin;
 
 		channel.addOrderer(
 			client.newOrderer(
@@ -182,7 +175,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 
 		return channel.initialize();
 
-	}).then((nothing) => {
+	}).then(() => {
 		tx_id = client.newTransactionID();
 
 		// send proposal to endorser
@@ -272,7 +265,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 								}
 							}
 						},
-						(err) => {
+						() => {
 							clearTimeout(handle);
 							t.pass('Successfully received notification of the event call back being cancelled for '+ deployId);
 							resolve();

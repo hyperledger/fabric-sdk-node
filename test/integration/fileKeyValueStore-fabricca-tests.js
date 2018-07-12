@@ -39,11 +39,11 @@ test('Use FabricCAServices with a File KeyValueStore', function(t) {
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
 
-	var keyValueStore = Client.getConfigSetting('key-value-store');
+	//var keyValueStore = Client.getConfigSetting('key-value-store');
 	var keyValStorePath = path.join(testUtil.getTempDir(), 'customKeyValStorePath');
 
 	var client = new Client();
-	var cryptoSuite, member, opts;
+	var cryptoSuite, member;
 
 	// clean up
 	if (testUtil.existsSync(keyValStorePath)) {
@@ -123,11 +123,11 @@ test('Use FabricCAServices with a File KeyValueStore', function(t) {
 			t.end();
 		})
 	.then(
-		function(user) {
+		function() {
 			return client.setUserContext(new User('userx'));
 		})
 	.then(
-		function(user) {
+		function() {
 			client.setCryptoSuite(cryptoSuite);
 			return client.getUserContext('admin2', true);
 		})

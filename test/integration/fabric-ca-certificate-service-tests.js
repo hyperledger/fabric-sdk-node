@@ -4,10 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
-const utils = require('fabric-client/lib/utils.js');
-const logger = utils.getLogger('integration.ca.certificate-service');
-
 const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
@@ -50,11 +46,10 @@ test('\n\n ** FabricCAServices - CertificateService Test **\n\n', async (t) => {
 		resp = await certificateService2.getCertificates(null, admin2);
 		t.equal(resp.success, true, 'certificate service should response success');
 		t.equal(resp.result.certs.length > 0, true, 'there should be certificates for the admin user');
-		let certsNum2 = resp.result.certs.length;
 
 		// admin1 create a new identity at ca-org1
 		// after enroll the new created identity, there should be a new certificate
-		let user1 = await createAndEnrollIdentity(caService1, admin1, t);
+		let user1 = await createAndEnrollIdentity(caService1, admin1);
 		resp = await certificateService1.getCertificates(null, admin1);
 		t.equal(resp.success, true, 'certificate service should response success');
 		t.equal(resp.result.certs.length, certsNum1 + 1, 'there should be a new certificate after a new identity was created');
@@ -93,7 +88,7 @@ async function enrollAdmin(caService1, caService2, t) {
 	return {admin1, admin2};
 }
 
-async function createAndEnrollIdentity(ca, admin, t) {
+async function createAndEnrollIdentity(ca, admin) {
 	const affiliation = admin.getName() === 'admin1' ? 'org1':'org2';
 	const mspId = admin._mspId;
 	const identityService = ca.newIdentityService();

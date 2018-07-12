@@ -111,7 +111,8 @@ var PKCS11_ECDSA_KEY = class extends api.Key {
 
 	}
 
-	generateKey(opts) {
+	/* implementation must include 'opts' as a parameter to this method */
+	generateKey() {
 		throw new Error('Not implemented');
 	}
 

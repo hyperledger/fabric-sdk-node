@@ -12,8 +12,6 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 
-const Client = require('fabric-client');
-const util = require('util');
 const fs = require('fs');
 const path = require('path');
 
@@ -79,7 +77,7 @@ async function manually(t, client) {
 		sys_channel.addOrderer(orderer);
 		t.pass('Successfully added orderer to channel');
 
-		let config_envelope = await sys_channel.getChannelConfigFromOrderer();
+		await sys_channel.getChannelConfigFromOrderer();
 		t.pass('Successfully got the config envelope by using the admin identity');
 
 		client._adminSigningIdentity = null; //remove the admin assigned above
@@ -95,7 +93,7 @@ async function manually(t, client) {
 		t.equals(user.getName(), 'ordererAdmin', 'Checking that the user was created');
 		t.equals(client._userContext.getName(), 'ordererAdmin', 'Checking that the user was set');
 
-		config_envelope = await sys_channel.getChannelConfigFromOrderer();
+		await sys_channel.getChannelConfigFromOrderer();
 		t.pass('Successfully got the config envelope by user the user context');
 
 	} catch(error) {
