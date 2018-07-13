@@ -165,76 +165,122 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', async (t) =
 		await client.saveUserToStateStore();
 		t.fail('Client tests: got response, but should throw "Cannot save user to state store when userContext is null."');
 	} catch (error) {
-		if (error.message === 'Cannot save user to state store when userContext is null.')
+		if (error.message === 'Cannot save user to state store when userContext is null.') {
 			t.pass('Client tests: Should throw "Cannot save user to state store when userContext is null."');
-		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when userContext is null." ' + error.stack ? error.stack : error);
+		} else {
+			t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when userContext is null." ' + error.stack ? error.stack : error);
+		}
 	}
+
 	try {
 		await client.setUserContext(null);
 		t.fail('Client tests: got response, but should throw "Cannot save null userContext."');
-	} catch (e) {
-		if (e.message === 'Cannot save null userContext.')
+		t.end();
+	} catch (error) {
+		if (error.message === 'Cannot save null userContext.')
 			t.pass('Client tests: Should throw "Cannot save null userContext."');
-		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save null userContext." ' + e.stack ? e.stack : e);
+		else t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save null userContext." ' + error.stack ? error.stack : error);
 	}
 
-
 	try {
+		response = await client.getUserContext('someUser');
+		if (response == null) {
+			t.pass('Client tests: getUserContext with no context in memory or persisted returns null');
+		} else {
+			t.fail('Client tests: getUserContext with no context in memory or persisted did not return null');
+		}
+
 		response = await client.setUserContext(new User('someUser'), true);
-	} catch (e) {
-		t.fail('Client tests: Unexpected error, failed setUserContext with skipPersistence. ' + e.stack ? e.stack : e);
-	}
+		if (response && response.getName() === 'someUser') {
+			t.pass('Client tests: successfully setUserContext with skipPersistence.');
+		} else {
+			t.fail('Client tests: failed name check after setUserContext with skipPersistence.');
+		}
 
-	if (response && response.getName() === 'someUser')
-		t.pass('Client tests: successfully setUserContext with skipPersistence.');
-	else
-		t.fail('Client tests: failed name check after setUserContext with skipPersistence.');
+		response = await client.getUserContext('someUser');
+		if (response && response.getName() === 'someUser') {
+			t.pass('Client tests: getUserContext not persisted/skipPersistence was successful.');
+		} else {
+			t.fail('Client tests: getUserContext not persisted/skipPersistence was not successful.');
+		}
 
+		response = await client.getUserContext('someUser');
+		if (response && response.getName() === 'someUser') {
+			t.pass('Client tests: getUserContext not persisted/skipPersistence was successful.');
+		} else {
+			t.fail('Client tests: getUserContext not persisted/skipPersistence was not successful.');
+		}
 
-	try {
-		await client.setUserContext(new User('someUser'));
-		t.fail('Client tests: setUserContext without skipPersistence and no stateStore should not return result.');
-	} catch (e) {
-		if (e.message === 'Cannot save user to state store when stateStore is null.')
-			t.pass('Client tests: Should throw "Cannot save user to state store when stateStore is null"');
-		else
-			t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + e.stack ? e.stack : e);
-	}
+		try {
+			await client.setUserContext(new User('someUser'));
+			t.fail('Client tests: setUserContext without skipPersistence and no stateStore should not return result.');
+			t.end();
+		} catch (error) {
+			if (error.message === 'Cannot save user to state store when stateStore is null.')
+				t.pass('Client tests: Should throw "Cannot save user to state store when stateStore is null"');
+			else
+				t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error.stack ? error.stack : error);
+		}
 
+		let channel = client.newChannel('somechannel');
+		t.equals(channel.getName(), 'somechannel', 'Checking channel names match');
+		t.throws(
+			() => {
+				client.newChannel('somechannel');
+			},
+			/^Error: Channel somechannel already exist/,
+			'Client tests: checking that channel already exists.');
 
-	t.throws(
-		() => {
-			client.setStateStore({});
-		},
-		/The "keyValueStore" parameter must be an object that implements the following methods, which are missing:/,
-		'Client tests: checking state store parameter implementing required functions');
+		t.doesNotThrow(
+			() => {
+				client.getChannel('somechannel');
+			},
+			null,
+			'Client tests: getChannel()');
 
-	testutil.cleanupDir(channelKeyValStorePath);
-	try {
-		const kvs = await Client.newDefaultKeyValueStore({path: channelKeyValStorePath});
+		t.throws(
+			() => {
+				client.getChannel('someOtherChannel');
+			},
+			/^Error: Channel not found for name someOtherChannel./,
+			'Client tests: Should throw Error: Channel not found for name someOtherChannel.');
+
+		t.throws(
+			() => {
+				client.setStateStore({});
+			},
+			/The "keyValueStore" parameter must be an object that implements the following methods, which are missing:/,
+			'Client tests: checking state store parameter implementing required functions');
+
+		testutil.cleanupDir(channelKeyValStorePath);
+		const kvs = await Client.newDefaultKeyValueStore({ path: channelKeyValStorePath });
 		client.setStateStore(kvs);
-		let exists = testutil.existsSync(channelKeyValStorePath);
-		if (exists)
-			t.pass('Client setKeyValueStore test:  Successfully created new directory');
-		else
-			t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + channelKeyValStorePath);
 
-		const store = client.getStateStore();
+		let exists = testutil.existsSync(channelKeyValStorePath);
+		if (exists) {
+			t.pass('Client setKeyValueStore test:  Successfully created new directory');
+		} else {
+			t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + channelKeyValStorePath);
+		}
+
+		let store = client.getStateStore();
 		const result = await store.setValue('testKey', 'testValue');
 		t.pass('Client getStateStore test:  Successfully set value, result: ' + result);
 
 		exists = testutil.existsSync(channelKeyValStorePath, testKey);
-		if (exists)
+		if (exists) {
 			t.pass('Client getStateStore test:  Verified the file for key ' + testKey + ' does exist');
-		else
+		} else {
 			t.fail('Client getStateStore test:  Failed to create file for key ' + testKey);
+		}
 
-
+		t.end();
 	} catch (e) {
 		t.fail(`Client StateStore tests:  Error ${e}`);
+		t.end();
 	}
-	t.end();
 });
+
 test('\n\n ** testing channel operation on client **\n\n', async (t) => {
 
 	const client = prepareClient();
@@ -433,7 +479,7 @@ test('\n\n ** client installChaincode() tests **\n\n', async (t) => {
 	try {
 		await client.installChaincode();
 		t.fail('Should not have been able to resolve the promise because of missing request parameter');
-	}catch (e) {
+	} catch (e) {
 		if (e.message.includes('Missing input request object on install chaincode request')) {
 			t.pass('Successfully caught missing request error');
 		} else {
@@ -514,7 +560,7 @@ test('\n\n ** client installChaincode() tests **\n\n', async (t) => {
 			chaincodeVersion: 'blah'
 		});
 		t.fail('Should not have been able to resolve the promise because of "targets"');
-	}catch (e) {
+	} catch (e) {
 		if (e.message.includes('not found')) {
 			t.pass('Successfully caught bad request param "targets"');
 		} else {
@@ -530,7 +576,7 @@ test('\n\n ** client installChaincode() tests **\n\n', async (t) => {
 			chaincodeVersion: 'blah'
 		});
 		t.fail('Should not have been able to resolve the promise because of "targets" including non-peer Object');
-	}catch (e) {
+	} catch (e) {
 		if (e.message.includes('Target peer is not a valid peer object')) {
 			t.pass('Successfully caught bad request param "targets" including non-peer Object');
 		} else {
@@ -564,7 +610,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 		}
 
 		try {
-			await client[action]({envelope: {}, name: 'name', txId: '77'});
+			await client[action]({ envelope: {}, name: 'name', txId: '77' });
 			t.fail('Should not have been able to resolve the promise because of orderer missing');
 		} catch (err) {
 			if (err.message.includes('Missing "orderer" request parameter')) {
@@ -574,7 +620,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 			}
 		}
 		try {
-			await client[action]({config: 'a', signatures: [], txId: 'a', name: 'a', orderer: {}});
+			await client[action]({ config: 'a', signatures: [], txId: 'a', name: 'a', orderer: {} });
 			t.fail('Should not have been able to resolve the promise');
 		} catch (err) {
 			const msg = '"orderer" request parameter is not valid';
@@ -587,7 +633,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 
 
 		try {
-			await client[action]({orderer: orderer, name: 'name', txId: '777', signatures: []});
+			await client[action]({ orderer: orderer, name: 'name', txId: '777', signatures: [] });
 			t.fail('Should not have been able to resolve the promise because of envelope request parameter');
 		} catch (err) {
 			if (err.message.includes('Missing config')) {
@@ -598,7 +644,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 		}
 
 		try {
-			await client[action]({envelope: {}, orderer, config: 'a', signatures: [], txId: 'a'});
+			await client[action]({ envelope: {}, orderer, config: 'a', signatures: [], txId: 'a' });
 			t.fail('Should not have been able to resolve the promise because of name request parameter');
 		} catch (err) {
 			if (err.message.includes('Missing name request parameter')) {
@@ -609,7 +655,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 		}
 
 		try {
-			await client[action]({config: {}, orderer: orderer, name: 'name', txId: 'fff'});
+			await client[action]({ config: {}, orderer: orderer, name: 'name', txId: 'fff' });
 			t.fail('Should not have been able to resolve the promise because of missing signatures request parameter');
 		} catch (err) {
 			if (err.message.includes('Missing signatures request parameter for the new channel')) {
@@ -637,7 +683,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 		}
 
 		try {
-			await client[action]({config: {}, orderer: orderer, name: 'name', signatures: []});
+			await client[action]({ config: {}, orderer: orderer, name: 'name', signatures: [] });
 			t.fail('Should not have been able to resolve the promise because of missing txId request parameter');
 		} catch (err) {
 			if (err.message.includes('Missing txId request parameter')) {
@@ -659,7 +705,7 @@ test('\n\n ** createUser tests **\n\n', async (t) => {
 
 
 	const client = new Client();
-	const errorHandler = (e,msg)=>{
+	const errorHandler = (e, msg) => {
 		if (e.message.includes(msg)) {
 			t.pass(`Should throw ${msg}`);
 		} else {
@@ -669,54 +715,54 @@ test('\n\n ** createUser tests **\n\n', async (t) => {
 	try {
 		await client.createUser();
 		t.fail('Should not have gotten user.');
-	}catch(e){
+	} catch (e) {
 		const msg = 'Client.createUser missing required \'opts\' parameter.';
-		errorHandler(e,msg);
+		errorHandler(e, msg);
 	}
 
-	const org1KeyStore = {path: path.join(testutil.getTempDir(), caImport.orgs['org1'].storePath)};
+	const org1KeyStore = { path: path.join(testutil.getTempDir(), caImport.orgs['org1'].storePath) };
 
 	const store = await utils.newKeyValueStore(org1KeyStore);
 	logger.info('store: %s', store);
 	client.setStateStore(store);
 
 	try {
-		await client.createUser({username: ''});
+		await client.createUser({ username: '' });
 		t.fail('Should not have gotten user.');
-	}catch (e) {
+	} catch (e) {
 		const msg = 'Client.createUser parameter \'opts username\' is required.';
-		errorHandler(e,msg);
+		errorHandler(e, msg);
 	}
 
 	try {
-		await client.createUser({username: 'anyone'});
+		await client.createUser({ username: 'anyone' });
 		t.fail('Should not have gotten user.');
-	}catch (e) {
+	} catch (e) {
 		const msg = 'Client.createUser parameter \'opts mspid\' is required.';
-		errorHandler(e,msg);
+		errorHandler(e, msg);
 	}
 
 	try {
-		await client.createUser({username: 'anyone', mspid: 'one'});
+		await client.createUser({ username: 'anyone', mspid: 'one' });
 		t.fail('Should not have gotten user.');
-	}catch (e) {
+	} catch (e) {
 		const msg = 'Client.createUser parameter \'opts cryptoContent\' is required.';
-		errorHandler(e,msg);
+		errorHandler(e, msg);
 	}
 	try {
-		await client.createUser({cryptoContent: {privateKeyPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
+		await client.createUser({ cryptoContent: { privateKeyPEM: 'abcd' }, username: 'anyone', mspid: 'one' });
 		t.fail('Should not have gotten user.');
-	}catch (e) {
+	} catch (e) {
 		const msg = 'Client.createUser either \'opts cryptoContent signedCert or signedCertPEM\' is required.';
-		errorHandler(e,msg);
+		errorHandler(e, msg);
 	}
 
 	try {
-		await client.createUser({cryptoContent: {signedCertPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
+		await client.createUser({ cryptoContent: { signedCertPEM: 'abcd' }, username: 'anyone', mspid: 'one' });
 		t.fail('Should not have gotten user.');
-	}catch (e) {
+	} catch (e) {
 		const msg = 'Client.createUser one of \'opts cryptoContent privateKey, privateKeyPEM or privateKeyObj\' is required.';
-		errorHandler(e,msg);
+		errorHandler(e, msg);
 	}
 
 	t.end();
@@ -745,7 +791,7 @@ test('\n\n ** createUser tests 2 **\n\n', async (t) => {
 			t.fail(`createUser, unexpected error: ${err.message}`);
 		}
 	}
-	const org2KeyStore = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
+	const org2KeyStore = { path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath) };
 	t.comment('createUser success path - no cryptoKeyStore');
 	const store = await utils.newKeyValueStore(org2KeyStore);
 
@@ -764,7 +810,7 @@ test('\n\n ** createUser tests 2 **\n\n', async (t) => {
 		} else {
 			t.fail('createUser, returned null');
 		}
-	}catch (e) {
+	} catch (e) {
 		t.fail(`createUser, error, did not get user ${e.message}`);
 	}
 	t.end();
@@ -885,7 +931,7 @@ test('\n\n*** Test normalizeX509 ***\n', (t) => {
 	t.end();
 });
 
-test('\n\n*** Test Add TLS ClientCert ***\n', function (t) {
+test('\n\n*** Test Add TLS ClientCert ***\n', (t) => {
 	var testClient = new Client();
 	t.doesNotThrow(
 		() => {
@@ -924,7 +970,7 @@ test('\n\n*** Test Add TLS ClientCert ***\n', function (t) {
 	t.end();
 });
 
-test('\n\n*** Test Set and Add TLS ClientCert ***\n', function(t) {
+test('\n\n*** Test Set and Add TLS ClientCert ***\n', (t) => {
 	let client = new Client();
 	t.notOk(client.getClientCertHash(), 'Check getting null hash when no client cert assigned');
 	client.setTlsClientCertAndKey(aPem, aPem);

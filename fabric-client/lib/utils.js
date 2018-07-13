@@ -73,7 +73,7 @@ module.exports.newCryptoSuite = function(setting) {
 	if (!csImpl)
 		throw new Error(util.format('Desired CryptoSuite module not found supporting algorithm "%s"', algorithm));
 
-	var cryptoSuite = require(csImpl);
+	const cryptoSuite = require(csImpl);
 
 	// the 'opts' argument to be passed or none at all
 	opts = (typeof setting === 'undefined') ? null : setting;

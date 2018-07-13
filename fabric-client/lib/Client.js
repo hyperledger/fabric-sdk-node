@@ -1316,25 +1316,23 @@ const Client = class extends BaseClient {
 	 */
 	async setUserContext(user, skipPersistence) {
 		logger.debug(`setUserContext - user: ${user}, skipPersistence: ${skipPersistence}`);
-		if (user) {
-			if (user instanceof User) {
-				this._userContext = user;
-				if (!skipPersistence) {
-					logger.debug('setUserContext - begin promise to saveUserToStateStore');
-					return this.saveUserToStateStore();
-				} else {
-					logger.debug('setUserContext - resolved user');
-					return user;
-				}
-			} else {
-				// must be they have passed in an object
-				logger.debug('setUserContext - will try to use network configuration to set the user');
-				return this._setUserFromConfig(user);
-			}
-		} else {
-			logger.debug('setUserContext, Cannot save null userContext');
+		if (!user) {
+			logger.debug('setUserContext, Cannot save null userContext.');
 			throw new Error('Cannot save null userContext.');
 		}
+
+		if (user instanceof User) {
+			this._userContext = user;
+			if (!skipPersistence) {
+				logger.debug('setUserContext - begin promise to saveUserToStateStore');
+				return this.saveUserToStateStore();
+			}
+			logger.debug('setUserContext - resolved user');
+			return user;
+		}
+		// must be they have passed in an object
+		logger.debug('setUserContext - will try to use network configuration to set the user');
+		return this._setUserFromConfig(user);
 	}
 
 	/**
@@ -1516,7 +1514,11 @@ const Client = class extends BaseClient {
 		}
 		if (privateKeyPEM) {
 			logger.debug('then privateKeyPEM data');
-			importedKey = await this.getCryptoSuite().importKey(privateKeyPEM.toString(), { ephemeral: !this.getCryptoSuite()._cryptoKeyStore });
+			if (opts.skipPersistence) {
+				importedKey = await this.getCryptoSuite().importKey(privateKeyPEM.toString(), { ephemeral: true });
+			} else {
+				importedKey = await this.getCryptoSuite().importKey(privateKeyPEM.toString(), { ephemeral: !this.getCryptoSuite()._cryptoKeyStore });
+			}
 		} else {
 			importedKey = opts.cryptoContent.privateKeyObj;
 		}
@@ -1525,18 +1527,12 @@ const Client = class extends BaseClient {
 			signedCertPEM = await readFile(opts.cryptoContent.signedCert);
 		}
 		logger.debug('then signedCertPEM data');
-
 		user.setCryptoSuite(this.getCryptoSuite());
-		await user.setEnrollment(importedKey, signedCertPEM.toString(), opts.mspid);
+		await user.setEnrollment(importedKey, signedCertPEM.toString(), opts.mspid, opts.skipPersistence);
 		logger.debug('then setUserContext');
 		await this.setUserContext(user, opts.skipPersistence);
 		logger.debug('then user');
 		return user;
-
-		// }).catch((err) => {
-		// 	logger.error(err.stack ? err.stack : err);
-		// 	return reject(new Error('Failed to load key or certificate and save to local stores.'));
-		// });
 	}
 
 	/*
