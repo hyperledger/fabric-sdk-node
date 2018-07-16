@@ -113,7 +113,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 	async _endorse(discovery_plan, request, proposal) {
 		const method = '_endorse';
 		// see if we have an endorsement plan for the requested chaincode
-		if(discovery_plan && discovery_plan.endorsement_targets[request.chaincodeId]) {
+		if(discovery_plan && discovery_plan.endorsement_targets && discovery_plan.endorsement_targets[request.chaincodeId]) {
 			logger.debug('%s - found discovery endorsement plan for %s', method, request.chaincodeId);
 			const chaincode_plan = discovery_plan.endorsement_targets[request.chaincodeId];
 			chaincode_plan.endorsements = {};
