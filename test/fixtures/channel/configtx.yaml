@@ -18,6 +18,19 @@ Application: &ApplicationDefaults
     # the application side of the network
     Organizations:
 
+    # Policies defines the set of policies at this level of the config tree
+    # For Application policies, their canonical path is
+    #   /Channel/Application/<PolicyName>
+    Policies: &ApplicationDefaultPolicies
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
 ################################################################################
 #
 #   SECTION: Capabilities
@@ -53,29 +66,6 @@ Capabilities:
         # features and fixes of fabric v1.1 (note, this need not be set if
         # V1_2 is set).
         V1_1: false
-        # V1_1_PVTDATA_EXPERIMENTAL is an Application capability to enable the
-        # private data capability.  It is only supported when using peers built
-        # with experimental build tag.  When set to true, private data
-        # collections can be configured upon chaincode instantiation and
-        # utilized within chaincode Invokes.
-        # NOTE: Use of this feature with non "experimental" binaries on the
-        # network may cause a fork.
-        V1_1_PVTDATA_EXPERIMENTAL: false
-        # V1_1_RESOURCETREE_EXPERIMENTAL is an Application capability to enable
-        # the resources capability. Currently this is needed for defining
-        # resource-based access control (RBAC). RBAC helps set fine-grained
-        # access control on system resources such as the endorser and various
-        # system chaincodes. Default is v1.0-based access control based on
-        # CHANNEL_READERS and CHANNEL_WRITERS.
-        # NOTE: Use of this feature with non "experimental" binaries on
-        # the network may cause a fork.
-        V1_1_RESOURCETREE_EXPERIMENTAL: false
-        # V1_2_CHAINCODE_LIFECYCLE_EXPERIMENTAL is an Application capability
-        # to enable the new lifecycle semantics of "Install Code, Install
-        # Metadata to a Channel, Define Chaincode, Init Chaincode"
-        # This is an in development feature and is useful only for developer
-        # testing at this time.
-        V1_2_CHAINCODE_LIFECYCLE_EXPERIMENTAL: false
 
 ################################################################################
 #
@@ -156,6 +146,25 @@ Orderer: &OrdererDefaults
     # the orderer side of the network
     Organizations:
 
+    # Policies defines the set of policies at this level of the config tree
+    # For Orderer policies, their canonical path is
+    #   /Channel/Orderer/<PolicyName>
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        # BlockValidation specifies what signatures must be included in the block
+        # from the orderer for the peer to validate it.
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
 ################################################################################
 #
 #   Section: Organizations
@@ -166,7 +175,7 @@ Orderer: &OrdererDefaults
 ################################################################################
 Organizations:
 
-    # SampleOrg defines an MSP using the sampleconfig.  It should never be used
+    # OrdererOrg defines an MSP using the sampleconfig. It should never be used
     # in production but may be used as a template for other definitions
     - &OrdererOrg
         # DefaultOrg defines the organization which is used in the sampleconfig
@@ -178,6 +187,26 @@ Organizations:
 
         # MSPDir is the filesystem path which contains the MSP configuration
         MSPDir: crypto-config/ordererOrganizations/example.com/msp
+
+        # Policies defines the set of policies at this level of the config tree
+        # For organization policies, their canonical path is usually
+        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Policies: &OrdererOrgPolicies
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+                # If your MSP is configured with the new NodeOUs, you might
+                # want to use a more specific rule like the following:
+                # Rule: "OR('OrdererMSP.admin', 'OrdererMSP.peer', 'OrdererMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+                # If your MSP is configured with the new NodeOUs, you might
+                # want to use a more specific rule like the following:
+                # Rule: "OR('OrdererMSP.admin', 'OrdererMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
 
     - &Org1
         # DefaultOrg defines the organization which is used in the sampleconfig
@@ -196,6 +225,26 @@ Organizations:
             - Host: peer0.org1.example.com
               Port: 7051
 
+        # Policies defines the set of policies at this level of the config tree
+        # For organization policies, their canonical path is usually
+        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Policies: &Org1Policies
+            Readers:
+                Type: Signature
+                Rule: "OR('Org1MSP.member')"
+                # If your MSP is configured with the new NodeOUs, you might
+                # want to use a more specific rule like the following:
+                # Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org1MSP.member')"
+                # If your MSP is configured with the new NodeOUs, you might
+                # want to use a more specific rule like the following:
+                # Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org1MSP.admin')"
+
     - &Org2
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
@@ -212,6 +261,26 @@ Organizations:
             # encoded in the genesis block in the Application section context
             - Host: peer0.org2.example.com
               Port: 7051
+
+        # Policies defines the set of policies at this level of the config tree
+        # For organization policies, their canonical path is usually
+        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Policies: &Org2Policies
+            Readers:
+                Type: Signature
+                Rule: "OR('Org2MSP.member')"
+                # If your MSP is configured with the new NodeOUs, you might
+                # want to use a more specific rule like the following:
+                # Rule: "OR('Org2MSP.admin', 'Org2MSP.peer', 'Org2MSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org2MSP.member')"
+                # If your MSP is configured with the new NodeOUs, you might
+                # want to use a more specific rule like the following:
+                # Rule: "OR('Org2MSP.admin', 'Org2MSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org2MSP.admin')"
 
 ################################################################################
 #
