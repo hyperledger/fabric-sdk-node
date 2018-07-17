@@ -424,7 +424,7 @@ async function actions(t) {
 			admin : false
 		};
 
-		var eventhub = client.getEventHub('peer0.org1.example.com');
+		var eventhub = channel.getChannelEventHub('peer0.org1.example.com');
 
 		response = await invoke(t, request, tx_id, client, channel, eventhub); //logged in as org2 user
 		if (!(response[0] instanceof Error) && response[0].status === 'SUCCESS') {
@@ -550,28 +550,21 @@ function invoke(t, request, tx_id, client, channel, eventhub) {
 	var promises = [];
 	promises.push(channel.sendTransaction(request));
 
-	eventhub.disconnect(); // clean up any old registered events
-	eventhub.connect();
-
 	let txPromise = new Promise((resolve, reject) => {
 		let handle = setTimeout(() => {
 			eventhub.disconnect();
 			t.fail('REQUEST_TIMEOUT -- eventhub did not respond');
-			reject(new Error('REQUEST_TIMEOUT:' + eventhub._ep._endpoint.addr));
+			reject(new Error('REQUEST_TIMEOUT:' + eventhub.getPeerAddr()));
 		}, 30000);
 
 		eventhub.registerTxEvent(transactionID, (tx, code) => {
 			clearTimeout(handle);
-			eventhub.unregisterTxEvent(tx); // if we do not unregister then when
-											// when we shutdown the eventhub the
-											// error call back will get called
-			eventhub.disconnect(); // all done
 
 			if (code !== 'VALID') {
 				t.fail('transaction was invalid, code = ' + code);
 				reject(new Error('INVALID:' + code));
 			} else {
-				t.pass('transaction has been committed on peer ' + eventhub._ep._endpoint.addr);
+				t.pass('transaction has been committed on peer ' + eventhub.getPeerAddr());
 				resolve();
 			}
 		}, (error) => {
@@ -579,7 +572,11 @@ function invoke(t, request, tx_id, client, channel, eventhub) {
 
 			t.fail('Event registration for this transaction was invalid ::' + error);
 			reject(error);
-		});
+		},
+			{disconnect: true}
+		);
+
+		eventhub.connect();
 	});
 	promises.push(txPromise);
 

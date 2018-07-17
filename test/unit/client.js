@@ -63,19 +63,6 @@ test('\n\n ** index.js **\n\n', (t) => {
 	t.end();
 });
 
-test('\n\n ** eventhub **\n\n', (t) => {
-	t.doesNotThrow(
-		() => {
-			const c = new Client();
-			c._userContext = new User('name');
-			c.newEventHub();
-		},
-		null,
-		'Should be able to call "newEventHub" on the new instance of "hfc"');
-
-	t.end();
-});
-
 const channelKeyValStorePath = path.join(testutil.getTempDir(), 'channelKeyValStorePath');
 const testKey = 'keyValFileStoreName';
 
@@ -93,10 +80,9 @@ test('\n\n ** config **\n\n', (t) => {
 			t.equals(c.getConfigSetting('something', 'ABC'), 'ABC', 'Check getting default config setting value');
 			c.setConfigSetting('something', 'DEF');
 			t.equals(c.getConfigSetting('something', 'ABC'), 'DEF', 'Check getting a set config setting value');
-			c.newEventHub();
 		},
 		null,
-		'Should be able to call "newEventHub" on the new instance of "hfc"');
+		'Should be able to call "getConfigSetting" on the new instance of "hfc"');
 
 	t.end();
 });

@@ -11,25 +11,25 @@
 //     and checks that it succeeds.
 'use strict';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var Client = require('fabric-client');
-var utils = require('fabric-client/lib/utils.js');
-var testUtil = require('../unit/util.js');
-var e2e = testUtil.END2END;
-var e2eUtils = require('./e2e/e2eUtils.js');
+const Client = require('fabric-client');
+const utils = require('fabric-client/lib/utils.js');
+const testUtil = require('../unit/util.js');
+const e2e = testUtil.END2END;
+const e2eUtils = require('./e2e/e2eUtils.js');
 
-var path = require('path');
-var fs = require('fs');
-var util = require('util');
+const path = require('path');
+const fs = require('fs');
+const util = require('util');
 
-var logger = utils.getLogger('E2E testing');
+const logger = utils.getLogger('E2E testing');
 
-var ORGS;
-var tx_id = null;
-var peers = [];
+let ORGS;
+let tx_id = null;
+const peers = [];
 
 init();
 
@@ -82,8 +82,8 @@ function init() {
 
 	for (let key in ORGS) {
 		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-			let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[key].peer1['tls_cacerts']));
-			var org = ORGS[key].peer1;
+			const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[key].peer1['tls_cacerts']));
+			const org = ORGS[key].peer1;
 			org.pem = Buffer.from(data).toString();
 			peers.push(org);
 		}
@@ -93,15 +93,15 @@ function init() {
 function invokeChaincode(userOrg, version, t, shouldFail, peers){
 	logger.debug('invokeChaincode begin');
 	Client.setConfigSetting('request-timeout', 60000);
-	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	var eventhubs = [];
+	const eventhubs = [];
 
 	// override t.end function so it'll always disconnect the event hub
 	t.end = ((context, ehs, f) => {
 		return function() {
-			for(var key in ehs) {
-				var eventhub = ehs[key];
+			for(let key in ehs) {
+				const eventhub = ehs[key];
 				if (eventhub && eventhub.isconnected()) {
 					logger.debug('Disconnecting the event hub');
 					eventhub.disconnect();
@@ -116,12 +116,12 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 	// submit the request. intentionally we are using a different org
 	// than the one that instantiated the chaincode, although either org
 	// should work properly
-	var client = new Client();
-	var channel = client.newChannel(channel_name);
+	const client = new Client();
+	const channel = client.newChannel(channel_name);
 
-	var caRootsPath = ORGS.orderer.tls_cacerts;
-	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
-	let caroots = Buffer.from(data).toString();
+	const caRootsPath = ORGS.orderer.tls_cacerts;
+	const data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
+	const caroots = Buffer.from(data).toString();
 	let tlsInfo = null;
 
 	return e2eUtils.tlsEnroll(userOrg)
@@ -138,40 +138,21 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 				ORGS.orderer.url,
 				{
 					'pem': caroots,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
 					'ssl-target-name-override': ORGS.orderer['server-hostname']
 				}
 			)
 		);
 
 		for (let key in peers) {
-			let peer = client.newPeer(
+			const peer = client.newPeer(
 				peers[key].requests,
 				{
 					pem: peers[key].pem,
-					'clientCert': tlsInfo.certificate,
-					'clientKey': tlsInfo.key,
 					'ssl-target-name-override': peers[key]['server-hostname'],
 				});
 			channel.addPeer(peer);
+			eventhubs.push(channel.newChannelEventHub(peer));
 		}
-
-		// an event listener can only register with a peer in its own org
-		let data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
-		let eh = client.newEventHub();
-		eh.setPeerAddr(
-			ORGS[userOrg].peer1.events,
-			{
-				pem: Buffer.from(data).toString(),
-				'clientCert': tlsInfo.certificate,
-				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS[userOrg].peer1['server-hostname'],
-				'grpc.http2.keepalive_time' : 15
-			}
-		);
-		eh.connect();
-		eventhubs.push(eh);
 
 		return channel.initialize();
 
@@ -179,10 +160,10 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 		tx_id = client.newTransactionID();
 
 		// send proposal to endorser
-		var request = {
+		const request = {
 			chaincodeId : e2e.chaincodeId,
 			fcn: 'move',
-			args: ['a', 'b','100'],
+			args: ['a', 'b', '100'],
 			txId: tx_id,
 		};
 		return channel.sendTransactionProposal(request);
@@ -192,13 +173,13 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 		throw new Error('Failed to enroll user \'admin\'. ' + err);
 
 	}).then((results) => {
-		var proposalResponses = results[0];
-		var proposal = results[1];
-		var all_good = true;
+		const proposalResponses = results[0];
+		const proposal = results[1];
+		let all_good = true;
 
-		for(var i in proposalResponses) {
+		for(let i in proposalResponses) {
 			let one_good = false;
-			let proposal_response = proposalResponses[i];
+			const proposal_response = proposalResponses[i];
 			if( proposal_response.response && proposal_response.response.status === 200) {
 				t.pass('transaction proposal has response status of good');
 				one_good = channel.verifyProposalResponse(proposal_response);
@@ -227,7 +208,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 			t.pass('Successfully sent Proposal and received ProposalResponse');
 			logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 
-			var request = {
+			const request = {
 				proposalResponses: proposalResponses,
 				proposal: proposal
 			};
@@ -235,12 +216,12 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 			// set the transaction listener and set a timeout of 30sec
 			// if the transaction did not get committed within the timeout period,
 			// fail the test
-			var deployId = tx_id.getTransactionID();
+			const deployId = tx_id.getTransactionID();
 
-			var eventPromises = [];
+			const eventPromises = [];
 			eventhubs.forEach((eh) => {
-				let txPromise = new Promise((resolve, reject) => {
-					let handle = setTimeout(reject, 120000);
+				const txPromise = new Promise((resolve, reject) => {
+					const handle = setTimeout(reject, 120000);
 
 					eh.registerTxEvent(deployId.toString(),
 						(tx, code) => {
@@ -267,16 +248,17 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 						},
 						() => {
 							clearTimeout(handle);
-							t.pass('Successfully received notification of the event call back being cancelled for '+ deployId);
+							t.fail('Failed -- received notification of the event call back being cancelled for '+ deployId);
 							resolve();
 						}
 					);
 				});
+				eh.connect();
 
 				eventPromises.push(txPromise);
 			});
 
-			var sendPromise = channel.sendTransaction(request);
+			const sendPromise = channel.sendTransaction(request);
 			return Promise.all([sendPromise].concat(eventPromises))
 			.then((results) => {
 				logger.debug('event promise all complete and testing complete');

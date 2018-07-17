@@ -39,7 +39,6 @@ import {
 	BlockchainInfo,
 	Peer,
 	Orderer,
-	EventHub,
 	ICryptoSuite,
 	ICryptoKeyStore,
 } from 'fabric-client';
@@ -71,9 +70,6 @@ test('test Peer', (t) => {
 
 	let channel: Channel = new Channel('mychannel', client);
 	t.equal(channel.constructor.name, 'Channel');
-
-	let eh = new EventHub(client);
-	t.equal(eh.constructor.name, 'EventHub');
 
 	let ceh = new ChannelEventHub(channel, p);
 	t.equal(ceh.constructor.name, 'ChannelEventHub');

@@ -31,7 +31,7 @@ client:
         endorser: 120
         # the timeout in seconds to be used by applications when waiting for an
         # event to occur. This time should be used in a javascript timer object
-        # that will cancel the event registration with the event hub instance.
+        # that will cancel the event registration with the channel event hub instance.
         eventHub: 60
         # the timeout in seconds to be used when setting up the connection
         # with the peer's event hub. If the peer does not acknowledge the

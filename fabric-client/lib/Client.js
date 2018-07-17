@@ -16,7 +16,6 @@ const User = require('./User.js');
 const Channel = require('./Channel.js');
 const Packager = require('./Packager.js');
 const Peer = require('./Peer.js');
-const EventHub = require('./EventHub.js');
 const ChannelEventHub = require('./ChannelEventHub');
 const Orderer = require('./Orderer.js');
 const TransactionID = require('./TransactionID.js');
@@ -382,60 +381,6 @@ const Client = class extends BaseClient {
 		return orderer;
 	}
 
-	/**
-	 * Returns an {@link EventHub} object. An event hub object encapsulates the
-	 * properties of an event stream on a peer node, through which the peer publishes
-	 * notifications of blocks being committed in the channel's ledger.
-	 *
-	 * @returns {EventHub} The EventHub instance
-	 */
-	newEventHub() {
-		return new EventHub(this);
-	}
-
-	/**
-	 * Returns an {@link EventHub} object based on the event hub address
-	 * as defined in the currently loaded network configuration for the
-	 * peer by the name parameter. The named peer must have the "eventUrl"
-	 * setting or a null will be returned.
-	 *
-	 * @param {string} peer_name - The name of the peer that has an event hub defined
-	 * @returns {EventHub} The EventHub instance that has had the event hub address assigned
-	 */
-	getEventHub(peer_name) {
-		if (this._network_config) {
-			return this._network_config.getEventHub(peer_name);
-		} else {
-			return null;
-		}
-	}
-
-	/**
-	 * Returns a list of {@link EventHub} for an organization as defined
-	 * in the currently loaded network configuration. If no organization mspid is
-	 * provided then the organization referenced in the currently active network
-	 * configuration's client section will be used. The list will be based on
-	 * the peers in the organization that have the "eventUrl" setting.
-	 *
-	 * @param {string} mspid - Optional - The mspid of an organization
-	 * @returns {EventHub[]} An array of EventHub instances that are defined for this organization
-	 */
-	getEventHubsForOrg(mspid) {
-		let event_hubs = [];
-		let _mspid = mspid;
-		if (!mspid) {
-			_mspid = this._mspid;
-		}
-		if (_mspid && this._network_config) {
-			const organization = this._network_config.getOrganizationByMspId(_mspid);
-			if (organization) {
-				event_hubs = organization.getEventHubs();
-			}
-		}
-
-		return event_hubs;
-	}
-
 	/*
 	 * Private utility method to get target peers. The peers will be in the organization of this client,
 	 * (meaning the peer has the same mspid). If this client is not assigned a mspid, then all
@@ -723,7 +668,7 @@ const Client = class extends BaseClient {
 	 * @returns {Promise} Promise for a result object with status on the acceptance of the update request
 	 *                    by the orderer. A channel update is finally completed when the new channel configuration
 	 *                    block created by the orderer has been committed to the channel's peers. To be notified
-	 *                    of the successful update of the channel, an application should use the {@link EventHub}
+	 *                    of the successful update of the channel, an application should use the {@link ChannelEventHub}
 	 *                    to connect to the peers and register a block listener.
 	 */
 	updateChannel(request) {
@@ -1812,7 +1757,6 @@ function _getNetworkConfig(config, client) {
 
 module.exports = Client;
 module.exports.Peer = Peer;
-module.exports.EventHub = EventHub;
 module.exports.ChannelEventHub = ChannelEventHub;
 module.exports.Orderer = Orderer;
 module.exports.Channel = Channel;

@@ -156,21 +156,6 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', (t) => {
 });
 
 test('\n\n **** Testing re-initializing states during upgrade ****', (t) => {
-	let eventhubs = [];
-	// override t.end function so it'll always disconnect the event hub
-	t.end = ((context, ehs, f) => {
-		return function() {
-			for(var key in ehs) {
-				var eventhub = ehs[key];
-				if (eventhub && eventhub.isconnected()) {
-					logger.debug('Disconnecting the event hub');
-					eventhub.disconnect();
-				}
-			}
-
-			f.apply(context, arguments);
-		};
-	})(t, eventhubs, t.end);
 
 	let VER = 'v3';
 

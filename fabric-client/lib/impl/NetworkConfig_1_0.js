@@ -12,7 +12,6 @@ var path = require('path');
 var utils = require('../utils');
 var Constants = require('../Constants.js');
 var Channel = require('../Channel.js');
-var EventHub = require('../EventHub.js');
 var Organization = require('../Organization.js');
 var CertificateAuthority = require('../CertificateAuthority.js');
 
@@ -207,26 +206,6 @@ const NetworkConfig_1_0 = class {
 		}
 	}
 
-	getEventHub(name) {
-		const method = 'getEventHub';
-		logger.debug('%s - name %s',method, name);
-		let event_hub = null;
-		if(this._network_config && this._network_config[PEERS_CONFIG]) {
-			const peer_config = this._network_config[PEERS_CONFIG][name];
-			if(peer_config && peer_config[EVENT_URL]) {
-				const opts = {};
-				opts.pem = getTLSCACert(peer_config);
-				this._client_context.addTlsClientCertAndKey(opts);
-				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
-				this.addTimeout(opts, EVENTREG);
-				event_hub = new EventHub(this._client_context);
-				event_hub.setPeerAddr(peer_config[EVENT_URL], opts);
-			}
-		}
-
-		return event_hub;
-	}
-
 	getOrderer(name) {
 		const method = 'getOrderer';
 		logger.debug('%s - name %s',method, name);
@@ -271,10 +250,6 @@ const NetworkConfig_1_0 = class {
 						const peer = this.getPeer(peer_name);
 						if(peer) {
 							organization.addPeer(peer);
-							const event_hub = this.getEventHub(peer_name);
-							if(event_hub) {
-								organization.addEventHub(event_hub);
-							}
 						}
 					}
 				}

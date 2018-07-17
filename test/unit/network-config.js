@@ -112,10 +112,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setCryptoSuite(Client.newCryptoSuite());
 			client.setUserContext(new User('testUser'), true);
 			const channel = client.getChannel('mychannel2');
-			let event_hubs = client.getEventHubsForOrg();
-			t.equals('localhost:8053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org2 by default');
-			event_hubs = client.getEventHubsForOrg('Org1MSP');
-			t.equals('localhost:7053', event_hubs[0].getPeerAddr(),  ' Check to see if we got the right event hub for org1 by specifically asking for mspid of org1');
 			let peers = client.getPeersForOrg();
 			t.equals('grpcs://localhost:8051', peers[0].getUrl(),  ' Check to see if we got the right peer for org2 by default');
 			peers = client.getPeersForOrg('Org1MSP');
@@ -161,8 +157,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals(peer._options['request-timeout'],120000, ' check that we get this peer endorser timeout set');
 			let orderer = client._network_config.getOrderer('orderer.example.com');
 			t.equals(orderer._options['request-timeout'],30000, ' check that we get this orderer timeout set');
-			let eventHub = client._network_config.getEventHub('peer0.org1.example.com');
-			t.equals(eventHub._ep._options['request-timeout'],3000, ' check that we get this eventHub timeout set');
 
 			delete client._network_config._network_config.certificateAuthorities['ca-org1'].tlsCACerts;
 			delete client._network_config._network_config.certificateAuthorities['ca-org1'].httpOptions;
@@ -528,7 +522,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			let organization = client._network_config.getOrganization(organizations[0].getName());
 			let ca = organization.getCertificateAuthorities()[0];
 			t.equals('ca1',ca.getName(),'check the ca name');
-			t.equals(organization.getEventHubs().length,0,'Check that there are no event hubs');
 
 			organization = client._network_config.getOrganization(organizations[1].getName());
 			ca = organization.getCertificateAuthorities()[0];
@@ -537,7 +530,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			organization = client._network_config.getOrganizationByMspId(organizations[0].getMspid());
 			ca = organization.getCertificateAuthorities()[0];
 			t.equals('ca1',ca.getName(),'check the ca name');
-			t.equals(organization.getEventHubs().length,0,'Check that there are no event hubs');
 		},
 		null,
 		'Should be able to get organizations'

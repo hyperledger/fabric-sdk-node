@@ -544,43 +544,8 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 
 
 module.exports.buildJoinEventMonitor = function(t, client, channel_name, peer_name) {
-	const event_hub = client.getEventHub(peer_name);
-	const event_block_promise = new Promise((resolve, reject) => {
-		let registration_id = null;
-		const event_timeout = setTimeout(() => {
-			let message = 'REQUEST_TIMEOUT:' + event_hub._ep._endpoint.addr;
-			logger.error(message);
-			event_hub.disconnect();
-			reject(new Error(message));
-		}, 30000);
-		registration_id = event_hub.registerBlockEvent((block) => {
-			clearTimeout(event_timeout);
-			// A peer may have more than one channel, check that this block came
-			// is from the channel that is being joined.
-			// ... also this will be the first block channel, and the channel may
-			// have many more blocks
-			if (block.data.data.length === 1) {
-				const channel_header = block.data.data[0].payload.header.channel_header;
-				if (channel_header.channel_id === channel_name) {
-					const message = util.format('EventHub %s has reported a block update for channel %s',event_hub._ep._endpoint.addr,channel_name);
-					t.pass(message);
-					event_hub.unregisterBlockEvent(registration_id);
-					event_hub.disconnect();
-					t.pass(util.format('EventHub %s has been disconnected',event_hub._ep._endpoint.addr));
-					resolve(message);
-				} else {
-					t.pass('Keep waiting for the right block');
-				}
-			}
-		}, (err) => {
-			clearTimeout(event_timeout);
-			const message = 'Problem setting up the event hub :'+ err.toString();
-			t.fail(message);
-			event_hub.disconnect();
-			reject(new Error(message));
-		});
-		event_hub.connect();
-	});
+	// no event available ... just going to wait
+	const event_block_promise = new Promise(resolve => setTimeout(resolve, 10000));
 
 	return event_block_promise;
 };

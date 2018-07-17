@@ -77,25 +77,6 @@ var Organization = class {
 	}
 
 	/**
-	 * Add a {@link EventHub} to this organizations
-	 *
-	 * @param {EventHub} event_hub - The event hub instance to add to this
-	 *        organization's list of event hubs
-	 */
-	addEventHub(event_hub) {
-		this._event_hubs.push(event_hub);
-	}
-
-	/**
-	 * Gets the list of this organization's {@link EventHub}
-	 *
-	 * @returns [{EventHub}] An array of {@link EventHub} objects
-	 */
-	getEventHubs() {
-		return this._event_hubs;
-	}
-
-	/**
 	 * Add a {@link CertificateAuthority} to this organization
 	 *
 	 * @param {CertificateAuthority} certificateAuthority - The CertificateAuthority

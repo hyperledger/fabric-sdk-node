@@ -46,9 +46,6 @@ declare class Client extends BaseClient {
   newChannel(name: string): Client.Channel;
   getChannel(name?: string, throwError?: boolean): Client.Channel;
   newPeer(url: string, opts?: Client.ConnectionOptions): Client.Peer;
-  newEventHub(): Client.EventHub;
-  getEventHub(peer_name: string): Client.EventHub;
-  getEventHubsForOrg(org_name: string): Client.EventHub[];
   getPeersForOrg(org_name: string): Client.Peer[];
   newOrderer(url: string, opts?: Client.ConnectionOptions): Client.Orderer;
   getCertificateAuthority(): FabricCAServices;
@@ -290,20 +287,6 @@ declare namespace Client {
     sendDeliver(envelope: Buffer): Promise<any>;
   }
 
-  export class EventHub {
-    constructor(clientContext: Client);
-    connect(): void;
-    disconnect(): void;
-    getPeerAddr(): string;
-    setPeerAddr(url: string, opts: ConnectionOptions): void;
-    isconnected(): boolean;
-    registerBlockEvent(onEvent: (block: Block) => void, onError?: (err: Error) => void): number;
-    registerTxEvent(txId: string, onEvent: (txId: any, code: string) => void, onError?: (err: Error) => void): void;
-    registerChaincodeEvent(ccid: string, eventname: string, onEvent: (event: ChaincodeEvent) => void, onError?: (err: Error) => void): ChaincodeEventHandle;
-    unregisterBlockEvent(regNumber: number): void;
-    unregisterTxEvent(txId: string): void;
-    unregisterChaincodeEvent(handle: ChaincodeEventHandle): void;
-  }
   interface MSPConstructorConfig {
     rootCerts: IIdentity[];
     intermediateCerts: IIdentity[];

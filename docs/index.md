@@ -37,10 +37,10 @@ The SDK's list of features include:
     * [transaction-by-id]{@link Channel#queryTransaction}
     * [channel configuration data]{@link Channel#getChannelConfig}
   * monitoring events:
-    * [connect to a peer's event stream]{@link EventHub#connect}
-    * listen on [block events]{@link EventHub#registerBlockEvent}
-    * listen on [transactions events]{@link EventHub#registerTxEvent} and find out if the transaction was successfully committed to the ledger or marked invalid
-    * listen on [custom events]{@link EventHub#registerChaincodeEvent} produced by chaincodes
+    * [connect to a peer's event stream]{@link ChannelEventHub#connect}
+    * listen on [block events]{@link ChannelEventHub#registerBlockEvent}
+    * listen on [transactions events]{@link ChannelEventHub#registerTxEvent} and find out if the transaction was successfully committed to the ledger or marked invalid
+    * listen on [custom events]{@link ChannelEventHub#registerChaincodeEvent} produced by chaincodes
   * serializable [User]{@link User} object with signing capabilities
   * [hierarchical configuration]{@link Client.getConfigSetting} settings with multiple layers of overrides: files, environment variable, program arguments, in-memory settings
   * [logging utility]{@link Client.setLogger} with a built-in logger (winston) and can be overriden with a number of popular loggers including log4js and bunyan
