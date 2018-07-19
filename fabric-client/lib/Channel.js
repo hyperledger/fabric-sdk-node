@@ -1373,7 +1373,7 @@ const Channel = class {
 						if (response instanceof Error) {
 							return Promise.reject(response);
 						}
-						else if (response.response && response.response.payload) {
+						else if (response.response && response.response.payload && response.response.status === 200) {
 							const block = _commonProto.Block.decode(response.response.payload);
 							const envelope = _commonProto.Envelope.decode(block.data.data[0]);
 							const payload = _commonProto.Payload.decode(envelope.payload);
@@ -2002,16 +2002,22 @@ const Channel = class {
 							return Promise.reject(response);
 						}
 						if (response.response) {
-							logger.debug('queryInstantiatedChaincodes - response status :: %d', response.response.status);
-							const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
-							logger.debug('queryInstantiatedChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
-							for (let chaincode of queryTrans.chaincodes) {
-								logger.debug('queryInstantiatedChaincodes - name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
+							if (response.response.status === 200) {
+								logger.debug('queryInstantiatedChaincodes - response status :: %d', response.response.status);
+								const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+								logger.debug('queryInstantiatedChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
+								for (let chaincode of queryTrans.chaincodes) {
+									logger.debug('queryInstantiatedChaincodes - name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
+								}
+								return Promise.resolve(queryTrans);
+							} else {
+								if (response.response.message) {
+									return Promise.reject(new Error(response.response.message));
+								}
 							}
-							return Promise.resolve(queryTrans);
 						}
 						// no idea what we have, lets fail it and send it back
-						return Promise.reject(response);
+						return Promise.reject(new Error(response));
 					}
 					return Promise.reject(new Error('Payload results are missing from the query'));
 				}
@@ -2625,7 +2631,15 @@ const Channel = class {
 								results.push(response);
 							}
 							else if (response.response && response.response.payload) {
-								results.push(response.response.payload);
+								if (response.response.status === 200) {
+									results.push(response.response.payload);
+								} else {
+									if (response.response.message) {
+										results.push(new Error(response.response.message));
+									} else {
+										results.push(new Error(response));
+									}
+								}
 							}
 							else {
 								logger.error('queryByChaincode - unknown or missing results in query ::' + results);
