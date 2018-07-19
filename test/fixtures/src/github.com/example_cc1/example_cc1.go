@@ -55,6 +55,11 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		// queries an entity state
 		return t.query(stub, args)
 	}
+
+	if function == "queryError" {
+		return t.queryError(stub, args)
+	}
+
 	if function == "move" {
 		// Deletes an entity from its state
 		return t.move(stub, args)
@@ -171,6 +176,11 @@ func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string)
 	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
 	logger.Infof("Query Response:%s\n", jsonResp)
 	return shim.Success(Avalbytes)
+}
+
+func (t *SimpleChaincode) queryError(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	err := fmt.Errorf("queryError: an error occurred")
+	return shim.Error(err.Error())
 }
 
 // used in SDK test code for transient data support

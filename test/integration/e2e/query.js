@@ -15,26 +15,34 @@ const e2eUtils = require('./e2eUtils.js');
 const testUtils = require('../../unit/util');
 const chaincodeId = testUtils.END2END.chaincodeId;
 
-test('\n\n***** End-to-end flow: query chaincode *****\n\n', (t) => {
+test('\n\n***** End-to-end flow: query chaincode *****\n\n', async (t) => {
 	const fcn = 'query';
 	const args = ['b'];
-	const expectedResult = '300';
+	let expectedResult = '300';
 	const targets = [];  // empty array, meaning client will discover the peers
-	e2eUtils.queryChaincode('org2', 'v0', targets, fcn, args, expectedResult, chaincodeId, t)
-		.then((result) => {
-			if(result){
-				t.pass('Successfully query chaincode on the channel');
-				t.end();
-			}
-			else {
-				t.fail('Failed to query chaincode ');
-				t.end();
-			}
-		}, (err) => {
-			t.fail('Failed to query chaincode on the channel. ' + err.stack ? err.stack : err);
-			t.end();
-		}).catch((err) => {
-			t.fail('Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);
-			t.end();
-		});
+	try {
+		let result = await e2eUtils.queryChaincode('org2', 'v0', targets, fcn, args, expectedResult, chaincodeId, t);
+		if(result){
+			t.pass('Successfully query chaincode on the channel');
+		}
+		else {
+			t.fail('Failed to query chaincode ');
+		}
+	} catch(err) {
+		t.fail('Failed to query chaincode on the channel. ' + err.stack ? err.stack : err);
+	}
+
+	try {
+		expectedResult = new Error('queryError: an error occurred');
+		let result = await e2eUtils.queryChaincode('org2', 'v0', targets, 'queryError', args, expectedResult, chaincodeId, t);
+		if(result){
+			t.pass('Successfully query chaincode on the channel');
+		}
+		else {
+			t.fail('Failed to query chaincode ');
+		}
+	} catch(err) {
+		t.fail('Failed to query chaincode on the channel. ' + err.stack ? err.stack : err);
+	}
+	t.end();
 });

@@ -97,9 +97,9 @@ test('\n\n***** End-to-end flow: private data *****\n\n', async (t) => {
 		// Pass specific peer from org2
 		// The corresponding private data are stored in org1 peers, but not in org2 peers, so expected result is ''
 		targets = ['localhost:8051'];
-		expectedResult = '';
+		expectedResult = new Error('Failed to get private state for name1');
 		await e2eUtils.queryChaincode('org1', 'v0', targets, fcn, args, expectedResult, chaincodeId, t);
-		t.pass('Got empty value from peers which did not store private data in a collection based on policy.');
+		t.pass('Got error object from peers which did not store private data in a collection based on policy.');
 
 		t.end();
 	} catch (err) {
