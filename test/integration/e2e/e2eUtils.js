@@ -797,10 +797,15 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 							transientMap[Object.keys(transientMap)[0]].toString(),
 							'Checking the result has the transientMap value returned by the chaincode');
 					} else {
-						t.equal(
-							response_payloads[i].toString('utf8'),
-							value,
-							'checking query results are correct that value is '+ value);
+						if (value instanceof Error) {
+							t.true((response_payloads[i] instanceof Error), 'query result should be an instance of error');
+							t.true(response_payloads[i].message.includes(value.message), 'error should contain the correct message: ' + value.message);
+						} else {
+							t.equal(
+								response_payloads[i].toString('utf8'),
+								value,
+								'checking query results are correct that value is '+ value);
+						}
 					}
 				}
 				return true;
