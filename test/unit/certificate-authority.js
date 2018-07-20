@@ -32,7 +32,6 @@ test('\n\n ** CertificateAuthority - constructor set get tests **\n\n', function
 	t.doesNotThrow(()=>{
 		new CertificateAuthority('name', 'caname', 'url');
 	},
-	null,
 	'Test good construction');
 
 	var ca = new CertificateAuthority('name', 'caname', 'url','opts', 'certs', 'user');

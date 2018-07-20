@@ -176,7 +176,6 @@ test('Orderer test', function(t) {
 			orderer.setName('name');
 			orderer.close();
 		},
-		null,
 		'checking the orderer setName() and close()'
 	);
 	t.equals('name', orderer.getName(), 'checking getName on orderer');

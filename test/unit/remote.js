@@ -57,7 +57,6 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		function () {
 			remote = new Remote(url, {pem: aPem});
 		},
-		null,
 		'Check not passing any GRPC options.'
 	);
 
@@ -81,7 +80,6 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		function () {
 			remote = new Remote(url, {pem: aPem, clientKey: aPem, clientCert: aPem});
 		},
-		null,
 		'Pass valid client certificate options.'
 	);
 
@@ -97,7 +95,6 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		function () {
 			remote = new Remote(url, {pem: aPem, [Symbol(1)]: ''});
 		},
-		null,
 		'GRPC Options tests: non-string option key is allowed but ignored'
 	);
 
@@ -142,7 +139,6 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		function () {
 			peer = new Peer(url, opts);
 		},
-		null,
 		'Check not passing any GRPC options.'
 	);
 
@@ -192,7 +188,6 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		function () {
 			peer = new Peer(url, opts);
 		},
-		null,
 		'Pass valid client certificate options.'
 	);
 
@@ -224,7 +219,6 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		function () {
 			orderer = new Orderer(url, opts);
 		},
-		null,
 		'Check not passing any GRPC options.'
 	);
 
@@ -277,7 +271,6 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		function () {
 			orderer = new Orderer(url, opts);
 		},
-		null,
 		'Pass valid client certificate options.'
 	);
 

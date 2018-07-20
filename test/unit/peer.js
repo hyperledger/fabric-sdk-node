@@ -4,24 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var Client = require('fabric-client');
-var testUtil = require('./util.js');
+const Client = require('fabric-client');
+const testUtil = require('./util.js');
 
-var Peer = require('fabric-client/lib/Peer.js');
+const Peer = require('fabric-client/lib/Peer.js');
 
-test('Peer test', function(t) {
-	let peer = new Peer('grpc://127.0.0.1:5005');
+test('Peer test', (t) => {
+	const peer = new Peer('grpc://127.0.0.1:5005');
 
 	t.doesNotThrow(
-		function () {
+		() => {
 			peer.setName('name');
 			peer.close();
 		},
-		null,
 		'checking the peer setName() and close()'
 	);
 	t.equals('name', peer.getName(), 'checking getName on Peer');
@@ -42,7 +41,7 @@ test('Peer test', function(t) {
 // error is expected in this case.
 //
 
-test('Peer bad address test', function(t) {
+test('Peer bad address test', (t) => {
 	testUtil.resetDefaults();
 
 	try {
@@ -62,7 +61,7 @@ test('Peer bad address test', function(t) {
 // indicating that the URL must be a "string" is expected in this case.
 //
 
-test('Peer missing address test', function(t) {
+test('Peer missing address test', (t) => {
 	try {
 		new Peer();
 		t.fail('Peer allowed setting a missing address.');
@@ -80,32 +79,32 @@ test('Peer missing address test', function(t) {
 // data was sent is expected in this case.
 //
 
-test('Peer missing data test', function(t) {
-	let peer = new Peer('grpc://127.0.0.1:5005');
+test('Peer missing data test', (t) => {
+	const peer = new Peer('grpc://127.0.0.1:5005');
 	peer.sendProposal()
 		.then(
-			function() {
+			() => {
 				t.fail('Should have noticed missing data.');
 			},
-			function(err) {
+			(err) => {
 				t.pass('Successfully found missing data: ' + err);
 				peer.close();
 			}
-		).catch(function(err) {
+		).catch((err) => {
 			t.fail('Caught Error: should not be here if we defined promise error function: ' + err);
 		});
 	peer.sendDiscovery()
 		.then(
-			function() {
+			() => {
 				t.fail('Should have noticed missing discovery data.');
 				t.end();
 			},
-			function(err) {
+			(err) => {
 				t.pass('Successfully found missing discovery data: ' + err);
 				peer.close();
 				t.end();
 			}
-		).catch(function(err) {
+		).catch((err) => {
 			t.fail('Caught Error: should not be here if we defined discovery promise error function: ' + err);
 			t.end();
 		});
@@ -118,37 +117,37 @@ test('Peer missing data test', function(t) {
 // a connection failure is expected in this case.
 //
 
-test('Peer unknown address test', function(t) {
-	let peer = new Peer('grpc://127.0.0.1:51006');
+test('Peer unknown address test', (t) => {
+	const peer = new Peer('grpc://127.0.0.1:51006');
 
 	peer.sendProposal('some data')
 		.then(
-			function() {
+			() => {
 				t.fail('Should have noticed a bad address.');
 			},
-			function(err) {
+			(err) => {
 				t.equal(err.message, 'Failed to connect before the deadline',
 					'sendProposal to unreachable peer should response connection failed');
 				t.pass('Successfully found bad address!' + err);
 			}
-		).catch(function(err) {
+		).catch((err) => {
 			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
 		});
 
 	peer.sendDiscovery('some data')
 		.then(
-			function() {
+			() => {
 				t.fail('Should have noticed a bad address.');
 				t.end();
 			},
-			function(err) {
+			(err) => {
 				t.equal(err.message, 'Failed to connect before the deadline',
 					'sendProposal to unreachable peer should response connection failed');
 				t.pass('Successfully found bad address!' + err);
 				t.end();
 			}
-		).catch(function(err) {
+		).catch((err) => {
 			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
 			t.end();
@@ -162,32 +161,32 @@ test('Peer unknown address test', function(t) {
 //a timeout failure is expected in this case.
 //
 
-test('Peer timeout test', function(t) {
+test('Peer timeout test', (t) => {
 	// this does require a running network. This test does not really
 	// test the timeout, but does show that it does not cause any issues
 	let peer = new Peer('grpc://localhost:7051');
 
 	peer.sendProposal('some data', 1)
 		.then(
-			function() {
+			() => {
 				t.fail('Should have noticed a timeout.');
 			},
-			function(err) {
+			(err) => {
 				t.pass('Successfully got the timeout' + err);
 			}
-		).catch(function(err) {
+		).catch((err) => {
 			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
 		});
 	peer.sendDiscovery('some data', 1)
 		.then(
-			function() {
+			() => {
 				t.fail('Should have noticed a discovery timeout.');
 			},
-			function(err) {
+			(err) => {
 				t.pass('Successfully got the discovery timeout' + err);
 			}
-		).catch(function(err) {
+		).catch((err) => {
 			t.fail('Caught Error: should not be here if we defined discovery promise error function: '
 		+ err);
 		});
@@ -198,28 +197,28 @@ test('Peer timeout test', function(t) {
 
 	peer.sendProposal('some data')
 		.then(
-			function() {
+			() => {
 				t.fail('Should have noticed a timeout.');
 			},
-			function(err) {
+			(err) => {
 				t.pass('Successfully got the timeout' + err);
 			}
-		).catch(function(err) {
+		).catch((err) => {
 			t.fail('Caught Error: should not be here if we defined promise error function: '
 		+ err);
 		});
 
 	peer.sendDiscovery('some data')
 		.then(
-			function() {
+			() => {
 				t.fail('Should have noticed a discovery timeout.');
 				t.end();
 			},
-			function(err) {
+			(err) => {
 				t.pass('Successfully got the discovery timeout' + err);
 				t.end();
 			}
-		).catch(function(err) {
+		).catch((err) => {
 			t.fail('Caught Error: should not be here if we defined discovery promise error function: '
 		+ err);
 			t.end();
@@ -229,8 +228,8 @@ test('Peer timeout test', function(t) {
 	Client.setConfigSetting('request-timeout', backup);
 });
 
-test('Peer clientCert est', function(t) {
-	var peer = new Peer('grpc://127.0.0.1:5005', {clientCert: 'some cert'});
+test('Peer clientCert est', (t) => {
+	const peer = new Peer('grpc://127.0.0.1:5005', {clientCert: 'some cert'});
 
 	t.equals('some cert', peer.clientCert, 'checking client certificate on peer');
 

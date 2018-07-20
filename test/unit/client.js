@@ -49,7 +49,6 @@ test('\n\n ** index.js **\n\n', (t) => {
 		() => {
 			new Client();
 		},
-		null,
 		'Should be able to instantiate a new instance of "Client" require');
 
 	t.doesNotThrow(
@@ -57,7 +56,6 @@ test('\n\n ** index.js **\n\n', (t) => {
 			const c = new Client();
 			c.newChannel('test');
 		},
-		null,
 		'Should be able to call "newChannel" on the new instance of "Client"');
 
 	t.end();
@@ -81,7 +79,6 @@ test('\n\n ** config **\n\n', (t) => {
 			c.setConfigSetting('something', 'DEF');
 			t.equals(c.getConfigSetting('something', 'ABC'), 'DEF', 'Check getting a set config setting value');
 		},
-		null,
 		'Should be able to call "getConfigSetting" on the new instance of "hfc"');
 
 	t.end();
@@ -129,29 +126,29 @@ test('\n\n ** Client.js Tests: getUserContext() method **\n\n', async (t) => {
 	invalidUser = await client.getUserContext('invalidUser', true);
 	t.notOk(invalidUser, 'return null when using invalid user and "checkPersistence" is true');
 
-	try {
-		await client.getUserContext(true);
-	} catch (e) {
-		if (!(e.message.includes('Illegal arguments: "checkPersistence" is truthy but "name" is undefined'))) {
-			t.fail(`Check that error condition is properly handled when only a truthy value is passed in ${e}`);
-		}
-	}
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await client.getUserContext(true);
+		},
+		/Illegal arguments: "checkPersistence" is truthy but "name" is undefined/,
+		'Check that error condition is properly handled when only a truthy value is passed in');
 
-	try {
-		await client.getUserContext(null, true);
-	} catch (e) {
-		if (!(e.message.includes('Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value'))) {
-			t.fail(`Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string ${e}`);
-		}
-	}
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await client.getUserContext(null, true);
+		},
+		/Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value/,
+		'Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string'
+	);
 
-	try {
-		await client.getUserContext('', true);
-	} catch (e) {
-		if (!(e.message.includes('Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value'))) {
-			t.fail(`Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string ${e}`);
-		}
-	}
+
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await client.getUserContext('', true);
+		},
+		/Illegal arguments: "checkPersistence" is truthy but "name" is not a valid string value/,
+		'Check that error condition is properly handled when "checkPersistence" is true but "name" is not valid string'
+	);
 
 	t.end();
 });
@@ -222,7 +219,7 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', async (t) =
 				t.fail('Client tests: Unexpected error message thrown, should throw "Cannot save user to state store when stateStore is null." ' + error.stack ? error.stack : error);
 		}
 
-		let channel = client.newChannel('somechannel');
+		const channel = client.newChannel('somechannel');
 		t.equals(channel.getName(), 'somechannel', 'Checking channel names match');
 		t.throws(
 			() => {
@@ -235,7 +232,6 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', async (t) =
 			() => {
 				client.getChannel('somechannel');
 			},
-			null,
 			'Client tests: getChannel()');
 
 		t.throws(
@@ -253,7 +249,7 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', async (t) =
 			'Client tests: checking state store parameter implementing required functions');
 
 		testutil.cleanupDir(channelKeyValStorePath);
-		const kvs = await Client.newDefaultKeyValueStore({ path: channelKeyValStorePath });
+		const kvs = await Client.newDefaultKeyValueStore({path: channelKeyValStorePath});
 		client.setStateStore(kvs);
 
 		let exists = testutil.existsSync(channelKeyValStorePath);
@@ -263,7 +259,7 @@ test('\n\n ** Client.js Tests: user persistence and loading **\n\n', async (t) =
 			t.fail('Client setKeyValueStore test:  Failed to create new directory: ' + channelKeyValStorePath);
 		}
 
-		let store = client.getStateStore();
+		const store = client.getStateStore();
 		const result = await store.setValue('testKey', 'testValue');
 		t.pass('Client getStateStore test:  Successfully set value, result: ' + result);
 
@@ -298,7 +294,6 @@ test('\n\n ** testing channel operation on client **\n\n', async (t) => {
 		() => {
 			client.getChannel(channelName);
 		},
-		null,
 		'Client tests: getChannel()');
 
 	t.throws(
@@ -317,7 +312,6 @@ test('\n\n ** testing devmode set and get calls on client **\n\n', (t) => {
 		() => {
 			client.setDevMode(true);
 		},
-		null,
 		'checking the set of DevMode'
 	);
 	t.equal(client.isDevMode(), true, 'checking DevMode');
@@ -414,7 +408,6 @@ test('\n\n ** testing get and new peer calls on client **\n\n', (t) => {
 		() => {
 			client.newPeer('grpc://somehost:9090');
 		},
-		null,
 		'Should be able to call "newPeer" with a valid URL');
 
 	t.end();
@@ -427,7 +420,6 @@ test('\n\n ** testing get and new orderer calls on client **\n\n', (t) => {
 		() => {
 			client.newOrderer('grpc://somehost:9090');
 		},
-		null,
 		'Should be able to call "newOrderer" with a valid URL');
 
 	t.end();
@@ -550,8 +542,6 @@ test('\n\n ** client installChaincode() tests **\n\n', async (t) => {
 	}
 
 
-
-
 	try {
 		await client.installChaincode({
 			targets: ['somename'],
@@ -610,7 +600,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 		}
 
 		try {
-			await client[action]({ envelope: {}, name: 'name', txId: '77' });
+			await client[action]({envelope: {}, name: 'name', txId: '77'});
 			t.fail('Should not have been able to resolve the promise because of orderer missing');
 		} catch (err) {
 			if (err.message.includes('Missing "orderer" request parameter')) {
@@ -620,7 +610,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 			}
 		}
 		try {
-			await client[action]({ config: 'a', signatures: [], txId: 'a', name: 'a', orderer: {} });
+			await client[action]({config: 'a', signatures: [], txId: 'a', name: 'a', orderer: {}});
 			t.fail('Should not have been able to resolve the promise');
 		} catch (err) {
 			const msg = '"orderer" request parameter is not valid';
@@ -633,7 +623,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 
 
 		try {
-			await client[action]({ orderer: orderer, name: 'name', txId: '777', signatures: [] });
+			await client[action]({orderer: orderer, name: 'name', txId: '777', signatures: []});
 			t.fail('Should not have been able to resolve the promise because of envelope request parameter');
 		} catch (err) {
 			if (err.message.includes('Missing config')) {
@@ -644,7 +634,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 		}
 
 		try {
-			await client[action]({ envelope: {}, orderer, config: 'a', signatures: [], txId: 'a' });
+			await client[action]({envelope: {}, orderer, config: 'a', signatures: [], txId: 'a'});
 			t.fail('Should not have been able to resolve the promise because of name request parameter');
 		} catch (err) {
 			if (err.message.includes('Missing name request parameter')) {
@@ -655,7 +645,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 		}
 
 		try {
-			await client[action]({ config: {}, orderer: orderer, name: 'name', txId: 'fff' });
+			await client[action]({config: {}, orderer: orderer, name: 'name', txId: 'fff'});
 			t.fail('Should not have been able to resolve the promise because of missing signatures request parameter');
 		} catch (err) {
 			if (err.message.includes('Missing signatures request parameter for the new channel')) {
@@ -683,7 +673,7 @@ test('\n\n ** Client createChannel(), updateChannel() tests **\n\n', async (t) =
 		}
 
 		try {
-			await client[action]({ config: {}, orderer: orderer, name: 'name', signatures: [] });
+			await client[action]({config: {}, orderer: orderer, name: 'name', signatures: []});
 			t.fail('Should not have been able to resolve the promise because of missing txId request parameter');
 		} catch (err) {
 			if (err.message.includes('Missing txId request parameter')) {
@@ -720,14 +710,14 @@ test('\n\n ** createUser tests **\n\n', async (t) => {
 		errorHandler(e, msg);
 	}
 
-	const org1KeyStore = { path: path.join(testutil.getTempDir(), caImport.orgs['org1'].storePath) };
+	const org1KeyStore = {path: path.join(testutil.getTempDir(), caImport.orgs['org1'].storePath)};
 
 	const store = await utils.newKeyValueStore(org1KeyStore);
 	logger.info('store: %s', store);
 	client.setStateStore(store);
 
 	try {
-		await client.createUser({ username: '' });
+		await client.createUser({username: ''});
 		t.fail('Should not have gotten user.');
 	} catch (e) {
 		const msg = 'Client.createUser parameter \'opts username\' is required.';
@@ -735,7 +725,7 @@ test('\n\n ** createUser tests **\n\n', async (t) => {
 	}
 
 	try {
-		await client.createUser({ username: 'anyone' });
+		await client.createUser({username: 'anyone'});
 		t.fail('Should not have gotten user.');
 	} catch (e) {
 		const msg = 'Client.createUser parameter \'opts mspid\' is required.';
@@ -743,14 +733,14 @@ test('\n\n ** createUser tests **\n\n', async (t) => {
 	}
 
 	try {
-		await client.createUser({ username: 'anyone', mspid: 'one' });
+		await client.createUser({username: 'anyone', mspid: 'one'});
 		t.fail('Should not have gotten user.');
 	} catch (e) {
 		const msg = 'Client.createUser parameter \'opts cryptoContent\' is required.';
 		errorHandler(e, msg);
 	}
 	try {
-		await client.createUser({ cryptoContent: { privateKeyPEM: 'abcd' }, username: 'anyone', mspid: 'one' });
+		await client.createUser({cryptoContent: {privateKeyPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
 		t.fail('Should not have gotten user.');
 	} catch (e) {
 		const msg = 'Client.createUser either \'opts cryptoContent signedCert or signedCertPEM\' is required.';
@@ -758,7 +748,7 @@ test('\n\n ** createUser tests **\n\n', async (t) => {
 	}
 
 	try {
-		await client.createUser({ cryptoContent: { signedCertPEM: 'abcd' }, username: 'anyone', mspid: 'one' });
+		await client.createUser({cryptoContent: {signedCertPEM: 'abcd'}, username: 'anyone', mspid: 'one'});
 		t.fail('Should not have gotten user.');
 	} catch (e) {
 		const msg = 'Client.createUser one of \'opts cryptoContent privateKey, privateKeyPEM or privateKeyObj\' is required.';
@@ -791,7 +781,7 @@ test('\n\n ** createUser tests 2 **\n\n', async (t) => {
 			t.fail(`createUser, unexpected error: ${err.message}`);
 		}
 	}
-	const org2KeyStore = { path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath) };
+	const org2KeyStore = {path: path.join(testutil.getTempDir(), caImport.orgs[userOrg].storePath)};
 	t.comment('createUser success path - no cryptoKeyStore');
 	const store = await utils.newKeyValueStore(org2KeyStore);
 
@@ -932,12 +922,11 @@ test('\n\n*** Test normalizeX509 ***\n', (t) => {
 });
 
 test('\n\n*** Test Add TLS ClientCert ***\n', (t) => {
-	var testClient = new Client();
+	const testClient = new Client();
 	t.doesNotThrow(
 		() => {
 			testClient.addTlsClientCertAndKey({});
 		},
-		/A crypto suite has not been assigned to this client/,
 		'Check that error is not thrown when crypto suite is not set'
 	);
 	testClient.setCryptoSuite(Client.newCryptoSuite());
@@ -945,7 +934,6 @@ test('\n\n*** Test Add TLS ClientCert ***\n', (t) => {
 		() => {
 			testClient.addTlsClientCertAndKey({});
 		},
-		/A user context has not been assigned to this client/,
 		'Check that error is not thrown when user context is not set'
 	);
 	testClient.setUserContext(new User('testUser'), true);
@@ -971,7 +959,7 @@ test('\n\n*** Test Add TLS ClientCert ***\n', (t) => {
 });
 
 test('\n\n*** Test Set and Add TLS ClientCert ***\n', (t) => {
-	let client = new Client();
+	const client = new Client();
 	t.notOk(client.getClientCertHash(), 'Check getting null hash when no client cert assigned');
 	client.setTlsClientCertAndKey(aPem, aPem);
 	t.pass('Able to set the client cert and client key');
@@ -986,7 +974,7 @@ test('\n\n*** Test Set and Add TLS ClientCert ***\n', (t) => {
 });
 
 test('\n\n*** Test channel selection if no channel name provided ***\n', (t) => {
-	let config = {
+	const config = {
 		'name': 'test',
 		'version': '1.0.0',
 		'channels': {
@@ -1032,7 +1020,7 @@ test('\n\n*** Test channel selection if no channel name provided ***\n', (t) => 
 	t.doesNotThrow(() => {
 		// TODO: really ? have to set this even if it's not used
 		client.setTlsClientCertAndKey(aPem, aPem);
-		let channel = client.getChannel();
+		const channel = client.getChannel();
 		t.equals(channel.getName(), 'testchannel', 'correct channel is returned from network config');
 	});
 
@@ -1040,7 +1028,7 @@ test('\n\n*** Test channel selection if no channel name provided ***\n', (t) => 
 	client._channels.set('aChannel', 'SomeChannelObject');
 	t.doesNotThrow(() => {
 		client.setTlsClientCertAndKey(aPem, aPem);
-		let channel = client.getChannel();
+		const channel = client.getChannel();
 		t.equals(channel, 'SomeChannelObject', 'correct channel is returned from channel map');
 	});
 
@@ -1048,7 +1036,7 @@ test('\n\n*** Test channel selection if no channel name provided ***\n', (t) => 
 });
 
 test('\n\n*** Test Client.getPeersForOrgOnChannel ***\n', (t) => {
-	let config = {
+	const config = {
 		'name': 'test',
 		'version': '1.0.0',
 		'client': {

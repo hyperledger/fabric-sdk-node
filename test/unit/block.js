@@ -223,7 +223,6 @@ test('\n\n*** BlockDecoder.js test HeaderType ***\n\n', (t) => {
 		() => {
 			BlockDecoder.HeaderType.decodePayloadBasedOnType(null,99);
 		},
-		null,
 		'checking the HeaderType decodePayloadBasedOnType()'
 	);
 	t.end();

@@ -7,24 +7,24 @@
 // This is an end-to-end test that focuses on exercising all parts of the fabric APIs
 // in a happy-path scenario
 'use strict';
-var FabricCAServices = require('../../../fabric-ca-client');
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('E2E testing');
+const FabricCAServices = require('../../../fabric-ca-client');
+const utils = require('fabric-client/lib/utils.js');
+const logger = utils.getLogger('E2E testing');
 
-var path = require('path');
-var fs = require('fs');
-var util = require('util');
+const path = require('path');
+const fs = require('fs');
+const util = require('util');
 
-var Client = require('fabric-client');
-var testUtil = require('../../unit/util.js');
-var e2eUtils = require('./e2eUtils.js');
+const Client = require('fabric-client');
+const testUtil = require('../../unit/util.js');
+const e2eUtils = require('./e2eUtils.js');
 
-var e2e = testUtil.END2END;
-var e2e_node = testUtil.NODE_END2END;
-var ORGS;
+const e2e = testUtil.END2END;
+const e2e_node = testUtil.NODE_END2END;
+let ORGS;
 
-var tx_id = null;
-var the_user = null;
+let tx_id = null;
+let the_user = null;
 
 function init() {
 	if (!ORGS) {
@@ -48,19 +48,19 @@ function installChaincode(org, chaincode_path, metadata_path, version, language,
 function installChaincodeWithId(org, chaincode_id, chaincode_path, metadata_path, version, language, t, get_admin) {
 	init();
 	Client.setConfigSetting('request-timeout', 60000);
-	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	var client = new Client();
+	const client = new Client();
 	// client.setDevMode(true);
-	var channel = client.newChannel(channel_name);
+	const channel = client.newChannel(channel_name);
 
-	var orgName = ORGS[org].name;
-	var cryptoSuite = Client.newCryptoSuite();
+	const orgName = ORGS[org].name;
+	const cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
-	var caRootsPath = ORGS.orderer.tls_cacerts;
-	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
+	const caRootsPath = ORGS.orderer.tls_cacerts;
+	const data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	let caroots = Buffer.from(data).toString();
 	// make sure the cert is OK
 	caroots = Client.normalizeX509(caroots);
@@ -92,12 +92,12 @@ function installChaincodeWithId(org, chaincode_id, chaincode_path, metadata_path
 				)
 			);
 
-			var targets = [];
-			for (let key in ORGS[org]) {
+			const targets = [];
+			for (const key in ORGS[org]) {
 				if (ORGS[org].hasOwnProperty(key)) {
 					if (key.indexOf('peer') === 0) {
-						let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
-						let peer = client.newPeer(
+						const data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+						const peer = client.newPeer(
 							ORGS[org][key].requests,
 							{
 								pem: Buffer.from(data).toString(),
@@ -115,7 +115,7 @@ function installChaincodeWithId(org, chaincode_id, chaincode_path, metadata_path
 			}
 
 			// send proposal to endorser
-			let request = {
+			const request = {
 				targets: targets,
 				chaincodePath: chaincode_path,
 				metadataPath: metadata_path,
@@ -130,11 +130,11 @@ function installChaincodeWithId(org, chaincode_id, chaincode_path, metadata_path
 			t.fail('Failed to enroll user \'admin\'. ' + err);
 			throw new Error('Failed to enroll user \'admin\'. ' + err);
 		}).then((results) => {
-			var proposalResponses = results[0];
+			const proposalResponses = results[0];
 
-			var all_good = true;
-			var errors = [];
-			for(var i in proposalResponses) {
+			let all_good = true;
+			const errors = [];
+			for(const i in proposalResponses) {
 				let one_good = false;
 				if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
 					one_good = true;
@@ -177,23 +177,23 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 
 	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	let targets = [];
-	let eventhubs = [];
+	const targets = [];
+	const eventhubs = [];
 
 	let type = 'instantiate';
 	if(upgrade) type = 'upgrade';
 
-	let client = new Client();
-	let channel = client.newChannel(channel_name);
+	const client = new Client();
+	const channel = client.newChannel(channel_name);
 
 	const orgName = ORGS[userOrg].name;
-	let cryptoSuite = Client.newCryptoSuite();
+	const cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
 	const caRootsPath = ORGS.orderer.tls_cacerts;
-	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
-	let caroots = Buffer.from(data).toString();
+	const data = fs.readFileSync(path.join(__dirname, caRootsPath));
+	const caroots = Buffer.from(data).toString();
 
 	const badTransientMap = { 'test1': 'transientValue' }; // have a different key than what the chaincode example_cc1.go expects in Init()
 	const transientMap = { 'test': 'transientValue' };
@@ -227,12 +227,12 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 				)
 			);
 
-			for(let org in ORGS) {
+			for(const org in ORGS) {
 				if (ORGS[org].hasOwnProperty('peer1')) {
-					let key = 'peer1';
-					let data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+					const key = 'peer1';
+					const data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
 					logger.debug(' create new peer %s', ORGS[org][key].requests);
-					let peer = client.newPeer(
+					const peer = client.newPeer(
 						ORGS[org][key].requests,
 						{
 							pem: Buffer.from(data).toString(),
@@ -243,7 +243,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 					targets.push(peer);
 					channel.addPeer(peer);
 
-					let eh = channel.newChannelEventHub(peer);
+					const eh = channel.newChannelEventHub(peer);
 					eventhubs.push(eh);
 				}
 			}
@@ -280,7 +280,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 				// x86 CI times out. set the per-request timeout to a super-long value
 				return channel.sendUpgradeProposal(request, 10*60*1000)
 					.then((results) => {
-						let proposalResponses = results[0];
+						const proposalResponses = results[0];
 
 						if (version === 'v1') {
 							// expecting both peers to return an Error due to the bad transient map
@@ -331,11 +331,11 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 
 		}).then((results) => {
 
-			let proposalResponses = results[0];
+			const proposalResponses = results[0];
 
-			let proposal = results[1];
+			const proposal = results[1];
 			let all_good = true;
-			for(var i in proposalResponses) {
+			for(const i in proposalResponses) {
 				if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
 					logger.info(type +' proposal was good');
 				} else {
@@ -355,13 +355,13 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 				throw new Error('All proposals were not good');
 			}
 
-			let deployId = tx_id.getTransactionID();
-			let eventPromises = [];
+			const deployId = tx_id.getTransactionID();
+			const eventPromises = [];
 			eventPromises.push(channel.sendTransaction(request));
 
 			eventhubs.forEach((eh) => {
-				let txPromise = new Promise((resolve, reject) => {
-					let handle = setTimeout(() => {
+				const txPromise = new Promise((resolve, reject) => {
+					const handle = setTimeout(() => {
 						t.fail('Timeout - Failed to receive the event for instantiate:  waiting on '+ eh.getPeerAddr());
 						eh.disconnect();
 						reject('TIMEOUT waiting on '+ eh.getPeerAddr());
@@ -405,10 +405,10 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 }
 
 function buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path, version, type, upgrade, transientMap) {
-	var tx_id = client.newTransactionID();
+	const tx_id = client.newTransactionID();
 
 	// send proposal to endorser
-	let request = {
+	const request = {
 		chaincodePath: chaincode_path,
 		chaincodeId: chaincode_id,
 		chaincodeVersion: version,
@@ -455,33 +455,33 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 
 	logger.debug('invokeChaincode begin');
 	Client.setConfigSetting('request-timeout', 60000);
-	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	let eventhubs = [];
-	var pass_results = null;
+	const eventhubs = [];
+	let pass_results = null;
 
 	// this is a transaction, will just use org's identity to
 	// submit the request. intentionally we are using a different org
 	// than the one that instantiated the chaincode, although either org
 	// should work properly
-	var client = new Client();
-	var channel = client.newChannel(channel_name);
+	const client = new Client();
+	const channel = client.newChannel(channel_name);
 
-	var orgName = ORGS[userOrg].name;
-	var cryptoSuite = Client.newCryptoSuite();
+	let orgName = ORGS[userOrg].name;
+	const cryptoSuite = Client.newCryptoSuite();
 	if (useStore) {
 		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 		client.setCryptoSuite(cryptoSuite);
 	}
 
-	var caRootsPath = ORGS.orderer.tls_cacerts;
-	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
-	let caroots = Buffer.from(data).toString();
+	const caRootsPath = ORGS.orderer.tls_cacerts;
+	const data = fs.readFileSync(path.join(__dirname, caRootsPath));
+	const caroots = Buffer.from(data).toString();
 	let tlsInfo = null;
 
 	orgName = ORGS[userOrg].name;
 
-	var promise;
+	let promise;
 	if (useStore) {
 		promise = Client.newDefaultKeyValueStore({
 			path: testUtil.storePathForOrg(orgName)});
@@ -518,10 +518,10 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 
 			// set up the channel to use each org's 'peer1' for
 			// both requests and events
-			for (let key in ORGS) {
+			for (const key in ORGS) {
 				if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-					let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
-					let peer = client.newPeer(
+					const data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+					const peer = client.newPeer(
 						ORGS[key].peer1.requests,
 						{
 							pem: Buffer.from(data).toString(),
@@ -543,7 +543,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 			logger.debug('setConfigSetting("E2E_TX_ID") = %s', tx_id.getTransactionID());
 
 			// send proposal to endorser
-			let request = {
+			const request = {
 				chaincodeId : chaincodeId,
 				fcn: fcn,
 				args: args,
@@ -557,7 +557,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 			throw new Error('Failed to enroll user \'admin\'. ' + err);
 		}).then((results) =>{
 			pass_results = results;
-			var sleep_time = 0;
+			let sleep_time = 0;
 			// can use "sleep=30000" to give some time to manually stop and start
 			// the peer so the event hub will also stop and start
 			if (process.argv.length > 2) {
@@ -568,13 +568,13 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 			t.comment('*****************************************************************************');
 			t.comment('stop and start the peer event hub ---- N  O  W ----- you have ' + sleep_time + ' millis ' + (new Date()).toString());
 			t.comment('*****************************************************************************');
-			return sleep(sleep_time);
+			return exports.sleep(sleep_time);
 		}).then(() => {
 
-			let proposalResponses = pass_results[0];
-			let proposal = pass_results[1];
+			const proposalResponses = pass_results[0];
+			const proposal = pass_results[1];
 			let all_good = true;
-			for(let i in proposalResponses) {
+			for(const i in proposalResponses) {
 				let one_good = false;
 				let proposal_response = proposalResponses[i];
 
@@ -625,7 +625,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 			// check to see if all the results match
 				t.pass('Successfully sent Proposal and received ProposalResponse');
 				logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-				let request = {
+				const request = {
 					proposalResponses: proposalResponses,
 					proposal: proposal
 				};
@@ -633,12 +633,12 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 				// set the transaction listener and set a timeout of 30sec
 				// if the transaction did not get committed within the timeout period,
 				// fail the test
-				var deployId = tx_id.getTransactionID();
+				const deployId = tx_id.getTransactionID();
 
-				var eventPromises = [];
+				const eventPromises = [];
 				eventhubs.forEach((eh) => {
-					let txPromise = new Promise((resolve, reject) => {
-						let handle = setTimeout(() => {
+					const txPromise = new Promise((resolve, reject) => {
+						const handle = setTimeout(() => {
 							t.fail('Timeout - Failed to receive the event for commit:  waiting on '+ eh.getPeerAddr());
 							eh.disconnect(); // will not be using this event hub
 							reject('TIMEOUT waiting on '+ eh.getPeerAddr());
@@ -665,7 +665,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 					eventPromises.push(txPromise);
 				});
 
-				var sendPromise = channel.sendTransaction(request);
+				const sendPromise = channel.sendTransaction(request);
 				return Promise.all([sendPromise].concat(eventPromises))
 					.then((results) => {
 
@@ -727,17 +727,17 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 	init();
 
 	Client.setConfigSetting('request-timeout', 60000);
-	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
 	// this is a transaction, will just use org's identity to
 	// submit the request. intentionally we are using a different org
 	// than the one that submitted the "move" transaction, although either org
 	// should work properly
-	var client = new Client();
-	var channel = client.newChannel(channel_name);
+	const client = new Client();
+	const channel = client.newChannel(channel_name);
 
-	var orgName = ORGS[org].name;
-	var cryptoSuite = Client.newCryptoSuite();
+	const orgName = ORGS[org].name;
+	const cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 	let tlsInfo = null;
@@ -761,10 +761,10 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 
 			// set up the channel to use each org's 'peer1' for
 			// both requests and events
-			for (let key in ORGS) {
+			for (const key in ORGS) {
 				if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-					let data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
-					let peer = client.newPeer(
+					const data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+					const peer = client.newPeer(
 						ORGS[key].peer1.requests,
 						{
 							pem: Buffer.from(data).toString(),
@@ -775,7 +775,7 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 			}
 
 			// send query
-			let request = {
+			const request = {
 				chaincodeId : chaincodeId,
 				txId: tx_id,
 				fcn: fcn,
@@ -837,13 +837,10 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 
 module.exports.queryChaincode = queryChaincode;
 
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-module.exports.sleep = sleep;
+module.exports.sleep = testUtil.sleep;
 
 function loadMSPConfig(name, mspdir) {
-	var msp = {};
+	const msp = {};
 	msp.id = name;
 	msp.rootCerts = readAllFiles(path.join(__dirname, mspdir, 'cacerts'));
 	msp.admins = readAllFiles(path.join(__dirname, mspdir, 'admincerts'));
@@ -852,11 +849,11 @@ function loadMSPConfig(name, mspdir) {
 module.exports.loadMSPConfig = loadMSPConfig;
 
 function readAllFiles(dir) {
-	var files = fs.readdirSync(dir);
-	var certs = [];
+	const files = fs.readdirSync(dir);
+	const certs = [];
 	files.forEach((file_name) => {
-		let file_path = path.join(dir,file_name);
-		let data = fs.readFileSync(file_path);
+		const file_path = path.join(dir,file_name);
+		const data = fs.readFileSync(file_path);
 		certs.push(data);
 	});
 	return certs;
@@ -864,45 +861,45 @@ function readAllFiles(dir) {
 module.exports.readAllFiles = readAllFiles;
 
 function tlsEnroll(orgName) {
-	return new Promise(function (resolve, reject) {
+	return new Promise(((resolve, reject) => {
 		FabricCAServices.addConfigFile(path.join(__dirname, 'config.json'));
-		let orgs = FabricCAServices.getConfigSetting('test-network');
+		const orgs = FabricCAServices.getConfigSetting('test-network');
 		if (!orgs[orgName]) {
 			throw new Error('Invalid org name: ' + orgName);
 		}
-		let fabricCAEndpoint = orgs[orgName].ca.url;
-		let tlsOptions = {
+		const fabricCAEndpoint = orgs[orgName].ca.url;
+		const tlsOptions = {
 			trustedRoots: [],
 			verify: false
 		};
-		let caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, orgs[orgName].ca.name);
-		let req = {
+		const caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, orgs[orgName].ca.name);
+		const req = {
 			enrollmentID: 'admin',
 			enrollmentSecret: 'adminpw',
 			profile: 'tls'
 		};
 		caService.enroll(req).then(
-			function(enrollment) {
+			(enrollment) => {
 				enrollment.key = enrollment.key.toBytes();
 				return resolve(enrollment);
 			},
-			function(err) {
+			(err) => {
 				return reject(err);
 			}
 		);
-	});
+	}));
 }
 module.exports.tlsEnroll = tlsEnroll;
 
 // return an array of peer objects for targets which are a array of peer urls in string (e.g., localhost:7051)
 function getTargetPeers(channel, targets) {
 	// get all the peers and then find what peer matches a target
-	let targetPeers = [];
+	const targetPeers = [];
 	if (targets && targets.length != 0) {
 		const peers = channel.getPeers();
-		for (let i in targets) {
+		for (const i in targets) {
 			let found = false;
-			for (let j in peers) {
+			for (const j in peers) {
 				logger.debug('channel has peer ' + peers[j].getName());
 				if (targets[i] === peers[j].getName()) {
 					targetPeers.push(peers[j]);

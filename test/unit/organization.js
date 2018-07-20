@@ -32,7 +32,6 @@ test('\n\n ** Organization - constructor set get tests **\n\n', function (t) {
 	t.doesNotThrow(()=>{
 		new Organization('name', 'mspid');
 	},
-	null,
 	'Test good construction');
 
 	var organization = new Organization('name','mspid');

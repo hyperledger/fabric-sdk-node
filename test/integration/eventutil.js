@@ -6,12 +6,12 @@
 
 'use strict';
 
-var utils = require('fabric-client/lib/utils.js');
-var util = require('util');
+const utils = require('fabric-client/lib/utils.js');
+const util = require('util');
 
 module.exports.registerTxEvent = function(eh, txid, timeout) {
 	return new Promise((resolve, reject) => {
-		var handle = setTimeout(() => {
+		const handle = setTimeout(() => {
 			eh.unregisterTxEvent(txid);
 			reject('timeout');
 		}, timeout);
@@ -30,8 +30,8 @@ module.exports.registerTxEvent = function(eh, txid, timeout) {
 
 module.exports.registerCCEvent = function(eh, ccid, enregex, timeout, t, message) {
 	return new Promise((resolve, reject) => {
-		var regid = null;
-		var handle = setTimeout(() => {
+		let regid = null;
+		const handle = setTimeout(() => {
 			t.fail('Failed to receive '+ message);
 			reject();
 			if (regid) {
@@ -49,8 +49,8 @@ module.exports.registerCCEvent = function(eh, ccid, enregex, timeout, t, message
 };
 
 module.exports.createRequest = function(client, chaincode_id, targets, fcn, args) {
-	var tx_id = client.newTransactionID();
-	var request = {
+	const tx_id = client.newTransactionID();
+	const request = {
 		targets : targets,
 		chaincodeId: chaincode_id,
 		chaincodeVersion: '',
@@ -62,10 +62,10 @@ module.exports.createRequest = function(client, chaincode_id, targets, fcn, args
 };
 
 function checkProposal(results) {
-	var proposalResponses = results[0];
-	var all_good = true;
+	const proposalResponses = results[0];
+	let all_good = true;
 
-	for (var i in proposalResponses) {
+	for (const i in proposalResponses) {
 		let one_good = false;
 
 		if (proposalResponses &&
@@ -83,9 +83,9 @@ module.exports.checkProposal =  checkProposal;
 
 module.exports.sendTransaction = function(channel, results) {
 	if (checkProposal(results)) {
-		var proposalResponses = results[0];
-		var proposal = results[1];
-		var request = {
+		const proposalResponses = results[0];
+		const proposal = results[1];
+		const request = {
 			proposalResponses: proposalResponses,
 			proposal: proposal
 		};

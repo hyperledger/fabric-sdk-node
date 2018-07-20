@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var path = require('path');
-var fs = require('fs-extra');
-var util = require('util');
+const path = require('path');
+const fs = require('fs-extra');
+const util = require('util');
 
 
-var Client = require('fabric-client');
-var copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
-var User = require('fabric-client/lib/User.js');
-var Constants = require('./constants.js');
+const Client = require('fabric-client');
+const copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
+const User = require('fabric-client/lib/User.js');
+const Constants = require('./constants.js');
 
-var logger = require('fabric-client/lib/utils.js').getLogger('TestUtil');
+const logger = require('fabric-client/lib/utils.js').getLogger('TestUtil');
 
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
 module.exports.CHAINCODE_UPGRADE_PATH = 'github.com/example_cc1';
@@ -43,7 +43,7 @@ module.exports.NODE_END2END = {
 };
 
 // all temporary files and directories are created under here
-var tempdir = Constants.tempdir;
+const tempdir = Constants.tempdir;
 
 logger.info(util.format(
 	'\n\n*******************************************************************************' +
@@ -78,8 +78,8 @@ module.exports.resetDefaults = function() {
 };
 
 module.exports.cleanupDir = function(keyValStorePath) {
-	var absPath = path.join(process.cwd(), keyValStorePath);
-	var exists = module.exports.existsSync(absPath);
+	const absPath = path.join(process.cwd(), keyValStorePath);
+	const exists = module.exports.existsSync(absPath);
 	if (exists) {
 		fs.removeSync(absPath);
 	}
@@ -94,7 +94,7 @@ module.exports.getUniqueVersion = function(prefix) {
 // uses entire / absolute path from root
 module.exports.existsSync = function(absolutePath /*string*/) {
 	try  {
-		var stat = fs.statSync(absolutePath);
+		const stat = fs.statSync(absolutePath);
 		if (stat.isDirectory() || stat.isFile()) {
 			return true;
 		} else
@@ -108,15 +108,15 @@ module.exports.existsSync = function(absolutePath /*string*/) {
 module.exports.readFile = readFile;
 
 Client.addConfigFile(path.join(__dirname, '../integration/e2e/config.json'));
-var ORGS = Client.getConfigSetting('test-network');
+const ORGS = Client.getConfigSetting('test-network');
 
-var	tlsOptions = {
+const	tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
 
 function getMember(username, password, client, t, userOrg) {
-	var caUrl = ORGS[userOrg].ca.url;
+	const caUrl = ORGS[userOrg].ca.url;
 
 	return client.getUserContext(username, true)
 		.then((user) => {
@@ -127,8 +127,8 @@ function getMember(username, password, client, t, userOrg) {
 					return resolve(user);
 				}
 
-				var member = new User(username);
-				var cryptoSuite = client.getCryptoSuite();
+				const member = new User(username);
+				let cryptoSuite = client.getCryptoSuite();
 				if (!cryptoSuite) {
 					cryptoSuite = Client.newCryptoSuite();
 					if (userOrg) {
@@ -139,7 +139,7 @@ function getMember(username, password, client, t, userOrg) {
 				member.setCryptoSuite(cryptoSuite);
 
 				// need to enroll it with CA server
-				var cop = new copService(caUrl, tlsOptions, ORGS[userOrg].ca.name, cryptoSuite);
+				const cop = new copService(caUrl, tlsOptions, ORGS[userOrg].ca.name, cryptoSuite);
 
 				return cop.enroll({
 					enrollmentID: username,
@@ -149,7 +149,7 @@ function getMember(username, password, client, t, userOrg) {
 
 					return member.setEnrollment(enrollment.key, enrollment.certificate, ORGS[userOrg].mspid);
 				}).then(() => {
-					var skipPersistence = false;
+					let skipPersistence = false;
 					if (!client.getStateStore()) {
 						skipPersistence = true;
 					}
@@ -169,12 +169,12 @@ module.exports.setAdmin = function(client, userOrg) {
 };
 
 function getAdmin(client, t, userOrg) {
-	var keyPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/keystore', userOrg, userOrg));
-	var keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
-	var certPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/signcerts', userOrg, userOrg));
-	var certPEM = readAllFiles(certPath)[0];
+	const keyPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/keystore', userOrg, userOrg));
+	const keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
+	const certPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/signcerts', userOrg, userOrg));
+	const certPEM = readAllFiles(certPath)[0];
 
-	var cryptoSuite = Client.newCryptoSuite();
+	const cryptoSuite = Client.newCryptoSuite();
 	if (userOrg) {
 		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
 		client.setCryptoSuite(cryptoSuite);
@@ -191,10 +191,10 @@ function getAdmin(client, t, userOrg) {
 }
 
 function getOrdererAdmin(client, t) {
-	var keyPath = path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/keystore');
-	var keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
-	var certPath = path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/signcerts');
-	var certPEM = readAllFiles(certPath)[0];
+	const keyPath = path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/keystore');
+	const keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
+	const certPath = path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/signcerts');
+	const certPEM = readAllFiles(certPath)[0];
 	t.comment('getOrdererAdmin');
 
 	return Promise.resolve(client.createUser({
@@ -219,12 +219,12 @@ function readFile(path) {
 }
 
 function readAllFiles(dir) {
-	var files = fs.readdirSync(dir);
-	var certs = [];
+	const files = fs.readdirSync(dir);
+	const certs = [];
 	files.forEach((file_name) => {
-		let file_path = path.join(dir,file_name);
+		const file_path = path.join(dir,file_name);
 		logger.debug(' looking at file ::'+file_path);
-		let data = fs.readFileSync(file_path);
+		const data = fs.readFileSync(file_path);
 		certs.push(data);
 	});
 	return certs;
@@ -237,7 +237,7 @@ module.exports.getOrderAdminSubmitter = function(client, test) {
 module.exports.getSubmitter = function(client, test, peerOrgAdmin, org) {
 	if (arguments.length < 2) throw new Error('"client" and "test" are both required parameters');
 
-	var peerAdmin, userOrg;
+	let peerAdmin, userOrg;
 	if (typeof peerOrgAdmin === 'boolean') {
 		peerAdmin = peerOrgAdmin;
 	} else {
@@ -394,7 +394,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 			txId : 	tx_id
 		};
 
-		let genesis_block = await channel_org1.getGenesisBlock(request);
+		const genesis_block = await channel_org1.getGenesisBlock(request);
 		t.pass('Successfully got the genesis block');
 
 		let promises = [];
@@ -506,7 +506,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 		};
 
 		// send proposal
-		let instan_results = await channel_org1.sendInstantiateProposal(request);
+		const instan_results = await channel_org1.sendInstantiateProposal(request);
 		const proposalResponses = instan_results[0];
 		const proposal = instan_results[1];
 		if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
@@ -570,7 +570,7 @@ module.exports.invokeAsAdmin = async function(t, client, channel, additional_req
 		const proposalResponses = results[0];
 		const proposal = results[1];
 		let all_good = true;
-		for(let i in proposalResponses) {
+		for(const i in proposalResponses) {
 			let one_good = false;
 			const proposal_response = proposalResponses[i];
 			if( proposal_response.response && proposal_response.response.status === 200) {
@@ -614,8 +614,8 @@ module.exports.send_and_wait_on_events = async function(t, channel, request, tx_
 	const promises = [];
 	promises.push(channel.sendTransaction(request));
 
-	let channel_event_hubs = channel.getChannelEventHubsForOrg();
-	for(let i in channel_event_hubs) {
+	const channel_event_hubs = channel.getChannelEventHubsForOrg();
+	for(const i in channel_event_hubs) {
 		const channel_event_hub = channel_event_hubs[i];
 		const event_monitor = module.exports.transaction_monitor(t, channel_event_hub, tx_id);
 		promises.push(event_monitor);
@@ -640,10 +640,9 @@ module.exports.transaction_monitor = function(t, channel_event_hub, tx_id) {
 			clearTimeout(handle);
 			t.fail('Failed to receive event replay for Event for transaction id ::'+tx_id);
 			reject(error);
-		},
+		},{disconnect: true}
 			// Setting the disconnect to true as we do not want to use this
 			// ChannelEventHub after the event we are looking for comes in
-			{disconnect: true}
 		);
 		t.pass('Successfully registered event for ' + tx_id);
 
@@ -697,7 +696,7 @@ module.exports.queryChannelAsAdmin = async function(t, client, channel, tx_id_st
 module.exports.queryClientAsAdmin = async function(t, client, channel, peer) {
 	let results = await client.queryInstalledChaincodes(peer, true); // use admin
 	let found = false;
-	for(let i in results.chaincodes) {
+	for(const i in results.chaincodes) {
 		if(results.chaincodes[i].name === 'example') {
 			found = true;
 		}
@@ -710,7 +709,7 @@ module.exports.queryClientAsAdmin = async function(t, client, channel, peer) {
 
 	results = await client.queryChannels(peer, true);
 	found = false;
-	for(let i in results.channels) {
+	for(const i in results.channels) {
 		if(results.channels[i].channel_id === channel.getName()) {
 			found = true;
 		}
@@ -725,3 +724,17 @@ module.exports.queryClientAsAdmin = async function(t, client, channel, peer) {
 module.exports.sleep = function(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 };
+exports.tapeAsyncThrow = async (t, asyncFun, regx, message) => {
+	try {
+		await asyncFun();
+		t.fail(message);
+	} catch (err) {
+		if (err.toString().match(regx)) {
+			t.pass(message);
+		} else {
+			t.fail(message);
+			t.comment(err.toString());
+		}
+	}
+};
+

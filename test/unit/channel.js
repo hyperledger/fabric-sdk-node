@@ -6,27 +6,27 @@
 
 'use strict';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var sinon = require('sinon');
-var rewire = require('rewire');
-var grpc = require('grpc');
-var _policiesProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/policies.proto').common;
-var _mspPrProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/msp/msp_principal.proto').common;
+const sinon = require('sinon');
+const rewire = require('rewire');
+const grpc = require('grpc');
+const _policiesProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/policies.proto').common;
+const _mspPrProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/msp/msp_principal.proto').common;
 
-var Client = require('fabric-client');
-var testutil = require('./util.js');
-var Peer = require('fabric-client/lib/Peer.js');
-var Policy = require('fabric-client/lib/Policy.js');
-var Channel = rewire('fabric-client/lib/Channel.js');
-var Orderer = require('fabric-client/lib/Orderer.js');
-var User = require('fabric-client/lib/User.js');
-var MSP = require('fabric-client/lib/msp/msp.js');
-var MSPManager = require('fabric-client/lib/msp/msp-manager.js');
+const Client = require('fabric-client');
+const testutil = require('./util.js');
+const Peer = require('fabric-client/lib/Peer.js');
+const Policy = require('fabric-client/lib/Policy.js');
+const Channel = rewire('fabric-client/lib/Channel.js');
+const Orderer = require('fabric-client/lib/Orderer.js');
+const User = require('fabric-client/lib/User.js');
+const MSP = require('fabric-client/lib/msp/msp.js');
+const MSPManager = require('fabric-client/lib/msp/msp-manager.js');
 
-var utils = require('fabric-client/lib/utils.js');
+const utils = require('fabric-client/lib/utils.js');
 
 // Channel tests /////////////
 test('\n\n ** Channel - constructor test **\n\n', (t) => {
@@ -44,14 +44,14 @@ test('\n\n ** Channel - constructor test **\n\n', (t) => {
 		utils.setConfigSetting('channel-name-regx-checker', null);
 		channelName = 'testChannel';
 		_channel = new Channel(channelName, client);
-	}, undefined, 'Channel constructor tests: skip name pattern checking:0');
+	}, 'Channel constructor tests: skip name pattern checking:0');
 	t.doesNotThrow(() => {
 		utils.setConfigSetting('channel-name-regx-checker', {
 			pattern: '', flags: ''
 		});
 		channelName = 'testChannel';
 		_channel = new Channel(channelName, client);
-	}, undefined, 'Channel constructor tests: skip name pattern checking:1');
+	}, 'Channel constructor tests: skip name pattern checking:1');
 
 	t.throws(
 		() => {
@@ -85,23 +85,22 @@ test('\n\n ** Channel - constructor test **\n\n', (t) => {
 	t.end();
 });
 
-test('\n\n ** Channel - method tests **\n\n', function (t) {
-	var client = new Client();
-	var _channel = new Channel('testchannel', client);
+test('\n\n ** Channel - method tests **\n\n', (t) => {
+	const client = new Client();
+	const _channel = new Channel('testchannel', client);
 
 	t.doesNotThrow(
-		function () {
-			var orderer = new Orderer('grpc://somehost.com:1234');
+		() => {
+			const orderer = new Orderer('grpc://somehost.com:1234');
 			_channel.close();
 			_channel.addOrderer(orderer);
 			_channel.getOrderer(orderer.getName());
 			_channel.close();
 		},
-		null,
 		'checking the channel addOrderer()'
 	);
 	t.doesNotThrow(
-		function () {
+		() => {
 			let peer = new Peer('grpc://somehost.com:1234');
 			_channel.close();
 			_channel.addPeer(peer, 'ANY');
@@ -122,11 +121,10 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 			_channel.getChannelEventHub(peer.getName());
 			_channel.close();
 		},
-		null,
 		'checking the peer and channel peer methods'
 	);
 	t.throws(
-		function () {
+		() => {
 			const cp = _channel.getChannelPeer('peer1');
 			t.equals(cp.isInRole(), true, 'Checking isInRole');
 		},
@@ -143,15 +141,15 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 	t.ok(peer, 'Check that peer was returned');
 	t.equal(peer.toString(), 'Peer:{url:grpc://somehost.com:1234}', 'checking channel peer is the same one');
 	t.throws(
-		function () {
-			var orderer = new Orderer('grpc://somehost.com:1234');
+		() => {
+			const orderer = new Orderer('grpc://somehost.com:1234');
 			_channel.addOrderer(orderer);
 		},
 		/^DuplicateOrderer: Orderer/,
 		'Channel tests: checking that orderer already exists.'
 	);
-	let test_string = Buffer.from('{"name":"testchannel","orderers":["Orderer:{url:grpc://somehost.com:1234}"],"peers":["Peer:{url:grpc://somehost.com:1234}"]}');
-	let channel_string = Buffer.from(_channel.toString());
+	const test_string = Buffer.from('{"name":"testchannel","orderers":["Orderer:{url:grpc://somehost.com:1234}"],"peers":["Peer:{url:grpc://somehost.com:1234}"]}');
+	const channel_string = Buffer.from(_channel.toString());
 	if (test_string.equals(channel_string)) {
 		t.pass('Successfully tested Channel toString()');
 	} else {
@@ -159,11 +157,10 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 	}
 	t.notEquals(_channel.getMSPManager(), null, 'checking the channel getMSPManager()');
 	t.doesNotThrow(
-		function () {
-			var msp_manager = new MSPManager();
+		() => {
+			const msp_manager = new MSPManager();
 			_channel.setMSPManager(msp_manager);
 		},
-		null,
 		'checking the channel setMSPManager()'
 	);
 	t.notEquals(_channel.getOrganizations(), null, 'checking the channel getOrganizations()');
@@ -171,141 +168,141 @@ test('\n\n ** Channel - method tests **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n **  Channel query target parameter tests', function (t) {
-	var client = new Client();
-	var _channel = new Channel('testchannel', client);
+test('\n\n **  Channel query target parameter tests', async (t) => {
+	const client = new Client();
+	const _channel = new Channel('testchannel', client);
 
-	t.throws(
-		function () {
-			_channel.queryBlockByHash();
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlockByHash();
 		},
 		/Blockhash bytes are required/,
 		'Channel tests, queryBlockByHash(): checking for Blockhash bytes are required.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryBlockByHash(Buffer.from('12345'));
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlockByHash(Buffer.from('12345'));
 		},
 		/^Error: "target" parameter not specified and no peers are set on this Channel./,
 		'Channel tests, queryBlockByHash(): "target" parameter not specified and no peers are set on Channel.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryBlockByHash(Buffer.from('12345'), [new Peer('grpc://localhost:7051')]);
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlockByHash(Buffer.from('12345'), [new Peer('grpc://localhost:7051')]);
 		},
 		/^Error: "target" parameter is an array, but should be a singular peer object/,
 		'Channel tests, queryBlockByHash(): checking for "target" parameter is an array, but should be a singular peer object.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryBlockByHash(Buffer.from('12345'), new Peer('grpc://localhost:7051'));
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlockByHash(Buffer.from('12345'), new Peer('grpc://localhost:7051'));
 		},
-		/^[Error: Missing userContext parameter]/,
+		/Error: No identity has been assigned to this client/,
 		'Channel tests, queryBlockByHash(): good target, checking for Missing userContext parameter.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryInfo();
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryInfo();
 		},
 		/^Error: "target" parameter not specified and no peers are set on this Channel./,
 		'Channel tests, queryInfo(): "target" parameter not specified and no peers are set on Channel.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryInfo([new Peer('grpc://localhost:7051')]);
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryInfo([new Peer('grpc://localhost:7051')]);
 		},
 		/^Error: "target" parameter is an array, but should be a singular peer object/,
 		'Channel tests, queryInfo: checking for "target" parameter is an array, but should be a singular peer object.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryBlock();
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlock();
 		},
 		/Block number must be a positive integer/,
 		'Channel tests, queryBlock(): Block number must be a positive integer with nothing specified'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryBlock('abc');
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlock('abc');
 		},
 		/Block number must be a positive integer/,
 		'Channel tests, queryBlock(): Block number must be a positive integer with "abc" specified'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryBlock(1.1);
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlock(1.1);
 		},
 		/Block number must be a positive integer/,
 		'Channel tests, queryBlock(): Block number must be a positive integer with "1.1" specified'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryBlock(-1);
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlock(-1);
 		},
 		/Block number must be a positive integer/,
 		'Channel tests, queryBlock(): Block number must be a positive integer with "-1" specified'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryBlock(123);
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlock(123);
 		},
 		/^Error: "target" parameter not specified and no peers are set on this Channel./,
 		'Channel tests, queryBlock(): "target" parameter not specified and no peers are set on Channel.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryBlock(123, [new Peer('grpc://localhost:7051')]);
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryBlock(123, [new Peer('grpc://localhost:7051')]);
 		},
 		/^Error: "target" parameter is an array, but should be a singular peer object/,
 		'Channel tests, queryBlock(): checking for "target" parameter is an array, but should be a singular peer object.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryTransaction();
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryTransaction();
 		},
 		/Missing "tx_id" parameter/,
 		'Channel tests, queryTransaction(): checking for Missing "tx_id" parameter.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryTransaction('abc');
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryTransaction('abc');
 		},
 		/"target" parameter not specified and no peers are set/,
 		'Channel tests, queryTransaction(): "target" parameter not specified and no peers are set'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryTransaction('abc', [new Peer('grpc://localhost:7051')]);
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryTransaction('abc', [new Peer('grpc://localhost:7051')]);
 		},
 		/target" parameter is an array/,
 		'Channel tests, queryTransaction(): checking for "target" parameter is an array'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryInstantiatedChaincodes();
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryInstantiatedChaincodes();
 		},
 		/"target" parameter not specified and no peers are set/,
 		'Channel tests, queryInstantiatedChaincodes(): checking for "target" parameter not specified and no peers are set'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryInstantiatedChaincodes([new Peer('grpc://localhost:7051')]);
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryInstantiatedChaincodes([new Peer('grpc://localhost:7051')]);
 		},
 		/^Error: "target" parameter is an array, but should be a singular peer object/,
 		'Channel tests, queryInstantiatedChaincodes(): checking for "target" parameter is an array, but should be a singular peer object.'
@@ -314,25 +311,25 @@ test('\n\n **  Channel query target parameter tests', function (t) {
 	t.end();
 });
 
-test('\n\n ** Channel addPeer() duplicate tests **\n\n', function (t) {
-	var client = new Client();
-	var channel_duplicate = new Channel('channel-duplicate', client);
-	var peers = [
+test('\n\n ** Channel addPeer() duplicate tests **\n\n', (t) => {
+	const client = new Client();
+	const channel_duplicate = new Channel('channel-duplicate', client);
+	const peers = [
 		'grpc://localhost:7051',
 		'grpc://localhost:7052',
 		'grpc://localhost:7053',
 		'grpc://localhost:7051'
 	];
 
-	var expected = peers.length - 1;
+	const expected = peers.length - 1;
 
-	peers.forEach(function (peer) {
+	peers.forEach((peer) => {
 		try {
-			var _peer = new Peer(peer);
+			const _peer = new Peer(peer);
 			channel_duplicate.addPeer(_peer);
 		}
 		catch (err) {
-			if (err.name != 'DuplicatePeer') {
+			if (err.name !== 'DuplicatePeer') {
 				t.fail('Unexpected error ' + err.toString());
 			}
 			else {
@@ -342,7 +339,7 @@ test('\n\n ** Channel addPeer() duplicate tests **\n\n', function (t) {
 	});
 
 	//check to see we have the correct number of peers
-	if (channel_duplicate.getPeers().length == expected) {
+	if (channel_duplicate.getPeers().length === expected) {
 		t.pass('Duplicate peer not added to the channel(' + expected +
 			' expected | ' + channel_duplicate.getPeers().length + ' found)');
 	}
@@ -352,19 +349,18 @@ test('\n\n ** Channel addPeer() duplicate tests **\n\n', function (t) {
 	}
 
 	t.doesNotThrow(
-		function () {
+		() => {
 			channel_duplicate.close();
 		},
-		null,
 		'checking the channel close()'
 	);
 
 	t.end();
 });
 
-test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
-	var client = new Client();
-	var channel = new Channel('join-channel', client);
+test('\n\n ** Channel joinChannel() tests **\n\n', (t) => {
+	const client = new Client();
+	const channel = new Channel('join-channel', client);
 
 	t.throws(
 		() => {
@@ -392,7 +388,7 @@ test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
 
 	t.throws(
 		() => {
-			channel.joinChannel({ txId: 'txid' });
+			channel.joinChannel({txId: 'txid'});
 		},
 		/Missing block input parameter/,
 		'Checking joinChannel(): Missing block input parameter'
@@ -400,7 +396,7 @@ test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
 
 	t.throws(
 		() => {
-			channel.joinChannel({ txId: 'txid', block: 'something' });
+			channel.joinChannel({txId: 'txid', block: 'something'});
 		},
 		/"targets" parameter not specified and no peers are set on this Channel/,
 		'Checking joinChannel(): "targets" parameter not specified and no peers are set on this Channel'
@@ -408,7 +404,7 @@ test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
 
 	t.throws(
 		() => {
-			channel.joinChannel({ txId: 'txid', block: 'something', targets: [{}] });
+			channel.joinChannel({txId: 'txid', block: 'something', targets: [{}]});
 		},
 		/Target peer is not a valid peer object instance/,
 		'Checking joinChannel(): Target peer is not a valid peer object instance'
@@ -416,7 +412,7 @@ test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
 
 	t.throws(
 		() => {
-			channel.joinChannel({ txId: 'txid', block: 'something', targets: 'somename' });
+			channel.joinChannel({txId: 'txid', block: 'something', targets: 'somename'});
 		},
 		/not assigned/,
 		'Checking joinChannel(): not found'
@@ -425,7 +421,7 @@ test('\n\n ** Channel joinChannel() tests **\n\n', function (t) {
 	t.end();
 });
 
-var TWO_ORG_MEMBERS_AND_ADMIN = [{
+const TWO_ORG_MEMBERS_AND_ADMIN = [{
 	role: {
 		name: 'peer',
 		mspId: 'org1'
@@ -442,53 +438,53 @@ var TWO_ORG_MEMBERS_AND_ADMIN = [{
 	}
 }];
 
-var ONE_OF_TWO_ORG_MEMBER = {
+const ONE_OF_TWO_ORG_MEMBER = {
 	identities: TWO_ORG_MEMBERS_AND_ADMIN,
 	policy: {
-		'1-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }]
+		'1-of': [{'signed-by': 0}, {'signed-by': 1}]
 	}
 };
 
-var TWO_OF_TWO_ORG_MEMBER = {
+const TWO_OF_TWO_ORG_MEMBER = {
 	identities: TWO_ORG_MEMBERS_AND_ADMIN,
 	policy: {
-		'2-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }]
+		'2-of': [{'signed-by': 0}, {'signed-by': 1}]
 	}
 };
 
-var ONE_OF_TWO_ORG_MEMBER_AND_ADMIN = {
+const ONE_OF_TWO_ORG_MEMBER_AND_ADMIN = {
 	identities: TWO_ORG_MEMBERS_AND_ADMIN,
 	policy: {
 		'2-of': [{
-			'1-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }]
+			'1-of': [{'signed-by': 0}, {'signed-by': 1}]
 		}, {
 			'signed-by': 2
 		}]
 	}
 };
 
-var CRAZY_SPEC = {
+const CRAZY_SPEC = {
 	identities: TWO_ORG_MEMBERS_AND_ADMIN,
 	policy: {
 		'2-of': [{
 			'1-of': [{
 				'signed-by': 0
 			}, {
-				'1-of': [{ 'signed-by': 1 }, { 'signed-by': 2 }]
+				'1-of': [{'signed-by': 1}, {'signed-by': 2}]
 			}]
 		}, {
 			'1-of': [{
-				'2-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }, { 'signed-by': 2 }]
+				'2-of': [{'signed-by': 0}, {'signed-by': 1}, {'signed-by': 2}]
 			}, {
-				'2-of': [{ 'signed-by': 2 }, { '1-of': [{ 'signed-by': 0 }, { 'signed-by': 1 }] }]
+				'2-of': [{'signed-by': 2}, {'1-of': [{'signed-by': 0}, {'signed-by': 1}]}]
 			}]
 		}]
 	}
 };
 
-test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (t) {
-	var client = new Client();
-	var c = new Channel('does-not-matter', client);
+test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
+	const client = new Client();
+	const c = new Channel('does-not-matter', client);
 
 	t.throws(
 		() => {
@@ -499,17 +495,17 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 	);
 
 	// construct dummy msps and msp manager to test default policy construction
-	var msp1 = new MSP({
+	const msp1 = new MSP({
 		id: 'msp1',
 		cryptoSuite: 'crypto1'
 	});
 
-	var msp2 = new MSP({
+	const msp2 = new MSP({
 		id: 'msp2',
 		cryptoSuite: 'crypto2'
 	});
 
-	var mspm = new MSPManager();
+	const mspm = new MSPManager();
 	mspm._msps = {
 		'msp1': msp1,
 		'msp2': msp2
@@ -517,18 +513,17 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 
 	c._msp_manager = mspm;
 
-	var policy;
+	let policy;
 	t.doesNotThrow(
 		() => {
 			policy = c._buildEndorsementPolicy();
 		},
-		null,
 		'Checking that after initializing the channel with dummy msps and msp manager, _buildEndorsementPolicy() can be called without error'
 	);
 
 	t.equal(Buffer.isBuffer(policy), true, 'Checking default policy has an identities array');
 
-	var env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
+	let env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
 	t.equal(Array.isArray(env.identities), true, 'Checking decoded default policy has an "identities" array');
 	t.equal(env.identities.length, 2, 'Checking decoded default policy has two array items');
 	t.equal(env.identities[0].getPrincipalClassification(), _mspPrProto.MSPPrincipal.Classification.ROLE, 'Checking decoded default policy has a ROLE identity');
@@ -538,7 +533,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({ identities: null });
+			c._buildEndorsementPolicy({identities: null});
 		},
 		/Invalid policy, missing the "identities" property/,
 		'Checking policy spec: must have identities'
@@ -546,7 +541,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({ identities: {} });
+			c._buildEndorsementPolicy({identities: {}});
 		},
 		/Invalid policy, the "identities" property must be an array/,
 		'Checking policy spec: identities must be an array'
@@ -554,7 +549,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({ identities: [] });
+			c._buildEndorsementPolicy({identities: []});
 		},
 		/Invalid policy, missing the "policy" property/,
 		'Checking policy spec: must have "policy"'
@@ -562,7 +557,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({ identities: [{ dummy: 'value', dummer: 'value' }], policy: {} });
+			c._buildEndorsementPolicy({identities: [{dummy: 'value', dummer: 'value'}], policy: {}});
 		},
 		/Invalid identity type found: must be one of role, organization-unit or identity, but found dummy,dummer/,
 		'Checking policy spec: each identity must be "role", "organization-unit" or "identity"'
@@ -570,7 +565,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({ identities: [{ role: 'value' }], policy: {} });
+			c._buildEndorsementPolicy({identities: [{role: 'value'}], policy: {}});
 		},
 		/Invalid role name found: must be one of "peer", "member" or "admin", but found/,
 		'Checking policy spec: value identity type "role" must have valid "name" value'
@@ -578,7 +573,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({ identities: [{ 'organization-unit': 'value' }], policy: {} });
+			c._buildEndorsementPolicy({identities: [{'organization-unit': 'value'}], policy: {}});
 		},
 		/NOT IMPLEMENTED/,
 		'Checking policy spec: value identity type "organization-unit"'
@@ -586,7 +581,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({ identities: [{ identity: 'value' }], policy: {} });
+			c._buildEndorsementPolicy({identities: [{identity: 'value'}], policy: {}});
 		},
 		/NOT IMPLEMENTED/,
 		'Checking policy spec: value identity type "identity"'
@@ -607,15 +602,13 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 		() => {
 			policy = c._buildEndorsementPolicy(ONE_OF_TWO_ORG_MEMBER);
 		},
-		null,
 		'Building successfully from valid policy spec ONE_OF_TWO_ORG_MEMBER'
 	);
 
 	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
-	t.equals(Array.isArray(env.identities) &&
+	t.ok(Array.isArray(env.identities) &&
 		env.identities.length === 3 &&
 		env.identities[0].getPrincipalClassification() === _mspPrProto.MSPPrincipal.Classification.ROLE,
-	true,
 	'Checking decoded custom policy has two items'
 	);
 
@@ -626,7 +619,6 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 		() => {
 			policy = c._buildEndorsementPolicy(TWO_OF_TWO_ORG_MEMBER);
 		},
-		null,
 		'Building successfully from valid policy spec TWO_OF_TWO_ORG_MEMBER'
 	);
 
@@ -638,7 +630,6 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 		() => {
 			policy = c._buildEndorsementPolicy(ONE_OF_TWO_ORG_MEMBER_AND_ADMIN);
 		},
-		null,
 		'Building successfully from valid policy spec ONE_OF_TWO_ORG_MEMBER_AND_ADMIN'
 	);
 
@@ -653,7 +644,6 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 		() => {
 			policy = c._buildEndorsementPolicy(CRAZY_SPEC);
 		},
-		null,
 		'Building successfully from valid policy spec CRAZY_SPEC'
 	);
 
@@ -674,25 +664,25 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', function (
 	t.end();
 });
 
-test('\n\n ** Channel sendTransactionProposal() tests **\n\n', function (t) {
-	var client = new Client();
-	var channel = new Channel('does-not-matter', client);
+test('\n\n ** Channel sendTransactionProposal() tests **\n\n', async (t) => {
+	const client = new Client();
+	const channel = new Channel('does-not-matter', client);
 	channel._use_discovery = false;
-	var peer = new Peer('grpc://localhost:7051');
+	const peer = new Peer('grpc://localhost:7051');
 
 	channel.addPeer(peer);
 
-	t.throws(
-		function () {
-			channel.sendTransactionProposal();
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.sendTransactionProposal();
 		},
 		/Missing input request object on the proposal request/,
 		'Channel tests, sendTransactionProposal(): Missing input request object on the proposal request'
 	);
 
-	t.throws(
-		function () {
-			channel.sendTransactionProposal({
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.sendTransactionProposal({
 				chaincodeId: 'blah',
 				fcn: 'invoke',
 				txId: 'blah'
@@ -702,9 +692,9 @@ test('\n\n ** Channel sendTransactionProposal() tests **\n\n', function (t) {
 		'Channel tests, sendTransactionProposal(): Missing "args" in Transaction'
 	);
 
-	t.throws(
-		function () {
-			channel.sendTransactionProposal({
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.sendTransactionProposal({
 				fcn: 'init',
 				args: ['a', '100', 'b', '200'],
 				txId: 'blah'
@@ -714,9 +704,9 @@ test('\n\n ** Channel sendTransactionProposal() tests **\n\n', function (t) {
 		'Channel tests, sendTransactionProposal(): Missing "chaincodeId" parameter'
 	);
 
-	t.throws(
-		function () {
-			channel.sendTransactionProposal({
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.sendTransactionProposal({
 				chaincodeId: 'blah',
 				fcn: 'init',
 				args: ['a', '100', 'b', '200']
@@ -729,21 +719,21 @@ test('\n\n ** Channel sendTransactionProposal() tests **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n ** Channel queryByChaincode() tests **\n\n', async function (t) {
+test('\n\n ** Channel queryByChaincode() tests **\n\n', async (t) => {
 	let client = new Client();
-	var _channel = new Channel('testchannel', client);
+	const _channel = new Channel('testchannel', client);
 
-	t.throws(
-		function () {
-			_channel.queryByChaincode();
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryByChaincode();
 		},
 		/Missing request object for this queryByChaincode call/,
 		'Channel tests, queryByChaincode(): Missing request object for this queryByChaincode call.'
 	);
 
-	t.throws(
-		function () {
-			_channel.queryByChaincode({});
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.queryByChaincode({});
 		},
 		/"targets" parameter not specified and no peers are set/,
 		'Channel tests, queryByChaincode(): "targets" parameter not specified and no peers are set.'
@@ -752,13 +742,13 @@ test('\n\n ** Channel queryByChaincode() tests **\n\n', async function (t) {
 	client = new Client();
 	await setMember(client);
 
-	var channel = client.newChannel('any-channel-goes');
-	var peer = client.newPeer('grpc://localhost:7051');
+	const channel = client.newChannel('any-channel-goes');
+	const peer = client.newPeer('grpc://localhost:7051');
 	channel.addPeer(peer);
 
-	t.throws(
-		function () {
-			channel.queryByChaincode({
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.queryByChaincode({
 				chaincodeId: 'blah',
 				fcn: 'invoke'
 			});
@@ -767,9 +757,9 @@ test('\n\n ** Channel queryByChaincode() tests **\n\n', async function (t) {
 		'Channel tests, queryByChaincode(): Missing "args" in Transaction'
 	);
 
-	t.throws(
-		function () {
-			channel.queryByChaincode({
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.queryByChaincode({
 				fcn: 'init',
 				args: ['a', '100', 'b', '200']
 			});
@@ -780,39 +770,39 @@ test('\n\n ** Channel queryByChaincode() tests **\n\n', async function (t) {
 	t.end();
 });
 
-test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
-	var client = new Client();
-	var _channel = new Channel('testchannel', client);
+test('\n\n ** Channel sendTransaction() tests **\n\n', async (t) => {
+	const client = new Client();
+	const _channel = new Channel('testchannel', client);
 
-	t.throws(
-		function () {
-			_channel.sendTransaction();
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.sendTransaction();
 		},
 		/Missing input request/,
 		'Channel tests, sendTransaction: Missing request object.'
 	);
 
-	t.throws(
-		function () {
-			_channel.sendTransaction({ proposal: 'blah' });
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.sendTransaction({proposal: 'blah'});
 		},
 		/Missing "proposalResponses"/,
 		'Channel tests, sendTransaction: Missing "proposalResponses" object.'
 	);
 
-	t.throws(
-		function () {
-			_channel.sendTransaction({ proposalResponses: 'blah' });
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.sendTransaction({proposalResponses: 'blah'});
 		},
 		/Missing "proposal"/,
 		'Channel tests, sendTransaction: Missing "proposal" object.'
 	);
 
-	t.throws(
-		function () {
-			_channel.sendTransaction({
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await _channel.sendTransaction({
 				proposal: 'blah',
-				proposalResponses: { response: { status: 500 } }
+				proposalResponses: {response: {status: 500}}
 			});
 		},
 		/no valid endorsements found/,
@@ -828,62 +818,61 @@ test('\n\n ** Channel sendTransaction() tests **\n\n', function (t) {
 // orderer URL was set correctly through the getOrderer method. Repeat the
 // process by updating the orderer URL to a different address.
 //
-test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', function (t) {
-	var client = new Client();
+test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', (t) => {
+	const client = new Client();
 	//
 	// Create and configure the test channel
 	//
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	Client.newDefaultKeyValueStore({
 		path: testutil.KVS
-	})
-		.then(function (store) {
-			client.setStateStore(store);
+	}).then((store) => {
+		client.setStateStore(store);
 
-			var channel = client.newChannel('testchannel-orderer-member');
-			try {
-				var orderer = new Orderer('grpc://localhost:7050');
-				channel.addOrderer(orderer);
-				t.pass('Successfully set the new orderer URL');
+		const channel = client.newChannel('testchannel-orderer-member');
+		try {
+			const orderer = new Orderer('grpc://localhost:7050');
+			channel.addOrderer(orderer);
+			t.pass('Successfully set the new orderer URL');
 
-				let orderers = channel.getOrderers();
-				if (orderers !== null && orderers.length > 0 && orderers[0].getUrl() === 'grpc://localhost:7050') {
-					t.pass('Successfully retrieved the new orderer URL from the channel');
-				}
-				else {
-					t.fail('Failed to retieve the new orderer URL from the channel');
-					t.end();
-				}
-
-				try {
-					var orderer2 = new Orderer('grpc://localhost:5152');
-					channel.addOrderer(orderer2);
-					t.pass('Successfully updated the orderer URL');
-
-					orderers = channel.getOrderers();
-					if (orderers !== null && orderers.length > 0 && orderers[1].getUrl() === 'grpc://localhost:5152') {
-						t.pass('Successfully retrieved the upated orderer URL from the channel');
-					}
-					else {
-						t.fail('Failed to retieve the updated orderer URL from the channel');
-					}
-
-					for (let i = 0; i < orderers.length; i++) {
-						channel.removeOrderer(orderers[i]);
-						t.pass('Successfully removed orderer');
-					}
-
-					t.end();
-				} catch (err2) {
-					t.fail('Failed to update the order URL ' + err2);
-					t.end();
-				}
+			let orderers = channel.getOrderers();
+			if (orderers !== null && orderers.length > 0 && orderers[0].getUrl() === 'grpc://localhost:7050') {
+				t.pass('Successfully retrieved the new orderer URL from the channel');
 			}
-			catch (err) {
-				t.fail('Failed to set the new order URL ' + err);
+			else {
+				t.fail('Failed to retieve the new orderer URL from the channel');
 				t.end();
 			}
-		});
+
+			try {
+				const orderer2 = new Orderer('grpc://localhost:5152');
+				channel.addOrderer(orderer2);
+				t.pass('Successfully updated the orderer URL');
+
+				orderers = channel.getOrderers();
+				if (orderers !== null && orderers.length > 0 && orderers[1].getUrl() === 'grpc://localhost:5152') {
+					t.pass('Successfully retrieved the upated orderer URL from the channel');
+				}
+				else {
+					t.fail('Failed to retieve the updated orderer URL from the channel');
+				}
+
+				for (let i = 0; i < orderers.length; i++) {
+					channel.removeOrderer(orderers[i]);
+					t.pass('Successfully removed orderer');
+				}
+
+				t.end();
+			} catch (err2) {
+				t.fail('Failed to update the order URL ' + err2);
+				t.end();
+			}
+		}
+		catch (err) {
+			t.fail('Failed to set the new order URL ' + err);
+			t.end();
+		}
+	});
 });
 
 //
@@ -892,16 +881,16 @@ test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', function (t) {
 // Set the orderer URL to a bad address through the channel setOrderer method.
 // Verify that an error is reported when trying to set a bad address.
 //
-test('\n\n** TEST ** orderer via channel set/get bad address', function (t) {
-	var client = new Client();
+test('\n\n** TEST ** orderer via channel set/get bad address', (t) => {
+	const client = new Client();
 	//
 	// Create and configure the test channel
 	//
-	var channel = client.newChannel('testchannel-orderer-member1');
+	const channel = client.newChannel('testchannel-orderer-member1');
 
 	t.throws(
-		function () {
-			var order_address = 'xxx';
+		() => {
+			const order_address = 'xxx';
 			channel.addOrderer(new Orderer(order_address));
 		},
 		/InvalidProtocol: Invalid protocol: undefined/,
@@ -909,7 +898,7 @@ test('\n\n** TEST ** orderer via channel set/get bad address', function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			channel.addOrderer(new Orderer());
 		},
 		/TypeError: Parameter "url" must be a string, not undefined/,
@@ -921,15 +910,15 @@ test('\n\n** TEST ** orderer via channel set/get bad address', function (t) {
 
 //Verify the verify compareProposalResponseResults method.
 //
-test('\n\n** TEST ** verify compareProposalResponseResults', function (t) {
-	var client = new Client();
+test('\n\n** TEST ** verify compareProposalResponseResults', (t) => {
+	const client = new Client();
 	//
 	// Create and configure the test channel
 	//
-	var channel = client.newChannel('testchannel-compare-proposal');
+	const channel = client.newChannel('testchannel-compare-proposal');
 
 	t.throws(
-		function () {
+		() => {
 			channel.compareProposalResponseResults();
 		},
 		/Error: Missing proposal responses/,
@@ -937,7 +926,7 @@ test('\n\n** TEST ** verify compareProposalResponseResults', function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			channel.compareProposalResponseResults({});
 		},
 		/Error: Parameter must be an array of ProposalRespone Objects/,
@@ -945,7 +934,7 @@ test('\n\n** TEST ** verify compareProposalResponseResults', function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			channel.compareProposalResponseResults([]);
 		},
 		/Error: Parameter proposal responses does not contain a PorposalResponse/,
@@ -953,7 +942,7 @@ test('\n\n** TEST ** verify compareProposalResponseResults', function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			channel.compareProposalResponseResults([{}]);
 		},
 		/Error: Parameter must be a ProposalResponse Object/,
@@ -964,15 +953,15 @@ test('\n\n** TEST ** verify compareProposalResponseResults', function (t) {
 
 //Verify the verify verifyProposalResponse method.
 //
-test('\n\n** TEST ** verify verifyProposalResponse', function (t) {
-	var client = new Client();
+test('\n\n** TEST ** verify verifyProposalResponse', (t) => {
+	const client = new Client();
 	//
 	// Create and configure the test channel
 	//
-	var channel = client.newChannel('testchannel-compare-proposal2');
+	const channel = client.newChannel('testchannel-compare-proposal2');
 
 	t.throws(
-		function () {
+		() => {
 			channel.verifyProposalResponse();
 		},
 		/Error: Missing proposal response/,
@@ -980,7 +969,7 @@ test('\n\n** TEST ** verify verifyProposalResponse', function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			channel.verifyProposalResponse({});
 		},
 		/Error: Parameter must be a ProposalResponse Object/,
@@ -988,7 +977,7 @@ test('\n\n** TEST ** verify verifyProposalResponse', function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			channel.verifyProposalResponse([]);
 		},
 		/Error: Parameter must be a ProposalResponse Object/,
@@ -996,7 +985,7 @@ test('\n\n** TEST ** verify verifyProposalResponse', function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			channel.verifyProposalResponse([{}]);
 		},
 		/Error: Parameter must be a ProposalResponse Object/,
@@ -1005,24 +994,24 @@ test('\n\n** TEST ** verify verifyProposalResponse', function (t) {
 	t.end();
 });
 
-test('\n\n*** Test per-call timeout support ***\n', function (t) {
-	var client = new Client();
-	let sandbox = sinon.sandbox.create();
-	let stub = sandbox.stub(Peer.prototype, 'sendProposal');
+test('\n\n*** Test per-call timeout support ***\n', (t) => {
+	const client = new Client();
+	const sandbox = sinon.sandbox.create();
+	const stub = sandbox.stub(Peer.prototype, 'sendProposal');
 	sandbox.stub(Policy, 'buildPolicy').returns(Buffer.from('dummyPolicy'));
 
 	// stub out the calls that requires getting MSPs from the orderer, or
 	// a valid user context
-	let client_utils = Channel.__get__('client_utils');
+	const client_utils = Channel.__get__('client_utils');
 	sandbox.stub(client_utils, 'buildHeader').returns(Buffer.from('dummyHeader'));
 	sandbox.stub(client_utils, 'buildProposal').returns(Buffer.from('dummyProposal'));
 	sandbox.stub(client_utils, 'signProposal').returns(Buffer.from('dummyProposal'));
 	client._userContext = {
-		getIdentity: ()=>'',
-		getSigningIdentity: ()=>''
+		getIdentity: () => '',
+		getSigningIdentity: () => ''
 	};
 
-	let c = new Channel('does-not-matter', client);
+	const c = new Channel('does-not-matter', client);
 
 	c.sendInstantiateProposal({
 		targets: [new Peer('grpc://localhost:7051'), new Peer('grpc://localhost:7052')],
@@ -1032,11 +1021,11 @@ test('\n\n*** Test per-call timeout support ***\n', function (t) {
 		fcn: 'init',
 		args: ['a', '100', 'b', '200'],
 		txId: {
-			getTransactionID: () =>'1234567',
-			isAdmin: () =>false,
-			getNonce: () =>Buffer.from('dummyNonce')
+			getTransactionID: () => '1234567',
+			isAdmin: () => false,
+			getNonce: () => Buffer.from('dummyNonce')
 		}
-	}, 12345).then(function () {
+	}, 12345).then(() => {
 		t.equal(stub.calledTwice, true, 'Peer.sendProposal() is called exactly twice');
 		t.equal(stub.firstCall.args.length, 2, 'Peer.sendProposal() is called first time with exactly 2 arguments');
 		t.equal(stub.firstCall.args[1], 12345, 'Peer.sendProposal() is called first time with a overriding timeout of 12345 (milliseconds)');
@@ -1044,33 +1033,33 @@ test('\n\n*** Test per-call timeout support ***\n', function (t) {
 		t.equal(stub.secondCall.args[1], 12345, 'Peer.sendProposal() is called 2nd time with a overriding timeout of 12345 (milliseconds)');
 		sandbox.restore();
 		t.end();
-	}).catch(function (err) {
+	}).catch((err) => {
 		t.fail('Failed to catch the missing chaincodeVersion error. Error: ' + err.stack ? err.stack : err);
 		sandbox.restore();
 		t.end();
 	});
 });
 
-test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
+test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 	const client = new Client();
 	const channel = new Channel('does-not-matter', client);
 	channel._use_discovery = true;
-	t.throws(
-		function () {
-			channel.initialize();
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.initialize();
 		},
 		/"target" parameter not specified and no peers are set on this Channel/,
 		'Channel tests, sendTransactionProposal(): "target" parameter not specified and no peers are set on this Channeln'
 	);
 
 
-	var peer = new Peer('grpc://localhost:9999');
+	const peer = new Peer('grpc://localhost:9999');
 
 	channel.addPeer(peer);
 
-	t.throws(
-		function () {
-			channel.initialize({
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.initialize({
 				target: peer
 			});
 		},
@@ -1078,9 +1067,9 @@ test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 		'Channel tests, sendTransactionProposal(): No identity has been assigned to this client'
 	);
 
-	t.throws(
-		function () {
-			channel.initialize({
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.initialize({
 				discover: 'BAD'
 			});
 		},
@@ -1090,17 +1079,16 @@ test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 
 	await setMember(client);
 
-	try {
-		await channel.initialize({
-			target: peer
-		});
-	} catch(error) {
-		if(error.message.includes('deadline')) {
-			t.pass('Check Failed to connect before the deadline');
-		} else {
-			t.fail('Did not get Failed to connect before the deadline');
-		}
-	}
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			await channel.initialize({
+				target: peer
+			});
+		},
+		/deadline/,
+		'Check Failed to connect before the deadline'
+	);
+
 
 	try {
 		await channel.initialize({
@@ -1108,11 +1096,11 @@ test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 			endorsementHandler: 'no.where'
 		});
 		t.fail('able to initialize channel with a bad endorsement handler path');
-	} catch(error) {
-		if(error.message.includes('Cannot find module')) {
+	} catch (error) {
+		if (error.message.includes('Cannot find module')) {
 			t.pass('Check Failed to initialize channel with bad endorsement handler path');
 		} else {
-			t.fail('Receive other failure '+ error.toString());
+			t.fail('Receive other failure ' + error.toString());
 		}
 	}
 
@@ -1121,11 +1109,11 @@ test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 		client.setConfigSetting('endorsement-handler', 'bad.path');
 		client.newChannel('test-channel');
 		t.fail('able to create channel with a bad endorsement handler path');
-	} catch(error) {
-		if(error.message.includes('Cannot find module')) {
+	} catch (error) {
+		if (error.message.includes('Cannot find module')) {
 			t.pass('Check Failed to create channel with bad endorsement handler path');
 		} else {
-			t.fail('Receive other failure '+ error.toString());
+			t.fail('Receive other failure ' + error.toString());
 		}
 	}
 	client.setConfigSetting('endorsement-handler', handler_path_temp);
@@ -1133,13 +1121,13 @@ test('\n\n ** Channel Discover) tests **\n\n', async function (t) {
 	t.end();
 });
 
-test('\n\n ** Channel _getOrderer tests **\n\n', function (t) {
+test('\n\n ** Channel _getOrderer tests **\n\n', (t) => {
 	const client = new Client();
 	const channel = new Channel('does-not-matter', client);
 
 
 	t.throws(
-		function () {
+		() => {
 			channel._getOrderer();
 		},
 		/No Orderers assigned to this channel/,
@@ -1147,7 +1135,7 @@ test('\n\n ** Channel _getOrderer tests **\n\n', function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			channel._getOrderer('bad');
 		},
 		/Orderer bad not assigned to the channel/,
@@ -1155,7 +1143,7 @@ test('\n\n ** Channel _getOrderer tests **\n\n', function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			channel._getOrderer({});
 		},
 		/Orderer is not a valid orderer object instance/,
@@ -1168,7 +1156,6 @@ test('\n\n ** Channel _getOrderer tests **\n\n', function (t) {
 			const test_orderer = channel._getOrderer(orderer);
 			t.equal(test_orderer.getName(), 'somehost.com:1234', 'Checking able to get correct name');
 		},
-		null,
 		'Channel _getOrderer: checking able to find orderer by name'
 	);
 
@@ -1177,7 +1164,6 @@ test('\n\n ** Channel _getOrderer tests **\n\n', function (t) {
 		() => {
 			channel._getOrderer('somehost.com:1234');
 		},
-		null,
 		'Channel _getOrderer: checking able to find orderer by name'
 	);
 
@@ -1186,13 +1172,12 @@ test('\n\n ** Channel _getOrderer tests **\n\n', function (t) {
 			const test_orderer = channel._getOrderer();
 			t.equal(test_orderer.getName(), 'somehost.com:1234', 'Checking able to get correct name');
 		},
-		null,
 		'Channel _getOrderer: checking able to find orderer by name'
 	);
 
 	t.end();
 });
-test('\n\n ** Channel mspid tests **\n\n', function (t) {
+test('\n\n ** Channel mspid tests **\n\n', (t) => {
 	const client = new Client();
 	client._mspid = 'Org1MSP';
 	const channel = new Channel('does-not-matter', client);
@@ -1225,15 +1210,16 @@ test('\n\n ** Channel mspid tests **\n\n', function (t) {
 
 	t.end();
 });
+
 async function setMember(client) {
 	// do some setup for following test
-	var member = new User('admin');
+	const member = new User('admin');
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	const store = await Client.newDefaultKeyValueStore({path: testutil.KVS});
 	client.setStateStore(store);
 	const cryptoUtils = utils.newCryptoSuite();
-	const key = await cryptoUtils.generateKey({ ephemeral: true });
-	var TEST_CERT_PEM = require('./user.js').TEST_CERT_PEM;
+	const key = await cryptoUtils.generateKey({ephemeral: true});
+	const TEST_CERT_PEM = require('./user.js').TEST_CERT_PEM;
 	await member.setEnrollment(key, TEST_CERT_PEM, 'DEFAULT');
 	client.setUserContext(member, true);
 }

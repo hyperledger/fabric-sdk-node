@@ -6,32 +6,31 @@
 */
 
 'use strict';
-var Long = require('long');
-var util = require('util');
-var utils = require('./utils.js');
-var clientUtils = require('./client-utils.js');
-var logger = utils.getLogger('ChannelEventHub.js');
+const Long = require('long');
+const utils = require('./utils.js');
+const clientUtils = require('./client-utils.js');
+const logger = utils.getLogger('ChannelEventHub.js');
 
-var BlockDecoder = require('./BlockDecoder.js');
+const BlockDecoder = require('./BlockDecoder.js');
 
-var grpc = require('grpc');
-var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
-var _eventsProto = grpc.load(__dirname + '/protos/peer/events.proto').protos;
-var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-var _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
+const grpc = require('grpc');
+const _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
+const _eventsProto = grpc.load(__dirname + '/protos/peer/events.proto').protos;
+const _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
+const _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
 
-var _validation_codes = {};
-var keys = Object.keys(_transProto.TxValidationCode);
-for(let i = 0;i<keys.length;i++) {
-	let new_key = _transProto.TxValidationCode[keys[i]];
-	_validation_codes[new_key] = keys[i];
+const _validation_codes = {};
+let keys = Object.keys(_transProto.TxValidationCode);
+for (const key of keys) {
+	const new_key = _transProto.TxValidationCode[key];
+	_validation_codes[new_key] = key;
 }
 
-var _header_types = {};
+const _header_types = {};
 keys = Object.keys(_commonProto.HeaderType);
-for(let j in keys) {
-	let new_key = _commonProto.HeaderType[keys[j]];
-	_header_types[new_key] = keys[j];
+for (const key of keys) {
+	const new_key = _commonProto.HeaderType[key];
+	_header_types[new_key] = key;
 }
 
 // GRPC connection states
@@ -47,11 +46,11 @@ const CONNECTION_STATE = {
 
 // internal use only
 const NO_START_STOP = 0;
-const START_ONLY    = 1;
-const END_ONLY      = 2;
+const START_ONLY = 1;
+const END_ONLY = 2;
 //const START_AND_END = 3;
 
-const five_minutes_ms = 5*60*1000;
+const five_minutes_ms = 5 * 60 * 1000;
 
 
 /**
@@ -59,7 +58,7 @@ const five_minutes_ms = 5*60*1000;
  * components (application, endorsing peer, orderer, committing peer) and takes
  * a relatively lengthy period of time (think seconds instead of milliseconds)
  * to complete. As a result the applications must design their handling of the
- * transaction lifecyle in an asynchrous fashion. After the transaction proposal
+ * transaction lifecycle in an asynchronous fashion. After the transaction proposal
  * has been successfully [endorsed]{@link Channel#sendTransactionProposal}, and before
  * the transaction message has been successfully [broadcast]{@link Channel#sendTransaction}
  * to the orderer, the application should register a listener to be notified of
@@ -105,11 +104,11 @@ const five_minutes_ms = 5*60*1000;
  * // connect() call fails
  * eh.registerTxEvent(
  *   transactionId,
- * 	 (tx, code) => {
+ *     (tx, code) => {
  * 	   eh.unregisterTxEvent(transactionId);
  * 	   console.log(util.format('Transaction %s has completed', transactionId));
  * 	 },
- * 	 (err) => {
+ *     (err) => {
  * 	   eh.unregisterTxEvent(transactionId);
  * 	   console.log(util.format('Error %s! Transaction listener for %s has been ' +
  *                 'deregistered with %s', transactionId, err, eh.getPeerAddr()));
@@ -120,7 +119,7 @@ const five_minutes_ms = 5*60*1000;
  *
  * @class
  */
-var ChannelEventHub = class {
+const ChannelEventHub = class {
 
 	/**
 	 * Constructs a ChannelEventHub object
@@ -165,14 +164,14 @@ var ChannelEventHub = class {
 		// connect count for this instance
 		this._current_stream = 0;
 		// reference to the channel instance holding critical context such as signing identity
-		if (typeof channel === 'undefined' || channel === null || channel === '')
+		if (!channel)
 			throw new Error('Missing required argument: channel');
 
 		this._clientContext = channel._clientContext;
 		this._channel = channel;
 		// peer node to connect
 		// reference to the peer instance holding end point information
-		if (typeof peer === 'undefined' || peer === null || peer === '')
+		if (!peer)
 			throw new Error('Missing required argument: peer');
 		this._peer = peer;
 	}
@@ -189,12 +188,11 @@ var ChannelEventHub = class {
 	 * Return the peer url of this event hub object
 	 */
 	getPeerAddr() {
-		let addr = null;
-		if(this._peer) {
-			addr = this._peer._endpoint.addr;
+		if (this._peer) {
+			return this._peer._endpoint.addr;
 		}
 
-		return addr;
+		return null;
 	}
 
 	/*
@@ -203,7 +201,7 @@ var ChannelEventHub = class {
 	 * @returns {Long} The block number of the last block seen
 	 */
 	lastBlockNumber() {
-		if(this._last_block_seen === null) {
+		if (this._last_block_seen === null) {
 			throw new Error('This ChannelEventHub has not had an event from the peer');
 		}
 
@@ -217,7 +215,7 @@ var ChannelEventHub = class {
 	 * new event listener will be allowed.
 	 */
 	_checkAllowRegistrations() {
-		if(!this._allowRegistration) {
+		if (!this._allowRegistration) {
 			throw new Error('This ChannelEventHub is not open to event listener registrations');
 		}
 	}
@@ -232,8 +230,6 @@ var ChannelEventHub = class {
 
 	/**
 	 * Establishes a connection with the peer event source.
-	 * The peer address must be set by calling the [setPeerAddr()]{@link ChannelEventHub#setPeerAddr}
-	 * method before calling this method.
 	 *
 	 * The connection will be established asynchronously. If the connection fails to
 	 * get established, the application will be notified via the error callbacks
@@ -253,18 +249,18 @@ var ChannelEventHub = class {
 	 *        will be required to have access to establish the connection to
 	 *        receive full blocks.
 	 *        Registering a block listener on a filtered block connection may not
-	 *        provide suficient information.
+	 *        provide sufficient information.
 	 */
-	connect(full_block){
+	connect(full_block) {
 		logger.debug('connect - start  %s', this.getPeerAddr());
 		if (!this._clientContext._userContext && !this._clientContext._adminSigningIdentity) {
 			throw new Error('The clientContext has not been properly initialized, missing userContext or admin identity');
 		}
 
-		if(typeof full_block === 'boolean') {
+		if (typeof full_block === 'boolean') {
 			this._filtered_stream = !full_block;
-			logger.debug('connect - filtered block stream set to:%s',!full_block);
-		} else if(typeof full_block === 'undefined' || full_block === null) {
+			logger.debug('connect - filtered block stream set to:%s', !full_block);
+		} else if (typeof full_block === 'undefined' || full_block === null) {
 			logger.debug('connect - using a filtered block stream by default');
 		} else {
 			throw new Error('"filtered" parameter is invalid');
@@ -282,7 +278,7 @@ var ChannelEventHub = class {
 	 */
 	_connect(force) {
 		logger.debug('_connect - start - %s', new Date());
-		if(this._connect_running) {
+		if (this._connect_running) {
 			logger.debug('_connect - connect is running');
 			return;
 		}
@@ -297,11 +293,11 @@ var ChannelEventHub = class {
 
 		this._connect_running = true;
 		this._current_stream++;
-		let stream_id = this._current_stream;
-		logger.debug('_connect - start stream:',stream_id);
-		let self = this; // for callback context
+		const stream_id = this._current_stream;
+		logger.debug('_connect - start stream:', stream_id);
+		const self = this; // for callback context
 
-		let connecton_setup_timeout = setTimeout(function(){
+		const connecton_setup_timeout = setTimeout(() => {
 			logger.error('_connect - timed out after:%s', self._peer._request_timeout);
 			self._connect_running = false;
 			self._disconnect(new Error('Unable to connect to the peer event hub'));
@@ -311,34 +307,34 @@ var ChannelEventHub = class {
 		// the keep alive interval
 		let options = utils.checkAndAddConfigSetting('grpc.keepalive_time_ms', 360000, this._peer._options);
 		// how long should we wait for the keep alive response
-		let request_timeout_ms = utils.getConfigSetting('request-timeout', 3000);
+		const request_timeout_ms = utils.getConfigSetting('request-timeout', 3000);
 		options = utils.checkAndAddConfigSetting('grpc.keepalive_timeout_ms', request_timeout_ms, options);
 		options = utils.checkAndAddConfigSetting('grpc.http2.min_time_between_pings_ms', five_minutes_ms, options);
 
 		logger.debug('_connect - options %j', options);
 		this._event_client = new _eventsProto.Deliver(this._peer._endpoint.addr, this._peer._endpoint.creds, options);
-		if(this._filtered_stream) {
+		if (this._filtered_stream) {
 			this._stream = this._event_client.deliverFiltered();
 		} else {
 			this._stream = this._event_client.deliver();
 		}
 
-		this._stream.on('data', function(deliverResponse) {
-			if(self._connect_running) {
+		this._stream.on('data', (deliverResponse) => {
+			if (self._connect_running) {
 				self._connect_running = false;
 				clearTimeout(connecton_setup_timeout);
 			}
 
-			logger.debug('on.data - event stream:%s _current_stream:%s  peer:%s',stream_id, self._current_stream, self.getPeerAddr());
-			if(stream_id != self._current_stream) {
+			logger.debug('on.data - event stream:%s _current_stream:%s  peer:%s', stream_id, self._current_stream, self.getPeerAddr());
+			if (stream_id !== self._current_stream) {
 				logger.debug('on.data - incoming event was from a cancelled stream');
 				return;
 			}
 
-			let state = getStreamState(self);
-			logger.debug('on.data - grpc stream state :%s',state);
+			const state = getStreamState(self);
+			logger.debug('on.data - grpc stream state :%s', state);
 			if (deliverResponse.Type === 'block' || deliverResponse.Type === 'filtered_block') {
-				if(self._connected == true) {
+				if (self._connected === true) {
 					logger.debug('on.data - new block received - check event registrations');
 				} else {
 					logger.debug('on.data - first block received , event hub now registered');
@@ -346,14 +342,14 @@ var ChannelEventHub = class {
 				}
 				try {
 					let block = null;
-					if(deliverResponse.Type === 'block') {
+					if (deliverResponse.Type === 'block') {
 						block = BlockDecoder.decodeBlock(deliverResponse.block);
 						self._last_block_seen = utils.convertToLong(block.header.number);
 					} else {
 						block = JSON.parse(JSON.stringify(deliverResponse.filtered_block));
 						self._last_block_seen = utils.convertToLong(block.number);
 					}
-					logger.debug('on.data - incoming block number %s',self._last_block_seen);
+					logger.debug('on.data - incoming block number %s', self._last_block_seen);
 
 					// somebody may have registered to receive this block
 					self._processBlockEvents(block);
@@ -362,15 +358,15 @@ var ChannelEventHub = class {
 
 					// check to see if we should shut things down
 					self._checkReplayEnd();
-				} catch(error) {
+				} catch (error) {
 					logger.error('ChannelEventHub - ::' + error.stack ? error.stack : error);
-					logger.error('ChannelEventHub has detected an error '+error.toString());
+					logger.error('ChannelEventHub has detected an error ' + error.toString());
 					//report error to all callbacks and shutdown this ChannelEventHub
 					self._disconnect(error);
 				}
 			}
-			else if(deliverResponse.Type === 'status') {
-				if(self._ending_block_seen) {
+			else if (deliverResponse.Type === 'status') {
+				if (self._ending_block_seen) {
 					// this is normal after the last block comes in when we set
 					// an ending block
 					logger.debug('on.data - status received after last block seen: %s', deliverResponse.status);
@@ -378,8 +374,8 @@ var ChannelEventHub = class {
 					// only blocks should be received .... get status means we need to tell
 					// all registered users that something is wrong and the stream is will be close or
 					// has been closed
-					logger.debug('on.data - status received - %s',deliverResponse.status);
-					self._disconnect(new Error(util.format('Received status message on the event stream. status:%s', deliverResponse.status)));
+					logger.debug('on.data - status received - %s', deliverResponse.status);
+					self._disconnect(new Error(`Received status message on the event stream. status:${deliverResponse.status}`));
 				}
 			}
 			else {
@@ -388,37 +384,37 @@ var ChannelEventHub = class {
 			}
 		});
 
-		this._stream.on('status', function (response) {
+		this._stream.on('status', (response) => {
 			logger.debug('on status - status received: %j  peer:%s', response, self.getPeerAddr());
 		});
 
-		this._stream.on('end', function() {
+		this._stream.on('end', () => {
 			self._connect_running = false;
 			clearTimeout(connecton_setup_timeout);
 			logger.debug('on.end - event stream:%s _current_stream:%s peer:%s', stream_id, self._current_stream, self.getPeerAddr());
-			if(stream_id != self._current_stream) {
+			if (stream_id !== self._current_stream) {
 				logger.debug('on.end - incoming event was from a canceled stream');
 				return;
 			}
 
-			let state = getStreamState(self);
-			logger.debug('on.end - grpc stream state :%s',state);
+			const state = getStreamState(self);
+			logger.debug('on.end - grpc stream state :%s', state);
 			self._disconnect(new Error('Peer event hub has disconnected due to an "end" event'));
 		});
 
-		this._stream.on('error', function(err) {
+		this._stream.on('error', (err) => {
 			self._connect_running = false;
 			clearTimeout(connecton_setup_timeout);
-			logger.debug('on.error - event stream:%s _current_stream:%s  peer:%s',stream_id, self._current_stream, self.getPeerAddr());
-			if(stream_id != self._current_stream) {
+			logger.debug('on.error - event stream:%s _current_stream:%s  peer:%s', stream_id, self._current_stream, self.getPeerAddr());
+			if (stream_id !== self._current_stream) {
 				logger.debug('on.error - incoming event was from a canceled stream');
-				logger.debug('on.error - %s %s',new Date(),err);
+				logger.debug('on.error - %s %s', new Date(), err);
 				return;
 			}
 
-			let state = getStreamState(self);
-			logger.debug('on.error - grpc stream state :%s',state);
-			if(err instanceof Error) {
+			const state = getStreamState(self);
+			logger.debug('on.error - grpc stream state :%s', state);
+			if (err instanceof Error) {
 				self._disconnect(err);
 			}
 			else {
@@ -427,7 +423,7 @@ var ChannelEventHub = class {
 		});
 
 		this._sendRegistration();
-		logger.debug('_connect - end stream:',stream_id);
+		logger.debug('_connect - end stream:', stream_id);
 	}
 
 	/**
@@ -437,7 +433,7 @@ var ChannelEventHub = class {
 	 * all listeners that provided an "onError" callback.
 	 */
 	disconnect() {
-		if(this._disconnect_running) {
+		if (this._disconnect_running) {
 			logger.debug('disconnect - disconnect is running');
 		} else {
 			this._disconnect_running = true;
@@ -462,22 +458,22 @@ var ChannelEventHub = class {
 	 * all listeners that provided an "onError" callback.
 	 */
 	_disconnect(err) {
-		logger.debug('_disconnect - start -- called due to:: %s, peer:%s',err.message, this.getPeerAddr());
+		logger.debug('_disconnect - start -- called due to:: %s, peer:%s', err.message, this.getPeerAddr());
 		this._connected = false;
 		this._connect_running = false;
 		this._closeAllCallbacks(err);
 		this._shutdown();
-		logger.debug('_disconnect - end -- called due to:: %s, peer:%s',err.message, this.getPeerAddr());
+		logger.debug('_disconnect - end -- called due to:: %s, peer:%s', err.message, this.getPeerAddr());
 	}
 
 	_shutdown() {
-		if(this._stream) {
+		if (this._stream) {
 			logger.debug('_shutdown - shutdown existing stream');
 			this._stream.cancel();
 			this._stream.end();
 			this._stream = null;
 		}
-		if(this._event_client) {
+		if (this._event_client) {
 			this._event_client.close();
 		}
 	}
@@ -489,20 +485,20 @@ var ChannelEventHub = class {
 	 */
 	_sendRegistration() {
 		// build start
-		let seekStart = new _abProto.SeekPosition();
-		if(this._starting_block_number) {
-			let seekSpecifiedStart = new _abProto.SeekSpecified();
+		const seekStart = new _abProto.SeekPosition();
+		if (this._starting_block_number) {
+			const seekSpecifiedStart = new _abProto.SeekSpecified();
 			seekSpecifiedStart.setNumber(this._starting_block_number);
 			seekStart.setSpecified(seekSpecifiedStart);
 		} else {
-			let seekNewest = new _abProto.SeekNewest();
+			const seekNewest = new _abProto.SeekNewest();
 			seekStart.setNewest(seekNewest);
 		}
 
 		// build stop
-		let seekStop = new _abProto.SeekPosition();
-		let seekSpecifiedStop = new _abProto.SeekSpecified();
-		if(this._ending_block_number) {
+		const seekStop = new _abProto.SeekPosition();
+		const seekSpecifiedStop = new _abProto.SeekSpecified();
+		if (this._ending_block_number) {
 			seekSpecifiedStop.setNumber(this._ending_block_number);
 		} else {
 			seekSpecifiedStop.setNumber(Long.MAX_VALUE);
@@ -510,18 +506,18 @@ var ChannelEventHub = class {
 		seekStop.setSpecified(seekSpecifiedStop);
 
 		// seek info with all parts
-		let seekInfo = new _abProto.SeekInfo();
+		const seekInfo = new _abProto.SeekInfo();
 		seekInfo.setStart(seekStart);
 		seekInfo.setStop(seekStop);
 		// BLOCK_UNTIL_READY will mean hold the stream open and keep sending as
 		//     the blocks come in
 		// FAIL_IF_NOT_READY will mean if the block is not there throw an error
 		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
-		let tx_id = this._clientContext.newTransactionID(true);
-		let signer = this._clientContext._getSigningIdentity(true);
+		const tx_id = this._clientContext.newTransactionID(true);
+		const signer = this._clientContext._getSigningIdentity(true);
 
 		// build the header for use with the seekInfo payload
-		let seekInfoHeader = clientUtils.buildChannelHeader(
+		const seekInfoHeader = clientUtils.buildChannelHeader(
 			_commonProto.HeaderType.DELIVER_SEEK_INFO,
 			this._channel._name,
 			tx_id.getTransactionID(),
@@ -531,19 +527,19 @@ var ChannelEventHub = class {
 			this._clientContext.getClientCertHash()
 		);
 
-		let seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, tx_id.getNonce());
-		let seekPayload = new _commonProto.Payload();
+		const seekHeader = clientUtils.buildHeader(signer, seekInfoHeader, tx_id.getNonce());
+		const seekPayload = new _commonProto.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
-		let seekPayloadBytes = seekPayload.toBuffer();
+		const seekPayloadBytes = seekPayload.toBuffer();
 
-		let sig = signer.sign(seekPayloadBytes);
-		let signature = Buffer.from(sig);
+		const sig = signer.sign(seekPayloadBytes);
+		const signature = Buffer.from(sig);
 
 		// building manually or will get protobuf errors on send
-		let envelope = {
+		const envelope = {
 			signature: signature,
-			payload : seekPayloadBytes
+			payload: seekPayloadBytes
 		};
 
 		this._stream.write(envelope);
@@ -555,13 +551,13 @@ var ChannelEventHub = class {
 	 * Sends an error to all registered event "onError" callbacks
 	 */
 	_closeAllCallbacks(err) {
-		let method = '_closeAllCallbacks -' + this.getPeerAddr();
+		const method = '_closeAllCallbacks -' + this.getPeerAddr();
 		logger.debug('%s - start', method);
 
 		logger.debug('%s - blockOnErrors %s', method, Object.keys(this._blockRegistrations).length);
-		for (let key in this._blockRegistrations) {
-			let block_registration = this._blockRegistrations[key];
-			if(block_registration.onError) {
+		for (const key in this._blockRegistrations) {
+			const block_registration = this._blockRegistrations[key];
+			if (block_registration.onError) {
 				logger.debug('%s - calling block error callback for %s', method, key);
 				block_registration.onError(err);
 			} else {
@@ -571,9 +567,9 @@ var ChannelEventHub = class {
 		this._blockRegistrations = {};
 
 		logger.debug('%s - transactionOnErrors %s', method, Object.keys(this._transactionRegistrations).length);
-		for (let key in this._transactionRegistrations) {
-			let trans_reg = this._transactionRegistrations[key];
-			if(trans_reg.onError) {
+		for (const key in this._transactionRegistrations) {
+			const trans_reg = this._transactionRegistrations[key];
+			if (trans_reg.onError) {
 				logger.debug('%s - calling transaction error callback for %s', method, key);
 				trans_reg.onError(err);
 			} else {
@@ -582,12 +578,11 @@ var ChannelEventHub = class {
 		}
 		this._transactionRegistrations = {};
 
-		let self = this;
-		let cc_closer = function(key) {
-			let cbtable = self._chaincodeRegistrants[key];
-			cbtable.forEach(function(chaincode_reg) {
+		const cc_closer = (key) => {
+			const cbtable = this._chaincodeRegistrants[key];
+			cbtable.forEach((chaincode_reg) => {
 				logger.debug('%s - closing this chaincode event ccid:%s eventNameFilter:%s', method, chaincode_reg.ccid, chaincode_reg.eventNameFilter);
-				if(chaincode_reg.event_reg.onError) {
+				if (chaincode_reg.event_reg.onError) {
 					chaincode_reg.event_reg.onError(err);
 				}
 			});
@@ -611,8 +606,8 @@ var ChannelEventHub = class {
 		let result = NO_START_STOP;
 		let have_start_block = false;
 		let have_end_block = false;
-		let converted_options = {};
-		if(options && typeof options.startBlock !== 'undefined') {
+		const converted_options = {};
+		if (options && typeof options.startBlock !== 'undefined') {
 			try {
 				converted_options.start_block = utils.convertToLong(options.startBlock);
 				have_start_block = true;
@@ -620,35 +615,35 @@ var ChannelEventHub = class {
 				throw new Error('Problem with the startBlock parameter ::' + error);
 			}
 		}
-		if(options && typeof options.endBlock !== 'undefined') {
+		if (options && typeof options.endBlock !== 'undefined') {
 			try {
 				converted_options.end_block = utils.convertToLong(options.endBlock);
 				have_end_block = true;
-			} catch(error) {
+			} catch (error) {
 				throw new Error('Problem with the endBlock parameter ::' + error);
 			}
 		}
 
-		if((have_start_block || have_end_block) && this._haveRegistrations()) {
-			logger.error('This ChannelEventHub is already registered with active listeners. Not able options of startBlock:%s endBlock:%s',options.startBlock, options.endBlock);
+		if ((have_start_block || have_end_block) && this._haveRegistrations()) {
+			logger.error('This ChannelEventHub is already registered with active listeners. Not able options of startBlock:%s endBlock:%s', options.startBlock, options.endBlock);
 			throw new Error('Only one event registration is allowed when startBlock or endBlock are used');
 		}
 
-		if((have_start_block || have_end_block) && (this._connected || this._connect_running)) {
-			logger.error('This ChannelEventHub has already been connected to start receiving blocks. Not able to use options of startBlock:%s endBlock:%s',options.startBlock, options.endBlock);
+		if ((have_start_block || have_end_block) && (this._connected || this._connect_running)) {
+			logger.error('This ChannelEventHub has already been connected to start receiving blocks. Not able to use options of startBlock:%s endBlock:%s', options.startBlock, options.endBlock);
 			throw new Error('Event listeners that use startBlock or endBlock must be registered before connecting to the peer channel-based event service');
 		}
 
-		if(have_end_block) {
-			if(have_start_block && converted_options.start_block.greaterThan(converted_options.end_block)) {
-				throw new Error(util.format('"startBlock" (%s) must not be larger than "endBlock" (%s)', converted_options.start_block, converted_options.end_block));
+		if (have_end_block) {
+			if (have_start_block && converted_options.start_block.greaterThan(converted_options.end_block)) {
+				throw new Error(`"startBlock" (${converted_options.start_block}) must not be larger than "endBlock" (${converted_options.end_block}})`);
 			}
 			this._ending_block_number = converted_options.end_block;
 			this._allowRegistration = false;
 			result = END_ONLY;
 			logger.debug('_checkReplay - Event listening will end at block %s', converted_options.end_block);
 		}
-		if(have_start_block) {
+		if (have_start_block) {
 			this._starting_block_number = converted_options.start_block;
 			this._allowRegistration = false;
 			result++; // will move result to START_ONLY or START_AND_END
@@ -664,10 +659,7 @@ var ChannelEventHub = class {
 		count = count + Object.keys(this._chaincodeRegistrants).length;
 		count = count + Object.keys(this._blockRegistrations).length;
 		count = count + Object.keys(this._transactionRegistrations).length;
-		if( count > 0) {
-			return true;
-		}
-		return false;
+		return count > 0;
 	}
 
 	/*
@@ -677,13 +669,13 @@ var ChannelEventHub = class {
 	  */
 	_checkConnection() {
 		logger.debug('_checkConnection - start');
-		if(this._connected || this._connect_running) {
-			let state = getStreamState(this);
+		if (this._connected || this._connect_running) {
+			const state = getStreamState(this);
 			logger.debug('_checkConnection -  %s with stream channel state %s', this._peer.getUrl(), getStateText(state));
 
-			if(state != 2 && !this._connect_running) { //Not READY, but trying
-				logger.error('_checkConnection - connection is not in the ready state. state:',getStateText(state));
-				let error = new Error('Connection is not in the READY state');
+			if (state !== 2 && !this._connect_running) { //Not READY, but trying
+				logger.error('_checkConnection - connection is not in the ready state. state:', getStateText(state));
+				const error = new Error('Connection is not in the READY state');
 				this._disconnect(error);
 				throw error;
 			}
@@ -702,18 +694,18 @@ var ChannelEventHub = class {
 	 */
 	checkConnection(force_reconnect) {
 		logger.debug('checkConnection - start force_reconnect:%s', force_reconnect);
-		let state = getStreamState(this);
+		const state = getStreamState(this);
 		logger.debug('checkConnection -  %s with stream channel state %s', this._peer.getUrl(), getStateText(state));
 
-		if(force_reconnect) {
+		if (force_reconnect) {
 			try {
-				if(this._stream) {
-					let is_paused = this._stream.isPaused();
-					logger.debug('checkConnection - grpc isPaused :%s',is_paused);
-					if(is_paused) {
+				if (this._stream) {
+					const is_paused = this._stream.isPaused();
+					logger.debug('checkConnection - grpc isPaused :%s', is_paused);
+					if (is_paused) {
 						this._stream.resume();
 						logger.debug('checkConnection - grpc resuming ');
-					} else if(state != 2) {
+					} else if (state !== 2) {
 						// try to reconnect
 						this._connect_running = false;
 						this._connect(true);
@@ -726,9 +718,9 @@ var ChannelEventHub = class {
 					this._connect(true);
 				}
 			}
-			catch(error) {
+			catch (error) {
 				logger.error('checkConnection - error ::' + error.stack ? error.stack : error);
-				let err = new Error('Problem during reconnect and the event hub is not connected ::%s',error);
+				const err = new Error('Problem during reconnect and the event hub is not connected ::%s', error);
 				this._disconnect(err);
 			}
 		}
@@ -739,53 +731,53 @@ var ChannelEventHub = class {
 	/**
 	 * @typedef {Object} ChaincodeEvent
 	 * @property {string} chaincode_id
-     * @property {string} tx_id
-     * @property {string} event_name
-     * @property {byte[]} payload - Application-specific byte array that the chaincode set
-     *                              when it called <code>stub.SetEvent(event_name, payload)</code>
+	 * @property {string} tx_id
+	 * @property {string} event_name
+	 * @property {byte[]} payload - Application-specific byte array that the chaincode set
+	 *                              when it called <code>stub.SetEvent(event_name, payload)</code>
 	 */
 
 	/**
-	  * @typedef {Object} RegistrationOpts
-	  * @property {integer} startBlock - Optional - The starting block number
-	  *           for event checking. When included, the peer's channel event service
-	  *           will be asked to start sending blocks from this block number.
-	  *           This is how to resume or replay missed blocks that were added
-	  *           to the ledger.
-	  *           Default is the latest block on the ledger.
-	  *           Setting a startBlock may confuse other event listeners,
-	  *           therefore only one listener will be allowed on a ChannelEventHub
-	  *           when a startBlock is being used.
-	  * @property {integer} endBlock - Optional - The ending block number
-	  *           for event checking. When included, the peer's channel event service
-	  *           will be asked to stop sending blocks once this block is delivered.
-	  *           This is how to replay missed blocks that were added
-	  *           to the ledger. When a startBlock is not included, the endBlock
-	  *           must be equal to or larger the current channel block height.
-	  *           Setting an endBlock may confuse other event listeners,
-	  *           therefore only one listener will be allowed on a ChannelEventHub
-	  *           when an endBlock is being used.
-	  * @property {boolean} unregister - Optional - This options setting indicates
-	  *           the registration should be removed (unregister) when the event
-	  *           is seen. When the application is using a timeout to only wait a
-	  *           specified amount of time for the transaction to be seen, the timeout
-	  *           processing should included the manual 'unregister' of the transaction
-	  *           event listener to avoid the event callbacks being called unexpectedly.
-	  *           The default for this setting is different for the different type of
-	  *           event listeners. For block listeners the default is true, however
-	  *           the event listener is assumed to have seen the final event only if
-	  *           the end_block was set as a option and that end_block was seen by the
-	  *           the listener. For transaction listeners the default is true and the
-	  *           listener will be unregistered when a transaction with the id is
-	  *           seen by this listener. For chaincode listeners the default will be
-	  *           false as the match filter might be intended for many transactions
-	  *           rather than a specific transaction or block as in the other listeners.
-	  * @property {boolean} disconnect - Optional - This option setting Indicates
-	  *           to the ChannelEventHub instance to automatically disconnect itself
-	  *           from the peer's channel event service once the event has been seen.
-	  *           The default is false unless the endBlock has been set, then it
-	  *           it will be true.
-	  */
+	 * @typedef {Object} RegistrationOpts
+	 * @property {integer} startBlock - Optional - The starting block number
+	 *           for event checking. When included, the peer's channel event service
+	 *           will be asked to start sending blocks from this block number.
+	 *           This is how to resume or replay missed blocks that were added
+	 *           to the ledger.
+	 *           Default is the latest block on the ledger.
+	 *           Setting a startBlock may confuse other event listeners,
+	 *           therefore only one listener will be allowed on a ChannelEventHub
+	 *           when a startBlock is being used.
+	 * @property {integer} endBlock - Optional - The ending block number
+	 *           for event checking. When included, the peer's channel event service
+	 *           will be asked to stop sending blocks once this block is delivered.
+	 *           This is how to replay missed blocks that were added
+	 *           to the ledger. When a startBlock is not included, the endBlock
+	 *           must be equal to or larger the current channel block height.
+	 *           Setting an endBlock may confuse other event listeners,
+	 *           therefore only one listener will be allowed on a ChannelEventHub
+	 *           when an endBlock is being used.
+	 * @property {boolean} unregister - Optional - This options setting indicates
+	 *           the registration should be removed (unregister) when the event
+	 *           is seen. When the application is using a timeout to only wait a
+	 *           specified amount of time for the transaction to be seen, the timeout
+	 *           processing should included the manual 'unregister' of the transaction
+	 *           event listener to avoid the event callbacks being called unexpectedly.
+	 *           The default for this setting is different for the different type of
+	 *           event listeners. For block listeners the default is true, however
+	 *           the event listener is assumed to have seen the final event only if
+	 *           the end_block was set as a option and that end_block was seen by the
+	 *           the listener. For transaction listeners the default is true and the
+	 *           listener will be unregistered when a transaction with the id is
+	 *           seen by this listener. For chaincode listeners the default will be
+	 *           false as the match filter might be intended for many transactions
+	 *           rather than a specific transaction or block as in the other listeners.
+	 * @property {boolean} disconnect - Optional - This option setting Indicates
+	 *           to the ChannelEventHub instance to automatically disconnect itself
+	 *           from the peer's channel event service once the event has been seen.
+	 *           The default is false unless the endBlock has been set, then it
+	 *           it will be true.
+	 */
 
 	/**
 	 * Register a listener to receive chaincode events.
@@ -808,42 +800,41 @@ var ChannelEventHub = class {
 	 * @param {function} onError - Optional callback function to be notified when this event hub
 	 *                             is shutdown. The shutdown may be caused by a network error or by
 	 *                             a call to the "disconnect()" method or a connection error.
-	 * @param {RegistrationOpts} - options
+	 * @param {RegistrationOpts} options -
 	 * @returns {Object} An object that should be treated as an opaque handle used
 	 *                   to unregister (see unregisterChaincodeEvent)
 	 */
 	registerChaincodeEvent(ccid, eventname, onEvent, onError, options) {
 		logger.debug('registerChaincodeEvent - start');
-		if(!ccid) {
+		if (!ccid) {
 			throw new Error('Missing "ccid" parameter');
 		}
-		if(!eventname) {
+		if (!eventname) {
 			throw new Error('Missing "eventname" parameter');
 		}
-		if(!onEvent) {
+		if (!onEvent) {
 			throw new Error('Missing "onEvent" parameter');
 		}
 
 		this._checkAllowRegistrations();
 		let default_disconnect = false;
-		let startstop_mode = this._checkReplay(options);
-		if(startstop_mode > START_ONLY) {
+		const startstop_mode = this._checkReplay(options);
+		if (startstop_mode > START_ONLY) {
 			default_disconnect = true;
 		}
-		let event_reg = new EventRegistration(onEvent, onError, options, false, default_disconnect);
+		const event_reg = new EventRegistration(onEvent, onError, options, false, default_disconnect);
 
-		let chaincode_reg = new ChaincodeRegistration(ccid, eventname, event_reg);
+		const chaincode_reg = new ChaincodeRegistration(ccid, eventname, event_reg);
 		let cbtable = this._chaincodeRegistrants[ccid];
 		if (!cbtable) {
 			cbtable = new Set();
 			this._chaincodeRegistrants[ccid] = cbtable;
 		}
 		cbtable.add(chaincode_reg);
-		if(startstop_mode > NO_START_STOP) {
+		if (startstop_mode > NO_START_STOP) {
 			this._start_stop_registration = chaincode_reg.event_reg;
-			let self = this;
-			chaincode_reg.event_reg.unregister_action = function() {
-				self.unregisterChaincodeEvent(chaincode_reg);
+			chaincode_reg.event_reg.unregister_action = () => {
+				this.unregisterChaincodeEvent(chaincode_reg);
 			};
 		}
 		this._checkConnection();
@@ -863,12 +854,12 @@ var ChannelEventHub = class {
 	 */
 	unregisterChaincodeEvent(listener_handle, throwError) {
 		logger.debug('unregisterChaincodeEvent - start');
-		if(!listener_handle) {
+		if (!listener_handle) {
 			throw new Error('Missing "listener_handle" parameter');
 		}
-		let cbtable = this._chaincodeRegistrants[listener_handle.ccid];
+		const cbtable = this._chaincodeRegistrants[listener_handle.ccid];
 		if (!cbtable && throwError) {
-			throw new Error(util.format('No event registration for chaincode id %s ', listener_handle.ccid));
+			throw new Error(`No event registration for chaincode id ${listener_handle.ccid}`);
 		} else {
 			cbtable.delete(listener_handle);
 			if (cbtable.size <= 0) {
@@ -895,7 +886,7 @@ var ChannelEventHub = class {
 	 * @param {function} onError - Optional callback function to be notified when this event hub
 	 *                             is shutdown. The shutdown may be caused by a network error or by
 	 *                             a call to the "disconnect()" method or a connection error.
-	 * @param {RegistrationOpts} - options
+	 * @param {RegistrationOpts} options -
 	 * @returns {int} This is the block registration number that must be
 	 *                sed to unregister (see unregisterBlockEvent)
 	 *
@@ -916,25 +907,24 @@ var ChannelEventHub = class {
 	 */
 	registerBlockEvent(onEvent, onError, options) {
 		logger.debug('registerBlockEvent - start');
-		if(!onEvent) {
+		if (!onEvent) {
 			throw new Error('Missing "onEvent" parameter');
 		}
 
 		this._checkAllowRegistrations();
 		let default_disconnect = false;
-		let startstop_mode = this._checkReplay(options);
-		if(startstop_mode > START_ONLY) {
+		const startstop_mode = this._checkReplay(options);
+		if (startstop_mode > START_ONLY) {
 			default_disconnect = true;
 		}
 
-		let block_registration_number = ++this._block_registrant_count;
-		let block_registration = new EventRegistration(onEvent, onError, options, true, default_disconnect);
+		const block_registration_number = ++this._block_registrant_count;
+		const block_registration = new EventRegistration(onEvent, onError, options, true, default_disconnect);
 		this._blockRegistrations[block_registration_number] = block_registration;
-		let self = this;
-		if(startstop_mode > NO_START_STOP) {
+		if (startstop_mode > NO_START_STOP) {
 			this._start_stop_registration = block_registration;
-			block_registration.unregister_action = function() {
-				self.unregisterBlockEvent(block_registration_number);
+			block_registration.unregister_action = () => {
+				this.unregisterBlockEvent(block_registration_number);
 			};
 		}
 		this._checkConnection();
@@ -953,10 +943,10 @@ var ChannelEventHub = class {
 	 *        registration does not exist, default is to not throw an error
 	 */
 	unregisterBlockEvent(block_registration_number, throwError) {
-		logger.debug('unregisterBlockEvent - start  %s',block_registration_number);
-		let block_reg = this._blockRegistrations[block_registration_number];
-		if(!block_reg && throwError) {
-			throw new Error(util.format('Block listener for block registration number "%" does not exist',block_registration_number));
+		logger.debug('unregisterBlockEvent - start  %s', block_registration_number);
+		const block_reg = this._blockRegistrations[block_registration_number];
+		if (!block_reg && throwError) {
+			throw new Error(`Block listener for block registration number "${block_registration_number}" does not exist`);
 		} else {
 			delete this._blockRegistrations[block_registration_number];
 		}
@@ -977,7 +967,7 @@ var ChannelEventHub = class {
 	 * @param {function} onError - Optional callback function to be notified when this event hub
 	 *                             is shutdown. The shutdown may be caused by a network error or by
 	 *                             a call to the "disconnect()" method or a connection error.
-	 * @param {RegistrationOpts} - options
+	 * @param {RegistrationOpts} options -
 	 * @returns {string} The transaction ID that was used to register this event listener,
 	 *          will the same as the txid parameter and must be used to unregister
 	 *          this event listener.
@@ -985,31 +975,30 @@ var ChannelEventHub = class {
 	registerTxEvent(txid, onEvent, onError, options) {
 		logger.debug('registerTxEvent start - txid:%s', txid);
 
-		if(!txid) {
+		if (!txid) {
 			throw new Error('Missing "txid" parameter');
 		}
-		if(!onEvent) {
+		if (!onEvent) {
 			throw new Error('Missing "onEvent" parameter');
 		}
 
 		this._checkAllowRegistrations();
-		let temp = this._transactionRegistrations[txid];
-		if(temp) {
-			throw new Error(util.format('TransactionId (%s) has already been registered',txid));
+		const temp = this._transactionRegistrations[txid];
+		if (temp) {
+			throw new Error(`TransactionId (${txid}) has already been registered`);
 		}
 		let default_disconnect = false;
-		let startstop_mode = this._checkReplay(options);
-		if(startstop_mode > START_ONLY) {
+		const startstop_mode = this._checkReplay(options);
+		if (startstop_mode > START_ONLY) {
 			default_disconnect = true;
 		}
 
-		let trans_registration = new EventRegistration(onEvent, onError, options, true, default_disconnect);
+		const trans_registration = new EventRegistration(onEvent, onError, options, true, default_disconnect);
 		this._transactionRegistrations[txid] = trans_registration;
-		let self = this;
-		if(startstop_mode > NO_START_STOP) {
+		if (startstop_mode > NO_START_STOP) {
 			this._start_stop_registration = trans_registration;
-			trans_registration.unregister_action = function() {
-				self.unregisterTxEvent(txid);
+			trans_registration.unregister_action = () => {
+				this.unregisterTxEvent(txid);
 			};
 		}
 		this._checkConnection();
@@ -1025,9 +1014,9 @@ var ChannelEventHub = class {
 	 */
 	unregisterTxEvent(txid, throwError) {
 		logger.debug('unregisterTxEvent txid ' + txid);
-		let tx_reg = this._transactionRegistrations[txid];
-		if(!tx_reg && throwError) {
-			throw new Error(util.format('Transaction listener for transaction id "%" does not exist',txid));
+		const tx_reg = this._transactionRegistrations[txid];
+		if (!tx_reg && throwError) {
+			throw new Error(`Transaction listener for transaction id "${txid}" does not exist`);
 		} else {
 			delete this._transactionRegistrations[txid];
 		}
@@ -1038,15 +1027,14 @@ var ChannelEventHub = class {
 	 * @param {Object} block protobuf object
 	 */
 	_processBlockEvents(block) {
-		if(Object.keys(this._blockRegistrations).length == 0) {
+		if (Object.keys(this._blockRegistrations).length === 0) {
 			logger.debug('_processBlockEvents - no registered block event "listeners"');
 			return;
 		}
 
 		// send to all registered block listeners
-		let self = this;
-		Object.keys(this._blockRegistrations).forEach(function(key) {
-			let block_reg = self._blockRegistrations[key];
+		Object.keys(this._blockRegistrations).forEach((key) => {
+			const block_reg = this._blockRegistrations[key];
 			logger.debug('_processBlockEvents - calling block listener callback');
 			block_reg.onEvent(block);
 		});
@@ -1057,25 +1045,25 @@ var ChannelEventHub = class {
 	 * @param {Object} block protobuf object which might contain the tx from the fabric
 	 */
 	_processTxEvents(block) {
-		if(Object.keys(this._transactionRegistrations).length == 0) {
+		if (Object.keys(this._transactionRegistrations).length === 0) {
 			logger.debug('_processTxEvents - no registered transaction event "listeners"');
 			return;
 		}
 
-		if(block.number) {
-			logger.debug('_processTxEvents filtered block num=%s', block.number);
-			if(block.filtered_transactions) for(let index in block.filtered_transactions) {
-				let filtered_transaction = block.filtered_transactions[index];
-				this._callTransactionListener(filtered_transaction.txid,
-					filtered_transaction.tx_validation_code,
-					block.number);
+		if (block.number) {
+			logger.debug(`_processTxEvents filtered block num=${block.number}`);
+			if (block.filtered_transactions) {
+				for (const filtered_transaction of block.filtered_transactions) {
+					this._callTransactionListener(filtered_transaction.txid,
+						filtered_transaction.tx_validation_code,
+						block.number);
+				}
 			}
-
 		} else {
-			logger.debug('_processTxEvents block num=%s', block.header.number);
-			let txStatusCodes = block.metadata.metadata[_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER];
-			for (let index=0; index < block.data.data.length; index++) {
-				let channel_header = block.data.data[index].payload.header.channel_header;
+			logger.debug(`_processTxEvents block num=${block.header.number}`);
+			const txStatusCodes = block.metadata.metadata[_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER];
+			for (let index = 0; index < block.data.data.length; index++) {
+				const channel_header = block.data.data[index].payload.header.channel_header;
 				this._callTransactionListener(channel_header.tx_id,
 					txStatusCodes[index],
 					block.header.number);
@@ -1085,16 +1073,16 @@ var ChannelEventHub = class {
 
 	/* internal utility method */
 	_callTransactionListener(tx_id, val_code, block_num) {
-		let trans_reg = this._transactionRegistrations[tx_id];
-		if (trans_reg){
+		const trans_reg = this._transactionRegistrations[tx_id];
+		if (trans_reg) {
 			logger.debug('_callTransactionListener - about to call the transaction call back for code=%s tx=%s', val_code, tx_id);
-			let status = convertValidationCode(val_code);
+			const status = convertValidationCode(val_code);
 			trans_reg.onEvent(tx_id, status, block_num);
-			if(trans_reg.unregister) {
+			if (trans_reg.unregister) {
 				this.unregisterTxEvent(tx_id);
-				logger.debug('_callTransactionListener - automatically unregister tx listener for %s',tx_id);
+				logger.debug('_callTransactionListener - automatically unregister tx listener for %s', tx_id);
 			}
-			if(trans_reg.disconnect) {
+			if (trans_reg.disconnect) {
 				this._disconnect(new Error('Shutdown due to disconnect on transaction id registration'));
 			}
 		} else {
@@ -1107,48 +1095,45 @@ var ChannelEventHub = class {
 	 * @param {Object} block protobuf object which might contain the chaincode event from the fabric
 	 */
 	_processChaincodeEvents(block) {
-		if(Object.keys(this._chaincodeRegistrants).length == 0) {
+		if (Object.keys(this._chaincodeRegistrants).length === 0) {
 			logger.debug('_processChaincodeEvents - no registered chaincode event "listeners"');
 			return;
 		}
 
-		if(block.number) {
-			if(block.filtered_transactions) for(let index in block.filtered_transactions) {
-				let filtered_transaction = block.filtered_transactions[index];
-				if(filtered_transaction.transaction_actions) {
-					if(filtered_transaction.transaction_actions.chaincode_actions) {
-						for(let index in filtered_transaction.transaction_actions.chaincode_actions) {
-							let chaincode_action = filtered_transaction.transaction_actions.chaincode_actions[index];
+		if (block.number) {
+			if (block.filtered_transactions) {
+				for (const filtered_transaction of block.filtered_transactions) {
+					if (filtered_transaction.transaction_actions) {
+						if (filtered_transaction.transaction_actions.chaincode_actions) {
+							for (const chaincode_action of filtered_transaction.transaction_actions.chaincode_actions) {
 
-							this._callChaincodeListener(chaincode_action.chaincode_event,
-								block.number,
-								filtered_transaction.txid,
-								filtered_transaction.tx_validation_code,
-								true);
+								this._callChaincodeListener(chaincode_action.chaincode_event,
+									block.number,
+									filtered_transaction.txid,
+									filtered_transaction.tx_validation_code,
+									true);
+							}
 						}
 					}
 				}
 			}
 		} else {
-			for (let index=0; index < block.data.data.length; index++) {
-				logger.debug('_processChaincodeEvents - trans index=%s',index);
+			for (let index = 0; index < block.data.data.length; index++) {
+				logger.debug(`_processChaincodeEvents - trans index=${index}`);
 				try {
-					let env = block.data.data[index];
-					let payload = env.payload;
-					let channel_header = payload.header.channel_header;
+					const env = block.data.data[index];
+					const payload = env.payload;
+					const channel_header = payload.header.channel_header;
 					if (channel_header.type === 3) { //only ENDORSER_TRANSACTION have chaincode events
-						let tx = payload.data;
-						if(tx && tx.actions) {
-							for(let action_index in tx.actions) {
-								let chaincodeActionPayload = tx.actions[action_index].payload;
-								let propRespPayload = chaincodeActionPayload.action.proposal_response_payload;
-								let caPayload = propRespPayload.extension;
-								let chaincode_event = caPayload.events;
-								logger.debug('_processChaincodeEvents - chaincode_event %s',chaincode_event);
+						const tx = payload.data;
+						if (tx && tx.actions) {
+							for (const {payload} of tx.actions) {
+								const chaincode_event = payload.action.proposal_response_payload.extension.events;
+								logger.debug('_processChaincodeEvents - chaincode_event %s', chaincode_event);
 
-								let txStatusCodes = block.metadata.metadata[_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER];
-								let channel_header = block.data.data[index].payload.header.channel_header;
-								let val_code = txStatusCodes[index];
+								const txStatusCodes = block.metadata.metadata[_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER];
+								const channel_header = block.data.data[index].payload.header.channel_header;
+								const val_code = txStatusCodes[index];
 
 								this._callChaincodeListener(chaincode_event,
 									block.header.number,
@@ -1170,33 +1155,32 @@ var ChannelEventHub = class {
 	}
 
 	_callChaincodeListener(chaincode_event, block_num, tx_id, val_code, filtered) {
-		logger.debug('_callChaincodeListener - chaincode_event %s',chaincode_event);
-		let cbtable = this._chaincodeRegistrants[chaincode_event.chaincode_id];
+		logger.debug('_callChaincodeListener - chaincode_event %s', chaincode_event);
+		const cbtable = this._chaincodeRegistrants[chaincode_event.chaincode_id];
 		if (!cbtable) {
 			logger.debug('_callChaincodeListener - no chaincode listeners found');
 			return;
 		}
-		let tx_status = convertValidationCode(val_code);
+		const tx_status = convertValidationCode(val_code);
 
 		logger.debug('_callChaincodeListener - txid=%s  val_code=%s', tx_id, tx_status);
 
-		let self = this;
-		cbtable.forEach(function(chaincode_reg) {
+		cbtable.forEach((chaincode_reg) => {
 			if (chaincode_reg.eventNameFilter.test(chaincode_event.event_name)) {
 				logger.debug('_callChaincodeListener - calling chaincode listener callback');
-				if(filtered) {
+				if (filtered) {
 					// need to remove the payload since with filtered blocks it
 					// has an empty byte array value which is not the real value
 					// we do not want the listener to think that is the value
 					delete chaincode_event['payload'];
 				}
 				chaincode_reg.event_reg.onEvent(chaincode_event, block_num, tx_id, tx_status);
-				if(chaincode_reg.event_reg.unregister) {
+				if (chaincode_reg.event_reg.unregister) {
 					cbtable.delete(chaincode_reg);
-					logger.debug('_callChaincodeListener - automatically unregister tx listener for %s',tx_id);
+					logger.debug('_callChaincodeListener - automatically unregister tx listener for %s', tx_id);
 				}
-				if(chaincode_reg.event_reg.disconnect) {
-					self._disconnect(new Error('Shutdown due to disconnect on transaction id registration'));
+				if (chaincode_reg.event_reg.disconnect) {
+					this._disconnect(new Error('Shutdown due to disconnect on transaction id registration'));
 				}
 			} else {
 				logger.debug('_callChaincodeListener - NOT calling chaincode listener callback');
@@ -1209,14 +1193,14 @@ var ChannelEventHub = class {
 	 * in the range when this event hub is using startBlock/endBlock
 	 */
 	_checkReplayEnd() {
-		if(this._ending_block_number) {
-			if(this._ending_block_number.lessThanOrEqual(this._last_block_seen)) {
+		if (this._ending_block_number) {
+			if (this._ending_block_number.lessThanOrEqual(this._last_block_seen)) {
 				//see if the listener wants to do anything else
-				if(this._start_stop_registration) {
-					if(this._start_stop_registration.unregister) {
+				if (this._start_stop_registration) {
+					if (this._start_stop_registration.unregister) {
 						this._start_stop_registration.unregister_action();
 					}
-					if(this._start_stop_registration.disconnect) {
+					if (this._start_stop_registration.disconnect) {
 						this._disconnect(new Error('Shutdown due to end block number has been seen'));
 					}
 				}
@@ -1227,7 +1211,7 @@ var ChannelEventHub = class {
 module.exports = ChannelEventHub;
 
 function convertValidationCode(code) {
-	if(typeof code === 'string') {
+	if (typeof code === 'string') {
 		return code;
 	}
 	return _validation_codes[code];
@@ -1238,7 +1222,7 @@ function convertValidationCode(code) {
  */
 function getStreamState(self) {
 	let state = -1;
-	if(self._stream && self._stream.call && self._stream.call.channel_) {
+	if (self._stream && self._stream.call && self._stream.call.channel_) {
 		state = self._stream.call.channel_.getConnectivityState();
 	}
 
@@ -1252,19 +1236,20 @@ function getStateText(state) {
 	let result = null;
 	try {
 		result = CONNECTION_STATE[state];
-	} catch(error) {
-		logger.error('Connection state conversion - unknown state - %s',state);
+	} catch (error) {
+		logger.error('Connection state conversion - unknown state - %s', state);
 	}
-	if(!result) {
+	if (!result) {
 		result = 'UNKNOWN_STATE';
 	}
 	return result;
 }
+
 /*
  * The ChaincodeRegistration is used internal to the ChannelEventHub to hold chaincode
  * event registration callbacks.
  */
-var ChaincodeRegistration = class {
+class ChaincodeRegistration {
 	/*
 	 * Constructs a chaincode callback entry
 	 *
@@ -1280,13 +1265,13 @@ var ChaincodeRegistration = class {
 
 		this.event_reg = event_reg;
 	}
-};
+}
 
 /*
  * The EventRegistration is used internally to the ChannelEventHub to hold
  * event registration callback and settings.
  */
-var EventRegistration = class {
+class EventRegistration {
 	/*
 	 * Constructs a block callback entry
 	 *
@@ -1303,22 +1288,23 @@ var EventRegistration = class {
 		this.onError = onError;
 		this.unregister = default_unregister;
 		this.disconnect = default_disconnect;
-		this.unregister_action = function(){}; // do nothing by default
-		if(options) {
-			if(typeof options.unregister === 'undefined' || options.unregister === null) {
+		this.unregister_action = function () {
+		}; // do nothing by default
+		if (options) {
+			if (typeof options.unregister === 'undefined' || options.unregister === null) {
 				logger.debug('const-EventRegistration - unregister was not defined');
-			} else if(typeof options.unregister === 'boolean'){
+			} else if (typeof options.unregister === 'boolean') {
 				this.unregister = options.unregister;
 			} else {
 				throw new Error('Event registration has invalid value for "unregister" option');
 			}
-			if(typeof options.disconnect === 'undefined' || options.disconnect === null) {
+			if (typeof options.disconnect === 'undefined' || options.disconnect === null) {
 				logger.debug('const-EventRegistration - disconnect was not defined');
-			} else if(typeof options.disconnect === 'boolean'){
+			} else if (typeof options.disconnect === 'boolean') {
 				this.disconnect = options.disconnect;
 			} else {
 				throw new Error('Event registration has invalid value for "disconnect" option');
 			}
 		}
 	}
-};
+}
