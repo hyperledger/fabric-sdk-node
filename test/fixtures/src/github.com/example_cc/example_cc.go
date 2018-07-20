@@ -87,8 +87,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.query(stub, args)
 	}
 
-	if function == "queryError" {
-		return t.queryError(stub, args)
+	if function == "throwError" {
+		return t.throwError(stub, args)
 	}
 
 	if function == "move" {
@@ -203,8 +203,8 @@ func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string)
 	return shim.Success(Avalbytes)
 }
 
-func (t *SimpleChaincode) queryError(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	err := fmt.Errorf("queryError: an error occurred")
+func (t *SimpleChaincode) throwError(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	err := fmt.Errorf("throwError: an error occurred")
 	return shim.Error(err.Error())
 }
 

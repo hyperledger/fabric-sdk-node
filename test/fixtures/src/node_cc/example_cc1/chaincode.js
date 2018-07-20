@@ -46,8 +46,8 @@ var Chaincode = class {
 			return this.query(stub, args);
 		}
 
-		if (fcn === 'queryError') {
-			return this.queryError(stub, args);
+		if (fcn === 'throwError') {
+			return this.throwError(stub, args);
 		}
 
 		if (fcn === 'move') {
@@ -160,8 +160,8 @@ var Chaincode = class {
 		return shim.success(Buffer.from(Aval.toString()));
 	}
 
-	async queryError(stub, args) {
-		return shim.error(new Error('queryError: an error occurred'));
+	async throwError(stub, args) {
+		return shim.error(new Error('throwError: an error occurred'));
 	}
 
 	async testTransient(stub) {

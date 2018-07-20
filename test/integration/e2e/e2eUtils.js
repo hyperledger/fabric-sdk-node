@@ -287,8 +287,8 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 							let success = false;
 							if (proposalResponses && proposalResponses.length > 0) {
 								proposalResponses.forEach((response) => {
-									if (response &&
-                    response.response.message.indexOf('Did not find expected key "test" in the transient map of the proposal')) {
+									if (response && response instanceof Error &&
+                    response.message.includes('Did not find expected key "test" in the transient map of the proposal')) {
 										success = true;
 									} else {
 										success = false;
@@ -577,28 +577,38 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 			for(let i in proposalResponses) {
 				let one_good = false;
 				let proposal_response = proposalResponses[i];
-				logger.debug('invoke chaincode, proposal response: ' + util.inspect(proposal_response, {depth: null}));
-				if( proposal_response.response && proposal_response.response.status === 200) {
-					t.pass('transaction proposal has response status of good');
-					one_good = channel.verifyProposalResponse(proposal_response);
-					if(one_good) {
-						t.pass('transaction proposal signature and endorser are valid');
-					}
 
-					// check payload
-					let payload = proposal_response.response.payload.toString();
-					// verify payload is equal to expectedResult
-					if (payload === expectedResult){
-						t.pass('transaction proposal payloads are valid');
-					} else {
-						one_good = false;
-						t.fail('transaction proposal payloads are invalid, expect ' + expectedResult + ', but got ' + payload);
-					}
+				if (expectedResult instanceof Error) {
+					t.true((proposal_response instanceof Error), 'proposal response should be an instance of error');
+					t.true(proposal_response.message.includes(expectedResult.message), 'error should contain the correct message: ' + expectedResult.message);
 				} else {
-					t.fail('invokeChaincode: transaction proposal was bad');
+					logger.debug('invoke chaincode, proposal response: ' + util.inspect(proposal_response, {depth: null}));
+					if( proposal_response.response && proposal_response.response.status === 200) {
+						t.pass('transaction proposal has response status of good');
+						one_good = channel.verifyProposalResponse(proposal_response);
+						if(one_good) {
+							t.pass('transaction proposal signature and endorser are valid');
+						}
+
+						// check payload
+						let payload = proposal_response.response.payload.toString();
+						// verify payload is equal to expectedResult
+						if (payload === expectedResult){
+							t.pass('transaction proposal payloads are valid');
+						} else {
+							one_good = false;
+							t.fail('transaction proposal payloads are invalid, expect ' + expectedResult + ', but got ' + payload);
+						}
+					} else {
+						t.fail('invokeChaincode: transaction proposal was bad');
+					}
+					all_good = all_good & one_good;
 				}
-				all_good = all_good & one_good;
 			}
+			if (expectedResult instanceof Error) {
+				return;
+			}
+
 			if (all_good) {
 			// check all the read/write sets to see if the same, verify that each peer
 			// got the same results on the proposal
@@ -679,6 +689,11 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 			throw new Error('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
 
 		}).then((response) => {
+			if (expectedResult instanceof Error) {
+				channel.close();
+				t.pass('Successfully closed all connections');
+				return true;
+			}
 
 			if (response.status === 'SUCCESS') {
 				t.pass('Successfully sent transaction to the orderer.');
