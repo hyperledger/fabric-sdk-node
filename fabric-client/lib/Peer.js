@@ -107,10 +107,18 @@ var Peer = class extends Remote {
 					} else {
 						if (proposalResponse) {
 							logger.debug('%s - Received proposal response from peer "%s": status - %s', method, self._url, proposalResponse.response.status);
-							resolve(proposalResponse);
+							// 400 is the error threshold level, anything below that the endorser will endorse it.
+							if (proposalResponse.response && proposalResponse.response.status < 400) {
+								resolve(proposalResponse);
+							} else if (proposalResponse.response && proposalResponse.response.message) {
+								reject(new Error(proposalResponse.response.message));
+							} else {
+								logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
+								reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
+							}
 						} else {
-							logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
-							reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
+							logger.error('GRPC client got a null or undefined response from the peer "%s".', self._url);
+							reject(new Error(util.format('GRPC client got a null or undefined response from the peer "%s".', self._url)));
 						}
 					}
 				});
