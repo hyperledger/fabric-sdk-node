@@ -151,17 +151,21 @@ const Client = class extends BaseClient {
 	/**
 	 * Utility method to add the mutual tls client material to a set of options.
 	 * If the tls client material has not been set for the client, it will be
-	 * generated if the user and crypto suite has been assigned to this client.
+	 * generated if the user has been assigned to this client. Note that it will
+	 * always use the default software cryptosuite, not the one assigned to the
+	 * client.
 	 * @param {object} opts - The options object holding the connection settings
 	 *        that will be updated with the mutual TLS clientCert and clientKey.
 	 * @throws Will throw an error if generating the tls client material fails
 	 */
 	addTlsClientCertAndKey(opts) {
 		if (!this._tls_mutual.clientCert || !this._tls_mutual.clientKey) {
-			if (this._cryptoSuite && this._userContext) {
+			if (this._userContext) {
 				logger.debug('addTlsClientCertAndKey - generating self-signed TLS client certificate');
 				// generate X509 cert pair
-				let key = this._cryptoSuite.generateEphemeralKey();
+				// use the default software cryptosuite, not the client assigned cryptosuite, which may be
+				// HSM, or the default has been set to HSM. FABN-830
+				const key = Client.newCryptoSuite({software: true}).generateEphemeralKey();
 				this._tls_mutual.clientKey = key.toBytes();
 				this._tls_mutual.clientCert = key.generateX509Certificate(this._userContext.getName());
 			}
