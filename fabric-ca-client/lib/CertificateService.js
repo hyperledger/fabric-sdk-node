@@ -6,6 +6,7 @@
 
 const querystring = require('querystring');
 const logger = require('./utils.js').getLogger('CertificateService');
+const checkRegistrar = require('./helper').checkRegistrar;
 
 class CertificateService {
 	constructor(client) {
@@ -46,6 +47,9 @@ class CertificateService {
 	 */
 	async getCertificates(request, registrar) {
 		logger.debug('getCertificates by %j', request);
+
+		checkRegistrar(registrar);
+
 		let url = 'certificates';
 		if (request) {
 			const query = {};
@@ -79,7 +83,7 @@ class CertificateService {
 			if(request.ca && typeof request.ca === 'string'){
 				query.ca = request.ca;
 			}
-			let qStr = querystring.stringify(query);
+			const qStr = querystring.stringify(query);
 			if(qStr) {
 				url += `?${qStr}`;
 			}

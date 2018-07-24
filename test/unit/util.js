@@ -10,7 +10,7 @@ const util = require('util');
 
 
 const Client = require('fabric-client');
-const copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
+const copService = require('fabric-ca-client/lib/FabricCAServices.js');
 const User = require('fabric-client/lib/User.js');
 const Constants = require('./constants.js');
 
@@ -263,9 +263,9 @@ module.exports.getSubmitter = function(client, test, peerOrgAdmin, org) {
 };
 
 module.exports.checkResults = function(results, error_snip, t) {
-	var proposalResponses = results[0];
-	for(var i in proposalResponses) {
-		let proposal_response = proposalResponses[i];
+	const proposalResponses = results[0];
+	for(const i in proposalResponses) {
+		const proposal_response = proposalResponses[i];
 		if(proposal_response instanceof Error) {
 			if(proposal_response.message.includes(error_snip)) {
 				t.pass('Successfully got the error' + error_snip);

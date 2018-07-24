@@ -17,11 +17,13 @@
 const rewire = require('rewire');
 const AffiliationService = require('../lib/AffiliationService');
 const AffiliationServiceRewire = rewire('../lib/AffiliationService');
-const FabricCAServices = require('../lib/FabricCAClientImpl');
-const FabricCAClient = FabricCAServices.FabricCAClient;
+const FabricCAClient =  require('../lib/FabricCAClient');
 const User = require('../lib/User');
 
-require('chai').should();
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
+
 const sinon = require('sinon');
 
 describe('AffiliationService', () => {

@@ -13,41 +13,40 @@
 // the fabric-ca-client package by editing build/tasks/ca.js
 /////////////////////////////////////////////////////////////////
 
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('integration.client');
+const utils = require('fabric-client/lib/utils.js');
+const logger = utils.getLogger('integration.client');
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var X509 = require('x509');
+const X509 = require('x509');
 
-var util = require('util');
-var fs = require('fs-extra');
-var path = require('path');
+const util = require('util');
+const fs = require('fs-extra');
+const path = require('path');
 const http = require('http');
 
-var testUtil = require('../unit/util.js');
+const testUtil = require('../unit/util.js');
 
-var LocalMSP = require('fabric-ca-client/lib/msp/msp.js');
-var idModule = require('fabric-ca-client/lib/msp/identity.js');
-var SigningIdentity = idModule.SigningIdentity;
-var Signer = idModule.Signer;
-var User = require('fabric-ca-client/lib/User.js');
+const LocalMSP = require('fabric-ca-client/lib/msp/msp.js');
+const idModule = require('fabric-ca-client/lib/msp/identity.js');
+const SigningIdentity = idModule.SigningIdentity;
+const Signer = idModule.Signer;
+const User = require('fabric-ca-client/lib/User.js');
 
 //var keyValStorePath = testUtil.KVS;
+const FabricCAServices = require('fabric-ca-client/lib/FabricCAServices');
+const FabricCAClient = require('fabric-ca-client/lib/FabricCAClient');
 
-var FabricCAServices = require('fabric-ca-client');
-var FabricCAClient = FabricCAServices.FabricCAClient;
+const enrollmentID = 'testUser';
+let enrollmentSecret;
+const csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabricca/enroll-csr.pem'));
 
-var enrollmentID = 'testUser';
-var enrollmentSecret;
-var csr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabricca/enroll-csr.pem'));
+const userOrg = 'org1';
+let ORGS, fabricCAEndpoint;
 
-var userOrg = 'org1';
-var ORGS, fabricCAEndpoint;
-
-var	tlsOptions = {
+const tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
@@ -58,7 +57,7 @@ var	tlsOptions = {
 
 //run the enroll test
 
-test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function (t) {
+test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 	testUtil.resetDefaults();
 	FabricCAServices.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 	ORGS = FabricCAServices.getConfigSetting('test-network');
@@ -67,9 +66,9 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 	FabricCAServices.getConfigSetting('crypto-keysize', '256');//force for gulp test
 	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2');//force for gulp test
 
-	var caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
+	const caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
 
-	var req = {
+	const req = {
 		enrollmentID: 'admin',
 		enrollmentSecret: 'adminpw'
 	};
@@ -81,7 +80,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 			eResult = enrollment;
 
 			//check that we got back the expected certificate
-			var subject;
+			let subject;
 			try {
 				subject = X509.getSubject(FabricCAServices.normalizeX509(enrollment.certificate));
 			} catch(err) {
@@ -98,7 +97,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 		}).then((pubKey) => {
 			t.pass('Successfully imported public key from the resulting enrollment certificate');
 
-			var msp = new LocalMSP({
+			const msp = new LocalMSP({
 				id: ORGS[userOrg].mspid,
 				cryptoSuite: caService.getCryptoSuite()
 			});
@@ -167,7 +166,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 			return caService.enroll({enrollmentID: 'testUserY', enrollmentSecret: secret});
 		}).then((enrollment) => {
 
-			var cert;
+			let cert;
 			try {
 				cert = X509.parseCert(FabricCAServices.normalizeX509(enrollment.certificate));
 			} catch(err) {
@@ -179,15 +178,15 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 			}
 
 			// convert the raw AKI string in the form of 'keyid:HX:HX....' (HX represents a hex-encoded byte) to a hex string
-			var akiString = cert.extensions.authorityKeyIdentifier;
-			var arr = akiString.split(':');
+			const akiString = cert.extensions.authorityKeyIdentifier;
+			const arr = akiString.split(':');
 			if (arr[0] !== 'keyid') {
 				t.fail(util.format('Found an Autheority Key Identifier we do not understand: first segment is not "keyid": %s', akiString));
 			}
 
 			arr.shift(); // remove the 'keyid'
-			var aki = arr.join('');
-			var serial = cert.serial;
+			const aki = arr.join('');
+			const serial = cert.serial;
 
 			t.comment(util.format('Ready to revoke certificate serial # "%s" with aki "%s"', serial, aki));
 
@@ -342,12 +341,12 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', function
 });
 
 function checkoutCertForAttributes(t, pem, should_find, attr_name) {
-	let cert = X509.parseCert(pem);
+	const cert = X509.parseCert(pem);
 	let found = false;
 	if(cert && cert.extensions && cert.extensions['1.2.3.4.5.6.7.8.1']) {
-		let attr_string = cert.extensions['1.2.3.4.5.6.7.8.1'];
-		let attr_object = JSON.parse(attr_string);
-		let attrs = attr_object.attrs;
+		const attr_string = cert.extensions['1.2.3.4.5.6.7.8.1'];
+		const attr_object = JSON.parse(attr_string);
+		const attrs = attr_object.attrs;
 		if(attrs && attrs[attr_name]) {
 			logger.debug(' Found attribute %s with value of %s',attr_name, attrs[attr_name]);
 			found = true;
@@ -369,9 +368,9 @@ function checkoutCertForAttributes(t, pem, should_find, attr_name) {
 	}
 }
 
-test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', function (t) {
-	var endpoint = FabricCAServices._parseURL(fabricCAEndpoint);
-	var client = new FabricCAClient({
+test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', (t) => {
+	const endpoint = FabricCAServices._parseURL(fabricCAEndpoint);
+	const client = new FabricCAClient({
 		protocol: endpoint.protocol,
 		hostname: endpoint.hostname,
 		port: endpoint.port,
@@ -380,10 +379,10 @@ test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', function (t) 
 	});
 
 	return client.enroll(enrollmentID, enrollmentSecret, csr.toString())
-		.then(function (enrollResponse) {
+		.then((enrollResponse) => {
 			t.pass('Successfully invoked enroll API with enrollmentID \'' + enrollmentID + '\'');
 			//check that we got back the expected certificate
-			var subject;
+			let subject;
 			try {
 				subject = X509.getSubject(FabricCAServices.normalizeX509(enrollResponse.enrollmentCert));
 			} catch(err) {
@@ -392,7 +391,7 @@ test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', function (t) 
 			t.equal(subject.commonName, enrollmentID, 'Subject should be /CN=' + enrollmentID);
 			t.end();
 		})
-		.catch(function (err) {
+		.catch((err) => {
 			t.fail('Failed to enroll \'' + enrollmentID + '\'.  ' + err);
 			t.end();
 		});

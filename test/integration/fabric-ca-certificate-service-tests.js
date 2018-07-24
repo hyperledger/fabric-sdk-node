@@ -8,7 +8,7 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 const path = require('path');
-const FabricCAServices = require('../../fabric-ca-client');
+const FabricCAServices = require('../../fabric-ca-client/lib/FabricCAServices');
 const User = require('../../fabric-ca-client/lib/User');
 const { HFCAIdentityAttributes, HFCAIdentityType } = require('../../fabric-ca-client/lib/IdentityService');
 

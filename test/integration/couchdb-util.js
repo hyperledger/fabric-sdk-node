@@ -11,7 +11,7 @@ var Cloudant = require('@cloudant/cloudant');
 module.exports.getCloudantClient = function() {
 	var username = Client.getConfigSetting('cloudant-username', 'notfound');
 	var password = Client.getConfigSetting('cloudant-password', 'notfound');
-	//console.log('CloudantClient username = ' + username + ', password: ' + password);
+
 	return Cloudant({account: username, password: password});
 };
 

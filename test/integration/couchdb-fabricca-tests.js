@@ -15,7 +15,7 @@ var path = require('path');
 var Client = require('fabric-client');
 
 var User = require('fabric-client/lib/User.js');
-var FabricCAServices = require('fabric-ca-client/lib/FabricCAClientImpl');
+var FabricCAServices = require('fabric-ca-client/lib/FabricCAServices');
 var testUtil = require('../unit/util.js');
 
 var couchdbUtil = require('./couchdb-util.js');
