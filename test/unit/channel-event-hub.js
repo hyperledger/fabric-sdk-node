@@ -6,30 +6,30 @@
 
 'use strict';
 
-var Long = require('long');
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const Long = require('long');
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var testutil = require('./util.js');
-var User = require('fabric-client/lib/User.js');
-var utils = require('fabric-client/lib/utils.js');
-var test_user = require('./user.js');
+const testutil = require('./util.js');
+const User = require('fabric-client/lib/User.js');
+const utils = require('fabric-client/lib/utils.js');
+const test_user = require('./user.js');
 
-var Client = require('fabric-client');
-var Peer = require('fabric-client/lib/Peer.js');
-var ChannelEventHub = require('fabric-client/lib/ChannelEventHub.js');
-var sdkUtils = require('fabric-client/lib/utils.js');
+const Client = require('fabric-client');
+const Peer = require('fabric-client/lib/Peer.js');
+const ChannelEventHub = require('fabric-client/lib/ChannelEventHub.js');
+const sdkUtils = require('fabric-client/lib/utils.js');
 
-var rewire = require('rewire');
-var RewiredChannelEventHub = rewire('fabric-client/lib/ChannelEventHub.js');
+const rewire = require('rewire');
+const RewiredChannelEventHub = rewire('fabric-client/lib/ChannelEventHub.js');
 
 test('\n\n** ChannelEventHub tests\n\n', (t) => {
 	testutil.resetDefaults();
 
-	let client = new Client();
-	let channel = client.newChannel('mychannel');
-	let peer = client.newPeer('grpc://somehost.com:8888');
+	const client = new Client();
+	const channel = client.newChannel('mychannel');
+	const peer = client.newPeer('grpc://somehost.com:8888');
 
 	let eh;
 
@@ -224,12 +224,12 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 });
 
 test('\n\n** ChannelEventHub block callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
-	var index = eh.registerBlockEvent(() => {
+	let index = eh.registerBlockEvent(() => {
 		t.fail('Should not have called success callback when disconnect() is called');
 		t.end();
 	}, () =>{
@@ -253,12 +253,12 @@ test('\n\n** ChannelEventHub block callback \n\n', (t) => {
 });
 
 test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
-	var index = eh.registerBlockEvent(() => {
+	let index = eh.registerBlockEvent(() => {
 		t.fail('Should not have called success callback');
 		t.end();
 	}, () =>{
@@ -276,7 +276,7 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 			t.fail('Should not have called error callback');
 			t.end();
 		},
-			{startBlock: 1}
+		{startBlock: 1}
 		);
 		t.fail('Failed if the block event with a replay is registered after another block event');
 	} catch(error) {
@@ -297,7 +297,7 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 			t.fail('Should not have called error callback');
 			t.end();
 		},
-			{startBlock: 1}
+		{startBlock: 1}
 		);
 		t.pass('Successfully registered a playback block event');
 	} catch(error) {
@@ -311,10 +311,10 @@ test('\n\n** ChannelEventHub block callback with replay \n\n', (t) => {
 });
 
 test('\n\n** ChannelEventHub transaction callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
 	eh.registerTxEvent('txid1', () => {
 		// empty method body
@@ -352,9 +352,9 @@ test('\n\n** ChannelEventHub transaction callback \n\n', (t) => {
 });
 
 test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
 	let eh = channel.newChannelEventHub(peer);
 	eh._force_reconnect = false;
 
@@ -375,7 +375,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 			t.fail('Should not have called error callback');
 			t.end();
 		},
-			{startBlock: 1, endBlock: 2}
+		{startBlock: 1, endBlock: 2}
 		);
 		t.fail('Failed if the transaction event with a replay is registered after another transaction event');
 	} catch(error) {
@@ -396,7 +396,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 			t.fail('Should not have called error callback');
 			t.end();
 		},
-			{startBlock: 1, endBlock: 2}
+		{startBlock: 1, endBlock: 2}
 		);
 		t.pass('Successfully registered a playback transaction event');
 	} catch(error) {
@@ -419,7 +419,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 				t.fail('Should not have called error callback');
 				t.end();
 			},
-				{startBlock: 2, endBlock: 1}
+			{startBlock: 2, endBlock: 1}
 			);
 		},
 		/must not be larger than/,
@@ -430,10 +430,10 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 });
 
 test('\n\n** ChannelEventHub chaincode callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
 	eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
 		t.fail('Should not have called success callback');
@@ -469,13 +469,13 @@ test('\n\n** ChannelEventHub chaincode callback \n\n', (t) => {
 
 
 test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 	eh._force_reconnect = false;
 
-	let handle = eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
+	const handle = eh.registerChaincodeEvent('ccid1', 'eventfilter', () => {
 		t.fail('Should not have called success callback');
 		t.end();
 	}, () =>{
@@ -492,7 +492,7 @@ test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
 			t.fail('Should not have called error callback');
 			t.end();
 		},
-			{startBlock: 1}
+		{startBlock: 1}
 		);
 		t.fail('Failed if the chaincode event with a replay is registered after another chaincode event');
 	} catch(error) {
@@ -513,7 +513,7 @@ test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
 			t.fail('Should not have called error callback');
 			t.end();
 		},
-			{startBlock: 1}
+		{startBlock: 1}
 		);
 		t.pass('Successfully registered a playback chaincode event');
 	} catch(error) {
@@ -527,10 +527,10 @@ test('\n\n** ChannelEventHub chaincode callback with replay \n\n', (t) => {
 
 
 test('\n\n** ChannelEventHub block callback no Error callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
 	eh.registerBlockEvent(() => {
 		t.fail('Should not have called block no error success callback');
@@ -542,10 +542,10 @@ test('\n\n** ChannelEventHub block callback no Error callback \n\n', (t) => {
 });
 
 test('\n\n** ChannelEventHub transaction callback no Error callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
 	eh.registerTxEvent('txid', () => {
 		t.fail('Should not have called transaction no error success callback');
@@ -557,10 +557,10 @@ test('\n\n** ChannelEventHub transaction callback no Error callback \n\n', (t) =
 });
 
 test('\n\n** ChannelEventHub chaincode callback no Error callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
 	eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
 		t.fail('Should not have called chaincode no error success callback');
@@ -572,20 +572,20 @@ test('\n\n** ChannelEventHub chaincode callback no Error callback \n\n', (t) => 
 });
 
 test('\n\n** ChannelEventHub remove block callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
-	var blockcallback = () => {
+	const blockcallback = () => {
 		t.fail('Should not have called block success callback (on remove)');
 		t.end();
 	};
-	var blockerrorcallback = () =>{
+	const blockerrorcallback = () =>{
 		t.fail('Should not have called block error callback (on remove)');
 		t.end();
 	};
-	var brn = eh.registerBlockEvent( blockcallback, blockerrorcallback);
+	const brn = eh.registerBlockEvent( blockcallback, blockerrorcallback);
 	t.pass('successfully registered block callbacks');
 	eh.unregisterBlockEvent(brn);
 	t.equal(Object.keys(eh._blockRegistrations).length, 0, 'Check the size of the blockOnEvents hash table');
@@ -596,12 +596,12 @@ test('\n\n** ChannelEventHub remove block callback \n\n', (t) => {
 });
 
 test('\n\n** ChannelEventHub remove transaction callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
-	var txid = 'txid';
+	const txid = 'txid';
 	eh.registerTxEvent(txid, () => {
 		t.fail('Should not have called transaction success callback (on remove)');
 		t.end();
@@ -619,12 +619,12 @@ test('\n\n** ChannelEventHub remove transaction callback \n\n', (t) => {
 });
 
 test('\n\n** ChannelEventHub remove chaincode callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
-	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
+	const cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
 		t.fail('Should not have called chaincode success callback (on remove)');
 		t.end();
 	}, () =>{
@@ -643,16 +643,16 @@ test('\n\n** ChannelEventHub remove chaincode callback \n\n', (t) => {
 
 
 test('\n\n** ChannelEventHub remove block callback no Error callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
-	var blockcallback = () => {
+	const blockcallback = () => {
 		t.fail('Should not have called block success callback (remove with no error callback)');
 		t.end();
 	};
-	var brn = eh.registerBlockEvent( blockcallback);
+	const brn = eh.registerBlockEvent( blockcallback);
 	t.pass('successfully registered block callbacks');
 	eh.unregisterBlockEvent(brn);
 	t.pass('successfuly unregistered block callback');
@@ -662,12 +662,12 @@ test('\n\n** ChannelEventHub remove block callback no Error callback \n\n', (t) 
 });
 
 test('\n\n** ChannelEventHub remove transaction callback no Error callback\n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
-	var txid = 'txid';
+	const txid = 'txid';
 	eh.registerTxEvent(txid, () => {
 		t.fail('Should not have called transaction success callback (remove with no error callback)');
 		t.end();
@@ -681,12 +681,12 @@ test('\n\n** ChannelEventHub remove transaction callback no Error callback\n\n',
 });
 
 test('\n\n** ChannelEventHub remove chaincode callback no Error callback \n\n', (t) => {
-	let client = new Client();
-	let peer = new Peer('grpc://127.0.0.1:7051');
-	let channel = client.newChannel('mychannel');
-	let eh = channel.newChannelEventHub(peer);
+	const client = new Client();
+	const peer = new Peer('grpc://127.0.0.1:7051');
+	const channel = client.newChannel('mychannel');
+	const eh = channel.newChannelEventHub(peer);
 
-	var cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
+	const cbe = eh.registerChaincodeEvent('ccid', 'eventfilter', () => {
 		t.fail('Should not have called chaincode success callback (remove with no error callback)');
 		t.end();
 	});
@@ -699,13 +699,13 @@ test('\n\n** ChannelEventHub remove chaincode callback no Error callback \n\n', 
 });
 
 test('\n\n** Test the add and remove utilty used by the ChannelEventHub to add a setting to the options \n\n', (t) => {
-	var only_options = sdkUtils.checkAndAddConfigSetting('opt1', 'default1', null);
+	const only_options = sdkUtils.checkAndAddConfigSetting('opt1', 'default1', null);
 	t.equals(only_options['opt1'], 'default1', 'Checking that new options has the setting with the incoming value and options are null');
 
-	var options = { opt1 : 'incoming1', opt4 : 'incoming4'};
+	const options = { opt1 : 'incoming1', opt4 : 'incoming4'};
 
 	// case where incoming options does have the setting
-	var updated_options = sdkUtils.checkAndAddConfigSetting('opt1', 'default1', options);
+	let updated_options = sdkUtils.checkAndAddConfigSetting('opt1', 'default1', options);
 	// case where incoming options does not have setting and config does not
 	updated_options = sdkUtils.checkAndAddConfigSetting('opt2', 'default2', updated_options);
 	// case where incoming options does not have setting and config does
@@ -722,113 +722,112 @@ test('\n\n** Test the add and remove utilty used by the ChannelEventHub to add a
 });
 
 test('\n\n** ChannelEventHub test connect failure on transaction registration \n\n', (t) => {
-	var client = new Client();
-	var channel = client.newChannel('mychannel');
-	let peer = new Peer('grpc://127.0.0.1:9999');
-	var event_hub = null;
-	var member = new User('user1');
-	var crypto_suite = utils.newCryptoSuite();
+	const client = new Client();
+	const channel = client.newChannel('mychannel');
+	const peer = new Peer('grpc://127.0.0.1:9999');
+	let event_hub = null;
+	const member = new User('user1');
+	const crypto_suite = utils.newCryptoSuite();
 	crypto_suite.setCryptoKeyStore(utils.newCryptoKeyStore());
 	member.setCryptoSuite(crypto_suite);
 	crypto_suite.generateKey()
-	.then(function (key) {
-		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
-	}).then(() => {
-		client.setUserContext(member, true);
+		.then((key) => {
+			return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
+		}).then(() => {
+			client.setUserContext(member, true);
 
-		// tx test
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.registerTxEvent('123',
-			() => {
-				t.fail('Failed callback should not have been called - tx test 2');
-				t.end();
-			},
-			(error) => {
-				if(error.toString().indexOf('Connect Failed')) {
-					t.pass('Successfully got the error call back tx test 2 ::'+error);
-				} else {
-					t.failed('Failed to get connection failed error tx test 2 ::'+error);
+			// tx test
+			event_hub = channel.newChannelEventHub(peer);
+			event_hub.registerTxEvent('123',
+				() => {
+					t.fail('Failed callback should not have been called - tx test 2');
+					t.end();
+				},
+				(error) => {
+					if(error.toString().indexOf('Connect Failed')) {
+						t.pass('Successfully got the error call back tx test 2 ::'+error);
+					} else {
+						t.failed('Failed to get connection failed error tx test 2 ::'+error);
+					}
+					t.end();
 				}
-				t.end();
-			}
-		);
+			);
 
-		event_hub.connect();
+			event_hub.connect();
 
-		return true;
-	}).then(() => {
-		t.pass('#2 call back tx test complete ');
+			return true;
+		}).then(() => {
+			t.pass('#2 call back tx test complete ');
 		// eventhub is now actually not connected
-	}).catch((err) => {
-		t.fail(err.stack ? err.stack : err);
-		t.end();
-	});
+		}).catch((err) => {
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		});
 });
 
 test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
-	var client = new Client();
-	var channel = client.newChannel('mychannel');
-	let peer = new Peer('grpc://127.0.0.1:9999');
-	var event_hub = null;
-	var member = new User('user1');
-	var crypto_suite = utils.newCryptoSuite();
+	const client = new Client();
+	const channel = client.newChannel('mychannel');
+	const peer = new Peer('grpc://127.0.0.1:9999');
+	let event_hub = null;
+	const member = new User('user1');
+	const crypto_suite = utils.newCryptoSuite();
 	crypto_suite.setCryptoKeyStore(utils.newCryptoKeyStore());
 	member.setCryptoSuite(crypto_suite);
 	crypto_suite.generateKey()
-	.then(function (key) {
-		return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
-	}).then(() => {
-		client.setUserContext(member, true);
+		.then((key) => {
+			return member.setEnrollment(key, test_user.TEST_CERT_PEM, 'DEFAULT');
+		}).then(() => {
+			client.setUserContext(member, true);
 
-		event_hub = channel.newChannelEventHub(peer);
-		t.doesNotThrow(
-			() => {
-				event_hub.registerBlockEvent(() => {
-					t.fail('Failed callback should not have been called - block test 1');
-				});
-			},
-			null,
-			'Check for The event hub has not been connected to the event source - block test 1'
-		);
+			event_hub = channel.newChannelEventHub(peer);
+			t.doesNotThrow(
+				() => {
+					event_hub.registerBlockEvent(() => {
+						t.fail('Failed callback should not have been called - block test 1');
+					});
+				},
+				'Check for The event hub has not been connected to the event source - block test 1'
+			);
 
-		event_hub = channel.newChannelEventHub(peer);
-		event_hub.registerBlockEvent(
-			() => {
-				t.fail('Failed callback should not have been called - block test 3');
-				t.end();
-			},
-			(error) =>{
-				if(error.toString().indexOf('Connect Failed')) {
-					t.pass('Successfully got the error call back block test 3 ::'+error);
-				} else {
-					t.failed('Failed to get connection failed error block test 3 ::'+error);
+			event_hub = channel.newChannelEventHub(peer);
+			event_hub.registerBlockEvent(
+				() => {
+					t.fail('Failed callback should not have been called - block test 3');
+					t.end();
+				},
+				(error) =>{
+					if(error.toString().indexOf('Connect Failed')) {
+						t.pass('Successfully got the error call back block test 3 ::'+error);
+					} else {
+						t.failed('Failed to get connection failed error block test 3 ::'+error);
+					}
+					t.end();
 				}
-				t.end();
-			}
-		);
+			);
 
-		let state = event_hub.checkConnection();
-		t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
+			let state = event_hub.checkConnection();
+			t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
 
-		// force the connections
-		// runs asynchronously, must be an error callback registered to get the
-		// failure will be reported to an error callback
-		state = event_hub.checkConnection(true);
-		t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
+			// force the connections
+			// runs asynchronously, must be an error callback registered to get the
+			// failure will be reported to an error callback
+			state = event_hub.checkConnection(true);
+			t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
 
-		return true;
-	}).then(() => {
-		t.pass('#3 callback block test complete');
+			return true;
+		}).then(() => {
+			t.pass('#3 callback block test complete');
 		// t.end() should come from the callback
-	}).catch((err) => {
-		t.fail(err.stack ? err.stack : err);
-		t.end();
-	});
+		}).catch((err) => {
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		});
 
 });
 
 test('\n\n** Test the state conversion\n\n', (t) => {
-	var getStateText = RewiredChannelEventHub.__get__('getStateText');
+	const getStateText = RewiredChannelEventHub.__get__('getStateText');
 
 	t.equals(getStateText(0), 'IDLE', 'Checking that 0 state');
 	t.equals(getStateText(1), 'CONNECTING', 'Checking that 1 state');

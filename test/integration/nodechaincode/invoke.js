@@ -23,7 +23,7 @@ test('\n\n***** Node-Chaincode End-to-end flow: invoke transaction to move money
 		let result = await e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/, fcn, args, expectedResult);
 		if(result){
 			t.pass('Successfully invoke transaction chaincode on channel');
-			await sleep(5000);
+			await testUtils.sleep(5000);
 		}
 		else {
 			t.fail('Failed to invoke transaction chaincode ');
@@ -47,7 +47,3 @@ test('\n\n***** Node-Chaincode End-to-end flow: invoke transaction to move money
 	}
 	t.end();
 });
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}

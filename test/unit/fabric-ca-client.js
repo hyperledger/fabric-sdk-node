@@ -64,7 +64,6 @@ test('FabricCAClient: Test constructor', (t) => {
 		() => {
 			new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'HTTP is a valid protocol'
 	);
 
@@ -74,7 +73,6 @@ test('FabricCAClient: Test constructor', (t) => {
 		() => {
 			new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options. Protocol must be set to 'http' or 'https'/,
 		'HTTPS is a valid protocol'
 	);
 
@@ -94,7 +92,6 @@ test('FabricCAClient: Test constructor', (t) => {
 		() => {
 			new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options. Port must be an integer/,
 		'Should not throw error if port is not set'
 	);
 
@@ -104,7 +101,6 @@ test('FabricCAClient: Test constructor', (t) => {
 		() => {
 			new FabricCAClient(connectOpts);
 		},
-		/Invalid connection options. Port must be an integer/,
 		'Throw error for invalid port'
 	);
 
@@ -159,7 +155,6 @@ test('FabricCAClient: Test constructor', (t) => {
 			() => {
 				client = new FabricCAClient(connectOpts);
 			},
-			/Invalid connection options. /,
 			'Add tlsOptions to client connect_opts -- non default values'
 		);
 		t.false(client._tlsOptions.verify, 'Check specified tlsOptions.verify');
@@ -269,7 +264,6 @@ test('FabricCAServices:  Test optional constructor', (t) => {
 		() => {
 			new FabricCAServices(opts);
 		},
-		null,
 		'FabricCAServices constructor with object and just url'
 	);
 
@@ -280,7 +274,6 @@ test('FabricCAServices:  Test optional constructor', (t) => {
 			t.equals(service._fabricCAClient._caName, 'someca', 'Caname should have been passed correctly');
 			t.equals(service.getCaName(), 'someca', 'checket getter method for caname');
 		},
-		null,
 		'FabricCAServices constructor with object and just url'
 	);
 
@@ -290,7 +283,6 @@ test('FabricCAServices:  Test optional constructor', (t) => {
 			const service = new FabricCAServices(opts);
 			t.equals(service._fabricCAClient._cryptoPrimitives, 'somesuite', 'CryptoSuite should have been passed correctly');
 		},
-		null,
 		'FabricCAServices constructor with object and just url'
 	);
 
@@ -300,7 +292,6 @@ test('FabricCAServices:  Test optional constructor', (t) => {
 			const service = new FabricCAServices(opts);
 			t.equals(service._fabricCAClient._tlsOptions.verify, 'someverify', 'tlsOptions should have been passed correctly');
 		},
-		null,
 		'FabricCAServices constructor with object and just url'
 	);
 
@@ -518,7 +509,6 @@ test('FabricCAServices: Test revoke() function', (t) => {
 					t.end();
 				});
 		},
-		null,
 		'Test invalid "signingIdentity"'
 	);
 });
@@ -670,7 +660,6 @@ test('FabricCAServices: Test reenroll() function', (t) => {
 		() => {
 			getSubjectCommonName(VALID_CERT);
 		},
-		null,
 		'Must not throw error when target certificate is valid and contains a common name'
 	);
 
@@ -691,7 +680,6 @@ test('FabricCAServices: Test reenroll() function', (t) => {
 					t.fail(err);
 			});
 		},
-		null,
 		'Must not throw error when current user is valid'
 	);
 

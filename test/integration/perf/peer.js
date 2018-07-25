@@ -4,35 +4,35 @@
 # SPDX-License-Identifier: Apache-2.0
 */
 'use strict';
-var utils = require('fabric-client/lib/utils.js');
-var clientUtils = require('fabric-client/lib/client-utils.js');
-var logger = utils.getLogger('performance testing');
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const utils = require('fabric-client/lib/utils.js');
+const clientUtils = require('fabric-client/lib/client-utils.js');
+const logger = utils.getLogger('performance testing');
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var util = require('util');
-var fs = require('fs');
-var path = require('path');
-var grpc = require('grpc');
-var e2eUtils = require('../e2e/e2eUtils.js');
+const util = require('util');
+const fs = require('fs');
+const path = require('path');
+const grpc = require('grpc');
+const e2eUtils = require('../e2e/e2eUtils.js');
 
-var Client = require('fabric-client');
+const Client = require('fabric-client');
 
-var testUtil = require('../../unit/util.js');
-var ORGS;
+const testUtil = require('../../unit/util.js');
+let ORGS;
 
-var commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
-var ccProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/peer/chaincode.proto')).protos;
+const commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
+const ccProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/peer/chaincode.proto')).protos;
 
-var client = new Client();
-var org = 'org1';
-var total = 1000;
-var proposals = [];
+const client = new Client();
+const org = 'org1';
+const total = 1000;
+const proposals = [];
 
-var DESC = '\n\n** gRPC peer client low-level API performance **';
+const DESC = '\n\n** gRPC peer client low-level API performance **';
 
-test(DESC, function(t) {
+test(DESC, (t) => {
 	perfTest3(t);
 	t.end();
 });
@@ -42,20 +42,20 @@ async function perfTest3(t) {
 	Client.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
 	Client.addConfigFile(path.join(__dirname, '../e2e', 'config.json'));
 	ORGS = Client.getConfigSetting('test-network');
-	let orgName = ORGS[org].name;
+	const orgName = ORGS[org].name;
 
-	let cryptoSuite = Client.newCryptoSuite();
+	const cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
-	var caRootsPath = ORGS[org].peer1.tls_cacerts;
-	let data = fs.readFileSync(path.join(__dirname, '../e2e', caRootsPath));
-	let caroots = Buffer.from(data).toString();
+	const caRootsPath = ORGS[org].peer1.tls_cacerts;
+	const data = fs.readFileSync(path.join(__dirname, '../e2e', caRootsPath));
+	const caroots = Buffer.from(data).toString();
 
-	let tlsInfo = await e2eUtils.tlsEnroll(org);
+	const tlsInfo = await e2eUtils.tlsEnroll(org);
 	client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 
-	let peer = client.newPeer(
+	const peer = client.newPeer(
 		ORGS[org].peer1.requests,
 		{
 			'pem': caroots,
@@ -64,26 +64,26 @@ async function perfTest3(t) {
 		}
 	);
 
-	var start;
-	var start2;
-	var endorser = peer._endorserClient;
+	let start;
+	let start2;
+	const endorser = peer._endorserClient;
 
-	var promise = function(user) {
+	const promise = function(user) {
 		for(let i=0; i<total; i++) {
-			let proposal = makeProposal(user, client);
+			const proposal = makeProposal(user, client);
 			proposals.push(proposal);
 		}
 		start = Date.now();
-		let count = 0;
+		const count = 0;
 		return new Promise((resolve, reject) => {
 			// eslint-disable-next-line no-constant-condition
 			while(true) {
-				let proposal = proposals.pop();
+				const proposal = proposals.pop();
 				if(!proposal){
 					logger.debug(' sendind proposals is complete');
 					break;
 				}
-				endorser.processProposal(proposal, function(err, proposalResponse) {
+				endorser.processProposal(proposal, (err, proposalResponse) => {
 					if (err) {
 						reject(err);
 					} else {
@@ -101,25 +101,25 @@ async function perfTest3(t) {
 		});
 	};
 
-	var user;
+	let user;
 	return Client.newDefaultKeyValueStore({
 		path: testUtil.KVS
 	}).then((store) => {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, org);
 	}).then(
-		function(admin) {
+		(admin) => {
 			user = admin;
 			start2 = Date.now();
 			promise(user);
 		},
-		function(err) {
+		(err) => {
 			t.fail('Failed to enroll user \'admin\'. ' + err);
 		}
 	).then(
-		function() {
-			let end = Date.now();
-			let end2 = Date.now();
+		() => {
+			const end = Date.now();
+			const end2 = Date.now();
 			t.pass(util.format(
 				'Completed sending %s "INVOKE" requests to peer and chaincode :: ',
 				total));
@@ -134,25 +134,25 @@ async function perfTest3(t) {
 
 			t.end();
 		},
-		function(err) {
+		(err) => {
 			t.comment(util.format('Error: %j', err));
 			t.fail(util.format('Failed to submit a valid dummy request to peer. Error code: %j', err.stack ? err.stack : err));
 			t.end();
 		}
-	).catch(function(err) {
+	).catch((err) => {
 		t.fail('Failed request. ' + err);
 		t.end();
 	});
 }
 
 function makeProposal(signer, client) {
-	let tx_id = client.newTransactionID();
-	let args = ['query', 'a'];
-	let arg_bytes = [];
+	const tx_id = client.newTransactionID();
+	const args = ['query', 'a'];
+	const arg_bytes = [];
 	for(let i=0; i<args.length; i++) {
 		arg_bytes.push(Buffer.from(args[i], 'utf8'));
 	}
-	let invokeSpec = {
+	const invokeSpec = {
 		type: ccProto.ChaincodeSpec.Type.GOLANG,
 		chaincode_id: {
 			name: testUtil.END2END.chaincodeId
@@ -162,16 +162,16 @@ function makeProposal(signer, client) {
 		}
 	};
 
-	var channelHeader = clientUtils.buildChannelHeader(
+	const channelHeader = clientUtils.buildChannelHeader(
 		commonProto.HeaderType.ENDORSER_TRANSACTION,
 		testUtil.END2END.channel,
 		tx_id.getTransactionID(),
 		null,
 		testUtil.END2END.chaincodeId
 	);
-	let header = clientUtils.buildHeader(signer.getIdentity(), channelHeader, tx_id.getNonce());
-	let proposal = clientUtils.buildProposal(invokeSpec, header);
-	let signed_proposal = clientUtils.signProposal(signer.getSigningIdentity(), proposal);
+	const header = clientUtils.buildHeader(signer.getIdentity(), channelHeader, tx_id.getNonce());
+	const proposal = clientUtils.buildProposal(invokeSpec, header);
+	const signed_proposal = clientUtils.signProposal(signer.getSigningIdentity(), proposal);
 
 	return signed_proposal;
 }

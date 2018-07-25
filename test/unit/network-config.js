@@ -41,7 +41,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals(myOpts.clientCert, 'client cert', 'Checking that client cert was added');
 			t.equals(myOpts.clientKey, 'client key', 'Checking that client key was added');
 		},
-		null,
 		'Checking that able to call xxxTlsClientCertAndKey methods without error'
 	);
 
@@ -70,7 +69,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		() => {
 			Client.loadFromConfig('test/fixtures/network.json');
 		},
-		null,
 		'Should be able to instantiate a new instance of "Client" with a valid path to the configuration'
 	);
 
@@ -80,7 +78,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.newChannel('mychannel2');
 			client.loadFromConfig('test/fixtures/network.json');
 		},
-		null,
 		'1 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
 	);
 
@@ -168,7 +165,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 				t.fail('Failed to get the certificate_authority');
 			}
 		},
-		null,
 		'2 Should be able to run a number of test without error'
 	);
 
@@ -194,7 +190,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals(channel.getPeers()[0].getUrl(),'grpcs://localhost:7051',' check to see that the peer has been added to the channel');
 			t.equals(channel.getPeers()[1].getUrl(),'grpcs://localhost:8051',' check to see that the peer has been added to the channel');
 		},
-		null,
 		'3 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
 	);
 
@@ -206,7 +201,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client._network_config = new NetworkConfig(network_config, client);
 			client.newChannel('mychannel');
 		},
-		null,
 		'Should be able to instantiate a new instance of "Channel" with blank definition in the network configuration'
 	);
 
@@ -219,7 +213,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setCryptoSuite({cryptoSuite : 'cryptoSuite'});
 			client.getCertificateAuthority();
 		},
-		/Network configuration is missing this client\'s organization and certificate authority/,
+		/Network configuration is missing this client's organization and certificate authority/,
 		'Check for Network configuration is missing this client\'s organization and certificate authority'
 	);
 
@@ -238,7 +232,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			const channel = client.newChannel('mychannel');
 			t.equals('mychannel',channel.getName(),'Channel should be named');
 		},
-		null,
 		'Should be able to instantiate a new instance of "Channel" with an empty channel definition in the network configuration'
 	);
 
@@ -270,7 +263,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			else t.fail('Failed to get an orderer');
 			t.equals('orderer0', orderer.getName(), 'Orderer should be named');
 		},
-		null,
 		'Should be able to instantiate a new instance of "Channel" with only orderer definition in the network configuration'
 	);
 
@@ -300,7 +292,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			if(orderer instanceof Orderer) t.pass('Successfully got an orderer');
 			else t.fail('Failed to get an orderer');
 		},
-		null,
 		'Should be able to instantiate a new instance of "Channel" with org that does not exist in the network configuration'
 	);
 
@@ -330,7 +321,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			if(orderer instanceof Orderer) t.pass('Successfully got an orderer');
 			else t.fail('Failed to get an orderer');
 		},
-		null,
 		'Should be able to instantiate a new instance of "Channel" with a peer in the org that does not exist in the network configuration'
 	);
 
@@ -392,7 +382,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			if(peer && peer.constructor && peer.constructor.name === 'ChannelPeer') t.pass('Successfully got a channel peer');
 			else t.fail('Failed to get a channel peer');
 		},
-		null,
 		'Should be able to instantiate a new instance of "Channel" with orderer, org and peer defined in the network configuration'
 	);
 
@@ -430,7 +419,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			else t.fail('targets does not have a peer');
 
 		},
-		null,
 		'Should be able to get targets for peer'
 	);
 
@@ -441,7 +429,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			const targets = client.getTargetPeers(null, client);
 			t.equals(null, targets, 'targets should be null when request targets is null');
 		},
-		null,
 		'Should return null targets when checking a null request target'
 	);
 
@@ -472,7 +459,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			const targets = client.getTargetPeers([], client);
 			t.equals(null, targets, 'targets should be null when list is empty');
 		},
-		null,
 		'Should get a null when the target list is empty'
 	);
 
@@ -503,7 +489,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals(client_config.credentialStore.cryptoStore.dbsetting, 'relative/something','client config cryptoStore store path should be something');
 
 		},
-		null,
 		'Should not get an error when working with credentialStore settings'
 	);
 
@@ -531,7 +516,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			ca = organization.getCertificateAuthorities()[0];
 			t.equals('ca1',ca.getName(),'check the ca name');
 		},
-		null,
 		'Should be able to get organizations'
 	);
 
@@ -566,7 +550,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			checkTarget(channel._getTargetForQuery(), '9999', 'finding a default ledger query without networkconfig', t);
 			checkTarget(channel._getTargets(undefined, 'ANY'), '9999', 'finding a default targets without networkconfig', t);
 		},
-		null,
 		'Should be able to run channel target methods'
 	);
 
@@ -659,7 +642,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			if(orderer instanceof Orderer) t.pass('orderer has a orderer ');
 			else t.fail('orderer does not have a orderer');
 		},
-		null,
 		'Should be able to get orderer'
 	);
 
@@ -678,7 +660,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			});
 			client.getChannel('otherchannel');
 		},
-		null,
 		'Should be able to load additional configurations'
 	);
 
@@ -693,7 +674,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('ca',organization.getCertificateAuthorities()[0], 'check getPeers');
 			t.comment(organization.toString());
 		},
-		null,
 		'Should be able to run all methods of Organization'
 	);
 
@@ -708,7 +688,6 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals('registrar',certificateAuthority.getRegistrar(), 'check registrar');
 			t.comment(certificateAuthority.toString());
 		},
-		null,
 		'Should be able to run all methods of CertificateAuthority'
 	);
 

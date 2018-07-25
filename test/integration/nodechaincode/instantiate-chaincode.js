@@ -27,7 +27,7 @@ test('\n\n***** Node-Chaincode End-to-end flow: instantiate chaincode *****\n\n'
 			if(result){
 				t.pass('Successfully instantiated chaincode on the channel');
 
-				return sleep(5000);
+				return testUtil.sleep(5000);
 			}
 			else {
 				t.fail('Failed to instantiate chaincode ');
@@ -44,7 +44,3 @@ test('\n\n***** Node-Chaincode End-to-end flow: instantiate chaincode *****\n\n'
 			t.end();
 		});
 });
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}

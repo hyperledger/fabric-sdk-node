@@ -6,36 +6,36 @@
 
 'use strict';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
 //var Client = require('fabric-client');
-var testutil = require('./util.js');
-var utils = require('fabric-client/lib/utils.js');
-var path = require('path');
-var fs = require('fs-extra');
-var util = require('util');
+const testutil = require('./util.js');
+const utils = require('fabric-client/lib/utils.js');
+const path = require('path');
+const fs = require('fs-extra');
+const util = require('util');
 //var os = require('os');
 
-var jsrsa = require('jsrsasign');
+const jsrsa = require('jsrsasign');
 //var KEYUTIL = jsrsa.KEYUTIL;
-var ECDSA = jsrsa.ECDSA;
+const ECDSA = jsrsa.ECDSA;
 
 //var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
-var CryptoSuite_ECDSA_AES = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
-var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
+const CryptoSuite_ECDSA_AES = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
+const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 //var api = require('fabric-client/lib/api.js');
-var User = require('fabric-client/lib/User.js');
-var elliptic = require('elliptic');
+const User = require('fabric-client/lib/User.js');
+const elliptic = require('elliptic');
 //var BN = require('bn.js');
-var Signature = require('elliptic/lib/elliptic/ec/signature.js');
+const Signature = require('elliptic/lib/elliptic/ec/signature.js');
 //var PKCS11 = require('fabric-client/lib/impl/bccsp_pkcs11.js');
 
 //var keyValStorePath = path.join(testutil.getTempDir(), 'keyValStore1');
 
-var TEST_MSG = 'this is a test message';
-var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative effort created to advance cross-industry blockchain technologies. ' +
+const TEST_MSG = 'this is a test message';
+const TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative effort created to advance cross-industry blockchain technologies. ' +
 	'It is a global collaboration including leaders in finance, banking, Internet of Things, supply chains, manufacturing and Technology. The Linux ' +
 	'Foundation hosts Hyperledger as a Collaborative Project under the foundation. Why Create the Project? Not since the Web itself has a technology ' +
 	'promised broader and more fundamental revolution than blockchain technology. A blockchain is a peer-to-peer distributed ledger forged by consensus, ' +
@@ -46,21 +46,21 @@ var TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative eff
 	'ensure the transparency, longevity, interoperability and support required to bring blockchain technologies forward to mainstream commercial adoption. That ' +
 	'is what Hyperledger is about – communities of software developers building blockchain frameworks and platforms.';
 
-var HASH_MSG_SHA384 = '6247065855a812ecd182476576c02d46a675845ef4b0056e973ca42dcf8191d3adabc8c6c4b909f20f96136032ab723a';
+const HASH_MSG_SHA384 = '6247065855a812ecd182476576c02d46a675845ef4b0056e973ca42dcf8191d3adabc8c6c4b909f20f96136032ab723a';
 //var HASH_LONG_MSG_SHA384 = 'e647ea97fec64412a34f522b5d80cbba9a293f89d4dc63802c79bf485078ecbaed59a0d53cd7ab08a9ae983e64f886a6';
-var HASH_MSG_SHA3_384 = '9e9c2e5edf6cbc0b512807a8efa2917daff71b83e04dee28fcc00b1a1dd935fb5afc5eafa06bf55bd64792a597e2a8f3';
-var HASH_LONG_MSG_SHA3_384 = '47a90d6721523682e09b81da0a60e6ee1faf839f0503252316638daf038cf682c0a842edaf310eb0f480a2e181a07af0';
-var HASH_MSG_SHA256 = '4e4aa09b6d80efbd684e80f54a70c1d8605625c3380f4cb012b32644a002b5be';
-var HASH_LONG_MSG_SHA256 = '0d98987f5e4e3ea611f0e3d768c594ff9aac25404265d73554d12c86d7f6fbbc';
-var HASH_MSG_SHA3_256 = '7daeff454f7e91e3cd2d1c1bd5fcd1b6c9d4d5fffc6c327710d8fae7b06ee4a3';
-var HASH_LONG_MSG_SHA3_256 = '577174210438a85ae4311a62e5fccf2441b960013f5691993cdf38ed6ba0c84f';
+const HASH_MSG_SHA3_384 = '9e9c2e5edf6cbc0b512807a8efa2917daff71b83e04dee28fcc00b1a1dd935fb5afc5eafa06bf55bd64792a597e2a8f3';
+const HASH_LONG_MSG_SHA3_384 = '47a90d6721523682e09b81da0a60e6ee1faf839f0503252316638daf038cf682c0a842edaf310eb0f480a2e181a07af0';
+const HASH_MSG_SHA256 = '4e4aa09b6d80efbd684e80f54a70c1d8605625c3380f4cb012b32644a002b5be';
+const HASH_LONG_MSG_SHA256 = '0d98987f5e4e3ea611f0e3d768c594ff9aac25404265d73554d12c86d7f6fbbc';
+const HASH_MSG_SHA3_256 = '7daeff454f7e91e3cd2d1c1bd5fcd1b6c9d4d5fffc6c327710d8fae7b06ee4a3';
+const HASH_LONG_MSG_SHA3_256 = '577174210438a85ae4311a62e5fccf2441b960013f5691993cdf38ed6ba0c84f';
 
-var TEST_KEY_PRIVATE = '93f15b31e3c3f3bddcd776d9219e93d8559e31453757b79e193a793cbd239573';
-var TEST_KEY_PUBLIC = '04f46815aa00fe2ba2814b906aa4ef1755caf152658de8997a6a858088296054baf45b06b2eba514bcbc37ae0c0cc7465115d36429d0e0bff23dc40e3760c10aa9';
-var TEST_MSG_SIGNATURE_SHA2_256 = '3046022100a6460b29373fa16ee96172bfe04666140405fdef78182280545d451f08547736022100d9022fe620ceadabbef1714b894b8d6be4b74c0f9c573bd774871764f4f789c9';
-var TEST_LONG_MSG_SIGNATURE_SHA2_256 = '3045022073266302d730b07499aabd0f88f12c8749a0f90144034dbc86a8cd742722ad29022100852346f93e50911008ab97afc452f83c5985a19fa3aa6d58f615c03bddaa90a1';
+const TEST_KEY_PRIVATE = '93f15b31e3c3f3bddcd776d9219e93d8559e31453757b79e193a793cbd239573';
+const TEST_KEY_PUBLIC = '04f46815aa00fe2ba2814b906aa4ef1755caf152658de8997a6a858088296054baf45b06b2eba514bcbc37ae0c0cc7465115d36429d0e0bff23dc40e3760c10aa9';
+const TEST_MSG_SIGNATURE_SHA2_256 = '3046022100a6460b29373fa16ee96172bfe04666140405fdef78182280545d451f08547736022100d9022fe620ceadabbef1714b894b8d6be4b74c0f9c573bd774871764f4f789c9';
+const TEST_LONG_MSG_SIGNATURE_SHA2_256 = '3045022073266302d730b07499aabd0f88f12c8749a0f90144034dbc86a8cd742722ad29022100852346f93e50911008ab97afc452f83c5985a19fa3aa6d58f615c03bddaa90a1';
 
-var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
+const TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'MIIDVDCCAvqgAwIBAgIBATAKBggqhkjOPQQDAjBOMRMwEQYDVQQKDArOoyBBY21l' +
 'IENvMRkwFwYDVQQDExB0ZXN0LmV4YW1wbGUuY29tMQ8wDQYDVQQqEwZHb3BoZXIx' +
 'CzAJBgNVBAYTAk5MMB4XDTE2MTIxNjIzMTAxM1oXDTE2MTIxNzAxMTAxM1owTjET' +
@@ -81,12 +81,12 @@ var TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'UWUxIC0CIQDNyHQAwzhw+512meXRwG92GfpzSBssDKLdwlrqiHOu5A==' +
 '-----END CERTIFICATE-----';
 
-var TEST_KEY_PRIVATE_PEM = '-----BEGIN PRIVATE KEY-----' +
+const TEST_KEY_PRIVATE_PEM = '-----BEGIN PRIVATE KEY-----' +
 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgZYMvf3w5VkzzsTQY' +
 'I8Z8IXuGFZmmfjIX2YSScqCvAkihRANCAAS6BhFgW/q0PzrkwT5RlWTt41VgXLgu' +
 'Pv6QKvGsW7SqK6TkcCfxsWoSjy6/r1SzzTMni3J8iQRoJ3roPmoxPLK4' +
 '-----END PRIVATE KEY-----';
-var TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
+const TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'MIICEDCCAbagAwIBAgIUXoY6X7jIpHAAgL267xHEpVr6NSgwCgYIKoZIzj0EAwIw' +
 'fzELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNh' +
 'biBGcmFuY2lzY28xHzAdBgNVBAoTFkludGVybmV0IFdpZGdldHMsIEluYy4xDDAK' +
@@ -101,7 +101,7 @@ var TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'BAHpeA==' +
 '-----END CERTIFICATE-----';
 
-var TEST_USER_ENROLLMENT = {
+const TEST_USER_ENROLLMENT = {
 	'name': 'admin2',
 	'mspid': 'test',
 	'roles': null,
@@ -154,7 +154,7 @@ test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 
 test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', (t) => {
 	testutil.resetDefaults();
-	var cryptoUtils = utils.newCryptoSuite();
+	const cryptoUtils = utils.newCryptoSuite();
 	t.throws(
 		() => {
 			cryptoUtils.importKey(TEST_CERT_PEM);
@@ -172,10 +172,10 @@ test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', (t) => {
 
 });
 
-test('\n\n ** CryptoSuite_ECDSA_AES - generateEphemeralKey tests **\n\n', function (t) {
+test('\n\n ** CryptoSuite_ECDSA_AES - generateEphemeralKey tests **\n\n', (t) => {
 	testutil.resetDefaults();
-	var cryptoUtils = utils.newCryptoSuite();
-	var key = cryptoUtils.generateEphemeralKey();
+	const cryptoUtils = utils.newCryptoSuite();
+	const key = cryptoUtils.generateEphemeralKey();
 	if (key && key._key && key._key.type === 'EC') {
 		t.pass('generateEphemeralKey returned key');
 		t.end();
@@ -186,10 +186,10 @@ test('\n\n ** CryptoSuite_ECDSA_AES - generateEphemeralKey tests **\n\n', functi
 
 });
 
-test('\n\n ** CryptoSuite_ECDSA_AES - ephemeral true tests **\n\n', function (t) {
+test('\n\n ** CryptoSuite_ECDSA_AES - ephemeral true tests **\n\n', (t) => {
 	testutil.resetDefaults();
-	var cryptoUtils = utils.newCryptoSuite();
-	var key = cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM, {ephemeral: true});
+	const cryptoUtils = utils.newCryptoSuite();
+	const key = cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM, {ephemeral: true});
 	if (key && key._key && key._key.type === 'EC') {
 		t.pass('importKey returned key using ephemeral true');
 	} else {
@@ -197,24 +197,24 @@ test('\n\n ** CryptoSuite_ECDSA_AES - ephemeral true tests **\n\n', function (t)
 	}
 
 	return cryptoUtils.generateKey({ephemeral: true})
-	.then(function (key) {
-		if (key && key._key && key._key.type === 'EC') {
-			t.pass('generateKey returned key using ephemeral true');
+		.then((key) => {
+			if (key && key._key && key._key.type === 'EC') {
+				t.pass('generateKey returned key using ephemeral true');
+				t.end();
+			} else {
+				t.fail('generateKey did not return key using ephemeral true');
+				t.end();
+			}
+		},(err) => {
+			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
-		} else {
-			t.fail('generateKey did not return key using ephemeral true');
-			t.end();
-		}
-	},(err) => {
-		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
-		t.end();
-	});
+		});
 });
 
-test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
+test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 	testutil.resetDefaults();
 
-	var cryptoUtils = utils.newCryptoSuite();
+	let cryptoUtils = utils.newCryptoSuite();
 
 	t.equal(true, (typeof cryptoUtils._ecdsaCurve !== 'undefined' && typeof cryptoUtils._ecdsa !== 'undefined'),
 		'CryptoSuite_ECDSA_AES function tests: default instance has "_ecdsaCurve" and "_ecdsa" properties');
@@ -239,253 +239,253 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', function (t) {
 	cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
 	cryptoUtils.generateKey()
-	.then(function (key) {
-		t.equal('secp256r1', key.getPublicKey()._key.curveName,
-			'CryptoSuite_ECDSA_AES function tests: cryptoUtils generated public key curveName == secp256r1');
+		.then((key) => {
+			t.equal('secp256r1', key.getPublicKey()._key.curveName,
+				'CryptoSuite_ECDSA_AES function tests: cryptoUtils generated public key curveName == secp256r1');
 
-		// test curve 256 with SHA3_256
-		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
-		utils.setConfigSetting('crypto-keysize', 256);
-		cryptoUtils = utils.newCryptoSuite();
-		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
-		return cryptoUtils.generateKey();
-	},(err) => {
-		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
-		t.end();
-	}).then(function (key) {
-		t.equal('secp256r1', key.getPublicKey()._key.curveName,
-			'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp256r1');
+			// test curve 256 with SHA3_256
+			utils.setConfigSetting('crypto-hash-algo', 'SHA3');
+			utils.setConfigSetting('crypto-keysize', 256);
+			cryptoUtils = utils.newCryptoSuite();
+			cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
+			return cryptoUtils.generateKey();
+		},(err) => {
+			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+			t.end();
+		}).then((key) => {
+			t.equal('secp256r1', key.getPublicKey()._key.curveName,
+				'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp256r1');
 
-		t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_256,
-			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
+			t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_256,
+				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
 
-		t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_256,
-			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
+			t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_256,
+				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 256');
 
-		// test SHA3_384
-		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
-		utils.setConfigSetting('crypto-keysize', 384);
-		cryptoUtils = utils.newCryptoSuite();
-		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
+			// test SHA3_384
+			utils.setConfigSetting('crypto-hash-algo', 'SHA3');
+			utils.setConfigSetting('crypto-keysize', 384);
+			cryptoUtils = utils.newCryptoSuite();
+			cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
-		t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
-			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
+			t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
+				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
-		t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_384,
-			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
+			t.equal(cryptoUtils.hash(TEST_LONG_MSG), HASH_LONG_MSG_SHA3_384,
+				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
-		return cryptoUtils.generateKey();
-	},(err) => {
-		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
-		t.end();
-	}).then(function (key) {
-		t.equal('secp384r1', key.getPublicKey()._key.curveName,
-			'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp384r1');
+			return cryptoUtils.generateKey();
+		},(err) => {
+			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+			t.end();
+		}).then((key) => {
+			t.equal('secp384r1', key.getPublicKey()._key.curveName,
+				'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp384r1');
 
-		if (key._key)
-			t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
-		else
-			t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
+			if (key._key)
+				t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
+			else
+				t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
 
-		utils.setConfigSetting('crypto-hash-algo', 'sha3'); //lower or upper case is allowed
-		cryptoUtils = utils.newCryptoSuite();
-		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
+			utils.setConfigSetting('crypto-hash-algo', 'sha3'); //lower or upper case is allowed
+			cryptoUtils = utils.newCryptoSuite();
+			cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
-		t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
-			'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
+			t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA3_384,
+				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
-		// test generation options
-		return cryptoUtils.generateKey({ ephemeral: true });
-	},(err) => {
-		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
-		t.end();
-	}).then(function (key) {
-		if (key._key)
-			t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
-		else
-			t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
+			// test generation options
+			return cryptoUtils.generateKey({ ephemeral: true });
+		},(err) => {
+			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+			t.end();
+		}).then((key) => {
+			if (key._key)
+				t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
+			else
+				t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
 
-		t.throws(
-			function () {
-				utils.setConfigSetting('crypto-keysize', 123);
-				cryptoUtils = utils.newCryptoSuite();
-			},
-			/^Error: Illegal key size/,
-			'CryptoSuite_ECDSA_AES function tests: setting key size 123 should throw Illegal level error'
-		);
+			t.throws(
+				() => {
+					utils.setConfigSetting('crypto-keysize', 123);
+					cryptoUtils = utils.newCryptoSuite();
+				},
+				/^Error: Illegal key size/,
+				'CryptoSuite_ECDSA_AES function tests: setting key size 123 should throw Illegal level error'
+			);
 
-		t.throws(
-			function () {
-				utils.setConfigSetting('crypto-keysize', 256);
-				utils.setConfigSetting('crypto-hash-algo', '12345');
-				cryptoUtils = utils.newCryptoSuite();
-			},
-			/^Error: Unsupported hash algorithm/,
-			'CryptoSuite_ECDSA_AES function tests: setting hash algo to 12345 should throw Illegal Hash function family'
-		);
+			t.throws(
+				() => {
+					utils.setConfigSetting('crypto-keysize', 256);
+					utils.setConfigSetting('crypto-hash-algo', '12345');
+					cryptoUtils = utils.newCryptoSuite();
+				},
+				/^Error: Unsupported hash algorithm/,
+				'CryptoSuite_ECDSA_AES function tests: setting hash algo to 12345 should throw Illegal Hash function family'
+			);
 
-		utils.setConfigSetting('crypto-keysize', 256);
-		utils.setConfigSetting('crypto-hash-algo', 'SHA3');
-		cryptoUtils = utils.newCryptoSuite();
-		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
+			utils.setConfigSetting('crypto-keysize', 256);
+			utils.setConfigSetting('crypto-hash-algo', 'SHA3');
+			cryptoUtils = utils.newCryptoSuite();
+			cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
-		return cryptoUtils.generateKey();
-	},(err) => {
-		t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
-		t.end();
-	}).then(function (key) {
-		t.throws(
-			function () {
-				cryptoUtils.sign();
-			},
-			/A valid key is required to sign/,
-			'CryptoSuite_ECDSA_AES function tests: sign() should throw "A valid key is required to sign"'
-		);
+			return cryptoUtils.generateKey();
+		},(err) => {
+			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+			t.end();
+		}).then((key) => {
+			t.throws(
+				() => {
+					cryptoUtils.sign();
+				},
+				/A valid key is required to sign/,
+				'CryptoSuite_ECDSA_AES function tests: sign() should throw "A valid key is required to sign"'
+			);
 
-		t.throws(
-			function () {
-				cryptoUtils.sign('dummy key');
-			},
-			/A valid message is required to sign/,
-			'CryptoSuite_ECDSA_AES function tests: sign() should throw "A valid message is required to sign"'
-		);
+			t.throws(
+				() => {
+					cryptoUtils.sign('dummy key');
+				},
+				/A valid message is required to sign/,
+				'CryptoSuite_ECDSA_AES function tests: sign() should throw "A valid message is required to sign"'
+			);
 
-		var testSignature = function (msg) {
-			var sig = cryptoUtils.sign(key, cryptoUtils.hash(msg));
-			if (sig) {
+			const testSignature = function (msg) {
+				const sig = cryptoUtils.sign(key, cryptoUtils.hash(msg));
+				if (sig) {
 				// test that signatures have low-S
-				var halfOrder = halfOrdersForCurve[key._key.ecparams.name];
-				var sigObject = new Signature(sig);
-				if (sigObject.s.cmp(halfOrder) == 1) {
-					t.fail('Invalid signature object: S value larger than N/2');
+					const halfOrder = halfOrdersForCurve[key._key.ecparams.name];
+					const sigObject = new Signature(sig);
+					if (sigObject.s.cmp(halfOrder) == 1) {
+						t.fail('Invalid signature object: S value larger than N/2');
+					} else {
+						t.pass('Valid signature object generated from sign()');
+					}
+
+					// using internal calls to verify the signature
+					const pubKey = cryptoUtils._ecdsa.keyFromPublic(key.getPublicKey()._key.pubKeyHex, 'hex');
+					// note that the signature is generated on the hash of the message, not the message itself
+					t.equal(pubKey.verify(cryptoUtils.hash(msg), Buffer.from(sig)), true,
+						'CryptoSuite_ECDSA_AES function tests: sign() method produced proper signature that was successfully verified');
 				} else {
-					t.pass('Valid signature object generated from sign()');
+					t.fail('Invalid signature generated by sign()');
 				}
+			};
 
-				// using internal calls to verify the signature
-				var pubKey = cryptoUtils._ecdsa.keyFromPublic(key.getPublicKey()._key.pubKeyHex, 'hex');
-				// note that the signature is generated on the hash of the message, not the message itself
-				t.equal(pubKey.verify(cryptoUtils.hash(msg), Buffer.from(sig)), true,
-					'CryptoSuite_ECDSA_AES function tests: sign() method produced proper signature that was successfully verified');
-			} else {
-				t.fail('Invalid signature generated by sign()');
-			}
-		};
+			testSignature(TEST_MSG);
+			testSignature(TEST_LONG_MSG);
 
-		testSignature(TEST_MSG);
-		testSignature(TEST_LONG_MSG);
+			t.throws(
+				() => {
+					cryptoUtils.verify();
+				},
+				/A valid key is required to verify/,
+				'CryptoSuite_ECDSA_AES function tests: verify() should throw "A valid key is required to verify"'
+			);
 
-		t.throws(
-			function () {
-				cryptoUtils.verify();
-			},
-			/A valid key is required to verify/,
-			'CryptoSuite_ECDSA_AES function tests: verify() should throw "A valid key is required to verify"'
-		);
+			t.throws(
+				() => {
+					cryptoUtils.verify('dummy key');
+				},
+				/A valid signature is required to verify/,
+				'CryptoSuite_ECDSA_AES function tests: verify() should throw "A valid signature is required to verify"'
+			);
 
-		t.throws(
-			function () {
-				cryptoUtils.verify('dummy key');
-			},
-			/A valid signature is required to verify/,
-			'CryptoSuite_ECDSA_AES function tests: verify() should throw "A valid signature is required to verify"'
-		);
+			t.throws(
+				() => {
+					cryptoUtils.verify('dummy key', 'dummy signature');
+				},
+				/A valid message is required to verify/,
+				'CryptoSuite_ECDSA_AES function tests: verify() should throw "A valid message is required to verify"'
+			);
 
-		t.throws(
-			function () {
-				cryptoUtils.verify('dummy key', 'dummy signature');
-			},
-			/A valid message is required to verify/,
-			'CryptoSuite_ECDSA_AES function tests: verify() should throw "A valid message is required to verify"'
-		);
+			utils.setConfigSetting('crypto-keysize', 256);
+			utils.setConfigSetting('crypto-hash-algo', 'SHA2');
+			cryptoUtils = utils.newCryptoSuite();
+			cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
-		utils.setConfigSetting('crypto-keysize', 256);
-		utils.setConfigSetting('crypto-hash-algo', 'SHA2');
-		cryptoUtils = utils.newCryptoSuite();
-		cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
-
-		var testVerify = function (sig, msg, expected) {
+			const testVerify = function (sig, msg, expected) {
 			// manually construct a key based on the saved privKeyHex and pubKeyHex
-			var f = new ECDSA({ curve: 'secp256r1' });
-			f.setPrivateKeyHex(TEST_KEY_PRIVATE);
-			f.setPublicKeyHex(TEST_KEY_PUBLIC);
-			f.isPrivate = true;
-			f.isPublic = false;
+				const f = new ECDSA({ curve: 'secp256r1' });
+				f.setPrivateKeyHex(TEST_KEY_PRIVATE);
+				f.setPublicKeyHex(TEST_KEY_PUBLIC);
+				f.isPrivate = true;
+				f.isPublic = false;
 
-			t.equal(cryptoUtils.verify(new ecdsaKey(f), sig, msg), expected,
-				'CryptoSuite_ECDSA_AES function tests: verify() method');
-		};
+				t.equal(cryptoUtils.verify(new ecdsaKey(f), sig, msg), expected,
+					'CryptoSuite_ECDSA_AES function tests: verify() method');
+			};
 
-		// these signatures have S values larger than N/2
-		testVerify(TEST_MSG_SIGNATURE_SHA2_256, TEST_MSG, false);
-		testVerify(TEST_LONG_MSG_SIGNATURE_SHA2_256, TEST_LONG_MSG, false);
+			// these signatures have S values larger than N/2
+			testVerify(TEST_MSG_SIGNATURE_SHA2_256, TEST_MSG, false);
+			testVerify(TEST_LONG_MSG_SIGNATURE_SHA2_256, TEST_LONG_MSG, false);
 
-		// test importKey()
-		return cryptoUtils.importKey(TEST_CERT_PEM);
-	},(err) => {
-		t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
-		t.end();
-	}).then((pubKey) => {
-		t.equal(pubKey.isPrivate(), false, 'Test imported public key isPrivate()');
-		t.equal(pubKey.getSKI(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef', 'Test imported public key SKI');
-
-		// verify that the pub key has been saved in the key store by the proper key
-		t.equal(
-			fs.existsSync(path.join(utils.getDefaultKeyStorePath(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef-pub')),
-			true,
-			'Check that the imported public key has been saved in the key store');
-
-		return cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM);
-	},(err) => {
-		t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
-		t.end();
-	}).then((privKey) => {
-		t.equal(privKey.isPrivate(), true, 'Test imported private key isPrivate');
-		t.equal(privKey.getSKI(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a', 'Test imported private key SKI');
-		t.end();
-
-		// verify that the imported private key has been saved in the key store by the proper key
-		t.equal(
-			fs.existsSync(path.join(utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv')),
-			true,
-			'Check that the imported private key has been saved in the key store');
-
-		// verify that the imported key can properly sign messages
-		var testSig = cryptoUtils.sign(privKey, cryptoUtils.hash(TEST_MSG));
-		t.equal(
-			cryptoUtils.verify(privKey.getPublicKey(), testSig, TEST_MSG),
-			true,
-			'Check that the imported private key can properly sign messages');
-
-		// manufacture an error condition where the private key does not exist for the SKI, and only the public key does
-		return cryptoUtils.importKey(TEST_KEY_PRIVATE_CERT_PEM);
-	},(err) => {
-		t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
-		t.end();
-	}).then(() => {
-		fs.removeSync(path.join(utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
-
-		var poorUser = new User('admin2');
-		poorUser.setCryptoSuite(cryptoUtils);
-
-		return poorUser.fromString(JSON.stringify(TEST_USER_ENROLLMENT));
-	}).then(() => {
-		t.fail('Failed to catch missing private key expected from a user enrollment object');
-		t.end();
-	},(err) => {
-		var msg = 'Private key missing from key store';
-		if (err.message && err.message.indexOf(msg) > -1) {
-			t.pass('Successfully caught missing private key expected from a user enrollment object');
+			// test importKey()
+			return cryptoUtils.importKey(TEST_CERT_PEM);
+		},(err) => {
+			t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
-		} else {
-			t.fail(util.format('Unexpected message.  Expecting "%s" but got "%s"', msg, err));
+		}).then((pubKey) => {
+			t.equal(pubKey.isPrivate(), false, 'Test imported public key isPrivate()');
+			t.equal(pubKey.getSKI(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef', 'Test imported public key SKI');
+
+			// verify that the pub key has been saved in the key store by the proper key
+			t.equal(
+				fs.existsSync(path.join(utils.getDefaultKeyStorePath(), 'b5cb4942005c4ecaa9f73a49e1936a58baf549773db213cf1e22a1db39d9dbef-pub')),
+				true,
+				'Check that the imported public key has been saved in the key store');
+
+			return cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM);
+		},(err) => {
+			t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
-		}
-	}).catch((err) => {
-		t.comment('final catch, caught err...');
-		t.fail(err.stack ? err.stack : err);
-		t.end();
-	});
+		}).then((privKey) => {
+			t.equal(privKey.isPrivate(), true, 'Test imported private key isPrivate');
+			t.equal(privKey.getSKI(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a', 'Test imported private key SKI');
+			t.end();
+
+			// verify that the imported private key has been saved in the key store by the proper key
+			t.equal(
+				fs.existsSync(path.join(utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv')),
+				true,
+				'Check that the imported private key has been saved in the key store');
+
+			// verify that the imported key can properly sign messages
+			const testSig = cryptoUtils.sign(privKey, cryptoUtils.hash(TEST_MSG));
+			t.equal(
+				cryptoUtils.verify(privKey.getPublicKey(), testSig, TEST_MSG),
+				true,
+				'Check that the imported private key can properly sign messages');
+
+			// manufacture an error condition where the private key does not exist for the SKI, and only the public key does
+			return cryptoUtils.importKey(TEST_KEY_PRIVATE_CERT_PEM);
+		},(err) => {
+			t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
+			t.end();
+		}).then(() => {
+			fs.removeSync(path.join(utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
+
+			const poorUser = new User('admin2');
+			poorUser.setCryptoSuite(cryptoUtils);
+
+			return poorUser.fromString(JSON.stringify(TEST_USER_ENROLLMENT));
+		}).then(() => {
+			t.fail('Failed to catch missing private key expected from a user enrollment object');
+			t.end();
+		},(err) => {
+			const msg = 'Private key missing from key store';
+			if (err.message && err.message.indexOf(msg) > -1) {
+				t.pass('Successfully caught missing private key expected from a user enrollment object');
+				t.end();
+			} else {
+				t.fail(util.format('Unexpected message.  Expecting "%s" but got "%s"', msg, err));
+				t.end();
+			}
+		}).catch((err) => {
+			t.comment('final catch, caught err...');
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		});
 });
 
 // function cleanupFileKeyValueStore(keyValStorePath) {

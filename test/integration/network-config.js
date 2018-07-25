@@ -178,7 +178,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		logger.debug(' response ::%j', result);
 		t.pass('Successfully created the channel.');
 		if (result.status && result.status === 'SUCCESS') {
-			await sleep(10000);
+			await testUtil.sleep(10000);
 		} else {
 			t.fail('Failed to create the channel. ');
 			throw new Error('Failed to create the channel. ');
@@ -248,7 +248,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			t.fail(' Failed to join channel on org1');
 			throw new Error('Failed to join channel on org1');
 		}
-		await sleep(10000);
+		await testUtil.sleep(10000);
 		t.pass('Successfully waited for peers to join the channel');
 
 		process.env.GOPATH = path.join(__dirname, '../fixtures');
@@ -328,7 +328,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		}
 		if (!(response instanceof Error) && response.status === 'SUCCESS') {
 			t.pass('Successfully sent transaction to instantiate the chaincode to the orderer.');
-			await sleep(10000);
+			await testUtil.sleep(10000);
 		} else {
 			t.fail('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
 			throw new Error('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
@@ -775,7 +775,3 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 
 	t.end();
 });
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
