@@ -22,9 +22,6 @@ interface ProtoBufObject {
 }
 
 // Dummy classes for opaque handles for registerChaincodeEvent's
-declare class ChaincodeEventHandle {
-}
-
 declare class ChaincodeChannelEventHandle {
 }
 

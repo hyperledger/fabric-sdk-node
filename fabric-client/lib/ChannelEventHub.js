@@ -787,7 +787,7 @@ const ChannelEventHub = class {
 	 * "onError" callback to be notified when this ChannelEventHub has an issue.
 	 *
 	 * @param {string} ccid - Id of the chaincode of interest
-	 * @param {string} eventname - The exact name of the chaincode event (must match
+	 * @param {string|RegExp} eventname - The exact name of the chaincode event (must match
 	 *                             the name given to the target chaincode's call to
 	 *                             <code>stub.SetEvent(name, payload)</code>), or a
 	 *                             regular expression string to match more than one
@@ -802,7 +802,7 @@ const ChannelEventHub = class {
 	 *                             a call to the "disconnect()" method or a connection error.
 	 * @param {RegistrationOpts} options -
 	 * @returns {Object} An object that should be treated as an opaque handle used
-	 *                   to unregister (see unregisterChaincodeEvent)
+	 *                   to unregister (see {@link unregisterChaincodeEvent})
 	 */
 	registerChaincodeEvent(ccid, eventname, onEvent, onError, options) {
 		logger.debug('registerChaincodeEvent - start');
@@ -849,7 +849,7 @@ const ChannelEventHub = class {
 	 *
 	 * @param {Object} listener_handle - The handle object returned from the
 	 *        call to registerChaincodeEvent.
-	 * @param {boolean} throwError - Optional - throw an error if the block
+	 * @param {boolean} throwError - Optional - throw an error if the chaincode event
 	 *        registration does not exist, default is to not throw an error
 	 */
 	unregisterChaincodeEvent(listener_handle, throwError) {
@@ -1009,7 +1009,7 @@ const ChannelEventHub = class {
 	/**
 	 * Unregister transaction event listener for the transaction id.
 	 * @param {string} txid - The transaction id
-	 * @param {boolean} throwError - Optional - throw an error if the block
+	 * @param {boolean} throwError - Optional - throw an error if the transaction
 	 *        registration does not exist, default is to not throw an error
 	 */
 	unregisterTxEvent(txid, throwError) {
@@ -1250,11 +1250,11 @@ function getStateText(state) {
  * event registration callbacks.
  */
 class ChaincodeRegistration {
-	/*
+	/**
 	 * Constructs a chaincode callback entry
 	 *
 	 * @param {string} ccid - chaincode id
-	 * @param {string} eventNameFilter - The regex used to filter events
+	 * @param {string|RegExp} eventNameFilter - The regex used to filter events
 	 * @param {EventRegistration} event_reg - event registrations callbacks
 	 */
 	constructor(ccid, eventNameFilter, event_reg) {
