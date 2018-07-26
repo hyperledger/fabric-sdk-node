@@ -542,7 +542,7 @@ module.exports.pemToDER = function(pem) {
 /*
  * Converts to a Long number
  * Returns a null if the incoming value is not a string that represents a
- * number or an actual javasript number. Also allows for a Long object to be
+ * number or an actual javascript number. Also allows for a Long object to be
  * passed in as the value to convert
  */
 module.exports.convertToLong = function(value) {
