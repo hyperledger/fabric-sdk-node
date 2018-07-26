@@ -14,7 +14,6 @@
 			},
 			"peer1": {
 				"requests": "grpcs://localhost:7051",
-				"events": "grpcs://localhost:7053",
 				"server-hostname": "peer0.org1.example.com",
 				"tls_cacerts": "../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem"
 			}
@@ -28,7 +27,6 @@
 			},
 			"peer1": {
 				"requests": "grpcs://localhost:8051",
-				"events": "grpcs://localhost:8053",
 				"server-hostname": "peer0.org2.example.com",
 				"tls_cacerts": "../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tlscacerts/org2.example.com-cert.pem"
 			}

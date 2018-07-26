@@ -107,7 +107,6 @@ orderers:
 peers:
   peer0.org1.example.com:
     url: grpcs://localhost:7051
-    eventUrl: grpcs://localhost:7053
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
       grpc.keepalive_time_ms: 600000
@@ -116,7 +115,6 @@ peers:
 
   peer0.org2.example.com:
     url: grpcs://localhost:8051
-    eventUrl: grpcs://localhost:8053
     grpcOptions:
       ssl-target-name-override: peer0.org2.example.com
     tlsCACerts:

@@ -76,7 +76,6 @@ services:
       - CORE_PEER_LISTENADDRESS=peer0.org1.example.com:7051
       - CORE_PEER_GOSSIP_ENDPOINT=peer0.org1.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
-      - CORE_PEER_EVENTS_ADDRESS=0.0.0.0:7053
       - CORE_LOGGING_LEVEL=debug
       ## the following setting redirects chaincode container logs to the peer container logs
       - CORE_VM_DOCKER_ATTACHSTDOUT=true
@@ -96,7 +95,6 @@ services:
     command: peer node start
     ports:
       - 7051:7051
-      - 7053:7053
     volumes:
         - /var/run/:/host/var/run/
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/:/etc/hyperledger/msp/peer
@@ -113,7 +111,6 @@ services:
       - CORE_PEER_LISTENADDRESS=peer0.org2.example.com:8051
       - CORE_PEER_GOSSIP_ENDPOINT=peer0.org2.example.com:8051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:8051
-      - CORE_PEER_EVENTS_ADDRESS=0.0.0.0:8053
       - CORE_PEER_LOCALMSPID=Org2MSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
       - CORE_LOGGING_LEVEL=debug
@@ -131,7 +128,6 @@ services:
     command: peer node start
     ports:
       - 8051:8051
-      - 8053:8053
     volumes:
         - /var/run/:/host/var/run/
         - ./channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/:/etc/hyperledger/msp/peer
