@@ -4,6 +4,7 @@ coverage
 docs/gen
 node_modules/*
 fabric-client/node_modules/*
+fabric-client/.nyc_output
 fabric-ca-client/node_modules/*
 fabric-ca-client/.nyc_output
 fabric-ca-client/lib/api.js

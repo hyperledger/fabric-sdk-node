@@ -7,8 +7,8 @@
 
 'use strict';
 
-const sdkUtils = require('./utils.js');
-const logger = sdkUtils.getLogger('TransactionID.js');
+const utils = require('./utils.js');
+const logger = utils.getLogger('TransactionID.js');
 const User = require('./User.js');
 const hashPrimitives = require('./hash.js');
 
@@ -41,7 +41,7 @@ class TransactionID {
 			signer = signer_or_userContext;
 		}
 
-		this._nonce = sdkUtils.getNonce(); //nonce is in bytes
+		this._nonce = utils.getNonce(); //nonce is in bytes
 		const creator_bytes = signer.serialize();//same as signatureHeader.Creator
 		const trans_bytes = Buffer.concat([this._nonce, creator_bytes]);
 		const trans_hash = hashPrimitives.SHA2_256(trans_bytes);

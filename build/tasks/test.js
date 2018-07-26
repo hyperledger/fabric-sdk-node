@@ -115,16 +115,30 @@ gulp.task('test-headless', shell.task(
 	'./node_modules/nyc/bin/nyc.js gulp run-test-headless'
 ));
 
-gulp.task('run-test', ['run-full'],
+gulp.task('test-mocha', ['mocha-fabric-client'],
 	() => {
-		return gulp.src(['./fabric-ca-client/test/**/*.js', './fabric-client/test/**/*.js'], { read: false })
+		return gulp.src(['./fabric-ca-client/test/**/*.js'], { read: false })
 			.pipe(mocha({ reporter: 'list', exit: true }));
 	}
 );
 
-gulp.task('run-test-headless', ['run-headless'],
+gulp.task('mocha-fabric-client',
 	() => {
-		return gulp.src(['./fabric-ca-client/test/**/*.js', './fabric-client/test/**/*.js'], { read: false })
+		return gulp.src(['./fabric-client/test/**/*.js'], { read: false })
+			.pipe(mocha({ reporter: 'list', exit: true }));
+	}
+);
+
+gulp.task('run-test', ['run-full', 'mocha-fabric-client'],
+	() => {
+		return gulp.src(['./fabric-ca-client/test/**/*.js'], { read: false })
+			.pipe(mocha({ reporter: 'list', exit: true }));
+	}
+);
+
+gulp.task('run-test-headless', ['run-headless', 'mocha-fabric-client'],
+	() => {
+		return gulp.src(['./fabric-ca-client/test/**/*.js'], { read: false })
 			.pipe(mocha({ reporter: 'list', exit: true }));
 	}
 );
