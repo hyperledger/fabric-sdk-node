@@ -7,15 +7,15 @@
 
 'use strict';
 
-var util = require('util');
-var winston = require('winston');
-var fs = require('fs-extra');
-var crypto = require('crypto');
-var path = require('path');
-var os = require('os');
-var Long = require('long');
+const util = require('util');
+const winston = require('winston');
+const fs = require('fs-extra');
+const crypto = require('crypto');
+const path = require('path');
+const os = require('os');
+const Long = require('long');
 
-var Config = require('./Config.js');
+const Config = require('./Config.js');
 const sjcl = require('sjcl');
 
 //
@@ -33,17 +33,17 @@ const sjcl = require('sjcl');
 //  - hash {string}: 'SHA2' or 'SHA3'
 //
 //
-module.exports.newCryptoSuite = function(setting) {
-	var csImpl, keysize, algorithm, hashAlgo, opts = null;
+module.exports.newCryptoSuite = (setting) => {
+	let csImpl, keysize, algorithm, hashAlgo, opts = null;
 
-	var useHSM = false;
+	let useHSM = false;
 	if (setting && typeof setting.software === 'boolean') {
 		useHSM = !setting.software;
 	} else {
-		useHSM = this.getConfigSetting('crypto-hsm');
+		useHSM = exports.getConfigSetting('crypto-hsm');
 	}
 
-	csImpl = useHSM ? this.getConfigSetting('crypto-suite-hsm') : this.getConfigSetting('crypto-suite-software');
+	csImpl = useHSM ? exports.getConfigSetting('crypto-suite-hsm') : exports.getConfigSetting('crypto-suite-software');
 
 	// this function supports the following:
 	// - newCryptoSuite({software: true, keysize: 256, algorithm: EC})
@@ -55,7 +55,7 @@ module.exports.newCryptoSuite = function(setting) {
 	if (setting && setting.keysize && typeof setting === 'object' && typeof setting.keysize === 'number') {
 		keysize = setting.keysize;
 	} else
-		keysize = this.getConfigSetting('crypto-keysize');
+		keysize = exports.getConfigSetting('crypto-keysize');
 
 	if (setting && setting.algorithm && typeof setting === 'object' && typeof setting.algorithm === 'string') {
 		algorithm = setting.algorithm.toUpperCase();
@@ -83,11 +83,11 @@ module.exports.newCryptoSuite = function(setting) {
 };
 
 // Provide a Promise-based keyValueStore for couchdb, etc.
-module.exports.newKeyValueStore = function(options) {
+module.exports.newKeyValueStore = async (options) =>{
 	// initialize the correct KeyValueStore
-	var kvsEnv = this.getConfigSetting('key-value-store');
-	var store = require(kvsEnv);
-	return Promise.resolve(new store(options));
+	const kvsEnv = exports.getConfigSetting('key-value-store');
+	const store = require(kvsEnv);
+	return new store(options);
 };
 
 const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];
@@ -109,8 +109,8 @@ const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];
 //   'info': 'console'					// 'console' is a keyword for logging to console
 // }
 //
-module.exports.getLogger = function(name) {
-	var saveLogger = function(logger) {
+module.exports.getLogger = function (name) {
+	const saveLogger = function (logger) {
 		if (global.hfc) {
 			global.hfc.logger = logger;
 		} else {
@@ -120,22 +120,22 @@ module.exports.getLogger = function(name) {
 		}
 	};
 
-	var newDefaultLogger = function() {
+	const newDefaultLogger = function () {
 		return new winston.Logger({
 			transports: [
-				new (winston.transports.Console)({ colorize: true })
+				new (winston.transports.Console)({colorize: true})
 			]
 		});
 	};
 
-	var insertLoggerName = function(originalLogger, lname) {
+	const insertLoggerName = function (originalLogger, lname) {
 		const logger = Object.assign({}, originalLogger);
 
-		['debug', 'info', 'warn', 'error'].forEach(function(method) {
-			var func = originalLogger[method];
+		['debug', 'info', 'warn', 'error'].forEach((method) => {
+			const func = originalLogger[method];
 
-			logger[method] = (function(context, loggerName, f) {
-				return function() {
+			logger[method] = (function (context, loggerName, f) {
+				return function () {
 					if (arguments.length > 0) {
 						arguments[0] = '[' + loggerName + ']: ' + arguments[0];
 					}
@@ -153,13 +153,13 @@ module.exports.getLogger = function(name) {
 	}
 
 	//see if the config has it set
-	var config_log_setting = this.getConfigSetting('hfc-logging', undefined); //environment setting will be HFC_LOGGING
+	const config_log_setting = exports.getConfigSetting('hfc-logging', undefined); //environment setting will be HFC_LOGGING
 
-	var options = {};
+	const options = {};
 	if (config_log_setting) {
 		try {
-			var config = null;
-			if( typeof config_log_setting === 'string') {
+			let config = null;
+			if (typeof config_log_setting === 'string') {
 				config = JSON.parse(config_log_setting);
 			}
 			else {
@@ -168,7 +168,7 @@ module.exports.getLogger = function(name) {
 			if (typeof config !== 'object') {
 				throw new Error('Environment variable "HFC_LOGGING" must be an object conforming to the format documented.');
 			} else {
-				for (var level in config) {
+				for (const level in config) {
 					if (!config.hasOwnProperty(level)) {
 						continue;
 					}
@@ -200,7 +200,7 @@ module.exports.getLogger = function(name) {
 			logger.debug('Successfully constructed a winston logger with configurations', config);
 			saveLogger(logger);
 			return insertLoggerName(logger, name);
-		} catch(err) {
+		} catch (err) {
 			// the user's configuration from environment variable failed to parse.
 			// construct the default logger, log a warning and return it
 			const logger = newDefaultLogger();
@@ -219,52 +219,52 @@ module.exports.getLogger = function(name) {
 //
 //Internal method to add additional configuration file to override default file configuration settings
 //
-module.exports.addConfigFile = function(path) {
-	var config = this.getConfig();
+module.exports.addConfigFile = (path) => {
+	const config = exports.getConfig();
 	config.file(path);
 };
 
 //
 //Internal method to set an override setting to the configuration settings
 //
-module.exports.setConfigSetting = function(name, value) {
-	var config = this.getConfig();
+module.exports.setConfigSetting = (name, value) => {
+	const config = exports.getConfig();
 	config.set(name, value);
 };
 
 //
 //Internal method to get an override setting to the configuration settings
 //
-module.exports.getConfigSetting = function(name, default_value) {
-	var config = this.getConfig();
+exports.getConfigSetting = (name, default_value) => {
+	const config = exports.getConfig();
 	return config.get(name, default_value);
 };
 
 //
 // Internal method to get the configuration settings singleton
 //
-module.exports.getConfig = function() {
-	if(global.hfc && global.hfc.config) {
+exports.getConfig = () => {
+	if (global.hfc && global.hfc.config) {
 		return global.hfc.config;
 	}
-	var config = new Config();
+	const config = new Config();
 	if (global.hfc) {
 		global.hfc.config = config;
 	} else {
-		global.hfc = { config: config };
+		global.hfc = {config: config};
 	}
 
 	return config;
 };
 
 // this is a per-application map of msp managers for each channel
-var mspManagers = {};
+const mspManagers = {};
 
 //
 // returns the MSP manager responsible for the given channel
 //
-module.exports.getMSPManager = function(channelId) {
-	var mspm = mspManagers[channelId];
+module.exports.getMSPManager = (channelId) => {
+	const mspm = mspManagers[channelId];
 	if (mspm === null) {
 		// this is a rather catastrophic error, without an MSP manager not much can continue
 		throw new Error(util.format('Can not find an MSP Manager for the given channel ID: %s', channelId));
@@ -276,14 +276,14 @@ module.exports.getMSPManager = function(channelId) {
 //
 // registers an MSP manager using the channelId as the key
 //
-module.exports.addMSPManager = function(channelId, mspm) {
+module.exports.addMSPManager = (channelId, mspm) => {
 	mspManagers[channelId] = mspm;
 };
 
 //
 // unregisters the MSP manager for the given channelId
 //
-module.exports.removeMSPManager = function(channelId) {
+module.exports.removeMSPManager = (channelId) => {
 	delete mspManagers[channelId];
 };
 
@@ -296,8 +296,8 @@ module.exports.removeMSPManager = function(channelId) {
  * @param {number[]} arr a bitArray to convert from
  * @returns the bytes converted from the bitArray
  */
-module.exports.bitsToBytes = function(arr) {
-	var out = [],
+module.exports.bitsToBytes = (arr) => {
+	let out = [],
 		bl = sjcl.bitArray.bitLength(arr),
 		i, tmp;
 	for (i = 0; i < bl / 8; i++) {
@@ -315,8 +315,8 @@ module.exports.bitsToBytes = function(arr) {
  * @param {number[]} bytes a bytes to convert from
  * @returns the bitArray converted from bytes
  */
-module.exports.bytesToBits = function(bytes) {
-	var out = [],
+module.exports.bytesToBits = (bytes) => {
+	let out = [],
 		i, tmp = 0;
 	for (i = 0; i < bytes.length; i++) {
 		tmp = tmp << 8 | bytes[i];
@@ -331,15 +331,15 @@ module.exports.bytesToBits = function(bytes) {
 	return out;
 };
 
-module.exports.zeroBuffer = function(length) {
+module.exports.zeroBuffer = (length) => {
 	return Buffer.alloc(length);
 };
 
 // utility function to convert Node buffers to Javascript arraybuffer
-module.exports.toArrayBuffer = function(buffer) {
-	var ab = new ArrayBuffer(buffer.length);
-	var view = new Uint8Array(ab);
-	for (var i = 0; i < buffer.length; ++i) {
+module.exports.toArrayBuffer = (buffer) => {
+	const ab = new ArrayBuffer(buffer.length);
+	const view = new Uint8Array(ab);
+	for (let i = 0; i < buffer.length; ++i) {
 		view[i] = buffer[i];
 	}
 	return ab;
@@ -347,60 +347,48 @@ module.exports.toArrayBuffer = function(buffer) {
 
 // utility function to create a random number of
 // the specified length.
-module.exports.getNonce = function(length) {
-	if(length) {
-		if(Number.isInteger(length)) {
+module.exports.getNonce = (length) => {
+	if (length) {
+		if (Number.isInteger(length)) {
 			// good, it is a number
 		} else {
 			throw new Error('Parameter must be an integer');
 		}
 	} else {
-		length = this.getConfigSetting('nonce-size', 24);
+		length = exports.getConfigSetting('nonce-size', 24);
 	}
 
-	var value = crypto.randomBytes(length);
+	const value = crypto.randomBytes(length);
 	return value;
 };
 
-module.exports.getClassMethods = function(clazz) {
-	var i = new clazz();
-	var proto = Object.getPrototypeOf(i);
+module.exports.getClassMethods = (clazz) => {
+	const i = new clazz();
+	const proto = Object.getPrototypeOf(i);
 	return Object.getOwnPropertyNames(proto).filter(
-		function(e) {
+		(e) => {
 			if (e !== 'constructor' && typeof i[e] === 'function')
 				return true;
 		});
 };
 
-module.exports.getBufferBit = function(buf, idx) {
+module.exports.getBufferBit = (buf, idx) => {
 	// return error=true if bit to mask exceeds buffer length
-	if ((parseInt(idx/8) + 1) > buf.length) {
-		return { error: true, invalid: 0} ;
+	if ((parseInt(idx / 8) + 1) > buf.length) {
+		return {error: true, invalid: 0};
 	}
-	if ((buf[parseInt(idx/8)] & (1<<(idx%8))) != 0) {
-		return { error: false, invalid: 1};
+	if ((buf[parseInt(idx / 8)] & (1 << (idx % 8))) != 0) {
+		return {error: false, invalid: 1};
 	} else {
-		return { error: false, invalid: 0};
+		return {error: false, invalid: 0};
 	}
 };
 
-module.exports.readFile = function(path) {
-	return new Promise(function(resolve, reject) {
-		fs.readFile(path, function(err, data) {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(data);
-			}
-		});
-	});
-};
-
-module.exports.getDefaultKeyStorePath = function() {
+module.exports.getDefaultKeyStorePath = () => {
 	return path.join(os.homedir(), '.hfc-key-store');
 };
 
-var CryptoKeyStore = function(KVSImplClass, opts) {
+const CryptoKeyStore = function (KVSImplClass, opts) {
 	this.logger = module.exports.getLogger('utils.CryptoKeyStore');
 	this.logger.debug('CryptoKeyStore, constructor - start');
 	if (KVSImplClass && typeof opts === 'undefined') {
@@ -419,13 +407,13 @@ var CryptoKeyStore = function(KVSImplClass, opts) {
 			path: module.exports.getDefaultKeyStorePath()
 		};
 	}
-	var superClass;
+	let superClass;
 	if (typeof KVSImplClass !== 'undefined' && KVSImplClass !== null) {
 		superClass = KVSImplClass;
 	} else {
 		// no super class specified, use the default key value store implementation
-		superClass = require(module.exports.getConfigSetting('key-value-store'));
-		this.logger.debug('constructor, no super class specified, using config: '+module.exports.getConfigSetting('key-value-store'));
+		superClass = require(exports.getConfigSetting('key-value-store'));
+		this.logger.debug('constructor, no super class specified, using config: ' + module.exports.getConfigSetting('key-value-store'));
 	}
 
 	this._store = null;
@@ -435,10 +423,10 @@ var CryptoKeyStore = function(KVSImplClass, opts) {
 
 	};
 
-	this._getKeyStore = function() {
-		var CKS = require('./impl/CryptoKeyStore.js');
+	this._getKeyStore = function () {
+		const CKS = require('./impl/CryptoKeyStore.js');
 
-		var self = this;
+		const self = this;
 		return new Promise((resolve, reject) => {
 			if (self._store === null) {
 				self.logger.debug(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', self._storeConfig));
@@ -460,7 +448,7 @@ var CryptoKeyStore = function(KVSImplClass, opts) {
 
 };
 
-module.exports.newCryptoKeyStore = function(KVSImplClass, opts) {
+module.exports.newCryptoKeyStore = (KVSImplClass, opts) => {
 	// this function supports skipping any of the arguments such that it can be called in any of the following fashions:
 	// - newCryptoKeyStore(CouchDBKeyValueStore, {name: 'member_db', url: 'http://localhost:5984'})
 	// - newCryptoKeyStore({path: '/tmp/app-state-store'})
@@ -475,14 +463,14 @@ module.exports.newCryptoKeyStore = function(KVSImplClass, opts) {
  * will be the default value passed in unless there is a value in the config
  * settings or already on the options list.
  */
-module.exports.checkAndAddConfigSetting = function(option_name, default_value, options) {
-	var return_options = {};
+module.exports.checkAndAddConfigSetting = (option_name, default_value, options) => {
+	const return_options = {};
 	return_options[option_name] = module.exports.getConfigSetting(option_name, default_value);
-	if(options) {
-		var keys = Object.keys(options);
-		for(var i in keys) {
-			let key = keys[i];
-			var value = options[key];
+	if (options) {
+		const keys = Object.keys(options);
+		for (const i in keys) {
+			const key = keys[i];
+			const value = options[key];
 			return_options[key] = value;
 		}
 	}
@@ -494,9 +482,9 @@ module.exports.checkAndAddConfigSetting = function(option_name, default_value, o
  * and end line with '-----END CERTIFICATE-----', so as to be compliant
  * with x509 parsers
  */
-module.exports.normalizeX509 = function(raw) {
-	var regex = /(-----\s*BEGIN ?[^-]+?-----)([\s\S]*)(-----\s*END ?[^-]+?-----)/;
-	var matches = raw.match(regex);
+module.exports.normalizeX509 = (raw) => {
+	const regex = /(-----\s*BEGIN ?[^-]+?-----)([\s\S]*)(-----\s*END ?[^-]+?-----)/;
+	let matches = raw.match(regex);
 	if (!matches || matches.length !== 4) {
 		throw new Error('Failed to find start line or end line of the certificate.');
 	}
@@ -519,12 +507,12 @@ module.exports.normalizeX509 = function(raw) {
  * @returns {string} hex Hex-encoded DER bytes
  * @throws Will throw an error if the conversation fails
  */
-module.exports.pemToDER = function(pem) {
+module.exports.pemToDER = (pem) => {
 
 	//PEM format is essentially a nicely formatted base64 representation of DER encoding
 	//So we need to strip "BEGIN" / "END" header/footer and string line breaks
 	//Then we simply base64 decode it and convert to hex string
-	var contents = pem.toString().trim().split(/\r?\n/);
+	const contents = pem.toString().trim().split(/\r?\n/);
 	//check for BEGIN and END tags
 	if (!(contents[0].match(/-----\s*BEGIN ?([^-]+)?-----/) &&
 		contents[contents.length - 1].match(/-----\s*END ?([^-]+)?-----/))) {
@@ -534,7 +522,7 @@ module.exports.pemToDER = function(pem) {
 	contents.pop(); //remove END
 	//base64 decode and encode as hex string
 	//var hex = Buffer.from(contents.join(''), 'base64').toString('hex');
-	var hex = Buffer.from(contents.join(''), 'base64');
+	const hex = Buffer.from(contents.join(''), 'base64');
 	return hex;
 };
 
@@ -545,20 +533,20 @@ module.exports.pemToDER = function(pem) {
  * number or an actual javascript number. Also allows for a Long object to be
  * passed in as the value to convert
  */
-module.exports.convertToLong = function(value) {
+module.exports.convertToLong = (value) => {
 	let result;
-	if(Long.isLong(value)) {
+	if (Long.isLong(value)) {
 		result = value; //already a long
-	} else if(typeof value !== 'undefined' && value != null) {
+	} else if (typeof value !== 'undefined' && value != null) {
 		result = Long.fromValue(value);
 		// Long will return a zero for invalid strings so make sure we did
 		// not get a real zero as the incoming value
-		if(result.equals(Long.ZERO)) {
-			if(Number.isInteger(value) || value === '0') {
+		if (result.equals(Long.ZERO)) {
+			if (Number.isInteger(value) || value === '0') {
 				// all good
 			} else {
 				// anything else must be a string that is not a valid number
-				throw new Error(util.format('value:%s is not a valid number ',value));
+				throw new Error(util.format('value:%s is not a valid number ', value));
 			}
 		}
 	} else {
@@ -568,9 +556,9 @@ module.exports.convertToLong = function(value) {
 	return result;
 };
 
-module.exports.checkIntegerConfig = function(opts, configName) {
+module.exports.checkIntegerConfig = (opts, configName) => {
 	let result = false;
-	if(opts && opts[configName]) {
+	if (opts && opts[configName]) {
 		if (!Number.isInteger(opts[configName])) {
 			throw new Error(`Expect an integer value of ${configName}, found ${typeof configName}`);
 		}
@@ -579,15 +567,15 @@ module.exports.checkIntegerConfig = function(opts, configName) {
 	return result;
 };
 
-module.exports.convertBytetoString = function(buffer_array, encoding) {
+module.exports.convertBytetoString = (buffer_array, encoding) => {
 	let result;
 	let decode_as = 'utf8';
-	if(!encoding) {
+	if (!encoding) {
 		decode_as = encoding;
 	}
-	if(Array.isArray(buffer_array)) {
+	if (Array.isArray(buffer_array)) {
 		const a_strings = [];
-		for(let index in buffer_array) {
+		for (const index in buffer_array) {
 			const buffer = buffer_array[index];
 			const hex_string = buffer.toString(decode_as);
 			a_strings.push(hex_string);
