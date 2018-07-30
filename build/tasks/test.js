@@ -34,8 +34,8 @@ let arch = process.arch;
 let dockerImageTag = '';
 let thirdpartyImageTag = '';
 let docker_arch = '';
-let release = require(path.join(__dirname, '../../fabric-client/package.json')).version;
-let thirparty_release = require(path.join(__dirname, '../../fabric-client/package.json')).thirdparty;
+let release = require(path.join(__dirname, '../../package.json')).testFabricVersion;
+let thirparty_release = require(path.join(__dirname, '../../package.json')).testFabricThirdParty;
 
 // this is a release build, need to build the proper docker image tag
 // to run the tests against the corresponding fabric released docker images
