@@ -7,14 +7,15 @@
 
 'use strict';
 
-var utils = require('../utils.js');
+const utils = require('../utils.js');
 
-var logger = utils.getLogger('packager/Car.js');
+const logger = utils.getLogger('packager/Car.js');
+const fs = require('fs-extra');
 
 class Car {
-	package (path) {
-		logger.debug('Packaging CAR file from %s', path);
-		return utils.readFile(path);
+	package(path) {
+		logger.debug(`Packaging CAR file from ${path}`);
+		return fs.readFileSync(path);
 	}
 }
 
