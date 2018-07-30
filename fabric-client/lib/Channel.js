@@ -2091,10 +2091,10 @@ const Channel = class {
 		 * args[2] is the ChaincodeDeploymentSpec
 		 *
 		 * the following optional arguments here (they can each be nil and may or may not be present)
-		 * args[3] is a marshalled SignaturePolicyEnvelope representing the endorsement policy
+		 * args[3] is a marshaled SignaturePolicyEnvelope representing the endorsement policy
 		 * args[4] is the name of escc
 		 * args[5] is the name of vscc
-		 * args[6] is a marshalled CollectionConfigPackage struct
+		 * args[6] is a marshaled CollectionConfigPackage struct
 		 */
 		const lcccSpec_args = [
 			Buffer.from(command),
@@ -2108,7 +2108,7 @@ const Channel = class {
 			lcccSpec_args[3] = this._buildEndorsementPolicy(request['endorsement-policy']);
 		}
 		if (request['collections-config']) {
-			const collectionConfigPackage = this._buildCollectionsConfigPackage(request['collections-config']);
+			const collectionConfigPackage = CollectionConfig.buildCollectionConfigPackage(request['collections-config']);
 			lcccSpec_args[6] = collectionConfigPackage.toBuffer();
 		}
 
@@ -2770,10 +2770,6 @@ const Channel = class {
 	// internal utility method to build chaincode policy
 	_buildEndorsementPolicy(policy) {
 		return Policy.buildPolicy(this.getMSPManager().getMSPs(), policy);
-	}
-
-	_buildCollectionsConfigPackage(collectionsConfig) {
-		return CollectionConfig.buildCollectionConfigPackage(collectionsConfig);
 	}
 
 	/**

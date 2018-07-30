@@ -16,20 +16,31 @@ const logger = utils.getLogger('SideDB.js');
 const { format } = require('util');
 
 class CollectionConfig {
-	static buildCollectionConfigPackage(collectionsConfig) {
-		/**
-		 * collectionsConfig can be either:
-		 *   - A string represents the collections-config.json file path
-		 *   - An array of collectionConfig
-		 */
+
+	/**
+	 * @typedef {Object} collectionConfig
+	 * @property {string} name
+	 * @property policy
+	 * @property {number} maxPeerCount integer
+	 * @property {number} requiredPeerCount integer
+	 * @property {!Long|number|string|!{low: number, high: number, unsigned: boolean}} blockToLive param will be converted to unsigned int64 as Long
+	 */
+
+	/**
+	 *
+	 * @param {string|collectionConfig[]} collectionsConfigs can be either:
+	 * A string represents the collections-config.json file path;
+	 * An array of collectionConfig;
+	 */
+	static buildCollectionConfigPackage(collectionsConfigs) {
 		try {
-			let content = collectionsConfig;
-			if (typeof collectionsConfig === 'string') {
-				logger.debug('Read CollectionsConfig From %s', collectionsConfig);
-				content = fs.readFileSync(collectionsConfig, 'utf8');
+			let content = collectionsConfigs;
+			if (typeof collectionsConfigs === 'string') {
+				logger.debug('Read CollectionsConfig From %s', collectionsConfigs);
+				content = fs.readFileSync(collectionsConfigs, 'utf8');
 				content = JSON.parse(content);
 			}
-			if (!Array.isArray(content) || content.length == 0) {
+			if (!Array.isArray(content) || content.length === 0) {
 				logger.error('Expect collections config of type Array, found %s', typeof content);
 				throw new Error('Expect collections config of type Array');
 			}
@@ -47,6 +58,11 @@ class CollectionConfig {
 		}
 	}
 
+	/**
+	 *
+	 * @param {collectionConfig} collectionConfig
+	 * @returns {collectionConfig}
+	 */
 	static checkCollectionConfig(collectionConfig) {
 		let {
 			name,
@@ -67,6 +83,10 @@ class CollectionConfig {
 		}
 		if (!Number.isInteger(requiredPeerCount)) {
 			throw new Error(format('CollectionConfig Requires Param "requiredPeerCount" of type number, found %j(type: %s)', requiredPeerCount, typeof requiredPeerCount));
+		}
+
+		if(maxPeerCount<requiredPeerCount){
+			throw new Error(`CollectionConfig Requires Param "maxPeerCount" bigger than "requiredPeerCount", found maxPeerCount==${maxPeerCount}, requiredPeerCount==${requiredPeerCount}`);
 		}
 
 		if(blockToLive === null || typeof blockToLive === 'undefined') {
@@ -92,6 +112,9 @@ class CollectionConfig {
 		};
 	}
 
+	/**
+	 * @param {collectionConfig} collectionConfig
+	 */
 	static buildCollectionConfig(collectionConfig) {
 		try {
 			const {
@@ -116,9 +139,9 @@ class CollectionConfig {
 				principals.push(newPrincipal);
 			});
 
-			let signaturePolicy = Policy.buildSignaturePolicy(policy.policy);
+			const signaturePolicy = Policy.buildSignaturePolicy(policy.policy);
 
-			let signaturePolicyEnvelope = {
+			const signaturePolicyEnvelope = {
 				version: 0,
 				rule: signaturePolicy,
 				identities: principals
