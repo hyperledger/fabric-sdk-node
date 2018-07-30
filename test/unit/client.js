@@ -1011,7 +1011,6 @@ test('\n\n*** Test channel selection if no channel name provided ***\n', (t) => 
 		'peers': {
 			'peer0.org1.example.com': {
 				'url': 'grpc://localhost:7051',
-				'eventUrl': 'grpc://localhost:7053'
 			}
 		}
 	};
@@ -1083,11 +1082,9 @@ test('\n\n*** Test Client.getPeersForOrgOnChannel ***\n', (t) => {
 		'peers': {
 			'peer0.org1.example.com': {
 				'url': 'grpc://localhost:7051',
-				'eventUrl': 'grpc://localhost:7053'
 			},
 			'peer0.org2.example.com': {
 				'url': 'grpc://localhost:8051',
-				'eventUrl': 'grpc://localhost:8053'
 			}
 		}
 	};

@@ -27,7 +27,6 @@ const ADMIN_CERT = 'signedCert';
 const GRPC_CONNECTION_OPTIONS = 'grpcOptions';
 const HTTP_CONNECTION_OPTIONS = 'httpOptions';
 const URL = 'url';
-const EVENT_URL = 'eventUrl';
 const CANAME = 'caName';
 const PEM = 'pem';
 const PATH = 'path';
