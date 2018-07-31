@@ -7,23 +7,23 @@
 
 'use strict';
 
-var util = require('util');
-var settle = require('promise-settle');
-var utils = require('./utils.js');
-var logger = utils.getLogger('client-utils.js');
+const util = require('util');
+const settle = require('promise-settle');
+const utils = require('./utils.js');
+const logger = utils.getLogger('client-utils.js');
 
-var grpc = require('grpc');
-var _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-var _proposalProto = grpc.load(__dirname +
+const grpc = require('grpc');
+const _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
+const _proposalProto = grpc.load(__dirname +
 	'/protos/peer/proposal.proto').protos;
-var _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
-var _timestampProto = grpc.load(__dirname +
+const _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
+const _timestampProto = grpc.load(__dirname +
 	'/protos/google/protobuf/timestamp.proto').google.protobuf;
 
 /*
  * This function will build the proposal
  */
-module.exports.buildProposal = function (invokeSpec, header, transientMap) {
+module.exports.buildProposal = (invokeSpec, header, transientMap) => {
 	// construct the ChaincodeInvocationSpec
 	const cciSpec = new _ccProto.ChaincodeInvocationSpec();
 	cciSpec.setChaincodeSpec(invokeSpec);
@@ -50,73 +50,59 @@ module.exports.buildProposal = function (invokeSpec, header, transientMap) {
 /*
  * This function will return one Promise when sending a proposal to many peers
  */
-module.exports.sendPeersProposal = function (peers, proposal, timeout) {
+module.exports.sendPeersProposal = async (peers, proposal, timeout) => {
 	let targets = peers;
 	if (!Array.isArray(peers)) {
 		targets = [peers];
 	}
-	// make function to return an individual promise
-	const fn = function (peer) {
-		return new Promise(function (resolve, reject) {
-			peer.sendProposal(proposal, timeout).then(
-				function (result) {
-					resolve(result);
-				}
-			).catch(
-				function (err) {
-					logger.error('sendPeersProposal - Promise is rejected: %s',
-						err.stack ? err.stack : err);
-					return reject(err);
-				}
-			);
-		});
-	};
 	// create array of promises mapping peers array to peer parameter
 	// settle all the promises and return array of responses
-	const promises = targets.map(fn);
-	const responses = [];
-	return settle(promises).then(function (results) {
-		results.forEach(function (result) {
-			if (result.isFulfilled()) {
-				logger.debug('sendPeersProposal - Promise is fulfilled: ' +
-					result.value());
-				responses.push(result.value());
-			} else {
-				logger.debug('sendPeersProposal - Promise is rejected: ' +
-					result.reason());
-				responses.push(result.reason());
-			}
-		});
-		return responses;
+	const promises = targets.map(async (peer) => {
+		return peer.sendProposal(proposal, timeout);
 	});
+	const responses = [];
+	const results = await settle(promises);
+	results.forEach((result) => {
+		if (result.isFulfilled()) {
+			logger.debug(`sendPeersProposal - Promise is fulfilled: ${result.value()}`);
+			responses.push(result.value());
+		} else {
+			logger.debug(`sendPeersProposal - Promise is rejected: ${result.reason()}`);
+			responses.push(result.reason());
+		}
+	});
+	return responses;
 };
 
 /*
  * This function will sign the proposal
  */
-module.exports.signProposal = function (signingIdentity, proposal) {
+module.exports.signProposal = (signingIdentity, proposal) => {
 	const proposal_bytes = proposal.toBuffer();
 	// sign the proposal
-	const sig = signingIdentity.sign(proposal_bytes);
-	const signature = Buffer.from(sig);
+	const signature = Buffer.from(signingIdentity.sign(proposal_bytes));
 
 	// build manually for now
-	const signedProposal = {
-		signature: signature,
-		proposal_bytes: proposal_bytes
+	return {
+		signature,
+		proposal_bytes
 	};
-	return signedProposal;
 };
+/**
+ * convert proposal.proto:SignedProposal to be common.proto:Envelope
+ * @param signature
+ * @param proposal_bytes
+ */
+exports.toEnvelope = ({signature, proposal_bytes}) => ({signature, payload: proposal_bytes});
 
 /*
  * This function will build a common channel header
  */
-module.exports.buildChannelHeader = function (
-	type, channel_id, tx_id, epoch, chaincode_id, time_stamp, client_cert_hash) {
+module.exports.buildChannelHeader = (type, channel_id, tx_id, epoch, chaincode_id, time_stamp, client_cert_hash) => {
 	logger.debug(
 		'buildChannelHeader - type %s channel_id %s tx_id %d epoch % chaincode_id %s',
 		type, channel_id, tx_id, epoch, chaincode_id);
-	var channelHeader = new _commonProto.ChannelHeader();
+	const channelHeader = new _commonProto.ChannelHeader();
 	channelHeader.setType(type); // int32
 	channelHeader.setVersion(1); // int32
 	if (!time_stamp) {
@@ -128,18 +114,18 @@ module.exports.buildChannelHeader = function (
 		channelHeader.setEpoch(epoch); // uint64
 	}
 	if (chaincode_id) {
-		let chaincodeID = new _ccProto.ChaincodeID();
+		const chaincodeID = new _ccProto.ChaincodeID();
 		chaincodeID.setName(chaincode_id);
 
-		let headerExt = new _proposalProto.ChaincodeHeaderExtension();
+		const headerExt = new _proposalProto.ChaincodeHeaderExtension();
 		headerExt.setChaincodeId(chaincodeID);
 
 		channelHeader.setExtension(headerExt.toBuffer());
 	}
-	if(time_stamp) {
+	if (time_stamp) {
 		channelHeader.setTimestamp(time_stamp); // google.protobuf.Timestamp
 	}
-	if(client_cert_hash) {
+	if (client_cert_hash) {
 		channelHeader.setTlsCertHash(client_cert_hash);
 	}
 	return channelHeader;
@@ -148,7 +134,7 @@ module.exports.buildChannelHeader = function (
 /*
  * This function will build the common header
  */
-module.exports.buildHeader = function (creator, channelHeader, nonce) {
+module.exports.buildHeader = (creator, channelHeader, nonce) => {
 	const signatureHeader = new _commonProto.SignatureHeader();
 	signatureHeader.setCreator(creator.serialize());
 	signatureHeader.setNonce(nonce);
@@ -160,8 +146,8 @@ module.exports.buildHeader = function (creator, channelHeader, nonce) {
 	return header;
 };
 
-module.exports.checkProposalRequest = function (request, all) {
-	var errorMsg = null;
+module.exports.checkProposalRequest = (request, all) => {
+	let errorMsg = null;
 
 	if (request) {
 		if (!request.chaincodeId) {
@@ -175,8 +161,8 @@ module.exports.checkProposalRequest = function (request, all) {
 	return errorMsg;
 };
 
-module.exports.checkInstallRequest = function (request) {
-	var errorMsg = null;
+module.exports.checkInstallRequest = (request) => {
+	let errorMsg = null;
 
 	if (request) {
 		if (!request.chaincodeVersion) {
@@ -188,28 +174,26 @@ module.exports.checkInstallRequest = function (request) {
 	return errorMsg;
 };
 
-module.exports.translateCCType = function (type) {
-	let chaincodeType = type ? type : 'golang';
+module.exports.translateCCType = (type) => {
+	const chaincodeType = type ? type.toLowerCase() : 'golang';
 
-	switch (chaincodeType.toLowerCase()) {
-	case 'golang':
-	default:
-		return _ccProto.ChaincodeSpec.Type.GOLANG;
-	case 'car':
-		return _ccProto.ChaincodeSpec.Type.CAR;
-	case 'java':
-		return _ccProto.ChaincodeSpec.Type.JAVA;
-	case 'node':
-		return _ccProto.ChaincodeSpec.Type.NODE;
-	}
+	const map = {
+		golang: _ccProto.ChaincodeSpec.Type.GOLANG,
+		car: _ccProto.ChaincodeSpec.Type.CAR,
+		java: _ccProto.ChaincodeSpec.Type.JAVA,
+		node: _ccProto.ChaincodeSpec.Type.NODE
+	};
+	const value = map[chaincodeType];
+
+	return value ? value : _ccProto.ChaincodeSpec.Type.GOLANG;
 };
 
 /*
  * This function will create a timestamp from the current time
  */
-module.exports.buildCurrentTimestamp = function () {
-	var now = new Date();
-	var timestamp = new _timestampProto.Timestamp();
+module.exports.buildCurrentTimestamp = () => {
+	const now = new Date();
+	const timestamp = new _timestampProto.Timestamp();
 	timestamp.setSeconds(now.getTime() / 1000);
 	timestamp.setNanos((now.getTime() % 1000) * 1000000);
 	return timestamp;

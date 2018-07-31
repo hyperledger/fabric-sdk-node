@@ -203,6 +203,7 @@ declare namespace Client {
     proposal: Proposal;
     admin?: boolean;
     txId?: TransactionId;
+    orderer?: string | Orderer;
   }
 
   export interface BroadcastResponse {

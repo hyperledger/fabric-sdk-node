@@ -175,7 +175,7 @@ var Orderer = class extends Remote {
 	sendDeliver(envelope) {
 		logger.debug('sendDeliver - start');
 
-		if (!envelope || envelope == '') {
+		if (!envelope) {
 			logger.debug('sendDeliver ERROR - missing envelope');
 			var err = new Error('Missing data - Nothing to deliver');
 			return Promise.reject(err);
