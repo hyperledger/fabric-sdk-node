@@ -7,14 +7,49 @@
 
 'use strict';
 
-var utils = require('./utils.js');
-var Remote = require('./Remote');
+const utils = require('./utils.js');
+const Remote = require('./Remote');
 
-var grpc = require('grpc');
-var logger = utils.getLogger('Orderer.js');
+const grpc = require('grpc');
+const logger = utils.getLogger('Orderer.js');
 
-var _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
-var _common = grpc.load(__dirname + '/protos/common/common.proto').common;
+const _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
+const _common = grpc.load(__dirname + '/protos/common/common.proto').common;
+
+/**
+ * @typedef {Error} SYSTEM_TIMEOUT The Error message string that indicates that
+ *           the request operation has timed out due to a system issue. This will
+ *           indicate that the issue is local rather than remote. If there is
+ *           an issue with the remote node a 'REQUEST_TIMEOUT' error message
+ *           will be returned.
+ *           The operation will only use one timer for both types of timeouts.
+ *           The timer will start running as the operation begins. If the timer
+ *           expires before the local instance is able to make the outbound
+ *           request then 'SYSTEM_TIMEOUT' error will be returned. If the local
+ *           instance is able to make the outbound request and the timer expires
+ *           before the remote node responds then the 'REQUEST_TIMEOUT' is
+ *           returned. The timer is controlled by the 'request-timeout' setting
+ *           or passed on a call that makes an outbound request
+ *           @example 'client.setConfigSetting('request-timeout', 3000)'
+ *           @example 'channel.sendTranaction(request, 3000)'
+ */
+
+/**
+ * @typedef {Error} REQUEST_TIMEOUT The Error message string that indicates that
+ *           the request operation has timed out due to a remote node issue.
+ *           If there is an issue with the local system a 'SYSTEM_TIMEOUT'
+ *           error message will be returned.
+ *           The operation will only use one timer for both types of timeouts.
+ *           The timer will start running as the operation begins. If the timer
+ *           expires before the local instance is able to make the outbound
+ *           request then 'SYSTEM_TIMEOUT' error will be returned. If the local
+ *           instance is able to make the outbound request and the timer expires
+ *           before the remote node responds then the 'REQUEST_TIMEOUT' is
+ *           returned. The timer is controlled by the 'request-timeout' setting
+ *           or passed on a call that makes an outbound request
+ *           @example 'client.setConfigSetting('request-timeout', 3000)'
+ *           @example 'channel.sendTranaction(request, 3000)'
+ */
 
 /**
  * The Orderer class encapsulates the client capabilities to interact with
@@ -28,7 +63,7 @@ var _common = grpc.load(__dirname + '/protos/common/common.proto').common;
  * @class
  * @extends Remote
  */
-var Orderer = class extends Remote {
+class Orderer extends Remote {
 
 	/**
 	 * Constructs an Orderer object with the given url and opts. An orderer object
@@ -77,17 +112,18 @@ var Orderer = class extends Remote {
 	 *        overrides the default timeout of the Peer instance and the global
 	 *        timeout in the config settings.
 	 * @returns {Promise} A Promise for a {@link BroadcastResponse} object
+	 * @throws {SYSTEM_TIMEOUT | REQUEST_TIMEOUT}
 	 */
 	sendBroadcast(envelope, timeout) {
 		logger.debug('sendBroadcast - start');
 
 		if (!envelope || envelope == '') {
 			logger.debug('sendBroadcast ERROR - missing envelope');
-			var err = new Error('Missing data - Nothing to broadcast');
+			const err = new Error('Missing data - Nothing to broadcast');
 			return Promise.reject(err);
 		}
 
-		var self = this;
+		const self = this;
 		let rto = self._request_timeout;
 		if (typeof timeout === 'number')
 			rto = timeout;
@@ -95,12 +131,13 @@ var Orderer = class extends Remote {
 		return this.waitForReady(this._ordererClient).then(() => {
 			// Send the envelope to the orderer via grpc
 			return new Promise(function (resolve, reject) {
-				var broadcast = self._ordererClient.broadcast();
+				const broadcast = self._ordererClient.broadcast();
+				let error_msg = 'SYSTEM_TIMEOUT';
 
-				var broadcast_timeout = setTimeout(function () {
+				const broadcast_timeout = setTimeout(function () {
 					logger.error('sendBroadcast - timed out after:%s', rto);
 					broadcast.end();
-					return reject(new Error('REQUEST_TIMEOUT'));
+					return reject(new Error(error_msg));
 				}, rto);
 
 				broadcast.on('data', function (response) {
@@ -143,7 +180,7 @@ var Orderer = class extends Remote {
 				});
 
 				broadcast.write(envelope);
-				//			broadcast.end();
+				error_msg = 'REQUEST_TIMEOUT';
 				logger.debug('sendBroadcast - sent message');
 			});
 		},
@@ -171,46 +208,48 @@ var Orderer = class extends Remote {
 	 *                    accessor methods, getters and setters, and toBuffer() for each property
 	 *                    to be used for further manipulating the object and convert to and from
 	 *                    byte arrays.
+	 * @throws {SYSTEM_TIMEOUT | REQUEST_TIMEOUT}
 	 */
 	sendDeliver(envelope) {
 		logger.debug('sendDeliver - start');
 
 		if (!envelope) {
 			logger.debug('sendDeliver ERROR - missing envelope');
-			var err = new Error('Missing data - Nothing to deliver');
+			const err = new Error('Missing data - Nothing to deliver');
 			return Promise.reject(err);
 		}
 
-		var self = this;
+		const self = this;
 
 		return this.waitForReady(this._ordererClient).then(() => {
 			// Send the seek info to the orderer via grpc
 			return new Promise(function (resolve, reject) {
 				try {
-					var deliver = self._ordererClient.deliver();
-					var return_block = null;
-					var connect = false;
+					const deliver = self._ordererClient.deliver();
+					let return_block = null;
+					let connect = false;
+					let error_msg = 'SYSTEM_TIMEOUT';
 
-					var deliver_timeout = setTimeout(function () {
+					const deliver_timeout = setTimeout(function () {
 						logger.debug('sendDeliver - timed out after:%s', self._request_timeout);
 						deliver.end();
-						return reject(new Error('REQUEST_TIMEOUT'));
+						return reject(new Error(error_msg));
 					}, self._request_timeout);
 
 					deliver.on('data', function (response) {
 						logger.debug('sendDeliver - on data'); //response: %j', response);
 						// check the type of the response
 						if (response.Type === 'block') {
-							var blockHeader = new _common.BlockHeader();
+							const blockHeader = new _common.BlockHeader();
 							blockHeader.setNumber(response.block.header.number);
 							blockHeader.setPreviousHash(response.block.header.previous_hash);
 							blockHeader.setDataHash(response.block.header.data_hash);
-							var blockData = new _common.BlockData();
+							const blockData = new _common.BlockData();
 							blockData.setData(response.block.data.data);
-							var blockMetadata = new _common.BlockMetadata();
+							const blockMetadata = new _common.BlockMetadata();
 							blockMetadata.setMetadata(response.block.metadata.metadata);
 
-							var block = new _common.Block();
+							const block = new _common.Block();
 							block.setHeader(blockHeader);
 							block.setData(blockData);
 							block.setMetadata(blockMetadata);
@@ -275,8 +314,8 @@ var Orderer = class extends Remote {
 					});
 
 					deliver.write(envelope);
+					error_msg = 'REQUEST_TIMEOUT';
 					connect = true;
-					//				deliver.end();
 					logger.debug('sendDeliver - sent envelope');
 				} catch (error) {
 					logger.error('sendDeliver - system error ::' + error.stack ? error.stack : error);
@@ -298,6 +337,6 @@ var Orderer = class extends Remote {
             'url:' + this._url +
             '}';
 	}
-};
+}
 
 module.exports = Orderer;
