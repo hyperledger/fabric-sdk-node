@@ -576,7 +576,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 			let all_good = true;
 			for(const i in proposalResponses) {
 				let one_good = false;
-				let proposal_response = proposalResponses[i];
+				const proposal_response = proposalResponses[i];
 
 				if (expectedResult instanceof Error) {
 					t.true((proposal_response instanceof Error), 'proposal response should be an instance of error');
@@ -591,7 +591,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 						}
 
 						// check payload
-						let payload = proposal_response.response.payload.toString();
+						const payload = proposal_response.response.payload.toString();
 						// verify payload is equal to expectedResult
 						if (payload === expectedResult){
 							t.pass('transaction proposal payloads are valid');
@@ -914,3 +914,76 @@ function getTargetPeers(channel, targets) {
 	}
 	return targetPeers;
 }
+
+async function getCollectionsConfig(t, org, chaincodeId, targets) {
+	init();
+	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+
+	// this is a transaction, will just use org's identity to
+	// submit the request. intentionally we are using a different org
+	// than the one that submitted the "move" transaction, although either org
+	// should work properly
+	const client = new Client();
+	const channel = client.newChannel(channel_name);
+
+	const orgName = ORGS[org].name;
+	const cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	client.setCryptoSuite(cryptoSuite);
+	let tlsInfo = null;
+
+	try {
+		const enrollment = await e2eUtils.tlsEnroll(org);
+		t.pass('Successfully retrieved TLS certificate');
+		tlsInfo = enrollment;
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
+		client.setStateStore(store);
+
+		const admin = await testUtil.getSubmitter(client, t, org);
+		await client.setUserContext(admin);
+		t.pass('Successfully enrolled user \'admin\'');
+
+		// set up the channel to use each org's 'peer1' for
+		// both requests and events
+		for (const key in ORGS) {
+			if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
+				const data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1['tls_cacerts']));
+				const peer = client.newPeer(
+					ORGS[key].peer1.requests,
+					{
+						pem: Buffer.from(data).toString(),
+						'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+					});
+				channel.addPeer(peer);
+			}
+		}
+		// send query
+		const request = {
+			chaincodeId,
+			txId: client.newTransactionID(),
+		};
+
+		// find the peers that match the targets
+		if (targets && targets.length != 0) {
+			const targetPeers = getTargetPeers(channel, targets);
+			if (targetPeers.length < targets.length) {
+				t.fail('Failed to get all peers for targets: ' + targets);
+			} else {
+				request.targets = targetPeers;
+			}
+		}
+		try {
+			const resp = await channel.queryCollectionsConfig(request);
+			t.pass('Successfully retrieved collections config from peer');
+			return resp;
+		} catch (error) {
+			throw error;
+		}
+	} catch (error) {
+		t.fail(error.message);
+		throw error;
+	}
+}
+
+module.exports.getCollectionsConfig = getCollectionsConfig;
