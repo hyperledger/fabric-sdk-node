@@ -93,6 +93,13 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 	);
 	t.throws(
 		() => {
+			eh.registerTxEvent(1234);
+		},
+		/is not a string/,
+		'Check the txid is a string'
+	);
+	t.throws(
+		() => {
 			eh.unregisterTxEvent('bad', true);
 		},
 		/Transaction listener for transaction id/,
@@ -335,16 +342,30 @@ test('\n\n** ChannelEventHub transaction callback \n\n', (t) => {
 			});
 		},
 		/has already been registered/,
-		'Checking for TransactionId (%s) has already been registered'
+		'Checking for TransactionId has already been registered'
 	);
 
-	eh.registerTxEvent('txid2', () => {
+	eh.registerTxEvent('all', () => {
 		t.fail('Should not have called success callback');
 		t.end();
 	}, () =>{
 		t.pass('Should have called error callback');
 		t.end();
 	});
+
+	t.throws(
+		() => {
+			eh.registerTxEvent('All', () => {
+				t.fail('Should not have called success callback');
+				t.end();
+			}, () =>{
+				t.fail('Should not have called error callback');
+				t.end();
+			});
+		},
+		/\(All\) has already been registered/,
+		'Checking for TransactionId has already been registered'
+	);
 
 	t.equal(Object.keys(eh._transactionRegistrations).length, 2, 'Check the size of the transactionOnEvents hash table');
 
