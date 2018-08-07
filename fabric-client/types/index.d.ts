@@ -43,8 +43,11 @@ declare class Client extends BaseClient {
   newChannel(name: string): Client.Channel;
   getChannel(name?: string, throwError?: boolean): Client.Channel;
   newPeer(url: string, opts?: Client.ConnectionOptions): Client.Peer;
-  getPeersForOrg(org_name: string): Client.Peer[];
+  getPeer(name: string): Client.Peer;
+  getPeersForOrg(mspid?: string): Client.Peer[];
   newOrderer(url: string, opts?: Client.ConnectionOptions): Client.Orderer;
+  getOrderer(name: string): Client.Orderer;
+  getPeersForOrgOnChannel(channel_names: string | string[]): Client.ChannelPeer[];
   getCertificateAuthority(): FabricCAServices;
   getClientConfig(): any;
   getMspid(): string;
@@ -65,6 +68,12 @@ declare class Client extends BaseClient {
   loadUserFromStateStore(name: string): Promise<Client.User>;
   getStateStore(): Client.IKeyValueStore;
   createUser(opts: Client.UserOptions): Promise<Client.User>;
+
+  getTargetPeers(request_targets: string | string[] | Client.Peer | Client.Peer[]): Client.Peer[];
+  getTargetOrderers(request_orderer: string | Client.Orderer): Client.Orderer;
+  getTargetOrderers(request_orderer: null | undefined, channel_orderers: Client.Orderer[]): Client.Orderer;
+  getTargetOrderers(request_orderer: null | undefined, channel_orderers: null | undefined, channel_name: string): Client.Orderer;
+  getClientCertHash(create: boolean): Buffer;
 }
 export = Client;
 
@@ -125,7 +134,6 @@ declare namespace Client {
 
   export class User {
     constructor(cfg: string | UserConfig);
-    isEnrolled(): boolean;
     getName(): string;
     getRoles(): string[];
     setRoles(roles: string[]): void;
@@ -136,42 +144,102 @@ declare namespace Client {
     getCryptoSuite(): ICryptoSuite;
     setCryptoSuite(suite: ICryptoSuite): void;
     setEnrollment(privateKey: ICryptoKey, certificate: string, mspId: string): Promise<void>;
+    isEnrolled(): boolean;
     fromString(): Promise<User>;
+    static isInstance(object: any): boolean;
+  }
+
+  export interface InitializeRequest {
+    target?: string | Peer | ChannelPeer;
+    discover?: boolean;
+    endorsementHandler?: string;
+    asLocalhost?: boolean;
+    configUpdate?: Buffer;
   }
 
   export class Channel {
     constructor(name: string, clientContext: Client);
-    initialize(config?: Buffer): Promise<void>;
-    addOrderer(orderer: Orderer): void;
-    removeOrderer(orderer: Orderer): void;
-    addPeer(peer: Peer): void;
+    close(): void;
+    initialize(request?: InitializeRequest): Promise<void>;
+
+    getName(): string;
+    getDiscoveryResults(): Promise<DiscoveryResults>;
+    refresh(request?: DiscoveryRequest): Promise<DiscoveryResults>;
+    getOrganizations(): string[];
+
+    setMSPManager(manager: MSPManager): void;
+    getMSPManager(): MSPManager;
+
+    addPeer(peer: Peer, mspid: string, roles?: ChannelPeerRoles, replace?: boolean): void;
     removePeer(peer: Peer): void;
-    getGenesisBlock(request: OrdererRequest): Promise<Block>;
-    getChannelConfig(): Promise<any>;
+    getPeer(name: string): ChannelPeer;
+    getChannelPeer(name: string): ChannelPeer;
+    getPeers(): ChannelPeer[];
+    getChannelPeers(): ChannelPeer[];
+
+    addOrderer(orderer: Orderer, replace?: boolean): void;
+    removeOrderer(orderer: Orderer): void;
+    getOrderer(name: string): Orderer;
+    getOrderers(): Orderer[];
+    newChannelEventHub(peer: Peer | string): ChannelEventHub;
+    getChannelEventHub(name: string): ChannelEventHub;
+    getChannelEventHubsForOrg(mspid?: string): ChannelEventHub[];
+    getPeersForOrg(mspid?: string): ChannelPeer[];
+
+    getGenesisBlock(request?: OrdererRequest): Promise<Block>;
+
     joinChannel(request: JoinChannelRequest, timeout?: number): Promise<ProposalResponse[]>;
-    sendInstantiateProposal(request: ChaincodeInstantiateUpgradeRequest, timeout?: number): Promise<ProposalResponseObject>;
-    sendTransactionProposal(request: ChaincodeInvokeRequest, timeout?: number): Promise<ProposalResponseObject>;
-    sendTransaction(request: TransactionRequest): Promise<BroadcastResponse>;
-    sendUpgradeProposal(request: ChaincodeInstantiateUpgradeRequest, timeout?: number): Promise<ProposalResponseObject>;
-    queryByChaincode(request: ChaincodeQueryRequest): Promise<Buffer[]>;
-    queryBlock(blockNumber: number, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<Block>;
-    queryBlock(blockNumber: number, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
-    queryBlockByHash(block: Buffer, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<Block>;
-    queryBlockByHash(block: Buffer, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
-    queryTransaction(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<any>;
-    queryTransaction(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
+    getChannelConfig(target?: string | Peer, timeout?: number): Promise<any>;
+    getChannelConfigFromOrderer(): Promise<any>;
+    loadConfigUpdateEnvelope(data: Buffer): any;
+    loadConfigUpdate(config_update_bytes: Buffer): any;
+    loadConfigEnvelope(config_envelope: any): any;
+
+    queryInfo(target?: Peer | string, useAdmin?: boolean): Promise<BlockchainInfo>;
     queryBlockByTxID(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<Block>;
     queryBlockByTxID(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
+    queryBlockByHash(block: Buffer, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<Block>;
+    queryBlockByHash(block: Buffer, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
+    queryBlock(blockNumber: number, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<Block>;
+    queryBlock(blockNumber: number, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
+    queryTransaction(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: false): Promise<any>;
+    queryTransaction(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
+
     queryInstantiatedChaincodes(target: Peer | string, useAdmin?: boolean): Promise<ChaincodeQueryResponse>;
-    queryInfo(target?: Peer | string, useAdmin?: boolean): Promise<BlockchainInfo>;
-    getOrderers(): Orderer[];
-    getPeers(): Peer[];
-    getOrganizations(): string[];
-    getMSPManager(): MSPManager;
-    setMSPManager(manager: MSPManager): void;
-    newChannelEventHub(peer: Peer | string): ChannelEventHub;
-    getChannelEventHubsForOrg(org_name?: string): ChannelEventHub[];
+
+    sendInstantiateProposal(request: ChaincodeInstantiateUpgradeRequest, timeout?: number): Promise<ProposalResponseObject>;
+    sendUpgradeProposal(request: ChaincodeInstantiateUpgradeRequest, timeout?: number): Promise<ProposalResponseObject>;
+    sendTransactionProposal(request: ChaincodeInvokeRequest, timeout?: number): Promise<ProposalResponseObject>;
+    sendTransaction(request: TransactionRequest, timeout?: number): Promise<BroadcastResponse>;
+    queryByChaincode(request: ChaincodeQueryRequest, useAdmin?: boolean): Promise<Buffer[]>;
+    verifyProposalResponse(proposal_response: ProposalResponse): boolean;
+    compareProposalResponseResults(proposal_responses: ProposalResponse[]): boolean;
   }
+
+  export interface ChannelPeerRoles {
+    endorsingPeer?: boolean;
+    chaincodeQuery?: boolean;
+    ledgerQuery?: boolean;
+    eventSource?: boolean;
+  }
+
+  export class ChannelPeer {
+    constructor(mspid: string, channel: Channel, peer: Peer, roles: ChannelPeerRoles);
+
+    close(): void;
+
+    getMspid(): string;
+    getName(): string;
+    getUrl(): string;
+    setRole(role: string, isIn: boolean): void;
+    isInRole(role: string): boolean;
+    isInOrg(mspid: string): boolean;
+    getChannelEventHub(): ChannelEventHub;
+    getPeer(): Peer;
+    sendProposal(proposal: Proposal, timeout?: number): Promise<ProposalResponse>;
+    sendDiscovery(request: Buffer, timeout?: number): Promise<DiscoveryResults>;
+  }
+
   export interface IKeyValueStore {
     getValue(name: string): Promise<string>;
     setValue(name: string, value: string): Promise<string>;
@@ -255,11 +323,13 @@ declare namespace Client {
 
   export class ChannelEventHub {
     constructor(channel: Channel, peer: Peer);
+    getName(): string;
     getPeerAddr(): string;
     lastBlockNumber(): number;
     isconnected(): boolean;
     connect(full_block?: boolean): void;
     disconnect(): void;
+    close(): void;
     checkConnection(force_reconnect: boolean): string;
     registerChaincodeEvent(ccid: string, eventname: string, onEvent: (event: ChaincodeEvent, block_number?: number, tx_id?: string, tx_status?: string) => void,
       onError?: (err: Error) => void, options?: RegistrationOptions): ChaincodeChannelEventHandle;
@@ -270,12 +340,18 @@ declare namespace Client {
     unregisterTxEvent(txId: string, throwError?: boolean): void;
   }
 
+  export interface SignedRequest {
+    payload: Buffer;
+    signature: Buffer;
+  }
+
   export class Peer extends Remote {
     constructor(url: string, opts?: ConnectionOptions);
     close(): void;
     setRole(role: string, isIn: boolean): void;
     isInRole(role: string): boolean;
-    sendProposal(proposal: Proposal, timeout: number): Promise<ProposalResponse>;
+    sendProposal(proposal: Proposal, timeout?: number): Promise<ProposalResponse>;
+    sendDiscovery(request: SignedRequest, timeout?: number): Promise<DiscoveryResults>;
   }
 
   export class Orderer extends Remote {
@@ -441,5 +517,70 @@ declare namespace Client {
     tx_id: string;
     event_name: string;
     payload: Buffer;
+  }
+
+  export interface DiscoveryRequest {
+    target?: string | Peer;
+    chaincodes?: string[];
+    endpoint_names?: boolean;
+    initialize_msps?: boolean;
+    config?: boolean;
+    local?: boolean;
+  }
+
+  export interface DiscoveryResultMSPConfig {
+    rootCerts: string;
+    intermediateCerts: string;
+    admins: string;
+    id: string;
+    orgs: string[];
+    tls_root_certs: string;
+    tls_intermediate_certs: string;
+  }
+
+  export interface DiscoveryResultEndpoint {
+    host: string;
+    port: number;
+    name?: string;
+  }
+  export type DiscoveryResultEndpoints = { endpoints: DiscoveryResultEndpoint[] };
+
+  export interface DiscoveryResultChaincode {
+    name: string;
+    version: string;
+  }
+
+  export interface DiscoveryResultPeer {
+    mspid: string;
+    endpoint: string;
+    ledger_height: Long;
+    name: string;
+    chaincodes: DiscoveryResultChaincode[];
+  }
+  export type DiscoveryResultPeers = { peers: DiscoveryResultPeer[] };
+
+  export interface DiscoveryResultEndorsementGroup {
+    peers: DiscoveryResultPeer[];
+  }
+  export type DiscoveryResultEndorsementLayout = {
+    [group_name: string]: number;
+  };
+  export interface DiscoveryResultEndorsementTarget {
+    groups: {
+      [group_name: string] : DiscoveryResultEndorsementGroup;
+    },
+    layouts: DiscoveryResultEndorsementLayout[];
+  }
+
+  export interface DiscoveryResults {
+    msps?: { [mspid: string]: DiscoveryResultMSPConfig };
+    orderers?: { [mspid: string]: DiscoveryResultEndpoints };
+
+    peers_by_org?: { [name: string]: DiscoveryResultPeers };
+    local_peers?: { [name: string]: DiscoveryResultPeers };
+
+    endorsement_targets?: { [chaincode_name: string]: DiscoveryResultEndorsementTarget };
+
+    timestamp: number;
   }
 }
