@@ -177,8 +177,7 @@ const Channel = class {
 	 * Optionally a configuration may be passed in to initialize this channel without making the call
 	 * to the orderer.
 	 *
-	 * @param {byte[] | InitializeRequest} request - Optional.  a {@link InitializeRequest}
-	 *        or an encoded (a.k.a un-decoded) byte array of the protobuf "ConfigUpdate"
+	 * @param {InitializeRequest} request - Optional.  a {@link InitializeRequest}
 	 * @return {Promise} A Promise that will resolve when the action is complete
 	 */
 	async initialize(request) {
@@ -366,9 +365,80 @@ const Channel = class {
 	 */
 
 	/**
+	 * @typedef {Object} DiscoveryResultMSPConfig
+	 * @property {string} rootCerts List of root certificates trusted by this MSP.
+	 *                              They are used upon certificate validation.
+	 * @property {string} intermediateCerts List of intermediate certificates trusted by this MSP.
+	 *                                      They are used upon certificate validation as follows:
+	 *                                      validation attempts to build a path from the certificate
+	 *                                      to be validated (which is at one end of the path) and
+	 *                                      one of the certs in the RootCerts field (which is at
+	 *                                      the other end of the path). If the path is longer than
+	 *                                      2, certificates in the middle are searched within the
+	 *                                      IntermediateCerts pool.
+	 * @property {string} admins Identity denoting the administrator of this MSP
+	 * @property {string} id the identifier of the MSP
+	 * @property {string[]} orgs fabric organizational unit identifiers that belong to this MSP configuration
+	 * @property {string} tls_root_certs TLS root certificates trusted by this MSP
+	 * @property {string} tls_intermediate_certs TLS intermediate certificates trusted by this MSP
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryResultEndpoint
+	 * @property {string} host
+	 * @property {number} port
+	 * @property {string} name Optional. the name of this endpoint
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryResultPeers
+	 * @property {DiscoveryResultPeer[]} peers
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryResultPeer
+	 * @property {string} mspid
+	 * @property {string} endpoint host:port for this peer
+	 * @property {Long} ledger_height
+	 * @property {string} name
+	 * @property {DiscoveryResultChaincode[]} chaincodes
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryResultChaincode
+	 * @property {string} name
+	 * @property {string} version
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryResultEndorsementTarget
+	 * @property {Object.<string, DiscoveryResultEndorsementGroup>} groups Specifies the endorsers, separated to groups.
+	 * @property {DiscoveryResultEndorsementLayout[]} layouts Specifies options of fulfulling the endorsement policy
+	 */
+
+	/**
+	 * @typedef {Object.<string, number>} DiscoveryResultEndorsementLayout lists the group names, and the amount of signatures needed from each group.
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryResultEndorsementGroup
+	 * @property {DiscoveryResultPeer[]} peers the peers in this group
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryResults
+	 * @property {Object.<string, DiscoveryResultMSPConfig>} msps - Optional. The msp config found.
+	 * @property {Object.<string, DiscoveryResultEndpoint>} orderers - Optional. The orderers found.
+	 * @property {Object.<string, DiscoveryResultPeers>} peers_by_org - Optional. The peers by org found.
+	 * @property {Object.<string, DiscoveryResultEndorsementTarget>} endorsement_targets - Optional.
+	 * @property {number} timestamp - The timestamp at which the discovery results are updated.
+	 */
+
+	/**
 	 * Return the discovery results.
 	 * Discovery results are only available if this channel has been initialized.
 	 * If the results are too old, they will be refreshed
+	 * @returns {Promise<DiscoveryResults>}
 	 */
 	async getDiscoveryResults() {
 		if (this._discovery_results) {
@@ -455,7 +525,6 @@ const Channel = class {
 	 * @param {Peer} peer - An instance of the Peer class that has been initialized with URL
 	 *        and other gRPC options such as TLS credentials and request timeout.
 	 * @param {string} mspid - The mpsid of the organization this peer belongs.
-	 * @param {string} mspid - The MSP this peer is using.
 	 * @param {ChannelPeerRoles} roles - Optional. The roles this peer will perform
 	 *        on this channel.  A role that is not defined will default to true
 	 * @param {boolean} replace - If an orderer exist with the same name, replace
@@ -1314,6 +1383,11 @@ const Channel = class {
 	 * Asks the peer for the current (latest) configuration block for this channel.
 	 * @param {string | Peer} target - Optional. The peer to be used to make the
 	 *        request.
+	 * @param {Number} timeout - Optional. A number indicating milliseconds to wait
+	 *                           on the response before rejecting the promise with a
+	 *                           timeout error. This overrides the default timeout
+	 *                           of the {@link Peer} instance(s) and the global timeout
+	 *                           in the config settings.
 	 * @returns {Promise} A Promise for a {@link ConfigEnvelope} object containing the configuration items.
 	 */
 	async getChannelConfig(target, timeout) {
