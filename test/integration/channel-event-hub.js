@@ -431,11 +431,11 @@ test('*****  Test channel events', async (t) => {
 		eventhubs.push(eh2); //putting on this list will have it closed on the test end
 		let block_reg_num = null;
 
-		const block_replay =  new Promise((resolve, reject) => {
+		let block_replay =  new Promise((resolve, reject) => {
 			const handle = setTimeout(() => {
 				t.fail('Timeout - Failed to replay all the block events in a reasonable amount of time');
 				throw new Error('Timeout -  block replay has not completed');
-			}, 600000000);
+			}, 10000);
 
 			// register to replay all block events
 			block_reg_num = eh2.registerBlockEvent((full_block) => {
@@ -444,7 +444,7 @@ test('*****  Test channel events', async (t) => {
 				// let's put it back into a long
 				const event_block = Long.fromValue(full_block.header.number);
 				if(event_block.equals(current_block)) {
-					t.pass('Successfully got the same last block number');
+					t.pass('Successfully got the last block number');
 					clearTimeout(handle);
 					resolve('all blocks replayed');
 				}
@@ -454,7 +454,6 @@ test('*****  Test channel events', async (t) => {
 				t.fail('Failed to replay all the block events');
 				throw new Error('Replay Error callback was called with ::' + error);
 			},
-				// setting the unregister to false, application code will handle it
 				{startBlock : 0, endBlock : current_block}
 			);
 			eh2.connect(true);
@@ -463,10 +462,53 @@ test('*****  Test channel events', async (t) => {
 		results = await block_replay;
 		t.equals(results, 'all blocks replayed', 'Checking that all blocks were replayed');
 
+		eh2.disconnect(); //clean up
+
+		let seen_last_block = false;
+		block_replay =  new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				t.fail('Timeout - Failed to replay all the block events in a reasonable amount of time');
+				throw new Error('Timeout -  block replay has not completed');
+			}, 10000);
+
+			// register to replay all block events
+			block_reg_num = eh2.registerBlockEvent((full_block) => {
+				t.pass('Successfully got a replayed block ::' + full_block.header.number);
+				// block number is decoded into human readable form
+				// let's put it back into a long
+				const event_block = Long.fromValue(full_block.header.number);
+				if(event_block.equals(current_block)) {
+					t.pass('Successfully got the last block number');
+					seen_last_block = true;
+				}
+				// keep going...do not resolve this promise yet
+			}, (error) => {
+				clearTimeout(handle);
+				if(error.toString().indexOf('Newest block received')) {
+					// this error callback will be called to indicate that the listener is no longer listening
+					// in this case it is OK as the message indicates that newest block was sent
+					t.pass('Message received inidicating newest block received ::' + error);
+					resolve('newest block replayed');
+				} else {
+					t.fail('Failed to replay all the block events');
+					throw new Error('Replay Error callback was called with ::' + error);
+				}
+
+			},
+				{startBlock : 0, endBlock : 'newest'}
+			);
+			eh2.connect(true); //need to connect as disconnect was called
+		});
+
+		results = await block_replay;
+		t.equals(results, 'newest block replayed', 'Checking that newest block replayed');
+
+
 		t.pass(' ======>>>>> CHANNEL EVENT INTEGRATION TEST END');
 	} catch(catch_err) {
 		t.fail('Testing of channel events has failed with ' + catch_err);
 	}
+
 	t.end();
 });
 
