@@ -33,8 +33,8 @@ console.log(util.format('# debug log: %s', debugPath));
 console.log('####################################################\n');
 
 const arch = process.arch;
-const release = require(path.join(__dirname, '../../fabric-client/package.json')).version;
-const thirparty_release = require(path.join(__dirname, '../../fabric-client/package.json')).thirdparty;
+const release = require(path.join(__dirname, '../../package.json')).testFabricVersion;
+const thirdparty_release = require(path.join(__dirname, '../../package.json')).testFabricThirdParty;
 let dockerImageTag = '';
 let thirdpartyImageTag = '';
 let docker_arch = '';
@@ -50,11 +50,15 @@ if (arch.indexOf('x64') === 0) {
 } else {
 	throw new Error('Unknown architecture: ' + arch);
 }
-// prepare thirdpartyImageTag (currently using couchdb image in tests)
-thirdpartyImageTag = docker_arch + '-' + thirparty_release;
 
-// release check
-if (!/-snapshot/.test(release)) {
+// release check, if master is specified then we are using a fabric that has been
+// built from source, otherwise we are using specific published versions.
+
+// prepare thirdpartyImageTag (currently using couchdb image in tests)
+if (!/master/.test(thirdparty_release)) {
+	thirdpartyImageTag = docker_arch + '-' + thirdparty_release;
+}
+if (!/master/.test(release)) {
 	dockerImageTag = docker_arch + '-' + release;
 }
 // these environment variables would be read at test/fixtures/docker-compose.yaml
