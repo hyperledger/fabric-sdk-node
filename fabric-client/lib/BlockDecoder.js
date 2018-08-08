@@ -1086,7 +1086,7 @@ function timeStampToDate(time_stamp) {
 	const millis = time_stamp.seconds * 1000 + time_stamp.nanos / 1000000;
 	const date = new Date(millis);
 
-	return date.toString();
+	return date.toISOString();
 }
 
 function decodeChaincodeActionPayload(payload_bytes) {
