@@ -541,7 +541,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({identities: {}});
+			c._buildEndorsementPolicy({identities: {name: 'something'}});
 		},
 		/Invalid policy, the "identities" property must be an array/,
 		'Checking policy spec: identities must be an array'
@@ -549,7 +549,13 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({identities: []});
+			const identities = [{
+				role: {
+					name: 'member',
+					mspId: 'Org1MSP'
+				}
+			}];
+			c._buildEndorsementPolicy({identities: identities});
 		},
 		/Invalid policy, missing the "policy" property/,
 		'Checking policy spec: must have "policy"'
@@ -557,7 +563,23 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({identities: [{dummy: 'value', dummer: 'value'}], policy: {}});
+			const policy = {
+				identities: [{
+					role: {
+						name: 'member',
+						mspId: 'Org1MSP'
+					}
+				}
+				],
+				policy: {
+					'1-of': [
+						{
+							'signed-by': 0
+						}
+					]
+				}
+			};
+			c._buildEndorsementPolicy({identities: [{dummy: 'value', dummer: 'value'}], policy: policy});
 		},
 		/Invalid identity type found: must be one of role, organization-unit or identity, but found dummy,dummer/,
 		'Checking policy spec: each identity must be "role", "organization-unit" or "identity"'
@@ -565,7 +587,23 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({identities: [{role: 'value'}], policy: {}});
+			const policy = {
+				identities: [{
+					role: {
+						name: 'member',
+						mspId: 'Org1MSP'
+					}
+				}
+				],
+				policy: {
+					'1-of': [
+						{
+							'signed-by': 0
+						}
+					]
+				}
+			};
+			c._buildEndorsementPolicy({identities: [{role: 'value'}], policy: policy});
 		},
 		/Invalid role name found: must be one of "peer", "member" or "admin", but found/,
 		'Checking policy spec: value identity type "role" must have valid "name" value'
@@ -573,7 +611,23 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({identities: [{'organization-unit': 'value'}], policy: {}});
+			const policy = {
+				identities: [{
+					role: {
+						name: 'member',
+						mspId: 'Org1MSP'
+					}
+				}
+				],
+				policy: {
+					'1-of': [
+						{
+							'signed-by': 0
+						}
+					]
+				}
+			};
+			c._buildEndorsementPolicy({identities: [{'organization-unit': 'value'}], policy: policy});
 		},
 		/NOT IMPLEMENTED/,
 		'Checking policy spec: value identity type "organization-unit"'
@@ -581,7 +635,23 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			c._buildEndorsementPolicy({identities: [{identity: 'value'}], policy: {}});
+			const policy = {
+				identities: [{
+					role: {
+						name: 'member',
+						mspId: 'Org1MSP'
+					}
+				}
+				],
+				policy: {
+					'1-of': [
+						{
+							'signed-by': 0
+						}
+					]
+				}
+			};
+			c._buildEndorsementPolicy({identities: [{identity: 'value'}], policy: policy});
 		},
 		/NOT IMPLEMENTED/,
 		'Checking policy spec: value identity type "identity"'

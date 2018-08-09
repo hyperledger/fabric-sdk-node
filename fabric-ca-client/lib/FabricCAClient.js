@@ -314,7 +314,7 @@ const FabricCAClient = class {
 					const payload = responseBody.join('');
 
 					if (!payload) {
-						reject(new Error(
+						return reject(new Error(
 							util.format('fabric-ca request %s failed with HTTP status code %s', api_method, JSON.parse(data).statusCode)));
 					}
 					//response should be JSON
@@ -329,7 +329,7 @@ const FabricCAClient = class {
 						}
 
 					} catch (err) {
-						reject(new Error(
+						return reject(new Error(
 							util.format('Could not parse %s response [%s] as JSON due to error [%s]', api_method, payload, err)));
 					}
 				});
@@ -453,7 +453,7 @@ const FabricCAClient = class {
 					const payload = responseBody.join('');
 
 					if (!payload) {
-						reject(new Error(
+						return reject(new Error(
 							util.format('Enrollment failed with HTTP status code', JSON.parse(data).statusCode)));
 					}
 					//response should be JSON
@@ -472,7 +472,7 @@ const FabricCAClient = class {
 						}
 
 					} catch (err) {
-						reject(new Error(
+						return reject(new Error(
 							util.format('Could not parse enrollment response [%s] as JSON due to error [%s]', payload, err)));
 					}
 				});

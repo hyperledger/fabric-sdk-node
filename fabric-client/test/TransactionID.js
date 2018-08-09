@@ -25,7 +25,7 @@ const Utils = require('../lib/utils');
 require('chai').should();
 const sinon = require('sinon');
 
-describe.only('TransactionID', () => {
+describe('TransactionID', () => {
 
 	let revert;
 	let bufferSpy;
