@@ -144,6 +144,57 @@ test('\n\n*** BlockDecoder test for readwrite sets', (t) => {
 	t.equal(33,results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_level,' check results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_level');
 	t.equal('some hash',results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_level_hashes[0].toString('utf8'),' check results_json.ns_rwset[0].rwset.range_queries_info[0].reads_merkle_hashes.max_level_hashes[0]');
 
+	// Private data
+	const hashed_kv_rwset = new kvrwsetProto.HashedRWSet();
+	const hashed_kv_read = new kvrwsetProto.KVReadHash();
+	hashed_kv_read.setKeyHash(Buffer.from('HASHEDKEY0000'));
+	hashed_kv_read.setVersion(version_proto);
+
+	const hashed_kv_write = new kvrwsetProto.KVWriteHash();
+	hashed_kv_write.setKeyHash(Buffer.from('HASHEDKEY1111'));
+	hashed_kv_write.setIsDelete(true);
+	hashed_kv_write.setValueHash(Buffer.from('HASHEDVAL1111'));
+
+	hashed_kv_rwset.setHashedReads([hashed_kv_read]);
+	hashed_kv_rwset.setHashedWrites([hashed_kv_write]);
+
+	const collection_rwset_array = [];
+	const collection_rwset = new rwsetProto.CollectionHashedReadWriteSet();
+	collection_rwset.setCollectionName('test4private');
+	collection_rwset.setHashedRwset(hashed_kv_rwset.toBuffer());
+	collection_rwset.setPvtRwsetHash(Buffer.from('11111ABCDEFGHIJK'));
+	collection_rwset_array.push(collection_rwset);
+
+	ns_rwset_array = [];
+	ns_rwset_proto = new rwsetProto.NsReadWriteSet();
+	ns_rwset_proto.setNamespace('test4');
+	ns_rwset_proto.setRwset(kvrwset_proto.toBuffer());
+	ns_rwset_proto.setCollectionHashedRwset(collection_rwset_array);
+	ns_rwset_array.push(ns_rwset_proto);
+
+	results_proto.setNsRwset(ns_rwset_array);
+
+	results_json = decodeReadWriteSets(results_proto.toBuffer());
+	logger.debug('results test4 %j', results_json);
+
+	t.equal('test4',results_json.ns_rwset[0].namespace, ' check results_json.ns_rwset[0].namespace');
+	t.equal(1, results_json.ns_rwset[0].collection_hashed_rwset.length, ' check results_json.ns_rwset[0].collection_hashed_rwset.length');
+	t.equal('test4private', results_json.ns_rwset[0].collection_hashed_rwset[0].collection_name, ' check results_json.ns_rwset[0].collection_hashed_rwset[0].collection_name');
+	t.equal('11111ABCDEFGHIJK', results_json.ns_rwset[0].collection_hashed_rwset[0].pvt_rwset_hash.toString(), ' check results_json.ns_rwset[0].collection_hashed_rwset[0].pvt_rwset_hash');
+
+	t.equal('12', results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_reads[0].version.block_num,
+			' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_reads[0].version.block_num');
+	t.equal('21', results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_reads[0].version.tx_num,
+			' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_reads[0].version.tx_num');
+	t.equal('HASHEDKEY0000', results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_reads[0].key_hash.toString(),
+			' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_reads[0].key_hash');
+	t.equal('HASHEDKEY1111', results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_writes[0].key_hash.toString(),
+			' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_writes[0].key_hash');
+	t.equal('HASHEDVAL1111', results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_writes[0].value_hash.toString(),
+			' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_writes[0].value_hash');
+	t.equal(true, results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_writes[0].is_delete,
+			' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_writes[0].is_delete');
+
 	t.end();
 
 });

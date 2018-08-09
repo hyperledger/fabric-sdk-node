@@ -192,6 +192,19 @@ actions {array}
 									key -- {string}
 									is_delete -- {boolean}
 									value -- {string}
+						collection_hashed_rwset -- {array}
+							collection_name -- {string}
+							hashed_rwset
+								hashed_reads -- {array}
+									key_hash -- {byte[]}
+									version
+										block_num -- {number}
+										tx_num -- {number}
+								hashed_writes -- {array}
+									key_hash -- {byte[]}
+									is_delete -- {boolean}
+									value_hash -- {byte[]}
+							pvt_rwset_hash -- {byte[]}
 					events
 						chaincode_id --  {string}
 						tx_id -- {string}
@@ -1244,6 +1257,7 @@ function decodeReadWriteSets(rw_sets_bytes) {
 			const proto_kv_rw_set = proto_ns_rwset[i];
 			kv_rw_set.namespace = proto_kv_rw_set.getNamespace();
 			kv_rw_set.rwset = decodeKVRWSet(proto_kv_rw_set.getRwset());
+			kv_rw_set.collection_hashed_rwset = decodeCollectionHashedRWSet(proto_kv_rw_set.getCollectionHashedRwset());
 			tx_read_write_set.ns_rwset.push(kv_rw_set);
 		}
 	} else {
@@ -1357,6 +1371,65 @@ function decodeVersion(version_long) {
 
 	return version_int;
 }
+
+function decodeCollectionHashedRWSet(proto_collection_hashed_rwset) {
+	let collection_hashed_rwset = [];
+	for (const i in proto_collection_hashed_rwset) {
+		const proto_collection = proto_collection_hashed_rwset[i];
+		const collection = {};
+
+		collection.collection_name = proto_collection.getCollectionName();
+		collection.hashed_rwset = decodeHashedRwset(proto_collection.getHashedRwset().toBuffer());
+		collection.pvt_rwset_hash = proto_collection.getPvtRwsetHash().toBuffer();
+
+		collection_hashed_rwset.push(collection);
+	}
+	return collection_hashed_rwset;
+}
+
+function decodeHashedRwset(hashed_rwset_bytes) {
+	const proto_hashed_rwset = _kv_rwsetProto.HashedRWSet.decode(hashed_rwset_bytes);
+	let hashed_rwset = {};
+
+	const proto_hashed_reads = proto_hashed_rwset.getHashedReads();
+	hashed_rwset.hashed_reads = [];
+	for (const i in proto_hashed_reads) {
+		hashed_rwset.hashed_reads.push(decodeKVReadHash(proto_hashed_reads[i]));
+	}
+
+	const proto_hashed_writes = proto_hashed_rwset.getHashedWrites();
+	hashed_rwset.hashed_writes = [];
+	for (const i in proto_hashed_writes) {
+		hashed_rwset.hashed_writes.push(decodeKVWriteHash(proto_hashed_writes[i]));
+	}
+
+	return hashed_rwset;
+}
+
+function decodeKVReadHash(proto_kv_read_hash) {
+	const kv_read_hash = {};
+	kv_read_hash.key_hash = proto_kv_read_hash.getKeyHash().toBuffer();
+	const proto_version = proto_kv_read_hash.getVersion();
+	if (proto_version) {
+		kv_read_hash.version = {};
+		kv_read_hash.version.block_num = proto_version.getBlockNum().toString();
+		kv_read_hash.version.tx_num = proto_version.getTxNum().toString();
+	} else {
+		kv_read_hash.version = null;
+	}
+
+	return kv_read_hash;
+}
+
+function decodeKVWriteHash(proto_kv_write_hash) {
+	const kv_write_hash = {};
+	kv_write_hash.key_hash = proto_kv_write_hash.getKeyHash().toBuffer();
+	kv_write_hash.is_delete = proto_kv_write_hash.getIsDelete();
+	kv_write_hash.value_hash = proto_kv_write_hash.getValueHash().toBuffer();
+
+	return kv_write_hash;
+}
+
 
 const type_as_string = {
 	0: 'MESSAGE', // Used for messages which are signed but opaque
