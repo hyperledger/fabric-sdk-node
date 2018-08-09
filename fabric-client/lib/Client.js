@@ -919,7 +919,7 @@ const Client = class extends BaseClient {
 	 *           where the chaincode source code resides.
 	 * @property {string} chaincodeType - Optional. Type of chaincode. One of
 	 *           'golang', 'car', 'node' or 'java'.
-	 *           Default is 'golang'. Note that 'java' is not supported as of v1.0.
+	 *           Default is 'golang'. Note that 'java' is not yet supported.
 	 * @property {string[] | string} channelNames - Optional. When no targets are
 	 *           provided. The loaded network configuration will be searched for
 	 *           suitable target peers. Peers that are defined in the channels named
@@ -940,8 +940,8 @@ const Client = class extends BaseClient {
 	 */
 
 	/**
-	 * In fabric v1.0, a chaincode must be installed and instantiated before it
-	 * can be called to process transactions.
+	 * A chaincode must be installed to peers and instantiated on a channel
+	 * before it can be called to process transactions.
 	 * <br><br>
 	 * Chaincode installation is simply uploading the chaincode source and
 	 * dependencies to the peers. This operation is "channel-agnostic" and is

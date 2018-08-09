@@ -10,7 +10,7 @@ The following check-list is for code contributors to make sure their changesets 
 Check the coding styles, run the following command and make sure no ESLint violations are present:
 * `gulp`
 
-Run the full unit test bucket and make sure 100% are passing.  Because v1.0 is still in active development, all tests may not pass. You can run each individually to isolate the failure(s):
+Run the full unit test bucket and make sure 100% are passing.  You can also run each test individually to isolate any failures:
 * `gulp test`
 
 The gulp test command above also generates code coverage reports. Your new code should be accompanied with unit tests and provide 80% line coverage or higher.

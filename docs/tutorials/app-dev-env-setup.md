@@ -54,8 +54,8 @@ within the organization can register themselves to listen on that port
 to get notified.
 
 The final piece of the puzzle is identities. Every operation in a Hyperledger
-Fabric network must be digitially signed for the purposes of access control,
-or provenance/auditing (who did what), or both. As of v1.0, identities are
+Fabric network must be digitally signed for the purposes of access control,
+or provenance/auditing (who did what), or both. Identities are
 based on the Public Key Infrastructure (PKI)) standards. Every orderer node,
 every peer node and every user/transactor must have a key pair with the
 public key wrapped in a x.509 certificate signed by a
