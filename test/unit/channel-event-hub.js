@@ -447,6 +447,50 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 		'Checking for "startBlock" (%s) must not be larger than "endBlock" (%s)'
 	);
 
+	let got_called = false;
+	try {
+		eh.unregisterTxEvent('transid');
+		eh.registerTxEvent('all', () => {
+			t.fail('Should not have called success callback');
+			t.end();
+		}, (err) =>{
+			got_called = true;
+			t.pass('Should be called after getting last trans or a shutdown');
+			t.equals(err.toString().indexOf('ChannelEventHub has been shutdown'), 7,'Check that we got the correct error message');
+		},
+		{startBlock: 1, endBlock: 'newest'}
+		);
+		t.pass('Successfully registered a newest playback transaction event');
+	} catch(error) {
+		t.fail( 'Failed - Should be able to register with newest replay');
+	}
+	t.equal(eh._ending_block_newest, true, 'Check the newest state');
+	t.equal(eh._allowRegistration, false, 'Check the replay state');
+	t.equal(eh._ending_block_number, Long.MAX_VALUE, 'Check the replay end block');
+
+	// this should get some errors posted
+	eh.disconnect();
+	t.equal(got_called, true, 'Check that error callback was called');
+
+	try {
+		eh.unregisterTxEvent('transid');
+		eh.registerBlockEvent(() => {
+			t.fail('Should not have called success callback');
+			t.end();
+		}, () =>{
+			t.fail('Should not have called error callback');
+			t.end();
+		},
+		{startBlock: 10000000, endBlock: 'newest'}
+		);
+		t.pass('Successfully registered a newest playback block event');
+	} catch(error) {
+		t.fail( 'Failed - Should be able to register with newest replay');
+	}
+	t.equal(eh._ending_block_newest, true, 'Check the newest state');
+	t.equal(eh._allowRegistration, false, 'Check the replay state');
+	t.equal(eh._ending_block_number, Long.MAX_VALUE, 'Check the replay end block');
+
 	t.end();
 });
 

@@ -56,6 +56,8 @@ const five_minutes_ms = 5 * 60 * 1000;
 // notified of all transactions
 const ALL = 'all';
 
+// Special value for block numbers
+const NEWEST = Long.fromValue(-1);
 
 /**
  * Transaction processing in fabric v1.1 is a long operation spanning multiple
@@ -138,12 +140,9 @@ const ChannelEventHub = class {
 		logger.debug('const ');
 		// this will hold the last block number received
 		this._last_block_seen = null;
-		// these will hold the block numbers to be used when this
-		// event hub connects to the remote peer's channel event sevice
-		this._starting_block_number = null;
-		this._ending_block_number = null;
-		this._ending_block_seen = false;
-		this._start_stop_registration = null;
+
+		this._setReplayDefaults();
+
 		// hashtable of clients registered for chaincode events
 		this._chaincodeRegistrants = {};
 		// set of clients registered for block events
@@ -155,8 +154,7 @@ const ChannelEventHub = class {
 		this._event_client = null;
 		// grpc chat streaming interface
 		this._stream = null;
-		//allow this hub to to registar new listeners
-		this._allowRegistration = true;
+
 		// fabric connection state of this ChannelEventHub
 		this._connected = false;
 		this._connect_running = false;
@@ -370,14 +368,17 @@ const ChannelEventHub = class {
 				}
 			}
 			else if (deliverResponse.Type === 'status') {
-				if (self._ending_block_seen) {
-					// this is normal after the last block comes in when we set
-					// an ending block
-					logger.debug('on.data - status received after last block seen: %s', deliverResponse.status);
+				if( deliverResponse.status === 'SUCCESS') {
+					if (self._ending_block_seen) {
+						// this is normal after the last block comes in when we set an ending block
+						logger.debug('on.data - status received after last block seen: %s block_num:', deliverResponse.status, self._last_block_seen);
+					} if (self._ending_block_newest) {
+						// this is normal after the last block comes in when we set to newest as an ending block
+						logger.debug('on.data - status received when newest block seen: %s block_num:', deliverResponse.status, self._last_block_seen);
+						self._disconnect(new Error(`Newest block received:${self._last_block_seen} status:${deliverResponse.status}`));
+					}
 				} else {
-					// only blocks should be received .... get status means we need to tell
-					// all registered users that something is wrong and the stream is will be close or
-					// has been closed
+					// tell all registered users that something is wrong and shutting down
 					logger.debug('on.data - status received - %s', deliverResponse.status);
 					self._disconnect(new Error(`Received status message on the event stream. status:${deliverResponse.status}`));
 				}
@@ -456,7 +457,8 @@ const ChannelEventHub = class {
 		this.disconnect();
 	}
 
-	/* Internal method
+	/*
+	 * Internal method
 	 * Disconnects the connection to the peer event source.
 	 * Will close all event listeners and send an `Error` to
 	 * all listeners that provided an "onError" callback.
@@ -467,9 +469,14 @@ const ChannelEventHub = class {
 		this._connect_running = false;
 		this._closeAllCallbacks(err);
 		this._shutdown();
+		this._setReplayDefaults();
 		logger.debug('_disconnect - end -- called due to:: %s, peer:%s', err.message, this.getPeerAddr());
 	}
 
+	/*
+	 * Internal method
+	 * Closes the grpc stream and service client
+	 */
 	_shutdown() {
 		if (this._stream) {
 			logger.debug('_shutdown - shutdown existing stream');
@@ -488,6 +495,8 @@ const ChannelEventHub = class {
 	 * and sends it to the peer's event hub.
 	 */
 	_sendRegistration() {
+		// The behavior when a missing block is encountered
+		let behavior = _abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY;
 		// build start
 		const seekStart = new _abProto.SeekPosition();
 		if (this._starting_block_number) {
@@ -501,13 +510,21 @@ const ChannelEventHub = class {
 
 		// build stop
 		const seekStop = new _abProto.SeekPosition();
-		const seekSpecifiedStop = new _abProto.SeekSpecified();
-		if (this._ending_block_number) {
-			seekSpecifiedStop.setNumber(this._ending_block_number);
+		if(this._ending_block_newest) {
+			const seekNewest = new _abProto.SeekNewest();
+			seekStop.setNewest(seekNewest);
+			behavior = _abProto.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
 		} else {
-			seekSpecifiedStop.setNumber(Long.MAX_VALUE);
+			const seekSpecifiedStop = new _abProto.SeekSpecified();
+			if (this._ending_block_number) {
+				seekSpecifiedStop.setNumber(this._ending_block_number);
+				// user should know the block does not exist
+				behavior = _abProto.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
+			} else {
+				seekSpecifiedStop.setNumber(Long.MAX_VALUE);
+			}
+			seekStop.setSpecified(seekSpecifiedStop);
 		}
-		seekStop.setSpecified(seekSpecifiedStop);
 
 		// seek info with all parts
 		const seekInfo = new _abProto.SeekInfo();
@@ -516,7 +533,9 @@ const ChannelEventHub = class {
 		// BLOCK_UNTIL_READY will mean hold the stream open and keep sending as
 		//     the blocks come in
 		// FAIL_IF_NOT_READY will mean if the block is not there throw an error
-		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
+		seekInfo.setBehavior(behavior);
+
+		// use the admin if available
 		const tx_id = this._clientContext.newTransactionID(true);
 		const signer = this._clientContext._getSigningIdentity(true);
 
@@ -603,10 +622,11 @@ const ChannelEventHub = class {
 	 * Internal method
 	 * checks the startBlock/endBlock options
 	 * checks that only one registration when using startBlock/endBlock
-	 * @returns true if the endBlock has been set otherwise false
+	 * @returns enum of how the endBlock and startBlock have been set
 	 */
 	_checkReplay(options) {
 		logger.debug('_checkReplay - start');
+
 		let result = NO_START_STOP;
 		let have_start_block = false;
 		let have_end_block = false;
@@ -621,7 +641,14 @@ const ChannelEventHub = class {
 		}
 		if (options && typeof options.endBlock !== 'undefined') {
 			try {
-				converted_options.end_block = utils.convertToLong(options.endBlock);
+				let end_block = options.endBlock;
+				if(typeof end_block === 'string') {
+					if(end_block.toLowerCase() === 'newest') {
+						end_block = Long.MAX_VALUE;
+						this._ending_block_newest = true;
+					}
+				}
+				converted_options.end_block = utils.convertToLong(end_block);
 				have_end_block = true;
 			} catch (error) {
 				throw new Error('Problem with the endBlock parameter ::' + error);
@@ -752,8 +779,13 @@ const ChannelEventHub = class {
 	 *           Setting a startBlock may confuse other event listeners,
 	 *           therefore only one listener will be allowed on a ChannelEventHub
 	 *           when a startBlock is being used.
-	 * @property {integer} endBlock - Optional - The ending block number
-	 *           for event checking. When included, the peer's channel event service
+	 * @property {integer | 'newest'} endBlock - Optional - The ending block number
+	 *           for event checking. The value 'newest' to indicate that endBlock
+	 *           will be calculated by the peer as the newest block on the ledger.
+	 *           This allows the application to replay up to the latest block on
+	 *           the ledger and then the listener will stop and be notified by the
+	 *           'onError' callback.
+	 *           When included, the peer's channel event service
 	 *           will be asked to stop sending blocks once this block is delivered.
 	 *           This is how to replay missed blocks that were added
 	 *           to the ledger. When a startBlock is not included, the endBlock
@@ -804,6 +836,9 @@ const ChannelEventHub = class {
 	 * @param {function} onError - Optional callback function to be notified when this event hub
 	 *                             is shutdown. The shutdown may be caused by a network error or by
 	 *                             a call to the "disconnect()" method or a connection error.
+	 *                             This callback will also be called when the event hub is shutdown
+	 *                             due to the last block being received if replaying and requesting
+	 *                             the endBlock to be 'newest'.
 	 * @param {RegistrationOpts} options -
 	 * @returns {Object} An object that should be treated as an opaque handle used
 	 *                   to unregister (see {@link unregisterChaincodeEvent})
@@ -890,6 +925,9 @@ const ChannelEventHub = class {
 	 * @param {function} onError - Optional callback function to be notified when this event hub
 	 *                             is shutdown. The shutdown may be caused by a network error or by
 	 *                             a call to the "disconnect()" method or a connection error.
+	 *                             This callback will also be called when the event hub is shutdown
+	 *                             due to the last block being received if replaying and requesting
+	 *                             the endBlock to be 'newest'.
 	 * @param {RegistrationOpts} options -
 	 * @returns {int} This is the block registration number that must be
 	 *                sed to unregister (see unregisterBlockEvent)
@@ -971,6 +1009,9 @@ const ChannelEventHub = class {
 	 * @param {function} onError - Optional callback function to be notified when this event hub
 	 *                             is shutdown. The shutdown may be caused by a network error or by
 	 *                             a call to the "disconnect()" method or a connection error.
+	 *                             This callback will also be called when the event hub is shutdown
+	 *                             due to the last block being received if replaying and requesting
+	 *                             the endBlock to be 'newest'.
 	 * @param {RegistrationOpts} options -
 	 * @returns {string} The transaction ID that was used to register this event listener,
 	 *          will the same as the txid parameter and must be used to unregister
@@ -1220,7 +1261,7 @@ const ChannelEventHub = class {
 	_checkReplayEnd() {
 		if (this._ending_block_number) {
 			if (this._ending_block_number.lessThanOrEqual(this._last_block_seen)) {
-				//see if the listener wants to do anything else
+				this._ending_block_seen = true;
 				if (this._start_stop_registration) {
 					if (this._start_stop_registration.unregister) {
 						this._start_stop_registration.unregister_action();
@@ -1232,6 +1273,22 @@ const ChannelEventHub = class {
 			}
 		}
 	}
+
+	/*
+	 * utility method to reset the replay state
+	 */
+	_setReplayDefaults() {
+		// these will hold the block numbers to be used when this
+		// event hub connects to the remote peer's channel event sevice
+		this._starting_block_number = null;
+		this._ending_block_number = null;
+		this._ending_block_seen = false;
+		this._ending_block_newest = false;
+		//allow this hub to to registar new listeners
+		this._allowRegistration = true;
+		this._start_stop_registration = null;
+	}
+
 };
 module.exports = ChannelEventHub;
 
