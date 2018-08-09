@@ -384,6 +384,11 @@ const Channel = class {
 	 */
 
 	/**
+	 * @typedef {Object} DiscoveryResultEndpoints
+	 * @property {DiscoveryResultEndpoint[]} endpoints
+	 */
+
+	/**
 	 * @typedef {Object} DiscoveryResultEndpoint
 	 * @property {string} host
 	 * @property {number} port
@@ -428,7 +433,7 @@ const Channel = class {
 	/**
 	 * @typedef {Object} DiscoveryResults
 	 * @property {Object.<string, DiscoveryResultMSPConfig>} msps - Optional. The msp config found.
-	 * @property {Object.<string, DiscoveryResultEndpoint>} orderers - Optional. The orderers found.
+	 * @property {Object.<string, DiscoveryResultEndpoints>} orderers - Optional. The orderers found.
 	 * @property {Object.<string, DiscoveryResultPeers>} peers_by_org - Optional. The peers by org found.
 	 * @property {Object.<string, DiscoveryResultEndorsementTarget>} endorsement_targets - Optional.
 	 * @property {number} timestamp - The timestamp at which the discovery results are updated.
