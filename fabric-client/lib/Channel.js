@@ -48,7 +48,7 @@ const PEER_NOT_ASSIGNED_MSG = 'Peer with name "%s" not assigned to this channel'
 const ORDERER_NOT_ASSIGNED_MSG = 'Orderer with name "%s" not assigned to this channel';
 
 /**
- * In fabric v1.0, channels are the recommended way to isolate data and maintain privacy.
+ * Channels provide data isolation for a set of participating organizations.
  * <br><br>
  * A Channel object captures the settings needed to interact with a fabric backend in the
  * context of a channel. These settings including the list of participating organizations,
@@ -1999,7 +1999,7 @@ const Channel = class {
 	 *           to this channel instance that are in the endorsing role.
 	 * @property {string} chaincodeType - Optional. Type of chaincode. One of
 	 *           'golang', 'car', 'java' or 'node'. Default is 'golang'. Note that 'java'
-	 *           is not supported as of v1.0.
+	 *           is not yet supported.
 	 * @property {string} chaincodeId - Required. The name of the chaincode
 	 * @property {string} chaincodeVersion - Required. Version string of the chaincode,
 	 *           such as 'v1'
@@ -2516,7 +2516,7 @@ const Channel = class {
 
 	/**
 	 * Sends a proposal to one or more endorsing peers that will be handled by the chaincode.
-	 * In fabric v1.0, there is no difference in how the endorsing peers process a request
+	 * There is no difference in how the endorsing peers process a request
 	 * to invoke a chaincode for transaction vs. to invoke a chaincode for query. All requests
 	 * will be presented to the target chaincode's 'Invoke' method which must be implemented to
 	 * understand from the arguments that this is a query request. The chaincode must also return
