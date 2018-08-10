@@ -49,10 +49,20 @@ test('\n\n*** BlockDecoder test for readwrite sets', (t) => {
 	var writes_array = [];
 	writes_array.push(kv_write_proto);
 
+	const kv_metadata_entry_proto = new kvrwsetProto.KVMetadataEntry();
+	kv_metadata_entry_proto.setName('metadata name');
+	kv_metadata_entry_proto.setValue(Buffer.from('METADATAVALUE'));
+	const kv_metadata_proto = new kvrwsetProto.KVMetadataWrite();
+	kv_metadata_proto.setKey('metadata key');
+	kv_metadata_proto.setEntries([kv_metadata_entry_proto]);
+	const metadata_array = [];
+	metadata_array.push(kv_metadata_proto);
+
 	var kvrwset_proto = new kvrwsetProto.KVRWSet();
 	kvrwset_proto.setReads(reads_array);
 	kvrwset_proto.setRangeQueriesInfo(range_query_info_array);
 	kvrwset_proto.setWrites(writes_array);
+	kvrwset_proto.setMetadataWrites(metadata_array);
 
 	var results_proto = new rwsetProto.TxReadWriteSet();
 	results_proto.setDataModel(rwsetProto.TxReadWriteSet.DataModel.KV);
@@ -83,7 +93,11 @@ test('\n\n*** BlockDecoder test for readwrite sets', (t) => {
 	t.equal(false,results_json.ns_rwset[0].rwset.writes[0].is_delete, ' check results_json.ns_rwset[0].rwset.writes[0].version.is_delete');
 	t.equal('this is the value',results_json.ns_rwset[0].rwset.writes[0].value, ' check results_json.ns_rwset[0].rwset.writes[0].value');
 
-  //now add in range query with query reads
+	t.equal('metadata key', results_json.ns_rwset[0].rwset.metadata_writes[0].key, ' check results_json.ns_rwset[0].rwset.metadata_writes[0].key');
+	t.equal('metadata name', results_json.ns_rwset[0].rwset.metadata_writes[0].entries[0].name, ' check results_json.ns_rwset[0].rwset.metadata_writes[0].entries[0].name');
+	t.equal('METADATAVALUE', results_json.ns_rwset[0].rwset.metadata_writes[0].entries[0].value.toString(), ' check results_json.ns_rwset[0].rwset.metadata_writes[0].entries[0].value');
+
+	//now add in range query with query reads
 	var rqi_version_proto = new kvrwsetProto.Version();
 	rqi_version_proto.setBlockNum(13);
 	rqi_version_proto.setTxNum(31);
@@ -155,8 +169,13 @@ test('\n\n*** BlockDecoder test for readwrite sets', (t) => {
 	hashed_kv_write.setIsDelete(true);
 	hashed_kv_write.setValueHash(Buffer.from('HASHEDVAL1111'));
 
+	const hashed_kv_metadata = new kvrwsetProto.KVMetadataWriteHash();
+	hashed_kv_metadata.setKeyHash(Buffer.from('HASHEDKEY2222'));
+	hashed_kv_metadata.setEntries([kv_metadata_entry_proto]);
+
 	hashed_kv_rwset.setHashedReads([hashed_kv_read]);
 	hashed_kv_rwset.setHashedWrites([hashed_kv_write]);
+	hashed_kv_rwset.setMetadataWrites([hashed_kv_metadata]);
 
 	const collection_rwset_array = [];
 	const collection_rwset = new rwsetProto.CollectionHashedReadWriteSet();
@@ -194,6 +213,13 @@ test('\n\n*** BlockDecoder test for readwrite sets', (t) => {
 			' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_writes[0].value_hash');
 	t.equal(true, results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_writes[0].is_delete,
 			' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.hashed_writes[0].is_delete');
+
+	t.equal('HASHEDKEY2222', results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.metadata_writes[0].key_hash.toString(),
+	        ' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.metadata_writes[0].key_hash');
+	t.equal('metadata name', results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.metadata_writes[0].entries[0].name,
+	        ' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.metadata_writes[0].entries[0].name');
+	t.equal('METADATAVALUE', results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.metadata_writes[0].entries[0].value.toString(),
+	        ' check results_json.ns_rwset[0].collection_hashed_rwset[0].hashed_rwset.metadata_writes[0].entries[0].value');
 
 	t.end();
 

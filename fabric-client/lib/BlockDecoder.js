@@ -192,6 +192,11 @@ actions {array}
 									key -- {string}
 									is_delete -- {boolean}
 									value -- {string}
+								metadata_writes -- {array}
+									key -- {string}
+									entries -- {array}
+										name -- {string}
+										value -- {byte[]}
 						collection_hashed_rwset -- {array}
 							collection_name -- {string}
 							hashed_rwset
@@ -204,6 +209,11 @@ actions {array}
 									key_hash -- {byte[]}
 									is_delete -- {boolean}
 									value_hash -- {byte[]}
+								metadata_writes -- {array}
+									key_hash -- {byte[]}
+									entries -- {array}
+										name -- {string}
+										value -- {byte[]}
 							pvt_rwset_hash -- {byte[]}
 					events
 						chaincode_id --  {string}
@@ -1276,6 +1286,7 @@ function decodeKVRWSet(kv_bytes) {
 	kv_rw_set.reads = [];
 	kv_rw_set.range_queries_info = [];
 	kv_rw_set.writes = [];
+	kv_rw_set.metadata_writes = [];
 
 	// build reads
 	const reads = kv_rw_set.reads;
@@ -1296,6 +1307,13 @@ function decodeKVRWSet(kv_bytes) {
 	const proto_writes = proto_kv_rw_set.getWrites();
 	for (const i in proto_writes) {
 		writes.push(decodeKVWrite(proto_writes[i]));
+	}
+
+	// build metadata writes
+	const metadata_writes = kv_rw_set.metadata_writes;
+	const proto_metadata_writes = proto_kv_rw_set.getMetadataWrites();
+	for (const i in proto_metadata_writes) {
+		metadata_writes.push(decodeKVMetadataWrite(proto_metadata_writes[i]));
 	}
 
 	return kv_rw_set;
@@ -1353,6 +1371,29 @@ function decodeKVWrite(proto_kv_write) {
 	return kv_write;
 }
 
+function decodeKVMetadataWrite(proto_kv_metadata_write) {
+	const kv_metadata_write = {};
+
+	kv_metadata_write.key = proto_kv_metadata_write.getKey();
+
+	const proto_kv_metadata_entries = proto_kv_metadata_write.getEntries();
+	kv_metadata_write.entries = [];
+	for (const i in proto_kv_metadata_entries) {
+		kv_metadata_write.entries.push(decodeKVMetadataEntry(proto_kv_metadata_entries[i]));
+	}
+
+	return kv_metadata_write;
+}
+
+function decodeKVMetadataEntry(proto_kv_metadata_entry) {
+	const kv_metadata_entry = {};
+
+	kv_metadata_entry.name = proto_kv_metadata_entry.getName();
+	kv_metadata_entry.value = proto_kv_metadata_entry.getValue().toBuffer();
+
+	return kv_metadata_entry;
+}
+
 function decodeResponse(proto_response) {
 	if (!proto_response) return null;
 	const response = {};
@@ -1403,6 +1444,11 @@ function decodeHashedRwset(hashed_rwset_bytes) {
 		hashed_rwset.hashed_writes.push(decodeKVWriteHash(proto_hashed_writes[i]));
 	}
 
+	const proto_hashed_metadata_writes = proto_hashed_rwset.getMetadataWrites();
+	hashed_rwset.metadata_writes = [];
+	for (const i in proto_hashed_metadata_writes) {
+		hashed_rwset.metadata_writes.push(decodeKVMetadataWriteHash(proto_hashed_metadata_writes[i]));
+	}
 	return hashed_rwset;
 }
 
@@ -1430,6 +1476,19 @@ function decodeKVWriteHash(proto_kv_write_hash) {
 	return kv_write_hash;
 }
 
+function decodeKVMetadataWriteHash(proto_kv_metadata_write_hash) {
+	const kv_metadata_write_hash = {};
+
+	kv_metadata_write_hash.key_hash = proto_kv_metadata_write_hash.getKeyHash().toBuffer();
+
+	const proto_kv_metadata_entries = proto_kv_metadata_write_hash.getEntries();
+	kv_metadata_write_hash.entries = [];
+	for (const i in proto_kv_metadata_entries) {
+		kv_metadata_write_hash.entries.push(decodeKVMetadataEntry(proto_kv_metadata_entries[i]));
+	}
+
+	return kv_metadata_write_hash;
+}
 
 const type_as_string = {
 	0: 'MESSAGE', // Used for messages which are signed but opaque
