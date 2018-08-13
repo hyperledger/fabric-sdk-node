@@ -192,6 +192,9 @@ gulp.task('run-full', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready'
 			'test/integration/only-admin.js',
 			'test/integration/discovery.js',
 			'test/integration/grpc.js',
+			// channel: mychannelts chaincode: examplets:v1
+			'test/typescript/test.js',
+			//
 			'test/integration/perf/orderer.js',
 			'test/integration/perf/peer.js'
 		]))
