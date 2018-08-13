@@ -53,7 +53,7 @@ module.exports.package = function(chaincodePath, chaincodeType, devmode, metadat
 			handler = new Node();
 			break;
 		default:
-			handler = new Golang(['.go','.c','.h']);
+			handler = new Golang(['.go','.c','.h','.s']);
 		}
 
 		return resolve(handler.package(chaincodePath, metadataPath));
