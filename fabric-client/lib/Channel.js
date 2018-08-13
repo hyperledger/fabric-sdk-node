@@ -2005,6 +2005,8 @@ const Channel = class {
 	 *           such as 'v1'
 	 * @property {TransactionID} txId - Required. Object with the transaction id
 	 *           and nonce
+	 * @property {string} collections-config - Optional. The path to the collections
+	 *           config. More details can be found at this [tutorial]{@link https://fabric-sdk-node.github.io/tutorial-private-data.html}
 	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
 	 *           used by the chaincode during initialization, but not saved in the
 	 *           ledger. Data such as cryptographic information for encryption can
