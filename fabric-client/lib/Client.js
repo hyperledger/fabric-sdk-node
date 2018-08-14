@@ -1246,14 +1246,23 @@ const Client = class extends BaseClient {
 		});
 		logger.debug(`Successfully enrolled user "${opts.username}"`);
 
+		const cryptoContent = { signedCertPEM: enrollment.certificate };
+		let keyBytes = null;
+		try {
+			keyBytes = enrollment.key.toBytes();
+		} catch(err) {
+			logger.debug('Cannot access enrollment private key bytes');
+		}
+		if (keyBytes != null && keyBytes.startsWith('-----BEGIN')) {
+			cryptoContent.privateKeyPEM = keyBytes;
+		} else {
+			cryptoContent.privateKeyObj = enrollment.key;
+		}
 		return this.createUser(
 			{
 				username: opts.username,
 				mspid: mspid,
-				cryptoContent: {
-					privateKeyPEM: enrollment.key.toBytes(),
-					signedCertPEM: enrollment.certificate
-				}
+				cryptoContent: cryptoContent
 			});
 	}
 
