@@ -53,6 +53,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
   * Test end to end one step at a time, make sure to follow this sequence:
     * `node test/integration/e2e/create-channel.js`
     * `node test/integration/e2e/join-channel.js`
+    * `node test/integration/e2e/updateAnchorPeers.js`
     * `node test/integration/e2e/install-chaincode.js`
     * `node test/integration/e2e/instantiate-chaincode.js`
     * `node test/integration/e2e/invoke-transaction.js`
