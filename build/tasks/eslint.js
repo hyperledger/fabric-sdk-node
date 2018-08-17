@@ -9,11 +9,14 @@ const eslint = require('gulp-eslint');
 gulp.task('lint', () => {
 	return gulp.src([
 		'**/*.js',
+		'fabric-network/**/*.js',
 		'fabric-client/**/*.js',
 		'fabric-ca-client/lib/*.js',
+		'!fabric-network/coverage/**',
 		'!fabric-ca-client/coverage/**',
 		'!test/typescript/*.js',
 		'!node_modules/**',
+		'!fabric-network/node_modules/**',
 		'!fabric-client/node_modules/**',
 		'!fabric-ca-client/node_modules/**',
 		'!docs/**',
