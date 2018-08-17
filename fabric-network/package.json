@@ -1,0 +1,47 @@
+{
+  "name": "fabric-network",
+  "version": "1.3.0-snapshot",
+  "main": "index.js",
+  "repository": {
+    "type": "gerrit",
+    "url": "https://gerrit.hyperledger.org/r/#/admin/projects/fabric-sdk-node"
+  },
+  "homepage": "https://www.hyperledger.org/projects/fabric",
+  "author": {
+    "name": "hyperledger/fabric",
+    "email": "fabric@lists.hyperledger.org"
+  },
+  "scripts": {
+    "test": "gulp test-headless"
+  },
+  "dependencies": {
+    "fabric-ca-client": "file:../fabric-ca-client",
+    "fabric-client": "file:../fabric-client",
+    "nano": "^6.4.4",
+    "rimraf": "^2.6.2",
+    "uuid": "^3.2.1"
+  },
+  "devDependencies": {
+    "nyc": "^11.8.0",
+    "rewire": "^4.0.1",
+    "sinon": "^5.0.7"
+  },
+  "nyc": {
+    "include": [],
+    "reporter": [
+      "lcov",
+      "json",
+      "text",
+      "text-summary",
+      "cobertura"
+    ],
+    "cache": true
+  },
+  "license": "Apache-2.0",
+  "licenses": [
+    {
+      "type": "Apache-2.0",
+      "url": "https://github.com/hyperledger/fabric/blob/master/LICENSE"
+    }
+  ]
+}

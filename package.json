@@ -62,6 +62,7 @@
   },
   "nyc": {
     "include": [
+      "fabric-network/lib/**/*.js",
       "fabric-client/lib/**/*.js",
       "fabric-ca-client/lib/FabricCAClientImpl.js",
       "fabric-ca-client/lib/helper.js",

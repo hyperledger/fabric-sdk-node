@@ -67,6 +67,7 @@ process.env.THIRDPARTY_IMG_TAG = thirdpartyImageTag;
 
 gulp.task('pre-test', () => {
 	return gulp.src([
+		'fabric-network/lib/**/*.js',
 		'fabric-client/lib/**/*.js',
 		'fabric-ca-client/lib/FabricCAClientImpl.js',
 		'fabric-ca-client/lib/helper.js',
@@ -133,14 +134,21 @@ gulp.task('mocha-fabric-client',
 	}
 );
 
-gulp.task('run-test', ['run-full', 'mocha-fabric-client'],
+gulp.task('mocha-fabric-network',
+	() => {
+		return gulp.src(['./fabric-network/test/**/*.js'], { read: false })
+			.pipe(mocha({ reporter: 'list', exit: true }));
+	}
+);
+
+gulp.task('run-test', ['run-full', 'mocha-fabric-client', 'mocha-fabric-network'],
 	() => {
 		return gulp.src(['./fabric-ca-client/test/**/*.js'], { read: false })
 			.pipe(mocha({ reporter: 'list', exit: true }));
 	}
 );
 
-gulp.task('run-test-headless', ['run-headless', 'mocha-fabric-client'],
+gulp.task('run-test-headless', ['run-headless', 'mocha-fabric-client', 'mocha-fabric-network'],
 	() => {
 		return gulp.src(['./fabric-ca-client/test/**/*.js'], { read: false })
 			.pipe(mocha({ reporter: 'list', exit: true }));
@@ -163,6 +171,7 @@ gulp.task('run-full', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready'
 			'!test/unit/logger.js',
 			// channel: mychannel, chaincode: e2enodecc:v0
 			'test/integration/nodechaincode/e2e.js',
+			'test/integration/network-e2e/e2e.js',
 			// channel: mychannel, chaincode: end2endnodesdk:v0/v1
 			'test/integration/e2e.js',
 			'test/integration/query.js',
