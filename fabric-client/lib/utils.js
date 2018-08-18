@@ -257,36 +257,6 @@ exports.getConfig = () => {
 	return config;
 };
 
-// this is a per-application map of msp managers for each channel
-const mspManagers = {};
-
-//
-// returns the MSP manager responsible for the given channel
-//
-module.exports.getMSPManager = (channelId) => {
-	const mspm = mspManagers[channelId];
-	if (mspm === null) {
-		// this is a rather catastrophic error, without an MSP manager not much can continue
-		throw new Error(util.format('Can not find an MSP Manager for the given channel ID: %s', channelId));
-	}
-
-	return mspm;
-};
-
-//
-// registers an MSP manager using the channelId as the key
-//
-module.exports.addMSPManager = (channelId, mspm) => {
-	mspManagers[channelId] = mspm;
-};
-
-//
-// unregisters the MSP manager for the given channelId
-//
-module.exports.removeMSPManager = (channelId) => {
-	delete mspManagers[channelId];
-};
-
 //
 // Other miscellaneous methods
 //
