@@ -12,7 +12,7 @@
     "email": "fabric@lists.hyperledger.org"
   },
   "scripts": {
-    "test": "gulp test-headless"
+    "test": "nyc mocha --recursive -t 10000"
   },
   "dependencies": {
     "fabric-ca-client": "file:../fabric-ca-client",
@@ -22,20 +22,28 @@
     "uuid": "^3.2.1"
   },
   "devDependencies": {
-    "nyc": "^11.8.0",
+    "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
     "rewire": "^4.0.1",
     "sinon": "^5.0.7"
   },
   "nyc": {
-    "include": [],
-    "reporter": [
-      "lcov",
-      "json",
-      "text",
-      "text-summary",
-      "cobertura"
+    "exclude": [
+      "index.js",
+      "coverage/**",
+      "test/**"
     ],
-    "cache": true
+    "reporter": [
+      "text-summary",
+      "html"
+    ],
+    "cache": true,
+    "all": true,
+    "check-coverage": true,
+    "statements": 100,
+    "branches": 100,
+    "functions": 100,
+    "lines": 100
   },
   "license": "Apache-2.0",
   "licenses": [
