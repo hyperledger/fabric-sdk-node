@@ -20,7 +20,7 @@ chai.use(require('chai-as-promised'));
 const Contract = require('../lib/contract');
 const Network = require('../lib/network');
 const QueryHandler = require('../lib/api/queryhandler');
-
+const TransactionEventHandler = require('../lib/impl/event/transactioneventhandler');
 
 describe('Contract', () => {
 
@@ -57,8 +57,13 @@ describe('Contract', () => {
 		mockPeer3.index = 3;
 		mockPeer3.getName.returns('Peer3');
 		mockQueryHandler = sinon.createStubInstance(QueryHandler);
-		contract = new Contract(mockChannel, 'someid', mockNetwork, mockQueryHandler);
 
+		const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
+		const stubEventHandlerFactory = {
+			createTxEventHandler: () => stubEventHandler
+		};
+
+		contract = new Contract(mockChannel, 'someid', mockNetwork, mockQueryHandler, stubEventHandlerFactory);
 	});
 
 	afterEach(() => {
@@ -103,31 +108,6 @@ describe('Contract', () => {
 			(function() {
 				contract._validatePeerResponses([]);
 			}).should.throw(/No results were returned/);
-		});
-
-		it('should throw if all responses are either not 200 or errors', () => {
-			const responses = [
-				{
-					response: {
-						status: 500,
-						payload: 'got an error'
-					}
-				},
-				new Error('had a problem'),
-				{
-					response: {
-						status: 500,
-						payload: 'oh oh another error'
-					}
-				}
-			];
-
-			mockChannel.verifyProposalResponse.returns(true);
-			mockChannel.compareProposalResponseResults.returns(true);
-
-			(function() {
-				contract._validatePeerResponses(responses);
-			}).should.throw(/No valid responses/);
 		});
 
 		it('should return only the valid responses', () => {
@@ -203,13 +183,13 @@ describe('Contract', () => {
 
 		it('should throw if functionName not specified', () => {
 			return contract.submitTransaction(null, 'arg1', 'arg2')
-				.should.be.rejectedWith('transactionName must be a non-empty string: null');
+				.should.be.rejectedWith('Transaction name must be a non-empty string: null');
 		});
 
 
 		it('should throw if args contains non-string values', () => {
-			return contract.submitTransaction('myfunc', 'arg1', 3.142)
-				.should.be.rejectedWith('transaction parameters must be strings: 3.142');
+			return contract.submitTransaction('myfunc', 'arg1', 3.142, 'arg3', null)
+				.should.be.rejectedWith('Transaction parameters must be strings: 3.142, null');
 		});
 
 		it('should submit an invoke request to the chaincode which does not return data', () => {
@@ -312,12 +292,25 @@ describe('Contract', () => {
 		});
 
 		it('should throw if no valid proposal responses', () => {
-			const proposalResponses = [];
+			const proposalResponses = [
+				{
+					response: { status: 500, payload: 'got an error' }
+				},
+				new Error('had a problem'),
+				{
+					response: { status: 500, payload: 'oh oh another error' }
+				}
+			];
 			const proposal = { proposal: 'i do' };
 			const header = { header: 'gooooal' };
-			//const errorResp = new Error('an error');
 			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
-			contract._validatePeerResponses.withArgs(proposalResponses).returns({ validResponses: [] });
+
+			mockChannel.verifyProposalResponse.returns(true);
+			mockChannel.compareProposalResponseResults.returns(true);
+
+			// Remove the stubbing of _validatePeerResponses in beforeEach()
+			contract._validatePeerResponses.restore();
+
 			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
 				.should.be.rejectedWith(/No valid responses from any peers/);
 		});
@@ -343,7 +336,6 @@ describe('Contract', () => {
 	});
 
 	describe('#executeTransaction', () => {
-
 		/*
 		beforeEach(() => {
 			mockChannel.getPeers.returns([mockPeer1]);
@@ -395,5 +387,4 @@ describe('Contract', () => {
 
 		});
 	});
-
 });

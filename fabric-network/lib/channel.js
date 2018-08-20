@@ -8,6 +8,8 @@
 const FabricConstants = require('fabric-client/lib/Constants');
 const Contract = require('./contract');
 const logger = require('./logger').getLogger('FabricNetwork.Channel');
+const EventHubFactory = require('./impl/event/eventhubfactory');
+const TransactionEventHandler = require('./impl/event/transactioneventhandler');
 const util = require('util');
 
 class Channel {
@@ -23,6 +25,22 @@ class Channel {
 
 		this.network = network;
 		this.channel = channel;
+
+		this.eventHandlerFactory = {
+			createTxEventHandler: () => null
+		};
+		const createEventStrategyFn = network.getOptions().eventStrategy;
+		if (createEventStrategyFn) {
+			const self = this;
+			const eventHubFactory = new EventHubFactory(channel);
+			const mspId = network.getCurrentIdentity()._mspId;
+			const commitTimeout = network.getOptions().commitTimeout;
+			this.eventHandlerFactory.createTxEventHandler = (txId) => {
+				const eventStrategy = createEventStrategyFn(eventHubFactory, self, mspId);
+				return new TransactionEventHandler(txId, eventStrategy, { timeout: commitTimeout });
+			};
+		}
+
 		this.contracts = new Map();
 		this.initialized = false;
 		this.queryHandler;
@@ -156,7 +174,8 @@ class Channel {
 				this.channel,
 				chaincodeId,
 				this.network,
-				this.queryHandler
+				this.queryHandler,
+				this.eventHandlerFactory
 			);
 			this.contracts.set(chaincodeId, contract);
 		}

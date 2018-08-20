@@ -7,7 +7,10 @@
 'use strict';
 
 const Client = require('fabric-client');
+
 const Channel = require('./channel');
+const EventStrategies = require('./eventstrategies');
+
 const logger = require('./logger').getLogger('Network');
 
 class Network {
@@ -37,7 +40,8 @@ class Network {
 
 		// default options
 		this.options = {
-			commitTimeout: 300 * 1000,
+			commitTimeout: 300, // 5 minutes
+			eventStrategy: EventStrategies.MSPID_SCOPE_ALLFORTX,
 			queryHandler: './impl/query/defaultqueryhandler',
 			queryHandlerOptions: {
 			}
@@ -49,7 +53,9 @@ class Network {
 	 * @property {Wallet} wallet The identity wallet implementation for use with this network instance
  	 * @property {string} identity The identity in the wallet for all interactions on this network instance
 	 * @property {string} [clientTlsIdentity] the identity in the wallet to use as the client TLS identity
- 	 * @property {number} [commitTimeout = 300000] The timout period in milliseconds to wait for commit notification to complete
+ 	 * @property {number} [commitTimeout = 300] The timout period in seconds to wait for commit notification to complete
+	 * @property {*} [eventStrategy] Event handling strategy to identify successful transaction commits. A null value
+	 * indicates that no event handling is desired.
  	 */
 
 	/**

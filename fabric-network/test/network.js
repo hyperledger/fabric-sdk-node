@@ -42,7 +42,6 @@ describe('Network', () => {
 
 	beforeEach(() => {
 		mockClient = sinon.createStubInstance(Client);
-
 	});
 
 	afterEach(() => {
@@ -149,13 +148,10 @@ describe('Network', () => {
 		it('should instantiate a Network object', () => {
 			const network = new Network();
 			network.channels.should.be.instanceof(Map);
-			network.options.should.deep.equal(
-				{
-					commitTimeout: 300 * 1000,
-					queryHandler: './impl/query/defaultqueryhandler',
-					queryHandlerOptions: {
-					}
-				});
+			network.options.should.include({
+				commitTimeout: 300,
+				queryHandler: './impl/query/defaultqueryhandler'
+			});
 		});
 	});
 
@@ -288,7 +284,32 @@ describe('Network', () => {
 			should.equal(undefined, network.queryHandlerClass);
 		});
 
+		it('has default transaction event handling strategy if none specified', async () => {
+			const options = {
+				wallet: mockWallet
+			};
+			await network.initialize('ccp', options);
+			network.options.eventStrategy.should.be.a('Function');
+		});
 
+		it('allows transaction event handling strategy to be specified', async () => {
+			const stubStrategyFn = function stubStrategyFn() { };
+			const options = {
+				wallet: mockWallet,
+				eventStrategy: stubStrategyFn
+			};
+			await network.initialize('ccp', options);
+			network.options.eventStrategy.should.equal(stubStrategyFn);
+		});
+
+		it('allows null transaction event handling strategy to be set', async () => {
+			const options = {
+				wallet: mockWallet,
+				eventStrategy: null
+			};
+			await network.initialize('ccp', options);
+			should.equal(network.options.eventStrategy, null);
+		});
 	});
 
 	describe('#_createQueryHandler', () => {
@@ -358,14 +379,12 @@ describe('Network', () => {
 		describe('#getOptions', () => {
 			it('should return the initialized options', () => {
 				const expectedOptions = {
-					commitTimeout: 300 * 1000,
+					commitTimeout: 300,
 					wallet: mockWallet,
 					identity: 'admin',
-					queryHandler: './impl/query/defaultqueryhandler',
-					queryHandlerOptions: {
-					}
+					queryHandler: './impl/query/defaultqueryhandler'
 				};
-				network.getOptions().should.deep.equal(expectedOptions);
+				network.getOptions().should.include(expectedOptions);
 			});
 		});
 	});
@@ -398,6 +417,7 @@ describe('Network', () => {
 
 			it('should create a non-existent channel object', async () => {
 				mockClient.getChannel.withArgs('bar').returns(mockInternalChannel);
+				network.getCurrentIdentity = sinon.stub().returns({ _mspId: 'MSP_ID' });
 
 				const channel2 = await network.getChannel('bar');
 				channel2.should.be.instanceof(Channel);

@@ -158,7 +158,7 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 			.payload.action.proposal_response_payload.extension.results.ns_rwset['0']
 			.rwset.writes['0'].key,
 			'test for write set key value');
-		t.equals('8', processed_transaction.transactionEnvelope.payload.data.actions['0']
+		t.equals('14', processed_transaction.transactionEnvelope.payload.data.actions['0']
 			.payload.action.proposal_response_payload.extension.results.ns_rwset['0']
 			.rwset.reads[1].version.block_num.toString(),
 			'test for read set block num');

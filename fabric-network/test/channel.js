@@ -11,21 +11,23 @@ const rewire = require('rewire');
 const InternalChannel = rewire('fabric-client/lib/Channel');
 const Peer = InternalChannel.__get__('ChannelPeer');
 const Client = require('fabric-client');
+const ChannelEventHub = Client.ChannelEventHub;
 const TransactionID = require('fabric-client/lib/TransactionID.js');
 const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
 
 const chai = require('chai');
-chai.should();
+const should = chai.should();
 chai.use(require('chai-as-promised'));
 
 const Channel = require('../lib/channel');
 const Network = require('../lib/network');
 const Contract = require('../lib/contract');
-
+const EventStrategies = require('../lib/eventstrategies');
 
 describe('Channel', () => {
-
 	const sandbox = sinon.createSandbox();
+
+	const mspId = 'MSP_ID';
 
 	let mockChannel, mockClient;
 	let mockPeer1, mockPeer2, mockPeer3;
@@ -38,7 +40,11 @@ describe('Channel', () => {
 		mockTransactionID = sinon.createStubInstance(TransactionID);
 		mockTransactionID.getTransactionID.returns('00000000-0000-0000-0000-000000000000');
 		mockClient.newTransactionID.returns(mockTransactionID);
+
 		mockChannel.getName.returns('testchainid');
+		const stubEventHub = sinon.createStubInstance(ChannelEventHub);
+		stubEventHub.isconnected.returns(true);
+		mockChannel.getChannelEventHub.returns(stubEventHub);
 
 		mockPeer1 = sinon.createStubInstance(Peer);
 		mockPeer1.index = 1; // add these so that the mockPeers can be distiguished when used in WithArgs().
@@ -53,7 +59,14 @@ describe('Channel', () => {
 		mockPeer3.getName.returns('Peer3');
 
 		mockNetwork = sinon.createStubInstance(Network);
-		mockNetwork.getOptions.returns({useDiscovery: false});
+		mockNetwork.getOptions.returns({
+			useDiscovery: false,
+			commitTimeout: 300,
+			eventStrategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+		});
+		mockNetwork.getCurrentIdentity.returns({
+			_mspId: mspId
+		});
 		channel = new Channel(mockNetwork, mockChannel);
 
 	});
@@ -237,4 +250,42 @@ describe('Channel', () => {
 		});
 	});
 
+	describe('eventHandlerFactory', () => {
+		describe('#createTxEventHandler', () => {
+			const txId = 'TRANSACTION_ID';
+
+			async function initChannel() {
+				sandbox.stub(channel, '_initializeInternalChannel').returns();
+				const peersByMspId = new Map();
+				peersByMspId.set(mspId, [ mockPeer1 ]);
+				sandbox.stub(channel, '_mapPeersToMSPid').returns(peersByMspId);
+				await channel._initialize();
+			}
+
+			it('return an event handler object if event strategy set', async () => {
+				await initChannel();
+				const eventHandler = channel.eventHandlerFactory.createTxEventHandler(txId);
+				eventHandler.should.be.an('Object');
+			});
+
+			it('use commitTimeout option from network as timeout option for event handler', async () => {
+				await initChannel();
+				const timeout = mockNetwork.getOptions().commitTimeout;
+				const eventHandler = channel.eventHandlerFactory.createTxEventHandler(txId);
+				eventHandler.options.timeout.should.equal(timeout);
+			});
+
+			it('return null if no event strategy set', async () => {
+				mockNetwork.getOptions.returns({
+					useDiscovery: false,
+					commitTimeout: 300,
+					eventStrategy: null
+				});
+				channel = new Channel(mockNetwork, mockChannel);
+				await initChannel();
+				const eventHandler = channel.eventHandlerFactory.createTxEventHandler(txId);
+				should.equal(eventHandler, null);
+			});
+		});
+	});
 });

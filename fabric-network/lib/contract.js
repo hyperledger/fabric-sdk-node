@@ -11,14 +11,14 @@ const util = require('util');
 
 class Contract {
 
-	constructor(channel, chaincodeId, network, queryHandler) {
+	constructor(channel, chaincodeId, network, queryHandler, eventHandlerFactory) {
 		logger.debug('in Contract constructor');
 
 		this.channel = channel;
 		this.chaincodeId = chaincodeId;
 		this.network = network;
 		this.queryHandler = queryHandler;
-
+		this.eventHandlerFactory = eventHandlerFactory;
 	}
 
 	/**
@@ -78,23 +78,8 @@ class Contract {
 		return {validResponses, invalidResponses, invalidResponseMsgs};
 	}
 
-	_checkTransactionParameters(method, transactionName, parameters) {
-		if(typeof transactionName !== 'string' || transactionName.length === 0) {
-			const msg = util.format('transactionName must be a non-empty string: %j', transactionName);
-			logger.error('%s: %s', method, msg);
-			throw new Error(msg);
-		}
-		parameters.forEach((parameter) => {
-			if(typeof parameter !== 'string') {
-				const msg = util.format('transaction parameters must be strings: %j', parameter);
-				logger.error('%s: %s', method, msg);
-				throw new Error(msg);
-			}
-		});
-
-	}
-
 	/**
+	 * Submit a transaction to the contract.
      * @param {string} transactionName Transaction function name
      * @param {...string} parameters Transaction function parameters
      * @returns {Buffer} Payload response
@@ -102,24 +87,11 @@ class Contract {
 	async submitTransaction(transactionName, ...parameters) {
 		logger.debug('in submitTransaction: ' + transactionName);
 
-		// check parameters
-		this._checkTransactionParameters('submitTransaction', transactionName, parameters);
-		/*
-		if(typeof transactionName !== 'string' || transactionName.length === 0) {
-			const msg = util.format('transactionName must be a non-empty string: %j', transactionName);
-			logger.error('submitTransaction: ' + msg);
-			throw new Error(msg);
-		}
-		parameters.forEach((parameter) => {
-			if(typeof parameter !== 'string') {
-				const msg = util.format('transaction parameters must be strings: %j', parameter);
-				logger.error('submitTransaction: ' + msg);
-				throw new Error(msg);
-			}
-		});
-		*/
+		this._verifyTransactionDetails('submitTransaction', transactionName, parameters);
 
 		const txId = this.network.getClient().newTransactionID();
+		// createTxEventHandler() will return null if no event handler is requested
+		const eventHandler = this.eventHandlerFactory.createTxEventHandler(txId.getTransactionID());
 
 		// Submit the transaction to the endorsers.
 		const request = {
@@ -132,21 +104,16 @@ class Contract {
 		// node sdk will target all peers on the channel that are endorsingPeer or do something special for a discovery environment
 		const results = await this.channel.sendTransactionProposal(request);
 		const proposalResponses = results[0];
+		const proposal = results[1];
 
 		//TODO: what to do about invalidResponses
 		const {validResponses} = this._validatePeerResponses(proposalResponses);
-		if (validResponses.length === 0) {
-			//TODO: include the invalidResponsesMsgs ?
-			const msg = 'No valid responses from any peers';
-			logger.error('submitTransaction: ' + msg);
-			throw new Error(msg);
-		}
-
-		// Submit the endorsed transaction to the primary orderers.
-		const proposal = results[1];
 
 		//TODO: more to do regarding checking the response (see hlfconnection.invokeChaincode)
 
+		eventHandler && await eventHandler.startListening();
+
+		// Submit the endorsed transaction to the primary orderers.
 		const response = await this.channel.sendTransaction({
 			proposalResponses: validResponses,
 			proposal
@@ -154,9 +121,12 @@ class Contract {
 
 		if (response.status !== 'SUCCESS') {
 			const msg = util.format('Failed to send peer responses for transaction \'%j\' to orderer. Response status: %j', txId.getTransactionID(), response.status);
-			logger.error('submitTransaction: ' + msg);
+			logger.error('submitTransaction:', msg);
+			eventHandler && eventHandler.cancelListening();
 			throw new Error(msg);
 		}
+
+		eventHandler && await eventHandler.waitForEvents();
 
 		// return the payload from the invoked chaincode
 		let result = null;
@@ -164,7 +134,53 @@ class Contract {
 			result = validResponses[0].response.payload;
 		}
 		return result;
+	}
 
+	/**
+	 * Verify the supplied transaction details.
+	 * @private
+	 * @param {String} methodName Requesting method name, used for logging.
+	 * @param {String} transactionName Name of a transaction.
+	 * @param {String[]} parameters transaction parameters.
+	 * @throws {Error} if the details are not acceptable.
+	 */
+	_verifyTransactionDetails(methodName, transactionName, parameters) {
+		this._verifyTransactionName(methodName, transactionName);
+		this._verifyTransactionParameters(methodName, parameters);
+	}
+
+	/**
+	 * Ensure a supplied transaction name is valid.
+	 * @private
+	 * @param {String} methodName Requesting method name, used for logging.
+	 * @param {String} transactionName Name of a transaction.
+	 * @throws {Error} if the name is not valid.
+	 */
+	_verifyTransactionName(methodName, transactionName) {
+		if(typeof transactionName !== 'string' || transactionName.length === 0) {
+			const msg = util.format('Transaction name must be a non-empty string: %j', transactionName);
+			logger.error(methodName + ':', msg);
+			throw new Error(msg);
+		}
+	}
+
+	/**
+	 * Ensure supplied transaction parameters are valid.
+	 * @private
+	 * @param {String} methodName Requesting method name, used for logging.
+	 * @param {String[]} parameters transaction parameters.
+	 * @throws {Error} if any parameters are invalid.
+	 */
+	_verifyTransactionParameters(methodName, parameters) {
+		const invalidParameters = parameters.filter((parameter) => typeof parameter !== 'string');
+		if (invalidParameters.length > 0) {
+			const invalidParamString = invalidParameters
+				.map((parameter) => util.format('%j', parameter))
+				.join(', ');
+			const msg = 'Transaction parameters must be strings: ' + invalidParamString;
+			logger.error(methodName + ':', msg);
+			throw new Error(msg);
+		}
 	}
 
 	/**
@@ -173,7 +189,7 @@ class Contract {
      * @returns {byte[]} payload response
      */
 	async executeTransaction(transactionName, ...parameters) {
-		this._checkTransactionParameters('executeTransaction', transactionName, parameters);
+		this._verifyTransactionDetails('executeTransaction', transactionName, parameters);
 		const txId = this.network.getClient().newTransactionID();
 		const result = await this.queryHandler.queryChaincode(this.chaincodeId, txId, transactionName, parameters);
 		return result ? result : null;
