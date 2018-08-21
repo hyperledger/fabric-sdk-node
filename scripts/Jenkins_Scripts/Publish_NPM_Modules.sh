@@ -25,22 +25,21 @@ npmPublish() {
 
       echo "===> Incremented UNSTABLE VERSION --> $UNSTABLE_INCREMENT"
 
+      if [ "$1" = "fabric-network" ]; then
+          sed -i 's/\(.*\"fabric-client\"\: \"\)\(.*\)/\1'$CLIENT_VER\"\,'/' package.json
+          sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CA_CLIENT_VER\"\,'/' package.json
+      fi
+
       if [ "$UNSTABLE_VER" = "$CURRENT_RELEASE" ]; then
           # Replace existing version with Incremented $UNSTABLE_VERSION
           sed -i 's/\(.*\"version\"\: \"\)\(.*\)/\1'$UNSTABLE_INCREMENT\"\,'/' package.json
-		  if [ "$1" = "fabric-network" ]; then
-		      sed -i 's/\(.*\"fabric-client\"\: \"\)\(.*\)/\1'$UNSTABLE_INCREMENT\"\,'/' package.json
-			  sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$UNSTABLE_INCREMENT\"\,'/' package.json
-		  fi
           npm publish --tag unstable
+	      PUBLISHED_VER=$UNSTABLE_INCREMENT
       else
           # Replace existing version with $CURRENT_RELEASE
           sed -i 's/\(.*\"version\"\: \"\)\(.*\)/\1'$CURRENT_RELEASE\"\,'/' package.json
-          if [ "$1" = "fabric-network" ]; then
-        	  sed -i 's/\(.*\"fabric-client\"\: \"\)\(.*\)/\1'$CURRENT_RELEASE\"\,'/' package.json
-        	  sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CURRENT_RELEASE\"\,'/' package.json
-	      fi
           npm publish --tag unstable
+	      PUBLISHED_VER=$CURRENT_RELEASE
       fi
   else
       if [[ "$RELEASE" =~ alpha*|preview*|beta*|rc*|^[0-9].[0-9].[0-9]$ ]]; then
@@ -74,11 +73,13 @@ npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 cd fabric-ca-client
 versions
 npmPublish fabric-ca-client
+CA_CLIENT_VER=$PUBLISHED_VER
 
 # publish fabric-client node module
 cd ../fabric-client
 versions
 npmPublish fabric-client
+CLIENT_VER=$PUBLISHED_VER
 
 # publish fabric-network node module
 if [ -d "../fabric-network" ]; then
