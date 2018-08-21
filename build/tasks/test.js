@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 */
+
+/* eslint-disable no-console */
+
 'use strict';
 
 const addsrc = require('gulp-add-src');

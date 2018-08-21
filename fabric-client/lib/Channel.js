@@ -41,6 +41,7 @@ const _mspPrincipalProto = grpc.load(__dirname + '/protos/msp/msp_principal.prot
 const _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
 const _discoveryProto = grpc.load(__dirname + '/protos/discovery/protocol.proto').discovery;
 const _gossipProto = grpc.load(__dirname + '/protos/gossip/message.proto').gossip;
+const _collectionProto = grpc.load(__dirname + '/protos/common/collection.proto').common;
 
 const ImplicitMetaPolicy_Rule = {0: 'ANY', 1: 'ALL', 2: 'MAJORITY'};
 
@@ -1991,6 +1992,58 @@ const Channel = class {
 		throw new Error('Payload results are missing from the query');
 	}
 
+	async queryCollectionsConfig(options, useAdmin) {
+		const method = 'queryCollectionsConfig';
+		logger.debug('%s - start. options:%j, useAdmin:%s', method, options, useAdmin);
+		if (!options || !options.chaincodeId || typeof options.chaincodeId !== 'string') {
+			throw new Error('Missing required argument \'options.chaincodeId\' or \'options.chaincodeId\' is not of type string');
+		}
+
+		const targets = this._getTargetForQuery(options.target);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = new TransactionID(signer, useAdmin);
+
+		const request = {
+			targets,
+			txId,
+			signer,
+			chaincodeId: Constants.LSCC,
+			fcn: 'GetCollectionsConfig',
+			args: [options.chaincodeId],
+		};
+
+		try {
+			const [responses] = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
+			if (responses && Array.isArray(responses)) {
+				if (responses.length > 1) {
+					throw new Error('Too many results returned');
+				}
+				const [response] = responses;
+				if (response instanceof Error) {
+					throw response;
+				}
+				if (!response.response) {
+					throw new Error('Didn\'t receive a valid peer response');
+				}
+				logger.debug('%s - response status :: %d', method, response.response.status);
+
+				if (response.response.status !== 200) {
+					logger.debug('%s - response:%j', method, response);
+					if (response.response.message) {
+						throw new Error(response.response.message);
+					}
+					throw new Error('Failed to retrieve collections config from peer');
+				}
+				const queryResponse = decodeCollectionsConfig(response.response.payload);
+				logger.debug('%s - get %s collections for chaincode %s from peer', method, queryResponse.length, options.chaincodeId);
+				return queryResponse;
+			}
+			throw new Error('Failed to retrieve collections config from peer');
+		} catch (e) {
+			throw e;
+		}
+	}
+
 	/**
 	 * @typedef {Object} ChaincodeInstantiateUpgradeRequest
 	 * @property {Peer[]} targets - Optional. An array of endorsing
@@ -3311,6 +3364,35 @@ function decodeSignaturePolicy(identities) {
 		}
 	}
 	return results;
+}
+
+function decodeCollectionsConfig(payload) {
+	const configs = [];
+	const queryResponse = _collectionProto.CollectionConfigPackage.decode(payload);
+	queryResponse.config.forEach((config) => {
+		let collectionConfig = {
+			type: config.payload,
+		};
+		if (config.payload === 'static_collection_config') {
+			const { static_collection_config } = config;
+			const { signature_policy } = static_collection_config.member_orgs_policy;
+			const identities = decodeSignaturePolicy(signature_policy.identities);
+
+			// delete member_orgs_policy, and use policy to keep consistency with the format in collections-config.json
+			delete static_collection_config.member_orgs_policy;
+			static_collection_config.policy = {
+				identities: identities.map(i => JSON.parse(i)),
+				policy: signature_policy.rule.n_out_of,
+			};
+
+			static_collection_config.block_to_live = static_collection_config.block_to_live.toInt();
+			collectionConfig = Object.assign(collectionConfig, static_collection_config);
+		} else {
+			throw new Error(`Do not support collections config of type "${config.payload}"`);
+		}
+		configs.push(collectionConfig);
+	});
+	return configs;
 }
 
 module.exports = Channel;
