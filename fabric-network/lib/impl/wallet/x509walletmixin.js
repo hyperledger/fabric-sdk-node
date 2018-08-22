@@ -6,7 +6,7 @@
 
 'use strict';
 
-const logger = require('../../logger').getLogger('network.js');
+const logger = require('../../logger').getLogger('X509WalletMixin');
 const util = require('util');
 
 class X509WalletMixin {
@@ -22,7 +22,7 @@ class X509WalletMixin {
 	}
 
 	async importIdentity(client, label, identity) {
-		logger.debug(util.format('in importIdentity, label = %s', label));
+		logger.debug('in importIdentity, label = %s', label);
 		// check identity type
 		const cryptoContent = {
 			signedCertPEM: identity.certificate,
@@ -38,7 +38,7 @@ class X509WalletMixin {
 	}
 
 	async exportIdentity(client, label) {
-		logger.debug(util.format('in exportIdentity, label = %s', label));
+		logger.debug('in exportIdentity, label = %s', label);
 		const user = await client.getUserContext(label, true);
 		let result = null;
 		if (user) {
@@ -52,7 +52,7 @@ class X509WalletMixin {
 	}
 
 	async getIdentityInfo(client, label) {
-		logger.debug(util.format('in getIdentityInfo, label = %s', label));
+		logger.debug('in getIdentityInfo, label = %s', label);
 		const user = await client.getUserContext(label, true);
 		let result = null;
 		if (user) {

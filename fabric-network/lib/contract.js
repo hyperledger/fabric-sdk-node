@@ -6,7 +6,7 @@
 
 'use strict';
 
-const logger = require('./logger').getLogger('contract.js');
+const logger = require('./logger').getLogger('Contract');
 const util = require('util');
 
 class Contract {

@@ -9,14 +9,14 @@
 const Client = require('fabric-client');
 const X509WalletMixin = require('./x509walletmixin');
 const Wallet = require('../../api/wallet');
-const logger = require('../../logger').getLogger('network.js');
+const logger = require('../../logger').getLogger('BaseWallet');
 const util = require('util');
 
 class BaseWallet extends Wallet {
 
 	constructor(walletMixin = new X509WalletMixin()) {
 		super();
-		logger.debug(util.format('in BaseWallet constructor, mixin = %O', walletMixin));
+		logger.debug('in BaseWallet constructor, mixin = %O', walletMixin);
 		this.storesInitialized = false;
 		this.walletMixin = walletMixin;
 	}
@@ -35,7 +35,7 @@ class BaseWallet extends Wallet {
 	 * @memberof Wallet
 	 */
 	async setUserContext(client, label) {
-		logger.debug(util.format('in setUserContext, label = %s', label));
+		logger.debug('in setUserContext, label = %s', label);
 
 		label = this.normalizeLabel(label);
 
@@ -53,7 +53,7 @@ class BaseWallet extends Wallet {
 	}
 
 	async configureClientStores(client, label) {
-		logger.debug(util.format('in configureClientStores, label = %s', label));
+		logger.debug('in configureClientStores, label = %s', label);
 
 		label = this.normalizeLabel(label);
 		if (!client) {
@@ -104,7 +104,7 @@ class BaseWallet extends Wallet {
 	//=========================================================
 
 	async import(label, identity) {
-		logger.debug(util.format('in import, label = %s', label));
+		logger.debug('in import, label = %s', label);
 
 		label = this.normalizeLabel(label);
 		const client = await this.configureClientStores(null, label);
@@ -117,7 +117,7 @@ class BaseWallet extends Wallet {
 	}
 
 	async export(label) {
-		logger.debug(util.format('in export, label = %s', label));
+		logger.debug('in export, label = %s', label);
 
 		label = this.normalizeLabel(label);
 		const client = await this.configureClientStores(null, label);
@@ -155,7 +155,7 @@ class BaseWallet extends Wallet {
 			}
 		}
 
-		logger.debug(util.format('list returns %j', idInfoList));
+		logger.debug('list returns %j', idInfoList);
 		return idInfoList;
 	}
 

@@ -50,6 +50,7 @@
     "nyc": "^11.8.0",
     "require-dir": "^1.0.0",
     "rewire": "^4.0.1",
+    "rimraf": "2.6.2",
     "sinon": "6.1.3",
     "tap-colorize": "^1.2.0",
     "tape": "^4.5.1",

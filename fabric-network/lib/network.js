@@ -8,7 +8,7 @@
 
 const Client = require('fabric-client');
 const Channel = require('./channel');
-const logger = require('./logger').getLogger('network.js');
+const logger = require('./logger').getLogger('Network');
 
 class Network {
 

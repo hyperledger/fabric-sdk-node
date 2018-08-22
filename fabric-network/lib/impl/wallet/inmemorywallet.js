@@ -9,7 +9,7 @@
 const Client = require('fabric-client');
 const BaseWallet = require('./basewallet');
 const api = require('fabric-client/lib/api.js');
-const logger = require('../../logger').getLogger('network.js');
+const logger = require('../../logger').getLogger('InMemoryWallet');
 const util = require('util');
 
 // this will be shared across all instance of a memory wallet, so really an app should
@@ -24,14 +24,14 @@ class InMemoryWallet extends BaseWallet {
 	}
 
 	async getStateStore(label) {
-		logger.debug(util.format('in getStateStore, label = %s', label));
+		logger.debug('in getStateStore, label = %s', label);
 		label = this.normalizeLabel(label);
 		const store = await new InMemoryKVS(label);
 		return store;
 	}
 
 	async getCryptoSuite(label) {
-		logger.debug(util.format('in getCryptoSuite, label = %s', label));
+		logger.debug('in getCryptoSuite, label = %s', label);
 		label = this.normalizeLabel(label);
 		const cryptoSuite = Client.newCryptoSuite();
 		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(InMemoryKVS, label));
@@ -39,20 +39,24 @@ class InMemoryWallet extends BaseWallet {
 	}
 
 	async delete(label) {
-		logger.debug(util.format('in delete, label = %s', label));
+		logger.debug('in delete, label = %s', label);
 		label = this.normalizeLabel(label);
-		memoryStore.delete(label);
+		if (memoryStore.has(label)) {
+			memoryStore.delete(label);
+			return true;
+		}
+		return false;
 	}
 
 	async exists(label) {
-		logger.debug(util.format('in exists, label = %s', label));
+		logger.debug('in exists, label = %s', label);
 		label = this.normalizeLabel(label);
 		return memoryStore.has(label);
 	}
 
 	async getAllLabels() {
 		const labels =  Array.from(memoryStore.keys());
-		logger.debug(util.format('getAllLabels returns: %j', labels));
+		logger.debug('getAllLabels returns: %j', labels);
 		return labels;
 	}
 }

@@ -7,7 +7,7 @@
 'use strict';
 const FabricConstants = require('fabric-client/lib/Constants');
 const Contract = require('./contract');
-const logger = require('./logger').getLogger('channel.js');
+const logger = require('./logger').getLogger('FabricNetwork.Channel');
 const util = require('util');
 
 class Channel {

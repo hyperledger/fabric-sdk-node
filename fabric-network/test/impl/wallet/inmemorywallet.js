@@ -172,9 +172,12 @@ mb3MM6J+V7kciO3hSyP5OJSBPWGlsjxQj2m55aFutmlleVfr6YiaLnYd
 			it('should delete an identity from the wallet', async () => {
 				let exists = await wallet.exists('user1');
 				exists.should.equal(true);
-				await wallet.delete('user1');
+				let deleted = await wallet.delete('user1');
+				deleted.should.be.true;
 				exists = await wallet.exists('user1');
 				exists.should.equal(false);
+				deleted = await wallet.delete('user1');
+				deleted.should.be.false;
 			});
 		});
 
