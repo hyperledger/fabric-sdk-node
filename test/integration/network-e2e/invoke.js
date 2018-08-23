@@ -38,16 +38,17 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			t.fail('Failed to import User1@org1.example.com into wallet');
 		}
 
+		const tlsInfo = await e2eUtils.tlsEnroll('org1');
+		await inMemoryWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
+
 		const network = new Network();
 
 		const ccp = fs.readFileSync(fixtures + '/network.json');
 		await network.initialize(JSON.parse(ccp.toString()), {
 			wallet: inMemoryWallet,
-			identity: 'User1@org1.example.com'
+			identity: 'User1@org1.example.com',
+			clientTlsIdentity: 'tlsId'
 		});
-
-		const tlsInfo = await e2eUtils.tlsEnroll('org1');
-		network.getClient().setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 
 		t.pass('Initialized the network');
 
@@ -103,17 +104,20 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		await fileSystemWallet.import(identityLabel, X509WalletMixin.createIdentity('Org1MSP', cert, key));
 		const exists = await fileSystemWallet.exists(identityLabel);
 		t.ok(exists, 'Successfully imported User1@org1.example.com into wallet');
+		const tlsInfo = await e2eUtils.tlsEnroll('org1');
+
+		await fileSystemWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
+
+
 
 		const network = new Network();
 
 		const ccp = fs.readFileSync(fixtures + '/network.json');
 		await network.initialize(JSON.parse(ccp.toString()), {
 			wallet: fileSystemWallet,
-			identity: identityLabel
+			identity: identityLabel,
+			clientTlsIdentity: 'tlsId'
 		});
-
-		const tlsInfo = await e2eUtils.tlsEnroll('org1');
-		network.getClient().setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 
 		t.pass('Initialized the network');
 

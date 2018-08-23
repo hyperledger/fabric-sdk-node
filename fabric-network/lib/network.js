@@ -37,18 +37,28 @@ class Network {
 
 		// default options
 		this.options = {
-			commitTimeout: 300 * 1000,
+			commitTimeout: 300 * 1000
 		};
 	}
 
 	/**
+ 	 * @typedef {Object} NetworkOptions
+	 * @property {Wallet} wallet The identity wallet implementation for use with this network instance
+ 	 * @property {string} identity The identity in the wallet for all interactions on this network instance
+	 * @property {string} [clientTlsIdentity] the identity in the wallet to use as the client TLS identity
+ 	 * @property {number} [commitTimeout = 300000] The timout period in milliseconds to wait for commit notification to complete
+ 	 */
+
+	/**
      * Initialize the network with a connection profile
      *
-     * @param {*} ccp
-     * @param {*} options
+     * @param {Client | string} config The configuration for this network which can come from a common connection
+	 * profile or an existing fabric-client Client instance
+	 * @see see {Client}
+     * @param {NetworkOptions} options specific options for creating this network instance
      * @memberof Network
      */
-	async initialize(ccp, options) {
+	async initialize(config, options) {
 		logger.debug('in initialize');
 
 		if (!options || !options.wallet) {
@@ -58,14 +68,14 @@ class Network {
 
 		Network._mergeOptions(this.options, options);
 
-		if (!(ccp instanceof Client)) {
+		if (!(config instanceof Client)) {
 			// still use a ccp for the discovery peer and ca information
 			logger.debug('initialize: loading client from ccp');
-			this.client = Client.loadFromConfig(ccp);
+			this.client = Client.loadFromConfig(config);
 		} else {
 			// initialize from an existing Client object instance
 			logger.debug('initialize: using existing client object');
-			this.client = ccp;
+			this.client = config;
 		}
 
 		// setup an initial identity for the network
@@ -73,12 +83,17 @@ class Network {
 			logger.debug('initialize: setting identity');
 			this.currentIdentity = await options.wallet.setUserContext(this.client, options.identity);
 		}
+
+		if (options.clientTlsIdentity) {
+			const tlsIdentity = await options.wallet.export(options.clientTlsIdentity);
+			this.client.setTlsClientCertAndKey(tlsIdentity.certificate, tlsIdentity.privateKey);
+		}
 	}
 
 	/**
      * Get the current identity
      *
-     * @returns
+     * @returns {User} a fabric-client User instance of the current identity used by this network
      * @memberof Network
      */
 	getCurrentIdentity() {
@@ -89,7 +104,7 @@ class Network {
 	/**
      * Get the underlying Client object instance
      *
-     * @returns
+     * @returns {Client} the underlying fabric-client Client instance
      * @memberof Network
      */
 	getClient() {
@@ -99,8 +114,8 @@ class Network {
 
 	/**
 	 * Returns the set of options associated with the network connection
-	 * @returns {{commitTimeout: number}|*}
-	 * @memberOf Network
+	 * @returns {NetworkOptions} the network options
+	 * @memberof Network
 	 */
 	getOptions() {
 		logger.debug('in getOptions');
@@ -124,7 +139,7 @@ class Network {
 	 * Returns an object representing the channel
 	 * @param channelName
 	 * @returns {Promise<Channel>}
-	 * @memberOf Network
+	 * @memberof Network
 	 */
 	async getChannel(channelName) {
 		logger.debug('in getChannel');
@@ -140,6 +155,5 @@ class Network {
 		return existingChannel;
 	}
 }
-
 
 module.exports = Network;

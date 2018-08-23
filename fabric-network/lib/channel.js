@@ -14,8 +14,8 @@ class Channel {
 
 	/**
 	 * Channel constructor for internal use only
-	 * @param network
-	 * @param channel
+	 * @param {Network} network The owning network instance
+	 * @param {Channel} channel The fabric-client channel instance
 	 * @private
 	 */
 	constructor(network, channel) {
@@ -107,6 +107,11 @@ class Channel {
 		}
 	}
 
+	/**
+	 * Initialize this channel instance
+	 * @private
+	 * @memberof Channel
+	 */
 	async _initialize() {
 		logger.debug('in initialize');
 
@@ -140,9 +145,6 @@ class Channel {
 	 */
 	getContract(chaincodeId) {
 		logger.debug('in getContract');
-
-		// check initialized flag
-		// Create the new Contract
 		let contract = this.contracts.get(chaincodeId);
 		if (!contract) {
 			contract = 	new Contract(
@@ -150,6 +152,7 @@ class Channel {
 				chaincodeId,
 				this.network
 			);
+			this.contracts.set(chaincodeId, contract);
 		}
 		return contract;
 	}

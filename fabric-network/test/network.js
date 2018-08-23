@@ -188,6 +188,22 @@ describe('Network', () => {
 			network.currentIdentity.should.equal('foo');
 		});
 
+		it('should initialize the network with identity and set client tls crypto material', async () => {
+			mockWallet.export.withArgs('tlsId').resolves({certificate: 'acert', privateKey: 'akey'});
+
+			const options = {
+				wallet: mockWallet,
+				identity: 'admin',
+				clientTlsIdentity: 'tlsId'
+			};
+			await network.initialize('ccp', options);
+			network.client.should.equal(mockClient);
+			network.currentIdentity.should.equal('foo');
+			sinon.assert.calledOnce(mockClient.setTlsClientCertAndKey);
+			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey, 'acert', 'akey');
+		});
+
+
 		it('should initialize from an existing client object', async () => {
 			const options = {
 				wallet: mockWallet,
