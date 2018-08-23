@@ -88,11 +88,11 @@ gulp.task('clean-up', () => {
 
 gulp.task('docker-clean', shell.task([
 	// stop and remove chaincode docker instances
-	'docker kill $(docker ps | grep "dev-peer0.org[12].example.com-e" | awk \'{print $1}\')',
-	'docker rm $(docker ps -a | grep "dev-peer0.org[12].example.com-e" | awk \'{print $1}\')',
+	'docker kill $(docker ps | grep "dev-peer0.org[12].example.com-[en]" | awk \'{print $1}\')',
+	'docker rm $(docker ps -a | grep "dev-peer0.org[12].example.com-[en]" | awk \'{print $1}\')',
 
 	// remove chaincode images so that they get rebuilt during test
-	'docker rmi $(docker images | grep "^dev-peer0.org[12].example.com-e" | awk \'{print $3}\')',
+	'docker rmi $(docker images | grep "^dev-peer0.org[12].example.com-[en]" | awk \'{print $3}\')',
 
 	// clean up all the containers created by docker-compose
 	'docker-compose -f test/fixtures/docker-compose.yaml down'
