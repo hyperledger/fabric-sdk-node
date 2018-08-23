@@ -81,6 +81,7 @@ class Orderer extends Remote {
 
 		logger.debug('Orderer.const - url: %s timeout: %s', url, this._request_timeout);
 		this._ordererClient = new _abProto.AtomicBroadcast(this._endpoint.addr, this._endpoint.creds, this._options);
+		this._sendDeliverConnect = false;
 	}
 
 	/**
@@ -117,7 +118,7 @@ class Orderer extends Remote {
 	sendBroadcast(envelope, timeout) {
 		logger.debug('sendBroadcast - start');
 
-		if (!envelope || envelope == '') {
+		if (!envelope || envelope === '') {
 			logger.debug('sendBroadcast ERROR - missing envelope');
 			const err = new Error('Missing data - Nothing to broadcast');
 			return Promise.reject(err);
@@ -130,17 +131,17 @@ class Orderer extends Remote {
 
 		return this.waitForReady(this._ordererClient).then(() => {
 			// Send the envelope to the orderer via grpc
-			return new Promise(function (resolve, reject) {
+			return new Promise((resolve, reject) => {
 				const broadcast = self._ordererClient.broadcast();
 				let error_msg = 'SYSTEM_TIMEOUT';
 
-				const broadcast_timeout = setTimeout(function () {
+				const broadcast_timeout = setTimeout(() => {
 					logger.error('sendBroadcast - timed out after:%s', rto);
 					broadcast.end();
 					return reject(new Error(error_msg));
 				}, rto);
 
-				broadcast.on('data', function (response) {
+				broadcast.on('data', (response) => {
 					logger.debug('sendBroadcast - on data response: %j', response);
 					broadcast.end();
 					if (response && response.info) {
@@ -153,7 +154,6 @@ class Orderer extends Remote {
 						logger.error('sendBroadcast ERROR - reject with invalid response from the orderer');
 						return reject(new Error('SYSTEM_ERROR'));
 					}
-
 				});
 
 				broadcast.on('end', () => {
@@ -162,21 +162,17 @@ class Orderer extends Remote {
 					broadcast.cancel();
 				});
 
-				broadcast.on('error', function (err) {
+				broadcast.on('error', (err) => {
 					clearTimeout(broadcast_timeout);
 					broadcast.end();
 					if (err && err.code) {
-						if (err.code == 14) {
+						if (err.code === 14) {
 							logger.error('sendBroadcast - on error: %j', err.stack ? err.stack : err);
 							return reject(new Error('SERVICE_UNAVAILABLE'));
 						}
 					}
 					logger.debug('sendBroadcast - on error: %j', err.stack ? err.stack : err);
-					if (err instanceof Error) {
-						return reject(err);
-					} else {
-						return reject(new Error(err));
-					}
+					return reject(err);
 				});
 
 				broadcast.write(envelope);
@@ -223,20 +219,20 @@ class Orderer extends Remote {
 
 		return this.waitForReady(this._ordererClient).then(() => {
 			// Send the seek info to the orderer via grpc
-			return new Promise(function (resolve, reject) {
+			return new Promise((resolve, reject) => {
 				try {
 					const deliver = self._ordererClient.deliver();
 					let return_block = null;
-					let connect = false;
+					self._sendDeliverConnect = false;
 					let error_msg = 'SYSTEM_TIMEOUT';
 
-					const deliver_timeout = setTimeout(function () {
+					const deliver_timeout = setTimeout(() => {
 						logger.debug('sendDeliver - timed out after:%s', self._request_timeout);
 						deliver.end();
 						return reject(new Error(error_msg));
 					}, self._request_timeout);
 
-					deliver.on('data', function (response) {
+					deliver.on('data', (response) => {
 						logger.debug('sendDeliver - on data'); //response: %j', response);
 						// check the type of the response
 						if (response.Type === 'block') {
@@ -258,7 +254,7 @@ class Orderer extends Remote {
 							logger.debug('sendDeliver - wait for success, keep this block number %s', return_block.header.number);
 						} else if (response.Type === 'status') {
 							clearTimeout(deliver_timeout);
-							connect = false;
+							self._sendDeliverConnect = false;
 							deliver.end();
 							// response type should now be 'status'
 							if (response.status === 'SUCCESS') {
@@ -270,35 +266,35 @@ class Orderer extends Remote {
 							}
 						} else {
 							logger.error('sendDeliver ERROR - reject with invalid response from the orderer');
-							if (connect) {
+							if (self._sendDeliverConnect) {
 								clearTimeout(deliver_timeout);
 								deliver.end();
-								connect = false;
+								self._sendDeliverConnect = false;
 							}
 							return reject(new Error('SYSTEM_ERROR'));
 						}
 					});
 
-					deliver.on('status', function (response) {
+					deliver.on('status', (response) => {
 						logger.debug('sendDeliver - on status:%j', response);
 					});
 
 					deliver.on('end', () => {
 						logger.debug('sendDeliver - on end');
-						if (connect) {
+						if (self._sendDeliverConnect) {
 							clearTimeout(deliver_timeout);
 							deliver.cancel();
-							connect = false;
+							self._sendDeliverConnect = false;
 						}
 
 					});
 
-					deliver.on('error', function (err) {
+					deliver.on('error', (err) => {
 						logger.debug('sendDeliver - on error');
 						clearTimeout(deliver_timeout);
-						if (connect) {
+						if (self._sendDeliverConnect) {
 							deliver.end();
-							connect = false;
+							self._sendDeliverConnect = false;
 							if (err && err.code) {
 								if (err.code == 14) {
 									logger.error('sendDeliver - on error code 14: %j', err.stack ? err.stack : err);
@@ -306,16 +302,12 @@ class Orderer extends Remote {
 								}
 							}
 						}
-						if (err instanceof Error) {
-							return reject(err);
-						} else {
-							return reject(new Error(err));
-						}
+						return reject(err);
 					});
 
 					deliver.write(envelope);
 					error_msg = 'REQUEST_TIMEOUT';
-					connect = true;
+					self._sendDeliverConnect = true;
 					logger.debug('sendDeliver - sent envelope');
 				} catch (error) {
 					logger.error('sendDeliver - system error ::' + error.stack ? error.stack : error);
