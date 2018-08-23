@@ -25,6 +25,7 @@ class Channel {
 		this.channel = channel;
 		this.contracts = new Map();
 		this.initialized = false;
+		this.queryHandler;
 	}
 
 	/**
@@ -121,7 +122,7 @@ class Channel {
 
 		await this._initializeInternalChannel();
 		this.peerMap = this._mapPeersToMSPid();
-
+		this.queryHandler = await this.network._createQueryHandler(this.channel, this.peerMap);
 		this.initialized = true;
 	}
 
@@ -145,12 +146,17 @@ class Channel {
 	 */
 	getContract(chaincodeId) {
 		logger.debug('in getContract');
+		if (!this.initialized) {
+			throw new Error('Unable to get contract as channel has failed to initialize');
+		}
+
 		let contract = this.contracts.get(chaincodeId);
 		if (!contract) {
 			contract = 	new Contract(
 				this.channel,
 				chaincodeId,
-				this.network
+				this.network,
+				this.queryHandler
 			);
 			this.contracts.set(chaincodeId, contract);
 		}
@@ -164,6 +170,9 @@ class Channel {
 		// channel._dispose() followed by channel.initialize() be safe ?
 		// make this private is the safest option.
 		this.contracts.clear();
+		if (this.queryHandler) {
+			this.queryHandler.dispose();
+		}
 		this.initialized = false;
 	}
 

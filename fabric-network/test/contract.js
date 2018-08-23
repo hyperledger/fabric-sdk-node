@@ -19,6 +19,7 @@ chai.use(require('chai-as-promised'));
 
 const Contract = require('../lib/contract');
 const Network = require('../lib/network');
+const QueryHandler = require('../lib/api/queryhandler');
 
 
 describe('Contract', () => {
@@ -30,6 +31,7 @@ describe('Contract', () => {
 	let mockPeer1, mockPeer2, mockPeer3;
 	let contract;
 	let mockTransactionID;
+	let mockQueryHandler;
 
 	beforeEach(() => {
 		clock = sinon.useFakeTimers();
@@ -54,8 +56,8 @@ describe('Contract', () => {
 		mockPeer3 = sinon.createStubInstance(Peer);
 		mockPeer3.index = 3;
 		mockPeer3.getName.returns('Peer3');
-
-		contract = new Contract(mockChannel, 'someid', mockNetwork);
+		mockQueryHandler = sinon.createStubInstance(QueryHandler);
+		contract = new Contract(mockChannel, 'someid', mockNetwork, mockQueryHandler);
 
 	});
 
@@ -338,6 +340,60 @@ describe('Contract', () => {
 				.should.be.rejectedWith(/Failed to send/);
 		});
 
+	});
+
+	describe('#executeTransaction', () => {
+
+		/*
+		beforeEach(() => {
+			mockChannel.getPeers.returns([mockPeer1]);
+			mockPeer1.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.EVENT_SOURCE_ROLE).returns(true);
+			mockChannel.newChannelEventHub.withArgs(mockPeer1).returns(mockEventHub1);
+			contract._connectToEventHubs();
+			mockEventHub1.isconnected.returns(true);
+			mockEventHub1.getPeerAddr.returns('mockPeer1');
+		});
+		*/
+
+		// it('should throw if functionName not specified', () => {
+		// 	return contract.queryChainCode(mockSecurityContext, null, [])
+		// 		.should.be.rejectedWith(/functionName not specified/);
+		// });
+
+		// it('should throw if args not specified', () => {
+		// 	return contract.queryChainCode(mockSecurityContext, 'myfunc', null)
+		// 		.should.be.rejectedWith(/args not specified/);
+		// });
+
+		// it('should throw if args contains non-string values', () => {
+		// 	return contract.queryChainCode(mockSecurityContext, 'myfunc', [3.142])
+		// 		.should.be.rejectedWith(/invalid arg specified: 3.142/);
+		// });
+
+		it('should query chaincode and handle a good response without return data', async () => {
+			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves();
+
+			const result = await contract.executeTransaction('myfunc', 'arg1', 'arg2');
+			sinon.assert.calledOnce(mockQueryHandler.queryChaincode);
+			should.equal(result, null);
+		});
+
+		it('should query chaincode and handle a good response with return data', async () => {
+			const response = Buffer.from('hello world');
+			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves(response);
+
+			const result = await contract.executeTransaction('myfunc', 'arg1', 'arg2');
+			sinon.assert.calledOnce(mockQueryHandler.queryChaincode);
+			result.equals(response).should.be.true;
+		});
+
+		it('should query chaincode and handle an error response', () => {
+			const response = new Error('such error');
+			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).rejects(response);
+			return contract.executeTransaction('myfunc', 'arg1', 'arg2')
+				.should.be.rejectedWith(/such error/);
+
+		});
 	});
 
 });

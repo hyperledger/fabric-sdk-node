@@ -32,7 +32,7 @@ const logger = utils.getLogger('Peer.js');
  * @class
  * @extends Remote
  */
-const Peer = class extends Remote {
+class Peer extends Remote {
 
 	/**
 	 * Construct a Peer object with the given url and opts. A peer object
@@ -82,7 +82,7 @@ const Peer = class extends Remote {
 	 *        timeout in the config settings.
 	 * @returns {Promise} A Promise for a {@link ProposalResponse}
 	 */
-	sendProposal(proposal, timeout) {
+	async sendProposal(proposal, timeout) {
 		const method = 'sendProposal';
 		logger.debug('%s - Start ----%s %s', method, this.getName(), this.getUrl());
 		const self = this;
@@ -91,45 +91,47 @@ const Peer = class extends Remote {
 			rto = timeout;
 
 		if(!proposal) {
-			return Promise.reject(new Error('Missing proposal to send to peer'));
+			throw new Error('Missing proposal to send to peer');
 		}
 
-		return this.waitForReady(this._endorserClient).then(() => {
-			return new Promise((resolve, reject) => {
-				const send_timeout = setTimeout(() => {
-					clearTimeout(send_timeout);
-					logger.error('%s - timed out after:%s', method, rto);
-					return reject(new Error('REQUEST_TIMEOUT'));
-				}, rto);
+		await this.waitForReady(this._endorserClient);
 
-				self._endorserClient.processProposal(proposal, (err, proposalResponse) => {
-					clearTimeout(send_timeout);
-					if (err) {
-						logger.debug('%s - Received proposal response from: %s status: %s', method, self._url, err);
-						if(err instanceof Error) {
-							reject(err);
-						}
-						else {
-							reject(new Error(err));
+		return new Promise((resolve, reject) => {
+			const send_timeout = setTimeout(() => {
+				clearTimeout(send_timeout);
+				logger.error('%s - timed out after:%s', method, rto);
+				return reject(new Error('REQUEST_TIMEOUT'));
+			}, rto);
+
+			self._endorserClient.processProposal(proposal, (err, proposalResponse) => {
+				clearTimeout(send_timeout);
+				if (err) {
+					logger.debug('%s - Received proposal response from: %s status: %s', method, self._url, err);
+					if(err instanceof Error) {
+						reject(err);
+					}
+					else {
+						reject(new Error(err));
+					}
+				} else {
+					if (proposalResponse) {
+						logger.debug('%s - Received proposal response from peer "%s": status - %s', method, self._url, (proposalResponse.response &&  proposalResponse.response.status) ? proposalResponse.response.status : 'undefined');
+						// 400 is the error threshold level, anything below that the endorser will endorse it.
+						if (proposalResponse.response && proposalResponse.response.status < 400) {
+							resolve(proposalResponse);
+						} else if (proposalResponse.response && proposalResponse.response.message) {
+							const error = Object.assign(new Error(proposalResponse.response.message), proposalResponse.response);
+							error.isProposalResponse = true;
+							reject(error);
+						} else {
+							logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
+							reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
 						}
 					} else {
-						if (proposalResponse) {
-							logger.debug('%s - Received proposal response from peer "%s": status - %s', method, self._url, (proposalResponse.response &&  proposalResponse.response.status) ? proposalResponse.response.status : 'undefined');
-							// 400 is the error threshold level, anything below that the endorser will endorse it.
-							if (proposalResponse.response && proposalResponse.response.status < 400) {
-								resolve(proposalResponse);
-							} else if (proposalResponse.response && proposalResponse.response.message) {
-								reject(new Error(proposalResponse.response.message));
-							} else {
-								logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
-								reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
-							}
-						} else {
-							logger.error('GRPC client got a null or undefined response from the peer "%s".', self._url);
-							reject(new Error(util.format('GRPC client got a null or undefined response from the peer "%s".', self._url)));
-						}
+						logger.error('GRPC client got a null or undefined response from the peer "%s".', self._url);
+						reject(new Error(util.format('GRPC client got a null or undefined response from the peer "%s".', self._url)));
 					}
-				});
+				}
 			});
 		});
 	}
@@ -197,6 +199,6 @@ const Peer = class extends Remote {
 		'}';
 	}
 
-};
+}
 
 module.exports = Peer;

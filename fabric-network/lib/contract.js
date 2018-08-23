@@ -11,12 +11,13 @@ const util = require('util');
 
 class Contract {
 
-	constructor(channel, chaincodeId, network) {
+	constructor(channel, chaincodeId, network, queryHandler) {
 		logger.debug('in Contract constructor');
 
 		this.channel = channel;
 		this.chaincodeId = chaincodeId;
 		this.network = network;
+		this.queryHandler = queryHandler;
 
 	}
 
@@ -77,6 +78,22 @@ class Contract {
 		return {validResponses, invalidResponses, invalidResponseMsgs};
 	}
 
+	_checkTransactionParameters(method, transactionName, parameters) {
+		if(typeof transactionName !== 'string' || transactionName.length === 0) {
+			const msg = util.format('transactionName must be a non-empty string: %j', transactionName);
+			logger.error('%s: %s', method, msg);
+			throw new Error(msg);
+		}
+		parameters.forEach((parameter) => {
+			if(typeof parameter !== 'string') {
+				const msg = util.format('transaction parameters must be strings: %j', parameter);
+				logger.error('%s: %s', method, msg);
+				throw new Error(msg);
+			}
+		});
+
+	}
+
 	/**
      * @param {string} transactionName Transaction function name
      * @param {...string} parameters Transaction function parameters
@@ -86,6 +103,8 @@ class Contract {
 		logger.debug('in submitTransaction: ' + transactionName);
 
 		// check parameters
+		this._checkTransactionParameters('submitTransaction', transactionName, parameters);
+		/*
 		if(typeof transactionName !== 'string' || transactionName.length === 0) {
 			const msg = util.format('transactionName must be a non-empty string: %j', transactionName);
 			logger.error('submitTransaction: ' + msg);
@@ -98,6 +117,7 @@ class Contract {
 				throw new Error(msg);
 			}
 		});
+		*/
 
 		const txId = this.network.getClient().newTransactionID();
 
@@ -145,6 +165,18 @@ class Contract {
 		}
 		return result;
 
+	}
+
+	/**
+     * @param {string} transactionName transaction name
+     * @param {string[]} parameters transaction parameters
+     * @returns {byte[]} payload response
+     */
+	async executeTransaction(transactionName, ...parameters) {
+		this._checkTransactionParameters('executeTransaction', transactionName, parameters);
+		const txId = this.network.getClient().newTransactionID();
+		const result = await this.queryHandler.queryChaincode(this.chaincodeId, txId, transactionName, parameters);
+		return result ? result : null;
 	}
 }
 

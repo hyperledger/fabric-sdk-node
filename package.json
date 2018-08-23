@@ -46,6 +46,7 @@
     "log4js": "^2.6.1",
     "mocha": "5.2.0",
     "mock-couch": "git+https://github.com/jimthematrix/mock-couch.git",
+    "mockery": "^2.1.0",
     "nano": "^6.4.4",
     "nyc": "^11.8.0",
     "require-dir": "^1.0.0",

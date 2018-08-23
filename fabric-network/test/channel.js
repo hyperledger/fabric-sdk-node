@@ -15,6 +15,7 @@ const TransactionID = require('fabric-client/lib/TransactionID.js');
 const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
 
 const chai = require('chai');
+chai.should();
 chai.use(require('chai-as-promised'));
 
 const Channel = require('../lib/channel');
@@ -24,8 +25,7 @@ const Contract = require('../lib/contract');
 
 describe('Channel', () => {
 
-	let sandbox = sinon.createSandbox();
-	let clock;
+	const sandbox = sinon.createSandbox();
 
 	let mockChannel, mockClient;
 	let mockPeer1, mockPeer2, mockPeer3;
@@ -33,7 +33,6 @@ describe('Channel', () => {
 	let mockTransactionID, mockNetwork;
 
 	beforeEach(() => {
-		clock = sinon.useFakeTimers();
 		mockChannel = sinon.createStubInstance(InternalChannel);
 		mockClient = sinon.createStubInstance(Client);
 		mockTransactionID = sinon.createStubInstance(TransactionID);
@@ -61,7 +60,6 @@ describe('Channel', () => {
 
 	afterEach(() => {
 		sandbox.restore();
-		clock.restore();
 	});
 
 
@@ -196,13 +194,22 @@ describe('Channel', () => {
 	});
 
 	describe('#getContract', () => {
+		it('should throw an error if not initialized', () => {
+			channel.initialized = false;
+			(() => {
+				channel.getContract();
+			}).should.throw(/Unable to get contract as channel has failed to initialize/);
+		});
+
 		it('should return a cached contract object', () => {
 			const mockContract = sinon.createStubInstance(Contract);
 			channel.contracts.set('foo', mockContract);
+			channel.initialized = true;
 			channel.getContract('foo').should.equal(mockContract);
 		});
 
 		it('should create a non-existent contract object', () => {
+			channel.initialized = true;
 			const contract = channel.getContract('bar');
 			contract.should.be.instanceof(Contract);
 			contract.chaincodeId.should.equal('bar');
@@ -218,6 +225,15 @@ describe('Channel', () => {
 			channel._dispose();
 			channel.contracts.size.should.equal(0);
 			channel.initialized.should.equal(false);
+		});
+
+		it('should call dispose on the queryHandler if defined and work if no contracts have been got', () => {
+			const disposeStub = sinon.stub();
+			channel.queryHandler = {
+				dispose: disposeStub
+			};
+			channel._dispose();
+			sinon.assert.calledOnce(disposeStub);
 		});
 	});
 

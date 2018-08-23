@@ -21,24 +21,32 @@ chai.use(require('chai-as-promised'));
 const Channel = require('../lib/channel');
 const Network = require('../lib/network');
 const Wallet = require('../lib/api/wallet');
+const Mockery = require('mockery');
 
 
 describe('Network', () => {
-
 	const sandbox = sinon.createSandbox();
-	let clock;
 
 	let mockClient;
+	let mockDefaultQueryHandler;
+
+	before(() => {
+		Mockery.enable();
+		mockDefaultQueryHandler = {query: 'mock'};
+		Mockery.registerMock('./impl/query/defaultqueryhandler', mockDefaultQueryHandler);
+	});
+
+	after(() => {
+		Mockery.disable();
+	});
 
 	beforeEach(() => {
-		clock = sinon.useFakeTimers();
 		mockClient = sinon.createStubInstance(Client);
 
 	});
 
 	afterEach(() => {
 		sandbox.restore();
-		clock.restore();
 	});
 
 
@@ -141,7 +149,13 @@ describe('Network', () => {
 		it('should instantiate a Network object', () => {
 			const network = new Network();
 			network.channels.should.be.instanceof(Map);
-			network.options.should.deep.equal({ commitTimeout: 300 * 1000 });
+			network.options.should.deep.equal(
+				{
+					commitTimeout: 300 * 1000,
+					queryHandler: './impl/query/defaultqueryhandler',
+					queryHandlerOptions: {
+					}
+				});
 		});
 	});
 
@@ -169,13 +183,14 @@ describe('Network', () => {
 				.should.be.rejectedWith(/A wallet must be assigned to a Network instance/);
 		});
 
-		it('should initialize the network', async () => {
+		it('should initialize the network with default plugins', async () => {
 			const options = {
 				wallet: mockWallet,
 			};
 			await network.initialize('ccp', options);
 			network.client.should.equal(mockClient);
 			should.not.exist(network.currentIdentity);
+			network.queryHandlerClass.should.equal(mockDefaultQueryHandler);
 		});
 
 		it('should initialize the network with identity', async () => {
@@ -214,6 +229,101 @@ describe('Network', () => {
 			network.currentIdentity.should.equal('foo');
 		});
 
+		it ('should delete any default query handler options if the plugin doesn\'t match the default plugin', async () => {
+			network.options = {
+				commitTimeout: 300 * 1000,
+				queryHandler: './impl/query/defaultqueryhandler',
+				queryHandlerOptions: {
+					'default1': 1,
+					'default2': 2
+				}
+			};
+
+			const otherQueryHandler = {query: 'other'};
+			Mockery.registerMock('./impl/query/otherqueryhandler', otherQueryHandler);
+
+
+			const options = {
+				wallet: mockWallet,
+				identity: 'admin',
+				queryHandler: './impl/query/otherqueryhandler',
+				queryHandlerOptions: {
+					'other1': 99
+				}
+			};
+
+			await network.initialize('ccp', options);
+			network.options.should.deep.equal(
+				{
+					wallet: mockWallet,
+					identity: 'admin',
+					commitTimeout: 300 * 1000,
+					queryHandler: './impl/query/otherqueryhandler',
+					queryHandlerOptions: {
+						'other1': 99
+					}
+				}
+			);
+			network.currentIdentity.should.equal('foo');
+			network.queryHandlerClass.should.equal(otherQueryHandler);
+		});
+
+		it('should throw an error if it cannot load a query plugin', () => {
+			const options = {
+				wallet: mockWallet,
+				identity: 'admin',
+				queryHandler: './impl/query/noqueryhandler'
+			};
+			return network.initialize('ccp', options)
+				.should.be.rejectedWith(/unable to load provided query handler: .\/impl\/query\/noqueryhandler/);
+		});
+
+		it('should not create a query handler if explicitly set to null', async () => {
+			const options = {
+				wallet: mockWallet,
+				queryHandler: null
+			};
+			await network.initialize('ccp', options);
+			network.client.should.equal(mockClient);
+			should.equal(undefined, network.queryHandlerClass);
+		});
+
+
+	});
+
+	describe('#_createQueryHandler', () => {
+		let network;
+		beforeEach(() => {
+			network = new Network();
+		});
+
+		it('should create a query handler if class defined', async () => {
+			const initStub = sinon.stub();
+			const constructStub = sinon.stub();
+			const mockClass = class MockClass {
+				constructor(...args) {
+					constructStub(...args);
+					this.initialize = initStub;
+				}
+			};
+
+			network.queryHandlerClass = mockClass;
+
+			network.options.queryHandlerOptions = 'options';
+			network.getCurrentIdentity = sinon.stub();
+			network.getCurrentIdentity.returns({_mspId: 'anmsp'});
+			const queryHandler = await network._createQueryHandler('channel', 'peerMap');
+			queryHandler.should.be.instanceof(mockClass);
+			sinon.assert.calledOnce(constructStub);
+			sinon.assert.calledWith(constructStub, 'channel', 'anmsp', 'peerMap', 'options');
+			sinon.assert.calledOnce(initStub);
+
+		});
+
+		it('should do nothing if no class defined', async () => {
+			const queryHandler = await network._createQueryHandler('channel', 'peerMap');
+			should.equal(null, queryHandler);
+		});
 	});
 
 	describe('getters', () => {
@@ -250,7 +360,10 @@ describe('Network', () => {
 				const expectedOptions = {
 					commitTimeout: 300 * 1000,
 					wallet: mockWallet,
-					identity: 'admin'
+					identity: 'admin',
+					queryHandler: './impl/query/defaultqueryhandler',
+					queryHandlerOptions: {
+					}
 				};
 				network.getOptions().should.deep.equal(expectedOptions);
 			});

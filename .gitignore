@@ -40,3 +40,6 @@ test/typescript/**/*.js.map
 yarn.lock
 test/fixtures/src/node_cc/example_cc/.npmrc
 test/fixtures/src/node_cc/example_cc1/.npmrc
+fabric-network/_*
+fabric-network/e2e
+fabric-network/OUTSTA*

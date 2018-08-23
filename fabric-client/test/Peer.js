@@ -19,6 +19,7 @@ const PeerRewire = rewire('../lib/Peer');
 const Peer = require('../lib/Peer');
 
 const chai = require('chai');
+const should = chai.should();
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const sinon = require('sinon');
@@ -128,7 +129,7 @@ describe('Peer', () => {
 			await obj.sendProposal('deliver', 0).should.be.rejectedWith(/REQUEST_TIMEOUT/);
 		});
 
-		it('should log and reject Error object on proposal repsonse error string', async () => {
+		it('should log and reject Error object on proposal response error string', async () => {
 
 			const FakeLogger = {
 				debug : () => {},
@@ -156,7 +157,7 @@ describe('Peer', () => {
 			sinon.assert.calledWith(debugStub,'%s - Received proposal response from: %s status: %s');
 		});
 
-		it('should reject Error object on proposal repsonse error object', async () => {
+		it('should reject Error object on proposal response error object', async () => {
 			const FakeLogger = {
 				debug : () => {},
 				error: () => {}
@@ -183,7 +184,7 @@ describe('Peer', () => {
 			sinon.assert.calledWith(debugStub,'%s - Received proposal response from: %s status: %s');
 		});
 
-		it('should log and reject on undefined proposal repsonse', async () => {
+		it('should log and reject on undefined proposal response', async () => {
 			const FakeLogger = {
 				debug : () => {},
 				error: () => {}
@@ -210,7 +211,7 @@ describe('Peer', () => {
 			sinon.assert.calledWith(errorStub,'GRPC client got a null or undefined response from the peer "%s".');
 		});
 
-		it('should log and reject on invalid proposal repsonse', async () => {
+		it('should log and reject on invalid proposal response', async () => {
 			const FakeLogger = {
 				debug : () => {},
 				error: () => {}
@@ -239,7 +240,7 @@ describe('Peer', () => {
 			sinon.assert.calledWith(errorStub,'GRPC client failed to get a proper response from the peer "%s".');
 		});
 
-		it('should log and reject on proposal repsonse error status greater than or equal to 400', async () => {
+		it('should log and reject on proposal response error status greater than or equal to 400', async () => {
 			const FakeLogger = {
 				debug : () => {},
 				error: () => {}
@@ -266,7 +267,7 @@ describe('Peer', () => {
 			sinon.assert.calledWith(debugStub,'%s - Received proposal response from peer "%s": status - %s');
 		});
 
-		it('should resolve on valid proposal repsonse', async () => {
+		it('should resolve on valid proposal response', async () => {
 			const FakeLogger = {
 				debug : () => {},
 				error: () => {}
@@ -280,9 +281,9 @@ describe('Peer', () => {
 
 			const endorserClient = sinon.stub();
 
-			const myRepsonse = {response: {status: 399, message: 'passed_values'}};
+			const myResponse = {response: {status: 399, message: 'passed_values'}};
 			function Fake(params, callback) {
-				callback.call(null, null, myRepsonse);
+				callback.call(null, null, myResponse);
 			}
 
 			endorserClient.processProposal = sinon.stub().callsFake(Fake);
@@ -291,9 +292,63 @@ describe('Peer', () => {
 			obj._endorserClient = endorserClient;
 
 			const response = await obj.sendProposal('deliver');
-			response.should.deep.equal(myRepsonse);
+			response.should.deep.equal(myResponse);
 			sinon.assert.calledWith(debugStub,'%s - Received proposal response from peer "%s": status - %s');
 		});
+
+		it('should mark errors from chaincode as proposal response', async () => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+
+			const debugStub = sandbox.stub(FakeLogger, 'debug');
+			PeerRewire.__set__('logger', FakeLogger);
+			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
+			const endorserClient = sinon.stub();
+
+			const myResponse = {response: {status: 500, message: 'some error'}};
+			function Fake(params, callback) {
+				callback.call(null, null, myResponse);
+			}
+
+			endorserClient.processProposal = sinon.stub().callsFake(Fake);
+
+			const obj = new PeerRewire('grpc://host:2700');
+			obj._endorserClient = endorserClient;
+
+			try {
+				await obj.sendProposal('deliver');
+				should.fail();
+			} catch(err) {
+				err.isProposalResponse.should.be.true;
+				err.status.should.equal(500);
+				err.message.should.equal('some error');
+			}
+		});
+
+		it('should not mark errors as proposal response if not a proposal response', async () => {
+			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
+
+			function Fake(params, callback) {
+				setTimeout(() => { callback.call(null,'timeout not honoured'); }, 10);
+			}
+
+			const endorserClient = sinon.stub();
+			endorserClient.processProposal = sinon.stub().callsFake(Fake);
+
+			const obj = new PeerRewire('grpc://host:2700');
+			obj._endorserClient = endorserClient;
+
+			try {
+				await obj.sendProposal('deliver', 0);
+				should.fail();
+			} catch(error) {
+				should.equal(error.isProposalResponse, undefined);
+			}
+		});
+
+
 
 	});
 
@@ -358,7 +413,7 @@ describe('Peer', () => {
 			sinon.assert.calledWith(errorStub,'%s - timed out after:%s');
 		});
 
-		it('should log and reject Error object on discover repsonse error string', async () => {
+		it('should log and reject Error object on discover Response error string', async () => {
 
 			const FakeLogger = {
 				debug : () => {},
@@ -385,7 +440,7 @@ describe('Peer', () => {
 			sinon.assert.calledWith(debugStub,'%s - Received discovery response from: %s status: %s');
 		});
 
-		it('should log and reject Error object on discover repsonse error object', async () => {
+		it('should log and reject Error object on discover Response error object', async () => {
 
 			const FakeLogger = {
 				debug : () => {},
@@ -462,8 +517,8 @@ describe('Peer', () => {
 			const obj = new PeerRewire('grpc://host:2700');
 			obj._discoveryClient = discoveryClient;
 
-			const repsonse = await obj.sendDiscovery('deliver');
-			repsonse.should.deep.equal(myResponse);
+			const Response = await obj.sendDiscovery('deliver');
+			Response.should.deep.equal(myResponse);
 			sinon.assert.calledWith(debugStub,'%s - Received discovery response from peer "%s"');
 		});
 

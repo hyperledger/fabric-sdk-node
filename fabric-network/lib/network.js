@@ -37,7 +37,10 @@ class Network {
 
 		// default options
 		this.options = {
-			commitTimeout: 300 * 1000
+			commitTimeout: 300 * 1000,
+			queryHandler: './impl/query/defaultqueryhandler',
+			queryHandlerOptions: {
+			}
 		};
 	}
 
@@ -59,34 +62,52 @@ class Network {
      * @memberof Network
      */
 	async initialize(config, options) {
-		logger.debug('in initialize');
+		const method = 'initialize';
+		logger.debug('in %s', method);
 
 		if (!options || !options.wallet) {
-			logger.error('initialize: A wallet must be assigned to a Network instance');
+			logger.error('%s - A wallet must be assigned to a Network instance', method);
 			throw new Error('A wallet must be assigned to a Network instance');
+		}
+
+		// if a different queryHandler was provided and it doesn't match the default
+		// delete the default queryHandlerOptions.
+		if (options.queryHandler && (this.options.queryHandler !== options.queryHandler)) {
+			delete this.options.queryHandlerOptions;
 		}
 
 		Network._mergeOptions(this.options, options);
 
 		if (!(config instanceof Client)) {
 			// still use a ccp for the discovery peer and ca information
-			logger.debug('initialize: loading client from ccp');
+			logger.debug('%s - loading client from ccp', method);
 			this.client = Client.loadFromConfig(config);
 		} else {
 			// initialize from an existing Client object instance
-			logger.debug('initialize: using existing client object');
+			logger.debug('%s - using existing client object', method);
 			this.client = config;
 		}
 
 		// setup an initial identity for the network
 		if (options.identity) {
-			logger.debug('initialize: setting identity');
+			logger.debug('%s - setting identity', method);
 			this.currentIdentity = await options.wallet.setUserContext(this.client, options.identity);
 		}
 
 		if (options.clientTlsIdentity) {
 			const tlsIdentity = await options.wallet.export(options.clientTlsIdentity);
 			this.client.setTlsClientCertAndKey(tlsIdentity.certificate, tlsIdentity.privateKey);
+		}
+
+		// load in the query handler plugin
+		if (this.options.queryHandler) {
+			logger.debug('%s - loading query handler: %s', method, this.options.queryHandler);
+			try {
+				this.queryHandlerClass = require(this.options.queryHandler);
+			} catch(error) {
+				logger.error('%s - unable to load provided query handler: %s. Error %O', method, this.options.queryHandler, error);
+				throw new Error(`unable to load provided query handler: ${this.options.queryHandler}. Error ${error}`);
+			}
 		}
 	}
 
@@ -153,6 +174,21 @@ class Network {
 			return newChannel;
 		}
 		return existingChannel;
+	}
+
+	async _createQueryHandler(channel, peerMap) {
+		if (this.queryHandlerClass) {
+			const currentmspId = this.getCurrentIdentity()._mspId;
+			const queryHandler = new this.queryHandlerClass(
+				channel,
+				currentmspId,
+				peerMap,
+				this.options.queryHandlerOptions
+			);
+			await queryHandler.initialize();
+			return queryHandler;
+		}
+		return null;
 	}
 }
 
