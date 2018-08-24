@@ -12,9 +12,9 @@ const sbuf = require('stream-buffers');
 const utils = require('../utils.js');
 const walk = require('ignore-walk');
 
-let logger = utils.getLogger('packager/Node.js');
+const logger = utils.getLogger('packager/Node.js');
 
-let BasePackager = require('./BasePackager');
+const BasePackager = require('./BasePackager');
 
 class NodePackager extends BasePackager {
 
@@ -29,14 +29,14 @@ class NodePackager extends BasePackager {
 		logger.debug('packaging Node from %s', chaincodePath);
 
 		// Compose the path to the chaincode project directory
-		let projDir = chaincodePath;
+		const projDir = chaincodePath;
 
 		// We generate the tar in two phases: First grab a list of descriptors,
 		// and then pack them into an archive.  While the two phases aren't
 		// strictly necessary yet, they pave the way for the future where we
 		// will need to assemble sources from multiple packages
 
-		let buffer = new sbuf.WritableStreamBuffer();
+		const buffer = new sbuf.WritableStreamBuffer();
 		return this.findSource(projDir).then((srcDescriptors) => {
 			if (metadataPath){
 				return super.findMetadataDescriptors(metadataPath)
@@ -69,7 +69,7 @@ class NodePackager extends BasePackager {
 			// follow symlink dirs
 			follow: true
 		}).then((files) => {
-			let descriptors = [];
+			const descriptors = [];
 
 			if (!files) {
 				files = [];
@@ -79,7 +79,7 @@ class NodePackager extends BasePackager {
 			files = files.filter(f => f.indexOf('node_modules') !== 0);
 
 			files.forEach((entry) => {
-				let desc = {
+				const desc = {
 					name: path.join('src', entry).split('\\').join('/'), // for windows style paths
 					fqp: path.join(filePath, entry)
 				};

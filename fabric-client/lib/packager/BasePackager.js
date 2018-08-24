@@ -7,16 +7,16 @@
 
 'use strict';
 
-var fs = require('fs-extra');
-var klaw = require('klaw');
-var tar = require('tar-stream');
-var path = require('path');
-var zlib = require('zlib');
+const fs = require('fs-extra');
+const klaw = require('klaw');
+const tar = require('tar-stream');
+const path = require('path');
+const zlib = require('zlib');
 const utils = require('../utils.js');
 
-let logger = utils.getLogger('packager/BasePackager.js');
+const logger = utils.getLogger('packager/BasePackager.js');
 
-var BasePackager = class {
+const BasePackager = class {
 
 	/**
 	 * Constructor
@@ -68,11 +68,11 @@ var BasePackager = class {
 	findMetadataDescriptors (filePath) {
 		return new Promise((resolve, reject) => {
 			logger.debug('findMetadataDescriptors : start');
-			var descriptors = [];
+			const descriptors = [];
 			klaw(filePath).on('data', (entry) => {
 				if (entry.stats.isFile() && this.isMetadata(entry.path)) {
 
-					var desc = {
+					const desc = {
 						name: path.join('META-INF', path.relative(filePath, entry.path).split('\\').join('/')), // for windows style paths
 						fqp: entry.path
 					};
@@ -98,7 +98,7 @@ var BasePackager = class {
 	 * @returns {boolean} Returns true for valid metadata descriptors.
 	 */
 	isMetadata (filePath) {
-		var extensions = ['.json'];
+		const extensions = ['.json'];
 		return (extensions.indexOf(path.extname(filePath)) != -1);
 	}
 
@@ -125,13 +125,13 @@ var BasePackager = class {
 	packEntry (pack, desc) {
 		return new Promise((resolve, reject) => {
 			// Use a synchronous read to reduce non-determinism
-			var content = fs.readFileSync(desc.fqp);
+			const content = fs.readFileSync(desc.fqp);
 			if (!content) {
 				reject(new Error('failed to read ' + desc.fqp));
 			} else {
 				// Use a deterministic "zero-time" for all date fields
-				var zeroTime = new Date(0);
-				var header = {
+				const zeroTime = new Date(0);
+				const header = {
 					name: desc.name,
 					size: content.size,
 					mode: 0o100644,
@@ -159,7 +159,7 @@ var BasePackager = class {
 	 */
 	generateTarGz (descriptors, dest) {
 		return new Promise((resolve, reject) => {
-			var pack = tar.pack();
+			const pack = tar.pack();
 
 			// Setup the pipeline to compress on the fly and resolve/reject the promise
 			pack.pipe(zlib.createGzip()).pipe(dest).on('finish', () => {
@@ -171,9 +171,9 @@ var BasePackager = class {
 			// Iterate through each descriptor in the order it was provided and resolve
 			// the entry asynchronously.  We will gather results below before
 			// finalizing the tarball
-			var tasks = [];
-			for (let desc of descriptors) {
-				var task = this.packEntry(pack, desc);
+			const tasks = [];
+			for (const desc of descriptors) {
+				const task = this.packEntry(pack, desc);
 				tasks.push(task);
 			}
 

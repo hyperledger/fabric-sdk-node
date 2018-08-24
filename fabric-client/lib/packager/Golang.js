@@ -7,13 +7,13 @@
 
 'use strict';
 
-var klaw = require('klaw');
-var path = require('path');
-var sbuf = require('stream-buffers');
-var utils = require('../utils.js');
-var BasePackager = require('./BasePackager');
+const klaw = require('klaw');
+const path = require('path');
+const sbuf = require('stream-buffers');
+const utils = require('../utils.js');
+const BasePackager = require('./BasePackager');
 
-var logger = utils.getLogger('packager/Golang.js');
+const logger = utils.getLogger('packager/Golang.js');
 
 class GolangPackager extends BasePackager {
 
@@ -28,17 +28,17 @@ class GolangPackager extends BasePackager {
 		logger.debug('packaging GOLANG from %s', chaincodePath);
 
 		// Determine the user's $GOPATH
-		let goPath = process.env['GOPATH'];
+		const goPath = process.env['GOPATH'];
 
 		// Compose the path to the chaincode project directory
-		let projDir = path.join(goPath, 'src', chaincodePath);
+		const projDir = path.join(goPath, 'src', chaincodePath);
 
 		// We generate the tar in two phases: First grab a list of descriptors,
 		// and then pack them into an archive.  While the two phases aren't
 		// strictly necessary yet, they pave the way for the future where we
 		// will need to assemble sources from multiple packages
 
-		var buffer = new sbuf.WritableStreamBuffer();
+		const buffer = new sbuf.WritableStreamBuffer();
 
 		return this.findSource(goPath, projDir).then((srcDescriptors) => {
 			if (metadataPath){
@@ -67,12 +67,12 @@ class GolangPackager extends BasePackager {
 	 */
 	findSource (goPath, filePath) {
 		return new Promise((resolve, reject) => {
-			var descriptors = [];
+			const descriptors = [];
 			klaw(filePath).on('data', (entry) => {
 
 				if (entry.stats.isFile() && super.isSource(entry.path)) {
 
-					var desc = {
+					const desc = {
 						name: path.relative(goPath, entry.path).split('\\').join('/'), // for windows style paths
 						fqp: entry.path
 					};

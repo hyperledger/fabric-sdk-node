@@ -99,7 +99,7 @@ describe('Peer', () => {
 			// this will throw, but we can still check method entry
 			obj.sendProposal()
 				.then(() => {
-					chai.fail();
+					sinon.assert.fail();
 				})
 				.catch(() => {
 					sinon.assert.called(debugStub);
@@ -319,7 +319,7 @@ describe('Peer', () => {
 			// this will throw, but we can still check method entry
 			obj.sendDiscovery()
 				.then(() => {
-					chai.fail();
+					sinon.assert.fail();
 				})
 				.catch(() => {
 					sinon.assert.called(debugStub);
