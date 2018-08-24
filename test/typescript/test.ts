@@ -433,8 +433,7 @@ test('use the connection profile file', (t) => {
 			}
 			let request: TransactionRequest = {
 				proposalResponses: proposalResponses,
-				proposal: proposal,
-				admin: true
+				proposal: proposal
 			};
 
 			let promises = [];

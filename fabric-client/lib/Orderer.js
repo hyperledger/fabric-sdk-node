@@ -97,6 +97,7 @@ class Orderer extends Remote {
 	/**
 	 * @typedef {Object} BroadcastResponse
 	 * @property {string} status - Value is 'SUCCESS' or a descriptive error string
+	 * @property {string} info - Optional. Additional information about the status
 	 */
 
 	/**

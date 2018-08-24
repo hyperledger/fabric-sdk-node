@@ -1,17 +1,7 @@
 /**
  * Copyright 2017 Kapil Sachdeva All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 import FabricCAServices = require('fabric-ca-client');
@@ -26,7 +16,7 @@ declare class ChaincodeChannelEventHandle {
 }
 
 declare class Remote {
-  constructor(url: string, opts?: Client.ConnectionOptions);
+  constructor(url: string, opts?: Client.ConnectionOpts);
   getName(): string;
   setName(name: string): void;
   getUrl(): string;
@@ -42,10 +32,10 @@ declare class Client extends BaseClient {
   setDevMode(mode: boolean): void;
   newChannel(name: string): Client.Channel;
   getChannel(name?: string, throwError?: boolean): Client.Channel;
-  newPeer(url: string, opts?: Client.ConnectionOptions): Client.Peer;
+  newPeer(url: string, opts?: Client.ConnectionOpts): Client.Peer;
   getPeer(name: string): Client.Peer;
   getPeersForOrg(mspid?: string): Client.Peer[];
-  newOrderer(url: string, opts?: Client.ConnectionOptions): Client.Orderer;
+  newOrderer(url: string, opts?: Client.ConnectionOpts): Client.Orderer;
   getOrderer(name: string): Client.Orderer;
   getPeersForOrgOnChannel(channel_names: string | string[]): Client.ChannelPeer[];
   getCertificateAuthority(): FabricCAServices;
@@ -67,7 +57,7 @@ declare class Client extends BaseClient {
   getUserContext(name: string, checkPersistence?: boolean): Promise<Client.User> | Client.User;
   loadUserFromStateStore(name: string): Promise<Client.User>;
   getStateStore(): Client.IKeyValueStore;
-  createUser(opts: Client.UserOptions): Promise<Client.User>;
+  createUser(opts: Client.UserOpts): Promise<Client.User>;
 
   getTargetPeers(request_targets: string | string[] | Client.Peer | Client.Peer[]): Client.Peer[];
   getTargetOrderers(request_orderer: string | Client.Orderer): Client.Orderer;
@@ -116,6 +106,13 @@ declare namespace Client {
     setCryptoKeyStore(cryptoKeyStore: ICryptoKeyStore): void;
   }
 
+  export interface CryptoSetting {
+    software: boolean;
+    keysize: number;
+    algorithm: string;
+    hash: string;
+  }
+
   export interface UserConfig {
     enrollmentID: string;
     name: string
@@ -123,7 +120,7 @@ declare namespace Client {
     affiliation?: string;
   }
 
-  export interface ConnectionOptions {
+  export interface ConnectionOpts {
     pem?: string;
     clientKey?: string;
     clientCert?: string;
@@ -221,6 +218,7 @@ declare namespace Client {
     chaincodeQuery?: boolean;
     ledgerQuery?: boolean;
     eventSource?: boolean;
+    discover?: boolean;
   }
 
   export class ChannelPeer {
@@ -269,20 +267,19 @@ declare namespace Client {
   export interface TransactionRequest {
     proposalResponses: ProposalResponse[];
     proposal: Proposal;
-    admin?: boolean;
     txId?: TransactionId;
     orderer?: string | Orderer;
   }
 
   export interface BroadcastResponse {
     status: string;
-    info: string;
+    info?: string;
   }
 
   export type ProposalResponseObject = [Array<Client.ProposalResponse>, Client.Proposal];
 
   export interface OrdererRequest {
-    txId: TransactionId;
+    txId?: TransactionId;
     orderer?: string | Orderer;
   }
 
@@ -316,7 +313,7 @@ declare namespace Client {
   export interface ProposalResponse {
     version: number;
     timestamp: Date;
-    response: ResponseObject;
+    response: Response;
     payload: Buffer;
     endorsement: any;
   }
@@ -332,11 +329,11 @@ declare namespace Client {
     close(): void;
     checkConnection(force_reconnect: boolean): string;
     registerChaincodeEvent(ccid: string, eventname: string, onEvent: (event: ChaincodeEvent, block_number?: number, tx_id?: string, tx_status?: string) => void,
-      onError?: (err: Error) => void, options?: RegistrationOptions): ChaincodeChannelEventHandle;
+      onError?: (err: Error) => void, options?: RegistrationOpts): ChaincodeChannelEventHandle;
     unregisterChaincodeEvent(handle: ChaincodeChannelEventHandle, throwError?: boolean): void;
-    registerBlockEvent(onEvent: (block: Block) => void, onError?: (err: Error) => void, options?: RegistrationOptions): number;
+    registerBlockEvent(onEvent: (block: Block) => void, onError?: (err: Error) => void, options?: RegistrationOpts): number;
     unregisterBlockEvent(block_registration_number: number, throwError: boolean): void;
-    registerTxEvent(txId: string, onEvent: (txId: string, code: string, block_number: number) => void, onError?: (err: Error) => void, options?: RegistrationOptions): string;
+    registerTxEvent(txId: string, onEvent: (txId: string, code: string, block_number: number) => void, onError?: (err: Error) => void, options?: RegistrationOpts): string;
     unregisterTxEvent(txId: string, throwError?: boolean): void;
   }
 
@@ -346,7 +343,7 @@ declare namespace Client {
   }
 
   export class Peer extends Remote {
-    constructor(url: string, opts?: ConnectionOptions);
+    constructor(url: string, opts?: ConnectionOpts);
     close(): void;
     setRole(role: string, isIn: boolean): void;
     isInRole(role: string): boolean;
@@ -355,7 +352,7 @@ declare namespace Client {
   }
 
   export class Orderer extends Remote {
-    constructor(url: string, opts?: ConnectionOptions);
+    constructor(url: string, opts?: ConnectionOpts);
     close(): void;
     sendBroadcast(envelope: Buffer): Promise<BroadcastResponse>;
     sendDeliver(envelope: Buffer): Promise<any>;
@@ -394,6 +391,7 @@ declare namespace Client {
   export interface ChaincodeInstallRequest {
     targets?: Peer[] | string[];
     chaincodePath: string;
+    metadataPath?: string;
     chaincodeId: string;
     chaincodeVersion: string;
     chaincodePackage?: Buffer;
@@ -408,6 +406,7 @@ declare namespace Client {
     chaincodeId: string;
     chaincodeVersion: string;
     txId: TransactionId;
+    'collections-config'?: string;
     transientMap?: any;
     fcn?: string;
     args?: string[];
@@ -421,6 +420,8 @@ declare namespace Client {
     transientMap?: any;
     fcn?: string;
     args: string[];
+    ignore?: string[];
+    preferred?: string[];
   }
 
   export interface ChaincodeQueryRequest {
@@ -448,7 +449,7 @@ declare namespace Client {
     password?: string;
   }
 
-  export interface UserOptions {
+  export interface UserOpts {
     username: string;
     mspid: string;
     cryptoContent: CryptoContent;
@@ -488,7 +489,7 @@ declare namespace Client {
     channels: ChannelInfo[];
   }
 
-  export interface ResponseObject {
+  export interface Response {
     status: Client.Status;
     message: string;
     payload: Buffer;
@@ -505,9 +506,9 @@ declare namespace Client {
     signature_header: ByteBuffer;
   }
 
-  export interface RegistrationOptions {
+  export interface RegistrationOpts {
     startBlock?: number;
-    endBlock?: number;
+    endBlock?: number | "newest";
     unregister?: boolean;
     disconnect?: boolean;
   }

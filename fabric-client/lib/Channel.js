@@ -359,13 +359,6 @@ const Channel = class {
 	}
 
 	/**
-	 * @typedef {Object} ChaincodeInfo Object used internally to store chaincodes
-	 *          names and versions found on this channel.
-	 * @property {string} name - The name of the chaincode
-	 * @property {string} version - The version of the chaincode
-	 */
-
-	/**
 	 * @typedef {Object} DiscoveryResultMSPConfig
 	 * @property {string} rootCerts List of root certificates trusted by this MSP.
 	 *                              They are used upon certificate validation.
@@ -1304,7 +1297,7 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} JoinChannelRequest
-	 * @property {Peer[]} targets - Optional. An array of Peer objects or Peer names that will
+	 * @property {Peer[] | string[]} targets - Optional. An array of Peer objects or Peer names that will
 	 *                              be asked to join this channel. When using Peer names or left
 	 *                              empty (use default targets) there must be a loaded network
 	 *                              configuration.
@@ -2046,9 +2039,9 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} ChaincodeInstantiateUpgradeRequest
-	 * @property {Peer[]} targets - Optional. An array of endorsing
-	 *           {@link Peer} objects as the targets of the request. When this
-	 *           parameter is omitted the target list will include peers assigned
+	 * @property {Peer[] | string[]} targets - Optional. An array of endorsing
+	 *           {@link Peer} objects or peer names as the targets of the request.
+	 *           When this parameter is omitted the target list will include peers assigned
 	 *           to this channel instance that are in the endorsing role.
 	 * @property {string} chaincodeType - Optional. Type of chaincode. One of
 	 *           'golang', 'car', 'java' or 'node'. Default is 'golang'. Note that 'java'
@@ -2247,7 +2240,7 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} ChaincodeInvokeRequest
-	 * @property {Peer[]} targets - Optional. The peers that will receive this request,
+	 * @property {Peer[] | string[]} targets - Optional. The peers that will receive this request,
 	 *           when not provided the list of peers added to this channel object will
 	 *           be used. When this channel has been initialized using the discovery
 	 *           service the proposal will be sent to the peers on the list provided
@@ -2412,12 +2405,12 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} TransactionRequest
-	 * @property {array} proposalResponses - An array of or a single
+	 * @property {ProposalResponse[]} proposalResponses - An array of or a single
 	 *           {@link ProposalResponse} object containing the response from the
 	 *           [endorsement]{@link Channel#sendTransactionProposal} call
-	 * @property {Object} proposal - A Proposal object containing the original
+	 * @property {Proposal} proposal - A Proposal object containing the original
 	 *           request for endorsement(s)
-	 * @property {Object} txID - Optional. - Must be the transaction ID object
+	 * @property {TransactionId} txID - Optional. - Must be the transaction ID object
 	 *           used in the proposal endorsement. The transactionID will
 	 *           only be used to determine if the signing of the request
 	 *           should be done by the admin identity or the user assigned
@@ -3146,6 +3139,10 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
  * @property {boolean} eventSource - Optional. This peer may be the target of a
  *           event listener registration? All peers can produce events, but the
  *           appliatiion typically only needs to connect to one.
+ *           Default: true
+ *
+ * @property {boolean} discover - Optional. This peer may be the target of service
+ *           discovery.
  *           Default: true
  */
 
