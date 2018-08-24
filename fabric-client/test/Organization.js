@@ -199,7 +199,7 @@ describe('Organization', () => {
 	});
 
 	describe('#toString', () => {
-		it('should return a string representation of the Organzartion object', () => {
+		it('should return a string representation of the Organization object', () => {
 			const myOrg = new Organization('my_org_name', 'my_org_mspid');
 
 			// Add peers

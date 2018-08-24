@@ -100,7 +100,7 @@ exports.toEnvelope = ({signature, proposal_bytes}) => ({signature, payload: prop
  */
 module.exports.buildChannelHeader = (type, channel_id, tx_id, epoch, chaincode_id, time_stamp, client_cert_hash) => {
 	logger.debug(
-		'buildChannelHeader - type %s channel_id %s tx_id %d epoch % chaincode_id %s',
+		'buildChannelHeader - type %s channel_id %s tx_id %d epoch %s chaincode_id %s',
 		type, channel_id, tx_id, epoch, chaincode_id);
 	const channelHeader = new _commonProto.ChannelHeader();
 	channelHeader.setType(type); // int32

@@ -9,8 +9,6 @@
 
 const Long = require('long');
 const utils = require('../utils');
-const client_utils = require('../client-utils.js');
-const Constants = require('../Constants.js');
 const api = require('../api.js');
 const logger = utils.getLogger('DiscoveryEndorsementHandler');
 
@@ -62,6 +60,8 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 			errorMsg = 'Missing "request" input parameter';
 		} else if (!params.signed_proposal) {
 			errorMsg = 'Missing "signed_proposal" input request parameter';
+		} else if (!params.endorsement_hint) {
+			errorMsg = 'Missing "endorsement_hint" parameter in the proposal request';
 		}
 
 		if (errorMsg) {
@@ -71,9 +71,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 
 		const request = Object.assign({}, params.request);
 
-		if (!request.chaincodeId) {
-			errorMsg = 'Missing "chaincodeId" parameter in the proposal request';
-		} else if (!request.txId) {
+		if (!request.txId) {
 			errorMsg = 'Missing "txId" parameter in the proposal request';
 		} else if (!request.args) {
 			errorMsg = 'Missing "args" in Transaction proposal request';
@@ -85,47 +83,47 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 		}
 
 		let timeout = utils.getConfigSetting('request-timeout');
+		if(request['request-timeout']) {
+			timeout = request['request-timeout'];
+		}
 		if(params.timeout) {
 			timeout = params.timeout;
 		}
 
-
-		// this will check the age of the results and get new results if needed
-		let discovery_results = null;
+		let endorsement_plan = null;
 		try {
-			discovery_results = await this._channel.getDiscoveryResults();
+			// this will check the age of the results and get new a new plan if needed
+			logger.debug('%s - get endorsement plans for %j', method, params.endorsement_hint);
+			endorsement_plan = await this._channel.getEndorsementPlan(params.endorsement_hint);
 		} catch(error) {
-			logger.debug('%s - no discovery results %s', method, error);
+			logger.error('%s - error getting discovery results  :: %s', method, error);
 		}
-		if(discovery_results && !request.targets) {
-			const working_discovery = JSON.parse(JSON.stringify(discovery_results));
 
-			return this._endorse(working_discovery, request, params.signed_proposal);
+		if(endorsement_plan) {
+
+			return this._endorse(endorsement_plan, request, params.signed_proposal, timeout);
 		} else {
-			logger.debug('%s - not using discovery', method);
-			const targets = this._channel._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
-
-			return client_utils.sendPeersProposal(targets, params.signed_proposal, timeout);
+			logger.error('%s - no endorsement plan found for %j', method, params.endorsement_hint);
+			throw Error('No endorsement plan available for ' + JSON.stringify(params.endorsement_hint));
 		}
-
 	}
 
-	async _endorse(discovery_plan, request, proposal) {
+	async _endorse(endorsement_plan, request, proposal, timeout) {
 		const method = '_endorse';
-		// see if we have an endorsement plan for the requested chaincode
-		if(discovery_plan && discovery_plan.endorsement_targets && discovery_plan.endorsement_targets[request.chaincodeId]) {
-			logger.debug('%s - found discovery endorsement plan for %s', method, request.chaincodeId);
-			const chaincode_plan = discovery_plan.endorsement_targets[request.chaincodeId];
-			chaincode_plan.endorsements = {};
+
+		// see if we have an endorsement plan for the requested chaincodes/collection call
+		if(endorsement_plan) {
+			logger.debug('%s - starting discovery endorsement plan');
+			endorsement_plan.endorsements = {};
 			let results = {};
 
 			const preferred = this._create_map(request.preferred);
 			const ignore = this._create_map(request.ignore);
-			this._modify_groups(preferred, ignore, chaincode_plan);
+			this._modify_groups(preferred, ignore, endorsement_plan);
 			// loop through the layouts trying to complete one successfully
-			for(let layout_index in chaincode_plan.layouts) {
+			for(const layout_index in endorsement_plan.layouts) {
 				logger.debug('%s - starting layout plan %s', method, layout_index);
-				results = await this._endorse_layout(layout_index, request.chaincodeId, chaincode_plan, proposal, request.timeout);
+				results = await this._endorse_layout(layout_index, endorsement_plan, proposal, timeout);
 				if(results.successful) {
 					logger.debug('%s - layout plan %s completed successfully', method, layout_index);
 					return Promise.resolve(results.endorsements);
@@ -136,29 +134,29 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 
 			return Promise.reject(results.endorsements);
 		} else {
-			throw new Error('No discovery endorsement targets for chaincodeId '+ request.chaincodeId);
+			throw new Error('No discovery endorsement plan found');
 		}
 	}
 
-	async _endorse_layout(layout_index, chaincodeId, chaincode_plan, proposal, timeout) {
+	async _endorse_layout(layout_index, endorsement_plan, proposal, timeout) {
 		const method = '_endorse_layout';
 		logger.debug('%s - start', method);
 		const results = {};
 		results.endorsements = [];
 		results.successful = true;
-		const layout = chaincode_plan.layouts[layout_index];
+		const layout = endorsement_plan.layouts[layout_index];
 		let endorser_process_index = 0;
 		const endorsers = [];
-		for(let group_name in layout) {
+		for(const group_name in layout) {
 			const required = layout[group_name];
-			const group = chaincode_plan.groups[group_name];
+			const group = endorsement_plan.groups[group_name];
 			for(let x=0;x<required; x++) {
-				const endorser_process = this._endorse_group_member(chaincode_plan, group, proposal, timeout, endorser_process_index++, group_name);
+				const endorser_process = this._endorse_group_member(endorsement_plan, group, proposal, timeout, endorser_process_index++, group_name);
 				endorsers.push(endorser_process);
 			}
 		}
 		results.endorsements = await this._execute_endorsements(endorsers);
-		for(let endorsement of results.endorsements) {
+		for(const endorsement of results.endorsements) {
 			if(endorsement instanceof Error) {
 				results.successful = false;
 			}
@@ -170,8 +168,8 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 	async _execute_endorsements(endorser_processes) {
 		const method = '_execute_endorsements';
 		const responses = [];
-		return Promise.all(endorser_processes).then(function (results) {
-			results.forEach(function (result) {
+		return Promise.all(endorser_processes).then((results) => {
+			results.forEach((result) => {
 				if (result instanceof Error) {
 					logger.debug('%s - endorsement failed: %s', method, result);
 					responses.push(result);
@@ -195,7 +193,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 		let error = null;
 		const self = this;
 		return new Promise(async (resolve) => {
-			for(let peer_info of group.peers) {
+			for(const peer_info of group.peers) {
 				const previous_endorsement = plan.endorsements[peer_info.name];
 				if(previous_endorsement && previous_endorsement.endorsement) {
 					if(previous_endorsement.success) {
@@ -246,17 +244,17 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 		});
 	}
 
-	_modify_groups(preferred, ignore, chaincode_plan) {
+	_modify_groups(preferred, ignore, endorsement_plan) {
 		const method = '_modify_groups';
 		logger.debug('%s - start', method);
 		logger.debug('%s - preferred:%j', method, preferred);
 		logger.debug('%s - ignore:%j', method, ignore);
-		logger.debug('%s - chaincode_plan:%j', method, chaincode_plan);
+		logger.debug('%s - endorsement_plan:%j', method, endorsement_plan);
 
-		for(let group_name in chaincode_plan.groups) {
-			const group = chaincode_plan.groups[group_name];
+		for(const group_name in endorsement_plan.groups) {
+			const group = endorsement_plan.groups[group_name];
 			const un_sorted = [];
-			for(let peer_index in group.peers) {
+			for(const peer_index in group.peers) {
 				const peer = group.peers[peer_index];
 				let found = ignore[peer.endpoint];
 				if(!found) {
@@ -303,7 +301,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 			group.peers = sorted;
 		}
 
-		logger.debug('%s - updated chaincode_plan:%j', method, chaincode_plan);
+		logger.debug('%s - updated endorsement_plan:%j', method, endorsement_plan);
 	}
 
 	_create_map(array) {

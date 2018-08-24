@@ -286,6 +286,26 @@ module.exports.checkResults = function(results, error_snip, t) {
 	}
 };
 
+module.exports.checkGoodResults = function(t, results) {
+	let result = true;
+	const proposalResponses = results[0];
+	for(const i in proposalResponses) {
+		const proposal_response = proposalResponses[i];
+		if(proposal_response instanceof Error) {
+			t.fail( 'Failed with error ' + proposal_response.toString());
+			result = result & false;
+		} else if( proposal_response && proposal_response.response && proposal_response.response.status === 200) {
+			t.pass('transaction proposal has response status of good');
+			result = result & true;
+		} else {
+			t.fail(' Unknown results ');
+			result = result & false;
+		}
+	}
+
+	return result;
+};
+
 module.exports.getClientForOrg = async function(t, org) {
 	// build a 'Client' instance that knows of a network
 	//  this network config does not have the client information, we will
@@ -637,7 +657,7 @@ module.exports.transaction_monitor = function(t, channel_event_hub, tx_id) {
 			t.fail('Timeout - Failed to receive event for tx_id '+ tx_id);
 			channel_event_hub.disconnect(); //shutdown
 			throw new Error('TIMEOUT - no event received');
-		}, 10000);
+		}, 60000);
 
 		channel_event_hub.registerTxEvent(tx_id, (txnid, code, block_num) => {
 			clearTimeout(handle);
@@ -662,11 +682,10 @@ module.exports.transaction_monitor = function(t, channel_event_hub, tx_id) {
 	return a_promise;
 };
 
-module.exports.queryChannelAsAdmin = async function(t, client, channel, tx_id_string, peer) {
-	logger.info('\n\nStart queries\n\n\n');
+module.exports.queryChannelAsAdmin = async function(t, client, channel, tx_id_string, peer, chaincode_id) {
 	try {
 		const request = {
-			chaincodeId : 'example',
+			chaincodeId : chaincode_id,
 			fcn: 'query',
 			args: ['b']
 		};
@@ -744,4 +763,3 @@ exports.tapeAsyncThrow = async (t, asyncFun, regx, message) => {
 		}
 	}
 };
-

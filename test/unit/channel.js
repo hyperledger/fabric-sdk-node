@@ -1174,10 +1174,26 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		}
 	}
 
+	try {
+		await channel.initialize({
+			target: peer,
+			endorsementHandler: 'fabric-client/lib/impl/DiscoveryEndorsementHandler.js',
+			discover: false
+		});
+		t.fail('able to initialize channel with a good endorsement handler path');
+	} catch (error) {
+		if (error.message.includes('Failed to connect before the deadline')) {
+			t.pass('Check Failed to initialize channel with good endorsement handler path');
+		} else {
+			t.fail('Receive other failure ' + error.toString());
+		}
+	}
+
 	const handler_path_temp = client.getConfigSetting('endorsement-handler');
 	try {
 		client.setConfigSetting('endorsement-handler', 'bad.path');
-		client.newChannel('test-channel');
+		const channel = client.newChannel('test-channel');
+		await channel.initialize({discover:true});
 		t.fail('able to create channel with a bad endorsement handler path');
 	} catch (error) {
 		if (error.message.includes('Cannot find module')) {
@@ -1186,8 +1202,58 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 			t.fail('Receive other failure ' + error.toString());
 		}
 	}
-	client.setConfigSetting('endorsement-handler', handler_path_temp);
 
+	try {
+		await channel.getDiscoveryResults();
+	} catch(error) {
+		if (error.message.includes('This Channel has not been initialized or not initialized with discovery support')) {
+			t.pass('Check for:: This Channel has not been initialized or not initialized with discovery support');
+		} else {
+			t.fail('Receive other failure ' + error.toString());
+		}
+	}
+
+	try {
+		await channel.getEndorsementPlan();
+	} catch(error) {
+		if (error.message.includes('This Channel has not been initialized or not initialized with discovery support')) {
+			t.pass('Check for:: This Channel has not been initialized or not initialized with discovery support');
+		} else {
+			t.fail('Receive other failure ' + error.toString());
+		}
+	}
+
+	try {
+		const chaincode = channel._buildDiscoveryChaincodeCall('somename');
+		t.equals(chaincode.name, 'somename', 'checking that the name is correct');
+
+		const endorsement_hint = channel._buildDiscoveryInterest('somechaincode');
+		t.equals(endorsement_hint.chaincodes[0].name, 'somechaincode', 'checking that the name is correct');
+
+		channel._discovery_interests.set(JSON.stringify(endorsement_hint), endorsement_hint);
+
+		let added = channel._merge_hints(endorsement_hint);
+		t.equal(added,false,'Check that the new endorsement hint will not be added');
+
+		const endorsement_hint_2 = channel._buildDiscoveryInterest('somechaincode2');
+		added = channel._merge_hints(endorsement_hint_2);
+		t.equal(added,true,'Check that the new endorsement hint will be added');
+
+		const plan_id = JSON.stringify(endorsement_hint_2);
+		const check_endorsement_hint = channel._discovery_interests.get(plan_id);
+		t.equals(check_endorsement_hint.chaincodes[0].name, 'somechaincode2', 'checking that the name is correct');
+
+		channel._last_discover_timestamp = Date.now();
+		channel._discovery_results = {endorsement_plans:[{plan_id: plan_id}]};
+
+		const plan = await channel.getEndorsementPlan(endorsement_hint_2);
+		t.equals(plan.plan_id, plan_id, 'Check the name of endorsement plan retrieved');
+
+	} catch(error) {
+		t.fail(error);
+	}
+
+	client.setConfigSetting('endorsement-handler', handler_path_temp);
 	t.end();
 });
 

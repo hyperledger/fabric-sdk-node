@@ -32,6 +32,11 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 	client.setStateStore(store);
 	await TestUtil.setAdmin(client, 'org1');
 	const channel = client.newChannel('handlertest');
+	try {
+		await channel.initialize();
+	} catch(error) {
+		//going to get an error
+	}
 
 	const handler = channel._commit_handler;
 	if(handler && handler.commit) {
@@ -41,6 +46,18 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 		t.end();
 		return;
 	}
+
+	try{
+		await channel.initialize({commitHandler:'bad.js'});
+		t.fail('Should not be here - commiHandler name is bad ');
+	} catch(error) {
+		if(error.toString().includes('find module')) {
+			t.pass('Successfully failed to initialize using the commitHandler file name ::' + error);
+		} else {
+			t.fail('Received an unknown error ::'+ error);
+		}
+	}
+
 	let parameters = null;
 	await errorChecker(t, handler, parameters, 'Missing all');
 	parameters = {};

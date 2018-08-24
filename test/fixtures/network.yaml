@@ -177,6 +177,7 @@ peers:
 
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
+      request-timeout: 120001
 
     tlsCACerts:
       path: test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem

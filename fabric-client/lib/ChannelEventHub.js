@@ -57,7 +57,7 @@ const five_minutes_ms = 5 * 60 * 1000;
 const ALL = 'all';
 
 // Special value for block numbers
-const NEWEST = Long.fromValue(-1);
+const NEWEST = 'newest';
 
 /**
  * Transaction processing in fabric v1.1 is a long operation spanning multiple
@@ -643,7 +643,7 @@ const ChannelEventHub = class {
 			try {
 				let end_block = options.endBlock;
 				if(typeof end_block === 'string') {
-					if(end_block.toLowerCase() === 'newest') {
+					if(end_block.toLowerCase() === NEWEST) {
 						end_block = Long.MAX_VALUE;
 						this._ending_block_newest = true;
 					}

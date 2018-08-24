@@ -49,7 +49,7 @@
     "mock-couch": "git+https://github.com/jimthematrix/mock-couch.git",
     "mockery": "^2.1.0",
     "nano": "^6.4.4",
-    "nyc": "^11.8.0",
+    "nyc": "^12.0.2",
     "require-dir": "^1.0.0",
     "rewire": "^4.0.1",
     "rimraf": "2.6.2",
