@@ -1,9 +1,16 @@
 /*
- Copyright 2016, 2018 IBM All Rights Reserved.
-
- SPDX-License-Identifier: Apache-2.0
-
-*/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 'use strict';
 
@@ -25,7 +32,7 @@ const logger = utils.getLogger('Peer.js');
  * @class
  * @extends Remote
  */
-var Peer = class extends Remote {
+const Peer = class extends Remote {
 
 	/**
 	 * Construct a Peer object with the given url and opts. A peer object
@@ -88,13 +95,14 @@ var Peer = class extends Remote {
 		}
 
 		return this.waitForReady(this._endorserClient).then(() => {
-			return new Promise(function(resolve, reject) {
-				const send_timeout = setTimeout(function(){
+			return new Promise((resolve, reject) => {
+				const send_timeout = setTimeout(() => {
+					clearTimeout(send_timeout);
 					logger.error('%s - timed out after:%s', method, rto);
 					return reject(new Error('REQUEST_TIMEOUT'));
 				}, rto);
 
-				self._endorserClient.processProposal(proposal, function(err, proposalResponse) {
+				self._endorserClient.processProposal(proposal, (err, proposalResponse) => {
 					clearTimeout(send_timeout);
 					if (err) {
 						logger.debug('%s - Received proposal response from: %s status: %s', method, self._url, err);
@@ -106,7 +114,7 @@ var Peer = class extends Remote {
 						}
 					} else {
 						if (proposalResponse) {
-							logger.debug('%s - Received proposal response from peer "%s": status - %s', method, self._url, proposalResponse.response.status);
+							logger.debug('%s - Received proposal response from peer "%s": status - %s', method, self._url, (proposalResponse.response &&  proposalResponse.response.status) ? proposalResponse.response.status : 'undefined');
 							// 400 is the error threshold level, anything below that the endorser will endorse it.
 							if (proposalResponse.response && proposalResponse.response.status < 400) {
 								resolve(proposalResponse);
@@ -150,13 +158,13 @@ var Peer = class extends Remote {
 		}
 
 		return this.waitForReady(this._discoveryClient).then(() => {
-			return new Promise(function(resolve, reject) {
-				const send_timeout = setTimeout(function(){
+			return new Promise((resolve, reject) => {
+				const send_timeout = setTimeout(() =>{
 					logger.error('%s - timed out after:%s', method, rto);
 					return reject(new Error('REQUEST_TIMEOUT'));
 				}, rto);
 
-				self._discoveryClient.discover(request, function(err, response) {
+				self._discoveryClient.discover(request, (err, response) => {
 					clearTimeout(send_timeout);
 					if (err) {
 						logger.debug('%s - Received discovery response from: %s status: %s', method, self._url, err);
