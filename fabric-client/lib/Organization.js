@@ -1,21 +1,28 @@
 /*
- Copyright 2017, 2018 IBM All Rights Reserved.
-
- SPDX-License-Identifier: Apache-2.0
-
-*/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 'use strict';
 
-var utils = require('./utils.js');
-var logger = utils.getLogger('Organization.js');
+const utils = require('./utils.js');
+const logger = utils.getLogger('Organization.js');
 
 /**
  * The Organization class represents an organization in the target blockchain network.
  *
  * @class
  */
-var Organization = class {
+const Organization = class {
 
 	/**
 	 * Construct a Organization object
@@ -24,17 +31,16 @@ var Organization = class {
 	 * @returns {Organization} The Organization instance.
 	 */
 	constructor(name, mspid) {
-		logger.debug('Organization.const ');
-		if (typeof name === 'undefined' || name === null) {
+		logger.debug('Organization.const');
+		if (!name) {
 			throw new Error('Missing name parameter');
 		}
-		if (typeof mspid === 'undefined' || mspid === null) {
+		if (!mspid) {
 			throw new Error('Missing mspid parameter');
 		}
 		this._name = name;
 		this._mspid = mspid;
 		this._peers = [];
-		this._event_hubs = [];
 		this._certificateAuthorities = [];
 		this._adminPrivateKeyPEM = null;
 		this._adminCertPEM = null;
@@ -96,23 +102,19 @@ var Organization = class {
 	}
 
 	/**
-	 * Gets the admin private key in PEM format for this organization.
-	 */
-	getAdminPrivateKey() {
-		return this._adminPrivateKeyPEM;
-	}
-	/**
 	 * Sets the admin private key in PEM format for this organization.
 	 */
 	setAdminPrivateKey(adminPrivateKeyPEM) {
 		this._adminPrivateKeyPEM = adminPrivateKeyPEM;
 	}
+
 	/**
-	 * Gets the admin signing certificate in PEM format for this organization.
+	 * Gets the admin private key in PEM format for this organization.
 	 */
-	getAdminCert() {
-		return this._adminCertPEM;
+	getAdminPrivateKey() {
+		return this._adminPrivateKeyPEM;
 	}
+
 	/**
 	 * Sets the admin signing certificate in PEM format for this organization.
 	 */
@@ -121,20 +123,24 @@ var Organization = class {
 	}
 
 	/**
+	 * Gets the admin signing certificate in PEM format for this organization.
+	 */
+	getAdminCert() {
+		return this._adminCertPEM;
+	}
+
+	/**
 	 * return a printable representation of this object
 	 */
 	toString() {
-		var peers = '';
-		this._peers.forEach((peer) => {peers = peers + peer.toString() + ',';});
-		var ehs = '';
-		this._event_hubs.forEach((event_hub) => {ehs = ehs + event_hub.toString() + ',';});
-		var cas = '';
-		this._certificateAuthorities.forEach((ca) => {cas = cas + ca.toString() + ',';});
-		return ' Organization : {' +
+		let peers = '';
+		this._peers.forEach((peer) => {peers = peers.length ? peers + ',' + peer.toString() : peers + peer.toString();});
+		let cas = '';
+		this._certificateAuthorities.forEach((ca) => {cas = cas.length ? cas + ',' + ca.toString() : cas + ca.toString();});
+		return 'Organization : {' +
 			'name : ' +  this._name +
 			', mspid : ' +  this._mspid +
 			', peers : [' +  peers + ']' +
-			', event hubs : [' +  ehs + ']' +
 			', certificateAuthorities : [' +  cas + ']' +
 		'}';
 	}
