@@ -39,12 +39,11 @@ const CertificateAuthority = class {
 	 * @returns {CertificateAuthority} The CertificateAuthority instance.
 	 */
 	constructor(name, caname, url, connection_options, tlsCACerts, registrar) {
-		logger.debug('CertificateAuthority.const ');
-		logger.debug('Organization.const ');
-		if (typeof name === 'undefined' || name === null) {
+		logger.debug('CertificateAuthority.const');
+		if (!name) {
 			throw new Error('Missing name parameter');
 		}
-		if (typeof url === 'undefined' || url === null) {
+		if (!url) {
 			throw new Error('Missing url parameter');
 		}
 		this._name = name;
@@ -193,7 +192,7 @@ const CertificateAuthority = class {
 	 * return a printable representation of this object
 	 */
 	toString() {
-		return ' CertificateAuthority : {' +
+		return 'CertificateAuthority : {' +
 		'name : ' +  this._name +
 		', url : ' +  this._url +
 		'}';
