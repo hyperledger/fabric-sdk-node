@@ -624,7 +624,7 @@ const Client = class extends BaseClient {
 	/**
 	 * @typedef {Object} ChannelRequest
 	 * @property {string} name - Required. The name of the new channel
-	 * @property {Orderer} orderer - Required. An Orderer object representing the
+	 * @property {Orderer | string} orderer - Required. An Orderer object or an orderer name representing the
 	 *                               orderer node to send the channel create request
 	 * @property {byte[]} envelope - Optional. Bytes of the envelope object containing all
 	 *                               required settings and signatures to initialize this channel. This envelope
@@ -634,8 +634,8 @@ const Client = class extends BaseClient {
 	 * @property {byte[]} config - Optional. Protobuf ConfigUpdate object extracted from a ConfigEnvelope
 	 *                             created by the configtxgen tool. See [extractChannelConfig()]{@link Client#extractChannelConfig}.
 	 *                             The ConfigUpdate object may also be created by the configtxlator tool.
-	 * @property {ConfigSignature[]} signatures - Required. The list of signatures required by the
-	 *                               channel creation or update policy when using the `config` parameter.
+	 * @property {ConfigSignature[] | string[]} signatures - Required. The list of signatures required by the
+	 *                                                       channel creation or update policy when using the `config` parameter.
 	 * @property {TransactionID} txId - Required. TransactionID object with the transaction id and nonce
 	 */
 
@@ -895,8 +895,8 @@ const Client = class extends BaseClient {
 
 	/**
 	 * @typedef {Object} ChaincodeInstallRequest
-	 * @property {Peer[]} targets - Optional. An array of Peer objects where the
-	 *           chaincode will be installed. When excluded, the peers assigned
+	 * @property {Peer[] | string[]} targets - Optional. An array of Peer objects or peer names
+	 *           where the chaincode will be installed. When excluded, the peers assigned
 	 *           to this client's organization will be used as defined in the
 	 *           network configuration. If the 'channelNames' property is included,
 	 *           the target peers will be based the peers defined in the channels.
@@ -926,6 +926,7 @@ const Client = class extends BaseClient {
 	 *           by this property and in this client's organization and that are
 	 *           in the endorsing or chain code query role on the named channel
 	 *           will be selected.
+	 * @property {TransactionID} txId - Optional. TransactionID object for this request.
 	 */
 
 	/**
@@ -933,7 +934,7 @@ const Client = class extends BaseClient {
 	 * standard array of objects.
 	 *
 	 * @typedef {array} ProposalResponseObject
-	 * @property {array} index:0 - Array of ProposalResponse objects from the
+	 * @property {ProposalResponse[]} index:0 - Array of ProposalResponse objects from the
 	 *           endorsing peers
 	 * @property {Object} index:1 - The original Proposal object needed when
 	 *           sending the transaction request to the orderer
@@ -1450,8 +1451,8 @@ const Client = class extends BaseClient {
 
 	/**
 	 * @typedef {Object} UserOpts
-	 * @property {string} username {string} - the user name used for enrollment
-	 * @property {string} mspid {string} - the MSP id
+	 * @property {string} username - the user name used for enrollment
+	 * @property {string} mspid - the MSP id
 	 * @property {CryptoContent} cryptoContent - the private key and certificate
 	 * @property {boolean} skipPersistence - whether to save this new user object into persistence.
 	 */
