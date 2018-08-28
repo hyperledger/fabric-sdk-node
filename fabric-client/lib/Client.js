@@ -917,7 +917,7 @@ const Client = class extends BaseClient {
 	 *           where the chaincode source code resides.
 	 * @property {string} chaincodeType - Optional. Type of chaincode. One of
 	 *           'golang', 'car', 'node' or 'java'.
-	 *           Default is 'golang'. Note that 'java' is not yet supported.
+	 *           Default is 'golang'.
 	 * @property {string[] | string} channelNames - Optional. When no targets are
 	 *           provided. The loaded network configuration will be searched for
 	 *           suitable target peers. Peers that are defined in the channels named

@@ -26,6 +26,7 @@ function filterExcludedFiles {
 		| grep -v "\.pb\.go$" \
 		| grep -v "\.yaml$" \
 		| grep -v "\.json$" \
+		| grep -v "\.gradle$" \
 		| sort -u`
 }
 
