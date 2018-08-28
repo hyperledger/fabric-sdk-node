@@ -172,7 +172,7 @@ class Orderer extends Remote {
 							return reject(new Error('SERVICE_UNAVAILABLE'));
 						}
 					}
-					logger.debug('sendBroadcast - on error: %j', err.stack ? err.stack : err);
+					logger.error('sendBroadcast - on error: %j', err.stack ? err.stack : err);
 					return reject(err);
 				});
 
