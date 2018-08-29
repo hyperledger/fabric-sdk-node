@@ -7,7 +7,6 @@
 'use strict';
 
 const logger = require('../../logger').getLogger('X509WalletMixin');
-const util = require('util');
 
 class X509WalletMixin {
 

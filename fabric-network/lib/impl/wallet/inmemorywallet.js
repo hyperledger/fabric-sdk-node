@@ -10,7 +10,6 @@ const Client = require('fabric-client');
 const BaseWallet = require('./basewallet');
 const api = require('fabric-client/lib/api.js');
 const logger = require('../../logger').getLogger('InMemoryWallet');
-const util = require('util');
 
 // this will be shared across all instance of a memory wallet, so really an app should
 // only have one instance otherwise if you put 2 different identities with the same

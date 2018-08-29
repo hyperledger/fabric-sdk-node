@@ -14,6 +14,7 @@
   "scripts": {
     "test": "nyc mocha --recursive -t 10000"
   },
+  "types": "./types/index.d.ts",
   "dependencies": {
     "fabric-ca-client": "file:../fabric-ca-client",
     "fabric-client": "file:../fabric-client",
