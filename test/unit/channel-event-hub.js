@@ -466,7 +466,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 	}
 	t.equal(eh._ending_block_newest, true, 'Check the newest state');
 	t.equal(eh._allowRegistration, false, 'Check the replay state');
-	t.equal(eh._ending_block_number, Long.MAX_VALUE, 'Check the replay end block');
+	t.deepEqual(eh._ending_block_number, Long.MAX_VALUE, 'Check the replay end block');
 
 	// this should get some errors posted
 	eh.disconnect();
@@ -489,7 +489,7 @@ test('\n\n** ChannelEventHub transaction callback with replay \n\n', (t) => {
 	}
 	t.equal(eh._ending_block_newest, true, 'Check the newest state');
 	t.equal(eh._allowRegistration, false, 'Check the replay state');
-	t.equal(eh._ending_block_number, Long.MAX_VALUE, 'Check the replay end block');
+	t.deepEqual(eh._ending_block_number, Long.MAX_VALUE, 'Check the replay end block');
 
 	t.end();
 });

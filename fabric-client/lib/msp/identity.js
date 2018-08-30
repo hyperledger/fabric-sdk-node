@@ -5,9 +5,9 @@
 */
 'use strict';
 
-var grpc = require('grpc');
+const grpc = require('grpc');
 
-var identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp;
+const identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp;
 
 /**
  * This interface is shared within the peer and client API of the membership service provider.
@@ -19,7 +19,7 @@ var identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp
  *
  * @class
  */
-var Identity = class {
+class Identity {
 	/**
 	 * @param {string} certificate HEX string for the PEM encoded certificate
 	 * @param {module:api.Key} publicKey The public key represented by the certificate
@@ -32,14 +32,8 @@ var Identity = class {
 		if (!certificate)
 			throw new Error('Missing required parameter "certificate".');
 
-		if (!publicKey)
-			throw new Error('Missing required parameter "publicKey".');
-
 		if (!mspId)
 			throw new Error('Missing required parameter "mspId".');
-
-		if (!cryptoSuite)
-			throw new Error('Missing required parameter "cryptoSuite".');
 
 		this._certificate = certificate;
 		this._publicKey = publicKey;
@@ -93,7 +87,14 @@ var Identity = class {
 	 * @param {Object} opts Options include 'policy' and 'label' TODO (not implemented yet)
 	 */
 	verify(msg, signature, opts) {
-		if(opts);
+		if (opts);
+		// TODO: retrieve the publicKey from the certificate
+		if (!this._publicKey) {
+			throw new Error('Missing public key for this Identity');
+		}
+		if (!this._cryptoSuite) {
+			throw new Error('Missing cryptoSuite for this Identity');
+		}
 		return this._cryptoSuite.verify(this._publicKey, signature, msg);
 	}
 
@@ -102,7 +103,7 @@ var Identity = class {
 	 * TODO: when this method's design is finalized
 	 */
 	verifyAttributes(proof, attributeProofSpec) {
-		if(proof||attributeProofSpec);
+		if (proof || attributeProofSpec);
 		return true;
 	}
 
@@ -116,14 +117,14 @@ var Identity = class {
 		serializedIdentity.setIdBytes(Buffer.from(this._certificate));
 		return serializedIdentity.toBuffer();
 	}
-};
+}
 
 /**
  * Signer is an interface for an opaque private key that can be used for signing operations
  *
  * @class
  */
-var Signer = class {
+class Signer {
 	/**
 	 * @param {module:api.CryptoSuite} cryptoSuite The underlying {@link CryptoSuite} implementation for the digital
 	 * signature algorithm
@@ -168,7 +169,7 @@ var Signer = class {
 	sign(digest, opts) {
 		return this._cryptoSuite.sign(this._key, digest, opts);
 	}
-};
+}
 
 /**
  * SigningIdentity is an extension of Identity to cover signing capabilities. E.g., signing identity
@@ -176,7 +177,7 @@ var Signer = class {
  *
  * @class
  */
-var SigningIdentity = class extends Identity {
+class SigningIdentity extends Identity {
 	/**
 	 * @param {string} certificate HEX string for the PEM encoded certificate
 	 * @param {module:api.Key} publicKey The public key represented by the certificate
@@ -187,10 +188,23 @@ var SigningIdentity = class extends Identity {
 	 * digital signature algorithm to be used for signing operations
 	 */
 	constructor(certificate, publicKey, mspId, cryptoSuite, signer) {
+		if (!certificate) {
+			throw new Error('Missing required parameter "certificate".');
+		}
+		if (!publicKey) {
+			throw new Error('Missing required parameter "publicKey".');
+		}
+		if (!mspId) {
+			throw new Error('Missing required parameter "mspId".');
+		}
+		if (!cryptoSuite) {
+			throw new Error('Missing required parameter "cryptoSuite".');
+		}
 		super(certificate, publicKey, mspId, cryptoSuite);
 
-		if (!signer)
+		if (!signer) {
 			throw new Error('Missing required parameter "signer".');
+		}
 
 		this._signer = signer;
 	}
@@ -227,7 +241,7 @@ var SigningIdentity = class extends Identity {
 			object._cryptoSuite &&
 			object._signer;
 	}
-};
+}
 
 module.exports.Identity = Identity;
 module.exports.SigningIdentity = SigningIdentity;

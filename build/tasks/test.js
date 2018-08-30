@@ -177,6 +177,7 @@ gulp.task('run-full', ['clean-up', 'lint', 'pre-test', 'compile', 'docker-ready'
 			'test/integration/network-e2e/e2e.js',
 			// channel: mychannel, chaincode: end2endnodesdk:v0/v1
 			'test/integration/e2e.js',
+			'test/integration/signTransactionOffline.js',
 			'test/integration/query.js',
 			'test/integration/fabric-ca-affiliation-service-tests.js',
 			'test/integration/fabric-ca-identity-service-tests.js',

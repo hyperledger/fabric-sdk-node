@@ -22,6 +22,8 @@ const MSPManager = require('./msp/msp-manager.js');
 const Policy = require('./Policy.js');
 const Constants = require('./Constants.js');
 const CollectionConfig = require('./SideDB.js');
+const { Identity } = require('./msp/identity.js');
+const ChannelHelper = require('./utils/ChannelHelper');
 
 const _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
 const _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
@@ -43,7 +45,7 @@ const _discoveryProto = grpc.load(__dirname + '/protos/discovery/protocol.proto'
 const _gossipProto = grpc.load(__dirname + '/protos/gossip/message.proto').gossip;
 const _collectionProto = grpc.load(__dirname + '/protos/common/collection.proto').common;
 
-const ImplicitMetaPolicy_Rule = {0: 'ANY', 1: 'ALL', 2: 'MAJORITY'};
+const ImplicitMetaPolicy_Rule = { 0: 'ANY', 1: 'ALL', 2: 'MAJORITY' };
 
 const PEER_NOT_ASSIGNED_MSG = 'Peer with name "%s" not assigned to this channel';
 const ORDERER_NOT_ASSIGNED_MSG = 'Orderer with name "%s" not assigned to this channel';
@@ -92,7 +94,7 @@ const Channel = class {
 		}
 		const channelNameRegxChecker = sdk_utils.getConfigSetting('channel-name-regx-checker');
 		if (channelNameRegxChecker) {
-			const {pattern, flags} = channelNameRegxChecker;
+			const { pattern, flags } = channelNameRegxChecker;
 			const namePattern = new RegExp(pattern ? pattern : '', flags ? flags : '');
 			if (!(name.match(namePattern))) {
 				throw new Error(util.format('Failed to create Channel. channel name should match Regex %s, but got %j', namePattern, name));
@@ -485,7 +487,7 @@ const Channel = class {
 			const keys = Object.keys(msps);
 			for (const key in keys) {
 				const msp = msps[keys[key]];
-				const msp_org = {id: msp.getId()};
+				const msp_org = { id: msp.getId() };
 				logger.debug('%s - found %j', method, msp_org);
 				orgs.push(msp_org);
 			}
@@ -871,7 +873,7 @@ const Channel = class {
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
 		// building manually or will get protobuf errors on send
-		const envelope = client_utils.toEnvelope(client_utils.signProposal(signer,seekPayload));
+		const envelope = client_utils.toEnvelope(client_utils.signProposal(signer, seekPayload));
 
 		return orderer.sendDeliver(envelope);
 	}
@@ -985,7 +987,7 @@ const Channel = class {
 		discovery_request.setQueries(queries);
 
 		// build up the outbound request object
-		const signed_request = client_utils.toEnvelope(client_utils.signProposal(signer,discovery_request));
+		const signed_request = client_utils.toEnvelope(client_utils.signProposal(signer, discovery_request));
 
 		const response = await target_peer.sendDiscovery(signed_request);
 		logger.debug('%s - processing discovery response', method);
@@ -1479,7 +1481,7 @@ const Channel = class {
 		seekPayload.setData(seekInfo.toBuffer());
 
 		// building manually or will get protobuf errors on send
-		let envelope = client_utils.toEnvelope(client_utils.signProposal(signer,seekPayload));
+		let envelope = client_utils.toEnvelope(client_utils.signProposal(signer, seekPayload));
 		// This will return us a block
 		let block = await orderer.sendDeliver(envelope);
 		logger.debug('%s - good results from seek block ', method); // :: %j',results);
@@ -1537,7 +1539,7 @@ const Channel = class {
 		seekPayload.setData(seekInfo.toBuffer());
 
 		// building manually or will get protobuf errors on send
-		envelope = client_utils.toEnvelope(client_utils.signProposal(signer,seekPayload));
+		envelope = client_utils.toEnvelope(client_utils.signProposal(signer, seekPayload));
 		// this will return us a block
 		block = await orderer.sendDeliver(envelope);
 		if (!block) {
@@ -2217,8 +2219,8 @@ const Channel = class {
 		const lcccSpec = {
 			// type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			type: client_utils.translateCCType(request.chaincodeType),
-			chaincode_id: {name: Constants.LSCC},
-			input: {args: lcccSpec_args}
+			chaincode_id: { name: Constants.LSCC },
+			input: { args: lcccSpec_args }
 		};
 
 		const channelHeader = client_utils.buildChannelHeader(
@@ -2247,8 +2249,9 @@ const Channel = class {
 	 *           discovery service if no targets are specified.
 	 * @property {string} chaincodeId - Required. The id of the chaincode to process
 	 *           the transaction proposal
-	 * @property {TransactionID} txId - Required. TransactionID object with the
-	 *           transaction id and nonce
+	 * @property {TransactionID} txId - Optional. TransactionID object with the
+	 *           transaction id and nonce. txId is required for [sendTransactionProposal]{@link Channel#sendTransactionProposal}
+	 *           and optional for [generateUnsignedProposal]{@link Channel#generateUnsignedProposal}
 	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
 	 *           used by the chaincode but not
 	 *           saved in the ledger, such as cryptographic information for encryption
@@ -2375,8 +2378,8 @@ const Channel = class {
 
 		const invokeSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
-			chaincode_id: {name: request.chaincodeId},
-			input: {args: args}
+			chaincode_id: { name: request.chaincodeId },
+			input: { args: args }
 		};
 
 		let signer = null;
@@ -2400,7 +2403,7 @@ const Channel = class {
 		const proposal = client_utils.buildProposal(invokeSpec, header, request.transientMap);
 		const signed_proposal = client_utils.signProposal(signer, proposal);
 
-		return {signed: signed_proposal, source: proposal};
+		return { signed: signed_proposal, source: proposal };
 	}
 
 	/**
@@ -2452,7 +2455,7 @@ const Channel = class {
 	async sendTransaction(request, timeout) {
 		logger.debug('sendTransaction - start :: channel %s', this);
 
-		if(!request){
+		if (!request) {
 			throw Error('Missing input request object on the transaction request');
 		}
 		// Verify that data is being passed in
@@ -2490,7 +2493,7 @@ const Channel = class {
 			use_admin_signer = request.txId.isAdmin();
 		}
 
-		const envelope = Channel.buildEnvelope(this._clientContext,chaincodeProposal,endorsements,proposalResponse,use_admin_signer);
+		const envelope = Channel.buildEnvelope(this._clientContext, chaincodeProposal, endorsements, proposalResponse, use_admin_signer);
 
 		if (this._commit_handler) {
 			const params = {
@@ -2503,7 +2506,217 @@ const Channel = class {
 		} else {
 			// verify that we have an orderer configured
 			const orderer = this._clientContext.getTargetOrderer(request.orderer, this.getOrderers(), this._name);
-			return orderer.sendBroadcast(envelope,timeout);
+			return orderer.sendBroadcast(envelope, timeout);
+		}
+	}
+
+
+	/**
+	 * @typedef {Object} ProposalRequest
+	 * @property {string} fcn - Required. The function name.
+	 * @property {string[]} args - Required. Arguments to send to chaincode.
+	 * @property {string} chaincodeId - Required. ChaincodeId.
+	 * @property {Buffer} argbytes - Optional. Include when an argument must be included as bytes.
+	 * @property {map} transientMap - Optional. <sting, byte[]> The Map that can be
+	 *           used by the chaincode but not saved in the ledger, such as
+	 *           cryptographic information for encryption.
+	 */
+
+
+	/**
+	 * Generates the endorse proposal bytes for a transaction
+	 *
+	 * Current the [sendTransactionProposal]{@link Channel#sendTransactionProposal}
+	 * sign a transaction using the user identity from SDK's context (which
+	 * contains the user's private key).
+	 *
+	 * This method is designed to build the proposal bytes at SDK side,
+	 * and user can sign this proposal with their private key, and send
+	 * the signed proposal to peer by [sendSignedProposal]
+	 *
+	 * so the user's private
+	 * key would not be required at SDK side.
+	 *
+	 * @param {ProposalRequest} request chaincode invoke request
+	 * @param {string} mspId the mspId for this identity
+	 * @param {string} certificate PEM encoded certificate
+	 * @param {boolean} admin if this transaction is invoked by admin
+	 * @returns {Proposal}
+	 */
+	generateUnsignedProposal(request, mspId, certificate, admin) {
+		const method = 'generateUnsignedProposal';
+		logger.debug('%s - start', method);
+
+		const args = [];
+		args.push(Buffer.from(request.fcn ? request.fcn : 'invoke', 'utf8'));
+		logger.debug('%s - adding function arg:%s', method, request.fcn ? request.fcn : 'invoke');
+
+		// check request && request.chaincodeId
+		let errorMsg = client_utils.checkProposalRequest(request, false);
+
+		if (!request.args) {
+			errorMsg = 'Missing "args" in Transaction proposal request';
+		}
+		if (!Array.isArray(request.args)) {
+			errorMsg = 'Param "args" in Transaction proposal request should be a string array';
+		}
+		if (!request.channelId) {
+			errorMsg = 'Missing Required param "channelId" in Transaction proposal';
+		}
+
+		if (errorMsg) {
+			logger.error('%s error %s', method, errorMsg);
+			throw new Error(errorMsg);
+		}
+
+		request.args.forEach(arg => {
+			logger.debug('%s - adding arg %s', method, arg);
+			args.push(Buffer.from(arg, 'utf8'));
+		});
+		//special case to support the bytes argument of the query by hash
+		if (request.argbytes) {
+			logger.debug('%s - adding the argument :: argbytes', method);
+			args.push(request.argbytes);
+		} else {
+			logger.debug('%s - not adding the argument :: argbytes', method);
+		}
+
+		const invokeSpec = {
+			type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			chaincode_id: { name: request.chaincodeId },
+			input: { args }
+		};
+
+		// certificate, publicKey, mspId, cryptoSuite
+		const signer = new Identity(certificate, null, mspId);
+		const txId = new TransactionID(signer, admin);
+
+		const channelHeader = client_utils.buildChannelHeader(
+			_commonProto.HeaderType.ENDORSER_TRANSACTION,
+			request.channelId,
+			txId.getTransactionID(),
+			null,
+			request.chaincodeId,
+			client_utils.buildCurrentTimestamp(),
+			this._clientContext.getClientCertHash()
+		);
+
+		const header = client_utils.buildHeader(signer, channelHeader, txId.getNonce());
+		const proposal = client_utils.buildProposal(invokeSpec, header, request.transientMap);
+		return { proposal, txId };
+	}
+
+	/**
+	 * @typedef {Object} SignedProposal
+	 * @property {Peer[]} targets - Required. The function name.
+	 * @property {Buffer} signedProposal - Required. The signed endorse proposal
+	 */
+
+	/**
+	 * Send signed transaction proposal to peer
+	 *
+	 * @param {SignedProposal} request signed endorse transaction proposal, this signed
+	 * proposal would be send to peer directly.
+	 * @param {number} timeout the timeout setting passed on sendSignedProposal
+	 */
+	async sendSignedProposal(request, timeout) {
+		return Channel.sendSignedProposal(request, timeout);
+	}
+
+	/**
+	 * Send signed transaction proposal to peer
+	 *
+	 * @param {SignedProposal} request signed endorse transaction proposal, this signed
+	 * proposal would be send to peer directly.
+	 * @param {number} timeout the timeout setting passed on sendSignedProposal
+	 */
+	static async sendSignedProposal(request, timeout) {
+		const responses = await client_utils.sendPeersProposal(request.targets, request.signedProposal, timeout);
+		return responses;
+	}
+
+	/**
+	 * generate the commit proposal for a transaction
+	 *
+	 * @param {TransactionRequest} request
+	 */
+	async generateUnsignedTransaction(request) {
+		logger.debug('generateUnsignedTransaction - start :: channel %s', this._name);
+
+		if (!request) {
+			throw Error('Missing input request object on the generateUnsignedTransaction() call');
+		}
+		// Verify that data is being passed in
+		if (!request.proposalResponses) {
+			throw Error('Missing "proposalResponses" parameter in transaction request');
+		}
+		if (!request.proposal) {
+			throw Error('Missing "proposal" parameter in transaction request');
+		}
+		let proposalResponses = request.proposalResponses;
+		const chaincodeProposal = request.proposal;
+
+		const endorsements = [];
+		if (!Array.isArray(proposalResponses)) {
+			//convert to array
+			proposalResponses = [proposalResponses];
+		}
+		for (const proposalResponse of proposalResponses) {
+			// make sure only take the valid responses to set on the consolidated response object
+			// to use in the transaction object
+			if (proposalResponse && proposalResponse.response && proposalResponse.response.status === 200) {
+				endorsements.push(proposalResponse.endorsement);
+			}
+		}
+
+		if (endorsements.length < 1) {
+			logger.error('sendTransaction - no valid endorsements found');
+			throw new Error('no valid endorsements found');
+		}
+		const proposalResponse = proposalResponses[0];
+
+		let use_admin_signer = false;
+		if (request.txId) {
+			use_admin_signer = request.txId.isAdmin();
+		}
+
+		const proposal = ChannelHelper.buildTransactionProposal(
+			chaincodeProposal,
+			endorsements,
+			proposalResponse,
+			use_admin_signer
+		);
+		return proposal;
+	}
+
+	/**
+	 * @typedef {Object} SignedCommitProposal
+	 * @property {TransactionRequest} request - Required. The commit request
+	 * @property {Buffer} signedTransaction - Required. The signed transaction
+	 * @property {Orderer|string} orderer - Optional. The orderer instance or string name
+	 *                     of the orderer to operate. See {@link Client.getTargetOrderer}
+	 */
+
+	/**
+	 * send the signed commit proposal for a transaction
+	 *
+	 * @param {SignedCommitProposal} request the signed commit proposal
+	 * @param {number} timeout the timeout setting passed on sendSignedProposal
+	 */
+	async sendSignedTransaction(request, timeout) {
+		const signed_envelope = client_utils.toEnvelope(request.signedProposal);
+		if (this._commit_handler) {
+			const params = {
+				signed_envelope,
+				request: request.request,
+				timeout: timeout
+			};
+
+			return this._commit_handler.commit(params);
+		} else {
+			// verify that we have an orderer configured
+			const orderer = this._clientContext.getTargetOrderer(request.orderer, this.getOrderers(), this._name);
+			return orderer.sendBroadcast(signed_envelope, timeout);
 		}
 	}
 
@@ -2511,7 +2724,7 @@ const Channel = class {
 	 * Internal static method to allow transaction envelop to be built without
 	 * creating a new channel
 	 */
-	static buildEnvelope(clientContext, chaincodeProposal, endorsements, proposalResponse, use_admin_signer){
+	static buildEnvelope(clientContext, chaincodeProposal, endorsements, proposalResponse, use_admin_signer) {
 
 		const header = _commonProto.Header.decode(chaincodeProposal.getHeader());
 
@@ -2548,7 +2761,7 @@ const Channel = class {
 		payload.setData(transaction.toBuffer());
 
 		const signer = clientContext._getSigningIdentity(use_admin_signer);
-		return client_utils.toEnvelope(client_utils.signProposal(signer,payload));
+		return client_utils.toEnvelope(client_utils.signProposal(signer, payload));
 	}
 	/**
 	 * @typedef {Object} ChaincodeQueryRequest
