@@ -1071,8 +1071,8 @@ test('\n\n*** Test per-call timeout support ***\n', function(t) {
 	sandbox.stub(clientUtils, 'buildHeader').returns(Buffer.from('dummyHeader'));
 	sandbox.stub(clientUtils, 'buildProposal').returns(Buffer.from('dummyProposal'));
 	sandbox.stub(clientUtils, 'signProposal').returns(Buffer.from('dummyProposal'));
-	let _getChaincodePackageData = ClientRewired.__set__(
-		'_getChaincodePackageData',
+	let _getChaincodeDeploymentSpec = ClientRewired.__set__(
+		'_getChaincodeDeploymentSpec',
 		function() {
 			return Promise.resolve(Buffer.from('dummyChaincodePackage'));
 		});
@@ -1143,6 +1143,49 @@ test('\n\n*** Test normalizeX509 ***\n', function(t) {
 	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone start line');
 	matches = normalized.match(/\n\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-\n/);
 	t.equals(matches.length, 1, 'Check that the normalized CERT has the standalone end line');
+
+	t.end();
+});
+
+test('\n\n Test _getChaincodeDeploymentSpec ***\n', function (t) {
+	let ccPath = testutil.NODE_CHAINCODE_PATH;
+
+	let ccInstallRequest = {
+		chaincodeType: 'node',
+		chaincodePath: ccPath,
+		chaincodeId: 'example_cc',
+		chaincodeVersion: '1.0.0'
+	};
+
+	var packageBytes;
+
+	let _getChaincodeDeploymentSpec = rewire('fabric-client/lib/Client.js').__get__('_getChaincodeDeploymentSpec');
+
+	// install from source
+	let p = _getChaincodeDeploymentSpec(ccInstallRequest, false)
+		.then((cdsBytes) => {
+			t.pass('Successfully got chaincode deployment spec from source');
+			// capture the cdsBytes for next test
+			packageBytes = Buffer.from(cdsBytes);
+		})
+		.catch((err) => {
+			t.fail('Failed to get deployment spec. Error: ' + err.stack ? err.stack : err);
+		});
+
+	// install using existing package
+	ccInstallRequest.chaincodePackage = packageBytes;
+	p = _getChaincodeDeploymentSpec(ccInstallRequest, false)
+		.then((cdsBytes) => {
+			// should get back what was passed in
+			if (Buffer.compare(cdsBytes, packageBytes)) {
+				t.pass('Successfully got chaincode deployment spec for existing package');
+			} else {
+				t.fail('Failed to get correct deployment spec for existing package  ' + cdsBytes.length + ' | ' + packageBytes.length);
+			}
+		})
+		.catch((err) => {
+			t.fail('Failed to get deployment spec for source. Error: ' + err.stack ? err.stack : err);
+		});
 
 	t.end();
 });

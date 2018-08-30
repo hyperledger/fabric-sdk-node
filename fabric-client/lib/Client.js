@@ -1058,38 +1058,18 @@ var Client = class extends BaseClient {
 
 		const self = this;
 
-		const ccSpec = {
-			type: clientUtils.translateCCType(request.chaincodeType),
-			chaincode_id: {
-				name: request.chaincodeId,
-				path: request.chaincodePath,
-				version: request.chaincodeVersion
-			}
-		};
-		logger.debug('installChaincode - ccSpec %s ',JSON.stringify(ccSpec));
-
-		// step 2: construct the ChaincodeDeploymentSpec
-		const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
-		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
-		chaincodeDeploymentSpec.setEffectiveDate(clientUtils.buildCurrentTimestamp()); //TODO may wish to add this as a request setting
-
-		return _getChaincodePackageData(request, this.isDevMode())
-			.then((data) => {
-			// DATA may or may not be present depending on devmode settings
-				if (data) {
-					chaincodeDeploymentSpec.setCodePackage(data);
-					logger.debug('installChaincode - found packaged data');
-				}
-				logger.debug('installChaincode - sending deployment spec %s ',chaincodeDeploymentSpec);
+		return _getChaincodeDeploymentSpec(request, this.isDevMode())
+			.then((cdsBytes) => {
+				logger.debug('installChaincode - sending deployment spec');
 
 				// TODO add ESCC/VSCC info here ??????
 				const lcccSpec = {
-					type: ccSpec.type,
+					type: clientUtils.translateCCType(request.chaincodeType),
 					chaincode_id: {
 						name: Constants.LSCC
 					},
 					input: {
-						args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
+						args: [Buffer.from('install', 'utf8'), cdsBytes]
 					}
 				};
 
@@ -1859,16 +1839,39 @@ function readFile(path) {
 	});
 }
 
-// internal utility method to get the chaincodePackage data in bytes
-function _getChaincodePackageData(request, devMode) {
-	return new Promise((resolve,reject) => {
-		if (!request.chaincodePackage) {
-			logger.debug('_getChaincodePackageData -  build package with chaincodepath %s, chaincodeType %s, devMode %s, metadataPath %s',
-				request.chaincodePath, request.chaincodeType, devMode, request.metadataPath);
-			resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath));
-		} else {
-			logger.debug('_getChaincodePackageData - working with included chaincodePackage');
+// internal utility to get the serialized deployment spec for installing chaincode
+function _getChaincodeDeploymentSpec(request, devMode) {
+	return new Promise((resolve, reject) => {
+		// use existing package if present in the request
+		if (request.chaincodePackage && Buffer.isBuffer(request.chaincodePackage)) {
+			logger.debug('installChaincode - using included package');
 			resolve(request.chaincodePackage);
+		} else {
+			return Packager.package(request.chaincodePath, request.chaincodeType, devMode)
+				.then((data) => {
+					let ccSpec = {
+						type: clientUtils.translateCCType(request.chaincodeType),
+						chaincode_id: {
+							name: request.chaincodeId,
+							path: request.chaincodePath,
+							version: request.chaincodeVersion
+						}
+					};
+					logger.debug('installChaincode - ccSpec %s ', JSON.stringify(ccSpec));
+					let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+					chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
+					//TODO may wish to add this as a request setting
+					chaincodeDeploymentSpec.setEffectiveDate(clientUtils.buildCurrentTimestamp());
+					// DATA may or may not be present depending on devmode settings
+					if (data) {
+						chaincodeDeploymentSpec.setCodePackage(data);
+						logger.debug('installChaincode - created new package');
+					}
+					resolve(chaincodeDeploymentSpec.toBuffer());
+				})
+				.catch((err)=> {
+					reject(err);
+				});
 		}
 	});
 }
