@@ -103,6 +103,8 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
      } finally {
            junit '**/cobertura-coverage.xml'
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+           // Sends notification to Rocket.Chat
+           rocketSend channel: 'jenkins-robot', message: "Build Notification - Branch: ${env.GERRIT_BRANCH} - Commit: ${env.GIT_COMMIT} - (<${env.BUILD_URL}|Open>)", rawMessage: true
        }
 }
 
