@@ -844,7 +844,7 @@ test('\n\n ** Test per-call timeout support [client] **\n', (t) => {
 	sandbox.stub(clientUtils, 'buildProposal').returns(Buffer.from('dummyProposal'));
 	sandbox.stub(clientUtils, 'signProposal').returns(Buffer.from('dummyProposal'));
 	ClientRewired.__set__(
-		'_getChaincodePackageData',
+		'_getChaincodeDeploymentSpec',
 		() => {
 			return Promise.resolve(Buffer.from('dummyChaincodePackage'));
 		});
@@ -1118,5 +1118,45 @@ test('\n\n*** Test Client.getPeersForOrgOnChannel ***\n', (t) => {
 	t.equals(peer_results.length, 1, 'correct number of peers returned when anotherchannel specified');
 	t.equals(peer_results[0].getName(), 'peer0.org2.example.com', 'correct peer for Org2 returned');
 
+	t.end();
+});
+
+
+test('\n\n Test _getChaincodeDeploymentSpec ***\n', function (t) {
+	let ccPath = testutil.NODE_CHAINCODE_PATH;
+	let ccInstallRequest = {
+		chaincodeType: 'node',
+		chaincodePath: ccPath,
+		chaincodeId: 'example_cc',
+		chaincodeVersion: '1.0.0'
+	};
+	let _getChaincodeDeploymentSpec = rewire('fabric-client/lib/Client.js').__get__('_getChaincodeDeploymentSpec');
+
+	// install from source
+	_getChaincodeDeploymentSpec(ccInstallRequest, false)
+		.then((cdsBytes) => {
+			t.pass('Successfully got chaincode deployment spec from source');
+			// capture the cdsBytes for next test
+			return Buffer.from(cdsBytes);
+		})
+		.then((packageBytes) => {
+			// install using existing package
+			ccInstallRequest.chaincodePackage = packageBytes;
+			_getChaincodeDeploymentSpec(ccInstallRequest, false)
+				.then((cdsBytes) => {
+					// should get back what was passed in
+					if (packageBytes.equals(cdsBytes)) {
+						t.pass('Successfully got chaincode deployment spec from existing package');
+					} else {
+						t.fail('Failed to get correct deployment spec from existing package  ' + cdsBytes.length + ' | ' + packageBytes.length);
+					}
+				})
+				.catch((err) => {
+					t.fail('Failed to get deployment spec from existing package. Error: ' + err.stack ? err.stack : err);
+				});
+		})
+		.catch((err) => {
+			t.fail('Failed to get deployment spec. Error: ' + err.stack ? err.stack : err);
+		});
 	t.end();
 });
