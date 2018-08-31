@@ -19,9 +19,7 @@ const Peer = require('./Peer.js');
 const ChannelEventHub = require('./ChannelEventHub');
 const Orderer = require('./Orderer.js');
 const TransactionID = require('./TransactionID.js');
-const idModule = require('./msp/identity.js');
-const SigningIdentity = idModule.SigningIdentity;
-const Signer = idModule.Signer;
+const { Signer, SigningIdentity } = require('./msp/identity.js');
 const crypto = require('crypto');
 
 const util = require('util');
@@ -165,7 +163,7 @@ const Client = class extends BaseClient {
 				// generate X509 cert pair
 				// use the default software cryptosuite, not the client assigned cryptosuite, which may be
 				// HSM, or the default has been set to HSM. FABN-830
-				const key = Client.newCryptoSuite({software: true}).generateEphemeralKey();
+				const key = Client.newCryptoSuite({ software: true }).generateEphemeralKey();
 				this._tls_mutual.clientKey = key.toBytes();
 				this._tls_mutual.clientCert = key.generateX509Certificate(this._userContext.getName());
 			}
@@ -1251,7 +1249,7 @@ const Client = class extends BaseClient {
 		let keyBytes = null;
 		try {
 			keyBytes = enrollment.key.toBytes();
-		} catch(err) {
+		} catch (err) {
 			logger.debug('Cannot access enrollment private key bytes');
 		}
 		if (keyBytes != null && keyBytes.startsWith('-----BEGIN')) {
@@ -1670,8 +1668,8 @@ function computeHash(data) {
 }
 
 function readFile(path) {
-	return new Promise(function (resolve, reject) {
-		fs.readFile(path, 'utf8', function (err, data) {
+	return new Promise((resolve, reject) => {
+		fs.readFile(path, 'utf8', (err, data) => {
 			if (err) {
 				if (err.code !== 'ENOENT') {
 					return reject(err);
