@@ -171,7 +171,7 @@ const Client = class extends BaseClient {
 				// generate X509 cert pair
 				// use the default software cryptosuite, not the client assigned cryptosuite, which may be
 				// HSM, or the default has been set to HSM. FABN-830
-				const key = Client.newCryptoSuite({software: true}).generateEphemeralKey();
+				const key = Client.newCryptoSuite({ software: true }).generateEphemeralKey();
 				this._tls_mutual.clientKey = key.toBytes();
 				this._tls_mutual.clientCert = key.generateX509Certificate(this._userContext.getName());
 			}
@@ -249,7 +249,7 @@ const Client = class extends BaseClient {
 			if (this._network_config) {
 				if (!name) {
 					let channel_names = Object.keys(this._network_config._network_config.channels);
-					if(channel_names) {
+					if (channel_names) {
 						name = channel_names[0];
 					}
 				}
@@ -339,7 +339,7 @@ const Client = class extends BaseClient {
 	 */
 	getPeersForOrg(mspid) {
 		let _mspid = mspid;
-		if (!mspid ) {
+		if (!mspid) {
 			_mspid = this._mspid;
 		}
 		if (_mspid && this._network_config) {
@@ -433,7 +433,7 @@ const Client = class extends BaseClient {
 	getEventHubsForOrg(mspid) {
 		let event_hubs = [];
 		let _mspid = mspid;
-		if (!mspid ) {
+		if (!mspid) {
 			_mspid = this._mspid;
 		}
 		if (_mspid && this._network_config) {
@@ -1067,37 +1067,18 @@ const Client = class extends BaseClient {
 
 		const self = this;
 
-		const ccSpec = {
-			type: clientUtils.translateCCType(request.chaincodeType),
-			chaincode_id: {
-				name: request.chaincodeId,
-				path: request.chaincodePath,
-				version: request.chaincodeVersion
-			}
-		};
-		logger.debug('installChaincode - ccSpec %s ', JSON.stringify(ccSpec));
-
-		// step 2: construct the ChaincodeDeploymentSpec
-		const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
-		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
-
-		return _getChaincodePackageData(request, this.isDevMode())
-			.then((data) => {
-				// DATA may or may not be present depending on devmode settings
-				if (data) {
-					chaincodeDeploymentSpec.setCodePackage(data);
-					logger.debug('installChaincode - found packaged data');
-				}
-				logger.debug('installChaincode - sending deployment spec %s ', chaincodeDeploymentSpec);
+		return _getChaincodeDeploymentSpec(request, this.isDevMode())
+			.then((cdsBytes) => {
+				logger.debug('installChaincode - sending deployment spec');
 
 				// TODO add ESCC/VSCC info here ??????
 				const lcccSpec = {
-					type: ccSpec.type,
+					type: clientUtils.translateCCType(request.chaincodeType),
 					chaincode_id: {
 						name: Constants.LSCC
 					},
 					input: {
-						args: [Buffer.from('install', 'utf8'), chaincodeDeploymentSpec.toBuffer()]
+						args: [Buffer.from('install', 'utf8'), cdsBytes]
 					}
 				};
 
@@ -1794,10 +1775,10 @@ const Client = class extends BaseClient {
 	getClientCertHash(create) {
 		const method = 'getClientCertHash';
 		logger.debug('%s - start', method);
-		if(this._tls_mutual.clientCertHash) {
+		if (this._tls_mutual.clientCertHash) {
 			return this._tls_mutual.clientCertHash;
 		}
-		if(!this._tls_mutual.clientCert && create) {
+		if (!this._tls_mutual.clientCert && create) {
 			// this will create the cert and key from the current user if available
 			this.addTlsClientCertAndKey({});
 		}
@@ -1846,18 +1827,41 @@ function readFile(path) {
 	});
 }
 
-// internal utility method to get the chaincodePackage data in bytes
-function _getChaincodePackageData(request, devMode) {
-	if (!request.chaincodePackage) {
-		logger.debug('_getChaincodePackageData -  build package with chaincodepath %s, chaincodeType %s, devMode %s, metadataPath %s',
-			request.chaincodePath, request.chaincodeType, devMode, request.metadataPath);
-
-		return Promise.resolve(Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath));
-	} else {
-		logger.debug('_getChaincodePackageData - working with included chaincodePackage');
-
-		return Promise.resolve(request.chaincodePackage);
-	}
+// internal utility to get the serialized deployment spec for installing chaincode
+function _getChaincodeDeploymentSpec(request, devMode) {
+	return new Promise((resolve, reject) => {
+		// use existing package if present in the request
+		if (request.chaincodePackage && Buffer.isBuffer(request.chaincodePackage)) {
+			logger.debug('installChaincode - using included package');
+			resolve(request.chaincodePackage);
+		} else {
+			logger.debug('getChaincodeDeploymentSpec -  build package with chaincodepath %s, chaincodeType %s, devMode %s, metadataPath %s',
+				request.chaincodePath, request.chaincodeType, devMode, request.metadataPath);
+			return Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath)
+				.then((data) => {
+					let ccSpec = {
+						type: clientUtils.translateCCType(request.chaincodeType),
+						chaincode_id: {
+							name: request.chaincodeId,
+							path: request.chaincodePath,
+							version: request.chaincodeVersion
+						}
+					};
+					logger.debug('installChaincode - ccSpec %s ', JSON.stringify(ccSpec));
+					let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+					chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
+					// DATA may or may not be present depending on devmode settings
+					if (data) {
+						chaincodeDeploymentSpec.setCodePackage(data);
+						logger.debug('installChaincode - created new package');
+					}
+					resolve(chaincodeDeploymentSpec.toBuffer());
+				})
+				.catch((err) => {
+					reject(err);
+				});
+		}
+	});
 }
 
 // internal utility method to check and convert any strings to protobuf signatures

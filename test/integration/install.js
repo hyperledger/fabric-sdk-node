@@ -8,6 +8,9 @@
 // in a happy-path scenario
 'use strict';
 
+const grpc = require('grpc');
+const _ccProto = grpc.load('fabric-client/lib/protos/peer/chaincode.proto').protos;
+
 var utils = require('fabric-client/lib/utils.js');
 var logger = utils.getLogger('install');
 
@@ -56,88 +59,108 @@ test('\n\n** Test chaincode install using chaincodePath to create chaincodePacka
 				t.end();
 			}
 		},
-		(err) => {
-			t.fail('install reject: '+err);
-			t.end();
-		}).catch((err) => {
-			t.fail('install error. ' + err.stack ? err.stack : err);
-			t.end();
-		}).then ((success) => {
-			params.channelName = params.channelName+'0';
-			params.testDesc = params.testDesc+'0';
-			installChaincode(params, t)
-				.then((info) => {
-					if (info && info instanceof Error && info.message.includes('install.'+params.chaincodeVersion+' exists')) {
-						t.pass('passed check for exists on install again');
-						t.end();
-					} else {
-						t.fail('failed check for exists on install again');
-						t.end();
-					}
-				},
-				(err) => {
-					t.fail('install reject: '+err);
-					t.end();
-				}).catch((err) => {
-					t.fail('install error. ' + err.stack ? err.stack : err);
-					t.end();
-				});
-		});
+			(err) => {
+				t.fail('install reject: ' + err);
+				t.end();
+			}).catch((err) => {
+				t.fail('install error. ' + err.stack ? err.stack : err);
+				t.end();
+			}).then((success) => {
+				params.channelName = params.channelName + '0';
+				params.testDesc = params.testDesc + '0';
+				installChaincode(params, t)
+					.then((info) => {
+						if (info && info instanceof Error && info.message.includes('install.' + params.chaincodeVersion + ' exists')) {
+							t.pass('passed check for exists on install again');
+							t.end();
+						} else {
+							t.fail('failed check for exists on install again');
+							t.end();
+						}
+					},
+						(err) => {
+							t.fail('install reject: ' + err);
+							t.end();
+						}).catch((err) => {
+							t.fail('install error. ' + err.stack ? err.stack : err);
+							t.end();
+						});
+			});
 });
 
-test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) => {
+test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', async (t) => {
 	var params = {
 		org: 'org1',
 		testDesc: 'using chaincodePackage',
 		channelName: 'test-install-package',
 		chaincodeId: 'install-package',
-		chaincodePath: testUtil.CHAINCODE_PATH+'_pkg',//not an existing path
+		chaincodePath: testUtil.CHAINCODE_PATH,
 		chaincodeVersion: testUtil.getUniqueVersion()
 	};
 
-	Packager.package(testUtil.CHAINCODE_PATH, null, false) //use good path here to get data
-		.then((data) => {
-			params.chaincodePackage = data;
 
+	Packager.package(testUtil.CHAINCODE_PATH, null, false)
+		.then((data) => {
+
+			// create chaincode package
+			let ccSpec = {
+				type: _ccProto.ChaincodeSpec.Type.GOLANG,
+				chaincode_id: {
+					name: params.chaincodeId,
+					path: params.chaincodePath,
+					version: params.chaincodeVersion
+				}
+			};
+			let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+			chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
+			chaincodeDeploymentSpec.setCodePackage(data);
+
+			params.chaincodePackage = chaincodeDeploymentSpec.toBuffer();
 			installChaincode(params, t)
 				.then((info) => {
 					if (info === 'success') {
-						t.pass(params.testDesc+' - success');
+						t.pass(params.testDesc + ' - success');
 						return true;
 					} else {
-						t.fail(params.testDesc+' - '+info);
+						t.fail(params.testDesc + ' - ' + info);
 						t.end();
 					}
 				},
-				(err) => {
-					t.fail(params.testDesc+' - install reject: '+err);
-					t.end();
-				}).catch((err) => {
-					t.fail(params.testDesc+' - install error. ' + err.stack ? err.stack : err);
-					t.end();
-				}).then ((success) => {
-					params.channelName = params.channelName+'0';
-					params.testDesc = params.testDesc+'0';
-					installChaincode(params, t)
-						.then((info) => {
-							if (info && info instanceof Error && info.message.includes('install-package.'+params.chaincodeVersion+' exists')) {
-								t.pass('passed check for exists same code again');
-								t.end();
-							} else {
-								t.fail('failed check for exists same code again');
-								t.end();
-							}
-						},
-						(err) => {
-							t.fail(params.testDesc+' - install same chaincode again - reject, error');
-							logger.error(err.stack ? err.stack : err);
-							t.end();
-						}).catch((err) => {
-							t.fail(params.testDesc+' - install same chaincode again - error');
-							logger.error(err.stack ? err.stack : err);
-							t.end();
-						});
-				});
+					(err) => {
+						t.fail(params.testDesc + ' - install reject: ' + err);
+						t.end();
+					}).catch((err) => {
+						t.fail(params.testDesc + ' - install error. ' + err.stack ? err.stack : err);
+						t.end();
+					}).then((success) => {
+						params.channelName = params.channelName + '0';
+						params.testDesc = params.testDesc + '0';
+						installChaincode(params, t)
+							.then((info) => {
+								if (info && info instanceof Error &&
+									info.message.includes('install-package.' + params.chaincodeVersion + ' exists')) {
+									t.pass('passed check for exists same code again');
+									t.end();
+								} else {
+									t.fail('failed check for exists same code again');
+									t.end();
+								}
+							},
+								(err) => {
+									t.fail(params.testDesc + ' - install same chaincode again - reject, error');
+									logger.error(err.stack ? err.stack : err);
+									t.end();
+								}).catch((err) => {
+									t.fail(params.testDesc + ' - install same chaincode again - error');
+									logger.error(err.stack ? err.stack : err);
+									t.end();
+								});
+					});
+		})
+		.catch((err) => {
+			t.fail(params.testDesc + ' - failed to get deployment spec - reject, error');
+			logger.error(err.stack ? err.stack : err);
+			t.end();
 		});
 });
 
@@ -158,14 +181,14 @@ function installChaincode(params, t) {
 				t.pass('Successfully retrieved TLS certificate');
 				tlsInfo = enrollment;
 				client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
-				return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
+				return Client.newDefaultKeyValueStore({ path: testUtil.storePathForOrg(orgName) });
 			}).then((store) => {
 				client.setStateStore(store);
 
 				// get the peer org's admin required to send install chaincode requests
 				return testUtil.getSubmitter(client, t, true /* get peer org admin */, org);
 			}).then((admin) => {
-				t.pass(params.testDesc+' - Successfully enrolled user \'admin\'');
+				t.pass(params.testDesc + ' - Successfully enrolled user \'admin\'');
 				the_user = admin;
 
 				channel.addOrderer(
@@ -210,38 +233,38 @@ function installChaincode(params, t) {
 
 				return client.installChaincode(request);
 			},
-			(err) => {
-				t.fail(params.testDesc+' - Failed to enroll user \'admin\'. ' + err);
-				throw new Error(params.testDesc+' - Failed to enroll user \'admin\'. ' + err);
-			}).then((results) => {
-				var proposalResponses = results[0];
+				(err) => {
+					t.fail(params.testDesc + ' - Failed to enroll user \'admin\'. ' + err);
+					throw new Error(params.testDesc + ' - Failed to enroll user \'admin\'. ' + err);
+				}).then((results) => {
+					var proposalResponses = results[0];
 
-				var proposal = results[1];
-				var all_good = true;
-				var error = null;
-				for(var i in proposalResponses) {
-					let one_good = false;
-					if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
-						one_good = true;
-						logger.info(params.testDesc+' - install proposal was good');
+					var proposal = results[1];
+					var all_good = true;
+					var error = null;
+					for (var i in proposalResponses) {
+						let one_good = false;
+						if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
+							one_good = true;
+							logger.info(params.testDesc + ' - install proposal was good');
+						} else {
+							logger.error(params.testDesc + ' - install proposal was bad');
+							error = proposalResponses[i];
+						}
+						all_good = all_good & one_good;
+					}
+					if (all_good) {
+						return 'success';
 					} else {
-						logger.error(params.testDesc+' - install proposal was bad');
-						error = proposalResponses[i];
+						if (error) {
+							return error;
+						}
+						else return 'fail';
 					}
-					all_good = all_good & one_good;
-				}
-				if (all_good) {
-					return 'success';
-				} else {
-					if (error) {
-						return error;
-					}
-					else return 'fail';
-				}
-			},
-			(err) => {
-				return new Error(err.stack ? err.stack : err);
-			});
+				},
+					(err) => {
+						return new Error(err.stack ? err.stack : err);
+					});
 	} catch (err) {
 		return Promise.reject(new Error(err.stack ? err.stack : err));
 	}
