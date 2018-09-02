@@ -104,6 +104,7 @@ test('\n\n** Golang Packager tests **\n\n', function(t) {
 				t.end();
 			}
 
+			testutil.setupChaincodeDeploy();
 			return Packager.package(testutil.CHAINCODE_PATH,'',false);
 		}).then((data) => {
 			let tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
@@ -122,10 +123,11 @@ test('\n\n** Golang Packager tests **\n\n', function(t) {
 
 				t.end();
 			});
+			testutil.setupChaincodeDeploy();
 			return Packager.package(testutil.CHAINCODE_PATH,'', false, testutil.METADATA_PATH);
 		}).then((data) => {
-			let tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
-			let destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
+			let tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy2.tar.gz');
+			let destDir = path.join(testutil.getTempDir(), 'test-deploy-copy2-tar-gz');
 			fs.writeFileSync(tmpFile, data);
 			fs.removeSync(destDir);
 			targz.decompress({
