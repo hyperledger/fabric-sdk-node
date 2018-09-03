@@ -25,5 +25,8 @@
 	},
 	"private-data" : {
 		"title": "How to use private data"
+	},
+	"sign-transaction-offline": {
+		"title": "How to sign a transaction with an offline private key"
 	}
 }
