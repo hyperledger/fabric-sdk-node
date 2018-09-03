@@ -1887,10 +1887,16 @@ function _stringToSignature(string_signatures) {
 function _getNetworkConfig(config, client) {
 	let network_config = null;
 	let network_data = null;
+	let file_data;
 	if (typeof config === 'string') {
 		const config_loc = path.resolve(config);
 		logger.debug('%s - looking at absolute path of ==>%s<==', '_getNetworkConfig', config_loc);
-		const file_data = fs.readFileSync(config_loc);
+		try {
+			file_data = fs.readFileSync(config_loc);
+		} catch (err) {
+			if (err.code !== 'ENOENT') 
+				throw new Error(util.format('File not found at path - %s', config_loc));
+		}
 		const file_ext = path.extname(config_loc);
 		// maybe the file is yaml else has to be JSON
 		if (file_ext.indexOf('y') > -1) {
