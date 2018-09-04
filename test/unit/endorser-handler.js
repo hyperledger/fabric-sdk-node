@@ -96,7 +96,7 @@ const discovery_plan = {
 			]
 		}
 	},
-	endorsement_targets: {
+	endorsement_plans: {
 		example: {
 			groups: {
 				G0: {
@@ -137,7 +137,11 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 	client.setStateStore(store);
 	await TestUtil.setAdmin(client, 'org1');
 	const channel = client.newChannel('handlertest');
-
+	try {
+		channel.initialize({discover:true});
+	} catch(error) {
+		// we will get an error
+	}
 	const handler = channel._endorsement_handler;
 	if(handler && handler.endorse) {
 		t.pass('Able to have the channel create the handler');
@@ -168,9 +172,9 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 	const preferred = handler._create_map([org3[3]]);
 	const remove = handler._create_map([org2[1]]);
 
-	handler._modify_groups(preferred, remove, discovery_plan.endorsement_targets['example']);
-	t.equal(discovery_plan.endorsement_targets['example'].groups['G1'].peers.length, 1, 'Checking that one peer was removed');
-	t.equal(discovery_plan.endorsement_targets['example'].groups['G3'].peers[0].name, org3[3], 'Checking that peer was moved to top of list');
+	handler._modify_groups(preferred, remove, discovery_plan.endorsement_plans['example']);
+	t.equal(discovery_plan.endorsement_plans['example'].groups['G1'].peers.length, 1, 'Checking that one peer was removed');
+	t.equal(discovery_plan.endorsement_plans['example'].groups['G3'].peers[0].name, org3[3], 'Checking that peer was moved to top of list');
 
 	channel.addPeer(client.newPeer('grpcs://' + org1[1], {pem}));
 	channel.addPeer(client.newPeer('grpcs://' + org1[2], {pem}));
@@ -189,7 +193,7 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 	const proposal = Channel._buildSignedProposal(request, 'handlert', client);
 
 	try {
-		await handler._endorse(discovery_plan, request, proposal);
+		await handler._endorse(discovery_plan.endorsement_plans['example'], request, proposal);
 	} catch(error) {
 		if(error instanceof Error) {
 			t.fail('Should have received endorsment array');

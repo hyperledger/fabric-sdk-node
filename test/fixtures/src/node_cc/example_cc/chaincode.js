@@ -83,11 +83,17 @@ var Chaincode = class {
 			return this.move(stub, args);
 		}
 
+		if (fcn === 'call') {
+			return this.call(stub, args);
+		}
+
 		logger.Errorf(`Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: ${fcn}`);
 		return shim.error(`Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: ${fcn}`);
 	}
 
 	async move(stub, args) {
+		logger.info('########### example_cc0 move ###########');
+
 		let A, B;
 		let Aval, Bval;
 		let X;
@@ -133,6 +139,7 @@ var Chaincode = class {
 		try {
 			await stub.putState(A, Buffer.from(Aval.toString()));
 			await stub.putState(B, Buffer.from(Bval.toString()));
+			logger.info(' example_cc0 - move succeed');
 			return shim.success(Buffer.from('move succeed'));
 		} catch (e) {
 			return shim.error(e);
@@ -141,6 +148,8 @@ var Chaincode = class {
 	}
 
 	async delete(stub, args) {
+		logger.info('########### example_cc0 delete ###########');
+
 		if (args.length != 1) {
 			return shim.error('Incorrect number of arguments. Expecting 1');
 		}
@@ -157,6 +166,8 @@ var Chaincode = class {
 	}
 
 	async query(stub, args) {
+		logger.info('########### example_cc0 query ###########');
+
 		if (args.length != 1) {
 			return shim.error('Incorrect number of arguments. Expecting name of the person to query');
 		}
@@ -185,6 +196,33 @@ var Chaincode = class {
 
 	async throwError(stub, args) {
 		return shim.error(new Error('throwError: an error occurred'));
+	}
+
+	async call(stub, args) {
+		logger.info('########### example_cc0 call ###########');
+
+		if (args.length < 2) {
+			return shim.error('Incorrect number of arguments. Expecting name of the chaincode and function to call');
+		}
+
+		let chaincode_name = args.shift().toString();
+
+		logger.info('Calling chaincode:%s with function:%s  argument 1:%s \n', chaincode_name, args[0].toString(), parseInt(args[1]));
+
+		let results = null;
+		// call the other chaincode
+		try {
+			results = await stub.invokeChaincode(chaincode_name, args);
+			logger.info(' example_cc0 - call succeeded %s', results);
+		} catch (e) {
+			logger.error('Failed to call chaincode ' + e);
+		}
+
+		if(results) {
+			return shim.success(Buffer.from('Success'));
+		}
+
+		return shim.error('Failed to complete the call to '+ chaincode_name);
 	}
 };
 

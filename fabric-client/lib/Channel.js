@@ -111,27 +111,14 @@ const Channel = class {
 		this._kafka_brokers = [];
 		this._clientContext = clientContext;
 		this._msp_manager = new MSPManager();
-		this._chaincodes = new Map();
+		this._discovery_interests = new Map();
 		this._discovery_results = null;
 		this._last_discover_timestamp = null;
 		this._discovery_peer = null;
 		this._use_discovery = sdk_utils.getConfigSetting('initialize-with-discovery', false);
-
-		// setup the endorsement handler
-		this._endorsement_handler = null;
-		let handler_path = sdk_utils.getConfigSetting('endorsement-handler');
-		if (handler_path) {
-			this._endorsement_handler = require(handler_path).create(this);
-			this._endorsement_handler.initialize();
-		}
-
-		// setup the commit handler
+		this._endorsement_handler = null; //will be setup during initialization
 		this._commit_handler = null;
-		handler_path = sdk_utils.getConfigSetting('commit-handler');
-		if (handler_path) {
-			this._commit_handler = require(handler_path).create(this);
-			this._commit_handler.initialize();
-		}
+
 
 
 		logger.debug('Constructed Channel instance: name - %s, network mode: %s', this._name, !this._devMode);
@@ -161,6 +148,8 @@ const Channel = class {
 	 *           base Peer query to load only the configuration information.
 	 * @property {string} endorsementHandler - Optional. The path to a custom
 	 *           endorsement handler implementing {@link EndorsementHandler}.
+	 * @property {string} commitHandler - Optional. The path to a custom
+	 *           commit handler implementing {@link CommitHandler}.
 	 * @property {boolean} asLocalhost - Optional. Convert discovered host addresses
 	 *           to be 'localhost'. Will be needed when running a docker composed
 	 *           fabric network on the local system.
@@ -186,162 +175,151 @@ const Channel = class {
 	async initialize(request) {
 		const method = 'initialize';
 		logger.debug('%s - start', method);
-		let target_peer = this._discovery_peer;
 
-		this._discovery_results = null;
-		this._last_discover_timestamp = null;
-		let use_discovery = this._use_discovery;
+		let endorsement_handler_path = null;
+		let commit_handler_path = null;
 
 		if (request) {
 			if (request.configUpate) {
+				logger.debub('%s - have a configupdate', method);
 				this.loadConfigUpdate(request.configUpate);
 
 				return true;
 			} else {
 				if (typeof request.discover !== 'undefined') {
 					if (typeof request.discover === 'boolean') {
-						use_discovery = request.discover;
+						logger.debug('%s - user requested discover %s', method, request.discover);
+						this._use_discovery = request.discover;
 					} else {
 						throw new Error('Request parameter "discover" must be boolean');
 					}
 				}
-				if (request.target) {
-					target_peer = request.target;
-				}
 				if (request.endorsementHandler) {
-					this._endorsement_handler = require(request.endorsementHandler).create(this);
-					this._endorsement_handler.initialize();
+					logger.debug('%s - user requested endorsementHandler %s', method, request.endorsementHandler);
+					endorsement_handler_path = request.endorsementHandler;
+				}
+				if (request.commitHandler) {
+					logger.debug('%s - user requested commitHandler %s', method, request.commitHandler);
+					commit_handler_path = request.commitHandler;
 				}
 			}
 		}
 
+		// setup the endorsement handler
+		if(!endorsement_handler_path && this._use_discovery) {
+			endorsement_handler_path = sdk_utils.getConfigSetting('endorsement-handler');
+			logger.debug('%s - using config setting for endorsement handler ::%s', method, endorsement_handler_path);
+		}
+		if (endorsement_handler_path) {
+			this._endorsement_handler = require(endorsement_handler_path).create(this);
+			await this._endorsement_handler.initialize();
+		}
+
+		// setup the commit handler
+		if(!commit_handler_path) {
+			commit_handler_path = sdk_utils.getConfigSetting('commit-handler');
+			logger.debug('%s - using config setting for commit handler ::%s', method, commit_handler_path);
+		}
+		if (commit_handler_path) {
+			this._commit_handler = require(commit_handler_path).create(this);
+			await this._commit_handler.initialize();
+		}
+
+		const results = await this._initialize(request);
+
+		return results;
+	}
+
+	async _initialize(request) {
+		const method = '_initialize';
+		logger.debug('%s - start', method);
+
+		this._discovery_results = null;
+		this._last_discover_timestamp = null;
 		this._last_refresh_request = Object.assign({}, request);
-		let discover_results, discover_request;
-		if (use_discovery) {
+		let target_peer = this._discovery_peer;
+
+		if (request && request.target) {
+			target_peer = request.target;
+		}
+
+		if (this._use_discovery) {
+			logger.debug('%s - starting discovery', method);
 			target_peer = this._getTargetForDiscovery(target_peer);
 			if (!target_peer) {
 				throw new Error('No target provided for discovery services');
 			}
-			const chaincodes = {};
-			discover_request = {
-				target: target_peer,
-				config: true
-			};
 
-			discover_results = await this._discover(discover_request);
-			// chaincode names are in each peer
-			if (discover_results && discover_results.peers_by_org) {
-				for (const mspid in discover_results.peers_by_org) {
-					const org = discover_results.peers_by_org[mspid];
-					for (const peer_index in org.peers) {
-						const peer = org.peers[peer_index];
-						for (const chaincode_index in peer.chaincodes) {
-							const chaincode = peer.chaincodes[chaincode_index];
-							chaincodes[chaincode.name] = chaincode.version;
-						}
+			try {
+				const discover_request = {
+					target: target_peer,
+					config: true
+				};
+
+				const discovery_results = await this._discover(discover_request);
+				if (discovery_results) {
+					if (discovery_results.msps) {
+						this._buildDiscoveryMSPs(discovery_results);
+					} else {
+						throw Error('No MSP information found');
 					}
-				}
-			}
-
-			discover_request = {
-				target: target_peer,
-				config: true,
-				chaincodes: Object.keys(chaincodes),
-				endpoint_names: true,
-				initialize_msps: true
-			};
-
-			discover_results = await this._discover(discover_request);
-			if (discover_results) {
-				if (discover_results.msps) {
-					logger.debug('%s - build msps', method);
-					for (const msp_name in discover_results.msps) {
-						const msp = discover_results.msps[msp_name];
-						const config = {
-							rootCerts: msp.rootCerts,
-							intermediateCerts: msp.intermediateCerts,
-							admins: msp.admins,
-							cryptoSuite: this._clientContext._crytoSuite,
-							id: msp.id,
-							orgs: msp.orgs,
-							tls_root_certs: msp.tls_root_certs,
-							tls_intermediate_certs: msp.tls_intermediate_certs
-						};
-						this._msp_manager.addMSP(config);
+					if (discovery_results.orderers) {
+						this._buildDiscoveryOrderers(discovery_results, discovery_results.msps, request);
+					}
+					if (discovery_results.peers_by_org) {
+						this._buildDiscoveryPeers(discovery_results, discovery_results.msps, request);
 					}
 				}
 
-				logger.debug('%s - build target names', method);
-				// add orderers names
-				if (discover_results.orderers) {
-					for (const msp_id in discover_results.orderers) {
-						logger.debug('%s - orderers msp:%s', method, msp_id);
-						const endpoints = discover_results.orderers[msp_id].endpoints;
-						for (const endpoint of endpoints) {
-							logger.debug('%s - orderer mspid:%s endpoint:%s:%s', method, msp_id, endpoint.host, endpoint.port);
-							endpoint.name = this._buildOrdererName(
-								msp_id,
-								endpoint.host,
-								endpoint.port,
-								discover_results.msps,
-								request
-							);
-						}
+				discovery_results.endorsement_plans = [];
+
+				const interests = [];
+				const plan_ids = [];
+				this._discovery_interests.forEach((interest, plan_id) =>{
+					logger.debug('%s - have interest of:%s', method, plan_id);
+					plan_ids.push(plan_id);
+					interests.push(interest);
+				});
+
+				for(const i in plan_ids) {
+					const plan_id = plan_ids[i];
+					const interest = interests[i];
+
+					const discover_request = {
+						target: target_peer,
+						interests: [interest]
+					};
+
+					let discover_interest_results = null;
+					try {
+						discover_interest_results = await this._discover(discover_request);
+					} catch(error) {
+						logger.error('Not able to get an endorsement plan for %s', plan_id);
 					}
-				}
-				// add peer names
-				if (discover_results.peers_by_org) {
-					for (const msp_id in discover_results.peers_by_org) {
-						logger.debug('%s - peers msp:%s', method, msp_id);
-						const peers = discover_results.peers_by_org[msp_id].peers;
-						for (const index in peers) {
-							const peer = peers[index];
-							peer.name = this._buildPeerName(
-								peer.endpoint,
-								peer.mspid,
-								discover_results.msps,
-								request
-							);
-							logger.debug('%s - peer:%j', method, peer);
-						}
-					}
-				}
-				//add peer names for setEndorsements
-				if (discover_results.endorsement_targets) {
-					for (const chaincode_name in discover_results.endorsement_targets) {
-						const chaincode = discover_results.endorsement_targets[chaincode_name];
-						for (const group_name in chaincode.groups) {
-							logger.debug('%s - endorsing peer group %s', method, group_name);
-							const peers = chaincode.groups[group_name].peers;
-							for (const index in peers) {
-								const peer = peers[index];
-								peer.name = this._buildPeerName(
-									peer.endpoint,
-									peer.mspid,
-									discover_results.msps,
-									request
-								);
-								logger.debug('%s - peer:%j', method, peer);
-							}
-						}
+
+					if(discover_interest_results && discover_interest_results.endorsement_plans && discover_interest_results.endorsement_plans[0]) {
+						const plan = this._buildDiscoveryEndorsementPlan(discover_interest_results, plan_id, discovery_results.msps, request);
+						discovery_results.endorsement_plans.push(plan);
+						logger.debug('Added an endorsement plan for %s', plan_id);
+					} else {
+						logger.debug('Not adding an endorsement plan for %s', plan_id);
 					}
 				}
 
-				discover_results.timestamp = Date.now();
-				this._discovery_results = discover_results;
+				discovery_results.timestamp = Date.now();
+				this._discovery_results = discovery_results;
 				this._discovery_peer = target_peer;
-				this._last_discover_timestamp = discover_results.timestamp;
+				this._last_discover_timestamp = discovery_results.timestamp;
 
-				return discover_results;
-			} else {
-
-				throw new Error('initialization failed');
+				return discovery_results;
+			} catch(error) {
+				logger.error(error);
+				throw Error('Failed to discover ::'+ error.toString());
 			}
-
 		} else {
 			target_peer = this._getFirstAvailableTarget(target_peer);
 			if (!target_peer) {
-				throw new Error('No target provided for initialization');
+				throw new Error('No target provided for non-discovery initialization');
 			}
 			const config_envelope = await this.getChannelConfig(target_peer);
 			logger.debug('initialize - got config envelope from getChannelConfig :: %j', config_envelope);
@@ -350,6 +328,95 @@ const Channel = class {
 			return config_items;
 
 		}
+	}
+
+	_buildDiscoveryMSPs(discovery_results) {
+		const method = '_buildDiscoveryMSPs';
+		logger.debug('%s - build msps', method);
+
+		for (const msp_name in discovery_results.msps) {
+			const msp = discovery_results.msps[msp_name];
+			const config = {
+				rootCerts: msp.rootCerts,
+				intermediateCerts: msp.intermediateCerts,
+				admins: msp.admins,
+				cryptoSuite: this._clientContext._cryptoSuite,
+				id: msp.id,
+				orgs: msp.orgs,
+				tls_root_certs: msp.tls_root_certs,
+				tls_intermediate_certs: msp.tls_intermediate_certs
+			};
+			this._msp_manager.addMSP(config);
+		}
+	}
+
+	_buildDiscoveryOrderers(discovery_results, msps, options) {
+		const method = '_buildDiscoveryOrderers';
+		logger.debug('%s - build orderers', method);
+
+		for (const msp_id in discovery_results.orderers) {
+			logger.debug('%s - orderers msp:%s', method, msp_id);
+			const endpoints = discovery_results.orderers[msp_id].endpoints;
+			for (const endpoint of endpoints) {
+				logger.debug('%s - orderer mspid:%s endpoint:%s:%s', method, msp_id, endpoint.host, endpoint.port);
+				endpoint.name = this._buildOrdererName(
+					msp_id,
+					endpoint.host,
+					endpoint.port,
+					msps,
+					options
+				);
+			}
+		}
+	}
+
+	_buildDiscoveryPeers(discovery_results, msps, options) {
+		const method = '_buildDiscoveryPeers';
+		logger.debug('%s - build peers', method);
+
+		for (const msp_id in discovery_results.peers_by_org) {
+			logger.debug('%s - peers msp:%s', method, msp_id);
+			const peers = discovery_results.peers_by_org[msp_id].peers;
+			for (const peer of peers) {
+				for (const chaincode of  peer.chaincodes) {
+					const interest = this._buildDiscoveryInterest(chaincode.name);
+					const plan_id = JSON.stringify(interest);
+					logger.debug('%s - looking at adding plan_id of  %s', method, plan_id);
+					this._discovery_interests.set(plan_id, interest); //will replace existing
+					logger.debug('%s - adding new interest of single chaincode ::%s', method, plan_id);
+				}
+				peer.name = this._buildPeerName(
+					peer.endpoint,
+					peer.mspid,
+					msps,
+					options
+				);
+				logger.debug('%s - peer:%j', method, peer);
+			}
+		}
+	}
+
+	_buildDiscoveryEndorsementPlan(discovery_results, plan_id, msps, options){
+		const method = '_buildDiscoveryPeers';
+		logger.debug('%s - build endorsement plan for %s', method, plan_id);
+
+		const endorsement_plan = discovery_results.endorsement_plans[0];
+		endorsement_plan.plan_id = plan_id;
+		for (const group_name in endorsement_plan.groups) {
+			logger.debug('%s - endorsing peer group %s', method, group_name);
+			const peers = endorsement_plan.groups[group_name].peers;
+			for (const peer of peers) {
+				peer.name = this._buildPeerName(
+					peer.endpoint,
+					peer.mspid,
+					msps,
+					options
+				);
+				logger.debug('%s - peer:%j', method, peer);
+			}
+		}
+
+		return endorsement_plan;
 	}
 
 	/**
@@ -363,20 +430,22 @@ const Channel = class {
 	/**
 	 * @typedef {Object} DiscoveryResultMSPConfig
 	 * @property {string} rootCerts List of root certificates trusted by this MSP.
-	 *                              They are used upon certificate validation.
-	 * @property {string} intermediateCerts List of intermediate certificates trusted by this MSP.
-	 *                                      They are used upon certificate validation as follows:
-	 *                                      validation attempts to build a path from the certificate
-	 *                                      to be validated (which is at one end of the path) and
-	 *                                      one of the certs in the RootCerts field (which is at
-	 *                                      the other end of the path). If the path is longer than
-	 *                                      2, certificates in the middle are searched within the
-	 *                                      IntermediateCerts pool.
+	 *           They are used upon certificate validation.
+	 * @property {string} intermediateCerts List of intermediate certificates
+	 *           trusted by this MSP. They are used upon certificate validation
+	 *           as follows:
+	 *           Validation attempts to build a path from the certificate to be
+	 *           validated (which is at one end of the path) and one of the certs
+	 *           in the RootCerts field (which is at the other end of the path).
+	 *           If the path is longer than 2, certificates in the middle are
+	 *           searched within the IntermediateCerts pool.
 	 * @property {string} admins Identity denoting the administrator of this MSP
 	 * @property {string} id the identifier of the MSP
-	 * @property {string[]} orgs fabric organizational unit identifiers that belong to this MSP configuration
+	 * @property {string[]} orgs fabric organizational unit identifiers that
+	 *           belong to this MSP configuration
 	 * @property {string} tls_root_certs TLS root certificates trusted by this MSP
-	 * @property {string} tls_intermediate_certs TLS intermediate certificates trusted by this MSP
+	 * @property {string} tls_intermediate_certs TLS intermediate certificates
+	 *           trusted by this MSP
 	 */
 
 	/**
@@ -412,13 +481,23 @@ const Channel = class {
 	 */
 
 	/**
-	 * @typedef {Object} DiscoveryResultEndorsementTarget
-	 * @property {Object.<string, DiscoveryResultEndorsementGroup>} groups Specifies the endorsers, separated to groups.
-	 * @property {DiscoveryResultEndorsementLayout[]} layouts Specifies options of fulfulling the endorsement policy
+	 * @typedef {Object} DiscoveryResultEndorsementPlan
+	 * @property {string} chaincode The chaincode name that is the first
+	 *           chaincode in the interest that was used to calculate this plan.
+	 * @property {string} plan_id The string of the JSON object that represents
+	 *           the hint that was used to build the query for this result. The
+	 *           hint is a {@link DiscoveryChaincodeInterest} that contains chaincode
+	 *           names and collections that the discovery service uses to calculate
+	 *           the returned plan.
+	 * @property {Object.<string, DiscoveryResultEndorsementGroup>} groups Specifies
+	 *           the endorsers, separated to groups.
+	 * @property {DiscoveryResultEndorsementLayout[]} layouts Specifies options
+	 *           of fulfulling the endorsement policy
 	 */
 
 	/**
-	 * @typedef {Object.<string, number>} DiscoveryResultEndorsementLayout lists the group names, and the amount of signatures needed from each group.
+	 * @typedef {Object.<string, number>} DiscoveryResultEndorsementLayout lists
+	 *          the group names, and the amount of signatures needed from each group.
 	 */
 
 	/**
@@ -431,28 +510,149 @@ const Channel = class {
 	 * @property {Object.<string, DiscoveryResultMSPConfig>} msps - Optional. The msp config found.
 	 * @property {Object.<string, DiscoveryResultEndpoints>} orderers - Optional. The orderers found.
 	 * @property {Object.<string, DiscoveryResultPeers>} peers_by_org - Optional. The peers by org found.
-	 * @property {Object.<string, DiscoveryResultEndorsementTarget>} endorsement_targets - Optional.
+	 * @property {DiscoveryResultEndorsementPlan[]} endorsement_plans - Optional.
 	 * @property {number} timestamp - The timestamp at which the discovery results are updated.
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryChaincodeQuery
+	 *          Requests DiscoveryResults for a given list invocations.
+	 *          Each interest is a separate invocation of one or more chaincodes,
+	 *          which may include invocation on collections.
+	 *          The endorsement policy is evaluated independantly for each given
+	 *          interest.
+	 * @property {DiscoveryChaincodeInterest[]} interests - defines interests
+	 *           in an invocations of chaincodes
+	 *
+	 * @example <caption>"chaincode and no collection"</caption>
+	 * {
+	 *   interests: [
+	 *     { chaincodes: [{ name: "mychaincode"}]}
+	 *   ]
+	 * }
+	 *
+	 * @example <caption>"chaincode with collection"</caption>
+	 * {
+	 *   interests: [
+	 *     { chaincodes: [{ name: "mychaincode", collection_names: ["mycollection"] }]}
+	 *   ]
+	 * }
+	 *
+	 * @example <caption>"chaincode to chaincode with collection"</caption>
+	 * {
+	 *   interests: [
+	 *      { chaincodes: [
+	 *          { name: "mychaincode", collection_names: ["mycollection"] }},
+	 *          { name: "myotherchaincode", collection_names: ["mycollection"] }}
+	 *        ]
+	 *      }
+	 *   ]
+	 * }
+	 *
+	 * @example <caption>"query for multiple invocations"</caption>
+	 * {
+	 *   interests: [
+	 *      { chaincodes: [
+	 *          { name: "mychaincode", collection_names: ["mycollection"] }},
+	 *          { name: "myotherchaincode", collection_names: ["mycollection"] }}
+	 *        ]
+	 *      },
+	 *     { chaincodes: [{ name: "mychaincode", collection_names: ["mycollection"] }]},
+	 *     { chaincodes: [{ name: "mychaincode"}]}
+	 *   ]
+	 * }
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryChaincodeInterest
+	 * @property {DiscoveryChaincodeCall[]} chaincodes
+	 */
+
+	/**
+	 * @typedef {Object} DiscoveryChaincodeCall
+	 * @property {string} name - The name of the chaincode
+	 * @property {string[]} collection_names - The names of the related collections
+	 * @example <caption>"single chaincode"</caption>
+	 *   { name: "mychaincode"}
+	 *
+	 * @example <caption>"chaincode to chaincode"</caption>
+	 *   [ { name: "mychaincode"}, { name: "myotherchaincode"} ]
+	 *
+	 * @example <caption>"single chaincode with a collection"</caption>
+	 *   { name: "mychaincode", collection_names: ["mycollection"] }
+	 *
+	 * @example <caption>"chaincode to chaincode with a collection"</caption>
+	 *   [
+	 *     { name: "mychaincode", collection_names: ["mycollection"] },
+	 *     { name: "myotherchaincode", collection_names: ["mycollection"] }}
+	 *   ]
+	 *
+	 * @example <caption>"chaincode to chaincode with collections"</caption>
+	 *   [
+	 *     { name: "mychaincode", collection_names: ["mycollection", "myothercollection"] },
+	 *     { name: "myotherchaincode", collection_names: ["mycollection", "myothercollection"] }}
+	 *   ]
 	 */
 
 	/**
 	 * Return the discovery results.
 	 * Discovery results are only available if this channel has been initialized.
 	 * If the results are too old, they will be refreshed
+	 * @param {DiscoveryChaincodeInterest[]} endorsement_hints - Indicate to discovery
+	 *        how to calculate the endorsement plans.
 	 * @returns {Promise<DiscoveryResults>}
 	 */
-	async getDiscoveryResults() {
+	async getDiscoveryResults(endorsement_hints) {
+		const method = 'getDiscoveryResults';
+		logger.debug('%s - start', method);
+
 		if (this._discovery_results) {
-			const allowed_age = sdk_utils.getConfigSetting('discovery-cache-age', 300000); //default is 5 minutes
+			const have_new_interests = this._merge_hints(endorsement_hints);
+			const allowed_age = sdk_utils.getConfigSetting('discovery-cache-life', 300000); //default is 5 minutes
 			const now = Date.now();
-			if (now - this._last_discover_timestamp > allowed_age) {
-				return this.refresh();
-			} else {
-				return this._discovery_results;
+			if (have_new_interests || now - this._last_discover_timestamp > allowed_age) {
+				logger.debug('%s - need to refresh :: have_new_interests %s', method, have_new_interests);
+				await this.refresh();
 			}
+
+			logger.debug('%s - returning results', method);
+			return this._discovery_results;
 		} else {
+			logger.error('No discovery results to return');
 			// not working with discovery or we have not been initialized
 			throw new Error('This Channel has not been initialized or not initialized with discovery support');
+		}
+	}
+
+	/**
+	 * Return a single endorsment plan based off a {@link DiscoveryChaincodeInterest}.
+	 * @param {DiscoveryChaincodeInterest} endorsement_hint - The chaincodes and
+	 *        collections of how the discovery service will calculate an endorsement plan.
+	 * @return {DiscoveryResultEndorsementPlan} The endorsement plan based on the hint provided.
+	 */
+	async getEndorsementPlan(endorsement_hint) {
+		const method = 'getEndorsementPlan';
+		logger.debug('%s - start - %j', method, endorsement_hint);
+
+		let endorsement_plan = null;
+		const discovery_results = await this.getDiscoveryResults(endorsement_hint);
+		const plan_id = JSON.stringify(endorsement_hint);
+		logger.debug('%s - looking at plan_id of  %s', method, plan_id);
+		if(discovery_results && discovery_results.endorsement_plans) {
+			for(const plan of discovery_results.endorsement_plans) {
+				if(plan.plan_id === plan_id) {
+					endorsement_plan = plan;
+					logger.debug('%s -  found plan in known plans ::%s', method, plan_id);
+					break;
+				}
+			}
+		}
+
+		if(endorsement_plan) {
+			return JSON.parse(JSON.stringify(endorsement_plan));
+		} else {
+			logger.debug('%s - plan not found in known plans', method, plan_id);
+			return null;
 		}
 	}
 
@@ -462,15 +662,21 @@ const Channel = class {
 	 * the Discover Service. The queries will be made to the peer used previously
 	 * for discovery if the 'target' parameter is not provided.
 	 *
-	 * @param {DiscoveryRequest} request - {@link DiscoveryRequest}
 	 * @return {DiscoveryResults} - The results of refreshing
 	 */
-	refresh(request) {
-		if (!request) {
-			request = this._last_refresh_request;
-		}
+	async refresh() {
+		const method = 'refresh';
+		logger.debug('%s - using last initialize settings', method);
 
-		return this.initialize(request);
+		try {
+			const results = await this._initialize(this._last_refresh_request);
+
+			return results;
+		} catch(error) {
+			logger.error('%s - failed:%s', method, error);
+
+			throw error;
+		}
 	}
 
 	/**
@@ -885,18 +1091,13 @@ const Channel = class {
 	 * @property {Peer | string} target - Optional. A Peer object or Peer name that
 	 *           will be asked to discovery information about this channel.
 	 *           Default is the first peer assigned to this channel that has the
-	 *           'discovery' role.
-	 * @property {string[]} chaincodes - Optional. An Array of chaincodes to get
-	 *           the endorsement target selection layouts
-	 * @property {boolean} endpoint_names - Optional. To indicate if the names of
-	 *           endpoints should be added to the return attributes of an end point.
-	 *           Requesting the name will require that the endpoints (Peer and Orderer)
-	 *           be added to this channel instance with the returned name.
-	 * @property {boolean} initialize_msps - Optional. To indicate that the MSPs
-	 *           discovered in this query should be added to this channel instance.
+	 *           'discover' role.
+	 * @property {DiscoveryChaincodeInterest[]} interests - Optional. An
+	 *           Array of {@link DiscoveryChaincodeInterest} that have chaincodes
+	 *           and collections to calculate the endorsement plans.
 	 * @property {boolean} config - Optional. To indicate that the channel configuration
 	 *           should be included in the discovery query.
-	 * @property {boolean} local - Optonal. To indicate that the local endpoints
+	 * @property {boolean} local - Optional. To indicate that the local endpoints
 	 *           should be included in the discovery query.
 	 */
 
@@ -905,7 +1106,7 @@ const Channel = class {
 	 * network.
 	 *
 	 * @param {DiscoveryRequest} request -
-	 * @returns {DiscoveryResponse} The results of the discover
+	 * @returns {DiscoveryResponse} The results from the discovery service
 	 */
 	async _discover(request) {
 		const method = 'discover';
@@ -959,28 +1160,22 @@ const Channel = class {
 			logger.debug('%s - adding channel peers query', method);
 		}
 
-		// add a chaincode query to get endorsement layouts if chaincodeId is set
-		if (request.chaincodes && request.chaincodes.length > 0) {
+		// add a chaincode query to get endorsement plans
+		if (request.interests && request.interests.length > 0) {
 			const query = new _discoveryProto.Query();
 			queries.push(query);
 			query.setChannel(this.getName());
 
 			const interests = [];
-			for (const index in request.chaincodes) {
-				const chaincodes = [];
-				const chaincode_name = request.chaincodes[index];
-				const chaincode_call = new _discoveryProto.ChaincodeCall();
-				chaincode_call.setName(chaincode_name);
-				chaincodes.push(chaincode_call);
-				const interest = new _discoveryProto.ChaincodeInterest();
-				interest.setChaincodes(chaincodes);
-				interests.push(interest);
+			for(const interest of request.interests) {
+				const proto_interest = this._buildProtoChaincodeInterest(interest);
+				interests.push(proto_interest);
 			}
 
 			const cc_query = new _discoveryProto.ChaincodeQuery();
 			cc_query.setInterests(interests);
 			query.setCcQuery(cc_query);
-			logger.debug('%s - adding chaincode query', method);
+			logger.debug('%s - adding chaincodes/collection query', method);
 		}
 
 		// be sure to set the array after completely building it
@@ -1018,7 +1213,7 @@ const Channel = class {
 						}
 					}
 					if (result.cc_query_res) {
-						results.endorsement_targets = self._processDiscoveryChaincodeResults(result.cc_query_res);
+						results.endorsement_plans = self._processDiscoveryChaincodeResults(result.cc_query_res);
 					}
 					logger.debug('%s - completed processing results', method);
 				}
@@ -1038,26 +1233,27 @@ const Channel = class {
 	_processDiscoveryChaincodeResults(q_chaincodes) {
 		const method = '_processDiscoveryChaincodeResults';
 		logger.debug('%s - start', method);
-		const by_chaincode = {};
+		const endorsement_plans = [];
 		if (q_chaincodes && q_chaincodes.content) {
 			if (Array.isArray(q_chaincodes.content)) {
 				for (const index in q_chaincodes.content) {
 					const q_endors_desc = q_chaincodes.content[index];
-					const endorsement_descriptor = {};
-					by_chaincode[q_endors_desc.chaincode] = endorsement_descriptor;
+					const endorsement_plan = {};
+					endorsement_plan.chaincode = q_endors_desc.chaincode;
+					endorsement_plans.push(endorsement_plan);
 
 					// GROUPS
-					endorsement_descriptor.groups = {};
+					endorsement_plan.groups = {};
 					for (const group_name in q_endors_desc.endorsers_by_groups) {
 						logger.debug('%s - found group: %s', method, group_name);
 						const group = {};
 						group.peers = this._processPeers(q_endors_desc.endorsers_by_groups[group_name].peers);
 						//all done with this group
-						endorsement_descriptor.groups[group_name] = group;
+						endorsement_plan.groups[group_name] = group;
 					}
 
 					// LAYOUTS
-					endorsement_descriptor.layouts = [];
+					endorsement_plan.layouts = [];
 					for (const index in q_endors_desc.layouts) {
 						const q_layout = q_endors_desc.layouts[index];
 						const layout = {};
@@ -1065,13 +1261,13 @@ const Channel = class {
 							layout[group_name] = q_layout.quantities_by_group[group_name];
 						}
 						logger.debug('%s - layout :%j', method, layout);
-						endorsement_descriptor.layouts.push(layout);
+						endorsement_plan.layouts.push(layout);
 					}
 				}
 			}
 		}
 
-		return by_chaincode;
+		return endorsement_plans;
 	}
 
 	_processDiscoveryConfigResults(q_config) {
@@ -1269,6 +1465,121 @@ const Channel = class {
 		}
 
 		return caroots;
+	}
+
+	/* internal method
+	 *  Takes an array of {@link DiscoveryChaincodeCall} that represent the
+	 *  chaincodes and associated collections to build an interest.
+	 *  The interest becomes part of the query object needed by the discovery
+	 *  service to calculate the endorsement plan for an invocation.
+	 */
+	_buildProtoChaincodeInterest(interest) {
+		const chaincode_calls = [];
+		for(const chaincode of interest.chaincodes) {
+			const chaincode_call = new _discoveryProto.ChaincodeCall();
+			if(typeof chaincode.name === 'string') {
+				chaincode_call.setName(chaincode.name);
+				if(chaincode.collection_names) {
+					if(Array.isArray(chaincode.collection_names)) {
+						const collection_names = [];
+						chaincode.collection_names.map(name =>{
+							if(typeof name === 'string') {
+								collection_names.push(name);
+							} else {
+								throw Error('The collection name must be a string');
+							}
+						});
+						chaincode_call.setCollectionNames(collection_names);
+					} else {
+						throw Error('collection_names must be an array of strings');
+					}
+				}
+				chaincode_calls.push(chaincode_call);
+			} else {
+				throw Error('Chaincode name must be a string');
+			}
+		}
+		const interest_proto = new _discoveryProto.ChaincodeInterest();
+		interest_proto.setChaincodes(chaincode_calls);
+
+		return interest_proto;
+	}
+
+	/* internal method
+	 * takes an array of interest and checks to see if they exist on the current
+	 * interests, if not adds in any that do not already exist
+	 */
+	_merge_hints(endorsement_hints) {
+		const method = '_merge_hints';
+		if(!endorsement_hints) {
+			logger.debug('%s - no hint return false', method);
+			return false;
+		}
+		let results = false;
+		let hints = endorsement_hints;
+		if(!Array.isArray(endorsement_hints)) {
+			hints = [endorsement_hints];
+		}
+		for(const hint of hints) {
+			const key = JSON.stringify(hint);
+			const value = this._discovery_interests.get(key);
+			logger.debug('%s - key %s', method, key);
+			if(value) {
+				logger.debug('%s - found interest exist %s', method, key);
+			} else {
+				logger.debug('%s - add new interest %s', method, key);
+				this._discovery_interests.set(key, hint);
+				results = true;
+			}
+		}
+
+		return results;
+	}
+
+	/* internal method
+	 * takes a single string that represents a chaincode name and builds a JSON
+	 * object that may be used as input to building of the GRPC objects to send
+	 * to the discovery service.
+	 */
+	_buildDiscoveryInterest(name) {
+		logger.debug('_buildDiscoveryInterest - name %s', name);
+		const interest = {};
+		interest.chaincodes = [];
+		const chaincodes = this._buildDiscoveryChaincodeCall(name);
+		interest.chaincodes.push(chaincodes);
+
+		return interest;
+	}
+
+	/* internal metnod
+	 * takes a single string name and an array of collection names and builds
+	 * a JSON object that may be used as input to the building of the GRPC
+	 * objects to send to the discovery service.
+	 */
+	_buildDiscoveryChaincodeCall(name, collection_names) {
+		const chaincode_call = {};
+		if(typeof name === 'string') {
+			chaincode_call.name = name;
+			if(collection_names) {
+				if(Array.isArray(collection_names)) {
+					const collection_names = [];
+					collection_names.map(name =>{
+						if(typeof name === 'string') {
+							collection_names.push(name);
+						} else {
+							throw Error('The collection name must be a string');
+						}
+					});
+					chaincode_call.collection_names = collection_names;
+				} else {
+					throw Error('Collections names must be an array of strings');
+				}
+			}
+		} else {
+			throw Error('Chaincode name must be a string');
+		}
+
+		return chaincode_call;
 	}
 
 	/**
@@ -2071,8 +2382,9 @@ const Channel = class {
 	 *           <b>WARNING:</b> The default policy is NOT recommended for production,
 	 *           because this allows an application to bypass the proposal endorsement
 	 *           and send a manually constructed transaction, with arbitrary output
-	 *           in the write set, to the orderer directly. An application's own
-	 *           signature would allow the transaction to be successfully validated
+	 *           in the write set, to the orderer directly. The user context assigned
+	 *           to the client instance that creates the signature will allow the
+	 *           transaction to be successfully validated
 	 *           and committed to the ledger.
 	 * @example <caption>Endorsement policy: "Signed by any member from one of the organizations"</caption>
 	 * {
@@ -2249,6 +2561,12 @@ const Channel = class {
 	 *           discovery service if no targets are specified.
 	 * @property {string} chaincodeId - Required. The id of the chaincode to process
 	 *           the transaction proposal
+	 * @property {DiscoveryChaincodeIntereset} endorsement_hint - Optional. A
+	 *           of {@link DiscoveryChaincodeInterest} object that will be used by
+	 *           discovery service to calculate an appropriate endorsement plan.
+	 *           The parameter is only required when the endorsement will be preformed
+	 *           by a chaincode that will call other chaincodes or if the endorsement
+	 *           should be made by only peers within a collection or collections.
 	 * @property {TransactionID} txId - Optional. TransactionID object with the
 	 *           transaction id and nonce. txId is required for [sendTransactionProposal]{@link Channel#sendTransactionProposal}
 	 *           and optional for [generateUnsignedProposal]{@link Channel#generateUnsignedProposal}
@@ -2303,22 +2621,29 @@ const Channel = class {
 			throw new Error(errorMsg);
 		}
 
-
-		if (this._endorsement_handler) {
-			logger.debug('%s - running with endorsement handler');
+		if (!request.targets && this._endorsement_handler) {
+			logger.debug('%s - running with endorsement handler', method);
 			const proposal = Channel._buildSignedProposal(request, this._name, this._clientContext);
+
+			let endorsement_hint = request.endorsement_hint;
+			if(!endorsement_hint && request.chaincodeId) {
+				endorsement_hint = this._buildDiscoveryInterest(request.chaincodeId);
+			}
+
+			logger.debug('%s - endorse with hint %j', method, endorsement_hint);
 
 			const params = {
 				request: request,
 				signed_proposal: proposal.signed,
-				timeout: timeout
+				timeout: timeout,
+				endorsement_hint: endorsement_hint
 			};
 
 			const responses = await this._endorsement_handler.endorse(params);
 
 			return [responses, proposal.source];
 		} else {
-			logger.debug('%s - running without endorsement handler');
+			logger.debug('%s - running without endorsement handler', method);
 			request.targets = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
 
 			return Channel.sendTransactionProposal(request, this._name, this._clientContext, timeout);
@@ -2331,7 +2656,7 @@ const Channel = class {
 	 */
 	static async sendTransactionProposal(request, channelId, client_context, timeout) {
 		const method = 'sendTransactionProposal(static)';
-		logger.debug('%s - start');
+		logger.debug('%s - start', method);
 
 		let errorMsg = client_utils.checkProposalRequest(request, true);
 
@@ -2376,6 +2701,7 @@ const Channel = class {
 			logger.debug('%s - not adding the argument :: argbytes', method);
 		}
 
+		logger.debug('%s - chaincode ID:%s', method, request.chaincodeId);
 		const invokeSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			chaincode_id: { name: request.chaincodeId },
@@ -3387,7 +3713,6 @@ const ChannelPeer = class {
 			if (peer && peer.constructor && peer.constructor.name === 'Peer') {
 				this._channel = channel;
 				this._name = peer.getName();
-				this._chaincodes = new Map();
 				this._peer = peer;
 				this._roles = {};
 				logger.debug('ChannelPeer.const - url: %s', peer.getUrl());

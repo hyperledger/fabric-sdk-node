@@ -171,11 +171,14 @@ function instantiateChaincode(userOrg, chaincode_path, version, language, upgrad
 
 	return instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, version, language, upgrade, badTransient, t);
 }
+module.exports.instantiateChaincode = instantiateChaincode;
 
-function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, version, language, upgrade, badTransient, t) {
+function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, version, language, upgrade, badTransient, t, channel_name) {
 	init();
 
-	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	if(!channel_name) {
+		channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	}
 
 	const targets = [];
 	const eventhubs = [];
@@ -403,6 +406,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 			t.fail('Failed to instantiate ' + type + ' due to error: ' + err.stack ? err.stack : err);
 		});
 }
+module.exports.instantiateChaincodeWithId = instantiateChaincodeWithId;
 
 function buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path, version, type, upgrade, transientMap) {
 	const tx_id = client.newTransactionID();
@@ -446,9 +450,7 @@ function buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path, 
 
 	return request;
 }
-
-module.exports.instantiateChaincode = instantiateChaincode;
-module.exports.instantiateChaincodeWithId = instantiateChaincodeWithId;
+module.exports.buildChaincodeProposal = buildChaincodeProposal;
 
 function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, expectedResult) {
 	init();
@@ -580,6 +582,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 
 				if (expectedResult instanceof Error) {
 					t.true((proposal_response instanceof Error), 'proposal response should be an instance of error');
+					t.pass('Error message::'+proposal_response.message);
 					t.true(proposal_response.message.includes(expectedResult.message), 'error should contain the correct message: ' + expectedResult.message);
 				} else {
 					logger.debug('invoke chaincode, proposal response: ' + util.inspect(proposal_response, {depth: null}));
@@ -814,6 +817,7 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 					} else {
 						if (value instanceof Error) {
 							t.true((response_payloads[i] instanceof Error), 'query result should be an instance of error');
+							t.pass('Error message::'+response_payloads[i].message);
 							t.true(response_payloads[i].message.includes(value.message), 'error should contain the correct message: ' + value.message);
 						} else {
 							t.equal(

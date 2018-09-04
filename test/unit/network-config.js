@@ -151,6 +151,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			t.equals(opts['request-timeout'], undefined, 'check that timeout did not change');
 
 			let peer = client._network_config.getPeer('peer0.org1.example.com');
+			t.equals(peer._options['request-timeout'],120001, ' check that we get this peer endorser timeout set');
+			peer = client._network_config.getPeer('peer0.org2.example.com');
 			t.equals(peer._options['request-timeout'],120000, ' check that we get this peer endorser timeout set');
 			let orderer = client._network_config.getOrderer('orderer.example.com');
 			t.equals(orderer._options['request-timeout'],30000, ' check that we get this orderer timeout set');

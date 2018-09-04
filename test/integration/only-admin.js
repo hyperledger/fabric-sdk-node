@@ -37,7 +37,7 @@ test('\n\n***** use only admin identity  *****\n\n', async function(t) {
 	const channel = await testUtil.setupChannel(t, client_org1, client_org2, channel_name);
 	channel._endorsement_handler = null;
 	const tx_id_string = await testUtil.invokeAsAdmin(t, client_org1, channel);
-	await testUtil.queryChannelAsAdmin(t, client_org1, channel, tx_id_string, 'peer0.org1.example.com');
+	await testUtil.queryChannelAsAdmin(t, client_org1, channel, tx_id_string, 'peer0.org1.example.com', 'example');
 	await testUtil.queryClientAsAdmin(t, client_org1, channel, 'peer0.org1.example.com');
 	await manually(t, client_org1);
 
