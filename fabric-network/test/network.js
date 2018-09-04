@@ -10,38 +10,65 @@ const rewire = require('rewire');
 
 const InternalChannel = rewire('fabric-client/lib/Channel');
 const Peer = InternalChannel.__get__('ChannelPeer');
-const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
-
 const Client = require('fabric-client');
+const ChannelEventHub = Client.ChannelEventHub;
+const TransactionID = require('fabric-client/lib/TransactionID.js');
+const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
 
 const chai = require('chai');
 const should = chai.should();
 chai.use(require('chai-as-promised'));
 
-const Channel = require('../lib/channel');
 const Network = require('../lib/network');
-const Wallet = require('../lib/api/wallet');
-const Mockery = require('mockery');
-
+const Gateway = require('../lib/gateway');
+const Contract = require('../lib/contract');
+const EventStrategies = require('../lib/eventstrategies');
 
 describe('Network', () => {
 	const sandbox = sinon.createSandbox();
 
-	let mockClient;
-	let mockDefaultQueryHandler;
+	const mspId = 'MSP_ID';
 
-	before(() => {
-		Mockery.enable();
-		mockDefaultQueryHandler = {query: 'mock'};
-		Mockery.registerMock('./impl/query/defaultqueryhandler', mockDefaultQueryHandler);
-	});
-
-	after(() => {
-		Mockery.disable();
-	});
+	let mockChannel, mockClient;
+	let mockPeer1, mockPeer2, mockPeer3;
+	let network;
+	let mockTransactionID, mockGateway;
 
 	beforeEach(() => {
+		mockChannel = sinon.createStubInstance(InternalChannel);
 		mockClient = sinon.createStubInstance(Client);
+		mockTransactionID = sinon.createStubInstance(TransactionID);
+		mockTransactionID.getTransactionID.returns('00000000-0000-0000-0000-000000000000');
+		mockClient.newTransactionID.returns(mockTransactionID);
+
+		mockChannel.getName.returns('testchainid');
+		const stubEventHub = sinon.createStubInstance(ChannelEventHub);
+		stubEventHub.isconnected.returns(true);
+		mockChannel.getChannelEventHub.returns(stubEventHub);
+
+		mockPeer1 = sinon.createStubInstance(Peer);
+		mockPeer1.index = 1; // add these so that the mockPeers can be distiguished when used in WithArgs().
+		mockPeer1.getName.returns('Peer1');
+
+		mockPeer2 = sinon.createStubInstance(Peer);
+		mockPeer2.index = 2;
+		mockPeer2.getName.returns('Peer2');
+
+		mockPeer3 = sinon.createStubInstance(Peer);
+		mockPeer3.index = 3;
+		mockPeer3.getName.returns('Peer3');
+
+		mockGateway = sinon.createStubInstance(Gateway);
+		mockGateway.getOptions.returns({
+			useDiscovery: false,
+			commitTimeout: 300,
+			eventStrategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+		});
+		mockGateway.getCurrentIdentity.returns({
+			_mspId: mspId
+		});
+		network = new Network(mockGateway, mockChannel);
+
 	});
 
 	afterEach(() => {
@@ -49,391 +76,216 @@ describe('Network', () => {
 	});
 
 
-	describe('#_mergeOptions', () => {
-		let defaultOptions;
-
+	describe('#_initializeInternalChannel', () => {
+		let peerArray;
+		let mockPeer4, mockPeer5;
 		beforeEach(() => {
-			defaultOptions = {
-				commitTimeout: 300 * 1000,
-			};
+			mockPeer4 = sinon.createStubInstance(Peer);
+			mockPeer4.index = 4;
+			mockPeer5 = sinon.createStubInstance(Peer);
+			mockPeer5.index = 5;
+
+			mockPeer1.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
+			mockPeer2.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
+			mockPeer3.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
+			mockPeer4.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
+			mockPeer5.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
+			peerArray = [mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5];
+			mockChannel.getPeers.returns(peerArray);
 		});
 
-		it('should return the default options when there are no overrides', () => {
-			const overrideOptions = {};
-			const expectedOptions = {
-				commitTimeout: 300 * 1000
-			};
-			Network._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
+		it('should initialize the network using the first peer', async () => {
+			mockChannel.initialize.resolves();
+			await network._initializeInternalChannel();
+			sinon.assert.calledOnce(mockChannel.initialize);
 		});
 
-		it('should change a default option', () => {
-			const overrideOptions = {
-				commitTimeout: 1234
-			};
-			const expectedOptions = {
-				commitTimeout: 1234
-			};
-			Network._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
+		it('should try other peers if initialization fails', async () => {
+			network.initialized = false;
+			// create a real mock
+			mockChannel.initialize.onCall(0).rejects(new Error('connect failed'));
+			mockChannel.initialize.onCall(1).resolves();
+			await network._initializeInternalChannel();
+			sinon.assert.calledTwice(mockChannel.initialize);
+			sinon.assert.calledWith(mockChannel.initialize.firstCall, {target: mockPeer1});
+			sinon.assert.calledWith(mockChannel.initialize.secondCall, {target: mockPeer3});
 		});
 
-		it('should add a new option', () => {
-			const overrideOptions = {
-				useDiscovery: true
-			};
-			const expectedOptions = {
-				commitTimeout: 300 * 1000,
-				useDiscovery: true
-			};
-			Network._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
+		it('should fail if all peers fail', async () => {
+			network.initialized = false;
+			mockChannel.initialize.onCall(0).rejects(new Error('connect failed'));
+			mockChannel.initialize.onCall(1).rejects(new Error('connect failed next'));
+			mockChannel.initialize.onCall(2).rejects(new Error('connect failed again'));
+			let error;
+			try {
+				await network._initializeInternalChannel();
+			} catch(_error) {
+				error = _error;
+			}
+			error.should.match(/connect failed again/);
+			sinon.assert.calledThrice(mockChannel.initialize);
+			sinon.assert.calledWith(mockChannel.initialize.firstCall, {target: mockPeer1});
+			sinon.assert.calledWith(mockChannel.initialize.secondCall, {target: mockPeer3});
+			sinon.assert.calledWith(mockChannel.initialize.thirdCall, {target: mockPeer4});
 		});
 
-		it('should add option structures', () => {
-			const overrideOptions = {
-				identity: 'admin',
-				useDiscovery: true,
-				discoveryOptions: {
-					discoveryProtocol: 'grpc',
-					asLocalhost: true
-				}
-			};
-			const expectedOptions = {
-				commitTimeout: 300 * 1000,
-				identity: 'admin',
-				useDiscovery: true,
-				discoveryOptions: {
-					discoveryProtocol: 'grpc',
-					asLocalhost: true
-				}
-			};
-			Network._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
-		});
-
-		it('should merge option structures', () => {
-			defaultOptions = {
-				commitTimeout: 300 * 1000,
-				identity: 'user',
-				useDiscovery: true,
-				discoveryOptions: {
-					discoveryProtocol: 'grpc',
-					asLocalhost: false
-				}
-			};
-			const overrideOptions = {
-				identity: 'admin',
-				useDiscovery: true,
-				discoveryOptions: {
-					asLocalhost: true
-				}
-			};
-			const expectedOptions = {
-				commitTimeout: 300 * 1000,
-				identity: 'admin',
-				useDiscovery: true,
-				discoveryOptions: {
-					discoveryProtocol: 'grpc',
-					asLocalhost: true
-				}
-			};
-			Network._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
-		});
-
-	});
-
-	describe('#constructor', () => {
-		it('should instantiate a Network object', () => {
-			const network = new Network();
-			network.channels.should.be.instanceof(Map);
-			network.options.should.include({
-				commitTimeout: 300,
-				queryHandler: './impl/query/defaultqueryhandler'
-			});
+		it('should fail if there are no LEDGER_QUERY_ROLE peers', async () => {
+			network.initialized = false;
+			mockPeer1.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
+			mockPeer2.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
+			mockPeer3.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
+			mockPeer4.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
+			mockPeer5.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
+			peerArray = [mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5];
+			mockChannel.getPeers.returns(peerArray);
+			return network._initializeInternalChannel()
+				.should.be.rejectedWith(/no suitable peers available to initialize from/);
 		});
 	});
 
 	describe('#initialize', () => {
-		let network;
-		let mockWallet;
-
-		beforeEach(() => {
-			network = new Network();
-			mockWallet = sinon.createStubInstance(Wallet);
-			sandbox.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
-			mockWallet.setUserContext.withArgs(mockClient, 'admin').returns('foo');
+		it('should return with no action if already initialized', () => {
+			network.initialized = true;
+			network._initialize();
 		});
 
-		it('should fail without options supplied', () => {
-			return network.initialize()
-				.should.be.rejectedWith(/A wallet must be assigned to a Network instance/);
-		});
-
-		it('should fail without wallet option supplied', () => {
-			const options = {
-				identity: 'admin'
-			};
-			return network.initialize('ccp', options)
-				.should.be.rejectedWith(/A wallet must be assigned to a Network instance/);
-		});
-
-		it('should initialize the network with default plugins', async () => {
-			const options = {
-				wallet: mockWallet,
-			};
-			await network.initialize('ccp', options);
-			network.client.should.equal(mockClient);
-			should.not.exist(network.currentIdentity);
-			network.queryHandlerClass.should.equal(mockDefaultQueryHandler);
-		});
-
-		it('should initialize the network with identity', async () => {
-			const options = {
-				wallet: mockWallet,
-				identity: 'admin'
-			};
-			await network.initialize('ccp', options);
-			network.client.should.equal(mockClient);
-			network.currentIdentity.should.equal('foo');
-		});
-
-		it('should initialize the network with identity and set client tls crypto material', async () => {
-			mockWallet.export.withArgs('tlsId').resolves({certificate: 'acert', privateKey: 'akey'});
-
-			const options = {
-				wallet: mockWallet,
-				identity: 'admin',
-				clientTlsIdentity: 'tlsId'
-			};
-			await network.initialize('ccp', options);
-			network.client.should.equal(mockClient);
-			network.currentIdentity.should.equal('foo');
-			sinon.assert.calledOnce(mockClient.setTlsClientCertAndKey);
-			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey, 'acert', 'akey');
-		});
-
-
-		it('should initialize from an existing client object', async () => {
-			const options = {
-				wallet: mockWallet,
-				identity: 'admin'
-			};
-			await network.initialize(mockClient, options);
-			network.client.should.equal(mockClient);
-			network.currentIdentity.should.equal('foo');
-		});
-
-		it ('should delete any default query handler options if the plugin doesn\'t match the default plugin', async () => {
-			network.options = {
-				commitTimeout: 300 * 1000,
-				queryHandler: './impl/query/defaultqueryhandler',
-				queryHandlerOptions: {
-					'default1': 1,
-					'default2': 2
-				}
-			};
-
-			const otherQueryHandler = {query: 'other'};
-			Mockery.registerMock('./impl/query/otherqueryhandler', otherQueryHandler);
-
-
-			const options = {
-				wallet: mockWallet,
-				identity: 'admin',
-				queryHandler: './impl/query/otherqueryhandler',
-				queryHandlerOptions: {
-					'other1': 99
-				}
-			};
-
-			await network.initialize('ccp', options);
-			network.options.should.deep.equal(
-				{
-					wallet: mockWallet,
-					identity: 'admin',
-					commitTimeout: 300 * 1000,
-					queryHandler: './impl/query/otherqueryhandler',
-					queryHandlerOptions: {
-						'other1': 99
-					}
-				}
-			);
-			network.currentIdentity.should.equal('foo');
-			network.queryHandlerClass.should.equal(otherQueryHandler);
-		});
-
-		it('should throw an error if it cannot load a query plugin', () => {
-			const options = {
-				wallet: mockWallet,
-				identity: 'admin',
-				queryHandler: './impl/query/noqueryhandler'
-			};
-			return network.initialize('ccp', options)
-				.should.be.rejectedWith(/unable to load provided query handler: .\/impl\/query\/noqueryhandler/);
-		});
-
-		it('should not create a query handler if explicitly set to null', async () => {
-			const options = {
-				wallet: mockWallet,
-				queryHandler: null
-			};
-			await network.initialize('ccp', options);
-			network.client.should.equal(mockClient);
-			should.equal(undefined, network.queryHandlerClass);
-		});
-
-		it('has default transaction event handling strategy if none specified', async () => {
-			const options = {
-				wallet: mockWallet
-			};
-			await network.initialize('ccp', options);
-			network.options.eventStrategy.should.be.a('Function');
-		});
-
-		it('allows transaction event handling strategy to be specified', async () => {
-			const stubStrategyFn = function stubStrategyFn() { };
-			const options = {
-				wallet: mockWallet,
-				eventStrategy: stubStrategyFn
-			};
-			await network.initialize('ccp', options);
-			network.options.eventStrategy.should.equal(stubStrategyFn);
-		});
-
-		it('allows null transaction event handling strategy to be set', async () => {
-			const options = {
-				wallet: mockWallet,
-				eventStrategy: null
-			};
-			await network.initialize('ccp', options);
-			should.equal(network.options.eventStrategy, null);
+		it('should initialize the internal channels', async () => {
+			network.initialized = false;
+			sandbox.stub(network, '_initializeInternalChannel').returns();
+			sandbox.stub(network, '_mapPeersToMSPid').returns({});
+			await network._initialize();
+			network.initialized.should.equal(true);
 		});
 	});
 
-	describe('#_createQueryHandler', () => {
-		let network;
+	describe('#_mapPeersToMSPid', () => {
+		let peerArray;
+		let mockPeer4, mockPeer5;
 		beforeEach(() => {
-			network = new Network();
-		});
+			mockPeer4 = sinon.createStubInstance(Peer);
+			mockPeer4.index = 4;
+			mockPeer5 = sinon.createStubInstance(Peer);
+			mockPeer5.index = 5;
 
-		it('should create a query handler if class defined', async () => {
-			const initStub = sinon.stub();
-			const constructStub = sinon.stub();
-			const mockClass = class MockClass {
-				constructor(...args) {
-					constructStub(...args);
-					this.initialize = initStub;
-				}
-			};
-
-			network.queryHandlerClass = mockClass;
-
-			network.options.queryHandlerOptions = 'options';
-			network.getCurrentIdentity = sinon.stub();
-			network.getCurrentIdentity.returns({_mspId: 'anmsp'});
-			const queryHandler = await network._createQueryHandler('channel', 'peerMap');
-			queryHandler.should.be.instanceof(mockClass);
-			sinon.assert.calledOnce(constructStub);
-			sinon.assert.calledWith(constructStub, 'channel', 'anmsp', 'peerMap', 'options');
-			sinon.assert.calledOnce(initStub);
-
-		});
-
-		it('should do nothing if no class defined', async () => {
-			const queryHandler = await network._createQueryHandler('channel', 'peerMap');
-			should.equal(null, queryHandler);
-		});
-	});
-
-	describe('getters', () => {
-		let network;
-		let mockWallet;
-
-		beforeEach(async () => {
-			network = new Network();
-			mockWallet = sinon.createStubInstance(Wallet);
-			sandbox.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
-			mockWallet.setUserContext.withArgs(mockClient, 'admin').returns('foo');
-			const options = {
-				wallet: mockWallet,
-				identity: 'admin'
-			};
-			await network.initialize('ccp', options);
-
-		});
-
-		describe('#getCurrentIdentity', () => {
-			it('should return the initialized identity', () => {
-				network.getCurrentIdentity().should.equal('foo');
-			});
-		});
-
-		describe('#getClient', () => {
-			it('should return the underlying client object', () => {
-				network.getClient().should.equal(mockClient);
-			});
-		});
-
-		describe('#getOptions', () => {
-			it('should return the initialized options', () => {
-				const expectedOptions = {
-					commitTimeout: 300,
-					wallet: mockWallet,
-					identity: 'admin',
-					queryHandler: './impl/query/defaultqueryhandler'
-				};
-				network.getOptions().should.include(expectedOptions);
-			});
-		});
-	});
-
-	describe('channel interactions', () => {
-		let network;
-		let mockChannel;
-		let mockInternalChannel;
-
-		beforeEach(() => {
-			network = new Network();
-			mockChannel = sinon.createStubInstance(Channel);
-			network.channels.set('foo', mockChannel);
-			network.client = mockClient;
-
-			mockInternalChannel = sinon.createStubInstance(InternalChannel);
-			const mockPeer1 = sinon.createStubInstance(Peer);
-			mockPeer1.index = 1; // add these so that the mockPeers can be distiguished when used in WithArgs().
-			mockPeer1.getName.returns('Peer1');
 			mockPeer1.getMspid.returns('MSP01');
-			mockPeer1.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
-			const peerArray = [mockPeer1];
-			mockInternalChannel.getPeers.returns(peerArray);
+			mockPeer2.getMspid.returns('MSP02');
+			mockPeer3.getMspid.returns('MSP03');
+			mockPeer4.getMspid.returns('MSP03'); // duplicate id
+			mockPeer5.getMspid.returns();
+			peerArray = [mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5];
+			mockChannel.getPeers.returns(peerArray);
 		});
 
-		describe('#getChannel', () => {
-			it('should return a cached channel object', () => {
-				network.getChannel('foo').should.eventually.equal(mockChannel);
-			});
-
-			it('should create a non-existent channel object', async () => {
-				mockClient.getChannel.withArgs('bar').returns(mockInternalChannel);
-				network.getCurrentIdentity = sinon.stub().returns({ _mspId: 'MSP_ID' });
-
-				const channel2 = await network.getChannel('bar');
-				channel2.should.be.instanceof(Channel);
-				channel2.network.should.equal(network);
-				channel2.channel.should.equal(mockInternalChannel);
-				network.channels.size.should.equal(2);
-			});
+		it('should initialize the peer map', async () => {
+			const peermap = network._mapPeersToMSPid();
+			peermap.size.should.equal(3);
+			peermap.get('MSP01').should.deep.equal([mockPeer1]);
+			peermap.get('MSP02').should.deep.equal([mockPeer2]);
+			peermap.get('MSP03').should.deep.equal([mockPeer3, mockPeer4]);
 		});
 
-		describe('#dispose', () => {
-			it('should cleanup the network and its channels', () => {
-				network.channels.size.should.equal(1);
-				network.dispose();
-				network.channels.size.should.equal(0);
-			});
+		it('should throw error if no peers associated with MSPID', async () => {
+			mockChannel.getPeers.returns([]);
+			(() => {
+				network._mapPeersToMSPid();
+			}).should.throw(/no suitable peers associated with mspIds were found/);
 		});
 	});
 
+	describe('#getChannel', () => {
+		it('should return the fabric-client channel object', () => {
+			network.getChannel().should.equal(mockChannel);
+		});
+	});
+
+	describe('#getPeerMap', () => {
+		it('should return the peer map', () => {
+			const map = new Map();
+			network.peerMap = map;
+			network.getPeerMap().should.equal(map);
+		});
+	});
+
+	describe('#getContract', () => {
+		it('should throw an error if not initialized', () => {
+			network.initialized = false;
+			(() => {
+				network.getContract();
+			}).should.throw(/Unable to get contract as network has failed to initialize/);
+		});
+
+		it('should return a cached contract object', () => {
+			const mockContract = sinon.createStubInstance(Contract);
+			network.contracts.set('foo', mockContract);
+			network.initialized = true;
+			network.getContract('foo').should.equal(mockContract);
+		});
+
+		it('should create a non-existent contract object', () => {
+			network.initialized = true;
+			const contract = network.getContract('bar');
+			contract.should.be.instanceof(Contract);
+			contract.chaincodeId.should.equal('bar');
+		});
+	});
+
+	describe('#_dispose', () => {
+		it('should cleanup the network object', () => {
+			const mockContract = sinon.createStubInstance(Contract);
+			network.contracts.set('foo', mockContract);
+			network.contracts.size.should.equal(1);
+			network.initialized = true;
+			network._dispose();
+			network.contracts.size.should.equal(0);
+			network.initialized.should.equal(false);
+		});
+
+		it('should call dispose on the queryHandler if defined and work if no contracts have been got', () => {
+			const disposeStub = sinon.stub();
+			network.queryHandler = {
+				dispose: disposeStub
+			};
+			network._dispose();
+			sinon.assert.calledOnce(disposeStub);
+		});
+	});
+
+	describe('eventHandlerFactory', () => {
+		describe('#createTxEventHandler', () => {
+			const txId = 'TRANSACTION_ID';
+
+			async function initNetwork() {
+				sandbox.stub(network, '_initializeInternalChannel').returns();
+				const peersByMspId = new Map();
+				peersByMspId.set(mspId, [ mockPeer1 ]);
+				sandbox.stub(network, '_mapPeersToMSPid').returns(peersByMspId);
+				await network._initialize();
+			}
+
+			it('return an event handler object if event strategy set', async () => {
+				await initNetwork();
+				const eventHandler = network.eventHandlerFactory.createTxEventHandler(txId);
+				eventHandler.should.be.an('Object');
+			});
+
+			it('use commitTimeout option from gateway as timeout option for event handler', async () => {
+				await initNetwork();
+				const timeout = mockGateway.getOptions().commitTimeout;
+				const eventHandler = network.eventHandlerFactory.createTxEventHandler(txId);
+				eventHandler.options.timeout.should.equal(timeout);
+			});
+
+			it('return null if no event strategy set', async () => {
+				mockGateway.getOptions.returns({
+					useDiscovery: false,
+					commitTimeout: 300,
+					eventStrategy: null
+				});
+				network = new Network(mockGateway, mockChannel);
+				await initNetwork();
+				const eventHandler = network.eventHandlerFactory.createTxEventHandler(txId);
+				should.equal(eventHandler, null);
+			});
+		});
+	});
 });

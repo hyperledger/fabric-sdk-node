@@ -5,197 +5,196 @@
  */
 
 'use strict';
-
-const Client = require('fabric-client');
-
-const Channel = require('./channel');
-const EventStrategies = require('./eventstrategies');
-
+const FabricConstants = require('fabric-client/lib/Constants');
+const Contract = require('./contract');
 const logger = require('./logger').getLogger('Network');
+const EventHubFactory = require('./impl/event/eventhubfactory');
+const TransactionEventHandler = require('./impl/event/transactioneventhandler');
+const util = require('util');
 
 class Network {
 
-	static _mergeOptions(defaultOptions, suppliedOptions) {
-		for (const prop in suppliedOptions) {
-			if (suppliedOptions[prop] instanceof Object && prop.endsWith('Options')) {
-				if (defaultOptions[prop] === undefined) {
-					defaultOptions[prop] = suppliedOptions[prop];
-				} else {
-					Network._mergeOptions(defaultOptions[prop], suppliedOptions[prop]);
-				}
-			} else {
-				defaultOptions[prop] = suppliedOptions[prop];
-			}
-		}
-	}
-
 	/**
-	 * Public constructor for Network object
+	 * Network constructor for internal use only
+	 * @param {Gateway} gateway The owning gateway instance
+	 * @param {Channel} channel The fabric-client channel instance
+	 * @private
 	 */
-	constructor() {
+	constructor(gateway, channel) {
 		logger.debug('in Network constructor');
-		this.client = null;
-		this.wallet = null;
-		this.channels = new Map();
 
-		// default options
-		this.options = {
-			commitTimeout: 300, // 5 minutes
-			eventStrategy: EventStrategies.MSPID_SCOPE_ALLFORTX,
-			queryHandler: './impl/query/defaultqueryhandler',
-			queryHandlerOptions: {
-			}
+		this.gateway = gateway;
+		this.channel = channel;
+
+		this.eventHandlerFactory = {
+			createTxEventHandler: () => null
 		};
+		const createEventStrategyFn = gateway.getOptions().eventStrategy;
+		if (createEventStrategyFn) {
+			const self = this;
+			const eventHubFactory = new EventHubFactory(channel);
+			const mspId = gateway.getCurrentIdentity()._mspId;
+			const commitTimeout = gateway.getOptions().commitTimeout;
+			this.eventHandlerFactory.createTxEventHandler = (txId) => {
+				const eventStrategy = createEventStrategyFn(eventHubFactory, self, mspId);
+				return new TransactionEventHandler(txId, eventStrategy, { timeout: commitTimeout });
+			};
+		}
+
+		this.contracts = new Map();
+		this.initialized = false;
+		this.queryHandler;
 	}
 
 	/**
- 	 * @typedef {Object} NetworkOptions
-	 * @property {Wallet} wallet The identity wallet implementation for use with this network instance
- 	 * @property {string} identity The identity in the wallet for all interactions on this network instance
-	 * @property {string} [clientTlsIdentity] the identity in the wallet to use as the client TLS identity
- 	 * @property {number} [commitTimeout = 300] The timout period in seconds to wait for commit notification to complete
-	 * @property {*} [eventStrategy] Event handling strategy to identify successful transaction commits. A null value
-	 * indicates that no event handling is desired.
- 	 */
-
-	/**
-     * Initialize the network with a connection profile
-     *
-     * @param {Client | string} config The configuration for this network which can come from a common connection
-	 * profile or an existing fabric-client Client instance
-	 * @see see {Client}
-     * @param {NetworkOptions} options specific options for creating this network instance
+     * create a map of mspId's and the network peers in those mspIds
+     * @private
      * @memberof Network
      */
-	async initialize(config, options) {
-		const method = 'initialize';
-		logger.debug('in %s', method);
+	_mapPeersToMSPid() {
+		logger.debug('in _mapPeersToMSPid');
 
-		if (!options || !options.wallet) {
-			logger.error('%s - A wallet must be assigned to a Network instance', method);
-			throw new Error('A wallet must be assigned to a Network instance');
+		// TODO: assume 1-1 mapping of mspId to org as the node-sdk makes that assumption
+		// otherwise we would need to find the channel peer in the network config collection or however SD
+		// stores things
+
+		const peerMap = new Map();
+		const channelPeers = this.channel.getPeers();
+
+		// bug in service discovery, peers don't have the associated mspid
+		if (channelPeers.length > 0) {
+			for (const channelPeer of channelPeers) {
+				const mspId = channelPeer.getMspid();
+				if (mspId) {
+					let peerList = peerMap.get(mspId);
+					if (!peerList) {
+						peerList = [];
+						peerMap.set(mspId, peerList);
+					}
+					peerList.push(channelPeer);
+				}
+			}
+		}
+		if (peerMap.size === 0) {
+			const msg = 'no suitable peers associated with mspIds were found';
+			logger.error('_mapPeersToMSPid: ' + msg);
+			throw new Error(msg);
+		}
+		return peerMap;
+	}
+
+	/**
+     * initialize the channel if it hasn't been done
+     * @private
+     */
+	async _initializeInternalChannel() {
+		logger.debug('in _initializeInternalChannel');
+
+		//TODO: Should this work across all peers or just orgs peers ?
+		//TODO: should sort peer list to the identity org initializing the channel.
+		//TODO: Candidate to push to low level node-sdk.
+
+		const ledgerPeers = this.channel.getPeers().filter((cPeer) => {
+			return cPeer.isInRole(FabricConstants.NetworkConfig.LEDGER_QUERY_ROLE);
+		});
+
+		if (ledgerPeers.length === 0) {
+			const msg = 'no suitable peers available to initialize from';
+			logger.error('_initializeInternalChannel: ' + msg);
+			throw new Error(msg);
 		}
 
-		// if a different queryHandler was provided and it doesn't match the default
-		// delete the default queryHandlerOptions.
-		if (options.queryHandler && (this.options.queryHandler !== options.queryHandler)) {
-			delete this.options.queryHandlerOptions;
-		}
+		let ledgerPeerIndex = 0;
+		let success = false;
 
-		Network._mergeOptions(this.options, options);
-
-		if (!(config instanceof Client)) {
-			// still use a ccp for the discovery peer and ca information
-			logger.debug('%s - loading client from ccp', method);
-			this.client = Client.loadFromConfig(config);
-		} else {
-			// initialize from an existing Client object instance
-			logger.debug('%s - using existing client object', method);
-			this.client = config;
-		}
-
-		// setup an initial identity for the network
-		if (options.identity) {
-			logger.debug('%s - setting identity', method);
-			this.currentIdentity = await options.wallet.setUserContext(this.client, options.identity);
-		}
-
-		if (options.clientTlsIdentity) {
-			const tlsIdentity = await options.wallet.export(options.clientTlsIdentity);
-			this.client.setTlsClientCertAndKey(tlsIdentity.certificate, tlsIdentity.privateKey);
-		}
-
-		// load in the query handler plugin
-		if (this.options.queryHandler) {
-			logger.debug('%s - loading query handler: %s', method, this.options.queryHandler);
+		while (!success) {
 			try {
-				this.queryHandlerClass = require(this.options.queryHandler);
+				const initOptions = {
+					target: ledgerPeers[ledgerPeerIndex]
+				};
+
+				await this.channel.initialize(initOptions);
+				success = true;
 			} catch(error) {
-				logger.error('%s - unable to load provided query handler: %s. Error %O', method, this.options.queryHandler, error);
-				throw new Error(`unable to load provided query handler: ${this.options.queryHandler}. Error ${error}`);
+				if (ledgerPeerIndex >= ledgerPeers.length - 1) {
+					const msg = util.format('Unable to initialize channel. Attempted to contact %j Peers. Last error was %s', ledgerPeers.length, error);
+					logger.error('_initializeInternalChannel: ' + msg);
+					throw new Error(msg);
+				}
+				ledgerPeerIndex++;
 			}
 		}
 	}
 
 	/**
-     * Get the current identity
-     *
-     * @returns {User} a fabric-client User instance of the current identity used by this network
-     * @memberof Network
-     */
-	getCurrentIdentity() {
-		logger.debug('in getCurrentIdentity');
-		return this.currentIdentity;
-	}
-
-	/**
-     * Get the underlying Client object instance
-     *
-     * @returns {Client} the underlying fabric-client Client instance
-     * @memberof Network
-     */
-	getClient() {
-		logger.debug('in getClient');
-		return this.client;
-	}
-
-	/**
-	 * Returns the set of options associated with the network connection
-	 * @returns {NetworkOptions} the network options
+	 * Initialize this network instance
+	 * @private
 	 * @memberof Network
 	 */
-	getOptions() {
-		logger.debug('in getOptions');
-		return this.options;
-	}
+	async _initialize() {
+		logger.debug('in initialize');
 
-	/**
-     * clean up this network in prep for it to be discarded and garbage collected
-     *
-     * @memberof Network
-     */
-	dispose() {
-		logger.debug('in cleanup');
-		for (const channel of this.channels.values()) {
-			channel._dispose();
+		if (this.initialized) {
+			return;
 		}
-		this.channels.clear();
+
+		await this._initializeInternalChannel();
+		this.peerMap = this._mapPeersToMSPid();
+		this.queryHandler = await this.gateway._createQueryHandler(this.channel, this.peerMap);
+		this.initialized = true;
 	}
 
-	/**
-	 * Returns an object representing the channel
-	 * @param channelName
-	 * @returns {Promise<Channel>}
-	 * @memberof Network
-	 */
-	async getChannel(channelName) {
+	getChannel() {
 		logger.debug('in getChannel');
-		const existingChannel = this.channels.get(channelName);
-		if (!existingChannel) {
-			logger.debug('getChannel: create channel object and initialize');
-			const channel = this.client.getChannel(channelName);
-			const newChannel = new Channel(this, channel);
-			await newChannel._initialize();
-			this.channels.set(channelName, newChannel);
-			return newChannel;
-		}
-		return existingChannel;
+
+		return this.channel;
 	}
 
-	async _createQueryHandler(channel, peerMap) {
-		if (this.queryHandlerClass) {
-			const currentmspId = this.getCurrentIdentity()._mspId;
-			const queryHandler = new this.queryHandlerClass(
-				channel,
-				currentmspId,
-				peerMap,
-				this.options.queryHandlerOptions
-			);
-			await queryHandler.initialize();
-			return queryHandler;
-		}
-		return null;
+	getPeerMap() {
+		logger.debug('in getPeerMap');
+
+		return this.peerMap;
 	}
+
+	/**
+	 * Returns an instance of a contract (chaincode) on the current network
+	 * @param chaincodeId
+	 * @returns {Contract}
+	 * @api
+	 */
+	getContract(chaincodeId) {
+		logger.debug('in getContract');
+		if (!this.initialized) {
+			throw new Error('Unable to get contract as network has failed to initialize');
+		}
+
+		let contract = this.contracts.get(chaincodeId);
+		if (!contract) {
+			contract = 	new Contract(
+				this.channel,
+				chaincodeId,
+				this.gateway,
+				this.queryHandler,
+				this.eventHandlerFactory
+			);
+			this.contracts.set(chaincodeId, contract);
+		}
+		return contract;
+	}
+
+	_dispose() {
+		logger.debug('in _dispose');
+
+		// Danger as this cached in gateway, and also async so how would
+		// network._dispose() followed by network.initialize() be safe ?
+		// make this private is the safest option.
+		this.contracts.clear();
+		if (this.queryHandler) {
+			this.queryHandler.dispose();
+		}
+		this.initialized = false;
+	}
+
 }
 
 module.exports = Network;

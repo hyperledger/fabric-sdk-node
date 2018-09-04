@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { User } from 'fabric-client';
+import { User, Channel } from 'fabric-client';
 
 import Client = require('fabric-client');
 
@@ -19,25 +19,20 @@ export interface InitOptions {
 	clientTlsIdentity?: string;
 }
 
-export class Network {
+export class Gateway {
 	constructor();
 	initialize(ccp: string | Client, options?: InitOptions): Promise<void>;
 	getCurrentIdentity(): User;
 	getClient(): Client;
 	getOptions(): InitOptions;
-	getChannel(channelName: string): Promise<FabricNetwork.Channel>;
+	getNetwork(channelName: string): Promise<Network>;
 	dispose(): void;
 }
 
-// put into it's own separate namespace to avoid a clash with fabric-client Channel
-declare namespace FabricNetwork {
-	export class Channel {
-		getInternalChannel(): Client.Channel;
-		getPeerMap(): Map<string, Client.ChannelPeer[]>;
-		getContract(chaincodeId: string): Contract;
-		// will be coming
-		// getEventHubs(): ChannelEventHub[];
-	}
+export class Network {
+	getChannel(): Channel;
+	getPeerMap(): Map<string, Client.ChannelPeer[]>;
+	getContract(chaincodeId: string): Contract;
 }
 
 export class Contract {

@@ -9,29 +9,29 @@
 const AllForTxStrategy = require('fabric-network/lib/impl/event/allfortxstrategy');
 const AnyForTxStrategy = require('fabric-network/lib/impl/event/anyfortxstrategy');
 
-function MSPID_SCOPE_ALLFORTX(eventHubFactory, channel, mspId) {
-	const peers = channel.getPeerMap().get(mspId);
+function MSPID_SCOPE_ALLFORTX(eventHubFactory, network, mspId) {
+	const peers = network.getPeerMap().get(mspId);
 	return new AllForTxStrategy(eventHubFactory, peers);
 }
 
-function MSPID_SCOPE_ANYFORTX(eventHubFactory, channel, mspId) {
-	const peers = channel.getPeerMap().get(mspId);
+function MSPID_SCOPE_ANYFORTX(eventHubFactory, network, mspId) {
+	const peers = network.getPeerMap().get(mspId);
 	return new AnyForTxStrategy(eventHubFactory, peers);
 }
 
-function CHANNEL_SCOPE_ALLFORTX(eventHubFactory, channel, mspId) {
-	const peers = channel.getInternalChannel().getPeers();
+function NETWORK_SCOPE_ALLFORTX(eventHubFactory, network, mspId) {
+	const peers = network.getChannel().getPeers();
 	return new AllForTxStrategy(eventHubFactory, peers);
 }
 
-function CHANNEL_SCOPE_ANYFORTX(eventHubFactory, channel, mspId) {
-	const peers = channel.getInternalChannel().getPeers();
+function NETWORK_SCOPE_ANYFORTX(eventHubFactory, network, mspId) {
+	const peers = network.getChannel().getPeers();
 	return new AnyForTxStrategy(eventHubFactory, peers);
 }
 
 module.exports = {
 	MSPID_SCOPE_ALLFORTX,
 	MSPID_SCOPE_ANYFORTX,
-	CHANNEL_SCOPE_ALLFORTX,
-	CHANNEL_SCOPE_ANYFORTX
+	NETWORK_SCOPE_ALLFORTX,
+	NETWORK_SCOPE_ANYFORTX
 };

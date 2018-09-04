@@ -11,12 +11,12 @@ const util = require('util');
 
 class Contract {
 
-	constructor(channel, chaincodeId, network, queryHandler, eventHandlerFactory) {
+	constructor(channel, chaincodeId, gateway, queryHandler, eventHandlerFactory) {
 		logger.debug('in Contract constructor');
 
 		this.channel = channel;
 		this.chaincodeId = chaincodeId;
-		this.network = network;
+		this.gateway = gateway;
 		this.queryHandler = queryHandler;
 		this.eventHandlerFactory = eventHandlerFactory;
 	}
@@ -89,7 +89,7 @@ class Contract {
 
 		this._verifyTransactionDetails('submitTransaction', transactionName, parameters);
 
-		const txId = this.network.getClient().newTransactionID();
+		const txId = this.gateway.getClient().newTransactionID();
 		// createTxEventHandler() will return null if no event handler is requested
 		const eventHandler = this.eventHandlerFactory.createTxEventHandler(txId.getTransactionID());
 
@@ -190,7 +190,7 @@ class Contract {
      */
 	async executeTransaction(transactionName, ...parameters) {
 		this._verifyTransactionDetails('executeTransaction', transactionName, parameters);
-		const txId = this.network.getClient().newTransactionID();
+		const txId = this.gateway.getClient().newTransactionID();
 		const result = await this.queryHandler.queryChaincode(this.chaincodeId, txId, transactionName, parameters);
 		return result ? result : null;
 	}

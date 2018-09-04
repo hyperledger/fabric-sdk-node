@@ -11,7 +11,7 @@
 const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
-const {Network, FileSystemWallet, X509WalletMixin} = require('../../../fabric-network/index.js');
+const {Gateway, FileSystemWallet, X509WalletMixin} = require('../../../fabric-network/index.js');
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
@@ -43,20 +43,20 @@ test('\n\n***** Network End-to-end flow: execute transaction to get information 
 
 		await fileSystemWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
 
-		const network = new Network();
+		const gateway = new Gateway();
 
 		const ccp = fs.readFileSync(fixtures + '/network.json');
 		let ccpObject = JSON.parse(ccp.toString());
 
-		await network.initialize(ccpObject, {
+		await gateway.initialize(ccpObject, {
 			wallet: fileSystemWallet,
 			identity: identityLabel,
 			clientTlsIdentity: 'tlsId'
 		});
 
-		t.pass('Initialized the network');
+		t.pass('Initialized the gateway');
 
-		const channel = await network.getChannel(channelName);
+		const channel = await gateway.getNetwork(channelName);
 
 		t.pass('Initialized the channel, ' + channelName);
 

@@ -11,7 +11,7 @@
 const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
-const {Network, InMemoryWallet, FileSystemWallet, X509WalletMixin, EventStrategies} = require('../../../fabric-network/index.js');
+const {Gateway, InMemoryWallet, FileSystemWallet, X509WalletMixin, EventStrategies} = require('../../../fabric-network/index.js');
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
@@ -39,15 +39,15 @@ async function tlsSetup() {
 	await inMemoryWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
 }
 
-async function createContract(t, networkOptions) {
-	const network = new Network();
-	await network.initialize(JSON.parse(ccp.toString()), networkOptions);
-	t.pass('Initialized the network');
+async function createContract(t, gatewayOptions) {
+	const gateway = new Gateway();
+	await gateway.initialize(JSON.parse(ccp.toString()), gatewayOptions);
+	t.pass('Initialized the gateway');
 
-	const channel = await network.getChannel(channelName);
-	t.pass('Initialized the channel, ' + channelName);
+	const network = await gateway.getNetwork(channelName);
+	t.pass('Initialized the network, ' + channelName);
 
-	const contract = await channel.getContract(chaincodeId);
+	const contract = await network.getContract(chaincodeId);
 	t.pass('Got the contract, about to submit "move" transaction');
 
 	return contract;
@@ -147,7 +147,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and CHANNEL_SCOPE_ALLFORTX event strategy *****\n\n', async (t) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ALLFORTX event strategy *****\n\n', async (t) => {
 	try {
 		await inMemoryIdentitySetup();
 		await tlsSetup();
@@ -156,7 +156,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId',
-			eventStrategy: EventStrategies.CHANNEL_SCOPE_ALLFORTX
+			eventStrategy: EventStrategies.NETWORK_SCOPE_ALLFORTX
 		});
 
 		const response = await contract.submitTransaction('move', 'a', 'b','100');
@@ -175,7 +175,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and CHANNEL_SCOPE_ANYFORTX event strategy *****\n\n', async (t) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ANYFORTX event strategy *****\n\n', async (t) => {
 	try {
 		await inMemoryIdentitySetup();
 		await tlsSetup();
@@ -184,7 +184,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId',
-			eventStrategy: EventStrategies.CHANNEL_SCOPE_ANYFORTX
+			eventStrategy: EventStrategies.NETWORK_SCOPE_ANYFORTX
 		});
 
 		const response = await contract.submitTransaction('move', 'a', 'b','100');
@@ -250,22 +250,22 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 
 
-		const network = new Network();
+		const gateway = new Gateway();
 
 		const ccp = fs.readFileSync(fixtures + '/network.json');
-		await network.initialize(JSON.parse(ccp.toString()), {
+		await gateway.initialize(JSON.parse(ccp.toString()), {
 			wallet: fileSystemWallet,
 			identity: identityLabel,
 			clientTlsIdentity: 'tlsId'
 		});
 
-		t.pass('Initialized the network');
+		t.pass('Initialized the gateway');
 
-		const channel = await network.getChannel(channelName);
+		const network = await gateway.getNetwork(channelName);
 
 		t.pass('Initialized the channel, ' + channelName);
 
-		const contract = await channel.getContract(chaincodeId);
+		const contract = await network.getContract(chaincodeId);
 
 		t.pass('Got the contract, about to submit "move" transaction');
 

@@ -13,7 +13,7 @@ const should = chai.should();
 
 const EventHubFactory = require('../lib/impl/event/eventhubfactory');
 const ChannelEventHub = require('fabric-client').ChannelEventHub;
-const Channel = require('../lib/channel');
+const Network = require('../lib/network');
 const FabricChannel = require('fabric-client').Channel;
 // const ChannelPeer = require('fabric-client').ChannelPeer;
 const AllForTxStrategy = require('../lib/impl/event/allfortxstrategy');
@@ -26,7 +26,7 @@ describe('EventStrategies', () => {
 
 	let stubEventHubFactory;
 	let stubEventHub;
-	let stubChannel;
+	let stubNetwork;
 	let stubPeer;
 
 	beforeEach(() => {
@@ -44,30 +44,30 @@ describe('EventStrategies', () => {
 		const fabricChannel = sinon.createStubInstance(FabricChannel);
 		fabricChannel.getPeers.returns([stubPeer]);
 
-		stubChannel = sinon.createStubInstance(Channel);
+		stubNetwork = sinon.createStubInstance(Network);
 		const peerMap = new Map();
 		peerMap.set(mspId, [stubPeer]);
-		stubChannel.getPeerMap.returns(peerMap);
-		stubChannel.getInternalChannel.returns(fabricChannel);
+		stubNetwork.getPeerMap.returns(peerMap);
+		stubNetwork.getChannel.returns(fabricChannel);
 	});
 
 	it('MSPID_SCOPE_ALLFORTX', () => {
-		const result = EventStrategies.MSPID_SCOPE_ALLFORTX(stubEventHubFactory, stubChannel, mspId);
+		const result = EventStrategies.MSPID_SCOPE_ALLFORTX(stubEventHubFactory, stubNetwork, mspId);
 		result.should.be.an.instanceOf(AllForTxStrategy);
 	});
 
 	it('MSPID_SCOPE_ANYFORTX', () => {
-		const result = EventStrategies.MSPID_SCOPE_ANYFORTX(stubEventHubFactory, stubChannel, mspId);
+		const result = EventStrategies.MSPID_SCOPE_ANYFORTX(stubEventHubFactory, stubNetwork, mspId);
 		result.should.be.an.instanceOf(AnyForTxStrategy);
 	});
 
-	it('CHANNEL_SCOPE_ALLFORTX', () => {
-		const result = EventStrategies.CHANNEL_SCOPE_ALLFORTX(stubEventHubFactory, stubChannel, mspId);
+	it('NETWORK_SCOPE_ALLFORTX', () => {
+		const result = EventStrategies.NETWORK_SCOPE_ALLFORTX(stubEventHubFactory, stubNetwork, mspId);
 		result.should.be.an.instanceOf(AllForTxStrategy);
 	});
 
-	it('CHANNEL_SCOPE_ANYFORTX', () => {
-		const result = EventStrategies.CHANNEL_SCOPE_ANYFORTX(stubEventHubFactory, stubChannel, mspId);
+	it('NETWORK_SCOPE_ANYFORTX', () => {
+		const result = EventStrategies.NETWORK_SCOPE_ANYFORTX(stubEventHubFactory, stubNetwork, mspId);
 		result.should.be.an.instanceOf(AnyForTxStrategy);
 	});
 });

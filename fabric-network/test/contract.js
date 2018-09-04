@@ -18,7 +18,7 @@ const should = chai.should();
 chai.use(require('chai-as-promised'));
 
 const Contract = require('../lib/contract');
-const Network = require('../lib/network');
+const Gateway = require('../lib/gateway');
 const QueryHandler = require('../lib/api/queryhandler');
 const TransactionEventHandler = require('../lib/impl/event/transactioneventhandler');
 
@@ -27,7 +27,7 @@ describe('Contract', () => {
 	const sandbox = sinon.createSandbox();
 	let clock;
 
-	let mockChannel, mockClient, mockUser, mockNetwork;
+	let mockChannel, mockClient, mockUser, mockGateway;
 	let mockPeer1, mockPeer2, mockPeer3;
 	let contract;
 	let mockTransactionID;
@@ -37,8 +37,8 @@ describe('Contract', () => {
 		clock = sinon.useFakeTimers();
 		mockChannel = sinon.createStubInstance(Channel);
 		mockClient = sinon.createStubInstance(Client);
-		mockNetwork = sinon.createStubInstance(Network);
-		mockNetwork.getClient.returns(mockClient);
+		mockGateway = sinon.createStubInstance(Gateway);
+		mockGateway.getClient.returns(mockClient);
 		mockUser = sinon.createStubInstance(User);
 		mockTransactionID = sinon.createStubInstance(TransactionID);
 		mockTransactionID.getTransactionID.returns('00000000-0000-0000-0000-000000000000');
@@ -63,7 +63,7 @@ describe('Contract', () => {
 			createTxEventHandler: () => stubEventHandler
 		};
 
-		contract = new Contract(mockChannel, 'someid', mockNetwork, mockQueryHandler, stubEventHandlerFactory);
+		contract = new Contract(mockChannel, 'someid', mockGateway, mockQueryHandler, stubEventHandlerFactory);
 	});
 
 	afterEach(() => {
