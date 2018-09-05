@@ -1,12 +1,20 @@
 /*
-# Copyright IBM Corp. All Rights Reserved.
-#
-# SPDX-License-Identifier: Apache-2.0
-*/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 'use strict';
 
-var sdkUtils = require('./utils.js');
+const sdkUtils = require('./utils.js');
 
 /**
  * Base class for a client that can use a {@link CryptoSuite} to sign and hash.
@@ -15,7 +23,7 @@ var sdkUtils = require('./utils.js');
  *
  * @class
  */
-var BaseClient = class {
+const BaseClient = class {
 	constructor() {
 		this._cryptoSuite = null;
 	}
@@ -91,7 +99,7 @@ var BaseClient = class {
 	 * string interpolation methods like [util.format]{@link https://nodejs.org/api/util.html#util_util_format_format}.
 	 */
 	static setLogger(logger) {
-		var err = '';
+		let err = '';
 
 		if (typeof logger.debug !== 'function') {
 			err += 'debug() ';
@@ -230,7 +238,7 @@ var BaseClient = class {
 	 * with x509 parsers.
 	 * Will remove or add required linefeeds and carriage returns.
 	 *
-	 * @param {string} raw - a string that contains a X509 certiicate
+	 * @param {string} raw - a string that contains a X509 certificate
 	 * @throws {Error} An error indicating that the begining and end parts are
 	 *         not correct.
 	 */
