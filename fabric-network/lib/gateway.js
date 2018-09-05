@@ -9,7 +9,7 @@
 const Client = require('fabric-client');
 
 const Network = require('./network');
-const EventStrategies = require('./eventstrategies');
+const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 
 const logger = require('./logger').getLogger('Gateway');
 
@@ -40,10 +40,12 @@ class Gateway {
 
 		// default options
 		this.options = {
-			commitTimeout: 300, // 5 minutes
-			eventStrategy: EventStrategies.MSPID_SCOPE_ALLFORTX,
 			queryHandler: './impl/query/defaultqueryhandler',
 			queryHandlerOptions: {
+			},
+			eventHandlerOptions: {
+				commitTimeout: 300, // 5 minutes
+				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
 			}
 		};
 	}
@@ -53,13 +55,19 @@ class Gateway {
 	 * @property {Wallet} wallet The identity wallet implementation for use with this Gateway instance
  	 * @property {string} identity The identity in the wallet for all interactions on this Gateway instance
 	 * @property {string} [clientTlsIdentity] the identity in the wallet to use as the client TLS identity
- 	 * @property {number} [commitTimeout = 300] The timout period in seconds to wait for commit notification to complete
-	 * @property {*} [eventStrategy] Event handling strategy to identify successful transaction commits. A null value
-	 * indicates that no event handling is desired.
+	 * @property {DefaultEventHandlerOptions|Object} [eventHandlerOptions] This defines options for the inbuilt default
+	 * event handler capability
  	 */
 
 	/**
-     * Initialize the Gateway with a connection profile
+	 * @typedef {Object} DefaultEventHanderOptions
+ 	 * @property {number} [commitTimeout = 300] The timeout period in seconds to wait for commit notification to complete
+	 * @property {*} [strategy] Event handling strategy to identify successful transaction commits. A null value
+	 * indicates that no event handling is desired.
+	 */
+
+	/**
+     * Connect to the Gateway with a connection profile or a prebuilt Client instance.
      *
      * @param {Client | string} config The configuration for this Gateway which can come from a common connection
 	 * profile or an existing fabric-client Client instance
@@ -67,8 +75,8 @@ class Gateway {
      * @param {GatewayOptions} options specific options for creating this Gateway instance
      * @memberof Gateway
      */
-	async initialize(config, options) {
-		const method = 'initialize';
+	async connect(config, options) {
+		const method = 'connect';
 		logger.debug('in %s', method);
 
 		if (!options || !options.wallet) {
@@ -150,12 +158,12 @@ class Gateway {
 	}
 
 	/**
-     * clean up this Gateway in prep for it to be discarded and garbage collected
+     * clean up and disconnect this Gateway in prep for it to be discarded and garbage collected
      *
      * @memberof Gateway
      */
-	dispose() {
-		logger.debug('in cleanup');
+	disconnect() {
+		logger.debug('in disconnect');
 		for (const network of this.networks.values()) {
 			network._dispose();
 		}

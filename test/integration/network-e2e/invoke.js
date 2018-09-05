@@ -11,7 +11,7 @@
 const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
-const {Gateway, InMemoryWallet, FileSystemWallet, X509WalletMixin, EventStrategies} = require('../../../fabric-network/index.js');
+const {Gateway, InMemoryWallet, FileSystemWallet, X509WalletMixin, DefaultEventHandlerStrategies} = require('../../../fabric-network/index.js');
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
@@ -39,10 +39,9 @@ async function tlsSetup() {
 	await inMemoryWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
 }
 
-async function createContract(t, gatewayOptions) {
-	const gateway = new Gateway();
-	await gateway.initialize(JSON.parse(ccp.toString()), gatewayOptions);
-	t.pass('Initialized the gateway');
+async function createContract(t, gateway, gatewayOptions) {
+	await gateway.connect(JSON.parse(ccp.toString()), gatewayOptions);
+	t.pass('Connected to the gateway');
 
 	const network = await gateway.getNetwork(channelName);
 	t.pass('Initialized the network, ' + channelName);
@@ -65,11 +64,14 @@ test('\n\n***** Network End-to-end flow: import identity into wallet *****\n\n',
 });
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and default event strategy *****\n\n', async (t) => {
+	const gateway = new Gateway();
+
 	try {
 		await inMemoryIdentitySetup();
 		await tlsSetup();
 
-		const contract = await createContract(t, {
+
+		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId'
@@ -86,21 +88,26 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		}
 	} catch(err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
 	}
+
 
 	t.end();
 });
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and MSPID_SCOPE_ALLFORTX event strategy *****\n\n', async (t) => {
+	const gateway = new Gateway();
+
 	try {
 		await inMemoryIdentitySetup();
 		await tlsSetup();
 
-		const contract = await createContract(t, {
+		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId',
-			eventStrategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+			eventStrategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX
 		});
 
 		const response = await contract.submitTransaction('move', 'a', 'b','100');
@@ -114,21 +121,24 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		}
 	} catch(err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
 	}
 
 	t.end();
 });
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and MSPID_SCOPE_ANYFORTX event strategy *****\n\n', async (t) => {
+	const gateway = new Gateway();
 	try {
 		await inMemoryIdentitySetup();
 		await tlsSetup();
 
-		const contract = await createContract(t, {
+		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId',
-			eventStrategy: EventStrategies.MSPID_SCOPE_ANYFORTX
+			eventStrategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ANYFORTX
 		});
 
 		const response = await contract.submitTransaction('move', 'a', 'b','100');
@@ -142,21 +152,25 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		}
 	} catch(err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
 	}
 
 	t.end();
 });
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ALLFORTX event strategy *****\n\n', async (t) => {
+	const gateway = new Gateway();
+
 	try {
 		await inMemoryIdentitySetup();
 		await tlsSetup();
 
-		const contract = await createContract(t, {
+		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId',
-			eventStrategy: EventStrategies.NETWORK_SCOPE_ALLFORTX
+			eventStrategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ALLFORTX
 		});
 
 		const response = await contract.submitTransaction('move', 'a', 'b','100');
@@ -170,21 +184,25 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		}
 	} catch(err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
 	}
 
 	t.end();
 });
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ANYFORTX event strategy *****\n\n', async (t) => {
+	const gateway = new Gateway();
+
 	try {
 		await inMemoryIdentitySetup();
 		await tlsSetup();
 
-		const contract = await createContract(t, {
+		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId',
-			eventStrategy: EventStrategies.NETWORK_SCOPE_ANYFORTX
+			eventStrategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ANYFORTX
 		});
 
 		const response = await contract.submitTransaction('move', 'a', 'b','100');
@@ -198,16 +216,20 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		}
 	} catch(err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
 	}
 
 	t.end();
 });
 
 test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', async (t) => {
+	const gateway = new Gateway();
+
 	await inMemoryIdentitySetup();
 	await tlsSetup();
 
-	const contract = await createContract(t, {
+	const contract = await createContract(t, gateway, {
 		wallet: inMemoryWallet,
 		identity: 'User1@org1.example.com',
 		clientTlsIdentity: 'tlsId'
@@ -222,6 +244,8 @@ test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', as
 		} else {
 			t.fail('Unexpected exception: ' + expectedErr.message);
 		}
+	} finally {
+		gateway.disconnect();
 	}
 
 	t.end();
@@ -229,6 +253,7 @@ test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', as
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in file system wallet *****\n\n', async (t) => {
 	const tmpdir = path.join(os.tmpdir(), 'integration-network-test987');
+	const gateway = new Gateway();
 
 	try {
 		// define the identity to use
@@ -248,18 +273,14 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 		await fileSystemWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
 
-
-
-		const gateway = new Gateway();
-
 		const ccp = fs.readFileSync(fixtures + '/network.json');
-		await gateway.initialize(JSON.parse(ccp.toString()), {
+		await gateway.connect(JSON.parse(ccp.toString()), {
 			wallet: fileSystemWallet,
 			identity: identityLabel,
 			clientTlsIdentity: 'tlsId'
 		});
 
-		t.pass('Initialized the gateway');
+		t.pass('Connected to the gateway');
 
 		const network = await gateway.getNetwork(channelName);
 
@@ -304,17 +325,20 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			});
 		});
 		await rimRafPromise;
+		gateway.disconnect();
 	}
 
 	t.end();
 });
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and no event strategy *****\n\n', async (t) => {
+	const gateway = new Gateway();
+
 	try {
 		await inMemoryIdentitySetup();
 		await tlsSetup();
 
-		const contract = await createContract(t, {
+		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId',
@@ -332,6 +356,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		}
 	} catch(err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
 	}
 
 	t.end();

@@ -22,6 +22,7 @@ const Network = require('../lib/network');
 const Gateway = require('../lib/gateway');
 const Wallet = require('../lib/api/wallet');
 const Mockery = require('mockery');
+const EventStrategies = require('../lib/impl/event/defaulteventhandlerstrategies');
 
 
 describe('Gateway', () => {
@@ -54,14 +55,14 @@ describe('Gateway', () => {
 
 		beforeEach(() => {
 			defaultOptions = {
-				commitTimeout: 300 * 1000,
+				aTimeout: 300 * 1000,
 			};
 		});
 
 		it('should return the default options when there are no overrides', () => {
 			const overrideOptions = {};
 			const expectedOptions = {
-				commitTimeout: 300 * 1000
+				aTimeout: 300 * 1000
 			};
 			Gateway._mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
@@ -69,10 +70,10 @@ describe('Gateway', () => {
 
 		it('should change a default option', () => {
 			const overrideOptions = {
-				commitTimeout: 1234
+				aTimeout: 1234
 			};
 			const expectedOptions = {
-				commitTimeout: 1234
+				aTimeout: 1234
 			};
 			Gateway._mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
@@ -83,7 +84,7 @@ describe('Gateway', () => {
 				useDiscovery: true
 			};
 			const expectedOptions = {
-				commitTimeout: 300 * 1000,
+				aTimeout: 300 * 1000,
 				useDiscovery: true
 			};
 			Gateway._mergeOptions(defaultOptions, overrideOptions);
@@ -100,7 +101,7 @@ describe('Gateway', () => {
 				}
 			};
 			const expectedOptions = {
-				commitTimeout: 300 * 1000,
+				aTimeout: 300 * 1000,
 				identity: 'admin',
 				useDiscovery: true,
 				discoveryOptions: {
@@ -114,7 +115,7 @@ describe('Gateway', () => {
 
 		it('should merge option structures', () => {
 			defaultOptions = {
-				commitTimeout: 300 * 1000,
+				aTimeout: 300 * 1000,
 				identity: 'user',
 				useDiscovery: true,
 				discoveryOptions: {
@@ -130,7 +131,7 @@ describe('Gateway', () => {
 				}
 			};
 			const expectedOptions = {
-				commitTimeout: 300 * 1000,
+				aTimeout: 300 * 1000,
 				identity: 'admin',
 				useDiscovery: true,
 				discoveryOptions: {
@@ -149,13 +150,15 @@ describe('Gateway', () => {
 			const gateway = new Gateway();
 			gateway.networks.should.be.instanceof(Map);
 			gateway.options.should.include({
-				commitTimeout: 300,
 				queryHandler: './impl/query/defaultqueryhandler'
+			});
+			gateway.options.eventHandlerOptions.should.include({
+				commitTimeout: 300
 			});
 		});
 	});
 
-	describe('#initialize', () => {
+	describe('#connect', () => {
 		let gateway;
 		let mockWallet;
 
@@ -167,7 +170,7 @@ describe('Gateway', () => {
 		});
 
 		it('should fail without options supplied', () => {
-			return gateway.initialize()
+			return gateway.connect()
 				.should.be.rejectedWith(/A wallet must be assigned to a Gateway instance/);
 		});
 
@@ -175,31 +178,31 @@ describe('Gateway', () => {
 			const options = {
 				identity: 'admin'
 			};
-			return gateway.initialize('ccp', options)
+			return gateway.connect('ccp', options)
 				.should.be.rejectedWith(/A wallet must be assigned to a Gateway instance/);
 		});
 
-		it('should initialize the gateway with default plugins', async () => {
+		it('should connect to the gateway with default plugins', async () => {
 			const options = {
 				wallet: mockWallet,
 			};
-			await gateway.initialize('ccp', options);
+			await gateway.connect('ccp', options);
 			gateway.client.should.equal(mockClient);
 			should.not.exist(gateway.currentIdentity);
 			gateway.queryHandlerClass.should.equal(mockDefaultQueryHandler);
 		});
 
-		it('should initialize the gateway with identity', async () => {
+		it('should connect to the gateway with identity', async () => {
 			const options = {
 				wallet: mockWallet,
 				identity: 'admin'
 			};
-			await gateway.initialize('ccp', options);
+			await gateway.connect('ccp', options);
 			gateway.client.should.equal(mockClient);
 			gateway.currentIdentity.should.equal('foo');
 		});
 
-		it('should initialize the gateway with identity and set client tls crypto material', async () => {
+		it('should connect to the gateway with identity and set client tls crypto material', async () => {
 			mockWallet.export.withArgs('tlsId').resolves({certificate: 'acert', privateKey: 'akey'});
 
 			const options = {
@@ -207,7 +210,7 @@ describe('Gateway', () => {
 				identity: 'admin',
 				clientTlsIdentity: 'tlsId'
 			};
-			await gateway.initialize('ccp', options);
+			await gateway.connect('ccp', options);
 			gateway.client.should.equal(mockClient);
 			gateway.currentIdentity.should.equal('foo');
 			sinon.assert.calledOnce(mockClient.setTlsClientCertAndKey);
@@ -215,19 +218,19 @@ describe('Gateway', () => {
 		});
 
 
-		it('should initialize from an existing client object', async () => {
+		it('should connect from an existing client object', async () => {
 			const options = {
 				wallet: mockWallet,
 				identity: 'admin'
 			};
-			await gateway.initialize(mockClient, options);
+			await gateway.connect(mockClient, options);
 			gateway.client.should.equal(mockClient);
 			gateway.currentIdentity.should.equal('foo');
 		});
 
 		it ('should delete any default query handler options if the plugin doesn\'t match the default plugin', async () => {
 			gateway.options = {
-				commitTimeout: 300 * 1000,
+				aTimeout: 300 * 1000,
 				queryHandler: './impl/query/defaultqueryhandler',
 				queryHandlerOptions: {
 					'default1': 1,
@@ -248,12 +251,12 @@ describe('Gateway', () => {
 				}
 			};
 
-			await gateway.initialize('ccp', options);
+			await gateway.connect('ccp', options);
 			gateway.options.should.deep.equal(
 				{
 					wallet: mockWallet,
 					identity: 'admin',
-					commitTimeout: 300 * 1000,
+					aTimeout: 300 * 1000,
 					queryHandler: './impl/query/otherqueryhandler',
 					queryHandlerOptions: {
 						'other1': 99
@@ -270,7 +273,7 @@ describe('Gateway', () => {
 				identity: 'admin',
 				queryHandler: './impl/query/noqueryhandler'
 			};
-			return gateway.initialize('ccp', options)
+			return gateway.connect('ccp', options)
 				.should.be.rejectedWith(/unable to load provided query handler: .\/impl\/query\/noqueryhandler/);
 		});
 
@@ -279,7 +282,7 @@ describe('Gateway', () => {
 				wallet: mockWallet,
 				queryHandler: null
 			};
-			await gateway.initialize('ccp', options);
+			await gateway.connect('ccp', options);
 			gateway.client.should.equal(mockClient);
 			should.equal(undefined, gateway.queryHandlerClass);
 		});
@@ -288,8 +291,8 @@ describe('Gateway', () => {
 			const options = {
 				wallet: mockWallet
 			};
-			await gateway.initialize('ccp', options);
-			gateway.options.eventStrategy.should.be.a('Function');
+			await gateway.connect('ccp', options);
+			gateway.options.eventHandlerOptions.strategy.should.be.a('Function');
 		});
 
 		it('allows transaction event handling strategy to be specified', async () => {
@@ -298,7 +301,7 @@ describe('Gateway', () => {
 				wallet: mockWallet,
 				eventStrategy: stubStrategyFn
 			};
-			await gateway.initialize('ccp', options);
+			await gateway.connect('ccp', options);
 			gateway.options.eventStrategy.should.equal(stubStrategyFn);
 		});
 
@@ -307,7 +310,7 @@ describe('Gateway', () => {
 				wallet: mockWallet,
 				eventStrategy: null
 			};
-			await gateway.initialize('ccp', options);
+			await gateway.connect('ccp', options);
 			should.equal(gateway.options.eventStrategy, null);
 		});
 	});
@@ -360,7 +363,7 @@ describe('Gateway', () => {
 				wallet: mockWallet,
 				identity: 'admin'
 			};
-			await gateway.initialize('ccp', options);
+			await gateway.connect('ccp', options);
 
 		});
 
@@ -379,12 +382,15 @@ describe('Gateway', () => {
 		describe('#getOptions', () => {
 			it('should return the initialized options', () => {
 				const expectedOptions = {
-					commitTimeout: 300,
 					wallet: mockWallet,
 					identity: 'admin',
 					queryHandler: './impl/query/defaultqueryhandler'
 				};
 				gateway.getOptions().should.include(expectedOptions);
+				gateway.getOptions().eventHandlerOptions.should.include({
+					commitTimeout: 300
+				});
+
 			});
 		});
 	});
@@ -427,10 +433,10 @@ describe('Gateway', () => {
 			});
 		});
 
-		describe('#dispose', () => {
+		describe('#disconnect', () => {
 			it('should cleanup the gateway and its networks', () => {
 				gateway.networks.size.should.equal(1);
-				gateway.dispose();
+				gateway.disconnect();
 				gateway.networks.size.should.equal(0);
 			});
 		});

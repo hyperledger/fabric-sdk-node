@@ -53,8 +53,8 @@ class EventHubFactory {
 		if (!eventHub.isconnected()) {
 			await this.connectEventHub(eventHub);
 		} else {
-			logger.info('getEventHub:', 'event hub already connected:', eventHub.getName());
-			eventHub.checkConnection(true);
+			// event hub is already connected, nothing else needs to be done
+			logger.debug('getEventHub:', 'event hub already connected:', eventHub.getName());
 		}
 		return eventHub;
 	}
@@ -67,14 +67,14 @@ class EventHubFactory {
      * @param {ChannelEventHub} eventHub An event hub.
      */
 	async connectEventHub(eventHub) {
-		const connectPromise = new Promise((resolve, reject) => {
+		const connectPromise = new Promise((resolve) => {
 			const regId = eventHub.registerBlockEvent(
-				(block) => {
-					logger.info('connectEventHub:', 'successfully connected event hub:', eventHub.getName());
+				() => {
+					logger.debug('connectEventHub:', 'successfully connected event hub:', eventHub.getName());
 					eventHub.unregisterBlockEvent(regId);
 					resolve();
 				},
-				(err) => {
+				() => {
 					logger.info('connectEventHub:', 'failed to connect event hub:', eventHub.getName());
 					eventHub.unregisterBlockEvent(regId);
 					resolve();

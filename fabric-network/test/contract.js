@@ -111,61 +111,33 @@ describe('Contract', () => {
 		});
 
 		it('should return only the valid responses', () => {
-			const resp1 = {
+
+			// simulate an Error from node-sdk itself
+			const resp1 = new Error('had a problem');
+
+			// simulate a good response
+			const resp2 = {
 				response: {
 					status: 200,
 					payload: 'no error'
 				}
 			};
 
-			const resp2 = new Error('had a problem');
-
-			const resp3 = {
-				response: {
-					status: 500,
-					payload: 'such error'
-				}
+			// simulate a bad response from peer, chaincode
+			const resp3 = new Error('some other error');
+			resp3.response = {
+				status: 500,
+				message: 'some other error'
 			};
 
 			const responses = [resp1, resp2, resp3];
 
-			mockChannel.verifyProposalResponse.returns(true);
-			mockChannel.compareProposalResponseResults.returns(true);
-
 			(function() {
 				const {validResponses} = contract._validatePeerResponses(responses);
-				validResponses.should.deep.equal([resp1]);
+				validResponses.should.deep.equal([resp2]);
 
 			}).should.not.throw();
 
-		});
-
-		it('should log warning if verifyProposal returns false', () => {
-			const response1 = {
-				response: {
-					status: 200,
-					payload: 'NOTVALID'
-				}
-			};
-			const response2 = {
-				response: {
-					status: 200,
-					payload: 'I AM VALID'
-				}
-			};
-
-			const responses = [ response1, response2 ];
-
-			mockChannel.verifyProposalResponse.withArgs(response1).returns(false);
-			mockChannel.verifyProposalResponse.withArgs(response2).returns(true);
-			mockChannel.compareProposalResponseResults.returns(true);
-			(function() {
-				const {validResponses, invalidResponses, invalidResponseMsgs} = contract._validatePeerResponses(responses);
-				validResponses.should.deep.equal([response2]);
-				invalidResponses.should.deep.equal([response1]);
-				invalidResponseMsgs.length.should.equal(1);
-				invalidResponseMsgs[0].should.equal('Proposal response from peer failed verification: {"status":200,"payload":"NOTVALID"}');
-			}).should.not.throw();
 		});
 	});
 
@@ -293,20 +265,19 @@ describe('Contract', () => {
 
 		it('should throw if no valid proposal responses', () => {
 			const proposalResponses = [
-				{
-					response: { status: 500, payload: 'got an error' }
-				},
+				Object.assign(new Error(),
+					{
+						response: { status: 500, payload: 'got an error' }
+					}),
 				new Error('had a problem'),
-				{
-					response: { status: 500, payload: 'oh oh another error' }
-				}
+				Object.assign(new Error(),
+					{
+						response: { status: 500, payload: 'oh oh another error' }
+					})
 			];
 			const proposal = { proposal: 'i do' };
 			const header = { header: 'gooooal' };
 			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
-
-			mockChannel.verifyProposalResponse.returns(true);
-			mockChannel.compareProposalResponseResults.returns(true);
 
 			// Remove the stubbing of _validatePeerResponses in beforeEach()
 			contract._validatePeerResponses.restore();
@@ -336,32 +307,6 @@ describe('Contract', () => {
 	});
 
 	describe('#executeTransaction', () => {
-		/*
-		beforeEach(() => {
-			mockChannel.getPeers.returns([mockPeer1]);
-			mockPeer1.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.EVENT_SOURCE_ROLE).returns(true);
-			mockChannel.newChannelEventHub.withArgs(mockPeer1).returns(mockEventHub1);
-			contract._connectToEventHubs();
-			mockEventHub1.isconnected.returns(true);
-			mockEventHub1.getPeerAddr.returns('mockPeer1');
-		});
-		*/
-
-		// it('should throw if functionName not specified', () => {
-		// 	return contract.queryChainCode(mockSecurityContext, null, [])
-		// 		.should.be.rejectedWith(/functionName not specified/);
-		// });
-
-		// it('should throw if args not specified', () => {
-		// 	return contract.queryChainCode(mockSecurityContext, 'myfunc', null)
-		// 		.should.be.rejectedWith(/args not specified/);
-		// });
-
-		// it('should throw if args contains non-string values', () => {
-		// 	return contract.queryChainCode(mockSecurityContext, 'myfunc', [3.142])
-		// 		.should.be.rejectedWith(/invalid arg specified: 3.142/);
-		// });
-
 		it('should query chaincode and handle a good response without return data', async () => {
 			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves();
 

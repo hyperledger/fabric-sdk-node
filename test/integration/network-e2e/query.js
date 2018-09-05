@@ -24,6 +24,7 @@ const chaincodeId = testUtils.NETWORK_END2END.chaincodeId;
 
 test('\n\n***** Network End-to-end flow: execute transaction to get information *****\n\n', async (t) => {
 	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+	const gateway = new Gateway();
 
 	try {
 		// define the identity to use
@@ -43,18 +44,16 @@ test('\n\n***** Network End-to-end flow: execute transaction to get information 
 
 		await fileSystemWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
 
-		const gateway = new Gateway();
-
 		const ccp = fs.readFileSync(fixtures + '/network.json');
 		let ccpObject = JSON.parse(ccp.toString());
 
-		await gateway.initialize(ccpObject, {
+		await gateway.connect(ccpObject, {
 			wallet: fileSystemWallet,
 			identity: identityLabel,
 			clientTlsIdentity: 'tlsId'
 		});
 
-		t.pass('Initialized the gateway');
+		t.pass('Connected to the gateway');
 
 		const channel = await gateway.getNetwork(channelName);
 
@@ -102,6 +101,7 @@ test('\n\n***** Network End-to-end flow: execute transaction to get information 
 			});
 		});
 		await rimRafPromise;
+		gateway.disconnect();
 	}
 
 	t.end();
