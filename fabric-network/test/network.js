@@ -22,7 +22,7 @@ chai.use(require('chai-as-promised'));
 const Network = require('../lib/network');
 const Gateway = require('../lib/gateway');
 const Contract = require('../lib/contract');
-const EventStrategies = require('../lib/eventstrategies');
+const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 
 describe('Network', () => {
 	const sandbox = sinon.createSandbox();
@@ -61,8 +61,10 @@ describe('Network', () => {
 		mockGateway = sinon.createStubInstance(Gateway);
 		mockGateway.getOptions.returns({
 			useDiscovery: false,
-			commitTimeout: 300,
-			eventStrategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+			eventHandlerOptions: {
+				commitTimeout: 300,
+				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+			}
 		});
 		mockGateway.getCurrentIdentity.returns({
 			_mspId: mspId
@@ -270,7 +272,7 @@ describe('Network', () => {
 
 			it('use commitTimeout option from gateway as timeout option for event handler', async () => {
 				await initNetwork();
-				const timeout = mockGateway.getOptions().commitTimeout;
+				const timeout = mockGateway.getOptions().eventHandlerOptions.commitTimeout;
 				const eventHandler = network.eventHandlerFactory.createTxEventHandler(txId);
 				eventHandler.options.timeout.should.equal(timeout);
 			});
@@ -278,8 +280,10 @@ describe('Network', () => {
 			it('return null if no event strategy set', async () => {
 				mockGateway.getOptions.returns({
 					useDiscovery: false,
-					commitTimeout: 300,
-					eventStrategy: null
+					eventHandlerOptions: {
+						commitTimeout: 300,
+						eventStrategy: null
+					}
 				});
 				network = new Network(mockGateway, mockChannel);
 				await initNetwork();

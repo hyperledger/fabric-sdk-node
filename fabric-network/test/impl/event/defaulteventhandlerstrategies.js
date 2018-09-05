@@ -8,20 +8,18 @@
 
 const sinon = require('sinon');
 const chai = require('chai');
-const should = chai.should();
-// chai.use(require('chai-as-promised'));
+chai.should();
 
-const EventHubFactory = require('../lib/impl/event/eventhubfactory');
+const EventHubFactory = require('fabric-network/lib/impl/event/eventhubfactory');
 const ChannelEventHub = require('fabric-client').ChannelEventHub;
-const Network = require('../lib/network');
+const Network = require('fabric-network/lib/network');
 const FabricChannel = require('fabric-client').Channel;
-// const ChannelPeer = require('fabric-client').ChannelPeer;
-const AllForTxStrategy = require('../lib/impl/event/allfortxstrategy');
-const AnyForTxStrategy = require('../lib/impl/event/anyfortxstrategy');
+const AllForTxStrategy = require('fabric-network/lib/impl/event/allfortxstrategy');
+const AnyForTxStrategy = require('fabric-network/lib/impl/event/anyfortxstrategy');
 
-const EventStrategies = require('../lib/eventstrategies');
+const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 
-describe('EventStrategies', () => {
+describe('DefaultEventHandlerStrategies', () => {
 	const mspId = 'MSP_ID';
 
 	let stubEventHubFactory;

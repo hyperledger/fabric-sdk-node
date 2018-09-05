@@ -42,28 +42,21 @@ class Contract {
 
 		responses.forEach((responseContent) => {
 			if (responseContent instanceof Error) {
+
+				// this is either an error from the sdk, peer response or chaincode response.
+				// we can distinguish between sdk vs peer/chaincode by the isProposalResponse flag in the future.
+				// TODO: would be handy to know which peer the response is from and include it here.
 				const warning = util.format('Response from attempted peer comms was an error: %j', responseContent);
 				logger.warn('_validatePeerResponses: ' + warning);
 				invalidResponseMsgs.push(warning);
 				invalidResponses.push(responseContent);
 			} else {
 
-				// not an error, if it is from a proposal, verify the response
-				if (!this.channel.verifyProposalResponse(responseContent)) {
-					// the node-sdk doesn't provide any external utilities from parsing the responseContent.
-					// there are internal ones which may do what is needed or we would have to decode the
-					// protobufs ourselves but it should really be the node sdk doing this.
-					const warning = util.format('Proposal response from peer failed verification: %j', responseContent.response);
-					logger.warn('_validatePeerResponses: ' + warning);
-					invalidResponseMsgs.push(warning);
-					invalidResponses.push(responseContent);
-				} else if (responseContent.response.status !== 200) {
-					const warning = util.format('Unexpected response of %j. Payload was: %j', responseContent.response.status, responseContent.response.payload);
-					logger.warn('_validatePeerResponses: ' + warning);
-					invalidResponseMsgs.push(warning);
-				} else {
-					validResponses.push(responseContent);
-				}
+				// anything else is a successful response ie status will be less the 400.
+				// in the future we can do things like verifyProposalResponse and compareProposalResponseResults
+				// as part of an extended client side validation strategy but for now don't perform any client
+				// side checks as the peers will have to do this anyway and it impacts client performance
+				validResponses.push(responseContent);
 			}
 		});
 
@@ -75,7 +68,7 @@ class Contract {
 			throw new Error(msg);
 		}
 
-		return {validResponses, invalidResponses, invalidResponseMsgs};
+		return {validResponses, invalidResponses};
 	}
 
 	/**
@@ -106,12 +99,10 @@ class Contract {
 		const proposalResponses = results[0];
 		const proposal = results[1];
 
-		//TODO: what to do about invalidResponses
+		// get only the valid responses to submit to the orderer
 		const {validResponses} = this._validatePeerResponses(proposalResponses);
 
-		//TODO: more to do regarding checking the response (see hlfconnection.invokeChaincode)
-
-		eventHandler && await eventHandler.startListening();
+		eventHandler && (await eventHandler.startListening());
 
 		// Submit the endorsed transaction to the primary orderers.
 		const response = await this.channel.sendTransaction({
@@ -126,7 +117,7 @@ class Contract {
 			throw new Error(msg);
 		}
 
-		eventHandler && await eventHandler.waitForEvents();
+		eventHandler && (await eventHandler.waitForEvents());
 
 		// return the payload from the invoked chaincode
 		let result = null;

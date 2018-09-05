@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { User, Channel } from 'fabric-client';
+import { User, Channel, ChannelPeer } from 'fabric-client';
 
 import Client = require('fabric-client');
 
@@ -13,10 +13,22 @@ import Client = require('fabric-client');
 // Main fabric network classes
 //-------------------------------------------
 export interface InitOptions {
-	commitTimeout?: number;
 	wallet: Wallet;
 	identity: string;
 	clientTlsIdentity?: string;
+	eventHandlerOptions?: DefaultEventHandlerOptions|Object;
+}
+
+export interface DefaultEventHandlerOptions {
+	commitTimeout?: number;
+	strategy?: DefaultEventHandlerStrategies;
+}
+
+export enum DefaultEventHandlerStrategies {
+	MSPID_SCOPE_ALLFORTX,
+	MSPID_SCOPE_ANYFORTX,
+	NETWORK_SCOPE_ALLFORTX,
+	NETWORK_SCOPE_ANYFORTX
 }
 
 export class Gateway {
@@ -31,7 +43,7 @@ export class Gateway {
 
 export class Network {
 	getChannel(): Channel;
-	getPeerMap(): Map<string, Client.ChannelPeer[]>;
+	getPeerMap(): Map<string, ChannelPeer[]>;
 	getContract(chaincodeId: string): Contract;
 }
 

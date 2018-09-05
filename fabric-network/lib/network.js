@@ -29,12 +29,12 @@ class Network {
 		this.eventHandlerFactory = {
 			createTxEventHandler: () => null
 		};
-		const createEventStrategyFn = gateway.getOptions().eventStrategy;
+		const createEventStrategyFn = gateway.getOptions().eventHandlerOptions.strategy;
 		if (createEventStrategyFn) {
 			const self = this;
 			const eventHubFactory = new EventHubFactory(channel);
 			const mspId = gateway.getCurrentIdentity()._mspId;
-			const commitTimeout = gateway.getOptions().commitTimeout;
+			const commitTimeout = gateway.getOptions().eventHandlerOptions.commitTimeout;
 			this.eventHandlerFactory.createTxEventHandler = (txId) => {
 				const eventStrategy = createEventStrategyFn(eventHubFactory, self, mspId);
 				return new TransactionEventHandler(txId, eventStrategy, { timeout: commitTimeout });

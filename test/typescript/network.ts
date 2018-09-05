@@ -15,7 +15,9 @@ import {
   Gateway,
   Wallet,
   X509Identity,
-  X509WalletMixin
+  X509WalletMixin,
+  DefaultEventHandlerOptions,
+  DefaultEventHandlerStrategies
 
 } from 'fabric-network';
 
@@ -47,16 +49,32 @@ import {
 
 	const idList: IdentityInformation[] = await inMemoryWallet.list();
 
-    const gateway: Gateway = new Gateway();
+	const gateway: Gateway = new Gateway();
 
-    const opt1: InitOptions = {
+	const evtOpts: DefaultEventHandlerOptions = {
+
+	};
+
+	const evtOpts1: DefaultEventHandlerOptions = {
+		commitTimeout: 100,
+		strategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX
+	};
+
+    const initOpt: InitOptions = {
         wallet: inMemoryWallet,
         identity: 'User1@org1.example.com',
-        clientTlsIdentity: 'tlsId',
-        commitTimeout: 1000
+        clientTlsIdentity: 'tlsId'
+	};
+
+    const initOpt1: InitOptions = {
+        wallet: inMemoryWallet,
+        identity: 'User1@org1.example.com',
+		clientTlsIdentity: 'tlsId',
+		eventHandlerOptions: evtOpts1
     };
 
-    await gateway.initialize('accp', opt1);
+
+    await gateway.initialize('accp', initOpt1);
 
     const gateway2: Gateway = new Gateway();
     const client: Client = new Client();

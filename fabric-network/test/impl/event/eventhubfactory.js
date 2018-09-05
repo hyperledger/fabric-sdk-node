@@ -108,16 +108,5 @@ describe('EventHubFactory', () => {
 			const results = await factory.getEventHubs([stubPeer2]);
 			expect(results[0].connect.called).to.be.true;
 		});
-
-		it('calls checkConnection(true) on previously connected event hubs', async () => {
-			const results = await factory.getEventHubs([stubPeer1]);
-			expect(stubEventHub1.checkConnection.calledWith(true)).to.be.true;
-		});
-
-		it('does not call checkConnection() on previously unconnected event hubs', async () => {
-			const results = await factory.getEventHubs([stubPeer2]);
-			expect(stubEventHub1.checkConnection.notCalled).to.be.true;
-		});
 	});
-
 });
