@@ -2914,8 +2914,8 @@ const Channel = class {
 		};
 
 		// certificate, publicKey, mspId, cryptoSuite
-		const signer = new Identity(certificate, null, mspId);
-		const txId = new TransactionID(signer, admin);
+		const identity = new Identity(certificate, null, mspId);
+		const txId = new TransactionID(identity, admin);
 
 		const channelHeader = client_utils.buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
@@ -2927,7 +2927,7 @@ const Channel = class {
 			this._clientContext.getClientCertHash()
 		);
 
-		const header = client_utils.buildHeader(signer, channelHeader, txId.getNonce());
+		const header = client_utils.buildHeader(identity, channelHeader, txId.getNonce());
 		const proposal = client_utils.buildProposal(invokeSpec, header, request.transientMap);
 		return { proposal, txId };
 	}

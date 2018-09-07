@@ -55,7 +55,7 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 			eh.registerBlockEvent({});
 			eh.connect();
 		},
-		/The clientContext has not been properly initialized, missing userContext/,
+		/Error connect the ChannelEventhub to peer, either the clientContext has not been properly initialized, missing userContext or admin identity or missing signedEvent/,
 		'Must pass in a clientContext that has the user context already initialized'
 	);
 
