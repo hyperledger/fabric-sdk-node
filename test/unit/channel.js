@@ -1239,15 +1239,31 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		added = channel._merge_hints(endorsement_hint_2);
 		t.equal(added,true,'Check that the new endorsement hint will be added');
 
-		const plan_id = JSON.stringify(endorsement_hint_2);
-		const check_endorsement_hint = channel._discovery_interests.get(plan_id);
-		t.equals(check_endorsement_hint.chaincodes[0].name, 'somechaincode2', 'checking that the name is correct');
+		const plan_id_2 = JSON.stringify(endorsement_hint_2);
+		const check_endorsement_hint_2 = channel._discovery_interests.get(plan_id_2);
+		t.equals(check_endorsement_hint_2.chaincodes[0].name, 'somechaincode2', 'checking that the name is correct');
 
 		channel._last_discover_timestamp = Date.now();
-		channel._discovery_results = {endorsement_plans:[{plan_id: plan_id}]};
+		channel._discovery_results = {endorsement_plans:[{plan_id: plan_id_2}]};
 
 		const plan = await channel.getEndorsementPlan(endorsement_hint_2);
-		t.equals(plan.plan_id, plan_id, 'Check the name of endorsement plan retrieved');
+		t.equals(plan.plan_id, plan_id_2, 'Check the name of endorsement plan retrieved');
+
+		const endorsement_hint_3 = channel._buildDiscoveryInterest('somechaincode3', ['collection1', 'collection2', 'collection3']);
+		added = channel._merge_hints(endorsement_hint_3);
+		t.equal(added,true,'Check that the new endorsement hint will be added');
+
+		const plan_id_3 = JSON.stringify(endorsement_hint_3);
+		const check_endorsement_hint_3 = channel._discovery_interests.get(plan_id_3);
+		t.equals(check_endorsement_hint_3.chaincodes[0].name, 'somechaincode3', 'checking that the name is correct');
+		t.equals(check_endorsement_hint_3.chaincodes[0].collection_names[2], 'collection3', 'checking that the collection is correct');
+
+		const proto_interest = channel._buildProtoChaincodeInterest(endorsement_hint_3);
+		const proto_chaincodes = proto_interest.getChaincodes();
+		const proto_chaincode = proto_chaincodes[0];
+		t.equals(proto_chaincode.getName(), 'somechaincode3', 'Checking the protobuf name of the chaincode');
+		const proto_collections = proto_chaincode.getCollectionNames();
+		t.equals(proto_collections[2], 'collection3', 'Checking that the collection name is correct');
 
 	} catch(error) {
 		t.fail(error);

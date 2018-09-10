@@ -108,10 +108,10 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking peer chaincode name');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking peer chaincode version');
 	if(results.endorsement_plans[0].groups.G0) {
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].endpoint, 'peer0.org2.example.com:8051', 'Checking peer endpoint');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].ledger_height.low, ledger_height, 'Checking peer ledger_height');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking peer chaincode name');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking peer chaincode version');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking plan peer endpoint');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].ledger_height.low, ledger_height, 'Checking plan peer ledger_height');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking plan peer chaincode name');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking plan peer chaincode version');
 		t.equals(results.endorsement_plans[0].layouts[0].G0, 1, 'Checking layout quantities_by_group');
 	} else {
 		t.fail('MISSING group results');
@@ -136,10 +136,10 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking peer chaincode version');
 	if(results.endorsement_plans[0].groups.G0) {
 		t.equals(results.endorsement_plans[0].chaincode, first_chaincode_name, 'Checking plan id');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].endpoint, 'peer0.org2.example.com:8051', 'Checking peer endpoint');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].ledger_height.low, ledger_height, 'Checking peer ledger_height');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking peer chaincode name');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking peer chaincode version');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking plan peer endpoint');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].ledger_height.low, ledger_height, 'Checking plan peer ledger_height');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking plan peer chaincode name');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking plan peer chaincode version');
 		t.equals(results.endorsement_plans[0].layouts[0].G0, 1, 'Checking layout quantities_by_group');
 	} else {
 		t.fail('MISSING group results');
@@ -161,10 +161,10 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking peer chaincode name');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking peer chaincode version');
 	if(results.endorsement_plans[0].groups.G0) {
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].endpoint, 'peer0.org2.example.com:8051', 'Checking peer endpoint');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].ledger_height.low, ledger_height, 'Checking peer ledger_height');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking peer chaincode name');
-		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking peer chaincode version');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking plan peer endpoint');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].ledger_height.low, ledger_height, 'Checking plan peer ledger_height');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking plan peer chaincode name');
+		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking plan peer chaincode version');
 		t.equals(results.endorsement_plans[0].layouts[0].G0, 1, 'Checking layout quantities_by_group');
 	} else {
 		t.fail('MISSING group results');
@@ -269,6 +269,27 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async function(t) {
 		t.fail('Failed to have received a good chaincode to chaincode endorsement ::'+error);
 	}
 
+	const collections_request = {
+		chaincodeId : first_chaincode_name,
+		fcn: 'call',
+		args: [second_chaincode_name, 'move', 'a', 'b','100'],
+		txId: client_org1.newTransactionID(true),
+		endorsement_hint: { chaincodes: [
+			{name: first_chaincode_name, collection_names: ['detailCol', 'sensitiveCol']},
+			{name: second_chaincode_name, collection_names: ['detailCol', 'sensitiveCol']}
+		]}
+	};
+	try {
+		const results = await channel_org1.sendTransactionProposal(collections_request);
+		if(testUtil.checkGoodResults(t, results)) {
+			t.pass('Successfully endorsed chaincode to chaincode with collections');
+		} else {
+			t.fail('Failed to endorse using a chaincode to chaincode call with collections');
+		}
+	} catch(error) {
+		t.fail('Failed to have received a good chaincode to chaincode endorsement with collections::'+error);
+	}
+
 	t.pass('End discovery testing');
 	t.end();
 });
@@ -305,6 +326,19 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 	try {
 		const tx_id = client.newTransactionID(true);
 
+		const policy = {
+			identities: [
+				{ role: { name: 'member', mspId: 'Org1MSP' }},
+				{ role: { name: 'member', mspId: 'Org2MSP' }}
+			],
+			policy: {
+				'1-of': [
+					{ 'signed-by': 0},
+					{ 'signed-by': 1}
+				]
+			}
+		};
+
 		// send proposal to endorser
 		const proposal_request = {
 			targets: peers,
@@ -318,19 +352,23 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 			// 'if signed by org1 admin, then that's the only signature required,
 			// but if that signature is missing, then the policy can also be fulfilled
 			// when members (non-admin) from both orgs signed'
-			'endorsement-policy': {
-				identities: [
-					{ role: { name: 'member', mspId: 'Org1MSP' }},
-					{ role: { name: 'member', mspId: 'Org2MSP' }},
-					{ role: { name: 'admin', mspId: 'Org1MSP' }}
-				],
-				policy: {
-					'1-of': [
-						{ 'signed-by': 1}
-					]
+			'endorsement-policy': policy,
+			'collections-config': [
+				{
+					'name': 'detailCol',
+					'policy': policy,
+					'requiredPeerCount': 0,
+					'maxPeerCount': 1,
+					'blockToLive': 100
+				},
+				{
+					'name': 'sensitiveCol',
+					'policy': policy,
+					'requiredPeerCount': 0,
+					'maxPeerCount': 1,
+					'blockToLive': 100
 				}
-			},
-			'collections-config': null
+			]
 		};
 
 		const proposal_results = await channel.sendInstantiateProposal(proposal_request, 10*60*1000);

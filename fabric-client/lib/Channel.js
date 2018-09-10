@@ -565,7 +565,9 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} DiscoveryChaincodeInterest
-	 * @property {DiscoveryChaincodeCall[]} chaincodes
+	 * @property {DiscoveryChaincodeCall[]} chaincodes The chaincodes names and collections
+	 *           that will be sent to the discovery service to calculate an endorsement
+	 *           plan.
 	 */
 
 	/**
@@ -1537,15 +1539,16 @@ const Channel = class {
 	}
 
 	/* internal method
-	 * takes a single string that represents a chaincode name and builds a JSON
+	 * takes a single string that represents a chaincode and optional array of strings
+	 * that represent collections and builds a JSON
 	 * object that may be used as input to building of the GRPC objects to send
 	 * to the discovery service.
 	 */
-	_buildDiscoveryInterest(name) {
+	_buildDiscoveryInterest(name, collections) {
 		logger.debug('_buildDiscoveryInterest - name %s', name);
 		const interest = {};
 		interest.chaincodes = [];
-		const chaincodes = this._buildDiscoveryChaincodeCall(name);
+		const chaincodes = this._buildDiscoveryChaincodeCall(name, collections);
 		interest.chaincodes.push(chaincodes);
 
 		return interest;
@@ -1562,15 +1565,14 @@ const Channel = class {
 			chaincode_call.name = name;
 			if(collection_names) {
 				if(Array.isArray(collection_names)) {
-					const collection_names = [];
+					chaincode_call.collection_names = [];
 					collection_names.map(name =>{
 						if(typeof name === 'string') {
-							collection_names.push(name);
+							chaincode_call.collection_names.push(name);
 						} else {
 							throw Error('The collection name must be a string');
 						}
 					});
-					chaincode_call.collection_names = collection_names;
 				} else {
 					throw Error('Collections names must be an array of strings');
 				}

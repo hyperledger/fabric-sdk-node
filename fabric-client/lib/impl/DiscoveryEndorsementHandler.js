@@ -225,7 +225,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 							plan.endorsements[peer_info.name] = {};
 							plan.endorsements[peer_info.name].endorsement = error;
 							plan.endorsements[peer_info.name].success = false;
-							logger.error('%s - endorsement failed - %s', method, error.toString());
+							logger.warn('%s - endorsement failed - %s', method, error.toString());
 						}
 					} else {
 						logger.debug('%s - peer %s not assigned to this channel', method, peer_info.name);
