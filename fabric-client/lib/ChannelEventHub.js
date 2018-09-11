@@ -33,17 +33,6 @@ for (const key of keys) {
 	_header_types[new_key] = key;
 }
 
-// GRPC connection states
-// as seen in grpc/include/grpc/impl/codegen/connectivity_state.h
-const CONNECTION_STATE = {
-	0: 'IDLE',
-	1: 'CONNECTING',
-	2: 'READY',
-	3: 'TRANSIENT_FAILURE',
-	4: 'FATAL_FAILURE',
-	5: 'SHUTDOWN'
-};
-
 // internal use only
 const NO_START_STOP = 0;
 const START_ONLY = 1;
@@ -333,8 +322,7 @@ const ChannelEventHub = class {
 				return;
 			}
 
-			const state = getStreamState(self);
-			logger.debug('on.data - grpc stream state :%s', state);
+			logger.debug('on.data - grpc stream is ready :%s', isStreamReady(self));
 			if (deliverResponse.Type === 'block' || deliverResponse.Type === 'filtered_block') {
 				if (self._connected === true) {
 					logger.debug('on.data - new block received - check event registrations');
@@ -402,8 +390,7 @@ const ChannelEventHub = class {
 				return;
 			}
 
-			const state = getStreamState(self);
-			logger.debug('on.end - grpc stream state :%s', state);
+			logger.debug('on.end - grpc stream is ready :%s', isStreamReady(self));
 			self._disconnect(new Error('Peer event hub has disconnected due to an "end" event'));
 		});
 
@@ -417,8 +404,7 @@ const ChannelEventHub = class {
 				return;
 			}
 
-			const state = getStreamState(self);
-			logger.debug('on.error - grpc stream state :%s', state);
+			logger.debug('on.error - grpc stream is ready :%s', isStreamReady(self));
 			if (err instanceof Error) {
 				self._disconnect(err);
 			}
@@ -694,19 +680,19 @@ const ChannelEventHub = class {
 	}
 
 	/*
-	  * internal method to check state of the connection and if
+	  * internal method to check if the connection is ready and if
 	  * not in the ready state disconnect (post an error to all registered)
 	  * and throw and error to enform the caller
 	  */
 	_checkConnection() {
 		logger.debug('_checkConnection - start');
 		if (this._connected || this._connect_running) {
-			const state = getStreamState(this);
-			logger.debug('_checkConnection -  %s with stream channel state %s', this._peer.getUrl(), getStateText(state));
+			const ready = isStreamReady(this);
+			logger.debug('_checkConnection -  %s with stream channel ready %s', this._peer.getUrl(), ready);
 
-			if (state !== 2 && !this._connect_running) { //Not READY, but trying
-				logger.error('_checkConnection - connection is not in the ready state. state:', getStateText(state));
-				const error = new Error('Connection is not in the READY state');
+			if (!ready && !this._connect_running) { //Not READY, but trying
+				logger.error('_checkConnection - connection is not ready');
+				const error = new Error('Connection is not READY');
 				this._disconnect(error);
 				throw error;
 			}
@@ -718,15 +704,15 @@ const ChannelEventHub = class {
 	}
 
 	/**
-	 * Returns the connection state. and will attempt a restart when forced
+	 * Returns if the stream is ready. and will attempt a restart when forced
 	 *
-	 * @param {boolean} force_reconnect - attempt to reconnect if the state
+	 * @param {boolean} force_reconnect - attempt to reconnect if the stream
 	 *        is not in the 'READY' state
 	 */
 	checkConnection(force_reconnect) {
 		logger.debug('checkConnection - start force_reconnect:%s', force_reconnect);
-		const state = getStreamState(this);
-		logger.debug('checkConnection -  %s with stream channel state %s', this._peer.getUrl(), getStateText(state));
+		const ready = isStreamReady(this);
+		logger.debug('checkConnection -  %s with stream channel ready %s', this._peer.getUrl(), ready);
 
 		if (force_reconnect) {
 			try {
@@ -736,7 +722,7 @@ const ChannelEventHub = class {
 					if (is_paused) {
 						this._stream.resume();
 						logger.debug('checkConnection - grpc resuming ');
-					} else if (state !== 2) {
+					} else if (!ready) {
 						// try to reconnect
 						this._connect_running = false;
 						this._connect(true);
@@ -756,7 +742,7 @@ const ChannelEventHub = class {
 			}
 		}
 
-		return getStateText(state);
+		return isStreamReady(this);
 	}
 
 	/**
@@ -1300,31 +1286,23 @@ function convertValidationCode(code) {
 }
 
 /*
- * Utility method to get the state of the GRPC stream
+ * Utility method to check if the stream is ready.
+ * The stream must be readable, writeable and reading to be 'ready'
  */
-function getStreamState(self) {
-	let state = -1;
-	if (self._stream && self._stream.call && self._stream.call.channel_) {
-		state = self._stream.call.channel_.getConnectivityState();
+function isStreamReady(self) {
+	const method = 'isStreamReady';
+	let ready = false;
+	if (self._stream) {
+		const stream = self._stream;
+		ready = stream.readable && stream.writable && stream.reading;
+		logger.debug('%s - stream.readable %s :: %s', method, stream.readable, self.getPeerAddr());
+		logger.debug('%s - stream.writable %s :: %s', method, stream.writable, self.getPeerAddr());
+		logger.debug('%s - stream.reading %s :: %s', method, stream.reading, self.getPeerAddr());
+		logger.debug('%s - stream.read_status %s :: %s', method, stream.read_status, self.getPeerAddr());
+		logger.debug('%s - stream.received_status %s :: %s', method, stream.received_status, self.getPeerAddr());
 	}
 
-	return state;
-}
-
-/*
- * Utility method to get the string state from an integer
- */
-function getStateText(state) {
-	let result = null;
-	try {
-		result = CONNECTION_STATE[state];
-	} catch (error) {
-		logger.error('Connection state conversion - unknown state - %s', state);
-	}
-	if (!result) {
-		result = 'UNKNOWN_STATE';
-	}
-	return result;
+	return ready;
 }
 
 /*
