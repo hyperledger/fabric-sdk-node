@@ -1327,15 +1327,24 @@ const Client = class extends BaseClient {
 						enrollmentSecret: opts.password
 					}).then((enrollment) => {
 						logger.debug('Successfully enrolled user "%s"', opts.username);
+						const cryptoContent = { signedCertPEM: enrollment.certificate };
+						let keyBytes = null;
+						try {
+							keyBytes = enrollment.key.toBytes();
+						} catch(err) {
+							logger.debug('Cannot access enrollment private key bytes');
+						}
+						if (keyBytes != null && keyBytes.startsWith('-----BEGIN')) {
+							cryptoContent.privateKeyPEM = keyBytes;
+						} else {
+							cryptoContent.privateKeyObj = enrollment.key;
+						}
 
 						return self.createUser(
 							{
 								username: opts.username,
 								mspid: mspid,
-								cryptoContent: {
-									privateKeyPEM: enrollment.key.toBytes(),
-									signedCertPEM: enrollment.certificate
-								}
+								cryptoContent: cryptoContent
 							});
 					}).then((member) => {
 						return resolve(member);
