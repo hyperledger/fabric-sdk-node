@@ -91,6 +91,7 @@ class Gateway {
 		}
 
 		Gateway._mergeOptions(this.options, options);
+		logger.debug('connection options: %O', options);
 
 		if (!(config instanceof Client)) {
 			// still use a ccp for the discovery peer and ca information

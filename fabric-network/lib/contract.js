@@ -84,7 +84,7 @@ class Contract {
 
 		const txId = this.gateway.getClient().newTransactionID();
 		// createTxEventHandler() will return null if no event handler is requested
-		const eventHandler = this.eventHandlerFactory.createTxEventHandler(txId.getTransactionID());
+		const eventHandler = this.eventHandlerFactory ? this.eventHandlerFactory.createTxEventHandler(txId.getTransactionID()) : null;
 
 		// Submit the transaction to the endorsers.
 		const request = {

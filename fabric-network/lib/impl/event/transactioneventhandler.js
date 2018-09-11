@@ -27,26 +27,21 @@ class TransactionEventHandler {
 	/**
 	 * Constructor.
 	 * @private
+	 * @param {DefaultEventHandlerManager} manager Event handler manager
 	 * @param {String} transactionId Transaction ID.
-	 * @param {Object} strategy Event strategy implementation.
-	 * @param {TransactionEventHandlerOptions} [options] Additional options.
 	 */
-	constructor(transactionId, strategy, options) {
+	constructor(manager, transactionId) {
 		this.transactionId = transactionId;
-		this.strategy = strategy;
+		this.strategy = manager.eventStrategy;
 
 		const defaultOptions = {
-			timeout: 0 // No timeout by default
+			commitTimeout: 0 // No timeout by default
 		};
-		this.options = Object.assign(defaultOptions, options);
+		this.options = Object.assign(defaultOptions, manager.options);
 
 		logger.debug('constructor:', util.format('transactionId = %s, options = %O', this.transactionId, this.options));
 
-		this.eventHubs = [];
-		// Kick off the async connection of event hubs as early as possible
-		this.eventHubsConnectionPromise = strategy.getConnectedEventHubs().then((eventHubs) => {
-			this.eventHubs = eventHubs;
-		});
+		this.eventHubs = manager.getEventHubs();
 
 		this.notificationPromise = new Promise((resolve, reject) => {
 			this._txResolve = resolve;
@@ -59,7 +54,6 @@ class TransactionEventHandler {
 	 * @async
 	 */
 	async startListening() {
-		await this.eventHubsConnectionPromise;
 		this._setListenTimeout();
 
 		for (const eventHub of this.eventHubs) {
@@ -72,15 +66,15 @@ class TransactionEventHandler {
 	}
 
 	_setListenTimeout() {
-		if (this.options.timeout <= 0) {
+		if (this.options.commitTimeout <= 0) {
 			return;
 		}
 
-		logger.debug('_setListenTimeout:', `setTimeout(${this.options.timeout}) for transaction ${this.transactionId}`);
+		logger.debug('_setListenTimeout:', `setTimeout(${this.options.commitTimeout}) for transaction ${this.transactionId}`);
 
 		this.timeoutHandler = setTimeout(() => {
-			this._strategyFail(new Error('Event strategy not satisified within the timeout period'));
-		}, this.options.timeout * 1000);
+			this._strategyFail(new Error('Event strategy not satisfied within the timeout period'));
+		}, this.options.commitTimeout * 1000);
 	}
 
 	_onEvent(eventHub, txId, code) {
