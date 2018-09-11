@@ -15,18 +15,18 @@ const fs = require('fs-extra');
 const targz = require('targz');
 
 const Packager = require('fabric-client/lib/Packager.js');
-var Node = require('fabric-client/lib/packager/Node.js');
-var Golang = require('fabric-client/lib/packager/Golang.js');
+const Node = require('fabric-client/lib/packager/Node.js');
+const Golang = require('fabric-client/lib/packager/Golang.js');
 
 
 
-test('\n\n** BasePackager tests **\n\n', function(t) {
-	var keep = [
+test('\n\n** BasePackager tests **\n\n', (t) => {
+	const keep = [
 		'.keep',
 		'.keep2'
 	];
 	// test with concrete implementations
-	var node = new Node(keep);
+	const node = new Node(keep);
 	t.equal(node.isSource('path/src.keep'), true, 'Node.isSource() should return true for valid extension ".keep"');
 	t.equal(node.isSource('path/src.keep2'), true, 'Node.isSource() should return true for valid extension ".keep2"');
 	t.equal(node.isSource('path/src.keep3'), false, 'Node.isSource() should return false for invalid extension ".keep3"');
@@ -34,7 +34,7 @@ test('\n\n** BasePackager tests **\n\n', function(t) {
 	t.equal(node.isMetadata('path/metadata.notjson'), false, 'Node.isMetadata() should return false for invalid extension ".notjson"');
 	node.findMetadataDescriptors(testutil.METADATA_PATH)
 		.then((descriptors) => {
-			let expected = 'META-INF/statedb/couchdb/indexes/index.json';
+			const expected = 'META-INF/statedb/couchdb/indexes/index.json';
 			t.equal(descriptors.length, 1, 'Expected Node.findMetadataDescriptors() to return one valid descriptor');
 			t.equal(descriptors[0].name, expected, 'Node.findMetadataDescriptors() should return valid descriptor name');
 		}).catch((err) => {
@@ -42,7 +42,7 @@ test('\n\n** BasePackager tests **\n\n', function(t) {
 			t.comment(err.stack ? err.stack : err);
 		});
 
-	var golang = new Golang(keep);
+	const golang = new Golang(keep);
 	t.equal(golang.isSource('path/src.keep'), true, 'Golang.isSource() should return true for valid extension ".keep"');
 	t.equal(golang.isSource('path/src.keep2'), true, 'Golang.isSource() should return true for valid extension ".keep2"');
 	t.equal(golang.isSource('path/src.keep3'), false, 'Golang.isSource() should return false for invalid extension ".keep3"');
@@ -50,7 +50,7 @@ test('\n\n** BasePackager tests **\n\n', function(t) {
 	t.equal(golang.isMetadata('path/metadata.notjson'), false, 'Golang.isMetadata() should return false for invalid extension ".notjson"');
 	golang.findMetadataDescriptors(testutil.METADATA_PATH)
 		.then((descriptors) => {
-			let expected = 'META-INF/statedb/couchdb/indexes/index.json';
+			const expected = 'META-INF/statedb/couchdb/indexes/index.json';
 			t.equal(descriptors.length, 1, 'Expected Golang.findMetadataDescriptors() to return one valid descriptor');
 			t.equal(descriptors[0].name, expected, 'Golang.findMetadataDescriptors() should return valid descriptor name');
 		}).catch((err) => {
@@ -68,7 +68,7 @@ test('\n\n** BasePackager tests **\n\n', function(t) {
 	t.end();
 });
 
-test('\n\n** Golang Packager tests **\n\n', function(t) {
+test('\n\n** Golang Packager tests **\n\n', (t) => {
 	Packager.package('blah','',true)
 		.then((data) => {
 			t.equal(data, null, 'Channel.packageChaincode() should return null for dev mode');
@@ -78,7 +78,7 @@ test('\n\n** Golang Packager tests **\n\n', function(t) {
 			t.end();
 		},
 		(err) => {
-			let msg = 'Missing chaincodePath parameter';
+			const msg = 'Missing chaincodePath parameter';
 			if (err.message.indexOf(msg) >= 0) {
 				t.pass('Should throw error: '+msg);
 			} else {
@@ -96,7 +96,7 @@ test('\n\n** Golang Packager tests **\n\n', function(t) {
 			t.end();
 		},
 		(err)=>{
-			let msg = 'ENOENT: no such file or directory';
+			const msg = 'ENOENT: no such file or directory';
 			if (err.message.indexOf(msg) >= 0) {
 				t.pass('Should throw error: ' + msg);
 			} else {
@@ -106,8 +106,8 @@ test('\n\n** Golang Packager tests **\n\n', function(t) {
 
 			return Packager.package(testutil.CHAINCODE_PATH,'',false);
 		}).then((data) => {
-			let tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
-			let destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
+			const tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
+			const destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
 			fs.writeFileSync(tmpFile, data);
 			fs.removeSync(destDir);
 			targz.decompress({
@@ -134,7 +134,7 @@ test('\n\n** Golang Packager tests **\n\n', function(t) {
 			}, (err) => {
 				if (err) {
 					t.fail('Failed to extract generated chaincode package. ' + err);
-					let checkPath = path.join(destDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
+					const checkPath = path.join(destDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
 					t.equal(fs.existsSync(checkPath), true,
 						'The tar.gz file produced by Packager.package() has the "META-INF/statedb/couchdb/indexes/index.json" file');
 				}
@@ -170,7 +170,7 @@ function check(data, checkFcn) {
 	});
 }
 
-test('\n\n** Node.js Packager tests **\n\n', function(t) {
+test('\n\n** Node.js Packager tests **\n\n', (t) => {
 	Packager.package(testutil.NODE_CHAINCODE_PATH, 'node', true)
 		.then((data) => {
 			t.equal(data, null, 'Should return null when packaging for dev mode');
@@ -179,7 +179,7 @@ test('\n\n** Node.js Packager tests **\n\n', function(t) {
 			t.fail('Packager.package() should have rejected a call that does not have valid chaincodePath parameter');
 			t.end();
 		},(err)=>{
-			let msg = 'ENOENT: no such file or directory';
+			const msg = 'ENOENT: no such file or directory';
 			if (err.message.indexOf(msg) >= 0) {
 				t.pass('Should throw error: ' + msg);
 			} else {
@@ -238,7 +238,7 @@ test('\n\n** Node.js Packager tests **\n\n', function(t) {
 			return Packager.package(destDir, 'node', false, testutil.METADATA_PATH);
 		}).then((data) => {
 			return check(data, () => {
-				let checkPath = path.join(targzDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
+				const checkPath = path.join(targzDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
 				t.equal(fs.existsSync(checkPath), true,
 					'The tar.gz file produced by Packager.package() has the "META-INF/statedb/couchdb/indexes/index.json" file');
 			});
@@ -250,3 +250,61 @@ test('\n\n** Node.js Packager tests **\n\n', function(t) {
 			t.end();
 		});
 });
+
+test('\n\n** Java chaincode Packager tests **\n\n', async (t) => {
+	try {
+		const dev_mode_package = await Packager.package(testutil.JAVA_CHAINCODE_PATH, 'java', true);
+		t.equal(dev_mode_package, null, 'Should return null when packaging for dev mode');
+		try {
+			await Packager.package('blah', 'java', false);
+			t.fail('Packager.package() should have rejected a call that does not have valid chaincodePath parameter');
+		} catch(error) {
+			const msg = 'ENOENT: no such file or directory';
+			if (error.message.indexOf(msg) >= 0) {
+				t.pass('Should throw error: ' + msg);
+			} else {
+				t.fail(error.message + 'should be' + msg);
+				t.end();
+			}
+		}
+
+		const destDir = path.join(testutil.getTempDir(), 'test-java-chaincode');
+		const tmpFile = path.join(testutil.getTempDir(), 'test-java-chaincode.tar.gz');
+		const targzDir = path.join(testutil.getTempDir(), 'test-java-chaincode-tar-gz');
+
+		fs.removeSync(destDir);
+		fs.copySync(testutil.JAVA_CHAINCODE_PATH, destDir);
+
+		const real_package = await Packager.package(destDir, 'java', false);
+		await processPackage(real_package, tmpFile, targzDir);
+		let checkPath = path.join(targzDir, 'src', 'src', 'main', 'java', 'org', 'hyperledger', 'fabric', 'example', 'SimpleChaincode.java');
+		t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "SimpleChaincode.java" file');
+
+		const meta_package = await Packager.package(destDir, 'java', false, testutil.METADATA_PATH);
+		await processPackage(meta_package, tmpFile, targzDir);
+		checkPath = path.join(targzDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
+		t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "META-INF/statedb/couchdb/indexes/index.json" file');
+	} catch(overall_error) {
+		t.fail('Caught error in Java Package.package tests');
+		t.comment(overall_error.stack ? overall_error.stack : overall_error);
+	}
+
+	t.end();
+
+});
+
+function processPackage(data, tmpFile, targzDir) {
+	return new Promise((resolve, reject) => {
+		fs.writeFileSync(tmpFile, data);
+		fs.removeSync(targzDir);
+		targz.decompress({
+			src: tmpFile,
+			dest: targzDir
+		}, (err) => {
+			if (err){
+				reject('Failed to extract generated chaincode package. ' + err);
+			}
+			resolve();
+		});
+	});
+}
