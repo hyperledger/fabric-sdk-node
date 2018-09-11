@@ -8,8 +8,7 @@
 const FabricConstants = require('fabric-client/lib/Constants');
 const Contract = require('./contract');
 const logger = require('./logger').getLogger('Network');
-const EventHubFactory = require('./impl/event/eventhubfactory');
-const TransactionEventHandler = require('./impl/event/transactioneventhandler');
+const DefaultEventHandlerManager = require('./impl/event/defaulteventhandlermanager');
 const util = require('util');
 
 class Network {
@@ -25,25 +24,8 @@ class Network {
 
 		this.gateway = gateway;
 		this.channel = channel;
-
-		this.eventHandlerFactory = {
-			createTxEventHandler: () => null
-		};
-		const createEventStrategyFn = gateway.getOptions().eventHandlerOptions.strategy;
-		if (createEventStrategyFn) {
-			const self = this;
-			const eventHubFactory = new EventHubFactory(channel);
-			const mspId = gateway.getCurrentIdentity()._mspId;
-			const commitTimeout = gateway.getOptions().eventHandlerOptions.commitTimeout;
-			this.eventHandlerFactory.createTxEventHandler = (txId) => {
-				const eventStrategy = createEventStrategyFn(eventHubFactory, self, mspId);
-				return new TransactionEventHandler(txId, eventStrategy, { timeout: commitTimeout });
-			};
-		}
-
 		this.contracts = new Map();
 		this.initialized = false;
-		this.queryHandler;
 	}
 
 	/**
@@ -140,6 +122,7 @@ class Network {
 
 		await this._initializeInternalChannel();
 		this.peerMap = this._mapPeersToMSPid();
+		this.eventHandlerManager = await this._createEventHandlerManager();
 		this.queryHandler = await this.gateway._createQueryHandler(this.channel, this.peerMap);
 		this.initialized = true;
 	}
@@ -175,11 +158,27 @@ class Network {
 				chaincodeId,
 				this.gateway,
 				this.queryHandler,
-				this.eventHandlerFactory
+				this.eventHandlerManager
 			);
 			this.contracts.set(chaincodeId, contract);
 		}
 		return contract;
+	}
+
+	async _createEventHandlerManager() {
+		const createEventStrategyFn = this.gateway.getOptions().eventHandlerOptions.strategy;
+		if (createEventStrategyFn) {
+			const currentmspId = this.gateway.getCurrentIdentity()._mspId;
+			const eventHandlerManager = new DefaultEventHandlerManager(
+				this,
+				currentmspId,
+				this.gateway.getOptions().eventHandlerOptions
+			);
+			await eventHandlerManager.initialize();
+			return eventHandlerManager;
+		}
+		return null;
+
 	}
 
 	_dispose() {
@@ -189,6 +188,10 @@ class Network {
 		// network._dispose() followed by network.initialize() be safe ?
 		// make this private is the safest option.
 		this.contracts.clear();
+		if (this.eventHandlerManager) {
+			this.eventHandlerManager.dispose();
+		}
+
 		if (this.queryHandler) {
 			this.queryHandler.dispose();
 		}

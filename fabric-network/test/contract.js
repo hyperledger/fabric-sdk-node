@@ -192,7 +192,35 @@ describe('Contract', () => {
 				});
 		});
 
-		it('should submit an invoke request to the chaincode which does return data', () => {
+		it('should submit an invoke request to the chaincode which does not return data', () => {
+			const proposalResponses = [{
+				response: {
+					status: 200
+				}
+			}];
+			const proposal = { proposal: 'i do' };
+			const header = { header: 'gooooal' };
+			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
+			// This is the commit proposal and response (from the orderer).
+			const response = {
+				status: 'SUCCESS'
+			};
+			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
+			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
+				.then((result) => {
+					should.equal(result, null);
+					sinon.assert.calledOnce(mockChannel.sendTransactionProposal);
+					sinon.assert.calledWith(mockChannel.sendTransactionProposal, {
+						chaincodeId: 'someid',
+						txId: mockTransactionID,
+						fcn: 'myfunc',
+						args: ['arg1', 'arg2']
+					});
+					sinon.assert.calledOnce(mockChannel.sendTransaction);
+				});
+		});
+
+		it('should submit an invoke request to the chaincode with no event handler', () => {
 			const proposalResponses = [{
 				response: {
 					status: 200,
@@ -208,6 +236,7 @@ describe('Contract', () => {
 				status: 'SUCCESS'
 			};
 			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
+			contract.eventHandlerFactory = null;
 			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
 				.then((result) => {
 					result.should.equal('hello world');

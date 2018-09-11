@@ -414,6 +414,7 @@ describe('Gateway', () => {
 			mockPeer1.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
 			const peerArray = [mockPeer1];
 			mockInternalChannel.getPeers.returns(peerArray);
+			mockInternalChannel.getChannelEventHub.returns({isconnected: () => true, getName: () => 'myeventhub'});
 		});
 
 		describe('#getNetwork', () => {
@@ -423,7 +424,7 @@ describe('Gateway', () => {
 
 			it('should create a non-existent network object', async () => {
 				mockClient.getChannel.withArgs('bar').returns(mockInternalChannel);
-				gateway.getCurrentIdentity = sinon.stub().returns({ _mspId: 'MSP_ID' });
+				gateway.getCurrentIdentity = sinon.stub().returns({ _mspId: 'MSP01' });
 
 				const network2 = await gateway.getNetwork('bar');
 				network2.should.be.instanceof(Network);

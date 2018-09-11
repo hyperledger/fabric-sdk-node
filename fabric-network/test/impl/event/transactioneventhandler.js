@@ -14,11 +14,14 @@ const sinon = require('sinon');
 const ChannelEventHub = require('fabric-client').ChannelEventHub;
 
 const TransactionEventHandler = require('../../../lib/impl/event/transactioneventhandler');
+const DefaultEventHandlerManager = require('../../../lib/impl/event/defaulteventhandlermanager');
+const EventHandlerStrategies = require('../../../lib/impl/event/defaulteventhandlerstrategies');
 
 describe('TransactionEventHandler', () => {
 	const transactionId = 'TRANSACTION_ID';
 	let stubEventHub;
 	let stubStrategy;
+	let stubEventHandlerManager;
 
 	beforeEach(() => {
 		// Include _stubInfo property on stubs to enable easier equality comparison in tests
@@ -40,26 +43,30 @@ describe('TransactionEventHandler', () => {
 			eventReceived: sinon.stub(),
 			errorReceived: sinon.stub()
 		};
+
+		stubEventHandlerManager = sinon.createStubInstance(DefaultEventHandlerManager);
+		stubEventHandlerManager.getEventHubs.returns([stubEventHub]);
+		stubEventHandlerManager.options = {
+			commitTimeout: 300
+		};
+		stubEventHandlerManager.eventStrategy = stubStrategy;
+		stubEventHandlerManager.availableEventHubs = [stubEventHub];
 	});
 
 	describe('#constructor', () => {
 		it('has a default timeout if no options supplied', () => {
-			const handler = new TransactionEventHandler(transactionId, stubStrategy);
-			expect(handler.options.timeout).to.be.a('Number');
+			const handler = new TransactionEventHandler(stubEventHandlerManager, transactionId);
+			expect(handler.options.commitTimeout).to.be.a('Number');
+			handler.strategy.should.equal(stubStrategy);
 		});
 
-		it('allows a timeout option to be specified', () => {
-			const timeout = 418;
-			const handler = new TransactionEventHandler(transactionId, stubStrategy, { timeout: timeout });
-			expect(handler.options.timeout).to.equal(timeout);
-		});
 	});
 
 	describe('event handling:', () => {
 		let handler;
 
 		beforeEach(() => {
-			handler = new TransactionEventHandler(transactionId, stubStrategy);
+			handler = new TransactionEventHandler(stubEventHandlerManager, transactionId);
 		});
 
 		afterEach(() => {
@@ -163,27 +170,25 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('fails on timeout if timeout set', async () => {
-			handler = new TransactionEventHandler(transactionId, stubStrategy, { timeout: 418 });
+			stubEventHandlerManager.options = {
+				strategy: stubStrategy,
+				commitTimeout: 418
+			};
+			handler = new TransactionEventHandler(stubEventHandlerManager, transactionId);
 			await handler.startListening();
 			const promise = handler.waitForEvents();
 			clock.runAll();
-			return expect(promise).to.be.rejectedWith('Event strategy not satisified within the timeout period');
-		});
-
-		it('does not timeout if timeout not set', async () => {
-			stubStrategy.eventReceived = ((successFn, failFn) => successFn());
-
-			handler = new TransactionEventHandler(transactionId, stubStrategy);
-			await handler.startListening();
-			clock.runAll();
-			stubEventHub._onEventFn(transactionId, 'VALID');
-			return expect(handler.waitForEvents()).to.be.fulfilled;
+			return expect(promise).to.be.rejectedWith('Event strategy not satisfied within the timeout period');
 		});
 
 		it('does not timeout if timeout set to zero', async () => {
 			stubStrategy.eventReceived = ((successFn, failFn) => successFn());
 
-			handler = new TransactionEventHandler(transactionId, stubStrategy, { timeout: 0 });
+			stubEventHandlerManager.options = {
+				strategy: stubStrategy,
+				commitTimeout: 0
+			};
+			handler = new TransactionEventHandler(stubEventHandlerManager, transactionId);
 			await handler.startListening();
 			clock.runAll();
 			stubEventHub._onEventFn(transactionId, 'VALID');
