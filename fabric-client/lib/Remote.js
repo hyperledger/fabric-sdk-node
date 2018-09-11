@@ -128,6 +128,7 @@ class Remote {
 	}
 
 	waitForReady(client) {
+		const self = this;
 		if (!client) {
 			throw new Error('Missing required gRPC client');
 		}
@@ -136,6 +137,9 @@ class Remote {
 		return new Promise((resolve, reject) => {
 			client.waitForReady(timeout, (err) => {
 				if (err) {
+					if(err.message) {
+						err.message = err.message + ' URL:'+ self.getUrl();
+					}
 					logger.error(err);
 
 					return reject(err);
