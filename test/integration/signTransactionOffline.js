@@ -82,8 +82,7 @@ function sign(privateKey, proposalBytes, algorithm, keySize) {
 	return Buffer.from(sig.toDER());
 }
 
-function signProposal(proposal) {
-	const proposalBytes = proposal.toBuffer();
+function signProposal(proposalBytes) {
 	const signature = sign(privateKeyPem, proposalBytes, 'sha2', 256);
 	const signedProposal = { signature, proposal_bytes: proposalBytes };
 	return signedProposal;
@@ -136,6 +135,42 @@ async function setupChannel() {
 	return channel;
 }
 
+async function transactionMonitor(txId, eh, t) {
+	return new Promise((resolve, reject) => {
+		const handle = setTimeout(() => {
+			t.fail('Timeout - Failed to receive event for txId ' + txId);
+			eh.disconnect(); //shutdown
+			throw new Error('TIMEOUT - no event received');
+		}, 60000);
+
+		eh.registerTxEvent(txId, (txnid, code, block_num) => {
+			clearTimeout(handle);
+			t.pass('Event has been seen with transaction code:' + code + ' for transaction id:' + txnid + ' for block_num:' + block_num);
+			resolve('Got the replayed transaction');
+		}, (error) => {
+			clearTimeout(handle);
+			t.fail('Failed to receive event replay for Event for transaction id ::' + txId);
+			reject(error);
+		}, { disconnect: true }
+			// Setting the disconnect to true as we do not want to use this
+			// ChannelEventHub after the event we are looking for comes in
+		);
+		t.pass('Successfully registered event for ' + txId);
+
+		const unsignedEvent = eh.generateUnsignedRegistration({
+			certificate: certPem,
+			mspId,
+		});
+		const signedProposal = signProposal(unsignedEvent);
+		const signedEvent = {
+			signature: signedProposal.signature,
+			payload: signedProposal.proposal_bytes,
+		};
+		eh.connect({ signedEvent });
+		t.pass('Successfully called connect on ' + eh.getPeerAddr());
+	});
+}
+
 test('Test sign a contract with a private key offline', async (t) => {
 	try {
 		const channel = await setupChannel();
@@ -148,7 +183,7 @@ test('Test sign a contract with a private key offline', async (t) => {
 		};
 
 		const { proposal, txId } = channel.generateUnsignedProposal(transactionProposalReq, mspId, certPem);
-		const signedProposal = signProposal(proposal);
+		const signedProposal = signProposal(proposal.toBuffer());
 		t.pass('Successfully build endorse transaction proposal');
 
 		const peer = channel.getPeer('localhost:7051');
@@ -174,13 +209,17 @@ test('Test sign a contract with a private key offline', async (t) => {
 		t.pass('Successfully build commit transaction proposal');
 
 		// sign this commit proposal at local
-		const signedCommitProposal = signProposal(commitProposal);
+		const signedCommitProposal = signProposal(commitProposal.toBuffer());
 
 		const response = await channel.sendSignedTransaction({
 			signedProposal: signedCommitProposal,
 			request: commitReq,
 		});
 		t.equal(response.status, 'SUCCESS', 'commit should response success');
+
+		const eh = channel.newChannelEventHub(peer);
+		await transactionMonitor(txId.getTransactionID(), eh, t);
+		t.pass(`Successfully listened the event for transaction ${txId.getTransactionID()}`);
 
 		t.end();
 	} catch (e) {
