@@ -38,7 +38,7 @@ const aHost = 'atesthostname:9999';
 const url = 'grpcs://' + aHost;
 const aHostnameOverride = 'atesthostnameoverride';
 
-test('\n\n ** Remote node tests **\n\n', function (t) {
+test('\n\n ** Remote node tests **\n\n', async function (t) {
 	testutil.resetDefaults();
 
 	t.comment('\n * REMOTE *');
@@ -141,6 +141,17 @@ test('\n\n ** Remote node tests **\n\n', function (t) {
 		},
 		'Check not passing any GRPC options.'
 	);
+
+	peer = new Peer(url, {pem: aPem, clientKey: aPem, clientCert: aPem});
+	try {
+		await peer.sendProposal({}, 100);
+	} catch(error) {
+		if(error.toString().includes(peer.getUrl())) {
+			t.pass('Successfully got the waitForReady URL address error');
+		} else {
+			t.fail('Failed to get the waitForReady URL address error');
+		}
+	}
 
 	opts = { pem: aPem, 'ssl-target-name-override': aHostnameOverride };
 	peer = new Peer(url, opts);
