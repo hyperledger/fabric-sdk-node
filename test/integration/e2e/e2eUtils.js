@@ -782,7 +782,8 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 				chaincodeId : chaincodeId,
 				txId: tx_id,
 				fcn: fcn,
-				args: args
+				args: args,
+				request_timeout: 3000
 			};
 
 			// find the peers that match the targets
