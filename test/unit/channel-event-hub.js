@@ -871,14 +871,27 @@ test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
 				}
 			);
 
-			let state = event_hub.checkConnection();
-			t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
+			let ready = event_hub.checkConnection();
+			if(ready) {
+				t.fail('Connection should be not ready');
+			} else {
+				t.pass('Connection should be not ready');
+			}
 
 			// force the connections
 			// runs asynchronously, must be an error callback registered to get the
 			// failure will be reported to an error callback
-			state = event_hub.checkConnection(true);
-			t.equals(state, 'UNKNOWN_STATE', 'Check the state of the connection');
+			try {
+				ready = event_hub.checkConnection(true);
+				if(ready) {
+					t.fail('Connection should be not ready after a force');
+				} else {
+					t.pass('Connection should be not ready after a force');
+				}
+			} catch(error) {
+				t.fail('Connection ready test failed with %s', error);
+			}
+
 
 			return true;
 		}).then(() => {
@@ -889,18 +902,4 @@ test('\n\n** EventHub test reconnect on block registration \n\n', (t) => {
 			t.end();
 		});
 
-});
-
-test('\n\n** Test the state conversion\n\n', (t) => {
-	const getStateText = RewiredChannelEventHub.__get__('getStateText');
-
-	t.equals(getStateText(0), 'IDLE', 'Checking that 0 state');
-	t.equals(getStateText(1), 'CONNECTING', 'Checking that 1 state');
-	t.equals(getStateText(2), 'READY', 'Checking that 2 state');
-	t.equals(getStateText(3), 'TRANSIENT_FAILURE', 'Checking that 3 state');
-	t.equals(getStateText(4), 'FATAL_FAILURE', 'Checking that 4 state');
-	t.equals(getStateText(5), 'SHUTDOWN', 'Checking that 5 state');
-	t.equals(getStateText(99), 'UNKNOWN_STATE', 'Checking that 99 state');
-
-	t.end();
 });
