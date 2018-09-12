@@ -1,3 +1,10 @@
+## v1.2.2
+Wed Sep 12 13:14:15 EDT 2018
+
+* [af91033](https://github.com/hyperledger/fabric-sdk-node/commit/af91033) [FABN-848](https://jira.hyperledger.org/browse/FABN-848) setUserFromConfig fails when using HSM
+* [4feacbd](https://github.com/hyperledger/fabric-sdk-node/commit/4feacbd) [FABN-850](https://jira.hyperledger.org/browse/FABN-850) Added inclusion of .s files on compilation
+* [d859f9a](https://github.com/hyperledger/fabric-sdk-node/commit/d859f9a) [FAB-11259](https://jira.hyperledger.org/browse/FAB-11259) Pipeline job configuration
+
 ## v1.2.1
 Mon 30 Jul 2018 14:36:56 BST
 
