@@ -1,19 +1,26 @@
-/**
- * Copyright 2016, 2018 IBM All Rights Reserved.
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- SPDX-License-Identifier: Apache-2.0
-
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 'use strict';
 
-var nconf = require('nconf');
+const nconf = require('nconf');
 
 //
 // The class representing the hierarchy of configuration settings.
 //
 
-var Config = class {
+const Config = class {
 
 	constructor() {
 		nconf.use('memory');
@@ -31,8 +38,8 @@ var Config = class {
 	//	 names to configuration (lower case and dashes) style names
 	//
 	mapSettings(store, settings) {
-		for(var key in settings) {
-			var value = settings[key];
+		for(let key in settings) {
+			const value = settings[key];
 			key = key.toLowerCase();
 			key = key.replace(/_/g, '-');
 			store.set(key,value);
@@ -46,7 +53,7 @@ var Config = class {
 	//
 	reorderFileStores(path, bottom) {
 		// first remove all the file stores
-		for(let x in this._fileStores) {
+		for(const x in this._fileStores) {
 			this._config.remove(this._fileStores[x]);
 		}
 
@@ -59,8 +66,8 @@ var Config = class {
 		}
 
 		// now load all the file stores
-		for(let x in this._fileStores) {
-			var name = this._fileStores[x];
+		for(const x in this._fileStores) {
+			const name = this._fileStores[x];
 			this._config.file(name, name);
 		}
 	}
@@ -81,7 +88,7 @@ var Config = class {
 	//   If the setting is not found returns the default value provided.
 	//
 	get(name, default_value) {
-		var return_value = null;
+		let return_value = null;
 
 		try {
 			return_value = this._config.get(name);
