@@ -1,7 +1,15 @@
-/**
- * Copyright 2016-2017 IBM All Rights Reserved.
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * SPDX-License-Identifier: Apache-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 'use strict';
@@ -38,7 +46,7 @@ const aHost = 'atesthostname:9999';
 const url = 'grpcs://' + aHost;
 const aHostnameOverride = 'atesthostnameoverride';
 
-test('\n\n ** Remote node tests **\n\n', async function (t) {
+test('\n\n ** Remote node tests **\n\n', async (t) => {
 	testutil.resetDefaults();
 
 	t.comment('\n * REMOTE *');
@@ -46,7 +54,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	let opts = { pem: aPem };
 	let remote = null;
 	t.throws(
-		function () {
+		() => {
 			remote = new Remote(url);
 		},
 		/^Error: PEM encoded certificate is required./,
@@ -54,14 +62,14 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	);
 
 	t.doesNotThrow(
-		function () {
+		() => {
 			remote = new Remote(url, {pem: aPem});
 		},
 		'Check not passing any GRPC options.'
 	);
 
 	t.throws(
-		function () {
+		() => {
 			remote = new Remote(url, {pem: aPem, clientKey: aPem});
 		},
 		/^Error: clientKey and clientCert are both required./,
@@ -69,7 +77,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			remote = new Remote(url, {pem: aPem, clientCert: aPem});
 		},
 		/^Error: clientKey and clientCert are both required./,
@@ -77,14 +85,14 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	);
 
 	t.doesNotThrow(
-		function () {
+		() => {
 			remote = new Remote(url, {pem: aPem, clientKey: aPem, clientCert: aPem});
 		},
 		'Pass valid client certificate options.'
 	);
 
 	t.throws(
-		function () {
+		() => {
 			remote = new Remote(url, {pem: aPem, anyStringKey: Buffer.alloc(1)});
 		},
 		/invalid grpc option value/,
@@ -92,7 +100,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	);
 
 	t.doesNotThrow(
-		function () {
+		() => {
 			remote = new Remote(url, {pem: aPem, [Symbol(1)]: ''});
 		},
 		'GRPC Options tests: non-string option key is allowed but ignored'
@@ -100,7 +108,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 
 	opts = {pem: aPem, 'grpc-wait-for-ready-timeout': '1000'};
 	t.throws(
-		function () {
+		() => {
 			remote = new Remote(url, opts);
 		},
 		/^Error: Expect an integer value of grpc-wait-for-ready-timeout, found string/,
@@ -136,7 +144,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	opts = { pem: aPem };
 	let peer = null;
 	t.doesNotThrow(
-		function () {
+		() => {
 			peer = new Peer(url, opts);
 		},
 		'Check not passing any GRPC options.'
@@ -167,7 +175,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	t.equal(peer.getUrl(), url, 'checking that getURL works');
 
 	t.throws(
-		function () {
+		() => {
 			peer = new Peer('http://somehost:8888', opts);
 		},
 		/^InvalidProtocol: Invalid protocol: http./,
@@ -177,7 +185,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 
 	opts = {};
 	t.throws(
-		function () {
+		() => {
 			peer = new Peer(url, opts);
 		},
 		/^Error: PEM encoded certificate is required./,
@@ -186,7 +194,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			peer = new Peer(url);
 		},
 		/^Error: PEM encoded certificate is required./,
@@ -196,7 +204,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 
 	opts = {pem: aPem, clientKey: aPem, clientCert: aPem};
 	t.doesNotThrow(
-		function () {
+		() => {
 			peer = new Peer(url, opts);
 		},
 		'Pass valid client certificate options.'
@@ -204,7 +212,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 
 	opts = {pem: aPem, clientKey: aPem};
 	t.throws(
-		function () {
+		() => {
 			peer = new Peer(url, opts);
 		},
 		/^Error: clientKey and clientCert are both required./,
@@ -214,7 +222,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 
 	opts = {pem: aPem, clientCert: aPem};
 	t.throws(
-		function () {
+		() => {
 			peer = new Peer(url, opts);
 		},
 		/^Error: clientKey and clientCert are both required./,
@@ -227,7 +235,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	opts = { pem: aPem };
 	let orderer = null;
 	t.doesNotThrow(
-		function () {
+		() => {
 			orderer = new Orderer(url, opts);
 		},
 		'Check not passing any GRPC options.'
@@ -250,7 +258,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	t.equals(orderer._request_timeout, 2000, 'checking that the request timeout was set using the passed in value');
 
 	t.throws(
-		function () {
+		() => {
 			orderer = new Orderer('http://somehost:8888', opts);
 		},
 		/^InvalidProtocol: Invalid protocol: http./,
@@ -260,7 +268,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 
 	opts = {};
 	t.throws(
-		function () {
+		() => {
 			orderer = new Orderer(url, opts);
 		},
 		/^Error: PEM encoded certificate is required./,
@@ -269,7 +277,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 	);
 
 	t.throws(
-		function () {
+		() => {
 			orderer = new Orderer(url);
 		},
 		/^Error: PEM encoded certificate is required./,
@@ -279,7 +287,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 
 	opts = {pem: aPem, clientKey: aPem, clientCert: aPem};
 	t.doesNotThrow(
-		function () {
+		() => {
 			orderer = new Orderer(url, opts);
 		},
 		'Pass valid client certificate options.'
@@ -287,7 +295,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 
 	opts = {pem: aPem, clientKey: aPem};
 	t.throws(
-		function () {
+		() => {
 			orderer = new Orderer(url, opts);
 		},
 		/^Error: clientKey and clientCert are both required./,
@@ -297,7 +305,7 @@ test('\n\n ** Remote node tests **\n\n', async function (t) {
 
 	opts = {pem: aPem, clientCert: aPem};
 	t.throws(
-		function () {
+		() => {
 			orderer = new Orderer(url, opts);
 		},
 		/^Error: clientKey and clientCert are both required./,
