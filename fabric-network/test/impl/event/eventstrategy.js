@@ -128,15 +128,15 @@ describe('Event Strategy Implementations', () => {
 		it('calls success callback on second event of two expected events', () => {
 			strategy.eventReceived(stubSuccessFn, stubFailFn);
 			strategy.eventReceived(stubSuccessFn, stubFailFn);
-			expect(stubSuccessFn.called, 'successFn').to.be.true;
+			expect(stubSuccessFn.calledOnce, 'successFn').to.be.true;
 			expect(stubFailFn.notCalled, 'failFn').to.be.true;
 		});
 
 		it('calls success callback on error then event of two expected events', () => {
 			strategy.errorReceived(stubSuccessFn, stubFailFn);
 			strategy.eventReceived(stubSuccessFn, stubFailFn);
-			sinon.assert.called(stubSuccessFn);
-			sinon.assert.notCalled(stubFailFn);
+			expect(stubSuccessFn.calledOnce, 'successFn').to.be.true;
+			expect(stubFailFn.notCalled, 'failFn').to.be.true;
 		});
 
 		it('does not call callbacks on first error of two expected events', () => {
@@ -149,13 +149,14 @@ describe('Event Strategy Implementations', () => {
 			strategy.errorReceived(stubSuccessFn, stubFailFn);
 			strategy.errorReceived(stubSuccessFn, stubFailFn);
 			expect(stubSuccessFn.notCalled, 'successFn').to.be.true;
-			expect(stubFailFn.called, 'failFn').to.be.true;
+			expect(stubFailFn.calledOnce, 'failFn').to.be.true;
+			expect(stubFailFn.calledWith(sinon.match.instanceOf(Error)), 'failFn(Error)').to.be.true;
 		});
 
 		it('calls success callback on event then error of two expected events', () => {
 			strategy.errorReceived(stubSuccessFn, stubFailFn);
 			strategy.eventReceived(stubSuccessFn, stubFailFn);
-			expect(stubSuccessFn.called, 'successFn').to.be.true;
+			expect(stubSuccessFn.calledOnce, 'successFn').to.be.true;
 			expect(stubFailFn.notCalled, 'failFn').to.be.true;
 		});
 	});
@@ -171,7 +172,7 @@ describe('Event Strategy Implementations', () => {
 
 		it('calls success callback on first event of two expected events', () => {
 			strategy.eventReceived(stubSuccessFn, stubFailFn);
-			expect(stubSuccessFn.called, 'successFn').to.be.true;
+			expect(stubSuccessFn.calledOnce, 'successFn').to.be.true;
 			expect(stubFailFn.notCalled, 'failFn').to.be.true;
 		});
 
@@ -192,7 +193,8 @@ describe('Event Strategy Implementations', () => {
 			strategy.errorReceived(stubSuccessFn, stubFailFn);
 			strategy.errorReceived(stubSuccessFn, stubFailFn);
 			expect(stubSuccessFn.notCalled, 'successFn').to.be.true;
-			expect(stubFailFn.called, 'failFn').to.be.true;
+			expect(stubFailFn.calledOnce, 'failFn').to.be.true;
+			expect(stubFailFn.calledWith(sinon.match.instanceOf(Error)), 'failFn(Error)').to.be.true;
 		});
 	});
 });

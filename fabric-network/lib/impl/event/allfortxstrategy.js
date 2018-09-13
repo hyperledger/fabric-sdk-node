@@ -35,7 +35,7 @@ class AllForTxStrategy extends AbstractEventStrategy {
 			if (counts.success > 0) {
 				successFn();
 			} else {
-				failFn();
+				failFn(new Error('No successful events received'));
 			}
 		}
 	}
