@@ -3093,14 +3093,20 @@ const Channel = class {
 	}
 	/**
 	 * @typedef {Object} ChaincodeQueryRequest
-	 * @property {Peer[]} targets - Optional. The peers that will receive this request,
-	 *                                when not provided the list of peers added to this channel object will be used.
-	 * @property {string} chaincodeId - Required. The id of the chaincode to process the transaction proposal
-	 * @property {map} transientMap - Optional. <string, byte[]> map that can be used by the chaincode but not
-	 *                                  saved in the ledger, such as cryptographic information for encryption
-	 * @property {string} fcn - Optional. The function name to be returned when calling <code>stub.GetFunctionAndParameters()</code>
-	 *                          in the target chaincode. Default is 'invoke'
-	 * @property {string[]} args - An array of string arguments specific to the chaincode's 'Invoke' method
+	 * @property {Peer[]} targets - Optional. The peers that will receive this
+	 *           request, when not provided the list of peers added to this channel
+	 *           object will be used.
+	 * @property {string} chaincodeId - Required. The id of the chaincode to process
+	 *           the transaction proposal
+	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
+	 *           used by the chaincode but not saved in the ledger, such as cryptographic
+	 *           information for encryption
+	 * @property {string} fcn - Optional. The function name to be returned when
+	 *           calling <code>stub.GetFunctionAndParameters()</code>
+	 *           in the target chaincode. Default is 'invoke'
+	 * @property {string[]} args - An array of string arguments specific to the
+	 *           chaincode's 'Invoke' method
+	 * @property {integer} request_timeout - The timeout value to use for this request
 	 */
 
 	/**
@@ -3147,7 +3153,7 @@ const Channel = class {
 			signer: signer
 		};
 
-		const results = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, null);
+		const results = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
 		const responses = results[0];
 		logger.debug('queryByChaincode - results received');
 		if (responses && Array.isArray(responses)) {
