@@ -19,12 +19,6 @@ const util = require('util');
  */
 class TransactionEventHandler {
 	/**
-	 * @typedef {Object} TransactionEventHandlerOptions
-	 * @property {Number} [timeout = 0] Number of seconds to wait for transaction completion. A value of zero indicates
-	 * that the handler should wait indefinitely.
-	 */
-
-	/**
 	 * Constructor.
 	 * @private
 	 * @param {DefaultEventHandlerManager} manager Event handler manager
@@ -42,6 +36,7 @@ class TransactionEventHandler {
 		logger.debug('constructor:', util.format('transactionId = %s, options = %O', this.transactionId, this.options));
 
 		this.eventHubs = manager.getEventHubs();
+		this.respondedEventHubs = new Set();
 
 		this.notificationPromise = new Promise((resolve, reject) => {
 			this._txResolve = resolve;
@@ -73,14 +68,24 @@ class TransactionEventHandler {
 		logger.debug('_setListenTimeout:', `setTimeout(${this.options.commitTimeout}) for transaction ${this.transactionId}`);
 
 		this.timeoutHandler = setTimeout(() => {
-			this._strategyFail(new Error('Event strategy not satisfied within the timeout period'));
+			this._timeoutFail();
 		}, this.options.commitTimeout * 1000);
+	}
+
+	_timeoutFail() {
+		const unrespondedEventHubs = this.eventHubs
+			.filter((eventHub) => !this.respondedEventHubs.has(eventHub))
+			.map((eventHub) => eventHub.getName())
+			.join(', ');
+		const message = 'Event strategy not satisfied within the timeout period. No response received from event hubs: ' + unrespondedEventHubs;
+		this._strategyFail(new Error(message));
 	}
 
 	_onEvent(eventHub, txId, code) {
 		logger.debug('_onEvent:', util.format('received event for %j with code %j', txId, code));
 
 		eventHub.unregisterTxEvent(this.transactionId);
+		this._receivedEventHubResponse(eventHub);
 		if (code !== 'VALID') {
 			const message = util.format('Peer %s has rejected transaction %j with code %j', eventHub.getPeerAddr(), txId, code);
 			this._strategyFail(new Error(message));
@@ -93,7 +98,12 @@ class TransactionEventHandler {
 		logger.info('_onError:', util.format('received error from peer %s: %s', eventHub.getPeerAddr(), err));
 
 		eventHub.unregisterTxEvent(this.transactionId);
+		this._receivedEventHubResponse(eventHub);
 		this.strategy.errorReceived(this._strategySuccess.bind(this), this._strategyFail.bind(this));
+	}
+
+	_receivedEventHubResponse(eventHub) {
+		this.respondedEventHubs.add(eventHub);
 	}
 
 	/**

@@ -12,7 +12,18 @@ const EventHubFactory = require('./eventhubfactory');
 const logger = require('../../logger').getLogger('DefaultEventHandlerManager');
 
 class DefaultEventHandlerManager {
+	/**
+	 * @typedef {Object} EventHandlerOptions
+	 * @property {Number} [timeout = 0] Number of seconds to wait for transaction completion. A value of zero indicates
+	 * that the handler should wait indefinitely.
+	 */
 
+	/**
+	 * Constructor.
+	 * @param {Network} network Network on which events will be processed.
+	 * @param {String} mspId Member Services Provider identifier.
+	 * @param {EventHandlerOptions} options Additional options for event handling behaviour.
+	 */
 	constructor(network, mspId, options) {
 		this.network = network;
 		this.channel = network.channel;

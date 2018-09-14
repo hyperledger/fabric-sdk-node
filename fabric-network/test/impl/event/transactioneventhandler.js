@@ -15,7 +15,6 @@ const ChannelEventHub = require('fabric-client').ChannelEventHub;
 
 const TransactionEventHandler = require('../../../lib/impl/event/transactioneventhandler');
 const DefaultEventHandlerManager = require('../../../lib/impl/event/defaulteventhandlermanager');
-const EventHandlerStrategies = require('../../../lib/impl/event/defaulteventhandlerstrategies');
 
 describe('TransactionEventHandler', () => {
 	const transactionId = 'TRANSACTION_ID';
@@ -193,6 +192,19 @@ describe('TransactionEventHandler', () => {
 			clock.runAll();
 			stubEventHub._onEventFn(transactionId, 'VALID');
 			return expect(handler.waitForEvents()).to.be.fulfilled;
+		});
+
+		it('timeout failure message includes event hubs that have not responded', async () => {
+			stubEventHandlerManager.options = {
+				strategy: stubStrategy,
+				commitTimeout: 418
+			};
+			handler = new TransactionEventHandler(stubEventHandlerManager, transactionId);
+			await handler.startListening();
+			const promise = handler.waitForEvents();
+			clock.runAll();
+			const eventHubName = stubEventHub.getName();
+			return expect(promise).to.be.rejectedWith(eventHubName);
 		});
 	});
 });
