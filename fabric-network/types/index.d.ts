@@ -33,12 +33,12 @@ export enum DefaultEventHandlerStrategies {
 
 export class Gateway {
 	constructor();
-	initialize(ccp: string | Client, options?: InitOptions): Promise<void>;
+	connect(ccp: string | Client, options?: InitOptions): Promise<void>;
 	getCurrentIdentity(): User;
 	getClient(): Client;
 	getOptions(): InitOptions;
 	getNetwork(channelName: string): Promise<Network>;
-	dispose(): void;
+	disconnect(): void;
 }
 
 export class Network {
