@@ -74,7 +74,7 @@ import {
     };
 
 
-    await gateway.initialize('accp', initOpt1);
+    await gateway.connect('accp', initOpt1);
 
     const gateway2: Gateway = new Gateway();
     const client: Client = new Client();
@@ -83,7 +83,7 @@ import {
         identity: 'anod'
     };
 
-    await gateway.initialize(client, opt2);
+    await gateway2.connect(client, opt2);
 
 
     const network: Network = await gateway.getNetwork('a channel');
@@ -102,8 +102,8 @@ import {
 	const deleteDone: Promise<void> = inMemoryWallet.delete('User1@org1.example.com')
 	await deleteDone;
 	await fileSystemWallet.delete('User1@org1.example.com');
-    gateway.dispose();
-    gateway2.dispose();
+    gateway.disconnect();
+    gateway2.disconnect();
 
 })();
 
