@@ -25,10 +25,10 @@ npmPublish() {
 
       echo "===> Incremented UNSTABLE VERSION --> $UNSTABLE_INCREMENT"
 
-      if [ "$1" = "fabric-network" ]; then
-          sed -i 's/\(.*\"fabric-client\"\: \"\)\(.*\)/\1'$CLIENT_VER\"\,'/' package.json
-          sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CA_CLIENT_VER\"\,'/' package.json
-      fi
+      #if [ "$1" = "fabric-network" ]; then
+      #    sed -i 's/\(.*\"fabric-client\"\: \"\)\(.*\)/\1'$CLIENT_VER\"\,'/' package.json
+      #    sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CA_CLIENT_VER\"\,'/' package.json
+      #fi
 
       if [ "$UNSTABLE_VER" = "$CURRENT_RELEASE" ]; then
           # Replace existing version with Incremented $UNSTABLE_VERSION
