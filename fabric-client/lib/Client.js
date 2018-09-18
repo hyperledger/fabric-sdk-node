@@ -206,7 +206,9 @@ const Client = class extends BaseClient {
 	 * @returns {Channel} The uninitialized channel instance.
 	 */
 	newChannel(name) {
-		if (this._channels.get(name)) throw new Error(`Channel ${name} already exists`);
+		if (this._channels.get(name)) {
+			throw new Error(`Channel ${name} already exists`);
+		}
 		const channel = new Channel(name, this);
 		this._channels.set(name, channel);
 		return channel;
@@ -234,15 +236,14 @@ const Client = class extends BaseClient {
 			channel = this._channels.values().next().value;
 		}
 
-		if (channel) return channel;
-		else {
+		if (channel) {
+			return channel;
+		} else {
 			// maybe it is defined in the network config
 			if (this._network_config) {
 				if (!name) {
-					let channel_names = Object.keys(this._network_config._network_config.channels);
-					if (channel_names) {
-						name = channel_names[0];
-					}
+					const channel_names = Object.keys(this._network_config._network_config.channels);
+					name = channel_names[0];
 				}
 				if (name) {
 					channel = this._network_config.getChannel(name);
@@ -397,17 +398,17 @@ const Client = class extends BaseClient {
 		if (!Array.isArray(channel_names)) {
 			channel_names = [channel_names];
 		}
-		let peers = [];
+		const peers = [];
 		const temp_peers = {};
-		for (let i in channel_names) {
+		for (const i in channel_names) {
 			const channel = this.getChannel(channel_names[i]);
 			const channel_peers = channel.getPeersForOrg(this._mspid);
-			for (let j in channel_peers) {
+			for (const j in channel_peers) {
 				const peer = channel_peers[j];
 				temp_peers[peer.getName()] = peer; // will remove duplicates
 			}
 		}
-		for (let name in temp_peers) {
+		for (const name in temp_peers) {
 			//TODO: Need to check the roles but cannot do so at present awaiting fix
 			peers.push(temp_peers[name]);
 		}
@@ -439,11 +440,11 @@ const Client = class extends BaseClient {
 		if (name) {
 			ca_info = this._network_config.getCertificateAuthority(name);
 		} else {
-			let client_config = this._network_config.getClientConfig();
+			const client_config = this._network_config.getClientConfig();
 			if (client_config && client_config.organization) {
-				let organization_config = this._network_config.getOrganization(client_config.organization, true);
+				const organization_config = this._network_config.getOrganization(client_config.organization, true);
 				if (organization_config) {
-					let ca_infos = organization_config.getCertificateAuthorities();
+					const ca_infos = organization_config.getCertificateAuthorities();
 					if (ca_infos.length > 0) {
 						ca_info = ca_infos[0];
 					}
@@ -531,7 +532,7 @@ const Client = class extends BaseClient {
 	 *           client's userContext and a randomly generated nonce value.
 	 */
 	newTransactionID(admin) {
-		if (admin) {
+		if (typeof admin !== 'undefined' && admin !== null) {
 			if (typeof admin === 'boolean') {
 				if (admin) {
 					logger.debug('newTransactionID - getting an admin TransactionID');
@@ -593,7 +594,7 @@ const Client = class extends BaseClient {
 		if (!config) {
 			throw new Error('Channel configuration update parameter is required.');
 		}
-		if (!(config instanceof Buffer)) {
+		if (!Buffer.isBuffer(config)) {
 			throw new Error('Channel configuration update parameter is not in the correct form.');
 		}
 		// should try to use the admin signer if assigned
@@ -682,13 +683,12 @@ const Client = class extends BaseClient {
 	 */
 	async _createOrUpdateChannel(request, have_envelope) {
 		logger.debug('_createOrUpdateChannel - start');
-
 		if (!request) {
-			throw Error('Missing all required input request parameters for initialize channel');
+			throw new Error('Missing all required input request parameters for initialize channel');
 		}
 		if (!request.name) {
 			// verify that we have the name of the new channel
-			throw Error('Missing name request parameter');
+			throw new Error('Missing name request parameter');
 		}
 		if (!request.txId) {
 			throw Error('Missing txId request parameter');
@@ -797,7 +797,7 @@ const Client = class extends BaseClient {
 			throw Error('Peer is required');
 		} else {
 			targets = this.getTargetPeers(request.target);
-			if(!targets && !targets[0]) {
+			if (!targets && !targets[0]) {
 				throw Error('Peer not found');
 			}
 		}
@@ -813,15 +813,14 @@ const Client = class extends BaseClient {
 			// create dummy channel just to use the dicovery code
 			// since channel does not exist only the local query will work
 			const channel = new Channel('discover-peers', this);
-			const results = {};
 
 			const discovery_results = await channel._discover(discover_request);
 
 			return discovery_results;
 		}
-		catch(error) {
+		catch (error) {
 			logger.error(error);
-			throw Error('Failed to discover local peers ::'+ error.toString());
+			throw Error('Failed to discover local peers ::' + error.toString());
 		}
 	}
 
@@ -880,7 +879,7 @@ const Client = class extends BaseClient {
 				logger.debug('queryChannels - response status :: %d', response.response.status);
 				const queryTrans = _queryProto.ChannelQueryResponse.decode(response.response.payload);
 				logger.debug('queryChannels - ProcessedTransaction.channelInfo.length :: %s', queryTrans.channels.length);
-				for (let channel of queryTrans.channels) {
+				for (const channel of queryTrans.channels) {
 					logger.debug('>>> channel id %s ', channel.channel_id);
 				}
 				return queryTrans;
@@ -954,7 +953,7 @@ const Client = class extends BaseClient {
 				logger.debug('queryInstalledChaincodes - response status :: %d', response.response.status);
 				const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
 				logger.debug('queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
-				for (let chaincode of queryTrans.chaincodes) {
+				for (const chaincode of queryTrans.chaincodes) {
 					logger.debug('>>> name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
 				}
 				return queryTrans;
@@ -1042,17 +1041,19 @@ const Client = class extends BaseClient {
 			// Verify that a Peer has been added
 			if (peers && peers.length > 0) {
 				logger.debug(`installChaincode - found peers ::${peers.length}`);
-			}
-			else {
+			} else {
 				error_msg = 'Missing peer objects in install chaincode request';
 			}
-		}
-		else {
+		} else {
 			error_msg = 'Missing input request object on install chaincode request';
 		}
 
-		if (!error_msg) error_msg = clientUtils.checkProposalRequest(request, false);
-		if (!error_msg) error_msg = clientUtils.checkInstallRequest(request);
+		if (!error_msg) {
+			error_msg = clientUtils.checkProposalRequest(request, false);
+		}
+		if (!error_msg) {
+			error_msg = clientUtils.checkInstallRequest(request);
+		}
 
 		if (error_msg) {
 			logger.error(`installChaincode error ${error_msg}`);
@@ -1108,7 +1109,7 @@ const Client = class extends BaseClient {
 		if (!this._network_config) {
 			throw new Error('No network configuration settings found');
 		}
-		let client_config = this._network_config.getClientConfig();
+		const client_config = this._network_config.getClientConfig();
 		if (client_config && client_config.credentialStore) {
 			const key_value_store = await BaseClient.newDefaultKeyValueStore(client_config.credentialStore);
 			this.setStateStore(key_value_store);
@@ -1137,7 +1138,7 @@ const Client = class extends BaseClient {
 		let err = '';
 
 		const methods = sdkUtils.getClassMethods(api.KeyValueStore);
-		methods.forEach(function (m) {
+		methods.forEach((m) => {
 			if (typeof keyValueStore[m] !== 'function') {
 				err += m + '() ';
 			}
@@ -1242,7 +1243,7 @@ const Client = class extends BaseClient {
 
 		const client_config = this._network_config.getClientConfig();
 		if (client_config && client_config.organization) {
-			let organization_config = this._network_config.getOrganization(client_config.organization, true);
+			const organization_config = this._network_config.getOrganization(client_config.organization, true);
 			if (organization_config) {
 				this._mspid = organization_config.getMspid();
 			}
@@ -1555,10 +1556,13 @@ const Client = class extends BaseClient {
 		if (this.getCryptoSuite() == null) {
 			logger.debug('cryptoSuite is null, creating default cryptoSuite and cryptoKeyStore');
 			this.setCryptoSuite(sdkUtils.newCryptoSuite());
-			this.getCryptoSuite().setCryptoKeyStore(Client.newCryptoKeyStore());
+			this.getCryptoSuite().setCryptoKeyStore(Client.newCryptoKeyStore()); // This is impossible
 		} else {
-			if (this.getCryptoSuite()._cryptoKeyStore) logger.debug('cryptoSuite has a cryptoKeyStore');
-			else logger.debug('cryptoSuite does not have a cryptoKeyStore');
+			if (this.getCryptoSuite()._cryptoKeyStore) {
+				logger.debug('cryptoSuite has a cryptoKeyStore');
+			} else {
+				logger.debug('cryptoSuite does not have a cryptoKeyStore');
+			}
 		}
 
 		// need to load private key and pre-enrolled certificate from files based on the MSP
@@ -1611,7 +1615,7 @@ const Client = class extends BaseClient {
 			if (!Array.isArray(request_targets)) {
 				targetsTemp = [request_targets];
 			}
-			for (let target_peer of targetsTemp) {
+			for (const target_peer of targetsTemp) {
 				if (typeof target_peer === 'string') {
 					targets.push(this.getPeer(target_peer));
 				} else if (target_peer && target_peer.constructor && target_peer.constructor.name === 'Peer') {
@@ -1660,8 +1664,7 @@ const Client = class extends BaseClient {
 				const temp_orderers = temp_channel.getOrderers();
 				if (temp_orderers && temp_orderers.length > 0) {
 					orderer = temp_orderers[0];
-				}
-				else {
+				} else {
 					throw new Error('"orderer" request parameter is missing and there' + ' ' +
 						'are no orderers defined on this channel in the network configuration');
 				}
@@ -1694,7 +1697,7 @@ const Client = class extends BaseClient {
 
 		if (this._tls_mutual.clientCert) {
 			logger.debug('%s - using clientCert %s', method, this._tls_mutual.clientCert);
-			let der_cert = sdkUtils.pemToDER(this._tls_mutual.clientCert);
+			const der_cert = sdkUtils.pemToDER(this._tls_mutual.clientCert);
 			this._tls_mutual.clientCertHash = computeHash(der_cert);
 		} else {
 			logger.debug('%s - no tls client cert', method);
@@ -1738,7 +1741,6 @@ function readFile(path) {
 
 // internal utility to get the serialized deployment spec for installing chaincode
 async function _getChaincodeDeploymentSpec(request, devMode) {
-
 	if (request.chaincodePackage && Buffer.isBuffer(request.chaincodePackage)) {
 		logger.debug('installChaincode - using included package');
 		return request.chaincodePackage;
@@ -1746,7 +1748,7 @@ async function _getChaincodeDeploymentSpec(request, devMode) {
 		return new Promise((resolve, reject) => {
 			return Packager.package(request.chaincodePath, request.chaincodeType, devMode)
 				.then((data) => {
-					let ccSpec = {
+					const ccSpec = {
 						type: clientUtils.translateCCType(request.chaincodeType),
 						chaincode_id: {
 							name: request.chaincodeId,
@@ -1755,7 +1757,7 @@ async function _getChaincodeDeploymentSpec(request, devMode) {
 						}
 					};
 					logger.debug('installChaincode - ccSpec %s ', JSON.stringify(ccSpec));
-					let chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+					const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
 					chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 					// DATA may or may not be present depending on devmode settings
 					if (data) {
@@ -1764,9 +1766,7 @@ async function _getChaincodeDeploymentSpec(request, devMode) {
 					}
 					resolve(chaincodeDeploymentSpec.toBuffer());
 				})
-				.catch((err) => {
-					reject(err);
-				});
+				.catch(reject);
 		});
 	}
 }
@@ -1778,8 +1778,7 @@ function _stringToSignature(string_signatures) {
 		// check for properties rather than object type
 		if (signature && signature.signature_header && signature.signature) {
 			logger.debug('_stringToSignature - signature is protobuf');
-		}
-		else {
+		} else {
 			logger.debug('_stringToSignature - signature is string');
 			const signature_bytes = Buffer.from(signature, 'hex');
 			signature = _configtxProto.ConfigSignature.decode(signature_bytes);
