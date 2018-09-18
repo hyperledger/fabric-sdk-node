@@ -119,8 +119,6 @@ const Channel = class {
 		this._endorsement_handler = null; //will be setup during initialization
 		this._commit_handler = null;
 
-
-
 		logger.debug('Constructed Channel instance: name - %s, network mode: %s', this._name, !this._devMode);
 	}
 
@@ -2888,9 +2886,6 @@ const Channel = class {
 		if (!Array.isArray(request.args)) {
 			errorMsg = 'Param "args" in Transaction proposal request should be a string array';
 		}
-		if (!request.channelId) {
-			errorMsg = 'Missing Required param "channelId" in Transaction proposal';
-		}
 
 		if (errorMsg) {
 			logger.error('%s error %s', method, errorMsg);
@@ -2921,7 +2916,7 @@ const Channel = class {
 
 		const channelHeader = client_utils.buildChannelHeader(
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
-			request.channelId,
+			this._name,
 			txId.getTransactionID(),
 			null,
 			request.chaincodeId,
@@ -2968,7 +2963,7 @@ const Channel = class {
 	 *
 	 * @param {TransactionRequest} request
 	 */
-	async generateUnsignedTransaction(request) {
+	generateUnsignedTransaction(request) {
 		logger.debug('generateUnsignedTransaction - start :: channel %s', this._name);
 
 		if (!request) {

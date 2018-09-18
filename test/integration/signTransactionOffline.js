@@ -205,7 +205,7 @@ test('Test sign a contract with a private key offline', async (t) => {
 			proposal,
 		};
 
-		const commitProposal = await channel.generateUnsignedTransaction(commitReq);
+		const commitProposal = channel.generateUnsignedTransaction(commitReq);
 		t.pass('Successfully build commit transaction proposal');
 
 		// sign this commit proposal at local
