@@ -327,4 +327,235 @@ The following will be a list of channel-based event hubs that are within the org
 ```
 var channel_event_hubs = channel.getChannelEventHubsForOrg();
 ```
+
+## What does the Fabric Client look for in a common connection profile
+The Fabric Client will be looking for the following key names and parameters for those keys:
+
+```
+#
+# Schema version of the content. Used by the SDK to apply the parsing rules.
+#
+version: "1.0" # only supported version as of fabric-client v1.3.0
+
+#
+# The client section is SDK-specific. These are the settings that the
+# NodeSDK will use to automatically set up a Client instance.
+#
+client:
+  # Which organization does this application instance belong to? The value must be the name of an org
+  # defined under "organizations" ... see below
+  organization: Org1
+
+  # Some SDKs support pluggable KV stores, the properties under "credentialStore"
+  # are implementation specific
+  credentialStore:
+    # Specific to FileKeyValueStore.js or similar implementations in other SDKs. Can be others
+    # if using an alternative impl. For instance, CouchDBKeyValueStore.js would require an object
+    # here for properties like url, db name, etc.
+    path: "/tmp/hfc-kvs"
+      or
+    <implementation specific properties>
+
+    # Specific to the CryptoSuite implementation. Software-based implementations like
+    # CryptoSuite_ECDSA_AES.js in node SDK requires a key store. PKCS#11 based implementations does
+    # not.
+    cryptoStore:
+      # Specific to the underlying KeyValueStore that backs the crypto key store.
+      path: "/tmp/hfc-cvs"
+       or
+    <implementation specific properties>
+
+  # Sets the connection timeouts for new peer and orderer objects when the client creates
+  # peer and orderer objects during the client.getPeer() and client.getOrderer() calls
+  # or when the peer and orderer objects are created automatically when a channel
+  # is created by the client.getChannel() call.
+  connection:
+    timeout:
+       peer:
+         # the timeout in seconds to be used on requests to a peer,
+         # for example 'sendTransactionProposal'
+         endorser: 120
+         # the timeout in seconds to be used by applications when waiting for an
+         # event to occur. This time should be used in a javascript timer object
+         # that will cancel the event registration with the channel event hub instance.
+         eventHub: 60
+         # the timeout in seconds to be used when setting up the connection
+         # with a peer event hub. If the peer does not acknowledge the
+         # connection within the time, the application will be notified over the
+         # error callback if provided.
+         eventReg: 3
+       # the timeout in seconds to be used on request to the orderer,
+       # for example
+       orderer: 30
+
+#
+# How a channel is defined and the peers and orderers on that channel. When the
+# client.getChannel() call is used the client will pre-populate the channel with
+# orderers and peers as defined in this section.
+#
+channels:
+  # name of the channel
+  mychannel2:
+    # List of orderers designated by the application to use for transactions on this channel.
+    # The values must be orderer names defined under "orderers" section
+    orderers:
+      - orderer.example.com
+
+    # List of peers from participating organizations
+    peers:
+      # The values must be peer names defined under "peers" section
+      peer0.org1.example.com:
+        # Will this peer be sent transaction proposals for endorsement? The peer must
+        # have the chaincode installed. The app can also use this property to decide which peers
+        # to send the chaincode install request. Default: true
+        endorsingPeer: true
+
+        # Will this peer be sent query proposals? The peer must have the chaincode
+        # installed. The app can also use this property to decide which peers to send the
+        # chaincode install request. Default: true
+        chaincodeQuery: true
+
+        # Will this peer be sent query proposals that do not require chaincodes, like
+        # queryBlock(), queryTransaction(), etc. Default: true
+        ledgerQuery: true
+
+        # Will this peer be the target of a SDK listener registration? All peers can
+        # produce events but the app typically only needs to connect to one to listen to events.
+        # Default: true
+        eventSource: true
+
+        # Will this peer be the target of Discovery requests.
+        # Default: true
+        discover: true
+
+#
+# list of participating organizations in this network
+#
+organizations:
+  Org1:
+    mspid: Org1MSP
+
+    # The peers that are known to be in this organization
+    peers:
+      - peer0.org1.example.com
+
+    # Certificate Authorities issue certificates for identification purposes in a Fabric based
+    # network. Typically certificates provisioning is done in a separate process outside of the
+    # runtime network. Fabric-CA is a special certificate authority that provides a REST APIs for
+    # dynamic certificate management (enroll, revoke, re-enroll). The following section is only for
+    # Fabric-CA servers.
+    certificateAuthorities:
+      - ca-org1
+
+    # If the application is going to make requests that are reserved to organization
+    # administrators, including creating/updating channels, installing/instantiating chaincodes, it
+    # must have access to the admin identity represented by the private key and signing certificate.
+    # Both properties can be the PEM string or local path to the PEM file.
+	#   path: <the path to a file containing the byte string>
+	#    or
+	#   pem: <the byte string>
+	# Note that this is mainly for convenience in development mode, production systems
+	# should not expose sensitive information this way.
+	# The SDK should allow applications to set the org admin identity via APIs, and only use
+    # this route as an alternative when it exists.
+    adminPrivateKey:
+      path: <path to file>
+       or
+      pem: <byte string>
+    signedCert:
+      path: <path to file>
+       or
+      pem: <byte string>
+
+  # the profile will contain public information about organizations other than the one it belongs to.
+  # These are necessary information to make transaction lifecycles work, including MSP IDs and
+  # peers with a public URL to send transaction proposals. The file will not contain private
+  # information reserved for members of the organization, such as admin key and certificate,
+  # fabric-ca registrar enroll ID and secret, etc.
+  Org2:
+    mspid: Org2MSP
+    peers:
+      - peer0.org2.example.com
+    certificateAuthorities:
+      - ca-org2
+    adminPrivateKey:
+      path: <path to file>
+       or
+      pem: <byte string>
+    signedCert:
+      path: <path to file>
+       or
+      pem: <byte string>
+
+#
+# List of orderers to send transaction and channel create/update requests.
+#
+orderers:
+  orderer.example.com:
+    url: grpcs://localhost:7050
+
+    # these are standard properties defined by the gRPC library
+    # they will be passed in as-is to gRPC client constructor
+    grpcOptions:
+      ssl-target-name-override: orderer.example.com
+
+    tlsCACerts:
+      path: <path to file>
+       or
+      pem: <byte string>
+
+#
+# List of peers to send various requests to, including endorsement, query
+# and event listener registration.
+#
+peers:
+  peer0.org1.example.com:
+    # this URL is used to send endorsement and query requests
+    url: grpcs://localhost:7051
+
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.example.com
+      request-timeout: 120001
+
+    tlsCACerts:
+      path: <path to file>
+       or
+      pem: <byte string>
+
+  peer0.org2.example.com:
+    url: grpcs://localhost:8051
+    grpcOptions:
+      ssl-target-name-override: peer0.org2.example.com
+    tlsCACerts:
+      path: <path to file>
+       or
+      pem: <byte string>
+
+#
+# Fabric-CA is a special kind of Certificate Authority provided by Hyperledger Fabric which allows
+# certificate management to be done via REST APIs. Application may choose to use a standard
+# Certificate Authority instead of Fabric-CA, in which case this section would not be specified.
+#
+certificateAuthorities:
+  ca-org1:
+    url: https://localhost:7054
+    # the properties specified under this object are passed to the 'http' client verbatim when
+    # making the request to the Fabric-CA server
+    httpOptions:
+      verify: false
+    tlsCACerts:
+      path: <path to file>
+        or
+      pem: <byte string>
+
+    # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
+    # needed to enroll and invoke new users.
+    registrar:
+      - enrollId: admin
+        enrollSecret: adminpw
+    # The optional name of the CA.
+    caName: ca-org1
+```
+
+
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.

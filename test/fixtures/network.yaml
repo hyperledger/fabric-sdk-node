@@ -60,15 +60,16 @@ version: "1.0"
 channels:
   # name of the channel
   mychannel2:
-    # Required. list of orderers designated by the application to use for transactions on this
+    # List of orderers designated by the application to use for transactions on this
     # channel. This list can be a result of access control ("org1" can only access "ordererA"), or
     # operational decisions to share loads from applications among the orderers.  The values must
-    # be "names" of orgs defined under "organizations/peers"
+    # be "names" of orderers defined under "orderers" section
     orderers:
       - orderer.example.com
 
-    # Required. list of peers from participating orgs
+    # List of peers from participating orgs
     peers:
+      # The values must be peer names defined under "peers" section
       peer0.org1.example.com:
         # [Optional]. will this peer be sent transaction proposals for endorsement? The peer must
         # have the chaincode installed. The app can also use this property to decide which peers
