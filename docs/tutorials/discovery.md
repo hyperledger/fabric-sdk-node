@@ -75,26 +75,30 @@ A endorsement handler must implement the `api.EndorsementHandler`. When the
 channel is instantiated, the channel will read the path setting and create an
 instance of the handler for use by the new channel instance.
 
+
+
 #### How the `DiscoveryEndorsementHandler` works
-The default handler that comes with the fabric-client is designed to use the results of a
-discover service query. The `sendTransactionProposal` call allows for the target
-peers to be specified, the handler will honor that request and send to list as
-indicated. The handler assumes that the query has been made and is current.
+The `sendTransactionProposal` will use the peers included in the "targets" to
+endorse the proposal. If there is no "targets" parameter the endorsement request
+will be handled by the endorsement handler.
+The default handler that comes with the fabric-client is designed to use the
+results from the fabric discovery service.
+The discovery service results will be based on the chaincode of the endorsement
+or based on an endorsement hint included in the endorsement request. The hint
+may include one or more chaincodes and each chaincode may include one or more
+associated collection names.
 If there are no service discover results, the handler will send to peers that have been
 assigned to the channel with the `endorsingPeer` role (a peer that has been assigned
-to the channel without defining a role will have the role by default).
-The handler assumes that all peers referenced in the endorsement plans have had
+
+When the handler processes the discovery results it
+assumes that all peers referenced have a
 a peer object created and assigned to the channel object.
 The service discover handler takes optional parameters that allow the user to specify
 peers to be preferred and to be ignored.
-The handler will determine the chaincode that will make the endorsement and finds
-the peer endorsement plan within the service discover results. The plan will include
+The discovery results will include
 groups of peers and layouts that specify how many peers from each group it will take
-to satisfy the endorsement policy of the chaincode. The service discovery does
-not actually send the endorsement policy as part of the service discover results, the
-service sends a plan with layouts and groups that guide the fabric-client on how
-to send requests that will produce a set of endorsements that will be able to be
-successfully committed. The handler will first sort each group of peers, moving
+to satisfy the endorsement policy of the proposal chaincode.
+The handler will first sort each group of peers, moving
 peers on the preferred list to the top, moving peers with a higher ledger block
 height up, and removing any peers that need to be ignored. The handler
 will then select the first layout and build a list of outbound requests.
@@ -378,7 +382,8 @@ handler. The fabric-client will come with a handler that will use service discov
 By default the `endorsement-handler` configuration setting will point to the
 `DiscoveryEndorsementHandler`.  If the channel has been initialized using the
 service discovery and there are no targets define on the `sendTransactionProposal`
-call, the handler will use the service discover results to determine the target peers
+call, the handler will use the service discover results based on the chaincode
+of the proposal request to determine the target peers
 to perform the endorsements.
 ```
 const tx_id = client.newTransactionID();
@@ -390,6 +395,39 @@ const request = {
 };
 await channel.sendTransactionProposal(request);
 ```
+
+If the endorsement will require one or more chaincode to chaincode calls and/or
+be over a collection or two, then the endorsement proposal request must include the
+parameter "endorsement_hint". This will assist the discovery service in putting
+together an endorsement plan based on all the endorsement policies of chaincodes
+and collections involved and the active peers on the network.
+The following example shows a chaincode to chaincode call over collections.
+Notice how the chaincode that starts the endorsement must also still be included
+as the "chaincodeId" of the endorsement request.
+
+```
+const hint = { chaincodes: [
+	{
+		name: "my_chaincode1",
+		collection_names: ["my_collection1", "my_collection2"]
+	},
+	{
+		name: "my_chaincode2",
+		collection_names: ["my_collection1", "my_collection2"]
+	}
+]};
+
+const tx_id = client.newTransactionID();
+const request = {
+	chaincodeId : 'my_chaincode1',
+	fcn: 'move',
+	args: ['a', 'b','100'],
+	txId: tx_id,
+	endorsement_hint: hint
+};
+await channel.sendTransactionProposal(request);
+```
+
 The application is able to have specific peers chosen before other peers or
 to be not chosen at all for endorsements. The application may add the following
 optional settings to the request object.
@@ -400,8 +438,6 @@ using the service discovery.
 ignored by the endorsement. This list only applies to endorsements using the
 service discovery.
 
-Notice in the following example the names would indicate that some peers
-were manually added to the channel and some where added by service discover.
 ```
 const request = {
 	chaincodeId : 'example',
