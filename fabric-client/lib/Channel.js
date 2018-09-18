@@ -395,7 +395,7 @@ const Channel = class {
 	}
 
 	_buildDiscoveryEndorsementPlan(discovery_results, plan_id, msps, options){
-		const method = '_buildDiscoveryPeers';
+		const method = '_buildDiscoveryEndorsementPlan';
 		logger.debug('%s - build endorsement plan for %s', method, plan_id);
 
 		const endorsement_plan = discovery_results.endorsement_plans[0];
@@ -1099,6 +1099,8 @@ const Channel = class {
 	 *           should be included in the discovery query.
 	 * @property {boolean} local - Optional. To indicate that the local endpoints
 	 *           should be included in the discovery query.
+	 * @property {boolean} useAdmin - Optional. To indicate that the admin identity
+	 *           should be used to make the discovery request
 	 */
 
 	/**
@@ -1116,8 +1118,13 @@ const Channel = class {
 		if (!request) {
 			request = {};
 		}
+
+		let useAdmin = true; //default
+		if(typeof request.useAdmin === 'boolean') {
+			useAdmin = request.useAdmin;
+		}
 		const target_peer = this._getTargetForDiscovery(request.target);
-		const signer = this._clientContext._getSigningIdentity(true); //use the admin if assigned
+		const signer = this._clientContext._getSigningIdentity(useAdmin); //use the admin if assigned
 		const discovery_request = new _discoveryProto.Request();
 
 		const authentication = new _discoveryProto.AuthInfo();

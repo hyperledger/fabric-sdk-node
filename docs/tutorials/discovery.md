@@ -34,12 +34,16 @@ orderers to send the signed endorsements.
 * `channel.refresh()` - The channel will be refreshed with new service discovery
 results, add new peers, orderers, and MSPs. The call will use the service discovery
 settings as provided on the `channel.initialize()` call.
-* `getDiscoveryResults` - The channel will cache the results of the last query
+* `channel.getDiscoveryResults()` - The channel will cache the results of the last query
 made to the service discovery and make the results available. The call will use
 the `discovery-cache-life` setting to determine if the results should be refreshed.
 if the results need to be refreshed, the `channel.refresh()` will be called
 internally to fetch new service discovery results. The call is used by the
 `DiscoveryEndorsementHandler` as it starts to determine the target peers.
+* `client.queryPeers()` - A client object will be able to query a target peer
+using the discovery service to provide a list of peer endpoints and associated
+organizations active on the network at the time of the query. see {@link Client#queryPeers}
+
 
 #### New configuration settings
 * `initialize-with-discovery` - boolean - When the applications calls for the
