@@ -1,0 +1,26 @@
+v1.3.0 Sept 19, 2018
+-----------------------
+
+Release Notes
+-------------
+Removed the EventHub class. This has been replaced by the ChannelEventHub.
+  The ChannelEventHub uses the more reliable and better performant fabric block
+  delivery service. The API's for both classes are the same, so the ChannelEventHub
+  replace the EventHub class in your code.
+
+Bug fixes and documentation improvements.
+
+Known Vulnerabilities
+---------------------
+none
+
+Resolved Vulnerabilities
+------------------------
+none
+
+Known Issues & Workarounds
+--------------------------
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.2/CHANGELOG.md#v120
