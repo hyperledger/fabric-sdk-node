@@ -618,7 +618,7 @@ const Channel = class {
 			logger.debug('%s - returning results', method);
 			return this._discovery_results;
 		} else {
-			logger.error('No discovery results to return');
+			logger.debug('No discovery results to return');
 			// not working with discovery or we have not been initialized
 			throw new Error('This Channel has not been initialized or not initialized with discovery support');
 		}
