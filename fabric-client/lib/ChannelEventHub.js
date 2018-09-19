@@ -58,73 +58,81 @@ const NEWEST = 'newest';
  * to complete. As a result the applications must design their handling of the
  * transaction lifecycle in an asynchronous fashion. After the transaction proposal
  * has been successfully [endorsed]{@link Channel#sendTransactionProposal}, and before
- * the transaction message has been successfully [broadcast]{@link Channel#sendTransaction}
- * to the orderer, the application should register a listener to be notified of
- * the event when the transaction achieves finality, which is when the block
+ * the transaction message has been successfully [sent]{@link Channel#sendTransaction}
+ * to the orderer, the application should register a listener to be notified
+ * when the transaction achieves finality, which is when the block
  * containing the transaction gets added to the peer's ledger/blockchain.
  * <br><br>
- * Fabric committing peers provides an event stream to publish blocks to registered
- * listeners.  A Block gets published whenever the committing peer adds a validated block
- * to the ledger. There are three ways to register a listener to get notified:
- * <li>register a "block listener" to get called for every block event. The listener
- *     will be passed a fully decoded {@link Block} object.
+ * Fabric committing peers provide a block delivery service to publish blocks or
+ * filtered blocks to connected fabric-clients. See [connect]{@link ChannelEventHub#connect}
+ * on connection options and how this ChannelEventHub may connect to the fabric
+ * service. For more information on the service see [deliver]{@link https://hyperledger-fabric.readthedocs.io/en/release-1.2/peer_event_services.html}.
+ * A block gets published whenever the committing peer adds a validated block
+ * to the ledger.
+ * When a fabric-client receives a block it will investigate the block and notify
+ * interested listeners with the related contents of the block (e.g. transactionId, status).
+ * There are three types of listeners that will get notified by
+ * the fabric-client after it receives a published block from the fabric deliver service.
+ * <li> A "block listener" gets called for every block received. The listener
+ *     will be passed a fully decoded {@link Block} object unless the connection
+ *     to the fabric service is using filtered blocks.
  *     See [registerBlockEvent]{@link ChannelEventHub#registerBlockEvent}
- * <li>register a "transaction listener" to get called when the specific transaction
- *     by id is committed (discovered inside a published block).
+ * <li>A "transaction listener" gets called when the specific transaction
+ *     is committed (discovered inside a published block). The listener
+ *     may also be registered to listen to "all" transactions.
  *     The listener will be passed the transaction id, transaction status and block number.
  *     See [registerTxEvent]{@link ChannelEventHub#registerTxEvent}
- * <li>register a "chaincode event listener" to get called when a specific
- *     chaincode event has arrived.
- *     The listener will be passed the {@link ChaincodeEvent}, block number,
- *     transaction id, and transaction status.
+ * <li>A "chaincode event listener" gets called when a specific
+ *     chaincode event is discovered within a block.
+ *     The listener will be passed the block number, transaction id, and
+ *     transaction status. The {@link ChaincodeEvent} will be also be passed,
+ *     however the payload of the event will not be passed if
+ *     the connection to the fabric service is publishing filtered blocks.
  *     See [registerChaincodeEvent]{@link ChannelEventHub#registerChaincodeEvent}
- * <br><br>
- * The events are ephemeral, such that if a registered listener
- * crashed when the event is published, the listener will miss the event.
- * There are several techniques to compensate for missed events due to client crashes:
- * <li>register block event listeners and record the block numbers received, such that
- *     when the next block arrives and its number is not the next in sequence, then
- *     the application knows exactly which block events have been missed. It can then use
- *     [queryBlock]{@link Channel#queryBlock} to get those missed blocks from the target peer or
- *     register for events using the startBlock option to resume or replay the events. You may
- *     also include an endBlock number if you wish to stop listening.
- * <li>use a message queue to catch all the block events. With many robust message queue
- *     implementations available today, you will be guaranteed to not miss an event. A
- *     fabric event listener can be written in any programming language. The following
- *     implementations can be used as reference to write the necessary glue code between
- *     the fabric event stream and a message queue:
+ * <br><br><br>
+ * When the fabric-client connects to the peer, it tells the peer which block
+ * to begin delivering from. If no start block is provided, then the client will
+ * only receive events for the most recently committed block onwards.
+ * To avoid missing events in blocks that are published while the client is
+ * crashed/offline, the client should record the most recently processed block,
+ * and resume event delivery from this block number on startup. In this way,
+ * there is no custom recovery path for missed events, and the normal processing
+ * code may execute instead. You may also include an endBlock number if you
+ * wish to stop listening after receiving a range of events.
  *
  * @example
  * const eh = channel.newChannelEventHub(peer);
  *
- * // register the listeners before calling "connect()" so there
+ * // register the listener before calling "connect()" so there
  * // is an error callback ready to process an error in case the
  * // connect() call fails
  * eh.registerTxEvent(
- *   transactionId,
- *     (tx, code) => {
- * 	   eh.unregisterTxEvent(transactionId);
- * 	   console.log(util.format('Transaction %s has completed', transactionId));
- * 	 },
+ *   'all', // this listener will be notificed of all transactions
+ *     (tx, status, block_num) => {
+ *        record(tx, status, block_num);
+ *        console.log(util.format('Transaction %s has completed', tx));
+ *     },
  *     (err) => {
- * 	   eh.unregisterTxEvent(transactionId);
- * 	   console.log(util.format('Error %s! Transaction listener for %s has been ' +
- *                 'deregistered with %s', transactionId, err, eh.getPeerAddr()));
- * 	 }
+ *        eh.unregisterTxEvent('all');
+ *        reportError(err);
+ *        console.log(util.format('Error %s! Transaction listener has been ' +
+ *                 'deregistered for %s', err, eh.getPeerAddr()));
+ *     }
  * );
  *
  * eh.connect();
  *
  * @class
  */
+
 class ChannelEventHub {
 
 	/**
 	 * Constructs a ChannelEventHub object
 	 *
 	 * @param {Channel} channel - An instance of the Channel class
-	 * were this event hub will receive blocks from
-	 * @param {Peer} peer An instance of the Peer class this event hub connects to.
+	 * were this ChannelEventHub will receive blocks
+	 * @param {Peer} peer An instance of the Peer class this ChannelEventHub connects.
 	 * @returns {ChannelEventHub} An instance of this class
 	 */
 
@@ -171,15 +179,15 @@ class ChannelEventHub {
 	}
 
 	/**
-	 * Return the name of this channel event hub, will be the name of the
-	 * peer associated with this channel event hub.
+	 * Return the name of this ChannelEventHub, will be the name of the
+	 * associated peer.
 	 */
 	getName() {
 		return this._peer.getName();
 	}
 
 	/**
-	 * Return the peer url of this event hub object
+	 * Return the peer url
 	 */
 	getPeerAddr() {
 		if (this._peer) {
@@ -196,15 +204,15 @@ class ChannelEventHub {
 	 */
 	lastBlockNumber() {
 		if (this._last_block_seen === null) {
-			throw new Error('This ChannelEventHub has not had an event from the peer');
+			throw new Error('This ChannelEventHub has not seen a block from the peer');
 		}
 
 		return this._last_block_seen;
 	}
 
 	/*
-	 * internal method to check if this event hub is allowing new event listeners
-	 * If this event hub has been configured for a startBlock/endBlock of events then
+	 * internal method to check if this ChannelEventHub is allowing new event listeners
+	 * If this ChannelEventHub has been configured for a startBlock/endBlock of events then
 	 * only one event listener is allowed. Once the connect has been called no
 	 * new event listener will be allowed.
 	 */
@@ -215,7 +223,7 @@ class ChannelEventHub {
 	}
 
 	/**
-	 * Is the event hub connected to the event source?
+	 * Is this ChannelEventHub connected to the fabric service?
 	 * @returns {boolean} True if connected to the event source, false otherwise
 	 */
 	isconnected() {
@@ -225,41 +233,50 @@ class ChannelEventHub {
 	/**
 	 * @typedef {Object} SignedEvent
 	 * @property {Buffer} signature the signature over this payload
-	 * @property {Buffer} payload the payload byte array to be send to peer
+	 * @property {Buffer} payload the payload byte array to be sent to the peer
 	 */
 
 	/**
-	 * @typedef {ConnectOptions}
+	 * @typedef {Object} ConnectOptions
 	 * @property {boolean} full_block - Optional. to indicated that the connection
 	 *        with the peer will be sending full blocks or filtered blocks to this
 	 *        ChannelEventHub.
 	 *        The default will be to establish a connection using filtered blocks.
 	 *        Filtered blocks have the required information to provided transaction
-	 *        status and chaincode events. When using the non filtered blocks the user
+	 *        status and chaincode events (no payload).
+	 *        When using the non filtered blocks (full blocks) the user
 	 *        will be required to have access to establish the connection to
 	 *        receive full blocks.
 	 *        Registering a block listener on a filtered block connection may not
 	 *        provide sufficient information.
-	 * @property {SignedEvent} signedEvent - Optional. the signed event to be send to peer
+	 * @property {SignedEvent} signedEvent - Optional. the signed event to be sent
+	 *        to the peer. This option is useful when the fabric-client application
+	 *        does not have the user's privateKey and can not sign requests to the
+	 *        fabric network.
 	 */
 
 	/**
-	 * Establishes a connection with the peer event source.
+	 * Establishes a connection with the fabric peer service.
 	 *
 	 * The connection will be established asynchronously. If the connection fails to
 	 * get established, the application will be notified via the error callbacks
 	 * from the registerXXXEvent() methods. It is recommended that an application always
-	 * registers at least one event listener with an error callback, by calling any one of the
+	 * register at least one event listener with an error callback, by calling any one of the
 	 * [registerBlockEvent]{@link ChannelEventHub#registerBlockEvent},
 	 * [registerTxEvent]{@link ChannelEventHub#registerTxEvent} or
 	 * [registerChaincodeEvent]{@link ChannelEventHub#registerChaincodeEvent}
 	 * methods, before calling connect().
 	 *
-	 * @param {ConnectOptions|boolean} options - Optional
+	 * @param {ConnectOptions | boolean} options - Optional. If of type boolean
+	 *        then it will be assumed to how to connect to receive full (true)
+	 *        or filtered (false) blocks.
 	 */
 	connect(options) {
 		let signedEvent = null;
 		let full_block = null;
+
+		// the following supports the users using the boolean parameter to control
+		// how to connect to the fabric service for full or filtered blocks
 		if (typeof options === 'boolean') {
 			full_block = options;
 		}
@@ -289,17 +306,17 @@ class ChannelEventHub {
 		logger.debug('connect - end  %s', this.getPeerAddr());
 	}
 
-	/**
+	/*
 	 * @typedef {InternalConnectOptions}
-	 * @property {boolean} force - Optional. internal use only, will reestablish the
-	 *                  the connection to the peer event hub
+	 * @property {boolean} force - Optional. internal use only, will reestablish
+	 *           the connection to the peer event hub
 	 * @property {SignedEvent} signedEvent - Optional. the signed event to be send to peer
 	 */
 
 
 	/*
 	 * Internal use only
-	 * Establishes a connection with the peer event source
+	 * Establishes a connection with the fabric peer service
 	 * @param {InternalConnectOptions} request - internal use only, the options to be passed
 	 *                                           to the internal method _connect()
 	 */
@@ -333,7 +350,7 @@ class ChannelEventHub {
 		const connecton_setup_timeout = setTimeout(() => {
 			logger.error('_connect - timed out after:%s', self._peer._request_timeout);
 			self._connect_running = false;
-			self._disconnect(new Error('Unable to connect to the peer event hub'));
+			self._disconnect(new Error('Unable to connect to the fabric peer service'));
 		}, self._peer._request_timeout);
 
 		// check on the keep alive options
@@ -358,9 +375,9 @@ class ChannelEventHub {
 				clearTimeout(connecton_setup_timeout);
 			}
 
-			logger.debug('on.data - event stream:%s _current_stream:%s  peer:%s', stream_id, self._current_stream, self.getPeerAddr());
+			logger.debug('on.data - block stream:%s _current_stream:%s  peer:%s', stream_id, self._current_stream, self.getPeerAddr());
 			if (stream_id !== self._current_stream) {
-				logger.debug('on.data - incoming event was from a cancelled stream');
+				logger.debug('on.data - incoming block was from a cancelled stream');
 				return;
 			}
 
@@ -369,7 +386,7 @@ class ChannelEventHub {
 				if (self._connected === true) {
 					logger.debug('on.data - new block received - check event registrations');
 				} else {
-					logger.debug('on.data - first block received , event hub now registered');
+					logger.debug('on.data - first block received , this ChannelEventHub now registered');
 					self._connected = true;
 				}
 				try {
@@ -410,7 +427,7 @@ class ChannelEventHub {
 				} else {
 					// tell all registered users that something is wrong and shutting down
 					logger.debug('on.data - status received - %s', deliverResponse.status);
-					self._disconnect(new Error(`Received status message on the event stream. status:${deliverResponse.status}`));
+					self._disconnect(new Error(`Received status message on the block stream. status:${deliverResponse.status}`));
 				}
 			}
 			else {
@@ -428,20 +445,20 @@ class ChannelEventHub {
 			clearTimeout(connecton_setup_timeout);
 			logger.debug('on.end - event stream:%s _current_stream:%s peer:%s', stream_id, self._current_stream, self.getPeerAddr());
 			if (stream_id !== self._current_stream) {
-				logger.debug('on.end - incoming event was from a canceled stream');
+				logger.debug('on.end - incoming message was from a canceled stream');
 				return;
 			}
 
 			logger.debug('on.end - grpc stream is ready :%s', isStreamReady(self));
-			self._disconnect(new Error('Peer event hub has disconnected due to an "end" event'));
+			self._disconnect(new Error('fabric peer service has disconnected due to an "end" event'));
 		});
 
 		this._stream.on('error', (err) => {
 			self._connect_running = false;
 			clearTimeout(connecton_setup_timeout);
-			logger.debug('on.error - event stream:%s _current_stream:%s  peer:%s', stream_id, self._current_stream, self.getPeerAddr());
+			logger.debug('on.error - block stream:%s _current_stream:%s  peer:%s', stream_id, self._current_stream, self.getPeerAddr());
 			if (stream_id !== self._current_stream) {
-				logger.debug('on.error - incoming event was from a canceled stream');
+				logger.debug('on.error - incoming message was from a canceled stream');
 				logger.debug('on.error - %s %s', new Date(), err);
 				return;
 			}
@@ -464,7 +481,7 @@ class ChannelEventHub {
 	}
 
 	/**
-	 * Disconnects the event hub from the peer event source.
+	 * Disconnects the ChannelEventHub from the peer event source.
 	 * Will close all event listeners and send an Error object
 	 * with the message "ChannelEventHub has been shutdown" to
 	 * all listeners that provided an "onError" callback.
@@ -480,7 +497,7 @@ class ChannelEventHub {
 	}
 
 	/**
-	 * Disconnects the event hub from the peer event source.
+	 * Disconnects the ChannelEventHub from the fabric peer service.
 	 * Will close all event listeners and send an Error object
 	 * with the message "ChannelEventHub has been shutdown" to
 	 * all listeners that provided an "onError" callback.
@@ -491,7 +508,7 @@ class ChannelEventHub {
 
 	/*
 	 * Internal method
-	 * Disconnects the connection to the peer event source.
+	 * Disconnects the connection to the fabric peer service.
 	 * Will close all event listeners and send an `Error` to
 	 * all listeners that provided an "onError" callback.
 	 */
@@ -549,7 +566,7 @@ class ChannelEventHub {
 		this._stream.write(envelope);
 	}
 
-	/**
+	/*
 	 * Internal method
 	 * validate the signedEvent has signature and payload
 	 * and return the signedEvent
@@ -572,7 +589,7 @@ class ChannelEventHub {
 		};
 	}
 
-	/**
+	/*
 	 * Internal method
 	 * Send a signed event registration to the peer's eventhub
 	 */
@@ -592,14 +609,16 @@ class ChannelEventHub {
 	 */
 
 	/**
-	 * generate the unsigned eventhub registration, the returned payload should be signed by the
-	 * identity's private key.
+	 * Generate the unsigned fabric service registration, this should be
+	 * signed by the identity's private key.
 	 *
-	 * @param {EventHubRegistrationRequest} options the options for register the eventhub at peer,
-	 *                                              Notice the options should contain either both
-	 *                                              identity and txId, or both certificate or mspId
+	 * @param {EventHubRegistrationRequest} options the options for register this
+	 *        ChannelEventHub with the fabric peer service.
+	 *        Notice the options should contain either both identity and txId
+	 *        or both certificate and mspId
 	 *
-	 * @returns {Buffer} the byte array contains the registration payload
+	 * @returns {Buffer} the byte array contains the registration payload to be
+	 *        signed.
 	 */
 	generateUnsignedRegistration(options) {
 		const method = 'generateUnsignedRegistration';
@@ -611,10 +630,10 @@ class ChannelEventHub {
 		// either we have both identity and txId, or we have both certificate or mspId
 		if (identity || txId) {
 			if (!txId) {
-				throw new Error('"options.txId" is required to generate unsigned event');
+				throw new Error('"options.txId" is required to generate unsigned fabric service registration');
 			}
 			if (!identity) {
-				throw new Error('"options.identity" is required to generate unsigned event');
+				throw new Error('"options.identity" is required to generate unsigned fabric service registration');
 			}
 			if (certificate || mspId) {
 				certificate = null;
@@ -623,10 +642,10 @@ class ChannelEventHub {
 		}
 		if (certificate || mspId) {
 			if (!certificate) {
-				throw new Error('"options.certificate" is required to generate unsigned event');
+				throw new Error('"options.certificate" is required to generate unsigned fabric service registration');
 			}
 			if (!mspId) {
-				throw new Error('"options.mspId" is required to generate unsigned event');
+				throw new Error('"options.mspId" is required to generate unsigned fabric service registration');
 			}
 		}
 
@@ -790,7 +809,7 @@ class ChannelEventHub {
 
 		if ((have_start_block || have_end_block) && (this._connected || this._connect_running)) {
 			logger.error('This ChannelEventHub has already been connected to start receiving blocks. Not able to use options of startBlock:%s endBlock:%s', options.startBlock, options.endBlock);
-			throw new Error('Event listeners that use startBlock or endBlock must be registered before connecting to the peer channel-based event service');
+			throw new Error('Event listeners that use startBlock or endBlock must be registered before connecting to the peer channel-based service');
 		}
 
 		if (have_end_block) {
@@ -889,17 +908,20 @@ class ChannelEventHub {
 
 	/**
 	 * @typedef {Object} ChaincodeEvent
-	 * @property {string} chaincode_id
-	 * @property {string} tx_id
-	 * @property {string} event_name
-	 * @property {byte[]} payload - Application-specific byte array that the chaincode set
-	 *                              when it called <code>stub.SetEvent(event_name, payload)</code>
+	 * @property {string} chaincode_id - The name of chaincode that sourced this
+	 *           event.
+	 * @property {string} tx_id - The transaction ID of this event.
+	 * @property {string} event_name - The string that is the event_name of this
+	 *           event as set by the chaincode during endorsement.
+	 *           <code>stub.SetEvent(event_name, payload)</code>
+	 * @property {byte[]} payload - Application-specific byte array that the chaincode
+	 *           set when it called <code>stub.SetEvent(event_name, payload)</code>
 	 */
 
 	/**
 	 * @typedef {Object} RegistrationOpts
 	 * @property {integer} startBlock - Optional - The starting block number
-	 *           for event checking. When included, the peer's channel event service
+	 *           for event checking. When included, the peer's fabric service
 	 *           will be asked to start sending blocks from this block number.
 	 *           This is how to resume or replay missed blocks that were added
 	 *           to the ledger.
@@ -907,13 +929,18 @@ class ChannelEventHub {
 	 *           Setting a startBlock may confuse other event listeners,
 	 *           therefore only one listener will be allowed on a ChannelEventHub
 	 *           when a startBlock is being used.
+	 *           Setting a startBlock also requires
+	 *           this ChannelEventHub to connect to the fabric service using
+	 *           different options. The registration with a startBlock must be
+	 *           done before calling [connect()]{@link ChannelEventhub#connect}.
 	 * @property {integer | 'newest'} endBlock - Optional - The ending block number
-	 *           for event checking. The value 'newest' to indicate that endBlock
-	 *           will be calculated by the peer as the newest block on the ledger.
+	 *           for event checking. The value 'newest' indicates that the endBlock
+	 *           will be calculated by the peer as the newest block on the ledger
+	 *           at the time of registration.
 	 *           This allows the application to replay up to the latest block on
 	 *           the ledger and then the listener will stop and be notified by the
 	 *           'onError' callback.
-	 *           When included, the peer's channel event service
+	 *           When included, the peer's fabric service
 	 *           will be asked to stop sending blocks once this block is delivered.
 	 *           This is how to replay missed blocks that were added
 	 *           to the ledger. When a startBlock is not included, the endBlock
@@ -921,6 +948,10 @@ class ChannelEventHub {
 	 *           Setting an endBlock may confuse other event listeners,
 	 *           therefore only one listener will be allowed on a ChannelEventHub
 	 *           when an endBlock is being used.
+	 *           Setting a endBlock also requires
+	 *           this ChannelEventHub to connect to the fabric service using
+	 *           different options. The a registration with an endBlock must be
+	 *           done before calling [connect()]{@link ChannelEventhub#connect}.
 	 * @property {boolean} unregister - Optional - This options setting indicates
 	 *           the registration should be removed (unregister) when the event
 	 *           is seen. When the application is using a timeout to only wait a
@@ -938,7 +969,7 @@ class ChannelEventHub {
 	 *           rather than a specific transaction or block as in the other listeners.
 	 * @property {boolean} disconnect - Optional - This option setting Indicates
 	 *           to the ChannelEventHub instance to automatically disconnect itself
-	 *           from the peer's channel event service once the event has been seen.
+	 *           from the peer's fabric service once the event has been seen.
 	 *           The default is false unless the endBlock has been set, then it
 	 *           it will be true.
 	 */
@@ -951,25 +982,27 @@ class ChannelEventHub {
 	 * "onError" callback to be notified when this ChannelEventHub has an issue.
 	 *
 	 * @param {string} ccid - Id of the chaincode of interest
-	 * @param {string|RegExp} eventname - The exact name of the chaincode event (must match
-	 *                             the name given to the target chaincode's call to
-	 *                             <code>stub.SetEvent(name, payload)</code>), or a
-	 *                             regular expression string to match more than one
-	 *                             event by this chaincode.
+	 * @param {string|RegExp} eventname - The exact name of the chaincode event or
+	 *        regular expression that will be matched against the name given to
+	 *        the target chaincode's call
+	 *        <code>stub.SetEvent(name, payload)</code>)
 	 * @param {function} onEvent - callback function for matched events. It gets passed
-	 *                             four parameters, a {@link ChaincodeEvent} object,
-	 *                             the block number this transaction was committed to the ledger,
-	 *                             the transaction ID, and a string representing the status of
-	 *                             the transaction.
-	 * @param {function} onError - Optional callback function to be notified when this event hub
-	 *                             is shutdown. The shutdown may be caused by a network error or by
-	 *                             a call to the "disconnect()" method or a connection error.
-	 *                             This callback will also be called when the event hub is shutdown
-	 *                             due to the last block being received if replaying and requesting
-	 *                             the endBlock to be 'newest'.
-	 * @param {RegistrationOpts} options -
+	 *        four parameters, a {@link ChaincodeEvent} object,
+	 *        the block number this transaction was committed to the ledger,
+	 *        the transaction ID, and a string representing the status of
+	 *        the transaction.
+	 * @param {function} onError - Optional callback function to be notified when
+	 *        this ChannelEventHub is shutdown. The shutdown may be caused by a network
+	 *        or connection error, by a call to the "disconnect()" method or when
+	 *        the fabric service ends the connection this ChannelEventHub.
+	 *        This callback will also be called when the ChannelEventHub is shutdown
+	 *        due to the last block being received if replaying and requesting
+	 *        the endBlock to be 'newest'.
+	 * @param {RegistrationOpts} options - Options on the registrations to allow
+	 *        for start and end block numbers, automatically unregister and
+	 *        automatically disconnect.
 	 * @returns {Object} An object that should be treated as an opaque handle used
-	 *                   to unregister (see {@link unregisterChaincodeEvent})
+	 *        to unregister (see [unregisterChaincodeEvent()]{@link ChannelEventHub#unregisterChaincodeEvent})
 	 */
 	registerChaincodeEvent(ccid, eventname, onEvent, onError, options) {
 		logger.debug('registerChaincodeEvent - start');
@@ -1037,43 +1070,27 @@ class ChannelEventHub {
 	}
 
 	/**
-	 * Register a listener to receive all block events <b>from all the channels</b> that
-	 * the target peer is part of. The listener's "onEvent" callback gets called
-	 * on the arrival of every block. If the target peer is expected to participate
-	 * in more than one channel, then care must be taken in the listener's implementation
-	 * to differentiate blocks from different channels. See the example below on
-	 * how to accomplish that.
+	 * Register a listener to receive all block committed to this channel.
+	 * The listener's "onEvent" callback gets called on the arrival of every block.
 	 * <br><br>
 	 * An error may occur in the connection establishment which runs
 	 * asynchronously. The best practice would be to provide an
 	 * "onError" callback to be notified when this ChannelEventHub has an issue.
 	 *
 	 * @param {function} onEvent - Callback function that takes a single parameter
-	 *                             of a {@link Block} object
-	 * @param {function} onError - Optional callback function to be notified when this event hub
-	 *                             is shutdown. The shutdown may be caused by a network error or by
-	 *                             a call to the "disconnect()" method or a connection error.
-	 *                             This callback will also be called when the event hub is shutdown
-	 *                             due to the last block being received if replaying and requesting
-	 *                             the endBlock to be 'newest'.
-	 * @param {RegistrationOpts} options -
+	 *        of a {@link Block} object
+	 * @param {function} onError - Optional callback function to be notified when
+	 *        this ChannelEventHub is shutdown. The shutdown may be caused by a network
+	 *        or connection error, by a call to the "disconnect()" method or when
+	 *        the fabric service ends the connection this ChannelEventHub.
+	 *        This callback will also be called when the ChannelEventHub is shutdown
+	 *        due to the last block being received if replaying and requesting
+	 *        the endBlock to be 'newest'.
+	 * @param {RegistrationOpts} options - Options on the registrations to allow
+	 *        for start and end block numbers, automatically unregister and
+	 *        automatically disconnect.
 	 * @returns {int} This is the block registration number that must be
-	 *                sed to unregister (see unregisterBlockEvent)
-	 *
-	 * @example <caption>Find out the channel Id of the arriving block</caption>
-	 * eh.registerBlockEvent(
-	 *   (block) => {
-	 *     let first_tx = block.data.data[0]; // get the first transaction
-	 *     let header = first_tx.payload.header; // the "header" object contains metadata of the transaction
-	 *     let channel_id = header.channel_header.channel_id;
-	 *     if ("mychannel" !== channel_id) return;
-	 *
-	 *     // do useful processing of the block
-	 *   },
-	 *   (err) => {
-	 *     console.log('Oh snap!');
-	 *   }
-	 * );
+	 *        used to unregister this block listener. see [unregisterBlockEvent()]{@link ChannelEventHub#unregisterBlockEvent}
 	 */
 	registerBlockEvent(onEvent, onError, options) {
 		logger.debug('registerBlockEvent - start');
@@ -1124,26 +1141,30 @@ class ChannelEventHub {
 
 	/**
 	 * Register a callback function to receive a notification when the transaction
-	 * by the given id has been committed into a block.
+	 * by the given id has been committed into a block. Using the special string
+	 * 'all' will indicate that this listener will notify (call) the callback
+	 * for every transaction received from the fabric service.
 	 * <br><br>
 	 * An error may occur in the connection establishment which runs
 	 * asynchronously. The best practice would be to provide an
 	 * "onError" callback to be notified when this ChannelEventHub has an issue.
 	 *
-	 * @param {string} txid - Transaction id string
-	 * @param {function} onEvent - Callback function that takes a parameter of transaction ID,
-	 *                             a string parameter indicating the transaction status,
-	 *                             and the block number this transaction was committed to the ledger
-	 * @param {function} onError - Optional callback function to be notified when this event hub
-	 *                             is shutdown. The shutdown may be caused by a network error or by
-	 *                             a call to the "disconnect()" method or a connection error.
-	 *                             This callback will also be called when the event hub is shutdown
-	 *                             due to the last block being received if replaying and requesting
-	 *                             the endBlock to be 'newest'.
-	 * @param {RegistrationOpts} options -
-	 * @returns {string} The transaction ID that was used to register this event listener,
-	 *          will the same as the txid parameter and must be used to unregister
-	 *          this event listener.
+	 * @param {string} txid - Transaction id string or 'all'
+	 * @param {function} onEvent - Callback function that takes a parameter of
+	 *        transaction ID, a string parameter indicating the transaction status,
+	 *        and the block number of this transaction committed to the ledger
+	 * @param {function} onError - Optional callback function to be notified when
+	 *        this ChannelEventHub is shutdown. The shutdown may be caused by a network
+	 *        or connection error, by a call to the "disconnect()" method or when
+	 *        the fabric event service ends the connection this ChannelEventHub.
+	 *        This callback will also be called when the ChannelEventHub is shutdown
+	 *        due to the last block being received if replaying and requesting
+	 *        the endBlock to be 'newest'.
+	 * @param {RegistrationOpts} options - Options on the registrations to allow
+	 *        for start and end block numbers, automatically unregister and
+	 *        automatically disconnect.
+	 * @returns {string} The transaction ID that was used to register this event listener.
+	 *        May be used to unregister this event listener.
 	 */
 	registerTxEvent(txid, onEvent, onError, options) {
 		logger.debug('registerTxEvent start - txid:%s', txid);
@@ -1383,7 +1404,7 @@ class ChannelEventHub {
 	}
 
 	/*
-	 * utility method to mark if this channel event hub has seen the last
+	 * utility method to mark if this ChannelEventHub has seen the last
 	 * in the range when this event hub is using startBlock/endBlock
 	 */
 	_checkReplayEnd() {

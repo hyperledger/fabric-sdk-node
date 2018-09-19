@@ -159,7 +159,7 @@ test('\n\n** ChannelEventHub tests\n\n', (t) => {
 		() => {
 			eh.lastBlockNumber();
 		},
-		/This ChannelEventHub has not had an event from the peer/,
+		/This ChannelEventHub has not seen a block from the peer/,
 		'Check that we able to see: This ChannelEventHub has not had an event from the peer'
 	);
 
