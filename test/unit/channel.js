@@ -978,49 +978,6 @@ test('\n\n** TEST ** orderer via channel set/get bad address', (t) => {
 	t.end();
 });
 
-//Verify the verify compareProposalResponseResults method.
-//
-test('\n\n** TEST ** verify compareProposalResponseResults', (t) => {
-	const client = new Client();
-	//
-	// Create and configure the test channel
-	//
-	const channel = client.newChannel('testchannel-compare-proposal');
-
-	t.throws(
-		() => {
-			channel.compareProposalResponseResults();
-		},
-		/Error: Missing proposal responses/,
-		'Test compareProposalResponseResults with empty parameter'
-	);
-
-	t.throws(
-		() => {
-			channel.compareProposalResponseResults({});
-		},
-		/Error: Parameter must be an array of ProposalRespone Objects/,
-		'Test compareProposalResponseResults with an object parameter'
-	);
-
-	t.throws(
-		() => {
-			channel.compareProposalResponseResults([]);
-		},
-		/Error: Parameter proposal responses does not contain a PorposalResponse/,
-		'Test compareProposalResponseResults with an empty array parameter'
-	);
-
-	t.throws(
-		() => {
-			channel.compareProposalResponseResults([{}]);
-		},
-		/Error: Parameter must be a ProposalResponse Object/,
-		'Test compareProposalResponseResults with an array without the correct endorsements parameter'
-	);
-	t.end();
-});
-
 //Verify the verify verifyProposalResponse method.
 //
 test('\n\n** TEST ** verify verifyProposalResponse', (t) => {
