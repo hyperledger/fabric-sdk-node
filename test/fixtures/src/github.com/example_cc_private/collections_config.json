@@ -25,7 +25,7 @@
         ]
       }
     },
-    "requiredPeerCount": 0,
+    "requiredPeerCount": 1,
     "maxPeerCount": 1,
     "blockToLive": 100
   },
