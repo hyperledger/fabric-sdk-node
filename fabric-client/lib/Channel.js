@@ -734,7 +734,7 @@ const Channel = class {
 	 * @param {string} mspid - The mpsid of the organization this peer belongs.
 	 * @param {ChannelPeerRoles} roles - Optional. The roles this peer will perform
 	 *        on this channel.  A role that is not defined will default to true
-	 * @param {boolean} replace - If an orderer exist with the same name, replace
+	 * @param {boolean} replace - If a peer exist with the same name, replace
 	 *        with this one.
 	 */
 	addPeer(peer, mspid, roles, replace) {
