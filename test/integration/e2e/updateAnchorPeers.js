@@ -106,17 +106,17 @@ test('\n\n***** End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
 
 	const blockEventPromise = new Promise((resolve, reject) => {
 		const block_registration_number = eventHub.registerBlockEvent((block) => {
-			t.comment(JSON.stringify(block));
-			// if (block.data.data.length !== 1) {
-			// 	reject('Config block must only contain one transaction');
-			// }
-			// let envelope = _commonProto.Envelope.decode(block.data.data[0]);
-			// const payload = _commonProto.Payload.decode(envelope.payload);
-			// const channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
-			// if (channel_header.type !== _commonProto.HeaderType.CONFIG) {
-			// 	t.comment(`Block must be of type "CONFIG" (${_commonProto.HeaderType.CONFIG}), but got "${channel_header.type}" instead`);
-			// 	return;
-			// }
+			if (block.data.data.length !== 1) {
+				reject('Config block must only contain one transaction');
+			}
+			const envelope = block.data.data[0];
+			const channel_header = envelope.payload.header.channel_header;
+			t.comment(JSON.stringify(channel_header));
+
+			if (channel_header.type !== _commonProto.HeaderType.CONFIG) {
+				t.comment(`expect block of type "CONFIG" (${_commonProto.HeaderType.CONFIG}), but got "${channel_header.type}" instead`);
+				return;
+			}
 
 			t.pass('Successfully update anchor peers.');
 			eventHub.unregisterBlockEvent(block_registration_number, true);
