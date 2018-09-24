@@ -27,11 +27,11 @@ const NetworkConfig = require('fabric-client/lib/impl/NetworkConfig_1_0.js');
 const testutil = require('./util.js');
 
 
-test('\n\n ** configuration testing **\n\n', function (t) {
+test('\n\n ** configuration testing **\n\n', (t) => {
 	testutil.resetDefaults();
 
 	t.doesNotThrow(
-		function() {
+		() => {
 			let client = new Client();
 			client.setTlsClientCertAndKey('client cert', 'client key');
 			t.equals(client._tls_mutual.clientCert, 'client cert', 'Checking that client cert was set');
@@ -45,21 +45,21 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	);
 
 	t.throws(
-		function() {
+		() => {
 			Client.loadFromConfig();
 		},
 		/Invalid network configuration/,
 		'Should not be able to instantiate a new instance of "Client" without a valid path to the configuration');
 
 	t.throws(
-		function() {
+		() => {
 			Client.loadFromConfig('/');
 		},
 		/EISDIR: illegal operation on a directory/,
 		'Should not be able to instantiate a new instance of "Client" without an actual configuration file');
 
 	t.throws(
-		function() {
+		() => {
 			Client.loadFromConfig('something');
 		},
 		/ENOENT: no such file or directory/,
@@ -110,12 +110,12 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setUserContext(new User('testUser'), true);
 			const channel = client.getChannel('mychannel2');
 			let peers = client.getPeersForOrg();
-			t.equals('grpcs://localhost:8051', peers[0].getUrl(),  ' Check to see if we got the right peer for org2 by default');
+			t.equals('grpcs://localhost:8051', peers[0].getUrl(), ' Check to see if we got the right peer for org2 by default');
 			peers = client.getPeersForOrg('Org1MSP');
-			t.equals('grpcs://localhost:7051', peers[0].getUrl(),  ' Check to see if we got the right peer for org1 by specifically asking for mspid of org1');
-			let orderers = channel.getOrderers();
+			t.equals('grpcs://localhost:7051', peers[0].getUrl(), ' Check to see if we got the right peer for org1 by specifically asking for mspid of org1');
+			const orderers = channel.getOrderers();
 			t.equals('grpcs://localhost:7050', orderers[0].getUrl(), ' Check to see if we got the right orderer for mychannel2');
-			let client_config = client.getClientConfig();
+			const client_config = client.getClientConfig();
 			t.equals('wallet-name', client_config.credentialStore.wallet, ' check to see if we can get the wallet name from the client config');
 			t.equals('Org2MSP', client.getMspid(), ' check to see if we can get the mspid of the current clients organization');
 
@@ -128,40 +128,40 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client2.loadFromConfig('test/fixtures/org2.yaml');
 			t.equals(client2.getPeersForOrg().length, 1, ' Check to see that we got 1 peer for Org2');
 
-			let opts = {somesetting : 4};
-			client._network_config.addTimeout(opts,1);
+			let opts = { somesetting: 4 };
+			client._network_config.addTimeout(opts, 1);
 			t.equals(opts['somesetting'], 4, 'check that existing settings are still there');
 			t.equals(opts['request-timeout'], 120000, 'check that endorser timeout was added');
 			opts = {};
-			client._network_config.addTimeout(opts,2);
+			client._network_config.addTimeout(opts, 2);
 			t.equals(opts['request-timeout'], 30000, 'check that orderer timeout was added');
 			opts = {};
-			client._network_config.addTimeout(opts,3);
+			client._network_config.addTimeout(opts, 3);
 			t.equals(opts['request-timeout'], 60000, 'check that eventHub timeout was added');
 			opts = {};
-			client._network_config.addTimeout(opts,4);
+			client._network_config.addTimeout(opts, 4);
 			t.equals(opts['request-timeout'], 3000, 'check that eventReg timeout was added');
 			opts = {};
 			opts['request-timeout'] = 5000;
-			client._network_config.addTimeout(opts,4);
+			client._network_config.addTimeout(opts, 4);
 			t.equals(opts['request-timeout'], 5000, 'check that timeout did not change');
 			client._network_config._network_config.client.connection.timeout.peer.eventHub = '2s';
 			opts = {};
-			client._network_config.addTimeout(opts,3);
+			client._network_config.addTimeout(opts, 3);
 			t.equals(opts['request-timeout'], undefined, 'check that timeout did not change');
 
 			let peer = client._network_config.getPeer('peer0.org1.example.com');
-			t.equals(peer._options['request-timeout'],120001, ' check that we get this peer endorser timeout set');
+			t.equals(peer._options['request-timeout'], 120001, ' check that we get this peer endorser timeout set');
 			peer = client._network_config.getPeer('peer0.org2.example.com');
-			t.equals(peer._options['request-timeout'],120000, ' check that we get this peer endorser timeout set');
-			let orderer = client._network_config.getOrderer('orderer.example.com');
-			t.equals(orderer._options['request-timeout'],30000, ' check that we get this orderer timeout set');
+			t.equals(peer._options['request-timeout'], 120000, ' check that we get this peer endorser timeout set');
+			const orderer = client._network_config.getOrderer('orderer.example.com');
+			t.equals(orderer._options['request-timeout'], 30000, ' check that we get this orderer timeout set');
 
 			delete client._network_config._network_config.certificateAuthorities['ca-org1'].tlsCACerts;
 			delete client._network_config._network_config.certificateAuthorities['ca-org1'].httpOptions;
-			client.setCryptoSuite({cryptoSuite : 'cryptoSuite'});
-			let certificate_authority = client.getCertificateAuthority();
-			if(certificate_authority && certificate_authority.fabricCAServices._cryptoSuite && certificate_authority.fabricCAServices._cryptoSuite.cryptoSuite === 'cryptoSuite') {
+			client.setCryptoSuite({ cryptoSuite: 'cryptoSuite' });
+			const certificate_authority = client.getCertificateAuthority();
+			if (certificate_authority && certificate_authority.fabricCAServices._cryptoSuite && certificate_authority.fabricCAServices._cryptoSuite.cryptoSuite === 'cryptoSuite') {
 				t.pass('Successfully got the certificate_authority');
 			} else {
 				t.fail('Failed to get the certificate_authority');
@@ -189,8 +189,8 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setUserContext(new User('testUser'), true);
 			client.loadFromConfig(network_data);
 			const channel = client.getChannel('mychannel2');
-			t.equals(channel.getPeers()[0].getUrl(),'grpcs://localhost:7051',' check to see that the peer has been added to the channel');
-			t.equals(channel.getPeers()[1].getUrl(),'grpcs://localhost:8051',' check to see that the peer has been added to the channel');
+			t.equals(channel.getPeers()[0].getUrl(), 'grpcs://localhost:7051', ' check to see that the peer has been added to the channel');
+			t.equals(channel.getPeers()[1].getUrl(), 'grpcs://localhost:8051', ' check to see that the peer has been added to the channel');
 		},
 		'3 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
 	);
@@ -212,7 +212,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setCryptoSuite(Client.newCryptoSuite());
 			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig({}, client);
-			client.setCryptoSuite({cryptoSuite : 'cryptoSuite'});
+			client.setCryptoSuite({ cryptoSuite: 'cryptoSuite' });
 			client.getCertificateAuthority();
 		},
 		/Network configuration is missing this client's organization and certificate authority/,
@@ -221,7 +221,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 
 	network_config.version = '1.0.0';
 	network_config.channels = {
-		'mychannel' : {
+		'mychannel': {
 		}
 	};
 
@@ -232,22 +232,22 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.newChannel('mychannel');
-			t.equals('mychannel',channel.getName(),'Channel should be named');
+			t.equals('mychannel', channel.getName(), 'Channel should be named');
 		},
 		'Should be able to instantiate a new instance of "Channel" with an empty channel definition in the network configuration'
 	);
 
 	network_config.channels = {
-		'mychannel' : {
-			orderers : ['orderer0']
+		'mychannel': {
+			orderers: ['orderer0']
 		}
 	};
 
 	network_config.orderers = {
-		'orderer0' : {
-			url : 'grpcs://localhost:7050',
-			'tlsCACerts' : {
-				path : 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+		'orderer0': {
+			url: 'grpcs://localhost:7050',
+			'tlsCACerts': {
+				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
 			}
 		}
 	};
@@ -259,9 +259,9 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.getChannel('mychannel');
-			t.equals('mychannel',channel.getName(),'Channel should be named');
+			t.equals('mychannel', channel.getName(), 'Channel should be named');
 			const orderer = channel.getOrderers()[0];
-			if(orderer instanceof Orderer) t.pass('Successfully got an orderer');
+			if (orderer instanceof Orderer) t.pass('Successfully got an orderer');
 			else t.fail('Failed to get an orderer');
 			t.equals('orderer0', orderer.getName(), 'Orderer should be named');
 		},
@@ -269,17 +269,17 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	);
 
 	network_config.channels = {
-		'mychannel' : {
-			peers : {
-				peer1 : {},
-				peer2 : {},
-				peer3 : {},
-				peer4 : {}
+		'mychannel': {
+			peers: {
+				peer1: {},
+				peer2: {},
+				peer3: {},
+				peer4: {}
 			},
-			orderers : ['orderer0']
+			orderers: ['orderer0']
 		}
 	};
-	network_config.orgainizations = { 'org1' : {} };
+	network_config.orgainizations = { 'org1': {} };
 
 	t.doesNotThrow(
 		() => {
@@ -288,25 +288,25 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.getChannel('mychannel');
-			t.equals('mychannel',channel.getName(),'Channel should be named');
+			t.equals('mychannel', channel.getName(), 'Channel should be named');
 			t.equals(channel.getPeers().length, 0, 'Peers should be empty');
 			const orderer = channel.getOrderers()[0];
-			if(orderer instanceof Orderer) t.pass('Successfully got an orderer');
+			if (orderer instanceof Orderer) t.pass('Successfully got an orderer');
 			else t.fail('Failed to get an orderer');
 		},
 		'Should be able to instantiate a new instance of "Channel" with org that does not exist in the network configuration'
 	);
 
 	network_config.organizations = {
-		'org1' : {
-			mspid : 'mspid1',
-			peers : ['peer1','peer2'],
-			certificateAuthorities : ['ca1']
+		'org1': {
+			mspid: 'mspid1',
+			peers: ['peer1', 'peer2'],
+			certificateAuthorities: ['ca1']
 		},
-		'org2' : {
-			mspid : 'mspid2',
-			peers : ['peer3','peer4'],
-			certificateAuthorities : ['ca2']
+		'org2': {
+			mspid: 'mspid2',
+			peers: ['peer3', 'peer4'],
+			certificateAuthorities: ['ca2']
 		}
 	};
 
@@ -317,58 +317,58 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.getChannel('mychannel');
-			t.equals('mychannel',channel.getName(),'Channel should be named');
+			t.equals('mychannel', channel.getName(), 'Channel should be named');
 			t.equals(channel.getPeers().length, 0, 'Peers should be empty');
 			const orderer = channel.getOrderers()[0];
-			if(orderer instanceof Orderer) t.pass('Successfully got an orderer');
+			if (orderer instanceof Orderer) t.pass('Successfully got an orderer');
 			else t.fail('Failed to get an orderer');
 		},
 		'Should be able to instantiate a new instance of "Channel" with a peer in the org that does not exist in the network configuration'
 	);
 
 	network_config.peers = {
-		'peer1' : {
-			url : 'grpcs://localhost:7051',
-			'tlsCACerts' : {
-				pem : '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'
+		'peer1': {
+			url: 'grpcs://localhost:7051',
+			'tlsCACerts': {
+				pem: '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'
 			}
 		},
-		'peer2' : {
-			url : 'grpcs://localhost:7052',
-			'tlsCACerts' : {
-				path : 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+		'peer2': {
+			url: 'grpcs://localhost:7052',
+			'tlsCACerts': {
+				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
 			}
 		},
-		'peer3' : {
-			url : 'grpcs://localhost:7053',
-			'tlsCACerts' : {
-				path : 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+		'peer3': {
+			url: 'grpcs://localhost:7053',
+			'tlsCACerts': {
+				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
 			}
 		},
-		'peer4' : {
-			url : 'grpcs://localhost:7054',
-			'tlsCACerts' : {
-				path : 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+		'peer4': {
+			url: 'grpcs://localhost:7054',
+			'tlsCACerts': {
+				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
 			}
 		},
 	};
 
 	network_config.certificateAuthorities = {
-		'ca1' : {
-			url : 'https://localhost:7051',
-			'tlsCACerts' : {
-				pem : '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'
+		'ca1': {
+			url: 'https://localhost:7051',
+			'tlsCACerts': {
+				pem: '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'
 			},
-			grpcOptions : { verify : true},
-			registrar : { enrollId: 'admin1', enrollSecret: 'adminpw1'}
+			grpcOptions: { verify: true },
+			registrar: { enrollId: 'admin1', enrollSecret: 'adminpw1' }
 		},
-		'ca2' : {
-			url : 'https://localhost:7052',
-			'tlsCACerts' : {
-				path : 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+		'ca2': {
+			url: 'https://localhost:7052',
+			'tlsCACerts': {
+				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
 			},
-			grpcOptions : { verify : true},
-			registrar : { enrollId: 'admin2', enrollSecret: 'adminpw2' }
+			grpcOptions: { verify: true },
+			registrar: { enrollId: 'admin2', enrollSecret: 'adminpw2' }
 		}
 	};
 	t.doesNotThrow(
@@ -378,16 +378,16 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const channel = client.getChannel('mychannel');
-			t.equals('mychannel',channel.getName(),'Channel should be named');
+			t.equals('mychannel', channel.getName(), 'Channel should be named');
 			t.equals(channel.getPeers().length, 4, 'Peers should be four');
-			const peer =  channel.getPeers()[0];
-			if(peer && peer.constructor && peer.constructor.name === 'ChannelPeer') t.pass('Successfully got a channel peer');
+			const peer = channel.getPeers()[0];
+			if (peer && peer.constructor && peer.constructor.name === 'ChannelPeer') t.pass('Successfully got a channel peer');
 			else t.fail('Failed to get a channel peer');
 		},
 		'Should be able to instantiate a new instance of "Channel" with orderer, org and peer defined in the network configuration'
 	);
 
-	const peer1 = new Peer('grpcs://localhost:9999', {pem : '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'});
+	const peer1 = new Peer('grpcs://localhost:9999', { pem: '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----' });
 
 	t.doesNotThrow(
 		() => {
@@ -397,27 +397,27 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client._network_config = new NetworkConfig(network_config, client);
 
 			let targets = client.getTargetPeers('peer1', client);
-			if(Array.isArray(targets)) t.pass('targets is an array');
+			if (Array.isArray(targets)) t.pass('targets is an array');
 			else t.fail('targets is not an array');
-			if(targets[0] instanceof Peer) t.pass('targets has a peer ');
+			if (targets[0] instanceof Peer) t.pass('targets has a peer ');
 			else t.fail('targets does not have a peer');
 
 			targets = client.getTargetPeers(['peer1'], client);
-			if(Array.isArray(targets)) t.pass('targets is an array');
+			if (Array.isArray(targets)) t.pass('targets is an array');
 			else t.fail('targets is not an array');
-			if(targets[0] instanceof Peer) t.pass('targets has a peer ');
+			if (targets[0] instanceof Peer) t.pass('targets has a peer ');
 			else t.fail('targets does not have a peer');
 
 			targets = client.getTargetPeers(peer1, client);
-			if(Array.isArray(targets)) t.pass('targets is an array');
+			if (Array.isArray(targets)) t.pass('targets is an array');
 			else t.fail('targets is not an array');
-			if(targets[0] instanceof Peer) t.pass('targets has a peer ');
+			if (targets[0] instanceof Peer) t.pass('targets has a peer ');
 			else t.fail('targets does not have a peer');
 
 			targets = client.getTargetPeers([peer1], client);
-			if(Array.isArray(targets)) t.pass('targets is an array');
+			if (Array.isArray(targets)) t.pass('targets is an array');
 			else t.fail('targets is not an array');
-			if(targets[0] instanceof Peer) t.pass('targets has a peer ');
+			if (targets[0] instanceof Peer) t.pass('targets has a peer ');
 			else t.fail('targets does not have a peer');
 
 		},
@@ -469,26 +469,26 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			const client = new Client();
 			let network_config_impl = new NetworkConfig(network_config, client);
 			let client_config = network_config_impl.getClientConfig();
-			if(typeof client_config.credentialStore === 'undefined') {
+			if (typeof client_config.credentialStore === 'undefined') {
 				t.pass('client config should be empty');
 			} else {
 				t.fail('client config is not correct');
 			}
 			network_config.client = {};
-			network_config.client.credentialStore = {path : '/tmp/something', cryptoStore : { path : 'relative/something'}};
+			network_config.client.credentialStore = { path: '/tmp/something', cryptoStore: { path: 'relative/something' } };
 			network_config_impl = new NetworkConfig(network_config, client);
 			client_config = network_config_impl.getClientConfig();
-			t.equals(client_config.credentialStore.path, '/tmp/something','client config store path should be something');
-			if(client_config.credentialStore.cryptoStore.path.indexOf('relative/something') > 1) {
+			t.equals(client_config.credentialStore.path, '/tmp/something', 'client config store path should be something');
+			if (client_config.credentialStore.cryptoStore.path.indexOf('relative/something') > 1) {
 				t.pass('client config cryptoStore store path should be something relative');
 			} else {
 				t.fail('client config cryptoStore store path should be something relative');
 			}
-			network_config.client.credentialStore = {dbsetting : '/tmp/something', cryptoStore : { dbsetting : 'relative/something'}};
+			network_config.client.credentialStore = { dbsetting: '/tmp/something', cryptoStore: { dbsetting: 'relative/something' } };
 			network_config_impl = new NetworkConfig(network_config, client);
 			client_config = network_config_impl.getClientConfig();
-			t.equals(client_config.credentialStore.dbsetting, '/tmp/something','client config store path should be something');
-			t.equals(client_config.credentialStore.cryptoStore.dbsetting, 'relative/something','client config cryptoStore store path should be something');
+			t.equals(client_config.credentialStore.dbsetting, '/tmp/something', 'client config store path should be something');
+			t.equals(client_config.credentialStore.cryptoStore.dbsetting, 'relative/something', 'client config cryptoStore store path should be something');
 
 		},
 		'Should not get an error when working with credentialStore settings'
@@ -501,35 +501,35 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setUserContext(new User('testUser'), true);
 			client._network_config = new NetworkConfig(network_config, client);
 			const organizations = client._network_config.getOrganizations();
-			if(Array.isArray(organizations)) t.pass('organizations is an array');
+			if (Array.isArray(organizations)) t.pass('organizations is an array');
 			else t.fail('organizations is not an array');
-			if(organizations[0] instanceof Organization) t.pass('organizations has a organization ');
+			if (organizations[0] instanceof Organization) t.pass('organizations has a organization ');
 			else t.fail('organizations does not have a organization');
 
 			let organization = client._network_config.getOrganization(organizations[0].getName());
 			let ca = organization.getCertificateAuthorities()[0];
-			t.equals('ca1',ca.getName(),'check the ca name');
+			t.equals('ca1', ca.getName(), 'check the ca name');
 
 			organization = client._network_config.getOrganization(organizations[1].getName());
 			ca = organization.getCertificateAuthorities()[0];
-			t.equals('ca2',ca.getName(),'check the ca name');
+			t.equals('ca2', ca.getName(), 'check the ca name');
 
 			organization = client._network_config.getOrganizationByMspId(organizations[0].getMspid());
 			ca = organization.getCertificateAuthorities()[0];
-			t.equals('ca1',ca.getName(),'check the ca name');
+			t.equals('ca1', ca.getName(), 'check the ca name');
 		},
 		'Should be able to get organizations'
 	);
 
 	network_config.channels = {
-		'mychannel' : {
-			peers : {
-				peer1: {endorsingPeer:false, chaincodeQuery:false, ledgerQuery:false},
-				peer2 : {endorsingPeer:false, chaincodeQuery:false, ledgerQuery:false},
-				peer3 : {ledgerQuery:true},
-				peer4 : {ledgerQuery:false}
+		'mychannel': {
+			peers: {
+				peer1: { endorsingPeer: false, chaincodeQuery: false, ledgerQuery: false },
+				peer2: { endorsingPeer: false, chaincodeQuery: false, ledgerQuery: false },
+				peer3: { ledgerQuery: true },
+				peer4: { ledgerQuery: false }
 			},
-			orderers : ['orderer0']
+			orderers: ['orderer0']
 		}
 	};
 
@@ -612,7 +612,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.throws(
 		() => {
 			const client = new Client();
-			client._network_config = new NetworkConfig({ channels : {somechannel : {}}}, client);
+			client._network_config = new NetworkConfig({ channels: { somechannel: {} } }, client);
 			client.getTargetOrderer(null, null, 'somechannel');
 		},
 		/"orderer" request parameter is missing and there are no orderers defined on this channel in the network configuration/,
@@ -627,21 +627,21 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client._network_config = new NetworkConfig(network_config, client);
 
 			let orderer = client.getTargetOrderer('orderer0');
-			if(orderer instanceof Orderer) t.pass('orderer has a orderer ');
+			if (orderer instanceof Orderer) t.pass('orderer has a orderer ');
 			else t.fail('orderer does not have a orderer');
 
-			const orderer1 = new Orderer('grpcs://localhost:9999', {pem : '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'});
+			const orderer1 = new Orderer('grpcs://localhost:9999', { pem: '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----' });
 
 			orderer = client.getTargetOrderer(orderer1);
-			if(orderer instanceof Orderer) t.pass('orderer has a orderer ');
+			if (orderer instanceof Orderer) t.pass('orderer has a orderer ');
 			else t.fail('orderer does not have a orderer');
 
 			orderer = client.getTargetOrderer(null, null, 'mychannel');
-			if(orderer instanceof Orderer) t.pass('orderer has a orderer ');
+			if (orderer instanceof Orderer) t.pass('orderer has a orderer ');
 			else t.fail('orderer does not have a orderer');
 
 			orderer = client.getTargetOrderer(null, [orderer1]);
-			if(orderer instanceof Orderer) t.pass('orderer has a orderer ');
+			if (orderer instanceof Orderer) t.pass('orderer has a orderer ');
 			else t.fail('orderer does not have a orderer');
 		},
 		'Should be able to get orderer'
@@ -653,10 +653,11 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 			client.setCryptoSuite(Client.newCryptoSuite());
 			client.setUserContext(new User('testUser'), true);
 			client.getChannel('mychannel');
-			client.loadFromConfig({ version: '1.0.0',
-				channels : {
-					'otherchannel' : {
-						orderers : ['orderer0']
+			client.loadFromConfig({
+				version: '1.0.0',
+				channels: {
+					'otherchannel': {
+						orderers: ['orderer0']
 					}
 				}
 			});
@@ -668,12 +669,12 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const organization = new Organization('name', 'mspid');
-			t.equals('name',organization.getName(), 'check name');
-			t.equals('mspid',organization.getMspid(), 'check mspid');
+			t.equals('name', organization.getName(), 'check name');
+			t.equals('mspid', organization.getMspid(), 'check mspid');
 			organization.addPeer('peer');
-			t.equals('peer',organization.getPeers()[0], 'check getPeers');
+			t.equals('peer', organization.getPeers()[0], 'check getPeers');
 			organization.addCertificateAuthority('ca');
-			t.equals('ca',organization.getCertificateAuthorities()[0], 'check getPeers');
+			t.equals('ca', organization.getCertificateAuthorities()[0], 'check getPeers');
 			t.comment(organization.toString());
 		},
 		'Should be able to run all methods of Organization'
@@ -682,21 +683,21 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.doesNotThrow(
 		() => {
 			const certificateAuthority = new CertificateAuthority('name', 'caname', 'url', 'connection', 'tlscert', 'registrar');
-			t.equals('name',certificateAuthority.getName(), 'check name');
-			t.equals('caname',certificateAuthority.getCaName(), 'check caname');
-			t.equals('url',certificateAuthority.getUrl(), 'check url');
-			t.equals('connection',certificateAuthority.getConnectionOptions(), 'check connection options');
-			t.equals('tlscert',certificateAuthority.getTlsCACerts(), 'check tlscert');
-			t.equals('registrar',certificateAuthority.getRegistrar(), 'check registrar');
+			t.equals('name', certificateAuthority.getName(), 'check name');
+			t.equals('caname', certificateAuthority.getCaName(), 'check caname');
+			t.equals('url', certificateAuthority.getUrl(), 'check url');
+			t.equals('connection', certificateAuthority.getConnectionOptions(), 'check connection options');
+			t.equals('tlscert', certificateAuthority.getTlsCACerts(), 'check tlscert');
+			t.equals('registrar', certificateAuthority.getRegistrar(), 'check registrar');
 			t.comment(certificateAuthority.toString());
 		},
 		'Should be able to run all methods of CertificateAuthority'
 	);
 
 	const clientpr1 = new Client();
-	const pr1 = clientpr1.initCredentialStores().then(function () {
+	const pr1 = clientpr1.initCredentialStores().then(() => {
 		t.fail('pr1 Should not have been able to resolve the promise');
-	}).catch(function (err) {
+	}).catch((err) => {
 		if (err.message.indexOf('No network configuration settings found') >= 0) {
 			t.pass('pr1 Successfully caught error');
 		} else {
@@ -705,11 +706,11 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	});
 	Promise.all([pr1])
 		.then(
-			function () {
+			() => {
 				t.end();
 			}
 		).catch(
-			function (err) {
+			(err) => {
 				t.fail('Channel query calls, Promise.all: ');
 				logger.error(err.stack ? err.stack : err);
 				t.end();
@@ -746,7 +747,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.throws(
 		() => {
 			const client = new Client();
-			client.setAdminSigningIdentity('privateKey','cert');
+			client.setAdminSigningIdentity('privateKey', 'cert');
 		},
 		/Invalid parameter. Must have a valid mspid./,
 		'Should get an error Invalid parameter. Must have a valid mspid.'
@@ -769,7 +770,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		client.loadFromConfig('test/fixtures/org1.yaml');
 		t.pass('Should be able to load an additional config ...this one has the client section');
 		t.pass('Should be able to try to load an admin from the config');
-	} catch(err) {
+	} catch (err) {
 		t.fail('Fail - caught an error while trying to load a config and run the set admin');
 	}
 
@@ -778,27 +779,27 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	clientp1.loadFromConfig('test/fixtures/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 
-	const p1 = clientp1.initCredentialStores().then(()=> {
+	const p1 = clientp1.initCredentialStores().then(() => {
 		t.pass('Should be able to load the stores from the config');
 		clientp1._setAdminFromConfig();
 		t.pass('Should be able to load an admin from the config');
 		clientp1._getSigningIdentity(true);
 		t.pass('Should be able to get the loaded admin identity');
-	}).catch(function (err) {
-		t.fail(util.format('Should not get an error when doing get signer: %O',err));
+	}).catch((err) => {
+		t.fail(util.format('Should not get an error when doing get signer: %O', err));
 	});
 
 	const clientp2 = Client.loadFromConfig('test/fixtures/network.yaml');
 	t.pass('Successfully loaded a network configuration');
 	clientp2.loadFromConfig('test/fixtures/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
-	const p2 = clientp2.initCredentialStores().then(()=> {
+	const p2 = clientp2.initCredentialStores().then(() => {
 		t.pass('Should be able to load the stores from the config');
 		clientp2._network_config._network_config.client = {};
 		return clientp2._setUserFromConfig();
-	}).then(()=>{
+	}).then(() => {
 		t.fail('Should not be able to load an user based on the config');
-	}).catch((err) =>{
+	}).catch((err) => {
 		if (err.message.includes('Missing parameter. Must have a username.')) {
 			t.pass('Successfully caught Missing parameter. Must have a username.');
 		} else {
@@ -811,13 +812,13 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.pass('Successfully loaded a network configuration');
 	clientp3.loadFromConfig('test/fixtures/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
-	const p3 = clientp3.initCredentialStores().then(()=> {
+	const p3 = clientp3.initCredentialStores().then(() => {
 		t.pass('Should be able to load the stores from the config');
 		clientp4._network_config._network_config.client = {};
-		return clientp3._setUserFromConfig({username:'username'});
-	}).then(()=>{
+		return clientp3._setUserFromConfig({ username: 'username' });
+	}).then(() => {
 		t.fail('Should not be able to load an user based on the config');
-	}).catch(function (err) {
+	}).catch((err) => {
 		if (err.message.indexOf('Missing parameter. Must have a password.') >= 0) {
 			t.pass('Successfully caught Missing parameter. Must have a password.');
 		} else {
@@ -828,9 +829,9 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 
 	const clientp4 = Client.loadFromConfig('test/fixtures/network.yaml');
 	t.pass('Successfully loaded a network configuration');
-	const p4 = clientp4._setUserFromConfig({username:'username', password:'password'}).then(()=> {
+	const p4 = clientp4._setUserFromConfig({ username: 'username', password: 'password' }).then(() => {
 		t.fail('Should not be able to load an user based on the config');
-	}).catch(function (err) {
+	}).catch((err) => {
 		if (err.message.includes('Client requires a network configuration loaded, stores attached, and crypto suite.')) {
 			t.pass('Successfully caught Client requires a network configuration loaded, stores attached, and crypto suite.');
 		} else {
@@ -839,13 +840,13 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 		}
 	});
 
-	Promise.all([p1,p2, p3, p4])
+	Promise.all([p1, p2, p3, p4])
 		.then(
-			function () {
+			() => {
 				t.end();
 			}
 		).catch(
-			function (err) {
+			(err) => {
 				t.fail('Client network config calls failed during the Promise.all');
 				logger.error(err.stack ? err.stack : err);
 				t.end();
@@ -855,7 +856,7 @@ test('\n\n ** configuration testing **\n\n', function (t) {
 	t.end();
 });
 
-test('\n\n ** channel testing **\n\n', function (t) {
+test('\n\n ** channel testing **\n\n', (t) => {
 	const client = new Client();
 	client.setCryptoSuite(Client.newCryptoSuite());
 	client.setUserContext(new User('testUser'), true);
@@ -874,12 +875,12 @@ test('\n\n ** channel testing **\n\n', function (t) {
 });
 
 function checkTarget(target, check, msg, t) {
-	if(Array.isArray(target)) {
+	if (Array.isArray(target)) {
 		target = target[0];
 	}
-	if(target.toString().indexOf(check) > -1) {
-		t.pass('Successfully got the correct target result for '+ msg);
+	if (target.toString().indexOf(check) > -1) {
+		t.pass('Successfully got the correct target result for ' + msg);
 	} else {
-		t.equals(check, target.toString(), 'Failed to get correct target result for '+ msg);
+		t.equals(check, target.toString(), 'Failed to get correct target result for ' + msg);
 	}
 }
