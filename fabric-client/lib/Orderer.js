@@ -232,7 +232,6 @@ class Orderer extends Remote {
 						deliver.end();
 						return reject(new Error(error_msg));
 					}, self._request_timeout);
-
 					deliver.on('data', (response) => {
 						logger.debug('sendDeliver - on data'); //response: %j', response);
 						// check the type of the response
@@ -267,11 +266,9 @@ class Orderer extends Remote {
 							}
 						} else {
 							logger.error('sendDeliver ERROR - reject with invalid response from the orderer');
-							if (self._sendDeliverConnect) {
-								clearTimeout(deliver_timeout);
-								deliver.end();
-								self._sendDeliverConnect = false;
-							}
+							clearTimeout(deliver_timeout);
+							deliver.end();
+							self._sendDeliverConnect = false;
 							return reject(new Error('SYSTEM_ERROR'));
 						}
 					});
@@ -311,7 +308,7 @@ class Orderer extends Remote {
 					self._sendDeliverConnect = true;
 					logger.debug('sendDeliver - sent envelope');
 				} catch (error) {
-					logger.error('sendDeliver - system error ::' + error.stack ? error.stack : error);
+					logger.error('sendDeliver - system error ::' + (error.stack ? error.stack : error));
 					if (error instanceof Error) {
 						return reject(error);
 					} else {

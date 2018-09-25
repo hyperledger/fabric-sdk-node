@@ -176,7 +176,33 @@ describe('Packager', () => {
 			PackagerRewire.__set__('Car', FakeOther);
 			PackagerRewire.__set__('Golang', FakeGoLang);
 
-			const obj = await PackagerRewire.package('chaincodePath', 'golang', false);
+			const obj = await PackagerRewire.package('chaincodePath', null, false);
+
+			sinon.assert.calledWith(debugStub, 'packager: type %s ');
+			obj.should.deep.equal({response: 'go_build'});
+		});
+
+		it('should handle `JAVA` chaincode types', async () => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+
+			const FakeJava = (function() {
+				function Fake() {
+				}
+				Fake.prototype.package = function() {
+					return Promise.resolve({response: 'go_build'});
+				};
+				return Fake;
+			})();
+
+			const debugStub = sandbox.stub(FakeLogger, 'debug');
+
+			PackagerRewire.__set__('logger', FakeLogger);
+			PackagerRewire.__set__('Java', FakeJava);
+
+			const obj = await PackagerRewire.package('chaincodePath', 'java', false);
 
 			sinon.assert.calledWith(debugStub, 'packager: type %s ');
 			obj.should.deep.equal({response: 'go_build'});

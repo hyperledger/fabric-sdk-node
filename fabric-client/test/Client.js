@@ -1027,6 +1027,81 @@ describe('Client', () => {
 		});
 	});
 
+	describe('#queryPeers', () => {
+		let getTargetPeersStub;
+		let ChannelStub;
+		let _discoverStub;
+
+		let client;
+		beforeEach(() => {
+			getTargetPeersStub = sandbox.stub();
+			ChannelStub = sandbox.stub();
+			revert.push(Client.__set__('Channel', ChannelStub));
+			_discoverStub = sandbox.stub();
+			revert.push(Client.__set__('Client.prototype._discover', _discoverStub));
+
+			client = new Client();
+			client.getTargetPeers = getTargetPeersStub;
+		});
+
+		it('should throw an error if no request is given', async() => {
+			try {
+				await client.queryPeers();
+				should.fail();
+			} catch (e) {
+				e.message.should.equal('Peer is required');
+				sinon.assert.calledWith(FakeLogger.debug, '%s - start', 'queryPeers');
+			}
+		});
+
+		it('should throw an error if no request.target is given', async() => {
+			try {
+				await client.queryPeers({});
+				should.fail();
+			} catch (e) {
+				e.message.should.equal('Peer is required');
+			}
+		});
+
+		it('should throw an error if undefined target peers are found', async() => {
+			try {
+				await client.queryPeers({target: 'peers'});
+			} catch (e) {
+				e.message.should.equal('Peer not found');
+				sinon.assert.calledWith(getTargetPeersStub, 'peers');
+			}
+		});
+
+		it('should throw an error if no target peers are found', async() => {
+			getTargetPeersStub.returns([]);
+			try {
+				await client.queryPeers({target: 'peers'});
+			} catch (e) {
+				e.message.should.equal('Peer not found');
+				sinon.assert.calledWith(getTargetPeersStub, 'peers');
+			}
+		});
+
+		it('should throw if creating a channel object throws', async() => {
+			ChannelStub.throws(Error, 'test-error');
+			getTargetPeersStub.returns(['peer1']);
+			try {
+				await client.queryPeers({target: 'peer1'});
+			} catch (e) {
+				e.message.should.equal('Failed to discover local peers ::Error');
+				sinon.assert.calledWith(ChannelStub, 'discover-peers', client);
+			}
+		});
+
+		it('should call discover with the generated discover_request and return the discovered peers', async() => {
+			getTargetPeersStub.returns(['peer1']);
+			_discoverStub.returns(Promise.resolve('peer-results'));
+			ChannelStub.returns({_discover: _discoverStub});
+			const peers = await client.queryPeers({target: 'peer1'});
+			peers.should.equal('peer-results');
+		});
+	});
+
 	describe('#queryChannels', () => {
 		let _getSigningIdentityStub;
 		let getTargetPeersStub;
@@ -2872,6 +2947,21 @@ describe('Client', () => {
 			sinon.assert.calledWith(requireStub, 'network-config-file');
 			sinon.assert.calledWith(MockNetworkConfig, { version: '1.0' }, 'client');
 			sinon.assert.calledWith(readFileSyncStub, 'config.yaml');
+			sinon.assert.calledWith(safeLoadStub, 'file-data');
+			networkConfig.should.deep.equal(new MockNetworkConfig());
+		});
+
+		it('should return the new network config when config is a yml file path', () => {
+			readFileSyncStub.returns('file-data');
+			safeLoadStub.returns({ version: '1.0' });
+			getConfigSettingStub.returns({ '1.0': 'network-config-file' });
+			requireStub.returns(MockNetworkConfig);
+			MockNetworkConfig.returns('network-config');
+			const networkConfig = _getNetworkConfig('config.yml', 'client');
+			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
+			sinon.assert.calledWith(requireStub, 'network-config-file');
+			sinon.assert.calledWith(MockNetworkConfig, { version: '1.0' }, 'client');
+			sinon.assert.calledWith(readFileSyncStub, 'config.yml');
 			sinon.assert.calledWith(safeLoadStub, 'file-data');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});

@@ -1,9 +1,16 @@
 /*
- Copyright 2016, 2018 London Stock Exchange All Rights Reserved.
-
- SPDX-License-Identifier: Apache-2.0
-
-*/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 'use strict';
 const Long = require('long');
@@ -166,15 +173,17 @@ class ChannelEventHub {
 		// connect count for this instance
 		this._current_stream = 0;
 		// reference to the channel instance holding critical context such as signing identity
-		if (!channel)
+		if (!channel) {
 			throw new Error('Missing required argument: channel');
+		}
 
 		this._clientContext = channel._clientContext;
 		this._channel = channel;
 		// peer node to connect
 		// reference to the peer instance holding end point information
-		if (!peer)
+		if (!peer) {
 			throw new Error('Missing required argument: peer');
+		}
 		this._peer = peer;
 	}
 
@@ -190,7 +199,7 @@ class ChannelEventHub {
 	 * Return the peer url
 	 */
 	getPeerAddr() {
-		if (this._peer) {
+		if (typeof this._peer === 'object') {
 			return this._peer._endpoint.addr;
 		}
 
@@ -280,7 +289,7 @@ class ChannelEventHub {
 		if (typeof options === 'boolean') {
 			full_block = options;
 		}
-		if (typeof options === 'object') {
+		if (typeof options === 'object' && options !== null) {
 			signedEvent = options.signedEvent || null;
 			full_block = options.full_block || null;
 		}
@@ -295,15 +304,13 @@ class ChannelEventHub {
 		if (typeof full_block === 'boolean') {
 			this._filtered_stream = !full_block;
 			logger.debug('connect - filtered block stream set to:%s', !full_block);
-		} else if (typeof full_block === 'undefined' || full_block === null) {
-			logger.debug('connect - using a filtered block stream by default');
 		} else {
-			throw new Error('"filtered" parameter is invalid');
+			logger.debug('connect - using a filtered block stream by default');
 		}
 
 		logger.debug('connect - signed event:%s', !!signedEvent);
 		this._connect({ signedEvent });
-		logger.debug('connect - end  %s', this.getPeerAddr());
+		logger.debug('connect - end %s', this.getPeerAddr());
 	}
 
 	/*
@@ -336,7 +343,9 @@ class ChannelEventHub {
 			logger.debug('_connect - end - already connected');
 			return;
 		}
-		if (!this._peer) throw Error('Must set peer address before connecting.');
+		if (!this._peer) {
+			throw Error('Must set peer address before connecting.');
+		}
 
 		// clean up
 		this._shutdown();
@@ -346,7 +355,6 @@ class ChannelEventHub {
 		const stream_id = this._current_stream;
 		logger.debug('_connect - start stream:', stream_id);
 		const self = this; // for callback context
-
 		const connecton_setup_timeout = setTimeout(() => {
 			logger.error('_connect - timed out after:%s', self._peer._request_timeout);
 			self._connect_running = false;
@@ -408,18 +416,18 @@ class ChannelEventHub {
 					// check to see if we should shut things down
 					self._checkReplayEnd();
 				} catch (error) {
-					logger.error('ChannelEventHub - ::' + error.stack ? error.stack : error);
+					logger.error('ChannelEventHub - ::' + (error.stack ? error.stack : error));
 					logger.error('ChannelEventHub has detected an error ' + error.toString());
 					//report error to all callbacks and shutdown this ChannelEventHub
 					self._disconnect(error);
 				}
-			}
-			else if (deliverResponse.Type === 'status') {
+			} else if (deliverResponse.Type === 'status') {
 				if (deliverResponse.status === 'SUCCESS') {
 					if (self._ending_block_seen) {
 						// this is normal after the last block comes in when we set an ending block
 						logger.debug('on.data - status received after last block seen: %s block_num:', deliverResponse.status, self._last_block_seen);
-					} if (self._ending_block_newest) {
+					}
+					if (self._ending_block_newest) {
 						// this is normal after the last block comes in when we set to newest as an ending block
 						logger.debug('on.data - status received when newest block seen: %s block_num:', deliverResponse.status, self._last_block_seen);
 						self._disconnect(new Error(`Newest block received:${self._last_block_seen} status:${deliverResponse.status}`));
@@ -721,7 +729,7 @@ class ChannelEventHub {
 	 * Sends an error to all registered event "onError" callbacks
 	 */
 	_closeAllCallbacks(err) {
-		const method = '_closeAllCallbacks -' + this.getPeerAddr();
+		const method = '_closeAllCallbacks - ' + this.getPeerAddr();
 		logger.debug('%s - start', method);
 
 		logger.debug('%s - blockOnErrors %s', method, Object.keys(this._blockRegistrations).length);
@@ -849,7 +857,7 @@ class ChannelEventHub {
 		logger.debug('_checkConnection - start');
 		if (this._connected || this._connect_running) {
 			const ready = isStreamReady(this);
-			logger.debug('_checkConnection -  %s with stream channel ready %s', this._peer.getUrl(), ready);
+			logger.debug('_checkConnection - %s with stream channel ready %s', this._peer.getUrl(), ready);
 
 			if (!ready && !this._connect_running) { //Not READY, but trying
 				logger.error('_checkConnection - connection is not ready');
@@ -882,22 +890,20 @@ class ChannelEventHub {
 					logger.debug('checkConnection - grpc isPaused :%s', is_paused);
 					if (is_paused) {
 						this._stream.resume();
-						logger.debug('checkConnection - grpc resuming ');
+						logger.debug('checkConnection - grpc resuming');
 					} else if (!ready) {
 						// try to reconnect
 						this._connect_running = false;
 						this._connect({ force: true });
 					}
-				}
-				else {
+				} else {
 					logger.debug('checkConnection - stream was shutdown - will reconnected');
 					// try to reconnect
 					this._connect_running = false;
 					this._connect({ force: true });
 				}
-			}
-			catch (error) {
-				logger.error('checkConnection - error ::' + error.stack ? error.stack : error);
+			} catch (error) {
+				logger.error('checkConnection - error ::' + (error.stack ? error.stack : error));
 				const err = new Error('Problem during reconnect and the event hub is not connected ::%s', error);
 				this._disconnect(err);
 			}
@@ -1060,13 +1066,12 @@ class ChannelEventHub {
 		const cbtable = this._chaincodeRegistrants[listener_handle.ccid];
 		if (!cbtable && throwError) {
 			throw new Error(`No event registration for chaincode id ${listener_handle.ccid}`);
-		} else {
+		} else if (cbtable) {
 			cbtable.delete(listener_handle);
 			if (cbtable.size <= 0) {
 				delete this._chaincodeRegistrants[listener_handle.ccid];
 			}
 		}
-
 	}
 
 	/**
@@ -1437,7 +1442,6 @@ class ChannelEventHub {
 		this._allowRegistration = true;
 		this._start_stop_registration = null;
 	}
-
 }
 
 module.exports = ChannelEventHub;

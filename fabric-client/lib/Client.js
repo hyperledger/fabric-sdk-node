@@ -793,11 +793,11 @@ const Client = class extends BaseClient {
 		logger.debug('%s - start', method);
 
 		let targets = null;
-		if (!request && !request.target) {
+		if (!request || !request.target) {
 			throw Error('Peer is required');
 		} else {
 			targets = this.getTargetPeers(request.target);
-			if (!targets && !targets[0]) {
+			if (!targets || !targets[0]) {
 				throw Error('Peer not found');
 			}
 		}
@@ -1799,7 +1799,7 @@ function _getNetworkConfig(config, client) {
 		const file_data = fs.readFileSync(config_loc);
 		const file_ext = path.extname(config_loc);
 		// maybe the file is yaml else has to be JSON
-		if (file_ext.indexOf('y') > -1) {
+		if ((/(yml|yaml)$/i).test(file_ext)) {
 			network_data = yaml.safeLoad(file_data);
 		} else {
 			network_data = JSON.parse(file_data);
