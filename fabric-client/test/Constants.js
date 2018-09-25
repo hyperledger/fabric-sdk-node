@@ -33,7 +33,7 @@ describe('Constants', () => {
 		Constants.SYSTEM_CHANNEL_NAME.should.equal('testchainid');
 	});
 
-	it('should set the correct NetworkConfig.ENDORSING_PEER_ROLE contant', () => {
+	it('should set the correct NetworkConfig.ENDORSING_PEER_ROLE constant', () => {
 		Constants.NetworkConfig.ENDORSING_PEER_ROLE.should.equal('endorsingPeer');
 	});
 
