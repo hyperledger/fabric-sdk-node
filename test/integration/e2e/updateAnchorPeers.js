@@ -95,7 +95,7 @@ test('\n\n***** End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
 			'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 		}
 	);
-	channel.addPeer(peer,ORGS[org].mspid);
+	channel.addPeer(peer, ORGS[org].mspid);
 	await channel.initialize();
 
 
@@ -107,7 +107,8 @@ test('\n\n***** End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
 	const blockEventPromise = new Promise((resolve, reject) => {
 		const block_registration_number = eventHub.registerBlockEvent((block) => {
 			if (block.data.data.length !== 1) {
-				reject('Config block must only contain one transaction');
+				t.comment('Config block must only contain one transaction');
+				return;
 			}
 			const envelope = block.data.data[0];
 			const channel_header = envelope.payload.header.channel_header;
