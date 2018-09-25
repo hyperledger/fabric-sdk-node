@@ -680,9 +680,14 @@ const Channel = class {
 	}
 
 	/**
+	 * @typedef {Object} OrganizationIdentifier
+	 * @property {string} id The organization's MSP id
+	 */
+
+	/**
 	 * Get organization identifiers from the MSP's for this channel
-	 * @returns {string[]} Array of MSP identifiers representing the channel's
-	 *          participating organizations
+	 * @returns {OrganizationIdentifier[]} Array of OrganizationIdentifier Objects
+	 *          representing the channel's participating organizations
 	 */
 	getOrganizations() {
 		const method = 'getOrganizations';
