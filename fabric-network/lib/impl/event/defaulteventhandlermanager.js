@@ -90,6 +90,7 @@ class DefaultEventHandlerManager {
 		logger.debug('createTxEventHandler: txid = %s', txid);
 		// pass in all available eventHubs to listen on, the handler decides when to resolve based on strategy
 		// a TxEventHandler should check that the available ones are usable when appropriate.
+		this.eventStrategy.reset();
 		return new TransactionEventHandler(this, txid);
 	}
 

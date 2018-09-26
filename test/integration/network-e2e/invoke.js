@@ -124,6 +124,84 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
+test('\n\n***** Network End-to-end flow: invoke multiple transactions to move money using in memory wallet and default event strategy *****\n\n', async (t) => {
+	const gateway = new Gateway();
+	let org1EventHub;
+
+	try {
+		await inMemoryIdentitySetup();
+		await tlsSetup();
+
+
+		const contract = await createContract(t, gateway, {
+			wallet: inMemoryWallet,
+			identity: 'User1@org1.example.com',
+			clientTlsIdentity: 'tlsId'
+		});
+
+		// Obtain an event hub that that will be used by the underlying implementation
+		org1EventHub = await getEventHubForOrg(gateway, 'Org1MSP');
+		const org2EventHub = await getEventHubForOrg(gateway, 'Org2MSP');
+
+		// initialize eventFired to 0
+		let eventFired = 0;
+
+		// have to register for all transaction events (a new feature in 1.3) as
+		// there is no way to know what the initial transaction id is
+		org1EventHub.registerTxEvent('all', (txId, code) => {
+			if (code === 'VALID') {
+				eventFired++;
+			}
+		}, () => {});
+
+		let response = await contract.submitTransaction('move', 'a', 'b','100');
+
+		t.true(org1EventHub.isconnected(), 'org1 event hub correctly connected');
+		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
+		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
+
+		const expectedResult = 'move succeed';
+		if(response.toString() === expectedResult){
+			t.pass('Successfully invoked first transaction chaincode on channel');
+		}
+		else {
+			t.fail('Unexpected response first from transaction chaincode: ' + response);
+		}
+
+		// second transaction for same connection
+		response = await contract.submitTransaction('move', 'a', 'b','50');
+
+		t.equal(eventFired, 2, 'single event for org1 correctly unblocked submitTransaction');
+
+		if(response.toString() === expectedResult){
+			t.pass('Successfully invoked second transaction chaincode on channel');
+		}
+		else {
+			t.fail('Unexpected response from second transaction chaincode: ' + response);
+		}
+
+		// third transaction for same connection
+		response = await contract.submitTransaction('move', 'a', 'b','25');
+
+		t.equal(eventFired, 3, 'single event for org1 correctly unblocked submitTransaction');
+
+		if(response.toString() === expectedResult){
+			t.pass('Successfully invoked third transaction chaincode on channel');
+		}
+		else {
+			t.fail('Unexpected response from third transaction chaincode: ' + response);
+		}
+	} catch(err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
+		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+	}
+
+
+	t.end();
+});
+
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and MSPID_SCOPE_ALLFORTX event strategy *****\n\n', async (t) => {
 	const gateway = new Gateway();
 	let org1EventHub;
