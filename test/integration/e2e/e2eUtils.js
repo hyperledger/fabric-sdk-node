@@ -198,8 +198,8 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 	const data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	const caroots = Buffer.from(data).toString();
 
-	const badTransientMap = { 'test1': 'transientValue' }; // have a different key than what the chaincode example_cc1.go expects in Init()
-	const transientMap = { 'test': 'transientValue' };
+	const badTransientMap = { 'test1': Buffer.from('transientValue') }; // have a different key than what the chaincode example_cc1.go expects in Init()
+	const transientMap = { 'test': Buffer.from('transientValue') };
 	let tlsInfo = null;
 	let request = null;
 
