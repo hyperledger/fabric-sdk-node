@@ -1,9 +1,17 @@
 /*
- Copyright 2017, 2018 IBM All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
- SPDX-License-Identifier: Apache-2.0
-
-*/
 
 'use strict';
 
@@ -69,17 +77,18 @@ const BasePackager = class {
 		return new Promise((resolve, reject) => {
 			logger.debug('findMetadataDescriptors : start');
 			const descriptors = [];
-			klaw(filePath).on('data', (entry) => {
-				if (entry.stats.isFile() && this.isMetadata(entry.path)) {
+			klaw(filePath)
+				.on('data', (entry) => {
+					if (entry.stats.isFile() && this.isMetadata(entry.path)) {
 
-					const desc = {
-						name: path.join('META-INF', path.relative(filePath, entry.path).split('\\').join('/')), // for windows style paths
-						fqp: entry.path
-					};
-					logger.debug(' findMetadataDescriptors  :: %j', desc);
-					descriptors.push(desc);
-				}
-			})
+						const desc = {
+							name: path.join('META-INF', path.relative(filePath, entry.path).split('\\').join('/')), // for windows style paths
+							fqp: entry.path
+						};
+						logger.debug(' findMetadataDescriptors  :: %j', desc);
+						descriptors.push(desc);
+					}
+				})
 				.on('error', (error, item) => {
 					logger.error('error while packaging item %j :: %s', item, error);
 					reject(error);
@@ -160,13 +169,14 @@ const BasePackager = class {
 	generateTarGz (descriptors, dest) {
 		return new Promise((resolve, reject) => {
 			const pack = tar.pack();
-
 			// Setup the pipeline to compress on the fly and resolve/reject the promise
-			pack.pipe(zlib.createGzip()).pipe(dest).on('finish', () => {
-				resolve(true);
-			}).on('error', (err) => {
-				reject(err);
-			});
+			pack.pipe(zlib.createGzip()).pipe(dest)
+				.on('finish', () => {
+					resolve(true);
+				})
+				.on('error', (err) => {
+					reject(err);
+				});
 
 			// Iterate through each descriptor in the order it was provided and resolve
 			// the entry asynchronously.  We will gather results below before
