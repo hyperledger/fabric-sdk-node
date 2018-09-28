@@ -17,8 +17,7 @@ const logger = require('../../logger').getLogger('FileSystemWallet');
  * This class defines an implementation of an Identity wallet that persists
  * to the file system.
  *
- * @class FileSystemWallet
- * @see See {@link BaseWallet}
+ * @class
  * @extends {BaseWallet}
  */
 class FileSystemWallet extends BaseWallet {

@@ -16,6 +16,10 @@ const logger = require('../../logger').getLogger('InMemoryWallet');
 // label it will overwrite the existing one.
 const memoryStore = new Map();
 
+/**
+ * @class
+ * @extends {BaseWallet}
+ */
 class InMemoryWallet extends BaseWallet {
 	constructor(walletmixin) {
 		super(walletmixin);

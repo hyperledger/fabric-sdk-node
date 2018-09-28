@@ -25,6 +25,8 @@ gulp.task('clean', function(){
 gulp.task('doc', ['clean'], function () {
 	gulp.src([
 		'docs/index.md',
+		'fabric-network/index.js',
+		'fabric-network/lib/**/*.js',
 		'fabric-client/index.js',
 		'fabric-client/lib/**/*.js',
 		'!fabric-client/lib/protos/**',

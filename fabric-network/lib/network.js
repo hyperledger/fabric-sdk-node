@@ -11,13 +11,19 @@ const logger = require('./logger').getLogger('Network');
 const DefaultEventHandlerManager = require('./impl/event/defaulteventhandlermanager');
 const util = require('util');
 
+/**
+ * A Network represents the set of peers in a Fabric network.
+ * Applications should get a Network instance using the
+ * gateway's [getNetwork]{@link Gateway#getNetwork} method.
+ */
+
 class Network {
 
-	/**
-	 * Network constructor for internal use only
+	/*
+	 * Network constructor for internal use only.
 	 * @param {Gateway} gateway The owning gateway instance
 	 * @param {Channel} channel The fabric-client channel instance
-	 * @private
+	 * @ignore
 	 */
 	constructor(gateway, channel) {
 		logger.debug('in Network constructor');
@@ -141,8 +147,8 @@ class Network {
 
 	/**
 	 * Returns an instance of a contract (chaincode) on the current network
-	 * @param chaincodeId
-	 * @returns {Contract}
+	 * @param {string} chaincodeId the chaincode Identifier
+	 * @returns {Contract} the contract
 	 * @api
 	 */
 	getContract(chaincodeId) {

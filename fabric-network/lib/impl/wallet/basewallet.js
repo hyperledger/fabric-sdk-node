@@ -12,6 +12,11 @@ const Wallet = require('../../api/wallet');
 const logger = require('../../logger').getLogger('BaseWallet');
 const util = require('util');
 
+/**
+ * Base class for the built-in wallet implementations.  For internal use only.
+ * @class
+ * @implements {Wallet}
+ */
 class BaseWallet extends Wallet {
 
 	constructor(walletMixin = new X509WalletMixin()) {
@@ -31,7 +36,7 @@ class BaseWallet extends Wallet {
 	 *
 	 * @param {*} client
 	 * @param {*} label
-	 * @returns
+	 * @returns The user context
 	 * @memberof Wallet
 	 */
 	async setUserContext(client, label) {

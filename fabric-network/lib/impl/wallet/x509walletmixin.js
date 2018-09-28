@@ -8,6 +8,9 @@
 
 const logger = require('../../logger').getLogger('X509WalletMixin');
 
+/**
+ * @class
+ */
 class X509WalletMixin {
 
 	static createIdentity(mspId, certificate, privateKey) {

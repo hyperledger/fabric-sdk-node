@@ -13,6 +13,17 @@ const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandl
 
 const logger = require('./logger').getLogger('Gateway');
 
+/**
+ * The gateway peer provides the connection point for an application to access the Fabric network.  It is instantiated using
+ * the default constructor.
+ * It can then be connected to a fabric network using the [connect]{@link Gateway#connect} method by passing either a CCP definition
+ * or an existing {@link Client} object.
+ * Once connected, it can then access individual Network instances (channels) using the [getNetwork]{@link Gateway#getNetwork} method
+ * which in turn can access the [smart contracts]{@link Contract} installed on a network and
+ * [submit transactions]{@link Contract#submitTransaction} to the ledger.
+ *
+ * @class
+ */
 class Gateway {
 
 	static _mergeOptions(defaultOptions, suppliedOptions) {
@@ -60,20 +71,29 @@ class Gateway {
  	 */
 
 	/**
-	 * @typedef {Object} DefaultEventHanderOptions
+	 * @typedef {Object} DefaultEventHandlerOptions
  	 * @property {number} [commitTimeout = 300] The timeout period in seconds to wait for commit notification to complete
-	 * @property {*} [strategy] Event handling strategy to identify successful transaction commits. A null value
-	 * indicates that no event handling is desired.
+	 * @property {MSPID_SCOPE_ALLFORTX|MSPID_SCOPE_ANYFORTX|NETWORK_SCOPE_ALLFORTX|NETWORK_SCOPE_ANYFORTX} [strategy] Event
+	 * handling strategy to identify successful transaction commits. A null value
+	 * indicates that no event handling is desired. The default is {@link MSPID_SCOPE_ALLFORTX}.
 	 */
 
 	/**
      * Connect to the Gateway with a connection profile or a prebuilt Client instance.
      *
-     * @param {Client | string} config The configuration for this Gateway which can come from a common connection
+     * @param {string|Client} config The configuration for this Gateway which can come from a common connection
 	 * profile or an existing fabric-client Client instance
-	 * @see see {Client}
      * @param {GatewayOptions} options specific options for creating this Gateway instance
      * @memberof Gateway
+	 * @example
+	 * const gateway = new Gateway();
+	 * const wallet = new FileSystemWallet('./WALLETS/wallet');
+	 * const ccpFile = fs.readFileSync('./network.json');
+	 * const ccp = JSON.parse(ccpFile.toString());
+	 * await gateway.connect(ccp, {
+	 *   identity: 'admin',
+	 *   wallet: wallet
+	 * });
      */
 	async connect(config, options) {
 		const method = 'connect';
@@ -129,7 +149,7 @@ class Gateway {
 	/**
      * Get the current identity
      *
-     * @returns {User} a fabric-client User instance of the current identity used by this Gateway
+     * @returns {User} A fabric-client {@link User} instance of the current identity used by this Gateway
      * @memberof Gateway
      */
 	getCurrentIdentity() {
@@ -140,7 +160,7 @@ class Gateway {
 	/**
      * Get the underlying Client object instance
      *
-     * @returns {Client} the underlying fabric-client Client instance
+     * @returns {Client} The underlying fabric-client {@link Client} instance
      * @memberof Gateway
      */
 	getClient() {
@@ -150,7 +170,7 @@ class Gateway {
 
 	/**
 	 * Returns the set of options associated with the Gateway connection
-	 * @returns {GatewayOptions} the Gateway options
+	 * @returns {GatewayOptions} The Gateway connection options
 	 * @memberof Gateway
 	 */
 	getOptions() {
@@ -159,7 +179,7 @@ class Gateway {
 	}
 
 	/**
-     * clean up and disconnect this Gateway in prep for it to be discarded and garbage collected
+     * Clean up and disconnect this Gateway connection in preparation for it to be discarded and garbage collected
      *
      * @memberof Gateway
      */
@@ -172,9 +192,9 @@ class Gateway {
 	}
 
 	/**
-	 * Returns an object representing the network
-	 * @param networkName
-	 * @returns {Promise<Network>}
+	 * Returns an object representing a network
+	 * @param {string} networkName The name of the network (channel name)
+	 * @returns {Network}
 	 * @memberof Gateway
 	 */
 	async getNetwork(networkName) {

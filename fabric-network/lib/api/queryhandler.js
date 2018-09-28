@@ -6,6 +6,11 @@
 
 'use strict';
 
+/**
+ * QueryHandler defines the interface for pluggable query handlers.
+ *
+ * @interface
+ */
 class QueryHandler {
 
 	constructor(channel, mspId, peerMap, queryOptions) {
