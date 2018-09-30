@@ -1,8 +1,16 @@
 /*
- Copyright 2016, 2018 IBM All Rights Reserved.
-
- SPDX-License-Identifier: Apache-2.0
-*/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 'use strict';
 
@@ -49,6 +57,11 @@ const ImplicitMetaPolicy_Rule = { 0: 'ANY', 1: 'ALL', 2: 'MAJORITY' };
 
 const PEER_NOT_ASSIGNED_MSG = 'Peer with name "%s" not assigned to this channel';
 const ORDERER_NOT_ASSIGNED_MSG = 'Orderer with name "%s" not assigned to this channel';
+
+function logAndThrow(methodName, errorMessage) {
+	logger.error('%s error %s', methodName, errorMessage);
+	throw new Error(errorMessage);
+}
 
 /**
  * Channels provide data isolation for a set of participating organizations.
@@ -693,16 +706,10 @@ const Channel = class {
 		const method = 'getOrganizations';
 		logger.debug('%s - start', method);
 		const msps = this._msp_manager.getMSPs();
-		const orgs = [];
-		if (msps) {
-			const keys = Object.keys(msps);
-			for (const key in keys) {
-				const msp = msps[keys[key]];
-				const msp_org = { id: msp.getId() };
-				logger.debug('%s - found %j', method, msp_org);
-				orgs.push(msp_org);
-			}
-		}
+		const mspIds = Object.keys(msps);
+		const orgs = mspIds.map((mspId) => {
+			return { id: mspId };
+		});
 		logger.debug('%s - orgs::%j', method, orgs);
 		return orgs;
 	}
@@ -921,14 +928,10 @@ const Channel = class {
 	 * @returns {ChannelEventHub} The ChannelEventHub instance
 	 */
 	newChannelEventHub(peer) {
+		// Will always return one or throw
 		const peers = this._getTargets(peer, Constants.NetworkConfig.EVENT_SOURCE_ROLE, true);
-		// will only return one
-		if (peers && peers.length > 0) {
-			const channel_event_hub = new ChannelEventHub(this, peers[0]);
-			return channel_event_hub;
-		} else {
-			throw new Error(util.format(PEER_NOT_ASSIGNED_MSG, peer));
-		}
+		const channel_event_hub = new ChannelEventHub(this, peers[0]);
+		return channel_event_hub;
 	}
 
 	/**
@@ -997,7 +1000,7 @@ const Channel = class {
 		const method = 'getPeersForOrg';
 		let _mspid = null;
 		if (!mspid) {
-			_mspid = this._clientContext._mspid;
+			_mspid = this._clientContext.getMspid();
 			logger.debug('%s - starting - using client mspid: %s', method, _mspid);
 		} else {
 			_mspid = mspid;
@@ -2619,18 +2622,14 @@ const Channel = class {
 		const method = 'sendTransactionProposal';
 		logger.debug('%s - start', method);
 
-		let errorMsg = client_utils.checkProposalRequest(request, true);
-
+		const errorMsg = client_utils.checkProposalRequest(request, true);
 		if (errorMsg) {
-			// do nothing so we skip the rest of the checks
-		} else if (!request.args) {
-			// args is not optional because we need for transaction to execute
-			errorMsg = 'Missing "args" in Transaction proposal request';
+			logAndThrow(method, errorMsg);
 		}
 
-		if (errorMsg) {
-			logger.error('%s error %s', method, errorMsg);
-			throw new Error(errorMsg);
+		if (!request.args) {
+			// args is not optional because we need for transaction to execute
+			logAndThrow(method, 'Missing "args" in Transaction proposal request');
 		}
 
 		if (!request.targets && this._endorsement_handler) {
@@ -2885,29 +2884,24 @@ const Channel = class {
 		const method = 'generateUnsignedProposal';
 		logger.debug('%s - start', method);
 
-		const args = [];
-		args.push(Buffer.from(request.fcn ? request.fcn : 'invoke', 'utf8'));
-		logger.debug('%s - adding function arg:%s', method, request.fcn ? request.fcn : 'invoke');
-
 		// check request && request.chaincodeId
-		let errorMsg = client_utils.checkProposalRequest(request, false);
-
-		if (!request.args) {
-			errorMsg = 'Missing "args" in Transaction proposal request';
-		}
-		if (!Array.isArray(request.args)) {
-			errorMsg = 'Param "args" in Transaction proposal request should be a string array';
-		}
-
+		const errorMsg = client_utils.checkProposalRequest(request, false);
 		if (errorMsg) {
-			logger.error('%s error %s', method, errorMsg);
-			throw new Error(errorMsg);
+			logAndThrow(method, errorMsg);
 		}
 
+		if (!Array.isArray(request.args)) {
+			logAndThrow(method, 'Parameter "args" in transaction proposal request must be an array but was ' + typeof request.args);
+		}
+
+		const functionName = request.fcn ? request.fcn : 'invoke';
+		logger.debug('%s - adding function arg: %s', method, functionName);
+		const args = [ Buffer.from(functionName, 'utf8') ];
 		request.args.forEach(arg => {
 			logger.debug('%s - adding arg %s', method, arg);
 			args.push(Buffer.from(arg, 'utf8'));
 		});
+
 		//special case to support the bytes argument of the query by hash
 		if (request.argbytes) {
 			logger.debug('%s - adding the argument :: argbytes', method);
@@ -2982,8 +2976,8 @@ const Channel = class {
 			throw Error('Missing input request object on the generateUnsignedTransaction() call');
 		}
 		// Verify that data is being passed in
-		if (!request.proposalResponses) {
-			throw Error('Missing "proposalResponses" parameter in transaction request');
+		if (!Array.isArray(request.proposalResponses)) {
+			throw Error('"proposalResponses" parameter in transaction request must be an array but was ' + typeof request.proposalResponses);
 		}
 		if (!request.proposal) {
 			throw Error('Missing "proposal" parameter in transaction request');
@@ -2992,10 +2986,6 @@ const Channel = class {
 		const chaincodeProposal = request.proposal;
 
 		const endorsements = [];
-		if (!Array.isArray(proposalResponses)) {
-			//convert to array
-			proposalResponses = [proposalResponses];
-		}
 		for (const proposalResponse of proposalResponses) {
 			// make sure only take the valid responses to set on the consolidated response object
 			// to use in the transaction object
@@ -3010,16 +3000,10 @@ const Channel = class {
 		}
 		const proposalResponse = proposalResponses[0];
 
-		let use_admin_signer = false;
-		if (request.txId) {
-			use_admin_signer = request.txId.isAdmin();
-		}
-
 		const proposal = ChannelHelper.buildTransactionProposal(
 			chaincodeProposal,
 			endorsements,
-			proposalResponse,
-			use_admin_signer
+			proposalResponse
 		);
 		return proposal;
 	}
@@ -3277,16 +3261,14 @@ const Channel = class {
 	 */
 	compareProposalResponseResults(proposal_responses) {
 		logger.debug('compareProposalResponseResults - start');
-		if (!proposal_responses) {
-			throw new Error('Missing proposal responses');
-		}
+
 		if (!Array.isArray(proposal_responses)) {
-			throw new Error('Parameter must be an array of ProposalRespone Objects');
+			throw new Error('proposal_responses must be an array but was ' + typeof proposal_responses);
+		}
+		if (proposal_responses.length == 0) {
+			throw new Error('proposal_responses is empty');
 		}
 
-		if (proposal_responses.length == 0) {
-			throw new Error('Parameter proposal responses does not contain a PorposalResponse');
-		}
 		const first_one = _getProposalResponseResults(proposal_responses[0]);
 		for (let i = 1; i < proposal_responses.length; i++) {
 			const next_one = _getProposalResponseResults(proposal_responses[i]);
