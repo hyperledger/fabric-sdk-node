@@ -16,7 +16,7 @@ const util = require('util');
  */
 class Contract {
 
-	constructor(channel, chaincodeId, gateway, queryHandler, eventHandlerFactory) {
+	constructor(channel, chaincodeId, gateway, queryHandler, eventHandlerFactory, namespace='') {
 		logger.debug('in Contract constructor');
 
 		this.channel = channel;
@@ -24,6 +24,7 @@ class Contract {
 		this.gateway = gateway;
 		this.queryHandler = queryHandler;
 		this.eventHandlerFactory = eventHandlerFactory;
+		this.namespace = namespace;
 	}
 
 	/**
@@ -87,7 +88,10 @@ class Contract {
 	async submitTransaction(transactionName, ...parameters) {
 		logger.debug('in submitTransaction: ' + transactionName);
 
-		this._verifyTransactionDetails('submitTransaction', transactionName, parameters);
+		// form the transaction name with the namespace
+		const fullTxName = (this.namespace==='') ? transactionName : `${this.namespace}:${transactionName}`;
+
+		this._verifyTransactionDetails('submitTransaction', fullTxName, parameters);
 
 		const txId = this.gateway.getClient().newTransactionID();
 		// createTxEventHandler() will return null if no event handler is requested
@@ -97,7 +101,7 @@ class Contract {
 		const request = {
 			chaincodeId: this.chaincodeId,
 			txId,
-			fcn: transactionName,
+			fcn: fullTxName,
 			args: parameters
 		};
 
@@ -192,9 +196,12 @@ class Contract {
      * @returns {Buffer} Payload response from the transaction function
      */
 	async executeTransaction(transactionName, ...parameters) {
-		this._verifyTransactionDetails('executeTransaction', transactionName, parameters);
+
+		// form the transaction name with the namespace
+		const fullTxName = (this.namespace==='') ? transactionName : `${this.namespace}:${transactionName}`;
+		this._verifyTransactionDetails('executeTransaction', fullTxName, parameters);
 		const txId = this.gateway.getClient().newTransactionID();
-		const result = await this.queryHandler.queryChaincode(this.chaincodeId, txId, transactionName, parameters);
+		const result = await this.queryHandler.queryChaincode(this.chaincodeId, txId, fullTxName, parameters);
 		return result ? result : null;
 	}
 }

@@ -333,6 +333,40 @@ describe('Contract', () => {
 				.should.be.rejectedWith(/Failed to send/);
 		});
 
+		it('should preprend the namespace if one has been given',()=>{
+			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
+			const stubEventHandlerFactory = {
+				createTxEventHandler: () => stubEventHandler
+			};
+			const nscontract = new Contract(mockChannel, 'someid', mockGateway, mockQueryHandler, stubEventHandlerFactory,'my.name.space');
+			const proposalResponses = [{
+				response: {
+					status: 200
+				}
+			}];
+			const proposal = { proposal: 'i do' };
+			const header = { header: 'gooooal' };
+			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
+			// This is the commit proposal and response (from the orderer).
+			const response = {
+				status: 'SUCCESS'
+			};
+			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
+			return nscontract.submitTransaction('myfunc', 'arg1', 'arg2')
+				.then((result) => {
+					should.equal(result, null);
+					sinon.assert.calledOnce(mockClient.newTransactionID);
+					sinon.assert.calledOnce(mockChannel.sendTransactionProposal);
+					sinon.assert.calledWith(mockChannel.sendTransactionProposal, {
+						chaincodeId: 'someid',
+						txId: mockTransactionID,
+						fcn: 'my.name.space:myfunc',
+						args: ['arg1', 'arg2']
+					});
+					sinon.assert.calledOnce(mockChannel.sendTransaction);
+				});
+		});
+
 	});
 
 	describe('#executeTransaction', () => {
@@ -359,6 +393,25 @@ describe('Contract', () => {
 			return contract.executeTransaction('myfunc', 'arg1', 'arg2')
 				.should.be.rejectedWith(/such error/);
 
+		});
+
+		it('should query chaincode with namespace added to the function', async () => {
+
+			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
+			const stubEventHandlerFactory = {
+				createTxEventHandler: () => stubEventHandler
+			};
+			const nscontract = new Contract(mockChannel, 'someid', mockGateway, mockQueryHandler, stubEventHandlerFactory,'my.name.space');
+
+			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves();
+
+			await nscontract.executeTransaction('myfunc', 'arg1', 'arg2');
+			sinon.assert.calledOnce(mockQueryHandler.queryChaincode);
+			sinon.assert.calledWith(mockQueryHandler.queryChaincode,
+				sinon.match.any,
+				sinon.match.any,
+				'my.name.space:myfunc',
+				sinon.match.any);
 		});
 	});
 });

@@ -220,7 +220,7 @@ describe('Network', () => {
 
 		it('should return a cached contract object', () => {
 			const mockContract = sinon.createStubInstance(Contract);
-			network.contracts.set('foo', mockContract);
+			network.contracts.set('foo:', mockContract);
 			network.initialized = true;
 			network.getContract('foo').should.equal(mockContract);
 		});
@@ -230,6 +230,21 @@ describe('Network', () => {
 			const contract = network.getContract('bar');
 			contract.should.be.instanceof(Contract);
 			contract.chaincodeId.should.equal('bar');
+		});
+
+		it('should return a newly created contract, with namespace', () => {
+			const mockContract = sinon.createStubInstance(Contract);
+			network.contracts.set('foo:my.name.space', mockContract);
+			network.initialized = true;
+			network.getContract('foo','my.name.space').should.equal(mockContract);
+		});
+
+		it('should create a non-existent contract object with namespace', () => {
+			network.initialized = true;
+			const contract = network.getContract('bar','my.name.space');
+			contract.should.be.instanceof(Contract);
+			contract.chaincodeId.should.equal('bar');
+			contract.namespace.should.equal('my.name.space');
 		});
 	});
 
