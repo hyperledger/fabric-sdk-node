@@ -191,9 +191,9 @@ const Channel = class {
 		let commit_handler_path = null;
 
 		if (request) {
-			if (request.configUpate) {
-				logger.debub('%s - have a configupdate', method);
-				this.loadConfigUpdate(request.configUpate);
+			if (request.configUpdate) {
+				logger.debug('%s - have a configupdate', method);
+				this.loadConfigUpdate(request.configUpdate);
 
 				return true;
 			} else {
@@ -329,9 +329,6 @@ const Channel = class {
 			}
 		} else {
 			target_peer = this._getFirstAvailableTarget(target_peer);
-			if (!target_peer) {
-				throw new Error('No target provided for non-discovery initialization');
-			}
 			const config_envelope = await this.getChannelConfig(target_peer);
 			logger.debug('initialize - got config envelope from getChannelConfig :: %j', config_envelope);
 			const config_items = this.loadConfigEnvelope(config_envelope);
@@ -1889,25 +1886,6 @@ const Channel = class {
 		return config_envelope;
 	}
 
-	/*
-	 * Utility method to load this channel with configuration information
-	 * from an Envelope that contains a Configuration
-	 * @param {byte[]} the envelope with the configuration update items
-	 * @see /protos/common/configtx.proto
-	 */
-	loadConfigUpdateEnvelope(data) {
-		logger.debug('loadConfigUpdateEnvelope - start');
-		const envelope = _commonProto.Envelope.decode(data);
-		const payload = _commonProto.Payload.decode(envelope.payload);
-		const channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
-		if (channel_header.type != _commonProto.HeaderType.CONFIG_UPDATE) {
-			return new Error('Data must be of type "CONFIG_UPDATE"');
-		}
-
-		const config_update_envelope = _configtxProto.ConfigUpdateEnvelope.decode(payload.data);
-		return this.loadConfigUpdate(config_update_envelope.config_update);
-	}
-
 	loadConfigUpdate(config_update_bytes) {
 		const config_update = _configtxProto.ConfigUpdate.decode(config_update_bytes);
 		logger.debug('loadConfigData - channel ::' + config_update.channel_id);
@@ -1925,9 +1903,9 @@ const Channel = class {
 		config_items.versions.read_group = {};
 		config_items.versions.write_group = {};
 
-		loadConfigGroup(config_items, config_items.versions.read_group, read_group, 'read_set', null, true, false);
+		loadConfigGroup(config_items, config_items.versions.read_group, read_group, 'read_set', null, true);
 		// do the write_set second so they update anything in the read set
-		loadConfigGroup(config_items, config_items.versions.write_group, write_group, 'write_set', null, true, false);
+		loadConfigGroup(config_items, config_items.versions.write_group, write_group, 'write_set', null, true);
 		this._msp_manager.loadMSPs(config_items.msps);
 		this._anchor_peers = config_items.anchor_peers;
 
@@ -1954,7 +1932,7 @@ const Channel = class {
 		config_items.versions = {};
 		config_items.versions.channel = {};
 
-		loadConfigGroup(config_items, config_items.versions.channel, group, 'base', null, true, true);
+		loadConfigGroup(config_items, config_items.versions.channel, group, 'base', null, true);
 		this._msp_manager.loadMSPs(config_items.msps);
 		this._anchor_peers = config_items.anchor_peers;
 
@@ -3292,26 +3270,19 @@ const Channel = class {
 			throw new Error('"target" parameter is an array, but should be a singular peer object' +
 				' ' + 'or peer name according to the network configuration loaded by the client instance');
 		}
-		let targets = this._getTargets(target, Constants.NetworkConfig.LEDGER_QUERY_ROLE, true);
-		// only want to query one peer
-		if (targets && targets.length > 0) {
-			targets = [targets[0]];
-		}
 
-		return targets;
+		const targets = this._getTargets(target, Constants.NetworkConfig.LEDGER_QUERY_ROLE, true);
+		// only want to query one peer
+		return [ targets[0] ];
 	}
 
 	/*
-	 *  utility method to decide on the target for queries that only need ledger access
+	 * utility method to decide on the target for queries that only need ledger access.
+	 * Returns a {ChannelPeer|Peer}. Throws if none can be found.
 	 */
 	_getFirstAvailableTarget(target) {
-		let targets = this._getTargets(target, Constants.NetworkConfig.ALL_ROLES, true);
-		// only want to query one peer
-		if (targets && targets.length > 0) {
-			targets = targets[0];
-		}
-
-		return targets;
+		const targets = this._getTargets(target, Constants.NetworkConfig.ALL_ROLES, true);
+		return targets[0];
 	}
 
 	/*
@@ -3325,6 +3296,7 @@ const Channel = class {
 
 	/*
 	 * utility method to decide on the targets for requests
+	 * Returns an array of one or more {ChannelPeer|Peer}. Throws if no targets are found.
 	 */
 	_getTargets(request_targets, role, isTarget) {
 		const targets = [];
@@ -3357,7 +3329,7 @@ const Channel = class {
 			});
 		}
 
-		if (targets.length == 0) {
+		if (targets.length === 0) {
 			let target_msg = 'targets';
 			if (isTarget) target_msg = 'target';
 			if (role === Constants.NetworkConfig.EVENT_SOURCE_ROLE) target_msg = 'peer';

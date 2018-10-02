@@ -190,7 +190,6 @@ declare namespace Client {
     joinChannel(request: JoinChannelRequest, timeout?: number): Promise<ProposalResponse[]>;
     getChannelConfig(target?: string | Peer, timeout?: number): Promise<any>;
     getChannelConfigFromOrderer(): Promise<any>;
-    loadConfigUpdateEnvelope(data: Buffer): any;
     loadConfigUpdate(config_update_bytes: Buffer): any;
     loadConfigEnvelope(config_envelope: any): any;
 

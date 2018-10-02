@@ -14,7 +14,14 @@
     "email": "fabric@lists.hyperledger.org"
   },
   "scripts": {
-    "test": "gulp test-headless",
+	"test": "gulp test-headless",
+	"test:ca-client": "npm run coverage -- fabric-ca-client/test",
+	"test:client": "npm run coverage -- fabric-client/test",
+	"test:network": "npm run coverage -- fabric-network/test",
+	"test:all": "nyc npm run unit-test:all",
+	"unit-test:all": "npm run unit-test -- fabric-ca-client/test && npm run unit-test -- fabric-client/test && npm run unit-test -- fabric-network/test",
+	"coverage": "nyc npm run unit-test",
+	"unit-test": "mocha --exclude 'fabric-client/test/data/**' --recursive",
     "compile": "tsc --project test/typescript",
     "compile:w": "tsc --project test/typescript --watch"
   },
@@ -74,7 +81,7 @@
       "fabric-client/lib/**/*.js",
       "fabric-common/lib/**/*.js",
       "fabric-network/lib/**/*.js"
-    ],
+	],
     "reporter": [
       "lcov",
       "json",

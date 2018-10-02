@@ -40,9 +40,10 @@ const transactionProto = grpc.load(__dirname + '/../lib/protos/peer/transaction.
 const commonProto = grpc.load(__dirname + '/../lib/protos/common/common.proto').common;
 const configtxProto = grpc.load(__dirname + '/../lib/protos/common/configtx.proto').common;
 
-describe('Channel', () => {
-	const sandbox = sinon.createSandbox();
+const fakeHandlerModulePath = 'fabric-client/test/FakeHandler';
+const fakeHandler = require(fakeHandlerModulePath).create();
 
+describe('Channel', () => {
 	const channelName = 'channel-name';
 	const mspId = 'mspId';
 
@@ -72,17 +73,17 @@ describe('Channel', () => {
 		stubMsp = sinon.createStubInstance(MSP);
 		stubMsp.deserializeIdentity.returns(stubMspIdentity);
 
-		sandbox.stub(channel.getMSPManager(), 'getMSP').withArgs(mspId).returns(stubMsp);
+		sinon.stub(channel.getMSPManager(), 'getMSP').withArgs(mspId).returns(stubMsp);
 
 		stubSigningIdentity = sinon.createStubInstance(SigningIdentity);
 		stubSigningIdentity.serialize.returns(Buffer.from('fake-serialized-signing-identity'));
 		stubSigningIdentity.sign.callsFake((digest) => `fake-signature-of-${digest}`);
-		sandbox.stub(client, '_getSigningIdentity').returns(stubSigningIdentity);
+		sinon.stub(client, '_getSigningIdentity').returns(stubSigningIdentity);
 
 	});
 
 	afterEach(() => {
-		sandbox.restore();
+		sinon.restore();
 	});
 
 	/**
@@ -141,6 +142,19 @@ describe('Channel', () => {
 		return proposalResponse;
 	}
 
+	function createConfigUpdate() {
+		const readSet = new configtxProto.ConfigGroup();
+
+		const writeSet = new configtxProto.ConfigGroup();
+
+		const configUpdate = new configtxProto.ConfigUpdate();
+		configUpdate.channel_id = channelName;
+		configUpdate.read_set = readSet;
+		configUpdate.write_set = writeSet;
+
+		return configUpdate;
+	}
+
 	describe('#constructor', () => {
 		// Default channel name regex is /^[a-z][a-z0-9.-]*$/
 		const invalidChannelName = '!INVALID_CHANNEL_NAME!';
@@ -155,7 +169,7 @@ describe('Channel', () => {
 		});
 
 		it('throws if name parameters does not match channel-name-regex-checker', () => {
-			sandbox.stub(sdk_utils, 'getConfigSetting').withArgs(channelNameCheckProperty).returns({
+			sinon.stub(sdk_utils, 'getConfigSetting').withArgs(channelNameCheckProperty).returns({
 				pattern: '^[a-z]+$',
 				flags: 'i'
 			});
@@ -163,12 +177,12 @@ describe('Channel', () => {
 		});
 
 		it('no regex check of name parameter if configuration contains an empty object', () => {
-			sandbox.stub(sdk_utils, 'getConfigSetting').withArgs(channelNameCheckProperty).returns({});
+			sinon.stub(sdk_utils, 'getConfigSetting').withArgs(channelNameCheckProperty).returns({});
 			expect(new Channel(invalidChannelName, client)).to.be.an.instanceof(Channel);
 		});
 
 		it('no regex check of name parameter if no channel-name-regx-checker configuration present', () => {
-			sandbox.stub(sdk_utils, 'getConfigSetting').withArgs(channelNameCheckProperty).returns(null);
+			sinon.stub(sdk_utils, 'getConfigSetting').withArgs(channelNameCheckProperty).returns(null);
 			expect(new Channel(invalidChannelName, client)).to.be.an.instanceof(Channel);
 		});
 
@@ -347,7 +361,7 @@ describe('Channel', () => {
 		it('calls close on all channel peers', () => {
 			const peers = [ peer1, peer2 ];
 			peers.forEach((peer) => {
-				sandbox.spy(peer, 'close');
+				sinon.spy(peer, 'close');
 				channel.addPeer(peer, `${peer.getName()}Org`);
 			});
 
@@ -361,7 +375,7 @@ describe('Channel', () => {
 		it('calls close on all orderers', () => {
 			const orderers = [ orderer1, orderer2 ];
 			orderers.forEach((orderer) => {
-				sandbox.spy(orderer, 'close');
+				sinon.spy(orderer, 'close');
 				channel.addOrderer(orderer);
 			});
 
@@ -762,8 +776,8 @@ describe('Channel', () => {
 		it('returns results of calling sendProposal() on peers as an array', async () => {
 			const proposalResult1 = { _fake: 'peer1' };
 			const proposalResult2 = { _fake: 'peer2' };
-			sandbox.stub(peer1, 'sendProposal').resolves(proposalResult1);
-			sandbox.stub(peer2, 'sendProposal').resolves(proposalResult2);
+			sinon.stub(peer1, 'sendProposal').resolves(proposalResult1);
+			sinon.stub(peer2, 'sendProposal').resolves(proposalResult2);
 
 			const signedProposal = {
 				targets: [ peer1, peer2 ],
@@ -781,11 +795,103 @@ describe('Channel', () => {
 		});
 
 		it('successful with peer added and no request parameter', () => {
-			sandbox.stub(peer1, 'sendProposal').resolves(createGetConfigBlockResponse());
-			sandbox.stub(peer2, 'sendProposal').resolves(createGetConfigBlockResponse());
+			sinon.stub(peer1, 'sendProposal').resolves(createGetConfigBlockResponse());
 
 			channel.addPeer(peer1, 'mspid');
 			return expect(channel.initialize()).to.be.fulfilled;
+		});
+
+		it('successful with two peers added and peer name supplied as request target parameter', () => {
+			sinon.stub(peer1, 'sendProposal').resolves('proposal sent to wrong peer');
+			sinon.stub(peer2, 'sendProposal').resolves(createGetConfigBlockResponse());
+
+			channel.addPeer(peer1, 'org1');
+			channel.addPeer(peer2, 'org2');
+			const request = {
+				target: peer2.getName()
+			};
+			return expect(channel.initialize(request)).to.be.fulfilled;
+		});
+
+		it('successful with no peer added and a Peer supplied as request target parameter', () => {
+			sinon.stub(peer1, 'sendProposal').resolves(createGetConfigBlockResponse());
+
+			const request = {
+				target: peer1
+			};
+			return expect(channel.initialize(request)).to.be.fulfilled;
+		});
+
+		it('successful with no peer added and a ChannelPeer supplied as request target parameter', () => {
+			sinon.stub(peer1, 'sendProposal').resolves(createGetConfigBlockResponse());
+			channel.addPeer(peer1, 'mspid');
+			const channelPeer = channel.getChannelPeer(peer1.getName());
+			channel.removePeer(peer1);
+
+			const request = {
+				target: channelPeer
+			};
+			return expect(channel.initialize(request)).to.be.fulfilled;
+		});
+
+		it('throws if specified target peer name does not exist', () => {
+			const request = {
+				target: 'NON_EXISTENT_PEER_NAME'
+			};
+			return expect(channel.initialize(request)).to.be.rejectedWith(request.target);
+		});
+
+		it('throws if specified target peer is not a Peer or ChannelPeer', () => {
+			const request = {
+				target: {}
+			};
+			return expect(channel.initialize(request)).to.be.rejectedWith('Target peer is not a valid peer object instance');
+		});
+
+		it('specified endorsement handler is initialized', async () => {
+			sinon.stub(peer1, 'sendProposal').resolves(createGetConfigBlockResponse());
+			const initializeSpy = sinon.spy(fakeHandler, 'initialize');
+
+			const request = {
+				target: peer1,
+				endorsementHandler: fakeHandlerModulePath
+			};
+			await channel.initialize(request);
+
+			sinon.assert.called(initializeSpy);
+		});
+
+		it('specified commit handler is initialized', async () => {
+			sinon.stub(peer1, 'sendProposal').resolves(createGetConfigBlockResponse());
+			const initializeSpy = sinon.spy(fakeHandler, 'initialize');
+
+			const request = {
+				target: peer1,
+				commitHandler: fakeHandlerModulePath
+			};
+			await channel.initialize(request);
+
+			sinon.assert.called(initializeSpy);
+		});
+
+		it('successful with no commit handler specified and no commit handler configuration', () => {
+			sinon.stub(peer1, 'sendProposal').resolves(createGetConfigBlockResponse());
+			const getConfigSettingStub = sinon.stub(sdk_utils, 'getConfigSetting');
+			getConfigSettingStub.withArgs('commit-handler').returns(null);
+			getConfigSettingStub.callThrough();
+
+			const request = {
+				target: peer1,
+			};
+			return expect(channel.initialize(request)).to.be.fulfilled;
+		});
+
+		it('configuration update', () => {
+			const configUpdate = createConfigUpdate();
+			const request = {
+				configUpdate: configUpdate.toBuffer()
+			};
+			return expect(channel.initialize(request)).to.be.fulfilled;
 		});
 	});
 });

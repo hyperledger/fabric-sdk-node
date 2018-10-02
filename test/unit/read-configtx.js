@@ -46,16 +46,3 @@ test('\n\n***** READ in the genesis block *****\n\n', (t) => {
 	t.pass(' Loaded the geneisis block from the configtx tool');
 	t.end();
 });
-
-
-test('\n\n***** READ in the configtx *****\n\n', (t) => {
-	// readin the envelope to send to the orderer
-	const normalPath = path.normalize(path.join(__dirname, '../fixtures/channel/mychannel.tx'));
-	const data = fs.readFileSync(normalPath);
-
-	const channel = new Channel('test', 'fake');
-
-	channel.loadConfigUpdateEnvelope(data);
-	t.pass(' Loaded the channel config from the configtx tool');
-	t.end();
-});
