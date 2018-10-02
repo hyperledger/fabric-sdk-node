@@ -155,8 +155,8 @@ const Channel = class {
 	 *           Default is to use the first ChannelPeer assigned to this channel.
 	 * @property {boolean} discover - Optional. Use the discovery service on the
 	 *           the target peer to load the configuration and network information.
-	 *           Default is true. When set to false the target peer will use
-	 *           base Peer query to load only the configuration information.
+	 *           Default is false. When false, the target peer will use the
+	 *           Peer query to load only the configuration information.
 	 * @property {string} endorsementHandler - Optional. The path to a custom
 	 *           endorsement handler implementing {@link EndorsementHandler}.
 	 * @property {string} commitHandler - Optional. The path to a custom
