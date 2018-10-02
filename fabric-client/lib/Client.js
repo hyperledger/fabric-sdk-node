@@ -1746,7 +1746,7 @@ async function _getChaincodeDeploymentSpec(request, devMode) {
 		return request.chaincodePackage;
 	} else {
 		return new Promise((resolve, reject) => {
-			return Packager.package(request.chaincodePath, request.chaincodeType, devMode)
+			return Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath)
 				.then((data) => {
 					const ccSpec = {
 						type: clientUtils.translateCCType(request.chaincodeType),
