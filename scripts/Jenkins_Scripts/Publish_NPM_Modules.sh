@@ -87,3 +87,10 @@ if [ -d "../fabric-network" ]; then
   versions
   npmPublish fabric-network
 fi
+
+# publish fabric-common node module
+if [ -d "../fabric-common" ]; then
+  cd ../fabric-common
+  versions
+  npmPublish fabric-common
+fi
