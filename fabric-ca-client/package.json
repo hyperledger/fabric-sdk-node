@@ -2,7 +2,8 @@
   "name": "fabric-ca-client",
   "description": "SDK for writing node.js applications to interact with Hyperledger Fabric. This package encapsulates the APIs to interact with the Fabric CA to manage user certificates lifecycle such as register, enroll, renew and revoke.",
   "keywords" : ["hyperledger", "blockchain"],
-  "version": "1.3.0-snapshot",
+  "version": "1.4.0-snapshot",
+  "tag": "unstable",
   "main": "index.js",
   "scripts": {
 	"lint": "eslint .",
