@@ -1,11 +1,37 @@
 # Copyright IBM Corp. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
+
+#general
 coverage
 docs/gen
 node_modules/*
 package-lock.json
+npm-shrinkwrap.json
+npm-debug.log
+yarn.lock
+tmp
+.project
+.DS_Store
+.vscode
+.idea
+.nyc_output/*
+*.csv
+*.heapsnapshot
+
+#test files
+test/typescript/**/*.js
+test/typescript/**/*.js.map
+test/fixtures/src/node_cc/example_cc/.npmrc
+test/fixtures/src/node_cc/example_cc1/.npmrc
+test/fixtures/src/github.com/example_cc/junk.go
+
+#fabric client
+fabric-client/.DS_Store
 fabric-client/node_modules/*
 fabric-client/.nyc_output
+
+#fabric-ca-client
+fabric-ca-client/.DS_Store
 fabric-ca-client/node_modules/*
 fabric-ca-client/.nyc_output
 fabric-ca-client/lib/api.js
@@ -20,27 +46,15 @@ fabric-ca-client/lib/hash.js
 fabric-ca-client/lib/impl/*
 fabric-ca-client/types/base.d.ts
 fabric-ca-client/types/tsconfig.json
+
+#fabric network items
+fabric-network/.DS_Store
 fabric-network/node_modules/*
 fabric-network/.nyc_output
-npm-shrinkwrap.json
-npm-debug.log
-tmp
-.project
-.DS_Store
-fabric-client/.DS_Store
-fabric-ca-client/.DS_Store
-fabric-network/.DS_Store
-test/fixtures/src/github.com/example_cc/junk.go
-*.csv
-*.heapsnapshot
-.vscode
-.idea
-.nyc_output/*
-test/typescript/**/*.js
-test/typescript/**/*.js.map
-yarn.lock
-test/fixtures/src/node_cc/example_cc/.npmrc
-test/fixtures/src/node_cc/example_cc1/.npmrc
 fabric-network/_*
 fabric-network/e2e
 fabric-network/OUTSTA*
+
+#fabric common items
+fabric-common/node_modules/*
+fabric-common/.nyc_output
