@@ -132,7 +132,7 @@ gulp.task('test-mocha', ['mocha-fabric-client'],
 
 gulp.task('mocha-fabric-client',
 	() => {
-		return gulp.src(['./fabric-client/test/**/*.js'], { read: false })
+		return gulp.src(['./fabric-client/test/**/*.js', '!./fabric-client/test/data/**/*.js'], { read: false })
 			.pipe(mocha({ reporter: 'list', exit: true }));
 	}
 );

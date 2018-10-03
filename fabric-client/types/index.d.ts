@@ -584,4 +584,14 @@ declare namespace Client {
 
     timestamp: number;
   }
+
+  export class Package {
+	static fromBuffer(buffer: Buffer): Promise<Package>;
+	static fromDirectory(options: { name: string, version: string, path: string, type: ChaincodeType, metadataPath?: string }): Promise<Package>;
+	getName(): string;
+	getVersion(): string;
+	getType(): ChaincodeType;
+	getFileNames(): string[];
+	toBuffer(): Promise<Buffer>;
+  }
 }

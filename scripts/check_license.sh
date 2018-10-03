@@ -17,7 +17,7 @@ function filterExcludedFiles {
 		| grep -v "\.pem$" \
 		| grep -v "\.block$" \
 		| grep -v "\.tx$" \
-    | grep -v "\.txt$" \
+		| grep -v "\.txt$" \
 		| grep -v "_sk$" \
 		| grep -v "\.key$" \
 		| grep -v "\.gen\.go$" \
@@ -27,6 +27,8 @@ function filterExcludedFiles {
 		| grep -v "\.yaml$" \
 		| grep -v "\.json$" \
 		| grep -v "\.gradle$" \
+		| grep -v "\.cds$" \
+		| grep -v "\.jar$" \
 		| sort -u`
 }
 
