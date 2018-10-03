@@ -148,25 +148,27 @@ class Network {
 	/**
 	 * Returns an instance of a contract (chaincode) on the current network
 	 * @param {string} chaincodeId the chaincode Identifier
+	 * @param {string} [namespace] optional namespace for the contract
 	 * @returns {Contract} the contract
 	 * @api
 	 */
-	getContract(chaincodeId) {
+	getContract(chaincodeId,namespace='') {
 		logger.debug('in getContract');
 		if (!this.initialized) {
 			throw new Error('Unable to get contract as network has failed to initialize');
 		}
-
-		let contract = this.contracts.get(chaincodeId);
+		const key = `${chaincodeId}:${namespace}`;
+		let contract = this.contracts.get(key);
 		if (!contract) {
 			contract = 	new Contract(
 				this.channel,
 				chaincodeId,
 				this.gateway,
 				this.queryHandler,
-				this.eventHandlerManager
+				this.eventHandlerManager,
+				namespace
 			);
-			this.contracts.set(chaincodeId, contract);
+			this.contracts.set(key, contract);
 		}
 		return contract;
 	}
