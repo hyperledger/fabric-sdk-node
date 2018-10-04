@@ -21,7 +21,7 @@ test('\n\n***** End-to-end flow: query chaincode *****\n\n', async (t) => {
 	let expectedResult = '300';
 	const targets = [];  // empty array, meaning client will discover the peers
 	try {
-		let result = await e2eUtils.queryChaincode('org2', 'v0', targets, fcn, args, expectedResult, chaincodeId, t);
+		const result = await e2eUtils.queryChaincode('org2', 'v0', targets, fcn, args, expectedResult, chaincodeId, t);
 		if(result){
 			t.pass('Successfully query chaincode on the channel');
 		}
@@ -34,7 +34,7 @@ test('\n\n***** End-to-end flow: query chaincode *****\n\n', async (t) => {
 
 	try {
 		expectedResult = new Error('throwError: an error occurred');
-		let result = await e2eUtils.queryChaincode('org2', 'v0', targets, 'throwError', args, expectedResult, chaincodeId, t);
+		const result = await e2eUtils.queryChaincode('org2', 'v0', targets, 'throwError', args, expectedResult, chaincodeId, t);
 		if(result){
 			t.pass('Successfully handled error from query');
 		}

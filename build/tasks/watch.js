@@ -9,15 +9,15 @@ let gulp = require('gulp'),
 	fs = require('fs'),
 	ca = require('./ca.js');
 
-gulp.task('watch', function () {
+gulp.task('watch', () => {
 	watch(ca.DEPS, { ignoreInitial: false, base: 'fabric-client/' })
-	.pipe(debug())
-	.pipe(gulp.dest('fabric-ca-client/'));
+		.pipe(debug())
+		.pipe(gulp.dest('fabric-ca-client/'));
 
 	// only do the following if node_modules/fabric-client and
 	// node_modules/fabric-ca-client are NOT created as sym links
-	let statsA = fs.lstatSync('node_modules/fabric-client');
-	let statsB = fs.lstatSync('node_modules/fabric-ca-client');
+	const statsA = fs.lstatSync('node_modules/fabric-client');
+	const statsB = fs.lstatSync('node_modules/fabric-ca-client');
 	if (!statsA.isSymbolicLink() && !statsB.isSymbolicLink()) {
 		watch([
 			'fabric-client/index.js',
@@ -27,7 +27,7 @@ gulp.task('watch', function () {
 			'fabric-ca-client/config/**/*',
 			'fabric-ca-client/lib/**/*'
 		], { ignoreInitial: false, base: './' })
-		.pipe(debug())
-		.pipe(gulp.dest('node_modules'));
+			.pipe(debug())
+			.pipe(gulp.dest('node_modules'));
 	}
 });

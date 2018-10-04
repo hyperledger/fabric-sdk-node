@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-let tape = require('tape');
-let _test = require('tape-promise').default;
-let test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 const path = require('path');
-let FabricCAServices = require('../../fabric-ca-client');
+const FabricCAServices = require('../../fabric-ca-client');
 const { HFCAIdentityAttributes, HFCAIdentityType } = require('../../fabric-ca-client/lib/IdentityService');
 
 const User = require('../../fabric-ca-client/lib/User');
 
-let userOrg1 = 'org1';
-let userOrg2 = 'org2';
-let tlsOptions = {
+const userOrg1 = 'org1';
+const userOrg2 = 'org2';
+const tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
@@ -33,17 +33,17 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 	FabricCAServices.getConfigSetting('crypto-keysize', '256'); //force for gulp test
 	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); //force for gulp test
 
-	let caService1 = new FabricCAServices(fabricCAEndpoint1, tlsOptions, ORGS[userOrg1].ca.name);
-	let caService2 = new FabricCAServices(fabricCAEndpoint2, tlsOptions, ORGS[userOrg2].ca.name);
+	const caService1 = new FabricCAServices(fabricCAEndpoint1, tlsOptions, ORGS[userOrg1].ca.name);
+	const caService2 = new FabricCAServices(fabricCAEndpoint2, tlsOptions, ORGS[userOrg2].ca.name);
 
-	let bootstrapUser = {
+	const bootstrapUser = {
 		enrollmentID: 'admin',
 		enrollmentSecret: 'adminpw'
 	};
 
 	let admin1;
 	let admin2;
-	let testIdentity = {
+	const testIdentity = {
 		enrollmentID: 'user_' + Math.random().toFixed(3).toString(),
 		enrollmentSecret: 'userpw',
 		affiliation: 'org1',
@@ -52,7 +52,7 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 	};
 
 	// update the enrollment secret for testIdentity
-	let update = {
+	const update = {
 		enrollmentSecret: 'mysecret'
 	};
 	let hfcaIdentityService1;

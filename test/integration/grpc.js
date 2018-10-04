@@ -6,19 +6,19 @@
 
 'use strict';
 
-var utils = require('fabric-client/lib/utils.js');
+const utils = require('fabric-client/lib/utils.js');
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var path = require('path');
-var fs = require('fs');
-var crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
 
-var e2eUtils = require('./e2e/e2eUtils.js');
-var testUtil = require('../unit/util.js');
-var Client = require('fabric-client');
+const e2eUtils = require('./e2e/e2eUtils.js');
+const testUtil = require('../unit/util.js');
+const Client = require('fabric-client');
 
 const GRPC_SEND = 'grpc.max_send_message_length';
 const GRPC_RECEIVE = 'grpc.max_receive_message_length';
@@ -165,12 +165,12 @@ async function send(client, channel, url, cc, opts, megs, grpc_send_max, grpc_re
 	if(sdk_send_max !== null) utils.setConfigSetting('grpc-max-send-message-length', sdk_send_max);
 	if(sdk_receive_max !== null) utils.setConfigSetting('grpc-max-receive-message-length', sdk_receive_max);
 
-	let peer = client.newPeer(
+	const peer = client.newPeer(
 		url,
 		opts
 	);
 
-	let request = {
+	const request = {
 		targets: [peer],
 		chaincodeId : cc,
 		fcn: 'echo',
@@ -183,9 +183,9 @@ async function send(client, channel, url, cc, opts, megs, grpc_send_max, grpc_re
 
 async function sendToConnectionProfile(client, channel, config, cc, megs) {
 	client.loadFromConfig(config);
-	let peer = client.getPeersForOrg('Org1MSP')[0]; // will only be one
+	const peer = client.getPeersForOrg('Org1MSP')[0]; // will only be one
 
-	let request = {
+	const request = {
 		targets: [peer],
 		chaincodeId : cc,
 		fcn: 'echo',
@@ -197,9 +197,9 @@ async function sendToConnectionProfile(client, channel, config, cc, megs) {
 }
 
 function checkResponse(t, response, message, error_message) {
-	var err = (response[0] && response[0][0] && response[0][0] instanceof Error) ? response[0][0] : {};
-	let pattern = new RegExp('\\b(' + error_message + ')', 'g');
-	let error_words_length = error_message.split('|').length;
+	const err = (response[0] && response[0][0] && response[0][0] instanceof Error) ? response[0][0] : {};
+	const pattern = new RegExp('\\b(' + error_message + ')', 'g');
+	const error_words_length = error_message.split('|').length;
 
 	if(err.message) {
 		if(pattern.test(err.message) && err.message.match(pattern).length == error_words_length) {

@@ -14,15 +14,15 @@
  limitations under the License.
 */
 
-var gulp = require('gulp');
-var jsdoc = require('gulp-jsdoc3');
-var del = require('del');
+const gulp = require('gulp');
+const jsdoc = require('gulp-jsdoc3');
+const del = require('del');
 
-gulp.task('clean', function(){
+gulp.task('clean', () => {
 	return del('./docs/gen/**', {force:true});
 });
 
-gulp.task('doc', ['clean'], function () {
+gulp.task('doc', ['clean'], () => {
 	gulp.src([
 		'docs/index.md',
 		'fabric-network/index.js',
@@ -37,14 +37,14 @@ gulp.task('doc', ['clean'], function () {
 		'fabric-ca-client/lib/AffiliationService.js',
 		'fabric-ca-client/lib/IdentityService.js',
 	], { read: false })
-	.pipe(jsdoc({
-		opts: {
-			tutorials: './docs/tutorials',
-			destination: './docs/gen'
-		},
-		templates: {
-			systemName: 'Hyperledger Fabric SDK for node.js',
-			theme: 'cosmo' //cerulean, cosmo, cyborg, flatly, journal, lumen, paper, readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
-		}
-	}));
+		.pipe(jsdoc({
+			opts: {
+				tutorials: './docs/tutorials',
+				destination: './docs/gen'
+			},
+			templates: {
+				systemName: 'Hyperledger Fabric SDK for node.js',
+				theme: 'cosmo' //cerulean, cosmo, cyborg, flatly, journal, lumen, paper, readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
+			}
+		}));
 });

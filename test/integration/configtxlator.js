@@ -66,7 +66,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		const tlsInfo = await e2eUtils.tlsEnroll(org);
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		t.pass('Successfully retrieved TLS certificate');
-		let store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
+		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
 		client.setStateStore(store);
 
 		/*

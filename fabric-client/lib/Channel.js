@@ -2982,7 +2982,7 @@ const Channel = class {
 		if (!request.proposal) {
 			throw Error('Missing "proposal" parameter in transaction request');
 		}
-		let proposalResponses = request.proposalResponses;
+		const proposalResponses = request.proposalResponses;
 		const chaincodeProposal = request.proposal;
 
 		const endorsements = [];

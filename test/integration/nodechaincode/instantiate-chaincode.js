@@ -8,16 +8,16 @@
 // in a happy-path scenario
 'use strict';
 
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('E2E instantiate-chaincode');
+const utils = require('fabric-client/lib/utils.js');
+const logger = utils.getLogger('E2E instantiate-chaincode');
 logger.level = 'debug';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var e2eUtils = require('../e2e/e2eUtils.js');
-var testUtil = require('../../unit/util.js');
+const e2eUtils = require('../e2e/e2eUtils.js');
+const testUtil = require('../../unit/util.js');
 
 
 

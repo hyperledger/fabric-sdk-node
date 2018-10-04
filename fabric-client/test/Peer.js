@@ -302,7 +302,6 @@ describe('Peer', () => {
 				error: () => {}
 			};
 
-			const debugStub = sandbox.stub(FakeLogger, 'debug');
 			PeerRewire.__set__('logger', FakeLogger);
 			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 			const endorserClient = sinon.stub();

@@ -7,15 +7,15 @@
 
 'use strict';
 
-var fs = require('fs-extra');
-var path = require('path');
-var utils = require('../utils');
-var Constants = require('../Constants.js');
-var Channel = require('../Channel.js');
-var Organization = require('../Organization.js');
-var CertificateAuthority = require('../CertificateAuthority.js');
+const fs = require('fs-extra');
+const path = require('path');
+const utils = require('../utils');
+const Constants = require('../Constants.js');
+const Channel = require('../Channel.js');
+const Organization = require('../Organization.js');
+const CertificateAuthority = require('../CertificateAuthority.js');
 
-var logger = utils.getLogger('NetworkConfig101.js');
+const logger = utils.getLogger('NetworkConfig101.js');
 const CHANNELS_CONFIG = 'channels';
 const ORGS_CONFIG = 'organizations';
 const PEERS_CONFIG = 'peers';
@@ -37,7 +37,7 @@ const EVENTHUB = 3;
 const EVENTREG = 4;
 const TYPES = ['unknown', 'endorser', 'orderer', 'eventHub', 'eventReg'];
 const REQUEST_TIMEOUT = 'request-timeout';
-var ROLES = Constants.NetworkConfig.ROLES;
+const ROLES = Constants.NetworkConfig.ROLES;
 
 /**
  * This is an implementation of the [NetworkConfig]{@link module:api.NetworkConfig} API.
@@ -99,7 +99,7 @@ const NetworkConfig_1_0 = class {
 		const result = {};
 		if(this._network_config && this._network_config.client) {
 			const client_config = this._network_config.client;
-			for(let setting in client_config) {
+			for(const setting in client_config) {
 				// copy all except credentialStore, special case to handle paths
 				if(setting !== 'credentialStore') {
 					result[setting] = client_config[setting];
@@ -110,7 +110,7 @@ const NetworkConfig_1_0 = class {
 				if(client_config.credentialStore.path) {
 					result.credentialStore.path = path.resolve(client_config.credentialStore.path);
 				}
-				for(let setting in client_config.credentialStore) {
+				for(const setting in client_config.credentialStore) {
 					if(setting !== 'cryptoStore' && setting != 'path') {
 						result.credentialStore[setting] = client_config.credentialStore[setting];
 					}
@@ -120,7 +120,7 @@ const NetworkConfig_1_0 = class {
 					if(client_config.credentialStore.cryptoStore.path) {
 						result.credentialStore.cryptoStore.path = path.resolve(client_config.credentialStore.cryptoStore.path);
 					}
-					for(let setting in client_config.credentialStore.cryptoStore) {
+					for(const setting in client_config.credentialStore.cryptoStore) {
 						if(setting != 'path') {
 							result.credentialStore.cryptoStore[setting] = client_config.credentialStore.cryptoStore[setting];
 						}
@@ -227,7 +227,7 @@ const NetworkConfig_1_0 = class {
 		const method = 'getOrganization';
 		logger.debug('%s - mspid %s',method, mspid);
 		if(mspid && this._network_config && this._network_config[ORGS_CONFIG]) {
-			for(let name in this._network_config[ORGS_CONFIG]) {
+			for(const name in this._network_config[ORGS_CONFIG]) {
 				const organization_config = this._network_config[ORGS_CONFIG][name];
 				if(organization_config.mspid === mspid) {
 					return this.getOrganization(name, only_client);
@@ -244,7 +244,7 @@ const NetworkConfig_1_0 = class {
 			if(organization_config) {
 				organization = new Organization(name, organization_config.mspid);
 				if(organization_config[PEERS_CONFIG] && !only_client) {
-					for(let i in organization_config[PEERS_CONFIG]) {
+					for(const i in organization_config[PEERS_CONFIG]) {
 						const peer_name = organization_config[PEERS_CONFIG][i];
 						const peer = this.getPeer(peer_name);
 						if(peer) {
@@ -253,7 +253,7 @@ const NetworkConfig_1_0 = class {
 					}
 				}
 				if(organization_config[CAS_CONFIG]) {
-					for(let i in organization_config[CAS_CONFIG]) {
+					for(const i in organization_config[CAS_CONFIG]) {
 						const ca_name = organization_config[CAS_CONFIG][i];
 						const ca = this.getCertificateAuthority(ca_name);
 						if(ca) organization.addCertificateAuthority(ca);
@@ -278,7 +278,7 @@ const NetworkConfig_1_0 = class {
 		logger.debug('%s - start',method);
 		const organizations = [];
 		if(this._network_config && this._network_config[ORGS_CONFIG]) {
-			for(let organization_name in  this._network_config[ORGS_CONFIG]) {
+			for(const organization_name in  this._network_config[ORGS_CONFIG]) {
 				const organization = this.getOrganization(organization_name);
 				organizations.push(organization);
 			}
@@ -317,8 +317,8 @@ const NetworkConfig_1_0 = class {
 		if(this._network_config &&
 			this._network_config[CHANNELS_CONFIG] &&
 			this._network_config[CHANNELS_CONFIG][channel.getName()] ) {
-			let orderer_names = this._network_config[CHANNELS_CONFIG][channel.getName()][ORDERERS_CONFIG];
-			if(Array.isArray(orderer_names)) for(let i in orderer_names){
+			const orderer_names = this._network_config[CHANNELS_CONFIG][channel.getName()][ORDERERS_CONFIG];
+			if(Array.isArray(orderer_names)) for(const i in orderer_names){
 				const orderer_name = orderer_names[i];
 				const orderer = this.getOrderer(orderer_name);
 				if(orderer) channel.addOrderer(orderer);
@@ -335,12 +335,12 @@ const NetworkConfig_1_0 = class {
 		if(this._network_config &&
 			this._network_config[CHANNELS_CONFIG] &&
 			this._network_config[CHANNELS_CONFIG][channel.getName()] ) {
-			let channel_peers = this._network_config[CHANNELS_CONFIG][channel.getName()][PEERS_CONFIG];
-			if(channel_peers) for(let peer_name in channel_peers) {
+			const channel_peers = this._network_config[CHANNELS_CONFIG][channel.getName()][PEERS_CONFIG];
+			if(channel_peers) for(const peer_name in channel_peers) {
 				const channel_peer = channel_peers[peer_name];
 				const peer = this.getPeer(peer_name);
 				const roles = {};
-				for(let i in ROLES) {
+				for(const i in ROLES) {
 					if(typeof channel_peer[ROLES[i]] === 'boolean') {
 						roles[ROLES[i]] = channel_peer[ROLES[i]];
 					}
@@ -361,9 +361,9 @@ const NetworkConfig_1_0 = class {
 	 */
 	_getOrganizationForPeer(peer_name) {
 		if(this._network_config && this._network_config[ORGS_CONFIG]) {
-			for(let organization_name in  this._network_config[ORGS_CONFIG]) {
-				let organization = this.getOrganization(organization_name);
-				for(let i in organization._peers) {
+			for(const organization_name in  this._network_config[ORGS_CONFIG]) {
+				const organization = this.getOrganization(organization_name);
+				for(const i in organization._peers) {
 					if(peer_name === organization._peers[i].getName()) {
 						return organization_name;
 					}
@@ -379,7 +379,7 @@ const NetworkConfig_1_0 = class {
 	 */
 	_getMspIdForOrganization(org_name) {
 		if(this._network_config && this._network_config[ORGS_CONFIG]) {
-			let organization = this.getOrganization(org_name);
+			const organization = this.getOrganization(org_name);
 			if(organization) {
 				return organization.getMspid();
 			}
@@ -414,8 +414,8 @@ function getPEMfromConfig(config) {
 
 function readFileSync(config_path) {
 	try {
-		let config_loc = path.resolve(config_path);
-		let data = fs.readFileSync(config_loc);
+		const config_loc = path.resolve(config_path);
+		const data = fs.readFileSync(config_loc);
 		return Buffer.from(data).toString();
 	} catch(err) {
 		logger.error('NetworkConfig101 - problem reading the PEM file :: ' + err);

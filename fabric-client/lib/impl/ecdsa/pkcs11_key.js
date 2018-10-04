@@ -7,12 +7,12 @@
 
 'use strict';
 
-var api = require('../../api.js');
-var jsrsa = require('jsrsasign');
-var asn1 = jsrsa.asn1;
+const api = require('../../api.js');
+const jsrsa = require('jsrsasign');
+const asn1 = jsrsa.asn1;
 
-var elliptic = require('elliptic');
-var EC = elliptic.ec;
+const elliptic = require('elliptic');
+const EC = elliptic.ec;
 
 
 /**
@@ -22,7 +22,7 @@ var EC = elliptic.ec;
  * @class PKCS11_ECDSA_KEY
  * @extends module:api.Key
  */
-var PKCS11_ECDSA_KEY = class extends api.Key {
+const PKCS11_ECDSA_KEY = class extends api.Key {
 
 	constructor(attr, size) {
 		if (typeof attr === 'undefined' || attr === null)
@@ -74,39 +74,39 @@ var PKCS11_ECDSA_KEY = class extends api.Key {
 		csr.asn1SignatureAlg =
 			new asn1.x509.AlgorithmIdentifier({'name': sigAlgName});
 
-		var digest = this._cryptoSuite.hash(Buffer.from(csr.asn1CSRInfo.getEncodedHex(), 'hex'));
-		var sig = this._cryptoSuite.sign(this, Buffer.from(digest, 'hex'));
+		const digest = this._cryptoSuite.hash(Buffer.from(csr.asn1CSRInfo.getEncodedHex(), 'hex'));
+		const sig = this._cryptoSuite.sign(this, Buffer.from(digest, 'hex'));
 		csr.hexSig = sig.toString('hex');
 
 		csr.asn1Sig = new asn1.DERBitString({'hex': '00' + csr.hexSig});
-		var seq = new asn1.DERSequence({'array': [csr.asn1CSRInfo, csr.asn1SignatureAlg, csr.asn1Sig]});
+		const seq = new asn1.DERSequence({'array': [csr.asn1CSRInfo, csr.asn1SignatureAlg, csr.asn1Sig]});
 		csr.hTLV = seq.getEncodedHex();
 		csr.isModified = false;
 	}
 
 	newCSRPEM(param) {
-		var _KJUR_asn1_csr = asn1.csr;
+		const _KJUR_asn1_csr = asn1.csr;
 		if (param.subject === undefined) throw 'parameter subject undefined';
 		if (param.sbjpubkey === undefined) throw 'parameter sbjpubkey undefined';
 		if (param.sigalg === undefined) throw 'parameter sigalg undefined';
 		if (param.sbjprvkey === undefined) throw 'parameter sbjpubkey undefined';
-		var ecdsa = new EC(this._cryptoSuite._ecdsaCurve);
-		var pubKey = ecdsa.keyFromPublic(this._pub._ecpt);
-		var csri = new _KJUR_asn1_csr.CertificationRequestInfo();
+		const ecdsa = new EC(this._cryptoSuite._ecdsaCurve);
+		const pubKey = ecdsa.keyFromPublic(this._pub._ecpt);
+		const csri = new _KJUR_asn1_csr.CertificationRequestInfo();
 		csri.setSubjectByParam(param.subject);
 		csri.setSubjectPublicKeyByGetKey({xy: pubKey.getPublic('hex'), curve: 'secp256r1'});
 		if (param.ext !== undefined && param.ext.length !== undefined) {
-			for (let ext of param.ext) {
-				for (let key in ext) {
+			for (const ext of param.ext) {
+				for (const key in ext) {
 					csri.appendExtensionByName(key, ext[key]);
 				}
 			}
 		}
 
-		var csr = new _KJUR_asn1_csr.CertificationRequest({'csrinfo': csri});
+		const csr = new _KJUR_asn1_csr.CertificationRequest({'csrinfo': csri});
 		this.signCSR(csr, param.sigalg);
 
-		var pem = csr.getPEMString();
+		const pem = csr.getPEMString();
 		return pem;
 
 	}
@@ -127,7 +127,7 @@ var PKCS11_ECDSA_KEY = class extends api.Key {
 		}
 
 		try {
-			var csr = this.newCSRPEM({
+			const csr = this.newCSRPEM({
 				subject: { str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
 				sbjpubkey: this._pub,
 				sigalg: 'SHA256withECDSA',

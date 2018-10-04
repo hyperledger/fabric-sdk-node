@@ -5,30 +5,30 @@
  */
 'use strict';
 
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('E2E join-channel');
+const utils = require('fabric-client/lib/utils.js');
+const logger = utils.getLogger('E2E join-channel');
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var util = require('util');
-var path = require('path');
-var fs = require('fs');
+const util = require('util');
+const path = require('path');
+const fs = require('fs');
 
-var Client = require('fabric-client');
+const Client = require('fabric-client');
 
-var testUtil = require('../../unit/util.js');
-var e2eUtils = require('./e2eUtils.js');
+const testUtil = require('../../unit/util.js');
+const e2eUtils = require('./e2eUtils.js');
 
-var tx_id = null;
+let tx_id = null;
 
-var ORGS;
+let ORGS;
 
 //
 //Attempt to send a request to the orderer with the createChannel method
 //
-test('\n\n***** End-to-end flow: join channel *****\n\n', function(t) {
+test('\n\n***** End-to-end flow: join channel *****\n\n', (t) => {
 	Client.addConfigFile(path.join(__dirname, './config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 
@@ -47,29 +47,29 @@ test('\n\n***** End-to-end flow: join channel *****\n\n', function(t) {
 			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS['org2'].name), err.stack ? err.stack : err);
 			t.end();
 		})
-		.catch(function(err) {
+		.catch((err) => {
 			t.fail('Failed request. ' + err);
 			t.end();
 		});
 });
 
 function joinChannel(org, t) {
-	var channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 	//
 	// Create and configure the test channel
 	//
-	var client = new Client();
-	var channel = client.newChannel(channel_name);
+	const client = new Client();
+	const channel = client.newChannel(channel_name);
 
-	var orgName = ORGS[org].name;
+	const orgName = ORGS[org].name;
 
-	var targets = [];
+	const targets = [];
 
-	var caRootsPath = ORGS.orderer.tls_cacerts;
+	const caRootsPath = ORGS.orderer.tls_cacerts;
 	let data = fs.readFileSync(path.join(__dirname, caRootsPath));
-	let caroots = Buffer.from(data).toString();
-	var genesis_block = null;
-	var tlsInfo = null;
+	const caroots = Buffer.from(data).toString();
+	let genesis_block = null;
+	let tlsInfo = null;
 
 	return e2eUtils.tlsEnroll(org)
 		.then((enrollment) => {
@@ -94,7 +94,7 @@ function joinChannel(org, t) {
 				)
 			);
 			tx_id = client.newTransactionID();
-			let request = {
+			const request = {
 				txId : 	tx_id
 			};
 
@@ -110,7 +110,7 @@ function joinChannel(org, t) {
 		}).then(() => {
 			t.pass('Successfully enrolled org (join_channel):' + org + ' \'admin\'');
 
-			for (let key in ORGS[org]) {
+			for (const key in ORGS[org]) {
 				if (ORGS[org].hasOwnProperty(key)) {
 					if (key.indexOf('peer') === 0) {
 						data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
@@ -128,7 +128,7 @@ function joinChannel(org, t) {
 			}
 
 			tx_id = client.newTransactionID();
-			let request = {
+			const request = {
 				targets : targets,
 				block : genesis_block,
 				txId : 	tx_id

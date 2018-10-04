@@ -45,7 +45,7 @@ test('\n\n***** Network End-to-end flow: execute transaction to get information 
 		await fileSystemWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
 
 		const ccp = fs.readFileSync(fixtures + '/network.json');
-		let ccpObject = JSON.parse(ccp.toString());
+		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
 			wallet: fileSystemWallet,
@@ -65,7 +65,7 @@ test('\n\n***** Network End-to-end flow: execute transaction to get information 
 
 
 		// try a standard query
-		let responseBuffer = await contract.executeTransaction('query', 'a');
+		const responseBuffer = await contract.executeTransaction('query', 'a');
 		let response = responseBuffer.toString();
 
 		if(response * 1 === parseInt(response)){

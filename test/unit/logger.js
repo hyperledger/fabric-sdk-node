@@ -6,30 +6,30 @@
 
 'use strict';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var hfc = require('fabric-client');
-var testutil = require('./util.js');
-var utils = require('fabric-client/lib/utils.js');
+const hfc = require('fabric-client');
+const testutil = require('./util.js');
+const utils = require('fabric-client/lib/utils.js');
 
-var bunyan = require('bunyan');
-var log4js = require('log4js');
-var intercept = require('intercept-stdout');
-var fs = require('fs-extra');
-var util = require('util');
-var path = require('path');
+const bunyan = require('bunyan');
+const log4js = require('log4js');
+const intercept = require('intercept-stdout');
+const fs = require('fs-extra');
+const util = require('util');
+const path = require('path');
 
 // Logger tests /////////
 function testLogger(t, ignoreLevels) {
-	var output = '';
+	let output = '';
 
-	let unhook = intercept(function (txt) {
+	const unhook = intercept((txt) => {
 		output += txt;
 	});
 
-	let log = utils.getLogger('testlogger');
+	const log = utils.getLogger('testlogger');
 	log.error('Test logger - error');
 	log.warn('Test logger - warn');
 	log.info('Test logger - info');
@@ -50,7 +50,7 @@ function testLogger(t, ignoreLevels) {
 	}
 }
 
-test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
+test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
 	if (process.env.HFC_LOGGING) {
 		delete process.env['HFC_LOGGING'];
 	}
@@ -62,7 +62,7 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
 	testutil.resetDefaults();
 
 	// test 2: custom logging levels for console logging
-	var output = '';
+	let output = '';
 	// setup the environment *ignore this*
 	process.env.HFC_LOGGING = "{'debug': 'console'}"; // eslint-disable-line quotes
 	// internal call. clearing the cached config.
@@ -70,11 +70,11 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
 	// internal call. clearing the cached logger.
 	global.hfc.logger = undefined;
 	try {
-		let unhook = intercept(function (txt) {
+		const unhook = intercept((txt) => {
 			output += txt;
 		});
 
-		let logger = utils.getLogger('testlogger');
+		const logger = utils.getLogger('testlogger');
 
 		unhook();
 
@@ -96,7 +96,7 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
 	// internal call. clearing the cached logger.
 	global.hfc.logger = undefined;
 
-	let unhook = intercept(function (txt) {
+	let unhook = intercept((txt) => {
 		output += txt;
 	});
 
@@ -125,7 +125,7 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
 	// internal call. clearing the cached logger.
 	global.hfc.logger = undefined;
 
-	unhook = intercept(function (txt) {
+	unhook = intercept((txt) => {
 		output += txt;
 	});
 
@@ -147,11 +147,11 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
 	}
 
 
-	let prepareEmptyFile = function (logPath) {
+	const prepareEmptyFile = function (logPath) {
 		try {
 			fs.ensureFileSync(logPath);
 
-			let stats = fs.statSync(logPath);
+			const stats = fs.statSync(logPath);
 
 			if (stats.isFile()) {
 				fs.truncateSync(logPath);
@@ -162,22 +162,22 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
 		}
 	};
 
-	let debugPath = path.join(testutil.getTempDir(), 'hfc-log/debug.log');
-	let errorPath = path.join(testutil.getTempDir(), 'hfc-log/error.log');
+	const debugPath = path.join(testutil.getTempDir(), 'hfc-log/debug.log');
+	const errorPath = path.join(testutil.getTempDir(), 'hfc-log/error.log');
 	prepareEmptyFile(debugPath);
 	prepareEmptyFile(errorPath);
 
 	hfc.setConfigSetting('hfc-logging', util.format('{"debug": "%s", "error": "%s"}', debugPath, errorPath));
 	// internal call. clearing the cached logger.
 	global.hfc.logger = undefined;
-	var log1 = utils.getLogger('testlogger');
+	const log1 = utils.getLogger('testlogger');
 	log1.error('Test logger - error');
 	log1.warn('Test logger - warn');
 	log1.info('Test logger - info');
 	log1.debug('Test logger - debug');
 
-	setTimeout(function () {
-		var data = fs.readFileSync(debugPath);
+	setTimeout(() => {
+		let data = fs.readFileSync(debugPath);
 
 		if (data.indexOf('Test logger - error') > 0 &&
 			data.indexOf('Test logger - warn') > 0 &&
@@ -206,16 +206,16 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', function (t) {
 	}, 1000);
 });
 
-test('\n\n ** Logging utility tests - test setting an external logger based on bunyan **\n\n', function (t) {
-	var logger = bunyan.createLogger({ name: 'bunyanLogger' });
+test('\n\n ** Logging utility tests - test setting an external logger based on bunyan **\n\n', (t) => {
+	const logger = bunyan.createLogger({ name: 'bunyanLogger' });
 	hfc.setLogger(logger);
 
 	testLogger(t);
 	t.end();
 });
 
-test('\n\n ** Logging utility tests - test setting an external logger based on log4js **\n\n', function (t) {
-	var logger = log4js.getLogger();
+test('\n\n ** Logging utility tests - test setting an external logger based on log4js **\n\n', (t) => {
+	const logger = log4js.getLogger();
 	logger.level = 'info'; // Set level in order to output logs because by default it is OFF
 	hfc.setLogger(logger);
 
@@ -223,9 +223,9 @@ test('\n\n ** Logging utility tests - test setting an external logger based on l
 	t.end();
 });
 
-test('\n\n ** Logging utility tests - test setting an invalid external logger **\n\n', function (t) {
+test('\n\n ** Logging utility tests - test setting an invalid external logger **\n\n', (t) => {
 	// construct an invalid logger
-	var logger = {
+	const logger = {
 		inf: function () { t.comment('info'); },
 	};
 
@@ -234,7 +234,7 @@ test('\n\n ** Logging utility tests - test setting an invalid external logger **
 		t.fail('Should not have allowed an invalid logger to be set');
 		t.end();
 	} catch (err) {
-		var er1 = err.toString();
+		const er1 = err.toString();
 		if (er1.indexOf('debug()') > 0 &&
 			er1.indexOf('info()') > 0 &&
 			er1.indexOf('warn()') > 0 &&

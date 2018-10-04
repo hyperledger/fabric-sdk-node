@@ -138,7 +138,7 @@ module.exports = class ECDSA_KEY extends api.Key {
 	 */
 	generateX509Certificate(commonName) {
 
-		var subjectDN = '/CN=self';
+		let subjectDN = '/CN=self';
 		if (commonName) {
 			subjectDN = '/CN=' + commonName;
 		}
@@ -150,7 +150,7 @@ module.exports = class ECDSA_KEY extends api.Key {
 		try {
 			//var before = Date.now() - 60000;
 			//var after = Date.now() + 60000;
-			var certPEM = asn1.x509.X509Util.newCertPEM({
+			const certPEM = asn1.x509.X509Util.newCertPEM({
 				serial: { int: 4 },
 				sigalg: { name: 'SHA256withECDSA' },
 				issuer: { str: subjectDN },

@@ -19,12 +19,12 @@ limitations under the License.
 const shim = require('fabric-shim');
 
 // An log4js logger instance
-var logger = shim.newLogger('example_cc1');
+const logger = shim.newLogger('example_cc1');
 // The logger level can also be set by environment variable 'CORE_CHAINCODE_LOGGING_SHIM'
 // to CRITICAL, ERROR, WARNING, DEBUG
 logger.level = 'info';
 
-var Chaincode = class {
+const Chaincode = class {
 	async Init(stub) {
 
 		logger.info('########### example_cc1 Init ###########');
@@ -34,9 +34,9 @@ var Chaincode = class {
 
 	async Invoke(stub) {
 		logger.info('########### example_cc1 Invoke ###########');
-		let ret = stub.getFunctionAndParameters();
-		let fcn = ret.fcn;
-		let args = ret.params;
+		const ret = stub.getFunctionAndParameters();
+		const fcn = ret.fcn;
+		const args = ret.params;
 
 		if (fcn === 'delete') {
 			return this.delete(stub, args);
@@ -77,7 +77,7 @@ var Chaincode = class {
 		B = args[1];
 
 		try {
-			let Avalbytes = await stub.getState(A);
+			const Avalbytes = await stub.getState(A);
 			if (!Avalbytes) {
 				return shim.error('Entity A not found');
 			}
@@ -88,7 +88,7 @@ var Chaincode = class {
 		}
 
 		try {
-			let Bvalbytes = await stub.getState(B);
+			const Bvalbytes = await stub.getState(B);
 			if (!Bvalbytes) {
 				return shim.error('Entity B not found');
 			}
@@ -122,7 +122,7 @@ var Chaincode = class {
 			return shim.error('Incorrect number of arguments. Expecting 1');
 		}
 
-		let A = args[0];
+		const A = args[0];
 
 		try {
 			await stub.deleteState(A);
@@ -138,11 +138,11 @@ var Chaincode = class {
 			return shim.error('Incorrect number of arguments. Expecting name of the person to query');
 		}
 
-		let A = args[0];
+		const A = args[0];
 		let Aval;
 		// Get the state from the ledger
 		try {
-			let Avalbytes = await stub.getState(A);
+			const Avalbytes = await stub.getState(A);
 			if (!Avalbytes) {
 				return shim.error('Entity A not found');
 			}
@@ -151,7 +151,7 @@ var Chaincode = class {
 			return shim.error('Failed to get state A');
 		}
 
-		let jsonResp = {
+		const jsonResp = {
 			Name: A,
 			Amount: Aval
 		};
@@ -174,7 +174,7 @@ var Chaincode = class {
 			return shim.error(Buffer.from('{"Error":"Did not find expected transient map in the proposal}'));
 		}
 
-		let v = tm.map.test;
+		const v = tm.map.test;
 
 		if (!v) {
 			logger.error('Did not find expected key "test" in the transient map of the proposal');

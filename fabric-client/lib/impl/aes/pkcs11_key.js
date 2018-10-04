@@ -7,9 +7,9 @@
 
 'use strict';
 
-var api = require('../../api.js');
+const api = require('../../api.js');
 
-var PKCS11_AES_KEY = class extends api.Key {
+const PKCS11_AES_KEY = class extends api.Key {
 
 	constructor(attr, size) {
 		if (typeof attr === 'undefined' || attr === null)

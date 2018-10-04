@@ -112,7 +112,7 @@ class Identity {
 	 * @returns {Buffer} protobuf-based serialization with two fields: "mspid" and "certificate PEM bytes"
 	 */
 	serialize() {
-		var serializedIdentity = new identityProto.SerializedIdentity();
+		const serializedIdentity = new identityProto.SerializedIdentity();
 		serializedIdentity.setMspid(this.getMSPId());
 		serializedIdentity.setIdBytes(Buffer.from(this._certificate));
 		return serializedIdentity.toBuffer();
@@ -219,7 +219,7 @@ class SigningIdentity extends Identity {
 	 */
 	sign(msg, opts) {
 		// calculate the hash for the message before signing
-		var hashFunction;
+		let hashFunction;
 		if (opts && opts.hashFunction) {
 			if (typeof opts.hashFunction !== 'function') {
 				throw new Error('The "hashFunction" field must be a function');
@@ -230,7 +230,7 @@ class SigningIdentity extends Identity {
 			hashFunction = this._cryptoSuite.hash.bind(this._cryptoSuite);
 		}
 
-		var digest = hashFunction(msg);
+		const digest = hashFunction(msg);
 		return this._signer.sign(Buffer.from(digest, 'hex'), null);
 	}
 

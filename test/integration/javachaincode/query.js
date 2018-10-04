@@ -8,11 +8,11 @@
 // in a happy-path scenario
 'use strict';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
-var e2eUtils = require('../e2e/e2eUtils.js');
-var testUtils = require('../../unit/util');
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
+const e2eUtils = require('../e2e/e2eUtils.js');
+const testUtils = require('../../unit/util');
 
 test('\n\n***** Java-Chaincode End-to-end flow: query chaincode *****\n\n', async (t) => {
 	const chaincode_id = 'example_java';
@@ -23,7 +23,7 @@ test('\n\n***** Java-Chaincode End-to-end flow: query chaincode *****\n\n', asyn
 	let expectedResult = '300';
 	const targets = [];  // empty array, meaning client will get the peers from the channel
 	try {
-		let result = await e2eUtils.queryChaincode('org2', version, targets, fcn, args, expectedResult, chaincode_id, t);
+		const result = await e2eUtils.queryChaincode('org2', version, targets, fcn, args, expectedResult, chaincode_id, t);
 		if(result){
 			t.pass('Successfully query java chaincode on the channel');
 		}
@@ -36,7 +36,7 @@ test('\n\n***** Java-Chaincode End-to-end flow: query chaincode *****\n\n', asyn
 
 	try {
 		expectedResult = new Error('throwError: an error occurred');
-		let result = await e2eUtils.queryChaincode('org2', version, targets, 'throwError', args, expectedResult, chaincode_id, t);
+		const result = await e2eUtils.queryChaincode('org2', version, targets, 'throwError', args, expectedResult, chaincode_id, t);
 		if(result){
 			t.pass('Sucessfully handled error from a query on java chaincode');
 		}

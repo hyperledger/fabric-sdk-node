@@ -8,13 +8,13 @@
 // in a happy-path scenario
 'use strict';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
-var e2eUtils = require('../e2e/e2eUtils.js');
-var testUtil = require('../../unit/util.js');
-var chaincodeId = testUtil.NODE_END2END.chaincodeId;
-var version = 'v1';
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
+const e2eUtils = require('../e2e/e2eUtils.js');
+const testUtil = require('../../unit/util.js');
+const chaincodeId = testUtil.NODE_END2END.chaincodeId;
+const version = 'v1';
 
 test('\n\n***** Node-Chaincode U P G R A D E flow: chaincode install *****\n\n', (t) => {
 	e2eUtils.installChaincode('org1', testUtil.NODE_CHAINCODE_UPGRADE_PATH, null, version, 'node', t, true)

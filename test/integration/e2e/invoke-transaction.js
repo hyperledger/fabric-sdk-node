@@ -20,7 +20,7 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****\n\n', as
 	const args = ['a', 'b','100'];
 	let expectedResult = 'move succeed';
 	try {
-		let result = await e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/, fcn, args, expectedResult);
+		const result = await e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/, fcn, args, expectedResult);
 		if(result){
 			t.pass('Successfully invoke transaction chaincode on channel');
 			await testUtils.sleep(5000);

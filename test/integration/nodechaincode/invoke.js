@@ -8,19 +8,19 @@
 // in a happy-path scenario
 'use strict';
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
-var e2eUtils = require('../e2e/e2eUtils.js');
-var testUtils = require('../../unit/util');
-var chaincodeId = testUtils.NODE_END2END.chaincodeId;
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
+const e2eUtils = require('../e2e/e2eUtils.js');
+const testUtils = require('../../unit/util');
+const chaincodeId = testUtils.NODE_END2END.chaincodeId;
 
 test('\n\n***** Node-Chaincode End-to-end flow: invoke transaction to move money *****\n\n', async (t) => {
 	const fcn = 'move';
 	const args = ['a', 'b','100'];
 	let expectedResult = 'move succeed';
 	try {
-		let result = await e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/, fcn, args, expectedResult);
+		const result = await e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/, fcn, args, expectedResult);
 		if(result){
 			t.pass('Successfully invoke transaction chaincode on channel');
 			await testUtils.sleep(5000);
@@ -34,7 +34,7 @@ test('\n\n***** Node-Chaincode End-to-end flow: invoke transaction to move money
 
 	try {
 		expectedResult = new Error('throwError: an error occurred');
-		let result = await e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/, 'throwError', args, expectedResult);
+		const result = await e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/*useStore*/, 'throwError', args, expectedResult);
 		if(result){
 			t.pass('Successfully handled invocation errors');
 		}

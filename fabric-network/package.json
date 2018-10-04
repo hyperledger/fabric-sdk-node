@@ -1,7 +1,10 @@
 {
   "name": "fabric-network",
   "description": "SDK for writing node.js applications to interact with Hyperledger Fabric. This package encapsulates the APIs to connect to a Fabric network, submit transactions and perform queries against the ledger.",
-  "keywords" : ["hyperledger", "blockchain"],
+  "keywords": [
+    "hyperledger",
+    "blockchain"
+  ],
   "version": "1.3.0-snapshot",
   "main": "index.js",
   "repository": {
@@ -14,7 +17,8 @@
     "email": "fabric@lists.hyperledger.org"
   },
   "scripts": {
-    "test": "nyc mocha --recursive -t 10000"
+	"lint": "eslint .",
+	"test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
   },
   "types": "./types/index.d.ts",
   "dependencies": {

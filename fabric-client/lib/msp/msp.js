@@ -5,16 +5,16 @@
 */
 'use strict';
 
-var api = require('../api.js');
-var idModule = require('./identity.js');
-var Identity = idModule.Identity;
-var SigningIdentity = idModule.SigningIdentity;
-var utils = require('../utils.js');
-var logger = utils.getLogger('msp.js');
+const api = require('../api.js');
+const idModule = require('./identity.js');
+const Identity = idModule.Identity;
+const SigningIdentity = idModule.SigningIdentity;
+const utils = require('../utils.js');
+const logger = utils.getLogger('msp.js');
 
-var grpc = require('grpc');
-var identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp;
-var _mspConfigProto = grpc.load(__dirname + '/../protos/msp/msp_config.proto').msp;
+const grpc = require('grpc');
+const identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp;
+const _mspConfigProto = grpc.load(__dirname + '/../protos/msp/msp_config.proto').msp;
 
 
 /**
@@ -24,7 +24,7 @@ var _mspConfigProto = grpc.load(__dirname + '/../protos/msp/msp_config.proto').m
  * and PKIs (software-managed or HSM based)
  * @class
  */
-var MSP = class {
+const MSP = class {
 	/**
 	 * Setup the MSP instance according to configuration information
 	 * @param {Object} config A configuration object specific to the implementation. For this
@@ -114,9 +114,9 @@ var MSP = class {
 	 * Returns the Protobuf representation of this MSP Config
 	 */
 	toProtobuf() {
-		var proto_msp_config = new _mspConfigProto.MSPConfig();
+		const proto_msp_config = new _mspConfigProto.MSPConfig();
 		proto_msp_config.setType(0); //FABRIC
-		var proto_fabric_msp_config = new _mspConfigProto.FabricMSPConfig();
+		const proto_fabric_msp_config = new _mspConfigProto.FabricMSPConfig();
 		proto_fabric_msp_config.setName(this._id);
 		proto_fabric_msp_config.setRootCerts(this._rootCerts);
 		if(this._intermediateCerts) {
@@ -150,18 +150,18 @@ var MSP = class {
 	 */
 	deserializeIdentity(serializedIdentity, storeKey) {
 		logger.debug('importKey - start');
-		var store_key = true; //default
+		let store_key = true; //default
 		// if storing is not required and therefore a promise will not be returned
 		// then storeKey must be set to false;
 		if(typeof storeKey === 'boolean') {
 			store_key = storeKey;
 		}
-		var sid = identityProto.SerializedIdentity.decode(serializedIdentity);
-		var cert = sid.getIdBytes().toBinary();
+		const sid = identityProto.SerializedIdentity.decode(serializedIdentity);
+		const cert = sid.getIdBytes().toBinary();
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
 		if(!store_key) {
-			var publicKey =this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate, ephemeral: true });
-			var sdk_identity = new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
+			const publicKey =this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate, ephemeral: true });
+			const sdk_identity = new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 			return sdk_identity;
 		}
 		else {

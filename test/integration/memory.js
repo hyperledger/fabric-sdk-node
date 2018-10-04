@@ -5,17 +5,17 @@
  */
 'use strict';
 
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('Memory Usage');
+const utils = require('fabric-client/lib/utils.js');
+const logger = utils.getLogger('Memory Usage');
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var Client = require('fabric-client');
-var util = require('util');
-var fs = require('fs');
-var path = require('path');
+const Client = require('fabric-client');
+const util = require('util');
+const fs = require('fs');
+const path = require('path');
 //var heapdump = require('heapdump');
 
 
@@ -39,7 +39,7 @@ var path = require('path');
 	node --expose-gc test/integration/memory.js count=1000
 	node --expose-gc test/integration/memory.js count=1000 skipcreate=true
 */
-test('\n\n***** use the network configuration file  *****\n\n', function(t) {
+test('\n\n***** use the network configuration file  *****\n\n', (t) => {
 	looper(t);
 	t.end();
 });
@@ -47,11 +47,11 @@ test('\n\n***** use the network configuration file  *****\n\n', function(t) {
 async function looper(t) {
 	//global.gc();
 	//heapdump.writeSnapshot();
-	var skip = getArg('skipcreate', false);
+	let skip = getArg('skipcreate', false);
 	if(skip === 'true') skip = true;
 
 	if(!skip) await createChannel(t);
-	var count = getArg('count', 1);
+	const count = getArg('count', 1);
 
 	for(let i = 0;i<count; i++) {
 		logger.info('\n');
@@ -72,8 +72,8 @@ function getArg(arg_name, default_value) {
 	let value = default_value;
 	try {
 		if (process.argv.length > 2) {
-			for(let i in process.argv) {
-				let arg = process.argv[i];
+			for(const i in process.argv) {
+				const arg = process.argv[i];
 				if(arg && arg.indexOf(arg_name+'=') === 0) {
 					value = arg.split('=')[1];
 				}
@@ -95,19 +95,19 @@ async function createChannel(t) {
 	//  this network config does not have the client information, we will
 	//  load that later so that we can switch this client to be in a different
 	//  organization
-	var client = Client.loadFromConfig('test/fixtures/network.yaml');
+	const client = Client.loadFromConfig('test/fixtures/network.yaml');
 	t.pass('Successfully loaded a network configuration');
 
-	var channel_name = 'mychannel2';
-	var config = null;
-	var signatures = [];
-	var genesis_block = null;
-	var channel = null;
-	var instansiate_tx_id = null;
-	var results = null;
-	var response = null;
-	var request = null;
-	var tx_id = null;
+	const channel_name = 'mychannel2';
+	let config = null;
+	const signatures = [];
+	let genesis_block = null;
+	let channel = null;
+	let instansiate_tx_id = null;
+	let results = null;
+	let response = null;
+	let request = null;
+	let tx_id = null;
 	try {
 		// lets load the client information for this organization
 		// the file only has the client section
@@ -119,7 +119,7 @@ async function createChannel(t) {
 		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
 
 		// get the config envelope created by the configtx tool
-		let envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/mychannel2.tx'));
+		const envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/mychannel2.tx'));
 		// have the sdk get the config update object from the envelope
 		// the config update object is what is required to be signed by all
 		// participating organizations
@@ -127,11 +127,11 @@ async function createChannel(t) {
 		t.pass('Successfully extracted the config update from the configtx envelope');
 
 		// sign the config by admin from org1
-		var signature = client.signChannelConfig(config);
+		let signature = client.signChannelConfig(config);
 		// convert signature to a storable string
 		// fabric-client SDK will convert any strings it finds back
 		// to GRPC protobuf objects during the channel create
-		var string_signature = signature.toBuffer().toString('hex');
+		const string_signature = signature.toBuffer().toString('hex');
 		t.pass('Successfully signed config update by org1');
 		// collect signature from org1 admin
 		signatures.push(string_signature);
@@ -318,8 +318,8 @@ async function createChannel(t) {
 		};
 
 		results = await channel.sendInstantiateProposal(request); // still have org2 admin signer
-		var proposalResponses = results[0];
-		var proposal = results[1];
+		const proposalResponses = results[0];
+		const proposal = results[1];
 		if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 			t.pass('Successfully sent Proposal and received ProposalResponse');
 			request = {
@@ -362,17 +362,17 @@ async function actions(t) {
 	//  this network config does not have the client information, we will
 	//  load that later so that we can switch this client to be in a different
 	//  organization
-	var client = Client.loadFromConfig('test/fixtures/network.yaml');
+	const client = Client.loadFromConfig('test/fixtures/network.yaml');
 	t.pass('Successfully loaded a network configuration');
 
-	var channel_name = 'mychannel2';
-	var channel = null;
-	var query_tx_id = null;
-	var results = null;
-	var response = null;
-	var request = null;
-	var tx_id = null;
-	var found = null;
+	const channel_name = 'mychannel2';
+	let channel = null;
+	let query_tx_id = null;
+	let results = null;
+	let response = null;
+	let request = null;
+	let tx_id = null;
+	let found = null;
 	try {
 		// lets load the client information for this organization
 		// the file only has the client section
@@ -399,12 +399,12 @@ async function actions(t) {
 		};
 
 		results = await channel.sendTransactionProposal(request); //logged in as org2 user
-		var proposalResponses = results[0];
-		var proposal = results[1];
-		var all_good = true;
-		for(var i in proposalResponses) {
+		const proposalResponses = results[0];
+		const proposal = results[1];
+		let all_good = true;
+		for(const i in proposalResponses) {
 			let one_good = false;
-			let proposal_response = proposalResponses[i];
+			const proposal_response = proposalResponses[i];
 			if( proposal_response.response && proposal_response.response.status === 200) {
 				t.pass('transaction proposal has response status of good');
 				one_good = true;
@@ -424,7 +424,7 @@ async function actions(t) {
 			admin : false
 		};
 
-		var eventhub = channel.getChannelEventHub('peer0.org1.example.com');
+		const eventhub = channel.getChannelEventHub('peer0.org1.example.com');
 
 		response = await invoke(t, request, tx_id, client, channel, eventhub); //logged in as org2 user
 		if (!(response[0] instanceof Error) && response[0].status === 'SUCCESS') {
@@ -440,7 +440,7 @@ async function actions(t) {
 			args: ['b']
 		};
 
-		let response_payloads = await channel.queryByChaincode(request); //logged in as user on org1
+		const response_payloads = await channel.queryByChaincode(request); //logged in as user on org1
 		if (response_payloads) {
 			for(let i = 0; i < response_payloads.length; i++) {
 				t.pass('Successfully got query results :: '+ response_payloads[i].toString('utf8'));
@@ -453,7 +453,7 @@ async function actions(t) {
 		results = await client.queryChannels('peer0.org1.example.com');
 		logger.debug(' queryChannels ::%j',results);
 		found = false;
-		for(let i in results.channels) {
+		for(const i in results.channels) {
 			logger.debug(' queryChannels has found %s', results.channels[i].channel_id);
 			if(results.channels[i].channel_id === channel_name) {
 				found = true;
@@ -468,7 +468,7 @@ async function actions(t) {
 		results = await client.queryInstalledChaincodes('peer0.org1.example.com', true); // use admin
 		logger.debug(' queryInstalledChaincodes ::%j',results);
 		found = false;
-		for(let i in results.chaincodes) {
+		for(const i in results.chaincodes) {
 			logger.debug(' queryInstalledChaincodes has found %s', results.chaincodes[i].name);
 			if(results.chaincodes[i].name === 'example') {
 				found = true;
@@ -546,12 +546,12 @@ async function actions(t) {
 
 function invoke(t, request, tx_id, client, channel, eventhub) {
 
-	var transactionID = tx_id.getTransactionID();
-	var promises = [];
+	const transactionID = tx_id.getTransactionID();
+	const promises = [];
 	promises.push(channel.sendTransaction(request));
 
-	let txPromise = new Promise((resolve, reject) => {
-		let handle = setTimeout(() => {
+	const txPromise = new Promise((resolve, reject) => {
+		const handle = setTimeout(() => {
 			eventhub.disconnect();
 			t.fail('REQUEST_TIMEOUT -- eventhub did not respond');
 			reject(new Error('REQUEST_TIMEOUT:' + eventhub.getPeerAddr()));
@@ -573,7 +573,7 @@ function invoke(t, request, tx_id, client, channel, eventhub) {
 			t.fail('Event registration for this transaction was invalid ::' + error);
 			reject(error);
 		},
-			{disconnect: true}
+		{disconnect: true}
 		);
 
 		eventhub.connect();
@@ -588,12 +588,12 @@ function sleep(ms) {
 }
 
 function logMemory(clean) {
-	var memory_usage = process.memoryUsage();
+	const memory_usage = process.memoryUsage();
 	logger.info(' Memory usage :: %j',memory_usage);
 	//info: memory_usage : {"rss":214753280,"heapTotal":55156736,"heapUsed":36789336,"external":5236572}
-	let now = new Date();
-	let line = now.toString() + ',' + memory_usage.rss + ',' + memory_usage.heapTotal + ',' + memory_usage.heapUsed + ',' + memory_usage.external + '\n';
-	let file_path = path.join(__dirname, '../memory-usage.csv');
+	const now = new Date();
+	const line = now.toString() + ',' + memory_usage.rss + ',' + memory_usage.heapTotal + ',' + memory_usage.heapUsed + ',' + memory_usage.external + '\n';
+	const file_path = path.join(__dirname, '../memory-usage.csv');
 	if(clean) {
 		fs.writeFileSync(file_path, 'time,rss,heapTotal,heapUsed,external\n');
 	}

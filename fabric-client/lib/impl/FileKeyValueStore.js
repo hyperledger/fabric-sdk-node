@@ -7,12 +7,12 @@
 
 'use strict';
 
-var api = require('../api.js');
-var fs = require('fs-extra');
-var path = require('path');
-var utils = require('../utils');
+const api = require('../api.js');
+const fs = require('fs-extra');
+const path = require('path');
+const utils = require('../utils');
 
-var logger = utils.getLogger('FileKeyValueStore.js');
+const logger = utils.getLogger('FileKeyValueStore.js');
 
 /**
  * This is a default implementation of the [KeyValueStore]{@link module:api.KeyValueStore} API.
@@ -21,7 +21,7 @@ var logger = utils.getLogger('FileKeyValueStore.js');
  * @class
  * @extends module:api.KeyValueStore
  */
-var FileKeyValueStore = class extends api.KeyValueStore {
+const FileKeyValueStore = class extends api.KeyValueStore {
 
 	/**
 	 * constructor
@@ -39,27 +39,27 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 		// Create the keyValStore instance
 		super();
 
-		var self = this;
+		const self = this;
 		this._dir = options.path;
-		return new Promise(function (resolve, reject) {
-			fs.mkdirs(self._dir, function (err) {
+		return new Promise(((resolve, reject) => {
+			fs.mkdirs(self._dir, (err) => {
 				if (err) {
 					logger.error('constructor, error creating directory, code: %s' , err.code);
 					return reject(err);
 				}
 				return resolve(self);
 			});
-		});
+		}));
 	}
 
 	getValue(name) {
 		logger.debug('getValue', { key: name });
 
-		var self = this;
+		const self = this;
 
-		return new Promise(function (resolve, reject) {
-			var p = path.join(self._dir, name);
-			fs.readFile(p, 'utf8', function (err, data) {
+		return new Promise(((resolve, reject) => {
+			const p = path.join(self._dir, name);
+			fs.readFile(p, 'utf8', (err, data) => {
 				if (err) {
 					if (err.code !== 'ENOENT') {
 						return reject(err);
@@ -69,24 +69,24 @@ var FileKeyValueStore = class extends api.KeyValueStore {
 				}
 				return resolve(data);
 			});
-		});
+		}));
 	}
 
 	setValue(name, value) {
 		logger.debug('setValue', { key: name });
 
-		var self = this;
+		const self = this;
 
-		return new Promise(function (resolve, reject) {
-			var p = path.join(self._dir, name);
-			fs.writeFile(p, value, function (err) {
+		return new Promise(((resolve, reject) => {
+			const p = path.join(self._dir, name);
+			fs.writeFile(p, value, (err) => {
 				if (err) {
 					reject(err);
 				} else {
 					return resolve(value);
 				}
 			});
-		});
+		}));
 	}
 };
 

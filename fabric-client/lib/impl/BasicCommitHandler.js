@@ -107,7 +107,7 @@ class BasicCommitHandler extends api.CommitHandler {
 		if(orderers && orderers.length > 0) {
 			logger.debug('%s - found %s orderers assigned to channel', method, orderers.length);
 			// loop through the orderers trying to complete one successfully
-			for(let orderer of orderers) {
+			for(const orderer of orderers) {
 				logger.debug('%s - starting orderer %s', method, orderer.getName());
 				try {
 					const results =  await orderer.sendBroadcast(envelope, timeout);

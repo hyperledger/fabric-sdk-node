@@ -57,7 +57,7 @@ test('*****  Test channel events', async (t) => {
 			};
 		})(t, eventhubs, t.end);
 
-		let tlsInfo = await e2eUtils.tlsEnroll('org1');
+		const tlsInfo = await e2eUtils.tlsEnroll('org1');
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg('peerOrg1')});
 		client.setStateStore(store);
@@ -454,7 +454,7 @@ test('*****  Test channel events', async (t) => {
 				t.fail('Failed to replay all the block events');
 				throw new Error('Replay Error callback was called with ::' + error);
 			},
-				{startBlock : 0, endBlock : current_block}
+			{startBlock : 0, endBlock : current_block}
 			);
 			eh2.connect(true);
 		});
@@ -495,7 +495,7 @@ test('*****  Test channel events', async (t) => {
 				}
 
 			},
-				{startBlock : 0, endBlock : 'newest'}
+			{startBlock : 0, endBlock : 'newest'}
 			);
 			eh2.connect(true); //need to connect as disconnect was called
 		});

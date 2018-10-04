@@ -27,7 +27,7 @@ const testUtil = require('../unit/util.js');
 // Testing will also demostrate how to read and set the admin identity manually
 // Only one call will be made with this, however if the identity has access, all
 // the calls made by connection profile demonstration may also be made.
-test('\n\n***** use only admin identity  *****\n\n', async function(t) {
+test('\n\n***** use only admin identity  *****\n\n', async (t) => {
 	const channel_name = 'adminconfig';
 
 	const client_org1 = await testUtil.getClientForOrg(t, 'org1');

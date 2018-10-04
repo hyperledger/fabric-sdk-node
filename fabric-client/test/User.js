@@ -728,7 +728,7 @@ describe('User', () => {
 			};
 
 			const FakeIdentity = sandbox.stub();
-			const promise = new Promise(function(resolve, reject){ resolve( {isPrivate(){ return false;}});});
+			const promise = new Promise(((resolve) => { resolve( {isPrivate(){ return false;}});}));
 			sandbox.stub(FakeCryptoSuite, 'importKey').returns(promise);
 
 			sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(FakeCryptoSuite);

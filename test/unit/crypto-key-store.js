@@ -9,31 +9,31 @@
 if (global && global.hfc) global.hfc.config = undefined;
 require('nconf').reset();
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
 
-var util = require('util');
-var testutil = require('./util.js');
-var utils = require('fabric-client/lib/utils.js');
-var fs = require('fs-extra');
-var path = require('path');
-var os = require('os');
-var jsrsa = require('jsrsasign');
-var KEYUTIL = jsrsa.KEYUTIL;
-var CouchdbMock = require('mock-couch');
-var nano = require('nano');
+const util = require('util');
+const testutil = require('./util.js');
+const utils = require('fabric-client/lib/utils.js');
+const fs = require('fs-extra');
+const path = require('path');
+const os = require('os');
+const jsrsa = require('jsrsasign');
+const KEYUTIL = jsrsa.KEYUTIL;
+const CouchdbMock = require('mock-couch');
+const nano = require('nano');
 
-var ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
-var CKS = require('fabric-client/lib/impl/CryptoKeyStore.js');
-var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
+const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
+const CKS = require('fabric-client/lib/impl/CryptoKeyStore.js');
+const CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
 
-var TEST_KEY_PRIVATE_PEM = '-----BEGIN PRIVATE KEY-----' +
+const TEST_KEY_PRIVATE_PEM = '-----BEGIN PRIVATE KEY-----' +
 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgZYMvf3w5VkzzsTQY' +
 'I8Z8IXuGFZmmfjIX2YSScqCvAkihRANCAAS6BhFgW/q0PzrkwT5RlWTt41VgXLgu' +
 'Pv6QKvGsW7SqK6TkcCfxsWoSjy6/r1SzzTMni3J8iQRoJ3roPmoxPLK4' +
 '-----END PRIVATE KEY-----';
-var TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
+const TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'MIICEDCCAbagAwIBAgIUXoY6X7jIpHAAgL267xHEpVr6NSgwCgYIKoZIzj0EAwIw' +
 'fzELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNh' +
 'biBGcmFuY2lzY28xHzAdBgNVBAoTFkludGVybmV0IFdpZGdldHMsIEluYy4xDDAK' +
@@ -48,18 +48,18 @@ var TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'BAHpeA==' +
 '-----END CERTIFICATE-----';
 
-var dbname = 'test_keystore';
-var dbclient = nano('http://localhost:5985');
+const dbname = 'test_keystore';
+const dbclient = nano('http://localhost:5985');
 
-var f1 = KEYUTIL.getKey(TEST_KEY_PRIVATE_PEM);
-var testPrivKey = new ecdsaKey(f1);
-var f2 = KEYUTIL.getKey(TEST_KEY_PRIVATE_CERT_PEM);
-var testPubKey = new ecdsaKey(f2);
+const f1 = KEYUTIL.getKey(TEST_KEY_PRIVATE_PEM);
+const testPrivKey = new ecdsaKey(f1);
+const f2 = KEYUTIL.getKey(TEST_KEY_PRIVATE_CERT_PEM);
+const testPubKey = new ecdsaKey(f2);
 
-test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
+test('\n\n** CryptoKeyStore tests **\n\n', (t) => {
 	testutil.resetDefaults();
 
-	var keystorePath = path.join(testutil.getTempDir(), 'crypto-key-store');
+	const keystorePath = path.join(testutil.getTempDir(), 'crypto-key-store');
 
 	t.throws(
 		() => {
@@ -77,50 +77,50 @@ test('\n\n** CryptoKeyStore tests **\n\n', function(t) {
 		'Test invalid constructor calls: missing "path" property in the "options" parameter'
 	);
 
-	var store;
+	let store;
 	CKS({path: keystorePath})
-	.then((st) => {
-		store = st;
-		return store.putKey(testPrivKey);
-	}).then(() => {
-		t.pass('Successfully saved private key in store');
+		.then((st) => {
+			store = st;
+			return store.putKey(testPrivKey);
+		}).then(() => {
+			t.pass('Successfully saved private key in store');
 
-		t.equal(fs.existsSync(path.join(keystorePath, testPrivKey.getSKI() + '-priv')), true,
-			'Check that the private key has been saved with the proper <SKI>-priv index');
+			t.equal(fs.existsSync(path.join(keystorePath, testPrivKey.getSKI() + '-priv')), true,
+				'Check that the private key has been saved with the proper <SKI>-priv index');
 
-		return store.getKey(testPrivKey.getSKI());
-	}).then((recoveredKey) => {
-		t.notEqual(recoveredKey, null, 'Successfully read private key from store using SKI');
-		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
+			return store.getKey(testPrivKey.getSKI());
+		}).then((recoveredKey) => {
+			t.notEqual(recoveredKey, null, 'Successfully read private key from store using SKI');
+			t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
 
-		return store.putKey(testPubKey);
-	}).then(() => {
-		t.equal(fs.existsSync(path.join(keystorePath, testPrivKey.getSKI() + '-pub')), true,
-			'Check that the public key has been saved with the proper <SKI>-pub index');
+			return store.putKey(testPubKey);
+		}).then(() => {
+			t.equal(fs.existsSync(path.join(keystorePath, testPrivKey.getSKI() + '-pub')), true,
+				'Check that the public key has been saved with the proper <SKI>-pub index');
 
-		return store.getKey(testPubKey.getSKI());
-	}).then((recoveredKey) => {
-		t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
-		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
+			return store.getKey(testPubKey.getSKI());
+		}).then((recoveredKey) => {
+			t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
+			t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
 
-		// delete the private key entry and test if getKey() would return the public key
-		fs.unlinkSync(path.join(keystorePath, testPrivKey.getSKI() + '-priv'));
-		return store.getKey(testPubKey.getSKI());
-	}).then((recoveredKey) => {
-		t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
-		t.equal(recoveredKey.isPrivate(), false, 'Test if the recovered key is a public key');
-		t.end();
-	}).catch((err) => {
-		t.fail(err.stack ? err.stack : err);
-		t.end();
-	});
+			// delete the private key entry and test if getKey() would return the public key
+			fs.unlinkSync(path.join(keystorePath, testPrivKey.getSKI() + '-priv'));
+			return store.getKey(testPubKey.getSKI());
+		}).then((recoveredKey) => {
+			t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
+			t.equal(recoveredKey.isPrivate(), false, 'Test if the recovered key is a public key');
+			t.end();
+		}).catch((err) => {
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		});
 });
 
 
-test('\n\n** CryptoKeyStore tests - couchdb based store tests - use configSetting **\n\n', function(t) {
+test('\n\n** CryptoKeyStore tests - couchdb based store tests - use configSetting **\n\n', (t) => {
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');
 
-	var couchdb = CouchdbMock.createServer();
+	const couchdb = CouchdbMock.createServer();
 	couchdb.listen(5985);
 
 	// override t.end function so it'll always disconnect the event hub
@@ -136,18 +136,18 @@ test('\n\n** CryptoKeyStore tests - couchdb based store tests - use configSettin
 	})(t, couchdb, t.end);
 
 	CKS({name: dbname, url: 'http://localhost:5985'})
-	.then((store) => {
-		return testKeyStore(store, t);
-	}).catch((err) => {
-		t.fail(err.stack ? err.stack : err);
-		t.end();
-	}).then(() => {
-		t.end();
-	});
+		.then((store) => {
+			return testKeyStore(store, t);
+		}).catch((err) => {
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		}).then(() => {
+			t.end();
+		});
 });
 
-test('\n\n** CryptoKeyStore tests - couchdb based store tests - use constructor argument **\n\n', function(t) {
-	var couchdb = CouchdbMock.createServer();
+test('\n\n** CryptoKeyStore tests - couchdb based store tests - use constructor argument **\n\n', (t) => {
+	const couchdb = CouchdbMock.createServer();
 	couchdb.listen(5985);
 
 	// override t.end function so it'll always disconnect the event hub
@@ -163,82 +163,82 @@ test('\n\n** CryptoKeyStore tests - couchdb based store tests - use constructor 
 	})(t, couchdb, t.end);
 
 	CKS(CouchDBKeyValueStore, {name: dbname, url: 'http://localhost:5985'})
-	.then((store) => {
-		return testKeyStore(store, t);
-	}).catch((err) => {
-		t.fail(err.stack ? err.stack : err);
-		t.end();
-	}).then(() => {
-		t.end();
-	});
+		.then((store) => {
+			return testKeyStore(store, t);
+		}).catch((err) => {
+			t.fail(err.stack ? err.stack : err);
+			t.end();
+		}).then(() => {
+			t.end();
+		});
 });
 
 function testKeyStore(store, t) {
-	var docRev;
+	let docRev;
 
 	return store.putKey(testPrivKey)
-	.then(() => {
-		t.pass('Successfully saved private key in store based on couchdb');
+		.then(() => {
+			t.pass('Successfully saved private key in store based on couchdb');
 
-		return new Promise((resolve) => {
-			dbclient.use(dbname).get(testPrivKey.getSKI() + '-priv', function(err, body) {
-				if (!err) {
-					t.pass('Successfully verified private key persisted in couchdb');
-					docRev = body._rev;
-					return resolve(store.getKey(testPrivKey.getSKI()));
-				} else {
-					t.fail('Failed to persist private key in couchdb. ' + err.stack ? err.stack : err);
-					t.end();
-				}
+			return new Promise((resolve) => {
+				dbclient.use(dbname).get(testPrivKey.getSKI() + '-priv', (err, body) => {
+					if (!err) {
+						t.pass('Successfully verified private key persisted in couchdb');
+						docRev = body._rev;
+						return resolve(store.getKey(testPrivKey.getSKI()));
+					} else {
+						t.fail('Failed to persist private key in couchdb. ' + err.stack ? err.stack : err);
+						t.end();
+					}
+				});
 			});
-		});
-	}).then((recoveredKey) => {
-		t.notEqual(recoveredKey, null, 'Successfully read private key from store using SKI');
-		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
+		}).then((recoveredKey) => {
+			t.notEqual(recoveredKey, null, 'Successfully read private key from store using SKI');
+			t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
 
-		return store.putKey(testPubKey);
-	}).then(() => {
-		return new Promise((resolve) => {
-			dbclient.use(dbname).get(testPrivKey.getSKI() + '-pub', function(err) {
-				if (!err) {
-					t.pass('Successfully verified public key persisted in couchdb');
-					return resolve(store.getKey(testPubKey.getSKI()));
-				} else {
-					t.fail('Failed to persist public key in couchdb. ' + err.stack ? err.stack : err);
-					t.end();
-				}
+			return store.putKey(testPubKey);
+		}).then(() => {
+			return new Promise((resolve) => {
+				dbclient.use(dbname).get(testPrivKey.getSKI() + '-pub', (err) => {
+					if (!err) {
+						t.pass('Successfully verified public key persisted in couchdb');
+						return resolve(store.getKey(testPubKey.getSKI()));
+					} else {
+						t.fail('Failed to persist public key in couchdb. ' + err.stack ? err.stack : err);
+						t.end();
+					}
+				});
 			});
-		});
-	}).then((recoveredKey) => {
-		t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
-		t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
+		}).then((recoveredKey) => {
+			t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
+			t.equal(recoveredKey.isPrivate(), true, 'Test if the recovered key is a private key');
 
-		// delete the private key entry and test if getKey() would return the public key
-		return new Promise((resolve) => {
-			dbclient.use(dbname).destroy(testPrivKey.getSKI() + '-priv', docRev, function(err) {
-				if (!err) {
-					return resolve(store.getKey(testPubKey.getSKI()));
-				} else {
-					t.fail('Failed to delete private key in couchdb. ' + err.stack ? err.stack : err);
-					t.end();
-				}
+			// delete the private key entry and test if getKey() would return the public key
+			return new Promise((resolve) => {
+				dbclient.use(dbname).destroy(testPrivKey.getSKI() + '-priv', docRev, (err) => {
+					if (!err) {
+						return resolve(store.getKey(testPubKey.getSKI()));
+					} else {
+						t.fail('Failed to delete private key in couchdb. ' + err.stack ? err.stack : err);
+						t.end();
+					}
+				});
 			});
+		}).then((recoveredKey) => {
+			t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
+			t.equal(recoveredKey.isPrivate(), false, 'Test if the recovered key is a public key');
 		});
-	}).then((recoveredKey) => {
-		t.notEqual(recoveredKey, null, 'Successfully read public key from store using SKI');
-		t.equal(recoveredKey.isPrivate(), false, 'Test if the recovered key is a public key');
-	});
 }
 
-test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', function(t) {
+test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', (t) => {
 	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
-	let keyValStorePath = 'tmp/keyValStore1';
-	let config = { path: keyValStorePath };
+	const keyValStorePath = 'tmp/keyValStore1';
+	const config = { path: keyValStorePath };
 	let cs = utils.newCryptoKeyStore(config);
 	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
 	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
 
-	let defaultKVSPath = path.join(os.homedir(), '.hfc-key-store');
+	const defaultKVSPath = path.join(os.homedir(), '.hfc-key-store');
 	cs = utils.newCryptoKeyStore();
 	t.equal(cs._storeConfig.opts.path, defaultKVSPath, util.format('Returned instance should have store config opts.path of %s', defaultKVSPath));
 	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');
@@ -256,10 +256,10 @@ test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', function(t)
 	t.end();
 });
 
-test('\n\n** CryptoKeyStore tests - getKey error tests **\n\n', function (t) {
+test('\n\n** CryptoKeyStore tests - getKey error tests **\n\n', (t) => {
 	// override t.end function so it'll always clear the config settings
 	testutil.resetDefaults();
-	var cryptoSuite = utils.newCryptoSuite();
+	const cryptoSuite = utils.newCryptoSuite();
 	cryptoSuite.getKey('blah').catch(err => {
 		t.ok(err.toString().includes('getKey requires CryptoKeyStore to be set.'),
 			'Test missing cryptoKeyStore: cryptoSuite.getKey');

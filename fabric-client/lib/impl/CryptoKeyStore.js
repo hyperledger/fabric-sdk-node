@@ -7,27 +7,27 @@
 
 'use strict';
 
-var jsrsasign = require('jsrsasign');
-var KEYUTIL = jsrsasign.KEYUTIL;
+const jsrsasign = require('jsrsasign');
+const KEYUTIL = jsrsasign.KEYUTIL;
 
-var utils = require('../utils.js');
-var ECDSAKey = require('./ecdsa/key.js');
+const utils = require('../utils.js');
+const ECDSAKey = require('./ecdsa/key.js');
 
 /*
  * The mixin enforces the special indexing mechanism with private and public
  * keys on top of a standard implementation of the KeyValueStore interface
  * with the getKey() and putKey() methods
  */
-var CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
+const CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
 	getKey(ski) {
-		var self = this;
+		const self = this;
 
 		// first try the private key entry, since it encapsulates both
 		// the private key and public key
 		return this.getValue(_getKeyIndex(ski, true))
 			.then((raw) => {
 				if (raw !== null) {
-					var privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
+					const privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
 					// TODO: for now assuming ECDSA keys only, need to add support for RSA keys
 					return new ECDSAKey(privKey);
 				}
@@ -40,15 +40,15 @@ var CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
 					return key;
 
 				if (key !== null) {
-					var pubKey = KEYUTIL.getKey(key);
+					const pubKey = KEYUTIL.getKey(key);
 					return new ECDSAKey(pubKey);
 				}
 			});
 	}
 
 	putKey(key) {
-		var idx = _getKeyIndex(key.getSKI(), key.isPrivate());
-		var pem = key.toBytes();
+		const idx = _getKeyIndex(key.getSKI(), key.isPrivate());
+		const pem = key.toBytes();
 		return this.setValue(idx, pem)
 			.then(() => {
 				return key;
@@ -68,8 +68,8 @@ var CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
  *
  * @class
  */
-var CryptoKeyStore = function(KVSImplClass, opts) {
-	var superClass;
+const CryptoKeyStore = function(KVSImplClass, opts) {
+	let superClass;
 
 	if (typeof KVSImplClass !== 'function') {
 		let impl_class = utils.getConfigSetting('crypto-value-store');
@@ -84,7 +84,7 @@ var CryptoKeyStore = function(KVSImplClass, opts) {
 		opts = KVSImplClass;
 	}
 
-	var MyClass = class extends CryptoKeyStoreMixin(superClass) {};
+	const MyClass = class extends CryptoKeyStoreMixin(superClass) {};
 	return new MyClass(opts);
 };
 

@@ -32,11 +32,11 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 
 	t.doesNotThrow(
 		() => {
-			let client = new Client();
+			const client = new Client();
 			client.setTlsClientCertAndKey('client cert', 'client key');
 			t.equals(client._tls_mutual.clientCert, 'client cert', 'Checking that client cert was set');
 			t.equals(client._tls_mutual.clientKey, 'client key', 'Checking that client key was set');
-			let myOpts = {};
+			const myOpts = {};
 			client.addTlsClientCertAndKey(myOpts);
 			t.equals(myOpts.clientCert, 'client cert', 'Checking that client cert was added');
 			t.equals(myOpts.clientKey, 'client key', 'Checking that client key was added');

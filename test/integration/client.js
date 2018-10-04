@@ -6,38 +6,38 @@
 
 'use strict';
 
-var utils = require('fabric-client/lib/utils.js');
-var logger = utils.getLogger('integration.client');
+const utils = require('fabric-client/lib/utils.js');
+const logger = utils.getLogger('integration.client');
 
-var tape = require('tape');
-var _test = require('tape-promise').default;
-var test = _test(tape);
-var path = require('path');
-var fs = require('fs-extra');
+const tape = require('tape');
+const _test = require('tape-promise').default;
+const test = _test(tape);
+const path = require('path');
+const fs = require('fs-extra');
 
-var Client = require('fabric-client');
-var testUtil = require('../unit/util.js');
-var couchdbUtil = require('./couchdb-util.js');
+const Client = require('fabric-client');
+const testUtil = require('../unit/util.js');
+const couchdbUtil = require('./couchdb-util.js');
 
-var tag = 'integration.client: ';
-var caImport;
+const tag = 'integration.client: ';
+let caImport;
 logger.debug('caImport = %s', JSON.stringify(caImport));
 
-test('\n\n ** createUser happy path - file store **\n\n', function (t) {
+test('\n\n ** createUser happy path - file store **\n\n', (t) => {
 	testUtil.resetDefaults();
 	Client.addConfigFile(path.join(__dirname, '../fixtures/caimport.json'));
 	caImport = utils.getConfigSetting('ca-import', 'notfound');
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	utils.setConfigSetting('crypto-keysize', 256);
-	var userOrg = 'org1';
+	const userOrg = 'org1';
 
-	var prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
-	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
+	const prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
+	const sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
-	var keyStoreOpts = {path: path.join(testUtil.getTempDir(), caImport.orgs[userOrg].storePath)};
-	var client = new Client();
-	var cryptoSuite = Client.newCryptoSuite();
+	const keyStoreOpts = {path: path.join(testUtil.getTempDir(), caImport.orgs[userOrg].storePath)};
+	const client = new Client();
+	const cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(keyStoreOpts));
 	client.setCryptoSuite(cryptoSuite);
 
@@ -49,186 +49,186 @@ test('\n\n ** createUser happy path - file store **\n\n', function (t) {
 	}
 
 	return utils.newKeyValueStore(keyStoreOpts)
-	.then((store) => {
-		logger.debug('store: %s',store);
-		client.setStateStore(store);
-		return '';
-	}).then(() => {
-		return client.createUser(
-			{username: caImport.orgs[userOrg].username,
-				mspid: caImport.orgs[userOrg].mspid,
-				cryptoContent: { privateKey: prvKey, signedCert: sgnCert }
-			});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then((user) => {
-		if (user) {
-			t.pass(tag+': got user');
+		.then((store) => {
+			logger.debug('store: %s',store);
+			client.setStateStore(store);
+			return '';
+		}).then(() => {
+			return client.createUser(
+				{username: caImport.orgs[userOrg].username,
+					mspid: caImport.orgs[userOrg].mspid,
+					cryptoContent: { privateKey: prvKey, signedCert: sgnCert }
+				});
+		}, (err) => {
+			logger.error(err.stack ? err.stack : err);
+			throw new Error('Failed createUser.');
+		}).then((user) => {
+			if (user) {
+				t.pass(tag+': got user');
+				t.end();
+			} else {
+				t.fail(tag+'createUser returned null');
+				t.end();
+			}
+		}).catch((err) => {
+			t.fail(tag+': error, did not get user');
+			t.comment(err.stack ? err.stack : err);
 			t.end();
-		} else {
-			t.fail(tag+'createUser returned null');
-			t.end();
-		}
-	}).catch((err) => {
-		t.fail(tag+': error, did not get user');
-		t.comment(err.stack ? err.stack : err);
-		t.end();
-	});
+		});
 });
 
-test('\n\n ** createUser happy path - CouchDB **\n\n', function (t) {
+test('\n\n ** createUser happy path - CouchDB **\n\n', (t) => {
 	// Use the CouchDB specific config file
 	Client.addConfigFile('test/fixtures/couchdb.json');
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');//override
-	var couchdbIPAddr = Client.getConfigSetting('couchdb-ip-addr', 'notfound');
-	var couchdbPort = Client.getConfigSetting('couchdb-port', 'notfound');
-	var keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
+	const couchdbIPAddr = Client.getConfigSetting('couchdb-ip-addr', 'notfound');
+	const couchdbPort = Client.getConfigSetting('couchdb-port', 'notfound');
+	const keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
 
 	// Clean up the couchdb test database
-	var userOrg = 'org1';
-	var dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
-	var keyStoreOpts = {name: dbname, url: keyValStorePath};
+	const userOrg = 'org1';
+	const dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
+	const keyStoreOpts = {name: dbname, url: keyValStorePath};
 	logger.debug('couch keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
 
-	var prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
-	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
+	const prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
+	const sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
-	var client = new Client();
-	var cryptoSuite = Client.newCryptoSuite();
+	const client = new Client();
+	const cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(keyStoreOpts));
 	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, keyValStorePath)
-	.then(() => {
-		return utils.newKeyValueStore(keyStoreOpts);
-	}).then((store) => {
-		logger.debug('store: %s',store);
-		client.setStateStore(store);
-		return true;
-	}).then(() => {
-		return client.createUser(
-			{username: caImport.orgs[userOrg].username,
-				mspid: caImport.orgs[userOrg].mspid,
-				cryptoContent: { privateKey: prvKey, signedCert: sgnCert },
-				keyStoreOpts: keyStoreOpts
-			});
-	}).then((user) => {
-		if (user) {
-			t.pass(tag+': got user');
+		.then(() => {
+			return utils.newKeyValueStore(keyStoreOpts);
+		}).then((store) => {
+			logger.debug('store: %s',store);
+			client.setStateStore(store);
+			return true;
+		}).then(() => {
+			return client.createUser(
+				{username: caImport.orgs[userOrg].username,
+					mspid: caImport.orgs[userOrg].mspid,
+					cryptoContent: { privateKey: prvKey, signedCert: sgnCert },
+					keyStoreOpts: keyStoreOpts
+				});
+		}).then((user) => {
+			if (user) {
+				t.pass(tag+': got user');
+				t.end();
+			} else {
+				t.fail(tag+'createUser returned null');
+				t.end();
+			}
+		}).catch((err) => {
+			t.fail(tag+'error, did not get user');
+			t.comment(err.stack ? err.stack : err);
 			t.end();
-		} else {
-			t.fail(tag+'createUser returned null');
-			t.end();
-		}
-	}).catch((err) => {
-		t.fail(tag+'error, did not get user');
-		t.comment(err.stack ? err.stack : err);
-		t.end();
-	});
+		});
 });
 
-test('\n\n ** createUser happy path - Cloudant  **\n\n', function (t) {
+test('\n\n ** createUser happy path - Cloudant  **\n\n', (t) => {
 	// Use the Cloudant specific config file
 	Client.addConfigFile('test/fixtures/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');//override
-	var cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
-	var cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
-	var cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');
-	var cloudantUrl = 'https://' + cloudantUsername + ':' + cloudantPassword + cloudantBluemix;
+	const cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
+	const cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
+	const cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');
+	const cloudantUrl = 'https://' + cloudantUsername + ':' + cloudantPassword + cloudantBluemix;
 
 	// Clean up the cloudant test database
-	var userOrg = 'org1';
-	var dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
-	var keyStoreOpts = {name: dbname, url: cloudantUrl};
+	const userOrg = 'org1';
+	const dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
+	const keyStoreOpts = {name: dbname, url: cloudantUrl};
 	logger.debug('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
 
-	var prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
-	var sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
+	const prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
+	const sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
 
-	var client = new Client();
-	var cryptoSuite = Client.newCryptoSuite();
+	const client = new Client();
+	const cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(keyStoreOpts));
 	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, cloudantUrl)
-	.then(() => {
-		return utils.newKeyValueStore(keyStoreOpts);
-	}).then((store) => {
-		logger.debug('store: %s',store);
-		client.setStateStore(store);
-		return true;
-	}).then(() => {
-		return client.createUser(
-			{username: caImport.orgs[userOrg].username,
-				mspid: caImport.orgs[userOrg].mspid,
-				cryptoContent: { privateKey: prvKey, signedCert: sgnCert }
-			});
-	}).then((user) => {
-		if (user) {
-			t.pass(tag+': got user');
+		.then(() => {
+			return utils.newKeyValueStore(keyStoreOpts);
+		}).then((store) => {
+			logger.debug('store: %s',store);
+			client.setStateStore(store);
+			return true;
+		}).then(() => {
+			return client.createUser(
+				{username: caImport.orgs[userOrg].username,
+					mspid: caImport.orgs[userOrg].mspid,
+					cryptoContent: { privateKey: prvKey, signedCert: sgnCert }
+				});
+		}).then((user) => {
+			if (user) {
+				t.pass(tag+': got user');
+				t.end();
+			} else {
+				t.fail(tag+'createUser returned null');
+				t.end();
+			}
+		}).catch((err) => {
+			t.fail(tag+'error, did not get user');
+			t.comment(err.stack ? err.stack : err);
 			t.end();
-		} else {
-			t.fail(tag+'createUser returned null');
-			t.end();
-		}
-	}).catch((err) => {
-		t.fail(tag+'error, did not get user');
-		t.comment(err.stack ? err.stack : err);
-		t.end();
-	});
+		});
 });
 
-test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', function (t) {
+test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', (t) => {
 	// Use the Cloudant specific config file
 	Client.addConfigFile('test/fixtures/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');//override
-	var cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
-	var cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
-	var cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');
-	var cloudantUrl = 'https://' + cloudantUsername + ':' + cloudantPassword + cloudantBluemix;
+	const cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
+	const cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
+	const cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');
+	const cloudantUrl = 'https://' + cloudantUsername + ':' + cloudantPassword + cloudantBluemix;
 
 	// Clean up the cloudant test database
-	var userOrg = 'org2';
-	var dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
-	var keyStoreOpts = {name: dbname, url: cloudantUrl};
+	const userOrg = 'org2';
+	const dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
+	const keyStoreOpts = {name: dbname, url: cloudantUrl};
 	logger.debug('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
 
-	var client = new Client();
-	var cryptoSuite = Client.newCryptoSuite();
+	const client = new Client();
+	const cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(keyStoreOpts));
 	client.setCryptoSuite(cryptoSuite);
 
 	couchdbUtil.destroy(dbname, cloudantUrl)
-	.then(() => {
-		return utils.newKeyValueStore(keyStoreOpts);
-	}).then((store) => {
-		logger.debug('store: %s',store);
-		client.setStateStore(store);
-		return true;
-	}).then(() => {
-		return client.createUser(
-			{username: caImport.orgs[userOrg].username,
-				mspid: caImport.orgs[userOrg].mspid,
-				cryptoContent: caImport.orgs[userOrg].cryptoContent
-			});
-	}, (err) => {
-		logger.error(err.stack ? err.stack : err);
-		throw new Error('Failed createUser.');
-	}).then((user) => {
-		if (user) {
-			t.pass(tag+': got user');
+		.then(() => {
+			return utils.newKeyValueStore(keyStoreOpts);
+		}).then((store) => {
+			logger.debug('store: %s',store);
+			client.setStateStore(store);
+			return true;
+		}).then(() => {
+			return client.createUser(
+				{username: caImport.orgs[userOrg].username,
+					mspid: caImport.orgs[userOrg].mspid,
+					cryptoContent: caImport.orgs[userOrg].cryptoContent
+				});
+		}, (err) => {
+			logger.error(err.stack ? err.stack : err);
+			throw new Error('Failed createUser.');
+		}).then((user) => {
+			if (user) {
+				t.pass(tag+': got user');
+				t.end();
+			} else {
+				t.fail(tag+'createUser returned null');
+				t.end();
+			}
+		}).catch((err) => {
+			t.fail(tag+'error, did not get user');
+			t.comment(err.stack ? err.stack : err);
 			t.end();
-		} else {
-			t.fail(tag+'createUser returned null');
-			t.end();
-		}
-	}).catch((err) => {
-		t.fail(tag+'error, did not get user');
-		t.comment(err.stack ? err.stack : err);
-		t.end();
-	});
+		});
 });

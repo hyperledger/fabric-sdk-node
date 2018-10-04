@@ -35,43 +35,43 @@ init();
 
 test('\n\n***** E R R O R  T E S T I N G: invoke transaction with one endorsement *****\n\n', (t) => {
 	invokeChaincode('org2', 'v0', t, 'ENDORSEMENT_POLICY_FAILURE', [peers[0]])
-	.then((result) => {
-		if(result){
-			t.pass('Successfully tested failure to invoke transaction chaincode due to insufficient endorsement');
+		.then((result) => {
+			if(result){
+				t.pass('Successfully tested failure to invoke transaction chaincode due to insufficient endorsement');
 
-			return invokeChaincode('org2', 'v0', t, 'ENDORSEMENT_POLICY_FAILURE', [peers[1]]);
-		}
-		else {
-			t.fail('Failed to invoke transaction chaincode');
+				return invokeChaincode('org2', 'v0', t, 'ENDORSEMENT_POLICY_FAILURE', [peers[1]]);
+			}
+			else {
+				t.fail('Failed to invoke transaction chaincode');
+				t.end();
+			}
+		}, (err) => {
+			t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 			t.end();
-		}
-	}, (err) => {
-		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
-		t.end();
-	}).then((result) => {
-		if(result){
-			t.pass('Successfully tested failure to invoke transaction chaincode due to insufficient endorsement');
+		}).then((result) => {
+			if(result){
+				t.pass('Successfully tested failure to invoke transaction chaincode due to insufficient endorsement');
+				t.end();
+			}
+			else {
+				t.fail('Failed to invoke transaction chaincode');
+				t.end();
+			}
+		}, (err) => {
+			t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 			t.end();
-		}
-		else {
-			t.fail('Failed to invoke transaction chaincode');
-			t.end();
-		}
-	}, (err) => {
-		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
-		t.end();
-	});
+		});
 });
 
 test('\n\n***** invoke transaction with inverted order of endorsements *****\n\n', (t) => {
 	invokeChaincode('org2', 'v0', t, false, [peers[1], peers[0]])
-	.then(() => {
-		t.pass('Successfully invoke transaction chaincode on channel');
-		t.end();
-	}, (err) => {
-		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
-		t.end();
-	});
+		.then(() => {
+			t.pass('Successfully invoke transaction chaincode on channel');
+			t.end();
+		}, (err) => {
+			t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+			t.end();
+		});
 });
 
 function init() {
@@ -80,7 +80,7 @@ function init() {
 		ORGS = Client.getConfigSetting('test-network');
 	}
 
-	for (let key in ORGS) {
+	for (const key in ORGS) {
 		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
 			const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[key].peer1['tls_cacerts']));
 			const org = ORGS[key].peer1;
@@ -100,7 +100,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 	// override t.end function so it'll always disconnect the event hub
 	t.end = ((context, ehs, f) => {
 		return function() {
-			for(let key in ehs) {
+			for(const key in ehs) {
 				const eventhub = ehs[key];
 				if (eventhub && eventhub.isconnected()) {
 					logger.debug('Disconnecting the event hub');
@@ -125,154 +125,154 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 	let tlsInfo = null;
 
 	return e2eUtils.tlsEnroll(userOrg)
-	.then((enrollment) => {
-		t.pass('Successfully retrieved TLS certificate');
-		tlsInfo = enrollment;
-		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
-		return testUtil.getSubmitter(client, t, userOrg);
-	}).then(() => {
-		t.pass('Successfully enrolled user \'admin\'');
+		.then((enrollment) => {
+			t.pass('Successfully retrieved TLS certificate');
+			tlsInfo = enrollment;
+			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+			return testUtil.getSubmitter(client, t, userOrg);
+		}).then(() => {
+			t.pass('Successfully enrolled user \'admin\'');
 
-		channel.addOrderer(
-			client.newOrderer(
-				ORGS.orderer.url,
-				{
-					'pem': caroots,
-					'ssl-target-name-override': ORGS.orderer['server-hostname']
-				}
-			)
-		);
+			channel.addOrderer(
+				client.newOrderer(
+					ORGS.orderer.url,
+					{
+						'pem': caroots,
+						'ssl-target-name-override': ORGS.orderer['server-hostname']
+					}
+				)
+			);
 
-		for (let key in peers) {
-			const peer = client.newPeer(
-				peers[key].requests,
-				{
-					pem: peers[key].pem,
-					'ssl-target-name-override': peers[key]['server-hostname'],
-				});
-			channel.addPeer(peer);
-			eventhubs.push(channel.newChannelEventHub(peer));
-		}
-
-		return channel.initialize();
-
-	}).then(() => {
-		tx_id = client.newTransactionID();
-
-		// send proposal to endorser
-		const request = {
-			chaincodeId : e2e.chaincodeId,
-			fcn: 'move',
-			args: ['a', 'b', '100'],
-			txId: tx_id,
-		};
-		return channel.sendTransactionProposal(request);
-
-	}, (err) => {
-		t.fail('Failed to enroll user \'admin\'. ' + err);
-		throw new Error('Failed to enroll user \'admin\'. ' + err);
-
-	}).then((results) => {
-		const proposalResponses = results[0];
-		const proposal = results[1];
-		let all_good = true;
-
-		for(let i in proposalResponses) {
-			let one_good = false;
-			const proposal_response = proposalResponses[i];
-			if( proposal_response.response && proposal_response.response.status === 200) {
-				t.pass('transaction proposal has response status of good');
-				one_good = channel.verifyProposalResponse(proposal_response);
-				if(one_good) {
-					t.pass(' transaction proposal signature and endorser are valid');
-				}
-			} else {
-				t.fail('transaction proposal was bad');
+			for (const key in peers) {
+				const peer = client.newPeer(
+					peers[key].requests,
+					{
+						pem: peers[key].pem,
+						'ssl-target-name-override': peers[key]['server-hostname'],
+					});
+				channel.addPeer(peer);
+				eventhubs.push(channel.newChannelEventHub(peer));
 			}
-			all_good = all_good & one_good;
-		}
-		if (all_good) {
+
+			return channel.initialize();
+
+		}).then(() => {
+			tx_id = client.newTransactionID();
+
+			// send proposal to endorser
+			const request = {
+				chaincodeId : e2e.chaincodeId,
+				fcn: 'move',
+				args: ['a', 'b', '100'],
+				txId: tx_id,
+			};
+			return channel.sendTransactionProposal(request);
+
+		}, (err) => {
+			t.fail('Failed to enroll user \'admin\'. ' + err);
+			throw new Error('Failed to enroll user \'admin\'. ' + err);
+
+		}).then((results) => {
+			const proposalResponses = results[0];
+			const proposal = results[1];
+			let all_good = true;
+
+			for(const i in proposalResponses) {
+				let one_good = false;
+				const proposal_response = proposalResponses[i];
+				if( proposal_response.response && proposal_response.response.status === 200) {
+					t.pass('transaction proposal has response status of good');
+					one_good = channel.verifyProposalResponse(proposal_response);
+					if(one_good) {
+						t.pass(' transaction proposal signature and endorser are valid');
+					}
+				} else {
+					t.fail('transaction proposal was bad');
+				}
+				all_good = all_good & one_good;
+			}
+			if (all_good) {
 			// check all the read/write sets to see if the same, verify that each peer
 			// got the same results on the proposal
-			all_good = channel.compareProposalResponseResults(proposalResponses);
-			t.pass('compareProposalResponseResults exection did not throw an error');
-			if(all_good){
-				t.pass(' All proposals have a matching read/writes sets');
+				all_good = channel.compareProposalResponseResults(proposalResponses);
+				t.pass('compareProposalResponseResults exection did not throw an error');
+				if(all_good){
+					t.pass(' All proposals have a matching read/writes sets');
+				}
+				else {
+					t.fail(' All proposals do not have matching read/write sets');
+				}
 			}
-			else {
-				t.fail(' All proposals do not have matching read/write sets');
-			}
-		}
-		if (all_good) {
+			if (all_good) {
 			// check to see if all the results match
-			t.pass('Successfully sent Proposal and received ProposalResponse');
-			logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
+				t.pass('Successfully sent Proposal and received ProposalResponse');
+				logger.debug(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 
-			const request = {
-				proposalResponses: proposalResponses,
-				proposal: proposal
-			};
+				const request = {
+					proposalResponses: proposalResponses,
+					proposal: proposal
+				};
 
-			// set the transaction listener and set a timeout of 30sec
-			// if the transaction did not get committed within the timeout period,
-			// fail the test
-			const deployId = tx_id.getTransactionID();
+				// set the transaction listener and set a timeout of 30sec
+				// if the transaction did not get committed within the timeout period,
+				// fail the test
+				const deployId = tx_id.getTransactionID();
 
-			const eventPromises = [];
-			eventhubs.forEach((eh) => {
-				const txPromise = new Promise((resolve, reject) => {
-					const handle = setTimeout(reject, 120000);
+				const eventPromises = [];
+				eventhubs.forEach((eh) => {
+					const txPromise = new Promise((resolve, reject) => {
+						const handle = setTimeout(reject, 120000);
 
-					eh.registerTxEvent(deployId.toString(),
-						(tx, code) => {
-							clearTimeout(handle);
-							eh.unregisterTxEvent(deployId);
+						eh.registerTxEvent(deployId.toString(),
+							(tx, code) => {
+								clearTimeout(handle);
+								eh.unregisterTxEvent(deployId);
 
-							if (code !== 'VALID') {
-								if (shouldFail !== false && code === shouldFail) {
-									t.pass('The balance transaction failed with ' + shouldFail + ' as expected');
-									resolve();
+								if (code !== 'VALID') {
+									if (shouldFail !== false && code === shouldFail) {
+										t.pass('The balance transaction failed with ' + shouldFail + ' as expected');
+										resolve();
+									} else {
+										t.fail('The balance transaction failed with ' + code);
+										reject();
+									}
 								} else {
-									t.fail('The balance transaction failed with ' + code);
-									reject();
+									if (shouldFail === false) {
+										t.pass('The balance transfer transaction has been committed on peer '+ eh.getPeerAddr());
+										resolve();
+									} else {
+										t.fail('The balance transfer transaction should have failed with ' + shouldFail);
+										reject();
+									}
 								}
-							} else {
-								if (shouldFail === false) {
-									t.pass('The balance transfer transaction has been committed on peer '+ eh.getPeerAddr());
-									resolve();
-								} else {
-									t.fail('The balance transfer transaction should have failed with ' + shouldFail);
-									reject();
-								}
+							},
+							() => {
+								clearTimeout(handle);
+								t.fail('Failed -- received notification of the event call back being cancelled for '+ deployId);
+								resolve();
 							}
-						},
-						() => {
-							clearTimeout(handle);
-							t.fail('Failed -- received notification of the event call back being cancelled for '+ deployId);
-							resolve();
-						}
-					);
+						);
+					});
+					eh.connect();
+
+					eventPromises.push(txPromise);
 				});
-				eh.connect();
 
-				eventPromises.push(txPromise);
-			});
-
-			const sendPromise = channel.sendTransaction(request);
-			return Promise.all([sendPromise].concat(eventPromises))
-			.then((results) => {
-				logger.debug('event promise all complete and testing complete');
-				return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
-			}).catch((err) => {
-				t.fail('Failed transaction ::'+ err);
-				throw new Error('Failed transaction ::'+ err);
-			});
-		} else {
-			t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
-			throw new Error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
-		}
-	}, (err) => {
-		t.fail('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
-		throw new Error('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
-	});
+				const sendPromise = channel.sendTransaction(request);
+				return Promise.all([sendPromise].concat(eventPromises))
+					.then((results) => {
+						logger.debug('event promise all complete and testing complete');
+						return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
+					}).catch((err) => {
+						t.fail('Failed transaction ::'+ err);
+						throw new Error('Failed transaction ::'+ err);
+					});
+			} else {
+				t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
+				throw new Error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
+			}
+		}, (err) => {
+			t.fail('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
+			throw new Error('Failed to send proposal due to error: ' + err.stack ? err.stack : err);
+		});
 }

@@ -165,23 +165,23 @@ test('\n\n ** Identity class tests **\n\n', (t) => {
 		'Checking required input parameters'
 	);
 
-	let cryptoUtils = utils.newCryptoSuite();
+	const cryptoUtils = utils.newCryptoSuite();
 	cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
 	// test identity serialization and deserialization
-	let mspImpl = new MSP({
+	const mspImpl = new MSP({
 		rootCerts: [],
 		admins: [],
 		id: 'testMSP',
 		cryptoSuite: cryptoUtils
 	});
 
-	let pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: api.CryptoAlgorithms.X509Certificate });
-	let identity = new Identity(TEST_CERT_PEM, pubKey, mspImpl.getId(), cryptoUtils);
+	const pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: api.CryptoAlgorithms.X509Certificate });
+	const identity = new Identity(TEST_CERT_PEM, pubKey, mspImpl.getId(), cryptoUtils);
 
-	let serializedID = identity.serialize();
+	const serializedID = identity.serialize();
 	// deserializeIdentity should work both ways ... with promise and without
-	let identity_g = mspImpl.deserializeIdentity(serializedID, false);
+	const identity_g = mspImpl.deserializeIdentity(serializedID, false);
 	t.equals(identity_g.getMSPId(),'testMSP', 'deserializeIdentity call without promise');
 
 	mspImpl.deserializeIdentity(serializedID)
@@ -191,14 +191,14 @@ test('\n\n ** Identity class tests **\n\n', (t) => {
 			t.equal(dsID._publicKey._key.pubKeyHex, '0452a75e1ee105da7ab3d389fda69d8a04f5cf65b305b49cec7cdbdeb91a585cf87bef5a96aa9683d96bbabfe60d8cc6f5db9d0bc8c58d56bb28887ed81c6005ac', 'Identity class function tests: deserialized public key ecparam check');
 
 			// manually construct a key based on the saved privKeyHex and pubKeyHex
-			let f = KEYUTIL.getKey(TEST_KEY_PRIVATE_PEM);
-			let testKey = new ecdsaKey(f);
-			let pubKey = testKey.getPublicKey();
+			const f = KEYUTIL.getKey(TEST_KEY_PRIVATE_PEM);
+			const testKey = new ecdsaKey(f);
+			const pubKey = testKey.getPublicKey();
 
-			let signer = new Signer(cryptoUtils, testKey);
+			const signer = new Signer(cryptoUtils, testKey);
 			t.equal(signer.getPublicKey().isPrivate(), false, 'Test Signer class getPublicKey() method');
 
-			let signingID = new SigningIdentity(TEST_KEY_PRIVATE_CERT_PEM, pubKey, mspImpl.getId(), cryptoUtils, signer);
+			const signingID = new SigningIdentity(TEST_KEY_PRIVATE_CERT_PEM, pubKey, mspImpl.getId(), cryptoUtils, signer);
 
 			t.throws(
 				() => {
@@ -208,7 +208,7 @@ test('\n\n ** Identity class tests **\n\n', (t) => {
 				'Test invalid hashFunction parameter for the sign() method'
 			);
 
-			let sig = signingID.sign(TEST_MSG);
+			const sig = signingID.sign(TEST_MSG);
 			t.equal(cryptoUtils.verify(pubKey, sig, TEST_MSG), true, 'Test SigningIdentity sign() method');
 			t.equal(signingID.verify(TEST_MSG, sig), true, 'Test Identity verify() method');
 			t.end();

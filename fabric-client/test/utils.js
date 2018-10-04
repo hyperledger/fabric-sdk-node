@@ -83,7 +83,6 @@ describe('Utils', () => {
 		it('should throw an error if csImpl does not exist', () => {
 			const settings = {
 			};
-			const MockCryptoSuite = sinon.stub();
 			const getConfigSettingStub = sandbox.stub();
 			getConfigSettingStub.withArgs('crypto-hsm').returns(true);
 			getConfigSettingStub.withArgs('crypto-suite-hsm').returns({});

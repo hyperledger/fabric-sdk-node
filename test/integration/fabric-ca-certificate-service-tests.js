@@ -41,7 +41,7 @@ test('\n\n ** FabricCAServices - CertificateService Test **\n\n', async (t) => {
 		let resp = await certificateService1.getCertificates(null, admin1);
 		t.equal(resp.success, true, 'certificate service should response success');
 		t.equal(resp.result.certs.length > 0, true, 'there should be certificates for the admin user');
-		let certsNum1 = resp.result.certs.length;
+		const certsNum1 = resp.result.certs.length;
 
 		resp = await certificateService2.getCertificates(null, admin2);
 		t.equal(resp.success, true, 'certificate service should response success');
@@ -49,7 +49,7 @@ test('\n\n ** FabricCAServices - CertificateService Test **\n\n', async (t) => {
 
 		// admin1 create a new identity at ca-org1
 		// after enroll the new created identity, there should be a new certificate
-		let user1 = await createAndEnrollIdentity(caService1, admin1);
+		const user1 = await createAndEnrollIdentity(caService1, admin1);
 		resp = await certificateService1.getCertificates(null, admin1);
 		t.equal(resp.success, true, 'certificate service should response success');
 		t.equal(resp.result.certs.length, certsNum1 + 1, 'there should be a new certificate after a new identity was created');

@@ -117,15 +117,15 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 				if (err)
 					t.fail('Failed to extract generated chaincode package. ' + err);
 
-				let checkPath = path.join(destDir, 'src', 'github.com', 'example_cc', 'example_cc.go');
+				const checkPath = path.join(destDir, 'src', 'github.com', 'example_cc', 'example_cc.go');
 				t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/github.com/example_cc/example_cc.go" file');
 
 				t.end();
 			});
 			return Packager.package(testutil.CHAINCODE_PATH,'', false, testutil.METADATA_PATH);
 		}).then((data) => {
-			let tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
-			let destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
+			const tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
+			const destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
 			fs.writeFileSync(tmpFile, data);
 			fs.removeSync(destDir);
 			targz.decompress({

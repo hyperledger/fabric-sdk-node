@@ -3,10 +3,10 @@
 
  SPDX-License-Identifier: Apache-2.0
 */
-var os = require('os');
-var path = require('path');
+const os = require('os');
+const path = require('path');
 
-var tempdir = path.join(os.tmpdir(), 'hfc');
+const tempdir = path.join(os.tmpdir(), 'hfc');
 
 module.exports = {
 	tempdir: tempdir

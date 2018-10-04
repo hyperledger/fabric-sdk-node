@@ -19,19 +19,19 @@ limitations under the License.
 const shim = require('fabric-shim');
 
 // An log4js logger instance
-var logger = shim.newLogger('example_cc0');
+const logger = shim.newLogger('example_cc0');
 // The logger level can also be set by environment variable 'CORE_CHAINCODE_LOGGING_SHIM'
 // to CRITICAL, ERROR, WARNING, DEBUG
 logger.level = 'info';
 
-var Chaincode = class {
+const Chaincode = class {
 	async Init(stub) {
 		logger.info('########### example_cc0 Init ###########');
-		let ret = stub.getFunctionAndParameters();
+		const ret = stub.getFunctionAndParameters();
 
 		let A, B;    // Entities
 		let Aval, Bval; // Asset holdings
-		let args = ret.params;
+		const args = ret.params;
 
 		if (args.length === 4) {
 			A = args[0];
@@ -63,9 +63,9 @@ var Chaincode = class {
 
 	async Invoke(stub) {
 		logger.info('########### example_cc0 Invoke ###########');
-		let ret = stub.getFunctionAndParameters();
-		let fcn = ret.fcn;
-		let args = ret.params;
+		const ret = stub.getFunctionAndParameters();
+		const fcn = ret.fcn;
+		const args = ret.params;
 
 		if (fcn === 'delete') {
 			return this.delete(stub, args);
@@ -106,7 +106,7 @@ var Chaincode = class {
 		B = args[1];
 
 		try {
-			let Avalbytes = await stub.getState(A);
+			const Avalbytes = await stub.getState(A);
 			if (!Avalbytes) {
 				return shim.error('Entity A not found');
 			}
@@ -117,7 +117,7 @@ var Chaincode = class {
 		}
 
 		try {
-			let Bvalbytes = await stub.getState(B);
+			const Bvalbytes = await stub.getState(B);
 			if (!Bvalbytes) {
 				return shim.error('Entity B not found');
 			}
@@ -154,7 +154,7 @@ var Chaincode = class {
 			return shim.error('Incorrect number of arguments. Expecting 1');
 		}
 
-		let A = args[0];
+		const A = args[0];
 
 		try {
 			await stub.deleteState(A);
@@ -172,11 +172,11 @@ var Chaincode = class {
 			return shim.error('Incorrect number of arguments. Expecting name of the person to query');
 		}
 
-		let A = args[0];
+		const A = args[0];
 		let Aval;
 		// Get the state from the ledger
 		try {
-			let Avalbytes = await stub.getState(A);
+			const Avalbytes = await stub.getState(A);
 			if (!Avalbytes) {
 				return shim.error('Entity A not found');
 			}
@@ -185,7 +185,7 @@ var Chaincode = class {
 			return shim.error('Failed to get state A');
 		}
 
-		let jsonResp = {
+		const jsonResp = {
 			Name: A,
 			Amount: Aval
 		};
@@ -205,7 +205,7 @@ var Chaincode = class {
 			return shim.error('Incorrect number of arguments. Expecting name of the chaincode and function to call');
 		}
 
-		let chaincode_name = args.shift().toString();
+		const chaincode_name = args.shift().toString();
 
 		logger.info('Calling chaincode:%s with function:%s  argument 1:%s \n', chaincode_name, args[0].toString(), parseInt(args[1]));
 

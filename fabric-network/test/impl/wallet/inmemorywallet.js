@@ -163,7 +163,7 @@ mb3MM6J+V7kciO3hSyP5OJSBPWGlsjxQj2m55aFutmlleVfr6YiaLnYd
 			});
 
 			it('should test the non-existence of an identity from the wallet', async () => {
-				let exists = await wallet.exists('user3');
+				const exists = await wallet.exists('user3');
 				exists.should.equal(false);
 			});
 		});
@@ -201,7 +201,7 @@ mb3MM6J+V7kciO3hSyP5OJSBPWGlsjxQj2m55aFutmlleVfr6YiaLnYd
 
 		describe('#list', () => {
 			it('should return an empty list for no identities in the wallet', async () => {
-				let labels = await wallet.getAllLabels();
+				const labels = await wallet.getAllLabels();
 				labels.forEach(async label => await wallet.delete(label));
 				const list = await wallet.list();
 				list.length.should.equal(0);

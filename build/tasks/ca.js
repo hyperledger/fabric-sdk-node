@@ -5,8 +5,8 @@
 */
 'use strict';
 
-var gulp = require('gulp');
-var debug = require('gulp-debug');
+const gulp = require('gulp');
+const debug = require('gulp-debug');
 
 const DEPS = [
 	'fabric-client/lib/api.js',
@@ -31,7 +31,7 @@ const DEPS = [
 	'fabric-client/types/base.d.ts'
 ];
 
-gulp.task('ca', function() {
+gulp.task('ca', () => {
 	return gulp.src(DEPS, { base: 'fabric-client/' })
 		.pipe(debug())
 		.pipe(gulp.dest('fabric-ca-client/'))
