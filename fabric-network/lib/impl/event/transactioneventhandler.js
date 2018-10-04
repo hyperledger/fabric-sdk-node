@@ -6,7 +6,7 @@
 
 'use strict';
 
-const logger = require('../../logger').getLogger('TransactionEventHandler');
+const logger = require('fabric-network/lib/logger').getLogger('TransactionEventHandler');
 const util = require('util');
 
 /**
@@ -49,14 +49,12 @@ class TransactionEventHandler {
 	 * @async
 	 */
 	async startListening() {
-		this._setListenTimeout();
-
-		for (const eventHub of this.eventHubs) {
-			logger.debug('startListening:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
-
-			eventHub.registerTxEvent(this.transactionId,
-				(txId, code) => this._onEvent(eventHub, txId, code),
-				(err) => this._onError(eventHub, err));
+		if (this.eventHubs.length > 0) {
+			this._setListenTimeout();
+			this._registerTxEventListeners();
+		} else {
+			logger.debug('startListening: No event hubs');
+			this._txResolve();
 		}
 	}
 
@@ -70,6 +68,16 @@ class TransactionEventHandler {
 		this.timeoutHandler = setTimeout(() => {
 			this._timeoutFail();
 		}, this.options.commitTimeout * 1000);
+	}
+
+	_registerTxEventListeners() {
+		for (const eventHub of this.eventHubs) {
+			logger.debug('_registerTxEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
+
+			eventHub.registerTxEvent(this.transactionId,
+				(txId, code) => this._onEvent(eventHub, txId, code),
+				(err) => this._onError(eventHub, err));
+		}
 	}
 
 	_timeoutFail() {
@@ -135,6 +143,7 @@ class TransactionEventHandler {
 	 * @throws {Error} if the transaction commit is not successful within the timeout period.
      */
 	async waitForEvents() {
+		logger.debug('waitForEvents called');
 		await this.notificationPromise;
 	}
 
@@ -142,6 +151,8 @@ class TransactionEventHandler {
      * Cancel listening for events.
      */
 	cancelListening() {
+		logger.debug('cancelListening called');
+
 		clearTimeout(this.timeoutHandler);
 		for (const eventHub of this.eventHubs) {
 			eventHub.unregisterTxEvent(this.transactionId);

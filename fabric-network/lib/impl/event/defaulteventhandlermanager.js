@@ -9,7 +9,7 @@
 const EventHandlerStrategies = require('./defaulteventhandlerstrategies');
 const TransactionEventHandler = require('./transactioneventhandler');
 const EventHubFactory = require('./eventhubfactory');
-const logger = require('../../logger').getLogger('DefaultEventHandlerManager');
+const logger = require('fabric-network/lib/logger').getLogger('DefaultEventHandlerManager');
 
 class DefaultEventHandlerManager {
 	/**

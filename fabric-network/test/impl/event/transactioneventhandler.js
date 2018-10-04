@@ -13,8 +13,8 @@ const sinon = require('sinon');
 
 const ChannelEventHub = require('fabric-client').ChannelEventHub;
 
-const TransactionEventHandler = require('../../../lib/impl/event/transactioneventhandler');
-const DefaultEventHandlerManager = require('../../../lib/impl/event/defaulteventhandlermanager');
+const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
+const DefaultEventHandlerManager = require('fabric-network/lib/impl/event/defaulteventhandlermanager');
 
 describe('TransactionEventHandler', () => {
 	const transactionId = 'TRANSACTION_ID';
@@ -49,16 +49,22 @@ describe('TransactionEventHandler', () => {
 			commitTimeout: 300
 		};
 		stubEventHandlerManager.eventStrategy = stubStrategy;
-		stubEventHandlerManager.availableEventHubs = [stubEventHub];
+	});
+
+	afterEach(() => {
+		sinon.reset();
 	});
 
 	describe('#constructor', () => {
 		it('has a default timeout if no options supplied', () => {
 			const handler = new TransactionEventHandler(stubEventHandlerManager, transactionId);
 			expect(handler.options.commitTimeout).to.be.a('Number');
-			handler.strategy.should.equal(stubStrategy);
 		});
 
+		it('gets event strategy from manager', () => {
+			const handler = new TransactionEventHandler(stubEventHandlerManager, transactionId);
+			expect(handler.strategy).to.equal(stubStrategy);
+		});
 	});
 
 	describe('event handling:', () => {
@@ -153,6 +159,13 @@ describe('TransactionEventHandler', () => {
 			stubEventHub._onErrorFn(new Error('EVENT_HUB_ERROR'));
 			return expect(handler.waitForEvents()).to.be.rejectedWith(error);
 		});
+
+		it('succeeds immediately with no event hubs', async () => {
+			stubEventHandlerManager.getEventHubs.returns([]);
+			handler = new TransactionEventHandler(stubEventHandlerManager, transactionId);
+			await handler.startListening();
+			return expect(handler.waitForEvents()).to.be.fulfilled;
+		});
 	});
 
 	describe('timeouts:', () => {
@@ -205,6 +218,18 @@ describe('TransactionEventHandler', () => {
 			clock.runAll();
 			const eventHubName = stubEventHub.getName();
 			return expect(promise).to.be.rejectedWith(eventHubName);
+		});
+
+		it('does not timeout if no event hubs', async () => {
+			stubEventHandlerManager.options = {
+				strategy: stubStrategy,
+				commitTimeout: 418
+			};
+			stubEventHandlerManager.getEventHubs.returns([]);
+			handler = new TransactionEventHandler(stubEventHandlerManager, transactionId);
+			await handler.startListening();
+			clock.runAll();
+			return expect(handler.waitForEvents()).to.be.fulfilled;
 		});
 	});
 });
