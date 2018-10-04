@@ -18,7 +18,7 @@ const AnyForTxStrategy = require('fabric-network/lib/impl/event/anyfortxstrategy
  */
 function MSPID_SCOPE_ALLFORTX(eventHubFactory, network, mspId) {
 	const peers = network.getPeerMap().get(mspId);
-	return new AllForTxStrategy(eventHubFactory, peers);
+	return new AllForTxStrategy(eventHubFactory.getEventHubs(peers));
 }
 
 /**
@@ -29,7 +29,7 @@ function MSPID_SCOPE_ALLFORTX(eventHubFactory, network, mspId) {
  */
 function MSPID_SCOPE_ANYFORTX(eventHubFactory, network, mspId) {
 	const peers = network.getPeerMap().get(mspId);
-	return new AnyForTxStrategy(eventHubFactory, peers);
+	return new AnyForTxStrategy(eventHubFactory.getEventHubs(peers));
 }
 
 /**
@@ -42,7 +42,7 @@ function MSPID_SCOPE_ANYFORTX(eventHubFactory, network, mspId) {
 //eslint-disable-next-line no-unused-vars
 function NETWORK_SCOPE_ALLFORTX(eventHubFactory, network, mspId) {
 	const peers = network.getChannel().getPeers();
-	return new AllForTxStrategy(eventHubFactory, peers);
+	return new AllForTxStrategy(eventHubFactory.getEventHubs(peers));
 }
 
 /**
@@ -54,7 +54,7 @@ function NETWORK_SCOPE_ALLFORTX(eventHubFactory, network, mspId) {
 //eslint-disable-next-line no-unused-vars
 function NETWORK_SCOPE_ANYFORTX(eventHubFactory, network, mspId) {
 	const peers = network.getChannel().getPeers();
-	return new AnyForTxStrategy(eventHubFactory, peers);
+	return new AnyForTxStrategy(eventHubFactory.getEventHubs(peers));
 }
 
 module.exports = {

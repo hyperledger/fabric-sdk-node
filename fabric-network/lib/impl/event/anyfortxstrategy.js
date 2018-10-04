@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+'use strict';
+
 const AbstractEventStrategy = require('fabric-network/lib/impl/event/abstracteventstrategy');
 
-const logger = require('../../logger').getLogger('AnyForTxStrategy');
+const logger = require('fabric-network/lib/logger').getLogger('AnyForTxStrategy');
 
 /**
  * Event handling strategy that:
@@ -22,14 +24,8 @@ class AnyForTxStrategy extends AbstractEventStrategy {
 	/**
 	 * @inheritdoc
 	 */
-	constructor(eventHubFactory, peers) {
-		super(eventHubFactory, peers);
-	}
-
-	/**
-	 * @inheritdoc
-	 */
 	checkCompletion(counts, successFn, failFn) {
+		logger.debug('checkCompletion:', counts);
 		const isAllResponsesReceived = (counts.success + counts.fail === counts.expected);
 		if (counts.success > 0) {
 			successFn();

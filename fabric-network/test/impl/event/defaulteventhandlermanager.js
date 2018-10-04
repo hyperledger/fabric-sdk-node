@@ -56,12 +56,15 @@ describe('DefaultEventHandlerManager', () => {
 
 	describe('#constructor', () => {
 		it('has a default strategy if no options supplied', () => {
-			const handler = new DefaultEventHandlerManager(stubNetwork, 'MSP_ID', {commitTimeout: 300});
+			const handler = new DefaultEventHandlerManager(stubNetwork, 'MSP_ID', {});
 			expect(handler.options.strategy).to.equal(EventHandlerStrategies.MSPID_SCOPE_ALLFORTX);
 		});
 
-		it('allows a timeout option to be specified', () => {
-			const handler = new DefaultEventHandlerManager(stubNetwork, 'MSP_ID', {commitTimeout: 300, strategy: EventHandlerStrategies.MSPID_SCOPE_ANYFORTX});
+		it('allows a strategy to be specified', () => {
+			const options = {
+				strategy: EventHandlerStrategies.MSPID_SCOPE_ANYFORTX
+			};
+			const handler = new DefaultEventHandlerManager(stubNetwork, 'MSP_ID', options);
 			expect(handler.options.strategy).to.equal(EventHandlerStrategies.MSPID_SCOPE_ANYFORTX);
 		});
 	});
@@ -93,8 +96,8 @@ describe('DefaultEventHandlerManager', () => {
 			stubNetwork.getPeerMap.returns(mockPeerMap);
 			handler.channel = mockChannel;
 			await handler.initialize();
-			handler.initialized.should.equal(true);
-			handler.useFullBlocks.should.equal(true);
+			expect(handler.initialized, 'initialized').to.be.true;
+			expect(handler.useFullBlocks, 'useFullBlocks').to.be.true;
 		});
 	});
 
@@ -104,8 +107,8 @@ describe('DefaultEventHandlerManager', () => {
 			handler.initialized = true;
 			handler.availableEventHubs = [ { disconnect: () => {} }];
 			handler.dispose();
-			handler.availableEventHubs.length.should.equal(0);
-			handler.initialized.should.equal(false);
+			expect(handler.availableEventHubs).to.have.lengthOf(0);
+			expect(handler.initialized).to.be.false;
 		});
 	});
 

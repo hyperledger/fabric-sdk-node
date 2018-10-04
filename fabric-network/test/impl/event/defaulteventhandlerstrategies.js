@@ -32,7 +32,7 @@ describe('DefaultEventHandlerStrategies', () => {
 		stubEventHub.isconnected.returns(true);
 
 		stubEventHubFactory = sinon.createStubInstance(EventHubFactory);
-		stubEventHubFactory.getEventHubs.returns([stubEventHub]);
+		stubEventHubFactory.getEventHubs.resolves([stubEventHub]);
 
 		stubPeer = {
 			_stubInfo: 'peer',

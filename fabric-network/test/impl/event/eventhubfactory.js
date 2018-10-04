@@ -13,7 +13,7 @@ const sinon = require('sinon');
 const Channel = require('fabric-client').Channel;
 const ChannelEventHub = require('fabric-client').ChannelEventHub;
 
-const EventHubFactory = require('../../../lib/impl/event/eventhubfactory');
+const EventHubFactory = require('fabric-network/lib/impl/event/eventhubfactory');
 
 describe('EventHubFactory', () => {
 	let stubChannel;

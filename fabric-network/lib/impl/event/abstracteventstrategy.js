@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+'use strict';
+
 const logger = require('fabric-network/lib/logger').getLogger('AbstractStrategy');
 
 /**
@@ -19,23 +21,16 @@ const logger = require('fabric-network/lib/logger').getLogger('AbstractStrategy'
 class AbstractEventStrategy {
 	/**
 	 * Constructor.
-	 * @param {EventHubFactory} eventHubFactory Factory for obtaining event hubs for peers.
-	 * @param {ChannelPeer[]} peers Peers from which to process events.
+	 * @param {Promise.ChannelEventHub[]} eventHubsPromise Promise to event hubs for which to process events.
 	 */
-	constructor(eventHubFactory, peers) {
-		if (!eventHubFactory) {
-			const message = 'Event hub factory not set';
-			logger.error('constructor:', message);
-			throw new Error(message);
-		}
-		if (!peers || peers.length === 0) {
-			const message = 'Peers not set';
+	constructor(eventHubsPromise) {
+		if (!(eventHubsPromise instanceof Promise)) {
+			const message = 'Expected event hubs to be a Promise but was ' + typeof eventHubsPromise;
 			logger.error('constructor:', message);
 			throw new Error(message);
 		}
 
-		this.eventHubFactory = eventHubFactory;
-		this.peers = peers;
+		this.eventHubsPromise = eventHubsPromise;
 		this.counts = {
 			success: 0,
 			fail: 0,
@@ -47,10 +42,11 @@ class AbstractEventStrategy {
 	 * Called by event handler to obtain the event hubs to which it should listen. Gives an opportunity for
 	 * the strategy to store information on the events it expects to receive for later use in event handling.
 	 * @async
+	 * @returns ChannelEventHubs[] connected event hubs.
 	 * @throws {Error} if the connected event hubs do not satisfy the strategy.
 	 */
 	async getConnectedEventHubs() {
-		const eventHubs = await this.eventHubFactory.getEventHubs(this.peers);
+		const eventHubs = await this.eventHubsPromise;
 		const connectedEventHubs = eventHubs.filter((eventHub) => eventHub.isconnected());
 
 		if (connectedEventHubs.length === 0) {

@@ -6,7 +6,7 @@
 
 'use strict';
 
-const logger = require('../../logger').getLogger('EventHubFactory');
+const logger = require('fabric-network/lib/logger').getLogger('EventHubFactory');
 
 /**
  * Factory for obtaining event hubs for peers on a given channel.
