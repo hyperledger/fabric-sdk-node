@@ -1,7 +1,10 @@
 {
   "name": "fabric-client",
   "description": "SDK for writing node.js applications to interact with Hyperledger Fabric. This package encapsulates the APIs to interact with Peers and Orderers of the Fabric network to install and instantiate chaincodes, send transaction invocations and perform chaincode queries.",
-  "keywords" : ["hyperledger", "blockchain"],
+  "keywords": [
+    "hyperledger",
+    "blockchain"
+  ],
   "version": "1.4.0-snapshot",
   "tag": "unstable",
   "main": "index.js",

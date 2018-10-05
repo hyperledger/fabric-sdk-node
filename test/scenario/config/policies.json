@@ -1,0 +1,39 @@
+{
+	"1ofAny": {
+		"identities": [
+			{ "role": { "name": "member", "mspId": "Org1MSP" }},
+			{ "role": { "name": "member", "mspId": "Org2MSP" }},
+			{ "role": { "name": "admin", "mspId": "Org1MSP" }},
+			{ "role": { "name": "admin", "mspId": "Org2MSP" }}
+		],
+		"policy": {
+			"1-of": [{ "signed-by": 0}, { "signed-by": 1 }, { "signed-by": 2 }, { "signed-by": 3}]
+		}
+	},
+	"1AdminOr2Other": {
+			"identities": [
+				{ "role": { "name": "member", "mspId": "Org1MSP" }},
+				{ "role": { "name": "member", "mspId": "Org2MSP" }},
+				{ "role": { "name": "admin", "mspId": "Org1MSP" }},
+				{ "role": { "name": "admin", "mspId": "Org2MSP" }}
+			],
+			"policy": {
+				"1-of": [
+					{ "signed-by": 2},
+					{ "signed-by": 3},
+					{ "2-of": [{ "signed-by": 0}, { "signed-by": 1 }]}
+				]
+			}
+	},
+	"2ofAny": {
+		"identities": [
+			{ "role": { "name": "member", "mspId": "Org1MSP" }},
+			{ "role": { "name": "member", "mspId": "Org2MSP" }},
+			{ "role": { "name": "admin", "mspId": "Org1MSP" }},
+			{ "role": { "name": "admin", "mspId": "Org2MSP" }}
+		],
+		"policy": {
+			"2-of": [{"signed-by": 0}, {"signed-by": 1}, {"signed-by": 2}, {"signed-by": 3}]
+		}
+	}
+}

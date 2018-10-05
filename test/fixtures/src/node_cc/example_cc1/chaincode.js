@@ -65,16 +65,14 @@ const Chaincode = class {
 	}
 
 	async move(stub, args) {
-		let A, B;
 		let Aval, Bval;
-		let X;
 
 		if (args.length != 3) {
 			return shim.error('Incorrect number of arguments. Expecting 4, function followed by 2 names and 1 value');
 		}
 
-		A = args[0];
-		B = args[1];
+		const A = args[0];
+		const B = args[1];
 
 		try {
 			const Avalbytes = await stub.getState(A);
@@ -98,7 +96,7 @@ const Chaincode = class {
 			return shim.error('Failed to get state B');
 		}
 		// Perform the execution
-		X = parseInt(args[2]);
+		const X = parseInt(args[2]);
 		if (isNaN(X)) {
 			return shim.error('Invalid transaction amount, expecting a integer value');
 		}

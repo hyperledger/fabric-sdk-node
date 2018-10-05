@@ -1048,7 +1048,6 @@ const Client = class extends BaseClient {
 				throw new Error('Missing "chaincodePath" parameter in the proposal request');
 			}
 
-			console.log('request.targets', request.targets);
 			let peers = this.getTargetPeers(request.targets);
 			if (!peers && request.channelNames) {
 				peers = this.getPeersForOrgOnChannel(request.channelNames);
