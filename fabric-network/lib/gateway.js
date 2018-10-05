@@ -199,16 +199,18 @@ class Gateway {
 	 */
 	async getNetwork(networkName) {
 		logger.debug('in getNetwork');
+
 		const existingNetwork = this.networks.get(networkName);
-		if (!existingNetwork) {
-			logger.debug('getNetwork: create network object and initialize');
-			const channel = this.client.getChannel(networkName);
-			const newNetwork = new Network(this, channel);
-			await newNetwork._initialize();
-			this.networks.set(networkName, newNetwork);
-			return newNetwork;
+		if (existingNetwork) {
+			return existingNetwork;
 		}
-		return existingNetwork;
+
+		logger.debug('getNetwork: create network object and initialize');
+		const channel = this.client.getChannel(networkName);
+		const newNetwork = new Network(this, channel);
+		await newNetwork._initialize();
+		this.networks.set(networkName, newNetwork);
+		return newNetwork;
 	}
 
 	async _createQueryHandler(channel, peerMap) {

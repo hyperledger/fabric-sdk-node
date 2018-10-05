@@ -26,8 +26,6 @@ const EventStrategies = require('../lib/impl/event/defaulteventhandlerstrategies
 
 
 describe('Gateway', () => {
-	const sandbox = sinon.createSandbox();
-
 	let mockClient;
 	let mockDefaultQueryHandler;
 
@@ -46,7 +44,7 @@ describe('Gateway', () => {
 	});
 
 	afterEach(() => {
-		sandbox.restore();
+		sinon.restore();
 	});
 
 
@@ -165,7 +163,7 @@ describe('Gateway', () => {
 		beforeEach(() => {
 			gateway = new Gateway();
 			mockWallet = sinon.createStubInstance(Wallet);
-			sandbox.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
+			sinon.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
 			mockWallet.setUserContext.withArgs(mockClient, 'admin').returns('foo');
 		});
 
@@ -357,7 +355,7 @@ describe('Gateway', () => {
 		beforeEach(async () => {
 			gateway = new Gateway();
 			mockWallet = sinon.createStubInstance(Wallet);
-			sandbox.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
+			sinon.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
 			mockWallet.setUserContext.withArgs(mockClient, 'admin').returns('foo');
 			const options = {
 				wallet: mockWallet,

@@ -10,106 +10,92 @@ const chai = require('chai');
 chai.use(require('chai-as-promised'));
 const expect = chai.expect;
 const sinon = require('sinon');
-const rewire = require('rewire');
-
-const ChannelEventHub = require('fabric-client').ChannelEventHub;
 
 const DefaultEventHandlerManager = require('../../../lib/impl/event/defaulteventhandlermanager');
 const EventHandlerStrategies = require('../../../lib/impl/event/defaulteventhandlerstrategies');
-const Network = require('../../../lib/network');
-
-const InternalChannel = rewire('fabric-client/lib/Channel');
-const Peer = InternalChannel.__get__('ChannelPeer');
+const EventHubFactory = require('fabric-network/lib/impl/event/eventhubfactory');
+const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
+const Network = require('fabric-network/lib/network');
+const Channel = require('fabric-client/lib/Channel');
 
 describe('DefaultEventHandlerManager', () => {
-	let stubEventHub;
-	let stubStrategy;
-	let stubEventHandlerManager;
+	const mspId = 'MSP_ID';
+
 	let stubNetwork;
+	let fakeStrategyFactory;
+	let stubStrategy;
 
 	beforeEach(() => {
-		// Include _stubInfo property on stubs to enable easier equality comparison in tests
-
-		stubEventHub = sinon.createStubInstance(ChannelEventHub);
-		stubEventHub._stubInfo = 'eventHub';
-		stubEventHub.getName.returns('eventHub');
-		stubEventHub.getPeerAddr.returns('eventHubAddress');
-		stubEventHub.registerTxEvent.callsFake((transactionId, onEventFn, onErrorFn) => {
-			stubEventHub._transactionId = transactionId;
-			stubEventHub._onEventFn = onEventFn;
-			stubEventHub._onErrorFn = onErrorFn;
-		});
-
-		stubStrategy = {
-			getConnectedEventHubs: async () => {
-				return [stubEventHub];
-			},
-			eventReceived: sinon.stub(),
-			errorReceived: sinon.stub()
-		};
-
-		stubEventHandlerManager = sinon.createStubInstance(DefaultEventHandlerManager);
-		stubEventHandlerManager.getEventHubs.returns([stubEventHub]);
+		const stubChannel = sinon.createStubInstance(Channel);
 
 		stubNetwork = sinon.createStubInstance(Network);
+		stubNetwork.getChannel.returns(stubChannel);
+
+		stubStrategy = {
+			getConnectedEventHubs: sinon.stub()
+		};
+		stubStrategy.getConnectedEventHubs.resolves([]);
+
+		fakeStrategyFactory = sinon.stub();
+		fakeStrategyFactory.withArgs(sinon.match.instanceOf(EventHubFactory), sinon.match(stubNetwork), sinon.match(mspId)).returns(stubStrategy);
+	});
+
+	afterEach(() => {
+		sinon.restore();
 	});
 
 	describe('#constructor', () => {
 		it('has a default strategy if no options supplied', () => {
-			const handler = new DefaultEventHandlerManager(stubNetwork, 'MSP_ID', {});
-			expect(handler.options.strategy).to.equal(EventHandlerStrategies.MSPID_SCOPE_ALLFORTX);
+			const manager = new DefaultEventHandlerManager(stubNetwork, mspId, {});
+			expect(manager.options.strategy).to.equal(EventHandlerStrategies.MSPID_SCOPE_ALLFORTX);
 		});
 
 		it('allows a strategy to be specified', () => {
 			const options = {
 				strategy: EventHandlerStrategies.MSPID_SCOPE_ANYFORTX
 			};
-			const handler = new DefaultEventHandlerManager(stubNetwork, 'MSP_ID', options);
-			expect(handler.options.strategy).to.equal(EventHandlerStrategies.MSPID_SCOPE_ANYFORTX);
+			const manager = new DefaultEventHandlerManager(stubNetwork, mspId, options);
+			expect(manager.options.strategy).to.equal(EventHandlerStrategies.MSPID_SCOPE_ANYFORTX);
 		});
 	});
 
 	describe('#initialize', () => {
-		let mockChannel;
+		let manager;
 
 		beforeEach(() => {
-			mockChannel = sinon.createStubInstance(InternalChannel);
-			mockChannel.getChannelEventHub.returns({isconnected: () => true, getName: () => 'myeventhub'});
+			const options = { strategy: fakeStrategyFactory };
+			manager = new DefaultEventHandlerManager(stubNetwork, mspId, options);
 		});
 
-		it('no-op if already initialized', async () => {
-			const handler = new DefaultEventHandlerManager(stubNetwork, 'MSP_ID', {commitTimeout: 300});
-			handler.initialized = true;
-			await handler.initialize();
+		it('gets event hubs from strategy', () => {
+			manager.initialize();
+			sinon.assert.calledOnce(stubStrategy.getConnectedEventHubs);
 		});
 
-		it('initialise with full blocks option', async () => {
-			const mspId = 'MSP_ID';
-			const handler = new DefaultEventHandlerManager(stubNetwork, mspId, {commitTimeout: 300, useFullBlocks: true});
-			const mockPeerMap = new Map();
-			const mockPeer1 = sinon.createStubInstance(Peer);
-			mockPeer1.index = 1; // add these so that the mockPeers can be distinguished when used in WithArgs().
-			mockPeer1.getName.returns('Peer1');
-			mockPeer1.getMspid.returns(mspId);
-
-			mockPeerMap.set(mspId, [mockPeer1]);
-			stubNetwork.getPeerMap.returns(mockPeerMap);
-			handler.channel = mockChannel;
-			await handler.initialize();
-			expect(handler.initialized, 'initialized').to.be.true;
-			expect(handler.useFullBlocks, 'useFullBlocks').to.be.true;
+		it('does not reject if getting event hubs from strategy errors', () => {
+			stubStrategy.getConnectedEventHubs.rejects();
+			return expect(manager.initialize()).to.be.fulfilled;
 		});
 	});
 
-	describe('#dispose', () => {
-		it('disconnects event hubs and empties array', () => {
-			const handler = new DefaultEventHandlerManager(stubNetwork, 'MSP_ID', {commitTimeout: 300});
-			handler.initialized = true;
-			handler.availableEventHubs = [ { disconnect: () => {} }];
-			handler.dispose();
-			expect(handler.availableEventHubs).to.have.lengthOf(0);
-			expect(handler.initialized).to.be.false;
+	describe('#createTxEventHandler', () => {
+		it('returns a transaction event handler', () => {
+			const options = { strategy: fakeStrategyFactory };
+			const manager = new DefaultEventHandlerManager(stubNetwork, mspId, options);
+
+			const result = manager.createTxEventHandler('txId');
+
+			expect(result).to.be.an.instanceof(TransactionEventHandler);
+		});
+
+		it('creates a new strategy instance on each call', () => {
+			const options = { strategy: fakeStrategyFactory };
+			const manager = new DefaultEventHandlerManager(stubNetwork, mspId, options);
+
+			manager.createTxEventHandler('txId');
+			manager.createTxEventHandler('txId');
+
+			sinon.assert.calledTwice(fakeStrategyFactory);
 		});
 	});
-
 });

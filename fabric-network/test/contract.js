@@ -24,7 +24,6 @@ const TransactionEventHandler = require('../lib/impl/event/transactioneventhandl
 
 describe('Contract', () => {
 
-	const sandbox = sinon.createSandbox();
 	let clock;
 
 	let mockChannel, mockClient, mockUser, mockGateway;
@@ -67,7 +66,7 @@ describe('Contract', () => {
 	});
 
 	afterEach(() => {
-		sandbox.restore();
+		sinon.restore();
 		clock.restore();
 	});
 
@@ -150,7 +149,7 @@ describe('Contract', () => {
 
 
 		beforeEach(() => {
-			sandbox.stub(contract, '_validatePeerResponses').returns({validResponses: validResponses});
+			sinon.stub(contract, '_validatePeerResponses').returns({validResponses: validResponses});
 		});
 
 		it('should throw if functionName not specified', () => {

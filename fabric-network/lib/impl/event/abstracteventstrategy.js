@@ -98,11 +98,6 @@ class AbstractEventStrategy {
 	checkCompletion(counts, successFn, failFn) {
 		throw new Error('AbstractEventStrategy.checkCompletion() not implemented');
 	}
-
-	reset() {
-		this.counts.success = 0;
-		this.counts.fail = 0;
-	}
 }
 
 module.exports = AbstractEventStrategy;

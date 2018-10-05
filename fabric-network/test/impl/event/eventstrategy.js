@@ -50,7 +50,7 @@ describe('Event Strategy Implementations', () => {
 	});
 
 	afterEach(() => {
-		sinon.reset();
+		sinon.restore();
 	});
 
 	// Common behaviour for all implementations

@@ -57,6 +57,10 @@ describe('EventHubFactory', () => {
 		stubChannel.getChannelEventHub.withArgs(stubPeer2.getName()).returns(stubEventHub2);
 	});
 
+	afterEach(() => {
+		sinon.restore();
+	});
+
 	describe('#constructor', () => {
 		it('takes a Channel argument', () => {
 			new EventHubFactory(stubChannel);
