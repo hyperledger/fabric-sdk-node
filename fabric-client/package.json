@@ -6,7 +6,6 @@
   "tag": "unstable",
   "main": "index.js",
   "scripts": {
-	"lint": "eslint .",
     "test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
   },
   "repository": {
