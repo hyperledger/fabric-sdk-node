@@ -1,12 +1,17 @@
-v1.3.0 Sept 19, 2018
+v1.3.0 Oct 10, 2018
 -----------------------
 
 Release Notes
 -------------
-Removed the EventHub class. This has been replaced by the ChannelEventHub.
-  The ChannelEventHub uses the more reliable and better performant fabric block
-  delivery service. The API's for both classes are the same, so the ChannelEventHub
-  replace the EventHub class in your code.
+Fabric 1.3.0 has removed EventHub service and therefore the fabric-client has
+   removed the EventHub class. This has been replaced by the Fabric Channel Event
+   Service and fabric-client ChannelEventHub class.
+   The ChannelEventHub uses the more reliable and better performant fabric block
+   delivery service. The ChannelEventHub will be able to replace the EventHub class
+   in your code as the ChannelEventHub has similar API's to the removed EventHub
+   class
+      see https://fabric-sdk-node.github.io/ChannelEventHub.html.
+	  see https://fabric-sdk-node.github.io/tutorial-channel-events.html
 
 Bug fixes and documentation improvements.
 
