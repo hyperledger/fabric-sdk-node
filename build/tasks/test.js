@@ -123,7 +123,11 @@ gulp.task('test-headless', shell.task(
 	'./node_modules/nyc/bin/nyc.js gulp run-test-headless'
 ));
 
-gulp.task('test-mocha', ['mocha-fabric-client'],
+gulp.task('test-mocha', shell.task(
+	'./node_modules/nyc/bin/nyc.js gulp run-test-mocha'
+));
+
+gulp.task('run-test-mocha', ['mocha-fabric-client', 'mocha-fabric-network'],
 	() => {
 		return gulp.src(['./fabric-ca-client/test/**/*.js'], { read: false })
 			.pipe(mocha({ reporter: 'list', exit: true }));
