@@ -19,23 +19,30 @@ const util = require('util');
  */
 class TransactionEventHandler {
 	/**
+	 * @typedef {Object} TransactionEventHandlerOptions
+	 * @property {Number} [commitTimeout = 0] Number of seconds to wait for transaction completion. A value of zero
+	 * indicates that the handler should wait indefinitely.
+	 */
+
+	/**
 	 * Constructor.
 	 * @private
-	 * @param {DefaultEventHandlerManager} manager Event handler manager
 	 * @param {String} transactionId Transaction ID.
+	 * @param {Object} strategy Event strategy implementation.
+	 * @param {TransactionEventHandlerOptions} [options] Additional options.
 	 */
-	constructor(manager, transactionId) {
+	constructor(transactionId, strategy, options) {
 		this.transactionId = transactionId;
-		this.strategy = manager.eventStrategy;
+		this.strategy = strategy;
 
 		const defaultOptions = {
 			commitTimeout: 0 // No timeout by default
 		};
-		this.options = Object.assign(defaultOptions, manager.options);
+		this.options = Object.assign(defaultOptions, options);
 
 		logger.debug('constructor:', util.format('transactionId = %s, options = %O', this.transactionId, this.options));
 
-		this.eventHubs = manager.getEventHubs();
+		this.eventHubs = [];
 		this.respondedEventHubs = new Set();
 
 		this.notificationPromise = new Promise((resolve, reject) => {
@@ -49,9 +56,10 @@ class TransactionEventHandler {
 	 * @async
 	 */
 	async startListening() {
+		this.eventHubs = await this.strategy.getConnectedEventHubs();
 		if (this.eventHubs.length > 0) {
-			this._setListenTimeout();
 			this._registerTxEventListeners();
+			this._setListenTimeout();
 		} else {
 			logger.debug('startListening: No event hubs');
 			this._txResolve();

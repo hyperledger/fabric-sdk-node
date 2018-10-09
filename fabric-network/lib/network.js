@@ -196,13 +196,13 @@ class Network {
 		// network._dispose() followed by network.initialize() be safe ?
 		// make this private is the safest option.
 		this.contracts.clear();
-		if (this.eventHandlerManager) {
-			this.eventHandlerManager.dispose();
-		}
 
 		if (this.queryHandler) {
 			this.queryHandler.dispose();
 		}
+
+		this.channel.close(); // Tidies up event hubs obtained from the channel
+
 		this.initialized = false;
 	}
 

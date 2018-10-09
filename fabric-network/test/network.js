@@ -25,8 +25,6 @@ const Contract = require('../lib/contract');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 
 describe('Network', () => {
-	const sandbox = sinon.createSandbox();
-
 	const mspId = 'MSP_ID';
 
 	let mockChannel, mockClient;
@@ -74,7 +72,7 @@ describe('Network', () => {
 	});
 
 	afterEach(() => {
-		sandbox.restore();
+		sinon.restore();
 	});
 
 
@@ -153,10 +151,10 @@ describe('Network', () => {
 
 		it('should initialize the internal channels', async () => {
 			network.initialized = false;
-			sandbox.stub(network, '_initializeInternalChannel').returns();
+			sinon.stub(network, '_initializeInternalChannel').returns();
 			const mockPeerMap = new Map();
 			mockPeerMap.set(mspId, [mockPeer1]);
-			sandbox.stub(network, '_mapPeersToMSPid').returns(mockPeerMap);
+			sinon.stub(network, '_mapPeersToMSPid').returns(mockPeerMap);
 			await network._initialize();
 			network.initialized.should.equal(true);
 		});
@@ -259,15 +257,6 @@ describe('Network', () => {
 			network.initialized.should.equal(false);
 		});
 
-		it('should cleanup the event handler manager, if defined', () => {
-			const disposeStub = sinon.stub();
-			network.eventHandlerManager = {
-				dispose: disposeStub
-			};
-			network._dispose();
-			sinon.assert.calledOnce(disposeStub);
-		});
-
 		it('should call dispose on the queryHandler if defined and work if no contracts have been got', () => {
 			const disposeStub = sinon.stub();
 			network.queryHandler = {
@@ -276,6 +265,11 @@ describe('Network', () => {
 			network._dispose();
 			sinon.assert.calledOnce(disposeStub);
 		});
+
+		it('calls close() on its channel', () => {
+			network._dispose();
+			sinon.assert.calledOnce(mockChannel.close);
+		});
 	});
 
 	describe('eventHandlerManager', () => {
@@ -283,10 +277,10 @@ describe('Network', () => {
 			const txId = 'TRANSACTION_ID';
 
 			async function initNetwork() {
-				sandbox.stub(network, '_initializeInternalChannel').returns();
+				sinon.stub(network, '_initializeInternalChannel').returns();
 				const peersByMspId = new Map();
 				peersByMspId.set(mspId, [ mockPeer1 ]);
-				sandbox.stub(network, '_mapPeersToMSPid').returns(peersByMspId);
+				sinon.stub(network, '_mapPeersToMSPid').returns(peersByMspId);
 				await network._initialize();
 			}
 
