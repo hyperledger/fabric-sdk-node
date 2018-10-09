@@ -13,6 +13,8 @@ const Peer = InternalChannel.__get__('ChannelPeer');
 const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
 
 const Client = require('fabric-client');
+const User = require('fabric-client/lib/User');
+const { Identity } = require('fabric-client/lib/msp/identity');
 
 const chai = require('chai');
 const should = chai.should();
@@ -22,8 +24,6 @@ const Network = require('../lib/network');
 const Gateway = require('../lib/gateway');
 const Wallet = require('../lib/api/wallet');
 const Mockery = require('mockery');
-const EventStrategies = require('../lib/impl/event/defaulteventhandlerstrategies');
-
 
 describe('Gateway', () => {
 	let mockClient;
@@ -331,10 +331,17 @@ describe('Gateway', () => {
 
 			gateway.queryHandlerClass = mockClass;
 
+			const stubIdentity = sinon.createStubInstance(Identity);
+			stubIdentity.getMSPId.returns('anmsp');
+
+			const stubUser = sinon.createStubInstance(User);
+			stubUser.getIdentity.returns(stubIdentity);
+
 			gateway.options.queryHandlerOptions = 'options';
-			gateway.getCurrentIdentity = sinon.stub();
-			gateway.getCurrentIdentity.returns({_mspId: 'anmsp'});
+			sinon.stub(gateway, 'getCurrentIdentity').returns(stubUser);
+
 			const queryHandler = await gateway._createQueryHandler('channel', 'peerMap');
+
 			queryHandler.should.be.instanceof(mockClass);
 			sinon.assert.calledOnce(constructStub);
 			sinon.assert.calledWith(constructStub, 'channel', 'anmsp', 'peerMap', 'options');

@@ -96,8 +96,7 @@ import {
     const user: User = gateway.getCurrentIdentity();
     const opt3: InitOptions = gateway.getOptions();
 
-    const internalChannel: Channel = network.getChannel();
-    const peerMap: Map<string, ChannelPeer[]> = network.getPeerMap();
+	const internalChannel: Channel = network.getChannel();
 
 	const deleteDone: Promise<void> = inMemoryWallet.delete('User1@org1.example.com')
 	await deleteDone;

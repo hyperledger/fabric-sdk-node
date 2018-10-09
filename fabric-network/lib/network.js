@@ -7,8 +7,9 @@
 'use strict';
 const FabricConstants = require('fabric-client/lib/Constants');
 const Contract = require('./contract');
+const EventHubFactory = require('fabric-network/lib/impl/event/eventhubfactory');
+
 const logger = require('./logger').getLogger('Network');
-const DefaultEventHandlerManager = require('./impl/event/defaulteventhandlermanager');
 const util = require('util');
 
 /**
@@ -31,6 +32,7 @@ class Network {
 		this.gateway = gateway;
 		this.channel = channel;
 		this.contracts = new Map();
+		this.eventHubFactory = new EventHubFactory(channel);
 		this.initialized = false;
 	}
 
@@ -127,9 +129,8 @@ class Network {
 		}
 
 		await this._initializeInternalChannel();
-		this.peerMap = this._mapPeersToMSPid();
-		this.eventHandlerManager = await this._createEventHandlerManager();
-		this.queryHandler = await this.gateway._createQueryHandler(this.channel, this.peerMap);
+		const peerMap = this._mapPeersToMSPid();
+		this.queryHandler = await this.gateway._createQueryHandler(this.channel, peerMap);
 		this.initialized = true;
 	}
 
@@ -137,12 +138,6 @@ class Network {
 		logger.debug('in getChannel');
 
 		return this.channel;
-	}
-
-	getPeerMap() {
-		logger.debug('in getPeerMap');
-
-		return this.peerMap;
 	}
 
 	/**
@@ -161,32 +156,15 @@ class Network {
 		let contract = this.contracts.get(key);
 		if (!contract) {
 			contract = 	new Contract(
-				this.channel,
+				this,
 				chaincodeId,
 				this.gateway,
 				this.queryHandler,
-				this.eventHandlerManager,
 				namespace
 			);
 			this.contracts.set(key, contract);
 		}
 		return contract;
-	}
-
-	async _createEventHandlerManager() {
-		const createEventStrategyFn = this.gateway.getOptions().eventHandlerOptions.strategy;
-		if (createEventStrategyFn) {
-			const currentmspId = this.gateway.getCurrentIdentity()._mspId;
-			const eventHandlerManager = new DefaultEventHandlerManager(
-				this,
-				currentmspId,
-				this.gateway.getOptions().eventHandlerOptions
-			);
-			await eventHandlerManager.initialize();
-			return eventHandlerManager;
-		}
-		return null;
-
 	}
 
 	_dispose() {
@@ -206,6 +184,14 @@ class Network {
 		this.initialized = false;
 	}
 
+	/**
+	 * Get the event hub factory for this network.
+	 * @private
+	 * @returns {EventHubFactory} An event hub factory.
+	 */
+	getEventHubFactory() {
+		return this.eventHubFactory;
+	}
 }
 
 module.exports = Network;

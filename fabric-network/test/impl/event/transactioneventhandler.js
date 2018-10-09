@@ -14,7 +14,6 @@ const sinon = require('sinon');
 const ChannelEventHub = require('fabric-client').ChannelEventHub;
 
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
-const DefaultEventHandlerManager = require('fabric-network/lib/impl/event/defaulteventhandlermanager');
 
 describe('TransactionEventHandler', () => {
 	const transactionId = 'TRANSACTION_ID';
@@ -119,7 +118,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('succeeds when strategy calls success function after event received', async () => {
-			stubStrategy.eventReceived = ((successFn, failFn) => successFn());
+			stubStrategy.eventReceived = ((successFn, failFn) => successFn()); // eslint-disable-line no-unused-vars
 
 			await handler.startListening();
 			stubEventHub._onEventFn(transactionId, 'VALID');
@@ -136,7 +135,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('succeeds when strategy calls success function after error received', async () => {
-			stubStrategy.errorReceived = ((successFn, failFn) => successFn());
+			stubStrategy.errorReceived = ((successFn, failFn) => successFn()); // eslint-disable-line no-unused-vars
 
 			await handler.startListening();
 			stubEventHub._onErrorFn(new Error('EVENT_HUB_ERROR'));
@@ -183,7 +182,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('does not timeout if timeout set to zero', async () => {
-			stubStrategy.eventReceived = ((successFn, failFn) => successFn());
+			stubStrategy.eventReceived = ((successFn, failFn) => successFn()); // eslint-disable-line no-unused-vars
 
 			const options = { commitTimeout: 0 };
 			handler = new TransactionEventHandler(transactionId, stubStrategy, options);

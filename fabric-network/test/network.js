@@ -12,11 +12,12 @@ const InternalChannel = rewire('fabric-client/lib/Channel');
 const Peer = InternalChannel.__get__('ChannelPeer');
 const Client = require('fabric-client');
 const ChannelEventHub = Client.ChannelEventHub;
+const EventHubFactory = require('fabric-network/lib/impl/event/eventhubfactory');
 const TransactionID = require('fabric-client/lib/TransactionID.js');
 const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
 
 const chai = require('chai');
-const should = chai.should();
+chai.should();
 chai.use(require('chai-as-promised'));
 
 const Network = require('../lib/network');
@@ -64,9 +65,7 @@ describe('Network', () => {
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
 			}
 		});
-		mockGateway.getCurrentIdentity.returns({
-			_mspId: mspId
-		});
+
 		network = new Network(mockGateway, mockChannel);
 
 	});
@@ -200,14 +199,6 @@ describe('Network', () => {
 		});
 	});
 
-	describe('#getPeerMap', () => {
-		it('should return the peer map', () => {
-			const map = new Map();
-			network.peerMap = map;
-			network.getPeerMap().should.equal(map);
-		});
-	});
-
 	describe('#getContract', () => {
 		it('should throw an error if not initialized', () => {
 			network.initialized = false;
@@ -272,43 +263,10 @@ describe('Network', () => {
 		});
 	});
 
-	describe('eventHandlerManager', () => {
-		describe('#createTxEventHandler', () => {
-			const txId = 'TRANSACTION_ID';
-
-			async function initNetwork() {
-				sinon.stub(network, '_initializeInternalChannel').returns();
-				const peersByMspId = new Map();
-				peersByMspId.set(mspId, [ mockPeer1 ]);
-				sinon.stub(network, '_mapPeersToMSPid').returns(peersByMspId);
-				await network._initialize();
-			}
-
-			it('return an event handler object if event strategy set', async () => {
-				await initNetwork();
-				const eventHandler = network.eventHandlerManager.createTxEventHandler(txId);
-				eventHandler.should.be.an('Object');
-			});
-
-			it('use commitTimeout option from gateway as timeout option for event handler', async () => {
-				await initNetwork();
-				const timeout = mockGateway.getOptions().eventHandlerOptions.commitTimeout;
-				const eventHandler = network.eventHandlerManager.createTxEventHandler(txId);
-				eventHandler.options.commitTimeout.should.equal(timeout);
-			});
-
-			it('return null if no event strategy set', async () => {
-				mockGateway.getOptions.returns({
-					useDiscovery: false,
-					eventHandlerOptions: {
-						commitTimeout: 300,
-						strategy: null
-					}
-				});
-				network = new Network(mockGateway, mockChannel);
-				await initNetwork();
-				should.equal(network.eventHandlerManager, null);
-			});
+	describe('#getEventHubFactory', () => {
+		it('Returns an EventHubFactory', () => {
+			const result = network.getEventHubFactory();
+			result.should.be.an.instanceOf(EventHubFactory);
 		});
 	});
 });

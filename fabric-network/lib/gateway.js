@@ -63,19 +63,38 @@ class Gateway {
 
 	/**
  	 * @typedef {Object} GatewayOptions
-	 * @property {Wallet} wallet The identity wallet implementation for use with this Gateway instance
- 	 * @property {string} identity The identity in the wallet for all interactions on this Gateway instance
-	 * @property {string} [clientTlsIdentity] the identity in the wallet to use as the client TLS identity
-	 * @property {DefaultEventHandlerOptions|Object} [eventHandlerOptions] This defines options for the inbuilt default
-	 * event handler capability
+	 * @property {Wallet} wallet The identity wallet implementation for use with this Gateway instance.
+ 	 * @property {string} identity The identity in the wallet for all interactions on this Gateway instance.
+	 * @property {string} [clientTlsIdentity] the identity in the wallet to use as the client TLS identity.
+	 * @property {DefaultEventHandlerOptions} [eventHandlerOptions] This defines options for the inbuilt default
+	 * event handler capability.
  	 */
 
 	/**
 	 * @typedef {Object} DefaultEventHandlerOptions
- 	 * @property {number} [commitTimeout = 300] The timeout period in seconds to wait for commit notification to complete
-	 * @property {MSPID_SCOPE_ALLFORTX|MSPID_SCOPE_ANYFORTX|NETWORK_SCOPE_ALLFORTX|NETWORK_SCOPE_ANYFORTX} [strategy] Event
-	 * handling strategy to identify successful transaction commits. A null value
-	 * indicates that no event handling is desired. The default is {@link MSPID_SCOPE_ALLFORTX}.
+ 	 * @property {number} [commitTimeout = 300] The timeout period in seconds to wait for commit notification to
+	 * complete.
+	 * @property {?TxEventHandlerFactory} [strategy = MSPID_SCOPE_ALLFORTX] Event handling strategy to identify
+	 * successful transaction commits. A null value indicates that no event handling is desired. The default is
+	 * {@link MSPID_SCOPE_ALLFORTX}.
+	 */
+
+	/**
+	 * @typedef {Function} TxEventHandlerFactory
+	 * @param {String} transactionId The transaction ID for which the handler should listen.
+	 * @param {Network} network The network on which this transaction is being submitted.
+	 * @returns {TxEventHandler} A transaction event handler.
+	 */
+
+	/**
+	 * @typedef {Object} TxEventHandler
+	 * @property {Function} startLstening Async function that resolves when the handler has started listening for
+	 * transaction commit events. Called after the transaction proposal has been accepted and prior to submission of
+	 * the transaction to the orderer.
+	 * @property {Function} waitForEvents Async function that resolves (or rejects) when suitable transaction
+	 * commit events have been received. Called after submission of the transaction to the orderer.
+	 * @property {Function} cancelListening Cancel listening. Called if submission of the transaction to the orderer
+	 * fails.
 	 */
 
 	/**
@@ -215,7 +234,7 @@ class Gateway {
 
 	async _createQueryHandler(channel, peerMap) {
 		if (this.queryHandlerClass) {
-			const currentmspId = this.getCurrentIdentity()._mspId;
+			const currentmspId = this.getCurrentIdentity().getIdentity().getMSPId();
 			const queryHandler = new this.queryHandlerClass(
 				channel,
 				currentmspId,

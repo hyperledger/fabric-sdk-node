@@ -26,12 +26,6 @@ describe('BaseWallet', () => {
 		});
 	});
 
-	describe('#setUserContext', () => {
-		const wallet = new BaseWallet();
-
-
-	});
-
 	describe('Unimplemented methods', () => {
 		const wallet = new BaseWallet();
 

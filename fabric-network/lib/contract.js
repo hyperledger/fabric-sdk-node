@@ -16,14 +16,15 @@ const util = require('util');
  */
 class Contract {
 
-	constructor(channel, chaincodeId, gateway, queryHandler, eventHandlerFactory, namespace='') {
+	constructor(network, chaincodeId, gateway, queryHandler, namespace='') {
 		logger.debug('in Contract constructor');
 
-		this.channel = channel;
+		this.network = network;
+		this.channel = network.getChannel();
 		this.chaincodeId = chaincodeId;
 		this.gateway = gateway;
 		this.queryHandler = queryHandler;
-		this.eventHandlerFactory = eventHandlerFactory;
+		this.eventHandlerOptions = gateway.getOptions().eventHandlerOptions;
 		this.namespace = namespace;
 	}
 
@@ -94,8 +95,7 @@ class Contract {
 		this._verifyTransactionDetails('submitTransaction', fullTxName, parameters);
 
 		const txId = this.gateway.getClient().newTransactionID();
-		// createTxEventHandler() will return null if no event handler is requested
-		const eventHandler = this.eventHandlerFactory ? this.eventHandlerFactory.createTxEventHandler(txId.getTransactionID()) : null;
+		const eventHandler = this._createTxEventHandler(txId.getTransactionID());
 
 		// Submit the transaction to the endorsers.
 		const request = {
@@ -136,6 +136,21 @@ class Contract {
 			result = validResponses[0].response.payload;
 		}
 		return result;
+	}
+
+	/**
+	 * Create an appropriate transaction event handler, if one is configured.
+	 * @private
+	 * @param {String} transactionId The transation ID to listen for.
+	 * @returns {TransactionEventHandler|null} A transactionevent handler, or null if non is configured.
+	 */
+	_createTxEventHandler(transactionId) {
+		const eventHandlerFactoryFn = this.eventHandlerOptions.strategy;
+		if (eventHandlerFactoryFn) {
+			return eventHandlerFactoryFn(transactionId, this.network, this.eventHandlerOptions);
+		} else {
+			return null;
+		}
 	}
 
 	/**

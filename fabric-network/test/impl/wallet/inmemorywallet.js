@@ -216,8 +216,8 @@ mb3MM6J+V7kciO3hSyP5OJSBPWGlsjxQj2m55aFutmlleVfr6YiaLnYd
 
 		it('#getValue', async () => {
 			await store.setValue('user1', 'val1');
-			const value = await store.getValue('user1');
-			const value2 = await store.getValue('user3');
+			await store.getValue('user1');
+			await store.getValue('user3');
 		});
 	});
 });

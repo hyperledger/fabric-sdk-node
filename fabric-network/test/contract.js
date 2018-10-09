@@ -11,7 +11,6 @@ const Channel = require('fabric-client/lib/Channel');
 const Peer = require('fabric-client/lib/Peer');
 const Client = require('fabric-client');
 const TransactionID = require('fabric-client/lib/TransactionID.js');
-const User = require('fabric-client/lib/User.js');
 
 const chai = require('chai');
 const should = chai.should();
@@ -19,14 +18,16 @@ chai.use(require('chai-as-promised'));
 
 const Contract = require('../lib/contract');
 const Gateway = require('../lib/gateway');
+const Network = require('fabric-network/lib/network');
 const QueryHandler = require('../lib/api/queryhandler');
 const TransactionEventHandler = require('../lib/impl/event/transactioneventhandler');
 
 describe('Contract', () => {
 
 	let clock;
+	let network;
 
-	let mockChannel, mockClient, mockUser, mockGateway;
+	let mockChannel, mockClient, mockGateway;
 	let mockPeer1, mockPeer2, mockPeer3;
 	let contract;
 	let mockTransactionID;
@@ -34,11 +35,22 @@ describe('Contract', () => {
 
 	beforeEach(() => {
 		clock = sinon.useFakeTimers();
+
+		const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
+
 		mockChannel = sinon.createStubInstance(Channel);
 		mockClient = sinon.createStubInstance(Client);
+
 		mockGateway = sinon.createStubInstance(Gateway);
 		mockGateway.getClient.returns(mockClient);
-		mockUser = sinon.createStubInstance(User);
+		mockGateway.getOptions.returns({
+			eventHandlerOptions: {
+				strategy: () => stubEventHandler
+			}
+		});
+
+		network = new Network(mockGateway, mockChannel);
+
 		mockTransactionID = sinon.createStubInstance(TransactionID);
 		mockTransactionID.getTransactionID.returns('00000000-0000-0000-0000-000000000000');
 		mockClient.newTransactionID.returns(mockTransactionID);
@@ -57,12 +69,7 @@ describe('Contract', () => {
 		mockPeer3.getName.returns('Peer3');
 		mockQueryHandler = sinon.createStubInstance(QueryHandler);
 
-		const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-		const stubEventHandlerFactory = {
-			createTxEventHandler: () => stubEventHandler
-		};
-
-		contract = new Contract(mockChannel, 'someid', mockGateway, mockQueryHandler, stubEventHandlerFactory);
+		contract = new Contract(network, 'someid', mockGateway, mockQueryHandler);
 	});
 
 	afterEach(() => {
@@ -141,15 +148,23 @@ describe('Contract', () => {
 	});
 
 	describe('#submitTransaction', () => {
-		const validResponses = [{
-			response: {
-				status: 200
-			}
-		}];
-
+		const expectedResult = 'hello world';
 
 		beforeEach(() => {
-			sinon.stub(contract, '_validatePeerResponses').returns({validResponses: validResponses});
+			const proposalResponses = [{
+				response: {
+					status: 200,
+					payload: expectedResult
+				}
+			}];
+			const proposal = { proposal: 'i do' };
+			const header = { header: 'gooooal' };
+			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
+			// This is the commit proposal and response (from the orderer).
+			const response = {
+				status: 'SUCCESS'
+			};
+			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
 		});
 
 		it('should throw if functionName not specified', () => {
@@ -163,7 +178,7 @@ describe('Contract', () => {
 				.should.be.rejectedWith('Transaction parameters must be strings: 3.142, null');
 		});
 
-		it('should submit an invoke request to the chaincode which does not return data', () => {
+		it('should return null if transaction response contains no response payload', async () => {
 			const proposalResponses = [{
 				response: {
 					status: 200
@@ -177,116 +192,48 @@ describe('Contract', () => {
 				status: 'SUCCESS'
 			};
 			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
-			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
-				.then((result) => {
-					should.equal(result, null);
-					sinon.assert.calledOnce(mockChannel.sendTransactionProposal);
-					sinon.assert.calledWith(mockChannel.sendTransactionProposal, {
-						chaincodeId: 'someid',
-						txId: mockTransactionID,
-						fcn: 'myfunc',
-						args: ['arg1', 'arg2']
-					});
-					sinon.assert.calledOnce(mockChannel.sendTransaction);
-				});
+			const result = await contract.submitTransaction('myfunc', 'arg1', 'arg2');
+			should.equal(result, null);
 		});
 
-		it('should submit an invoke request to the chaincode which does not return data', () => {
-			const proposalResponses = [{
-				response: {
-					status: 200
+		it('should return transaction response payload', async () => {
+			mockGateway.getOptions.returns({
+				eventHandlerOptions: {
+					strategy: null
 				}
-			}];
-			const proposal = { proposal: 'i do' };
-			const header = { header: 'gooooal' };
-			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
-			// This is the commit proposal and response (from the orderer).
-			const response = {
-				status: 'SUCCESS'
-			};
-			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
-			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
-				.then((result) => {
-					should.equal(result, null);
-					sinon.assert.calledOnce(mockChannel.sendTransactionProposal);
-					sinon.assert.calledWith(mockChannel.sendTransactionProposal, {
-						chaincodeId: 'someid',
-						txId: mockTransactionID,
-						fcn: 'myfunc',
-						args: ['arg1', 'arg2']
-					});
-					sinon.assert.calledOnce(mockChannel.sendTransaction);
-				});
+			});
+			contract = new Contract(network, 'someid', mockGateway, mockQueryHandler);
+
+			const result = await contract.submitTransaction('myfunc', 'arg1', 'arg2');
+			result.should.equal(expectedResult);
 		});
 
-		it('should submit an invoke request to the chaincode with no event handler', () => {
-			const proposalResponses = [{
-				response: {
-					status: 200,
-					payload: 'hello world'
+		it('should get expected result with no event handler', async () => {
+			mockGateway.getOptions.returns({
+				eventHandlerOptions: {
+					strategy: null
 				}
-			}];
-			const proposal = { proposal: 'i do' };
-			const header = { header: 'gooooal' };
-			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
-			contract._validatePeerResponses.returns({validResponses: proposalResponses});
-			// This is the commit proposal and response (from the orderer).
-			const response = {
-				status: 'SUCCESS'
-			};
-			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
-			contract.eventHandlerFactory = null;
-			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
-				.then((result) => {
-					result.should.equal('hello world');
-					sinon.assert.calledOnce(mockChannel.sendTransactionProposal);
-					sinon.assert.calledWith(mockChannel.sendTransactionProposal, {
-						chaincodeId: 'someid',
-						txId: mockTransactionID,
-						fcn: 'myfunc',
-						args: ['arg1', 'arg2']
-					});
-					sinon.assert.calledOnce(mockChannel.sendTransaction);
-				});
+			});
+			contract = new Contract(network, 'someid', mockGateway, mockQueryHandler);
+
+			const result = await contract.submitTransaction('myfunc', 'arg1', 'arg2');
+			result.should.equal(expectedResult);
 		});
 
-		it('should submit an invoke request to the chaincode', () => {
-			const proposalResponses = [{
-				response: {
-					status: 200
-				}
-			}];
-			const proposal = { proposal: 'i do' };
-			const header = { header: 'gooooal' };
-			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
-			// This is the commit proposal and response (from the orderer).
-			const response = {
-				status: 'SUCCESS'
-			};
-			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
-			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
-				.then((result) => {
-					should.equal(result, null);
-					sinon.assert.calledOnce(mockClient.newTransactionID);
-					sinon.assert.calledOnce(mockChannel.sendTransactionProposal);
-					sinon.assert.calledWith(mockChannel.sendTransactionProposal, {
-						chaincodeId: 'someid',
-						txId: mockTransactionID,
-						fcn: 'myfunc',
-						args: ['arg1', 'arg2']
-					});
-					sinon.assert.calledOnce(mockChannel.sendTransaction);
-				});
+		it('should send transaction proposal with supplied function and argument values', async () => {
+			await contract.submitTransaction('myfunc', 'arg1', 'arg2');
+			sinon.assert.calledWith(mockChannel.sendTransactionProposal, {
+				chaincodeId: 'someid',
+				txId: mockTransactionID,
+				fcn: 'myfunc',
+				args: ['arg1', 'arg2']
+			});
 		});
 
 
 		it('should throw if transaction proposals were not valid', () => {
-			const proposalResponses = [];
-			const proposal = { proposal: 'i do' };
-			const header = { header: 'gooooal' };
 			const errorResp = new Error('an error');
-			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
-			contract._validatePeerResponses.withArgs(proposalResponses).throws(errorResp);
+			sinon.stub(contract, '_validatePeerResponses').throws(errorResp);
 			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
 				.should.be.rejectedWith(/an error/);
 		});
@@ -307,63 +254,30 @@ describe('Contract', () => {
 			const header = { header: 'gooooal' };
 			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
 
-			// Remove the stubbing of _validatePeerResponses in beforeEach()
-			contract._validatePeerResponses.restore();
-
 			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
 				.should.be.rejectedWith(/No valid responses from any peers/);
 		});
 
 		it('should throw an error if the orderer responds with an error', () => {
-			const proposalResponses = [{
-				response: {
-					status: 200
-				}
-			}];
-			const proposal = { proposal: 'i do' };
-			const header = { header: 'gooooal' };
-			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
-			// This is the commit proposal and response (from the orderer).
 			const response = {
 				status: 'FAILURE'
 			};
-			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
+			mockChannel.sendTransaction.withArgs(sinon.match.any).resolves(response);
 			return contract.submitTransaction('myfunc', 'arg1', 'arg2')
 				.should.be.rejectedWith(/Failed to send/);
 		});
 
-		it('should preprend the namespace if one has been given',()=>{
-			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const stubEventHandlerFactory = {
-				createTxEventHandler: () => stubEventHandler
-			};
-			const nscontract = new Contract(mockChannel, 'someid', mockGateway, mockQueryHandler, stubEventHandlerFactory,'my.name.space');
-			const proposalResponses = [{
-				response: {
-					status: 200
-				}
-			}];
-			const proposal = { proposal: 'i do' };
-			const header = { header: 'gooooal' };
-			mockChannel.sendTransactionProposal.resolves([ proposalResponses, proposal, header ]);
-			// This is the commit proposal and response (from the orderer).
-			const response = {
-				status: 'SUCCESS'
-			};
-			mockChannel.sendTransaction.withArgs({ proposalResponses: proposalResponses, proposal: proposal }).resolves(response);
-			return nscontract.submitTransaction('myfunc', 'arg1', 'arg2')
-				.then((result) => {
-					should.equal(result, null);
-					sinon.assert.calledOnce(mockClient.newTransactionID);
-					sinon.assert.calledOnce(mockChannel.sendTransactionProposal);
-					sinon.assert.calledWith(mockChannel.sendTransactionProposal, {
-						chaincodeId: 'someid',
-						txId: mockTransactionID,
-						fcn: 'my.name.space:myfunc',
-						args: ['arg1', 'arg2']
-					});
-					sinon.assert.calledOnce(mockChannel.sendTransaction);
-				});
+		it('should preprend the namespace to transaction proposal if one has been given', async () => {
+			const nscontract = new Contract(network, 'someid', mockGateway, mockQueryHandler, 'my.name.space');
+
+			await nscontract.submitTransaction('myfunc', 'arg1', 'arg2');
+
+			sinon.assert.calledWith(mockChannel.sendTransactionProposal, {
+				chaincodeId: 'someid',
+				txId: mockTransactionID,
+				fcn: 'my.name.space:myfunc',
+				args: ['arg1', 'arg2']
+			});
 		});
 
 	});
@@ -395,12 +309,7 @@ describe('Contract', () => {
 		});
 
 		it('should query chaincode with namespace added to the function', async () => {
-
-			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const stubEventHandlerFactory = {
-				createTxEventHandler: () => stubEventHandler
-			};
-			const nscontract = new Contract(mockChannel, 'someid', mockGateway, mockQueryHandler, stubEventHandlerFactory,'my.name.space');
+			const nscontract = new Contract(network, 'someid', mockGateway, mockQueryHandler, 'my.name.space');
 
 			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves();
 

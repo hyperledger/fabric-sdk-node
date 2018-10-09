@@ -86,11 +86,11 @@ class BaseWallet extends Wallet {
 	// a mixin can override the getCryptoSuite
 	//========================================
 
-	async getStateStore(label) {
+	async getStateStore(label) { // eslint-disable-line no-unused-vars
 		throw new Error('Not implemented');
 	}
 
-	async getCryptoSuite(label) {
+	async getCryptoSuite(label) { // eslint-disable-line no-unused-vars
 		throw new Error('Not implemented');
 	}
 
@@ -173,11 +173,11 @@ class BaseWallet extends Wallet {
 	//=========================================================
 
 
-	async delete(label) {
+	async delete(label) { // eslint-disable-line no-unused-vars
 		throw new Error('Not implemented');
 	}
 
-	async exists(label) {
+	async exists(label) { // eslint-disable-line no-unused-vars
 		throw new Error('Not implemented');
 	}
 

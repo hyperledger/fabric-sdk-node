@@ -13,63 +13,80 @@ const expect = chai.expect;
 const EventHubFactory = require('fabric-network/lib/impl/event/eventhubfactory');
 const ChannelEventHub = require('fabric-client').ChannelEventHub;
 const Network = require('fabric-network/lib/network');
-const FabricChannel = require('fabric-client').Channel;
+const Channel = require('fabric-client').Channel;
 const AllForTxStrategy = require('fabric-network/lib/impl/event/allfortxstrategy');
 const AnyForTxStrategy = require('fabric-network/lib/impl/event/anyfortxstrategy');
+const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
 
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 
 describe('DefaultEventHandlerStrategies', () => {
-	const mspId = 'MSP_ID';
+	const transactionId = 'TRANSACTION_ID';
+	const expectedStrategyTypes = {
+		'MSPID_SCOPE_ALLFORTX': AllForTxStrategy,
+		'MSPID_SCOPE_ANYFORTX': AnyForTxStrategy,
+		'NETWORK_SCOPE_ALLFORTX': AllForTxStrategy,
+		'NETWORK_SCOPE_ANYFORTX': AnyForTxStrategy
+	};
+	const strategyNames = Object.keys(expectedStrategyTypes);
 
-	let stubEventHubFactory;
-	let stubEventHub;
+	let options;
 	let stubNetwork;
-	let stubPeer;
 
 	beforeEach(() => {
-		stubEventHub = sinon.createStubInstance(ChannelEventHub);
-		stubEventHub.isconnected.returns(true);
+		options = {
+			commitTimeout: 418,
+			banana: 'man'
+		};
 
-		stubEventHubFactory = sinon.createStubInstance(EventHubFactory);
-		stubEventHubFactory.getEventHubs.resolves([stubEventHub]);
-
-		stubPeer = {
+		const stubPeer = {
 			_stubInfo: 'peer',
 			getName: function() { return 'peer'; }
 		};
 
-		const fabricChannel = sinon.createStubInstance(FabricChannel);
-		fabricChannel.getPeers.returns([stubPeer]);
+		const stubEventHub = sinon.createStubInstance(ChannelEventHub);
+		stubEventHub.isconnected.returns(true);
+
+		const stubEventHubFactory = sinon.createStubInstance(EventHubFactory);
+		stubEventHubFactory.getEventHubs.withArgs([stubPeer]).resolves([stubEventHub]);
+
+		const channel = sinon.createStubInstance(Channel);
+		channel.getPeers.returns([stubPeer]);
+		channel.getPeersForOrg.returns([stubPeer]);
 
 		stubNetwork = sinon.createStubInstance(Network);
-		const peerMap = new Map();
-		peerMap.set(mspId, [stubPeer]);
-		stubNetwork.getPeerMap.returns(peerMap);
-		stubNetwork.getChannel.returns(fabricChannel);
+		stubNetwork.getChannel.returns(channel);
+		stubNetwork.getEventHubFactory.returns(stubEventHubFactory);
 	});
 
 	afterEach(() => {
 		sinon.restore();
 	});
 
-	it('MSPID_SCOPE_ALLFORTX', () => {
-		const result = EventStrategies.MSPID_SCOPE_ALLFORTX(stubEventHubFactory, stubNetwork, mspId);
-		expect(result).to.be.an.instanceOf(AllForTxStrategy);
-	});
+	strategyNames.forEach((strategyName) => describe(strategyName, () => {
+		const createTxEventHandler = EventStrategies[strategyName];
 
-	it('MSPID_SCOPE_ANYFORTX', () => {
-		const result = EventStrategies.MSPID_SCOPE_ANYFORTX(stubEventHubFactory, stubNetwork, mspId);
-		expect(result).to.be.an.instanceOf(AnyForTxStrategy);
-	});
+		let eventHandler;
 
-	it('NETWORK_SCOPE_ALLFORTX', () => {
-		const result = EventStrategies.NETWORK_SCOPE_ALLFORTX(stubEventHubFactory, stubNetwork, mspId);
-		expect(result).to.be.an.instanceOf(AllForTxStrategy);
-	});
+		beforeEach(() => {
+			eventHandler = createTxEventHandler(transactionId, stubNetwork, options);
+		});
 
-	it('NETWORK_SCOPE_ANYFORTX', () => {
-		const result = EventStrategies.NETWORK_SCOPE_ANYFORTX(stubEventHubFactory, stubNetwork, mspId);
-		expect(result).to.be.an.instanceOf(AnyForTxStrategy);
-	});
+		it('Returns a TransactionEventHandler', () => {
+			expect(eventHandler).to.be.an.instanceOf(TransactionEventHandler);
+		});
+
+		it('Sets transaction ID on event handler', () => {
+			expect(eventHandler.transactionId).to.equal(transactionId);
+		});
+
+		it('Sets options on event handler', () => {
+			expect(eventHandler.options).to.include(options);
+		});
+
+		it('Sets correct strategy on event handler', () => {
+			const expectedType = expectedStrategyTypes[strategyName];
+			expect(eventHandler.strategy).to.be.an.instanceOf(expectedType);
+		});
+	}));
 });

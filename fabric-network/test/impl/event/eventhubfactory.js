@@ -45,7 +45,7 @@ describe('EventHubFactory', () => {
 		stubEventHub2._stubInfo = 'eventHub2';
 		stubEventHub2.getName.returns('eventHub2');
 		// Fake a connection success event
-		stubEventHub2.registerBlockEvent.callsFake((block, error) => {
+		stubEventHub2.registerBlockEvent.callsFake((block, error) => { // eslint-disable-line no-unused-vars
 			Promise.resolve().then(block);
 			return 2;
 		});

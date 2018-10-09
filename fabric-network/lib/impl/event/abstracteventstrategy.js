@@ -42,7 +42,7 @@ class AbstractEventStrategy {
 	 * Called by event handler to obtain the event hubs to which it should listen. Gives an opportunity for
 	 * the strategy to store information on the events it expects to receive for later use in event handling.
 	 * @async
-	 * @returns ChannelEventHubs[] connected event hubs.
+	 * @returns {ChannelEventHubs[]} connected event hubs.
 	 * @throws {Error} if the connected event hubs do not satisfy the strategy.
 	 */
 	async getConnectedEventHubs() {

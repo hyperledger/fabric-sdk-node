@@ -32,7 +32,7 @@ class EventHubFactory {
 	/**
      * Gets event hubs for all specified peers. Where possible, the event hubs will be connected.
      * @async
-     * @param {ChannelPeer} peers Peers for which event hubs should be connected.
+     * @param {ChannelPeer[]} peers Peers for which event hubs should be connected.
      * @returns {ChannelEventHub[]} Event hubs, which may or may not have successfully connected.
      */
 	async getEventHubs(peers) {
