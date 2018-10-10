@@ -18,8 +18,7 @@
     "email": "fabric@lists.hyperledger.org"
   },
   "scripts": {
-	"lint": "eslint .",
-	"test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
+    "test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
   },
   "types": "./types/index.d.ts",
   "dependencies": {
@@ -30,6 +29,7 @@
   "devDependencies": {
     "mocha": "^5.2.0",
     "nyc": "^12.0.2",
+    "proxyquire": "^2.1.0",
     "rewire": "^4.0.1",
     "sinon": "^5.0.7"
   },

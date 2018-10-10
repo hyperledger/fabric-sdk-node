@@ -11,7 +11,7 @@
 const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
-const {Gateway, InMemoryWallet, FileSystemWallet, X509WalletMixin, DefaultEventHandlerStrategies} = require('../../../fabric-network/index.js');
+const {Gateway, CouchDBWallet, InMemoryWallet, FileSystemWallet, X509WalletMixin, DefaultEventHandlerStrategies} = require('../../../fabric-network/index.js');
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
@@ -541,6 +541,67 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	}
 
 	t.end();
+});
+
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using CouchDB wallet *****\n\n', async (t) => {
+	const gateway = new Gateway();
+	try {
+		const fixtures = process.cwd() + '/test/fixtures';
+		const credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
+		const cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
+		const key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
+		const identityLabel = 'user1-org1_example_com';
+
+		const couchDBWallet = new CouchDBWallet({url: 'http://localhost:5984'});
+		await couchDBWallet.import(identityLabel, X509WalletMixin.createIdentity('Org1MSP', cert, key));
+		const exists = await couchDBWallet.exists(identityLabel);
+		t.ok(exists, 'Successfully imported User1@org1.example.com into wallet');
+		const tlsInfo = await e2eUtils.tlsEnroll('org1');
+
+		await couchDBWallet.import('tls_id', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
+
+		const ccp = fs.readFileSync(fixtures + '/network.json');
+		await gateway.connect(JSON.parse(ccp.toString()), {
+			wallet: couchDBWallet,
+			identity: identityLabel,
+			clientTlsIdentity: 'tls_id'
+		});
+
+		t.pass('Connected to the gateway');
+
+		const network = await gateway.getNetwork(channelName);
+
+		t.pass('Initialized the channel, ' + channelName);
+
+		const contract = await network.getContract(chaincodeId);
+
+		t.pass('Got the contract, about to submit "move" transaction');
+
+		let response = await contract.submitTransaction('move', 'a', 'b','100');
+
+		const expectedResult = 'move succeed';
+		if(response.toString() === expectedResult){
+			t.pass('Successfully invoked transaction chaincode on channel');
+		}
+		else {
+			t.fail('Unexpected response from transaction chaincode: ' + response);
+		}
+
+		try {
+			response = await contract.submitTransaction('throwError', 'a', 'b','100');
+			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
+		} catch(expectedErr) {
+			if(expectedErr.message.includes('throwError: an error occurred')) {
+				t.pass('Successfully handled invocation errors');
+			} else {
+				t.fail('Unexpected exception: ' + expectedErr.message);
+			}
+		}
+	} catch (err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
+	}
 });
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and no event strategy *****\n\n', async (t) => {
