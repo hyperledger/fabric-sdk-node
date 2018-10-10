@@ -42,10 +42,11 @@ declare class Client extends BaseClient {
   getClientConfig(): any;
   getMspid(): string;
   newTransactionID(admin?: boolean): Client.TransactionId;
-  extractChannelConfig(envelope: Buffer): Buffer;
+  extractChannelConfig(config_envelope: Buffer): Buffer;
   signChannelConfig(config: Buffer): Client.ConfigSignature;
   createChannel(request: Client.ChannelRequest): Promise<Client.BroadcastResponse>;
   updateChannel(request: Client.ChannelRequest): Promise<Client.BroadcastResponse>;
+  queryPeers(request: Client.PeerQueryRequest): Promise<Client.PeerQueryResponse>;
   queryChannels(peer: Client.Peer | string, useAdmin?: boolean): Promise<Client.ChannelQueryResponse>;
   queryInstalledChaincodes(peer: Client.Peer | string, useAdmin?: boolean): Promise<Client.ChaincodeQueryResponse>;
   installChaincode(request: Client.ChaincodeInstallRequest, timeout?: number): Promise<Client.ProposalResponseObject>;
@@ -60,9 +61,7 @@ declare class Client extends BaseClient {
   createUser(opts: Client.UserOpts): Promise<Client.User>;
 
   getTargetPeers(request_targets: string | string[] | Client.Peer | Client.Peer[]): Client.Peer[];
-  getTargetOrderers(request_orderer: string | Client.Orderer): Client.Orderer;
-  getTargetOrderers(request_orderer: null | undefined, channel_orderers: Client.Orderer[]): Client.Orderer;
-  getTargetOrderers(request_orderer: null | undefined, channel_orderers: null | undefined, channel_name: string): Client.Orderer;
+  getTargetOrderer(request_orderer?: string | Client.Orderer, channel_orderers?: Client.Orderer[], channel_name?: string): Client.Orderer;
   getClientCertHash(create: boolean): Buffer;
 }
 export = Client;
@@ -150,6 +149,7 @@ declare namespace Client {
     target?: string | Peer | ChannelPeer;
     discover?: boolean;
     endorsementHandler?: string;
+    commitHandler?: string;
     asLocalhost?: boolean;
     configUpdate?: Buffer;
   }
@@ -158,13 +158,15 @@ declare namespace Client {
     constructor(name: string, clientContext: Client);
     close(): void;
     initialize(request?: InitializeRequest): Promise<void>;
-
     getName(): string;
-    getDiscoveryResults(): Promise<DiscoveryResults>;
-    refresh(request?: DiscoveryRequest): Promise<DiscoveryResults>;
+
+    getDiscoveryResults(endorsement_hints?: DiscoveryChaincodeInterest[]): Promise<DiscoveryResults>;
+    getEndorsementPlan(endorsement_hint?: DiscoveryChaincodeInterest): Promise<DiscoveryResultEndorsementPlan>;
+    refresh(): Promise<DiscoveryResults>;
+
     getOrganizations(): string[];
 
-    setMSPManager(manager: MSPManager): void;
+    setMSPManager(msp_manager: MSPManager): void;
     getMSPManager(): MSPManager;
 
     addPeer(peer: Peer, mspid: string, roles?: ChannelPeerRoles, replace?: boolean): void;
@@ -203,11 +205,19 @@ declare namespace Client {
     queryTransaction(txId: string, target?: Peer | string, useAdmin?: boolean, skipDecode?: true): Promise<Buffer>;
 
     queryInstantiatedChaincodes(target: Peer | string, useAdmin?: boolean): Promise<ChaincodeQueryResponse>;
+    queryCollectionsConfig(options: CollectionQueryOptions, useAdmin?: boolean): Promise<CollectionQueryResponse[]>;
 
     sendInstantiateProposal(request: ChaincodeInstantiateUpgradeRequest, timeout?: number): Promise<ProposalResponseObject>;
     sendUpgradeProposal(request: ChaincodeInstantiateUpgradeRequest, timeout?: number): Promise<ProposalResponseObject>;
     sendTransactionProposal(request: ChaincodeInvokeRequest, timeout?: number): Promise<ProposalResponseObject>;
     sendTransaction(request: TransactionRequest, timeout?: number): Promise<BroadcastResponse>;
+
+    generateUnsignedProposal(request: ProposalRequest, mspId: string, certificate: string, admin: boolean): Promise<Proposal>;
+    sendSignedProposal(request: SignedProposal, timeout?: number): Promise<ProposalResponseObject>;
+    static sendSignedProposal(request: SignedProposal, timeout?: number): Promise<ProposalResponseObject>;
+    generateUnsignedTransaction(request: TransactionRequest): Promise<any>;
+    sendSignedTransaction(request: SignedCommitProposal, timeout?: number): Promise<BroadcastResponse>;
+
     queryByChaincode(request: ChaincodeQueryRequest, useAdmin?: boolean): Promise<Buffer[]>;
     verifyProposalResponse(proposal_response: ProposalResponse): boolean;
     compareProposalResponseResults(proposal_responses: ProposalResponse[]): boolean;
@@ -235,7 +245,7 @@ declare namespace Client {
     getChannelEventHub(): ChannelEventHub;
     getPeer(): Peer;
     sendProposal(proposal: Proposal, timeout?: number): Promise<ProposalResponse>;
-    sendDiscovery(request: Buffer, timeout?: number): Promise<DiscoveryResults>;
+    sendDiscovery(request: SignedRequest, timeout?: number): Promise<DiscoveryResults>;
   }
 
   export interface IKeyValueStore {
@@ -318,15 +328,35 @@ declare namespace Client {
     endorsement: any;
   }
 
+  export interface SignedEvent {
+    signature: Buffer;
+    payload: Buffer;
+  }
+
+  export interface ConnectOptions {
+    full_block?: boolean;
+    signedEvent?: SignedEvent;
+  }
+
+  export interface EventHubRegistrationRequest {
+    identity: IIdentity;
+    TransactionID: TransactionId;
+    certificate: string;
+    mspId: string;
+  }
+
   export class ChannelEventHub {
     constructor(channel: Channel, peer: Peer);
     getName(): string;
     getPeerAddr(): string;
     lastBlockNumber(): number;
     isconnected(): boolean;
-    connect(full_block?: boolean): void;
+    connect(options?: ConnectOptions | boolean): void;
     disconnect(): void;
     close(): void;
+
+    generateUnsignedRegistration(options: EventHubRegistrationRequest): Buffer;
+
     checkConnection(force_reconnect: boolean): string;
     registerChaincodeEvent(ccid: string, eventname: string, onEvent: (event: ChaincodeEvent, block_number?: number, tx_id?: string, tx_status?: string) => void,
       onError?: (err: Error) => void, options?: RegistrationOpts): ChaincodeChannelEventHandle;
@@ -342,12 +372,15 @@ declare namespace Client {
     signature: Buffer;
   }
 
+  export interface PeerSignedProposal {
+    proposal_bytes: Buffer;
+    signature: Buffer;
+  }
+
   export class Peer extends Remote {
     constructor(url: string, opts?: ConnectionOpts);
     close(): void;
-    setRole(role: string, isIn: boolean): void;
-    isInRole(role: string): boolean;
-    sendProposal(proposal: Proposal, timeout?: number): Promise<ProposalResponse>;
+    sendProposal(proposal: PeerSignedProposal, timeout?: number): Promise<ProposalResponse>;
     sendDiscovery(request: SignedRequest, timeout?: number): Promise<DiscoveryResults>;
   }
 
@@ -388,6 +421,12 @@ declare namespace Client {
     getMSPs(): any;
     loadMSPs(mspConfigs: any): void;
   }
+
+  export interface MSPPrincipal {
+    principal_classification: number;
+    principal: Buffer;
+  }
+
   export interface ChaincodeInstallRequest {
     targets?: Peer[] | string[];
     chaincodePath: string;
@@ -407,7 +446,7 @@ declare namespace Client {
     chaincodeVersion: string;
     txId: TransactionId;
     'collections-config'?: string;
-    transientMap?: any;
+    transientMap?: TransientMap;
     fcn?: string;
     args?: string[];
     'endorsement-policy'?: any;
@@ -416,8 +455,9 @@ declare namespace Client {
   export interface ChaincodeInvokeRequest {
     targets?: Peer[] | string[];
     chaincodeId: string;
+    endorsement_hint?: DiscoveryChaincodeInterest;
     txId: TransactionId;
-    transientMap?: any;
+    transientMap?: TransientMap;
     fcn?: string;
     args: string[];
     ignore?: string[];
@@ -427,7 +467,7 @@ declare namespace Client {
   export interface ChaincodeQueryRequest {
     targets?: Peer[] | string[];
     chaincodeId: string;
-    transientMap?: any;
+    transientMap?: TransientMap;
     fcn?: string;
     args: string[];
   }
@@ -481,12 +521,45 @@ declare namespace Client {
     channel_id: string;
   }
 
+  export interface PeerQueryRequest {
+    target: Peer | string;
+    useAdmin?: boolean;
+  }
+
+  export interface PeerQueryResponse {
+    peers_by_org: {
+      [msp_id: string]: {
+        "peers": {
+          "mspid": string,
+          "endpoint": string
+        }[];
+      }
+    }
+  }
+
   export interface ChaincodeQueryResponse {
     chaincodes: ChaincodeInfo[];
   }
 
   export interface ChannelQueryResponse {
     channels: ChannelInfo[];
+  }
+
+  export interface CollectionQueryOptions {
+    target?: Peer | string;
+    chaincodeId: string;
+  }
+
+  export interface CollectionQueryResponse {
+    type: string;
+    name: string;
+    policy: {
+      identities: MSPPrincipal[];
+      n_out_of: any;
+    };
+    required_peer_count: number;
+    maximum_peer_count: number;
+    block_to_live: number;
   }
 
   export interface Response {
@@ -504,6 +577,27 @@ declare namespace Client {
   export interface Header {
     channel_header: ByteBuffer;
     signature_header: ByteBuffer;
+  }
+
+  export type TransientMap = { [key: string]: Buffer };
+
+  export interface ProposalRequest {
+    fcn: string;
+    args: string[];
+    chaincodeId: string
+    argbytes?: Buffer;
+    transientMap?: TransientMap;
+  }
+
+  export interface SignedProposal {
+    targets: Peer[];
+    signedProposal: Buffer;
+  }
+
+  export interface SignedCommitProposal {
+    request: TransactionRequest;
+    signedTransaction: Buffer;
+    orderer?: Orderer | string;
   }
 
   export interface RegistrationOpts {
@@ -566,10 +660,12 @@ declare namespace Client {
   export type DiscoveryResultEndorsementLayout = {
     [group_name: string]: number;
   };
-  export interface DiscoveryResultEndorsementTarget {
+  export interface DiscoveryResultEndorsementPlan {
+    chaincode: string;
+    plan_id: string;
     groups: {
-      [group_name: string] : DiscoveryResultEndorsementGroup;
-    },
+      [group_name: string]: DiscoveryResultEndorsementGroup;
+    };
     layouts: DiscoveryResultEndorsementLayout[];
   }
 
@@ -578,11 +674,19 @@ declare namespace Client {
     orderers?: { [mspid: string]: DiscoveryResultEndpoints };
 
     peers_by_org?: { [name: string]: DiscoveryResultPeers };
-    local_peers?: { [name: string]: DiscoveryResultPeers };
 
-    endorsement_targets?: { [chaincode_name: string]: DiscoveryResultEndorsementTarget };
+    endorsement_plans: DiscoveryResultEndorsementPlan[];
 
     timestamp: number;
+  }
+
+  export interface DiscoveryChaincodeCall {
+    name: string;
+    collection_names?: string[];
+  }
+
+  export interface DiscoveryChaincodeInterest {
+    chaincodes: DiscoveryChaincodeCall[];
   }
 
   export class Package {
