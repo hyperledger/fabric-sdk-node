@@ -1,9 +1,8 @@
 
-This tutorial illustrates the use of channel-based events. These events are
-similar to the existing events, however are specific to a single channel.
-The client handling of channel-based events has a few new options when setting
-up a listener. Channel-based events are a new feature of the
-Hyperledger Fabric Node.js client as of v1.1.
+This tutorial illustrates the use of channel-based events.
+Channel-based events are a new feature of the Hyperledger Fabric Node.js client
+as of v1.1. It replaces the event hub from v1.0, with a more useful
+and reliable interface for applications to receive events.
 
 For more information on getting started with Fabric check out
 [Building your first network](http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html).
@@ -22,9 +21,19 @@ transactions or chaincode events. This allows a client application to be
 notified of transaction completion or arbitrary chaincode events without having
 to perform multiple queries or search through the blocks as they are received.
 
-The service allows any user to receive "filtered" block events (which contain no
-sensitive information, in other words). Receiving "unfiltered" block events
-requires read access to the channel. The default behavior is to connect to
+Applications may use block or chaincode events to provide channel data to
+other applications. For example an application could listen for block events
+and write transaction data to a data store for the purpose of performing
+queries or other analytics against the channel's data.
+For each block received, the block listener application could iterate through
+the block transactions, and build a data store using the key/value writes from
+each valid transaction's 'rwset' (see the {@link Block} and {@link Transaction}
+Type Definitions for details of these data structures).
+
+The event service also allows applications to receive "filtered" block events
+(which allow for receiving transaction validation status without providing
+other sensitive information). Access to "filtered" and "unfiltered" events
+can be configured independently in Fabric. The default behavior is to connect to
 receive filtered block events. To connect to receive unfiltered block events
 call `connect(true)` (see below).
 
