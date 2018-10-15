@@ -5,11 +5,12 @@
 node ('hyp-x') { // trigger build on x86_64 node
     try {
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
+     env.NODE_VER = "8.11.3"
+     env.GO_VER = "1.11.1"
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
-     env.JAVA_HOME = "/usr/lib/jvm/java-1.8.0-openjdk-amd64"
-     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v6.9.5/bin:/home/jenkins/.nvm/versions/node/v8.9.4/bin:$PATH"
-     env.GOROOT = "/opt/go/go1.10.linux.amd64"
+     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
+     env.GOROOT = "/opt/go${GO_VER}.linux.amd64"
      env.PATH = "$GOROOT/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
@@ -56,15 +57,15 @@ node ('hyp-x') { // trigger build on x86_64 node
            }
       }
 
-// Pull Fabric, Fabric-ca Images
+// Pull Docker Images
       stage("Pull Docker images") {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
-                 sh './CI_Script.sh --pull_Fabric_Images --pull_Fabric_CA_Image'
+                 sh './CI_Script.sh --pull_Fabric_Images'
                  }
                }
            catch (err) {
-                 failure_stage = "Pull fabric, fabric-ca docker images"
+                 failure_stage = "Pull docker images"
                  throw err
            }
       }
