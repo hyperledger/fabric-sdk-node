@@ -3,18 +3,21 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 node ('hyp-x') { // trigger build on x86_64 node
+  timestamps {
     try {
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
-     env.JAVA_HOME = "/usr/lib/jvm/java-1.8.0-openjdk-amd64"
-     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v6.9.5/bin:/home/jenkins/.nvm/versions/node/v8.9.4/bin:$PATH"
-     env.GOROOT = "/opt/go/go1.10.linux.amd64"
+     env.NODE_VER = "8.9.4"
+     env.GO_VER = "1.10"
+     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
+     env.GOROOT = "/opt/go/go${GO_VER}.linux.amd64"
      env.PATH = "$GOROOT/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
      deleteDir()
       stage("Fetch Patchset") { // fetch gerrit refspec on latest commit
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
           try {
               dir("${ROOTDIR}"){
               sh '''
@@ -29,9 +32,11 @@ node ('hyp-x') { // trigger build on x86_64 node
                  failure_stage = "Fetch patchset"
                  throw err
            }
+         }
       }
 // clean environment and get env data
       stage("Clean Environment - Get Env Info") {
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --clean_Environment --env_Info'
@@ -41,36 +46,12 @@ node ('hyp-x') { // trigger build on x86_64 node
                  failure_stage = "Clean Environment - Get Env Info"
                  throw err
            }
-      }
-
-// Pull Couchdb Image
-      stage("Pull Couchdb image") {
-           try {
-                 dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
-                 sh './CI_Script.sh --pull_Thirdparty_Images'
-                 }
-               }
-           catch (err) {
-                 failure_stage = "Pull couchdb docker image"
-                 throw err
-           }
-      }
-
-// Pull Fabric, Fabric-ca Images
-      stage("Pull Docker images") {
-           try {
-                 dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
-                 sh './CI_Script.sh --pull_Fabric_Images --pull_Fabric_CA_Image'
-                 }
-               }
-           catch (err) {
-                 failure_stage = "Pull fabric, fabric-ca docker images"
-                 throw err
-           }
+         }
       }
 
 // Run gulp tests (headless and e2e tests)
       stage("Run gulp_Tests") {
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --sdk_E2e_Tests'
@@ -80,6 +61,7 @@ node ('hyp-x') { // trigger build on x86_64 node
                  failure_stage = "sdk_E2e_Tests"
                  throw err
            }
+         }
       }
 
 // Publish unstable npm modules from merged job
@@ -104,7 +86,7 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
            junit '**/cobertura-coverage.xml'
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
            // Sends notification to Rocket.Chat
-           rocketSend channel: 'jenkins-robot', message: "Build Notification - Branch: ${env.GERRIT_BRANCH} - Commit: ${env.GIT_COMMIT} - (<${env.BUILD_URL}|Open>)", rawMessage: true
+           rocketSend channel: 'jenkins-robot', message: "Build Notification - Branch: ${env.GERRIT_BRANCH} - Project: ${env.PROJECT} - Commit: ${env.GERRIT_PATCHSET_REVISION}- (<${env.BUILD_URL}|Open>)"
        }
 }
 
