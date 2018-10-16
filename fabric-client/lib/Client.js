@@ -1029,12 +1029,27 @@ const Client = class extends BaseClient {
 	 * @returns {Promise} A Promise for a {@link ProposalResponseObject}
 	 */
 	async installChaincode(request, timeout) {
-		logger.debug('installChaincode - start');
+		try {
+			logger.debug('installChaincode - start');
 
-		let error_msg = null;
-		let peers = null;
-		if (request) {
-			peers = this.getTargetPeers(request.targets);
+			// must provide a valid request object with:
+			// chaincodePackage
+			// -or-
+			// chaincodeId, chaincodeVersion, and chaincodePath
+			if (!request) {
+				throw new Error('Missing input request object on install chaincode request');
+			} else if (request.chaincodePackage) {
+				logger.debug('installChaincode - installing chaincode package');
+			} else if (!request.chaincodeId) {
+				throw new Error('Missing "chaincodeId" parameter in the proposal request');
+			} else if (!request.chaincodeVersion) {
+				throw new Error('Missing "chaincodeVersion" parameter in the proposal request');
+			} else if (!request.chaincodePath) {
+				throw new Error('Missing "chaincodePath" parameter in the proposal request');
+			}
+
+			console.log('request.targets', request.targets);
+			let peers = this.getTargetPeers(request.targets);
 			if (!peers && request.channelNames) {
 				peers = this.getPeersForOrgOnChannel(request.channelNames);
 			}
@@ -1043,58 +1058,47 @@ const Client = class extends BaseClient {
 			if (peers && peers.length > 0) {
 				logger.debug(`installChaincode - found peers ::${peers.length}`);
 			} else {
-				error_msg = 'Missing peer objects in install chaincode request';
+				throw new Error('Missing peer objects in install chaincode request');
 			}
-		} else {
-			error_msg = 'Missing input request object on install chaincode request';
-		}
 
-		if (!error_msg) {
-			error_msg = clientUtils.checkProposalRequest(request, false);
-		}
-		if (!error_msg) {
-			error_msg = clientUtils.checkInstallRequest(request);
-		}
+			const cdsBytes = await _getChaincodeDeploymentSpec(request, this.isDevMode());
+			// TODO add ESCC/VSCC info here ??????
+			const lcccSpec = {
+				type: clientUtils.translateCCType(request.chaincodeType),
+				chaincode_id: {
+					name: Constants.LSCC
+				},
+				input: {
+					args: [Buffer.from('install', 'utf8'), cdsBytes]
+				}
+			};
 
-		if (error_msg) {
-			logger.error(`installChaincode error ${error_msg}`);
-			throw new Error(error_msg);
-		}
-
-		const cdsBytes = await _getChaincodeDeploymentSpec(request, this.isDevMode());
-		// TODO add ESCC/VSCC info here ??????
-		const lcccSpec = {
-			type: clientUtils.translateCCType(request.chaincodeType),
-			chaincode_id: {
-				name: Constants.LSCC
-			},
-			input: {
-				args: [Buffer.from('install', 'utf8'), cdsBytes]
+			let signer;
+			let tx_id = request.txId;
+			if (!tx_id) {
+				signer = this._getSigningIdentity(true);
+				tx_id = new TransactionID(signer, true);
+			} else {
+				signer = this._getSigningIdentity(tx_id.isAdmin());
 			}
-		};
 
-		let signer;
-		let tx_id = request.txId;
-		if (!tx_id) {
-			signer = this._getSigningIdentity(true);
-			tx_id = new TransactionID(signer, true);
-		} else {
-			signer = this._getSigningIdentity(tx_id.isAdmin());
+			const channelHeader = clientUtils.buildChannelHeader(
+				_commonProto.HeaderType.ENDORSER_TRANSACTION,
+				'', //install does not target a channel
+				tx_id.getTransactionID(),
+				null,
+				Constants.LSCC
+			);
+			const header = clientUtils.buildHeader(signer, channelHeader, tx_id.getNonce());
+			const proposal = clientUtils.buildProposal(lcccSpec, header);
+			const signed_proposal = clientUtils.signProposal(signer, proposal);
+			logger.debug('installChaincode - about to sendPeersProposal');
+			const responses = await clientUtils.sendPeersProposal(peers, signed_proposal, timeout);
+			return [responses, proposal];
+		} catch (error) {
+			logger.error(`installChaincode error ${error.message}`);
+			throw error;
 		}
-
-		const channelHeader = clientUtils.buildChannelHeader(
-			_commonProto.HeaderType.ENDORSER_TRANSACTION,
-			'', //install does not target a channel
-			tx_id.getTransactionID(),
-			null,
-			Constants.LSCC
-		);
-		const header = clientUtils.buildHeader(signer, channelHeader, tx_id.getNonce());
-		const proposal = clientUtils.buildProposal(lcccSpec, header);
-		const signed_proposal = clientUtils.signProposal(signer, proposal);
-		logger.debug('installChaincode - about to sendPeersProposal');
-		const responses = await clientUtils.sendPeersProposal(peers, signed_proposal, timeout);
-		return [responses, proposal];
 	}
 
 	/**
