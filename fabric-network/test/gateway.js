@@ -215,6 +215,19 @@ describe('Gateway', () => {
 			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey, 'acert', 'akey');
 		});
 
+		it('should connect to the gateway with identity and set client tls crypto material using tlsInfo', async () => {
+			const options = {
+				wallet: mockWallet,
+				identity: 'admin',
+				tlsInfo: {certificate: 'acert', key: 'akey'}
+			};
+			await gateway.connect('ccp', options);
+			gateway.client.should.equal(mockClient);
+			gateway.currentIdentity.should.equal('foo');
+			sinon.assert.calledOnce(mockClient.setTlsClientCertAndKey);
+			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey, 'acert', 'akey');
+		});
+
 
 		it('should connect from an existing client object', async () => {
 			const options = {

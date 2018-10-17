@@ -153,6 +153,10 @@ class Gateway {
 			this.client.setTlsClientCertAndKey(tlsIdentity.certificate, tlsIdentity.privateKey);
 		}
 
+		if (options.tlsInfo && !options.clientTlsIdentity) {
+			this.client.setTlsClientCertAndKey(options.tlsInfo.certificate, options.tlsInfo.key);
+		}
+
 		// load in the query handler plugin
 		if (this.options.queryHandler) {
 			logger.debug('%s - loading query handler: %s', method, this.options.queryHandler);

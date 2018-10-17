@@ -91,8 +91,8 @@
   "certificateAuthorities":{
     "ca-org1":{
       "url":"https://localhost:7054",
-      "grpcOptions":{
-        "verify":true
+      "httpOptions":{
+        "verify": false
       },
       "tlsCACerts":{
         "path":"test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/ca/org1.example.com-cert.pem"

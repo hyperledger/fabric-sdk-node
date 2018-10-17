@@ -122,7 +122,7 @@ test('\n\n**PKCS11 - generate a non-ephemeral key\n\n', async (t) => {
 
 		cryptoUtils = utils.newCryptoSuite({
 			lib: libpath,
-			slot: 0,
+			slot,
 			pin: pin
 		});
 
@@ -278,14 +278,13 @@ test('\n\n**PKCS11 - Test Client.createUser with existing PKCS11 key.\n\n', asyn
 			});
 		if (user) {
 			t.pass('createUser, got user');
-			t.end();
 		} else {
 			t.fail('createUser, returned null');
-			t.end();
 		}
+
 	} catch (e) {
 		t.fail('Failed. ' + e);
-		t.end();
 	}
-
+	cryptoUtils.closeSession();
+	t.end();
 });

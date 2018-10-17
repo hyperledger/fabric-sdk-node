@@ -65,11 +65,10 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
     * `test/integration/cloudant-fabricca-tests.js`
   * To re-run `node test/integration/e2e.js` or `fabric-ca-services-tests.js` stop the network (ctrl-c), clean up the docker instances (`docker rm $(docker ps -aq)`) and restart the network with `docker-compose up` as described above.
 
-### Special Tests for Hardware Security Module support (experimental) via PKCS#11 interface
-The SDK has experimental support for PKCS#11 interface in order to allow applications to make use of HSM devices for key management. Unit tests for this feature are skipped by default. To run these testss:
+### Special Tests for Hardware Security Module support via PKCS#11 interface
+The SDK has support for PKCS#11 interface in order to allow applications to make use of HSM devices for key management. To turn these tests off, set environment variable "PKCS11_TESTS" to "false". In order to run the tests:
 
-* set environment variable "PKCS11_TESTS" to "true"
-* install a software emulator of the PKCS#11 interface. The unit tests have been tried with SoftHSM2:
+* Install a software emulator of the PKCS#11 interface. The unit tests have been tried with SoftHSM2:
   * install using the package manager for your host system:
     * Ubuntu:  apt-get install softhsm2
     * macOS: brew install softhsm
@@ -85,7 +84,7 @@ The SDK has experimental support for PKCS#11 interface in order to allow applica
   * create a token to store keys inside slot 0: `softhsm2-util --init-token --slot 0 --label "My token 1"`, you will be prompted two PINs: SO (Security Officer) PIN that can be used to re-initialize the token, and user PIN to be used by applications to access the token for generating and retrieving keys
 
 The unit test assumes slot '0' and user PIN `98765432`. If your configuration is different, use these environment variables to pass in the values:
-* PKCS11_LIB - path to the SoftHSM2 library, if not specified, the test case searches through a list of popular install locations
+* PKCS11_LIB - path to the SoftHSM2 library, if not specified, the test case searches through a list of popular install locaions
 * PKCS11_PIN
 * PKCS11_SLOT
 
