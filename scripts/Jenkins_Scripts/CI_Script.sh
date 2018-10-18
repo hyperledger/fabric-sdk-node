@@ -8,12 +8,9 @@
 # exit on first error
 
 export BASE_FOLDER=$WORKSPACE/gopath/src/github.com/hyperledger
-# Modify this when change the image tag
 export STABLE_TAG=1.3.0-stable
-export NEXUS_URL=nexus3.hyperledger.org:10001
+export NEXUS_REPO_URL=nexus3.hyperledger.org:10001
 export ORG_NAME="hyperledger/fabric"
-# Set this in GOPATH
-export NODE_VER=8.9.4 # Default nodejs version
 
 # Fetch baseimage version
 curl -L https://raw.githubusercontent.com/hyperledger/fabric/master/Makefile > Makefile
@@ -46,9 +43,6 @@ Parse_Arguments() {
                             ;;
                       --pull_Fabric_Images)
                             pull_Fabric_Images
-                            ;;
-                      --pull_Fabric_CA_Image)
-                            pull_Fabric_CA_Image
                             ;;
                       --clean_Environment)
                             clean_Environment
@@ -150,41 +144,22 @@ pull_Thirdparty_Images() {
 }
 # pull fabric images from nexus
 pull_Fabric_Images() {
-            for IMAGES in peer orderer; do
+            for IMAGES in peer orderer ca; do
                  echo "-----------> pull $IMAGES image"
                  echo
-                 docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
-                 docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES
-                 docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES:$STABLE_TAG
-                 docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
+                 docker pull $NEXUS_REPO_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
+                 docker tag $NEXUS_REPO_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES
+                 docker tag $NEXUS_REPO_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES:$STABLE_TAG
+                 docker rmi -f $NEXUS_REPO_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
             done
                  echo
                  docker images | grep hyperledger/fabric
 }
-# pull fabric-ca images from nexus
-pull_Fabric_CA_Image() {
-        echo
-            for IMAGES in ca; do
-                 echo "-----------> pull $IMAGES image"
-                 echo
-                 docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
-                 docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES
-	         docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES:$STABLE_TAG
-                 docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
-            done
-                 echo
-                 docker images | grep hyperledger/fabric-ca
-}
+
 # run sdk e2e tests
 sdk_E2e_Tests() {
         echo
         echo "-----------> Execute NODE SDK E2E Tests"
-        cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node/test/fixtures || exit
-        docker-compose up >> dockerlogfile.log 2>&1 &
-        sleep 30
-        echo "---------> LIST DOCKER CONTAINERS"
-        docker ps -a
-
         cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node || exit
         # Install nvm to install multi node versions
         wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
@@ -197,7 +172,6 @@ sdk_E2e_Tests() {
         # This also depends on the fabric-baseimage. Make sure you modify there as well.
         echo "------> Use $NODE_VER for >=release-1.1 branches"
         nvm install $NODE_VER || true
-        # use nodejs 8.9.4 version
         nvm use --delete-prefix v$NODE_VER --silent
 
         echo "npm version ------> $(npm -v)"
