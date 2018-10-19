@@ -46,8 +46,8 @@ class TransactionEventHandler {
 		this.respondedEventHubs = new Set();
 
 		this.notificationPromise = new Promise((resolve, reject) => {
-			this._txResolve = resolve;
-			this._txReject = reject;
+			this._resolveNotificationPromise = resolve;
+			this._rejectNotificationPromise = reject;
 		});
 	}
 
@@ -58,11 +58,11 @@ class TransactionEventHandler {
 	async startListening() {
 		this.eventHubs = await this.strategy.getConnectedEventHubs();
 		if (this.eventHubs.length > 0) {
-			this._registerTxEventListeners();
 			this._setListenTimeout();
+			await this._registerTxEventListeners();
 		} else {
 			logger.debug('startListening: No event hubs');
-			this._txResolve();
+			this._resolveNotificationPromise();
 		}
 	}
 
@@ -78,14 +78,25 @@ class TransactionEventHandler {
 		}, this.options.commitTimeout * 1000);
 	}
 
-	_registerTxEventListeners() {
-		for (const eventHub of this.eventHubs) {
-			logger.debug('_registerTxEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
+	async _registerTxEventListeners() {
+		const registrationOptions = { unregister: true };
 
-			eventHub.registerTxEvent(this.transactionId,
-				(txId, code) => this._onEvent(eventHub, txId, code),
-				(err) => this._onError(eventHub, err));
-		}
+		const promises = this.eventHubs.map((eventHub) => {
+			return new Promise((resolve) => {
+				logger.debug('_registerAllEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
+
+				eventHub.registerTxEvent(
+					this.transactionId,
+					(txId, code) => this._onEvent(eventHub, txId, code),
+					(err) => this._onError(eventHub, err),
+					registrationOptions
+				);
+				eventHub.connect();
+				resolve();
+			});
+		});
+
+		await Promise.all(promises);
 	}
 
 	_timeoutFail() {
@@ -100,7 +111,6 @@ class TransactionEventHandler {
 	_onEvent(eventHub, txId, code) {
 		logger.debug('_onEvent:', util.format('received event for %j with code %j', txId, code));
 
-		eventHub.unregisterTxEvent(this.transactionId);
 		this._receivedEventHubResponse(eventHub);
 		if (code !== 'VALID') {
 			const message = util.format('Peer %s has rejected transaction %j with code %j', eventHub.getPeerAddr(), txId, code);
@@ -113,7 +123,6 @@ class TransactionEventHandler {
 	_onError(eventHub, err) {
 		logger.info('_onError:', util.format('received error from peer %s: %s', eventHub.getPeerAddr(), err));
 
-		eventHub.unregisterTxEvent(this.transactionId);
 		this._receivedEventHubResponse(eventHub);
 		this.strategy.errorReceived(this._strategySuccess.bind(this), this._strategyFail.bind(this));
 	}
@@ -130,7 +139,7 @@ class TransactionEventHandler {
 		logger.info('_strategySuccess:', util.format('strategy success for transaction %j', this.transactionId));
 
 		this.cancelListening();
-		this._txResolve();
+		this._resolveNotificationPromise();
 	}
 
 	/**
@@ -142,7 +151,7 @@ class TransactionEventHandler {
 		logger.warn('_strategyFail:', util.format('strategy fail for transaction %j: %s', this.transactionId, error));
 
 		this.cancelListening();
-		this._txReject(error);
+		this._rejectNotificationPromise(error);
 	}
 
 	/**
@@ -162,9 +171,7 @@ class TransactionEventHandler {
 		logger.debug('cancelListening called');
 
 		clearTimeout(this.timeoutHandler);
-		for (const eventHub of this.eventHubs) {
-			eventHub.unregisterTxEvent(this.transactionId);
-		}
+		this.eventHubs.forEach((eventHub) => eventHub.unregisterTxEvent(this.transactionId));
 	}
 
 }

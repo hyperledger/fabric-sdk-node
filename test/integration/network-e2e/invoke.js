@@ -12,9 +12,7 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 const {Gateway, CouchDBWallet, InMemoryWallet, FileSystemWallet, X509WalletMixin, DefaultEventHandlerStrategies} = require('../../../fabric-network/index.js');
-const { sampleEventStrategy, SampleEventHandlerManager } = require('./sample-transaction-event-handler'); // eslint-disable-line no-unused-vars
-const { sampleEventStrategy: sampleEventStrategy2 } = require('./sample-transaction-event-handler-2');
-const { sampleEventStrategy: sampleEventStrategy3 } = require('./sample-transaction-event-handler-3');
+const sampleEventStrategy = require('./sample-transaction-event-handler');
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
@@ -452,37 +450,15 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		await inMemoryIdentitySetup();
 		await tlsSetup();
 
-		// const eventHandlerManager = new SampleEventHandlerManager(); // --- With event handler manager
 		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId',
-			eventHandlerOptions: {
-				strategy: sampleEventStrategy // --- Without event handler manager
-				// strategy: eventHandlerManager.createTransactionEventHandler // --- With event handler manager
-			}
+			eventHandlerOptions: { strategy: sampleEventStrategy }
 		});
-
-		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
-
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let eventFired = -1;
-
-		// have to register for all transaction events (a new feature in 1.3) as
-		// there is no way to know what the initial transaction id is
-		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
-				eventFired++;
-			}
-		}, () => {});
 
 		const response = await contract.submitTransaction('move', 'a', 'b','100');
 
-		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
-		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
 		const expectedResult = 'move succeed';
 		if(response.toString() === expectedResult){
 			t.pass('Successfully invoked transaction chaincode on channel');
@@ -494,115 +470,6 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
-	}
-
-	t.end();
-});
-
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and plug-in event strategy 2 *****\n\n', async (t) => {
-	const gateway = new Gateway();
-	let org1EventHub;
-
-	try {
-		await inMemoryIdentitySetup();
-		await tlsSetup();
-
-		const contract = await createContract(t, gateway, {
-			wallet: inMemoryWallet,
-			identity: 'User1@org1.example.com',
-			clientTlsIdentity: 'tlsId',
-			eventHandlerOptions: {
-				strategy: sampleEventStrategy2
-			}
-		});
-
-		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
-
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let eventFired = -1;
-
-		// have to register for all transaction events (a new feature in 1.3) as
-		// there is no way to know what the initial transaction id is
-		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
-				eventFired++;
-			}
-		}, () => {});
-
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
-
-		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
-		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
-		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
-			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
-			t.fail('Unexpected response from transaction chaincode: ' + response);
-		}
-	} catch(err) {
-		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
-	} finally {
-		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
-	}
-
-	t.end();
-});
-
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and plug-in event strategy 3 *****\n\n', async (t) => {
-	const gateway = new Gateway();
-	let org1EventHub;
-
-	try {
-		await inMemoryIdentitySetup();
-		await tlsSetup();
-
-		const contract = await createContract(t, gateway, {
-			wallet: inMemoryWallet,
-			identity: 'User1@org1.example.com',
-			clientTlsIdentity: 'tlsId',
-			eventHandlerOptions: {
-				strategy: sampleEventStrategy3
-			}
-		});
-
-		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
-
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let eventFired = -1;
-
-		// have to register for all transaction events (a new feature in 1.3) as
-		// there is no way to know what the initial transaction id is
-		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
-				eventFired++;
-			}
-		}, () => {});
-
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
-
-		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
-		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
-		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
-			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
-			t.fail('Unexpected response from transaction chaincode: ' + response);
-		}
-	} catch(err) {
-		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
-	} finally {
-		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
 	}
 
 	t.end();
