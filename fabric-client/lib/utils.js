@@ -130,7 +130,7 @@ module.exports.getLogger = function (name) {
 	const newDefaultLogger = function () {
 		return new winston.Logger({
 			transports: [
-				new (winston.transports.Console)({colorize: true})
+				new (winston.transports.Console)({colorize: true,timestamp:true})
 			]
 		});
 	};
