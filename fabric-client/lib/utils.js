@@ -90,7 +90,7 @@ module.exports.newCryptoSuite = (setting) => {
 };
 
 // Provide a Promise-based keyValueStore for couchdb, etc.
-module.exports.newKeyValueStore = async (options) =>{
+module.exports.newKeyValueStore = async (options) => {
 	// initialize the correct KeyValueStore
 	const kvsEnv = exports.getConfigSetting('key-value-store');
 	const store = require(kvsEnv);
@@ -127,18 +127,18 @@ module.exports.getLogger = function (name) {
 		}
 	};
 
-	const newDefaultLogger = function () {
+	const newDefaultLogger = () => {
 		return new winston.Logger({
 			transports: [
-				new (winston.transports.Console)({colorize: true,timestamp:true})
+				new (winston.transports.Console)({colorize: true, timestamp: true})
 			]
 		});
 	};
 
-	const insertLoggerName = function (originalLogger, lname) {
+	const insertLoggerName = (originalLogger, lname) => {
 		const logger = Object.assign({}, originalLogger);
 
-		['debug', 'info', 'warn', 'error'].forEach((method) => {
+		LOGGING_LEVELS.forEach((method) => {
 			const func = originalLogger[method];
 
 			logger[method] = (function (context, loggerName, f) {
@@ -165,40 +165,36 @@ module.exports.getLogger = function (name) {
 	const options = {};
 	if (config_log_setting) {
 		try {
-			let config = null;
-			if (typeof config_log_setting === 'string') {
-				config = JSON.parse(config_log_setting);
-			}
-			else {
-				config = config_log_setting;
-			}
+			const config = typeof config_log_setting === 'string' ? JSON.parse(config_log_setting) : config_log_setting;
 			if (typeof config !== 'object') {
 				throw new Error('Environment variable "HFC_LOGGING" must be an object conforming to the format documented.');
-			} else {
-				for (const level in config) {
-					if (!config.hasOwnProperty(level)) {
-						continue;
+			}
+			for (const level in config) {
+				if (!config.hasOwnProperty(level)) {
+					continue;
+				}
+
+				if (LOGGING_LEVELS.includes(level)) {
+					if (!options.transports) {
+						options.transports = [];
 					}
 
-					if (LOGGING_LEVELS.indexOf(level) >= 0) {
-						if (!options.transports) {
-							options.transports = [];
-						}
-
-						if (config[level] === 'console') {
-							options.transports.push(new (winston.transports.Console)({
-								name: level + 'console',
-								level: level,
-								colorize: true
-							}));
-						} else {
-							options.transports.push(new (winston.transports.File)({
-								name: level + 'file',
-								level: level,
-								filename: config[level],
-								colorize: true
-							}));
-						}
+					if (config[level] === 'console') {
+						options.transports.push(new (winston.transports.Console)({
+							name: level + 'console',
+							level: level,
+							timestamp: true,
+							colorize: true
+						}));
+					} else {
+						options.transports.push(new (winston.transports.File)({
+							name: level + 'file',
+							level: level,
+							filename: config[level],
+							timestamp: true,
+							colorize: false,
+							json: false
+						}));
 					}
 				}
 			}
@@ -409,14 +405,13 @@ const CryptoKeyStore = function (KVSImplClass, opts) {
 			if (self._store === null) {
 				self.logger.debug(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', self._storeConfig));
 
-				CKS(self._storeConfig.superClass, self._storeConfig.opts)
-					.then((ks) => {
-						self.logger.debug('_getKeyStore returning ks');
-						self._store = ks;
-						return resolve(self._store);
-					}).catch((err) => {
-						reject(err);
-					});
+				CKS(self._storeConfig.superClass, self._storeConfig.opts).then((ks) => {
+					self.logger.debug('_getKeyStore returning ks');
+					self._store = ks;
+					return resolve(self._store);
+				}).catch((err) => {
+					reject(err);
+				});
 			} else {
 				self.logger.debug('_getKeyStore resolving store');
 				return resolve(self._store);
