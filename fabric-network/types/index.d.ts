@@ -48,7 +48,7 @@ export class Network {
 }
 
 export class Contract {
-	executeTransaction(transactionName: string, ...parameters: string[]): Promise<Buffer>;
+	evaluateTransaction(transactionName: string, ...parameters: string[]): Promise<Buffer>;
 	submitTransaction(transactionName: string, ...parameters: string[]): Promise<Buffer>;
 }
 

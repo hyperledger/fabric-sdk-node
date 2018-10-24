@@ -90,7 +90,7 @@ import {
     const contract: Contract = await network.getContract('chaincode');
 
     let response: Buffer = await contract.submitTransaction('move', 'a', 'b','100');
-    response = await contract.executeTransaction('move', 'a', 'b','100');
+    response = await contract.evaluateTransaction('move', 'a', 'b','100');
 
     const aClient: Client = gateway.getClient();
     const user: User = gateway.getCurrentIdentity();
