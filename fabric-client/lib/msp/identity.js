@@ -5,9 +5,9 @@
 */
 'use strict';
 
-const grpc = require('grpc');
+const ProtoLoader = require('../ProtoLoader');
 
-const identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp;
+const identityProto = ProtoLoader.load(__dirname + '/../protos/msp/identities.proto').msp;
 
 /**
  * This interface is shared within the peer and client API of the membership service provider.

@@ -16,11 +16,11 @@
 
 const utils = require('./utils.js');
 const Remote = require('./Remote');
-const grpc = require('grpc');
+const ProtoLoader = require('./ProtoLoader');
 const util = require('util');
 
-const _serviceProto = grpc.load(__dirname + '/protos/peer/peer.proto').protos;
-const _discoveryProto = grpc.load(__dirname + '/protos/discovery/protocol.proto').discovery;
+const _serviceProto = ProtoLoader.load(__dirname + '/protos/peer/peer.proto').protos;
+const _discoveryProto = ProtoLoader.load(__dirname + '/protos/discovery/protocol.proto').discovery;
 
 const logger = utils.getLogger('Peer.js');
 

@@ -13,12 +13,12 @@
  */
 
 
-const grpc = require('grpc');
+const ProtoLoader = require('../ProtoLoader');
 const path = require('path');
 
-const _commonProto = grpc.load(path.resolve(__dirname, '../protos/common/common.proto')).common;
-const _transProto = grpc.load(path.resolve(__dirname, '../protos/peer/transaction.proto')).protos;
-const _proposalProto = grpc.load(path.resolve(__dirname, '../protos/peer/proposal.proto')).protos;
+const _commonProto = ProtoLoader.load(path.resolve(__dirname, '../protos/common/common.proto')).common;
+const _transProto = ProtoLoader.load(path.resolve(__dirname, '../protos/peer/transaction.proto')).protos;
+const _proposalProto = ProtoLoader.load(path.resolve(__dirname, '../protos/peer/proposal.proto')).protos;
 
 
 /*

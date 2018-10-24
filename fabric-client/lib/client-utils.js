@@ -11,12 +11,13 @@ const settle = require('promise-settle');
 const utils = require('./utils.js');
 const logger = utils.getLogger('client-utils.js');
 
-const grpc = require('grpc');
-const _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-const _proposalProto = grpc.load(__dirname +
+const ProtoLoader = require('./ProtoLoader');
+
+const _commonProto = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
+const _proposalProto = ProtoLoader.load(__dirname +
 	'/protos/peer/proposal.proto').protos;
-const _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
-const _timestampProto = grpc.load(__dirname +
+const _ccProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
+const _timestampProto = ProtoLoader.load(__dirname +
 	'/protos/google/protobuf/timestamp.proto').google.protobuf;
 
 /*

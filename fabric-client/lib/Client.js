@@ -29,11 +29,11 @@ const path = require('path');
 const yaml = require('js-yaml');
 const Constants = require('./Constants.js');
 
-const grpc = require('grpc');
-const _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-const _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
-const _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
-const _queryProto = grpc.load(__dirname + '/protos/peer/query.proto').protos;
+const ProtoLoader = require('./ProtoLoader');
+const _commonProto = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
+const _configtxProto = ProtoLoader.load(__dirname + '/protos/common/configtx.proto').common;
+const _ccProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
+const _queryProto = ProtoLoader.load(__dirname + '/protos/peer/query.proto').protos;
 
 const config = sdkUtils.getConfig();
 // setup the location of the default config shipped with code

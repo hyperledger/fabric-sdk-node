@@ -12,11 +12,11 @@
  * limitations under the License.
  */
 
-const grpc = require('grpc');
+const ProtoLoader = require('./ProtoLoader');
 const fs = require('fs');
 const Long = require('long');
 const Policy = require('./Policy.js');
-const _collectionProto = grpc.load(__dirname + '/protos/common/collection.proto').common;
+const _collectionProto = ProtoLoader.load(__dirname + '/protos/common/collection.proto').common;
 
 const utils = require('./utils.js');
 const logger = utils.getLogger('SideDB.js');

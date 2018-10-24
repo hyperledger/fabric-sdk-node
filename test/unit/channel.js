@@ -12,9 +12,9 @@ const test = _test(tape);
 
 const sinon = require('sinon');
 const rewire = require('rewire');
-const grpc = require('grpc');
-const _policiesProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/policies.proto').common;
-const _mspPrProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/msp/msp_principal.proto').common;
+const ProtoLoader = require('fabric-client/lib/ProtoLoader');
+const _policiesProto = ProtoLoader.load(__dirname + '/../../fabric-client/lib/protos/common/policies.proto').common;
+const _mspPrProto = ProtoLoader.load(__dirname + '/../../fabric-client/lib/protos/msp/msp_principal.proto').common;
 
 const Client = require('fabric-client');
 const testutil = require('./util.js');

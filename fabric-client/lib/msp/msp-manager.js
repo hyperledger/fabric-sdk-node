@@ -9,14 +9,14 @@
 
 const util = require('util');
 const path = require('path');
-const grpc = require('grpc');
+const ProtoLoader = require('../ProtoLoader');
 
 const MSP = require('./msp.js');
 const utils = require('../utils.js');
 const logger = utils.getLogger('MSPManager.js');
 
-const mspProto = grpc.load(path.join(__dirname, '../protos/msp/msp_config.proto')).msp;
-const identityProto = grpc.load(path.join(__dirname, '../protos/msp/identities.proto')).msp;
+const mspProto = ProtoLoader.load(path.join(__dirname, '../protos/msp/msp_config.proto')).msp;
+const identityProto = ProtoLoader.load(path.join(__dirname, '../protos/msp/identities.proto')).msp;
 
 /**
  * MSPManager is an interface defining a manager of one or more MSPs. This essentially acts
