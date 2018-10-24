@@ -8,8 +8,9 @@
 # exit on first error
 
 export BASE_FOLDER=$WORKSPACE/gopath/src/github.com/hyperledger
-export STABLE_TAG=1.3.0-stable
-export NEXUS_REPO_URL=nexus3.hyperledger.org:10001
+# Modify this when change the image tag
+export STABLE_TAG=1.4.0-stable
+export NEXUS_URL=nexus3.hyperledger.org:10001
 export ORG_NAME="hyperledger/fabric"
 
 # Fetch baseimage version
@@ -19,11 +20,6 @@ echo "-----------> BASE_IMAGE_VER" $BASE_IMAGE_VER
 export OS_VER=$(dpkg --print-architecture)
 echo "-----------> OS_VER" $OS_VER
 export BASE_IMAGE_TAG=$OS_VER-$BASE_IMAGE_VER
-
-# Fetch Go Version from fabric ci.properties file
-curl -L https://raw.githubusercontent.com/hyperledger/fabric/master/ci.properties > ci.properties
-export GO_VER=`cat ci.properties | grep GO_VER | cut -d "=" -f 2`
-echo "-----------> GO_VER" $GO_VER
 
 # Published stable version from nexus
 export STABLE_TAG=$OS_VER-$STABLE_TAG
@@ -127,8 +123,6 @@ env_Info() {
         docker info
         docker-compose version
         pgrep -a docker
-        docker images
-        docker ps -a
 }
 
 # Pull Thirdparty Docker images (couchdb)
@@ -136,21 +130,29 @@ pull_Thirdparty_Images() {
             for IMAGES in couchdb; do
                  echo "-----------> Pull $IMAGE image"
                  echo
-                 docker pull $ORG_NAME-$IMAGES:$BASE_IMAGE_TAG
+                 docker pull $ORG_NAME-$IMAGES:$BASE_IMAGE_TAG > /dev/null 2>&1
+                 if [ $? -ne 0 ]; then
+                       echo -e "\033[31m FAILED to download docker images" "\033[0m"
+                       exit 1
+                 fi
                  docker tag $ORG_NAME-$IMAGES:$BASE_IMAGE_TAG $ORG_NAME-$IMAGES
             done
                  echo
                  docker images | grep hyperledger/fabric
 }
-# pull fabric images from nexus
-pull_Fabric_Images() {
+# pull fabric, fabric-ca images from nexus
+pull_Docker_Images() {
             for IMAGES in peer orderer ca; do
                  echo "-----------> pull $IMAGES image"
                  echo
-                 docker pull $NEXUS_REPO_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
-                 docker tag $NEXUS_REPO_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES
-                 docker tag $NEXUS_REPO_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES:$STABLE_TAG
-                 docker rmi -f $NEXUS_REPO_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
+                 docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG > /dev/null 2>&1
+                 if [ $? -ne 0 ]; then
+                       echo -e "\033[31m FAILED to download docker images" "\033[0m"
+                       exit 1
+                 fi
+                 docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES
+                 docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES:$STABLE_TAG
+                 docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
             done
                  echo
                  docker images | grep hyperledger/fabric
@@ -162,15 +164,13 @@ sdk_E2e_Tests() {
         echo "-----------> Execute NODE SDK E2E Tests"
         cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node || exit
         # Install nvm to install multi node versions
-        wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+        wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
         # shellcheck source=/dev/null
         export NVM_DIR="$HOME/.nvm"
         # shellcheck source=/dev/null
         [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 
         echo "------> Install NodeJS"
-        # This also depends on the fabric-baseimage. Make sure you modify there as well.
-        echo "------> Use $NODE_VER for >=release-1.1 branches"
         nvm install $NODE_VER || true
         nvm use --delete-prefix v$NODE_VER --silent
 

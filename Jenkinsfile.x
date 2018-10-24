@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 node ('hyp-x') { // trigger build on x86_64 node
+ timestamps {
     try {
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
      env.NODE_VER = "8.11.3"
@@ -16,6 +17,7 @@ node ('hyp-x') { // trigger build on x86_64 node
 // delete working directory
      deleteDir()
       stage("Fetch Patchset") { // fetch gerrit refspec on latest commit
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
           try {
               dir("${ROOTDIR}"){
               sh '''
@@ -30,9 +32,11 @@ node ('hyp-x') { // trigger build on x86_64 node
                  failure_stage = "Fetch patchset"
                  throw err
            }
+         }
       }
 // clean environment and get env data
       stage("Clean Environment - Get Env Info") {
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --clean_Environment --env_Info'
@@ -42,10 +46,12 @@ node ('hyp-x') { // trigger build on x86_64 node
                  failure_stage = "Clean Environment - Get Env Info"
                  throw err
            }
+         }
       }
 
 // Pull Couchdb Image
       stage("Pull Couchdb image") {
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --pull_Thirdparty_Images'
@@ -55,10 +61,12 @@ node ('hyp-x') { // trigger build on x86_64 node
                  failure_stage = "Pull couchdb docker image"
                  throw err
            }
+         }
       }
 
 // Pull Docker Images
       stage("Pull Docker images") {
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --pull_Fabric_Images'
@@ -68,10 +76,12 @@ node ('hyp-x') { // trigger build on x86_64 node
                  failure_stage = "Pull docker images"
                  throw err
            }
+         }
       }
 
 // Run gulp tests (headless and e2e tests)
       stage("Run gulp_Tests") {
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --sdk_E2e_Tests'
@@ -81,6 +91,7 @@ node ('hyp-x') { // trigger build on x86_64 node
                  failure_stage = "sdk_E2e_Tests"
                  throw err
            }
+         }
       }
 
 // Publish unstable npm modules from merged job
@@ -102,6 +113,7 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
            archiveArtifacts artifacts: '**/*.log'
       } // finally block end here
+  } // timestamps end here
 } // node block end here
 
 def unstableNpm() {
