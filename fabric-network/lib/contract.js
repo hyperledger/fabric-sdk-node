@@ -80,7 +80,7 @@ class Contract {
 
 	/**
 	 * Submit a transaction to the ledger.  The transaction function <code>transactionName</code>
-	 * will be executed on the endorsing peers and then submitted to the ordering service
+	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
      * @param {string} transactionName Transaction function name
      * @param {...string} parameters Transaction function parameters
@@ -201,20 +201,20 @@ class Contract {
 	}
 
 	/**
-	 * Execute a transaction function and return its results.
+	 * Evaluate a transaction function and return its results.
 	 * The transaction function <code>transactionName</code>
-	 * will be executed on the endorsing peers but the responses will not be sent to to
+	 * will be evaluated on the endorsing peers but the responses will not be sent to to
 	 * the ordering service and hence will not be committed to the ledger.
 	 * This is used for querying the world state.
      * @param {string} transactionName Transaction function name
      * @param {...string} parameters Transaction function parameters
      * @returns {Buffer} Payload response from the transaction function
      */
-	async executeTransaction(transactionName, ...parameters) {
+	async evaluateTransaction(transactionName, ...parameters) {
 
 		// form the transaction name with the namespace
 		const fullTxName = (this.namespace==='') ? transactionName : `${this.namespace}:${transactionName}`;
-		this._verifyTransactionDetails('executeTransaction', fullTxName, parameters);
+		this._verifyTransactionDetails('evaluateTransaction', fullTxName, parameters);
 		const txId = this.gateway.getClient().newTransactionID();
 		const result = await this.queryHandler.queryChaincode(this.chaincodeId, txId, fullTxName, parameters);
 		return result ? result : null;

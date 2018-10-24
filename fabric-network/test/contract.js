@@ -282,11 +282,11 @@ describe('Contract', () => {
 
 	});
 
-	describe('#executeTransaction', () => {
+	describe('#evaluateTransaction', () => {
 		it('should query chaincode and handle a good response without return data', async () => {
 			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves();
 
-			const result = await contract.executeTransaction('myfunc', 'arg1', 'arg2');
+			const result = await contract.evaluateTransaction('myfunc', 'arg1', 'arg2');
 			sinon.assert.calledOnce(mockQueryHandler.queryChaincode);
 			should.equal(result, null);
 		});
@@ -295,7 +295,7 @@ describe('Contract', () => {
 			const response = Buffer.from('hello world');
 			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves(response);
 
-			const result = await contract.executeTransaction('myfunc', 'arg1', 'arg2');
+			const result = await contract.evaluateTransaction('myfunc', 'arg1', 'arg2');
 			sinon.assert.calledOnce(mockQueryHandler.queryChaincode);
 			result.equals(response).should.be.true;
 		});
@@ -303,7 +303,7 @@ describe('Contract', () => {
 		it('should query chaincode and handle an error response', () => {
 			const response = new Error('such error');
 			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).rejects(response);
-			return contract.executeTransaction('myfunc', 'arg1', 'arg2')
+			return contract.evaluateTransaction('myfunc', 'arg1', 'arg2')
 				.should.be.rejectedWith(/such error/);
 
 		});
@@ -313,7 +313,7 @@ describe('Contract', () => {
 
 			mockQueryHandler.queryChaincode.withArgs('someid', mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves();
 
-			await nscontract.executeTransaction('myfunc', 'arg1', 'arg2');
+			await nscontract.evaluateTransaction('myfunc', 'arg1', 'arg2');
 			sinon.assert.calledOnce(mockQueryHandler.queryChaincode);
 			sinon.assert.calledWith(mockQueryHandler.queryChaincode,
 				sinon.match.any,

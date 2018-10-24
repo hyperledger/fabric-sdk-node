@@ -22,7 +22,7 @@ const testUtils = require('../../unit/util.js');
 const channelName = testUtils.NETWORK_END2END.channel;
 const chaincodeId = testUtils.NETWORK_END2END.chaincodeId;
 
-test('\n\n***** Network End-to-end flow: execute transaction to get information *****\n\n', async (t) => {
+test('\n\n***** Network End-to-end flow: evaluate transaction to get information *****\n\n', async (t) => {
 	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
 	const gateway = new Gateway();
 
@@ -61,11 +61,11 @@ test('\n\n***** Network End-to-end flow: execute transaction to get information 
 
 		const contract = await channel.getContract(chaincodeId);
 
-		t.pass('Got the contract, about to execute (query) transaction');
+		t.pass('Got the contract, about to evaluate (query) transaction');
 
 
 		// try a standard query
-		const responseBuffer = await contract.executeTransaction('query', 'a');
+		const responseBuffer = await contract.evaluateTransaction('query', 'a');
 		let response = responseBuffer.toString();
 
 		if(response * 1 === parseInt(response)){
@@ -77,7 +77,7 @@ test('\n\n***** Network End-to-end flow: execute transaction to get information 
 
 		// check we deal with an error returned.
 		try {
-			response = await contract.executeTransaction('throwError', 'a', 'b','100');
+			response = await contract.evaluateTransaction('throwError', 'a', 'b','100');
 			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
 		} catch(expectedErr) {
 			if(expectedErr.message.includes('throwError: an error occurred')) {
