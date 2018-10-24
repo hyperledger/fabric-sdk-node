@@ -69,9 +69,27 @@ describe('TransactionEventHandler', () => {
 			handler.cancelListening();
 		});
 
-		it('calls registerTxEvent() on event hub with transaction ID', async () => {
-			await handler.startListening();
-			sinon.assert.calledWith(stubEventHub.registerTxEvent, transactionId);
+		describe('#startListening', () => {
+			it('calls registerTxEvent() on event hub with transaction ID', async () => {
+				await handler.startListening();
+				sinon.assert.calledWith(stubEventHub.registerTxEvent, transactionId);
+			});
+
+			it('sets auto-unregister option when calling registerTxEvent() on event hub', async () => {
+				await handler.startListening();
+				sinon.assert.calledWith(
+					stubEventHub.registerTxEvent,
+					sinon.match.any,
+					sinon.match.any,
+					sinon.match.any,
+					sinon.match.has('unregister', true)
+				);
+			});
+
+			it('calls connect() on event hub', async () => {
+				await handler.startListening();
+				sinon.assert.called(stubEventHub.connect);
+			});
 		});
 
 		it('calls eventReceived() on strategy when event hub sends valid event', async () => {
@@ -96,18 +114,6 @@ describe('TransactionEventHandler', () => {
 			await handler.startListening();
 			stubEventHub._onErrorFn(new Error('EVENT_HUB_ERROR'));
 			sinon.assert.notCalled(stubStrategy.eventReceived);
-		});
-
-		it('calls unregisterTxEvent() on event hub when event hub sends an event', async () => {
-			await handler.startListening();
-			stubEventHub._onEventFn(transactionId, 'VALID');
-			sinon.assert.calledWith(stubEventHub.unregisterTxEvent, transactionId);
-		});
-
-		it('calls unregisterTxEvent() on event hub when event hub sends an error', async () => {
-			await handler.startListening();
-			stubEventHub._onEventFn(transactionId, 'VALID');
-			sinon.assert.calledWith(stubEventHub.unregisterTxEvent, transactionId);
 		});
 
 		it('fails when event hub sends an invalid event', async () => {
