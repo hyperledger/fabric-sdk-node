@@ -16,8 +16,7 @@ npmPublish() {
       print ver}')
 
       echo "===> UNSTABLE VERSION --> $UNSTABLE_VER"
-
-      UNSTABLE_VER=$(npm dist-tags ls "$1" | awk '/$CURRENT_TAG/{
+      UNSTABLE_INCREMENT=$(npm dist-tags ls "$1" | awk '/$CURRENT_TAG/{
       ver=$NF
       rel=$NF
       sub(/.*\./,"",rel)
@@ -59,21 +58,17 @@ versions() {
   echo "===> Current Version --> $RELEASE_VERSION"
 }
 
-# Publish unstable npm modules from amd64 ARCH
-cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
-echo "npm version ------> $(npm -v)"
-echo "node version ------> $(node -v)"
-
 ARCH=$(uname -m)
-echo "-------> ARCH" $ARCH
+echo "----------> ARCH" $ARCH
 
 if [[ "$ARCH" = "s390x" ]] || [[ "$ARCH" = "ppc64le" ]]; then
-   echo "--------> Publish npm modules only from x86_64 (x) platform, not from $ARCH (z and p) now. <----"
+   echo "-------> Publish npm modules only from x86_64 (x) platform, not from $ARCH (z or p) <---------"
 else
-   echo "----------> Publish npm node modules from $ARCH <--------"
+   echo "-------> Publish npm node modules from $ARCH <----------"
    cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
+   # Set NPM_TOKEN from CI configuration
    npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-   
+
    # Publish fabric-ca-client node module
    cd fabric-ca-client
    versions
