@@ -14,6 +14,7 @@ const DEPS = [
 	'fabric-client/lib/utils.js',
 	'fabric-client/lib/BaseClient.js',
 	'fabric-client/lib/Config.js',
+	'fabric-client/lib/ProtoLoader.js',
 	'fabric-client/lib/Remote.js',
 	'fabric-client/lib/User.js',
 	'fabric-client/lib/impl/bccsp_pkcs11.js',

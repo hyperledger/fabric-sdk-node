@@ -10,11 +10,11 @@
 const utils = require('./utils.js');
 const Remote = require('./Remote');
 
-const grpc = require('grpc');
+const ProtoLoader = require('./ProtoLoader');
 const logger = utils.getLogger('Orderer.js');
 
-const _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
-const _common = grpc.load(__dirname + '/protos/common/common.proto').common;
+const _abProto = ProtoLoader.load(__dirname + '/protos/orderer/ab.proto').orderer;
+const _common = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
 
 /**
  * @typedef {Error} SYSTEM_TIMEOUT The Error message string that indicates that

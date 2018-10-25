@@ -23,11 +23,11 @@ const util = require('util');
 
 const BlockDecoder = require('./BlockDecoder.js');
 
-const grpc = require('grpc');
-const _abProto = grpc.load(__dirname + '/protos/orderer/ab.proto').orderer;
-const _eventsProto = grpc.load(__dirname + '/protos/peer/events.proto').protos;
-const _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-const _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
+const ProtoLoader = require('./ProtoLoader');
+const _abProto = ProtoLoader.load(__dirname + '/protos/orderer/ab.proto').orderer;
+const _eventsProto = ProtoLoader.load(__dirname + '/protos/peer/events.proto').protos;
+const _commonProto = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
+const _transProto = ProtoLoader.load(__dirname + '/protos/peer/transaction.proto').protos;
 
 const _validation_codes = {};
 let keys = Object.keys(_transProto.TxValidationCode);

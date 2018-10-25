@@ -14,11 +14,11 @@
 
 'use strict';
 
-const grpc = require('grpc');
+const ProtoLoader = require('./ProtoLoader');
 const util = require('util');
 
-const _mspPrProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
-const _policiesProto = grpc.load(__dirname + '/protos/common/policies.proto').common;
+const _mspPrProto = ProtoLoader.load(__dirname + '/protos/msp/msp_principal.proto').common;
+const _policiesProto = ProtoLoader.load(__dirname + '/protos/common/policies.proto').common;
 
 const IDENTITY_TYPE = {
 	Role: 'role',

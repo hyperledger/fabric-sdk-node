@@ -12,9 +12,9 @@ const SigningIdentity = idModule.SigningIdentity;
 const utils = require('../utils.js');
 const logger = utils.getLogger('msp.js');
 
-const grpc = require('grpc');
-const identityProto = grpc.load(__dirname + '/../protos/msp/identities.proto').msp;
-const _mspConfigProto = grpc.load(__dirname + '/../protos/msp/msp_config.proto').msp;
+const ProtoLoader = require('../ProtoLoader');
+const identityProto = ProtoLoader.load(__dirname + '/../protos/msp/identities.proto').msp;
+const _mspConfigProto = ProtoLoader.load(__dirname + '/../protos/msp/msp_config.proto').msp;
 
 
 /**

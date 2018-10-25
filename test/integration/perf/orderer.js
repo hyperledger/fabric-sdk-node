@@ -12,7 +12,7 @@ const test = _test(tape);
 const util = require('util');
 const fs = require('fs');
 const path = require('path');
-const grpc = require('grpc');
+const ProtoLoader = require('fabric-client/lib/ProtoLoader');
 
 const Client = require('fabric-client');
 
@@ -20,7 +20,7 @@ const testUtil = require('../../unit/util.js');
 const e2eUtils = require('../e2e/e2eUtils.js');
 let ORGS;
 
-const commonProto = grpc.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
+const commonProto = ProtoLoader.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
 
 const client = new Client();
 

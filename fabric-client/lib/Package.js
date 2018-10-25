@@ -7,13 +7,13 @@
 'use strict';
 
 const clientUtils = require('./client-utils.js');
-const grpc = require('grpc');
+const ProtoLoader = require('./ProtoLoader');
 const Packager = require('./Packager.js');
 const tar = require('tar-stream');
 const utils = require('./utils.js');
 const zlib = require('zlib');
 
-const _ccProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
+const _ccProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
 const logger = utils.getLogger('package');
 
 /**

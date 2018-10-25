@@ -14,27 +14,27 @@
 
 'use strict';
 
-const grpc = require('grpc');
+const ProtoLoader = require('./ProtoLoader');
 const path = require('path');
 const utils = require('./utils.js');
 const logger = utils.getLogger('BlockDecoder.js');
 
-const _ccEventProto = grpc.load(__dirname + '/protos/peer/chaincode_event.proto').protos;
-const _transProto = grpc.load(__dirname + '/protos/peer/transaction.proto').protos;
-const _proposalProto = grpc.load(__dirname + '/protos/peer/proposal.proto').protos;
-const _responseProto = grpc.load(__dirname + '/protos/peer/proposal_response.proto').protos;
-const _peerConfigurationProto = grpc.load(__dirname + '/protos/peer/configuration.proto').protos;
-const _chaincodeProto = grpc.load(__dirname + '/protos/peer/chaincode.proto').protos;
-const _mspPrProto = grpc.load(__dirname + '/protos/msp/msp_principal.proto').common;
-const _commonProto = grpc.load(__dirname + '/protos/common/common.proto').common;
-const _configtxProto = grpc.load(__dirname + '/protos/common/configtx.proto').common;
-const _policiesProto = grpc.load(__dirname + '/protos/common/policies.proto').common;
-const _commonConfigurationProto = grpc.load(__dirname + '/protos/common/configuration.proto').common;
-const _ordererConfigurationProto = grpc.load(__dirname + '/protos/orderer/configuration.proto').orderer;
-const _mspConfigProto = grpc.load(__dirname + '/protos/msp/msp_config.proto').msp;
-const _identityProto = grpc.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
-const _rwsetProto = grpc.load(path.join(__dirname, '/protos/ledger/rwset/rwset.proto')).rwset;
-const _kv_rwsetProto = grpc.load(path.join(__dirname, '/protos/ledger/rwset/kvrwset/kv_rwset.proto')).kvrwset;
+const _ccEventProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode_event.proto').protos;
+const _transProto = ProtoLoader.load(__dirname + '/protos/peer/transaction.proto').protos;
+const _proposalProto = ProtoLoader.load(__dirname + '/protos/peer/proposal.proto').protos;
+const _responseProto = ProtoLoader.load(__dirname + '/protos/peer/proposal_response.proto').protos;
+const _peerConfigurationProto = ProtoLoader.load(__dirname + '/protos/peer/configuration.proto').protos;
+const _chaincodeProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
+const _mspPrProto = ProtoLoader.load(__dirname + '/protos/msp/msp_principal.proto').common;
+const _commonProto = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
+const _configtxProto = ProtoLoader.load(__dirname + '/protos/common/configtx.proto').common;
+const _policiesProto = ProtoLoader.load(__dirname + '/protos/common/policies.proto').common;
+const _commonConfigurationProto = ProtoLoader.load(__dirname + '/protos/common/configuration.proto').common;
+const _ordererConfigurationProto = ProtoLoader.load(__dirname + '/protos/orderer/configuration.proto').orderer;
+const _mspConfigProto = ProtoLoader.load(__dirname + '/protos/msp/msp_config.proto').msp;
+const _identityProto = ProtoLoader.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
+const _rwsetProto = ProtoLoader.load(path.join(__dirname, '/protos/ledger/rwset/rwset.proto')).rwset;
+const _kv_rwsetProto = ProtoLoader.load(path.join(__dirname, '/protos/ledger/rwset/kvrwset/kv_rwset.proto')).kvrwset;
 
 
 /**

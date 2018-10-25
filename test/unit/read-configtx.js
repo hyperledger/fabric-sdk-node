@@ -18,9 +18,9 @@ const test = _test(tape);
 
 const Channel = require('fabric-client/lib/Channel.js');
 
-const grpc = require('grpc');
-const _commonProto   = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/common.proto').common;
-const _configtxProto = grpc.load(__dirname + '/../../fabric-client/lib/protos/common/configtx.proto').common;
+const ProtoLoader = require('fabric-client/lib/ProtoLoader');
+const _commonProto   = ProtoLoader.load(__dirname + '/../../fabric-client/lib/protos/common/common.proto').common;
+const _configtxProto = ProtoLoader.load(__dirname + '/../../fabric-client/lib/protos/common/configtx.proto').common;
 
 const testUtil = require('../unit/util.js');
 

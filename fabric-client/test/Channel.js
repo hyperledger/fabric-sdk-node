@@ -31,14 +31,14 @@ const Peer = require('fabric-client/lib/Peer');
 const TransactionID = require('fabric-client/lib/TransactionID');
 const sdk_utils = require('fabric-client/lib/utils.js');
 
-const grpc = require('grpc');
-const responseProto = grpc.load(__dirname + '/../lib/protos/peer/proposal_response.proto').protos;
-const proposalProto = grpc.load(__dirname + '/../lib/protos/peer/proposal.proto').protos;
-const chaincodeProto = grpc.load(__dirname + '/../lib/protos/peer/chaincode.proto').protos;
-const identitiesProto = grpc.load(__dirname + '/../lib/protos/msp/identities.proto').msp;
-const transactionProto = grpc.load(__dirname + '/../lib/protos/peer/transaction.proto').protos;
-const commonProto = grpc.load(__dirname + '/../lib/protos/common/common.proto').common;
-const configtxProto = grpc.load(__dirname + '/../lib/protos/common/configtx.proto').common;
+const ProtoLoader = require('fabric-client/lib/ProtoLoader');
+const responseProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/proposal_response.proto').protos;
+const proposalProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/proposal.proto').protos;
+const chaincodeProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/chaincode.proto').protos;
+const identitiesProto = ProtoLoader.load(__dirname + '/../lib/protos/msp/identities.proto').msp;
+const transactionProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/transaction.proto').protos;
+const commonProto = ProtoLoader.load(__dirname + '/../lib/protos/common/common.proto').common;
+const configtxProto = ProtoLoader.load(__dirname + '/../lib/protos/common/configtx.proto').common;
 
 const fakeHandlerModulePath = 'fabric-client/test/FakeHandler';
 const fakeHandler = require(fakeHandlerModulePath).create();
