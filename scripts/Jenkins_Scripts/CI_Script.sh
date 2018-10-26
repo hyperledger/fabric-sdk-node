@@ -5,12 +5,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-# exit on first error
-
 export BASE_FOLDER=$WORKSPACE/gopath/src/github.com/hyperledger
 # error check
 err_Check() {
-echo "ERROR !!!! --------> $1 <---------"
+echo -e "\033[31m $1" "\033[0m"
 exit 1
 }
 
@@ -26,11 +24,11 @@ Parse_Arguments() {
                       --sdk_E2e_Tests)
                             sdk_E2e_Tests
                             ;;
-                      --publish_Unstable)
-                            --publish_Unstable
+                      --publish_NpmModules)
+                            --publish_NpmModules
                             ;;
-                      --publish_Api_Docs)
-                            publish_Api_Docs
+                      --publish_ApiDocs)
+                            publish_ApiDocs
                             ;;
               esac
               shift
@@ -95,14 +93,12 @@ env_Info() {
 	docker info
 	docker-compose version
 	pgrep -a docker
-	docker images
-	docker ps -a
 }
 
-# run sdk e2e tests
+# run headless and Integration tests
 sdk_E2e_Tests() {
 	echo
-	echo "-----------> Execute NODE SDK E2E Tests"
+	echo "-----------> Execute HeadLess and Integration tests"
         cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node || exit
         # Install nvm to install multi node versions
         wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
@@ -125,7 +121,7 @@ sdk_E2e_Tests() {
         ~/npm/bin/gulp 	ca || err_Check "ERROR!!! gulp ca failed"
         rm -rf node_modules/fabric-ca-client && npm install || err_Check "ERROR!!! npm install failed"
 
-        echo "------> Run node headless & e2e tests"
+        echo "------> Run node Headless & Integration Tests"
         echo "============"
         ~/npm/bin/gulp test
         echo "============"
@@ -138,15 +134,15 @@ sdk_E2e_Tests() {
            exit 1
         fi
 }
-# Publish unstable npm modules after successful merge on amd64
-publish_Unstable() {
+# Publish npm modules after successful merge on amd64
+publish_NpmModules() {
 	echo
-	echo "-----------> Publish unstable npm modules from amd64"
+	echo "-----------> Publish npm modules from amd64"
 	./Publish_NPM_Modules.sh
 }
 
 # Publish NODE_SDK API docs after successful merge on amd64
-publish_Api_Docs() {
+publish_ApiDocs() {
 	echo
 	echo "-----------> Publish NODE_SDK API docs after successful merge on amd64"
 	./Publish_API_Docs.sh

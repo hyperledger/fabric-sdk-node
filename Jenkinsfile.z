@@ -8,10 +8,7 @@ node('hyp-z') {
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
      env.NODE_VER = "8.9.4"
-     env.GO_VER = "1.10"
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
-     env.GOROOT = "/opt/go/go${GO_VER}.linux.s390x"
-     env.PATH = "$GOROOT/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
      deleteDir()
@@ -28,6 +25,7 @@ node('hyp-z') {
           }
           catch (err) {
                  failure_stage = "Fetch patchset"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }
@@ -40,11 +38,12 @@ node('hyp-z') {
                }
            catch (err) {
                  failure_stage = "Clean Environment - Get Env Info"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }
 
-// Run gulp tests (headless and e2e tests)
+// Run gulp tests (headless and Integration tests)
       stage("Run gulp_Tests") {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
@@ -53,16 +52,14 @@ node('hyp-z') {
                }
            catch (err) {
                  failure_stage = "sdk_E2e_Tests"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }
-      stage("Archive Build artifacts") {
-          archiveArtifacts artifacts: '**/*.log'
-      }
     } finally {
-             junit '**/cobertura-coverage.xml'
-             step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+             step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false,  failNoReports: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+             archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
               // Sends notification to Rocket.Chat
-             rocketSend channel: 'jenkins-robot', message: "Build Notification - Branch: ${env.GERRIT_BRANCH} - Project: ${env.PROJECT} - Commit: ${env.GERRIT_PATCHSET_REVISION}- (<${env.BUILD_URL}|Open>)"
+             rocketSend channel: 'jenkins-robot', message: "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - (<${env.BUILD_URL}|Open>)"
        }
 }
