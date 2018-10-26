@@ -30,6 +30,7 @@ node ('hyp-x') { // trigger build on x86_64 node
           }
           catch (err) {
                  failure_stage = "Fetch patchset"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
          }
@@ -44,6 +45,7 @@ node ('hyp-x') { // trigger build on x86_64 node
                }
            catch (err) {
                  failure_stage = "Clean Environment - Get Env Info"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
          }
@@ -59,6 +61,7 @@ node ('hyp-x') { // trigger build on x86_64 node
                }
            catch (err) {
                  failure_stage = "sdk_E2e_Tests"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
          }
@@ -80,7 +83,12 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
     } finally { // Code for coverage report
            junit '**/cobertura-coverage.xml'
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
-           archiveArtifacts artifacts: '**/*.log'
+           archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
+           if (env.GERRIT_EVENT_TYPE == 'change-merged') {
+              if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
+               rocketSend channel: 'jenkins-robot', message: "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - (<${env.BUILD_URL}|Open>)"
+              }
+           }
       } // finally block end here
    } // timestamps block end here
 } // node block end here
@@ -97,6 +105,7 @@ def ROOTDIR = pwd()
                }
            catch (err) {
                  failure_stage = "publish_Unstable"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
          }
@@ -115,6 +124,7 @@ def ROOTDIR = pwd()
                }
            catch (err) {
                  failure_stage = "publish_Api_Docs"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
          }

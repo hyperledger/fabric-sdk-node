@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Copyright IBM Corp All Rights Reserved
 #
@@ -8,7 +8,7 @@
 # exit on first error
 # error check
 err_Check() {
-echo "ERROR !!!! --------> $1 <---------"
+echo -e "\033[31m $1" "\033[0m"
 exit 1
 }
 
