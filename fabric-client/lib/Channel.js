@@ -2563,7 +2563,7 @@ const Channel = class {
 	 * @property {TransactionID} txId - Optional. TransactionID object with the
 	 *           transaction id and nonce. txId is required for [sendTransactionProposal]{@link Channel#sendTransactionProposal}
 	 *           and optional for [generateUnsignedProposal]{@link Channel#generateUnsignedProposal}
-	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
+	 * @property {map} transientMap - Optional. <string, Buffer> map that can be
 	 *           used by the chaincode but not
 	 *           saved in the ledger, such as cryptographic information for encryption
 	 * @property {string} fcn - Optional. The function name to be returned when

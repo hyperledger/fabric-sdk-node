@@ -24,6 +24,8 @@ const logger = shim.newLogger('example_cc0');
 // to CRITICAL, ERROR, WARNING, DEBUG
 logger.level = 'info';
 
+const util = require('util');
+
 const Chaincode = class {
 	async Init(stub) {
 		logger.info('########### example_cc0 Init ###########');
@@ -67,24 +69,32 @@ const Chaincode = class {
 		const fcn = ret.fcn;
 		const args = ret.params;
 
-		if (fcn === 'delete') {
-			return this.delete(stub, args);
-		}
+		try {
+			if (fcn === 'delete') {
+				return this.delete(stub, args);
+			}
 
-		if (fcn === 'query') {
-			return this.query(stub, args);
-		}
+			if (fcn === 'query') {
+				return this.query(stub, args);
+			}
 
-		if (fcn === 'throwError') {
-			return this.throwError(stub, args);
-		}
+			if (fcn === 'throwError') {
+				return this.throwError(stub, args);
+			}
 
-		if (fcn === 'move') {
-			return this.move(stub, args);
-		}
+			if (fcn === 'move') {
+				return this.move(stub, args);
+			}
 
-		if (fcn === 'call') {
-			return this.call(stub, args);
+			if (fcn === 'call') {
+				return this.call(stub, args);
+			}
+
+			if (fcn === 'getTransient') {
+				return this.getTransient(stub, args);
+			}
+		} catch (error) {
+			return shim.error(error.toString());
 		}
 
 		logger.Errorf(`Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: ${fcn}`);
@@ -223,6 +233,16 @@ const Chaincode = class {
 		}
 
 		return shim.error('Failed to complete the call to '+ chaincode_name);
+	}
+
+	async getTransient(stub) {
+		const transientMap = stub.getTransient();
+		const result = {};
+		transientMap.forEach((value, key) => {
+			result[key] = value.toString('utf8');
+		});
+		const payload = Buffer.from(JSON.stringify(result));
+		return shim.success(payload);
 	}
 };
 
