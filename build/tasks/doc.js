@@ -14,35 +14,74 @@
  limitations under the License.
 */
 
-var gulp = require('gulp');
-var jsdoc = require('gulp-jsdoc3');
-var del = require('del');
+const gulp = require('gulp');
+const jsdoc = require('gulp-jsdoc3');
+const fs = require('fs-extra');
+const path = require('path');
+const replace = require('gulp-replace');
+let currentBranch = process.env.GERRIT_BRANCH;
 
-gulp.task('clean', function(){
-	return del('./docs/gen/**', {force:true});
+if (!currentBranch) {
+	currentBranch = 'master';
+}
+let docsRoot;
+if (process.env.DOCS_ROOT) {
+	docsRoot = process.env.DOCS_ROOT;
+} else {
+	docsRoot = './docs/gen';
+}
+
+gulp.task('clean', () => {
+	return fs.removeSync(path.join(docsRoot, currentBranch));
 });
 
-gulp.task('doc', ['clean'], function () {
-	gulp.src([
-		'docs/index.md',
-		'fabric-client/index.js',
-		'fabric-client/lib/**/*.js',
-		'!fabric-client/lib/protos/**',
-		'!fabric-client/lib/hash.js',
-		'!fabric-client/lib/utils.js',
-		'fabric-ca-client/index.js',
-		'fabric-ca-client/lib/FabricCAClientImpl.js',
-		'fabric-ca-client/lib/AffiliationService.js',
-		'fabric-ca-client/lib/IdentityService.js',
-	], { read: false })
-	.pipe(jsdoc({
-		opts: {
-			tutorials: './docs/tutorials',
-			destination: './docs/gen'
-		},
-		templates: {
-			systemName: 'Hyperledger Fabric SDK for node.js',
-			theme: 'cosmo' //cerulean, cosmo, cyborg, flatly, journal, lumen, paper, readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
-		}
-	}));
+const docSrc = [
+	'docs/index.md',
+	'fabric-network/index.js',
+	'fabric-network/lib/**/*.js',
+	'fabric-client/index.js',
+	'fabric-client/lib/**/*.js',
+	'!fabric-client/lib/protos/**',
+	'!fabric-client/lib/hash.js',
+	'!fabric-client/lib/utils.js',
+	'fabric-ca-client/index.js',
+	'fabric-ca-client/lib/FabricCAClientImpl.js',
+	'fabric-ca-client/lib/AffiliationService.js',
+	'fabric-ca-client/lib/IdentityService.js',
+];
+
+gulp.task('jsdocs', ['clean'], () => {
+	gulp.src(docSrc, { read: false })
+		.pipe(jsdoc({
+			opts: {
+				tutorials: './docs/tutorials',
+				destination: path.join(docsRoot, currentBranch)
+			},
+			templates: {
+				systemName: 'Hyperledger Fabric SDK for node.js',
+				theme: 'cosmo' //cerulean, cosmo, cyborg, flatly, journal, lumen, paper, readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
+			}
+		}));
+});
+
+gulp.task('docs-dev', ['docs'], () => {
+	gulp.watch(docSrc, ['docs']);
+});
+
+
+gulp.task('doc', ['jsdocs'], () => {
+	const relativePath = '..';
+	const packageJson = require(path.join(__dirname, '../..', 'package.json'));
+
+	// jsdocs produced
+	// if this is the master build then we need to ensure that the index.html and
+	// the 404.html page are properly setup and configured.
+	if (currentBranch === 'master') {
+		gulp.src('./docs/redirectTemplates/*.html')
+			.pipe(replace('LATEST__VERSION', packageJson.docsLatestVersion))
+			.pipe(replace('RELATIVE__PATH', relativePath))
+			.pipe(gulp.dest(docsRoot));
+	} else {
+		console.log(`Not updating or routing logic, as not master branch - it is ${currentBranch}`);
+	}
 });

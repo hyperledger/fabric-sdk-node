@@ -31,7 +31,7 @@ class BaseWallet extends Wallet {
 	 *
 	 * @param {*} client
 	 * @param {*} label
-	 * @returns
+	 * @returns {Promise<User>}
 	 * @memberof Wallet
 	 */
 	async setUserContext(client, label) {
