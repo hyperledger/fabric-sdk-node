@@ -8,6 +8,7 @@ node ('hyp-x') { // trigger build on x86_64 node
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
      env.NODE_VER = "8.11.3"
      env.GO_VER = "1.11.1"
+     env.STABLE_TAG = "1.4.0-stable"
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
@@ -59,21 +60,23 @@ node ('hyp-x') { // trigger build on x86_64 node
                }
            catch (err) {
                  failure_stage = "Pull couchdb docker image"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
          }
       }
 
-// Pull Docker Images
+// Pull fabric,fabric-ca and Javaenv
       stage("Pull Docker images") {
          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
-                 sh './CI_Script.sh --pull_Fabric_Images'
+                 sh './CI_Script.sh --pull_Docker_Images'
                  }
                }
            catch (err) {
                  failure_stage = "Pull docker images"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
          }
@@ -89,6 +92,7 @@ node ('hyp-x') { // trigger build on x86_64 node
                }
            catch (err) {
                  failure_stage = "sdk_E2e_Tests"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
          }
@@ -111,7 +115,12 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
     } finally { // Code for coverage report
            junit '**/cobertura-coverage.xml'
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
-           archiveArtifacts artifacts: '**/*.log'
+           archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
+           if (env.GERRIT_EVENT_TYPE == 'change-merged') {
+              if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
+               rocketSend channel: 'jenkins-robot', message: "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - (<${env.BUILD_URL}|Open>)"
+              }
+           }
       } // finally block end here
   } // timestamps end here
 } // node block end here
@@ -120,6 +129,7 @@ def unstableNpm() {
 def ROOTDIR = pwd()
 // Publish unstable npm modules after successful merge
       stage("Publish Unstable npm modules") {
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --publish_Unstable'
@@ -127,8 +137,10 @@ def ROOTDIR = pwd()
                }
            catch (err) {
                  failure_stage = "publish_Unstable"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
+         }
       }
 }
 
@@ -143,6 +155,7 @@ def ROOTDIR = pwd()
                }
            catch (err) {
                  failure_stage = "publish_Api_Docs"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }

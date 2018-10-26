@@ -9,7 +9,6 @@
 
 export BASE_FOLDER=$WORKSPACE/gopath/src/github.com/hyperledger
 # Modify this when change the image tag
-export STABLE_TAG=1.4.0-stable
 export NEXUS_URL=nexus3.hyperledger.org:10001
 export ORG_NAME="hyperledger/fabric"
 
@@ -37,8 +36,8 @@ Parse_Arguments() {
                       --env_Info)
                             env_Info
                             ;;
-                      --pull_Fabric_Images)
-                            pull_Fabric_Images
+                      --pull_Docker_Images)
+                            pull_Docker_Images
                             ;;
                       --clean_Environment)
                             clean_Environment
@@ -132,7 +131,7 @@ pull_Thirdparty_Images() {
                  echo
                  docker pull $ORG_NAME-$IMAGES:$BASE_IMAGE_TAG > /dev/null 2>&1
                  if [ $? -ne 0 ]; then
-                       echo -e "\033[31m FAILED to download docker images" "\033[0m"
+                       echo -e "\033[31m FAILED to pull docker images" "\033[0m"
                        exit 1
                  fi
                  docker tag $ORG_NAME-$IMAGES:$BASE_IMAGE_TAG $ORG_NAME-$IMAGES
@@ -147,7 +146,7 @@ pull_Docker_Images() {
                  echo
                  docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG > /dev/null 2>&1
                  if [ $? -ne 0 ]; then
-                       echo -e "\033[31m FAILED to download docker images" "\033[0m"
+                       echo -e "\033[31m FAILED to pull docker images" "\033[0m"
                        exit 1
                  fi
                  docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES
