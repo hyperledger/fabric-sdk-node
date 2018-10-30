@@ -35,8 +35,8 @@ let arch = process.arch;
 let dockerImageTag = '';
 let thirdpartyImageTag = '';
 let docker_arch = '';
-let release = require(path.join(__dirname, '../../fabric-client/package.json')).version;
-let thirparty_release = require(path.join(__dirname, '../../fabric-client/package.json')).thirdparty;
+const fabric_release     = require(path.join(__dirname, '../../package.json')).testFabricVersion;
+const thirdparty_release = require(path.join(__dirname, '../../package.json')).testFabricThirdParty;
 
 // this is a release build, need to build the proper docker image tag
 // to run the tests against the corresponding fabric released docker images
@@ -49,16 +49,12 @@ if (arch.indexOf('x64') === 0) {
 } else {
 	throw new Error('Unknown architecture: ' + arch);
 }
+console.log(util.format('# debug log thirdparty_release: %s', thirdparty_release));
+console.log(util.format('# debug log fabric_release: %s', fabric_release));
+
 // prepare thirdpartyImageTag (currently using couchdb image in tests)
-thirdpartyImageTag = docker_arch + '-' + thirparty_release;
-
-// release check
-// if (!/-snapshot/.test(release)) {
-// 	dockerImageTag = docker_arch + '-' + release;
-// }
-
-// This will lock down the fabric release being used
-dockerImageTag = docker_arch + '-' + '1.1.0';
+thirdpartyImageTag = docker_arch + '-' + thirdparty_release;
+dockerImageTag     = docker_arch + '-' + fabric_release;
 
 // these environment variables would be read at test/fixtures/docker-compose.yaml
 process.env.DOCKER_IMG_TAG = dockerImageTag;
