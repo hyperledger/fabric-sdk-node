@@ -12,18 +12,6 @@ export BASE_FOLDER=$WORKSPACE/gopath/src/github.com/hyperledger
 export NEXUS_URL=nexus3.hyperledger.org:10001
 export ORG_NAME="hyperledger/fabric"
 
-# Fetch baseimage version
-curl -L https://raw.githubusercontent.com/hyperledger/fabric/master/Makefile > Makefile
-export BASE_IMAGE_VER=`cat Makefile | grep BASEIMAGE_RELEASE= | cut -d "=" -f2`
-echo "-----------> BASE_IMAGE_VER" $BASE_IMAGE_VER
-export OS_VER=$(dpkg --print-architecture)
-echo "-----------> OS_VER" $OS_VER
-export BASE_IMAGE_TAG=$OS_VER-$BASE_IMAGE_VER
-
-# Published stable version from nexus
-export STABLE_TAG=$OS_VER-$STABLE_TAG
-echo "-----------> STABLE_TAG" $STABLE_TAG
-
 # error check
 err_Check() {
 echo "ERROR !!!! --------> $1 <---------"
@@ -48,11 +36,11 @@ Parse_Arguments() {
                       --pull_Thirdparty_Images)
                             pull_Thirdparty_Images
                             ;;
-                      --publish_Unstable)
-                            publish_Unstable
+                      --publish_NpmModules)
+                            publish_NpmModules
                             ;;
-                      --publish_Api_Docs)
-                            publish_Api_Docs
+                      --publish_ApiDocs)
+                            publish_ApiDocs
                             ;;
               esac
               shift
@@ -126,15 +114,16 @@ env_Info() {
 
 # Pull Thirdparty Docker images (couchdb)
 pull_Thirdparty_Images() {
+            echo "--------> BASE_IMAGE_TAG:" ${BASE_IMAGE_TAG}
             for IMAGES in couchdb; do
-                 echo "-----------> Pull $IMAGE image"
+                 echo "-----------> Pull $IMAGES image"
                  echo
-                 docker pull $ORG_NAME-$IMAGES:$BASE_IMAGE_TAG > /dev/null 2>&1
+                 docker pull $ORG_NAME-$IMAGES:${BASE_IMAGE_TAG} > /dev/null 2>&1
                  if [ $? -ne 0 ]; then
                        echo -e "\033[31m FAILED to pull docker images" "\033[0m"
                        exit 1
                  fi
-                 docker tag $ORG_NAME-$IMAGES:$BASE_IMAGE_TAG $ORG_NAME-$IMAGES
+                 docker tag $ORG_NAME-$IMAGES:${BASE_IMAGE_TAG} $ORG_NAME-$IMAGES
             done
                  echo
                  docker images | grep hyperledger/fabric
@@ -144,14 +133,14 @@ pull_Docker_Images() {
             for IMAGES in peer orderer ca; do
                  echo "-----------> pull $IMAGES image"
                  echo
-                 docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG > /dev/null 2>&1
+                 docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} > /dev/null 2>&1
                  if [ $? -ne 0 ]; then
                        echo -e "\033[31m FAILED to pull docker images" "\033[0m"
                        exit 1
                  fi
-                 docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES
-                 docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES:$STABLE_TAG
-                 docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
+                 docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES
+                 docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES:${ARCH}-${VERSION}
+                 docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG}
             done
                  echo
                  docker images | grep hyperledger/fabric
@@ -160,7 +149,7 @@ pull_Docker_Images() {
 # run sdk e2e tests
 sdk_E2e_Tests() {
         echo
-        echo "-----------> Execute NODE SDK E2E Tests"
+        echo "-----------> Execute NODE SDK Integration Tests"
         cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node || exit
         # Install nvm to install multi node versions
         wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
@@ -180,7 +169,7 @@ sdk_E2e_Tests() {
         npm config set prefix ~/npm && npm install -g gulp && npm install -g istanbul
         ~/npm/bin/gulp || err_Check "ERROR!!! gulp failed"
         ~/npm/bin/gulp ca || err_Check "ERROR!!! gulp ca failed"
-        rm -rf node_modules/fabric-ca-client && npm install || err_Check "ERROR!!! npm install failed"
+        rm -rf node_modules && npm install || err_Check "ERROR!!! npm install failed"
 
         echo "------> Run Node SDK Unit, FV, and scenario tests"
         echo "============"
@@ -194,15 +183,15 @@ sdk_E2e_Tests() {
            exit 1
         fi
 }
-# Publish unstable npm modules after successful merge on amd64
-publish_Unstable() {
+# Publish npm modules after successful merge on amd64
+publish_NpmModules() {
         echo
-        echo "-----------> Publish unstable npm modules from amd64"
+        echo "-----------> Publish npm modules from amd64"
         ./Publish_NPM_Modules.sh
 }
 
 # Publish NODE_SDK API docs after successful merge on amd64
-publish_Api_Docs() {
+publish_ApiDocs() {
         echo
         echo "-----------> Publish NODE_SDK API docs after successful merge on amd64"
         ./Publish_API_Docs.sh
