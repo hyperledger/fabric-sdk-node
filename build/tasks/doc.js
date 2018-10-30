@@ -69,7 +69,7 @@ gulp.task('docs-dev', ['docs'], () => {
 });
 
 
-gulp.task('docs', ['jsdocs'], () => {
+gulp.task('doc', ['jsdocs'], () => {
 	const relativePath = '..';
 	const packageJson = require(path.join(__dirname, '../..', 'package.json'));
 
