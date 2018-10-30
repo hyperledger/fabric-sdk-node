@@ -83,7 +83,7 @@ class DefaultEventHandlerManager {
 	 * create an Tx Event handler for the specific txid
 	 *
 	 * @param {*} txid
-	 * @returns
+	 * @returns {TransactionEventHandler}
 	 * @memberof DefaultEventHandlerFactory
 	 */
 	createTxEventHandler(txid) {
