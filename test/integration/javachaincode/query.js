@@ -12,7 +12,6 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 const e2eUtils = require('../e2e/e2eUtils.js');
-const testUtils = require('../../unit/util');
 
 test('\n\n***** Java-Chaincode End-to-end flow: query chaincode *****\n\n', async (t) => {
 	const chaincode_id = 'example_java';

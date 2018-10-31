@@ -1,0 +1,139 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+version: '2'
+
+services:
+
+  ca0.example.com:
+    extends:
+        file: docker-compose-base.yaml
+        service: ca0
+    container_name: ca0.example.com
+    environment:
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/org1.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/key.pem
+
+  ca1.example.com:
+    extends:
+        file: docker-compose-base.yaml
+        service: ca1
+    container_name: ca1.example.com
+    environment:
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/org2.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/key.pem
+
+  orderer.example.com:
+    extends:
+        file: docker-compose-base.yaml
+        service: orderer
+    container_name: orderer.example.com
+    environment:
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_CLIENTAUTHREQUIRED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/msp/orderer/keystore/key.pem
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/msp/orderer/signcerts/orderer.example.com-cert.pem
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/msp/orderer/cacerts/example.com-cert.pem, /etc/hyperledger/msp/peerOrg1/cacerts/org1.example.com-cert.pem, /etc/hyperledger/msp/peerOrg2/cacerts/org2.example.com-cert.pem]
+      - ORDERER_GENERAL_TLS_CLIENTROOTCAS=[/etc/hyperledger/msp/orderer/cacerts/example.com-cert.pem, /etc/hyperledger/msp/peerOrg1/cacerts/org1.example.com-cert.pem, /etc/hyperledger/msp/peerOrg2/cacerts/org2.example.com-cert.pem]
+
+  peer0.org1.example.com:
+    extends:
+        file: docker-compose-base.yaml
+        service: peer
+    container_name: peer0.org1.example.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.org1.example.com
+      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+      - CORE_PEER_LISTENADDRESS=peer0.org1.example.com:7051
+      - CORE_PEER_GOSSIP_ENDPOINT=peer0.org1.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.org1.example.com:5984
+
+      ## Enable TLS
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/tls/key.pem
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/tls/cert.pem
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
+      - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
+
+    ports:
+      - 7051:7051
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/:/etc/hyperledger/msp/peer
+    depends_on:
+      - orderer.example.com
+      - couchdb.org1.example.com
+
+  couchdb.org1.example.com:
+    extends:
+        file: docker-compose-base.yaml
+        service: couchdb
+    container_name: couchdb.org1.example.com
+    ports:
+      - 5984:5984
+    environment:
+      DB_URL: http://localhost:5984/member_db
+
+  peer0.org2.example.com:
+    extends:
+        file: docker-compose-base.yaml
+        service: peer
+    container_name: peer0.org2.example.com
+
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.org2.example.com
+      - CORE_PEER_ADDRESS=peer0.org2.example.com:8051
+      - CORE_PEER_LISTENADDRESS=peer0.org2.example.com:8051
+      - CORE_PEER_GOSSIP_ENDPOINT=peer0.org2.example.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:8051
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.org2.example.com:5984
+
+      ## Enable TLS
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/tls/key.pem
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/tls/cert.pem
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org2.example.com-cert.pem
+      - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/cacerts/org2.example.com-cert.pem
+    ports:
+      - 8051:8051
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../config/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/:/etc/hyperledger/msp/peer
+    depends_on:
+      - orderer.example.com
+      - couchdb.org2.example.com
+
+  couchdb.org2.example.com:
+    extends:
+        file: docker-compose-base.yaml
+        service: couchdb
+    container_name: couchdb.org2.example.com
+    ports:
+      - 6984:5984
+    environment:
+      DB_URL: http://localhost:5984/member_db

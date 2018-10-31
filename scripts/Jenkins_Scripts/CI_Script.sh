@@ -182,7 +182,7 @@ sdk_E2e_Tests() {
         ~/npm/bin/gulp ca || err_Check "ERROR!!! gulp ca failed"
         rm -rf node_modules/fabric-ca-client && npm install || err_Check "ERROR!!! npm install failed"
 
-        echo "------> Run node headless & e2e tests"
+        echo "------> Run Node SDK Unit, FV, and scenario tests"
         echo "============"
         ~/npm/bin/gulp test
         if [ $? == 0 ]; then
