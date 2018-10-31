@@ -50,6 +50,24 @@ class Package {
 	}
 
 	/**
+	 * Validate that the specified smart contract name and version meet the rules specified
+	 * by the LSCC (https://github.com/hyperledger/fabric/blob/master/core/scc/lscc/lscc.go).
+	 * @param {string} name The name of the smart contract.
+	 * @param {*} version The version of the smart contract.
+	 */
+	static _validateNameAndVersion(name, version) {
+		if (!name) {
+			throw new Error('Smart contract name not specified');
+		} else if (!name.match(/^[a-zA-Z0-9]+([-_][a-zA-Z0-9]+)*$/)) {
+			throw new Error(`Invalid smart contract name '${name}'. Smart contract names must only consist of alphanumerics, '_', and '-'`);
+		} else if (!version) {
+			throw new Error('Smart contract version not specified');
+		} else if (!version.match(/^[A-Za-z0-9_.+-]+$/)) {
+			throw new Error(`Invalid smart contract version '${version}'. Smart contract versions must only consist of alphanumerics, '_', '-', '+', and '.'`);
+		}
+	}
+
+	/**
 	 * Load a smart contract package from the specified buffer.
 	 * @param {Buffer} buffer A buffer containing the serialized smart contract package.
 	 * @returns {Package} The smart contract package.
@@ -72,6 +90,7 @@ class Package {
 	 */
 	static async fromDirectory({ name, version, path, type, metadataPath }) {
 		logger.debug('Package.fromDirectory - entry - %s, %s, %s, %s', name, version, path, type);
+		Package._validateNameAndVersion(name, version);
 		const codePackage = await Packager.package(path, type, false, metadataPath);
 		logger.debug('Package.fromDirectory - code package is %s bytes', codePackage.length);
 		const chaincodeSpec = {
