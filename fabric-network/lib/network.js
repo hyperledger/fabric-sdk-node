@@ -77,7 +77,7 @@ class Network {
      * initialize the channel if it hasn't been done
      * @private
      */
-	async _initializeInternalChannel() {
+	async _initializeInternalChannel(discovery) {
 		logger.debug('in _initializeInternalChannel');
 
 		//TODO: Should this work across all peers or just orgs peers ?
@@ -100,10 +100,13 @@ class Network {
 		while (!success) {
 			try {
 				const initOptions = {
-					target: ledgerPeers[ledgerPeerIndex]
+					target: ledgerPeers[ledgerPeerIndex],
+					discover: discovery.enabled,
+					asLocalhost: discovery.asLocalhost
 				};
 
 				await this.channel.initialize(initOptions);
+
 				success = true;
 			} catch(error) {
 				if (ledgerPeerIndex >= ledgerPeers.length - 1) {
@@ -121,14 +124,14 @@ class Network {
 	 * @private
 	 * @memberof Network
 	 */
-	async _initialize() {
+	async _initialize(discover) {
 		logger.debug('in initialize');
 
 		if (this.initialized) {
 			return;
 		}
 
-		await this._initializeInternalChannel();
+		await this._initializeInternalChannel(discover);
 		const peerMap = this._mapPeersToMSPid();
 		this.queryHandler = await this.gateway._createQueryHandler(this.channel, peerMap);
 		this.initialized = true;

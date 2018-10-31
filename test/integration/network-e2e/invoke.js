@@ -29,6 +29,7 @@ const cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.
 const key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
 const inMemoryWallet = new InMemoryWallet();
 const ccp = fs.readFileSync(fixtures + '/network.json');
+const ccpDiscovery = fs.readFileSync(fixtures + '/network-discovery.json');
 
 async function inMemoryIdentitySetup() {
 	await inMemoryWallet.import('User1@org1.example.com', X509WalletMixin.createIdentity('Org1MSP', cert, key));
@@ -40,7 +41,8 @@ async function tlsSetup() {
 }
 
 async function createContract(t, gateway, gatewayOptions) {
-	await gateway.connect(JSON.parse(ccp.toString()), gatewayOptions);
+	const profile = gatewayOptions.useDiscovery ? ccpDiscovery : ccp;
+	await gateway.connect(JSON.parse(profile.toString()), gatewayOptions);
 	t.pass('Connected to the gateway');
 
 	const network = await gateway.getNetwork(channelName);
@@ -70,7 +72,7 @@ test('\n\n***** Network End-to-end flow: import identity into wallet *****\n\n',
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and default event strategy *****\n\n', async (t) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and default event strategy with discovery *****\n\n', async (t) => {
 	const gateway = new Gateway();
 	let org1EventHub;
 
@@ -78,11 +80,13 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		await inMemoryIdentitySetup();
 		await tlsSetup();
 
-
 		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
-			clientTlsIdentity: 'tlsId'
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				asLocalHost: true
+			}
 		});
 
 		// Obtain an event hub that that will be used by the underlying implementation
@@ -121,7 +125,6 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
 	}
 
-
 	t.end();
 });
 
@@ -137,7 +140,10 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
-			clientTlsIdentity: 'tlsId'
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				enabled: false
+			}
 		});
 
 		// Obtain an event hub that that will be used by the underlying implementation
@@ -218,6 +224,9 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			clientTlsIdentity: 'tlsId',
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX
+			},
+			discovery: {
+				enabled: false
 			}
 		});
 
@@ -271,6 +280,9 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			clientTlsIdentity: 'tlsId',
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ANYFORTX
+			},
+			discovery: {
+				enabled: false
 			}
 		});
 
@@ -326,6 +338,74 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			clientTlsIdentity: 'tlsId',
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ALLFORTX
+			},
+			discovery: {
+				enabled: false
+			}
+		});
+
+		// Obtain the event hubs that that will be used by the underlying implementation
+		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
+		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+
+		// Initialize eventFired to -1 since the event hub connection event will happen during
+		// the first call to submitTransaction() after the network is created
+		let org1EventFired = -1;
+		let org2EventFired = -1;
+		org1EventHub.registerTxEvent('all', (txId, code) => {
+			if (code === 'VALID') {
+				org1EventFired++;
+			}
+		}, () => {});
+
+		org2EventHub.registerTxEvent('all', (txId, code) => {
+			if (code === 'VALID') {
+				org2EventFired++;
+			}
+		}, () => {});
+
+		const response = await contract.submitTransaction('move', 'a', 'b','100');
+
+		const unblockCorrectly = (org1EventFired === 1) && (org2EventFired === 1);
+		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
+		t.true(unblockCorrectly, 'got single events at both org event hubs before submitTransaction was unblocked');
+
+		const expectedResult = 'move succeed';
+		if(response.toString() === expectedResult){
+			t.pass('Successfully invoked transaction chaincode on channel');
+		}
+		else {
+			t.fail('Unexpected response from transaction chaincode: ' + response);
+		}
+	} catch(err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
+		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
+	}
+
+	t.end();
+});
+
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ALLFORTX event strategy with discovery *****\n\n', async (t) => {
+	const gateway = new Gateway();
+	let org1EventHub;
+	let org2EventHub;
+
+	try {
+		await inMemoryIdentitySetup();
+		await tlsSetup();
+
+		const contract = await createContract(t, gateway, {
+			wallet: inMemoryWallet,
+			identity: 'User1@org1.example.com',
+			clientTlsIdentity: 'tlsId',
+			eventHandlerOptions: {
+				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ALLFORTX
+			},
+			discovery: {
+				asLocalHost: true
 			}
 		});
 
@@ -388,6 +468,9 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			clientTlsIdentity: 'tlsId',
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ANYFORTX
+			},
+			discovery: {
+				enabled: false
 			}
 		});
 
@@ -441,6 +524,77 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ANYFORTX event strategy with discovery *****\n\n', async (t) => {
+	const gateway = new Gateway();
+	let org1EventHub;
+	let org2EventHub;
+
+	try {
+		await inMemoryIdentitySetup();
+		await tlsSetup();
+
+		const contract = await createContract(t, gateway, {
+			wallet: inMemoryWallet,
+			identity: 'User1@org1.example.com',
+			clientTlsIdentity: 'tlsId',
+			eventHandlerOptions: {
+				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ANYFORTX
+			},
+			discovery: {
+				asLocalHost: true
+			}
+		});
+
+		// Obtain the event hubs that that will be used by the underlying implementation
+		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
+		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+
+		// Initialize eventFired to -1 since the event hub connection event will happen during
+		// the first call to submitTransaction() after the network is created
+		let org1EventFired = -1;
+		let org2EventFired = -1;
+
+		org1EventHub.registerTxEvent('all', (txId, code) => {
+			if (code === 'VALID') {
+				org1EventFired++;
+			}
+		}, () => {});
+
+		org2EventHub.registerTxEvent('all', (txId, code) => {
+			if (code === 'VALID') {
+				org2EventFired++;
+			}
+		}, () => {});
+
+		const response = await contract.submitTransaction('move', 'a', 'b','100');
+
+		const unblockCorrectly = (org1EventFired === 1 && org2EventFired === 0)
+			|| (org1EventFired === 0 && org2EventFired === 1)
+			// || (org1EventFired === 1 && org2EventFired === 1) hopefully this doesn't have to be included due to timing
+		;
+
+		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
+		t.true(unblockCorrectly, 'single event received by one of the event hubs caused submitTransaction to unblock, before other event received');
+
+		const expectedResult = 'move succeed';
+		if(response.toString() === expectedResult){
+			t.pass('Successfully invoked transaction chaincode on channel');
+		}
+		else {
+			t.fail('Unexpected response from transaction chaincode: ' + response);
+		}
+	} catch(err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		// remove the disconnects once gateway disconnect cleans up event hubs
+		gateway.disconnect();
+		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
+	}
+
+	t.end();
+});
+
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and plug-in event strategy *****\n\n', async (t) => {
 	const gateway = new Gateway();
 	let org1EventHub;
@@ -453,7 +607,12 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
 			clientTlsIdentity: 'tlsId',
-			eventHandlerOptions: { strategy: sampleEventStrategy }
+			eventHandlerOptions: {
+				strategy: sampleEventStrategy
+			},
+			discovery: {
+				enabled: false
+			}
 		});
 
 		const response = await contract.submitTransaction('move', 'a', 'b','100');
@@ -483,7 +642,10 @@ test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', as
 	const contract = await createContract(t, gateway, {
 		wallet: inMemoryWallet,
 		identity: 'User1@org1.example.com',
-		clientTlsIdentity: 'tlsId'
+		clientTlsIdentity: 'tlsId',
+		discovery: {
+			enabled: false
+		}
 	});
 
 	try {
@@ -528,7 +690,10 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		await gateway.connect(JSON.parse(ccp.toString()), {
 			wallet: fileSystemWallet,
 			identity: identityLabel,
-			clientTlsIdentity: 'tlsId'
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				enabled: false
+			}
 		});
 
 		t.pass('Connected to the gateway');
@@ -603,7 +768,10 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		await gateway.connect(JSON.parse(ccp.toString()), {
 			wallet: couchDBWallet,
 			identity: identityLabel,
-			clientTlsIdentity: 'tls_id'
+			clientTlsIdentity: 'tls_id',
+			discovery: {
+				enabled: false
+			}
 		});
 
 		t.pass('Connected to the gateway');
@@ -656,6 +824,9 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			clientTlsIdentity: 'tlsId',
 			eventHandlerOptions: {
 				strategy: null
+			},
+			discovery: {
+				enabled: false
 			}
 		});
 

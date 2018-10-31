@@ -57,6 +57,10 @@ class Gateway {
 			eventHandlerOptions: {
 				commitTimeout: 300, // 5 minutes
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+			},
+			discovery: {
+				enabled: true,
+				asLocalhost: false
 			}
 		};
 	}
@@ -130,7 +134,7 @@ class Gateway {
 		}
 
 		Gateway._mergeOptions(this.options, options);
-		logger.debug('connection options: %O', options);
+		logger.debug('connection options: %j', options);
 
 		if (!(config instanceof Client)) {
 			// still use a ccp for the discovery peer and ca information
@@ -140,6 +144,12 @@ class Gateway {
 			// initialize from an existing Client object instance
 			logger.debug('%s - using existing client object', method);
 			this.client = config;
+		}
+
+		if(this.options.discovery && this.options.discovery.enabled) {
+			this.client.setConfigSetting('initialize-with-discovery', true);
+		} else {
+			this.client.setConfigSetting('initialize-with-discovery', false);
 		}
 
 		// setup an initial identity for the Gateway
@@ -163,7 +173,7 @@ class Gateway {
 			try {
 				this.queryHandlerClass = require(this.options.queryHandler);
 			} catch(error) {
-				logger.error('%s - unable to load provided query handler: %s. Error %O', method, this.options.queryHandler, error);
+				logger.error('%s - unable to load provided query handler: %s. Error %j', method, this.options.queryHandler, error);
 				throw new Error(`unable to load provided query handler: ${this.options.queryHandler}. Error ${error}`);
 			}
 		}
@@ -231,7 +241,7 @@ class Gateway {
 		logger.debug('getNetwork: create network object and initialize');
 		const channel = this.client.getChannel(networkName);
 		const newNetwork = new Network(this, channel);
-		await newNetwork._initialize();
+		await newNetwork._initialize(this.options.discovery);
 		this.networks.set(networkName, newNetwork);
 		return newNetwork;
 	}

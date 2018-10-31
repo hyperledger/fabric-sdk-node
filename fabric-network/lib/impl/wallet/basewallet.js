@@ -21,7 +21,7 @@ class BaseWallet extends Wallet {
 
 	constructor(walletMixin = new X509WalletMixin()) {
 		super();
-		logger.debug('in BaseWallet constructor, mixin = %O', walletMixin);
+		logger.debug('in BaseWallet constructor, mixin = %j', walletMixin);
 		this.storesInitialized = false;
 		this.walletMixin = walletMixin;
 	}
