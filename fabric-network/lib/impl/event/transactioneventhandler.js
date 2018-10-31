@@ -40,7 +40,7 @@ class TransactionEventHandler {
 		};
 		this.options = Object.assign(defaultOptions, options);
 
-		logger.debug('constructor:', util.format('transactionId = %s, options = %O', this.transactionId, this.options));
+		logger.debug('constructor:', util.format('transactionId = %s, options = %j', this.transactionId, this.options));
 
 		this.eventHubs = [];
 		this.respondedEventHubs = new Set();

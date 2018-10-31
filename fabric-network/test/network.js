@@ -95,7 +95,7 @@ describe('Network', () => {
 
 		it('should initialize the network using the first peer', async () => {
 			mockChannel.initialize.resolves();
-			await network._initializeInternalChannel();
+			await network._initializeInternalChannel({enabled:false, asLocalhost: false});
 			sinon.assert.calledOnce(mockChannel.initialize);
 		});
 
@@ -104,10 +104,10 @@ describe('Network', () => {
 			// create a real mock
 			mockChannel.initialize.onCall(0).rejects(new Error('connect failed'));
 			mockChannel.initialize.onCall(1).resolves();
-			await network._initializeInternalChannel();
+			await network._initializeInternalChannel({enabled:false, asLocalhost: false});
 			sinon.assert.calledTwice(mockChannel.initialize);
-			sinon.assert.calledWith(mockChannel.initialize.firstCall, {target: mockPeer1});
-			sinon.assert.calledWith(mockChannel.initialize.secondCall, {target: mockPeer3});
+			sinon.assert.calledWith(mockChannel.initialize.firstCall, {target: mockPeer1, discover:false, asLocalhost: false});
+			sinon.assert.calledWith(mockChannel.initialize.secondCall, {target: mockPeer3, discover: false, asLocalhost: false});
 		});
 
 		it('should fail if all peers fail', async () => {
@@ -117,15 +117,15 @@ describe('Network', () => {
 			mockChannel.initialize.onCall(2).rejects(new Error('connect failed again'));
 			let error;
 			try {
-				await network._initializeInternalChannel();
+				await network._initializeInternalChannel({enabled:true, asLocalhost: true});
 			} catch(_error) {
 				error = _error;
 			}
 			error.should.match(/connect failed again/);
 			sinon.assert.calledThrice(mockChannel.initialize);
-			sinon.assert.calledWith(mockChannel.initialize.firstCall, {target: mockPeer1});
-			sinon.assert.calledWith(mockChannel.initialize.secondCall, {target: mockPeer3});
-			sinon.assert.calledWith(mockChannel.initialize.thirdCall, {target: mockPeer4});
+			sinon.assert.calledWith(mockChannel.initialize.firstCall, {target: mockPeer1, discover: true, asLocalhost: true});
+			sinon.assert.calledWith(mockChannel.initialize.secondCall, {target: mockPeer3, discover: true, asLocalhost: true});
+			sinon.assert.calledWith(mockChannel.initialize.thirdCall, {target: mockPeer4, discover: true, asLocalhost: true});
 		});
 
 		it('should fail if there are no LEDGER_QUERY_ROLE peers', async () => {

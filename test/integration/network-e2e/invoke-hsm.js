@@ -110,6 +110,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			wallet: hsmWallet,
 			identity: hsmUser,
 			tlsInfo,
+			discovery: { enabled: false }
 		});
 
 		// Obtain an event hub that that will be used by the underlying implementation
