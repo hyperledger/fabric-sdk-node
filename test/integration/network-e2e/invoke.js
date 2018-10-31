@@ -47,7 +47,7 @@ async function createContract(t, gateway, gatewayOptions) {
 	t.pass('Initialized the network, ' + channelName);
 
 	const contract = network.getContract(chaincodeId);
-	t.pass('Got the contract, about to submit "move" transaction');
+	t.pass('Got the contract');
 
 	return contract;
 }
@@ -443,7 +443,6 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and plug-in event strategy *****\n\n', async (t) => {
 	const gateway = new Gateway();
-	let org1EventHub;
 
 	try {
 		await inMemoryIdentitySetup();
@@ -464,6 +463,58 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		}
 		else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
+		}
+	} catch(err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
+test('\n\n***** Network End-to-end flow: transient data *****\n\n', async (t) => {
+	const gateway = new Gateway();
+
+	try {
+		await inMemoryIdentitySetup();
+		await tlsSetup();
+
+		const contract = await createContract(t, gateway, {
+			wallet: inMemoryWallet,
+			identity: 'User1@org1.example.com',
+			clientTlsIdentity: 'tlsId'
+		});
+
+		const transaction = contract.createTransaction('getTransient');
+		const transientMap = {
+			key1: Buffer.from('value1'),
+			key2: Buffer.from('value2')
+		};
+		transaction.setTransient(transientMap);
+		const response = await transaction.submit();
+		t.pass('Got response: ' + response.toString('utf8'));
+		const result = JSON.parse(response.toString('utf8'));
+
+		let success = true;
+
+		if (Object.keys(transientMap).length !== Object.keys(result).length) {
+			success = false;
+		}
+
+		Object.entries(transientMap).forEach((entry) => {
+			const key = entry[0];
+			const value = entry[1].toString();
+			if (value !== result[key]) {
+				t.fail(`Expected ${key} to be ${value} but was ${result[key]}`);
+				success = false;
+			}
+		});
+
+		if (success) {
+			t.pass('Got expected transaction response');
+		} else {
+			t.fail('Unexpected transaction response: ' + response);
 		}
 	} catch(err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
