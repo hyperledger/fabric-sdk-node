@@ -14,6 +14,23 @@ function getResponsePayload(peerResponse) {
 	return (payload && payload.length > 0) ? payload : null;
 }
 
+/**
+ * Ensure supplied transaction arguments are not strings.
+ * @private
+ * @static
+ * @param {Array} args transaction arguments.
+ * @throws {Error} if any arguments are invalid.
+ */
+function verifyArguments(args) {
+	const isInvalid = args.some((arg) => typeof arg !== 'string');
+	if (isInvalid) {
+		const argsString = args.map((arg) => util.format('%j', arg)).join(', ');
+		const msg = util.format('Transaction arguments must be strings: %s', argsString);
+		logger.error('verifyArguments:', msg);
+		throw new Error(msg);
+	}
+}
+
 class Transaction {
 	/**
 	 * Constructor.
@@ -32,23 +49,6 @@ class Transaction {
 				cancelListening: () => {}
 			};
 		};
-	}
-
-	/**
-	 * Ensure supplied transaction arguments are not strings.
-	 * @private
-	 * @static
-	 * @param {Array} args transaction argument.
-	 * @throws {Error} if any arguments are invalid.
-	 */
-	static verifyArguments(args) {
-		const isInvalid = args.some((arg) => typeof arg !== 'string');
-		if (isInvalid) {
-			const argsString = args.map((arg) => util.format('%j', arg)).join(', ');
-			const msg = util.format('Transaction arguments must be strings: %s', argsString);
-			logger.error('_verifyTransactionArguments:', msg);
-			throw new Error(msg);
-		}
 	}
 
 	getName() {
@@ -72,11 +72,11 @@ class Transaction {
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
 	 * @async
-     * @param {...string} args Transaction function arguments.
+     * @param {...string} [args] Transaction function arguments.
      * @returns {Buffer} Payload response from the transaction function.
      */
 	async submit(...args) {
-		Transaction.verifyArguments(args);
+		verifyArguments(args);
 
 		const network = this._contract.getNetwork();
 		const channel = network.getChannel();
@@ -165,6 +165,24 @@ class Transaction {
 		}
 
 		return { validResponses, invalidResponses };
+	}
+
+	/**
+	 * Evaluate a transaction function and return its results.
+	 * The transaction function will be evaluated on the endorsing peers but
+	 * the responses will not be sent to the ordering service and hence will
+	 * not be committed to the ledger.
+	 * This is used for querying the world state.
+	 * @async
+     * @param {...string} [args] Transaction function arguments.
+     * @returns {Buffer} Payload response from the transaction function.
+     */
+	async evaluate(...args) {
+		verifyArguments(args);
+
+		const queryHandler = this._contract.getQueryHandler();
+		const chaincodeId = this._contract.getChaincodeId();
+		return queryHandler.queryChaincode(chaincodeId, this._transactionId, this._name, args, this._transientMap);
 	}
 }
 

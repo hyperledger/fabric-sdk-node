@@ -2359,10 +2359,10 @@ const Channel = class {
 	 *           and nonce
 	 * @property {string} collections-config - Optional. The path to the collections
 	 *           config. More details can be found at this [tutorial]{@link https://fabric-sdk-node.github.io/tutorial-private-data.html}
-	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
-	 *           used by the chaincode during initialization, but not saved in the
-	 *           ledger. Data such as cryptographic information for encryption can
-	 *           be passed to the chaincode using this technique.
+	 * @property {object} [transientMap] - Optional. Object with String property names
+	 *           and Buffer property values that can be used by the chaincode but not
+	 *           saved in the ledger. Data such as cryptographic information for
+	 *           encryption can be passed to the chaincode using this technique.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code> in the target
 	 *           chaincode. Default is 'init'.
@@ -2563,9 +2563,10 @@ const Channel = class {
 	 * @property {TransactionID} txId - Optional. TransactionID object with the
 	 *           transaction id and nonce. txId is required for [sendTransactionProposal]{@link Channel#sendTransactionProposal}
 	 *           and optional for [generateUnsignedProposal]{@link Channel#generateUnsignedProposal}
-	 * @property {map} transientMap - Optional. <string, Buffer> map that can be
-	 *           used by the chaincode but not
-	 *           saved in the ledger, such as cryptographic information for encryption
+	 * @property {object} [transientMap] - Optional. Object with String property names
+	 *           and Buffer property values that can be used by the chaincode but not
+	 *           saved in the ledger. Data such as cryptographic information for
+	 *           encryption can be passed to the chaincode using this technique.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code>
 	 *           in the target chaincode. Default is 'invoke'
@@ -2832,9 +2833,10 @@ const Channel = class {
 	 * @property {string[]} args - Required. Arguments to send to chaincode.
 	 * @property {string} chaincodeId - Required. ChaincodeId.
 	 * @property {Buffer} argbytes - Optional. Include when an argument must be included as bytes.
-	 * @property {map} transientMap - Optional. <sting, byte[]> The Map that can be
-	 *           used by the chaincode but not saved in the ledger, such as
-	 *           cryptographic information for encryption.
+	 * @property {object} [transientMap] - Optional. Object with String property names
+	 *           and Buffer property values that can be used by the chaincode but not
+	 *           saved in the ledger. Data such as cryptographic information for
+	 *           encryption can be passed to the chaincode using this technique.
 	 */
 
 
@@ -3067,9 +3069,10 @@ const Channel = class {
 	 *           object will be used.
 	 * @property {string} chaincodeId - Required. The id of the chaincode to process
 	 *           the transaction proposal
-	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
-	 *           used by the chaincode but not saved in the ledger, such as cryptographic
-	 *           information for encryption
+	 * @property {object} [transientMap] - Optional. Object with String property names
+	 *           and Buffer property values that can be used by the chaincode but not
+	 *           saved in the ledger. Data such as cryptographic information for
+	 *           encryption can be passed to the chaincode using this technique.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code>
 	 *           in the target chaincode. Default is 'invoke'

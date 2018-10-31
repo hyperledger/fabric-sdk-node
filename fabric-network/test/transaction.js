@@ -16,6 +16,7 @@ const util = require('util');
 const Channel = require('fabric-client/lib/Channel');
 const Contract = require('fabric-network/lib/contract');
 const Network = require('fabric-network/lib/network');
+const QueryHandler = require('fabric-network/lib/api/queryhandler');
 const Transaction = require('fabric-network/lib/transaction');
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
 const TransactionID = require('fabric-client/lib/TransactionID');
@@ -184,16 +185,77 @@ describe('Transaction', () => {
 		});
 
 		it('sends a proposal with transient data', async () => {
-			const transientMap = new Map([
-				[ 'key1', 'value1' ],
-				[ 'key2', 'value2' ]
-			]);
+			const transientMap = { key1: 'value1', key2: 'value2' };
 			expectedProposal.transientMap = transientMap;
 
 			transaction.setTransient(transientMap);
 			await transaction.submit();
 
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
+		});
+	});
+
+	describe('#evaluate', () => {
+		const transactionName = 'TRANSACTION_NAME';
+		const expectedResult = Buffer.from('42');
+
+		let stubQueryHandler;
+		let transaction;
+
+		beforeEach(() => {
+			stubQueryHandler = sinon.createStubInstance(QueryHandler);
+			stubQueryHandler.queryChaincode.resolves(expectedResult);
+			stubContract.getQueryHandler.returns(stubQueryHandler);
+
+			transaction = new Transaction(stubContract, transactionName);
+		});
+
+		it('returns the result from the query handler', async () => {
+			const result = await transaction.evaluate();
+			expect(result).to.equal(expectedResult);
+		});
+
+		it('passes required parameters to query handler for no-args invocation', async () => {
+			await transaction.evaluate();
+			sinon.assert.calledWith(stubQueryHandler.queryChaincode,
+				stubContract.getChaincodeId(),
+				transaction.getTransactionID(),
+				transactionName,
+				[]
+			);
+		});
+
+		it('passes required parameters to query handler for with-args invocation', async () => {
+			const args = [ 'a', 'b', 'c' ];
+
+			await transaction.evaluate(...args);
+
+			sinon.assert.calledWith(stubQueryHandler.queryChaincode,
+				stubContract.getChaincodeId(),
+				transaction.getTransactionID(),
+				transactionName,
+				args
+			);
+		});
+
+		it('passes transient data to query handler', async () => {
+			const transientMap = { key1: 'value1', key2: 'value2' };
+			transaction.setTransient(transientMap);
+
+			await transaction.evaluate();
+
+			sinon.assert.calledWith(stubQueryHandler.queryChaincode,
+				sinon.match.any,
+				sinon.match.any,
+				sinon.match.any,
+				sinon.match.any,
+				transientMap
+			);
+		});
+
+		it('rejects for non-string arguments', () => {
+			const promise = transaction.evaluate('arg1', 3.142, null);
+			return expect(promise).to.be.rejectedWith('"arg1", 3.142, null');
 		});
 	});
 });

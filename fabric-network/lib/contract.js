@@ -75,6 +75,10 @@ class Contract {
 		return this.gateway.getOptions().eventHandlerOptions;
 	}
 
+	getQueryHandler() {
+		return this.queryHandler;
+	}
+
 	/**
 	 * Submit a transaction to the ledger.  The transaction function <code>transactionName</code>
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
@@ -105,33 +109,26 @@ class Contract {
 	 * for committing to the ledger.
 	 * @async
      * @param {string} name Transaction function name.
-	 * @param {...string} args Transaction function arguments.
+	 * @param {...string} [args] Transaction function arguments.
 	 * @returns {Buffer} Payload response from the transaction function.
      */
 	async submitTransaction(name, ...args) {
-		const transaction = this.createTransaction(name);
-		return transaction.submit(...args);
+		return this.createTransaction(name).submit(...args);
 	}
 
 	/**
 	 * Evaluate a transaction function and return its results.
 	 * The transaction function <code>transactionName</code>
-	 * will be evaluated on the endorsing peers but the responses will not be sent to to
+	 * will be evaluated on the endorsing peers but the responses will not be sent to
 	 * the ordering service and hence will not be committed to the ledger.
 	 * This is used for querying the world state.
-     * @param {string} name Transaction function name
-     * @param {...string} parameters Transaction function parameters
-     * @returns {Buffer} Payload response from the transaction function
+	 * @async
+     * @param {string} name Transaction function name.
+     * @param {...string} [args] Transaction function arguments.
+     * @returns {Buffer} Payload response from the transaction function.
      */
-	async evaluateTransaction(name, ...parameters) {
-		verifyTransactionName(name);
-		Transaction.verifyArguments(parameters);
-
-		// form the transaction name with the namespace
-		const qualifiedName = this._getQualifiedName(name);
-		const txId = this.gateway.getClient().newTransactionID();
-		const result = await this.queryHandler.queryChaincode(this.chaincodeId, txId, qualifiedName, parameters);
-		return result ? result : null;
+	async evaluateTransaction(name, ...args) {
+		return this.createTransaction(name).evaluate(...args);
 	}
 }
 
