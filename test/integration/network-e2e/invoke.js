@@ -473,7 +473,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: transient data *****\n\n', async (t) => {
+test('\n\n***** Network End-to-end flow: invoke transaction with transient data *****\n\n', async (t) => {
 	const gateway = new Gateway();
 
 	try {

@@ -19,8 +19,6 @@ const should = chai.should();
 chai.use(require('chai-as-promised'));
 
 describe('DefaultQueryHandler', () => {
-
-	const sandbox = sinon.createSandbox();
 	let mockPeer1, mockPeer2, mockPeer3, mockPeer4;
 	let mockPeerMap, mockTransactionID, mockChannel;
 	let queryHandler;
@@ -48,10 +46,9 @@ describe('DefaultQueryHandler', () => {
 		mockTransactionID = sinon.createStubInstance(TransactionID);
 		mockChannel = sinon.createStubInstance(Channel);
 		queryHandler = new DefaultQueryHandler(mockChannel, 'mspid', mockPeerMap);
-
 	});
 	afterEach(() => {
-		sandbox.restore();
+		sinon.restore();
 	});
 
 	describe('#constructor', () => {
@@ -69,97 +66,116 @@ describe('DefaultQueryHandler', () => {
 	});
 
 	describe('#queryChaincode', () => {
+		let errorResponse;
+		let validResponse;
+		let failResponse;
+
+		beforeEach(() => {
+			errorResponse = new Error('Chaincode error response');
+			errorResponse.status = 500;
+			errorResponse.isProposalResponse = true;
+
+			validResponse = Buffer.from('hello world');
+
+			failResponse = new Error('Failed to contact peer');
+
+			mockChannel.queryByChaincode.resolves([ validResponse ]);
+		});
+
 		it('should not switch to another peer if peer returns a payload which is an error', async () => {
-			const response = new Error('my chaincode error');
-			response.status = 500;
-			response.isProposalResponse = true;
-			mockChannel.queryByChaincode.resolves([response]);
-			const qspSpy = sinon.spy(queryHandler, '_querySinglePeer');
+			mockChannel.queryByChaincode.resolves([ errorResponse ]);
 			try {
 				await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
 				should.fail('expected error to be thrown');
 			} catch(error) {
-				error.message.should.equal('my chaincode error');
-				sinon.assert.calledOnce(qspSpy);
-				sinon.assert.calledWith(qspSpy, mockPeer1, 'chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
+				error.message.should.equal(errorResponse.message);
+				sinon.assert.calledWith(mockChannel.queryByChaincode, {
+					targets: [ mockPeer1 ],
+					chaincodeId: 'chaincodeId',
+					txId: mockTransactionID,
+					fcn: 'myfunc',
+					args: [ 'arg1', 'arg2' ]
+				});
 				queryHandler.queryPeerIndex.should.equal(0);
 			}
-
 		});
 
 		it('should choose a valid peer', async () => {
-			const response = Buffer.from('hello world');
-			sandbox.stub(queryHandler, '_querySinglePeer').resolves(response);
-
 			const result = await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
-			sinon.assert.calledOnce(queryHandler._querySinglePeer);
-			sinon.assert.calledWith(queryHandler._querySinglePeer, mockPeer1, 'chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
+
+			sinon.assert.calledWith(mockChannel.queryByChaincode, {
+				targets: [ mockPeer1 ],
+				chaincodeId: 'chaincodeId',
+				txId: mockTransactionID,
+				fcn: 'myfunc',
+				args: [ 'arg1', 'arg2' ]
+			});
 			queryHandler.queryPeerIndex.should.equal(0);
-			result.equals(response).should.be.true;
+			result.equals(validResponse).should.be.true;
 		});
 
 		it('should cache a valid peer and reuse', async () => {
-			const response = Buffer.from('hello world');
-			sandbox.stub(queryHandler, '_querySinglePeer').resolves(response);
-
 			await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
 			const result = await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
-			sinon.assert.calledTwice(queryHandler._querySinglePeer);
-			sinon.assert.alwaysCalledWith(queryHandler._querySinglePeer, mockPeer1, 'chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
+
+			sinon.assert.calledTwice(mockChannel.queryByChaincode);
+			sinon.assert.alwaysCalledWith(mockChannel.queryByChaincode, {
+				targets: [ mockPeer1 ],
+				chaincodeId: 'chaincodeId',
+				txId: mockTransactionID,
+				fcn: 'myfunc',
+				args: [ 'arg1', 'arg2' ]
+			});
 			queryHandler.queryPeerIndex.should.equal(0);
-			result.equals(response).should.be.true;
+			result.equals(validResponse).should.be.true;
 		});
 
 		it('should choose a valid peer if any respond with an error', async () => {
-			const response = Buffer.from('hello world');
-			const qsp = sandbox.stub(queryHandler, '_querySinglePeer');
-
-			/* this didn't work as the mockPeers look the same
-            qsp.withArgs(mockPeer2, 'aTxID', 'myfunc', ['arg1', 'arg2']).rejects(new Error('I failed'));
-            qsp.withArgs(mockPeer1, 'aTxID', 'myfunc', ['arg1', 'arg2']).rejects(new Error('I failed'));
-            qsp.withArgs(mockPeer3, 'aTxID', 'myfunc', ['arg1', 'arg2']).resolves(response);
-            */
-			qsp.onFirstCall().rejects(new Error('I failed'));
-			qsp.onSecondCall().rejects(new Error('I failed'));
-			qsp.onThirdCall().resolves(response);
+			mockChannel.queryByChaincode.onFirstCall().resolves([failResponse]);
+			mockChannel.queryByChaincode.onSecondCall().resolves([failResponse]);
+			mockChannel.queryByChaincode.onThirdCall().resolves([validResponse]);
 
 			const result = await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
-			sinon.assert.calledThrice(qsp);
-			sinon.assert.calledWith(qsp.thirdCall, mockPeer4, 'chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
+
+			sinon.assert.calledThrice(mockChannel.queryByChaincode);
+			sinon.assert.calledWith(mockChannel.queryByChaincode, {
+				targets: [ mockPeer4 ],
+				chaincodeId: 'chaincodeId',
+				txId: mockTransactionID,
+				fcn: 'myfunc',
+				args: [ 'arg1', 'arg2' ]
+			});
 			queryHandler.queryPeerIndex.should.equal(2);
-			result.equals(response).should.be.true;
+			result.equals(validResponse).should.be.true;
 		});
 
 		it('should handle when the last successful peer fails', async () => {
-			const response = Buffer.from('hello world');
-			const qsp = sandbox.stub(queryHandler, '_querySinglePeer');
-			qsp.onFirstCall().resolves(response);
-			qsp.onSecondCall().rejects(new Error('I failed'));
-			qsp.onThirdCall().resolves(response);
+			mockChannel.queryByChaincode.onFirstCall().resolves([validResponse]);
+			mockChannel.queryByChaincode.onSecondCall().resolves([failResponse]);
+			mockChannel.queryByChaincode.onThirdCall().resolves([validResponse]);
 
 			let result = await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
-			result.equals(response).should.be.true;
+			result.equals(validResponse).should.be.true;
 			result = await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
-			result.equals(response).should.be.true;
-			sinon.assert.calledThrice(queryHandler._querySinglePeer);
-			sinon.assert.calledWith(qsp.firstCall, mockPeer1, 'chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
-			sinon.assert.calledWith(qsp.secondCall, mockPeer1, 'chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
-			sinon.assert.calledWith(qsp.thirdCall, mockPeer3, 'chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
+
+			result.equals(validResponse).should.be.true;
+			sinon.assert.calledThrice(mockChannel.queryByChaincode);
+			sinon.assert.calledWith(mockChannel.queryByChaincode.firstCall, sinon.match({ targets: [ mockPeer1 ] }));
+			sinon.assert.calledWith(mockChannel.queryByChaincode.secondCall, sinon.match({ targets: [ mockPeer1 ] }));
+			sinon.assert.calledWith(mockChannel.queryByChaincode.thirdCall, sinon.match({ targets: [ mockPeer3 ] }));
 			queryHandler.queryPeerIndex.should.equal(1);
-			result.equals(response).should.be.true;
+			result.equals(validResponse).should.be.true;
 
 		});
 
 		it('should throw if all peers respond with errors', () => {
-			const qsp = sandbox.stub(queryHandler, '_querySinglePeer');
-			qsp.onFirstCall().rejects(new Error('I failed 1'));
-			qsp.onSecondCall().rejects(new Error('I failed 2'));
-			qsp.onThirdCall().rejects(new Error('I failed 3'));
+			mockChannel.queryByChaincode.onFirstCall().resolves([ new Error('FAIL_1') ]);
+			mockChannel.queryByChaincode.onSecondCall().resolves([ new Error('FAIL_2') ]);
+			mockChannel.queryByChaincode.onThirdCall().resolves([ new Error('FAIL_3') ]);
 
 			return queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2'])
-				.should.be.rejectedWith(/No peers available.+failed 3/);
+				.should.be.rejectedWith(/No peers available.+FAIL_3/);
 		});
-
 
 		it('should throw if no peers are suitable to query', () => {
 			mockPeer1 = sinon.createStubInstance(Peer);
@@ -174,62 +190,30 @@ describe('DefaultQueryHandler', () => {
 				.should.be.rejectedWith(/No peers have been provided/);
 		});
 
-	});
-
-	describe('#_querySinglePeer', () => {
-
-		it('should query a single peer', async () => {
-			const response = Buffer.from('hello world');
-			mockChannel.queryByChaincode.resolves([response]);
-			const result = await queryHandler._querySinglePeer(mockPeer2, 'org-acme-biznet', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
-			sinon.assert.calledOnce(mockChannel.queryByChaincode);
-			sinon.assert.calledWith(mockChannel.queryByChaincode, {
-				chaincodeId: 'org-acme-biznet',
-				txId: mockTransactionID,
-				fcn: 'myfunc',
-				args: ['arg1', 'arg2'],
-				targets: [mockPeer2]
-			});
-			result.equals(response).should.be.true;
-
-		});
-
-		it('should throw if no responses are returned', () => {
+		it('throws if peers return no responses', () => {
 			mockChannel.queryByChaincode.resolves([]);
-			return queryHandler._querySinglePeer(mockPeer2, 'org-acme-biznet', 'txid', 'myfunc', ['arg1', 'arg2'])
-				.should.be.rejectedWith(/No payloads were returned from request:myfunc/);
+			return queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2'])
+				.should.be.rejectedWith(/No payloads were returned/);
 		});
 
-		it('should return any responses that are chaincode errors', async () => {
-			const response = new Error('such error');
-			response.status = 500;
-			response.isProposalResponse = true;
-			mockChannel.queryByChaincode.resolves([response]);
-			const result = await queryHandler._querySinglePeer(mockPeer2, 'org-acme-biznet', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
-			sinon.assert.calledOnce(mockChannel.queryByChaincode);
+		it('throws if queryByChaincode throws', () => {
+			mockChannel.queryByChaincode.rejects(new Error('queryByChaincode failed'));
+			return queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2'])
+				.should.be.rejectedWith(/No peers available.+queryByChaincode failed/);
+		});
+
+		it('passes transient data to queryByChaincode', async () => {
+			const transientMap = { transientKey: Buffer.from('value') };
+			await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2'], transientMap);
+
 			sinon.assert.calledWith(mockChannel.queryByChaincode, {
-				chaincodeId: 'org-acme-biznet',
+				targets: [ mockPeer1 ],
+				chaincodeId: 'chaincodeId',
 				txId: mockTransactionID,
 				fcn: 'myfunc',
-				args: ['arg1', 'arg2'],
-				targets: [mockPeer2]
+				args: [ 'arg1', 'arg2' ],
+				transientMap: transientMap
 			});
-			result.should.be.instanceOf(Error);
-			result.message.should.equal('such error');
-		});
-
-		it('should throw any responses that are errors and code 14 being unavailable.', () => {
-			const response = new Error('14 UNAVAILABLE: Connect Failed');
-			response.code = 14;
-			mockChannel.queryByChaincode.resolves([response]);
-			return queryHandler._querySinglePeer(mockPeer2, 'org-acme-biznet', 'txid', 'myfunc', ['arg1', 'arg2'])
-				.should.be.rejectedWith(/Connect Failed/);
-		});
-
-		it('should throw if query request fails', () => {
-			mockChannel.queryByChaincode.rejects(new Error('Query Failed'));
-			return queryHandler._querySinglePeer(mockPeer2, 'org-acme-biznet', 'txid', 'myfunc', ['arg1', 'arg2'])
-				.should.be.rejectedWith(/Query Failed/);
 		});
 	});
 

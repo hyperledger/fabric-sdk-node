@@ -49,9 +49,10 @@ class DefaultQueryHandler extends QueryHandler {
      * @param {string} functionName the function name to invoke
      * @param {string[]} args the arguments
      * @param {TransactionID} txId the transaction id to use
+	 * @param {object} [transientMap] transient data
      * @returns {object} asynchronous response or async error.
      */
-	async queryChaincode(chaincodeId, txId, functionName, args) {
+	async queryChaincode(chaincodeId, txId, functionName, args, transientMap) {
 		const method = 'queryChaincode';
 		let success = false;
 		let payload;
@@ -67,7 +68,7 @@ class DefaultQueryHandler extends QueryHandler {
 			const peer = this.allQueryablePeers[this.queryPeerIndex];
 			try {
 				logger.debug('%s - querying previously successful peer: %s', method, peer.getName());
-				payload = await this._querySinglePeer(peer, chaincodeId, txId, functionName, args);
+				payload = await this._querySinglePeer(peer, chaincodeId, txId, functionName, args, transientMap);
 				success = true;
 			} catch (error) {
 				logger.warn('%s - error response trying previously successful peer: %s. Error: %s', method, peer.getName(), error);
@@ -88,7 +89,7 @@ class DefaultQueryHandler extends QueryHandler {
 				const peer = this.allQueryablePeers[i];
 				try {
 					logger.debug('%s - querying new peer: %s', method, peer.getName());
-					payload = await this._querySinglePeer(peer, chaincodeId, txId, functionName, args);
+					payload = await this._querySinglePeer(peer, chaincodeId, txId, functionName, args, transientMap);
 					this.queryPeerIndex = i;
 					success = true;
 					break;
@@ -120,9 +121,10 @@ class DefaultQueryHandler extends QueryHandler {
      * @param {string} functionName the function name of the query
      * @param {array} args the arguments to ass
      * @param {TransactionID} txId the transaction id to use
+	 * @param {object} [transientMap] transient data
      * @returns {Buffer} asynchronous response to query
      */
-	async _querySinglePeer(peer, chaincodeId, txId, functionName, args) {
+	async _querySinglePeer(peer, chaincodeId, txId, functionName, args, transientMap) {
 		const method = '_querySinglePeer';
 		const request = {
 			targets: [peer],
@@ -131,6 +133,9 @@ class DefaultQueryHandler extends QueryHandler {
 			fcn: functionName,
 			args: args
 		};
+		if (transientMap) {
+			request.transientMap = transientMap;
+		}
 
 		const payloads = await this.channel.queryByChaincode(request);
 		if (!payloads.length) {

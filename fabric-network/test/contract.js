@@ -96,6 +96,13 @@ describe('Contract', () => {
 		});
 	});
 
+	describe('#getQueryhandler', () => {
+		it('returns the query handler', () => {
+			const result = contract.getQueryHandler();
+			result.should.equal(mockQueryHandler);
+		});
+	});
+
 	describe('#createTransaction', () => {
 		it('returns a transaction with only a name', () => {
 			const name = 'name';
@@ -150,54 +157,16 @@ describe('Contract', () => {
 	});
 
 	describe('#evaluateTransaction', () => {
-		it('should query chaincode and handle a good response without return data', async () => {
-			mockQueryHandler.queryChaincode.withArgs(chaincodeId, mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves();
+		it('evaluates a transaction with supplied arguments', async () => {
+			const args = [ 'a', 'b', 'c' ];
+			const expected = Buffer.from('result');
+			const stubTransaction = sinon.createStubInstance(Transaction);
+			stubTransaction.evaluate.withArgs(...args).resolves(expected);
+			sinon.stub(contract, 'createTransaction').returns(stubTransaction);
 
-			const result = await contract.evaluateTransaction('myfunc', 'arg1', 'arg2');
-			sinon.assert.calledOnce(mockQueryHandler.queryChaincode);
-			should.equal(result, null);
+			const result = await contract.evaluateTransaction('name', ...args);
+
+			result.should.equal(expected);
 		});
-
-		it('should query chaincode and handle a good response with return data', async () => {
-			const response = Buffer.from('hello world');
-			mockQueryHandler.queryChaincode.withArgs(chaincodeId, mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves(response);
-
-			const result = await contract.evaluateTransaction('myfunc', 'arg1', 'arg2');
-			sinon.assert.calledOnce(mockQueryHandler.queryChaincode);
-			result.equals(response).should.be.true;
-		});
-
-		it('should query chaincode and handle an error response', () => {
-			const response = new Error('such error');
-			mockQueryHandler.queryChaincode.withArgs(chaincodeId, mockTransactionID, 'myfunc', ['arg1', 'arg2']).rejects(response);
-			return contract.evaluateTransaction('myfunc', 'arg1', 'arg2')
-				.should.be.rejectedWith(/such error/);
-
-		});
-
-		it('should query chaincode with namespace added to the function', async () => {
-			const nscontract = new Contract(network, chaincodeId, mockGateway, mockQueryHandler, 'my.name.space');
-
-			mockQueryHandler.queryChaincode.withArgs(chaincodeId, mockTransactionID, 'myfunc', ['arg1', 'arg2']).resolves();
-
-			await nscontract.evaluateTransaction('myfunc', 'arg1', 'arg2');
-			sinon.assert.calledOnce(mockQueryHandler.queryChaincode);
-			sinon.assert.calledWith(mockQueryHandler.queryChaincode,
-				sinon.match.any,
-				sinon.match.any,
-				'my.name.space:myfunc',
-				sinon.match.any);
-		});
-
-		it('throws if name is an empty string', () => {
-			const promise = contract.evaluateTransaction('');
-			return promise.should.be.rejectedWith('name');
-		});
-
-		it('throws is name is not a string', () => {
-			const promise = contract.evaluateTransaction(123);
-			return promise.should.be.rejectedWith('name');
-		});
-
 	});
 });
