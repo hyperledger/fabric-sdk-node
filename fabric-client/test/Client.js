@@ -15,7 +15,11 @@
 'use strict';
 
 const rewire = require('rewire');
+
 const Client = rewire('../lib/Client');
+const fs = require('fs');
+const Package = require('../lib/Package');
+const path = require('path');
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -1420,6 +1424,10 @@ describe('Client', () => {
 	});
 
 	describe('#installChaincode', () => {
+
+		const smartContractPackageBytes = fs.readFileSync(path.resolve(__dirname, 'data', 'golang-contract.cds'));
+		let smartContractPackage;
+
 		let getTargetPeersStub;
 		let getPeersForOrgOnChannelStub;
 		let _getSigningIdentityStub;
@@ -1432,11 +1440,11 @@ describe('Client', () => {
 		let buildProposalStub;
 		let signProposalStub;
 		let sendPeersProposalStub;
-		let _getChaincodeDeploymentSpecStub;
 		let translateCCTypeStub;
 
 		let client;
-		beforeEach(() => {
+		beforeEach(async () => {
+			smartContractPackage = await Package.fromBuffer(smartContractPackageBytes);
 			getPeersForOrgOnChannelStub = sandbox.stub();
 			getTargetPeersStub = sandbox.stub();
 			_getSigningIdentityStub = sandbox.stub().returns('signer');
@@ -1455,8 +1463,6 @@ describe('Client', () => {
 			revert.push(Client.__set__('clientUtils.signProposal', signProposalStub));
 			sendPeersProposalStub = sandbox.stub().returns(Promise.resolve(['response']));
 			revert.push(Client.__set__('clientUtils.sendPeersProposal', sendPeersProposalStub));
-			_getChaincodeDeploymentSpecStub = sandbox.stub().returns(Promise.resolve('cdsBytes'));
-			revert.push(Client.__set__('_getChaincodeDeploymentSpec', _getChaincodeDeploymentSpecStub));
 			translateCCTypeStub = sandbox.stub().returns('go');
 			revert.push(Client.__set__('clientUtils.translateCCType', translateCCTypeStub));
 			revert.push(Client.__set__('_commonProto.HeaderType.ENDORSER_TRANSACTION', 'ENDORSER_TRANSACITON'));
@@ -1494,18 +1500,25 @@ describe('Client', () => {
 		});
 
 		it('should install using chaincode ID, chaincode version, and chaincode path', async () => {
+			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').withArgs({
+				name: 'mycc',
+				version: '0.0.1',
+				path: 'mycc',
+				type: undefined,
+				metadataPath: undefined
+			}).resolves(smartContractPackage);
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
 			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer'] };
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
-			sinon.assert.calledWith(_getChaincodeDeploymentSpecStub, request, client.isDevMode());
+			sinon.assert.calledOnce(fromDirectoryStub);
 			sinon.assert.calledWith(translateCCTypeStub, undefined);
 			sinon.assert.calledWith(_getSigningIdentityStub, true);
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
 				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), 'cdsBytes'] },
+				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1514,18 +1527,74 @@ describe('Client', () => {
 		});
 
 		it('should install using chaincode ID, chaincode version, chaincode path, and chaincode type', async () => {
+			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').withArgs({
+				name: 'mycc',
+				version: '0.0.1',
+				path: 'mycc',
+				type: 'java',
+				metadataPath: undefined
+			}).resolves(smartContractPackage);
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
 			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', chaincodeType: 'java', targets: ['peer'] };
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
-			sinon.assert.calledWith(_getChaincodeDeploymentSpecStub, request, client.isDevMode());
+			sinon.assert.calledOnce(fromDirectoryStub);
 			sinon.assert.calledWith(translateCCTypeStub, 'java');
 			sinon.assert.calledWith(_getSigningIdentityStub, true);
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
 				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), 'cdsBytes'] },
+				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
+				type: 'go'
+			}, 'header');
+			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
+			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
+			response.should.deep.equal([['response'], 'proposal']);
+		});
+
+		it('should install using chaincode ID, chaincode version, chaincode path, chaincode type, and metadata path', async () => {
+			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').withArgs({
+				name: 'mycc',
+				version: '0.0.1',
+				path: 'mycc',
+				type: 'java',
+				metadataPath: 'mycc/META-INF'
+			}).resolves(smartContractPackage);
+			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
+			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', chaincodeType: 'java', metadataPath: 'mycc/META-INF', targets: ['peer'] };
+			const response = await client.installChaincode(request);
+			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
+			sinon.assert.calledOnce(fromDirectoryStub);
+			sinon.assert.calledWith(translateCCTypeStub, 'java');
+			sinon.assert.calledWith(_getSigningIdentityStub, true);
+			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
+			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
+			sinon.assert.calledWith(buildProposalStub, {
+				chaincode_id: { name: 'lscc' },
+				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
+				type: 'go'
+			}, 'header');
+			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
+			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
+			response.should.deep.equal([['response'], 'proposal']);
+		});
+
+		it('should install, but not package, when dev mode is enabled', async () => {
+			client.setDevMode(true);
+			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').rejects(new Error('such error'));
+			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
+			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer'] };
+			const response = await client.installChaincode(request);
+			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
+			sinon.assert.notCalled(fromDirectoryStub);
+			sinon.assert.calledWith(translateCCTypeStub, undefined);
+			sinon.assert.calledWith(_getSigningIdentityStub, true);
+			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
+			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
+			sinon.assert.calledWith(buildProposalStub, {
+				chaincode_id: { name: 'lscc' },
+				input: { args: [Buffer.from('install', 'utf8'), null] },
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1534,20 +1603,19 @@ describe('Client', () => {
 		});
 
 		it('should install using a chaincode package', async () => {
+			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').rejects(new Error('such error'));
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
-			const chaincodePackage = Buffer.from('hello world');
-			_getChaincodeDeploymentSpecStub.resolves(chaincodePackage);
-			const request = { chaincodePackage, targets: ['peer'] };
+			const request = { chaincodePackage: smartContractPackageBytes, targets: ['peer'] };
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
-			sinon.assert.calledWith(_getChaincodeDeploymentSpecStub, request, client.isDevMode());
+			sinon.assert.notCalled(fromDirectoryStub);
 			sinon.assert.calledWith(translateCCTypeStub, undefined);
 			sinon.assert.calledWith(_getSigningIdentityStub, true);
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
 				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), chaincodePackage] },
+				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1556,18 +1624,24 @@ describe('Client', () => {
 		});
 
 		it('should install using an explicit transaction ID', async () => {
+			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').withArgs({
+				name: 'mycc',
+				version: '0.0.1',
+				path: 'mycc',
+				type: undefined,
+				metadataPath: undefined
+			}).resolves(smartContractPackage);
 			getTargetPeersStub.returns(['peer']);
-			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: [], channelNames: [], txId: { isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub }, chaincodeType: 'go' };
+			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: [], channelNames: [], txId: { isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub } };
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, []);
-			sinon.assert.calledWith(_getChaincodeDeploymentSpecStub, request, client.isDevMode());
-			sinon.assert.calledWith(translateCCTypeStub, 'go');
+			sinon.assert.calledOnce(fromDirectoryStub);
 			sinon.assert.calledWith(_getSigningIdentityStub, true);
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
 				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), 'cdsBytes'] },
+				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1576,18 +1650,24 @@ describe('Client', () => {
 		});
 
 		it('should install using the specified target peers', async () => {
+			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').withArgs({
+				name: 'mycc',
+				version: '0.0.1',
+				path: 'mycc',
+				type: undefined,
+				metadataPath: undefined
+			}).resolves(smartContractPackage);
 			getTargetPeersStub.returns(['peer']);
-			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: [], channelNames: [], txId: { isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub }, chaincodeType: 'go' };
+			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: [], channelNames: [], txId: { isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub } };
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, []);
-			sinon.assert.calledWith(_getChaincodeDeploymentSpecStub, request, client.isDevMode());
-			sinon.assert.calledWith(translateCCTypeStub, 'go');
+			sinon.assert.calledOnce(fromDirectoryStub);
 			sinon.assert.calledWith(_getSigningIdentityStub, true);
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
 				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), 'cdsBytes'] },
+				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1596,19 +1676,26 @@ describe('Client', () => {
 		});
 
 		it('should install using the peers discovered for the channel', async () => {
+			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').withArgs({
+				name: 'mycc',
+				version: '0.0.1',
+				path: 'mycc',
+				type: undefined,
+				metadataPath: undefined
+			}).resolves(smartContractPackage);
 			getTargetPeersStub.returns();
 			getPeersForOrgOnChannelStub.withArgs(['mychannel']).returns(['peer']);
 			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', channelNames: ['mychannel'] };
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, undefined);
-			sinon.assert.calledWith(_getChaincodeDeploymentSpecStub, request, client.isDevMode());
+			sinon.assert.calledOnce(fromDirectoryStub);
 			sinon.assert.calledWith(translateCCTypeStub, undefined);
 			sinon.assert.calledWith(_getSigningIdentityStub, true);
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
 				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), 'cdsBytes'] },
+				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -2799,92 +2886,6 @@ describe('Client', () => {
 			revert.push(Client.__set__('fs', { readFile: readFileStub }));
 			const data = await readFile('file');
 			data.should.equal('data');
-		});
-	});
-
-	describe('_getChaincodeDeploymentSpec', () => {
-		let PackagerStub;
-		let packageStub;
-		let translateCCTypeStub;
-		let ChaincodeDeploymentSpecStub;
-		let setChaincodeSpecStub;
-		let setCodePackageStub;
-		let toBufferStub;
-
-		let _getChaincodeDeploymentSpec;
-		before(() => {
-			_getChaincodeDeploymentSpec = Client.__get__('_getChaincodeDeploymentSpec');
-		});
-
-		beforeEach(() => {
-			packageStub = sandbox.stub();
-			PackagerStub = { package: packageStub };
-			translateCCTypeStub = (cc) => cc;
-			toBufferStub = sandbox.stub();
-			setCodePackageStub = sandbox.stub();
-			setChaincodeSpecStub = sandbox.stub();
-			ChaincodeDeploymentSpecStub = sandbox.stub().returns({
-				setChaincodeSpec: setChaincodeSpecStub,
-				setCodePackage: setCodePackageStub,
-				toBuffer: toBufferStub
-			});
-
-			revert.push(Client.__set__('Packager', PackagerStub));
-			revert.push(Client.__set__('clientUtils.translateCCType', translateCCTypeStub));
-			revert.push(Client.__set__('_ccProto.ChaincodeDeploymentSpec', ChaincodeDeploymentSpecStub));
-		});
-
-		it('should return the stored chaincode spec', async () => {
-			const request = { chaincodePackage: Buffer.from('cc') };
-			const chaincodePackage = await _getChaincodeDeploymentSpec(request);
-			chaincodePackage.should.equal(request.chaincodePackage);
-		});
-
-		it('should be rejected', async () => {
-			packageStub.returns(Promise.reject('Error'));
-			const request = {};
-			try {
-				await _getChaincodeDeploymentSpec(request);
-				should.fail();
-			} catch (err) {
-				err.should.equal('Error');
-			}
-		});
-
-		it('should return a chaincode deployment spec when package returns no data', async () => {
-			toBufferStub.returns('spec');
-			packageStub.returns(Promise.resolve(null));
-			const request = { chaincodeType: 'cc', chaincodeId: 'chaincode-id', chaincodePath: 'chaincode-path', chaincodeVersion: 'chaincode-version' };
-			const deploymentSpec = await _getChaincodeDeploymentSpec(request);
-			sinon.assert.called(ChaincodeDeploymentSpecStub);
-			sinon.assert.calledWith(setChaincodeSpecStub, {
-				type: 'cc',
-				chaincode_id: {
-					name: 'chaincode-id',
-					path: 'chaincode-path',
-					version: 'chaincode-version'
-				}
-			});
-			deploymentSpec.should.equal('spec');
-		});
-
-		it('should return a chaincode deployment spec when package returns data', async () => {
-			toBufferStub.returns('spec');
-			packageStub.returns(Promise.resolve('data'));
-			const request = { chaincodeType: 'cc', chaincodeId: 'chaincode-id', chaincodePath: 'chaincode-path', chaincodeVersion: 'chaincode-version' };
-			const deploymentSpec = await _getChaincodeDeploymentSpec(request);
-			sinon.assert.called(ChaincodeDeploymentSpecStub);
-			sinon.assert.calledWith(setCodePackageStub, 'data');
-			sinon.assert.calledWith(FakeLogger.debug, 'installChaincode - created new package');
-			sinon.assert.calledWith(setChaincodeSpecStub, {
-				type: 'cc',
-				chaincode_id: {
-					name: 'chaincode-id',
-					path: 'chaincode-path',
-					version: 'chaincode-version'
-				}
-			});
-			deploymentSpec.should.equal('spec');
 		});
 	});
 

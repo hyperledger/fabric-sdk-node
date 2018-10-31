@@ -34,39 +34,38 @@ const logger = utils.getLogger('packager');
  *        The path to the top-level directory containing metadata descriptors
  * @returns {Promise} A promise for the data as a byte array
  */
-module.exports.package = function(chaincodePath, chaincodeType, devmode, metadataPath) {
+module.exports.package = async function (chaincodePath, chaincodeType, devmode, metadataPath) {
 	logger.debug('packager: chaincodePath: %s, chaincodeType: %s, devmode: %s, metadataPath: %s',
 		chaincodePath,chaincodeType,devmode, metadataPath);
-	return new Promise((resolve, reject) => {
-		if (devmode) {
-			logger.debug('packager: Skipping chaincode packaging due to devmode configuration');
-			return resolve(null);
-		}
 
-		if (!chaincodePath || chaincodePath && chaincodePath.length < 1) {
-			// Verify that chaincodePath is being passed
-			return reject(new Error('Missing chaincodePath parameter'));
-		}
+	if (devmode) {
+		logger.debug('packager: Skipping chaincode packaging due to devmode configuration');
+		return null;
+	}
 
-		const type = chaincodeType ? chaincodeType : 'golang';
-		logger.debug('packager: type %s ',type);
+	if (!chaincodePath || chaincodePath && chaincodePath.length < 1) {
+		// Verify that chaincodePath is being passed
+		throw new Error('Missing chaincodePath parameter');
+	}
 
-		let handler;
+	const type = chaincodeType ? chaincodeType : 'golang';
+	logger.debug('packager: type %s ',type);
 
-		switch (type.toLowerCase()) {
-		case 'car':
-			handler = new Car();
-			break;
-		case 'node':
-			handler = new Node();
-			break;
-		case 'java':
-			handler = new Java();
-			break;
-		default:
-			handler = new Golang(['.go','.c','.h','.s']);
-		}
+	let handler;
 
-		return resolve(handler.package(chaincodePath, metadataPath));
-	});
+	switch (type.toLowerCase()) {
+	case 'car':
+		handler = new Car();
+		break;
+	case 'node':
+		handler = new Node();
+		break;
+	case 'java':
+		handler = new Java();
+		break;
+	default:
+		handler = new Golang(['.go','.c','.h','.s']);
+	}
+
+	return handler.package(chaincodePath, metadataPath);
 };

@@ -1060,7 +1060,25 @@ const Client = class extends BaseClient {
 				throw new Error('Missing peer objects in install chaincode request');
 			}
 
-			const cdsBytes = await _getChaincodeDeploymentSpec(request, this.isDevMode());
+			let cdsBytes;
+			if (request.chaincodePackage) {
+				cdsBytes = request.chaincodePackage;
+				logger.debug(`installChaincode - using specified chaincode package (${cdsBytes.length} bytes)`);
+			} else if (this.isDevMode()) {
+				cdsBytes = null;
+				logger.debug('installChaincode - in dev mode, refusing to package chaincode');
+			} else {
+				const cdsPkg = await Package.fromDirectory({
+					name: request.chaincodeId,
+					version: request.chaincodeVersion,
+					path: request.chaincodePath,
+					type: request.chaincodeType,
+					metadataPath: request.metadataPath
+				});
+				cdsBytes = await cdsPkg.toBuffer();
+				logger.debug(`installChaincode - built chaincode package (${cdsBytes.length} bytes)`);
+			}
+
 			// TODO add ESCC/VSCC info here ??????
 			const lcccSpec = {
 				type: clientUtils.translateCCType(request.chaincodeType),
@@ -1741,38 +1759,6 @@ function readFile(path) {
 			return resolve(data);
 		});
 	});
-}
-
-// internal utility to get the serialized deployment spec for installing chaincode
-async function _getChaincodeDeploymentSpec(request, devMode) {
-	if (request.chaincodePackage && Buffer.isBuffer(request.chaincodePackage)) {
-		logger.debug('installChaincode - using included package');
-		return request.chaincodePackage;
-	} else {
-		return new Promise((resolve, reject) => {
-			return Packager.package(request.chaincodePath, request.chaincodeType, devMode, request.metadataPath)
-				.then((data) => {
-					const ccSpec = {
-						type: clientUtils.translateCCType(request.chaincodeType),
-						chaincode_id: {
-							name: request.chaincodeId,
-							path: request.chaincodePath,
-							version: request.chaincodeVersion
-						}
-					};
-					logger.debug('installChaincode - ccSpec %s ', JSON.stringify(ccSpec));
-					const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
-					chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
-					// DATA may or may not be present depending on devmode settings
-					if (data) {
-						chaincodeDeploymentSpec.setCodePackage(data);
-						logger.debug('installChaincode - created new package');
-					}
-					resolve(chaincodeDeploymentSpec.toBuffer());
-				})
-				.catch(reject);
-		});
-	}
 }
 
 // internal utility method to check and convert any strings to protobuf signatures
