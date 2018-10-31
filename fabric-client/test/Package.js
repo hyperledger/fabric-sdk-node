@@ -113,6 +113,50 @@ describe('Package', () => {
 
 			const type = languageToType[language];
 
+			it(`should throw an error for an empty smart contract name [${language}]`, async () => {
+				let pkgDirectory;
+				if (language === 'golang') {
+					pkgDirectory = `${language}-contract`;
+				} else {
+					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
+				}
+				await Package.fromDirectory({ name: '', version: '1.2.3', path: pkgDirectory, type })
+					.should.be.rejectedWith(/Smart contract name not specified/);
+			});
+
+			it(`should throw an error for an invalid smart contract name [${language}]`, async () => {
+				let pkgDirectory;
+				if (language === 'golang') {
+					pkgDirectory = `${language}-contract`;
+				} else {
+					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
+				}
+				await Package.fromDirectory({ name: 'great@scott', version: '1.2.3', path: pkgDirectory, type })
+					.should.be.rejectedWith(/Invalid smart contract name/);
+			});
+
+			it(`should throw an error for an empty smart contract version [${language}]`, async () => {
+				let pkgDirectory;
+				if (language === 'golang') {
+					pkgDirectory = `${language}-contract`;
+				} else {
+					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
+				}
+				await Package.fromDirectory({ name: 'my-contract', version: '', path: pkgDirectory, type })
+					.should.be.rejectedWith(/Smart contract version not specified/);
+			});
+
+			it(`should throw an error for an invalid smart contract version [${language}]`, async () => {
+				let pkgDirectory;
+				if (language === 'golang') {
+					pkgDirectory = `${language}-contract`;
+				} else {
+					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
+				}
+				await Package.fromDirectory({ name: 'my-contract', version: '1@2@3', path: pkgDirectory, type })
+					.should.be.rejectedWith(/Invalid smart contract version/);
+			});
+
 			it(`should create a smart contract package from a directory [${language}]`, async () => {
 				let pkgDirectory;
 				if (language === 'golang') {
