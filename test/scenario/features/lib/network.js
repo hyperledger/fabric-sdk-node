@@ -61,7 +61,8 @@ async function connectGateway(ccp, tls, userName, orgName, gatewayName) {
 
 	const opts = {
 		wallet: inMemoryWallet,
-		identity: userIdentity
+		identity: userIdentity,
+		discovery: { enabled: false }
 	};
 
 	if (tls) {
