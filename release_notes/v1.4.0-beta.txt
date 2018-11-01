@@ -1,0 +1,24 @@
+v1.4.0-beta November 1, 2018
+-----------------------
+
+Release Notes
+-------------
+Added the fabric-network project allowing for contract task orientated
+hyperledger fabric application programming.
+
+Bug fixes and documentation improvements.
+
+Known Vulnerabilities
+---------------------
+none
+
+Resolved Vulnerabilities
+------------------------
+none
+
+Known Issues & Workarounds
+--------------------------
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/master/CHANGELOG.md#v140-beta
