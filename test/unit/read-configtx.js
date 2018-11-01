@@ -5,7 +5,9 @@
  */
 'use strict';
 
-if (global && global.hfc) global.hfc.config = undefined;
+if (global && global.hfc) {
+	global.hfc.config = undefined;
+}
 require('nconf').reset();
 
 const utils = require('fabric-client/lib/utils.js');
@@ -37,7 +39,7 @@ test('\n\n***** READ in the genesis block *****\n\n', (t) => {
 	const envelope = _commonProto.Envelope.decode(block.data.data[0]);
 	const payload = _commonProto.Payload.decode(envelope.payload);
 	const channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
-	if(channel_header.type != _commonProto.HeaderType.CONFIG) {
+	if (channel_header.type !== _commonProto.HeaderType.CONFIG) {
 		logger.error('Block must be of type "CONFIG"');
 	}
 

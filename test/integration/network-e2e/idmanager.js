@@ -46,7 +46,7 @@ class IDManager {
 		if (typeof idAttributes === 'string') {
 			try {
 				idAttributes = JSON.parse(idAttributes);
-			} catch(error) {
+			} catch (error) {
 				const newError = new Error('attributes provided are not valid JSON. ' + error);
 				throw newError;
 			}
@@ -65,7 +65,7 @@ class IDManager {
 
 	async enrollToWallet(userID, secret, mspId, walletToImportTo) {
 		await walletToImportTo.configureClientStores(this.client, userID);
-		const options = { enrollmentID: userID, enrollmentSecret: secret };
+		const options = {enrollmentID: userID, enrollmentSecret: secret};
 		const enrollment = await this.client.getCertificateAuthority().enroll(options);
 		// private key will now have been stored
 		const user = new User(userID);

@@ -34,7 +34,7 @@ const CouchDBKeyValueStore = class extends api.KeyValueStore {
 	 * @param {CouchDBOpts} options Settings used to connect to a CouchDB instance
 	 */
 	constructor(options) {
-		logger.debug('constructor', { options: options });
+		logger.debug('constructor', {options: options});
 
 		if (!options || !options.url) {
 			throw new Error('Must provide the CouchDB database url to store membership data.');
@@ -61,12 +61,12 @@ const CouchDBKeyValueStore = class extends api.KeyValueStore {
 				// Check for error
 				if (err) {
 					// Database doesn't exist
-					if (err.error == 'not_found') {
+					if (err.error === 'not_found') {
 						logger.debug('No %s found, creating %s', self._name, self._name);
 
-						dbClient.db.create(self._name, (err) => {
-							if (err) {
-								return reject(new Error(util.format('Failed to create %s database due to error: %s', self._name, err.stack ? err.stack : err)));
+						dbClient.db.create(self._name, (error) => {
+							if (error) {
+								return reject(new Error(util.format('Failed to create %s database due to error: %s', self._name, error.stack ? error.stack : error)));
 							}
 
 							logger.debug('Created %s database', self._name);
@@ -90,7 +90,7 @@ const CouchDBKeyValueStore = class extends api.KeyValueStore {
 	}
 
 	getValue(name) {
-		logger.debug('getValue', { key: name });
+		logger.debug('getValue', {key: name});
 
 		const self = this;
 		return new Promise(((resolve, reject) => {
@@ -113,7 +113,7 @@ const CouchDBKeyValueStore = class extends api.KeyValueStore {
 	}
 
 	setValue(name, value) {
-		logger.debug('setValue', { key: name });
+		logger.debug('setValue', {key: name});
 
 		const self = this;
 
@@ -128,11 +128,14 @@ const CouchDBKeyValueStore = class extends api.KeyValueStore {
 					} else {
 						// Entry does not exist
 						logger.debug('setValue: %s, Entry does not exist, insert it.', name);
-						self._dbInsert({ _id: name, member: value })
+						self._dbInsert({_id: name, member: value})
 							.then((status) => {
 								logger.debug('setValue add: ' + name + ', status: ' + status);
-								if (status == true) resolve(value);
-								else reject(new Error('Couch database insert add failed.'));
+								if (status === true) {
+									resolve(value);
+								} else {
+									reject(new Error('Couch database insert add failed.'));
+								}
 							});
 					}
 				} else {
@@ -140,11 +143,14 @@ const CouchDBKeyValueStore = class extends api.KeyValueStore {
 					// Update the database entry using the latest rev number
 					logger.debug('setValue: %s, Retrieved entry from %s. Latest rev number: %s', name, self._name, body._rev);
 
-					self._dbInsert({ _id: name, _rev: body._rev, member: value })
+					self._dbInsert({_id: name, _rev: body._rev, member: value})
 						.then((status) => {
 							logger.debug('setValue update: ' + name + ', status: ' + status);
-							if (status == true) resolve(value);
-							else reject(new Error('Couch database insert update failed.'));
+							if (status === true) {
+								resolve(value);
+							} else {
+								reject(new Error('Couch database insert update failed.'));
+							}
 						});
 				}
 			});
@@ -152,7 +158,7 @@ const CouchDBKeyValueStore = class extends api.KeyValueStore {
 	}
 
 	_dbInsert(options) {
-		logger.debug('setValue, _dbInsert', { options: options });
+		logger.debug('setValue, _dbInsert', {options: options});
 		const self = this;
 		return new Promise(((resolve, reject) => {
 			self._database.insert(options, (err) => {

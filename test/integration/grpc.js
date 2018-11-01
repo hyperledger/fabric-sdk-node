@@ -22,8 +22,8 @@ const Client = require('fabric-client');
 
 const GRPC_SEND = 'grpc.max_send_message_length';
 const GRPC_RECEIVE = 'grpc.max_receive_message_length';
-const SDK_SEND = 'grpc-max-send-message-length'; //legacy v1.0 way of setting the max
-const SDK_RECEIVE = 'grpc-max-receive-message-length'; //legacy v1.0 way of setting the max
+const SDK_SEND = 'grpc-max-send-message-length'; // legacy v1.0 way of setting the max
+const SDK_RECEIVE = 'grpc-max-receive-message-length'; // legacy v1.0 way of setting the max
 
 /*
  * The test depends on an existing channel 'mychannel'
@@ -41,7 +41,7 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 		const userOrg = 'org1';
 		const orgName = ORGS[userOrg].name;
 		const url = ORGS[userOrg].peer1.requests;
-		const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts']));
+		const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[userOrg].peer1.tls_cacerts));
 		const cryptoSuite = Client.newCryptoSuite();
 		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 		client.setCryptoSuite(cryptoSuite);
@@ -54,7 +54,7 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 		// make sure chaincode is installed that has the echo function
 		const go_cc = testUtil.END2END.chaincodeId;
 		const node_cc = testUtil.NODE_END2END.chaincodeId;
-		const version = 'v'+ (new Date()).getTime();
+		const version = 'v' + (new Date()).getTime();
 		await e2eUtils.installChaincode(userOrg, testUtil.CHAINCODE_UPGRADE_PATH, testUtil.METADATA_PATH, version, 'golang', t, true);
 		await e2eUtils.installChaincode('org2', testUtil.CHAINCODE_UPGRADE_PATH, testUtil.METADATA_PATH, version, 'golang', t, true);
 		await e2eUtils.instantiateChaincode(userOrg, testUtil.CHAINCODE_UPGRADE_PATH, version, 'golang', true, false, t);
@@ -80,7 +80,7 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 						'grpc.max_receive_message_length': 1024,
 					},
 					'tlsCACerts': {
-						path: path.join(__dirname, 'e2e', ORGS[userOrg].peer1['tls_cacerts'])
+						path: path.join(__dirname, 'e2e', ORGS[userOrg].peer1.tls_cacerts)
 					}
 				}
 			}
@@ -152,18 +152,26 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, -1, -1);
 		checkResponse(t, response, 'Test node cc able to set peer for legacy sdk max send', 'Sent|max|1024');
 
-	} catch(error) {
-		t.fail('Failed -- '+ error);
+	} catch (error) {
+		t.fail('Failed -- ' + error);
 	}
 
 	t.end();
 });
 
 async function send(client, channel, url, cc, opts, megs, grpc_send_max, grpc_receive_max, sdk_send_max, sdk_receive_max) {
-	if(grpc_send_max !== null) utils.setConfigSetting('grpc.max_send_message_length', grpc_send_max);
-	if(grpc_receive_max !== null) utils.setConfigSetting('grpc.max_receive_message_length', grpc_receive_max);
-	if(sdk_send_max !== null) utils.setConfigSetting('grpc-max-send-message-length', sdk_send_max);
-	if(sdk_receive_max !== null) utils.setConfigSetting('grpc-max-receive-message-length', sdk_receive_max);
+	if (grpc_send_max !== null) {
+		utils.setConfigSetting('grpc.max_send_message_length', grpc_send_max);
+	}
+	if (grpc_receive_max !== null) {
+		utils.setConfigSetting('grpc.max_receive_message_length', grpc_receive_max);
+	}
+	if (sdk_send_max !== null) {
+		utils.setConfigSetting('grpc-max-send-message-length', sdk_send_max);
+	}
+	if (sdk_receive_max !== null) {
+		utils.setConfigSetting('grpc-max-receive-message-length', sdk_receive_max);
+	}
 
 	const peer = client.newPeer(
 		url,
@@ -201,14 +209,14 @@ function checkResponse(t, response, message, error_message) {
 	const pattern = new RegExp('\\b(' + error_message + ')', 'g');
 	const error_words_length = error_message.split('|').length;
 
-	if(err.message) {
-		if(pattern.test(err.message) && err.message.match(pattern).length == error_words_length) {
+	if (err.message) {
+		if (pattern.test(err.message) && err.message.match(pattern).length === error_words_length) {
 			t.pass('Successfully ' + message);
 		} else {
-			t.fail('Failed message not match ' + error_message + ' for ' + message );
-			t.comment('Failed with error of '+ err.message);
+			t.fail('Failed message not match ' + error_message + ' for ' + message);
+			t.comment('Failed with error of ' + err.message);
 		}
 	} else {
-		t.fail('Failed to get an error message for '+ message);
+		t.fail('Failed to get an error message for ' + message);
 	}
 }

@@ -36,7 +36,7 @@ test('\n\n** CouchDBKeyValueStore tests', (t) => {
 		.then(() => {
 			t.fail('Should not have been able to successfully construct a store from an invalid URL');
 			throw new Error('Failed');
-		},(err) => {
+		}, (err) => {
 			if (err.message && err.message.indexOf('ECONNREFUSED') > 0) {
 				t.pass('Successfully rejected the construction request due to invalid URL');
 			} else {

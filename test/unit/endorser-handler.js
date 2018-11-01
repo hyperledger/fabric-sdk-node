@@ -42,14 +42,14 @@ const org3 = [
 	'peer3.org3.example.com:9003'
 ];
 
-const chaincodes = [{name: 'example',version: 'v2'}];
+const chaincodes = [{name: 'example', version: 'v2'}];
 const ledger_height = {low: 4, high: 0, unsigned: true};
 
 const discovery_plan = {
 	msps: {
 		OrdererMSP: {
 			id: 'OrdererMSP',
-			orgs: [ ],
+			orgs: [],
 			rootCerts: pem,
 			intermediateCerts: '',
 			admins: pem,
@@ -57,7 +57,7 @@ const discovery_plan = {
 		},
 		Org2MSP: {
 			id: org2[0],
-			orgs: [ ],
+			orgs: [],
 			rootCerts: pem,
 			intermediateCerts: '',
 			admins: pem,
@@ -65,7 +65,7 @@ const discovery_plan = {
 		},
 		Org1MSP: {
 			id: org1[0],
-			orgs: [ ],
+			orgs: [],
 			rootCerts: pem,
 			intermediateCerts: '',
 			admins: pem,
@@ -121,7 +121,7 @@ const discovery_plan = {
 					]
 				}
 			},
-			layouts: [{G0: 1, G1: 1},{G3: 3, G1: 1}]
+			layouts: [{G0: 1, G1: 1}, {G3: 3, G1: 1}]
 		}
 	}
 };
@@ -139,11 +139,11 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 	const channel = client.newChannel('handlertest');
 	try {
 		channel.initialize({discover:true});
-	} catch(error) {
+	} catch (error) {
 		// we will get an error
 	}
 	const handler = channel._endorsement_handler;
-	if(handler && handler.endorse) {
+	if (handler && handler.endorse) {
 		t.pass('Able to have the channel create the handler');
 	} else {
 		t.fail('Channel was not able to create the handler');
@@ -172,9 +172,9 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 	const preferred = handler._create_map([org3[3]]);
 	const remove = handler._create_map([org2[1]]);
 
-	handler._modify_groups(preferred, remove, discovery_plan.endorsement_plans['example']);
-	t.equal(discovery_plan.endorsement_plans['example'].groups['G1'].peers.length, 1, 'Checking that one peer was removed');
-	t.equal(discovery_plan.endorsement_plans['example'].groups['G3'].peers[0].name, org3[3], 'Checking that peer was moved to top of list');
+	handler._modify_groups(preferred, remove, discovery_plan.endorsement_plans.example);
+	t.equal(discovery_plan.endorsement_plans.example.groups.G1.peers.length, 1, 'Checking that one peer was removed');
+	t.equal(discovery_plan.endorsement_plans.example.groups.G3.peers[0].name, org3[3], 'Checking that peer was moved to top of list');
 
 	channel.addPeer(client.newPeer('grpcs://' + org1[1], {pem}));
 	channel.addPeer(client.newPeer('grpcs://' + org1[2], {pem}));
@@ -193,18 +193,20 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 	const proposal = Channel._buildSignedProposal(request, 'handlert', client);
 
 	try {
-		await handler._endorse(discovery_plan.endorsement_plans['example'], request, proposal);
-	} catch(error) {
-		if(error instanceof Error) {
+		await handler._endorse(discovery_plan.endorsement_plans.example, request, proposal);
+	} catch (error) {
+		if (error instanceof Error) {
 			t.fail('Should have received endorsment array');
-		} if(Array.isArray(error)) {
+		} if (Array.isArray(error)) {
 			t.pass('So far so good');
 		} else {
 			t.fail('Unknown endorsement results returned');
 		}
 	}
 
-	if(temp) Client.setConfigSetting('endorsement-handler-path', temp);
+	if (temp) {
+		Client.setConfigSetting('endorsement-handler-path', temp);
+	}
 	t.end();
 });
 
@@ -213,8 +215,8 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 async function errorChecker(t, handler, parameters, error_text) {
 	try {
 		await handler.endorse(parameters);
-	} catch(error) {
-		if(error.toString().indexOf(error_text)) {
+	} catch (error) {
+		if (error.toString().indexOf(error_text)) {
 			t.pass('Check for :' + error_text);
 		} else {
 			t.fail('Check for :' + error_text);

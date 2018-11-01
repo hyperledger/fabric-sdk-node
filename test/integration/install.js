@@ -21,7 +21,6 @@ const fs = require('fs');
 const e2eUtils = require('./e2e/e2eUtils.js');
 
 const Client = require('fabric-client');
-const Packager = require('fabric-client/lib/Packager.js');
 const testUtil = require('../unit/util.js');
 
 let ORGS;
@@ -94,7 +93,7 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 	const _getChaincodeDeploymentSpec = rewire('fabric-client/lib/Client.js').__get__('_getChaincodeDeploymentSpec');
 
 	// install from source
-	const p = _getChaincodeDeploymentSpec(params, false)
+	_getChaincodeDeploymentSpec(params, false)
 		.then((cdsBytes) => {
 			params.chaincodePackage = cdsBytes;
 			installChaincode(params, t)
@@ -141,6 +140,7 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 });
 
 function installChaincode(params, t) {
+	let data;
 	try {
 		const org = params.org;
 		const client = new Client();
@@ -148,7 +148,7 @@ function installChaincode(params, t) {
 
 		const orgName = ORGS[org].name;
 		const caRootsPath = ORGS.orderer.tls_cacerts;
-		const data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
+		data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 		const caroots = Buffer.from(data).toString();
 		let tlsInfo = null;
 
@@ -157,7 +157,7 @@ function installChaincode(params, t) {
 				t.pass('Successfully retrieved TLS certificate');
 				tlsInfo = enrollment;
 				client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
-				return Client.newDefaultKeyValueStore({ path: testUtil.storePathForOrg(orgName) });
+				return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 			}).then((store) => {
 				client.setStateStore(store);
 
@@ -182,7 +182,7 @@ function installChaincode(params, t) {
 				for (const key in ORGS[org]) {
 					if (ORGS[org].hasOwnProperty(key)) {
 						if (key.indexOf('peer') === 0) {
-							const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key]['tls_cacerts']));
+							data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key].tls_cacerts));
 							const peer = client.newPeer(
 								ORGS[org][key].requests,
 								{
@@ -214,7 +214,7 @@ function installChaincode(params, t) {
 			}).then((results) => {
 				const proposalResponses = results[0];
 
-				//var proposal = results[1];
+				// var proposal = results[1];
 				let all_good = true;
 				let error = null;
 				for (const i in proposalResponses) {
@@ -233,8 +233,9 @@ function installChaincode(params, t) {
 				} else {
 					if (error) {
 						return error;
+					} else {
+						return 'fail';
 					}
-					else return 'fail';
 				}
 			},
 			(err) => {

@@ -238,7 +238,9 @@ test('\n\n**PKCS11 - Test Client.createUser with existing PKCS11 key.\n\n', asyn
 	// override t.end function so it'll always clear the config settings
 	t.end = ((context, f) => {
 		return function () {
-			if (global && global.hfc) global.hfc.config = undefined;
+			if (global && global.hfc) {
+				global.hfc.config = undefined;
+			}
 			require('nconf').reset();
 
 			f.apply(context, arguments);

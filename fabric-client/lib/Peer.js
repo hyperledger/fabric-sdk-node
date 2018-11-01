@@ -59,11 +59,11 @@ class Peer extends Remote {
 	 * Close the service connections.
 	 */
 	close() {
-		if(this._endorserClient) {
+		if (this._endorserClient) {
 			logger.debug('close - closing peer endorser connection ' + this._endpoint.addr);
 			this._endorserClient.close();
 		}
-		if(this._discoveryClient) {
+		if (this._discoveryClient) {
 			logger.debug('close - closing peer discovery connection ' + this._endpoint.addr);
 			this._discoveryClient.close();
 		}
@@ -87,10 +87,11 @@ class Peer extends Remote {
 		logger.debug('%s - Start ----%s %s', method, this.getName(), this.getUrl());
 		const self = this;
 		let rto = self._request_timeout;
-		if (typeof timeout === 'number')
-			rto = timeout;
 
-		if(!proposal) {
+		if (typeof timeout === 'number') {
+			rto = timeout;
+		}
+		if (!proposal) {
 			throw new Error('Missing proposal to send to peer');
 		}
 
@@ -107,10 +108,9 @@ class Peer extends Remote {
 				clearTimeout(send_timeout);
 				if (err) {
 					logger.debug('%s - Received proposal response from: %s status: %s', method, self._url, err);
-					if(err instanceof Error) {
+					if (err instanceof Error) {
 						reject(err);
-					}
-					else {
+					} else {
 						reject(new Error(err));
 					}
 				} else {
@@ -152,16 +152,17 @@ class Peer extends Remote {
 		logger.debug('%s - Start', method);
 		const self = this;
 		let rto = self._request_timeout;
-		if (typeof timeout === 'number')
-			rto = timeout;
 
-		if(!request) {
+		if (typeof timeout === 'number') {
+			rto = timeout;
+		}
+		if (!request) {
 			return Promise.reject(new Error('Missing request to send to peer discovery service'));
 		}
 
 		return this.waitForReady(this._discoveryClient).then(() => {
 			return new Promise((resolve, reject) => {
-				const send_timeout = setTimeout(() =>{
+				const send_timeout = setTimeout(() => {
 					logger.error('%s - timed out after:%s', method, rto);
 					return reject(new Error('REQUEST_TIMEOUT'));
 				}, rto);
@@ -170,10 +171,9 @@ class Peer extends Remote {
 					clearTimeout(send_timeout);
 					if (err) {
 						logger.debug('%s - Received discovery response from: %s status: %s', method, self._url, err);
-						if(err instanceof Error) {
+						if (err instanceof Error) {
 							reject(err);
-						}
-						else {
+						} else {
 							reject(new Error(err));
 						}
 					} else {

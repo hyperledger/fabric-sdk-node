@@ -39,7 +39,7 @@ test(DESC, (t) => {
 
 async function perfTest3(t) {
 	testUtil.resetDefaults();
-	Client.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
+	Client.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
 	Client.addConfigFile(path.join(__dirname, '../e2e', 'config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 	const orgName = ORGS[org].name;
@@ -69,7 +69,7 @@ async function perfTest3(t) {
 	const endorser = peer._endorserClient;
 
 	const promise = function(user) {
-		for(let i=0; i<total; i++) {
+		for (let i = 0; i < total; i++) {
 			const proposal = makeProposal(user, client);
 			proposals.push(proposal);
 		}
@@ -77,9 +77,9 @@ async function perfTest3(t) {
 		const count = 0;
 		return new Promise((resolve, reject) => {
 			// eslint-disable-next-line no-constant-condition
-			while(true) {
+			while (true) {
 				const proposal = proposals.pop();
-				if(!proposal){
+				if (!proposal) {
 					logger.debug(' sendind proposals is complete');
 					break;
 				}
@@ -88,8 +88,8 @@ async function perfTest3(t) {
 						reject(err);
 					} else {
 						if (proposalResponse) {
-							//logger.debug('Received proposal response with status - %s', proposalResponse.response.status);
-							if(count == total) {
+							// logger.debug('Received proposal response with status - %s', proposalResponse.response.status);
+							if (count === total) {
 								resolve(proposalResponse);
 							}
 						} else {
@@ -145,11 +145,11 @@ async function perfTest3(t) {
 	});
 }
 
-function makeProposal(signer, client) {
-	const tx_id = client.newTransactionID();
+function makeProposal(signer, targetClient) {
+	const tx_id = targetClient.newTransactionID();
 	const args = ['query', 'a'];
 	const arg_bytes = [];
-	for(let i=0; i<args.length; i++) {
+	for (let i = 0; i < args.length; i++) {
 		arg_bytes.push(Buffer.from(args[i], 'utf8'));
 	}
 	const invokeSpec = {

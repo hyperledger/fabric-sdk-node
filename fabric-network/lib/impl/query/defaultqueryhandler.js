@@ -36,7 +36,9 @@ class DefaultQueryHandler extends QueryHandler {
 				return peer.isInRole(FABRIC_CONSTANTS.NetworkConfig.CHAINCODE_QUERY_ROLE);
 			});
 		}
-		logger.debug('%s - queryable peers %j', method, this.allQueryablePeers.map((peer) => {return peer.getName();}));
+		logger.debug('%s - queryable peers %j', method, this.allQueryablePeers.map((peer) => {
+			return peer.getName();
+		}));
 		this.queryPeerIndex = -1;
 	}
 
@@ -101,7 +103,7 @@ class DefaultQueryHandler extends QueryHandler {
 		}
 
 		if (!success) {
-			const newError = new Error(`No peers available to query. last error was ${allErrors[allErrors.length-1]}`);
+			const newError = new Error(`No peers available to query. last error was ${allErrors[allErrors.length - 1]}`);
 			logger.error('%s - No peers out of a total of %i were available to query', method, this.allQueryablePeers.length);
 			throw newError;
 		}

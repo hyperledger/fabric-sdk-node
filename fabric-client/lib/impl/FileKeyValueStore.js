@@ -30,7 +30,7 @@ const FileKeyValueStore = class extends api.KeyValueStore {
 	 * for the store
 	 */
 	constructor(options) {
-		logger.debug('constructor', { options: options });
+		logger.debug('constructor', {options: options});
 
 		if (!options || !options.path) {
 			throw new Error('Must provide the path to the directory to hold files for the store.');
@@ -44,7 +44,7 @@ const FileKeyValueStore = class extends api.KeyValueStore {
 		return new Promise(((resolve, reject) => {
 			fs.mkdirs(self._dir, (err) => {
 				if (err) {
-					logger.error('constructor, error creating directory, code: %s' , err.code);
+					logger.error('constructor, error creating directory, code: %s', err.code);
 					return reject(err);
 				}
 				return resolve(self);
@@ -53,7 +53,7 @@ const FileKeyValueStore = class extends api.KeyValueStore {
 	}
 
 	getValue(name) {
-		logger.debug('getValue', { key: name });
+		logger.debug('getValue', {key: name});
 
 		const self = this;
 
@@ -73,7 +73,7 @@ const FileKeyValueStore = class extends api.KeyValueStore {
 	}
 
 	setValue(name, value) {
-		logger.debug('setValue', { key: name });
+		logger.debug('setValue', {key: name});
 
 		const self = this;
 

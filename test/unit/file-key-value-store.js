@@ -45,10 +45,10 @@ test('\n\n ** FileKeyValueStore - read and write test **\n\n', (t) => {
 			}
 		).then(
 			(result) => {
-				if (result == testValue) {
+				if (result === testValue) {
 					t.pass('FileKeyValueStore read and write test: Successfully set value');
 				} else {
-					t.fail('FileKeyValueStore read and write test: set value '+result+ 'does not match testValue '+testValue);
+					t.fail('FileKeyValueStore read and write test: set value ' + result + 'does not match testValue ' + testValue);
 					t.end();
 				}
 				if (testUtil.existsSync(path.join(keyValStorePath, testKey))) {
@@ -67,10 +67,11 @@ test('\n\n ** FileKeyValueStore - read and write test **\n\n', (t) => {
 		).then(
 		// Log the fulfillment value
 			(val) => {
-				if (val != testValue)
+				if (val !== testValue) {
 					t.fail('FileKeyValueStore read and write test: get value ' + val + ' does not equal testValue of ' + testValue);
-				else
+				} else {
 					t.pass('FileKeyValueStore read and write test: Successfully retrieved value');
+				}
 
 				// now test getValue() when the underlying directory get deleted
 				fs.removeSync(keyValStorePath);
@@ -90,7 +91,7 @@ test('\n\n ** FileKeyValueStore - read and write test **\n\n', (t) => {
 					t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue() should not have returned value: ' + val);
 				}
 
-				return new FileKeyValueStore({ path: keyValStorePath });
+				return new FileKeyValueStore({path: keyValStorePath});
 			},
 			(reason) => {
 				t.fail('FileKeyValueStore error check tests:  Delete store & getValue test. getValue caught unexpected error: ' + reason);
@@ -131,7 +132,7 @@ test('\n\n** FileKeyValueStore error check tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			new FileKeyValueStore({ dir: keyValStorePath });
+			new FileKeyValueStore({dir: keyValStorePath});
 		},
 		/^Error: Must provide the path/,
 		'FileKeyValueStore error check tests: new FileKeyValueStore with no options.path should throw ' +

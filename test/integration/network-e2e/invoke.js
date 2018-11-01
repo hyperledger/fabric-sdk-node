@@ -23,12 +23,12 @@ const testUtils = require('../../unit/util');
 const channelName = testUtils.NETWORK_END2END.channel;
 const chaincodeId = testUtils.NETWORK_END2END.chaincodeId;
 
-const fixtures = process.cwd() + '/test/fixtures';
-const credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
-const cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
-const key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
+let fixtures = process.cwd() + '/test/fixtures';
+let credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
+let cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
+let key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
 const inMemoryWallet = new InMemoryWallet();
-const ccp = fs.readFileSync(fixtures + '/network.json');
+let ccp = fs.readFileSync(fixtures + '/network.json');
 const ccpDiscovery = fs.readFileSync(fixtures + '/network-discovery.json');
 
 async function inMemoryIdentitySetup() {
@@ -64,7 +64,7 @@ async function getFirstEventHubForOrg(gateway, orgMSP) {
 test('\n\n***** Network End-to-end flow: import identity into wallet *****\n\n', async (t) => {
 	await inMemoryIdentitySetup();
 	const exists = await inMemoryWallet.exists('User1@org1.example.com');
-	if(exists) {
+	if (exists) {
 		t.pass('Successfully imported User1@org1.example.com into wallet');
 	} else {
 		t.fail('Failed to import User1@org1.example.com into wallet');
@@ -105,20 +105,19 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		t.true(org1EventHub.isconnected(), 'org1 event hub correctly connected');
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
@@ -162,44 +161,41 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 			}
 		}, () => {});
 
-		let response = await contract.submitTransaction('move', 'a', 'b','100');
+		let response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		t.true(org1EventHub.isconnected(), 'org1 event hub correctly connected');
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked first transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response first from transaction chaincode: ' + response);
 		}
 
 		// second transaction for same connection
-		response = await contract.submitTransaction('move', 'a', 'b','50');
+		response = await contract.submitTransaction('move', 'a', 'b', '50');
 
 		t.equal(eventFired, 2, 'single event for org1 correctly unblocked submitTransaction');
 
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked second transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from second transaction chaincode: ' + response);
 		}
 
 		// third transaction for same connection
-		response = await contract.submitTransaction('move', 'a', 'b','25');
+		response = await contract.submitTransaction('move', 'a', 'b', '25');
 
 		t.equal(eventFired, 3, 'single event for org1 correctly unblocked submitTransaction');
 
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked third transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from third transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
@@ -246,18 +242,17 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
@@ -302,18 +297,17 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
@@ -364,20 +358,19 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		const unblockCorrectly = (org1EventFired === 1) && (org2EventFired === 1);
 		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
 		t.true(unblockCorrectly, 'got single events at both org event hubs before submitTransaction was unblocked');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
@@ -429,20 +422,19 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		const unblockCorrectly = (org1EventFired === 1) && (org2EventFired === 1);
 		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
 		t.true(unblockCorrectly, 'got single events at both org event hubs before submitTransaction was unblocked');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
@@ -495,10 +487,10 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
-		const unblockCorrectly = (org1EventFired === 1 && org2EventFired === 0)
-								|| (org1EventFired === 0 && org2EventFired === 1)
+		const unblockCorrectly = (org1EventFired === 1 && org2EventFired === 0) ||
+								(org1EventFired === 0 && org2EventFired === 1)
 								// || (org1EventFired === 1 && org2EventFired === 1) hopefully this doesn't have to be included due to timing
 								;
 
@@ -506,13 +498,12 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.true(unblockCorrectly, 'single event received by one of the event hubs caused submitTransaction to unblock, before other event received');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		// remove the disconnects once gateway disconnect cleans up event hubs
@@ -566,10 +557,10 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
-		const unblockCorrectly = (org1EventFired === 1 && org2EventFired === 0)
-			|| (org1EventFired === 0 && org2EventFired === 1)
+		const unblockCorrectly = (org1EventFired === 1 && org2EventFired === 0) ||
+			(org1EventFired === 0 && org2EventFired === 1)
 			// || (org1EventFired === 1 && org2EventFired === 1) hopefully this doesn't have to be included due to timing
 		;
 
@@ -577,13 +568,12 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.true(unblockCorrectly, 'single event received by one of the event hubs caused submitTransaction to unblock, before other event received');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		// remove the disconnects once gateway disconnect cleans up event hubs
@@ -614,16 +604,15 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
@@ -662,7 +651,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction with transient data 
 		}
 
 		Object.entries(transientMap).forEach((entry) => {
-			const key = entry[0];
+			key = entry[0];
 			const value = entry[1].toString();
 			if (value !== result[key]) {
 				t.fail(`Expected ${key} to be ${value} but was ${result[key]}`);
@@ -675,7 +664,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction with transient data 
 		} else {
 			t.fail('Unexpected transaction response: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
@@ -700,10 +689,10 @@ test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', as
 	});
 
 	try {
-		const response = await contract.submitTransaction('throwError', 'a', 'b','100');
+		const response = await contract.submitTransaction('throwError', 'a', 'b', '100');
 		t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-	} catch(expectedErr) {
-		if(expectedErr.message.includes('throwError: an error occurred')) {
+	} catch (expectedErr) {
+		if (expectedErr.message.includes('throwError: an error occurred')) {
 			t.pass('Successfully handled invocation errors');
 		} else {
 			t.fail('Unexpected exception: ' + expectedErr.message);
@@ -721,10 +710,10 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 	try {
 		// define the identity to use
-		const fixtures = process.cwd() + '/test/fixtures';
-		const credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
-		const cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
-		const key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
+		fixtures = process.cwd() + '/test/fixtures';
+		credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
+		cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
+		key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
 		const identityLabel = 'User1@org1.example.com';
 
 		const fileSystemWallet = new FileSystemWallet(tmpdir);
@@ -737,7 +726,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 		await fileSystemWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
 
-		const ccp = fs.readFileSync(fixtures + '/network.json');
+		ccp = fs.readFileSync(fixtures + '/network.json');
 		await gateway.connect(JSON.parse(ccp.toString()), {
 			wallet: fileSystemWallet,
 			identity: identityLabel,
@@ -757,34 +746,33 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 		t.pass('Got the contract, about to submit "move" transaction');
 
-		let response = await contract.submitTransaction('move', 'a', 'b','100');
+		let response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
 
 		try {
-			response = await contract.submitTransaction('throwError', 'a', 'b','100');
+			response = await contract.submitTransaction('throwError', 'a', 'b', '100');
 			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-		} catch(expectedErr) {
-			if(expectedErr.message.includes('throwError: an error occurred')) {
+		} catch (expectedErr) {
+			if (expectedErr.message.includes('throwError: an error occurred')) {
 				t.pass('Successfully handled invocation errors');
 			} else {
 				t.fail('Unexpected exception: ' + expectedErr.message);
 			}
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		// delete the file system wallet.
 		const rimRafPromise = new Promise((resolve) => {
 			rimraf(tmpdir, (err) => {
 				if (err) {
-					//eslint-disable-next-line no-console
+					// eslint-disable-next-line no-console
 					console.log(`failed to delete ${tmpdir}, error was ${err}`);
 					resolve();
 				}
@@ -801,10 +789,10 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using CouchDB wallet *****\n\n', async (t) => {
 	const gateway = new Gateway();
 	try {
-		const fixtures = process.cwd() + '/test/fixtures';
-		const credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
-		const cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
-		const key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
+		fixtures = process.cwd() + '/test/fixtures';
+		credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
+		cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
+		key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
 		const identityLabel = 'user1-org1_example_com';
 
 		const couchDBWallet = new CouchDBWallet({url: 'http://localhost:5984'});
@@ -815,7 +803,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 		await couchDBWallet.import('tls_id', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
 
-		const ccp = fs.readFileSync(fixtures + '/network.json');
+		ccp = fs.readFileSync(fixtures + '/network.json');
 		await gateway.connect(JSON.parse(ccp.toString()), {
 			wallet: couchDBWallet,
 			identity: identityLabel,
@@ -835,21 +823,20 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 		t.pass('Got the contract, about to submit "move" transaction');
 
-		let response = await contract.submitTransaction('move', 'a', 'b','100');
+		let response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
 
 		try {
-			response = await contract.submitTransaction('throwError', 'a', 'b','100');
+			response = await contract.submitTransaction('throwError', 'a', 'b', '100');
 			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-		} catch(expectedErr) {
-			if(expectedErr.message.includes('throwError: an error occurred')) {
+		} catch (expectedErr) {
+			if (expectedErr.message.includes('throwError: an error occurred')) {
 				t.pass('Successfully handled invocation errors');
 			} else {
 				t.fail('Unexpected exception: ' + expectedErr.message);
@@ -881,16 +868,15 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();

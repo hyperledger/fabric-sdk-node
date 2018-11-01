@@ -11,8 +11,6 @@ const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-as-promised'));
 
-const util = require('util');
-
 const Channel = require('fabric-client/lib/Channel');
 const Contract = require('fabric-network/lib/contract');
 const Network = require('fabric-network/lib/network');
@@ -38,7 +36,7 @@ describe('Transaction', () => {
 		network.getChannel.returns(channel);
 
 		stubContract.getChaincodeId.returns('chaincode-id');
-		stubContract.getEventHandlerOptions.returns({ commitTimeout: 418 });
+		stubContract.getEventHandlerOptions.returns({commitTimeout: 418});
 	});
 
 	afterEach(() => {
@@ -66,8 +64,8 @@ describe('Transaction', () => {
 		const transactionName = 'TRANSACTION_NAME';
 		const expectedResult = Buffer.from('42');
 
-		const fakeProposal = { proposal: 'I do' };
-		const fakeHeader = { header: 'gooooal' };
+		const fakeProposal = {proposal: 'I do'};
+		const fakeHeader = {header: 'gooooal'};
 		const validProposalResponse = {
 			response: {
 				status: 200,
@@ -79,13 +77,13 @@ describe('Transaction', () => {
 				status: 200
 			}
 		};
-		const errorProposalResponse = Object.assign(new Error(), { response: { status: 500, payload: 'error' } });
+		const errorProposalResponse = Object.assign(new Error(), {response: {status: 500, payload: 'error'}});
 
-		const validProposalResponses = [ [ validProposalResponse ], fakeProposal, fakeHeader ];
-		const emptyProposalResponses = [ [ emptyProposalResponse ], fakeProposal, fakeHeader ];
-		const noProposalResponses = [ [], fakeProposal, fakeHeader ];
-		const errorProposalResponses = [ [ errorProposalResponse ], fakeProposal, fakeHeader ];
-		const mixedProposalResponses = [ [ validProposalResponse, errorProposalResponse ], fakeProposal, fakeHeader ];
+		const validProposalResponses = [[validProposalResponse], fakeProposal, fakeHeader];
+		const emptyProposalResponses = [[emptyProposalResponse], fakeProposal, fakeHeader];
+		const noProposalResponses = [[], fakeProposal, fakeHeader];
+		const errorProposalResponses = [[errorProposalResponse], fakeProposal, fakeHeader];
+		const mixedProposalResponses = [[validProposalResponse, errorProposalResponse], fakeProposal, fakeHeader];
 
 		let transaction;
 		let expectedProposal;
@@ -103,7 +101,7 @@ describe('Transaction', () => {
 
 			channel = stubContract.getNetwork().getChannel();
 			channel.sendTransactionProposal.resolves(validProposalResponses);
-			channel.sendTransaction.resolves({ status: 'SUCCESS' });
+			channel.sendTransaction.resolves({status: 'SUCCESS'});
 		});
 
 		it('rejects for non-string arguments', () => {
@@ -117,7 +115,7 @@ describe('Transaction', () => {
 		});
 
 		it('sends proposal with arguments', async () => {
-			const args = [ 'one', 'two', 'three' ];
+			const args = ['one', 'two', 'three'];
 			expectedProposal.args = args;
 			await transaction.submit(...args);
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
@@ -154,7 +152,7 @@ describe('Transaction', () => {
 
 		it('throws if the orderer returns an unsuccessful response', () => {
 			const status = 'FAILURE';
-			channel.sendTransaction.resolves({ status });
+			channel.sendTransaction.resolves({status});
 			const promise = transaction.submit();
 			return expect(promise).to.be.rejectedWith(status);
 		});
@@ -163,7 +161,7 @@ describe('Transaction', () => {
 			channel.sendTransactionProposal.resolves(mixedProposalResponses);
 			await transaction.submit();
 			const expected = {
-				proposalResponses: [ validProposalResponse ],
+				proposalResponses: [validProposalResponse],
 				proposal: fakeProposal
 			};
 			sinon.assert.calledWith(channel.sendTransaction, sinon.match(expected));
@@ -185,7 +183,7 @@ describe('Transaction', () => {
 		});
 
 		it('sends a proposal with transient data', async () => {
-			const transientMap = { key1: 'value1', key2: 'value2' };
+			const transientMap = {key1: 'value1', key2: 'value2'};
 			expectedProposal.transientMap = transientMap;
 
 			transaction.setTransient(transientMap);
@@ -226,7 +224,7 @@ describe('Transaction', () => {
 		});
 
 		it('passes required parameters to query handler for with-args invocation', async () => {
-			const args = [ 'a', 'b', 'c' ];
+			const args = ['a', 'b', 'c'];
 
 			await transaction.evaluate(...args);
 
@@ -239,7 +237,7 @@ describe('Transaction', () => {
 		});
 
 		it('passes transient data to query handler', async () => {
-			const transientMap = { key1: 'value1', key2: 'value2' };
+			const transientMap = {key1: 'value1', key2: 'value2'};
 			transaction.setTransient(transientMap);
 
 			await transaction.evaluate();

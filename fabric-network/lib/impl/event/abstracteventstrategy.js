@@ -94,7 +94,7 @@ class AbstractEventStrategy {
 	 * @param {Function} successFn Callback function to invoke if the strategy is successful.
 	 * @param {Function} failFn Callback function to invoke if the strategy fails.
 	 */
-	//eslint-disable-next-line no-unused-vars
+	// eslint-disable-next-line no-unused-vars
 	checkCompletion(counts, successFn, failFn) {
 		throw new Error('AbstractEventStrategy.checkCompletion() not implemented');
 	}

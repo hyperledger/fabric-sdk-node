@@ -32,7 +32,7 @@ let ORGS;
 
 const querys = [];
 if (process.argv.length > 2) {
-	for (let i=2; i<process.argv.length; i++) {
+	for (let i = 2; i < process.argv.length; i++) {
 		querys.push(process.argv[i]);
 	}
 }
@@ -47,7 +47,7 @@ test('  ---->>>>> get config <<<<<-----', (t) => {
 	const org = 'org1';
 	const orgName = ORGS[org].name;
 	const caRootsPath = ORGS.orderer.tls_cacerts;
-	const data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
+	let data = fs.readFileSync(path.join(__dirname, 'e2e', caRootsPath));
 	const caroots = Buffer.from(data).toString();
 	let tlsInfo = null;
 
@@ -57,7 +57,7 @@ test('  ---->>>>> get config <<<<<-----', (t) => {
 			tlsInfo = enrollment;
 			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
-		}).then( (store) => {
+		}).then((store) => {
 			client.setStateStore(store);
 			const cryptoSuite = Client.newCryptoSuite();
 			cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
@@ -83,7 +83,7 @@ test('  ---->>>>> get config <<<<<-----', (t) => {
 						for (const key in ORGS[org]) {
 							if (ORGS[org].hasOwnProperty(key)) {
 								if (key.indexOf('peer') === 0) {
-									const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key]['tls_cacerts']));
+									data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key].tls_cacerts));
 									const peer = new Peer(
 										ORGS[org][key].requests,
 										{
@@ -112,10 +112,9 @@ test('  ---->>>>> get config <<<<<-----', (t) => {
 						const orgs = channel.getOrganizations();
 						logger.debug(' Got the following orgs back %j', orgs);
 						t.equals(orgs.length, 2, 'Checking the that we got back the right number of orgs');
-						if(orgs[0].id.indexOf('Or') == 0) {
-							t.pass('Found the org name '+ orgs[0].id);
-						}
-						else {
+						if (orgs[0].id.indexOf('Or') === 0) {
+							t.pass('Found the org name ' + orgs[0].id);
+						} else {
 							t.fail('Did not find the org name of \'org\' :: found ' + orgs[0].id);
 						}
 						t.end();

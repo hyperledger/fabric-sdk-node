@@ -50,8 +50,8 @@ test('\n\n ** Remote node tests **\n\n', async (t) => {
 	testutil.resetDefaults();
 
 	t.comment('\n * REMOTE *');
-	//Peer: secure grpcs, requires opts.pem
-	let opts = { pem: aPem };
+	// Peer: secure grpcs, requires opts.pem
+	let opts = {pem: aPem};
 	let remote = null;
 	t.throws(
 		() => {
@@ -115,7 +115,7 @@ test('\n\n ** Remote node tests **\n\n', async (t) => {
 		'Should throw error if timeout is not an integer'
 	);
 
-	opts = { pem: aPem, 'ssl-target-name-override': aHostnameOverride };
+	opts = {pem: aPem, 'ssl-target-name-override': aHostnameOverride};
 	remote = new Remote(url, opts);
 	t.equal(remote._endpoint.addr, aHost, 'GRPC Options tests: new Remote grpcs with opts created');
 	t.equal(remote.getName(), aHost, 'checking the name assignment');
@@ -140,8 +140,8 @@ test('\n\n ** Remote node tests **\n\n', async (t) => {
 	t.equal(remote._grpc_wait_for_ready_timeout, 500, 'Remote should have grpc waitForReady timeout equals 500');
 
 	t.comment('\n * PEER *');
-	//Peer: secure grpcs, requires opts.pem
-	opts = { pem: aPem };
+	// Peer: secure grpcs, requires opts.pem
+	opts = {pem: aPem};
 	let peer = null;
 	t.doesNotThrow(
 		() => {
@@ -153,22 +153,22 @@ test('\n\n ** Remote node tests **\n\n', async (t) => {
 	peer = new Peer(url, {pem: aPem, clientKey: aPem, clientCert: aPem});
 	try {
 		await peer.sendProposal({}, 100);
-	} catch(error) {
-		if(error.toString().includes(peer.getUrl())) {
+	} catch (error) {
+		if (error.toString().includes(peer.getUrl())) {
 			t.pass('Successfully got the waitForReady URL address error');
 		} else {
 			t.fail('Failed to get the waitForReady URL address error');
 		}
 	}
 
-	opts = { pem: aPem, 'ssl-target-name-override': aHostnameOverride };
+	opts = {pem: aPem, 'ssl-target-name-override': aHostnameOverride};
 	peer = new Peer(url, opts);
 	t.equal(aHost, peer._endpoint.addr, 'GRPC Options tests: new Peer grpcs with opts created');
 	t.equal(peer.toString(), 'Peer:{url:grpcs://atesthostname:9999}', 'Checking that peer.toString() reports correctly');
 	t.equal(peer._grpc_wait_for_ready_timeout, 3000, 'Peer should have _grpc_wait_for_ready_timeout equals 3000');
 	t.ok(peer._endpoint.creds, 'GRPC Options tests: new Peer grpc with opts = null _endpoint.creds created');
 
-	opts = { pem: aPem, 'ssl-target-name-override': aHostnameOverride };
+	opts = {pem: aPem, 'ssl-target-name-override': aHostnameOverride};
 	peer = new Peer(url, opts);
 	t.equal(aHost, peer._endpoint.addr, 'GRPC Options tests: new Peer grpc with opts _endpoint.addr created');
 	t.ok(peer._endpoint.creds, 'GRPC Options tests: new Peer grpc with opts _endpoint.creds created');
@@ -231,8 +231,8 @@ test('\n\n ** Remote node tests **\n\n', async (t) => {
 	);
 
 	t.comment('\n * ORDERER *');
-	//Peer: secure grpcs, requires opts.pem
-	opts = { pem: aPem };
+	// Peer: secure grpcs, requires opts.pem
+	opts = {pem: aPem};
 	let orderer = null;
 	t.doesNotThrow(
 		() => {
@@ -241,19 +241,19 @@ test('\n\n ** Remote node tests **\n\n', async (t) => {
 		'Check not passing any GRPC options.'
 	);
 
-	opts = { pem: aPem, 'ssl-target-name-override': aHostnameOverride };
+	opts = {pem: aPem, 'ssl-target-name-override': aHostnameOverride};
 	orderer = new Orderer(url, opts);
 	t.equal(aHost, orderer._endpoint.addr, 'GRPC Options tests: new Orderer grpcs with opts created');
 	t.equal(orderer.toString(), 'Orderer:{url:grpcs://atesthostname:9999}', 'Checking that orderer.toString() reports correctly');
 	t.equal(orderer._grpc_wait_for_ready_timeout, 3000, 'orderer should have _grpc_wait_for_ready_timeout equals 3000');
 	t.ok(orderer._endpoint.creds, 'GRPC Options tests: new Orderer grpc with opts = null _endpoint.creds created');
 
-	opts = { pem: aPem, 'ssl-target-name-override': aHostnameOverride };
+	opts = {pem: aPem, 'ssl-target-name-override': aHostnameOverride};
 	orderer = new Orderer(url, opts);
 	t.equal(aHost, orderer._endpoint.addr, 'GRPC Options tests: new Orederer grpc with opts _endpoint.addr created');
 	t.ok(orderer._endpoint.creds, 'GRPC Options tests: new Orderer grpc with opts _endpoint.creds created');
 
-	opts = { pem: aPem, 'request-timeout': 2000 };
+	opts = {pem: aPem, 'request-timeout': 2000};
 	orderer = new Orderer(url, opts);
 	t.equals(orderer._request_timeout, 2000, 'checking that the request timeout was set using the passed in value');
 

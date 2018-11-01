@@ -24,7 +24,7 @@ const channel_name = process.env.channel ? process.env.channel : 'mychannel';
 // can use "channel=<name>" to control the channel name from command line
 
 //
-//Attempt to send a request to the orderer with the createChannel method
+// Attempt to send a request to the orderer with the createChannel method
 //
 test('\n\n***** SDK Built config update  create flow  *****\n\n', async (t) => {
 	testUtil.resetDefaults();
@@ -59,7 +59,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', async (t) => {
 	const config = client.extractChannelConfig(envelope_bytes);
 	t.pass('Successfully extracted the config update from the configtx envelope');
 
-	await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
+	await testUtil.getSubmitter(client, t, true /* get the org admin*/, 'org1');
 	t.pass('Successfully enrolled user \'admin\' for org1');
 
 	// sign the config
@@ -72,7 +72,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', async (t) => {
 	// collect signature from org1 admin
 	signatures.push(string_signature);
 
-	await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
+	await testUtil.getSubmitter(client, t, true /* get the org admin*/, 'org2');
 	t.pass('Successfully enrolled user \'admin\' for org2');
 
 	// sign the config
@@ -92,7 +92,7 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', async (t) => {
 				name: 'bad orderer',
 				'pem': caroots,
 				'ssl-target-name-override': ORGS.orderer['server-hostname'],
-				'grpc.max_send_message_length': 1000 //something too small for the request
+				'grpc.max_send_message_length': 1000 // something too small for the request
 			}
 		);
 

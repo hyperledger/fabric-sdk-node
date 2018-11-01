@@ -22,7 +22,7 @@ const logger = utils.getLogger('FabricCAClientService.js');
 
 // setup the location of the default config shipped with code
 const default_config = path.resolve(__dirname, '../config/default.json');
-config.reorderFileStores(default_config, true); //make sure this one is under the fabric-client
+config.reorderFileStores(default_config, true); // make sure this one is under the fabric-client
 
 /**
  * @typedef {Object} TLSOptions
@@ -156,7 +156,7 @@ const FabricCAServices = class extends BaseClient {
 	enroll(req) {
 		const self = this;
 
-		return new Promise( (resolve, reject) => {
+		return new Promise((resolve, reject) => {
 			if (!req) {
 				logger.error('enroll() missing required argument "request"');
 				return reject(new Error('Missing required argument "request"'));
@@ -186,17 +186,17 @@ const FabricCAServices = class extends BaseClient {
 				}
 			}
 
-			//generate enrollment certificate pair for signing
+			// generate enrollment certificate pair for signing
 			let opts;
 			if (self.getCryptoSuite()._cryptoKeyStore) {
-				opts = { ephemeral: false };
+				opts = {ephemeral: false};
 			} else {
-				opts = { ephemeral: true };
+				opts = {ephemeral: true};
 			}
 			self.getCryptoSuite().generateKey(opts)
 				.then(
 					(privateKey) => {
-						//generate CSR using enrollmentID for the subject
+						// generate CSR using enrollmentID for the subject
 						try {
 							const csr = privateKey.generateCSR('CN=' + req.enrollmentID);
 							self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.profile, req.attr_reqs)
@@ -273,11 +273,11 @@ const FabricCAServices = class extends BaseClient {
 		const self = this;
 
 		return new Promise((resolve, reject) => {
-			//generate enrollment certificate pair for signing
+			// generate enrollment certificate pair for signing
 			self.getCryptoSuite().generateKey()
 				.then(
 					(privateKey) => {
-						//generate CSR using the subject of the current user's certificate
+						// generate CSR using the subject of the current user's certificate
 						try {
 							const csr = privateKey.generateCSR('CN=' + subject);
 							self._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity(), attr_reqs)
@@ -421,7 +421,7 @@ const FabricCAServices = class extends BaseClient {
 	 * @throws InvalidURL for malformed URLs
 	 * @ignore
 	 */
-	static _parseURL(url){
+	static _parseURL(url) {
 		return parseURL(url);
 	}
 };

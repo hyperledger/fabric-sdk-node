@@ -36,8 +36,9 @@ const CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
 				// next try the public key entry
 				return self.getValue(_getKeyIndex(ski, false));
 			}).then((key) => {
-				if (key instanceof ECDSAKey)
+				if (key instanceof ECDSAKey) {
 					return key;
+				}
 
 				if (key !== null) {
 					const pubKey = KEYUTIL.getKey(key);
@@ -73,7 +74,9 @@ const CryptoKeyStore = function(KVSImplClass, opts) {
 
 	if (typeof KVSImplClass !== 'function') {
 		let impl_class = utils.getConfigSetting('crypto-value-store');
-		if(!impl_class) impl_class = utils.getConfigSetting('key-value-store');
+		if (!impl_class) {
+			impl_class = utils.getConfigSetting('key-value-store');
+		}
 		superClass = require(impl_class);
 	} else {
 		superClass = KVSImplClass;
@@ -89,10 +92,11 @@ const CryptoKeyStore = function(KVSImplClass, opts) {
 };
 
 function _getKeyIndex(ski, isPrivateKey) {
-	if (isPrivateKey)
+	if (isPrivateKey) {
 		return ski + '-priv';
-	else
+	} else {
 		return ski + '-pub';
+	}
 }
 
 module.exports = CryptoKeyStore;

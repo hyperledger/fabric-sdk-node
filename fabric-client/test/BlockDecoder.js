@@ -13,6 +13,7 @@
  */
 
 'use strict';
+/* eslint-disable no-throw-literal */
 
 const fs = require('fs');
 const path = require('path');
@@ -224,18 +225,18 @@ describe('BlockDecoder', () => {
 					key2: {toBuffer() {}}
 				}
 			};
-			const data = decodeBlockData(protoBlockData);
+			const newData = decodeBlockData(protoBlockData);
 			sinon.assert.calledTwice(decodeStub);
-			data.data.should.deep.equal(['envelope', 'envelope']);
+			newData.data.should.deep.equal(['envelope', 'envelope']);
 		});
 
 		it('should call _commonProto.Envelope.decode with no proto', () => {
 			const protoBlockData = {
 				data: [{}]
 			};
-			const data = decodeBlockData(protoBlockData, true);
+			const newData = decodeBlockData(protoBlockData, true);
 			sinon.assert.calledOnce(decodeStub);
-			data.data.should.deep.equal(['envelope']);
+			newData.data.should.deep.equal(['envelope']);
 		});
 	});
 
@@ -352,7 +353,9 @@ describe('BlockDecoder', () => {
 		beforeEach(() => {
 			decodeMetadataValueSignatures = BlockDecoderRewire.__get__('decodeMetadataValueSignatures;');
 			revert.push(BlockDecoderRewire.__set__('_commonProto.MetadataSignature.decode', () => {
-				return {getSignatureHeader: () => 'signature-header', getSignature: () => {return {toBuffer: () => 'signature'};}};
+				return {getSignatureHeader: () => 'signature-header', getSignature: () => {
+					return {toBuffer: () => 'signature'};
+				}};
 			}));
 			revert.push(BlockDecoderRewire.__set__('decodeSignatureHeader', (value) => value));
 		});
@@ -444,9 +447,9 @@ describe('BlockDecoder', () => {
 			revert.push(BlockDecoderRewire.__set__('_transProto.Transaction.decode', () => {
 				throw new Error();
 			}));
-			const data = decodeEndorserTransaction();
+			const newData = decodeEndorserTransaction();
 			sinon.assert.called(FakeLogger.error);
-			data.should.deep.equal({});
+			newData.should.deep.equal({});
 		});
 
 		it('should add actions to data when transaction with actions is given', () => {
@@ -459,8 +462,8 @@ describe('BlockDecoder', () => {
 			revert.push(BlockDecoderRewire.__set__('decodeSignatureHeader', decodeSignatureheaderStub));
 			revert.push(BlockDecoderRewire.__set__('decodeChaincodeActionPayload', decodeChaincodeActionPayloadStub));
 
-			const data = decodeEndorserTransaction('trans_bytes');
-			data.actions.should.have.lengthOf(1);
+			const newData = decodeEndorserTransaction('trans_bytes');
+			newData.actions.should.have.lengthOf(1);
 			sinon.assert.called(decodeSignatureheaderStub);
 			sinon.assert.called(decodeChaincodeActionPayloadStub);
 		});
@@ -470,8 +473,8 @@ describe('BlockDecoder', () => {
 				return null;
 			}));
 
-			const data = decodeEndorserTransaction('trans_bytes');
-			data.should.deep.equal({actions: []});
+			const newData = decodeEndorserTransaction('trans_bytes');
+			newData.should.deep.equal({actions: []});
 		});
 
 		it('should return an empty object if transaction is given with no actions', () => {
@@ -479,8 +482,8 @@ describe('BlockDecoder', () => {
 				return {};
 			}));
 
-			const data = decodeEndorserTransaction('trans_bytes');
-			data.should.deep.equal({actions: []});
+			const newData = decodeEndorserTransaction('trans_bytes');
+			newData.should.deep.equal({actions: []});
 		});
 	});
 
@@ -579,7 +582,7 @@ describe('BlockDecoder', () => {
 
 		it('should return the config update envelope', () => {
 			configUpdateEnvelopeStub.returns({
-				getConfigUpdate: () =>{
+				getConfigUpdate: () => {
 					return {toBuffer: () => 'config-update'};
 				},
 				signatures: ['signature']
@@ -732,7 +735,9 @@ describe('BlockDecoder', () => {
 			const getTypeStub = sandbox.stub();
 			const getConfigStub = sandbox.stub();
 			const decodeFabricMSPConfigStub = sandbox.stub();
-			const mspConfigProtoDecodeStub = () => { return {type: 0, getType: getTypeStub, getConfig: getConfigStub};};
+			const mspConfigProtoDecodeStub = () => {
+				return {type: 0, getType: getTypeStub, getConfig: getConfigStub};
+			};
 			getTypeStub.returns(0);
 			getConfigStub.returns('config');
 			decodeFabricMSPConfigStub.returns('decoded-config');
@@ -752,7 +757,9 @@ describe('BlockDecoder', () => {
 			const getTypeStub = sandbox.stub();
 			const getConfigStub = sandbox.stub();
 			const decodeFabricMSPConfigStub = sandbox.stub();
-			const mspConfigProtoDecodeStub = () => { return {type: 1, getType: getTypeStub, getConfig: getConfigStub};};
+			const mspConfigProtoDecodeStub = () => {
+				return {type: 1, getType: getTypeStub, getConfig: getConfigStub};
+			};
 			getTypeStub.returns(1);
 			getConfigStub.returns('config');
 			decodeFabricMSPConfigStub.returns('decoded-config');
@@ -1449,7 +1456,7 @@ describe('BlockDecoder', () => {
 		it('should return ISO8601 string for a valid timestamp', () => {
 			const now = new Date();
 			const timestamp = {
-				seconds: Math.floor(now.getTime()/1000),
+				seconds: Math.floor(now.getTime() / 1000),
 				nanos: now.getMilliseconds() * 1000000
 			};
 			const res = timeStampToDate(timestamp);
@@ -2017,8 +2024,8 @@ describe('BlockDecoder', () => {
 			getReadsMerkleHashesStub = sandbox.stub();
 			decodeKVReadStub = sandbox.stub();
 			getMaxDegreeStub = sandbox.stub();
-			getMaxLevelStub= sandbox.stub();
-			getMaxLevelHashesStub= sandbox.stub();
+			getMaxLevelStub = sandbox.stub();
+			getMaxLevelHashesStub = sandbox.stub();
 			mockMerkelHash = {getMaxDegree: getMaxDegreeStub, getMaxLevel: getMaxLevelStub, getMaxLevelHashes: getMaxLevelHashesStub};
 			revert.push(BlockDecoderRewire.__set__('decodeKVRead', decodeKVReadStub));
 		});

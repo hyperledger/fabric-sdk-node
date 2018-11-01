@@ -40,28 +40,33 @@ const MSPManager = class {
 	 *   protobuf protos/msp/mspconfig.proto
 	 */
 	loadMSPs(mspConfigs) {
-		logger.debug('loadMSPs - start number of msps=%s',mspConfigs.length);
+		logger.debug('loadMSPs - start number of msps=%s', mspConfigs.length);
 		const self = this;
-		if (!mspConfigs || !Array.isArray(mspConfigs))
+		if (!mspConfigs || !Array.isArray(mspConfigs)) {
 			throw new Error('"mspConfigs" argument must be an array');
+		}
 
 		mspConfigs.forEach((config) => {
-			if (typeof config.getType() !== 'number' || config.getType() !== 0)
+			if (typeof config.getType() !== 'number' || config.getType() !== 0) {
 				throw new Error(util.format('MSP Configuration object type not supported: %s', config.getType()));
+			}
 
-			if (!config.getConfig || !config.getConfig())
+			if (!config.getConfig || !config.getConfig()) {
 				throw new Error('MSP Configuration object missing the payload in the "Config" property');
+			}
 
 			const fabricConfig = mspProto.FabricMSPConfig.decode(config.getConfig());
 
-			if (!fabricConfig.getName())
+			if (!fabricConfig.getName()) {
 				throw new Error('MSP Configuration does not have a name');
+			}
 
 			// with this method we are only dealing with verifying MSPs, not local MSPs. Local MSPs are instantiated
 			// from user enrollment materials (see User class). For verifying MSPs the root certificates are always
 			// required
-			if (!fabricConfig.getRootCerts())
+			if (!fabricConfig.getRootCerts()) {
 				throw new Error('MSP Configuration does not have any root certificates required for validating signing certificates');
+			}
 
 			// TODO: for now using application-scope defaults but crypto parameters like key size, hash family
 			// and digital signature algorithm should be from the config itself
@@ -71,11 +76,13 @@ const MSPManager = class {
 			// get the application org names
 			const orgs = [];
 			const org_units = fabricConfig.getOrganizationalUnitIdentifiers();
-			if(org_units) for(let i = 0; i < org_units.length; i++) {
-				const org_unit = org_units[i];
-				const org_id = org_unit.organizational_unit_identifier;
-				logger.debug('loadMSPs - found org of :: %s',org_id);
-				orgs.push(org_id);
+			if (org_units) {
+				for (let i = 0; i < org_units.length; i++) {
+					const org_unit = org_units[i];
+					const org_id = org_unit.organizational_unit_identifier;
+					logger.debug('loadMSPs - found org of :: %s', org_id);
+					orgs.push(org_id);
+				}
 			}
 
 			const newMSP = new MSP({
@@ -88,8 +95,8 @@ const MSPManager = class {
 				tls_root_certs: fabricConfig.getTlsRootCerts(),
 				tls_intermediate_certs: fabricConfig.getTlsIntermediateCerts()
 			});
-			logger.debug('loadMSPs - found msp=',newMSP.getId());
-			//will eliminate duplicates
+			logger.debug('loadMSPs - found msp=', newMSP.getId());
+			// will eliminate duplicates
 			self._msps[fabricConfig.getName()] = newMSP;
 		});
 	}
@@ -110,9 +117,11 @@ const MSPManager = class {
 	 *@return {MSP} The newly created MSP instance
 	 */
 	addMSP(config) {
-		if(!config.cryptoSuite) config.cryptoSuite = utils.newCryptoSuite();
+		if (!config.cryptoSuite) {
+			config.cryptoSuite = utils.newCryptoSuite();
+		}
 		const msp = new MSP(config);
-		logger.debug('addMSP - msp=',msp.getId());
+		logger.debug('addMSP - msp=', msp.getId());
 		this._msps[msp.getId()] = msp;
 		return msp;
 	}
@@ -142,8 +151,9 @@ const MSPManager = class {
 		const mspid = sid.getMspid();
 		const msp = this._msps[mspid];
 
-		if (!msp)
+		if (!msp) {
 			throw new Error(util.format('Failed to locate an MSP instance matching the requested id "%s" in the deserialized identity', mspid));
+		}
 
 		return msp.deserializeIdentity(serializedIdentity);
 	}

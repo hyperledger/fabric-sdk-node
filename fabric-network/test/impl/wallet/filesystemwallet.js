@@ -35,7 +35,9 @@ describe('FileSystemWallet', () => {
 
 	describe('#constructor', () => {
 		it('should throw an error if path not defined', () => {
-			(() => {new FileSystemWallet();}).should.throw(/No path/);
+			(() => {
+				new FileSystemWallet();
+			}).should.throw(/No path/);
 		});
 
 		it('should default to X509 wallet mixin', () => {
@@ -43,7 +45,7 @@ describe('FileSystemWallet', () => {
 		});
 
 		it('should accept a mixin parameter', () => {
-			const wallet = new FileSystemWallet('/somepath','my_mixin');
+			const wallet = new FileSystemWallet('/somepath', 'my_mixin');
 			wallet.walletMixin.should.equal('my_mixin');
 		});
 	});
@@ -83,7 +85,7 @@ describe('FileSystemWallet', () => {
 			isDir.should.be.true;
 		});
 
-		it('should return false if not a directory',async () => {
+		it('should return false if not a directory', async () => {
 			sandbox.stub(fs, 'lstat').withArgs('/somepath/adir').resolves(
 				{
 					isDirectory: () => {
@@ -249,7 +251,7 @@ describe('FileSystemWallet', () => {
 			const rimRafPromise = new Promise((resolve) => {
 				rimraf(tmpdir, (err) => {
 					if (err) {
-						//eslint-disable-next-line no-console
+						// eslint-disable-next-line no-console
 						console.log(`failed to delete ${tmpdir}, error was ${err}`);
 						resolve();
 					}

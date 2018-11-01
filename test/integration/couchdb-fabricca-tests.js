@@ -48,12 +48,14 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', (t) => {
 	const couchdbIPAddr = Client.getConfigSetting('couchdb-ip-addr', 'notfound');
 	const couchdbPort = Client.getConfigSetting('couchdb-port', 'notfound');
 	const keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
-	logger.info('couch keyValStorePath: '+keyValStorePath);
+	logger.info('couch keyValStorePath: ' + keyValStorePath);
 
 	// override t.end function so it'll always clear the config settings
 	t.end = ((context, f) => {
 		return function() {
-			if (global && global.hfc) global.hfc.config = undefined;
+			if (global && global.hfc) {
+				global.hfc.config = undefined;
+			}
 			require('nconf').reset();
 
 			f.apply(context, arguments);
@@ -64,14 +66,14 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', (t) => {
 
 	// Set the relevant configuration values
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');
 
 	// Clean up the couchdb test database
 	const dbname = 'my_member_db';
 
 	let cryptoSuite, member;
 	couchdbUtil.destroy(dbname, keyValStorePath)
-		.then( () => {
+		.then(() => {
 			const options = {name: dbname, url: keyValStorePath};
 			utils.newKeyValueStore(options)
 				.then(

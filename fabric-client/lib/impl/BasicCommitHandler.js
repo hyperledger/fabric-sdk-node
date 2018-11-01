@@ -56,7 +56,7 @@ class BasicCommitHandler extends api.CommitHandler {
 		let errorMsg = null;
 		if (!params) {
 			errorMsg = 'Missing all required input parameters';
-		} else if (!params.request){
+		} else if (!params.request) {
 			errorMsg = 'Missing "request" input parameter';
 		} else if (!params.signed_envelope) {
 			errorMsg = 'Missing "signed_envelope" input parameter';
@@ -70,16 +70,16 @@ class BasicCommitHandler extends api.CommitHandler {
 		const request = Object.assign({}, params.request);
 
 		let timeout = utils.getConfigSetting('request-timeout');
-		if(params.timeout) {
+		if (params.timeout) {
 			timeout = params.timeout;
 		}
 
-		if(!request.orderer) {
+		if (!request.orderer) {
 			logger.debug('%s - using commit handler', method);
 			// this will check the age of the results and get new results if needed
 			try {
-				await this._channel.getDiscoveryResults(); //this will cause a refresh if using discovery and the results are old
-			} catch(error) {
+				await this._channel.getDiscoveryResults(); // this will cause a refresh if using discovery and the results are old
+			} catch (error) {
 				// No problem, user may not be using discovery
 				logger.debug('%s - no discovery results %s', method, error);
 			}
@@ -92,7 +92,7 @@ class BasicCommitHandler extends api.CommitHandler {
 			try {
 
 				return orderer.sendBroadcast(params.signed_envelope, timeout);
-			} catch(error) {
+			} catch (error) {
 				logger.error(error.stack);
 			}
 			throw new Error('Failed to send to the orderer');
@@ -104,15 +104,15 @@ class BasicCommitHandler extends api.CommitHandler {
 
 		const orderers = this._channel.getOrderers();
 		let return_error = null;
-		if(orderers && orderers.length > 0) {
+		if (orderers && orderers.length > 0) {
 			logger.debug('%s - found %s orderers assigned to channel', method, orderers.length);
 			// loop through the orderers trying to complete one successfully
-			for(const orderer of orderers) {
+			for (const orderer of orderers) {
 				logger.debug('%s - starting orderer %s', method, orderer.getName());
 				try {
 					const results =  await orderer.sendBroadcast(envelope, timeout);
 					if (results) {
-						if(results.status === 'SUCCESS') {
+						if (results.status === 'SUCCESS') {
 							logger.debug('%s - Successfully sent transaction to the orderer %s', method, orderer.getName());
 							return results;
 						} else {
@@ -123,7 +123,7 @@ class BasicCommitHandler extends api.CommitHandler {
 						return_error = new Error('Failed to send transaction to the orderer');
 						logger.debug('%s - Failed to send transaction to the orderer %s', method, orderer.getName());
 					}
-				} catch(error) {
+				} catch (error) {
 					logger.debug('%s - Caught: %s', method, error.toString());
 					return_error = error;
 				}

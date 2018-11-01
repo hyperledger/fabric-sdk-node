@@ -50,7 +50,7 @@ describe('BaseClient', () => {
 
 			result.should.equal('newCryptoSuite');
 			sinon.assert.calledOnce(newCryptoSuiteStub);
-			sinon.assert.calledWith(newCryptoSuiteStub,'setting');
+			sinon.assert.calledWith(newCryptoSuiteStub, 'setting');
 		});
 	});
 
@@ -72,7 +72,7 @@ describe('BaseClient', () => {
 
 			result.should.equal('newCryptoKeyStore');
 			sinon.assert.calledOnce(newCryptoKeyStoreStub);
-			sinon.assert.calledWith(newCryptoKeyStoreStub,'setting');
+			sinon.assert.calledWith(newCryptoKeyStoreStub, 'setting');
 		});
 	});
 
@@ -94,7 +94,7 @@ describe('BaseClient', () => {
 
 			result.should.equal('newDefaultKeyValueStore');
 			sinon.assert.calledOnce(newDefaultKeyValueStoreStub);
-			sinon.assert.calledWith(newDefaultKeyValueStoreStub,'setting');
+			sinon.assert.calledWith(newDefaultKeyValueStoreStub, 'setting');
 		});
 	});
 
@@ -202,7 +202,7 @@ describe('BaseClient', () => {
 
 			result.should.equal('getConfigSetting');
 			sinon.assert.calledOnce(getConfigSettingStub);
-			sinon.assert.calledWith(getConfigSettingStub,'name', 'default_value');
+			sinon.assert.calledWith(getConfigSettingStub, 'name', 'default_value');
 		});
 	});
 
@@ -226,7 +226,7 @@ describe('BaseClient', () => {
 
 			result.should.equal('getConfigSetting');
 			sinon.assert.calledOnce(getConfigSettingStub);
-			sinon.assert.calledWith(getConfigSettingStub,'name', 'default_value');
+			sinon.assert.calledWith(getConfigSettingStub, 'name', 'default_value');
 		});
 	});
 
@@ -246,7 +246,7 @@ describe('BaseClient', () => {
 
 			BaseClientRewire.addConfigFile('path');
 			sinon.assert.calledOnce(addConfigFileStub);
-			sinon.assert.calledWith(addConfigFileStub,'path');
+			sinon.assert.calledWith(addConfigFileStub, 'path');
 		});
 	});
 
@@ -265,7 +265,7 @@ describe('BaseClient', () => {
 
 			BaseClientRewire.setConfigSetting('name', 'value');
 			sinon.assert.calledOnce(setConfigSettingStub);
-			sinon.assert.calledWith(setConfigSettingStub,'name', 'value');
+			sinon.assert.calledWith(setConfigSettingStub, 'name', 'value');
 		});
 	});
 
@@ -287,7 +287,7 @@ describe('BaseClient', () => {
 			client.setConfigSetting('name', 'value');
 
 			sinon.assert.calledOnce(setConfigSettingStub);
-			sinon.assert.calledWith(setConfigSettingStub,'name', 'value');
+			sinon.assert.calledWith(setConfigSettingStub, 'name', 'value');
 		});
 	});
 
@@ -309,7 +309,7 @@ describe('BaseClient', () => {
 
 			result.should.equal('i am a logger');
 			sinon.assert.calledOnce(getLoggerStub);
-			sinon.assert.calledWith(getLoggerStub,'name');
+			sinon.assert.calledWith(getLoggerStub, 'name');
 		});
 	});
 
@@ -355,7 +355,7 @@ describe('BaseClient', () => {
 
 			result.should.equal('i am normal');
 			sinon.assert.calledOnce(normalizeX509Stub);
-			sinon.assert.calledWith(normalizeX509Stub,'raw');
+			sinon.assert.calledWith(normalizeX509Stub, 'raw');
 		});
 	});
 

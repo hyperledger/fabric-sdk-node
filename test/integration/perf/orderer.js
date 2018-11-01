@@ -41,7 +41,7 @@ test(DESC, (t) => {
 
 async function perfTest1(t) {
 	testUtil.resetDefaults();
-	Client.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
+	Client.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
 	Client.addConfigFile(path.join(__dirname, '../e2e', 'config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 	const orgName = ORGS[org].name;
@@ -74,7 +74,7 @@ async function perfTest1(t) {
 
 	const send = function(msg, type) {
 		start = Date.now();
-		for(let i=0; i<total; i++) {
+		for (let i = 0; i < total; i++) {
 			broadcast.write(msg);
 		}
 
@@ -91,7 +91,7 @@ async function perfTest1(t) {
 		let count = 0;
 		return new Promise((resolve, reject) => {
 			broadcast.on('data', (response) => {
-				if(response.status) {
+				if (response.status) {
 					if (response.status === 'SUCCESS') {
 						count ++;
 						if (count === total) {
@@ -100,8 +100,7 @@ async function perfTest1(t) {
 					} else {
 						return reject(new Error(response.status));
 					}
-				}
-				else {
+				} else {
 					return reject(new Error('SYSTEM_ERROR'));
 				}
 			});
@@ -203,7 +202,7 @@ async function perfTest2(t) {
 	const send = function(msg, type) {
 		const promises = [];
 		start = Date.now();
-		for(let i=0; i<total; i++) {
+		for (let i = 0; i < total; i++) {
 			promises.push(orderer.sendBroadcast(msg));
 		}
 		const end = Date.now();

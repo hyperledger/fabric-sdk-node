@@ -25,25 +25,34 @@ const EC = elliptic.ec;
 const PKCS11_ECDSA_KEY = class extends api.Key {
 
 	constructor(attr, size) {
-		if (typeof attr === 'undefined' || attr === null)
+		if (typeof attr === 'undefined' || attr === null) {
 			throw new Error('constructor: attr parameter must be specified');
-		if (typeof attr.ski === 'undefined' || attr.ski === null)
+		}
+		if (typeof attr.ski === 'undefined' || attr.ski === null) {
 			throw new Error('constructor: invalid key SKI');
-		if (!(attr.ski instanceof Buffer))
+		}
+		if (!(attr.ski instanceof Buffer)) {
 			throw new Error('constructor: key SKI must be Buffer type');
+		}
 		if ((typeof attr.priv === 'undefined' || attr.priv === null) &&
-			(typeof attr.pub === 'undefined' || attr.pub === null))
+			(typeof attr.pub === 'undefined' || attr.pub === null)) {
 			throw new Error('constructor: invalid key handles');
+		}
 		if (typeof attr.priv !== 'undefined' && attr.priv !== null &&
-			!(attr.priv instanceof Buffer))
+			!(attr.priv instanceof Buffer)) {
 			throw new Error('constructor: private key handle must be Buffer type');
+		}
 		if (typeof attr.pub !== 'undefined' && attr.pub !== null &&
-			!(attr.pub instanceof Buffer))
+			!(attr.pub instanceof Buffer)) {
 			throw new Error('constructor: public key handle must be Buffer type');
-		if (size === 'undefined')
+		}
+		if (size === 'undefined') {
 			throw new Error('constructor: size parameter must be specified');
-		if (size != 256 && size != 384) throw new Error(
-			'constructor: only 256 or 384 bits key size is supported');
+		}
+		if (size !== 256 && size !== 384) {
+			throw new Error(
+				'constructor: only 256 or 384 bits key size is supported');
+		}
 
 		super();
 
@@ -60,9 +69,8 @@ const PKCS11_ECDSA_KEY = class extends api.Key {
 		if (typeof attr.priv !== 'undefined' && attr.priv !== null) {
 			this._handle = attr.priv;
 			this._pub = new PKCS11_ECDSA_KEY(
-				{ ski: attr.ski, ecpt: attr.ecpt, pub: attr.pub }, size);
-		}
-		else {
+				{ski: attr.ski, ecpt: attr.ecpt, pub: attr.pub}, size);
+		} else {
 			this._ecpt = attr.ecpt;
 			this._handle = attr.pub;
 			this._pub = null;
@@ -86,10 +94,18 @@ const PKCS11_ECDSA_KEY = class extends api.Key {
 
 	newCSRPEM(param) {
 		const _KJUR_asn1_csr = asn1.csr;
-		if (param.subject === undefined) throw 'parameter subject undefined';
-		if (param.sbjpubkey === undefined) throw 'parameter sbjpubkey undefined';
-		if (param.sigalg === undefined) throw 'parameter sigalg undefined';
-		if (param.sbjprvkey === undefined) throw 'parameter sbjpubkey undefined';
+		if (param.subject === undefined) {
+			throw new Error('parameter subject undefined');
+		}
+		if (param.sbjpubkey === undefined) {
+			throw new Error('parameter sbjpubkey undefined');
+		}
+		if (param.sigalg === undefined) {
+			throw new Error('parameter sigalg undefined');
+		}
+		if (param.sbjprvkey === undefined) {
+			throw new Error('parameter sbjpubkey undefined');
+		}
 		const ecdsa = new EC(this._cryptoSuite._ecdsaCurve);
 		const pubKey = ecdsa.keyFromPublic(this._pub._ecpt);
 		const csri = new _KJUR_asn1_csr.CertificationRequestInfo();
@@ -121,14 +137,14 @@ const PKCS11_ECDSA_KEY = class extends api.Key {
 	}
 
 	generateCSR(subjectDN) {
-		//check to see if this is a private key
-		if (!this.isPrivate()){
+		// check to see if this is a private key
+		if (!this.isPrivate()) {
 			throw new Error('A CSR cannot be generated from a public key');
 		}
 
 		try {
 			const csr = this.newCSRPEM({
-				subject: { str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
+				subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
 				sbjpubkey: this._pub,
 				sigalg: 'SHA256withECDSA',
 				sbjprvkey: this
@@ -148,16 +164,17 @@ const PKCS11_ECDSA_KEY = class extends api.Key {
 	}
 
 	isPrivate() {
-		return (this._pub != null);
+		return (this._pub !== null);
 	}
 
 	getPublicKey() {
-		return this._pub == null ? this : this._pub;
+		return this._pub === null ? this : this._pub;
 	}
 
 	toBytes() {
-		if (this._pub != null)
+		if (this._pub !== null) {
 			throw new Error('toBytes: not allowed for private key');
+		}
 
 		return this._ecpt;
 	}

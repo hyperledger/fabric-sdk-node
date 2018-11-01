@@ -113,7 +113,7 @@ const BaseClient = class {
 			err += 'warn() ';
 		}
 
-		if (typeof logger.error !== 'function' ) {
+		if (typeof logger.error !== 'function') {
 			err += 'error()';
 		}
 

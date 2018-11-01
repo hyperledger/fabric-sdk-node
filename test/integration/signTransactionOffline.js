@@ -17,7 +17,7 @@ const Client = require('fabric-client');
 const hash = require('fabric-client/lib/hash');
 
 const jsrsa = require('jsrsasign');
-const { KEYUTIL } = jsrsa;
+const {KEYUTIL} = jsrsa;
 const elliptic = require('elliptic');
 const EC = elliptic.ec;
 
@@ -31,19 +31,19 @@ const mspId = 'Org1MSP';
 // stand alone fabric-sig package in future.
 const ordersForCurve = {
 	'secp256r1': {
-		'halfOrder': elliptic.curves['p256'].n.shrn(1),
-		'order': elliptic.curves['p256'].n
+		'halfOrder': elliptic.curves.p256.n.shrn(1),
+		'order': elliptic.curves.p256.n
 	},
 	'secp384r1': {
-		'halfOrder': elliptic.curves['p384'].n.shrn(1),
-		'order': elliptic.curves['p384'].n
+		'halfOrder': elliptic.curves.p384.n.shrn(1),
+		'order': elliptic.curves.p384.n
 	}
 };
 
 // this function comes from CryptoSuite_ECDSA_AES.js and will be part of the
 // stand alone fabric-sig package in future.
 function _preventMalleability(sig, curveParams) {
-	const halfOrder = ordersForCurve[curveParams.name]['halfOrder'];
+	const halfOrder = ordersForCurve[curveParams.name].halfOrder;
 	if (!halfOrder) {
 		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curveParams.name);
 	}
@@ -52,7 +52,7 @@ function _preventMalleability(sig, curveParams) {
 	// first see if 's' is larger than half of the order, if so, it needs to be specially treated
 	if (sig.s.cmp(halfOrder) === 1) { // module 'bn.js', file lib/bn.js, method cmp()
 		// convert from BigInteger used by jsrsasign Key objects and bn.js used by elliptic Signature objects
-		const bigNum = ordersForCurve[curveParams.name]['order'];
+		const bigNum = ordersForCurve[curveParams.name].order;
 		sig.s = bigNum.sub(sig.s);
 	}
 
@@ -84,7 +84,7 @@ function sign(privateKey, proposalBytes, algorithm, keySize) {
 
 function signProposal(proposalBytes) {
 	const signature = sign(privateKeyPem, proposalBytes, 'sha2', 256);
-	const signedProposal = { signature, proposal_bytes: proposalBytes };
+	const signedProposal = {signature, proposal_bytes: proposalBytes};
 	return signedProposal;
 }
 
@@ -139,7 +139,7 @@ async function transactionMonitor(txId, eh, t) {
 	return new Promise((resolve, reject) => {
 		const handle = setTimeout(() => {
 			t.fail('Timeout - Failed to receive event for txId ' + txId);
-			eh.disconnect(); //shutdown
+			eh.disconnect(); // shutdown
 			throw new Error('TIMEOUT - no event received');
 		}, 60000);
 
@@ -151,7 +151,7 @@ async function transactionMonitor(txId, eh, t) {
 			clearTimeout(handle);
 			t.fail('Failed to receive event replay for Event for transaction id ::' + txId);
 			reject(error);
-		}, { disconnect: true }
+		}, {disconnect: true}
 			// Setting the disconnect to true as we do not want to use this
 			// ChannelEventHub after the event we are looking for comes in
 		);
@@ -166,7 +166,7 @@ async function transactionMonitor(txId, eh, t) {
 			signature: signedProposal.signature,
 			payload: signedProposal.proposal_bytes,
 		};
-		eh.connect({ signedEvent });
+		eh.connect({signedEvent});
 		t.pass('Successfully called connect on ' + eh.getPeerAddr());
 	});
 }
@@ -182,14 +182,14 @@ test('Test sign a contract with a private key offline', async (t) => {
 			channelId: 'mychannel',
 		};
 
-		const { proposal, txId } = channel.generateUnsignedProposal(transactionProposalReq, mspId, certPem);
+		const {proposal, txId} = channel.generateUnsignedProposal(transactionProposalReq, mspId, certPem);
 		const signedProposal = signProposal(proposal.toBuffer());
 		t.pass('Successfully build endorse transaction proposal');
 
 		const peer = channel.getPeer('localhost:7051');
 		const targets = [peer];
 
-		const sendSignedProposalReq = { signedProposal, targets };
+		const sendSignedProposalReq = {signedProposal, targets};
 		const proposalResponses = await channel.sendSignedProposal(sendSignedProposalReq);
 
 		t.equal(Array.isArray(proposalResponses), true);

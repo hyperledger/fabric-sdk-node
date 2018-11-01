@@ -22,6 +22,7 @@ const logger = utils.getLogger('instantiate-chaincode');
 
 const e2e = testUtil.END2END;
 const version = 'v0';
+let data;
 
 test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-existent Chaincode version', (t) => {
 	const request = {
@@ -52,12 +53,10 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-exist
 test('\n\n***** End-to-end flow: instantiate chaincode *****\n\n', (t) => {
 	e2eUtils.instantiateChaincode('org1', testUtil.CHAINCODE_PATH, 'v0', 'golang', false, false, t)
 		.then((result) => {
-			if(result){
+			if (result) {
 				t.pass('Successfully instantiated chaincode on the channel');
-
 				return e2eUtils.sleep(5000);
-			}
-			else {
+			} else {
 				t.fail('Failed to instantiate chaincode ');
 				t.end();
 			}
@@ -92,7 +91,7 @@ function instantiateChaincodeForError(request, error_snip, t) {
 	const ORGS = Client.getConfigSetting('test-network');
 
 	const caRootsPath = ORGS.orderer.tls_cacerts;
-	const data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
+	data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
 	const caroots = Buffer.from(data).toString();
 
 	const userOrg = 'org1';
@@ -131,7 +130,7 @@ function instantiateChaincodeForError(request, error_snip, t) {
 			for (const org in ORGS) {
 				if (ORGS[org].hasOwnProperty('peer1')) {
 					const key = 'peer1';
-					const data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key]['tls_cacerts']));
+					data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key].tls_cacerts));
 					logger.debug(' create new peer %s', ORGS[org][key].requests);
 					const peer = client.newPeer(
 						ORGS[org][key].requests,

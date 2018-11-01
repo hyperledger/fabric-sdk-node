@@ -78,9 +78,11 @@ test('\n\n ** Channel - constructor test **\n\n', (t) => {
 
 	channelName = 'testchannel';
 	_channel = new Channel(channelName, client);
-	if (_channel.getName() === channelName)
+	if (_channel.getName() === channelName) {
 		t.pass('Channel constructor test: getName successful');
-	else t.fail('Channel constructor test: getName not successful');
+	} else {
+		t.fail('Channel constructor test: getName not successful');
+	}
 	testutil.resetDefaults();
 	t.end();
 });
@@ -327,23 +329,20 @@ test('\n\n ** Channel addPeer() duplicate tests **\n\n', (t) => {
 		try {
 			const _peer = new Peer(peer);
 			channel_duplicate.addPeer(_peer);
-		}
-		catch (err) {
+		} catch (err) {
 			if (err.name !== 'DuplicatePeer') {
 				t.fail('Unexpected error ' + err.toString());
-			}
-			else {
+			} else {
 				t.pass('Expected error message "DuplicatePeer" thrown');
 			}
 		}
 	});
 
-	//check to see we have the correct number of peers
+	// check to see we have the correct number of peers
 	if (channel_duplicate.getPeers().length === expected) {
 		t.pass('Duplicate peer not added to the channel(' + expected +
 			' expected | ' + channel_duplicate.getPeers().length + ' found)');
-	}
-	else {
+	} else {
 		t.fail('Failed to detect duplicate peer (' + expected +
 			' expected | ' + channel_duplicate.getPeers().length + ' found)');
 	}
@@ -485,6 +484,7 @@ const CRAZY_SPEC = {
 test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 	const client = new Client();
 	const c = new Channel('does-not-matter', client);
+	let policy;
 
 	t.throws(
 		() => {
@@ -512,8 +512,6 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 	};
 
 	c._msp_manager = mspm;
-
-	let policy;
 	t.doesNotThrow(
 		() => {
 			policy = c._buildEndorsementPolicy();
@@ -563,7 +561,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			const policy = {
+			policy = {
 				identities: [{
 					role: {
 						name: 'member',
@@ -587,7 +585,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			const policy = {
+			policy = {
 				identities: [{
 					role: {
 						name: 'member',
@@ -611,7 +609,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			const policy = {
+			policy = {
 				identities: [{
 					role: {
 						name: 'member',
@@ -635,7 +633,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 
 	t.throws(
 		() => {
-			const policy = {
+			policy = {
 				identities: [{
 					role: {
 						name: 'member',
@@ -682,8 +680,8 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 	'Checking decoded custom policy has two items'
 	);
 
-	t.equals(env.rule['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of"');
-	t.equals(env.rule['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.rule.n_out_of.getN(), 1, 'Checking decoded custom policy has "1 out of"');
+	t.equals(env.rule.n_out_of.getRules().length, 2, 'Checking decoded custom policy has two target policies');
 
 	t.doesNotThrow(
 		() => {
@@ -693,8 +691,8 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 	);
 
 	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
-	t.equals(env.rule['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
-	t.equals(env.rule['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.rule.n_out_of.getN(), 2, 'Checking decoded custom policy has "2 out of"');
+	t.equals(env.rule.n_out_of.getRules().length, 2, 'Checking decoded custom policy has two target policies');
 
 	t.doesNotThrow(
 		() => {
@@ -704,11 +702,11 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 	);
 
 	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
-	t.equals(env.rule['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
-	t.equals(env.rule['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies');
-	t.equals(env.rule['n_out_of'].rules[0]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[0]['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[1]['signed_by'], 2, 'Checking decoded custom policy has "signed-by: 2" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.getN(), 2, 'Checking decoded custom policy has "2 out of"');
+	t.equals(env.rule.n_out_of.getRules().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.rule.n_out_of.rules[0].n_out_of.getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[0].n_out_of.getRules().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[1].signed_by, 2, 'Checking decoded custom policy has "signed-by: 2" inside the "2 out of"');
 
 	t.doesNotThrow(
 		() => {
@@ -718,18 +716,18 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 	);
 
 	env = _policiesProto.SignaturePolicyEnvelope.decode(policy);
-	t.equals(env.rule['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of"');
-	t.equals(env.rule['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies');
-	t.equals(env.rule['n_out_of'].rules[0]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[0]['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[0]['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[0]['n_out_of'].getRules().length, 3, 'Checking decoded custom policy has 3 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[1]['n_out_of'].getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[1]['n_out_of'].getRules().length, 2, 'Checking decoded custom policy has 2 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[1]['n_out_of'].getRules()[0]['signed_by'], 2, 'Checking decoded custom policy has "signed-by: 2" for "2 out of " inside "1 out of" inside the "2 out of"');
-	t.equals(env.rule['n_out_of'].rules[1]['n_out_of'].getRules()[1]['n_out_of'].getRules()[1]['n_out_of'].getN(), 1, 'Checking decoded custom policy has "1 out of" inside "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.getN(), 2, 'Checking decoded custom policy has "2 out of"');
+	t.equals(env.rule.n_out_of.getRules().length, 2, 'Checking decoded custom policy has two target policies');
+	t.equals(env.rule.n_out_of.rules[0].n_out_of.getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[0].n_out_of.getRules().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[1].n_out_of.getN(), 1, 'Checking decoded custom policy has "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[1].n_out_of.getRules().length, 2, 'Checking decoded custom policy has two target policies inside the "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[1].n_out_of.getRules()[0].n_out_of.getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[1].n_out_of.getRules()[0].n_out_of.getRules().length, 3, 'Checking decoded custom policy has 3 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[1].n_out_of.getRules()[1].n_out_of.getN(), 2, 'Checking decoded custom policy has "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[1].n_out_of.getRules()[1].n_out_of.getRules().length, 2, 'Checking decoded custom policy has 2 target policies for "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[1].n_out_of.getRules()[1].n_out_of.getRules()[0].signed_by, 2, 'Checking decoded custom policy has "signed-by: 2" for "2 out of " inside "1 out of" inside the "2 out of"');
+	t.equals(env.rule.n_out_of.rules[1].n_out_of.getRules()[1].n_out_of.getRules()[1].n_out_of.getN(), 1, 'Checking decoded custom policy has "1 out of" inside "2 out of " inside "1 out of" inside the "2 out of"');
 
 	t.end();
 });
@@ -908,8 +906,7 @@ test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', (t) => {
 			let orderers = channel.getOrderers();
 			if (orderers !== null && orderers.length > 0 && orderers[0].getUrl() === 'grpc://localhost:7050') {
 				t.pass('Successfully retrieved the new orderer URL from the channel');
-			}
-			else {
+			} else {
 				t.fail('Failed to retieve the new orderer URL from the channel');
 				t.end();
 			}
@@ -922,8 +919,7 @@ test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', (t) => {
 				orderers = channel.getOrderers();
 				if (orderers !== null && orderers.length > 0 && orderers[1].getUrl() === 'grpc://localhost:5152') {
 					t.pass('Successfully retrieved the upated orderer URL from the channel');
-				}
-				else {
+				} else {
 					t.fail('Failed to retieve the updated orderer URL from the channel');
 				}
 
@@ -937,8 +933,7 @@ test('\n\n** TEST ** orderer via channel setOrderer/getOrderer', (t) => {
 				t.fail('Failed to update the order URL ' + err2);
 				t.end();
 			}
-		}
-		catch (err) {
+		} catch (err) {
 			t.fail('Failed to set the new order URL ' + err);
 			t.end();
 		}
@@ -978,7 +973,7 @@ test('\n\n** TEST ** orderer via channel set/get bad address', (t) => {
 	t.end();
 });
 
-//Verify the verify verifyProposalResponse method.
+// Verify the verify verifyProposalResponse method.
 //
 test('\n\n** TEST ** verify verifyProposalResponse', (t) => {
 	const client = new Client();
@@ -1069,7 +1064,8 @@ test('\n\n*** Test per-call timeout support ***\n', (t) => {
 
 test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 	const client = new Client();
-	const channel = new Channel('does-not-matter', client);
+	let channel;
+	channel = new Channel('does-not-matter', client);
 	channel._use_discovery = true;
 	await testutil.tapeAsyncThrow(t,
 		async () => {
@@ -1149,7 +1145,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 	const handler_path_temp = client.getConfigSetting('endorsement-handler');
 	try {
 		client.setConfigSetting('endorsement-handler', 'bad.path');
-		const channel = client.newChannel('test-channel');
+		channel = client.newChannel('test-channel');
 		await channel.initialize({discover:true});
 		t.fail('able to create channel with a bad endorsement handler path');
 	} catch (error) {
@@ -1162,7 +1158,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 
 	try {
 		await channel.getDiscoveryResults();
-	} catch(error) {
+	} catch (error) {
 		if (error.message.includes('This Channel has not been initialized or not initialized with discovery support')) {
 			t.pass('Check for:: This Channel has not been initialized or not initialized with discovery support');
 		} else {
@@ -1172,7 +1168,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 
 	try {
 		await channel.getEndorsementPlan();
-	} catch(error) {
+	} catch (error) {
 		if (error.message.includes('This Channel has not been initialized or not initialized with discovery support')) {
 			t.pass('Check for:: This Channel has not been initialized or not initialized with discovery support');
 		} else {
@@ -1190,11 +1186,11 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		channel._discovery_interests.set(JSON.stringify(endorsement_hint), endorsement_hint);
 
 		let added = channel._merge_hints(endorsement_hint);
-		t.equal(added,false,'Check that the new endorsement hint will not be added');
+		t.equal(added, false, 'Check that the new endorsement hint will not be added');
 
 		const endorsement_hint_2 = channel._buildDiscoveryInterest('somechaincode2');
 		added = channel._merge_hints(endorsement_hint_2);
-		t.equal(added,true,'Check that the new endorsement hint will be added');
+		t.equal(added, true, 'Check that the new endorsement hint will be added');
 
 		const plan_id_2 = JSON.stringify(endorsement_hint_2);
 		const check_endorsement_hint_2 = channel._discovery_interests.get(plan_id_2);
@@ -1208,7 +1204,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 
 		const endorsement_hint_3 = channel._buildDiscoveryInterest('somechaincode3', ['collection1', 'collection2', 'collection3']);
 		added = channel._merge_hints(endorsement_hint_3);
-		t.equal(added,true,'Check that the new endorsement hint will be added');
+		t.equal(added, true, 'Check that the new endorsement hint will be added');
 
 		const plan_id_3 = JSON.stringify(endorsement_hint_3);
 		const check_endorsement_hint_3 = channel._discovery_interests.get(plan_id_3);
@@ -1222,7 +1218,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		const proto_collections = proto_chaincode.getCollectionNames();
 		t.equals(proto_collections[2], 'collection3', 'Checking that the collection name is correct');
 
-	} catch(error) {
+	} catch (error) {
 		t.fail(error);
 	}
 

@@ -118,7 +118,7 @@ describe('Network', () => {
 			let error;
 			try {
 				await network._initializeInternalChannel({enabled:true, asLocalhost: true});
-			} catch(_error) {
+			} catch (_error) {
 				error = _error;
 			}
 			error.should.match(/connect failed again/);
@@ -225,12 +225,12 @@ describe('Network', () => {
 			const mockContract = sinon.createStubInstance(Contract);
 			network.contracts.set('foo:my.name.space', mockContract);
 			network.initialized = true;
-			network.getContract('foo','my.name.space').should.equal(mockContract);
+			network.getContract('foo', 'my.name.space').should.equal(mockContract);
 		});
 
 		it('should create a non-existent contract object with namespace', () => {
 			network.initialized = true;
-			const contract = network.getContract('bar','my.name.space');
+			const contract = network.getContract('bar', 'my.name.space');
 			contract.should.be.instanceof(Contract);
 			contract.chaincodeId.should.equal('bar');
 			contract.namespace.should.equal('my.name.space');

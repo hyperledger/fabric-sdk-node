@@ -36,7 +36,7 @@ const logger = utils.getLogger('packager');
  */
 module.exports.package = async function (chaincodePath, chaincodeType, devmode, metadataPath) {
 	logger.debug('packager: chaincodePath: %s, chaincodeType: %s, devmode: %s, metadataPath: %s',
-		chaincodePath,chaincodeType,devmode, metadataPath);
+		chaincodePath, chaincodeType, devmode, metadataPath);
 
 	if (devmode) {
 		logger.debug('packager: Skipping chaincode packaging due to devmode configuration');
@@ -49,22 +49,22 @@ module.exports.package = async function (chaincodePath, chaincodeType, devmode, 
 	}
 
 	const type = chaincodeType ? chaincodeType : 'golang';
-	logger.debug('packager: type %s ',type);
+	logger.debug('packager: type %s ', type);
 
 	let handler;
 
 	switch (type.toLowerCase()) {
-	case 'car':
-		handler = new Car();
-		break;
-	case 'node':
-		handler = new Node();
-		break;
-	case 'java':
-		handler = new Java();
-		break;
-	default:
-		handler = new Golang(['.go','.c','.h','.s']);
+		case 'car':
+			handler = new Car();
+			break;
+		case 'node':
+			handler = new Node();
+			break;
+		case 'java':
+			handler = new Java();
+			break;
+		default:
+			handler = new Golang(['.go', '.c', '.h', '.s']);
 	}
 
 	return handler.package(chaincodePath, metadataPath);

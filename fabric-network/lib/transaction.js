@@ -99,7 +99,7 @@ class Transaction {
 		const proposal = results[1];
 
 		// get only the valid responses to submit to the orderer
-		const { validResponses } = this._validatePeerResponses(proposalResponses);
+		const {validResponses} = this._validatePeerResponses(proposalResponses);
 
 		await eventHandler.startListening();
 
@@ -157,14 +157,14 @@ class Transaction {
 		});
 
 		if (validResponses.length === 0) {
-			const errorMessages = [ 'No valid responses from any peers.' ];
+			const errorMessages = ['No valid responses from any peers.'];
 			invalidResponseMsgs.forEach(invalidResponse => errorMessages.push(invalidResponse));
 			const msg = errorMessages.join('\n');
 			logger.error('_validatePeerResponses: ' + msg);
 			throw new Error(msg);
 		}
 
-		return { validResponses, invalidResponses };
+		return {validResponses, invalidResponses};
 	}
 
 	/**

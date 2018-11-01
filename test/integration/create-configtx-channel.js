@@ -22,7 +22,7 @@ const e2eUtils = require('./e2e/e2eUtils.js');
 let ORGS;
 
 //
-//Attempt to send a request to the orderer with the createChannel method
+// Attempt to send a request to the orderer with the createChannel method
 //
 test('\n\n***** Configtx Built config  create flow  *****\n\n', (t) => {
 	testUtil.resetDefaults();
@@ -61,8 +61,8 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', (t) => {
 		}).then((store) => {
 			client.setStateStore(store);
 
-			return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
-		}).then(() =>{
+			return testUtil.getSubmitter(client, t, true /* get the org admin*/, 'org1');
+		}).then(() => {
 			t.pass('Successfully enrolled user \'admin\' for orderer (create-configtx-channel 1)');
 
 			orderer = client.newOrderer(
@@ -87,7 +87,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', (t) => {
 
 			// make sure we do not reuse the user
 			client._userContext = null;
-			return testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
+			return testUtil.getSubmitter(client, t, true /* get the org admin*/, 'org2');
 		}).then(() => {
 			t.pass('Successfully enrolled user \'admin\' for org2');
 
@@ -129,9 +129,9 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', (t) => {
 		.then((result) => {
 			logger.debug('\n***\n completed the create \n***\n');
 
-			logger.debug(' response ::%j',result);
+			logger.debug(' response ::%j', result);
 			t.pass('Successfully created the channel.');
-			if(result.status && result.status === 'SUCCESS') {
+			if (result.status && result.status === 'SUCCESS') {
 				return e2eUtils.sleep(5000);
 			} else {
 				t.fail('Failed to create the channel. ');
@@ -144,15 +144,15 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', (t) => {
 		.then(() => {
 			t.pass('Successfully waited to make sure new channel was created.');
 
-			logger.info('\n\n >>>>>>  Should fail to create the existing channel again with name :: %s <<<<<<< \n\n',channel_name);
+			logger.info('\n\n >>>>>>  Should fail to create the existing channel again with name :: %s <<<<<<< \n\n', channel_name);
 			return client.createChannel(request);
 		}, (err) => {
 			t.fail('Failed to sleep due to error: ' + err.stack ? err.stack : err);
 			t.end();
 		})
 		.then((result) => {
-			logger.debug(' response ::%j',result);
-			if(result && result.status && result.status.toString().indexOf('BAD_REQUEST') >= 0) {
+			logger.debug(' response ::%j', result);
+			if (result && result.status && result.status.toString().indexOf('BAD_REQUEST') >= 0) {
 				t.pass('Successfully received the error message due to the conflict of channel: ' + result.info);
 			} else {
 				t.fail('Failed to get error. response: ' + result.status);

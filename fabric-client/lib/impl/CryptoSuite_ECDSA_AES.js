@@ -39,7 +39,9 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 	 * @param {string} hash Optional. Hash algorithm, supported values are "SHA2" and "SHA3"
 	 */
 	constructor(keySize, hash) {
-		if (!keySize) throw new Error('keySize must be specified');
+		if (!keySize) {
+			throw new Error('keySize must be specified');
+		}
 		if (keySize !== 256 && keySize !== 384) {
 			throw new Error('Illegal key size: ' + keySize + ' - this crypto suite only supports key sizes 256 or 384');
 		}
@@ -49,12 +51,14 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 		} else {
 			hashAlgo = utils.getConfigSetting('crypto-hash-algo');
 		}
-		if (!hashAlgo || typeof hashAlgo !== 'string')
+		if (!hashAlgo || typeof hashAlgo !== 'string') {
 			throw new Error(util.format('Unsupported hash algorithm: %j', hashAlgo));
+		}
 		hashAlgo = hashAlgo.toUpperCase();
 		const hashPair = `${hashAlgo}_${keySize}`;
-		if (!api.CryptoAlgorithms[hashPair] || !hashPrimitives[hashPair])
+		if (!api.CryptoAlgorithms[hashPair] || !hashPrimitives[hashPair]) {
 			throw Error(util.format('Unsupported hash algorithm and key size pair: %s', hashPair));
+		}
 		super();
 		this._keySize = keySize;
 		this._hashAlgo = hashAlgo;
@@ -119,7 +123,6 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 	 * To be implemented
 	 */
 	deriveKey(key, opts) {
-		if (key || opts) ;
 		throw new Error('Not implemented yet');
 	}
 
@@ -128,7 +131,7 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 	 */
 	importKey(pem, opts) {
 		logger.debug('importKey - start');
-		let store_key = true; //default
+		let store_key = true; // default
 		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
 			store_key = false;
 		}
@@ -159,8 +162,7 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 		if (key && key.type && key.type === 'EC') {
 			theKey = new ECDSAKey(key);
 			logger.debug('importKey - have the key %j', theKey);
-		}
-		else {
+		} else {
 			error = new Error('Does not understand PEM contents other than ECDSA private keys and certificates');
 		}
 
@@ -170,8 +172,7 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 				throw error;
 			}
 			return theKey;
-		}
-		else {
+		} else {
 			if (error) {
 				logger.error('importKey - %j', error);
 				return Promise.reject(error);
@@ -197,8 +198,9 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 		}
 		const store = await this._cryptoKeyStore._getKeyStore();
 		const key = await store.getKey(ski);
-		if (key instanceof ECDSAKey)
+		if (key instanceof ECDSAKey) {
 			return key;
+		}
 
 		if (key !== null) {
 			const pubKey = KEYUTIL.getKey(key);
@@ -211,7 +213,6 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 	 * The opts argument is not supported.
 	 */
 	hash(msg, opts) {
-		if (opts) ;
 		return this._hashFunction(msg);
 	}
 
@@ -265,7 +266,6 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 	 * To be implemented.
 	 */
 	encrypt(key, plainText, opts) {
-		if (key || plainText || opts) ;
 		throw new Error('Not implemented yet');
 	}
 
@@ -274,7 +274,6 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 	 * To be implemented.
 	 */
 	decrypt(key, cipherText, opts) {
-		if (key || cipherText || opts) ;
 		throw new Error('Not implemented yet');
 	}
 }
@@ -292,17 +291,17 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 // map for easy lookup of the "N/2" and "N" value per elliptic curve
 const ordersForCurve = {
 	'secp256r1': {
-		'halfOrder': elliptic.curves['p256'].n.shrn(1),
-		'order': elliptic.curves['p256'].n
+		'halfOrder': elliptic.curves.p256.n.shrn(1),
+		'order': elliptic.curves.p256.n
 	},
 	'secp384r1': {
-		'halfOrder': elliptic.curves['p384'].n.shrn(1),
-		'order': elliptic.curves['p384'].n
+		'halfOrder': elliptic.curves.p384.n.shrn(1),
+		'order': elliptic.curves.p384.n
 	}
 };
 
 function _preventMalleability(sig, curveParams) {
-	const halfOrder = ordersForCurve[curveParams.name]['halfOrder'];
+	const halfOrder = ordersForCurve[curveParams.name].halfOrder;
 	if (!halfOrder) {
 		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curveParams.name);
 	}
@@ -311,7 +310,7 @@ function _preventMalleability(sig, curveParams) {
 	// first see if 's' is larger than half of the order, if so, it needs to be specially treated
 	if (sig.s.cmp(halfOrder) === 1) { // module 'bn.js', file lib/bn.js, method cmp()
 		// convert from BigInteger used by jsrsasign Key objects and bn.js used by elliptic Signature objects
-		const bigNum = ordersForCurve[curveParams.name]['order'];
+		const bigNum = ordersForCurve[curveParams.name].order;
 		sig.s = bigNum.sub(sig.s);
 	}
 
@@ -319,7 +318,7 @@ function _preventMalleability(sig, curveParams) {
 }
 
 function _checkMalleability(sig, curveParams) {
-	const halfOrder = ordersForCurve[curveParams.name]['halfOrder'];
+	const halfOrder = ordersForCurve[curveParams.name].halfOrder;
 	if (!halfOrder) {
 		throw new Error('Can not find the half order needed to calculate "s" value for immalleable signatures. Unsupported curve name: ' + curveParams.name);
 	}

@@ -23,7 +23,7 @@ class ProtoLoader {
 	 */
 	static load(filename) {
 		const builder = protobuf.loadProtoFile(filename);
-		return grpc.loadObject(builder, { protobufjsVersion: 5 });
+		return grpc.loadObject(builder, {protobufjsVersion: 5});
 	}
 
 }

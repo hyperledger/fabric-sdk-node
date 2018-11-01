@@ -47,7 +47,7 @@ const CertificateAuthority = class {
 			throw new Error('Missing url parameter');
 		}
 		this._name = name;
-		if(caname) {
+		if (caname) {
 			this._caname = caname;
 		} else {
 			this._caname = name;

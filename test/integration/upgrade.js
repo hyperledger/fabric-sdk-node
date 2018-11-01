@@ -19,7 +19,7 @@ const testUtil = require('../unit/util.js');
 const e2eUtils = require('./e2e/e2eUtils.js');
 const logger = utils.getLogger('upgrade-chaincode');
 
-let client, channel, e2e, ORGS;
+let client, channel, e2e, ORGS, data;
 
 test('\n\n **** E R R O R  T E S T I N G on upgrade call', async (t) => {
 	testUtil.resetDefaults();
@@ -29,7 +29,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', async (t) => {
 	ORGS = Client.getConfigSetting('test-network');
 
 	const caRootsPath = ORGS.orderer.tls_cacerts;
-	const data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
+	data = fs.readFileSync(path.join(__dirname, '/test', caRootsPath));
 	const caroots = Buffer.from(data).toString();
 
 
@@ -63,7 +63,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', async (t) => {
 	for (const key in ORGS[org]) {
 		if (ORGS[org].hasOwnProperty(key)) {
 			if (key.indexOf('peer1') === 0) {
-				const data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key]['tls_cacerts']));
+				data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key].tls_cacerts));
 				const peer = client.newPeer(
 					ORGS[org][key].requests,
 					{
@@ -151,8 +151,7 @@ test('\n\n **** Testing re-initializing states during upgrade ****', async (t) =
 	if (result) {
 		t.pass('Successfully query chaincode on the channel after re-initializing chaincode states during upgrade');
 		t.end();
-	}
-	else {
+	} else {
 		t.fail('Failed to query chaincode to verify re-initialized state information');
 		t.end();
 	}

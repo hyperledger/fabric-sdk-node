@@ -53,13 +53,12 @@ describe('DefaultQueryHandler', () => {
 
 	describe('#constructor', () => {
 		it('should create a list of all queryable peers', () => {
-			const queryHandler = new DefaultQueryHandler(mockChannel, 'mspid', mockPeerMap);
 			queryHandler.allQueryablePeers.length.should.equal(3);
 			queryHandler.allQueryablePeers.should.deep.equal([mockPeer1, mockPeer3, mockPeer4]);
 		});
 
 		it('should handle no peers gracefully', () => {
-			const queryHandler = new DefaultQueryHandler(mockChannel, 'mspid2', mockPeerMap);
+			queryHandler = new DefaultQueryHandler(mockChannel, 'mspid2', mockPeerMap);
 			queryHandler.allQueryablePeers.length.should.equal(0);
 		});
 
@@ -79,22 +78,22 @@ describe('DefaultQueryHandler', () => {
 
 			failResponse = new Error('Failed to contact peer');
 
-			mockChannel.queryByChaincode.resolves([ validResponse ]);
+			mockChannel.queryByChaincode.resolves([validResponse]);
 		});
 
 		it('should not switch to another peer if peer returns a payload which is an error', async () => {
-			mockChannel.queryByChaincode.resolves([ errorResponse ]);
+			mockChannel.queryByChaincode.resolves([errorResponse]);
 			try {
 				await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
 				should.fail('expected error to be thrown');
-			} catch(error) {
+			} catch (error) {
 				error.message.should.equal(errorResponse.message);
 				sinon.assert.calledWith(mockChannel.queryByChaincode, {
-					targets: [ mockPeer1 ],
+					targets: [mockPeer1],
 					chaincodeId: 'chaincodeId',
 					txId: mockTransactionID,
 					fcn: 'myfunc',
-					args: [ 'arg1', 'arg2' ]
+					args: ['arg1', 'arg2']
 				});
 				queryHandler.queryPeerIndex.should.equal(0);
 			}
@@ -104,11 +103,11 @@ describe('DefaultQueryHandler', () => {
 			const result = await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
 
 			sinon.assert.calledWith(mockChannel.queryByChaincode, {
-				targets: [ mockPeer1 ],
+				targets: [mockPeer1],
 				chaincodeId: 'chaincodeId',
 				txId: mockTransactionID,
 				fcn: 'myfunc',
-				args: [ 'arg1', 'arg2' ]
+				args: ['arg1', 'arg2']
 			});
 			queryHandler.queryPeerIndex.should.equal(0);
 			result.equals(validResponse).should.be.true;
@@ -120,11 +119,11 @@ describe('DefaultQueryHandler', () => {
 
 			sinon.assert.calledTwice(mockChannel.queryByChaincode);
 			sinon.assert.alwaysCalledWith(mockChannel.queryByChaincode, {
-				targets: [ mockPeer1 ],
+				targets: [mockPeer1],
 				chaincodeId: 'chaincodeId',
 				txId: mockTransactionID,
 				fcn: 'myfunc',
-				args: [ 'arg1', 'arg2' ]
+				args: ['arg1', 'arg2']
 			});
 			queryHandler.queryPeerIndex.should.equal(0);
 			result.equals(validResponse).should.be.true;
@@ -139,11 +138,11 @@ describe('DefaultQueryHandler', () => {
 
 			sinon.assert.calledThrice(mockChannel.queryByChaincode);
 			sinon.assert.calledWith(mockChannel.queryByChaincode, {
-				targets: [ mockPeer4 ],
+				targets: [mockPeer4],
 				chaincodeId: 'chaincodeId',
 				txId: mockTransactionID,
 				fcn: 'myfunc',
-				args: [ 'arg1', 'arg2' ]
+				args: ['arg1', 'arg2']
 			});
 			queryHandler.queryPeerIndex.should.equal(2);
 			result.equals(validResponse).should.be.true;
@@ -160,18 +159,18 @@ describe('DefaultQueryHandler', () => {
 
 			result.equals(validResponse).should.be.true;
 			sinon.assert.calledThrice(mockChannel.queryByChaincode);
-			sinon.assert.calledWith(mockChannel.queryByChaincode.firstCall, sinon.match({ targets: [ mockPeer1 ] }));
-			sinon.assert.calledWith(mockChannel.queryByChaincode.secondCall, sinon.match({ targets: [ mockPeer1 ] }));
-			sinon.assert.calledWith(mockChannel.queryByChaincode.thirdCall, sinon.match({ targets: [ mockPeer3 ] }));
+			sinon.assert.calledWith(mockChannel.queryByChaincode.firstCall, sinon.match({targets: [mockPeer1]}));
+			sinon.assert.calledWith(mockChannel.queryByChaincode.secondCall, sinon.match({targets: [mockPeer1]}));
+			sinon.assert.calledWith(mockChannel.queryByChaincode.thirdCall, sinon.match({targets: [mockPeer3]}));
 			queryHandler.queryPeerIndex.should.equal(1);
 			result.equals(validResponse).should.be.true;
 
 		});
 
 		it('should throw if all peers respond with errors', () => {
-			mockChannel.queryByChaincode.onFirstCall().resolves([ new Error('FAIL_1') ]);
-			mockChannel.queryByChaincode.onSecondCall().resolves([ new Error('FAIL_2') ]);
-			mockChannel.queryByChaincode.onThirdCall().resolves([ new Error('FAIL_3') ]);
+			mockChannel.queryByChaincode.onFirstCall().resolves([new Error('FAIL_1')]);
+			mockChannel.queryByChaincode.onSecondCall().resolves([new Error('FAIL_2')]);
+			mockChannel.queryByChaincode.onThirdCall().resolves([new Error('FAIL_3')]);
 
 			return queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2'])
 				.should.be.rejectedWith(/No peers available.+FAIL_3/);
@@ -203,15 +202,15 @@ describe('DefaultQueryHandler', () => {
 		});
 
 		it('passes transient data to queryByChaincode', async () => {
-			const transientMap = { transientKey: Buffer.from('value') };
+			const transientMap = {transientKey: Buffer.from('value')};
 			await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2'], transientMap);
 
 			sinon.assert.calledWith(mockChannel.queryByChaincode, {
-				targets: [ mockPeer1 ],
+				targets: [mockPeer1],
 				chaincodeId: 'chaincodeId',
 				txId: mockTransactionID,
 				fcn: 'myfunc',
-				args: [ 'arg1', 'arg2' ],
+				args: ['arg1', 'arg2'],
 				transientMap: transientMap
 			});
 		});

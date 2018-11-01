@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/* eslint-disable no-throw-literal */
 'use strict';
 
 const rewire = require('rewire');
@@ -61,7 +61,7 @@ describe('Orderer', () => {
 			// call
 			obj.close();
 
-			//assert
+			// assert
 			sinon.assert.called(mockClose);
 		});
 
@@ -74,7 +74,7 @@ describe('Orderer', () => {
 			mockOC.close = mockClose;
 			obj.close();
 
-			//assert
+			// assert
 			sinon.assert.notCalled(mockClose);
 		});
 	});
@@ -152,7 +152,7 @@ describe('Orderer', () => {
 
 			const response = new PassThrough({objectMode: true});
 			response.cancel = sinon.stub();
-			response.write({ invalid: 'response' });
+			response.write({invalid: 'response'});
 
 			broadcastStub.broadcast = sinon.stub().returns(response);
 			obj._ordererClient = broadcastStub;

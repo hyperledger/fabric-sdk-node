@@ -88,7 +88,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		 *    the "ConfigUpdate" object.
 		 */
 
-		await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
+		await testUtil.getSubmitter(client, t, true /* get the org admin*/, 'org1');
 		t.pass('Successfully enrolled user \'admin\' for org1');
 		const config_json = fs.readFileSync(path.join(__dirname, '../fixtures/channel/' + channel_name + '.json'));
 
@@ -110,7 +110,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 					return;
 				}
 				config_proto = res.body;
-				//logger.info('config_proto %s',config_proto.toString());
+				// logger.info('config_proto %s',config_proto.toString());
 			});
 		// and here is an example of how to use it with a promise
 		const config = await agent.post('http://127.0.0.1:7059/protolator/encode/common.ConfigUpdate', config_json.toString())
@@ -125,7 +125,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
+		await testUtil.getSubmitter(client, t, true /* get the org admin*/, 'org2');
 		t.pass('Successfully enrolled user \'admin\' for org2');
 
 		// sign and collect signature
@@ -163,8 +163,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 			await e2eUtils.sleep(5000);
 		} else {
 			t.fail('Failed to create the channel. ');
-
-			throw 'Failed to create the channel';
+			throw new Error('Failed to create the channel');
 		}
 		t.pass('Successfully waited to make sure new channel was created.');
 
@@ -263,11 +262,11 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		config_proto = response;
 
 		// will have to now collect the signatures
-		signatures = []; //clear out the above
+		signatures = []; // clear out the above
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org1');
+		await testUtil.getSubmitter(client, t, true /* get the org admin*/, 'org1');
 		t.pass('Successfully enrolled user \'admin\' for org1');
 
 		// sign and collect signature
@@ -276,7 +275,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		// make sure we do not reuse the user
 		client._userContext = null;
 
-		await testUtil.getSubmitter(client, t, true /*get the org admin*/, 'org2');
+		await testUtil.getSubmitter(client, t, true /* get the org admin*/, 'org2');
 		t.pass('Successfully enrolled user \'admin\' for org2');
 
 		// sign and collect signature
@@ -310,7 +309,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 		} else {
 			t.fail('Failed to update the channel. ');
 
-			throw 'Failed to update the channel';
+			throw new Error('Failed to update the channel');
 		}
 		t.pass('Successfully waited to make sure new channel was updated.');
 		t.end();

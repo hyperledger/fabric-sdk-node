@@ -75,7 +75,7 @@ test('\n\n***** End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
 	client.setCryptoSuite(cryptoSuite);
 
 
-	await testUtil.getSubmitter(client, t, true /*get the org admin*/, org);
+	await testUtil.getSubmitter(client, t, true /* get the org admin*/, org);
 	t.pass(`Successfully enrolled user 'admin' for ${org}`);
 
 	const orderer = client.newOrderer(

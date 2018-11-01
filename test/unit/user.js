@@ -51,18 +51,20 @@ test('\n\n ** User - constructor set get tests **\n\n', async (t) => {
 	utils.setConfigSetting('crypto-hsm', false);
 
 	const member1 = new User(memberName);
-	if (member1.getName() === memberName)
+	if (member1.getName() === memberName) {
 		t.pass('User constructor set get tests 1: new User getName was successful');
-	else
+	} else {
 		t.fail('User constructor set get tests 1: new User getName was not successful');
+	}
 
 	member1.setRoles(roles);
 	if (member1.getRoles() &&
 		member1.getRoles().indexOf('admin') > -1 &&
-		member1.getRoles().indexOf('user') > -1)
+		member1.getRoles().indexOf('user') > -1) {
 		t.pass('User constructor set get tests 1: setRoles getRoles was successful');
-	else
+	} else {
 		t.fail('User constructor set get tests 1: setRoles getRoles was not successful');
+	}
 
 	try {
 		await member1.setEnrollment();
@@ -116,17 +118,19 @@ test('\n\n ** User - constructor set get tests **\n\n', async (t) => {
 	const member2 = new User(memberCfg);
 	t.equals(member2.getCryptoSuite(), null, 'User getCryptoSuite should initially be null');
 
-	if (member2.getName() === enrollmentID)
+	if (member2.getName() === enrollmentID) {
 		t.pass('User constructor test 2: new User cfg getName was successful');
-	else
+	} else {
 		t.fail('User constructor test 2: new User cfg getName was not successful');
+	}
 
 	if (member2.getRoles() &&
 		member2.getRoles().indexOf('admin') > -1 &&
-		member2.getRoles().indexOf('user') > -1)
+		member2.getRoles().indexOf('user') > -1) {
 		t.pass('User constructor test 2: new User cfg getRoles was successful');
-	else
+	} else {
 		t.fail('User constructor test 2: new User cfg getRoles was not successful');
+	}
 
 	// test set enrollment for identity and signing identity
 	try {

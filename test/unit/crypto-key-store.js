@@ -6,7 +6,9 @@
 
 'use strict';
 
-if (global && global.hfc) global.hfc.config = undefined;
+if (global && global.hfc) {
+	global.hfc.config = undefined;
+}
 require('nconf').reset();
 
 const tape = require('tape');
@@ -231,9 +233,9 @@ function testKeyStore(store, t) {
 }
 
 test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', (t) => {
-	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');//force for 'gulp test'
+	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
 	const keyValStorePath = 'tmp/keyValStore1';
-	const config = { path: keyValStorePath };
+	const config = {path: keyValStorePath};
 	let cs = utils.newCryptoKeyStore(config);
 	t.equal(cs._storeConfig.opts, config, util.format('Returned instance should have store config opts of %j', config));
 	t.equal(typeof cs._storeConfig.superClass, 'function', 'Returned instance should have store config superClass');

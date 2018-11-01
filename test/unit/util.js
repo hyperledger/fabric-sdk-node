@@ -96,21 +96,23 @@ module.exports.cleanupDir = function(keyValStorePath) {
 };
 
 module.exports.getUniqueVersion = function(prefix) {
-	if (!prefix) prefix = 'v';
+	if (!prefix) {
+		prefix = 'v';
+	}
 	return prefix + Date.now();
 };
 
 // utility function to check if directory or file exists
 // uses entire / absolute path from root
-module.exports.existsSync = function(absolutePath /*string*/) {
+module.exports.existsSync = function(absolutePath /* string*/) {
 	try  {
 		const stat = fs.statSync(absolutePath);
 		if (stat.isDirectory() || stat.isFile()) {
 			return true;
-		} else
+		} else {
 			return false;
-	}
-	catch (e) {
+		}
+	} catch (e) {
 		return false;
 	}
 };
@@ -191,7 +193,7 @@ function getAdmin(client, t, userOrg) {
 	}
 
 	return Promise.resolve(client.createUser({
-		username: 'peer'+userOrg+'Admin',
+		username: 'peer' + userOrg + 'Admin',
 		mspid: ORGS[userOrg].mspid,
 		cryptoContent: {
 			privateKeyPEM: keyPEM.toString(),
@@ -217,13 +219,14 @@ function getOrdererAdmin(client, t) {
 	}));
 }
 
-function readFile(path) {
+function readFile(filePath) {
 	return new Promise((resolve, reject) => {
-		fs.readFile(path, (err, data) => {
-			if (err)
-				reject(new Error('Failed to read file ' + path + ' due to error: ' + err));
-			else
+		fs.readFile(filePath, (err, data) => {
+			if (err) {
+				reject(new Error('Failed to read file ' + filePath + ' due to error: ' + err));
+			} else {
 				resolve(data);
+			}
 		});
 	});
 }
@@ -232,8 +235,8 @@ function readAllFiles(dir) {
 	const files = fs.readdirSync(dir);
 	const certs = [];
 	files.forEach((file_name) => {
-		const file_path = path.join(dir,file_name);
-		logger.debug(' looking at file ::'+file_path);
+		const file_path = path.join(dir, file_name);
+		logger.debug(' looking at file ::' + file_path);
 		const data = fs.readFileSync(file_path);
 		certs.push(data);
 	});
@@ -245,7 +248,9 @@ module.exports.getOrderAdminSubmitter = function(client, test) {
 };
 
 module.exports.getSubmitter = function(client, test, peerOrgAdmin, org) {
-	if (arguments.length < 2) throw new Error('"client" and "test" are both required parameters');
+	if (arguments.length < 2) {
+		throw new Error('"client" and "test" are both required parameters');
+	}
 
 	let peerAdmin, userOrg;
 	if (typeof peerOrgAdmin === 'boolean') {
@@ -274,17 +279,16 @@ module.exports.getSubmitter = function(client, test, peerOrgAdmin, org) {
 
 module.exports.checkResults = function(results, error_snip, t) {
 	const proposalResponses = results[0];
-	for(const i in proposalResponses) {
+	for (const i in proposalResponses) {
 		const proposal_response = proposalResponses[i];
-		if(proposal_response instanceof Error) {
-			if(proposal_response.message.includes(error_snip)) {
+		if (proposal_response instanceof Error) {
+			if (proposal_response.message.includes(error_snip)) {
 				t.pass('Successfully got the error' + error_snip);
 			} else {
-				t.fail( 'Failed to get error with ' + error_snip + ' :: response message ' + proposal_response.message);
+				t.fail('Failed to get error with ' + error_snip + ' :: response message ' + proposal_response.message);
 			}
-		}
-		else {
-			t.fail(' Failed  :: no Error response message found and should have had an error with '+ error_snip);
+		} else {
+			t.fail(' Failed  :: no Error response message found and should have had an error with ' + error_snip);
 		}
 	}
 };
@@ -292,12 +296,12 @@ module.exports.checkResults = function(results, error_snip, t) {
 module.exports.checkGoodResults = function(t, results) {
 	let result = true;
 	const proposalResponses = results[0];
-	for(const i in proposalResponses) {
+	for (const i in proposalResponses) {
 		const proposal_response = proposalResponses[i];
-		if(proposal_response instanceof Error) {
-			t.fail( 'Failed with error ' + proposal_response.toString());
+		if (proposal_response instanceof Error) {
+			t.fail('Failed with error ' + proposal_response.toString());
 			result = result & false;
-		} else if( proposal_response && proposal_response.response && proposal_response.response.status === 200) {
+		} else if (proposal_response && proposal_response.response && proposal_response.response.status === 200) {
 			t.pass('transaction proposal has response status of good');
 			result = result & true;
 		} else {
@@ -319,9 +323,9 @@ module.exports.getClientForOrg = async function(t, org) {
 
 	// load the client information for this organization
 	// this file only has the client section
-	client.loadFromConfig('test/fixtures/'+ org +'.yaml');
-	t.pass('Successfully loaded client section of network config for organization:'+ org);
-	if(client._adminSigningIdentity) {
+	client.loadFromConfig('test/fixtures/' + org + '.yaml');
+	t.pass('Successfully loaded client section of network config for organization:' + org);
+	if (client._adminSigningIdentity) {
 		t.pass('Successfully assigned an admin idenity to this client');
 	} else {
 		t.fail('Failed to assigne an admin idenity to this client');
@@ -396,16 +400,16 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 
 		try {
 			const create_results = await client_org1.createChannel(request);
-			if(create_results.status && create_results.status === 'SUCCESS') {
+			if (create_results.status && create_results.status === 'SUCCESS') {
 				t.pass('Successfully created the channel.');
 				await module.exports.sleep(10000);
 			} else {
 				t.fail('Failed to create the channel. ' + create_results.status + ' :: ' + create_results.info);
 				throw new Error('Failed to create the channel. ');
 			}
-		} catch(error) {
+		} catch (error) {
 			logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
-			t.fail('Failed to create channel :'+ error);
+			t.fail('Failed to create channel :' + error);
 			throw new Error('Failed to create the channel. ');
 		}
 
@@ -447,7 +451,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 		// lets check the results of sending to the peers which is
 		// last in the results array
 		let peer_results = join_results.pop();
-		if(peer_results && peer_results[0] && peer_results[0].response && peer_results[0].response.status == 200) {
+		if (peer_results && peer_results[0] && peer_results[0].response && peer_results[0].response.status === 200) {
 			t.pass('Successfully joined channnel on org1');
 		} else {
 			t.fail('Failed to join channel on org1');
@@ -474,7 +478,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 		// lets check the results of sending to the peers which is
 		// last in the results array
 		peer_results = join_results.pop();
-		if(peer_results && peer_results[0] && peer_results[0].response && peer_results[0].response.status == 200) {
+		if (peer_results && peer_results[0] && peer_results[0].response && peer_results[0].response.status === 200) {
 			t.pass('Successfully joined channnel on org2');
 		} else {
 			t.fail('Failed to join channel on org2');
@@ -485,7 +489,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 		 *  I N S T A L L   C H A I N C O D E
 		 */
 		process.env.GOPATH = path.join(__dirname, '../fixtures');
-		tx_id = client_org1.newTransactionID(true);//get an admin transaction ID
+		tx_id = client_org1.newTransactionID(true);// get an admin transaction ID
 		request = {
 			targets: ['peer0.org1.example.com'],
 			chaincodePath: 'github.com/example_cc',
@@ -496,14 +500,14 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 
 		// send install request as admin of org1
 		let install_results = await client_org1.installChaincode(request);
-		if(install_results && install_results[0] && install_results[0][0].response && install_results[0][0].response.status == 200) {
+		if (install_results && install_results[0] && install_results[0][0].response && install_results[0][0].response.status === 200) {
 			t.pass('Successfully installed chain code on org1');
 		} else {
 			t.fail(' Failed to install chaincode on org1');
 			throw new Error('Failed to install chain code on org1');
 		}
 
-		tx_id = client_org2.newTransactionID(true); //get an admin transaction ID
+		tx_id = client_org2.newTransactionID(true); // get an admin transaction ID
 		request = {
 			targets: ['peer0.org2.example.com'],
 			chaincodePath: 'github.com/example_cc',
@@ -514,7 +518,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 
 		// send install as org2 admin
 		install_results = await client_org2.installChaincode(request);
-		if(install_results && install_results[0] && install_results[0][0].response && install_results[0][0].response.status == 200) {
+		if (install_results && install_results[0] && install_results[0][0].response && install_results[0][0].response.status === 200) {
 			t.pass('Successfully installed chain code on org2');
 		} else {
 			t.fail(' Failed to install chaincode');
@@ -532,7 +536,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 			chaincodeVersion: 'v2',
 			args: ['a', '100', 'b', '200'],
 			txId: tx_id,
-			targets: ['peer0.org1.example.com','peer0.org2.example.com'],
+			targets: ['peer0.org1.example.com', 'peer0.org2.example.com'],
 		};
 
 		// send proposal
@@ -563,9 +567,9 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 		}
 
 		t.pass('Successfully waited for chaincodes to startup');
-	} catch(error) {
+	} catch (error) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
-		t.fail('Test failed with '+ error);
+		t.fail('Test failed with ' + error);
 	}
 
 	// just return the one channel instance
@@ -589,21 +593,21 @@ module.exports.invokeAsAdmin = async function(t, client, channel, additional_req
 		let request = {
 			chaincodeId : 'example',
 			fcn: 'move',
-			args: ['a', 'b','100'],
+			args: ['a', 'b', '100'],
 			txId: tx_id
 		};
 
 		request = Object.assign(request, additional_request_opts);
-		logger.info('request:%j',request);
+		logger.info('request:%j', request);
 
 		const results = await channel.sendTransactionProposal(request);
 		const proposalResponses = results[0];
 		const proposal = results[1];
 		let all_good = true;
-		for(const i in proposalResponses) {
+		for (const i in proposalResponses) {
 			let one_good = false;
 			const proposal_response = proposalResponses[i];
-			if( proposal_response.response && proposal_response.response.status === 200) {
+			if (proposal_response.response && proposal_response.response.status === 200) {
 				t.pass('transaction proposal has response status of good');
 				one_good = true;
 			} else {
@@ -629,12 +633,12 @@ module.exports.invokeAsAdmin = async function(t, client, channel, additional_req
 			t.pass('Successfully committed transaction ' + tx_id_string);
 			await module.exports.sleep(5000);
 		} else {
-			t.fail('Failed transaction '+ tx_id_string);
+			t.fail('Failed transaction ' + tx_id_string);
 			throw new Error('Failed transaction');
 		}
-	} catch(error) {
+	} catch (error) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
-		t.fail('Test failed with '+ error);
+		t.fail('Test failed with ' + error);
 	}
 
 	return tx_id_string;
@@ -645,7 +649,7 @@ module.exports.send_and_wait_on_events = async function(t, channel, request, tx_
 	promises.push(channel.sendTransaction(request));
 
 	const channel_event_hubs = channel.getChannelEventHubsForOrg();
-	for(const i in channel_event_hubs) {
+	for (const i in channel_event_hubs) {
 		const channel_event_hub = channel_event_hubs[i];
 		const event_monitor = module.exports.transaction_monitor(t, channel_event_hub, tx_id);
 		promises.push(event_monitor);
@@ -657,20 +661,20 @@ module.exports.send_and_wait_on_events = async function(t, channel, request, tx_
 module.exports.transaction_monitor = function(t, channel_event_hub, tx_id) {
 	const a_promise = new Promise((resolve, reject) => {
 		const handle = setTimeout(() => {
-			t.fail('Timeout - Failed to receive event for tx_id '+ tx_id);
-			channel_event_hub.disconnect(); //shutdown
+			t.fail('Timeout - Failed to receive event for tx_id ' + tx_id);
+			channel_event_hub.disconnect(); // shutdown
 			throw new Error('TIMEOUT - no event received');
 		}, 60000);
 
 		channel_event_hub.registerTxEvent(tx_id, (txnid, code, block_num) => {
 			clearTimeout(handle);
-			t.pass('Event has been seen with transaction code:'+ code + ' for transaction id:'+ txnid + ' for block_num:' + block_num);
+			t.pass('Event has been seen with transaction code:' + code + ' for transaction id:' + txnid + ' for block_num:' + block_num);
 			resolve('Got the replayed transaction');
 		}, (error) => {
 			clearTimeout(handle);
-			t.fail('Failed to receive event replay for Event for transaction id ::'+tx_id);
+			t.fail('Failed to receive event replay for Event for transaction id ::' + tx_id);
 			reject(error);
-		},{disconnect: true}
+		}, {disconnect: true}
 			// Setting the disconnect to true as we do not want to use this
 			// ChannelEventHub after the event we are looking for comes in
 		);
@@ -679,7 +683,7 @@ module.exports.transaction_monitor = function(t, channel_event_hub, tx_id) {
 		// this connect will send a request to the peer event service that has
 		// been signed by the admin identity
 		channel_event_hub.connect();
-		t.pass('Successfully called connect on '+ channel_event_hub.getPeerAddr());
+		t.pass('Successfully called connect on ' + channel_event_hub.getPeerAddr());
 	});
 
 	return a_promise;
@@ -695,8 +699,8 @@ module.exports.queryChannelAsAdmin = async function(t, client, channel, tx_id_st
 
 		const response_payloads = await channel.queryByChaincode(request, true);
 		if (response_payloads) {
-			for(let i = 0; i < response_payloads.length; i++) {
-				t.pass('Successfully got query results :: '+ response_payloads[i].toString('utf8'));
+			for (let i = 0; i < response_payloads.length; i++) {
+				t.pass('Successfully got query results :: ' + response_payloads[i].toString('utf8'));
 			}
 		} else {
 			t.fail('response_payloads is null');
@@ -707,16 +711,16 @@ module.exports.queryChannelAsAdmin = async function(t, client, channel, tx_id_st
 		t.equals('1', results.header.number, 'Checking able to find our block number by admin');
 
 		results = await channel.queryInfo(peer, true);
-		t.pass('Successfully got the block height by admin:: '+ results.height);
+		t.pass('Successfully got the block height by admin:: ' + results.height);
 
 		results = await channel.queryBlockByHash(results.previousBlockHash, peer, true);
 		t.pass('Successfully got block by hash by admin ::' + results.header.number);
 
 		results = await channel.queryTransaction(tx_id_string, peer, true);
 		t.equals(0, results.validationCode, 'Checking able to find our transaction validationCode by admin');
-	} catch(error) {
+	} catch (error) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
-		t.fail('Test failed with '+ error);
+		t.fail('Test failed with ' + error);
 	}
 
 	return true;
@@ -725,12 +729,12 @@ module.exports.queryChannelAsAdmin = async function(t, client, channel, tx_id_st
 module.exports.queryClientAsAdmin = async function(t, client, channel, peer) {
 	let results = await client.queryInstalledChaincodes(peer, true); // use admin
 	let found = false;
-	for(const i in results.chaincodes) {
-		if(results.chaincodes[i].name === 'example') {
+	for (const i in results.chaincodes) {
+		if (results.chaincodes[i].name === 'example') {
 			found = true;
 		}
 	}
-	if(found) {
+	if (found) {
 		t.pass('Successfully found our chaincode in the result list');
 	} else {
 		t.fail('Failed to find our chaincode in the result list');
@@ -738,12 +742,12 @@ module.exports.queryClientAsAdmin = async function(t, client, channel, peer) {
 
 	results = await client.queryChannels(peer, true);
 	found = false;
-	for(const i in results.channels) {
-		if(results.channels[i].channel_id === channel.getName()) {
+	for (const i in results.channels) {
+		if (results.channels[i].channel_id === channel.getName()) {
 			found = true;
 		}
 	}
-	if(found) {
+	if (found) {
 		t.pass('Successfully found our channel in the result list');
 	} else {
 		t.fail('Failed to find our channel in the result list');

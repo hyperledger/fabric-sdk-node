@@ -253,11 +253,11 @@ function buildSignaturePolicy(spec) {
 	}
 }
 
-function checkPolicy(policy){
+function checkPolicy(policy) {
 	if (!policy) {
 		throw new Error('Missing Required Param "policy"');
 	}
-	if (!policy.identities || policy.identities === '' || Object.keys(policy.identities).length === 0 ) {
+	if (!policy.identities || policy.identities === '' || Object.keys(policy.identities).length === 0) {
 		throw new Error('Invalid policy, missing the "identities" property');
 	} else if (!Array.isArray(policy.identities)) {
 		throw new Error('Invalid policy, the "identities" property must be an array');

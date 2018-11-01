@@ -10,7 +10,7 @@ const test = _test(tape);
 const path = require('path');
 const FabricCAServices = require('../../fabric-ca-client/lib/FabricCAServices');
 const User = require('../../fabric-ca-client/lib/User');
-const { HFCAIdentityAttributes, HFCAIdentityType } = require('../../fabric-ca-client/lib/IdentityService');
+const {HFCAIdentityAttributes, HFCAIdentityType} = require('../../fabric-ca-client/lib/IdentityService');
 
 const userOrg1 = 'org1';
 const userOrg2 = 'org2';
@@ -26,8 +26,8 @@ test('\n\n ** FabricCAServices - CertificateService Test **\n\n', async (t) => {
 
 		const fabricCAEndpoint1 = ORGS[userOrg1].ca.url;
 		const fabricCAEndpoint2 = ORGS[userOrg2].ca.url;
-		FabricCAServices.getConfigSetting('crypto-keysize', '256'); //force for gulp test
-		FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); //force for gulp test
+		FabricCAServices.getConfigSetting('crypto-keysize', '256'); // force for gulp test
+		FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); // force for gulp test
 
 		const caService1 = new FabricCAServices(fabricCAEndpoint1, tlsOptions, ORGS[userOrg1].ca.name);
 		const caService2 = new FabricCAServices(fabricCAEndpoint2, tlsOptions, ORGS[userOrg2].ca.name);
@@ -36,7 +36,7 @@ test('\n\n ** FabricCAServices - CertificateService Test **\n\n', async (t) => {
 		const certificateService2 = caService2.newCertificateService();
 
 		// enroll admin1 and admin2
-		const { admin1, admin2 } = await enrollAdmin(caService1, caService2, t);
+		const {admin1, admin2} = await enrollAdmin(caService1, caService2, t);
 		// there should be certificates for each admin at the beginning
 		let resp = await certificateService1.getCertificates(null, admin1);
 		t.equal(resp.success, true, 'certificate service should response success');
@@ -89,7 +89,7 @@ async function enrollAdmin(caService1, caService2, t) {
 }
 
 async function createAndEnrollIdentity(ca, admin) {
-	const affiliation = admin.getName() === 'admin1' ? 'org1':'org2';
+	const affiliation = admin.getName() === 'admin1' ? 'org1' : 'org2';
 	const mspId = admin._mspId;
 	const identityService = ca.newIdentityService();
 
@@ -98,7 +98,7 @@ async function createAndEnrollIdentity(ca, admin) {
 		enrollmentSecret: 'userpw',
 		affiliation,
 		// set this identity can manage identities of the role user
-		attrs: [{ name: HFCAIdentityAttributes.HFREGISTRARROLES, value: HFCAIdentityType.USER }]
+		attrs: [{name: HFCAIdentityAttributes.HFREGISTRARROLES, value: HFCAIdentityType.USER}]
 	};
 
 	await identityService.create(req, admin);

@@ -127,8 +127,9 @@ class Orderer extends Remote {
 
 		const self = this;
 		let rto = self._request_timeout;
-		if (typeof timeout === 'number')
+		if (typeof timeout === 'number') {
 			rto = timeout;
+		}
 
 		return this.waitForReady(this._ordererClient).then(() => {
 			// Send the envelope to the orderer via grpc
@@ -181,7 +182,7 @@ class Orderer extends Remote {
 				logger.debug('sendBroadcast - sent message');
 			});
 		},
-		(error) =>{
+		(error) => {
 			logger.error('Orderer %s has an error %s ', self.getUrl(), error.toString());
 			return Promise.reject(error);
 		});
@@ -233,7 +234,7 @@ class Orderer extends Remote {
 						return reject(new Error(error_msg));
 					}, self._request_timeout);
 					deliver.on('data', (response) => {
-						logger.debug('sendDeliver - on data'); //response: %j', response);
+						logger.debug('sendDeliver - on data'); // response: %j', response);
 						// check the type of the response
 						if (response.Type === 'block') {
 							const blockHeader = new _common.BlockHeader();
@@ -294,7 +295,7 @@ class Orderer extends Remote {
 							deliver.end();
 							self._sendDeliverConnect = false;
 							if (err && err.code) {
-								if (err.code == 14) {
+								if (err.code === 14) {
 									logger.error('sendDeliver - on error code 14: %j', err.stack ? err.stack : err);
 									return reject(new Error('SERVICE_UNAVAILABLE'));
 								}

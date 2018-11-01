@@ -3,14 +3,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 */
-let gulp = require('gulp'),
+const gulp = require('gulp'),
 	watch = require('gulp-watch'),
 	debug = require('gulp-debug'),
 	fs = require('fs'),
 	ca = require('./ca.js');
 
 gulp.task('watch', () => {
-	watch(ca.DEPS, { ignoreInitial: false, base: 'fabric-client/' })
+	watch(ca.DEPS, {ignoreInitial: false, base: 'fabric-client/'})
 		.pipe(debug())
 		.pipe(gulp.dest('fabric-ca-client/'));
 
@@ -26,7 +26,7 @@ gulp.task('watch', () => {
 			'fabric-ca-client/index.js',
 			'fabric-ca-client/config/**/*',
 			'fabric-ca-client/lib/**/*'
-		], { ignoreInitial: false, base: './' })
+		], {ignoreInitial: false, base: './'})
 			.pipe(debug())
 			.pipe(gulp.dest('node_modules'));
 	}

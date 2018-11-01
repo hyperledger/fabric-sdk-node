@@ -26,13 +26,13 @@ const fixtures = process.cwd() + '/test/fixtures';
 const identityLabel = 'User1@org1.example.com';
 const tlsLabel = 'tlsId';
 
-async function createWallet(t, path) {
+async function createWallet(t, filePath) {
 	// define the identity to use
 	const credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
 	const cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
 	const key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
 
-	const fileSystemWallet = new FileSystemWallet(path);
+	const fileSystemWallet = new FileSystemWallet(filePath);
 
 	// prep wallet and test it at the same time
 	await fileSystemWallet.import(identityLabel, X509WalletMixin.createIdentity('Org1MSP', cert, key));
@@ -45,12 +45,12 @@ async function createWallet(t, path) {
 	return fileSystemWallet;
 }
 
-async function deleteWallet(path) {
+async function deleteWallet(filePath) {
 	const rimRafPromise = new Promise((resolve) => {
-		rimraf(path, (err) => {
+		rimraf(filePath, (err) => {
 			if (err) {
-				//eslint-disable-next-line no-console
-				console.log(`failed to delete ${path}, error was ${err}`);
+				// eslint-disable-next-line no-console
+				console.log(`failed to delete ${filePath}, error was ${err}`);
 				resolve();
 			}
 			resolve();
@@ -86,25 +86,24 @@ test('\n\n***** Network End-to-end flow: evaluate transaction to get information
 		const responseBuffer = await contract.evaluateTransaction('query', 'a');
 		let response = responseBuffer.toString();
 
-		if(response * 1 === parseInt(response)){
+		if (response * 1 === parseInt(response)) {
 			t.pass('Successfully got back a value');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
 
 		// check we deal with an error returned.
 		try {
-			response = await contract.evaluateTransaction('throwError', 'a', 'b','100');
+			response = await contract.evaluateTransaction('throwError', 'a', 'b', '100');
 			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-		} catch(expectedErr) {
-			if(expectedErr.message.includes('throwError: an error occurred')) {
+		} catch (expectedErr) {
+			if (expectedErr.message.includes('throwError: an error occurred')) {
 				t.pass('Successfully handled invocation errors');
 			} else {
 				t.fail('Unexpected exception: ' + expectedErr.message);
 			}
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		await deleteWallet(tmpdir);
@@ -167,7 +166,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with transient dat
 		} else {
 			t.fail('Unexpected transaction response: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		await deleteWallet(tmpdir);

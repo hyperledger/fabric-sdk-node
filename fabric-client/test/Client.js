@@ -112,7 +112,7 @@ describe('Client', () => {
 			_setMspidFromConfigStub = sandbox.stub();
 			revert.push(Client.__set__('Client.prototype._setAdminFromConfig', _setAdminFromConfigStub));
 			revert.push(Client.__set__('Client.prototype._setMspidFromConfig', _setMspidFromConfigStub));
-			mock_network_config = { mergeSettings: mergeSettingsStub, hasClient: hasClientStub };
+			mock_network_config = {mergeSettings: mergeSettingsStub, hasClient: hasClientStub};
 
 			client = new Client();
 		});
@@ -169,8 +169,8 @@ describe('Client', () => {
 		beforeEach(() => {
 			toBytesStub = sandbox.stub();
 			generateX509CertificateStub = sandbox.stub();
-			generateEphemeralKeyStub = sandbox.stub().returns({ toBytes: toBytesStub, generateX509Certificate: generateX509CertificateStub });
-			newCryptoSuiteStub = sandbox.stub().returns({ generateEphemeralKey: generateEphemeralKeyStub });
+			generateEphemeralKeyStub = sandbox.stub().returns({toBytes: toBytesStub, generateX509Certificate: generateX509CertificateStub});
+			newCryptoSuiteStub = sandbox.stub().returns({generateEphemeralKey: generateEphemeralKeyStub});
 			revert.push(Client.__set__('Client.newCryptoSuite', newCryptoSuiteStub));
 			getNameStub = sandbox.stub();
 
@@ -178,12 +178,12 @@ describe('Client', () => {
 		});
 
 		it('should generate a new ephemeral key and set _tls_mutual', () => {
-			client._userContext = { getName: getNameStub.returns('name') };
+			client._userContext = {getName: getNameStub.returns('name')};
 			toBytesStub.returns('client-key');
 			generateX509CertificateStub.returns('client-cert');
 			client.addTlsClientCertAndKey({});
 			sinon.assert.calledWith(FakeLogger.debug, 'addTlsClientCertAndKey - generating self-signed TLS client certificate');
-			sinon.assert.calledWith(newCryptoSuiteStub, { software: true });
+			sinon.assert.calledWith(newCryptoSuiteStub, {software: true});
 			sinon.assert.called(generateEphemeralKeyStub);
 			sinon.assert.called(toBytesStub);
 			sinon.assert.calledWith(generateX509CertificateStub, 'name');
@@ -192,13 +192,13 @@ describe('Client', () => {
 		});
 
 		it('should generate a new ephemeral key and set _tls_mutual when only clientKey is missing', () => {
-			client._userContext = { getName: getNameStub.returns('name') };
-			client._tls_mutual = { clientCert: 'client-cert' };
+			client._userContext = {getName: getNameStub.returns('name')};
+			client._tls_mutual = {clientCert: 'client-cert'};
 			toBytesStub.returns('client-key');
 			generateX509CertificateStub.returns('client-cert');
 			client.addTlsClientCertAndKey({});
 			sinon.assert.calledWith(FakeLogger.debug, 'addTlsClientCertAndKey - generating self-signed TLS client certificate');
-			sinon.assert.calledWith(newCryptoSuiteStub, { software: true });
+			sinon.assert.calledWith(newCryptoSuiteStub, {software: true});
 			sinon.assert.called(generateEphemeralKeyStub);
 			sinon.assert.called(toBytesStub);
 			sinon.assert.calledWith(generateX509CertificateStub, 'name');
@@ -207,8 +207,8 @@ describe('Client', () => {
 		});
 
 		it('should add the current _tls_mutual values to the options object', () => {
-			client._userContext = { getName: getNameStub.returns('name') };
-			client._tls_mutual = { clientCert: 'client-cert', clientKey: 'client-key' };
+			client._userContext = {getName: getNameStub.returns('name')};
+			client._tls_mutual = {clientCert: 'client-cert', clientKey: 'client-key'};
 			const opts = {};
 			client.addTlsClientCertAndKey(opts);
 			client._tls_mutual.clientCert.should.equal('client-cert');
@@ -255,7 +255,7 @@ describe('Client', () => {
 			setStub = sandbox.stub();
 			channelStub = sandbox.stub();
 			client = new Client();
-			client._channels = { get: getStub, set: setStub };
+			client._channels = {get: getStub, set: setStub};
 
 			revert.push(Client.__set__('Channel', channelStub));
 		});
@@ -289,7 +289,7 @@ describe('Client', () => {
 			valuesStub = sandbox.stub();
 			nextStub = sandbox.stub();
 			client = new Client();
-			client._channels = { get: getStub, set: setStub, values: valuesStub.returns({ next: nextStub }), size: 1 };
+			client._channels = {get: getStub, set: setStub, values: valuesStub.returns({next: nextStub}), size: 1};
 		});
 
 		it('should get the channel with its name and return it', () => {
@@ -300,7 +300,7 @@ describe('Client', () => {
 		});
 
 		it('should get a channel wihtout its name and return it', () => {
-			nextStub.returns({ value: 'channel' });
+			nextStub.returns({value: 'channel'});
 			const channel = client.getChannel(null, false);
 			sinon.assert.called(valuesStub);
 			sinon.assert.called(nextStub);
@@ -310,7 +310,7 @@ describe('Client', () => {
 		it('should check the _network_config if no channel is returned and returned the discovered channel', () => {
 			client._channels.size = 0;
 			const getChannelStub = sandbox.stub().returns('channel');
-			client._network_config = { _network_config: { channels: { 'channel1': {} } }, getChannel: getChannelStub };
+			client._network_config = {_network_config: {channels: {'channel1': {}}}, getChannel: getChannelStub};
 			const channel = client.getChannel(null, false);
 			sinon.assert.calledWith(getChannelStub, 'channel1');
 			channel.should.equal('channel');
@@ -319,7 +319,7 @@ describe('Client', () => {
 		it('should return null as channel does not exist', () => {
 			client._channels.size = 0;
 			const getChannelStub = sandbox.stub();
-			client._network_config = { _network_config: { channels: {} }, getChannel: getChannelStub };
+			client._network_config = {_network_config: {channels: {}}, getChannel: getChannelStub};
 			const channel = client.getChannel('channel1', false);
 			sinon.assert.calledWith(getChannelStub, 'channel1');
 			should.equal(channel, null);
@@ -327,7 +327,7 @@ describe('Client', () => {
 
 		it('should return null since no channels are defined in _network_config', () => {
 			client._channels.size = 0;
-			client._network_config = { _network_config: { channels: {} } };
+			client._network_config = {_network_config: {channels: {}}};
 			const channel = client.getChannel(null, false);
 			should.equal(channel, null);
 		});
@@ -377,7 +377,7 @@ describe('Client', () => {
 
 		it('should return a peer', () => {
 			getPeerStub.returns('peer');
-			client._network_config = { getPeer: getPeerStub };
+			client._network_config = {getPeer: getPeerStub};
 			const peer = client.getPeer('peer-name');
 			peer.should.equal('peer');
 		});
@@ -396,12 +396,12 @@ describe('Client', () => {
 		let client;
 		beforeEach(() => {
 			getPeersStub = sandbox.stub();
-			getOrganizationByMspIdstub = sandbox.stub().returns({ getPeers: getPeersStub });
+			getOrganizationByMspIdstub = sandbox.stub().returns({getPeers: getPeersStub});
 			client = new Client();
 		});
 
 		it('should return a list of peers tied to an organisation when given an mspid', () => {
-			client._network_config = { getOrganizationByMspId: getOrganizationByMspIdstub };
+			client._network_config = {getOrganizationByMspId: getOrganizationByMspIdstub};
 			getPeersStub.returns(['peer1']);
 			const peers = client.getPeersForOrg(1);
 			peers.should.deep.equal(['peer1']);
@@ -409,7 +409,7 @@ describe('Client', () => {
 		});
 
 		it('should return a list of peers tied to an organisation when mspid given in client', () => {
-			client._network_config = { getOrganizationByMspId: getOrganizationByMspIdstub };
+			client._network_config = {getOrganizationByMspId: getOrganizationByMspIdstub};
 			client._mspid = 1;
 			getPeersStub.returns(['peer1']);
 			const peers = client.getPeersForOrg();
@@ -424,7 +424,7 @@ describe('Client', () => {
 
 		it('should return an empty list if organisation is not found', () => {
 			getOrganizationByMspIdstub.returns(null);
-			client._network_config = { getOrganizationByMspId: getOrganizationByMspIdstub };
+			client._network_config = {getOrganizationByMspId: getOrganizationByMspIdstub};
 			const peers = client.getPeersForOrg(1);
 			peers.should.deep.equal([]);
 			sinon.assert.calledWith(getOrganizationByMspIdstub, 1);
@@ -453,7 +453,7 @@ describe('Client', () => {
 		});
 
 		it('should return an orderer', () => {
-			client._network_config = { getOrderer: getOrdererStub };
+			client._network_config = {getOrderer: getOrdererStub};
 			getOrdererStub.returns('orderer');
 			const orderer = client.getOrderer('orderer');
 			orderer.should.equal('orderer');
@@ -484,24 +484,24 @@ describe('Client', () => {
 
 		it('should return an array of peers in an org available on the channel', () => {
 			getNameStub.returns('peer-name');
-			getChannelStub.returns({ getPeersForOrg: getPeersForOrgStub });
-			getPeersForOrgStub.returns([{ getName: getNameStub }]);
+			getChannelStub.returns({getPeersForOrg: getPeersForOrgStub});
+			getPeersForOrgStub.returns([{getName: getNameStub}]);
 			const orgPeers = client.getPeersForOrgOnChannel(['channel1']);
 			sinon.assert.calledWith(getChannelStub, 'channel1');
 			sinon.assert.calledWith(getPeersForOrgStub, 1);
 			sinon.assert.calledOnce(getNameStub);
-			orgPeers.should.deep.equal([{ getName: getNameStub }]);
+			orgPeers.should.deep.equal([{getName: getNameStub}]);
 		});
 
 		it('should return an array of peers in an org available on the channel when given a single channel name', () => {
 			getNameStub.returns('peer-name');
-			getChannelStub.returns({ getPeersForOrg: getPeersForOrgStub });
-			getPeersForOrgStub.returns([{ getName: getNameStub }]);
+			getChannelStub.returns({getPeersForOrg: getPeersForOrgStub});
+			getPeersForOrgStub.returns([{getName: getNameStub}]);
 			const orgPeers = client.getPeersForOrgOnChannel('channel1');
 			sinon.assert.calledWith(getChannelStub, 'channel1');
 			sinon.assert.calledWith(getPeersForOrgStub, 1);
 			sinon.assert.calledOnce(getNameStub);
-			orgPeers.should.deep.equal([{ getName: getNameStub }]);
+			orgPeers.should.deep.equal([{getName: getNameStub}]);
 		});
 	});
 
@@ -539,7 +539,7 @@ describe('Client', () => {
 		});
 
 		it('should throw an error if ca info is not found', () => {
-			client._network_config = { getCertificateAuthority: getCertificateAuthorityStub };
+			client._network_config = {getCertificateAuthority: getCertificateAuthorityStub};
 			client._cryptoSuite = {};
 			(() => {
 				client.getCertificateAuthority('name');
@@ -547,7 +547,7 @@ describe('Client', () => {
 		});
 
 		it('should throw an error if the client config is not found', () => {
-			client._network_config = { getClientConfig: getClientConfigStub };
+			client._network_config = {getClientConfig: getClientConfigStub};
 			client._cryptoSuite = {};
 			(() => {
 				client.getCertificateAuthority();
@@ -556,9 +556,9 @@ describe('Client', () => {
 		});
 
 		it('should throw an error if the organization config is not found', () => {
-			client._network_config = { getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub };
+			client._network_config = {getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub};
 			client._cryptoSuite = {};
-			getClientConfigStub.returns({ organization: 'organization' });
+			getClientConfigStub.returns({organization: 'organization'});
 			(() => {
 				client.getCertificateAuthority();
 			}).should.throw('Network configuration is missing this client\'s organization and certificate authority');
@@ -567,10 +567,10 @@ describe('Client', () => {
 		});
 
 		it('should throw an error if no ca\'s are found', () => {
-			client._network_config = { getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub };
+			client._network_config = {getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub};
 			client._cryptoSuite = {};
-			getClientConfigStub.returns({ organization: 'organization' });
-			getOrganizationStub.returns({ getCertificateAuthorities: getCertificateAuthoritiesStub });
+			getClientConfigStub.returns({organization: 'organization'});
+			getOrganizationStub.returns({getCertificateAuthorities: getCertificateAuthoritiesStub});
 			getCertificateAuthoritiesStub.returns([]);
 			(() => {
 				client.getCertificateAuthority();
@@ -582,18 +582,18 @@ describe('Client', () => {
 
 		it('should discover certificate authorities and return the first it finds', () => {
 			_buildCAfromConfigStub.returns('ca-service');
-			getClientConfigStub.returns({ organization: 'organization' });
-			getOrganizationStub.returns({ getCertificateAuthorities: getCertificateAuthoritiesStub });
-			getCertificateAuthoritiesStub.returns([{ setFabricCAServices: setFabricCAServicesStub }, 'ca2']);
-			client._network_config = { getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub };
+			getClientConfigStub.returns({organization: 'organization'});
+			getOrganizationStub.returns({getCertificateAuthorities: getCertificateAuthoritiesStub});
+			getCertificateAuthoritiesStub.returns([{setFabricCAServices: setFabricCAServicesStub}, 'ca2']);
+			client._network_config = {getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub};
 			client._cryptoSuite = {};
 			const caInfo = client.getCertificateAuthority();
 			sinon.assert.called(getClientConfigStub);
 			sinon.assert.calledWith(getOrganizationStub, 'organization');
 			sinon.assert.called(getCertificateAuthoritiesStub);
-			sinon.assert.calledWith(_buildCAfromConfigStub, { setFabricCAServices: setFabricCAServicesStub });
+			sinon.assert.calledWith(_buildCAfromConfigStub, {setFabricCAServices: setFabricCAServicesStub});
 			sinon.assert.calledWith(setFabricCAServicesStub, 'ca-service');
-			caInfo.should.deep.equal({ setFabricCAServices: setFabricCAServicesStub });
+			caInfo.should.deep.equal({setFabricCAServices: setFabricCAServicesStub});
 		});
 	});
 
@@ -629,14 +629,14 @@ describe('Client', () => {
 
 		it('should return the ca service', () => {
 			getTlsCACertsStub.returns('cert');
-			getConnectionOptionsStub.returns({ verify: true });
+			getConnectionOptionsStub.returns({verify: true});
 			getUrlStub.returns('url');
 			getCaNameStub.returns('name');
 			getConfigSettingStub.returns('class-path');
 			client._buildCAfromConfig(caInfo);
 			sinon.assert.calledWith(getConfigSettingStub, 'certificate-authority-client');
 			sinon.assert.calledWith(requireStub, 'class-path');
-			sinon.assert.calledWith(caServiceStub, { tlsOptions: { trustedRoots: ['cert'], verify: true }, caName: 'name', cryptoSuite: null, url: 'url' });
+			sinon.assert.calledWith(caServiceStub, {tlsOptions: {trustedRoots: ['cert'], verify: true}, caName: 'name', cryptoSuite: null, url: 'url'});
 		});
 
 		it('should return the ca service if no certs are returned', () => {
@@ -646,7 +646,7 @@ describe('Client', () => {
 			client._buildCAfromConfig(caInfo);
 			sinon.assert.calledWith(getConfigSettingStub, 'certificate-authority-client');
 			sinon.assert.calledWith(requireStub, 'class-path');
-			sinon.assert.calledWith(caServiceStub, { tlsOptions: { trustedRoots: [], verify: true }, caName: 'name', cryptoSuite: null, url: 'url' });
+			sinon.assert.calledWith(caServiceStub, {tlsOptions: {trustedRoots: [], verify: true}, caName: 'name', cryptoSuite: null, url: 'url'});
 		});
 	});
 
@@ -665,14 +665,14 @@ describe('Client', () => {
 		it('should return the client config', () => {
 			hasClientStub.returns(true);
 			getClientConfigStub.returns('client-config');
-			client._network_config = { hasClient: hasClientStub, getClientConfig: getClientConfigStub };
+			client._network_config = {hasClient: hasClientStub, getClientConfig: getClientConfigStub};
 			const clientConfig = client.getClientConfig();
 			clientConfig.should.equal('client-config');
 		});
 
 		it('should return null', () => {
 			hasClientStub.returns(false);
-			client._network_config = { hasClient: hasClientStub, getClientConfig: getClientConfigStub };
+			client._network_config = {hasClient: hasClientStub, getClientConfig: getClientConfigStub};
 			const clientConfig = client.getClientConfig();
 			should.equal(clientConfig, null);
 		});
@@ -749,12 +749,12 @@ describe('Client', () => {
 			getDataStub = sandbox.stub();
 			getConfigUpdateStub = sandbox.stub();
 
-			envelopeDecodeStub.returns({ getPayload: getPayloadStub });
-			getPayloadStub.returns({ toBuffer: toBufferStub });
-			getDataStub.returns({ toBuffer: toBufferStub });
-			payloadDecodeStub.returns({ getData: getDataStub });
-			getConfigUpdateStub.returns({ toBuffer: toBufferStub });
-			configUpdateEnvelopeDecodeStub.returns({ getConfigUpdate: getConfigUpdateStub });
+			envelopeDecodeStub.returns({getPayload: getPayloadStub});
+			getPayloadStub.returns({toBuffer: toBufferStub});
+			getDataStub.returns({toBuffer: toBufferStub});
+			payloadDecodeStub.returns({getData: getDataStub});
+			getConfigUpdateStub.returns({toBuffer: toBufferStub});
+			configUpdateEnvelopeDecodeStub.returns({getConfigUpdate: getConfigUpdateStub});
 
 			revert.push(Client.__set__('_commonProto.Envelope.decode', envelopeDecodeStub));
 			revert.push(Client.__set__('_commonProto.Payload.decode', payloadDecodeStub));
@@ -806,7 +806,7 @@ describe('Client', () => {
 			bufferFromStub = sandbox.stub();
 			bufferIsBufferStub = sandbox.stub();
 			signStub = sandbox.stub();
-			revert.push(Client.__set__('Buffer', { concat: bufferConcatStub, from: bufferFromStub, isBuffer: bufferIsBufferStub }));
+			revert.push(Client.__set__('Buffer', {concat: bufferConcatStub, from: bufferFromStub, isBuffer: bufferIsBufferStub}));
 			ConfigSignatureStub = sandbox.stub();
 			revert.push(Client.__set__('_configtxProto.ConfigSignature', ConfigSignatureStub));
 			setSignatureHeaderStub = sandbox.stub();
@@ -816,11 +816,11 @@ describe('Client', () => {
 			getNonceStub.returns('nonce');
 			toBufferStub.returns('signature-header-bytes');
 			signStub.returns('sign');
-			_getSigningIdentityStub.returns({ serialize: serializeStub, sign: signStub });
-			SignatureHeaderStub.returns({ setCreator: setCreatorStub, setNonce: setNonceStub, toBuffer: toBufferStub });
+			_getSigningIdentityStub.returns({serialize: serializeStub, sign: signStub});
+			SignatureHeaderStub.returns({setCreator: setCreatorStub, setNonce: setNonceStub, toBuffer: toBufferStub});
 			bufferConcatStub.returns('signing-bytes');
 			bufferFromStub.returns('signature-bytes');
-			ConfigSignatureStub.returns({ setSignatureHeader: setSignatureHeaderStub, setSignature: setSignatureStub });
+			ConfigSignatureStub.returns({setSignatureHeader: setSignatureHeaderStub, setSignature: setSignatureStub});
 
 			client = new Client();
 			client._getSigningIdentity = _getSigningIdentityStub;
@@ -868,7 +868,7 @@ describe('Client', () => {
 			const client = new Client();
 			client._createOrUpdateChannel = _createOrUpdateChannelStub;
 
-			const request = { envelope: true };
+			const request = {envelope: true};
 			const channel = client.createChannel(request);
 			sinon.assert.calledWith(_createOrUpdateChannelStub, request, true);
 			channel.should.equal('channel');
@@ -881,7 +881,7 @@ describe('Client', () => {
 			const client = new Client();
 			client._createOrUpdateChannel = _createOrUpdateChannelStub;
 
-			const request = { envelope: true };
+			const request = {envelope: true};
 			const channel = client.updateChannel(request);
 			sinon.assert.calledWith(_createOrUpdateChannelStub, request, true);
 			channel.should.equal('channel');
@@ -914,7 +914,7 @@ describe('Client', () => {
 		const orderer = {};
 		beforeEach(() => {
 			signStub = sandbox.stub().returns('signature');
-			_getSigningIdentityStub = sandbox.stub().returns({ sign: signStub });
+			_getSigningIdentityStub = sandbox.stub().returns({sign: signStub});
 			getTargetOrdererStub = sandbox.stub();
 			sendBroadcastStub = sandbox.stub();
 			envelopeDecodeStub = sandbox.stub();
@@ -922,18 +922,18 @@ describe('Client', () => {
 			setDataStub = sandbox.stub();
 			payloadStub = sandbox.stub();
 			toBufferStub = sandbox.stub();
-			payloadStub.returns({ setHeader: setHeaderStub, setData: setDataStub, toBuffer: toBufferStub });
+			payloadStub.returns({setHeader: setHeaderStub, setData: setDataStub, toBuffer: toBufferStub});
 			isAdminStub = sandbox.stub().returns(true);
 			getTransactionIDStub = sandbox.stub();
 			getNonceStub = sandbox.stub().returns('nonce');
-			txIdStub = { getTransactionID: getTransactionIDStub, isAdmin: isAdminStub, getNonce: getNonceStub };
+			txIdStub = {getTransactionID: getTransactionIDStub, isAdmin: isAdminStub, getNonce: getNonceStub};
 			buildChannelHeaderStub = sandbox.stub();
 			buildHeaderStub = sandbox.stub().returns('header');
 			ConfigUpdateEnvelopeStub = sandbox.stub();
 			setConfigUpdateStub = sandbox.stub();
 			_stringToSignatureStub = sandbox.stub().returns('signatures');
 			setSignaturesStub = sandbox.stub();
-			ConfigUpdateEnvelopeStub.returns({ setConfigUpdate: setConfigUpdateStub, setSignatures: setSignaturesStub, toBuffer: toBufferStub });
+			ConfigUpdateEnvelopeStub.returns({setConfigUpdate: setConfigUpdateStub, setSignatures: setSignaturesStub, toBuffer: toBufferStub});
 
 			revert.push(Client.__set__('_stringToSignature', _stringToSignatureStub));
 			revert.push(Client.__set__('_commonProto.Envelope.decode', envelopeDecodeStub));
@@ -971,7 +971,7 @@ describe('Client', () => {
 
 		it('should throw an error if request.txId is not given', async () => {
 			try {
-				await client._createOrUpdateChannel({ name: 'name' });
+				await client._createOrUpdateChannel({name: 'name'});
 				should.fail();
 			} catch (err) {
 				sinon.assert.calledWith(FakeLogger.debug, '_createOrUpdateChannel - start');
@@ -981,7 +981,7 @@ describe('Client', () => {
 
 		it('should throw an error if request.config is not given', async () => {
 			try {
-				await client._createOrUpdateChannel({ name: 'name', txId: 'txId' }, false);
+				await client._createOrUpdateChannel({name: 'name', txId: 'txId'}, false);
 			} catch (err) {
 				err.message.should.equal('Missing config request parameter containing the configuration of the channel');
 			}
@@ -989,7 +989,7 @@ describe('Client', () => {
 
 		it('should throw an error if request.signatures is not given', async () => {
 			try {
-				await client._createOrUpdateChannel({ name: 'name', txId: 'txId', config: {} }, false);
+				await client._createOrUpdateChannel({name: 'name', txId: 'txId', config: {}}, false);
 			} catch (err) {
 				err.message.should.equal('Missing signatures request parameter for the new channel');
 			}
@@ -997,16 +997,16 @@ describe('Client', () => {
 
 		it('should throw an error if request.signatures is not an array', async () => {
 			try {
-				await client._createOrUpdateChannel({ name: 'name', txId: 'txId', config: {}, signatures: 'signatures' }, false);
+				await client._createOrUpdateChannel({name: 'name', txId: 'txId', config: {}, signatures: 'signatures'}, false);
 			} catch (err) {
 				err.message.should.equal('Signatures request parameter must be an array of signatures');
 			}
 		});
 
 		it('should return the results of the broadcast when have_envelope is true', async () => {
-			const envelope = { signature: 'signature', payload: 'payload' };
+			const envelope = {signature: 'signature', payload: 'payload'};
 			envelopeDecodeStub.returns(envelope);
-			const results = await client._createOrUpdateChannel({ name: 'name', txId: 'txId', orderer: 'orderer', envelope: 'envelope' }, true);
+			const results = await client._createOrUpdateChannel({name: 'name', txId: 'txId', orderer: 'orderer', envelope: 'envelope'}, true);
 			sinon.assert.calledWith(getTargetOrdererStub, 'orderer', null, 'name');
 			sinon.assert.calledWith(FakeLogger.debug, '_createOrUpdateChannel - have envelope');
 			sinon.assert.calledWith(envelopeDecodeStub, 'envelope');
@@ -1018,7 +1018,7 @@ describe('Client', () => {
 			buildChannelHeaderStub.returns('proto_channel_header');
 			toBufferStub.onCall(0).returns('data');
 			toBufferStub.onCall(1).returns('payload-bytes');
-			const results = await client._createOrUpdateChannel({ name: 'name', txId: txIdStub, orderer: 'orderer', config: 'config', signatures: ['signature'] });
+			const results = await client._createOrUpdateChannel({name: 'name', txId: txIdStub, orderer: 'orderer', config: 'config', signatures: ['signature']});
 			sinon.assert.calledWith(FakeLogger.debug, '_createOrUpdateChannel - have config_update');
 			sinon.assert.calledWith(setConfigUpdateStub, 'config');
 			sinon.assert.calledWith(_stringToSignatureStub, ['signature']);
@@ -1028,7 +1028,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(setHeaderStub, 'header');
 			sinon.assert.calledWith(setDataStub, 'data');
 			sinon.assert.called(toBufferStub);
-			sinon.assert.calledWith(sendBroadcastStub, { signature: Buffer.from('signature'), payload: 'payload-bytes' });
+			sinon.assert.calledWith(sendBroadcastStub, {signature: Buffer.from('signature'), payload: 'payload-bytes'});
 			results.should.deep.equal('broadcast');
 		});
 	});
@@ -1123,7 +1123,7 @@ describe('Client', () => {
 			transactionIDStub = sandbox.stub();
 			sendTransactionProposalStub = sandbox.stub();
 			ChannelQueryResponseDecodeStub = sandbox.stub();
-			ChannelQueryResponseDecodeStub.returns({ channels: [{ channel_id: 1 }] });
+			ChannelQueryResponseDecodeStub.returns({channels: [{channel_id: 1}]});
 
 			revert.push(Client.__set__('_queryProto.ChannelQueryResponse.decode', ChannelQueryResponseDecodeStub));
 			revert.push(Client.__set__('Channel.sendTransactionProposal', sendTransactionProposalStub));
@@ -1241,7 +1241,7 @@ describe('Client', () => {
 
 		it('should return the query trans for a channel', async () => {
 			_getSigningIdentityStub.returns('signer');
-			sendTransactionProposalStub.returns(Promise.resolve([[{ response: { status: 'status', payload: 'payload' } }]]));
+			sendTransactionProposalStub.returns(Promise.resolve([[{response: {status: 'status', payload: 'payload'}}]]));
 			const queryTrans = await client.queryChannels('peer');
 			sinon.assert.calledWith(FakeLogger.debug, 'queryChannels - start');
 			sinon.assert.calledWith(getTargetPeersStub, 'peer');
@@ -1261,7 +1261,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(ChannelQueryResponseDecodeStub, 'payload');
 			sinon.assert.calledWith(FakeLogger.debug, 'queryChannels - ProcessedTransaction.channelInfo.length :: %s', 1);
 			sinon.assert.calledWith(FakeLogger.debug, '>>> channel id %s ', 1);
-			queryTrans.should.deep.equal({ channels: [{ channel_id: 1 }] });
+			queryTrans.should.deep.equal({channels: [{channel_id: 1}]});
 		});
 	});
 
@@ -1280,7 +1280,7 @@ describe('Client', () => {
 			transactionIDStub = sandbox.stub();
 			sendTransactionProposalStub = sandbox.stub();
 			ChaincodeQueryResponseDecodeStub = sandbox.stub();
-			ChaincodeQueryResponseDecodeStub.returns({ chaincodes: [{ name: 'chaincode1', version: 1, path: 'path' }] });
+			ChaincodeQueryResponseDecodeStub.returns({chaincodes: [{name: 'chaincode1', version: 1, path: 'path'}]});
 
 			revert.push(Client.__set__('_queryProto.ChaincodeQueryResponse.decode', ChaincodeQueryResponseDecodeStub));
 			revert.push(Client.__set__('Channel.sendTransactionProposal', sendTransactionProposalStub));
@@ -1399,7 +1399,7 @@ describe('Client', () => {
 
 		it('should return the query trans for a channel', async () => {
 			_getSigningIdentityStub.returns('signer');
-			sendTransactionProposalStub.returns(Promise.resolve([[{ response: { status: 'status', payload: 'payload' } }]]));
+			sendTransactionProposalStub.returns(Promise.resolve([[{response: {status: 'status', payload: 'payload'}}]]));
 			const queryTrans = await client.queryInstalledChaincodes('peer');
 			sinon.assert.calledWith(FakeLogger.debug, 'queryInstalledChaincodes - start peer %s', 'peer');
 			sinon.assert.calledWith(getTargetPeersStub, 'peer');
@@ -1419,7 +1419,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(ChaincodeQueryResponseDecodeStub, 'payload');
 			sinon.assert.calledWith(FakeLogger.debug, 'queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', 1);
 			sinon.assert.calledWith(FakeLogger.debug, '>>> name %s, version %s, path %s', 'chaincode1', 1, 'path');
-			queryTrans.should.deep.equal({ chaincodes: [{ name: 'chaincode1', version: 1, path: 'path' }] });
+			queryTrans.should.deep.equal({chaincodes: [{name: 'chaincode1', version: 1, path: 'path'}]});
 		});
 	});
 
@@ -1451,7 +1451,7 @@ describe('Client', () => {
 			getNonceStub = sandbox.stub().returns('nonce');
 			isAdminStub = sandbox.stub().returns(true);
 			getTransactionIDStub = sandbox.stub().returns('txId');
-			TransactionIDStub = sandbox.stub().returns({ isAdmin: isAdminStub, getTransactionID: getTransactionIDStub, getNonce: getNonceStub });
+			TransactionIDStub = sandbox.stub().returns({isAdmin: isAdminStub, getTransactionID: getTransactionIDStub, getNonce: getNonceStub});
 			revert.push(Client.__set__('TransactionID', TransactionIDStub));
 			buildChannelHeaderStub = sandbox.stub().returns('channel-header');
 			revert.push(Client.__set__('clientUtils.buildChannelHeader', buildChannelHeaderStub));
@@ -1480,22 +1480,22 @@ describe('Client', () => {
 		});
 
 		it('should throw error if chaincodeId not specified', async () => {
-			await client.installChaincode({ chaincodeVersion: '0.0.1', chaincodePath: 'mycc' })
+			await client.installChaincode({chaincodeVersion: '0.0.1', chaincodePath: 'mycc'})
 				.should.be.rejectedWith(/Missing "chaincodeId" parameter in the proposal request/);
 		});
 
 		it('should throw error if chaincodeVersion not specified', async () => {
-			await client.installChaincode({ chaincodeId: 'mycc', chaincodePath: 'mycc' })
+			await client.installChaincode({chaincodeId: 'mycc', chaincodePath: 'mycc'})
 				.should.be.rejectedWith(/Missing "chaincodeVersion" parameter in the proposal request/);
 		});
 
 		it('should throw error if chaincodePath not specified', async () => {
-			await client.installChaincode({ chaincodeId: 'mycc', chaincodeVersion: '0.0.1' })
+			await client.installChaincode({chaincodeId: 'mycc', chaincodeVersion: '0.0.1'})
 				.should.be.rejectedWith(/Missing "chaincodePath" parameter in the proposal request/);
 		});
 
 		it('should throw error if no peers found', async () => {
-			await client.installChaincode({ chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc' })
+			await client.installChaincode({chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc'})
 				.should.be.rejectedWith(/Missing peer objects in install chaincode request/);
 		});
 
@@ -1508,7 +1508,7 @@ describe('Client', () => {
 				metadataPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
-			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer'] };
+			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer']};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
 			sinon.assert.calledOnce(fromDirectoryStub);
@@ -1517,8 +1517,8 @@ describe('Client', () => {
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
-				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
+				chaincode_id: {name: 'lscc'},
+				input: {args: [Buffer.from('install', 'utf8'), smartContractPackageBytes]},
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1535,7 +1535,7 @@ describe('Client', () => {
 				metadataPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
-			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', chaincodeType: 'java', targets: ['peer'] };
+			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', chaincodeType: 'java', targets: ['peer']};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
 			sinon.assert.calledOnce(fromDirectoryStub);
@@ -1544,8 +1544,8 @@ describe('Client', () => {
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
-				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
+				chaincode_id: {name: 'lscc'},
+				input: {args: [Buffer.from('install', 'utf8'), smartContractPackageBytes]},
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1562,7 +1562,7 @@ describe('Client', () => {
 				metadataPath: 'mycc/META-INF'
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
-			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', chaincodeType: 'java', metadataPath: 'mycc/META-INF', targets: ['peer'] };
+			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', chaincodeType: 'java', metadataPath: 'mycc/META-INF', targets: ['peer']};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
 			sinon.assert.calledOnce(fromDirectoryStub);
@@ -1571,8 +1571,8 @@ describe('Client', () => {
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
-				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
+				chaincode_id: {name: 'lscc'},
+				input: {args: [Buffer.from('install', 'utf8'), smartContractPackageBytes]},
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1584,7 +1584,7 @@ describe('Client', () => {
 			client.setDevMode(true);
 			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').rejects(new Error('such error'));
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
-			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer'] };
+			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer']};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
 			sinon.assert.notCalled(fromDirectoryStub);
@@ -1593,8 +1593,8 @@ describe('Client', () => {
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
-				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), null] },
+				chaincode_id: {name: 'lscc'},
+				input: {args: [Buffer.from('install', 'utf8'), null]},
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1605,7 +1605,7 @@ describe('Client', () => {
 		it('should install using a chaincode package', async () => {
 			const fromDirectoryStub = sandbox.stub(Package, 'fromDirectory').rejects(new Error('such error'));
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
-			const request = { chaincodePackage: smartContractPackageBytes, targets: ['peer'] };
+			const request = {chaincodePackage: smartContractPackageBytes, targets: ['peer']};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
 			sinon.assert.notCalled(fromDirectoryStub);
@@ -1614,8 +1614,8 @@ describe('Client', () => {
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
-				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
+				chaincode_id: {name: 'lscc'},
+				input: {args: [Buffer.from('install', 'utf8'), smartContractPackageBytes]},
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1632,7 +1632,7 @@ describe('Client', () => {
 				metadataPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.returns(['peer']);
-			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: [], channelNames: [], txId: { isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub } };
+			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: [], channelNames: [], txId: {isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub}};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, []);
 			sinon.assert.calledOnce(fromDirectoryStub);
@@ -1640,8 +1640,8 @@ describe('Client', () => {
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
-				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
+				chaincode_id: {name: 'lscc'},
+				input: {args: [Buffer.from('install', 'utf8'), smartContractPackageBytes]},
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1658,7 +1658,7 @@ describe('Client', () => {
 				metadataPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.returns(['peer']);
-			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: [], channelNames: [], txId: { isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub } };
+			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: [], channelNames: [], txId: {isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub}};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, []);
 			sinon.assert.calledOnce(fromDirectoryStub);
@@ -1666,8 +1666,8 @@ describe('Client', () => {
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
-				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
+				chaincode_id: {name: 'lscc'},
+				input: {args: [Buffer.from('install', 'utf8'), smartContractPackageBytes]},
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1685,7 +1685,7 @@ describe('Client', () => {
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.returns();
 			getPeersForOrgOnChannelStub.withArgs(['mychannel']).returns(['peer']);
-			const request = { chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', channelNames: ['mychannel'] };
+			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', channelNames: ['mychannel']};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, undefined);
 			sinon.assert.calledOnce(fromDirectoryStub);
@@ -1694,8 +1694,8 @@ describe('Client', () => {
 			sinon.assert.calledWith(buildChannelHeaderStub, 'ENDORSER_TRANSACITON', '', 'txId', null, 'lscc');
 			sinon.assert.calledWith(buildHeaderStub, 'signer', 'channel-header', 'nonce');
 			sinon.assert.calledWith(buildProposalStub, {
-				chaincode_id: { name: 'lscc' },
-				input: { args: [Buffer.from('install', 'utf8'), smartContractPackageBytes] },
+				chaincode_id: {name: 'lscc'},
+				input: {args: [Buffer.from('install', 'utf8'), smartContractPackageBytes]},
 				type: 'go'
 			}, 'header');
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
@@ -1720,7 +1720,7 @@ describe('Client', () => {
 			revert.push(Client.__set__('BaseClient.newDefaultKeyValueStore', newDefaultKeyValueStoreStub));
 			setStateStoreStub = sandbox.stub();
 			setCryptoKeyStoreStub = sandbox.stub();
-			cryptoSuiteStub = sandbox.stub().returns({ setCryptoKeyStore: setCryptoKeyStoreStub });
+			cryptoSuiteStub = sandbox.stub().returns({setCryptoKeyStore: setCryptoKeyStoreStub});
 			revert.push(Client.__set__('BaseClient.newCryptoSuite', cryptoSuiteStub));
 			newCryptoKeyStoreStub = sandbox.stub();
 			revert.push(Client.__set__('BaseClient.newCryptoKeyStore', newCryptoKeyStoreStub));
@@ -1742,7 +1742,7 @@ describe('Client', () => {
 		});
 
 		it('should throw an error if no client config is returned', async () => {
-			client._network_config = { getClientConfig: getClientConfigStub };
+			client._network_config = {getClientConfig: getClientConfigStub};
 			try {
 				await client.initCredentialStores();
 				should.fail();
@@ -1752,18 +1752,18 @@ describe('Client', () => {
 		});
 
 		it('should return true and set the cryptokeystore', async () => {
-			getClientConfigStub.returns({ credentialStore: { cryptoStore: 'store' } });
-			client._network_config = { getClientConfig: getClientConfigStub };
+			getClientConfigStub.returns({credentialStore: {cryptoStore: 'store'}});
+			client._network_config = {getClientConfig: getClientConfigStub};
 			newCryptoKeyStoreStub.returns('new-crypto');
 			const success = await client.initCredentialStores();
 			success.should.be.true;
 			sinon.assert.called(getClientConfigStub);
-			sinon.assert.calledWith(newDefaultKeyValueStoreStub, { cryptoStore: 'store' });
+			sinon.assert.calledWith(newDefaultKeyValueStoreStub, {cryptoStore: 'store'});
 			sinon.assert.calledWith(setStateStoreStub, 'key-val-store');
 			sinon.assert.called(cryptoSuiteStub);
 			sinon.assert.calledWith(setCryptoKeyStoreStub, 'new-crypto');
 			sinon.assert.calledWith(newCryptoKeyStoreStub, 'store');
-			sinon.assert.calledWith(setCryptoSuiteStub, { setCryptoKeyStore: setCryptoKeyStoreStub });
+			sinon.assert.calledWith(setCryptoSuiteStub, {setCryptoKeyStore: setCryptoKeyStoreStub});
 
 		});
 	});
@@ -1787,7 +1787,7 @@ describe('Client', () => {
 		});
 
 		it('should set _stateStore and _userContext properties', () => {
-			const kvs = { method: () => { } };
+			const kvs = {method: () => { }};
 			client.setStateStore(kvs);
 			client._stateStore.should.equal(kvs);
 			should.equal(client._userContext, null);
@@ -1816,7 +1816,7 @@ describe('Client', () => {
 		});
 
 		it('should return the users signing identify', () => {
-			client._userContext = { getSigningIdentity: getSigningIdentityStub };
+			client._userContext = {getSigningIdentity: getSigningIdentityStub};
 			getSigningIdentityStub.returns('admin-identity');
 			const signingIdentity = client._getSigningIdentity(true);
 			signingIdentity.should.equal('admin-identity');
@@ -1835,7 +1835,7 @@ describe('Client', () => {
 		beforeEach(() => {
 			getCryptoSuiteStub = sandbox.stub();
 			importKeyStub = sandbox.stub();
-			newCryptoSuiteStub = sandbox.stub().returns({ importKey: importKeyStub });
+			newCryptoSuiteStub = sandbox.stub().returns({importKey: importKeyStub});
 			revert.push(Client.__set__('BaseClient.newCryptoSuite', newCryptoSuiteStub));
 			SigningIdentityStub = sandbox.stub();
 			revert.push(Client.__set__('SigningIdentity', SigningIdentityStub));
@@ -1901,13 +1901,13 @@ describe('Client', () => {
 		});
 
 		it('should retrieve CryptoSuite and import the public and private keys before creating an identity', () => {
-			getCryptoSuiteStub.returns({ importKey: importKeyStub });
+			getCryptoSuiteStub.returns({importKey: importKeyStub});
 			importKeyStub.onCall(0).returns('private_key');
 			importKeyStub.onCall(1).returns('public_key');
 			client.setAdminSigningIdentity('private-key', 'certificate', 'mspid');
 			sinon.assert.called(getCryptoSuiteStub);
-			sinon.assert.calledWith(importKeyStub, 'private-key', { ephemeral: true });
-			sinon.assert.calledWith(importKeyStub, 'certificate', { ephemeral: true });
+			sinon.assert.calledWith(importKeyStub, 'private-key', {ephemeral: true});
+			sinon.assert.calledWith(importKeyStub, 'certificate', {ephemeral: true});
 			sinon.assert.calledWith(SigningIdentityStub, 'certificate', 'public_key', 'mspid', getCryptoSuiteStub(), new SignerStub());
 			sinon.assert.calledWith(SignerStub, getCryptoSuiteStub(), 'private_key');
 			client._adminSigningIdentity.should.deep.equal(new SigningIdentityStub());
@@ -1917,8 +1917,8 @@ describe('Client', () => {
 			importKeyStub.onCall(0).returns('private_key');
 			importKeyStub.onCall(1).returns('public_key');
 			client.setAdminSigningIdentity('private-key', 'certificate', 'mspid');
-			sinon.assert.calledWith(importKeyStub, 'private-key', { ephemeral: true });
-			sinon.assert.calledWith(importKeyStub, 'certificate', { ephemeral: true });
+			sinon.assert.calledWith(importKeyStub, 'private-key', {ephemeral: true});
+			sinon.assert.calledWith(importKeyStub, 'certificate', {ephemeral: true});
 			sinon.assert.calledWith(SigningIdentityStub, 'certificate', 'public_key', 'mspid', newCryptoSuiteStub(), new SignerStub());
 			sinon.assert.calledWith(SignerStub, newCryptoSuiteStub(), 'private_key');
 			client._adminSigningIdentity.should.deep.equal(new SigningIdentityStub());
@@ -1958,7 +1958,7 @@ describe('Client', () => {
 
 		it('should not call anything if client config is null', () => {
 			getClientConfigStub.returns(null);
-			client._network_config = { getClientConfig: getClientConfigStub };
+			client._network_config = {getClientConfig: getClientConfigStub};
 			client._setAdminFromConfig();
 			sinon.assert.notCalled(getOrganizationStub);
 			sinon.assert.notCalled(getMspidStub);
@@ -1969,8 +1969,8 @@ describe('Client', () => {
 
 		it('should attempt to retrieve organization info', () => {
 			getOrganizationStub.returns(null);
-			getClientConfigStub.returns({ organization: {} });
-			client._network_config = { getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub };
+			getClientConfigStub.returns({organization: {}});
+			client._network_config = {getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub};
 			client._setAdminFromConfig();
 			sinon.assert.calledWith(getOrganizationStub, {});
 			sinon.assert.notCalled(getMspidStub);
@@ -1980,8 +1980,8 @@ describe('Client', () => {
 		});
 
 		it('should retrieve organization info and call setAdmnSigningIdentity with it', () => {
-			getClientConfigStub.returns({ organization: {} });
-			client._network_config = { getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub };
+			getClientConfigStub.returns({organization: {}});
+			client._network_config = {getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub};
 			client._setAdminFromConfig();
 			sinon.assert.calledWith(getOrganizationStub, {});
 			sinon.assert.called(getMspidStub);
@@ -2012,7 +2012,7 @@ describe('Client', () => {
 		});
 
 		it('should call nothing if getClientConfig returns nothing', () => {
-			client._network_config = { getClientConfig: getClientConfigStub };
+			client._network_config = {getClientConfig: getClientConfigStub};
 			client._setMspidFromConfig();
 			sinon.assert.called(getClientConfigStub);
 			sinon.assert.notCalled(getOrganizationStub);
@@ -2021,8 +2021,8 @@ describe('Client', () => {
 		});
 
 		it('should call nothing if getOrganization returns nothing', () => {
-			getClientConfigStub.returns({ organization: {} });
-			client._network_config = { getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub };
+			getClientConfigStub.returns({organization: {}});
+			client._network_config = {getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub};
 			client._setMspidFromConfig();
 			sinon.assert.called(getClientConfigStub);
 			sinon.assert.calledWith(getOrganizationStub, {}, true);
@@ -2031,9 +2031,9 @@ describe('Client', () => {
 		});
 
 		it('should set _mspid', () => {
-			getClientConfigStub.returns({ organization: {} });
-			getOrganizationStub.returns({ getMspid: getMspidStub.returns(1) });
-			client._network_config = { getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub };
+			getClientConfigStub.returns({organization: {}});
+			getOrganizationStub.returns({getMspid: getMspidStub.returns(1)});
+			client._network_config = {getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub};
 			client._setMspidFromConfig();
 			sinon.assert.called(getClientConfigStub);
 			sinon.assert.calledWith(getOrganizationStub, {}, true);
@@ -2065,7 +2065,7 @@ describe('Client', () => {
 
 			client = new Client();
 			client.getUserContext = getUserContextStub;
-			client.getCertificateAuthority = getCertificateAuthorityStub.returns({ enroll: enrollStub });
+			client.getCertificateAuthority = getCertificateAuthorityStub.returns({enroll: enrollStub});
 			client.createUser = createUserStub;
 		});
 
@@ -2075,52 +2075,52 @@ describe('Client', () => {
 		});
 
 		it('should throw if _network_config not set', async () => {
-			return await client._setUserFromConfig({ username: 'test' })
+			return await client._setUserFromConfig({username: 'test'})
 				.should.be.rejectedWith('Client requires a network configuration loaded, stores attached, and crypto suite.');
 		});
 
 		it('should throw if _stateStore not set', async () => {
 			client._network_config = {};
-			return await client._setUserFromConfig({ username: 'test' })
+			return await client._setUserFromConfig({username: 'test'})
 				.should.be.rejectedWith('Client requires a network configuration loaded, stores attached, and crypto suite.');
 		});
 
 		it('should throw if _cryptoSuite not set', async () => {
 			client._network_config = {};
 			client._stateStore = {};
-			return await client._setUserFromConfig({ username: 'test' })
+			return await client._setUserFromConfig({username: 'test'})
 				.should.be.rejectedWith('Client requires a network configuration loaded, stores attached, and crypto suite.');
 		});
 
 		it('should return the user', async () => {
-			getUserContextStub.returns({ isEnrolled: isEnrolledStub.returns(true) });
+			getUserContextStub.returns({isEnrolled: isEnrolledStub.returns(true)});
 			client._network_config = {};
 			client._stateStore = {};
 			client._cryptoSuite = {};
-			const user = await client._setUserFromConfig({ username: 'test' });
-			user.should.deep.equal({ isEnrolled: isEnrolledStub });
+			const user = await client._setUserFromConfig({username: 'test'});
+			user.should.deep.equal({isEnrolled: isEnrolledStub});
 			sinon.assert.calledWith(getUserContextStub, 'test', true);
 			sinon.assert.called(isEnrolledStub);
 			sinon.assert.calledWith(FakeLogger.debug, 'Successfully loaded member from persistence');
 		});
 
 		it('should throw an error if user is not enrolled and no password is given', async () => {
-			getUserContextStub.returns({ isEnrolled: isEnrolledStub.returns(false) });
+			getUserContextStub.returns({isEnrolled: isEnrolledStub.returns(false)});
 			client._network_config = {};
 			client._stateStore = {};
 			client._cryptoSuite = {};
-			await client._setUserFromConfig({ username: 'test' })
+			await client._setUserFromConfig({username: 'test'})
 				.should.be.eventually.rejectedWith('Missing parameter. Must have a password.');
 			sinon.assert.calledWith(getUserContextStub, 'test', true);
 			sinon.assert.called(isEnrolledStub);
 		});
 
 		it('should throw an error if no client config is found', async () => {
-			getUserContextStub.returns({ isEnrolled: isEnrolledStub.returns(false) });
-			client._network_config = { getClientConfig: getClientConfigStub };
+			getUserContextStub.returns({isEnrolled: isEnrolledStub.returns(false)});
+			client._network_config = {getClientConfig: getClientConfigStub};
 			client._stateStore = {};
 			client._cryptoSuite = {};
-			await client._setUserFromConfig({ username: 'test', password: 'password' })
+			await client._setUserFromConfig({username: 'test', password: 'password'})
 				.should.be.eventually.rejectedWith('Network configuration is missing this client\'s organization and mspid');
 			sinon.assert.calledWith(getUserContextStub, 'test', true);
 			sinon.assert.called(isEnrolledStub);
@@ -2128,12 +2128,12 @@ describe('Client', () => {
 		});
 
 		it('should throw an error if no organization config is found', async () => {
-			getUserContextStub.returns({ isEnrolled: isEnrolledStub.returns(false) });
-			getClientConfigStub.returns({ organization: true });
-			client._network_config = { getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub };
+			getUserContextStub.returns({isEnrolled: isEnrolledStub.returns(false)});
+			getClientConfigStub.returns({organization: true});
+			client._network_config = {getClientConfig: getClientConfigStub, getOrganization: getOrganizationStub};
 			client._stateStore = {};
 			client._cryptoSuite = {};
-			await client._setUserFromConfig({ username: 'test', password: 'password' })
+			await client._setUserFromConfig({username: 'test', password: 'password'})
 				.should.be.eventually.rejectedWith('Network configuration is missing this client\'s organization and mspid');
 			sinon.assert.calledWith(getUserContextStub, 'test', true);
 			sinon.assert.called(isEnrolledStub);
@@ -2142,18 +2142,18 @@ describe('Client', () => {
 		});
 
 		it('should create a user when private key is accessible', async () => {
-			getUserContextStub.returns({ isEnrolled: isEnrolledStub.returns(false) });
-			getClientConfigStub.returns({ organization: true });
+			getUserContextStub.returns({isEnrolled: isEnrolledStub.returns(false)});
+			getClientConfigStub.returns({organization: true});
 			createUserStub.returns('user');
 			client._network_config = {
 				getClientConfig: getClientConfigStub,
-				getOrganization: getOrganizationStub.returns({ getMspid: getMspidStub.returns(1) })
+				getOrganization: getOrganizationStub.returns({getMspid: getMspidStub.returns(1)})
 			};
 			client._stateStore = {};
 			client._cryptoSuite = {};
-			enrollStub.returns({ key: 'key', certificate: 'cert' });
+			enrollStub.returns({key: 'key', certificate: 'cert'});
 
-			const user = await client._setUserFromConfig({ username: 'test', password: 'password', caName: 'ca' });
+			const user = await client._setUserFromConfig({username: 'test', password: 'password', caName: 'ca'});
 			sinon.assert.calledWith(getUserContextStub, 'test', true);
 			sinon.assert.called(isEnrolledStub);
 			sinon.assert.called(getClientConfigStub);
@@ -2161,23 +2161,25 @@ describe('Client', () => {
 			sinon.assert.called(getMspidStub);
 			sinon.assert.calledWith(getCertificateAuthorityStub, 'ca');
 			sinon.assert.calledWith(FakeLogger.debug, 'Successfully enrolled user "test"');
-			sinon.assert.calledWith(createUserStub, { username: 'test', mspid: 1, cryptoContent: { privateKeyObj: 'key', signedCertPEM: 'cert' } });
+			sinon.assert.calledWith(createUserStub, {username: 'test', mspid: 1, cryptoContent: {privateKeyObj: 'key', signedCertPEM: 'cert'}});
 			user.should.equal('user');
 		});
 
 		it('should create a user when private key is not accessible', async () => {
-			getUserContextStub.returns({ isEnrolled: isEnrolledStub.returns(false) });
-			getClientConfigStub.returns({ organization: true });
+			getUserContextStub.returns({isEnrolled: isEnrolledStub.returns(false)});
+			getClientConfigStub.returns({organization: true});
 			createUserStub.returns('user');
 			client._network_config = {
 				getClientConfig: getClientConfigStub,
-				getOrganization: getOrganizationStub.returns({ getMspid: getMspidStub.returns(1) })
+				getOrganization: getOrganizationStub.returns({getMspid: getMspidStub.returns(1)})
 			};
 			client._stateStore = {};
 			client._cryptoSuite = {};
-			enrollStub.returns({ key: { toBytes: () => { throw new Error(); } }, certificate: 'cert' });
+			enrollStub.returns({key: {toBytes: () => {
+				throw new Error();
+			}}, certificate: 'cert'});
 
-			const user = await client._setUserFromConfig({ username: 'test', password: 'password', caName: 'ca' });
+			const user = await client._setUserFromConfig({username: 'test', password: 'password', caName: 'ca'});
 			sinon.assert.calledWith(getUserContextStub, 'test', true);
 			sinon.assert.called(isEnrolledStub);
 			sinon.assert.called(getClientConfigStub);
@@ -2186,23 +2188,23 @@ describe('Client', () => {
 			sinon.assert.calledWith(getCertificateAuthorityStub, 'ca');
 			sinon.assert.calledWith(FakeLogger.debug, 'Successfully enrolled user "test"');
 			sinon.assert.calledWith(FakeLogger.debug, 'Cannot access enrollment private key bytes');
-			sinon.assert.calledWith(createUserStub, { username: 'test', mspid: 1, cryptoContent: { privateKeyObj: enrollStub().key, signedCertPEM: 'cert' } });
+			sinon.assert.calledWith(createUserStub, {username: 'test', mspid: 1, cryptoContent: {privateKeyObj: enrollStub().key, signedCertPEM: 'cert'}});
 			user.should.equal('user');
 		});
 
 		it('should create a user when private key is not accessible and whos key is valid', async () => {
-			getUserContextStub.returns({ isEnrolled: isEnrolledStub.returns(false) });
-			getClientConfigStub.returns({ organization: true });
+			getUserContextStub.returns({isEnrolled: isEnrolledStub.returns(false)});
+			getClientConfigStub.returns({organization: true});
 			createUserStub.returns('user');
 			client._network_config = {
 				getClientConfig: getClientConfigStub,
-				getOrganization: getOrganizationStub.returns({ getMspid: getMspidStub.returns(1) })
+				getOrganization: getOrganizationStub.returns({getMspid: getMspidStub.returns(1)})
 			};
 			client._stateStore = {};
 			client._cryptoSuite = {};
-			enrollStub.returns({ key: { toBytes: () => '-----BEGIN' }, certificate: 'cert' });
+			enrollStub.returns({key: {toBytes: () => '-----BEGIN'}, certificate: 'cert'});
 
-			const user = await client._setUserFromConfig({ username: 'test', password: 'password', caName: 'ca' });
+			const user = await client._setUserFromConfig({username: 'test', password: 'password', caName: 'ca'});
 			sinon.assert.calledWith(getUserContextStub, 'test', true);
 			sinon.assert.called(isEnrolledStub);
 			sinon.assert.called(getClientConfigStub);
@@ -2210,7 +2212,7 @@ describe('Client', () => {
 			sinon.assert.called(getMspidStub);
 			sinon.assert.calledWith(getCertificateAuthorityStub, 'ca');
 			sinon.assert.calledWith(FakeLogger.debug, 'Successfully enrolled user "test"');
-			sinon.assert.calledWith(createUserStub, { username: 'test', mspid: 1, cryptoContent: { privateKeyPEM: '-----BEGIN', signedCertPEM: 'cert' } });
+			sinon.assert.calledWith(createUserStub, {username: 'test', mspid: 1, cryptoContent: {privateKeyPEM: '-----BEGIN', signedCertPEM: 'cert'}});
 			user.should.equal('user');
 		});
 	});
@@ -2240,15 +2242,15 @@ describe('Client', () => {
 		});
 
 		it('should throw if _stateStore is not found', async () => {
-			client._userContext = { _name: 'name' };
+			client._userContext = {_name: 'name'};
 			await client.saveUserToStateStore()
 				.should.eventually.be.rejectedWith('Cannot save user to state store when stateStore is null.');
 			sinon.assert.calledWith(FakeLogger.debug, 'saveUserToStateStore Promise rejected, Cannot save user to state store when stateStore is null.');
 		});
 
 		it('should return the user context', async () => {
-			client._userContext = { _name: 'name' };
-			client._stateStore = { setValue: setValueStub.returns(Promise.resolve('result')) };
+			client._userContext = {_name: 'name'};
+			client._stateStore = {setValue: setValueStub.returns(Promise.resolve('result'))};
 			const userContext = await client.saveUserToStateStore();
 			sinon.assert.calledWith(FakeLogger.debug, 'saveUserToStateStore, begin promise stateStore.setValue');
 			sinon.assert.calledWith(FakeLogger.debug, 'saveUserToStateStore, store.setValue, result = result');
@@ -2300,7 +2302,7 @@ describe('Client', () => {
 
 		it('should return the user', async () => {
 			_setUserFromConfigStub.returns('user');
-			const newUser = { username: 'test' };
+			const newUser = {username: 'test'};
 			const user = await client.setUserContext(newUser, true);
 			sinon.assert.calledWith(FakeLogger.debug, 'setUserContext - user: [object Object], skipPersistence: true');
 			sinon.assert.calledWith(FakeLogger.debug, 'setUserContext - will try to use network configuration to set the user');
@@ -2351,21 +2353,21 @@ describe('Client', () => {
 
 		it('should return _userContext if _userContext.getName returns value', async () => {
 			getNameStub.returns('name');
-			client._userContext = { getName: getNameStub };
+			client._userContext = {getName: getNameStub};
 			const userContext = await client.getUserContext('name');
 			sinon.assert.called(getNameStub);
 			userContext.should.equal(client._userContext);
 		});
 
 		it('should return _userContext if _userContext and name given', async () => {
-			client._userContext = { getName: getNameStub };
+			client._userContext = {getName: getNameStub};
 			const userContext = await client.getUserContext();
 			userContext.should.equal(client._userContext);
 		});
 
 		it('should return null if name is not set', async () => {
 			getNameStub.returns('name');
-			client._userContext = { getName: getNameStub };
+			client._userContext = {getName: getNameStub};
 			const userContext = await client.getUserContext('name');
 			sinon.assert.called(getNameStub);
 			userContext.should.equal(client._userContext);
@@ -2433,7 +2435,7 @@ describe('Client', () => {
 		});
 
 		it('should return null if no memberStr found', async () => {
-			client._stateStore = { getValue: getValueStub };
+			client._stateStore = {getValue: getValueStub};
 			const member = await client.loadUserFromStateStore('name');
 			sinon.assert.calledWith(FakeLogger.debug, 'Failed to find "name" in local key value store');
 			should.equal(member, null);
@@ -2441,7 +2443,7 @@ describe('Client', () => {
 
 		it('should return null if newUser to data returns nothing', async () => {
 			fromStringStub.returns(Promise.resolve(null));
-			client._stateStore = { getValue: getValueStub.returns('memberStr') };
+			client._stateStore = {getValue: getValueStub.returns('memberStr')};
 			const member = await client.loadUserFromStateStore('name');
 			sinon.assert.called(getCryptoSuiteStub);
 			sinon.assert.calledWith(FakeLogger.debug, 'loadUserFromStateStore, cryptoSuite is not set, will load using defaults');
@@ -2453,7 +2455,7 @@ describe('Client', () => {
 		it('should return the user', async () => {
 			fromStringStub.returns(Promise.resolve('user'));
 			getCryptoSuiteStub.returns(true);
-			client._stateStore = { getValue: getValueStub.returns('memberStr') };
+			client._stateStore = {getValue: getValueStub.returns('memberStr')};
 			const member = await client.loadUserFromStateStore('name');
 			sinon.assert.called(getCryptoSuiteStub);
 			sinon.assert.calledWith(fromStringStub, 'memberStr', true);
@@ -2500,7 +2502,7 @@ describe('Client', () => {
 			revert.push(Client.__set__('User', MockUser));
 
 			client = new Client();
-			client.getCryptoSuite = getCryptoSuiteStub.returns({ importKey: importKeyStub.returns(Promise.resolve('imported-key')) });
+			client.getCryptoSuite = getCryptoSuiteStub.returns({importKey: importKeyStub.returns(Promise.resolve('imported-key'))});
 			client.setUserContext = setUserContextStub;
 		});
 
@@ -2517,44 +2519,44 @@ describe('Client', () => {
 		});
 
 		it('should throw an error if opts.username is less than 1 character long', async () => {
-			await client.createUser({ username: '' })
+			await client.createUser({username: ''})
 				.should.eventually.be.rejectedWith('Client.createUser parameter \'opts username\' is required.');
-			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', { username: '' });
+			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', {username: ''});
 		});
 
 		it('should throw an error if opts.mspid is less than 1 character long', async () => {
-			await client.createUser({ username: 'name' })
+			await client.createUser({username: 'name'})
 				.should.eventually.be.rejectedWith('Client.createUser parameter \'opts mspid\' is required.');
-			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', { username: 'name' });
+			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', {username: 'name'});
 		});
 
 		it('should throw an error if opts.cryptoContent is not given', async () => {
-			await client.createUser({ username: 'name', mspid: '1' })
+			await client.createUser({username: 'name', mspid: '1'})
 				.should.eventually.be.rejectedWith('Client.createUser parameter \'opts cryptoContent\' is required.');
-			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', { username: 'name', mspid: '1' });
+			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', {username: 'name', mspid: '1'});
 		});
 
 		it('should throw an error if opts.cryptoContent.privateKey and privateKeyPEM are not given', async () => {
-			await client.createUser({ username: 'name', mspid: '1', cryptoContent: {} })
+			await client.createUser({username: 'name', mspid: '1', cryptoContent: {}})
 				.should.eventually.be.rejectedWith('Client.createUser one of \'opts cryptoContent privateKey, privateKeyPEM or privateKeyObj\' is required.');
-			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', { username: 'name', mspid: '1', cryptoContent: {} });
+			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', {username: 'name', mspid: '1', cryptoContent: {}});
 		});
 
 		it('should throw an error if opts.cryptoContent.privateKey, privateKeyPEM and privateKeyObj are not given', async () => {
-			await client.createUser({ username: 'name', mspid: '1', cryptoContent: {} })
+			await client.createUser({username: 'name', mspid: '1', cryptoContent: {}})
 				.should.eventually.be.rejectedWith('Client.createUser one of \'opts cryptoContent privateKey, privateKeyPEM or privateKeyObj\' is required.');
-			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', { username: 'name', mspid: '1', cryptoContent: {} });
+			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', {username: 'name', mspid: '1', cryptoContent: {}});
 		});
 
 		it('should throw an error if opts.cryptoContent.signedCert and signedCertPEM are not given', async () => {
-			await client.createUser({ username: 'name', mspid: '1', cryptoContent: { privateKey: 'private-key' } })
+			await client.createUser({username: 'name', mspid: '1', cryptoContent: {privateKey: 'private-key'}})
 				.should.eventually.be.rejectedWith('Client.createUser either \'opts cryptoContent signedCert or signedCertPEM\' is required.');
-			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', { username: 'name', mspid: '1', cryptoContent: { privateKey: 'private-key' } });
+			sinon.assert.calledWith(FakeLogger.debug, 'opts = %j', {username: 'name', mspid: '1', cryptoContent: {privateKey: 'private-key'}});
 		});
 
 		it('should return a user', async () => {
 			readFileStub.returns(Promise.resolve('privateKeyPEM'));
-			const user = await client.createUser({ username: 'name', mspid: '1', cryptoContent: { privateKey: 'private-key', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM' }, skipPersistence: true });
+			const user = await client.createUser({username: 'name', mspid: '1', cryptoContent: {privateKey: 'private-key', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM'}, skipPersistence: true});
 			sinon.assert.calledWith(readFileStub, 'private-key');
 			sinon.assert.calledWith(FakeLogger.debug, 'then privateKeyPEM data');
 			sinon.assert.calledWith(readFileStub, 'signed-cert');
@@ -2570,9 +2572,9 @@ describe('Client', () => {
 
 		it('should return a user if getCryptoSuite returns null', async () => {
 			getCryptoSuiteStub.onCall(0).returns(null);
-			getCryptoSuiteStub.onCall(1).returns({ setCryptoKeyStore: setCryptoKeyStoreStub });
+			getCryptoSuiteStub.onCall(1).returns({setCryptoKeyStore: setCryptoKeyStoreStub});
 			readFileStub.returns(Promise.resolve('privateKeyPEM'));
-			const user = await client.createUser({ username: 'name', mspid: '1', cryptoContent: { privateKey: 'private-key', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM' }, skipPersistence: true });
+			const user = await client.createUser({username: 'name', mspid: '1', cryptoContent: {privateKey: 'private-key', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM'}, skipPersistence: true});
 			sinon.assert.calledWith(readFileStub, 'private-key');
 			sinon.assert.calledWith(FakeLogger.debug, 'then privateKeyPEM data');
 			sinon.assert.calledWith(readFileStub, 'signed-cert');
@@ -2587,9 +2589,9 @@ describe('Client', () => {
 		});
 
 		it('should return a user if getCryptoSuite does not return null', async () => {
-			getCryptoSuiteStub.returns({ setCryptoKeyStore: setCryptoKeyStoreStub, importKey: importKeyStub, _cryptoKeyStore: {} });
+			getCryptoSuiteStub.returns({setCryptoKeyStore: setCryptoKeyStoreStub, importKey: importKeyStub, _cryptoKeyStore: {}});
 			readFileStub.returns(Promise.resolve('privateKeyPEM'));
-			const user = await client.createUser({ username: 'name', mspid: '1', cryptoContent: { privateKey: 'private-key', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM' }, skipPersistence: true });
+			const user = await client.createUser({username: 'name', mspid: '1', cryptoContent: {privateKey: 'private-key', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM'}, skipPersistence: true});
 			sinon.assert.calledWith(readFileStub, 'private-key');
 			sinon.assert.calledWith(FakeLogger.debug, 'then privateKeyPEM data');
 			sinon.assert.calledWith(readFileStub, 'signed-cert');
@@ -2605,8 +2607,8 @@ describe('Client', () => {
 		});
 
 		it('should return a user if getCryptoSuite does not return null', async () => {
-			getCryptoSuiteStub.returns({ setCryptoKeyStore: setCryptoKeyStoreStub, importKey: importKeyStub, _cryptoKeyStore: {} });
-			const user = await client.createUser({ username: 'name', mspid: '1', cryptoContent: { privateKeyPEM: 'privateKeyPem', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM' }, skipPersistence: false });
+			getCryptoSuiteStub.returns({setCryptoKeyStore: setCryptoKeyStoreStub, importKey: importKeyStub, _cryptoKeyStore: {}});
+			const user = await client.createUser({username: 'name', mspid: '1', cryptoContent: {privateKeyPEM: 'privateKeyPem', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM'}, skipPersistence: false});
 			sinon.assert.calledWith(FakeLogger.debug, 'then privateKeyPEM data');
 			sinon.assert.calledWith(readFileStub, 'signed-cert');
 			sinon.assert.calledWith(FakeLogger.debug, 'then signedCertPEM data');
@@ -2621,10 +2623,10 @@ describe('Client', () => {
 		});
 
 		it('should return a user if getCryptoSuite does not return null', async () => {
-			getCryptoSuiteStub.returns({ setCryptoKeyStore: setCryptoKeyStoreStub, importKey: importKeyStub, _cryptoKeyStore: {} });
+			getCryptoSuiteStub.returns({setCryptoKeyStore: setCryptoKeyStoreStub, importKey: importKeyStub, _cryptoKeyStore: {}});
 			readFileStub.onCall(0).returns(null);
 			readFileStub.onCall(1).returns(123);
-			const user = await client.createUser({ username: 'name', mspid: '1', cryptoContent: { privateKey: 'private-key', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM' }, skipPersistence: false });
+			const user = await client.createUser({username: 'name', mspid: '1', cryptoContent: {privateKey: 'private-key', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM'}, skipPersistence: false});
 			sinon.assert.calledWith(readFileStub, 'signed-cert');
 			sinon.assert.calledWith(FakeLogger.debug, 'then signedCertPEM data');
 			sinon.assert.calledWith(setCryptoSuiteStub, getCryptoSuiteStub());
@@ -2637,10 +2639,10 @@ describe('Client', () => {
 		});
 
 		it('should return a user if getCryptoSuite does not return null', async () => {
-			getCryptoSuiteStub.returns({ setCryptoKeyStore: setCryptoKeyStoreStub, importKey: importKeyStub, _cryptoKeyStore: {} });
+			getCryptoSuiteStub.returns({setCryptoKeyStore: setCryptoKeyStoreStub, importKey: importKeyStub, _cryptoKeyStore: {}});
 			readFileStub.onCall(0).returns(null);
 			readFileStub.onCall(1).returns(123);
-			const user = await client.createUser({ username: 'name', mspid: '1', cryptoContent: { privateKey: 'private-key', signedCertPEM: 'signed-cert-PEM' }, skipPersistence: false });
+			const user = await client.createUser({username: 'name', mspid: '1', cryptoContent: {privateKey: 'private-key', signedCertPEM: 'signed-cert-PEM'}, skipPersistence: false});
 			sinon.assert.calledWith(readFileStub, 'private-key');
 			sinon.assert.calledWith(FakeLogger.debug, 'then signedCertPEM data');
 			sinon.assert.calledWith(setCryptoSuiteStub, getCryptoSuiteStub());
@@ -2736,7 +2738,7 @@ describe('Client', () => {
 
 		it('should throw an error if orderers arent found', () => {
 			client._network_config = {};
-			getChannelStub.returns({ getOrderers: getOrderersStub });
+			getChannelStub.returns({getOrderers: getOrderersStub});
 			getOrdererStub.returns('orderer1');
 			(() => {
 				client.getTargetOrderer(null, null, 'channel1');
@@ -2767,7 +2769,7 @@ describe('Client', () => {
 		it('should get a channel and return an orderer', () => {
 			client._network_config = {};
 			getOrderersStub.returns(['channel-orderer']);
-			getChannelStub.returns({ getOrderers: getOrderersStub });
+			getChannelStub.returns({getOrderers: getOrderersStub});
 			const orderers = client.getTargetOrderer(null, null, 'channel1');
 			orderers.should.equal('channel-orderer');
 		});
@@ -2784,7 +2786,7 @@ describe('Client', () => {
 		});
 
 		it('should return he clientCertHash in client._tls_mutual', () => {
-			client._tls_mutual = { clientCertHash: 'cert-hash' };
+			client._tls_mutual = {clientCertHash: 'cert-hash'};
 			client.getClientCertHash().should.equal('cert-hash');
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start', 'getClientCertHash');
 		});
@@ -2803,7 +2805,7 @@ describe('Client', () => {
 			revert.push(Client.__set__('sdkUtils.pemToDER', pemToDERStub));
 			revert.push(Client.__set__('computeHash', computeHashStub));
 
-			client._tls_mutual = { clientCert: 'client-cert' };
+			client._tls_mutual = {clientCert: 'client-cert'};
 			const certHash = client.getClientCertHash();
 			should.equal(certHash, 'cert-hash');
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start', 'getClientCertHash');
@@ -2813,7 +2815,7 @@ describe('Client', () => {
 
 	describe('#_checkTLScert_n_key', () => {
 		it('should return opts', () => {
-			const opts = { 'clientCert': 'thing' };
+			const opts = {'clientCert': 'thing'};
 			const client = new Client();
 			const newOpts = client._checkTLScert_n_key(opts);
 			newOpts.should.deep.equal(opts);
@@ -2838,9 +2840,9 @@ describe('Client', () => {
 
 		it('should return then hash', () => {
 			const digestStub = sandbox.stub().returns('hash');
-			const updateStub = sandbox.stub().returns({ digest: digestStub });
-			const createHashStub = sandbox.stub().returns({ update: updateStub });
-			const cryptoStub = { createHash: createHashStub };
+			const updateStub = sandbox.stub().returns({digest: digestStub});
+			const createHashStub = sandbox.stub().returns({update: updateStub});
+			const cryptoStub = {createHash: createHashStub};
 			revert.push(Client.__set__('crypto', cryptoStub));
 			const hash = computehash('data');
 			sinon.assert.calledWith(createHashStub, 'sha256');
@@ -2850,7 +2852,7 @@ describe('Client', () => {
 		});
 	});
 
-	describe('readFile', () => {
+	describe.only('readFile', () => {
 		let readFileStub;
 		let readFile;
 		before(() => {
@@ -2858,32 +2860,32 @@ describe('Client', () => {
 		});
 
 		it('should reject with error', async () => {
-			readFileStub = (path, encoding, cb) => {
-				cb({ code: 'Error' });
+			readFileStub = (path_, encoding, cb) => {
+				cb({code: 'Error'});
 			};
-			revert.push(Client.__set__('fs', { readFile: readFileStub }));
+			revert.push(Client.__set__('fs', {readFile: readFileStub}));
 			try {
 				await readFile('file');
 				should.fail();
 			} catch (err) {
-				err.should.deep.equal({ code: 'Error' });
+				err.should.deep.equal({code: 'Error'});
 			}
 		});
 
 		it('should resolve with null', async () => {
-			readFileStub = (path, encoding, cb) => {
-				cb({ code: 'ENOENT' });
+			readFileStub = (path_, encoding, cb) => {
+				cb({code: 'ENOENT'});
 			};
-			revert.push(Client.__set__('fs', { readFile: readFileStub }));
+			revert.push(Client.__set__('fs', {readFile: readFileStub}));
 			const file = await readFile('file');
 			should.equal(file, null);
 		});
 
 		it('should resolve with the data', async () => {
-			readFileStub = (path, encoding, cb) => {
+			readFileStub = (path_, encoding, cb) => {
 				cb(null, 'data');
 			};
-			revert.push(Client.__set__('fs', { readFile: readFileStub }));
+			revert.push(Client.__set__('fs', {readFile: readFileStub}));
 			const data = await readFile('file');
 			data.should.equal('data');
 		});
@@ -2911,7 +2913,7 @@ describe('Client', () => {
 		});
 
 		it('should return a list of signatures if signature contains correct properties', () => {
-			const mockSignature = { signature_header: 'header', signature: 'body' };
+			const mockSignature = {signature_header: 'header', signature: 'body'};
 			const signatures = _stringToSignature([mockSignature]);
 			sinon.assert.calledWith(FakeLogger.debug, '_stringToSignature - signature is protobuf');
 			signatures.should.deep.equal([mockSignature]);
@@ -2969,42 +2971,42 @@ describe('Client', () => {
 
 		it('should throw if schema config is missing', () => {
 			(() => {
-				_getNetworkConfig({ version: '1.0' });
+				_getNetworkConfig({version: '1.0'});
 			}).should.throw(/missing "network-config-schema" configuration setting/);
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 		});
 
 		it('should throw if schema config is missing', () => {
-			getConfigSettingStub.returns({ '2.0': 'network-config-file' });
+			getConfigSettingStub.returns({'2.0': 'network-config-file'});
 			requireStub.returns(MockNetworkConfig);
 			(() => {
-				_getNetworkConfig({ version: '1.0' });
+				_getNetworkConfig({version: '1.0'});
 			}).should.throw(/network configuration has an unknown "version"/);
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 		});
 
 		it('should return the new network config when config is an object', () => {
 			readFileSyncStub.returns('file-data');
-			getConfigSettingStub.returns({ '1.0': 'network-config-file' });
+			getConfigSettingStub.returns({'1.0': 'network-config-file'});
 			requireStub.returns(MockNetworkConfig);
 			MockNetworkConfig.returns('network-config');
-			const networkConfig = _getNetworkConfig({ version: '1.0' }, 'client');
+			const networkConfig = _getNetworkConfig({version: '1.0'}, 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, { version: '1.0' }, 'client');
+			sinon.assert.calledWith(MockNetworkConfig, {version: '1.0'}, 'client');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});
 
 		it('should return the new network config when config is a yaml file path', () => {
 			readFileSyncStub.returns('file-data');
-			safeLoadStub.returns({ version: '1.0' });
-			getConfigSettingStub.returns({ '1.0': 'network-config-file' });
+			safeLoadStub.returns({version: '1.0'});
+			getConfigSettingStub.returns({'1.0': 'network-config-file'});
 			requireStub.returns(MockNetworkConfig);
 			MockNetworkConfig.returns('network-config');
 			const networkConfig = _getNetworkConfig('config.yaml', 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, { version: '1.0' }, 'client');
+			sinon.assert.calledWith(MockNetworkConfig, {version: '1.0'}, 'client');
 			sinon.assert.calledWith(readFileSyncStub, 'config.yaml');
 			sinon.assert.calledWith(safeLoadStub, 'file-data');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
@@ -3012,14 +3014,14 @@ describe('Client', () => {
 
 		it('should return the new network config when config is a yml file path', () => {
 			readFileSyncStub.returns('file-data');
-			safeLoadStub.returns({ version: '1.0' });
-			getConfigSettingStub.returns({ '1.0': 'network-config-file' });
+			safeLoadStub.returns({version: '1.0'});
+			getConfigSettingStub.returns({'1.0': 'network-config-file'});
 			requireStub.returns(MockNetworkConfig);
 			MockNetworkConfig.returns('network-config');
 			const networkConfig = _getNetworkConfig('config.yml', 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, { version: '1.0' }, 'client');
+			sinon.assert.calledWith(MockNetworkConfig, {version: '1.0'}, 'client');
 			sinon.assert.calledWith(readFileSyncStub, 'config.yml');
 			sinon.assert.calledWith(safeLoadStub, 'file-data');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
@@ -3027,28 +3029,28 @@ describe('Client', () => {
 
 		it('should return the new network config when config is a yaml file path', () => {
 			readFileSyncStub.returns('{"version":  "1.0"}');
-			safeLoadStub.returns({ version: '1.0' });
-			getConfigSettingStub.returns({ '1.0': 'network-config-file' });
+			safeLoadStub.returns({version: '1.0'});
+			getConfigSettingStub.returns({'1.0': 'network-config-file'});
 			requireStub.returns(MockNetworkConfig);
 			MockNetworkConfig.returns('network-config');
 			const networkConfig = _getNetworkConfig('config.json', 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, { version: '1.0' }, 'client');
+			sinon.assert.calledWith(MockNetworkConfig, {version: '1.0'}, 'client');
 			sinon.assert.calledWith(readFileSyncStub, 'config.json');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});
 
 		it('should return the new network config when config is a yaml file path', () => {
 			readFileSyncStub.returns('{"version": 1.1}');
-			safeLoadStub.returns({ version: 1.1 });
-			getConfigSettingStub.returns({ '1.1': 'network-config-file' });
+			safeLoadStub.returns({version: 1.1});
+			getConfigSettingStub.returns({'1.1': 'network-config-file'});
 			requireStub.returns(MockNetworkConfig);
 			MockNetworkConfig.returns('network-config');
 			const networkConfig = _getNetworkConfig('config.json', 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, { version: 1.1 }, 'client');
+			sinon.assert.calledWith(MockNetworkConfig, {version: 1.1}, 'client');
 			sinon.assert.calledWith(readFileSyncStub, 'config.json');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});

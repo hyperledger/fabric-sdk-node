@@ -13,6 +13,7 @@
  */
 
 'use strict';
+/* eslint-disable no-throw-literal */
 
 const rewire = require('rewire');
 const ChannelEventHub = rewire('../lib/ChannelEventHub');
@@ -69,11 +70,15 @@ describe('ChannelEventHub', () => {
 		});
 
 		it('should throw if channel arg isnt given', () => {
-			(() => {new ChannelEventHub();}).should.throw(/Missing required argument: channel/);
+			(() => {
+				new ChannelEventHub();
+			}).should.throw(/Missing required argument: channel/);
 		});
 
 		it('should throw if peer argument isnt given', () => {
-			(() => {new ChannelEventHub({});}).should.throw(/Missing required argument: peer/);
+			(() => {
+				new ChannelEventHub({});
+			}).should.throw(/Missing required argument: peer/);
 		});
 	});
 
@@ -334,7 +339,7 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(FakeLogger.debug, '_connect - end stream:', 1);
 		});
 
-		it('should call stream on data and log about an unbknown response', () => {
+		it('should call stream on data and log about an unknown response', () => {
 			setTimeoutStub.yields();
 			hub._filtered_stream = true;
 			checkAndAddConfigSettingStub.onCall(0).returns({});
@@ -396,7 +401,9 @@ describe('ChannelEventHub', () => {
 		});
 
 		it('should log if the stream id and _current stream are not the same', () => {
-			const takeCurrentStreamOutOfSync = function () {this._current_stream++;};
+			const takeCurrentStreamOutOfSync = function () {
+				this._current_stream++;
+			};
 			setTimeoutStub.callsFake(takeCurrentStreamOutOfSync.bind(hub));
 			checkAndAddConfigSettingStub.onCall(0).returns({});
 			checkAndAddConfigSettingStub.onCall(1).returns({});
@@ -1145,7 +1152,9 @@ describe('ChannelEventHub', () => {
 		});
 
 		it('should throw a string and call _disconnect if _stream is not set but force_reconnect is', () => {
-			hub._stream = {isPaused: () => {throw 'Error';}};
+			hub._stream = {isPaused: () => {
+				throw 'Error';
+			}};
 			hub.checkConnection(true);
 			sinon.assert.called(FakeLogger.error);
 			sinon.assert.calledWith(FakeLogger.error, 'checkConnection - error ::Error');
@@ -1153,7 +1162,9 @@ describe('ChannelEventHub', () => {
 		});
 
 		it('should throw a string and call _disconnect if _stream is not set but force_reconnect is', () => {
-			hub._stream = {isPaused: () => {throw new Error();}};
+			hub._stream = {isPaused: () => {
+				throw new Error();
+			}};
 			hub.checkConnection(true);
 			sinon.assert.called(FakeLogger.error);
 			sinon.assert.calledWithMatch(FakeLogger.error, Error);
@@ -1296,7 +1307,7 @@ describe('ChannelEventHub', () => {
 		it('should call not delete the _chaincodeRegistrants entry if the set has length > 0', () => {
 			hub._chaincodeRegistrants = {known: new Set([1])};
 			hub.unregisterChaincodeEvent({ccid: 'known'}, false);
-			hub._chaincodeRegistrants['known'].should.deep.equal(new Set([1]));
+			hub._chaincodeRegistrants.known.should.deep.equal(new Set([1]));
 		});
 
 		it('should not call delete if cbtable not found', () => {
@@ -1433,7 +1444,7 @@ describe('ChannelEventHub', () => {
 
 		it('should throw if onEvent is missing', () => {
 			(() => {
-				hub.registerTxEvent('txid',);
+				hub.registerTxEvent('txid');
 			}).should.throw(Error, 'Missing "onEvent" parameter');
 		});
 

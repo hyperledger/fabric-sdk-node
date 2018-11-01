@@ -5,13 +5,13 @@
  */
 'use strict';
 
-/////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////
 // ---------------------- IMPORTANT ----------------------------
 // this test is meant to test the fabric-ca-client
 // package ALONE! do not require anything from the fabric-client
 // package. If anything is required but missing, add them to
 // the fabric-ca-client package by editing build/tasks/ca.js
-/////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////
 
 const utils = require('fabric-client/lib/utils.js');
 const logger = utils.getLogger('integration.client');
@@ -35,7 +35,7 @@ const SigningIdentity = idModule.SigningIdentity;
 const Signer = idModule.Signer;
 const User = require('fabric-ca-client/lib/User.js');
 
-//var keyValStorePath = testUtil.KVS;
+// var keyValStorePath = testUtil.KVS;
 const FabricCAServices = require('fabric-ca-client/lib/FabricCAServices');
 const FabricCAClient = require('fabric-ca-client/lib/FabricCAClient');
 
@@ -55,7 +55,7 @@ const tlsOptions = {
  * FabricCAServices class tests
  */
 
-//run the enroll test
+// run the enroll test
 
 test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 	testUtil.resetDefaults();
@@ -63,8 +63,8 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 	ORGS = FabricCAServices.getConfigSetting('test-network');
 	fabricCAEndpoint = ORGS[userOrg].ca.url;
 
-	FabricCAServices.getConfigSetting('crypto-keysize', '256');//force for gulp test
-	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2');//force for gulp test
+	FabricCAServices.getConfigSetting('crypto-keysize', '256');// force for gulp test
+	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2');// force for gulp test
 
 	const caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
 
@@ -79,18 +79,18 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 			t.pass('Successfully enrolled \'' + req.enrollmentID + '\'.');
 			eResult = enrollment;
 
-			//check that we got back the expected certificate
+			// check that we got back the expected certificate
 			let subject;
 			try {
 				subject = X509.getSubject(FabricCAServices.normalizeX509(enrollment.certificate));
-			} catch(err) {
+			} catch (err) {
 				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollment.certificate, err));
 			}
 
 			t.equal(subject.commonName, req.enrollmentID, 'Subject should be /CN=' + req.enrollmentID);
 
 			return caService.getCryptoSuite().importKey(enrollment.certificate);
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to enroll the admin. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 
 			t.end();
@@ -105,7 +105,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 			signingIdentity = new SigningIdentity(eResult.certificate, pubKey, msp.getId(), msp.cryptoSuite,
 				new Signer(msp.cryptoSuite, eResult.key));
 			return timeOutTest(signingIdentity, t);
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to import the public key from the enrollment certificate. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then(() => {
@@ -118,7 +118,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 
 			member = new User('adminX');
 			return member.setEnrollment(eResult.key, eResult.certificate, 'Org1MSP');
-		},(err) => {
+		}, (err) => {
 			t.fail(util.format('Failed to register "%s". %s', enrollmentID, err.stack ? err.stack : err));
 			t.end();
 		}).then(() => {
@@ -127,7 +127,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 			return FabricCAServices.newDefaultKeyValueStore({
 				path: testUtil.KVS
 			});
-		},() => {
+		}, () => {
 			t.fail('Failed to configure the user with proper enrollment materials.');
 			t.end();
 		}).then((store) => {
@@ -142,22 +142,22 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 		}).then(() => {
 			t.fail('Should not have been able to register user of a affiliation "bank_X" because "admin" does not belong to that affiliation');
 			t.end();
-		},() => {
+		}, () => {
 			t.pass('Successfully rejected registration request "testUserX" in affiliation "bank_X"');
 
 			return caService.register({enrollmentID: 'testUserX', affiliation: userOrg}, member);
 		}).then((secret) => {
-			t.pass('Successfully registered "testUserX" in affiliation "'+userOrg+'" with enrollment secret returned: ' + secret);
+			t.pass('Successfully registered "testUserX" in affiliation "' + userOrg + '" with enrollment secret returned: ' + secret);
 
 			return caService.revoke({enrollmentID: 'testUserX'}, member);
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to register "testUserX". '  + err.stack ? err.stack : err);
 			t.end();
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserX"');
 
 			return caService.register({enrollmentID: 'testUserY', enrollmentSecret: 'testUserYSecret', affiliation: 'org2.department1'}, member);
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to revoke "testUserX". ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((secret) => {
@@ -169,7 +169,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 			let cert;
 			try {
 				cert = X509.parseCert(FabricCAServices.normalizeX509(enrollment.certificate));
-			} catch(err) {
+			} catch (err) {
 				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollment.certificate, err));
 			}
 
@@ -191,14 +191,14 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 			t.comment(util.format('Ready to revoke certificate serial # "%s" with aki "%s"', serial, aki));
 
 			return caService.revoke({serial: serial, aki: aki}, member);
-			//return;
+			// return;
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserY" using serial number and AKI');
 
 			// generate CRL
 			return caService.generateCRL({}, member);
 		}).then((CRL) => {
-			if(CRL){
+			if (CRL) {
 				t.pass('Successfully generated CRL');
 			} else {
 				t.fail('Unable to generate CRL');
@@ -210,8 +210,8 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 				affiliation: 'org1.department2',
 				attrs: [
 					{name: 'hf.Registrar.Roles', value: 'client'},
-					{name:'ecert',value:'default', ecert:true},
-					{name:'test1attr',value:'test1attr'}
+					{name:'ecert', value:'default', ecert:true},
+					{name:'test1attr', value:'test1attr'}
 				]}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "test1" ');
@@ -229,8 +229,8 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 				affiliation: 'org1.department2',
 				attrs: [
 					{name: 'hf.Registrar.Roles', value: 'client'},
-					{name:'ecert',value:'default', ecert:true},
-					{name:'test2attr',value:'test2attr'}
+					{name:'ecert', value:'default', ecert:true},
+					{name:'test2attr', value:'test2attr'}
 				]}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "test2" ');
@@ -248,8 +248,8 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 				affiliation: 'org1.department2',
 				attrs: [
 					{name: 'hf.Registrar.Roles', value: 'client'},
-					{name:'ecert',value:'default', ecert:true},
-					{name:'test3attr',value:'test3attr'}
+					{name:'ecert', value:'default', ecert:true},
+					{name:'test3attr', value:'test3attr'}
 				]}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "test3" ');
@@ -268,14 +268,14 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 				attrs: [
 					{name: 'hf.Registrar.Roles', value: 'client'},
 					{name: 'hf.Registrar.Attributes', value: '*'},
-					{name:'dfattrib',value:'default', ecert:true},
-					{name:'myattrib',value:'somevalue and lots of other information'}
+					{name:'dfattrib', value:'default', ecert:true},
+					{name:'myattrib', value:'somevalue and lots of other information'}
 				]}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "webAdmin" who can register other users with no role');
 
 			return caService.enroll({enrollmentID: 'webAdmin', enrollmentSecret: secret, attr_reqs :[{name:'myattrib', optional : false}]});
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to register "webAdmin". ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((enrollment) => {
@@ -293,15 +293,16 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 		}).then(() => {
 			t.fail('Should not have been able to use "webAdmin" to register a user of the "auditor" role');
 			t.end();
-		},(err) => {
+		}, (err) => {
 			t.pass('Successfully rejected attempt to register a user of invalid role. ' + err);
 
 			return caService.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org2.department1'}, webAdmin);
 		}).then(() => {
 			t.fail('Failed to capture the error when registering "auditor" of role "client" from "webAdmin" but using invalid affiliation');
-		},(err) => {
-			if (err.toString().indexOf('Registration of \'auditor\' failed in affiliation validation'))
+		}, (err) => {
+			if (err.toString().indexOf('Registration of \'auditor\' failed in affiliation validation')) {
 				t.pass('Successfully captured the error when registering "auditor" of role "client" from "webAdmin" but using invalid affiliation');
+			}
 
 			return caService.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org1.department2'}, webAdmin);
 		}).then(() => {
@@ -343,27 +344,27 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 function checkoutCertForAttributes(t, pem, should_find, attr_name) {
 	const cert = X509.parseCert(pem);
 	let found = false;
-	if(cert && cert.extensions && cert.extensions['1.2.3.4.5.6.7.8.1']) {
+	if (cert && cert.extensions && cert.extensions['1.2.3.4.5.6.7.8.1']) {
 		const attr_string = cert.extensions['1.2.3.4.5.6.7.8.1'];
 		const attr_object = JSON.parse(attr_string);
 		const attrs = attr_object.attrs;
-		if(attrs && attrs[attr_name]) {
-			logger.debug(' Found attribute %s with value of %s',attr_name, attrs[attr_name]);
+		if (attrs && attrs[attr_name]) {
+			logger.debug(' Found attribute %s with value of %s', attr_name, attrs[attr_name]);
 			found = true;
 		}
 	}
 
-	if(should_find) {
-		if(found) {
-			t.pass('Successfully received the enrolled certificate with the added attribute ::'+attr_name);
+	if (should_find) {
+		if (found) {
+			t.pass('Successfully received the enrolled certificate with the added attribute ::' + attr_name);
 		} else {
-			t.fail('Failed to receive the enrolled certificate with the added attribute ::'+attr_name);
+			t.fail('Failed to receive the enrolled certificate with the added attribute ::' + attr_name);
 		}
 	} else {
-		if(found) {
-			t.fail('Failed with the enrolled certificate that has the added attribute ::'+attr_name);
+		if (found) {
+			t.fail('Failed with the enrolled certificate that has the added attribute ::' + attr_name);
 		} else {
-			t.pass('Successfully enrolled with certificate without the added attribute ::'+attr_name);
+			t.pass('Successfully enrolled with certificate without the added attribute ::' + attr_name);
 		}
 	}
 }
@@ -381,11 +382,11 @@ test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', (t) => {
 	return client.enroll(enrollmentID, enrollmentSecret, csr.toString())
 		.then((enrollResponse) => {
 			t.pass('Successfully invoked enroll API with enrollmentID \'' + enrollmentID + '\'');
-			//check that we got back the expected certificate
+			// check that we got back the expected certificate
 			let subject;
 			try {
 				subject = X509.getSubject(FabricCAServices.normalizeX509(enrollResponse.enrollmentCert));
-			} catch(err) {
+			} catch (err) {
 				t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollResponse.enrollmentCert, err));
 			}
 			t.equal(subject.commonName, enrollmentID, 'Subject should be /CN=' + enrollmentID);
@@ -424,19 +425,17 @@ async function timeOutTest(signingIdentity, t) {
 		start = Date.now();
 		await caClient.request('GET', '/aMethod', signingIdentity);
 		t.fail('Should throw error by CONNECTION_TIMEOUT');
-	} catch(e) {
+	} catch (e) {
 		end = Date.now();
 		logger.debug('Conection failed with error ' + e.toString());
 		if (e.message === 'Calling /aMethod endpoint failed, CONNECTION Timeout') {
 			// for connection timeout, verify the timeout value
-			t.equal(Math.floor((end-start)/1000), 3, 'should have duration roughly equals 3000');
-		}
-		else if (e.message.includes('Error: connect ENETUNREACH')) {
+			t.equal(Math.floor((end - start) / 1000), 3, 'should have duration roughly equals 3000');
+		} else if (e.message.includes('Error: connect ENETUNREACH')) {
 			// Verification build sometimes failed with ENETUNREACH. It seems to relate to gateway on the build machine.
 			// Do not fail in this case.
 			t.pass('Calling non-routable endpoint failed with ENETUNREACH error');
-		}
-		else {
+		} else {
 			t.fail('Calling non-routable endpoint failed with unexpected error: ' + e.toString());
 		}
 	}
@@ -460,9 +459,9 @@ async function timeOutTest(signingIdentity, t) {
 		start = Date.now();
 		await caClient.request('GET', '/aMethod', signingIdentity);
 		t.fail('Should throw error by SO_TIMEOUT');
-	} catch(e) {
+	} catch (e) {
 		end = Date.now();
-		t.equal(Math.floor((end-start)/1000), 5, 'should have duration roughly equals 5000');
+		t.equal(Math.floor((end - start) / 1000), 5, 'should have duration roughly equals 5000');
 		t.equal(e.message, 'Calling /aMethod endpoint failed, READ Timeout', 'should throw error after SO_TIMEOUT');
 		mockServer.close();
 		t.pass('Successfully tested SO_TIMEOUT');

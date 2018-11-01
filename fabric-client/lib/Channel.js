@@ -30,7 +30,7 @@ const MSPManager = require('./msp/msp-manager.js');
 const Policy = require('./Policy.js');
 const Constants = require('./Constants.js');
 const CollectionConfig = require('./SideDB.js');
-const { Identity } = require('./msp/identity.js');
+const {Identity} = require('./msp/identity.js');
 const ChannelHelper = require('./utils/ChannelHelper');
 
 const _ccProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
@@ -53,7 +53,7 @@ const _discoveryProto = ProtoLoader.load(__dirname + '/protos/discovery/protocol
 const _gossipProto = ProtoLoader.load(__dirname + '/protos/gossip/message.proto').gossip;
 const _collectionProto = ProtoLoader.load(__dirname + '/protos/common/collection.proto').common;
 
-const ImplicitMetaPolicy_Rule = { 0: 'ANY', 1: 'ALL', 2: 'MAJORITY' };
+const ImplicitMetaPolicy_Rule = {0: 'ANY', 1: 'ALL', 2: 'MAJORITY'};
 
 const PEER_NOT_ASSIGNED_MSG = 'Peer with name "%s" not assigned to this channel';
 const ORDERER_NOT_ASSIGNED_MSG = 'Orderer with name "%s" not assigned to this channel';
@@ -107,7 +107,7 @@ const Channel = class {
 		}
 		const channelNameRegxChecker = sdk_utils.getConfigSetting('channel-name-regx-checker');
 		if (channelNameRegxChecker) {
-			const { pattern, flags } = channelNameRegxChecker;
+			const {pattern, flags} = channelNameRegxChecker;
 			const namePattern = new RegExp(pattern ? pattern : '', flags ? flags : '');
 			if (!(name.match(namePattern))) {
 				throw new Error(util.format('Failed to create Channel. channel name should match Regex %s, but got %j', namePattern, name));
@@ -129,7 +129,7 @@ const Channel = class {
 		this._last_discover_timestamp = null;
 		this._discovery_peer = null;
 		this._use_discovery = sdk_utils.getConfigSetting('initialize-with-discovery', false);
-		this._endorsement_handler = null; //will be setup during initialization
+		this._endorsement_handler = null; // will be setup during initialization
 		this._commit_handler = null;
 
 		logger.debug('Constructed Channel instance: name - %s, network mode: %s', this._name, !this._devMode);
@@ -217,7 +217,7 @@ const Channel = class {
 		}
 
 		// setup the endorsement handler
-		if(!endorsement_handler_path && this._use_discovery) {
+		if (!endorsement_handler_path && this._use_discovery) {
 			endorsement_handler_path = sdk_utils.getConfigSetting('endorsement-handler');
 			logger.debug('%s - using config setting for endorsement handler ::%s', method, endorsement_handler_path);
 		}
@@ -227,7 +227,7 @@ const Channel = class {
 		}
 
 		// setup the commit handler
-		if(!commit_handler_path) {
+		if (!commit_handler_path) {
 			commit_handler_path = sdk_utils.getConfigSetting('commit-handler');
 			logger.debug('%s - using config setting for commit handler ::%s', method, commit_handler_path);
 		}
@@ -262,7 +262,7 @@ const Channel = class {
 			}
 
 			try {
-				const discover_request = {
+				let discover_request = {
 					target: target_peer,
 					config: true
 				};
@@ -286,17 +286,17 @@ const Channel = class {
 
 				const interests = [];
 				const plan_ids = [];
-				this._discovery_interests.forEach((interest, plan_id) =>{
+				this._discovery_interests.forEach((interest, plan_id) => {
 					logger.debug('%s - have interest of:%s', method, plan_id);
 					plan_ids.push(plan_id);
 					interests.push(interest);
 				});
 
-				for(const i in plan_ids) {
+				for (const i in plan_ids) {
 					const plan_id = plan_ids[i];
 					const interest = interests[i];
 
-					const discover_request = {
+					discover_request = {
 						target: target_peer,
 						interests: [interest]
 					};
@@ -304,11 +304,11 @@ const Channel = class {
 					let discover_interest_results = null;
 					try {
 						discover_interest_results = await this._discover(discover_request);
-					} catch(error) {
+					} catch (error) {
 						logger.error('Not able to get an endorsement plan for %s', plan_id);
 					}
 
-					if(discover_interest_results && discover_interest_results.endorsement_plans && discover_interest_results.endorsement_plans[0]) {
+					if (discover_interest_results && discover_interest_results.endorsement_plans && discover_interest_results.endorsement_plans[0]) {
 						const plan = this._buildDiscoveryEndorsementPlan(discover_interest_results, plan_id, discovery_results.msps, request);
 						discovery_results.endorsement_plans.push(plan);
 						logger.debug('Added an endorsement plan for %s', plan_id);
@@ -323,9 +323,9 @@ const Channel = class {
 				this._last_discover_timestamp = discovery_results.timestamp;
 
 				return discovery_results;
-			} catch(error) {
+			} catch (error) {
 				logger.error(error);
-				throw Error('Failed to discover ::'+ error.toString());
+				throw Error('Failed to discover ::' + error.toString());
 			}
 		} else {
 			target_peer = this._getFirstAvailableTarget(target_peer);
@@ -390,7 +390,7 @@ const Channel = class {
 					const interest = this._buildDiscoveryInterest(chaincode.name);
 					const plan_id = JSON.stringify(interest);
 					logger.debug('%s - looking at adding plan_id of  %s', method, plan_id);
-					this._discovery_interests.set(plan_id, interest); //will replace existing
+					this._discovery_interests.set(plan_id, interest); // will replace existing
 					logger.debug('%s - adding new interest of single chaincode ::%s', method, plan_id);
 				}
 				peer.name = this._buildPeerName(
@@ -404,7 +404,7 @@ const Channel = class {
 		}
 	}
 
-	_buildDiscoveryEndorsementPlan(discovery_results, plan_id, msps, options){
+	_buildDiscoveryEndorsementPlan(discovery_results, plan_id, msps, options) {
 		const method = '_buildDiscoveryEndorsementPlan';
 		logger.debug('%s - build endorsement plan for %s', method, plan_id);
 
@@ -618,7 +618,7 @@ const Channel = class {
 
 		if (this._discovery_results) {
 			const have_new_interests = this._merge_hints(endorsement_hints);
-			const allowed_age = sdk_utils.getConfigSetting('discovery-cache-life', 300000); //default is 5 minutes
+			const allowed_age = sdk_utils.getConfigSetting('discovery-cache-life', 300000); // default is 5 minutes
 			const now = Date.now();
 			if (have_new_interests || now - this._last_discover_timestamp > allowed_age) {
 				logger.debug('%s - need to refresh :: have_new_interests %s', method, have_new_interests);
@@ -648,9 +648,9 @@ const Channel = class {
 		const discovery_results = await this.getDiscoveryResults(endorsement_hint);
 		const plan_id = JSON.stringify(endorsement_hint);
 		logger.debug('%s - looking at plan_id of  %s', method, plan_id);
-		if(discovery_results && discovery_results.endorsement_plans) {
-			for(const plan of discovery_results.endorsement_plans) {
-				if(plan.plan_id === plan_id) {
+		if (discovery_results && discovery_results.endorsement_plans) {
+			for (const plan of discovery_results.endorsement_plans) {
+				if (plan.plan_id === plan_id) {
 					endorsement_plan = plan;
 					logger.debug('%s -  found plan in known plans ::%s', method, plan_id);
 					break;
@@ -658,7 +658,7 @@ const Channel = class {
 			}
 		}
 
-		if(endorsement_plan) {
+		if (endorsement_plan) {
 			return JSON.parse(JSON.stringify(endorsement_plan));
 		} else {
 			logger.debug('%s - plan not found in known plans', method, plan_id);
@@ -682,7 +682,7 @@ const Channel = class {
 			const results = await this._initialize(this._last_refresh_request);
 
 			return results;
-		} catch(error) {
+		} catch (error) {
 			logger.error('%s - failed:%s', method, error);
 
 			throw error;
@@ -705,7 +705,7 @@ const Channel = class {
 		const msps = this._msp_manager.getMSPs();
 		const mspIds = Object.keys(msps);
 		const orgs = mspIds.map((mspId) => {
-			return { id: mspId };
+			return {id: mspId};
 		});
 		logger.debug('%s - orgs::%j', method, orgs);
 		return orgs;
@@ -1124,12 +1124,12 @@ const Channel = class {
 			request = {};
 		}
 
-		let useAdmin = true; //default
-		if(typeof request.useAdmin === 'boolean') {
+		let useAdmin = true; // default
+		if (typeof request.useAdmin === 'boolean') {
 			useAdmin = request.useAdmin;
 		}
 		const target_peer = this._getTargetForDiscovery(request.target);
-		const signer = this._clientContext._getSigningIdentity(useAdmin); //use the admin if assigned
+		const signer = this._clientContext._getSigningIdentity(useAdmin); // use the admin if assigned
 		const discovery_request = new _discoveryProto.Request();
 
 		const authentication = new _discoveryProto.AuthInfo();
@@ -1179,7 +1179,7 @@ const Channel = class {
 			query.setChannel(this.getName());
 
 			const interests = [];
-			for(const interest of request.interests) {
+			for (const interest of request.interests) {
 				const proto_interest = this._buildProtoChaincodeInterest(interest);
 				interests.push(proto_interest);
 			}
@@ -1246,9 +1246,10 @@ const Channel = class {
 		const method = '_processDiscoveryChaincodeResults';
 		logger.debug('%s - start', method);
 		const endorsement_plans = [];
+		let index;
 		if (q_chaincodes && q_chaincodes.content) {
 			if (Array.isArray(q_chaincodes.content)) {
-				for (const index in q_chaincodes.content) {
+				for (index in q_chaincodes.content) {
 					const q_endors_desc = q_chaincodes.content[index];
 					const endorsement_plan = {};
 					endorsement_plan.chaincode = q_endors_desc.chaincode;
@@ -1260,13 +1261,13 @@ const Channel = class {
 						logger.debug('%s - found group: %s', method, group_name);
 						const group = {};
 						group.peers = this._processPeers(q_endors_desc.endorsers_by_groups[group_name].peers);
-						//all done with this group
+						// all done with this group
 						endorsement_plan.groups[group_name] = group;
 					}
 
 					// LAYOUTS
 					endorsement_plan.layouts = [];
-					for (const index in q_endors_desc.layouts) {
+					for (index in q_endors_desc.layouts) {
 						const q_layout = q_endors_desc.layouts[index];
 						const layout = {};
 						for (const group_name in q_layout.quantities_by_group) {
@@ -1286,40 +1287,42 @@ const Channel = class {
 		const method = '_processDiscoveryConfigResults';
 		logger.debug('%s - start', method);
 		const config = {};
-		if (q_config) try {
-			if (q_config.msps) {
-				config.msps = {};
-				for (const id in q_config.msps) {
-					logger.debug('%s - found organization %s', method, id);
-					const q_msp = q_config.msps[id];
-					const msp_config = {
-						id: id,
-						orgs: q_msp.organizational_unit_identifiers,
-						rootCerts: sdk_utils.convertBytetoString(q_msp.root_certs),
-						intermediateCerts: sdk_utils.convertBytetoString(q_msp.intermediate_certs),
-						admins: sdk_utils.convertBytetoString(q_msp.admins),
-						tls_root_certs: sdk_utils.convertBytetoString(q_msp.tls_root_certs),
-						tls_intermediate_certs: sdk_utils.convertBytetoString(q_msp.tls_intermediate_certs)
-					};
-					config.msps[id] = msp_config;
-				}
-			}
-			/*
-			"orderers":{"OrdererMSP":{"endpoint":[{"host":"orderer.example.com","port":7050}]}}}
-			*/
-			if (q_config.orderers) {
-				config.orderers = {};
-				for (const mspid in q_config.orderers) {
-					logger.debug('%s - found orderer org: ', method, mspid);
-					config.orderers[mspid] = {};
-					config.orderers[mspid].endpoints = [];
-					for (const index in q_config.orderers[mspid].endpoint) {
-						config.orderers[mspid].endpoints.push(q_config.orderers[mspid].endpoint[index]);
+		if (q_config) {
+			try {
+				if (q_config.msps) {
+					config.msps = {};
+					for (const id in q_config.msps) {
+						logger.debug('%s - found organization %s', method, id);
+						const q_msp = q_config.msps[id];
+						const msp_config = {
+							id: id,
+							orgs: q_msp.organizational_unit_identifiers,
+							rootCerts: sdk_utils.convertBytetoString(q_msp.root_certs),
+							intermediateCerts: sdk_utils.convertBytetoString(q_msp.intermediate_certs),
+							admins: sdk_utils.convertBytetoString(q_msp.admins),
+							tls_root_certs: sdk_utils.convertBytetoString(q_msp.tls_root_certs),
+							tls_intermediate_certs: sdk_utils.convertBytetoString(q_msp.tls_intermediate_certs)
+						};
+						config.msps[id] = msp_config;
 					}
 				}
+				/*
+			"orderers":{"OrdererMSP":{"endpoint":[{"host":"orderer.example.com","port":7050}]}}}
+			*/
+				if (q_config.orderers) {
+					config.orderers = {};
+					for (const mspid in q_config.orderers) {
+						logger.debug('%s - found orderer org: ', method, mspid);
+						config.orderers[mspid] = {};
+						config.orderers[mspid].endpoints = [];
+						for (const index in q_config.orderers[mspid].endpoint) {
+							config.orderers[mspid].endpoints.push(q_config.orderers[mspid].endpoint[index]);
+						}
+					}
+				}
+			} catch (err) {
+				logger.error('Problem with discovery config: %s', err);
 			}
-		} catch (err) {
-			logger.error('Problem with discovery config: %s', err);
 		}
 
 		return config;
@@ -1369,13 +1372,13 @@ const Channel = class {
 					const chaincode = {};
 					chaincode.name = q_chaincode.getName();
 					chaincode.version = q_chaincode.getVersion();
-					//TODO metadata ?
+					// TODO metadata ?
 					logger.debug('%s - found chaincode :%j', method, chaincode);
 					peer.chaincodes.push(chaincode);
 				}
 			}
 
-			//all done with this peer
+			// all done with this peer
 			peers.push(peer);
 		});
 
@@ -1487,15 +1490,15 @@ const Channel = class {
 	 */
 	_buildProtoChaincodeInterest(interest) {
 		const chaincode_calls = [];
-		for(const chaincode of interest.chaincodes) {
+		for (const chaincode of interest.chaincodes) {
 			const chaincode_call = new _discoveryProto.ChaincodeCall();
-			if(typeof chaincode.name === 'string') {
+			if (typeof chaincode.name === 'string') {
 				chaincode_call.setName(chaincode.name);
-				if(chaincode.collection_names) {
-					if(Array.isArray(chaincode.collection_names)) {
+				if (chaincode.collection_names) {
+					if (Array.isArray(chaincode.collection_names)) {
 						const collection_names = [];
-						chaincode.collection_names.map(name =>{
-							if(typeof name === 'string') {
+						chaincode.collection_names.map(name => {
+							if (typeof name === 'string') {
 								collection_names.push(name);
 							} else {
 								throw Error('The collection name must be a string');
@@ -1523,20 +1526,20 @@ const Channel = class {
 	 */
 	_merge_hints(endorsement_hints) {
 		const method = '_merge_hints';
-		if(!endorsement_hints) {
+		if (!endorsement_hints) {
 			logger.debug('%s - no hint return false', method);
 			return false;
 		}
 		let results = false;
 		let hints = endorsement_hints;
-		if(!Array.isArray(endorsement_hints)) {
+		if (!Array.isArray(endorsement_hints)) {
 			hints = [endorsement_hints];
 		}
-		for(const hint of hints) {
+		for (const hint of hints) {
 			const key = JSON.stringify(hint);
 			const value = this._discovery_interests.get(key);
 			logger.debug('%s - key %s', method, key);
-			if(value) {
+			if (value) {
 				logger.debug('%s - found interest exist %s', method, key);
 			} else {
 				logger.debug('%s - add new interest %s', method, key);
@@ -1571,14 +1574,14 @@ const Channel = class {
 	 */
 	_buildDiscoveryChaincodeCall(name, collection_names) {
 		const chaincode_call = {};
-		if(typeof name === 'string') {
+		if (typeof name === 'string') {
 			chaincode_call.name = name;
-			if(collection_names) {
-				if(Array.isArray(collection_names)) {
+			if (collection_names) {
+				if (Array.isArray(collection_names)) {
 					chaincode_call.collection_names = [];
-					collection_names.map(name =>{
-						if(typeof name === 'string') {
-							chaincode_call.collection_names.push(name);
+					collection_names.map(name1 => {
+						if (typeof name1 === 'string') {
+							chaincode_call.collection_names.push(name1);
 						} else {
 							throw Error('The collection name must be a string');
 						}
@@ -1652,12 +1655,9 @@ const Channel = class {
 		// defined by the caller
 		if (!request) {
 			errorMsg = 'Missing all required input request parameters';
-		}
-		// verify that we have transaction id
-		else if (!request.txId) {
+		} else if (!request.txId) { // verify that we have transaction id
 			errorMsg = 'Missing txId input parameter with the required transaction identifier';
-		}
-		else if (!request.block) {
+		} else if (!request.block) {
 			errorMsg = 'Missing block input parameter with the required genesis block';
 		}
 
@@ -1687,7 +1687,7 @@ const Channel = class {
 			_commonProto.HeaderType.ENDORSER_TRANSACTION,
 			'',
 			request.txId.getTransactionID(),
-			null, //no epoch
+			null, // no epoch
 			Constants.CSCC,
 			client_utils.buildCurrentTimestamp(),
 			this._clientContext.getClientCertHash()
@@ -1738,15 +1738,13 @@ const Channel = class {
 			const response = responses[0];
 			if (response instanceof Error) {
 				throw response;
-			}
-			else if (response.response && response.response.payload && response.response.status === 200) {
+			} else if (response.response && response.response.payload && response.response.status === 200) {
 				const block = _commonProto.Block.decode(response.response.payload);
 				const envelope = _commonProto.Envelope.decode(block.data.data[0]);
 				const payload = _commonProto.Payload.decode(envelope.payload);
 				const config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
 				return config_envelope;
-			}
-			else {
+			} else {
 				logger.error('%s - unknown response ::%s', method, response);
 				throw new Error(response);
 			}
@@ -1811,8 +1809,7 @@ const Channel = class {
 		// verify that we have the genesis block
 		if (block) {
 			logger.debug('%s - found latest block', method);
-		}
-		else {
+		} else {
 			logger.error('%s - did not find latest block', method);
 			throw new Error('Failed to retrieve latest block', method);
 		}
@@ -1843,7 +1840,7 @@ const Channel = class {
 		seekInfo.setStart(seekStart);
 		seekInfo.setStop(seekStop);
 		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
-		//logger.debug('initializeChannel - seekInfo ::' + JSON.stringify(seekInfo));
+		// logger.debug('initializeChannel - seekInfo ::' + JSON.stringify(seekInfo));
 
 		// build the header for use with the seekInfo payload
 		seekInfoHeader = client_utils.buildChannelHeader(
@@ -1894,8 +1891,8 @@ const Channel = class {
 		const write_group = config_update.write_set;
 
 		const config_items = {};
-		config_items.msps = []; //save all the MSP's found
-		config_items['anchor-peers'] = []; //save all the MSP's found
+		config_items.msps = []; // save all the MSP's found
+		config_items['anchor-peers'] = []; // save all the MSP's found
 		config_items.orderers = [];
 		config_items['kafka-brokers'] = [];
 		config_items.settings = {};
@@ -1909,7 +1906,7 @@ const Channel = class {
 		this._msp_manager.loadMSPs(config_items.msps);
 		this._anchor_peers = config_items.anchor_peers;
 
-		//TODO should we create orderers and endorsing peers
+		// TODO should we create orderers and endorsing peers
 		return config_items;
 	}
 
@@ -1925,8 +1922,8 @@ const Channel = class {
 		const group = config_envelope.config.channel_group;
 
 		const config_items = {};
-		config_items.msps = []; //save all the MSP's found
-		config_items['anchor-peers'] = []; //save all the MSP's found
+		config_items.msps = []; // save all the MSP's found
+		config_items['anchor-peers'] = []; // save all the MSP's found
 		config_items.orderers = [];
 		config_items['kafka-brokers'] = [];
 		config_items.versions = {};
@@ -1936,7 +1933,7 @@ const Channel = class {
 		this._msp_manager.loadMSPs(config_items.msps);
 		this._anchor_peers = config_items.anchor_peers;
 
-		//TODO should we create orderers and endorsing peers
+		// TODO should we create orderers and endorsing peers
 		return config_items;
 	}
 
@@ -1979,7 +1976,7 @@ const Channel = class {
 		const responses = results[0];
 		if (responses && Array.isArray(responses)) {
 			logger.debug('queryInfo - got responses=' + responses.length);
-			//will only be one response as we are only querying the primary peer
+			// will only be one response as we are only querying the primary peer
 			if (responses.length > 1) {
 				throw new Error('Too many results returned');
 			}
@@ -2031,7 +2028,7 @@ const Channel = class {
 		const responses = results[0];
 		if (responses && Array.isArray(responses)) {
 			logger.debug('queryBlockByTxID - got response', responses.length);
-			//will only be one response as we are only querying the primary peer
+			// will only be one response as we are only querying the primary peer
 			if (responses.length > 1) {
 				throw new Error('Too many results returned');
 			}
@@ -2089,7 +2086,7 @@ const Channel = class {
 		const responses = results[0];
 		logger.debug('queryBlockByHash - got response');
 		if (responses && Array.isArray(responses)) {
-			//will only be one response as we are only querying the primary peer
+			// will only be one response as we are only querying the primary peer
 			if (responses.length > 1) {
 				throw new Error('Too many results returned');
 			}
@@ -2149,7 +2146,7 @@ const Channel = class {
 		const responses = results[0];
 		logger.debug('queryBlock - got response');
 		if (responses && Array.isArray(responses)) {
-			//will only be one response as we are only querying the primary peer
+			// will only be one response as we are only querying the primary peer
 			if (responses.length > 1) {
 				throw new Error('Too many results returned');
 			}
@@ -2208,7 +2205,7 @@ const Channel = class {
 		const responses = results[0];
 		logger.debug('queryTransaction - got response');
 		if (responses && Array.isArray(responses)) {
-			//will only be one response as we are only querying the primary peer
+			// will only be one response as we are only querying the primary peer
 			if (responses.length > 1) {
 				throw new Error('Too many results returned');
 			}
@@ -2262,7 +2259,7 @@ const Channel = class {
 		const responses = results[0];
 		logger.debug('queryInstantiatedChaincodes - got response');
 		if (responses && Array.isArray(responses)) {
-			//will only be one response as we are only querying one peer
+			// will only be one response as we are only querying one peer
 			if (responses.length > 1) {
 				throw new Error('Too many results returned');
 			}
@@ -2456,9 +2453,13 @@ const Channel = class {
 	async _sendChaincodeProposal(request, command, timeout) {
 		let errorMsg = null;
 
-		//validate the incoming request
-		if (!errorMsg) errorMsg = client_utils.checkProposalRequest(request, true);
-		if (!errorMsg) errorMsg = client_utils.checkInstallRequest(request);
+		// validate the incoming request
+		if (!errorMsg) {
+			errorMsg = client_utils.checkProposalRequest(request, true);
+		}
+		if (!errorMsg) {
+			errorMsg = client_utils.checkInstallRequest(request);
+		}
 		if (errorMsg) {
 			logger.error('sendChainCodeProposal error ' + errorMsg);
 			throw new Error(errorMsg);
@@ -2474,8 +2475,9 @@ const Channel = class {
 		const args = [];
 		args.push(Buffer.from(request.fcn ? request.fcn : 'init', 'utf8'));
 
-		for (const arg of request.args)
+		for (const arg of request.args) {
 			args.push(Buffer.from(arg, 'utf8'));
+		}
 
 		const ccSpec = {
 			type: client_utils.translateCCType(request.chaincodeType),
@@ -2524,8 +2526,8 @@ const Channel = class {
 		const lcccSpec = {
 			// type: _ccProto.ChaincodeSpec.Type.GOLANG,
 			type: client_utils.translateCCType(request.chaincodeType),
-			chaincode_id: { name: Constants.LSCC },
-			input: { args: lcccSpec_args }
+			chaincode_id: {name: Constants.LSCC},
+			input: {args: lcccSpec_args}
 		};
 
 		const channelHeader = client_utils.buildChannelHeader(
@@ -2616,7 +2618,7 @@ const Channel = class {
 			const proposal = Channel._buildSignedProposal(request, this._name, this._clientContext);
 
 			let endorsement_hint = request.endorsement_hint;
-			if(!endorsement_hint && request.chaincodeId) {
+			if (!endorsement_hint && request.chaincodeId) {
 				endorsement_hint = this._buildDiscoveryInterest(request.chaincodeId);
 			}
 
@@ -2682,20 +2684,19 @@ const Channel = class {
 			logger.debug('%s - adding arg', method);
 			args.push(Buffer.from(request.args[i], 'utf8'));
 		}
-		//special case to support the bytes argument of the query by hash
+		// special case to support the bytes argument of the query by hash
 		if (request.argbytes) {
 			logger.debug('%s - adding the argument :: argbytes', method);
 			args.push(request.argbytes);
-		}
-		else {
+		} else {
 			logger.debug('%s - not adding the argument :: argbytes', method);
 		}
 
 		logger.debug('%s - chaincode ID:%s', method, request.chaincodeId);
 		const invokeSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
-			chaincode_id: { name: request.chaincodeId },
-			input: { args: args }
+			chaincode_id: {name: request.chaincodeId},
+			input: {args: args}
 		};
 
 		let signer = null;
@@ -2719,7 +2720,7 @@ const Channel = class {
 		const proposal = client_utils.buildProposal(invokeSpec, header, request.transientMap);
 		const signed_proposal = client_utils.signProposal(signer, proposal);
 
-		return { signed: signed_proposal, source: proposal };
+		return {signed: signed_proposal, source: proposal};
 	}
 
 	/**
@@ -2787,7 +2788,7 @@ const Channel = class {
 
 		const endorsements = [];
 		if (!Array.isArray(proposalResponses)) {
-			//convert to array
+			// convert to array
 			proposalResponses = [proposalResponses];
 		}
 		for (const proposalResponse of proposalResponses) {
@@ -2876,13 +2877,13 @@ const Channel = class {
 
 		const functionName = request.fcn ? request.fcn : 'invoke';
 		logger.debug('%s - adding function arg: %s', method, functionName);
-		const args = [ Buffer.from(functionName, 'utf8') ];
+		const args = [Buffer.from(functionName, 'utf8')];
 		request.args.forEach(arg => {
 			logger.debug('%s - adding arg %s', method, arg);
 			args.push(Buffer.from(arg, 'utf8'));
 		});
 
-		//special case to support the bytes argument of the query by hash
+		// special case to support the bytes argument of the query by hash
 		if (request.argbytes) {
 			logger.debug('%s - adding the argument :: argbytes', method);
 			args.push(request.argbytes);
@@ -2892,8 +2893,8 @@ const Channel = class {
 
 		const invokeSpec = {
 			type: _ccProto.ChaincodeSpec.Type.GOLANG,
-			chaincode_id: { name: request.chaincodeId },
-			input: { args }
+			chaincode_id: {name: request.chaincodeId},
+			input: {args}
 		};
 
 		// certificate, publicKey, mspId, cryptoSuite
@@ -2912,7 +2913,7 @@ const Channel = class {
 
 		const header = client_utils.buildHeader(identity, channelHeader, txId.getNonce());
 		const proposal = client_utils.buildProposal(invokeSpec, header, request.transientMap);
-		return { proposal, txId };
+		return {proposal, txId};
 	}
 
 	/**
@@ -3125,17 +3126,16 @@ const Channel = class {
 			signer: signer
 		};
 
-		const results = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
+		let results = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
 		const responses = results[0];
 		logger.debug('queryByChaincode - results received');
 		if (responses && Array.isArray(responses)) {
-			const results = [];
+			results = [];
 			for (let i = 0; i < responses.length; i++) {
 				const response = responses[i];
 				if (response instanceof Error) {
 					results.push(response);
-				}
-				else if (response.response && response.response.payload) {
+				} else if (response.response && response.response.payload) {
 					if (response.response.status === 200) {
 						results.push(response.response.payload);
 					} else {
@@ -3145,8 +3145,7 @@ const Channel = class {
 							results.push(new Error(response));
 						}
 					}
-				}
-				else {
+				} else {
 					logger.error('queryByChaincode - unknown or missing results in query ::' + results);
 					results.push(new Error(response));
 				}
@@ -3201,8 +3200,7 @@ const Channel = class {
 			if (!identity) {
 				throw new Error('Unable to find the endorser identity');
 			}
-		}
-		catch (error) {
+		} catch (error) {
 			logger.error('verifyProposalResponse - getting endorser identity failed with: ', error);
 			return false;
 		}
@@ -3221,8 +3219,7 @@ const Channel = class {
 				logger.error('Proposal signature is not valid');
 				return false;
 			}
-		}
-		catch (error) {
+		} catch (error) {
 			logger.error('verifyProposalResponse - verify failed with: ', error);
 			return false;
 		}
@@ -3246,7 +3243,7 @@ const Channel = class {
 		if (!Array.isArray(proposal_responses)) {
 			throw new Error('proposal_responses must be an array but was ' + typeof proposal_responses);
 		}
-		if (proposal_responses.length == 0) {
+		if (proposal_responses.length === 0) {
 			throw new Error('proposal_responses is empty');
 		}
 
@@ -3255,8 +3252,7 @@ const Channel = class {
 			const next_one = _getProposalResponseResults(proposal_responses[i]);
 			if (next_one.equals(first_one)) {
 				logger.debug('compareProposalResponseResults - read/writes result sets match index=%s', i);
-			}
-			else {
+			} else {
 				logger.error('compareProposalResponseResults - read/writes result sets do not match index=%s', i);
 				return false;
 			}
@@ -3276,7 +3272,7 @@ const Channel = class {
 
 		const targets = this._getTargets(target, Constants.NetworkConfig.LEDGER_QUERY_ROLE, true);
 		// only want to query one peer
-		return [ targets[0] ];
+		return [targets[0]];
 	}
 
 	/*
@@ -3334,11 +3330,15 @@ const Channel = class {
 
 		if (targets.length === 0) {
 			let target_msg = 'targets';
-			if (isTarget) target_msg = 'target';
-			if (role === Constants.NetworkConfig.EVENT_SOURCE_ROLE) target_msg = 'peer';
-			throw new Error(util.format('"%s" parameter not specified and no peers'
-				+ ' ' + 'are set on this Channel instance'
-				+ ' ' + 'or specfied for this channel in the network ', target_msg));
+			if (isTarget) {
+				target_msg = 'target';
+			}
+			if (role === Constants.NetworkConfig.EVENT_SOURCE_ROLE) {
+				target_msg = 'peer';
+			}
+			throw new Error(util.format('"%s" parameter not specified and no peers' +
+				' ' + 'are set on this Channel instance' +
+				' ' + 'or specfied for this channel in the network ', target_msg));
 		}
 
 		return targets;
@@ -3401,8 +3401,8 @@ const Channel = class {
 
 };
 
-//internal utility method to decode and get the write set
-//from a proposal response
+// internal utility method to decode and get the write set
+// from a proposal response
 function _getProposalResponseResults(proposal_response) {
 	if (!proposal_response.payload) {
 		throw new Error('Parameter must be a ProposalResponse Object');
@@ -3441,8 +3441,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	if (top) {
 		groups = group.groups;
 		versions.version = group.version;
-	}
-	else {
+	} else {
 		groups = group.value.groups;
 		versions.version = group.value.version;
 	}
@@ -3461,8 +3460,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 			// The Application group is where config settings are that we want to find
 			loadConfigGroup(config_items, versions.groups[key], groups.map[key], name + '.' + key, key, false);
 		}
-	}
-	else {
+	} else {
 		logger.debug('loadConfigGroup - %s   - no groups', name);
 	}
 	logger.debug('loadConfigGroup - %s - << groups', name);
@@ -3471,8 +3469,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	let values = null;
 	if (top) {
 		values = group.values;
-	}
-	else {
+	} else {
 		values = group.value.values;
 	}
 	if (values) {
@@ -3484,8 +3481,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 			const config_value = values.map[key];
 			loadConfigValue(config_items, versions.values[key], config_value, name, org, isOrderer);
 		}
-	}
-	else {
+	} else {
 		logger.debug('loadConfigGroup - %s   - no values', name);
 	}
 	logger.debug('loadConfigGroup - %s - << values', name);
@@ -3494,8 +3490,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 	let policies = null;
 	if (top) {
 		policies = group.policies;
-	}
-	else {
+	} else {
 		policies = group.value.policies;
 	}
 	if (policies) {
@@ -3507,8 +3502,7 @@ function loadConfigGroup(config_items, versions, group, name, org, top) {
 			const config_policy = policies.map[key];
 			loadConfigPolicy(config_items, versions.policies[key], config_policy, name, org);
 		}
-	}
-	else {
+	} else {
 		logger.debug('loadConfigGroup - %s   - no policies', name);
 	}
 	logger.debug('loadConfigGroup - %s - << policies', name);
@@ -3531,100 +3525,103 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 	versions.version = config_value.value.version;
 	try {
 		switch (config_value.key) {
-		case 'AnchorPeers': {
-			const anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
-			logger.debug('loadConfigValue - %s    - AnchorPeers :: %s', group_name, anchor_peers);
-			if (anchor_peers && anchor_peers.anchor_peers) for (const i in anchor_peers.anchor_peers) {
-				const anchor_peer = {
-					host: anchor_peers.anchor_peers[i].host,
-					port: anchor_peers.anchor_peers[i].port,
-					org: org
-				};
-				config_items['anchor-peers'].push(anchor_peer);
-				logger.debug('loadConfigValue - %s    - AnchorPeer :: %s:%s:%s', group_name, anchor_peer.host, anchor_peer.port, anchor_peer.org);
-			}
-			break;
-		}
-		case 'MSP': {
-			const msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
-			logger.debug('loadConfigValue - %s    - MSP found', group_name);
-			if (!isOrderer) config_items.msps.push(msp_value);
-			break;
-		}
-		case 'ConsensusType': {
-			const consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
-			config_items.settings['ConsensusType'] = consensus_type;
-			logger.debug('loadConfigValue - %s    - Consensus type value :: %s', group_name, consensus_type.type);
-			break;
-		}
-		case 'BatchSize': {
-			const batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
-			config_items.settings['BatchSize'] = batch_size;
-			logger.debug('loadConfigValue - %s    - BatchSize  max_message_count :: %s', group_name, batch_size.maxMessageCount);
-			logger.debug('loadConfigValue - %s    - BatchSize  absolute_max_bytes :: %s', group_name, batch_size.absoluteMaxBytes);
-			logger.debug('loadConfigValue - %s    - BatchSize  preferred_max_bytes :: %s', group_name, batch_size.preferredMaxBytes);
-			break;
-		}
-		case 'BatchTimeout': {
-			const batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
-			config_items.settings['BatchTimeout'] = batch_timeout;
-			logger.debug('loadConfigValue - %s    - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
-			break;
-		}
-		case 'ChannelRestrictions': {
-			const channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
-			config_items.settings['ChannelRestrictions'] = channel_restrictions;
-			logger.debug('loadConfigValue - %s    - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
-			break;
-		}
-		case 'ChannelCreationPolicy': {
-			const creation_policy = _policiesProto.Policy.decode(config_value.value.value);
-			loadPolicy(config_items, versions, config_value.key, creation_policy, group_name, org);
-			break;
-		}
-		case 'HashingAlgorithm': {
-			const hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
-			config_items.settings['HashingAlgorithm'] = hashing_algorithm_name;
-			logger.debug('loadConfigValue - %s    - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
-			break;
-		}
-		case 'Consortium': {
-			const consortium_algorithm_name = _commonConfigurationProto.Consortium.decode(config_value.value.value);
-			config_items.settings['Consortium'] = consortium_algorithm_name;
-			logger.debug('loadConfigValue - %s    - Consortium name value :: %s', group_name, consortium_algorithm_name.name);
-			break;
-		}
-		case 'BlockDataHashingStructure': {
-			const blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
-			config_items.settings['BlockDataHashingStructure'] = blockdata_hashing_structure;
-			logger.debug('loadConfigValue - %s    - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
-			break;
-		}
-		case 'OrdererAddresses': {
-			const orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
-			logger.debug('loadConfigValue - %s    - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
-			if (orderer_addresses && orderer_addresses.addresses) {
-				for (const address of orderer_addresses.addresses) {
-					config_items.orderers.push(address);
+			case 'AnchorPeers': {
+				const anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
+				logger.debug('loadConfigValue - %s    - AnchorPeers :: %s', group_name, anchor_peers);
+				if (anchor_peers && anchor_peers.anchor_peers) {
+					for (const i in anchor_peers.anchor_peers) {
+						const anchor_peer = {
+							host: anchor_peers.anchor_peers[i].host,
+							port: anchor_peers.anchor_peers[i].port,
+							org: org
+						};
+						config_items['anchor-peers'].push(anchor_peer);
+						logger.debug('loadConfigValue - %s    - AnchorPeer :: %s:%s:%s', group_name, anchor_peer.host, anchor_peer.port, anchor_peer.org);
+					}
 				}
+				break;
 			}
-			break;
-		}
-		case 'KafkaBrokers': {
-			const kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
-			logger.debug('loadConfigValue - %s    - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
-			if (kafka_brokers && kafka_brokers.brokers) {
-				for (const broker of kafka_brokers.brokers) {
-					config_items['kafka-brokers'].push(broker);
+			case 'MSP': {
+				const msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
+				logger.debug('loadConfigValue - %s    - MSP found', group_name);
+				if (!isOrderer) {
+					config_items.msps.push(msp_value);
 				}
+				break;
 			}
-			break;
+			case 'ConsensusType': {
+				const consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
+				config_items.settings.ConsensusType = consensus_type;
+				logger.debug('loadConfigValue - %s    - Consensus type value :: %s', group_name, consensus_type.type);
+				break;
+			}
+			case 'BatchSize': {
+				const batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
+				config_items.settings.BatchSize = batch_size;
+				logger.debug('loadConfigValue - %s    - BatchSize  max_message_count :: %s', group_name, batch_size.maxMessageCount);
+				logger.debug('loadConfigValue - %s    - BatchSize  absolute_max_bytes :: %s', group_name, batch_size.absoluteMaxBytes);
+				logger.debug('loadConfigValue - %s    - BatchSize  preferred_max_bytes :: %s', group_name, batch_size.preferredMaxBytes);
+				break;
+			}
+			case 'BatchTimeout': {
+				const batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
+				config_items.settings.BatchTimeout = batch_timeout;
+				logger.debug('loadConfigValue - %s    - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
+				break;
+			}
+			case 'ChannelRestrictions': {
+				const channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
+				config_items.settings.ChannelRestrictions = channel_restrictions;
+				logger.debug('loadConfigValue - %s    - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
+				break;
+			}
+			case 'ChannelCreationPolicy': {
+				const creation_policy = _policiesProto.Policy.decode(config_value.value.value);
+				loadPolicy(config_items, versions, config_value.key, creation_policy, group_name, org);
+				break;
+			}
+			case 'HashingAlgorithm': {
+				const hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
+				config_items.settings.HashingAlgorithm = hashing_algorithm_name;
+				logger.debug('loadConfigValue - %s    - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
+				break;
+			}
+			case 'Consortium': {
+				const consortium_algorithm_name = _commonConfigurationProto.Consortium.decode(config_value.value.value);
+				config_items.settings.Consortium = consortium_algorithm_name;
+				logger.debug('loadConfigValue - %s    - Consortium name value :: %s', group_name, consortium_algorithm_name.name);
+				break;
+			}
+			case 'BlockDataHashingStructure': {
+				const blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
+				config_items.settings.BlockDataHashingStructure = blockdata_hashing_structure;
+				logger.debug('loadConfigValue - %s    - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
+				break;
+			}
+			case 'OrdererAddresses': {
+				const orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
+				logger.debug('loadConfigValue - %s    - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
+				if (orderer_addresses && orderer_addresses.addresses) {
+					for (const address of orderer_addresses.addresses) {
+						config_items.orderers.push(address);
+					}
+				}
+				break;
+			}
+			case 'KafkaBrokers': {
+				const kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
+				logger.debug('loadConfigValue - %s    - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
+				if (kafka_brokers && kafka_brokers.brokers) {
+					for (const broker of kafka_brokers.brokers) {
+						config_items['kafka-brokers'].push(broker);
+					}
+				}
+				break;
+			}
+			default:
+				logger.debug('loadConfigValue - %s    - value: %s', group_name, config_value.value.value);
 		}
-		default:
-			logger.debug('loadConfigValue - %s    - value: %s', group_name, config_value.value.value);
-		}
-	}
-	catch (err) {
+	} catch (err) {
 		logger.debug('loadConfigValue - %s - name: %s - *** unable to parse with error :: %s', group_name, config_value.key, err);
 	}
 }
@@ -3827,7 +3824,7 @@ const ChannelPeer = class {
 	toString() {
 		return this._peer.toString();
 	}
-}; //endof ChannelPeer
+}; // endof ChannelPeer
 
 /*
  * utility method to load in a config policy
@@ -3855,8 +3852,7 @@ function loadPolicy(config_items, versions, key, policy, group_name) {
 			logger.error('loadPolicy - Unknown policy type :: %s', policy.type);
 			throw new Error('Unknown Policy type ::' + policy.type);
 		}
-	}
-	catch (err) {
+	} catch (err) {
 		logger.debug('loadPolicy - %s - name: %s - unable to parse policy %s', group_name, key, err);
 	}
 }
@@ -3866,8 +3862,8 @@ function decodeSignaturePolicy(identities) {
 	for (const i in identities) {
 		const identity = identities[i];
 		switch (identity.getPrincipalClassification()) {
-		case _mspPrincipalProto.MSPPrincipal.Classification.ROLE:
-			results.push(_mspPrincipalProto.MSPRole.decode(identity.getPrincipal()).encodeJSON());
+			case _mspPrincipalProto.MSPPrincipal.Classification.ROLE:
+				results.push(_mspPrincipalProto.MSPRole.decode(identity.getPrincipal()).encodeJSON());
 		}
 	}
 	return results;
@@ -3881,8 +3877,8 @@ function decodeCollectionsConfig(payload) {
 			type: config.payload,
 		};
 		if (config.payload === 'static_collection_config') {
-			const { static_collection_config } = config;
-			const { signature_policy } = static_collection_config.member_orgs_policy;
+			const {static_collection_config} = config;
+			const {signature_policy} = static_collection_config.member_orgs_policy;
 			const identities = decodeSignaturePolicy(signature_policy.identities);
 
 			// delete member_orgs_policy, and use policy to keep consistency with the format in collections-config.json

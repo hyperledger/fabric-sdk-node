@@ -84,11 +84,15 @@ describe('CouchDBWallet', () => {
 
 	describe('#constructor', () => {
 		it('should throw an error if path not defined', () => {
-			(() => {new CouchDBWallet();}).should.throw(/No options/);
+			(() => {
+				new CouchDBWallet();
+			}).should.throw(/No options/);
 		});
 
 		it('should throw an error if path not defined', () => {
-			(() => {new CouchDBWallet({});}).should.throw(/No url/);
+			(() => {
+				new CouchDBWallet({});
+			}).should.throw(/No url/);
 		});
 
 		it('should default to X509 wallet mixin', () => {
@@ -96,7 +100,7 @@ describe('CouchDBWallet', () => {
 		});
 
 		it('should accept a mixin parameter', () => {
-			const wallet = new CouchDBWallet({url: 'http://someurl'},'my_mixin');
+			const wallet = new CouchDBWallet({url: 'http://someurl'}, 'my_mixin');
 			sinon.assert.calledWith(FakeLogger.debug, 'in CouchDBWallet %s', 'constructor');
 			wallet.walletMixin.should.equal('my_mixin');
 		});

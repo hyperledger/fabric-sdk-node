@@ -82,8 +82,8 @@ test('\n\n** bccsp_pkcs11 tests **\n\n', (t) => {
 	// after that check, so that parameter that is being tested is valid
 	const checkError = (error, msg) => {
 		const error_msg = error.toString();
-		if (error_msg.indexOf('no suitable image found') > -1 || error_msg.indexOf('No such file or directory') > -1
-            || error_msg.includes('image not found')) {
+		if (error_msg.indexOf('no suitable image found') > -1 || error_msg.indexOf('No such file or directory') > -1 ||
+            error_msg.includes('image not found')) {
 			t.pass(msg);
 		} else {
 			t.fail(msg + ' failed with ::' + error_msg);

@@ -36,7 +36,7 @@
     "cucumber": "5.0.1",
     "del": "^3.0.0",
     "elliptic": "^6.3.2",
-    "eslint": "^5.1.0",
+    "eslint": "^5.7.0",
     "fabric-ca-client": "file:./fabric-ca-client",
     "fabric-client": "file:./fabric-client",
     "fabric-common": "file:./fabric-common",

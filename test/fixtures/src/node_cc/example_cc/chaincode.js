@@ -24,8 +24,6 @@ const logger = shim.newLogger('example_cc0');
 // to CRITICAL, ERROR, WARNING, DEBUG
 logger.level = 'info';
 
-const util = require('util');
-
 const Chaincode = class {
 	async Init(stub) {
 		logger.info('########### example_cc0 Init ###########');
@@ -106,7 +104,8 @@ const Chaincode = class {
 
 		let Aval, Bval;
 
-		if (args.length != 3) {
+
+		if (args.length !== 3) {
 			return shim.error('Incorrect number of arguments. Expecting 4, function followed by 2 names and 1 value');
 		}
 
@@ -158,7 +157,7 @@ const Chaincode = class {
 	async delete(stub, args) {
 		logger.info('########### example_cc0 delete ###########');
 
-		if (args.length != 1) {
+		if (args.length !== 1) {
 			return shim.error('Incorrect number of arguments. Expecting 1');
 		}
 
@@ -176,7 +175,7 @@ const Chaincode = class {
 	async query(stub, args) {
 		logger.info('########### example_cc0 query ###########');
 
-		if (args.length != 1) {
+		if (args.length !== 1) {
 			return shim.error('Incorrect number of arguments. Expecting name of the person to query');
 		}
 
@@ -226,11 +225,11 @@ const Chaincode = class {
 			logger.error('Failed to call chaincode ' + e);
 		}
 
-		if(results) {
+		if (results) {
 			return shim.success(Buffer.from('Success'));
 		}
 
-		return shim.error('Failed to complete the call to '+ chaincode_name);
+		return shim.error('Failed to complete the call to ' + chaincode_name);
 	}
 
 	async getTransient(stub) {

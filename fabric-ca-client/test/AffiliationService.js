@@ -31,7 +31,7 @@ describe('AffiliationService', () => {
 	describe('#constructor', () => {
 
 		it('should set the client as passed in the argument', () => {
-			const client = { name: 'bob' };
+			const client = {name: 'bob'};
 			const service = new AffiliationService(client);
 			service.client.should.deep.equal(client);
 		});
@@ -63,19 +63,19 @@ describe('AffiliationService', () => {
 
 		it('should throw if called without the parameter "req.name"', () => {
 			(() => {
-				affiliation.create({ dummy: 'object' }, {});
+				affiliation.create({dummy: 'object'}, {});
 			}).should.throw(/Missing required parameters. "req.name" is required./);
 		});
 
 		it('should throw if registrar is null', () => {
 			(() => {
-				affiliation.create({ name: 'example' });
+				affiliation.create({name: 'example'});
 			}).should.throw(/Missing required argument "registrar"/);
 		});
 
 		it('should throw if registrar is undefined', () => {
 			(() => {
-				affiliation.create({ name: 'example' }, undefined);
+				affiliation.create({name: 'example'}, undefined);
 			}).should.throw(/Missing required argument "registrar"/);
 		});
 
@@ -86,7 +86,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.create({ name: 'example' }, registrar);
+			await affiliation.create({name: 'example'}, registrar);
 			sinon.assert.calledOnce(checkRegistrarStub);
 		});
 
@@ -97,7 +97,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.create({ name: 'example' }, registrar);
+			await affiliation.create({name: 'example'}, registrar);
 
 			// should call post
 			sinon.assert.calledOnce(clientStub.post);
@@ -105,7 +105,7 @@ describe('AffiliationService', () => {
 			// should call with known
 			const callArgs = clientStub.post.getCall(0).args;
 			callArgs[0].should.equal('affiliations');
-			callArgs[1].should.deep.equal({ name: 'example', caname: undefined });
+			callArgs[1].should.deep.equal({name: 'example', caname: undefined});
 			callArgs[2].should.equal('myID');
 		});
 
@@ -116,7 +116,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.create({ name: 'example', force: true }, registrar);
+			await affiliation.create({name: 'example', force: true}, registrar);
 
 			// should call post
 			sinon.assert.calledOnce(clientStub.post);
@@ -124,7 +124,7 @@ describe('AffiliationService', () => {
 			// should call with known
 			const callArgs = clientStub.post.getCall(0).args;
 			callArgs[0].should.equal('affiliations?force=true');
-			callArgs[1].should.deep.equal({ name: 'example', caname: undefined });
+			callArgs[1].should.deep.equal({name: 'example', caname: undefined});
 			callArgs[2].should.equal('myID');
 		});
 	});
@@ -248,19 +248,19 @@ describe('AffiliationService', () => {
 
 		it('should throw if called without the parameter "req.name"', () => {
 			(() => {
-				affiliation.delete({ invalid: 'fields' });
+				affiliation.delete({invalid: 'fields'});
 			}).should.throw(/Missing required argument "req.name", or argument "req.name" is not a valid string/);
 		});
 
 		it('should throw if parameter "req.name" is not a valid string', () => {
 			(() => {
-				affiliation.delete({ name: true });
+				affiliation.delete({name: true});
 			}).should.throw(/Missing required argument "req.name", or argument "req.name" is not a valid string/);
 		});
 
 		it('should throw if missing required argument "registrar"', () => {
 			(() => {
-				affiliation.delete({ name: 'bob' });
+				affiliation.delete({name: 'bob'});
 			}).should.throw(/Missing required argument "registrar"/);
 		});
 
@@ -271,7 +271,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.delete({ name: 'bob' }, registrar);
+			await affiliation.delete({name: 'bob'}, registrar);
 			sinon.assert.calledOnce(checkRegistrarStub);
 		});
 
@@ -282,7 +282,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.delete({ name: 'bob' }, registrar);
+			await affiliation.delete({name: 'bob'}, registrar);
 
 			// should call delete
 			sinon.assert.calledOnce(clientStub.delete);
@@ -300,7 +300,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.delete({ name: 'bob', force: true }, registrar);
+			await affiliation.delete({name: 'bob', force: true}, registrar);
 
 			// should call DELETE
 			sinon.assert.calledOnce(clientStub.delete);
@@ -346,7 +346,7 @@ describe('AffiliationService', () => {
 
 		it('should throw if missing required parameter "req.name"', () => {
 			(() => {
-				affiliation.update('affiliate', { invalid: true });
+				affiliation.update('affiliate', {invalid: true});
 			}).should.throw(/Missing required argument "req.name", or argument "req.name" is not a valid string/);
 		});
 
@@ -363,7 +363,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.update('affiliate', { name: 'bob' }, registrar);
+			await affiliation.update('affiliate', {name: 'bob'}, registrar);
 			sinon.assert.calledOnce(checkRegistrarStub);
 		});
 
@@ -374,7 +374,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.update('affiliation', { name: 'bob' }, registrar);
+			await affiliation.update('affiliation', {name: 'bob'}, registrar);
 
 			// should call PUT
 			sinon.assert.calledOnce(clientStub.put);
@@ -382,7 +382,7 @@ describe('AffiliationService', () => {
 			// should call with known
 			const callArgs = clientStub.put.getCall(0).args;
 			callArgs[0].should.equal('affiliations/affiliation');
-			callArgs[1].should.deep.equal({ name: 'bob' });
+			callArgs[1].should.deep.equal({name: 'bob'});
 			callArgs[2].should.equal('myID');
 
 		});
@@ -394,7 +394,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.update('affiliation', { name: 'bob', force: true }, registrar);
+			await affiliation.update('affiliation', {name: 'bob', force: true}, registrar);
 
 			// should call PUT
 			sinon.assert.calledOnce(clientStub.put);
@@ -402,7 +402,7 @@ describe('AffiliationService', () => {
 			// should call with known
 			const callArgs = clientStub.put.getCall(0).args;
 			callArgs[0].should.equal('affiliations/affiliation?force=true');
-			callArgs[1].should.deep.equal({ name: 'bob' });
+			callArgs[1].should.deep.equal({name: 'bob'});
 			callArgs[2].should.equal('myID');
 		});
 
@@ -413,7 +413,7 @@ describe('AffiliationService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await affiliation.update('affiliation', { name: 'bob', caname: 'my-ca' }, registrar);
+			await affiliation.update('affiliation', {name: 'bob', caname: 'my-ca'}, registrar);
 
 			// should call PUT
 			sinon.assert.calledOnce(clientStub.put);
@@ -421,7 +421,7 @@ describe('AffiliationService', () => {
 			// should call with known
 			const callArgs = clientStub.put.getCall(0).args;
 			callArgs[0].should.equal('affiliations/affiliation');
-			callArgs[1].should.deep.equal({ name: 'bob', caname: 'my-ca' });
+			callArgs[1].should.deep.equal({name: 'bob', caname: 'my-ca'});
 			callArgs[2].should.equal('myID');
 		});
 	});

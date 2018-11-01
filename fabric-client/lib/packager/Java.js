@@ -36,7 +36,7 @@ class JavaPackager extends BasePackager {
 
 		const buffer = new sbuf.WritableStreamBuffer();
 		let descriptors = await this.findSource(chaincodePath);
-		if (metadataPath){
+		if (metadataPath) {
 			logger.debug('packaging metadata files from %s', metadataPath);
 
 			const metaDescriptors = await super.findMetadataDescriptors(metadataPath);

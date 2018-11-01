@@ -41,15 +41,15 @@ const MSP = class {
 	 */
 	constructor(config) {
 		logger.debug('const - start');
-		if (!config)
+		if (!config) {
 			throw new Error('Missing required parameter "config"');
-
-		if (!config.id)
+		}
+		if (!config.id) {
 			throw new Error('Parameter "config" missing required field "id"');
-
-		if (!config.cryptoSuite)
+		}
+		if (!config.cryptoSuite) {
 			throw new Error('Parameter "config" missing required field "cryptoSuite"');
-
+		}
 		if (typeof config.signer !== 'undefined') {
 			// when constructing local msp, a signer property is required and it must be an instance of SigningIdentity
 			if (!(SigningIdentity.isInstance(config.signer))) {
@@ -98,7 +98,6 @@ const MSP = class {
 	 * @returns {SigningIdentity}
 	 */
 	getSigningIdentity(identifier) {
-		if(identifier);
 		throw new Error('Not implemented yet');
 	}
 
@@ -115,24 +114,24 @@ const MSP = class {
 	 */
 	toProtobuf() {
 		const proto_msp_config = new _mspConfigProto.MSPConfig();
-		proto_msp_config.setType(0); //FABRIC
+		proto_msp_config.setType(0); // FABRIC
 		const proto_fabric_msp_config = new _mspConfigProto.FabricMSPConfig();
 		proto_fabric_msp_config.setName(this._id);
 		proto_fabric_msp_config.setRootCerts(this._rootCerts);
-		if(this._intermediateCerts) {
+		if (this._intermediateCerts) {
 			proto_fabric_msp_config.setIntermediateCerts(this._intermediateCerts);
 		}
-		if(this._admins) {
+		if (this._admins) {
 			proto_fabric_msp_config.setAdmins(this._admins);
 		}
-		if(this._organization_units) {
-			//organizational_unit_identifiers
+		if (this._organization_units) {
+			// organizational_unit_identifiers
 			proto_fabric_msp_config.setOrganizationalUnitIdentifiers(this._organization_units);
 		}
-		if(this._tls_root_certs) {
+		if (this._tls_root_certs) {
 			proto_fabric_msp_config.setTlsRootCerts(this._tls_root_certs);
 		}
-		if(this._tls_intermediate_certs) {
+		if (this._tls_intermediate_certs) {
 			proto_fabric_msp_config.getTlsIntermediateCerts(this._tls_intermediate_certs);
 		}
 		proto_msp_config.setConfig(proto_fabric_msp_config.toBuffer());
@@ -150,22 +149,21 @@ const MSP = class {
 	 */
 	deserializeIdentity(serializedIdentity, storeKey) {
 		logger.debug('importKey - start');
-		let store_key = true; //default
+		let store_key = true; // default
 		// if storing is not required and therefore a promise will not be returned
 		// then storeKey must be set to false;
-		if(typeof storeKey === 'boolean') {
+		if (typeof storeKey === 'boolean') {
 			store_key = storeKey;
 		}
 		const sid = identityProto.SerializedIdentity.decode(serializedIdentity);
 		const cert = sid.getIdBytes().toBinary();
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
-		if(!store_key) {
-			const publicKey =this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate, ephemeral: true });
+		if (!store_key) {
+			const publicKey = this.cryptoSuite.importKey(cert, {algorithm: api.CryptoAlgorithms.X509Certificate, ephemeral: true});
 			const sdk_identity = new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 			return sdk_identity;
-		}
-		else {
-			return this.cryptoSuite.importKey(cert, { algorithm: api.CryptoAlgorithms.X509Certificate })
+		} else {
+			return this.cryptoSuite.importKey(cert, {algorithm: api.CryptoAlgorithms.X509Certificate})
 				.then((publicKey) => {
 					return new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 				});
@@ -178,7 +176,6 @@ const MSP = class {
 	 * @returns {boolean}
 	 */
 	validate(id) {
-		if(id);//TODO no checking yet
 		return true;
 	}
 

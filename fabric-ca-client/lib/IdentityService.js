@@ -158,7 +158,7 @@ class IdentityService {
 		checkRegistrar(registrar);
 		const signingIdentity = registrar.getSigningIdentity();
 
-		const url = 'identities/' + enrollmentID + '?ca='+this.client._caName;
+		const url = 'identities/' + enrollmentID + '?ca=' + this.client._caName;
 		return this.client.get(url, signingIdentity);
 	}
 
@@ -217,22 +217,22 @@ class IdentityService {
 		const url = 'identities/' + enrollmentID;
 
 		const request = {};
-		if(req.type) {
+		if (req.type) {
 			request.type = req.type;
 		}
-		if(req.affiliation) {
+		if (req.affiliation) {
 			request.affiliation = req.affiliation;
 		}
 		if (Number.isInteger(req.maxEnrollments)) {
 			request.maxEnrollments = req.maxEnrollments;
 		}
-		if(req.attrs) {
+		if (req.attrs) {
 			request.attrs = req.attrs;
 		}
-		if(req.enrollmentSecret) {
+		if (req.enrollmentSecret) {
 			request.secret = req.enrollmentSecret;
 		}
-		if(req.caname) {
+		if (req.caname) {
 			request.caname = req.caname;
 		}
 

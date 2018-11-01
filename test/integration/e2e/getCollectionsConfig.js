@@ -19,8 +19,7 @@ test('getCollectionsConfig from peer', async (t) => {
 		const results = await e2eUtils.getCollectionsConfig(t, 'org1', chaincodeId, targets);
 		if (results) {
 			t.pass('Successfully query collections config');
-		}
-		else {
+		} else {
 			t.fail('Failed to query collections config');
 			t.end();
 		}
@@ -31,14 +30,14 @@ test('getCollectionsConfig from peer', async (t) => {
 		t.equal(results[0].required_peer_count, 1);
 		t.equal(results[0].maximum_peer_count, 1);
 		t.equal(results[0].block_to_live, 100);
-		t.deepEqual(results[0].policy.identities, [{ msp_identifier: 'Org1MSP', role: 'MEMBER' }, { msp_identifier: 'Org2MSP', role: 'MEMBER' }]);
+		t.deepEqual(results[0].policy.identities, [{msp_identifier: 'Org1MSP', role: 'MEMBER'}, {msp_identifier: 'Org2MSP', role: 'MEMBER'}]);
 
 		t.equal(results[1].type, 'static_collection_config');
 		t.equal(results[1].name, 'sensitiveCol');
 		t.equal(results[1].required_peer_count, 0);
 		t.equal(results[1].maximum_peer_count, 1);
 		t.equal(results[1].block_to_live, 100);
-		t.deepEqual(results[1].policy.identities, [{ msp_identifier: 'Org1MSP', role: 'MEMBER' }]);
+		t.deepEqual(results[1].policy.identities, [{msp_identifier: 'Org1MSP', role: 'MEMBER'}]);
 		t.end();
 	} catch (err) {
 		t.fail('Failed to query chaincode on the channel. ' + err.stack ? err.stack : err);

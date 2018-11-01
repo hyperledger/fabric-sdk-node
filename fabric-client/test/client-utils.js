@@ -219,7 +219,7 @@ describe('client-utils', () => {
 			channelHeaderStub.returns(channelHeaderFunctionStub);
 			revert.push(ClientUtils.__set__('_commonProto.ChannelHeader', channelHeaderStub));
 			sandbox.stub(ClientUtils, 'buildCurrentTimestamp').returns(null);
-			chaincodeIDFunctionsStub = { setName: sandbox.stub() };
+			chaincodeIDFunctionsStub = {setName: sandbox.stub()};
 			chaincodeIDStub = sandbox.stub().returns(chaincodeIDFunctionsStub);
 			revert.push(ClientUtils.__set__('_ccProto.ChaincodeID', chaincodeIDStub));
 

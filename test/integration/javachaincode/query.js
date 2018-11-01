@@ -23,26 +23,24 @@ test('\n\n***** Java-Chaincode End-to-end flow: query chaincode *****\n\n', asyn
 	const targets = [];  // empty array, meaning client will get the peers from the channel
 	try {
 		const result = await e2eUtils.queryChaincode('org2', version, targets, fcn, args, expectedResult, chaincode_id, t);
-		if(result){
+		if (result) {
 			t.pass('Successfully query java chaincode on the channel');
-		}
-		else {
+		} else {
 			t.fail('Failed to query java chaincode ');
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to query java chaincode on the channel. ' + err.stack ? err.stack : err);
 	}
 
 	try {
 		expectedResult = new Error('throwError: an error occurred');
 		const result = await e2eUtils.queryChaincode('org2', version, targets, 'throwError', args, expectedResult, chaincode_id, t);
-		if(result){
+		if (result) {
 			t.pass('Sucessfully handled error from a query on java chaincode');
-		}
-		else {
+		} else {
 			t.fail('Failed to query java chaincode ');
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to query java chaincode on the channel. ' + err.stack ? err.stack : err);
 	}
 	t.end();

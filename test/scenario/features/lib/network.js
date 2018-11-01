@@ -62,7 +62,7 @@ async function connectGateway(ccp, tls, userName, orgName, gatewayName) {
 	const opts = {
 		wallet: inMemoryWallet,
 		identity: userIdentity,
-		discovery: { enabled: false }
+		discovery: {enabled: false}
 	};
 
 	if (tls) {
@@ -142,11 +142,11 @@ async function performGatewayTransaction(gatewayName, ccName, channelName, args,
 	const contract = await retrieveContractFromGateway(gateway, channelName, ccName);
 
 	// Split args
-	const argArray = args.slice(1,-1).split(',');
+	const argArray = args.slice(1, -1).split(',');
 	const func = argArray[0];
 	const funcArgs = argArray.slice(1);
 	try {
-		if (submit){
+		if (submit) {
 			testUtil.logMsg('Submitting transaction [' + func + '] ...');
 			await contract.submitTransaction(func, ...funcArgs);
 			testUtil.logMsg('Successfully submitted transaction [' + func + ']');

@@ -107,7 +107,7 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', (t) => {
 	t.equal(key3.getPublicKey().isPrivate(), false, 'Checking getPublicKey() logic');
 	t.equal(key4.getPublicKey().toBytes().length, 220, 'Checking toBytes() output');
 
-	//test CSR generation
+	// test CSR generation
 	const pair3 = KEYUTIL.generateKeypair('EC', 'secp256r1');
 	key3 = new ecdsaKey(pair3.prvKeyObj);
 	key4 = new ecdsaKey(pair3.pubKeyObj);
@@ -119,24 +119,22 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', (t) => {
 		/A CSR cannot be generated from a public key/,
 		'Checking that a CSR cannot be generated from a public key'
 	);
-
-	//malformed subjectDN
+	let csrPEM;
+	// malformed subjectDN
 	try {
-		var csrPEM = key3.generateCSR('###############');
+		csrPEM = key3.generateCSR('###############');
 		t.fail('Should not have generated a CSR with a malformed subject');
-	}
-	catch (err) {
+	} catch (err) {
 		t.pass('Checking that CSR is not generated for a malformed subject');
 	}
 
-	//valid CSR tests
+	// valid CSR tests
 	let csrObject;
 	const subjectDN = 'CN=dummy';
 	try {
 		csrPEM = key3.generateCSR(subjectDN);
 		csrObject = asn1.csr.CSRUtil.getInfo(csrPEM);
-	}
-	catch (err) {
+	} catch (err) {
 		t.fail('Failed to generate a CSR: ' + err.stack ? err.stack : err);
 	}
 
@@ -146,14 +144,14 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', (t) => {
 	t.equal(csrObject.pubkey.obj.pubKeyHex, key3.getPublicKey()._key.pubKeyHex,
 		'Checking CSR public key matches requested public key');
 
-	//test X509 generation
+	// test X509 generation
 	let x509PEM;
 	let cert;
 	try {
 		x509PEM = key3.generateX509Certificate();
 		cert = X509.parseCert(x509PEM);
-		t.comment(JSON.stringify(cert,'',2));
-		t.equal(cert.subject.commonName,'self', 'Checking common name set to default');
+		t.comment(JSON.stringify(cert, '', 2));
+		t.equal(cert.subject.commonName, 'self', 'Checking common name set to default');
 	} catch (err) {
 		t.fail('Failed to generate an X509 Certificate: ' + err.stack ? err.stack : err);
 	}
@@ -161,8 +159,8 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', (t) => {
 	try {
 		x509PEM = key3.generateX509Certificate('testUser');
 		cert = X509.parseCert(x509PEM);
-		t.comment(JSON.stringify(cert,'',2));
-		t.equal(cert.subject.commonName,'testUser', 'Checking common name set to "testUser"');
+		t.comment(JSON.stringify(cert, '', 2));
+		t.equal(cert.subject.commonName, 'testUser', 'Checking common name set to "testUser"');
 	} catch (err) {
 		t.fail('Failed to generate an X509 Certificate: ' + err.stack ? err.stack : err);
 	}

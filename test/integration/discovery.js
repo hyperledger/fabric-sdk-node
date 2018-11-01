@@ -35,7 +35,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 		await createUpdateChannel(t, true, channel_path, channel_name, client_org1, client_org2); // create the channel
 		await createUpdateChannel(t, false, anchor_path, channel_name, client_org1, client_org2); // set the anchor peer org1
 		t.pass('***** Channel is created and anchor peer updated *****');
-	} catch(error) {
+	} catch (error) {
 		t.fail('Failed to create and update the channel');
 	}
 
@@ -56,7 +56,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 		channel_org1 = await joinChannel(t, channel_name, peer_org1, orderer_org1, client_org1);
 		channel_org2 = await joinChannel(t, channel_name, peer_org2, orderer_org2, client_org2);
 		t.pass('***** Channel has been joined *****');
-	} catch(error) {
+	} catch (error) {
 		t.fail('Failed to join ');
 	}
 
@@ -72,19 +72,19 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 		await startChaincode(t, client_org1, channel_org1, orderer_org1, [peer_org1, peer_org2], first_chaincode_name, first_chaincode_ver);
 
 		t.pass('***** First chaincode has been installed and started *****');
-	} catch(error) {
+	} catch (error) {
 		t.fail('Failed to start first chaincode ');
 	}
 
 	let q_results = {};
 	try {
 		q_results = await channel_org1.queryInstantiatedChaincodes(peer_org1, true);
-	} catch(error) {
+	} catch (error) {
 		t.fail(error.toString());
 	}
 
-	q_results.chaincodes.map((chaincode) =>{
-		t.pass('Found chaincode '+ chaincode.name);
+	q_results.chaincodes.map((chaincode) => {
+		t.pass('Found chaincode ' + chaincode.name);
 	});
 
 	// give discovery time to catchup
@@ -107,9 +107,12 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, ledger_height, 'Checking peer ledger_height');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking peer chaincode name');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking peer chaincode version');
-	if(results.endorsement_plans[0].groups.G0) {
-		if(results.endorsement_plans[0].groups.G0.peers[0].endpoint.includes('example.com:')) t.pass('Checking plan peer endpoint');
-		else t.fail('Checking plan peer endpoint');
+	if (results.endorsement_plans[0].groups.G0) {
+		if (results.endorsement_plans[0].groups.G0.peers[0].endpoint.includes('example.com:')) {
+			t.pass('Checking plan peer endpoint');
+		} else {
+			t.fail('Checking plan peer endpoint');
+		}
 		t.equals(results.endorsement_plans[0].groups.G0.peers[0].ledger_height.low, ledger_height, 'Checking plan peer ledger_height');
 		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking plan peer chaincode name');
 		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking plan peer chaincode version');
@@ -136,10 +139,13 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, ledger_height, 'Checking peer ledger_height');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking peer chaincode name');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking peer chaincode version');
-	if(results.endorsement_plans[0].groups.G0) {
+	if (results.endorsement_plans[0].groups.G0) {
 		t.equals(results.endorsement_plans[0].chaincode, first_chaincode_name, 'Checking plan id');
-		if(results.endorsement_plans[0].groups.G0.peers[0].endpoint.includes('example.com:')) t.pass('Checking plan peer endpoint');
-		else t.fail('Checking plan peer endpoint');
+		if (results.endorsement_plans[0].groups.G0.peers[0].endpoint.includes('example.com:')) {
+			t.pass('Checking plan peer endpoint');
+		} else {
+			t.fail('Checking plan peer endpoint');
+		}
 		t.equals(results.endorsement_plans[0].groups.G0.peers[0].ledger_height.low, ledger_height, 'Checking plan peer ledger_height');
 		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking plan peer chaincode name');
 		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking plan peer chaincode version');
@@ -164,9 +170,12 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	t.equals(results.peers_by_org.Org1MSP.peers[0].ledger_height.low, ledger_height, 'Checking peer ledger_height');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking peer chaincode name');
 	t.equals(results.peers_by_org.Org1MSP.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking peer chaincode version');
-	if(results.endorsement_plans[0].groups.G0) {
-		if(results.endorsement_plans[0].groups.G0.peers[0].endpoint.includes('example.com:')) t.pass('Checking plan peer endpoint');
-		else t.fail('Checking plan peer endpoint');
+	if (results.endorsement_plans[0].groups.G0) {
+		if (results.endorsement_plans[0].groups.G0.peers[0].endpoint.includes('example.com:')) {
+			t.pass('Checking plan peer endpoint');
+		} else {
+			t.fail('Checking plan peer endpoint');
+		}
 		t.equals(results.endorsement_plans[0].groups.G0.peers[0].ledger_height.low, ledger_height, 'Checking plan peer ledger_height');
 		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].name, first_chaincode_name, 'Checking plan peer chaincode name');
 		t.equals(results.endorsement_plans[0].groups.G0.peers[0].chaincodes[0].version, first_chaincode_ver, 'Checking plan peer chaincode version');
@@ -198,7 +207,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	t.equal(channel_org1.getOrderers().length, 0, 'Checking that there are no orderers assigned to the channel');
 
 	const bad_orderer = client_org1.newOrderer('grpc://somebadhost:1000');
-	channel_org1.addOrderer(bad_orderer); //will put this orderer first on the list
+	channel_org1.addOrderer(bad_orderer); // will put this orderer first on the list
 
 	// This will call the discovery under the covers and load the channel with msps, orderers, and peers
 	results = await channel_org1.initialize({asLocalhost: true, discover: true, target: peer_org1});
@@ -207,12 +216,12 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 
 	// check orgs ... actually gets names from the msps loaded
 	const orgs = channel_org1.getOrganizations();
-	for(const index in orgs) {
+	for (const index in orgs) {
 		const org = orgs[index].id;
-		if(org === 'Org1MSP' || org === 'Org2MSP' || org === 'OrdererMSP') {
+		if (org === 'Org1MSP' || org === 'Org2MSP' || org === 'OrdererMSP') {
 			t.pass('Checking call to get organizations on the channel after using the discovery service for ' + org);
 		} else {
-			t.fail('Checking call to get organizations on the channel after using the discovery service for '+ org);
+			t.fail('Checking call to get organizations on the channel after using the discovery service for ' + org);
 		}
 	}
 
@@ -247,18 +256,18 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	request = {
 		chaincodeId : 'first',
 		fcn: 'move',
-		args: ['a', 'b','100'],
+		args: ['a', 'b', '100'],
 		txId: tx_id,
 		endorsement_hint: {chaincodes: [{name: 'shouldNotFindMe'}]}
 	};
 	try {
 		results = await channel_org1.sendTransactionProposal(request);
 		t.fail('unknown chaincode should have failed to endorse');
-	} catch(error) {
-		if(error.toString().includes('No endorsement plan available')) {
+	} catch (error) {
+		if (error.toString().includes('No endorsement plan available')) {
 			t.pass('Successfully got an error when the hint was not found ' + error);
 		} else {
-			t.fail('Should have gotten a not found message ::'+error);
+			t.fail('Should have gotten a not found message ::' + error);
 		}
 	}
 
@@ -270,47 +279,47 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 		await startChaincode(t, client_org1, channel_org1, orderer_org1, [peer_org1, peer_org2], second_chaincode_name, second_chaincode_ver);
 
 		t.pass('***** Second chaincode has been installed and started *****');
-	} catch(error) {
+	} catch (error) {
 		t.fail('Failed to start second chaincode ');
 	}
 
 	const cc2cc_request = {
 		chaincodeId : first_chaincode_name,
 		fcn: 'call',
-		args: [second_chaincode_name, 'move', 'a', 'b','100'],
+		args: [second_chaincode_name, 'move', 'a', 'b', '100'],
 		txId: client_org1.newTransactionID(true),
 		endorsement_hint: {chaincodes: [{name: first_chaincode_name}, {name: second_chaincode_name}]}
 	};
 	try {
-		const results = await channel_org1.sendTransactionProposal(cc2cc_request);
-		if(testUtil.checkGoodResults(t, results)) {
+		results = await channel_org1.sendTransactionProposal(cc2cc_request);
+		if (testUtil.checkGoodResults(t, results)) {
 			t.pass('Successfully endorsed chaincode to chaincode');
 		} else {
 			t.fail('Failed to endorse using a chaincode to chaincode call');
 		}
-	} catch(error) {
-		t.fail('Failed to have received a good chaincode to chaincode endorsement ::'+error);
+	} catch (error) {
+		t.fail('Failed to have received a good chaincode to chaincode endorsement ::' + error);
 	}
 
 	const collections_request = {
 		chaincodeId : first_chaincode_name,
 		fcn: 'call',
-		args: [second_chaincode_name, 'move', 'a', 'b','100'],
+		args: [second_chaincode_name, 'move', 'a', 'b', '100'],
 		txId: client_org1.newTransactionID(true),
-		endorsement_hint: { chaincodes: [
+		endorsement_hint: {chaincodes: [
 			{name: first_chaincode_name, collection_names: ['detailCol', 'sensitiveCol']},
 			{name: second_chaincode_name, collection_names: ['detailCol', 'sensitiveCol']}
 		]}
 	};
 	try {
-		const results = await channel_org1.sendTransactionProposal(collections_request);
-		if(testUtil.checkGoodResults(t, results)) {
+		results = await channel_org1.sendTransactionProposal(collections_request);
+		if (testUtil.checkGoodResults(t, results)) {
 			t.pass('Successfully endorsed chaincode to chaincode with collections');
 		} else {
 			t.fail('Failed to endorse using a chaincode to chaincode call with collections');
 		}
-	} catch(error) {
-		t.fail('Failed to have received a good chaincode to chaincode endorsement with collections::'+error);
+	} catch (error) {
+		t.fail('Failed to have received a good chaincode to chaincode endorsement with collections::' + error);
 	}
 
 	t.pass('End discovery testing');
@@ -318,10 +327,10 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 });
 
 function testLayoutQuantities(t, layouts) {
-	for(const layout of layouts) {
-		if(layout['G0']) {
+	for (const layout of layouts) {
+		if (layout.G0) {
 			t.equals(layout.G0, 1, 'Checking layout quantities_by_group');
-		} else if(layout['G1']) {
+		} else if (layout.G1) {
 			t.equals(layout.G1, 1, 'Checking layout quantities_by_group');
 		} else {
 			t.fail('Layout quantities_by_group not found');
@@ -344,12 +353,12 @@ async function installChaincode(t, client, channel, peer, chaincode_id, chaincod
 		};
 
 		const install_results = await client.installChaincode(request);
-		if(install_results && !(install_results[0] instanceof Error)) {
+		if (install_results && !(install_results[0] instanceof Error)) {
 			t.pass('Able to install chaincode ' + chaincode_id + ' on the peer');
 		} else {
 			t.failed('Chaincode not installed');
 		}
-	} catch(error) {
+	} catch (error) {
 		logger.error(error);
 		t.fail('Failed to install');
 		throw Error('Failed install');
@@ -363,13 +372,13 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 
 		const policy = {
 			identities: [
-				{ role: { name: 'member', mspId: 'Org1MSP' }},
-				{ role: { name: 'member', mspId: 'Org2MSP' }}
+				{role: {name: 'member', mspId: 'Org1MSP'}},
+				{role: {name: 'member', mspId: 'Org2MSP'}}
 			],
 			policy: {
 				'1-of': [
-					{ 'signed-by': 0},
-					{ 'signed-by': 1}
+					{'signed-by': 0},
+					{'signed-by': 1}
 				]
 			}
 		};
@@ -406,8 +415,8 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 			]
 		};
 
-		const proposal_results = await channel.sendInstantiateProposal(proposal_request, 10*60*1000);
-		if(proposal_results[0][0].response.status === 200) {
+		const proposal_results = await channel.sendInstantiateProposal(proposal_request, 10 * 60 * 1000);
+		if (proposal_results[0][0].response.status === 200) {
 			const commit_request = {
 				orderer: orderer,
 				proposalResponses: proposal_results[0],
@@ -415,14 +424,14 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 				txId : tx_id
 			};
 			const commit_results = await channel.sendTransaction(commit_request);
-			if(commit_results && commit_results.status === 'SUCCESS') {
-				await testUtil.sleep(5000); //let the peer catch up
+			if (commit_results && commit_results.status === 'SUCCESS') {
+				await testUtil.sleep(5000); // let the peer catch up
 				t.pass('Chaincode commited and running');
 			} else {
 				t.fail('Chaincode is not running');
 			}
 		}
-	} catch(error) {
+	} catch (error) {
 		logger.error(error);
 	}
 }
@@ -460,22 +469,22 @@ async function createUpdateChannel(t, create, file, channel_name, client_org1, c
 	try {
 		let results = null;
 		let text = 'create';
-		if(create) {
+		if (create) {
 			results = await client_org1.createChannel(request);
 		} else {
 			text = 'update';
 			results = await client_org1.updateChannel(request);
 		}
-		if(results.status === 'SUCCESS') {
+		if (results.status === 'SUCCESS') {
 			t.pass('Successfully ' + text + ' the channel.');
 			await testUtil.sleep(5000);
 		} else {
 			t.fail('Failed to create the channel. ' + results.status + ' :: ' + results.info);
 			throw new Error('Failed to ' + text + ' the channel. ');
 		}
-	} catch(error) {
+	} catch (error) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
-		t.fail('Failed to create/update channel :'+ error);
+		t.fail('Failed to create/update channel :' + error);
 		throw Error('Failed to create/update the channel');
 	}
 }
@@ -503,7 +512,7 @@ async function joinChannel(t, channel_name, peer, orderer, client) {
 		};
 
 		const join_results = await channel.joinChannel(request, 30000);
-		if(join_results && join_results[0] && join_results[0].response && join_results[0].response.status == 200) {
+		if (join_results && join_results[0] && join_results[0].response && join_results[0].response.status === 200) {
 			t.pass('Successfully joined channnel on org');
 		} else {
 			t.fail('Failed to join channel on org');
@@ -511,8 +520,8 @@ async function joinChannel(t, channel_name, peer, orderer, client) {
 		}
 
 		return channel;
-	} catch(error) {
-		logger.error('Not able to join '+ error);
+	} catch (error) {
+		logger.error('Not able to join ' + error);
 		t.fail('Failed to join ');
 		throw Error('Failed to join');
 	}

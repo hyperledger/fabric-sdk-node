@@ -12,20 +12,27 @@ const api = require('../../api.js');
 const PKCS11_AES_KEY = class extends api.Key {
 
 	constructor(attr, size) {
-		if (typeof attr === 'undefined' || attr === null)
+		if (typeof attr === 'undefined' || attr === null) {
 			throw new Error('constructor: attr parameter must be specified');
-		if (typeof attr.ski === 'undefined' || attr.ski === null)
+		}
+		if (typeof attr.ski === 'undefined' || attr.ski === null) {
 			throw new Error('constructor: invalid key SKI');
-		if (!(attr.ski instanceof Buffer))
+		}
+		if (!(attr.ski instanceof Buffer)) {
 			throw new Error('constructor: key SKI must be Buffer type');
-		if (typeof attr.key === 'undefined' || attr.key === null)
+		}
+		if (typeof attr.key === 'undefined' || attr.key === null) {
 			throw new Error('constructor: invalid key handle');
-		if (!(attr.key instanceof Buffer))
+		}
+		if (!(attr.key instanceof Buffer)) {
 			throw new Error('constructor: key handle must be Buffer type');
-		if (size === 'undefined')
+		}
+		if (size === 'undefined') {
 			throw new Error('constructor: size parameter must be specified');
-		if (size != 256)
+		}
+		if (size !== 256) {
 			throw new Error('constructor: only 256 bits key size is supported');
+		}
 
 		super();
 

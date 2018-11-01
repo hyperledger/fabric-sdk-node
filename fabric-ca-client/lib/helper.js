@@ -8,7 +8,7 @@
 'use strict';
 
 const jsrsasign = require('jsrsasign');
-const { X509, ASN1HEX } = jsrsasign;
+const {X509, ASN1HEX} = jsrsasign;
 const urlParser = require('url');
 
 function checkRegistrar(registrar) {
@@ -39,10 +39,11 @@ function getSubjectCommonName(pem) {
 	const d = ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0, 5]);
 	const subject = X509.hex2dn(d); // format: '/C=US/ST=California/L=San Francisco/CN=Admin@org1.example.com/emailAddress=admin@org1.example.com'
 	const m = subject.match(/CN=.+[^/]/);
-	if (!m)
+	if (!m) {
 		throw new Error('Certificate PEM does not seem to contain a valid subject with common name "CN"');
-	else
+	} else {
 		return m[0].substring(3);
+	}
 }
 
 /**

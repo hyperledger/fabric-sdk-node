@@ -27,7 +27,7 @@ const Config = class {
 		nconf.argv();
 		nconf.env();
 		nconf.use('mapenv', {type:'memory'});
-		this.mapSettings(nconf.stores['mapenv'], process.env);
+		this.mapSettings(nconf.stores.mapenv, process.env);
 		this._fileStores = [];
 		// reference to configuration settings
 		this._config = nconf;
@@ -38,11 +38,11 @@ const Config = class {
 	//	 names to configuration (lower case and dashes) style names
 	//
 	mapSettings(store, settings) {
-		for(let key in settings) {
+		for (let key in settings) {
 			const value = settings[key];
 			key = key.toLowerCase();
 			key = key.replace(/_/g, '-');
-			store.set(key,value);
+			store.set(key, value);
 		}
 	}
 
@@ -53,11 +53,11 @@ const Config = class {
 	//
 	reorderFileStores(path, bottom) {
 		// first remove all the file stores
-		for(const x in this._fileStores) {
+		for (const x in this._fileStores) {
 			this._config.remove(this._fileStores[x]);
 		}
 
-		if(bottom) {
+		if (bottom) {
 			// add to the bottom of the list
 			this._fileStores.push(path);
 		} else {
@@ -66,7 +66,7 @@ const Config = class {
 		}
 
 		// now load all the file stores
-		for(const x in this._fileStores) {
+		for (const x in this._fileStores) {
 			const name = this._fileStores[x];
 			this._config.file(name, name);
 		}
@@ -76,7 +76,7 @@ const Config = class {
 	//    Add an additional file
 	//
 	file(path) {
-		if(typeof path !== 'string') {
+		if (typeof path !== 'string') {
 			throw new Error('The "path" parameter must be a string');
 		}
 		// just reuse the path name as the store name...will be unique
@@ -92,12 +92,11 @@ const Config = class {
 
 		try {
 			return_value = this._config.get(name);
-		}
-		catch(err) {
+		} catch (err) {
 			return_value = default_value;
 		}
 
-		if(return_value === null || return_value === undefined) {
+		if (return_value === null || return_value === undefined) {
 			return_value = default_value;
 		}
 
@@ -108,7 +107,7 @@ const Config = class {
 	//	  Set a value into the 'memory' store of config settings. This will override all other settings
 	//
 	set(name, value) {
-		this._config.set(name,value);
+		this._config.set(name, value);
 	}
 
 };

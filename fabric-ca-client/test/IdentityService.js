@@ -27,7 +27,7 @@ describe('IdentityService', () => {
 	describe('#constructor', () => {
 
 		it('should set the client as passed in the argument', () => {
-			const client = { name: 'bob' };
+			const client = {name: 'bob'};
 			const service = new IdentityService(client);
 			service.client.should.deep.equal(client);
 		});
@@ -37,7 +37,7 @@ describe('IdentityService', () => {
 
 		let identity;
 		let checkRegistrarStub;
-		const success = { result: { secret: 'mySecret' } };
+		const success = {result: {secret: 'mySecret'}};
 
 		beforeEach(() => {
 			const mockClient = sinon.createStubInstance(FabricCAClient);
@@ -55,44 +55,44 @@ describe('IdentityService', () => {
 
 		it('should throw if if missing req.enrollmentID within request argument', () => {
 			(() => {
-				identity.create({ enrollmentID: 'dummy' });
+				identity.create({enrollmentID: 'dummy'});
 			}).should.throw(/Missing required parameters. "req.enrollmentID", "req.affiliation" are all required/);
 		});
 
 		it('should throw if if missing req.affiliation within request argument', () => {
 			(() => {
-				identity.create({ affiliation: 'dummy' });
+				identity.create({affiliation: 'dummy'});
 			}).should.throw(/Missing required parameters. "req.enrollmentID", "req.affiliation" are all required/);
 		});
 
 		it('should throw if missing required argument "registrar"', () => {
 			(() => {
-				identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' });
+				identity.create({enrollmentID: 'dummy', affiliation: 'dummy'});
 			}).should.throw(/Missing required argument "registrar"/);
 		});
 
 		it('should throw if required argument "registrar" is an empty object', () => {
 			(() => {
-				identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' }, {});
+				identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, {});
 			}).should.throw(/Argument "registrar" must be an instance of the class "User"/);
 		});
 
 		it('should throw if required argument "registrar" is null', () => {
 			(() => {
-				identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' }, null);
+				identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, null);
 			}).should.throw(/Missing required argument "registrar"/);
 		});
 
 		it('should throw if required argument "registrar" is undefined', () => {
 			(() => {
-				identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' }, undefined);
+				identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, undefined);
 			}).should.throw(/Missing required argument "registrar"/);
 		});
 
 		it('should throw if unable to get signingIdentity from registrar', () => {
 			(() => {
 				const registrar = new User('bob');
-				identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' }, registrar);
+				identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, registrar);
 			}).should.throw(/Can not get signingIdentity from registrar/);
 		});
 
@@ -104,7 +104,7 @@ describe('IdentityService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' }, registrar);
+			await identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, registrar);
 			sinon.assert.calledOnce(checkRegistrarStub);
 		});
 
@@ -116,7 +116,7 @@ describe('IdentityService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' }, registrar);
+			await identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, registrar);
 
 			// should call post
 			sinon.assert.calledOnce(clientStub.post);
@@ -135,7 +135,7 @@ describe('IdentityService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' }, registrar);
+			await identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, registrar);
 
 			// should call post
 			sinon.assert.calledOnce(clientStub.post);
@@ -153,7 +153,7 @@ describe('IdentityService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			await identity.create({ enrollmentID: 'dummy', affiliation: 'dummy', maxEnrollments: 23 }, registrar);
+			await identity.create({enrollmentID: 'dummy', affiliation: 'dummy', maxEnrollments: 23}, registrar);
 
 			// should call post
 			sinon.assert.calledOnce(clientStub.post);
@@ -171,7 +171,7 @@ describe('IdentityService', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			const result = await identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' }, registrar);
+			const result = await identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, registrar);
 			result.should.equal('mySecret');
 		});
 
@@ -183,7 +183,7 @@ describe('IdentityService', () => {
 
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
-			await identity.create({ enrollmentID: 'dummy', affiliation: 'dummy' }, registrar).should.be.rejectedWith('forced error');
+			await identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, registrar).should.be.rejectedWith('forced error');
 		});
 	});
 

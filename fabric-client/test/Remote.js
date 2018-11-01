@@ -136,7 +136,7 @@ describe('Remote', () => {
 		});
 
 		it('should create a valid remote instance when given all v10 parameters', () => {
-			const opts = { [MAX_RECEIVE_V10]: 1, [MAX_SEND_V10]: 2, 'request-timeout': 3, 'grpc-wait-for-ready-timeout': 4};
+			const opts = {[MAX_RECEIVE_V10]: 1, [MAX_SEND_V10]: 2, 'request-timeout': 3, 'grpc-wait-for-ready-timeout': 4};
 			FakeUtils.checkIntegerConfig.withArgs(opts, 'request-timeout').returns(true);
 			FakeUtils.checkIntegerConfig.withArgs(opts, 'grpc-wait-for-ready-timeout').returns(true);
 			const remote = new Remote('grpc://someurl', opts);
@@ -147,7 +147,7 @@ describe('Remote', () => {
 		});
 
 		it('should create a valid remote instance when given all non-v10 parameters', () => {
-			const opts = { [MAX_RECEIVE]: 1, [MAX_SEND]: 2, 'request-timeout': 3, 'grpc-wait-for-ready-timeout': 4};
+			const opts = {[MAX_RECEIVE]: 1, [MAX_SEND]: 2, 'request-timeout': 3, 'grpc-wait-for-ready-timeout': 4};
 			FakeUtils.checkIntegerConfig.withArgs(opts, 'request-timeout').returns(true);
 			FakeUtils.checkIntegerConfig.withArgs(opts, 'grpc-wait-for-ready-timeout').returns(true);
 			const remote = new Remote('grpc://someurl', opts);
@@ -381,14 +381,16 @@ describe('Endpoint', () => {
 			}).should.throw(Error, 'Invalid protocol: http.  URLs must begin with grpc:// or grpcs:/');
 		});
 
-		it('should throw an error if the pem certificate is not a string when using grpcs', () => {			FakeUrlParser.parse.withArgs('grpc://someurl', true).returns({protocol: 'grpc:', host: 'host'});
+		it('should throw an error if the pem certificate is not a string when using grpcs', () => {
+			FakeUrlParser.parse.withArgs('grpc://someurl', true).returns({protocol: 'grpc:', host: 'host'});
 			FakeUrlParser.parse.withArgs('grpcs://someurl', true).returns({protocol: 'grpcs:', host: 'host'});
 			(() => {
 				new Endpoint('grpcs://someurl');
 			}).should.throw('PEM encoded certificate is required.');
 		});
 
-		it('should throw an error client key and client certificate aren\'t strings', () => {			FakeUrlParser.parse.withArgs('grpc://someurl', true).returns({protocol: 'grpc:', host: 'host'});
+		it('should throw an error client key and client certificate aren\'t strings', () => {
+			FakeUrlParser.parse.withArgs('grpc://someurl', true).returns({protocol: 'grpc:', host: 'host'});
 			FakeUrlParser.parse.withArgs('grpcs://someurl', true).returns({protocol: 'grpcs:', host: 'host'});
 			(() => {
 				new Endpoint('grpcs://someurl', 'pem', {}, {});

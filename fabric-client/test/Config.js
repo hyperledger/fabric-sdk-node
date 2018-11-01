@@ -44,7 +44,7 @@ describe('Config', () => {
 			sandbox.stub(nconf, 'use');
 			sandbox.stub(nconf, 'argv');
 			sandbox.stub(nconf, 'env');
-			nconf.stores['mapenv'] = 'mapenv';
+			nconf.stores.mapenv = 'mapenv';
 			mapSettingsStub = sandbox.stub();
 			revert.push(ConfigRewire.__set__('Config.prototype.mapSettings', mapSettingsStub));
 			revert.push(ConfigRewire.__set__('nconf', nconf));
@@ -53,7 +53,7 @@ describe('Config', () => {
 
 		it('should call nconf, Config.mapSettings and set the correct properties', () => {
 			const config = new ConfigRewire();
-			sinon.assert.calledWith(mapSettingsStub, nconf.stores['mapenv'], 'env');
+			sinon.assert.calledWith(mapSettingsStub, nconf.stores.mapenv, 'env');
 			sinon.assert.calledWith(nconf.use, 'memory');
 			sinon.assert.called(nconf.argv);
 			sinon.assert.called(nconf.env);
@@ -98,11 +98,11 @@ describe('Config', () => {
 			config._fileStores = fileStoresStub;
 			config._config = configStub;
 			config.reorderFileStores('path', false);
-			sinon.assert.calledWith(configStub.remove, fileStoresStub['push']);
-			sinon.assert.calledWith(configStub.remove, fileStoresStub['unshift']);
+			sinon.assert.calledWith(configStub.remove, fileStoresStub.push);
+			sinon.assert.calledWith(configStub.remove, fileStoresStub.unshift);
 			sinon.assert.calledWith(fileStoresStub.unshift, 'path');
-			sinon.assert.calledWith(configStub.file, fileStoresStub['push'], fileStoresStub['push']);
-			sinon.assert.calledWith(configStub.file, fileStoresStub['unshift'], fileStoresStub['unshift']);
+			sinon.assert.calledWith(configStub.file, fileStoresStub.push, fileStoresStub.push);
+			sinon.assert.calledWith(configStub.file, fileStoresStub.unshift, fileStoresStub.unshift);
 		});
 
 		it('should re-add file store items where bottom is true', () => {
@@ -110,11 +110,11 @@ describe('Config', () => {
 			config._fileStores = fileStoresStub;
 			config._config = configStub;
 			config.reorderFileStores('path', true);
-			sinon.assert.calledWith(configStub.remove, fileStoresStub['push']);
-			sinon.assert.calledWith(configStub.remove, fileStoresStub['unshift']);
+			sinon.assert.calledWith(configStub.remove, fileStoresStub.push);
+			sinon.assert.calledWith(configStub.remove, fileStoresStub.unshift);
 			sinon.assert.calledWith(fileStoresStub.push, 'path');
-			sinon.assert.calledWith(configStub.file, fileStoresStub['push'], fileStoresStub['push']);
-			sinon.assert.calledWith(configStub.file, fileStoresStub['unshift'], fileStoresStub['unshift']);
+			sinon.assert.calledWith(configStub.file, fileStoresStub.push, fileStoresStub.push);
+			sinon.assert.calledWith(configStub.file, fileStoresStub.unshift, fileStoresStub.unshift);
 		});
 	});
 

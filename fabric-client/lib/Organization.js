@@ -134,9 +134,13 @@ const Organization = class {
 	 */
 	toString() {
 		let peers = '';
-		this._peers.forEach((peer) => {peers = peers.length ? peers + ',' + peer.toString() : peers + peer.toString();});
+		this._peers.forEach((peer) => {
+			peers = peers.length ? peers + ',' + peer.toString() : peers + peer.toString();
+		});
 		let cas = '';
-		this._certificateAuthorities.forEach((ca) => {cas = cas.length ? cas + ',' + ca.toString() : cas + ca.toString();});
+		this._certificateAuthorities.forEach((ca) => {
+			cas = cas.length ? cas + ',' + ca.toString() : cas + ca.toString();
+		});
 		return 'Organization : {' +
 			'name : ' +  this._name +
 			', mspid : ' +  this._mspid +

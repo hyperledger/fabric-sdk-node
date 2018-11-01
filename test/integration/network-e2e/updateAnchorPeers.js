@@ -28,14 +28,14 @@ test('\n\n***** End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
 	try {
 		await updateChannel(t, anchorPeerTXFileOrg1, channel_name, client_org1, client_org2); // set the anchor peer org1
 		t.pass('***** Channel is created and anchor peer updated *****');
-	} catch(error) {
-		console.log(error);
+	} catch (error) {
+		console.log(error); // eslint-disable-line
 		t.fail('Failed to create and update the channel');
 	}
 
 });
 
-async function updateChannel(t, file, channel_name, client_org1, client_org2) {
+async function updateChannel(t, file, channelName, client_org1, client_org2) {
 	// get the config envelope created by the configtx tool
 	const envelope_bytes = fs.readFileSync(file);
 	// Have the sdk get the config update object from the envelope.
@@ -60,23 +60,23 @@ async function updateChannel(t, file, channel_name, client_org1, client_org2) {
 	const request = {
 		config: config,
 		signatures : signatures,
-		name : channel_name,
+		name : channelName,
 		orderer : 'orderer.example.com',
 		txId  : tx_id
 	};
 
 	try {
 		const results = await client_org1.updateChannel(request);
-		if(results.status === 'SUCCESS') {
+		if (results.status === 'SUCCESS') {
 			t.pass('Successfully updated the channel.');
 			await testUtil.sleep(5000);
 		} else {
 			t.fail('Failed to create the channel. ' + results.status + ' :: ' + results.info);
 			throw new Error('Failed to update the channel. ');
 		}
-	} catch(error) {
+	} catch (error) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
-		t.fail('Failed to update channel :'+ error);
+		t.fail('Failed to update channel :' + error);
 		throw Error('Failed to update the channel');
 	}
 }
