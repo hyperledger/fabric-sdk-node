@@ -642,7 +642,10 @@ test('\n\n***** Network End-to-end flow: invoke transaction with transient data 
 		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
-			clientTlsIdentity: 'tlsId'
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				enabled: false
+			}
 		});
 
 		const transaction = contract.createTransaction('getTransient');

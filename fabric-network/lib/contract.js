@@ -59,31 +59,58 @@ class Contract {
 		this.namespace = namespace;
 	}
 
+	/**
+	 * Get the parent network on which this contract exists.
+	 * @private
+	 * @returns {Network} A network.
+	 */
 	getNetwork() {
 		return this.network;
 	}
 
+	/**
+	 * Create a new transaction ID.
+	 * @private
+	 * @returns {TransactionID} Transaction ID.
+	 */
 	createTransactionID() {
 		return this.gateway.getClient().newTransactionID();
 	}
 
+	/**
+	 * Get the chaincode ID of this contract.
+	 * @private
+	 * @returns {String} Chaincode ID.
+	 */
 	getChaincodeId() {
 		return this.chaincodeId;
 	}
 
+	/**
+	 * Get event handler options specified by the user when creating the gateway.
+	 * @private
+	 * @returns {Object} Event handler options.
+	 */
 	getEventHandlerOptions() {
 		return this.gateway.getOptions().eventHandlerOptions;
 	}
 
+	/**
+	 * Get the query handler for this contract. Used by transaction evaluate.
+	 * @private
+	 * @returns {QueryHandler} A query handler.
+	 */
 	getQueryHandler() {
 		return this.queryHandler;
 	}
 
 	/**
-	 * Submit a transaction to the ledger.  The transaction function <code>transactionName</code>
-	 * will be evaluated on the endorsing peers and then submitted to the ordering service
-	 * for committing to the ledger.
-     * @param {string} name Transaction function name
+	 * Create an object representing the invocation of a specific transaction
+	 * function implemented by this contract, and provides more control over
+	 * the transaction invocation. A new transaction object <strong>must</strong>
+	 * be created for each transaction invocation.
+     * @param {String} name Transaction function name.
+	 * @returns {Transaction} A transaction object.
      */
 	createTransaction(name) {
 		verifyTransactionName(name);
@@ -107,6 +134,7 @@ class Contract {
 	 * Submit a transaction to the ledger. The transaction function <code>name</code>
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
+	 * This function is equivalent to calling <code>createTransaction(name).submit()</code>.
 	 * @async
      * @param {string} name Transaction function name.
 	 * @param {...string} [args] Transaction function arguments.
@@ -118,10 +146,11 @@ class Contract {
 
 	/**
 	 * Evaluate a transaction function and return its results.
-	 * The transaction function <code>transactionName</code>
+	 * The transaction function <code>name</code>
 	 * will be evaluated on the endorsing peers but the responses will not be sent to
 	 * the ordering service and hence will not be committed to the ledger.
 	 * This is used for querying the world state.
+	 * This function is equivalent to calling <code>createTransaction(name).evaluate()</code>.
 	 * @async
      * @param {string} name Transaction function name.
      * @param {...string} [args] Transaction function arguments.
