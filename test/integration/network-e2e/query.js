@@ -71,7 +71,10 @@ test('\n\n***** Network End-to-end flow: evaluate transaction to get information
 		await gateway.connect(ccpObject, {
 			wallet: wallet,
 			identity: identityLabel,
-			clientTlsIdentity: tlsLabel
+			clientTlsIdentity: tlsLabel,
+			discovery: {
+				enabled: false
+			}
 		});
 		t.pass('Connected to the gateway');
 
@@ -126,7 +129,10 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with transient dat
 		await gateway.connect(ccpObject, {
 			wallet: wallet,
 			identity: identityLabel,
-			clientTlsIdentity: tlsLabel
+			clientTlsIdentity: tlsLabel,
+			discovery: {
+				enabled: false
+			}
 		});
 		t.pass('Connected to the gateway');
 

@@ -9,6 +9,12 @@
 const logger = require('fabric-network/lib/logger').getLogger('Transaction');
 const util = require('util');
 
+const noOpTxEventHandler = {
+	startListening: async () => {},
+	waitForEvents: async () => {},
+	cancelListening: () => {}
+};
+
 function getResponsePayload(peerResponse) {
 	const payload = peerResponse.response.payload;
 	return (payload && payload.length > 0) ? payload : null;
@@ -31,38 +37,59 @@ function verifyArguments(args) {
 	}
 }
 
+/**
+ * Represents a specific invocation of a transaction function, and provides
+ * felxibility over how that transaction is invoked. Instances of this class
+ * are stateful. A new instance <strong>must</strong> be created for each
+ * transaction invocation.
+ * @class
+ */
 class Transaction {
 	/**
 	 * Constructor.
 	 * @param {Contract} contract Contract to which this transaction belongs.
-	 * @param {String} name Transaction name.
+	 * @param {String} name Fully qualified transaction name.
 	 */
 	constructor(contract, name) {
 		this._contract = contract;
 		this._name = name;
 		this._transactionId = contract.createTransactionID();
 		this._transientMap = null;
-		this._createTxEventHandler = () => {
-			return {
-				startListening: async () => {},
-				waitForEvents: async () => {},
-				cancelListening: () => {}
-			};
-		};
+		this._createTxEventHandler = (() => noOpTxEventHandler);
 	}
 
+	/**
+	 * Get the fully qualified name of the transaction function.
+	 * @returns {String} Transaction name.
+	 */
 	getName() {
 		return this._name;
 	}
 
+	/**
+	 * Get the ID that will be used for this transaction invocation.
+	 * @returns {TransactionID} Transaction ID.
+	 */
 	getTransactionID() {
 		return this._transactionId;
 	}
 
+	/**
+	 * Set the event handler strategy to be used for this transaction invocation
+	 * instead of the default handler configured in the gateway options.
+	 * @param {Function} factoryFunction Event handler factory function.
+	 */
 	setEventHandlerStrategy(factoryFunction) {
 		this._createTxEventHandler = factoryFunction;
 	}
 
+	/**
+	 * Set transient data that will be passed to the transaction function
+	 * but will not be stored on the ledger. This can be used to pass
+	 * private data to a transaction function.
+	 * @param {Object} transientMap Object with String property names and
+	 * Buffer property values.
+	 */
 	setTransient(transientMap) {
 		this._transientMap = transientMap;
 	}
@@ -72,7 +99,7 @@ class Transaction {
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
 	 * @async
-     * @param {...string} [args] Transaction function arguments.
+     * @param {...String} [args] Transaction function arguments.
      * @returns {Buffer} Payload response from the transaction function.
      */
 	async submit(...args) {
@@ -174,7 +201,7 @@ class Transaction {
 	 * not be committed to the ledger.
 	 * This is used for querying the world state.
 	 * @async
-     * @param {...string} [args] Transaction function arguments.
+     * @param {...String} [args] Transaction function arguments.
      * @returns {Buffer} Payload response from the transaction function.
      */
 	async evaluate(...args) {
