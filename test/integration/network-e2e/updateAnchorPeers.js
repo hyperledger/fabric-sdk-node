@@ -18,7 +18,7 @@ const channel_name = testUtil.NETWORK_END2END.channel;
 const anchorPeerTXFileOrg1 = path.join(__dirname, '../../fixtures/channel/mychannel-org1anchor.tx');
 
 
-test('\n\n***** End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
+test('\n\n***** Network End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
 	// this will use the connection profile to set up the client
 	const client_org1 = await testUtil.getClientForOrg(t, 'org1');
 	const client_org2 = await testUtil.getClientForOrg(t, 'org2');

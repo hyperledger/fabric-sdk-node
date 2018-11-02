@@ -268,22 +268,22 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 			// the v1 chaincode has Init() method that expects a transient map
 			if (upgrade && badTransient) {
 			// first test that a bad transient map would get the chaincode to return an error
-				let request1 = buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path, version, language, upgrade, badTransientMap);
-				tx_id = request1.txId;
+				request = buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path, version, language, upgrade, badTransientMap);
+				tx_id = request.txId;
 
 				logger.debug(util.format(
 					'Upgrading chaincode "%s" at path "%s" to version "%s" by passing args "%s" to method "%s" in transaction "%s"',
-					request1.chaincodeId,
-					request1.chaincodePath,
-					request1.chaincodeVersion,
-					request1.args,
-					request1.fcn,
-					request1.txId.getTransactionID()
+					request.chaincodeId,
+					request.chaincodePath,
+					request.chaincodeVersion,
+					request.args,
+					request.fcn,
+					request.txId.getTransactionID()
 				));
 
 				// this is the longest response delay in the test, sometimes
 				// x86 CI times out. set the per-request timeout to a super-long value
-				return channel.sendUpgradeProposal(request1, 10 * 60 * 1000)
+				return channel.sendUpgradeProposal(request, 10 * 60 * 1000)
 					.then((results) => {
 						const proposalResponses = results[0];
 
@@ -304,11 +304,11 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 							if (success) {
 								// successfully tested the negative conditions caused by
 								// the bad transient map, now send the good transient map
-								request1 = buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path,
+								request = buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path,
 									version, language, upgrade, transientMap);
 								tx_id = request.txId;
 
-								return channel.sendUpgradeProposal(request1, 10 * 60 * 1000);
+								return channel.sendUpgradeProposal(request, 10 * 60 * 1000);
 							} else {
 								throw new Error('Failed to test for bad transient map. The chaincode should have rejected the upgrade proposal.');
 							}
