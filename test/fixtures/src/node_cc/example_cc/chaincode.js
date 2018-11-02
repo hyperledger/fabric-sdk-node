@@ -91,6 +91,10 @@ const Chaincode = class {
 			if (fcn === 'getTransient') {
 				return this.getTransient(stub, args);
 			}
+
+			if (fcn === 'echo') {
+				return this.echo(stub, args);
+			}
 		} catch (error) {
 			return shim.error(error.toString());
 		}
@@ -240,6 +244,14 @@ const Chaincode = class {
 		});
 		const payload = Buffer.from(JSON.stringify(result));
 		return shim.success(payload);
+	}
+
+	async echo(stub, args) {
+		if (args.length > 0) {
+			return shim.success(args[0]);
+		} else {
+			return shim.success();
+		}
 	}
 };
 

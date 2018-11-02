@@ -68,6 +68,7 @@ describe('DefaultQueryHandler', () => {
 		let errorResponse;
 		let validResponse;
 		let failResponse;
+		let emptyResponse;
 
 		beforeEach(() => {
 			errorResponse = new Error('Chaincode error response');
@@ -75,8 +76,8 @@ describe('DefaultQueryHandler', () => {
 			errorResponse.isProposalResponse = true;
 
 			validResponse = Buffer.from('hello world');
-
 			failResponse = new Error('Failed to contact peer');
+			emptyResponse = Buffer.from('');
 
 			mockChannel.queryByChaincode.resolves([validResponse]);
 		});
@@ -213,6 +214,12 @@ describe('DefaultQueryHandler', () => {
 				args: ['arg1', 'arg2'],
 				transientMap: transientMap
 			});
+		});
+
+		it('returns empty string response', async () => {
+			mockChannel.queryByChaincode.resolves([emptyResponse]);
+			const result = await queryHandler.queryChaincode('chaincodeId', mockTransactionID, 'myfunc', ['arg1', 'arg2']);
+			result.should.equal(emptyResponse);
 		});
 	});
 

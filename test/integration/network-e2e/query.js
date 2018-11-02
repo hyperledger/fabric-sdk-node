@@ -181,3 +181,45 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with transient dat
 
 	t.end();
 });
+
+test('\n\n***** Network End-to-end flow: evaluate transaction with empty string result *****\n\n', async (t) => {
+	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+	const gateway = new Gateway();
+
+	try {
+		const wallet = await createWallet(t, tmpdir);
+		const ccp = fs.readFileSync(fixtures + '/network.json');
+		const ccpObject = JSON.parse(ccp.toString());
+
+		await gateway.connect(ccpObject, {
+			wallet: wallet,
+			identity: identityLabel,
+			clientTlsIdentity: tlsLabel,
+			discovery: {
+				enabled: false
+			}
+		});
+		t.pass('Connected to the gateway');
+
+		const channel = await gateway.getNetwork(channelName);
+		t.pass('Initialized the channel, ' + channelName);
+
+		const contract = await channel.getContract(chaincodeId);
+		t.pass('Got the contract, about to evaluate (query) transaction');
+
+		const response = await contract.evaluateTransaction('echo', '');
+
+		if (response && response.toString('utf8') === '') {
+			t.pass('Got expected transaction response');
+		} else {
+			t.fail('Unexpected transaction response: ' + response);
+		}
+	} catch (err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		await deleteWallet(tmpdir);
+		gateway.disconnect();
+	}
+
+	t.end();
+});

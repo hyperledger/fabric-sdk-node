@@ -676,6 +676,38 @@ test('\n\n***** Network End-to-end flow: invoke transaction with transient data 
 	t.end();
 });
 
+test('\n\n***** Network End-to-end flow: invoke transaction with empty string response *****\n\n', async (t) => {
+	const gateway = new Gateway();
+
+	try {
+		await inMemoryIdentitySetup();
+		await tlsSetup();
+
+		const contract = await createContract(t, gateway, {
+			wallet: inMemoryWallet,
+			identity: 'User1@org1.example.com',
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				enabled: false
+			}
+		});
+
+		const response = await contract.submitTransaction('echo', '');
+
+		if (response && response.toString('utf8') === '') {
+			t.pass('Got expected transaction response');
+		} else {
+			t.fail('Unexpected transaction response: ' + response);
+		}
+	} catch (err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
 test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', async (t) => {
 	const gateway = new Gateway();
 
