@@ -9,15 +9,11 @@ node('hyp-z') {
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
      env.NODE_VER = "8.11.3"
-     env.GO_VER = "1.10.4"
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
-     env.GOROOT = "/opt/go/go${GO_VER}.linux.s390x"
-     env.PATH = "$GOROOT/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
      deleteDir()
       stage("Fetch Patchset") { // fetch gerrit refspec on latest commit
-         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
           try {
               dir("${ROOTDIR}"){
               sh '''
@@ -34,10 +30,8 @@ node('hyp-z') {
                  throw err
            }
          }
-      }
 // clean environment and get env data
       stage("Clean Environment - Get Env Info") {
-         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --clean_Environment --env_Info'
@@ -49,10 +43,9 @@ node('hyp-z') {
                  throw err
            }
          }
-      }
 
-// Run gulp tests (headless and e2e tests)
-      stage("Run gulp_Tests") {
+// Run gulp tests (headless and IntegrationTests)
+      stage("IntegrationTests") {
          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
@@ -67,8 +60,6 @@ node('hyp-z') {
          }
       }
     } finally { // Code for coverage report
-             junit '**/cobertura-coverage.xml'
-             step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
              archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
 // Sends notification to Rocket.Chat
               if (env.GERRIT_EVENT_TYPE == 'change-merged') {

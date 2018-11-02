@@ -5,7 +5,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-# exit on first error
 # error check
 err_Check() {
 echo -e "\033[31m $1" "\033[0m"
@@ -24,11 +23,11 @@ Parse_Arguments() {
                       --sdk_E2e_Tests)
                             sdk_E2e_Tests
                             ;;
-                      --publish_Unstable)
-                            publish_Unstable
+                      --publish_NpmModules)
+                            publish_NpmModules
                             ;;
-                      --publish_Api_Docs)
-                            publish_Api_Docs
+                      --publish_ApiDocs)
+                            publish_ApiDocs
                             ;;
               esac
               shift
@@ -116,7 +115,7 @@ sdk_E2e_Tests() {
 
         echo "------> Install NodeJS"
         # This also depends on the fabric-baseimage. Make sure you modify there as well.
-        echo "------> Use $NODE_VER for >=release-1.1 branches"
+        echo "------> Use $NODE_VER"
         nvm install $NODE_VER || true
         nvm use --delete-prefix v$NODE_VER --silent
 
@@ -129,7 +128,7 @@ sdk_E2e_Tests() {
         ~/npm/bin/gulp ca || err_Check "ERROR!!! gulp ca failed"
         rm -rf node_modules/fabric-ca-client && npm install || err_Check "ERROR!!! npm install failed"
 
-        echo "------> Run node headless & e2e tests"
+        echo "------> Run node headless & integration tests"
         echo "============"
         ~/npm/bin/gulp test
         if [ $? == 0 ]; then
@@ -141,15 +140,15 @@ sdk_E2e_Tests() {
            exit 1
         fi
 }
-# Publish unstable npm modules after successful merge on amd64
-publish_Unstable() {
+# Publish npm modules after successful merge on amd64
+publish_NpmModules() {
         echo
-        echo "-----------> Publish unstable npm modules from amd64"
+        echo "-----------> Publish npm modules from amd64"
         ./Publish_NPM_Modules.sh
 }
 
 # Publish NODE_SDK API docs after successful merge on amd64
-publish_Api_Docs() {
+publish_ApiDocs() {
         echo
         echo "-----------> Publish NODE_SDK API docs after successful merge on amd64"
         ./Publish_API_Docs.sh
