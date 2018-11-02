@@ -34,8 +34,7 @@ module.exports.buildProposal = (invokeSpec, header, transientMap) => {
 	if (typeof transientMap === 'object') {
 		logger.debug('buildProposal - adding in transientMap %s', util.inspect(transientMap));
 		cc_payload.setTransientMap(transientMap);
-	}
-	else {
+	} else {
 		logger.debug('buildProposal - not adding a transientMap');
 	}
 
@@ -108,8 +107,8 @@ module.exports.buildChannelHeader = (type, channel_id, tx_id, epoch, chaincode_i
 	if (!time_stamp) {
 		time_stamp = module.exports.buildCurrentTimestamp();
 	}
-	channelHeader.setChannelId(channel_id); //string
-	channelHeader.setTxId(tx_id.toString()); //string
+	channelHeader.setChannelId(channel_id); // string
+	channelHeader.setTxId(tx_id.toString()); // string
 	if (epoch) {
 		channelHeader.setEpoch(epoch); // uint64
 	}

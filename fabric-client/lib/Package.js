@@ -88,7 +88,7 @@ class Package {
 	 * @param {string} [options.metadataPath] The directory containing the metadata descriptors.
 	 * @returns {Package} The smart contract package.
 	 */
-	static async fromDirectory({ name, version, path, type, metadataPath }) {
+	static async fromDirectory({name, version, path, type, metadataPath}) {
 		logger.debug('Package.fromDirectory - entry - %s, %s, %s, %s', name, version, path, type);
 		Package._validateNameAndVersion(name, version);
 		const codePackage = await Packager.package(path, type, false, metadataPath);

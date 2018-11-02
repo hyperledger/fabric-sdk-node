@@ -51,7 +51,6 @@ const BasePackager = class {
 	 * @param metadataPath
 	 */
 	package (chaincodePath, metadataPath) {
-		if(chaincodePath||metadataPath);
 		throw new TypeError('Please implement method package from child class');
 	}
 
@@ -62,7 +61,6 @@ const BasePackager = class {
 	 * @param filepath
 	 */
 	findSource (filepath) {
-		if(filepath);
 		throw new Error('abstract function called');
 	}
 
@@ -108,7 +106,7 @@ const BasePackager = class {
 	 */
 	isMetadata (filePath) {
 		const extensions = ['.json'];
-		return (extensions.indexOf(path.extname(filePath)) != -1);
+		return (extensions.indexOf(path.extname(filePath)) !== -1);
 	}
 
 	/**
@@ -120,7 +118,7 @@ const BasePackager = class {
 	 * @returns {boolean}
 	 */
 	isSource (filePath) {
-		return (this.keep.indexOf(path.extname(filePath)) != -1);
+		return (this.keep.indexOf(path.extname(filePath)) !== -1);
 	}
 
 	/**
@@ -150,10 +148,11 @@ const BasePackager = class {
 				};
 
 				pack.entry(header, content, (err) => {
-					if (err)
+					if (err) {
 						reject(err);
-					else
+					} else {
 						resolve(true);
+					}
 				});
 			}
 		});

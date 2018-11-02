@@ -89,7 +89,7 @@ class Remote {
 			}
 		}
 		if (typeof grpc_receive_max === 'undefined') {
-			grpc_receive_max = -1; //default is unlimited
+			grpc_receive_max = -1; // default is unlimited
 		}
 		this._options[MAX_RECEIVE] = grpc_receive_max;
 
@@ -105,7 +105,7 @@ class Remote {
 			}
 		}
 		if (typeof grpc_send_max === 'undefined') {
-			grpc_send_max = -1; //default is unlimited
+			grpc_send_max = -1; // default is unlimited
 		}
 		this._options[MAX_SEND] = grpc_send_max;
 
@@ -114,7 +114,7 @@ class Remote {
 		this._endpoint = new Endpoint(url, pem, clientKey, this.clientCert);
 
 		// what shall we call this remote object
-		if(opts && opts.name) {
+		if (opts && opts.name) {
 			this._name = opts.name;
 		} else {
 			const split = url.split('//');
@@ -125,13 +125,13 @@ class Remote {
 		if (utils.checkIntegerConfig(opts, 'request-timeout')) {
 			this._request_timeout = opts['request-timeout'];
 		} else {
-			this._request_timeout = utils.getConfigSetting('request-timeout', 30000); //default 30 seconds
+			this._request_timeout = utils.getConfigSetting('request-timeout', 30000); // default 30 seconds
 		}
 
 		if (utils.checkIntegerConfig(opts, 'grpc-wait-for-ready-timeout')) {
 			this._grpc_wait_for_ready_timeout = opts['grpc-wait-for-ready-timeout'];
 		} else {
-			this._grpc_wait_for_ready_timeout = utils.getConfigSetting('grpc-wait-for-ready-timeout', 3000); //default 3 seconds
+			this._grpc_wait_for_ready_timeout = utils.getConfigSetting('grpc-wait-for-ready-timeout', 3000); // default 3 seconds
 		}
 	}
 
@@ -145,8 +145,8 @@ class Remote {
 		return new Promise((resolve, reject) => {
 			client.waitForReady(timeout, (err) => {
 				if (err) {
-					if(err.message) {
-						err.message = err.message + ' URL:'+ self.getUrl();
+					if (err.message) {
+						err.message = err.message + ' URL:' + self.getUrl();
 					}
 					logger.error(err);
 
@@ -193,7 +193,9 @@ class Remote {
 			const der_cert = utils.pemToDER(this.clientCert);
 			const hash = new hash_sha2_256();
 			return hash.reset().update(der_cert).finalize();
-		} else return null;
+		} else {
+			return null;
+		}
 	}
 
 	/**

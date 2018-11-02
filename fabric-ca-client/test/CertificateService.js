@@ -32,7 +32,7 @@ describe('IdentityService', () => {
 		});
 
 		it('should set the client as passed in the argument', () => {
-			const client = { name: 'bob' };
+			const client = {name: 'bob'};
 			const service = new CertificateServiceRewire(client);
 			service.client.should.deep.equal(client);
 		});

@@ -114,7 +114,7 @@ describe('Utils', () => {
 	describe('#newKeyValueStore', () => {
 		it('should create a new key value store', async() => {
 			const MockKeyValStore = sandbox.stub().returns(new Object({'value': 1}));
-			const requireStub = sandbox.stub().returns(MockKeyValStore);
+			requireStub = sandbox.stub().returns(MockKeyValStore);
 			const getConfigSettingStub = sandbox.stub().returns('kvs');
 			revert.push(Utils.__set__('exports.getConfigSetting', getConfigSettingStub));
 			revert.push(Utils.__set__('require', requireStub));
@@ -199,19 +199,19 @@ describe('Utils', () => {
 	describe('#bitsToBytes', () => {
 		it('should return the correct value', () => {
 			const result = Utils.bitsToBytes([1, 1, 1, 1]);
-			result.should.deep.equal([ 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 ]);
+			result.should.deep.equal([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]);
 		});
 	});
 
 	describe('#bytesToBits', () => {
 		it('should return the correct value', () => {
 			const result = Utils.bytesToBits([1, 1, 1, 1]);
-			result.should.deep.equal([ 16843009 ]);
+			result.should.deep.equal([16843009]);
 		});
 
 		it('should return the correct value', () => {
 			const result = Utils.bytesToBits([1, 1, 1]);
-			result.should.deep.equal([ 26388295909632 ]);
+			result.should.deep.equal([26388295909632]);
 		});
 	});
 
@@ -394,7 +394,6 @@ describe('Utils', () => {
 		let debugStub;
 		let defaultKeyStorePathStub;
 		let keyStore;
-		let requireStub;
 
 		beforeEach(() => {
 			CryptoKeyStore = Utils.__get__('CryptoKeyStore');
@@ -426,7 +425,7 @@ describe('Utils', () => {
 			try {
 				await keyStore._getKeyStore();
 				should.fail();
-			} catch(err) {
+			} catch (err) {
 				err.should.equal('keystore-error');
 			}
 		});
@@ -457,13 +456,13 @@ describe('Utils', () => {
 		it('should reutrn a list of return options', () => {
 			getConfigSettingStub.returns('config_option_name');
 			const result = Utils.checkAndAddConfigSetting('option_name', 'default_value', {key1: 'value1'});
-			result.should.deep.equal({ option_name: 'config_option_name', key1: 'value1' });
+			result.should.deep.equal({option_name: 'config_option_name', key1: 'value1'});
 		});
 
 		it('should return the default value when no options passed in', () => {
 			getConfigSettingStub.returns('config_option_name');
 			const result = Utils.checkAndAddConfigSetting('option_name', 'default_value');
-			result.should.deep.equal({ option_name: 'config_option_name' });
+			result.should.deep.equal({option_name: 'config_option_name'});
 		});
 	});
 

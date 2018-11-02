@@ -79,7 +79,7 @@ class TransactionEventHandler {
 	}
 
 	async _registerTxEventListeners() {
-		const registrationOptions = { unregister: true };
+		const registrationOptions = {unregister: true};
 
 		const promises = this.eventHubs.map((eventHub) => {
 			return new Promise((resolve) => {

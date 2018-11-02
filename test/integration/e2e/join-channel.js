@@ -26,7 +26,7 @@ let tx_id = null;
 let ORGS;
 
 //
-//Attempt to send a request to the orderer with the createChannel method
+// Attempt to send a request to the orderer with the createChannel method
 //
 test('\n\n***** End-to-end flow: join channel *****\n\n', (t) => {
 	Client.addConfigFile(path.join(__dirname, './config.json'));
@@ -34,17 +34,17 @@ test('\n\n***** End-to-end flow: join channel *****\n\n', (t) => {
 
 	joinChannel('org1', t)
 		.then(() => {
-			t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS['org1'].name));
+			t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS.org1.name));
 			return joinChannel('org2', t);
 		}, (err) => {
-			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS['org1'].name, err.stack ? err.stack : err));
+			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS.org1.name, err.stack ? err.stack : err));
 			t.end();
 		})
 		.then(() => {
-			t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS['org2'].name));
+			t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS.org2.name));
 			t.end();
 		}, (err) => {
-			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS['org2'].name), err.stack ? err.stack : err);
+			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS.org2.name), err.stack ? err.stack : err);
 			t.end();
 		})
 		.catch((err) => {
@@ -99,7 +99,7 @@ function joinChannel(org, t) {
 			};
 
 			return channel.getGenesisBlock(request);
-		}).then((block) =>{
+		}).then((block) => {
 			t.pass('Successfully got the genesis block');
 			genesis_block = block;
 
@@ -113,7 +113,7 @@ function joinChannel(org, t) {
 			for (const key in ORGS[org]) {
 				if (ORGS[org].hasOwnProperty(key)) {
 					if (key.indexOf('peer') === 0) {
-						data = fs.readFileSync(path.join(__dirname, ORGS[org][key]['tls_cacerts']));
+						data = fs.readFileSync(path.join(__dirname, ORGS[org][key].tls_cacerts));
 						targets.push(
 							client.newPeer(
 								ORGS[org][key].requests,
@@ -142,7 +142,7 @@ function joinChannel(org, t) {
 		.then((results) => {
 			logger.debug(util.format('Join Channel R E S P O N S E : %j', results));
 
-			if(results && results[0] && results[0].response && results[0].response.status == 200) {
+			if (results && results[0] && results[0].response && results[0].response.status === 200) {
 				t.pass(util.format('Successfully joined peers in organization %s to join the channel', orgName));
 			} else {
 				t.fail(' Failed to join channel');

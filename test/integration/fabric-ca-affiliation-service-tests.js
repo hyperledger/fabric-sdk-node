@@ -26,8 +26,8 @@ function checkResponse(response, name, t) {
 }
 
 function checkExist(response, affiliation, t) {
-	const res = response.affiliations.find((path) => {
-		if (path.name === affiliation) {
+	const res = response.affiliations.find((filePath) => {
+		if (filePath.name === affiliation) {
 			return true;
 		}
 	});
@@ -41,8 +41,8 @@ function checkExist(response, affiliation, t) {
 }
 
 function checkNotExist(response, affiliation, t) {
-	const res = response.affiliations.find((path) => {
-		if (path.name === affiliation) {
+	const res = response.affiliations.find((filePath) => {
+		if (filePath.name === affiliation) {
 			return true;
 		}
 	});
@@ -62,8 +62,8 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 
 	const fabricCAEndpoint = ORGS[userOrg].ca.url;
 
-	FabricCAServices.getConfigSetting('crypto-keysize', '256'); //force for gulp test
-	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); //force for gulp test
+	FabricCAServices.getConfigSetting('crypto-keysize', '256'); // force for gulp test
+	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); // force for gulp test
 
 	const caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
 

@@ -24,7 +24,7 @@ class QueryHandler {
 		return;
 	}
 
-	//eslint-disable-next-line no-unused-vars
+	// eslint-disable-next-line no-unused-vars
 	async queryChaincode(chaincodeId, txId, functionName, args) {
 		throw new Error('Not implemented');
 	}

@@ -37,9 +37,9 @@ test('Use FabricCAServices with a File KeyValueStore', (t) => {
 
 	// Set the relevant configuration values
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/FileKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 
-	//var keyValueStore = Client.getConfigSetting('key-value-store');
+	// var keyValueStore = Client.getConfigSetting('key-value-store');
 	const keyValStorePath = path.join(testUtil.getTempDir(), 'customKeyValStorePath');
 
 	const client = new Client();

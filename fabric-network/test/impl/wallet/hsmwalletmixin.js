@@ -67,7 +67,7 @@ describe('HSMWalletMixin', () => {
 	describe('#constructor', () => {
 		it('should set default hsm parameters and usertype', () => {
 			const hsmWalletMixin = new HSMWalletMixin();
-			const { library, slot, pin, usertype, cryptoSuite } = hsmWalletMixin;
+			const {library, slot, pin, usertype, cryptoSuite} = hsmWalletMixin;
 			should.equal(library, null);
 			should.equal(slot, null);
 			should.equal(pin, null);
@@ -77,7 +77,7 @@ describe('HSMWalletMixin', () => {
 
 		it('should set default hsm parameters and usertype', () => {
 			const hsmWalletMixin = new HSMWalletMixin('somelib', 1, 'somepin', 'sometype');
-			const { library, slot, pin, usertype, cryptoSuite } = hsmWalletMixin;
+			const {library, slot, pin, usertype, cryptoSuite} = hsmWalletMixin;
 			should.equal(library, 'somelib');
 			should.equal(slot, 1);
 			should.equal(pin, 'somepin');

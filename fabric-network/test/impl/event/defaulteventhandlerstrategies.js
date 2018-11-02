@@ -41,7 +41,9 @@ describe('DefaultEventHandlerStrategies', () => {
 
 		const stubPeer = {
 			_stubInfo: 'peer',
-			getName: function() { return 'peer'; }
+			getName: function() {
+				return 'peer';
+			}
 		};
 
 		const stubEventHub = sinon.createStubInstance(ChannelEventHub);

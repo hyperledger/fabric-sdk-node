@@ -176,13 +176,13 @@ test('\n\n ** Identity class tests **\n\n', (t) => {
 		cryptoSuite: cryptoUtils
 	});
 
-	const pubKey = cryptoUtils.importKey(TEST_CERT_PEM, { algorithm: api.CryptoAlgorithms.X509Certificate });
+	let pubKey = cryptoUtils.importKey(TEST_CERT_PEM, {algorithm: api.CryptoAlgorithms.X509Certificate});
 	const identity = new Identity(TEST_CERT_PEM, pubKey, mspImpl.getId(), cryptoUtils);
 
 	const serializedID = identity.serialize();
 	// deserializeIdentity should work both ways ... with promise and without
 	const identity_g = mspImpl.deserializeIdentity(serializedID, false);
-	t.equals(identity_g.getMSPId(),'testMSP', 'deserializeIdentity call without promise');
+	t.equals(identity_g.getMSPId(), 'testMSP', 'deserializeIdentity call without promise');
 
 	mspImpl.deserializeIdentity(serializedID)
 		.then((dsID) => {
@@ -193,7 +193,7 @@ test('\n\n ** Identity class tests **\n\n', (t) => {
 			// manually construct a key based on the saved privKeyHex and pubKeyHex
 			const f = KEYUTIL.getKey(TEST_KEY_PRIVATE_PEM);
 			const testKey = new ecdsaKey(f);
-			const pubKey = testKey.getPublicKey();
+			pubKey = testKey.getPublicKey();
 
 			const signer = new Signer(cryptoUtils, testKey);
 			t.equal(signer.getPublicKey().isPrivate(), false, 'Test Signer class getPublicKey() method');

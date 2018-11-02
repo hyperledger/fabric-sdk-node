@@ -80,7 +80,7 @@ async function manually(t, client) {
 		await sys_channel.getChannelConfigFromOrderer();
 		t.pass('Successfully got the config envelope by using the admin identity');
 
-		client._adminSigningIdentity = null; //remove the admin assigned above
+		client._adminSigningIdentity = null; // remove the admin assigned above
 		client._userContext = null;
 
 		// this will create the user and also assign it to client instance
@@ -88,7 +88,7 @@ async function manually(t, client) {
 		const user = await client.createUser({
 			username: 'ordererAdmin',
 			mspid: 'OrdererMSP',
-			cryptoContent: { privateKeyPEM: keyPem, signedCertPEM: cert }
+			cryptoContent: {privateKeyPEM: keyPem, signedCertPEM: cert}
 		});
 		t.equals(user.getName(), 'ordererAdmin', 'Checking that the user was created');
 		t.equals(client._userContext.getName(), 'ordererAdmin', 'Checking that the user was set');
@@ -96,9 +96,9 @@ async function manually(t, client) {
 		await sys_channel.getChannelConfigFromOrderer();
 		t.pass('Successfully got the config envelope by user the user context');
 
-	} catch(error) {
+	} catch (error) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
-		t.fail('Test failed with '+ error);
+		t.fail('Test failed with ' + error);
 	}
 
 	return true;

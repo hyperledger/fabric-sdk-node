@@ -167,24 +167,24 @@ describe('FabricCAServices', () => {
 
 		it('should throw if missing required argument "request.enrollmentID"', () => {
 			(() => {
-				service.register({ name: 'bob' });
+				service.register({name: 'bob'});
 			}).should.throw(/Missing required argument "request.enrollmentID"/);
 		});
 
 		it('should set max enrollments to "1" if req.maxEnrollments is undefined', () => {
-			service.register({ enrollmentID: 'bob' }, new User('bob'));
+			service.register({enrollmentID: 'bob'}, new User('bob'));
 			sinon.assert.calledOnce(clientMock.register);
 			clientMock.register.getCall(0).args[4].should.equal(1);
 		});
 
 		it('should set max enrollments to "1" if req.maxEnrollments is null', () => {
-			service.register({ enrollmentID: 'bob', maxEnrollments: null }, new User('bob'));
+			service.register({enrollmentID: 'bob', maxEnrollments: null}, new User('bob'));
 			sinon.assert.calledOnce(clientMock.register);
 			clientMock.register.getCall(0).args[4].should.equal(1);
 		});
 
 		it('should call "checkRegistrar"', () => {
-			service.register({ enrollmentID: 'bob', maxEnrollments: null }, new User('bob'));
+			service.register({enrollmentID: 'bob', maxEnrollments: null}, new User('bob'));
 			sinon.assert.calledOnce(checkRegistrarStub);
 		});
 
@@ -193,7 +193,7 @@ describe('FabricCAServices', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			service.register({ enrollmentID: 'bob', enrollmentSecret: 'shhh!', maxEnrollments: 7, role: 'test_role', affiliation: 'test_affiliation', attrs: 'test_atts' }, registrar);
+			service.register({enrollmentID: 'bob', enrollmentSecret: 'shhh!', maxEnrollments: 7, role: 'test_role', affiliation: 'test_affiliation', attrs: 'test_atts'}, registrar);
 			sinon.assert.calledOnce(clientMock.register);
 
 			// should be called with test values
@@ -257,8 +257,8 @@ describe('FabricCAServices', () => {
 			// Take control of the enroll
 			clientMock.enroll.rejects(new Error('enroll error'));
 
-			const atts = [{ name: 'penguin' }, { name: 'power' }];
-			const req = {enrollmentID: 'enrollmentID',enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const atts = [{name: 'penguin'}, {name: 'power'}];
+			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
 
 			await service.enroll(req).should.be.rejectedWith(/enroll error/);
 		});
@@ -272,8 +272,8 @@ describe('FabricCAServices', () => {
 			keyStub.generateCSR.throws(new Error('CSR error'));
 			cryptoPrimitives.generateKey.resolves(keyStub);
 
-			const atts = [{ name: 'penguin' }, { name: 'power' }];
-			const req = {enrollmentID: 'enrollmentID',enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const atts = [{name: 'penguin'}, {name: 'power'}];
+			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
 
 			await service.enroll(req).should.be.rejectedWith(/Failed to generate CSR for enrollmemnt due to error \[Error: CSR error\]/);
 		});
@@ -285,8 +285,8 @@ describe('FabricCAServices', () => {
 
 			cryptoPrimitives.generateKey.rejects(new Error('Key error'));
 
-			const atts = [{ name: 'penguin' }, { name: 'power' }];
-			const req = {enrollmentID: 'enrollmentID',enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const atts = [{name: 'penguin'}, {name: 'power'}];
+			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
 
 			await service.enroll(req).should.be.rejectedWith(/Failed to generate key for enrollment due to error \[Error: Key error\]/);
 		});
@@ -315,13 +315,13 @@ describe('FabricCAServices', () => {
 				result: {enrollmentCert: 'mycert', caCertChain: 'mychain'}
 			});
 
-			const atts = [{ name: 'penguin' }, { name: 'power' }];
-			const req = {enrollmentID: 'enrollmentID',enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const atts = [{name: 'penguin'}, {name: 'power'}];
+			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
 			await service.enroll(req);
 
 			// Opts should contain false
 			const callArgs = newSuite.generateKey.getCall(0);
-			callArgs.args[0].should.deep.equal({ ephemeral: false });
+			callArgs.args[0].should.deep.equal({ephemeral: false});
 
 		});
 
@@ -339,13 +339,13 @@ describe('FabricCAServices', () => {
 				result: {enrollmentCert: 'mycert', caCertChain: 'mychain'}
 			});
 
-			const atts = [{ name: 'penguin' }, { name: 'power' }];
-			const req = {enrollmentID: 'enrollmentID',enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const atts = [{name: 'penguin'}, {name: 'power'}];
+			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
 			await service.enroll(req);
 
 			// generateKey should be called with ephmereal set to true
 			const genKeyArgs = cryptoPrimitives.generateKey.getCall(0);
-			genKeyArgs.args[0].should.deep.equal({ ephemeral: true });
+			genKeyArgs.args[0].should.deep.equal({ephemeral: true});
 
 			// Enrol should be called with test values
 			sinon.assert.calledOnce(clientMock.enroll);
@@ -373,7 +373,7 @@ describe('FabricCAServices', () => {
 				enrollmentCert: 'mycert', caCertChain: 'mychain'
 			});
 
-			const req = {enrollmentID: 'enrollmentID',enrollmentSecret: 'enrollmentSecret', profile: 'profile'};
+			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile'};
 
 			const result = await service.enroll(req);
 
@@ -404,7 +404,7 @@ describe('FabricCAServices', () => {
 
 		it('should throw if required argument "currentUser" is not a valid User object', () => {
 			(() => {
-				service.reenroll({ bob: 'the_builder' });
+				service.reenroll({bob: 'the_builder'});
 			}).should.throw(/Invalid re-enroll request, "currentUser" is not a valid User object/);
 		});
 
@@ -418,36 +418,36 @@ describe('FabricCAServices', () => {
 		it('should throw if any request attributes are missing a name', () => {
 			(() => {
 				const user = new User('bob');
-				service.reenroll(user, [{ name: 'penguin' }, { noname: 'revenge' }]);
+				service.reenroll(user, [{name: 'penguin'}, {noname: 'revenge'}]);
 			}).should.throw(/Invalid re-enroll request, attr_reqs object is missing the name of the attribute/);
 		});
 
 		it('should throw if unable to parse enrollment certificate', async () => {
 			(() => {
 				const user = sinon.createStubInstance(User);
-				user.getIdentity.resolves({ _certificate: null });
+				user.getIdentity.resolves({_certificate: null});
 				getSubjectCommonNameStub.throws(new Error('forced error'));
-				service.reenroll(user, [{ name: 'penguin' }, { name: 'power' }]);
+				service.reenroll(user, [{name: 'penguin'}, {name: 'power'}]);
 			}).should.throw(/Failed to parse the enrollment certificate of the current user for its subject/);
 		});
 
 		it('should reject if unable to generate key', async () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
-			user.getIdentity.returns({ _certificate: 'my_cert' });
+			user.getIdentity.returns({_certificate: 'my_cert'});
 			getSubjectCommonNameStub.returns('mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			cryptoPrimitives.generateKey.rejects(new Error('Key Error'));
 
-			const atts = [{ name: 'penguin' }, { name: 'power' }];
+			const atts = [{name: 'penguin'}, {name: 'power'}];
 			await service.reenroll(user, atts).should.be.rejectedWith('Failed to generate key for enrollment due to error [Error: Key Error]');
 		});
 
 		it('should reject if unable to generate CSR', async () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
-			user.getIdentity.returns({ _certificate: 'my_cert' });
+			user.getIdentity.returns({_certificate: 'my_cert'});
 			getSubjectCommonNameStub.returns('mr_penguin');
 			normalizeX509Stub.returns('normal');
 
@@ -455,14 +455,14 @@ describe('FabricCAServices', () => {
 			keyStub.generateCSR.throws(new Error('CSR Error'));
 			cryptoPrimitives.generateKey.resolves(keyStub);
 
-			const atts = [{ name: 'penguin' }, { name: 'power' }];
+			const atts = [{name: 'penguin'}, {name: 'power'}];
 			await service.reenroll(user, atts).should.be.rejectedWith('Failed to generate CSR for enrollmemnt due to error [Error: CSR Error]');
 		});
 
 		it('should rejected if reenroll fails', async () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
-			user.getIdentity.returns({ _certificate: 'my_cert' });
+			user.getIdentity.returns({_certificate: 'my_cert'});
 			getSubjectCommonNameStub.returns('mr_penguin');
 			normalizeX509Stub.returns('normal');
 
@@ -473,14 +473,14 @@ describe('FabricCAServices', () => {
 			// Take control of the renroll
 			clientMock.reenroll.rejects(new Error('forced error'));
 
-			const atts = [{ name: 'penguin' }, { name: 'power' }];
+			const atts = [{name: 'penguin'}, {name: 'power'}];
 			await service.reenroll(user, atts).should.be.rejectedWith('forced error');
 		});
 
 		it('should call the reenroll function on the FabricCAClient object with mapped parameters', async () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
-			user.getIdentity.returns({ _certificate: 'my_cert' });
+			user.getIdentity.returns({_certificate: 'my_cert'});
 			getSubjectCommonNameStub.returns('mr_penguin');
 			normalizeX509Stub.returns('normal');
 
@@ -493,7 +493,7 @@ describe('FabricCAServices', () => {
 				result: {Cert: 'mycert', ServerInfo: {CAChain: 'mychain'}}
 			});
 
-			const atts = [{ name: 'penguin' }, { name: 'power' }];
+			const atts = [{name: 'penguin'}, {name: 'power'}];
 			await service.reenroll(user, atts);
 
 			// should be called with test values
@@ -509,7 +509,7 @@ describe('FabricCAServices', () => {
 		it('should return the correct object on success', async () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
-			user.getIdentity.returns({ _certificate: 'test_cert' });
+			user.getIdentity.returns({_certificate: 'test_cert'});
 			getSubjectCommonNameStub.returns('mr_penguin');
 			normalizeX509Stub.returns('normal');
 
@@ -555,30 +555,30 @@ describe('FabricCAServices', () => {
 
 		it('should throw if no enrollmentID and missing aki', () => {
 			(() => {
-				service.revoke({ something: true });
+				service.revoke({something: true});
 			}).should.throw(/Enrollment ID is empty, thus both "aki" and "serial" must have non-empty values/);
 		});
 
 		it('should throw if no enrollmentID and aki is an empty string', () => {
 			(() => {
-				service.revoke({ aki: '' });
+				service.revoke({aki: ''});
 			}).should.throw(/Enrollment ID is empty, thus both "aki" and "serial" must have non-empty values/);
 		});
 
 		it('should throw if no enrollmentID and missing serial', () => {
 			(() => {
-				service.revoke({ aki: 'aki' });
+				service.revoke({aki: 'aki'});
 			}).should.throw(/Enrollment ID is empty, thus both "aki" and "serial" must have non-empty values/);
 		});
 
 		it('should throw if no enrollmentID and serial is an empty string', () => {
 			(() => {
-				service.revoke({ aki: 'aki', serial: '' });
+				service.revoke({aki: 'aki', serial: ''});
 			}).should.throw(/Enrollment ID is empty, thus both "aki" and "serial" must have non-empty values/);
 		});
 
 		it('should call "checkRegistrar"', () => {
-			service.revoke({ enrollmentID: 'bob', aki: 'aki', serial: 'serial' }, new User('bob'));
+			service.revoke({enrollmentID: 'bob', aki: 'aki', serial: 'serial'}, new User('bob'));
 			sinon.assert.calledOnce(checkRegistrarStub);
 		});
 
@@ -586,7 +586,7 @@ describe('FabricCAServices', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			service.revoke({ enrollmentID: 'bob', aki: 'aki', serial: 'serial', reason: 'de-friended' }, registrar);
+			service.revoke({enrollmentID: 'bob', aki: 'aki', serial: 'serial', reason: 'de-friended'}, registrar);
 
 			// Should call
 			sinon.assert.calledOnce(clientMock.revoke);
@@ -606,7 +606,7 @@ describe('FabricCAServices', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			service.revoke({aki: 'aki', serial: 'serial' }, registrar);
+			service.revoke({aki: 'aki', serial: 'serial'}, registrar);
 
 			// Should call
 			sinon.assert.calledOnce(clientMock.revoke);
@@ -720,7 +720,7 @@ describe('FabricCAServices', () => {
 
 		it('should provide a String object showing the hostname and port', () => {
 			const service = new FabricCAServicesRewire('http://penguin.com', null, 'ca_name', cryptoPrimitives);
-			service._fabricCAClient = { _hostname: 'host', _port: 1234 };
+			service._fabricCAClient = {_hostname: 'host', _port: 1234};
 
 			service.toString().should.equal('FabricCAServices : {hostname: host, port: 1234}');
 		});

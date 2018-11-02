@@ -12,7 +12,6 @@ const Client = require('fabric-client');
 const TransactionID = require('fabric-client/lib/TransactionID.js');
 
 const chai = require('chai');
-const should = chai.should();
 chai.use(require('chai-as-promised'));
 
 const Contract = require('../lib/contract');
@@ -110,30 +109,30 @@ describe('Contract', () => {
 			result.getName().should.equal(name);
 		});
 
-		it('returns a transaction with both name and namespace', () => {
+		it ('returns a transaction with both name and namespace', () => {
 			const namespace = 'namespace';
 			const name = 'name';
 			const expected = `${namespace}:${name}`;
 
-			const contract = new Contract(network, chaincodeId, mockGateway, mockQueryHandler, namespace);
+			contract = new Contract(network, chaincodeId, mockGateway, mockQueryHandler, namespace);
 			const result = contract.createTransaction(name);
 
 			result.getName().should.equal(expected);
 		});
 
-		it('throws if name is an empty string', () => {
+		it ('throws if name is an empty string', () => {
 			(() => contract.createTransaction('')).should.throw('name');
 		});
 
-		it('throws is name is not a string', () => {
+		it ('throws is name is not a string', () => {
 			(() => contract.createTransaction(123)).should.throw('name');
 		});
 
-		it('sets an event handler strategy on the transaction', () => {
+		it ('sets an event handler strategy on the transaction', () => {
 			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
 			const strategy = () => stubEventHandler;
 			mockGateway.getOptions.returns({
-				eventHandlerOptions: { strategy }
+				eventHandlerOptions: {strategy}
 			});
 
 			const result = contract.createTransaction('name');
@@ -144,7 +143,7 @@ describe('Contract', () => {
 
 	describe('#submitTransaction', () => {
 		it('submits a transaction with supplied arguments', async () => {
-			const args = [ 'a', 'b', 'c' ];
+			const args = ['a', 'b', 'c'];
 			const expected = Buffer.from('result');
 			const stubTransaction = sinon.createStubInstance(Transaction);
 			stubTransaction.submit.withArgs(...args).resolves(expected);
@@ -158,7 +157,7 @@ describe('Contract', () => {
 
 	describe('#evaluateTransaction', () => {
 		it('evaluates a transaction with supplied arguments', async () => {
-			const args = [ 'a', 'b', 'c' ];
+			const args = ['a', 'b', 'c'];
 			const expected = Buffer.from('result');
 			const stubTransaction = sinon.createStubInstance(Transaction);
 			stubTransaction.evaluate.withArgs(...args).resolves(expected);

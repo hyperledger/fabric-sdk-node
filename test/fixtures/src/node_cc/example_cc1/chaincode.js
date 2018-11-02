@@ -53,10 +53,10 @@ const Chaincode = class {
 		if (fcn === 'move') {
 			return this.move(stub, args);
 		}
-		if (fcn == 'echo') {
+		if (fcn === 'echo') {
 			return this.echo(stub, args);
 		}
-		if (fcn == 'testTransient') {
+		if (fcn === 'testTransient') {
 			return this.testTransient(stub);
 		}
 
@@ -67,7 +67,7 @@ const Chaincode = class {
 	async move(stub, args) {
 		let Aval, Bval;
 
-		if (args.length != 3) {
+		if (args.length !== 3) {
 			return shim.error('Incorrect number of arguments. Expecting 4, function followed by 2 names and 1 value');
 		}
 
@@ -116,7 +116,7 @@ const Chaincode = class {
 	}
 
 	async delete(stub, args) {
-		if (args.length != 1) {
+		if (args.length !== 1) {
 			return shim.error('Incorrect number of arguments. Expecting 1');
 		}
 
@@ -132,7 +132,7 @@ const Chaincode = class {
 	}
 
 	async query(stub, args) {
-		if (args.length != 1) {
+		if (args.length !== 1) {
 			return shim.error('Incorrect number of arguments. Expecting name of the person to query');
 		}
 

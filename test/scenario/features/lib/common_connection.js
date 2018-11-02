@@ -33,11 +33,11 @@ class CommonConnectionProfile {
 	 * @param {String} rootPath the root path to use when setting absolute
 	 */
 	_makeJsonPathsAbsolute(parent, rootPath) {
-		if (parent && typeof parent == 'object') {
+		if (parent && typeof parent === 'object') {
 			Object.entries(parent).forEach(([key, value]) => {
 				// key is either an array index or object key
 				if (key.localeCompare('path') === 0) {
-					if(!path.isAbsolute(value)){
+					if (!path.isAbsolute(value)) {
 						parent[key] = path.join(rootPath, value);
 					}
 				} else {
@@ -91,11 +91,11 @@ class CommonConnectionProfile {
 		const orgs = this.profile.organizations;
 
 		const channelOrgs = new Array();
-		for (const key in orgs){
+		for (const key in orgs) {
 			const org = orgs[key];
 			const orgPeers = org.peers;
 
-			if (orgPeers.filter(peerName => channelPeers.includes(peerName)).length>0){
+			if (orgPeers.filter(peerName => channelPeers.includes(peerName)).length > 0) {
 				channelOrgs.push(key);
 			}
 		}

@@ -10,29 +10,29 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 
-//var Client = require('fabric-client');
+// var Client = require('fabric-client');
 const testutil = require('./util.js');
 const utils = require('fabric-client/lib/utils.js');
 const path = require('path');
 const fs = require('fs-extra');
 const util = require('util');
-//var os = require('os');
+// var os = require('os');
 
 const jsrsa = require('jsrsasign');
-//var KEYUTIL = jsrsa.KEYUTIL;
+// var KEYUTIL = jsrsa.KEYUTIL;
 const ECDSA = jsrsa.ECDSA;
 
-//var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
+// var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
 const CryptoSuite_ECDSA_AES = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
 const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
-//var api = require('fabric-client/lib/api.js');
+// var api = require('fabric-client/lib/api.js');
 const User = require('fabric-client/lib/User.js');
 const elliptic = require('elliptic');
-//var BN = require('bn.js');
+// var BN = require('bn.js');
 const Signature = require('elliptic/lib/elliptic/ec/signature.js');
-//var PKCS11 = require('fabric-client/lib/impl/bccsp_pkcs11.js');
+// var PKCS11 = require('fabric-client/lib/impl/bccsp_pkcs11.js');
 
-//var keyValStorePath = path.join(testutil.getTempDir(), 'keyValStore1');
+// var keyValStorePath = path.join(testutil.getTempDir(), 'keyValStore1');
 
 const TEST_MSG = 'this is a test message';
 const TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative effort created to advance cross-industry blockchain technologies. ' +
@@ -47,7 +47,7 @@ const TEST_LONG_MSG = 'The Hyperledger project is an open source collaborative e
 	'is what Hyperledger is about – communities of software developers building blockchain frameworks and platforms.';
 
 const HASH_MSG_SHA384 = '6247065855a812ecd182476576c02d46a675845ef4b0056e973ca42dcf8191d3adabc8c6c4b909f20f96136032ab723a';
-//var HASH_LONG_MSG_SHA384 = 'e647ea97fec64412a34f522b5d80cbba9a293f89d4dc63802c79bf485078ecbaed59a0d53cd7ab08a9ae983e64f886a6';
+// var HASH_LONG_MSG_SHA384 = 'e647ea97fec64412a34f522b5d80cbba9a293f89d4dc63802c79bf485078ecbaed59a0d53cd7ab08a9ae983e64f886a6';
 const HASH_MSG_SHA3_384 = '9e9c2e5edf6cbc0b512807a8efa2917daff71b83e04dee28fcc00b1a1dd935fb5afc5eafa06bf55bd64792a597e2a8f3';
 const HASH_LONG_MSG_SHA3_384 = '47a90d6721523682e09b81da0a60e6ee1faf839f0503252316638daf038cf682c0a842edaf310eb0f480a2e181a07af0';
 const HASH_MSG_SHA256 = '4e4aa09b6d80efbd684e80f54a70c1d8605625c3380f4cb012b32644a002b5be';
@@ -116,8 +116,8 @@ const TEST_USER_ENROLLMENT = {
 };
 
 const halfOrdersForCurve = {
-	'secp256r1': elliptic.curves['p256'].n.shrn(1),
-	'secp384r1': elliptic.curves['p384'].n.shrn(1)
+	'secp256r1': elliptic.curves.p256.n.shrn(1),
+	'secp384r1': elliptic.curves.p384.n.shrn(1)
 };
 
 test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
@@ -138,6 +138,7 @@ test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 	// each app instance is expected to use either HSM or software-based key management, as such this question
 	// is answered with a config setting rather than controlled on a case-by-case basis
 	utils.setConfigSetting('crypto-hsm', true);
+	/* eslint-disable-next-line */
 	let expectedError = '/Error:.*\/usr\/local\/lib/';
 	if (process.platform === 'win32') {
 		expectedError = 'Error: Win32 error 126/';
@@ -197,15 +198,15 @@ test('\n\n ** CryptoSuite_ECDSA_AES - ephemeral true tests **\n\n', (t) => {
 	}
 
 	return cryptoUtils.generateKey({ephemeral: true})
-		.then((key) => {
-			if (key && key._key && key._key.type === 'EC') {
+		.then((generatedKey) => {
+			if (generatedKey && generatedKey._key && generatedKey._key.type === 'EC') {
 				t.pass('generateKey returned key using ephemeral true');
 				t.end();
 			} else {
 				t.fail('generateKey did not return key using ephemeral true');
 				t.end();
 			}
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
 		});
@@ -232,9 +233,9 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 	t.equal(cryptoUtils.hash(TEST_MSG), HASH_MSG_SHA384,
 		'CryptoSuite_ECDSA_AES function tests: using "SHA2" hashing algorithm with default key size which should be 384');
 
-	//reset to default key size
+	// reset to default key size
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');//force for gulp test
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');// force for gulp test
 	cryptoUtils = utils.newCryptoSuite();
 	cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
@@ -249,7 +250,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 			cryptoUtils = utils.newCryptoSuite();
 			cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 			return cryptoUtils.generateKey();
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((key) => {
@@ -275,19 +276,20 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
 			return cryptoUtils.generateKey();
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((key) => {
 			t.equal('secp384r1', key.getPublicKey()._key.curveName,
 				'CryptoSuite_ECDSA_AES function tests: ccryptoUtils generated public key curveName == secp384r1');
 
-			if (key._key)
+			if (key._key) {
 				t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
-			else
+			} else {
 				t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey return object');
+			}
 
-			utils.setConfigSetting('crypto-hash-algo', 'sha3'); //lower or upper case is allowed
+			utils.setConfigSetting('crypto-hash-algo', 'sha3'); // lower or upper case is allowed
 			cryptoUtils = utils.newCryptoSuite();
 			cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
@@ -295,15 +297,16 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 				'CryptoSuite_ECDSA_AES function tests: using "SHA3" hashing algorithm with key size 384');
 
 			// test generation options
-			return cryptoUtils.generateKey({ ephemeral: true });
-		},(err) => {
+			return cryptoUtils.generateKey({ephemeral: true});
+		}, (err) => {
 			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((key) => {
-			if (key._key)
+			if (key._key) {
 				t.pass('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
-			else
+			} else {
 				t.fail('CryptoSuite_ECDSA_AES function tests: verify generateKey ephemeral=true return object');
+			}
 
 			t.throws(
 				() => {
@@ -330,7 +333,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 			cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 
 			return cryptoUtils.generateKey();
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((key) => {
@@ -356,7 +359,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 				// test that signatures have low-S
 					const halfOrder = halfOrdersForCurve[key._key.ecparams.name];
 					const sigObject = new Signature(sig);
-					if (sigObject.s.cmp(halfOrder) == 1) {
+					if (sigObject.s.cmp(halfOrder) === 1) {
 						t.fail('Invalid signature object: S value larger than N/2');
 					} else {
 						t.pass('Valid signature object generated from sign()');
@@ -406,7 +409,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 
 			const testVerify = function (sig, msg, expected) {
 			// manually construct a key based on the saved privKeyHex and pubKeyHex
-				const f = new ECDSA({ curve: 'secp256r1' });
+				const f = new ECDSA({curve: 'secp256r1'});
 				f.setPrivateKeyHex(TEST_KEY_PRIVATE);
 				f.setPublicKeyHex(TEST_KEY_PUBLIC);
 				f.isPrivate = true;
@@ -422,7 +425,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 
 			// test importKey()
 			return cryptoUtils.importKey(TEST_CERT_PEM);
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((pubKey) => {
@@ -436,7 +439,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 				'Check that the imported public key has been saved in the key store');
 
 			return cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM);
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((privKey) => {
@@ -459,7 +462,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 
 			// manufacture an error condition where the private key does not exist for the SKI, and only the public key does
 			return cryptoUtils.importKey(TEST_KEY_PRIVATE_CERT_PEM);
-		},(err) => {
+		}, (err) => {
 			t.fail('Failed to importKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then(() => {
@@ -472,7 +475,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 		}).then(() => {
 			t.fail('Failed to catch missing private key expected from a user enrollment object');
 			t.end();
-		},(err) => {
+		}, (err) => {
 			const msg = 'Private key missing from key store';
 			if (err.message && err.message.indexOf(msg) > -1) {
 				t.pass('Successfully caught missing private key expected from a user enrollment object');

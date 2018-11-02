@@ -52,7 +52,7 @@ function testLogger(t, ignoreLevels) {
 
 test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
 	if (process.env.HFC_LOGGING) {
-		delete process.env['HFC_LOGGING'];
+		delete process.env.HFC_LOGGING;
 	}
 
 	if (global.hfc.logger) {
@@ -207,7 +207,7 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
 });
 
 test('\n\n ** Logging utility tests - test setting an external logger based on bunyan **\n\n', (t) => {
-	const logger = bunyan.createLogger({ name: 'bunyanLogger' });
+	const logger = bunyan.createLogger({name: 'bunyanLogger'});
 	hfc.setLogger(logger);
 
 	testLogger(t);
@@ -226,7 +226,9 @@ test('\n\n ** Logging utility tests - test setting an external logger based on l
 test('\n\n ** Logging utility tests - test setting an invalid external logger **\n\n', (t) => {
 	// construct an invalid logger
 	const logger = {
-		inf: function () { t.comment('info'); },
+		inf: function () {
+			t.comment('info');
+		},
 	};
 
 	try {

@@ -26,7 +26,7 @@ const chaincodePath = '../../chaincode';
  */
 async function installChaincode(ccName, ccId, ccType, ccVersion, tls, ccp, orgName, channelName) {
 
-	if (!supportedLanguageTypes.includes(ccType)){
+	if (!supportedLanguageTypes.includes(ccType)) {
 		Promise.reject('Unsupported test ccType: ' + ccType);
 	}
 
@@ -43,7 +43,7 @@ async function installChaincode(ccName, ccId, ccType, ccVersion, tls, ccp, orgNa
 	}
 
 	const cryptoSuite = Client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: testUtil.storePathForOrg(orgName) }));
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
 	const ordererName = ccp.getOrderersForChannel(channelName)[0];
@@ -78,7 +78,7 @@ async function installChaincode(ccName, ccId, ccType, ccVersion, tls, ccp, orgNa
 	});
 
 	try {
-		const store = await Client.newDefaultKeyValueStore({ path: testUtil.storePathForOrg(orgName) });
+		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		client.setStateStore(store);
 
 		// set user to send install chaincode requests
@@ -143,13 +143,13 @@ async function installChaincode(ccName, ccId, ccType, ccVersion, tls, ccp, orgNa
  * @return {Promise} The return promise.
  */
 async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade, tls, ccp, orgName, channelName, policy) {
-	if (!supportedLanguageTypes.includes(ccType)){
+	if (!supportedLanguageTypes.includes(ccType)) {
 		Promise.reject('Unsupported test ccType: ' + ccType);
 	}
 
 	Client.setConfigSetting('request-timeout', 120000);
 
-	const type = upgrade? 'upgrade' : 'instantiate';
+	const type = upgrade ? 'upgrade' : 'instantiate';
 
 	const targets = [];
 	const eventhubs = [];
@@ -157,7 +157,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 	const channel = client.newChannel(channelName);
 
 	const cryptoSuite = Client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: testUtil.storePathForOrg(orgName) }));
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
 	// Conditional action on TLS enablement
@@ -170,7 +170,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 
 	const ordererName = ccp.getOrderersForChannel(channelName)[0];
 	const caRootsPath = ccp.getOrderer(ordererName).tlsCACerts.path;
-	const data = fs.readFileSync(caRootsPath);
+	let data = fs.readFileSync(caRootsPath);
 	const caroots = Buffer.from(data).toString();
 
 	channel.addOrderer(
@@ -186,7 +186,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 	try {
 		testUtil.logMsg('Performing ' + type + ' transaction on chaincode with ID [' + ccName + '] as organization [' + orgName + '] ...');
 
-		const store = await Client.newDefaultKeyValueStore({ path: testUtil.storePathForOrg(orgName) });
+		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		client.setStateStore(store);
 
 		// set user to send install chaincode requests
@@ -195,7 +195,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 		const peers = ccp.getPeersForOrganization(orgName);
 		peers.forEach((peerName) => {
 			const thisPeer = ccp.getPeer(peerName);
-			const data = fs.readFileSync(thisPeer.tlsCACerts.path);
+			data = fs.readFileSync(thisPeer.tlsCACerts.path);
 			const peer = client.newPeer(
 				thisPeer.url,
 				{
@@ -211,7 +211,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 
 		await channel.initialize();
 
-		const transientMap = { 'test': 'transientValue' };
+		const transientMap = {'test': 'transientValue'};
 		const ccPath = path.join(__dirname, chaincodePath, ccName, ccType);
 		const proposalRequest = buildChaincodeProposal(client, ccId, ccPath, version, ccType, args, upgrade, transientMap, policy);
 
@@ -281,7 +281,7 @@ function buildChaincodeProposal(client, ccId, ccPath, version, ccType, args, upg
 	const tx_id = client.newTransactionID();
 
 	// args is a string array for the arguments to pass [function, arg0, arg1, arg2, ..., argn]
-	const argArray = args.slice(1,-1).split(',');
+	const argArray = args.slice(1, -1).split(',');
 	const func = argArray[0];
 	const funcArgs = argArray.slice(1);
 
@@ -297,7 +297,7 @@ function buildChaincodeProposal(client, ccId, ccPath, version, ccType, args, upg
 		'endorsement-policy': policy
 	};
 
-	if(upgrade) {
+	if (upgrade) {
 		// use this call to test the transient map support during chaincode instantiation
 		request.transientMap = transientMap;
 	}

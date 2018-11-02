@@ -61,31 +61,35 @@ module.exports.newCryptoSuite = (setting) => {
 	// step 1: what's the cryptosuite impl to use, key size and algo
 	if (setting && setting.keysize && typeof setting === 'object' && typeof setting.keysize === 'number') {
 		keysize = setting.keysize;
-	} else
+	} else {
 		keysize = exports.getConfigSetting('crypto-keysize');
+	}
 
 	if (setting && setting.algorithm && typeof setting === 'object' && typeof setting.algorithm === 'string') {
 		algorithm = setting.algorithm.toUpperCase();
-	} else
+	} else {
 		algorithm = 'EC';
+	}
 
 	if (setting && setting.hash && typeof setting === 'object' && typeof setting.hash === 'string') {
 		hashAlgo = setting.hash.toUpperCase();
-	} else
+	} else {
 		hashAlgo = null;
+	}
 
 	// csImpl at this point should be a map (see config/default.json) with keys being the algorithm
 	csImpl = csImpl[algorithm];
 
-	if (!csImpl)
+	if (!csImpl) {
 		throw new Error(util.format('Desired CryptoSuite module not found supporting algorithm "%s"', algorithm));
+	}
 
 	const cryptoSuite = require(csImpl);
 
 	// the 'opts' argument to be passed or none at all
 	opts = (typeof setting === 'undefined') ? null : setting;
 
-	//opts Option is the form { lib: string, slot: number, pin: string }
+	// opts Option is the form { lib: string, slot: number, pin: string }
 	return new cryptoSuite(keysize, hashAlgo, opts);
 };
 
@@ -159,8 +163,8 @@ module.exports.getLogger = function (name) {
 		return insertLoggerName(global.hfc.logger, name);
 	}
 
-	//see if the config has it set
-	const config_log_setting = exports.getConfigSetting('hfc-logging', undefined); //environment setting will be HFC_LOGGING
+	// see if the config has it set
+	const config_log_setting = exports.getConfigSetting('hfc-logging', undefined); // environment setting will be HFC_LOGGING
 
 	const options = {};
 	if (config_log_setting) {
@@ -220,15 +224,15 @@ module.exports.getLogger = function (name) {
 };
 
 //
-//Internal method to add additional configuration file to override default file configuration settings
+// Internal method to add additional configuration file to override default file configuration settings
 //
-module.exports.addConfigFile = (path) => {
+module.exports.addConfigFile = (filePath) => {
 	const config = exports.getConfig();
-	config.file(path);
+	config.file(filePath);
 };
 
 //
-//Internal method to set an override setting to the configuration settings
+// Internal method to set an override setting to the configuration settings
 //
 module.exports.setConfigSetting = (name, value) => {
 	const config = exports.getConfig();
@@ -236,7 +240,7 @@ module.exports.setConfigSetting = (name, value) => {
 };
 
 //
-//Internal method to get an override setting to the configuration settings
+// Internal method to get an override setting to the configuration settings
 //
 exports.getConfigSetting = (name, default_value) => {
 	const config = exports.getConfig();
@@ -341,8 +345,9 @@ module.exports.getClassMethods = (clazz) => {
 	const proto = Object.getPrototypeOf(i);
 	return Object.getOwnPropertyNames(proto).filter(
 		(e) => {
-			if (e !== 'constructor' && typeof i[e] === 'function')
+			if (e !== 'constructor' && typeof i[e] === 'function') {
 				return true;
+			}
 		});
 };
 
@@ -351,7 +356,7 @@ module.exports.getBufferBit = (buf, idx) => {
 	if ((parseInt(idx / 8) + 1) > buf.length) {
 		return {error: true, invalid: 0};
 	}
-	if ((buf[parseInt(idx / 8)] & (1 << (idx % 8))) != 0) {
+	if ((buf[parseInt(idx / 8)] & (1 << (idx % 8))) !== 0) {
 		return {error: false, invalid: 1};
 	} else {
 		return {error: false, invalid: 0};
@@ -482,19 +487,19 @@ module.exports.normalizeX509 = (raw) => {
  */
 module.exports.pemToDER = (pem) => {
 
-	//PEM format is essentially a nicely formatted base64 representation of DER encoding
-	//So we need to strip "BEGIN" / "END" header/footer and string line breaks
-	//Then we simply base64 decode it and convert to hex string
+	// PEM format is essentially a nicely formatted base64 representation of DER encoding
+	// So we need to strip "BEGIN" / "END" header/footer and string line breaks
+	// Then we simply base64 decode it and convert to hex string
 	const contents = pem.toString().trim().split(/\r?\n/);
-	//check for BEGIN and END tags
+	// check for BEGIN and END tags
 	if (!(contents[0].match(/-----\s*BEGIN ?([^-]+)?-----/) &&
 		contents[contents.length - 1].match(/-----\s*END ?([^-]+)?-----/))) {
 		throw new Error('Input parameter does not appear to be PEM-encoded.');
 	}
-	contents.shift(); //remove BEGIN
-	contents.pop(); //remove END
-	//base64 decode and encode as hex string
-	//var hex = Buffer.from(contents.join(''), 'base64').toString('hex');
+	contents.shift(); // remove BEGIN
+	contents.pop(); // remove END
+	// base64 decode and encode as hex string
+	// var hex = Buffer.from(contents.join(''), 'base64').toString('hex');
 	const hex = Buffer.from(contents.join(''), 'base64');
 	return hex;
 };
@@ -509,8 +514,8 @@ module.exports.pemToDER = (pem) => {
 module.exports.convertToLong = (value) => {
 	let result;
 	if (Long.isLong(value)) {
-		result = value; //already a long
-	} else if (typeof value !== 'undefined' && value != null) {
+		result = value; // already a long
+	} else if (typeof value !== 'undefined' && value !== null) {
 		result = Long.fromValue(value);
 		// Long will return a zero for invalid strings so make sure we did
 		// not get a real zero as the incoming value

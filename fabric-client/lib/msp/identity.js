@@ -29,11 +29,13 @@ class Identity {
 	 */
 	constructor(certificate, publicKey, mspId, cryptoSuite) {
 
-		if (!certificate)
+		if (!certificate) {
 			throw new Error('Missing required parameter "certificate".');
+		}
 
-		if (!mspId)
+		if (!mspId) {
 			throw new Error('Missing required parameter "mspId".');
+		}
 
 		this._certificate = certificate;
 		this._publicKey = publicKey;
@@ -87,7 +89,6 @@ class Identity {
 	 * @param {Object} opts Options include 'policy' and 'label' TODO (not implemented yet)
 	 */
 	verify(msg, signature, opts) {
-		if (opts);
 		// TODO: retrieve the publicKey from the certificate
 		if (!this._publicKey) {
 			throw new Error('Missing public key for this Identity');
@@ -103,7 +104,6 @@ class Identity {
 	 * TODO: when this method's design is finalized
 	 */
 	verifyAttributes(proof, attributeProofSpec) {
-		if (proof || attributeProofSpec);
 		return true;
 	}
 
@@ -131,11 +131,13 @@ class Signer {
 	 * @param {module:api.Key} key The private key
 	 */
 	constructor(cryptoSuite, key) {
-		if (!cryptoSuite)
+		if (!cryptoSuite) {
 			throw new Error('Missing required parameter "cryptoSuite"');
+		}
 
-		if (!key)
+		if (!key) {
 			throw new Error('Missing required parameter "key" for private key');
+		}
 
 		this._cryptoSuite = cryptoSuite;
 		this._key = key;

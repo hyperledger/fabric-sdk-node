@@ -32,7 +32,7 @@ describe('Helper', () => {
 
 		it('should throw if called with argument that in not an instance of the class "User"', () => {
 			(() => {
-				Helper.checkRegistrar({ thisIs: 'the wrong class' });
+				Helper.checkRegistrar({thisIs: 'the wrong class'});
 			}).should.throw(/Argument "registrar" must be an instance of the class "User" but is of type:/);
 		});
 
@@ -148,7 +148,7 @@ describe('Helper', () => {
 
 		it('should return a URL Object on success', () => {
 			const result = Helper.parseURL('http://hyperledger.com:4200');
-			result.should.deep.equal({ protocol: 'http', port: 4200, hostname: 'hyperledger.com' });
+			result.should.deep.equal({protocol: 'http', port: 4200, hostname: 'hyperledger.com'});
 		});
 
 	});

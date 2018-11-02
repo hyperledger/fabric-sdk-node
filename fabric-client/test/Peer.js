@@ -13,6 +13,7 @@
  */
 
 'use strict';
+/* eslint-disable no-useless-call */
 
 const rewire = require('rewire');
 const PeerRewire = rewire('../lib/Peer');
@@ -55,7 +56,7 @@ describe('Peer', () => {
 			// call
 			obj.close();
 
-			//assert
+			// assert
 			sinon.assert.called(mockClose);
 		});
 
@@ -72,7 +73,7 @@ describe('Peer', () => {
 			// call
 			obj.close();
 
-			//assert
+			// assert
 			sinon.assert.called(mockClose);
 		});
 	});
@@ -117,7 +118,9 @@ describe('Peer', () => {
 			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
 			function Fake(params, callback) {
-				setTimeout(() => { callback.call(null,'timeout not honoured'); }, 10);
+				setTimeout(() => {
+					callback.call(null, 'timeout not honoured');
+				}, 10);
 			}
 
 			const endorserClient = sinon.stub();
@@ -145,7 +148,7 @@ describe('Peer', () => {
 			const endorserClient = sinon.stub();
 
 			function Fake(params, callback) {
-				callback.call(null,'i_am_an_error');
+				callback.call(null, 'i_am_an_error');
 			}
 
 			endorserClient.processProposal = sinon.stub().callsFake(Fake);
@@ -154,7 +157,7 @@ describe('Peer', () => {
 			obj._endorserClient = endorserClient;
 
 			await obj.sendProposal('deliver').should.be.rejectedWith(/i_am_an_error/);
-			sinon.assert.calledWith(debugStub,'%s - Received proposal response from: %s status: %s');
+			sinon.assert.calledWith(debugStub, '%s - Received proposal response from: %s status: %s');
 		});
 
 		it('should reject Error object on proposal response error object', async () => {
@@ -181,7 +184,7 @@ describe('Peer', () => {
 			obj._endorserClient = endorserClient;
 
 			await obj.sendProposal('deliver').should.be.rejectedWith(/FORCED_ERROR/);
-			sinon.assert.calledWith(debugStub,'%s - Received proposal response from: %s status: %s');
+			sinon.assert.calledWith(debugStub, '%s - Received proposal response from: %s status: %s');
 		});
 
 		it('should log and reject on undefined proposal response', async () => {
@@ -208,7 +211,7 @@ describe('Peer', () => {
 			obj._endorserClient = endorserClient;
 
 			await obj.sendProposal('deliver').should.be.rejectedWith(/GRPC client got a null or undefined response from the peer/);
-			sinon.assert.calledWith(errorStub,'GRPC client got a null or undefined response from the peer "%s".');
+			sinon.assert.calledWith(errorStub, 'GRPC client got a null or undefined response from the peer "%s".');
 		});
 
 		it('should log and reject on invalid proposal response', async () => {
@@ -236,8 +239,8 @@ describe('Peer', () => {
 			obj._endorserClient = endorserClient;
 
 			await obj.sendProposal('deliver').should.be.rejectedWith(/GRPC client failed to get a proper response from the peer/);
-			sinon.assert.calledWith(debugStub,'%s - Received proposal response from peer "%s": status - %s');
-			sinon.assert.calledWith(errorStub,'GRPC client failed to get a proper response from the peer "%s".');
+			sinon.assert.calledWith(debugStub, '%s - Received proposal response from peer "%s": status - %s');
+			sinon.assert.calledWith(errorStub, 'GRPC client failed to get a proper response from the peer "%s".');
 		});
 
 		it('should log and reject on proposal response error status greater than or equal to 400', async () => {
@@ -264,7 +267,7 @@ describe('Peer', () => {
 			obj._endorserClient = endorserClient;
 
 			await obj.sendProposal('deliver').should.be.rejectedWith(/fail_string/);
-			sinon.assert.calledWith(debugStub,'%s - Received proposal response from peer "%s": status - %s');
+			sinon.assert.calledWith(debugStub, '%s - Received proposal response from peer "%s": status - %s');
 		});
 
 		it('should resolve on valid proposal response', async () => {
@@ -293,7 +296,7 @@ describe('Peer', () => {
 
 			const response = await obj.sendProposal('deliver');
 			response.should.deep.equal(myResponse);
-			sinon.assert.calledWith(debugStub,'%s - Received proposal response from peer "%s": status - %s');
+			sinon.assert.calledWith(debugStub, '%s - Received proposal response from peer "%s": status - %s');
 		});
 
 		it('should mark errors from chaincode as proposal response', async () => {
@@ -319,7 +322,7 @@ describe('Peer', () => {
 			try {
 				await obj.sendProposal('deliver');
 				should.fail();
-			} catch(err) {
+			} catch (err) {
 				err.isProposalResponse.should.be.true;
 				err.status.should.equal(500);
 				err.message.should.equal('some error');
@@ -330,7 +333,9 @@ describe('Peer', () => {
 			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
 			function Fake(params, callback) {
-				setTimeout(() => { callback.call(null,'timeout not honoured'); }, 10);
+				setTimeout(() => {
+					callback.call(null, 'timeout not honoured');
+				}, 10);
 			}
 
 			const endorserClient = sinon.stub();
@@ -342,7 +347,7 @@ describe('Peer', () => {
 			try {
 				await obj.sendProposal('deliver', 0);
 				should.fail();
-			} catch(error) {
+			} catch (error) {
 				should.equal(error.isProposalResponse, undefined);
 			}
 		});
@@ -399,7 +404,9 @@ describe('Peer', () => {
 			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
 			function Fake(params, callback) {
-				setTimeout(() => { callback.call(null,'timeout not honoured'); }, 10);
+				setTimeout(() => {
+					callback.call(null, 'timeout not honoured');
+				}, 10);
 			}
 
 			const discoveryClient = sinon.stub();
@@ -409,7 +416,7 @@ describe('Peer', () => {
 			obj._discoveryClient = discoveryClient;
 
 			await obj.sendDiscovery('deliver', 0).should.be.rejectedWith(/REQUEST_TIMEOUT/);
-			sinon.assert.calledWith(errorStub,'%s - timed out after:%s');
+			sinon.assert.calledWith(errorStub, '%s - timed out after:%s');
 		});
 
 		it('should log and reject Error object on discover Response error string', async () => {
@@ -426,7 +433,7 @@ describe('Peer', () => {
 			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
 			function Fake(params, callback) {
-				callback.call(null,'i_am_an_error');
+				callback.call(null, 'i_am_an_error');
 			}
 
 			const discoveryClient = sinon.stub();
@@ -436,7 +443,7 @@ describe('Peer', () => {
 			obj._discoveryClient = discoveryClient;
 
 			await obj.sendDiscovery('deliver').should.be.rejectedWith(/i_am_an_error/);
-			sinon.assert.calledWith(debugStub,'%s - Received discovery response from: %s status: %s');
+			sinon.assert.calledWith(debugStub, '%s - Received discovery response from: %s status: %s');
 		});
 
 		it('should log and reject Error object on discover Response error object', async () => {
@@ -463,7 +470,7 @@ describe('Peer', () => {
 			obj._discoveryClient = discoveryClient;
 
 			await obj.sendDiscovery('deliver').should.be.rejectedWith(/FORCED_ERROR/);
-			sinon.assert.calledWith(debugStub,'%s - Received discovery response from: %s status: %s');
+			sinon.assert.calledWith(debugStub, '%s - Received discovery response from: %s status: %s');
 		});
 
 		it('should log and reject Error object on null response from discover', async () => {
@@ -490,7 +497,7 @@ describe('Peer', () => {
 			obj._discoveryClient = discoveryClient;
 
 			await obj.sendDiscovery('deliver').should.be.rejectedWith(/GRPC client failed to get a proper response from the peer/);
-			sinon.assert.calledWith(errorStub,'GRPC client failed to get a proper response from the peer "%s".');
+			sinon.assert.calledWith(errorStub, 'GRPC client failed to get a proper response from the peer "%s".');
 		});
 
 		it('should log and resolve on good response from discover', async () => {
@@ -518,7 +525,7 @@ describe('Peer', () => {
 
 			const Response = await obj.sendDiscovery('deliver');
 			Response.should.deep.equal(myResponse);
-			sinon.assert.calledWith(debugStub,'%s - Received discovery response from peer "%s"');
+			sinon.assert.calledWith(debugStub, '%s - Received discovery response from peer "%s"');
 		});
 
 	});

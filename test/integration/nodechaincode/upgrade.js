@@ -42,8 +42,7 @@ test('\n\n***** Node-Chaincode U P G R A D E flow: upgrade chaincode *****\n\n',
 			if (result) {
 				t.pass('Successfully upgrade chaincode on the channel');
 				t.end();
-			}
-			else {
+			} else {
 				t.fail('Failed to upgrade chaincode ');
 				t.end();
 			}
@@ -58,15 +57,14 @@ test('\n\n***** Node-Chaincode U P G R A D E flow: upgrade chaincode *****\n\n',
 
 test('\n\n***** Node-Chaincode U P G R A D E flow: invoke transaction to move money *****\n\n', (t) => {
 	const fcn = 'move';
-	const args = ['a', 'b','100'];
+	const args = ['a', 'b', '100'];
 	const expectedResult = 'move succeed';
 	e2eUtils.invokeChaincode('org2', 'v1', chaincodeId, t, false, fcn, args, expectedResult)
 		.then((result) => {
-			if(result){
+			if (result) {
 				t.pass('Successfully invoke transaction chaincode on the channel');
 				t.end();
-			}
-			else {
+			} else {
 				t.fail('Failed to invoke transaction chaincode ');
 				t.end();
 			}
@@ -86,11 +84,10 @@ test('\n\n***** Node-Chaincode U P G R A D E flow: query chaincode *****\n\n', (
 	const targets = [];  // empty array, meaning client will get the peers from the channel
 	e2eUtils.queryChaincode('org2', 'v1', targets, fcn, args, expectedResult, chaincodeId, t)
 		.then((result) => {
-			if(result){
+			if (result) {
 				t.pass('Successfully query chaincode on the channel');
 				t.end();
-			}
-			else {
+			} else {
 				t.fail('Failed to query chaincode ');
 				t.end();
 			}
@@ -113,11 +110,10 @@ test('\n\n***** Node-Chaincode TransientMap Support in Proposals *****\n\n', (t)
 	const targets = [];  // empty array, meaning client will get the peers from the channel
 	e2eUtils.queryChaincode('org2', 'v1', targets, fcn, args, expectedResult, chaincodeId, t, transient)
 		.then((result) => {
-			if(result){
+			if (result) {
 				t.pass('Successfully verified transient map values');
 				t.end();
-			}
-			else {
+			} else {
 				t.fail('Failed to test transientMap support');
 				t.end();
 			}

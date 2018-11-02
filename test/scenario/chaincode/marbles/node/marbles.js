@@ -171,7 +171,7 @@ const Chaincode = class {
 		if (!name) {
 			return shim.error(' marble name must not be empty');
 		}
-		const marbleAsBytes = await stub.getState(name); //get the marble from chaincode state
+		const marbleAsBytes = await stub.getState(name); // get the marble from chaincode state
 		if (!marbleAsBytes.toString()) {
 			const jsonResp = {};
 			jsonResp.Error = 'Marble does not exist: ' + name;
@@ -199,7 +199,7 @@ const Chaincode = class {
 			return shim.error('marble name must not be empty');
 		}
 		// to maintain the color~name index, we need to read the marble first and get its color
-		const valAsBytes = await stub.getState(marbleName); //get the marble from chaincode state
+		const valAsBytes = await stub.getState(marbleName); // get the marble from chaincode state
 		let jsonResp = {};
 		if (!valAsBytes) {
 			jsonResp.error = 'marble does not exist: ' + marbleName;
@@ -214,7 +214,7 @@ const Chaincode = class {
 			return shim.error(jsonResp);
 		}
 
-		await stub.deleteState(marbleName); //remove the marble from chaincode state
+		await stub.deleteState(marbleName); // remove the marble from chaincode state
 
 		// delete the index
 		const indexName = 'color~name';
@@ -253,17 +253,17 @@ const Chaincode = class {
 		}
 		let marbleToTransfer = {};
 		try {
-			marbleToTransfer = JSON.parse(marbleAsBytes.toString()); //unmarshal
+			marbleToTransfer = JSON.parse(marbleAsBytes.toString()); // unmarshal
 		} catch (err) {
 			const jsonResp = {};
 			jsonResp.error = 'Failed to decode JSON of: ' + marbleName;
 			return shim.error(jsonResp);
 		}
 		console.info(marbleToTransfer);
-		marbleToTransfer.owner = newOwner; //change the owner
+		marbleToTransfer.owner = newOwner; // change the owner
 
 		const marbleJSONasBytes = Buffer.from(JSON.stringify(marbleToTransfer));
-		await stub.putState(marbleName, marbleJSONasBytes); //rewrite the marble
+		await stub.putState(marbleName, marbleJSONasBytes); // rewrite the marble
 
 		console.info('- end transferMarble (success)');
 		return shim.success('transferMarble success');
@@ -382,7 +382,7 @@ const Chaincode = class {
 		queryString.selector = {};
 		queryString.selector.docType = 'marble';
 		queryString.selector.owner = owner;
-		const queryResults = await thisObject.getQueryResultForQueryString(stub, JSON.stringify(queryString), thisObject); //;
+		const queryResults = await thisObject.getQueryResultForQueryString(stub, JSON.stringify(queryString), thisObject);
 		return shim.success(queryResults);
 	}
 

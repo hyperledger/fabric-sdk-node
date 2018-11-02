@@ -25,7 +25,7 @@ const Channel = require('fabric-client/lib/Channel');
 const ChannelRewire = rewire('fabric-client/lib/Channel');
 const ChannelEventHub = require('fabric-client/lib/ChannelEventHub');
 const Client = require('fabric-client/lib/Client');
-const { Identity, SigningIdentity } = require('fabric-client/lib/msp/identity');
+const {Identity, SigningIdentity} = require('fabric-client/lib/msp/identity');
 const MSP = require('fabric-client/lib/msp/msp');
 const MSPManager = require('fabric-client/lib/msp/msp-manager');
 const Orderer = require('fabric-client/lib/Orderer');
@@ -47,10 +47,9 @@ const fakeHandler = require(fakeHandlerModulePath).create();
 
 describe('Channel', () => {
 	const channelName = 'channel-name';
-	const mspId = 'mspId';
-
 	let client;
 	let channel;
+	let mspId;
 	let peer1;
 	let peer2;
 	let orderer1;
@@ -60,13 +59,15 @@ describe('Channel', () => {
 	let stubMspIdentity;
 	let stubSigningIdentity;
 
+	mspId = 'mspId';
+
 	beforeEach(() => {
 		client = new Client();
 		channel = new Channel(channelName, client);
-		peer1 = new Peer('grpc://localhost', { name: 'Peer1' });
-		peer2 = new Peer('grpc://localhost', { name: 'Peer2' });
-		orderer1 = new Orderer('grpc://localhost', { name: 'Orderer1' });
-		orderer2 = new Orderer('grpc://localhost', { name: 'Orderer2' });
+		peer1 = new Peer('grpc://localhost', {name: 'Peer1'});
+		peer2 = new Peer('grpc://localhost', {name: 'Peer2'});
+		orderer1 = new Orderer('grpc://localhost', {name: 'Orderer1'});
+		orderer2 = new Orderer('grpc://localhost', {name: 'Orderer2'});
 
 		stubMspIdentity = sinon.createStubInstance(Identity);
 		stubMspIdentity.isValid.returns(true);
@@ -134,7 +135,7 @@ describe('Channel', () => {
 		envelope.payload = envelopePayload.toBuffer();
 
 		const blockData = new commonProto.BlockData();
-		blockData.data = [ envelope.toBuffer() ];
+		blockData.data = [envelope.toBuffer()];
 
 		const block = new commonProto.Block();
 		block.data = blockData;
@@ -361,7 +362,7 @@ describe('Channel', () => {
 
 	describe('#close', () => {
 		it('calls close on all channel peers', () => {
-			const peers = [ peer1, peer2 ];
+			const peers = [peer1, peer2];
 			peers.forEach((peer) => {
 				sinon.spy(peer, 'close');
 				channel.addPeer(peer, `${peer.getName()}Org`);
@@ -375,7 +376,7 @@ describe('Channel', () => {
 		});
 
 		it('calls close on all orderers', () => {
-			const orderers = [ orderer1, orderer2 ];
+			const orderers = [orderer1, orderer2];
 			orderers.forEach((orderer) => {
 				sinon.spy(orderer, 'close');
 				channel.addOrderer(orderer);
@@ -456,7 +457,7 @@ describe('Channel', () => {
 
 			const eventHubs = channel.getChannelEventHubsForOrg(org1);
 
-			assertChannelEventHubsMatchPeers(eventHubs, [ peer1 ]);
+			assertChannelEventHubsMatchPeers(eventHubs, [peer1]);
 		});
 
 		it('returns channel event hubs for channel\'s orgnanization if no organization specified', () => {
@@ -478,17 +479,17 @@ describe('Channel', () => {
 
 			const eventHubs = channel.getChannelEventHubsForOrg();
 
-			assertChannelEventHubsMatchPeers(eventHubs, [ peer1 ]);
+			assertChannelEventHubsMatchPeers(eventHubs, [peer1]);
 		});
 
 		it('does not return channel event hubs for peers that are not event sources', () => {
 			const org = 'org';
 			channel.addPeer(peer1, org);
-			channel.addPeer(peer2, org, { eventSource: false });
+			channel.addPeer(peer2, org, {eventSource: false});
 
 			const eventHubs = channel.getChannelEventHubsForOrg(org);
 
-			assertChannelEventHubsMatchPeers(eventHubs, [ peer1 ]);
+			assertChannelEventHubsMatchPeers(eventHubs, [peer1]);
 		});
 	});
 
@@ -514,13 +515,13 @@ describe('Channel', () => {
 		it('returns member services provider IDs from MSP manager', () => {
 			const mspId1 = 'mspId1';
 			const mspId2 = 'mspId2';
-			mspManager.addMSP({ id: mspId1 });
-			mspManager.addMSP({ id: mspId2 });
+			mspManager.addMSP({id: mspId1});
+			mspManager.addMSP({id: mspId2});
 			channel.setMSPManager(mspManager);
 
 			const orgs = channel.getOrganizations();
 
-			expect(orgs).to.have.deep.members([{ id: mspId1 }, { id: mspId2 }]);
+			expect(orgs).to.have.deep.members([{id: mspId1}, {id: mspId2}]);
 		});
 	});
 
@@ -564,27 +565,27 @@ describe('Channel', () => {
 
 		it('returns true for a single poposal response', () => {
 			const proposalResponse1 = createProposalResponse('foo');
-			const result = channel.compareProposalResponseResults([ proposalResponse1 ]);
+			const result = channel.compareProposalResponseResults([proposalResponse1]);
 			expect(result).to.be.true;
 		});
 
 		it('returns true for matching poposal responses', () => {
 			const proposalResponse1 = createProposalResponse('foo');
 			const proposalResponse2 = createProposalResponse('foo');
-			const result = channel.compareProposalResponseResults([ proposalResponse1, proposalResponse2 ]);
+			const result = channel.compareProposalResponseResults([proposalResponse1, proposalResponse2]);
 			expect(result).to.be.true;
 		});
 
 		it('returns false for non-matching poposal responses', () => {
 			const proposalResponse1 = createProposalResponse('foo');
 			const proposalResponse2 = createProposalResponse('bar');
-			const result = channel.compareProposalResponseResults([ proposalResponse1, proposalResponse2 ]);
+			const result = channel.compareProposalResponseResults([proposalResponse1, proposalResponse2]);
 			expect(result).to.be.false;
 		});
 	});
 
 	describe('#generateUnsignedProposal', () => {
-		const mspId = 'org1';
+		mspId = 'org1';
 		const certificate = 'fake-cert';
 		const admin = false;
 		let request;
@@ -730,7 +731,7 @@ describe('Channel', () => {
 
 		beforeEach(() => {
 			transactionRequest = {
-				proposalResponses: [ createProposalResponse('message') ],
+				proposalResponses: [createProposalResponse('message')],
 				proposal: new proposalProto.Proposal(),
 				txId: sinon.createStubInstance(TransactionID)
 			};
@@ -776,18 +777,18 @@ describe('Channel', () => {
 
 	describe('#sendSignedProposal', () => {
 		it('returns results of calling sendProposal() on peers as an array', async () => {
-			const proposalResult1 = { _fake: 'peer1' };
-			const proposalResult2 = { _fake: 'peer2' };
+			const proposalResult1 = {_fake: 'peer1'};
+			const proposalResult2 = {_fake: 'peer2'};
 			sinon.stub(peer1, 'sendProposal').resolves(proposalResult1);
 			sinon.stub(peer2, 'sendProposal').resolves(proposalResult2);
 
 			const signedProposal = {
-				targets: [ peer1, peer2 ],
+				targets: [peer1, peer2],
 				signedProposal: Buffer.from('signedProposal')
 			};
 			const results = await channel.sendSignedProposal(signedProposal, 1000);
 
-			expect(results).to.have.members([ proposalResult1, proposalResult2 ]);
+			expect(results).to.have.members([proposalResult1, proposalResult2]);
 		});
 	});
 
@@ -1046,7 +1047,7 @@ describe('Channel', () => {
 
 	describe('#_buildOptions', () => {
 		it('should return the build options', () => {
-			const client = sinon.createStubInstance(Client);
+			client = sinon.createStubInstance(Client);
 			channel._clientContext = client;
 			const msp = {tls_root_certs: 'ROOT_CERT'};
 			const pem = 'ROOT_CERT';
@@ -1259,7 +1260,7 @@ describe('ChannelPeer', () => {
 		});
 	});
 
-	describe('#close' , () => {
+	describe('#close', () => {
 		it('should close the peer connection', () => {
 			instance._channel_event_hub = null;
 			instance.close();

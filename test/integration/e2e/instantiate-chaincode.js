@@ -25,8 +25,7 @@ test('\n\n***** End-to-end flow: instantiate chaincode *****\n\n', async (t) => 
 			t.pass('Successfully instantiated chaincode on the channel');
 			await testUtil.sleep(5000);
 			logger.debug('Successfully slept 5s to wait for chaincode instantiate to be completed and committed in all peers');
-		}
-		else {
+		} else {
 			t.fail('Failed to instantiate chaincode ');
 		}
 	} catch (err) {

@@ -17,7 +17,7 @@ module.exports = function () {
 	this.Then(/^I can create a gateway named (.+?) as user (.+?) within (.+?) using the (.+?) common connection profile$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, userName, orgName, tlsType) => {
 		let profile;
 		let tls;
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {

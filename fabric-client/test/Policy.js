@@ -15,7 +15,8 @@
 'use strict';
 
 const rewire = require('rewire');
-const { checkPolicy, buildSignaturePolicy, buildPrincipal } = require('../lib/Policy');
+const {checkPolicy, buildSignaturePolicy} = require('../lib/Policy');
+let {buildPrincipal} = require('../lib/Policy');
 
 const chai = require('chai');
 const should = chai.should();
@@ -71,7 +72,7 @@ describe('Policy', () => {
 			}
 		};
 
-		beforeEach(() =>{
+		beforeEach(() => {
 			PolicyRewire = rewire('../lib/Policy');
 			PolicyRewire.__set__('_policiesProto', MockPolicyProto);
 		});
@@ -176,68 +177,68 @@ describe('Policy', () => {
 		MockMspProto.MSPRole = MockMSPRole;
 		MockMspProto.MSPPrincipal = MockMSPPrincipal;
 
-		beforeEach(() =>{
+		beforeEach(() => {
 			PolicyRewire = rewire('../lib/Policy');
 			PolicyRewire.__set__('_mspPrProto', MockMspProto);
 		});
 
-		afterEach(() =>{
+		afterEach(() => {
 			MockMSPRole.resetHistory();
 			setRoleStub.resetHistory();
 		});
 
 		it('should throw if the identity type is unknown', () => {
 			(() => {
-				buildPrincipal({ 'role': 'penguin' });
+				buildPrincipal({'role': 'penguin'});
 			}).should.throw(/Invalid role name found/);
 		});
 
 		it('should throw if the identity type is unimplemented', () => {
 			(() => {
-				buildPrincipal({ 'organization-unit': 'my organization-unit' });
+				buildPrincipal({'organization-unit': 'my organization-unit'});
 			}).should.throw(/NOT IMPLEMENTED/);
 		});
 
 		it('should throw if invalid role name passed', () => {
 			(() => {
-				buildPrincipal({ 'role': {name: 'penguin', mspId: 20 }});
+				buildPrincipal({'role': {name: 'penguin', mspId: 20}});
 			}).should.throw(/Invalid role name found/);
 		});
 
 		it('should throw if invalid mspid passed', () => {
 			(() => {
-				buildPrincipal({ 'role': {name: 'peer', mspId: 20 }});
+				buildPrincipal({'role': {name: 'peer', mspId: 20}});
 			}).should.throw(/Invalid mspid found/);
 		});
 
 		it('should throw if no mspid passed', () => {
 			(() => {
-				buildPrincipal({ 'role': {name: 'peer', mspId: null }});
+				buildPrincipal({'role': {name: 'peer', mspId: null}});
 			}).should.throw(/Invalid mspid found/);
 		});
 
-		it('should set the role to peer if peer role', () =>{
+		it('should set the role to peer if peer role', () => {
 
-			const buildPrincipal = PolicyRewire.__get__('buildPrincipal');
-			buildPrincipal({ 'role': {name: 'peer', mspId: 'my_mspId' }});
+			buildPrincipal = PolicyRewire.__get__('buildPrincipal');
+			buildPrincipal({'role': {name: 'peer', mspId: 'my_mspId'}});
 
 			sinon.assert.calledOnce(setRoleStub);
 			sinon.assert.calledWith(setRoleStub, MockPeerRole);
 		});
 
-		it('should set the role to member if member role', () =>{
+		it('should set the role to member if member role', () => {
 
-			const buildPrincipal = PolicyRewire.__get__('buildPrincipal');
-			buildPrincipal({ 'role': {name: 'member', mspId: 'my_mspId' }});
+			buildPrincipal = PolicyRewire.__get__('buildPrincipal');
+			buildPrincipal({'role': {name: 'member', mspId: 'my_mspId'}});
 
 			sinon.assert.calledOnce(setRoleStub);
 			sinon.assert.calledWith(setRoleStub, MockMemberRole);
 		});
 
-		it('should set the role to admin if admin role', () =>{
+		it('should set the role to admin if admin role', () => {
 
-			const buildPrincipal = PolicyRewire.__get__('buildPrincipal');
-			buildPrincipal({ 'role': {name: 'admin', mspId: 'my_mspId' }});
+			buildPrincipal = PolicyRewire.__get__('buildPrincipal');
+			buildPrincipal({'role': {name: 'admin', mspId: 'my_mspId'}});
 
 			sinon.assert.calledOnce(setRoleStub);
 			sinon.assert.calledWith(setRoleStub, MockAdminRole);
@@ -256,22 +257,22 @@ describe('Policy', () => {
 
 		it('should throw if an invalid identity type', () => {
 			(() => {
-				getIdentityType({ 'invalid': true });
+				getIdentityType({'invalid': true});
 			}).should.throw(/Invalid identity type found: must be one of role, organization-unit or identity, but found invalid/);
 		});
 
 		it('should return role type', () => {
-			const result = getIdentityType({ 'role': 'my role' });
+			const result = getIdentityType({'role': 'my role'});
 			result.should.equal('role');
 		});
 
 		it('should return organisation type', () => {
-			const result = getIdentityType({ 'organization-unit': 'my organization-unit' });
+			const result = getIdentityType({'organization-unit': 'my organization-unit'});
 			result.should.equal('organization-unit');
 		});
 
 		it('should return identity type', () => {
-			const result = getIdentityType({ 'identity': 'my identity' });
+			const result = getIdentityType({'identity': 'my identity'});
 			result.should.equal('identity');
 		});
 	});
@@ -282,23 +283,23 @@ describe('Policy', () => {
 
 		it('should throw if invalid type found', () => {
 			(() => {
-				getPolicy({ 'two-of': true });
+				getPolicy({'two-of': true});
 			}).should.throw(/Invalid policy type found/);
 		});
 
 		it('should throw if invalid type found', () => {
 			(() => {
-				getPolicy({ 'geoff': true });
+				getPolicy({'geoff': true});
 			}).should.throw(/Invalid policy type found/);
 		});
 
 		it('should return "signed-by" if that is the policy type', () => {
-			const myType = getPolicy({ 'signed-by': true });
+			const myType = getPolicy({'signed-by': true});
 			myType.should.be.equal('signed-by');
 		});
 
 		it('should return "n-of" if that is the policy type', () => {
-			const myType = getPolicy({ '3-of': true });
+			const myType = getPolicy({'3-of': true});
 			myType.should.be.equal('3-of');
 		});
 	});
@@ -350,7 +351,7 @@ describe('Policy', () => {
 			};
 
 			const result = buildSignaturePolicy(policy);
-			result.should.deep.equal({ signed_by: 0 });
+			result.should.deep.equal({signed_by: 0});
 		});
 
 		it('should recursively build if n-of detected', () => {
@@ -400,43 +401,43 @@ describe('Policy', () => {
 
 		it('should throw if passed parameter policy.identities is missing', () => {
 			(() => {
-				checkPolicy({ name: 'nothing' });
+				checkPolicy({name: 'nothing'});
 			}).should.throw(/Invalid policy, missing the "identities" property/);
 		});
 
 		it('should throw if passed parameter policy.identities is null', () => {
 			(() => {
-				checkPolicy({ identities: null });
+				checkPolicy({identities: null});
 			}).should.throw(/Invalid policy, missing the "identities" property/);
 		});
 
 		it('should throw if passed parameter policy.identities is undefined', () => {
 			(() => {
-				checkPolicy({ identities: undefined });
+				checkPolicy({identities: undefined});
 			}).should.throw(/Invalid policy, missing the "identities" property/);
 		});
 
 		it('should throw if passed parameter policy.identities is an empty string', () => {
 			(() => {
-				checkPolicy({ identities: '' });
+				checkPolicy({identities: ''});
 			}).should.throw(/Invalid policy, missing the "identities" property/);
 		});
 
 		it('should throw if passed parameter policy.identities is an empty object', () => {
 			(() => {
-				checkPolicy({ identities: {} });
+				checkPolicy({identities: {}});
 			}).should.throw(/Invalid policy, missing the "identities" property/);
 		});
 
 		it('should throw if passed parameter policy.identities is not an array', () => {
 			(() => {
-				checkPolicy({ identities: { name: 'something' } });
+				checkPolicy({identities: {name: 'something'}});
 			}).should.throw(/Invalid policy, the "identities" property must be an array/);
 		});
 
 		it('should throw if passed parameter policy.policy is missing', () => {
 			(() => {
-				checkPolicy({ identities: true });
+				checkPolicy({identities: true});
 			}).should.throw(/Invalid policy, missing the "identities" property/);
 		});
 
@@ -448,7 +449,7 @@ describe('Policy', () => {
 						mspId: 'Org1MSP'
 					}
 				}];
-				checkPolicy({ identities: identities, policy: null });
+				checkPolicy({identities: identities, policy: null});
 			}).should.throw(/Invalid policy, missing the "policy" property/);
 		});
 
@@ -460,7 +461,7 @@ describe('Policy', () => {
 						mspId: 'Org1MSP'
 					}
 				}];
-				checkPolicy({ identities: identities, policy: undefined });
+				checkPolicy({identities: identities, policy: undefined});
 			}).should.throw(/Invalid policy, missing the "policy" property/);
 		});
 
@@ -472,7 +473,7 @@ describe('Policy', () => {
 						mspId: 'Org1MSP'
 					}
 				}];
-				checkPolicy({ identities: identities, policy: {} });
+				checkPolicy({identities: identities, policy: {}});
 			}).should.throw(/Invalid policy, missing the "policy" property/);
 		});
 

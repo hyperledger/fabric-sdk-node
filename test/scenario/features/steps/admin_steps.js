@@ -19,7 +19,7 @@ const policiesPath = '../../config/policies.json';
 module.exports = function () {
 
 	this.Then(/^I can create a channels from the (.+?) common connection profile$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (tlsType) => {
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			const profile =  new CCP(path.join(__dirname, ccpPath), true);
 			return channel_util.create_channels(path.join(__dirname, configRoot), profile, false);
 		} else {
@@ -29,7 +29,7 @@ module.exports = function () {
 	});
 
 	this.Then(/^I can join organization (.+?) to the (.+?) enabled channel named (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (orgName, tlsType, channelName) => {
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			const profile =  new CCP(path.join(__dirname, ccpPath), true);
 			return channel_util.join_channel(profile, false, channelName, orgName);
 		} else {
@@ -42,7 +42,7 @@ module.exports = function () {
 		let tls;
 		let profile;
 
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {
@@ -54,13 +54,13 @@ module.exports = function () {
 
 		const channels = profile.getChannels();
 		try {
-			for (const channelName in channels){
+			for (const channelName in channels) {
 				const channel = profile.getChannel(channelName);
 				const orgs = profile.getOrganizations();
-				for (const orgName in orgs){
+				for (const orgName in orgs) {
 					const org = profile.getOrganization(orgName);
 					const orgPeers = org.peers;
-					if (Object.keys(channel.peers).some((peerName)=> orgPeers.includes(peerName))) {
+					if (Object.keys(channel.peers).some((peerName) => orgPeers.includes(peerName))) {
 						await channel_util.join_channel(profile, tls, channelName, orgName);
 					}
 				}
@@ -74,7 +74,7 @@ module.exports = function () {
 	this.Then(/^I can install (.+?) chaincode at version (.+?) named (.+?) to the (.+?) Fabric network as organization (.+?) on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (ccType, version, ccName, tlsType, orgName, channelName) => {
 		let profile;
 		let tls;
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {
@@ -87,7 +87,7 @@ module.exports = function () {
 	this.Then(/^I can install (.+?) chaincode at version (.+?) named (.+?) as (.+?) to the (.+?) Fabric network as organization (.+?) on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (ccType, version, ccName, ccId, tlsType, orgName, channelName) => {
 		let profile;
 		let tls;
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {
@@ -100,7 +100,7 @@ module.exports = function () {
 	this.Then(/^I can install (.+?) chaincode named (.+?) to the (.+?) Fabric network$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (ccType, ccName, tlsType) => {
 		let profile;
 		let tls;
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {
@@ -123,7 +123,7 @@ module.exports = function () {
 	this.Then(/^I can install (.+?) chaincode named (.+?) as (.+?) to the (.+?) Fabric network$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (ccType, ccName, ccId, tlsType) => {
 		let profile;
 		let tls;
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {
@@ -147,7 +147,7 @@ module.exports = function () {
 		let profile;
 		let tls;
 		let upgrade;
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {
@@ -155,7 +155,7 @@ module.exports = function () {
 			profile = new CCP(path.join(__dirname, tlsCcpPath), true);
 		}
 
-		if (exisiting.localeCompare('newly') == 0) {
+		if (exisiting.localeCompare('newly') === 0) {
 			upgrade = false;
 		} else {
 			upgrade = true;
@@ -169,7 +169,7 @@ module.exports = function () {
 		let profile;
 		let tls;
 		let upgrade;
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {
@@ -177,7 +177,7 @@ module.exports = function () {
 			profile = new CCP(path.join(__dirname, tlsCcpPath), true);
 		}
 
-		if (exisiting.localeCompare('newly') == 0) {
+		if (exisiting.localeCompare('newly') === 0) {
 			upgrade = false;
 		} else {
 			upgrade = true;
@@ -190,7 +190,7 @@ module.exports = function () {
 	this.Then(/^I can install\/instantiate (.+?) chaincode at version (.+?) named (.+?) to the (.+?) Fabric network for all organizations on channel (.+?) with endorsement policy (.+?) and args (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (ccType, version, ccName, tlsType, channelName, policyType, args) => {
 		let profile;
 		let tls;
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {
@@ -218,7 +218,7 @@ module.exports = function () {
 	this.Then(/^I can install\/instantiate (.+?) chaincode at version (.+?) named (.+?) to the (.+?) Fabric network for all organizations on channel (.+?) as (.+?) with endorsement policy (.+?) and args (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (ccType, version, ccName, tlsType, channelName, ccId, policyType, args) => {
 		let profile;
 		let tls;
-		if (tlsType.localeCompare('non-tls') == 0) {
+		if (tlsType.localeCompare('non-tls') === 0) {
 			tls = false;
 			profile = new CCP(path.join(__dirname, ccpPath), true);
 		} else {

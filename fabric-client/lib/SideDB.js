@@ -20,7 +20,7 @@ const _collectionProto = ProtoLoader.load(__dirname + '/protos/common/collection
 
 const utils = require('./utils.js');
 const logger = utils.getLogger('SideDB.js');
-const { format } = require('util');
+const {format} = require('util');
 
 class CollectionConfig {
 
@@ -72,12 +72,16 @@ class CollectionConfig {
 	 */
 	static checkCollectionConfig(collectionConfig) {
 		let {
+			blockToLive
+		} = collectionConfig;
+
+		const {
 			name,
 			policy,
 			maxPeerCount,
 			requiredPeerCount,
-			blockToLive
 		} = collectionConfig;
+
 		if (!name || typeof name !== 'string') {
 			throw new Error(format('CollectionConfig Requires Param "name" of type string, found %j(type: %s)', name, typeof name));
 		}
@@ -92,12 +96,12 @@ class CollectionConfig {
 			throw new Error(format('CollectionConfig Requires Param "requiredPeerCount" of type number, found %j(type: %s)', requiredPeerCount, typeof requiredPeerCount));
 		}
 
-		if(maxPeerCount<requiredPeerCount){
+		if (maxPeerCount < requiredPeerCount) {
 			throw new Error(`CollectionConfig Requires Param "maxPeerCount" bigger than "requiredPeerCount", found maxPeerCount==${maxPeerCount}, requiredPeerCount==${requiredPeerCount}`);
 		}
 
-		if(!blockToLive) {
-			blockToLive = 0; //default is never purge
+		if (!blockToLive) {
+			blockToLive = 0; // default is never purge
 		} else if (Number.isNaN(Number.parseInt(blockToLive)) ||
 			Long.fromValue(blockToLive, true).isNegative()) {
 			throw new Error(format('CollectionConfig Requires Param "blockToLive" of type unsigned int64, found %j(type: %s)', blockToLive, typeof blockToLive));
@@ -105,7 +109,7 @@ class CollectionConfig {
 			const test = Long.fromValue(blockToLive, true);
 			logger.debug('checkCollectionConfig blockToLive parse from %j and parsed to %s)', blockToLive, test);
 
-			if(test.toString() !== blockToLive.toString()) {
+			if (test.toString() !== blockToLive.toString()) {
 				throw new Error(format('CollectionConfig Requires Param "blockToLive" to be a valid unsigned int64, input is %j and parsed to %s)', blockToLive, test));
 			}
 		}
@@ -156,7 +160,7 @@ class CollectionConfig {
 
 			static_collection_config.member_orgs_policy.signature_policy = signaturePolicyEnvelope;
 
-			return { static_collection_config };
+			return {static_collection_config};
 		} catch (e) {
 			logger.error(e);
 			throw e;

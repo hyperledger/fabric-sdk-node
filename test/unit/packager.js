@@ -18,8 +18,6 @@ const Packager = require('fabric-client/lib/Packager.js');
 const Node = require('fabric-client/lib/packager/Node.js');
 const Golang = require('fabric-client/lib/packager/Golang.js');
 
-
-
 test('\n\n** BasePackager tests **\n\n', (t) => {
 	const keep = [
 		'.keep',
@@ -69,10 +67,10 @@ test('\n\n** BasePackager tests **\n\n', (t) => {
 });
 
 test('\n\n** Golang Packager tests **\n\n', (t) => {
-	Packager.package('blah','',true)
+	Packager.package('blah', '', true)
 		.then((data) => {
 			t.equal(data, null, 'Channel.packageChaincode() should return null for dev mode');
-			return Packager.package(null,'',false);
+			return Packager.package(null, '', false);
 		}).then(() => {
 			t.fail('Packager.package() should have rejected a call that does not have chaincodePath parameter');
 			t.end();
@@ -80,22 +78,22 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 		(err) => {
 			const msg = 'Missing chaincodePath parameter';
 			if (err.message.indexOf(msg) >= 0) {
-				t.pass('Should throw error: '+msg);
+				t.pass('Should throw error: ' + msg);
 			} else {
-				t.fail(err.message+' should be '+msg);
+				t.fail(err.message + ' should be ' + msg);
 				t.end();
 			}
 
 			testutil.setupChaincodeDeploy();
-			return Packager.package(testutil.CHAINCODE_PATH,'',true);
+			return Packager.package(testutil.CHAINCODE_PATH, '', true);
 		}).then((data) => {
 			t.equal(data, null, 'Should return null when packaging for dev mode');
-			return Packager.package('blah','',false);
+			return Packager.package('blah', '', false);
 		}).then(() => {
 			t.fail('Packager.package() should have rejected a call that does not have valid chaincodePath parameter');
 			t.end();
 		},
-		(err)=>{
+		(err) => {
 			const msg = 'ENOENT: no such file or directory';
 			if (err.message.indexOf(msg) >= 0) {
 				t.pass('Should throw error: ' + msg);
@@ -104,7 +102,7 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 				t.end();
 			}
 
-			return Packager.package(testutil.CHAINCODE_PATH,'',false);
+			return Packager.package(testutil.CHAINCODE_PATH, '', false);
 		}).then((data) => {
 			const tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
 			const destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
@@ -114,15 +112,16 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 				src: tmpFile,
 				dest: destDir
 			}, (err) => {
-				if (err)
+				if (err) {
 					t.fail('Failed to extract generated chaincode package. ' + err);
+				}
 
 				const checkPath = path.join(destDir, 'src', 'github.com', 'example_cc', 'example_cc.go');
 				t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/github.com/example_cc/example_cc.go" file');
 
 				t.end();
 			});
-			return Packager.package(testutil.CHAINCODE_PATH,'', false, testutil.METADATA_PATH);
+			return Packager.package(testutil.CHAINCODE_PATH, '', false, testutil.METADATA_PATH);
 		}).then((data) => {
 			const tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
 			const destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
@@ -149,9 +148,10 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 
 // ignore the dummy.js
 const npmignore1 = 'dummy.js';
-const destDir = path.join(testutil.getTempDir(), 'test-node-chaincode');
-const tmpFile = path.join(testutil.getTempDir(), 'test-node-chaincode.tar.gz');
-const targzDir = path.join(testutil.getTempDir(), 'test-node-chaincode-tar-gz');
+let destDir = path.join(testutil.getTempDir(), 'test-node-chaincode');
+let tmpFile = path.join(testutil.getTempDir(), 'test-node-chaincode.tar.gz');
+let targzDir = path.join(testutil.getTempDir(), 'test-node-chaincode-tar-gz');
+
 function check(data, checkFcn) {
 	fs.writeFileSync(tmpFile, data);
 	fs.removeSync(targzDir);
@@ -161,8 +161,9 @@ function check(data, checkFcn) {
 			src: tmpFile,
 			dest: targzDir
 		}, (err) => {
-			if (err)
+			if (err) {
 				reject('Failed to extract generated chaincode package. ' + err);
+			}
 
 			checkFcn();
 			resolve();
@@ -175,10 +176,10 @@ test('\n\n** Node.js Packager tests **\n\n', (t) => {
 		.then((data) => {
 			t.equal(data, null, 'Should return null when packaging for dev mode');
 			return Packager.package('blah', 'node', false);
-		}).then(()=>{
+		}).then(() => {
 			t.fail('Packager.package() should have rejected a call that does not have valid chaincodePath parameter');
 			t.end();
-		},(err)=>{
+		}, (err) => {
 			const msg = 'ENOENT: no such file or directory';
 			if (err.message.indexOf(msg) >= 0) {
 				t.pass('Should throw error: ' + msg);
@@ -234,7 +235,7 @@ test('\n\n** Node.js Packager tests **\n\n', (t) => {
 				checkPath = path.join(targzDir, 'src', 'node_modules');
 				t.equal(fs.existsSync(checkPath), false, 'The tar.gz file produced by Packager.package() does not has the "node_modules" folder');
 			});
-		}).then(()=>{
+		}).then(() => {
 			return Packager.package(destDir, 'node', false, testutil.METADATA_PATH);
 		}).then((data) => {
 			return check(data, () => {
@@ -258,7 +259,7 @@ test('\n\n** Java chaincode Packager tests **\n\n', async (t) => {
 		try {
 			await Packager.package('blah', 'java', false);
 			t.fail('Packager.package() should have rejected a call that does not have valid chaincodePath parameter');
-		} catch(error) {
+		} catch (error) {
 			const msg = 'ENOENT: no such file or directory';
 			if (error.message.indexOf(msg) >= 0) {
 				t.pass('Should throw error: ' + msg);
@@ -268,9 +269,9 @@ test('\n\n** Java chaincode Packager tests **\n\n', async (t) => {
 			}
 		}
 
-		const destDir = path.join(testutil.getTempDir(), 'test-java-chaincode');
-		const tmpFile = path.join(testutil.getTempDir(), 'test-java-chaincode.tar.gz');
-		const targzDir = path.join(testutil.getTempDir(), 'test-java-chaincode-tar-gz');
+		destDir = path.join(testutil.getTempDir(), 'test-java-chaincode');
+		tmpFile = path.join(testutil.getTempDir(), 'test-java-chaincode.tar.gz');
+		targzDir = path.join(testutil.getTempDir(), 'test-java-chaincode-tar-gz');
 
 		fs.removeSync(destDir);
 		fs.copySync(testutil.JAVA_CHAINCODE_PATH, destDir);
@@ -284,7 +285,7 @@ test('\n\n** Java chaincode Packager tests **\n\n', async (t) => {
 		await processPackage(meta_package, tmpFile, targzDir);
 		checkPath = path.join(targzDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
 		t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "META-INF/statedb/couchdb/indexes/index.json" file');
-	} catch(overall_error) {
+	} catch (overall_error) {
 		t.fail('Caught error in Java Package.package tests');
 		t.comment(overall_error.stack ? overall_error.stack : overall_error);
 	}
@@ -293,15 +294,15 @@ test('\n\n** Java chaincode Packager tests **\n\n', async (t) => {
 
 });
 
-function processPackage(data, tmpFile, targzDir) {
+function processPackage(data, tempFile, targetDir) {
 	return new Promise((resolve, reject) => {
-		fs.writeFileSync(tmpFile, data);
-		fs.removeSync(targzDir);
+		fs.writeFileSync(tempFile, data);
+		fs.removeSync(targetDir);
 		targz.decompress({
-			src: tmpFile,
-			dest: targzDir
+			src: tempFile,
+			dest: targetDir
 		}, (err) => {
-			if (err){
+			if (err) {
 				reject('Failed to extract generated chaincode package. ' + err);
 			}
 			resolve();

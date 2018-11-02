@@ -9,7 +9,7 @@ const _test = require('tape-promise').default;
 const test = _test(tape);
 const path = require('path');
 const FabricCAServices = require('../../fabric-ca-client');
-const { HFCAIdentityAttributes, HFCAIdentityType } = require('../../fabric-ca-client/lib/IdentityService');
+const {HFCAIdentityAttributes, HFCAIdentityType} = require('../../fabric-ca-client/lib/IdentityService');
 
 const User = require('../../fabric-ca-client/lib/User');
 
@@ -30,8 +30,8 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 	const fabricCAEndpoint1 = ORGS[userOrg1].ca.url;
 	const fabricCAEndpoint2 = ORGS[userOrg2].ca.url;
 
-	FabricCAServices.getConfigSetting('crypto-keysize', '256'); //force for gulp test
-	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); //force for gulp test
+	FabricCAServices.getConfigSetting('crypto-keysize', '256'); // force for gulp test
+	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); // force for gulp test
 
 	const caService1 = new FabricCAServices(fabricCAEndpoint1, tlsOptions, ORGS[userOrg1].ca.name);
 	const caService2 = new FabricCAServices(fabricCAEndpoint2, tlsOptions, ORGS[userOrg2].ca.name);
@@ -48,7 +48,7 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 		enrollmentSecret: 'userpw',
 		affiliation: 'org1',
 		// set this identity can manage identities of the role client
-		attrs: [{ name: HFCAIdentityAttributes.HFREGISTRARROLES, value: HFCAIdentityType.CLIENT }]
+		attrs: [{name: HFCAIdentityAttributes.HFREGISTRARROLES, value: HFCAIdentityType.CLIENT}]
 	};
 
 	// update the enrollment secret for testIdentity
@@ -82,16 +82,15 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 		t.pass('Successfully created new Identity %s by admin1', testIdentity.enrollmentID);
 
 		let enrollment;
-		let identity;
 		// enroll the new created user at ca_Org1
-		enrollment = await caService1.enroll({ enrollmentID: testIdentity.enrollmentID, enrollmentSecret: testIdentity.enrollmentSecret });
+		enrollment = await caService1.enroll({enrollmentID: testIdentity.enrollmentID, enrollmentSecret: testIdentity.enrollmentSecret});
 		t.pass(`Successfully enrolled ${testIdentity.enrollmentID} at ca_Org1`);
-		identity = new User(testIdentity.enrollmentID);
+		const identity = new User(testIdentity.enrollmentID);
 		await identity.setEnrollment(enrollment.key, enrollment.certificate, 'Org1MSP');
 
 		// should throw error if we enroll this new identity at ca_Org2
 		try {
-			enrollment = await caService2.enroll({ enrollmentID: testIdentity.enrollmentID, enrollmentSecret: testIdentity.enrollmentSecret });
+			enrollment = await caService2.enroll({enrollmentID: testIdentity.enrollmentID, enrollmentSecret: testIdentity.enrollmentSecret});
 			t.fail('should throw error if we enroll this new identity at ca_Org2');
 			t.end();
 		} catch (e) {

@@ -6,7 +6,7 @@
 
 'use strict';
 
-//--- Plug-in event handler sample where the user takes full responsibility for event hub connection and event handling
+// --- Plug-in event handler sample where the user takes full responsibility for event hub connection and event handling
 
 /**
  * Handler that listens for commit events for a specific transaction from a set of event hubs.
@@ -88,7 +88,7 @@ class SampleTransactionEventHandler {
 	}
 
 	async _registerTxEventListeners() {
-		const registrationOptions = { unregister: true, disconnect: true };
+		const registrationOptions = {unregister: true, disconnect: true};
 
 		const promises = this.eventHubs.map((eventHub) => {
 			return new Promise((resolve) => {

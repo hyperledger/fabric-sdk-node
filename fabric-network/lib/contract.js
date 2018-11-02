@@ -18,7 +18,7 @@ const util = require('util');
  * @throws {Error} if the name is invalid.
  */
 function verifyTransactionName(name) {
-	if(typeof name !== 'string' || name.length === 0) {
+	if (typeof name !== 'string' || name.length === 0) {
 		const msg = util.format('Transaction name must be a non-empty string: %j', name);
 		logger.error('verifyTransactionName:', msg);
 		throw new Error(msg);
@@ -32,7 +32,7 @@ function verifyTransactionName(name) {
  * @throws {Error} if the namespace is invalid.
  */
 function verifyNamespace(namespace) {
-	if(namespace && typeof namespace !== 'string') {
+	if (namespace && typeof namespace !== 'string') {
 		const msg = util.format('Namespace must be a non-empty string: %j', namespace);
 		logger.error('verifyNamespace:', msg);
 		throw new Error(msg);

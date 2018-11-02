@@ -25,7 +25,7 @@ test('\n\n***** Java-Chaincode End-to-end flow: chaincode install *****\n\n', as
 
 		await e2eUtils.installChaincodeWithId('org2', chaincode_id, testUtil.JAVA_CHAINCODE_PATH, testUtil.METADATA_PATH, version, 'java', t, true);
 		t.pass('Successfully installed java chaincode in peers of organization "org2"');
-	} catch(err) {
+	} catch (err) {
 		t.fail('Java chaincode install Test failed due to unexpected reasons. ' + err.stack ? err.stack : err);
 		t.end();
 	}

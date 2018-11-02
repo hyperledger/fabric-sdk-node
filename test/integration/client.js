@@ -41,37 +41,37 @@ test('\n\n ** createUser happy path - file store **\n\n', (t) => {
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore(keyStoreOpts));
 	client.setCryptoSuite(cryptoSuite);
 
-	logger.debug('try to cleanup kvs Path: '+keyStoreOpts.path);
+	logger.debug('try to cleanup kvs Path: ' + keyStoreOpts.path);
 	// clean up
 	if (testUtil.existsSync(keyStoreOpts.path)) {
 		fs.removeSync(keyStoreOpts.path);
-		logger.debug('removed kvsPath: '+keyStoreOpts.path);
+		logger.debug('removed kvsPath: ' + keyStoreOpts.path);
 	}
 
 	return utils.newKeyValueStore(keyStoreOpts)
 		.then((store) => {
-			logger.debug('store: %s',store);
+			logger.debug('store: %s', store);
 			client.setStateStore(store);
 			return '';
 		}).then(() => {
 			return client.createUser(
 				{username: caImport.orgs[userOrg].username,
 					mspid: caImport.orgs[userOrg].mspid,
-					cryptoContent: { privateKey: prvKey, signedCert: sgnCert }
+					cryptoContent: {privateKey: prvKey, signedCert: sgnCert}
 				});
 		}, (err) => {
 			logger.error(err.stack ? err.stack : err);
 			throw new Error('Failed createUser.');
 		}).then((user) => {
 			if (user) {
-				t.pass(tag+': got user');
+				t.pass(tag + ': got user');
 				t.end();
 			} else {
-				t.fail(tag+'createUser returned null');
+				t.fail(tag + 'createUser returned null');
 				t.end();
 			}
 		}).catch((err) => {
-			t.fail(tag+': error, did not get user');
+			t.fail(tag + ': error, did not get user');
 			t.comment(err.stack ? err.stack : err);
 			t.end();
 		});
@@ -81,16 +81,16 @@ test('\n\n ** createUser happy path - CouchDB **\n\n', (t) => {
 	// Use the CouchDB specific config file
 	Client.addConfigFile('test/fixtures/couchdb.json');
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');//override
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');// override
 	const couchdbIPAddr = Client.getConfigSetting('couchdb-ip-addr', 'notfound');
 	const couchdbPort = Client.getConfigSetting('couchdb-port', 'notfound');
 	const keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
 
 	// Clean up the couchdb test database
 	const userOrg = 'org1';
-	const dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
+	const dbname = (caImport.orgs[userOrg].name + '_db').toLowerCase();
 	const keyStoreOpts = {name: dbname, url: keyValStorePath};
-	logger.debug('couch keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
+	logger.debug('couch keyStoreOpts: ' + JSON.stringify(keyStoreOpts));
 
 	const prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
 	const sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
@@ -104,26 +104,26 @@ test('\n\n ** createUser happy path - CouchDB **\n\n', (t) => {
 		.then(() => {
 			return utils.newKeyValueStore(keyStoreOpts);
 		}).then((store) => {
-			logger.debug('store: %s',store);
+			logger.debug('store: %s', store);
 			client.setStateStore(store);
 			return true;
 		}).then(() => {
 			return client.createUser(
 				{username: caImport.orgs[userOrg].username,
 					mspid: caImport.orgs[userOrg].mspid,
-					cryptoContent: { privateKey: prvKey, signedCert: sgnCert },
+					cryptoContent: {privateKey: prvKey, signedCert: sgnCert},
 					keyStoreOpts: keyStoreOpts
 				});
 		}).then((user) => {
 			if (user) {
-				t.pass(tag+': got user');
+				t.pass(tag + ': got user');
 				t.end();
 			} else {
-				t.fail(tag+'createUser returned null');
+				t.fail(tag + 'createUser returned null');
 				t.end();
 			}
 		}).catch((err) => {
-			t.fail(tag+'error, did not get user');
+			t.fail(tag + 'error, did not get user');
 			t.comment(err.stack ? err.stack : err);
 			t.end();
 		});
@@ -133,7 +133,7 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', (t) => {
 	// Use the Cloudant specific config file
 	Client.addConfigFile('test/fixtures/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');//override
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');// override
 	const cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
 	const cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
 	const cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');
@@ -141,9 +141,9 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', (t) => {
 
 	// Clean up the cloudant test database
 	const userOrg = 'org1';
-	const dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
+	const dbname = (caImport.orgs[userOrg].name + '_db').toLowerCase();
 	const keyStoreOpts = {name: dbname, url: cloudantUrl};
-	logger.debug('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
+	logger.debug('cloudant keyStoreOpts: ' + JSON.stringify(keyStoreOpts));
 
 	const prvKey =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKey);
 	const sgnCert =  path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCert);
@@ -157,25 +157,25 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', (t) => {
 		.then(() => {
 			return utils.newKeyValueStore(keyStoreOpts);
 		}).then((store) => {
-			logger.debug('store: %s',store);
+			logger.debug('store: %s', store);
 			client.setStateStore(store);
 			return true;
 		}).then(() => {
 			return client.createUser(
 				{username: caImport.orgs[userOrg].username,
 					mspid: caImport.orgs[userOrg].mspid,
-					cryptoContent: { privateKey: prvKey, signedCert: sgnCert }
+					cryptoContent: {privateKey: prvKey, signedCert: sgnCert}
 				});
 		}).then((user) => {
 			if (user) {
-				t.pass(tag+': got user');
+				t.pass(tag + ': got user');
 				t.end();
 			} else {
-				t.fail(tag+'createUser returned null');
+				t.fail(tag + 'createUser returned null');
 				t.end();
 			}
 		}).catch((err) => {
-			t.fail(tag+'error, did not get user');
+			t.fail(tag + 'error, did not get user');
 			t.comment(err.stack ? err.stack : err);
 			t.end();
 		});
@@ -185,7 +185,7 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', (t) => {
 	// Use the Cloudant specific config file
 	Client.addConfigFile('test/fixtures/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');//override
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');// override
 	const cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
 	const cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
 	const cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');
@@ -193,9 +193,9 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', (t) => {
 
 	// Clean up the cloudant test database
 	const userOrg = 'org2';
-	const dbname = (caImport.orgs[userOrg].name+'_db').toLowerCase();
+	const dbname = (caImport.orgs[userOrg].name + '_db').toLowerCase();
 	const keyStoreOpts = {name: dbname, url: cloudantUrl};
-	logger.debug('cloudant keyStoreOpts: '+ JSON.stringify(keyStoreOpts));
+	logger.debug('cloudant keyStoreOpts: ' + JSON.stringify(keyStoreOpts));
 
 	const client = new Client();
 	const cryptoSuite = Client.newCryptoSuite();
@@ -206,7 +206,7 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', (t) => {
 		.then(() => {
 			return utils.newKeyValueStore(keyStoreOpts);
 		}).then((store) => {
-			logger.debug('store: %s',store);
+			logger.debug('store: %s', store);
 			client.setStateStore(store);
 			return true;
 		}).then(() => {
@@ -220,14 +220,14 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', (t) => {
 			throw new Error('Failed createUser.');
 		}).then((user) => {
 			if (user) {
-				t.pass(tag+': got user');
+				t.pass(tag + ': got user');
 				t.end();
 			} else {
-				t.fail(tag+'createUser returned null');
+				t.fail(tag + 'createUser returned null');
 				t.end();
 			}
 		}).catch((err) => {
-			t.fail(tag+'error, did not get user');
+			t.fail(tag + 'error, did not get user');
 			t.comment(err.stack ? err.stack : err);
 			t.end();
 		});

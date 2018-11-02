@@ -50,7 +50,7 @@ class FileSystemWallet extends BaseWallet {
 		try {
 			const stat = await fs.lstat(Path.join(this.path, label));
 			isDir = stat.isDirectory();
-		} catch(err) {
+		} catch (err) {
 			isDir = false;
 		}
 		logger.debug('%s - return value: %s', method, isDir);
@@ -111,7 +111,7 @@ class FileSystemWallet extends BaseWallet {
 		const labelList = [];
 		try {
 			dirList = await fs.readdir(this.path);
-		} catch(err) {
+		} catch (err) {
 			return [];
 		}
 

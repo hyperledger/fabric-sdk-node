@@ -23,14 +23,16 @@ const shell = require('gulp-shell');
 const testConstants = require('../../test/unit/constants.js');
 
 // Debug level of Docker containers used in scenario tests
-process.env.DOCKER_DEBUG='INFO';
+process.env.DOCKER_DEBUG = 'INFO';
 
 // by default for running the tests print debug to a file
 const debugPath = path.join(testConstants.tempdir, 'test-log/debug.log');
 process.env.HFC_LOGGING = util.format('{"debug":"%s"}', escapeWindowsPath(debugPath));
 
 function escapeWindowsPath(p) {
-	if (path.sep == '/') return p;
+	if (path.sep === '/') {
+		return p;
+	}
 	return p.replace(/\\/g, '\\\\');
 }
 
@@ -151,22 +153,22 @@ gulp.task('run-test-mocha', (done) => {
 
 gulp.task('mocha-fabric-ca-client',
 	() => {
-		return gulp.src(['./fabric-ca-client/test/**/*.js'], { read: false })
-			.pipe(mocha({ reporter: 'list', exit: true }));
+		return gulp.src(['./fabric-ca-client/test/**/*.js'], {read: false})
+			.pipe(mocha({reporter: 'list', exit: true}));
 	}
 );
 
 gulp.task('mocha-fabric-client',
 	() => {
-		return gulp.src(['./fabric-client/test/**/*.js', '!./fabric-client/test/data/**/*.js'], { read: false })
-			.pipe(mocha({ reporter: 'list', exit: true }));
+		return gulp.src(['./fabric-client/test/**/*.js', '!./fabric-client/test/data/**/*.js'], {read: false})
+			.pipe(mocha({reporter: 'list', exit: true}));
 	}
 );
 
 gulp.task('mocha-fabric-network',
 	() => {
-		return gulp.src(['./fabric-network/test/**/*.js'], { read: false })
-			.pipe(mocha({ reporter: 'list', exit: true }));
+		return gulp.src(['./fabric-network/test/**/*.js'], {read: false})
+			.pipe(mocha({reporter: 'list', exit: true}));
 	}
 );
 

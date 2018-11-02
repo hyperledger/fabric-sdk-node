@@ -167,12 +167,12 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			config: config,
 			signatures: signatures,
 			name: channel_name,
-			orderer: 'orderer.example.com', //this assumes we have loaded a connection profile
+			orderer: 'orderer.example.com', // this assumes we have loaded a connection profile
 			txId: tx_id
 		};
 
 		// send create request to orderer
-		const result = await client_org2.createChannel(request); //admin from org2
+		const result = await client_org2.createChannel(request); // admin from org2
 		logger.debug('\n***\n completed the create \n***\n');
 
 		logger.debug(' response ::%j', result);
@@ -195,7 +195,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			txId: tx_id
 		};
 
-		const block = await channel_on_org2.getGenesisBlock(request); //admin from org2
+		const block = await channel_on_org2.getGenesisBlock(request); // admin from org2
 		t.pass('Successfully got the genesis block');
 		genesis_block = block;
 
@@ -210,11 +210,11 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			txId: tx_id
 		};
 
-		let results = await channel_on_org2.joinChannel(request); //admin from org2
+		let results = await channel_on_org2.joinChannel(request); // admin from org2
 		logger.debug(util.format('Join Channel R E S P O N S E using default targets: %j', results));
 
 		// first of the results should not have good status as submitter does not have permission
-		if (results && results[0] && results[0].response && results[0].response.status == 200) {
+		if (results && results[0] && results[0].response && results[0].response.status === 200) {
 			t.fail(util.format('Successfully had peer in organization %s join the channel', 'org1'));
 			throw new Error('Should not have been able to join channel with this submitter');
 		} else {
@@ -222,7 +222,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		}
 
 		// second of the results should have good status
-		if (results && results[1] && results[1].response && results[1].response.status == 200) {
+		if (results && results[1] && results[1].response && results[1].response.status === 200) {
 			t.pass(util.format('Successfully had peer in organization %s join the channel', 'org2'));
 		} else {
 			t.fail(' Failed to join channel');
@@ -242,7 +242,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		results = await channel_on_org1.joinChannel(request);
 		logger.debug(util.format('Join Channel R E S P O N S E  for a string target: %j', results));
 
-		if (results && results[0] && results[0].response && results[0].response.status == 200) {
+		if (results && results[0] && results[0].response && results[0].response.status === 200) {
 			t.pass(util.format('Successfully had peer in organization %s join the channel', 'org1'));
 		} else {
 			t.fail(' Failed to join channel on org1');
@@ -255,7 +255,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		tx_id = client_org1.newTransactionID(true);
 		// send proposal to endorser
 		request = {
-			//targets: get peers for this clients organization based on channel id
+			// targets: get peers for this clients organization based on channel id
 			channelNames: channel_name,
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
@@ -265,7 +265,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		};
 
 		results = await client_org1.installChaincode(request);
-		if (results && results[0] && results[0][0].response && results[0][0].response.status == 200) {
+		if (results && results[0] && results[0][0].response && results[0][0].response.status === 200) {
 			t.pass('Successfully installed chain code on org1');
 		} else {
 			t.fail(' Failed to install chaincode on org1');
@@ -284,7 +284,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		};
 
 		results = await client_org2.installChaincode(request);
-		if (results && results[0] && results[0][0].response && results[0][0].response.status == 200) {
+		if (results && results[0] && results[0][0].response && results[0][0].response.status === 200) {
 			t.pass('Successfully installed chain code on org2');
 		} else {
 			t.fail(' Failed to install chaincode');
@@ -304,7 +304,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			txId: tx_id
 			// targets is not required, however the logged in user may not have
 			// admin access to all the peers defined in the connection profile
-			//targets: ['peer0.org1.example.com'],
+			// targets: ['peer0.org1.example.com'],
 		};
 
 		results = await channel_on_org1.sendInstantiateProposal(request);
@@ -316,8 +316,8 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			request = {
 				proposalResponses: proposalResponses,
 				proposal: proposal,
-				txId: instansiate_tx_id //required to indicate that this is an admin transaction
-				//orderer : not specifying, the first orderer defined in the
+				txId: instansiate_tx_id // required to indicate that this is an admin transaction
+				// orderer : not specifying, the first orderer defined in the
 				//          connection profile for this channel will be used
 			};
 
@@ -337,28 +337,28 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 
 		// this will enroll the user using the ca as defined in the connection profile
 		// for this organization and then set in on the client as the current user context
-		const admin = await client_org1.setUserContext({ username: 'admin', password: 'adminpw' });
+		const admin = await client_org1.setUserContext({username: 'admin', password: 'adminpw'});
 		t.pass('Successfully enrolled user \'admin\' for org1');
 
 		const ca1 = client_org1.getCertificateAuthority();
-		const secret = await ca1.register({ enrollmentID: 'user1', affiliation: 'org1' }, admin);
+		const secret = await ca1.register({enrollmentID: 'user1', affiliation: 'org1'}, admin);
 		t.pass('Successfully registered user \'user1\' for org1');
 
-		await client_org1.setUserContext({ username: 'user1', password: secret });
+		await client_org1.setUserContext({username: 'user1', password: secret});
 		t.pass('Successfully enrolled user \'user1\' for org1');
 
 		// try again ...this time use a longer timeout
 		tx_id = client_org1.newTransactionID(); // get a non admin transaction ID
-		query_tx_id = tx_id.getTransactionID(); //save transaction string for later
+		query_tx_id = tx_id.getTransactionID(); // save transaction string for later
 		request = {
 			chaincodeId: 'example',
 			fcn: 'move',
 			args: ['a', 'b', '100'],
 			txId: tx_id
-			//targets - Letting default to all endorsing peers defined on the channel in the connection profile
+			// targets - Letting default to all endorsing peers defined on the channel in the connection profile
 		};
 
-		results = await channel_on_org1.sendTransactionProposal(request); //logged in as org1 user
+		results = await channel_on_org1.sendTransactionProposal(request); // logged in as org1 user
 		proposalResponses = results[0];
 		proposal = results[1];
 		let all_good = true;
@@ -422,7 +422,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 				t.fail('transaction event failed:' + error);
 				reject(error);
 			},
-			{ disconnect: true } //since this is a test and we will not be using later
+			{disconnect: true} // since this is a test and we will not be using later
 			);
 		});
 		// connect(true) to receive full blocks (user must have read rights to the channel)
@@ -455,7 +455,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			const handle = setTimeout(() => {
 				t.fail('Timeout - Failed to receive replay the event for event1');
 				channel_event_hub.unregisterTxEvent(query_tx_id);
-				channel_event_hub.disconnect(); //shutdown down since we are done
+				channel_event_hub.disconnect(); // shutdown down since we are done
 			}, 10000);
 
 			channel_event_hub.registerTxEvent(query_tx_id,
@@ -472,11 +472,11 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 				// received and used that value to start the replay
 				// Setting the disconnect to true as we do not want to use this
 				// ChannelEventHub after the event we are looking for comes in
-				{ startBlock: 0, disconnect: true }
+				{startBlock: 0, disconnect: true}
 			);
 			t.pass('Successfully registered transaction replay for ' + query_tx_id);
 
-			channel_event_hub.connect(); //connect to receive filtered blocks
+			channel_event_hub.connect(); // connect to receive filtered blocks
 			t.pass('Successfully called connect on the transaction replay event hub for filtered blocks');
 		});
 		t.pass('Successfully checked channel event hub replay');
@@ -499,7 +499,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			const handle = setTimeout(() => {
 				t.fail('Timeout - Failed to receive replay the event for event1');
 				channel_event_hub.unregisterTxEvent(query_tx_id);
-				channel_event_hub.disconnect(); //shutdown down since we are done
+				channel_event_hub.disconnect(); // shutdown down since we are done
 			}, 10000);
 
 			channel_event_hub.registerTxEvent(query_tx_id,
@@ -516,18 +516,18 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 				// received and used that value to start the replay
 				// Setting the disconnect to true as we do not want to use this
 				// ChannelEventHub after the event we are looking for comes in
-				{ startBlock: 0, disconnect: true }
+				{startBlock: 0, disconnect: true}
 			);
 			t.pass('Successfully registered transaction replay for ' + query_tx_id);
 
-			channel_event_hub.connect(); //connect to receive filtered blocks
+			channel_event_hub.connect(); // connect to receive filtered blocks
 			t.pass('Successfully called connect on the transaction replay event hub for filtered blocks');
 		});
 		t.pass('Successfully checked replay');
 		// check that we can get the user again without password
 		// also verifies that we can get a complete user properly stored
 		// when using a connection profile
-		await client_org1.setUserContext({ username: 'admin' });
+		await client_org1.setUserContext({username: 'admin'});
 		t.pass('Successfully loaded user \'admin\' from store for org1');
 
 		request = {
@@ -536,7 +536,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			args: ['b']
 		};
 
-		const response_payloads = await channel_on_org1.queryByChaincode(request); //logged in as user on org1
+		const response_payloads = await channel_on_org1.queryByChaincode(request); // logged in as user on org1
 		// should only be one response ...as only one peer is defined as CHAINCODE_QUERY_ROLE
 		let query_responses = 0;
 		if (response_payloads) {
@@ -637,11 +637,11 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 			fcn: 'move',
 			args: ['a', 'b', '100'],
 			txId: tx_id
-			//targets - Letting default to all endorsing peers defined on the channel in the connection profile
+			// targets - Letting default to all endorsing peers defined on the channel in the connection profile
 		};
 
 		// put in a very small timeout to force a failure, thereby checking that the timeout value was being used
-		results = await channel_on_org1.sendTransactionProposal(request, 1); //logged in as org1 user
+		results = await channel_on_org1.sendTransactionProposal(request, 1); // logged in as org1 user
 		proposalResponses = results[0];
 		for (const i in proposalResponses) {
 			const proposal_response = proposalResponses[i];
@@ -682,15 +682,15 @@ test('\n\n***** Enroll user and set user context using a specified caName *****\
 		const caService = client_org1.getCertificateAuthority();
 		t.equals(caService.fabricCAServices._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
 
-		const admin = await client_org1.setUserContext({ username: 'admin', password: 'adminpw' });
+		const admin = await client_org1.setUserContext({username: 'admin', password: 'adminpw'});
 		t.pass('Successfully set user context \'admin\' for ' + org_name);
 
 		// register another user and enroll it with a specified caName
 		const ca1 = client_org1.getCertificateAuthority();
-		const secret = await ca1.register({ enrollmentID: testuser, affiliation: org_name }, admin);
+		const secret = await ca1.register({enrollmentID: testuser, affiliation: org_name}, admin);
 		t.pass('Successfully registerred user ' + testuser + ' for ' + org_name);
 
-		await client_org1.setUserContext({ username: testuser, password: secret, caName: ca_name });
+		await client_org1.setUserContext({username: testuser, password: secret, caName: ca_name});
 		t.pass('Successfully enrolled user and set user context using username, password, and caName');
 
 		let user = await client_org1.getUserContext();
@@ -702,10 +702,10 @@ test('\n\n***** Enroll user and set user context using a specified caName *****\
 
 		// register another user and enroll it without a caName. SDK will pick the first CA on the list
 		const testuser2 = testuser + '2';
-		const secret2 = await ca1.register({ enrollmentID: testuser2, affiliation: org_name }, admin);
+		const secret2 = await ca1.register({enrollmentID: testuser2, affiliation: org_name}, admin);
 		t.pass('Successfully registerred user ' + testuser2 + ' for ' + org_name);
 
-		await client_org1.setUserContext({ username: testuser2, password: secret2 });
+		await client_org1.setUserContext({username: testuser2, password: secret2});
 		t.pass('Successfully enrolled user and set user context using username and password');
 
 		user = await client_org1.getUserContext(testuser2);
@@ -746,14 +746,14 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 		const caService = client_org1.getCertificateAuthority();
 		t.equals(caService.fabricCAServices._fabricCAClient._caName, ca_name, 'checking that caname is correct after resetting the config');
 
-		const admin = await client_org1.setUserContext({ username: 'admin', password: 'adminpw' });
+		const admin = await client_org1.setUserContext({username: 'admin', password: 'adminpw'});
 		t.pass('Successfully set user context \'admin\' for ' + org_name);
 
 		const ca1 = client_org1.getCertificateAuthority();
-		const secret = await ca1.register({ enrollmentID: testuser, affiliation: org_name }, admin);
+		const secret = await ca1.register({enrollmentID: testuser, affiliation: org_name}, admin);
 
 		try {
-			await client_org1.setUserContext({ username: testuser, password: secret, caName: ca_bad_name });
+			await client_org1.setUserContext({username: testuser, password: secret, caName: ca_bad_name});
 			t.fail('Should throw error when setting user context using a bad caName');
 		} catch (err) {
 			// Expected error should include missing this client\'s organization and certificate authority
@@ -762,7 +762,7 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 		}
 
 		try {
-			await client_org1.setUserContext({ username: testuser, password: secret, caName: ca_wrong_name });
+			await client_org1.setUserContext({username: testuser, password: secret, caName: ca_wrong_name});
 			t.fail('Should throw error when setting user context using a caName in another org');
 		} catch (err) {
 			// Expected error should include Authorization failure or Authentication failure

@@ -56,7 +56,7 @@ const User = class {
 	constructor(cfg) {
 		if (util.isString(cfg)) {
 			this._name = cfg;
-			this._roles = null; //string[]
+			this._roles = null; // string[]
 			this._affiliation = '';
 		} else if (util.isObject(cfg)) {
 			const req = cfg;
@@ -183,7 +183,7 @@ const User = class {
 		if (this._cryptoSuite._cryptoKeyStore && !skipPersistence) {
 			pubKey = await this._cryptoSuite.importKey(certificate);
 		} else {
-			pubKey = await this._cryptoSuite.importKey(certificate, { ephemeral: true });
+			pubKey = await this._cryptoSuite.importKey(certificate, {ephemeral: true});
 		}
 
 		this._identity = new Identity(certificate, pubKey, mspId, this._cryptoSuite);
@@ -195,7 +195,7 @@ const User = class {
 	 * @returns {boolean} True if enrolled; otherwise, false.
 	 */
 	isEnrolled() {
-		return this._identity !== null && this._signingIdentity != null;
+		return this._identity !== null && this._signingIdentity !== null;
 	}
 
 	/**
@@ -231,7 +231,7 @@ const User = class {
 		let pubKey;
 
 		let import_promise = null;
-		const opts = { algorithm: api.CryptoAlgorithms.X509Certificate };
+		const opts = {algorithm: api.CryptoAlgorithms.X509Certificate};
 		if (no_save) {
 			opts.ephemeral = true;
 			import_promise = new Promise((resolve, reject) => {

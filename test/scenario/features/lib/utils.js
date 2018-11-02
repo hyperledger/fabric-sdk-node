@@ -118,7 +118,7 @@ function runShellCommand(pass, cmd) {
 async function getMember(username, password, client, userOrg, ccp) {
 
 	const org = ccp.getOrganization(userOrg);
-	if(!org) {
+	if (!org) {
 		throw new Error('Could not find ' + userOrg + ' in configuration');
 	}
 
@@ -176,7 +176,7 @@ function getOrgAdmin(client, userOrg, ccp) {
 	try {
 
 		const org = ccp.getOrganization(userOrg);
-		if(!org) {
+		if (!org) {
 			throw new Error('Could not find ' + userOrg + ' in configuration');
 		}
 
@@ -188,15 +188,14 @@ function getOrgAdmin(client, userOrg, ccp) {
 		client.setCryptoSuite(cryptoSuite);
 
 		return Promise.resolve(client.createUser({
-			username: 'peer'+userOrg+'Admin',
+			username: 'peer' + userOrg + 'Admin',
 			mspid: org.mspid,
 			cryptoContent: {
 				privateKeyPEM: keyPEM.toString(),
 				signedCertPEM: certPEM.toString()
 			}
 		}));
-	}
-	catch(err) {
+	} catch (err) {
 		return Promise.reject(err);
 	}
 }
@@ -221,8 +220,7 @@ function getOrdererAdmin(client, ordererName, ccp) {
 				signedCertPEM: certPEM.toString()
 			}
 		}));
-	}
-	catch(err) {
+	} catch (err) {
 		return Promise.reject(err);
 	}
 }
@@ -259,8 +257,8 @@ async function tlsEnroll(fabricCAEndpoint, caName) {
 }
 
 
-function logMsg(msg, obj){
-	if (obj){
+function logMsg(msg, obj) {
+	if (obj) {
 		// eslint-disable-next-line no-console
 		console.log(msg, obj);
 	} else {
@@ -269,8 +267,8 @@ function logMsg(msg, obj){
 	}
 }
 
-function logError(msg, obj){
-	if (obj){
+function logError(msg, obj) {
+	if (obj) {
 		// eslint-disable-next-line no-console
 		console.error(msg, obj);
 	} else {

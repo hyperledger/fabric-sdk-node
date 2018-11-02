@@ -36,12 +36,11 @@ init();
 test('\n\n***** E R R O R  T E S T I N G: invoke transaction with one endorsement *****\n\n', (t) => {
 	invokeChaincode('org2', 'v0', t, 'ENDORSEMENT_POLICY_FAILURE', [peers[0]])
 		.then((result) => {
-			if(result){
+			if (result) {
 				t.pass('Successfully tested failure to invoke transaction chaincode due to insufficient endorsement');
 
 				return invokeChaincode('org2', 'v0', t, 'ENDORSEMENT_POLICY_FAILURE', [peers[1]]);
-			}
-			else {
+			} else {
 				t.fail('Failed to invoke transaction chaincode');
 				t.end();
 			}
@@ -49,11 +48,10 @@ test('\n\n***** E R R O R  T E S T I N G: invoke transaction with one endorsemen
 			t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((result) => {
-			if(result){
+			if (result) {
 				t.pass('Successfully tested failure to invoke transaction chaincode due to insufficient endorsement');
 				t.end();
-			}
-			else {
+			} else {
 				t.fail('Failed to invoke transaction chaincode');
 				t.end();
 			}
@@ -82,7 +80,7 @@ function init() {
 
 	for (const key in ORGS) {
 		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-			const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[key].peer1['tls_cacerts']));
+			const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[key].peer1.tls_cacerts));
 			const org = ORGS[key].peer1;
 			org.pem = Buffer.from(data).toString();
 			peers.push(org);
@@ -90,7 +88,7 @@ function init() {
 	}
 }
 
-function invokeChaincode(userOrg, version, t, shouldFail, peers){
+function invokeChaincode(userOrg, version, t, shouldFail, peersArray) {
 	logger.debug('invokeChaincode begin');
 	Client.setConfigSetting('request-timeout', 60000);
 	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -100,7 +98,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 	// override t.end function so it'll always disconnect the event hub
 	t.end = ((context, ehs, f) => {
 		return function() {
-			for(const key in ehs) {
+			for (const key in ehs) {
 				const eventhub = ehs[key];
 				if (eventhub && eventhub.isconnected()) {
 					logger.debug('Disconnecting the event hub');
@@ -143,12 +141,12 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 				)
 			);
 
-			for (const key in peers) {
+			for (const key in peersArray) {
 				const peer = client.newPeer(
-					peers[key].requests,
+					peersArray[key].requests,
 					{
-						pem: peers[key].pem,
-						'ssl-target-name-override': peers[key]['server-hostname'],
+						pem: peersArray[key].pem,
+						'ssl-target-name-override': peersArray[key]['server-hostname'],
 					});
 				channel.addPeer(peer);
 				eventhubs.push(channel.newChannelEventHub(peer));
@@ -177,13 +175,13 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 			const proposal = results[1];
 			let all_good = true;
 
-			for(const i in proposalResponses) {
+			for (const i in proposalResponses) {
 				let one_good = false;
 				const proposal_response = proposalResponses[i];
-				if( proposal_response.response && proposal_response.response.status === 200) {
+				if (proposal_response.response && proposal_response.response.status === 200) {
 					t.pass('transaction proposal has response status of good');
 					one_good = channel.verifyProposalResponse(proposal_response);
-					if(one_good) {
+					if (one_good) {
 						t.pass(' transaction proposal signature and endorser are valid');
 					}
 				} else {
@@ -196,10 +194,9 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 			// got the same results on the proposal
 				all_good = channel.compareProposalResponseResults(proposalResponses);
 				t.pass('compareProposalResponseResults exection did not throw an error');
-				if(all_good){
+				if (all_good) {
 					t.pass(' All proposals have a matching read/writes sets');
-				}
-				else {
+				} else {
 					t.fail(' All proposals do not have matching read/write sets');
 				}
 			}
@@ -238,7 +235,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 									}
 								} else {
 									if (shouldFail === false) {
-										t.pass('The balance transfer transaction has been committed on peer '+ eh.getPeerAddr());
+										t.pass('The balance transfer transaction has been committed on peer ' + eh.getPeerAddr());
 										resolve();
 									} else {
 										t.fail('The balance transfer transaction should have failed with ' + shouldFail);
@@ -248,7 +245,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 							},
 							() => {
 								clearTimeout(handle);
-								t.fail('Failed -- received notification of the event call back being cancelled for '+ deployId);
+								t.fail('Failed -- received notification of the event call back being cancelled for ' + deployId);
 								resolve();
 							}
 						);
@@ -260,12 +257,12 @@ function invokeChaincode(userOrg, version, t, shouldFail, peers){
 
 				const sendPromise = channel.sendTransaction(request);
 				return Promise.all([sendPromise].concat(eventPromises))
-					.then((results) => {
+					.then((result) => {
 						logger.debug('event promise all complete and testing complete');
-						return results[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
+						return result[0]; // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 					}).catch((err) => {
-						t.fail('Failed transaction ::'+ err);
-						throw new Error('Failed transaction ::'+ err);
+						t.fail('Failed transaction ::' + err);
+						throw new Error('Failed transaction ::' + err);
 					});
 			} else {
 				t.fail('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');

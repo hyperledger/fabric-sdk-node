@@ -189,7 +189,7 @@ describe('User', () => {
 			const FakeIdentity = sandbox.stub();
 			const FakeSigningIdentity = sandbox.stub();
 
-			const returnStub = sandbox.stub( { setCryptoKeyStore: () =>{}, importKey: () => {}});
+			const returnStub = sandbox.stub({setCryptoKeyStore: () => {}, importKey: () => {}});
 			const newCryptoSuiteStub = sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(returnStub);
 
 			UserRewire.__set__('sdkUtils', FakeSdkUtils);
@@ -297,7 +297,7 @@ describe('User', () => {
 			await obj.setEnrollment('test_privateKey', 'test_certificate', 'test_mspId', true);
 
 			sinon.assert.calledOnce(FakeImportKey);
-			sinon.assert.calledWith(FakeImportKey, 'test_certificate', { ephemeral: true });
+			sinon.assert.calledWith(FakeImportKey, 'test_certificate', {ephemeral: true});
 		});
 
 		it('should set the users identity', async() => {
@@ -377,7 +377,7 @@ describe('User', () => {
 			myUser.isEnrolled().should.equal(false);
 		});
 
-		it('should return false if user has no signing identity',() => {
+		it('should return false if user has no signing identity', () => {
 			const myUser = new User('my_cfg');
 			myUser._identity = 'test_identity';
 			myUser.isEnrolled().should.equal(false);
@@ -522,7 +522,11 @@ describe('User', () => {
 
 			const FakeIdentity = sandbox.stub();
 			const FakeImportKey = sandbox.stub(FakeCryptoSuite, 'importKey').returns('key');
-			const promise = new Promise((resolve) => { resolve( {isPrivate(){ return true;}});});
+			const promise = new Promise((resolve) => {
+				resolve({isPrivate() {
+					return true;
+				}});
+			});
 
 			sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(FakeCryptoSuite);
 			sandbox.stub(FakeSdkUtils, 'newCryptoKeyStore').returns('test_cryptoKeyStore');
@@ -537,7 +541,7 @@ describe('User', () => {
 			await obj.fromString('{ "name":"cfg", "roles":"test_role", "affiliation":"test_affiliation", "enrollmentSecret":"test_enrollmentSecret", "mspid":"test_mspId", "enrollment":{"identity":{"certificate":"test_certificate"}}}', true);
 
 			sinon.assert.calledOnce(FakeImportKey);
-			sinon.assert.calledWith(FakeImportKey, 'test_certificate', { algorithm: 'X509Certificate', ephemeral: true});
+			sinon.assert.calledWith(FakeImportKey, 'test_certificate', {algorithm: 'X509Certificate', ephemeral: true});
 		});
 
 		it('should throw an error if key is not set if no_save is true', async () => {
@@ -564,7 +568,11 @@ describe('User', () => {
 
 			const FakeIdentity = sandbox.stub();
 			sandbox.stub(FakeCryptoSuite, 'importKey').returns(null);
-			const promise = new Promise((resolve) => { resolve( {isPrivate(){ return true;}});});
+			const promise = new Promise((resolve) => {
+				resolve({isPrivate() {
+					return true;
+				}});
+			});
 
 			sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(FakeCryptoSuite);
 			sandbox.stub(FakeSdkUtils, 'newCryptoKeyStore').returns('test_cryptoKeyStore');
@@ -602,7 +610,11 @@ describe('User', () => {
 			};
 
 			const FakeIdentity = sandbox.stub();
-			const promise = new Promise((resolve) => { resolve( {isPrivate(){ return true;}});});
+			const promise = new Promise((resolve) => {
+				resolve({isPrivate() {
+					return true;
+				}});
+			});
 			const FakeImportKey = sandbox.stub(FakeCryptoSuite, 'importKey').returns(promise);
 
 			sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(FakeCryptoSuite);
@@ -618,7 +630,7 @@ describe('User', () => {
 			await obj.fromString('{ "name":"cfg", "roles":"test_role", "affiliation":"test_affiliation", "enrollmentSecret":"test_enrollmentSecret", "mspid":"test_mspId", "enrollment":{"identity":{"certificate":"test_certificate"}}}', false);
 
 			sinon.assert.calledOnce(FakeImportKey);
-			sinon.assert.calledWith(FakeImportKey, 'test_certificate', { algorithm: 'X509Certificate' });
+			sinon.assert.calledWith(FakeImportKey, 'test_certificate', {algorithm: 'X509Certificate'});
 		});
 
 		it('should return the _cryptoSuite key', async () => {
@@ -644,7 +656,9 @@ describe('User', () => {
 			};
 
 			const FakeKey = {
-				isPrivate: () => {return true;}
+				isPrivate: () => {
+					return true;
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
@@ -663,8 +677,8 @@ describe('User', () => {
 
 			sinon.assert.calledOnce(FakeIdentity);
 			sinon.assert.calledOnce(FakeGetKey);
-			sinon.assert.calledWith( FakeIdentity, 'test_certificate', FakeKey, 'test_mspId', FakeCryptoSuite);
-			sinon.assert.calledWith( FakeGetKey, 'test_signingIdentity');
+			sinon.assert.calledWith(FakeIdentity, 'test_certificate', FakeKey, 'test_mspId', FakeCryptoSuite);
+			sinon.assert.calledWith(FakeGetKey, 'test_signingIdentity');
 		});
 
 		it('should assign the self variable with a signing identity if the privateKey is private', async () => {
@@ -684,7 +698,9 @@ describe('User', () => {
 			};
 
 			const FakeKey = {
-				isPrivate: () => {return true;}
+				isPrivate: () => {
+					return true;
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
@@ -705,7 +721,7 @@ describe('User', () => {
 			const obj = new UserRewire('cfg');
 			await obj.fromString('{ "name":"cfg", "roles":"test_role", "affiliation":"test_affiliation", "enrollmentSecret":"test_enrollmentSecret", "mspid":"test_mspId", "enrollment":{"identity":{"certificate":"test_certificate"}, "signingIdentity":"test_signingIdentity"}}', false);
 
-			sinon.assert.calledWith(FakeSigningIdentity, 'test_certificate', FakeKey, 'test_mspId', FakeCryptoSuite, sinon.match.instanceOf(FakeSigner) );
+			sinon.assert.calledWith(FakeSigningIdentity, 'test_certificate', FakeKey, 'test_mspId', FakeCryptoSuite, sinon.match.instanceOf(FakeSigner));
 			sinon.assert.calledWith(FakeSigner, FakeCryptoSuite, FakeKey);
 			sinon.assert.calledOnce(FakeSigningIdentity);
 			sinon.assert.calledOnce(FakeSigner);
@@ -728,7 +744,11 @@ describe('User', () => {
 			};
 
 			const FakeIdentity = sandbox.stub();
-			const promise = new Promise(((resolve) => { resolve( {isPrivate(){ return false;}});}));
+			const promise = new Promise(((resolve) => {
+				resolve({isPrivate() {
+					return false;
+				}});
+			}));
 			sandbox.stub(FakeCryptoSuite, 'importKey').returns(promise);
 
 			sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(FakeCryptoSuite);
@@ -753,7 +773,9 @@ describe('User', () => {
 
 		it('should set serializedEnrollment.signingIdentity if the user has a signingIdentity', () => {
 			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
-			user._signingIdentity = {_signer: {_key: {getSKI(){return 'test_signingIdentity';}}}};
+			user._signingIdentity = {_signer: {_key: {getSKI() {
+				return 'test_signingIdentity';
+			}}}};
 
 			user.toString().should.equal('{"name":"cfg","mspid":"","roles":"test_role","affiliation":"test_affiliation","enrollmentSecret":"","enrollment":{"signingIdentity":"test_signingIdentity"}}');
 		});

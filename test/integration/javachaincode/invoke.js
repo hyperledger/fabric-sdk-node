@@ -22,29 +22,27 @@ test('\n\n***** Java-Chaincode End-to-end flow: invoke transaction to move money
 	const args = ['a', 'b', '100'];
 	let expectedResult = 'move succeed';
 	try {
-		const result = await e2eUtils.invokeChaincode('org2', version, chaincode_id, t, false/*useStore*/, fcn, args, expectedResult);
-		if(result){
+		const result = await e2eUtils.invokeChaincode('org2', version, chaincode_id, t, false/* useStore*/, fcn, args, expectedResult);
+		if (result) {
 			t.pass('Successfully invoke transaction java chaincode on channel');
 			await testUtils.sleep(5000);
-		}
-		else {
+		} else {
 			t.fail('Failed to invoke transaction java chaincode ');
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction java chaincode on channel. ' + err.stack ? err.stack : err);
 	}
 
 	try {
 		expectedResult = new Error('throwError: an error occurred');
-		const result = await e2eUtils.invokeChaincode('org2', version, chaincode_id, t, false/*useStore*/, 'throwError', args, expectedResult);
-		if(result){
+		const result = await e2eUtils.invokeChaincode('org2', version, chaincode_id, t, false/* useStore*/, 'throwError', args, expectedResult);
+		if (result) {
 			t.pass('Successfully handled invocation errors from java chaincode');
-		}
-		else {
+		} else {
 			t.fail('Failed to invoke transaction java chaincode ');
 		}
 
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to query java chaincode on the channel. ' + err.stack ? err.stack : err);
 	}
 	t.end();

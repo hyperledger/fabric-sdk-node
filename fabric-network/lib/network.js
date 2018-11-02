@@ -80,9 +80,9 @@ class Network {
 	async _initializeInternalChannel(discovery) {
 		logger.debug('in _initializeInternalChannel');
 
-		//TODO: Should this work across all peers or just orgs peers ?
-		//TODO: should sort peer list to the identity org initializing the channel.
-		//TODO: Candidate to push to low level node-sdk.
+		// TODO: Should this work across all peers or just orgs peers ?
+		// TODO: should sort peer list to the identity org initializing the channel.
+		// TODO: Candidate to push to low level node-sdk.
 
 		const ledgerPeers = this.channel.getPeers().filter((cPeer) => {
 			return cPeer.isInRole(FabricConstants.NetworkConfig.LEDGER_QUERY_ROLE);
@@ -108,7 +108,7 @@ class Network {
 				await this.channel.initialize(initOptions);
 
 				success = true;
-			} catch(error) {
+			} catch (error) {
 				if (ledgerPeerIndex >= ledgerPeers.length - 1) {
 					const msg = util.format('Unable to initialize channel. Attempted to contact %j Peers. Last error was %s', ledgerPeers.length, error);
 					logger.error('_initializeInternalChannel: ' + msg);
@@ -150,7 +150,7 @@ class Network {
 	 * @returns {Contract} the contract
 	 * @api
 	 */
-	getContract(chaincodeId,namespace='') {
+	getContract(chaincodeId, namespace = '') {
 		logger.debug('in getContract');
 		if (!this.initialized) {
 			throw new Error('Unable to get contract as network has failed to initialize');

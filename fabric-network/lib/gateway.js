@@ -146,7 +146,7 @@ class Gateway {
 			this.client = config;
 		}
 
-		if(this.options.discovery && this.options.discovery.enabled) {
+		if (this.options.discovery && this.options.discovery.enabled) {
 			this.client.setConfigSetting('initialize-with-discovery', true);
 		} else {
 			this.client.setConfigSetting('initialize-with-discovery', false);
@@ -172,7 +172,7 @@ class Gateway {
 			logger.debug('%s - loading query handler: %s', method, this.options.queryHandler);
 			try {
 				this.queryHandlerClass = require(this.options.queryHandler);
-			} catch(error) {
+			} catch (error) {
 				logger.error('%s - unable to load provided query handler: %s. Error %j', method, this.options.queryHandler, error);
 				throw new Error(`unable to load provided query handler: ${this.options.queryHandler}. Error ${error}`);
 			}

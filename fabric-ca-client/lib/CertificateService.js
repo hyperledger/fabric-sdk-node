@@ -10,7 +10,7 @@ const checkRegistrar = require('./helper').checkRegistrar;
 
 class CertificateService {
 	constructor(client) {
-		if(!client){
+		if (!client) {
 			throw new Error('Missing Required Argument client<FabricCAClient>');
 		}
 		this.client = client;
@@ -53,38 +53,38 @@ class CertificateService {
 		let url = 'certificates';
 		if (request) {
 			const query = {};
-			if(request.id && typeof request.id === 'string'){
+			if (request.id && typeof request.id === 'string') {
 				query.id = request.id;
 			}
-			if(request.aki && typeof request.aki === 'string'){
+			if (request.aki && typeof request.aki === 'string') {
 				query.aki = request.aki;
 			}
-			if(request.serial && typeof request.serial === 'string'){
+			if (request.serial && typeof request.serial === 'string') {
 				query.serial = request.serial;
 			}
-			if(request.revoked_start && typeof request.revoked_start === 'string'){
+			if (request.revoked_start && typeof request.revoked_start === 'string') {
 				query.revoked_start = request.revoked_start;
 			}
-			if(request.revoked_end && typeof request.revoked_end === 'string'){
+			if (request.revoked_end && typeof request.revoked_end === 'string') {
 				query.revoked_end = request.revoked_end;
 			}
-			if(request.expired_start && typeof request.expired_start === 'string'){
+			if (request.expired_start && typeof request.expired_start === 'string') {
 				query.expired_start = request.expired_start;
 			}
-			if(request.expired_end && typeof request.expired_end === 'string'){
+			if (request.expired_end && typeof request.expired_end === 'string') {
 				query.expired_end = request.expired_end;
 			}
-			if(request.notrevoked && typeof request.notrevoked === 'boolean'){
+			if (request.notrevoked && typeof request.notrevoked === 'boolean') {
 				query.notrevoked = request.notrevoked;
 			}
-			if(request.notexpired && typeof request.notexpired === 'boolean'){
+			if (request.notexpired && typeof request.notexpired === 'boolean') {
 				query.notexpired = request.notexpired;
 			}
-			if(request.ca && typeof request.ca === 'string'){
+			if (request.ca && typeof request.ca === 'string') {
 				query.ca = request.ca;
 			}
 			const qStr = querystring.stringify(query);
-			if(qStr) {
+			if (qStr) {
 				url += `?${qStr}`;
 			}
 		}

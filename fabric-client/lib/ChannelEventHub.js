@@ -17,7 +17,7 @@ const Long = require('long');
 const utils = require('./utils.js');
 const clientUtils = require('./client-utils.js');
 const logger = utils.getLogger('ChannelEventHub.js');
-const { Identity } = require('./msp/identity');
+const {Identity} = require('./msp/identity');
 const TransactionID = require('./TransactionID');
 const util = require('util');
 
@@ -47,7 +47,7 @@ for (const key of keys) {
 const NO_START_STOP = 0;
 const START_ONLY = 1;
 const END_ONLY = 2;
-//const START_AND_END = 3;
+// const START_AND_END = 3;
 
 const five_minutes_ms = 5 * 60 * 1000;
 
@@ -309,7 +309,7 @@ class ChannelEventHub {
 		}
 
 		logger.debug('connect - signed event:%s', !!signedEvent);
-		this._connect({ signedEvent });
+		this._connect({signedEvent});
 		logger.debug('connect - end %s', this.getPeerAddr());
 	}
 
@@ -418,7 +418,7 @@ class ChannelEventHub {
 				} catch (error) {
 					logger.error('ChannelEventHub - ::' + (error.stack ? error.stack : error));
 					logger.error('ChannelEventHub has detected an error ' + error.toString());
-					//report error to all callbacks and shutdown this ChannelEventHub
+					// report error to all callbacks and shutdown this ChannelEventHub
 					self._disconnect(error);
 				}
 			} else if (deliverResponse.Type === 'status') {
@@ -437,8 +437,7 @@ class ChannelEventHub {
 					logger.debug('on.data - status received - %s', deliverResponse.status);
 					self._disconnect(new Error(`Received status message on the block stream. status:${deliverResponse.status}`));
 				}
-			}
-			else {
+			} else {
 				logger.debug('on.data - unknown deliverResponse');
 				logger.error('ChannelEventHub has received and unknown message type %s', deliverResponse.Type);
 			}
@@ -474,8 +473,7 @@ class ChannelEventHub {
 			logger.debug('on.error - grpc stream is ready :%s', isStreamReady(self));
 			if (err instanceof Error) {
 				self._disconnect(err);
-			}
-			else {
+			} else {
 				self._disconnect(new Error(err));
 			}
 		});
@@ -634,7 +632,7 @@ class ChannelEventHub {
 		if (!options) {
 			throw new Error(util.format('%s - Missing Required Argument "options"', method));
 		}
-		let { identity, txId, certificate, mspId } = options;
+		let {identity, txId, certificate, mspId} = options;
 		// either we have both identity and txId, or we have both certificate or mspId
 		if (identity || txId) {
 			if (!txId) {
@@ -859,7 +857,7 @@ class ChannelEventHub {
 			const ready = isStreamReady(this);
 			logger.debug('_checkConnection - %s with stream channel ready %s', this._peer.getUrl(), ready);
 
-			if (!ready && !this._connect_running) { //Not READY, but trying
+			if (!ready && !this._connect_running) { // Not READY, but trying
 				logger.error('_checkConnection - connection is not ready');
 				const error = new Error('Connection is not READY');
 				this._disconnect(error);
@@ -894,13 +892,13 @@ class ChannelEventHub {
 					} else if (!ready) {
 						// try to reconnect
 						this._connect_running = false;
-						this._connect({ force: true });
+						this._connect({force: true});
 					}
 				} else {
 					logger.debug('checkConnection - stream was shutdown - will reconnected');
 					// try to reconnect
 					this._connect_running = false;
-					this._connect({ force: true });
+					this._connect({force: true});
 				}
 			} catch (error) {
 				logger.error('checkConnection - error ::' + (error.stack ? error.stack : error));
@@ -1342,22 +1340,22 @@ class ChannelEventHub {
 				logger.debug(`_processChaincodeEvents - trans index=${index}`);
 				try {
 					const env = block.data.data[index];
-					const payload = env.payload;
-					const channel_header = payload.header.channel_header;
-					if (channel_header.type === 3) { //only ENDORSER_TRANSACTION have chaincode events
-						const tx = payload.data;
+					const pload = env.payload;
+					const channel_header = pload.header.channel_header;
+					if (channel_header.type === 3) { // only ENDORSER_TRANSACTION have chaincode events
+						const tx = pload.data;
 						if (tx && tx.actions) {
-							for (const { payload } of tx.actions) {
+							for (const {payload} of tx.actions) {
 								const chaincode_event = payload.action.proposal_response_payload.extension.events;
 								logger.debug('_processChaincodeEvents - chaincode_event %s', chaincode_event);
 
 								const txStatusCodes = block.metadata.metadata[_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER];
-								const channel_header = block.data.data[index].payload.header.channel_header;
+								const channelHeader = block.data.data[index].payload.header.channel_header;
 								const val_code = txStatusCodes[index];
 
 								this._callChaincodeListener(chaincode_event,
 									block.header.number,
-									channel_header.tx_id,
+									channelHeader.tx_id,
 									val_code,
 									false);
 							}
@@ -1392,7 +1390,7 @@ class ChannelEventHub {
 					// need to remove the payload since with filtered blocks it
 					// has an empty byte array value which is not the real value
 					// we do not want the listener to think that is the value
-					delete chaincode_event['payload'];
+					delete chaincode_event.payload;
 				}
 				chaincode_reg.event_reg.onEvent(chaincode_event, block_num, tx_id, tx_status);
 				if (chaincode_reg.event_reg.unregister) {
@@ -1438,7 +1436,7 @@ class ChannelEventHub {
 		this._ending_block_number = null;
 		this._ending_block_seen = false;
 		this._ending_block_newest = false;
-		//allow this hub to to registar new listeners
+		// allow this hub to to registar new listeners
 		this._allowRegistration = true;
 		this._start_stop_registration = null;
 	}

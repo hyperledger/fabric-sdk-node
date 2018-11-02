@@ -47,26 +47,28 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', (t) => {
 	// override t.end function so it'll always clear the config settings
 	t.end = ((context, f) => {
 		return function() {
-			if (global && global.hfc) global.hfc.config = undefined;
+			if (global && global.hfc) {
+				global.hfc.config = undefined;
+			}
 			require('nconf').reset();
 
 			f.apply(context, arguments);
 		};
 	})(t, t.end);
 
-	//var user = new User();
+	// var user = new User();
 	const client = new Client();
 
 	// Set the relevant configuration values
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store','fabric-client/lib/impl/CouchDBKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');
 
 	// Clean up the cloudant couchdb test database
 	const dbname = 'member_db';
 
 	let cryptoSuite, member, options;
 	couchdbUtil.destroy(dbname, cloudantUrl)
-		.then( () => {
+		.then(() => {
 			options = {name: dbname, url: cloudantUrl};
 			utils.newKeyValueStore(options)
 				.then(

@@ -120,7 +120,7 @@ describe('Package', () => {
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
 				}
-				await Package.fromDirectory({ name: '', version: '1.2.3', path: pkgDirectory, type })
+				await Package.fromDirectory({name: '', version: '1.2.3', path: pkgDirectory, type})
 					.should.be.rejectedWith(/Smart contract name not specified/);
 			});
 
@@ -131,7 +131,7 @@ describe('Package', () => {
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
 				}
-				await Package.fromDirectory({ name: 'great@scott', version: '1.2.3', path: pkgDirectory, type })
+				await Package.fromDirectory({name: 'great@scott', version: '1.2.3', path: pkgDirectory, type})
 					.should.be.rejectedWith(/Invalid smart contract name/);
 			});
 
@@ -142,7 +142,7 @@ describe('Package', () => {
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
 				}
-				await Package.fromDirectory({ name: 'my-contract', version: '', path: pkgDirectory, type })
+				await Package.fromDirectory({name: 'my-contract', version: '', path: pkgDirectory, type})
 					.should.be.rejectedWith(/Smart contract version not specified/);
 			});
 
@@ -153,7 +153,7 @@ describe('Package', () => {
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
 				}
-				await Package.fromDirectory({ name: 'my-contract', version: '1@2@3', path: pkgDirectory, type })
+				await Package.fromDirectory({name: 'my-contract', version: '1@2@3', path: pkgDirectory, type})
 					.should.be.rejectedWith(/Invalid smart contract version/);
 			});
 
@@ -164,7 +164,7 @@ describe('Package', () => {
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
 				}
-				const pkg = await Package.fromDirectory({ name: 'my-contract', version: '1.2.3', path: pkgDirectory, type });
+				const pkg = await Package.fromDirectory({name: 'my-contract', version: '1.2.3', path: pkgDirectory, type});
 				pkg.getName().should.equal('my-contract');
 				pkg.getVersion().should.equal('1.2.3');
 				pkg.getType().should.equal(type);
@@ -179,7 +179,7 @@ describe('Package', () => {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
 				}
 				const metaDirectory = path.resolve(__dirname, 'data', 'META-INF');
-				const pkg = await Package.fromDirectory({ name: 'my-contract', version: '1.2.3', path: pkgDirectory, type, metadataPath: metaDirectory });
+				const pkg = await Package.fromDirectory({name: 'my-contract', version: '1.2.3', path: pkgDirectory, type, metadataPath: metaDirectory});
 				pkg.getName().should.equal('my-contract');
 				pkg.getVersion().should.equal('1.2.3');
 				pkg.getType().should.equal(type);

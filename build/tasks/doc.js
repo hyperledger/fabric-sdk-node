@@ -51,7 +51,7 @@ const docSrc = [
 ];
 
 gulp.task('jsdocs', ['clean'], () => {
-	gulp.src(docSrc, { read: false })
+	gulp.src(docSrc, {read: false})
 		.pipe(jsdoc({
 			opts: {
 				tutorials: './docs/tutorials',
@@ -59,7 +59,7 @@ gulp.task('jsdocs', ['clean'], () => {
 			},
 			templates: {
 				systemName: 'Hyperledger Fabric SDK for node.js',
-				theme: 'cosmo' //cerulean, cosmo, cyborg, flatly, journal, lumen, paper, readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
+				theme: 'cosmo' // cerulean, cosmo, cyborg, flatly, journal, lumen, paper, readable, sandstone, simplex, slate, spacelab, superhero, united, yeti
 			}
 		}));
 });
@@ -81,7 +81,7 @@ gulp.task('doc', ['jsdocs'], () => {
 			.pipe(replace('LATEST__VERSION', packageJson.docsLatestVersion))
 			.pipe(replace('RELATIVE__PATH', relativePath))
 			.pipe(gulp.dest(docsRoot));
-	} else {
+	} else { // eslint-disable-next-line
 		console.log(`Not updating or routing logic, as not master branch - it is ${currentBranch}`);
 	}
 });

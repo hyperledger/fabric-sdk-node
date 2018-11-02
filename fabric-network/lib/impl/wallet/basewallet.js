@@ -44,9 +44,9 @@ class BaseWallet extends Wallet {
 
 		label = this.normalizeLabel(label);
 
-		//TODO: We could check the client to see if the context matches what we would load ?
-		//Although this may be complex to do, maybe we could cache the previous label and
-		//Another setUserContext call can be bypassed.
+		// TODO: We could check the client to see if the context matches what we would load ?
+		// Although this may be complex to do, maybe we could cache the previous label and
+		// Another setUserContext call can be bypassed.
 		await this.configureClientStores(client, label);
 		const loadedIdentity = await client.getUserContext(label, true);
 		if (!loadedIdentity || !loadedIdentity.isEnrolled()) {
@@ -80,11 +80,11 @@ class BaseWallet extends Wallet {
 		return client;
 	}
 
-	//========================================
+	// ========================================
 	// The following 2 apis are implemented to
 	// provide the persistence mechanism
 	// a mixin can override the getCryptoSuite
-	//========================================
+	// ========================================
 
 	async getStateStore(label) { // eslint-disable-line no-unused-vars
 		throw new Error('Not implemented');
@@ -100,13 +100,13 @@ class BaseWallet extends Wallet {
 		return label;
 	}
 
-	//=========================================================
+	// =========================================================
 	// End user APIs
-	//=========================================================
+	// =========================================================
 
-	//=========================================================
+	// =========================================================
 	// Mixins provide support for import & export
-	//=========================================================
+	// =========================================================
 
 	async import(label, identity) {
 		logger.debug('in import, label = %s', label);
@@ -134,9 +134,9 @@ class BaseWallet extends Wallet {
 		}
 	}
 
-	//=========================================================
+	// =========================================================
 	// Wallets combined with mixins provide support for list
-	//=========================================================
+	// =========================================================
 
 	async list() {
 		logger.debug('in list');
@@ -149,8 +149,7 @@ class BaseWallet extends Wallet {
 				const idInfo = await this.walletMixin.getIdentityInfo(client, label);
 				if (idInfo) {
 					idInfoList.push(idInfo);
-				}
-				else {
+				} else {
 					idInfoList.push({
 						label,
 						mspId: 'not provided',
@@ -168,9 +167,9 @@ class BaseWallet extends Wallet {
 		return null;
 	}
 
-	//=========================================================
+	// =========================================================
 	// Wallets provide support for delete and exists
-	//=========================================================
+	// =========================================================
 
 
 	async delete(label) { // eslint-disable-line no-unused-vars
@@ -181,9 +180,9 @@ class BaseWallet extends Wallet {
 		throw new Error('Not implemented');
 	}
 
-	//TODO: FUTURE: Need some sort of api for a mixin to call to be able to integrate correctly
-	//with the specific persistence mechanism if it wants to use the same persistence
-	//feature
+	// TODO: FUTURE: Need some sort of api for a mixin to call to be able to integrate correctly
+	// with the specific persistence mechanism if it wants to use the same persistence
+	// feature
 }
 
 module.exports = BaseWallet;

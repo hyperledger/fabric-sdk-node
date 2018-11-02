@@ -40,25 +40,23 @@ test('\n\n***** End-to-end flow: private data *****\n\n', async (t) => {
 		t.pass('Successfully installed chaincode ' + chaincodePath + ' in peers of organization "org2"');
 
 		let result = await e2eUtils.instantiateChaincodeWithId('org1', chaincodeId, chaincodePath, 'v0', 'golang', false, false, t);
-		if (result){
+		if (result) {
 			t.pass('Successfully instantiated chaincode ' + chaincodePath + ' on the channel');
 			await e2eUtils.sleep(5000);
-		}
-		else {
+		} else {
 			t.fail('Failed to instantiate chaincode ' + chaincodePath + ' on the channel');
 			t.end();
 		}
 
 		let fcn = 'setPrivateData';
-		let args = ['name1','blue','35','tom','99'];
+		let args = ['name1', 'blue', '35', 'tom', '99'];
 		let expectedResult = 'set private data';
 
 		result = await e2eUtils.invokeChaincode('org1', 'v0', chaincodeId, t, false, fcn, args, expectedResult);
-		if (result){
+		if (result) {
 			t.pass('Successfully invoke transaction chaincode ' + chaincodePath + ' on channel');
 			await e2eUtils.sleep(5000);
-		}
-		else {
+		} else {
 			t.fail('Failed to invoke transaction chaincode ' + chaincodePath + ' on channel');
 			t.end();
 		}
@@ -71,10 +69,9 @@ test('\n\n***** End-to-end flow: private data *****\n\n', async (t) => {
 		expectedResult = '{"docType":"detailCol","name":"name1","color":"blue","size":35,"owner":"tom"}';
 
 		result = await e2eUtils.queryChaincode('org2', 'v0', targets, fcn, args, expectedResult, chaincodeId, t);
-		if (result){
+		if (result) {
 			t.pass('Successfully query private data in detailCol from chaincode ' + chaincodePath + ' on channel');
-		}
-		else {
+		} else {
 			t.fail('Failed to query private data in detailCol from chaincode ' + chaincodePath + ' on channel');
 			t.end();
 		}
@@ -86,10 +83,9 @@ test('\n\n***** End-to-end flow: private data *****\n\n', async (t) => {
 		args = ['name1'];
 		expectedResult = '{"docType":"sensitiveCol","name":"name1","price":99}';
 		result = await e2eUtils.queryChaincode('org1', 'v0', targets, fcn, args, expectedResult, chaincodeId, t);
-		if (result){
+		if (result) {
 			t.pass('Successfully query private data in sensitiveCol from chaincode ' + chaincodePath + ' on channel');
-		}
-		else {
+		} else {
 			t.fail('Failed to query private data in sensitiveCol from chaincode ' + chaincodePath + ' on channel');
 			t.end();
 		}

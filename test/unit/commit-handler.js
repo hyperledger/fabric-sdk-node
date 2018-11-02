@@ -34,12 +34,12 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 	const channel = client.newChannel('handlertest');
 	try {
 		await channel.initialize();
-	} catch(error) {
-		//going to get an error
+	} catch (error) {
+		// going to get an error
 	}
 
 	const handler = channel._commit_handler;
-	if(handler && handler.commit) {
+	if (handler && handler.commit) {
 		t.pass('Able to have the channel create the handler');
 	} else {
 		t.fail('Channel was not able to create the handler');
@@ -47,14 +47,14 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 		return;
 	}
 
-	try{
+	try {
 		await channel.initialize({commitHandler:'bad.js'});
 		t.fail('Should not be here - commiHandler name is bad ');
-	} catch(error) {
-		if(error.toString().includes('find module')) {
+	} catch (error) {
+		if (error.toString().includes('find module')) {
 			t.pass('Successfully failed to initialize using the commitHandler file name ::' + error);
 		} else {
-			t.fail('Received an unknown error ::'+ error);
+			t.fail('Received an unknown error ::' + error);
 		}
 	}
 
@@ -69,10 +69,10 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 	try {
 		await handler.commit({request: {orderer}, signed_envelope: {}}, 1000);
 		t.fail('Should not be here - looking for orderers in request');
-	} catch(error) {
-		if(error instanceof Error) {
-			if(error.toString().indexOf('Failed to connect before the deadline') > -1) {
-				t.pass('This should fail with '+ error.toString());
+	} catch (error) {
+		if (error instanceof Error) {
+			if (error.toString().indexOf('Failed to connect before the deadline') > -1) {
+				t.pass('This should fail with ' + error.toString());
 			} else {
 				t.fail('Did not get Failed to connect before the deadline - got ' + error.toString());
 			}
@@ -87,10 +87,10 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 	try {
 		await handler._commit(request, envelope, 5000);
 		t.fail('Should not be here - looking for no orderers assigned');
-	} catch(error) {
-		if(error instanceof Error) {
-			if(error.toString().indexOf('No orderers assigned to the channel') > -1) {
-				t.pass('This should fail with '+ error.toString());
+	} catch (error) {
+		if (error instanceof Error) {
+			if (error.toString().indexOf('No orderers assigned to the channel') > -1) {
+				t.pass('This should fail with ' + error.toString());
 			} else {
 				t.fail('Did not get No orderers assigned to the channel - got ' + error.toString());
 			}
@@ -109,10 +109,10 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 	try {
 		await handler._commit(request, envelope, 5000);
 		t.fail('Should not be here - looking for connect deadline');
-	} catch(error) {
-		if(error instanceof Error) {
-			if(error.toString().indexOf('Failed to connect before the deadline') > -1) {
-				t.pass('This should fail with '+ error.toString());
+	} catch (error) {
+		if (error instanceof Error) {
+			if (error.toString().indexOf('Failed to connect before the deadline') > -1) {
+				t.pass('This should fail with ' + error.toString());
 			} else {
 				t.fail('Did not get deadline error - got ' + error.toString());
 			}
@@ -123,7 +123,9 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 
 	t.pass('Completed the testing');
 
-	if(temp) Client.setConfigSetting('endorsement-handler-path', temp);
+	if (temp) {
+		Client.setConfigSetting('endorsement-handler-path', temp);
+	}
 	t.end();
 });
 
@@ -131,8 +133,8 @@ async function errorChecker(t, handler, parameters, error_text) {
 	try {
 		await handler.commit(parameters);
 		t.fail('Should not be here - error checker has failed');
-	} catch(error) {
-		if(error.toString().indexOf(error_text)) {
+	} catch (error) {
+		if (error.toString().indexOf(error_text)) {
 			t.pass('Check for :' + error_text);
 		} else {
 			t.fail('Check for :' + error_text);

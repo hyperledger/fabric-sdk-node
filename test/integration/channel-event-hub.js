@@ -45,7 +45,7 @@ test('*****  Test channel events', async (t) => {
 		// override t.end function so it'll always disconnect the event hub
 		t.end = ((context, ehs, f) => {
 			return function() {
-				for(const key in ehs) {
+				for (const key in ehs) {
 					const eventhub = ehs[key];
 					if (eventhub && eventhub.isconnected()) {
 						logger.debug('Disconnecting the event hub from the modified test end method');
@@ -66,13 +66,13 @@ test('*****  Test channel events', async (t) => {
 		await testUtil.getSubmitter(client, t, true /* get peer org admin */, 'org1');
 
 		let data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'));
-		const orderer = client.newOrderer('grpcs://localhost:7050',{
+		const orderer = client.newOrderer('grpcs://localhost:7050', {
 			'pem': Buffer.from(data).toString(),
 			'ssl-target-name-override': 'orderer.example.com'});
 		channel.addOrderer(orderer);
 
 		data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem'));
-		const peer = client.newPeer('grpcs://localhost:7051',{
+		const peer = client.newPeer('grpcs://localhost:7051', {
 			pem: Buffer.from(data).toString(),
 			'ssl-target-name-override': 'peer0.org1.example.com'
 		});
@@ -90,14 +90,14 @@ test('*****  Test channel events', async (t) => {
 		};
 
 		let results = await client.installChaincode(req, 30000);
-		if(!checkResults(t, results[0])) {
+		if (!checkResults(t, results[0])) {
 			throw Error('Failed to install chaincode');
 		}
 
 		// get a transaction ID object based on the current user assigned
 		// to the client instance
 		tx_id = client.newTransactionID();
-		txid = tx_id.getTransactionID(); //get the transaction id string
+		txid = tx_id.getTransactionID(); // get the transaction id string
 
 		req = {
 			targets : targets,
@@ -110,7 +110,7 @@ test('*****  Test channel events', async (t) => {
 
 		// the instantiate proposal can take longer
 		results = await channel.sendInstantiateProposal(req, 30000);
-		if(!checkResults(t, results[0])) {
+		if (!checkResults(t, results[0])) {
 			throw Error('Failed to instantiate chaincode');
 		}
 
@@ -121,7 +121,7 @@ test('*****  Test channel events', async (t) => {
 		const event_hub = channel.newChannelEventHub(peer);
 		t.equal(event_hub.getName(), 'localhost:7051', 'Successfully created new channel event hub for peer, isName check');
 		t.equal(event_hub.isconnected(), false, 'Successfully created new channel event hub for peer, isconnected check');
-		eventhubs.push(event_hub); //add to list so we can shutdown at end of test
+		eventhubs.push(event_hub); // add to list so we can shutdown at end of test
 
 		/*
 		 * Test
@@ -135,11 +135,11 @@ test('*****  Test channel events', async (t) => {
 
 			event_hub.registerTxEvent(txid, (txnid, code, block_num) => {
 				clearTimeout(handle);
-				t.pass('instantiate has transaction status code:'+ code + ' for transaction id ::' + txnid + ' block_num:' + block_num);
+				t.pass('instantiate has transaction status code:' + code + ' for transaction id ::' + txnid + ' block_num:' + block_num);
 				resolve(code);
 			}, (error) => {
 				clearTimeout(handle);
-				t.fail('Failed to receive event for instantiate ::'+ error.toString());
+				t.fail('Failed to receive event for instantiate ::' + error.toString());
 				// send back error
 				reject(error);
 			});
@@ -152,11 +152,11 @@ test('*****  Test channel events', async (t) => {
 		t.pass('Successfully got the instantiate results');
 
 		// checking that the callback is able to tell the application something
-		t.equal(results[0],'VALID', 'checking that the event says the transaction was valid');
+		t.equal(results[0], 'VALID', 'checking that the event says the transaction was valid');
 
 		// must get a new transaction object for every transaction
 		tx_id = client.newTransactionID();
-		txid = tx_id.getTransactionID(); //get the actual transaction id string
+		txid = tx_id.getTransactionID(); // get the actual transaction id string
 		req = {
 			targets : targets,
 			chaincodeId: chaincode_id,
@@ -166,7 +166,7 @@ test('*****  Test channel events', async (t) => {
 		};
 
 		results = await channel.sendTransactionProposal(req);
-		if(!checkResults(t, results[0])) {
+		if (!checkResults(t, results[0])) {
 			throw Error('Failed to endorse invoke proposal with "BLOCK" arg');
 		}
 
@@ -181,47 +181,46 @@ test('*****  Test channel events', async (t) => {
 		let error_callback_called = 0;
 		let check_block_number = Long.fromValue(0);
 		event_monitor = new Promise((resolve, reject) => {
-			let block_reg = null;
 			const handle = setTimeout(() => {
 				t.fail('Timeout - Failed to receive the block and transaction event');
 				reject(new Error('Timed out waiting for events'));
 			}, 20000);
 
-			block_reg = event_hub.registerBlockEvent((filtered_block) => {
+			event_hub.registerBlockEvent((filtered_block) => {
 				// this block listener has to handle the filtered block
-				if(filtered_block.number) {
+				if (filtered_block.number) {
 					t.pass('Successfully received the filtered block event for block_num:' + filtered_block.number);
 				} else {
 					t.failed('Failed - received the full block event for block_num:' + filtered_block.header.number);
 				}
-			}, (error)=> {
-				t.pass('Successfully receive error callback on the block event ::'+error);
+			}, (error) => {
+				t.pass('Successfully receive error callback on the block event ::' + error);
 			});
 
-			event_hub.registerTxEvent(txid, (txid, status, block_num) => {
-				t.pass('Successfully got transaction event with txid:'+txid + ' status:'+ status + ' for block num:'+block_num);
+			event_hub.registerTxEvent(txid, (txId, status, block_num) => {
+				t.pass('Successfully got transaction event with txid:' + txId + ' status:' + status + ' for block num:' + block_num);
 				check_block_number = Long.fromValue(block_num);
 				resolve(block_num);
-			}, (error)=> {
-				t.fail('Failed to receive the known transaction event ::'+error);
+			}, (error) => {
+				t.fail('Failed to receive the known transaction event ::' + error);
 				reject(error);
 			});
 
-			event_hub.registerTxEvent('NONEXISTENT', (txid, status, block_num) => {
-				t.fail('Failed, got transaction event that we should not have with txid:'+txid);
+			event_hub.registerTxEvent('NONEXISTENT', (txId, status, block_num) => {
+				t.fail('Failed, got transaction event that we should not have with txid:' + txId);
 				reject('FAILED - this transaction listener was called');
-			}, (error)=> {
+			}, (error) => {
 				error_callback_called++;
 				// this error block has to be called or the timeout will hit
 				clearTimeout(handle);
-				t.pass('Successfully received the error callback for "NONEXISTENT" listener ::'+error);
+				t.pass('Successfully received the error callback for "NONEXISTENT" listener ::' + error);
 			});
 
-			event_hub.registerTxEvent('ALL', (txid, status, block_num) => {
-				t.pass('Successfully got ALL transaction event with txid:'+txid);
-			}, (error)=> {
+			event_hub.registerTxEvent('ALL', (txId, status, block_num) => {
+				t.pass('Successfully got ALL transaction event with txid:' + txId);
+			}, (error) => {
 				error_callback_called++;
-				t.pass('Successfully received the error callback for "ALL" listener ::'+error);
+				t.pass('Successfully received the error callback for "ALL" listener ::' + error);
 			});
 		});
 		send_trans = channel.sendTransaction({proposalResponses: results[0], proposal: results[1]});
@@ -231,7 +230,7 @@ test('*****  Test channel events', async (t) => {
 		 *    See if block and transaction event listeners reported correct results
 		 */
 		results = await Promise.all([event_monitor, send_trans]);
-		if(check_block_number.equals(Long.fromValue(results[0]))) {
+		if (check_block_number.equals(Long.fromValue(results[0]))) {
 			t.pass('Successfully got the block passed through from the transaction listener ');
 		} else {
 			t.fail('Failed to get correct block number passed through from the transaction listener');
@@ -247,7 +246,7 @@ test('*****  Test channel events', async (t) => {
 
 		// the query target will be the peer added to the channel
 		results = await channel.queryBlock(Long.fromValue(results[0]).toNumber());
-		t.pass('Successfully queried for block: '+results.header.number);
+		t.pass('Successfully queried for block: ' + results.header.number);
 
 		req = {
 			chaincodeId: chaincode_id,
@@ -261,7 +260,7 @@ test('*****  Test channel events', async (t) => {
 
 		// need to always get a new transactionId object for every transaction
 		tx_id = client.newTransactionID();
-		txid = tx_id.getTransactionID(); //save the actual transaction id string
+		txid = tx_id.getTransactionID(); // save the actual transaction id string
 		req = {
 			targets : targets,
 			chaincodeId: chaincode_id,
@@ -271,7 +270,7 @@ test('*****  Test channel events', async (t) => {
 		};
 
 		results = await channel.sendTransactionProposal(req);
-		if(!checkResults(t, results[0])) {
+		if (!checkResults(t, results[0])) {
 			throw Error('Failed to endorse invoke proposal with "CHAINCODE" arg');
 		}
 
@@ -299,11 +298,11 @@ test('*****  Test channel events', async (t) => {
 		t.equals(results[0], 'RECEIVEDfirst chaincode', 'Checking that we got the correct resolve string from our first event callback');
 		t.equals(results[1], 'RECEIVEDsecond chaincode', 'Checking that we got the correct resolve string from our second event callback');
 
-		//check the status of the sendTransaction
+		// check the status of the sendTransaction
 		//   notice that we are using index 2, these are based on the order of
 		//   the promise all array , where the send transaction was third
 		const sendResults = results[2];
-		if(sendResults && sendResults.status && sendResults.status === 'SUCCESS') {
+		if (sendResults && sendResults.status && sendResults.status === 'SUCCESS') {
 			t.pass('Successfully sent transaction to get chaincode event');
 		} else {
 			t.fail('Failed to send transaction to get chaincode event ');
@@ -349,10 +348,10 @@ test('*****  Test channel events', async (t) => {
 		const send_proposal_2 = channel.sendTransactionProposal(req2);
 
 		results = await Promise.all([send_proposal_1, send_proposal_2]);
-		if(!checkResults(t, results[0][0])) {
+		if (!checkResults(t, results[0][0])) {
 			throw Error('Failed to endorse invoke proposal with "TRANSACTIONID1" arg');
 		}
-		if(!checkResults(t, results[1][0])) {
+		if (!checkResults(t, results[1][0])) {
 			throw Error('Failed to endorse invoke proposal with "TRANSACTIONID2" arg');
 		}
 
@@ -364,16 +363,16 @@ test('*****  Test channel events', async (t) => {
 
 			event_hub.registerTxEvent(req1.txId.getTransactionID(), (txnid, code, block_num) => {
 				clearTimeout(handle);
-				t.pass('Event1 has transaction code:'+ code + ' for transactionID:'+txnid + ' block number:' + block_num);
-				if(block_num) {
-					t.pass('Successfully got the block number '+block_num);
+				t.pass('Event1 has transaction code:' + code + ' for transactionID:' + txnid + ' block number:' + block_num);
+				if (block_num) {
+					t.pass('Successfully got the block number ' + block_num);
 				} else {
 					t.fail('Failed to get the block number');
 				}
 				resolve(code);
 			}, (error) => {
 				clearTimeout(handle);
-				t.fail('Failed to receive event for Event1 for transaction id ::'+req1.txId.getTransactionID());
+				t.fail('Failed to receive event for Event1 for transaction id ::' + req1.txId.getTransactionID());
 				reject(error);
 			});
 
@@ -387,12 +386,12 @@ test('*****  Test channel events', async (t) => {
 
 			event_hub.registerTxEvent(req2.txId.getTransactionID(), (txnid, code) => {
 				clearTimeout(handle);
-				t.pass('Event2 has transaction code:'+ code + ' for transaction id ::'+txnid);
+				t.pass('Event2 has transaction code:' + code + ' for transaction id ::' + txnid);
 				// send back what we got... look at it later
 				resolve(code);
 			}, (error) => {
 				clearTimeout(handle);
-				t.fail('Failed to receive event2 for Event2 for transaction id ::'+req2.txId.getTransactionID());
+				t.fail('Failed to receive event2 for Event2 for transaction id ::' + req2.txId.getTransactionID());
 				// send back error
 				reject(error);
 			});
@@ -407,29 +406,36 @@ test('*****  Test channel events', async (t) => {
 		results = await Promise.all([event_monitor_1, event_monitor_2, send_trans_1, send_trans_2]);
 		t.pass('Successfully got back event and transaction results');
 		// lets see what we have
-		t.equal(results[2].status,'SUCCESS', 'Check that submit status is good');
-		t.equal(results[3].status,'SUCCESS', 'Check that submit status is good');
+		t.equal(results[2].status, 'SUCCESS', 'Check that submit status is good');
+		t.equal(results[3].status, 'SUCCESS', 'Check that submit status is good');
 		let VALID = 0;
 		let MVCC_READ_CONFLICT = 0;
-		if(results[0] === 'VALID') VALID++;
-		if(results[1] === 'VALID') VALID++;
-		if(results[0] === 'MVCC_READ_CONFLICT') MVCC_READ_CONFLICT++;
-		if(results[1] === 'MVCC_READ_CONFLICT') MVCC_READ_CONFLICT++;
+		if (results[0] === 'VALID') {
+			VALID++;
+		}
+		if (results[1] === 'VALID') {
+			VALID++;
+		}
+		if (results[0] === 'MVCC_READ_CONFLICT') {
+			MVCC_READ_CONFLICT++;
+		}
+		if (results[1] === 'MVCC_READ_CONFLICT') {
+			MVCC_READ_CONFLICT++;
+		}
 		t.equals(VALID, 1, 'Checking that we had one valid when sending two transactions');
 		t.equals(MVCC_READ_CONFLICT, 1, 'Checking that we had one read conflict when sending two transactions');
 
 		results = await channel.queryInfo(peer);
-		logger.debug(' queryInfo ::%j',results);
+		logger.debug(' queryInfo ::%j', results);
 		t.pass('Successfully received channel info');
 
 		const channel_height = Long.fromValue(results.height);
 		// will use the following number as way to know when to stop the replay
 		const current_block = channel_height.subtract(1);
-		t.pass('Successfully got current_block number :'+ current_block.toInt());
+		t.pass('Successfully got current_block number :' + current_block.toInt());
 
 		const eh2 = channel.newChannelEventHub(peer);
-		eventhubs.push(eh2); //putting on this list will have it closed on the test end
-		let block_reg_num = null;
+		eventhubs.push(eh2); // putting on this list will have it closed on the test end
 
 		let block_replay =  new Promise((resolve, reject) => {
 			const handle = setTimeout(() => {
@@ -438,12 +444,12 @@ test('*****  Test channel events', async (t) => {
 			}, 10000);
 
 			// register to replay all block events
-			block_reg_num = eh2.registerBlockEvent((full_block) => {
+			eh2.registerBlockEvent((full_block) => {
 				t.pass('Successfully got a replayed block ::' + full_block.header.number);
 				// block number is decoded into human readable form
 				// let's put it back into a long
 				const event_block = Long.fromValue(full_block.header.number);
-				if(event_block.equals(current_block)) {
+				if (event_block.equals(current_block)) {
 					t.pass('Successfully got the last block number');
 					clearTimeout(handle);
 					resolve('all blocks replayed');
@@ -462,9 +468,8 @@ test('*****  Test channel events', async (t) => {
 		results = await block_replay;
 		t.equals(results, 'all blocks replayed', 'Checking that all blocks were replayed');
 
-		eh2.disconnect(); //clean up
+		eh2.disconnect(); // clean up
 
-		let seen_last_block = false;
 		block_replay =  new Promise((resolve, reject) => {
 			const handle = setTimeout(() => {
 				t.fail('Timeout - Failed to replay all the block events in a reasonable amount of time');
@@ -472,19 +477,18 @@ test('*****  Test channel events', async (t) => {
 			}, 10000);
 
 			// register to replay all block events
-			block_reg_num = eh2.registerBlockEvent((full_block) => {
+			eh2.registerBlockEvent((full_block) => {
 				t.pass('Successfully got a replayed block ::' + full_block.header.number);
 				// block number is decoded into human readable form
 				// let's put it back into a long
 				const event_block = Long.fromValue(full_block.header.number);
-				if(event_block.equals(current_block)) {
+				if (event_block.equals(current_block)) {
 					t.pass('Successfully got the last block number');
-					seen_last_block = true;
 				}
 				// keep going...do not resolve this promise yet
 			}, (error) => {
 				clearTimeout(handle);
-				if(error.toString().indexOf('Newest block received')) {
+				if (error.toString().indexOf('Newest block received')) {
 					// this error callback will be called to indicate that the listener is no longer listening
 					// in this case it is OK as the message indicates that newest block was sent
 					t.pass('Message received inidicating newest block received ::' + error);
@@ -497,7 +501,7 @@ test('*****  Test channel events', async (t) => {
 			},
 			{startBlock : 0, endBlock : 'newest'}
 			);
-			eh2.connect(true); //need to connect as disconnect was called
+			eh2.connect(true); // need to connect as disconnect was called
 		});
 
 		results = await block_replay;
@@ -505,7 +509,7 @@ test('*****  Test channel events', async (t) => {
 
 
 		t.pass(' ======>>>>> CHANNEL EVENT INTEGRATION TEST END');
-	} catch(catch_err) {
+	} catch (catch_err) {
 		t.fail('Testing of channel events has failed with ' + catch_err);
 	}
 
@@ -525,7 +529,7 @@ function createChaincodeRegistration(t, message, event_hub, chaincode_id, chainc
 		}, 40000);
 
 		regid = event_hub.registerChaincodeEvent(chaincode_id.toString(), chaincode_eventname, (event, block_num, txnid, status) => {
-			t.pass('Successfully got a chaincode event with transid:'+ txnid + ' with status:'+status);
+			t.pass('Successfully got a chaincode event with transid:' + txnid + ' with status:' + status);
 			// --- With filtered events there is no chaincode event payload,
 			// --- the chaincode event does have the chaincode event name.
 			// --- To get the payload you must call the connect(true) to get full blocks
@@ -536,9 +540,9 @@ function createChaincodeRegistration(t, message, event_hub, chaincode_id, chainc
 			// Therefore the default to automatically unregister is false
 			// So in this case we want to shutdown the event listener
 			event_hub.unregisterChaincodeEvent(regid);
-			t.pass('Successfully received the chaincode event on block number '+ block_num + ' for ' + message);
-			resolve('RECEIVED'+ message);
-		}, (error)=> {
+			t.pass('Successfully received the chaincode event on block number ' + block_num + ' for ' + message);
+			resolve('RECEIVED' + message);
+		}, (error) => {
 			clearTimeout(timeout_handle);
 			t.fail('Failed to receive the ' + message + ' ::' + error);
 			reject(error);
@@ -560,7 +564,7 @@ function checkResults(t, proposalResponses) {
 		all_good = all_good & one_good;
 	}
 
-	if(!all_good) {
+	if (!all_good) {
 		t.fail('Failed to endorse the proposal');
 		return false;
 	}

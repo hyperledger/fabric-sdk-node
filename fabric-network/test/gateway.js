@@ -14,7 +14,7 @@ const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
 
 const Client = require('fabric-client');
 const User = require('fabric-client/lib/User');
-const { Identity } = require('fabric-client/lib/msp/identity');
+const {Identity} = require('fabric-client/lib/msp/identity');
 
 const chai = require('chai');
 const should = chai.should();
@@ -442,7 +442,7 @@ describe('Gateway', () => {
 
 			it('should create a non-existent network object', async () => {
 				mockClient.getChannel.withArgs('bar').returns(mockInternalChannel);
-				gateway.getCurrentIdentity = sinon.stub().returns({ _mspId: 'MSP01' });
+				gateway.getCurrentIdentity = sinon.stub().returns({_mspId: 'MSP01'});
 
 				const network2 = await gateway.getNetwork('bar');
 				network2.should.be.instanceof(Network);

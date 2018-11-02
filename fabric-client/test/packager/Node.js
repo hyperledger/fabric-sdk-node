@@ -92,8 +92,8 @@ describe('Node', () => {
 		it('should return a list of descriptors if files are returned', async() => {
 			walkStub.resolves(['FILE_1']);
 			const descriptors = await node.findSource('path');
-			sinon.assert.calledWith(FakeLogger.debug, 'adding entry', { fqp: 'path/FILE_1', name: 'src/FILE_1' });
-			descriptors.should.deep.equal([{ fqp: 'path/FILE_1', name: 'src/FILE_1' }]);
+			sinon.assert.calledWith(FakeLogger.debug, 'adding entry', {fqp: 'path/FILE_1', name: 'src/FILE_1'});
+			descriptors.should.deep.equal([{fqp: 'path/FILE_1', name: 'src/FILE_1'}]);
 		});
 
 		it('should return a list of descriptors if no files are returned', async() => {

@@ -56,16 +56,16 @@ module.exports = class ECDSA_KEY extends api.Key {
 
 		const pointToOctet = function (key) {
 			const byteLen = (key.ecparams.keylen + 7) >> 3;
-			const buff = Buffer.allocUnsafe(1 + 2 * byteLen);
-			buff[0] = 4; // uncompressed point (https://www.security-audit.com/files/x9-62-09-20-98.pdf, section 4.3.6)
+			const newBuff = Buffer.allocUnsafe(1 + 2 * byteLen);
+			newBuff[0] = 4; // uncompressed point (https://www.security-audit.com/files/x9-62-09-20-98.pdf, section 4.3.6)
 			const xyhex = key.getPublicKeyXYHex();
 			const xBuffer = Buffer.from(xyhex.x, 'hex');
 			const yBuffer = Buffer.from(xyhex.y, 'hex');
 			logger.debug('ECDSA curve param X: %s', xBuffer.toString('hex'));
 			logger.debug('ECDSA curve param Y: %s', yBuffer.toString('hex'));
-			xBuffer.copy(buff, 1 + byteLen - xBuffer.length);
-			yBuffer.copy(buff, 1 + 2 * byteLen - yBuffer.length);
-			return buff;
+			xBuffer.copy(newBuff, 1 + byteLen - xBuffer.length);
+			yBuffer.copy(newBuff, 1 + 2 * byteLen - yBuffer.length);
+			return newBuff;
 		};
 
 		if (this._key.isPublic) {
@@ -84,17 +84,18 @@ module.exports = class ECDSA_KEY extends api.Key {
 	}
 
 	isPrivate() {
-		if (typeof this._key.prvKeyHex !== 'undefined' && this._key.prvKeyHex === null)
+		if (typeof this._key.prvKeyHex !== 'undefined' && this._key.prvKeyHex === null) {
 			return false;
-		else
+		} else {
 			return true;
+		}
 	}
 
 	getPublicKey() {
-		if (this._key.isPublic)
+		if (this._key.isPublic) {
 			return this;
-		else {
-			const f = new ECDSA({ curve: this._key.curveName });
+		} else {
+			const f = new ECDSA({curve: this._key.curveName});
 			f.setPublicKeyHex(this._key.pubKeyHex);
 			f.isPrivate = false;
 			f.isPublic = true;
@@ -111,14 +112,14 @@ module.exports = class ECDSA_KEY extends api.Key {
 	 */
 	generateCSR(subjectDN) {
 
-		//check to see if this is a private key
+		// check to see if this is a private key
 		if (!this.isPrivate()) {
 			throw new Error('A CSR cannot be generated from a public key');
 		}
 
 		try {
 			const csr = asn1.csr.CSRUtil.newCSRPEM({
-				subject: { str: asn1.x509.X500Name.ldapToOneline(subjectDN) },
+				subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
 				sbjpubkey: this.getPublicKey()._key,
 				sigalg: 'SHA256withECDSA',
 				sbjprvkey: this._key
@@ -142,21 +143,21 @@ module.exports = class ECDSA_KEY extends api.Key {
 		if (commonName) {
 			subjectDN = '/CN=' + commonName;
 		}
-		//check to see if this is a private key
+		// check to see if this is a private key
 		if (!this.isPrivate()) {
 			throw new Error('An X509 certificate cannot be generated from a public key');
 		}
 
 		try {
-			//var before = Date.now() - 60000;
-			//var after = Date.now() + 60000;
+			// var before = Date.now() - 60000;
+			// var after = Date.now() + 60000;
 			const certPEM = asn1.x509.X509Util.newCertPEM({
-				serial: { int: 4 },
-				sigalg: { name: 'SHA256withECDSA' },
-				issuer: { str: subjectDN },
-				notbefore: { 'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() - 5000) },
-				notafter: { 'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() + 60000) },
-				subject: { str: subjectDN },
+				serial: {int: 4},
+				sigalg: {name: 'SHA256withECDSA'},
+				issuer: {str: subjectDN},
+				notbefore: {'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() - 5000)},
+				notafter: {'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() + 60000)},
+				subject: {str: subjectDN},
 				sbjpubkey: this.getPublicKey()._key,
 				ext: [
 					{
@@ -166,7 +167,7 @@ module.exports = class ECDSA_KEY extends api.Key {
 						}
 					},
 					{
-						keyUsage: { bin: '11'}
+						keyUsage: {bin: '11'}
 					},
 					{
 						extKeyUsage: {

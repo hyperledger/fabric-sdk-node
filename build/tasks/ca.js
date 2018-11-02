@@ -33,7 +33,7 @@ const DEPS = [
 ];
 
 gulp.task('ca', () => {
-	return gulp.src(DEPS, { base: 'fabric-client/' })
+	return gulp.src(DEPS, {base: 'fabric-client/'})
 		.pipe(debug())
 		.pipe(gulp.dest('fabric-ca-client/'))
 		.pipe(gulp.dest('node_modules/fabric-ca-client'));

@@ -46,7 +46,7 @@ const FabricCAClient = class {
 	 */
 	constructor(connect_opts, cryptoPrimitives) {
 
-		//check connect_opts
+		// check connect_opts
 		try {
 			this._validateConnectionOpts(connect_opts);
 		} catch (err) {
@@ -109,7 +109,7 @@ const FabricCAClient = class {
 
 		const self = this;
 
-		//all arguments are required
+		// all arguments are required
 		if (arguments.length < 7) {
 			throw new Error('Missing required parameters. \'enrollmentID\', \'enrollmentSecret\', \'role\', \'affiliation\', ' +
 				'\'maxEnrollments\', \'attrs\' and \'signingIdentity\' are all required.');
@@ -164,7 +164,7 @@ const FabricCAClient = class {
 
 		const self = this;
 
-		//all arguments are required
+		// all arguments are required
 		if (arguments.length < 5) {
 			throw new Error('Missing required parameters. \'enrollmentID\', \'aki\', \'serial\', \'reason\', ' +
 				'\'callerID\' and \'signingIdentity\' are all required.');
@@ -200,7 +200,7 @@ const FabricCAClient = class {
 
 		const self = this;
 
-		//First two arguments are required
+		// First two arguments are required
 		if (arguments.length < 2) {
 			throw new Error('Missing required parameters.  \'csr\', \'signingIdentity\' are all required.');
 		}
@@ -317,7 +317,7 @@ const FabricCAClient = class {
 						return reject(new Error(
 							util.format('fabric-ca request %s failed with HTTP status code %s', api_method, JSON.parse(data).statusCode)));
 					}
-					//response should be JSON
+					// response should be JSON
 					let responseObj;
 					try {
 						responseObj = JSON.parse(payload);
@@ -376,7 +376,7 @@ const FabricCAClient = class {
 			bodyAndcert = '.' + cert;
 		}
 
-		const sig = signingIdentity.sign(bodyAndcert, { hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives) });
+		const sig = signingIdentity.sign(bodyAndcert, {hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives)});
 		logger.debug(util.format('bodyAndcert: %s', bodyAndcert));
 
 		const b64Sign = Buffer.from(sig, 'hex').toString('base64');
@@ -411,7 +411,7 @@ const FabricCAClient = class {
 
 		const self = this;
 
-		//check for required args
+		// check for required args
 		if (arguments.length < 3) {
 			return Promise.reject('Missing required parameters.  \'enrollmentID\', \'enrollmentSecret\' and \'csr\' are all required.');
 		}
@@ -456,11 +456,11 @@ const FabricCAClient = class {
 						return reject(new Error(
 							util.format('Enrollment failed with HTTP status code', JSON.parse(data).statusCode)));
 					}
-					//response should be JSON
+					// response should be JSON
 					try {
 						const res = JSON.parse(payload);
 						if (res.success) {
-							//we want the result field which is Base64-encoded PEM
+							// we want the result field which is Base64-encoded PEM
 							const enrollResponse = new Object();
 							// Cert field is Base64-encoded PEM
 							enrollResponse.enrollmentCert = Buffer.from(res.result.Cert, 'base64').toString();
@@ -529,13 +529,13 @@ const FabricCAClient = class {
 	 * @ignore
 	 */
 	_validateConnectionOpts(connect_opts) {
-		//check for protocol
+		// check for protocol
 		if (!connect_opts.protocol) {
 			throw new Error('Protocol must be set to \'http\' or \'https\'');
 		}
 
-		if (connect_opts.protocol != 'http') {
-			if (connect_opts.protocol != 'https') {
+		if (connect_opts.protocol !== 'http') {
+			if (connect_opts.protocol !== 'https') {
 				throw new Error('Protocol must be set to \'http\' or \'https\'');
 			}
 		}

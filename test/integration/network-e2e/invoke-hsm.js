@@ -7,7 +7,7 @@
 const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
-const { Gateway, InMemoryWallet, HSMWalletMixin } = require('../../../fabric-network/index.js');
+const {Gateway, InMemoryWallet, HSMWalletMixin} = require('../../../fabric-network/index.js');
 const fs = require('fs-extra');
 
 const e2eUtils = require('../e2e/e2eUtils.js');
@@ -110,7 +110,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			wallet: hsmWallet,
 			identity: hsmUser,
 			tlsInfo,
-			discovery: { enabled: false }
+			discovery: {enabled: false}
 		});
 
 		// Obtain an event hub that that will be used by the underlying implementation
@@ -128,20 +128,19 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b','100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		t.true(org1EventHub.isconnected(), 'org1 event hub correctly connected');
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
 
 		const expectedResult = 'move succeed';
-		if(response.toString() === expectedResult){
+		if (response.toString() === expectedResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
-		}
-		else {
+		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
-	} catch(err) {
+	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();

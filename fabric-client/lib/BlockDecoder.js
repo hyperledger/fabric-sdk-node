@@ -629,18 +629,18 @@ function decodeBlockMetaData(proto_block_metadata) {
 
 function decodeTransactionFilter(metadata_bytes) {
 	const transaction_filter = [];
-	if(!metadata_bytes) {
+	if (!metadata_bytes) {
 		logger.debug('decodeTransactionFilter - no metadata');
 		return null;
 	}
-	if(!(metadata_bytes instanceof Buffer)) {
+	if (!(metadata_bytes instanceof Buffer)) {
 		metadata_bytes = metadata_bytes.toBuffer();
 	}
-	logger.debug('decodeTransactionFilter - metadata length:%s',metadata_bytes.length);
+	logger.debug('decodeTransactionFilter - metadata length:%s', metadata_bytes.length);
 
 	for (let i = 0; i < metadata_bytes.length; i++) {
 		const value = parseInt(metadata_bytes[i]);
-		logger.debug('decodeTransactionFilter - looking at index:%s with value:%s',i,value);
+		logger.debug('decodeTransactionFilter - looking at index:%s with value:%s', i, value);
 		transaction_filter.push(value);
 	}
 	return transaction_filter;
@@ -652,7 +652,7 @@ function decodeLastConfigSequenceNumber(metadata_bytes) {
 	if (metadata_bytes) {
 		const proto_metadata = _commonProto.Metadata.decode(metadata_bytes);
 		const proto_last_config = _commonProto.LastConfig.decode(proto_metadata.getValue());
-		last_config.value.index = proto_last_config.getIndex().toString(); //unit64
+		last_config.value.index = proto_last_config.getIndex().toString(); // unit64
 		last_config.signatures = decodeMetadataValueSignatures(proto_metadata.signatures);
 	}
 	return last_config;
@@ -669,7 +669,7 @@ function decodeMetadataSignatures(metadata_bytes) {
 
 function decodeMetadataValueSignatures(proto_meta_signatures) {
 	const signatures = [];
-	if (proto_meta_signatures)
+	if (proto_meta_signatures) {
 		for (const i in proto_meta_signatures) {
 			const metadata_signature = {};
 			const proto_metadata_signature = _commonProto.MetadataSignature.decode(proto_meta_signatures[i].toBuffer());
@@ -677,13 +677,14 @@ function decodeMetadataValueSignatures(proto_meta_signatures) {
 			metadata_signature.signature = proto_metadata_signature.getSignature().toBuffer();
 			signatures.push(metadata_signature);
 		}
+	}
 
 	return signatures;
 }
 
 function decodeBlockDataEnvelope(proto_envelope) {
 	const envelope = {};
-	envelope.signature = proto_envelope.getSignature().toBuffer(); //leave as bytes
+	envelope.signature = proto_envelope.getSignature().toBuffer(); // leave as bytes
 
 	envelope.payload = {};
 	const proto_payload = _commonProto.Payload.decode(proto_envelope.getPayload().toBuffer());
@@ -708,8 +709,8 @@ function decodeEndorserTransaction(trans_bytes) {
 				data.actions.push(action);
 			}
 		}
-	} catch(error) {
-		logger.error(' Unable to decodeEndorserTransaction :: %s',error);
+	} catch (error) {
+		logger.error(' Unable to decodeEndorserTransaction :: %s', error);
 	}
 
 	return data;
@@ -721,13 +722,13 @@ function decodeConfigEnvelope(config_envelope_bytes) {
 	config_envelope.config = decodeConfig(proto_config_envelope.getConfig());
 	logger.debug('decodeConfigEnvelope - decode complete for config envelope - start config update');
 	config_envelope.last_update = {};
-	const proto_last_update = proto_config_envelope.getLastUpdate(); //this is a common.Envelope
+	const proto_last_update = proto_config_envelope.getLastUpdate(); // this is a common.Envelope
 	if (proto_last_update !== null) { // the orderer's genesis block may not have this field
 		config_envelope.last_update.payload = {};
 		const proto_payload = _commonProto.Payload.decode(proto_last_update.getPayload().toBuffer());
 		config_envelope.last_update.payload.header = decodeHeader(proto_payload.getHeader());
 		config_envelope.last_update.payload.data = decodeConfigUpdateEnvelope(proto_payload.getData().toBuffer());
-		config_envelope.last_update.signature = proto_last_update.getSignature().toBuffer(); //leave as bytes
+		config_envelope.last_update.signature = proto_last_update.getSignature().toBuffer(); // leave as bytes
 	}
 
 	return config_envelope;
@@ -735,7 +736,7 @@ function decodeConfigEnvelope(config_envelope_bytes) {
 
 function decodeConfig(proto_config) {
 	const config = {};
-	config.sequence = proto_config.getSequence().toString(); //unit64
+	config.sequence = proto_config.getSequence().toString(); // unit64
 	config.channel_group = decodeConfigGroup(proto_config.getChannelGroup());
 
 	return config;
@@ -778,13 +779,15 @@ function decodeConfigGroups(config_group_map) {
 }
 
 function decodeConfigGroup(proto_config_group) {
-	if (!proto_config_group) return null;
+	if (!proto_config_group) {
+		return null;
+	}
 	const config_group = {};
 	config_group.version = decodeVersion(proto_config_group.getVersion());
 	config_group.groups = decodeConfigGroups(proto_config_group.getGroups());
 	config_group.values = decodeConfigValues(proto_config_group.getValues());
 	config_group.policies = decodeConfigPolicies(proto_config_group.getPolicies());
-	config_group.mod_policy = proto_config_group.getModPolicy(); //string
+	config_group.mod_policy = proto_config_group.getModPolicy(); // string
 	return config_group;
 }
 
@@ -802,12 +805,14 @@ function decodeConfigValues(config_value_map) {
 function decodeConfigValueAnchorPeers(proto_config_value, config_value) {
 	const anchor_peers = [];
 	const proto_anchor_peers = _peerConfigurationProto.AnchorPeers.decode(proto_config_value.value.value);
-	if(proto_anchor_peers && proto_anchor_peers.anchor_peers) for(const i in proto_anchor_peers.anchor_peers) {
-		const anchor_peer = {
-			host : proto_anchor_peers.anchor_peers[i].host,
-			port : proto_anchor_peers.anchor_peers[i].port
-		};
-		anchor_peers.push(anchor_peer);
+	if (proto_anchor_peers && proto_anchor_peers.anchor_peers) {
+		for (const i in proto_anchor_peers.anchor_peers) {
+			const anchor_peer = {
+				host : proto_anchor_peers.anchor_peers[i].host,
+				port : proto_anchor_peers.anchor_peers[i].port
+			};
+			anchor_peers.push(anchor_peer);
+		}
 	}
 	config_value.value.anchor_peers = anchor_peers;
 	return config_value;
@@ -816,7 +821,7 @@ function decodeConfigValueAnchorPeers(proto_config_value, config_value) {
 function decodeConfigValueMSP(proto_config_value, config_value) {
 	let msp_config = {};
 	const proto_msp_config = _mspConfigProto.MSPConfig.decode(proto_config_value.value.value);
-	if(proto_msp_config.getType() == 0) {
+	if (proto_msp_config.getType() === 0) {
 		msp_config = decodeFabricMSPConfig(proto_msp_config.getConfig());
 	}
 	config_value.value.type = proto_msp_config.type;
@@ -832,27 +837,27 @@ function decodeConfigValueConsensusType(proto_config_value, config_value) {
 
 function decodeConfigValueBatchSize(proto_config_value, config_value) {
 	const proto_batch_size = _ordererConfigurationProto.BatchSize.decode(proto_config_value.value.value);
-	config_value.value.max_message_count = proto_batch_size.getMaxMessageCount(); //uint32
-	config_value.value.absolute_max_bytes = proto_batch_size.getAbsoluteMaxBytes(); //uint32
-	config_value.value.preferred_max_bytes = proto_batch_size.getPreferredMaxBytes(); //uint32
+	config_value.value.max_message_count = proto_batch_size.getMaxMessageCount(); // uint32
+	config_value.value.absolute_max_bytes = proto_batch_size.getAbsoluteMaxBytes(); // uint32
+	config_value.value.preferred_max_bytes = proto_batch_size.getPreferredMaxBytes(); // uint32
 	return config_value;
 }
 
 function decodeConfigValueBatchTimeout(proto_config_value, config_value) {
 	const proto_batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(proto_config_value.value.value);
-	config_value.value.timeout = proto_batch_timeout.getTimeout(); //string
+	config_value.value.timeout = proto_batch_timeout.getTimeout(); // string
 	return config_value;
 }
 
 function decodeConfigValueChannelRestrictions(proto_config_value, config_value) {
 	const proto_channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(proto_config_value.value.value);
-	config_value.value.max_count = proto_channel_restrictions.getMaxCount().toString(); //unit64
+	config_value.value.max_count = proto_channel_restrictions.getMaxCount().toString(); // unit64
 	return config_value;
 }
 
 function decodeConfigValueBlockDataConsortium(proto_config_value, config_value) {
 	const consortium_name = _commonConfigurationProto.Consortium.decode(proto_config_value.value.value);
-	config_value.value.name = consortium_name.getName(); //string
+	config_value.value.name = consortium_name.getName(); // string
 	return config_value;
 }
 
@@ -872,8 +877,10 @@ function decodeConfigValueOrdererAddresses(proto_config_value, config_value) {
 	const orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(proto_config_value.value.value);
 	const addresses = [];
 	const proto_addresses = orderer_addresses.getAddresses();
-	if(proto_addresses) for(const i in proto_addresses) {
-		addresses.push(proto_addresses[i]); //string
+	if (proto_addresses) {
+		for (const i in proto_addresses) {
+			addresses.push(proto_addresses[i]); // string
+		}
 	}
 	config_value.value.addresses = addresses;
 	return config_value;
@@ -885,38 +892,38 @@ function decodeConfigValue(proto_config_value) {
 	config_value.version = decodeVersion(proto_config_value.value.getVersion());
 	config_value.mod_policy = proto_config_value.value.getModPolicy();
 	config_value.value = {};
-	switch(proto_config_value.key) {
-	case 'AnchorPeers':
-		config_value = decodeConfigValueAnchorPeers(proto_config_value, config_value);
-		break;
-	case 'MSP':
-		config_value = decodeConfigValueMSP(proto_config_value, config_value);
-		break;
-	case 'ConsensusType':
-		config_value = decodeConfigValueConsensusType(proto_config_value, config_value);
-		break;
-	case 'BatchSize':
-		config_value = decodeConfigValueBatchSize(proto_config_value, config_value);
-		break;
-	case 'BatchTimeout':
-		config_value = decodeConfigValueBatchTimeout(proto_config_value, config_value);
-		break;
-	case 'ChannelRestrictions':
-		config_value = decodeConfigValueChannelRestrictions(proto_config_value, config_value);
-		break;
-	case 'Consortium':
-		config_value = decodeConfigValueBlockDataConsortium(proto_config_value, config_value);
-		break;
-	case 'HashingAlgorithm':
-		config_value = decodeConfigValueHashingAlgorithm(proto_config_value, config_value);
-		break;
-	case 'BlockDataHashingStructure':
-		config_value = decodeConfigValueBlockDataHashingStructure(proto_config_value, config_value);
-		break;
-	case 'OrdererAddresses':
-		config_value = decodeConfigValueOrdererAddresses(proto_config_value, config_value);
-		break;
-	default:
+	switch (proto_config_value.key) {
+		case 'AnchorPeers':
+			config_value = decodeConfigValueAnchorPeers(proto_config_value, config_value);
+			break;
+		case 'MSP':
+			config_value = decodeConfigValueMSP(proto_config_value, config_value);
+			break;
+		case 'ConsensusType':
+			config_value = decodeConfigValueConsensusType(proto_config_value, config_value);
+			break;
+		case 'BatchSize':
+			config_value = decodeConfigValueBatchSize(proto_config_value, config_value);
+			break;
+		case 'BatchTimeout':
+			config_value = decodeConfigValueBatchTimeout(proto_config_value, config_value);
+			break;
+		case 'ChannelRestrictions':
+			config_value = decodeConfigValueChannelRestrictions(proto_config_value, config_value);
+			break;
+		case 'Consortium':
+			config_value = decodeConfigValueBlockDataConsortium(proto_config_value, config_value);
+			break;
+		case 'HashingAlgorithm':
+			config_value = decodeConfigValueHashingAlgorithm(proto_config_value, config_value);
+			break;
+		case 'BlockDataHashingStructure':
+			config_value = decodeConfigValueBlockDataHashingStructure(proto_config_value, config_value);
+			break;
+		case 'OrdererAddresses':
+			config_value = decodeConfigValueOrdererAddresses(proto_config_value, config_value);
+			break;
+		default:
 //		logger.debug('loadConfigValue - %s   - value: %s', group_name, config_value.value.value);
 	}
 	return config_value;
@@ -944,18 +951,18 @@ function decodeConfigPolicy(proto_config_policy) {
 		config_policy.policy.type = Policy_PolicyType[proto_config_policy.value.policy.type];
 		logger.debug('decodeConfigPolicy ======> Policy item ::%s', proto_config_policy.key);
 		switch (proto_config_policy.value.policy.type) {
-		case _policiesProto.Policy.PolicyType.SIGNATURE:
-			config_policy.policy.value = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.value);
-			break;
-		case _policiesProto.Policy.PolicyType.MSP:
+			case _policiesProto.Policy.PolicyType.SIGNATURE:
+				config_policy.policy.value = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.value);
+				break;
+			case _policiesProto.Policy.PolicyType.MSP:
 			// var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.value);
-			logger.warn('decodeConfigPolicy - found a PolicyType of MSP. This policy type has not been implemented yet.');
-			break;
-		case _policiesProto.Policy.PolicyType.IMPLICIT_META:
-			config_policy.policy.value = decodeImplicitMetaPolicy(proto_config_policy.value.policy.value);
-			break;
-		default:
-			throw new Error('Unknown Policy type');
+				logger.warn('decodeConfigPolicy - found a PolicyType of MSP. This policy type has not been implemented yet.');
+				break;
+			case _policiesProto.Policy.PolicyType.IMPLICIT_META:
+				config_policy.policy.value = decodeImplicitMetaPolicy(proto_config_policy.value.policy.value);
+				break;
+			default:
+				throw new Error('Unknown Policy type');
 		}
 	}
 
@@ -979,11 +986,12 @@ function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 	signature_policy_envelope.rule = decodeSignaturePolicy(proto_signature_policy_envelope.getRule());
 	const identities = [];
 	const proto_identities = proto_signature_policy_envelope.getIdentities();
-	if (proto_identities)
+	if (proto_identities) {
 		for (const i in proto_identities) {
 			const msp_principal = decodeMSPPrincipal(proto_identities[i]);
-			identities.push(msp_principal); //string
+			identities.push(msp_principal); // string
 		}
+	}
 	signature_policy_envelope.identities = identities;
 
 	return signature_policy_envelope;
@@ -992,7 +1000,7 @@ function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 function decodeSignaturePolicy(proto_signature_policy) {
 	const signature_policy = {};
 	signature_policy.Type = proto_signature_policy.Type;
-	if (signature_policy.Type == 'n_out_of') {
+	if (signature_policy.Type === 'n_out_of') {
 		signature_policy.n_out_of = {};
 		signature_policy.n_out_of.N = proto_signature_policy.n_out_of.getN();
 		signature_policy.n_out_of.rules = [];
@@ -1001,7 +1009,7 @@ function decodeSignaturePolicy(proto_signature_policy) {
 			const policy = decodeSignaturePolicy(proto_policy);
 			signature_policy.n_out_of.rules.push(policy);
 		}
-	} else if (signature_policy.Type == 'signed_by') {
+	} else if (signature_policy.Type === 'signed_by') {
 		signature_policy.signed_by = proto_signature_policy.getSignedBy();
 	} else {
 		throw new Error('unknown signature policy type');
@@ -1015,24 +1023,24 @@ function decodeMSPPrincipal(proto_msp_principal) {
 	msp_principal.principal_classification = proto_msp_principal.getPrincipalClassification();
 	let proto_principal = null;
 	switch (msp_principal.principal_classification) {
-	case _mspPrProto.MSPPrincipal.Classification.ROLE:
-		proto_principal = _mspPrProto.MSPRole.decode(proto_msp_principal.getPrincipal());
-		msp_principal.msp_identifier = proto_principal.getMspIdentifier();
-		if (proto_principal.getRole() === 0) {
-			msp_principal.Role = 'MEMBER';
-		} else if (proto_principal.getRole() === 1) {
-			msp_principal.Role = 'ADMIN';
-		}
-		break;
-	case _mspPrProto.MSPPrincipal.Classification.ORGANIZATION_UNIT:
-		proto_principal = _mspPrProto.OrganizationUnit.decode(proto_msp_principal.getPrincipal());
-		msp_principal.msp_identifier = proto_principal.getMspIdentifier(); //string
-		msp_principal.organizational_unit_identifier = proto_principal.getOrganizationalUnitIdentifier(); //string
-		msp_principal.certifiers_identifier = proto_principal.getCertifiersIdentifier().toBuffer(); //bytes
-		break;
-	case _mspPrProto.MSPPrincipal.Classification.IDENTITY:
-		msp_principal = decodeIdentity(proto_msp_principal.getPrincipal());
-		break;
+		case _mspPrProto.MSPPrincipal.Classification.ROLE:
+			proto_principal = _mspPrProto.MSPRole.decode(proto_msp_principal.getPrincipal());
+			msp_principal.msp_identifier = proto_principal.getMspIdentifier();
+			if (proto_principal.getRole() === 0) {
+				msp_principal.Role = 'MEMBER';
+			} else if (proto_principal.getRole() === 1) {
+				msp_principal.Role = 'ADMIN';
+			}
+			break;
+		case _mspPrProto.MSPPrincipal.Classification.ORGANIZATION_UNIT:
+			proto_principal = _mspPrProto.OrganizationUnit.decode(proto_msp_principal.getPrincipal());
+			msp_principal.msp_identifier = proto_principal.getMspIdentifier(); // string
+			msp_principal.organizational_unit_identifier = proto_principal.getOrganizationalUnitIdentifier(); // string
+			msp_principal.certifiers_identifier = proto_principal.getCertifiersIdentifier().toBuffer(); // bytes
+			break;
+		case _mspPrProto.MSPPrincipal.Classification.IDENTITY:
+			msp_principal = decodeIdentity(proto_msp_principal.getPrincipal());
+			break;
 	}
 
 	return msp_principal;
@@ -1046,7 +1054,7 @@ function decodeConfigSignature(proto_configSignature) {
 }
 
 function decodeSignatureHeader(signature_header_bytes) {
-	//logger.debug('decodeSignatureHeader - %s',signature_header_bytes);
+	// logger.debug('decodeSignatureHeader - %s',signature_header_bytes);
 	const signature_header = {};
 	const proto_signature_header = _commonProto.SignatureHeader.decode(signature_header_bytes);
 	signature_header.creator = decodeIdentity(proto_signature_header.getCreator().toBuffer());
@@ -1056,7 +1064,7 @@ function decodeSignatureHeader(signature_header_bytes) {
 }
 
 function decodeIdentity(id_bytes) {
-	//logger.debug('decodeIdentity - %s',id_bytes);
+	// logger.debug('decodeIdentity - %s',id_bytes);
 	const identity = {};
 	try {
 		const proto_identity = _identityProto.SerializedIdentity.decode(id_bytes);
@@ -1128,7 +1136,7 @@ function decodeKeyInfo(key_info_bytes) {
 	if (key_info_bytes) {
 		const proto_key_info = _mspConfigProto.KeyInfo.decode(key_info_bytes);
 		key_info.key_identifier = proto_key_info.getKeyIdentifier();
-		key_info.key_material = 'private'; //should not show this
+		key_info.key_material = 'private'; // should not show this
 	}
 
 	return key_info;
@@ -1146,20 +1154,20 @@ function decodeChannelHeader(header_bytes) {
 	const channel_header = {};
 	const proto_channel_header = _commonProto.ChannelHeader.decode(header_bytes);
 	channel_header.type = proto_channel_header.getType();
-	logger.debug('decodeChannelHeader - looking at type:%s',channel_header.type);
+	logger.debug('decodeChannelHeader - looking at type:%s', channel_header.type);
 	channel_header.version = decodeVersion(proto_channel_header.getVersion());
 	channel_header.timestamp = timeStampToDate(proto_channel_header.getTimestamp());
 	channel_header.channel_id = proto_channel_header.getChannelId();
 	channel_header.tx_id = proto_channel_header.getTxId();
-	channel_header.epoch = proto_channel_header.getEpoch().toString(); //unit64
-	//TODO need to decode this
+	channel_header.epoch = proto_channel_header.getEpoch().toString(); // unit64
+	// TODO need to decode this
 	channel_header.extension = proto_channel_header.getExtension().toBuffer();
 
 	return channel_header;
 }
 
 function timeStampToDate(time_stamp) {
-	if(!time_stamp) {
+	if (!time_stamp) {
 		return 'null';
 	}
 	const millis = time_stamp.seconds * 1000 + time_stamp.nanos / 1000000;
@@ -1181,7 +1189,7 @@ function decodeChaincodeProposalPayload(chaincode_proposal_payload_bytes) {
 	const chaincode_proposal_payload = {};
 	const proto_chaincode_proposal_payload = _proposalProto.ChaincodeProposalPayload.decode(chaincode_proposal_payload_bytes);
 	chaincode_proposal_payload.input = decodeChaincodeProposalPayloadInput(proto_chaincode_proposal_payload.getInput());
-	//TransientMap is not allowed to be included on ledger
+	// TransientMap is not allowed to be included on ledger
 
 	return chaincode_proposal_payload;
 }
@@ -1206,7 +1214,7 @@ const chaincode_type_as_string = {
 
 function chaincodeTypeToString(type) {
 	const type_str = chaincode_type_as_string[type];
-	if (typeof type_str == 'undefined') {
+	if (typeof type_str === 'undefined') {
 		return 'UNKNOWN';
 	} else {
 		return type_str;
@@ -1299,7 +1307,7 @@ function decodeChaincodeEvents(event_bytes) {
 
 function decodeChaincodeID(proto_chaincode_id) {
 	const chaincode_id = {};
-	if(!proto_chaincode_id) {
+	if (!proto_chaincode_id) {
 		logger.debug('decodeChaincodeID - no proto_chaincode_id found');
 		return chaincode_id;
 	}
@@ -1451,7 +1459,9 @@ function decodeKVMetadataEntry(proto_kv_metadata_entry) {
 }
 
 function decodeResponse(proto_response) {
-	if (!proto_response) return null;
+	if (!proto_response) {
+		return null;
+	}
 	const response = {};
 	response.status = proto_response.getStatus();
 	response.message = proto_response.getMessage();
@@ -1561,10 +1571,10 @@ const HeaderType = class {
 		let result = null;
 		try {
 			result = type_as_string[type];
-		} catch(error) {
-			logger.error('HeaderType conversion - unknown headertype - %s',type);
+		} catch (error) {
+			logger.error('HeaderType conversion - unknown headertype - %s', type);
 		}
-		if(!result) {
+		if (!result) {
 			result = 'UNKNOWN_TYPE';
 		}
 		return result;
@@ -1572,22 +1582,22 @@ const HeaderType = class {
 
 	static decodePayloadBasedOnType(proto_data, type) {
 		let result = null;
-		switch(type) {
-		case 1:
-			result = decodeConfigEnvelope(proto_data);
-			break;
-		case 2:
-			result = decodeConfigUpdateEnvelope(proto_data);
-			break;
-		case 3:
-			result = decodeEndorserTransaction(proto_data);
-			break;
-		default:
-			logger.debug(' ***** found a header type of %s :: %s', type, HeaderType.convertToString(type));
-			// return empty data on types we do not know so that
-			// event processing may continue on blocks we do not
-			// care about
-			result = {};
+		switch (type) {
+			case 1:
+				result = decodeConfigEnvelope(proto_data);
+				break;
+			case 2:
+				result = decodeConfigUpdateEnvelope(proto_data);
+				break;
+			case 3:
+				result = decodeEndorserTransaction(proto_data);
+				break;
+			default:
+				logger.debug(' ***** found a header type of %s :: %s', type, HeaderType.convertToString(type));
+				// return empty data on types we do not know so that
+				// event processing may continue on blocks we do not
+				// care about
+				result = {};
 		}
 
 		return result;

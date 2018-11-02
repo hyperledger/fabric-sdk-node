@@ -63,10 +63,10 @@ async function create_channels(configPath, ccp, tls) {
 			let config = null;
 			const signatures = [];
 
-			const store = await Client.newDefaultKeyValueStore({ path: testUtil.storePathForOrg(org) });
+			const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
 			client.setStateStore(store);
 			const cryptoSuite = Client.newCryptoSuite();
-			cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: testUtil.storePathForOrg(org) }));
+			cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(org)}));
 			client.setCryptoSuite(cryptoSuite);
 
 			// Run this to set the required identity on the client object
@@ -110,8 +110,7 @@ async function create_channels(configPath, ccp, tls) {
 				testUtil.logMsg('Successfully created channel [' + channelName + ']');
 				await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
 				return Promise.resolve();
-			}
-			else {
+			} else {
 				throw new Error('Failed to create channels, with status: ' + result.status);
 			}
 		}
@@ -151,7 +150,7 @@ async function join_channel(ccp, tls, channelName, orgName) {
 			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 		}
 
-		const store = await Client.newDefaultKeyValueStore({ path: testUtil.storePathForOrg(orgName) });
+		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		client.setStateStore(store);
 
 		// set user internal to client

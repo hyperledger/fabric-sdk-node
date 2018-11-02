@@ -27,11 +27,15 @@ describe('EventHubFactory', () => {
 
 		stubPeer1 = {
 			_stubInfo: 'peer1',
-			getName: function() { return 'peer1'; }
+			getName: function() {
+				return 'peer1';
+			}
 		};
 		stubPeer2 = {
 			_stubInfo: 'peer2',
-			getName: function() { return 'peer2'; }
+			getName: function() {
+				return 'peer2';
+			}
 		};
 
 		// Connected event hub

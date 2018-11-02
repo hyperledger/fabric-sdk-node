@@ -58,14 +58,14 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
 	const cryptoSuite = Client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: testUtil.storePathForOrg(orgName) }));
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
 	return e2eUtils.tlsEnroll(org).then((enrollment) => {
 		t.pass('Successfully retrieved TLS certificate');
 		tlsInfo = enrollment;
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
-		return Client.newDefaultKeyValueStore({ path: testUtil.storePathForOrg(orgName) });
+		return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 	}).then((store) => {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, org);
@@ -84,7 +84,7 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 			)
 		);
 
-		data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1['tls_cacerts']));
+		data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org].peer1.tls_cacerts));
 		peer0 = new Peer(
 			ORGS[org].peer1.requests,
 			{
@@ -93,14 +93,14 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 				'clientKey': tlsInfo.key,
 				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 			});
-		data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS['org2'].peer1['tls_cacerts']));
+		data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS.org2.peer1.tls_cacerts));
 		const peer1 = new Peer(
-			ORGS['org2'].peer1.requests,
+			ORGS.org2.peer1.requests,
 			{
 				pem: Buffer.from(data).toString(),
 				'clientCert': tlsInfo.certificate,
 				'clientKey': tlsInfo.key,
-				'ssl-target-name-override': ORGS['org2'].peer1['server-hostname']
+				'ssl-target-name-override': ORGS.org2.peer1['server-hostname']
 			});
 
 		channel.addPeer(peer0);
@@ -136,7 +136,7 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 		} else {
 			t.pass('Got tx_id from ConfigSetting "E2E_TX_ID"');
 			// send query
-			return channel.queryTransaction(tx_id, peer0); //assumes the end-to-end has run first
+			return channel.queryTransaction(tx_id, peer0); // assumes the end-to-end has run first
 		}
 	}).then((processed_transaction) => {
 		t.equals('mychannel', processed_transaction.transactionEnvelope.payload.header.channel_header.channel_id,
@@ -161,7 +161,7 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 		const block_num =  Number(processed_transaction.transactionEnvelope.payload.data.actions['0']
 			.payload.action.proposal_response_payload.extension.results.ns_rwset['0']
 			.rwset.reads[1].version.block_num.toString());
-		if(parseInt(block_num) > 7) {
+		if (parseInt(block_num) > 7) {
 			t.pass('Successfully test for read set block num');
 		} else {
 			t.fail('Failed test for read set block num - block_num > 7 ::' + block_num);
@@ -228,21 +228,21 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 			const block = BlockDecoder.decode(binaryBlock);
 			if (block && block.header && block.header.number) {
 				t.pass('queryBlockByTxID(skipDecode = true) returned a decodable binary block');
-				t.equals(block.header.number, tx_block,'block number is correct');
+				t.equals(block.header.number, tx_block, 'block number is correct');
 			} else {
 				t.fail('queryBlockByTxID(skipDecode = true) did not return decodable binary block');
 			}
 		}
 
 		// query tx skipping decoder
-		return channel.queryTransaction(tx_id, peer0, null, true); //assumes the end-to-end has run first
+		return channel.queryTransaction(tx_id, peer0, null, true); // assumes the end-to-end has run first
 	}).then((binaryTx) => {
 		if (!(binaryTx instanceof Buffer)) {
 			t.fail('queryTransaction(skipDecode = true) did not return a binary transaction');
 		} else {
 			const tx = BlockDecoder.decodeTransaction(binaryTx);
-			if (tx && tx.transactionEnvelope && tx.transactionEnvelope.payload
-				&& tx.transactionEnvelope.payload.header && tx.transactionEnvelope.payload.header.channel_header) {
+			if (tx && tx.transactionEnvelope && tx.transactionEnvelope.payload &&
+				tx.transactionEnvelope.payload.header && tx.transactionEnvelope.payload.header.channel_header) {
 				t.pass(util.format('queryTransaction(skipDecode = true) returned binary transaction which is decodable'));
 				t.equals(tx_id, tx.transactionEnvelope.payload.header.channel_header.tx_id, 'tx_id is correct');
 			} else {
@@ -266,7 +266,7 @@ test('  ---->>>>> Query channel failing: GetBlockByNumber <<<<<-----', (t) => {
 	}).then(() => {
 		t.pass('Successfully enrolled user \'admin\'');
 		// send query
-		return channel.queryBlock(9999999); //should not find it
+		return channel.queryBlock(9999999); // should not find it
 	}, (err) => {
 		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
 		t.end();
@@ -290,7 +290,7 @@ test('  ---->>>>> Query channel failing: GetBlockByTxID <<<<<-----', (t) => {
 		client.setStateStore(store);
 		return testUtil.getSubmitter(client, t, org);
 	}).then(() => {
-		return channel.queryBlockByTxID(client.newTransactionID()); //should not find this txid
+		return channel.queryBlockByTxID(client.newTransactionID()); // should not find this txid
 	}, (err) => {
 		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
 		t.end();
@@ -315,7 +315,7 @@ test('  ---->>>>> Query channel failing: GetTransactionByID <<<<<-----', (t) => 
 	}).then(() => {
 		t.pass('Successfully enrolled user \'admin\'');
 		// send query
-		return channel.queryTransaction('99999'); //assumes the end-to-end has run first
+		return channel.queryTransaction('99999'); // assumes the end-to-end has run first
 	}, (err) => {
 		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
 		t.end();
@@ -367,7 +367,7 @@ test('  ---->>>>> Query channel failing: GetBlockByHash <<<<<-----', (t) => {
 	}).then(() => {
 		t.pass('Successfully enrolled user \'admin\'');
 		// send query
-		channel._name = channel_id; //put it back
+		channel._name = channel_id; // put it back
 		return channel.queryBlockByHash(Buffer.from('dummy'));
 	}, (err) => {
 		t.fail('Failed to enroll user: ' + err.stack ? err.stack : err);
@@ -408,9 +408,9 @@ test('  ---->>>>> Query Installed Chaincodes working <<<<<-----', (t) => {
 				', version: ' + response.chaincodes[i].version +
 				', path: ' + response.chaincodes[i].path);
 
-			if (response.chaincodes[i].name === e2e.chaincodeId
-				&& response.chaincodes[i].version === e2e.chaincodeVersion
-				&& response.chaincodes[i].path === testUtil.CHAINCODE_PATH) {
+			if (response.chaincodes[i].name === e2e.chaincodeId &&
+				response.chaincodes[i].version === e2e.chaincodeVersion &&
+				response.chaincodes[i].path === testUtil.CHAINCODE_PATH) {
 				found = true;
 			}
 		}
@@ -453,9 +453,9 @@ test('  ---->>>>> Query Instantiated Chaincodes working <<<<<-----', (t) => {
 				', version: ' + response.chaincodes[i].version +
 				', path: ' + response.chaincodes[i].path);
 
-			if (response.chaincodes[i].name === e2e.chaincodeId
-				&& response.chaincodes[i].version === 'v1'
-				&& response.chaincodes[i].path === testUtil.CHAINCODE_UPGRADE_PATH) {
+			if (response.chaincodes[i].name === e2e.chaincodeId &&
+				response.chaincodes[i].version === 'v1' &&
+				response.chaincodes[i].path === testUtil.CHAINCODE_UPGRADE_PATH) {
 				found = true;
 			}
 		}

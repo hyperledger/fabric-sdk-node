@@ -45,7 +45,7 @@ class NodePackager extends BasePackager {
 
 		const buffer = new sbuf.WritableStreamBuffer();
 		return this.findSource(projDir).then((srcDescriptors) => {
-			if (metadataPath){
+			if (metadataPath) {
 				return super.findMetadataDescriptors(metadataPath)
 					.then((metaDescriptors) => {
 						return srcDescriptors.concat(metaDescriptors);

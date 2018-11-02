@@ -16,7 +16,7 @@ const Client = require('fabric-client');
 const util = require('util');
 const fs = require('fs');
 const path = require('path');
-//var heapdump = require('heapdump');
+// var heapdump = require('heapdump');
 
 
 /*
@@ -45,41 +45,45 @@ test('\n\n***** use the network configuration file  *****\n\n', (t) => {
 });
 
 async function looper(t) {
-	//global.gc();
-	//heapdump.writeSnapshot();
+	// global.gc();
+	// heapdump.writeSnapshot();
 	let skip = getArg('skipcreate', false);
-	if(skip === 'true') skip = true;
+	if (skip === 'true') {
+		skip = true;
+	}
 
-	if(!skip) await createChannel(t);
+	if (!skip) {
+		await createChannel(t);
+	}
 	const count = getArg('count', 1);
 
-	for(let i = 0;i<count; i++) {
+	for (let i = 0;i < count; i++) {
 		logger.info('\n');
 		logger.info('**********************************************');
-		logger.info('************ Start pass :: %s ****************',i+1);
+		logger.info('************ Start pass :: %s ****************', i + 1);
 		logger.info('*********************************************\n');
 		await actions(t);
-		if(i==0) {
-			//global.gc();
-			//heapdump.writeSnapshot();
+		if (i === 0) {
+			// global.gc();
+			// heapdump.writeSnapshot();
 		}
 	}
-	//global.gc();
-	//heapdump.writeSnapshot();
+	// global.gc();
+	// heapdump.writeSnapshot();
 }
 
 function getArg(arg_name, default_value) {
 	let value = default_value;
 	try {
 		if (process.argv.length > 2) {
-			for(const i in process.argv) {
+			for (const i in process.argv) {
 				const arg = process.argv[i];
-				if(arg && arg.indexOf(arg_name+'=') === 0) {
+				if (arg && arg.indexOf(arg_name + '=') === 0) {
 					value = arg.split('=')[1];
 				}
 			}
 		}
-	} catch(error) {
+	} catch (error) {
 		logger.error(error);
 	}
 
@@ -163,17 +167,17 @@ async function createChannel(t) {
 			config: config,
 			signatures : signatures,
 			name : channel_name,
-			orderer : 'orderer.example.com', //this assumes we have loaded a network config
+			orderer : 'orderer.example.com', // this assumes we have loaded a network config
 			txId  : tx_id
 		};
 
 		// send create request to orderer
-		results = await client.createChannel(request); //logged in as org2
+		results = await client.createChannel(request); // logged in as org2
 		logger.debug('\n***\n completed the create \n***\n');
 
-		logger.debug(' response ::%j',results);
+		logger.debug(' response ::%j', results);
 		t.pass('Successfully created the channel.');
-		if(results.status && results.status === 'SUCCESS') {
+		if (results.status && results.status === 'SUCCESS') {
 			await sleep(5000);
 		} else {
 			t.fail('Failed to create the channel. ');
@@ -190,12 +194,12 @@ async function createChannel(t) {
 			txId : 	tx_id
 		};
 
-		genesis_block = await channel.getGenesisBlock(request); //admin from org2
+		genesis_block = await channel.getGenesisBlock(request); // admin from org2
 		t.pass('Successfully got the genesis block');
 
 		tx_id = client.newTransactionID(true);
 		request = {
-			//targets:
+			// targets:
 			// this time we will leave blank so that we can use
 			// all the peers assigned to the channel ...some may fail
 			// if the submitter is not allowed, let's see what we get
@@ -203,11 +207,11 @@ async function createChannel(t) {
 			txId : 	tx_id
 		};
 
-		results = await channel.joinChannel(request, 30000); //admin from org2
+		results = await channel.joinChannel(request, 30000); // admin from org2
 		logger.debug(util.format('Join Channel R E S P O N S E using default targets: %j', results));
 
 		// first of the results should not have good status as submitter does not have permission
-		if(results && results[0] && results[0].response && results[0].response.status == 200) {
+		if (results && results[0] && results[0].response && results[0].response.status === 200) {
 			t.fail(util.format('Successfully had peer in organization %s join the channel', 'org1'));
 			throw new Error('Should not have been able to join channel with this submitter');
 		} else {
@@ -215,7 +219,7 @@ async function createChannel(t) {
 		}
 
 		// second of the results should have good status
-		if(results && results[1] && results[1].response && results[1].response.status == 200) {
+		if (results && results[1] && results[1].response && results[1].response.status === 200) {
 			t.pass(util.format('Successfully had peer in organization %s join the channel', 'org2'));
 		} else {
 			t.fail(' Failed to join channel');
@@ -240,10 +244,10 @@ async function createChannel(t) {
 			txId : 	tx_id
 		};
 
-		results = await channel.joinChannel(request, 30000); //logged in as org1
+		results = await channel.joinChannel(request, 30000); // logged in as org1
 		logger.debug(util.format('Join Channel R E S P O N S E  for a string target: %j', results));
 
-		if(results && results[0] && results[0].response && results[0].response.status == 200) {
+		if (results && results[0] && results[0].response && results[0].response.status === 200) {
 			t.pass(util.format('Successfully had peer in organization %s join the channel', 'org1'));
 		} else {
 			t.fail(' Failed to join channel on org1');
@@ -264,8 +268,8 @@ async function createChannel(t) {
 			txId : tx_id
 		};
 
-		results = await client.installChaincode(request); //still logged as org1
-		if(results && results[0] && results[0][0].response && results[0][0].response.status == 200) {
+		results = await client.installChaincode(request); // still logged as org1
+		if (results && results[0] && results[0][0].response && results[0][0].response.status === 200) {
 			t.pass('Successfully installed chain code on org1');
 		} else {
 			t.fail(' Failed to install chaincode on org1');
@@ -293,7 +297,7 @@ async function createChannel(t) {
 		};
 
 		results = await client.installChaincode(request); // org2 admin is the signer
-		if(results && results[0] && results[0][0].response && results[0][0].response.status == 200) {
+		if (results && results[0] && results[0][0].response && results[0][0].response.status === 200) {
 			t.pass('Successfully installed chain code on org2');
 		} else {
 			t.fail(' Failed to install chaincode');
@@ -314,7 +318,7 @@ async function createChannel(t) {
 			txId: tx_id
 			// targets is not required, however the logged in user may not have
 			// admin access to all the peers defined in the network configuration
-			//targets: ['peer0.org1.example.com'],
+			// targets: ['peer0.org1.example.com'],
 		};
 
 		results = await channel.sendInstantiateProposal(request); // still have org2 admin signer
@@ -325,8 +329,8 @@ async function createChannel(t) {
 			request = {
 				proposalResponses: proposalResponses,
 				proposal: proposal,
-				txId : instansiate_tx_id //required to indicate that this is an admin transaction
-				//orderer : not specifying, the first orderer defined in the
+				txId : instansiate_tx_id // required to indicate that this is an admin transaction
+				// orderer : not specifying, the first orderer defined in the
 				//          network configuration for this channel will be used
 			};
 
@@ -348,9 +352,9 @@ async function createChannel(t) {
 
 
 		logMemory();
-	} catch(error) {
+	} catch (error) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
-		t.fail('Test failed with '+ error);
+		t.fail('Test failed with ' + error);
 	}
 	logger.info('********************  end of createChannel *********************');
 }
@@ -393,19 +397,19 @@ async function actions(t) {
 		request = {
 			chaincodeId : 'example',
 			fcn: 'move',
-			args: ['a', 'b','100'],
+			args: ['a', 'b', '100'],
 			txId: tx_id
-			//targets - Letting default to all endorsing peers defined on the channel in the network configuration
+			// targets - Letting default to all endorsing peers defined on the channel in the network configuration
 		};
 
-		results = await channel.sendTransactionProposal(request); //logged in as org2 user
+		results = await channel.sendTransactionProposal(request); // logged in as org2 user
 		const proposalResponses = results[0];
 		const proposal = results[1];
 		let all_good = true;
-		for(const i in proposalResponses) {
+		for (const i in proposalResponses) {
 			let one_good = false;
 			const proposal_response = proposalResponses[i];
-			if( proposal_response.response && proposal_response.response.status === 200) {
+			if (proposal_response.response && proposal_response.response.status === 200) {
 				t.pass('transaction proposal has response status of good');
 				one_good = true;
 			} else {
@@ -426,7 +430,7 @@ async function actions(t) {
 
 		const eventhub = channel.getChannelEventHub('peer0.org1.example.com');
 
-		response = await invoke(t, request, tx_id, client, channel, eventhub); //logged in as org2 user
+		response = await invoke(t, request, tx_id, client, channel, eventhub); // logged in as org2 user
 		if (!(response[0] instanceof Error) && response[0].status === 'SUCCESS') {
 			t.pass('Successfully sent transaction to invoke the chaincode to the orderer.');
 		} else {
@@ -440,10 +444,10 @@ async function actions(t) {
 			args: ['b']
 		};
 
-		const response_payloads = await channel.queryByChaincode(request); //logged in as user on org1
+		const response_payloads = await channel.queryByChaincode(request); // logged in as user on org1
 		if (response_payloads) {
-			for(let i = 0; i < response_payloads.length; i++) {
-				t.pass('Successfully got query results :: '+ response_payloads[i].toString('utf8'));
+			for (let i = 0; i < response_payloads.length; i++) {
+				t.pass('Successfully got query results :: ' + response_payloads[i].toString('utf8'));
 			}
 		} else {
 			t.fail('response_payloads is null');
@@ -451,96 +455,96 @@ async function actions(t) {
 		}
 
 		results = await client.queryChannels('peer0.org1.example.com');
-		logger.debug(' queryChannels ::%j',results);
+		logger.debug(' queryChannels ::%j', results);
 		found = false;
-		for(const i in results.channels) {
+		for (const i in results.channels) {
 			logger.debug(' queryChannels has found %s', results.channels[i].channel_id);
-			if(results.channels[i].channel_id === channel_name) {
+			if (results.channels[i].channel_id === channel_name) {
 				found = true;
 			}
 		}
-		if(found) {
+		if (found) {
 			t.pass('Successfully found our channel in the result list');
 		} else {
 			t.fail('Failed to find our channel in the result list');
 		}
 
 		results = await client.queryInstalledChaincodes('peer0.org1.example.com', true); // use admin
-		logger.debug(' queryInstalledChaincodes ::%j',results);
+		logger.debug(' queryInstalledChaincodes ::%j', results);
 		found = false;
-		for(const i in results.chaincodes) {
+		for (const i in results.chaincodes) {
 			logger.debug(' queryInstalledChaincodes has found %s', results.chaincodes[i].name);
-			if(results.chaincodes[i].name === 'example') {
+			if (results.chaincodes[i].name === 'example') {
 				found = true;
 			}
 		}
-		if(found) {
+		if (found) {
 			t.pass('Successfully found our chaincode in the result list');
 		} else {
 			t.fail('Failed to find our chaincode in the result list');
 		}
 
 		results = await channel.queryBlock(0);
-		logger.debug(' queryBlock ::%j',results);
+		logger.debug(' queryBlock ::%j', results);
 		t.equals('0', results.header.number, 'Should be able to find our block number');
 
 		results = await channel.queryBlock(1);
-		logger.debug(' queryBlock ::%j',results);
+		logger.debug(' queryBlock ::%j', results);
 		t.equals('1', results.header.number, 'Should be able to find our block number');
 
 		results = await channel.queryInfo();
-		logger.debug(' queryInfo ::%j',results);
-		t.pass('Successfully got the block height :: '+ results.height);
+		logger.debug(' queryInfo ::%j', results);
+		t.pass('Successfully got the block height :: ' + results.height);
 
 		results = await channel.queryBlockByHash(results.previousBlockHash);
-		logger.debug(' queryBlockHash ::%j',results);
-		t.pass('Successfully got block by hash ::'+ results.header.number);
+		logger.debug(' queryBlockHash ::%j', results);
+		t.pass('Successfully got block by hash ::' + results.header.number);
 
 		results = await channel.queryTransaction(query_tx_id);
-		logger.debug(' queryTransaction ::%j',results);
+		logger.debug(' queryTransaction ::%j', results);
 		t.equals(0, results.validationCode, 'Should be able to find our transaction validationCode');
 
-		results = await channel.queryBlock(1,'peer0.org1.example.com');
-		logger.debug(' queryBlock ::%j',results);
+		results = await channel.queryBlock(1, 'peer0.org1.example.com');
+		logger.debug(' queryBlock ::%j', results);
 		t.equals('1', results.header.number, 'Should be able to find our block number with string peer name');
 
 		results = await channel.queryInfo('peer0.org1.example.com');
-		logger.info(' queryInfo ::%j',results);
-		t.pass('Successfully got the block height :: '+ results.height);
+		logger.info(' queryInfo ::%j', results);
+		t.pass('Successfully got the block height :: ' + results.height);
 
 		results = await channel.queryBlockByHash(results.previousBlockHash, 'peer0.org1.example.com');
-		logger.debug(' queryBlockHash ::%j',results);
-		t.pass('Successfully got block by hash ::'+ results.header.number);
+		logger.debug(' queryBlockHash ::%j', results);
+		t.pass('Successfully got block by hash ::' + results.header.number);
 
-		results = await channel.queryTransaction(query_tx_id,'peer0.org1.example.com');
-		logger.debug(' queryTransaction ::%j',results);
+		results = await channel.queryTransaction(query_tx_id, 'peer0.org1.example.com');
+		logger.debug(' queryTransaction ::%j', results);
 		t.equals(0, results.validationCode, 'Should be able to find our transaction validationCode with string peer name');
 
-		results = await channel.queryBlock(1,'peer0.org1.example.com', true);
-		logger.debug(' queryBlock ::%j',results);
+		results = await channel.queryBlock(1, 'peer0.org1.example.com', true);
+		logger.debug(' queryBlock ::%j', results);
 		t.equals('1', results.header.number, 'Should be able to find our block number by admin');
 
 		results = await channel.queryInfo('peer0.org1.example.com', true);
-		logger.debug(' queryInfo ::%j',results);
-		t.pass('Successfully got the block height by admin:: '+ results.height);
+		logger.debug(' queryInfo ::%j', results);
+		t.pass('Successfully got the block height by admin:: ' + results.height);
 
 		results = await channel.queryBlockByHash(results.previousBlockHash, 'peer0.org1.example.com', true);
-		logger.debug(' queryBlockHash ::%j',results);
+		logger.debug(' queryBlockHash ::%j', results);
 		t.pass('Successfully got block by hash by admin ::' + results.header.number);
 
-		results = await channel.queryTransaction(query_tx_id,'peer0.org1.example.com', true);
-		logger.debug(' queryTransaction ::%j',results);
+		results = await channel.queryTransaction(query_tx_id, 'peer0.org1.example.com', true);
+		logger.debug(' queryTransaction ::%j', results);
 		t.equals(0, results.validationCode, 'Should be able to find our transaction validationCode by admin');
 
 		// close out connection
 		channel.close();
 
 		logMemory();
-		//await sleep(2000);
+		// await sleep(2000);
 		logger.info('***********  pass all done *************');
-	} catch(error) {
+	} catch (error) {
 		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
-		t.fail('Test failed with '+ error);
+		t.fail('Test failed with ' + error);
 	}
 }
 
@@ -589,12 +593,12 @@ function sleep(ms) {
 
 function logMemory(clean) {
 	const memory_usage = process.memoryUsage();
-	logger.info(' Memory usage :: %j',memory_usage);
-	//info: memory_usage : {"rss":214753280,"heapTotal":55156736,"heapUsed":36789336,"external":5236572}
+	logger.info(' Memory usage :: %j', memory_usage);
+	// info: memory_usage : {"rss":214753280,"heapTotal":55156736,"heapUsed":36789336,"external":5236572}
 	const now = new Date();
 	const line = now.toString() + ',' + memory_usage.rss + ',' + memory_usage.heapTotal + ',' + memory_usage.heapUsed + ',' + memory_usage.external + '\n';
 	const file_path = path.join(__dirname, '../memory-usage.csv');
-	if(clean) {
+	if (clean) {
 		fs.writeFileSync(file_path, 'time,rss,heapTotal,heapUsed,external\n');
 	}
 	fs.appendFileSync(file_path, line);

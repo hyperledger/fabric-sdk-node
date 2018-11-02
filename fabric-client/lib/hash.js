@@ -117,4 +117,4 @@ exports.SHA2_384 = (data) => {
 	return (new hash_sha2_384()).hash(data);
 };
 exports.SHA3_384 = sha3_384;
-exports.shake_256 = shake_256;//TODO
+exports.shake_256 = shake_256;// TODO

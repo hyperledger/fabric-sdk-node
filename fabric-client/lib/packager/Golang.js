@@ -35,7 +35,7 @@ class GolangPackager extends BasePackager {
 		logger.debug('packaging GOLANG from %s', chaincodePath);
 
 		// Determine the user's $GOPATH
-		const goPath = process.env['GOPATH'];
+		const goPath = process.env.GOPATH;
 
 		// Compose the path to the chaincode project directory
 		const projDir = path.join(goPath, 'src', chaincodePath);
@@ -48,7 +48,7 @@ class GolangPackager extends BasePackager {
 		const buffer = new sbuf.WritableStreamBuffer();
 
 		return this.findSource(goPath, projDir).then((srcDescriptors) => {
-			if (metadataPath){
+			if (metadataPath) {
 				return super.findMetadataDescriptors(metadataPath)
 					.then((metaDescriptors) => {
 						return srcDescriptors.concat(metaDescriptors);

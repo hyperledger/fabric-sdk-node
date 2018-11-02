@@ -16,10 +16,9 @@ const ChannelEventHub = require('fabric-client').ChannelEventHub;
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
 
 describe('TransactionEventHandler', () => {
-	const transactionId = 'TRANSACTION_ID';
 	let stubEventHub;
 	let stubStrategy;
-
+	const transactionId = 'TRANSACTION_ID';
 	beforeEach(() => {
 		// Include _stubInfo property on stubs to enable easier equality comparison in tests
 
@@ -27,8 +26,8 @@ describe('TransactionEventHandler', () => {
 		stubEventHub._stubInfo = 'eventHub';
 		stubEventHub.getName.returns('eventHub');
 		stubEventHub.getPeerAddr.returns('eventHubAddress');
-		stubEventHub.registerTxEvent.callsFake((transactionId, onEventFn, onErrorFn) => {
-			stubEventHub._transactionId = transactionId;
+		stubEventHub.registerTxEvent.callsFake((transaction_Id, onEventFn, onErrorFn) => {
+			stubEventHub._transactionId = transaction_Id;
 			stubEventHub._onEventFn = onEventFn;
 			stubEventHub._onErrorFn = onErrorFn;
 		});
@@ -52,7 +51,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('uses timeout from supplied options', () => {
-			const options = { commitTimeout: 1 };
+			const options = {commitTimeout: 1};
 			const handler = new TransactionEventHandler(transactionId, stubStrategy, options);
 			expect(handler.options.commitTimeout).to.equal(options.commitTimeout);
 		});
@@ -179,7 +178,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('fails on timeout if timeout set', async () => {
-			const options = { commitTimeout: 418 };
+			const options = {commitTimeout: 418};
 			handler = new TransactionEventHandler(transactionId, stubStrategy, options);
 			await handler.startListening();
 			const promise = handler.waitForEvents();
@@ -190,7 +189,7 @@ describe('TransactionEventHandler', () => {
 		it('does not timeout if timeout set to zero', async () => {
 			stubStrategy.eventReceived = ((successFn, failFn) => successFn()); // eslint-disable-line no-unused-vars
 
-			const options = { commitTimeout: 0 };
+			const options = {commitTimeout: 0};
 			handler = new TransactionEventHandler(transactionId, stubStrategy, options);
 			await handler.startListening();
 			clock.runAll();
@@ -199,7 +198,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('timeout failure message includes event hubs that have not responded', async () => {
-			const options = { commitTimeout: 418 };
+			const options = {commitTimeout: 418};
 			handler = new TransactionEventHandler(transactionId, stubStrategy, options);
 			await handler.startListening();
 			const promise = handler.waitForEvents();
@@ -210,7 +209,7 @@ describe('TransactionEventHandler', () => {
 
 		it('does not timeout if no event hubs', async () => {
 			stubStrategy.getConnectedEventHubs.resolves([]);
-			const options = { commitTimeout: 418 };
+			const options = {commitTimeout: 418};
 			handler = new TransactionEventHandler(transactionId, stubStrategy, options);
 			await handler.startListening();
 			clock.runAll();

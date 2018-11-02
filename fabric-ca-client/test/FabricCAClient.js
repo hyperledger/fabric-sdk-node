@@ -73,7 +73,7 @@ describe('FabricCAClient', () => {
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			client._port.should.equal(7054);
-			client._tlsOptions.should.deep.equal({ trustedRoots: [], verify: false });
+			client._tlsOptions.should.deep.equal({trustedRoots: [], verify: false});
 			client._caName.should.equal('test-ca-name');
 			client._httpClient.should.deep.equal(https);
 			client._hostname.should.equal('testHost');
@@ -117,7 +117,7 @@ describe('FabricCAClient', () => {
 			const validateStub = sinon.stub();
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype._validateConnectionOpts', validateStub);
 
-			const opts = { trustedRoots: 'much root', verify: false };
+			const opts = {trustedRoots: 'much root', verify: false};
 			const connect_opts = {
 				caname: 'test-ca-name',
 				hostname: 'testHost',
@@ -134,7 +134,7 @@ describe('FabricCAClient', () => {
 			const validateStub = sinon.stub();
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype._validateConnectionOpts', validateStub);
 
-			const opts = { trustedRoots: 'much root' };
+			const opts = {trustedRoots: 'much root'};
 			const connect_opts = {
 				caname: 'test-ca-name',
 				hostname: 'testHost',
@@ -144,14 +144,14 @@ describe('FabricCAClient', () => {
 			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
-			client._tlsOptions.should.deep.equal({ trustedRoots: 'much root', verify: true });
+			client._tlsOptions.should.deep.equal({trustedRoots: 'much root', verify: true});
 		});
 
 		it('should default _tlsOptions.trustedRoots if not provided in opts', () => {
 			const validateStub = sinon.stub();
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype._validateConnectionOpts', validateStub);
 
-			const opts = { verify: false };
+			const opts = {verify: false};
 			const connect_opts = {
 				caname: 'test-ca-name',
 				hostname: 'testHost',
@@ -161,7 +161,7 @@ describe('FabricCAClient', () => {
 			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
-			client._tlsOptions.should.deep.equal({ trustedRoots: [], verify: false });
+			client._tlsOptions.should.deep.equal({trustedRoots: [], verify: false});
 		});
 	});
 
@@ -216,7 +216,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { secret: 'shhh!' } });
+			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -248,7 +248,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { secret: 'shhh!' } });
+			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -277,7 +277,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { secret: 'shhh!' } });
+			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -352,7 +352,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { secret: 'shhh!' } });
+			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -427,7 +427,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { secret: 'shhh!' } });
+			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -455,7 +455,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { secret: 'shhh!' } });
+			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -511,7 +511,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { secret: 'shhh!' } });
+			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -543,7 +543,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { secret: 'shhh!' } });
+			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -575,7 +575,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { secret: 'shhh!' } });
+			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -854,7 +854,7 @@ describe('FabricCAClient', () => {
 			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			const result = await client.request('test_http_method', 'test_api_method', 'signingIdentity', {});
-			result.should.deep.equal({ my_data: 'test_data', success: true });
+			result.should.deep.equal({my_data: 'test_data', success: true});
 		});
 
 		it('should reject if no success message', async () => {
@@ -1048,7 +1048,7 @@ describe('FabricCAClient', () => {
 		});
 
 		afterEach(() => {
-			if (requestStub){
+			if (requestStub) {
 				requestStub.restore();
 			}
 			if (revert) {
@@ -1284,7 +1284,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { CRL: 'bazinga' }, success: true });
+			postStub.resolves({result: {CRL: 'bazinga'}, success: true});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -1318,7 +1318,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ result: { CRL: 'bazinga' }, errors: 'test_fail' });
+			postStub.resolves({result: {CRL: 'bazinga'}, errors: 'test_fail'});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -1334,7 +1334,7 @@ describe('FabricCAClient', () => {
 
 			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
-			postStub.resolves({ errors: 'test_fail' });
+			postStub.resolves({errors: 'test_fail'});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
@@ -1370,24 +1370,24 @@ describe('FabricCAClient', () => {
 
 		it('should throw if protocol is not set to http or https', () => {
 			(() => {
-				validateFunc({ protocol: 'bad' });
+				validateFunc({protocol: 'bad'});
 			}).should.throw(/Protocol must be set to 'http' or 'https'/);
 		});
 
 		it('should throw if no hostname', () => {
 			(() => {
-				validateFunc({ protocol: 'http' });
+				validateFunc({protocol: 'http'});
 			}).should.throw(/Hostname must be set/);
 		});
 
 		it('should throw if provided port is not an integer', () => {
 			(() => {
-				validateFunc({ protocol: 'http', hostname: 'frank', port: '4200' });
+				validateFunc({protocol: 'http', hostname: 'frank', port: '4200'});
 			}).should.throw(/Port must be an integer/);
 		});
 
 		it('should pass with a valid input', () => {
-			should.not.exist(validateFunc({ protocol: 'http', hostname: 'frank', port: 4200 }));
+			should.not.exist(validateFunc({protocol: 'http', hostname: 'frank', port: 4200}));
 		});
 	});
 });
