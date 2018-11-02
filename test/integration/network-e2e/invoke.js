@@ -89,23 +89,24 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		});
 
+		const transaction = contract.createTransaction('move');
+		const transactionId = transaction.getTransactionID().getTransactionID();
+
 		// Obtain an event hub that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let eventFired = -1;
+		let eventFired = 0;
 
 		// have to register for all transaction events (a new feature in 1.3) as
 		// there is no way to know what the initial transaction id is
 		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				eventFired++;
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b', '100');
+		const response = await transaction.submit('a', 'b', '100');
 
 		t.true(org1EventHub.isconnected(), 'org1 event hub correctly connected');
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
@@ -145,23 +146,24 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 			}
 		});
 
+		const transactions = new Array(3).fill('move').map((name) => contract.createTransaction(name));
+		const transactionIds = transactions.map((tx) => tx.getTransactionID().getTransactionID());
+
 		// Obtain an event hub that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let eventFired = -1;
+		let eventFired = 0;
 
 		// have to register for all transaction events (a new feature in 1.3) as
 		// there is no way to know what the initial transaction id is
 		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && transactionIds.includes(txId)) {
 				eventFired++;
 			}
 		}, () => {});
 
-		let response = await contract.submitTransaction('move', 'a', 'b', '100');
+		let response = await transactions[0].submit('a', 'b', '100');
 
 		t.true(org1EventHub.isconnected(), 'org1 event hub correctly connected');
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
@@ -175,7 +177,7 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 		}
 
 		// second transaction for same connection
-		response = await contract.submitTransaction('move', 'a', 'b', '50');
+		response = await transactions[1].submit('a', 'b', '50');
 
 		t.equal(eventFired, 2, 'single event for org1 correctly unblocked submitTransaction');
 
@@ -186,7 +188,7 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 		}
 
 		// third transaction for same connection
-		response = await contract.submitTransaction('move', 'a', 'b', '25');
+		response = await transactions[2].submit('a', 'b', '25');
 
 		t.equal(eventFired, 3, 'single event for org1 correctly unblocked submitTransaction');
 
@@ -226,23 +228,24 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		});
 
+		const transaction = contract.createTransaction('move');
+		const transactionId = transaction.getTransactionID().getTransactionID();
+
 		// Obtain an event hub that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let eventFired = -1;
+		let eventFired = 0;
 
 		// have to register for all transaction events (a new feature in 1.3) as
 		// there is no way to know what the initial transaction id is
 		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				eventFired++;
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b', '100');
+		const response = await transaction.submit('a', 'b', '100');
 
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
@@ -281,23 +284,24 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		});
 
+		const transaction = contract.createTransaction('move');
+		const transactionId = transaction.getTransactionID().getTransactionID();
+
 		// Obtain an event hub that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let eventFired = -1;
+		let eventFired = 0;
 
 		// have to register for all transaction events (a new feature in 1.3) as
 		// there is no way to know what the initial transaction id is
 		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				eventFired++;
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b', '100');
+		const response = await transaction.submit('a', 'b', '100');
 
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
@@ -338,27 +342,28 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		});
 
+		const transaction = contract.createTransaction('move');
+		const transactionId = transaction.getTransactionID().getTransactionID();
+
 		// Obtain the event hubs that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let org1EventFired = -1;
-		let org2EventFired = -1;
+		let org1EventFired = 0;
+		let org2EventFired = 0;
 		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				org1EventFired++;
 			}
 		}, () => {});
 
 		org2EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				org2EventFired++;
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b', '100');
+		const response = await transaction.submit('a', 'b', '100');
 
 		const unblockCorrectly = (org1EventFired === 1) && (org2EventFired === 1);
 		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
@@ -402,27 +407,28 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		});
 
+		const transaction = contract.createTransaction('move');
+		const transactionId = transaction.getTransactionID().getTransactionID();
+
 		// Obtain the event hubs that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let org1EventFired = -1;
-		let org2EventFired = -1;
+		let org1EventFired = 0;
+		let org2EventFired = 0;
 		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				org1EventFired++;
 			}
 		}, () => {});
 
 		org2EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				org2EventFired++;
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b', '100');
+		const response = await transaction.submit('a', 'b', '100');
 
 		const unblockCorrectly = (org1EventFired === 1) && (org2EventFired === 1);
 		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
@@ -466,28 +472,28 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		});
 
+		const transaction = contract.createTransaction('move');
+		const transactionId = transaction.getTransactionID().getTransactionID();
+
 		// Obtain the event hubs that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let org1EventFired = -1;
-		let org2EventFired = -1;
-
+		let org1EventFired = 0;
+		let org2EventFired = 0;
 		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				org1EventFired++;
 			}
 		}, () => {});
 
 		org2EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				org2EventFired++;
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b', '100');
+		const response = await transaction.submit('a', 'b', '100');
 
 		const unblockCorrectly = (org1EventFired === 1 && org2EventFired === 0) ||
 								(org1EventFired === 0 && org2EventFired === 1)
@@ -536,28 +542,28 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			}
 		});
 
+		const transaction = contract.createTransaction('move');
+		const transactionId = transaction.getTransactionID().getTransactionID();
+
 		// Obtain the event hubs that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
-		// Initialize eventFired to -1 since the event hub connection event will happen during
-		// the first call to submitTransaction() after the network is created
-		let org1EventFired = -1;
-		let org2EventFired = -1;
-
+		let org1EventFired = 0;
+		let org2EventFired = 0;
 		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				org1EventFired++;
 			}
 		}, () => {});
 
 		org2EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
+			if (code === 'VALID' && txId === transactionId) {
 				org2EventFired++;
 			}
 		}, () => {});
 
-		const response = await contract.submitTransaction('move', 'a', 'b', '100');
+		const response = await transaction.submit('a', 'b', '100');
 
 		const unblockCorrectly = (org1EventFired === 1 && org2EventFired === 0) ||
 			(org1EventFired === 0 && org2EventFired === 1)
