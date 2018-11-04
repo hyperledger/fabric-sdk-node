@@ -124,7 +124,7 @@ As discussed above, the orderer should be the first step to bootstrap (launch)
 a network. The orderer will need the initial configurations wrapped inside
 a `genesis block`. Follow the
 [instructions here](http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html#configuration-transaction-generator)
-to use the `congigtxgen` tool to generate a `genesis.block`.
+to use the `configtxgen` tool to generate a `genesis.block`.
 The output, a genesis block file for the orderer, will be used in
 the next step to launch the orderer node.
 
