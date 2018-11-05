@@ -15,11 +15,6 @@ const noOpTxEventHandler = {
 	cancelListening: () => {}
 };
 
-function getResponsePayload(peerResponse) {
-	const payload = peerResponse.response.payload;
-	return (payload && payload.length > 0) ? payload : null;
-}
-
 /**
  * Ensure supplied transaction arguments are not strings.
  * @private
@@ -145,7 +140,7 @@ class Transaction {
 
 		await eventHandler.waitForEvents();
 
-		return getResponsePayload(validResponses[0]);
+		return validResponses[0].response.payload || null;
 	}
 
 	/**

@@ -72,18 +72,25 @@ describe('Transaction', () => {
 				payload: expectedResult
 			}
 		};
-		const emptyProposalResponse = {
+		const noPayloadProposalResponse = {
 			response: {
 				status: 200
 			}
 		};
 		const errorProposalResponse = Object.assign(new Error(), {response: {status: 500, payload: 'error'}});
+		const emptyStringProposalResponse = {
+			response: {
+				status: 200,
+				payload: Buffer.from('')
+			}
+		};
 
 		const validProposalResponses = [[validProposalResponse], fakeProposal, fakeHeader];
-		const emptyProposalResponses = [[emptyProposalResponse], fakeProposal, fakeHeader];
+		const noPayloadProposalResponses = [[noPayloadProposalResponse], fakeProposal, fakeHeader];
 		const noProposalResponses = [[], fakeProposal, fakeHeader];
 		const errorProposalResponses = [[errorProposalResponse], fakeProposal, fakeHeader];
 		const mixedProposalResponses = [[validProposalResponse, errorProposalResponse], fakeProposal, fakeHeader];
+		const emptyStringProposalResponses = [[emptyStringProposalResponse], fakeProposal, fakeHeader];
 
 		let transaction;
 		let expectedProposal;
@@ -121,8 +128,8 @@ describe('Transaction', () => {
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
 		});
 
-		it('returns null for empty proposal response payload', async () => {
-			channel.sendTransactionProposal.resolves(emptyProposalResponses);
+		it('returns null for no proposal response payload', async () => {
+			channel.sendTransactionProposal.resolves(noPayloadProposalResponses);
 			const result = await transaction.submit();
 			expect(result).to.be.null;
 		});
@@ -191,6 +198,12 @@ describe('Transaction', () => {
 
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
 		});
+
+		it('returns empty string proposal response payload', async () => {
+			channel.sendTransactionProposal.resolves(emptyStringProposalResponses);
+			const result = await transaction.submit();
+			expect(result.toString()).to.equal('');
+		});
 	});
 
 	describe('#evaluate', () => {
@@ -254,6 +267,12 @@ describe('Transaction', () => {
 		it('rejects for non-string arguments', () => {
 			const promise = transaction.evaluate('arg1', 3.142, null);
 			return expect(promise).to.be.rejectedWith('"arg1", 3.142, null');
+		});
+
+		it('returns empty string response', async () => {
+			stubQueryHandler.queryChaincode.resolves(Buffer.from(''));
+			const result = await transaction.evaluate();
+			expect(result.toString()).to.equal('');
 		});
 	});
 });
