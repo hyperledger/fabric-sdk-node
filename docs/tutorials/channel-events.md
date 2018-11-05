@@ -142,7 +142,7 @@ When using a connection profile ([see](tutorial-network-config.html)) then
 the peer's name may be used to get a new channel event hub.
 
 ```
-var channel_event_hub = channel.newChannelEventHub('peer0.org1.example.com');
+const channel_event_hub = channel.newChannelEventHub('peer0.org1.example.com');
 ```
 
 Here is an example of how to get a list of channel event hubs when using a
@@ -152,22 +152,22 @@ connection profile. Peers defined in the organization that have the `eventSource
 set to true will be added to the list.
 
 ```
-var channel_event_hubs = channel.getChannelEventHubsForOrg();
+const channel_event_hubs = channel.getChannelEventHubsForOrg();
 ```
 
 When creating a peer instance, you can get a `ChannelEventHub` instance by using
 the peer instance.
 
 ```
-let data = fs.readFileSync(path.join(__dirname, 'somepath/tlscacerts/org1.example.com-cert.pem'));
-let peer = client.newPeer(
+const data = fs.readFileSync(path.join(__dirname, 'somepath/tlscacerts/org1.example.com-cert.pem'));
+const peer = client.newPeer(
 	'grpcs://localhost:7051',
 	{
 		pem: Buffer.from(data).toString(),
 		'ssl-target-name-override': 'peer0.org1.example.com'
 	}
 );
-let channel_event_hub = channel.newChannelEventHub(peer);
+const channel_event_hub = channel.newChannelEventHub(peer);
 ```
 
 ### Block Listener
@@ -437,5 +437,23 @@ return Promise.all([event_monitor, send_trans]);
 }).then((results) => {
 ```
 
+### When using mutual tls
+All peers and orderers objects need to use the same client side credentials
+for a mutual TLS connection. The credentials must be assigned to the 'client'
+object instance before it is used to create the peer used in the ChannelEventHub
+creation.
+
+```
+const client = new Client();
+client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+
+const channel = client.newChannel('mychannel');
+const peer = client.newPeer('grpcs://localhost:7051', {
+	pem: '<pem string here>',
+	'ssl-target-name-override': 'peer0.org1.example.com'
+});
+channel.addPeer(peer);
+const channelEventHub = channel.newChannelEventHub(peer);
+```
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
