@@ -25,7 +25,7 @@ Parse_Arguments() {
                             sdk_E2e_Tests
                             ;;
                       --publish_NpmModules)
-                            --publish_NpmModules
+                            publish_NpmModules
                             ;;
                       --publish_ApiDocs)
                             publish_ApiDocs

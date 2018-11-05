@@ -1,7 +1,7 @@
 {
   "name": "fabric-client",
   "version": "1.2.2",
-  "tag": "unstable-1.2",
+  "tag": "latest-1.2",
   "main": "index.js",
   "repository": {
     "type": "github (read mirror)",

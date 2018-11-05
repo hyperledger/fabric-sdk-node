@@ -79,7 +79,7 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
            if (env.GERRIT_EVENT_TYPE == 'change-merged') {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
                // Sends notification to Rocket.Chat
-               rocketSend channel: 'jenkins-robot', message: "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - (<${env.BUILD_URL}|Open>)"
+               rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
               }
            }
        }
@@ -89,6 +89,10 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
 def publishNpm() {
 // Publish npm modules after successful merge
       stage("Publish npm modules") {
+      def ROOTDIR = pwd()
+      withCredentials([[$class       : 'StringBinding',
+                      credentialsId: 'NPM_LOCAL',
+                      variable : 'NPM_TOKEN']]) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --publish_NpmModules'
@@ -100,11 +104,17 @@ def publishNpm() {
                  throw err
            }
       }
+      }
 }
 
 def apiDocs() {
 // Publish SDK_NODE API docs after successful merge
       stage("Publish API Docs") {
+      def ROOTDIR = pwd()
+      withCredentials([[$class     : 'UsernamePasswordMultiBinding',
+                         credentialsId: 'sdk-node-credentials',
+                         usernameVariable: 'NODE_SDK_USERNAME',
+                         passwordVariable: 'NODE_SDK_PASSWORD']]) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --publish_ApiDocs'
@@ -115,5 +125,6 @@ def apiDocs() {
                  currentBuild.result = 'FAILURE'
                  throw err
            }
+      }
       }
 }
