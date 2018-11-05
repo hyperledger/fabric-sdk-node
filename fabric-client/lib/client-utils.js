@@ -6,8 +6,8 @@
 
 'use strict';
 
-const util = require('util');
 const settle = require('promise-settle');
+const util = require('util');
 const utils = require('./utils.js');
 const logger = utils.getLogger('client-utils.js');
 
