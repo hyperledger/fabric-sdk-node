@@ -60,6 +60,26 @@ describe('Transaction', () => {
 		});
 	});
 
+	describe('#setEventHandlerStrategy', () => {
+		it('returns this', () => {
+			const transaction = new Transaction(stubContract, 'name');
+			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
+			const stubEventHandlerFactoryFn = () => stubEventHandler;
+
+			const result = transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn);
+
+			expect(result).to.equal(transaction);
+		});
+	});
+
+	describe('#setTransient', () => {
+		it('returns this', () => {
+			const transaction = new Transaction(stubContract, 'name');
+			const result = transaction.setTransient(new Map());
+			expect(result).to.equal(transaction);
+		});
+	});
+
 	describe('#submit', () => {
 		const transactionName = 'TRANSACTION_NAME';
 		const expectedResult = Buffer.from('42');
@@ -182,8 +202,7 @@ describe('Transaction', () => {
 			const stubEventHandlerFactoryFn = sinon.stub();
 			stubEventHandlerFactoryFn.withArgs(txId, network, options).returns(stubEventHandler);
 
-			transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn);
-			await transaction.submit();
+			await transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn).submit();
 
 			sinon.assert.called(stubEventHandler.startListening);
 			sinon.assert.called(stubEventHandler.waitForEvents);
@@ -193,8 +212,7 @@ describe('Transaction', () => {
 			const transientMap = {key1: 'value1', key2: 'value2'};
 			expectedProposal.transientMap = transientMap;
 
-			transaction.setTransient(transientMap);
-			await transaction.submit();
+			await transaction.setTransient(transientMap).submit();
 
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
 		});

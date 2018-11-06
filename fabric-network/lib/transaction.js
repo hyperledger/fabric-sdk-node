@@ -73,9 +73,11 @@ class Transaction {
 	 * Set the event handler strategy to be used for this transaction invocation
 	 * instead of the default handler configured in the gateway options.
 	 * @param {Function} factoryFunction Event handler factory function.
+	 * @returns {Transaction} This object, to allow function chaining.
 	 */
 	setEventHandlerStrategy(factoryFunction) {
 		this._createTxEventHandler = factoryFunction;
+		return this;
 	}
 
 	/**
@@ -84,9 +86,11 @@ class Transaction {
 	 * private data to a transaction function.
 	 * @param {Object} transientMap Object with String property names and
 	 * Buffer property values.
+	 * @returns {Transaction} This object, to allow function chaining.
 	 */
 	setTransient(transientMap) {
 		this._transientMap = transientMap;
+		return this;
 	}
 
 	/**

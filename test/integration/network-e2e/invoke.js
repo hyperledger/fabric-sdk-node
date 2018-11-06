@@ -642,8 +642,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction with transient data 
 			key1: Buffer.from('value1'),
 			key2: Buffer.from('value2')
 		};
-		transaction.setTransient(transientMap);
-		const response = await transaction.submit();
+		const response = await transaction.setTransient(transientMap).submit();
 		t.pass('Got response: ' + response.toString('utf8'));
 		const result = JSON.parse(response.toString('utf8'));
 
