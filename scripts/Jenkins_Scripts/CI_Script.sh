@@ -33,9 +33,6 @@ Parse_Arguments() {
                       --sdk_E2e_Tests)
                             sdk_E2e_Tests
                             ;;
-                      --pull_Thirdparty_Images)
-                            pull_Thirdparty_Images
-                            ;;
                       --publish_NpmModules)
                             publish_NpmModules
                             ;;
@@ -112,26 +109,9 @@ env_Info() {
         pgrep -a docker
 }
 
-# Pull Thirdparty Docker images (couchdb)
-pull_Thirdparty_Images() {
-            echo "--------> BASE_IMAGE_TAG:" ${BASE_IMAGE_TAG}
-            for IMAGES in couchdb; do
-                 echo "-----------> Pull $IMAGES image"
-                 echo
-                 docker pull $ORG_NAME-$IMAGES:${BASE_IMAGE_TAG} > /dev/null 2>&1
-                 if [ $? -ne 0 ]; then
-                       echo -e "\033[31m FAILED to pull docker images" "\033[0m"
-                       exit 1
-                 fi
-                 docker tag $ORG_NAME-$IMAGES:${BASE_IMAGE_TAG} $ORG_NAME-$IMAGES
-            done
-                 echo
-                 docker images | grep hyperledger/fabric
-}
 # pull fabric, fabric-ca images from nexus
 pull_Docker_Images() {
             for IMAGES in peer orderer ca javaenv; do
-                 echo "-----------> pull $IMAGES image"
                  if [ $IMAGES == "javaenv" ]; then
                        if [ $ARCH == "s390x" ]; then
                              # Do not pull javaenv if OS_VER == s390x
@@ -157,6 +137,9 @@ pull_Docker_Images() {
                                    echo -e "\033[31m FAILED to pull docker images" "\033[0m"
                                    exit 1
                              fi
+                             docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES
+                             docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES:${ARCH}-${VERSION}
+                             docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG}
                  fi
             done
                  echo

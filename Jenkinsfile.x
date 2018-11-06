@@ -12,8 +12,6 @@ node ('hyp-x') { // trigger build on x86_64 node
      env.ARCH = "amd64"
      env.IMAGE_TAG = "${ARCH}-${VERSION}-stable" // fabric latest stable version from nexus
      env.PROJECT_VERSION = "${VERSION}-stable"
-     env.BASE_IMAGE_VER = sh(returnStdout: true, script: 'cat Makefile | grep BASEIMAGE_RELEASE= | cut -d "=" -f2').trim() // BASEIMAGE Version from fabric Makefile
-     env.BASE_IMAGE_TAG = "${ARCH}-${BASE_IMAGE_VER}" //fabric baseimage version
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
@@ -49,22 +47,6 @@ node ('hyp-x') { // trigger build on x86_64 node
            }
          }
 
-// Pull Couchdb Image
-      stage("Pull Couchdb image") {
-         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
-           try {
-                 dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
-                 sh './CI_Script.sh --pull_Thirdparty_Images'
-                 }
-               }
-           catch (err) {
-                 failure_stage = "Pull couchdb docker image"
-                 currentBuild.result = 'FAILURE'
-                 throw err
-           }
-         }
-      }
-
 // Pull fabric,fabric-ca and Javaenv
       stage("Pull Docker images") {
          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
@@ -98,14 +80,14 @@ node ('hyp-x') { // trigger build on x86_64 node
       }
 
 // Publish npm modules from merged job
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
+if (env.GERRIT_EVENT_TYPE == 'change-merged') {
     publishNpm()
 }  else {
      echo "------> Don't publish npm modules from verify job"
    }
 
 // Publish API Docs from merged job only
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
+if (env.GERRIT_EVENT_TYPE == 'change-merged') {
     apiDocs()
 } else {
      echo "------> Don't publish API Docs from verify job"
@@ -127,6 +109,7 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
 def publishNpm() {
 // Publish npm modules after successful merge
       stage("Publish npm Modules") {
+        sh 'echo "-------> Publish npm Modules"'
         def ROOTDIR = pwd()
         withCredentials([[$class       : 'StringBinding',
                       credentialsId: 'NPM_LOCAL',
@@ -148,6 +131,7 @@ def publishNpm() {
 def apiDocs() {
 // Publish SDK_NODE API docs after successful merge
       stage("Publish API Docs") {
+        sh 'echo "--------> Publish API Docs"'
         def ROOTDIR = pwd()
         withCredentials([[$class     : 'UsernamePasswordMultiBinding',
                          credentialsId: 'sdk-node-credentials',
