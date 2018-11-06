@@ -8,7 +8,6 @@
 
 'use strict';
 
-const addsrc = require('gulp-add-src');
 const gulp = require('gulp');
 const mocha = require('gulp-mocha');
 const tape = require('gulp-tape');
@@ -185,13 +184,13 @@ gulp.task('run-test-cucumber', shell.task(
 // Main test method to run all test suites
 // - lint, unit first, then FV, then scenario
 gulp.task('run-test', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'run-test-mocha', 'run-tape-unit', 'docker-clean', 'run-test-cucumber'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'run-test-mocha', 'run-tape-unit', 'docker-clean', 'run-test-cucumber', 'run-logger-unit'];
 	runSequence(...tasks, done);
 });
 
 // Run all non-integration tests
 gulp.task('run-test-headless', (done) => {
-	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'run-test-mocha', 'run-tape-unit'];
+	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'run-test-mocha', 'run-tape-unit', 'run-logger-unit'];
 	runSequence(...tasks, done);
 });
 
@@ -207,9 +206,21 @@ gulp.task('run-tape-unit',
 			'!test/unit/util.js',
 			'!test/unit/logger.js',
 		]))
-			.pipe(addsrc.append(
-				'test/unit/logger.js' // put this to the last so the debugging levels are not mixed up
-			))
+			.pipe(tape({
+				reporter: tapColorize()
+			}));
+	});
+
+// Run logger in isolation
+gulp.task('run-logger-unit',
+	() => {
+		// this is needed to avoid a problem in tape-promise with adding
+		// too many listeners to the "unhandledRejection" event
+		process.setMaxListeners(0);
+
+		return gulp.src(shouldRunPKCS11Tests([
+			'test/unit/logger.js'
+		]))
 			.pipe(tape({
 				reporter: tapColorize()
 			}));
