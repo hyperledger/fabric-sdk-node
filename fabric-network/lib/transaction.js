@@ -51,6 +51,7 @@ class Transaction {
 		this._transactionId = contract.createTransactionID();
 		this._transientMap = null;
 		this._createTxEventHandler = (() => noOpTxEventHandler);
+		this._isInvoked = false;
 	}
 
 	/**
@@ -103,6 +104,7 @@ class Transaction {
      */
 	async submit(...args) {
 		verifyArguments(args);
+		this._setInvokedOrThrow();
 
 		const network = this._contract.getNetwork();
 		const channel = network.getChannel();
@@ -145,6 +147,13 @@ class Transaction {
 		await eventHandler.waitForEvents();
 
 		return validResponses[0].response.payload || null;
+	}
+
+	_setInvokedOrThrow() {
+		if (this._isInvoked) {
+			throw new Error('Transaction has already been invoked');
+		}
+		this._isInvoked = true;
 	}
 
 	/**
@@ -205,6 +214,7 @@ class Transaction {
      */
 	async evaluate(...args) {
 		verifyArguments(args);
+		this._setInvokedOrThrow();
 
 		const queryHandler = this._contract.getQueryHandler();
 		const chaincodeId = this._contract.getChaincodeId();
