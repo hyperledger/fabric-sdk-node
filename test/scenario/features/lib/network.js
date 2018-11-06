@@ -4,7 +4,7 @@
 
 'use strict';
 
-const {Gateway, InMemoryWallet, X509WalletMixin} = require('../../../../fabric-network');
+const {Gateway, InMemoryWallet, X509WalletMixin} = require('fabric-network');
 const testUtil = require('./utils.js');
 const fs = require('fs');
 

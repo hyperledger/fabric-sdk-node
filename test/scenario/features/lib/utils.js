@@ -4,10 +4,9 @@
 
 'use strict';
 
-const Client = require('../../../../fabric-client');
-const copService = require('../../../../fabric-ca-client/lib/FabricCAClient.js');
-const FabricCAServices = require('../../../../fabric-ca-client');
-const User = require('../../../../fabric-client/lib/User.js');
+const Client = require('fabric-client');
+const User = Client.User;
+const FabricCAServices = require('fabric-ca-client');
 
 const childProcess = require('child_process');
 const stripAnsi = require('strip-ansi');
@@ -24,7 +23,6 @@ const TIMEOUTS = {
 	MED_INC : 10 * 1000,
 	SHORT_INC: 5 * 1000
 };
-
 
 // all temporary files and directories are created under here
 const tempdir = path.join(os.tmpdir(), 'hfc');
@@ -147,7 +145,7 @@ async function getMember(username, password, client, userOrg, ccp) {
 			trustedRoots: [],
 			verify: false
 		};
-		const cop = new copService(caUrl, tlsOptions, org.ca.name, cryptoSuite);
+		const cop = new FabricCAServices(caUrl, tlsOptions, org.ca.name, cryptoSuite);
 
 		const enrollment = await cop.enroll({enrollmentID: username, enrollmentSecret: password});
 

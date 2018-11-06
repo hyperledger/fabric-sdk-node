@@ -4,7 +4,6 @@
 
 'use strict';
 
-const utils = require('fabric-client/lib/utils.js');
 const Client = require('fabric-client');
 const testUtil = require('./utils.js');
 
@@ -26,8 +25,6 @@ async function create_channels(configPath, ccp, tls) {
 	}
 
 	try {
-		utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
-
 		for (const channelName in channels) {
 			const channel = channels[channelName];
 
