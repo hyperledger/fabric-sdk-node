@@ -32,6 +32,7 @@ node ('hyp-x') { // trigger build on x86_64 node
          }
 // clean environment and get env data
       stage("Clean Environment - Get Env Info") {
+        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --clean_Environment --env_Info'
@@ -42,10 +43,11 @@ node ('hyp-x') { // trigger build on x86_64 node
                  currentBuild.result = 'FAILURE'
                  throw err
            }
-         }
+        }
+      }
 
 // Run gulp tests (headless and Integration tests)
-      stage("Run gulp_Tests") {
+      stage("Integration Tests") {
          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
@@ -76,7 +78,7 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
      } finally {
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false,  failNoReports: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
-           if (env.GERRIT_EVENT_TYPE == 'change-merged') {
+           if (env.GERRIT_EVENT_TYPE == "change-merged") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
                // Sends notification to Rocket.Chat
                rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
