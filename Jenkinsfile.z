@@ -85,7 +85,7 @@ node('hyp-z') {
       }
     } finally { // log artifacts
              archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
-             if (env.GERRIT_EVENT_TYPE == 'change-merged') {
+             if (env.JOB_NAME == "fabric-sdk-node-merge-s390x") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
                rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
               }
