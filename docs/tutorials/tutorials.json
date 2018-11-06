@@ -3,30 +3,33 @@
 		"title": "Setting up the Application Developer's Environment"
 	},
 	"channel-create": {
-		"title": "How to create a Hyperledger Fabric channel"
+		"title": "fabric-client: How to create a Hyperledger Fabric channel"
 	},
 	"network-config" : {
-		"title": "How to use a common connection profile"
+		"title": "fabric-client: How to use a common connection profile"
 	},
 	"channel-events" : {
-		"title": "How to use the channel-based event service"
+		"title": "fabric-client: How to use the channel-based event service"
 	},
 	"mutual-tls" : {
-		"title": "How to configure mutual TLS"
+		"title": "fabric-client: How to configure mutual TLS"
 	},
 	"metadata-chaincode" : {
-		"title": "How to add CouchDB indexes during chaincode installation"
+		"title": "fabric-client: How to add CouchDB indexes during chaincode installation"
 	},
 	"discovery" : {
-		"title": "How to use the service discovery"
+		"title": "fabric-client: How to use the service discovery"
 	},
 	"logging" : {
-		"title": "How to use logging"
+		"title": "fabric-client: How to use logging"
 	},
 	"private-data" : {
-		"title": "How to use private data"
+		"title": "fabric-client: How to use private data"
 	},
 	"sign-transaction-offline": {
-		"title": "How to sign a transaction with an offline private key"
-	}
+		"title": "fabric-client: How to sign a transaction with an offline private key"
+	},
+	"transaction-commit-events" : {
+		"title": "fabric-network: How to wait for transactions to be commited to the ledger"
+	},
 }
