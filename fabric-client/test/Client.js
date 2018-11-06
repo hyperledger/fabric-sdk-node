@@ -2852,7 +2852,7 @@ describe('Client', () => {
 		});
 	});
 
-	describe.only('readFile', () => {
+	describe('readFile', () => {
 		let readFileStub;
 		let readFile;
 		before(() => {
