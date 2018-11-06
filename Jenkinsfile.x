@@ -85,14 +85,14 @@ node ('hyp-x') { // trigger build on x86_64 node
 if (env.GERRIT_EVENT_TYPE == "change-merged") {
     publishNpm()
 }  else {
-     echo -e "\033[32m ------> Dont publish npm modules from verify job" "\033[0m"
+     echo "------> Don't publish npm modules from VERIFY job"
    }
 
 // Publish API Docs from merged job only
 if (env.GERRIT_EVENT_TYPE == "change-merged") {
     apiDocs()
 } else {
-     echo -e ""\033[32m" ------> Don't publish API Docs from verify job" "\033[0m"
+     echo "------> Don't publish API Docs from VERIFY job"
    }
 
     } finally { // Code for coverage report

@@ -38,6 +38,7 @@ node('hyp-z') {
          }
 // clean environment and get env data
       stage("Clean Environment - Get Env Info") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --clean_Environment --env_Info'
@@ -48,6 +49,7 @@ node('hyp-z') {
                  currentBuild.result = 'FAILURE'
                  throw err
            }
+      }
       }
 
 // Pull fabric, fabric-ca Docker Images
@@ -85,7 +87,7 @@ node('hyp-z') {
              archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
              if (env.GERRIT_EVENT_TYPE == 'change-merged') {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
-               rocketSend channel: "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
+               rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
               }
            }
       } // finally block end here
