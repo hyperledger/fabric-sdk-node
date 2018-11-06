@@ -12,7 +12,7 @@ if [[ "$CURRENT_TAG" = *"skip"* ]]; then
 elif [[ "$CURRENT_TAG" = *"unstable"* ]]; then
 ## Get the version from npmjs of the  module
       echo
-      UNSTABLE_VER=$(npm dist-tags ls "$1" | awk '/$CURRENT_TAG/{
+      UNSTABLE_VER=$(npm dist-tags ls "$1" | awk "/$CURRENT_TAG"":"/'{
       ver=$NF
       sub(/.*\./,"",rel)
       sub(/\.[[:digit:]]+$/,"",ver)
@@ -20,7 +20,7 @@ elif [[ "$CURRENT_TAG" = *"unstable"* ]]; then
 
       echo "===> UNSTABLE VERSION --> $UNSTABLE_VER"
 ## Increment unstable version here
-      UNSTABLE_INCREMENT=$(npm dist-tags ls "$1" | awk '/$CURRENT_TAG/{
+      UNSTABLE_INCREMENT=$(npm dist-tags ls "$1" | awk "/$CURRENT_TAG"":"/'{
       ver=$NF
       rel=$NF
       sub(/.*\./,"",rel)
@@ -43,8 +43,8 @@ elif [[ "$CURRENT_TAG" = *"unstable"* ]]; then
 
   else
       # Publish node modules on latest tag
-      echo "========> PUBLISH --> $RELEASE_VERSION"
-       npm publish --tag $CURRENT_TAG
+      echo -e "\033[32m ========> PUBLISH --> $RELEASE_VERSION" "\033[0m"
+      npm publish --tag $CURRENT_TAG
   fi
 }
 
@@ -58,11 +58,11 @@ versions() {
 
   # Get the value of the tag from package.json
   CURRENT_TAG=$(cat package.json | grep tag | awk -F\" '{ print $4 }')
-  echo "===> Current TAG --> $CURRENT_TAG"
+  echo -e "\033[32m ===> Current TAG --> $CURRENT_TAG" "\033[0m"
 
   # Get the version from package.json
   RELEASE_VERSION=$(cat package.json | grep version | awk -F\" '{ print $4 }')
-  echo "===> Current Version --> $RELEASE_VERSION"
+  echo -e "\033[32m ===> Current Version --> $RELEASE_VERSION" "\033[0m"
 
 }
 

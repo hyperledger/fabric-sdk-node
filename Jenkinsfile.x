@@ -32,6 +32,7 @@ node ('hyp-x') { // trigger build on x86_64 node
          }
 // clean environment and get env data
       stage("Clean Environment - Get Env Info") {
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --clean_Environment --env_Info'
@@ -43,9 +44,10 @@ node ('hyp-x') { // trigger build on x86_64 node
                  throw err
            }
          }
+         }
 
 // Run gulp tests (headless and Integration tests)
-      stage("Run IntegrationTests") {
+      stage("Integration Tests") {
          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
@@ -64,7 +66,7 @@ node ('hyp-x') { // trigger build on x86_64 node
 if (env.GERRIT_EVENT_TYPE == "change-merged") {
     publishNpm()
 }  else {
-     echo "------> Don't publish npm modules from verify job"
+     echo "------> Don't publish npm modules from VERIFY job"
    }
 
 // Publish API Docs from merged job only
@@ -76,9 +78,9 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
     } finally { // Code for coverage report
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, failNoReports: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
-           if (env.GERRIT_EVENT_TYPE == 'change-merged') {
+           if (env.GERRIT_EVENT_TYPE == "change-merged") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
-               rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - (<${env.BUILD_URL}|Open>)"
+               rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL - (<${env.BUILD_URL}|Open>)"
               }
            }
       } // finally block end here

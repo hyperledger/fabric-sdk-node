@@ -87,7 +87,7 @@ env_Info() {
         # This function prints system info
 
         #### Build Env INFO
-        echo "-----------> Build Env INFO"
+        echo -e "\033[32m -----------> Build Env INFO" "\033[0m"
         # Output all information about the Jenkins environment
         uname -a
         cat /etc/*-release
@@ -104,7 +104,7 @@ env_Info() {
 # run sdk e2e tests
 sdk_E2e_Tests() {
 	echo
-	echo "-----------> Execute NODE SDK E2E Tests"
+        echo -e "\033[32m -----------> Execute NODE SDK E2E Tests" "\033[0m"
         cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node || exit
         # Install nvm to install multi node versions
         wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
@@ -113,14 +113,14 @@ sdk_E2e_Tests() {
         # shellcheck source=/dev/null
         [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 
-        echo "------> Install NodeJS"
+        echo -e "\033[32m -----------> Install NodeJS" "\033[0m"
         # This also depends on the fabric-baseimage. Make sure you modify there as well.
         echo "------> Use $NODE_VER"
         nvm install $NODE_VER || true
         nvm use --delete-prefix v$NODE_VER --silent
 
-        echo "npm version ------> $(npm -v)"
-        echo "node version ------> $(node -v)"
+        echo -e "\033[32m npm version ------> $(npm -v)" "\033[0m"
+        echo -e "\033[32m node version ------> $(node -v)" "\033[0m"
 
         npm install || err_Check "ERROR!!! npm install failed"
         npm config set prefix ~/npm && npm install -g gulp && npm install -g istanbul
@@ -128,7 +128,7 @@ sdk_E2e_Tests() {
         ~/npm/bin/gulp ca || err_Check "ERROR!!! gulp ca failed"
         rm -rf node_modules/fabric-ca-client && npm install || err_Check "ERROR!!! npm install failed"
 
-        echo "------> Run node headless & integration tests"
+        echo -e "\033[32m ------> Run Node SDK Unit, FV, and scenario tests" "\033[0m"
         echo "============"
         ~/npm/bin/gulp test
         if [ $? == 0 ]; then
