@@ -6,6 +6,7 @@
 
 'use strict';
 
+const isPromise = require('is-promise');
 const logger = require('fabric-network/lib/logger').getLogger('AbstractStrategy');
 
 /**
@@ -24,7 +25,7 @@ class AbstractEventStrategy {
 	 * @param {Promise.ChannelEventHub[]} eventHubsPromise Promise to event hubs for which to process events.
 	 */
 	constructor(eventHubsPromise) {
-		if (!(eventHubsPromise instanceof Promise)) {
+		if (!isPromise(eventHubsPromise)) {
 			const message = 'Expected event hubs to be a Promise but was ' + typeof eventHubsPromise;
 			logger.error('constructor:', message);
 			throw new Error(message);
