@@ -8,9 +8,9 @@ node('hyp-z') {
 
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
      env.NODE_VER = "8.11.3"
-     env.VERSION = sh(returnStdout: true, script: 'curl -O https://raw.githubusercontent.com/hyperledger/fabric/master/Makefile && cat Makefile | grep "PREV_VERSION =" | cut -d "=" -f2').trim()
+     env.VERSION = sh(returnStdout: true, script: 'curl -O https://raw.githubusercontent.com/hyperledger/fabric/master/Makefile && cat Makefile | grep "BASE_VERSION =" | cut -d "=" -f2').trim()
      env.VERSION = "$VERSION" // BASE_VERSION from fabric Makefile
-     env.ARCH = "s390x" // `uname -m` 
+     env.ARCH = "s390x" // `uname -m`
      env.IMAGE_TAG = "${ARCH}-${VERSION}-stable" // fabric latest stable version from nexus
      env.PROJECT_VERSION = "${VERSION}-stable"
      env.BASE_IMAGE_VER = sh(returnStdout: true, script: 'cat Makefile | grep BASEIMAGE_RELEASE= | cut -d "=" -f2').trim() // BASEIMAGE Version from fabric Makefile
@@ -54,6 +54,7 @@ node('hyp-z') {
 
 // Pull Couchdb Image
       stage("Pull Couchdb image") {
+         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --pull_Thirdparty_Images'
@@ -65,7 +66,7 @@ node('hyp-z') {
                  throw err
            }
          }
-      }
+       }
 
 // Pull fabric, fabric-ca Docker Images
       stage("Pull Docker Images") {
@@ -102,7 +103,7 @@ node('hyp-z') {
              archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
              if (env.GERRIT_EVENT_TYPE == 'change-merged') {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
-               rocketSend channel: 'jenkins-robot', message: "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - (<${env.BUILD_URL}|Open>)"
+               rocketSend channel: "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
               }
            }
       } // finally block end here
