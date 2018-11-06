@@ -82,14 +82,14 @@ node ('hyp-x') { // trigger build on x86_64 node
       }
 
 // Publish npm modules from merged job
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
+if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
     publishNpm()
 }  else {
      echo "------> Don't publish npm modules from VERIFY job"
    }
 
 // Publish API Docs from merged job only
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
+if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
     apiDocs()
 } else {
      echo "------> Don't publish API Docs from VERIFY job"
@@ -98,7 +98,7 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
     } finally { // Code for coverage report
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, failNoReports: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
-           if (env.GERRIT_EVENT_TYPE == "change-merged") {
+           if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
                rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
               }
