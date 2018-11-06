@@ -14,7 +14,7 @@ export ORG_NAME="hyperledger/fabric"
 
 # error check
 err_Check() {
-echo "ERROR !!!! --------> $1 <---------"
+echo "\033[31m $1" "\033[0m"
 exit 1
 }
 
@@ -97,7 +97,7 @@ env_Info() {
         # This function prints system info
 
         #### Build Env INFO
-        echo "-----------> Build Env INFO"
+        echo -e "\033[32m -----------> Build Env INFO" "\033[0m"
         # Output all information about the Jenkins environment
         uname -a
         cat /etc/*-release
@@ -115,10 +115,10 @@ pull_Docker_Images() {
                  if [ $IMAGES == "javaenv" ]; then
                        if [ $ARCH == "s390x" ]; then
                              # Do not pull javaenv if OS_VER == s390x
-                             echo "-----------> skipping pull of javaenv image on s390x"
+                             echo "\033[32m -----------> skipping pull of javaenv image on s390x" "\033[0m"
                        else
                              # Pull javaenv at same level as node SDK
-                             echo "-----------> pull $ORG_NAME-$IMAGES:${ARCH}-${IMAGE_TAG} image"
+                             echo "\033[32m -----------> pull $ORG_NAME-$IMAGES:${IMAGE_TAG} image" "\033[0m"
                              echo
                              docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} > /dev/null 2>&1
                              if [ $? -ne 0 ]; then
@@ -149,7 +149,7 @@ pull_Docker_Images() {
 # run sdk e2e tests
 sdk_E2e_Tests() {
         echo
-        echo "-----------> Execute NODE SDK Integration Tests"
+        echo -e "\033[32m Execute NODE SDK Integration Tests" "\033[0m"
         cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node || exit
         # Install nvm to install multi node versions
         wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
@@ -162,8 +162,8 @@ sdk_E2e_Tests() {
         nvm install $NODE_VER || true
         nvm use --delete-prefix v$NODE_VER --silent
 
-        echo "npm version ------> $(npm -v)"
-        echo "node version ------> $(node -v)"
+        echo -e "\033[32m npm version ------> $(npm -v)" "\033[0m"
+        echo -e "\033[32m node version ------> $(node -v)" "\033[0m"
 
         npm install || err_Check "ERROR!!! npm install failed"
         npm config set prefix ~/npm && npm install -g gulp && npm install -g istanbul
@@ -171,7 +171,7 @@ sdk_E2e_Tests() {
         ~/npm/bin/gulp ca || err_Check "ERROR!!! gulp ca failed"
         rm -rf node_modules && npm install || err_Check "ERROR!!! npm install failed"
 
-        echo "------> Run Node SDK Unit, FV, and scenario tests"
+        echo -e "\033[32m ------> Run Node SDK Unit, FV, and scenario tests" "\033[0m"
         echo "============"
         ~/npm/bin/gulp test
         if [ $? == 0 ]; then
@@ -186,14 +186,14 @@ sdk_E2e_Tests() {
 # Publish npm modules after successful merge on amd64
 publish_NpmModules() {
         echo
-        echo "-----------> Publish npm modules from amd64"
+        echo -e "\033[32m -----------> Publish npm modules from amd64" "\033[0m"
         ./Publish_NPM_Modules.sh
 }
 
 # Publish NODE_SDK API docs after successful merge on amd64
 publish_ApiDocs() {
         echo
-        echo "-----------> Publish NODE_SDK API docs after successful merge on amd64"
+        echo -e "\033[32m -----------> Publish NODE_SDK API docs after successful merge on amd64" "\033[0m"
         ./Publish_API_Docs.sh
 }
 Parse_Arguments $@
