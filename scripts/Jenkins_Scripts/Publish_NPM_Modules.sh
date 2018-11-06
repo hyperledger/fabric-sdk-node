@@ -18,14 +18,14 @@ npmPublish() {
       print ver}')
 
       echo "===> UNSTABLE VERSION --> $UNSTABLE_VER"
-      UNSTABLE_INCREMENT=$(npm dist-tags ls "$1" | awk '/$CURRENT_TAG/{
+      UNSTABLE_INCREMENT=$(npm dist-tags ls "$1" | awk "/$CURRENT_TAG"":"/'{
       ver=$NF
       rel=$NF
       sub(/.*\./,"",rel)
       sub(/\.[[:digit:]]+$/,"",ver)
       print ver"."rel+1}')
       echo "===> Incremented UNSTABLE VERSION --> $UNSTABLE_INCREMENT"
-  
+
       # Get last digit of the unstable version of $CURRENT_TAG
       UNSTABLE_INCREMENT=$(echo $UNSTABLE_INCREMENT| rev | cut -d '.' -f 1 | rev)
       echo "--------> UNSTABLE_INCREMENT : $UNSTABLE_INCREMENT"
