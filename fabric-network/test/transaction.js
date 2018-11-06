@@ -20,7 +20,41 @@ const TransactionEventHandler = require('fabric-network/lib/impl/event/transacti
 const TransactionID = require('fabric-client/lib/TransactionID');
 
 describe('Transaction', () => {
+	const transactionName = 'TRANSACTION_NAME';
+	const expectedResult = Buffer.from('42');
+
+	const fakeProposal = {proposal: 'I do'};
+	const fakeHeader = {header: 'gooooal'};
+	const validProposalResponse = {
+		response: {
+			status: 200,
+			payload: expectedResult
+		}
+	};
+	const noPayloadProposalResponse = {
+		response: {
+			status: 200
+		}
+	};
+	const errorProposalResponse = Object.assign(new Error(), {response: {status: 500, payload: 'error'}});
+	const emptyStringProposalResponse = {
+		response: {
+			status: 200,
+			payload: Buffer.from('')
+		}
+	};
+
+	const validProposalResponses = [[validProposalResponse], fakeProposal, fakeHeader];
+	const noPayloadProposalResponses = [[noPayloadProposalResponse], fakeProposal, fakeHeader];
+	const noProposalResponses = [[], fakeProposal, fakeHeader];
+	const errorProposalResponses = [[errorProposalResponse], fakeProposal, fakeHeader];
+	const mixedProposalResponses = [[validProposalResponse, errorProposalResponse], fakeProposal, fakeHeader];
+	const emptyStringProposalResponses = [[emptyStringProposalResponse], fakeProposal, fakeHeader];
+
 	let stubContract;
+	let transaction;
+	let channel;
+	let stubQueryHandler;
 
 	beforeEach(() => {
 		stubContract = sinon.createStubInstance(Contract);
@@ -32,11 +66,19 @@ describe('Transaction', () => {
 		const network = sinon.createStubInstance(Network);
 		stubContract.getNetwork.returns(network);
 
-		const channel = sinon.createStubInstance(Channel);
+		stubQueryHandler = sinon.createStubInstance(QueryHandler);
+		stubQueryHandler.queryChaincode.resolves(expectedResult);
+		stubContract.getQueryHandler.returns(stubQueryHandler);
+
+		channel = sinon.createStubInstance(Channel);
+		channel.sendTransactionProposal.resolves(validProposalResponses);
+		channel.sendTransaction.resolves({status: 'SUCCESS'});
 		network.getChannel.returns(channel);
 
 		stubContract.getChaincodeId.returns('chaincode-id');
 		stubContract.getEventHandlerOptions.returns({commitTimeout: 418});
+
+		transaction = new Transaction(stubContract, transactionName);
 	});
 
 	afterEach(() => {
@@ -45,16 +87,13 @@ describe('Transaction', () => {
 
 	describe('#getName', () => {
 		it('return the name', () => {
-			const name = 'TRANSACTION_NAME';
-			const transaction = new Transaction(stubContract, name);
 			const result = transaction.getName();
-			expect(result).to.equal(name);
+			expect(result).to.equal(transactionName);
 		});
 	});
 
 	describe('#getTransactionID', () => {
 		it('has a default transaction ID', () => {
-			const transaction = new Transaction(stubContract, 'name');
 			const result = transaction.getTransactionID();
 			expect(result).to.be.an.instanceOf(TransactionID);
 		});
@@ -62,7 +101,6 @@ describe('Transaction', () => {
 
 	describe('#setEventHandlerStrategy', () => {
 		it('returns this', () => {
-			const transaction = new Transaction(stubContract, 'name');
 			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
 			const stubEventHandlerFactoryFn = () => stubEventHandler;
 
@@ -74,61 +112,21 @@ describe('Transaction', () => {
 
 	describe('#setTransient', () => {
 		it('returns this', () => {
-			const transaction = new Transaction(stubContract, 'name');
 			const result = transaction.setTransient(new Map());
 			expect(result).to.equal(transaction);
 		});
 	});
 
 	describe('#submit', () => {
-		const transactionName = 'TRANSACTION_NAME';
-		const expectedResult = Buffer.from('42');
-
-		const fakeProposal = {proposal: 'I do'};
-		const fakeHeader = {header: 'gooooal'};
-		const validProposalResponse = {
-			response: {
-				status: 200,
-				payload: expectedResult
-			}
-		};
-		const noPayloadProposalResponse = {
-			response: {
-				status: 200
-			}
-		};
-		const errorProposalResponse = Object.assign(new Error(), {response: {status: 500, payload: 'error'}});
-		const emptyStringProposalResponse = {
-			response: {
-				status: 200,
-				payload: Buffer.from('')
-			}
-		};
-
-		const validProposalResponses = [[validProposalResponse], fakeProposal, fakeHeader];
-		const noPayloadProposalResponses = [[noPayloadProposalResponse], fakeProposal, fakeHeader];
-		const noProposalResponses = [[], fakeProposal, fakeHeader];
-		const errorProposalResponses = [[errorProposalResponse], fakeProposal, fakeHeader];
-		const mixedProposalResponses = [[validProposalResponse, errorProposalResponse], fakeProposal, fakeHeader];
-		const emptyStringProposalResponses = [[emptyStringProposalResponse], fakeProposal, fakeHeader];
-
-		let transaction;
 		let expectedProposal;
-		let channel;
 
 		beforeEach(() => {
-			transaction = new Transaction(stubContract, transactionName);
-
 			expectedProposal = {
 				fcn: transactionName,
 				txId: transaction.getTransactionID(),
 				chaincodeId: stubContract.getChaincodeId(),
 				args: []
 			};
-
-			channel = stubContract.getNetwork().getChannel();
-			channel.sendTransactionProposal.resolves(validProposalResponses);
-			channel.sendTransaction.resolves({status: 'SUCCESS'});
 		});
 
 		it('rejects for non-string arguments', () => {
@@ -222,23 +220,21 @@ describe('Transaction', () => {
 			const result = await transaction.submit();
 			expect(result.toString()).to.equal('');
 		});
+
+		it('throws if called a second time', async () => {
+			await transaction.submit();
+			const promise = transaction.submit();
+			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
+		});
+
+		it('throws if called after evaluate', async () => {
+			await transaction.evaluate();
+			const promise = transaction.submit();
+			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
+		});
 	});
 
 	describe('#evaluate', () => {
-		const transactionName = 'TRANSACTION_NAME';
-		const expectedResult = Buffer.from('42');
-
-		let stubQueryHandler;
-		let transaction;
-
-		beforeEach(() => {
-			stubQueryHandler = sinon.createStubInstance(QueryHandler);
-			stubQueryHandler.queryChaincode.resolves(expectedResult);
-			stubContract.getQueryHandler.returns(stubQueryHandler);
-
-			transaction = new Transaction(stubContract, transactionName);
-		});
-
 		it('returns the result from the query handler', async () => {
 			const result = await transaction.evaluate();
 			expect(result).to.equal(expectedResult);
@@ -291,6 +287,18 @@ describe('Transaction', () => {
 			stubQueryHandler.queryChaincode.resolves(Buffer.from(''));
 			const result = await transaction.evaluate();
 			expect(result.toString()).to.equal('');
+		});
+
+		it('throws if called a second time', async () => {
+			await transaction.evaluate();
+			const promise = transaction.evaluate();
+			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
+		});
+
+		it('throws if called after submit', async () => {
+			await transaction.submit();
+			const promise = transaction.evaluate();
+			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
 		});
 	});
 });
