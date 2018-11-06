@@ -7,7 +7,7 @@ node ('hyp-x') { // trigger build on x86_64 node
     try {
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
      env.NODE_VER = "8.11.3"
-     env.VERSION = sh(returnStdout: true, script: 'curl -O https://raw.githubusercontent.com/hyperledger/fabric/master/Makefile && cat Makefile | grep "PREV_VERSION =" | cut -d "=" -f2').trim()
+     env.VERSION = sh(returnStdout: true, script: 'curl -O https://raw.githubusercontent.com/hyperledger/fabric/master/Makefile && cat Makefile | grep "BASE_VERSION =" | cut -d "=" -f2').trim()
      env.VERSION = "$VERSION" // BASE_VERSION from fabric Makefile
      env.ARCH = "amd64"
      env.IMAGE_TAG = "${ARCH}-${VERSION}-stable" // fabric latest stable version from nexus
@@ -117,7 +117,7 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
            if (env.GERRIT_EVENT_TYPE == 'change-merged') {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
-               rocketSend channel: 'jenkins-robot', message: "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - (<${env.BUILD_URL}|Open>)"
+               rocketSend channel: "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
               }
            }
       } // finally block end here
@@ -125,10 +125,12 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
 } // node block end here
 
 def publishNpm() {
-def ROOTDIR = pwd()
 // Publish npm modules after successful merge
       stage("Publish npm Modules") {
-         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
+        def ROOTDIR = pwd()
+        withCredentials([[$class       : 'StringBinding',
+                      credentialsId: 'NPM_LOCAL',
+                      variable : 'NPM_TOKEN']]) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --publish_NpmModules'
@@ -144,9 +146,13 @@ def ROOTDIR = pwd()
 }
 
 def apiDocs() {
-def ROOTDIR = pwd()
 // Publish SDK_NODE API docs after successful merge
       stage("Publish API Docs") {
+        def ROOTDIR = pwd()
+        withCredentials([[$class     : 'UsernamePasswordMultiBinding',
+                         credentialsId: 'sdk-node-credentials',
+                         usernameVariable: 'NODE_SDK_USERNAME',
+                         passwordVariable: 'NODE_SDK_PASSWORD']]) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --publish_ApiDocs'
@@ -157,5 +163,6 @@ def ROOTDIR = pwd()
                  currentBuild.result = 'FAILURE'
                  throw err
            }
-      }
+        }
+        }
 }
