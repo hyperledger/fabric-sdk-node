@@ -155,6 +155,9 @@ class ChannelEventHub {
 		// set of clients registered for block events
 		this._block_registrant_count = 0;
 		this._blockRegistrations = {};
+
+		this.connectCallback = null;
+
 		// registered transactional events
 		this._transactionRegistrations = {};
 		// grpc event client interface
@@ -279,8 +282,13 @@ class ChannelEventHub {
 	 * @param {ConnectOptions | boolean} options - Optional. If of type boolean
 	 *        then it will be assumed to how to connect to receive full (true)
 	 *        or filtered (false) blocks.
+	 * @param {functon} connectCallback - Optional. This callback will report
+	 *        completion of the connection to the peer or  will report
+	 *        any errors encountered during connection to the peer. When there
+	 *        is an error, this ChannelEventHub will be shutdown (disconnected).
+	 *        Callback function should take two parameters as (error, value).
 	 */
-	connect(options) {
+	connect(options, connectCallback) {
 		let signedEvent = null;
 		let full_block = null;
 
@@ -296,6 +304,10 @@ class ChannelEventHub {
 		if (signedEvent) {
 			signedEvent = this._validateSignedEvent(signedEvent);
 		}
+		if (connectCallback) {
+			this.connectCallback = connectCallback;
+		}
+
 		logger.debug('connect - start peerAddr:%s', this.getPeerAddr());
 		if (!this._clientContext._userContext && !this._clientContext._adminSigningIdentity && !signedEvent) {
 			throw new Error('Error connect the ChannelEventhub to peer, either the clientContext has not been properly initialized, missing userContext or admin identity or missing signedEvent');
@@ -396,6 +408,10 @@ class ChannelEventHub {
 				} else {
 					logger.debug('on.data - first block received , this ChannelEventHub now registered');
 					self._connected = true;
+					if (this.connectCallback) {
+						this.connectCallback(null, this); // return this instance, user will be able check with isconnected()
+						this.connectCallback = null; // clean up so not called again
+					}
 				}
 				try {
 					let block = null;
@@ -525,6 +541,13 @@ class ChannelEventHub {
 		this._closeAllCallbacks(err);
 		this._shutdown();
 		this._setReplayDefaults();
+
+		// one last thing, report to the connect callback
+		if (this.connectCallback) {
+			this.connectCallback(err, this); // report and ourselves so user will know the source
+			this.connectCallback = null; // clean up
+		}
+
 		logger.debug('_disconnect - end -- called due to:: %s, peer:%s', err.message, this.getPeerAddr());
 	}
 
