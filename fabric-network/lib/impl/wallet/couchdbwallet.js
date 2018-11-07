@@ -13,9 +13,8 @@ const Nano = require('nano');
 /**
  * This class defines an implementation of an Identity wallet that persists
  * to a Couch DB database
- *
- * @class
- * @extends {BaseWallet}
+ * @memberof module:fabric-network
+ * @implements {module:fabric-network.Wallet}
  */
 class CouchDBWallet extends BaseWallet {
 
@@ -48,9 +47,6 @@ class CouchDBWallet extends BaseWallet {
 		return dbOptions;
 	}
 
-	/**
-	 * @inheritdoc
-	 */
 	async getStateStore(label) {
 		const method = 'getStateStore';
 		logger.debug('in %s, label = %s', method, label);
@@ -58,9 +54,6 @@ class CouchDBWallet extends BaseWallet {
 		return store;
 	}
 
-	/**
-	 * @inheritdoc
-	 */
 	async getCryptoSuite(label) {
 		const method = 'getCryptoSuite';
 		logger.debug('in %s, label = %s', method, label);
@@ -70,7 +63,7 @@ class CouchDBWallet extends BaseWallet {
 	}
 
 	/**
-	 * @inheritdoc
+	 * @private
 	 */
 	async delete(label) {
 		const method = 'delete';
@@ -81,7 +74,7 @@ class CouchDBWallet extends BaseWallet {
 	}
 
 	/**
-	 * @inheritdoc
+	 * @private
 	 */
 	async exists(label) {
 		const method = 'exists';
@@ -91,9 +84,6 @@ class CouchDBWallet extends BaseWallet {
 		return kvs.exists(label);
 	}
 
-	/**
-	 * @inheritdoc
-	 */
 	async getAllLabels() {
 		const method = 'getAllLabels';
 		logger.debug('in %s', method);

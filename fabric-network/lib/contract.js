@@ -42,10 +42,11 @@ function verifyNamespace(namespace) {
 /**
  * Represents a smart contract (chaincode) instance in a network.
  * Applications should get a Contract instance using the
- * networks's [getContract]{@link Network#getContract} method.
+ * networks's [getContract]{@link fabric-network.Network#getContract} method.
+ * @memberof module:fabric-network
+ * @hideconstructor
  */
 class Contract {
-
 	constructor(network, chaincodeId, gateway, queryHandler, namespace) {
 		logger.debug('in Contract constructor');
 
@@ -71,7 +72,7 @@ class Contract {
 	/**
 	 * Create a new transaction ID.
 	 * @private
-	 * @returns {TransactionID} Transaction ID.
+	 * @returns {module:fabric-client.TransactionID} Transaction ID.
 	 */
 	createTransactionID() {
 		return this.gateway.getClient().newTransactionID();
@@ -98,7 +99,7 @@ class Contract {
 	/**
 	 * Get the query handler for this contract. Used by transaction evaluate.
 	 * @private
-	 * @returns {QueryHandler} A query handler.
+	 * @returns {module:fabric-network.QueryHandler} A query handler.
 	 */
 	getQueryHandler() {
 		return this.queryHandler;
@@ -110,7 +111,7 @@ class Contract {
 	 * the transaction invocation. A new transaction object <strong>must</strong>
 	 * be created for each transaction invocation.
      * @param {String} name Transaction function name.
-	 * @returns {Transaction} A transaction object.
+	 * @returns {module:fabric-network.Transaction} A transaction object.
      */
 	createTransaction(name) {
 		verifyTransactionName(name);

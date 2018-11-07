@@ -5,6 +5,7 @@
  */
 
 /**
+ * Higher level API for interacting with smart contracts.
  * @module fabric-network
  */
 

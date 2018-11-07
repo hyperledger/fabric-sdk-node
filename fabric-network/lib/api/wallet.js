@@ -9,10 +9,27 @@
 'use strict';
 
 /**
+ * @typedef {Object} Wallet~IdentityInfo
+ * @memberof module:fabric-network
+ * @property label
+ * @property mspId
+ * @property identifier
+ */
+
+/**
+ * @typedef {Object} Wallet~Identity
+ * @memberof module:fabric-network
+ * @property type
+ * @property mspId
+ * @property certificate
+ * @property privateKey
+ */
+
+/**
  * Wallet defines the interface for storing and managing users' identities in a fabric network.
  * This is an abstract base class and must be extended.
- *
  * @interface
+ * @memberof module:fabric-network
  */
 class Wallet {
 
@@ -34,9 +51,9 @@ class Wallet {
 
 	/**
 	 * Import an identity into the wallet
-	 * @param label
-	 * @param identity
-	 * @returns {Promise<void>}
+	 * @async
+	 * @param {string} label
+	 * @param {module:fabric-network.Wallet~Identity} identity
 	 */
 	async import(label, identity) {
 		throw new Error('Not implemented');
@@ -44,8 +61,9 @@ class Wallet {
 
 	/**
 	 * Extract an identity from the wallet
-	 * @param label
-	 * @returns {Promise<void>}
+	 * @async
+	 * @param {string} label
+	 * @returns {module:fabric-network.Wallet~Identity}
 	 */
 	async export(label) {
 		throw new Error('Not implemented');
@@ -53,7 +71,8 @@ class Wallet {
 
 	/**
 	 * List the contents of the wallet
-	 * @returns {Promise<void>}
+	 * @async
+	 * @returns {module:fabric-network.Wallet~IdentityInfo[]}
 	 */
 	async list() {
 		throw new Error('Not implemented');
@@ -61,8 +80,8 @@ class Wallet {
 
 	/**
 	 * Removes an identity from the wallet
-	 * @param label
-	 * @returns {Promise<void>}
+	 * @async
+	 * @param {string} label
 	 */
 	async delete(label) {
 		throw new Error('Not implemented');
@@ -70,8 +89,9 @@ class Wallet {
 
 	/**
 	 * Query the existence of an identity in the wallet
-	 * @param label
-	 * @returns {Promise<void>}
+	 * @async
+	 * @param {string} label
+	 * @returns {boolean}
 	 */
 	async exists(label) {
 		throw new Error('Not implemented');

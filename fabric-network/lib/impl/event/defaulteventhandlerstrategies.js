@@ -66,6 +66,25 @@ function NETWORK_SCOPE_ANYFORTX(transactionId, network, options) {
 	return new TransactionEventHandler(transactionId, eventStrategy, options);
 }
 
+/**
+ * @typedef DefaultEventHandlerStrategies
+ * @memberof module:fabric-network
+ * @property NETWORK_SCOPE_ANYFORTX Listen to all event hubs for the connected organisation.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} method will wait
+ * until <b>all</b> of the events to be received from
+ * all of the event hubs that are still connected (minimum 1).
+ * @property MSPID_SCOPE_ALLFORTX Listen to all event hubs for the connected organisation.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} method will wait
+ * until the first event from <b>any</b> of the event hubs that are still connected.
+ * @property MSPID_SCOPE_ANYFORTX Listen to all event hubs for all peers in the current network.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} method will wait
+ * until <b>all</b> of the events to be received from
+ * all of the event hubs that are still connected (minimum 1).
+ * @property NETWORK_SCOPE_ALLFORTX Listen to all event hubs for all peers in the current network.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} method will wait
+ * until the first event from <b>any</b> of the event hubs that are still connected.
+*/
+
 module.exports = {
 	MSPID_SCOPE_ALLFORTX,
 	MSPID_SCOPE_ANYFORTX,

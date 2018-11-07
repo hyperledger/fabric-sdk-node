@@ -9,7 +9,7 @@
 const logger = require('../../logger').getLogger('X509WalletMixin');
 
 /**
- * @class
+ * @memberof module:fabric-network
  */
 class X509WalletMixin {
 

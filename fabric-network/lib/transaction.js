@@ -34,14 +34,17 @@ function verifyArguments(args) {
 
 /**
  * Represents a specific invocation of a transaction function, and provides
- * felxibility over how that transaction is invoked. Instances of this class
- * are stateful. A new instance <strong>must</strong> be created for each
- * transaction invocation.
- * @class
+ * felxibility over how that transaction is invoked. Applications should
+ * obtain instances of this class by calling
+ * [Contract#createTransaction()]{@link module:fabric-network.Contract#createTransaction}.
+ * <br><br>
+ * Instances of this class are stateful. A new instance <strong>must</strong>
+ * be created for each transaction invocation.
+ * @memberof module:fabric-network
+ * @hideconstructor
  */
 class Transaction {
-	/**
-	 * Constructor.
+	/*
 	 * @param {Contract} contract Contract to which this transaction belongs.
 	 * @param {String} name Fully qualified transaction name.
 	 */
@@ -64,7 +67,7 @@ class Transaction {
 
 	/**
 	 * Get the ID that will be used for this transaction invocation.
-	 * @returns {TransactionID} Transaction ID.
+	 * @returns {module:fabric-client.TransactionID} Transaction ID.
 	 */
 	getTransactionID() {
 		return this._transactionId;
@@ -73,8 +76,9 @@ class Transaction {
 	/**
 	 * Set the event handler strategy to be used for this transaction invocation
 	 * instead of the default handler configured in the gateway options.
+	 * @private
 	 * @param {Function} factoryFunction Event handler factory function.
-	 * @returns {Transaction} This object, to allow function chaining.
+	 * @returns {module:fabric-network.Transaction} This object, to allow function chaining.
 	 */
 	setEventHandlerStrategy(factoryFunction) {
 		this._createTxEventHandler = factoryFunction;
@@ -87,7 +91,7 @@ class Transaction {
 	 * private data to a transaction function.
 	 * @param {Object} transientMap Object with String property names and
 	 * Buffer property values.
-	 * @returns {Transaction} This object, to allow function chaining.
+	 * @returns {module:fabric-network.Transaction} This object, to allow function chaining.
 	 */
 	setTransient(transientMap) {
 		this._transientMap = transientMap;
