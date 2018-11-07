@@ -8,8 +8,9 @@
 
 /**
  * QueryHandler defines the interface for pluggable query handlers.
- *
+ * @private
  * @interface
+ * @memberof module:fabric-network
  */
 class QueryHandler {
 

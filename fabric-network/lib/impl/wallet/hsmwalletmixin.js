@@ -11,6 +11,9 @@ const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 
 const HSMSuite = new Map();
 
+/**
+ * @memberof module:fabric-network
+ */
 class HSMWalletMixin {
 
 	static createIdentity(mspId, certificate) {

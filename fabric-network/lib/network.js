@@ -15,16 +15,15 @@ const util = require('util');
 /**
  * A Network represents the set of peers in a Fabric network.
  * Applications should get a Network instance using the
- * gateway's [getNetwork]{@link Gateway#getNetwork} method.
+ * gateway's [getNetwork]{@link module:fabric-network.Gateway#getNetwork} method.
+ * @memberof module:fabric-network
+ * @hideconstructor
  */
-
 class Network {
-
 	/*
 	 * Network constructor for internal use only.
 	 * @param {Gateway} gateway The owning gateway instance
 	 * @param {Channel} channel The fabric-client channel instance
-	 * @ignore
 	 */
 	constructor(gateway, channel) {
 		logger.debug('in Network constructor');
@@ -39,7 +38,6 @@ class Network {
 	/**
      * create a map of mspId's and the network peers in those mspIds
      * @private
-     * @memberof Network
      */
 	_mapPeersToMSPid() {
 		logger.debug('in _mapPeersToMSPid');
@@ -122,7 +120,6 @@ class Network {
 	/**
 	 * Initialize this network instance
 	 * @private
-	 * @memberof Network
 	 */
 	async _initialize(discover) {
 		logger.debug('in initialize');
@@ -137,18 +134,19 @@ class Network {
 		this.initialized = true;
 	}
 
+	/**
+	 * Get the underlying channel object representation of this network.
+	 * @returns {module:fabric-client.Channel} A channel.
+	 */
 	getChannel() {
-		logger.debug('in getChannel');
-
 		return this.channel;
 	}
 
 	/**
-	 * Returns an instance of a contract (chaincode) on the current network
-	 * @param {string} chaincodeId the chaincode Identifier
-	 * @param {string} [namespace] optional namespace for the contract
-	 * @returns {Contract} the contract
-	 * @api
+	 * Get an instance of a contract (chaincode) on the current network.
+	 * @param {string} chaincodeId the chaincode identifier.
+	 * @param {string} [namespace] optional namespace for the contract.
+	 * @returns {module:fabric-network.Contract} the contract.
 	 */
 	getContract(chaincodeId, namespace = '') {
 		logger.debug('in getContract');

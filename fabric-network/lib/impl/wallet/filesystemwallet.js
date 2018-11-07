@@ -16,32 +16,29 @@ const logger = require('../../logger').getLogger('FileSystemWallet');
 /**
  * This class defines an implementation of an Identity wallet that persists
  * to the file system.
- *
- * @class
- * @extends {BaseWallet}
+ * @memberof module:fabric-network
+ * @implements {module:fabric-network.Wallet}
  */
 class FileSystemWallet extends BaseWallet {
 
-	/*
+	/**
 	 * create a new File Key Value Store
 	 *
 	 * @static
 	 * @param {string} path the root path of the key value store
 	 * @returns {Promise} a promise that is resolved when a new File KVS instance is recreated.
-	 * @memberof FileSystemWallet
 	 * @private
 	 */
 	static async _createFileKVS(path) {
 		return await new FileKVS({path});
 	}
 
-	/*
+	/**
 	 * check to see if the label defines a directory in the wallet
 	 *
 	 * @static
 	 * @param {string} label
 	 * @returns {Promise} a promise that returns true if this is a valid directory, false otherwise
-	 * @memberof FileSystemWallet
 	 * @private
 	 */
 	async _isDirectory(label) {
@@ -61,7 +58,6 @@ class FileSystemWallet extends BaseWallet {
 	 * Creates an instance of FileSystemWallet.
 	 * @param {string} path The root path for this wallet on the file system
 	 * @param {WalletMixin} [mixin] optionally provide an alternative WalletMixin. Defaults to X509WalletMixin
-	 * @memberof FileSystemWallet
 	 */
 	constructor(path, mixin) {
 		if (!path) {
@@ -71,7 +67,7 @@ class FileSystemWallet extends BaseWallet {
 		this.path = path;
 	}
 
-	/*
+	/**
 	 * Get the partitioned path for the provided label
 	 *
 	 * @param {string} label
@@ -85,17 +81,11 @@ class FileSystemWallet extends BaseWallet {
 		return partitionedPath;
 	}
 
-	/**
-	 * @inheritdoc
-	 */
 	async getStateStore(label) {
 		const partitionedPath = this._getPartitionedPath(label);
 		return FileSystemWallet._createFileKVS(partitionedPath);
 	}
 
-	/**
-	 * @inheritdoc
-	 */
 	async getCryptoSuite(label) {
 		const partitionedPath = this._getPartitionedPath(label);
 		const cryptoSuite = Client.newCryptoSuite();
@@ -103,9 +93,6 @@ class FileSystemWallet extends BaseWallet {
 		return cryptoSuite;
 	}
 
-	/**
-	 * @inheritdoc
-	 */
 	async getAllLabels() {
 		let dirList;
 		const labelList = [];
@@ -127,7 +114,7 @@ class FileSystemWallet extends BaseWallet {
 	}
 
 	/**
-	 * @inheritdoc
+	 * @private
 	 */
 	async delete(label) {
 		const method = 'delete';
@@ -149,7 +136,7 @@ class FileSystemWallet extends BaseWallet {
 	}
 
 	/**
-	 * @inheritdoc
+	 * @private
 	 */
 	async exists(label) {
 		const method = 'exists';

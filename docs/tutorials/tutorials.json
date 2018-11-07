@@ -31,5 +31,5 @@
 	},
 	"transaction-commit-events" : {
 		"title": "fabric-network: How to wait for transactions to be commited to the ledger"
-	},
+	}
 }

@@ -14,15 +14,54 @@ const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandl
 const logger = require('./logger').getLogger('Gateway');
 
 /**
+ * @typedef {Object} Gateway~GatewayOptions
+ * @memberof module:fabric-network
+ * @property {fabric-network.Wallet} wallet The identity wallet implementation for use with this Gateway instance.
+ * @property {string} identity The identity in the wallet for all interactions on this Gateway instance.
+ * @property {string} [clientTlsIdentity] The identity in the wallet to use as the client TLS identity.
+ * @property {module:fabric-network.Gateway~DefaultEventHandlerOptions} [eventHandlerOptions] Options for the inbuilt default
+ * event handler capability.
+ */
+
+/**
+ * @typedef {Object} Gateway~DefaultEventHandlerOptions
+ * @memberof module:fabric-network
+ * @property {number} [commitTimeout = 300] The timeout period in seconds to wait for commit notification to
+ * complete.
+ * @property {?module:fabric-network.Gateway~TxEventHandlerFactory} [strategy = MSPID_SCOPE_ALLFORTX] Event handling strategy to identify
+ * successful transaction commits. A null value indicates that no event handling is desired. The default is
+ * {@link MSPID_SCOPE_ALLFORTX}.
+ */
+
+/**
+ * @typedef {Function} Gateway~TxEventHandlerFactory
+ * @memberof module:fabric-network
+ * @param {String} transactionId The transaction ID for which the handler should listen.
+ * @param {module:fabric-network.Network} network The network on which this transaction is being submitted.
+ * @returns {module:fabric-network.Gateway~TxEventHandler} A transaction event handler.
+ */
+
+/**
+ * @typedef {Object} Gateway~TxEventHandler
+ * @memberof module:fabric-network
+ * @property {Function} startLstening Async function that resolves when the handler has started listening for
+ * transaction commit events. Called after the transaction proposal has been accepted and prior to submission of
+ * the transaction to the orderer.
+ * @property {Function} waitForEvents Async function that resolves (or rejects) when suitable transaction
+ * commit events have been received. Called after submission of the transaction to the orderer.
+ * @property {Function} cancelListening Cancel listening. Called if submission of the transaction to the orderer
+ * fails.
+ */
+
+/**
  * The gateway peer provides the connection point for an application to access the Fabric network.  It is instantiated using
  * the default constructor.
- * It can then be connected to a fabric network using the [connect]{@link Gateway#connect} method by passing either a CCP definition
- * or an existing {@link Client} object.
- * Once connected, it can then access individual Network instances (channels) using the [getNetwork]{@link Gateway#getNetwork} method
+ * It can then be connected to a fabric network using the [connect]{@link #connect} method by passing either a CCP definition
+ * or an existing {@link module:fabric-client.Client} object.
+ * Once connected, it can then access individual Network instances (channels) using the [getNetwork]{@link #getNetwork} method
  * which in turn can access the [smart contracts]{@link Contract} installed on a network and
  * [submit transactions]{@link Contract#submitTransaction} to the ledger.
- *
- * @class
+ * @memberof module:fabric-network
  */
 class Gateway {
 
@@ -40,9 +79,6 @@ class Gateway {
 		}
 	}
 
-	/**
-	 * Public constructor for Gateway object
-	 */
 	constructor() {
 		logger.debug('in Gateway constructor');
 		this.client = null;
@@ -66,48 +102,15 @@ class Gateway {
 	}
 
 	/**
- 	 * @typedef {Object} GatewayOptions
-	 * @property {Wallet} wallet The identity wallet implementation for use with this Gateway instance.
- 	 * @property {string} identity The identity in the wallet for all interactions on this Gateway instance.
-	 * @property {string} [clientTlsIdentity] the identity in the wallet to use as the client TLS identity.
-	 * @property {DefaultEventHandlerOptions} [eventHandlerOptions] This defines options for the inbuilt default
-	 * event handler capability.
- 	 */
-
-	/**
-	 * @typedef {Object} DefaultEventHandlerOptions
- 	 * @property {number} [commitTimeout = 300] The timeout period in seconds to wait for commit notification to
-	 * complete.
-	 * @property {?TxEventHandlerFactory} [strategy = MSPID_SCOPE_ALLFORTX] Event handling strategy to identify
-	 * successful transaction commits. A null value indicates that no event handling is desired. The default is
-	 * {@link MSPID_SCOPE_ALLFORTX}.
-	 */
-
-	/**
-	 * @typedef {Function} TxEventHandlerFactory
-	 * @param {String} transactionId The transaction ID for which the handler should listen.
-	 * @param {Network} network The network on which this transaction is being submitted.
-	 * @returns {TxEventHandler} A transaction event handler.
-	 */
-
-	/**
-	 * @typedef {Object} TxEventHandler
-	 * @property {Function} startLstening Async function that resolves when the handler has started listening for
-	 * transaction commit events. Called after the transaction proposal has been accepted and prior to submission of
-	 * the transaction to the orderer.
-	 * @property {Function} waitForEvents Async function that resolves (or rejects) when suitable transaction
-	 * commit events have been received. Called after submission of the transaction to the orderer.
-	 * @property {Function} cancelListening Cancel listening. Called if submission of the transaction to the orderer
-	 * fails.
-	 */
-
-	/**
      * Connect to the Gateway with a connection profile or a prebuilt Client instance.
-     *
-     * @param {string|Client} config The configuration for this Gateway which can come from a common connection
-	 * profile or an existing fabric-client Client instance
-     * @param {GatewayOptions} options specific options for creating this Gateway instance
-     * @memberof Gateway
+     * @async
+     * @param {(string|object|module:fabric-client.Client)} config The configuration for this Gateway which can be:
+	 * <ul>
+	 *   <li>A fully qualified common connection profile file path (String)</li>
+	 *   <li>A common connection profile JSON (Object)</li>
+	 *   <li>A pre-configured client instance</li>
+	 * </ul>
+     * @param {module:fabric-network.Gateway~GatewayOptions} options specific options for creating this Gateway instance
 	 * @example
 	 * const gateway = new Gateway();
 	 * const wallet = new FileSystemWallet('./WALLETS/wallet');
@@ -176,8 +179,7 @@ class Gateway {
 	/**
      * Get the current identity
      *
-     * @returns {User} A fabric-client {@link User} instance of the current identity used by this Gateway
-     * @memberof Gateway
+     * @returns {module:fabric-client.User} The current identity used by this Gateway.
      */
 	getCurrentIdentity() {
 		logger.debug('in getCurrentIdentity');
@@ -187,8 +189,7 @@ class Gateway {
 	/**
      * Get the underlying Client object instance
      *
-     * @returns {Client} The underlying fabric-client {@link Client} instance
-     * @memberof Gateway
+     * @returns {module:fabric-client.Client} The underlying client instance
      */
 	getClient() {
 		logger.debug('in getClient');
@@ -197,8 +198,7 @@ class Gateway {
 
 	/**
 	 * Returns the set of options associated with the Gateway connection
-	 * @returns {GatewayOptions} The Gateway connection options
-	 * @memberof Gateway
+	 * @returns {module:fabric-network.Gateway~GatewayOptions} The Gateway connection options
 	 */
 	getOptions() {
 		logger.debug('in getOptions');
@@ -207,8 +207,6 @@ class Gateway {
 
 	/**
      * Clean up and disconnect this Gateway connection in preparation for it to be discarded and garbage collected
-     *
-     * @memberof Gateway
      */
 	disconnect() {
 		logger.debug('in disconnect');
@@ -221,8 +219,7 @@ class Gateway {
 	/**
 	 * Returns an object representing a network
 	 * @param {string} networkName The name of the network (channel name)
-	 * @returns {Network}
-	 * @memberof Gateway
+	 * @returns {module:fabric-network.Network}
 	 */
 	async getNetwork(networkName) {
 		logger.debug('in getNetwork');

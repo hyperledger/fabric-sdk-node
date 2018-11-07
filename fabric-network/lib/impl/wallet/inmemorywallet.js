@@ -17,8 +17,8 @@ const logger = require('../../logger').getLogger('InMemoryWallet');
 const memoryStore = new Map();
 
 /**
- * @class
- * @extends {BaseWallet}
+ * @memberof module:fabric-network
+ * @implements {module:fabric-network.Wallet}
  */
 class InMemoryWallet extends BaseWallet {
 	constructor(walletmixin) {
@@ -41,6 +41,9 @@ class InMemoryWallet extends BaseWallet {
 		return cryptoSuite;
 	}
 
+	/**
+	 * @private
+	 */
 	async delete(label) {
 		logger.debug('in delete, label = %s', label);
 		label = this.normalizeLabel(label);
@@ -51,6 +54,9 @@ class InMemoryWallet extends BaseWallet {
 		return false;
 	}
 
+	/**
+	 * @private
+	 */
 	async exists(label) {
 		logger.debug('in exists, label = %s', label);
 		label = this.normalizeLabel(label);
