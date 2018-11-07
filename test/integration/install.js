@@ -8,7 +8,6 @@
 // in a happy-path scenario
 'use strict';
 
-const rewire = require('rewire');
 const utils = require('fabric-client/lib/utils.js');
 const logger = utils.getLogger('install');
 
@@ -90,53 +89,46 @@ test('\n\n** Test chaincode install using chaincodePackage[byte] **\n\n', (t) =>
 		chaincodeVersion: testUtil.getUniqueVersion()
 	};
 
-	const _getChaincodeDeploymentSpec = rewire('fabric-client/lib/Client.js').__get__('_getChaincodeDeploymentSpec');
-
 	// install from source
-	_getChaincodeDeploymentSpec(params, false)
-		.then((cdsBytes) => {
-			params.chaincodePackage = cdsBytes;
+	installChaincode(params, t)
+		.then((info) => {
+			if (info === 'success') {
+				t.pass(params.testDesc + ' - success');
+				return true;
+			} else {
+				t.fail(params.testDesc + ' - ' + info);
+				t.end();
+			}
+		},
+		(err) => {
+			t.fail(params.testDesc + ' - install reject: ' + err);
+			t.end();
+		}).catch((err) => {
+			t.fail(params.testDesc + ' - install error. ' + err.stack ? err.stack : err);
+			t.end();
+		}).then(() => {
+			params.channelName = params.channelName + '0';
+			params.testDesc = params.testDesc + '0';
 			installChaincode(params, t)
 				.then((info) => {
-					if (info === 'success') {
-						t.pass(params.testDesc + ' - success');
-						return true;
+					if (info && info instanceof Error && info.message.includes('install-package.' + params.chaincodeVersion + ' exists')) {
+						t.pass('passed check for exists same code again');
+						t.end();
 					} else {
-						t.fail(params.testDesc + ' - ' + info);
+						t.fail('failed check for exists same code again');
 						t.end();
 					}
 				},
 				(err) => {
-					t.fail(params.testDesc + ' - install reject: ' + err);
+					t.fail(params.testDesc + ' - install same chaincode again - reject, error');
+					logger.error(err.stack ? err.stack : err);
 					t.end();
 				}).catch((err) => {
-					t.fail(params.testDesc + ' - install error. ' + err.stack ? err.stack : err);
+					t.fail(params.testDesc + ' - install same chaincode again - error');
+					logger.error(err.stack ? err.stack : err);
 					t.end();
-				}).then(() => {
-					params.channelName = params.channelName + '0';
-					params.testDesc = params.testDesc + '0';
-					installChaincode(params, t)
-						.then((info) => {
-							if (info && info instanceof Error && info.message.includes('install-package.' + params.chaincodeVersion + ' exists')) {
-								t.pass('passed check for exists same code again');
-								t.end();
-							} else {
-								t.fail('failed check for exists same code again');
-								t.end();
-							}
-						},
-						(err) => {
-							t.fail(params.testDesc + ' - install same chaincode again - reject, error');
-							logger.error(err.stack ? err.stack : err);
-							t.end();
-						}).catch((err) => {
-							t.fail(params.testDesc + ' - install same chaincode again - error');
-							logger.error(err.stack ? err.stack : err);
-							t.end();
-						});
 				});
 		});
-	t.end();
 });
 
 function installChaincode(params, t) {

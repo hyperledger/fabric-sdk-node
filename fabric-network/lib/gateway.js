@@ -146,12 +146,6 @@ class Gateway {
 			this.client = config;
 		}
 
-		if (this.options.discovery && this.options.discovery.enabled) {
-			this.client.setConfigSetting('initialize-with-discovery', true);
-		} else {
-			this.client.setConfigSetting('initialize-with-discovery', false);
-		}
-
 		// setup an initial identity for the Gateway
 		if (options.identity) {
 			logger.debug('%s - setting identity', method);
