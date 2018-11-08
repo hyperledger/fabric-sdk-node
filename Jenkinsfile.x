@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+timeout(40) {
 node ('hyp-x') { // trigger build on x86_64 node
   timestamps {
     try {
@@ -63,14 +64,14 @@ node ('hyp-x') { // trigger build on x86_64 node
       }
 
 // Publish npm modules from merged job
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
+if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
     publishNpm()
 }  else {
      echo "------> Don't publish npm modules from verify job"
    }
 
 // Publish API Docs from merged job only
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
+if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
     apiDocs()
 } else {
      echo "------> Don't publish API Docs from verify job"
@@ -78,7 +79,7 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
      } finally {
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false,  failNoReports: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
-           if (env.GERRIT_EVENT_TYPE == "change-merged") {
+           if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
                // Sends notification to Rocket.Chat
                rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
@@ -87,10 +88,11 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
        }
   } // timestamps block
 } // node block
+} // time block
 
 def publishNpm() {
 // Publish npm modules after successful merge
-      stage("Publish npm modules") {
+      stage("Publish npm Modules") {
       def ROOTDIR = pwd()
       withCredentials([[$class       : 'StringBinding',
                       credentialsId: 'NPM_LOCAL',
