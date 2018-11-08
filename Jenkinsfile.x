@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+timeout(40) {
 node ('hyp-x') { // trigger build on x86_64 node
   timestamps {
     try {
@@ -86,6 +87,7 @@ if (env.GERRIT_EVENT_TYPE == "change-merged") {
       } // finally block end here
    } // timestamps block end here
 } // node block end here
+} // time block end here
 
 def publishNpm() {
 // Publish npm modules after successful merge
