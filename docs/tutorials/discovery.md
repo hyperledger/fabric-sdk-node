@@ -129,7 +129,7 @@ Client.addConfigFile('/path/to/config.json');
 // the json file contains the following line
 // "commit-handler": "/path/to/the/handler.js"
 ```
-A commit handler must implement the `api.CommmitHandler`. When the
+A commit handler must implement the `api.CommitHandler`. When the
 channel is instantiated, the channel will read the path setting and create an
 instance of the handler for use by the new channel instance.
 
@@ -432,24 +432,83 @@ const request = {
 await channel.sendTransactionProposal(request);
 ```
 
-The application is able to have specific peers chosen before other peers or
-to be not chosen at all for endorsements. The application may add the following
-optional settings to the request object.
+The application is able to have specific peers or peers in a specified
+organization chosen before other peers or not be chosen at all for endorsements.
+- `required`: An array of strings that represent the names of peers.
+Peers named on this list and in the endorsement plan will be the only
+peers to be sent the endorsement request. Other peers found in the endorsement
+plan will not be used.
 - `preferred`: An array of strings that represent the names of peers that should
-be given priority by the endorsement. This list only applies to endorsements
-using the service discovery.
+be given priority by the endorsement handler if their ledger height is up to date.
 - `ignored`: An array of strings that represent the names of peers that should be
-ignored by the endorsement. This list only applies to endorsements using the
-service discovery.
+ignored by the endorsement handler.
+- `requiredOrgs`: An array of strings that represent the names of organizations.
+Peers found in the endorsement plan that are in these organizations will be
+the only peers to be sent the endorsement request. Other peers found in the
+endorsement plan will not be used.
+- `preferredOrgs`: An array of strings that represent the MSP ids of organizations
+that should be given priority by the endorsement handler if their ledger height is
+up to date.
+- `ignoredOrgs`: An array of strings that represent the MSP ids of organizations
+that should be ignored by the endorsement handler.
+- `preferredHeightGap`: An integer representing the maximum difference in the
+ledger height of a peer and the highest ledger height found in a group of peers.
+A peer will be given priority if it's ledger height is within this range.
+There is no default, if this value is not provided the ledger height of the peer
+will not be considered when being added a peer to the preferred list.
+- `sort`: A string value that indicates how the peers within groups should
+be chosen. There are two sorts available:
+    <br>"`ledgerHeight`", sort the peers descending by the number of blocks
+    on the channel ledger. 
+    <br>"`random`", sort the peers randomly from the list, the
+    preferred peers will be added randomly first then the others will be
+	added randomly.
+  <br>The default is to sort by ledger height.
 
+For example when the handler gets the following request and has an endorsement
+plan with 'peer3' ledger height of 2000 and 'peer1' ledger height of 1990.
+Notice that the gap is 10, this gap is too large and 'peer1' will not be given
+priority.
 ```
 const request = {
 	chaincodeId : 'example',
 	fcn: 'move',
 	args: ['a', 'b','100'],
 	txId: tx_id,
-	preferred: ['peer0', 'peer1.org1.exmaple.com:8051'],
+	preferred: ['peer0', 'peer1.org1.example.com:8051'],
+	preferredHeightGap: 5,
 	ignored: ['peer1', 'peer2.org2.example.com:8054']
+}
+```
+
+For example when the handler gets the following request and has an endorsement
+plan with 'peer3' in 'Org3MSP'  ledger height of 2000 and 'peer1' in 'Org1MSP'
+ledger height of 1990. Notice that the difference is 10, this gap is too large and
+'peer1' will not be given priority.
+```
+const request = {
+	chaincodeId : 'example',
+	fcn: 'move',
+	args: ['a', 'b','100'],
+	txId: tx_id,
+	preferredOrgs: ['Org1MSP', 'Org3MSP'],
+	preferredHeightGap: 5,
+	ignored: ['Org4MSP']
+}
+```
+
+When the application only knows about organizations and
+will not know about specific peers it may use the 'requiredOrgs',
+'preferredOrgs', and/or 'ignoredOrgs' request parameters.
+For example if the application knows that the transaction is between two
+organizations, it may require that only these two endorse the proposal.
+```
+const request = {
+	chaincodeId : 'example',
+	fcn: 'move',
+	args: ['a', 'b','100'],
+	txId: tx_id,
+	requiredOrgs: ['Org2MSP', 'Org3MSP']
 }
 ```
 

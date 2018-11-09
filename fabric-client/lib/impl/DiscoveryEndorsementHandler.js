@@ -8,9 +8,15 @@
 'use strict';
 
 const Long = require('long');
+const util = require('util');
+
 const utils = require('../utils');
 const api = require('../api.js');
 const logger = utils.getLogger('DiscoveryEndorsementHandler');
+
+const BLOCK_HEIGHT = 'ledgerHeight';
+const RANDOM = 'random';
+const DEFAULT = 'default';
 
 
 /**
@@ -92,7 +98,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 
 		let endorsement_plan = null;
 		try {
-			// this will check the age of the results and get new a new plan if needed
+			// this will check the age of the results and get a new plan if needed
 			logger.debug('%s - get endorsement plans for %j', method, params.endorsement_hint);
 			endorsement_plan = await this._channel.getEndorsementPlan(params.endorsement_hint);
 		} catch (error) {
@@ -113,26 +119,64 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 
 		// see if we have an endorsement plan for the requested chaincodes/collection call
 		if (endorsement_plan) {
-			logger.debug('%s - starting discovery endorsement plan');
+			logger.debug('%s - starting discovery endorsement plan', method);
 			endorsement_plan.endorsements = {};
-			let results = {};
+			const results = {};
+			results.endorsements = [];
+			results.failed_endorsements = [];
+			results.success = false;
 
-			const preferred = this._create_map(request.preferred);
-			const ignore = this._create_map(request.ignore);
-			this._modify_groups(preferred, ignore, endorsement_plan);
-			// loop through the layouts trying to complete one successfully
-			for (const layout_index in endorsement_plan.layouts) {
-				logger.debug('%s - starting layout plan %s', method, layout_index);
-				results = await this._endorse_layout(layout_index, endorsement_plan, proposal, timeout);
-				if (results.successful) {
-					logger.debug('%s - layout plan %s completed successfully', method, layout_index);
-					return Promise.resolve(results.endorsements);
-				} else {
-					logger.debug('%s - layout plan %s did not complete successfully, try another layout plan', method, layout_index);
+			const required = this._create_map(request.required, 'endpoint');
+			const preferred = this._create_map(request.preferred, 'endpoint');
+			const ignored = this._create_map(request.ignored, 'endpoint');
+			const required_orgs = this._create_map(request.requiredOrgs, 'mspid');
+			const preferred_orgs = this._create_map(request.preferredOrgs, 'mspid');
+			const ignored_orgs = this._create_map(request.ignoredOrgs, 'mspid');
+			let preferred_height_gap = null;
+			try {
+				preferred_height_gap = Long.fromValue(request.preferredHeightGap);
+			} catch (error) {
+				logger.debug('%s - preferred_height_gap setting is not a number', method);
+			}
+
+			let sort = DEFAULT;
+			if (request.sort) {
+				if (request.sort === BLOCK_HEIGHT) {
+					sort = BLOCK_HEIGHT;
+				} else if (request.sort === RANDOM) {
+					sort = RANDOM;
 				}
 			}
 
-			return Promise.reject(results.endorsements);
+			this._modify_groups(required, preferred, ignored, required_orgs, preferred_orgs,
+				ignored_orgs, preferred_height_gap, sort, endorsement_plan);
+
+			// always randomize the layouts
+			endorsement_plan.layouts = this._getRandom(endorsement_plan.layouts);
+
+			// loop through the layouts trying to complete one successfully
+			for (const layout_index in endorsement_plan.layouts) {
+				logger.debug('%s - starting layout plan %s', method, layout_index);
+				const layout_results = await this._endorse_layout(layout_index, endorsement_plan, proposal, timeout);
+				// if this layout is successful then we are done
+				if (layout_results.success) {
+					logger.debug('%s - layout plan %s completed successfully', method, layout_index);
+					results.endorsements = layout_results.endorsements;
+					results.success = true;
+					break;
+				} else {
+					logger.debug('%s - layout plan %s did not complete successfully, try another layout plan', method, layout_index);
+					results.failed_endorsements = results.failed_endorsements.concat(layout_results.endorsements);
+				}
+			}
+
+			if (!results.success) {
+				const error = new Error('Endorsement has failed');
+				error.endorsements = results.failed_endorsements;
+				throw error;
+			}
+
+			return results.endorsements;
 		} else {
 			throw new Error('No discovery endorsement plan found');
 		}
@@ -143,22 +187,37 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 		logger.debug('%s - start', method);
 		const results = {};
 		results.endorsements = [];
-		results.successful = true;
+		results.success = true;
 		const layout = endorsement_plan.layouts[layout_index];
 		let endorser_process_index = 0;
 		const endorsers = [];
 		for (const group_name in layout) {
 			const required = layout[group_name];
 			const group = endorsement_plan.groups[group_name];
-			for (let x = 0;x < required; x++) {
-				const endorser_process = this._endorse_group_member(endorsement_plan, group, proposal, timeout, endorser_process_index++, group_name);
+			// make sure there are enough peers in the group to satisfy required
+			if (required > group.peers.length) {
+				results.success = false;
+				const error = new Error(util.format('Endorsement plan group does not contain' +
+					' enough peers (%s) to satisfy policy (required:%s)', group.peers.length, required));
+				logger.error(error);
+				results.endorsements.push(error);
+				break; // no need to look at other groups, this layout failed
+			}
+			for (let x = 0; x < required; x++) {
+				const endorser_process =
+					this._build_endorse_group_member(endorsement_plan, group, proposal, timeout, endorser_process_index++, group_name);
 				endorsers.push(endorser_process);
 			}
 		}
-		results.endorsements = await this._execute_endorsements(endorsers);
-		for (const endorsement of results.endorsements) {
-			if (endorsement instanceof Error) {
-				results.successful = false;
+
+		if (results.success) {
+			results.endorsements = await this._execute_endorsements(endorsers);
+			for (const endorsement of results.endorsements) {
+				if (endorsement instanceof Error) {
+					results.success = false;
+				} else if (typeof endorsement.success === 'boolean' && endorsement.success === false) {
+					results.success = false;
+				}
 			}
 		}
 
@@ -172,11 +231,10 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 			results.forEach((result) => {
 				if (result instanceof Error) {
 					logger.debug('%s - endorsement failed: %s', method, result);
-					responses.push(result);
 				} else {
 					logger.debug('%s - endorsement is complete', method);
-					responses.push(result);
 				}
+				responses.push(result);
 			});
 
 			return responses;
@@ -187,14 +245,14 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 	 * utility method to build a promise that will return one of the required
 	 * endorsements or an error object
 	 */
-	_endorse_group_member(plan, group, proposal, timeout, endorser_process_index, group_name) {
-		const method = '_endorse_group_member >> ' + group_name + ':' + endorser_process_index;
+	_build_endorse_group_member(endorsement_plan, group, proposal, timeout, endorser_process_index, group_name) {
+		const method = '_build_endorse_group_member >> ' + group_name + ':' + endorser_process_index;
 		logger.debug('%s - start', method);
 		let error = null;
 		const self = this;
 		return new Promise(async (resolve) => {
 			for (const peer_info of group.peers) {
-				const previous_endorsement = plan.endorsements[peer_info.name];
+				const previous_endorsement = endorsement_plan.endorsements[peer_info.name];
 				if (previous_endorsement && previous_endorsement.endorsement) {
 					if (previous_endorsement.success) {
 						logger.debug('%s - this peer has been previously endorsed successfully: %s', method, peer_info.name);
@@ -211,8 +269,8 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 						peer_info.in_use = true;
 						try {
 							const endorsement = await peer.sendProposal(proposal, timeout);
-							// if the endorsement is OK, then return it and quit
-							plan.endorsements[peer_info.name] = {endorsement, success: true};
+							// save this endorsement results in case we try this peer again
+							endorsement_plan.endorsements[peer_info.name] = {endorsement, success: true};
 							logger.debug('%s - endorsement completed to %s - %s', method, peer_info.name, endorsement.response.status);
 							resolve(endorsement);
 							return;
@@ -222,9 +280,8 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 							} else {
 								error = caught_error;
 							}
-							plan.endorsements[peer_info.name] = {};
-							plan.endorsements[peer_info.name].endorsement = error;
-							plan.endorsements[peer_info.name].success = false;
+							// save this endorsement results in case we try this peer again
+							endorsement_plan.endorsements[peer_info.name] = {endorsement: error, success: false};
 							logger.warn('%s - endorsement failed - %s', method, error.toString());
 						}
 					} else {
@@ -239,37 +296,130 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 			if (error) {
 				resolve(error);
 			} else {
-				resolve(new Error('Failed to have the endorsement complete successfully'));
+				resolve(new Error('No endorsement available'));
 			}
 		});
 	}
-
-	_modify_groups(preferred, ignore, endorsement_plan) {
+	/*
+	 * utility method that will take a group of peers and modify the order
+	 * of the peers within the group based on the user's requirements
+	 *
+	 * for each group
+	 *  - remove the ignored and all non required
+	 *  - sort group list by ledger height (larger on top) or randomly
+	 *  - walk sorted list
+	 *      -- put the preferred peers & organizations in the priority bucket if ledger height acceptable
+	 *      -- put others in non priority bucket
+	 *  - build final modified group (this will maintain how they were sorted)
+	 *      -- pull peers from priority bucket
+	 *      -- pull peers from non priority bucket
+	 *  - return modified group
+	 */
+	_modify_groups(required, preferred, ignored, required_orgs, preferred_orgs, ignored_orgs, preferred_height_gap, sort, endorsement_plan) {
 		const method = '_modify_groups';
 		logger.debug('%s - start', method);
+		logger.debug('%s - required:%j', method, required);
 		logger.debug('%s - preferred:%j', method, preferred);
-		logger.debug('%s - ignore:%j', method, ignore);
+		logger.debug('%s - ignored:%j', method, ignored);
+		logger.debug('%s - required_orgs:%j', method, required_orgs);
+		logger.debug('%s - preferred_orgs:%j', method, preferred_orgs);
+		logger.debug('%s - ignored_orgs:%j', method, ignored_orgs);
+		logger.debug('%s - sort: %s', method, sort);
 		logger.debug('%s - endorsement_plan:%j', method, endorsement_plan);
 
 		for (const group_name in endorsement_plan.groups) {
 			const group = endorsement_plan.groups[group_name];
-			const un_sorted = [];
-			for (const peer_index in group.peers) {
-				const peer = group.peers[peer_index];
-				let found = ignore[peer.endpoint];
+			// remove ignored and non-required
+			const clean_list = this._removePeers(ignored, ignored_orgs, required, required_orgs, group.peers);
+			// get the highest ledger height if needed
+			let highest = null;
+			if (preferred_height_gap) {
+				highest = this._findHighest(clean_list);
+			}
+			// sort based on ledger height or randomly
+			const sorted_list = this._sortPeerList(sort, clean_list);
+			// pop the priority peers off the sorted list
+			const split_lists = this._splitList(preferred, preferred_orgs, highest, preferred_height_gap, sorted_list);
+			// put the priorities on top
+			const reordered_list = split_lists.priority.concat(split_lists.non_priority);
+			// set the rebuilt peer list into the group
+			group.peers = reordered_list;
+		}
+
+		logger.debug('%s - updated endorsement_plan:%j', method, endorsement_plan);
+	}
+
+	_create_map(array) {
+		const map = new Map();
+		if (array && Array.isArray(array)) {
+			array.forEach((item) => {
+				map.set(item, item);
+			});
+		}
+
+		return map;
+	}
+
+	/*
+	 *utility method to remove peers that are ignored or not on the required list
+	 */
+	_removePeers(ignored_peers, ignored_orgs, required_peers, required_orgs, peers) {
+		const method = '_removePeers';
+		logger.debug('%s - start', method);
+		const keep_list = [];
+		for (const peer of peers) {
+			let found = ignored_peers.has(peer.name);
+			if (!found) {
+				found = ignored_orgs.has(peer.mspid);
 				if (!found) {
-					found = preferred[peer.endpoint];
-					if (found) {
-						peer.ledger_height = Long.MAX_VALUE;
-					} else {
-						peer.ledger_height = new Long(peer.ledger_height);
+					// if the user has requested required peers/orgs
+					// then all peers that stay on the list must be
+					// one of those peers or in one of those orgs
+					if (required_peers.size || required_orgs.size) {
+						found = required_peers.has(peer.name);
+						if (!found) {
+							found = required_orgs.has(peer.mspid);
+						}
+						// if we did not find it on a either list then
+						// this peer will not be added to the keep list
+						if (!found) {
+							continue; // do not add this peer to the keep list
+						}
 					}
-					un_sorted.push(peer);
+
+					// looks like this peer is not on the ignored list and
+					// is on the required list (if being used);
+					keep_list.push(peer);
 				}
 			}
-			logger.debug('%s - about to sort');
-			const sorted = un_sorted.sort((a, b) => {
-				logger.debug('%s - sorting descending');
+		}
+
+		return keep_list;
+	}
+
+	_findHighest(peers) {
+		let highest = Long.fromValue(0);
+		for (const peer of peers) {
+			try {
+				if (peer.ledger_height.greaterThan(highest)) {
+					highest = peer.ledger_height;
+				}
+			} catch (error) {
+				logger.warn('problem finding highest block:%s', error);
+			}
+		}
+
+		return highest;
+	}
+
+	_sortPeerList(sort, peers) {
+		const method = '_sortList';
+		logger.debug('%s - start - %s', method, sort);
+		let sorted = null;
+
+		if (!sort || sort === BLOCK_HEIGHT || sort === DEFAULT) {
+			sorted = peers.sort((a, b) => {
+				logger.debug('%s - sorting descending', method);
 				if (!a || !b) {
 					return 0;
 				}
@@ -298,21 +448,63 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 
 				return 1;
 			});
-			group.peers = sorted;
+		} else if (sort === RANDOM) {
+			sorted = this._getRandom(peers);
 		}
 
-		logger.debug('%s - updated endorsement_plan:%j', method, endorsement_plan);
+		return sorted;
 	}
 
-	_create_map(array) {
-		const map = {};
-		if (array && Array.isArray(array)) {
-			array.forEach((item) => {
-				map[item] = item;
-			});
+
+	_splitList(preferred_peers, preferred_orgs, preferred_height_gap, highest, sorted_list) {
+		const method = '_splitList';
+		logger.debug('%s - start', method);
+		const list = {};
+		list.priority = [];
+		list.non_priority = [];
+
+		for (const peer of sorted_list) {
+			let found = preferred_peers.has(peer.name);
+			if (!found) {
+				found = preferred_orgs.has(peer.mspid);
+				logger.debug('%s - peer found on preferred org list');
+			} else {
+				logger.debug('%s - peer found on the preferred peer list');
+			}
+			if (found && preferred_height_gap) {
+				logger.debug('%s - checking preferred gap of %s', method, preferred_height_gap);
+				logger.debug('%s - peer.ledger_height %s', method, peer.ledger_height);
+				if (highest.subtract(peer.ledger_height).greaterThan(preferred_height_gap)) {
+					found = false; // this peer should not be on the priority list
+				}
+			} else {
+				logger.debug('%s - not checking the preferred high gap', method);
+			}
+			if (found) {
+				list.priority.push(peer);
+			} else {
+				list.non_priority.push(peer);
+			}
 		}
 
-		return map;
+		return list;
+	}
+
+	/*
+	 * utility function to return a random list
+	 */
+	_getRandom(start_list) {
+		let len = start_list.length;
+		const result_list = new Array(len);
+		const taken = new Array(len);
+		let n = len;
+		while (n--) {
+			const x = Math.floor(Math.random() * len);
+			result_list[n] = start_list[x in taken ? taken[x] : x];
+			taken[x] = --len in taken ? taken[len] : len;
+		}
+
+		return result_list;
 	}
 }
 

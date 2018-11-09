@@ -22,9 +22,15 @@ const util = require('util');
 const path = require('path');
 
 let backup_env = null;
+let unhook_count = 0;
+const final_unhook_count = 5;
+
+console.log(' ***** logger test loaded *****');
 
 // Logger tests /////////
 function testLogger(t, ignoreLevels) {
+	console.log(' ***** logger.js - started *****');
+
 	let output = '';
 
 	const unhook = intercept((txt) => {
@@ -38,6 +44,7 @@ function testLogger(t, ignoreLevels) {
 	log.debug('Test logger - debug');
 
 	unhook();
+	unhook_count++;
 
 	if (output.indexOf('Test logger - error') > 0 &&
 		output.indexOf('Test logger - warn') > 0 &&
@@ -53,14 +60,18 @@ function testLogger(t, ignoreLevels) {
 }
 
 test('\n\n ** Logging utility tests - save settings **\n\n', (t) => {
+	console.log(' ***** logger.js - save settings *****');
+
 	if (process.env.HFC_LOGGING) {
 		backup_env = process.env.HFC_LOGGING;
 	}
-
+	t.pass('Successfully saved the environment');
 	t.end();
 });
 
 test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
+	console.log(' ***** logger.js - test built-in *****');
+
 	if (process.env.HFC_LOGGING) {
 		delete process.env.HFC_LOGGING;
 	}
@@ -87,6 +98,7 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
 		const logger = utils.getLogger('testlogger');
 
 		unhook();
+		unhook_count++;
 
 		if (output.indexOf('Failed to parse environment variable "HFC_LOGGING"') > 0 && logger) {
 			t.pass('Successfully caught error thrown by "utils.getLogger()" on invalid environment variable value, and returned a valid default logger');
@@ -117,6 +129,7 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
 	log.debug('Test logger - debug');
 
 	unhook();
+	unhook_count++;
 
 	if (output.indexOf('Test logger - error') > 0 &&
 		output.indexOf('Test logger - warn') > 0 &&
@@ -146,6 +159,7 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
 	log.debug('Test logger - debug');
 
 	unhook();
+	unhook_count++;
 
 	if (output.indexOf('Test logger - error') > 0 &&
 		output.indexOf('Test logger - warn') > 0 &&
@@ -173,7 +187,10 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
 	};
 
 	const debugPath = path.join(testutil.getTempDir(), 'hfc-log/debug.log');
+	console.log(' *** logger.js - debugPath:' + debugPath);
 	const errorPath = path.join(testutil.getTempDir(), 'hfc-log/error.log');
+	console.log(' *** logger.js - errorPath:' + errorPath);
+
 	prepareEmptyFile(debugPath);
 	prepareEmptyFile(errorPath);
 
@@ -217,6 +234,8 @@ test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
 });
 
 test('\n\n ** Logging utility tests - test setting an external logger based on bunyan **\n\n', (t) => {
+	console.log(' ***** logger.js - test bunyan *****');
+
 	const logger = bunyan.createLogger({name: 'bunyanLogger'});
 	hfc.setLogger(logger);
 
@@ -225,6 +244,8 @@ test('\n\n ** Logging utility tests - test setting an external logger based on b
 });
 
 test('\n\n ** Logging utility tests - test setting an external logger based on log4js **\n\n', (t) => {
+	console.log(' ***** logger.js - test log4js *****');
+
 	const logger = log4js.getLogger();
 	logger.level = 'info'; // Set level in order to output logs because by default it is OFF
 	hfc.setLogger(logger);
@@ -234,6 +255,8 @@ test('\n\n ** Logging utility tests - test setting an external logger based on l
 });
 
 test('\n\n ** Logging utility tests - test setting an invalid external logger **\n\n', (t) => {
+	console.log(' ***** logger.js - test external *****');
+
 	// construct an invalid logger
 	const logger = {
 		inf: function () {
@@ -261,6 +284,10 @@ test('\n\n ** Logging utility tests - test setting an invalid external logger **
 });
 
 test('\n\n ** Logging utility tests - clean up **\n\n', (t) => {
+	console.log(' ***** logger.js - clean up *****');
+
+	t.equals(unhook_count, final_unhook_count, 'Checking that the unhook count is correct to check the flow');
+
 	if (backup_env) {
 		process.env.HFC_LOGGING = backup_env;
 	}
@@ -271,6 +298,6 @@ test('\n\n ** Logging utility tests - clean up **\n\n', (t) => {
 	global.hfc.config = undefined;
 	// internal call. clearing the cached logger.
 	global.hfc.logger = undefined;
-
+	t.pass('Successfully reset the logging environment');
 	t.end();
 });

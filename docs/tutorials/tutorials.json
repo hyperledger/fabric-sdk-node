@@ -18,7 +18,7 @@
 		"title": "fabric-client: How to add CouchDB indexes during chaincode installation"
 	},
 	"discovery" : {
-		"title": "fabric-client: How to use the service discovery"
+		"title": "fabric-client: How to use the discovery service"
 	},
 	"logging" : {
 		"title": "fabric-client: How to use logging"

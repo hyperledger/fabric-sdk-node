@@ -1071,8 +1071,8 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		async () => {
 			await channel.initialize();
 		},
-		/"target" parameter not specified and no peers are set on this Channel/,
-		'Channel tests, sendTransactionProposal(): "target" parameter not specified and no peers are set on this Channeln'
+		/No target provided for discovery services/,
+		'Channel tests, sendTransactionProposal(): "target" parameter not specified and no peers are set on this Channel'
 	);
 
 

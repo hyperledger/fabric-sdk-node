@@ -154,7 +154,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 		t.fail('MISSING group results');
 	}
 
-	// try without the target specfied
+	// try without the target specified
 	results = await channel_org1._discover({
 		interests: [{chaincodes: [{name:first_chaincode_name}]}],
 		config: true
@@ -195,8 +195,8 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 
 	t.comment('Found local peer information ::' + JSON.stringify(results));
 
-	t.equals(results.peers_by_org.Org1MSP.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking org1 peer endpoint');
-	t.equals(results.peers_by_org.Org2MSP.peers[0].endpoint, 'peer0.org2.example.com:8051', 'Checking org2 peer endpoint');
+	t.equals(results.local_peers.Org1MSP.peers[0].endpoint, 'peer0.org1.example.com:7051', 'Checking org1 peer endpoint');
+	t.equals(results.local_peers.Org2MSP.peers[0].endpoint, 'peer0.org2.example.com:8051', 'Checking org2 peer endpoint');
 
 
 	// clean up
@@ -213,6 +213,8 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	results = await channel_org1.initialize({asLocalhost: true, discover: true, target: peer_org1});
 
 	t.equal(channel_org1.getOrderers().length, 2, 'Checking that there are two orderers assigned to the channel');
+	const msps = channel_org1.getMSPManager().getMSPs();
+	t.equals(msps.Org1MSP._id, 'Org1MSP', 'Check that the MSP was loaded by initialize');
 
 	// check orgs ... actually gets names from the msps loaded
 	const orgs = channel_org1.getOrganizations();
@@ -234,7 +236,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	let request = {
 		chaincodeId: first_chaincode_name,
 		preferred: ['peer6.org1.example.com:7077'],
-		ignore:['peer9.org2,example.com:8077']
+		ignored:['peer9.org2,example.com:8077']
 	};
 	let tx_id_string = await testUtil.invokeAsAdmin(t, client_org1, channel_org1, request);
 
@@ -425,8 +427,8 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 			};
 			const commit_results = await channel.sendTransaction(commit_request);
 			if (commit_results && commit_results.status === 'SUCCESS') {
-				await testUtil.sleep(5000); // let the peer catch up
-				t.pass('Chaincode commited and running');
+				await testUtil.sleep(10000); // let the discovery catch up
+				t.pass('Chaincode committed and running');
 			} else {
 				t.fail('Chaincode is not running');
 			}
@@ -483,7 +485,7 @@ async function createUpdateChannel(t, create, file, channel_name, client_org1, c
 			throw new Error('Failed to ' + text + ' the channel. ');
 		}
 	} catch (error) {
-		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
+		logger.error('Discovery channel/update - catch network config test error:: %s', error.stack ? error.stack : error);
 		t.fail('Failed to create/update channel :' + error);
 		throw Error('Failed to create/update the channel');
 	}
@@ -513,7 +515,7 @@ async function joinChannel(t, channel_name, peer, orderer, client) {
 
 		const join_results = await channel.joinChannel(request, 30000);
 		if (join_results && join_results[0] && join_results[0].response && join_results[0].response.status === 200) {
-			t.pass('Successfully joined channnel on org');
+			t.pass('Successfully joined channel on org');
 		} else {
 			t.fail('Failed to join channel on org');
 			throw new Error('Failed to join channel on org');

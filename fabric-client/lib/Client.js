@@ -791,7 +791,7 @@ const Client = class extends BaseClient {
 	 * known by the target peer.
 	 *
 	 * @param {PeerQueryRequest} request - The request parameters.
-	 * @returns {PeerQueryResponse} The list of peers
+	 * @returns {PeerQueryResponse} The list of peer information
 	 */
 	async queryPeers(request) {
 		const method = 'queryPeers';
@@ -799,11 +799,11 @@ const Client = class extends BaseClient {
 
 		let targets = null;
 		if (!request || !request.target) {
-			throw Error('Peer is required');
+			throw Error('Target Peer is required');
 		} else {
 			targets = this.getTargetPeers(request.target);
 			if (!targets || !targets[0]) {
-				throw Error('Peer not found');
+				throw Error('Target Peer not found');
 			}
 		}
 
@@ -811,11 +811,11 @@ const Client = class extends BaseClient {
 			const discover_request = {
 				target: targets[0],
 				local: true,
-				config: false, // config only for channel queries
+				config: false, // config only available on channel queries
 				useAdmin: request.useAdmin
 			};
 
-			// create dummy channel just to use the dicovery code
+			// create dummy channel just to use the discovery code
 			// since channel does not exist only the local query will work
 			const channel = new Channel('discover-peers', this);
 
