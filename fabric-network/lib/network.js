@@ -82,9 +82,14 @@ class Network {
 		// TODO: should sort peer list to the identity org initializing the channel.
 		// TODO: Candidate to push to low level node-sdk.
 
-		const ledgerPeers = this.channel.getPeers().filter((cPeer) => {
-			return cPeer.isInRole(FabricConstants.NetworkConfig.LEDGER_QUERY_ROLE);
-		});
+		let ledgerPeers;
+		if (discovery.enabled) {
+			ledgerPeers = this.gateway.getClient().getPeersForOrg();
+		} else {
+			ledgerPeers = this.channel.getPeers().filter((cPeer) => {
+				return cPeer.isInRole(FabricConstants.NetworkConfig.LEDGER_QUERY_ROLE);
+			});
+		}
 
 		if (ledgerPeers.length === 0) {
 			const msg = 'no suitable peers available to initialize from';
@@ -99,9 +104,11 @@ class Network {
 			try {
 				const initOptions = {
 					target: ledgerPeers[ledgerPeerIndex],
-					discover: discovery.enabled,
-					asLocalhost: discovery.asLocalhost
+					discover: discovery.enabled
 				};
+				if (typeof discovery.asLocalhost !== 'undefined') {
+					initOptions.asLocalhost = discovery.asLocalhost;
+				}
 
 				await this.channel.initialize(initOptions);
 

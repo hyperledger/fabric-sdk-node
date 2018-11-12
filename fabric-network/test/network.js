@@ -66,6 +66,9 @@ describe('Network', () => {
 			}
 		});
 
+		mockGateway.getClient.returns(mockClient);
+		mockClient.getPeersForOrg.returns([mockPeer1, mockPeer2]);
+
 		network = new Network(mockGateway, mockChannel);
 
 	});
@@ -99,6 +102,12 @@ describe('Network', () => {
 			sinon.assert.calledOnce(mockChannel.initialize);
 		});
 
+		it('should initialize the network using the first peer with discovery', async () => {
+			mockChannel.initialize.resolves();
+			await network._initializeInternalChannel({enabled:true});
+			sinon.assert.calledOnce(mockChannel.initialize);
+		});
+
 		it('should try other peers if initialization fails', async () => {
 			network.initialized = false;
 			// create a real mock
@@ -117,15 +126,15 @@ describe('Network', () => {
 			mockChannel.initialize.onCall(2).rejects(new Error('connect failed again'));
 			let error;
 			try {
-				await network._initializeInternalChannel({enabled:true, asLocalhost: true});
+				await network._initializeInternalChannel({enabled:false, asLocalhost: true});
 			} catch (_error) {
 				error = _error;
 			}
 			error.should.match(/connect failed again/);
 			sinon.assert.calledThrice(mockChannel.initialize);
-			sinon.assert.calledWith(mockChannel.initialize.firstCall, {target: mockPeer1, discover: true, asLocalhost: true});
-			sinon.assert.calledWith(mockChannel.initialize.secondCall, {target: mockPeer3, discover: true, asLocalhost: true});
-			sinon.assert.calledWith(mockChannel.initialize.thirdCall, {target: mockPeer4, discover: true, asLocalhost: true});
+			sinon.assert.calledWith(mockChannel.initialize.firstCall, {target: mockPeer1, discover: false, asLocalhost: true});
+			sinon.assert.calledWith(mockChannel.initialize.secondCall, {target: mockPeer3, discover: false, asLocalhost: true});
+			sinon.assert.calledWith(mockChannel.initialize.thirdCall, {target: mockPeer4, discover: false, asLocalhost: true});
 		});
 
 		it('should fail if there are no LEDGER_QUERY_ROLE peers', async () => {
@@ -137,7 +146,7 @@ describe('Network', () => {
 			mockPeer5.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
 			peerArray = [mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5];
 			mockChannel.getPeers.returns(peerArray);
-			return network._initializeInternalChannel()
+			return network._initializeInternalChannel({discover: false})
 				.should.be.rejectedWith(/no suitable peers available to initialize from/);
 		});
 	});

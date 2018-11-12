@@ -161,10 +161,10 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 		const block_num =  Number(processed_transaction.transactionEnvelope.payload.data.actions['0']
 			.payload.action.proposal_response_payload.extension.results.ns_rwset['0']
 			.rwset.reads[1].version.block_num.toString());
-		if (parseInt(block_num) > 7) {
+		if (parseInt(block_num) >= 7) {
 			t.pass('Successfully test for read set block num');
 		} else {
-			t.fail('Failed test for read set block num - block_num > 7 ::' + block_num);
+			t.fail('Failed test for read set block num - block_num >= 7 ::' + block_num);
 		}
 
 		// the "target peer" must be a peer in the same org as the app

@@ -41,7 +41,8 @@ async function tlsSetup() {
 }
 
 async function createContract(t, gateway, gatewayOptions) {
-	const profile = gatewayOptions.useDiscovery ? ccpDiscovery : ccp;
+	const useDiscovery = !(gatewayOptions.discovery && gatewayOptions.discovery.enabled === false);
+	const profile = useDiscovery ? ccpDiscovery : ccp;
 	await gateway.connect(JSON.parse(profile.toString()), gatewayOptions);
 	t.pass('Connected to the gateway');
 
@@ -86,10 +87,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const contract = await createContract(t, gateway, {
 			wallet: inMemoryWallet,
 			identity: 'User1@org1.example.com',
-			clientTlsIdentity: 'tlsId',
-			discovery: {
-				asLocalHost: true
-			}
+			clientTlsIdentity: 'tlsId'
 		});
 
 		const transaction = contract.createTransaction('move');
@@ -393,9 +391,6 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			clientTlsIdentity: 'tlsId',
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ALLFORTX
-			},
-			discovery: {
-				asLocalHost: true
 			}
 		});
 
@@ -524,9 +519,6 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			clientTlsIdentity: 'tlsId',
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ANYFORTX
-			},
-			discovery: {
-				asLocalHost: true
 			}
 		});
 

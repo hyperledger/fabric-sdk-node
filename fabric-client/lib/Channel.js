@@ -129,6 +129,7 @@ const Channel = class {
 		this._last_discover_timestamp = null;
 		this._discovery_peer = null;
 		this._use_discovery = sdk_utils.getConfigSetting('initialize-with-discovery', false);
+		this._as_localhost = sdk_utils.getConfigSetting('discovery-as-localhost', true);
 		this._endorsement_handler = null; // will be setup during initialization
 		this._commit_handler = null;
 
@@ -203,6 +204,14 @@ const Channel = class {
 						this._use_discovery = request.discover;
 					} else {
 						throw new Error('Request parameter "discover" must be boolean');
+					}
+				}
+				if (typeof request.asLocalhost !== 'undefined') {
+					if (typeof request.asLocalhost === 'boolean') {
+						logger.debug('%s - user requested discovery as localhost %s', method, request.asLocalhost);
+						this._as_localhost = request.asLocalhost;
+					} else {
+						throw new Error('Request parameter "asLocalhost" must be boolean');
 					}
 				}
 				if (request.endorsementHandler) {
@@ -1445,7 +1454,7 @@ const Channel = class {
 		let t_hostname = hostname;
 
 		// endpoints may be running in containers on the local system
-		if (request && request.asLocalhost) {
+		if (this._as_localhost) {
 			t_hostname = 'localhost';
 		}
 

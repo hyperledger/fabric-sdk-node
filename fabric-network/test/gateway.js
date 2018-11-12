@@ -423,6 +423,7 @@ describe('Gateway', () => {
 			mockNetwork = sinon.createStubInstance(Network);
 			gateway.networks.set('foo', mockNetwork);
 			gateway.client = mockClient;
+			gateway.options.discovery.enabled = false;
 
 			mockInternalChannel = sinon.createStubInstance(InternalChannel);
 			const mockPeer1 = sinon.createStubInstance(Peer);
@@ -442,6 +443,18 @@ describe('Gateway', () => {
 
 			it('should create a non-existent network object', async () => {
 				mockClient.getChannel.withArgs('bar').returns(mockInternalChannel);
+				gateway.getCurrentIdentity = sinon.stub().returns({_mspId: 'MSP01'});
+
+				const network2 = await gateway.getNetwork('bar');
+				network2.should.be.instanceof(Network);
+				network2.gateway.should.equal(gateway);
+				network2.channel.should.equal(mockInternalChannel);
+				gateway.networks.size.should.equal(2);
+			});
+
+			it('should create a channel object if not defined in the ccp', async () => {
+				mockClient.getChannel.withArgs('bar').returns(null);
+				mockClient.newChannel.withArgs('bar').returns(mockInternalChannel);
 				gateway.getCurrentIdentity = sinon.stub().returns({_mspId: 'MSP01'});
 
 				const network2 = await gateway.getNetwork('bar');
