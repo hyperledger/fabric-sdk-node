@@ -123,6 +123,86 @@ test('*****  Test channel events', async (t) => {
 		t.equal(event_hub.isconnected(), false, 'Successfully created new channel event hub for peer, isconnected check');
 		eventhubs.push(event_hub); // add to list so we can shutdown at end of test
 
+		// check that we can connect with callbacks
+		let connecter = new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				reject(new Error('timeout connecting to the event service'));
+			}, 15000);
+			event_hub.connect({full_block: false}, (error, connected_hub) => {
+				clearTimeout(handle);
+				if (error) {
+					reject(error);
+				} else {
+					if (connected_hub.isconnected()) {
+						t.pass('Successfully able to connect to the event service using a connect callback');
+						resolve();
+					} else {
+						reject(new Error('Event Hub notified us that it was connected however the connect status was false'));
+					}
+				}
+			});
+		});
+
+		try {
+			await connecter;
+			t.pass('Successfully checked for connect using a callback');
+		} catch (error) {
+			t.fail('Failed to connect to event service ::' + error.toString());
+		}
+
+		/*
+		 * Test
+		 * Creating a ChannelEventHub by name
+		 *  --- only works if the channel has this peer
+		 */
+		const event_hub_byname = channel.newChannelEventHub('localhost:7051');
+		t.equal(event_hub_byname.getName(), 'localhost:7051', 'Successfully created new channel event hub for peer, isName check');
+		t.equal(event_hub_byname.isconnected(), false, 'Successfully created new channel event hub for peer, isconnected check');
+
+		/*
+		 * Test
+		 * Connect failure - check error callback on connect
+		 */
+		const bad_peer = client.newPeer('grpcs://localhost:1111', {
+			pem: Buffer.from(data).toString(),
+			'ssl-target-name-override': 'peer0.org1.example.com'
+		});
+		const event_hub_fail = channel.newChannelEventHub(bad_peer);
+		let got_callback_error = false;
+		// check that we can connect with callbacks
+		connecter = new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				reject(new Error('timeout connecting to the event service'));
+			}, 15000);
+			event_hub_fail.connect({full_block: false}, (error, connected_hub) => {
+				clearTimeout(handle);
+				if (error) {
+					t.pass('Successfully got the connect error on the connect error callback');
+					got_callback_error = true;
+					reject(error);
+				} else {
+					if (connected_hub.isconnected()) {
+						t.fail('able to connect to the event service using a connect callback');
+						resolve();
+					} else {
+						t.fail('Connect callback called, however this hub is not connected');
+						reject(new Error('Event Hub notified us that it was connected however the connect status was false'));
+					}
+				}
+			});
+		});
+
+		try {
+			await connecter;
+			t.fail('Should have received the callback error');
+		} catch (error) {
+			if (got_callback_error) {
+				t.pass('Successfully got the expexted error from the event service callback testing::' + error.toString());
+			} else {
+				t.fail('FAILED to get the expexted error from the event service callback testing::' + error.toString());
+			}
+		}
+
 		/*
 		 * Test
 		 *  Transaction registration using all defaults
@@ -143,7 +223,6 @@ test('*****  Test channel events', async (t) => {
 				// send back error
 				reject(error);
 			});
-			event_hub.connect();
 		});
 
 		let send_trans = channel.sendTransaction({proposalResponses: results[0], proposal: results[1]});
