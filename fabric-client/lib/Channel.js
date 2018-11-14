@@ -2310,6 +2310,38 @@ const Channel = class {
 		throw new Error('Payload results are missing from the query');
 	}
 
+	/**
+	 * @typedef {Object} CollectionQueryOptions
+	 * @property {string} chaincodeId - Required. Name of the chaincode
+	 * @property {string|Peer} target - Optional. The peer that will receive this
+	 *           request, when not provided the first peer in this channel
+	 *           object will be used.
+	 */
+
+	/**
+	 * @typedef {Object} CollectionQueryResponse
+	 * @property {string} type - The collection type
+	 * @property {string} name - the name of the collection inside the denoted chaincode
+	 * @property {number} required_peer_count - The minimum number of peers private data
+	 *  will be sent to upon endorsement. The endorsement would fail if dissemination to
+	 *  at least this number of peers is not achieved.
+	 * @property {number} maximum_peer_count - The maximum number of peers that private
+	 *  data will be sent to upon endorsement. This number has to be bigger than
+	 *  required_peer_count.
+	 * @property {number} block_to_live - The number of blocks after which the collection
+	 *  data expires. For instance if the value is set to 10, a key last modified by block
+	 *  number 100 will be purged at block number 111. A zero value is treated same as MaxUint64
+	 * @property {Policy} policy - The
+	 */
+
+	/**
+	 * query for the collections config for a chaincode.
+	 *
+	 * @param {CollectionQueryOptions} options - Required. The options to query the collections config.
+	 * @property {boolean} useAdmin - Optional. To indicate that the admin identity
+	 *           should be used to make the discovery request
+	 * @returns {Promise<CollectionQueryResponse>} returns a promise for a {@link CollectionQueryResponse} object.
+	 */
 	async queryCollectionsConfig(options, useAdmin) {
 		const method = 'queryCollectionsConfig';
 		logger.debug('%s - start. options:%j, useAdmin:%s', method, options, useAdmin);
