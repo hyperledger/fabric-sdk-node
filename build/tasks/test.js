@@ -113,6 +113,8 @@ gulp.task('docker-ready', ['docker-clean'], shell.task([
 	'docker-compose -f test/fixtures/docker-compose.yaml up -d'
 ]));
 
+gulp.task('lint', ['eslint', 'tslint']);
+
 gulp.task('compile', shell.task([
 	'npm run compile',
 ], {
@@ -125,24 +127,16 @@ gulp.task('compile', shell.task([
 //  - Cannot use gulp-istabul because it throws "unexpected identifier" for async/await functions
 
 // Main test to run all tests
-gulp.task('test', shell.task(
-	'./node_modules/nyc/bin/nyc.js gulp run-test'
-));
+gulp.task('test', shell.task('npx nyc gulp run-test'));
 
 // Test to run all unit tests
-gulp.task('test-headless', shell.task(
-	'./node_modules/nyc/bin/nyc.js gulp run-test-headless'
-));
+gulp.task('test-headless', shell.task('npx nyc gulp run-test-headless'));
 
 // Only run Mocha unit tests
-gulp.task('test-mocha', shell.task(
-	'./node_modules/nyc/bin/nyc.js gulp run-test-mocha'
-));
+gulp.task('test-mocha', shell.task('npx nyc gulp run-test-mocha'));
 
 // Only run scenario tests
-gulp.task('test-cucumber', shell.task(
-	'./node_modules/nyc/bin/nyc.js npm run test:cucumber'
-));
+gulp.task('test-cucumber', shell.task('npx nyc npm run test:cucumber'));
 
 // Definition of Mocha (unit) test suites
 gulp.task('run-test-mocha', (done) => {
@@ -172,9 +166,7 @@ gulp.task('mocha-fabric-network',
 );
 
 // Test to run all unit tests
-gulp.task('test-tape', shell.task(
-	'./node_modules/nyc/bin/nyc.js gulp run-tape-unit'
-));
+gulp.task('test-tape', shell.task('npx nyc gulp run-tape-unit'));
 
 // Definition of Cucumber (scenario) test suite
 gulp.task('run-test-cucumber', shell.task(

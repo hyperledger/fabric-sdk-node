@@ -10,6 +10,13 @@ const BaseWallet = require('./basewallet');
 const CouchDBVStore = require('fabric-client/lib/impl/CouchDBKeyValueStore');
 const logger = require('../../logger').getLogger('CouchDBWallet');
 const Nano = require('nano');
+
+/**
+ * @typedef {object} CouchDBWallet~CouchDBWalletOptions
+ * @memberof module:fabric-network
+ * @property {string} url CouchDB URL
+ */
+
 /**
  * This class defines an implementation of an Identity wallet that persists
  * to a Couch DB database
@@ -17,12 +24,10 @@ const Nano = require('nano');
  * @implements {module:fabric-network.Wallet}
  */
 class CouchDBWallet extends BaseWallet {
-
 	/**
 	 * Creates an instance of the CouchDBWallet
-	 * @param {Object} options contains required property <code>url</code> and other Nano options
-	 * @param {WalletMixin} mixin
-	 * @memberof CouchDBWallet
+	 * @param {module:fabric-network.CouchDBWallet~CouchDBWalletOptions} options contains required property <code>url</code> and other Nano options
+	 * @param {module:fabric-network.WalletMixin} [mixin]
 	 */
 	constructor(options, mixin) {
 		const method = 'constructor';

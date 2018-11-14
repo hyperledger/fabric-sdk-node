@@ -11,18 +11,18 @@
 /**
  * @typedef {Object} Wallet~IdentityInfo
  * @memberof module:fabric-network
- * @property label
- * @property mspId
- * @property identifier
+ * @property {string} label Label used to refer to this identity in the wallet.
+ * @property {string} mspId Organizational unit to which this identity belongs.
+ * @property {string} identifier
  */
 
 /**
  * @typedef {Object} Wallet~Identity
  * @memberof module:fabric-network
- * @property type
- * @property mspId
- * @property certificate
- * @property privateKey
+ * @property {string} type Type of credentials, for example X509.
+ * @property {string} mspId Organizational unit to which this identity belongs.
+ * @property {string} certificate Certificate containing the public key in PEM format.
+ * @property {string} privateKey Private key in PEM format.
  */
 
 /**
