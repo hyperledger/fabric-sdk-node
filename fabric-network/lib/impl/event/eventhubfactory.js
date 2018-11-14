@@ -6,6 +6,8 @@
 
 'use strict';
 
+const util = require('util');
+
 const logger = require('fabric-network/lib/logger').getLogger('EventHubFactory');
 
 /**
@@ -67,22 +69,14 @@ class EventHubFactory {
      * @param {ChannelEventHub} eventHub An event hub.
      */
 	async connectEventHub(eventHub) {
-		const connectPromise = new Promise((resolve) => {
-			const regId = eventHub.registerBlockEvent(
-				() => {
-					logger.debug('connectEventHub:', 'successfully connected event hub:', eventHub.getName());
-					eventHub.unregisterBlockEvent(regId);
-					resolve();
-				},
-				() => {
-					logger.info('connectEventHub:', 'failed to connect event hub:', eventHub.getName());
-					eventHub.unregisterBlockEvent(regId);
-					resolve();
-				}
-			);
-		});
-		eventHub.connect();
-		await connectPromise;
+		try {
+			// Need to wrap in an arrow function to protect the value of this in connect()
+			const connect = util.promisify((callback) => eventHub.connect({}, callback));
+			await connect();
+			logger.debug('connectEventHub:', 'successfully connected event hub:', eventHub.getName());
+		} catch (error) {
+			logger.info('connectEventHub:', 'failed to connect event hub:', eventHub.getName(), error);
+		}
 	}
 }
 

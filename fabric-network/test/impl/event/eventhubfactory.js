@@ -48,13 +48,16 @@ describe('EventHubFactory', () => {
 		stubEventHub2 = sinon.createStubInstance(ChannelEventHub);
 		stubEventHub2._stubInfo = 'eventHub2';
 		stubEventHub2.getName.returns('eventHub2');
-		// Fake a connection success event
-		stubEventHub2.registerBlockEvent.callsFake((block, error) => { // eslint-disable-line no-unused-vars
-			Promise.resolve().then(block);
-			return 2;
-		});
 		stubEventHub2.isconnected.returns(false);
-
+		// Fake a connection success callback
+		stubEventHub2.connect.callsFake((fullBlocks, callback) => {
+			// Invoke callback manually rather than using stub.callsArgWith() to ensure the code will hang rather than
+			// error if the callback is not passed correctly. An error will be swallowed by the code in EventHubFactory
+			// and produce a false positive test result.
+			if (typeof callback === 'function') {
+				callback(null, stubEventHub2);
+			}
+		});
 		stubChannel = sinon.createStubInstance(Channel);
 		stubChannel.getName.returns('channel');
 		stubChannel.getChannelEventHub.withArgs(stubPeer1.getName()).returns(stubEventHub1);
@@ -108,10 +111,11 @@ describe('EventHubFactory', () => {
 		});
 
 		it('does not fail on error connecting event hub', async () => {
-			// Fake a connection failure event
-			stubEventHub2.registerBlockEvent.callsFake((block, error) => {
-				Promise.resolve().then(error);
-				return 2;
+			// Fake a connection failure callback
+			stubEventHub2.connect.callsFake((fullBlocks, callback) => {
+				if (typeof callback === 'function') {
+					callback(new Error('connect failed'));
+				}
 			});
 			const results = await factory.getEventHubs([stubPeer2]);
 			expect(results[0].connect.called).to.be.true;
