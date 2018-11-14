@@ -2330,17 +2330,19 @@ const Channel = class {
 	 *  required_peer_count.
 	 * @property {number} block_to_live - The number of blocks after which the collection
 	 *  data expires. For instance if the value is set to 10, a key last modified by block
-	 *  number 100 will be purged at block number 111. A zero value is treated same as MaxUint64
+	 *  number 100 will be purged at block number 111. A zero value is treated same as MaxUint64,
+	 *  where the data will not be purged.
 	 * @property {Policy} policy - The
 	 */
 
 	/**
-	 * query for the collections config for a chaincode.
+	 * Query for the collection definitions associated with a chaincode.
 	 *
 	 * @param {CollectionQueryOptions} options - Required. The options to query the collections config.
-	 * @property {boolean} useAdmin - Optional. To indicate that the admin identity
-	 *           should be used to make the discovery request
-	 * @returns {Promise<CollectionQueryResponse>} returns a promise for a {@link CollectionQueryResponse} object.
+	 * @param {boolean} useAdmin - Optional. To indicate that the admin identity
+	 *           should be used to make the query request
+	 * @returns {Promise<CollectionQueryResponse[]>} returns a promise for an array of
+	 *          {@link CollectionQueryResponse} objects.
 	 */
 	async queryCollectionsConfig(options, useAdmin) {
 		const method = 'queryCollectionsConfig';

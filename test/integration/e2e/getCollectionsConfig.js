@@ -11,12 +11,13 @@ const test = _test(tape);
 const e2eUtils = require('./e2eUtils.js');
 const testUtil = require('../../unit/util.js');
 
-const chaincodeId = testUtil.END2END.chaincodeIdPrivateData;
-
 test('getCollectionsConfig from peer', async (t) => {
-	const targets = [];  // empty array, meaning client will discover the peers
+	const chaincodeId = testUtil.END2END.chaincodeIdPrivateData;
+	const channel_name = testUtil.END2END.channel;
+	t.comment(' looking at chaincodeId:' + chaincodeId);
+	t.comment(' looking at channel_name:' + channel_name);
 	try {
-		const results = await e2eUtils.getCollectionsConfig(t, 'org1', chaincodeId, targets);
+		const results = await e2eUtils.getCollectionsConfig(t, 'org1', chaincodeId, channel_name);
 		if (results) {
 			t.pass('Successfully query collections config');
 		}
