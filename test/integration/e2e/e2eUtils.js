@@ -922,9 +922,8 @@ function getTargetPeers(channel, targets) {
 	return targetPeers;
 }
 
-async function getCollectionsConfig(t, org, chaincodeId, targets) {
+async function getCollectionsConfig(t, org, chaincodeId, channel_name) {
 	init();
-	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
 	// this is a transaction, will just use org's identity to
 	// submit the request. intentionally we are using a different org
@@ -951,35 +950,23 @@ async function getCollectionsConfig(t, org, chaincodeId, targets) {
 		await client.setUserContext(admin);
 		t.pass('Successfully enrolled user \'admin\'');
 
-		// set up the channel to use each org's 'peer1' for
-		// both requests and events
-		for (const key in ORGS) {
-			if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
-				const data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1.tls_cacerts));
-				const peer = client.newPeer(
-					ORGS[key].peer1.requests,
-					{
-						pem: Buffer.from(data).toString(),
-						'ssl-target-name-override': ORGS[key].peer1['server-hostname']
-					});
-				channel.addPeer(peer);
+		const caRootsPath = ORGS[org].peer1.tls_cacerts;
+		const data = fs.readFileSync(path.join(__dirname, '../e2e', caRootsPath));
+		const caroots = Buffer.from(data).toString();
+
+		const peer = client.newPeer(
+			ORGS[org].peer1.requests,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
 			}
-		}
-		// send query
+		);
+
 		const request = {
-			chaincodeId,
-			txId: client.newTransactionID(),
+			chaincodeId: chaincodeId,
+			target: peer
 		};
 
-		// find the peers that match the targets
-		if (targets && targets.length !== 0) {
-			const targetPeers = getTargetPeers(channel, targets);
-			if (targetPeers.length < targets.length) {
-				t.fail('Failed to get all peers for targets: ' + targets);
-			} else {
-				request.targets = targetPeers;
-			}
-		}
 		try {
 			const resp = await channel.queryCollectionsConfig(request);
 			t.pass('Successfully retrieved collections config from peer');
