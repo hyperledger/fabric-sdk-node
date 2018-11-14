@@ -149,12 +149,59 @@ describe('Client', () => {
 	});
 
 	describe('#setTlsClientCertAndKey', () => {
+		let newCryptoSuiteStub;
+		let generateEphemeralKeyStub;
+		let toBytesStub;
+		let generateX509CertificateStub;
+		let getNameStub;
+		let client;
+
+		beforeEach(() => {
+			toBytesStub = sandbox.stub();
+			generateX509CertificateStub = sandbox.stub();
+			generateEphemeralKeyStub = sandbox.stub().returns({toBytes: toBytesStub, generateX509Certificate: generateX509CertificateStub});
+			newCryptoSuiteStub = sandbox.stub().returns({generateEphemeralKey: generateEphemeralKeyStub});
+			revert.push(Client.__set__('Client.newCryptoSuite', newCryptoSuiteStub));
+			getNameStub = sandbox.stub();
+
+			client = new Client();
+		});
+
 		it('should set clientCert, cleintKey, clientCerthash and call logger.debug', () => {
-			const client = new Client();
 			client.setTlsClientCertAndKey('client-cert', 'client-key');
 			client._tls_mutual.clientCert.should.equal('client-cert');
 			client._tls_mutual.clientKey.should.equal('client-key');
+			client._tls_mutual.selfGenerated.should.equal(false);
 			should.equal(client._tls_mutual.clientCertHash, null);
+		});
+
+		it('should generate a new ephemeral key and set _tls_mutual', () => {
+			client._userContext = {getName: getNameStub.returns('name')};
+			toBytesStub.returns('client-key');
+			generateX509CertificateStub.returns('client-cert');
+			client.setTlsClientCertAndKey();
+			sinon.assert.calledWith(FakeLogger.debug, 'setTlsClientCertAndKey - generating self-signed TLS client certificate');
+			sinon.assert.calledWith(newCryptoSuiteStub, {software: true});
+			sinon.assert.called(generateEphemeralKeyStub);
+			sinon.assert.called(toBytesStub);
+			sinon.assert.calledWith(generateX509CertificateStub, 'name');
+			client._tls_mutual.clientCert.should.equal('client-cert');
+			client._tls_mutual.clientKey.should.equal('client-key');
+			client._tls_mutual.selfGenerated.should.equal(true);
+		});
+
+		it('should generate a new ephemeral key and set _tls_mutual when only clientKey is missing', () => {
+			client._userContext = {getName: getNameStub.returns('name')};
+			toBytesStub.returns('client-key');
+			generateX509CertificateStub.returns('client-cert');
+			client.setTlsClientCertAndKey('client-cert');
+			sinon.assert.calledWith(FakeLogger.debug, 'setTlsClientCertAndKey - generating self-signed TLS client certificate');
+			sinon.assert.calledWith(newCryptoSuiteStub, {software: true});
+			sinon.assert.called(generateEphemeralKeyStub);
+			sinon.assert.called(toBytesStub);
+			sinon.assert.calledWith(generateX509CertificateStub, 'name');
+			client._tls_mutual.clientCert.should.equal('client-cert');
+			client._tls_mutual.clientKey.should.equal('client-key');
 		});
 	});
 
@@ -177,35 +224,6 @@ describe('Client', () => {
 			client = new Client();
 		});
 
-		it('should generate a new ephemeral key and set _tls_mutual', () => {
-			client._userContext = {getName: getNameStub.returns('name')};
-			toBytesStub.returns('client-key');
-			generateX509CertificateStub.returns('client-cert');
-			client.addTlsClientCertAndKey({});
-			sinon.assert.calledWith(FakeLogger.debug, 'addTlsClientCertAndKey - generating self-signed TLS client certificate');
-			sinon.assert.calledWith(newCryptoSuiteStub, {software: true});
-			sinon.assert.called(generateEphemeralKeyStub);
-			sinon.assert.called(toBytesStub);
-			sinon.assert.calledWith(generateX509CertificateStub, 'name');
-			client._tls_mutual.clientCert.should.equal('client-cert');
-			client._tls_mutual.clientKey.should.equal('client-key');
-		});
-
-		it('should generate a new ephemeral key and set _tls_mutual when only clientKey is missing', () => {
-			client._userContext = {getName: getNameStub.returns('name')};
-			client._tls_mutual = {clientCert: 'client-cert'};
-			toBytesStub.returns('client-key');
-			generateX509CertificateStub.returns('client-cert');
-			client.addTlsClientCertAndKey({});
-			sinon.assert.calledWith(FakeLogger.debug, 'addTlsClientCertAndKey - generating self-signed TLS client certificate');
-			sinon.assert.calledWith(newCryptoSuiteStub, {software: true});
-			sinon.assert.called(generateEphemeralKeyStub);
-			sinon.assert.called(toBytesStub);
-			sinon.assert.calledWith(generateX509CertificateStub, 'name');
-			client._tls_mutual.clientCert.should.equal('client-cert');
-			client._tls_mutual.clientKey.should.equal('client-key');
-		});
-
 		it('should add the current _tls_mutual values to the options object', () => {
 			client._userContext = {getName: getNameStub.returns('name')};
 			client._tls_mutual = {clientCert: 'client-cert', clientKey: 'client-key'};
@@ -223,6 +241,26 @@ describe('Client', () => {
 			client.addTlsClientCertAndKey(opts);
 			should.equal(client._tls_mutual.clientCert, undefined);
 			should.equal(client._tls_mutual.clientKey, undefined);
+			should.equal(opts.clientCert, undefined);
+			should.equal(opts.clientKey, undefined);
+		});
+
+		it('should not add the current _tls_mutual values to the options object when auto generated', () => {
+			client._userContext = {getName: getNameStub.returns('name')};
+			// first set in the auto generated client cert and key
+			toBytesStub.returns('client-key');
+			generateX509CertificateStub.returns('client-cert');
+			client.setTlsClientCertAndKey('client-cert');
+			sinon.assert.calledWith(FakeLogger.debug, 'setTlsClientCertAndKey - generating self-signed TLS client certificate');
+			sinon.assert.calledWith(newCryptoSuiteStub, {software: true});
+			sinon.assert.called(generateEphemeralKeyStub);
+			sinon.assert.called(toBytesStub);
+			sinon.assert.calledWith(generateX509CertificateStub, 'name');
+			client._tls_mutual.clientCert.should.equal('client-cert');
+			client._tls_mutual.clientKey.should.equal('client-key');
+			// now the actual add
+			const opts = {};
+			client.addTlsClientCertAndKey(opts);
 			should.equal(opts.clientCert, undefined);
 			should.equal(opts.clientKey, undefined);
 		});
@@ -2776,16 +2814,16 @@ describe('Client', () => {
 	});
 
 	describe('#getClientCertHash', () => {
-		let addTlsClientCertAndKeyStub;
+		let setTlsClientCertAndKeyStub;
 
 		let client;
 		beforeEach(() => {
-			addTlsClientCertAndKeyStub = sandbox.stub();
+			setTlsClientCertAndKeyStub = sandbox.stub();
 			client = new Client();
-			client.addTlsClientCertAndKey = addTlsClientCertAndKeyStub;
+			client.setTlsClientCertAndKey = setTlsClientCertAndKeyStub;
 		});
 
-		it('should return he clientCertHash in client._tls_mutual', () => {
+		it('should return the clientCertHash in client._tls_mutual', () => {
 			client._tls_mutual = {clientCertHash: 'cert-hash'};
 			client.getClientCertHash().should.equal('cert-hash');
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start', 'getClientCertHash');
@@ -2794,12 +2832,12 @@ describe('Client', () => {
 		it('should create a cert and key and return null', () => {
 			const certHash = client.getClientCertHash(true);
 			should.equal(certHash, undefined);
-			sinon.assert.called(addTlsClientCertAndKeyStub);
+			sinon.assert.called(setTlsClientCertAndKeyStub);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start', 'getClientCertHash');
 			sinon.assert.calledWith(FakeLogger.debug, '%s - no tls client cert', 'getClientCertHash');
 		});
 
-		it('should create a cert and key and return the cert hash', () => {
+		it('should create and return the cert hash', () => {
 			const pemToDERStub = sandbox.stub().returns('DER');
 			const computeHashStub = sandbox.stub().returns('cert-hash');
 			revert.push(Client.__set__('sdkUtils.pemToDER', pemToDERStub));
