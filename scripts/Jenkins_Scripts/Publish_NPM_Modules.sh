@@ -55,11 +55,11 @@ fi
 versions() {
 
   # Get the "tag" from package.json
-  CURRENT_TAG=$(cat package.json | grep tag | awk -F\" '{ print $4 }')
+  CURRENT_TAG=$(grep '"tag":' package.json | cut -d\" -f4)
   echo -e "\033[32m ===> Current TAG --> $CURRENT_TAG" "\033[0m"
 
   # Get the "version" from package.json
-  RELEASE_VERSION=$(cat package.json | grep version | awk -F\" '{ print $4 }')
+  RELEASE_VERSION=$(grep '"version":' package.json | cut -d\" -f4)
   echo -e "\033[32m ===> Current Version --> $RELEASE_VERSION" "\033[0m"
 
 }

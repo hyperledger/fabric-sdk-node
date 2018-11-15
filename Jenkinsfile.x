@@ -82,7 +82,7 @@ if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
            if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
                // Sends notification to Rocket.Chat
-               rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
+               rocketSend "Build Notification - STATUS: *${currentBuild.result}* - BRANCH: *${env.GERRIT_BRANCH}* - PROJECT: *${env.PROJECT}* - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
               }
            }
        }
