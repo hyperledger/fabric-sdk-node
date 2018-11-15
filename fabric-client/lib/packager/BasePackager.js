@@ -80,7 +80,7 @@ const BasePackager = class {
 					if (entry.stats.isFile() && this.isMetadata(entry.path)) {
 
 						const desc = {
-							name: path.join('META-INF', path.relative(filePath, entry.path).split('\\').join('/')), // for windows style paths
+							name: path.join('META-INF', path.relative(filePath, entry.path)).split('\\').join('/'), // for windows style paths
 							fqp: entry.path
 						};
 						logger.debug(' findMetadataDescriptors  :: %j', desc);
