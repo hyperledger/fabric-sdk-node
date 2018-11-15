@@ -2,20 +2,21 @@
 This tutorial illustrates how to use the Node.js SDK APIs to store and retrieve private data in the Hyperledger Fabric network.
 
 Starting in v1.2, Fabric offers the ability to create private data collections, which allows a subset of organizations on
-a channel to endorse, commit, or query private data without having to create a separate channel.For more information,
+a channel to endorse, commit, or query private data without having to create a separate channel. For more information,
 refer to [Private Data Concept](
 http://hyperledger-fabric.readthedocs.io/en/latest/private-data/private-data.html), [Private Data Architecture](
 http://hyperledger-fabric.readthedocs.io/en/latest/private-data-arch.html), and [Using Private Data in Fabric](
 http://hyperledger-fabric.readthedocs.io/en/latest/private_data_tutorial.html).
 
 ### Overview
-The following are the steps to use private data with the Node.js SDK. Check out below sections for the details of these steps.
+The following are the steps to use private data with the Node.js SDK (fabric-client). Check out the sections below for details on these steps.
 
 1. Create a collection definition json file
 2. Implement chaincode to store and query private data
 3. Install and instantiate chaincode with a collection definition
 4. Invoke chaincode to store and query private data
 5. Purge private data
+6. Query for a collection definition
 
 ### Create a collection definition json file
 A collection definition describes who can persist data, how many peers the data is distributed to, how many peers are
@@ -96,7 +97,7 @@ The policy property in the collectionMarbles definition allows all members of th
 the private data in a private database. The collectionMarblesPrivateDetails collection allows only members of `Org1`
 to have the private data in their private database.
 
-For Node.js SDK, you must define policies in the same format as shown in the above.
+For Node.js SDK, you must define policies in the same format as shown above.
 
 ### Implement chaincode to store and query private data
 Fabric provides chaincode APIs to store and query private data. As an example, check out [marbles private data example](
@@ -113,7 +114,8 @@ This example implements the following functions to manage private data.
 ### Install and instantiate chaincode with a collection definition
 Client applications interact with the blockchain ledger through chaincode. As such
 we need to install and instantiate the chaincode on every peer that will execute and
-endorse transactions.
+endorse transactions. When instantiated a chaincode on a channel the collection will
+be associated with that chaincode.
 
 * Install chaincode. No specific parameter needed to support private data.
 * Instantiate chaincode. To support private data, the request must include the `collections-config` attribute.
@@ -150,7 +152,27 @@ https://github.com/hyperledger/fabric-samples/blob/master/chaincode/marbles02_pr
 ### Purge private data
 The Hyperledger Fabric allows client applications to optionally purge the private data in a collection by setting the
 `blockToLive` property. This option may be needed when private data include personal or confidential information
-and transacting parties want to have a limited lifespan for these data.
+and transacting parties want to have a limited lifespan for the data.
 
 When `blockToLive` is set to a non-zero value in the collection definition file, Fabric will automatically purge the related
 private data after the specified number of blocks are committed. Client applications do not need to call any API.
+
+### Query for a collection definition
+The Hyperledger Fabric allows client applications to query a peer for collection definitions.
+The Node.js SDK (fabric-client) has an API that will query a Hyperledger Fabric Peer for a
+collection definition associated with a chaincode running on the specified channel.
+See {@link Channel#queryCollectionsConfig} for detailed information.
+```
+		const request = {
+			chaincodeId: chaincodeId,
+			target: peer
+		};
+		
+		try {
+			const response = await channel.queryCollectionsConfig(request);
+			// response contains an array of collection definitions
+			return response;
+		} catch (error) {
+			throw error;
+		}
+```
