@@ -2,37 +2,44 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+timeout(40) {
 node ('hyp-x') { // trigger build on x86_64 node
+  timestamps {
     try {
-     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
+     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>)
+     env.NODE_VER = "8.9.4"
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
-     env.NODE_VER = "8.9.4"
-     env.GO_VER = "1.9.2"
-     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
-     env.GOROOT = "/opt/go/go${GO_VER}.linux.amd64"
-     env.PATH = "$GOROOT/bin:$PATH"
+     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
      deleteDir()
       stage("Fetch Patchset") { // fetch gerrit refspec on latest commit
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
           try {
-              dir("${ROOTDIR}"){
+              dir("${ROOTDIR}") {
               sh '''
                  [ -e gopath/src/github.com/hyperledger/fabric-sdk-node ] || mkdir -p $PROJECT_DIR
                  cd $PROJECT_DIR
+                 # Clone sdk-node repository
                  git clone git://cloud.hyperledger.org/mirror/fabric-sdk-node && cd fabric-sdk-node
+                 # Checkout to Branch and Apply patchset on latest commit
                  git checkout "$GERRIT_BRANCH" && git fetch origin "$GERRIT_REFSPEC" && git checkout FETCH_HEAD
+                 # Print last two commit details
+                 git log -n2 --pretty=oneline --abbrev-commit
               '''
               }
           }
           catch (err) {
                  failure_stage = "Fetch patchset"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }
+      }
 // clean environment and get env data
       stage("Clean Environment - Get Env Info") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --clean_Environment --env_Info'
@@ -40,74 +47,101 @@ node ('hyp-x') { // trigger build on x86_64 node
                }
            catch (err) {
                  failure_stage = "Clean Environment - Get Env Info"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }
+      }
 
 // Run gulp tests (headless and e2e tests)
-      stage("Run gulp_Tests") {
+      stage("Run Headless & Integration Tests") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
+                 // Get the testFabricVersion and thirdpartyVersion from package.json
+                 // and Pull the DockerImages from dockerhub and run the Integration Tests
                  sh './CI_Script.sh --sdk_E2e_Tests'
                  }
                }
            catch (err) {
                  failure_stage = "sdk_E2e_Tests"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }
+      } 
 
 // Publish unstable npm modules from merged job
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
-    unstableNpm()
+if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
+    publishNpm()
 }  else {
-     echo "------> Don't publish npm modules from verify job"
+     echo "------> Don't publish npm modules from VERIFY job"
    }
 
 // Publish API Docs from merged job only
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
+if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
     apiDocs()
 } else {
-     echo "------> Don't publish API Docs from verify job"
+     echo "------> Don't publish API Docs from VERIFY job"
    }
-
-// Archive Build artifacts (logs)
-      stage("Archive Build artifacts") {
-          archiveArtifacts artifacts: '**/*.log'
-      }
      } finally {
-           step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
-           // Sends notification to Rocket.Chat
-           rocketSend channel: 'jenkins-robot', message: "Build Notification - Branch: ${env.GERRIT_BRANCH} - Commit: ${env.GIT_COMMIT} - (<${env.BUILD_URL}|Open>)", rawMessage: true
-       }
-}
+           step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, failNoReports: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+           archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
+           if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
+              if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
+               rocketSend message: "Build Notification - STATUS: *${currentBuild.result}* - BRANCH: *${env.GERRIT_BRANCH}* - PROJECT: *${env.PROJECT}* - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
+              }
+           }
+       } // finally
+  } // timestamps
+} // node
+} // timeout
 
-def unstableNpm() {
-// Publish unstable npm modules after successful merge
-      stage("Publish Unstable npm modules") {
+def publishNpm() {
+// Publish npm modules after successful merge
+      stage("Publish npm Modules") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
+        sh 'echo "-------> Publish npm Modules"'
+        def ROOTDIR = pwd()
+        withCredentials([[$class       : 'StringBinding',
+                      credentialsId: 'NPM_LOCAL',
+                      variable : 'NPM_TOKEN']]) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
-                 sh './CI_Script.sh --publish_Unstable'
+                 sh './CI_Script.sh --publish_NpmModules'
                  }
                }
            catch (err) {
-                 failure_stage = "publish_Unstable"
+                 failure_stage = "publish_NpmModules"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
+        }
+      }
       }
 }
 
 def apiDocs() {
 // Publish SDK_NODE API docs after successful merge
       stage("Publish API Docs") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
+        sh 'echo "--------> Publish API Docs"'
+        def ROOTDIR = pwd()
+        withCredentials([[$class     : 'UsernamePasswordMultiBinding',
+                         credentialsId: 'sdk-node-credentials',
+                         usernameVariable: 'NODE_SDK_USERNAME',
+                         passwordVariable: 'NODE_SDK_PASSWORD']]) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
-                 sh './CI_Script.sh --publish_Api_Docs'
+                 sh './CI_Script.sh --publish_ApiDocs'
                  }
                }
            catch (err) {
-                 failure_stage = "publish_Api_Docs"
+                 failure_stage = "publish_ApiDocs"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
+        }
+      }
       }
 }

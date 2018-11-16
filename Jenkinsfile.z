@@ -2,37 +2,45 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+timeout(40) {
 node('hyp-z') {
+  timestamps {
     try {
-     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
+     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>)
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
      env.NODE_VER = "8.9.4"
-     env.GO_VER = "1.10"
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
-     env.GOROOT = "/opt/go/go${GO_VER}.linux.s390x"
-     env.PATH = "$GOROOT/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
      deleteDir()
       stage("Fetch Patchset") { // fetch gerrit refspec on latest commit
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
           try {
-              dir("${ROOTDIR}"){
+              dir("${ROOTDIR}") {
               sh '''
                  [ -e gopath/src/github.com/hyperledger/fabric-sdk-node ] || mkdir -p $PROJECT_DIR
                  cd $PROJECT_DIR
+                 # Clone fabric-sdk-node repository
                  git clone git://cloud.hyperledger.org/mirror/fabric-sdk-node && cd fabric-sdk-node
+                 # Checkout to Gerrit Branch and Apply patchset on latest commit
                  git checkout $GERRIT_BRANCH && git fetch origin "$GERRIT_REFSPEC" && git checkout FETCH_HEAD
+                 # Print last two commits
+                 git log -n2 --pretty=oneline --abbrev-commit
+
               '''
               }
           }
           catch (err) {
                  failure_stage = "Fetch patchset"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }
+      }
 // clean environment and get env data
       stage("Clean Environment - Get Env Info") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
                  sh './CI_Script.sh --clean_Environment --env_Info'
@@ -40,28 +48,39 @@ node('hyp-z') {
                }
            catch (err) {
                  failure_stage = "Clean Environment - Get Env Info"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }
+      }
 
 // Run gulp tests (headless and e2e tests)
-      stage("Run gulp_Tests") {
+      stage("Run Headless & Integration Tests") {
+      wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
+                 // Get the testFabricVersion and thirdpartyVersion from package.json
+                 // and Pull the DockerImages from dockerhub and run the Integration Tests
+
                  sh './CI_Script.sh --sdk_E2e_Tests'
                  }
                }
            catch (err) {
                  failure_stage = "sdk_E2e_Tests"
+                 currentBuild.result = 'FAILURE'
                  throw err
            }
       }
-      stage("Archive Build artifacts") {
-          archiveArtifacts artifacts: '**/*.log'
       }
     } finally {
-             step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
-              // Sends notification to Rocket.Chat
-             rocketSend channel: 'jenkins-robot', message: "Build Notification - Branch: ${env.GERRIT_BRANCH} - Commit: ${env.GIT_COMMIT} - (<${env.BUILD_URL}|Open>)", rawMessage: true
-       }
-}
+           step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, failNoReports: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+           archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
+           if (env.JOB_NAME == "fabric-sdk-node-merge-s390x") {
+              if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
+               rocketSend message: "Build Notification - STATUS: *${currentBuild.result}* - BRANCH: *${env.GERRIT_BRANCH}* - PROJECT: *${env.PROJECT}* - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
+              }
+           }
+       } // finally
+  } // timestamps
+} // node
+} // timeout
