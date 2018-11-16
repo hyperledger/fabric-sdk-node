@@ -2,11 +2,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+timeout(40) {
 node ('hyp-x') { // trigger build on x86_64 node
  timestamps {
     try {
-     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
-     env.NODE_VER = "8.11.3"
+     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>)
+     def nodeHome = tool 'nodejs-8.11.3'
      env.VERSION = sh(returnStdout: true, script: 'curl -O https://raw.githubusercontent.com/hyperledger/fabric/master/Makefile && cat Makefile | grep "BASE_VERSION =" | cut -d "=" -f2').trim()
      env.VERSION = "$VERSION" // BASE_VERSION from fabric Makefile
      env.ARCH = "amd64"
@@ -14,7 +15,7 @@ node ('hyp-x') { // trigger build on x86_64 node
      env.PROJECT_VERSION = "${VERSION}-stable"
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
-     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
+     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${nodeHome}/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
      deleteDir()
@@ -24,8 +25,14 @@ node ('hyp-x') { // trigger build on x86_64 node
               sh '''
                  [ -e gopath/src/github.com/hyperledger/fabric-sdk-node ] || mkdir -p $PROJECT_DIR
                  cd $PROJECT_DIR
+                 # Clone fabric-sdk-node repository
                  git clone git://cloud.hyperledger.org/mirror/fabric-sdk-node && cd fabric-sdk-node
+                 # Checkout to Branch and Apply patchset on latest commit
                  git checkout "$GERRIT_BRANCH" && git fetch origin "$GERRIT_REFSPEC" && git checkout FETCH_HEAD
+                 # Print last two commit details
+                 echo "************"
+                 git log -n2 --pretty=oneline --abbrev-commit
+                 echo "************"
               '''
               }
           }
@@ -66,10 +73,12 @@ node ('hyp-x') { // trigger build on x86_64 node
       }
 
 // Run gulp tests (headless and integration tests)
-      stage("Integration Tests") {
+      stage("Headless & Integration Tests") {
          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
+                 // Get the testFabricVersion and thirdpartyVersion from package.json
+                 // and Pull the DockerImages from dockerhub and run the Integration Tests
                  sh './CI_Script.sh --sdk_E2e_Tests'
                  }
                }
@@ -100,12 +109,14 @@ if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
            if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
-               rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
+               // Sends merge failure notifications to Jenkins-robot RocketChat Channel
+               rocketSend message: "Build Notification - STATUS: *${currentBuild.result}* - BRANCH: *${env.GERRIT_BRANCH}* - PROJECT: *${env.PROJECT}* - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
               }
            }
-      } // finally block end here
-  } // timestamps end here
-} // node block end here
+      } // finally block
+  } // timestamps block
+} // node block block
+} // timeout block
 
 def publishNpm() {
 // Publish npm modules after successful merge
