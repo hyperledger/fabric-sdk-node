@@ -24,5 +24,5 @@ git commit -m "SDK commit - $SDK_COMMIT"
 # Credentials are stored as Global Variables in Jenkins
 git config remote.gh-pages.url https://$NODE_SDK_USERNAME:$NODE_SDK_PASSWORD@github.com/$NODE_SDK_USERNAME/$TARGET_REPO
 # Push API docs to target repository
-echo "TEST CHANGE"
-#git push gh-pages master
+git push gh-pages master
+echo "---------> Check the API DOCS here https://fabric-sdk-node.github.io"

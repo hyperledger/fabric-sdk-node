@@ -6,11 +6,12 @@ timeout(40) {
 node ('hyp-x') { // trigger build on x86_64 node
   timestamps {
     try {
-     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
+     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>)
+     def nodeHome = tool 'nodejs-8.11.3'
+     env.ARCH = "amd64"
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
-     env.NODE_VER = "8.9.4"
-     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
+     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${nodeHome}/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
      deleteDir()
@@ -20,8 +21,14 @@ node ('hyp-x') { // trigger build on x86_64 node
               sh '''
                  [ -e gopath/src/github.com/hyperledger/fabric-sdk-node ] || mkdir -p $PROJECT_DIR
                  cd $PROJECT_DIR
+                 # Clone fabric-sdk-node repository
                  git clone git://cloud.hyperledger.org/mirror/fabric-sdk-node && cd fabric-sdk-node
+                 # Checkout to Branch and Apply patchset on latest commit
                  git checkout "$GERRIT_BRANCH" && git fetch origin "$GERRIT_REFSPEC" && git checkout FETCH_HEAD
+                 # Print last two commit details
+                 echo "************"
+                 git log -n2 --pretty=oneline --abbrev-commit
+                 echo "************"
               '''
               }
           }
@@ -81,14 +88,14 @@ if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
            if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
-               // Sends notification to Rocket.Chat
-               rocketSend "Build Notification - STATUS: *${currentBuild.result}* - BRANCH: *${env.GERRIT_BRANCH}* - PROJECT: *${env.PROJECT}* - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
+               // Send Merge failure notifications to Jenkins-robot RocketChat channel
+               rocketSend message: "Build Notification - STATUS: *${currentBuild.result}* - BRANCH: *${env.GERRIT_BRANCH}* - PROJECT: *${env.PROJECT}* - BUILD_URL:  (<${env.BUILD_URL}|Open>)"
               }
            }
        }
   } // timestamps block
 } // node block
-} // time block
+} // timeout block
 
 def publishNpm() {
 // Publish npm modules after successful merge

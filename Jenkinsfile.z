@@ -6,9 +6,10 @@ timeout(40) {
 node('hyp-z') {
     try {
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
+     env.NODE_VER = "8.11.3"
+     env.ARCH = "s390x" // `uname -m` 
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
-     env.NODE_VER = "8.9.4"
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
@@ -19,8 +20,14 @@ node('hyp-z') {
               sh '''
                  [ -e gopath/src/github.com/hyperledger/fabric-sdk-node ] || mkdir -p $PROJECT_DIR
                  cd $PROJECT_DIR
+                 # Clone sdk-node repository
                  git clone git://cloud.hyperledger.org/mirror/fabric-sdk-node && cd fabric-sdk-node
+                 # Checkout to Branch and Apply patchset on latest commit
                  git checkout $GERRIT_BRANCH && git fetch origin "$GERRIT_REFSPEC" && git checkout FETCH_HEAD
+                 # Print last two commit details
+                 echo "***********"
+                 git log -n2 --pretty=oneline --abbrev-commit
+                 echo "***********"
               '''
               }
           }
@@ -48,6 +55,8 @@ node('hyp-z') {
       stage("IntegrationTests") {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
+                  // Get the testFabricVersion and thirdpartyVersion from package.json
+                 // and Pull the DockerImages from dockerhub and run the Integration Tests
                  sh './CI_Script.sh --sdk_E2e_Tests'
                  }
                }
@@ -62,8 +71,8 @@ node('hyp-z') {
              archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
              if (env.JOB_NAME == "fabric-sdk-node-merge-s390x") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
-               // Sends notification to Rocket.Chat
-               rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL: (<${env.BUILD_URL}|Open>)"
+               // Sends merge failure notifications to Jenkins-robot RocketChat Channel
+               rocketSend message: "Build Notification - STATUS: *${currentBuild.result}* - BRANCH: *${env.GERRIT_BRANCH}* - PROJECT: *${env.PROJECT}* - BUILD_URL: (<${env.BUILD_URL}|Open>)"
               }
            }
        }
