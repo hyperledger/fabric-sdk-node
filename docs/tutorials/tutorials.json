@@ -24,7 +24,7 @@
 		"title": "fabric-client: How to use logging"
 	},
 	"private-data" : {
-		"title": "fabric-client: How to use private data"
+		"title": "How to use private data"
 	},
 	"sign-transaction-offline": {
 		"title": "fabric-client: How to sign a transaction with an offline private key"

@@ -2402,7 +2402,9 @@ const Channel = class {
 	 * @property {object} [transientMap] - Optional. Object with String property names
 	 *           and Buffer property values that can be used by the chaincode but not
 	 *           saved in the ledger. Data such as cryptographic information for
-	 *           encryption can be passed to the chaincode using this technique.
+	 *           encryption can be passed to the chaincode using this technique. Data
+	 *           that is to be kept in a private data store (a collection) should be
+	 *           passed to the chaincode in the transientMap.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code> in the target
 	 *           chaincode. Default is 'init'.
@@ -2611,7 +2613,9 @@ const Channel = class {
 	 * @property {object} [transientMap] - Optional. Object with String property names
 	 *           and Buffer property values that can be used by the chaincode but not
 	 *           saved in the ledger. Data such as cryptographic information for
-	 *           encryption can be passed to the chaincode using this technique.
+	 *           encryption can be passed to the chaincode using this technique. Data
+	 *           that is to be kept in a private data store (a collection) should be
+	 *           passed to the chaincode in the transientMap.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code>
 	 *           in the target chaincode. Default is 'invoke'
@@ -2880,7 +2884,9 @@ const Channel = class {
 	 * @property {object} [transientMap] - Optional. Object with String property names
 	 *           and Buffer property values that can be used by the chaincode but not
 	 *           saved in the ledger. Data such as cryptographic information for
-	 *           encryption can be passed to the chaincode using this technique.
+	 *           encryption can be passed to the chaincode using this technique. Data
+	 *           that is to be kept in a private data store (a collection) should be
+	 *           passed to the chaincode in the transientMap.
 	 */
 
 
@@ -3116,7 +3122,9 @@ const Channel = class {
 	 * @property {object} [transientMap] - Optional. Object with String property names
 	 *           and Buffer property values that can be used by the chaincode but not
 	 *           saved in the ledger. Data such as cryptographic information for
-	 *           encryption can be passed to the chaincode using this technique.
+	 *           encryption can be passed to the chaincode using this technique. Data
+	 *           that is to be kept in a private data store (a collection) should be
+	 *           passed to the chaincode in the transientMap.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code>
 	 *           in the target chaincode. Default is 'invoke'
