@@ -5,10 +5,32 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+
+export CONTAINER_LIST=(orderer peer0.org1 peer0.org2)
+
 # error check
 err_Check() {
-echo "ERROR !!!! --------> $1 <---------"
+
+echo -e "\033[31m $1" "\033[0m"
+docker images | grep hyperledger && docker ps -a
+
+# Write orderer, peer logs
+for CONTAINER in ${CONTAINER_LIST[*]}; do
+   docker logs $CONTAINER.example.com >& $CONTAINER.log
+done
+
+# Write ca logs into ca_peerOrg1.log
+docker logs ca_peerOrg1 >& ca_peerOrg1.log
+# Write ca logs into ca_peerOrg2.log
+docker logs ca_peerOrg2 >& ca_peerOrg2.log
+# Write couchdb container logs into couchdb.log file
+docker logs couchdb >& couchdb.log
+
+# Copy debug log
+cp /tmp/hfc/test-log/*.log $WORKSPACE || true
+clean_Environment
 exit 1
+
 }
 
 Parse_Arguments() {
@@ -23,11 +45,11 @@ Parse_Arguments() {
                       --sdk_E2e_Tests)
                             sdk_E2e_Tests
                             ;;
-                      --publish_Unstable)
-                            --publish_Unstable
+                      --publish_NpmModules)
+                            --publish_NpmModules
                             ;;
-                      --publish_Api_Docs)
-                            publish_Api_Docs
+                      --publish_ApiDocs)
+                            publish_ApiDocs
                             ;;
               esac
               shift
@@ -43,7 +65,6 @@ function clearContainers () {
                 echo "---- No containers available for deletion ----"
         else
                 docker rm -f $CONTAINER_IDS || true
-                docker ps -a
         fi
 }
 
@@ -61,7 +82,6 @@ function removeUnwantedImages() {
                 echo "---- No images available for deletion ----"
         else
                 docker rmi -f $DOCKER_IMAGE_IDS || true
-                docker images
         fi
 }
 
@@ -124,28 +144,21 @@ sdk_E2e_Tests() {
 
         echo "------> Run node headless & e2e tests"
         echo "============"
-        ~/npm/bin/gulp test
+        ~/npm/bin/gulp test || err_Check "ERROR!!! gulp test failed"
         echo "============"
-        if [ $? == 0 ]; then
-           # Copy Debug log to $WORKSPACE
-           cp /tmp/hfc/test-log/*.log $WORKSPACE
-        else
-           # Copy Debug log to $WORKSPACE
-           cp /tmp/hfc/test-log/*.log $WORKSPACE
-           exit 1
-        fi
 }
-# Publish unstable npm modules after successful merge on amd64
-publish_Unstable() {
+
+# Publish npm modules after successful merge on amd64
+publish_NpmModules() {
 	echo
-	echo "-----------> Publish unstable npm modules from amd64"
+        echo -e "\033[32m -----------> Publish npm modules from amd64" "\033[0m"
 	./Publish_NPM_Modules.sh
 }
 
 # Publish NODE_SDK API docs after successful merge on amd64
-publish_Api_Docs() {
+publish_ApiDocs() {
 	echo
-	echo "-----------> Publish NODE_SDK API docs after successful merge on amd64"
+        echo -e "\033[32m -----------> Publish NODE_SDK API docs after successful merge on amd64" "\033[0m"
 	./Publish_API_Docs.sh
 }
 Parse_Arguments $@

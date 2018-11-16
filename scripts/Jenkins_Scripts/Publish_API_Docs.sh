@@ -12,6 +12,8 @@ gulp doc
 SDK_COMMIT=$(git rev-parse --short HEAD)
 echo "-------> SDK_COMMIT:" $SDK_COMMIT
 TARGET_REPO=$NODE_SDK_USERNAME.github.io.git
+git config --global user.email "fabricsdknode@gmail.com"
+git config --global user.name "fabric-sdk-node"
 # Clone SDK_NODE API doc repository
 git clone https://github.com/$NODE_SDK_USERNAME/$TARGET_REPO
 # Copy API docs to target repository & push to gh-pages URL
@@ -22,5 +24,4 @@ git commit -m "SDK commit - $SDK_COMMIT"
 # Credentials are stored as Global Variables in Jenkins
 git config remote.gh-pages.url https://$NODE_SDK_USERNAME:$NODE_SDK_PASSWORD@github.com/$NODE_SDK_USERNAME/$TARGET_REPO
 # Push API docs to target repository
-echo "TEST CHANGE"
-#git push gh-pages master
+git push gh-pages master

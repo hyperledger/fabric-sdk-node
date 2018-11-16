@@ -8,7 +8,7 @@
 npmPublish() {
   if [[ "$CURRENT_TAG" = *"unstable"* ]] || [[ "$CURRENT_TAG" = *"skip"* ]]; then
       echo
-      UNSTABLE_VER=$(npm dist-tags ls "$1" | awk '/$CURRENT_TAG/{
+      UNSTABLE_VER=$(npm dist-tags ls "$1" | awk "/$CURRENT_TAG"":"/'{
       ver=$NF
       sub(/.*\./,"",rel)
       sub(/\.[[:digit:]]+$/,"",ver)
@@ -16,87 +16,77 @@ npmPublish() {
 
       echo "===> UNSTABLE VERSION --> $UNSTABLE_VER"
 
-      UNSTABLE_INCREMENT=$(npm dist-tags ls "$1" | awk '/$CURRENT_TAG/{
+      UNSTABLE_INCREMENT=$(npm dist-tags ls "$1" | awk "/$CURRENT_TAG"":"/'{
       ver=$NF
       rel=$NF
       sub(/.*\./,"",rel)
       sub(/\.[[:digit:]]+$/,"",ver)
       print ver"."rel+1}')
 
-      echo "===> Incremented UNSTABLE VERSION --> $UNSTABLE_INCREMENT
+      echo "======> Incremented UNSTABLE VERSION:" $UNSTABLE_INCREMENT
 
       # Get last digit of the unstable version of $CURRENT_TAG
       UNSTABLE_INCREMENT=$(echo $UNSTABLE_INCREMENT| rev | cut -d '.' -f 1 | rev)
-      echo "--------> UNSTABLE_INCREMENT : $UNSTABLE_INCREMENT""
+      echo "======> UNSTABLE_INCREMENT:" $UNSTABLE_INCREMENT
 
       # Append last digit with the package.json version
       export UNSTABLE_INCREMENT_VERSION=$RELEASE_VERSION.$UNSTABLE_INCREMENT
-      echo "--------> UNSTABLE_INCREMENT_VERSION" $UNSTABLE_INCREMENT_VERSION
+      echo "======> UNSTABLE_INCREMENT_VERSION:" $UNSTABLE_INCREMENT_VERSION
 
       # Replace existing version with $UNSTABLE_INCREMENT_VERSION
       sed -i 's/\(.*\"version\"\: \"\)\(.*\)/\1'$UNSTABLE_INCREMENT_VERSION\"\,'/' package.json
       npm publish --tag $CURRENT_TAG
 
   else
-      if [[ "$RELEASE" =~ alpha*|preview*|beta*|rc*|^[0-9].[0-9].[0-9]$ ]]; then
-          echo "----> Publish $RELEASE from fabric-sdk-node-npm-release-x86_64 job"
-      fi
+      # Publish node modules on latest tag
+      echo -e "\033[32m ========> PUBLISH $RELEASE_VERSION" "\033[0m"
+      npm publish --tag $CURRENT_TAG
   fi
 }
-
-##########################
-#
-# Fetch release version
-#
-##########################
 
 versions() {
 
   # Get the unstable tag from package.json
-  CURRENT_TAG=$(cat package.json | grep tag | awk -F\" '{ print $4 }')
-  echo "===> Current TAG --> $CURRENT_TAG"
+  CURRENT_TAG=$(grep '"tag":' package.json | cut -d\" -f4)
+  echo -e "\033[32m ======> Current TAG: $CURRENT_TAG" "\033[0m
 
   # Get the version from package.json
-  RELEASE_VERSION=$(cat package.json | grep version | awk -F\" '{ print $4 }')
-  echo "===> Current Version --> $RELEASE_VERSION"
-
+  RELEASE_VERSION=$(grep '"version":' package.json | cut -d\" -f4)
+  echo -e "\033[32m ======> Current Version $RELEASE_VERSION" "\033[0m"
 }
-
+############
+# START HERE
+############
 
 echo "----------> START PUBLISHING FROM HERE"
+cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
+# Set NPM_TOKEN from CI configuration
+npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 
-ARCH=$(uname -m)
-echo "----------> ARCH" $ARCH
+# Publish fabric-ca-client node module
+cd fabric-ca-client
+versions
+# Publish fabric-ca-client node module
+npmPublish fabric-ca-client
 
-if [[ "$ARCH" = "s390x" ]] || [[ "$ARCH" = "ppc64le" ]]; then
-   echo "-------> Publish npm modules only from x86_64 (x) platform, not from $ARCH (z or p) <---------"
-else
-   echo "-------> Publish npm node modules from $ARCH <----------"
-   cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
-   # Set NPM_TOKEN from CI configuration
-   npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+# Publish fabric-client node module
+cd ../fabric-client
+versions
+# Publish fabric-client node module
+npmPublish fabric-client
 
-   # Publish fabric-ca-client node module
-   cd fabric-ca-client
-   versions
-   npmPublish fabric-ca-client
+# Publish fabric-network node module
+if [ -d "../fabric-network" ]; then
+  cd ../fabric-network
+  versions
+  # Publish fabric-network node module
+  npmPublish fabric-network
+fi
 
-   # Publish fabric-client node module
-   cd ../fabric-client
-   versions
-   npmPublish fabric-client
-
-   # Publish fabric-network node module
-   if [ -d "../fabric-network" ]; then
-      cd ../fabric-network
-      versions
-      npmPublish fabric-network
-   fi
-
-   # Publish fabric-common node module
-   if [ -d "../fabric-common" ]; then
-      cd ../fabric-common
-      versions
-      npmPublish fabric-common
-   fi
+# Publish fabric-common node module
+if [ -d "../fabric-common" ]; then
+   cd ../fabric-common
+    versions
+    # Publish fabric-common node module
+    npmPublish fabric-common
 fi
