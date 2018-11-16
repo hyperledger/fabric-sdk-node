@@ -38,7 +38,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
   * run `brew install gnu-tar —-with-default-names` in order to swap out Mac's default tar command for a gnu-compliant one needed by chaincode execution on the peers
 
 * build fabric-ca docker image (new membership service)
-  * cd `$GOPATH/src/github.com/hyperledger/fabric-ca
+  * cd `$GOPATH/src/github.com/hyperledger/fabric-ca`
   * run `make docker`. For more build instructions see [fabric-ca README](https://github.com/hyperledger/fabric-ca)
 * build fabric peer and orderer docker images and other ancillary images
   * `cd $GOPATH/src/github.com/hyperledger/fabric`
