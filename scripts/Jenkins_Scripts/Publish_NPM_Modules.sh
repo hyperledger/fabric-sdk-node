@@ -18,7 +18,7 @@ elif [[ "$CURRENT_TAG" = *"unstable"* ]]; then
       sub(/\.[[:digit:]]+$/,"",ver)
       print ver}')
 
-      echo "===> UNSTABLE VERSION --> $UNSTABLE_VER"
+      echo "======> UNSTABLE VERSION --> $UNSTABLE_VER"
 ## Increment unstable version here
       UNSTABLE_INCREMENT=$(npm dist-tags ls "$1" | awk "/$CURRENT_TAG"":"/'{
       ver=$NF
@@ -27,15 +27,15 @@ elif [[ "$CURRENT_TAG" = *"unstable"* ]]; then
       sub(/\.[[:digit:]]+$/,"",ver)
       print ver"."rel+1}')
 
-      echo "===> Incremented UNSTABLE VERSION --> $UNSTABLE_INCREMENT
+      echo "======> Incremented UNSTABLE VERSION --> $UNSTABLE_INCREMENT
 
       # Get last digit of the unstable version of $CURRENT_TAG
       UNSTABLE_INCREMENT=$(echo $UNSTABLE_INCREMENT| rev | cut -d '.' -f 1 | rev)
-      echo "--------> UNSTABLE_INCREMENT : $UNSTABLE_INCREMENT""
+      echo "======> UNSTABLE_INCREMENT : $UNSTABLE_INCREMENT""
 
       # Append last digit with the package.json version
       export UNSTABLE_INCREMENT_VERSION=$RELEASE_VERSION.$UNSTABLE_INCREMENT
-      echo "--------> UNSTABLE_INCREMENT_VERSION" $UNSTABLE_INCREMENT_VERSION
+      echo "======> UNSTABLE_INCREMENT_VERSION" $UNSTABLE_INCREMENT_VERSION
 
       # Replace existing version with $UNSTABLE_INCREMENT_VERSION
       sed -i 's/\(.*\"version\"\: \"\)\(.*\)/\1'$UNSTABLE_INCREMENT_VERSION\"\,'/' package.json
@@ -43,30 +43,26 @@ elif [[ "$CURRENT_TAG" = *"unstable"* ]]; then
 
   else
       # Publish node modules on latest tag
-      echo -e "\033[32m ========> PUBLISH --> $RELEASE_VERSION" "\033[0m"
+      echo -e "\033[32m ========> PUBLISH: $RELEASE_VERSION" "\033[0m"
       npm publish --tag $CURRENT_TAG
   fi
 }
 
-##########################
-#
-# Fetch release version
-#
-##########################
-
 versions() {
 
   # Get the value of the tag from package.json
-  CURRENT_TAG=$(cat package.json | grep tag | awk -F\" '{ print $4 }')
-  echo -e "\033[32m ===> Current TAG --> $CURRENT_TAG" "\033[0m"
+  CURRENT_TAG=$(grep '"tag":' package.json | cut -d\" -f4)
+  echo -e "\033[32m =======> Current TAG: $CURRENT_TAG" "\033[0m"
 
   # Get the version from package.json
-  RELEASE_VERSION=$(cat package.json | grep version | awk -F\" '{ print $4 }')
-  echo -e "\033[32m ===> Current Version --> $RELEASE_VERSION" "\033[0m"
+  RELEASE_VERSION=$(grep '"version":' package.json | cut -d\" -f4)
+  echo -e "\033[32m ======> Current Version: $RELEASE_VERSION" "\033[0m"
 
 }
 
-echo "-------> Publish npm node modules<----------"
+############
+# START HERE
+############
 
 cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
 # Set NPM_TOKEN from CI configuration

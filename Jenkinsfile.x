@@ -6,22 +6,27 @@ timeout(40) {
 node ('hyp-x') { // trigger build on x86_64 node
   timestamps {
     try {
-     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
+     def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>)
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
-     env.NODE_VER = "8.11.3"
-     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
+     env.ARCH = "amd64"
+     def nodeHome = tool 'nodejs-8.11.3'
+     env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${nodeHome}/bin:$PATH"
      def failure_stage = "none"
 // delete working directory
      deleteDir()
       stage("Fetch Patchset") { // fetch gerrit refspec on latest commit
           try {
-              dir("${ROOTDIR}"){
+              dir("${ROOTDIR}") {
               sh '''
                  [ -e gopath/src/github.com/hyperledger/fabric-sdk-node ] || mkdir -p $PROJECT_DIR
                  cd $PROJECT_DIR
+                 # Clone fabric-sdk-node repository
                  git clone git://cloud.hyperledger.org/mirror/fabric-sdk-node && cd fabric-sdk-node
+                 # Checkout to Branch and Apply patchset on latest commit
                  git checkout "$GERRIT_BRANCH" && git fetch origin "$GERRIT_REFSPEC" && git checkout FETCH_HEAD
+                 # Print last commit details
+                 git log -n2 --pretty=oneline --abbrev-commit
               '''
               }
           }
@@ -48,10 +53,12 @@ node ('hyp-x') { // trigger build on x86_64 node
          }
 
 // Run gulp tests (headless and Integration tests)
-      stage("Integration Tests") {
+      stage("Run Headless & Integration Tests") {
          wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
            try {
                  dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
+                 // Get the testFabricVersion and thirdpartyVersion from package.json
+                 // and Pull the DockerImages from dockerhub and run the Integration Tests
                  sh './CI_Script.sh --sdk_E2e_Tests'
                  }
                }
@@ -64,24 +71,24 @@ node ('hyp-x') { // trigger build on x86_64 node
       }
 
 // Publish npm modules from merge job
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
+if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
     publishNpm()
 }  else {
      echo "------> Don't publish npm modules from VERIFY job"
    }
 
 // Publish API Docs from merged job only
-if (env.GERRIT_EVENT_TYPE == "change-merged") {
+if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
     apiDocs()
 } else {
-     echo "------> Don't publish API Docs from verify job"
+     echo "------> Don't publish API Docs from VERIFY job"
    }
     } finally { // Code for coverage report
            step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, failNoReports: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.log'
-           if (env.GERRIT_EVENT_TYPE == "change-merged") {
+           if (env.JOB_NAME == "fabric-sdk-node-merge-x86_64") {
               if (currentBuild.result == 'FAILURE') { // Other values: SUCCESS, UNSTABLE
-               rocketSend "Build Notification - STATUS: ${currentBuild.result} - BRANCH: ${env.GERRIT_BRANCH} - PROJECT: ${env.PROJECT} - BUILD_URL - (<${env.BUILD_URL}|Open>)"
+               rocketSend message: "Build Notification - STATUS: *${currentBuild.result}* - BRANCH: *${env.GERRIT_BRANCH}* - PROJECT: *${env.PROJECT}* - BUILD_URL - (<${env.BUILD_URL}|Open>)"
               }
            }
       } // finally block end here

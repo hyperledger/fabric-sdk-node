@@ -12,8 +12,8 @@ gulp doc
 SDK_COMMIT=$(git rev-parse --short HEAD)
 echo "-------> SDK_COMMIT:" $SDK_COMMIT
 TARGET_REPO=$NODE_SDK_USERNAME.github.io.git
-git config user.email "fabricsdknode@gmail.com"
-git config user.name "fabric-sdk-node"
+git config --global user.email "fabricsdknode@gmail.com"
+git config --global user.name "fabric-sdk-node"
 # Clone SDK_NODE API doc repository
 git clone https://github.com/$NODE_SDK_USERNAME/$TARGET_REPO
 # Copy API docs to target repository & push to gh-pages URL
