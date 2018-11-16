@@ -3,10 +3,13 @@ This tutorial illustrates how to use the Node.js SDK APIs to store and retrieve 
 
 Starting in v1.2, Fabric offers the ability to create private data collections, which allows a subset of organizations on
 a channel to endorse, commit, or query private data without having to create a separate channel.For more information,
-refer to [Private Data Concept](
-http://hyperledger-fabric.readthedocs.io/en/latest/private-data/private-data.html), [Private Data Architecture](
-http://hyperledger-fabric.readthedocs.io/en/latest/private-data-arch.html), and [Using Private Data in Fabric](
-http://hyperledger-fabric.readthedocs.io/en/latest/private_data_tutorial.html).
+refer to:
+
+[Private Data Concept](http://hyperledger-fabric.readthedocs.io/en/latest/private-data/private-data.html) 
+
+[Private Data Architecture](http://hyperledger-fabric.readthedocs.io/en/latest/private-data-arch.html)
+
+[Using Private Data in Fabric](http://hyperledger-fabric.readthedocs.io/en/latest/private_data_tutorial.html)
 
 ### Overview
 The following are the steps to use private data with the Node.js SDK. Check out below sections for the details of these steps.
@@ -154,3 +157,36 @@ and transacting parties want to have a limited lifespan for these data.
 
 When `blockToLive` is set to a non-zero value in the collection definition file, Fabric will automatically purge the related
 private data after the specified number of blocks are committed. Client applications do not need to call any API.
+
+### How to build a Transaction proposal
+The client application must put all private data into the transient
+data of the proposal request if the application wishes to keep
+the data private. Transient data is not returned in the
+endorsement results, only the hash of the transient data is
+returned in the endorsement created by the peer.
+The chaincode executed during the endorsement will be responsible
+for pulling the private data from the transient area of the proposal
+request and then work with the private data store of the peer.
+
+```
+// private data
+const transient_data = {
+  'marblename': Buffer.from('marble1') // string <-> byte[]
+  'color': Buffer.from('red') // string <-> byte[]
+  'owner': Buffer.from('John') // string <-> byte[]
+  'size': Buffer.from('85') // string <-> byte[]
+  'price': Buffer.from('99') // string <-> byte[]
+};
+const tx_id = client.newTransactionID();
+const request = {
+  chaincodeId : chaincodeId,
+  txId: tx_id,
+  fcn: 'initMarble',
+  args: [], // all data is transient data
+  tranientMap: transient_data // private data
+};
+
+// results will not contain the private data
+const results = await channel.sendTransactionProposal(request);
+```
+
