@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # Copyright IBM Corp All Rights Reserved
 #
@@ -147,7 +147,7 @@ fi
 # run sdk e2e tests
 sdk_E2e_Tests() {
 
-        cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-chaincode-node
+        cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node
 
         # Install NPM before start the tests
         install_Npm

@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Copyright IBM Corp All Rights Reserved
 #
@@ -43,19 +43,21 @@ elif [[ "$CURRENT_TAG" = *"unstable"* ]]; then
       # Publish unstable versions to npm registry
       npm publish --tag $CURRENT_TAG
       if [ $? != 0 ]; then
-           echo -e "\033[31m FAILED to Publish $CURRENT_TAG of $1 npm module" "\033[0m"
+           echo -e "\033[31m FAILED to Publish $CURRENT_TAG tag of $1 npm module" "\033[0m"
+           cp /home/jenkins/.npm/_logs/*.log $WORKSPACE
            exit 1
       fi
-      echo -e "\033[32m ========> PUBLISHED $CURRENT_TAG of $1 npm module SUCCESSFULLY" "\033[0m"
+      echo -e "\033[32m ========> PUBLISHED $CURRENT_TAG tag of $1 npm module SUCCESSFULLY" "\033[0m"
 
 else
       echo -e "\033[32m ========> READY to PUBLISH $RELEASE_VERSION of $1 npm module" "\033[0m"
       npm publish --tag $CURRENT_TAG
       if [ $? != 0 ]; then
-           echo -e "\033[31m FAILED TO PUBLISH $CURRENT_TAG of $1 npm module" "\033[0m"
+           echo -e "\033[31m FAILED TO PUBLISH $CURRENT_TAG tag of $1 npm module" "\033[0m"
+           cp /home/jenkins/.npm/_logs/*.log $WORKSPACE
            exit 1
       fi
-      echo -e "\033[32m ========> PUBLISHED $CURRENT_TAG of $1 npm module SUCCESSFULLY" "\033[0m"
+      echo -e "\033[32m ========> PUBLISHED $CURRENT_TAG tag of $1 npm module SUCCESSFULLY" "\033[0m"
 fi
 }
 
@@ -80,12 +82,13 @@ cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
 # Set NPM_TOKEN from CI configuration
 npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 
-# Publish fabric-ca-client node module
-cd fabric-ca-client
-versions
-npmPublish fabric-ca-client
-
-# Publish fabric-client node module
-cd ../fabric-client
-versions
-npmPublish fabric-client
+# Add or delete node modules here
+for modules in fabric-client fabric-ca-client; do
+   if [ -d "$modules" ]; then
+           echo -e "\033[32m Publishing $modules" "\033[0m"
+           cd $modules
+           versions
+           npmPublish $modules
+           cd -
+   fi
+done
