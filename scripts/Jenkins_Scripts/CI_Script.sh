@@ -11,7 +11,6 @@ export CONTAINER_LIST=(orderer peer0.org1 peer0.org2)
 err_Check() {
 
 echo -e "\033[31m $1" "\033[0m"
-docker images | grep hyperledger && docker ps -a
 
 # Write orderer, peer logs
 for CONTAINER in ${CONTAINER_LIST[*]}; do
@@ -28,6 +27,7 @@ docker logs couchdb >& couchdb.log
 # Copy debug log
 cp /tmp/hfc/test-log/*.log $WORKSPACE || true
 clean_Environment
+docker images | grep hyperledger && docker ps -a
 exit 1
 
 }
@@ -154,7 +154,7 @@ fi
 # run sdk e2e tests
 sdk_E2e_Tests() {
 
-        cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-chaincode-node
+        cd ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node
 
         # Install NPM before start the tests
         install_Npm
