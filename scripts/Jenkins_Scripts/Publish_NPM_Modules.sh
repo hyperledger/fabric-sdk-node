@@ -8,7 +8,7 @@
 npmPublish() {
 
  if [[ "$CURRENT_TAG" = *"skip"* ]]; then
-     echo "----> Don't publish npm modules on skip tag"
+     echo "----> Don't publish $1 npm modules on skip tag"
  elif [[ "$CURRENT_TAG" = *"unstable"* ]]; then
       echo
       UNSTABLE_VER=$(npm dist-tags ls "$1" | awk "/$CURRENT_TAG"":"/'{
@@ -45,7 +45,7 @@ npmPublish() {
            echo -e "\033[31m FAILED to Publish $CURRENT_TAG of $1 npm module" "\033[0m"
            exit 1
       fi
-      echo -e "\033[32m ========> PUBLISHED $CURRENT_TAG of $1 npm module SUCCESSFULLY" "\033[0m"
+      echo -e "\033[32m ========> PUBLISHED $CURRENT_TAG tag of $1 npm module SUCCESSFULLY" "\033[0m"
 
  else
       # Publish node modules on latest tag
@@ -55,14 +55,14 @@ npmPublish() {
            echo -e "\033[31m FAILED TO PUBLISH $CURRENT_TAG of $1 npm module" "\033[0m"
            exit 1
       fi
-      echo -e "\033[32m ========> PUBLISHED $CURRENT_TAG of $1 npm module SUCCESSFULLY" "\033[0m"
+      echo -e "\033[32m ========> PUBLISHED $CURRENT_TAG tag of $1 npm module SUCCESSFULLY" "\033[0m"
  fi
 }
 
 versions() {
  # Get the unstable tag from package.json
   CURRENT_TAG=$(grep '"tag":' package.json | cut -d\" -f4)
-  echo -e "\033[32m ======> Current TAG: $CURRENT_TAG" "\033[0m
+  echo -e "\033[32m ======> Current TAG: $CURRENT_TAG" "\033[0m"
 
   # Get the version from package.json
   RELEASE_VERSION=$(grep '"version":' package.json | cut -d\" -f4)
@@ -78,26 +78,13 @@ cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
 # Set NPM_TOKEN from CI configuration
 npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 
-# Publish fabric-ca-client node module
-cd fabric-ca-client
-versions
-npmPublish fabric-ca-client
-
-# Publish fabric-client node module
-cd ../fabric-client
-versions
-npmPublish fabric-client
-
-# Publish fabric-network node module
-if [ -d "../fabric-network" ]; then
-    cd ../fabric-network
-    versions
-    npmPublish fabric-network
-fi
-
-# Publish fabric-common node module
-if [ -d "../fabric-common" ]; then
-    cd ../fabric-common
-    versions
-     npmPublish fabric-common
-fi
+# Add or delete modules from here.. 
+for modules in fabric-network fabric-common fabric-ca-client fabric-client; do
+     if [ -d "$modules" ]; then
+           echo -e "\033[32m Publishing $modules" "\033[0m"
+           cd $modules
+           versions
+          npmPublish $modules
+          cd -
+     fi
+done
