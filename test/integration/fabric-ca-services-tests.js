@@ -59,14 +59,7 @@ const tlsOptions = {
 
 test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 	testUtil.resetDefaults();
-	FabricCAServices.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
-	ORGS = FabricCAServices.getConfigSetting('test-network');
-	fabricCAEndpoint = ORGS[userOrg].ca.url;
-
-	FabricCAServices.getConfigSetting('crypto-keysize', '256');// force for gulp test
-	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2');// force for gulp test
-
-	const caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
+	const caService = getFabricCAService(userOrg);
 
 	const req = {
 		enrollmentID: 'admin',
@@ -398,18 +391,73 @@ test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', (t) => {
 		});
 });
 
-// function savePem(pem) {
-// 	logger.info(' saving  :: %j',pem);
-// 	let file_path = path.join(__dirname, '../attribute.pem');
-// 	fs.writeFileSync(file_path, pem);
-// }
-//
-// function readPem() {
-// 	logger.info(' reading pem');
-// 	let file_path = path.join(__dirname, '../attribute.pem');
-// 	var pem = fs.readFileSync(file_path);
-// 	return pem;
-// }
+test('\n\n ** FabricCAClient: Test enroll With a Signed CSR **\n\n', async (t) => {
+	try {
+		testUtil.resetDefaults();
+		const caService = getFabricCAService();
+		const admin = await enrollAdminTest(caService, t);
+
+		const newUser = {
+			enrollmentID: 'aTestUser',
+			maxEnrollments: -1,
+			enrollmentSecret: 'userpw',
+		};
+		await caService.register(newUser, admin);
+
+		const myCsr = fs.readFileSync(path.resolve(__dirname, '../fixtures/fabricca/test.csr'), 'utf8');
+
+		const req = {
+			enrollmentID: newUser.enrollmentID,
+			enrollmentSecret: newUser.enrollmentSecret,
+			csr: myCsr,
+		};
+
+		const enrollment = await caService.enroll(req);
+		t.pass('Successfully get enrollment by csr');
+
+		// check that we got back the expected certificate
+		let subject;
+		try {
+			subject = X509.getSubject(FabricCAServices.normalizeX509(enrollment.certificate));
+		} catch (err) {
+			t.fail(util.format('Failed to parse enrollment cert\n%s\n. Error: %s', enrollment.certificate, err));
+		}
+
+		t.equal(subject.commonName, req.enrollmentID, 'Subject should be /CN=' + req.enrollmentID);
+		t.pass('Successfully tested enroll with csr');
+	} catch (error) {
+		t.fail(error.message);
+		t.end();
+	}
+});
+
+function getFabricCAService() {
+	FabricCAServices.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
+	ORGS = FabricCAServices.getConfigSetting('test-network');
+	fabricCAEndpoint = ORGS[userOrg].ca.url;
+
+	FabricCAServices.getConfigSetting('crypto-keysize', '256');// force for gulp test
+	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2');// force for gulp test
+
+	return new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
+}
+
+async function enrollAdminTest(caService, t) {
+	try {
+		const req = {
+			enrollmentID: 'admin',
+			enrollmentSecret: 'adminpw'
+		};
+		const enrollment = await caService.enroll(req);
+		const admin = new User('admin1');
+		await admin.setEnrollment(enrollment.key, enrollment.certificate, 'Org1MSP');
+		t.pass('Successfully enrolled admin');
+		return admin;
+	} catch (error) {
+		t.fail(error.message);
+		t.end();
+	}
+}
 
 async function timeOutTest(signingIdentity, t) {
 	const CONNECTION_TIMEOUT = FabricCAServices.getConfigSetting('connection-timeout');

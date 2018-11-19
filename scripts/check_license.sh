@@ -29,6 +29,7 @@ function filterExcludedFiles {
 		| grep -v "\.gradle$" \
 		| grep -v "\.cds$" \
 		| grep -v "\.jar$" \
+		| grep -v "\.csr$" \
 		| sort -u`
 }
 

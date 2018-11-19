@@ -145,6 +145,8 @@ const FabricCAServices = class extends BaseClient {
 	 * @property {string} enrollmentSecret - The secret associated with the enrollment ID
 	 * @property {string} profile - The profile name.  Specify the 'tls' profile for a TLS certificate;
 	 *                   otherwise, an enrollment certificate is issued.
+	 * @property {Buffer} csr - Optional. Certificate Signing Request. The message sent from client side to
+	 *                   Fabric-ca for the digital identity certificate.
 	 * @property {AttributeRequest[]} attr_reqs - An array of {@link AttributeRequest}
 	 */
 
@@ -153,76 +155,80 @@ const FabricCAServices = class extends BaseClient {
 	 * @param req the {@link EnrollmentRequest}
 	 * @returns Promise for an object with "key" for private key and "certificate" for the signed certificate
 	 */
-	enroll(req) {
-		const self = this;
+	async enroll(req) {
+		if (!req) {
+			logger.error('enroll() missing required argument "request"');
+			throw new Error('Missing required argument "request"');
+		}
 
-		return new Promise((resolve, reject) => {
-			if (!req) {
-				logger.error('enroll() missing required argument "request"');
-				return reject(new Error('Missing required argument "request"'));
-			}
-			if (!req.enrollmentID) {
-				logger.error('Invalid enroll request, missing enrollmentID');
-				return reject(new Error('req.enrollmentID is not set'));
-			}
+		if (!req.enrollmentID) {
+			logger.error('Invalid enroll request, missing enrollmentID');
+			throw new Error('req.enrollmentID is not set');
+		}
 
-			if (!req.enrollmentSecret) {
-				logger.error('Invalid enroll request, missing enrollmentSecret');
-				return reject(new Error('req.enrollmentSecret is not set'));
-			}
+		if (!req.enrollmentSecret) {
+			logger.error('Invalid enroll request, missing enrollmentSecret');
+			throw new Error('req.enrollmentSecret is not set');
+		}
 
-			if (req.attr_reqs) {
-				if (!Array.isArray(req.attr_reqs)) {
-					logger.error('Invalid enroll request, attr_reqs must be an array of AttributeRequest objects');
-					return reject(new Error('req.attr_reqs is not an array'));
-				} else {
-					for (const i in req.attr_reqs) {
-						const attr_req = req.attr_reqs[i];
-						if (!attr_req.name) {
-							logger.error('Invalid enroll request, attr_reqs object is missing the name of the attribute');
-							return reject(new Error('req.att_regs is missing the attribute name'));
-						}
+		if (req.attr_reqs) {
+			if (!Array.isArray(req.attr_reqs)) {
+				logger.error('Invalid enroll request, attr_reqs must be an array of AttributeRequest objects');
+				throw new Error('req.attr_reqs is not an array');
+			} else {
+				for (const i in req.attr_reqs) {
+					const attr_req = req.attr_reqs[i];
+					if (!attr_req.name) {
+						logger.error('Invalid enroll request, attr_reqs object is missing the name of the attribute');
+						throw new Error('req.att_regs is missing the attribute name');
 					}
 				}
 			}
+		}
 
-			// generate enrollment certificate pair for signing
-			let opts;
-			if (self.getCryptoSuite()._cryptoKeyStore) {
-				opts = {ephemeral: false};
+		let opts;
+		if (this.getCryptoSuite()._cryptoKeyStore) {
+			opts = {ephemeral: false};
+		} else {
+			opts = {ephemeral: true};
+		}
+
+		try {
+			let csr;
+			let privateKey;
+			if (req.csr) {
+				logger.debug('try to enroll with a csr');
+				csr = req.csr;
 			} else {
-				opts = {ephemeral: true};
+				try {
+					privateKey = await this.getCryptoSuite().generateKey(opts);
+					logger.debug('successfully generated key pairs');
+				} catch (err) {
+					throw new Error(util.format('Failed to generate key for enrollment due to error [%s]', err));
+				}
+				try {
+					csr = privateKey.generateCSR('CN=' + req.enrollmentID);
+					logger.debug('successfully generated csr');
+				} catch (err) {
+					throw new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err));
+				}
 			}
-			self.getCryptoSuite().generateKey(opts)
-				.then(
-					(privateKey) => {
-						// generate CSR using enrollmentID for the subject
-						try {
-							const csr = privateKey.generateCSR('CN=' + req.enrollmentID);
-							self._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.profile, req.attr_reqs)
-								.then(
-									(enrollResponse) => {
-										return resolve({
-											key: privateKey,
-											certificate: enrollResponse.enrollmentCert,
-											rootCertificate: enrollResponse.caCertChain
-										});
-									},
-									(err) => {
-										return reject(err);
-									}
-								);
 
-						} catch (err) {
-							return reject(new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err)));
-						}
-					},
-					(err) => {
-						return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]', err)));
-					}
-				);
+			const enrollResponse = await this._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.profile, req.attr_reqs);
+			logger.debug('successfully enrolled %s', req.enrollmentID);
 
-		});
+			const enrollment = {
+				certificate: enrollResponse.enrollmentCert,
+				rootCertificate: enrollResponse.caCertChain,
+			};
+			if (!req.csr) {
+				enrollment.key = privateKey;
+			}
+			return enrollment;
+		} catch (error) {
+			logger.error('Failed to enroll %s, error:%o', req.enrollmentID, error);
+			throw error;
+		}
 	}
 
 	/**
