@@ -12,7 +12,7 @@ import * as util from 'util';
 import FabricCAServices = require('fabric-ca-client');
 import Client = require('fabric-client');
 
-import utils = require('fabric-client/lib/utils.js');
+import utils = require('fabric-client/lib/utils');
 const logger = utils.getLogger('connection profile');
 
 import { IEnrollmentRequest } from 'fabric-ca-client';
@@ -49,7 +49,7 @@ const configOrg1: string = path.resolve(__dirname, '../fixtures/org1.yaml');
 const configOrg2: string = path.resolve(__dirname, '../fixtures/org2.yaml');
 const channelName: string = 'mychannelts';
 
-test('\n\n ** test TypeScript **', (t) => {
+test('\n\n ** test TypeScript **', (t: any) => {
 	const client: Client = new Client();
 	t.equal(client.constructor.name, 'Client');
 
@@ -78,25 +78,25 @@ test('\n\n ** test TypeScript **', (t) => {
 	t.end();
 });
 
-test('test-crypto-key-store', (t) => {
+test('test-crypto-key-store', (t: any) => {
 	const store: ICryptoKeyStore = Client.newCryptoKeyStore();
 	const cryptoSuite: ICryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(store);
 	t.end();
 });
 
-test('use the connection profile file', (t) => {
+test('use the connection profile file', (t: any) => {
 	let client = Client.loadFromConfig(configNetwork);
 	t.pass('Successfully load config from network.yaml');
 
 	client.loadFromConfig(configOrg1);
 
-	let config = null;
-	const signatures = [];
-	let channel: Channel = null;
-	let genesisBlock: any = null;
-	let instansiateTxId: TransactionId = null;
-	let queryTxId: string = null;
+	let config: Buffer;
+	const signatures: any[] = [];
+	let channel: Channel;
+	let genesisBlock: any;
+	let instansiateTxId: TransactionId;
+	let queryTxId: string;
 
 	client.initCredentialStores()
 		.then(() => {
@@ -476,7 +476,7 @@ test('use the connection profile file', (t) => {
 			return Promise.all(promises);
 		}).then((results) => {
 			const eventResults = results[0]; // Promise all will return the results in order of the of Array
-			const sendTransactionResults = results[1];
+			const sendTransactionResults = results[1] as Client.BroadcastResponse;
 			if (sendTransactionResults instanceof Error) {
 				t.fail('Failed to order the transaction: ' + sendTransactionResults);
 				throw sendTransactionResults;
@@ -721,6 +721,6 @@ test('use the connection profile file', (t) => {
 		});
 });
 
-function sleep(ms) {
+function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }

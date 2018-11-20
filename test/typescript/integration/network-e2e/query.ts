@@ -53,7 +53,7 @@ async function createWallet(t: any, filePath: string): Promise<Wallet> {
 	return fileSystemWallet;
 }
 
-async function deleteWallet(filePath): Promise<void> {
+async function deleteWallet(filePath: string): Promise<void> {
 	const rimRafPromise = new Promise((resolve) => {
 		rimraf(filePath, (err: Error) => {
 			if (err) {
@@ -73,7 +73,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction to get information
 	try {
 		const wallet = await createWallet(t, tmpdir);
 		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
-		const ccpObject: object = JSON.parse(ccp.toString());
+		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
 			clientTlsIdentity: tlsLabel,
@@ -128,7 +128,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with transient dat
 	try {
 		const wallet = await createWallet(t, tmpdir);
 		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
-		const ccpObject: object = JSON.parse(ccp.toString());
+		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
 			clientTlsIdentity: tlsLabel,
@@ -154,7 +154,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with transient dat
 		const response = await transaction.setTransient(transientMap).evaluate();
 
 		t.pass('Got response: ' + response.toString('utf8'));
-		const result: object = JSON.parse(response.toString('utf8'));
+		const result = JSON.parse(response.toString('utf8'));
 
 		let success = true;
 
@@ -193,7 +193,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with empty string 
 	try {
 		const wallet = await createWallet(t, tmpdir);
 		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
-		const ccpObject: object = JSON.parse(ccp.toString());
+		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
 			clientTlsIdentity: tlsLabel,

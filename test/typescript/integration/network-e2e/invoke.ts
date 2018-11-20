@@ -96,7 +96,7 @@ test('\n\n***** Network End-to-end flow: import identity into wallet and configu
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and default event strategy with discovery *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
-	let org1EventHub: ChannelEventHub;
+	let org1EventHub: ChannelEventHub | undefined;
 
 	try {
 		const contract = await createContract(t, gateway, {
@@ -137,7 +137,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org1EventHub && org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
 	}
 
 	t.end();
@@ -145,7 +145,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 test('\n\n***** Network End-to-end flow: invoke multiple transactions to move money using in memory wallet and default event strategy *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
-	let org1EventHub: ChannelEventHub;
+	let org1EventHub: ChannelEventHub | undefined;
 
 	try {
 		const contract = await createContract(t, gateway, {
@@ -211,7 +211,7 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org1EventHub && org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
 	}
 
 	t.end();
@@ -219,7 +219,7 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and MSPID_SCOPE_ALLFORTX event strategy *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
-	let org1EventHub: ChannelEventHub;
+	let org1EventHub: ChannelEventHub | undefined;
 
 	try {
 		const contract = await createContract(t, gateway, {
@@ -265,7 +265,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org1EventHub && org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
 	}
 
 	t.end();
@@ -273,7 +273,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and MSPID_SCOPE_ANYFORTX event strategy *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
-	let org1EventHub: ChannelEventHub;
+	let org1EventHub: ChannelEventHub | undefined;
 
 	try {
 		const contract = await createContract(t, gateway, {
@@ -319,7 +319,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org1EventHub && org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
 	}
 
 	t.end();
@@ -327,8 +327,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ALLFORTX event strategy *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
-	let org1EventHub: ChannelEventHub;
-	let org2EventHub: ChannelEventHub;
+	let org1EventHub: ChannelEventHub | undefined;
+	let org2EventHub: ChannelEventHub | undefined;
 
 	try {
 		const contract = await createContract(t, gateway, {
@@ -346,7 +346,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transaction = contract.createTransaction('move');
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
-		// Obtain the event hubs that that will be used by the underlying implementation
+		// Obtain an event hub that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
@@ -383,8 +383,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
-		t.false(org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
+		t.false(org1EventHub && org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org2EventHub && org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
 	}
 
 	t.end();
@@ -392,8 +392,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ALLFORTX event strategy with discovery *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
-	let org1EventHub: ChannelEventHub;
-	let org2EventHub: ChannelEventHub;
+	let org1EventHub: ChannelEventHub | undefined;
+	let org2EventHub: ChannelEventHub | undefined;
 
 	try {
 		const contract = await createContract(t, gateway, {
@@ -408,7 +408,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transaction = contract.createTransaction('move');
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
-		// Obtain the event hubs that that will be used by the underlying implementation
+		// Obtain an event hub that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
@@ -445,8 +445,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
-		t.false(org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
+		t.false(org1EventHub && org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org2EventHub && org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
 	}
 
 	t.end();
@@ -454,8 +454,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ANYFORTX event strategy *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
-	let org1EventHub: ChannelEventHub;
-	let org2EventHub: ChannelEventHub;
+	let org1EventHub: ChannelEventHub | undefined;
+	let org2EventHub: ChannelEventHub | undefined;
 
 	try {
 		const contract = await createContract(t, gateway, {
@@ -473,7 +473,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transaction = contract.createTransaction('move');
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
-		// Obtain the event hubs that that will be used by the underlying implementation
+		// Obtain an event hub that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
@@ -513,8 +513,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
-		t.false(org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
+		t.false(org1EventHub && org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org2EventHub && org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
 	}
 
 	t.end();
@@ -522,8 +522,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ANYFORTX event strategy with discovery *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
-	let org1EventHub: ChannelEventHub;
-	let org2EventHub: ChannelEventHub;
+	let org1EventHub: ChannelEventHub | undefined;
+	let org2EventHub: ChannelEventHub | undefined;
 
 	try {
 		const contract = await createContract(t, gateway, {
@@ -538,7 +538,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transaction = contract.createTransaction('move');
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
-		// Obtain the event hubs that that will be used by the underlying implementation
+		// Obtain an event hub that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
 		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
 
@@ -577,8 +577,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
-		t.false(org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
+		t.false(org1EventHub && org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
+		t.false(org2EventHub && org2EventHub.isconnected(), 'org2 event hub correctly been disconnected');
 	}
 
 	t.end();
@@ -637,7 +637,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction with transient data 
 		};
 		const response = await transaction.setTransient(transientMap).submit();
 		t.pass('Got response: ' + response.toString('utf8'));
-		const result: object = JSON.parse(response.toString('utf8'));
+		const result = JSON.parse(response.toString('utf8'));
 
 		let success = true;
 
