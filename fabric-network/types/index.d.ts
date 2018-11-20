@@ -4,108 +4,139 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { User, Channel, ChannelPeer } from 'fabric-client';
+/* tslint:disable:max-classes-per-file */
+
+import { Channel, ChannelPeer, TransactionId, User } from 'fabric-client';
 
 import Client = require('fabric-client');
-
 
 //-------------------------------------------
 // Main fabric network classes
 //-------------------------------------------
-export interface InitOptions {
+export interface GatewayOptions {
 	wallet: Wallet;
 	identity: string;
 	clientTlsIdentity?: string;
-	eventHandlerOptions?: DefaultEventHandlerOptions|Object;
+	discovery?: DiscoveryOptions;
+	eventHandlerOptions?: DefaultEventHandlerOptions;
+}
+
+export interface DiscoveryOptions {
+	enabled?: boolean;
 }
 
 export interface DefaultEventHandlerOptions {
 	commitTimeout?: number;
-	strategy?: DefaultEventHandlerStrategies;
+	strategy?: TxEventHandlerFactory | null;
 }
 
-export enum DefaultEventHandlerStrategies {
-	MSPID_SCOPE_ALLFORTX,
-	MSPID_SCOPE_ANYFORTX,
-	NETWORK_SCOPE_ALLFORTX,
-	NETWORK_SCOPE_ANYFORTX
+export class DefaultEventHandlerStrategies {
+	public static MSPID_SCOPE_ALLFORTX: TxEventHandlerFactory;
+	public static MSPID_SCOPE_ANYFORTX: TxEventHandlerFactory;
+	public static NETWORK_SCOPE_ALLFORTX: TxEventHandlerFactory;
+	public static NETWORK_SCOPE_ANYFORTX: TxEventHandlerFactory;
+}
+
+export type TxEventHandlerFactory = (transactionId: TransactionId, network: Network, options: object) => TxEventHandler;
+
+export interface TxEventHandler {
+	startListening(): Promise<void>;
+	waitForEvents(): Promise<void>;
+	cancelListening(): void;
 }
 
 export class Gateway {
 	constructor();
-	connect(ccp: string | Client, options?: InitOptions): Promise<void>;
-	getCurrentIdentity(): User;
-	getClient(): Client;
-	getOptions(): InitOptions;
-	getNetwork(channelName: string): Promise<Network>;
-	disconnect(): void;
+	public connect(config: Client | string | object, options: GatewayOptions): Promise<void>;
+	public disconnect(): void;
+	public getClient(): Client;
+	public getCurrentIdentity(): User;
+	public getNetwork(channelName: string): Promise<Network>;
+	public getOptions(): GatewayOptions;
 }
 
 export class Network {
-	getChannel(): Channel;
-	getPeerMap(): Map<string, ChannelPeer[]>;
-	getContract(chaincodeId: string): Contract;
+	public getChannel(): Channel;
+	public getContract(chaincodeId: string, namespace?: string): Contract;
 }
 
 export class Contract {
-	evaluateTransaction(transactionName: string, ...parameters: string[]): Promise<Buffer>;
-	submitTransaction(transactionName: string, ...parameters: string[]): Promise<Buffer>;
+	public createTransaction(name: string): Transaction;
+	public evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
+	public submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
+}
+
+export interface TransientMap {
+	[key: string]: Buffer;
+}
+export class Transaction {
+	public evaluate(...args: string[]): Promise<Buffer>;
+	public getName(): string;
+	public getTransactionID(): TransactionId;
+	public setTransient(transientMap: TransientMap): this;
+	public submit(...args: string[]): Promise<Buffer>;
 }
 
 //-------------------------------------------
 // Wallet Management
 //-------------------------------------------
 export interface Identity {
-	type: string
+	type: string;
 }
 
-export interface X509Identity extends Identity {
-	mspId: string,
-	certificate: string,
-	privateKey: string
+export interface IdentityInfo {
+	label: string;
+	identifier?: string;
+	mspId?: string;
 }
 
-export interface IdentityInformation {
-	label: string,
-	mspId: string,
-	identifier: string
-}
-
-interface WalletAPI {
-	import(label: string, identity: Identity): Promise<void>;
-	export(label: string): Promise<Identity>;
-	list(): Promise<IdentityInformation[]>;
+interface Wallet {
 	delete(label: string): Promise<void>;
 	exists(label: string): Promise<boolean>;
-}
-
-interface Wallet extends WalletAPI {
-}
-
-interface WalletMixin {
-}
-
-declare abstract class BaseWallet implements Wallet {
-	import(label: string, identity: Identity): Promise<void>;
 	export(label: string): Promise<Identity>;
-	list(): Promise<IdentityInformation[]>;
-	abstract delete(label: string): Promise<void>;
-	abstract exists(label: string): Promise<boolean>;
+	import(label: string, identity: Identity): Promise<void>;
+	list(): Promise<IdentityInfo[]>;
 }
 
-export class InMemoryWallet extends BaseWallet {
+export class InMemoryWallet implements Wallet {
 	constructor(mixin?: WalletMixin);
-	delete(label: string): Promise<void>;
-	exists(label: string): Promise<boolean>;
+	public delete(label: string): Promise<void>;
+	public exists(label: string): Promise<boolean>;
+	public export(label: string): Promise<Identity>;
+	public import(label: string, identity: Identity): Promise<void>;
+	public list(): Promise<IdentityInfo[]>;
 }
 
-export class FileSystemWallet extends BaseWallet {
+export class FileSystemWallet implements Wallet {
 	constructor(path: string, mixin?: WalletMixin);
-	delete(label: string): Promise<void>;
-	exists(label: string): Promise<boolean>;
+	public delete(label: string): Promise<void>;
+	public exists(label: string): Promise<boolean>;
+	public export(label: string): Promise<Identity>;
+	public import(label: string, identity: Identity): Promise<void>;
+	public list(): Promise<IdentityInfo[]>;
 }
+
+export class CouchDBWallet implements Wallet {
+	constructor(options: CouchDBWalletOptions, mixin?: WalletMixin)
+	public delete(label: string): Promise<void>;
+	public exists(label: string): Promise<boolean>;
+	public export(label: string): Promise<Identity>;
+	public import(label: string, identity: Identity): Promise<void>;
+	public list(): Promise<IdentityInfo[]>;
+}
+
+export interface CouchDBWalletOptions {
+	url: string;
+}
+
+export interface WalletMixin {} // tslint:disable-line:no-empty-interface
 
 export class X509WalletMixin implements WalletMixin {
+	public static createIdentity(mspId: string, certificate: string, privateKey: string): Identity;
 	constructor();
-	static createIdentity(mspId: string, certificate: string, privateKey: string): X509Identity;
+}
+
+export class HSMWalletMixin implements WalletMixin {
+	public static createIdentity(mspId: string, certificate: string): Identity;
+	constructor();
 }

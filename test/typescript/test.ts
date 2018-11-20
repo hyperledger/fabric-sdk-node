@@ -4,53 +4,53 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as test from 'tape';
-import * as fs from 'fs-extra';
 import * as util from 'util';
 
-import Client = require('fabric-client');
 import FabricCAServices = require('fabric-ca-client');
+import Client = require('fabric-client');
 
-const utils = require('fabric-client/lib/utils.js');
+import utils = require('fabric-client/lib/utils.js');
 const logger = utils.getLogger('connection profile');
 
+import { IEnrollmentRequest } from 'fabric-ca-client';
 import {
-	ConfigSignature,
-	TransactionId,
-	ChannelRequest,
-	BroadcastResponse,
-	Channel,
-	OrdererRequest,
-	JoinChannelRequest,
 	Block,
-	ProposalResponse,
+	BlockchainInfo,
+	BroadcastResponse,
 	ChaincodeInstallRequest,
-	ProposalResponseObject,
 	ChaincodeInstantiateUpgradeRequest,
+	ChaincodeInvokeRequest,
+	ChaincodeQueryRequest,
+	ChaincodeQueryResponse,
+	Channel,
+	ChannelEventHub,
+	ChannelQueryResponse,
+	ChannelRequest,
+	ConfigSignature,
+	ICryptoKeyStore,
+	ICryptoSuite,
+	JoinChannelRequest,
+	Orderer,
+	OrdererRequest,
+	Peer,
+	Proposal,
+	ProposalResponse,
+	ProposalResponseObject,
+	TransactionId,
 	TransactionRequest,
 	User,
-	ChaincodeInvokeRequest,
-	Proposal,
-	ChannelEventHub,
-	ChaincodeQueryRequest,
-	ChannelQueryResponse,
-	ChaincodeQueryResponse,
-	BlockchainInfo,
-	Peer,
-	Orderer,
-	ICryptoSuite,
-	ICryptoKeyStore,
 } from 'fabric-client';
-import { IEnrollmentRequest } from 'fabric-ca-client';
 
-const config_network: string = path.resolve(__dirname, '../fixtures/network-ts.yaml');
-const config_org1: string = path.resolve(__dirname, '../fixtures/org1.yaml');
-const config_org2: string = path.resolve(__dirname, '../fixtures/org2.yaml');
-const channel_name: string = 'mychannelts';
+const configNetwork: string = path.resolve(__dirname, '../fixtures/network-ts.yaml');
+const configOrg1: string = path.resolve(__dirname, '../fixtures/org1.yaml');
+const configOrg2: string = path.resolve(__dirname, '../fixtures/org2.yaml');
+const channelName: string = 'mychannelts';
 
 test('\n\n ** test TypeScript **', (t) => {
-	let client: Client = new Client();
+	const client: Client = new Client();
 	t.equal(client.constructor.name, 'Client');
 
 	let p: Peer = client.newPeer('grpc://localhost:7051');
@@ -59,7 +59,7 @@ test('\n\n ** test TypeScript **', (t) => {
 	p = new Peer('grpc://localhost:7051');
 	t.equal(p.constructor.name, 'Peer');
 
-	let u: User = new User('testUser');
+	const u: User = new User('testUser');
 	t.equal(u.constructor.name, 'User');
 
 	let o: Orderer = new Orderer('grpc://localhost:7050');
@@ -68,10 +68,10 @@ test('\n\n ** test TypeScript **', (t) => {
 	o = client.newOrderer('grpc://localhost:7050');
 	t.equal(o.constructor.name, 'Orderer');
 
-	let channel: Channel = new Channel('mychannel', client);
+	const channel: Channel = new Channel('mychannel', client);
 	t.equal(channel.constructor.name, 'Channel');
 
-	let ceh = new ChannelEventHub(channel, p);
+	const ceh = new ChannelEventHub(channel, p);
 	t.equal(ceh.constructor.name, 'ChannelEventHub');
 
 	t.pass('Pass all Class check');
@@ -79,39 +79,39 @@ test('\n\n ** test TypeScript **', (t) => {
 });
 
 test('test-crypto-key-store', (t) => {
-	const store:ICryptoKeyStore = Client.newCryptoKeyStore();
+	const store: ICryptoKeyStore = Client.newCryptoKeyStore();
 	const cryptoSuite: ICryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(store);
-	t.end()
-})
+	t.end();
+});
 
 test('use the connection profile file', (t) => {
-	let client = Client.loadFromConfig(config_network);
+	let client = Client.loadFromConfig(configNetwork);
 	t.pass('Successfully load config from network.yaml');
 
-	client.loadFromConfig(config_org1);
+	client.loadFromConfig(configOrg1);
 
 	let config = null;
-	let signatures = [];
+	const signatures = [];
 	let channel: Channel = null;
-	let genesis_block: any = null;
-	let instansiate_tx_id: TransactionId = null;
-	let query_tx_id: string = null;
+	let genesisBlock: any = null;
+	let instansiateTxId: TransactionId = null;
+	let queryTxId: string = null;
 
 	client.initCredentialStores()
 		.then(() => {
 			t.pass('Successfully created the key value store and crypto store based on the sdk config and connection profile');
-			let envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/mychannelts.tx'));
-			config = client.extractChannelConfig(envelope_bytes);
+			const envelopeBytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/mychannelts.tx'));
+			config = client.extractChannelConfig(envelopeBytes);
 
-			let signature: ConfigSignature = client.signChannelConfig(config);
+			const signature: ConfigSignature = client.signChannelConfig(config);
 
-			let string_signature = signature.toBuffer().toString('hex');
+			const stringSignature = signature.toBuffer().toString('hex');
 			t.pass('Successfully signed config update by org1');
 			// collect signature from org1 admin
-			signatures.push(string_signature);
+			signatures.push(stringSignature);
 			t.pass('Successfully extracted the config update from the configtx envelope');
-			return client.loadFromConfig(config_org2);
+			return client.loadFromConfig(configOrg2);
 		}).then(() => {
 			t.pass('Successfully loaded the client configuration for org2');
 
@@ -122,7 +122,7 @@ test('use the connection profile file', (t) => {
 			const req: IEnrollmentRequest = {
 				enrollmentID: 'admin',
 				enrollmentSecret: 'adminpw',
-				profile: 'tls'
+				profile: 'tls',
 			};
 			return fabca.enroll(req);
 		}).then((enrollment: FabricCAServices.IEnrollResponse) => {
@@ -133,27 +133,27 @@ test('use the connection profile file', (t) => {
 			// set the material on the client to be used when building endpoints for the user
 			client.setTlsClientCertAndKey(cert, key);
 
-			let signature: ConfigSignature = client.signChannelConfig(config);
-			let string_signature: string = signature.toBuffer().toString('hex');
+			const signature: ConfigSignature = client.signChannelConfig(config);
+			const stringSignature: string = signature.toBuffer().toString('hex');
 			t.pass('Successfully signed config update by org2');
 			// collect signature from org2 admin
 			signatures.push(signature);
 			t.pass('Successfully extracted the config update from the configtx envelope');
 
-			let txId: TransactionId = client.newTransactionID(true);
+			const txId: TransactionId = client.newTransactionID(true);
 			// build up the create request
-			let request: ChannelRequest = {
+			const request: ChannelRequest = {
 				config,
+				name: channelName,
+				orderer: 'orderer.example.com', //this assumes we have loaded a connection profile
 				signatures,
 				txId,
-				name: channel_name,
-				orderer: 'orderer.example.com', //this assumes we have loaded a connection profile
 			};
 			return client.createChannel(request); //logged in as org2
 		}).then((result: BroadcastResponse) => {
 			logger.debug('\n***\n completed the create \n***\n');
 
-			logger.debug(' response ::%j',result);
+			logger.debug(' response ::%j', result);
 			t.pass('Successfully send create channel request');
 			if (result.status && result.status === 'SUCCESS') {
 				return sleep(10000);
@@ -163,27 +163,27 @@ test('use the connection profile file', (t) => {
 			}
 		}).then(() => {
 			t.pass('Successfully waited to make sure new channel was created.');
-			channel = client.getChannel(channel_name);
+			channel = client.getChannel(channelName);
 
-			let txId = client.newTransactionID(true);
-			let request: OrdererRequest = { txId };
+			const txId = client.newTransactionID(true);
+			const request: OrdererRequest = { txId };
 			return channel.getGenesisBlock(request);
 		}).then((block: Block) => {
 			t.pass('Successfully got the genesis block');
-			genesis_block = block;
+			genesisBlock = block;
 
-			let txId: TransactionId = client.newTransactionID(true);
-			let request: JoinChannelRequest = {
+			const txId: TransactionId = client.newTransactionID(true);
+			const request: JoinChannelRequest = {
 				//targets: // this time we will leave blank so that we can use
 				// all the peers assigned to the channel ...some may fail
 				// if the submitter is not allowed, let's see what we get
 				block,
-				txId
+				txId,
 			};
 			return channel.joinChannel(request); //admin from org2
 		}).then((results: ProposalResponse[]) => {
 			// first of the results should not have good status as submitter does not have permission
-			if (results && results[0] && results[0].response && results[0].response.status == 200) {
+			if (results && results[0] && results[0].response && results[0].response.status === 200) {
 				t.fail('Successfully had peer in organization org1 join the channel');
 				throw new Error('Should not have been able to join channel with this submitter');
 			} else {
@@ -191,7 +191,7 @@ test('use the connection profile file', (t) => {
 			}
 
 			// second of the results should have good status
-			if (results && results[1] && results[1].response && results[1].response.status == 200) {
+			if (results && results[1] && results[1].response && results[1].response.status === 200) {
 				t.pass('Successfully had peer in organization org2 join the channel');
 			} else {
 				t.fail(' Failed to join channel');
@@ -201,9 +201,9 @@ test('use the connection profile file', (t) => {
 			/*
 			 * switch to organization org1 (recreate client)
 			 */
-			client = Client.loadFromConfig(config_network);
+			client = Client.loadFromConfig(configNetwork);
 
-			client.loadFromConfig(config_org1);
+			client.loadFromConfig(configOrg1);
 			t.pass('Successfully loaded \'admin\' for org1');
 			return client.initCredentialStores();
 		}).then(() => {
@@ -212,7 +212,7 @@ test('use the connection profile file', (t) => {
 			const req: IEnrollmentRequest = {
 				enrollmentID: 'admin',
 				enrollmentSecret: 'adminpw',
-				profile: 'tls'
+				profile: 'tls',
 			};
 			return fabca.enroll(req);
 		}).then((enrollment: FabricCAServices.IEnrollResponse) => {
@@ -222,19 +222,19 @@ test('use the connection profile file', (t) => {
 
 			// set the material on the client to be used when building endpoints for the user
 			client.setTlsClientCertAndKey(cert, key);
-			channel = client.getChannel(channel_name);
+			channel = client.getChannel(channelName);
 
-			let txId: TransactionId = client.newTransactionID(true);
-			let request: JoinChannelRequest = {
-				targets: ['peer0.org1.example.com'], // this does assume that we have loaded a
-				// connection profile with a peer by this name
-				block: genesis_block,
+			const txId: TransactionId = client.newTransactionID(true);
+			const request: JoinChannelRequest = {
+				block: genesisBlock,
+				// this does assume that we have loaded a connection profile with a peer by this name
+				targets: ['peer0.org1.example.com'],
 				txId,
 			};
 
 			return channel.joinChannel(request); //logged in as org1
 		}).then((results: ProposalResponse[]) => {
-			if (results && results[0] && results[0].response && results[0].response.status == 200) {
+			if (results && results[0] && results[0].response && results[0].response.status === 200) {
 				t.pass(util.format('Successfully had peer in organization %s join the channel', 'org1'));
 			} else {
 				t.fail(' Failed to join channel on org1');
@@ -245,20 +245,20 @@ test('use the connection profile file', (t) => {
 			t.pass('Successfully waited for peers to join the channel');
 			process.env.GOPATH = path.join(__dirname, '../fixtures');
 			logger.debug(`Set GOPATH to ${process.env.GOPATH}`);
-			let txId: TransactionId = client.newTransactionID(true);
+			const txId: TransactionId = client.newTransactionID(true);
 			// send proposal to endorser
 			const request: ChaincodeInstallRequest = {
-				targets: ['peer0.org1.example.com'],
-				chaincodePath: 'github.com/example_cc',
 				chaincodeId: 'examplets',
+				chaincodePath: 'github.com/example_cc',
 				chaincodeVersion: 'v1',
 				channelNames: 'mychannelts', //targets will based on peers in this channel
+				targets: ['peer0.org1.example.com'],
 				txId,
 			};
 
 			return client.installChaincode(request);
 		}).then((results: ProposalResponseObject) => {
-			if (results && results[0] && results[0][0].response && results[0][0].response.status == 200) {
+			if (results && results[0] && results[0][0].response && results[0][0].response.status === 200) {
 				t.pass('Successfully installed chain code on org1');
 			} else {
 				t.fail(' Failed to install chaincode on org1');
@@ -266,25 +266,25 @@ test('use the connection profile file', (t) => {
 				throw new Error('Failed to install chain code on org1');
 			}
 
-			client.loadFromConfig(config_org2);
+			client.loadFromConfig(configOrg2);
 			t.pass('Successfully loaded \'admin\' for org2');
 			return client.initCredentialStores();
 		}).then(() => {
 			t.pass('Successfully loaded the client configuration for org2');
-			let txId: TransactionId = client.newTransactionID(true);
+			const txId: TransactionId = client.newTransactionID(true);
 			// send proposal to endorser
 			const request: ChaincodeInstallRequest = {
-				targets: ['peer0.org2.example.com'],
-				chaincodePath: 'github.com/example_cc',
 				chaincodeId: 'examplets',
+				chaincodePath: 'github.com/example_cc',
 				chaincodeVersion: 'v1',
 				channelNames: 'mychannelts', //targets will based on peers in this channel
+				targets: ['peer0.org2.example.com'],
 				txId,
 			};
 
 			return client.installChaincode(request);
 		}).then((results: ProposalResponseObject) => {
-			if (results && results[0] && results[0][0].response && results[0][0].response.status == 200) {
+			if (results && results[0] && results[0][0].response && results[0][0].response.status === 200) {
 				t.pass('Successfully installed chain code on org2');
 			} else {
 				t.fail(' Failed to install chaincode on org2');
@@ -293,32 +293,32 @@ test('use the connection profile file', (t) => {
 			}
 
 			// Back to org1 for instantiation
-			client.loadFromConfig(config_org1);
+			client.loadFromConfig(configOrg1);
 			t.pass('Successfully loaded \'admin\' for org1');
 			return client.initCredentialStores();
 		}).then(() => {
 			/*
 			 *  I N S T A N T I A T E
 			 */
-			let txId: TransactionId = client.newTransactionID(true);
-			instansiate_tx_id = txId;
-			let request: ChaincodeInstantiateUpgradeRequest = {
+			const txId: TransactionId = client.newTransactionID(true);
+			instansiateTxId = txId;
+			const request: ChaincodeInstantiateUpgradeRequest = {
+				args: ['a', '100', 'b', '200'],
 				chaincodeId: 'examplets',
 				chaincodeVersion: 'v1',
-				args: ['a', '100', 'b', '200'],
-				txId: txId
+				txId,
 			};
 
 			return channel.sendInstantiateProposal(request); // still have org2 admin signer
 		}).then((results: ProposalResponseObject) => {
-			var proposalResponses = results[0];
-			var proposal = results[1];
+			const proposalResponses = results[0];
+			const proposal = results[1];
 			if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
 				t.pass('Successfully sent Proposal and received ProposalResponse');
-				var request: TransactionRequest = {
-					proposalResponses: proposalResponses,
-					proposal: proposal,
-					txId: instansiate_tx_id //required to indicate that this is an admin transaction
+				const request: TransactionRequest = {
+					proposal,
+					proposalResponses,
+					txId: instansiateTxId, //required to indicate that this is an admin transaction
 					//orderer : not specifying, the first orderer defined in the
 					//          connection profile for this channel will be used
 				};
@@ -352,7 +352,7 @@ test('use the connection profile file', (t) => {
 		}).then(() => {
 			t.pass('Successfully created the key value store  and crypto store based on the config and connection profile');
 
-			let ca: FabricCAServices = client.getCertificateAuthority();
+			const ca: FabricCAServices = client.getCertificateAuthority();
 			if (ca) {
 				t.equals(ca.getCaName(), 'ca-org2', 'checking that caname is correct for the newly created ca');
 			} else {
@@ -373,7 +373,7 @@ test('use the connection profile file', (t) => {
 		}).then((admin: User) => {
 			t.pass('Successfully enrolled user \'admin\' for org1');
 
-			let ca: FabricCAServices = client.getCertificateAuthority();
+			const ca: FabricCAServices = client.getCertificateAuthority();
 			if (ca) {
 				t.equals(ca.getCaName(), 'ca-org1', 'checking that caname is correct after resetting the config');
 			} else {
@@ -389,67 +389,66 @@ test('use the connection profile file', (t) => {
 			t.pass('Successfully enrolled user \'user2\' for org1');
 
 			// try again ...this time use a longer timeout
-			let tx_id: TransactionId = client.newTransactionID(); // get a non admin transaction ID
-			query_tx_id = tx_id.getTransactionID(); //save transaction string for later
-			let request: ChaincodeInvokeRequest = {
+			const txId: TransactionId = client.newTransactionID(); // get a non admin transaction ID
+			queryTxId = txId.getTransactionID(); //save transaction string for later
+			const request: ChaincodeInvokeRequest = {
+				args: ['a', 'b', '100'],
 				chaincodeId: 'examplets',
 				fcn: 'move',
-				args: ['a', 'b', '100'],
-				txId: tx_id
+				txId,
 				//targets - Letting default to all endorsing peers defined on the channel in the connection profile
 			};
 
 			return channel.sendTransactionProposal(request); //logged in as org1 user
 		}).then((results: ProposalResponseObject) => {
-			let proposalResponses: ProposalResponse[] = results[0];
-			let proposal: Proposal = results[1];
-			let all_good = true;
+			const proposalResponses: ProposalResponse[] = results[0];
+			const proposal: Proposal = results[1];
+			let allGood = true;
 			// Will check to be sure that we see two responses as there are two peers defined on this
 			// channel that are endorsing peers
-			let endorsed_responses = 0;
-			for (let i in proposalResponses) {
-				let one_good = false;
-				endorsed_responses++;
-				let proposal_response: ProposalResponse = proposalResponses[i];
-				if (proposal_response.response && proposal_response.response.status === 200) {
+			let endorsedResponses = 0;
+			for (const proposalResponse of proposalResponses) {
+				let oneGood = false;
+				endorsedResponses++;
+				if (proposalResponse.response && proposalResponse.response.status === 200) {
 					t.pass('transaction proposal has response status of good');
-					one_good = true;
+					oneGood = true;
 				} else {
 					t.fail('transaction proposal was bad');
-					if (proposal_response.response && proposal_response.response.status) {
-						t.comment(' response status:' + proposal_response.response.status +
-							' message:' + proposal_response.response.message);
+					if (proposalResponse.response && proposalResponse.response.status) {
+						t.comment(' response status:' + proposalResponse.response.status +
+							' message:' + proposalResponse.response.message);
 					} else {
 						t.fail('transaction response was unknown');
-						logger.error('transaction response was unknown %s', proposal_response);
+						logger.error('transaction response was unknown %s', proposalResponse);
 					}
 				}
-				all_good = all_good && one_good;
+				allGood = allGood && oneGood;
 			}
-			t.equals(endorsed_responses, 2, 'Checking that there are the correct number of endorsed responses');
-			if (!all_good) {
+			t.equals(endorsedResponses, 2, 'Checking that there are the correct number of endorsed responses');
+			if (!allGood) {
 				t.fail('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
 				throw new Error('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
 			}
-			let request: TransactionRequest = {
-				proposalResponses: proposalResponses,
-				proposal: proposal
+			const request: TransactionRequest = {
+				proposal,
+				proposalResponses,
 			};
 
-			let promises = [];
+			const promises = [];
 
 			// be sure to get an channel event hub the current user is authorized to use
-			let eventhub = channel.newChannelEventHub('peer0.org1.example.com');
+			const eventhub = channel.newChannelEventHub('peer0.org1.example.com');
 
-			let txPromise = new Promise((resolve, reject) => {
-				let handle = setTimeout(() => {
-					eventhub.unregisterTxEvent(query_tx_id);
+			const txPromise = new Promise((resolve, reject) => {
+				const handle = setTimeout(() => {
+					eventhub.unregisterTxEvent(queryTxId);
 					eventhub.disconnect();
 					t.fail('REQUEST_TIMEOUT --- eventhub did not report back');
 					reject(new Error('REQUEST_TIMEOUT:' + eventhub.getPeerAddr()));
 				}, 30000);
 
-				eventhub.registerTxEvent(query_tx_id, (tx, code, block_num) => {
+				eventhub.registerTxEvent(queryTxId, (tx, code, blockNum) => {
 					clearTimeout(handle);
 					if (code !== 'VALID') {
 						t.fail('transaction was invalid, code = ' + code);
@@ -463,7 +462,7 @@ test('use the connection profile file', (t) => {
 					t.fail('transaction event failed:' + error);
 					reject(error);
 				},
-					{ disconnect: true } //since this is a test and we will not be using later
+					{ disconnect: true }, //since this is a test and we will not be using later
 				);
 			});
 			// connect(true) to receive full blocks (user must have read rights to the channel)
@@ -476,16 +475,16 @@ test('use the connection profile file', (t) => {
 
 			return Promise.all(promises);
 		}).then((results) => {
-			let event_results = results[0]; // Promise all will return the results in order of the of Array
-			let sendTransaction_results = results[1];
-			if (sendTransaction_results instanceof Error) {
-				t.fail('Failed to order the transaction: ' + sendTransaction_results);
-				throw sendTransaction_results;
-			} else if (sendTransaction_results.status === 'SUCCESS') {
+			const eventResults = results[0]; // Promise all will return the results in order of the of Array
+			const sendTransactionResults = results[1];
+			if (sendTransactionResults instanceof Error) {
+				t.fail('Failed to order the transaction: ' + sendTransactionResults);
+				throw sendTransactionResults;
+			} else if (sendTransactionResults.status === 'SUCCESS') {
 				t.pass('Successfully sent transaction to invoke the chaincode to the orderer.');
 			} else {
-				t.fail('Failed to order the transaction to invoke the chaincode. Error code: ' + sendTransaction_results.status);
-				throw new Error('Failed to order the transaction to invoke the chaincode. Error code: ' + sendTransaction_results.status);
+				t.fail('Failed to order the transaction to invoke the chaincode. Error code: ' + sendTransactionResults.status);
+				throw new Error('Failed to order the transaction to invoke the chaincode. Error code: ' + sendTransactionResults.status);
 			}
 
 			return new Promise((resolve, reject) => {
@@ -493,32 +492,32 @@ test('use the connection profile file', (t) => {
 				// with startBlock or endBlock when doing a replay
 				// The ChannelEventHub must not have been connected or have other
 				// listeners.
-				let channel_event_hub: ChannelEventHub = channel.newChannelEventHub('peer0.org1.example.com');
+				const channelEventHub: ChannelEventHub = channel.newChannelEventHub('peer0.org1.example.com');
 
-				let handle = setTimeout(() => {
+				const handle = setTimeout(() => {
 					t.fail('Timeout - Failed to receive replay the event for event1');
-					channel_event_hub.unregisterTxEvent(query_tx_id);
-					channel_event_hub.disconnect(); //shutdown down since we are done
+					channelEventHub.unregisterTxEvent(queryTxId);
+					channelEventHub.disconnect(); //shutdown down since we are done
 				}, 10000);
 
-				channel_event_hub.registerTxEvent(query_tx_id, (txnid, code, block_num) => {
+				channelEventHub.registerTxEvent(queryTxId, (txnid, code, blockNum) => {
 					clearTimeout(handle);
-					t.pass('Event has been replayed with transaction code:' + code + ' for transaction id:' + txnid + ' for block_num:' + block_num);
+					t.pass('Event has been replayed with transaction code:' + code + ' for transaction id:' + txnid + ' for block_num:' + blockNum);
 					resolve('Got the replayed transaction');
 				}, (error) => {
 					clearTimeout(handle);
-					t.fail('Failed to receive event replay for Event for transaction id ::' + query_tx_id);
+					t.fail('Failed to receive event replay for Event for transaction id ::' + queryTxId);
 					throw (error);
 				},
 					// a real application would have remembered the last block number
 					// received and used that value to start the replay
 					// Setting the disconnect to true as we do not want to use this
 					// ChannelEventHub after the event we are looking for comes in
-					{ startBlock: 0, disconnect: true }
+					{ startBlock: 0, disconnect: true },
 				);
-				t.pass('Successfully registered transaction replay for ' + query_tx_id);
+				t.pass('Successfully registered transaction replay for ' + queryTxId);
 
-				channel_event_hub.connect(); //connect to receive filtered blocks
+				channelEventHub.connect(); //connect to receive filtered blocks
 				t.pass('Successfully called connect on the transaction replay event hub for filtered blocks');
 			});
 		}).then((results) => {
@@ -532,37 +531,37 @@ test('use the connection profile file', (t) => {
 				// a different port than the peer services. The peers with the
 				// "eventSource" tag are running the channel-based event service
 				// on the same port as the other peer services.
-				let channel_event_hubs: ChannelEventHub[] = channel.getChannelEventHubsForOrg();
+				const channelEventHubs: ChannelEventHub[] = channel.getChannelEventHubsForOrg();
 				// we should have the an channel event hub defined on the "peer0.org1.example.com"
-				t.equals(channel_event_hubs.length, 1, 'Checking that the channel event hubs has one');
+				t.equals(channelEventHubs.length, 1, 'Checking that the channel event hubs has one');
 
-				let channel_event_hub = channel_event_hubs[0];
-				t.equals(channel_event_hub.getPeerAddr(), 'localhost:7051', ' channel event hub address ');
+				const channelEventHub = channelEventHubs[0];
+				t.equals(channelEventHub.getPeerAddr(), 'localhost:7051', ' channel event hub address ');
 
-				let handle = setTimeout(() => {
+				const handle = setTimeout(() => {
 					t.fail('Timeout - Failed to receive replay the event for event1');
-					channel_event_hub.unregisterTxEvent(query_tx_id);
-					channel_event_hub.disconnect(); //shutdown down since we are done
+					channelEventHub.unregisterTxEvent(queryTxId);
+					channelEventHub.disconnect(); //shutdown down since we are done
 				}, 10000);
 
-				channel_event_hub.registerTxEvent(query_tx_id, (txnid, code, block_num) => {
+				channelEventHub.registerTxEvent(queryTxId, (txnid, code, blockNum) => {
 					clearTimeout(handle);
-					t.pass('Event has been replayed with transaction code:' + code + ' for transaction id:' + txnid + ' for block_num:' + block_num);
+					t.pass('Event has been replayed with transaction code:' + code + ' for transaction id:' + txnid + ' for block_num:' + blockNum);
 					resolve('Got the replayed transaction');
 				}, (error) => {
 					clearTimeout(handle);
-					t.fail('Failed to receive event replay for Event for transaction id ::' + query_tx_id);
+					t.fail('Failed to receive event replay for Event for transaction id ::' + queryTxId);
 					throw (error);
 				},
 					// a real application would have remembered the last block number
 					// received and used that value to start the replay
 					// Setting the disconnect to true as we do not want to use this
 					// ChannelEventHub after the event we are looking for comes in
-					{ startBlock: 0, disconnect: true }
+					{ startBlock: 0, disconnect: true },
 				);
-				t.pass('Successfully registered transaction replay for ' + query_tx_id);
+				t.pass('Successfully registered transaction replay for ' + queryTxId);
 
-				channel_event_hub.connect(); //connect to receive filtered blocks
+				channelEventHub.connect(); //connect to receive filtered blocks
 				t.pass('Successfully called connect on the transaction replay event hub for filtered blocks');
 			});
 		}).then((results) => {
@@ -574,21 +573,21 @@ test('use the connection profile file', (t) => {
 		}).then((admin: User) => {
 			t.pass('Successfully loaded user \'admin\' from store for org1');
 
-			var request: ChaincodeQueryRequest = {
+			const request: ChaincodeQueryRequest = {
+				args: ['b'],
 				chaincodeId: 'examplets',
 				fcn: 'query',
-				args: ['b']
 			};
 
 			return channel.queryByChaincode(request); //logged in as user on org1
-		}).then((response_payloads) => {
+		}).then((responsePayloads) => {
 			// should only be one response ...as only one peer is defined as CHAINCODE_QUERY_ROLE
-			var query_responses = 0;
-			if (response_payloads) {
-				for (let i = 0; i < response_payloads.length; i++) {
-					query_responses++;
+			let queryResponses = 0;
+			if (responsePayloads) {
+				for (const responsePayload of responsePayloads) {
+					queryResponses++;
 					t.equal(
-						response_payloads[i].toString('utf8'),
+						responsePayload.toString('utf8'),
 						'300',
 						'checking query results are correct that user b has 300 now after the move');
 				}
@@ -596,15 +595,15 @@ test('use the connection profile file', (t) => {
 				t.fail('response_payloads is null');
 				throw new Error('Failed to get response on query');
 			}
-			t.equals(query_responses, 1, 'Checking that only one response was seen');
+			t.equals(queryResponses, 1, 'Checking that only one response was seen');
 
 			return client.queryChannels('peer0.org1.example.com');
 		}).then((results: ChannelQueryResponse) => {
 			logger.debug(' queryChannels ::%j', results);
 			let found = false;
-			for (let i in results.channels) {
-				logger.debug(' queryChannels has found %s', results.channels[i].channel_id);
-				if (results.channels[i].channel_id === channel_name) {
+			for (const resultChannel of results.channels) {
+				logger.debug(' queryChannels has found %s', resultChannel.channel_id);
+				if (resultChannel.channel_id === channelName) {
 					found = true;
 				}
 			}
@@ -618,9 +617,9 @@ test('use the connection profile file', (t) => {
 		}).then((results: ChaincodeQueryResponse) => {
 			logger.debug(' queryInstalledChaincodes ::%j', results);
 			let found = false;
-			for (let i in results.chaincodes) {
-				logger.debug(' queryInstalledChaincodes has found %s', results.chaincodes[i].name);
-				if (results.chaincodes[i].name === 'examplets') {
+			for (const resultChaincode of results.chaincodes) {
+				logger.debug(' queryInstalledChaincodes has found %s', resultChaincode.name);
+				if (resultChaincode.name === 'examplets') {
 					found = true;
 				}
 			}
@@ -645,7 +644,7 @@ test('use the connection profile file', (t) => {
 			logger.debug(' queryBlockHash ::%j', results);
 			t.equals('1', results.header.number, 'Should be able to find our block number by hash');
 
-			return channel.queryTransaction(query_tx_id);
+			return channel.queryTransaction(queryTxId);
 		}).then((results) => {
 			logger.debug(' queryTransaction ::%j', results);
 			t.equals(0, results.validationCode, 'Should be able to find our transaction validationCode');
@@ -665,7 +664,7 @@ test('use the connection profile file', (t) => {
 			logger.debug(' queryBlockHash ::%j', results);
 			t.equals('1', results.header.number, 'Should be able to find our block number by hash with string peer name');
 
-			return channel.queryTransaction(query_tx_id, 'peer0.org1.example.com');
+			return channel.queryTransaction(queryTxId, 'peer0.org1.example.com');
 		}).then((results) => {
 			logger.debug(' queryTransaction ::%j', results);
 			t.equals(0, results.validationCode, 'Should be able to find our transaction validationCode with string peer name');
@@ -685,27 +684,26 @@ test('use the connection profile file', (t) => {
 			logger.debug(' queryBlockHash ::%j', results);
 			t.equals('1', results.header.number, 'Should be able to find our block number by hash by admin');
 
-			return channel.queryTransaction(query_tx_id, 'peer0.org1.example.com', true);
+			return channel.queryTransaction(queryTxId, 'peer0.org1.example.com', true);
 		}).then((results) => {
 			logger.debug(' queryTransaction ::%j', results);
 			t.equals(0, results.validationCode, 'Should be able to find our transaction validationCode by admin');
 
-			let tx_id = client.newTransactionID(); // get a non admin transaction ID
-			var request: ChaincodeInvokeRequest = {
+			const txId = client.newTransactionID(); // get a non admin transaction ID
+			const request: ChaincodeInvokeRequest = {
+				args: ['a', 'b', '100'],
 				chaincodeId: 'examplets',
 				fcn: 'move',
-				args: ['a', 'b', '100'],
-				txId: tx_id
+				txId,
 				//targets - Letting default to all endorsing peers defined on the channel in the connection profile
 			};
 
 			// put in a very small timeout to force a failure, thereby checking that the timeout value was being used
 			return channel.sendTransactionProposal(request, 1); //logged in as org1 user
 		}).then((results: ProposalResponseObject) => {
-			var proposalResponses = results[0];
-			for (var i in proposalResponses) {
-				let proposal_response = proposalResponses[i];
-				if (proposal_response instanceof Error && proposal_response.toString().indexOf('REQUEST_TIMEOUT') > 0) {
+			const proposalResponses = results[0];
+			for (const proposalResponse of proposalResponses) {
+				if (proposalResponse instanceof Error && proposalResponse.toString().indexOf('REQUEST_TIMEOUT') > 0) {
 					t.pass('Successfully cause a timeout error by setting the timeout setting to 1');
 				} else {
 					t.fail('Failed to get the timeout error');
@@ -720,9 +718,9 @@ test('use the connection profile file', (t) => {
 			t.fail(err.message);
 			t.end();
 			throw err;
-		})
+		});
 });
 
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }

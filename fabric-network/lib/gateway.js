@@ -21,6 +21,7 @@ const logger = require('./logger').getLogger('Gateway');
  * @property {string} [clientTlsIdentity] The identity in the wallet to use as the client TLS identity.
  * @property {module:fabric-network.Gateway~DefaultEventHandlerOptions} [eventHandlerOptions] Options for the inbuilt default
  * event handler capability.
+ * @property {module:fabric-network.Gateway~DiscoveryOptions} [discovery] Discovery options.
  */
 
 /**
@@ -28,7 +29,7 @@ const logger = require('./logger').getLogger('Gateway');
  * @memberof module:fabric-network
  * @property {number} [commitTimeout = 300] The timeout period in seconds to wait for commit notification to
  * complete.
- * @property {?module:fabric-network.Gateway~TxEventHandlerFactory} [strategy = MSPID_SCOPE_ALLFORTX] Event handling strategy to identify
+ * @property {?module:fabric-network.Gateway~TxEventHandlerFactory} [strategy=MSPID_SCOPE_ALLFORTX] Event handling strategy to identify
  * successful transaction commits. A null value indicates that no event handling is desired. The default is
  * {@link MSPID_SCOPE_ALLFORTX}.
  */
@@ -53,6 +54,11 @@ const logger = require('./logger').getLogger('Gateway');
  * fails.
  */
 
+/**
+ * @typedef {Object} Gateway~DiscoveryOptions
+ * @memberof module:fabric-network
+ * @property {boolean} [enabled=true] True if discovery should be used; otherwise false.
+ */
 /**
  * The gateway peer provides the connection point for an application to access the Fabric network.  It is instantiated using
  * the default constructor.

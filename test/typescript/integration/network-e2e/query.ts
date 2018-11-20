@@ -8,25 +8,33 @@
 // in a happy-path scenario
 'use strict';
 
-const tape = require('tape');
-const _test = require('tape-promise').default;
-const test = _test(tape);
-const {Gateway, FileSystemWallet, X509WalletMixin} = require('../../../fabric-network/index.js');
-const fs = require('fs-extra');
-const os = require('os');
-const path = require('path');
-const rimraf = require('rimraf');
+import fs = require('fs-extra');
+import os = require('os');
+import path = require('path');
+import rimraf = require('rimraf');
+import tape = require('tape');
+import tapePromise = require('tape-promise');
 
-const e2eUtils = require('../e2e/e2eUtils.js');
-const testUtils = require('../../unit/util.js');
-const channelName = testUtils.NETWORK_END2END.channel;
-const chaincodeId = testUtils.NETWORK_END2END.chaincodeId;
+import {
+	FileSystemWallet,
+	Gateway,
+	TransientMap,
+	Wallet,
+	X509WalletMixin,
+} from 'fabric-network';
+
+import e2eUtils = require('../../../integration/e2e/e2eUtils.js');
+import testUtils = require('../../../unit/util.js');
+
+const test: any = tapePromise.default(tape);
+const channelName: string = testUtils.NETWORK_END2END.channel;
+const chaincodeId: string = testUtils.NETWORK_END2END.chaincodeId;
 
 const fixtures = process.cwd() + '/test/fixtures';
 const identityLabel = 'User1@org1.example.com';
 const tlsLabel = 'tlsId';
 
-async function createWallet(t, filePath) {
+async function createWallet(t: any, filePath: string): Promise<Wallet> {
 	// define the identity to use
 	const credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
 	const cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
@@ -45,12 +53,11 @@ async function createWallet(t, filePath) {
 	return fileSystemWallet;
 }
 
-async function deleteWallet(filePath) {
+async function deleteWallet(filePath): Promise<void> {
 	const rimRafPromise = new Promise((resolve) => {
-		rimraf(filePath, (err) => {
+		rimraf(filePath, (err: Error) => {
 			if (err) {
-				// eslint-disable-next-line no-console
-				console.log(`failed to delete ${filePath}, error was ${err}`);
+				console.log(`failed to delete ${filePath}, error was ${err}`); // tslint:disable-line:no-console
 				resolve();
 			}
 			resolve();
@@ -59,22 +66,22 @@ async function deleteWallet(filePath) {
 	await rimRafPromise;
 }
 
-test('\n\n***** Network End-to-end flow: evaluate transaction to get information *****\n\n', async (t) => {
+test('\n\n***** Network End-to-end flow: evaluate transaction to get information *****\n\n', async (t: any) => {
 	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
 	const gateway = new Gateway();
 
 	try {
 		const wallet = await createWallet(t, tmpdir);
-		const ccp = fs.readFileSync(fixtures + '/network.json');
-		const ccpObject = JSON.parse(ccp.toString());
+		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccpObject: object = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
-			wallet: wallet,
-			identity: identityLabel,
 			clientTlsIdentity: tlsLabel,
 			discovery: {
-				enabled: false
-			}
+				enabled: false,
+			},
+			identity: identityLabel,
+			wallet,
 		});
 		t.pass('Connected to the gateway');
 
@@ -84,12 +91,10 @@ test('\n\n***** Network End-to-end flow: evaluate transaction to get information
 		const contract = await channel.getContract(chaincodeId);
 		t.pass('Got the contract, about to evaluate (query) transaction');
 
-
 		// try a standard query
-		const responseBuffer = await contract.evaluateTransaction('query', 'a');
-		let response = responseBuffer.toString();
+		let response = await contract.evaluateTransaction('query', 'a');
 
-		if (response * 1 === parseInt(response)) {
+		if (!isNaN(parseInt(response.toString(), 10))) {
 			t.pass('Successfully got back a value');
 		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
@@ -116,22 +121,22 @@ test('\n\n***** Network End-to-end flow: evaluate transaction to get information
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: evaluate transaction with transient data *****\n\n', async (t) => {
+test('\n\n***** Network End-to-end flow: evaluate transaction with transient data *****\n\n', async (t: any) => {
 	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
 	const gateway = new Gateway();
 
 	try {
 		const wallet = await createWallet(t, tmpdir);
-		const ccp = fs.readFileSync(fixtures + '/network.json');
-		const ccpObject = JSON.parse(ccp.toString());
+		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccpObject: object = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
-			wallet: wallet,
-			identity: identityLabel,
 			clientTlsIdentity: tlsLabel,
 			discovery: {
-				enabled: false
-			}
+				enabled: false,
+			},
+			identity: identityLabel,
+			wallet,
 		});
 		t.pass('Connected to the gateway');
 
@@ -142,14 +147,14 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with transient dat
 		t.pass('Got the contract, about to evaluate (query) transaction');
 
 		const transaction = contract.createTransaction('getTransient');
-		const transientMap = {
+		const transientMap: TransientMap = {
 			key1: Buffer.from('value1'),
-			key2: Buffer.from('value2')
+			key2: Buffer.from('value2'),
 		};
 		const response = await transaction.setTransient(transientMap).evaluate();
 
 		t.pass('Got response: ' + response.toString('utf8'));
-		const result = JSON.parse(response.toString('utf8'));
+		const result: object = JSON.parse(response.toString('utf8'));
 
 		let success = true;
 
@@ -181,22 +186,22 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with transient dat
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: evaluate transaction with empty string result *****\n\n', async (t) => {
+test('\n\n***** Network End-to-end flow: evaluate transaction with empty string result *****\n\n', async (t: any) => {
 	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
 	const gateway = new Gateway();
 
 	try {
 		const wallet = await createWallet(t, tmpdir);
-		const ccp = fs.readFileSync(fixtures + '/network.json');
-		const ccpObject = JSON.parse(ccp.toString());
+		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccpObject: object = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
-			wallet: wallet,
-			identity: identityLabel,
 			clientTlsIdentity: tlsLabel,
 			discovery: {
-				enabled: false
-			}
+				enabled: false,
+			},
+			identity: identityLabel,
+			wallet,
 		});
 		t.pass('Connected to the gateway');
 

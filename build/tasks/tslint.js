@@ -4,26 +4,23 @@
 # SPDX-License-Identifier: Apache-2.0
 */
 const gulp = require('gulp');
-const eslint = require('gulp-eslint');
+const tslint = require('gulp-tslint');
 
-gulp.task('eslint', () => {
+gulp.task('tslint', () => {
 	return gulp.src([
-		'**/*.js',
-		'fabric-network/**/*.js',
-		'fabric-client/**/*.js',
-		'fabric-ca-client/lib/*.js',
-		'!coverage/**',
-		'!docs/**',
+		// 'fabric-ca/**/*.ts',
+		// 'fabric-client/**/*.ts',
+		'fabric-network/**/*.ts',
+		'test/**/*.ts',
 		'!fabric-network/coverage/**',
 		'!fabric-network/node_modules/**',
 		'!fabric-client/coverage/**',
 		'!fabric-client/node_modules/**',
 		'!fabric-ca-client/coverage/**',
 		'!fabric-ca-client/node_modules/**',
-		'!node_modules/**',
-		'!test/typescript/**/*.js',
-		'!tmp/**',
-	]).pipe(eslint())
-		.pipe(eslint.format())
-		.pipe(eslint.failAfterError());
+	]).pipe(tslint({
+		formatter: 'prose'
+	})).pipe(tslint.report({
+		summarizeFailureOutput: true
+	}));
 });

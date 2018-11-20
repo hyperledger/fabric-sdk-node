@@ -13,6 +13,12 @@ const logger = require('../../logger').getLogger('X509WalletMixin');
  */
 class X509WalletMixin {
 
+	/**
+	 * Create an identity object using X509 credentials.
+	 * @param {string} mspId
+	 * @param {string} certificate Certificate containing the public key in PEM format.
+	 * @param {string} privateKey Private key in PEM format.
+	 */
 	static createIdentity(mspId, certificate, privateKey) {
 		logger.debug('in createIdentity: mspId = ' + mspId);
 		return {
