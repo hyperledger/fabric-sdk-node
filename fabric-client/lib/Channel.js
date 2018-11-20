@@ -2413,7 +2413,9 @@ const Channel = class {
 	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
 	 *           used by the chaincode during initialization, but not saved in the
 	 *           ledger. Data such as cryptographic information for encryption can
-	 *           be passed to the chaincode using this technique.
+	 *           be passed to the chaincode using this technique. Data that is to be
+	 *           kept in a private data store (a collection) should be passed to the
+	 *           chaincode in the transientMap.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code> in the target
 	 *           chaincode. Default is 'init'.
@@ -2616,7 +2618,10 @@ const Channel = class {
 	 *           and optional for [generateUnsignedProposal]{@link Channel#generateUnsignedProposal}
 	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
 	 *           used by the chaincode but not
-	 *           saved in the ledger, such as cryptographic information for encryption
+	 *           saved in the ledger, such as cryptographic information for encryption.
+	 *           Data that is to be
+	 *           kept in a private data store (a collection) should be passed to the
+	 *           chaincode in the transientMap.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code>
 	 *           in the target chaincode. Default is 'invoke'
@@ -2889,7 +2894,9 @@ const Channel = class {
 	 * @property {Buffer} argbytes - Optional. Include when an argument must be included as bytes.
 	 * @property {map} transientMap - Optional. <sting, byte[]> The Map that can be
 	 *           used by the chaincode but not saved in the ledger, such as
-	 *           cryptographic information for encryption.
+	 *           cryptographic information for encryption. Data that is to be
+	 *           kept in a private data store (a collection) should be passed to the
+	 *           chaincode in the transientMap.
 	 */
 
 
@@ -3139,7 +3146,9 @@ const Channel = class {
 	 *           the transaction proposal
 	 * @property {map} transientMap - Optional. <string, byte[]> map that can be
 	 *           used by the chaincode but not saved in the ledger, such as cryptographic
-	 *           information for encryption
+	 *           information for encryption. Data that is to be
+	 *           kept in a private data store (a collection) should be passed to the
+	 *           chaincode in the transientMap.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code>
 	 *           in the target chaincode. Default is 'invoke'
