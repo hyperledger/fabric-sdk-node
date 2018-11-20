@@ -36,7 +36,8 @@ describe('Transaction', () => {
 			status: 200
 		}
 	};
-	const errorProposalResponse = Object.assign(new Error(), {response: {status: 500, payload: 'error'}});
+	const errorResponseMessage = 'I_AM_AN_ERROR_RESPONSE';
+	const errorProposalResponse = Object.assign(new Error(errorResponseMessage), {response: {status: 500, payload: 'error'}});
 	const emptyStringProposalResponse = {
 		response: {
 			status: 200,
@@ -167,6 +168,12 @@ describe('Transaction', () => {
 			channel.sendTransactionProposal.resolves(errorProposalResponses);
 			const promise = transaction.submit();
 			return expect(promise).to.be.rejectedWith('No valid responses from any peers');
+		});
+
+		it('throws with message including underlying error message', () => {
+			channel.sendTransactionProposal.resolves(errorProposalResponses);
+			const promise = transaction.submit();
+			return expect(promise).to.be.rejectedWith(errorResponseMessage);
 		});
 
 		it('succeeds if some proposal responses are valid', () => {
