@@ -16,7 +16,6 @@ const tapColorize = require('tap-colorize');
 
 const fs = require('fs-extra');
 const path = require('path');
-const os = require('os');
 const util = require('util');
 const shell = require('gulp-shell');
 const testConstants = require('../../test/unit/constants.js');
@@ -200,7 +199,7 @@ gulp.task('run-tape-unit',
 		// too many listeners to the "unhandledRejection" event
 		process.setMaxListeners(0);
 
-		return gulp.src(shouldRunPKCS11Tests([
+		return gulp.src(shouldRunTests([
 			'test/unit/**/*.js',
 			'!test/unit/constants.js',
 			'!test/unit/util.js',
@@ -218,9 +217,9 @@ gulp.task('run-logger-unit',
 		// too many listeners to the "unhandledRejection" event
 		process.setMaxListeners(0);
 
-		return gulp.src(shouldRunPKCS11Tests([
+		return gulp.src([
 			'test/unit/logger.js'
-		]))
+		])
 			.pipe(tape({
 				reporter: tapColorize()
 			}));
@@ -239,7 +238,7 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 		// of the tests will re-use the same key value store that has
 		// saved the user certificates so they can interact with the
 		// network
-		return gulp.src(shouldRunPKCS11Tests([
+		return gulp.src(shouldRunTests([
 			'test/unit/config.js', // needs to be first
 			'test/integration/fabric-ca-affiliation-service-tests.js',
 			'test/integration/fabric-ca-identity-service-tests.js',
@@ -286,19 +285,31 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 	});
 
 // Filter out tests that should not be run on specific operating systems since only the x64 CI jobs are configured with SoftHSM
-// - disable the pkcs11.js test for s390 or other jobs
-// - may be enabled manually with an environment variable
-function shouldRunPKCS11Tests(tests) {
-	if (typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() === 'false' && os.arch().match(/(x64|x86)/) !== null) {
+// - disable the pkcs11 (HSM) tests for s390 (non x86)
+// - may be enabled manually with an environment variable, (actually left enabled, but disable the non HSM version of the e2e test)
+// - disable javachaincode except for x86 environment
+// - may enable the java testing with environment variable
+function shouldRunTests(tests) {
+	// for now always disable the pkcs11 testing on s390
+	if (arch.indexOf('s390') === 0) {
 		tests.push('!test/unit/pkcs11.js');
 		tests.push('!test/integration/network-e2e/e2e-hsm.js');
-	} else if (os.arch().match(/(x64|x86)/) === null) {
-		tests.push('!test/unit/pkcs11.js');
-		tests.push('!test/integration/javachaincode/e2e.js');
-		tests.push('!test/integration/network-e2e/e2e-hsm.js');
-	} else {
-		// If running HSM tests
+	// check to see if they want to test PKCS11
+	} else if (typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() === 'true') {
 		tests.push('!test/integration/network-e2e/e2e.js');
+	// check to see if they do not want to test PKCS11
+	} else if (typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() === 'false') {
+		tests.push('!test/unit/pkcs11.js');
+		tests.push('!test/integration/network-e2e/e2e-hsm.js');
+	// default is to run the PKCS11 tests so we need to disable the non HSM version
+	} else {
+		tests.push('!test/integration/network-e2e/e2e.js');
+	}
+	// keep the java tests
+	if (typeof process.env.JAVA_TESTS === 'string' && process.env.JAVA_TESTS.toLowerCase() === 'true') {
+	// disable when z390 or when JAVA tests is off
+	} else 	if ((arch.indexOf('s390') === 0) || (typeof process.env.JAVA_TESTS === 'string' && process.env.JAVA_TESTS.toLowerCase() === 'false')) {
+		tests.push('!test/integration/javachaincode/e2e.js');
 	}
 
 	return tests;
