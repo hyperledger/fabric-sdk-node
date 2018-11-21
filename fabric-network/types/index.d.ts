@@ -22,6 +22,7 @@ export interface GatewayOptions {
 }
 
 export interface DiscoveryOptions {
+	asLocalhost?: boolean;
 	enabled?: boolean;
 }
 

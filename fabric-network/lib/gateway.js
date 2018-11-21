@@ -58,7 +58,10 @@ const logger = require('./logger').getLogger('Gateway');
  * @typedef {Object} Gateway~DiscoveryOptions
  * @memberof module:fabric-network
  * @property {boolean} [enabled=true] True if discovery should be used; otherwise false.
+ * @property {boolean} [asLocalhost=true] Convert discovered host addresses to be 'localhost'. Will be needed when
+ * running a docker composed fabric network on the local system; otherwise should be disabled.
  */
+
 /**
  * The gateway peer provides the connection point for an application to access the Fabric network.  It is instantiated using
  * the default constructor.

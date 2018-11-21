@@ -164,7 +164,7 @@ const Channel = class {
 	 *           commit handler implementing {@link CommitHandler}.
 	 * @property {boolean} asLocalhost - Optional. Convert discovered host addresses
 	 *           to be 'localhost'. Will be needed when running a docker composed
-	 *           fabric network on the local system.
+	 *           fabric network on the local system; otherwise should be disabled. Defaults to true.
 	 * @property {byte[]} configUpdate - Optional. To initialize this channel with
 	 *           a serialized ConfigUpdate protobuf object.
 	 */

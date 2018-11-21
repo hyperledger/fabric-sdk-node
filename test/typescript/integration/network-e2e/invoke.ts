@@ -151,6 +151,7 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 		const contract = await createContract(t, gateway, {
 			clientTlsIdentity: 'tlsId',
 			discovery: {
+				asLocalhost: true, // Redundant since discovery is disabled but ensures TS definitions are correct
 				enabled: false,
 			},
 			identity: 'User1@org1.example.com',
