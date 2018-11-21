@@ -182,9 +182,9 @@ class Transaction {
 				// this is either an error from the sdk, peer response or chaincode response.
 				// we can distinguish between sdk vs peer/chaincode by the isProposalResponse flag in the future.
 				// TODO: would be handy to know which peer the response is from and include it here.
-				const warning = util.format('Response from attempted peer comms was an error: %j', responseContent);
-				logger.warn('_validatePeerResponses: ' + warning);
-				invalidResponseMsgs.push(warning);
+				const message = responseContent.message;
+				logger.warn('_validatePeerResponses: Received error response from peer:', responseContent);
+				invalidResponseMsgs.push(message);
 				invalidResponses.push(responseContent);
 			} else {
 				// anything else is a successful response ie status will be less the 400.
@@ -196,9 +196,9 @@ class Transaction {
 		});
 
 		if (validResponses.length === 0) {
-			const errorMessages = ['No valid responses from any peers.'];
-			invalidResponseMsgs.forEach(invalidResponse => errorMessages.push(invalidResponse));
-			const msg = errorMessages.join('\n');
+			const messages = Array.of(`No valid responses from any peers. ${invalidResponseMsgs.length} peer error responses:`,
+				...invalidResponseMsgs);
+			const msg = messages.join('\n    ');
 			logger.error('_validatePeerResponses: ' + msg);
 			throw new Error(msg);
 		}

@@ -713,6 +713,7 @@ test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', as
 		const response = await contract.submitTransaction('throwError', 'a', 'b', '100');
 		t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
 	} catch (expectedErr) {
+		t.comment(expectedErr.message);
 		if (expectedErr.message.includes('throwError: an error occurred')) {
 			t.pass('Successfully handled invocation errors');
 		} else {
