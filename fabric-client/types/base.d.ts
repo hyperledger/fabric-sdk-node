@@ -4,26 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { CryptoSetting, ICryptoSuite, ICryptoKeyStore, IKeyValueStore } from 'fabric-client';
+import { CryptoSetting, ICryptoKeyStore, ICryptoSuite, IKeyValueStore } from 'fabric-client';
 
 export abstract class BaseClient {
+	public static newCryptoSuite(setting?: CryptoSetting): ICryptoSuite;
+	public static newCryptoKeyStore(obj?: { path: string }): ICryptoKeyStore;
+	public static newDefaultKeyValueStore(obj?: { path: string }): Promise<IKeyValueStore>;
+
+	public static setLogger(logger: any): void;
+
+	public static getConfigSetting(name: string, defaultValue?: any): any;
+	public static addConfigFile(path: string): void;
+	public static setConfigSetting(name: string, value: any): void;
+
+	public static getLogger(name: string): any;
+
+	public static normalizeX509(raw: string): string;
+
 	constructor();
-	static newCryptoSuite(setting?: CryptoSetting): ICryptoSuite;
-	static newCryptoKeyStore(obj?: { path: string }): ICryptoKeyStore;
-	static newDefaultKeyValueStore(obj?: { path: string }): Promise<IKeyValueStore>;
+	public getConfigSetting(name: string, defaultValue?: any): any;
+	public setConfigSetting(name: string, value: any): void;
 
-	static setLogger(logger: any): void;
-
-	static getConfigSetting(name: string, default_value?: any): any;
-	getConfigSetting(name: string, default_value?: any): any;
-	static addConfigFile(path: string): void;
-	static setConfigSetting(name: string, value: any): void;
-	setConfigSetting(name: string, value: any): void;
-
-	static getLogger(name: string): any;
-
-	setCryptoSuite(suite: ICryptoSuite): void;
-	getCryptoSuite(): ICryptoSuite;
-
-	static normalizeX509(raw: string): string;
+	public setCryptoSuite(suite: ICryptoSuite): void;
+	public getCryptoSuite(): ICryptoSuite;
 }

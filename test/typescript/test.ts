@@ -258,13 +258,13 @@ test('use the connection profile file', (t: any) => {
 
 			return client.installChaincode(request);
 		}).then((results: ProposalResponseObject) => {
-			if (results && results[0] && results[0][0].response && results[0][0].response.status === 200) {
-				t.pass('Successfully installed chain code on org1');
-			} else {
+			const firstResponse = results[0][0];
+			if (firstResponse instanceof Error || firstResponse.response.status !== 200) {
 				t.fail(' Failed to install chaincode on org1');
 				logger.debug('Failed due to: %j', results);
 				throw new Error('Failed to install chain code on org1');
 			}
+			t.pass('Successfully installed chain code on org1');
 
 			client.loadFromConfig(configOrg2);
 			t.pass('Successfully loaded \'admin\' for org2');
@@ -284,13 +284,13 @@ test('use the connection profile file', (t: any) => {
 
 			return client.installChaincode(request);
 		}).then((results: ProposalResponseObject) => {
-			if (results && results[0] && results[0][0].response && results[0][0].response.status === 200) {
-				t.pass('Successfully installed chain code on org2');
-			} else {
+			const firstResponse = results[0][0];
+			if (firstResponse instanceof Error || firstResponse.response.status !== 200) {
 				t.fail(' Failed to install chaincode on org2');
 				logger.debug('Failed due to: %j', results);
 				throw new Error('Failed to install chain code on org2');
 			}
+			t.pass('Successfully installed chain code on org2');
 
 			// Back to org1 for instantiation
 			client.loadFromConfig(configOrg1);
@@ -313,21 +313,23 @@ test('use the connection profile file', (t: any) => {
 		}).then((results: ProposalResponseObject) => {
 			const proposalResponses = results[0];
 			const proposal = results[1];
-			if (proposalResponses && proposalResponses[0].response && proposalResponses[0].response.status === 200) {
-				t.pass('Successfully sent Proposal and received ProposalResponse');
-				const request: TransactionRequest = {
-					proposal,
-					proposalResponses,
-					txId: instansiateTxId, //required to indicate that this is an admin transaction
-					//orderer : not specifying, the first orderer defined in the
-					//          connection profile for this channel will be used
-				};
 
-				return channel.sendTransaction(request); // still have org2 admin as signer
-			} else {
+			const firstResponse = proposalResponses[0];
+			if (firstResponse instanceof Error || firstResponse.response.status !== 200) {
 				t.fail('Failed to send  Proposal or receive valid response. Response null or status is not 200. exiting...');
 				throw new Error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
 			}
+
+			t.pass('Successfully sent Proposal and received ProposalResponse');
+			const request: TransactionRequest = {
+				proposal,
+				proposalResponses: proposalResponses as ProposalResponse[],
+				txId: instansiateTxId, //required to indicate that this is an admin transaction
+				//orderer : not specifying, the first orderer defined in the
+				//          connection profile for this channel will be used
+			};
+
+			return channel.sendTransaction(request); // still have org2 admin as signer
 		}).then((response: BroadcastResponse) => {
 			if (!(response instanceof Error) && response.status === 'SUCCESS') {
 				t.pass('Successfully sent transaction to instantiate the chaincode to the orderer.');
@@ -401,29 +403,26 @@ test('use the connection profile file', (t: any) => {
 
 			return channel.sendTransactionProposal(request); //logged in as org1 user
 		}).then((results: ProposalResponseObject) => {
-			const proposalResponses: ProposalResponse[] = results[0];
+			const proposalResponses: Array<ProposalResponse | Error> = results[0];
 			const proposal: Proposal = results[1];
 			let allGood = true;
 			// Will check to be sure that we see two responses as there are two peers defined on this
 			// channel that are endorsing peers
 			let endorsedResponses = 0;
 			for (const proposalResponse of proposalResponses) {
-				let oneGood = false;
 				endorsedResponses++;
-				if (proposalResponse.response && proposalResponse.response.status === 200) {
-					t.pass('transaction proposal has response status of good');
-					oneGood = true;
-				} else {
+				if (proposalResponse instanceof Error || !proposalResponse.response || !proposalResponse.response.status) {
+					t.fail('transaction response was unknown');
+					logger.error('transaction response was unknown %s', proposalResponse);
+					allGood = false;
+				} else if (proposalResponse.response.status !== 200) {
 					t.fail('transaction proposal was bad');
-					if (proposalResponse.response && proposalResponse.response.status) {
-						t.comment(' response status:' + proposalResponse.response.status +
-							' message:' + proposalResponse.response.message);
-					} else {
-						t.fail('transaction response was unknown');
-						logger.error('transaction response was unknown %s', proposalResponse);
-					}
+					t.comment(' response status:' + proposalResponse.response.status +
+						' message:' + proposalResponse.response.message);
+					allGood = false;
+				} else {
+					t.pass('transaction proposal has response status of good');
 				}
-				allGood = allGood && oneGood;
 			}
 			t.equals(endorsedResponses, 2, 'Checking that there are the correct number of endorsed responses');
 			if (!allGood) {
@@ -432,7 +431,7 @@ test('use the connection profile file', (t: any) => {
 			}
 			const request: TransactionRequest = {
 				proposal,
-				proposalResponses,
+				proposalResponses: proposalResponses as ProposalResponse[],
 			};
 
 			const promises = [];

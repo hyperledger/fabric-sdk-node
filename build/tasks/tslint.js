@@ -9,7 +9,7 @@ const tslint = require('gulp-tslint');
 gulp.task('tslint', () => {
 	return gulp.src([
 		// 'fabric-ca/**/*.ts',
-		// 'fabric-client/**/*.ts',
+		'fabric-client/**/*.ts',
 		'fabric-network/**/*.ts',
 		'test/**/*.ts',
 		'!fabric-network/coverage/**',
