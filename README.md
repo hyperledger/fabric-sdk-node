@@ -22,8 +22,7 @@ Clone the project and launch the following commands to install the dependencies 
 
 In the project root folder:
 * `npm install` to install dependencies
-* optionally, `gulp watch` to set up watch that updates fabric-ca-client's shared dependencies from fabric-client/lib and updates installed fabric-client and fabric-ca-client modules in node_modules. This command does not return, so you should keep it running in a separate command window as you work on the code and test in another command window. Note that you do NOT need to run this unless you plan to make changes in the fabric-client and fabric-ca-client packages
-* optionally, `gulp doc` to generate API docs if you want to review the doc content
+* optionally, `gulp docs` to generate API docs if you want to review the doc content
 * `npm test` or `gulp test-headless` to run the headless tests that do not require any additional set up
 
 The following tests require setting up a local blockchain network as the target. You need to build the necessary Docker images required to run the network. Follow the steps below to set it up.
@@ -85,14 +84,15 @@ The unit test assumes slot '0' and user PIN `98765432`. If your configuration is
 * PKCS11_SLOT
 
 ### Hyperledger Fabric Client objects and reference documentation
-For a high-level design specificiation for Fabric SDKs of all languages, visit [this google doc](https://docs.google.com/document/d/1R5RtIBMW9fZpli37E5Li5_Q9ve3BnQ4q3gWmGZj6Sv4/edit?usp=sharing) (Work-In-Progress).
+The SDK has support for Java based Chaincode. To turn these tests off, set the environment variable "JAVA_TESTS" to false.
 
+### Hyperledger Fabric Client objects 
 fabric-client and fabric-ca-client are written in CommonJS modules and take advantage of ECMAScript 2015 class syntax.
 
-* The main top-level class is **Channel**. It is the client's view of a fabric [channel](https://docs.google.com/document/d/1eRNxxQ0P8yp4Wh__Vi6ddaN_vhN2RQHP-IruHNUwyhc/). The SDK allows you to interact with multiple channels. A channel object can be configured with a different ordering service or share a common ordering service, depending on how the target blockchain network is set up. A channel object has a _KeyValueStore_ to store private keys and certificates for authenticated users. Through the channel object the application can perform
+* The main top-level class is **Client**. The client's view of a fabric [channel] is the class **Channel**.
+The SDK allows you to interact with multiple channels. A channel object can be configured with a different ordering service or share a common ordering service, depending on how the target blockchain network is set up. A client object has a _KeyValueStore_ to store private keys and certificates for authenticated users. Through the client object the application can perform
 * The **KeyValueStore** is a very simple interface which SDK uses to store and retrieve all persistent data. This data includes private keys, so it is very important to keep this storage secure. The default implementation is a simple file-based version found in the _FileKeyValueStore_ class. The SDK also provides an implementation based on CouchDB which can be configured to use a local CouchDB database or a remote deployment including a Cloudant database.
 * The **User** class represents an end user who transacts on the channel. The user object must have a valid enrollment configured in order to properly sign transaction requests. The enrollment materials can either be obtained from enrolling with fabric-ca or an external Certificate Authority.
-* The **ChannelEventHub** class encapsulates the interaction with the network peers' event streams.
 * The **FabricCAClientImpl** class provides security and identity related features such as user registration and enrollment, transaction certificate issuance. The Hyperledger Fabric has a built-in implementation that issues _ECerts_ (enrollment certificates) and _TCerts_ (transaction certificates). ECerts are for enrollment identity and TCerts are for transactions.
 
 ### Pluggability

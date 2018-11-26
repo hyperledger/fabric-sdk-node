@@ -21,6 +21,8 @@ const fs = require('fs-extra');
 const util = require('util');
 const path = require('path');
 
+let backup_env = null;
+
 // Logger tests /////////
 function testLogger(t, ignoreLevels) {
 	let output = '';
@@ -49,6 +51,14 @@ function testLogger(t, ignoreLevels) {
 		t.fail('Failed to test default logger levels: info, warn and error');
 	}
 }
+
+test('\n\n ** Logging utility tests - save settings **\n\n', (t) => {
+	if (process.env.HFC_LOGGING) {
+		backup_env = process.env.HFC_LOGGING;
+	}
+
+	t.end();
+});
 
 test('\n\n ** Logging utility tests - built-in logger **\n\n', (t) => {
 	if (process.env.HFC_LOGGING) {
@@ -248,4 +258,19 @@ test('\n\n ** Logging utility tests - test setting an invalid external logger **
 			t.end();
 		}
 	}
+});
+
+test('\n\n ** Logging utility tests - clean up **\n\n', (t) => {
+	if (backup_env) {
+		process.env.HFC_LOGGING = backup_env;
+	}
+
+	// remove the args we added
+	process.argv.pop();
+	// internal call. clearing the cached config.
+	global.hfc.config = undefined;
+	// internal call. clearing the cached logger.
+	global.hfc.logger = undefined;
+
+	t.end();
 });
