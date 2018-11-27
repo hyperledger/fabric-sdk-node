@@ -128,6 +128,9 @@ to use the `configtxgen` tool to generate a `genesis.block`.
 The output, a genesis block file for the orderer, will be used in
 the next step to launch the orderer node.
 
+> Notice some features are non-backwards compatible. To enable features from a particular fabric version,
+the `Capabilities` section in `configtx.yaml` should be updated before generate the `genesis.block`.
+
 ## Start the network
 
 Now we are ready to put it all together. The easiest way to launch the
