@@ -23,6 +23,7 @@ import {
 	Gateway,
 	GatewayOptions,
 	InMemoryWallet,
+	Transaction,
 	TransientMap,
 	X509WalletMixin,
 } from 'fabric-network';
@@ -158,8 +159,13 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 			wallet: inMemoryWallet,
 		});
 
-		const transactions = new Array(3).fill('move').map((name) => contract.createTransaction(name));
-		const transactionIds = transactions.map((tx) => tx.getTransactionID().getTransactionID());
+		const transactions: Transaction[] = [];
+		const transactionIds: string[] = [];
+		for (let i = 0; i < 3; i++) {
+			const transaction = contract.createTransaction('move');
+			transactions.push(transaction);
+			transactionIds.push(transaction.getTransactionID().getTransactionID());
+		}
 
 		// Obtain an event hub that that will be used by the underlying implementation
 		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
@@ -852,6 +858,42 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	} finally {
 		gateway.disconnect();
 	}
+});
+
+test('\n\n***** Network End-to-end flow: invoke multiple transactions concurrently *****\n\n', async (t: any) => {
+	const gateway = new Gateway();
+
+	try {
+		const contract = await createContract(t, gateway, {
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				enabled: false,
+			},
+			identity: 'User1@org1.example.com',
+			wallet: inMemoryWallet,
+		});
+
+		const expected = 'RESULT';
+		const promises: Array<Promise<Buffer>> = [];
+		for (let i = 0; i < 10; i++) {
+			promises.push(contract.submitTransaction('echo', expected));
+		}
+		const results = await Promise.all(promises);
+		const resultStrings = results.map((buffer) => buffer.toString('utf8'));
+
+		const badResults = resultStrings.filter((value) => value !== expected);
+		if (badResults.length > 0) {
+			t.fail('Got bad results: ' + badResults.join(', '));
+		} else {
+			t.pass('Got expected results from all transactions');
+		}
+	} catch (err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
+	}
+
+	t.end();
 });
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and no event strategy *****\n\n', async (t: any) => {

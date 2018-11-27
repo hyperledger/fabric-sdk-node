@@ -33,11 +33,11 @@ describe('TransactionEventHandler', () => {
 		});
 
 		stubStrategy = {
-			getConnectedEventHubs: sinon.stub(),
+			getEventHubs: sinon.stub(),
 			eventReceived: sinon.stub(),
 			errorReceived: sinon.stub()
 		};
-		stubStrategy.getConnectedEventHubs.resolves([stubEventHub]);
+		stubStrategy.getEventHubs.returns([stubEventHub]);
 	});
 
 	afterEach(() => {
@@ -157,7 +157,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('succeeds immediately with no event hubs', async () => {
-			stubStrategy.getConnectedEventHubs.resolves([]);
+			stubStrategy.getEventHubs.returns([]);
 			handler = new TransactionEventHandler(transactionId, stubStrategy);
 			await handler.startListening();
 			return expect(handler.waitForEvents()).to.be.fulfilled;
@@ -208,7 +208,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('does not timeout if no event hubs', async () => {
-			stubStrategy.getConnectedEventHubs.resolves([]);
+			stubStrategy.getEventHubs.returns([]);
 			const options = {commitTimeout: 418};
 			handler = new TransactionEventHandler(transactionId, stubStrategy, options);
 			await handler.startListening();

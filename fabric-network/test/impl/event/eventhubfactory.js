@@ -42,22 +42,12 @@ describe('EventHubFactory', () => {
 		stubEventHub1 = sinon.createStubInstance(ChannelEventHub);
 		stubEventHub1._stubInfo = 'eventHub1';
 		stubEventHub1.getName.returns('eventHub1');
-		stubEventHub1.isconnected.returns(true);
 
 		// Unconnected event hub that will successfully connect
 		stubEventHub2 = sinon.createStubInstance(ChannelEventHub);
 		stubEventHub2._stubInfo = 'eventHub2';
 		stubEventHub2.getName.returns('eventHub2');
-		stubEventHub2.isconnected.returns(false);
-		// Fake a connection success callback
-		stubEventHub2.connect.callsFake((fullBlocks, callback) => {
-			// Invoke callback manually rather than using stub.callsArgWith() to ensure the code will hang rather than
-			// error if the callback is not passed correctly. An error will be swallowed by the code in EventHubFactory
-			// and produce a false positive test result.
-			if (typeof callback === 'function') {
-				callback(null, stubEventHub2);
-			}
-		});
+
 		stubChannel = sinon.createStubInstance(Channel);
 		stubChannel.getName.returns('channel');
 		stubChannel.getChannelEventHub.withArgs(stubPeer1.getName()).returns(stubEventHub1);
@@ -85,40 +75,19 @@ describe('EventHubFactory', () => {
 			factory = new EventHubFactory(stubChannel);
 		});
 
-		it('returns empty array for no peer arguments', async () => {
-			const results = await factory.getEventHubs([]);
+		it('returns empty array for no peer arguments', () => {
+			const results = factory.getEventHubs([]);
 			expect(results).to.be.an('Array').that.is.empty;
 		});
 
-		it('returns eventHub for peer1', async () => {
-			const results = await factory.getEventHubs([stubPeer1]);
+		it('returns eventHub for peer1', () => {
+			const results = factory.getEventHubs([stubPeer1]);
 			expect(results).to.have.members([stubEventHub1]);
 		});
 
-		it('returns eventHubs for peer1 and peer2', async () => {
-			const results = await factory.getEventHubs([stubPeer1, stubPeer2]);
+		it('returns eventHubs for peer1 and peer2', () => {
+			const results = factory.getEventHubs([stubPeer1, stubPeer2]);
 			expect(results).to.have.members([stubEventHub1, stubEventHub2]);
-		});
-
-		it('does not reconnect a connected event hub', async () => {
-			const results = await factory.getEventHubs([stubPeer1]);
-			expect(results[0].connect.notCalled).to.be.true;
-		});
-
-		it('connects an unconnected event hub', async () => {
-			const results = await factory.getEventHubs([stubPeer2]);
-			expect(results[0].connect.called).to.be.true;
-		});
-
-		it('does not fail on error connecting event hub', async () => {
-			// Fake a connection failure callback
-			stubEventHub2.connect.callsFake((fullBlocks, callback) => {
-				if (typeof callback === 'function') {
-					callback(new Error('connect failed'));
-				}
-			});
-			const results = await factory.getEventHubs([stubPeer2]);
-			expect(results[0].connect.called).to.be.true;
 		});
 	});
 });

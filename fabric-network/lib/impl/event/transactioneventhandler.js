@@ -42,7 +42,7 @@ class TransactionEventHandler {
 
 		logger.debug('constructor:', util.format('transactionId = %s, options = %j', this.transactionId, this.options));
 
-		this.eventHubs = [];
+		this.eventHubs = strategy.getEventHubs();
 		this.respondedEventHubs = new Set();
 
 		this.notificationPromise = new Promise((resolve, reject) => {
@@ -56,7 +56,6 @@ class TransactionEventHandler {
 	 * @async
 	 */
 	async startListening() {
-		this.eventHubs = await this.strategy.getConnectedEventHubs();
 		if (this.eventHubs.length > 0) {
 			this._setListenTimeout();
 			await this._registerTxEventListeners();
@@ -83,7 +82,7 @@ class TransactionEventHandler {
 
 		const promises = this.eventHubs.map((eventHub) => {
 			return new Promise((resolve) => {
-				logger.debug('_registerAllEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
+				logger.debug('_registerTxEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
 
 				eventHub.registerTxEvent(
 					this.transactionId,

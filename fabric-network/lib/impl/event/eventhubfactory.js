@@ -6,8 +6,6 @@
 
 'use strict';
 
-const util = require('util');
-
 const logger = require('fabric-network/lib/logger').getLogger('EventHubFactory');
 
 /**
@@ -32,51 +30,12 @@ class EventHubFactory {
 	}
 
 	/**
-     * Gets event hubs for all specified peers. Where possible, the event hubs will be connected.
-     * @async
-     * @param {ChannelPeer[]} peers Peers for which event hubs should be connected.
-     * @returns {ChannelEventHub[]} Event hubs, which may or may not have successfully connected.
+     * Gets event hubs for all specified peers.
+     * @param {ChannelPeer[]} peers Peers for which event hubs should be obtained.
+     * @returns {ChannelEventHub[]} Event hubs, which may or may not be connected.
      */
-	async getEventHubs(peers) {
-		// Get event hubs in parallel as each may take some time
-		const eventHubPromises = peers.map((peer) => this.getEventHub(peer));
-		return Promise.all(eventHubPromises);
-	}
-
-	/**
-     * Get the event hub for a specific peer. Where possible, the event hub will be connected.
-     * @private
-     * @async
-     * @param {ChannelPeer} peer Peer for which the event hub should be connected.
-     * @returns {ChannelEventHub} Event hub, which may or may not have successfully connected.
-     */
-	async getEventHub(peer) {
-		const eventHub = this.channel.getChannelEventHub(peer.getName());
-		if (!eventHub.isconnected()) {
-			await this.connectEventHub(eventHub);
-		} else {
-			// event hub is already connected, nothing else needs to be done
-			logger.debug('getEventHub:', 'event hub already connected:', eventHub.getName());
-		}
-		return eventHub;
-	}
-
-	/**
-     * Attempt to connect a given event hub. Resolves successfully regardless of whether or the event hub connection
-     * was successful or failed.
-     * @private
-     * @async
-     * @param {ChannelEventHub} eventHub An event hub.
-     */
-	async connectEventHub(eventHub) {
-		try {
-			// Need to wrap in an arrow function to protect the value of this in connect()
-			const connect = util.promisify((callback) => eventHub.connect({}, callback));
-			await connect();
-			logger.debug('connectEventHub:', 'successfully connected event hub:', eventHub.getName());
-		} catch (error) {
-			logger.info('connectEventHub:', 'failed to connect event hub:', eventHub.getName(), error);
-		}
+	getEventHubs(peers) {
+		return peers.map((peer) => this.channel.getChannelEventHub(peer.getName()));
 	}
 }
 

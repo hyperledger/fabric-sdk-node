@@ -248,7 +248,7 @@ const Chaincode = class {
 
 	async echo(stub, args) {
 		if (args.length > 0) {
-			return shim.success(args[0]);
+			return shim.success(Buffer.from(args[0]));
 		} else {
 			return shim.success();
 		}

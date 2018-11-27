@@ -6,7 +6,6 @@
 
 'use strict';
 
-const isPromise = require('is-promise');
 const logger = require('fabric-network/lib/logger').getLogger('AbstractStrategy');
 
 /**
@@ -22,44 +21,30 @@ const logger = require('fabric-network/lib/logger').getLogger('AbstractStrategy'
 class AbstractEventStrategy {
 	/**
 	 * Constructor.
-	 * @param {Promise.ChannelEventHub[]} eventHubsPromise Promise to event hubs for which to process events.
+	 * @param {ChannelEventHub[]} eventHubs Event hubs for which to process events.
 	 */
-	constructor(eventHubsPromise) {
-		if (!isPromise(eventHubsPromise)) {
-			const message = 'Expected event hubs to be a Promise but was ' + typeof eventHubsPromise;
+	constructor(eventHubs) {
+		if (eventHubs.length < 1) {
+			const message = 'No event hubs for strategy';
 			logger.error('constructor:', message);
 			throw new Error(message);
 		}
 
-		this.eventHubsPromise = eventHubsPromise;
+		this.eventHubs = eventHubs;
 		this.counts = {
 			success: 0,
 			fail: 0,
-			expected: 0
+			expected: eventHubs.length
 		};
 	}
 
 	/**
 	 * Called by event handler to obtain the event hubs to which it should listen. Gives an opportunity for
 	 * the strategy to store information on the events it expects to receive for later use in event handling.
-	 * @async
-	 * @returns {ChannelEventHubs[]} connected event hubs.
-	 * @throws {Error} if the connected event hubs do not satisfy the strategy.
+	 * @returns {ChannelEventHubs[]} Event hubs.
 	 */
-	async getConnectedEventHubs() {
-		const eventHubs = await this.eventHubsPromise;
-		const connectedEventHubs = eventHubs.filter((eventHub) => eventHub.isconnected());
-
-		if (connectedEventHubs.length === 0) {
-			const message = 'No available event hubs found for strategy';
-			const eventHubNames = eventHubs.map((eventHub) => eventHub.getName());
-			logger.error('getConnectedEventHubs:', message, eventHubNames);
-			throw new Error(message);
-		}
-
-		this.counts.expected = connectedEventHubs.length;
-
-		return connectedEventHubs;
+	getEventHubs() {
+		return this.eventHubs;
 	}
 
 	/**
@@ -95,8 +80,7 @@ class AbstractEventStrategy {
 	 * @param {Function} successFn Callback function to invoke if the strategy is successful.
 	 * @param {Function} failFn Callback function to invoke if the strategy fails.
 	 */
-	// eslint-disable-next-line no-unused-vars
-	checkCompletion(counts, successFn, failFn) {
+	checkCompletion(counts, successFn, failFn) { // eslint-disable-line no-unused-vars
 		throw new Error('AbstractEventStrategy.checkCompletion() not implemented');
 	}
 }
