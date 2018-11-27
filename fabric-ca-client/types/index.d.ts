@@ -71,6 +71,7 @@ declare namespace FabricCAServices {
         enrollmentSecret: string;
         profile?: string;
         attr_reqs?: IAttributeRequest[];
+        csr?: Buffer;
     }
 
     export interface IKey {
