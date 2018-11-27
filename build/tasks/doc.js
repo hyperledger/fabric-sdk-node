@@ -45,7 +45,8 @@ const docSrc = [
 	'!fabric-client/lib/hash.js',
 	'!fabric-client/lib/utils.js',
 	'fabric-ca-client/index.js',
-	'fabric-ca-client/lib/FabricCAClientImpl.js',
+	'fabric-ca-client/lib/FabricCAServices.js',
+	'fabric-ca-client/lib/FabricCAClient.js',
 	'fabric-ca-client/lib/AffiliationService.js',
 	'fabric-ca-client/lib/IdentityService.js',
 ];
