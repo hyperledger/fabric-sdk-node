@@ -782,7 +782,6 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 			// send query
 			const request = {
 				chaincodeId : chaincodeId,
-				txId: tx_id,
 				fcn: fcn,
 				args: args,
 				request_timeout: 3000

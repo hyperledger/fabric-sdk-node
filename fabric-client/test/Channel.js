@@ -20,6 +20,7 @@ const rewire = require('rewire');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const expect = chai.expect;
+chai.should();
 
 const Channel = require('fabric-client/lib/Channel');
 const ChannelRewire = rewire('fabric-client/lib/Channel');
@@ -90,11 +91,46 @@ describe('Channel', () => {
 	});
 
 	/**
-	 * Create a skeleton proposal response object.
-	 * @param {String} results value for the payload.extension.results field of the proposal response
+	 * Create a transaction success proposal response.
+	 * @param {Buffer} [payload] Transaction return value.
 	 * @returns {ProposalResponse} protobuff
 	 */
-	function createProposalResponse(results) {
+	function createTransactionResponse(payload) {
+		const proposalResponse = createProposalResponse(payload);
+
+		if (payload) {
+			proposalResponse.response.payload = payload;
+		}
+
+		return proposalResponse;
+	}
+
+	/**
+	 * Create a transaction error proposal response.
+	 * @param {String} [message] Error message.
+	 * @returns {ProposalResponse} protobuff
+	 */
+	function createErrorResponse(message) {
+		const proposalResponse = createProposalResponse(message, 500);
+
+		if (typeof message === 'string') {
+			proposalResponse.response.message = Buffer.from(message);
+		}
+
+		return proposalResponse;
+	}
+
+	/**
+	 * Create a skeleton proposal response object.
+	 * @param {String} results value for the payload.extension.results fields of the proposal response.
+	 * @param {number} [status=200] status code for the response, where 200 is OK and 400+ is an error.
+	 * @returns {ProposalResponse} protobuff
+	 */
+	function createProposalResponse(results, status = 200) {
+		if (typeof results !== 'string') {
+			results = '';
+		}
+
 		const extension = new proposalProto.ChaincodeAction();
 		extension.response = new responseProto.Response();
 		extension.results = Buffer.from(results);
@@ -109,7 +145,7 @@ describe('Channel', () => {
 		endorsement.endorser = identity.toBuffer();
 
 		const response = new responseProto.Response();
-		response.status = 200;
+		response.status = status;
 
 		const proposalResponse = new responseProto.ProposalResponse();
 		proposalResponse.response = response;
@@ -1190,7 +1226,88 @@ describe('Channel', () => {
 
 	describe('#buildEnvelope', () => {});
 
-	describe('#queryByChaincode', () => {});
+	describe('#queryByChaincode', () => {
+		const peer1Result = 'PEER1_RESULT';
+		const peer2Result = 'PEER2_RESULT';
+		let request;
+		let spySendTransactionProposal;
+
+		beforeEach(() => {
+			sinon.stub(peer1, 'sendProposal').resolves(createTransactionResponse(Buffer.from(peer1Result)));
+			sinon.stub(peer2, 'sendProposal').resolves(createTransactionResponse(Buffer.from(peer2Result)));
+
+			spySendTransactionProposal = sinon.spy(Channel, 'sendTransactionProposal');
+
+			request = {
+				targets: [peer1, peer2],
+				chaincodeId: 'chaincodeId',
+				fcn: 'fcn',
+				args: ['arg1', 'arg2']
+			};
+		});
+
+		it('uses supplied transaction ID', async () => {
+			const txId = client.newTransactionID();
+			request.txId = txId;
+
+			await channel.queryByChaincode(request);
+
+			sinon.assert.calledWith(spySendTransactionProposal, sinon.match.has('txId', txId));
+		});
+
+		it('creates a transaction ID if none supplied', async () => {
+			await channel.queryByChaincode(request);
+			sinon.assert.calledWith(spySendTransactionProposal, sinon.match.has('txId', sinon.match.instanceOf(TransactionID)));
+		});
+
+		it('returns valid peer response payloads', async () => {
+			const results = await channel.queryByChaincode(request);
+
+			const resultStrings = results.map((buffer) => buffer.toString());
+			expect(resultStrings).to.have.members([peer1Result, peer2Result]);
+		});
+
+		it('returns error peer response messages', async () => {
+			const errorMessage = 'ALL YOUR BASE ARE BELONG TO ME';
+			peer1.sendProposal.resolves(createErrorResponse(errorMessage));
+			request.targets = [peer1];
+
+			const results = await channel.queryByChaincode(request);
+
+			expect(results).to.have.lengthOf(1);
+			const result = results[0];
+			expect(result).to.be.an.instanceof(Error);
+			expect(result.message).to.equal(errorMessage);
+		});
+
+		it('returns error peer response without message', async () => {
+			peer1.sendProposal.resolves(createErrorResponse());
+			request.targets = [peer1];
+
+			const results = await channel.queryByChaincode(request);
+
+			expect(results).to.have.lengthOf(1);
+			const result = results[0];
+			expect(result).to.be.an.instanceof(Error);
+		});
+
+		it('returns peer invocation failures', async () => {
+			const peerError = new Error('peer invocation error');
+			peer1.sendProposal.rejects(peerError);
+			request.targets = [peer1];
+
+			const results = await channel.queryByChaincode(request);
+
+			expect(results).to.have.lengthOf(1);
+			const result = results[0];
+			expect(result).to.be.an.instanceof(Error);
+			expect(result.message).to.equal(peerError.message);
+		});
+
+		it('throws if no request supplied', async () => {
+			expect(channel.queryByChaincode()).to.be.rejectedWith('Missing request');
+		});
+	});
 
 	describe('#_getTargetForQuery', () => {});
 

@@ -481,6 +481,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		transientMap?: TransientMap;
 		fcn?: string;
 		args: string[];
+		txId?: TransactionId;
 	}
 
 	export interface KeyOpts {
