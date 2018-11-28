@@ -18,7 +18,7 @@ var Config = class {
 	constructor() {
 		nconf.use('memory');
 		nconf.argv();
-		nconf.env();
+		nconf.env({parseValues: true});
 		nconf.use('mapenv', {type:'memory'});
 		this.mapSettings(nconf.stores['mapenv'], process.env);
 		this._fileStores = [];
