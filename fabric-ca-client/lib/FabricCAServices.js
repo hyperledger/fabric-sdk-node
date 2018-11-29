@@ -151,9 +151,21 @@ const FabricCAServices = class extends BaseClient {
 	 */
 
 	/**
+	 * @typedef {Object} Enrollment
+	 * @property {Object} key - the private key
+	 * @property {string} certificate - The enrollment certificate in base 64 encoded PEM format
+	 * @property {string} rootCertificate - Base 64 encoded PEM-encoded certificate chain of the CA's signing certificate
+	 */
+
+	/**
 	 * Enroll the member and return an opaque member object.
-	 * @param req the {@link EnrollmentRequest}
-	 * @returns Promise for an object with "key" for private key and "certificate" for the signed certificate
+	 *
+	 * @param req the {@link EnrollmentRequest} If the request contains the field "csr", this csr will be used for
+	 *     getting the certificate from Fabric-CA. Otherwise , a new private key will be generated and be used to
+	 *     generate a csr later.
+	 * @returns {Promise<Enrollment>} If the request does not contain the field "csr", the returned promise resolves an
+	 *     {@link Enrollment} object with "key" for the new generated private key. If the request contains the field "csr",
+	 *     the resolved {@link Enrollment} object does not contain the property "key".
 	 */
 	async enroll(req) {
 		if (!req) {
