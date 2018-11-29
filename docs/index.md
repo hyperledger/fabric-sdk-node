@@ -21,6 +21,11 @@ Security on the Fabric is enforced with digital signatures. All requests made to
 The Hyperledger Fabric SDK for Node.js is designed in an Object-Oriented programming style. Its modular construction enables application developers to plug in alternative implementations of key functions such as crypto suites, the state persistence store, and logging utility.
 
 The SDK's list of features include:
+* [**fabric-network**]{@link module:fabric-network} (the recommended API for):
+  * [Submitting transactions]{@link module:fabric-network.Transaction} to a smart contract.
+  * [Querying]{@link module:fabric-network.Transaction#evaluate} a smart contract for the latest application state.
+
+
 * **fabric-client**:
   * [create a new channel]{@link Client#createChannel}
   * [send channel information to a peer to join]{@link Channel#joinChannel}
@@ -53,6 +58,7 @@ The SDK's list of features include:
   * customizable [Crypto Key Store]{@link CryptoKeyStore} for any software-based cryptographic suite implementation
   * supports both TLS (grpcs://) or non-TLS (grpc://) connections to peers and orderers, see {@link Remote} which is the superclass for [peers]{@link Peer} and [orderers]{@link Orderer}
 
+
 * **fabric-ca-client**:
   * [register]{@link FabricCAServices#register} a new user
   * [enroll]{@link FabricCAServices#enroll} a user to obtain the enrollment certificate signed by the Fabric CA
@@ -60,8 +66,9 @@ The SDK's list of features include:
   * [customizable persistence store]{@link FabricCAServices}
 
 ### API Reference
-The SDK is made up of 3 top-level modules that can be accessed through the navigation menu **Modules**:
-* **api**: pluggable APIs for application developers to supply alternative implementations of key interfaces used by the SDK. For each interface there are built-in default implementations.
-* **fabric-client**: this module provides APIs to interact with the core components of a Hypreledger Fabric-based blockchain network, namely the peers, orderers and event streams.
-* **fabric-ca-client**: this module provides APIs to interact with the optional component, fabric-ca, that contains services for membership management.
+The SDK is made up of 4 top-level modules that can be accessed through the navigation menu **Modules**:
+* [**fabric-network**]{@link module:fabric-network}: Provides high level APIs for client applications to submit transactions and evaluate queries for a smart contract (chaincode).
+* **api**: Pluggable APIs for application developers to supply alternative implementations of key interfaces used by the SDK. For each interface there are built-in default implementations.
+* **fabric-client**: Provides APIs to interact with the core components of a Hypreledger Fabric-based blockchain network, namely the peers, orderers and event streams.
+* **fabric-ca-client**: Provides APIs to interact with the optional component, fabric-ca, that contains services for membership management.
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
