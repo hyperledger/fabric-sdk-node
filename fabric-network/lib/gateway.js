@@ -104,7 +104,7 @@ class Gateway {
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
 			},
 			discovery: {
-				enabled: true
+				enabled: Client.getConfigSetting('initialize-with-discovery', true)
 			}
 		};
 	}

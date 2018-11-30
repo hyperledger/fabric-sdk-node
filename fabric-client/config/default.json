@@ -23,7 +23,6 @@
 		"1.0": "./impl/NetworkConfig_1_0.js"
 	},
 	"grpc-wait-for-ready-timeout": 3000,
-	"initialize-with-discovery": false,
 	"discovery-as-localhost": true,
 	"discovery-cache-life": 300000,
 	"discovery-protocol": "grpcs",
