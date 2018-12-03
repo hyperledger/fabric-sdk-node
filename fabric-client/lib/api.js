@@ -360,8 +360,8 @@ module.exports.EndorsementHandler = class {
 	/**
 	 * This method will process the request object to calculate the target peers.
 	 * Once the targets have been determined, the channel to send the endorsement
-	 * transaction to all targets. The results will be analized to see if
-	 * enough good endorsments have been received.
+	 * transaction to all targets. The results will be analyzed to see if
+	 * enough completed endorsements have been received.
 	 *
 	 * @param {EndorsementHandlerParameters} params - A {@link EndorsementHandlerParameters}
 	 *        that contains enough information to determine the targets and contains

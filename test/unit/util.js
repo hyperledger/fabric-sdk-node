@@ -408,7 +408,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 				throw new Error('Failed to create the channel. ');
 			}
 		} catch (error) {
-			logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
+			logger.error('create channel - catch network config test error:: %s', error.stack ? error.stack : error);
 			t.fail('Failed to create channel :' + error);
 			throw new Error('Failed to create the channel. ');
 		}
@@ -568,7 +568,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 
 		t.pass('Successfully waited for chaincodes to startup');
 	} catch (error) {
-		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
+		logger.error('Instantiate - catch network config test error:: %s', error.stack ? error.stack : error);
 		t.fail('Test failed with ' + error);
 	}
 
@@ -637,7 +637,7 @@ module.exports.invokeAsAdmin = async function(t, client, channel, additional_req
 			throw new Error('Failed transaction');
 		}
 	} catch (error) {
-		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
+		logger.error('Invoke - catch network config test error:: %s', error.stack ? error.stack : error);
 		t.fail('Test failed with ' + error);
 	}
 
@@ -719,7 +719,7 @@ module.exports.queryChannelAsAdmin = async function(t, client, channel, tx_id_st
 		results = await channel.queryTransaction(tx_id_string, peer, true);
 		t.equals(0, results.validationCode, 'Checking able to find our transaction validationCode by admin');
 	} catch (error) {
-		logger.error('catch network config test error:: %s', error.stack ? error.stack : error);
+		logger.error('Query - catch network config test error:: %s', error.stack ? error.stack : error);
 		t.fail('Test failed with ' + error);
 	}
 

@@ -245,7 +245,13 @@ const Channel = class {
 			await this._commit_handler.initialize();
 		}
 
-		const results = await this._initialize(request);
+		let results = null;
+		try {
+			results = await this._initialize(request);
+		} catch (error) {
+			logger.debug(' Problem with the initialize :: %s', error);
+			throw error;
+		}
 
 		return results;
 	}
@@ -265,7 +271,11 @@ const Channel = class {
 
 		if (this._use_discovery) {
 			logger.debug('%s - starting discovery', method);
-			target_peer = this._getTargetForDiscovery(target_peer);
+			try {
+				target_peer = this._getTargetForDiscovery(target_peer);
+			} catch (error) {
+				logger.debug('Problem getting a target peer for discovery service :: %s', error);
+			}
 			if (!target_peer) {
 				throw new Error('No target provided for discovery services');
 			}
@@ -644,7 +654,7 @@ const Channel = class {
 	}
 
 	/**
-	 * Return a single endorsment plan based off a {@link DiscoveryChaincodeInterest}.
+	 * Return a single endorsement plan based off a {@link DiscoveryChaincodeInterest}.
 	 * @param {DiscoveryChaincodeInterest} endorsement_hint - The chaincodes and
 	 *        collections of how the discovery service will calculate an endorsement plan.
 	 * @return {DiscoveryResultEndorsementPlan} The endorsement plan based on the hint provided.
@@ -1125,7 +1135,7 @@ const Channel = class {
 	 * @returns {DiscoveryResponse} The results from the discovery service
 	 */
 	async _discover(request) {
-		const method = 'discover';
+		const method = '_discover';
 		const self = this;
 		logger.debug('%s - start', method);
 		const results = {};
@@ -1227,7 +1237,8 @@ const Channel = class {
 						results.orderers = config.orderers;
 					}
 					if (result.members) {
-						if (request.local && index === 0) {
+						// local query is always first if included
+						if (request.local && index === '0') {
 							results.local_peers = self._processDiscoveryMembershipResults(result.members);
 						} else {
 							results.peers_by_org = self._processDiscoveryMembershipResults(result.members);
@@ -2594,6 +2605,7 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} ChaincodeInvokeRequest
+	 *          This object contains many properties that will be used by the Discovery service.
 	 * @property {Peer[] | string[]} targets - Optional. The peers that will receive this request,
 	 *           when not provided the list of peers added to this channel object will
 	 *           be used. When this channel has been initialized using the discovery
@@ -2621,12 +2633,57 @@ const Channel = class {
 	 *           in the target chaincode. Default is 'invoke'
 	 * @property {string[]} args - An array of string arguments specific to the
 	 *           chaincode's 'Invoke' method
+	 * @property {string[]} required - Optional. An array of strings that represent
+	 *           the names of peers that are required for the endorsement. These will
+	 *           be the only peers which the proposal will be sent.
+	 *           This list only applies to endorsements using the discovery service.
+	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
 	 * @property {string[]} ignore - Optional. An array of strings that represent
 	 *           the names of peers that should be ignored by the endorsement.
 	 *           This list only applies to endorsements using the discovery service.
+	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
 	 * @property {string[]} preferred - Optional. An array of strings that represent
 	 *           the names of peers that should be given priority by the endorsement.
+	 *           Priority means that these peers will be chosen first for endorsements
+	 *           when an endorsement plan has more peers in a group then needed to
+	 *           satisfy the endorsement policy.
 	 *           This list only applies to endorsements using the discovery service.
+	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
+	 * @property {string[]} requiredOrgs - Optional. An array of strings that represent
+	 *           the names of an organization's MSP id that are required for the
+	 *           endorsement. Only peers in these organizations will be sent the
+	 *           proposal.
+	 *           This list only applies to endorsements using the discovery service.
+	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
+	 * @property {string[]} ignoreOrgs - Optional. An array of strings that represent
+	 *           the names of an organization's MSP id that should be ignored by the
+	 *           endorsement.
+	 *           This list only applies to endorsements using the discovery service.
+	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
+	 * @property {string[]} preferredOrgs - Optional. An array of strings that represent
+	 *           the names of an organization's MSP id that should be given priority
+	 *           by the endorsement. Peers within an organization may have their
+	 *           ledger height considered  using the optional property {@link preferredHeightGap}
+	 *           before being added to the priority list.
+	 *           This list only applies to endorsements using the discovery service.
+	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
+	 * @property {Number} preferredHeightGap - Optional. An integer representing
+	 *           the maximum difference in the block height of a peer and the
+	 *           highest block height found in a group of peers within an endorsement
+	 *           plan allowed to be a preferred peer. A peer will not be given
+	 *           priority if it's block height is less than the highest block
+	 *           height by an amount greater than this value. There is no default,
+	 *           if this value is not provided the block height of the peer will
+	 *           not be considered when being added to the preferred list.
+	 *           This list only applies to endorsements using the discovery service.
+	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
+	 * @property {string} sort - Optional. A string value that indicates how
+	 *           the peers within groups should be chosen.
+	 *           "ledgerHeight", sort the peers descending by the number of blocks
+	 *            on the channel ledger.
+	 *           "random", pull the peers randomly from the list, the preferred
+	 *            will be pulled first.
+	 *            The default will be to sort by ledger height.
 	 */
 
 	/**

@@ -1093,7 +1093,7 @@ describe('Client', () => {
 				await client.queryPeers();
 				should.fail();
 			} catch (e) {
-				e.message.should.equal('Peer is required');
+				e.message.should.equal('Target Peer is required');
 				sinon.assert.calledWith(FakeLogger.debug, '%s - start', 'queryPeers');
 			}
 		});
@@ -1103,7 +1103,7 @@ describe('Client', () => {
 				await client.queryPeers({});
 				should.fail();
 			} catch (e) {
-				e.message.should.equal('Peer is required');
+				e.message.should.equal('Target Peer is required');
 			}
 		});
 
@@ -1111,7 +1111,7 @@ describe('Client', () => {
 			try {
 				await client.queryPeers({target: 'peers'});
 			} catch (e) {
-				e.message.should.equal('Peer not found');
+				e.message.should.equal('Target Peer not found');
 				sinon.assert.calledWith(getTargetPeersStub, 'peers');
 			}
 		});
@@ -1121,7 +1121,7 @@ describe('Client', () => {
 			try {
 				await client.queryPeers({target: 'peers'});
 			} catch (e) {
-				e.message.should.equal('Peer not found');
+				e.message.should.equal('Target Peer not found');
 				sinon.assert.calledWith(getTargetPeersStub, 'peers');
 			}
 		});
