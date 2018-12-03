@@ -100,7 +100,7 @@ orderers:
     url: grpcs://localhost:7050
     grpcOptions:
       ssl-target-name-override: orderer.example.com
-      grpc-max-send-message-length: 15
+      grpc-max-send-message-length: 4194304
     tlsCACerts:
       path: test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem
 
@@ -144,7 +144,7 @@ certificateAuthorities:
     caName: caorg2
 ```
 
-The following example will have an existing fabric client load a connection profile configuration. The definition will only contain client side definitions and no fabric network definitions. Calling for a load on an existing fabric client does an overlay of the top level sections in the file being loaded replacing the sections on those previously loaded. In this case the file being loaded only has a client section, therefore the loaded definition will now have the previously loaded channels, organizations, peers, orderers, and certificateAuthorities section definitions and the newly loaded client section definition. This allows for an existing fabric client to be able to work within different organization.
+The following example will have an existing fabric client load a connection profile configuration. The definition will only contain client side definitions and no fabric network definitions. Calling for a load on an existing fabric client does an overlay of the top level sections in the file being loaded replacing the sections on those previously loaded. In this case the file being loaded only has a client section, therefore the loaded definition will now have the previously loaded channels, organizations, peers, orderers, and certificateAuthorities section definitions and the newly loaded client section definition. This allows for an existing fabric client to be able to work within different organization. Note: The the SDK's `grpc-max-send-message-length` default is -1 (unlimited).
 ```
 client.loadFromConfig('test/fixtures/org1.yaml');
 ```
