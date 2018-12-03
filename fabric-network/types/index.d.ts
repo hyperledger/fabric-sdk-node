@@ -91,7 +91,7 @@ export interface IdentityInfo {
 	mspId?: string;
 }
 
-interface Wallet {
+export interface Wallet {
 	delete(label: string): Promise<void>;
 	exists(label: string): Promise<boolean>;
 	export(label: string): Promise<Identity>;
