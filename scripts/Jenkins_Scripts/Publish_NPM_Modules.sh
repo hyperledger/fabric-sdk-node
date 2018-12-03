@@ -34,6 +34,10 @@ npmPublish() {
       export UNSTABLE_INCREMENT_VERSION=$RELEASE_VERSION.$UNSTABLE_INCREMENT
       echo "======> UNSTABLE_INCREMENT_VERSION:" $UNSTABLE_INCREMENT_VERSION
 
+      if [ "$1" = "fabric-network" ]; then
+          sed -i 's/\(.*\"fabric-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
+          sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
+      fi
 
       # Replace existing version with $UNSTABLE_INCREMENT_VERSION
       sed -i 's/\(.*\"version\"\: \"\)\(.*\)/\1'$UNSTABLE_INCREMENT_VERSION\"\,'/' package.json
@@ -78,7 +82,7 @@ cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
 # Set NPM_TOKEN from CI configuration
 npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 
-# Add or delete modules from here.. 
+# Add or delete modules from here..
 for modules in fabric-network fabric-common fabric-ca-client fabric-client; do
      if [ -d "$modules" ]; then
            echo -e "\033[32m Publishing $modules" "\033[0m"
