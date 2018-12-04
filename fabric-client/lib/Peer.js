@@ -118,18 +118,24 @@ class Peer extends Remote {
 						logger.debug('%s - Received proposal response from peer "%s": status - %s', method, self._url, (proposalResponse.response &&  proposalResponse.response.status) ? proposalResponse.response.status : 'undefined');
 						// 400 is the error threshold level, anything below that the endorser will endorse it.
 						if (proposalResponse.response && proposalResponse.response.status < 400) {
+							proposalResponse.peer = self.getCharacteristics();
 							resolve(proposalResponse);
 						} else if (proposalResponse.response && proposalResponse.response.message) {
 							const error = Object.assign(new Error(proposalResponse.response.message), proposalResponse.response);
+							error.peer = self.getCharacteristics();
 							error.isProposalResponse = true;
 							reject(error);
 						} else {
-							logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
-							reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
+							const return_error = new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url));
+							return_error.peer = self.getCharacteristics();
+							logger.error('%s - rejecting with:%s', method, return_error);
+							reject(return_error);
 						}
 					} else {
-						logger.error('GRPC client got a null or undefined response from the peer "%s".', self._url);
-						reject(new Error(util.format('GRPC client got a null or undefined response from the peer "%s".', self._url)));
+						const return_error = new Error(util.format('GRPC client got a null or undefined response from the peer "%s".', self._url));
+						return_error.peer = self.getCharacteristics();
+						logger.error('%s - rejecting with:%s', method, return_error);
+						reject(return_error);
 					}
 				}
 			});
@@ -172,17 +178,23 @@ class Peer extends Remote {
 					if (err) {
 						logger.debug('%s - Received discovery response from: %s status: %s', method, self._url, err);
 						if (err instanceof Error) {
+							err.peer = self.getCharacteristics();
 							reject(err);
 						} else {
-							reject(new Error(err));
+							const return_error = new Error(err);
+							return_error.peer = self.getCharacteristics();
+							reject(return_error);
 						}
 					} else {
 						if (response) {
 							logger.debug('%s - Received discovery response from peer "%s"', method, self._url);
+							response.peer = self.getCharacteristics();
 							resolve(response);
 						} else {
-							logger.error('GRPC client failed to get a proper response from the peer "%s".', self._url);
-							reject(new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url)));
+							const return_error = new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url));
+							return_error.peer = self.getCharacteristics();
+							logger.error('%s - rejecting with:%s', method, return_error);
+							reject(return_error);
 						}
 					}
 				});

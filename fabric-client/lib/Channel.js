@@ -1628,10 +1628,29 @@ const Channel = class {
 	 * @property {number} version
 	 * @property {Timestamp} timestamp - Time the proposal was created by the submitter
 	 * @property {Response} response
-	 * @property {byte[]} payload - The payload of the response. It is the encoded bytes of
-	 *                              the "ProposalResponsePayload" protobuf message
-	 * @property {Endorsement} endorsement - The endorsement of the proposal, basically the
-	 *                                       endorser's signature over the payload
+	 * @property {byte[]} payload - The payload of the response. It is the encoded
+	 *           bytes of the "ProposalResponsePayload" protobuf message
+	 * @property {Endorsement} endorsement - The endorsement of the proposal,
+	 *           basically the endorser's signature over the payload
+	 * @property {RemoteCharacteristics} peer - The characteristics of the peer
+	 *           that created this ProposalResponse. Items include the url, name,
+	 *           and connection options.
+	 *           This information is not returned from the peer, it is not part of
+	 *           the serialized protobuf data returned by the peer. This information
+	 *           is added by the client instance peer object to help identify
+	 *           this ProposalResponse object.
+	 */
+
+	/**
+	 * Information related to the peer instance object.
+	 *
+	 * @typedef {Object} RemoteCharacteristics
+	 * @property {string} url - The url of this peer
+	 * @property {string} name - The name of this peer, this will be the host and port
+	 *           if the peer was not created with the name option.
+	 * @property {Object} options - The options object that this peer built
+	 *           based on defaults and what was passed when it was created.
+	 *           Typical options will include the GRPC connection settings.
 	 */
 
 	/**

@@ -304,6 +304,31 @@ describe('Remote', () => {
 		});
 	});
 
+	describe('#getCharacteristics', () => {
+		let remote;
+		const name = 'someurl';
+		const url = 'grpc://' + name;
+		const options = {
+			GRPC_VALUE: '999'
+		};
+
+		beforeEach(() => {
+			remote = new Remote(url, options);
+		});
+
+		it('should get the url characteristics', () => {
+			remote.getCharacteristics().url.should.equal(url);
+		});
+
+		it('should get the name characteristics', () => {
+			remote.getCharacteristics().name.should.equal(name);
+		});
+
+		it('should get the options characteristics', () => {
+			remote.getCharacteristics().options.GRPC_VALUE.should.equal(options.GRPC_VALUE);
+		});
+	});
+
 	describe('#toString', () => {
 		let remote;
 

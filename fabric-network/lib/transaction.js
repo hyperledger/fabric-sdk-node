@@ -184,13 +184,15 @@ class Transaction {
 				// TODO: would be handy to know which peer the response is from and include it here.
 				const message = responseContent.message;
 				logger.warn('_validatePeerResponses: Received error response from peer:', responseContent);
+				logger.debug('_validatePeerResponses: invalid response from peer %j', responseContent.peer);
 				invalidResponseMsgs.push(message);
 				invalidResponses.push(responseContent);
 			} else {
-				// anything else is a successful response ie status will be less the 400.
+				// anything else is a successful response ie status will be less then 400.
 				// in the future we can do things like verifyProposalResponse and compareProposalResponseResults
 				// as part of an extended client side validation strategy but for now don't perform any client
 				// side checks as the peers will have to do this anyway and it impacts client performance
+				logger.debug('_validatePeerResponses: valid response from peer %j', responseContent.peer);
 				validResponses.push(responseContent);
 			}
 		});
