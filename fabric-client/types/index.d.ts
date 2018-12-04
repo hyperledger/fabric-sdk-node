@@ -330,6 +330,13 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		response: Response;
 		payload: Buffer;
 		endorsement: any;
+		peer: RemoteCharacteristics;
+	}
+
+	export interface RemoteCharacteristics {
+		url: string;
+		name: string;
+		options: object;
 	}
 
 	export interface SignedEvent {

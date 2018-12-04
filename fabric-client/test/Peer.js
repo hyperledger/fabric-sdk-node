@@ -211,7 +211,7 @@ describe('Peer', () => {
 			obj._endorserClient = endorserClient;
 
 			await obj.sendProposal('deliver').should.be.rejectedWith(/GRPC client got a null or undefined response from the peer/);
-			sinon.assert.calledWith(errorStub, 'GRPC client got a null or undefined response from the peer "%s".');
+			sinon.assert.calledWith(errorStub, '%s - rejecting with:%s');
 		});
 
 		it('should log and reject on invalid proposal response', async () => {
@@ -240,7 +240,7 @@ describe('Peer', () => {
 
 			await obj.sendProposal('deliver').should.be.rejectedWith(/GRPC client failed to get a proper response from the peer/);
 			sinon.assert.calledWith(debugStub, '%s - Received proposal response from peer "%s": status - %s');
-			sinon.assert.calledWith(errorStub, 'GRPC client failed to get a proper response from the peer "%s".');
+			sinon.assert.calledWith(errorStub, '%s - rejecting with:%s');
 		});
 
 		it('should log and reject on proposal response error status greater than or equal to 400', async () => {
@@ -296,6 +296,8 @@ describe('Peer', () => {
 
 			const response = await obj.sendProposal('deliver');
 			response.should.deep.equal(myResponse);
+			response.peer.name.should.equal('host:2700');
+			response.peer.url.should.equal('grpc://host:2700');
 			sinon.assert.calledWith(debugStub, '%s - Received proposal response from peer "%s": status - %s');
 		});
 
@@ -326,6 +328,8 @@ describe('Peer', () => {
 				err.isProposalResponse.should.be.true;
 				err.status.should.equal(500);
 				err.message.should.equal('some error');
+				err.peer.name.should.equal('host:2700');
+				err.peer.url.should.equal('grpc://host:2700');
 			}
 		});
 
@@ -473,7 +477,7 @@ describe('Peer', () => {
 			sinon.assert.calledWith(debugStub, '%s - Received discovery response from: %s status: %s');
 		});
 
-		it('should log and reject Error object on null response from discover', async () => {
+		it('should log and reject Error object on null response from discovery', async () => {
 
 			const FakeLogger = {
 				debug : () => {},
@@ -497,7 +501,7 @@ describe('Peer', () => {
 			obj._discoveryClient = discoveryClient;
 
 			await obj.sendDiscovery('deliver').should.be.rejectedWith(/GRPC client failed to get a proper response from the peer/);
-			sinon.assert.calledWith(errorStub, 'GRPC client failed to get a proper response from the peer "%s".');
+			sinon.assert.calledWith(errorStub, '%s - rejecting with:%s');
 		});
 
 		it('should log and resolve on good response from discover', async () => {
@@ -523,8 +527,11 @@ describe('Peer', () => {
 			const obj = new PeerRewire('grpc://host:2700');
 			obj._discoveryClient = discoveryClient;
 
-			const Response = await obj.sendDiscovery('deliver');
-			Response.should.deep.equal(myResponse);
+			const response = await obj.sendDiscovery('deliver');
+			response.should.deep.equal(myResponse);
+			response.peer.name.should.equal('host:2700');
+			response.peer.url.should.equal('grpc://host:2700');
+
 			sinon.assert.calledWith(debugStub, '%s - Received discovery response from peer "%s"');
 		});
 

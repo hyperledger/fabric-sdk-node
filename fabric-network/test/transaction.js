@@ -28,7 +28,8 @@ describe('Transaction', () => {
 	const validProposalResponse = {
 		response: {
 			status: 200,
-			payload: expectedResult
+			payload: expectedResult,
+			peer: {url: 'grpc://fakehost:9999'}
 		}
 	};
 	const noPayloadProposalResponse = {
@@ -37,7 +38,7 @@ describe('Transaction', () => {
 		}
 	};
 	const errorResponseMessage = 'I_AM_AN_ERROR_RESPONSE';
-	const errorProposalResponse = Object.assign(new Error(errorResponseMessage), {response: {status: 500, payload: 'error'}});
+	const errorProposalResponse = Object.assign(new Error(errorResponseMessage), {response: {status: 500, payload: 'error', peer: {url: 'grpc://fakehost:9999'}}});
 	const emptyStringProposalResponse = {
 		response: {
 			status: 200,

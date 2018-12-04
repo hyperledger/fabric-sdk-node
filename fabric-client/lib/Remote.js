@@ -26,6 +26,9 @@ const MAX_RECEIVE = 'grpc.max_receive_message_length';
 const MAX_SEND_V10 = 'grpc-max-send-message-length';
 const MAX_RECEIVE_V10 = 'grpc-max-receive-message-length';
 
+// the logger available during construction of instances
+const super_logger = utils.getLogger('Remote.js');
+
 /**
  * The Remote class represents a the base class for all remote nodes, Peer, Orderer , and MemberServicespeer.
  *
@@ -133,6 +136,8 @@ class Remote {
 		} else {
 			this._grpc_wait_for_ready_timeout = utils.getConfigSetting('grpc-wait-for-ready-timeout', 3000); // default 3 seconds
 		}
+
+		super_logger.debug(' ** Remote instance url: %s, name: %s, options loaded are:: %j', this._url, this._name, this._options);
 	}
 
 	waitForReady(client) {
@@ -196,6 +201,22 @@ class Remote {
 		} else {
 			return null;
 		}
+	}
+
+	/**
+	 * Get this remote endpoints characteristics
+	 *   It's name, url, and connection options are
+	 *   the items that make this instance unique.
+	 *   These items may be useful when debugging issues
+	 *   or validating responses.
+	 */
+	getCharacteristics() {
+		const characteristics = {};
+		characteristics.url = this._url;
+		characteristics.name = this._name;
+		characteristics.options = this._options;
+
+		return characteristics;
 	}
 
 	/**
