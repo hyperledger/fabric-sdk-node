@@ -1533,8 +1533,8 @@ class EventRegistration {
 	 *        setting if not option setting is set by the user
 	 */
 	constructor(onEvent, onError, options, default_unregister, default_disconnect) {
-		this.onEvent = onEvent;
-		this.onError = onError;
+		this._onEventFn = onEvent;
+		this._onErrorFn = onError;
 		this.unregister = default_unregister;
 		this.disconnect = default_disconnect;
 		this.unregister_action = () => { }; // do nothing by default
@@ -1554,6 +1554,22 @@ class EventRegistration {
 			} else {
 				throw new Error('Event registration has invalid value for "disconnect" option');
 			}
+		}
+	}
+
+	onEvent(...args) {
+		try {
+			this._onEventFn(...args);
+		} catch (error) {
+			logger.warn('Event notification callback failed', error);
+		}
+	}
+
+	onError(...args) {
+		try {
+			this._onErrorFn(...args);
+		} catch (error) {
+			logger.warn('Error notifacation callback failed', error);
 		}
 	}
 }
