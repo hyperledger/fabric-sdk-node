@@ -12,13 +12,13 @@ node ('hyp-x') { // trigger build on x86_64 node
      env.ARCH = "amd64"
      def nodeHome = tool 'nodejs-8.11.3'
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${nodeHome}/bin:$PATH"
-     def REFSPEC = sh(returnStdout: true, script: 'echo ${JOB_NAME} | grep "verify"').trim()
+     def jobname = sh(returnStdout: true, script: 'echo ${JOB_NAME} | grep "verify" && echo patchset || echo merge').trim()
      def failure_stage = "none"
 // delete working directory
      deleteDir()
       stage("Fetch Patchset") { // fetch gerrit refspec on latest commit
           try {
-             if (REFSPEC != null)  {
+             if (jobname == "patchset")  {
                    println "$GERRIT_REFSPEC"
                    println "$GERRIT_BRANCH"
                    checkout([
