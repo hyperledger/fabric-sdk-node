@@ -41,7 +41,8 @@ const ROLES = Constants.NetworkConfig.ROLES;
 
 /**
  * This is an implementation of the [NetworkConfig]{@link module:api.NetworkConfig} API.
- * It will be used to work with the v1.0.1 version of a JSON based network configuration.
+ * It will be used to work with the v1.0.1 version of a JSON based common connection profile.
+ * (also known as a network configuration).
  *
  * @class
  * @extends module:api.NetworkConfig
@@ -51,7 +52,7 @@ const NetworkConfig_1_0 = class {
 	/**
 	 * constructor
 	 *
-	 * @param {Object} network_config - Network Configuration as represented in a JSON object
+	 * @param {Object} network_config - Common Connection Profile as represented in a JSON object
 	 */
 	constructor(network_config, client_context) {
 		logger.debug('constructor, network_config: ' + JSON.stringify(network_config));
@@ -310,7 +311,7 @@ const NetworkConfig_1_0 = class {
 
 	/*
 	 * Internal method to add orderer instances to a channel as defined
-	 * by the network configuration
+	 * by the common connection profile
 	 */
 	_addOrderersToChannel(channel) {
 		// get the organization list for this channel
@@ -332,7 +333,7 @@ const NetworkConfig_1_0 = class {
 
 	/*
 	 * Internal method to configure a channel as defined
-	 * by the network configuration
+	 * by the common connection profile
 	 */
 	_addPeersToChannel(channel) {
 		// get the organization list for this channel

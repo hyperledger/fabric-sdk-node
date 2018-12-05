@@ -39,7 +39,7 @@ const path = require('path');
 	node --expose-gc test/integration/memory.js count=1000
 	node --expose-gc test/integration/memory.js count=1000 skipcreate=true
 */
-test('\n\n***** use the network configuration file  *****\n\n', (t) => {
+test('\n\n***** use the Common connection profile file  *****\n\n', (t) => {
 	looper(t);
 	t.end();
 });
@@ -100,7 +100,7 @@ async function createChannel(t) {
 	//  load that later so that we can switch this client to be in a different
 	//  organization
 	const client = Client.loadFromConfig('test/fixtures/network.yaml');
-	t.pass('Successfully loaded a network configuration');
+	t.pass('Successfully loaded a Common connection profile');
 
 	const channel_name = 'mychannel2';
 	let config = null;
@@ -317,7 +317,7 @@ async function createChannel(t) {
 			args: ['a', '100', 'b', '200'],
 			txId: tx_id
 			// targets is not required, however the logged in user may not have
-			// admin access to all the peers defined in the network configuration
+			// admin access to all the peers defined in the common connection profile
 			// targets: ['peer0.org1.example.com'],
 		};
 
@@ -331,7 +331,7 @@ async function createChannel(t) {
 				proposal: proposal,
 				txId : instansiate_tx_id // required to indicate that this is an admin transaction
 				// orderer : not specifying, the first orderer defined in the
-				//          network configuration for this channel will be used
+				//          common connection profile for this channel will be used
 			};
 
 			response = await channel.sendTransaction(request); // still have org2 admin as signer
@@ -367,7 +367,7 @@ async function actions(t) {
 	//  load that later so that we can switch this client to be in a different
 	//  organization
 	const client = Client.loadFromConfig('test/fixtures/network.yaml');
-	t.pass('Successfully loaded a network configuration');
+	t.pass('Successfully loaded a common connection profile');
 
 	const channel_name = 'mychannel2';
 	let channel = null;
@@ -399,7 +399,7 @@ async function actions(t) {
 			fcn: 'move',
 			args: ['a', 'b', '100'],
 			txId: tx_id
-			// targets - Letting default to all endorsing peers defined on the channel in the network configuration
+			// targets - Letting default to all endorsing peers defined on the channel in the common connection profile
 		};
 
 		results = await channel.sendTransactionProposal(request); // logged in as org2 user

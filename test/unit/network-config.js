@@ -48,7 +48,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		() => {
 			Client.loadFromConfig();
 		},
-		/Invalid network configuration/,
+		/Invalid common connection profile/,
 		'Should not be able to instantiate a new instance of "Client" without a valid path to the configuration');
 
 	t.throws(
@@ -78,7 +78,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			client.newChannel('mychannel2');
 			client.loadFromConfig('test/fixtures/network.json');
 		},
-		'1 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
+		'1 Should be able to instantiate a new instance of "Channel" with the definition in the common connection profile'
 	);
 
 	t.throws(
@@ -192,7 +192,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			t.equals(channel.getPeers()[0].getUrl(), 'grpcs://localhost:7051', ' check to see that the peer has been added to the channel');
 			t.equals(channel.getPeers()[1].getUrl(), 'grpcs://localhost:8051', ' check to see that the peer has been added to the channel');
 		},
-		'3 Should be able to instantiate a new instance of "Channel" with the definition in the network configuration'
+		'3 Should be able to instantiate a new instance of "Channel" with the definition in the common connection profile'
 	);
 
 	const network_config = {};
@@ -203,7 +203,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			client._network_config = new NetworkConfig(network_config, client);
 			client.newChannel('mychannel');
 		},
-		'Should be able to instantiate a new instance of "Channel" with blank definition in the network configuration'
+		'Should be able to instantiate a new instance of "Channel" with blank definition in the common connection profile'
 	);
 
 	t.throws(
@@ -215,8 +215,8 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			client.setCryptoSuite({cryptoSuite: 'cryptoSuite'});
 			client.getCertificateAuthority();
 		},
-		/Network configuration is missing this client's organization and certificate authority/,
-		'Check for Network configuration is missing this client\'s organization and certificate authority'
+		/Common connection profile is missing this client's organization and certificate authority/,
+		'Check for Common connection profile is missing this client\'s organization and certificate authority'
 	);
 
 	network_config.version = '1.0.0';
@@ -234,7 +234,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			const channel = client.newChannel('mychannel');
 			t.equals('mychannel', channel.getName(), 'Channel should be named');
 		},
-		'Should be able to instantiate a new instance of "Channel" with an empty channel definition in the network configuration'
+		'Should be able to instantiate a new instance of "Channel" with an empty channel definition in the common connection profile'
 	);
 
 	network_config.channels = {
@@ -268,7 +268,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			}
 			t.equals('orderer0', orderer.getName(), 'Orderer should be named');
 		},
-		'Should be able to instantiate a new instance of "Channel" with only orderer definition in the network configuration'
+		'Should be able to instantiate a new instance of "Channel" with only orderer definition in the common connection profile'
 	);
 
 	network_config.channels = {
@@ -300,7 +300,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 				t.fail('Failed to get an orderer');
 			}
 		},
-		'Should be able to instantiate a new instance of "Channel" with org that does not exist in the network configuration'
+		'Should be able to instantiate a new instance of "Channel" with org that does not exist in the common connection profile'
 	);
 
 	network_config.organizations = {
@@ -332,7 +332,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 				t.fail('Failed to get an orderer');
 			}
 		},
-		'Should be able to instantiate a new instance of "Channel" with a peer in the org that does not exist in the network configuration'
+		'Should be able to instantiate a new instance of "Channel" with a peer in the org that does not exist in the common connection profile'
 	);
 
 	network_config.peers = {
@@ -396,7 +396,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 				t.fail('Failed to get a channel peer');
 			}
 		},
-		'Should be able to instantiate a new instance of "Channel" with orderer, org and peer defined in the network configuration'
+		'Should be able to instantiate a new instance of "Channel" with orderer, org and peer defined in the common connection profile'
 	);
 
 	const peer1 = new Peer('grpcs://localhost:9999', {pem: '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'});
@@ -657,7 +657,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			client._network_config = new NetworkConfig({channels: {somechannel: {}}}, client);
 			client.getTargetOrderer(null, null, 'somechannel');
 		},
-		/"orderer" request parameter is missing and there are no orderers defined on this channel in the network configuration/,
+		/"orderer" request parameter is missing and there are no orderers defined on this channel in the common connection profile/,
 		'Should get an error when the request orderer is not defined and the channel does not have any orderers'
 	);
 
@@ -752,7 +752,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 	const pr1 = clientpr1.initCredentialStores().then(() => {
 		t.fail('pr1 Should not have been able to resolve the promise');
 	}).catch((err) => {
-		if (err.message.indexOf('No network configuration settings found') >= 0) {
+		if (err.message.indexOf('No common connection profile settings found') >= 0) {
 			t.pass('pr1 Successfully caught error');
 		} else {
 			t.fail('pr1 Failed to catch error. Error: ' + err.stack ? err.stack : err);
@@ -776,8 +776,8 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			const client = new Client();
 			client._setAdminFromConfig();
 		},
-		/No network configuration has been loaded/,
-		'Should get an error No network configuration has been loaded'
+		/No common connection profile has been loaded/,
+		'Should get an error No common connection profile has been loaded'
 	);
 
 	t.throws(
@@ -818,18 +818,21 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 
 	try {
 		const client = Client.loadFromConfig('test/fixtures/network.yaml');
-		t.pass('Successfully loaded a network configuration');
+		t.pass('Successfully loaded a common connection profile');
 		t.pass('Should be able to try to load an admin from the config');
 
 		client.loadFromConfig('test/fixtures/org1.yaml');
 		t.pass('Should be able to load an additional config ...this one has the client section');
 		t.pass('Should be able to try to load an admin from the config');
+		// check to see if we were able to load a setting from the yaml into
+		// the loaded profile
+		t.equal(client._connection_options.fakeSetting, 99, 'check loading connection options');
 	} catch (err) {
 		t.fail('Fail - caught an error while trying to load a config and run the set admin');
 	}
 
 	const clientp1 = Client.loadFromConfig('test/fixtures/network.yaml');
-	t.pass('Successfully loaded a network configuration');
+	t.pass('Successfully loaded a common connection profile');
 	clientp1.loadFromConfig('test/fixtures/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 
@@ -844,7 +847,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 	});
 
 	const clientp2 = Client.loadFromConfig('test/fixtures/network.yaml');
-	t.pass('Successfully loaded a network configuration');
+	t.pass('Successfully loaded a common connection profile');
 	clientp2.loadFromConfig('test/fixtures/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 	const p2 = clientp2.initCredentialStores().then(() => {
@@ -863,7 +866,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 	});
 
 	const clientp3 = Client.loadFromConfig('test/fixtures/network.yaml');
-	t.pass('Successfully loaded a network configuration');
+	t.pass('Successfully loaded a common connection profile');
 	clientp3.loadFromConfig('test/fixtures/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 	const p3 = clientp3.initCredentialStores().then(() => {
@@ -882,14 +885,14 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 	});
 
 	const clientp4 = Client.loadFromConfig('test/fixtures/network.yaml');
-	t.pass('Successfully loaded a network configuration');
+	t.pass('Successfully loaded a common connection profile');
 	const p4 = clientp4._setUserFromConfig({username: 'username', password: 'password'}).then(() => {
 		t.fail('Should not be able to load an user based on the config');
 	}).catch((err) => {
-		if (err.message.includes('Client requires a network configuration loaded, stores attached, and crypto suite.')) {
-			t.pass('Successfully caught Client requires a network configuration loaded, stores attached, and crypto suite.');
+		if (err.message.includes('Client requires a common connection profile loaded, stores attached, and crypto suite.')) {
+			t.pass('Successfully caught Client requires a common connection profile loaded, stores attached, and crypto suite.');
 		} else {
-			t.fail('Failed to catch Client requires a network configuration loaded, stores attached, and crypto suite.');
+			t.fail('Failed to catch Client requires a common connection profile loaded, stores attached, and crypto suite.');
 			logger.error(err.stack ? err.stack : err);
 		}
 	});

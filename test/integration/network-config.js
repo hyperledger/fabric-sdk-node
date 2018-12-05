@@ -662,7 +662,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 
 test('\n\n***** Enroll user and set user context using a specified caName *****\n\n', async (t) => {
 	try {
-		// ca_name and org_name must match network configuration
+		// ca_name and org_name must match common connection profile
 		const ca_name = 'ca-org1';
 		const org_name = 'org1';
 		const testuser = 'test_caname';
@@ -724,7 +724,7 @@ test('\n\n***** Enroll user and set user context using a specified caName *****\
 
 test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', async (t) => {
 	try {
-		// ca_name and org_name must match network configuration
+		// ca_name and org_name must match common connection profile
 		const ca_name = 'ca-org1';
 		const ca_bad_name = 'ca-badname'; // non existent ca
 		const ca_wrong_name = 'ca-org2'; // ca in another org

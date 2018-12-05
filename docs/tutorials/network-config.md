@@ -144,7 +144,15 @@ certificateAuthorities:
     caName: caorg2
 ```
 
-The following example will have an existing fabric client load a connection profile configuration. The definition will only contain client side definitions and no fabric network definitions. Calling for a load on an existing fabric client does an overlay of the top level sections in the file being loaded replacing the sections on those previously loaded. In this case the file being loaded only has a client section, therefore the loaded definition will now have the previously loaded channels, organizations, peers, orderers, and certificateAuthorities section definitions and the newly loaded client section definition. This allows for an existing fabric client to be able to work within different organization. Note: The the SDK's `grpc-max-send-message-length` default is -1 (unlimited).
+The following example will have an existing fabric client load a connection profile configuration. The definition will only contain client side definitions and no fabric network definitions. The client may load a new profile at anytime, it will overlay the top level sections it contains of those previously loaded. In this case the file being loaded only has a client section, therefore the loaded definition will now have the previously loaded channels, organizations, peers, orderers, and certificateAuthorities section definitions and the newly loaded client section definition. This allows for an existing fabric client to be able to work within different organization. 
+Notice this client definition contains a `connection` section with an `options` attribute in the
+client section. Settings defined here will be applied to new peer and orderer
+instances the client creates.
+This will include peers and orderers that will be created automatically when
+using the discovery service.
+Peers and Orderers may override these connection settings in their `grpcOptions` settings.
+
+Note: The fabric-client `grpc-max-send-message-length` and `grpc-max-receive-message-length` defaults are -1 (unlimited).
 ```
 client.loadFromConfig('test/fixtures/org1.yaml');
 ```
@@ -159,6 +167,9 @@ client:
     path: "/tmp/hfc-kvs/org1"
     cryptoStore:
       path: "/tmp/hfc-cvs/org1"
+  connection:
+    options
+      grpc.keepalive_time_ms: 120000
 ```
 
 ### Setup the stores
@@ -192,7 +203,7 @@ fabric_ca_client.register({enrollmentID: 'user1', affiliation: 'org1'}, admin)
 }).then((user)=> {
 ```
 ### Work with mutual TLS
-When your network configuration includes mutual TLS, the client certificate and private key must be available to the client instance before the endpoints are automatically built. The client instance will be able to pass the required material to the endpoint instance that is needed to establish the connection. The example shown will also retrieve the material. These steps must be performed before any actions on the fabric network.
+When your network is using mutual TLS, the client certificate and private key must be available to the client instance before the endpoints are automatically built. The client instance will be able to pass the required material to the endpoint instance that is needed to establish the connection. The example shown will also retrieve the material. These steps must be performed before any actions on the fabric network.
 ```
 // get the CA associated with this client's organization
 let fabric_ca_client = client.getCertificateAuthority();
@@ -221,7 +232,7 @@ Notice in the organizations section of the connection profile configuration that
 client.setAdminSigningIdentity('admin privateKey','admin cert');
 ```
 
-Assume that connection profile configurations have been loaded, setting up both an organization with an admin and indicating that the client is in that organization. Then when the call is made to get a transaction id object, the fabric client will check to see if an admin has been assigned to the fabric client and use that to generate the transaction id. The transaction id returned will be tagged that it was generated with the assigned administrative identity. Notice how the request object being built is using just a name for the orderer rather than a `Orderer` object. The fabric client will look up this name in the loaded connection profile configuration. When the `createChannel` call is made, the fabric client will know that this action should be signed by the administrative identity because the transaction id was marked as an admin based transaction. Note that the administrative signing identity is not required if the logged in user is an administrative user and has been assigned to the fabric client.  
+Assume that a common connection profile has been loaded, setting up both an organization with an admin and indicating that the client is in that organization. Then when the call is made to get a transaction id object, the fabric client will check to see if an admin has been assigned to the fabric client and use that to generate the transaction id. The transaction id returned will be tagged that it was generated with the assigned administrative identity. Notice how the request object being built is using just a name for the orderer rather than an `Orderer` object. The fabric client will look up this name in the loaded connection profile configuration. When the `createChannel` call is made, the fabric client will know that this action should be signed by the administrative identity because the transaction id was marked as an admin based transaction. Note that the administrative signing identity is not required if the logged in user is an administrative user and has been assigned to the fabric client.  
 ```
 let tx_id = client.newTransactionID(true);
 

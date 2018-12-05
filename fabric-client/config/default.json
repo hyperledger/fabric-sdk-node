@@ -17,8 +17,15 @@
 	"certificate-authority-client": "fabric-ca-client",
 	"nonce-size" : 24,
 	"grpc-ssl-cipher-suites": "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384",
-	"grpc.max_receive_message_length": -1,
-	"grpc.max_send_message_length": -1,
+	"connection-options": {
+		"grpc.max_receive_message_length": -1,
+		"grpc.max_send_message_length": -1,
+		"grpc.keepalive_time_ms": 120000, 
+ 		"grpc.http2.min_time_between_pings_ms": 120000, 
+		"grpc.keepalive_timeout_ms": 20000, 
+		"grpc.http2.max_pings_without_data": 0, 
+ 		"grpc.keepalive_permit_without_calls": 1 
+	},
 	"network-config-schema" : {
 		"1.0": "./impl/NetworkConfig_1_0.js"
 	},

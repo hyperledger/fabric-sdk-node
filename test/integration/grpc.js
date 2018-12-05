@@ -173,6 +173,9 @@ async function send(client, channel, url, cc, opts, megs, grpc_send_max, grpc_re
 		utils.setConfigSetting('grpc-max-receive-message-length', sdk_receive_max);
 	}
 
+	// replace the default loading
+	client._connection_options = {};
+
 	const peer = client.newPeer(
 		url,
 		opts
