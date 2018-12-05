@@ -41,6 +41,10 @@ client:
       # the timeout in seconds to be used on request to the orderer,
       # for example
       orderer: 30
+      # connection options, typically these will be common GRPC settings,
+      # overriding what has been set in the system config file "default.json"
+    options:
+      fakeSetting: 99
 
   # Since the node.js SDK supports pluggable KV stores, the properties under "credentialStore"
   # are implementation specific

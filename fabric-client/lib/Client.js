@@ -77,19 +77,22 @@ const Client = class extends BaseClient {
 
 		this._stateStore = null;
 		this._userContext = null;
+
+		// common connection profile
 		this._network_config = null;
+
 		// keep a collection of MSP's
 		this._msps = new Map();
 
 		// Is in dev mode or network mode
 		this._devMode = false;
 
-		// When using a network configuration there may be
+		// When using a common connection profile there may be
 		// an admin defined for the current user's organization.
 		// This will get set during the setUserFromConfig
 		this._adminSigningIdentity = null;
 
-		// When using a network configuration (connection profile) the client
+		// When using a common connection profile (connection profile) the client
 		// side mutual tls cert and key must be stored here
 		//  -- also store the hash after computing
 		this._tls_mutual = {};
@@ -97,10 +100,13 @@ const Client = class extends BaseClient {
 		this._organizations = new Map();
 		this._certificateAuthorities = new Map();
 		this._channels = new Map();
+
+		// load the default connection settings
+		this._connection_options = Client.getConfigSetting('connection-options', {});
 	}
 
 	/**
-	 * Load a network configuration object or load a JSON file and return a Client object.
+	 * Load a common connection profile object or load a JSON file and return a Client object.
 	 *
 	 * @param {object | string} loadConfig - This may be the config object or a path to the configuration file
 	 * @return {Client} An instance of this class initialized with the network end points.
@@ -112,7 +118,7 @@ const Client = class extends BaseClient {
 	}
 
 	/**
-	 * Load a network configuration object or load a JSON file and update this client with
+	 * Load a common connection profile object or load a JSON file and update this client with
 	 * any values in the config.
 	 *
 	 * @param {object | string} config - This may be the config object or a path to the configuration file
@@ -127,12 +133,13 @@ const Client = class extends BaseClient {
 		if (this._network_config.hasClient()) {
 			this._setAdminFromConfig();
 			this._setMspidFromConfig();
+			this._addConnectionOptionsFromConfig();
 		}
 	}
 
 	/**
 	 * Sets the mutual TLS client side certificate and key necessary to build
-	 * network endpoints when working with a network configuration (connection profile).
+	 * network endpoints when working with a common connection profile (connection profile).
 	 * This must be called before a peer, orderer, or channel eventhub is needed.
 	 *
 	 * If the tls client material has not been provided for the client, it will be
@@ -180,6 +187,57 @@ const Client = class extends BaseClient {
 		}
 	}
 
+	/*
+	 * Utility method to merge connection options into a set of options and
+	 * return a new options object.
+	 * The client's options will not override any existing settings by
+	 * the same name, these will only be added as new settings to the
+	 * application's options being passed in. see {@link Client#addConnectionOptions}
+	 * for how this client will have connection options to merge.
+	 *
+	 * @param {object} options - The object holding the application options
+	 *        that will be merged on top of this client's options.
+	 * @returns {object} - The object holding both the application's options
+	 *          and this client's options.
+	 */
+	_buildConnectionOptions(options) {
+		const method = 'getConnectionOptions';
+		logger.debug('%s - start', method);
+		let return_options = Object.assign({}, this._connection_options);
+		return_options = Object.assign(return_options, options);
+
+		if (!return_options.clientCert) {
+			this.addTlsClientCertAndKey(return_options);
+		}
+
+		return return_options;
+	}
+
+	/**
+	 * Add a set of connection options to this client. These will be
+	 * available to be merged into an application's options when new
+	 * peers and orderers are created or when a channel
+	 * uses discovery to automatically create the peers and orderers on
+	 * the channel. This would be a convenient place to store common GRPC settings
+	 * that affect all connections from this client.
+	 * These settings will be used when this client object builds new
+	 * {@link Peer} or {@link Orderer} instances when the {@link Client#newPeer},
+	 * {@link Client#getPeer}, {@link Client#newOrderer} or {@link Client#getOrderer}
+	 * methods are called.
+	 * Options will be automatically added when loading a common connection profile
+	 * and the client section has the 'connection' section with an 'options' attribute.
+	 * These options will be initially loaded from the system configuration
+	 * 'connection-options' setting.
+	 *
+	 * @param {object} options - The connection options that will be assigned to
+	 *        this client instance.
+	 */
+	addConnectionOptions(options) {
+		if (options) {
+			this._connection_options = Object.assign(this._connection_options, options);
+		}
+	}
+
 	/**
 	 * Determine if the fabric backend is started in
 	 * [development mode]{@link http://hyperledger-fabric.readthedocs.io/en/latest/chaincode4ade.html?highlight=develop%20mode#testing-using-dev-mode}.
@@ -221,12 +279,12 @@ const Client = class extends BaseClient {
 
 	/**
 	 * Get a {@link Channel} instance from the client instance. This is a memory-only lookup.
-	 * If the loaded network configuration has a channel by the 'name', a new channel instance
+	 * If the loaded common connection profile has a channel by the 'name', a new channel instance
 	 * will be created and populated with {@link Orderer} objects and {@link Peer} objects
-	 * as defined in the network configuration.
+	 * as defined in the common connection profile.
 	 *
 	 * @param {string} name - Optional. The name of the channel. When omitted the
-	 *        first channel defined in the loaded network configuration will be
+	 *        first channel defined in the loaded common connection profile will be
 	 *        returned
 	 * @param {boolean} throwError - Indicates if this method will throw an error
 	 *        if the channel is not found. Default is true.
@@ -244,7 +302,7 @@ const Client = class extends BaseClient {
 		if (channel) {
 			return channel;
 		} else {
-			// maybe it is defined in the network config
+			// maybe it is defined in the network
 			if (this._network_config) {
 				if (!name) {
 					const channel_names = Object.keys(this._network_config._network_config.channels);
@@ -302,7 +360,7 @@ const Client = class extends BaseClient {
 	 * @returns {Peer} The Peer instance.
 	 */
 	newPeer(url, opts) {
-		return new Peer(url, this._checkTLScert_n_key(opts));
+		return new Peer(url, this._buildConnectionOptions(opts));
 	}
 
 	/**
@@ -327,7 +385,7 @@ const Client = class extends BaseClient {
 
 	/**
 	 * Returns a list of {@link Peer} for the mspid of an organization as defined
-	 * in the currently loaded network configuration. If no id is
+	 * in the currently loaded common connection profile. If no id is
 	 * provided then the organization named in the currently active network
 	 * configuration's client section will be used.
 	 *
@@ -363,7 +421,7 @@ const Client = class extends BaseClient {
 	 * @returns {Orderer} The Orderer instance.
 	 */
 	newOrderer(url, opts) {
-		return new Orderer(url, this._checkTLScert_n_key(opts));
+		return new Orderer(url, this._buildConnectionOptions(opts));
 	}
 
 	/**
@@ -422,12 +480,12 @@ const Client = class extends BaseClient {
 
 	/**
 	 * Returns a CertificateAuthority implementation as defined by the settings
-	 * in the currently loaded network configuration and the client configuration.
-	 * A network configuration must be loaded for this get method to return a
+	 * in the currently loaded common connection profile and the client configuration.
+	 * A common connection profile must be loaded for this get method to return a
 	 * Certificate Authority.
 	 * A crypto suite must be assigned to this client instance. Running the
 	 * 'initCredentialStores' method will build the stores and create a crypto
-	 * suite as defined in the network configuration.
+	 * suite as defined in the common connection profile.
 	 *
 	 * @param {string} name - Optional - the name of the Certificate Authority
 	 *        defined in the loaded connection profile.
@@ -435,7 +493,7 @@ const Client = class extends BaseClient {
 	 */
 	getCertificateAuthority(name) {
 		if (!this._network_config) {
-			throw new Error('No network configuration has been loaded');
+			throw new Error('No common connection profile has been loaded');
 		}
 		if (!this._cryptoSuite) {
 			throw new Error('A crypto suite has not been assigned to this client');
@@ -461,7 +519,7 @@ const Client = class extends BaseClient {
 			const ca_service = this._buildCAfromConfig(ca_info);
 			ca_info.setFabricCAServices(ca_service);
 		} else {
-			throw new Error('Network configuration is missing this client\'s organization and certificate authority');
+			throw new Error('Common connection profile is missing this client\'s organization and certificate authority');
 		}
 
 		return ca_info;
@@ -501,7 +559,7 @@ const Client = class extends BaseClient {
 	}
 
 	/**
-	 * Returns the "client" section of the network configuration.
+	 * Returns the "client" section of the common connection profile.
 	 *
 	 * @returns {object} The client section from the configuration
 	 */
@@ -517,7 +575,7 @@ const Client = class extends BaseClient {
 	 * reference to the organization.
 	 *
 	 * @returns {string} the mspid of the organization defined in the client
-	 *          section of the loaded network configuration
+	 *          section of the loaded common connection profile
 	 */
 	getMspid() {
 		return this._mspid;
@@ -845,7 +903,7 @@ const Client = class extends BaseClient {
 	 * @param {Peer} peer - The target peer to send the query
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials
 	 *        should be used in making this call to the peer. An administrative
-	 *        identity must have been loaded by network configuration or by
+	 *        identity must have been loaded by common connection profile or by
 	 *        using the 'setAdminSigningIdentity' method.
 	 * @returns {Promise} A promise to return a {@link ChannelQueryResponse}
 	 */
@@ -919,7 +977,7 @@ const Client = class extends BaseClient {
 	 * @param {Peer} peer - The target peer
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials
 	 *        should be used in making this call to the peer. An administrative
-	 *        identity must have been loaded by network configuration or by
+	 *        identity must have been loaded by common connection profile or by
 	 *        using the 'setAdminSigningIdentity' method.
 	 * @returns {Promise} Promise for a {@link ChaincodeQueryResponse} object
 	 */
@@ -973,7 +1031,7 @@ const Client = class extends BaseClient {
 	 * @property {Peer[] | string[]} targets - Optional. An array of Peer objects or peer names
 	 *           where the chaincode will be installed. When excluded, the peers assigned
 	 *           to this client's organization will be used as defined in the
-	 *           network configuration. If the 'channelNames' property is included,
+	 *           common connection profile. If the 'channelNames' property is included,
 	 *           the target peers will be based the peers defined in the channels.
 	 * @property {string} chaincodePath - Required. The path to the location of
 	 *           the source code of the chaincode. If the chaincode type is golang,
@@ -996,7 +1054,7 @@ const Client = class extends BaseClient {
 	 *           'golang', 'car', 'node' or 'java'.
 	 *           Default is 'golang'.
 	 * @property {string[] | string} channelNames - Optional. When no targets are
-	 *           provided. The loaded network configuration will be searched for
+	 *           provided. The loaded common connection profile will be searched for
 	 *           suitable target peers. Peers that are defined in the channels named
 	 *           by this property and in this client's organization and that are
 	 *           in the endorsing or chain code query role on the named channel
@@ -1123,8 +1181,8 @@ const Client = class extends BaseClient {
 
 	/**
 	 * Sets the state and crypto suite for use by this client.
-	 * This requires that a network config has been loaded. Will use the settings
-	 * from the network configuration along with the system configuration to build
+	 * This requires that a common connection profile has been loaded. Will use the settings
+	 * from the common connection profile along with the system configuration to build
 	 * instances of the stores and assign them to this client and the crypto suites
 	 * if needed.
 	 *
@@ -1132,7 +1190,7 @@ const Client = class extends BaseClient {
 	 */
 	async initCredentialStores() {
 		if (!this._network_config) {
-			throw new Error('No network configuration settings found');
+			throw new Error('No common connection profile settings found');
 		}
 		const client_config = this._network_config.getClientConfig();
 		if (client_config && client_config.credentialStore) {
@@ -1231,14 +1289,14 @@ const Client = class extends BaseClient {
 
 	/*
 	 * Utility method to set the admin signing identity object based on the current
-	 * organization defined in the network configuration. A network configuration
+	 * organization defined in the common connection profile. A common connection profile
 	 * be must loaded that defines an organization for this client and have an
 	 * admin credentials defined.
 	 */
 	_setAdminFromConfig() {
 		let admin_key, admin_cert, mspid = null;
 		if (!this._network_config) {
-			throw new Error('No network configuration has been loaded');
+			throw new Error('No common connection profile has been loaded');
 		}
 
 		const client_config = this._network_config.getClientConfig();
@@ -1257,13 +1315,13 @@ const Client = class extends BaseClient {
 	}
 
 	/*
-	 * Utility method to set the mspid from current network configuration.
-	 * A network configuration be must loaded and defines both an organization
+	 * Utility method to set the mspid from current common connection profile.
+	 * A common connection profile be must loaded and defines both an organization
 	 * and the client.
 	 */
 	_setMspidFromConfig() {
 		if (!this._network_config) {
-			throw new Error('No network configuration has been loaded');
+			throw new Error('No common connection profile has been loaded');
 		}
 
 		const client_config = this._network_config.getClientConfig();
@@ -1275,10 +1333,25 @@ const Client = class extends BaseClient {
 		}
 	}
 
+	/*
+	 * Utility method to add connection options from the current common connection profile
+	 * client section into this client.
+	 */
+	_addConnectionOptionsFromConfig() {
+		if (!this._network_config) {
+			throw new Error('No common connection profile has been loaded');
+		}
+
+		const client_config = this._network_config.getClientConfig();
+		if (client_config && client_config.connection && client_config.connection.options) {
+			this.addConnectionOptions(client_config.connection.options);
+		}
+	}
+
 	/**
 	 * Utility Method
 	 * Sets the user context based on the passed in username and password
-	 * and the organization in the client section of the network configuration
+	 * and the organization in the client section of the common connection profile
 	 * settings.
 	 *
 	 * @param {Object} opts - contains
@@ -1291,7 +1364,7 @@ const Client = class extends BaseClient {
 			throw new Error('Missing parameter. Must have a username.');
 		}
 		if (!this._network_config || !this._stateStore || !this._cryptoSuite) {
-			throw new Error('Client requires a network configuration loaded, stores attached, and crypto suite.');
+			throw new Error('Client requires a common connection profile loaded, stores attached, and crypto suite.');
 		}
 		this._userContext = null;
 
@@ -1314,7 +1387,7 @@ const Client = class extends BaseClient {
 			}
 		}
 		if (!mspid) {
-			throw new Error('Network configuration is missing this client\'s organization and mspid');
+			throw new Error('Common connection profile is missing this client\'s organization and mspid');
 		}
 		const ca_service = this.getCertificateAuthority(opts.caName);
 
@@ -1374,7 +1447,7 @@ const Client = class extends BaseClient {
 	/**
 	 * An alternate object to use on the 'setUserContext' call in place of the 'User' object.
 	 * When using this object it is assumed that the current 'Client' instance has been loaded
-	 * with a network configuration.
+	 * with a common connection profile.
 	 *
 	 * @typedef {Object} UserNamePasswordObject
 	 * @property {string} username - Required. A string representing the user name of the user
@@ -1395,13 +1468,13 @@ const Client = class extends BaseClient {
 	 * @param {User | UserNamePasswordObject} user - An instance of the User class encapsulating the authenticated
 	 *                      user’s signing materials (private key and enrollment certificate).
 	 *                      The parameter may also be a {@link UserNamePasswordObject} that contains the username
-	 *                      and optionally the password and caName. A network configuration must has been loaded to use the
+	 *                      and optionally the password and caName. A common connection profile must has been loaded to use the
 	 *                      {@link UserNamePasswordObject} which will also create the user context and set it on
 	 *                      this client instance. The created user context will be based on the current network
 	 *                      configuration( i.e. the current organization's CA, current persistence stores).
 	 * @param {boolean} skipPersistence - Whether to skip saving the user object into persistence. Default is false and the
 	 *                                    method will attempt to save the user object to the state store. When using a
-	 *                                    network configuration and {@link UserNamePasswordObject}, the user object will
+	 *                                    common connection profile and {@link UserNamePasswordObject}, the user object will
 	 *                                    always be stored to the persistence store.
 	 * @returns {Promise} Promise of the 'user' object upon successful persistence of the user to the state store
 	 */
@@ -1422,7 +1495,7 @@ const Client = class extends BaseClient {
 			return user;
 		}
 		// must be they have passed in an object
-		logger.debug('setUserContext - will try to use network configuration to set the user');
+		logger.debug('setUserContext - will try to use common connection profile to set the user');
 		return this._setUserFromConfig(user);
 	}
 
@@ -1666,10 +1739,10 @@ const Client = class extends BaseClient {
 	 * Utility method to get the orderer for the request
 	 * Will find the orderer in this sequence:
 	 *    if request_orderer is an object, will check that it is an orderer
-	 *    if request_orderer is a string will look up in the network configuration the orderer by that name
+	 *    if request_orderer is a string will look up in the common connection profile the orderer by that name
 	 *    if channel_orderers is not null then this index 0 will be used
 	 *    if channel_name is not null will look up the channel to see if there is an orderer defined in the
-	 *        network configuration
+	 *        common connection profile
 	 *    will throw an error in all cases if there is not a valid orderer to return
 	 */
 	getTargetOrderer(request_orderer, channel_orderers, channel_name) {
@@ -1693,10 +1766,10 @@ const Client = class extends BaseClient {
 					orderer = temp_orderers[0];
 				} else {
 					throw new Error('"orderer" request parameter is missing and there' + ' ' +
-						'are no orderers defined on this channel in the network configuration');
+						'are no orderers defined on this channel in the common connection profile');
 				}
 			} else {
-				throw new Error(util.format('Channel name %s was not found in the network configuration', channel_name));
+				throw new Error(util.format('Channel name %s was not found in the common connection profile', channel_name));
 			}
 		} else {
 			throw new Error('Missing "orderer" request parameter');
@@ -1731,15 +1804,6 @@ const Client = class extends BaseClient {
 		}
 
 		return this._tls_mutual.clientCertHash;
-	}
-
-	_checkTLScert_n_key(opts) {
-		const new_opts = Object.assign({}, opts);
-		if (opts && !opts.clientCert) {
-			this.addTlsClientCertAndKey(new_opts);
-		}
-
-		return new_opts;
 	}
 };
 
@@ -1814,7 +1878,7 @@ function _getNetworkConfig(loadConfig, client) {
 					const NetworkConfig = require(parsing[version]);
 					network_config = new NetworkConfig(network_data, client);
 				} else {
-					error_msg = 'network configuration has an unknown "version"';
+					error_msg = 'common connection profile has an unknown "version"';
 				}
 			} else {
 				error_msg = 'missing "network-config-schema" configuration setting';
@@ -1827,7 +1891,7 @@ function _getNetworkConfig(loadConfig, client) {
 	}
 
 	if (error_msg) {
-		throw new Error(util.format('Invalid network configuration due to %s', error_msg));
+		throw new Error(util.format('Invalid common connection profile due to %s', error_msg));
 	}
 
 	return network_config;

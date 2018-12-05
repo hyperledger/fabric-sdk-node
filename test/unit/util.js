@@ -319,7 +319,7 @@ module.exports.getClientForOrg = async function(t, org) {
 	//  load that later so that we can switch this client to be in a different
 	//  organization
 	const client = Client.loadFromConfig('test/fixtures/network-ad.yaml');
-	t.pass('Successfully loaded a network configuration');
+	t.pass('Successfully loaded a common connection profile');
 
 	// load the client information for this organization
 	// this file only has the client section

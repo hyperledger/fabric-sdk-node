@@ -78,7 +78,7 @@ event registrations of the shutdown by using the registered `errorCallBack`s.
 #### `peer` parameter
 This parameter must be included when getting a new instance of the
 `ChannelEventHub`. The value may be a `Peer` instance or the name of a peer when
-using a `connection profile` see [How to use a common network configuration file](tutorial-network-config.html).
+using a `connection profile` see [How to use a common common connection profile file](tutorial-network-config.html).
 
 #### `eventCallback` parameter
 This parameter must be included. This is the callback function to be notified

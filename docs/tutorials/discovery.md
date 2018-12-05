@@ -355,7 +355,10 @@ peers:
 ```
 When a channel is created using the `client.getChannel()` after the client
 instance has loaded a connection profile, the fabric-client will create peers
-and assign them to the channel. Peers with the the `discover` role will be used
+and assign them to the channel.
+The peers and orderers will inherent the connection options as assigned to
+the client instance. see {@link Client#addConnectionOptions} 
+Peers with the the `discover` role will be used
 when the `channel.initialize()` is called and no peer is passed as a target.
 
 ```

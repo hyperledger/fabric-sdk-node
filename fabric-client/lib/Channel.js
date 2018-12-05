@@ -2257,7 +2257,7 @@ const Channel = class {
 	 *        added to the channel object.
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials
 	 *        should be used in making this call to the peer. An administrative
-	 *        identity must have been loaded by network configuration or by
+	 *        identity must have been loaded by common connection profile or by
 	 *        using the 'setAdminSigningIdentity' method.
 	 * @returns {Promise} A Promise for a fully decoded {@link ChaincodeQueryResponse} object.
 	 */
@@ -3383,7 +3383,7 @@ const Channel = class {
 	_getTargetForQuery(target) {
 		if (Array.isArray(target)) {
 			throw new Error('"target" parameter is an array, but should be a singular peer object' +
-				' ' + 'or peer name according to the network configuration loaded by the client instance');
+				' ' + 'or peer name according to the common connection profile loaded by the client instance');
 		}
 
 		const targets = this._getTargets(target, Constants.NetworkConfig.LEDGER_QUERY_ROLE, true);
