@@ -391,7 +391,7 @@ test('\n\n ** FabricCAClient: Test enroll With Static CSR **\n\n', (t) => {
 		});
 });
 
-test('\n\n ** FabricCAClient: Test enroll With a Signed CSR **\n\n', async (t) => {
+test('\n\n ** FabricCAClient: Test enroll With a CSR **\n\n', async (t) => {
 	try {
 		testUtil.resetDefaults();
 		const caService = getFabricCAService();

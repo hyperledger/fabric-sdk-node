@@ -145,7 +145,7 @@ const FabricCAServices = class extends BaseClient {
 	 * @property {string} enrollmentSecret - The secret associated with the enrollment ID
 	 * @property {string} profile - The profile name.  Specify the 'tls' profile for a TLS certificate;
 	 *                   otherwise, an enrollment certificate is issued.
-	 * @property {Buffer} csr - Optional. Certificate Signing Request. The message sent from client side to
+	 * @property {string} csr - Optional. PEM-encoded PKCS#10 Certificate Signing Request. The message sent from client side to
 	 *                   Fabric-ca for the digital identity certificate.
 	 * @property {AttributeRequest[]} attr_reqs - An array of {@link AttributeRequest}
 	 */

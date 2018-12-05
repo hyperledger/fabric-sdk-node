@@ -27,7 +27,7 @@
 		"title": "How to use private data"
 	},
 	"sign-transaction-offline": {
-		"title": "fabric-client: How to sign a transaction with an offline private key"
+		"title": "Working with an offline private key"
 	},
 	"transaction-commit-events" : {
 		"title": "fabric-network: How to wait for transactions to be commited to the ledger"

@@ -1,9 +1,25 @@
+This tutorial illustrates how to work with an offline private key with the Hyperledger Fabric Node.js SDK (fabric-client and fabric-ca-client) APIs.
 
-This tutorial illustrates how to use the Hyperledger Fabric Node.js client (fabric client) APIs when signing a transaction offline.
+For more information on:
+* getting started with Hyperledger Fabric see
+[Building your first network](http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html).
+* The transactional mechanics that take place during a standard asset exchange.
+[transacton flow in fabric](https://hyperledger-fabric.readthedocs.io/en/latest/txflow.html).
+* The Certificate Signing Request (CSR) in a PKI system.
+[CSR](https://en.wikipedia.org/wiki/Certificate_signing_request)
 
-In most use cases the fabric client will persist the user's credentials including the private key and sign transactions for the user. However some business scenarios may require a higher level of privacy. What if the user wants to keep their private key secret and does not trust another system or backend server to securely store it and use it.
+The following assumes an understanding of the Hyperledger Fabric network
+(orderers and peers),
+and of Node application development, including the use of the
+Javascript `promise` and `async await`.
 
-The fabric client comes with the ability to sign a transaction offline. The fabric client does not have to have access to the user's private key. The application may request the fabric client to generate a transaction proposal and then the application may sign the transaction. The application may then send the signed transaction back to fabric client ready to be sent to the fabric network.
+## Overview
+
+In most use cases the `fabric-client` will persist the user's credentials including the private key and sign transactions for the user. However some business scenarios may require higher level of privacy. What if the user wants to keep their private key secret and does not trust another system or backend server to securely store it and use it?
+
+The `fabric-client` comes with the ability to sign a transaction with an offline private key. By contrast to call `setUserContext()` with the user's identity (which contains the user's private key), an alternative way is to split the `sign a tx` process out of the `fabric-client` and let the application layer choose the place to store the private key, sign the transaction and send the signed transaction back. By this approach, the `fabric-client` does not require the user's private key any more.
+
+The Fabric-ca comes with the ability to enroll with a PKCS#10 standard CSR, which means the user can use an existing key pairs to generate the CSR and send this CSR to Fabric-ca to get the signed certificate. The `fabric-ca-client` also accepts a CSR at the API `enroll()`.
 
 ## The transaction flow for signing a transaction offline
 
@@ -158,3 +174,42 @@ Here is how this works with an offline private key.
     ```
 
 A full test can be found at `fabric-sdk-node/test/integration/signTransactionOffline.js`
+
+## How to enroll with a CSR
+
+The `fabric-ca-client` provides the API `enroll()` that accepts an optional param 'CSR'.
+If the params does not contains CSR, `fabric-ca-client` will first generate a key pair,
+then use the user's enrollmentID as the common name to create a CSR which is signed with
+the new generated private key. The response will contain the private key object if no 'CSR'
+in enroll params.
+
+To enroll with a CSR, first we should call `fabric-ca-client` API `register` to register
+a new identity at Fabric-ca. After a successfully register, we have the `enrollmentID` and `enrollmentSecret`.
+
+Then we should create the CSR. A common way is using the `openssl` command.
+> Notice the CSR must contain the information "common name" and the "common name" must be
+> same as the "enrollmentID" at the register step.
+
+Here is an example of how to create a CSR with the key algorithm rsa and key size 2048 bits
+
+```
+openssl req -nodes -newkey rsa:2048 -keyout test.key -out test.csr
+```
+
+The `test.csr` from the above command is represented as a Base64 encoded PKCS#10.
+
+Here is how we call enroll with a CSR
+
+```javascript
+const fs = require('fs');
+const csr = fs.readFileSync('the path to test.csr', 'utf8');
+const req = {
+    enrollmentID: enrollmentID,
+    enrollmentSecret: enrollmentSecret,
+    csr: csr,
+};
+
+const enrollment = await caService.enroll(req);
+
+// the enrollment.certificate contains the signed certificate from Fabric-ca
+```
