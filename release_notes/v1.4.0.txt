@@ -1,0 +1,46 @@
+Release Notes
+-------------
+
+Fabric 1.4.0 introduces a new programming model designed to improve developer
+  productivity and ease of use.  Without needing to understand the underlying
+  interactions in a fabric network, minimal code can be written to submit
+  transactions to the ledger.  A new NPM package `fabric-network` is added
+  which contains the classes and methods for writing blockchain enabled
+  applications in node.js using javascript or typescript.
+
+See https://fabric-sdk-node.github.io/module-fabric-network.html
+See https://hyperledger-fabric.readthedocs.io/en/developapps/developing_applications.html
+
+Added organizational parameters to the EndorsementHandler to support
+  endorsements using the discovery service. Applications may now request
+  proposals to be sent to peers in specific organizations, excluded, or given
+  priority. This is useful for applications utilizing fabric's discovery
+  service that wish to filter the list of peers the service provides. Peers
+  may be selected randomly or by ledger height when sending the proposal
+  to be endorsed.
+See https://fabric-sdk-node.github.io/tutorial-discovery.html
+
+Added support for offline private keys. The node application does not have to
+  have access to the user's private key.
+See https://fabric-sdk-node.github.io/tutorial-sign-transaction-offline.html
+
+Bug fixes and documentation improvements.
+
+
+Known Vulnerabilities
+---------------------
+none
+
+
+Resolved Vulnerabilities
+------------------------
+none
+
+
+Known Issues & Workarounds
+--------------------------
+
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/CHANGELOG.md#v140
