@@ -487,19 +487,47 @@ describe('ChannelEventHub', () => {
 	});
 
 	describe('#disconnect', () => {
+		let hub;
+
+		beforeEach(() => {
+			hub = new ChannelEventHub('channel', 'peer');
+		});
+
 		it('should call a debug log', () => {
-			const hub = new ChannelEventHub('channel', 'peer');
 			hub._disconnect_running = true;
 			hub.disconnect();
 			sinon.assert.calledWith(FakeLogger.debug, 'disconnect - disconnect is running');
 		});
 
 		it('should log, call _disconnect and change disconnect_running to false', () => {
-			const hub = new ChannelEventHub('channel', 'peer');
 			hub._disconnect = sandbox.stub();
 			hub.disconnect();
 			hub._disconnect_running.should.be.false;
 			sinon.assert.calledWith(hub._disconnect, sinon.match(Error));
+		});
+
+		it('handles errors thrown by block event listeners', () => {
+			const onEventStub = sandbox.stub().throws('onEvent');
+			const onErrorStub = sandbox.stub().throws('onError');
+			hub.registerBlockEvent(onEventStub, onErrorStub, {});
+			hub.registerBlockEvent(onEventStub, onErrorStub, {});
+
+			hub.disconnect();
+
+			sinon.assert.calledTwice(onErrorStub);
+		});
+
+		it('handles errors throw by tx event listeners', () => {
+			const onEventStub = sandbox.stub().throws('onEvent');
+			const txErrorStub = sandbox.stub().throws('tx onError');
+			const allErrorStub = sandbox.stub().throws('all onError');
+			hub.registerTxEvent('1', onEventStub, txErrorStub, {});
+			hub.registerTxEvent('all', onEventStub, allErrorStub, {});
+
+			hub.disconnect();
+
+			sinon.assert.calledOnce(txErrorStub);
+			sinon.assert.calledOnce(allErrorStub);
 		});
 	});
 
@@ -1528,6 +1556,17 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(FakeLogger.debug, '_processBlockEvents - calling block listener callback');
 			sinon.assert.calledWith(onEventStub, 'block');
 		});
+
+		it('handles errors thrown from block listeners', () => {
+			const onEventStub = sandbox.stub().throws('onEvent');
+			const onErrorStub = sandbox.stub().throws('onError');
+			hub.registerBlockEvent(onEventStub, onErrorStub, {});
+			hub.registerBlockEvent(onEventStub, onErrorStub, {});
+
+			hub._processBlockEvents('block');
+
+			sinon.assert.calledTwice(onEventStub);
+		});
 	});
 
 	describe('#_processTxEvents', () => {
@@ -1575,6 +1614,26 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledTwice(_checkTransactionIdStub);
 			sinon.assert.calledWith(_checkTransactionIdStub, 1, 'code0', 1);
 			sinon.assert.calledWith(_checkTransactionIdStub, 1, 'code1', 1);
+		});
+
+		it('handles errors thrown from tx event listeners', () => {
+			hub = new ChannelEventHub('channel', 'peer');
+			const fakeTx1 = {txid: '1'};
+			const fakeTx2 = {txid: '2'};
+			const block = {
+				number: 1,
+				filtered_transactions: [fakeTx1, fakeTx2]
+			};
+			const txOnEventStub = sandbox.stub().throws('tx onEvent');
+			const allOnEventStub = sandbox.stub().throws('all onEvent');
+			const onErrorStub = sandbox.stub().throws('onError');
+			hub.registerTxEvent(fakeTx1.txid, txOnEventStub, onErrorStub, {});
+			hub.registerTxEvent('all', allOnEventStub, onErrorStub, {});
+
+			hub._processTxEvents(block);
+
+			sinon.assert.calledOnce(txOnEventStub);
+			sinon.assert.calledTwice(allOnEventStub);
 		});
 	});
 
@@ -2048,8 +2107,8 @@ describe('EventRegistration', () => {
 
 		it('should set the correct parameters', () => {
 			const reg = new EventRegistration('onEvent', 'onError', null, 'default_unregister', 'default_disconnect');
-			reg.onEvent.should.equal('onEvent');
-			reg.onError.should.equal('onError');
+			reg._onEventFn.should.equal('onEvent');
+			reg._onErrorFn.should.equal('onError');
 			reg.unregister.should.equal('default_unregister');
 			reg.disconnect.should.equal('default_disconnect');
 			reg.unregister_action.should.be.instanceof(Function);
