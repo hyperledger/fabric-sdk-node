@@ -187,7 +187,8 @@ class Network {
 			this.queryHandler.dispose();
 		}
 
-		this.channel.close(); // Tidies up event hubs obtained from the channel
+		this.eventHubFactory.dispose();
+		this.channel.close();
 
 		this.initialized = false;
 	}

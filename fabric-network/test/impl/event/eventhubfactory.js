@@ -38,20 +38,23 @@ describe('EventHubFactory', () => {
 			}
 		};
 
-		// Connected event hub
-		stubEventHub1 = sinon.createStubInstance(ChannelEventHub);
-		stubEventHub1._stubInfo = 'eventHub1';
-		stubEventHub1.getName.returns('eventHub1');
+		let eventHubCount = 0;
+		function newStubEventHub(peerName) {
+			const stubEventHub = sinon.createStubInstance(ChannelEventHub);
+			stubEventHub._stubInfo = `${peerName}-eventHub${++eventHubCount}`;
+			stubEventHub.getName.returns(peerName);
 
-		// Unconnected event hub that will successfully connect
-		stubEventHub2 = sinon.createStubInstance(ChannelEventHub);
-		stubEventHub2._stubInfo = 'eventHub2';
-		stubEventHub2.getName.returns('eventHub2');
+			return stubEventHub;
+		}
+
+		stubEventHub1 = newStubEventHub(stubPeer1.getName());
+		stubEventHub2 = newStubEventHub(stubPeer2.getName());
 
 		stubChannel = sinon.createStubInstance(Channel);
 		stubChannel.getName.returns('channel');
 		stubChannel.getChannelEventHub.withArgs(stubPeer1.getName()).returns(stubEventHub1);
 		stubChannel.getChannelEventHub.withArgs(stubPeer2.getName()).returns(stubEventHub2);
+		stubChannel.newChannelEventHub.callsFake((peer) => newStubEventHub(peer.getName()));
 	});
 
 	afterEach(() => {
@@ -75,19 +78,73 @@ describe('EventHubFactory', () => {
 			factory = new EventHubFactory(stubChannel);
 		});
 
+		function assertEventHubsMatchPeers(eventHubs, peers) {
+			expect(eventHubs).to.be.an('Array').with.lengthOf(peers.length);
+			const eventHubNames = eventHubs.map((eventHub) => eventHub.getName());
+			const peerNames = peers.map((peer) => peer.getName());
+			expect(eventHubNames).to.have.ordered.members(peerNames);
+		}
+
 		it('returns empty array for no peer arguments', () => {
 			const results = factory.getEventHubs([]);
 			expect(results).to.be.an('Array').that.is.empty;
 		});
 
 		it('returns eventHub for peer1', () => {
-			const results = factory.getEventHubs([stubPeer1]);
-			expect(results).to.have.members([stubEventHub1]);
+			const peers = [stubPeer1];
+			const eventHubs = factory.getEventHubs(peers);
+			assertEventHubsMatchPeers(eventHubs, peers);
 		});
 
 		it('returns eventHubs for peer1 and peer2', () => {
-			const results = factory.getEventHubs([stubPeer1, stubPeer2]);
-			expect(results).to.have.members([stubEventHub1, stubEventHub2]);
+			const peers = [stubPeer1, stubPeer2];
+			const eventHubs = factory.getEventHubs(peers);
+			assertEventHubsMatchPeers(eventHubs, peers);
+		});
+
+		it('does not return same eventHub as channel.getChannelEventHub()', () => {
+			const eventHubs = factory.getEventHubs([stubPeer1]);
+			expect(eventHubs).to.not.deep.equal(stubEventHub1);
+		});
+
+		it('returns the same eventHub on subsequent calls', () => {
+			const peers = [stubPeer1, stubPeer2];
+			const eventHubs1 = factory.getEventHubs(peers);
+			const eventHubs2 = factory.getEventHubs(peers);
+			expect(eventHubs1).to.have.deep.ordered.members(eventHubs2);
+		});
+
+		it('client code can\'t close event hubs', () => {
+			stubChannel.newChannelEventHub.returns(stubEventHub1);
+			const close = stubEventHub1.close;
+
+			const eventHub = factory.getEventHubs([stubPeer1])[0];
+			eventHub.close();
+
+			sinon.assert.notCalled(close);
+		});
+
+		it('client code can\'t disconnect event hubs', () => {
+			stubChannel.newChannelEventHub.returns(stubEventHub1);
+			const disconnect = stubEventHub1.disconnect;
+
+			const eventHub = factory.getEventHubs([stubPeer1])[0];
+			eventHub.disconnect();
+
+			sinon.assert.notCalled(disconnect);
+		});
+	});
+
+	describe('#dispose', () => {
+		it('disconnects created event hubs', () => {
+			stubChannel.newChannelEventHub.returns(stubEventHub1);
+			const disconnect = stubEventHub1.disconnect;
+			const factory = new EventHubFactory(stubChannel);
+			factory.getEventHubs([stubPeer1]);
+
+			factory.dispose();
+
+			sinon.assert.called(disconnect);
 		});
 	});
 });
