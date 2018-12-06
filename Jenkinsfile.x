@@ -16,7 +16,7 @@ node ('hyp-x') { // trigger build on x86_64 node
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${nodeHome}/bin:$PATH"
-     def jobname = sh(returnStdout: true, script: 'echo ${JOB_NAME} | grep "verify" && echo patchset || echo merge').trim()
+     def jobname = sh(returnStdout: true, script: 'echo ${JOB_NAME} | grep -q "verify" && echo patchset || echo merge').trim()
      def failure_stage = "none"
 // delete working directory
      deleteDir()
