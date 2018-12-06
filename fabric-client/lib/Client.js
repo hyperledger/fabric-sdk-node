@@ -101,8 +101,8 @@ const Client = class extends BaseClient {
 		this._certificateAuthorities = new Map();
 		this._channels = new Map();
 
-		// load the default connection settings
-		this._connection_options = Client.getConfigSetting('connection-options', {});
+		// connection settings
+		this._connection_options = {};
 	}
 
 	/**
@@ -203,7 +203,8 @@ const Client = class extends BaseClient {
 	_buildConnectionOptions(options) {
 		const method = 'getConnectionOptions';
 		logger.debug('%s - start', method);
-		let return_options = Object.assign({}, this._connection_options);
+		let return_options = Object.assign({}, Client.getConfigSetting('connection-options'));
+		return_options = Object.assign({}, this._connection_options);
 		return_options = Object.assign(return_options, options);
 
 		if (!return_options.clientCert) {
@@ -229,7 +230,7 @@ const Client = class extends BaseClient {
 	 * These options will be initially loaded from the system configuration
 	 * 'connection-options' setting.
 	 *
-	 * @param {object} options - The connection options that will be assigned to
+	 * @param {object} options - The connection options that will be added to
 	 *        this client instance.
 	 */
 	addConnectionOptions(options) {
