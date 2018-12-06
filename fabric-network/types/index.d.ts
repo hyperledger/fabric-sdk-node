@@ -58,7 +58,7 @@ export class Gateway {
 
 export class Network {
 	public getChannel(): Channel;
-	public getContract(chaincodeId: string, namespace?: string): Contract;
+	public getContract(chaincodeId: string, name?: string): Contract;
 }
 
 export class Contract {

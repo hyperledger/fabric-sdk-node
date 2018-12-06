@@ -152,15 +152,15 @@ class Network {
 	/**
 	 * Get an instance of a contract (chaincode) on the current network.
 	 * @param {string} chaincodeId the chaincode identifier.
-	 * @param {string} [namespace] optional namespace for the contract.
+	 * @param {string} [name] name of the contract.
 	 * @returns {module:fabric-network.Contract} the contract.
 	 */
-	getContract(chaincodeId, namespace = '') {
+	getContract(chaincodeId, name = '') {
 		logger.debug('in getContract');
 		if (!this.initialized) {
 			throw new Error('Unable to get contract as network has failed to initialize');
 		}
-		const key = `${chaincodeId}:${namespace}`;
+		const key = `${chaincodeId}:${name}`;
 		let contract = this.contracts.get(key);
 		if (!contract) {
 			contract = 	new Contract(
@@ -168,7 +168,7 @@ class Network {
 				chaincodeId,
 				this.gateway,
 				this.queryHandler,
-				namespace
+				name
 			);
 			this.contracts.set(key, contract);
 		}
