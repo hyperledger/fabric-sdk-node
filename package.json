@@ -3,7 +3,7 @@
   "version": "1.4.0-rc2",
   "testFabricVersion": "master",
   "testFabricThirdParty": "0.4.14",
-  "docsLatestVersion": "release-1.4",
+  "docsLatestVersion": "master",
   "main": "index.js",
   "repository": {
     "type": "gerrit",

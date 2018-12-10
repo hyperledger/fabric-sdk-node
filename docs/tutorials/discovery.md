@@ -83,37 +83,66 @@ instance of the handler for use by the new channel instance.
 
 #### How the `DiscoveryEndorsementHandler` works
 The `sendTransactionProposal` will use the peers included in the "targets" to
-endorse the proposal. If there is no "targets" parameter the endorsement request
+endorse the proposal. If there is no "targets" parameter, the endorsement request
 will be handled by the endorsement handler.
 The default handler that comes with the fabric-client is designed to use the
-results from the fabric discovery service.
+results from the fabric discovery service. The peer that is assigned as the
+target during channel initialization will be the peer that is sent the
+discovery service request.
 The discovery service results will be based on the chaincode of the endorsement
-or based on an endorsement hint included in the endorsement request. The hint
-may include one or more chaincodes and each chaincode may include one or more
-associated collection names.
-If there are no service discover results, the handler will send to peers that have been
-assigned to the channel with the `endorsingPeer` role (a peer that has been assigned
+or based on an endorsement hint (`endorsementHint`) included in the endorsement
+request. The hint may include one or more chaincodes and each chaincode may
+include one or more associated collection names. Results will be refreshed using
+the `discovery-cache-life` system setting. By default the cache life is
+5 minutes. This may be changed easily by using the following.
+```
+Client.setConfigSetting('discover-cache-life', <milliseconds>);
+```
+If there are no service discover results, the handler will send the
+endorsement request to the peers that have been assigned to the channel with
+the `endorsingPeer` role (a peer that has nor been assigned a role will default
+to having that role, this means that a role must be explicitly turned off).
 
-When the handler processes the discovery results it
-assumes that all peers referenced have a
-a peer object created and assigned to the channel object.
-The service discover handler takes optional parameters that allow the user to specify
-peers to be preferred and to be ignored.
-The discovery results will include
-groups of peers and layouts that specify how many peers from each group it will take
-to satisfy the endorsement policy of the proposal chaincode.
-The handler will first sort each group of peers, moving
-peers on the preferred list to the top, moving peers with a higher ledger block
-height up, and removing any peers that need to be ignored. The handler
-will then select the first layout and build a list of outbound requests.
-The handler looks at each group called out in the layout and selects, starting
-the top of sorted group list, the number of peers called out in the layout.
-The handler then sends all the request out at once. If any of the request fail
-the handler will select another peer from the group list. If the enough successful
-endorsements are returned and the layout is satisfied, the handler returns
-the results. If there are not enough successful endorsements the handler will
-select the next layout and try again or return the results of last attempt.
+When the handler processes the discovery service results it assumes that all
+peers referenced have a peer instance object created and assigned to the channel
+instance object. The channel instance will build the required peer instances to
+support endorsements when it processes the discovery service results before
+passing the results to the handler. The channel will not build new peer instances
+if the peer is already assigned to the channel either by the application or by a
+previous discovery service request.
 
+The default 'DiscoveryEndorsementHandler' takes optional parameters that allow
+the application to specify peers or organizations that will be preferred,
+ignored or required. The discovery service results will include groups of peers
+and layouts that specify how many peers from each group it will take to satisfy
+the endorsement policy of the proposal's chaincode or the endorsement policies
+of the endorsement hint.
+Each group will be modified using the parameters of the endorsement call.
+The handler will first remove peers that are not required or should be ignored.
+Then the group list will be sorted by ledger height or randomized.
+Finally preferred peers will be moved to the top of the group list.
+The handler will randomly select a layout to make the endorsement.
+The handler looks at each group in the layout and selects the number
+peers specified by that group in the layout. The number of peers is the
+number of endorsements needed to satisfy the endorsement policy.
+Peers will be selected starting at the top of the modified group list
+to be sent an endorsement request.
+If any of the requests fail, the handler will select the next available peer
+from the modified group list. If the number of successful endorsements reaches
+the number of peers called out for each group in the layout, the handler
+will successfully return the endorsements.
+If there are not enough successful endorsements, the handler will
+select another random layout and try again or return an error indicating
+that it was unable to complete successfully. The error will include
+the responses from all peers.
+
+Note: The default handler does not remember the results of the previous call.
+Peers that may have failed will be tried again. With randomizing and
+refreshing of the discovery service results, the order of how peers are
+selected will likely change on every request.
+
+Note: If the above behavior does not meet the needs of your organization a
+custom handler may be used.
 
 ### new `CommitHandler`
 The sending of the endorsements to be committed may be done using custom code.
