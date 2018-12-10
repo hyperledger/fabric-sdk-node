@@ -287,18 +287,16 @@ const Channel = class {
 				};
 
 				const discovery_results = await this._discover(discover_request);
-				if (discovery_results) {
-					if (discovery_results.msps) {
-						this._buildDiscoveryMSPs(discovery_results);
-					} else {
-						throw Error('No MSP information found');
-					}
-					if (discovery_results.orderers) {
-						this._buildDiscoveryOrderers(discovery_results, discovery_results.msps, request);
-					}
-					if (discovery_results.peers_by_org) {
-						this._buildDiscoveryPeers(discovery_results, discovery_results.msps, request);
-					}
+				if (discovery_results.msps) {
+					this._buildDiscoveryMSPs(discovery_results);
+				} else {
+					throw Error('No MSP information found');
+				}
+				if (discovery_results.orderers) {
+					this._buildDiscoveryOrderers(discovery_results, discovery_results.msps, request);
+				}
+				if (discovery_results.peers_by_org) {
+					this._buildDiscoveryPeers(discovery_results, discovery_results.msps, request);
 				}
 
 				discovery_results.endorsement_plans = [];
@@ -1140,7 +1138,7 @@ const Channel = class {
 		logger.debug('%s - start', method);
 		const results = {};
 		if (!request) {
-			request = {};
+			throw new Error('"request" parameter is not set');
 		}
 
 		let useAdmin = true; // default
@@ -1217,7 +1215,7 @@ const Channel = class {
 
 		const response = await target_peer.sendDiscovery(signed_request);
 		logger.debug('%s - processing discovery response', method);
-		if (response && response.results) {
+		if (response.results) {
 			let error_msg = null;
 			logger.debug('%s - parse discovery response', method);
 			for (const index in response.results) {
@@ -1314,42 +1312,40 @@ const Channel = class {
 		const method = '_processDiscoveryConfigResults';
 		logger.debug('%s - start', method);
 		const config = {};
-		if (q_config) {
-			try {
-				if (q_config.msps) {
-					config.msps = {};
-					for (const id in q_config.msps) {
-						logger.debug('%s - found organization %s', method, id);
-						const q_msp = q_config.msps[id];
-						const msp_config = {
-							id: id,
-							orgs: q_msp.organizational_unit_identifiers,
-							rootCerts: sdk_utils.convertBytetoString(q_msp.root_certs),
-							intermediateCerts: sdk_utils.convertBytetoString(q_msp.intermediate_certs),
-							admins: sdk_utils.convertBytetoString(q_msp.admins),
-							tls_root_certs: sdk_utils.convertBytetoString(q_msp.tls_root_certs),
-							tls_intermediate_certs: sdk_utils.convertBytetoString(q_msp.tls_intermediate_certs)
-						};
-						config.msps[id] = msp_config;
-					}
+		try {
+			if (q_config.msps) {
+				config.msps = {};
+				for (const id in q_config.msps) {
+					logger.debug('%s - found organization %s', method, id);
+					const q_msp = q_config.msps[id];
+					const msp_config = {
+						id: id,
+						orgs: q_msp.organizational_unit_identifiers,
+						rootCerts: sdk_utils.convertBytetoString(q_msp.root_certs),
+						intermediateCerts: sdk_utils.convertBytetoString(q_msp.intermediate_certs),
+						admins: sdk_utils.convertBytetoString(q_msp.admins),
+						tls_root_certs: sdk_utils.convertBytetoString(q_msp.tls_root_certs),
+						tls_intermediate_certs: sdk_utils.convertBytetoString(q_msp.tls_intermediate_certs)
+					};
+					config.msps[id] = msp_config;
 				}
-				/*
+			}
+			/*
 			"orderers":{"OrdererMSP":{"endpoint":[{"host":"orderer.example.com","port":7050}]}}}
 			*/
-				if (q_config.orderers) {
-					config.orderers = {};
-					for (const mspid in q_config.orderers) {
-						logger.debug('%s - found orderer org: ', method, mspid);
-						config.orderers[mspid] = {};
-						config.orderers[mspid].endpoints = [];
-						for (const index in q_config.orderers[mspid].endpoint) {
-							config.orderers[mspid].endpoints.push(q_config.orderers[mspid].endpoint[index]);
-						}
+			if (q_config.orderers) {
+				config.orderers = {};
+				for (const mspid in q_config.orderers) {
+					logger.debug('%s - found orderer org: ', method, mspid);
+					config.orderers[mspid] = {};
+					config.orderers[mspid].endpoints = [];
+					for (const index in q_config.orderers[mspid].endpoint) {
+						config.orderers[mspid].endpoints.push(q_config.orderers[mspid].endpoint[index]);
 					}
 				}
-			} catch (err) {
-				logger.error('Problem with discovery config: %s', err);
 			}
+		} catch (err) {
+			logger.error('Problem with discovery config: %s', err);
 		}
 
 		return config;
@@ -1359,7 +1355,7 @@ const Channel = class {
 		const method = '_processDiscoveryChannelMembershipResults';
 		logger.debug('%s - start', method);
 		const peers_by_org = {};
-		if (q_members && q_members.peers_by_org) {
+		if (q_members.peers_by_org) {
 			for (const mspid in q_members.peers_by_org) {
 				logger.debug('%s - found org:%s', method, mspid);
 				peers_by_org[mspid] = {};
@@ -1390,7 +1386,7 @@ const Channel = class {
 					peer.ledger_height = Long.fromValue(message_s.state_info.properties.ledger_height);
 				} else {
 					logger.debug('%s - did not find ledger_height', method);
-					peer.ledger_height = Long.fromValue(0);
+					throw new Error('Malformed state_info');
 				}
 				logger.debug('%s - found ledger_height :%s', method, peer.ledger_height);
 				peer.chaincodes = [];
@@ -1743,10 +1739,7 @@ const Channel = class {
 		const proposal = client_utils.buildProposal(chaincodeSpec, header);
 		const signed_proposal = client_utils.signProposal(signer, proposal);
 
-		return client_utils.sendPeersProposal(targets, signed_proposal, timeout).catch((err) => {
-			logger.error('joinChannel - Failed Proposal. Error: %s', err.stack ? err.stack : err);
-			return Promise.reject(err);
-		});
+		return client_utils.sendPeersProposal(targets, signed_proposal, timeout);
 	}
 
 	/**
@@ -1792,7 +1785,7 @@ const Channel = class {
 				return config_envelope;
 			} else {
 				logger.error('%s - unknown response ::%s', method, response);
-				throw new Error(response);
+				throw new Error(JSON.stringify(response));
 			}
 		}
 		throw new Error('Payload results are missing from the get channel config');
@@ -1922,7 +1915,6 @@ const Channel = class {
 		if (channel_header.type !== _commonProto.HeaderType.CONFIG) {
 			throw new Error(`Block must be of type "CONFIG" (${_commonProto.HeaderType.CONFIG}), but got "${channel_header.type}" instead`);
 		}
-
 		const config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
 
 		// send back the envelope
@@ -2020,23 +2012,18 @@ const Channel = class {
 
 		const results = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
 		const responses = results[0];
-		if (responses && Array.isArray(responses)) {
-			logger.debug('queryInfo - got responses=' + responses.length);
-			// will only be one response as we are only querying the primary peer
-			if (responses.length > 1) {
-				throw new Error('Too many results returned');
-			}
-			const response = responses[0];
-			if (response instanceof Error) {
-				throw response;
-			}
-			if (response.response && response.response.status && response.response.status === 200) {
-				logger.debug('queryInfo - response status %d:', response.response.status);
-				return _ledgerProto.BlockchainInfo.decode(response.response.payload);
-			} else if (response.response && response.response.status) {
-				// no idea what we have, lets fail it and send it back
-				throw new Error(response.response.message);
-			}
+		logger.debug('queryInfo - got responses=' + responses.length);
+		// will only be one response as we are only querying the primary peer
+		const response = responses[0];
+		if (response instanceof Error) {
+			throw response;
+		}
+		if (response.response && response.response.status && response.response.status === 200) {
+			logger.debug('queryInfo - response status %d:', response.response.status);
+			return _ledgerProto.BlockchainInfo.decode(response.response.payload);
+		} else if (response.response && response.response.status) {
+			// no idea what we have, lets fail it and send it back
+			throw new Error(response.response.message);
 		}
 		throw new Error('Payload results are missing from the query channel info');
 	}
@@ -2072,29 +2059,23 @@ const Channel = class {
 
 		const results = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
 		const responses = results[0];
-		if (responses && Array.isArray(responses)) {
-			logger.debug('queryBlockByTxID - got response', responses.length);
-			// will only be one response as we are only querying the primary peer
-			if (responses.length > 1) {
-				throw new Error('Too many results returned');
+		logger.debug('queryBlockByTxID - got response', responses.length);
+		const response = responses[0];
+		if (response instanceof Error) {
+			throw response;
+		}
+		if (response.response && response.response.status && response.response.status === 200) {
+			logger.debug('queryBlockByTxID - response status %d:', response.response.status);
+			if (skipDecode) {
+				return response.response.payload;
+			} else {
+				const block = BlockDecoder.decode(response.response.payload);
+				logger.debug('queryBlockByTxID - looking at block :: %s', block.header.number);
+				return block;
 			}
-			const response = responses[0];
-			if (response instanceof Error) {
-				throw response;
-			}
-			if (response.response && response.response.status && response.response.status === 200) {
-				logger.debug('queryBlockByTxID - response status %d:', response.response.status);
-				if (skipDecode) {
-					return response.response.payload;
-				} else {
-					const block = BlockDecoder.decode(response.response.payload);
-					logger.debug('queryBlockByTxID - looking at block :: %s', block.header.number);
-					return block;
-				}
-			} else if (response.response && response.response.status) {
-				// no idea what we have, lets fail it and send it back
-				throw new Error(response.response.message);
-			}
+		} else if (response.response && response.response.status) {
+			// no idea what we have, lets fail it and send it back
+			throw new Error(response.response.message);
 		}
 		throw new Error('Payload results are missing from the query');
 	}
@@ -2131,28 +2112,22 @@ const Channel = class {
 		const results = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
 		const responses = results[0];
 		logger.debug('queryBlockByHash - got response');
-		if (responses && Array.isArray(responses)) {
-			// will only be one response as we are only querying the primary peer
-			if (responses.length > 1) {
-				throw new Error('Too many results returned');
+		const response = responses[0];
+		if (response instanceof Error) {
+			throw response;
+		}
+		if (response.response && response.response.status && response.response.status === 200) {
+			logger.debug('queryBlockByHash - response status %d:', response.response.status);
+			if (skipDecode) {
+				return response.response.payload;
+			} else {
+				const block = BlockDecoder.decode(response.response.payload);
+				logger.debug('queryBlockByHash - looking at block :: %s', block.header.number);
+				return block;
 			}
-			const response = responses[0];
-			if (response instanceof Error) {
-				throw response;
-			}
-			if (response.response && response.response.status && response.response.status === 200) {
-				logger.debug('queryBlockByHash - response status %d:', response.response.status);
-				if (skipDecode) {
-					return response.response.payload;
-				} else {
-					const block = BlockDecoder.decode(response.response.payload);
-					logger.debug('queryBlockByHash - looking at block :: %s', block.header.number);
-					return block;
-				}
-			} else if (response.response && response.response.status) {
-				// no idea what we have, lets fail it and send it back
-				throw new Error(response.response.message);
-			}
+		} else if (response.response && response.response.status) {
+			// no idea what we have, lets fail it and send it back
+			throw new Error(response.response.message);
 		}
 		throw new Error('Payload results are missing from the query');
 	}
@@ -2191,28 +2166,22 @@ const Channel = class {
 		const results = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
 		const responses = results[0];
 		logger.debug('queryBlock - got response');
-		if (responses && Array.isArray(responses)) {
-			// will only be one response as we are only querying the primary peer
-			if (responses.length > 1) {
-				throw new Error('Too many results returned');
+		const response = responses[0];
+		if (response instanceof Error) {
+			throw response;
+		}
+		if (response.response && response.response.status && response.response.status === 200) {
+			logger.debug('queryBlock - response status %d:', response.response.status);
+			if (skipDecode) {
+				return response.response.payload;
+			} else {
+				const block = BlockDecoder.decode(response.response.payload);
+				logger.debug('queryBlock - looking at block :: %s', block.header.number);
+				return block;
 			}
-			const response = responses[0];
-			if (response instanceof Error) {
-				throw response;
-			}
-			if (response.response && response.response.status && response.response.status === 200) {
-				logger.debug('queryBlock - response status %d:', response.response.status);
-				if (skipDecode) {
-					return response.response.payload;
-				} else {
-					const block = BlockDecoder.decode(response.response.payload);
-					logger.debug('queryBlock - looking at block :: %s', block.header.number);
-					return block;
-				}
-			} else if (response.response && response.response.status) {
-				// no idea what we have, lets fail it and send it back
-				throw new Error(response.response.message);
-			}
+		} else if (response.response && response.response.status) {
+			// no idea what we have, lets fail it and send it back
+			throw new Error(response.response.message);
 		}
 		throw new Error('Payload results are missing from the query');
 	}
@@ -2250,28 +2219,22 @@ const Channel = class {
 		const results = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
 		const responses = results[0];
 		logger.debug('queryTransaction - got response');
-		if (responses && Array.isArray(responses)) {
-			// will only be one response as we are only querying the primary peer
-			if (responses.length > 1) {
-				throw new Error('Too many results returned');
-			}
-			const response = responses[0];
-			if (response instanceof Error) {
-				throw response;
-			}
-			if (response.response && response.response.status && response.response.status === 200) {
-				logger.debug('queryTransaction - response status :: %d', response.response.status);
-				if (skipDecode) {
-					return response.response.payload;
-				} else {
-					return BlockDecoder.decodeTransaction(response.response.payload);
-				}
-			} else if (response.response && response.response.status) {
-				// no idea what we have, lets fail it and send it back
-				throw new Error(response.response.message);
-			}
-
+		const response = responses[0];
+		if (response instanceof Error) {
+			throw response;
 		}
+		if (response.response && response.response.status && response.response.status === 200) {
+			logger.debug('queryTransaction - response status :: %d', response.response.status);
+			if (skipDecode) {
+				return response.response.payload;
+			} else {
+				return BlockDecoder.decodeTransaction(response.response.payload);
+			}
+		} else if (response.response && response.response.status) {
+			// no idea what we have, lets fail it and send it back
+			throw new Error(response.response.message);
+		}
+
 		throw new Error('Payload results are missing from the query');
 	}
 
@@ -2304,32 +2267,24 @@ const Channel = class {
 		const results = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
 		const responses = results[0];
 		logger.debug('queryInstantiatedChaincodes - got response');
-		if (responses && Array.isArray(responses)) {
-			// will only be one response as we are only querying one peer
-			if (responses.length > 1) {
-				throw new Error('Too many results returned');
-			}
-			const response = responses[0];
-			if (response instanceof Error) {
-				throw response;
-			}
-			if (response.response) {
-				if (response.response.status === 200) {
-					logger.debug('queryInstantiatedChaincodes - response status :: %d', response.response.status);
-					const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
-					logger.debug('queryInstantiatedChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
-					for (const chaincode of queryTrans.chaincodes) {
-						logger.debug('queryInstantiatedChaincodes - name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
-					}
-					return queryTrans;
-				} else {
-					if (response.response.message) {
-						throw new Error(response.response.message);
-					}
+		const response = responses[0];
+		if (response instanceof Error) {
+			throw response;
+		}
+		if (response.response) {
+			if (response.response.status === 200) {
+				logger.debug('queryInstantiatedChaincodes - response status :: %d', response.response.status);
+				const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+				logger.debug('queryInstantiatedChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
+				for (const chaincode of queryTrans.chaincodes) {
+					logger.debug('queryInstantiatedChaincodes - name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
+				}
+				return queryTrans;
+			} else {
+				if (response.response.message) {
+					throw new Error(response.response.message);
 				}
 			}
-			// no idea what we have, lets fail it and send it back
-			throw new Error(response);
 		}
 		throw new Error('Payload results are missing from the query');
 	}

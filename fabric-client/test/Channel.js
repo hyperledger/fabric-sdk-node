@@ -21,6 +21,7 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 chai.should();
+const Long = require('long');
 
 const Channel = require('fabric-client/lib/Channel');
 const ChannelRewire = rewire('fabric-client/lib/Channel');
@@ -42,11 +43,17 @@ const identitiesProto = ProtoLoader.load(__dirname + '/../lib/protos/msp/identit
 const transactionProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/transaction.proto').protos;
 const commonProto = ProtoLoader.load(__dirname + '/../lib/protos/common/common.proto').common;
 const configtxProto = ProtoLoader.load(__dirname + '/../lib/protos/common/configtx.proto').common;
+const identityProto = ProtoLoader.load(__dirname + '/../lib/protos/msp/identities.proto').msp;
+const gossipProto = ProtoLoader.load(__dirname + '/../lib/protos/gossip/message.proto').gossip;
+const ledgerProto = ProtoLoader.load(__dirname + '/../lib/protos/common/ledger.proto').common;
+const queryProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/query.proto').protos;
 
 const fakeHandlerModulePath = 'fabric-client/test/FakeHandler';
 const fakeHandler = require(fakeHandlerModulePath).create();
 
 describe('Channel', () => {
+	let debugStub;
+	// let errorStub;
 	const channelName = 'channel-name';
 	let client;
 	let channel;
@@ -55,6 +62,7 @@ describe('Channel', () => {
 	let peer2;
 	let orderer1;
 	let orderer2;
+	let orderer3;
 
 	let stubMsp;
 	let stubMspIdentity;
@@ -63,18 +71,35 @@ describe('Channel', () => {
 	mspId = 'mspId';
 
 	beforeEach(() => {
+		const FakeLogger = {
+			debug : () => {},
+			error: () => {}
+		};
+
+		debugStub = sinon.stub(FakeLogger, 'debug');
+		// errorStub = sinon.stub(FakeLogger, 'error');
+		ChannelRewire.__set__('logger', FakeLogger);
+
 		client = new Client();
-		channel = new Channel(channelName, client);
+		channel = new ChannelRewire(channelName, client);
 		peer1 = new Peer('grpc://localhost', {name: 'Peer1'});
 		peer2 = new Peer('grpc://localhost', {name: 'Peer2'});
 		orderer1 = new Orderer('grpc://localhost', {name: 'Orderer1'});
 		orderer2 = new Orderer('grpc://localhost', {name: 'Orderer2'});
+		orderer3 = sinon.createStubInstance(Orderer);
+
 
 		stubMspIdentity = sinon.createStubInstance(Identity);
 		stubMspIdentity.isValid.returns(true);
 		stubMspIdentity.verify.returns(true);
 
 		stubMsp = sinon.createStubInstance(MSP);
+		stubMsp.organizational_unit_identifiers = mspId;
+		stubMsp.root_certs = Buffer.from('root-certs');
+		stubMsp.intermediate_certs = Buffer.from('intermediate-certs');
+		stubMsp.admins = Buffer.from('admin');
+		stubMsp.tls_root_certs = Buffer.from('tls_root_certs');
+		stubMsp.tls_intermediate_certs = Buffer.from('tls_intermediate_certs');
 		stubMsp.deserializeIdentity.returns(stubMspIdentity);
 
 		sinon.stub(channel.getMSPManager(), 'getMSP').withArgs(mspId).returns(stubMsp);
@@ -845,6 +870,11 @@ describe('Channel', () => {
 		it('throws if no request parameter and no peer added', () => {
 			return expect(channel.initialize()).to.be.rejectedWith('target');
 		});
+		it('should throw if peer.discover returns an error', async () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, new Error('Forced error message'), null);
+			return expect(channel.initialize({discover: true, target: peer1})).to.be.rejectedWith('Forced error message');
+		});
 
 		it('successful with peer added and no request parameter', () => {
 			sinon.stub(peer1, 'sendProposal').resolves(createGetConfigBlockResponse());
@@ -945,6 +975,161 @@ describe('Channel', () => {
 			};
 			return expect(channel.initialize(request)).to.be.fulfilled;
 		});
+
+		it('throws if request.discover is not a boolean', () => {
+			return expect(channel.initialize({discover: 'true'})).to.be.rejectedWith('Request parameter "discover" must be boolean');
+		});
+
+		it('set channel._use_discovery if request.asLocalHost is given', async () => {
+			sinon.stub(channel, '_initialize');
+			await channel.initialize({discover: true});
+			expect(channel._use_discovery).to.be.true;
+		});
+
+		it('throws if request.asLocalHost is not a boolean', () => {
+			return expect(channel.initialize({asLocalhost: 'true'})).to.be.rejectedWith('Request parameter "asLocalhost" must be boolean');
+		});
+
+		it('set channel._as_localhost if request.asLocalHost is given', async () => {
+			sinon.stub(channel, '_initialize');
+			await channel.initialize({asLocalhost: true});
+			expect(channel._as_localhost).to.be.true;
+		});
+
+		it('throws if discovery is set and target peer has no msp information', () => {
+			sinon.stub(peer1, 'sendDiscovery').resolves({results: []});
+			return expect(channel.initialize({discover: true, target: peer1})).to.be.rejectedWith('No MSP information found');
+		});
+
+		it('finds orderers', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			const init = await channel.initialize({discover: true, target: peer1});
+			expect(init.orderers).to.deep.equal({[mspId]: {endpoints: [{name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`, host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}});
+		});
+
+		it('sets discovery interests', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {msps: {[mspId]: stubMsp}},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			await channel.initialize({discover: true, target: peer1});
+			const interest = {chaincodes: [{name: 'mynewcc'}]};
+			const interestKey = JSON.stringify(interest);
+			expect(channel._discovery_interests.get(interestKey)).to.deep.equal(interest);
+		});
+
+		it('finds endorsement plans', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {msps: {[mspId]: stubMsp}},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+						cc_query_res: {content: [{
+							chaincode: {name: 'mynewcc'},
+							endorsers_by_groups: {group1: {peers: [peer2]}},
+							layouts: [{quantities_by_group: ['layout']}]
+						}]}
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			const init = await channel.initialize({discover: true, target: peer1});
+			expect(init.endorsement_plans[0].chaincode).to.deep.equal({name: 'mynewcc'});
+			const group = init.endorsement_plans[0].groups.group1;
+			expect(JSON.stringify(group.peers)).to.equal(JSON.stringify([{
+				'mspid': 'org1',
+				'endpoint': 'grpc://localhost',
+				'ledger_height': {
+					'low': 1,
+					'high': 0,
+					'unsigned': true
+				},
+				'chaincodes': [
+					{
+						'name': 'mynewcc',
+						'version': ''
+					}
+				],
+				'name': 'grpc://localhost'
+			}]));
+			expect(init.endorsement_plans[0].layouts).to.deep.equal([{'0': 'layout'}]);
+			expect(init.endorsement_plans[0].plan_id).to.equal('{"chaincodes":[{"name":"mynewcc"}]}');
+		});
+
+		it('finds endorsement plans without chaincode', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {msps: {[mspId]: stubMsp}},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+						cc_query_res: {}
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			const init = await channel.initialize({discover: true, target: peer1});
+			expect(init.endorsement_plans).to.deep.equal([]);
+		});
+
+		it('finds no endorsement plans when cc_query_res.content is not an array', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {msps: {[mspId]: stubMsp}},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+						cc_query_res: {content: 'not an array'}
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			const init = await channel.initialize({discover: true, target: peer1});
+			expect(init.endorsement_plans).to.deep.equal([]);
+		});
 	});
 
 	describe('#_initialize', () => {});
@@ -957,7 +1142,43 @@ describe('Channel', () => {
 
 	describe('#_buildDiscoveryEndorsementPlan', () => {});
 
-	describe('#getDiscoveryResults', () => {});
+	describe('#_discover', () => {
+	});
+
+	describe('#getDiscoveryResults', () => {
+		it('should throw discovery is not turned on', async () => {
+			sinon.stub(channel, '_initialize');
+			await channel.initialize();
+			return expect(channel.getDiscoveryResults({})).to.be.rejectedWith('This Channel has not been initialized or not initialized with discovery support');
+		});
+
+		it('returns discovery results', async () => {
+			const discoveryResponse = {
+				interests: [{name: 'mycc'}],
+				peer: peer1,
+				results: [{config_result: {msps: {[mspId]: stubMsp}}}],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			await channel.initialize({discover: true, target: peer1});
+			const discoveryResults = await channel.getDiscoveryResults({});
+			expect(discoveryResults.msps).to.deep.equal({
+				[mspId]: {
+					admins: 'admin',
+					id: 'org1',
+					intermediateCerts: 'intermediate-certs',
+					orgs: mspId,
+					rootCerts: 'root-certs',
+					tls_intermediate_certs: 'tls_intermediate_certs',
+					tls_root_certs: 'tls_root_certs',
+				}
+			});
+			expect(discoveryResults.orders).to.be.undefined;
+			expect(discoveryResults.endorsement_plans).to.deep.equal([]);
+			expect(discoveryResults.timestamp).to.exist;
+		});
+	});
+
 
 	describe('#getEndorsementPlan', () => {});
 
@@ -1009,9 +1230,284 @@ describe('Channel', () => {
 
 	describe('#getPeersForOrg', () => {});
 
-	describe('#getGenesisBlock', () => {});
+	describe('#getGenesisBlock', () => {
+		it('should generate a new transaction id', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			const init = await channel.initialize({discover: true, target: peer1});
+			expect(init.orderers).to.deep.equal({[mspId]: {endpoints: [{name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`, host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}});
+			orderer3.sendDeliver.returns('genesis-block');
+			const block = await channel.getGenesisBlock();
+			sinon.assert.called(channel._clientContext.getTargetOrderer);
+			sinon.assert.called(channel._clientContext._getSigningIdentity);
+			sinon.assert.calledWith(orderer3.sendDeliver, sinon.match.has('payload', sinon.match.instanceOf(Buffer)));
+			sinon.assert.calledWith(orderer3.sendDeliver, sinon.match.has('signature', sinon.match.instanceOf(Buffer)));
+			expect(block).to.equal('genesis-block');
+		});
 
-	describe('#_discover', () => {});
+		it('should use the provided transaction id', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			const init = await channel.initialize({discover: true, target: peer1});
+			expect(init.orderers).to.deep.equal({[mspId]: {endpoints: [{name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`, host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}});
+			orderer3.sendDeliver.returns('genesis-block');
+			const txId = client.newTransactionID();
+			const block = await channel.getGenesisBlock({txId});
+			sinon.assert.called(channel._clientContext.getTargetOrderer);
+			sinon.assert.called(channel._clientContext._getSigningIdentity);
+			sinon.assert.calledWith(orderer3.sendDeliver, sinon.match.has('payload', sinon.match.instanceOf(Buffer)));
+			sinon.assert.calledWith(orderer3.sendDeliver, sinon.match.has('signature', sinon.match.instanceOf(Buffer)));
+			expect(block).to.equal('genesis-block');
+		});
+	});
+
+	describe('#_discover', () => {
+		it('should throw if the request parameter is not set', () => {
+			return expect(channel._discover()).to.be.rejectedWith('"request" parameter is not set');
+		});
+
+		it('should accept the request.useAdmin flag', async () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			sinon.spy(channel._clientContext._getSigningIdentity);
+
+			await channel._discover({useAdmin: true, target: peer1});
+			sinon.assert.calledWith(channel._clientContext._getSigningIdentity, true);
+		});
+
+		it('should accept the request.local flag', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}},
+						},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			sinon.spy(channel._clientContext._getSigningIdentity);
+
+			await channel._discover({useAdmin: false, target: peer1, local: true});
+			sinon.assert.calledWith(channel._clientContext._getSigningIdentity, false);
+			sinon.assert.calledWith(debugStub, '%s - adding local peers query', '_discover');
+		});
+
+		it('should accept the request.config flag', async () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+
+			await channel._discover({target: peer1, config: true});
+			sinon.assert.calledWith(debugStub, '%s - adding config query', '_discover');
+		});
+
+		it('should throw if discovery returns no results', () => {
+			const discoveryResponse = {};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+
+			return expect(channel._discover({target: peer1})).to.be.rejectedWith('Discovery has failed to return results');
+		});
+
+		it('should throw if a discovery result is null', () => {
+			const discoveryResponse = {results: [null]};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+
+			return expect(channel._discover({target: peer1})).to.be.rejectedWith('Channel:channel-name Discovery error:Discover results are missing');
+		});
+
+		it('should throw if a discovery result result field is "error"', () => {
+			const discoveryResponse = {results: [{result: 'error', error: {content: 'fake error'}}]};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+
+			return expect(channel._discover({target: peer1})).to.be.rejectedWith('fake error');
+		});
+
+		it('should not thow if no config_result is given', () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [{}],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			return expect(channel._discover({target: peer1})).to.be.fulfilled;
+		});
+
+		it('should not error given an empty result.config_result', () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [{config_result: null}],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			return expect(channel._discover({target: peer1})).to.be.fulfilled;
+		});
+
+		it('should not error given an empty result.config_result.msps', () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [{config_result: {}}],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			return expect(channel._discover({target: peer1})).to.be.fulfilled;
+		});
+
+		it('should throw if anything errors whilst building the discovery config', () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [{config_result: {
+					msps: {[mspId]: {}}
+				}}],
+			};
+			debugStub.withArgs('%s - found organization %s', '_processDiscoveryConfigResults', 'org1').callsFake(() => {
+				throw new Error('forced error');
+			});
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			return expect(channel._discover({target: peer1})).to.be.eventually.deep.equal({msps: {}, orderers: undefined});
+		});
+
+		it('should not throw if members.peer_by_org is null', () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: {}}
+						},
+						members: {peers_by_org: null},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			return expect(channel._discover({target: peer1})).to.be.fulfilled;
+		});
+
+		it('should ignore everything if top level state info is null', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = null;
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}},
+						},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+
+			return expect(channel._discover({target: peer1})).to.be.fulfilled;
+		});
+
+		it('should ignore ledger height if state info is null', async () => {
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: null}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}},
+						},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+
+			return expect(channel._discover({target: peer1})).to.be.rejectedWith('Malformed state_info');
+		});
+	});
 
 	describe('#_processDiscoveryChaincodeResults', () => {});
 
@@ -1092,7 +1588,13 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#_buildUrl', () => {});
+	describe('#_buildUrl', () => {
+		it('should build the peer url', () => {
+			channel._as_localhost = false;
+			const url = channel._buildUrl('somehost', '7050', {});
+			expect(url).to.equal('grpcs://somehost:7050');
+		});
+	});
 
 	describe('#_buildOptions', () => {
 		it('should return the build options', () => {
@@ -1126,7 +1628,25 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#_buildProtoChaincodeInterest', () => {});
+	describe('#_buildProtoChaincodeInterest', () => {
+		it('should throw if the chaincode name is not a string', () => {
+			expect(() => {
+				channel._buildProtoChaincodeInterest({chaincodes: [{name: null}]});
+			}).to.throw('Chaincode name must be a string');
+		});
+
+		it('should throw if the collection_names is not an array', () => {
+			expect(() => {
+				channel._buildProtoChaincodeInterest({chaincodes: [{name: 'mycc', collection_names: 'not an array'}]});
+			}).to.throw('collection_names must be an array of strings');
+		});
+
+		it('should throw if the collection_names contains something that is not a string', () => {
+			expect(() => {
+				channel._buildProtoChaincodeInterest({chaincodes: [{name: 'mycc', collection_names: ['string', null]}]});
+			}).to.throw('The collection name must be a string');
+		});
+	});
 
 	describe('#_merge_hints', () => {
 		it('should return false if no hints are given', () => {
@@ -1187,27 +1707,578 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#joinChannel', () => {});
+	describe('#joinChannel', () => {
+		it('should be rejected is sendPeersProposal fails', async () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			const err = new Error('forced error');
+			sinon.stub(peer1, 'sendProposal').callsFake(() => {
+				throw err;
+			});
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			const request = {
+				txId: client.newTransactionID(),
+				block: {toBuffer: () => new Buffer('{}')},
+				targets: [peer1],
+			};
+			const res = await channel.joinChannel(request);
+			expect(res).to.deep.equal([err]);
+		});
+	});
 
-	describe('#getChannelConfig', () => {});
+	describe('#getChannelConfig', () => {
+		it('should throw if responses from the transaction proposal arent an array', () => {
+			// sinon.stub(peer1, 'sendProposal').resolves(createTransactionResponse(Buffer.from('result')));
+			// sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(ChannelRewire, 'sendTransactionProposal').resolves([]);
+			return expect(channel.getChannelConfig(peer1)).to.be.rejectedWith('Payload results are missing from the get channel config');
+		});
 
-	describe('#getChannelConfigFromOrderer', () => {});
+		it('should throw if response is an instance of error', () => {
+			sinon.stub(ChannelRewire, 'sendTransactionProposal').resolves([[new Error('forced error')]]);
+			return expect(channel.getChannelConfig(peer1)).to.be.rejectedWith('forced error');
+		});
 
-	describe('#loadConfigUpdate', () => {});
+		it('should throw if response is not status 200', () => {
+			sinon.stub(ChannelRewire, 'sendTransactionProposal').resolves([[{response: {payload: '', status: 500}}]]);
+			return expect(channel.getChannelConfig(peer1)).to.be.rejectedWith('{"response":{"payload":"","status":500}}');
+		});
+	});
 
-	describe('#loadConfigEnvelope', () => {});
+	describe('#getChannelConfigFromOrderer', () => {
+		it('should throw if orderer.sendDeliver returns nothing', async () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
+			sinon.stub(orderer1, 'sendDeliver').returns(null);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			await channel.initialize({discover: true, target: peer1});
+			await expect(channel.getChannelConfigFromOrderer()).to.be.rejectedWith('Failed to retrieve latest block');
+			sinon.assert.calledWith(orderer1.sendDeliver, sinon.match.has('payload', sinon.match.instanceOf(Buffer)));
+		});
 
-	describe('#queryInfo', () => {});
+		it('should throw if orderer.sendDeliver second call returns nothing', async () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
+			sinon.stub(orderer1, 'sendDeliver').onCall(0).returns({
+				header: {},
+				metadata: {
+					metadata: [
+						null,
+						commonProto.Metadata.encode('{value: []}')
+					]
+				}});
+			orderer1.sendDeliver.onCall(1).returns(null);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			await channel.initialize({discover: true, target: peer1});
+			await expect(channel.getChannelConfigFromOrderer()).to.be.rejectedWith('Config block was not found');
+			sinon.assert.calledWith(orderer1.sendDeliver, sinon.match.has('payload', sinon.match.instanceOf(Buffer)));
+		});
 
-	describe('#queryByBlockId', () => {});
+		it('should throw if config block data length is 0', async () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
+			sinon.stub(orderer1, 'sendDeliver').onCall(0).returns({
+				header: {},
+				metadata: {
+					metadata: [
+						null,
+						commonProto.Metadata.encode('{value: []}')
+					]
+				}});
+			orderer1.sendDeliver.onCall(1).returns({
+				header: {number: 1},
+				data: {data: []}
+			});
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			await channel.initialize({discover: true, target: peer1});
+			await expect(channel.getChannelConfigFromOrderer()).to.be.rejectedWith('Config block must only contain one transaction');
+			sinon.assert.calledWith(orderer1.sendDeliver, sinon.match.has('payload', sinon.match.instanceOf(Buffer)));
+		});
 
-	describe('#queryBlockByHash', () => {});
+		it('should throw if config block type is not config', async () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
+			sinon.stub(orderer1, 'sendDeliver').onCall(0).returns({
+				header: {},
+				metadata: {
+					metadata: [
+						null,
+						commonProto.Metadata.encode('{value: []}')
+					]
+				}});
+			const envelope = new commonProto.Envelope();
+			const payload = new commonProto.Payload();
+			const header = new commonProto.Header();
+			const channelHeader = new commonProto.ChannelHeader();
+			header.channel_header = channelHeader.toBuffer();
+			payload.header = header.toBuffer();
+			envelope.payload = payload.toBuffer();
+			envelope.signature = envelope.signature.toBuffer();
+			orderer1.sendDeliver.onCall(1).returns({
+				header: {number: 1},
+				data: {
+					data: [
+						envelope.toBuffer()
+					]
+				}
+			});
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			await channel.initialize({discover: true, target: peer1});
+			await expect(channel.getChannelConfigFromOrderer()).to.be.rejectedWith('Block must be of type "CONFIG" (1), but got "0" instead');
+			sinon.assert.calledWith(orderer1.sendDeliver, sinon.match.has('payload', sinon.match.instanceOf(Buffer)));
+		});
 
-	describe('#queryBlock', () => {});
+		it('should return a valid config envelope', async () => {
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
+			sinon.stub(orderer1, 'sendDeliver').onCall(0).returns({
+				header: {},
+				metadata: {
+					metadata: [
+						null,
+						commonProto.Metadata.encode('{value: []}')
+					]
+				}});
+			const envelope = new commonProto.Envelope();
+			const payload = new commonProto.Payload();
+			const header = new commonProto.Header();
+			const channelHeader = new commonProto.ChannelHeader({
+				type: 1,
+				version: 1,
+				timestamp: {seconds: 1, nanos: 1},
+				channel_id: 'mychannel',
+				tx_id: 'tx_id',
+				epoch: 1,
+				extension: '',
+				tls_cert_hash:''
+			});
+			const data = new configtxProto.ConfigEnvelope();
+			data.setConfig({});
+			header.setChannelHeader(channelHeader.toBuffer());
+			payload.setHeader(header);
+			payload.setData(data.toBuffer());
+			envelope.setPayload(payload.toBuffer());
+			orderer1.sendDeliver.onCall(1).returns({
+				header: {number: 1},
+				data: {data: [envelope.toBuffer()]}
+			});
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			await channel.initialize({discover: true, target: peer1});
+			const configEnvelope = await channel.getChannelConfigFromOrderer();
+			expect(JSON.stringify(configEnvelope)).to.deep.equal(
+				JSON.stringify({
+					config: {
+						sequence: Long.fromValue(0, true),
+						channel_group: null
+					},
+					last_update: null
+				})
+			);
+			sinon.assert.calledWith(orderer1.sendDeliver, sinon.match.has('payload', sinon.match.instanceOf(Buffer)));
+		});
+	});
 
-	describe('#queryTransaction', () => {});
+	describe('#queryInfo', () => {
+		it('should throw if the response is an error', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves(new Error('forced error'));
+			return expect(channel.queryInfo(peer1)).to.be.rejectedWith('forced error');
+		});
 
-	describe('#queryInstantiatedChaincodes', () => {});
+		it('should throw if we dont get a status 200', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({response: {status: 500, message: 'forced error'}});
+			return expect(channel.queryInfo(peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if the payload results are missing', async () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({});
+			return expect(channel.queryInfo(peer1)).to.be.rejectedWith('Payload results are missing from the query channel info');
+		});
+
+		it('should return decoded blockchain info', async () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: ''
+				}
+			});
+			const blockchainInfo = await channel.queryInfo(peer1);
+			expect(blockchainInfo.height).to.be.deep.equal(ledgerProto.BlockchainInfo.decode('').height);
+			expect(blockchainInfo.currentBlockHash).to.be.deep.equal(ledgerProto.BlockchainInfo.decode('').currentBlockHash);
+			expect(blockchainInfo.previousBlockHash).to.be.deep.equal(ledgerProto.BlockchainInfo.decode('').previousBlockHash);
+		});
+	});
+
+	describe('#queryBlockByTxId', () => {
+		it('should throw if a tx_id is not given', () => {
+			return expect(channel.queryBlockByTxID(null, peer1)).to.be.rejectedWith('tx_id as string is required');
+		});
+
+		it('should throw if the response is an error', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves(new Error('forced error'));
+			return expect(channel.queryBlockByTxID('tx_id', peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if we dont get a status 200', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({response: {status: 500, message: 'forced error'}});
+			return expect(channel.queryBlockByTxID('tx_id', peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if the payload results are missing', async () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({});
+			return expect(channel.queryBlockByTxID('tx_id', peer1)).to.be.rejectedWith('Payload results are missing from the query');
+		});
+
+		it('should return decoded block', async () => {
+			const b = new commonProto.Block();
+			const header = new commonProto.BlockHeader();
+			const data = new commonProto.BlockData();
+			b.setHeader(header);
+			b.setData(data);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: b.toBuffer()
+				}
+			});
+			const block = await channel.queryBlockByTxID('tx_id', peer1);
+			expect(block).to.deep.equal({header: {number: '0', previous_hash: '', data_hash: ''}, data: {data: []}, metadata: {metadata: []}});
+		});
+
+		it('should return non-decoded block', async () => {
+			const b = new commonProto.Block();
+			const header = new commonProto.BlockHeader();
+			const data = new commonProto.BlockData();
+			b.setHeader(header);
+			b.setData(data);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: b.toBuffer()
+				}
+			});
+			const block = await channel.queryBlockByTxID('tx_id', peer1, false, true);
+			expect(block).to.deep.equal(b.toBuffer());
+		});
+	});
+
+	describe('#queryBlockByHash', () => {
+		const blockhashBytes = new Buffer('hash');
+		it('should throw if a blockHash is not given', () => {
+			return expect(channel.queryBlockByHash(null, peer1)).to.be.rejectedWith('Blockhash bytes are required');
+		});
+
+		it('should throw if the response is an error', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves(new Error('forced error'));
+			return expect(channel.queryBlockByHash(blockhashBytes, peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if we dont get a status 200', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({response: {status: 500, message: 'forced error'}});
+			return expect(channel.queryBlockByHash(blockhashBytes, peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if the payload results are missing', async () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({});
+			return expect(channel.queryBlockByHash(blockhashBytes, peer1)).to.be.rejectedWith('Payload results are missing from the query');
+		});
+
+		it('should return decoded block', async () => {
+			const b = new commonProto.Block();
+			const header = new commonProto.BlockHeader();
+			const data = new commonProto.BlockData();
+			b.setHeader(header);
+			b.setData(data);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: b.toBuffer()
+				}
+			});
+			const block = await channel.queryBlockByHash(blockhashBytes, peer1);
+			expect(block).to.deep.equal({header: {number: '0', previous_hash: '', data_hash: ''}, data: {data: []}, metadata: {metadata: []}});
+		});
+
+		it('should return non-decoded block', async () => {
+			const b = new commonProto.Block();
+			const header = new commonProto.BlockHeader();
+			const data = new commonProto.BlockData();
+			b.setHeader(header);
+			b.setData(data);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: b.toBuffer()
+				}
+			});
+			const block = await channel.queryBlockByHash(blockhashBytes, peer1, false, true);
+			expect(block).to.deep.equal(b.toBuffer());
+		});
+	});
+
+	describe('#queryBlock', () => {
+		const blockNum = 1;
+		it('should throw if a blockHash is not given', () => {
+			return expect(channel.queryBlock(null, peer1)).to.be.rejectedWith('Block number must be a positive integer');
+		});
+
+		it('should throw if the response is an error', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves(new Error('forced error'));
+			return expect(channel.queryBlock(blockNum, peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if we dont get a status 200', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({response: {status: 500, message: 'forced error'}});
+			return expect(channel.queryBlock(blockNum, peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if the payload results are missing', async () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({});
+			return expect(channel.queryBlock(blockNum, peer1)).to.be.rejectedWith('Payload results are missing from the query');
+		});
+
+		it('should return decoded block', async () => {
+			const b = new commonProto.Block();
+			const header = new commonProto.BlockHeader();
+			const data = new commonProto.BlockData();
+			b.setHeader(header);
+			b.setData(data);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: b.toBuffer()
+				}
+			});
+			const block = await channel.queryBlock(blockNum, peer1);
+			expect(block).to.deep.equal({header: {number: '0', previous_hash: '', data_hash: ''}, data: {data: []}, metadata: {metadata: []}});
+		});
+
+		it('should return non-decoded block', async () => {
+			const b = new commonProto.Block();
+			const header = new commonProto.BlockHeader();
+			const data = new commonProto.BlockData();
+			b.setHeader(header);
+			b.setData(data);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: b.toBuffer()
+				}
+			});
+			const block = await channel.queryBlock(blockNum, peer1, false, true);
+			expect(block).to.deep.equal(b.toBuffer());
+		});
+	});
+
+	describe('#queryTransaction', () => {
+		const txId = 'tx_id';
+		it('should throw if a tx_id is not given', () => {
+			return expect(channel.queryTransaction(null, peer1)).to.be.rejectedWith('Missing "tx_id" parameter');
+		});
+
+		it('should throw if the response is an error', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves(new Error('forced error'));
+			return expect(channel.queryTransaction(txId, peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if we dont get a status 200', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({response: {status: 500, message: 'forced error'}});
+			return expect(channel.queryTransaction(txId, peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if the payload results are missing', async () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({});
+			return expect(channel.queryTransaction(txId, peer1)).to.be.rejectedWith('Payload results are missing from the query');
+		});
+
+		it('should return decoded transaction', async () => {
+			const t = new transactionProto.ProcessedTransaction();
+			const envelope = new commonProto.Envelope();
+			const payload = new commonProto.Payload();
+			const header = new commonProto.Header();
+			const channelHeader = new commonProto.ChannelHeader();
+			header.channel_header = channelHeader.toBuffer();
+			payload.header = header.toBuffer();
+			envelope.payload = payload.toBuffer();
+			envelope.signature = envelope.signature.toBuffer();
+			t.setTransactionEnvelope(envelope);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: t.toBuffer()
+				}
+			});
+			const transaction = await channel.queryTransaction(txId, peer1);
+			sinon.match({
+				'validationCode': 0,
+				'transactionEnvelope': {
+					'signature': sinon.match.instanceOf(Buffer),
+					'payload': {
+						'header': {
+							'channel_header': {
+								'type': 0,
+								'version': 0,
+								'timestamp': 'null',
+								'channel_id': '',
+								'tx_id': '',
+								'epoch': '0',
+								'extension': sinon.match.instanceOf(Buffer),
+								'typeString': 'MESSAGE'
+							},
+							'signature_header': {
+								'creator': {
+									'Mspid': '',
+									'IdBytes': ''
+								},
+								'nonce': sinon.match.instanceOf(Buffer)
+							}
+						},
+						'data': {}
+					}
+				}
+			}).test(transaction);
+		});
+
+		it('should return non-decoded block', async () => {
+			const t = new transactionProto.ProcessedTransaction();
+			const envelope = new commonProto.Envelope();
+			const payload = new commonProto.Payload();
+			const header = new commonProto.Header();
+			const channelHeader = new commonProto.ChannelHeader();
+			header.channel_header = channelHeader.toBuffer();
+			payload.header = header.toBuffer();
+			envelope.payload = payload.toBuffer();
+			envelope.signature = envelope.signature.toBuffer();
+			t.setTransactionEnvelope(envelope);
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: t.toBuffer()
+				}
+			});
+			const transaction = await channel.queryTransaction(txId, peer1, false, true);
+			expect(transaction).to.deep.equal(t.toBuffer());
+		});
+	});
+
+	describe('#queryInstantiatedChaincodes', () => {
+		it('should throw if the response is an error', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves(new Error('forced error'));
+			return expect(channel.queryInstantiatedChaincodes(peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if we dont get a status 200', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({response: {status: 500, message: 'forced error'}});
+			return expect(channel.queryInstantiatedChaincodes(peer1)).to.be.rejectedWith('forced error');
+		});
+
+		it('should throw if we dont get a status 200 or a message', () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({response: {status: 500}});
+			return expect(channel.queryInstantiatedChaincodes(peer1)).to.be.rejectedWith('Payload results are missing from the query');
+		});
+
+		it('should throw if the payload results are missing', async () => {
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({});
+			return expect(channel.queryInstantiatedChaincodes(peer1)).to.be.rejectedWith('Payload results are missing from the query');
+		});
+
+		it('should return decoded query response', async () => {
+			const r = new queryProto.ChaincodeQueryResponse({chaincodes: [{name: 'mycc'}]});
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1, 'sendProposal').resolves({
+				response: {
+					status: 200,
+					payload: r.toBuffer()
+				}
+			});
+			const response = await channel.queryInstantiatedChaincodes(peer1);
+			sinon.match({
+				'chaincodes':[
+					{'name':'mycc', 'version':'', 'path':'', 'input':'', 'escc':'', 'vscc':'', 'id':{'buffer': sinon.match.instanceOf(Buffer), 'offset':0, 'markedOffset':-1, 'limit':0, 'littleEndian':false, 'noAssert':false}}
+				]}).test(response);
+		});
+	});
 
 	describe('#queryCollectionsConfig', () => {});
 
@@ -1249,7 +2320,7 @@ describe('Channel', () => {
 			sinon.stub(peer1, 'sendProposal').resolves(createTransactionResponse(Buffer.from(peer1Result)));
 			sinon.stub(peer2, 'sendProposal').resolves(createTransactionResponse(Buffer.from(peer2Result)));
 
-			spySendTransactionProposal = sinon.spy(Channel, 'sendTransactionProposal');
+			spySendTransactionProposal = sinon.spy(ChannelRewire, 'sendTransactionProposal');
 
 			request = {
 				targets: [peer1, peer2],
