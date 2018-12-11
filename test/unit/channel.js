@@ -1123,7 +1123,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		if (error.message.includes('Cannot find module')) {
 			t.pass('Check Failed to initialize channel with bad endorsement handler path');
 		} else {
-			t.fail('Receive other failure ' + error.toString());
+			t.fail('1 - Receive other failure ' + error.toString());
 		}
 	}
 
@@ -1138,7 +1138,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		if (error.message.includes('Failed to connect before the deadline')) {
 			t.pass('Check Failed to initialize channel with good endorsement handler path');
 		} else {
-			t.fail('Receive other failure ' + error.toString());
+			t.fail('2 - Receive other failure ' + error.toString());
 		}
 	}
 
@@ -1152,31 +1152,35 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		if (error.message.includes('Cannot find module')) {
 			t.pass('Check Failed to create channel with bad endorsement handler path');
 		} else {
-			t.fail('Receive other failure ' + error.toString());
+			t.fail('3 - Receive other failure ' + error.toString());
 		}
 	}
 
 	try {
+		channel._use_discovery = false;
 		await channel.getDiscoveryResults();
 	} catch (error) {
 		if (error.message.includes('This Channel has not been initialized or not initialized with discovery support')) {
 			t.pass('Check for:: This Channel has not been initialized or not initialized with discovery support');
 		} else {
-			t.fail('Receive other failure ' + error.toString());
+			t.fail('4 - Receive other failure ' + error.toString());
 		}
 	}
 
 	try {
+		channel._use_discovery = false;
 		await channel.getEndorsementPlan();
 	} catch (error) {
 		if (error.message.includes('This Channel has not been initialized or not initialized with discovery support')) {
 			t.pass('Check for:: This Channel has not been initialized or not initialized with discovery support');
 		} else {
-			t.fail('Receive other failure ' + error.toString());
+			t.fail('5 - Receive other failure ' + error.toString());
 		}
 	}
 
 	try {
+		channel._use_discovery = true;
+
 		const chaincode = channel._buildDiscoveryChaincodeCall('somename');
 		t.equals(chaincode.name, 'somename', 'checking that the name is correct');
 

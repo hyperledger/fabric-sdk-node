@@ -635,7 +635,7 @@ const Channel = class {
 		const method = 'getDiscoveryResults';
 		logger.debug('%s - start', method);
 
-		if (this._discovery_results) {
+		if (this._use_discovery) {
 			const have_new_interests = this._merge_hints(endorsement_hints);
 			const allowed_age = sdk_utils.getConfigSetting('discovery-cache-life', 300000); // default is 5 minutes
 			const now = Date.now();
