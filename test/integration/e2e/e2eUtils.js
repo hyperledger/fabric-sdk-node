@@ -340,11 +340,14 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 
 			const proposal = results[1];
 			let all_good = true;
-			for (const i in proposalResponses) {
-				if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
+			for (const response of proposalResponses) {
+				if (response instanceof Error) {
+					t.comment('Proposal failed to ' + chaincode_id + ' :: ' + response.toString());
+					all_good = false;
+				} else if (response.response && response.response.status === 200) {
 					logger.info(type + ' proposal was good');
 				} else {
-					logger.error(type + ' proposal was bad');
+					logger.error(type + ' proposal was bad for unknown reason');
 					all_good = false;
 				}
 			}

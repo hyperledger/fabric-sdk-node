@@ -1,3 +1,122 @@
+## v1.4.0-rc1
+Tue 11 Dec 2018 09:14:32 GMT
+
+* [3e9ae04](https://github.com/hyperledger/fabric-sdk-node/commit/3e9ae04) [FABN-834](https://jira.hyperledger.org/browse/FABN-834) NodeSDK explain gRPC settings
+* [92b70bc](https://github.com/hyperledger/fabric-sdk-node/commit/92b70bc) [FABN-1051](https://jira.hyperledger.org/browse/FABN-1051) Update pipeline script
+* [f19e630](https://github.com/hyperledger/fabric-sdk-node/commit/f19e630) [FABN-1045](https://jira.hyperledger.org/browse/FABN-1045) release notes for v1.4.0
+* [55c8f55](https://github.com/hyperledger/fabric-sdk-node/commit/55c8f55) [FABN-1053](https://jira.hyperledger.org/browse/FABN-1053): Rename contract namespace to name
+* [afae931](https://github.com/hyperledger/fabric-sdk-node/commit/afae931) [FABN-1052](https://jira.hyperledger.org/browse/FABN-1052) NodeSDK reorder logging test
+* [d664de0](https://github.com/hyperledger/fabric-sdk-node/commit/d664de0) [FABN-1051](https://jira.hyperledger.org/browse/FABN-1051) Update pipeline script
+* [a688fc2](https://github.com/hyperledger/fabric-sdk-node/commit/a688fc2) [FABN-912](https://jira.hyperledger.org/browse/FABN-912) NodeSDK add connection options
+* [003da0d](https://github.com/hyperledger/fabric-sdk-node/commit/003da0d) [FABN-1050](https://jira.hyperledger.org/browse/FABN-1050): Catch errors thrown by event callbacks
+* [e60796c](https://github.com/hyperledger/fabric-sdk-node/commit/e60796c) [[FABN-899](https://jira.hyperledger.org/browse/FABN-899)] update toturials for offline private key
+* [cfaec8f](https://github.com/hyperledger/fabric-sdk-node/commit/cfaec8f) [FABN-987](https://jira.hyperledger.org/browse/FABN-987): Update JSDoc for ProposalResponseObject
+* [0d143be](https://github.com/hyperledger/fabric-sdk-node/commit/0d143be) [FABN-941](https://jira.hyperledger.org/browse/FABN-941) NodeSDK Add peer info to response
+* [2f81b2c](https://github.com/hyperledger/fabric-sdk-node/commit/2f81b2c) [[FABN-877] Adjusted doc'ed grpc-max-send-message-](https://jira.hyperledger.org/browse/FABN-877] Adjusted doc'ed grpc-max-send-message-)length
+* [790484d](https://github.com/hyperledger/fabric-sdk-node/commit/790484d) [FABN-1048](https://jira.hyperledger.org/browse/FABN-1048) Update pipeline scripts
+* [c89e34a](https://github.com/hyperledger/fabric-sdk-node/commit/c89e34a) [FABN-1040](https://jira.hyperledger.org/browse/FABN-1040) add missing fabric client dependencies
+* [90201ae](https://github.com/hyperledger/fabric-sdk-node/commit/90201ae) [FABN-1019](https://jira.hyperledger.org/browse/FABN-1019) NodeSDK add orgs to discovery handler
+* [462dca2](https://github.com/hyperledger/fabric-sdk-node/commit/462dca2) [FABN-1042](https://jira.hyperledger.org/browse/FABN-1042): Export Wallet in TS definitions
+* [765b159](https://github.com/hyperledger/fabric-sdk-node/commit/765b159) Allow discovery to be turned off in fabric-network
+* [e3b6d83](https://github.com/hyperledger/fabric-sdk-node/commit/e3b6d83) [[FABN-969](https://jira.hyperledger.org/browse/FABN-969)] Parse environment variables with nconf
+* [f79198d](https://github.com/hyperledger/fabric-sdk-node/commit/f79198d) [FABN-1002: fabric-](https://jira.hyperledger.org/browse/FABN-1002: fabric-)network module documentation
+* [3c50e3a](https://github.com/hyperledger/fabric-sdk-node/commit/3c50e3a) [[FABN-899](https://jira.hyperledger.org/browse/FABN-899)] update docs for enroll()
+* [6eefe64](https://github.com/hyperledger/fabric-sdk-node/commit/6eefe64) [FABN-985](https://jira.hyperledger.org/browse/FABN-985): Use request txId in Channel.queryByChaincode
+* [d999468](https://github.com/hyperledger/fabric-sdk-node/commit/d999468) [FABN-1034](https://jira.hyperledger.org/browse/FABN-1034): Prevent hang with concurrent transactions
+* [cd0de89](https://github.com/hyperledger/fabric-sdk-node/commit/cd0de89) [[FABN-1033](https://jira.hyperledger.org/browse/FABN-1033)] update jsdoc build scripts
+* [680a4ce](https://github.com/hyperledger/fabric-sdk-node/commit/680a4ce) update doc for network setup
+* [27b6b1e](https://github.com/hyperledger/fabric-sdk-node/commit/27b6b1e) [[FABN-902](https://jira.hyperledger.org/browse/FABN-902)] update type definition for enroll()
+* [cbd442d](https://github.com/hyperledger/fabric-sdk-node/commit/cbd442d) [FABN-1028](https://jira.hyperledger.org/browse/FABN-1028) NodeSDK update ignoring test
+* [6d631e4](https://github.com/hyperledger/fabric-sdk-node/commit/6d631e4) [FABN-987](https://jira.hyperledger.org/browse/FABN-987): Update TS defs for ProposalResponseObject
+* [54fa5cf](https://github.com/hyperledger/fabric-sdk-node/commit/54fa5cf) [[FABN-897] fabric-ca-](https://jira.hyperledger.org/browse/FABN-897] fabric-ca-)client enroll with csr
+* [83fedc9](https://github.com/hyperledger/fabric-sdk-node/commit/83fedc9) [FABN-1026](https://jira.hyperledger.org/browse/FABN-1026): NodeSDK private data tutorial
+* [cf3abfd](https://github.com/hyperledger/fabric-sdk-node/commit/cf3abfd) [FABN-1026](https://jira.hyperledger.org/browse/FABN-1026): Add discovery 'asLocalhost' prop to TS defs
+* [2068039](https://github.com/hyperledger/fabric-sdk-node/commit/2068039) [FABN-926](https://jira.hyperledger.org/browse/FABN-926): Improve messages for failed proposals
+* [db94927](https://github.com/hyperledger/fabric-sdk-node/commit/db94927) [FABN-1001](https://jira.hyperledger.org/browse/FABN-1001): Enable strict typescript compile option
+* [c833235](https://github.com/hyperledger/fabric-sdk-node/commit/c833235) [[FABN-1027](https://jira.hyperledger.org/browse/FABN-1027)] README: Fix Markup
+* [63fd9ae](https://github.com/hyperledger/fabric-sdk-node/commit/63fd9ae) [FABN-1024](https://jira.hyperledger.org/browse/FABN-1024) Update pipeline scripts
+* [9e3cc71](https://github.com/hyperledger/fabric-sdk-node/commit/9e3cc71) [FABN-1024](https://jira.hyperledger.org/browse/FABN-1024) Update pipeline scripts
+* [a261444](https://github.com/hyperledger/fabric-sdk-node/commit/a261444) [FABN-1001: Update fabric-](https://jira.hyperledger.org/browse/FABN-1001: Update fabric-)network typescript defs
+* [177b286](https://github.com/hyperledger/fabric-sdk-node/commit/177b286) [FABN-1017](https://jira.hyperledger.org/browse/FABN-1017) Update the README.md
+* [0ecfdd3](https://github.com/hyperledger/fabric-sdk-node/commit/0ecfdd3) [FABN-972](https://jira.hyperledger.org/browse/FABN-972) NodeSDK Add private data doc
+* [7364f18](https://github.com/hyperledger/fabric-sdk-node/commit/7364f18) [[FABN-1020](https://jira.hyperledger.org/browse/FABN-1020)] Correct metadata packaging code for Windows
+* [ab11815](https://github.com/hyperledger/fabric-sdk-node/commit/ab11815) [FABN-946](https://jira.hyperledger.org/browse/FABN-946) NodeSDK auto cert not for mutual TLS
+* [480fb4c](https://github.com/hyperledger/fabric-sdk-node/commit/480fb4c) [FABN-1014](https://jira.hyperledger.org/browse/FABN-1014): Use ChannelEventHub.connect callback
+* [dfdd972](https://github.com/hyperledger/fabric-sdk-node/commit/dfdd972) [[FABN-1010](https://jira.hyperledger.org/browse/FABN-1010)] add missing jsdocs
+* [65a8da9](https://github.com/hyperledger/fabric-sdk-node/commit/65a8da9) [FABN-864](https://jira.hyperledger.org/browse/FABN-864) service discovery usage improvements
+* [1bc3892](https://github.com/hyperledger/fabric-sdk-node/commit/1bc3892) [FABN-1003](https://jira.hyperledger.org/browse/FABN-1003) NodeSDK add connect callback
+* [4348438](https://github.com/hyperledger/fabric-sdk-node/commit/4348438) [FABN-1006](https://jira.hyperledger.org/browse/FABN-1006) Update API docs script
+* [f3bff6d](https://github.com/hyperledger/fabric-sdk-node/commit/f3bff6d) [FABN-1002: Tidy-up fabric-](https://jira.hyperledger.org/browse/FABN-1002: Tidy-up fabric-)network JSDoc
+* [1bbeea6](https://github.com/hyperledger/fabric-sdk-node/commit/1bbeea6) [FABN-997](https://jira.hyperledger.org/browse/FABN-997) Update pipeline scripts
+* [0c12234](https://github.com/hyperledger/fabric-sdk-node/commit/0c12234) [[FABN-1000](https://jira.hyperledger.org/browse/FABN-1000)] Use less strict "is promise" check
+* [e20c048](https://github.com/hyperledger/fabric-sdk-node/commit/e20c048) [FABN-929](https://jira.hyperledger.org/browse/FABN-929): Enfore single Transaction invocation
+* [93fe94d](https://github.com/hyperledger/fabric-sdk-node/commit/93fe94d) [[FABN-975](https://jira.hyperledger.org/browse/FABN-975)] enable e2e tests
+* [c79db9b](https://github.com/hyperledger/fabric-sdk-node/commit/c79db9b) [FABN-997](https://jira.hyperledger.org/browse/FABN-997) Update pipeline scripts
+* [d3ada6f](https://github.com/hyperledger/fabric-sdk-node/commit/d3ada6f) [FABN-997](https://jira.hyperledger.org/browse/FABN-997) Update pipeline script
+* [b106818](https://github.com/hyperledger/fabric-sdk-node/commit/b106818) [FABN-997](https://jira.hyperledger.org/browse/FABN-997) Update pipeline script
+* [adadd93](https://github.com/hyperledger/fabric-sdk-node/commit/adadd93) [FABN-865](https://jira.hyperledger.org/browse/FABN-865): Include event tutorial in docs
+* [4a6ef6a](https://github.com/hyperledger/fabric-sdk-node/commit/4a6ef6a) [[FAB-12640](https://jira.hyperledger.org/browse/FAB-12640)] Enable disabled mocha tests
+* [1cdd627](https://github.com/hyperledger/fabric-sdk-node/commit/1cdd627) [FABN-997](https://jira.hyperledger.org/browse/FABN-997) Update pipeline script
+* [163e5e0](https://github.com/hyperledger/fabric-sdk-node/commit/163e5e0) [FABN-929](https://jira.hyperledger.org/browse/FABN-929): Allow function chaining on Transaction
+* [7b2eaff](https://github.com/hyperledger/fabric-sdk-node/commit/7b2eaff) [FABN-990](https://jira.hyperledger.org/browse/FABN-990) NodeSDK return to snapshot publish
+* [911c1fa](https://github.com/hyperledger/fabric-sdk-node/commit/911c1fa) [[FABN-975](https://jira.hyperledger.org/browse/FABN-975)] Drive cucumber tests from node_modules dir
+* [214b813](https://github.com/hyperledger/fabric-sdk-node/commit/214b813) [FABN-997](https://jira.hyperledger.org/browse/FABN-997) Add credentials in pipeline script
+* [edeabd0](https://github.com/hyperledger/fabric-sdk-node/commit/edeabd0) [FABN-995](https://jira.hyperledger.org/browse/FABN-995) NodeSDK update channel event hub doc
+* [9668d63](https://github.com/hyperledger/fabric-sdk-node/commit/9668d63) [[FABN-994](https://jira.hyperledger.org/browse/FABN-994)] Typo in Tutorial Document
+* [486333f](https://github.com/hyperledger/fabric-sdk-node/commit/486333f) Tidy up network e2e test event listening
+* [49637c6](https://github.com/hyperledger/fabric-sdk-node/commit/49637c6) [FAB-12548](https://jira.hyperledger.org/browse/FAB-12548) Update CI Pipeline scripts
+* [4dc5ec1](https://github.com/hyperledger/fabric-sdk-node/commit/4dc5ec1) [FABN-993](https://jira.hyperledger.org/browse/FABN-993): Return empty string correctly
+* [2ca614d](https://github.com/hyperledger/fabric-sdk-node/commit/2ca614d) [FABN-990](https://jira.hyperledger.org/browse/FABN-990) NodeSDK prepare for 1.4.0 beta
+* [2955431](https://github.com/hyperledger/fabric-sdk-node/commit/2955431) [[FAB-12640] Adding stricter ESLint rules to sdk-](https://jira.hyperledger.org/browse/FAB-12640] Adding stricter ESLint rules to sdk-)node
+* [421a1bc](https://github.com/hyperledger/fabric-sdk-node/commit/421a1bc) [FABN-929](https://jira.hyperledger.org/browse/FABN-929): Additional JSDoc for transient data
+* [a07cc90](https://github.com/hyperledger/fabric-sdk-node/commit/a07cc90) [[FABN-909](https://jira.hyperledger.org/browse/FABN-909)] use devDependancies
+* [2f37854](https://github.com/hyperledger/fabric-sdk-node/commit/2f37854) [[FABN-975](https://jira.hyperledger.org/browse/FABN-975)] disable discovery in sceanrio tests
+* [9baa401](https://github.com/hyperledger/fabric-sdk-node/commit/9baa401) [[FABN-989](https://jira.hyperledger.org/browse/FABN-989)] Remove redundant packaging code
+* [1b14029](https://github.com/hyperledger/fabric-sdk-node/commit/1b14029) [FABN-929](https://jira.hyperledger.org/browse/FABN-929): Transient data with evaluateTransaction()
+* [e047f07](https://github.com/hyperledger/fabric-sdk-node/commit/e047f07) [[FABN-988](https://jira.hyperledger.org/browse/FABN-988)] Validate smart contract name/version
+* [4f65a2e](https://github.com/hyperledger/fabric-sdk-node/commit/4f65a2e) [FABN-864 Discovery support in fabric-](https://jira.hyperledger.org/browse/FABN-864 Discovery support in fabric-)network api
+* [9a37ef1](https://github.com/hyperledger/fabric-sdk-node/commit/9a37ef1) [[FABN-975](https://jira.hyperledger.org/browse/FABN-975)] cucumber test framework
+* [967eee1](https://github.com/hyperledger/fabric-sdk-node/commit/967eee1) [FABN-929: Transient data support in fabric-](https://jira.hyperledger.org/browse/FABN-929: Transient data support in fabric-)network
+* [61376fe](https://github.com/hyperledger/fabric-sdk-node/commit/61376fe) [[FABN-599](https://jira.hyperledger.org/browse/FABN-599)] Mocha unit tests for Channel
+* [4197aed](https://github.com/hyperledger/fabric-sdk-node/commit/4197aed) [[FABN-829](https://jira.hyperledger.org/browse/FABN-829)] Multi version docs fix
+* [db4c59f](https://github.com/hyperledger/fabric-sdk-node/commit/db4c59f) [[FABN-829](https://jira.hyperledger.org/browse/FABN-829)] Multi version docs
+* [5e99372](https://github.com/hyperledger/fabric-sdk-node/commit/5e99372) [FAB-12617](https://jira.hyperledger.org/browse/FAB-12617) Update pipeline scripts
+* [8b59db1](https://github.com/hyperledger/fabric-sdk-node/commit/8b59db1) [FAB-12615 Fix fabric-](https://jira.hyperledger.org/browse/FAB-12615 Fix fabric-)common module name
+* [e3fd07b](https://github.com/hyperledger/fabric-sdk-node/commit/e3fd07b) [FABN-981](https://jira.hyperledger.org/browse/FABN-981) Update pipeline scripts
+* [74ffdf8](https://github.com/hyperledger/fabric-sdk-node/commit/74ffdf8) [[FAB-12567](https://jira.hyperledger.org/browse/FAB-12567)] executeTransaction to evaluateTransaction
+* [458fe61](https://github.com/hyperledger/fabric-sdk-node/commit/458fe61) [[FABN-942](https://jira.hyperledger.org/browse/FABN-942)] Remove gRPC warnings from grpc.load()
+* [db0f4cf](https://github.com/hyperledger/fabric-sdk-node/commit/db0f4cf) [FABN-865: Simplify sample plug-](https://jira.hyperledger.org/browse/FABN-865: Simplify sample plug-)in event handler
+* [aa7df5e](https://github.com/hyperledger/fabric-sdk-node/commit/aa7df5e) [[FABN-863](https://jira.hyperledger.org/browse/FABN-863)] Added HSM wallet mixin
+* [96cfd8f](https://github.com/hyperledger/fabric-sdk-node/commit/96cfd8f) [[FABN-956] logger timeStamp re-](https://jira.hyperledger.org/browse/FABN-956] logger timeStamp re-)order
+* [6b46d7d](https://github.com/hyperledger/fabric-sdk-node/commit/6b46d7d) [[FABN-979](https://jira.hyperledger.org/browse/FABN-979)] default logger: enable timeStamp
+* [dc849aa](https://github.com/hyperledger/fabric-sdk-node/commit/dc849aa) [FABN-599: More mocha tests for fabric-](https://jira.hyperledger.org/browse/FABN-599: More mocha tests for fabric-)client Channel
+* [9b7a616](https://github.com/hyperledger/fabric-sdk-node/commit/9b7a616) [[FABN-976](https://jira.hyperledger.org/browse/FABN-976)] Fix chaincode package install arg validation
+* [4f7c9aa](https://github.com/hyperledger/fabric-sdk-node/commit/4f7c9aa) [[FABN-967] type update for fabric-](https://jira.hyperledger.org/browse/FABN-967] type update for fabric-)client
+* [e6df05b](https://github.com/hyperledger/fabric-sdk-node/commit/e6df05b) [FABCI-22](https://jira.hyperledger.org/browse/FABCI-22) Pipeline job configuration
+* [9f5a2dd](https://github.com/hyperledger/fabric-sdk-node/commit/9f5a2dd) [[FABN-973](https://jira.hyperledger.org/browse/FABN-973)] Improve ChannelEventHub doc for node sdk
+* [6b483df](https://github.com/hyperledger/fabric-sdk-node/commit/6b483df) [[FAB-12444] Update fabric-sdk-](https://jira.hyperledger.org/browse/FAB-12444] Update fabric-sdk-)node to baseimage 0.4.14
+* [792d86f](https://github.com/hyperledger/fabric-sdk-node/commit/792d86f) [FABN-865: Plug-](https://jira.hyperledger.org/browse/FABN-865: Plug-)in event handlers
+* [28f48d3](https://github.com/hyperledger/fabric-sdk-node/commit/28f48d3) [[FABN-862](https://jira.hyperledger.org/browse/FABN-862)] Implemented CouchDB wallet storage
+* [4579e7e](https://github.com/hyperledger/fabric-sdk-node/commit/4579e7e) [[FABN-599](https://jira.hyperledger.org/browse/FABN-599) ] enhance gulp mocha tasks
+* [7ea726a](https://github.com/hyperledger/fabric-sdk-node/commit/7ea726a) [FABN-962 Update sdk-](https://jira.hyperledger.org/browse/FABN-962 Update sdk-)node to baseimage 0.4.13
+* [2840d59](https://github.com/hyperledger/fabric-sdk-node/commit/2840d59) [FABCI-138](https://jira.hyperledger.org/browse/FABCI-138) NodeSDK update version and tag
+* [d855f1c](https://github.com/hyperledger/fabric-sdk-node/commit/d855f1c) [[FABN-953](https://jira.hyperledger.org/browse/FABN-953)] reinstate java chaincode tests
+* [3243d67](https://github.com/hyperledger/fabric-sdk-node/commit/3243d67) [FABN-951](https://jira.hyperledger.org/browse/FABN-951): Fix event handling concurreny issue
+* [d7b354e](https://github.com/hyperledger/fabric-sdk-node/commit/d7b354e) [[FABN-599](https://jira.hyperledger.org/browse/FABN-599)] Fixed eslint issues with autofix
+* [a63c19c](https://github.com/hyperledger/fabric-sdk-node/commit/a63c19c) [FABN-955](https://jira.hyperledger.org/browse/FABN-955): Additional logging for tx event handling
+* [3d2d893](https://github.com/hyperledger/fabric-sdk-node/commit/3d2d893) [[FABN-599](https://jira.hyperledger.org/browse/FABN-599)] Unit tests for packager module
+* [a674009](https://github.com/hyperledger/fabric-sdk-node/commit/a674009) [[FABN-953](https://jira.hyperledger.org/browse/FABN-953)] temporarily disable java chaincode e2e tests
+* [526a266](https://github.com/hyperledger/fabric-sdk-node/commit/526a266) [[FABN-909](https://jira.hyperledger.org/browse/FABN-909)] publish empty common module
+* [49b73f2](https://github.com/hyperledger/fabric-sdk-node/commit/49b73f2) [[FABN-599](https://jira.hyperledger.org/browse/FABN-599)] Added unit tests
+* [70ec069](https://github.com/hyperledger/fabric-sdk-node/commit/70ec069) [[FABN-952](https://jira.hyperledger.org/browse/FABN-952)] update readmes and package information
+* [a50f68d](https://github.com/hyperledger/fabric-sdk-node/commit/a50f68d) [[FABN-948] Add top-](https://jira.hyperledger.org/browse/FABN-948] Add top-)level Package class to SDK
+* [ab01269](https://github.com/hyperledger/fabric-sdk-node/commit/ab01269) [[FABN-940](https://jira.hyperledger.org/browse/FABN-940)] Contract Namespaces
+* [4f19232](https://github.com/hyperledger/fabric-sdk-node/commit/4f19232) [FABN-950](https://jira.hyperledger.org/browse/FABN-950) NodeSDK Update JSDOC for discovery
+* [ed043c3](https://github.com/hyperledger/fabric-sdk-node/commit/ed043c3) [FABN-949](https://jira.hyperledger.org/browse/FABN-949) NodeSDK metadataPath not working
+* [857c68e](https://github.com/hyperledger/fabric-sdk-node/commit/857c68e) [FABN-599: Mocha unit tests for fabric-](https://jira.hyperledger.org/browse/FABN-599: Mocha unit tests for fabric-)client Channel
+* [f356471](https://github.com/hyperledger/fabric-sdk-node/commit/f356471) [[FABN-599](https://jira.hyperledger.org/browse/FABN-599)] Added unit tests
+* [6634e1a](https://github.com/hyperledger/fabric-sdk-node/commit/6634e1a) [FABN-944 JSDoc for fabric-](https://jira.hyperledger.org/browse/FABN-944 JSDoc for fabric-)network classes
+
 ## 1.4.0-beta
 Thu Nov  1 13:30:41 EDT 2018
 
