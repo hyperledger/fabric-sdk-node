@@ -8,11 +8,7 @@ node ('hyp-x') { // trigger build on x86_64 node
     try {
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>)
      def nodeHome = tool 'nodejs-8.11.3'
-     env.VERSION = sh(returnStdout: true, script: 'curl -O https://raw.githubusercontent.com/hyperledger/fabric/master/Makefile && cat Makefile | grep "BASE_VERSION =" | cut -d "=" -f2').trim()
-     env.VERSION = "$VERSION" // BASE_VERSION from fabric Makefile
      env.ARCH = "amd64"
-     env.IMAGE_TAG = "${ARCH}-${VERSION}-stable" // fabric latest stable version from nexus
-     env.PROJECT_VERSION = "${VERSION}-stable"
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${nodeHome}/bin:$PATH"
@@ -67,22 +63,6 @@ node ('hyp-x') { // trigger build on x86_64 node
            }
           }
          }
-
-// Pull fabric,fabric-ca and Javaenv
-      stage("Pull Docker Images") {
-         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
-           try {
-                 dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
-                 sh './CI_Script.sh --pull_Docker_Images'
-                 }
-               }
-           catch (err) {
-                 failure_stage = "Pull docker images"
-                 currentBuild.result = 'FAILURE'
-                 throw err
-           }
-         }
-      }
 
 // Run gulp tests (headless and integration tests)
       stage("Headless & Integration Tests") {

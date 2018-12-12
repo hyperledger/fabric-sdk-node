@@ -8,31 +8,28 @@
 npmPublish() {
 
  if [[ "$CURRENT_TAG" = *"skip"* ]]; then
-     echo "----> Don't publish $1 npm modules on skip tag"
+     echo -e "\033[34m----> Don't publish $1 npm modules on skip tag \033[0m"
  elif [[ "$CURRENT_TAG" = *"unstable"* ]]; then
       echo
       UNSTABLE_VER=$(npm dist-tags ls "$1" | awk "/$CURRENT_TAG"":"/'{
-      ver=$NF
-      sub(/.*\./,"",rel)
-      sub(/\.[[:digit:]]+$/,"",ver)
-      print ver}')
-      echo "======> UNSTABLE VERSION:" $UNSTABLE_VER
-
-      UNSTABLE_INCREMENT=$(npm dist-tags ls "$1" | awk "/$CURRENT_TAG"":"/'{
       ver=$NF
       rel=$NF
       sub(/.*\./,"",rel)
       sub(/\.[[:digit:]]+$/,"",ver)
       print ver"."rel+1}')
-      echo "======> Incremented UNSTABLE VERSION:" $UNSTABLE_INCREMENT
-
-      # Get last digit of the unstable version of $CURRENT_TAG
-      UNSTABLE_INCREMENT=$(echo $UNSTABLE_INCREMENT| rev | cut -d '.' -f 1 | rev)
-      echo "======> UNSTABLE_INCREMENT:" $UNSTABLE_INCREMENT
+      if [[ $UNSTABLE_VER = "" ]]; then
+        echo -e "\033[34m  ----> unstable ver is blank \033[0m"
+        UNSTABLE_INCREMENT=1
+      else
+        # Get last digit of the unstable version built above
+        UNSTABLE_INCREMENT=$(echo $UNSTABLE_VER| rev | cut -d '.' -f 1 | rev)
+      fi
+      
+      echo -e "\033[32m======> UNSTABLE_INCREMENT:" $UNSTABLE_INCREMENT "\033[0m"
 
       # Append last digit with the package.json version
       export UNSTABLE_INCREMENT_VERSION=$RELEASE_VERSION.$UNSTABLE_INCREMENT
-      echo "======> UNSTABLE_INCREMENT_VERSION:" $UNSTABLE_INCREMENT_VERSION
+      echo -e "\033[32m======> UNSTABLE_INCREMENT_VERSION:" $UNSTABLE_INCREMENT_VERSION "\033[0"
 
       if [ "$1" = "fabric-network" ]; then
           sed -i 's/\(.*\"fabric-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
@@ -84,7 +81,7 @@ versions() {
 # START HERE
 ############
 
-echo "----------> START PUBLISHING FROM HERE"
+echo -e "\033[34m----------> START PUBLISHING FROM HERE" "\033[0m"
 cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
 # Set NPM_TOKEN from CI configuration
 npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
