@@ -3320,6 +3320,9 @@ const Channel = class {
 		if (!proposal_response) {
 			throw new Error('Missing proposal response');
 		}
+		if (proposal_response instanceof Error) {
+			return false;
+		}
 		if (!proposal_response.endorsement) {
 			throw new Error('Parameter must be a ProposalResponse Object');
 		}
@@ -3387,6 +3390,10 @@ const Channel = class {
 		}
 		if (proposal_responses.length === 0) {
 			throw new Error('proposal_responses is empty');
+		}
+
+		if (proposal_responses.some((response) => response instanceof Error)) {
+			return false;
 		}
 
 		const first_one = _getProposalResponseResults(proposal_responses[0]);

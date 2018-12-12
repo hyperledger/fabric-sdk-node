@@ -618,6 +618,13 @@ describe('Channel', () => {
 			const result = channel.compareProposalResponseResults([proposalResponse1, proposalResponse2]);
 			expect(result).to.be.false;
 		});
+
+		it('returns false if any proposal responses are Error objects', () => {
+			const proposalResponse1 = createProposalResponse('foo');
+			const proposalResponse2 = new Error('bah');
+			const result = channel.compareProposalResponseResults([proposalResponse1, proposalResponse2]);
+			expect(result).to.be.false;
+		});
 	});
 
 	describe('#generateUnsignedProposal', () => {
@@ -759,6 +766,12 @@ describe('Channel', () => {
 			const proposalResponse = createProposalResponse('messsage');
 			const result = channel.verifyProposalResponse(proposalResponse);
 			expect(result).to.be.true;
+		});
+
+		it('returns false if the proposal response is an error', () => {
+			const proposalResponse = new Error('sadface');
+			const result = channel.verifyProposalResponse(proposalResponse);
+			expect(result).to.be.false;
 		});
 	});
 
