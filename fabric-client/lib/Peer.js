@@ -51,8 +51,20 @@ class Peer extends Remote {
 		super(url, opts);
 
 		logger.debug('Peer.const - url: %s timeout: %s name:%s', url, this._request_timeout, this.getName());
-		this._endorserClient = new _serviceProto.Endorser(this._endpoint.addr, this._endpoint.creds, this._options);
-		this._discoveryClient = new _discoveryProto.Discovery(this._endpoint.addr, this._endpoint.creds, this._options);
+		this._endorserClient = null;
+		this._discoveryClient = null;
+		this._createClients();
+	}
+
+	_createClients() {
+		if (!this._endorserClient) {
+			logger.debug('_createClients - create peer endorser connection ' + this._endpoint.addr);
+			this._endorserClient = new _serviceProto.Endorser(this._endpoint.addr, this._endpoint.creds, this._options);
+		}
+		if (!this._discoveryClient) {
+			logger.debug('_createClients - create peer discovery connection ' + this._endpoint.addr);
+			this._discoveryClient = new _discoveryProto.Discovery(this._endpoint.addr, this._endpoint.creds, this._options);
+		}
 	}
 
 	/**
@@ -62,10 +74,12 @@ class Peer extends Remote {
 		if (this._endorserClient) {
 			logger.debug('close - closing peer endorser connection ' + this._endpoint.addr);
 			this._endorserClient.close();
+			this._endorserClient = null;
 		}
 		if (this._discoveryClient) {
 			logger.debug('close - closing peer discovery connection ' + this._endpoint.addr);
 			this._discoveryClient.close();
+			this._discoveryClient = null;
 		}
 	}
 
@@ -94,6 +108,8 @@ class Peer extends Remote {
 		if (!proposal) {
 			throw new Error('Missing proposal to send to peer');
 		}
+
+		this._createClients();
 
 		await this.waitForReady(this._endorserClient);
 
@@ -165,6 +181,8 @@ class Peer extends Remote {
 		if (!request) {
 			return Promise.reject(new Error('Missing request to send to peer discovery service'));
 		}
+
+		this._createClients();
 
 		return this.waitForReady(this._discoveryClient).then(() => {
 			return new Promise((resolve, reject) => {

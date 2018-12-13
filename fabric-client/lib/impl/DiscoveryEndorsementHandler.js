@@ -277,6 +277,10 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 						} catch (caught_error) {
 							if (!(caught_error instanceof Error)) {
 								error = new Error(caught_error.toString());
+								// if this peer failed to connect then close it
+								if (error.connectFailed) {
+									peer.close();
+								}
 							} else {
 								error = caught_error;
 							}
