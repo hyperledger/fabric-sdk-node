@@ -78,6 +78,13 @@ export class Transaction {
 	public submit(...args: string[]): Promise<Buffer>;
 }
 
+export interface FabricError {
+	cause?: Error;
+	transactionId?: string;
+}
+
+export class TimeoutError implements FabricError {}
+
 //-------------------------------------------
 // Wallet Management
 //-------------------------------------------

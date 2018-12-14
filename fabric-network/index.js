@@ -59,3 +59,4 @@ module.exports.HSMWalletMixin = require('./lib/impl/wallet/hsmwalletmixin');
 module.exports.FileSystemWallet = require('./lib/impl/wallet/filesystemwallet');
 module.exports.CouchDBWallet = require('./lib/impl/wallet/couchdbwallet');
 module.exports.DefaultEventHandlerStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
+module.exports.TimeoutError = require('fabric-network/lib/errors/timeouterror');

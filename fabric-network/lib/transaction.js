@@ -105,6 +105,8 @@ class Transaction {
 	 * @async
      * @param {...String} [args] Transaction function arguments.
      * @returns {Buffer} Payload response from the transaction function.
+	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
+	 * timed out before a commit event was received from peers.
      */
 	async submit(...args) {
 		verifyArguments(args);
