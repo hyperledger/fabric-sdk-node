@@ -279,6 +279,7 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 								error = new Error(caught_error.toString());
 								// if this peer failed to connect then close it
 								if (error.connectFailed) {
+									logger.warn('%s - connect fail to peer - %s', peer.getUrl());
 									peer.close();
 								}
 							} else {

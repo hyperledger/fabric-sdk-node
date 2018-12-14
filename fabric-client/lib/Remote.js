@@ -153,6 +153,7 @@ class Remote {
 					if (err.message) {
 						err.message = err.message + ' URL:' + self.getUrl();
 					}
+					err.connectFailed = true;
 					logger.error(err);
 
 					return reject(err);

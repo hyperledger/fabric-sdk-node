@@ -156,6 +156,11 @@ test('\n\n ** Remote node tests **\n\n', async (t) => {
 	} catch (error) {
 		if (error.toString().includes(peer.getUrl())) {
 			t.pass('Successfully got the waitForReady URL address error');
+			if (error.connectFailed) {
+				t.pass('Successfully got the connection failed set in the error');
+			} else {
+				t.fail('Failed to get the connection failed set in the error');
+			}
 		} else {
 			t.fail('Failed to get the waitForReady URL address error');
 		}
