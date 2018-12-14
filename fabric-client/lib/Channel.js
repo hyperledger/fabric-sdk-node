@@ -1258,6 +1258,13 @@ const Channel = class {
 				return results;
 			}
 		} else {
+			if (response instanceof Error) {
+				if (response.connectFailed) {
+					logger.error(' Unable to get discovery results from peer %s', target_peer.getUrl());
+					// close this peer down so that next time a new connection will be used
+					target_peer.close();
+				}
+			}
 			throw new Error('Discovery has failed to return results');
 		}
 	}
