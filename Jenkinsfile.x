@@ -7,7 +7,7 @@ node ('hyp-x') { // trigger build on x86_64 node
  timestamps {
     try {
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>)
-     def nodeHome = tool 'nodejs-8.11.3'
+     def nodeHome = tool 'nodejs-8.14.0'
      env.ARCH = "amd64"
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
