@@ -7,7 +7,7 @@ node ('hyp-x') { // trigger build on x86_64 node
  timestamps {
     try {
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>)
-     def nodeHome = tool 'nodejs-8.11.3'
+     def nodeHome = tool 'nodejs-8.14.0'
      env.VERSION = sh(returnStdout: true, script: 'curl -O https://raw.githubusercontent.com/hyperledger/fabric/master/Makefile && cat Makefile | grep "BASE_VERSION =" | cut -d "=" -f2').trim()
      env.VERSION = "$VERSION" // BASE_VERSION from fabric Makefile
      env.ARCH = "amd64"
