@@ -261,7 +261,7 @@ peer0.org1.example.com:
 	- CORE_PEER_LISTENADDRESS=peer0.org1.example.com:7051
 	- CORE_PEER_GOSSIP_ENDPOINT=peer0.org1.example.com:7051
 	- CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
-	- CORE_LOGGING_LEVEL=debug
+	- FABRIC_LOGGING_SPEC=debug
 	## the following setting redirects chaincode container logs to the peer container logs
 	- CORE_VM_DOCKER_ATTACHSTDOUT=true
 	- CORE_PEER_LOCALMSPID=Org1MSP

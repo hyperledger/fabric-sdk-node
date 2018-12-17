@@ -76,7 +76,7 @@ services:
       - CORE_PEER_LISTENADDRESS=peer0.org1.example.com:7051
       - CORE_PEER_GOSSIP_ENDPOINT=peer0.org1.example.com:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
-      - CORE_LOGGING_LEVEL=debug
+      - FABRIC_LOGGING_SPEC=debug
       ## the following setting redirects chaincode container logs to the peer container logs
       - CORE_VM_DOCKER_ATTACHSTDOUT=true
       - CORE_PEER_LOCALMSPID=Org1MSP
@@ -113,7 +113,7 @@ services:
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:8051
       - CORE_PEER_LOCALMSPID=Org2MSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
-      - CORE_LOGGING_LEVEL=debug
+      - FABRIC_LOGGING_SPEC=debug
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/tls/key.pem
