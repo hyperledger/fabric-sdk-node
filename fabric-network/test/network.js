@@ -270,6 +270,12 @@ describe('Network', () => {
 			network._dispose();
 			sinon.assert.calledOnce(mockChannel.close);
 		});
+
+		it('calls dispose() on the event hub factory', () => {
+			const spy = sinon.spy(network.getEventHubFactory(), 'dispose');
+			network._dispose();
+			sinon.assert.called(spy);
+		});
 	});
 
 	describe('#getEventHubFactory', () => {
