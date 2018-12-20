@@ -57,7 +57,8 @@ class FileSystemWallet extends BaseWallet {
 	/**
 	 * Creates an instance of FileSystemWallet.
 	 * @param {string} path The root path for this wallet on the file system
-	 * @param {WalletMixin} [mixin] optionally provide an alternative WalletMixin. Defaults to X509WalletMixin
+	 * @param {WalletMixin} [mixin] Optionally provide an alternative wallet mixin.
+	 * Defaults to [X509WalletMixin]{@link module:fabric-network.X509WalletMixin}.
 	 */
 	constructor(path, mixin) {
 		if (!path) {

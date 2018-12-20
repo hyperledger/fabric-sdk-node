@@ -16,7 +16,7 @@ const logger = require('./logger').getLogger('Gateway');
 /**
  * @typedef {Object} Gateway~GatewayOptions
  * @memberof module:fabric-network
- * @property {fabric-network.Wallet} wallet The identity wallet implementation for use with this Gateway instance.
+ * @property {module:fabric-network.Wallet} wallet The identity wallet implementation for use with this Gateway instance.
  * @property {string} identity The identity in the wallet for all interactions on this Gateway instance.
  * @property {string} [clientTlsIdentity] The identity in the wallet to use as the client TLS identity.
  * @property {module:fabric-network.Gateway~DefaultEventHandlerOptions} [eventHandlerOptions] Options for the inbuilt default
@@ -45,7 +45,7 @@ const logger = require('./logger').getLogger('Gateway');
 /**
  * @typedef {Object} Gateway~TxEventHandler
  * @memberof module:fabric-network
- * @property {Function} startLstening Async function that resolves when the handler has started listening for
+ * @property {Function} startListening Async function that resolves when the handler has started listening for
  * transaction commit events. Called after the transaction proposal has been accepted and prior to submission of
  * the transaction to the orderer.
  * @property {Function} waitForEvents Async function that resolves (or rejects) when suitable transaction
@@ -66,7 +66,7 @@ const logger = require('./logger').getLogger('Gateway');
  * The gateway peer provides the connection point for an application to access the Fabric network.  It is instantiated using
  * the default constructor.
  * It can then be connected to a fabric network using the [connect]{@link #connect} method by passing either a CCP definition
- * or an existing {@link module:fabric-client.Client} object.
+ * or an existing {@link Client} object.
  * Once connected, it can then access individual Network instances (channels) using the [getNetwork]{@link #getNetwork} method
  * which in turn can access the [smart contracts]{@link Contract} installed on a network and
  * [submit transactions]{@link Contract#submitTransaction} to the ledger.
@@ -112,7 +112,7 @@ class Gateway {
 	/**
      * Connect to the Gateway with a connection profile or a prebuilt Client instance.
      * @async
-     * @param {(string|object|module:fabric-client.Client)} config The configuration for this Gateway which can be:
+     * @param {(string|object|Client)} config The configuration for this Gateway which can be:
 	 * <ul>
 	 *   <li>A fully qualified common connection profile file path (String)</li>
 	 *   <li>A common connection profile JSON (Object)</li>
@@ -187,7 +187,7 @@ class Gateway {
 	/**
      * Get the current identity
      *
-     * @returns {module:fabric-client.User} The current identity used by this Gateway.
+     * @returns {User} The current identity used by this Gateway.
      */
 	getCurrentIdentity() {
 		logger.debug('in getCurrentIdentity');
@@ -197,7 +197,7 @@ class Gateway {
 	/**
      * Get the underlying Client object instance
      *
-     * @returns {module:fabric-client.Client} The underlying client instance
+     * @returns {Client} The underlying client instance
      */
 	getClient() {
 		logger.debug('in getClient');

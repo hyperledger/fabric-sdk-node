@@ -27,7 +27,8 @@ class CouchDBWallet extends BaseWallet {
 	/**
 	 * Creates an instance of the CouchDBWallet
 	 * @param {module:fabric-network.CouchDBWallet~CouchDBWalletOptions} options contains required property <code>url</code> and other Nano options
-	 * @param {module:fabric-network.WalletMixin} [mixin]
+	 * @param {WalletMixin} [mixin] Optionally provide an alternative wallet mixin.
+	 * Defaults to [X509WalletMixin]{@link module:fabric-network.X509WalletMixin}.
 	 */
 	constructor(options, mixin) {
 		const method = 'constructor';
