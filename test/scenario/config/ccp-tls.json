@@ -1,5 +1,5 @@
 {
-  "name":"cucmber-network",
+  "name":"cucumber-network",
   "description":"The network to be in if you like scenario tests, not vegetables",
   "version":"1.0",
   "client":{

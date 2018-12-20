@@ -213,5 +213,107 @@ async function join_channel(ccp, tls, channelName, orgName) {
 	}
 }
 
+/**
+ * Update a channel with a new config file
+ * @param {CommonConnectionProfile} ccp The common connection profile
+ * @param {String} channelName the name of the channel to join
+ * @param {String} configPath the relative path of the config file (relative to this file)
+ * @param {Boolean} tls true if a tls network; false if not
+ */
+async function update_channel(ccp, channelName, configPath, tls) {
+	Client.setConfigSetting('request-timeout', 60000);
+	const channels = ccp.getChannels();
+	if (!Object.keys(channels) || Object.keys(channels).length === 0) {
+		return Promise.reject(new Error('No channel information found'));
+	}
+
+	try {
+		const channel = channels[channelName];
+
+		testUtil.logMsg('Creating channel [' + channelName + '] ...');
+
+		// Acting as a client in first org when creating the channel
+		const client = new Client();
+		const orgs = ccp.getOrganizations();
+		const orgName = Object.keys(orgs)[0];
+		const org = orgs[orgName];
+
+		const ordererName = channel.orderers[0];
+		const caRootsPath = ccp.getOrderer(ordererName).tlsCACerts.path;
+		const data = fs.readFileSync(caRootsPath);
+		const caroots = Buffer.from(data).toString();
+
+		// Conditional action on TLS enablement
+		if (tls) {
+			const caName = org.certificateAuthorities[0];
+			const fabricCAEndpoint = ccp.getCertificateAuthority(caName).url;
+			const tlsInfo = await testUtil.tlsEnroll(fabricCAEndpoint, caName);
+			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+		}
+
+		const orderer = client.newOrderer(
+			ccp.getOrderer(ordererName).url,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ccp.getOrderer(ordererName).grpcOptions['ssl-target-name-override']
+			}
+		);
+
+		let config = null;
+		const signatures = [];
+
+		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(org)});
+		client.setStateStore(store);
+		const cryptoSuite = Client.newCryptoSuite();
+		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(org)}));
+		client.setCryptoSuite(cryptoSuite);
+
+		// Run this to set the required identity on the client object
+		await testUtil.getOrdererAdmin(client, ordererName, ccp);
+
+		// use the config update created by the configtx tool
+		const envelope_bytes = fs.readFileSync(path.join(__dirname, configPath));
+		config = client.extractChannelConfig(envelope_bytes);
+
+		// sign the config for each org
+		for (const organization in ccp.getOrganizations()) {
+			client._userContext = null;
+			await testUtil.getSubmitter(client, true, organization, ccp);
+			// sign the config
+			const signature = client.signChannelConfig(config);// .toBuffer().toString('hex');
+			signatures.push(signature);
+		}
+
+		client._userContext = null;
+
+		// Run this to set the required identity on the client object
+		await testUtil.getOrdererAdmin(client, ordererName, ccp);
+
+		// build up the create request
+		const tx_id = client.newTransactionID(true);
+		const request = {
+			name: channelName,
+			config: config,
+			signatures: signatures,
+			orderer: orderer,
+			txId: tx_id
+		};
+
+		// send create request to orderer
+		const result = await client.updateChannel(request);
+		if (result.status && result.status === 'SUCCESS') {
+			testUtil.logMsg('Successfully update channel [' + channelName + ']');
+			await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
+			return Promise.resolve();
+		} else {
+			throw new Error('Failed to update channel, with status: ' + result.status);
+		}
+	} catch (err) {
+		testUtil.logError('Failed to update channels ' + (err.stack ? err.stack : err));
+		return Promise.reject(err);
+	}
+}
+
 module.exports.create_channels = create_channels;
 module.exports.join_channel = join_channel;
+module.exports.update_channel = update_channel;

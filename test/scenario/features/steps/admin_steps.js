@@ -28,6 +28,16 @@ module.exports = function () {
 		}
 	});
 
+	this.Then(/^I can update channel with name (.+?) with config file (.+?) from the (.+?) common connection profile/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (channelName, configFilePath, tlsType) => {
+		if (tlsType.localeCompare('non-tls') === 0) {
+			const profile =  new CCP(path.join(__dirname, ccpPath), true);
+			return channel_util.update_channel(profile, channelName, configFilePath, false);
+		} else {
+			const profile =  new CCP(path.join(__dirname, tlsCcpPath), true);
+			return channel_util.update_channel(profile, channelName, configFilePath, true);
+		}
+	}),
+
 	this.Then(/^I can join organization (.+?) to the (.+?) enabled channel named (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (orgName, tlsType, channelName) => {
 		if (tlsType.localeCompare('non-tls') === 0) {
 			const profile =  new CCP(path.join(__dirname, ccpPath), true);

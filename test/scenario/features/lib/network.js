@@ -42,9 +42,10 @@ async function inMemoryIdentitySetup(inMemoryWallet, ccp, orgName, userName) {
  * @param {String} userName the user name to perform actinos with
  * @param {String} orgName the Organization to which the user belongs
  * @param {String} gatewayName the name of the gateway
+ * @param {Boolean} useDiscovery toggle discovery on
  * @return {Gateway} the connected gateway
  */
-async function connectGateway(ccp, tls, userName, orgName, gatewayName) {
+async function connectGateway(ccp, tls, userName, orgName, gatewayName, useDiscovery) {
 
 	const gateway = new Gateway();
 	const inMemoryWallet = new InMemoryWallet();
@@ -58,12 +59,15 @@ async function connectGateway(ccp, tls, userName, orgName, gatewayName) {
 		const tlsInfo = await testUtil.tlsEnroll(fabricCAEndpoint, caName);
 		await inMemoryWallet.import('tlsId', X509WalletMixin.createIdentity(userIdentity, tlsInfo.certificate, tlsInfo.key));
 	}
-
 	const opts = {
 		wallet: inMemoryWallet,
 		identity: userIdentity,
-		discovery: {enabled: false}
+		discovery: {enabled: useDiscovery}
 	};
+
+	if (useDiscovery) {
+		opts.discovery.asLocalhost = true;
+	}
 
 	if (tls) {
 		opts.clientTlsIdentity = 'tlsId';
@@ -162,7 +166,12 @@ async function performGatewayTransaction(gatewayName, ccName, channelName, args,
 	}
 }
 
+function getGateway(gatewayName) {
+	return gateways.get(gatewayName);
+}
+
 module.exports.connectGateway = connectGateway;
 module.exports.performGatewayTransaction = performGatewayTransaction;
 module.exports.disconnectGateway = disconnectGateway;
 module.exports.disconnectAllGateways = disconnectAllGateways;
+module.exports.getGateway = getGateway;

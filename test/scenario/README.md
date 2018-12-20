@@ -1,6 +1,6 @@
 # Cucumber Test Sceanrios For Fabric-SDK-Node
 
-Welcome to the Fabric-SDK-Node Cucmber test readme. Below are some notes on these tests, but before you go any further, here are some general contribution guide lines:
+Welcome to the Fabric-SDK-Node Cucumber test readme. Below are some notes on these tests, but before you go any further, here are some general contribution guide lines:
  - Each feature file must have its own tag
  - All features and scenarios must be isolated from one another (no relying on other tests to create things for you!)
    - Each feature must be runnable in isolation
@@ -47,7 +47,7 @@ scenario
 ```
 
 - The scenario tests and all required files are conatained within the `scenario` directory
-- `chaincode` holds all the chaincode files used within the cucmber tesst, with each chaincode contained within a specific named folder, itself decomposed into goLang and node. The structure here is important, since step files rely on the consistent location and naming strategy to deploy named chaincode of a specific type.
+- `chaincode` holds all the chaincode files used within the cucumber tesst, with each chaincode contained within a specific named folder, itself decomposed into goLang and node. The structure here is important, since step files rely on the consistent location and naming strategy to deploy named chaincode of a specific type.
 - `config` contains connection profiles, a json document of all possible endorsement policies, and a crypto-config directory that contains the crypto-material for the network defined within the docker-compose folder.
 - `docker-compose` contains the two test networks, tls and non-tls, that are used within the cucumber tests.
 - All feature files and supporting files are contained in the `features` directory
