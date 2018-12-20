@@ -143,7 +143,7 @@ class Network {
 
 	/**
 	 * Get the underlying channel object representation of this network.
-	 * @returns {module:fabric-client.Channel} A channel.
+	 * @returns {Channel} A channel.
 	 */
 	getChannel() {
 		return this.channel;

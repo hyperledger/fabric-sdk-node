@@ -42,7 +42,7 @@ function verifyNamespace(namespace) {
 /**
  * Represents a smart contract (chaincode) instance in a network.
  * Applications should get a Contract instance using the
- * networks's [getContract]{@link fabric-network.Network#getContract} method.
+ * networks's [getContract]{@link module:fabric-network.Network#getContract} method.
  * @memberof module:fabric-network
  * @hideconstructor
  */
@@ -106,7 +106,7 @@ class Contract {
 	}
 
 	/**
-	 * Create an object representing the invocation of a specific transaction
+	 * Create an object representing a specific invocation of a transaction
 	 * function implemented by this contract, and provides more control over
 	 * the transaction invocation. A new transaction object <strong>must</strong>
 	 * be created for each transaction invocation.
