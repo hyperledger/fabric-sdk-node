@@ -50,7 +50,7 @@
     "targz": "^1.0.1",
     "typescript": "2.7.2",
     "winston": "^2.2.0",
-    "x509": "^0.3.2"
+    "x509": "0.3.3"
   },
   "license": "Apache-2.0",
   "licenses": [
