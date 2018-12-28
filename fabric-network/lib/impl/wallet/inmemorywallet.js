@@ -17,10 +17,17 @@ const logger = require('../../logger').getLogger('InMemoryWallet');
 const memoryStore = new Map();
 
 /**
+ * In-memory wallet implementation. Note that the in-memory state is shared between all
+ * instances of this class in a given Node.js process.
  * @memberof module:fabric-network
  * @implements {module:fabric-network.Wallet}
  */
 class InMemoryWallet extends BaseWallet {
+	/**
+	 * Creates an instance of an in-memory wallet.
+	 * @param {WalletMixin} [walletmixin] Optionally provide an alternative wallet mixin.
+	 * Defaults to [X509WalletMixin]{@link module:fabric-network.X509WalletMixin}.
+	 */
 	constructor(walletmixin) {
 		super(walletmixin);
 		logger.debug('in InMemoryWallet constructor');
