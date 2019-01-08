@@ -278,7 +278,8 @@ var CryptoSuite_ECDSA_AES = class extends api.CryptoSuite {
 		var sig = this._ecdsa.sign(digest, signKey);
 		sig = _preventMalleability(sig, key._key.ecparams);
 		logger.debug('ecdsa signature: ', sig);
-		return sig.toDER();
+		const der = sig.toDER();
+		return Buffer.from(der);
 	}
 
 	verify(key, signature, digest) {
