@@ -9,12 +9,7 @@ node('hyp-z') {
 
      def ROOTDIR = pwd() // workspace dir (/w/workspace/<job_name>
      env.NODE_VER = "8.14.0"
-     // Fetch the BASE_VERSION from fabric master branch to pull images from nexus
-     env.VERSION = sh(returnStdout: true, script: 'curl -O https://raw.githubusercontent.com/hyperledger/fabric/release-1.4/Makefile && cat Makefile | grep "BASE_VERSION =" | cut -d "=" -f2').trim()
-     env.VERSION = "$VERSION" // BASE_VERSION from fabric Makefile
      env.ARCH = "s390x" // `uname -m`
-     env.IMAGE_TAG = "${ARCH}-${VERSION}-stable" // fabric latest stable version from nexus3
-     env.PROJECT_VERSION = "${VERSION}-stable"
      env.PROJECT_DIR = "gopath/src/github.com/hyperledger"
      env.GOPATH = "$WORKSPACE/gopath"
      env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:~/npm/bin:/home/jenkins/.nvm/versions/node/v${NODE_VER}/bin:$PATH"
@@ -70,22 +65,6 @@ node('hyp-z') {
                  throw err
            }
       }
-      }
-
-// Pull fabric, fabric-ca Docker Images
-      stage("Pull Docker Images") {
-         wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
-           try {
-                 dir("${ROOTDIR}/$PROJECT_DIR/fabric-sdk-node/scripts/Jenkins_Scripts") {
-                 sh './CI_Script.sh --pull_Docker_Images'
-                 }
-               }
-           catch (err) {
-                 failure_stage = "Pull docker images"
-                 currentBuild.result = 'FAILURE'
-                 throw err
-           }
-         }
       }
 
 // Run gulp tests (headless and integration tests)

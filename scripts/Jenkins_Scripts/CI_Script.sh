@@ -39,9 +39,6 @@ Parse_Arguments() {
                       --env_Info)
                             env_Info
                             ;;
-                      --pull_Docker_Images)
-                            pull_Docker_Images
-                            ;;
                       --clean_Environment)
                             clean_Environment
                             ;;
@@ -124,42 +121,6 @@ env_Info() {
         docker images
 }
 
-# pull fabric, fabric-ca images from nexus
-pull_Docker_Images() {
-            for IMAGES in peer orderer ca javaenv; do
-                 if [ $IMAGES == "javaenv" ]; then
-                       if [ $ARCH == "s390x" ]; then
-                             # Do not pull javaenv if OS_VER == s390x
-                             echo "\033[32m -----------> skipping pull of javaenv image on s390x" "\033[0m"
-                       else
-                             # Pull javaenv at same level as node SDK
-                             echo "\033[32m -----------> pull $ORG_NAME-$IMAGES:${IMAGE_TAG} image" "\033[0m"
-                             echo
-                             docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} > /dev/null 2>&1
-                             if [ $? -ne 0 ]; then
-                                   echo -e "\033[31m FAILED to pull docker images" "\033[0m"
-                                   exit 1
-                             fi
-                             docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES
-                             docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES:${ARCH}-${VERSION}
-                             docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG}
-                       fi
-                 else
-                       echo "-----------> pull $IMAGES image"
-                       echo
-                       docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} > /dev/null 2>&1
-                             if [ $? -ne 0 ]; then
-                                   echo -e "\033[31m FAILED to pull docker images" "\033[0m"
-                                   exit 1
-                             fi
-                             docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES
-                             docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES:${ARCH}-${VERSION}
-                             docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG}
-                 fi
-            done
-                 echo
-                 docker images | grep hyperledger/fabric
-}
 # Install NPM
 install_Npm() {
 
