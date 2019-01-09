@@ -1,3 +1,18 @@
+## v1.4.0
+Wed  9 Jan 2019 09:42:07 GMT
+
+* [0d24cec](https://github.com/hyperledger/fabric-sdk-node/commit/0d24cec) [[FABN-1056](https://jira.hyperledger.org/browse/FABN-1056)] update return type of sign() to Buffer
+* [edc7983](https://github.com/hyperledger/fabric-sdk-node/commit/edc7983) [FABN-1058](https://jira.hyperledger.org/browse/FABN-1058) NodeSDK add discover doc
+* [34a1fee](https://github.com/hyperledger/fabric-sdk-node/commit/34a1fee) [FABN-1085](https://jira.hyperledger.org/browse/FABN-1085): Minor doc corrections
+* [ea92a09](https://github.com/hyperledger/fabric-sdk-node/commit/ea92a09) [FABN-1060](https://jira.hyperledger.org/browse/FABN-1060): Handle error responses in comparison
+* [050f250](https://github.com/hyperledger/fabric-sdk-node/commit/050f250) [FABN-1084](https://jira.hyperledger.org/browse/FABN-1084) X509 library locked to 0.3.3
+* [58c8666](https://github.com/hyperledger/fabric-sdk-node/commit/58c8666) [FABN-1081](https://jira.hyperledger.org/browse/FABN-1081) Add new environment variable for logging spec
+* [650dc6b](https://github.com/hyperledger/fabric-sdk-node/commit/650dc6b) [FABN-1070](https://jira.hyperledger.org/browse/FABN-1070) NodeSDK Use Node 8.14.0
+* [2cc9f01](https://github.com/hyperledger/fabric-sdk-node/commit/2cc9f01) [FABN-1079 Publish release-1](https://jira.hyperledger.org/browse/FABN-1079 Publish release-1).4 API docs
+* [866f023](https://github.com/hyperledger/fabric-sdk-node/commit/866f023) [FABN-1058](https://jira.hyperledger.org/browse/FABN-1058) NodeSDK handler close peer
+* [284ff10](https://github.com/hyperledger/fabric-sdk-node/commit/284ff10) [FABN-1058](https://jira.hyperledger.org/browse/FABN-1058) NodeSDK handler close peer
+* [5f4733b](https://github.com/hyperledger/fabric-sdk-node/commit/5f4733b) [FABN-1067](https://jira.hyperledger.org/browse/FABN-1067) NodeSDK prepare for 1.4.0
+
 ## v1.4.0-rc1
 Tue 11 Dec 2018 09:14:32 GMT
 
