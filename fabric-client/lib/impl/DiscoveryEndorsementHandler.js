@@ -13,6 +13,8 @@ const util = require('util');
 const utils = require('../utils');
 const EndorsementHandler = require('../EndorsementHandler');
 const logger = utils.getLogger('DiscoveryEndorsementHandler');
+const client_utils = require('fabric-client/lib/client-utils.js');
+
 
 const BLOCK_HEIGHT = 'ledgerHeight';
 const RANDOM = 'random';
@@ -20,12 +22,12 @@ const DEFAULT = 'default';
 
 
 /**
- * This is an implementation of the [EndorsementHandler]{@link module:api.EndorsementHandler} API.
+ * This is an implementation of the [EndorsementHandler]{@link EndorsementHandler} API.
  * It will submit transactions to be endorsed to a target list generated from the
  * results of service discovery.
  *
  * @class
- * @extends module:api.EndorsementHandler
+ * @extends EndorsementHandler
  */
 class DiscoveryEndorsementHandler extends EndorsementHandler {
 
@@ -94,6 +96,14 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 		}
 		if (params.timeout) {
 			timeout = params.timeout;
+		}
+
+		// when not using discovery
+		if (!params.use_discovery) {
+			logger.debug('%s - running without discovery', method);
+			const responses = await client_utils.sendPeersProposal(params.request.targets, params.signed_proposal, timeout);
+
+			return responses;
 		}
 
 		let endorsement_plan = null;

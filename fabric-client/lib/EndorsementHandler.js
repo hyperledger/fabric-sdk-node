@@ -41,7 +41,7 @@ class EndorsementHandler {
 	 *        a {@link ChaincodeInvokeRequest} to be sent using the included channel
 	 *        with the {@link Channel} 'sendTransactionProposal' method.
 	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}, the
-	 *        same results as calling the {@link Channel} 'sendTransactionProposal'
+	 *        same results as calling the {@link Channel#sendTransactionProposal}
 	 *        method directly.
 	 */
 	endorse(params) {
@@ -52,7 +52,7 @@ class EndorsementHandler {
 	}
 
 	/**
-	 * This method will be called by the channel when the channel is initialzied.
+	 * This method will be called by the channel when the channel is initialized.
 	 */
 	initialize() {
 		throw new Error('The "initialize" method must be implemented');

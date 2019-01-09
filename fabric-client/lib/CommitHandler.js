@@ -36,9 +36,9 @@ class CommitHandler {
 	 * the channel. The handler is expected to preform failover and use all available
 	 * orderers to send the endorsed transaction.
 	 *
-	 * @param {CommitHandlerParameters} params - A {@link EndorsementHandlerParameters}
+	 * @param {CommitHandlerParameters} params - A {@link CommitHandlerParameters}
 	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}, the
-	 *        same results as calling the {@link Channel} 'sendTransactionProposal'
+	 *        same results as calling the {@link Channel#sendTransaction}
 	 *        method directly.
 	 */
 	commit(params) {
@@ -49,7 +49,7 @@ class CommitHandler {
 	}
 
 	/**
-	 * This method will be called by the channel when the channel is initialzied.
+	 * This method will be called by the channel when the channel is initialized.
 	 */
 	initialize() {
 		throw new Error('The "initialize" method must be implemented');

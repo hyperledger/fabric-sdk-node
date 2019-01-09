@@ -108,7 +108,7 @@ const Channel = class {
 		this._last_discover_timestamp = null;
 		this._use_discovery = sdk_utils.getConfigSetting('initialize-with-discovery', false);
 		this._as_localhost = sdk_utils.getConfigSetting('discovery-as-localhost', true);
-		this._endorsement_handler = null; // will be setup during initialization
+		this._endorsement_handler = null;
 		this._commit_handler = null;
 
 		logger.debug('Constructed Channel instance: name - %s, network mode: %s', this._name, !this._devMode);
@@ -134,7 +134,7 @@ const Channel = class {
 	 *           When used with `targets` parameter, the peer referenced here will be
 	 *           added to the `targets` array.
 	 *           Default is to use the first ChannelPeer assigned to this channel.
-	 * @property {Array.<(Peer | ChannelPeer)>} targets - Optional. The target peers to be used
+	 * @property {string[] | Peer[] | ChannelPeer[]} targets - Optional. The target peers to be used
 	 *           to make the initialization requests for configuration information.
 	 * 	         When used with `target` parameter, the peer referenced there will be
 	 *           added to the `targets` array.
@@ -165,6 +165,10 @@ const Channel = class {
 	 * This method retrieves the configuration from the orderer if no "config" parameter is passed in.
 	 * Optionally a configuration may be passed in to initialize this channel without making the call
 	 * to the orderer.
+	 * <br><br>
+	 * This method will also automatically load orderers and peers that represent
+	 * the fabric network when using discovery. This application must provide a
+	 * peer running the fabric discovery service.
 	 *
 	 * @param {InitializeRequest} request - Optional.  a {@link InitializeRequest}
 	 * @return {Promise} A Promise that will resolve when the action is complete
@@ -210,25 +214,9 @@ const Channel = class {
 			}
 		}
 
-		// setup the endorsement handler
-		if (!endorsement_handler_path && this._use_discovery) {
-			endorsement_handler_path = sdk_utils.getConfigSetting('endorsement-handler');
-			logger.debug('%s - using config setting for endorsement handler ::%s', method, endorsement_handler_path);
-		}
-		if (endorsement_handler_path) {
-			this._endorsement_handler = require(endorsement_handler_path).create(this);
-			await this._endorsement_handler.initialize();
-		}
-
-		// setup the commit handler
-		if (!commit_handler_path) {
-			commit_handler_path = sdk_utils.getConfigSetting('commit-handler');
-			logger.debug('%s - using config setting for commit handler ::%s', method, commit_handler_path);
-		}
-		if (commit_handler_path) {
-			this._commit_handler = require(commit_handler_path).create(this);
-			await this._commit_handler.initialize();
-		}
+		// setup the handlers
+		this._endorsement_handler = await this._build_handler(endorsement_handler_path, 'endorsement-handler');
+		this._commit_handler = await this._build_handler(commit_handler_path, 'commit-handler');
 
 		let results = null;
 		try {
@@ -2698,7 +2686,12 @@ const Channel = class {
 			logAndThrow(method, 'Missing "args" in Transaction proposal request');
 		}
 
-		if (!request.targets && this._endorsement_handler) {
+		// convert any names into peer objects or if empty find all
+		// endorsing peers added to this channel
+		request.targets = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+
+		// always use the handler if available (may not be just for discovery)
+		if (this._endorsement_handler) {
 			logger.debug('%s - running with endorsement handler', method);
 			const proposal = Channel._buildSignedProposal(request, this._name, this._clientContext);
 
@@ -2713,7 +2706,8 @@ const Channel = class {
 				request: request,
 				signed_proposal: proposal.signed,
 				timeout: timeout,
-				endorsement_hint: endorsement_hint
+				endorsement_hint: endorsement_hint,
+				use_discovery: this._use_discovery
 			};
 
 			const responses = await this._endorsement_handler.endorse(params);
@@ -2721,7 +2715,6 @@ const Channel = class {
 			return [responses, proposal.source];
 		} else {
 			logger.debug('%s - running without endorsement handler', method);
-			request.targets = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
 
 			return Channel.sendTransactionProposal(request, this._name, this._clientContext, timeout);
 		}
@@ -2829,7 +2822,7 @@ const Channel = class {
 	 * to the orderer for further processing. This is the 2nd phase of the transaction
 	 * lifecycle in the fabric. The orderer will globally order the transactions in the
 	 * context of this channel and deliver the resulting blocks to the committing peers for
-	 * validation against the chaincode's endorsement policy. When the committering peers
+	 * validation against the chaincode's endorsement policy. When the committing peers
 	 * successfully validate the transactions, it will mark the transaction as valid inside
 	 * the block. After all transactions in a block have been validated, and marked either as
 	 * valid or invalid (with a [reason code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L125}),
@@ -2838,7 +2831,6 @@ const Channel = class {
 	 * The caller of this method must use the proposal responses returned from the endorser along
 	 * with the original proposal that was sent to the endorser. Both of these objects are contained
 	 * in the {@link ProposalResponseObject} returned by calls to any of the following methods:
-	 * <li>[installChaincode()]{@link Client#installChaincode}
 	 * <li>[sendInstantiateProposal()]{@link Channel#sendInstantiateProposal}
 	 * <li>[sendUpgradeProposal()]{@link Channel#sendUpgradeProposal}
 	 * <li>[sendTransactionProposal()]{@link Channel#sendTransactionProposal}
@@ -2898,9 +2890,15 @@ const Channel = class {
 		const envelope = Channel.buildEnvelope(this._clientContext, chaincodeProposal, endorsements, proposalResponse, use_admin_signer);
 
 		if (this._commit_handler) {
+			// protect the users input
+			const param_request = Object.assign({}, request);
+			if (param_request.orderer) {
+				// check and convert to orderer object if a name
+				param_request.orderer = this._clientContext.getTargetOrderer(param_request.orderer, this.getOrderers(), this._name);
+			}
 			const params = {
 				signed_envelope: envelope,
-				request: request,
+				request: param_request,
 				timeout: timeout
 			};
 			return this._commit_handler.commit(params);
@@ -3501,6 +3499,22 @@ const Channel = class {
 		};
 
 		return JSON.stringify(state).toString();
+	}
+
+	async _build_handler(_handler_path, handler_name) {
+		const method = '_build_handler';
+		let handler_path = _handler_path;
+		let handler = null;
+		if (!handler_path) {
+			handler_path = sdk_utils.getConfigSetting(handler_name);
+			logger.debug('%s - using path %s for %s', method, handler_path, handler_name);
+		}
+		if (handler_path) {
+			handler = require(handler_path).create(this);
+			await handler.initialize();
+			logger.debug('%s - create instance of %s', method, handler_name);
+		}
+		return handler;
 	}
 
 };

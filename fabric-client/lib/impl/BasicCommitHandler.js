@@ -14,12 +14,12 @@ const logger = utils.getLogger('BasicCommitHandler');
 
 
 /**
- * This is an implementation of the [CommitHandler]{@link module:api.CommitHandler} API.
+ * This is an implementation of the [CommitHandler]{@link CommitHandler} API.
  * It will submit transactions to be committed to one orderer at time from a provided
  * list or a list currently assigned to the channel.
  *
  * @class
- * @extends module:api.CommitHandler
+ * @extends CommitHandler
  */
 class BasicCommitHandler extends CommitHandler {
 
