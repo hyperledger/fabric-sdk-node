@@ -1142,6 +1142,35 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		}
 	}
 
+	try {
+		await channel.initialize({
+			target: peer,
+			commitHandler: 'no.where'
+		});
+		t.fail('able to initialize channel with a bad commit handler path');
+	} catch (error) {
+		if (error.message.includes('Cannot find module')) {
+			t.pass('Check Failed to initialize channel with bad commit handler path');
+		} else {
+			t.fail('1.2 - Receive other failure ' + error.toString());
+		}
+	}
+
+	try {
+		await channel.initialize({
+			target: peer,
+			endorsementHandler: 'fabric-client/lib/impl/BasicCommitHandler.js',
+			discover: false
+		});
+		t.fail('able to initialize channel with a good commit handler path');
+	} catch (error) {
+		if (error.message.includes('Failed to connect before the deadline')) {
+			t.pass('Check Failed to initialize channel with good commit handler path');
+		} else {
+			t.fail('2.1 - Receive other failure ' + error.toString());
+		}
+	}
+
 	const handler_path_temp = client.getConfigSetting('endorsement-handler');
 	try {
 		client.setConfigSetting('endorsement-handler', 'bad.path');
