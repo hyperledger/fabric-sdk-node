@@ -47,7 +47,7 @@ function verifyNamespace(namespace) {
  * @hideconstructor
  */
 class Contract {
-	constructor(network, chaincodeId, gateway, queryHandler, namespace) {
+	constructor(network, chaincodeId, gateway, namespace) {
 		logger.debug('in Contract constructor');
 
 		verifyNamespace(namespace);
@@ -56,7 +56,6 @@ class Contract {
 		this.channel = network.getChannel();
 		this.chaincodeId = chaincodeId;
 		this.gateway = gateway;
-		this.queryHandler = queryHandler;
 		this.namespace = namespace;
 	}
 
@@ -94,15 +93,6 @@ class Contract {
 	 */
 	getEventHandlerOptions() {
 		return this.gateway.getOptions().eventHandlerOptions;
-	}
-
-	/**
-	 * Get the query handler for this contract. Used by transaction evaluate.
-	 * @private
-	 * @returns {module:fabric-network.QueryHandler} A query handler.
-	 */
-	getQueryHandler() {
-		return this.queryHandler;
 	}
 
 	/**

@@ -10,6 +10,7 @@ const Client = require('fabric-client');
 
 const Network = require('./network');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
+const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
 
 const logger = require('./logger').getLogger('Gateway');
 
@@ -55,6 +56,27 @@ const logger = require('./logger').getLogger('Gateway');
  */
 
 /**
+ * @typedef {Object} Gateway~DefaultQueryHandlerOptions
+ * @memberof module:fabric-network
+ * @property {module:fabric-network.Gateway~QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE] Query handling strategy
+ * used to evaluate queries. The default is {@link MSPID_SCOPE_SINGLE}.
+ */
+
+/**
+ * @typedef {Function} Gateway~QueryEventHandlerFactory
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network} network The network on which queries are being evaluated.
+ * @returns {module:fabric-network.Gateway~QueryHandler} A query handler.
+ */
+
+/**
+ * @typedef {Object} Gateway~QueryHandler
+ * @memberof module:fabric-network
+ * @property {Function} evaluate Async function that takes a (Query){@link module:fabric-network.Query} and resolves
+ * with the result of the query evaluation.
+ */
+
+/**
  * @typedef {Object} Gateway~DiscoveryOptions
  * @memberof module:fabric-network
  * @property {boolean} [enabled=true] True if discovery should be used; otherwise false.
@@ -96,8 +118,8 @@ class Gateway {
 
 		// default options
 		this.options = {
-			queryHandler: './impl/query/defaultqueryhandler',
 			queryHandlerOptions: {
+				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 			},
 			eventHandlerOptions: {
 				commitTimeout: 300, // 5 minutes
@@ -138,12 +160,6 @@ class Gateway {
 			throw new Error('A wallet must be assigned to a Gateway instance');
 		}
 
-		// if a different queryHandler was provided and it doesn't match the default
-		// delete the default queryHandlerOptions.
-		if (options.queryHandler && (this.options.queryHandler !== options.queryHandler)) {
-			delete this.options.queryHandlerOptions;
-		}
-
 		Gateway._mergeOptions(this.options, options);
 		logger.debug('connection options: %j', options);
 
@@ -170,17 +186,6 @@ class Gateway {
 
 		if (options.tlsInfo && !options.clientTlsIdentity) {
 			this.client.setTlsClientCertAndKey(options.tlsInfo.certificate, options.tlsInfo.key);
-		}
-
-		// load in the query handler plugin
-		if (this.options.queryHandler) {
-			logger.debug('%s - loading query handler: %s', method, this.options.queryHandler);
-			try {
-				this.queryHandlerClass = require(this.options.queryHandler);
-			} catch (error) {
-				logger.error('%s - unable to load provided query handler: %s. Error %j', method, this.options.queryHandler, error);
-				throw new Error(`unable to load provided query handler: ${this.options.queryHandler}. Error ${error}`);
-			}
 		}
 	}
 

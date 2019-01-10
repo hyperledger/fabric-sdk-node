@@ -14,13 +14,14 @@ chai.use(require('chai-as-promised'));
 const Channel = require('fabric-client/lib/Channel');
 const Contract = require('fabric-network/lib/contract');
 const Network = require('fabric-network/lib/network');
-const QueryHandler = require('fabric-network/lib/api/queryhandler');
+const Query = require('fabric-network/lib/impl/query/query');
 const Transaction = require('fabric-network/lib/transaction');
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
 const TransactionID = require('fabric-client/lib/TransactionID');
 
 describe('Transaction', () => {
 	const transactionName = 'TRANSACTION_NAME';
+	const chaincodeId = 'chaincode-id';
 	const expectedResult = Buffer.from('42');
 
 	const fakeProposal = {proposal: 'I do'};
@@ -65,19 +66,20 @@ describe('Transaction', () => {
 		transactionId.getTransactionID.returns('TRANSACTION_ID');
 		stubContract.createTransactionID.returns(transactionId);
 
-		const network = sinon.createStubInstance(Network);
-		stubContract.getNetwork.returns(network);
+		stubQueryHandler = {
+			evaluate: sinon.fake.resolves(expectedResult)
+		};
 
-		stubQueryHandler = sinon.createStubInstance(QueryHandler);
-		stubQueryHandler.queryChaincode.resolves(expectedResult);
-		stubContract.getQueryHandler.returns(stubQueryHandler);
+		const network = sinon.createStubInstance(Network);
+		network.getQueryHandler.returns(stubQueryHandler);
+		stubContract.getNetwork.returns(network);
 
 		channel = sinon.createStubInstance(Channel);
 		channel.sendTransactionProposal.resolves(validProposalResponses);
 		channel.sendTransaction.resolves({status: 'SUCCESS'});
 		network.getChannel.returns(channel);
 
-		stubContract.getChaincodeId.returns('chaincode-id');
+		stubContract.getChaincodeId.returns(chaincodeId);
 		stubContract.getEventHandlerOptions.returns({commitTimeout: 418});
 
 		transaction = new Transaction(stubContract, transactionName);
@@ -248,42 +250,47 @@ describe('Transaction', () => {
 			expect(result).to.equal(expectedResult);
 		});
 
-		it('passes required parameters to query handler for no-args invocation', async () => {
+		it('passes a query to the query handler', async () => {
 			await transaction.evaluate();
-			sinon.assert.calledWith(stubQueryHandler.queryChaincode,
-				stubContract.getChaincodeId(),
-				transaction.getTransactionID(),
-				transactionName,
-				[]
-			);
+			sinon.assert.calledWith(stubQueryHandler.evaluate, sinon.match.instanceOf(Query));
 		});
 
-		it('passes required parameters to query handler for with-args invocation', async () => {
+		it('builds correct request for no-args invocation', async () => {
+			await transaction.evaluate();
+
+			const query = stubQueryHandler.evaluate.lastArg;
+			expect(query._request).to.deep.include({
+				chaincodeId,
+				fcn: transactionName,
+				txId: transaction.getTransactionID(),
+				args: []
+			});
+		});
+
+		it('builds correct request for with-args invocation', async () => {
 			const args = ['a', 'b', 'c'];
 
 			await transaction.evaluate(...args);
 
-			sinon.assert.calledWith(stubQueryHandler.queryChaincode,
-				stubContract.getChaincodeId(),
-				transaction.getTransactionID(),
-				transactionName,
+			const query = stubQueryHandler.evaluate.lastArg;
+			expect(query._request).to.deep.include({
+				chaincodeId,
+				fcn: transactionName,
+				txId: transaction.getTransactionID(),
 				args
-			);
+			});
 		});
 
-		it('passes transient data to query handler', async () => {
+		it('builds request with transient data', async () => {
 			const transientMap = {key1: 'value1', key2: 'value2'};
 			transaction.setTransient(transientMap);
 
 			await transaction.evaluate();
 
-			sinon.assert.calledWith(stubQueryHandler.queryChaincode,
-				sinon.match.any,
-				sinon.match.any,
-				sinon.match.any,
-				sinon.match.any,
+			const query = stubQueryHandler.evaluate.lastArg;
+			expect(query._request).to.deep.include({
 				transientMap
-			);
+			});
 		});
 
 		it('rejects for non-string arguments', () => {
@@ -292,7 +299,7 @@ describe('Transaction', () => {
 		});
 
 		it('returns empty string response', async () => {
-			stubQueryHandler.queryChaincode.resolves(Buffer.from(''));
+			stubQueryHandler.evaluate = sinon.fake.resolves(Buffer.from(''));
 			const result = await transaction.evaluate();
 			expect(result.toString()).to.equal('');
 		});

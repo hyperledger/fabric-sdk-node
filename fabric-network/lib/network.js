@@ -36,42 +36,6 @@ class Network {
 	}
 
 	/**
-     * create a map of mspId's and the network peers in those mspIds
-     * @private
-     */
-	_mapPeersToMSPid() {
-		logger.debug('in _mapPeersToMSPid');
-
-		// TODO: assume 1-1 mapping of mspId to org as the node-sdk makes that assumption
-		// otherwise we would need to find the channel peer in the network config collection or however SD
-		// stores things
-
-		const peerMap = new Map();
-		const channelPeers = this.channel.getPeers();
-
-		// bug in service discovery, peers don't have the associated mspid
-		if (channelPeers.length > 0) {
-			for (const channelPeer of channelPeers) {
-				const mspId = channelPeer.getMspid();
-				if (mspId) {
-					let peerList = peerMap.get(mspId);
-					if (!peerList) {
-						peerList = [];
-						peerMap.set(mspId, peerList);
-					}
-					peerList.push(channelPeer);
-				}
-			}
-		}
-		if (peerMap.size === 0) {
-			const msg = 'no suitable peers associated with mspIds were found';
-			logger.error('_mapPeersToMSPid: ' + msg);
-			throw new Error(msg);
-		}
-		return peerMap;
-	}
-
-	/**
      * initialize the channel if it hasn't been done
      * @private
      */
@@ -136,9 +100,12 @@ class Network {
 		}
 
 		await this._initializeInternalChannel(discover);
-		const peerMap = this._mapPeersToMSPid();
-		this.queryHandler = await this.gateway._createQueryHandler(this.channel, peerMap);
+
 		this.initialized = true;
+
+		// Must be created after channel initialization to ensure discovery has located peers
+		const queryHandlerOptions = this.gateway.getOptions().queryHandlerOptions;
+		this.queryHandler = queryHandlerOptions.strategy(this, queryHandlerOptions);
 	}
 
 	/**
@@ -167,7 +134,6 @@ class Network {
 				this,
 				chaincodeId,
 				this.gateway,
-				this.queryHandler,
 				name
 			);
 			this.contracts.set(key, contract);
@@ -183,10 +149,6 @@ class Network {
 		// make this private is the safest option.
 		this.contracts.clear();
 
-		if (this.queryHandler) {
-			this.queryHandler.dispose();
-		}
-
 		this.eventHubFactory.dispose();
 		this.channel.close();
 
@@ -200,6 +162,15 @@ class Network {
 	 */
 	getEventHubFactory() {
 		return this.eventHubFactory;
+	}
+
+	/**
+	 * Get the query handler for this network.
+	 * @private
+	 * @returns {object} A query handler.
+	 */
+	getQueryHandler() {
+		return this.queryHandler;
 	}
 }
 

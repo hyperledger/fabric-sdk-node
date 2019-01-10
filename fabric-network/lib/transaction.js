@@ -6,6 +6,8 @@
 
 'use strict';
 
+const Query = require('fabric-network/lib/impl/query/query');
+
 const logger = require('fabric-network/lib/logger').getLogger('Transaction');
 const util = require('util');
 
@@ -55,6 +57,7 @@ class Transaction {
 		this._transientMap = null;
 		this._createTxEventHandler = (() => noOpTxEventHandler);
 		this._isInvoked = false;
+		this._queryHandler = contract.getNetwork().getQueryHandler();
 	}
 
 	/**
@@ -74,8 +77,7 @@ class Transaction {
 	}
 
 	/**
-	 * Set the event handler strategy to be used for this transaction invocation
-	 * instead of the default handler configured in the gateway options.
+	 * Set the event handler strategy to be used for this transaction invocation.
 	 * @private
 	 * @param {Function} factoryFunction Event handler factory function.
 	 * @returns {module:fabric-network.Transaction} This object, to allow function chaining.
@@ -117,15 +119,7 @@ class Transaction {
 		const txId = this._transactionId.getTransactionID();
 		const eventHandler = this._createTxEventHandler(txId, network, this._contract.getEventHandlerOptions());
 
-		const request = {
-			chaincodeId: this._contract.getChaincodeId(),
-			txId: this._transactionId,
-			fcn: this._name,
-			args: args
-		};
-		if (this._transientMap) {
-			request.transientMap = this._transientMap;
-		}
+		const request = this._buildRequest(args);
 
 		// node sdk will target all peers on the channel that are endorsingPeer or do something special for a discovery environment
 		const results = await channel.sendTransactionProposal(request);
@@ -160,6 +154,19 @@ class Transaction {
 			throw new Error('Transaction has already been invoked');
 		}
 		this._isInvoked = true;
+	}
+
+	_buildRequest(args) {
+		const request = {
+			chaincodeId: this._contract.getChaincodeId(),
+			txId: this._transactionId,
+			fcn: this._name,
+			args: args
+		};
+		if (this._transientMap) {
+			request.transientMap = this._transientMap;
+		}
+		return request;
 	}
 
 	/**
@@ -224,9 +231,11 @@ class Transaction {
 		verifyArguments(args);
 		this._setInvokedOrThrow();
 
-		const queryHandler = this._contract.getQueryHandler();
-		const chaincodeId = this._contract.getChaincodeId();
-		return queryHandler.queryChaincode(chaincodeId, this._transactionId, this._name, args, this._transientMap);
+		const channel = this._contract.getNetwork().getChannel();
+		const request = this._buildRequest(args);
+		const query = new Query(channel, request);
+
+		return this._queryHandler.evaluate(query);
 	}
 }
 
