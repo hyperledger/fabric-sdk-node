@@ -2345,13 +2345,13 @@ describe('Client', () => {
 	describe('#setUserContext', () => {
 		let saveUserToStateStoreStub;
 		let _setUserFromConfigStub;
-		const MockUser = class { };
+		const User = class { };
 
 		let client;
 		beforeEach(() => {
 			saveUserToStateStoreStub = sandbox.stub();
 			_setUserFromConfigStub = sandbox.stub();
-			revert.push(Client.__set__('User', MockUser));
+			revert.push(Client.__set__('User', User));
 
 			client = new Client();
 			client.saveUserToStateStore = saveUserToStateStoreStub;
@@ -2368,7 +2368,7 @@ describe('Client', () => {
 
 		it('should save the user to the state store and return it', async () => {
 			saveUserToStateStoreStub.returns('user');
-			const user = await client.setUserContext(new MockUser(), false);
+			const user = await client.setUserContext(new User(), false);
 			sinon.assert.calledWith(FakeLogger.debug, 'setUserContext - user: [object Object], skipPersistence: false');
 			sinon.assert.calledWith(FakeLogger.debug, 'setUserContext - begin promise to saveUserToStateStore');
 			sinon.assert.called(saveUserToStateStoreStub);
@@ -2377,7 +2377,7 @@ describe('Client', () => {
 
 		it('should return the user', async () => {
 			saveUserToStateStoreStub.returns('user');
-			const newUser = new MockUser();
+			const newUser = new User();
 			const user = await client.setUserContext(newUser, true);
 			sinon.assert.calledWith(FakeLogger.debug, 'setUserContext - user: [object Object], skipPersistence: true');
 			sinon.assert.calledWith(FakeLogger.debug, 'setUserContext - resolved user');
@@ -2496,7 +2496,7 @@ describe('Client', () => {
 	});
 
 	describe('#loadUserFromStateStore', () => {
-		const MockUser = class { };
+		const User = class { };
 		let getValueStub;
 		let getCryptoSuiteStub;
 		let setCryptoSuiteStub;
@@ -2504,14 +2504,14 @@ describe('Client', () => {
 
 		let client;
 		beforeEach(() => {
-			revert.push(Client.__set__('User', MockUser));
+			revert.push(Client.__set__('User', User));
 			getValueStub = sandbox.stub();
 			getCryptoSuiteStub = sandbox.stub();
 			setCryptoSuiteStub = sandbox.stub();
 			fromStringStub = sandbox.stub();
 
-			MockUser.prototype.fromString = fromStringStub;
-			MockUser.prototype.setCryptoSuite = setCryptoSuiteStub;
+			User.prototype.fromString = fromStringStub;
+			User.prototype.setCryptoSuite = setCryptoSuiteStub;
 
 			client = new Client();
 			client.getCryptoSuite = getCryptoSuiteStub;
@@ -2557,7 +2557,7 @@ describe('Client', () => {
 	});
 
 	describe('#createUser', () => {
-		let MockUser;
+		let User;
 		let userConstructorStub;
 		let readFileStub;
 		let getCryptoSuiteStub;
@@ -2570,12 +2570,12 @@ describe('Client', () => {
 		let client;
 		beforeEach(() => {
 			userConstructorStub = sandbox.stub();
-			MockUser = class { };
+			User = class { };
 			setCryptoSuiteStub = sandbox.stub();
 			setEnrollmentStub = sandbox.stub().returns(Promise.resolve());
-			MockUser.prototype.constructor = userConstructorStub;
-			MockUser.prototype.setCryptoSuite = setCryptoSuiteStub;
-			MockUser.prototype.setEnrollment = setEnrollmentStub;
+			User.prototype.constructor = userConstructorStub;
+			User.prototype.setCryptoSuite = setCryptoSuiteStub;
+			User.prototype.setEnrollment = setEnrollmentStub;
 			readFileStub = sandbox.stub().returns(Promise.resolve(1));
 			getCryptoSuiteStub = sandbox.stub();
 			importKeyStub = sandbox.stub();
@@ -2583,7 +2583,7 @@ describe('Client', () => {
 			setCryptoKeyStoreStub = sandbox.stub();
 
 			revert.push(Client.__set__('readFile', readFileStub));
-			revert.push(Client.__set__('User', MockUser));
+			revert.push(Client.__set__('User', User));
 
 			client = new Client();
 			client.getCryptoSuite = getCryptoSuiteStub.returns({importKey: importKeyStub.returns(Promise.resolve('imported-key'))});
@@ -2649,9 +2649,9 @@ describe('Client', () => {
 			sinon.assert.called(getCryptoSuiteStub);
 			sinon.assert.calledWith(setEnrollmentStub, 'imported-key', 'privateKeyPEM', '1', true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then setUserContext');
-			sinon.assert.calledWith(setUserContextStub, new MockUser(), true);
+			sinon.assert.calledWith(setUserContextStub, new User(), true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then user');
-			user.should.deep.equal(new MockUser());
+			user.should.deep.equal(new User());
 		});
 
 		it('should return a user if getCryptoSuite returns null', async () => {
@@ -2667,9 +2667,9 @@ describe('Client', () => {
 			sinon.assert.called(getCryptoSuiteStub);
 			sinon.assert.calledWith(setEnrollmentStub, 'imported-key', 'privateKeyPEM', '1', true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then setUserContext');
-			sinon.assert.calledWith(setUserContextStub, new MockUser(), true);
+			sinon.assert.calledWith(setUserContextStub, new User(), true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then user');
-			user.should.deep.equal(new MockUser());
+			user.should.deep.equal(new User());
 		});
 
 		it('should return a user if getCryptoSuite does not return null', async () => {
@@ -2685,9 +2685,9 @@ describe('Client', () => {
 			sinon.assert.calledWith(FakeLogger.debug, 'cryptoSuite has a cryptoKeyStore');
 			sinon.assert.calledWith(setEnrollmentStub, 'imported-key', 'privateKeyPEM', '1', true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then setUserContext');
-			sinon.assert.calledWith(setUserContextStub, new MockUser(), true);
+			sinon.assert.calledWith(setUserContextStub, new User(), true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then user');
-			user.should.deep.equal(new MockUser());
+			user.should.deep.equal(new User());
 		});
 
 		it('should return a user if getCryptoSuite does not return null', async () => {
@@ -2701,9 +2701,9 @@ describe('Client', () => {
 			sinon.assert.calledWith(FakeLogger.debug, 'cryptoSuite has a cryptoKeyStore');
 			sinon.assert.calledWith(setEnrollmentStub, 'imported-key', '1', '1', false);
 			sinon.assert.calledWith(FakeLogger.debug, 'then setUserContext');
-			sinon.assert.calledWith(setUserContextStub, new MockUser(), false);
+			sinon.assert.calledWith(setUserContextStub, new User(), false);
 			sinon.assert.calledWith(FakeLogger.debug, 'then user');
-			user.should.deep.equal(new MockUser());
+			user.should.deep.equal(new User());
 		});
 
 		it('should return a user if getCryptoSuite does not return null', async () => {
@@ -2717,9 +2717,9 @@ describe('Client', () => {
 			sinon.assert.called(getCryptoSuiteStub);
 			sinon.assert.calledWith(FakeLogger.debug, 'cryptoSuite has a cryptoKeyStore');
 			sinon.assert.calledWith(FakeLogger.debug, 'then setUserContext');
-			sinon.assert.calledWith(setUserContextStub, new MockUser(), false);
+			sinon.assert.calledWith(setUserContextStub, new User(), false);
 			sinon.assert.calledWith(FakeLogger.debug, 'then user');
-			user.should.deep.equal(new MockUser());
+			user.should.deep.equal(new User());
 		});
 
 		it('should return a user if getCryptoSuite does not return null', async () => {
@@ -2733,9 +2733,9 @@ describe('Client', () => {
 			sinon.assert.called(getCryptoSuiteStub);
 			sinon.assert.calledWith(FakeLogger.debug, 'cryptoSuite has a cryptoKeyStore');
 			sinon.assert.calledWith(FakeLogger.debug, 'then setUserContext');
-			sinon.assert.calledWith(setUserContextStub, new MockUser(), false);
+			sinon.assert.calledWith(setUserContextStub, new User(), false);
 			sinon.assert.calledWith(FakeLogger.debug, 'then user');
-			user.should.deep.equal(new MockUser());
+			user.should.deep.equal(new User());
 		});
 	});
 
