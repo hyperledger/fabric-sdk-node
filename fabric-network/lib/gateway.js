@@ -147,7 +147,7 @@ class Gateway {
 		Gateway._mergeOptions(this.options, options);
 		logger.debug('connection options: %j', options);
 
-		if (!(config instanceof Client)) {
+		if (!(config && config.constructor && config.constructor.name === 'Client')) {
 			// still use a ccp for the discovery peer and ca information
 			logger.debug('%s - loading client from ccp', method);
 			this.client = Client.loadFromConfig(config);

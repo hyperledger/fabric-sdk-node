@@ -1487,7 +1487,7 @@ const Client = class extends BaseClient {
 			throw new Error('Cannot save null userContext.');
 		}
 
-		if (user instanceof User) {
+		if (user && user.constructor && user.constructor.name === 'User') {
 			this._userContext = user;
 			if (!skipPersistence) {
 				logger.debug('setUserContext - begin promise to saveUserToStateStore');
