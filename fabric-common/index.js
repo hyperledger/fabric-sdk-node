@@ -3,3 +3,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+const Config = require('./lib/Config');
+
+module.exports = {
+	Config
+};

@@ -16,6 +16,7 @@
   },
   "scripts": {
     "test": "gulp test-headless",
+    "test:common": "npm run coverage -- fabric-common/test",
     "test:ca-client": "npm run coverage -- fabric-ca-client/test",
     "test:client": "npm run coverage -- fabric-client/test",
     "test:network": "npm run coverage -- fabric-network/test",

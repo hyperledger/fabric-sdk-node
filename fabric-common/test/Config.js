@@ -20,6 +20,8 @@ const ConfigRewire = rewire('../lib/Config');
 const nconf = require('nconf');
 
 const sinon = require('sinon');
+const chai = require('chai');
+chai.should();
 
 describe('Config', () => {
 	let sandbox;
