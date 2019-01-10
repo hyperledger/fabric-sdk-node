@@ -10,6 +10,7 @@ const Client = require('fabric-client');
 
 const Network = require('./network');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
+const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
 
 const logger = require('./logger').getLogger('Gateway');
 
@@ -21,6 +22,8 @@ const logger = require('./logger').getLogger('Gateway');
  * @property {string} [clientTlsIdentity] The identity in the wallet to use as the client TLS identity.
  * @property {module:fabric-network.Gateway~DefaultEventHandlerOptions} [eventHandlerOptions] Options for the inbuilt default
  * event handler capability.
+ * @property {module:fabric-network.Gateway~DefaultQueryHandlerOptions} [queryHandlerOptions] Options for the inbuilt
+ * default query handler capability.
  * @property {module:fabric-network.Gateway~DiscoveryOptions} [discovery] Discovery options.
  */
 
@@ -31,7 +34,7 @@ const logger = require('./logger').getLogger('Gateway');
  * complete.
  * @property {?module:fabric-network.Gateway~TxEventHandlerFactory} [strategy=MSPID_SCOPE_ALLFORTX] Event handling strategy to identify
  * successful transaction commits. A null value indicates that no event handling is desired. The default is
- * {@link MSPID_SCOPE_ALLFORTX}.
+ * [MSPID_SCOPE_ALLFORTX]{@link module:fabric-network.DefaultEventHandlerStrategies}.
  */
 
 /**
@@ -52,6 +55,27 @@ const logger = require('./logger').getLogger('Gateway');
  * commit events have been received. Called after submission of the transaction to the orderer.
  * @property {Function} cancelListening Cancel listening. Called if submission of the transaction to the orderer
  * fails.
+ */
+
+/**
+ * @typedef {Object} Gateway~DefaultQueryHandlerOptions
+ * @memberof module:fabric-network
+ * @property {module:fabric-network.Gateway~QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE] Query handling strategy
+ * used to evaluate queries. The default is [MSPID_SCOPE_SINGLE]{@link module:fabric-network.DefaultQueryHandlerStrategies}.
+ */
+
+/**
+ * @typedef {Function} Gateway~QueryHandlerFactory
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network} network The network on which queries are being evaluated.
+ * @returns {module:fabric-network.Gateway~QueryHandler} A query handler.
+ */
+
+/**
+ * @typedef {Object} Gateway~QueryHandler
+ * @memberof module:fabric-network
+ * @property {Function} evaluate Async function that takes a [Query]{@link module:fabric-network.Query} and resolves
+ * with the result of the query evaluation.
  */
 
 /**
@@ -96,8 +120,8 @@ class Gateway {
 
 		// default options
 		this.options = {
-			queryHandler: './impl/query/defaultqueryhandler',
 			queryHandlerOptions: {
+				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 			},
 			eventHandlerOptions: {
 				commitTimeout: 300, // 5 minutes
@@ -138,12 +162,6 @@ class Gateway {
 			throw new Error('A wallet must be assigned to a Gateway instance');
 		}
 
-		// if a different queryHandler was provided and it doesn't match the default
-		// delete the default queryHandlerOptions.
-		if (options.queryHandler && (this.options.queryHandler !== options.queryHandler)) {
-			delete this.options.queryHandlerOptions;
-		}
-
 		Gateway._mergeOptions(this.options, options);
 		logger.debug('connection options: %j', options);
 
@@ -170,17 +188,6 @@ class Gateway {
 
 		if (options.tlsInfo && !options.clientTlsIdentity) {
 			this.client.setTlsClientCertAndKey(options.tlsInfo.certificate, options.tlsInfo.key);
-		}
-
-		// load in the query handler plugin
-		if (this.options.queryHandler) {
-			logger.debug('%s - loading query handler: %s', method, this.options.queryHandler);
-			try {
-				this.queryHandlerClass = require(this.options.queryHandler);
-			} catch (error) {
-				logger.error('%s - unable to load provided query handler: %s. Error %j', method, this.options.queryHandler, error);
-				throw new Error(`unable to load provided query handler: ${this.options.queryHandler}. Error ${error}`);
-			}
 		}
 	}
 
@@ -247,21 +254,6 @@ class Gateway {
 		await newNetwork._initialize(this.options.discovery);
 		this.networks.set(networkName, newNetwork);
 		return newNetwork;
-	}
-
-	async _createQueryHandler(channel, peerMap) {
-		if (this.queryHandlerClass) {
-			const currentmspId = this.getCurrentIdentity().getIdentity().getMSPId();
-			const queryHandler = new this.queryHandlerClass(
-				channel,
-				currentmspId,
-				peerMap,
-				this.options.queryHandlerOptions
-			);
-			await queryHandler.initialize();
-			return queryHandler;
-		}
-		return null;
 	}
 }
 

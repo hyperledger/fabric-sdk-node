@@ -31,6 +31,7 @@ import {
 
 import {
 	ChannelEventHub,
+	RegistrationOpts,
 } from 'fabric-client';
 
 import e2eUtils = require('../../../integration/e2e/e2eUtils.js');
@@ -48,6 +49,8 @@ const privateKeyPem: string = fs.readFileSync(credPath + '/keystore/e4af7f90fa89
 const inMemoryWallet: Wallet = new InMemoryWallet();
 const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
 const ccpDiscovery: Buffer = fs.readFileSync(fixtures + '/network-discovery.json');
+
+const expectedMoveResult = 'move succeed';
 
 async function inMemoryIdentitySetup(): Promise<void> {
 	await inMemoryWallet.import('User1@org1.example.com', X509WalletMixin.createIdentity('Org1MSP', certificatePem, privateKeyPem));
@@ -73,11 +76,14 @@ async function createContract(t: any, gateway: Gateway, gatewayOptions: GatewayO
 	return contract;
 }
 
-async function getFirstEventHubForOrg(gateway: Gateway, orgMSP: string): Promise<ChannelEventHub> {
+async function getInternalEventHubForOrg(gateway: Gateway, orgMSP: string): Promise<ChannelEventHub> {
 	const network = await gateway.getNetwork(channelName);
 	const channel = network.getChannel();
-	const orgPeer = channel.getPeersForOrg(orgMSP)[0];
-	return channel.getChannelEventHub(orgPeer.getName());
+	const orgPeer = channel.getPeersForOrg(orgMSP)[0]; // Only one peer per org in the test configuration
+
+	// Using private functions to get hold of an internal event hub. Don't try this at home, kids!
+	const eventHubFactory = (network as any).getEventHubFactory();
+	return eventHubFactory.getEventHub(orgPeer);
 }
 
 test('\n\n***** Network End-to-end flow: import identity into wallet and configure tls *****\n\n', async (t: any) => {
@@ -111,8 +117,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
 		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+		org1EventHub = await getInternalEventHubForOrg(gateway, 'Org1MSP');
+		const org2EventHub = await getInternalEventHubForOrg(gateway, 'Org2MSP');
 
 		let eventFired = 0;
 		org1EventHub.registerTxEvent('all', (txId, code) => {
@@ -129,8 +135,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
 
-		const expectedResult = 'move succeed';
-		if (response.toString() === expectedResult) {
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
@@ -169,8 +174,8 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 		}
 
 		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+		org1EventHub = await getInternalEventHubForOrg(gateway, 'Org1MSP');
+		const org2EventHub = await getInternalEventHubForOrg(gateway, 'Org2MSP');
 
 		let eventFired = 0;
 		org1EventHub.registerTxEvent('all', (txId, code) => {
@@ -187,8 +192,7 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
 
-		const expectedResult = 'move succeed';
-		if (response.toString() === expectedResult) {
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked first transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response first from transaction chaincode: ' + response);
@@ -199,7 +203,7 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 
 		t.equal(eventFired, 2, 'single event for org1 correctly unblocked submitTransaction');
 
-		if (response.toString() === expectedResult) {
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked second transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from second transaction chaincode: ' + response);
@@ -210,7 +214,7 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 
 		t.equal(eventFired, 3, 'single event for org1 correctly unblocked submitTransaction');
 
-		if (response.toString() === expectedResult) {
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked third transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from third transaction chaincode: ' + response);
@@ -246,8 +250,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
 		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+		org1EventHub = await getInternalEventHubForOrg(gateway, 'Org1MSP');
+		const org2EventHub = await getInternalEventHubForOrg(gateway, 'Org2MSP');
 
 		let eventFired = 0;
 
@@ -263,8 +267,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
-		const expectedResult = 'move succeed';
-		if (response.toString() === expectedResult) {
+
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
@@ -300,8 +304,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
 		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		const org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+		org1EventHub = await getInternalEventHubForOrg(gateway, 'Org1MSP');
+		const org2EventHub = await getInternalEventHubForOrg(gateway, 'Org2MSP');
 
 		let eventFired = 0;
 
@@ -317,8 +321,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
 		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
-		const expectedResult = 'move succeed';
-		if (response.toString() === expectedResult) {
+
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
@@ -355,8 +359,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
 		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+		org1EventHub = await getInternalEventHubForOrg(gateway, 'Org1MSP');
+		org2EventHub = await getInternalEventHubForOrg(gateway, 'Org2MSP');
 
 		let org1EventFired = 0;
 		let org2EventFired = 0;
@@ -381,8 +385,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
 		t.true(unblockCorrectly, 'got single events at both org event hubs before submitTransaction was unblocked');
 
-		const expectedResult = 'move succeed';
-		if (response.toString() === expectedResult) {
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
@@ -417,8 +420,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
 		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+		org1EventHub = await getInternalEventHubForOrg(gateway, 'Org1MSP');
+		org2EventHub = await getInternalEventHubForOrg(gateway, 'Org2MSP');
 
 		let org1EventFired = 0;
 		let org2EventFired = 0;
@@ -443,8 +446,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
 		t.true(unblockCorrectly, 'got single events at both org event hubs before submitTransaction was unblocked');
 
-		const expectedResult = 'move succeed';
-		if (response.toString() === expectedResult) {
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
@@ -482,8 +484,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
 		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+		org1EventHub = await getInternalEventHubForOrg(gateway, 'Org1MSP');
+		org2EventHub = await getInternalEventHubForOrg(gateway, 'Org2MSP');
 
 		let org1EventFired = 0;
 		let org2EventFired = 0;
@@ -511,8 +513,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
 		t.true(unblockCorrectly, 'single event received by one of the event hubs caused submitTransaction to unblock, before other event received');
 
-		const expectedResult = 'move succeed';
-		if (response.toString() === expectedResult) {
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
@@ -547,8 +548,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const transactionId = transaction.getTransactionID().getTransactionID();
 
 		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getFirstEventHubForOrg(gateway, 'Org1MSP');
-		org2EventHub = await getFirstEventHubForOrg(gateway, 'Org2MSP');
+		org1EventHub = await getInternalEventHubForOrg(gateway, 'Org1MSP');
+		org2EventHub = await getInternalEventHubForOrg(gateway, 'Org2MSP');
 
 		let org1EventFired = 0;
 		let org2EventFired = 0;
@@ -575,8 +576,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.pass(`org1 events: ${org1EventFired}, org2 events: ${org2EventFired}`);
 		t.true(unblockCorrectly, 'single event received by one of the event hubs caused submitTransaction to unblock, before other event received');
 
-		const expectedResult = 'move succeed';
-		if (response.toString() === expectedResult) {
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
@@ -610,8 +610,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 
 		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
-		const expectedResult = 'move succeed';
-		if (response.toString() === expectedResult) {
+		if (response.toString() === expectedMoveResult) {
 			t.pass('Successfully invoked transaction chaincode on channel');
 		} else {
 			t.fail('Unexpected response from transaction chaincode: ' + response);
@@ -695,6 +694,61 @@ test('\n\n***** Network End-to-end flow: invoke transaction with empty string re
 			t.pass('Got expected transaction response');
 		} else {
 			t.fail('Unexpected transaction response: ' + response);
+		}
+	} catch (err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
+test('\n\n***** Network End-to-end flow: invoke transaction while channel\'s event hub is replaying blocks *****\n\n', async (t: any) => {
+	const gateway = new Gateway();
+
+	try {
+		const contract = await createContract(t, gateway, {
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				enabled: false,
+			},
+			identity: 'User1@org1.example.com',
+			wallet: inMemoryWallet,
+		});
+
+		const network = await gateway.getNetwork(channelName);
+		const channel = network.getChannel();
+		const peer = channel.getPeersForOrg('Org1MSP')[0];
+		const eventHub = channel.getChannelEventHub(peer.getName());
+
+		let eventsReceived = 0;
+		let errorsReceived = 0;
+
+		function onEvent(txId: string, code: string, blockNumber: number) {
+			eventsReceived++;
+		}
+		function onError(error: Error) {
+			errorsReceived++;
+		}
+		// Trigger replay of previous blocks, which will prevent any other listeners registering with this event hub
+		const registrationOptions: RegistrationOpts = {
+			disconnect: false,
+			startBlock: 0,
+			unregister: false,
+		};
+		eventHub.registerTxEvent('all', onEvent, onError, registrationOptions);
+		eventHub.connect();
+
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
+
+		t.true(eventsReceived > 0, `Received replay events (eventsReceived = ${eventsReceived})`);
+		t.false(errorsReceived > 0, `No replay errors (errorsReceived = ${errorsReceived})`);
+
+		if (response.toString() === expectedMoveResult) {
+			t.pass('Successfully invoked transaction chaincode on channel');
+		} else {
+			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);

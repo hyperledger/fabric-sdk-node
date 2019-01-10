@@ -13,11 +13,11 @@ const TransactionID = require('fabric-client/lib/TransactionID.js');
 
 const chai = require('chai');
 chai.use(require('chai-as-promised'));
+chai.should();
 
 const Contract = require('../lib/contract');
 const Gateway = require('../lib/gateway');
 const Network = require('fabric-network/lib/network');
-const QueryHandler = require('../lib/api/queryhandler');
 const Transaction = require('../lib/transaction');
 const TransactionEventHandler = require('../lib/impl/event/transactioneventhandler');
 
@@ -29,7 +29,6 @@ describe('Contract', () => {
 	let mockChannel, mockClient, mockGateway;
 	let contract;
 	let mockTransactionID;
-	let mockQueryHandler;
 
 	beforeEach(() => {
 		mockChannel = sinon.createStubInstance(Channel);
@@ -40,6 +39,11 @@ describe('Contract', () => {
 		mockGateway.getOptions.returns({
 			eventHandlerOptions: {
 				strategy: null
+			},
+			queryHandlerOptions: {
+				strategy: () => {
+					return {};
+				}
 			}
 		});
 
@@ -50,9 +54,7 @@ describe('Contract', () => {
 		mockClient.newTransactionID.returns(mockTransactionID);
 		mockChannel.getName.returns('testchainid');
 
-		mockQueryHandler = sinon.createStubInstance(QueryHandler);
-
-		contract = new Contract(network, chaincodeId, mockGateway, mockQueryHandler);
+		contract = new Contract(network, chaincodeId, mockGateway);
 	});
 
 	afterEach(() => {
@@ -61,7 +63,7 @@ describe('Contract', () => {
 
 	describe('#constructor', () => {
 		it('throws if namespace is not a string', () => {
-			(() => new Contract(network, chaincodeId, mockGateway, mockQueryHandler, 123))
+			(() => new Contract(network, chaincodeId, mockGateway, 123))
 				.should.throw(/namespace/i);
 		});
 	});
@@ -95,13 +97,6 @@ describe('Contract', () => {
 		});
 	});
 
-	describe('#getQueryhandler', () => {
-		it('returns the query handler', () => {
-			const result = contract.getQueryHandler();
-			result.should.equal(mockQueryHandler);
-		});
-	});
-
 	describe('#createTransaction', () => {
 		it('returns a transaction with only a name', () => {
 			const name = 'name';
@@ -114,7 +109,7 @@ describe('Contract', () => {
 			const name = 'name';
 			const expected = `${namespace}:${name}`;
 
-			contract = new Contract(network, chaincodeId, mockGateway, mockQueryHandler, namespace);
+			contract = new Contract(network, chaincodeId, mockGateway, namespace);
 			const result = contract.createTransaction(name);
 
 			result.getName().should.equal(expected);

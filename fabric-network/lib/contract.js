@@ -47,7 +47,7 @@ function verifyNamespace(namespace) {
  * @hideconstructor
  */
 class Contract {
-	constructor(network, chaincodeId, gateway, queryHandler, namespace) {
+	constructor(network, chaincodeId, gateway, namespace) {
 		logger.debug('in Contract constructor');
 
 		verifyNamespace(namespace);
@@ -56,7 +56,6 @@ class Contract {
 		this.channel = network.getChannel();
 		this.chaincodeId = chaincodeId;
 		this.gateway = gateway;
-		this.queryHandler = queryHandler;
 		this.namespace = namespace;
 	}
 
@@ -97,15 +96,6 @@ class Contract {
 	}
 
 	/**
-	 * Get the query handler for this contract. Used by transaction evaluate.
-	 * @private
-	 * @returns {module:fabric-network.QueryHandler} A query handler.
-	 */
-	getQueryHandler() {
-		return this.queryHandler;
-	}
-
-	/**
 	 * Create an object representing a specific invocation of a transaction
 	 * function implemented by this contract, and provides more control over
 	 * the transaction invocation. A new transaction object <strong>must</strong>
@@ -140,6 +130,8 @@ class Contract {
      * @param {string} name Transaction function name.
 	 * @param {...string} [args] Transaction function arguments.
 	 * @returns {Buffer} Payload response from the transaction function.
+	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
+	 * timed out before a commit event was received from peers.
      */
 	async submitTransaction(name, ...args) {
 		return this.createTransaction(name).submit(...args);
