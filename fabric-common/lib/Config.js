@@ -20,7 +20,7 @@ const nconf = require('nconf');
 // The class representing the hierarchy of configuration settings.
 //
 
-const Config = class {
+class Config {
 
 	constructor() {
 		nconf.use('memory');
@@ -110,6 +110,6 @@ const Config = class {
 		this._config.set(name, value);
 	}
 
-};
+}
 
 module.exports = Config;

@@ -73,6 +73,7 @@ process.env.THIRDPARTY_IMG_TAG = thirdpartyImageTag;
 
 gulp.task('pre-test', () => {
 	return gulp.src([
+		'fabric-common/lib/**/*.js',
 		'fabric-network/lib/**/*.js',
 		'fabric-client/lib/**/*.js',
 		'fabric-ca-client/lib/FabricCAClientImpl.js',
@@ -139,9 +140,16 @@ gulp.task('test-cucumber', shell.task('npx nyc npm run test:cucumber'));
 
 // Definition of Mocha (unit) test suites
 gulp.task('run-test-mocha', (done) => {
-	const tasks = ['mocha-fabric-ca-client', 'mocha-fabric-client', 'mocha-fabric-network'];
+	const tasks = ['mocha-fabric-common', 'mocha-fabric-ca-client', 'mocha-fabric-client', 'mocha-fabric-network'];
 	runSequence(...tasks, done);
 });
+
+gulp.task('mocha-fabric-common',
+	() => {
+		return gulp.src(['./fabric-common/test/**/*.js'], {read: false})
+			.pipe(mocha({reporter: 'list', exit: true}));
+	}
+);
 
 gulp.task('mocha-fabric-ca-client',
 	() => {

@@ -126,7 +126,7 @@ env_Info() {
 
 # pull fabric, fabric-ca images from nexus
 pull_Docker_Images() {
-            for IMAGES in peer orderer ca javaenv; do
+            for IMAGES in peer orderer ca baseos ccenv javaenv nodeenv; do
                  if [ $IMAGES == "javaenv" ]; then
                        if [ $ARCH == "s390x" ]; then
                              # Do not pull javaenv if OS_VER == s390x
@@ -142,6 +142,7 @@ pull_Docker_Images() {
                              fi
                              docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES
                              docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES:${ARCH}-${VERSION}
+                             docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES:${VERSION}
                              docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG}
                        fi
                  else
@@ -154,6 +155,7 @@ pull_Docker_Images() {
                              fi
                              docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES
                              docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES:${ARCH}-${VERSION}
+                             docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG} $ORG_NAME-$IMAGES:${VERSION}
                              docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:${IMAGE_TAG}
                  fi
             done

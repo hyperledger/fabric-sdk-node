@@ -22,7 +22,7 @@ const path = require('path');
 const os = require('os');
 const Long = require('long');
 
-const Config = require('./Config.js');
+const {Config} = require('fabric-common');
 const sjcl = require('sjcl');
 
 //

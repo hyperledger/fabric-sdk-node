@@ -24,6 +24,7 @@
     "@types/bytebuffer": "^5.0.34",
     "bn.js": "^4.11.3",
     "elliptic": "^6.2.3",
+    "fabric-common": "file:../fabric-common",
     "fs-extra": "^6.0.1",
     "grpc": "1.14.2",
     "js-sha3": "^0.7.0",

@@ -34,7 +34,11 @@ npmPublish() {
       export UNSTABLE_INCREMENT_VERSION=$RELEASE_VERSION.$UNSTABLE_INCREMENT
       echo "======> UNSTABLE_INCREMENT_VERSION:" $UNSTABLE_INCREMENT_VERSION
 
-      if [ "$1" = "fabric-network" ]; then
+      if [ "$1" = "fabric-client" ]; then
+          sed -i 's/\(.*\"fabric-common\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
+      elif [ "$1" = "fabric-ca-client" ]; then
+          sed -i 's/\(.*\"fabric-common\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
+      elif [ "$1" = "fabric-network" ]; then
           sed -i 's/\(.*\"fabric-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
           sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
       fi
@@ -55,7 +59,11 @@ npmPublish() {
       # Publish node modules on latest tag
       echo -e "\033[32m ========> PUBLISH $RELEASE_VERSION" "\033[0m"
 
-      if [ "$1" = "fabric-network" ]; then
+      if [ "$1" = "fabric-client" ]; then
+          sed -i 's/\(.*\"fabric-common\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
+      elif [ "$1" = "fabric-ca-client" ]; then
+          sed -i 's/\(.*\"fabric-common\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
+      elif [ "$1" = "fabric-network" ]; then
           sed -i 's/\(.*\"fabric-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
           sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
       fi
