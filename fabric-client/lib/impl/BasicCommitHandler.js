@@ -9,7 +9,7 @@
 
 const utils = require('../utils');
 const Constants = require('../Constants.js');
-const api = require('../api.js');
+const CommitHandler = require('../CommitHandler');
 const logger = utils.getLogger('BasicCommitHandler');
 
 
@@ -21,7 +21,7 @@ const logger = utils.getLogger('BasicCommitHandler');
  * @class
  * @extends module:api.CommitHandler
  */
-class BasicCommitHandler extends api.CommitHandler {
+class BasicCommitHandler extends CommitHandler {
 
 	/**
 	 * constructor

@@ -8,7 +8,7 @@
 
 const Client = require('fabric-client');
 const BaseWallet = require('./basewallet');
-const api = require('fabric-client/lib/api.js');
+const {KeyValueStore} = require('fabric-common');
 const logger = require('../../logger').getLogger('InMemoryWallet');
 
 // this will be shared across all instance of a memory wallet, so really an app should
@@ -77,7 +77,7 @@ class InMemoryWallet extends BaseWallet {
 	}
 }
 
-class InMemoryKVS extends api.KeyValueStore {
+class InMemoryKVS extends KeyValueStore {
 
 	/**
 	 * constructor

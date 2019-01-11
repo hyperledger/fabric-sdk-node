@@ -5,7 +5,7 @@
 */
 'use strict';
 
-const api = require('../api.js');
+const {CryptoAlgorithms} = require('fabric-common');
 const idModule = require('./identity.js');
 const Identity = idModule.Identity;
 const SigningIdentity = idModule.SigningIdentity;
@@ -159,11 +159,11 @@ const MSP = class {
 		const cert = sid.getIdBytes().toBinary();
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
 		if (!store_key) {
-			const publicKey = this.cryptoSuite.importKey(cert, {algorithm: api.CryptoAlgorithms.X509Certificate, ephemeral: true});
+			const publicKey = this.cryptoSuite.importKey(cert, {algorithm: CryptoAlgorithms.X509Certificate, ephemeral: true});
 			const sdk_identity = new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 			return sdk_identity;
 		} else {
-			return this.cryptoSuite.importKey(cert, {algorithm: api.CryptoAlgorithms.X509Certificate})
+			return this.cryptoSuite.importKey(cert, {algorithm: CryptoAlgorithms.X509Certificate})
 				.then((publicKey) => {
 					return new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 				});

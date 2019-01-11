@@ -7,9 +7,9 @@
 
 'use strict';
 
-const api = require('../../api.js');
+const {Key} = require('fabric-common');
 
-const PKCS11_AES_KEY = class extends api.Key {
+const PKCS11_AES_KEY = class extends Key {
 
 	constructor(attr, size) {
 		if (typeof attr === 'undefined' || attr === null) {

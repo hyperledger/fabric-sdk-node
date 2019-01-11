@@ -8,7 +8,7 @@
 'use strict';
 
 // requires
-const api = require('../api.js');
+const {CryptoAlgorithms, CryptoSuite} = require('fabric-common');
 
 const elliptic = require('elliptic');
 const EC = elliptic.ec;
@@ -30,7 +30,7 @@ const logger = utils.getLogger('crypto_ecdsa_aes');
  * @class
  * @extends module:api.CryptoSuite
  */
-class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
+class CryptoSuite_ECDSA_AES extends CryptoSuite {
 
 	/**
 	 * constructor
@@ -56,7 +56,7 @@ class CryptoSuite_ECDSA_AES extends api.CryptoSuite {
 		}
 		hashAlgo = hashAlgo.toUpperCase();
 		const hashPair = `${hashAlgo}_${keySize}`;
-		if (!api.CryptoAlgorithms[hashPair] || !hashPrimitives[hashPair]) {
+		if (!CryptoAlgorithms[hashPair] || !hashPrimitives[hashPair]) {
 			throw Error(util.format('Unsupported hash algorithm and key size pair: %s', hashPair));
 		}
 		super();

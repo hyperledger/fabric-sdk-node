@@ -25,7 +25,6 @@ const ECDSA = jsrsa.ECDSA;
 // var CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
 const CryptoSuite_ECDSA_AES = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
 const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
-// var api = require('fabric-client/lib/api.js');
 const User = require('fabric-client/lib/User.js');
 const elliptic = require('elliptic');
 // var BN = require('bn.js');

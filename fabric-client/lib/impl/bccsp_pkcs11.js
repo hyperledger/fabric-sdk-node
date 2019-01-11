@@ -7,7 +7,7 @@
 
 'use strict';
 
-const api = require('../api.js');
+const {CryptoAlgorithms, CryptoSuite} = require('fabric-common');
 const utils = require('../utils');
 const aesKey = require('./aes/pkcs11_key.js');
 const ecdsaKey = require('./ecdsa/pkcs11_key.js');
@@ -65,7 +65,7 @@ const __func = function () {
  * @class
  * @extends module:api.CryptoSuite
  */
-class CryptoSuite_PKCS11 extends api.CryptoSuite {
+class CryptoSuite_PKCS11 extends CryptoSuite {
 
 	/**
 	 * @param {number} keySize Length of key (in bytes), a.k.a "security level"
@@ -206,7 +206,7 @@ class CryptoSuite_PKCS11 extends api.CryptoSuite {
 		}
 		hashAlgo = hashAlgo.toUpperCase();
 		const hashPair = `${hashAlgo}_${keySize}`;
-		if (!api.CryptoAlgorithms[hashPair] || !hashPrimitives[hashPair]) {
+		if (!CryptoAlgorithms[hashPair] || !hashPrimitives[hashPair]) {
 			throw Error(util.format('Unsupported hash algorithm and key size pair: %s', hashPair));
 		}
 

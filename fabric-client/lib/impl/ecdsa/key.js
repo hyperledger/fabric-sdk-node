@@ -14,7 +14,7 @@ const asn1 = jsrsa.asn1;
 const KEYUTIL = jsrsa.KEYUTIL;
 const ECDSA = jsrsa.ECDSA;
 const jws = jsrsa.jws;
-const api = require('../../api');
+const {Key} = require('fabric-common');
 const logger = utils.getLogger('ecdsa/key.js');
 
 /**
@@ -22,7 +22,7 @@ const logger = utils.getLogger('ecdsa/key.js');
  * @class ECDSA_KEY
  * @extends module:api.Key
  */
-module.exports = class ECDSA_KEY extends api.Key {
+module.exports = class ECDSA_KEY extends Key {
 	/**
 	 * this class represents the private or public key of an ECDSA key pair.
 	 *

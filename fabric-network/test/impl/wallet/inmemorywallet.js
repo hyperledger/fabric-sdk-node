@@ -13,7 +13,7 @@ const should = chai.should();
 const InMemoryWallet = require('../../../lib/impl/wallet/inmemorywallet');
 const X509WalletMixin = require('../../../lib/impl/wallet/x509walletmixin');
 const Client = require('fabric-client');
-const api = require('fabric-client/lib/api.js');
+const {CryptoSuite, KeyValueStore} = require('fabric-common');
 
 
 describe('InMemoryWallet', () => {
@@ -34,7 +34,7 @@ describe('InMemoryWallet', () => {
 
 		it('should create a KV store', async () => {
 			const store = await wallet.getStateStore('test');
-			store.should.be.an.instanceof(api.KeyValueStore);
+			store.should.be.an.instanceof(KeyValueStore);
 		});
 	});
 
@@ -43,7 +43,7 @@ describe('InMemoryWallet', () => {
 
 		it('should create a KV store', async () => {
 			const suite = await wallet.getCryptoSuite('test');
-			suite.should.be.an.instanceof(api.CryptoSuite);
+			suite.should.be.an.instanceof(CryptoSuite);
 		});
 	});
 

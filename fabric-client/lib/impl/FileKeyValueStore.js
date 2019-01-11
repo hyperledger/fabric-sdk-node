@@ -7,7 +7,7 @@
 
 'use strict';
 
-const api = require('../api.js');
+const {KeyValueStore} = require('fabric-common');
 const fs = require('fs-extra');
 const path = require('path');
 const utils = require('../utils');
@@ -21,7 +21,7 @@ const logger = utils.getLogger('FileKeyValueStore.js');
  * @class
  * @extends module:api.KeyValueStore
  */
-const FileKeyValueStore = class extends api.KeyValueStore {
+const FileKeyValueStore = class extends KeyValueStore {
 
 	/**
 	 * constructor

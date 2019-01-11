@@ -7,7 +7,7 @@
 
 'use strict';
 
-const api = require('../api.js');
+const {KeyValueStore} = require('fabric-common');
 const util = require('util');
 const utils = require('../utils');
 const nano = require('nano');
@@ -21,7 +21,7 @@ const logger = utils.getLogger('CouchDBKeyValueStore.js');
  * @class
  * @extends module:api.KeyValueStore
  */
-const CouchDBKeyValueStore = class extends api.KeyValueStore {
+const CouchDBKeyValueStore = class extends KeyValueStore {
 	/**
 	 * @typedef {Object} CouchDBOpts
 	 * @property {string} url The CouchDB instance url, in the form of http(s)://<user>:<password>@host:port

@@ -10,7 +10,7 @@
 const sdkUtils = require('./utils.js');
 const clientUtils = require('./client-utils.js');
 
-const api = require('./api.js');
+const {KeyValueStore} = require('fabric-common');
 const BaseClient = require('./BaseClient.js');
 const User = require('./User.js');
 const Channel = require('./Channel.js');
@@ -1222,7 +1222,7 @@ const Client = class extends BaseClient {
 	setStateStore(keyValueStore) {
 		let err = '';
 
-		const methods = sdkUtils.getClassMethods(api.KeyValueStore);
+		const methods = sdkUtils.getClassMethods(KeyValueStore);
 		methods.forEach((m) => {
 			if (typeof keyValueStore[m] !== 'function') {
 				err += m + '() ';

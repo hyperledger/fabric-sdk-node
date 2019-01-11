@@ -18,7 +18,7 @@
 const jsSHA3 = require('js-sha3');
 const {sha3_256, sha3_384, shake_256} = jsSHA3;
 const crypto = require('crypto');
-const {Hash} = require('./api');
+const {Hash} = require('fabric-common');
 
 class hash_sha2_256 extends Hash {
 	constructor() {

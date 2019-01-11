@@ -12,7 +12,7 @@ const test = _test(tape);
 
 const testutil = require('./util.js');
 const utils = require('fabric-client/lib/utils.js');
-const api = require('fabric-client/lib/api.js');
+const {CryptoAlgorithms} = require('fabric-common');
 
 const jsrsa = require('jsrsasign');
 const KEYUTIL = jsrsa.KEYUTIL;
@@ -176,7 +176,7 @@ test('\n\n ** Identity class tests **\n\n', (t) => {
 		cryptoSuite: cryptoUtils
 	});
 
-	let pubKey = cryptoUtils.importKey(TEST_CERT_PEM, {algorithm: api.CryptoAlgorithms.X509Certificate});
+	let pubKey = cryptoUtils.importKey(TEST_CERT_PEM, {algorithm: CryptoAlgorithms.X509Certificate});
 	const identity = new Identity(TEST_CERT_PEM, pubKey, mspImpl.getId(), cryptoUtils);
 
 	const serializedID = identity.serialize();

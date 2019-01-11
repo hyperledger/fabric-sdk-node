@@ -11,7 +11,7 @@ const Long = require('long');
 const util = require('util');
 
 const utils = require('../utils');
-const api = require('../api.js');
+const EndorsementHandler = require('../EndorsementHandler');
 const logger = utils.getLogger('DiscoveryEndorsementHandler');
 
 const BLOCK_HEIGHT = 'ledgerHeight';
@@ -27,7 +27,7 @@ const DEFAULT = 'default';
  * @class
  * @extends module:api.EndorsementHandler
  */
-class DiscoveryEndorsementHandler extends api.EndorsementHandler {
+class DiscoveryEndorsementHandler extends EndorsementHandler {
 
 	/**
 	 * constructor

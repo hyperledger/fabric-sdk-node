@@ -514,10 +514,8 @@ describe('User', () => {
 				getKey: () => {}
 			};
 
-			const FakeApi = {
-				CryptoAlgorithms: {
-					X509Certificate: 'X509Certificate',
-				}
+			const FakeCryptoAlgorithms = {
+				X509Certificate: 'X509Certificate',
 			};
 
 			const FakeIdentity = sandbox.stub();
@@ -535,7 +533,7 @@ describe('User', () => {
 			UserRewire.__set__('logger', FakeLogger);
 			UserRewire.__set__('sdkUtils', FakeSdkUtils);
 			UserRewire.__set__('Identity', FakeIdentity);
-			UserRewire.__set__('api', FakeApi);
+			UserRewire.__set__('CryptoAlgorithms', FakeCryptoAlgorithms);
 
 			const obj = new UserRewire('cfg');
 			await obj.fromString('{ "name":"cfg", "roles":"test_role", "affiliation":"test_affiliation", "enrollmentSecret":"test_enrollmentSecret", "mspid":"test_mspId", "enrollment":{"identity":{"certificate":"test_certificate"}}}', true);
@@ -560,10 +558,8 @@ describe('User', () => {
 				getKey: () => {}
 			};
 
-			const FakeApi = {
-				CryptoAlgorithms: {
-					X509Certificate: 'X509Certificate',
-				}
+			const FakeCryptoAlgorithms = {
+				X509Certificate: 'X509Certificate',
 			};
 
 			const FakeIdentity = sandbox.stub();
@@ -581,7 +577,7 @@ describe('User', () => {
 			UserRewire.__set__('logger', FakeLogger);
 			UserRewire.__set__('sdkUtils', FakeSdkUtils);
 			UserRewire.__set__('Identity', FakeIdentity);
-			UserRewire.__set__('api', FakeApi);
+			UserRewire.__set__('CryptoAlgorithms', FakeCryptoAlgorithms);
 
 			const obj = new UserRewire('cfg');
 			await obj.fromString('{ "name":"cfg", "roles":"test_role", "affiliation":"test_affiliation", "enrollmentSecret":"test_enrollmentSecret", "mspid":"test_mspId", "enrollment":{"identity":{"certificate":"test_certificate"}}}', true).should.be.rejectedWith(/Import of saved user has failed/);
@@ -603,10 +599,8 @@ describe('User', () => {
 				getKey: () => {}
 			};
 
-			const FakeApi = {
-				CryptoAlgorithms: {
-					X509Certificate: 'X509Certificate',
-				}
+			const FakeCryptoAlgorithms = {
+				X509Certificate: 'X509Certificate',
 			};
 
 			const FakeIdentity = sandbox.stub();
@@ -624,7 +618,7 @@ describe('User', () => {
 			UserRewire.__set__('logger', FakeLogger);
 			UserRewire.__set__('sdkUtils', FakeSdkUtils);
 			UserRewire.__set__('Identity', FakeIdentity);
-			UserRewire.__set__('api', FakeApi);
+			UserRewire.__set__('CryptoAlgorithms', FakeCryptoAlgorithms);
 
 			const obj = new UserRewire('cfg');
 			await obj.fromString('{ "name":"cfg", "roles":"test_role", "affiliation":"test_affiliation", "enrollmentSecret":"test_enrollmentSecret", "mspid":"test_mspId", "enrollment":{"identity":{"certificate":"test_certificate"}}}', false);
@@ -649,10 +643,8 @@ describe('User', () => {
 				getKey: () => {}
 			};
 
-			const FakeApi = {
-				CryptoAlgorithms: {
-					X509Certificate: 'X509Certificate',
-				}
+			const FakeCryptoAlgorithms = {
+				X509Certificate: 'X509Certificate',
 			};
 
 			const FakeKey = {
@@ -670,7 +662,7 @@ describe('User', () => {
 			UserRewire.__set__('logger', FakeLogger);
 			UserRewire.__set__('sdkUtils', FakeSdkUtils);
 			UserRewire.__set__('Identity', FakeIdentity);
-			UserRewire.__set__('api', FakeApi);
+			UserRewire.__set__('CryptoAlgorithms', FakeCryptoAlgorithms);
 
 			const obj = new UserRewire('cfg');
 			await obj.fromString('{ "name":"cfg", "roles":"test_role", "affiliation":"test_affiliation", "enrollmentSecret":"test_enrollmentSecret", "mspid":"test_mspId", "enrollment":{"identity":{"certificate":"test_certificate"}, "signingIdentity":"test_signingIdentity"}}', false);

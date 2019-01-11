@@ -13,7 +13,7 @@ const should = chai.should();
 const rewire = require('rewire');
 
 const Client = require('fabric-client');
-const api = require('fabric-client/lib/api');
+const {CryptoSuite, KeyValueStore} = require('fabric-common');
 const User = require('fabric-client/lib/User');
 const HSMWalletMixin = rewire('./../../../lib/impl/wallet/hsmwalletmixin');
 const {KEYUTIL} = require('jsrsasign');
@@ -92,8 +92,8 @@ describe('HSMWalletMixin', () => {
 		let keyStoreStub;
 		let hsmWalletMixin;
 		beforeEach(() => {
-			cryptoSuiteStub = sinon.createStubInstance(api.CryptoSuite);
-			keyStoreStub = sinon.createStubInstance(api.KeyValueStore);
+			cryptoSuiteStub = sinon.createStubInstance(CryptoSuite);
+			keyStoreStub = sinon.createStubInstance(KeyValueStore);
 			ClientStub = {
 				newCryptoSuite: sandbox.stub().returns(cryptoSuiteStub),
 				newCryptoKeyStore: sandbox.stub().returns(keyStoreStub)
@@ -131,7 +131,7 @@ describe('HSMWalletMixin', () => {
 			sandbox.stub(KEYUTIL, 'getKey').returns('public key');
 			revert.push(HSMWalletMixin.__set__('KEYUTIL', KEYUTIL));
 			clientStub = sinon.createStubInstance(Client);
-			cryptoSuiteStub = sinon.createStubInstance(api.CryptoSuite);
+			cryptoSuiteStub = sinon.createStubInstance(CryptoSuite);
 			cryptoSuiteStub.getKey.returns('private key');
 			hsmWalletMixin = new HSMWalletMixin();
 			hsmWalletMixin.cryptoSuite = cryptoSuiteStub;

@@ -1827,7 +1827,7 @@ describe('Client', () => {
 		beforeEach(() => {
 			getClassMethodsStub = ['method'];
 			revert.push(Client.__set__('sdkUtils.getClassMethods', () => getClassMethodsStub));
-			revert.push(Client.__set__('api.KeyValueStore', 'kvs'));
+			revert.push(Client.__set__('KeyValueStore', 'kvs'));
 
 			client = new Client();
 		});

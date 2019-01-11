@@ -7,7 +7,7 @@
 
 'use strict';
 
-const api = require('../../api.js');
+const {Key} = require('fabric-common');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 
@@ -22,7 +22,7 @@ const EC = elliptic.ec;
  * @class PKCS11_ECDSA_KEY
  * @extends module:api.Key
  */
-const PKCS11_ECDSA_KEY = class extends api.Key {
+const PKCS11_ECDSA_KEY = class extends Key {
 
 	constructor(attr, size) {
 		if (typeof attr === 'undefined' || attr === null) {

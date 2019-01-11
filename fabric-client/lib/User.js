@@ -16,7 +16,7 @@
 
 const util = require('util');
 const sdkUtils = require('./utils.js');
-const api = require('./api.js');
+const {CryptoAlgorithms} = require('fabric-common');
 const logger = sdkUtils.getLogger('User.js');
 const idModule = require('./msp/identity.js');
 const Identity = idModule.Identity;
@@ -231,7 +231,7 @@ const User = class {
 		let pubKey;
 
 		let import_promise = null;
-		const opts = {algorithm: api.CryptoAlgorithms.X509Certificate};
+		const opts = {algorithm: CryptoAlgorithms.X509Certificate};
 		if (no_save) {
 			opts.ephemeral = true;
 			import_promise = new Promise((resolve, reject) => {
