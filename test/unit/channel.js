@@ -1071,8 +1071,8 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 		async () => {
 			await channel.initialize();
 		},
-		/No target provided for discovery services/,
-		'Channel tests, sendTransactionProposal(): "target" parameter not specified and no peers are set on this Channel'
+		/"target" parameter not specified and no peers are set on this Channel/,
+		'Channel tests, initialize(): "target" parameter not specified and no peers are set on this Channel'
 	);
 
 
@@ -1087,7 +1087,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 			});
 		},
 		/No identity has been assigned to this client/,
-		'Channel tests, sendTransactionProposal(): No identity has been assigned to this client'
+		'Channel tests, initialize(): No identity has been assigned to this client'
 	);
 
 	await testutil.tapeAsyncThrow(t,

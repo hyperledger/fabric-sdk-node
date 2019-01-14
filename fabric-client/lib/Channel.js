@@ -127,7 +127,6 @@ const Channel = class {
 		this._discovery_interests = new Map();
 		this._discovery_results = null;
 		this._last_discover_timestamp = null;
-		this._discovery_peer = null;
 		this._use_discovery = sdk_utils.getConfigSetting('initialize-with-discovery', false);
 		this._as_localhost = sdk_utils.getConfigSetting('discovery-as-localhost', true);
 		this._endorsement_handler = null;
@@ -153,6 +152,13 @@ const Channel = class {
 	 * @typedef {Object} InitializeRequest
 	 * @property {string | Peer | ChannelPeer} target - Optional. The target peer to be used
 	 *           to make the initialization requests for configuration information.
+	 *           When used with `targets` parameter, the peer referenced here will be
+	 *           added to the `targets` array.
+	 *           Default is to use the first ChannelPeer assigned to this channel.
+	 * @property {Array[Peer | ChannelPeer]} targets - Optional. The target peers to be used
+	 *           to make the initialization requests for configuration information.
+	 * 	         When used with `target` parameter, the peer referenced there will be
+	 *           added to the `targets` array.
 	 *           Default is to use the first ChannelPeer assigned to this channel.
 	 * @property {boolean} discover - Optional. Use the discovery service on the
 	 *           the target peer to load the configuration and network information.
@@ -251,31 +257,41 @@ const Channel = class {
 		this._discovery_results = null;
 		this._last_discover_timestamp = null;
 		this._last_refresh_request = Object.assign({}, request);
-		let target_peer = this._discovery_peer;
+		let target_peers = [];
 
 		if (request && request.target) {
-			target_peer = request.target;
+			target_peers.push(request.target);
+		}
+		if (request && Array.isArray(request.targets)) {
+			target_peers = target_peers.concat(request.targets);
 		}
 
-		if (this._use_discovery) {
-			logger.debug('%s - starting discovery', method);
-			try {
-				target_peer = this._getTargetForDiscovery(target_peer);
-			} catch (error) {
-				logger.debug('Problem getting a target peer for discovery service :: %s', error);
+		if (target_peers.length === 0) {
+			if (this._use_discovery) {
+				target_peers = this._getTargets(null, Constants.NetworkConfig.DISCOVERY_ROLE, true);
+			} else {
+				target_peers = this._getTargets(null, Constants.NetworkConfig.ALL_ROLES, true);
 			}
-			if (!target_peer) {
-				throw new Error('No target provided for discovery services');
-			}
+		}
 
+		let final_error = null;
+		for (let target_peer of target_peers) {
 			try {
-				let discover_request = {
-					target: target_peer,
-					config: true
-				};
+				logger.debug('%s - target peer %s starting', method, target_peer);
 
-				const discovery_results = await this._discover(discover_request);
-				if (discovery_results) {
+				if (this._use_discovery) {
+					logger.debug('%s - starting discovery', method);
+					target_peer = this._getTargetForDiscovery(target_peer);
+
+					if (!target_peer) {
+						throw new Error('No target provided for discovery services');
+					}
+					let discover_request = {
+						target: target_peer,
+						config: true
+					};
+
+					const discovery_results = await this._discover(discover_request);
 					if (discovery_results.msps) {
 						this._buildDiscoveryMSPs(discovery_results);
 					} else {
@@ -287,61 +303,67 @@ const Channel = class {
 					if (discovery_results.peers_by_org) {
 						this._buildDiscoveryPeers(discovery_results, discovery_results.msps, request);
 					}
-				}
 
-				discovery_results.endorsement_plans = [];
+					discovery_results.endorsement_plans = [];
 
-				const interests = [];
-				const plan_ids = [];
-				this._discovery_interests.forEach((interest, plan_id) => {
-					logger.debug('%s - have interest of:%s', method, plan_id);
-					plan_ids.push(plan_id);
-					interests.push(interest);
-				});
+					const interests = [];
+					const plan_ids = [];
+					this._discovery_interests.forEach((interest, plan_id) => {
+						logger.debug('%s - have interest of:%s', method, plan_id);
+						plan_ids.push(plan_id);
+						interests.push(interest);
+					});
 
-				for (const i in plan_ids) {
-					const plan_id = plan_ids[i];
-					const interest = interests[i];
+					for (const i in plan_ids) {
+						const plan_id = plan_ids[i];
+						const interest = interests[i];
 
-					discover_request = {
-						target: target_peer,
-						interests: [interest]
-					};
+						discover_request = {
+							target: target_peer,
+							interests: [interest]
+						};
 
-					let discover_interest_results = null;
-					try {
-						discover_interest_results = await this._discover(discover_request);
-					} catch (error) {
-						logger.error('Not able to get an endorsement plan for %s', plan_id);
+						try {
+							const discover_interest_results = await this._discover(discover_request);
+							if (discover_interest_results &&
+								discover_interest_results.endorsement_plans &&
+								discover_interest_results.endorsement_plans[0]) {
+								const plan = this._buildDiscoveryEndorsementPlan(discover_interest_results, plan_id, discovery_results.msps, request);
+								discovery_results.endorsement_plans.push(plan);
+								logger.debug('%s - Added an endorsement plan for %s', method, plan_id);
+							} else {
+								logger.debug('%s - Not adding an endorsement plan for %s', method, plan_id);
+							}
+						} catch (error) {
+							logger.debug('%s - trying to get a plan for plan %s :: interest:%s error:%s', method, plan_id, interest, error);
+						}
+
 					}
+					discovery_results.timestamp = Date.now();
+					this._discovery_results = discovery_results;
+					this._last_discover_timestamp = discovery_results.timestamp;
 
-					if (discover_interest_results && discover_interest_results.endorsement_plans && discover_interest_results.endorsement_plans[0]) {
-						const plan = this._buildDiscoveryEndorsementPlan(discover_interest_results, plan_id, discovery_results.msps, request);
-						discovery_results.endorsement_plans.push(plan);
-						logger.debug('Added an endorsement plan for %s', plan_id);
-					} else {
-						logger.debug('Not adding an endorsement plan for %s', plan_id);
-					}
+					return discovery_results;
+				} else {
+					target_peer = this._getFirstAvailableTarget(target_peer);
+					const config_envelope = await this.getChannelConfig(target_peer);
+					logger.debug('%s - got config envelope from getChannelConfig :: %j', method, config_envelope);
+					const config_items = this.loadConfigEnvelope(config_envelope);
+
+					return config_items;
 				}
-
-				discovery_results.timestamp = Date.now();
-				this._discovery_results = discovery_results;
-				this._discovery_peer = target_peer;
-				this._last_discover_timestamp = discovery_results.timestamp;
-
-				return discovery_results;
 			} catch (error) {
-				logger.error(error);
-				throw Error('Failed to discover ::' + error.toString());
+				logger.error(error.toString());
+				final_error = error;
 			}
+
+			logger.debug('%s - target peer %s failed %s:', method, target_peer, final_error);
+		}
+
+		if (final_error) {
+			throw final_error;
 		} else {
-			target_peer = this._getFirstAvailableTarget(target_peer);
-			const config_envelope = await this.getChannelConfig(target_peer);
-			logger.debug('initialize - got config envelope from getChannelConfig :: %j', config_envelope);
-			const config_items = this.loadConfigEnvelope(config_envelope);
-
-			return config_items;
-
+			throw new Error('Initialization failed to complete');
 		}
 	}
 

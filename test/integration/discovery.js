@@ -42,6 +42,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	let data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem'));
 	let pem = Buffer.from(data).toString();
 	const peer_org1 = client_org1.newPeer('grpcs://localhost:7051', {pem: pem, 'ssl-target-name-override': 'peer0.org1.example.com', name: 'peer0.org1.example.com'});
+	const peer_bad = client_org1.newPeer('grpcs://localhost:9999', {pem: pem, 'ssl-target-name-override': 'peer9.org1.example.com', name: 'peer9.org1.example.com'});
 
 	data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tlscacerts/org2.example.com-cert.pem'));
 	pem = Buffer.from(data).toString();
@@ -223,6 +224,16 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 
 	// This will call the discovery under the covers and load the channel with msps, orderers, and peers
 	results = await channel_org1.initialize({asLocalhost: true, discover: true, target: peer_org1});
+	t.equal(channel_org1.getOrderers().length, 2, 'Checking that there are two orderers assigned to the channel');
+
+	// This will call the discovery under the covers and load the channel with msps, orderers, and peers
+	// after if fails with the bad peer
+	results = await channel_org1.initialize({asLocalhost: true, discover: true, target: peer_bad, targets: [peer_org1]});
+	t.equal(channel_org1.getOrderers().length, 2, 'Checking that there are two orderers assigned to the channel');
+
+	// This will call the discovery under the covers and load the channel with msps, orderers, and peers
+	// after it fails with the bad peer
+	results = await channel_org1.initialize({asLocalhost: true, discover: true, targets: [peer_bad, peer_org1]});
 
 	if (channel_org1._endorsement_handler !== null) {
 		t.pass('Successfully checked channel has the handler');
