@@ -20,7 +20,7 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 
-const X509 = require('x509');
+const X509 = require('@ampretia/x509');
 
 const util = require('util');
 const fs = require('fs-extra');
