@@ -34,5 +34,8 @@
 	},
 	"grpc-settings": {
 		"title": "fabric-client: How to set gRPC settings"
+	},
+	"handlers": {
+		"title": "fabric-client: How to use the endorsement and commit handlers"
 	}
 }

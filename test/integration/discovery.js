@@ -209,8 +209,32 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	const bad_orderer = client_org1.newOrderer('grpc://somebadhost:1000');
 	channel_org1.addOrderer(bad_orderer); // will put this orderer first on the list
 
+	if (channel_org1._endorsement_handler === null) {
+		t.pass('Successfully checked channel does not have handler');
+	} else {
+		t.fail('Failed- Channel already has handler');
+	}
+
+	if (channel_org1._commit_handler === null) {
+		t.pass('Successfully checked channel does not have handler');
+	} else {
+		t.fail('Failed- Channel already has handler');
+	}
+
 	// This will call the discovery under the covers and load the channel with msps, orderers, and peers
 	results = await channel_org1.initialize({asLocalhost: true, discover: true, target: peer_org1});
+
+	if (channel_org1._endorsement_handler !== null) {
+		t.pass('Successfully checked channel has the handler');
+	} else {
+		t.fail('Failed- Channel does not have handler');
+	}
+
+	if (channel_org1._commit_handler !== null) {
+		t.pass('Successfully checked channel has the handler');
+	} else {
+		t.fail('Failed- Channel does not have handler');
+	}
 
 	t.equal(channel_org1.getOrderers().length, 2, 'Checking that there are two orderers assigned to the channel');
 	const msps = channel_org1.getMSPManager().getMSPs();
@@ -314,7 +338,10 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 		]}
 	};
 	try {
+		// setup to test if the endorsement handler will be built by the sendTransactionProposal method
+
 		results = await channel_org1.sendTransactionProposal(collections_request);
+
 		if (testUtil.checkGoodResults(t, results)) {
 			t.pass('Successfully endorsed chaincode to chaincode with collections');
 		} else {
@@ -370,6 +397,7 @@ async function installChaincode(t, client, channel, peer, chaincode_id, chaincod
 async function startChaincode(t, client, channel, orderer, peers, chaincode_id, chaincode_ver) {
 
 	try {
+		// reset the testing
 		const tx_id = client.newTransactionID(true);
 
 		const policy = {
@@ -425,6 +453,7 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 				proposal: proposal_results[1],
 				txId : tx_id
 			};
+
 			const commit_results = await channel.sendTransaction(commit_request);
 			if (commit_results && commit_results.status === 'SUCCESS') {
 				await testUtil.sleep(10000); // let the discovery catch up
