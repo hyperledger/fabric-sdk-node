@@ -58,3 +58,7 @@ fabric-network/OUTSTA*
 #fabric common items
 fabric-common/node_modules/*
 fabric-common/.nyc_output
+
+#fabric protos items
+fabric-protos/node_modules/*
+fabric-protos/.nyc_output
