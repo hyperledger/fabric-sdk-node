@@ -1001,6 +1001,33 @@ describe('Channel', () => {
 			return expect(channel.initialize({discover: true, target: peer1})).to.be.rejectedWith('No MSP information found');
 		});
 
+		it('should set the clientTlsCertHash if the cert has is available', async () => {
+			const setClientTlsCertHashStub = sinon.stub();
+			ChannelRewire.__set__('_discoveryProto.AuthInfo.prototype.setClientTlsCertHash', setClientTlsCertHashStub);
+			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
+			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
+			peer2.chaincodes = [{name: 'mynewcc'}];
+			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			const discoveryResponse = {
+				peer: peer1,
+				results: [
+					{
+						config_result: {
+							msps: {[mspId]: stubMsp},
+							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
+						},
+					}
+				],
+			};
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			const getClientCertHash = sinon.stub(channel._clientContext, 'getClientCertHash').returns('hash');
+			const init = await channel.initialize({discover: true, target: peer1});
+			sinon.assert.calledWith(getClientCertHash, true);
+			sinon.assert.calledWith(setClientTlsCertHashStub, 'hash');
+			expect(init.orderers).to.deep.equal({[mspId]: {endpoints: [{name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`, host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}});
+		});
+
 		it('finds orderers', async () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
@@ -1130,6 +1157,10 @@ describe('Channel', () => {
 			const init = await channel.initialize({discover: true, target: peer1});
 			expect(init.endorsement_plans).to.deep.equal([]);
 		});
+
+		it('should log an error if _getTargetDiscovery throws an error', () => {
+			return expect(channel.initialize({discover: true})).to.be.rejectedWith('No target provided for discovery services');
+		});
 	});
 
 	describe('#_initialize', () => {});
@@ -1180,7 +1211,13 @@ describe('Channel', () => {
 	});
 
 
-	describe('#getEndorsementPlan', () => {});
+	describe('#getEndorsementPlan', () => {
+		it('should return null if no endorsement plans are found', async () => {
+			sinon.stub(channel, '_initialize').resolves('initialize-result');
+			channel.initialize({discover: true});
+			expect(await channel.getEndorsementPlan({chaincodes: []})).to.equal(null);
+		});
+	});
 
 	describe('#refresh', () => {
 		it('should call initialize and return the result', async () => {
@@ -1373,6 +1410,27 @@ describe('Channel', () => {
 			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
 
 			return expect(channel._discover({target: peer1})).to.be.rejectedWith('Discovery has failed to return results');
+		});
+
+		it('should throw if discovery returns no results and response is an Error object', () => {
+			const discoveryResponse = new Error();
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+
+			return expect(channel._discover({target: peer1})).to.be.rejectedWith('Discovery has failed to return results');
+		});
+
+		it('should throw if discovery returns no results and connection failed', async () => {
+			const discoveryResponse = new Error();
+			discoveryResponse.connectFailed = true;
+			sinon.stub(peer1, 'waitForReady').resolves();
+			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
+			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
+			sinon.stub(peer1, 'close');
+
+			await expect(channel._discover({target: peer1})).to.be.rejectedWith('Discovery has failed to return results');
+			sinon.assert.called(peer1.close);
 		});
 
 		it('should throw if a discovery result is null', () => {
@@ -1708,6 +1766,19 @@ describe('Channel', () => {
 	});
 
 	describe('#joinChannel', () => {
+
+		it('should throw if request is missing', () => {
+			expect(() => channel.joinChannel()).to.throw(/Missing all required input request parameters/);
+		});
+
+		it('should throw if request.txId is missing', () => {
+			expect(() => channel.joinChannel({})).to.throw(/Missing txId input parameter with the required transaction identifier/);
+		});
+
+		it('should throw if request.block is missing', () => {
+			expect(() => channel.joinChannel({txId: 1})).to.throw(/Missing block input parameter with the required genesis block/);
+		});
+
 		it('should be rejected is sendPeersProposal fails', async () => {
 			sinon.stub(peer1, 'waitForReady').resolves();
 			const err = new Error('forced error');
