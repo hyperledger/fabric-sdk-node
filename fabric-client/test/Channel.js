@@ -1159,7 +1159,7 @@ describe('Channel', () => {
 		});
 
 		it('should log an error if _getTargetDiscovery throws an error', () => {
-			return expect(channel.initialize({discover: true})).to.be.rejectedWith('No target provided for discovery services');
+			return expect(channel.initialize({discover: true})).to.be.rejectedWith('"target" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network');
 		});
 	});
 

@@ -16,6 +16,7 @@ import tape = require('tape');
 import tapePromise = require('tape-promise');
 
 import {
+	DefaultQueryHandlerStrategies,
 	FileSystemWallet,
 	Gateway,
 	TransientMap,
@@ -66,7 +67,7 @@ async function deleteWallet(filePath: string): Promise<void> {
 	await rimRafPromise;
 }
 
-test('\n\n***** Network End-to-end flow: evaluate transaction to get information *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: evaluate transaction with default query handler *****\n\n', async (t: any) => {
 	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
 	const gateway = new Gateway();
 
@@ -81,6 +82,122 @@ test('\n\n***** Network End-to-end flow: evaluate transaction to get information
 				enabled: false,
 			},
 			identity: identityLabel,
+			wallet,
+		});
+		t.pass('Connected to the gateway');
+
+		const channel = await gateway.getNetwork(channelName);
+		t.pass('Initialized the channel, ' + channelName);
+
+		const contract = await channel.getContract(chaincodeId);
+		t.pass('Got the contract, about to evaluate (query) transaction');
+
+		// try a standard query
+		let response = await contract.evaluateTransaction('query', 'a');
+
+		if (!isNaN(parseInt(response.toString(), 10))) {
+			t.pass('Successfully got back a value');
+		} else {
+			t.fail('Unexpected response from transaction chaincode: ' + response);
+		}
+
+		// check we deal with an error returned.
+		try {
+			response = await contract.evaluateTransaction('throwError', 'a', 'b', '100');
+			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
+		} catch (expectedErr) {
+			if (expectedErr.message.includes('throwError: an error occurred')) {
+				t.pass('Successfully handled invocation errors');
+			} else {
+				t.fail('Unexpected exception: ' + expectedErr.message);
+			}
+		}
+	} catch (err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		await deleteWallet(tmpdir);
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
+test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_ROUND_ROBIN query handler *****\n\n', async (t: any) => {
+	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+	const gateway = new Gateway();
+
+	try {
+		const wallet = await createWallet(t, tmpdir);
+		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccpObject = JSON.parse(ccp.toString());
+
+		await gateway.connect(ccpObject, {
+			clientTlsIdentity: tlsLabel,
+			discovery: {
+				enabled: false,
+			},
+			identity: identityLabel,
+			queryHandlerOptions: {
+				strategy: DefaultQueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN,
+			},
+			wallet,
+		});
+		t.pass('Connected to the gateway');
+
+		const channel = await gateway.getNetwork(channelName);
+		t.pass('Initialized the channel, ' + channelName);
+
+		const contract = await channel.getContract(chaincodeId);
+		t.pass('Got the contract, about to evaluate (query) transaction');
+
+		// try a standard query
+		let response = await contract.evaluateTransaction('query', 'a');
+
+		if (!isNaN(parseInt(response.toString(), 10))) {
+			t.pass('Successfully got back a value');
+		} else {
+			t.fail('Unexpected response from transaction chaincode: ' + response);
+		}
+
+		// check we deal with an error returned.
+		try {
+			response = await contract.evaluateTransaction('throwError', 'a', 'b', '100');
+			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
+		} catch (expectedErr) {
+			if (expectedErr.message.includes('throwError: an error occurred')) {
+				t.pass('Successfully handled invocation errors');
+			} else {
+				t.fail('Unexpected exception: ' + expectedErr.message);
+			}
+		}
+	} catch (err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		await deleteWallet(tmpdir);
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
+test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_SINGLE query handler *****\n\n', async (t: any) => {
+	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+	const gateway = new Gateway();
+
+	try {
+		const wallet = await createWallet(t, tmpdir);
+		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccpObject = JSON.parse(ccp.toString());
+
+		await gateway.connect(ccpObject, {
+			clientTlsIdentity: tlsLabel,
+			discovery: {
+				enabled: false,
+			},
+			identity: identityLabel,
+			queryHandlerOptions: {
+				strategy: DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE,
+			},
 			wallet,
 		});
 		t.pass('Connected to the gateway');

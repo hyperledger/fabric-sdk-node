@@ -7,13 +7,14 @@
 'use strict';
 
 const SingleQueryHandler = require('fabric-network/lib/impl/query/singlequeryhandler');
+const RoundRobinQueryHandler = require('fabric-network/lib/impl/query/roundrobinqueryhandler');
 
 const sinon = require('sinon');
 const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-as-promised'));
 
-describe('SingleStrategy', () => {
+describe('QueryHandlers', () => {
 	const queryResult = Buffer.from('QUERY_RESULT');
 	const queryFailMessage = 'QUERY_FAILED';
 
@@ -53,7 +54,7 @@ describe('SingleStrategy', () => {
 		sinon.restore();
 	});
 
-	describe('#evaluate', () => {
+	describe('SingleQueryHandler', () => {
 		let strategy;
 
 		beforeEach(() => {
@@ -107,6 +108,77 @@ describe('SingleStrategy', () => {
 			await strategy.evaluate(stubQuery);
 
 			sinon.assert.callCount(fakeEvaluate, 4);
+			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer1]);
+		});
+
+		it('returns query result if first peer fails', async () => {
+			failedPeers = [stubPeer1];
+
+			const result = await strategy.evaluate(stubQuery);
+
+			expect(result).equals(queryResult);
+		});
+
+		it('throws if all peers fail', () => {
+			failedPeers = [stubPeer1, stubPeer2];
+
+			return expect(strategy.evaluate(stubQuery))
+				.to.be.rejectedWith(queryFailMessage);
+		});
+	});
+
+	describe('RoundRobinQueryHandler', () => {
+		let strategy;
+
+		beforeEach(() => {
+			strategy = new RoundRobinQueryHandler([stubPeer1, stubPeer2]);
+		});
+
+		it('queries first peer on first call', async () => {
+			await strategy.evaluate(stubQuery);
+
+			sinon.assert.callCount(fakeEvaluate, 1);
+			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer1]);
+		});
+
+		it('queries second peer on second call', async () => {
+			await strategy.evaluate(stubQuery);
+			await strategy.evaluate(stubQuery);
+
+			sinon.assert.callCount(fakeEvaluate, 2);
+			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer2]);
+		});
+
+		it('queries third peer on third call', async () => {
+			await strategy.evaluate(stubQuery);
+			await strategy.evaluate(stubQuery);
+			await strategy.evaluate(stubQuery);
+
+			sinon.assert.callCount(fakeEvaluate, 3);
+			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer1]);
+		});
+
+		it('returns query result', async () => {
+			const result = await strategy.evaluate(stubQuery);
+			expect(result).to.equal(queryResult);
+		});
+
+		it('queries second peer if first fails', async () => {
+			failedPeers = [stubPeer1];
+
+			await strategy.evaluate(stubQuery);
+
+			sinon.assert.callCount(fakeEvaluate, 2);
+			sinon.assert.calledWith(fakeEvaluate.getCall(0), [stubPeer1]);
+			sinon.assert.calledWith(fakeEvaluate.getCall(1), [stubPeer2]);
+		});
+
+		it('queries first peer again if second fails', async () => {
+			await strategy.evaluate(stubQuery);
+			failedPeers = [stubPeer2];
+			await strategy.evaluate(stubQuery);
+
+			sinon.assert.callCount(fakeEvaluate, 3);
 			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer1]);
 		});
 

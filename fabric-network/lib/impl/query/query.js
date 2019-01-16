@@ -8,6 +8,11 @@
 
 const logger = require('fabric-network/lib/logger').getLogger('Query');
 
+/**
+ * Describes a transaction to be evaluated on a specified set of peers.
+ * Used by query handler implementations to evaluate transactions on peers of their choosing.
+ * @memberof module:fabric-network
+ */
 class Query {
 	constructor(channel, request) {
 		this._channel = channel;
@@ -16,9 +21,9 @@ class Query {
 
 	/**
      * Evaluates the query on the specified peers.
-	 * @async
      * @param {ChannelPeer[]} peers The peers to query
-     * @returns {object} Object with peer name keys and associated values that are either Buffer or Error objects.
+     * @returns {Object.<String, (Buffer | Error)>} Object with peer name keys and associated values that are either
+	 * Buffer or Error objects.
      */
 	async evaluate(peers) {
 		const request = Object.assign({targets: peers}, this._request);

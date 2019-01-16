@@ -13,12 +13,14 @@ const expect = chai.expect;
 const Network = require('fabric-network/lib/network');
 const Channel = require('fabric-client').Channel;
 const SingleQueryHandler = require('fabric-network/lib/impl/query/singlequeryhandler');
+const RoundRobinQueryHandler = require('fabric-network/lib/impl/query/roundrobinqueryhandler');
 
 const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
 
 describe('DefaultQueryHandlerStrategies', () => {
 	const expectedStrategyTypes = {
-		'MSPID_SCOPE_SINGLE': SingleQueryHandler
+		'MSPID_SCOPE_SINGLE': SingleQueryHandler,
+		'MSPID_SCOPE_ROUND_ROBIN': RoundRobinQueryHandler
 	};
 	const strategyNames = Object.keys(expectedStrategyTypes);
 

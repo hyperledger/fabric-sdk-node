@@ -183,7 +183,7 @@ gulp.task('run-test-cucumber', shell.task(
 // Main test method to run all test suites
 // - lint, unit first, then FV, then scenario
 gulp.task('run-test', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'run-test-mocha', 'run-tape-unit', 'run-tape-e2e', 'run-logger-unit', 'docker-clean', 'run-test-cucumber'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'docs', 'run-test-mocha', 'run-tape-unit', 'run-tape-e2e', 'run-logger-unit', 'docker-clean', 'run-test-cucumber'];
 	runSequence(...tasks, done);
 });
 

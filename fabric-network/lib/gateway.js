@@ -22,6 +22,8 @@ const logger = require('./logger').getLogger('Gateway');
  * @property {string} [clientTlsIdentity] The identity in the wallet to use as the client TLS identity.
  * @property {module:fabric-network.Gateway~DefaultEventHandlerOptions} [eventHandlerOptions] Options for the inbuilt default
  * event handler capability.
+ * @property {module:fabric-network.Gateway~DefaultQueryHandlerOptions} [queryHandlerOptions] Options for the inbuilt
+ * default query handler capability.
  * @property {module:fabric-network.Gateway~DiscoveryOptions} [discovery] Discovery options.
  */
 
@@ -32,7 +34,7 @@ const logger = require('./logger').getLogger('Gateway');
  * complete.
  * @property {?module:fabric-network.Gateway~TxEventHandlerFactory} [strategy=MSPID_SCOPE_ALLFORTX] Event handling strategy to identify
  * successful transaction commits. A null value indicates that no event handling is desired. The default is
- * {@link MSPID_SCOPE_ALLFORTX}.
+ * [MSPID_SCOPE_ALLFORTX]{@link module:fabric-network.DefaultEventHandlerStrategies}.
  */
 
 /**
@@ -59,11 +61,11 @@ const logger = require('./logger').getLogger('Gateway');
  * @typedef {Object} Gateway~DefaultQueryHandlerOptions
  * @memberof module:fabric-network
  * @property {module:fabric-network.Gateway~QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE] Query handling strategy
- * used to evaluate queries. The default is {@link MSPID_SCOPE_SINGLE}.
+ * used to evaluate queries. The default is [MSPID_SCOPE_SINGLE]{@link module:fabric-network.DefaultQueryHandlerStrategies}.
  */
 
 /**
- * @typedef {Function} Gateway~QueryEventHandlerFactory
+ * @typedef {Function} Gateway~QueryHandlerFactory
  * @memberof module:fabric-network
  * @param {module:fabric-network.Network} network The network on which queries are being evaluated.
  * @returns {module:fabric-network.Gateway~QueryHandler} A query handler.
@@ -72,7 +74,7 @@ const logger = require('./logger').getLogger('Gateway');
 /**
  * @typedef {Object} Gateway~QueryHandler
  * @memberof module:fabric-network
- * @property {Function} evaluate Async function that takes a (Query){@link module:fabric-network.Query} and resolves
+ * @property {Function} evaluate Async function that takes a [Query]{@link module:fabric-network.Query} and resolves
  * with the result of the query evaluation.
  */
 
@@ -252,21 +254,6 @@ class Gateway {
 		await newNetwork._initialize(this.options.discovery);
 		this.networks.set(networkName, newNetwork);
 		return newNetwork;
-	}
-
-	async _createQueryHandler(channel, peerMap) {
-		if (this.queryHandlerClass) {
-			const currentmspId = this.getCurrentIdentity().getIdentity().getMSPId();
-			const queryHandler = new this.queryHandlerClass(
-				channel,
-				currentmspId,
-				peerMap,
-				this.options.queryHandlerOptions
-			);
-			await queryHandler.initialize();
-			return queryHandler;
-		}
-		return null;
 	}
 }
 

@@ -19,6 +19,7 @@ export interface GatewayOptions {
 	clientTlsIdentity?: string;
 	discovery?: DiscoveryOptions;
 	eventHandlerOptions?: DefaultEventHandlerOptions;
+	queryHandlerOptions?: DefaultQueryHandlerOptions;
 }
 
 export interface DiscoveryOptions {
@@ -46,6 +47,29 @@ export interface TxEventHandler {
 	cancelListening(): void;
 }
 
+export interface DefaultQueryHandlerOptions {
+	strategy?: QueryHandlerFactory;
+}
+
+export class DefaultQueryHandlerStrategies {
+	public static MSPID_SCOPE_ROUND_ROBIN: QueryHandlerFactory;
+	public static MSPID_SCOPE_SINGLE: QueryHandlerFactory;
+}
+
+export type QueryHandlerFactory = (network: Network, options: object) => QueryHandler;
+
+export interface QueryHandler {
+	evaluate(query: Query): Promise<Buffer>;
+}
+
+export interface Query {
+	evaluate(peers: ChannelPeer[]): Promise<QueryResults>;
+}
+
+export interface QueryResults {
+	[peerName: string]: Buffer | Error;
+}
+
 export class Gateway {
 	constructor();
 	public connect(config: Client | string | object, options: GatewayOptions): Promise<void>;
@@ -56,34 +80,34 @@ export class Gateway {
 	public getOptions(): GatewayOptions;
 }
 
-export class Network {
-	public getChannel(): Channel;
-	public getContract(chaincodeId: string, name?: string): Contract;
+export interface Network {
+	getChannel(): Channel;
+	getContract(chaincodeId: string, name?: string): Contract;
 }
 
-export class Contract {
-	public createTransaction(name: string): Transaction;
-	public evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	public submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
+export interface Contract {
+	createTransaction(name: string): Transaction;
+	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
+	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
 }
 
 export interface TransientMap {
 	[key: string]: Buffer;
 }
-export class Transaction {
-	public evaluate(...args: string[]): Promise<Buffer>;
-	public getName(): string;
-	public getTransactionID(): TransactionId;
-	public setTransient(transientMap: TransientMap): this;
-	public submit(...args: string[]): Promise<Buffer>;
+export interface Transaction {
+	evaluate(...args: string[]): Promise<Buffer>;
+	getName(): string;
+	getTransactionID(): TransactionId;
+	setTransient(transientMap: TransientMap): this;
+	submit(...args: string[]): Promise<Buffer>;
 }
 
-export interface FabricError {
+export interface FabricError extends Error {
 	cause?: Error;
 	transactionId?: string;
 }
 
-export class TimeoutError implements FabricError {}
+export interface TimeoutError extends FabricError {} // tslint:disable-line:no-empty-interface
 
 //-------------------------------------------
 // Wallet Management

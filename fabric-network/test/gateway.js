@@ -13,8 +13,6 @@ const Peer = InternalChannel.__get__('ChannelPeer');
 const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
 
 const Client = require('fabric-client');
-const User = require('fabric-client/lib/User');
-const {Identity} = require('fabric-client/lib/msp/identity');
 
 const chai = require('chai');
 const should = chai.should();
@@ -246,48 +244,6 @@ describe('Gateway', () => {
 			};
 			await gateway.connect('ccp', options);
 			should.equal(gateway.options.eventStrategy, null);
-		});
-	});
-
-	describe('#_createQueryHandler', () => {
-		let gateway;
-		beforeEach(() => {
-			gateway = new Gateway();
-		});
-
-		it('should create a query handler if class defined', async () => {
-			const initStub = sinon.stub();
-			const constructStub = sinon.stub();
-			const mockClass = class MockClass {
-				constructor(...args) {
-					constructStub(...args);
-					this.initialize = initStub;
-				}
-			};
-
-			gateway.queryHandlerClass = mockClass;
-
-			const stubIdentity = sinon.createStubInstance(Identity);
-			stubIdentity.getMSPId.returns('anmsp');
-
-			const stubUser = sinon.createStubInstance(User);
-			stubUser.getIdentity.returns(stubIdentity);
-
-			gateway.options.queryHandlerOptions = 'options';
-			sinon.stub(gateway, 'getCurrentIdentity').returns(stubUser);
-
-			const queryHandler = await gateway._createQueryHandler('channel', 'peerMap');
-
-			queryHandler.should.be.instanceof(mockClass);
-			sinon.assert.calledOnce(constructStub);
-			sinon.assert.calledWith(constructStub, 'channel', 'anmsp', 'peerMap', 'options');
-			sinon.assert.calledOnce(initStub);
-
-		});
-
-		it('should do nothing if no class defined', async () => {
-			const queryHandler = await gateway._createQueryHandler('channel', 'peerMap');
-			should.equal(null, queryHandler);
 		});
 	});
 

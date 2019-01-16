@@ -20,47 +20,21 @@ function getNetworkEventHubs(network) {
 	return network.getEventHubFactory().getEventHubs(peers);
 }
 
-/**
- * Default event handler strategy.<br>
- * Listen to all event hubs for the connected organisation.
- * The [submitTransaction]{@link Contract#submitTransaction} method will wait
- * until <b>all</b> of the events to be received from
- * all of the event hubs that are still connected (minimum 1).
- */
 function MSPID_SCOPE_ALLFORTX(transactionId, network, options) {
 	const eventStrategy = new AllForTxStrategy(getOrganizationEventHubs(network));
 	return new TransactionEventHandler(transactionId, eventStrategy, options);
 }
 
-/**
- * Event handler strategy.<br>
- * Listen to all event hubs for the connected organisation.
- * The [submitTransaction]{@link Contract#submitTransaction} method will wait
- * until the first event from <b>any</b> of the event hubs that are still connected.
- */
 function MSPID_SCOPE_ANYFORTX(transactionId, network, options) {
 	const eventStrategy = new AnyForTxStrategy(getOrganizationEventHubs(network));
 	return new TransactionEventHandler(transactionId, eventStrategy, options);
 }
 
-/**
- * Event handler strategy.<br>
- * Listen to all event hubs for all peers in the current network.
- * The [submitTransaction]{@link Contract#submitTransaction} method will wait
- * until <b>all</b> of the events to be received from
- * all of the event hubs that are still connected (minimum 1).
- */
 function NETWORK_SCOPE_ALLFORTX(transactionId, network, options) {
 	const eventStrategy = new AllForTxStrategy(getNetworkEventHubs(network));
 	return new TransactionEventHandler(transactionId, eventStrategy, options);
 }
 
-/**
- * Event handler strategy.<br>
- * Listen to all event hubs for all peers in the current network.
- * The [submitTransaction]{@link Contract#submitTransaction} method will wait
- * until the first event from <b>any</b> of the event hubs that are still connected.
- */
 function NETWORK_SCOPE_ANYFORTX(transactionId, network, options) {
 	const eventStrategy = new AnyForTxStrategy(getNetworkEventHubs(network));
 	return new TransactionEventHandler(transactionId, eventStrategy, options);
