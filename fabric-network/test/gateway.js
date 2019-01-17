@@ -23,21 +23,10 @@ chai.use(require('chai-as-promised'));
 const Network = require('../lib/network');
 const Gateway = require('../lib/gateway');
 const Wallet = require('../lib/api/wallet');
-const Mockery = require('mockery');
+const QueryStrategies = require('../lib/impl/query/defaultqueryhandlerstrategies');
 
 describe('Gateway', () => {
 	let mockClient;
-	let mockDefaultQueryHandler;
-
-	before(() => {
-		Mockery.enable();
-		mockDefaultQueryHandler = {query: 'mock'};
-		Mockery.registerMock('./impl/query/defaultqueryhandler', mockDefaultQueryHandler);
-	});
-
-	after(() => {
-		Mockery.disable();
-	});
 
 	beforeEach(() => {
 		mockClient = sinon.createStubInstance(Client);
@@ -147,12 +136,6 @@ describe('Gateway', () => {
 		it('should instantiate a Gateway object', () => {
 			const gateway = new Gateway();
 			gateway.networks.should.be.instanceof(Map);
-			gateway.options.should.include({
-				queryHandler: './impl/query/defaultqueryhandler'
-			});
-			gateway.options.eventHandlerOptions.should.include({
-				commitTimeout: 300
-			});
 		});
 	});
 
@@ -187,7 +170,6 @@ describe('Gateway', () => {
 			await gateway.connect('ccp', options);
 			gateway.client.should.equal(mockClient);
 			should.not.exist(gateway.currentIdentity);
-			gateway.queryHandlerClass.should.equal(mockDefaultQueryHandler);
 		});
 
 		it('should connect to the gateway with identity', async () => {
@@ -237,65 +219,6 @@ describe('Gateway', () => {
 			await gateway.connect(mockClient, options);
 			gateway.client.should.equal(mockClient);
 			gateway.currentIdentity.should.equal('foo');
-		});
-
-		it ('should delete any default query handler options if the plugin doesn\'t match the default plugin', async () => {
-			gateway.options = {
-				aTimeout: 300 * 1000,
-				queryHandler: './impl/query/defaultqueryhandler',
-				queryHandlerOptions: {
-					'default1': 1,
-					'default2': 2
-				}
-			};
-
-			const otherQueryHandler = {query: 'other'};
-			Mockery.registerMock('./impl/query/otherqueryhandler', otherQueryHandler);
-
-
-			const options = {
-				wallet: mockWallet,
-				identity: 'admin',
-				queryHandler: './impl/query/otherqueryhandler',
-				queryHandlerOptions: {
-					'other1': 99
-				}
-			};
-
-			await gateway.connect('ccp', options);
-			gateway.options.should.deep.equal(
-				{
-					wallet: mockWallet,
-					identity: 'admin',
-					aTimeout: 300 * 1000,
-					queryHandler: './impl/query/otherqueryhandler',
-					queryHandlerOptions: {
-						'other1': 99
-					}
-				}
-			);
-			gateway.currentIdentity.should.equal('foo');
-			gateway.queryHandlerClass.should.equal(otherQueryHandler);
-		});
-
-		it('should throw an error if it cannot load a query plugin', () => {
-			const options = {
-				wallet: mockWallet,
-				identity: 'admin',
-				queryHandler: './impl/query/noqueryhandler'
-			};
-			return gateway.connect('ccp', options)
-				.should.be.rejectedWith(/unable to load provided query handler: .\/impl\/query\/noqueryhandler/);
-		});
-
-		it('should not create a query handler if explicitly set to null', async () => {
-			const options = {
-				wallet: mockWallet,
-				queryHandler: null
-			};
-			await gateway.connect('ccp', options);
-			gateway.client.should.equal(mockClient);
-			should.equal(undefined, gateway.queryHandlerClass);
 		});
 
 		it('has default transaction event handling strategy if none specified', async () => {
@@ -402,9 +325,11 @@ describe('Gateway', () => {
 				const expectedOptions = {
 					wallet: mockWallet,
 					identity: 'admin',
-					queryHandler: './impl/query/defaultqueryhandler'
+					queryHandlerOptions: {
+						strategy: QueryStrategies.MSPID_SCOPE_SINGLE
+					}
 				};
-				gateway.getOptions().should.include(expectedOptions);
+				gateway.getOptions().should.deep.include(expectedOptions);
 				gateway.getOptions().eventHandlerOptions.should.include({
 					commitTimeout: 300
 				});
@@ -444,6 +369,7 @@ describe('Gateway', () => {
 			it('should create a non-existent network object', async () => {
 				mockClient.getChannel.withArgs('bar').returns(mockInternalChannel);
 				gateway.getCurrentIdentity = sinon.stub().returns({_mspId: 'MSP01'});
+				gateway.getOptions().queryHandlerOptions.strategy = () => {};
 
 				const network2 = await gateway.getNetwork('bar');
 				network2.should.be.instanceof(Network);
@@ -456,6 +382,7 @@ describe('Gateway', () => {
 				mockClient.getChannel.withArgs('bar').returns(null);
 				mockClient.newChannel.withArgs('bar').returns(mockInternalChannel);
 				gateway.getCurrentIdentity = sinon.stub().returns({_mspId: 'MSP01'});
+				gateway.getOptions().queryHandlerOptions.strategy = () => {};
 
 				const network2 = await gateway.getNetwork('bar');
 				network2.should.be.instanceof(Network);
