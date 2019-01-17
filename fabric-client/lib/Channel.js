@@ -2366,7 +2366,12 @@ const Channel = class {
 	 *  data expires. For instance if the value is set to 10, a key last modified by block
 	 *  number 100 will be purged at block number 111. A zero value is treated same as MaxUint64,
 	 *  where the data will not be purged.
-	 * @property {Policy} policy - The
+	 * @property {boolean} member_read_only - The member only read access denotes
+	 *  whether only collection member clients can read the private data (if set
+	 *  to true), or even non members can read the data (if set to false, for
+	 *  example if you want to implement more granular access logic in the
+	 *  chaincode)
+	 * @property {Policy} policy - The "member_orgs_policy" policy
 	 */
 
 	/**

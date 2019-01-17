@@ -31,6 +31,7 @@ class CollectionConfig {
 	 * @property {number} maxPeerCount integer
 	 * @property {number} requiredPeerCount integer
 	 * @property {!Long|number|string|!{low: number, high: number, unsigned: boolean}} blockToLive param will be converted to unsigned int64 as Long
+	 * @property {boolean} memberOnlyRead denotes whether only collection member clients can read the private data
 	 */
 
 	/**
@@ -71,8 +72,10 @@ class CollectionConfig {
 	 * @returns {collectionConfig}
 	 */
 	static checkCollectionConfig(collectionConfig) {
+		const method = 'checkCollectionConfig';
 		let {
-			blockToLive
+			blockToLive,
+			memberOnlyRead
 		} = collectionConfig;
 
 		const {
@@ -107,11 +110,22 @@ class CollectionConfig {
 			throw new Error(format('CollectionConfig Requires Param "blockToLive" of type unsigned int64, found %j(type: %s)', blockToLive, typeof blockToLive));
 		} else {
 			const test = Long.fromValue(blockToLive, true);
-			logger.debug('checkCollectionConfig blockToLive parse from %j and parsed to %s)', blockToLive, test);
+			logger.debug('%s blockToLive parse from %j and parsed to %s)', method, blockToLive, test);
 
 			if (test.toString() !== blockToLive.toString()) {
 				throw new Error(format('CollectionConfig Requires Param "blockToLive" to be a valid unsigned int64, input is %j and parsed to %s)', blockToLive, test));
 			}
+		}
+
+		if (typeof memberOnlyRead !== 'undefined') {
+			if (typeof memberOnlyRead === 'boolean') {
+				logger.debug('%s - memberOnlyRead has value of %s', method, memberOnlyRead);
+			} else {
+				throw new Error('CollectionConfig Requires Param "memberOnlyRead" to be boolean, input is %s', memberOnlyRead);
+			}
+		} else {
+			logger.debug('%s - memberOnlyRead defaulting to false', method);
+			memberOnlyRead = false;
 		}
 
 		return {
@@ -119,7 +133,8 @@ class CollectionConfig {
 			policy,
 			maxPeerCount,
 			requiredPeerCount,
-			blockToLive
+			blockToLive,
+			memberOnlyRead
 		};
 	}
 
@@ -133,7 +148,8 @@ class CollectionConfig {
 				policy,
 				maxPeerCount,
 				requiredPeerCount,
-				blockToLive
+				blockToLive,
+				memberOnlyRead
 			} = this.checkCollectionConfig(collectionConfig);
 
 			const static_collection_config = {
@@ -141,7 +157,8 @@ class CollectionConfig {
 				member_orgs_policy: {},
 				required_peer_count: requiredPeerCount,
 				maximum_peer_count: maxPeerCount,
-				block_to_live: blockToLive
+				block_to_live: blockToLive,
+				member_only_read: memberOnlyRead
 			};
 
 			const principals = [];

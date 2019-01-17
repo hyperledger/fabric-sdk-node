@@ -451,7 +451,8 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 					'policy': policy,
 					'requiredPeerCount': 0,
 					'maxPeerCount': 1,
-					'blockToLive': 100
+					'blockToLive': 100,
+					'memberOnlyRead': true
 				}
 			]
 		};
