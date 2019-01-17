@@ -13,6 +13,7 @@ const clientUtils = require('./client-utils.js');
 const {KeyValueStore} = require('fabric-common');
 const BaseClient = require('./BaseClient.js');
 const User = require('./User.js');
+const Chaincode = require('./Chaincode.js');
 const Channel = require('./Channel.js');
 const Package = require('./Package.js');
 const Peer = require('./Peer.js');
@@ -258,6 +259,28 @@ const Client = class extends BaseClient {
 	 */
 	setDevMode(devMode) {
 		this._devMode = devMode;
+	}
+
+	/**
+	 * Returns a {@link Chaincode} instance with the given name. This represents
+	 * an administrative object to be used when an application is maintaining
+	 * the lifecycle of chaincode.
+	 *
+	 * @param {string} name
+	 * @param {string} version
+	 * @returns {Chaincode} a new instance of {@link Chaincode}.
+	 */
+	newChaincode(name, version) {
+		if (!name) {
+			throw new Error('Name is a required parameter');
+		}
+		if (!version) {
+			throw new Error('Version is a required parameter');
+		}
+
+		const chaincode = new Chaincode(name, version, this);
+
+		return chaincode;
 	}
 
 	/**
@@ -580,7 +603,6 @@ const Client = class extends BaseClient {
 		const identity = (user && user.getIdentity());
 		return (identity && identity.getMSPId()) || this._clientConfigMspid;
 	}
-
 
 	/**
 	 * Returns a new {@link TransactionID} object. Fabric transaction ids are constructed
@@ -1027,7 +1049,7 @@ const Client = class extends BaseClient {
 	}
 
 	/**
-	 * @typedef {Object} ChaincodeInstallRequest
+	 * @typedef {Object} Deprecated_ChaincodeInstallRequest
 	 * @property {Peer[] | string[]} targets - Optional. An array of Peer objects or peer names
 	 *           where the chaincode will be installed. When excluded, the peers assigned
 	 *           to this client's organization will be used as defined in the
@@ -1083,7 +1105,8 @@ const Client = class extends BaseClient {
 	 * performed on a peer-by-peer basis. Only the peer organization's ADMIN
 	 * identities are allowed to perform this operation.
 	 *
-	 * @param {ChaincodeInstallRequest} request - The request object
+	 * @deprecated
+	 * @param {Deprecated_ChaincodeInstallRequest} request - The request object
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Peer instance and the global

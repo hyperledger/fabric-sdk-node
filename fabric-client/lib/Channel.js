@@ -2450,6 +2450,7 @@ const Channel = class {
 	 * committed to the channel's ledger on the peers, the chaincode is then considered
 	 * activated and the peers are ready to take requests to process transactions.
 	 *
+	 * @deprecated
 	 * @param {ChaincodeInstantiateUpgradeRequest} request
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
 	 *                              response before rejecting the promise with a
@@ -2471,6 +2472,7 @@ const Channel = class {
 	 * Similar to instantiating a chaincode, upgrading chaincodes is also a full transaction
 	 * operation.
 	 *
+	 * @deprecated
 	 * @param {ChaincodeInstantiateUpgradeRequest} request
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
 	 *                              response before rejecting the promise with a
@@ -2581,15 +2583,102 @@ const Channel = class {
 		const responses = await client_utils.sendPeersProposal(peers, signed_proposal, timeout);
 		return [responses, proposal];
 	}
+	/**
+	 * @typedef {Object} ChaincodeDefineRequest
+	 *  This object contains many properties that will be when defining
+	 *  a chaincode on the channel for an organization or channel wide
+	 * @property {Peer[] | string[]} targets - Optional. The peers that will
+	 *  receive the define request. When not provided, peers that have been
+	 *  added to the channel with the 'endorser' role.
+	 * @property {object} chaincode - Required. The chaincode object containing
+	 *  all the chaincode information required by the define chaincode fabric
+	 *  network action. see {@link Chaincode}
+	 */
+
+	/*
+	 * Internal method to check the incoming request object to be sure all the
+	 * chaincode settings are available
+	 *
+	 * @param {object} request - the {@link Chaincode} object to be checked
+	 * @throws error when there are issues with the incoming request object
+	 */
+	_verifyChaincodeRequest(request) {
+		const method = '_verifyChaincodeRequest';
+		logger.debug('%s - start', method);
+
+		if (!request) {
+			throw new Error('Missing required request parameter');
+		}
+		if (!request.chaincode) {
+			throw new Error('Missing required request parameter "chaincode"');
+		}
+		if (!request.chaincode.hasHash()) {
+			throw new Error('Chaincode definition must include the chaincode hash value');
+		}
+
+		logger.debug('%s - verify successfully completed', method);
+	}
+
+	/**
+	 * This method will build and send an "allow chaincode for organization for channel"
+	 * transaction to the fabric lifecycle system chaincode.
+	 * see {@link Chaincode}
+	 *
+	 * @async
+	 * @param {ChaincodeDefineRequest} request - Required.
+	 * @param {Number} timeout - Optional. Timeout specific for this request.
+	 *
+	 * @return {Object} Return object will contain the proposalResponses and the proposal
+	 */
+	async allowChaincodeForOrg(request, timeout) {
+		const method = 'allowChaincodeForOrg';
+		logger.debug('%s - start', method);
+
+		this._verifyChaincodeRequest(request);
+
+		// TODO - build send the define for org transaction to the lifecycle chaincode.
+
+		const proposal = {};
+
+		const proposal_responses = [];
+
+		return {proposalResponses: proposal_responses, proposal: proposal};
+	}
+
+	/**
+	 * This method will build and send a "commit chaincode for channel"
+	 * transaction to the fabric lifecycle system chaincode.
+	 * see {@link Chaincode}
+	 *
+	 * @async
+	 * @param {ChaincodeDefineRequest} request - Required.
+	 * @param {Number} timeout - Optional. Timeout specific for this request.
+	 *
+	 * @return {Object} Return object will contain the proposalResponses and the proposal
+	 */
+	async CommitChaincode(request, timeout) {
+		const method = 'CommitChaincode';
+		logger.debug('%s - start', method);
+
+		this._verifyChaincodeRequest(request);
+
+		// TODO - build send the define for org transaction to the lifecycle chaincode.
+
+		const proposal = {};
+
+		const proposal_responses = [];
+
+		return {proposalResponses: proposal_responses, proposal: proposal};
+	}
 
 	/**
 	 * @typedef {Object} ChaincodeInvokeRequest
 	 *          This object contains many properties that will be used by the Discovery service.
 	 * @property {Peer[] | string[]} targets - Optional. The peers that will receive this request,
 	 *           when not provided the list of peers added to this channel object will
-	 *           be used. When this channel has been initialized using the discovery
-	 *           service the proposal will be sent to the peers on the list provided
-	 *           discovery service if no targets are specified.
+	 *           be used. When this channel has been initialized to use the discovery
+	 *           service, the proposal will be sent to the peers on the list provided
+	 *           by the discovery service if no targets are specified.
 	 * @property {string} chaincodeId - Required. The id of the chaincode to process
 	 *           the transaction proposal
 	 * @property {DiscoveryChaincodeIntereset} endorsement_hint - Optional. A

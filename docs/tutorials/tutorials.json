@@ -40,5 +40,8 @@
 	},
 	"handlers": {
 		"title": "fabric-client: How to use the endorsement and commit handlers"
+	},
+	"chaincode-lifecycle": {
+		"title": "fabric-client: How to install and start your chaincode"
 	}
 }

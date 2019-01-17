@@ -20,12 +20,13 @@ const rewire = require('rewire');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const expect = chai.expect;
-chai.should();
+const should = chai.should();
 const Long = require('long');
 
 const Channel = require('fabric-client/lib/Channel');
 const ChannelRewire = rewire('fabric-client/lib/Channel');
 const ChannelEventHub = require('fabric-client/lib/ChannelEventHub');
+const Chaincode = require('fabric-client/lib/Chaincode');
 const Client = require('fabric-client/lib/Client');
 const {Identity, SigningIdentity} = require('fabric-client/lib/msp/identity');
 const MSP = require('fabric-client/lib/msp/msp');
@@ -2369,6 +2370,89 @@ describe('Channel', () => {
 	});
 
 	describe('#_sendChaincodeProposal', () => {});
+
+	describe('#_verifyChaincodeRequest', () => {
+		const chaincode = sinon.createStubInstance(Chaincode);
+
+		it('should check for a request input object parameter', async () => {
+			try {
+				channel._verifyChaincodeRequest();
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required request parameter');
+			}
+			try {
+				channel._verifyChaincodeRequest({});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required request parameter "chaincode"');
+			}
+			try {
+				chaincode.hasHash.returns(false);
+				channel._verifyChaincodeRequest({chaincode: chaincode});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Chaincode definition must include the chaincode hash value');
+			}
+		});
+
+	});
+
+	describe('#allowChaincodeForOrg', () => {
+		it('should require a request object parameter', async () => {
+			try {
+				await channel.allowChaincodeForOrg();
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required request parameter');
+			}
+		});
+		it('should require a request.chaincode object parameter', async () => {
+			try {
+				await channel.allowChaincodeForOrg({});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required request parameter "chaincode"');
+			}
+		});
+		it('should require a request.chaincode._hash object parameter', async () => {
+			try {
+				const chaincode = client.newChaincode('mychaincode', 'v1');
+				await channel.allowChaincodeForOrg({chaincode: chaincode});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Chaincode definition must include the chaincode hash value');
+			}
+		});
+	});
+
+	describe('#CommitChaincode', () => {
+		it('should require a request object parameter', async () => {
+			try {
+				await channel.CommitChaincode();
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required request parameter');
+			}
+		});
+		it('should require a request.chaincode object parameter', async () => {
+			try {
+				await channel.CommitChaincode({});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required request parameter "chaincode"');
+			}
+		});
+		it('should require a request.chaincode._hash object parameter', async () => {
+			try {
+				const chaincode = client.newChaincode('mychaincode', 'v1');
+				await channel.CommitChaincode({chaincode: chaincode});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Chaincode definition must include the chaincode hash value');
+			}
+		});
+	});
 
 	describe('#sendTransactionProposal', () => {});
 

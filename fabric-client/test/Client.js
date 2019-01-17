@@ -3205,4 +3205,15 @@ describe('Client', () => {
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});
 	});
+
+	describe('#newChaincode', () => {
+		it('should create and return a new chaincode instance', () => {
+			const chaincodeStub = sinon.stub();
+			revert.push(Client.__set__('Chaincode', chaincodeStub));
+			const client = new Client();
+			const chaincode = client.newChaincode('mychaincode', 'v1');
+			sinon.assert.calledWith(chaincodeStub, 'mychaincode', 'v1', client);
+			chaincode.should.deep.equal(new chaincodeStub('mychaincode', 'v1', client));
+		});
+	});
 });
