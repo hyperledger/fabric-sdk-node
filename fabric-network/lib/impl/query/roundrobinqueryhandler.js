@@ -20,7 +20,7 @@ class RoundRobinQueryHandler {
 	}
 
 	async evaluate(query) {
-		const errors = [];
+		const errorMessages = [];
 
 		for (let i = 0; i < this._peers.length; i++) {
 			const index = (this._startPeerIndex + i) % this._peers.length;
@@ -28,14 +28,13 @@ class RoundRobinQueryHandler {
 			const results = await query.evaluate([peer]);
 			const result = results[peer.getName()];
 			if (result instanceof Error) {
-				errors.push(result);
+				errorMessages.push(result.message);
 			} else {
 				this._startPeerIndex = (index + 1) % this._peers.length;
 				return result;
 			}
 		}
 
-		const errorMessages = errors.map((error) => error.message);
 		const message = util.format('No peers available to query. Errors: %j', errorMessages);
 		const error = new FabricError(message);
 		logger.error('evaluate:', error);

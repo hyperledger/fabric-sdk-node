@@ -24,6 +24,8 @@ import {
 	X509WalletMixin,
 } from 'fabric-network';
 
+import sampleQueryStrategy = require('./sample-query-handler');
+
 import e2eUtils = require('../../../integration/e2e/e2eUtils.js');
 import testUtils = require('../../../unit/util.js');
 
@@ -197,6 +199,64 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_S
 			identity: identityLabel,
 			queryHandlerOptions: {
 				strategy: DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE,
+			},
+			wallet,
+		});
+		t.pass('Connected to the gateway');
+
+		const channel = await gateway.getNetwork(channelName);
+		t.pass('Initialized the channel, ' + channelName);
+
+		const contract = await channel.getContract(chaincodeId);
+		t.pass('Got the contract, about to evaluate (query) transaction');
+
+		// try a standard query
+		let response = await contract.evaluateTransaction('query', 'a');
+
+		if (!isNaN(parseInt(response.toString(), 10))) {
+			t.pass('Successfully got back a value');
+		} else {
+			t.fail('Unexpected response from transaction chaincode: ' + response);
+		}
+
+		// check we deal with an error returned.
+		try {
+			response = await contract.evaluateTransaction('throwError', 'a', 'b', '100');
+			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
+		} catch (expectedErr) {
+			if (expectedErr.message.includes('throwError: an error occurred')) {
+				t.pass('Successfully handled invocation errors');
+			} else {
+				t.fail('Unexpected exception: ' + expectedErr.message);
+			}
+		}
+	} catch (err) {
+		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
+	} finally {
+		await deleteWallet(tmpdir);
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
+test('\n\n***** Network End-to-end flow: evaluate transaction with sample query handler *****\n\n', async (t: any) => {
+	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+	const gateway = new Gateway();
+
+	try {
+		const wallet = await createWallet(t, tmpdir);
+		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccpObject = JSON.parse(ccp.toString());
+
+		await gateway.connect(ccpObject, {
+			clientTlsIdentity: tlsLabel,
+			discovery: {
+				enabled: false,
+			},
+			identity: identityLabel,
+			queryHandlerOptions: {
+				strategy: sampleQueryStrategy,
 			},
 			wallet,
 		});

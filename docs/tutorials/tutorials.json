@@ -29,8 +29,11 @@
 	"sign-transaction-offline": {
 		"title": "Working with an offline private key"
 	},
-	"transaction-commit-events" : {
+	"transaction-commit-events": {
 		"title": "fabric-network: How to wait for transactions to be committed to the ledger"
+	},
+	"query-peers": {
+		"title": "fabric-network: How to select peers for evaluating transactions (queries)"
 	},
 	"grpc-settings": {
 		"title": "fabric-client: How to set gRPC settings"
