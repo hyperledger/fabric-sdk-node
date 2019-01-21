@@ -98,7 +98,7 @@ cd $WORKSPACE/gopath/src/github.com/hyperledger/fabric-sdk-node
 npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 
 # Add or delete modules from here..
-for modules in fabric-network fabric-common fabric-ca-client fabric-client; do
+for modules in fabric-protos fabric-common fabric-ca-client fabric-client fabric-network; do
      if [ -d "$modules" ]; then
            echo -e "\033[32m Publishing $modules" "\033[0m"
            cd $modules

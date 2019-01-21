@@ -42,6 +42,7 @@
     "fabric-client": "file:./fabric-client",
     "fabric-common": "file:./fabric-common",
     "fabric-network": "file:./fabric-network",
+    "fabric-protos": "file:./fabric-protos",
     "fs-extra": "^6.0.1",
     "gulp": "^3.9.1",
     "gulp-add-src": "^1.0.0",
