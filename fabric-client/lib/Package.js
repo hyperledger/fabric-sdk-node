@@ -7,13 +7,12 @@
 'use strict';
 
 const clientUtils = require('./client-utils.js');
-const ProtoLoader = require('./ProtoLoader');
+const fabprotos = require('fabric-protos');
 const Packager = require('./Packager.js');
 const tar = require('tar-stream');
 const utils = require('./utils.js');
 const zlib = require('zlib');
 
-const _ccProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
 const logger = utils.getLogger('package');
 
 /**
@@ -73,7 +72,7 @@ class Package {
 	 * @returns {Package} The smart contract package.
 	 */
 	static async fromBuffer(buffer) {
-		const chaincodeDeploymentSpec = _ccProto.ChaincodeDeploymentSpec.decode(buffer);
+		const chaincodeDeploymentSpec = fabprotos.protos.ChaincodeDeploymentSpec.decode(buffer);
 		const fileNames = await Package._findFileNames(chaincodeDeploymentSpec);
 		return new Package(chaincodeDeploymentSpec, fileNames);
 	}
@@ -102,7 +101,7 @@ class Package {
 			}
 		};
 		logger.debug('Package.fromDirectory - built chaincode specification %s', JSON.stringify(chaincodeSpec));
-		const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+		const chaincodeDeploymentSpec = new fabprotos.protos.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(chaincodeSpec);
 		chaincodeDeploymentSpec.setCodePackage(codePackage);
 		const fileNames = await Package._findFileNames(chaincodeDeploymentSpec);

@@ -8,15 +8,11 @@
 'use strict';
 
 const util = require('util');
-const path = require('path');
-const ProtoLoader = require('../ProtoLoader');
+const fabprotos = require('fabric-protos');
 
 const MSP = require('./msp.js');
 const utils = require('../utils.js');
 const logger = utils.getLogger('MSPManager.js');
-
-const mspProto = ProtoLoader.load(path.join(__dirname, '../protos/msp/msp_config.proto')).msp;
-const identityProto = ProtoLoader.load(path.join(__dirname, '../protos/msp/identities.proto')).msp;
 
 /**
  * MSPManager is an interface defining a manager of one or more MSPs. This essentially acts
@@ -55,7 +51,7 @@ const MSPManager = class {
 				throw new Error('MSP Configuration object missing the payload in the "Config" property');
 			}
 
-			const fabricConfig = mspProto.FabricMSPConfig.decode(config.getConfig());
+			const fabricConfig = fabprotos.msp.FabricMSPConfig.decode(config.getConfig());
 
 			if (!fabricConfig.getName()) {
 				throw new Error('MSP Configuration does not have a name');
@@ -147,7 +143,7 @@ const MSPManager = class {
 	 * @returns {Promise} Promise for an {@link Identity} instance
 	 */
 	deserializeIdentity(serializedIdentity) {
-		const sid = identityProto.SerializedIdentity.decode(serializedIdentity);
+		const sid = fabprotos.msp.SerializedIdentity.decode(serializedIdentity);
 		const mspid = sid.getMspid();
 		const msp = this._msps[mspid];
 

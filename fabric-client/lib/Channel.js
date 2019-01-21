@@ -17,13 +17,12 @@
 const sdk_utils = require('./utils.js');
 const client_utils = require('./client-utils.js');
 const util = require('util');
-const path = require('path');
 const Peer = require('./Peer.js');
 const ChannelEventHub = require('./ChannelEventHub.js');
 const Orderer = require('./Orderer.js');
 const BlockDecoder = require('./BlockDecoder.js');
 const TransactionID = require('./TransactionID.js');
-const ProtoLoader = require('./ProtoLoader');
+const fabprotos = require('fabric-protos');
 const Long = require('long');
 const logger = sdk_utils.getLogger('Channel.js');
 const MSPManager = require('./msp/msp-manager.js');
@@ -32,26 +31,6 @@ const Constants = require('./Constants.js');
 const CollectionConfig = require('./SideDB.js');
 const {Identity} = require('./msp/identity.js');
 const ChannelHelper = require('./utils/ChannelHelper');
-
-const _ccProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
-const _transProto = ProtoLoader.load(__dirname + '/protos/peer/transaction.proto').protos;
-const _proposalProto = ProtoLoader.load(__dirname + '/protos/peer/proposal.proto').protos;
-const _responseProto = ProtoLoader.load(__dirname + '/protos/peer/proposal_response.proto').protos;
-const _queryProto = ProtoLoader.load(__dirname + '/protos/peer/query.proto').protos;
-const _peerConfigurationProto = ProtoLoader.load(__dirname + '/protos/peer/configuration.proto').protos;
-const _commonProto = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
-const _configtxProto = ProtoLoader.load(__dirname + '/protos/common/configtx.proto').common;
-const _policiesProto = ProtoLoader.load(__dirname + '/protos/common/policies.proto').common;
-const _ledgerProto = ProtoLoader.load(__dirname + '/protos/common/ledger.proto').common;
-const _commonConfigurationProto = ProtoLoader.load(__dirname + '/protos/common/configuration.proto').common;
-const _ordererConfigurationProto = ProtoLoader.load(__dirname + '/protos/orderer/configuration.proto').orderer;
-const _abProto = ProtoLoader.load(__dirname + '/protos/orderer/ab.proto').orderer;
-const _mspConfigProto = ProtoLoader.load(__dirname + '/protos/msp/msp_config.proto').msp;
-const _mspPrincipalProto = ProtoLoader.load(__dirname + '/protos/msp/msp_principal.proto').common;
-const _identityProto = ProtoLoader.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
-const _discoveryProto = ProtoLoader.load(__dirname + '/protos/discovery/protocol.proto').discovery;
-const _gossipProto = ProtoLoader.load(__dirname + '/protos/gossip/message.proto').gossip;
-const _collectionProto = ProtoLoader.load(__dirname + '/protos/common/collection.proto').common;
 
 const ImplicitMetaPolicy_Rule = {0: 'ANY', 1: 'ALL', 2: 'MAJORITY'};
 
@@ -1089,26 +1068,26 @@ const Channel = class {
 		// now build the seek info, will be used once the channel is created
 		// to get the genesis block back
 		//   build start
-		const seekSpecifiedStart = new _abProto.SeekSpecified();
+		const seekSpecifiedStart = new fabprotos.orderer.SeekSpecified();
 		seekSpecifiedStart.setNumber(0);
-		const seekStart = new _abProto.SeekPosition();
+		const seekStart = new fabprotos.orderer.SeekPosition();
 		seekStart.setSpecified(seekSpecifiedStart);
 
 		//   build stop
-		const seekSpecifiedStop = new _abProto.SeekSpecified();
+		const seekSpecifiedStop = new fabprotos.orderer.SeekSpecified();
 		seekSpecifiedStop.setNumber(0);
-		const seekStop = new _abProto.SeekPosition();
+		const seekStop = new fabprotos.orderer.SeekPosition();
 		seekStop.setSpecified(seekSpecifiedStop);
 
 		// seek info with all parts
-		const seekInfo = new _abProto.SeekInfo();
+		const seekInfo = new fabprotos.orderer.SeekInfo();
 		seekInfo.setStart(seekStart);
 		seekInfo.setStop(seekStop);
-		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
+		seekInfo.setBehavior(fabprotos.orderer.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
 		// build the header for use with the seekInfo payload
 		const seekInfoHeader = client_utils.buildChannelHeader(
-			_commonProto.HeaderType.DELIVER_SEEK_INFO,
+			fabprotos.common.HeaderType.DELIVER_SEEK_INFO,
 			this._name,
 			tx_id.getTransactionID(),
 			this._initial_epoch,
@@ -1118,7 +1097,7 @@ const Channel = class {
 		);
 
 		const seekHeader = client_utils.buildHeader(signer, seekInfoHeader, tx_id.getNonce());
-		const seekPayload = new _commonProto.Payload();
+		const seekPayload = new fabprotos.common.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
 		// building manually or will get protobuf errors on send
@@ -1168,9 +1147,9 @@ const Channel = class {
 		}
 		const target_peer = this._getTargetForDiscovery(request.target);
 		const signer = this._clientContext._getSigningIdentity(useAdmin); // use the admin if assigned
-		const discovery_request = new _discoveryProto.Request();
+		const discovery_request = new fabprotos.discovery.Request();
 
-		const authentication = new _discoveryProto.AuthInfo();
+		const authentication = new fabprotos.discovery.AuthInfo();
 		authentication.setClientIdentity(signer.serialize());
 		const cert_hash = this._clientContext.getClientCertHash(true);
 		if (cert_hash) {
@@ -1184,35 +1163,35 @@ const Channel = class {
 
 		// if doing local it will be index 0 of the results
 		if (request.local) {
-			const query = new _discoveryProto.Query();
+			const query = new fabprotos.discovery.Query();
 			queries.push(query);
 
-			const local_peers = new _discoveryProto.LocalPeerQuery();
+			const local_peers = new fabprotos.discovery.LocalPeerQuery();
 			query.setLocalPeers(local_peers);
 			logger.debug('%s - adding local peers query', method);
 		}
 
 		if (request.config) {
-			let query = new _discoveryProto.Query();
+			let query = new fabprotos.discovery.Query();
 			queries.push(query);
 			query.setChannel(this.getName());
 
-			const config_query = new _discoveryProto.ConfigQuery();
+			const config_query = new fabprotos.discovery.ConfigQuery();
 			query.setConfigQuery(config_query);
 			logger.debug('%s - adding config query', method);
 
-			query = new _discoveryProto.Query();
+			query = new fabprotos.discovery.Query();
 			queries.push(query);
 			query.setChannel(this.getName());
 
-			const peer_query = new _discoveryProto.PeerMembershipQuery();
+			const peer_query = new fabprotos.discovery.PeerMembershipQuery();
 			query.setPeerQuery(peer_query);
 			logger.debug('%s - adding channel peers query', method);
 		}
 
 		// add a chaincode query to get endorsement plans
 		if (request.interests && request.interests.length > 0) {
-			const query = new _discoveryProto.Query();
+			const query = new fabprotos.discovery.Query();
 			queries.push(query);
 			query.setChannel(this.getName());
 
@@ -1222,7 +1201,7 @@ const Channel = class {
 				interests.push(proto_interest);
 			}
 
-			const cc_query = new _discoveryProto.ChaincodeQuery();
+			const cc_query = new fabprotos.discovery.ChaincodeQuery();
 			cc_query.setInterests(interests);
 			query.setCcQuery(cc_query);
 			logger.debug('%s - adding chaincodes/collection query', method);
@@ -1392,17 +1371,17 @@ const Channel = class {
 		q_peers.forEach((q_peer) => {
 			const peer = {};
 			// IDENTITY
-			const q_identity = _identityProto.SerializedIdentity.decode(q_peer.identity);
+			const q_identity = fabprotos.msp.SerializedIdentity.decode(q_peer.identity);
 			peer.mspid = q_identity.mspid;
 
 			// MEMBERSHIP
-			const q_membership_message = _gossipProto.GossipMessage.decode(q_peer.membership_info.payload);
+			const q_membership_message = fabprotos.gossip.GossipMessage.decode(q_peer.membership_info.payload);
 			peer.endpoint = q_membership_message.alive_msg.membership.endpoint;
 			logger.debug('%s - found peer :%s', method, peer.endpoint);
 
 			// STATE
 			if (q_peer.state_info) {
-				const message_s = _gossipProto.GossipMessage.decode(q_peer.state_info.payload);
+				const message_s = fabprotos.gossip.GossipMessage.decode(q_peer.state_info.payload);
 				if (message_s && message_s.state_info && message_s.state_info.properties && message_s.state_info.properties.ledger_height) {
 					peer.ledger_height = Long.fromValue(message_s.state_info.properties.ledger_height);
 				} else {
@@ -1535,7 +1514,7 @@ const Channel = class {
 	_buildProtoChaincodeInterest(interest) {
 		const chaincode_calls = [];
 		for (const chaincode of interest.chaincodes) {
-			const chaincode_call = new _discoveryProto.ChaincodeCall();
+			const chaincode_call = new fabprotos.discovery.ChaincodeCall();
 			if (typeof chaincode.name === 'string') {
 				chaincode_call.setName(chaincode.name);
 				if (chaincode.collection_names) {
@@ -1558,7 +1537,7 @@ const Channel = class {
 				throw Error('Chaincode name must be a string');
 			}
 		}
-		const interest_proto = new _discoveryProto.ChaincodeInterest();
+		const interest_proto = new fabprotos.discovery.ChaincodeInterest();
 		interest_proto.setChaincodes(chaincode_calls);
 
 		return interest_proto;
@@ -1731,23 +1710,23 @@ const Channel = class {
 
 		const targets = this._getTargets(request.targets, 'ALL ROLES');
 		const signer = this._clientContext._getSigningIdentity(request.txId.isAdmin());
-		const chaincodeInput = new _ccProto.ChaincodeInput();
+		const chaincodeInput = new fabprotos.protos.ChaincodeInput();
 		const args = [];
 		args.push(Buffer.from('JoinChain', 'utf8'));
 		args.push(request.block.toBuffer());
 
 		chaincodeInput.setArgs(args);
 
-		const chaincodeID = new _ccProto.ChaincodeID();
+		const chaincodeID = new fabprotos.protos.ChaincodeID();
 		chaincodeID.setName(Constants.CSCC);
 
-		const chaincodeSpec = new _ccProto.ChaincodeSpec();
-		chaincodeSpec.setType(_ccProto.ChaincodeSpec.Type.GOLANG);
+		const chaincodeSpec = new fabprotos.protos.ChaincodeSpec();
+		chaincodeSpec.setType(fabprotos.protos.ChaincodeSpec.Type.GOLANG);
 		chaincodeSpec.setChaincodeId(chaincodeID);
 		chaincodeSpec.setInput(chaincodeInput);
 
 		const channelHeader = client_utils.buildChannelHeader(
-			_commonProto.HeaderType.ENDORSER_TRANSACTION,
+			fabprotos.common.HeaderType.ENDORSER_TRANSACTION,
 			'',
 			request.txId.getTransactionID(),
 			null, // no epoch
@@ -1799,10 +1778,10 @@ const Channel = class {
 			if (response instanceof Error) {
 				throw response;
 			} else if (response.response && response.response.payload && response.response.status === 200) {
-				const block = _commonProto.Block.decode(response.response.payload);
-				const envelope = _commonProto.Envelope.decode(block.data.data[0]);
-				const payload = _commonProto.Payload.decode(envelope.payload);
-				const config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
+				const block = fabprotos.common.Block.decode(response.response.payload);
+				const envelope = fabprotos.common.Envelope.decode(block.data.data[0]);
+				const payload = fabprotos.common.Payload.decode(envelope.payload);
+				const config_envelope = fabprotos.common.ConfigEnvelope.decode(payload.data);
 				return config_envelope;
 			} else {
 				logger.error('%s - unknown response ::%s', method, response);
@@ -1831,23 +1810,23 @@ const Channel = class {
 		let txId = new TransactionID(signer, true);
 
 		// seek the latest block
-		let seekSpecifiedStart = new _abProto.SeekNewest();
-		let seekStart = new _abProto.SeekPosition();
+		let seekSpecifiedStart = new fabprotos.orderer.SeekNewest();
+		let seekStart = new fabprotos.orderer.SeekPosition();
 		seekStart.setNewest(seekSpecifiedStart);
 
-		let seekSpecifiedStop = new _abProto.SeekNewest();
-		let seekStop = new _abProto.SeekPosition();
+		let seekSpecifiedStop = new fabprotos.orderer.SeekNewest();
+		let seekStop = new fabprotos.orderer.SeekPosition();
 		seekStop.setNewest(seekSpecifiedStop);
 
 		// seek info with all parts
-		let seekInfo = new _abProto.SeekInfo();
+		let seekInfo = new fabprotos.orderer.SeekInfo();
 		seekInfo.setStart(seekStart);
 		seekInfo.setStop(seekStop);
-		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
+		seekInfo.setBehavior(fabprotos.orderer.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 
 		// build the header for use with the seekInfo payload
 		let seekInfoHeader = client_utils.buildChannelHeader(
-			_commonProto.HeaderType.DELIVER_SEEK_INFO,
+			fabprotos.common.HeaderType.DELIVER_SEEK_INFO,
 			self._name,
 			txId.getTransactionID(),
 			self._initial_epoch,
@@ -1857,7 +1836,7 @@ const Channel = class {
 		);
 
 		let seekHeader = client_utils.buildHeader(signer, seekInfoHeader, txId.getNonce());
-		let seekPayload = new _commonProto.Payload();
+		let seekPayload = new fabprotos.common.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
 
@@ -1876,35 +1855,35 @@ const Channel = class {
 
 		logger.debug('%s - latest block is block number %s', block.header.number);
 		// get the last config block number
-		const metadata = _commonProto.Metadata.decode(block.metadata.metadata[_commonProto.BlockMetadataIndex.LAST_CONFIG]);
-		const last_config = _commonProto.LastConfig.decode(metadata.value);
+		const metadata = fabprotos.common.Metadata.decode(block.metadata.metadata[fabprotos.common.BlockMetadataIndex.LAST_CONFIG]);
+		const last_config = fabprotos.common.LastConfig.decode(metadata.value);
 		logger.debug('%s - latest block has config block of %s', method, last_config.index);
 
 		txId = new TransactionID(signer);
 
 		// now build the seek info to get the block called out
 		// as the latest config block
-		seekSpecifiedStart = new _abProto.SeekSpecified();
+		seekSpecifiedStart = new fabprotos.orderer.SeekSpecified();
 		seekSpecifiedStart.setNumber(last_config.index);
-		seekStart = new _abProto.SeekPosition();
+		seekStart = new fabprotos.orderer.SeekPosition();
 		seekStart.setSpecified(seekSpecifiedStart);
 
 		//   build stop
-		seekSpecifiedStop = new _abProto.SeekSpecified();
+		seekSpecifiedStop = new fabprotos.orderer.SeekSpecified();
 		seekSpecifiedStop.setNumber(last_config.index);
-		seekStop = new _abProto.SeekPosition();
+		seekStop = new fabprotos.orderer.SeekPosition();
 		seekStop.setSpecified(seekSpecifiedStop);
 
 		// seek info with all parts
-		seekInfo = new _abProto.SeekInfo();
+		seekInfo = new fabprotos.orderer.SeekInfo();
 		seekInfo.setStart(seekStart);
 		seekInfo.setStop(seekStop);
-		seekInfo.setBehavior(_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
+		seekInfo.setBehavior(fabprotos.orderer.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY);
 		// logger.debug('initializeChannel - seekInfo ::' + JSON.stringify(seekInfo));
 
 		// build the header for use with the seekInfo payload
 		seekInfoHeader = client_utils.buildChannelHeader(
-			_commonProto.HeaderType.DELIVER_SEEK_INFO,
+			fabprotos.common.HeaderType.DELIVER_SEEK_INFO,
 			self._name,
 			txId.getTransactionID(),
 			self._initial_epoch,
@@ -1914,7 +1893,7 @@ const Channel = class {
 		);
 
 		seekHeader = client_utils.buildHeader(signer, seekInfoHeader, txId.getNonce());
-		seekPayload = new _commonProto.Payload();
+		seekPayload = new fabprotos.common.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
 
@@ -1930,20 +1909,20 @@ const Channel = class {
 		if (block.data.data.length !== 1) {
 			throw new Error('Config block must only contain one transaction');
 		}
-		envelope = _commonProto.Envelope.decode(block.data.data[0]);
-		const payload = _commonProto.Payload.decode(envelope.payload);
-		const channel_header = _commonProto.ChannelHeader.decode(payload.header.channel_header);
-		if (channel_header.type !== _commonProto.HeaderType.CONFIG) {
-			throw new Error(`Block must be of type "CONFIG" (${_commonProto.HeaderType.CONFIG}), but got "${channel_header.type}" instead`);
+		envelope = fabprotos.common.Envelope.decode(block.data.data[0]);
+		const payload = fabprotos.common.Payload.decode(envelope.payload);
+		const channel_header = fabprotos.common.ChannelHeader.decode(payload.header.channel_header);
+		if (channel_header.type !== fabprotos.common.HeaderType.CONFIG) {
+			throw new Error(`Block must be of type "CONFIG" (${fabprotos.common.HeaderType.CONFIG}), but got "${channel_header.type}" instead`);
 		}
-		const config_envelope = _configtxProto.ConfigEnvelope.decode(payload.data);
+		const config_envelope = fabprotos.common.ConfigEnvelope.decode(payload.data);
 
 		// send back the envelope
 		return config_envelope;
 	}
 
 	loadConfigUpdate(config_update_bytes) {
-		const config_update = _configtxProto.ConfigUpdate.decode(config_update_bytes);
+		const config_update = fabprotos.common.ConfigUpdate.decode(config_update_bytes);
 		logger.debug('loadConfigData - channel ::' + config_update.channel_id);
 
 		const read_group = config_update.read_set;
@@ -2041,7 +2020,7 @@ const Channel = class {
 		}
 		if (response.response && response.response.status && response.response.status === 200) {
 			logger.debug('queryInfo - response status %d:', response.response.status);
-			return _ledgerProto.BlockchainInfo.decode(response.response.payload);
+			return fabprotos.common.BlockchainInfo.decode(response.response.payload);
 		} else if (response.response && response.response.status) {
 			// no idea what we have, lets fail it and send it back
 			throw new Error(response.response.message);
@@ -2295,7 +2274,7 @@ const Channel = class {
 		if (response.response) {
 			if (response.response.status === 200) {
 				logger.debug('queryInstantiatedChaincodes - response status :: %d', response.response.status);
-				const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+				const queryTrans = fabprotos.protos.ChaincodeQueryResponse.decode(response.response.payload);
 				logger.debug('queryInstantiatedChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
 				for (const chaincode of queryTrans.chaincodes) {
 					logger.debug('queryInstantiatedChaincodes - name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
@@ -2549,7 +2528,7 @@ const Channel = class {
 		};
 
 		// step 2: construct the ChaincodeDeploymentSpec
-		const chaincodeDeploymentSpec = new _ccProto.ChaincodeDeploymentSpec();
+		const chaincodeDeploymentSpec = new fabprotos.protos.ChaincodeDeploymentSpec();
 		chaincodeDeploymentSpec.setChaincodeSpec(ccSpec);
 
 		const signer = this._clientContext._getSigningIdentity(request.txId.isAdmin());
@@ -2582,14 +2561,14 @@ const Channel = class {
 		}
 
 		const lcccSpec = {
-			// type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			// type: fabprotos.protos.ChaincodeSpec.Type.GOLANG,
 			type: client_utils.translateCCType(request.chaincodeType),
 			chaincode_id: {name: Constants.LSCC},
 			input: {args: lcccSpec_args}
 		};
 
 		const channelHeader = client_utils.buildChannelHeader(
-			_commonProto.HeaderType.ENDORSER_TRANSACTION,
+			fabprotos.common.HeaderType.ENDORSER_TRANSACTION,
 			this._name,
 			request.txId.getTransactionID(),
 			null,
@@ -2800,7 +2779,7 @@ const Channel = class {
 
 		logger.debug('%s - chaincode ID:%s', method, request.chaincodeId);
 		const invokeSpec = {
-			type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			type: fabprotos.protos.ChaincodeSpec.Type.GOLANG,
 			chaincode_id: {name: request.chaincodeId},
 			input: {args: args}
 		};
@@ -2813,7 +2792,7 @@ const Channel = class {
 		}
 
 		const channelHeader = client_utils.buildChannelHeader(
-			_commonProto.HeaderType.ENDORSER_TRANSACTION,
+			fabprotos.common.HeaderType.ENDORSER_TRANSACTION,
 			channelId,
 			request.txId.getTransactionID(),
 			null,
@@ -3000,7 +2979,7 @@ const Channel = class {
 		}
 
 		const invokeSpec = {
-			type: _ccProto.ChaincodeSpec.Type.GOLANG,
+			type: fabprotos.protos.ChaincodeSpec.Type.GOLANG,
 			chaincode_id: {name: request.chaincodeId},
 			input: {args}
 		};
@@ -3010,7 +2989,7 @@ const Channel = class {
 		const txId = new TransactionID(identity, admin);
 
 		const channelHeader = client_utils.buildChannelHeader(
-			_commonProto.HeaderType.ENDORSER_TRANSACTION,
+			fabprotos.common.HeaderType.ENDORSER_TRANSACTION,
 			this._name,
 			txId.getTransactionID(),
 			null,
@@ -3134,13 +3113,13 @@ const Channel = class {
 	 */
 	static buildEnvelope(clientContext, chaincodeProposal, endorsements, proposalResponse, use_admin_signer) {
 
-		const header = _commonProto.Header.decode(chaincodeProposal.getHeader());
+		const header = fabprotos.common.Header.decode(chaincodeProposal.getHeader());
 
-		const chaincodeEndorsedAction = new _transProto.ChaincodeEndorsedAction();
+		const chaincodeEndorsedAction = new fabprotos.protos.ChaincodeEndorsedAction();
 		chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);
 		chaincodeEndorsedAction.setEndorsements(endorsements);
 
-		const chaincodeActionPayload = new _transProto.ChaincodeActionPayload();
+		const chaincodeActionPayload = new fabprotos.protos.ChaincodeActionPayload();
 		chaincodeActionPayload.setAction(chaincodeEndorsedAction);
 
 		// the TransientMap field inside the original proposal payload is only meant for the
@@ -3148,23 +3127,23 @@ const Channel = class {
 		// to the orderer, otherwise the transaction will be rejected by the validators when
 		// it compares the proposal hash calculated by the endorsers and returned in the
 		// proposal response, which was calculated without the TransientMap
-		const originalChaincodeProposalPayload = _proposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
-		const chaincodeProposalPayloadNoTrans = new _proposalProto.ChaincodeProposalPayload();
+		const originalChaincodeProposalPayload = fabprotos.protos.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
+		const chaincodeProposalPayloadNoTrans = new fabprotos.protos.ChaincodeProposalPayload();
 		chaincodeProposalPayloadNoTrans.setInput(originalChaincodeProposalPayload.input); // only set the input field, skipping the TransientMap
 		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposalPayloadNoTrans.toBuffer());
 
-		const transactionAction = new _transProto.TransactionAction();
+		const transactionAction = new fabprotos.protos.TransactionAction();
 		transactionAction.setHeader(header.getSignatureHeader());
 		transactionAction.setPayload(chaincodeActionPayload.toBuffer());
 
 		const actions = [];
 		actions.push(transactionAction);
 
-		const transaction = new _transProto.Transaction();
+		const transaction = new fabprotos.protos.Transaction();
 		transaction.setActions(actions);
 
 
-		const payload = new _commonProto.Payload();
+		const payload = new fabprotos.common.Payload();
 		payload.setHeader(header);
 		payload.setData(transaction.toBuffer());
 
@@ -3306,7 +3285,7 @@ const Channel = class {
 		const endorsement = proposal_response.endorsement;
 		let identity;
 
-		const sid = _identityProto.SerializedIdentity.decode(endorsement.endorser);
+		const sid = fabprotos.msp.SerializedIdentity.decode(endorsement.endorser);
 		const mspid = sid.getMspid();
 		logger.debug('getMSPbyIdentity - found mspid %s', mspid);
 		const msp = this._msp_manager.getMSP(mspid);
@@ -3532,8 +3511,8 @@ function _getProposalResponseResults(proposal_response) {
 	if (!proposal_response.payload) {
 		throw new Error('Parameter must be a ProposalResponse Object');
 	}
-	const payload = _responseProto.ProposalResponsePayload.decode(proposal_response.payload);
-	const extension = _proposalProto.ChaincodeAction.decode(payload.extension);
+	const payload = fabprotos.protos.ProposalResponsePayload.decode(proposal_response.payload);
+	const extension = fabprotos.protos.ChaincodeAction.decode(payload.extension);
 	// TODO should we check the status of this action
 	logger.debug('_getWriteSet - chaincode action status:%s message:%s', extension.response.status, extension.response.message);
 	// return a buffer object which has an equals method
@@ -3651,7 +3630,7 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 	try {
 		switch (config_value.key) {
 			case 'AnchorPeers': {
-				const anchor_peers = _peerConfigurationProto.AnchorPeers.decode(config_value.value.value);
+				const anchor_peers = fabprotos.protos.AnchorPeers.decode(config_value.value.value);
 				logger.debug('loadConfigValue - %s    - AnchorPeers :: %s', group_name, anchor_peers);
 				if (anchor_peers && anchor_peers.anchor_peers) {
 					for (const i in anchor_peers.anchor_peers) {
@@ -3667,7 +3646,7 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 				break;
 			}
 			case 'MSP': {
-				const msp_value = _mspConfigProto.MSPConfig.decode(config_value.value.value);
+				const msp_value = fabprotos.msp.MSPConfig.decode(config_value.value.value);
 				logger.debug('loadConfigValue - %s    - MSP found', group_name);
 				if (!isOrderer) {
 					config_items.msps.push(msp_value);
@@ -3675,13 +3654,13 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 				break;
 			}
 			case 'ConsensusType': {
-				const consensus_type = _ordererConfigurationProto.ConsensusType.decode(config_value.value.value);
+				const consensus_type = fabprotos.orderer.ConsensusType.decode(config_value.value.value);
 				config_items.settings.ConsensusType = consensus_type;
 				logger.debug('loadConfigValue - %s    - Consensus type value :: %s', group_name, consensus_type.type);
 				break;
 			}
 			case 'BatchSize': {
-				const batch_size = _ordererConfigurationProto.BatchSize.decode(config_value.value.value);
+				const batch_size = fabprotos.orderer.BatchSize.decode(config_value.value.value);
 				config_items.settings.BatchSize = batch_size;
 				logger.debug('loadConfigValue - %s    - BatchSize  max_message_count :: %s', group_name, batch_size.maxMessageCount);
 				logger.debug('loadConfigValue - %s    - BatchSize  absolute_max_bytes :: %s', group_name, batch_size.absoluteMaxBytes);
@@ -3689,42 +3668,42 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 				break;
 			}
 			case 'BatchTimeout': {
-				const batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(config_value.value.value);
+				const batch_timeout = fabprotos.orderer.BatchTimeout.decode(config_value.value.value);
 				config_items.settings.BatchTimeout = batch_timeout;
 				logger.debug('loadConfigValue - %s    - BatchTimeout timeout value :: %s', group_name, batch_timeout.timeout);
 				break;
 			}
 			case 'ChannelRestrictions': {
-				const channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(config_value.value.value);
+				const channel_restrictions = fabprotos.orderer.ChannelRestrictions.decode(config_value.value.value);
 				config_items.settings.ChannelRestrictions = channel_restrictions;
 				logger.debug('loadConfigValue - %s    - ChannelRestrictions max_count value :: %s', group_name, channel_restrictions.max_count);
 				break;
 			}
 			case 'ChannelCreationPolicy': {
-				const creation_policy = _policiesProto.Policy.decode(config_value.value.value);
+				const creation_policy = fabprotos.common.Policy.decode(config_value.value.value);
 				loadPolicy(config_items, versions, config_value.key, creation_policy, group_name, org);
 				break;
 			}
 			case 'HashingAlgorithm': {
-				const hashing_algorithm_name = _commonConfigurationProto.HashingAlgorithm.decode(config_value.value.value);
+				const hashing_algorithm_name = fabprotos.common.HashingAlgorithm.decode(config_value.value.value);
 				config_items.settings.HashingAlgorithm = hashing_algorithm_name;
 				logger.debug('loadConfigValue - %s    - HashingAlgorithm name value :: %s', group_name, hashing_algorithm_name.name);
 				break;
 			}
 			case 'Consortium': {
-				const consortium_algorithm_name = _commonConfigurationProto.Consortium.decode(config_value.value.value);
+				const consortium_algorithm_name = fabprotos.common.Consortium.decode(config_value.value.value);
 				config_items.settings.Consortium = consortium_algorithm_name;
 				logger.debug('loadConfigValue - %s    - Consortium name value :: %s', group_name, consortium_algorithm_name.name);
 				break;
 			}
 			case 'BlockDataHashingStructure': {
-				const blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(config_value.value.value);
+				const blockdata_hashing_structure = fabprotos.common.BlockDataHashingStructure.decode(config_value.value.value);
 				config_items.settings.BlockDataHashingStructure = blockdata_hashing_structure;
 				logger.debug('loadConfigValue - %s    - BlockDataHashingStructure width value :: %s', group_name, blockdata_hashing_structure.width);
 				break;
 			}
 			case 'OrdererAddresses': {
-				const orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(config_value.value.value);
+				const orderer_addresses = fabprotos.common.OrdererAddresses.decode(config_value.value.value);
 				logger.debug('loadConfigValue - %s    - OrdererAddresses addresses value :: %s', group_name, orderer_addresses.addresses);
 				if (orderer_addresses && orderer_addresses.addresses) {
 					for (const address of orderer_addresses.addresses) {
@@ -3734,7 +3713,7 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 				break;
 			}
 			case 'KafkaBrokers': {
-				const kafka_brokers = _ordererConfigurationProto.KafkaBrokers.decode(config_value.value.value);
+				const kafka_brokers = fabprotos.orderer.KafkaBrokers.decode(config_value.value.value);
 				logger.debug('loadConfigValue - %s    - KafkaBrokers addresses value :: %s', group_name, kafka_brokers.brokers);
 				if (kafka_brokers && kafka_brokers.brokers) {
 					for (const broker of kafka_brokers.brokers) {
@@ -3966,11 +3945,11 @@ function loadConfigPolicy(config_items, versions, config_policy, group_name, org
 
 function loadPolicy(config_items, versions, key, policy, group_name) {
 	try {
-		if (policy.type === _policiesProto.Policy.PolicyType.SIGNATURE) {
-			const signature_policy = _policiesProto.SignaturePolicyEnvelope.decode(policy.policy);
+		if (policy.type === fabprotos.common.Policy.PolicyType.SIGNATURE) {
+			const signature_policy = fabprotos.common.SignaturePolicyEnvelope.decode(policy.policy);
 			logger.debug('loadPolicy - %s - policy SIGNATURE :: %s %s', group_name, signature_policy.encodeJSON(), decodeSignaturePolicy(signature_policy.getIdentities()));
-		} else if (policy.type === _policiesProto.Policy.PolicyType.IMPLICIT_META) {
-			const implicit_policy = _policiesProto.ImplicitMetaPolicy.decode(policy.value);
+		} else if (policy.type === fabprotos.common.Policy.PolicyType.IMPLICIT_META) {
+			const implicit_policy = fabprotos.common.ImplicitMetaPolicy.decode(policy.value);
 			const rule = ImplicitMetaPolicy_Rule[implicit_policy.getRule()];
 			logger.debug('loadPolicy - %s - policy IMPLICIT_META :: %s %s', group_name, rule, implicit_policy.getSubPolicy());
 		} else {
@@ -3987,8 +3966,8 @@ function decodeSignaturePolicy(identities) {
 	for (const i in identities) {
 		const identity = identities[i];
 		switch (identity.getPrincipalClassification()) {
-			case _mspPrincipalProto.MSPPrincipal.Classification.ROLE:
-				results.push(_mspPrincipalProto.MSPRole.decode(identity.getPrincipal()).encodeJSON());
+			case fabprotos.common.MSPPrincipal.Classification.ROLE:
+				results.push(fabprotos.common.MSPRole.decode(identity.getPrincipal()).encodeJSON());
 		}
 	}
 	return results;
@@ -3996,7 +3975,7 @@ function decodeSignaturePolicy(identities) {
 
 function decodeCollectionsConfig(payload) {
 	const configs = [];
-	const queryResponse = _collectionProto.CollectionConfigPackage.decode(payload);
+	const queryResponse = fabprotos.common.CollectionConfigPackage.decode(payload);
 	queryResponse.config.forEach((config) => {
 		let collectionConfig = {
 			type: config.payload,

@@ -12,10 +12,7 @@ const SigningIdentity = idModule.SigningIdentity;
 const utils = require('../utils.js');
 const logger = utils.getLogger('msp.js');
 
-const ProtoLoader = require('../ProtoLoader');
-const identityProto = ProtoLoader.load(__dirname + '/../protos/msp/identities.proto').msp;
-const _mspConfigProto = ProtoLoader.load(__dirname + '/../protos/msp/msp_config.proto').msp;
-
+const fabprotos = require('fabric-protos');
 
 /**
  * MSP is the minimal Membership Service Provider Interface to be implemented
@@ -113,9 +110,9 @@ const MSP = class {
 	 * Returns the Protobuf representation of this MSP Config
 	 */
 	toProtobuf() {
-		const proto_msp_config = new _mspConfigProto.MSPConfig();
+		const proto_msp_config = new fabprotos.msp.MSPConfig();
 		proto_msp_config.setType(0); // FABRIC
-		const proto_fabric_msp_config = new _mspConfigProto.FabricMSPConfig();
+		const proto_fabric_msp_config = new fabprotos.msp.FabricMSPConfig();
 		proto_fabric_msp_config.setName(this._id);
 		proto_fabric_msp_config.setRootCerts(this._rootCerts);
 		if (this._intermediateCerts) {
@@ -155,7 +152,7 @@ const MSP = class {
 		if (typeof storeKey === 'boolean') {
 			store_key = storeKey;
 		}
-		const sid = identityProto.SerializedIdentity.decode(serializedIdentity);
+		const sid = fabprotos.msp.SerializedIdentity.decode(serializedIdentity);
 		const cert = sid.getIdBytes().toBinary();
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
 		if (!store_key) {

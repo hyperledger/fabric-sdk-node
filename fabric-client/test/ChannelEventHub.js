@@ -248,7 +248,7 @@ describe('ChannelEventHub', () => {
 			deliverFilteredStub = sandbox.stub().returns({on: onStub});
 			deliverStub = sandbox.stub().returns({on: onStub});
 			eventProtoDeliverStub = sandbox.stub().returns({deliverFiltered: deliverFilteredStub, deliver: deliverStub});
-			revert.push(ChannelEventHub.__set__('_eventsProto.Deliver', eventProtoDeliverStub));
+			revert.push(ChannelEventHub.__set__('fabprotos.protos.Deliver', eventProtoDeliverStub));
 			setTimeoutStub = sandbox.stub();
 			revert.push(ChannelEventHub.__set__('setTimeout', setTimeoutStub));
 			clearTimeoutStub = sandbox.stub();
@@ -693,12 +693,12 @@ describe('ChannelEventHub', () => {
 			setNewestStub = sandbox.stub();
 			setSpecifiedStub = sandbox.stub();
 			SeekPositionStub = sandbox.stub().returns({setNewest: setNewestStub, setSpecified: setSpecifiedStub});
-			revert.push(ChannelEventHub.__set__('_abProto.SeekPosition', SeekPositionStub));
+			revert.push(ChannelEventHub.__set__('fabprotos.orderer.SeekPosition', SeekPositionStub));
 			setNumberStub = sandbox.stub();
 			SeekSpecifiedStub = sandbox.stub().returns({setNumber: setNumberStub});
-			revert.push(ChannelEventHub.__set__('_abProto.SeekSpecified', SeekSpecifiedStub));
+			revert.push(ChannelEventHub.__set__('fabprotos.orderer.SeekSpecified', SeekSpecifiedStub));
 			SeekNewestStub = sandbox.stub();
-			revert.push(ChannelEventHub.__set__('_abProto.SeekNewest', SeekNewestStub));
+			revert.push(ChannelEventHub.__set__('fabprotos.orderer.SeekNewest', SeekNewestStub));
 			setStartStub = sandbox.stub();
 			setStopStub = sandbox.stub();
 			setBehaviorStub = sandbox.stub();
@@ -707,9 +707,9 @@ describe('ChannelEventHub', () => {
 				setStart: setStartStub, setStop: setStopStub, setBehavior: setBehaviorStub, toBuffer: toBufferStub
 			});
 			SeekInfoStub.SeekBehavior = {BLOCK_UNTIL_READT: ''};
-			revert.push(ChannelEventHub.__set__('_abProto.SeekInfo', SeekInfoStub));
-			ChannelEventHub.__set__('_abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY', 'BLOCK_UNTIL_READY');
-			ChannelEventHub.__set__('_abProto.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY', 'FAIL_IF_NOT_READY');
+			revert.push(ChannelEventHub.__set__('fabprotos.orderer.SeekInfo', SeekInfoStub));
+			revert.push(ChannelEventHub.__set__('fabprotos.orderer.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY', 'BLOCK_UNTIL_READY'));
+			revert.push(ChannelEventHub.__set__('fabprotos.orderer.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY', 'FAIL_IF_NOT_READY'));
 			buildChannelHeaderStub = sandbox.stub();
 			revert.push(ChannelEventHub.__set__('clientUtils.buildChannelHeader', buildChannelHeaderStub));
 			getClientCertHashStub = sandbox.stub();
@@ -718,7 +718,7 @@ describe('ChannelEventHub', () => {
 			setHeaderStub = sandbox.stub();
 			setDataStub = sandbox.stub();
 			payloadStub = sandbox.stub().returns({setHeader: setHeaderStub, setData: setDataStub, toBuffer: toBufferStub});
-			revert.push(ChannelEventHub.__set__('_commonProto.Payload', payloadStub));
+			revert.push(ChannelEventHub.__set__('fabprotos.common.Payload', payloadStub));
 			getTransactionIDStub = sandbox.stub();
 			getNonceStub = sandbox.stub();
 			TransactionIDStub.returns({getTransactionID: getTransactionIDStub, getNonce: getNonceStub});
@@ -1577,7 +1577,7 @@ describe('ChannelEventHub', () => {
 			hub = new ChannelEventHub('channel', 'peer');
 			hub._checkTransactionId = _checkTransactionIdStub;
 
-			revert.push(ChannelEventHub.__set__('_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER', 'transactions_filter'));
+			revert.push(ChannelEventHub.__set__('fabprotos.common.BlockMetadataIndex.TRANSACTIONS_FILTER', 'transactions_filter'));
 		});
 
 		it('should log if there are no transaction registrations', () => {
@@ -1716,7 +1716,7 @@ describe('ChannelEventHub', () => {
 			hub = new ChannelEventHub('channel', 'peer');
 			hub._callChaincodeListener = _callChaincodeListenerStub;
 
-			revert.push(ChannelEventHub.__set__('_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER', 'transactions_filter'));
+			revert.push(ChannelEventHub.__set__('fabprotos.common.BlockMetadataIndex.TRANSACTIONS_FILTER', 'transactions_filter'));
 		});
 
 		it('should log and return if no chaincodeRegistrants are present', () => {

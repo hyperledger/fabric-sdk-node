@@ -54,7 +54,7 @@ describe('client-utils', () => {
 				setChaincodeSpec: setChaincodeSpecStub,
 				toBuffer: () => 'chaincode-invocation-spec'
 			});
-			revert.push(ClientUtils.__set__('_ccProto.ChaincodeInvocationSpec', ChaincodeInvocationSpecStub));
+			revert.push(ClientUtils.__set__('fabprotos.protos.ChaincodeInvocationSpec', ChaincodeInvocationSpecStub));
 			setInputStub = sandbox.stub();
 			setTransientMapStub = sandbox.stub();
 			ChaincodeProposalPayloadStub = sandbox.stub().returns({
@@ -62,14 +62,14 @@ describe('client-utils', () => {
 				setTransientMap: setTransientMapStub,
 				toBuffer: () => 'payload'
 			});
-			revert.push(ClientUtils.__set__('_proposalProto.ChaincodeProposalPayload', ChaincodeProposalPayloadStub));
+			revert.push(ClientUtils.__set__('fabprotos.protos.ChaincodeProposalPayload', ChaincodeProposalPayloadStub));
 			setHeaderStub = sandbox.stub();
 			setPayloadStub = sandbox.stub();
 			ProposalStub = sandbox.stub().returns({
 				setHeader: setHeaderStub,
 				setPayload: setPayloadStub
 			});
-			revert.push(ClientUtils.__set__('_proposalProto.Proposal', ProposalStub));
+			revert.push(ClientUtils.__set__('fabprotos.protos.Proposal', ProposalStub));
 
 		});
 
@@ -217,18 +217,18 @@ describe('client-utils', () => {
 				setTlsCertHash: sandbox.stub()
 			};
 			channelHeaderStub.returns(channelHeaderFunctionStub);
-			revert.push(ClientUtils.__set__('_commonProto.ChannelHeader', channelHeaderStub));
+			revert.push(ClientUtils.__set__('fabprotos.common.ChannelHeader', channelHeaderStub));
 			sandbox.stub(ClientUtils, 'buildCurrentTimestamp').returns(null);
 			chaincodeIDFunctionsStub = {setName: sandbox.stub()};
 			chaincodeIDStub = sandbox.stub().returns(chaincodeIDFunctionsStub);
-			revert.push(ClientUtils.__set__('_ccProto.ChaincodeID', chaincodeIDStub));
+			revert.push(ClientUtils.__set__('fabprotos.protos.ChaincodeID', chaincodeIDStub));
 
 			headerExtFunctionStub = {
 				setChaincodeId: sandbox.stub(),
 				toBuffer: sandbox.stub()
 			};
 			headerExtStub = sandbox.stub().returns(headerExtFunctionStub);
-			revert.push(ClientUtils.__set__('_proposalProto.ChaincodeHeaderExtension', headerExtStub));
+			revert.push(ClientUtils.__set__('fabprotos.protos.ChaincodeHeaderExtension', headerExtStub));
 		});
 
 		it('should return a channel header without any extra info', () => {
@@ -268,12 +268,12 @@ describe('client-utils', () => {
 		beforeEach(() => {
 			signatureHeaderFunctionStub = {setCreator: sandbox.stub(), setNonce: sandbox.stub(), toBuffer: sandbox.stub()};
 			signatureHeaderStub = sandbox.stub().returns(signatureHeaderFunctionStub);
-			revert.push(ClientUtils.__set__('_commonProto.SignatureHeader', signatureHeaderStub));
+			revert.push(ClientUtils.__set__('fabprotos.common.SignatureHeader', signatureHeaderStub));
 
 			headerFunctionStub = {setSignatureHeader: () => {}, setChannelHeader: () => {}};
 			sandbox.stub(headerFunctionStub);
 			headerStub = sandbox.stub().returns(headerFunctionStub);
-			revert.push(ClientUtils.__set__('_commonProto.Header', headerStub));
+			revert.push(ClientUtils.__set__('fabprotos.common.Header', headerStub));
 
 
 			mockCreator = {serialize: () => {}};
@@ -336,7 +336,7 @@ describe('client-utils', () => {
 	describe('#translateCCType', () => {
 		const ccTypes = {GOLANG: 'GOLANG', CAR: 'CAR', JAVA: 'JAVA', NODE: 'NODE'};
 		beforeEach(() => {
-			revert.push(ClientUtils.__set__('_ccProto.ChaincodeSpec.Type', ccTypes));
+			revert.push(ClientUtils.__set__('fabprotos.protos.ChaincodeSpec.Type', ccTypes));
 		});
 
 		it('should return the correct default type', () => {
@@ -352,10 +352,10 @@ describe('client-utils', () => {
 
 	describe('#ccTypeToString', () => {
 		it('should return the correct string', () => {
-			ClientUtils.ccTypeToString(ClientUtils.__get__('_ccProto.ChaincodeSpec.Type.GOLANG')).should.equal('golang');
-			ClientUtils.ccTypeToString(ClientUtils.__get__('_ccProto.ChaincodeSpec.Type.CAR')).should.equal('car');
-			ClientUtils.ccTypeToString(ClientUtils.__get__('_ccProto.ChaincodeSpec.Type.JAVA')).should.equal('java');
-			ClientUtils.ccTypeToString(ClientUtils.__get__('_ccProto.ChaincodeSpec.Type.NODE')).should.equal('node');
+			ClientUtils.ccTypeToString(ClientUtils.__get__('fabprotos.protos.ChaincodeSpec.Type.GOLANG')).should.equal('golang');
+			ClientUtils.ccTypeToString(ClientUtils.__get__('fabprotos.protos.ChaincodeSpec.Type.CAR')).should.equal('car');
+			ClientUtils.ccTypeToString(ClientUtils.__get__('fabprotos.protos.ChaincodeSpec.Type.JAVA')).should.equal('java');
+			ClientUtils.ccTypeToString(ClientUtils.__get__('fabprotos.protos.ChaincodeSpec.Type.NODE')).should.equal('node');
 		});
 	});
 
@@ -372,7 +372,7 @@ describe('client-utils', () => {
 			getTimeStub = sandbox.stub();
 			dateStub = sandbox.stub().returns({getTime: getTimeStub});
 			timestampStub = sandbox.stub().returns({setSeconds: setSecondsStub, setNanos: setNanosStub});
-			revert.push(ClientUtils.__set__('_timestampProto.Timestamp', timestampStub));
+			revert.push(ClientUtils.__set__('fabprotos.google.protobuf.Timestamp', timestampStub));
 			revert.push(ClientUtils.__set__('Date', dateStub));
 		});
 

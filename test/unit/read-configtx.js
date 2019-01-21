@@ -20,9 +20,8 @@ const test = _test(tape);
 
 const Channel = require('fabric-client/lib/Channel.js');
 
-const ProtoLoader = require('fabric-client/lib/ProtoLoader');
-const _commonProto   = ProtoLoader.load(__dirname + '/../../fabric-client/lib/protos/common/common.proto').common;
-const _configtxProto = ProtoLoader.load(__dirname + '/../../fabric-client/lib/protos/common/configtx.proto').common;
+const _commonProto   = require('fabric-protos').common;
+const _configtxProto = require('fabric-protos').common;
 
 const testUtil = require('../unit/util.js');
 

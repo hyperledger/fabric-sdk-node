@@ -28,10 +28,7 @@ const path = require('path');
 const yaml = require('js-yaml');
 const Constants = require('./Constants.js');
 
-const ProtoLoader = require('./ProtoLoader');
-const _commonProto = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
-const _configtxProto = ProtoLoader.load(__dirname + '/protos/common/configtx.proto').common;
-const _queryProto = ProtoLoader.load(__dirname + '/protos/peer/query.proto').protos;
+const fabprotos = require('fabric-protos');
 
 const config = sdkUtils.getConfig();
 // setup the location of the default config shipped with code
@@ -625,9 +622,9 @@ const Client = class extends BaseClient {
 	 */
 	extractChannelConfig(config_envelope) {
 		logger.debug('extractConfigUpdate - start');
-		const envelope = _commonProto.Envelope.decode(config_envelope);
-		const payload = _commonProto.Payload.decode(envelope.getPayload().toBuffer());
-		const configtx = _configtxProto.ConfigUpdateEnvelope.decode(payload.getData().toBuffer());
+		const envelope = fabprotos.common.Envelope.decode(config_envelope);
+		const payload = fabprotos.common.Payload.decode(envelope.getPayload().toBuffer());
+		const configtx = fabprotos.common.ConfigUpdateEnvelope.decode(payload.getData().toBuffer());
 		return configtx.getConfigUpdate().toBuffer();
 	}
 
@@ -666,7 +663,7 @@ const Client = class extends BaseClient {
 		const signer = this._getSigningIdentity(true);
 
 		// signature is across a signature header and the config update
-		const proto_signature_header = new _commonProto.SignatureHeader();
+		const proto_signature_header = new fabprotos.common.SignatureHeader();
 		proto_signature_header.setCreator(signer.serialize());
 		proto_signature_header.setNonce(sdkUtils.getNonce());
 		const signature_header_bytes = proto_signature_header.toBuffer();
@@ -677,7 +674,7 @@ const Client = class extends BaseClient {
 		const signature_bytes = Buffer.from(sig);
 
 		// build the return object
-		const proto_config_signature = new _configtxProto.ConfigSignature();
+		const proto_config_signature = new fabprotos.common.ConfigSignature();
 		proto_config_signature.setSignatureHeader(signature_header_bytes);
 		proto_config_signature.setSignature(signature_bytes);
 
@@ -763,7 +760,7 @@ const Client = class extends BaseClient {
 		let payload = null;
 		if (have_envelope) {
 			logger.debug('_createOrUpdateChannel - have envelope');
-			const envelope = _commonProto.Envelope.decode(request.envelope);
+			const envelope = fabprotos.common.Envelope.decode(request.envelope);
 			signature = envelope.signature;
 			payload = envelope.payload;
 		} else {
@@ -779,13 +776,13 @@ const Client = class extends BaseClient {
 			}
 
 			logger.debug('_createOrUpdateChannel - have config_update');
-			const proto_config_Update_envelope = new _configtxProto.ConfigUpdateEnvelope();
+			const proto_config_Update_envelope = new fabprotos.common.ConfigUpdateEnvelope();
 			proto_config_Update_envelope.setConfigUpdate(request.config);
 			const signatures = _stringToSignature(request.signatures);
 			proto_config_Update_envelope.setSignatures(signatures);
 
 			const proto_channel_header = clientUtils.buildChannelHeader(
-				_commonProto.HeaderType.CONFIG_UPDATE,
+				fabprotos.common.HeaderType.CONFIG_UPDATE,
 				request.name,
 				request.txId.getTransactionID()
 			);
@@ -793,7 +790,7 @@ const Client = class extends BaseClient {
 			const signer = this._getSigningIdentity(request.txId.isAdmin());
 
 			const proto_header = clientUtils.buildHeader(signer, proto_channel_header, request.txId.getNonce());
-			const proto_payload = new _commonProto.Payload();
+			const proto_payload = new fabprotos.common.Payload();
 			proto_payload.setHeader(proto_header);
 			proto_payload.setData(proto_config_Update_envelope.toBuffer());
 			const payload_bytes = proto_payload.toBuffer();
@@ -940,7 +937,7 @@ const Client = class extends BaseClient {
 			}
 			if (response.response) {
 				logger.debug('queryChannels - response status :: %d', response.response.status);
-				const queryTrans = _queryProto.ChannelQueryResponse.decode(response.response.payload);
+				const queryTrans = fabprotos.protos.ChannelQueryResponse.decode(response.response.payload);
 				logger.debug('queryChannels - ProcessedTransaction.channelInfo.length :: %s', queryTrans.channels.length);
 				for (const channel of queryTrans.channels) {
 					logger.debug('>>> channel id %s ', channel.channel_id);
@@ -1014,7 +1011,7 @@ const Client = class extends BaseClient {
 			}
 			if (response.response) {
 				logger.debug('queryInstalledChaincodes - response status :: %d', response.response.status);
-				const queryTrans = _queryProto.ChaincodeQueryResponse.decode(response.response.payload);
+				const queryTrans = fabprotos.protos.ChaincodeQueryResponse.decode(response.response.payload);
 				logger.debug('queryInstalledChaincodes - ProcessedTransaction.chaincodeInfo.length :: %s', queryTrans.chaincodes.length);
 				for (const chaincode of queryTrans.chaincodes) {
 					logger.debug('>>> name %s, version %s, path %s', chaincode.name, chaincode.version, chaincode.path);
@@ -1163,7 +1160,7 @@ const Client = class extends BaseClient {
 			}
 
 			const channelHeader = clientUtils.buildChannelHeader(
-				_commonProto.HeaderType.ENDORSER_TRANSACTION,
+				fabprotos.common.HeaderType.ENDORSER_TRANSACTION,
 				'', // install does not target a channel
 				tx_id.getTransactionID(),
 				null,
@@ -1842,7 +1839,7 @@ function _stringToSignature(string_signatures) {
 		} else {
 			logger.debug('_stringToSignature - signature is string');
 			const signature_bytes = Buffer.from(signature, 'hex');
-			signature = _configtxProto.ConfigSignature.decode(signature_bytes);
+			signature = fabprotos.common.ConfigSignature.decode(signature_bytes);
 		}
 		signatures.push(signature);
 	}

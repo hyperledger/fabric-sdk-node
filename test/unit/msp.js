@@ -13,7 +13,6 @@ const rewire = require('rewire');
 
 const fs = require('fs-extra');
 const path = require('path');
-const ProtoLoader = require('fabric-client/lib/ProtoLoader');
 const utils = rewire('fabric-client/lib/utils.js');
 const testutil = require('./util.js');
 const MSP = require('fabric-client/lib/msp/msp.js');
@@ -21,7 +20,7 @@ const MSPM = require('fabric-client/lib/msp/msp-manager.js');
 const idModule = require('fabric-client/lib/msp/identity.js');
 const Identity = idModule.Identity;
 
-const mspProto = ProtoLoader.load(path.join(__dirname, '../../fabric-client/lib/protos/msp/msp_config.proto')).msp;
+const mspProto = require('fabric-protos').msp;
 
 const FABRIC = 0;
 const TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +

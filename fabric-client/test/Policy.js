@@ -24,6 +24,18 @@ const sinon = require('sinon');
 
 describe('Policy', () => {
 
+	let revert;
+
+	beforeEach(() => {
+		revert = [];
+	});
+
+	afterEach(() => {
+		if (revert.length) {
+			revert.forEach(Function.prototype.call, Function.prototype.call);
+		}
+	});
+
 	describe('#EndorsementPolicy.buildPolicy', () => {
 
 		let PolicyRewire;
@@ -54,11 +66,6 @@ describe('Policy', () => {
 		MockSignaturePolicy.prototype.set = setStub;
 		MockSignaturePolicy.NOutOf = MockNOutOfStub;
 
-		const MockPolicyProto = sinon.stub();
-		MockPolicyProto.SignaturePolicyEnvelope = MockSignaturePolicyEnvelope;
-		MockPolicyProto.SignaturePolicy = MockSignaturePolicy;
-		MockPolicyProto.Role = MockRole;
-
 		const policy = {
 			identities: [{
 				role: {
@@ -74,7 +81,9 @@ describe('Policy', () => {
 
 		beforeEach(() => {
 			PolicyRewire = rewire('../lib/Policy');
-			PolicyRewire.__set__('_policiesProto', MockPolicyProto);
+			revert.push(PolicyRewire.__set__('fabprotos.common.SignaturePolicyEnvelope', MockSignaturePolicyEnvelope));
+			revert.push(PolicyRewire.__set__('fabprotos.common.SignaturePolicy', MockSignaturePolicy));
+			revert.push(PolicyRewire.__set__('fabprotos.common.Role', MockRole));
 		});
 
 		afterEach(() => {
@@ -173,13 +182,10 @@ describe('Policy', () => {
 		MockMSPRole.prototype.toBuffer = toBufferStub;
 		MockMSPRole.MSPRoleType = MockMSPRoleType;
 
-		const MockMspProto = sinon.stub();
-		MockMspProto.MSPRole = MockMSPRole;
-		MockMspProto.MSPPrincipal = MockMSPPrincipal;
-
 		beforeEach(() => {
 			PolicyRewire = rewire('../lib/Policy');
-			PolicyRewire.__set__('_mspPrProto', MockMspProto);
+			revert.push(PolicyRewire.__set__('fabprotos.common.MSPRole', MockMSPRole));
+			revert.push(PolicyRewire.__set__('fabprotos.common.MSPPrincipal', MockMSPPrincipal));
 		});
 
 		afterEach(() => {

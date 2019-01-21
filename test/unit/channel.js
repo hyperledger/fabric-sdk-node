@@ -12,9 +12,8 @@ const test = _test(tape);
 
 const sinon = require('sinon');
 const rewire = require('rewire');
-const ProtoLoader = require('fabric-client/lib/ProtoLoader');
-const _policiesProto = ProtoLoader.load(__dirname + '/../../fabric-client/lib/protos/common/policies.proto').common;
-const _mspPrProto = ProtoLoader.load(__dirname + '/../../fabric-client/lib/protos/msp/msp_principal.proto').common;
+const _policiesProto = require('fabric-protos').common;
+const _mspPrProto = require('fabric-protos').common;
 
 const Client = require('fabric-client');
 const testutil = require('./util.js');

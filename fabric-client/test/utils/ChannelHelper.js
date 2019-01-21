@@ -68,32 +68,32 @@ describe('ChannelHelper', () => {
 			getHeaderStub = sandbox.stub();
 			getSignatureHeaderStub = sandbox.stub();
 			headerDecodeStub = sandbox.stub().returns({getSignatureHeader: getSignatureHeaderStub});
-			revert.push(ChannelHelper.__set__('_commonProto.Header.decode', headerDecodeStub));
+			revert.push(ChannelHelper.__set__('fabprotos.common.Header.decode', headerDecodeStub));
 			setProposalPayloadStub = sandbox.stub();
 			setEndorsementsStub = sandbox.stub();
 			ChaincodeEndorserActionStub = sandbox.stub()
 				.returns({setEndorsements: setEndorsementsStub, setProposalResponsePayload: setProposalPayloadStub});
-			revert.push(ChannelHelper.__set__(' _transProto.ChaincodeEndorsedAction', ChaincodeEndorserActionStub));
+			revert.push(ChannelHelper.__set__('fabprotos.protos.ChaincodeEndorsedAction', ChaincodeEndorserActionStub));
 			setActionStub = sandbox.stub();
 			setChaincodeProposalPayloadStub = sandbox.stub();
 			toBufferStub = sandbox.stub();
 			ChaincodeActionPayloadStub = sandbox.stub()
 				.returns({setAction: setActionStub, setChaincodeProposalPayload: setChaincodeProposalPayloadStub, toBuffer: toBufferStub});
-			revert.push(ChannelHelper.__set__('_transProto.ChaincodeActionPayload', ChaincodeActionPayloadStub));
+			revert.push(ChannelHelper.__set__('fabprotos.protos.ChaincodeActionPayload', ChaincodeActionPayloadStub));
 			setInputStub = sandbox.stub();
 			ChaincodeProposalPayloadStub = sandbox.stub().returns({setInput: setInputStub});
-			revert.push(ChannelHelper.__set__('_proposalProto.ChaincodeProposalPayload', ChaincodeProposalPayloadStub));
+			revert.push(ChannelHelper.__set__('fabprotos.protos.ChaincodeProposalPayload', ChaincodeProposalPayloadStub));
 			ChaincodeProposalPayloadDecodeStub = sandbox.stub();
-			revert.push(ChannelHelper.__set__('_proposalProto.ChaincodeProposalPayload.decode', ChaincodeProposalPayloadDecodeStub));
+			revert.push(ChannelHelper.__set__('fabprotos.protos.ChaincodeProposalPayload.decode', ChaincodeProposalPayloadDecodeStub));
 			setHeaderStub = sandbox.stub();
 			setPayloadStub = sandbox.stub();
 			TransactionActionStub = sandbox.stub().returns({setHeader: setHeaderStub, setPayload: setPayloadStub});
-			revert.push(ChannelHelper.__set__('_transProto.TransactionAction', TransactionActionStub));
+			revert.push(ChannelHelper.__set__('fabprotos.protos.TransactionAction', TransactionActionStub));
 			TransactionStub = sandbox.stub().returns({toBuffer: toBufferStub, setActions: setActionStub});
-			revert.push(ChannelHelper.__set__('_transProto.Transaction', TransactionStub));
+			revert.push(ChannelHelper.__set__('fabprotos.protos.Transaction', TransactionStub));
 			setDataStub = sandbox.stub();
 			PayloadStub = sandbox.stub().returns({setHeader: setHeaderStub, setData: setDataStub});
-			revert.push(ChannelHelper.__set__('_commonProto.Payload', PayloadStub));
+			revert.push(ChannelHelper.__set__('fabprotos.common.Payload', PayloadStub));
 		});
 
 		it('should return the payload', () => {

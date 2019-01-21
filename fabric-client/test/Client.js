@@ -808,9 +808,9 @@ describe('Client', () => {
 			getConfigUpdateStub.returns({toBuffer: toBufferStub});
 			configUpdateEnvelopeDecodeStub.returns({getConfigUpdate: getConfigUpdateStub});
 
-			revert.push(Client.__set__('_commonProto.Envelope.decode', envelopeDecodeStub));
-			revert.push(Client.__set__('_commonProto.Payload.decode', payloadDecodeStub));
-			revert.push(Client.__set__('_configtxProto.ConfigUpdateEnvelope.decode', configUpdateEnvelopeDecodeStub));
+			revert.push(Client.__set__('fabprotos.common.Envelope.decode', envelopeDecodeStub));
+			revert.push(Client.__set__('fabprotos.common.Payload.decode', payloadDecodeStub));
+			revert.push(Client.__set__('fabprotos.common.ConfigUpdateEnvelope.decode', configUpdateEnvelopeDecodeStub));
 			client = new Client();
 		});
 
@@ -847,7 +847,7 @@ describe('Client', () => {
 		beforeEach(() => {
 			_getSigningIdentityStub = sandbox.stub();
 			SignatureHeaderStub = sandbox.stub();
-			revert.push(Client.__set__('_commonProto.SignatureHeader', SignatureHeaderStub));
+			revert.push(Client.__set__('fabprotos.common.SignatureHeader', SignatureHeaderStub));
 			setCreatorStub = sandbox.stub();
 			serializeStub = sandbox.stub();
 			setNonceStub = sandbox.stub();
@@ -860,7 +860,7 @@ describe('Client', () => {
 			signStub = sandbox.stub();
 			revert.push(Client.__set__('Buffer', {concat: bufferConcatStub, from: bufferFromStub, isBuffer: bufferIsBufferStub}));
 			ConfigSignatureStub = sandbox.stub();
-			revert.push(Client.__set__('_configtxProto.ConfigSignature', ConfigSignatureStub));
+			revert.push(Client.__set__('fabprotos.common.ConfigSignature', ConfigSignatureStub));
 			setSignatureHeaderStub = sandbox.stub();
 			setSignatureStub = sandbox.stub();
 
@@ -988,12 +988,12 @@ describe('Client', () => {
 			ConfigUpdateEnvelopeStub.returns({setConfigUpdate: setConfigUpdateStub, setSignatures: setSignaturesStub, toBuffer: toBufferStub});
 
 			revert.push(Client.__set__('_stringToSignature', _stringToSignatureStub));
-			revert.push(Client.__set__('_commonProto.Envelope.decode', envelopeDecodeStub));
+			revert.push(Client.__set__('fabprotos.common.Envelope.decode', envelopeDecodeStub));
 			revert.push(Client.__set__('clientUtils.buildChannelHeader', buildChannelHeaderStub.returns('payload-header')));
 			revert.push(Client.__set__('clientUtils.buildHeader', buildHeaderStub));
-			revert.push(Client.__set__('_commonProto.HeaderType.CONFIG_UPDATE', 'config_update'));
-			revert.push(Client.__set__('_commonProto.Payload', payloadStub));
-			revert.push(Client.__set__('_configtxProto.ConfigUpdateEnvelope', ConfigUpdateEnvelopeStub));
+			revert.push(Client.__set__('fabprotos.common.HeaderType.CONFIG_UPDATE', 'config_update'));
+			revert.push(Client.__set__('fabprotos.common.Payload', payloadStub));
+			revert.push(Client.__set__('fabprotos.common.ConfigUpdateEnvelope', ConfigUpdateEnvelopeStub));
 
 			client = new Client();
 			client.getTargetOrderer = getTargetOrdererStub.returns(orderer);
@@ -1177,7 +1177,7 @@ describe('Client', () => {
 			ChannelQueryResponseDecodeStub = sandbox.stub();
 			ChannelQueryResponseDecodeStub.returns({channels: [{channel_id: 1}]});
 
-			revert.push(Client.__set__('_queryProto.ChannelQueryResponse.decode', ChannelQueryResponseDecodeStub));
+			revert.push(Client.__set__('fabprotos.protos.ChannelQueryResponse.decode', ChannelQueryResponseDecodeStub));
 			revert.push(Client.__set__('Channel.sendTransactionProposal', sendTransactionProposalStub));
 			revert.push(Client.__set__('TransactionID', transactionIDStub));
 			client = new Client();
@@ -1334,7 +1334,7 @@ describe('Client', () => {
 			ChaincodeQueryResponseDecodeStub = sandbox.stub();
 			ChaincodeQueryResponseDecodeStub.returns({chaincodes: [{name: 'chaincode1', version: 1, path: 'path'}]});
 
-			revert.push(Client.__set__('_queryProto.ChaincodeQueryResponse.decode', ChaincodeQueryResponseDecodeStub));
+			revert.push(Client.__set__('fabprotos.protos.ChaincodeQueryResponse.decode', ChaincodeQueryResponseDecodeStub));
 			revert.push(Client.__set__('Channel.sendTransactionProposal', sendTransactionProposalStub));
 			revert.push(Client.__set__('TransactionID', transactionIDStub));
 			client = new Client();
@@ -1517,7 +1517,7 @@ describe('Client', () => {
 			revert.push(Client.__set__('clientUtils.sendPeersProposal', sendPeersProposalStub));
 			translateCCTypeStub = sandbox.stub().returns('go');
 			revert.push(Client.__set__('clientUtils.translateCCType', translateCCTypeStub));
-			revert.push(Client.__set__('_commonProto.HeaderType.ENDORSER_TRANSACTION', 'ENDORSER_TRANSACITON'));
+			revert.push(Client.__set__('fabprotos.common.HeaderType.ENDORSER_TRANSACTION', 'ENDORSER_TRANSACITON'));
 
 			client = new Client();
 			client.getTargetPeers = getTargetPeersStub;
@@ -3004,7 +3004,7 @@ describe('Client', () => {
 			bufferFromStub = sandbox.stub();
 			revert.push(Client.__set__('Buffer.from', bufferFromStub));
 			configSignatureDecodeStub = sandbox.stub();
-			revert.push(Client.__set__('_configtxProto.ConfigSignature.decode', configSignatureDecodeStub));
+			revert.push(Client.__set__('fabprotos.common.ConfigSignature.decode', configSignatureDecodeStub));
 		});
 
 		it('should return an empty aray if no signatures are given', () => {

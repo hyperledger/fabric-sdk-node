@@ -14,9 +14,7 @@ const Client = require('fabric-client');
 const fs = require('fs');
 const path = require('path');
 
-const ProtoLoader = require('fabric-client/lib/ProtoLoader');
-
-const _commonProto = ProtoLoader.load(path.resolve(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
+const _commonProto = require('fabric-protos').common;
 const testUtil = require('../../unit/util.js');
 const e2eUtils = require('./e2eUtils.js');
 const channel_name = process.env.channel ? process.env.channel : 'mychannel';// can use "channel=<name>" to control the channel name from command line
