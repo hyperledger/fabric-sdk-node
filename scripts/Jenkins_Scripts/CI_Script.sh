@@ -76,7 +76,7 @@ function removeUnwantedImages() {
         else
                 docker rmi -f $DOCKER_IMAGES_SNAPSHOTS || true
         fi
-        DOCKER_IMAGE_IDS=$(docker images | grep -v 'base*\|couchdb\|kafka\|zookeeper\|cello' | awk '{print $3}')
+        DOCKER_IMAGE_IDS=$(docker images | grep -v 'couchdb\|kafka\|zookeeper\|cello' | awk '{print $3}')
 
         if [ -z "$DOCKER_IMAGE_IDS" ] || [ "$DOCKER_IMAGE_IDS" = " " ]; then
                 echo "---- No images available for deletion ----"
@@ -86,18 +86,12 @@ function removeUnwantedImages() {
 }
 
 # Delete nvm prefix & then delete nvm
-rm -rf $HOME/.nvm/ $HOME/.node-gyp/ $HOME/.npm/ $HOME/.npmrc  || true
-
-mkdir $HOME/.nvm || true
+rm -rf $HOME/.node-gyp/ $HOME/.npm/ $HOME/.npmrc  || true
 
 # remove tmp/hfc and hfc-key-store data
-rm -rf /home/jenkins/.nvm /home/jenkins/npm /tmp/fabric-shim /tmp/hfc* /tmp/npm* /home/jenkins/kvsTemp /home/jenkins/.hfc-key-store
+rm -rf /home/jenkins/npm /tmp/fabric-shim /tmp/hfc* /tmp/npm* /home/jenkins/kvsTemp /home/jenkins/.hfc-key-store
 
 rm -rf /var/hyperledger/*
-
-rm -rf gopath/src/github.com/hyperledger/fabric-ca/vendor/github.com/cloudflare/cfssl/vendor/github.com/cloudflare/cfssl_trust/ca-bundle || true
-# yamllint disable-line rule:line-length
-rm -rf gopath/src/github.com/hyperledger/fabric-ca/vendor/github.com/cloudflare/cfssl/vendor/github.com/cloudflare/cfssl_trust/intermediate_ca || true
 
 clearContainers
 removeUnwantedImages
@@ -126,12 +120,8 @@ install_Npm() {
 
 echo "-------> ARCH:" $ARCH
 if [[ $ARCH == "s390x" || $ARCH == "ppc64le" ]]; then
-       # Install nvm to install multi node versions
-        wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
-        # shellcheck source=/dev/null
-        export NVM_DIR="$HOME/.nvm"
-        # shellcheck source=/dev/null
-        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+        # Source nvmrc.sh
+        source /etc/profile.d/nvmrc.sh
         echo "------> Install NodeJS"
         # Install NODE_VER
         echo "------> Use $NODE_VER"
