@@ -17,8 +17,7 @@ const utils = rewire('fabric-client/lib/utils.js');
 const testutil = require('./util.js');
 const MSP = require('fabric-client/lib/msp/msp.js');
 const MSPM = require('fabric-client/lib/msp/msp-manager.js');
-const idModule = require('fabric-client/lib/msp/identity.js');
-const Identity = idModule.Identity;
+const {Identity} = require('fabric-common');
 
 const mspProto = require('fabric-protos').msp;
 

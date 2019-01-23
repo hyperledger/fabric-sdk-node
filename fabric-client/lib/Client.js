@@ -10,7 +10,7 @@
 const sdkUtils = require('./utils.js');
 const clientUtils = require('./client-utils.js');
 
-const {KeyValueStore} = require('fabric-common');
+const {KeyValueStore, Signer, SigningIdentity} = require('fabric-common');
 const BaseClient = require('./BaseClient.js');
 const User = require('./User.js');
 const Channel = require('./Channel.js');
@@ -19,7 +19,6 @@ const Peer = require('./Peer.js');
 const ChannelEventHub = require('./ChannelEventHub');
 const Orderer = require('./Orderer.js');
 const TransactionID = require('./TransactionID.js');
-const {Signer, SigningIdentity} = require('./msp/identity.js');
 const crypto = require('crypto');
 
 const util = require('util');

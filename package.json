@@ -71,6 +71,7 @@
     "rimraf": "2.6.2",
     "run-sequence": "^2.2.1",
     "sinon": "6.1.3",
+    "sinon-chai": "^3.3.0",
     "tap-colorize": "^1.2.0",
     "tape": "^4.5.1",
     "tape-promise": "^3.0.0",

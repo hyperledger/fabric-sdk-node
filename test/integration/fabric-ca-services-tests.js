@@ -30,9 +30,7 @@ const http = require('http');
 const testUtil = require('../unit/util.js');
 
 const LocalMSP = require('fabric-ca-client/lib/msp/msp.js');
-const idModule = require('fabric-ca-client/lib/msp/identity.js');
-const SigningIdentity = idModule.SigningIdentity;
-const Signer = idModule.Signer;
+const {Signer, SigningIdentity} = require('fabric-common');
 const User = require('fabric-ca-client/lib/User.js');
 
 // var keyValStorePath = testUtil.KVS;

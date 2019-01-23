@@ -29,7 +29,7 @@ const MSPManager = require('./msp/msp-manager.js');
 const Policy = require('./Policy.js');
 const Constants = require('./Constants.js');
 const CollectionConfig = require('./SideDB.js');
-const {Identity} = require('./msp/identity.js');
+const {Identity} = require('fabric-common');
 const ChannelHelper = require('./utils/ChannelHelper');
 
 const ImplicitMetaPolicy_Rule = {0: 'ANY', 1: 'ALL', 2: 'MAJORITY'};

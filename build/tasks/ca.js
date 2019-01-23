@@ -20,7 +20,6 @@ const DEPS = [
 	'fabric-client/lib/impl/ecdsa/*',
 	'fabric-client/lib/impl/CryptoKeyStore.js',
 	'fabric-client/lib/impl/FileKeyValueStore.js',
-	'fabric-client/lib/msp/identity.js',
 	'fabric-client/lib/msp/msp.js',
 	'fabric-client/types/tsconfig.json',
 	'fabric-client/types/base.d.ts'

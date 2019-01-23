@@ -16,12 +16,8 @@
 
 const util = require('util');
 const sdkUtils = require('./utils.js');
-const {CryptoAlgorithms} = require('fabric-common');
+const {CryptoAlgorithms, Identity, Signer, SigningIdentity} = require('fabric-common');
 const logger = sdkUtils.getLogger('User.js');
-const idModule = require('./msp/identity.js');
-const Identity = idModule.Identity;
-const SigningIdentity = idModule.SigningIdentity;
-const Signer = idModule.Signer;
 
 /**
  * The User class represents users that have been enrolled and represented by

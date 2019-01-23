@@ -12,14 +12,10 @@ const test = _test(tape);
 
 const testutil = require('./util.js');
 const utils = require('fabric-client/lib/utils.js');
-const {CryptoAlgorithms} = require('fabric-common');
+const {CryptoAlgorithms, Identity, Signer, SigningIdentity} = require('fabric-common');
 
 const jsrsa = require('jsrsasign');
 const KEYUTIL = jsrsa.KEYUTIL;
-const idModule = require('fabric-client/lib/msp/identity.js');
-const Identity = idModule.Identity;
-const Signer = idModule.Signer;
-const SigningIdentity = idModule.SigningIdentity;
 const MSP = require('fabric-client/lib/msp/msp.js');
 const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 

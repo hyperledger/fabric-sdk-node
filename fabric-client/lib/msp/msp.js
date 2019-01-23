@@ -5,10 +5,7 @@
 */
 'use strict';
 
-const {CryptoAlgorithms} = require('fabric-common');
-const idModule = require('./identity.js');
-const Identity = idModule.Identity;
-const SigningIdentity = idModule.SigningIdentity;
+const {CryptoAlgorithms, Identity, SigningIdentity} = require('fabric-common');
 const utils = require('../utils.js');
 const logger = utils.getLogger('msp.js');
 

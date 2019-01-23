@@ -18,7 +18,7 @@ const utils = require('./utils.js');
 const clientUtils = require('./client-utils.js');
 const Constants = require('./Constants.js');
 const logger = utils.getLogger('ChannelEventHub.js');
-const {Identity} = require('./msp/identity');
+const {Identity} = require('fabric-common');
 const TransactionID = require('./TransactionID');
 const util = require('util');
 
