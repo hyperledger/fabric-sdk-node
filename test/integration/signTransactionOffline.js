@@ -14,7 +14,7 @@ const test = _test(tape);
 
 const FabricCAService = require('fabric-ca-client');
 const Client = require('fabric-client');
-const hash = require('fabric-client/lib/hash');
+const {HashPrimitives} = require('fabric-common');
 
 const jsrsa = require('jsrsasign');
 const {KEYUTIL} = jsrsa;
@@ -68,7 +68,7 @@ function _preventMalleability(sig, curveParams) {
  */
 function sign(privateKey, proposalBytes, algorithm, keySize) {
 	const hashAlgorithm = algorithm.toUpperCase();
-	const hashFunction = hash[`${hashAlgorithm}_${keySize}`];
+	const hashFunction = HashPrimitives[`${hashAlgorithm}_${keySize}`];
 	const ecdsaCurve = elliptic.curves[`p${keySize}`];
 	const ecdsa = new EC(ecdsaCurve);
 	const key = KEYUTIL.getKey(privateKey);

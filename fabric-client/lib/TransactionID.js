@@ -10,8 +10,7 @@
 const utils = require('./utils.js');
 const logger = utils.getLogger('TransactionID.js');
 const User = require('./User.js');
-const hashPrimitives = require('./hash.js');
-
+const {HashPrimitives} = require('fabric-common');
 
 /**
  * The class representing the transaction identifier. Provides for
@@ -44,7 +43,7 @@ class TransactionID {
 		this._nonce = utils.getNonce(); // nonce is in bytes
 		const creator_bytes = signer.serialize();// same as signatureHeader.Creator
 		const trans_bytes = Buffer.concat([this._nonce, creator_bytes]);
-		const trans_hash = hashPrimitives.SHA2_256(trans_bytes);
+		const trans_hash = HashPrimitives.SHA2_256(trans_bytes);
 		this._transaction_id = Buffer.from(trans_hash).toString();
 		logger.debug('const - transaction_id %s', this._transaction_id);
 

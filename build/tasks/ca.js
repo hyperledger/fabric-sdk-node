@@ -9,7 +9,6 @@ const gulp = require('gulp');
 const debug = require('gulp-debug');
 
 const DEPS = [
-	'fabric-client/lib/hash.js',
 	'fabric-client/lib/utils.js',
 	'fabric-client/lib/BaseClient.js',
 	'fabric-client/lib/Remote.js',

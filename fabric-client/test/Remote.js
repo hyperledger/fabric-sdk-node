@@ -270,31 +270,19 @@ describe('Remote', () => {
 	describe('#getClientCertHash', () => {
 		let remote;
 		let hashStub;
-		let updateStub;
-		let finalizeStub;
 		beforeEach(() => {
 			remote = new Remote('grpc://someurl');
-			updateStub = sandbox.stub();
-			finalizeStub = sandbox.stub();
-			hashStub = sandbox.stub().returns({
-				reset: () => {
-					return {
-						update: updateStub.returns({finalize: finalizeStub})
-					};
-				}
-			});
-			revert.push(Remote.__set__('hash_sha2_256', hashStub));
+			hashStub = sandbox.stub().returns('cert-hash');
+			revert.push(Remote.__set__('HashPrimitives.SHA2_256', hashStub));
 		});
 
 		it('should return the hashed client certificate', () => {
 			FakeUtils.pemToDER.returns('der-cert');
-			finalizeStub.returns('cert-hash');
 			remote.clientCert = 'clientCert';
 			const certHash = remote.getClientCertHash();
 			sinon.assert.calledWith(FakeUtils.pemToDER, remote.clientCert);
 			sinon.assert.called(hashStub);
-			sinon.assert.calledWith(updateStub, 'der-cert');
-			sinon.assert.called(finalizeStub);
+			sinon.assert.calledWith(hashStub, 'der-cert');
 			certHash.should.equal('cert-hash');
 		});
 

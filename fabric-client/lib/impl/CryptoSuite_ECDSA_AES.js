@@ -8,16 +8,13 @@
 'use strict';
 
 // requires
-const {CryptoAlgorithms, CryptoSuite} = require('fabric-common');
-
+const {CryptoAlgorithms, CryptoSuite, HashPrimitives} = require('fabric-common');
 const elliptic = require('elliptic');
 const EC = elliptic.ec;
 const jsrsa = require('jsrsasign');
 const {KEYUTIL} = jsrsa;
 const util = require('util');
 const Signature = require('elliptic/lib/elliptic/ec/signature.js');
-
-const hashPrimitives = require('../hash.js');
 const utils = require('../utils');
 const ECDSAKey = require('./ecdsa/key.js');
 
@@ -56,7 +53,7 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 		}
 		hashAlgo = hashAlgo.toUpperCase();
 		const hashPair = `${hashAlgo}_${keySize}`;
-		if (!CryptoAlgorithms[hashPair] || !hashPrimitives[hashPair]) {
+		if (!CryptoAlgorithms[hashPair] || !HashPrimitives[hashPair]) {
 			throw Error(util.format('Unsupported hash algorithm and key size pair: %s', hashPair));
 		}
 		super();
@@ -72,7 +69,7 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 
 		logger.debug('Hash algorithm: %s, hash output size: %s', this._hashAlgo, this._keySize);
 
-		this._hashFunction = hashPrimitives[hashPair];
+		this._hashFunction = HashPrimitives[hashPair];
 
 		this._hashOutputSize = this._keySize / 8;
 

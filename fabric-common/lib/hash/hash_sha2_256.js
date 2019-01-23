@@ -12,34 +12,33 @@
  * limitations under the License.
  */
 
-'use strict';
-
 /**
- * Base class for hash primitives.
- * @abstract
- * @type {Hash}
+ * Implement hash primitives.
  */
-class Hash {
-	constructor(blockSize) {
-		this._blockSize = blockSize;
-		this.reset();
+const crypto = require('crypto');
+const Hash = require('../Hash');
+
+class hash_sha2_256 extends Hash {
+
+	constructor() {
+		super(512);
 	}
 
-	hash(data) {
-		return this.reset().update(data).finalize();
+	hash(data, encoding = 'hex') {
+		return this.reset().update(data).finalize(encoding);
 	}
 
 	reset() {
-		return this;
+		this._hash = crypto.createHash('sha256');
+		return super.reset();
 	}
 
-	update(data) {
-		this._hash.update(data);
-		return this;
+	finalize(encoding) {
+		const hash = this._hash.digest(encoding);
+		this.reset();
+		return hash;
 	}
 
-	finalize() {
-	}
 }
 
-module.exports = Hash;
+module.exports = hash_sha2_256;

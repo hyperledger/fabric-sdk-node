@@ -20,7 +20,7 @@ const urlParser = require('url');
 
 const utils = require('./utils.js');
 const logger = utils.getLogger('Remote.js');
-const {hash_sha2_256} = require('./hash');
+const {HashPrimitives} = require('fabric-common');
 const MAX_SEND = 'grpc.max_send_message_length';
 const MAX_RECEIVE = 'grpc.max_receive_message_length';
 const MAX_SEND_V10 = 'grpc-max-send-message-length';
@@ -197,8 +197,7 @@ class Remote {
 	getClientCertHash() {
 		if (this.clientCert) {
 			const der_cert = utils.pemToDER(this.clientCert);
-			const hash = new hash_sha2_256();
-			return hash.reset().update(der_cert).finalize();
+			return HashPrimitives.SHA2_256(der_cert, null /* We need a Buffer */);
 		} else {
 			return null;
 		}

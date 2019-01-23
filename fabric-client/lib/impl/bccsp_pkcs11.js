@@ -7,7 +7,7 @@
 
 'use strict';
 
-const {CryptoAlgorithms, CryptoSuite} = require('fabric-common');
+const {CryptoAlgorithms, CryptoSuite, HashPrimitives} = require('fabric-common');
 const utils = require('../utils');
 const aesKey = require('./aes/pkcs11_key.js');
 const ecdsaKey = require('./ecdsa/pkcs11_key.js');
@@ -25,7 +25,6 @@ const callsite = require('callsite');
 const pkcs11js = require('pkcs11js');
 const util = require('util');
 const ECDSAKey = require('./ecdsa/key.js');
-const hashPrimitives = require('../hash.js');
 
 const logger = utils.getLogger('crypto_pkcs11');
 
@@ -206,7 +205,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 		}
 		hashAlgo = hashAlgo.toUpperCase();
 		const hashPair = `${hashAlgo}_${keySize}`;
-		if (!CryptoAlgorithms[hashPair] || !hashPrimitives[hashPair]) {
+		if (!CryptoAlgorithms[hashPair] || !HashPrimitives[hashPair]) {
 			throw Error(util.format('Unsupported hash algorithm and key size pair: %s', hashPair));
 		}
 
@@ -219,7 +218,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 
 		this._hashAlgo = hashAlgo;
 
-		this._hashFunction = hashPrimitives[hashPair];
+		this._hashFunction = HashPrimitives[hashPair];
 
 		/*
 		 * Load native PKCS11 library, open PKCS11 session and login.
@@ -251,8 +250,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 * sha256 of tod as SKI.
 	 */
 	_ski() {
-		const hash = new hashPrimitives.hash_sha2_256();
-		return hash.reset().update(this._tod()).finalize();
+		return HashPrimitives.SHA2_256(this._tod(), null /* We need a Buffer */);
 	}
 
 	/*
@@ -475,7 +473,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			/*
 			 * Set CKA_ID of public and private key to be SKI.
 			 */
-			const ski = Buffer.from(hashPrimitives.SHA2_256(ecpt), 'hex');
+			const ski = HashPrimitives.SHA2_256(ecpt, null /* We want a Buffer */);
 			this._pkcs11SetAttributeValue(
 				pkcs11, pkcs11Session, handles.publicKey,
 				[{type: pkcs11js.CKA_ID, value: ski}, {type: pkcs11js.CKA_LABEL, value: ski.toString('hex')}]);

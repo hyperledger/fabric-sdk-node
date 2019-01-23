@@ -7,14 +7,13 @@
 
 'use strict';
 
-const Hash = require('../../hash.js');
 const utils = require('../../utils.js');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 const KEYUTIL = jsrsa.KEYUTIL;
 const ECDSA = jsrsa.ECDSA;
 const jws = jsrsa.jws;
-const {Key} = require('fabric-common');
+const {HashPrimitives, Key} = require('fabric-common');
 const logger = utils.getLogger('ecdsa/key.js');
 
 /**
@@ -76,7 +75,7 @@ module.exports = class ECDSA_KEY extends Key {
 		}
 
 		// always use SHA256 regardless of the key size in effect
-		return Hash.SHA2_256(buff);
+		return HashPrimitives.SHA2_256(buff);
 	}
 
 	isSymmetric() {

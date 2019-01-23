@@ -14,32 +14,19 @@
 
 'use strict';
 
-/**
- * Base class for hash primitives.
- * @abstract
- * @type {Hash}
- */
-class Hash {
-	constructor(blockSize) {
-		this._blockSize = blockSize;
-		this.reset();
-	}
+const hash_sha2_256 = require('./hash/hash_sha2_256');
+const hash_sha2_384 = require('./hash/hash_sha2_384');
+const {sha3_256, sha3_384} = require('js-sha3');
 
-	hash(data) {
-		return this.reset().update(data).finalize();
-	}
+const HashPrimitives = {
+	SHA2_256: (data, encoding = 'hex') => {
+		return (new hash_sha2_256()).hash(data, encoding);
+	},
+	SHA2_384: (data, encoding = 'hex') => {
+		return (new hash_sha2_384()).hash(data, encoding);
+	},
+	SHA3_256: sha3_256,
+	SHA3_384: sha3_384
+};
 
-	reset() {
-		return this;
-	}
-
-	update(data) {
-		this._hash.update(data);
-		return this;
-	}
-
-	finalize() {
-	}
-}
-
-module.exports = Hash;
+module.exports = HashPrimitives;
