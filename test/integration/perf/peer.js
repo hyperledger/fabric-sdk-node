@@ -14,7 +14,6 @@ const test = _test(tape);
 const util = require('util');
 const fs = require('fs');
 const path = require('path');
-const ProtoLoader = require('fabric-client/lib/ProtoLoader');
 const e2eUtils = require('../e2e/e2eUtils.js');
 
 const Client = require('fabric-client');
@@ -22,8 +21,8 @@ const Client = require('fabric-client');
 const testUtil = require('../../unit/util.js');
 let ORGS;
 
-const commonProto = ProtoLoader.load(path.join(__dirname, '../../../fabric-client/lib/protos/common/common.proto')).common;
-const ccProto = ProtoLoader.load(path.join(__dirname, '../../../fabric-client/lib/protos/peer/chaincode.proto')).protos;
+const commonProto = require('fabric-protos').common;
+const ccProto = require('fabric-protos').protos;
 
 const client = new Client();
 const org = 'org1';

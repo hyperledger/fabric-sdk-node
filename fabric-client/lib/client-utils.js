@@ -11,24 +11,17 @@ const util = require('util');
 const utils = require('./utils.js');
 const logger = utils.getLogger('client-utils.js');
 
-const ProtoLoader = require('./ProtoLoader');
-
-const _commonProto = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
-const _proposalProto = ProtoLoader.load(__dirname +
-	'/protos/peer/proposal.proto').protos;
-const _ccProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
-const _timestampProto = ProtoLoader.load(__dirname +
-	'/protos/google/protobuf/timestamp.proto').google.protobuf;
+const fabprotos = require('fabric-protos');
 
 /*
  * This function will build the proposal
  */
 module.exports.buildProposal = (invokeSpec, header, transientMap) => {
 	// construct the ChaincodeInvocationSpec
-	const cciSpec = new _ccProto.ChaincodeInvocationSpec();
+	const cciSpec = new fabprotos.protos.ChaincodeInvocationSpec();
 	cciSpec.setChaincodeSpec(invokeSpec);
 
-	const cc_payload = new _proposalProto.ChaincodeProposalPayload();
+	const cc_payload = new fabprotos.protos.ChaincodeProposalPayload();
 	cc_payload.setInput(cciSpec.toBuffer());
 
 	if (typeof transientMap === 'object') {
@@ -39,7 +32,7 @@ module.exports.buildProposal = (invokeSpec, header, transientMap) => {
 	}
 
 	// proposal -- will switch to building the proposal once the signProposal is used
-	const proposal = new _proposalProto.Proposal();
+	const proposal = new fabprotos.protos.Proposal();
 	proposal.setHeader(header.toBuffer());
 	proposal.setPayload(cc_payload.toBuffer()); // chaincode proposal payload
 
@@ -101,7 +94,7 @@ module.exports.buildChannelHeader = (type, channel_id, tx_id, epoch, chaincode_i
 	logger.debug(
 		'buildChannelHeader - type %s channel_id %s tx_id %d epoch %s chaincode_id %s',
 		type, channel_id, tx_id, epoch, chaincode_id);
-	const channelHeader = new _commonProto.ChannelHeader();
+	const channelHeader = new fabprotos.common.ChannelHeader();
 	channelHeader.setType(type); // int32
 	channelHeader.setVersion(1); // int32
 	if (!time_stamp) {
@@ -113,10 +106,10 @@ module.exports.buildChannelHeader = (type, channel_id, tx_id, epoch, chaincode_i
 		channelHeader.setEpoch(epoch); // uint64
 	}
 	if (chaincode_id) {
-		const chaincodeID = new _ccProto.ChaincodeID();
+		const chaincodeID = new fabprotos.protos.ChaincodeID();
 		chaincodeID.setName(chaincode_id);
 
-		const headerExt = new _proposalProto.ChaincodeHeaderExtension();
+		const headerExt = new fabprotos.protos.ChaincodeHeaderExtension();
 		headerExt.setChaincodeId(chaincodeID);
 
 		channelHeader.setExtension(headerExt.toBuffer());
@@ -134,11 +127,11 @@ module.exports.buildChannelHeader = (type, channel_id, tx_id, epoch, chaincode_i
  * This function will build the common header
  */
 module.exports.buildHeader = (creator, channelHeader, nonce) => {
-	const signatureHeader = new _commonProto.SignatureHeader();
+	const signatureHeader = new fabprotos.common.SignatureHeader();
 	signatureHeader.setCreator(creator.serialize());
 	signatureHeader.setNonce(nonce);
 
-	const header = new _commonProto.Header();
+	const header = new fabprotos.common.Header();
 	header.setSignatureHeader(signatureHeader.toBuffer());
 	header.setChannelHeader(channelHeader.toBuffer());
 
@@ -177,10 +170,10 @@ module.exports.translateCCType = (type) => {
 	const chaincodeType = type ? type.toLowerCase() : 'golang';
 
 	const map = {
-		golang: _ccProto.ChaincodeSpec.Type.GOLANG,
-		car: _ccProto.ChaincodeSpec.Type.CAR,
-		java: _ccProto.ChaincodeSpec.Type.JAVA,
-		node: _ccProto.ChaincodeSpec.Type.NODE
+		golang: fabprotos.protos.ChaincodeSpec.Type.GOLANG,
+		car: fabprotos.protos.ChaincodeSpec.Type.CAR,
+		java: fabprotos.protos.ChaincodeSpec.Type.JAVA,
+		node: fabprotos.protos.ChaincodeSpec.Type.NODE
 	};
 	const value = map[chaincodeType];
 
@@ -189,10 +182,10 @@ module.exports.translateCCType = (type) => {
 
 module.exports.ccTypeToString = (ccType) => {
 	const map = {};
-	map[_ccProto.ChaincodeSpec.Type.GOLANG] = 'golang';
-	map[_ccProto.ChaincodeSpec.Type.CAR] = 'car';
-	map[_ccProto.ChaincodeSpec.Type.JAVA] = 'java';
-	map[_ccProto.ChaincodeSpec.Type.NODE] = 'node';
+	map[fabprotos.protos.ChaincodeSpec.Type.GOLANG] = 'golang';
+	map[fabprotos.protos.ChaincodeSpec.Type.CAR] = 'car';
+	map[fabprotos.protos.ChaincodeSpec.Type.JAVA] = 'java';
+	map[fabprotos.protos.ChaincodeSpec.Type.NODE] = 'node';
 	const value = map[ccType];
 
 	return value;
@@ -203,7 +196,7 @@ module.exports.ccTypeToString = (ccType) => {
  */
 module.exports.buildCurrentTimestamp = () => {
 	const now = new Date();
-	const timestamp = new _timestampProto.Timestamp();
+	const timestamp = new fabprotos.google.protobuf.Timestamp();
 	timestamp.setSeconds(now.getTime() / 1000);
 	timestamp.setNanos((now.getTime() % 1000) * 1000000);
 	return timestamp;

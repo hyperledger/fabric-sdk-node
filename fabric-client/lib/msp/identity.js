@@ -5,9 +5,7 @@
 */
 'use strict';
 
-const ProtoLoader = require('../ProtoLoader');
-
-const identityProto = ProtoLoader.load(__dirname + '/../protos/msp/identities.proto').msp;
+const fabprotos = require('fabric-protos');
 
 /**
  * This interface is shared within the peer and client API of the membership service provider.
@@ -112,7 +110,7 @@ class Identity {
 	 * @returns {Buffer} protobuf-based serialization with two fields: "mspid" and "certificate PEM bytes"
 	 */
 	serialize() {
-		const serializedIdentity = new identityProto.SerializedIdentity();
+		const serializedIdentity = new fabprotos.msp.SerializedIdentity();
 		serializedIdentity.setMspid(this.getMSPId());
 		serializedIdentity.setIdBytes(Buffer.from(this._certificate));
 		return serializedIdentity.toBuffer();

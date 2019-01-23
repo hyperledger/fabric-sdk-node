@@ -14,11 +14,8 @@
 
 'use strict';
 
-const ProtoLoader = require('./ProtoLoader');
+const fabprotos = require('fabric-protos');
 const util = require('util');
-
-const _mspPrProto = ProtoLoader.load(__dirname + '/protos/msp/msp_principal.proto').common;
-const _policiesProto = ProtoLoader.load(__dirname + '/protos/common/policies.proto').common;
 
 const IDENTITY_TYPE = {
 	Role: 'role',
@@ -71,7 +68,7 @@ const EndorsementPolicy = class {
 	 */
 	static buildPolicy(msps, policy) {
 		const principals = [];
-		const envelope = new _policiesProto.SignaturePolicyEnvelope();
+		const envelope = new fabprotos.common.SignaturePolicyEnvelope();
 		if (!policy) {
 			// no policy was passed in, construct a 'Signed By any member of an organization by mspid' policy
 			// construct a list of msp principals to select from using the 'n out of' operator
@@ -79,18 +76,18 @@ const EndorsementPolicy = class {
 			let index = 0;
 			for (const name in msps) {
 				if (msps.hasOwnProperty(name)) {
-					const onePrn = new _mspPrProto.MSPPrincipal();
-					onePrn.setPrincipalClassification(_mspPrProto.MSPPrincipal.Classification.ROLE);
+					const onePrn = new fabprotos.common.MSPPrincipal();
+					onePrn.setPrincipalClassification(fabprotos.common.MSPPrincipal.Classification.ROLE);
 
-					const memberRole = new _mspPrProto.MSPRole();
-					memberRole.setRole(_mspPrProto.MSPRole.MSPRoleType.MEMBER);
+					const memberRole = new fabprotos.common.MSPRole();
+					memberRole.setRole(fabprotos.common.MSPRole.MSPRoleType.MEMBER);
 					memberRole.setMspIdentifier(name);
 
 					onePrn.setPrincipal(memberRole.toBuffer());
 
 					principals.push(onePrn);
 
-					const signedBy = new _policiesProto.SignaturePolicy();
+					const signedBy = new fabprotos.common.SignaturePolicy();
 					signedBy.set('signed_by', index++);
 					signedBys.push(signedBy);
 				}
@@ -101,11 +98,11 @@ const EndorsementPolicy = class {
 			}
 
 			// construct 'one of any' policy
-			const oneOfAny = new _policiesProto.SignaturePolicy.NOutOf();
+			const oneOfAny = new fabprotos.common.SignaturePolicy.NOutOf();
 			oneOfAny.setN(1);
 			oneOfAny.setRules(signedBys);
 
-			const noutof = new _policiesProto.SignaturePolicy();
+			const noutof = new fabprotos.common.SignaturePolicy();
 			noutof.set('n_out_of', oneOfAny);
 
 			envelope.setVersion(0);
@@ -135,18 +132,18 @@ const EndorsementPolicy = class {
 
 function buildPrincipal(identity) {
 	const principalType = getIdentityType(identity);
-	const newPrincipal = new _mspPrProto.MSPPrincipal();
+	const newPrincipal = new fabprotos.common.MSPPrincipal();
 
 	if (principalType === IDENTITY_TYPE.Role) {
-		newPrincipal.setPrincipalClassification(_mspPrProto.MSPPrincipal.Classification.ROLE);
-		const newRole = new _mspPrProto.MSPRole();
+		newPrincipal.setPrincipalClassification(fabprotos.common.MSPPrincipal.Classification.ROLE);
+		const newRole = new fabprotos.common.MSPRole();
 		const roleName = identity[principalType].name;
 		if (roleName === 'peer') {
-			newRole.setRole(_mspPrProto.MSPRole.MSPRoleType.PEER);
+			newRole.setRole(fabprotos.common.MSPRole.MSPRoleType.PEER);
 		} else if (roleName === 'member') {
-			newRole.setRole(_mspPrProto.MSPRole.MSPRoleType.MEMBER);
+			newRole.setRole(fabprotos.common.MSPRole.MSPRoleType.MEMBER);
 		} else if (roleName === 'admin') {
-			newRole.setRole(_mspPrProto.MSPRole.MSPRoleType.ADMIN);
+			newRole.setRole(fabprotos.common.MSPRole.MSPRoleType.ADMIN);
 		} else {
 			throw new Error(util.format('Invalid role name found: must be one of "peer", "member" or "admin", but found "%s"', roleName));
 		}
@@ -204,14 +201,14 @@ function getPolicyType(spec) {
 function parsePolicy(spec) {
 	const type = getPolicyType(spec);
 	if (type === 'signed-by') {
-		const signedBy = new _policiesProto.SignaturePolicy();
+		const signedBy = new fabprotos.common.SignaturePolicy();
 		signedBy.set('signed_by', spec[type]);
 		return signedBy;
 	} else {
 		const n = type.match(/^(\d+)-of$/)[1];
 		const array = spec[type];
 
-		const nOutOf = new _policiesProto.SignaturePolicy.NOutOf();
+		const nOutOf = new fabprotos.common.SignaturePolicy.NOutOf();
 		nOutOf.setN(parseInt(n));
 
 		const subs = [];
@@ -222,7 +219,7 @@ function parsePolicy(spec) {
 
 		nOutOf.setRules(subs);
 
-		const nOf = new _policiesProto.SignaturePolicy();
+		const nOf = new fabprotos.common.SignaturePolicy();
 		nOf.set('n_out_of', nOutOf);
 
 		return nOf;

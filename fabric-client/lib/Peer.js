@@ -16,11 +16,8 @@
 
 const utils = require('./utils.js');
 const Remote = require('./Remote');
-const ProtoLoader = require('./ProtoLoader');
+const fabprotos = require('fabric-protos');
 const util = require('util');
-
-const _serviceProto = ProtoLoader.load(__dirname + '/protos/peer/peer.proto').protos;
-const _discoveryProto = ProtoLoader.load(__dirname + '/protos/discovery/protocol.proto').discovery;
 
 const logger = utils.getLogger('Peer.js');
 
@@ -59,11 +56,11 @@ class Peer extends Remote {
 	_createClients() {
 		if (!this._endorserClient) {
 			logger.debug('_createClients - create peer endorser connection ' + this._endpoint.addr);
-			this._endorserClient = new _serviceProto.Endorser(this._endpoint.addr, this._endpoint.creds, this._options);
+			this._endorserClient = new fabprotos.protos.Endorser(this._endpoint.addr, this._endpoint.creds, this._options);
 		}
 		if (!this._discoveryClient) {
 			logger.debug('_createClients - create peer discovery connection ' + this._endpoint.addr);
-			this._discoveryClient = new _discoveryProto.Discovery(this._endpoint.addr, this._endpoint.creds, this._options);
+			this._discoveryClient = new fabprotos.discovery.Discovery(this._endpoint.addr, this._endpoint.creds, this._options);
 		}
 	}
 

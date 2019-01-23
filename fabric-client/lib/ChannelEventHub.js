@@ -23,23 +23,19 @@ const util = require('util');
 
 const BlockDecoder = require('./BlockDecoder.js');
 
-const ProtoLoader = require('./ProtoLoader');
-const _abProto = ProtoLoader.load(__dirname + '/protos/orderer/ab.proto').orderer;
-const _eventsProto = ProtoLoader.load(__dirname + '/protos/peer/events.proto').protos;
-const _commonProto = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
-const _transProto = ProtoLoader.load(__dirname + '/protos/peer/transaction.proto').protos;
+const fabprotos = require('fabric-protos');
 
 const _validation_codes = {};
-let keys = Object.keys(_transProto.TxValidationCode);
+let keys = Object.keys(fabprotos.protos.TxValidationCode);
 for (const key of keys) {
-	const new_key = _transProto.TxValidationCode[key];
+	const new_key = fabprotos.protos.TxValidationCode[key];
 	_validation_codes[new_key] = key;
 }
 
 const _header_types = {};
-keys = Object.keys(_commonProto.HeaderType);
+keys = Object.keys(fabprotos.common.HeaderType);
 for (const key of keys) {
-	const new_key = _commonProto.HeaderType[key];
+	const new_key = fabprotos.common.HeaderType[key];
 	_header_types[new_key] = key;
 }
 
@@ -382,7 +378,7 @@ class ChannelEventHub {
 		options = utils.checkAndAddConfigSetting('grpc.http2.min_time_between_pings_ms', five_minutes_ms, options);
 
 		logger.debug('_connect - options %j', options);
-		this._event_client = new _eventsProto.Deliver(this._peer._endpoint.addr, this._peer._endpoint.creds, options);
+		this._event_client = new fabprotos.protos.Deliver(this._peer._endpoint.addr, this._peer._endpoint.creds, options);
 		if (this._filtered_stream) {
 			this._stream = this._event_client.deliverFiltered();
 		} else {
@@ -684,30 +680,30 @@ class ChannelEventHub {
 		}
 
 		// The behavior when a missing block is encountered
-		let behavior = _abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY;
+		let behavior = fabprotos.orderer.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY;
 		// build start
-		const seekStart = new _abProto.SeekPosition();
+		const seekStart = new fabprotos.orderer.SeekPosition();
 		if (this._starting_block_number) {
-			const seekSpecifiedStart = new _abProto.SeekSpecified();
+			const seekSpecifiedStart = new fabprotos.orderer.SeekSpecified();
 			seekSpecifiedStart.setNumber(this._starting_block_number);
 			seekStart.setSpecified(seekSpecifiedStart);
 		} else {
-			const seekNewest = new _abProto.SeekNewest();
+			const seekNewest = new fabprotos.orderer.SeekNewest();
 			seekStart.setNewest(seekNewest);
 		}
 
 		// build stop
-		const seekStop = new _abProto.SeekPosition();
+		const seekStop = new fabprotos.orderer.SeekPosition();
 		if (this._ending_block_newest) {
-			const seekNewest = new _abProto.SeekNewest();
+			const seekNewest = new fabprotos.orderer.SeekNewest();
 			seekStop.setNewest(seekNewest);
-			behavior = _abProto.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
+			behavior = fabprotos.orderer.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
 		} else {
-			const seekSpecifiedStop = new _abProto.SeekSpecified();
+			const seekSpecifiedStop = new fabprotos.orderer.SeekSpecified();
 			if (this._ending_block_number) {
 				seekSpecifiedStop.setNumber(this._ending_block_number);
 				// user should know the block does not exist
-				behavior = _abProto.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
+				behavior = fabprotos.orderer.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
 			} else {
 				seekSpecifiedStop.setNumber(Long.MAX_VALUE);
 			}
@@ -715,7 +711,7 @@ class ChannelEventHub {
 		}
 
 		// seek info with all parts
-		const seekInfo = new _abProto.SeekInfo();
+		const seekInfo = new fabprotos.orderer.SeekInfo();
 		seekInfo.setStart(seekStart);
 		seekInfo.setStop(seekStop);
 		// BLOCK_UNTIL_READY will mean hold the stream open and keep sending as
@@ -726,7 +722,7 @@ class ChannelEventHub {
 
 		// build the header for use with the seekInfo payload
 		const seekInfoHeader = clientUtils.buildChannelHeader(
-			_commonProto.HeaderType.DELIVER_SEEK_INFO,
+			fabprotos.common.HeaderType.DELIVER_SEEK_INFO,
 			this._channel._name,
 			txId.getTransactionID(),
 			this._initial_epoch,
@@ -736,7 +732,7 @@ class ChannelEventHub {
 		);
 
 		const seekHeader = clientUtils.buildHeader(identity, seekInfoHeader, txId.getNonce());
-		const seekPayload = new _commonProto.Payload();
+		const seekPayload = new fabprotos.common.Payload();
 		seekPayload.setHeader(seekHeader);
 		seekPayload.setData(seekInfo.toBuffer());
 		const seekPayloadBytes = seekPayload.toBuffer();
@@ -1291,7 +1287,7 @@ class ChannelEventHub {
 			}
 		} else {
 			logger.debug(`_processTxEvents block num=${block.header.number}`);
-			const txStatusCodes = block.metadata.metadata[_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER];
+			const txStatusCodes = block.metadata.metadata[fabprotos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
 			for (let index = 0; index < block.data.data.length; index++) {
 				const channel_header = block.data.data[index].payload.header.channel_header;
 				this._checkTransactionId(channel_header.tx_id,
@@ -1372,7 +1368,7 @@ class ChannelEventHub {
 								const chaincode_event = payload.action.proposal_response_payload.extension.events;
 								logger.debug('_processChaincodeEvents - chaincode_event %s', chaincode_event);
 
-								const txStatusCodes = block.metadata.metadata[_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER];
+								const txStatusCodes = block.metadata.metadata[fabprotos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
 								const channelHeader = block.data.data[index].payload.header.channel_header;
 								const val_code = txStatusCodes[index];
 

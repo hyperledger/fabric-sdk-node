@@ -10,11 +10,8 @@
 const utils = require('./utils.js');
 const Remote = require('./Remote');
 
-const ProtoLoader = require('./ProtoLoader');
+const fabprotos = require('fabric-protos');
 const logger = utils.getLogger('Orderer.js');
-
-const _abProto = ProtoLoader.load(__dirname + '/protos/orderer/ab.proto').orderer;
-const _common = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
 
 /**
  * @typedef {Error} SYSTEM_TIMEOUT The Error message string that indicates that
@@ -80,7 +77,7 @@ class Orderer extends Remote {
 		super(url, opts);
 
 		logger.debug('Orderer.const - url: %s timeout: %s', url, this._request_timeout);
-		this._ordererClient = new _abProto.AtomicBroadcast(this._endpoint.addr, this._endpoint.creds, this._options);
+		this._ordererClient = new fabprotos.orderer.AtomicBroadcast(this._endpoint.addr, this._endpoint.creds, this._options);
 		this._sendDeliverConnect = false;
 	}
 
@@ -237,16 +234,16 @@ class Orderer extends Remote {
 						logger.debug('sendDeliver - on data'); // response: %j', response);
 						// check the type of the response
 						if (response.Type === 'block') {
-							const blockHeader = new _common.BlockHeader();
+							const blockHeader = new fabprotos.common.BlockHeader();
 							blockHeader.setNumber(response.block.header.number);
 							blockHeader.setPreviousHash(response.block.header.previous_hash);
 							blockHeader.setDataHash(response.block.header.data_hash);
-							const blockData = new _common.BlockData();
+							const blockData = new fabprotos.common.BlockData();
 							blockData.setData(response.block.data.data);
-							const blockMetadata = new _common.BlockMetadata();
+							const blockMetadata = new fabprotos.common.BlockMetadata();
 							blockMetadata.setMetadata(response.block.metadata.metadata);
 
-							const block = new _common.Block();
+							const block = new fabprotos.common.Block();
 							block.setHeader(blockHeader);
 							block.setData(blockData);
 							block.setMetadata(blockMetadata);

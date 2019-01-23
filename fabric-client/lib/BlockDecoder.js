@@ -14,28 +14,9 @@
 
 'use strict';
 
-const ProtoLoader = require('./ProtoLoader');
-const path = require('path');
+const fabprotos = require('fabric-protos');
 const utils = require('./utils.js');
 const logger = utils.getLogger('BlockDecoder.js');
-
-const _ccEventProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode_event.proto').protos;
-const _transProto = ProtoLoader.load(__dirname + '/protos/peer/transaction.proto').protos;
-const _proposalProto = ProtoLoader.load(__dirname + '/protos/peer/proposal.proto').protos;
-const _responseProto = ProtoLoader.load(__dirname + '/protos/peer/proposal_response.proto').protos;
-const _peerConfigurationProto = ProtoLoader.load(__dirname + '/protos/peer/configuration.proto').protos;
-const _chaincodeProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
-const _mspPrProto = ProtoLoader.load(__dirname + '/protos/msp/msp_principal.proto').common;
-const _commonProto = ProtoLoader.load(__dirname + '/protos/common/common.proto').common;
-const _configtxProto = ProtoLoader.load(__dirname + '/protos/common/configtx.proto').common;
-const _policiesProto = ProtoLoader.load(__dirname + '/protos/common/policies.proto').common;
-const _commonConfigurationProto = ProtoLoader.load(__dirname + '/protos/common/configuration.proto').common;
-const _ordererConfigurationProto = ProtoLoader.load(__dirname + '/protos/orderer/configuration.proto').orderer;
-const _mspConfigProto = ProtoLoader.load(__dirname + '/protos/msp/msp_config.proto').msp;
-const _identityProto = ProtoLoader.load(path.join(__dirname, '/protos/msp/identities.proto')).msp;
-const _rwsetProto = ProtoLoader.load(path.join(__dirname, '/protos/ledger/rwset/rwset.proto')).rwset;
-const _kv_rwsetProto = ProtoLoader.load(path.join(__dirname, '/protos/ledger/rwset/kvrwset/kv_rwset.proto')).kvrwset;
-
 
 /**
  * Utility class to convert a protobuf encoded byte array of a Hyperledger Fabric block
@@ -509,7 +490,7 @@ rule
 		}
 		const block = {};
 		try {
-			const proto_block = _commonProto.Block.decode(block_bytes);
+			const proto_block = fabprotos.common.Block.decode(block_bytes);
 			block.header = decodeBlockHeader(proto_block.getHeader());
 			block.data = decodeBlockData(proto_block.getData());
 			block.metadata = decodeBlockMetaData(proto_block.getMetadata());
@@ -576,7 +557,7 @@ payload -- {}
 			throw new Error('Proccesed transaction data is not a byte buffer');
 		}
 		const processed_transaction = {};
-		const proto_processed_transaction = _transProto.ProcessedTransaction.decode(processed_transaction_bytes);
+		const proto_processed_transaction = fabprotos.protos.ProcessedTransaction.decode(processed_transaction_bytes);
 		processed_transaction.validationCode = proto_processed_transaction.getValidationCode();
 		processed_transaction.transactionEnvelope = decodeBlockDataEnvelope(proto_processed_transaction.getTransactionEnvelope());
 
@@ -599,9 +580,9 @@ function decodeBlockData(proto_block_data, not_proto) {
 	for (const i in proto_block_data.data) {
 		let proto_envelope = null;
 		if (not_proto) {
-			proto_envelope = _commonProto.Envelope.decode(proto_block_data.data[i]);
+			proto_envelope = fabprotos.common.Envelope.decode(proto_block_data.data[i]);
 		} else {
-			proto_envelope = _commonProto.Envelope.decode(proto_block_data.data[i].toBuffer());
+			proto_envelope = fabprotos.common.Envelope.decode(proto_block_data.data[i].toBuffer());
 		}
 		const envelope = decodeBlockDataEnvelope(proto_envelope);
 		data.data.push(envelope);
@@ -650,8 +631,8 @@ function decodeLastConfigSequenceNumber(metadata_bytes) {
 	const last_config = {};
 	last_config.value = {};
 	if (metadata_bytes) {
-		const proto_metadata = _commonProto.Metadata.decode(metadata_bytes);
-		const proto_last_config = _commonProto.LastConfig.decode(proto_metadata.getValue());
+		const proto_metadata = fabprotos.common.Metadata.decode(metadata_bytes);
+		const proto_last_config = fabprotos.common.LastConfig.decode(proto_metadata.getValue());
 		last_config.value.index = proto_last_config.getIndex().toString(); // unit64
 		last_config.signatures = decodeMetadataValueSignatures(proto_metadata.signatures);
 	}
@@ -660,7 +641,7 @@ function decodeLastConfigSequenceNumber(metadata_bytes) {
 
 function decodeMetadataSignatures(metadata_bytes) {
 	const metadata = {};
-	const proto_metadata = _commonProto.Metadata.decode(metadata_bytes);
+	const proto_metadata = fabprotos.common.Metadata.decode(metadata_bytes);
 	metadata.value = proto_metadata.getValue().toBuffer().toString();
 	metadata.signatures = decodeMetadataValueSignatures(proto_metadata.signatures);
 
@@ -672,7 +653,7 @@ function decodeMetadataValueSignatures(proto_meta_signatures) {
 	if (proto_meta_signatures) {
 		for (const i in proto_meta_signatures) {
 			const metadata_signature = {};
-			const proto_metadata_signature = _commonProto.MetadataSignature.decode(proto_meta_signatures[i].toBuffer());
+			const proto_metadata_signature = fabprotos.common.MetadataSignature.decode(proto_meta_signatures[i].toBuffer());
 			metadata_signature.signature_header = decodeSignatureHeader(proto_metadata_signature.getSignatureHeader());
 			metadata_signature.signature = proto_metadata_signature.getSignature().toBuffer();
 			signatures.push(metadata_signature);
@@ -687,7 +668,7 @@ function decodeBlockDataEnvelope(proto_envelope) {
 	envelope.signature = proto_envelope.getSignature().toBuffer(); // leave as bytes
 
 	envelope.payload = {};
-	const proto_payload = _commonProto.Payload.decode(proto_envelope.getPayload().toBuffer());
+	const proto_payload = fabprotos.common.Payload.decode(proto_envelope.getPayload().toBuffer());
 	envelope.payload.header = decodeHeader(proto_payload.getHeader());
 	envelope.payload.data = HeaderType.decodePayloadBasedOnType(proto_payload.getData().toBuffer(), envelope.payload.header.channel_header.type);
 	// let's also have the type as the enum string value so it is easier to read
@@ -699,7 +680,7 @@ function decodeBlockDataEnvelope(proto_envelope) {
 function decodeEndorserTransaction(trans_bytes) {
 	const data = {};
 	try {
-		const transaction = _transProto.Transaction.decode(trans_bytes);
+		const transaction = fabprotos.protos.Transaction.decode(trans_bytes);
 		data.actions = [];
 		if (transaction && transaction.actions) {
 			for (const i in transaction.actions) {
@@ -718,14 +699,14 @@ function decodeEndorserTransaction(trans_bytes) {
 
 function decodeConfigEnvelope(config_envelope_bytes) {
 	const config_envelope = {};
-	const proto_config_envelope = _configtxProto.ConfigEnvelope.decode(config_envelope_bytes);
+	const proto_config_envelope = fabprotos.common.ConfigEnvelope.decode(config_envelope_bytes);
 	config_envelope.config = decodeConfig(proto_config_envelope.getConfig());
 	logger.debug('decodeConfigEnvelope - decode complete for config envelope - start config update');
 	config_envelope.last_update = {};
 	const proto_last_update = proto_config_envelope.getLastUpdate(); // this is a common.Envelope
 	if (proto_last_update !== null) { // the orderer's genesis block may not have this field
 		config_envelope.last_update.payload = {};
-		const proto_payload = _commonProto.Payload.decode(proto_last_update.getPayload().toBuffer());
+		const proto_payload = fabprotos.common.Payload.decode(proto_last_update.getPayload().toBuffer());
 		config_envelope.last_update.payload.header = decodeHeader(proto_payload.getHeader());
 		config_envelope.last_update.payload.data = decodeConfigUpdateEnvelope(proto_payload.getData().toBuffer());
 		config_envelope.last_update.signature = proto_last_update.getSignature().toBuffer(); // leave as bytes
@@ -744,7 +725,7 @@ function decodeConfig(proto_config) {
 
 function decodeConfigUpdateEnvelope(config_update_envelope_bytes) {
 	const config_update_envelope = {};
-	const proto_config_update_envelope = _configtxProto.ConfigUpdateEnvelope.decode(config_update_envelope_bytes);
+	const proto_config_update_envelope = fabprotos.common.ConfigUpdateEnvelope.decode(config_update_envelope_bytes);
 	config_update_envelope.config_update = decodeConfigUpdate(proto_config_update_envelope.getConfigUpdate().toBuffer());
 	const signatures = [];
 	for (const i in proto_config_update_envelope.signatures) {
@@ -759,7 +740,7 @@ function decodeConfigUpdateEnvelope(config_update_envelope_bytes) {
 
 function decodeConfigUpdate(config_update_bytes) {
 	const config_update = {};
-	const proto_config_update = _configtxProto.ConfigUpdate.decode(config_update_bytes);
+	const proto_config_update = fabprotos.common.ConfigUpdate.decode(config_update_bytes);
 	config_update.channel_id = proto_config_update.getChannelId();
 	config_update.read_set = decodeConfigGroup(proto_config_update.getReadSet());
 	config_update.write_set = decodeConfigGroup(proto_config_update.getWriteSet());
@@ -804,7 +785,7 @@ function decodeConfigValues(config_value_map) {
 
 function decodeConfigValueAnchorPeers(proto_config_value, config_value) {
 	const anchor_peers = [];
-	const proto_anchor_peers = _peerConfigurationProto.AnchorPeers.decode(proto_config_value.value.value);
+	const proto_anchor_peers = fabprotos.protos.AnchorPeers.decode(proto_config_value.value.value);
 	if (proto_anchor_peers && proto_anchor_peers.anchor_peers) {
 		for (const i in proto_anchor_peers.anchor_peers) {
 			const anchor_peer = {
@@ -820,7 +801,7 @@ function decodeConfigValueAnchorPeers(proto_config_value, config_value) {
 
 function decodeConfigValueMSP(proto_config_value, config_value) {
 	let msp_config = {};
-	const proto_msp_config = _mspConfigProto.MSPConfig.decode(proto_config_value.value.value);
+	const proto_msp_config = fabprotos.msp.MSPConfig.decode(proto_config_value.value.value);
 	if (proto_msp_config.getType() === 0) {
 		msp_config = decodeFabricMSPConfig(proto_msp_config.getConfig());
 	}
@@ -830,13 +811,13 @@ function decodeConfigValueMSP(proto_config_value, config_value) {
 }
 
 function decodeConfigValueConsensusType(proto_config_value, config_value) {
-	const proto_consensus_type = _ordererConfigurationProto.ConsensusType.decode(proto_config_value.value.value);
+	const proto_consensus_type = fabprotos.orderer.ConsensusType.decode(proto_config_value.value.value);
 	config_value.value.type = proto_consensus_type.getType(); // string
 	return config_value;
 }
 
 function decodeConfigValueBatchSize(proto_config_value, config_value) {
-	const proto_batch_size = _ordererConfigurationProto.BatchSize.decode(proto_config_value.value.value);
+	const proto_batch_size = fabprotos.orderer.BatchSize.decode(proto_config_value.value.value);
 	config_value.value.max_message_count = proto_batch_size.getMaxMessageCount(); // uint32
 	config_value.value.absolute_max_bytes = proto_batch_size.getAbsoluteMaxBytes(); // uint32
 	config_value.value.preferred_max_bytes = proto_batch_size.getPreferredMaxBytes(); // uint32
@@ -844,37 +825,37 @@ function decodeConfigValueBatchSize(proto_config_value, config_value) {
 }
 
 function decodeConfigValueBatchTimeout(proto_config_value, config_value) {
-	const proto_batch_timeout = _ordererConfigurationProto.BatchTimeout.decode(proto_config_value.value.value);
+	const proto_batch_timeout = fabprotos.orderer.BatchTimeout.decode(proto_config_value.value.value);
 	config_value.value.timeout = proto_batch_timeout.getTimeout(); // string
 	return config_value;
 }
 
 function decodeConfigValueChannelRestrictions(proto_config_value, config_value) {
-	const proto_channel_restrictions = _ordererConfigurationProto.ChannelRestrictions.decode(proto_config_value.value.value);
+	const proto_channel_restrictions = fabprotos.orderer.ChannelRestrictions.decode(proto_config_value.value.value);
 	config_value.value.max_count = proto_channel_restrictions.getMaxCount().toString(); // unit64
 	return config_value;
 }
 
 function decodeConfigValueBlockDataConsortium(proto_config_value, config_value) {
-	const consortium_name = _commonConfigurationProto.Consortium.decode(proto_config_value.value.value);
+	const consortium_name = fabprotos.common.Consortium.decode(proto_config_value.value.value);
 	config_value.value.name = consortium_name.getName(); // string
 	return config_value;
 }
 
 function decodeConfigValueHashingAlgorithm(proto_config_value, config_value) {
-	const proto_hashing_algorithm = _commonConfigurationProto.HashingAlgorithm.decode(proto_config_value.value.value);
+	const proto_hashing_algorithm = fabprotos.common.HashingAlgorithm.decode(proto_config_value.value.value);
 	config_value.value.name = proto_hashing_algorithm.getName();
 	return config_value;
 }
 
 function decodeConfigValueBlockDataHashingStructure(proto_config_value, config_value) {
-	const proto_blockdata_hashing_structure = _commonConfigurationProto.BlockDataHashingStructure.decode(proto_config_value.value.value);
+	const proto_blockdata_hashing_structure = fabprotos.common.BlockDataHashingStructure.decode(proto_config_value.value.value);
 	config_value.value.width = proto_blockdata_hashing_structure.getWidth(); //
 	return config_value;
 }
 
 function decodeConfigValueOrdererAddresses(proto_config_value, config_value) {
-	const orderer_addresses = _commonConfigurationProto.OrdererAddresses.decode(proto_config_value.value.value);
+	const orderer_addresses = fabprotos.common.OrdererAddresses.decode(proto_config_value.value.value);
 	const addresses = [];
 	const proto_addresses = orderer_addresses.getAddresses();
 	if (proto_addresses) {
@@ -951,14 +932,14 @@ function decodeConfigPolicy(proto_config_policy) {
 		config_policy.policy.type = Policy_PolicyType[proto_config_policy.value.policy.type];
 		logger.debug('decodeConfigPolicy ======> Policy item ::%s', proto_config_policy.key);
 		switch (proto_config_policy.value.policy.type) {
-			case _policiesProto.Policy.PolicyType.SIGNATURE:
+			case fabprotos.common.Policy.PolicyType.SIGNATURE:
 				config_policy.policy.value = decodeSignaturePolicyEnvelope(proto_config_policy.value.policy.value);
 				break;
-			case _policiesProto.Policy.PolicyType.MSP:
-			// var proto_msp = _policiesProto.Policy.decode(proto_config_policy.value.policy.value);
+			case fabprotos.common.Policy.PolicyType.MSP:
+			// var proto_msp = fabprotos.common.Policy.decode(proto_config_policy.value.policy.value);
 				logger.warn('decodeConfigPolicy - found a PolicyType of MSP. This policy type has not been implemented yet.');
 				break;
-			case _policiesProto.Policy.PolicyType.IMPLICIT_META:
+			case fabprotos.common.Policy.PolicyType.IMPLICIT_META:
 				config_policy.policy.value = decodeImplicitMetaPolicy(proto_config_policy.value.policy.value);
 				break;
 			default:
@@ -973,7 +954,7 @@ const ImplicitMetaPolicy_Rule = ['ANY', 'ALL', 'MAJORITY'];
 
 function decodeImplicitMetaPolicy(implicit_meta_policy_bytes) {
 	const implicit_meta_policy = {};
-	const proto_implicit_meta_policy = _policiesProto.ImplicitMetaPolicy.decode(implicit_meta_policy_bytes);
+	const proto_implicit_meta_policy = fabprotos.common.ImplicitMetaPolicy.decode(implicit_meta_policy_bytes);
 	implicit_meta_policy.sub_policy = proto_implicit_meta_policy.getSubPolicy();
 	implicit_meta_policy.rule = ImplicitMetaPolicy_Rule[proto_implicit_meta_policy.getRule()];
 	return implicit_meta_policy;
@@ -981,7 +962,7 @@ function decodeImplicitMetaPolicy(implicit_meta_policy_bytes) {
 
 function decodeSignaturePolicyEnvelope(signature_policy_envelope_bytes) {
 	const signature_policy_envelope = {};
-	const proto_signature_policy_envelope = _policiesProto.SignaturePolicyEnvelope.decode(signature_policy_envelope_bytes);
+	const proto_signature_policy_envelope = fabprotos.common.SignaturePolicyEnvelope.decode(signature_policy_envelope_bytes);
 	signature_policy_envelope.version = decodeVersion(proto_signature_policy_envelope.getVersion());
 	signature_policy_envelope.rule = decodeSignaturePolicy(proto_signature_policy_envelope.getRule());
 	const identities = [];
@@ -1023,8 +1004,8 @@ function decodeMSPPrincipal(proto_msp_principal) {
 	msp_principal.principal_classification = proto_msp_principal.getPrincipalClassification();
 	let proto_principal = null;
 	switch (msp_principal.principal_classification) {
-		case _mspPrProto.MSPPrincipal.Classification.ROLE:
-			proto_principal = _mspPrProto.MSPRole.decode(proto_msp_principal.getPrincipal());
+		case fabprotos.common.MSPPrincipal.Classification.ROLE:
+			proto_principal = fabprotos.common.MSPRole.decode(proto_msp_principal.getPrincipal());
 			msp_principal.msp_identifier = proto_principal.getMspIdentifier();
 			if (proto_principal.getRole() === 0) {
 				msp_principal.Role = 'MEMBER';
@@ -1032,13 +1013,13 @@ function decodeMSPPrincipal(proto_msp_principal) {
 				msp_principal.Role = 'ADMIN';
 			}
 			break;
-		case _mspPrProto.MSPPrincipal.Classification.ORGANIZATION_UNIT:
-			proto_principal = _mspPrProto.OrganizationUnit.decode(proto_msp_principal.getPrincipal());
+		case fabprotos.common.MSPPrincipal.Classification.ORGANIZATION_UNIT:
+			proto_principal = fabprotos.common.OrganizationUnit.decode(proto_msp_principal.getPrincipal());
 			msp_principal.msp_identifier = proto_principal.getMspIdentifier(); // string
 			msp_principal.organizational_unit_identifier = proto_principal.getOrganizationalUnitIdentifier(); // string
 			msp_principal.certifiers_identifier = proto_principal.getCertifiersIdentifier().toBuffer(); // bytes
 			break;
-		case _mspPrProto.MSPPrincipal.Classification.IDENTITY:
+		case fabprotos.common.MSPPrincipal.Classification.IDENTITY:
 			msp_principal = decodeIdentity(proto_msp_principal.getPrincipal());
 			break;
 	}
@@ -1056,7 +1037,7 @@ function decodeConfigSignature(proto_configSignature) {
 function decodeSignatureHeader(signature_header_bytes) {
 	// logger.debug('decodeSignatureHeader - %s',signature_header_bytes);
 	const signature_header = {};
-	const proto_signature_header = _commonProto.SignatureHeader.decode(signature_header_bytes);
+	const proto_signature_header = fabprotos.common.SignatureHeader.decode(signature_header_bytes);
 	signature_header.creator = decodeIdentity(proto_signature_header.getCreator().toBuffer());
 	signature_header.nonce = proto_signature_header.getNonce().toBuffer();
 
@@ -1067,7 +1048,7 @@ function decodeIdentity(id_bytes) {
 	// logger.debug('decodeIdentity - %s',id_bytes);
 	const identity = {};
 	try {
-		const proto_identity = _identityProto.SerializedIdentity.decode(id_bytes);
+		const proto_identity = fabprotos.msp.SerializedIdentity.decode(id_bytes);
 		identity.Mspid = proto_identity.getMspid();
 		identity.IdBytes = proto_identity.getIdBytes().toBuffer().toString();
 	} catch (err) {
@@ -1079,7 +1060,7 @@ function decodeIdentity(id_bytes) {
 
 function decodeFabricMSPConfig(msp_config_bytes) {
 	const msp_config = {};
-	const proto_msp_config = _mspConfigProto.FabricMSPConfig.decode(msp_config_bytes);
+	const proto_msp_config = fabprotos.msp.FabricMSPConfig.decode(msp_config_bytes);
 
 	msp_config.name = proto_msp_config.getName();
 	msp_config.root_certs = toPEMcerts(proto_msp_config.getRootCerts());
@@ -1123,7 +1104,7 @@ function toPEMcerts(buffer_array_in) {
 function decodeSigningIdentityInfo(signing_identity_info_bytes) {
 	const signing_identity_info = {};
 	if (signing_identity_info_bytes) {
-		const proto_signing_identity_info = _mspConfigProto.SigningIdentityInfo.decode(signing_identity_info_bytes);
+		const proto_signing_identity_info = fabprotos.msp.SigningIdentityInfo.decode(signing_identity_info_bytes);
 		signing_identity_info.public_signer = proto_signing_identity_info.getPublicSigner().toBuffer().toString();
 		signing_identity_info.private_signer = decodeKeyInfo(proto_signing_identity_info.getPrivateSigner());
 	}
@@ -1134,7 +1115,7 @@ function decodeSigningIdentityInfo(signing_identity_info_bytes) {
 function decodeKeyInfo(key_info_bytes) {
 	const key_info = {};
 	if (key_info_bytes) {
-		const proto_key_info = _mspConfigProto.KeyInfo.decode(key_info_bytes);
+		const proto_key_info = fabprotos.msp.KeyInfo.decode(key_info_bytes);
 		key_info.key_identifier = proto_key_info.getKeyIdentifier();
 		key_info.key_material = 'private'; // should not show this
 	}
@@ -1152,7 +1133,7 @@ function decodeHeader(proto_header) {
 
 function decodeChannelHeader(header_bytes) {
 	const channel_header = {};
-	const proto_channel_header = _commonProto.ChannelHeader.decode(header_bytes);
+	const proto_channel_header = fabprotos.common.ChannelHeader.decode(header_bytes);
 	channel_header.type = proto_channel_header.getType();
 	logger.debug('decodeChannelHeader - looking at type:%s', channel_header.type);
 	channel_header.version = decodeVersion(proto_channel_header.getVersion());
@@ -1178,7 +1159,7 @@ function timeStampToDate(time_stamp) {
 
 function decodeChaincodeActionPayload(payload_bytes) {
 	const payload = {};
-	const proto_chaincode_action_payload = _transProto.ChaincodeActionPayload.decode(payload_bytes);
+	const proto_chaincode_action_payload = fabprotos.protos.ChaincodeActionPayload.decode(payload_bytes);
 	payload.chaincode_proposal_payload = decodeChaincodeProposalPayload(proto_chaincode_action_payload.getChaincodeProposalPayload());
 	payload.action = decodeChaincodeEndorsedAction(proto_chaincode_action_payload.getAction());
 
@@ -1187,7 +1168,7 @@ function decodeChaincodeActionPayload(payload_bytes) {
 
 function decodeChaincodeProposalPayload(chaincode_proposal_payload_bytes) {
 	const chaincode_proposal_payload = {};
-	const proto_chaincode_proposal_payload = _proposalProto.ChaincodeProposalPayload.decode(chaincode_proposal_payload_bytes);
+	const proto_chaincode_proposal_payload = fabprotos.protos.ChaincodeProposalPayload.decode(chaincode_proposal_payload_bytes);
 	chaincode_proposal_payload.input = decodeChaincodeProposalPayloadInput(proto_chaincode_proposal_payload.getInput());
 	// TransientMap is not allowed to be included on ledger
 
@@ -1198,7 +1179,7 @@ function decodeChaincodeProposalPayloadInput(chaincode_proposal_payload_input_by
 	const chaincode_proposal_payload_input = {};
 
 	// For a normal transaction, input is ChaincodeInvocationSpec.
-	const proto_chaincode_invocation_spec = _chaincodeProto.ChaincodeInvocationSpec.decode(chaincode_proposal_payload_input_bytes);
+	const proto_chaincode_invocation_spec = fabprotos.protos.ChaincodeInvocationSpec.decode(chaincode_proposal_payload_input_bytes);
 	chaincode_proposal_payload_input.chaincode_spec = decodeChaincodeSpec(proto_chaincode_invocation_spec.getChaincodeSpec().toBuffer());
 
 	return chaincode_proposal_payload_input;
@@ -1223,7 +1204,7 @@ function chaincodeTypeToString(type) {
 
 function decodeChaincodeSpec(chaincode_spec_bytes) {
 	const chaincode_spec = {};
-	const proto_chaincode_spec = _chaincodeProto.ChaincodeSpec.decode(chaincode_spec_bytes);
+	const proto_chaincode_spec = fabprotos.protos.ChaincodeSpec.decode(chaincode_spec_bytes);
 	chaincode_spec.type = proto_chaincode_spec.getType();
 	// Add a string for the chaincode type (GOLANG, NODE, etc.)
 	chaincode_spec.typeString = chaincodeTypeToString(chaincode_spec.type);
@@ -1236,7 +1217,7 @@ function decodeChaincodeSpec(chaincode_spec_bytes) {
 
 function decodeChaincodeInput(chaincode_spec_input_bytes) {
 	const input = {};
-	const proto_chaincode_input = _chaincodeProto.ChaincodeInput.decode(chaincode_spec_input_bytes);
+	const proto_chaincode_input = fabprotos.protos.ChaincodeInput.decode(chaincode_spec_input_bytes);
 	const args = proto_chaincode_input.getArgs();
 
 	input.args = [];
@@ -1275,7 +1256,7 @@ function decodeEndorsement(proto_endorsement) {
 
 function decodeProposalResponsePayload(proposal_response_payload_bytes) {
 	const proposal_response_payload = {};
-	const proto_proposal_response_payload = _responseProto.ProposalResponsePayload.decode(proposal_response_payload_bytes);
+	const proto_proposal_response_payload = fabprotos.protos.ProposalResponsePayload.decode(proposal_response_payload_bytes);
 	proposal_response_payload.proposal_hash = proto_proposal_response_payload.getProposalHash().toBuffer().toString('hex');
 	proposal_response_payload.extension = decodeChaincodeAction(proto_proposal_response_payload.getExtension());
 
@@ -1285,7 +1266,7 @@ function decodeProposalResponsePayload(proposal_response_payload_bytes) {
 function decodeChaincodeAction(action_bytes) {
 	logger.debug('decodeChaincodeAction - start');
 	const chaincode_action = {};
-	const proto_chaincode_action = _proposalProto.ChaincodeAction.decode(action_bytes);
+	const proto_chaincode_action = fabprotos.protos.ChaincodeAction.decode(action_bytes);
 	chaincode_action.results = decodeReadWriteSets(proto_chaincode_action.getResults());
 	chaincode_action.events = decodeChaincodeEvents(proto_chaincode_action.getEvents());
 	chaincode_action.response = decodeResponse(proto_chaincode_action.getResponse());
@@ -1296,7 +1277,7 @@ function decodeChaincodeAction(action_bytes) {
 
 function decodeChaincodeEvents(event_bytes) {
 	const events = {};
-	const proto_events = _ccEventProto.ChaincodeEvent.decode(event_bytes);
+	const proto_events = fabprotos.protos.ChaincodeEvent.decode(event_bytes);
 	events.chaincode_id = proto_events.getChaincodeId();
 	events.tx_id = proto_events.getTxId();
 	events.event_name = proto_events.getEventName();
@@ -1320,10 +1301,10 @@ function decodeChaincodeID(proto_chaincode_id) {
 }
 
 function decodeReadWriteSets(rw_sets_bytes) {
-	const proto_tx_read_write_set = _rwsetProto.TxReadWriteSet.decode(rw_sets_bytes);
+	const proto_tx_read_write_set = fabprotos.rwset.TxReadWriteSet.decode(rw_sets_bytes);
 	const tx_read_write_set = {};
 	tx_read_write_set.data_model = proto_tx_read_write_set.getDataModel();
-	if (proto_tx_read_write_set.getDataModel() === _rwsetProto.TxReadWriteSet.DataModel.KV) {
+	if (proto_tx_read_write_set.getDataModel() === fabprotos.rwset.TxReadWriteSet.DataModel.KV) {
 		tx_read_write_set.ns_rwset = [];
 		const proto_ns_rwset = proto_tx_read_write_set.getNsRwset();
 		for (const i in proto_ns_rwset) {
@@ -1343,7 +1324,7 @@ function decodeReadWriteSets(rw_sets_bytes) {
 }
 
 function decodeKVRWSet(kv_bytes) {
-	const proto_kv_rw_set = _kv_rwsetProto.KVRWSet.decode(kv_bytes);
+	const proto_kv_rw_set = fabprotos.kvrwset.KVRWSet.decode(kv_bytes);
 	const kv_rw_set = {};
 
 	// KV readwrite set has three arrays
@@ -1495,7 +1476,7 @@ function decodeCollectionHashedRWSet(proto_collection_hashed_rwset) {
 }
 
 function decodeHashedRwset(hashed_rwset_bytes) {
-	const proto_hashed_rwset = _kv_rwsetProto.HashedRWSet.decode(hashed_rwset_bytes);
+	const proto_hashed_rwset = fabprotos.kvrwset.HashedRWSet.decode(hashed_rwset_bytes);
 	const hashed_rwset = {};
 
 	const proto_hashed_reads = proto_hashed_rwset.getHashedReads();

@@ -104,12 +104,10 @@ describe('SideDB', () => {
 			buildStub.onSecondCall().returns({call: 'second_Call'});
 
 			const ccp = sandbox.stub();
-			const proto = sandbox.stub();
-			proto.CollectionConfigPackage = ccp;
 
 			revert.push(SideDBRewire.__set__('logger', FakeLogger));
 			revert.push(SideDBRewire.__set__('fs', fsStub));
-			revert.push(SideDBRewire.__set__('_collectionProto', proto));
+			revert.push(SideDBRewire.__set__('fabprotos.common.CollectionConfigPackage', ccp));
 			SideDBRewire.buildCollectionConfig = buildStub;
 
 			SideDBRewire.buildCollectionConfigPackage('myFileSource');
@@ -133,10 +131,8 @@ describe('SideDB', () => {
 			buildStub.onSecondCall().returns({call: 'second_Call'});
 
 			const ccp = sandbox.stub();
-			const proto = sandbox.stub();
-			proto.CollectionConfigPackage = ccp;
 
-			revert.push(SideDBRewire.__set__('_collectionProto', proto));
+			revert.push(SideDBRewire.__set__('fabprotos.common.CollectionConfigPackage', ccp));
 			SideDBRewire.buildCollectionConfig = buildStub;
 
 			SideDBRewire.buildCollectionConfigPackage([{name: 'call_one'}, {name: 'call_two'}]);

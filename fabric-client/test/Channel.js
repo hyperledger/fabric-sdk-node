@@ -35,18 +35,17 @@ const Peer = require('fabric-client/lib/Peer');
 const TransactionID = require('fabric-client/lib/TransactionID');
 const sdk_utils = require('fabric-client/lib/utils.js');
 
-const ProtoLoader = require('fabric-client/lib/ProtoLoader');
-const responseProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/proposal_response.proto').protos;
-const proposalProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/proposal.proto').protos;
-const chaincodeProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/chaincode.proto').protos;
-const identitiesProto = ProtoLoader.load(__dirname + '/../lib/protos/msp/identities.proto').msp;
-const transactionProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/transaction.proto').protos;
-const commonProto = ProtoLoader.load(__dirname + '/../lib/protos/common/common.proto').common;
-const configtxProto = ProtoLoader.load(__dirname + '/../lib/protos/common/configtx.proto').common;
-const identityProto = ProtoLoader.load(__dirname + '/../lib/protos/msp/identities.proto').msp;
-const gossipProto = ProtoLoader.load(__dirname + '/../lib/protos/gossip/message.proto').gossip;
-const ledgerProto = ProtoLoader.load(__dirname + '/../lib/protos/common/ledger.proto').common;
-const queryProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/query.proto').protos;
+const responseProto = require('fabric-protos').protos;
+const proposalProto = require('fabric-protos').protos;
+const chaincodeProto = require('fabric-protos').protos;
+const identitiesProto = require('fabric-protos').msp;
+const transactionProto = require('fabric-protos').protos;
+const commonProto = require('fabric-protos').common;
+const configtxProto = require('fabric-protos').common;
+const identityProto = require('fabric-protos').msp;
+const gossipProto = require('fabric-protos').gossip;
+const ledgerProto = require('fabric-protos').common;
+const queryProto = require('fabric-protos').protos;
 
 const fakeHandlerModulePath = 'fabric-client/test/FakeHandler';
 const fakeHandler = require(fakeHandlerModulePath).create();
@@ -1003,7 +1002,7 @@ describe('Channel', () => {
 
 		it('should set the clientTlsCertHash if the cert has is available', async () => {
 			const setClientTlsCertHashStub = sinon.stub();
-			ChannelRewire.__set__('_discoveryProto.AuthInfo.prototype.setClientTlsCertHash', setClientTlsCertHashStub);
+			ChannelRewire.__set__('fabprotos.discovery.AuthInfo.prototype.setClientTlsCertHash', setClientTlsCertHashStub);
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];

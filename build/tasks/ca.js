@@ -12,7 +12,6 @@ const DEPS = [
 	'fabric-client/lib/hash.js',
 	'fabric-client/lib/utils.js',
 	'fabric-client/lib/BaseClient.js',
-	'fabric-client/lib/ProtoLoader.js',
 	'fabric-client/lib/Remote.js',
 	'fabric-client/lib/User.js',
 	'fabric-client/lib/impl/bccsp_pkcs11.js',
@@ -24,8 +23,6 @@ const DEPS = [
 	'fabric-client/lib/impl/FileKeyValueStore.js',
 	'fabric-client/lib/msp/identity.js',
 	'fabric-client/lib/msp/msp.js',
-	'fabric-client/lib/protos/msp/identities.proto',
-	'fabric-client/lib/protos/msp/msp_config.proto',
 	'fabric-client/types/tsconfig.json',
 	'fabric-client/types/base.d.ts'
 ];

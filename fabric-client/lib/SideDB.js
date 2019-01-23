@@ -12,11 +12,10 @@
  * limitations under the License.
  */
 
-const ProtoLoader = require('./ProtoLoader');
+const fabprotos = require('fabric-protos');
 const fs = require('fs');
 const Long = require('long');
 const Policy = require('./Policy.js');
-const _collectionProto = ProtoLoader.load(__dirname + '/protos/common/collection.proto').common;
 
 const utils = require('./utils.js');
 const logger = utils.getLogger('SideDB.js');
@@ -56,7 +55,7 @@ class CollectionConfig {
 				const collectionConfig = this.buildCollectionConfig(config);
 				collectionConfigPackage.push(collectionConfig);
 			});
-			collectionConfigPackage = new _collectionProto.CollectionConfigPackage(collectionConfigPackage);
+			collectionConfigPackage = new fabprotos.common.CollectionConfigPackage(collectionConfigPackage);
 
 			return collectionConfigPackage;
 		} catch (e) {
