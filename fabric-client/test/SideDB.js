@@ -304,6 +304,72 @@ describe('SideDB', () => {
 			}).should.throw(/CollectionConfig Requires Param "blockToLive" to be a valid unsigned int64/);
 		});
 
+		it('should throw if passed collectionConfig.memberOnlyRead is not a valid boolean', () => {
+			(() => {
+				const checkPolicyStub = sandbox.stub();
+				const policy = sandbox.stub();
+				policy.checkPolicy = checkPolicyStub;
+
+				revert.push(SideDBRewire.__set__('Policy', policy));
+				SideDBRewire.checkCollectionConfig({name: 'test', policy: policy, maxPeerCount: 1, requiredPeerCount: 1, blockToLive: '100', memberOnlyRead: 'aa'});
+			}).should.throw('CollectionConfig Requires Param "memberOnlyRead" to be boolean, input is aa');
+		});
+
+		it('should default `memberOnlyRead` to be false if not passed as a config item', () => {
+			const checkPolicyStub = sandbox.stub();
+			const policy = sandbox.stub();
+			policy.checkPolicy = checkPolicyStub;
+
+			revert.push(SideDBRewire.__set__('Policy', policy));
+
+			const obj = SideDBRewire.checkCollectionConfig({name: 'test', policy: policy, maxPeerCount: 1, requiredPeerCount: 1});
+			obj.memberOnlyRead.should.equal(false);
+		});
+
+		it('should `memberOnlyRead` to be true if passed in as true as a config item', () => {
+			const checkPolicyStub = sandbox.stub();
+			const policy = sandbox.stub();
+			policy.checkPolicy = checkPolicyStub;
+
+			revert.push(SideDBRewire.__set__('Policy', policy));
+
+			const obj = SideDBRewire.checkCollectionConfig({name: 'test', policy: policy, maxPeerCount: 1, requiredPeerCount: 1, memberOnlyRead: true});
+			obj.memberOnlyRead.should.equal(true);
+		});
+
+		it('should throw if passed collectionConfig.memberOnlyWrite is not a valid boolean', () => {
+			(() => {
+				const checkPolicyStub = sandbox.stub();
+				const policy = sandbox.stub();
+				policy.checkPolicy = checkPolicyStub;
+
+				revert.push(SideDBRewire.__set__('Policy', policy));
+				SideDBRewire.checkCollectionConfig({name: 'test', policy: policy, maxPeerCount: 1, requiredPeerCount: 1, blockToLive: '100', memberOnlyWrite: 'aa'});
+			}).should.throw('CollectionConfig Requires Param "memberOnlyWrite" to be boolean, input is aa');
+		});
+
+		it('should default `memberOnlyWrite` to be false if not passed as a config item', () => {
+			const checkPolicyStub = sandbox.stub();
+			const policy = sandbox.stub();
+			policy.checkPolicy = checkPolicyStub;
+
+			revert.push(SideDBRewire.__set__('Policy', policy));
+
+			const obj = SideDBRewire.checkCollectionConfig({name: 'test', policy: policy, maxPeerCount: 1, requiredPeerCount: 1});
+			obj.memberOnlyWrite.should.equal(false);
+		});
+
+		it('should `memberOnlyWrite` to be true if passed in as true as a config item', () => {
+			const checkPolicyStub = sandbox.stub();
+			const policy = sandbox.stub();
+			policy.checkPolicy = checkPolicyStub;
+
+			revert.push(SideDBRewire.__set__('Policy', policy));
+
+			const obj = SideDBRewire.checkCollectionConfig({name: 'test', policy: policy, maxPeerCount: 1, requiredPeerCount: 1, memberOnlyWrite: true});
+			obj.memberOnlyWrite.should.equal(true);
+		});
+
 		it('should return if passed a correct collectionConfig', () => {
 			const checkPolicyStub = sandbox.stub();
 			const Policy = sandbox.stub();

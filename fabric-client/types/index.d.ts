@@ -579,6 +579,8 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		required_peer_count: number;
 		maximum_peer_count: number;
 		block_to_live: number;
+		member_only_read: boolean;
+		member_only_write: boolean;
 	}
 
 	export interface Response {
