@@ -26,7 +26,10 @@ To use the service the application will have to connect with just one peer.
 * `channel.initialize()` - This method has been enhanced by adding an option to
 query a peer using the new service discovery to initialize the channel object.
 This method may be call at anytime to reinitialize the channel. When using discovery,
-this may be used to assign a new target peer providing the discover service. 
+this may be used to assign a new target peer providing the discover service.
+The initialize() method is also required to instantiate the handlers, by default
+the handlers shipped with the fabric-client are designed to use the discovery
+results.
 * `channel.sendTransactionProposal()` - This method has been enhanced to use the
 discovered peers to send the endorsement proposal.
 * `channel.sendTransaction()` - This method has been enhanced to use the discovered
@@ -64,42 +67,6 @@ method to determine the target peers and how to send the proposal.
 a custom handler to be used. This handler is used in the `sendTransaction` method
 to determine the orderers and how to send the transaction to be committed.
 (default 'fabric-client/lib/impl/BasicCommitHandler.js')
-
-### new `EndorsementHandler`
-The sending of a proposal to be endorsed may be done using custom code. The
-fabric-client will use by default the file called `DiscoveryEndorsementHandler`.
-A different endorsement handler may be used by changing the configuration setting
-"endorsement-handler" with the `setConfigSetting()` or placing a new line
-in configuration JSON file that application has applied to the fabric-client
-configuration. This will instantiate a handler
-located at the path provide in the attribute for all channels initialized
-after the call.
-The handler may also be changed using the `endorsementHandler` attribute on the
-`channel.initialize()` request call parameter. This will instantiate a handler
-located at the path provide in the attribute just for this channel.
-```
-// set value in memory
-Client.setConfigSetting('endorsement-handler', '/path/to/the/handler.js');
---or--
-// the path to an additional config file
-Client.addConfigFile('/path/to/config.json');
-// the json file contains the following line
-// "endorsement-handler": "/path/to/the/handler.js"
---or--
-const request = {
-	target: peer,
-	discovery: true,
-	endorsementHandler: "/path/to/the/handler.js",
-	...
-}
-// request object contains the path to the handler
-channel.initialize(request);
-```
-A endorsement handler must implement the `api.EndorsementHandler`. When the
-channel is instantiated, the channel will read the path setting and create an
-instance of the handler for use by the new channel instance.
-
-
 
 #### How the `DiscoveryEndorsementHandler` works
 The `sendTransactionProposal` will use the peers included in the "targets" to
@@ -164,26 +131,6 @@ selected will likely change on every request.
 Note: If the above behavior does not meet the needs of your organization a
 custom handler may be used.
 
-### new `CommitHandler`
-The sending of the endorsements to be committed may be done using custom code.
-The fabric-client will use by default the file called `BasicCommitHandler`.
-The commit handler may be changed by changing the configuration setting
-"commit-handler" by doing a `setConfigSetting()` or placing a new line
-in configuration JSON file that application has applied to the fabric-client
-configuration.
-```
-// set the config value in memory
-Client.setConfigSetting('commit-handler', '/path/to/the/handler.js');
---or--
-// path of an additional config file
-Client.addConfigFile('/path/to/config.json');
-// the json file contains the following line
-// "commit-handler": "/path/to/the/handler.js"
-```
-A commit handler must implement the `api.CommitHandler`. When the
-channel is instantiated, the channel will read the path setting and create an
-instance of the handler for use by the new channel instance.
-
 #### How the `BasicCommitHandler` works
 The default handler that comes with the fabric-client will send to one orderer at
 a time until it receives a successful submission of the transaction. Sending
@@ -193,17 +140,19 @@ sender has the authority to send the request. The response from the orderer
 will indicate that the orderer has accepted the request. The `sendTransaction`
 has an optional parameter `orderer` that indicates the orderer to send the
 transaction. The handler will use the orderer as specified with the `orderer`
-parameter and send to any other orderers. If no orderer is specified the handler
+parameter and not send to any other orderers. If no orderer is specified the handler
 will get the list of orderers assigned to the channel. These orderers may have
 been assigned manually to the channel with a `channel.addOrderer()` call or
-automatically when using the service discovery.
+assigned automatically when using the service discovery.
 
 ### To Initialize
-
-
 By default the fabric-client will not use the service discovery. To enable the
 use of the service, set the config setting to true or use the discover parameter
 on the `initialize()` call.
+
+note: {@link Channel#initialize} must be run to both enable discovery and to
+startup the handlers.
+
 ```
 Client.setConfigSetting('initialize-with-discovery', true);
 --or--
