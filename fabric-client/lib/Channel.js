@@ -411,6 +411,7 @@ const Channel = class {
 		const method = '_buildDiscoveryPeers';
 		logger.debug('%s - build peers', method);
 
+		const onlinePeers = {};
 		for (const msp_id in discovery_results.peers_by_org) {
 			logger.debug('%s - peers msp:%s', method, msp_id);
 			const peers = discovery_results.peers_by_org[msp_id].peers;
@@ -428,9 +429,17 @@ const Channel = class {
 					msps,
 					options
 				);
+				onlinePeers[peer.name] = this._channel_peers.get(name);
 				logger.debug('%s - peer:%j', method, peer);
 			}
 		}
+
+		// remove offline peers from _channel_peers
+		this._channel_peers.forEach((channel_peer, name) => {
+			if(!onlinePeers[name]) {
+				this._channel_peers.delete(name);
+			}
+		});
 	}
 
 	_buildDiscoveryEndorsementPlan(discovery_results, plan_id, msps, options) {
