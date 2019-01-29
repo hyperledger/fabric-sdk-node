@@ -1315,8 +1315,19 @@ test('\n\n ** Channel _getOrderer tests **\n\n', (t) => {
 	t.end();
 });
 test('\n\n ** Channel mspid tests **\n\n', (t) => {
-	const client = new Client();
-	client._mspid = 'Org1MSP';
+	const connectionProfile = {
+		name: 'test-network',
+		version: '1.0',
+		client: {
+			organization: 'Org1'
+		},
+		organizations: {
+			Org1: {
+				mspid: 'Org1MSP'
+			}
+		}
+	};
+	const client = Client.loadFromConfig(connectionProfile);
 	const channel = new Channel('does-not-matter', client);
 	const peer1 = client.newPeer('grpc://localhost:7051');
 	channel.addPeer(peer1, 'Org1MSP');
