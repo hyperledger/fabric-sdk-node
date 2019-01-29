@@ -81,30 +81,6 @@
     "winston": "^2.2.0",
     "x509": "0.3.3"
   },
-  "nyc": {
-    "check-coverage": true,
-    "statements": 85,
-    "branches": 80,
-    "functions": 91,
-    "lines": 85,
-    "include": [
-      "fabric-ca-client/lib/FabricCAClientImpl.js",
-      "fabric-ca-client/lib/helper.js",
-      "fabric-ca-client/lib/IdentityService.js",
-      "fabric-ca-client/lib/AffiliationService.js",
-      "fabric-client/lib/**/*.js",
-      "fabric-common/lib/**/*.js",
-      "fabric-network/lib/**/*.js"
-    ],
-    "reporter": [
-      "lcov",
-      "json",
-      "text",
-      "text-summary",
-      "cobertura"
-    ],
-    "cache": true
-  },
   "license": "Apache-2.0",
   "licenses": [
     {

@@ -130,10 +130,10 @@ gulp.task('compile', shell.task([
 gulp.task('test', shell.task('npx nyc gulp run-test'));
 
 // Test to run all unit tests
-gulp.task('test-headless', shell.task('npx nyc gulp run-test-headless'));
+gulp.task('test-headless', shell.task('npx gulp run-test-headless'));
 
 // Only run Mocha unit tests
-gulp.task('test-mocha', shell.task('npx nyc gulp run-test-mocha'));
+gulp.task('test-mocha', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-test-mocha'));
 
 // Only run scenario tests
 gulp.task('test-cucumber', shell.task('npx nyc npm run test:cucumber'));
@@ -180,16 +180,24 @@ gulp.task('run-test-cucumber', shell.task(
 	'export HFC_LOGGING=""; npm run test:cucumber'
 ));
 
+// Run e2e and scenario tests with code coverage
+gulp.task('test-fv-scenario', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-test-fv-sceanrio'));
+
+gulp.task('run-test-fv-sceanrio', (done) => {
+	const tasks = ['run-tape-e2e', 'run-logger-unit', 'docker-clean', 'run-test-cucumber'];
+	runSequence(...tasks, done);
+});
+
 // Main test method to run all test suites
 // - lint, unit first, then FV, then scenario
 gulp.task('run-test', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'docs', 'run-test-mocha', 'run-tape-unit', 'run-tape-e2e', 'run-logger-unit', 'docker-clean', 'run-test-cucumber'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'docs', 'test-mocha', 'run-tape-unit', 'test-fv-scenario'];
 	runSequence(...tasks, done);
 });
 
 // Run all non-integration tests
 gulp.task('run-test-headless', (done) => {
-	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'run-test-mocha', 'run-tape-unit', 'run-logger-unit'];
+	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'test-mocha', 'run-tape-unit', 'run-logger-unit'];
 	runSequence(...tasks, done);
 });
 
