@@ -444,7 +444,7 @@ describe('IdentityService', () => {
 			callArgs[1].should.deep.equal({
 				type: 'testType',
 				affiliation: 'testAffiliation',
-				maxEnrollments: 42,
+				max_enrollments: 42,
 				attrs: 'testAtts',
 				secret: 'shhh!',
 				caname: 'caName'

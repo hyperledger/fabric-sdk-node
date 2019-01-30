@@ -224,7 +224,7 @@ class IdentityService {
 			request.affiliation = req.affiliation;
 		}
 		if (Number.isInteger(req.maxEnrollments)) {
-			request.maxEnrollments = req.maxEnrollments;
+			request.max_enrollments = req.maxEnrollments;
 		}
 		if (req.attrs) {
 			request.attrs = req.attrs;
