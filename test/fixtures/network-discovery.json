@@ -2,9 +2,6 @@
   "name":"global-trade-network",
   "description":"The network to be in if you want to stay in the global trade business",
   "version":"1.0",
-  "client":{
-    "organization":"Org1"
-  },
   "organizations":{
     "Org1":{
       "mspid":"Org1MSP",
