@@ -23,7 +23,7 @@ const e2eUtils = require('./e2e/e2eUtils.js');
 
 // When running this as a standalone test, be sure to create and join a channel called 'mychannel'
 test('*****  Test channel events', async (t) => {
-	t.pass(' ======>>>>> CHANNEL EVENT INTEGRATION TEST START');
+	t.pass('\n ======>>>>> CHANNEL EVENT INTEGRATION TEST START\n');
 
 	try {
 		testUtil.resetDefaults();
@@ -79,6 +79,14 @@ test('*****  Test channel events', async (t) => {
 		channel.addPeer(peer);
 		targets.push(peer);
 
+		data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tlscacerts/org2.example.com-cert.pem'));
+		const peer_org2 = client.newPeer('grpcs://localhost:8051', {
+			pem: Buffer.from(data).toString(),
+			'ssl-target-name-override': 'peer0.org2.example.com'
+		});
+
+		t.pass('Successfully setup the fabric network');
+
 		// get a transaction ID object based on the current user assigned to the client instance
 		tx_id = client.newTransactionID();
 		req = {
@@ -93,6 +101,7 @@ test('*****  Test channel events', async (t) => {
 		if (!checkResults(t, results[0])) {
 			throw Error('Failed to install chaincode');
 		}
+		t.pass('Successfully installed chaincode');
 
 		// get a transaction ID object based on the current user assigned
 		// to the client instance
@@ -113,6 +122,9 @@ test('*****  Test channel events', async (t) => {
 		if (!checkResults(t, results[0])) {
 			throw Error('Failed to instantiate chaincode');
 		}
+		// get the initialize chaincode response status
+		const init_response = results[0][0].response;
+		t.pass('The initialize response status:' + init_response.status);
 
 		/*
 		 * Test
@@ -570,7 +582,7 @@ test('*****  Test channel events', async (t) => {
 				if (error.toString().indexOf('Newest block received')) {
 					// this error callback will be called to indicate that the listener is no longer listening
 					// in this case it is OK as the message indicates that newest block was sent
-					t.pass('Message received inidicating newest block received ::' + error);
+					t.pass('Message received indicating newest block received ::' + error);
 					resolve('newest block replayed');
 				} else {
 					t.fail('Failed to replay all the block events');
@@ -586,8 +598,317 @@ test('*****  Test channel events', async (t) => {
 		results = await block_replay;
 		t.equals(results, 'newest block replayed', 'Checking that newest block replayed');
 
+		/*
+		 * Test
+		 *  that we are able to connect with start block
+		 *  before any listeners (just a test, not a good way to use an eventhub)
+		 */
+		event_hub.disconnect(); // clean up
+		// check that we can connect with callbacks
+		connecter = new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				reject(new Error('timeout connecting to the event service'));
+			}, 15000);
+			// connect with the startBlock
+			// For testing only, not a good idea as that the eventHub will
+			// immediately start to receive blocks and no listener will be
+			// registered to see
+			event_hub.connect({full_block: false, startBlock: 0}, (error, connected_hub) => {
+				clearTimeout(handle);
+				if (error) {
+					reject(error);
+				} else {
+					if (connected_hub.isconnected()) {
+						t.pass('Successfully able to connect to the event service using a connect callback and have a start block');
+						resolve();
+					} else {
+						reject(new Error('Event Hub notified us that it was connected however the connect status was false'));
+					}
+				}
+			});
+		});
 
-		t.pass(' ======>>>>> CHANNEL EVENT INTEGRATION TEST END');
+		try {
+			await connecter;
+			t.pass('Successfully checked for connect using a callback and start block');
+		} catch (error) {
+			t.fail('Failed to connect to event service ::' + error.toString());
+		}
+
+		// must get a new transaction object for every transaction
+		tx_id = client.newTransactionID();
+		txid = tx_id.getTransactionID(); // get the actual transaction id string
+		req = {
+			targets : targets,
+			chaincodeId: chaincode_id,
+			fcn: 'invoke',
+			args: ['invoke', 'BLOCK'],
+			txId: tx_id
+		};
+
+		results = await channel.sendTransactionProposal(req);
+		if (!checkResults(t, results[0])) {
+			throw Error('Failed to endorse invoke proposal with "BLOCK" arg');
+		}
+
+		event_monitor = new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				t.fail('Timeout - Failed to receive the event');
+				reject('timeout');
+			}, 15000);
+
+			event_hub.registerTxEvent(txid, (txnid, code, block_num) => {
+				clearTimeout(handle);
+				t.pass('transaction status code:' + code + ' for transaction id ::' + txnid + ' block_num:' + block_num);
+				resolve(code);
+			}, (error) => {
+				clearTimeout(handle);
+				t.fail('Failed to receive event for start block testing ::' + error.toString());
+				// send back error
+				reject(error);
+			});
+		});
+
+		send_trans = channel.sendTransaction({proposalResponses: results[0], proposal: results[1]});
+
+		results = await Promise.all([event_monitor, send_trans]);
+		t.pass('Successfully got the transaction results');
+
+		// checking that the callback is able to tell the application something
+		t.equal(results[0], 'VALID', 'checking that the event says the transaction was valid');
+
+
+		/*
+		 * Test
+		 *  that we are able to connect with start block after
+		 *  we register a listener, see if able to replay
+		 *  the blocks and not submit a new one
+		 */
+		event_hub.disconnect(); // clean up
+		// check that we can connect with callbacks
+		connecter = new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				reject(new Error('timeout connecting to the event service'));
+			}, 15000);
+			// connect with the startBlock
+			// For testing only, not a good idea as that the eventHub will
+			// immediately start to receive blocks and no listener will be
+			// registered to see
+			event_hub.connect({full_block: false, startBlock: 0}, (error, connected_hub) => {
+				clearTimeout(handle);
+				if (error) {
+					reject(error);
+				} else {
+					if (connected_hub.isconnected()) {
+						t.pass('Successfully able to connect to the event service using a connect callback and have a start block');
+						resolve();
+					} else {
+						reject(new Error('Event Hub notified us that it was connected however the connect status was false'));
+					}
+				}
+			});
+		});
+
+		event_monitor = new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				t.fail('Timeout - Failed to receive the event');
+				reject('timeout');
+			}, 15000);
+
+			// register will a txid that should already be in block
+			event_hub.registerTxEvent(txid, (txnid, code, block_num) => {
+				clearTimeout(handle);
+				t.pass('transaction status code:' + code + ' for transaction id ::' + txnid + ' block_num:' + block_num);
+				resolve(code);
+			}, (error) => {
+				clearTimeout(handle);
+				t.fail('Failed to receive event for replay::' + error.toString());
+				// send back error
+				reject(error);
+			});
+		});
+
+		// notice that we are just registering a listener and connecting
+		// we are not invoking a new transaction
+		results = await Promise.all([event_monitor, connecter]);
+		t.pass('Successfully got the transaction replayed results');
+
+		// checking that the callback is able to tell the application something
+		t.equal(results[0], 'VALID', 'checking that the replayed event says the transaction was valid');
+
+		/*
+		 * Test
+		 *  that we are able to reconnect with a start block after
+		 *  a timeout of not receiving an event
+		 */
+		event_hub.disconnect(); // clean up
+
+		// check that we can connect with callbacks
+		connecter = new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				reject(new Error('timeout connecting to the event service'));
+			}, 15000);
+
+			event_hub.connect({full_block: false}, (error, connected_hub) => {
+				clearTimeout(handle);
+				if (error) {
+					reject(error);
+				} else {
+					if (connected_hub.isconnected()) {
+						t.pass('Successfully able to connect to the event service using a connect callback');
+						resolve();
+					} else {
+						reject(new Error('Event Hub notified us that it was connected however the connect status was false'));
+					}
+				}
+			});
+		});
+
+		try {
+			await connecter;
+			t.pass('Successfully checked for connect using a callback');
+		} catch (error) {
+			t.fail('Failed to connect to event service ::' + error.toString());
+		}
+
+		// must get a new transaction object for every transaction
+		tx_id = client.newTransactionID();
+		txid = tx_id.getTransactionID(); // get the actual transaction id string
+		req = {
+			targets : targets,
+			chaincodeId: chaincode_id,
+			fcn: 'invoke',
+			args: ['invoke', 'BLOCK'],
+			txId: tx_id
+		};
+
+		results = await channel.sendTransactionProposal(req);
+		if (!checkResults(t, results[0])) {
+			throw Error('Failed to endorse invoke proposal with "BLOCK" arg');
+		}
+
+		const tx_event_checker = new TxEventChecker(t);
+
+		event_hub.registerTxEvent(txid, (txnid, code, block_num) => {
+			t.pass('transaction status code:' + code + ' for transaction id ::' + txnid + ' block_num:' + block_num);
+			tx_event_checker.check(txnid, code, block_num);
+		}, (error) => {
+			t.fail('Failed to receive event for replay on reconnect::' + error.toString());
+			tx_event_checker.error(error);
+		}, {
+			unregister: false
+			// need to make sure the event hub holds this
+			// registration, we are faking out the processing
+			// and pretending the event hub did not see it
+		});
+
+		event_monitor = new Promise((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				// this will simulate that this event listener did not see the
+				// the event, so later when we reconnect, we should see it
+				t.pass('Timeout - Successfully received the timeout');
+				resolve('TIMEOUT');
+			}, 5000);
+
+			// configure the listener to use this promise
+			tx_event_checker.setTimeout(timeout);
+			tx_event_checker.setResolve(resolve);
+			tx_event_checker.setReject(reject);
+			tx_event_checker.setTransactionId('bad'); // so we do not see it
+		});
+
+		send_trans = channel.sendTransaction({proposalResponses: results[0], proposal: results[1]});
+
+		results = await Promise.all([event_monitor, send_trans]);
+		t.equal(results[0], 'TIMEOUT', 'checking that the timeout occurred');
+
+
+		// -----------------------------
+		// check that we can reconnect
+		connecter = new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				reject(new Error('timeout reconnecting to the event service'));
+			}, 5000);
+			// reconnect with the startBlock
+			event_hub.reconnect({full_block: false, startBlock: 0}, (error, connected_hub) => {
+				clearTimeout(handle);
+				if (error) {
+					reject(error);
+				} else {
+					if (connected_hub.isconnected()) {
+						t.pass('Successfully able to reconnect to the event service using a reconnect callback and have a start block');
+						resolve();
+					} else {
+						reject(new Error('Event Hub notified us that it was connected however the connect status was false'));
+					}
+				}
+			});
+		});
+
+		event_monitor = new Promise((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				t.fail('Timeout - Failed to receive the replay of the event after reconnecting');
+				reject('timeout');
+			}, 5000);
+			// configure the listener to use this promise
+			tx_event_checker.setTimeout(timeout);
+			tx_event_checker.setResolve(resolve);
+			tx_event_checker.setReject(reject);
+			tx_event_checker.setTransactionId(txid);
+		});
+
+		// notice that we are just changing the promise of the listener callback
+		// we are not invoking a new transaction, the reconnect should replay
+		results = await Promise.all([event_monitor, connecter]);
+		// checking that the callback is able to tell the application something
+		t.equal(results[0], 'VALID', 'checking that reconnecting will replay the event');
+		t.equal(event_hub.getPeerAddr(), 'localhost:7051', 'checking received the replayed event from peer:localhost:7051');
+
+		// --------------------------------------------
+		// check that we can reconnect with a new peer
+		connecter = new Promise((resolve, reject) => {
+			const handle = setTimeout(() => {
+				reject(new Error('timeout reconnecting to the event service with a new peer'));
+			}, 5000);
+			// reconnect with the startBlock
+			event_hub.reconnect({full_block: false, startBlock: 0, target: peer_org2}, (error, connected_hub) => {
+				clearTimeout(handle);
+				if (error) {
+					reject(error);
+				} else {
+					if (connected_hub.isconnected()) {
+						t.pass('Successfully able to reconnect to the event service using a reconnect callback and have a new peer');
+						resolve();
+					} else {
+						reject(new Error('Event Hub notified us that it was connected however the connect status was false'));
+					}
+				}
+			});
+		});
+
+		event_monitor = new Promise((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				t.fail('Timeout - Failed to receive the replay of the event after reconnecting with a new peer');
+				reject('timeout');
+			}, 5000);
+			// configure the listener to use this promise
+			tx_event_checker.setTimeout(timeout);
+			tx_event_checker.setResolve(resolve);
+			tx_event_checker.setReject(reject);
+			tx_event_checker.setTransactionId(txid);
+		});
+
+		// notice that we are just changing the promise of the listener callback
+		// we are not invoking a new transaction, the reconnect should replay
+		results = await Promise.all([event_monitor, connecter]);
+		// checking that the callback is able to tell the application something
+		t.equal(results[0], 'VALID', 'checking that reconnecting will replay the events on a different peer');
+		t.equal(event_hub.getPeerAddr(), 'localhost:8051', 'checking received the replayed event from peer:localhost:8051');
+
+		// clean up since we set it to not unregister when notified
+		event_hub.unregisterTxEvent(txid);
+
+		t.pass(' \n======>>>>> CHANNEL EVENT INTEGRATION TEST END\n');
 	} catch (catch_err) {
 		t.fail('Testing of channel events has failed with ' + catch_err);
 	}
@@ -595,6 +916,45 @@ test('*****  Test channel events', async (t) => {
 	t.end();
 });
 
+class TxEventChecker {
+	constructor (t) {
+		this._resolve = null;
+		this._reject = null;
+		this._timeout = null;
+		this._tx_id = null;
+		this._t = t;
+	}
+
+	setResolve(resolve) {
+		this._resolve = resolve;
+	}
+
+	setReject(reject) {
+		this._reject = reject;
+	}
+
+	setTimeout(timeout) {
+		this._timeout = timeout;
+	}
+
+	setTransactionId(tx_id) {
+		this._tx_id = tx_id;
+	}
+
+	check(tx_id, code, block_num) {
+		if (tx_id === this._tx_id) {
+			this._t.pass('Successfully received the transaction on block_num ' + block_num);
+			clearTimeout(this._timeout);
+			this._resolve(code);
+		}
+	}
+
+	error(error) {
+		this._t.fail('This listener callback got an error :: ' + error);
+		clearTimeout(this._timeout);
+		this._reject(error);
+	}
+}
 
 function createChaincodeRegistration(t, message, event_hub, chaincode_id, chaincode_eventname) {
 	const event_monitor = new Promise((resolve, reject) => {
@@ -633,20 +993,19 @@ function createChaincodeRegistration(t, message, event_hub, chaincode_id, chainc
 function checkResults(t, proposalResponses) {
 	let all_good = true;
 
-	for (const i in proposalResponses) {
+	for (const proposalResponse of proposalResponses) {
 		let one_good = false;
-		if (proposalResponses &&
-		proposalResponses[i].response &&
-		proposalResponses[i].response.status === 200) {
+		if (proposalResponse instanceof Error) {
+			t.fail(proposalResponse.toString());
+		} else if (proposalResponse.response && proposalResponse.response.status === 200) {
 			one_good = true;
+		} else if (proposalResponse.response) {
+			t.fail ('response:' + proposalResponse.response);
+		} else {
+			t.fail('Received unknown response ::' + proposalResponse);
 		}
 		all_good = all_good & one_good;
 	}
 
-	if (!all_good) {
-		t.fail('Failed to endorse the proposal');
-		return false;
-	}
-	t.pass('Successfully endorsed the proposal');
-	return true;
+	return all_good;
 }
