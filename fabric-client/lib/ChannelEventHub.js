@@ -16,6 +16,7 @@
 const Long = require('long');
 const utils = require('./utils.js');
 const clientUtils = require('./client-utils.js');
+const Constants = require('./Constants.js');
 const logger = utils.getLogger('ChannelEventHub.js');
 const {Identity} = require('./msp/identity');
 const TransactionID = require('./TransactionID');
@@ -56,7 +57,9 @@ const five_minutes_ms = 5 * 60 * 1000;
 const ALL = 'all';
 
 // Special value for block numbers
-const NEWEST = 'newest';
+const NEWEST = 'newest'; // what fabric peer sees as newest on the ledger at time of connect
+const OLDEST = 'oldest'; // what fabric peer sees as oldest on the ledger at time of connect
+const LAST_SEEN = 'last_seen'; // what this event hub sees as the last block received
 
 /**
  * Transaction processing in fabric v1.1 is a long operation spanning multiple
@@ -114,7 +117,7 @@ const NEWEST = 'newest';
  * // is an error callback ready to process an error in case the
  * // connect() call fails
  * eh.registerTxEvent(
- *   'all', // this listener will be notificed of all transactions
+ *   'all', // this listener will be notified of all transactions
  *     (tx, status, block_num) => {
  *        record(tx, status, block_num);
  *        console.log(util.format('Transaction %s has completed', tx));
@@ -139,7 +142,7 @@ class ChannelEventHub {
 	 *
 	 * @param {Channel} channel - An instance of the Channel class
 	 * were this ChannelEventHub will receive blocks
-	 * @param {Peer} peer An instance of the Peer class this ChannelEventHub connects.
+	 * @param {Peer} peer Optional. An instance of the Peer class this ChannelEventHub connects.
 	 * @returns {ChannelEventHub} An instance of this class
 	 */
 
@@ -184,9 +187,6 @@ class ChannelEventHub {
 		this._channel = channel;
 		// peer node to connect
 		// reference to the peer instance holding end point information
-		if (!peer) {
-			throw new Error('Missing required argument: peer');
-		}
 		this._peer = peer;
 	}
 
@@ -225,11 +225,10 @@ class ChannelEventHub {
 	/*
 	 * internal method to check if this ChannelEventHub is allowing new event listeners
 	 * If this ChannelEventHub has been configured for a startBlock/endBlock of events then
-	 * only one event listener is allowed. Once the connect has been called no
-	 * new event listener will be allowed.
+	 * only one event listener is allowed.
 	 */
 	_checkAllowRegistrations() {
-		if (!this._allowRegistration) {
+		if (this._start_stop_registration) {
 			throw new Error('This ChannelEventHub is not open to event listener registrations');
 		}
 	}
@@ -250,7 +249,7 @@ class ChannelEventHub {
 
 	/**
 	 * @typedef {Object} ConnectOptions
-	 * @property {boolean} full_block - Optional. to indicated that the connection
+	 * @property {boolean} full_block - Optional. To indicate that the connection
 	 *        with the peer will be sending full blocks or filtered blocks to this
 	 *        ChannelEventHub.
 	 *        The default will be to establish a connection using filtered blocks.
@@ -261,36 +260,69 @@ class ChannelEventHub {
 	 *        receive full blocks.
 	 *        Registering a block listener on a filtered block connection may not
 	 *        provide sufficient information.
-	 * @property {SignedEvent} signedEvent - Optional. the signed event to be sent
+	 * @property {Number | string} startBlock - Optional. This will have the connection
+	 *        setup to start sending blocks back to the event hub at the block
+	 *        with this number. If connecting with a
+	 *        a startBlock then event listeners may not be registered with a
+	 *        startBlock or endBlock.
+	 *        If the event hub should start with the last block it has seen
+	 *        use the string 'last_seen'.
+	 *        If the event hub should start with the oldest block on the
+	 *        ledger use the string 'oldest'.
+	 *        If the event hub should start with the latest block on the ledger,
+	 *        use the string 'latest' or do use a startBlock.
+	 *        Default is to start with the latest block on the ledger.
+	 * @property {Number | string} endBlock - Optional. This will have the connection
+	 *        setup to end sending blocks back to the event hub at the block
+	 *        with this number. If connecting with a
+	 *        a endBlock then event listeners may not be registered with a
+	 *        startBlock or endBlock.
+	 *        If the event hub should end with the last block it has seen
+	 *        use the string 'last_seen'.
+	 *        If the event hub should end with the current block on the
+	 *        ledger use the string 'newest'.
+	 *        Default is to not stop sending.
+	 * @property {SignedEvent} signedEvent - Optional. The signed event to be sent
 	 *        to the peer. This option is useful when the fabric-client application
 	 *        does not have the user's privateKey and can not sign requests to the
 	 *        fabric network.
+	 * @property {Peer | string} target - Optional. The peer that provides the
+	 *        fabric event service. When using a string, the {@link Channel}
+	 *        must have a peer assigned with that name. This peer will replace
+	 *        the current peer endpoint of this channel event hub.
 	 */
 
 	/**
 	 * Establishes a connection with the fabric peer service.
 	 *
 	 * The connection will be established asynchronously. If the connection fails to
-	 * get established, the application will be notified via the error callbacks
-	 * from the registerXXXEvent() methods. It is recommended that an application always
-	 * register at least one event listener with an error callback, by calling any one of the
+	 * get established, the application will be notified via the 'connectCallback'
+	 * provided. Additionally the error callbacks from the registerXXXEvent() methods
+	 * will be notified if provided.
+	 * It is recommended that an application relay on 'connectCallback' to determine
+	 * connect status and relay on the 'errCallback' of the event listeners for
+	 * runtime connection issues.
+	 * Register event listeners and the error callbacks by calling any one of the
 	 * [registerBlockEvent]{@link ChannelEventHub#registerBlockEvent},
 	 * [registerTxEvent]{@link ChannelEventHub#registerTxEvent} or
 	 * [registerChaincodeEvent]{@link ChannelEventHub#registerChaincodeEvent}
-	 * methods, before calling connect().
+	 * methods, after calling connect().
 	 *
 	 * @param {ConnectOptions | boolean} options - Optional. If of type boolean
 	 *        then it will be assumed to how to connect to receive full (true)
 	 *        or filtered (false) blocks.
-	 * @param {functon} connectCallback - Optional. This callback will report
+	 * @param {function} connectCallback - Optional. This callback will report
 	 *        completion of the connection to the peer or  will report
 	 *        any errors encountered during connection to the peer. When there
 	 *        is an error, this ChannelEventHub will be shutdown (disconnected).
 	 *        Callback function should take two parameters as (error, value).
 	 */
 	connect(options, connectCallback) {
+		const method = 'connect';
+		logger.debug('%s - start', method);
 		let signedEvent = null;
 		let full_block = null;
+		const connect_request = {};
 
 		// the following supports the users using the boolean parameter to control
 		// how to connect to the fabric service for full or filtered blocks
@@ -300,29 +332,71 @@ class ChannelEventHub {
 		if (typeof options === 'object' && options !== null) {
 			signedEvent = options.signedEvent || null;
 			full_block = options.full_block || null;
+
+			if (typeof options.force === 'boolean') {
+				connect_request.force = options.force;
+			}
+			if (typeof options.startBlock === 'undefined' || options.startBlock === null) {
+				logger.debug('%s - options do not include startBlock', method);
+			} else {
+				connect_request.startBlock = options.startBlock;
+				logger.debug('%s - options include startBlock of %s', method, options.startBlock);
+			}
+			if (typeof options.endBlock === 'undefined' || options.endBlock === null) {
+				logger.debug('%s - options do not include endBlock', method);
+			} else {
+				connect_request.endBlock = options.endBlock;
+				logger.debug('%s - options include endBlock of %s', method, options.endBlock);
+			}
+			if (!options.target) {
+				logger.debug('%s - options do not include a target', method);
+			} else {
+				this._assignPeer(options.target);
+				logger.debug('%s - options include a target', method);
+			}
 		}
 		if (signedEvent) {
-			signedEvent = this._validateSignedEvent(signedEvent);
+			connect_request.signedEvent = this._validateSignedEvent(signedEvent);
 		}
 		if (connectCallback) {
+			logger.debug('%s - using a connect callback', method);
 			this.connectCallback = connectCallback;
 		}
 
-		logger.debug('connect - start peerAddr:%s', this.getPeerAddr());
+		logger.debug('%s - start peerAddr:%s', method, this.getPeerAddr());
 		if (!this._clientContext._userContext && !this._clientContext._adminSigningIdentity && !signedEvent) {
 			throw new Error('Error connect the ChannelEventhub to peer, either the clientContext has not been properly initialized, missing userContext or admin identity or missing signedEvent');
 		}
 
 		if (typeof full_block === 'boolean') {
 			this._filtered_stream = !full_block;
-			logger.debug('connect - filtered block stream set to:%s', !full_block);
+			logger.debug('%s - filtered block stream set to:%s', method, !full_block);
 		} else {
-			logger.debug('connect - using a filtered block stream by default');
+			logger.debug('%s - using a filtered block stream by default',  method);
 		}
 
-		logger.debug('connect - signed event:%s', !!signedEvent);
-		this._connect({signedEvent});
-		logger.debug('connect - end %s', this.getPeerAddr());
+		logger.debug('%s - signed event:%s', method, !!signedEvent);
+		this._connect(connect_request);
+		logger.debug('%s - end %s', method, this.getPeerAddr());
+	}
+
+	/**
+	 * Reestablishes a connection with the fabric peer service.
+
+	 *
+	 * @param {ConnectOptions} options - Optional.
+	 * @param {function} connectCallback - Optional. This callback will report
+	 *        completion of the connection to the peer or  will report
+	 *        any errors encountered during connection to the peer. When there
+	 *        is an error, this ChannelEventHub will be shutdown (disconnected).
+	 *        Callback function should take two parameters as (error, value).
+	 */
+	reconnect(options, connectCallback) {
+		const method = 'reconnect';
+		logger.debug('%s - start', method);
+		const re_options = Object.assign({force: true}, options);
+
+		this.connect(re_options, connectCallback);
 	}
 
 	/*
@@ -331,7 +405,6 @@ class ChannelEventHub {
 	 *           the connection to the peer event hub
 	 * @property {SignedEvent} signedEvent - Optional. the signed event to be send to peer
 	 */
-
 
 	/*
 	 * Internal use only
@@ -361,13 +434,23 @@ class ChannelEventHub {
 
 		// clean up
 		this._shutdown();
+		if (this._start_stop_connect) {
+			logger.debug('_connect - reset the start stop settings');
+			this._start_stop_connect = false;
+			this._starting_block_number = null;
+			this._ending_block_number = null;
+			this._ending_block_newest = false;
+			this._ending_block_seen = false;
+		}
+
+		this._checkReplay(request, true);
 
 		this._connect_running = true;
 		this._current_stream++;
 		const stream_id = this._current_stream;
 		logger.debug('_connect - start stream:', stream_id);
 		const self = this; // for callback context
-		const connecton_setup_timeout = setTimeout(() => {
+		const connection_setup_timeout = setTimeout(() => {
 			logger.error('_connect - timed out after:%s', self._peer._request_timeout);
 			self._connect_running = false;
 			self._disconnect(new Error('Unable to connect to the fabric peer service'));
@@ -392,7 +475,7 @@ class ChannelEventHub {
 		this._stream.on('data', (deliverResponse) => {
 			if (self._connect_running) {
 				self._connect_running = false;
-				clearTimeout(connecton_setup_timeout);
+				clearTimeout(connection_setup_timeout);
 			}
 
 			logger.debug('on.data - block stream:%s _current_stream:%s  peer:%s', stream_id, self._current_stream, self.getPeerAddr());
@@ -409,6 +492,7 @@ class ChannelEventHub {
 					logger.debug('on.data - first block received , this ChannelEventHub now registered');
 					self._connected = true;
 					if (this.connectCallback) {
+						logger.debug('_connect - call the connection callback');
 						this.connectCallback(null, this); // return this instance, user will be able check with isconnected()
 						this.connectCallback = null; // clean up so not called again
 					}
@@ -465,7 +549,7 @@ class ChannelEventHub {
 
 		this._stream.on('end', () => {
 			self._connect_running = false;
-			clearTimeout(connecton_setup_timeout);
+			clearTimeout(connection_setup_timeout);
 			logger.debug('on.end - event stream:%s _current_stream:%s peer:%s', stream_id, self._current_stream, self.getPeerAddr());
 			if (stream_id !== self._current_stream) {
 				logger.debug('on.end - incoming message was from a canceled stream');
@@ -478,10 +562,10 @@ class ChannelEventHub {
 
 		this._stream.on('error', (err) => {
 			self._connect_running = false;
-			clearTimeout(connecton_setup_timeout);
+			clearTimeout(connection_setup_timeout);
 			logger.debug('on.error - block stream:%s _current_stream:%s  peer:%s', stream_id, self._current_stream, self.getPeerAddr());
 			if (stream_id !== self._current_stream) {
-				logger.debug('on.error - incoming message was from a canceled stream');
+				logger.debug('on.error - incoming message was from a cancelled stream');
 				logger.debug('on.error - %s %s', new Date(), err);
 				return;
 			}
@@ -536,7 +620,6 @@ class ChannelEventHub {
 	 */
 	_disconnect(err) {
 		logger.debug('_disconnect - start -- called due to:: %s, peer:%s', err.message, this.getPeerAddr());
-		this._connected = false;
 		this._connect_running = false;
 		this._closeAllCallbacks(err);
 		this._shutdown();
@@ -565,6 +648,7 @@ class ChannelEventHub {
 		if (this._event_client) {
 			this._event_client.close();
 		}
+		this._connected = false;
 	}
 
 	/*
@@ -685,22 +769,31 @@ class ChannelEventHub {
 
 		// The behavior when a missing block is encountered
 		let behavior = _abProto.SeekInfo.SeekBehavior.BLOCK_UNTIL_READY;
+
 		// build start
 		const seekStart = new _abProto.SeekPosition();
-		if (this._starting_block_number) {
+		if (!this._starting_block_number || this._starting_block_number === NEWEST) {
+			const seekNewest = new _abProto.SeekNewest();
+			seekStart.setNewest(seekNewest);
+		} else if (this._starting_block_number === OLDEST) {
+			const seekOldest = new _abProto.SeekOldest();
+			seekStart.setOldest(seekOldest);
+		} else if (this._starting_block_number) {
 			const seekSpecifiedStart = new _abProto.SeekSpecified();
 			seekSpecifiedStart.setNumber(this._starting_block_number);
 			seekStart.setSpecified(seekSpecifiedStart);
-		} else {
-			const seekNewest = new _abProto.SeekNewest();
-			seekStart.setNewest(seekNewest);
 		}
 
 		// build stop
 		const seekStop = new _abProto.SeekPosition();
-		if (this._ending_block_newest) {
+		if (this._ending_block_number === NEWEST) {
+			this._ending_block_newest = true;
 			const seekNewest = new _abProto.SeekNewest();
 			seekStop.setNewest(seekNewest);
+			behavior = _abProto.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
+		} else if (this._ending_block_number === OLDEST) {
+			const seekOldest = new _abProto.SeekOldest();
+			seekStop.setOldest(seekOldest);
 			behavior = _abProto.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
 		} else {
 			const seekSpecifiedStop = new _abProto.SeekSpecified();
@@ -794,67 +887,109 @@ class ChannelEventHub {
 		logger.debug('%s - end', method);
 	}
 
+	_assignPeer(peer) {
+		const method = 'assignPeer';
+		logger.debug('%s - start', method);
+
+		const peers = this._channel._getTargets(peer, Constants.NetworkConfig.EVENT_SOURCE_ROLE, true);
+		this._peer = peers[0];
+
+		logger.debug('%s - reassigning new peer for this channel event hub %s,', method, this.getPeerAddr());
+	}
+
+	_checkBlockNum(block_num) {
+		let _block_num = null;
+		if (typeof block_num === 'string') {
+			if (block_num.toLowerCase() === LAST_SEEN) {
+				// set to last seen even if last seen is null
+				_block_num = this._last_block_seen;
+			} else if (block_num.toLowerCase() === OLDEST) {
+				_block_num = OLDEST;
+			} else if (block_num.toLowerCase() === NEWEST) {
+				_block_num = NEWEST;
+			} else {
+				// maybe it is a string number
+				_block_num = utils.convertToLong(block_num);
+			}
+		} else {
+			if (typeof block_num !== 'undefined' && block_num !== null) {
+				_block_num = utils.convertToLong(block_num);
+			}
+		}
+
+		return _block_num;
+	}
+
+	_checkEndBlock(endBlock, startBlock) {
+		const _endBlock = this._checkBlockNum(endBlock);
+
+		if (_endBlock instanceof Long && startBlock instanceof Long) {
+			if (startBlock.greaterThan(_endBlock)) {
+				throw new Error(util.format('"startBlock" (%s) must not be greater than "endBlock" (%s)', startBlock.toInt(), _endBlock.toInt()));
+			}
+		}
+
+		return _endBlock;
+	}
 	/*
 	 * Internal method
 	 * checks the startBlock/endBlock options
 	 * checks that only one registration when using startBlock/endBlock
+	 * checks that startBlock has been set during connect, then not allow
+	 *    registration with startBlock/endBlock
 	 * @returns enum of how the endBlock and startBlock have been set
 	 */
-	_checkReplay(options) {
+	_checkReplay(options, fromConnect) {
 		logger.debug('_checkReplay - start');
 
 		let result = NO_START_STOP;
-		let have_start_block = false;
-		let have_end_block = false;
-		const converted_options = {};
-		if (options && typeof options.startBlock !== 'undefined') {
-			try {
-				converted_options.start_block = utils.convertToLong(options.startBlock);
-				have_start_block = true;
-			} catch (error) {
-				throw new Error('Problem with the startBlock parameter ::' + error);
-			}
+		let _start_block = null;
+		let _end_block = null;
+
+		if (options) {
+			_start_block = this._checkBlockNum(options.startBlock);
+			_end_block = this._checkEndBlock(options.endBlock, _start_block);
 		}
-		if (options && typeof options.endBlock !== 'undefined') {
-			try {
-				let end_block = options.endBlock;
-				if (typeof end_block === 'string') {
-					if (end_block.toLowerCase() === NEWEST) {
-						end_block = Long.MAX_VALUE;
-						this._ending_block_newest = true;
-					}
+
+		if (_start_block || _end_block) {
+			if (fromConnect) {
+				if (this._start_stop_registration) {
+					logger.error('This ChannelEventHub has a registered listener that has options of startBlock or endBlock');
+					throw new Error('Not able to connect with startBlock or endBlock when a registered listener has those options.');
 				}
-				converted_options.end_block = utils.convertToLong(end_block);
-				have_end_block = true;
-			} catch (error) {
-				throw new Error('Problem with the endBlock parameter ::' + error);
+			} else {
+				if (this._haveRegistrations()) {
+					logger.error('This ChannelEventHub is already registered with active listeners.');
+					throw new Error('Only one event registration is allowed when startBlock or endBlock are used');
+				}
+				if (this._start_stop_connect) {
+					logger.error('This ChannelEventHub has been connected with a startBlock or endBlock');
+					throw new Error('Registrations with startBlock or endBlock are not allowed if this ChannelEventHub is connected with a startBlock or endBlock');
+				}
+				if (this._connected || this._connect_running) {
+					logger.error('This ChannelEventHub has already been connected to start receiving blocks.');
+					throw new Error('Event listeners that use startBlock or endBlock must be registered before connecting to the peer channel-based service');
+				}
 			}
 		}
 
-		if ((have_start_block || have_end_block) && this._haveRegistrations()) {
-			logger.error('This ChannelEventHub is already registered with active listeners. Not able options of startBlock:%s endBlock:%s', options.startBlock, options.endBlock);
-			throw new Error('Only one event registration is allowed when startBlock or endBlock are used');
-		}
-
-		if ((have_start_block || have_end_block) && (this._connected || this._connect_running)) {
-			logger.error('This ChannelEventHub has already been connected to start receiving blocks. Not able to use options of startBlock:%s endBlock:%s', options.startBlock, options.endBlock);
-			throw new Error('Event listeners that use startBlock or endBlock must be registered before connecting to the peer channel-based service');
-		}
-
-		if (have_end_block) {
-			if (have_start_block && converted_options.start_block.greaterThan(converted_options.end_block)) {
-				throw new Error(`"startBlock" (${converted_options.start_block}) must not be larger than "endBlock" (${converted_options.end_block}})`);
+		if (_end_block) {
+			this._ending_block_number = _end_block;
+			if (fromConnect) {
+				logger.debug('_checkReplay - connect will end receiving blocks from %s', this._ending_block_number);
+				this._start_stop_connect = true;
 			}
-			this._ending_block_number = converted_options.end_block;
-			this._allowRegistration = false;
 			result = END_ONLY;
-			logger.debug('_checkReplay - Event listening will end at block %s', converted_options.end_block);
+			logger.debug('_checkReplay - Event listening will end at block %s', this._ending_block_number);
 		}
-		if (have_start_block) {
-			this._starting_block_number = converted_options.start_block;
-			this._allowRegistration = false;
+		if (_start_block) {
+			this._starting_block_number = _start_block;
+			if (fromConnect) {
+				logger.debug('_checkReplay - connect will start receiving blocks from %s', this._starting_block_number);
+				this._start_stop_connect = true;
+			}
 			result++; // will move result to START_ONLY or START_AND_END
-			logger.debug('_checkReplay - Event listening will start at block %s', converted_options.start_block);
+			logger.debug('_checkReplay - Event listening will start at block %s', this._starting_block_number);
 		}
 
 		logger.debug('_checkReplay - end');
@@ -1459,9 +1594,8 @@ class ChannelEventHub {
 		this._ending_block_number = null;
 		this._ending_block_seen = false;
 		this._ending_block_newest = false;
-		// allow this hub to to registar new listeners
-		this._allowRegistration = true;
 		this._start_stop_registration = null;
+		this._start_stop_connect = false;
 	}
 }
 

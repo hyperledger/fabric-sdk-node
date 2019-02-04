@@ -949,14 +949,19 @@ const Channel = class {
 	 * This method will create a new ChannelEventHub and not save a reference.
 	 * Use the {getChannelEventHub} to reuse a ChannelEventHub.
 	 *
-	 * @param {Peer | string} peer A Peer instance or the name of a peer that has
-	 *        been assigned to the channel.
+	 * @param {Peer | string} peer Optional. A Peer instance or the name of a
+	 *        peer that has been assigned to the channel. If not provided the
+	 *        ChannelEventHub must be connected with a "target" peer.
 	 * @returns {ChannelEventHub} The ChannelEventHub instance
 	 */
 	newChannelEventHub(peer) {
-		// Will always return one or throw
-		const peers = this._getTargets(peer, Constants.NetworkConfig.EVENT_SOURCE_ROLE, true);
-		const channel_event_hub = new ChannelEventHub(this, peers[0]);
+		let _peer = null;
+		if (peer) {
+			const peers = this._getTargets(peer, Constants.NetworkConfig.EVENT_SOURCE_ROLE, true);
+			_peer = peers[0];
+		}
+		const channel_event_hub = new ChannelEventHub(this, _peer);
+
 		return channel_event_hub;
 	}
 

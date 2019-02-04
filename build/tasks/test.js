@@ -125,17 +125,22 @@ gulp.task('compile', shell.task([
 //  - Use nyc instead of gulp-istanbul to generate coverage report
 //  - Cannot use gulp-istabul because it throws "unexpected identifier" for async/await functions
 
-// Main test to run all tests
-gulp.task('test', shell.task('npx nyc gulp run-test'));
-
 // Test to run all unit tests
-gulp.task('test-headless', shell.task('npx nyc gulp run-test-headless'));
+gulp.task('test-headless', shell.task('npx nyc --check-coverage --lines 50 --statements 50 --functions 50 --branches 50 gulp run-test-headless'));
+
+// Test to run only tape integration test
+gulp.task('test-integration', shell.task('npx nyc --check-coverage --lines 50 --statements 50 --functions 50 --branches 50 gulp run-test-integration'));
+
+// Test to run only tape integration test
+gulp.task('test-cucumber', shell.task('npx nyc gulp run-test-cucumber'));
+
+// Test to run only logger test
+gulp.task('test-logger', shell.task('npx nyc gulp run-test-logger'));
+
+// -------------------------------------------------------------------------
 
 // Only run Mocha unit tests
 gulp.task('test-mocha', shell.task('npx nyc gulp run-test-mocha'));
-
-// Only run scenario tests
-gulp.task('test-cucumber', shell.task('npx nyc npm run test:cucumber'));
 
 // Definition of Mocha (unit) test suites
 gulp.task('run-test-mocha', (done) => {
@@ -164,9 +169,6 @@ gulp.task('mocha-fabric-network',
 	}
 );
 
-// Test to run all unit tests
-gulp.task('test-tape', shell.task('npx nyc gulp run-tape-unit'));
-
 // Definition of Cucumber (scenario) test suite
 gulp.task('run-test-cucumber', shell.task(
 	'export HFC_LOGGING=""; npm run test:cucumber'
@@ -175,13 +177,27 @@ gulp.task('run-test-cucumber', shell.task(
 // Main test method to run all test suites
 // - lint, unit first, then FV, then scenario
 gulp.task('run-test', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'run-test-mocha', 'run-tape-unit', 'run-tape-e2e', 'run-logger-unit', 'docker-clean', 'run-test-cucumber'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'run-test-mocha', 'run-tape-unit', 'run-tape-e2e', 'run-test-logger', 'docker-clean', 'run-test-cucumber'];
+	runSequence(...tasks, done);
+});
+
+// Main test method to run all test suites
+// - lint, unit first, then FV, then scenario
+gulp.task('run-test-integration', (done) => {
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'lint', 'run-tape-e2e'];
+	runSequence(...tasks, done);
+});
+
+// Main test method to run all test suites
+// - lint, unit first, then FV, then scenario
+gulp.task('test-cucumber', (done) => {
+	const tasks = ['clean-up', 'docker-clean', 'run-test-cucumber'];
 	runSequence(...tasks, done);
 });
 
 // Run all non-integration tests
 gulp.task('run-test-headless', (done) => {
-	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'run-test-mocha', 'run-tape-unit', 'run-logger-unit'];
+	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'compile', 'run-test-mocha', 'run-tape-unit'];
 	runSequence(...tasks, done);
 });
 
@@ -203,7 +219,7 @@ gulp.task('run-tape-unit',
 	});
 
 // Run logger in isolation
-gulp.task('run-logger-unit',
+gulp.task('run-test-logger',
 	() => {
 		// this is needed to avoid a problem in tape-promise with adding
 		// too many listeners to the "unhandledRejection" event

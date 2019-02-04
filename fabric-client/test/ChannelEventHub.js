@@ -17,12 +17,15 @@
 
 const rewire = require('rewire');
 const ChannelEventHub = rewire('../lib/ChannelEventHub');
+const Peer = rewire('../lib/Peer');
+const Channel = rewire('../lib/Channel');
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const should = chai.should();
 const sinon = require('sinon');
+const Long = require('long');
 
 describe('ChannelEventHub', () => {
 	let revert;
@@ -75,10 +78,9 @@ describe('ChannelEventHub', () => {
 			}).should.throw(/Missing required argument: channel/);
 		});
 
-		it('should throw if peer argument isnt given', () => {
-			(() => {
-				new ChannelEventHub({});
-			}).should.throw(/Missing required argument: peer/);
+		it('should create even if peer argument isnt given', () => {
+			const hub = new ChannelEventHub({});
+			should.equal(hub._peer, undefined);
 		});
 	});
 
@@ -108,25 +110,166 @@ describe('ChannelEventHub', () => {
 		});
 	});
 
+	describe('#_assignPeer', () => {
+		let hub, peer, channel;
+
+		beforeEach(() => {
+			peer = new Peer('grpc://host.com:9999', {name: 'mypeer'});
+			channel = new Channel('mychannel', {});
+			hub = new ChannelEventHub(channel, 'peer');
+		});
+
+		it('should reassign peer to channel event hub', () => {
+			hub._assignPeer(peer);
+			should.equal(hub.getPeerAddr(), 'host.com:9999');
+		});
+
+		it('should reassign peer to channel event hub', () => {
+			channel.addPeer(peer);
+			hub._assignPeer('mypeer');
+			should.equal(hub.getPeerAddr(), 'host.com:9999');
+		});
+
+		it('should throw an error if a peer name not found', () => {
+			(() => {
+				hub._assignPeer('bad');
+			}).should.throw('Peer with name "bad" not assigned to this channel');
+		});
+	});
+
 	describe('#lastBlockNumber', () => {
+		let hub;
+		beforeEach(() => {
+			hub = new ChannelEventHub('channel', 'peer');
+		});
+
 		it('should throw an error if a block has not been seen', () => {
-			const hub = new ChannelEventHub('channel', 'peer');
 			(() => {
 				hub.lastBlockNumber();
 			}).should.throw(/This ChannelEventHub has not seen a block from the peer/);
 		});
 
 		it('should return the last block seen', () => {
-			const hub = new ChannelEventHub('channel', 'peer');
 			hub._last_block_seen = 10;
 			hub.lastBlockNumber().should.equal(10);
 		});
 	});
 
+	describe('#_checkBlockNum', () => {
+		let hub;
+		beforeEach(() => {
+			hub = new ChannelEventHub('channel', 'peer');
+		});
+
+		it('should return the last block seen', () => {
+			hub._last_block_seen = 2;
+			const result = hub._checkBlockNum('last_seen');
+			result.should.equal(2);
+		});
+
+		it('should return newest when newest', () => {
+			const result = hub._checkBlockNum('newest');
+			result.should.equal('newest');
+		});
+
+		it('should return oldest when oldest', () => {
+			const result = hub._checkBlockNum('oldest');
+			result.should.equal('oldest');
+		});
+
+		it('should return Long 12 when "12"', () => {
+			const result = hub._checkBlockNum('12');
+			result.toInt().should.equal(12);
+		});
+
+		it('should return Long 12 when int 12', () => {
+			const result = hub._checkBlockNum(12);
+			result.toInt().should.equal(12);
+		});
+
+		it('should return Long 12 when Long 12', () => {
+			const result = hub._checkBlockNum(Long.fromInt(12));
+			result.toInt().should.equal(12);
+		});
+
+		it('should return null when null', () => {
+			const result = hub._checkBlockNum(null);
+			should.equal(result, null);
+		});
+
+		it('should throw an error if a block number is bad', () => {
+			(() => {
+				hub._checkBlockNum('bad');
+			}).should.throw(/value:bad is not a valid number /);
+		});
+
+	});
+
+	describe('#_checkEndBlock', () => {
+		let hub;
+		beforeEach(() => {
+			hub = new ChannelEventHub('channel', 'peer');
+		});
+
+		it('should return the last block seen', () => {
+			hub._last_block_seen = 2;
+			const result = hub._checkEndBlock('last_seen');
+			result.should.equal(2);
+		});
+
+		it('should return newest when newest', () => {
+			const result = hub._checkEndBlock('newest');
+			result.should.equal('newest');
+		});
+
+		it('should return oldest when oldest', () => {
+			const result = hub._checkEndBlock('oldest');
+			result.should.equal('oldest');
+		});
+
+		it('should return Long 12 when "12"', () => {
+			const result = hub._checkEndBlock('12');
+			result.toInt().should.equal(12);
+		});
+
+		it('should return Long 12 when int 12', () => {
+			const result = hub._checkEndBlock(12);
+			result.toInt().should.equal(12);
+		});
+
+		it('should return Long 12 when Long 12', () => {
+			const result = hub._checkEndBlock(Long.fromInt(12));
+			result.toInt().should.equal(12);
+		});
+
+		it('should return null when null', () => {
+			const result = hub._checkEndBlock(null);
+			should.equal(result, null);
+		});
+
+		it('should return Long 12 when int 12 and startBlock Long 12', () => {
+			const result = hub._checkEndBlock(12, Long.fromInt(12));
+			result.toInt().should.equal(12);
+		});
+
+		it('should throw an error when int 12 and startBlock Long 14', () => {
+			(() => {
+				hub._checkEndBlock(12, Long.fromInt(14));
+			}).should.throw('"startBlock" (14) must not be greater than "endBlock" (12)');
+		});
+
+		it('should throw an error if a block number is bad', () => {
+			(() => {
+				hub._checkEndBlock('bad');
+			}).should.throw(/value:bad is not a valid number /);
+		});
+
+	});
+
 	describe('#_checkAllowRegistrations', () => {
 		it ('should throw an error if registration is not allowed', () => {
 			const hub = new ChannelEventHub('channel', 'peer');
-			hub._allowRegistration = false;
+			hub._start_stop_registration = true;
 			(() => {
 				hub._checkAllowRegistrations();
 			}).should.throw(/This ChannelEventHub is not open to event listener registrations/);
@@ -146,6 +289,20 @@ describe('ChannelEventHub', () => {
 			const hub = new ChannelEventHub('channel', 'peer');
 			hub._connected = 'connected-status';
 			hub.isconnected().should.equal(hub._connected);
+		});
+	});
+
+	describe('#reconnect', () => {
+		let hub;
+		let connectStub;
+		it('should add in the force options', () => {
+			connectStub = sandbox.stub();
+			hub = new ChannelEventHub('channel', 'peer');
+			hub.connect = connectStub;
+
+			hub.reconnect();
+
+			sinon.assert.calledWith(connectStub, {'force': true});
 		});
 	});
 
@@ -177,10 +334,10 @@ describe('ChannelEventHub', () => {
 			getPeerAddrStub.returns('peer');
 			hub._clientContext._userContext = {};
 			hub.connect(true);
-			sinon.assert.calledWith(FakeLogger.debug, 'connect - start peerAddr:%s', 'peer');
-			sinon.assert.calledWith(FakeLogger.debug, 'connect - filtered block stream set to:%s', false);
-			sinon.assert.calledWith(FakeLogger.debug, 'connect - signed event:%s', false);
-			sinon.assert.calledWith(FakeLogger.debug, 'connect - end %s', 'peer');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - start peerAddr:%s', 'connect', 'peer');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - filtered block stream set to:%s', 'connect', false);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - signed event:%s', 'connect', false);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - end %s', 'connect', 'peer');
 		});
 
 		it('should validate a signed event', () => {
@@ -201,21 +358,55 @@ describe('ChannelEventHub', () => {
 			getPeerAddrStub.returns('peer');
 			hub._clientContext._userContext = {};
 			hub.connect(null);
-			sinon.assert.calledWith(FakeLogger.debug, 'connect - using a filtered block stream by default');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - using a filtered block stream by default', 'connect');
 		});
 
 		it('should log when options are undefined', () => {
 			getPeerAddrStub.returns('peer');
 			hub._clientContext._userContext = {};
 			hub.connect();
-			sinon.assert.calledWith(FakeLogger.debug, 'connect - using a filtered block stream by default');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - using a filtered block stream by default', 'connect');
 		});
 
 		it('should call _connect', () => {
 			getPeerAddrStub.returns('peer');
 			hub._clientContext._userContext = {};
 			hub.connect();
-			sinon.assert.calledWith(_connectStub, {signedEvent: null});
+			sinon.assert.calledWith(_connectStub, {});
+		});
+
+		it('should call the correct logs on startBlock', () => {
+			hub._clientContext._userContext = {};
+			hub.connect({startBlock: 1});
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options include startBlock of %s');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options do not include endBlock');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options do not include a target');
+		});
+
+		it('should call the correct logs on endBlock', () => {
+			hub._clientContext._userContext = {};
+			hub.connect({endBlock: 1});
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options include endBlock of %s');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options do not include startBlock');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options do not include a target');
+		});
+
+		it('should call the correct logs on startBlock and endBlock', () => {
+			hub._clientContext._userContext = {};
+			hub.connect({startBlock: 1, endBlock: 2});
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options include startBlock of %s');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options include endBlock of %s');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options do not include a target');
+		});
+
+		it('should call the correct logs on target', () => {
+			hub._clientContext._userContext = {};
+			hub._channel = {};
+			hub._channel._getTargets = sandbox.stub().returns({});
+			hub.connect({target: {}});
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options include a target');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options do not include startBlock');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - options do not include endBlock');
 		});
 	});
 
@@ -666,10 +857,12 @@ describe('ChannelEventHub', () => {
 		let TransactionIDStub;
 		let SeekPositionStub;
 		let setNewestStub;
+		let setOldestStub;
 		let setSpecifiedStub;
 		let SeekSpecifiedStub;
 		let setNumberStub;
 		let SeekNewestStub;
+		let SeekOldestStub;
 		let setStartStub;
 		let setStopStub;
 		let setBehaviorStub;
@@ -691,14 +884,17 @@ describe('ChannelEventHub', () => {
 			TransactionIDStub = sandbox.stub();
 			revert.push(ChannelEventHub.__set__('TransactionID', TransactionIDStub));
 			setNewestStub = sandbox.stub();
+			setOldestStub = sandbox.stub();
 			setSpecifiedStub = sandbox.stub();
-			SeekPositionStub = sandbox.stub().returns({setNewest: setNewestStub, setSpecified: setSpecifiedStub});
+			SeekPositionStub = sandbox.stub().returns({setNewest: setNewestStub, setOldest: setOldestStub, setSpecified: setSpecifiedStub});
 			revert.push(ChannelEventHub.__set__('_abProto.SeekPosition', SeekPositionStub));
 			setNumberStub = sandbox.stub();
 			SeekSpecifiedStub = sandbox.stub().returns({setNumber: setNumberStub});
 			revert.push(ChannelEventHub.__set__('_abProto.SeekSpecified', SeekSpecifiedStub));
 			SeekNewestStub = sandbox.stub();
 			revert.push(ChannelEventHub.__set__('_abProto.SeekNewest', SeekNewestStub));
+			SeekOldestStub = sandbox.stub();
+			revert.push(ChannelEventHub.__set__('_abProto.SeekOldest', SeekOldestStub));
 			setStartStub = sandbox.stub();
 			setStopStub = sandbox.stub();
 			setBehaviorStub = sandbox.stub();
@@ -774,16 +970,60 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(TransactionIDStub, new IdentityStub(), false);
 		});
 
-		it('should return the seek payload with more than zero blocks', () => {
+		it('should run with startBlock at newest', () => {
+			hub._starting_block_number = 'newest';
+			hub.generateUnsignedRegistration({mspId: 'mspId', certificate: 'certificate'});
+			sinon.assert.calledWith(SeekSpecifiedStub);
+			sinon.assert.calledWith(setSpecifiedStub, new SeekSpecifiedStub());
+			sinon.assert.called(SeekPositionStub);
+			sinon.assert.called(SeekNewestStub);
+			sinon.assert.calledWith(setNewestStub, new SeekNewestStub());
+			sinon.assert.called(SeekInfoStub);
+			sinon.assert.calledWith(setStartStub, new SeekPositionStub());
+			sinon.assert.calledWith(setStopStub, new SeekPositionStub());
+			sinon.assert.calledWith(setBehaviorStub, 'BLOCK_UNTIL_READY');
+			sinon.assert.called(buildChannelHeaderStub);
+			sinon.assert.called(getTransactionIDStub);
+			sinon.assert.called(getClientCertHashStub);
+			sinon.assert.called(getNonceStub);
+			sinon.assert.called(buildHeaderStub);
+			sinon.assert.called(buildHeaderStub);
+			sinon.assert.called(setHeaderStub);
+			sinon.assert.called(setDataStub);
+			sinon.assert.calledTwice(toBufferStub);
+		});
+
+		it('should run with startBlock at oldest', () => {
+			hub._starting_block_number = 'oldest';
+			hub.generateUnsignedRegistration({mspId: 'mspId', certificate: 'certificate'});
+			sinon.assert.calledWith(SeekSpecifiedStub);
+			sinon.assert.calledWith(setSpecifiedStub, new SeekSpecifiedStub());
+			sinon.assert.called(SeekPositionStub);
+			sinon.assert.called(SeekOldestStub);
+			sinon.assert.calledWith(setOldestStub, new SeekOldestStub());
+			sinon.assert.called(SeekInfoStub);
+			sinon.assert.calledWith(setStartStub, new SeekPositionStub());
+			sinon.assert.calledWith(setStopStub, new SeekPositionStub());
+			sinon.assert.calledWith(setBehaviorStub, 'BLOCK_UNTIL_READY');
+			sinon.assert.called(buildChannelHeaderStub);
+			sinon.assert.called(getTransactionIDStub);
+			sinon.assert.called(getClientCertHashStub);
+			sinon.assert.called(getNonceStub);
+			sinon.assert.called(buildHeaderStub);
+			sinon.assert.called(buildHeaderStub);
+			sinon.assert.called(setHeaderStub);
+			sinon.assert.called(setDataStub);
+			sinon.assert.calledTwice(toBufferStub);
+		});
+
+		it('should run with startBlock:1 and endBlock:1', () => {
 			hub._starting_block_number = 1;
-			hub._ending_block_newest = 1;
+			hub._ending_block_number = 1;
 			hub.generateUnsignedRegistration({mspId: 'mspId', certificate: 'certificate'});
 			sinon.assert.calledWith(SeekSpecifiedStub);
 			sinon.assert.calledWith(setNumberStub, 1);
 			sinon.assert.calledWith(setSpecifiedStub, new SeekSpecifiedStub());
 			sinon.assert.called(SeekPositionStub);
-			sinon.assert.called(SeekNewestStub);
-			sinon.assert.calledWith(setNewestStub, new SeekNewestStub());
 			sinon.assert.called(SeekInfoStub);
 			sinon.assert.calledWith(setStartStub, new SeekPositionStub());
 			sinon.assert.calledWith(setStopStub, new SeekPositionStub());
@@ -799,16 +1039,14 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledTwice(toBufferStub);
 		});
 
-		it('should return the seek payload with more than zero blocks given identity and txId', () => {
+		it('should run with startBlock:1 and endBlock:1 given identity and txId', () => {
 			hub._starting_block_number = 1;
-			hub._ending_block_newest = 1;
+			hub._ending_block_number = 1;
 			hub.generateUnsignedRegistration({identity: 'identity', txId: new TransactionIDStub()});
 			sinon.assert.calledWith(SeekSpecifiedStub);
 			sinon.assert.calledWith(setNumberStub, 1);
 			sinon.assert.calledWith(setSpecifiedStub, new SeekSpecifiedStub());
 			sinon.assert.called(SeekPositionStub);
-			sinon.assert.called(SeekNewestStub);
-			sinon.assert.calledWith(setNewestStub, new SeekNewestStub());
 			sinon.assert.called(SeekInfoStub);
 			sinon.assert.calledWith(setStartStub, new SeekPositionStub());
 			sinon.assert.calledWith(setStopStub, new SeekPositionStub());
@@ -824,16 +1062,16 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledTwice(toBufferStub);
 		});
 
-		it('should return the seek payload with more than zero blocks given identity and txId', () => {
+		it('should run with startBlock:1 and endBlock:newest given identity and txId', () => {
 			hub._starting_block_number = 1;
-			hub._ending_block_newest = 1;
+			hub._ending_block_number = 'newest';
 			hub.generateUnsignedRegistration({identity: 'identity', txId: new TransactionIDStub(), mspId: 'mspId', certificate: 'certificate'});
 			sinon.assert.calledWith(SeekSpecifiedStub);
 			sinon.assert.calledWith(setNumberStub, 1);
 			sinon.assert.calledWith(setSpecifiedStub, new SeekSpecifiedStub());
-			sinon.assert.called(SeekPositionStub);
 			sinon.assert.called(SeekNewestStub);
 			sinon.assert.calledWith(setNewestStub, new SeekNewestStub());
+			sinon.assert.called(SeekPositionStub);
 			sinon.assert.called(SeekInfoStub);
 			sinon.assert.calledWith(setStartStub, new SeekPositionStub());
 			sinon.assert.calledWith(setStopStub, new SeekPositionStub());
@@ -849,16 +1087,14 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledTwice(toBufferStub);
 		});
 
-		it('should return the seek payload with more than zero blocks given identity and txId', () => {
+		it('should run with startBlock:1 and endBlock:1 given identity and txId', () => {
 			hub._starting_block_number = 1;
-			hub._ending_block_newest = 1;
+			hub._ending_block_number = 1;
 			hub.generateUnsignedRegistration({identity: 'identity', txId: new TransactionIDStub(), mspId: 'mspId'});
 			sinon.assert.calledWith(SeekSpecifiedStub);
 			sinon.assert.calledWith(setNumberStub, 1);
 			sinon.assert.calledWith(setSpecifiedStub, new SeekSpecifiedStub());
 			sinon.assert.called(SeekPositionStub);
-			sinon.assert.called(SeekNewestStub);
-			sinon.assert.calledWith(setNewestStub, new SeekNewestStub());
 			sinon.assert.called(SeekInfoStub);
 			sinon.assert.calledWith(setStartStub, new SeekPositionStub());
 			sinon.assert.calledWith(setStopStub, new SeekPositionStub());
@@ -980,103 +1216,199 @@ describe('ChannelEventHub', () => {
 	});
 
 	describe('#_checkReplay', () => {
-		let convertToLongStub;
-		let _haveRegistrationsStub;
-
 		let hub;
 		beforeEach(() => {
-			_haveRegistrationsStub = sandbox.stub();
-			convertToLongStub = sandbox.stub();
-			revert.push(ChannelEventHub.__set__('utils.convertToLong', convertToLongStub));
 			hub = new ChannelEventHub('channel', 'peer');
-			hub._haveRegistrations = _haveRegistrationsStub;
 		});
 
-		it('should log on entry and exit', () => {
-			hub._checkReplay({});
+		it('should return NO_START_STOP and log on entry and exit', () => {
+			const result = hub._checkReplay({});
+			result.should.equal(0);
 			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - start');
 			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - end');
 		});
 
-		it('should throw if there is a problem with the startBlock parameter', () => {
-			convertToLongStub.throws(new Error());
-			(() => {
-				hub._checkReplay({startBlock: 1});
-			}).should.throw(Error, 'Problem with the startBlock parameter ::Error');
-		});
-
-		it('should return 1 when startBlock is set', () => {
-			convertToLongStub.returns('1');
+		it('should return START_ONLY with startBlock parameter of 1', () => {
 			const result = hub._checkReplay({startBlock: 1});
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', '1');
-			hub._starting_block_number.should.equal('1');
 			result.should.equal(1);
+			hub._starting_block_number.toInt().should.equal(1);
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', Long.fromInt(1));
 		});
 
-		it('should throw an error if there is a problem with the endBlock parameter', () => {
-			convertToLongStub.throws(new Error());
-			(() => {
-				hub._checkReplay({endBlock: 1});
-			}).should.throw(Error, 'Problem with the endBlock parameter ::Error');
+		it('should return START_ONLY with startBlock parameter of string 1', () => {
+			const result = hub._checkReplay({startBlock: '1'});
+			result.should.equal(1);
+			hub._starting_block_number.toInt().should.equal(1);
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', Long.fromInt(1));
+		});
+
+		it('should return START_ONLY with startBlock parameter of Long 1', () => {
+			const result = hub._checkReplay({startBlock: Long.fromInt(1)});
+			result.should.equal(1);
+			hub._starting_block_number.toInt().should.equal(1);
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', Long.fromInt(1));
+		});
+
+		it('should return START_ONLY with startBlock parameter of newest', () => {
+			const result = hub._checkReplay({startBlock: 'newest'});
+			result.should.equal(1);
+			hub._starting_block_number.should.equal('newest');
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', 'newest');
+		});
+
+		it('should return START_ONLY with startBlock parameter of oldest', () => {
+			const result = hub._checkReplay({startBlock: 'oldest'});
+			result.should.equal(1);
+			hub._starting_block_number.should.equal('oldest');
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', 'oldest');
+		});
+
+		it('should return START_ONLY with startBlock parameter of last_seen', () => {
+			hub._last_block_seen = 1;
+			const result = hub._checkReplay({startBlock: 'last_seen'});
+			result.should.equal(1);
+			hub._starting_block_number.should.equal(1);
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', 1);
+		});
+
+		it('should return END_ONLY with endBlock parameter of 1', () => {
+			const result = hub._checkReplay({endBlock: 1});
+			result.should.equal(2);
+			hub._ending_block_number.toInt().should.equal(1);
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', Long.fromInt(1));
+		});
+
+		it('should return END_ONLY with endBlock parameter of string 1', () => {
+			const result = hub._checkReplay({endBlock: '1'});
+			result.should.equal(2);
+			hub._ending_block_number.toInt().should.equal(1);
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', Long.fromInt(1));
+		});
+
+		it('should return END_ONLY with endBlock parameter of Long 1', () => {
+			const result = hub._checkReplay({endBlock: Long.fromInt(1)});
+			result.should.equal(2);
+			hub._ending_block_number.toInt().should.equal(1);
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', Long.fromInt(1));
+		});
+
+		it('should return END_ONLY with endBlock parameter of newest', () => {
+			const result = hub._checkReplay({endBlock: 'newest'});
+			result.should.equal(2);
+			hub._ending_block_number.should.equal('newest');
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', 'newest');
+		});
+
+		it('should return END_ONLY with endBlock parameter of oldest', () => {
+			const result = hub._checkReplay({endBlock: 'oldest'});
+			result.should.equal(2);
+			hub._ending_block_number.should.equal('oldest');
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', 'oldest');
+		});
+
+		it('should return END_ONLY with endBlock parameter of last_seen', () => {
+			hub._last_block_seen = 1;
+			const result = hub._checkReplay({endBlock: 'last_seen'});
+			result.should.equal(2);
+			hub._ending_block_number.should.equal(1);
+			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', 1);
 		});
 
 		it('should throw an error if startBlock is greater than endBlock', () => {
-			convertToLongStub.onCall(0).returns({greaterThan: () => true});
-			convertToLongStub.onCall(1).returns(100);
-			revert.push(ChannelEventHub.__set__('Long.MAX_VALUE', 100));
 			(() => {
-				hub._checkReplay({startBlock: 1, endBlock: '1'});
-			}).should.throw('"startBlock" ([object Object]) must not be larger than "endBlock" (100})');
+				hub._checkReplay({startBlock: 2, endBlock: '1'});
+			}).should.throw('"startBlock" (2) must not be greater than "endBlock" (1)');
 		});
 
-		it('should throw an error if startBlock given and _haveRegistrations is true', () => {
-			_haveRegistrationsStub.returns(true);
-			convertToLongStub.returns(1);
+		it('should throw an error if startBlock given and have _start_stop_registration', () => {
+			hub._start_stop_registration = {};
+			(() => {
+				hub._checkReplay({startBlock: 1}, true);
+			}).should.throw('Not able to connect with startBlock or endBlock when a registered listener has those options.');
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has a registered listener that has options of startBlock or endBlock');
+		});
+
+		it('should throw an error if endBlock given and have _start_stop_registration', () => {
+			hub._start_stop_registration = {};
+			(() => {
+				hub._checkReplay({endBlock: 1}, true);
+			}).should.throw('Not able to connect with startBlock or endBlock when a registered listener has those options.');
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has a registered listener that has options of startBlock or endBlock');
+		});
+
+		it('should throw an error if startBlock and have registered listeners', () => {
+			hub._haveRegistrations = sandbox.stub();
+			hub._haveRegistrations.returns(true);
 			(() => {
 				hub._checkReplay({startBlock: 1});
 			}).should.throw('Only one event registration is allowed when startBlock or endBlock are used');
-			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub is already registered with active listeners. Not able options of startBlock:%s endBlock:%s', 1, undefined);
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub is already registered with active listeners.');
 		});
 
-		it('should throw an error if endBlock given and _haveRegistrations is true', () => {
-			_haveRegistrationsStub.returns(true);
-			convertToLongStub.returns(1);
+		it('should throw an error if endBlock and have registered listeners', () => {
+			hub._haveRegistrations = sandbox.stub();
+			hub._haveRegistrations.returns(true);
 			(() => {
 				hub._checkReplay({endBlock: 1});
 			}).should.throw('Only one event registration is allowed when startBlock or endBlock are used');
-			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub is already registered with active listeners. Not able options of startBlock:%s endBlock:%s', undefined, 1);
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub is already registered with active listeners.');
+		});
+
+		it('should throw an error if startBlock and endBlock and have registered listeners', () => {
+			hub._haveRegistrations = sandbox.stub();
+			hub._haveRegistrations.returns(true);
+			(() => {
+				hub._checkReplay({startBlock: 1, endBlock: 2});
+			}).should.throw('Only one event registration is allowed when startBlock or endBlock are used');
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub is already registered with active listeners.');
 		});
 
 		it('should throw an error if startBlock and _connected', () => {
 			hub._connected = true;
-			convertToLongStub.returns(1);
 			(() => {
 				hub._checkReplay({startBlock: 1});
 			}).should.throw('Event listeners that use startBlock or endBlock must be registered before connecting to the peer channel-based service');
-			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has already been connected to start receiving blocks. Not able to use options of startBlock:%s endBlock:%s', 1, undefined);
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has already been connected to start receiving blocks.');
 		});
 
 		it('should throw an error if endBlock and _connected', () => {
 			hub._connected = true;
-			convertToLongStub.returns(1);
 			(() => {
 				hub._checkReplay({endBlock: 1});
 			}).should.throw('Event listeners that use startBlock or endBlock must be registered before connecting to the peer channel-based service');
-			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has already been connected to start receiving blocks. Not able to use options of startBlock:%s endBlock:%s', undefined, 1);
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has already been connected to start receiving blocks.');
 		});
 
-		it('should return 2 if endBlock is set', () => {
-			convertToLongStub.returns(1);
-			const result = hub._checkReplay({endBlock: 1});
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', 1);
-			result.should.equal(2);
+		it('should throw an error if startBlock and endBlock and _connected', () => {
+			hub._connected = true;
+			(() => {
+				hub._checkReplay({startBlock: 1, endBlock: 2});
+			}).should.throw('Event listeners that use startBlock or endBlock must be registered before connecting to the peer channel-based service');
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has already been connected to start receiving blocks.');
 		});
 
-		it('should return 2 if endBlock is set to newest', () => {
-			convertToLongStub.returns(1);
-			const result = hub._checkReplay({endBlock: 'newest'});
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', 1);
-			result.should.equal(2);
+		it('should throw an error if startBlock and _start_stop_connect', () => {
+			hub._start_stop_connect = true;
+			(() => {
+				hub._checkReplay({startBlock: 1});
+			}).should.throw('Registrations with startBlock or endBlock are not allowed if this ChannelEventHub is connected with a startBlock or endBlock');
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has been connected with a startBlock or endBlock');
+		});
+
+		it('should throw an error if endBlock and _start_stop_connect', () => {
+			hub._start_stop_connect = true;
+			(() => {
+				hub._checkReplay({endBlock: 1});
+			}).should.throw('Registrations with startBlock or endBlock are not allowed if this ChannelEventHub is connected with a startBlock or endBlock');
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has been connected with a startBlock or endBlock');
+		});
+
+		it('should throw an error if startBlock and endBlock and _start_stop_connect', () => {
+			hub._start_stop_connect = true;
+			(() => {
+				hub._checkReplay({startBlock: 1, endBlock: 2});
+			}).should.throw('Registrations with startBlock or endBlock are not allowed if this ChannelEventHub is connected with a startBlock or endBlock');
+			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has been connected with a startBlock or endBlock');
 		});
 	});
 
@@ -1981,7 +2313,6 @@ describe('ChannelEventHub', () => {
 		should.equal(hub._ending_block_number, null);
 		hub._ending_block_seen.should.be.false;
 		hub._ending_block_newest.should.be.false;
-		hub._allowRegistration.should.be.true;
 		should.equal(hub._start_stop_registration, null);
 	});
 });

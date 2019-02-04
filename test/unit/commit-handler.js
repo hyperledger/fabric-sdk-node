@@ -32,6 +32,20 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 	client.setStateStore(store);
 	await TestUtil.setAdmin(client, 'org1');
 	const channel = client.newChannel('handlertest');
+
+	// checking that we can not get the handler
+	try {
+		await channel.initialize({commitHandler:'bad.js'});
+		t.fail('Should not be here - commiHandler name is bad ');
+	} catch (error) {
+		if (error.toString().includes('find module')) {
+			t.pass('Successfully failed to initialize using the commitHandler file name ::' + error);
+		} else {
+			t.fail('Received an unknown error ::' + error);
+		}
+	}
+
+	// get a good handler
 	try {
 		await channel.initialize();
 	} catch (error) {
@@ -45,17 +59,6 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 		t.fail('Channel was not able to create the handler');
 		t.end();
 		return;
-	}
-
-	try {
-		await channel.initialize({commitHandler:'bad.js'});
-		t.fail('Should not be here - commiHandler name is bad ');
-	} catch (error) {
-		if (error.toString().includes('find module')) {
-			t.pass('Successfully failed to initialize using the commitHandler file name ::' + error);
-		} else {
-			t.fail('Received an unknown error ::' + error);
-		}
 	}
 
 	let parameters = null;
@@ -80,6 +83,8 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 			t.fail('Unknown commit results returned');
 		}
 	}
+
+	orderer.close();
 
 	const request = {};
 	const envelope = {};
@@ -111,7 +116,7 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 		t.fail('Should not be here - looking for connect deadline');
 	} catch (error) {
 		if (error instanceof Error) {
-			if (error.toString().indexOf('Failed to connect before the deadline') > -1) {
+			if (error.toString().indexOf('Failed to connect before the deadline URL:grpc://somehost.com:6666') > -1) {
 				t.pass('This should fail with ' + error.toString());
 			} else {
 				t.fail('Did not get deadline error - got ' + error.toString());
@@ -121,11 +126,15 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 		}
 	}
 
-	t.pass('Completed the testing');
+	// close all the connections
+	channel.close();
+
 
 	if (temp) {
 		Client.setConfigSetting('endorsement-handler-path', temp);
 	}
+
+	t.pass('Completed the testing');
 	t.end();
 });
 
