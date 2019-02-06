@@ -126,7 +126,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		pem?: string;
 		clientKey?: string;
 		clientCert?: string;
-		'request-timeout'?: string;
+		'request-timeout'?: number;
 		'ssl-target-name-override'?: string;
 		[propName: string]: any;
 	}
