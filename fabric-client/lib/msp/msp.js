@@ -154,8 +154,7 @@ const MSP = class {
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
 		if (!store_key) {
 			const publicKey = this.cryptoSuite.importKey(cert, {algorithm: CryptoAlgorithms.X509Certificate, ephemeral: true});
-			const sdk_identity = new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
-			return sdk_identity;
+			return new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 		} else {
 			return this.cryptoSuite.importKey(cert, {algorithm: CryptoAlgorithms.X509Certificate})
 				.then((publicKey) => {

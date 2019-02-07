@@ -22,26 +22,7 @@ const {Identity} = require('fabric-common');
 const mspProto = require('fabric-protos').msp;
 
 const FABRIC = 0;
-const TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
-	'MIIDVDCCAvqgAwIBAgIBATAKBggqhkjOPQQDAjBOMRMwEQYDVQQKDArOoyBBY21l' +
-	'IENvMRkwFwYDVQQDExB0ZXN0LmV4YW1wbGUuY29tMQ8wDQYDVQQqEwZHb3BoZXIx' +
-	'CzAJBgNVBAYTAk5MMB4XDTE2MTIxNjIzMTAxM1oXDTE2MTIxNzAxMTAxM1owTjET' +
-	'MBEGA1UECgwKzqMgQWNtZSBDbzEZMBcGA1UEAxMQdGVzdC5leGFtcGxlLmNvbTEP' +
-	'MA0GA1UEKhMGR29waGVyMQswCQYDVQQGEwJOTDBZMBMGByqGSM49AgEGCCqGSM49' +
-	'AwEHA0IABFKnXh7hBdp6s9OJ/aadigT1z2WzBbSc7Hzb3rkaWFz4e+9alqqWg9lr' +
-	'ur/mDYzG9dudC8jFjVa7KIh+2BxgBayjggHHMIIBwzAOBgNVHQ8BAf8EBAMCAgQw' +
-	'JgYDVR0lBB8wHQYIKwYBBQUHAwIGCCsGAQUFBwMBBgIqAwYDgQsBMA8GA1UdEwEB' +
-	'/wQFMAMBAf8wDQYDVR0OBAYEBAECAwQwDwYDVR0jBAgwBoAEAQIDBDBiBggrBgEF' +
-	'BQcBAQRWMFQwJgYIKwYBBQUHMAGGGmh0dHA6Ly9vY0JDQ1NQLmV4YW1wbGUuY29t' +
-	'MCoGCCsGAQUFBzAChh5odHRwOi8vY3J0LmV4YW1wbGUuY29tL2NhMS5jcnQwRgYD' +
-	'VR0RBD8wPYIQdGVzdC5leGFtcGxlLmNvbYERZ29waGVyQGdvbGFuZy5vcmeHBH8A' +
-	'AAGHECABSGAAACABAAAAAAAAAGgwDwYDVR0gBAgwBjAEBgIqAzAqBgNVHR4EIzAh' +
-	'oB8wDoIMLmV4YW1wbGUuY29tMA2CC2V4YW1wbGUuY29tMFcGA1UdHwRQME4wJaAj' +
-	'oCGGH2h0dHA6Ly9jcmwxLmV4YW1wbGUuY29tL2NhMS5jcmwwJaAjoCGGH2h0dHA6' +
-	'Ly9jcmwyLmV4YW1wbGUuY29tL2NhMS5jcmwwFgYDKgMEBA9leHRyYSBleHRlbnNp' +
-	'b24wCgYIKoZIzj0EAwIDSAAwRQIgcguBb6FUxO+X8DbY17gpqSGuNC4NT4BddPg1' +
-	'UWUxIC0CIQDNyHQAwzhw+512meXRwG92GfpzSBssDKLdwlrqiHOu5A==' +
-	'-----END CERTIFICATE-----';
+const TEST_CERT_PEM = require('./constants').TEST_CERT_PEM;
 
 test('\n\n** MSP Tests **\n\n', async (t) => {
 	testutil.resetDefaults();
@@ -49,45 +30,6 @@ test('\n\n** MSP Tests **\n\n', async (t) => {
 	// construct MSP config objects for org0 and org1
 	const configs = [];
 	const mspm = new MSPM();
-
-	t.throws(
-		() => {
-			mspm.loadMSPs({});
-		},
-		/"mspConfigs" argument must be an array/,
-		'Check MSPManager.loadMSPs() arguments: must be an array'
-	);
-
-	t.throws(
-		() => {
-			mspm.loadMSPs([{
-				getType: () => 'bad value'
-			}]);
-		},
-		/MSP Configuration object type not supported/,
-		'Check MSPManager.loadMSPs() arguments: each config must have getType() returning a number representing types'
-	);
-
-	t.throws(
-		() => {
-			mspm.loadMSPs([{
-				getType: () => 0
-			}]);
-		},
-		/MSP Configuration object missing the payload in the "Config" property/,
-		'Check MSPManager.loadMSPs() arguments: each config must have getConfig() returning a valid FabricMSPConfig'
-	);
-
-	t.throws(
-		() => {
-			mspm.loadMSPs([{
-				getType: () => 0,
-				getConfig: () => null
-			}]);
-		},
-		/MSP Configuration object missing the payload in the "Config" property/,
-		'Check MSPManager.loadMSPs() arguments: each config must have getConfig() returning a valid FabricMSPConfig'
-	);
 
 	let config = loadMSPConfig('peerOrg0', 'org0');
 	t.pass('Successfully loaded msp config for org0');

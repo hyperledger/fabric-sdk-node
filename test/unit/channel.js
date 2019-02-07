@@ -1367,7 +1367,7 @@ async function setMember(client) {
 	client.setStateStore(store);
 	const cryptoUtils = utils.newCryptoSuite();
 	const key = await cryptoUtils.generateKey({ephemeral: true});
-	const TEST_CERT_PEM = require('./user.js').TEST_CERT_PEM;
-	await member.setEnrollment(key, TEST_CERT_PEM, 'DEFAULT');
+	const cert = require('./constants.js').TEST_CERT_PEM;
+	await member.setEnrollment(key, cert, 'DEFAULT');
 	client.setUserContext(member, true);
 }

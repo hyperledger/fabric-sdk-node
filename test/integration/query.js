@@ -155,11 +155,11 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 			.payload.action.proposal_response_payload.extension.results.data_model,
 		'test for data model value');
 		t.equals('a', processed_transaction.transactionEnvelope.payload.data.actions['0']
-			.payload.action.proposal_response_payload.extension.results.ns_rwset['0']
+			.payload.action.proposal_response_payload.extension.results.ns_rwset['1']
 			.rwset.writes['0'].key,
 		'test for write set key value');
 		const block_num =  Number(processed_transaction.transactionEnvelope.payload.data.actions['0']
-			.payload.action.proposal_response_payload.extension.results.ns_rwset['0']
+			.payload.action.proposal_response_payload.extension.results.ns_rwset['1']
 			.rwset.reads[1].version.block_num.toString());
 		if (parseInt(block_num) >= 7) {
 			t.pass('Successfully test for read set block num');

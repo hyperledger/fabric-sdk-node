@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const {CryptoSuite, Identity, Key} = require('..');
+const CryptoSuite = require('../lib/CryptoSuite');
+const Identity = require('../lib/Identity');
+const Key = require('../lib/Key');
 const fabprotos = require('fabric-protos');
 const fs = require('fs');
 const path = require('path');
