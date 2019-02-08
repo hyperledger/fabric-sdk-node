@@ -36,17 +36,18 @@ const Peer = require('fabric-client/lib/Peer');
 const TransactionID = require('fabric-client/lib/TransactionID');
 const sdk_utils = require('fabric-client/lib/utils.js');
 
-const responseProto = require('fabric-protos').protos;
-const proposalProto = require('fabric-protos').protos;
-const chaincodeProto = require('fabric-protos').protos;
-const identitiesProto = require('fabric-protos').msp;
-const transactionProto = require('fabric-protos').protos;
-const commonProto = require('fabric-protos').common;
-const configtxProto = require('fabric-protos').common;
-const identityProto = require('fabric-protos').msp;
-const gossipProto = require('fabric-protos').gossip;
-const ledgerProto = require('fabric-protos').common;
-const queryProto = require('fabric-protos').protos;
+const fabprotos = require('fabric-protos');
+const responseProto = fabprotos.protos;
+const proposalProto = fabprotos.protos;
+const chaincodeProto = fabprotos.protos;
+const identitiesProto = fabprotos.msp;
+const transactionProto = fabprotos.protos;
+const commonProto = fabprotos.common;
+const configtxProto = fabprotos.common;
+const identityProto = fabprotos.msp;
+const gossipProto = fabprotos.gossip;
+const ledgerProto = fabprotos.common;
+const queryProto = fabprotos.protos;
 
 const fakeHandlerModulePath = 'fabric-client/test/FakeHandler';
 const fakeHandler = require(fakeHandlerModulePath).create();
@@ -2369,7 +2370,100 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#_sendChaincodeProposal', () => {});
+	describe('#_sendChaincodeProposal', () => {
+
+		let mockPeers;
+		let txId;
+
+		beforeEach(() => {
+			mockPeers = [
+				sinon.createStubInstance(Peer),
+				sinon.createStubInstance(Peer)
+			];
+			sinon.stub(channel, '_getTargets').returns(mockPeers);
+			txId = client.newTransactionID();
+		});
+
+		it('should send an instantiate request with no function name and no arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				txId
+			});
+			const payload = fabprotos.protos.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = fabprotos.protos.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = fabprotos.protos.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(0);
+		});
+
+		it('should send an instantiate request with a function name and no arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				fcn: 'initLedger',
+				txId
+			});
+			const payload = fabprotos.protos.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = fabprotos.protos.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = fabprotos.protos.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(1);
+			cds.chaincode_spec.input.args[0].toBuffer().toString().should.equal('initLedger');
+		});
+
+		it('should send an instantiate request with no function name and some arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				args: ['hello', 'world'],
+				txId
+			});
+			const payload = fabprotos.protos.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = fabprotos.protos.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = fabprotos.protos.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(2);
+			cds.chaincode_spec.input.args[0].toBuffer().toString().should.equal('hello');
+			cds.chaincode_spec.input.args[1].toBuffer().toString().should.equal('world');
+		});
+
+		it('should send an instantiate request with a function name and some arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				fcn: 'initLedger',
+				args: ['hello', 'world'],
+				txId
+			});
+			const payload = fabprotos.protos.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = fabprotos.protos.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = fabprotos.protos.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(3);
+			cds.chaincode_spec.input.args[0].toBuffer().toString().should.equal('initLedger');
+			cds.chaincode_spec.input.args[1].toBuffer().toString().should.equal('hello');
+			cds.chaincode_spec.input.args[2].toBuffer().toString().should.equal('world');
+		});
+
+
+	});
 
 	describe('#_verifyChaincodeRequest', () => {
 		const chaincode = sinon.createStubInstance(Chaincode);
