@@ -16,14 +16,13 @@
 'use strict';
 
 const rewire = require('rewire');
-const Node = rewire('../../lib/packager/Node');
-
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const sinon = require('sinon');
 
 describe('Node', () => {
+	const Node = rewire('../../lib/packager/Node');
 
 	let revert;
 	let sandbox;

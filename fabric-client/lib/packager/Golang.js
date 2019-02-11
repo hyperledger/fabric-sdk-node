@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 'use strict';
 
 const klaw = require('klaw');
@@ -27,19 +26,25 @@ class GolangPackager extends BasePackager {
 
 	/**
 	 * Package chaincode source and metadata for deployment.
-	 * @param {string} chaincodePath The Go package name.  The GOPATH environment variable must be set
-	 * and the package must be located under GOPATH/src.
-	 * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors.
+	 * @param {string} chaincodePath The Go package name. The package must be located under GOPATH/src.
+	 * @param {string} [metadataPath[] Optional. The path to the top-level directory containing metadata descriptors.
+	 * @param {string} [goPath] Optional. The GOPATH setting used when building the chaincode. This will
+	 *        default to the environment setting "GOPATH".
 	 * @returns {Promise.<TResult>}
 	 */
-	async package(chaincodePath, metadataPath) {
-		logger.debug(`packaging GOLANG from ${chaincodePath}`);
-
+	async package (chaincodePath, metadataPath, goPath) {
 		// Determine the user's $GOPATH
-		const goPath = process.env.GOPATH;
+		let _goPath = goPath;
+		if (!_goPath) {
+			_goPath = process.env.GOPATH;
+		}
 
 		// Compose the path to the chaincode project directory
-		const projDir = path.join(goPath, 'src', chaincodePath);
+		const projDir = path.join(_goPath, 'src', chaincodePath);
+
+		logger.debug('packaging GOLANG chaincodePath from %s', chaincodePath);
+		logger.debug('packaging GOLANG _goPath from %s', _goPath);
+		logger.debug('packaging GOLANG projDir from %s', projDir);
 
 		// We generate the tar in two phases: First grab a list of descriptors,
 		// and then pack them into an archive.  While the two phases aren't
@@ -48,7 +53,7 @@ class GolangPackager extends BasePackager {
 
 		const buffer = new sbuf.WritableStreamBuffer();
 
-		const srcDescriptors = await this.findSource(goPath, projDir);
+		const srcDescriptors = await this.findSource(_goPath, projDir);
 
 		let descriptors = srcDescriptors;
 		if (metadataPath) {

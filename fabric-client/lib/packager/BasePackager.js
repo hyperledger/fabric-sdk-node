@@ -36,9 +36,10 @@ const BasePackager = class {
 			// BasePackager can not be constructed.
 			throw new TypeError('Can not construct abstract class.');
 		}
-		if (this.package === BasePackager.prototype.package) {
-			throw new TypeError('Please implement method package from child class');
-		}
+		// let the implementor decide
+		// if (this.package === BasePackager.prototype.package) {
+		// 	throw new TypeError('Please implement method package from child class');
+		// }
 
 		this.keep = keep;
 	}
@@ -47,11 +48,27 @@ const BasePackager = class {
 	 * All of the files in the directory of request.chaincodePath will be
 	 * included in an archive file.
 	 *
-	 * @param chaincodePath
-	 * @param metadataPath
+	 * @param {string} chaincodePath
+	 * @param {string} metadataPath
+	 * @param {string} [goPath] Optional. Must be provided or environment "GOPATH" must be set
+	 *        when packaging goLang chaincode.
 	 */
-	package(chaincodePath, metadataPath) {
+	async package (chaincodePath, metadataPath, goPath) {
 		throw new TypeError('Please implement method package from child class');
+	}
+
+	/**
+	 * Package the final chaincode package for installation on a
+	 * Hyperledger Fabric Peer using the v2 Lifecycle process.
+	 * @param {string} chaincodeName The name of the chaincode
+	 * @param {string} chaincodeVersion The version of the chaincode
+	 * @param {string} chaincodeType The chaincode type
+	 * @param {Byte[]} packageBytes The chaincode package
+	 * @param {string} [chaincodePath] Optional. The chaincode path
+	 * @returns {Promise.<TResult>}
+	 */
+	async finalPackage (chaincodeName, chaincodeVersion, chaincodeType, packageBytes, chaincodePath) {
+		throw new TypeError('Please implement method finalPackage from child class');
 	}
 
 	/**
@@ -122,32 +139,21 @@ const BasePackager = class {
 	}
 
 	/**
-	 * Given an {fqp, name} tuple, generate a tar entry complete with sensible
-	 * header and populated contents read from the filesystem.
+	 * Given {fqp, name} generate a tar entry complete with sensible
+	 * header and contents read from the filesystem.
 	 *
 	 * @param pack
 	 * @param desc
 	 * @returns {Promise}
 	 */
-	packEntry(pack, desc) {
+	packFileEntry (pack, desc) {
 		return new Promise((resolve, reject) => {
 			// Use a synchronous read to reduce non-determinism
 			const content = fs.readFileSync(desc.fqp);
 			if (!content) {
 				reject(new Error('failed to read ' + desc.fqp));
 			} else {
-				// Use a deterministic "zero-time" for all date fields
-				const zeroTime = new Date(0);
-				const header = {
-					name: desc.name,
-					size: content.size,
-					mode: 0o100644,
-					atime: zeroTime,
-					mtime: zeroTime,
-					ctime: zeroTime
-				};
-
-				pack.entry(header, content, (err) => {
+				pack.entry(this._buildHeader(desc.name, content.length), content, (err) => {
 					if (err) {
 						reject(err);
 					} else {
@@ -156,6 +162,45 @@ const BasePackager = class {
 				});
 			}
 		});
+	}
+
+	/**
+	 * Given {bytes, name} generate a tar entry complete with sensible
+	 * header and contents from memory (the bytes).
+	 *
+	 * @param pack
+	 * @param desc
+	 * @returns {Promise}
+	 */
+	packMemoryEntry (pack, desc) {
+		return new Promise((resolve, reject) => {
+			if (!desc || !desc.bytes) {
+				reject(new Error('Missing content'));
+			} else {
+				pack.entry(this._buildHeader(desc.name, desc.bytes.length), desc.bytes, (err) => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve(true);
+					}
+				});
+			}
+		});
+	}
+
+	_buildHeader(name, size) {
+		// Use a deterministic "zero-time" for all date fields
+		const zeroTime = new Date(0);
+		const header = {
+			name: name,
+			size: size,
+			mode: 0o100644,
+			atime: zeroTime,
+			mtime: zeroTime,
+			ctime: zeroTime
+		};
+
+		return header;
 	}
 
 	/**
@@ -182,7 +227,13 @@ const BasePackager = class {
 			// finalizing the tarball
 			const tasks = [];
 			for (const desc of descriptors) {
-				const task = this.packEntry(pack, desc);
+				let task;
+				if (desc.bytes) {
+					task = this.packMemoryEntry(pack, desc);
+				} else {
+					task = this.packFileEntry(pack, desc);
+				}
+
 				tasks.push(task);
 			}
 

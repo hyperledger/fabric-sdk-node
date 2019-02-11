@@ -20,6 +20,7 @@ const token_utils = require('./token-utils.js');
 const util = require('util');
 const Peer = require('./Peer.js');
 const ChannelEventHub = require('./ChannelEventHub.js');
+const Chaincode = require('./Chaincode.js');
 const Orderer = require('./Orderer.js');
 const BlockDecoder = require('./BlockDecoder.js');
 const TransactionID = require('./TransactionID.js');
@@ -2625,91 +2626,129 @@ const Channel = class {
 	}
 
 	/**
-	 * @typedef {Object} ChaincodeDefineRequest
-	 *  This object contains many properties that will be when defining
-	 *  a chaincode on the channel for an organization or channel wide
+	 * @typedef {Object} ChaincodeRequest
+	 *  This object contains the  properties needed when approving
+	 *  a chaincode on the channel for an organization
 	 * @property {Peer[] | string[]} [targets] Optional. The peers that will
 	 *  receive the define request. When not provided, peers that have been
 	 *  added to the channel with the 'endorser' role.
 	 * @property {object} chaincode - Required. The chaincode object containing
-	 *  all the chaincode information required by the define chaincode fabric
+	 *  all the chaincode information required by the approve chaincode fabric
 	 *  network action. see {@link Chaincode}
+	 * @property {Object} txId - Required. The transaction object that has the
+	 *  ID and nonce to use for this request.
+	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this request
 	 */
-
-	/*
-	 * Internal method to check the incoming request object to be sure all the
-	 * chaincode settings are available
-	 *
-	 * @param {object} request - the {@link Chaincode} object to be checked
-	 * @throws error when there are issues with the incoming request object
-	 */
-	_verifyChaincodeRequest(request) {
-		const method = '_verifyChaincodeRequest';
-		logger.debug('%s - start', method);
-
-		if (!request) {
-			throw new Error('Missing required request parameter');
-		}
-		if (!request.chaincode) {
-			throw new Error('Missing required request parameter "chaincode"');
-		}
-		if (!request.chaincode.hasHash()) {
-			throw new Error('Chaincode definition must include the chaincode hash value');
-		}
-
-		logger.debug('%s - verify successfully completed', method);
-	}
 
 	/**
-	 * This method will build and send an "allow chaincode for organization for channel"
+	 * This method will build and send an
+	 * "approve chaincode definition for organization for channel"
 	 * transaction to the fabric lifecycle system chaincode.
 	 * see {@link Chaincode}
 	 *
 	 * @async
-	 * @param {ChaincodeDefineRequest} request - Required.
-	 * @param {Number} [timeout] Optional. Timeout specific for this request.
-	 *
+	 * @param {ChaincodeRequest} request - Required.
 	 * @return {Object} Return object will contain the proposalResponses and the proposal
 	 */
-	async allowChaincodeForOrg(request, timeout) {
+	async approveChaincodeForOrg(request) {
 		const method = 'allowChaincodeForOrg';
 		logger.debug('%s - start', method);
 
-		this._verifyChaincodeRequest(request);
-
-		// TODO - build send the define for org transaction to the lifecycle chaincode.
-
-		const proposal = {};
-
-		const proposal_responses = [];
-
-		return {proposalResponses: proposal_responses, proposal: proposal};
+		return await this._lifecycleAction(method, request);
 	}
 
 	/**
-	 * This method will build and send a "commit chaincode for channel"
+	 * This method will build and send a
+	 * "commit chaincode definition for channel"
 	 * transaction to the fabric lifecycle system chaincode.
 	 * see {@link Chaincode}
 	 *
 	 * @async
-	 * @param {ChaincodeDefineRequest} request - Required.
-	 * @param {Number} [timeout] Optional. Timeout specific for this request.
+	 * @param {ChaincodeRequest} request - Required.
 	 *
 	 * @return {Object} Return object will contain the proposalResponses and the proposal
 	 */
-	async CommitChaincode(request, timeout) {
-		const method = 'CommitChaincode';
+	async commitChaincode(request) {
+		const method = 'commitChaincode';
 		logger.debug('%s - start', method);
 
-		this._verifyChaincodeRequest(request);
+		return await this._lifecycleAction(method, request);
+	}
 
-		// TODO - build send the define for org transaction to the lifecycle chaincode.
+	async _lifecycleAction(command, request) {
+		const method = '_lifecycleAction_' + command;
+		logger.debug('%s - start', method);
 
-		const proposal = {};
+		if (!request || !request.chaincode) {
+			throw new Error('Missing required request parameter "chaincode"');
+		} else {
+			// check the chaincode object for the needed settings
+			request.chaincode.validate();
 
-		const proposal_responses = [];
+			// for now make the targets required
+			if (!request.targets) {
+				throw new Error('Missing "targets" request parameter');
+			}
+			if (!Array.isArray(request.targets)) {
+				throw new Error('"targets" request parameter must be an Array');
+			}
+		}
 
-		return {proposalResponses: proposal_responses, proposal: proposal};
+		if (!request.txId) {
+			throw new Error('Missing "txId" request parameter');
+		}
+
+		// maybe the targets are peer names
+		const targets = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+
+		let arg;
+		let fcn;
+		if (command === 'allowChaincodeForOrg') {
+			arg = request.chaincode.getApproveChaincodeDefinitionForMyOrgArgs();
+			fcn = 'ApproveChaincodeDefinitionForMyOrg';
+		} else if (command === 'commitChaincode') {
+			arg = request.chaincode.getCommitChaincodeDefinitionArgs();
+			fcn = 'CommitChaincodeDefinition';
+		}
+
+		// build approve request
+		try {
+			logger.debug('%s - build the approve chaincode request', method);
+
+			const install_request = {
+				chaincodeId: '_lifecycle',
+				fcn: fcn,
+				args: [arg.toBuffer()],
+				txId: request.txId
+			};
+
+			logger.debug('%s - build and sign the proposal', method);
+			const proposal = client_utils.buildSignedProposal(install_request, this._name, this._clientContext);
+
+			logger.debug('%s - about to sendPeersProposal', method);
+			const responses = await client_utils.sendPeersProposal(targets, proposal.signed, request.request_timeout);
+
+			for (const response of responses) {
+				logger.debug('%s - looking at response from peer %s', method, request.target);
+				if (response instanceof Error) {
+					logger.error('Problem with the ' + fcn + ' ::' + response);
+				} else if (response && response.response && response.response.status) {
+					if (response.response.status === 200) {
+						logger.debug('%s - peer response %j', method, response);
+					} else {
+						logger.error('%s - peer response %j', method, response);
+					}
+				} else {
+					logger.error('Problem with the ' + fcn + ' :: no response from the request');
+				}
+			}
+
+			return {proposalResponses: responses, proposal: proposal.source};
+		} catch (error) {
+			logger.error('Problem building the ' + fcn + ' request :: %s', error);
+			logger.error(' problem at ::' + error.stack);
+			throw error;
+		}
 	}
 
 	/**
@@ -2742,6 +2781,9 @@ const Channel = class {
 	 *           in the target chaincode. Default is 'invoke'
 	 * @property {string[]} args - An array of string arguments specific to the
 	 *           chaincode's 'Invoke' method
+	 * @property {boolean} [is_init] - Optional. Boolean to indicate that this invoke
+	 *           is to call the 'Init' function on the chaincode rather than the
+	 *           'Invoke'. TODO more text here
 	 * @property {string[]} [required] Optional. An array of strings that represent
 	 *           the names of peers that are required for the endorsement. These will
 	 *           be the only peers which the proposal will be sent.
@@ -2833,7 +2875,7 @@ const Channel = class {
 		// always use the handler if available (may not be just for discovery)
 		if (this._endorsement_handler) {
 			logger.debug('%s - running with endorsement handler', method);
-			const proposal = Channel._buildSignedProposal(request, this._name, this._clientContext);
+			const proposal = client_utils.buildSignedProposal(request, this._name, this._clientContext);
 
 			let endorsement_hint = request.endorsement_hint;
 			if (!endorsement_hint && request.chaincodeId) {
@@ -2884,61 +2926,10 @@ const Channel = class {
 			throw new Error(errorMsg);
 		}
 
-		const proposal = Channel._buildSignedProposal(request, channelId, client_context);
+		const proposal = client_utils.buildSignedProposal(request, channelId, client_context);
 
 		const responses = await client_utils.sendPeersProposal(request.targets, proposal.signed, timeout);
 		return [responses, proposal.source];
-	}
-
-	static _buildSignedProposal(request, channelId, client_context) {
-		const method = '_buildSignedProposal';
-		logger.debug('%s - start', method);
-
-		const args = [];
-		args.push(Buffer.from(request.fcn ? request.fcn : 'invoke', 'utf8'));
-		logger.debug('%s - adding function arg:%s', method, request.fcn ? request.fcn : 'invoke');
-
-		for (let i = 0; i < request.args.length; i++) {
-			logger.debug('%s - adding arg', method);
-			args.push(Buffer.from(request.args[i], 'utf8'));
-		}
-		// special case to support the bytes argument of the query by hash
-		if (request.argbytes) {
-			logger.debug('%s - adding the argument :: argbytes', method);
-			args.push(request.argbytes);
-		} else {
-			logger.debug('%s - not adding the argument :: argbytes', method);
-		}
-
-		logger.debug('%s - chaincode ID:%s', method, request.chaincodeId);
-		const invokeSpec = {
-			type: fabprotos.protos.ChaincodeSpec.Type.GOLANG,
-			chaincode_id: {name: request.chaincodeId},
-			input: {args: args}
-		};
-
-		let signer = null;
-		if (request.signer) {
-			signer = request.signer;
-		} else {
-			signer = client_context._getSigningIdentity(request.txId.isAdmin());
-		}
-
-		const channelHeader = client_utils.buildChannelHeader(
-			fabprotos.common.HeaderType.ENDORSER_TRANSACTION,
-			channelId,
-			request.txId.getTransactionID(),
-			null,
-			request.chaincodeId,
-			client_utils.buildCurrentTimestamp(),
-			client_context.getClientCertHash()
-		);
-
-		const header = client_utils.buildHeader(signer, channelHeader, request.txId.getNonce());
-		const proposal = client_utils.buildProposal(invokeSpec, header, request.transientMap);
-		const signed_proposal = client_utils.signProposal(signer, proposal);
-
-		return {signed: signed_proposal, source: proposal};
 	}
 
 	/**
@@ -3116,7 +3107,7 @@ const Channel = class {
 			logger.debug('%s - not adding the argument :: argbytes', method);
 		}
 
-		const invokeSpec = {
+		const chaincodeSpec = {
 			type: fabprotos.protos.ChaincodeSpec.Type.GOLANG,
 			chaincode_id: {name: request.chaincodeId},
 			input: {args}
@@ -3137,7 +3128,7 @@ const Channel = class {
 		);
 
 		const header = client_utils.buildHeader(identity, channelHeader, txId.getNonce());
-		const proposal = client_utils.buildProposal(invokeSpec, header, request.transientMap);
+		const proposal = client_utils.buildProposal(chaincodeSpec, header, request.transientMap);
 		return {proposal, txId};
 	}
 
@@ -3593,7 +3584,7 @@ const Channel = class {
 	 *           in the target chaincode. Default is 'invoke'
 	 * @property {string[]} args - An array of string arguments specific to the
 	 *           chaincode's 'Invoke' method
-	 * @property {integer} request_timeout - The timeout value to use for this request
+	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this request
 	 * @property {TransactionID} [txId] Optional. Transaction ID to use for the query.
 	 */
 
@@ -3673,6 +3664,423 @@ const Channel = class {
 				results.push(new Error(response));
 			}
 		});
+
+		return results;
+	}
+
+	/**
+	 * @typedef {Object} ChaincodeDefinitionQueryRequest
+	 * @property {Peer | string} target - Required. The peer that will receive
+	 *  this request
+	 * @property {string} chaincodeId - Required. Name of the chaincode
+	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this request
+	 * @property {TransactionID} [txId] - Optional. Transaction ID to use for the
+	 *  query. Required when using the admin idendity.
+	 * @returns {Chaincode} A chaincode object instance
+	 */
+
+	/**
+	 * Sends a QueryChaincodeDefintion request to one peer.
+	 *
+	 * @param {ChaincodeDefinitionQueryRequest} request
+	 * @returns {Promise} A Promise for a {@link Chaincode} instance
+	 */
+	async queryChaincodeDefinition(request) {
+		const method = 'queryChaincodeDefinition';
+		logger.debug('%s - start', method);
+
+		let useAdmin = false;
+		if (!request) {
+			throw new Error('Missing request object parameter');
+		}
+		if (!request.chaincodeId) {
+			throw new Error('Missing "chaincodeId" request parameter');
+		}
+
+		if (request.txId) {
+			useAdmin = request.txId.isAdmin();
+		}
+
+		const targets = this._getTargets(request.target, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = request.txId || new TransactionID(signer, useAdmin);
+
+		const arg = new fabprotos.lifecycle.QueryChaincodeDefinitionArgs();
+		arg.setName(request.chaincodeId);
+
+		const query_request = {
+			targets: targets,
+			chaincodeId: '_lifecycle',
+			fcn: 'QueryChaincodeDefinition',
+			args: [arg.toBuffer()],
+			txId: txId,
+			signer: signer
+		};
+
+		const proposalResults = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
+		const responses = proposalResults[0];
+		logger.debug('%s - results received', method);
+
+		if (!responses || !Array.isArray(responses)) {
+			throw new Error('Results are missing from the QueryChaincodeDefinition');
+		}
+
+		let results;
+		responses.forEach((response) => {
+			if (response instanceof Error) {
+				results = response;
+			} else if (response.response && response.response.payload) {
+				if (response.response.status === 200) {
+					const chaincode = Chaincode.fromQueryResult(request.chaincodeId, response.response.payload, this._clientContext);
+					results = chaincode;
+				} else {
+					if (response.response.message) {
+						results = new Error(response.response.message);
+					} else {
+						results = new Error(response);
+					}
+				}
+			} else {
+				results = new Error(response);
+			}
+		});
+
+		if (results instanceof Error) {
+			logger.error(results);
+			throw results;
+		}
+
+		return results;
+	}
+
+	/**
+	 * @typedef {Object} NamespaceDefinitionsRequest
+	 * @property {Peer | string} target - Required. The peer that will receive
+	 *  this request
+	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this
+	 *  request
+	 * @property {TransactionID} [txId] - Optional. Transaction ID to use for the
+	 *  query. Required when using the admin idendity.
+	 */
+
+	/**
+	 * Sends a QueryNamespaceDefinitions request to one peer.
+	 *
+	 * @param {NamespaceDefinitionsRequest} request
+	 * @returns {Promise} A Promise for an {Object} with a "namespaces" map
+	 */
+	async queryNamespaceDefinitions(request) {
+		const method = 'queryNamespaceDefinitions';
+		logger.debug('%s - start', method);
+
+		let useAdmin = false;
+		if (!request) {
+			throw new Error('Missing request object parameter');
+		}
+
+		if (request.txId) {
+			useAdmin = request.txId.isAdmin();
+		}
+
+		const targets = this._getTargets(request.target, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = request.txId || new TransactionID(signer, useAdmin);
+
+		const arg = new fabprotos.lifecycle.QueryNamespaceDefinitionsArgs();
+
+		const query_request = {
+			targets: targets,
+			chaincodeId: '_lifecycle',
+			fcn: 'QueryNamespaceDefinitions',
+			args: [arg.toBuffer()],
+			txId: txId,
+			signer: signer
+		};
+
+		const proposalResults = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
+		const responses = proposalResults[0];
+		logger.debug('%s - results received', method);
+
+		if (!responses || !Array.isArray(responses)) {
+			throw new Error('Results are missing from the QueryNamespaceDefinitions');
+		}
+
+		let results;
+		responses.forEach((response) => {
+			if (response instanceof Error) {
+				results = response;
+			} else if (response.response && response.response.status) {
+				if (response.response.status === 200) {
+					logger.debug('%s - decode payload', method);
+					results = fabprotos.lifecycle.QueryNamespaceDefinitionsResult.decode(response.response.payload);
+				} else {
+					if (response.response.message) {
+						results = new Error(response.response.message);
+					} else {
+						results = new Error('QueryNamespaceDefinitions has bad status ' + response.response.status);
+					}
+				}
+			} else {
+				results = new Error('QueryNamespaceDefinitions does not have results');
+			}
+		});
+
+		if (results instanceof Error) {
+			logger.error(results);
+			throw results;
+		}
+
+		return JSON.parse(results.encodeJSON());
+	}
+
+	/**
+	 * @typedef {Object} ApprovalStatusRequest
+	 * @property {Peer | string} target - Required. The peer that will receive
+	 *  this request
+	 * @property {object} chaincode - Required. The chaincode object containing
+	 *  all the chaincode information required by the approve chaincode fabric
+	 *  network action. see {@link Chaincode}
+	 * @property {Object} txId - Required. The transaction object that has the
+	 *  ID and nonce to use for this request.
+	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this
+	 *  request
+	 */
+
+	/**
+	 * Sends a QueryApprovalStatus request to one peer.
+	 *
+	 * @param {ApprovalStatusRequest} request
+	 * @returns {Promise} A Promise for a {@link Chaincode} instance
+	 */
+	async queryApprovalStatus(request) {
+		const method = 'queryApprovalStatus';
+		logger.debug('%s - start', method);
+
+		let useAdmin = false;
+		if (!request) {
+			throw new Error('Missing request object parameter');
+		}
+		if (!request.chaincode) {
+			throw new Error('Missing required request parameter "chaincode"');
+		} else {
+			// check the chaincode object for the needed settings
+			request.chaincode.validate();
+		}
+		if (request.txId) {
+			useAdmin = request.txId.isAdmin();
+		}
+
+		const targets = this._getTargets(request.target, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = request.txId || new TransactionID(signer, useAdmin);
+
+		const arg = request.chaincode.getQueryApprovalStatusArgs();
+
+
+		const query_request = {
+			targets: targets,
+			chaincodeId: '_lifecycle',
+			fcn: 'QueryApprovalStatus',
+			args: [arg.toBuffer()],
+			txId: txId,
+			signer: signer
+		};
+
+		const proposalResults = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
+		const responses = proposalResults[0];
+		logger.debug('%s - results received', method);
+
+		if (!responses || !Array.isArray(responses)) {
+			throw new Error('Results are missing from the QueryApprovalStatus');
+		}
+
+		let results;
+		responses.forEach((response) => {
+			if (response instanceof Error) {
+				results = response;
+			} else if (response.response && response.response.status) {
+				if (response.response.status === 200) {
+					logger.debug('%s - decode payload', method);
+					results = fabprotos.lifecycle.QueryApprovalStatusResults.decode(response.response.payload);
+				} else {
+					if (response.response.message) {
+						results = new Error(response.response.message);
+					} else {
+						results = new Error('QueryApprovalStatus has bad status ' + response.response.status);
+					}
+				}
+			} else {
+				results = new Error('QueryApprovalStatus does not have results');
+			}
+		});
+
+		if (results instanceof Error) {
+			logger.error(results);
+			throw results;
+		}
+
+		return JSON.parse(results.encodeJSON());
+	}
+
+	/**
+	 * @typedef {Object} InstalledChaincodeRequest
+	 * @property {Peer | string} target - Required. The peer that will receive
+	 *  this request
+	 * @property {string} package_id - Required. Package Id of the chaincode
+	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this request
+	 * @property {TransactionID} [txId] - Optional. Transaction ID to use for the
+	 *  query. Required when using the admin idendity.
+	 */
+
+	/**
+	 * Sends a QueryInstalledChaincode request to one peer.
+	 *
+	 * @param {InstalledChaincodeRequest} request
+	 * @returns {Promise} A Promise for a {@link Chaincode} instance
+	 */
+	async queryInstalledChaincode(request) {
+		const method = 'queryInstalledChaincode';
+		logger.debug('%s - start', method);
+
+		let useAdmin = false;
+		if (!request) {
+			throw new Error('Missing request object parameter');
+		}
+		if (!request.package_id) {
+			throw new Error('Missing "package_id" request parameter');
+		}
+
+		if (request.txId) {
+			useAdmin = request.txId.isAdmin();
+		}
+
+		const targets = this._getTargets(request.target, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = request.txId || new TransactionID(signer, useAdmin);
+
+		const arg = new fabprotos.lifecycle.QueryInstalledChaincodeArgs();
+		arg.setPackageId(request.package_id);
+
+		const query_request = {
+			targets: targets,
+			chaincodeId: '_lifecycle',
+			fcn: 'QueryInstalledChaincode',
+			args: [arg.toBuffer()],
+			txId: txId,
+			signer: signer
+		};
+
+		const proposalResults = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
+		const responses = proposalResults[0];
+		logger.debug('%s - results received', method);
+
+		if (!responses || !Array.isArray(responses)) {
+			throw new Error('Results are missing from the QueryInstalledChaincode');
+		}
+
+		let results;
+		responses.forEach((response) => {
+			if (response instanceof Error) {
+				results = response;
+			} else if (response.response && response.response.status) {
+				if (response.response.status === 200) {
+					logger.debug('%s - decode payload', method);
+					results = fabprotos.lifecycle.QueryInstalledChaincodeResult.decode(response.response.payload);
+				} else {
+					if (response.response.message) {
+						results = new Error(response.response.message);
+					} else {
+						results = new Error('QueryInstalledChaincode has bad status ' + response.response.status);
+					}
+				}
+			} else {
+				results = new Error('QueryInstalledChaincode does not have results');
+			}
+		});
+
+		if (results instanceof Error) {
+			logger.error(results);
+			throw results;
+		}
+
+		return results;
+	}
+
+	/**
+	 * @typedef {Object} InstalledChaincodesRequest
+	 * @property {Peer | string} target - Required. The peer that will receive
+	 *  this request
+	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this request
+	 * @property {TransactionID} [txId] - Optional. Transaction ID to use for the
+	 *  query. Required when using the admin idendity.
+	 */
+
+	/**
+	 * Sends a QueryInstalledChaincodes request to one peer.
+	 *
+	 * @param {InstalledChaincodesRequest} request
+	 * @returns {Promise} A Promise for a {@link Chaincode} instance
+	 */
+	async queryInstalledChaincodes(request) {
+		const method = 'queryInstalledChaincodes';
+		logger.debug('%s - start', method);
+
+		let useAdmin = false;
+		if (!request) {
+			throw new Error('Missing request object parameter');
+		}
+
+		if (request.txId) {
+			useAdmin = request.txId.isAdmin();
+		}
+
+		const targets = this._getTargets(request.target, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = request.txId || new TransactionID(signer, useAdmin);
+
+		const arg = new fabprotos.lifecycle.QueryInstalledChaincodesArgs();
+
+		const query_request = {
+			targets: targets,
+			chaincodeId: '_lifecycle',
+			fcn: 'QueryInstalledChaincodes',
+			args: [arg.toBuffer()],
+			txId: txId,
+			signer: signer
+		};
+
+		const proposalResults = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
+		const responses = proposalResults[0];
+		logger.debug('%s - results received', method);
+
+		if (!responses || !Array.isArray(responses)) {
+			throw new Error('Results are missing from the QueryInstalledChaincodes');
+		}
+
+		let results;
+		responses.forEach((response) => {
+			if (response instanceof Error) {
+				results = response;
+			} else if (response.response && response.response.status) {
+				if (response.response.status === 200) {
+					logger.debug('%s - decode payload', method);
+					results = fabprotos.lifecycle.QueryInstalledChaincodesResult.decode(response.response.payload);
+				} else {
+					if (response.response.message) {
+						results = new Error(response.response.message);
+					} else {
+						results = new Error('QueryInstalledChaincodes has bad status ' + response.response.status);
+					}
+				}
+			} else {
+				results = new Error('QueryInstalledChaincodes does not have results');
+			}
+		});
+
+		if (results instanceof Error) {
+			logger.error(results);
+			throw results;
+		}
 
 		return results;
 	}

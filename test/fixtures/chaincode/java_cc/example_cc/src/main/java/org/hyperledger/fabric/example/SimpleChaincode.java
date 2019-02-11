@@ -66,6 +66,9 @@ public class SimpleChaincode extends ChaincodeBase {
             if (func.equals("query")) {
                 return query(stub, params);
             }
+            if (func.equals("init")) {
+                return init(stub);
+            }
             if (func.equals("throwError")) {
                 return newErrorResponse("throwError: an error occurred");
             }

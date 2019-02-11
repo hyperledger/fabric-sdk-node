@@ -14,18 +14,21 @@
 
 'use strict';
 const {format} = require('util');
+const Long = require('long');
 
 const {Utils: utils} = require('fabric-common');
+const client_utils = require('./client-utils.js');
 const logger = utils.getLogger('Chaincode.js');
+const Packager = require('./Packager.js');
 const Policy = require('./Policy.js');
 const CollectionConfig = require('./SideDB.js');
-const fabprotos = require('fabric-protos').protos;
-
+const TransactionID = require('./TransactionID');
+const fabric_protos = require('fabric-protos').protos;
+const lifecycle_protos = require('fabric-protos').lifecycle;
 
 /**
  * @classdesc
- * The Chaincode class represents an Chaincode definition in the target
- * blockchain network.
+ * The Chaincode class represents an Chaincode definition.
  * <br><br>
  * see the tutorial {@tutorial chaincode-lifecycle}
  * <br><br>
@@ -37,146 +40,6 @@ const fabprotos = require('fabric-protos').protos;
  * This will return a Chaincode object instance that has been associated with
  * that client. This will provide access to user credentials used for signing
  * requests, access to peer, orderer, and channel information.
- *
- *
- * From the new chaincode object you will be able to use it to help you create
- * a chaincode package. This is a local client operation and does not make an
- * outbound request. The package may be sent to other organizations to be
- * installed on their peers.
- * This package may then be installed on your organization's peers.
- * The peer will return a hash value representing the package that it
- * has installed. This unique value will identify your chaincode across
- * the fabric network and must match all other peers that have installed
- * the chaincode.
- * <br>
- * <br>
- * Now that we have a hash value we can define a chaincode that our organization
- * would like to run. The definition will include the hash, the name, the version,
- * an endorsement policy, the channel and your organization.
- * The definition must be endorsed by a peer
- * in your organization and sent to be orderer to be committed to the ledger.
- * You may want to think of this definition as a vote that your organization
- * has agreed to run this particular chaincode on this channel.
- * Once enough organization have also voted by endorsing a chaincode organization
- * definition and committing that transaction the Chaincode channel definition
- * may now be processed.
- * <br>
- * <br>
- * When enough organizations have agreed to run this unique chaincode definition,
- * it may be defined to run on the channel. This is an endorsement sent by a
- * single client to enough organization's peers to satisfy the chaincode life-cycle
- * policy.
- * Once the client gets enough endorsements it will send the transaction to the
- * orderer to be committed to the ledger.
- * The chaincode may now be used for endorsements.
- *
- *
- * @example
- * // create chaincode object
- *   const mychaincode = client.newChaincode('mychaincode', 'version1');
- *
- * // package the source code
- *   //          - or -
- *   //         use an existing package
- *   const packge_request = {
- *      chaincodeType: 'golang',
- *      goPath: '/gopath',
- *      chaincodePath: '/path/to/code',
- *      metadataPath: '/path/to/metadat'
- *   }
- *   await mychaincode.package(package_request);
- *
- *   // send the package to the other organizations to install
- *   const package = mychaincode.getPackage();
- *   ... < code to send >
- *   // The other organizations will make the package call, they
- *   // will use the setPackage() method to apply an existing chaincode
- *   // package to the chaincode instance object.
- *   mychaincode.setPackage(package);
- *
- * // install on my peers
- *   //   This step is only required for peers that will execute the
- *   //   the chaincode during an endorsement or chaincode query operation.
- *   const install_request = {
- *      targets: [peer1, peer2],
- *      request_timeout: 20000 // give the peers some extra time
- *   }
- *   // The hash value of the package is returned by the peer
- *   // The chaincode instance object will also contain this value.
- *   const hash = await mychaincode.install(install_request);
- *
- * // set the endorsement policy and collection config
- *   // The endorsement policy - required.
- *   mychaincode.setEndorsementPolicy(policy_def);
- *   // The collection configuration - optional.
- *   mychaincode.setCollectionConfig(config_def));
- *
- * // set the sequence of the definition
- *   mychaincode.setSequence(1);
- *
- * // define for my organization
- *   //   Each organization will define the chaincode. Think of
- *   //   of this step as both defining a chaincode for the organization
- *   //   to use and the organization casting a vote for this definition
- *   //   the chaincode to be allowed to be executed on the channel.
- *   //   Note that an organization that is just voting to allow the chaincode
- *   //   on the channel and not planning on actually executing the  chaincode
- *   //   will only have to an chaincode instance object with
- *   //   the name, the version, the hash value, and the sequence number
- *   //   attributes set. The package and installing the package will not be
- *   //   required.
- *   const tx_id = client.newTransactionID();
- *   const request = {
- *      target: peer1,
- *      chaincode: mychaincode,
- *      txId: tx_id
- *   }
- *   const {proposalResponses, proposal} = await mychannel.defineChaincodeForOrg(request);
- *   const orderer_request = {
- *      proposalResponses: proposalResponses,
- *      proposal, proposal
- *   }
- *   const results = await mychannel.sendTransaction(orderer_request);
- *
- *
- * // define the chaincode for the channel
- *   //  One organization will create a transaction that will define this
- *   //  chaincode for the channel. The transaction must be endorsed by enough
- *   //  organizations on the channel to satisfy the chaincode lifecycle policy.
- *   //  This action will not succeed until enough organizations have voted
- *   //  (define for organization) for this chaincode definition to run on this
- *   //  channel to satisfy the chaincode lifecycle endorsement policy.
- *   const tx_id = client.newTransactionID();
- *   const request = {
- *      targets: [peer1, peer3],
- *      chaincode: mychaincode,
- *      txId: tx_id
- *   }
- *   const {proposalResponses, proposal} = await mychannel.defineChaincode(request);
- *   const orderer_request = {
- *      proposalResponses: proposalResponses,
- *      proposal, proposal
- *   }
- *   const results = await mychannel.sendTransaction(orderer_request);
- *
- * // initialize the chaincode
- *   // This action will start the chaincode container and run the 'init' method
- *   // of the chaincode with the provided arguments.
- *   // This action will only be required when the code package is new or
- *   // has changed and a new chaincode container must be initialized.
- *   const tx_id = client.newTransactionID();
- *   const request = {
- *      chaincodeId : chaincodeId,
- *      fcn: 'init',
- *      args: args,
- *      txId: tx_id
- *   }
- *   const init_results = await mychannel.sendTransaction(request);
- *   const orderer_request = {
- *      proposalResponses: init_results[0],
- *      proposal: init_results[1]
- *   }
- *   const results = await mychannel.sendTransaction(orderer_request);
  *
  * @class
  */
@@ -201,21 +64,59 @@ const Chaincode = class {
 		if (!client) {
 			throw new Error('Missing client parameter');
 		}
+		this._client = client;
 		this._name = name;
 		this._version = version;
-		this._client = client;
 
-		this._sequence = null;
+		// definition attributes with defaults
+		this._endorsement_plugin = 'escc';
+		this._validation_plugin = 'vscc';
+		this._init_required = false;
+		this._sequence = Long.fromValue(1); // starting value
+
+		this._chaincode_path = null;
+		this._metadata_path = null;
+		this._golang_path = null;
 		this._package = null;
-		this._hash = null;
-		this._endorsement_policy_proto = null;
-		this._endorsement_policy_json = null;
-		this._collection_config_proto = null;
-		this._collection_config_json = null;
+		this._package_id = null;
+		this._label = name + ':' + version;
+		this._endorsement_policy = null;
+		this._endorsement_policy_def = null;
+		this._collection_package_proto = null;
+		this._collection_package_json = null;
+		this._type = null;
 	}
 
 	/**
-	 * Gets the name of this chaincode.
+	 * Build a {@link Chaincode} instance from the QueryChaincodeDefinitionResult protobuf object
+	 * that is the result of the "QueryChaincodeDefinition" request to the Chaincode Lifecycle.
+	 * @param {*} name
+	 * @param {*} payload
+	 * @param {*} client
+	 *
+	 * @return {Chaincode}
+	 */
+	static fromQueryResult(name, payload, client) {
+		const chaincodeDefinitionQueryResult = lifecycle_protos.QueryChaincodeDefinitionResult.decode(payload);
+		const chaincode = new Chaincode(
+			name,
+			chaincodeDefinitionQueryResult.getVersion(),
+			client
+		);
+		chaincode.setSequence(chaincodeDefinitionQueryResult.getSequence());
+		chaincode._endorsement_plugin = chaincodeDefinitionQueryResult.getEndorsementPlugin();
+		chaincode._validation_plugin = chaincodeDefinitionQueryResult.getValidationPlugin();
+		chaincode.setEndorsementPolicy(chaincodeDefinitionQueryResult.getValidationParameter());
+		chaincode.setInitRequired(chaincodeDefinitionQueryResult.getInitRequired());
+		if (chaincodeDefinitionQueryResult.getCollections()) {
+			// TODO chaincode.setCollectionConfigPackageDefinition(chaincodeDefinitionQueryResult.getCollections());
+		}
+
+		return chaincode;
+	}
+
+	/**
+	 * Get the name of this chaincode.
 	 *
 	 * @returns {string} The name of this chaincode
 	 */
@@ -224,7 +125,7 @@ const Chaincode = class {
 	}
 
 	/**
-	 * Gets the version of this chaincode.
+	 * Get the version of this chaincode.
 	 *
 	 * @returns {string} The version of this chaincode
 	 */
@@ -233,35 +134,45 @@ const Chaincode = class {
 	}
 
 	/**
-	 * Gets the modification sequence of the chaincode definition.
+	 * Set the version of this chaincode.
+	 */
+	setVersion(version) {
+		this._version = version;
+
+		return this;
+	}
+
+	/**
+	 * Get the modification sequence of the chaincode definition.
 	 *
-	 * @returns {number} The sequence of this chaincode
+	 * @returns {Long} The sequence of this chaincode
 	 */
 	getSequence() {
 		return this._sequence;
 	}
 
 	/**
-	 * Sets the modification sequence of the chaincode definition.
+	 * Set the modification sequence of the chaincode definition.
 	 * The sequence value gives a unique number to a set of attributes for the
 	 * the chaincode. When a attribute changes for a chaincode, the sequence
 	 * value must be incremented and all organizations must again run
 	 * the defineChaincodeForOrg() method to agree to the new definition.
 	 * The default is 1, new chaincode.
 	 *
-	 * @param {number} sequence - sequence of this chaincode
+	 * @param {Long} sequence - sequence of this chaincode
 	 */
 	setSequence(sequence) {
-		if (!Number.isInteger(sequence) || sequence < 1) {
-			throw new Error('Sequence value must be an integer greater than zero');
-		}
-		this._sequence = sequence;
+		this._sequence = Long.fromValue(sequence);
+
+		// if (!Number.isInteger(sequence) || sequence < 1) {
+		// 	throw new Error('Sequence value must be an integer greater than zero');
+		// }
 
 		return this;
 	}
 
 	/**
-	 * Gets the source code package
+	 * Get the source code package
 	 *
 	 * @returns {number} The package of this chaincode
 	 */
@@ -271,7 +182,8 @@ const Chaincode = class {
 	}
 
 	/**
-	 * Sets the chaincode package
+	 * Set the chaincode package
+	 * It is recommended to set the package label associated with this package.
 	 *
 	 * @param {byte[]} package The source package
 	 */
@@ -282,184 +194,150 @@ const Chaincode = class {
 	}
 
 	/**
-	 * @typedef {Object} ChaincodeInstallRequest
-	 * @property {string} chaincodeType - Required. Type of chaincode. One of
-	 *        'golang', 'car', 'node' or 'java'.
-	 * @property {string} chaincodePath - Required. The path to the location of
-	 *        the source code of the chaincode. If the chaincode type is golang,
-	 *        then this path is the fully qualified package name, such as
-	 *        'mycompany.com/myproject/mypackage/mychaincode'
-	 * @property {string} metadataPath - Optional. The path to the top-level
-	 *        directory containing metadata descriptors.
-	 * @property {string} goPath - Optional. The path to be used with the golang
-	 *        chaincode.
+	 * Get the chaincode type
 	 */
+	getType() {
 
-	/**
-	 *  Package the files at the locations provided.
-	 *  This method will both return the package and set the
-	 *  package on this instance.
-	 *
-	 * @async
-	 * @param {ChaincodePackageRequest} request - Required. The parameters to build the
-	 *        chaincode package.
-	 */
-
-
-	async package(request) {
-		const method = 'package';
-		logger.debug('%s - start', method);
-
-		this._package = null;
-		this._hash = null;
-
-		if (!request) {
-			throw new Error('ChaincodeInstallRequest object parameter is required');
-		}
-
-		if (!request.chaincodeType) {
-			throw new Error('Chaincode package "chaincodeType" parameter is required');
-		}
-
-		const _type = Chaincode.translateCCType(request.chaincodeType);
-		if (!_type) {
-			throw new Error(format('Chaincode package "chaincodeType" parameter is not a known type %s', request.chaincodeType));
-		}
-
-
-		return this._package;
+		return this._type;
 	}
 
 	/**
-	 * Method to check if this chaincode instance has a chaincode package assigned.
-	 * @returns {boolean} indicates if this chaincode instance has a package
+	 * Set if the chaincode initialize is required
+	 * @param {boolean} required Indicates if this chaincode must be initialized
 	 */
-	hasPackage() {
-		const method = 'hasPackage';
-		if (this._package) {
-			logger.debug('%s - contains a package', method);
-			return true;
-		} else {
-			logger.debug('%s - does not contains a package', method);
-			return false;
-		}
-	}
-
-	/**
-	 * Gets the package hash value
-	 *
-	 * @returns {string} The hash value as generated by the peer when the
-	 *  package was installed
-	 */
-	getHash() {
-
-		return this._hash;
-	}
-
-	/**
-	 * Sets the chaincode package hash
-	 *
-	 * @param {string} hash The source package hash value
-	 */
-	setHash(hash) {
-		this._hash = hash;
+	setInitRequired(required) {
+		this._init_required = required;
 
 		return this;
 	}
 
 	/**
-	 * Method to check if this chaincode package hash has been assigned.
-	 * The hash value is the unique identifer of this chaincode source package
-	 * returned by the peer that installed the chaincode package.
-	 * When this chaincode instance has a hash value assigned it will mean
-	 * this chaincode has been installed. It also could mean that another
-	 * organization did the install and this organization only wants to define
-	 * (allow) this chaincode and will not install the package at this time.
-	 *
-	 * @returns {boolean} indicates if this chaincode instance has the hash value
-	 *  and this chaincode instance may be used for the chaincode define actions.
+	 * Get the initialize required setting
 	 */
-	hasHash() {
-		const method = 'hasHash';
-		if (this._hash) {
-			logger.debug('%s - contains a package hash', method);
-			return true;
-		} else {
-			logger.debug('%s - does not contains a package hash', method);
-			return false;
-		}
-	}
+	getInitRequired() {
 
-	// TODO ispackageinstalled
-	// will query the peer to see if this chaincode is installed
-	//  should be able to check the hash
-	// TODO isRunning on Channel
-	// will query the peer to see what is running and get info
-	// should be able to verify the hash and sequence
-	// TODO ... is there a way to check the endorsement policy
-
-	/**
-	 * @typedef {Object} ChaincodeInstallRequest
-	 * @property {Buffer} target Required. The peer to use for this request
-	 * @property {number} request_timeout Optional. The amount of time for the
-	 *        to respond. The default will be the system configuration
-	 *        value of 'request-timeout'.
-	 */
-
-	/**
-	 * Install the package on the specified peers.
-	 * This method will send the package to the peers provided.
-	 * Each peer will return a hash value of the installed
-	 * package. When this method is called again and within this call, the hash value
-	 * returnd from the peer must be equal to the pervious install.
-	 *
-	 * @async
-	 * @param {ChaincodeInstallRequest} request - The request object with the
-	 *        install attributes and settings.
-	 * @returns {string} The hash value as calculated by the target peer(s).
-	 */
-	async install(request) {
-		const method = 'install';
-		logger.debug('%s - start');
-
-		if (!request) {
-			throw new Error('Install operation requires a ChaincodeInstallRequest object parameter');
-		}
-
-		if (!this._package) {
-			throw new Error('Install operation requires a chaincode package be assigned to this chaincode');
-		}
-
-		const peers = request.targets; // TODO validate the targets
-
-		// loop on each peer in the target list
-		for (const peer of peers) {
-			const hash = 'somehash'; // TODO put the install call here to the peer
-			logger.debug('%s - working with peer %s', method, peer);
-
-			// TODO install process here
-
-			if (this._hash) {
-				if (hash === this._hash) {
-					logger.debug('%s - hash values are the same :: %s', method, hash);
-				} else {
-					const msg = utils.format('The install for chaincode: %s version: ' +
-						'%s did not return the same hash value of %s, value was %s',
-						this._name, this._version, this._hash, hash);
-					logger.error(msg);
-					throw new Error(msg);
-				}
-			} else {
-				logger.debug('%s - first install of package returned hash of %s', method, hash);
-				this._hash = hash;
-			}
-		}
-
-		return this._hash;
+		return this._init_required;
 	}
 
 	/**
-	 * Provide the endorsement policy for this chaincode. The input is a JSON object.
+	 * Set the chaincode type
+	 * @param {string} type The type of this chaincode. Must be "golang",
+	 *        "node", "java" or "car".
+	 */
+	setType(type) {
+		this._type = Chaincode.checkType(type);
+
+		return this;
+	}
+
+	/**
+	 * Get the chaincode path
+	 */
+	getChaincodePath() {
+
+		return this._chaincode_path;
+	}
+
+	/**
+	 * Set the chaincode path
+	 * @param {string} path The path of this chaincode.
+	 */
+	setChaincodePath(path) {
+		this._chaincode_path = path;
+
+		return this;
+	}
+
+	/**
+	 * Get the chaincode path
+	 */
+	getMetadataPath() {
+
+		return this._metadata_path;
+	}
+
+	/**
+	 * Set the metadata path
+	 * @param {string} path The path of this metadata.
+	 */
+	setMetadataPath(path) {
+		this._metadata_path = path;
+
+		return this;
+	}
+
+	/**
+	 * Get the goLang path
+	 */
+	getGoLangPath() {
+
+		return this._golang_path;
+	}
+
+	/**
+	 * Set the goLang path
+	 * @param {string} path The golang path.
+	 */
+	setGoLangPath(path) {
+		this._golang_path = path;
+
+		return this;
+	}
+
+	/**
+	 * Get the chaincode package label
+	 *
+	 * @returns {string} The label value
+	 */
+	getLabel() {
+		return this._label;
+	}
+
+	/**
+	 * Set the label to be used for this packaged chaincode
+	 * The default of name:version will be used if not set when
+	 * the package() method is called.
+	 *
+	 * @param {string} The label value
+	 */
+	setLabel(label) {
+		this._label = label;
+
+		return this;
+	}
+
+	/**
+	 * Get the package id value
+	 *
+	 * @returns {string} The package id value is generated by the peer when the
+	 *  package is installed
+	 */
+	getPackageId() {
+		return this._package_id;
+	}
+
+	/**
+	 * Sets the chaincode package id
+	 *
+	 * @param {string} package_id The source package id value
+	 */
+	setPackageId(package_id) {
+		this._package_id = package_id;
+
+		return this;
+	}
+
+	/**
+	 * Get the endorsement policy JSON definition.
+	 *
+	 * @returns {Object} The JSON endorsement policy
+	 */
+	getEndorsementPolicyDefinition() {
+		return this._endorsement_policy_def;
+	}
+
+	/**
+	 * Provide the endorsement policy definition for this chaincode. The input is a JSON object.
 	 *
 	 * @example <caption>Endorsement policy: "Signed by any member from one of the organizations"</caption>
 	 * {
@@ -487,26 +365,61 @@ const Chaincode = class {
 	 * }
 	 * @param {string} policy - The JSON representation of an fabric endorsement policy.
 	 */
-	setEndorsementPolicy(policy) {
-		const method = 'setEndorsementPolicy';
-		logger.debug('%s - start');
+	setEndorsementPolicyDefinition(policy) {
+		const method = 'setEndorsementPolicyDefinition';
+		logger.debug('%s - start', method);
 
-		if (policy instanceof Object) {
+		const application_policy = new fabric_protos.ApplicationPolicy();
+
+		if (typeof policy === 'string') {
+			logger.debug('%s - have a policy reference :: %s', method, policy);
+			application_policy.setChannelConfigPolicyReference(policy);
+		} else if (policy instanceof Object) {
 			logger.debug('%s - have a policy object %j', method, policy);
-			this._endorsement_policy_json = policy;
+			const signature_policy = Policy.buildPolicy(null, policy, true);
+			application_policy.setSignaturePolicy(signature_policy);
 		} else {
-			throw new Error('A JSON policy parameter is required');
+			throw new Error('The endorsement policy is not valid');
 		}
 
-		this._endorsement_policy_proto = Policy.buildPolicy(null, policy);
+		this._endorsement_policy_def = policy;
+		this._endorsement_policy = application_policy.toBuffer();
 
 		return this;
 	}
 
 	/**
-	 * Provide the collection configuration for this chaincode. The input is a JSON object.
+	 * Get the serialized endorsement policy generated by the endorsement
+	 * policy definition or directly assigned to this chaincode instance.
+	 * The serialized bytes will be generated when the endorsement policy
+	 * definition is assigned with {@link Chaincode#setEndorsementPolicyDefinition setEndorsementPolicyDefinition()}.
+
+	 */
+	getEndorsementPolicy() {
+		return this._endorsement_policy;
+	}
+
+	/**
+	 * Set the serialized endorsement policy required for the chaincode approval.
+	 * The serialized bytes may have been generated when the endorsement policy
+	 * JSON definition was assigned to a {@link Chaincode}. see {@link Chaincode#setEndorsementPolicyDefinition setEndorsementPolicyDefinition()}.
 	 *
-	 * @example <caption>Collection config</caption>
+	 * @param {byte[]} policy the serialized endorsement policy
+	 */
+	setEndorsementPolicy(policy) {
+		const method = 'setEndorsementPolicy';
+		logger.debug('%s - start', method);
+
+		this._endorsement_policy = policy;
+
+		return this;
+	}
+
+	/**
+	 * Set a collection package for this chaincode. The input is a JSON object.
+	 *
+	 * @example <caption>Collection package</caption> An array of collection
+	 * configurations.
 	 * [{
 	 *     name: "detailCol",
 	 *     policy: {
@@ -525,22 +438,252 @@ const Chaincode = class {
 	 *     maxPeerCount: 1,
 	 *     blockToLive: 100
 	 *   }]
-	 * @param {string} config - The JSON representation of a fabric collection configuration definition.
+	 * @param {Object} configPackage - The JSON representation of a fabric collection package definition.
 	 */
-	setCollectionConfig(config) {
-		const method = 'setCollectionConfig';
-		logger.debug('%s - start');
+	setCollectionConfigPackageDefinition(configPackage) {
+		const method = 'setCollectionConfigPackageDefinition';
+		logger.debug('%s - start', method);
 
-		if (config instanceof Object) {
-			logger.debug('%s - have a config object %j', method, config);
-			this._collection_config_json = config;
+		if (configPackage instanceof Object) {
+			logger.debug('%s - have a collection config package object %j', method, configPackage);
+			const config_proto = CollectionConfig.buildCollectionConfigPackage(configPackage);
+			this._collection_package_proto = config_proto;
+			this._collection_package_json = configPackage;
 		} else {
-			throw new Error('A JSON config parameter is required');
+			throw new Error('A JSON config package parameter is required');
 		}
 
-		this._colletion_config_proto = CollectionConfig.buildCollectionConfigPackage(config);
-
+		logger.debug('%s - end', method);
 		return this;
+	}
+
+	/**
+	 * Get the collection config package. This is the
+	 * protobuf object built by the CollectionConfig class using
+	 * the collection package JSON input.
+	 *
+	 * @returns {CollectionConfigPackage}
+	 */
+	getCollectionConfigPackage() {
+		return this._collection_package_proto;
+	}
+
+	/**
+	 * Get the collection config package JSON. This is the
+	 * input to the CollectionConfig class to build the protobuf
+	 * object needed by the Approve Chaincode Fabric request
+	 * see {@link Channel#approveChaincodeForOrg}.
+	 *
+	 * @returns {Object}
+	 */
+	getCollectionConfigPackageDefinition() {
+		return this._collection_package_json;
+	}
+
+	/**
+	 * Verify that this Chaincode instance has all the required attributes required for an
+	 * approval or commit request.
+	 */
+	validate() {
+		if (!this.getSequence()) {
+			throw new Error('Chaincode definition must include the chaincode sequence setting');
+		}
+		if (!this.getName()) {
+			throw new Error('Chaincode definition must include the chaincode name setting');
+		}
+		if (!this.getVersion()) {
+			throw new Error('Chaincode definition must include the chaincode version setting');
+		}
+	}
+
+	/**
+	 * @typedef {Object} ChaincodePackageRequest
+	 * @property {string} [label] - Optional. This string will identify this
+	 *        package. This will be used to associate the package_id returned
+	 *        by the Peer when this package is installed. The package_id will
+	 *        uniquely identity the package on the Peer, however it may be
+	 *        difficult to associate with this package. Since the label is
+	 *        supplied by the user, the label will be easier to
+	 *        association with the chaincode package. The name and version will
+	 *        be combined with a colon (name:version) to be the label if not
+	 *        supplied.
+	 * @property {string} chaincodeType - Required. Type of chaincode. One of
+	 *        'golang', 'car', 'node' or 'java'.
+	 * @property {string} chaincodePath - Required. The path to the location of
+	 *        the source code of the chaincode. If the chaincode type is golang,
+	 *        then this path is the fully qualified package name, such as
+	 *        'mycompany.com/myproject/mypackage/mychaincode'
+	 * @property {string} metadataPath - Optional. The path to the top-level
+	 *        directory containing metadata descriptors.
+	 * @property {string} [goPath] - Optional. The path to be used with the golang
+	 *        chaincode. Will default to the environment "GOPATH" value. Will be
+	 *        used to locate the actual Chaincode 'goLang' files by building a
+	 *        fully qualified path = < goPath > / 'src' / < chaincodePath >
+	 */
+
+	/**
+	 * Package the files at the locations provided.
+	 * This method will both return the package and set the package on this instance.
+	 * This method will set the label, type, and paths (if provided in the request).
+	 * The package_id will be set by the install method or manually by the application.
+	 * The package_id must be set before using this object on the {@link Channel#approveChaincodeForOrg}.
+	 *
+	 * @async
+	 * @param {ChaincodePackageRequest} request - Optional. The parameters to build the
+	 *        chaincode package. Parameters will be required when the parameter has not
+	 *        been set on this instance.
+	 */
+
+
+	async package(request) {
+		const method = 'package';
+		logger.debug('%s - start', method);
+
+		// just in case reset
+		this._package = null;
+
+		if (request) {
+			if (request.chaincodeType) {
+				this._type = request.chaincodeType;
+			}
+			if (request.chaincodePath) {
+				this._chaincode_path = request.chaincodePath;
+			}
+			if (request.metadataPath) {
+				this._metadata_path = request.metadataPath;
+			}
+			if (request.goPath) {
+				this._golang_path = request.goPath;
+			}
+			if (request.label) {
+				this._label = request.label;
+			}
+		}
+
+		if (!this._type) {
+			throw new Error('Chaincode package "chaincodeType" parameter is required');
+		}
+		this._type = Chaincode.checkType(this._type);
+
+		if (!this._chaincode_path) {
+			throw new Error('Chaincode package "chaincodePath" parameter is required');
+		}
+
+		// need a goPath when chaincode is golang
+		if (this._type === 'golang') {
+			if (!this._golang_path) {
+				this._golang_path = process.env.GOPATH;
+			}
+			if (!this._golang_path) {
+				throw new Error('Missing the GOPATH environment setting and the "goPath" parameter.');
+			}
+			logger.debug('%s - have golang chaincode using goPath %s', method, this._golang_path);
+		}
+
+		const inner_tarball = await Packager.package(this._chaincode_path, this._type, false, this._metadata_path, this._golang_path);
+
+		this._package = await Packager.finalPackage(this._label, this._type, inner_tarball, this._chaincode_path);
+
+		return this._package;
+	}
+
+	/**
+	 * @typedef {Object} ChaincodeInstallRequest
+	 * @property {Peer} target - Required. The peer to use for this request
+	 * @property {number} request_timeout - Optional. The amount of time for the
+	 *        to respond. The default will be the system configuration
+	 *        value of 'request-timeout'.
+	 * @property {TransactionID} txId - Optional. The transaction ID object to
+	 *        use with the install request. If not included it will be generated.
+	 */
+
+	/**
+	 * Install the package on the specified peers.
+	 * This method will send the package to the peers provided.
+	 * Each peer will return a hash value of the installed
+	 * package.
+	 *
+	 * @async
+	 * @param {ChaincodeInstallRequest} request - The request object with the
+	 *        install attributes and settings.
+	 * @returns {string} The hash value as calculated by the target peer(s).
+	 */
+	async install(request) {
+		const method = 'install';
+		logger.debug('%s - start', method);
+
+		if (!request) {
+			throw new Error('Install operation requires a ChaincodeInstallRequest object parameter');
+		}
+
+		if (!request.target) {
+			throw new Error('Chaincode install "target" parameter is required');
+		}
+
+		// check the internal settings that need to be set on this object before
+		// it will be able to do an install
+		if (!this._package) {
+			throw new Error('Install operation requires a chaincode package be assigned to this chaincode');
+		}
+
+		let signer;
+		let tx_id = request.txId;
+		if (!tx_id) {
+			logger.debug('%s - need to build a transaction ID', method);
+			signer = this._client._getSigningIdentity(true); // try to use the admin if available
+			tx_id = new TransactionID(signer, true);
+		} else {
+			signer = this._client._getSigningIdentity(tx_id.isAdmin()); // use the identity that built the transaction id
+		}
+
+		// build install request
+		try {
+			logger.debug('%s - build the install chaincode request', method);
+			const install_chaincode_arg = new lifecycle_protos.InstallChaincodeArgs();
+			install_chaincode_arg.setChaincodeInstallPackage(this._package);
+			const install_request = {
+				chaincodeId: '_lifecycle',
+				fcn: 'InstallChaincode',
+				args: [install_chaincode_arg.toBuffer()],
+				txId: tx_id
+			};
+
+			logger.debug('%s - build the signed proposal', method);
+			const proposal = client_utils.buildSignedProposal(install_request, '', this._client);
+
+			logger.debug('%s - about to sendPeersProposal', method);
+			// if request_timeout does not exist, then configuration setting value will be used
+			const responses = await client_utils.sendPeersProposal([request.target], proposal.signed, request.request_timeout);
+
+			for (const response of responses) {
+				logger.debug('%s - looking at response from peer %s', method, request.target);
+				if (response instanceof Error) {
+					logger.error('Problem with the chaincode install ::' + response);
+					throw response;
+				} else if (response.response && response.response.status) {
+					if (response.response.status === 200) {
+						logger.debug('%s - peer response %j', method, response);
+						const {package_id, label} = this._getInfoFromInstallResponse(response.response);
+						this._package_id = package_id;
+						if (label === this._label) {
+							logger.debug('%s- label is the same %s', method, label);
+						} else {
+							throw new Error(format('Chaincode package label returned is not the same as this chaincode :: %s vs %s', this._label, label));
+						}
+					} else {
+						throw new Error(format('Chaincode install failed with status:%s ::%s', response.status, response.message));
+					}
+				} else {
+					throw new Error('Chaincode install has failed');
+				}
+			}
+
+			return this._package_id;
+		} catch (error) {
+			logger.error('Problem building the lifecycle install request :: %s', error);
+			logger.error(' problem at ::' + error.stack);
+			throw error;
+		}
 	}
 
 	/**
@@ -551,24 +694,113 @@ const Chaincode = class {
 			'name : ' + this._name +
 			', version : ' + this._version +
 			', sequence : ' + this._sequence +
-			', hash : ' + this._hash +
-			'}';
+		'}';
 	}
 
-	static translateCCType(type) {
+	static checkType(type) {
 		const chaincodeType = type.toLowerCase();
 
 		const map = {
-			golang: fabprotos.ChaincodeSpec.Type.GOLANG,
-			car: fabprotos.ChaincodeSpec.Type.CAR,
-			java: fabprotos.ChaincodeSpec.Type.JAVA,
-			node: fabprotos.ChaincodeSpec.Type.NODE
+			golang: fabric_protos.ChaincodeSpec.Type.GOLANG,
+			java: fabric_protos.ChaincodeSpec.Type.JAVA,
+			node: fabric_protos.ChaincodeSpec.Type.NODE
 		};
 		const value = map[chaincodeType];
-
-		return value;
+		if (value) {
+			return chaincodeType;
+		} else {
+			throw new Error(format('Chaincode type is not a known type %s', type));
+		}
 	}
 
+	/*
+	 * Internal method to get the info returned by the install from the
+	 * payload of the invoke response
+	 */
+	_getInfoFromInstallResponse(response) {
+		const installChaincodeResult = lifecycle_protos.InstallChaincodeResult.decode(response.payload);
+		const package_id = installChaincodeResult.getPackageId();
+		const label = installChaincodeResult.getLabel();
+
+		return {package_id, label};
+	}
+
+
+	/**
+	 * Build a ApproveChaincodeDefinitionForMyOrgArgs protobuf object
+	 * based on this Chaincode definition
+	 */
+	getApproveChaincodeDefinitionForMyOrgArgs() {
+		const method = 'getApproveChaincodeDefinitionForMyOrgArgs';
+		logger.debug('%s - start', method);
+
+		const arg = new lifecycle_protos.ApproveChaincodeDefinitionForMyOrgArgs();
+		this._setCommon(arg);
+
+		const source = new lifecycle_protos.ChaincodeSource();
+		if (this._package_id) {
+			const local = new lifecycle_protos.ChaincodeSource.Local();
+			local.setPackageId(this._package_id);
+			source.setLocalPackage(local);
+		} else {
+			const unavailable = new lifecycle_protos.ChaincodeSource.Unavailable();
+			source.setUnavailable(unavailable);
+		}
+
+		arg.setSource(source);
+
+		logger.debug('%s - end', method);
+		return arg;
+	}
+
+	/**
+	 * Build a QueryApprovalStatusArgs protobuf object
+	 * based on this Chaincode definition
+	 */
+	getQueryApprovalStatusArgs() {
+		const method = 'getQueryApprovalStatusArgs';
+		logger.debug('%s - start', method);
+
+		const arg = new lifecycle_protos.QueryApprovalStatusArgs();
+		this._setCommon(arg);
+		// arg.setSequence(Long.fromValue(2));
+
+		logger.debug('%s - end', method);
+		return arg;
+	}
+
+	/**
+	 * Build a CommitChaincodeDefinitionArgs protobuf object
+	 * based on this Chaincode definition
+	 */
+	getCommitChaincodeDefinitionArgs() {
+		const method = 'getCommitChaincodeDefinitionArgs';
+		logger.debug('%s - start', method);
+
+		const arg = new lifecycle_protos.CommitChaincodeDefinitionArgs();
+		this._setCommon(arg);
+
+		logger.debug('%s - end', method);
+		return arg;
+	}
+
+	/*
+	 * Internal method to set the common chaincode attributes into a protobuf object
+	*/
+	_setCommon(arg) {
+		arg.setName(this._name);
+		arg.setVersion(this._version);
+		arg.setSequence(this._sequence);
+		arg.setEndorsementPlugin(this._endorsement_plugin);
+		arg.setValidationPlugin(this._validation_plugin);
+		if (this._endorsement_policy) {
+			arg.setValidationParameter(this._endorsement_policy);
+		}
+		if (this._collection_package_proto) {
+			arg.setCollections(this._collection_package_proto);
+		}
+		arg.setInitRequired(this._init_required);
+	}
 };
 
 module.exports = Chaincode;

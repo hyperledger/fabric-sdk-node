@@ -39,6 +39,7 @@ package token;
 //  Envelope
 //  |\_ Signature                                    (signature on the Payload message including
 //  |                                                 the transaction by the creator
+
 //  |                                                 specified in the Payload.header)
 //   \_ Payload
 //      |\_ Header (1)                               (the header of the proposal that requested
@@ -119,7 +120,8 @@ message Token {
     // Type is the type of the token
     string type = 2;
 
-    // Quantity is the number of units of Type carried in the token, in hex format
+    // Quantity is the number of units of Type carried in the token.
+    // It is encoded as a string containing a number in base 16. The string has prefix ``0x''.
     string quantity = 3;
 }
 

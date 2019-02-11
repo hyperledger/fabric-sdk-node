@@ -279,6 +279,195 @@ function logError(msg, obj) {
 	}
 }
 
+function logAndThrow(msg) {
+	logError(msg);
+	if (msg instanceof Error) {
+		throw msg;
+	}
+	throw new Error(msg);
+}
+
+async function getClientForOrg(network_ccp, org_ccp) {
+	// build a 'Client' instance that knows of a network
+	//  this network config does not have the client information, we will
+	//  load that later so that we can switch this client to be in a different
+	//  organization
+	const client = await Client.loadFromConfig(network_ccp);
+
+	// load the client information for this organization
+	// this file only has the client section
+	await client.loadFromConfig(org_ccp);
+
+	// tell this client instance where the state and key stores are located
+	await client.initCredentialStores();
+
+	// get the CA associated with this client's organization
+	// ---- this must only be run after the client has been loaded with a
+	// client section of the connection profile
+	const caService = client.getCertificateAuthority();
+
+	const request = {
+		enrollmentID: 'admin',
+		enrollmentSecret: 'adminpw',
+		profile: 'tls'
+	};
+	const enrollment = await caService.enroll(request);
+
+	const key = enrollment.key.toBytes();
+	const cert = enrollment.certificate;
+
+	// set the material on the client to be used when building endpoints for the user
+	client.setTlsClientCertAndKey(cert, key);
+
+	return client;
+}
+
+async function createUpdateChannel(create, file, channel_name, client_org1, client_org2, orderer_org1, orderer_org2) {
+	// get the config envelope created by the configtx tool
+	const envelope_bytes = fs.readFileSync(file);
+	// Have the sdk get the config update object from the envelope.
+	// the config update object is what is required to be signed by all
+	// participating organizations
+	const config = client_org1.extractChannelConfig(envelope_bytes);
+
+	const signatures = [];
+	// sign the config by the  admins
+	const signature1 = client_org1.signChannelConfig(config);
+	signatures.push(signature1);
+	const signature2 = client_org2.signChannelConfig(config);
+	signatures.push(signature2);
+	// now we have enough signatures...
+
+	// get an admin based transaction
+	const tx_id = client_org1.newTransactionID(true);
+
+	const request = {
+		config: config,
+		signatures : signatures,
+		name : channel_name,
+		orderer : orderer_org1,
+		txId  : tx_id
+	};
+
+	let results = null;
+	let text = 'create';
+	if (create) {
+		results = await client_org1.createChannel(request);
+	} else {
+		text = 'update';
+		results = await client_org1.updateChannel(request);
+	}
+	if (results.status === 'SUCCESS') {
+		await sleep(5000);
+	} else {
+		throw new Error('Failed to ' + text + ' the channel. ');
+	}
+}
+
+async function joinChannel(channel_name, peer, orderer, client) {
+	const channel = client.newChannel(channel_name);
+
+	// get an admin based transaction
+	let tx_id = client.newTransactionID(true);
+
+	let request = {
+		orderer: orderer,
+		txId : 	tx_id
+	};
+
+	const genesis_block = await channel.getGenesisBlock(request);
+
+	tx_id = client.newTransactionID(true);
+	request = {
+		targets: [peer],
+		block : genesis_block,
+		txId : 	tx_id
+	};
+
+	const join_results = await channel.joinChannel(request, 30000);
+	if (join_results && join_results[0] && join_results[0].response && join_results[0].response.status === 200) {
+		sleep(10000); // let the peer catch up
+	} else {
+		throw new Error('Failed to join channel on org');
+	}
+
+	// will need the orderer assigned to the channel later
+	channel.addOrderer(orderer);
+
+	return channel;
+}
+
+async function commitProposal(tx_id, proposalResponses, proposal, channel, peer) {
+	const deployId = tx_id.getTransactionID();
+	const promises = [];
+	const request = {
+		txId: tx_id,
+		proposalResponses: proposalResponses,
+		proposal: proposal
+	};
+	promises.push(channel.sendTransaction(request));
+
+	const channel_event_hub = channel.newChannelEventHub(peer);
+	const txPromise = new Promise((resolve, reject) => {
+		const handle = setTimeout(() => {
+			logError('Timeout - Failed to receive the event:  waiting on ' + channel_event_hub.getPeerAddr());
+			channel_event_hub.disconnect();
+			reject('TIMEOUT waiting on ' + channel_event_hub.getPeerAddr());
+		}, 15000);
+
+		channel_event_hub.registerTxEvent(deployId.toString(), (tx, code) => {
+			logMsg('The chaincode transaction has been committed on peer ' + channel_event_hub.getPeerAddr());
+			clearTimeout(handle);
+			if (code !== 'VALID') {
+				logError('The chaincode transaction was invalid, code = ' + code);
+				reject(code);
+			} else {
+				logMsg('The chaincode transaction was valid.');
+				resolve(code);
+			}
+		}, (err) => {
+			logError('There was a problem with the event ' + err);
+			clearTimeout(handle);
+			reject(err);
+		}, {
+			disconnect: true
+		});
+		channel_event_hub.connect();
+	});
+	logMsg('register eventhub tx=' + deployId);
+	promises.push(txPromise);
+
+	const results = await Promise.all(promises);
+
+	// orderer results are first as it was the first promise
+	if (results && results[0]) {
+		if (results[0] instanceof Error) {
+			logAndThrow(results[0]);
+		}
+		if (results[0].status) {
+			if (results[0].status === 'SUCCESS') {
+				logMsg('Successfully submitted transaction to the orderer');
+				if (results[1]) {
+					if (results[1] instanceof Error) {
+						logAndThrow(results[1]);
+					}
+					if (results[1] === 'VALID') {
+						return true;
+					} else {
+						logAndThrow('Transaction was not valid: code=' + results[1]);
+					}
+				} else {
+					logAndThrow('Event Hub did not provide results');
+				}
+			} else {
+				logAndThrow('Failed to submit transaction to the orderer, status=' + results[1].status);
+			}
+		}  else {
+			logAndThrow('Failed to submit transaction successfully to the orderer no status');
+		}
+	}
+}
+
 module.exports.TIMEOUTS = TIMEOUTS;
 module.exports.storePathForOrg = storePathForOrg;
 module.exports.sleep = sleep;
@@ -288,3 +477,9 @@ module.exports.getSubmitter = getSubmitter;
 module.exports.tlsEnroll = tlsEnroll;
 module.exports.logMsg = logMsg;
 module.exports.logError = logError;
+module.exports.logAndThrow = logAndThrow;
+module.exports.getClientForOrg = getClientForOrg;
+module.exports.createUpdateChannel = createUpdateChannel;
+module.exports.joinChannel = joinChannel;
+module.exports.commitProposal = commitProposal;
+

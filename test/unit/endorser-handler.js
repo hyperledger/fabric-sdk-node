@@ -22,7 +22,7 @@ const test = _test(tape);
 const Long = require('long');
 
 const Client = require('fabric-client');
-const Channel = require('fabric-client/lib/Channel.js');
+const clientUtils = require('fabric-client/lib/client-utils.js');
 const TestUtil = require('./util.js');
 
 const pem = '-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n';
@@ -312,7 +312,7 @@ test('\n\n ** DiscoveryEndorsementHandler - test **\n\n', async (t) => {
 		chaincodeId: 'example',
 		txId: txId
 	};
-	const proposal = Channel._buildSignedProposal(request, 'handler-test', client);
+	const proposal = clientUtils.buildSignedProposal(request, 'handler-test', client);
 
 	try {
 		await handler._endorse(discovery_plan.endorsement_plans[0], request, proposal);

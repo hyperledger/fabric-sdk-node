@@ -16,7 +16,6 @@ const Long = require('long');
 const Channel = require('fabric-client/lib/Channel');
 const ChannelRewire = rewire('fabric-client/lib/Channel');
 const ChannelEventHub = require('fabric-client/lib/ChannelEventHub');
-const Chaincode = require('fabric-client/lib/Chaincode');
 const Client = require('fabric-client/lib/Client');
 const Constants = require('fabric-client/lib/Constants');
 const {Identity, SigningIdentity, Utils: sdk_utils} = require('fabric-common');
@@ -38,6 +37,7 @@ const identityProto = fabprotos.msp;
 const gossipProto = fabprotos.gossip;
 const ledgerProto = fabprotos.common;
 const queryProto = fabprotos.protos;
+const lifecycleProto = fabprotos.lifecycle;
 
 const fakeHandlerModulePath = 'fabric-client/test/FakeHandler';
 const fakeHandler = require(fakeHandlerModulePath).create();
@@ -2967,86 +2967,157 @@ describe('Channel', () => {
 
 	});
 
-	describe('#_verifyChaincodeRequest', () => {
-		const chaincode = sinon.createStubInstance(Chaincode);
+	describe('#approveChaincodeForOrg', () => {
+		let chaincode;
+		let txId;
+		const peer = sinon.createStubInstance(Peer);
 
-		it('should check for a request input object parameter', async () => {
-			try {
-				channel._verifyChaincodeRequest();
-				should.fail();
-			} catch (err) {
-				err.message.should.equal('Missing required request parameter');
-			}
-			try {
-				channel._verifyChaincodeRequest({});
-				should.fail();
-			} catch (err) {
-				err.message.should.equal('Missing required request parameter "chaincode"');
-			}
-			try {
-				chaincode.hasHash.returns(false);
-				channel._verifyChaincodeRequest({chaincode: chaincode});
-				should.fail();
-			} catch (err) {
-				err.message.should.equal('Chaincode definition must include the chaincode hash value');
-			}
+		beforeEach(() => {
+			chaincode = client.newChaincode('mychaincode', 'v1');
+			txId = client.newTransactionID();
 		});
 
-	});
-
-	describe('#allowChaincodeForOrg', () => {
-		it('should require a request object parameter', async () => {
-			try {
-				await channel.allowChaincodeForOrg();
-				should.fail();
-			} catch (err) {
-				err.message.should.equal('Missing required request parameter');
-			}
-		});
 		it('should require a request.chaincode object parameter', async () => {
 			try {
-				await channel.allowChaincodeForOrg({});
+				await channel.approveChaincodeForOrg({});
 				should.fail();
 			} catch (err) {
 				err.message.should.equal('Missing required request parameter "chaincode"');
 			}
 		});
-		it('should require a request.chaincode._hash object parameter', async () => {
+
+		it('should require a request.targets object parameter', async () => {
 			try {
-				const chaincode = client.newChaincode('mychaincode', 'v1');
-				await channel.allowChaincodeForOrg({chaincode: chaincode});
+				chaincode._hash = 'fake';
+				chaincode._endorsement_policy = 'fake';
+				await channel.approveChaincodeForOrg({chaincode: chaincode});
 				should.fail();
 			} catch (err) {
-				err.message.should.equal('Chaincode definition must include the chaincode hash value');
+				err.message.should.equal('Missing "targets" request parameter');
 			}
+		});
+		it('should require a request.targets as an Array object parameter', async () => {
+			try {
+				chaincode._hash = 'fake';
+				chaincode._endorsement_policy = 'fake';
+				await channel.approveChaincodeForOrg({chaincode: chaincode, targets: 'something'});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('"targets" request parameter must be an Array');
+			}
+		});
+		it('should require a request.txId object parameter', async () => {
+			try {
+				chaincode._hash = 'fake';
+				chaincode._endorsement_policy = 'fake';
+				await channel.approveChaincodeForOrg({chaincode: chaincode, targets: [peer]});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing "txId" request parameter');
+			}
+		});
+		it('should require a good txId object parameter', async () => {
+			try {
+				chaincode._hash = 'fake';
+				chaincode._endorsement_policy = 'fake';
+				await channel.approveChaincodeForOrg({chaincode: chaincode, targets: [peer], txId: 'bad'});
+				should.fail();
+			} catch (err) {
+				err.message.should.contain('isAdmin is not a function');
+			}
+		});
+
+		it('should send an approve chaincode request with some arguments', async () => {
+			chaincode._hash = 'fake';
+			chaincode._endorsement_policy = 'fake';
+			const {proposal} = await channel.approveChaincodeForOrg({
+				chaincode: chaincode,
+				targets: [peer],
+				txId: txId
+			});
+			const payload = fabprotos.protos.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = fabprotos.protos.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(2);
+			const approve_chaincode_request = fabprotos.lifecycle.ApproveChaincodeDefinitionForMyOrgArgs.decode(args[1]);
+			approve_chaincode_request.getName().should.equal('mychaincode');
 		});
 	});
 
-	describe('#CommitChaincode', () => {
-		it('should require a request object parameter', async () => {
-			try {
-				await channel.CommitChaincode();
-				should.fail();
-			} catch (err) {
-				err.message.should.equal('Missing required request parameter');
-			}
+	describe('#commitChaincode', () => {
+		let chaincode;
+		let txId;
+		const peer = sinon.createStubInstance(Peer);
+
+		beforeEach(() => {
+			chaincode = client.newChaincode('mychaincode', 'v1');
+			txId = client.newTransactionID();
 		});
+
 		it('should require a request.chaincode object parameter', async () => {
 			try {
-				await channel.CommitChaincode({});
+				await channel.commitChaincode({});
 				should.fail();
 			} catch (err) {
 				err.message.should.equal('Missing required request parameter "chaincode"');
 			}
 		});
-		it('should require a request.chaincode._hash object parameter', async () => {
+
+		it('should require a request.targets object parameter', async () => {
 			try {
-				const chaincode = client.newChaincode('mychaincode', 'v1');
-				await channel.CommitChaincode({chaincode: chaincode});
+				chaincode._hash = 'fake';
+				chaincode._endorsement_policy = 'fake';
+				await channel.commitChaincode({chaincode: chaincode});
 				should.fail();
 			} catch (err) {
-				err.message.should.equal('Chaincode definition must include the chaincode hash value');
+				err.message.should.equal('Missing "targets" request parameter');
 			}
+		});
+		it('should require a request.targets as an Array object parameter', async () => {
+			try {
+				chaincode._hash = 'fake';
+				chaincode._endorsement_policy = 'fake';
+				await channel.commitChaincode({chaincode: chaincode, targets: 'something'});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('"targets" request parameter must be an Array');
+			}
+		});
+		it('should require a request.txId object parameter', async () => {
+			try {
+				chaincode._hash = 'fake';
+				chaincode._endorsement_policy = 'fake';
+				await channel.commitChaincode({chaincode: chaincode, targets: [peer]});
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing "txId" request parameter');
+			}
+		});
+		it('should require a good txId object parameter', async () => {
+			try {
+				chaincode._hash = 'fake';
+				chaincode._endorsement_policy = 'fake';
+				await channel.commitChaincode({chaincode: chaincode, targets: [peer], txId: 'bad'});
+				should.fail();
+			} catch (err) {
+				err.message.should.contain('isAdmin is not a function');
+			}
+		});
+
+		it('should send an approve chaincode request with some arguments', async () => {
+			chaincode._hash = 'fake';
+			chaincode._endorsement_policy = 'fake';
+			const {proposal} = await channel.commitChaincode({
+				chaincode: chaincode,
+				targets: [peer],
+				txId: txId
+			});
+			const payload = fabprotos.protos.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = fabprotos.protos.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(2);
+			const commmit_chaincode_request = fabprotos.lifecycle.CommitChaincodeDefinitionArgs.decode(args[1]);
+			commmit_chaincode_request.getName().should.equal('mychaincode');
 		});
 	});
 
@@ -3207,6 +3278,90 @@ describe('Channel', () => {
 	});
 
 	describe('#_getTargetForQuery', () => {
+	});
+
+	describe('#queryChaincodeDefinition', () => {
+		const queryResult = new lifecycleProto.QueryChaincodeDefinitionResult();
+		queryResult.setVersion('v1');
+		queryResult.setSequence(1);
+
+		let request;
+		let spySendTransactionProposal;
+
+		beforeEach(() => {
+			sinon.stub(peer1, 'sendProposal').resolves(createTransactionResponse(queryResult.toBuffer()));
+
+			spySendTransactionProposal = sinon.spy(ChannelRewire, 'sendTransactionProposal');
+
+			request = {
+				target: peer1,
+				chaincodeId: 'chaincodeId'
+			};
+		});
+
+		it('throws if no request object', () => {
+			return expect(channel.queryChaincodeDefinition()).to.be.rejectedWith('Missing request object parameter');
+		});
+
+		it('throws if request object missing chaincodeId', () => {
+			return expect(channel.queryChaincodeDefinition({})).to.be.rejectedWith('Missing "chaincodeId" request parameter');
+		});
+
+		it('throws if request object missing target', () => {
+			return expect(channel.queryChaincodeDefinition({chaincodeId: 'dummy'})).to.be.rejectedWith('"targets" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network');
+		});
+
+		it('user supplied transaction ID', async () => {
+			const txId = client.newTransactionID();
+			request.txId = txId;
+
+			await channel.queryChaincodeDefinition(request);
+
+			sinon.assert.calledWith(spySendTransactionProposal, sinon.match.has('txId', txId));
+		});
+
+		it('creates a transaction ID if none supplied', async () => {
+			await channel.queryChaincodeDefinition(request);
+			sinon.assert.calledWith(spySendTransactionProposal, sinon.match.has('txId', sinon.match.instanceOf(TransactionID)));
+		});
+
+		it('returns valid peer response payloads', async () => {
+			const result = await channel.queryChaincodeDefinition(request);
+			expect(result.getName()).to.equal('chaincodeId');
+		});
+
+		it('returns error peer response messages', async () => {
+			const errorMessage = 'ALL YOUR BASE ARE BELONG TO ME';
+			peer1.sendProposal.resolves(createErrorResponse(errorMessage));
+			request.target = peer1;
+			try {
+				await channel.queryChaincodeDefinition(request);
+			} catch (error) {
+				expect(error.message).to.equal(errorMessage);
+			}
+		});
+
+		it('returns error peer response without message', async () => {
+			peer1.sendProposal.resolves(createErrorResponse());
+			request.target = peer1;
+
+			try {
+				await channel.queryChaincodeDefinition(request);
+			} catch (error) {
+				expect(error.message).to.equal('.protos.ProposalResponse');
+			}
+		});
+
+		it('returns peer invocation failures', async () => {
+			const peerError = new Error('peer invocation error');
+			peer1.sendProposal.rejects(peerError);
+			request.target = peer1;
+			try {
+				await channel.queryChaincodeDefinition(request);
+			} catch (error) {
+				expect(error.message).to.equal(peerError.message);
+			}
+		});
 	});
 
 	describe('#_getTargetForDiscovery', () => {

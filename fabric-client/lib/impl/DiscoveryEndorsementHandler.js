@@ -483,18 +483,23 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 			let found = preferred_peers.has(peer.name);
 			if (!found) {
 				found = preferred_orgs.has(peer.mspid);
-				logger.debug('%s - peer found on preferred org list');
+				if (found) {
+					logger.debug('%s - peer %s found on preferred org list', method, peer.name);
+				} else {
+					logger.debug('%s - peer %s not found on preferred org list', method, peer.name);
+				}
 			} else {
-				logger.debug('%s - peer found on the preferred peer list');
+				logger.debug('%s - peer %s found on the preferred peer list', method, peer.name);
 			}
 			if (found && preferred_height_gap) {
 				logger.debug('%s - checking preferred gap of %s', method, preferred_height_gap);
 				logger.debug('%s - peer.ledger_height %s', method, peer.ledger_height);
 				if (highest.subtract(peer.ledger_height).greaterThan(preferred_height_gap)) {
 					found = false; // this peer should not be on the priority list
+					logger.debug('%s - peer should not be on priority list', method, peer.name);
 				}
 			} else {
-				logger.debug('%s - not checking the preferred high gap', method);
+				logger.debug('%s - not checking the preferred height gap', method);
 			}
 			if (found) {
 				list.priority.push(peer);

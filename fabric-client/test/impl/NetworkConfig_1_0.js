@@ -140,7 +140,6 @@ describe('NetworkConfig_1_0', () => {
 				networkConfig.getPeer('peer0.org1.example.com');
 			}).should.throw(/ENOENT/);
 		});
-
 	});
 
 	describe('#getCertificateAuthority', () => {
@@ -202,7 +201,6 @@ describe('NetworkConfig_1_0', () => {
 				networkConfig.getCertificateAuthority('ca.example.com');
 			}).should.throw(/ENOENT/);
 		});
-
 	});
 
 	describe('#getOrderer', () => {
@@ -284,7 +282,6 @@ describe('NetworkConfig_1_0', () => {
 				networkConfig.getOrderer('orderer.example.com');
 			}).should.throw(/ENOENT/);
 		});
-
 	});
 
 });
