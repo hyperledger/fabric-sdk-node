@@ -183,21 +183,29 @@ gulp.task('run-test-cucumber', shell.task(
 // Run e2e and scenario tests with code coverage
 gulp.task('test-fv-scenario', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-test-fv-sceanrio'));
 
+// run cucumber separate
+gulp.task('test-fv-only', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-tape-e2e'));
+
 gulp.task('run-test-fv-sceanrio', (done) => {
-	const tasks = ['run-tape-e2e', 'run-logger-unit', 'docker-clean', 'run-test-cucumber'];
+	const tasks = ['run-tape-e2e', 'docker-clean', 'run-test-cucumber'];
+	runSequence(...tasks, done);
+});
+
+gulp.task('run-test-sceanrio', (done) => {
+	const tasks = ['docker-clean', 'run-test-cucumber'];
 	runSequence(...tasks, done);
 });
 
 // Main test method to run all test suites
 // - lint, unit first, then FV, then scenario
 gulp.task('run-test', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'docs', 'test-mocha', 'run-tape-unit', 'test-fv-scenario'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'docs', 'test-mocha', 'run-tape-unit', 'test-fv-only'];
 	runSequence(...tasks, done);
 });
 
 // Run all non-integration tests
 gulp.task('run-test-headless', (done) => {
-	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'test-mocha', 'run-tape-unit', 'run-logger-unit'];
+	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'test-mocha', 'run-tape-unit'];
 	runSequence(...tasks, done);
 });
 
@@ -218,8 +226,8 @@ gulp.task('run-tape-unit',
 			}));
 	});
 
-// Run logger in isolation
-gulp.task('run-logger-unit',
+// must Run logger in isolation, where it is the only test within the node env
+gulp.task('test-logging',
 	() => {
 		// this is needed to avoid a problem in tape-promise with adding
 		// too many listeners to the "unhandledRejection" event
