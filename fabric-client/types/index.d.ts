@@ -13,10 +13,6 @@ interface ProtoBufObject {
 	toBuffer(): Buffer;
 }
 
-// Dummy interface for opaque handles for registerChaincodeEvent's
-interface ChaincodeChannelEventHandle { // tslint:disable-line:no-empty-interface
-}
-
 declare class Remote {
 	constructor(url: string, opts?: Client.ConnectionOpts);
 	public getName(): string;
@@ -67,6 +63,7 @@ declare class Client extends BaseClient {
 	public getTargetOrderer(requestOrderer?: string | Client.Orderer, channelOrderers?: Client.Orderer[], channelName?: string): Client.Orderer;
 	public getClientCertHash(create: boolean): Buffer;
 }
+
 export = Client;
 
 declare namespace Client { // tslint:disable-line:no-namespace
@@ -362,7 +359,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public getPeerAddr(): string;
 		public lastBlockNumber(): number;
 		public isconnected(): boolean;
-		public connect(options?: ConnectOptions | boolean): void;
+		public connect(options?: ConnectOptions | boolean, connectCallback?: (err: Error, channelEventHub: ChannelEventHub) => void): void;
 		public disconnect(): void;
 		public close(): void;
 
@@ -375,6 +372,10 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public unregisterBlockEvent(blockRegistrationNumber: number, throwError: boolean): void;
 		public registerTxEvent(txId: string, onEvent: (txId: string, code: string, blockNumber: number) => void, onError?: (err: Error) => void, options?: RegistrationOpts): string;
 		public unregisterTxEvent(txId: string, throwError?: boolean): void;
+	}
+
+	// Dummy interface for opaque handles for registerChaincodeEvent's
+	export interface ChaincodeChannelEventHandle { // tslint:disable-line:no-empty-interface
 	}
 
 	export interface SignedRequest {
@@ -401,7 +402,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public sendDeliver(envelope: Buffer): Promise<any>;
 	}
 
-	interface MSPConstructorConfig {
+	export interface MSPConstructorConfig {
 		rootCerts: IIdentity[];
 		intermediateCerts: IIdentity[];
 		admins: IIdentity[];
