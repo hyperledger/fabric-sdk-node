@@ -9,7 +9,7 @@ syntax = "proto3";
 option go_package = "github.com/hyperledger/fabric/protos/token";
 option java_package = "org.hyperledger.fabric.protos.token";
 
-package protos;
+package token;
 
 import "google/protobuf/timestamp.proto";
 import "token/expectations.proto";
@@ -18,7 +18,7 @@ import "token/transaction.proto";
 // TokenToIssue describes a token to be issued in the system
 message TokenToIssue {
     // Recipient refers to the owner of the token to be issued
-    bytes recipient = 1;
+    TokenOwner recipient = 1;
 
     // Type refers to the token type
     string type = 2;
@@ -30,7 +30,7 @@ message TokenToIssue {
 // RecipientTransferShare describes how much a recipient will receive in a token transfer
 message RecipientTransferShare {
     // Recipient refers to the prospective owner of a transferred token
-    bytes recipient = 1;
+    TokenOwner recipient = 1;
 
     // Quantity refers to the number of token units to be transferred to the recipient
     uint64 quantity = 2;
@@ -39,7 +39,7 @@ message RecipientTransferShare {
 // TokenOutput is used to specify a token returned by ListRequest
 message TokenOutput {
     // ID is used to uniquely identify the token
-    bytes id = 1;
+    TokenId id = 1;
 
     // Type is the type of the token
     string type = 2;
@@ -72,7 +72,7 @@ message ImportRequest {
 message TransferRequest {
     bytes credential = 1;
 
-    repeated bytes token_ids = 2;
+    repeated TokenId token_ids = 2;
 
     repeated RecipientTransferShare shares = 3;
 }
@@ -84,7 +84,7 @@ message RedeemRequest {
     bytes credential = 1;
 
     // token_ids specifies the ids for the tokens that will be redeemed
-    repeated bytes token_ids = 2;
+    repeated TokenId token_ids = 2;
 
     // quantity refers to the number of units of a given token needs to be redeemed.
     uint64 quantity_to_redeem = 3;
@@ -93,7 +93,7 @@ message RedeemRequest {
 // ALlowance defines how many and what tokens a recipient can transfer on behalf of their actual owner
 message AllowanceRecipientShare {
     // Recipient refers to the entity allowed to spend the specified quantity from the tokens identified by token IDs
-    bytes recipient = 1;
+    TokenOwner recipient = 1;
 
     // Quantity is how many tokens are delegated to the recipient
     uint64 quantity = 2;
@@ -108,7 +108,7 @@ message ApproveRequest{
     repeated AllowanceRecipientShare allowance_shares = 2;
 
     // TokenIds are the token identifiers used to create the allowance
-    repeated bytes token_ids = 3;
+    repeated TokenId token_ids = 3;
 }
 
 // ExpectationRequest is used to request indirect token import or transfer based on the token expectation
@@ -121,7 +121,7 @@ message ExpectationRequest {
     TokenExpectation expectation = 2;
 
     // TokenIds are the token identifiers used to fulfill the expectation
-    repeated bytes token_ids = 3;
+    repeated TokenId token_ids = 3;
 }
 
 // Header is a generic replay prevention and identity message to include in a signed command
