@@ -306,6 +306,7 @@ test('use the connection profile file', (t: any) => {
 				args: ['a', '100', 'b', '200'],
 				chaincodeId: 'examplets',
 				chaincodeVersion: 'v1',
+				fcn: 'init',
 				txId,
 			};
 

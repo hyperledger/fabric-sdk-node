@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.protobuf.ByteString;
-import io.netty.handler.ssl.OpenSsl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hyperledger.fabric.shim.ChaincodeBase;
@@ -136,7 +135,6 @@ public class SimpleChaincode extends ChaincodeBase {
     }
 
     public static void main(String[] args) {
-        System.out.println("OpenSSL avaliable: " + OpenSsl.isAvailable());
         new SimpleChaincode().start(args);
     }
 

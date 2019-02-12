@@ -314,6 +314,7 @@ async function createChannel(t) {
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
 			chaincodeVersion: 'v1',
+			fcn: 'init',
 			args: ['a', '100', 'b', '200'],
 			txId: tx_id
 			// targets is not required, however the logged in user may not have
