@@ -1227,7 +1227,180 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#_sendChaincodeProposal', () => {});
+	describe('#_sendChaincodeProposal', () => {
+
+		let mockPeers;
+		let txId;
+
+		beforeEach(() => {
+			mockPeers = [
+				sinon.createStubInstance(Peer),
+				sinon.createStubInstance(Peer)
+			];
+			sinon.stub(channel, '_getTargets').returns(mockPeers);
+			txId = client.newTransactionID();
+		});
+
+		it('should send an instantiate request with no function name (default to init) and no arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				txId
+			});
+			const payload = proposalProto.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = proposalProto.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = proposalProto.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(1);
+			cds.chaincode_spec.input.args[0].toBuffer().toString().should.equal('init');
+		});
+
+		it('should send an instantiate request with no function name (explicit null) and no arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				fcn: null,
+				txId
+			});
+			const payload = proposalProto.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = proposalProto.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = proposalProto.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(0);
+		});
+
+		it('should send an instantiate request with no function name (explicit empty string) and no arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				fcn: '',
+				txId
+			});
+			const payload = proposalProto.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = proposalProto.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = proposalProto.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(0);
+		});
+
+		it('should send an instantiate request with a function name and no arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				fcn: 'initLedger',
+				txId
+			});
+			const payload = proposalProto.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = proposalProto.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = proposalProto.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(1);
+			cds.chaincode_spec.input.args[0].toBuffer().toString().should.equal('initLedger');
+		});
+
+		it('should send an instantiate request with no function name (default to init) and some arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				args: ['hello', 'world'],
+				txId
+			});
+			const payload = proposalProto.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = proposalProto.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = proposalProto.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(3);
+			cds.chaincode_spec.input.args[0].toBuffer().toString().should.equal('init');
+			cds.chaincode_spec.input.args[1].toBuffer().toString().should.equal('hello');
+			cds.chaincode_spec.input.args[2].toBuffer().toString().should.equal('world');
+		});
+
+		it('should send an instantiate request with no function name (explicit null) and some arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				fcn: null,
+				args: ['hello', 'world'],
+				txId
+			});
+			const payload = proposalProto.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = proposalProto.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = proposalProto.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(2);
+			cds.chaincode_spec.input.args[0].toBuffer().toString().should.equal('hello');
+			cds.chaincode_spec.input.args[1].toBuffer().toString().should.equal('world');
+		});
+
+		it('should send an instantiate request with no function name (explicit empty string) and some arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				fcn: '',
+				args: ['hello', 'world'],
+				txId
+			});
+			const payload = proposalProto.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = proposalProto.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = proposalProto.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(2);
+			cds.chaincode_spec.input.args[0].toBuffer().toString().should.equal('hello');
+			cds.chaincode_spec.input.args[1].toBuffer().toString().should.equal('world');
+		});
+
+		it('should send an instantiate request with a function name and some arguments', async () => {
+			const [, proposal] = await channel.sendInstantiateProposal({
+				chaincodeType: 'node',
+				chaincodeId: 'fabcar',
+				chaincodeVersion: '1.0.0',
+				fcn: 'initLedger',
+				args: ['hello', 'world'],
+				txId
+			});
+			const payload = proposalProto.ChaincodeProposalPayload.decode(proposal.payload);
+			const input = proposalProto.ChaincodeInvocationSpec.decode(payload.input);
+			const args = input.chaincode_spec.input.args;
+			args.should.have.lengthOf(6);
+			const cds = proposalProto.ChaincodeDeploymentSpec.decode(args[2]);
+			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
+			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
+			cds.chaincode_spec.input.args.should.have.lengthOf(3);
+			cds.chaincode_spec.input.args[0].toBuffer().toString().should.equal('initLedger');
+			cds.chaincode_spec.input.args[1].toBuffer().toString().should.equal('hello');
+			cds.chaincode_spec.input.args[2].toBuffer().toString().should.equal('world');
+		});
+
+
+	});
 
 	describe('#sendTransactionProposal', () => {});
 

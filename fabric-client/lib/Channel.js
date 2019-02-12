@@ -2464,7 +2464,8 @@ const Channel = class {
 	 *           passed to the chaincode in the transientMap.
 	 * @property {string} fcn - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code> in the target
-	 *           chaincode. Default is 'init'.
+	 *           chaincode. Default is 'init'; to pass in no function name, explicitly
+	 *           pass in fcn with a value of null or '' (empty string).
 	 * @property {string[]} args - Optional. Array of string arguments to pass to
 	 *           the function identified by the <code>fcn</code> value.
 	 * @property {Object} endorsement-policy - Optional. EndorsementPolicy object
@@ -2575,7 +2576,10 @@ const Channel = class {
 
 		// step 1: construct a ChaincodeSpec
 		const args = [];
-		args.push(Buffer.from(request.fcn ? request.fcn : 'init', 'utf8'));
+		const fcn = (typeof request.fcn === 'undefined' ? 'init' : request.fcn);
+		if (fcn) {
+			args.push(Buffer.from(fcn, 'utf8'));
+		}
 
 		for (const arg of request.args) {
 			args.push(Buffer.from(arg, 'utf8'));

@@ -534,6 +534,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 			chaincodePath: 'github.com/example_cc',
 			chaincodeId: 'example',
 			chaincodeVersion: 'v2',
+			fcn: 'init',
 			args: ['a', '100', 'b', '200'],
 			txId: tx_id,
 			targets: ['peer0.org1.example.com', 'peer0.org2.example.com'],

@@ -300,6 +300,7 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 		request = {
 			chaincodeId: 'example',
 			chaincodeVersion: 'v1',
+			fcn: 'init',
 			args: ['a', '100', 'b', '200'],
 			txId: tx_id
 			// targets is not required, however the logged in user may not have
