@@ -16,7 +16,7 @@ const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
 const jsrsa = require('jsrsasign');
 const KEYUTIL = jsrsa.KEYUTIL;
 const asn1 = jsrsa.asn1;
-const X509 = require('x509');
+const X509 = require('@ampretia/x509');
 
 test('\n\n ** ECDSA Key Impl tests **\n\n', (t) => {
 	testutil.resetDefaults();
