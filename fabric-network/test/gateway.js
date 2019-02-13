@@ -141,6 +141,77 @@ describe('Gateway', () => {
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
+		it('should merge option structures - even ones that don\t end in Option', () => {
+			const strategy = () => {
+				return null;
+			};
+			defaultOptions = {
+				commitTimeout: 300 * 1000,
+				identity: 'user',
+				eventHandlerOptions: {
+					commitTimeout: 300, // 5 minutes
+					strategy: strategy
+				},
+				discovery: {
+					enabled: true,
+					asLocalhost: true
+				}
+			};
+			const overrideOptions = {
+				identity: 'admin',
+				discovery: {
+					asLocalhost: false
+				}
+			};
+			const expectedOptions = {
+				commitTimeout: 300 * 1000,
+				identity: 'admin',
+				eventHandlerOptions: {
+					commitTimeout: 300, // 5 minutes
+					strategy: strategy
+				},
+				discovery: {
+					enabled: true,
+					asLocalhost: false
+				}
+			};
+			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			defaultOptions.should.deep.equal(expectedOptions);
+		});
+
+		it('should merge null option structures', () => {
+			const strategy = () => {
+				return null;
+			};
+			defaultOptions = {
+				commitTimeout: 300 * 1000,
+				identity: 'user',
+				eventHandlerOptions: {
+					commitTimeout: 300, // 5 minutes
+					strategy: strategy
+				},
+				discovery: {
+					enabled: true,
+					asLocalhost: true
+				}
+			};
+			const overrideOptions = {
+				identity: 'admin',
+				discovery: null
+			};
+			const expectedOptions = {
+				commitTimeout: 300 * 1000,
+				identity: 'admin',
+				eventHandlerOptions: {
+					commitTimeout: 300, // 5 minutes
+					strategy: strategy
+				},
+				discovery: null
+			};
+			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			defaultOptions.should.deep.equal(expectedOptions);
+		});
+
 	});
 
 	describe('#constructor', () => {

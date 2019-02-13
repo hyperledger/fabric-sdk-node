@@ -76,7 +76,7 @@ class Gateway {
 
 	static _mergeOptions(defaultOptions, suppliedOptions) {
 		for (const prop in suppliedOptions) {
-			if (suppliedOptions[prop] instanceof Object && prop.endsWith('Options')) {
+			if (typeof suppliedOptions[prop] === 'object' && suppliedOptions[prop] !== null) {
 				if (defaultOptions[prop] === undefined) {
 					defaultOptions[prop] = suppliedOptions[prop];
 				} else {
