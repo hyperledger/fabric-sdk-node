@@ -11,6 +11,9 @@ const fs = require('fs');
 // Internal Map of connected gateways
 const gateways = new Map();
 
+// transaction types
+const types = ['evaluate', 'error', 'submit'];
+
 /**
  * Perform an  in memeory ID setup
  * @param {InMemoryWallet} inMemoryWallet the in memory wallet to use
@@ -74,7 +77,7 @@ async function connectGateway(ccp, tls, userName, orgName, gatewayName, useDisco
 	}
 
 	await gateway.connect(ccp.profile, opts);
-	gateways.set(gatewayName, gateway);
+	gateways.set(gatewayName, {gateway: gateway});
 
 	// Ensure that all connections have had time to process in the background
 	await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
@@ -88,7 +91,7 @@ async function connectGateway(ccp, tls, userName, orgName, gatewayName, useDisco
  */
 async function disconnectGateway(gatewayName) {
 	try {
-		const gateway = gateways.get(gatewayName);
+		const gateway = gateways.get(gatewayName).gateway;
 		await gateway.disconnect();
 		gateways.delete(gatewayName);
 	} catch (err) {
@@ -104,7 +107,7 @@ async function disconnectAllGateways() {
 	try {
 		for (const key of gateways.keys()) {
 			testUtil.logMsg('disconnecting from Gateway ', key);
-			const gateway = gateways.get(key);
+			const gateway = gateways.get(key).gateway;
 			await gateway.disconnect();
 		}
 		gateways.clear();
@@ -142,7 +145,8 @@ async function retrieveContractFromGateway(gateway, channelName, chaincodeId) {
  */
 async function performGatewayTransaction(gatewayName, ccName, channelName, args, submit) {
 	// Get contract from Gateway
-	const gateway = gateways.get(gatewayName);
+	const gatewayObj = gateways.get(gatewayName);
+	const gateway = gatewayObj.gateway;
 	const contract = await retrieveContractFromGateway(gateway, channelName, ccName);
 
 	// Split args
@@ -151,27 +155,80 @@ async function performGatewayTransaction(gatewayName, ccName, channelName, args,
 	const funcArgs = argArray.slice(1);
 	try {
 		if (submit) {
-			testUtil.logMsg('Submitting transaction [' + func + '] ...');
-			await contract.submitTransaction(func, ...funcArgs);
+			testUtil.logMsg('Submitting transaction [' + func + '] with arguments ' + args);
+			const result = await contract.submitTransaction(func, ...funcArgs);
+			gatewayObj.result = {type: 'submit', response: result.toString()};
 			testUtil.logMsg('Successfully submitted transaction [' + func + ']');
+			return Promise.resolve();
 		} else {
-			testUtil.logMsg('Evaluating transaction [' + func + '] ...');
+			testUtil.logMsg('Evaluating transaction [' + func + '] with arguments ' + args);
 			const result = await contract.evaluateTransaction(func, ...funcArgs);
 			testUtil.logMsg('Successfully evaluated transaction [' + func  + '] with result [' + result + ']');
+			gatewayObj.result = {type: 'evaluate', response: result.toString()};
 			return result.toString();
 		}
 	} catch (err) {
+		gatewayObj.result = {type: 'error', result: err.toString()};
 		testUtil.logError(err);
 		throw err;
 	}
 }
 
+/**
+ * Compare the last gateway transaction response with a passed value
+ * @param {String} type type of resposne
+ * @param {*} msg the message to compare against
+ */
+function lastResponseCompare(gatewayName, msg) {
+	const gatewayObj = gateways.get(gatewayName);
+	return (gatewayObj.result.response.localeCompare(msg) === 0);
+}
+
+/**
+ * Retrieve the last gateway transaction result
+ * @param {String} type type of resposne
+ */
+function lastResult(gatewayName) {
+	const gatewayObj = gateways.get(gatewayName);
+	return gatewayObj.result;
+}
+
+/**
+ * Compare the last gateway transaction type with a passed value
+ * @param {String} gatewayName gateway name
+ * @param {String} type type of resposne
+ */
+function lastTypeCompare(gatewayName, type) {
+	const gatewayObj = gateways.get(gatewayName);
+
+	if (!gatewayObj) {
+		throw  new Error('Unknown gateway with name ' + gatewayName);
+	}
+
+	if (!gatewayObj.result) {
+		throw  new Error('No existing response on gateway ' + gatewayName);
+	}
+
+	if (types.indexOf(type) === -1) {
+		throw  new Error('Unknown type transaction type ' + type + ', must be one of [evaluate, error, submit]');
+	}
+
+	return gatewayObj.result.type.localeCompare(type) === 0;
+}
+
 function getGateway(gatewayName) {
-	return gateways.get(gatewayName);
+	if (gateways.get(gatewayName)) {
+		return gateways.get(gatewayName).gateway;
+	} else {
+		return undefined;
+	}
 }
 
 module.exports.connectGateway = connectGateway;
 module.exports.performGatewayTransaction = performGatewayTransaction;
 module.exports.disconnectGateway = disconnectGateway;
 module.exports.disconnectAllGateways = disconnectAllGateways;
+module.exports.lastResponseCompare = lastResponseCompare;
+module.exports.lastResult = lastResult;
+module.exports.lastTypeCompare = lastTypeCompare;
 module.exports.getGateway = getGateway;

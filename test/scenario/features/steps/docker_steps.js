@@ -7,21 +7,30 @@
 const testUtil = require('../lib/utils');
 const path = require('path');
 
+const StateStore = require('../lib/state_store').StateStore;
+
 module.exports = function () {
 
 	this.Given(/^I have deployed a (.+?) Fabric network/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (type) => {
-		await testUtil.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
-		if (type.localeCompare('non-tls') === 0) {
-			await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../docker-compose/docker-compose.yaml') + ' -p cucumber up -d');
-			return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
-		} else {
-			await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../docker-compose/docker-compose-tls.yaml') + ' -p cucumber up -d');
+
+		const fabricState = StateStore.get('fabricState');
+
+		if (!fabricState || !fabricState.deployed || fabricState.type.localeCompare(type) !== 0) {
+			await testUtil.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
+			if (type.localeCompare('non-tls') === 0) {
+				await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../docker-compose/docker-compose.yaml') + ' -p cucumber up -d');
+			} else {
+				await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../docker-compose/docker-compose-tls.yaml') + ' -p cucumber up -d');
+			}
+
+			StateStore.set('fabricState', {deployed: true, type: type});
 			return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
 		}
 	});
 
 	this.Given(/^I have forcibly taken down all docker containers/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async () => {
 		await testUtil.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
+		StateStore.set('fabricState', {deployed: false, type: null});
 		return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
 	});
 

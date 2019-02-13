@@ -48,8 +48,15 @@ class CommonConnectionProfile {
 	}
 
 	/**
+	 * Retrieve the profile
+	 */
+	getProfile() {
+		return this.profile;
+	}
+
+	/**
 	 * Retrieve the channels named in the profile
-	 * @return {Object[]} an objeect array of all channels within the profile
+	 * @return {Object[]} an object array of all channels within the profile
 	 */
 	getChannels() {
 		return this.profile.channels;

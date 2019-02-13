@@ -184,7 +184,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 	);
 
 	try {
-		testUtil.logMsg('Performing ' + type + ' transaction on chaincode with ID [' + ccName + '] as organization [' + orgName + '] ...');
+		testUtil.logMsg('Performing ' + type + ' transaction on chaincode with ID [' + ccId + '] as organization [' + orgName + '] ...');
 
 		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		client.setStateStore(store);

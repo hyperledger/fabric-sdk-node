@@ -54,6 +54,8 @@ function runShellCommand(pass, cmd) {
 
 		return new Promise((resolve, reject) => {
 
+			logMsg('SCENARIO CMD:', cmd);
+
 			const options = {
 				env : env,
 				maxBuffer: 100000000
@@ -65,17 +67,17 @@ function runShellCommand(pass, cmd) {
 
 			childCliProcess.stdout.on('data', (data) => {
 				data = stripAnsi(data);
-				logMsg('STDOUT: ', data);
 				stdout += data;
 			});
 
 			childCliProcess.stderr.on('data', (data) => {
 				data = stripAnsi(data);
-				logMsg('STDERR: ', data);
 				stderr += data;
 			});
 
 			childCliProcess.on('error', (error) => {
+				logMsg('SCENARIO CMD - STDOUT:\n', stdout);
+				logMsg('SCENARIO CMD - STDERR:\n', stderr);
 				this.lastResp = {error : error, stdout : stdout, stderr : stderr};
 				if (pass) {
 					reject(this.lastResp);
@@ -83,6 +85,8 @@ function runShellCommand(pass, cmd) {
 			});
 
 			childCliProcess.on('close', (code) => {
+				logMsg('SCENARIO CMD - STDOUT:\n', stdout);
+				logMsg('SCENARIO CMD - STDERR:\n', stderr);
 				if (pass === undefined) {
 					// don't care case
 					this.lastResp = {code : code, stdout : stdout, stderr : stderr};
