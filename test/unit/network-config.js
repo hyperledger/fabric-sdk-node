@@ -32,155 +32,6 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 
 	t.doesNotThrow(
 		() => {
-			const client = new Client();
-			client.setTlsClientCertAndKey('client cert', 'client key');
-			t.equals(client._tls_mutual.clientCert, 'client cert', 'Checking that client cert was set');
-			t.equals(client._tls_mutual.clientKey, 'client key', 'Checking that client key was set');
-			const myOpts = {};
-			client.addTlsClientCertAndKey(myOpts);
-			t.equals(myOpts.clientCert, 'client cert', 'Checking that client cert was added');
-			t.equals(myOpts.clientKey, 'client key', 'Checking that client key was added');
-		},
-		'Checking that able to call xxxTlsClientCertAndKey methods without error'
-	);
-
-	t.throws(
-		() => {
-			Client.loadFromConfig();
-		},
-		/Invalid common connection profile/,
-		'Should not be able to instantiate a new instance of "Client" without a valid path to the configuration');
-
-	t.throws(
-		() => {
-			Client.loadFromConfig('/');
-		},
-		/EISDIR: illegal operation on a directory/,
-		'Should not be able to instantiate a new instance of "Client" without an actual configuration file');
-
-	t.throws(
-		() => {
-			Client.loadFromConfig('something');
-		},
-		/ENOENT: no such file or directory/,
-		'Should not be able to instantiate a new instance of "Client" without an actual configuration file');
-
-	t.doesNotThrow(
-		() => {
-			Client.loadFromConfig('test/fixtures/network.json');
-		},
-		'Should be able to instantiate a new instance of "Client" with a valid path to the configuration'
-	);
-
-	t.doesNotThrow(
-		() => {
-			const client = Client.loadFromConfig('test/fixtures/network.json');
-			client.newChannel('mychannel2');
-			client.loadFromConfig('test/fixtures/network.json');
-		},
-		'1 Should be able to instantiate a new instance of "Channel" with the definition in the common connection profile'
-	);
-
-	t.throws(
-		() => {
-			const client = Client.loadFromConfig('test/fixtures/network.json');
-			client.getChannel('dummy');
-		},
-		/Channel not found for name/,
-		'Should not be able to instantiate a new instance of "Channel" with a bad channel'
-	);
-
-	t.throws(
-		() => {
-			const client = Client.loadFromConfig('test/fixtures/network.json');
-			client.getCertificateAuthority();
-		},
-		/A crypto suite has not been assigned to this client/,
-		'Should not be able to instantiate a new instance of a certificate authority until a crypto suite is assigned'
-	);
-
-	t.doesNotThrow(
-		() => {
-			const client = Client.loadFromConfig('test/fixtures/network.yaml');
-			client.loadFromConfig('test/fixtures/org1.yaml');
-			t.equals('Org1', client._network_config._network_config.client.organization, ' org should be Org1');
-			client.loadFromConfig('test/fixtures/org2.yaml');
-			t.equals('Org2', client._network_config._network_config.client.organization, ' org should be Org2');
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			const channel = client.getChannel('mychannel2');
-			let peers = client.getPeersForOrg();
-			t.equals('grpcs://localhost:8051', peers[0].getUrl(), ' Check to see if we got the right peer for org2 by default');
-			peers = client.getPeersForOrg('Org1MSP');
-			t.equals('grpcs://localhost:7051', peers[0].getUrl(), ' Check to see if we got the right peer for org1 by specifically asking for mspid of org1');
-			const orderers = channel.getOrderers();
-			t.equals('grpcs://localhost:7050', orderers[0].getUrl(), ' Check to see if we got the right orderer for mychannel2');
-			const client_config = client.getClientConfig();
-			t.equals('wallet-name', client_config.credentialStore.wallet, ' check to see if we can get the wallet name from the client config');
-			t.equals('Org2MSP', client.getMspid(), ' check to see if we can get the mspid of the current clients organization');
-
-			const client2 = Client.loadFromConfig('test/fixtures/network2.yaml');
-			client2.setCryptoSuite(Client.newCryptoSuite());
-			client2.setUserContext(new User('testUser'), true);
-			client2.loadFromConfig('test/fixtures/org1.yaml');
-			t.equals(client2.getPeersForOrg().length, 3, ' Check to see that we got 3 peers for Org1');
-			client2.getChannel('mychannel3');
-			client2.loadFromConfig('test/fixtures/org2.yaml');
-			t.equals(client2.getPeersForOrg().length, 1, ' Check to see that we got 1 peer for Org2');
-
-			let opts = {somesetting: 4};
-			client._network_config.addTimeout(opts, 1);
-			t.equals(opts.somesetting, 4, 'check that existing settings are still there');
-			t.equals(opts['request-timeout'], 120000, 'check that endorser timeout was added');
-			opts = {};
-			client._network_config.addTimeout(opts, 2);
-			t.equals(opts['request-timeout'], 30000, 'check that orderer timeout was added');
-			opts = {};
-			client._network_config.addTimeout(opts, 3);
-			t.equals(opts['request-timeout'], 60000, 'check that eventHub timeout was added');
-			opts = {};
-			client._network_config.addTimeout(opts, 4);
-			t.equals(opts['request-timeout'], 3000, 'check that eventReg timeout was added');
-			opts = {};
-			opts['request-timeout'] = 5000;
-			client._network_config.addTimeout(opts, 4);
-			t.equals(opts['request-timeout'], 5000, 'check that timeout did not change');
-			client._network_config._network_config.client.connection.timeout.peer.eventHub = '2s';
-			opts = {};
-			client._network_config.addTimeout(opts, 3);
-			t.equals(opts['request-timeout'], undefined, 'check that timeout did not change');
-
-			let peer = client._network_config.getPeer('peer0.org1.example.com');
-			t.equals(peer._options['request-timeout'], 120001, ' check that we get this peer endorser timeout set');
-			peer = client._network_config.getPeer('peer0.org2.example.com');
-			t.equals(peer._options['request-timeout'], 120000, ' check that we get this peer endorser timeout set');
-			const orderer = client._network_config.getOrderer('orderer.example.com');
-			t.equals(orderer._options['request-timeout'], 30000, ' check that we get this orderer timeout set');
-
-			delete client._network_config._network_config.certificateAuthorities['ca-org1'].tlsCACerts;
-			delete client._network_config._network_config.certificateAuthorities['ca-org1'].httpOptions;
-			client.setCryptoSuite({cryptoSuite: 'cryptoSuite'});
-			const certificate_authority = client.getCertificateAuthority();
-			if (certificate_authority && certificate_authority.fabricCAServices._cryptoSuite && certificate_authority.fabricCAServices._cryptoSuite.cryptoSuite === 'cryptoSuite') {
-				t.pass('Successfully got the certificate_authority');
-			} else {
-				t.fail('Failed to get the certificate_authority');
-			}
-		},
-		'2 Should be able to run a number of test without error'
-	);
-
-	t.throws(
-		() => {
-			const client = new Client();
-			client.getChannel();
-		},
-		/Channel not found for name undefined./,
-		'Check for Channel not found for name undefined.'
-	);
-
-	t.doesNotThrow(
-		() => {
 			const config_loc = path.resolve('test/fixtures/network.yaml');
 			const file_data = fs.readFileSync(config_loc);
 			const network_data = yaml.safeLoad(file_data);
@@ -204,19 +55,6 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			client.newChannel('mychannel');
 		},
 		'Should be able to instantiate a new instance of "Channel" with blank definition in the common connection profile'
-	);
-
-	t.throws(
-		() => {
-			const client = new Client();
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client._network_config = new NetworkConfig({}, client);
-			client.setCryptoSuite({cryptoSuite: 'cryptoSuite'});
-			client.getCertificateAuthority();
-		},
-		/Common connection profile is missing this client's organization and certificate authority/,
-		'Check for Common connection profile is missing this client\'s organization and certificate authority'
 	);
 
 	network_config.version = '1.0.0';
@@ -474,16 +312,6 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		() => {
 			const client = new Client();
 			client._network_config = new NetworkConfig({}, client);
-			client.getTargetPeers({}, client);
-		},
-		/Target peer is not a valid peer object instance/,
-		'Should not be able to get targets when targets is not a peer object'
-	);
-
-	t.throws(
-		() => {
-			const client = new Client();
-			client._network_config = new NetworkConfig({}, client);
 			client.getTargetPeers('somepeer', client);
 		},
 		/not found/,
@@ -597,15 +425,6 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'Should be able to run channel target methods'
 	);
 
-	t.throws(
-		() => {
-			const client = new Client();
-			const channel = client.newChannel('mychannel');
-			channel._getTargetForQuery();
-		},
-		/"target" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network/,
-		'Should get an error back when no targets are available'
-	);
 
 	t.throws(
 		() => {

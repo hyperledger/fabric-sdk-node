@@ -745,6 +745,10 @@ describe('Channel', () => {
 			expect(() => channel.verifyProposalResponse({})).to.throw('ProposalResponse');
 		});
 
+		it('throws if parameter is not a ProposalResponse', () => {
+			expect(() => channel.verifyProposalResponse([])).to.throw('ProposalResponse');
+		});
+
 		it('throws for unknown MSP ID in proposal response', () => {
 			channel.getMSPManager().getMSP.withArgs(mspId).returns(null);
 			const proposalResponse = createProposalResponse('messsage');
@@ -1269,6 +1273,7 @@ describe('Channel', () => {
 	describe('#getPeersForOrg', () => {});
 
 	describe('#getGenesisBlock', () => {
+
 		it('should generate a new transaction id', async () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
@@ -1776,8 +1781,20 @@ describe('Channel', () => {
 			expect(() => channel.joinChannel({})).to.throw(/Missing txId input parameter with the required transaction identifier/);
 		});
 
-		it('should throw if request.block is missing', () => {
+		it('should throw if genesis block is missing', () => {
 			expect(() => channel.joinChannel({txId: 1})).to.throw(/Missing block input parameter with the required genesis block/);
+		});
+
+		it('should throw if targets is missing', () => {
+			expect(() => channel.joinChannel({txId: 1, block: 'something'})).to.throw(/"targets" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network/);
+		});
+
+		it('should throw if invalid target', () => {
+			expect(() => channel.joinChannel({txId: 1, block: 'something', targets: [{}]})).to.throw(/Target peer is not a valid peer object instance/);
+		});
+
+		it('should throw if not existing target', () => {
+			expect(() => channel.joinChannel({txId: 1, block: 'something', targets: 'penguin'})).to.throw(/Peer with name "penguin" not assigned to this channel/);
 		});
 
 		it('should be rejected is sendPeersProposal fails', async () => {
@@ -2005,6 +2022,15 @@ describe('Channel', () => {
 	});
 
 	describe('#queryInfo', () => {
+
+		it('should throw if no peer parameter passed', () => {
+			return expect(channel.queryInfo()).to.be.rejectedWith('"target" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network');
+		});
+
+		it('should throw if no peer Object passed', () => {
+			return expect(channel.queryInfo([peer1])).to.be.rejectedWith('"target" parameter is an array, but should be a singular peer object or peer name according to the common connection profile loaded by the client instance');
+		});
+
 		it('should throw if the response is an error', () => {
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1, 'sendProposal').resolves(new Error('forced error'));
@@ -2102,6 +2128,14 @@ describe('Channel', () => {
 			return expect(channel.queryBlockByHash(null, peer1)).to.be.rejectedWith('Blockhash bytes are required');
 		});
 
+		it('should throw if a peer is not given', () => {
+			return expect(channel.queryBlockByHash(blockhashBytes)).to.be.rejectedWith('"target" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network');
+		});
+
+		it('should throw if a peer Object is not given', () => {
+			return expect(channel.queryBlockByHash(blockhashBytes, [peer1])).to.be.rejectedWith('parameter is an array, but should be a singular peer object');
+		});
+
 		it('should throw if the response is an error', () => {
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1, 'sendProposal').resolves(new Error('forced error'));
@@ -2161,6 +2195,26 @@ describe('Channel', () => {
 			return expect(channel.queryBlock(null, peer1)).to.be.rejectedWith('Block number must be a positive integer');
 		});
 
+		it('should throw if a blockHash is given as string', () => {
+			return expect(channel.queryBlock('y u no integer?', peer1)).to.be.rejectedWith('Block number must be a positive integer');
+		});
+
+		it('should throw if a blockHash is given as double', () => {
+			return expect(channel.queryBlock(1.8934, peer1)).to.be.rejectedWith('Block number must be a positive integer');
+		});
+
+		it('should throw if a blockHash is given as negative', () => {
+			return expect(channel.queryBlock(-1, peer1)).to.be.rejectedWith('Block number must be a positive integer');
+		});
+
+		it('should throw if a peer array given', () => {
+			return expect(channel.queryBlock(1, [peer1])).to.be.rejectedWith('"target" parameter is an array, but should be a singular peer object');
+		});
+
+		it('should throw if no peer given', () => {
+			return expect(channel.queryBlock(1, undefined)).to.be.rejectedWith('"target" parameter not specified and no peers are set on this Channel');
+		});
+
 		it('should throw if the response is an error', () => {
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1, 'sendProposal').resolves(new Error('forced error'));
@@ -2218,6 +2272,14 @@ describe('Channel', () => {
 		const txId = 'tx_id';
 		it('should throw if a tx_id is not given', () => {
 			return expect(channel.queryTransaction(null, peer1)).to.be.rejectedWith('Missing "tx_id" parameter');
+		});
+
+		it('should throw if a peer is not given', () => {
+			return expect(channel.queryTransaction(txId, null)).to.be.rejectedWith('"target" parameter not specified and no peers are set');
+		});
+
+		it('should throw if a peer array is given', () => {
+			return expect(channel.queryTransaction(txId, [peer1])).to.be.rejectedWith('"target" parameter is an array, but should be a singular peer object or peer name according to the common connection profile loaded by the client instance');
 		});
 
 		it('should throw if the response is an error', () => {
@@ -2552,7 +2614,25 @@ describe('Channel', () => {
 
 	describe('sendTransactionProposal', () => {});
 
-	describe('#sendTransaction', () => {});
+	describe('#sendTransaction', () => {
+
+		it('throws if no transaction request object', () => {
+			return expect(channel.sendTransaction()).to.be.rejectedWith('Missing input request object on the transaction request');
+		});
+
+		it('throws if proposals in request object', () => {
+			return expect(channel.sendTransaction({proposalResponses: 'blah'})).to.be.rejectedWith('Missing "proposal" parameter in transaction request');
+		});
+
+		it('throws if no proposalResponses in request object', () => {
+			return expect(channel.sendTransaction({proposal: 'blah'})).to.be.rejectedWith('Missing "proposalResponses" parameter in transaction request');
+		});
+
+		it('throws if no endorsements in request object', () => {
+			return expect(channel.sendTransaction({proposal: 'blah', proposalResponses: {response: {status: 500}}})).to.be.rejectedWith('no valid endorsements found');
+		});
+
+	});
 
 	describe('#sendSignedTransation', () => {});
 
@@ -2576,6 +2656,14 @@ describe('Channel', () => {
 				fcn: 'fcn',
 				args: ['arg1', 'arg2']
 			};
+		});
+
+		it('throws if no request object', () => {
+			return expect(channel.queryByChaincode()).to.be.rejectedWith('Missing request object for this queryByChaincode call.');
+		});
+
+		it('throws if poorly defined request object', () => {
+			return expect(channel.queryByChaincode({})).to.be.rejectedWith('"targets" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network');
 		});
 
 		it('uses supplied transaction ID', async () => {
@@ -2647,7 +2735,31 @@ describe('Channel', () => {
 
 	describe('#_getTargets', () => {});
 
-	describe('#_getOrderer', () => {});
+	describe('#_getOrderer', () => {
+
+		const innerClient = new Client();
+		const innerChannel = new Channel('does-not-matter', innerClient);
+		const innerOrderer = new Orderer('grpc://somehost.com:1234');
+		innerChannel.addOrderer(innerOrderer);
+
+		it('should throw if no orderers assigned', () => {
+			expect(() => channel._getOrderer()).to.throw(/No Orderers assigned to this channel/);
+		});
+
+		it('should throw if no named orderer assigned', () => {
+			expect(() => channel._getOrderer('penguin')).to.throw(/Orderer penguin not assigned to the channel/);
+		});
+
+		it('should throw if no valid argument', () => {
+			expect(() => channel._getOrderer({})).to.throw(/Orderer is not a valid orderer object instance/);
+		});
+
+		it('should return an existing orderer', () => {
+			innerChannel._getOrderer().should.equal(innerOrderer);
+		});
+
+
+	});
 
 	describe('#_buildEndorsementPolicy', () => {});
 
