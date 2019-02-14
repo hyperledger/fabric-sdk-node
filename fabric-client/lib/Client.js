@@ -19,6 +19,7 @@ const Package = require('./Package.js');
 const Peer = require('./Peer.js');
 const ChannelEventHub = require('./ChannelEventHub');
 const Orderer = require('./Orderer.js');
+const TokenClient = require('./TokenClient.js');
 const TransactionID = require('./TransactionID.js');
 const crypto = require('crypto');
 
@@ -280,6 +281,24 @@ const Client = class extends BaseClient {
 		const chaincode = new Chaincode(name, version, this);
 
 		return chaincode;
+	}
+
+  /**
+	 * Returns a {@link TokenClient} instance for the specific channel and targets.
+	 * The TokenClient provides APIs for applications to perform token functions.
+	 *
+	 * @param {Channel} channel - Required. A channel object.
+	 * @param {Peer[]/string[]} targets - Optional. One or multiple prover peers.
+	 * @returns {TokenClient} a new instance of {@link TokenClient}.
+	 */
+	newTokenClient(channel, targets) {
+		if (!channel) {
+			throw new Error('Missing required "channel" parameter on newTokenClient() call');
+		}
+
+		const tokenClient = new TokenClient(this, channel, targets);
+
+		return tokenClient;
 	}
 
 	/**

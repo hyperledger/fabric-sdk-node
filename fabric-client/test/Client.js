@@ -17,6 +17,7 @@
 const rewire = require('rewire');
 
 const Client = rewire('../lib/Client');
+const Channel = require('../lib/Channel');
 const NetworkConfig = require('../lib/impl/NetworkConfig_1_0');
 const fs = require('fs');
 const {Identity} = require('fabric-common');
@@ -3214,6 +3215,25 @@ describe('Client', () => {
 			const chaincode = client.newChaincode('mychaincode', 'v1');
 			sinon.assert.calledWith(chaincodeStub, 'mychaincode', 'v1', client);
 			chaincode.should.deep.equal(new chaincodeStub('mychaincode', 'v1', client));
+		});
+	});
+
+	describe('#newTokenClient', () => {
+		it('should create and return a new TokenClient instance', () => {
+			const tokenClientStub = sinon.stub();
+			revert.push(Client.__set__('TokenClient', tokenClientStub));
+			const client = new Client();
+			const channel = sinon.createStubInstance(Channel);
+			const tokenClient = client.newTokenClient(channel);
+			sinon.assert.calledWith(tokenClientStub, client, channel);
+			tokenClient.should.deep.equal(new tokenClientStub(client, channel));
+		});
+
+		it('should get error when no channel is passed', () => {
+			(() => {
+				const client = new Client();
+				client.newTokenClient();
+			}).should.throw('Missing required "channel" parameter on newTokenClient() call');
 		});
 	});
 });

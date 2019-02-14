@@ -50,6 +50,7 @@ class Peer extends Remote {
 		logger.debug('Peer.const - url: %s timeout: %s name:%s', url, this._request_timeout, this.getName());
 		this._endorserClient = null;
 		this._discoveryClient = null;
+		this._proverClient = null;
 		this._createClients();
 	}
 
@@ -61,6 +62,10 @@ class Peer extends Remote {
 		if (!this._discoveryClient) {
 			logger.debug('_createClients - create peer discovery connection ' + this._endpoint.addr);
 			this._discoveryClient = new fabprotos.discovery.Discovery(this._endpoint.addr, this._endpoint.creds, this._options);
+		}
+		if (!this._proverClient) {
+			logger.debug('_createClients - create peer prover connection ' + this._endpoint.addr);
+			this._proverClient = new fabprotos.token.Prover(this._endpoint.addr, this._endpoint.creds, this._options);
 		}
 	}
 
@@ -77,6 +82,11 @@ class Peer extends Remote {
 			logger.debug('close - closing peer discovery connection ' + this._endpoint.addr);
 			this._discoveryClient.close();
 			this._discoveryClient = null;
+		}
+		if (this._proverClient) {
+			logger.debug('close - closing peer prover connection ' + this._endpoint.addr);
+			this._proverClient.close();
+			this._proverClient = null;
 		}
 	}
 
@@ -148,6 +158,64 @@ class Peer extends Remote {
 						const return_error = new Error(util.format('GRPC client got a null or undefined response from the peer "%s".', self._url));
 						return_error.peer = self.getCharacteristics();
 						logger.error('%s - rejecting with:%s', method, return_error);
+						reject(return_error);
+					}
+				}
+			});
+		});
+	}
+
+	/**
+	 * Send a token command to a prover peer.
+	 *
+	 * @param {Command} tokenCommand - A protobuf message for the token operation
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Peer instance and the global
+	 *        timeout in the config settings.
+	 * @returns {Promise} A Promise for a {@link SignedCommandResponse}
+	 */
+	async sendTokenCommand(command, timeout) {
+		const method = 'sendTokenCommand';
+		logger.debug('%s - Start ----%s %s', method, this.getName(), this.getUrl());
+		const self = this;
+		let rto = self._request_timeout;
+
+		if (!command) {
+			throw new Error('Missing command parameter to send to peer');
+		}
+		if (typeof timeout === 'number') {
+			rto = timeout;
+		}
+
+		this._createClients();
+
+		await this.waitForReady(this._proverClient);
+
+		return new Promise((resolve, reject) => {
+			const send_timeout = setTimeout(() => {
+				clearTimeout(send_timeout);
+				logger.error('%s - timed out after:%s', method, rto);
+				return reject(new Error('REQUEST_TIMEOUT'));
+			}, rto);
+
+			self._proverClient.processCommand(command, (err, signedCommandResp) => {
+				clearTimeout(send_timeout);
+				if (err) {
+					logger.error('%s - Received error %s from peer %s', method, err, self._url);
+					if (err instanceof Error) {
+						reject(err);
+					} else {
+						reject(new Error(err));
+					}
+				} else {
+					if (signedCommandResp) {
+						logger.debug('%s - Received signed command response %s from peer "%s"', method, signedCommandResp, self._url);
+						resolve(signedCommandResp);
+					} else {
+						const return_error = new Error(util.format('GRPC client got a null or undefined response from the peer "%s".', self._url));
+						return_error.peer = self.getCharacteristics();
+						logger.error('%s - rejecting with error response: %s', method, return_error);
 						reject(return_error);
 					}
 				}

@@ -53,13 +53,17 @@ describe('Constants', () => {
 		Constants.NetworkConfig.DISCOVERY_ROLE.should.equal('discover');
 	});
 
+	it('should set the correct NetworkConfig.PROVER_PEER_ROLE constant', () => {
+		Constants.NetworkConfig.PROVER_PEER_ROLE.should.equal('proverPeer');
+	});
+
 	it('should set the correct NetworkConfig.ALL_ROLES constant', () => {
 		Constants.NetworkConfig.ALL_ROLES.should.equal('all');
 	});
 
 	it('should set the correct NetworkConfig.ROLES constant', () => {
 		Constants.NetworkConfig.ROLES.should.deep.equal([
-			'endorsingPeer', 'chaincodeQuery', 'ledgerQuery', 'eventSource', 'discover', 'all'
+			'endorsingPeer', 'chaincodeQuery', 'ledgerQuery', 'eventSource', 'discover', 'proverPeer', 'all'
 		]);
 	});
 });
