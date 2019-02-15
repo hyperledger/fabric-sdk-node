@@ -140,7 +140,7 @@ gulp.task('test-cucumber', shell.task('npx nyc npm run test:cucumber'));
 
 // Definition of Mocha (unit) test suites
 gulp.task('run-test-mocha', (done) => {
-	const tasks = ['mocha-fabric-common', 'mocha-fabric-ca-client', 'mocha-fabric-client', 'mocha-fabric-network'];
+	const tasks = ['mocha-fabric-common', 'mocha-fabric-ca-client', 'mocha-fabric-client', 'mocha-fabric-network', 'mocha-fabric-protos'];
 	runSequence(...tasks, done);
 });
 
@@ -168,6 +168,13 @@ gulp.task('mocha-fabric-client',
 gulp.task('mocha-fabric-network',
 	() => {
 		return gulp.src(['./fabric-network/test/**/*.js'], {read: false})
+			.pipe(mocha({reporter: 'list', exit: true}));
+	}
+);
+
+gulp.task('mocha-fabric-protos',
+	() => {
+		return gulp.src(['./fabric-protos/test/**/*.js'], {read: false})
 			.pipe(mocha({reporter: 'list', exit: true}));
 	}
 );

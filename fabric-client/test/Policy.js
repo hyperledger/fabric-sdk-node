@@ -99,7 +99,29 @@ describe('Policy', () => {
 			}).should.throw(/Verifying MSPs not found in the channel object/);
 		});
 
+		it('should throw if invalid policy type found', () => {
+			(() => {
+				PolicyRewire.buildPolicy([], {
+					identities: [{role: {name: 'member', mspId: 'value'}}],
+					policy: {dummy: 'value'}
+				});
+			}).should.throw(/Invalid policy type found/);
+		});
+
+		it('should throw if missing the "identities" property', () => {
+			(() => {
+				PolicyRewire.buildPolicy([], {identities: null});
+			}).should.throw(/Invalid policy, missing the "identities" property/);
+		});
+
+		it('should throw if the "identities" property is not an array', () => {
+			(() => {
+				PolicyRewire.buildPolicy([], {identities: {name: 'something'}});
+			}).should.throw(/Invalid policy, the "identities" property must be an array/);
+		});
+
 		it('should create and set a one of any policy if no policy provided', () => {
+			setStub.resetHistory();
 			PolicyRewire.buildPolicy(['geoff'], undefined);
 
 			// Set SignaturePolicy

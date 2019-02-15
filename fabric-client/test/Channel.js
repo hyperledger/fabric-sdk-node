@@ -54,7 +54,7 @@ const fakeHandler = require(fakeHandlerModulePath).create();
 
 describe('Channel', () => {
 	let debugStub;
-	// let errorStub;
+	const buildPolicyStub = sinon.stub();
 	const channelName = 'channel-name';
 	let client;
 	let channel;
@@ -77,9 +77,13 @@ describe('Channel', () => {
 			error: () => {}
 		};
 
+		const FakePolicy = {
+			buildPolicy :buildPolicyStub
+		};
+
 		debugStub = sinon.stub(FakeLogger, 'debug');
-		// errorStub = sinon.stub(FakeLogger, 'error');
 		ChannelRewire.__set__('logger', FakeLogger);
+		ChannelRewire.__set__('Policy', FakePolicy);
 
 		client = new Client();
 		channel = new ChannelRewire(channelName, client);
@@ -104,6 +108,7 @@ describe('Channel', () => {
 		stubMsp.deserializeIdentity.returns(stubMspIdentity);
 
 		sinon.stub(channel.getMSPManager(), 'getMSP').withArgs(mspId).returns(stubMsp);
+		sinon.stub(channel.getMSPManager(), 'getMSPs').returns([stubMsp]);
 
 		stubSigningIdentity = sinon.createStubInstance(SigningIdentity);
 		stubSigningIdentity.serialize.returns(Buffer.from('fake-serialized-signing-identity'));
@@ -1222,6 +1227,14 @@ describe('Channel', () => {
 			channel.initialize({discover: true});
 			expect(await channel.getEndorsementPlan({chaincodes: []})).to.equal(null);
 		});
+
+		it('should call getDiscoveryResults', async () => {
+			sinon.stub(channel, '_initialize').resolves('initialize-result');
+			const mySpy = sinon.spy(channel, 'getDiscoveryResults');
+			channel.initialize({discover: true});
+			await channel.getEndorsementPlan({chaincodes: []});
+			sinon.assert.calledOnce(mySpy);
+		});
 	});
 
 	describe('#refresh', () => {
@@ -1269,8 +1282,6 @@ describe('Channel', () => {
 	describe('#getChannelEventHub', () => {});
 
 	describe('#getChannelEventHubsForOrg', () => {});
-
-	describe('#getPeersForOrg', () => {});
 
 	describe('#getGenesisBlock', () => {
 
@@ -2610,25 +2621,56 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#sendTransactionProposal', () => {});
+	describe('#sendTransactionProposal', () => {
+		it('should throw if no proposal request object', () => {
+			return expect(channel.sendTransactionProposal()).to.be.rejectedWith('Missing input request object on the proposal request');
+		});
 
-	describe('sendTransactionProposal', () => {});
+		it('should throw if no args in proposal request object', () => {
+			return expect(channel.sendTransactionProposal({
+				chaincodeId: 'blah',
+				fcn: 'invoke',
+				txId: 'blah'
+			})).to.be.rejectedWith('Missing "args" in Transaction');
+		});
+
+
+		it('should throw if no chaincodeId in proposal request object', () => {
+			return expect(channel.sendTransactionProposal({
+				fcn: 'init',
+				args: ['a', '100', 'b', '200'],
+				txId: 'blah'
+			})).to.be.rejectedWith('Missing "chaincodeId" parameter');
+		});
+
+
+		it('should throw if no txID in proposal request object', () => {
+			return expect(channel.sendTransactionProposal({
+				chaincodeId: 'blah',
+				fcn: 'init',
+				args: ['a', '100', 'b', '200']
+			})).to.be.rejectedWith('Missing "txId" parameter in the proposal request');
+		});
+
+	});
+
+	describe('Channel.sendTransactionProposal', () => {});
 
 	describe('#sendTransaction', () => {
 
-		it('throws if no transaction request object', () => {
+		it('should throw if no transaction request object', () => {
 			return expect(channel.sendTransaction()).to.be.rejectedWith('Missing input request object on the transaction request');
 		});
 
-		it('throws if proposals in request object', () => {
+		it('should throw if proposals in request object', () => {
 			return expect(channel.sendTransaction({proposalResponses: 'blah'})).to.be.rejectedWith('Missing "proposal" parameter in transaction request');
 		});
 
-		it('throws if no proposalResponses in request object', () => {
+		it('should throw if no proposalResponses in request object', () => {
 			return expect(channel.sendTransaction({proposal: 'blah'})).to.be.rejectedWith('Missing "proposalResponses" parameter in transaction request');
 		});
 
-		it('throws if no endorsements in request object', () => {
+		it('should throw if no endorsements in request object', () => {
 			return expect(channel.sendTransaction({proposal: 'blah', proposalResponses: {response: {status: 500}}})).to.be.rejectedWith('no valid endorsements found');
 		});
 
@@ -2761,7 +2803,17 @@ describe('Channel', () => {
 
 	});
 
-	describe('#_buildEndorsementPolicy', () => {});
+	describe('#_buildEndorsementPolicy', () => {
+
+		it('should call static Policy.buildPolicy() with passed args', () => {
+			channel._buildEndorsementPolicy('myPolicy');
+			sinon.assert.calledOnce(buildPolicyStub);
+			const args = buildPolicyStub.getCall(0).args;
+			args[0].should.deep.equal([stubMsp]);
+			args[1].should.equal('myPolicy');
+		});
+
+	});
 
 	describe('#_getProposalResponseResults', () => {});
 
