@@ -302,29 +302,30 @@ const Client = class extends BaseClient {
 
 		if (channel) {
 			return channel;
+		}
+
+		// maybe it is defined in the network
+		if (this._network_config) {
+			if (!name) {
+				const channel_names = Object.keys(this._network_config._network_config.channels);
+				name = channel_names[0];
+			}
+			if (name) {
+				channel = this._network_config.getChannel(name);
+			}
+		}
+		if (channel) {
+			this._channels.set(name, channel);
+			return channel;
+		}
+
+		const errorMessage = `Channel not found for name ${name}`;
+		if (throwError) {
+			logger.error(errorMessage);
+			throw new Error(errorMessage);
 		} else {
-			// maybe it is defined in the network
-			if (this._network_config) {
-				if (!name) {
-					const channel_names = Object.keys(this._network_config._network_config.channels);
-					name = channel_names[0];
-				}
-				if (name) {
-					channel = this._network_config.getChannel(name);
-				}
-			}
-			if (channel) {
-				this._channels.set(name, channel);
-				return channel;
-			}
-
-			logger.error(`Channel not found for name ${name}`);
-
-			if (throwError) {
-				throw new Error(`Channel not found for name ${name}.`);
-			} else {
-				return null;
-			}
+			logger.debug(errorMessage);
+			return null;
 		}
 	}
 

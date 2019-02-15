@@ -175,8 +175,8 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			const client = new Client();
 			client.getChannel();
 		},
-		/Channel not found for name undefined./,
-		'Check for Channel not found for name undefined.'
+		/Channel not found for name undefined/,
+		'Check for Channel not found for name undefined'
 	);
 
 	t.doesNotThrow(

@@ -410,10 +410,10 @@ describe('Client', () => {
 			should.equal(channel, null);
 		});
 
-		it('should call logger.error and return null if errors are turned off', () => {
+		it('should call logger.debug and return null if errors are turned off', () => {
 			client._channels.size = 0;
 			const channel = client.getChannel('channel1', false);
-			sinon.assert.calledWith(FakeLogger.error, 'Channel not found for name channel1');
+			sinon.assert.calledWith(FakeLogger.debug, 'Channel not found for name channel1');
 			should.equal(channel, null);
 		});
 
