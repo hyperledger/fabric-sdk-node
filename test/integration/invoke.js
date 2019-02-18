@@ -170,7 +170,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peersArray) {
 			t.fail('Failed to enroll user \'admin\'. ' + err);
 			throw new Error('Failed to enroll user \'admin\'. ' + err);
 
-		}).then((results) => {
+		}).then(async (results) => {
 			const proposalResponses = results[0];
 			const proposal = results[1];
 			let all_good = true;
@@ -180,7 +180,7 @@ function invokeChaincode(userOrg, version, t, shouldFail, peersArray) {
 				const proposal_response = proposalResponses[i];
 				if (proposal_response.response && proposal_response.response.status === 200) {
 					t.pass('transaction proposal has response status of good');
-					one_good = channel.verifyProposalResponse(proposal_response);
+					one_good = await channel.verifyProposalResponse(proposal_response);
 					if (one_good) {
 						t.pass(' transaction proposal signature and endorser are valid');
 					}

@@ -577,7 +577,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 			t.comment('stop and start the peer event hub ---- N  O  W ----- you have ' + sleep_time + ' millis ' + (new Date()).toString());
 			t.comment('*****************************************************************************');
 			return exports.sleep(sleep_time);
-		}).then(() => {
+		}).then(async() => {
 
 			const proposalResponses = pass_results[0];
 			const proposal = pass_results[1];
@@ -594,7 +594,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 					logger.debug('invoke chaincode, proposal response: ' + util.inspect(proposal_response, {depth: null}));
 					if (proposal_response.response && proposal_response.response.status === 200) {
 						t.pass('transaction proposal has response status of good');
-						one_good = channel.verifyProposalResponse(proposal_response);
+						one_good = await channel.verifyProposalResponse(proposal_response);
 						if (one_good) {
 							t.pass('transaction proposal signature and endorser are valid');
 						}

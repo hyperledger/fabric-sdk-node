@@ -86,11 +86,11 @@ test('test-crypto-key-store', (t: any) => {
 	t.end();
 });
 
-test('use the connection profile file', (t: any) => {
-	let client = Client.loadFromConfig(configNetwork);
+test('use the connection profile file', async (t: any) => {
+	let client = await Client.loadFromConfig(configNetwork);
 	t.pass('Successfully load config from network.yaml');
 
-	client.loadFromConfig(configOrg1);
+	await client.loadFromConfig(configOrg1);
 
 	let config: Buffer;
 	const signatures: any[] = [];
@@ -182,7 +182,7 @@ test('use the connection profile file', (t: any) => {
 				txId,
 			};
 			return channel.joinChannel(request); //admin from org2
-		}).then((results: ProposalResponse[]) => {
+		}).then(async (results: ProposalResponse[]) => {
 			// first of the results should not have good status as submitter does not have permission
 			if (results && results[0] && results[0].response && results[0].response.status === 200) {
 				t.fail('Successfully had peer in organization org1 join the channel');
@@ -202,9 +202,9 @@ test('use the connection profile file', (t: any) => {
 			/*
 			 * switch to organization org1 (recreate client)
 			 */
-			client = Client.loadFromConfig(configNetwork);
+			client = await Client.loadFromConfig(configNetwork);
 
-			client.loadFromConfig(configOrg1);
+			await client.loadFromConfig(configOrg1);
 			t.pass('Successfully loaded \'admin\' for org1');
 			return client.initCredentialStores();
 		}).then(() => {
@@ -258,7 +258,7 @@ test('use the connection profile file', (t: any) => {
 			};
 
 			return client.installChaincode(request);
-		}).then((results: ProposalResponseObject) => {
+		}).then(async (results: ProposalResponseObject) => {
 			const firstResponse = results[0][0];
 			if (firstResponse instanceof Error || firstResponse.response.status !== 200) {
 				t.fail(' Failed to install chaincode on org1');
@@ -267,7 +267,7 @@ test('use the connection profile file', (t: any) => {
 			}
 			t.pass('Successfully installed chain code on org1');
 
-			client.loadFromConfig(configOrg2);
+			await client.loadFromConfig(configOrg2);
 			t.pass('Successfully loaded \'admin\' for org2');
 			return client.initCredentialStores();
 		}).then(() => {
@@ -284,7 +284,7 @@ test('use the connection profile file', (t: any) => {
 			};
 
 			return client.installChaincode(request);
-		}).then((results: ProposalResponseObject) => {
+		}).then(async (results: ProposalResponseObject) => {
 			const firstResponse = results[0][0];
 			if (firstResponse instanceof Error || firstResponse.response.status !== 200) {
 				t.fail(' Failed to install chaincode on org2');
@@ -294,7 +294,7 @@ test('use the connection profile file', (t: any) => {
 			t.pass('Successfully installed chain code on org2');
 
 			// Back to org1 for instantiation
-			client.loadFromConfig(configOrg1);
+			await client.loadFromConfig(configOrg1);
 			t.pass('Successfully loaded \'admin\' for org1');
 			return client.initCredentialStores();
 		}).then(() => {
@@ -340,7 +340,7 @@ test('use the connection profile file', (t: any) => {
 				t.fail('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
 				throw new Error('Failed to order the transaction to instantiate the chaincode. Error code: ' + response.status);
 			}
-		}).then(() => {
+		}).then(async () => {
 			t.pass('Successfully waited for chaincode to startup');
 
 			/*
@@ -350,10 +350,10 @@ test('use the connection profile file', (t: any) => {
 			 * switch to organization org2
 			 */
 
-			client.loadFromConfig('test/fixtures/profiles/org2.yaml');
+			await client.loadFromConfig('test/fixtures/profiles/org2.yaml');
 
 			return client.initCredentialStores();
-		}).then(() => {
+		}).then(async () => {
 			t.pass('Successfully created the key value store  and crypto store based on the config and connection profile');
 
 			const ca: FabricCAServices = client.getCertificateAuthority();
@@ -366,7 +366,7 @@ test('use the connection profile file', (t: any) => {
 			/*
 			 * switch to organization org1
 			 */
-			client.loadFromConfig('test/fixtures/profiles/org1.yaml');
+			await client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 			t.pass('Successfully loaded config for org1');
 
 			return client.initCredentialStores();

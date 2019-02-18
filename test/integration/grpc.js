@@ -193,7 +193,7 @@ async function send(client, channel, url, cc, opts, megs, grpc_send_max, grpc_re
 }
 
 async function sendToConnectionProfile(client, channel, config, cc, megs) {
-	client.loadFromConfig(config);
+	await client.loadFromConfig(config);
 	const peer = client.getPeersForOrg('Org1MSP')[0]; // will only be one
 
 	const request = {

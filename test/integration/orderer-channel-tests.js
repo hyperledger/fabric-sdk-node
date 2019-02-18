@@ -33,7 +33,7 @@ const org = 'org1';
 // before the orderer URL was set. Verify that an error is reported when tying
 // to send the request.
 //
-test('\n\n** TEST ** orderer via member missing orderer', (t) => {
+test('\n\n** TEST ** orderer via member missing orderer', async (t) => {
 	testUtil.resetDefaults();
 	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
 	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
@@ -48,12 +48,12 @@ test('\n\n** TEST ** orderer via member missing orderer', (t) => {
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);
 
-	Client.newDefaultKeyValueStore({
+	const store = await Client.newDefaultKeyValueStore({
 		path: testUtil.KVS
-	}).then((store) => {
-		client.setStateStore(store);
-		return testUtil.getSubmitter(client, t, org);
-	}).then(
+	});
+
+	client.setStateStore(store);
+	testUtil.getSubmitter(client, t, org).then(
 		() => {
 			t.pass('Successfully enrolled user \'admin\'');
 

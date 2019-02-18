@@ -29,16 +29,16 @@
 class CryptoSuite {
 
 	/**
-	 * Generate a key using the options in <code>opts</code>. If the <code>opts.ephemeral</code>
-	 * parameter is false, the method, in addition to returning the imported {@link Key}
-	 * instance, also persists the generated key in the key store as PEM files that can be
+	 * Generate a key using the options in <code>opts</code> and persist it in the key store as PEM files that can be
 	 * retrieved using the <code>getKey()</code> method
 	 *
+	 * @async
 	 * @param {KeyOpts} opts Optional
-	 * @returns {module:api.Key} Promise for an instance of the Key class
+	 * @returns {Promise<module:api.Key>} Promise for an instance of the Key class
 	 * @throws Will throw an error if not implemented
 	 */
 	generateKey(opts) {
+		throw new Error('Unimplemented abstract method');
 	}
 
 	/**
@@ -48,6 +48,7 @@ class CryptoSuite {
 	 * @throws Will throw an error if not implemented
 	 */
 	generateEphemeralKey() {
+		throw new Error('Unimplemented abstract method');
 	}
 
 	/**
@@ -62,18 +63,26 @@ class CryptoSuite {
 	}
 
 	/**
-	 * Imports a {@link Key} from its raw representation using <code>opts</code>. If the <code>opts.ephemeral</code>
-	 * parameter is false, the method, in addition to returning the imported {@link Key}
-	 * instance, also saves the imported key in the key store as PEM files that can be
+	 * Creates a {@link Key} from its raw representation
+	 * @param {*} pem PEM string of the key to create
+	 * @param {KeyOpts} opts Options for the concrete implementation
+	 * @returns {module:api.Key} The created key
+	 */
+	createKeyFromRaw(pem, opts) {
+		throw new Error('Unimplemented abstract method');
+	}
+
+	/**
+	 * Imports a {@link Key} from its raw representation using <code>opts</code> to the key store as PEM files that can be
 	 * retrieved using the 'getKey()' method
 	 *
+	 * @async
 	 * @param {string} pem PEM string of the key to import
-	 * @param {KeyOpts} opts Optional
-	 * @returns {Key | Promise} If "opts.ephemeral" is true, returns the Key class synchronously.
-	 *          If "opts.ephemeral" not set or false, returns a Promise of an instance of the
-	 *          Key class.
+	 * @param {KeyOpts} opts Options for the concrete implementation
+	 * @returns {Promise<module:api.Key>} returns an instance of the Key class that was persisted.
 	 */
 	importKey(pem, opts) {
+		throw new Error('Unimplemented abstract method');
 	}
 
 	/**

@@ -26,11 +26,13 @@ describe('CouchDBWallet', () => {
 	let deleteStub;
 	let existsStub;
 	let getAllLabelsStub;
+	let initStub;
 	const CouchDBKeyValueStoreMock = class {
 		constructor() {
 			this.delete = deleteStub;
 			this.exists = existsStub;
 			this.getAllLabels = getAllLabelsStub;
+			this.initialize = initStub;
 		}
 	};
 	let FakeLogger;
@@ -58,6 +60,7 @@ describe('CouchDBWallet', () => {
 		getStub = sandbox.stub();
 		destroyStub = sandbox.stub();
 		getAllLabelsStub = sandbox.stub();
+		initStub = sandbox.stub();
 		nanoStub.returns({db: {
 			destroy: destroyStub,
 			get: getStub,

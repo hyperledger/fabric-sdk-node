@@ -28,6 +28,14 @@
 class KeyValueStore {
 
 	/**
+	 * Initialize the store
+	 *
+	 * @async
+	 */
+	initialize() {
+	}
+
+	/**
 	 * Get the value associated with <code>name</code>.
 	 *
 	 * @param {string} name Name of the key

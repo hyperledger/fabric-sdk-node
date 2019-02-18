@@ -106,12 +106,13 @@ const Client = class extends BaseClient {
 	/**
 	 * Load a common connection profile object or load a JSON file and return a Client object.
 	 *
+	 * @async
 	 * @param {object | string} loadConfig - This may be the config object or a path to the configuration file
 	 * @return {Client} An instance of this class initialized with the network end points.
 	 */
-	static loadFromConfig(loadConfig) {
+	static async loadFromConfig(loadConfig) {
 		const client = new Client();
-		client.loadFromConfig(loadConfig);
+		await client.loadFromConfig(loadConfig);
 		return client;
 	}
 
@@ -119,9 +120,10 @@ const Client = class extends BaseClient {
 	 * Load a common connection profile object or load a JSON file and update this client with
 	 * any values in the config.
 	 *
+	 * @async
 	 * @param {object | string} config - This may be the config object or a path to the configuration file
 	 */
-	loadFromConfig(loadConfig) {
+	async loadFromConfig(loadConfig) {
 		const additional_network_config = _getNetworkConfig(loadConfig, this);
 		if (!this._network_config) {
 			this._network_config = additional_network_config;
@@ -129,7 +131,7 @@ const Client = class extends BaseClient {
 			this._network_config.mergeSettings(additional_network_config);
 		}
 		if (this._network_config.hasClient()) {
-			this._setAdminFromConfig();
+			await this._setAdminFromConfig();
 			this._setMspidFromConfig();
 			this._addConnectionOptionsFromConfig();
 		}
@@ -889,6 +891,7 @@ const Client = class extends BaseClient {
 	 * Queries the target peer for a list of {@link Peer} objects of all peers
 	 * known by the target peer.
 	 *
+	 * @async
 	 * @param {PeerQueryRequest} request - The request parameters.
 	 * @returns {PeerQueryResponse} The list of peer information
 	 */
@@ -941,6 +944,7 @@ const Client = class extends BaseClient {
 	 * Queries the target peer for the names of all the channels that a
 	 * peer has joined.
 	 *
+	 * @async
 	 * @param {Peer} peer - The target peer to send the query
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials
 	 *        should be used in making this call to the peer. An administrative
@@ -1015,6 +1019,7 @@ const Client = class extends BaseClient {
 	/**
 	 * Queries the installed chaincodes on a peer.
 	 *
+	 * @async
 	 * @param {Peer} peer - The target peer
 	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials
 	 *        should be used in making this call to the peer. An administrative
@@ -1124,6 +1129,7 @@ const Client = class extends BaseClient {
 	 * performed on a peer-by-peer basis. Only the peer organization's ADMIN
 	 * identities are allowed to perform this operation.
 	 *
+	 * @async
 	 * @deprecated
 	 * @param {Deprecated_ChaincodeInstallRequest} request - The request object
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
@@ -1228,8 +1234,6 @@ const Client = class extends BaseClient {
 	 * from the common connection profile along with the system configuration to build
 	 * instances of the stores and assign them to this client and the crypto suites
 	 * if needed.
-	 *
-	 * @returns {Promise} - A promise to build a key value store and crypto store.
 	 */
 	async initCredentialStores() {
 		if (!this._network_config) {
@@ -1241,9 +1245,9 @@ const Client = class extends BaseClient {
 			this.setStateStore(key_value_store);
 			const crypto_suite = BaseClient.newCryptoSuite();
 			// all crypto suites should extends api.CryptoSuite
-			crypto_suite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(client_config.credentialStore.cryptoStore));
+			const cryptoStore = BaseClient.newCryptoKeyStore(client_config.credentialStore.cryptoStore);
+			crypto_suite.setCryptoKeyStore(cryptoStore);
 			this.setCryptoSuite(crypto_suite);
-			return true;
 		} else {
 			throw new Error('No credentialStore settings found');
 		}
@@ -1305,11 +1309,13 @@ const Client = class extends BaseClient {
 	 * Set the admin signing identity object. This method will only assign a
 	 * signing identity for use by this client instance and will not persist
 	 * the identity.
+	 *
+	 * @async
 	 * @param {string} private_key - the private key PEM string
 	 * @param {string} certificate the PEM-encoded string of certificate
 	 * @param {string} mspid The Member Service Provider id for the local signing identity
 	 */
-	setAdminSigningIdentity(private_key, certificate, mspid) {
+	async setAdminSigningIdentity(private_key, certificate, mspid) {
 		logger.debug('setAdminSigningIdentity - start mspid:%s', mspid);
 		if (typeof private_key === 'undefined' || private_key === null || private_key === '') {
 			throw new Error('Invalid parameter. Must have a valid private key.');
@@ -1324,8 +1330,8 @@ const Client = class extends BaseClient {
 		if (!crypto_suite) {
 			crypto_suite = BaseClient.newCryptoSuite();
 		}
-		const key = crypto_suite.importKey(private_key, {ephemeral: true});
-		const public_key = crypto_suite.importKey(certificate, {ephemeral: true});
+		const key = await crypto_suite.createKeyFromRaw(private_key);
+		const public_key = await crypto_suite.createKeyFromRaw(certificate);
 
 		this._adminSigningIdentity = new SigningIdentity(certificate, public_key, mspid, crypto_suite, new Signer(crypto_suite, key));
 	}
@@ -1336,7 +1342,7 @@ const Client = class extends BaseClient {
 	 * be must loaded that defines an organization for this client and have an
 	 * admin credentials defined.
 	 */
-	_setAdminFromConfig() {
+	async _setAdminFromConfig() {
 		let admin_key, admin_cert, mspid = null;
 		if (!this._network_config) {
 			throw new Error('No common connection profile has been loaded');
@@ -1353,7 +1359,7 @@ const Client = class extends BaseClient {
 		}
 		// if we found all we need then set the admin
 		if (admin_key && admin_cert && mspid) {
-			this.setAdminSigningIdentity(admin_key, admin_cert, mspid);
+			await this.setAdminSigningIdentity(admin_key, admin_cert, mspid);
 		}
 	}
 
@@ -1397,6 +1403,7 @@ const Client = class extends BaseClient {
 	 * and the organization in the client section of the common connection profile
 	 * settings.
 	 *
+	 * @async
 	 * @param {Object} opts - contains
 	 *                  - username [required] - username of the user
 	 *                  - password [optional] - password of the user
@@ -1463,6 +1470,7 @@ const Client = class extends BaseClient {
 	/**
 	 * Persist the current <code>userContext</code> to the key value store.
 	 *
+	 * @async
 	 * @returns {Promise} A Promise for the userContext object upon successful persistence
 	 */
 	async saveUserToStateStore() {
@@ -1508,6 +1516,7 @@ const Client = class extends BaseClient {
 	 * has been set on the Client instance. If no state store has been set, this cache will not be established
 	 * and the application is responsible for setting the user context again if the application crashes and is recovered.
 	 *
+	 * @async
 	 * @param {User | UserNamePasswordObject} user - An instance of the User class encapsulating the authenticated
 	 *                      user’s signing materials (private key and enrollment certificate).
 	 *                      The parameter may also be a {@link UserNamePasswordObject} that contains the username
@@ -1553,6 +1562,7 @@ const Client = class extends BaseClient {
 	 * (via the KeyValueStore interface). The loaded user object must represent an enrolled user with a valid
 	 * enrollment certificate signed by a trusted CA (such as the CA server).
 	 *
+	 * @async
 	 * @param {string} name - Optional. If not specified, will only return the current in-memory user context object, or null
 	 *                        if none has been set. If "name" is specified, will also attempt to load it from the state store
 	 *                        if search in memory failed.
@@ -1609,6 +1619,7 @@ const Client = class extends BaseClient {
 	/**
 	 * Restore the state of the {@link User} by the given name from the key value store (if found).  If not found, return null.
 	 *
+	 * @async
 	 * @param {string} name - Name of the user
 	 * @returns {Promise} A Promise for a {User} object upon successful restore, or if the user by the name
 	 *                    does not exist in the state store, returns null without rejecting the promise
@@ -1671,6 +1682,7 @@ const Client = class extends BaseClient {
 	 * Note that upon successful creation of the new user object, it is set to
 	 * the client instance as the current <code>userContext</code>.
 	 *
+	 * @async
 	 * @param {UserOpts} opts - Essential information about the user
 	 * @returns {Promise} Promise for the user object.
 	 */
@@ -1699,7 +1711,8 @@ const Client = class extends BaseClient {
 		if (this.getCryptoSuite() === null) {
 			logger.debug('cryptoSuite is null, creating default cryptoSuite and cryptoKeyStore');
 			this.setCryptoSuite(sdkUtils.newCryptoSuite());
-			this.getCryptoSuite().setCryptoKeyStore(Client.newCryptoKeyStore()); // This is impossible
+			const cryptoStore = Client.newCryptoKeyStore();
+			this.getCryptoSuite().setCryptoKeyStore(cryptoStore);
 		} else {
 			if (this.getCryptoSuite()._cryptoKeyStore) {
 				logger.debug('cryptoSuite has a cryptoKeyStore');
@@ -1727,9 +1740,9 @@ const Client = class extends BaseClient {
 		if (privateKeyPEM) {
 			logger.debug('then privateKeyPEM data');
 			if (opts.skipPersistence) {
-				importedKey = await this.getCryptoSuite().importKey(privateKeyPEM.toString(), {ephemeral: true});
+				importedKey = await this.getCryptoSuite().createKeyFromRaw(privateKeyPEM.toString());
 			} else {
-				importedKey = await this.getCryptoSuite().importKey(privateKeyPEM.toString(), {ephemeral: !this.getCryptoSuite()._cryptoKeyStore});
+				importedKey = await this.getCryptoSuite().importKey(privateKeyPEM.toString());
 			}
 		} else {
 			importedKey = opts.cryptoContent.privateKeyObj;

@@ -14,7 +14,7 @@ const rewire = require('rewire');
 const FileSystemWallet = rewire('../../../lib/impl/wallet/filesystemwallet');
 const X509WalletMixin = require('../../../lib/impl/wallet/x509walletmixin');
 const Client = require('fabric-client');
-const {CryptoSuite, KeyValueStore} = require('fabric-common');
+const {CryptoSuite} = require('fabric-common');
 const fs = require('fs-extra');
 const Path = require('path');
 const rimraf = require('rimraf');
@@ -51,10 +51,22 @@ describe('FileSystemWallet', () => {
 	});
 
 	describe('#_createFileKVS', () => {
+		let revert;
+		let instanceStub;
+
+		beforeEach(() => {
+			instanceStub = sinon.stub();
+			revert = FileSystemWallet.__set__('FileKVS', instanceStub);
+		});
+
+		afterEach(() => {
+			revert();
+		});
+
 		it('should create a File Key Value Store', async () => {
-			sandbox.stub(fs, 'mkdirs').callsArg(1);
-			const store = await FileSystemWallet._createFileKVS('test');
-			store.should.be.an.instanceof(KeyValueStore);
+			await FileSystemWallet._createFileKVS('test');
+			sinon.assert.calledWithNew(instanceStub);
+			sinon.assert.calledWith(instanceStub, {path: 'test'});
 		});
 	});
 
@@ -108,12 +120,12 @@ describe('FileSystemWallet', () => {
 	describe('#getStateStore', () => {
 		it('should create a KV store', async () => {
 			// use Error as a class to be detected
-			sandbox.stub(FileSystemWallet, '_createFileKVS').resolves(new Error());
+			sandbox.stub(FileSystemWallet, '_createFileKVS').returns(new Object({'value': 1, initialize: sinon.stub().resolves}));
 			sinon.stub(testwallet, '_getPartitionedPath').returns('/partitioned/path');
 			const store = await testwallet.getStateStore('test');
 			sinon.assert.calledOnce(FileSystemWallet._createFileKVS);
 			sinon.assert.calledWith(FileSystemWallet._createFileKVS, '/partitioned/path');
-			store.should.be.an.instanceof(Error);
+			store.value.should.equal(1);
 		});
 	});
 

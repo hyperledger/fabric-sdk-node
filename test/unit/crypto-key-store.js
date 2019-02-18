@@ -63,28 +63,9 @@ test('\n\n** CryptoKeyStore tests **\n\n', (t) => {
 
 	const keystorePath = path.join(testutil.getTempDir(), 'crypto-key-store');
 
-	t.throws(
-		() => {
-			CKS();
-		},
-		/Must provide the path to the directory to hold files for the store/,
-		'Test invalid constructor calls: missing options parameter'
-	);
-
-	t.throws(
-		() => {
-			CKS({something: 'useless'});
-		},
-		/Must provide the path to the directory to hold files for the store/,
-		'Test invalid constructor calls: missing "path" property in the "options" parameter'
-	);
-
-	let store;
-	CKS({path: keystorePath})
-		.then((st) => {
-			store = st;
-			return store.putKey(testPrivKey);
-		}).then(() => {
+	const store = CKS({path: keystorePath});
+	return store.initialize().then(() => {
+		store.putKey(testPrivKey).then(() => {
 			t.pass('Successfully saved private key in store');
 
 			t.equal(fs.existsSync(path.join(keystorePath, testPrivKey.getSKI() + '-priv')), true,
@@ -116,6 +97,7 @@ test('\n\n** CryptoKeyStore tests **\n\n', (t) => {
 			t.fail(err.stack ? err.stack : err);
 			t.end();
 		});
+	});
 });
 
 
@@ -137,8 +119,9 @@ test('\n\n** CryptoKeyStore tests - couchdb based store tests - use configSettin
 		};
 	})(t, couchdb, t.end);
 
-	CKS({name: dbname, url: 'http://localhost:5985'})
-		.then((store) => {
+	const store = CKS({name: dbname, url: 'http://localhost:5985'});
+	store.initialize()
+		.then(() => {
 			return testKeyStore(store, t);
 		}).catch((err) => {
 			t.fail(err.stack ? err.stack : err);
@@ -164,8 +147,9 @@ test('\n\n** CryptoKeyStore tests - couchdb based store tests - use constructor 
 		};
 	})(t, couchdb, t.end);
 
-	CKS(CouchDBKeyValueStore, {name: dbname, url: 'http://localhost:5985'})
-		.then((store) => {
+	const store = CKS(CouchDBKeyValueStore, {name: dbname, url: 'http://localhost:5985'});
+	store.initialize()
+		.then(() => {
 			return testKeyStore(store, t);
 		}).catch((err) => {
 			t.fail(err.stack ? err.stack : err);

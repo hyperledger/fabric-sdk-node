@@ -13,9 +13,8 @@ const utils = require('../../lib/utils');
 const path = require('path');
 const fs = require('fs');
 
-const chai = require('chai');
+require('chai');
 const sinon = require('sinon');
-const should = chai.should();
 
 const rewire = require('rewire');
 const MspRewire = rewire('../../lib/msp/msp');
@@ -286,11 +285,11 @@ describe('MSP', () => {
 			}
 		});
 
-		it('should call cryptoSuite.importKey with ephemeral: true if passed a false flag', () => {
+		it('should call cryptoSuite.createKeyFromRaw if passed a false flag', () => {
 
 			const importStub = sinon.stub();
 			const cryptoStub = {
-				importKey: importStub
+				createKeyFromRaw: importStub
 			};
 
 			const decoded = {
@@ -318,10 +317,9 @@ describe('MSP', () => {
 			const args = importStub.getCall(0).args;
 			args[0].should.equal('binary');
 			args[1].algorithm.should.equal('X509Certificate');
-			args[1].ephemeral.should.equal(true);
 		});
 
-		it('should not call cryptoSuite.importKey with ephemeral: true if not passed a false flag', async () => {
+		it('should call cryptoSuite.importKey if not passed a false flag', async () => {
 			const importStub = sinon.stub().resolves('key');
 			const cryptoStub = {
 				importKey: importStub
@@ -352,7 +350,6 @@ describe('MSP', () => {
 			const args = importStub.getCall(0).args;
 			args[0].should.equal('binary');
 			args[1].algorithm.should.equal('X509Certificate');
-			should.not.exist(args[1].ephemeral);
 		});
 
 		it('should deserialise a serialized identity', async () => {
@@ -378,7 +375,7 @@ describe('MSP', () => {
 			const serializedID = identity.serialize();
 
 			// Verify non-promise based route
-			let deserializedID = msp.deserializeIdentity(serializedID, false);
+			let deserializedID = await msp.deserializeIdentity(serializedID, false);
 			deserializedID.getMSPId().should.equal('testMSP');
 
 			deserializedID = await msp.deserializeIdentity(serializedID);

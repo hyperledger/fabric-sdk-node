@@ -168,7 +168,7 @@ class Gateway {
 		if (!(config && config.constructor && config.constructor.name === 'Client')) {
 			// still use a ccp for the discovery peer and ca information
 			logger.debug('%s - loading client from ccp', method);
-			this.client = Client.loadFromConfig(config);
+			this.client = await Client.loadFromConfig(config);
 		} else {
 			// initialize from an existing Client object instance
 			logger.debug('%s - using existing client object', method);

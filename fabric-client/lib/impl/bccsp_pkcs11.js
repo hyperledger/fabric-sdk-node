@@ -21,7 +21,6 @@ const KEYUTIL = jsrsa.KEYUTIL;
 const BN = require('bn.js');
 const ecsig = require('elliptic/lib/elliptic/ec/signature.js');
 const callsite = require('callsite');
-// const crypto = require('crypto');
 const pkcs11js = require('pkcs11js');
 const util = require('util');
 const ECDSAKey = require('./ecdsa/key.js');
@@ -229,10 +228,12 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 		this._pkcs11 = _pkcs11;
 
 		this._pkcs11OpenSession(this._pkcs11, pkcs11Lib, pkcs11Slot, pkcs11Pin, pkcs11UserType, pkcs11ReadWrite);
+
 		/*
 		 * SKI to key cache for getKey(ski) function.
 		 */
 		this._skiToKey = {};
+		this.keyToSki = new Map();
 	}
 
 	/** ********************************************************************************
@@ -794,70 +795,78 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 **********************************************************************************/
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#generateKey}
-	 * Returns an instance of {@link module.api.Key} representing the private key,
-	 * which also encapsulates the public key. By default the generated key (keypar)
-	 * is (are) ephemeral unless opts.ephemeral is set to false, in which case the
-	 * key (keypair) will be saved across PKCS11 sessions by the HSM hardware.
-	 *
+	 * This is an implementation of {@link module:api.CryptoSuite#generateEphemeralKey}
 	 * @returns {module:api.Key} Promise of an instance of {@link module:PKCS11_ECDSA_KEY}
 	 * containing the private key and the public key.
 	 */
-	generateKey(opts) {
+	generateEphemeralKey(opts) {
 		if (opts !== null && (typeof opts.algorithm === 'undefined' || opts.algorithm === null)) {
 			opts.algorithm = 'ECDSA';
 		}
 		if (typeof opts === 'undefined' || opts === null ||
 			typeof opts.algorithm === 'undefined' || opts.algorithm === null ||
 			typeof opts.algorithm !== 'string') {
-			return Promise.reject(Error(__func() + 'opts.algorithm must be String type'));
+			throw new Error(__func() + ' opts.algorithm must be String type');
 		}
 
-		const token = !opts.ephemeral;
-		const self = this;
+		switch (opts.algorithm.toUpperCase()) {
+			case 'AES': {
+				if (this._keySize !== 256) {
+					throw new Error(__func() + ' AES key size must be 256 (bits)');
+				}
+
+				const attributes = this._pkcs11GenerateKey(this._pkcs11, this._pkcs11Session, !!opts.persist);
+				// generateKey will need to know the ski, so set in a map here for use later
+				this.keyToSki.set(key, attributes.ski);
+				const key = new aesKey(attributes, this._keySize);
+				return key;
+			}
+			case 'ECDSA': {
+				const attributes = this._pkcs11GenerateECKeyPair(this._pkcs11, this._pkcs11Session, !!opts.persist);
+				// generateKey will need to know the ski, so set in a map here for use later
+				this.keyToSki.set(key, attributes.ski);
+				const key = new ecdsaKey(attributes, this._keySize);
+				key._cryptoSuite = this;
+				return key;
+			}
+			default:
+				throw new Error(__func() + ' must specify AES or ECDSA key algorithm');
+		}
+	}
+
+	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#generateKey}
+	 * Returns an instance of {@link module.api.Key} representing the private key,
+	 * which also encapsulates the public key. The key (keypair) will be saved
+	 * across PKCS11 sessions by the HSM hardware. Use generateEphemeralKey to
+	 * retrieve an ephmeral key.
+	 *
+	 * @returns {module:api.Key} Promise of an instance of {@link module:PKCS11_ECDSA_KEY}
+	 * containing the private key and the public key.
+	 */
+	generateKey(opts) {
+
+		// Use internal method to get key from passed options (if any)
+		if (!opts) {
+			opts = {};
+		}
+		opts.persist = true;
+		const key = this.generateEphemeralKey(opts);
+
+		// Set array
+		const ski = this.keyToSki.get(key);
 
 		switch (opts.algorithm.toUpperCase()) {
 			case 'AES':
-				return new Promise(((resolve, reject) => {
-					try {
-						if (self._keySize !== 256) {
-							throw new Error(
-								__func() + 'AES key size must be 256 (bits)');
-						}
-
-						const attr = self._pkcs11GenerateKey(
-							self._pkcs11, self._pkcs11Session, token);
-						/*
-						 * Put key in the session cache and return
-						 * promise of the key.
-						 */
-						const key = new aesKey(attr, self._keySize);
-						self._skiToKey[attr.ski.toString('hex')] = key;
-						return resolve(key);
-					} catch (e) {
-						return reject(e);
-					}
-				}));
+				this._skiToKey[ski.toString('hex')] = key;
+				return key;
 			case 'ECDSA':
-				return new Promise(((resolve, reject) => {
-					try {
-						const attr = self._pkcs11GenerateECKeyPair(
-							self._pkcs11, self._pkcs11Session, token);
-						/*
-						 * Put key in the session cache and return
-						 * promise of the key.
-						 */
-						const key = new ecdsaKey(attr, self._keySize);
-						self._skiToKey[attr.ski.toString('hex')] = key;
-						key._cryptoSuite = self;
-						return resolve(key);
-					} catch (e) {
-						return reject(e);
-					}
-				}));
+				delete key._cryptoSuite;
+				this._skiToKey[ski.toString('hex')] = key;
+				key._cryptoSuite = this;
+				return key;
 			default:
-				return Promise.reject(Error(
-					__func() + 'must specify AES or ECDSA key algorithm'));
+				throw new Error(__func() + ' must specify AES or ECDSA key algorithm');
 		}
 	}
 
@@ -867,7 +876,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 */
 	getKey(ski) {
 		if (!ski || !(ski instanceof Buffer || typeof ski === 'string')) {
-			return Promise.reject(Error(__func() + 'ski must be Buffer|string type'));
+			return Promise.reject(Error(__func() + ' ski must be Buffer|string type'));
 		}
 		/*
 		 * Found the ski in the session key cache.
@@ -893,7 +902,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 				let key;
 				if (typeof handle.secretKey !== 'undefined') {
 					if (self._keySize !== 256) {
-						throw new Error(__func() + 'key size mismatch, class: ' + self._keySize + ', ski: 256');
+						throw new Error(__func() + ' key size mismatch, class: ' + self._keySize + ', ski: 256');
 					}
 					key = new aesKey({ski, key: handle.secretKey}, self._keySize);
 				} else { /* ECDSA key. */
@@ -906,7 +915,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 							toUpperCase()];
 					if (keySize === undefined ||
 						keySize !== self._keySize) {
-						throw new Error(__func() + 'key size mismatch, class: ' + self._keySize + ', ski: ' + keySize);
+						throw new Error(__func() + ' key size mismatch, class: ' + self._keySize + ', ski: ' + keySize);
 					}
 					key = new ecdsaKey({ski, ecpt: attr.ecpt, pub: handle.publicKey, priv: handle.privateKey},
 						self._keySize);
@@ -931,11 +940,11 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	sign(key, digest) {
 		if (typeof key === 'undefined' || key === null ||
 			!(key instanceof ecdsaKey) || !key.isPrivate()) {
-			throw new Error(__func() + 'key must be PKCS11_ECDSA_KEY type private key');
+			throw new Error(__func() + ' key must be PKCS11_ECDSA_KEY type private key');
 		}
 		if (typeof digest === 'undefined' || digest === null ||
 			!(digest instanceof Buffer)) {
-			throw new Error(__func() + 'digest must be Buffer type');
+			throw new Error(__func() + ' digest must be Buffer type');
 		}
 
 		return this._pkcs11Sign(this._pkcs11, this._pkcs11Session, key, digest);
@@ -948,15 +957,15 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	verify(key, signature, digest) {
 		if (typeof key === 'undefined' || key === null ||
 			!(key instanceof ecdsaKey || key instanceof ECDSAKey)) {
-			throw new Error(__func() + 'key must be PKCS11_ECDSA_KEY type or ECDSA_KEY type');
+			throw new Error(__func() + ' key must be PKCS11_ECDSA_KEY type or ECDSA_KEY type');
 		}
 		if (typeof signature === 'undefined' || signature === null ||
 			!(signature instanceof Buffer)) {
-			throw new Error(__func() + 'signature must be Buffer type');
+			throw new Error(__func() + ' signature must be Buffer type');
 		}
 		if (typeof digest === 'undefined' || digest === null ||
 			!(digest instanceof Buffer)) {
-			throw new Error(__func() + 'digest must be Buffer type');
+			throw new Error(__func() + ' digest must be Buffer type');
 		}
 
 		if (key instanceof ECDSAKey) {
@@ -976,11 +985,11 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 */
 	encrypt(key, plainText, opts) {
 		if (typeof key === 'undefined' || key === null || !(key instanceof aesKey)) {
-			throw new Error(__func() + 'key must be PKCS11_AES_KEY type');
+			throw new Error(__func() + ' key must be PKCS11_AES_KEY type');
 		}
 		if (typeof plainText === 'undefined' || plainText === null ||
 			!(plainText instanceof Buffer)) {
-			throw new Error(__func() + 'plainText must be Buffer type');
+			throw new Error(__func() + ' plainText must be Buffer type');
 		}
 
 		return this._pkcs11Encrypt(this._pkcs11, this._pkcs11Session, key, plainText);
@@ -993,11 +1002,11 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 */
 	decrypt(key, cipherText, opts) {
 		if (typeof key === 'undefined' || key === null || !(key instanceof aesKey)) {
-			throw new Error(__func() + 'key must be PKCS11_AES_KEY type');
+			throw new Error(__func() + ' key must be PKCS11_AES_KEY type');
 		}
 		if (typeof cipherText === 'undefined' || cipherText === null ||
 			!(cipherText instanceof Buffer)) {
-			throw new Error(__func() + 'cipherText must be Buffer type');
+			throw new Error(__func() + ' cipherText must be Buffer type');
 		}
 
 		return this._pkcs11Decrypt(this._pkcs11, this._pkcs11Session, key, cipherText);
@@ -1007,57 +1016,63 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 * This is an implementation of {@link module:api.CryptoSuite#deriveKey}
 	 */
 	deriveKey(key, opts) {
-		throw new Error(__func() + 'not yet supported');
+		throw new Error(__func() + ' not yet supported');
+	}
+
+	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#createKeyFromRaw}
+	 */
+	createKeyFromRaw(pem, opts) {
+		const optsLocal = opts ? opts : {};
+		const token = !optsLocal.ephemeral;
+		switch (optsLocal.algorithm.toUpperCase()) {
+			case 'X509CERTIFICATE':
+				return new ECDSAKey(KEYUTIL.getKey(pem));
+			case 'AES':
+				if (pem.length !== (256 / 8)) {
+					throw new Error(__func() + 'AES key size must be 256 (bits)');
+				} else {
+					const attributes = this._pkcs11CreateObject(this._pkcs11, this._pkcs11Session, pem, token);
+					const key = new aesKey(attributes, pem.length * 8);
+					this.keyToSki.set(key, attributes.ski);
+					return key;
+				}
+			case 'ECDSA':
+				throw new Error(__func() + ' ECDSA key not yet supported');
+			default:
+				throw new Error(__func() + ' only AES or ECDSA key supported');
+		}
 	}
 
 	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
 	 */
-	importKey(pem, opts) {
+	async importKey(pem, opts) {
 		const optsLocal = opts ? opts : {};
 
 		const algorithm = optsLocal.algorithm ? optsLocal.algorithm : 'X509Certificate';
 
 		if (!pem || !(pem instanceof Buffer || typeof pem === 'string')) {
-			return Promise.reject(Error(__func() + 'pem must be Buffer type or String type'));
+			throw new Error(__func() + ' pem must be Buffer type or String type');
 		}
 		if (typeof algorithm !== 'string') {
-			return Promise.reject(Error(__func() + 'opts.algorithm must be String type'));
+			throw new Error(__func() + ' opts.algorithm must be String type');
 		}
 
-		const token = !optsLocal.ephemeral;
-		const self = this;
+		// Create key
+		const key = this.createKeyFromRaw(pem, optsLocal);
 
 		switch (algorithm.toUpperCase()) {
 			case 'X509CERTIFICATE':
-				if (token) {
-					return Promise.resolve(new ECDSAKey(KEYUTIL.getKey(pem)));
-				} else {
-					return new ECDSAKey(KEYUTIL.getKey(pem));
-				}
-			case 'AES':
-				return new Promise(((resolve, reject) => {
-					try {
-						if (pem.length !== (256 / 8)) {
-							throw new Error(__func() + 'AES key size must be 256 (bits)');
-						}
-
-						const attr = self._pkcs11CreateObject(self._pkcs11, self._pkcs11Session, pem, token);
-						/*
-									 * Put key in the session cache and return
-									 * promise of the key.
-									 */
-						const key = new aesKey(attr, pem.length * 8);
-						self._skiToKey[attr.ski.toString('hex')] = key;
-						return resolve(key);
-					} catch (e) {
-						reject(e);
-					}
-				}));
-			case 'ECDSA':
-				return Promise.reject(Error(__func() + 'ECDSA key not yet supported'));
+				return key;
+			case 'AES': {
+				// Store in array cache
+				const ski = this.keyToSki.get(key);
+				this._skiToKey[ski.toString('hex')] = key;
+				return key;
+			}
 			default:
-				return Promise.reject(Error(__func() + 'only AES or ECDSA key supported'));
+				throw new Error(__func() + ' only X509 or AES key supported');
 		}
 	}
 

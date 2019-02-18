@@ -22,12 +22,12 @@ const path = require('path');
 const testUtil = require('../unit/util.js');
 
 
-test('\n\n***** clean up the connection profile testing stores  *****\n\n', (t) => {
+test('\n\n***** clean up the connection profile testing stores  *****\n\n', async (t) => {
 /*
 	* The following is just testing housekeeping... cleanup from the last time
 	* this test was run, a real application would not do this.
 	*/
-	const client = Client.loadFromConfig('test/fixtures/profiles/org1.yaml');
+	const client = await Client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 	let client_config = client.getClientConfig();
 
 	let store_path = client_config.credentialStore.path;
@@ -38,7 +38,7 @@ test('\n\n***** clean up the connection profile testing stores  *****\n\n', (t) 
 	logger.debug('removing org1 cryptoStore %s', crypto_path);
 	fsx.removeSync(crypto_path);
 
-	client.loadFromConfig('test/fixtures/profiles/org2.yaml');
+	await client.loadFromConfig('test/fixtures/profiles/org2.yaml');
 	client_config = client.getClientConfig();
 
 	store_path = client_config.credentialStore.path;
@@ -62,8 +62,8 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 	//  this connection profile does not have the client information, we will
 	//  load that later so that we can switch this client to be in a different
 	//  organization.
-	const client_org1 = Client.loadFromConfig('test/fixtures/profiles/network2.yaml');
-	const client_org2 = Client.loadFromConfig('test/fixtures/profiles/network2.yaml');
+	const client_org1 = await Client.loadFromConfig('test/fixtures/profiles/network2.yaml');
+	const client_org2 = await Client.loadFromConfig('test/fixtures/profiles/network2.yaml');
 	t.pass('Successfully loaded a connection profile');
 
 	let config = null;
@@ -77,8 +77,8 @@ test('\n\n***** use the connection profile file  *****\n\n', async (t) => {
 	// Load the client information for an organization.
 	// The file only has the client section.
 	// A real application might do this when a new user logs in.
-	client_org1.loadFromConfig('test/fixtures/profiles/org1.yaml');
-	client_org2.loadFromConfig('test/fixtures/profiles/org2.yaml');
+	await client_org1.loadFromConfig('test/fixtures/profiles/org1.yaml');
+	await client_org2.loadFromConfig('test/fixtures/profiles/org2.yaml');
 
 	try {
 		// tell this client instance where the state and key stores are located
@@ -672,8 +672,8 @@ test('\n\n***** Enroll user and set user context using a specified caName *****\
 
 		// Build a 'Client' instance that knows the network
 		// then load org1.yaml to the same instance
-		const client_org1 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
-		client_org1.loadFromConfig('test/fixtures/profiles/org1.yaml');
+		const client_org1 = await Client.loadFromConfig('test/fixtures/profiles/network.yaml');
+		await client_org1.loadFromConfig('test/fixtures/profiles/org1.yaml');
 		t.pass('Successfully loaded client section of network config');
 
 		// tell this client instance where the state and key stores are located
@@ -736,8 +736,8 @@ test('\n\n***** Enroll user and set user context using a bad caName *****\n\n', 
 
 		// Build a 'Client' instance that knows the network
 		// then load org1.yaml to the same instance
-		const client_org1 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
-		client_org1.loadFromConfig('test/fixtures/profiles/org1.yaml');
+		const client_org1 = await Client.loadFromConfig('test/fixtures/profiles/network.yaml');
+		await client_org1.loadFromConfig('test/fixtures/profiles/org1.yaml');
 		t.pass('Successfully loaded client section of network config');
 
 		// tell this client instance where the state and key stores are located

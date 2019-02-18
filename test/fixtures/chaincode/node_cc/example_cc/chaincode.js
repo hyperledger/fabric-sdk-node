@@ -67,6 +67,7 @@ const Chaincode = class {
 		const fcn = ret.fcn;
 		const args = ret.params;
 
+		logger.info('-stub.getFunctionAndParameters(): ', JSON.stringify(ret));
 		try {
 			if (fcn === 'delete') {
 				return this.delete(stub, args);
