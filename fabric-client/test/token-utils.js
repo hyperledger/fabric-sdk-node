@@ -62,7 +62,7 @@ describe('token-utils', () => {
 			it('should get error when no txId is passed', () => {
 				(() => {
 					request.txId = undefined;
-					TokenUtils.checkTokenRequest(request, 'issue');
+					TokenUtils.checkTokenRequest(request, 'issue', true);
 				}).should.throw('Missing required "txId" in request on issue call');
 			});
 
@@ -70,7 +70,7 @@ describe('token-utils', () => {
 
 		describe('#checkTokenRequest for issue', () => {
 			it('should return without any error', () => {
-				TokenUtils.checkTokenRequest(request, 'issue');
+				TokenUtils.checkTokenRequest(request, 'issue', true);
 			});
 
 			it('should get error when no params in request', () => {
@@ -105,13 +105,13 @@ describe('token-utils', () => {
 				(() => {
 					request.commandName = 'badname';
 					TokenUtils.checkTokenRequest(request, 'issue');
-				}).should.throw('Wrong "commandName" in request on issue call: badname');
+				}).should.throw('Invalid "commandName" in request on issue call: badname');
 			});
 		});
 
 		describe('#checkTokenRequest for transfer', () => {
 			it('should return without any error', () => {
-				TokenUtils.checkTokenRequest(request, 'transfer');
+				TokenUtils.checkTokenRequest(request, 'transfer', true);
 			});
 
 			it('should get error when no tokenIds in request', () => {
@@ -146,13 +146,13 @@ describe('token-utils', () => {
 				(() => {
 					request.commandName = 'badname';
 					TokenUtils.checkTokenRequest(request, 'transfer');
-				}).should.throw('Wrong "commandName" in request on transfer call: badname');
+				}).should.throw('Invalid "commandName" in request on transfer call: badname');
 			});
 		});
 
 		describe('#checkTokenRequest for redeem', () => {
 			it('should return without any error', () => {
-				TokenUtils.checkTokenRequest(request, 'redeem');
+				TokenUtils.checkTokenRequest(request, 'redeem', true);
 			});
 
 			it('should get error when no tokenIds in request', () => {
@@ -180,7 +180,58 @@ describe('token-utils', () => {
 				(() => {
 					request.commandName = 'badname';
 					TokenUtils.checkTokenRequest(request, 'redeem');
-				}).should.throw('Wrong "commandName" in request on redeem call: badname');
+				}).should.throw('Invalid "commandName" in request on redeem call: badname');
+			});
+		});
+
+		describe('#checkTokenRequest for generateUnsignedTokenCommand', () => {
+			it('should return without any error for issue request', () => {
+				request = {commandName: 'issue', params: [param]};
+				TokenUtils.checkTokenRequest(request, 'generateUnsignedTokenCommand', false);
+			});
+
+			it('should return without any error for transfer request', () => {
+				request = {commandName: 'transfer', tokenIds: tokenIds, params: [param]};
+				TokenUtils.checkTokenRequest(request, 'generateUnsignedTokenCommand', false);
+			});
+
+			it('should return without any error for redeem request', () => {
+				request = {commandName: 'redeem', tokenIds: tokenIds, params: [param]};
+				TokenUtils.checkTokenRequest(request, 'generateUnsignedTokenCommand', false);
+			});
+
+			it('should return without any error for list request', () => {
+				request = {commandName: 'list'};
+				TokenUtils.checkTokenRequest(request, 'generateUnsignedTokenCommand', false);
+			});
+
+			it('should get error when wrong commandName in request', () => {
+				(() => {
+					request = {commandName: 'badName', params: [param]};
+					TokenUtils.checkTokenRequest(request, 'generateUnsignedTokenCommand', false);
+				}).should.throw('Invalid "commandName" in request on generateUnsignedTokenCommand call: badName');
+			});
+
+			it('should get error when no commandName in request', () => {
+				(() => {
+					request = {params: [param]};
+					TokenUtils.checkTokenRequest(request, 'generateUnsignedTokenCommand', false);
+				}).should.throw('Missing "commandName" in request on generateUnsignedTokenCommand call');
+			});
+
+			it('should get error when no params in request', () => {
+				(() => {
+					request = {commandName: 'issue'};
+					TokenUtils.checkTokenRequest(request, 'generateUnsignedTokenCommand', false);
+				}).should.throw('Missing required "params" in request on generateUnsignedTokenCommand call');
+			});
+
+			it('should get error when parameter has no quantity', () => {
+				(() => {
+					request = {commandName: 'issue', params: [param]};
+					param.quantity = undefined;
+					TokenUtils.checkTokenRequest(request, 'generateUnsignedTokenCommand');
+				}).should.throw('Missing required "quantity" in request on generateUnsignedTokenCommand call');
 			});
 		});
 	});

@@ -20,6 +20,8 @@ const utils = require('./utils.js');
 const logger = utils.getLogger('token-utils.js');
 const fabprotos = require('fabric-protos');
 
+const valid_command_names = ['issue', 'transfer', 'redeem', 'list'];
+
 /*
  * This function will build a token command for issue request
  */
@@ -181,21 +183,31 @@ module.exports.buildTokenCommandHeader = (creator, channelId, nonce, tlsCertHash
 };
 
 /*
- * Checks token request and throw an error if any required parameter is missing.
+ * Checks token request and throw an error if any required parameter is missing or invalid.
  */
-module.exports.checkTokenRequest = (request, command_name) => {
+module.exports.checkTokenRequest = (request, command_name, txIdRequired) => {
 	logger.debug('checkTokenRequest - start');
 
 	if (!request) {
 		logger.error('Missing required "request" parameter on %s call', command_name);
 		throw new Error(util.format('Missing required "request" parameter on %s call', command_name));
 	}
-	if (!request.txId) {
+	if (txIdRequired && !request.txId) {
 		logger.error('Missing required "txId" in request on %s call', command_name);
 		throw new Error(util.format('Missing required "txId" in request on %s call', command_name));
 	}
-	if (request.commandName !== undefined && request.commandName !== command_name) {
-		throw new Error(util.format('Wrong "commandName" in request on %s call: %s', command_name, request.commandName));
+	if (request.commandName !== undefined && !valid_command_names.includes(request.commandName)) {
+		throw new Error(util.format('Invalid "commandName" in request on %s call: %s', command_name, request.commandName));
+	}
+	if (!request.commandName && !valid_command_names.includes(command_name)) {
+		throw new Error(util.format('Missing "commandName" in request on %s call', command_name));
+	}
+	if (valid_command_names.includes(command_name) && request.commandName !== undefined && request.commandName !== command_name) {
+		throw new Error(util.format('Invalid "commandName" in request on %s call: %s', command_name, request.commandName));
+	}
+
+	if (request.commandName === 'list' || command_name === 'list') {
+		return;
 	}
 
 	// check parameters for non-list commands
@@ -230,3 +242,17 @@ module.exports.checkTokenRequest = (request, command_name) => {
 		}
 	});
 };
+
+/**
+ * convert to protos.token.SignedCommand
+ * @param signature
+ * @param command_bytes
+ */
+exports.toSignedCommand = (signature, command_bytes) => ({signature: signature, command: command_bytes});
+
+/**
+ * convert to protos.common.Envelope
+ * @param signature
+ * @param tokentx_bytes
+ */
+exports.toEnvelope = (signature, tokentx_bytes) => ({signature: signature, payload: tokentx_bytes});
