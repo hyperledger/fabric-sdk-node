@@ -28,6 +28,7 @@ const ChannelRewire = rewire('fabric-client/lib/Channel');
 const ChannelEventHub = require('fabric-client/lib/ChannelEventHub');
 const Chaincode = require('fabric-client/lib/Chaincode');
 const Client = require('fabric-client/lib/Client');
+const Constants = require('fabric-client/lib/Constants');
 const {Identity, SigningIdentity} = require('fabric-common');
 const MSP = require('fabric-client/lib/msp/msp');
 const MSPManager = require('fabric-client/lib/msp/msp-manager');
@@ -2820,6 +2821,499 @@ describe('Channel', () => {
 	describe('#loadConfigGroup', () => {});
 
 	describe('#loadConfigValue', () => {});
+
+	describe('#sendTokenCommand(static)', () => {
+		let sandbox;
+		let revert;
+		let _buildSignedTokenCommandStub;
+		let sendTokenCommandToPeerStub;
+
+		const channelId = 'mychannel';
+		const timeout = 100;
+		const mockRequest = {tokenCommand: 'x', txId: 'y'};
+		const mockSignedCommand = new fabprotos.token.SignedCommand();
+		const mockCommandResponse = new fabprotos.token.CommandResponse();
+		const clientStub = sinon.createStubInstance(Client);
+		const peerStub = sinon.createStubInstance(Peer);
+		const targets = [peerStub];
+
+		beforeEach(() => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+			debugStub = sinon.stub(FakeLogger, 'debug');
+
+			revert = [];
+			sandbox = sinon.createSandbox();
+
+			_buildSignedTokenCommandStub = sandbox.stub();
+			sendTokenCommandToPeerStub = sandbox.stub();
+
+			_buildSignedTokenCommandStub.returns(mockSignedCommand);
+			sendTokenCommandToPeerStub.returns(mockCommandResponse);
+
+			revert.push(ChannelRewire.__set__('Channel._buildSignedTokenCommand', _buildSignedTokenCommandStub));
+			revert.push(ChannelRewire.__set__('token_utils.sendTokenCommandToPeer', sendTokenCommandToPeerStub));
+			revert.push(ChannelRewire.__set__('logger', FakeLogger));
+		});
+
+		afterEach(() => {
+			if (revert.length) {
+				revert.forEach(Function.prototype.call, Function.prototype.call);
+			}
+			sandbox.restore();
+		});
+
+		it('should return a command response', async () => {
+			const response = await ChannelRewire.sendTokenCommand(mockRequest, [peerStub], channelId, clientStub, timeout);
+			expect(response).to.deep.equal(mockCommandResponse);
+
+			sinon.assert.calledOnce(_buildSignedTokenCommandStub);
+			sinon.assert.calledOnce(sendTokenCommandToPeerStub);
+
+			sinon.assert.calledWith(_buildSignedTokenCommandStub, mockRequest, channelId, clientStub);
+			sinon.assert.calledWith(sendTokenCommandToPeerStub, targets, mockSignedCommand, timeout);
+
+			sinon.assert.calledWith(debugStub, '%s - start');
+		});
+
+		it('should throw an error if _buildSignedTokenCommand fails', async () => {
+			try {
+				const fakeError = new Error('forced build command error');
+				_buildSignedTokenCommandStub.throws(fakeError);
+				await ChannelRewire.sendTokenCommand(mockRequest, [peerStub], channelId, clientStub, timeout);
+				should.fail();
+			} catch (err) {
+				sinon.assert.calledOnce(_buildSignedTokenCommandStub);
+				sinon.assert.notCalled(sendTokenCommandToPeerStub);
+				err.message.should.equal('forced build command error');
+			}
+		});
+
+		it('should throw an error if sendTokenCommandToPeer fails',  async () => {
+			try {
+				const fakeError = new Error('forced send command error');
+				sendTokenCommandToPeerStub.throws(fakeError);
+				await ChannelRewire.sendTokenCommand(mockRequest, [peerStub], channelId, clientStub, timeout);
+				should.fail();
+			} catch (err) {
+				sinon.assert.calledOnce(_buildSignedTokenCommandStub);
+				sinon.assert.calledOnce(sendTokenCommandToPeerStub);
+				err.message.should.equal('forced send command error');
+			}
+		});
+	});
+
+	describe('#sendTokenCommand', () => {
+		let sandbox;
+		let revert;
+		let mockRequest;
+		let _getTargetsStub;
+		let staticSendTokenCommandStub;
+
+		const channelId = 'mychannel';
+		const timeout = 100;
+		const mockCommandResponse = new fabprotos.token.CommandResponse();
+		const mockTargets = [sinon.createStubInstance(Peer)];
+		const clientStub = sinon.createStubInstance(Client);
+
+		beforeEach(() => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+			debugStub = sinon.stub(FakeLogger, 'debug');
+
+			revert = [];
+			sandbox = sinon.createSandbox();
+
+			staticSendTokenCommandStub = sandbox.stub();
+			staticSendTokenCommandStub.returns(mockCommandResponse);
+
+			// create channel instance
+			channel = new ChannelRewire(channelId, clientStub);
+
+			revert.push(ChannelRewire.__set__('Channel.sendTokenCommand', staticSendTokenCommandStub));
+			revert.push(ChannelRewire.__set__('logger', FakeLogger));
+
+			mockRequest = {tokenCommand: 'a', txId: 'b', targets: mockTargets};
+		});
+
+		afterEach(() => {
+			if (revert.length) {
+				revert.forEach(Function.prototype.call, Function.prototype.call);
+			}
+			sandbox.restore();
+		});
+
+		it('should return a command response when request has targets', async () => {
+			const response = await channel.sendTokenCommand(mockRequest, timeout);
+			expect(response).to.deep.equal(mockCommandResponse);
+
+			sinon.assert.calledOnce(staticSendTokenCommandStub);
+
+			sinon.assert.calledWith(staticSendTokenCommandStub, mockRequest, mockTargets, channelId, clientStub, timeout);
+			sinon.assert.calledWith(debugStub, '%s - start');
+		});
+
+		it('should return a command response when request has no targets', async () => {
+			// undefine mockRequest.targets and create _getTargetsStub
+			mockRequest.targets = undefined;
+			_getTargetsStub = sinon.stub(channel, '_getTargets');
+			_getTargetsStub.returns(mockTargets);
+
+			const response = await channel.sendTokenCommand(mockRequest, timeout);
+			expect(response).to.deep.equal(mockCommandResponse);
+
+			sinon.assert.calledOnce(_getTargetsStub);
+			sinon.assert.calledOnce(staticSendTokenCommandStub);
+
+			sinon.assert.calledWith(_getTargetsStub, undefined, Constants.NetworkConfig.PROVER_PEER_ROLE);
+			sinon.assert.calledWith(staticSendTokenCommandStub, mockRequest, mockTargets, channelId, clientStub, timeout);
+			sinon.assert.calledWith(debugStub, '%s - start');
+		});
+
+		it('should throw an error if request is mssing', async () => {
+			try {
+				mockRequest.tokenTransaction = undefined;
+				await channel.sendTokenCommand();
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "request" parameter on the sendTokenCommand call');
+			}
+		});
+
+		it('should throw an error if request.txId is mssing', async () => {
+			try {
+				mockRequest.txId = undefined;
+				await channel.sendTokenCommand(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "txId" in request on the sendTokenCommand call');
+			}
+		});
+
+		it('should throw an error if request.tokenCommand is mssing', async () => {
+			try {
+				mockRequest.tokenCommand = undefined;
+				await channel.sendTokenCommand(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "tokenCommand" in request on the sendTokenCommand call');
+			}
+		});
+
+		it('should throw an error if getTargets fails', async () => {
+			try {
+				const fakeError = new Error('forced get targets error');
+				sinon.stub(channel, '_getTargets').throws(fakeError);
+				await channel.sendTokenCommand(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced get targets error');
+			}
+		});
+
+		it('should throw an error if staticSendTokenCommandStub fails', async () => {
+			try {
+				const fakeError = new Error('forced static send command error');
+				staticSendTokenCommandStub.throws(fakeError);
+				await channel.sendTokenCommand(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced static send command error');
+			}
+		});
+	});
+
+	describe('#sendTokenTransaction', () => {
+		let sandbox;
+		let revert;
+		let clientStub;
+		let ordererStub;
+		let txIdStub;
+		let _buildTokenTxEnvelopeStub;
+		let mockRequest;
+
+		const channelId = 'mychannel';
+		const timeout = 100;
+		const isAdmin = false;
+		const mockEnvelope = new fabprotos.common.Envelope();
+		const mockResponse = {status: 'SUCCESS'};
+		const signingIdentityStub = sinon.createStubInstance(SigningIdentity);
+
+		beforeEach(() => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+			debugStub = sinon.stub(FakeLogger, 'debug');
+
+			revert = [];
+			sandbox = sinon.createSandbox();
+
+			// prepare stubs
+			_buildTokenTxEnvelopeStub = sandbox.stub();
+			_buildTokenTxEnvelopeStub.returns(mockEnvelope);
+			revert.push(ChannelRewire.__set__('Channel._buildTokenTxEnvelope', _buildTokenTxEnvelopeStub));
+			revert.push(ChannelRewire.__set__('logger', FakeLogger));
+
+			ordererStub = sinon.createStubInstance(Orderer);
+			ordererStub.sendBroadcast.returns(mockResponse);
+
+			clientStub = sinon.createStubInstance(Client);
+			clientStub._getSigningIdentity.returns(signingIdentityStub);
+			clientStub.getTargetOrderer.returns(ordererStub);
+
+			// create channel instance
+			channel = new ChannelRewire(channelId, clientStub);
+
+			// prepare mockRequest
+			txIdStub = sinon.createStubInstance(TransactionID);
+			txIdStub.isAdmin.returns(isAdmin);
+			mockRequest = {tokenTransaction: 'x', txId: txIdStub};
+		});
+
+		afterEach(() => {
+			if (revert.length) {
+				revert.forEach(Function.prototype.call, Function.prototype.call);
+			}
+			sandbox.restore();
+		});
+
+		it('should return a response with SUCCESS status', async () => {
+			sinon.spy(channel._clientContext._getSigningIdentity);
+			sinon.spy(channel._clientContext.getTargetOrderer);
+			sinon.spy(ordererStub.sendBroadcast);
+
+			const response = await channel.sendTokenTransaction(mockRequest, timeout);
+			expect(response.status).to.deep.equal('SUCCESS');
+
+			sinon.assert.calledOnce(_buildTokenTxEnvelopeStub);
+			sinon.assert.calledWith(_buildTokenTxEnvelopeStub, mockRequest, channelId, clientStub, signingIdentityStub, isAdmin);
+			sinon.assert.calledWith(channel._clientContext._getSigningIdentity, isAdmin);
+			sinon.assert.calledWith(ordererStub.sendBroadcast, mockEnvelope, timeout);
+			sinon.assert.calledWith(debugStub, '%s - start');
+		});
+
+		it('should throw an error if request is mssing', async () => {
+			try {
+				mockRequest.tokenTransaction = undefined;
+				await channel.sendTokenTransaction();
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "request" parameter on the sendTokenTransaction call');
+			}
+		});
+
+		it('should throw an error if request.txId is mssing', async () => {
+			try {
+				mockRequest.txId = undefined;
+				await channel.sendTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "txId" in request on the sendTokenTransaction call');
+			}
+		});
+
+		it('should throw an error if request.tokenTransaction is mssing', async () => {
+			try {
+				mockRequest.tokenTransaction = undefined;
+				await channel.sendTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "tokenTransaction" in request on the sendTokenTransaction call');
+			}
+		});
+
+		it('should throw an error if _buildTokenTxEnvelope throws an error', async () => {
+			try {
+				const fakeError = new Error('forced build envelope error');
+				_buildTokenTxEnvelopeStub.throws(fakeError);
+				await channel.sendTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced build envelope error');
+			}
+		});
+
+		it('should throw an error if client getTargetOrderer throws an error', async () => {
+			try {
+				const fakeError = new Error('forced get orderer error');
+				clientStub.getTargetOrderer.throws(fakeError);
+				await channel.sendTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced get orderer error');
+			}
+		});
+
+		it('should throw an error if order sendBroadcast throws an error', async () => {
+			try {
+				const fakeError = new Error('forced send broadcast error');
+				ordererStub.sendBroadcast.throws(fakeError);
+				await channel.sendTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced send broadcast error');
+			}
+		});
+	});
+
+	describe('#_buildSignedTokenCommand', () => {
+		let clientStub;
+		let signingIdentityStub;
+		let txIdStub;
+		let request;
+		let command;
+
+		const channelId = 'mychannel';
+		const signature = Buffer.from('command-signature');
+		const serializedCreator = Buffer.from('serialized-creator');
+		const nonce = Buffer.from('txid-nonce');
+		const clientCertHash = Buffer.from('');
+
+		beforeEach(() => {
+			// create stubs to return mock data
+			signingIdentityStub = sinon.createStubInstance(SigningIdentity);
+			signingIdentityStub.sign.returns(signature);
+			signingIdentityStub.serialize.returns(serializedCreator);
+
+			clientStub = sinon.createStubInstance(Client);
+			clientStub._getSigningIdentity.returns(signingIdentityStub);
+			clientStub.getClientCertHash.returns(clientCertHash);
+
+			txIdStub = sinon.createStubInstance(TransactionID);
+			txIdStub.getNonce.returns(nonce);
+
+			// create token command request
+			command = new fabprotos.token.Command();
+			const importRequest = new fabprotos.token.ImportRequest();
+			command.set('import_request', importRequest);
+			request = {tokenCommand: command, txId: txIdStub};
+		});
+
+		it('should return a signed command', () => {
+			const signedCommand = Channel._buildSignedTokenCommand(request, channelId, clientStub);
+
+			// verify signature
+			expect(signedCommand.signature.toBuffer()).to.deep.equal(signature);
+
+			// decode it first so that we can get timestamp since it is dynamic value
+			const decodedCommand = fabprotos.token.Command.decode(signedCommand.command);
+
+			// construct expected header and copy timestamp from decoded command
+			const expectedHeader = new fabprotos.token.Header();
+			expectedHeader.setChannelId(channelId);
+			expectedHeader.setCreator(serializedCreator);
+			expectedHeader.setNonce(nonce);
+			expectedHeader.setTlsCertHash(clientCertHash);
+			expectedHeader.timestamp = decodedCommand.header.timestamp;
+
+			// verify command (including header)
+			command.header = expectedHeader;
+			expect(decodedCommand.toBuffer()).to.deep.equal(command.toBuffer());
+		});
+
+		it('should throw an error if signingIndentity fails to sign', () => {
+			(() => {
+				const fakeError = new Error('forced sign error');
+				signingIdentityStub.sign.throws(fakeError);
+				Channel._buildSignedTokenCommand(request, channelId, clientStub);
+			}).should.throw(Error, 'forced sign error');
+		});
+
+		it('should throw an error if signingIndentity fails to serialize', () => {
+			(() => {
+				const fakeError = new Error('forced serialize error');
+				signingIdentityStub.serialize.throws(fakeError);
+				Channel._buildSignedTokenCommand(request, channelId, clientStub);
+			}).should.throw(Error, 'forced serialize error');
+		});
+	});
+
+	describe('#_buildTokenTxEnvelope', () => {
+		let clientStub;
+		let signingIdentityStub;
+		let txIdStub;
+		let request;
+		let tokenTx;
+
+		const channelId = 'mychannel';
+		const signature = Buffer.from('command-signature');
+		const serializedCreator = Buffer.from('serialized-creator');
+		const nonce = Buffer.from('txid-nonce');
+		const clientCertHash = Buffer.from('');
+
+		beforeEach(() => {
+			// create stubs to return mock data
+			signingIdentityStub = sinon.createStubInstance(SigningIdentity);
+			signingIdentityStub.sign.returns(signature);
+			signingIdentityStub.serialize.returns(serializedCreator);
+
+			clientStub = sinon.createStubInstance(Client);
+			clientStub._getSigningIdentity.returns(signingIdentityStub);
+			clientStub.getClientCertHash.returns(clientCertHash);
+
+			txIdStub = sinon.createStubInstance(TransactionID);
+			txIdStub.getNonce.returns(nonce);
+			txIdStub.getTransactionID.returns('mock-txid');
+
+			// prepare token transaction request
+			tokenTx = new fabprotos.token.TokenTransaction();
+			tokenTx.set('plain_action', new fabprotos.token.PlainTokenAction());
+			request = {tokenTransaction: tokenTx, txId: txIdStub};
+		});
+
+		it('should return a signed envelope', () => {
+			const envelope = Channel._buildTokenTxEnvelope(request, channelId, clientStub, signingIdentityStub, false);
+			const payload = fabprotos.common.Payload.decode(envelope.payload);
+
+			// verify signature
+			expect(envelope.signature.toBuffer()).to.deep.equal(signature);
+
+			// verify payload has correct token transaction
+			expect(payload.data.toBuffer()).to.deep.equal(tokenTx.toBuffer());
+
+			// verify channel header
+			const expectedChannelHeader = new fabprotos.common.ChannelHeader();
+			expectedChannelHeader.setType(fabprotos.common.HeaderType.TOKEN_TRANSACTION);
+			expectedChannelHeader.setVersion(1);
+			expectedChannelHeader.setChannelId(channelId);
+			expectedChannelHeader.setTxId('mock-txid');
+			expectedChannelHeader.setTlsCertHash(clientCertHash);
+
+			// update expectedChannelHeader with timestamp
+			const channelHeader = fabprotos.common.ChannelHeader.decode(payload.header.channel_header);
+			expectedChannelHeader.timestamp = channelHeader.timestamp;
+
+			// verify channel header
+			expect(channelHeader.toBuffer()).to.deep.equal(expectedChannelHeader.toBuffer());
+
+			// verify signature header
+			const expectedSignatureHeader = new fabprotos.common.SignatureHeader();
+			expectedSignatureHeader.setCreator(serializedCreator);
+			expectedSignatureHeader.setNonce(nonce);
+			expect(payload.header.signature_header.toBuffer()).to.deep.equal(expectedSignatureHeader.toBuffer());
+		});
+
+		it('should throw an error if signingIndentity fails to sign', () => {
+			(() => {
+				const fakeError = new Error('forced sign error');
+				signingIdentityStub.sign.throws(fakeError);
+				Channel._buildTokenTxEnvelope(request, channelId, clientStub, signingIdentityStub, false);
+			}).should.throw(Error, 'forced sign error');
+		});
+
+		it('should throw an error if signingIndentity fails to serialize', () => {
+			(() => {
+				const fakeError = new Error('forced serialize error');
+				signingIdentityStub.serialize.throws(fakeError);
+				Channel._buildTokenTxEnvelope(request, channelId, clientStub, signingIdentityStub, false);
+			}).should.throw(Error, 'forced serialize error');
+		});
+	});
 });
 
 describe('ChannelPeer', () => {

@@ -24,6 +24,7 @@ const should = chai.should();
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const sinon = require('sinon');
+const fabprotos = require('fabric-protos');
 
 describe('Peer', () => {
 
@@ -542,6 +543,110 @@ describe('Peer', () => {
 		it('should return a string representation of the object', () => {
 			const obj = new Peer('grpc://host:2700');
 			obj.toString().should.equal('Peer:{url:grpc://host:2700}');
+		});
+	});
+
+	describe('#sendTokenCommand', () => {
+
+		const sandbox = sinon.createSandbox();
+
+		afterEach(() => {
+			sandbox.restore();
+		});
+
+		it('should log function entry', () => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+
+			const debugStub = sandbox.stub(FakeLogger, 'debug');
+			PeerRewire.__set__('logger', FakeLogger);
+
+			const obj = new PeerRewire('grpc://host:2700');
+
+			// this will throw, but we can still check method entry
+			obj.sendTokenCommand()
+				.then(() => {
+					sinon.assert.fail();
+				})
+				.catch(() => {
+					sinon.assert.called(debugStub);
+					debugStub.getCall(1).args.should.deep.equal(['%s - Start ----%s %s', 'sendTokenCommand', 'host:2700', 'grpc://host:2700']);
+				});
+		});
+
+		it('should log and return signed command response', async () => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+
+			const debugStub = sandbox.stub(FakeLogger, 'debug');
+			PeerRewire.__set__('logger', FakeLogger);
+			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
+
+			const myResponse = new fabprotos.token.SignedCommandResponse();
+			function Fake(params, callback) {
+				callback.call(null, null, myResponse);
+			}
+
+			const proverClient = sinon.stub();
+			proverClient.processCommand = sinon.stub().callsFake(Fake);
+
+			const obj = new PeerRewire('grpc://host:2700');
+			obj._proverClient = proverClient;
+
+			const response = await obj.sendTokenCommand('test');
+			response.should.deep.equal(myResponse);
+			sinon.assert.calledWith(debugStub, '%s - Received signed command response %s from peer "%s"');
+		});
+
+		it('should reject if no command', async () => {
+			const obj = new Peer('grpc://host:2700');
+			await obj.sendTokenCommand().should.be.rejectedWith(/Missing command parameter to send to peer/);
+		});
+
+		it('should reject on timeout', async () => {
+			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
+
+			function Fake(params, callback) {
+				setTimeout(() => {
+					callback.call(null, 'timeout not honoured');
+				}, 10);
+			}
+
+			const proverClient = sinon.stub();
+			proverClient.processCommand = sinon.stub().callsFake(Fake);
+
+			const obj = new PeerRewire('grpc://host:2700');
+			obj._proverClient = proverClient;
+
+			await obj.sendTokenCommand('deliver', 0).should.be.rejectedWith(/REQUEST_TIMEOUT/);
+		});
+
+		it('should log and reject error objec when proverClient returns error', async () => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+
+			const errorStub = sandbox.stub(FakeLogger, 'error');
+			PeerRewire.__set__('logger', FakeLogger);
+			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
+			const proverClient = sinon.stub();
+
+			function Fake(params, callback) {
+				callback.call(null, new Error('FORCED_ERROR'));
+			}
+
+			proverClient.processCommand = sinon.stub().callsFake(Fake);
+
+			const obj = new PeerRewire('grpc://host:2700');
+			obj._proverClient = proverClient;
+
+			await obj.sendTokenCommand('deliver').should.be.rejectedWith(/FORCED_ERROR/);
+			sinon.assert.calledWith(errorStub, '%s - Received error %s from peer %s');
 		});
 	});
 });

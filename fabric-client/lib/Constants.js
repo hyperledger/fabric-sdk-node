@@ -24,6 +24,7 @@ module.exports.NetworkConfig.CHAINCODE_QUERY_ROLE = 'chaincodeQuery';
 module.exports.NetworkConfig.LEDGER_QUERY_ROLE = 'ledgerQuery';
 module.exports.NetworkConfig.EVENT_SOURCE_ROLE = 'eventSource';
 module.exports.NetworkConfig.DISCOVERY_ROLE = 'discover';
+module.exports.NetworkConfig.PROVER_PEER_ROLE = 'proverPeer';
 module.exports.NetworkConfig.ALL_ROLES = 'all';
 module.exports.NetworkConfig.ROLES = [
 	module.exports.NetworkConfig.ENDORSING_PEER_ROLE,
@@ -31,5 +32,6 @@ module.exports.NetworkConfig.ROLES = [
 	module.exports.NetworkConfig.LEDGER_QUERY_ROLE,
 	module.exports.NetworkConfig.EVENT_SOURCE_ROLE,
 	module.exports.NetworkConfig.DISCOVERY_ROLE,
+	module.exports.NetworkConfig.PROVER_PEER_ROLE,
 	module.exports.NetworkConfig.ALL_ROLES
 ];
