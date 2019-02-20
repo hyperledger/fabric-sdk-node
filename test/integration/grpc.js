@@ -86,7 +86,7 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 			}
 		};
 
-		// setup reusable artificates
+		// setup reusable certificates
 		const opts = {
 			pem: Buffer.from(data).toString(),
 			clientCert: tlsInfo.certificate,
@@ -96,6 +96,11 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 		let response;
 
 		t.pass('Successfully setup grpc testing environment');
+
+		// check default connection settings are loaded from the config/default.json
+		const defaultConnectionOptions = Client.getConfigSetting('connection-options');
+		const clientOptionsSubset = getClientOptionsDefinedInDefault(client, defaultConnectionOptions);
+		t.deepEqual(defaultConnectionOptions, clientOptionsSubset, 'Test default connection settings are applied');
 
 		// use the connection profile defined peer which includes a GRPC max setting
 		response = await sendToConnectionProfile(client, channel, connection_profile, go_cc, 1);
@@ -160,18 +165,11 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 });
 
 async function send(client, channel, url, cc, opts, megs, grpc_send_max, grpc_receive_max, sdk_send_max, sdk_receive_max) {
-	if (grpc_send_max !== null) {
-		utils.setConfigSetting('grpc.max_send_message_length', grpc_send_max);
-	}
-	if (grpc_receive_max !== null) {
-		utils.setConfigSetting('grpc.max_receive_message_length', grpc_receive_max);
-	}
-	if (sdk_send_max !== null) {
-		utils.setConfigSetting('grpc-max-send-message-length', sdk_send_max);
-	}
-	if (sdk_receive_max !== null) {
-		utils.setConfigSetting('grpc-max-receive-message-length', sdk_receive_max);
-	}
+
+	sentConnectionOptionsIfDefined('grpc.max_send_message_length', grpc_send_max);
+	sentConnectionOptionsIfDefined('grpc.max_receive_message_length', grpc_receive_max);
+	sentConnectionOptionsIfDefined('grpc-max-send-message-length', sdk_send_max);
+	sentConnectionOptionsIfDefined('grpc-max-receive-message-length', sdk_receive_max);
 
 	// replace the default loading
 	client._connection_options = {};
@@ -222,4 +220,19 @@ function checkResponse(t, response, message, error_message) {
 	} else {
 		t.fail('Failed to get an error message for ' + message);
 	}
+}
+
+function sentConnectionOptionsIfDefined(optionName, optionValue) {
+	if (optionValue !== null) {
+		let connectionOptions = utils.getConfigSetting('connection-options');
+		connectionOptions = Object.assign(connectionOptions, {[optionName]:optionValue});
+		utils.setConfigSetting('connection-options', connectionOptions);
+	}
+}
+
+function getClientOptionsDefinedInDefault(client, defaultConnectionOptions) {
+	const clientConnectionOptions = client._buildConnectionOptions();
+	const clientOptionsSubset = {};
+	Object.keys(defaultConnectionOptions).forEach(key => clientOptionsSubset[key] = clientConnectionOptions[key]);
+	return clientOptionsSubset;
 }

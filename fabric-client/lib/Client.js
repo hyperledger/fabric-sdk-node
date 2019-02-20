@@ -204,7 +204,8 @@ const Client = class extends BaseClient {
 		const method = 'getConnectionOptions';
 		logger.debug('%s - start', method);
 		let return_options = Object.assign({}, Client.getConfigSetting('connection-options'));
-		return_options = Object.assign({}, this._connection_options);
+		return_options = Object.assign(return_options, this._connection_options);
+		return_options = Object.assign(return_options, this._getLegacyOptions()); // keep for a while legacy options
 		return_options = Object.assign(return_options, options);
 
 		if (!return_options.clientCert) {
@@ -212,6 +213,34 @@ const Client = class extends BaseClient {
 		}
 
 		return return_options;
+	}
+
+	// @deprecated
+	// Deprecated, but keep for a while for backward compatibility. Code is moved here from Remote.js;
+	_getLegacyOptions() {
+		const MAX_SEND = 'grpc.max_send_message_length';
+		const MAX_RECEIVE = 'grpc.max_receive_message_length';
+		const MAX_SEND_V10 = 'grpc-max-send-message-length';
+		const MAX_RECEIVE_V10 = 'grpc-max-receive-message-length';
+		const LEGACY_WARN_MESSAGE = 'Setting grpc options by utils.setConfigSetting() is deprecated. Use utils.g(s)etConfigSetting("connection-options")';
+		const result = {};
+
+		if (typeof sdkUtils.getConfigSetting(MAX_RECEIVE) !== 'undefined') {
+			Object.assign(result, {[MAX_RECEIVE]: sdkUtils.getConfigSetting(MAX_RECEIVE)});
+		}
+		if (typeof sdkUtils.getConfigSetting(MAX_RECEIVE_V10) !== 'undefined') {
+			Object.assign(result, {[MAX_RECEIVE]: sdkUtils.getConfigSetting(MAX_RECEIVE_V10)});
+		}
+		if (typeof sdkUtils.getConfigSetting(MAX_SEND) !== 'undefined') {
+			Object.assign(result, {[MAX_SEND]: sdkUtils.getConfigSetting(MAX_SEND)});
+		}
+		if (typeof sdkUtils.getConfigSetting(MAX_SEND_V10) !== 'undefined') {
+			Object.assign(result, {[MAX_SEND]: sdkUtils.getConfigSetting(MAX_SEND_V10)});
+		}
+		if (Object.keys(result).length > 0) {
+			logger.warn(LEGACY_WARN_MESSAGE);
+		}
+		return result;
 	}
 
 	/**

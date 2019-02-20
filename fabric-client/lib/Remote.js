@@ -94,7 +94,9 @@ class Remote {
 		if (typeof grpc_receive_max === 'undefined') {
 			grpc_receive_max = -1; // default is unlimited
 		}
-		this._options[MAX_RECEIVE] = grpc_receive_max;
+		// keep this for backward compatibility until remove probably deprecated code (lines 83-115)
+		this._options[MAX_RECEIVE] = (this._options[MAX_RECEIVE] && (this._options[MAX_RECEIVE] !== -1))
+			? this._options[MAX_RECEIVE] : grpc_receive_max;
 
 		let grpc_send_max;
 		if (opts[MAX_SEND_V10]) {
@@ -110,7 +112,7 @@ class Remote {
 		if (typeof grpc_send_max === 'undefined') {
 			grpc_send_max = -1; // default is unlimited
 		}
-		this._options[MAX_SEND] = grpc_send_max;
+		this._options[MAX_SEND] = (this._options[MAX_SEND] && (this._options[MAX_SEND] !== -1)) ? this._options[MAX_SEND] : grpc_send_max;
 
 		// service connection
 		this._url = url;
