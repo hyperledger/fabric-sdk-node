@@ -3264,6 +3264,50 @@ const Channel = class {
 	}
 
 	/**
+	 * Send signed token command to peer
+	 *
+	 * @param {SignedCommandRequest} request - Required. Signed token command
+	 *        that will be sent to peer. Must contain a signedCommand object.
+	 * @param {Number} timeout - Optional. A number indicating milliseconds to wait on the
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Orderer instance and the global
+	 *        timeout in the config settings.
+	 * @returns {Promise} A Promise for the {@link CommandResponse}
+	 */
+	static async sendSignedTokenCommand(request, timeout) {
+		const method = 'sendSignedTokenCommand';
+		logger.debug('%s - start', method);
+
+		if (!request) {
+			throw Error(util.format('Missing required "request" parameter on the %s call', method));
+		}
+		if (!request.command_bytes) {
+			throw new Error(util.format('Missing required "command_bytes" in request on the %s call', method));
+		}
+		if (!request.signature) {
+			throw new Error(util.format('Missing required "signature" in request on the %s call', method));
+		}
+
+		const signedCommand = token_utils.toSignedCommand(request.signature, request.command_bytes);
+
+		if (this._prover_handler) {
+			const params = {
+				request: request,
+				signed_command: signedCommand,
+				timeout: timeout,
+			};
+
+			const response = await this._prover_handler.processCommand(params);
+			return response;
+		} else {
+			// convert any names into peer objects or if empty find all
+			// prover peers added to this channel
+			const targetPeers = this._getTargets(request.targets, Constants.NetworkConfig.PROVER_PEER_ROLE);
+			return await token_utils.sendTokenCommandToPeer(targetPeers, signedCommand, timeout);
+		}
+	}
+
+	/**
 	 * Sends a token command to a prover peer and returns a [CommandResponse] {@link CommandResponse}
 	 * that contains either a token transaction or unspent tokens depending on the command.
 	 *
@@ -3352,6 +3396,41 @@ const Channel = class {
 		const signed_command = token_utils.signCommand(signer, command);
 
 		return signed_command;
+	}
+
+	/**
+	 * send the signed token transaction
+	 *
+	 * @param {SignedTokenTransactionRequest} request - Required. The signed token transaction.
+	 *        Must contain 'signature' and 'tokentx_bytes' properties.
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Orderer instance and the global
+	 *        timeout in the config settings.
+	 * @returns {BroadcastResponse} A BroadcastResponse message returned by
+	 *          the orderer that contains a single "status" field for a
+	 *          standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
+	 *          This will be an acknowledgement from the orderer of a successfully
+	 *          submitted transaction.
+	 */
+	async sendSignedTokenTransaction(request, timeout) {
+		const method = 'sendSignedTokenTransaction';
+		logger.debug('%s - start', method);
+
+		const signed_envelope = token_utils.toEnvelope(request.signature, request.tokentx_bytes);
+		if (this._commit_handler) {
+			const params = {
+				signed_envelope,
+				request: request,
+				timeout: timeout,
+			};
+
+			return this._commit_handler.commit(params);
+		} else {
+			// verify that we have an orderer configured
+			const orderer = this._clientContext.getTargetOrderer(request.orderer, this.getOrderers(), this._name);
+			return orderer.sendBroadcast(signed_envelope, timeout);
+		}
 	}
 
 	/**

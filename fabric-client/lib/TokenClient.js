@@ -14,10 +14,16 @@
 
 'use strict';
 
+const Channel = require('./Channel');
+const TransactionID = require('./TransactionID');
 const util = require('util');
+const clientUtils = require('./client-utils.js');
 const tokenUtils = require('./token-utils.js');
 const utils = require('./utils.js');
 const logger = utils.getLogger('TokenClient.js');
+const fabprotos = require('fabric-protos');
+const {Identity} = require('fabric-common');
+const {HashPrimitives} = require('fabric-common');
 
 /**
  * @classdesc
@@ -179,7 +185,7 @@ const TokenClient = class {
 	             An array of token ids that will be spent by the token command.
 	 * @property {TokenParam[]} params - Required. One or multiple TokenParam
 	 *           for the token command.
-	 * @property {TransactionID} txId - Required. Transaction ID to use for this request.
+	 * @property {TransactionID} txId - Optional. Required for issue, transfer and redeem.
 	 */
 
 	/**
@@ -200,7 +206,7 @@ const TokenClient = class {
 	 */
 	async issue(request, timeout) {
 		logger.debug('issue - Start');
-		tokenUtils.checkTokenRequest(request, 'issue');
+		tokenUtils.checkTokenRequest(request, 'issue', true);
 
 		// copy request so that we can make update
 		const sendRequest = Object.assign({}, request);
@@ -228,7 +234,7 @@ const TokenClient = class {
 	 */
 	async transfer(request, timeout) {
 		logger.debug('transfer - Start');
-		tokenUtils.checkTokenRequest(request, 'transfer');
+		tokenUtils.checkTokenRequest(request, 'transfer', true);
 
 		// copy request so that we can make update
 		const sendRequest = Object.assign({}, request);
@@ -255,7 +261,7 @@ const TokenClient = class {
 	 */
 	async redeem(request, timeout) {
 		logger.debug('redeem - Start');
-		tokenUtils.checkTokenRequest(request, 'redeem');
+		tokenUtils.checkTokenRequest(request, 'redeem', true);
 
 		// copy request so that we can make update
 		const sendRequest = Object.assign({}, request);
@@ -327,6 +333,178 @@ const TokenClient = class {
 		request.tokenTransaction = tokentx;
 		const result = await this._channel.sendTokenTransaction(request, timeout);
 		return result;
+	}
+
+	/**
+	 * @typedef {Object} SignedCommandRequest
+	 *          The object contains properties that will be used for sending a token command.
+	 * @property {Buffer} command_bytes - Required. The token command bytes.
+	 * @property {Buffer} signature - Required. The signer's signature for the command_bytes.
+	 * @property {Peer[]|string[]} targets - Optional. The peers that will receive this
+	 *           request, when not provided the list of peers added to this channel
+	 *           object will be used.
+	 */
+
+	/**
+	 * Sends signed token command to peer
+	 *
+	 * @param {SignedCommandRequest} request containing signedCommand and targets.
+	 * The signed command would be sent to peer directly.
+	 * @param {number} timeout the timeout setting passed on sendSignedCommand
+	 * @returns {Promise} A Promise for a "CommandResponse" message returned by
+	 *          the prover peer.
+	 */
+	async sendSignedTokenCommand(request, timeout) {
+		// copy request to protect user input
+		const sendRequest = Object.assign({}, request);
+		if (!sendRequest.targets) {
+			sendRequest.targets = this._targets;
+		}
+		return Channel.sendSignedTokenCommand(sendRequest, timeout);
+	}
+
+	/**
+	 * @typedef {Object} SignedTokenTransactionRequest
+	 *          This object contains properties that will be used for broadcasting a token transaction.
+	 * @property {Buffer} signature - Required. The signature.
+	 * @property {Buffer} payload_bytes - Required. The token transaction payload bytes.
+	 * @property {TransactionID} txId - Required. Transaction ID to use for this request.
+	 * @property {Orderer | string} orderer - Optional. The orderer that will receive this request,
+	 *           when not provided, the transaction will be sent to the orderers assigned to this channel instance.
+	 */
+
+	/**
+	 * send the signed token transaction
+	 *
+	 * @param {SignedTokenTransactionRequest} request - Required. The signed token transaction.
+	 *        Must contain 'signature' and 'tokentx_bytes' properties.
+	 * @param {Number} timeout - A number indicating milliseconds to wait on the
+	 *        response before rejecting the promise with a timeout error. This
+	 *        overrides the default timeout of the Orderer instance and the global
+	 *        timeout in the config settings.
+	 * @returns {BroadcastResponse} A BroadcastResponse message returned by
+	 *          the orderer that contains a single "status" field for a
+	 *          standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
+	 *          This will be an acknowledgement from the orderer of a successfully
+	 *          submitted transaction.
+	 */
+	async sendSignedTokenTransaction(request, timeout) {
+		return this._channel.sendSignedTokenTransaction(request, timeout);
+	}
+
+	/**
+	 * Generates the unsigned token command
+	 *
+	 * Currently the [sendTokenCommand]{@link Channel#sendTokenCommand}
+	 * signs a token command using the user identity from SDK's context (which
+	 * contains the user's private key).
+	 *
+	 * This method is designed to build the token command at SDK side,
+	 * and user can sign this token command with their private key, and send
+	 * the signed token command to peer by [sendSignedTokenCommand]
+	 * so the user's private key would not be required at SDK side.
+	 *
+	 * @param {TokenRequest} request token request
+	 * @param {string} mspId the mspId for this identity
+	 * @param {string} certificate PEM encoded certificate
+	 * @param {boolean} admin if this transaction is invoked by admin
+	 * @returns {Command} protobuf message for token command
+	 */
+	generateUnsignedTokenCommand(request, mspId, certificate, admin) {
+		const method = 'generateUnsignedTokenCommand';
+		logger.debug('%s - start', method);
+
+		logger.debug('%s - token command name is %s', method, request.commandName);
+		tokenUtils.checkTokenRequest(request, method, false);
+
+		let tokenCommand;
+		if (request.commandName === 'issue') {
+			tokenCommand = tokenUtils.buildIssueCommand(request);
+		} else if (request.commandName === 'transfer') {
+			tokenCommand = tokenUtils.buildTransferCommand(request);
+		} else if (request.commandName === 'redeem') {
+			tokenCommand = tokenUtils.buildRedeemCommand(request);
+		} else if (request.commandName === 'list') {
+			tokenCommand = tokenUtils.buildListCommand(request);
+		} else if (!request.commandName) {
+			throw new Error(utils.format('Missing commandName on the %s call', method));
+		} else {
+			throw new Error(utils.format('Invalid commandName (%s) on the %s call', request.commandName, method));
+		}
+
+		// create identity using certificate, publicKey (null), and mspId
+		const identity = new Identity(certificate, null, mspId);
+		const txId = new TransactionID(identity, admin);
+		const header = tokenUtils.buildTokenCommandHeader(
+			identity,
+			this._channel._name,
+			txId.getNonce(),
+			this._client.getClientCertHash()
+		);
+
+		tokenCommand.setHeader(header);
+		return tokenCommand;
+	}
+
+	/**
+	 * @typedef {Object} TokenTransactionRequest
+	 *          This object contains properties that will be used build token transaction payload.
+	 * @property {Buffer} tokentx_bytes - Required. The token transaction bytes.
+	 * @property {Command} tokenCommand - Required. The token command that is used to receive the token transaction.
+	 */
+
+	/**
+	 * Generates unsigned payload for the token transaction.
+	 * The tokenCommand used to generate the token transaction must be passed in the request.
+	 *
+	 * @param {TokenTransactionRequest} request - required.
+	 * @returns {Payload} protobuf message for token transaction payload
+	 */
+	generateUnsignedTokenTransaction(request) {
+		const method = 'generateUnsignedTokenTransaction';
+		logger.debug('%s - start', method);
+
+		if (!request) {
+			throw new Error(util.format('Missing input request parameter on the %s call', method));
+		}
+		if (!request.tokenTransaction) {
+			throw new Error(util.format('Missing required "tokenTransaction" in request on the %s call', method));
+		}
+		if (!request.tokenCommand) {
+			throw new Error(util.format('Missing required "tokenCommand" in request on the %s call', method));
+		}
+		if (!request.tokenCommand.header) {
+			throw new Error(util.format('Missing required "header" in tokenCommand on the %s call', method));
+		}
+
+		const commandHeader = request.tokenCommand.header;
+		const trans_bytes = Buffer.concat([commandHeader.nonce.toBuffer(), commandHeader.creator.toBuffer()]);
+		const trans_hash = HashPrimitives.SHA2_256(trans_bytes);
+		const txId = Buffer.from(trans_hash).toString();
+
+		const channel_header = clientUtils.buildChannelHeader(
+			fabprotos.common.HeaderType.TOKEN_TRANSACTION,
+			this._channel._name,
+			txId,
+			null, // no epoch
+			'',
+			clientUtils.buildCurrentTimestamp(),
+			this._client.getClientCertHash()
+		);
+
+		const signature_header = new fabprotos.common.SignatureHeader();
+		signature_header.setCreator(commandHeader.creator);
+		signature_header.setNonce(commandHeader.nonce);
+
+		const header = new fabprotos.common.Header();
+		header.setChannelHeader(channel_header.toBuffer());
+		header.setSignatureHeader(signature_header.toBuffer());
+
+		const payload = new fabprotos.common.Payload();
+		payload.setHeader(header);
+		payload.setData(request.tokenTransaction.toBuffer());
+
+		return payload;
 	}
 };
 

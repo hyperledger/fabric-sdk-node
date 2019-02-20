@@ -14,8 +14,11 @@
 
 'use strict';
 
+const console = require('console');
+const util = require('util');
 const rewire = require('rewire');
 const Client = require('../lib/Client');
+const {Identity} = require('fabric-common');
 const TokenClient = rewire('../lib/TokenClient');
 const TransactionID = require('../lib/TransactionID.js');
 const fabprotos = require('fabric-protos');
@@ -46,6 +49,7 @@ describe('TokenClient', () => {
 
 	const testowner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('testowner')};
 	const txId = sinon.createStubInstance(TransactionID);
+	const channelId = 'mychannel';
 
 	beforeEach(() => {
 		revert = [];
@@ -74,6 +78,7 @@ describe('TokenClient', () => {
 		sendTokenCommandStub.returns(mockResponse);
 		sendTokenTransactionStub.returns(mockResult);
 
+		// use following common stubs for all tests
 		revert.push(TokenClient.__set__('tokenUtils.checkTokenRequest', checkTokenRequestStub));
 		revert.push(TokenClient.__set__('tokenUtils.buildIssueCommand', buildIssueCommandStub));
 		revert.push(TokenClient.__set__('tokenUtils.buildTransferCommand', buildTransferCommandStub));
@@ -81,6 +86,7 @@ describe('TokenClient', () => {
 		revert.push(TokenClient.__set__('tokenUtils.buildListCommand', buildListCommandStub));
 
 		mockChannel = {
+			_name: channelId,
 			sendTokenCommand: sendTokenCommandStub,
 			sendTokenTransaction: sendTokenTransactionStub,
 		};
@@ -144,7 +150,7 @@ describe('TokenClient', () => {
 			sinon.assert.calledOnce(sendTokenTransactionStub);
 
 			sinon.assert.calledWith(buildIssueCommandStub, request);
-			sinon.assert.calledWith(checkTokenRequestStub, request);
+			sinon.assert.calledWith(checkTokenRequestStub, request, 'issue', true);
 			let arg = sendTokenCommandStub.getCall(0).args[0];
 			arg.tokenCommand.should.deep.equal(mockCommand);
 			arg = sendTokenTransactionStub.getCall(0).args[0];
@@ -247,7 +253,7 @@ describe('TokenClient', () => {
 			sinon.assert.calledOnce(sendTokenCommandStub);
 			sinon.assert.calledOnce(sendTokenTransactionStub);
 
-			sinon.assert.calledWith(checkTokenRequestStub, request);
+			sinon.assert.calledWith(checkTokenRequestStub, request, 'transfer', true);
 			sinon.assert.calledWith(buildTransferCommandStub, request);
 			let arg = sendTokenCommandStub.getCall(0).args[0];
 			arg.tokenCommand.should.deep.equal(mockCommand);
@@ -351,7 +357,7 @@ describe('TokenClient', () => {
 			sinon.assert.calledOnce(sendTokenCommandStub);
 			sinon.assert.calledOnce(sendTokenTransactionStub);
 
-			sinon.assert.calledWith(checkTokenRequestStub, request);
+			sinon.assert.calledWith(checkTokenRequestStub, request, 'redeem', true);
 			sinon.assert.calledWith(buildRedeemCommandStub, request);
 			let arg = sendTokenCommandStub.getCall(0).args[0];
 			arg.tokenCommand.should.deep.equal(mockCommand);
@@ -564,6 +570,229 @@ describe('TokenClient', () => {
 				sinon.assert.calledOnce(sendTokenTransactionStub);
 				err.message.should.equal('forced tokentx error');
 			}
+		});
+	});
+
+	describe('#generateUnsignedTokenCommand', () => {
+		let request;
+		let param;
+		let tokenIds;
+		let newIdentityStub;
+		let identityStub;
+		let newTransactionIDStub;
+		let transactionIDStub;
+		let clientStub;
+		let buildTokenCommandHeaderStub;
+
+		const admin = true;
+		const mspId = 'fake-mspid';
+		const certificate = 'fake-certificate';
+		const commandHeader = new fabprotos.token.Header();
+		const tlsCertHash = Buffer.from('test-client-cert-hash');
+
+		beforeEach(() => {
+			sandbox = sinon.createSandbox();
+
+			// update mockCommand with mocked header
+			mockCommand.setHeader(commandHeader);
+
+			// prepare request parameters
+			tokenIds = [{tx_id: 'mock_tx_id', index: 0}];
+			param = {recipient: testowner, type: 'abc123', quantity: 210};
+
+			// create stubs
+			buildTokenCommandHeaderStub = sinon.stub();
+			buildTokenCommandHeaderStub.returns(commandHeader);
+
+			identityStub = sinon.createStubInstance(Identity);
+			identityStub.serialize.returns('fake-serialized-identity');
+			newIdentityStub = sinon.stub();
+			newIdentityStub.returns(identityStub);
+
+			transactionIDStub = sinon.createStubInstance(TransactionID);
+			transactionIDStub.getNonce.returns('fake-nonce');
+			newTransactionIDStub = sinon.stub();
+			newTransactionIDStub.returns(transactionIDStub);
+
+			revert.push(TokenClient.__set__('Identity', newIdentityStub));
+			revert.push(TokenClient.__set__('TransactionID', newTransactionIDStub));
+			revert.push(TokenClient.__set__('tokenUtils.buildTokenCommandHeader', buildTokenCommandHeaderStub));
+
+			clientStub = sinon.createStubInstance(Client);
+			clientStub.getClientCertHash.returns(tlsCertHash);
+			tokenClient = new TokenClient(clientStub, mockChannel);
+		});
+
+		it('should return a unsigned token command for issue', () => {
+			request = {commandName: 'issue', params: [param]};
+			const command = tokenClient.generateUnsignedTokenCommand(request, mspId, certificate, admin);
+			command.should.deep.equal(mockCommand);
+
+			sinon.assert.calledWith(buildIssueCommandStub, request);
+			sinon.assert.calledWith(newIdentityStub, certificate, null, mspId);
+			sinon.assert.calledWith(newTransactionIDStub, identityStub, admin);
+			sinon.assert.calledWith(buildTokenCommandHeaderStub, identityStub, channelId, 'fake-nonce', tlsCertHash);
+		});
+
+		it('should return a unsigned token command for transfer', () => {
+			request = {commandName: 'transfer', tokenIds: tokenIds, params: [param]};
+			const command = tokenClient.generateUnsignedTokenCommand(request, mspId, certificate, admin);
+			command.should.deep.equal(mockCommand);
+
+			sinon.assert.calledWith(buildTransferCommandStub, request);
+			sinon.assert.calledWith(newIdentityStub, certificate, null, mspId);
+			sinon.assert.calledWith(newTransactionIDStub, identityStub, admin);
+			sinon.assert.calledWith(buildTokenCommandHeaderStub, identityStub, channelId, 'fake-nonce', tlsCertHash);
+		});
+
+		it('should return a unsigned token command for redeem', () => {
+			request = {commandName: 'redeem', tokenIds: tokenIds, params: [param]};
+			const command = tokenClient.generateUnsignedTokenCommand(request, mspId, certificate, admin);
+			command.should.deep.equal(mockCommand);
+
+			sinon.assert.calledWith(buildRedeemCommandStub, request);
+			sinon.assert.calledWith(newIdentityStub, certificate, null, mspId);
+			sinon.assert.calledWith(newTransactionIDStub, identityStub, admin);
+			sinon.assert.calledWith(buildTokenCommandHeaderStub, identityStub, channelId, 'fake-nonce', tlsCertHash);
+		});
+
+		it('should return a unsigned token command for list', () => {
+			request = {commandName: 'list'};
+			const command = tokenClient.generateUnsignedTokenCommand(request, mspId, certificate, admin);
+			command.should.deep.equal(mockCommand);
+
+			sinon.assert.calledWith(checkTokenRequestStub, request, 'generateUnsignedTokenCommand', false);
+			sinon.assert.calledWith(buildListCommandStub, request);
+			sinon.assert.calledWith(newIdentityStub, certificate, null, mspId);
+			sinon.assert.calledWith(newTransactionIDStub, identityStub, admin);
+			sinon.assert.calledWith(buildTokenCommandHeaderStub, identityStub, channelId, 'fake-nonce', tlsCertHash);
+		});
+
+		it('should get error when new Identity throws error', () => {
+			(() => {
+				const fakeError = new Error('forced new identity error');
+				newIdentityStub.throws(fakeError);
+
+				request = {commandName: 'issue', params: [param], txId: txId};
+				tokenClient.generateUnsignedTokenCommand(request, mspId, certificate, admin);
+			}).should.throw('forced new identity error');
+		});
+
+		it('should get error when new TransactionID throws error', () => {
+			(() => {
+				const fakeError = new Error('forced new identity error');
+				newTransactionIDStub.throws(fakeError);
+
+				request = {commandName: 'issue', params: [param], txId: txId};
+				tokenClient.generateUnsignedTokenCommand(request, mspId, certificate, admin);
+			}).should.throw('forced new identity error');
+		});
+	});
+
+	describe('#generateUnsignedTokenTransaction', () => {
+		let request;
+		let tokenTx;
+		let command;
+		let commandHeader;
+		let sha2_256Stub;
+		let buildChannelHeaderStub;
+		let buildCurrentTimestampStub;
+		let clientStub;
+
+		const trans_hash = 'fake-sha2_256-tran-hash';
+		const tlsCertHash = Buffer.from('test-client-cert-hash');
+		const channelHeader = new fabprotos.common.ChannelHeader();
+		const mockTimestamp = sinon.createStubInstance(fabprotos.google.protobuf.Timestamp);
+
+		beforeEach(() => {
+			sandbox = sinon.createSandbox();
+
+			// prepare command header, command and token transaction for input request
+			commandHeader = new fabprotos.token.Header();
+			commandHeader.setChannelId(channelId);
+			commandHeader.setCreator(Buffer.from('fake-creator'));
+			commandHeader.setNonce(Buffer.from('fake-nonce'));
+			commandHeader.setTlsCertHash(tlsCertHash);
+
+			command = new fabprotos.token.Command();
+			command.setHeader(commandHeader);
+
+			tokenTx = new fabprotos.token.TokenTransaction();
+			tokenTx.set('plain_action', new fabprotos.token.PlainTokenAction());
+
+			// create stubs
+			sha2_256Stub = sinon.stub();
+			sha2_256Stub.returns(trans_hash);
+
+			buildChannelHeaderStub = sinon.stub();
+			buildChannelHeaderStub.returns(channelHeader);
+
+			buildCurrentTimestampStub = sinon.stub();
+			buildCurrentTimestampStub.returns(mockTimestamp);
+
+			revert.push(TokenClient.__set__('clientUtils.buildChannelHeader', buildChannelHeaderStub));
+			revert.push(TokenClient.__set__('clientUtils.buildCurrentTimestamp', buildCurrentTimestampStub));
+			revert.push(TokenClient.__set__('HashPrimitives.SHA2_256', sha2_256Stub));
+
+			// create an intance of TokenClient
+			clientStub = sinon.createStubInstance(Client);
+			clientStub.getClientCertHash.returns(tlsCertHash);
+			tokenClient = new TokenClient(clientStub, mockChannel);
+		});
+
+		it('should return a unsigned transaction payload', () => {
+			console.log('comparing 1');
+			request = {tokenTransaction: tokenTx, tokenCommand: command};
+			const payload = tokenClient.generateUnsignedTokenTransaction(request);
+
+			console.log('comparing 2 payload: %s', util.inspect(payload, {depth: null}));
+			payload.data.toBuffer().should.deep.equal(tokenTx.toBuffer());
+
+			console.log('comparing 4 payload: %s', util.inspect(payload, {depth: null}));
+			const signatureHeader = new fabprotos.common.SignatureHeader();
+			signatureHeader.setCreator(commandHeader.creator);
+			signatureHeader.setNonce(commandHeader.nonce);
+			payload.header.signature_header.toBuffer().should.deep.equal(signatureHeader.toBuffer());
+
+			console.log('comparing 5 payload: %s', util.inspect(payload, {depth: null}));
+			payload.header.channel_header.toBuffer().should.deep.equal(channelHeader.toBuffer());
+
+			console.log('comparing 6 payload: %s', util.inspect(payload, {depth: null}));
+			sinon.assert.calledWith(buildChannelHeaderStub,
+				fabprotos.common.HeaderType.TOKEN_TRANSACTION, channelId, trans_hash, null, '', mockTimestamp, tlsCertHash);
+			sinon.assert.calledOnce(buildCurrentTimestampStub);
+		});
+
+		it('should get error when request has no tokenTransaction', () => {
+			(() => {
+				request = {tokenCommand: command};
+				tokenClient.generateUnsignedTokenTransaction(request);
+			}).should.throw('Missing required "tokenTransaction" in request on the generateUnsignedTokenTransaction call');
+		});
+
+		it('should get error when request has no tokenCommand', () => {
+			(() => {
+				request = {tokenTransaction: tokenTx};
+				tokenClient.generateUnsignedTokenTransaction(request);
+			}).should.throw('Missing required "tokenCommand" in request on the generateUnsignedTokenTransaction call');
+		});
+
+		it('should get error when request has no tokenCommand', () => {
+			(() => {
+				command.header = undefined;
+				request = {tokenTransaction: tokenTx, tokenCommand: command};
+				tokenClient.generateUnsignedTokenTransaction(request);
+			}).should.throw('Missing required "header" in tokenCommand on the generateUnsignedTokenTransaction call');
+		});
+
+		it('should get error when buildChannelHeader throws error', () => {
+			(() => {
+				const fakeError = new Error('forced build header error');
+				buildChannelHeaderStub.throws(fakeError);
+
+				request = {tokenTransaction: tokenTx, tokenCommand: command};
+				tokenClient.generateUnsignedTokenTransaction(request);
+			}).should.throw('forced build header error');
 		});
 	});
 });
