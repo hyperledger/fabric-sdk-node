@@ -3027,6 +3027,117 @@ describe('Channel', () => {
 		});
 	});
 
+	describe('#sendSignedTokenCommand', () => {
+		let sandbox;
+		let revert;
+		let mockRequest;
+		let signedCommand;
+		let _getTargetsStub;
+		let sendTokenCommandToPeerStub;
+
+		const channelId = 'mychannel';
+		const timeout = 100;
+		const mockCommandResponse = new fabprotos.token.CommandResponse();
+		const mockTargets = [sinon.createStubInstance(Peer)];
+		const clientStub = sinon.createStubInstance(Client);
+
+		beforeEach(() => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+			debugStub = sinon.stub(FakeLogger, 'debug');
+
+			revert = [];
+			sandbox = sinon.createSandbox();
+
+			sendTokenCommandToPeerStub = sandbox.stub();
+			sendTokenCommandToPeerStub.returns(mockCommandResponse);
+
+			revert.push(ChannelRewire.__set__('token_utils.sendTokenCommandToPeer', sendTokenCommandToPeerStub));
+			revert.push(ChannelRewire.__set__('logger', FakeLogger));
+
+			// create channel instance
+			channel = new ChannelRewire(channelId, clientStub);
+
+			_getTargetsStub = sinon.stub(channel, '_getTargets');
+			_getTargetsStub.returns(mockTargets);
+
+			mockRequest = {command_bytes: 'fake-command', signature: 'fake-signature'};
+			signedCommand = {command: 'fake-command', signature: 'fake-signature'};
+		});
+
+		afterEach(() => {
+			if (revert.length) {
+				revert.forEach(Function.prototype.call, Function.prototype.call);
+			}
+			sandbox.restore();
+		});
+
+		it('should return a command response', async () => {
+			const response = await channel.sendSignedTokenCommand(mockRequest, timeout);
+			expect(response).to.equal(mockCommandResponse);
+
+			sinon.assert.calledOnce(_getTargetsStub);
+			sinon.assert.calledOnce(sendTokenCommandToPeerStub);
+			sinon.assert.calledWith(_getTargetsStub, undefined, Constants.NetworkConfig.PROVER_PEER_ROLE);
+			sinon.assert.calledWith(sendTokenCommandToPeerStub, mockTargets, signedCommand, timeout);
+			sinon.assert.calledWith(debugStub, '%s - start');
+		});
+
+		it('should throw an error if request is mssing', async () => {
+			try {
+				mockRequest.tokenTransaction = undefined;
+				await channel.sendSignedTokenCommand();
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "request" parameter on the sendSignedTokenCommand call');
+			}
+		});
+
+		it('should throw an error if request.command_bytes is mssing', async () => {
+			try {
+				mockRequest.command_bytes = undefined;
+				await channel.sendSignedTokenCommand(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "command_bytes" in request on the sendSignedTokenCommand call');
+			}
+		});
+
+		it('should throw an error if request.signature is mssing', async () => {
+			try {
+				mockRequest.signature = undefined;
+				await channel.sendSignedTokenCommand(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "signature" in request on the sendSignedTokenCommand call');
+			}
+		});
+
+		it('should throw an error if getTargets fails', async () => {
+			try {
+				const fakeError = new Error('forced get targets error');
+				_getTargetsStub.throws(fakeError);
+				await channel.sendSignedTokenCommand(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced get targets error');
+			}
+		});
+
+		it('should throw an error if sendTokenCommandToPeerStub fails', async () => {
+			try {
+				const fakeError = new Error('forced send to peer error');
+				sendTokenCommandToPeerStub.throws(fakeError);
+				await channel.sendSignedTokenCommand(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced send to peer error');
+			}
+		});
+	});
+
 	describe('#sendTokenTransaction', () => {
 		let sandbox;
 		let revert;
@@ -3154,6 +3265,129 @@ describe('Channel', () => {
 				const fakeError = new Error('forced send broadcast error');
 				ordererStub.sendBroadcast.throws(fakeError);
 				await channel.sendTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced send broadcast error');
+			}
+		});
+	});
+
+	describe('#sendSignedTokenTransaction', () => {
+		let sandbox;
+		let revert;
+		let mockRequest;
+		let clientStub;
+		let ordererStub;
+		let txIdStub;
+		let envelope;
+
+		const channelId = 'mychannel';
+		const timeout = 100;
+		const mockResponse = {status: 'SUCCESS'};
+
+		beforeEach(() => {
+			const FakeLogger = {
+				debug : () => {},
+				error: () => {}
+			};
+			debugStub = sinon.stub(FakeLogger, 'debug');
+
+			revert = [];
+			sandbox = sinon.createSandbox();
+
+			// prepare stubs
+			revert.push(ChannelRewire.__set__('logger', FakeLogger));
+
+			ordererStub = sinon.createStubInstance(Orderer);
+			ordererStub.sendBroadcast.returns(mockResponse);
+
+			clientStub = sinon.createStubInstance(Client);
+			clientStub.getTargetOrderer.returns(ordererStub);
+
+			// create channel instance
+			channel = new ChannelRewire(channelId, clientStub);
+
+			// prepare mockRequest
+			txIdStub = sinon.createStubInstance(TransactionID);
+			mockRequest = {payload_bytes: 'fake-payload', signature: 'fake-signature', txId: txIdStub};
+			envelope = {payload: 'fake-payload', signature: 'fake-signature'};
+		});
+
+		afterEach(() => {
+			if (revert.length) {
+				revert.forEach(Function.prototype.call, Function.prototype.call);
+			}
+			sandbox.restore();
+		});
+
+		it('should return a response with SUCCESS status', async () => {
+			sinon.spy(clientStub.getTargetOrderer);
+			sinon.spy(ordererStub.sendBroadcast);
+
+			const response = await channel.sendSignedTokenTransaction(mockRequest, timeout);
+			expect(response.status).to.equal('SUCCESS');
+
+			sinon.assert.calledWith(clientStub.getTargetOrderer, undefined, [], channelId);
+			sinon.assert.calledWith(ordererStub.sendBroadcast, envelope, timeout);
+			sinon.assert.calledWith(debugStub, '%s - start');
+		});
+
+		it('should throw an error if request is mssing', async () => {
+			try {
+				mockRequest.tokenTransaction = undefined;
+				await channel.sendSignedTokenTransaction();
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "request" parameter on the sendSignedTokenTransaction call');
+			}
+		});
+
+		it('should throw an error if request.signature is mssing', async () => {
+			try {
+				mockRequest.signature = undefined;
+				await channel.sendSignedTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "signature" in request on the sendSignedTokenTransaction call');
+			}
+		});
+
+		it('should throw an error if request.payload_bytes is mssing', async () => {
+			try {
+				mockRequest.payload_bytes = undefined;
+				await channel.sendSignedTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "payload_bytes" in request on the sendSignedTokenTransaction call');
+			}
+		});
+
+		it('should throw an error if request.txId is mssing', async () => {
+			try {
+				mockRequest.txId = undefined;
+				await channel.sendSignedTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('Missing required "txId" in request on the sendSignedTokenTransaction call');
+			}
+		});
+
+		it('should throw an error if client getTargetOrderer throws an error', async () => {
+			try {
+				const fakeError = new Error('forced get orderer error');
+				clientStub.getTargetOrderer.throws(fakeError);
+				await channel.sendSignedTokenTransaction(mockRequest, timeout);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced get orderer error');
+			}
+		});
+
+		it('should throw an error if order sendBroadcast throws an error', async () => {
+			try {
+				const fakeError = new Error('forced send broadcast error');
+				ordererStub.sendBroadcast.throws(fakeError);
+				await channel.sendSignedTokenTransaction(mockRequest, timeout);
 				should.fail();
 			} catch (err) {
 				err.message.should.equal('forced send broadcast error');

@@ -564,4 +564,18 @@ describe('token-utils', () => {
 			}).should.throw('forced build header error');
 		});
 	});
+
+	describe('#toSignedCommand', () => {
+		it('should return a signed command', () => {
+			const result = TokenUtils.toSignedCommand('fake-signature', 'fake-command-bytes');
+			result.should.deep.equal({signature: 'fake-signature', command: 'fake-command-bytes'});
+		});
+	});
+
+	describe('#toEnvelope', () => {
+		it('should return an envelope', () => {
+			const result = TokenUtils.toEnvelope('fake-signature', 'fake-payload-bytes');
+			result.should.deep.equal({signature: 'fake-signature', payload: 'fake-payload-bytes'});
+		});
+	});
 });
