@@ -3274,7 +3274,7 @@ const Channel = class {
 	 *        timeout in the config settings.
 	 * @returns {Promise} A Promise for the {@link CommandResponse}
 	 */
-	static async sendSignedTokenCommand(request, timeout) {
+	async sendSignedTokenCommand(request, timeout) {
 		const method = 'sendSignedTokenCommand';
 		logger.debug('%s - start', method);
 
@@ -3417,7 +3417,21 @@ const Channel = class {
 		const method = 'sendSignedTokenTransaction';
 		logger.debug('%s - start', method);
 
-		const signed_envelope = token_utils.toEnvelope(request.signature, request.tokentx_bytes);
+		if (!request) {
+			throw Error(util.format('Missing required "request" parameter on the %s call', method));
+		}
+		if (!request.signature) {
+			throw new Error(util.format('Missing required "signature" in request on the %s call', method));
+		}
+		if (!request.payload_bytes) {
+			throw new Error(util.format('Missing required "payload_bytes" in request on the %s call', method));
+		}
+		if (!request.txId) {
+			throw new Error(util.format('Missing required "txId" in request on the %s call', method));
+		}
+
+		const signed_envelope = token_utils.toEnvelope(request.signature, request.payload_bytes);
+
 		if (this._commit_handler) {
 			const params = {
 				signed_envelope,

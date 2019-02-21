@@ -253,6 +253,6 @@ exports.toSignedCommand = (signature, command_bytes) => ({signature: signature, 
 /**
  * convert to protos.common.Envelope
  * @param signature
- * @param tokentx_bytes
+ * @param payload_bytes
  */
-exports.toEnvelope = (signature, tokentx_bytes) => ({signature: signature, payload: tokentx_bytes});
+exports.toEnvelope = (signature, payload_bytes) => ({signature: signature, payload: payload_bytes});

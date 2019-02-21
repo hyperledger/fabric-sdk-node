@@ -14,9 +14,8 @@
 
 'use strict';
 
-const console = require('console');
-const util = require('util');
 const rewire = require('rewire');
+const Channel = require('../lib/Channel');
 const Client = require('../lib/Client');
 const {Identity} = require('fabric-common');
 const TokenClient = rewire('../lib/TokenClient');
@@ -741,23 +740,18 @@ describe('TokenClient', () => {
 		});
 
 		it('should return a unsigned transaction payload', () => {
-			console.log('comparing 1');
 			request = {tokenTransaction: tokenTx, tokenCommand: command};
 			const payload = tokenClient.generateUnsignedTokenTransaction(request);
 
-			console.log('comparing 2 payload: %s', util.inspect(payload, {depth: null}));
 			payload.data.toBuffer().should.deep.equal(tokenTx.toBuffer());
 
-			console.log('comparing 4 payload: %s', util.inspect(payload, {depth: null}));
 			const signatureHeader = new fabprotos.common.SignatureHeader();
 			signatureHeader.setCreator(commandHeader.creator);
 			signatureHeader.setNonce(commandHeader.nonce);
 			payload.header.signature_header.toBuffer().should.deep.equal(signatureHeader.toBuffer());
 
-			console.log('comparing 5 payload: %s', util.inspect(payload, {depth: null}));
 			payload.header.channel_header.toBuffer().should.deep.equal(channelHeader.toBuffer());
 
-			console.log('comparing 6 payload: %s', util.inspect(payload, {depth: null}));
 			sinon.assert.calledWith(buildChannelHeaderStub,
 				fabprotos.common.HeaderType.TOKEN_TRANSACTION, channelId, trans_hash, null, '', mockTimestamp, tlsCertHash);
 			sinon.assert.calledOnce(buildCurrentTimestampStub);
@@ -777,7 +771,7 @@ describe('TokenClient', () => {
 			}).should.throw('Missing required "tokenCommand" in request on the generateUnsignedTokenTransaction call');
 		});
 
-		it('should get error when request has no tokenCommand', () => {
+		it('should get error when request has no tokenCommand header', () => {
 			(() => {
 				command.header = undefined;
 				request = {tokenTransaction: tokenTx, tokenCommand: command};
@@ -793,6 +787,73 @@ describe('TokenClient', () => {
 				request = {tokenTransaction: tokenTx, tokenCommand: command};
 				tokenClient.generateUnsignedTokenTransaction(request);
 			}).should.throw('forced build header error');
+		});
+	});
+
+	describe('#sendSignedTokenCommand', () => {
+		let request;
+		let channelStub;
+
+		const commandResponse = new fabprotos.token.CommandResponse();
+
+		beforeEach(() => {
+			channelStub = sinon.createStubInstance(Channel);
+			channelStub.sendSignedTokenCommand.returns(commandResponse);
+
+			tokenClient = new TokenClient(client, channelStub);
+			request = {command_bytes: 'fake-payload-bytes', signature: 'fake-signature-bytes'};
+		});
+
+		it('should return command response', async () => {
+			sinon.spy(channelStub.sendSignedTokenCommand);
+			const response = await tokenClient.sendSignedTokenCommand(request);
+			response.should.deep.equal(commandResponse);
+			request.targets = undefined;
+			sinon.assert.calledWith(channelStub.sendSignedTokenCommand, request);
+		});
+
+		it('should get error when channel.sendSignedTokenCommand throws error', async () => {
+			try {
+				const fakeError = new Error('forced send command error');
+				channelStub.sendSignedTokenCommand.throws(fakeError);
+				await tokenClient.sendSignedTokenCommand(request);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced send command error');
+			}
+		});
+	});
+
+	describe('#sendSignedTokenTransaction', () => {
+		let request;
+		let channelStub;
+
+		const bcResponse = {status: 'SUCCESS'};
+
+		beforeEach(() => {
+			channelStub = sinon.createStubInstance(Channel);
+			channelStub.sendSignedTokenTransaction.returns(bcResponse);
+
+			tokenClient = new TokenClient(client, channelStub);
+
+			request = {payload_bytes: 'fake-payload-bytes', signature: 'fake-signature-bytes', txId: txId};
+		});
+
+		it('should return broadcast response with success status', async () => {
+			const result = await tokenClient.sendSignedTokenTransaction(request);
+			result.status.should.equal('SUCCESS');
+			result.should.deep.equal(bcResponse);
+		});
+
+		it('should get error when channel.sendSignedTokenTransaction throws error', async () => {
+			try {
+				const fakeError = new Error('forced send transaction error');
+				channelStub.sendSignedTokenTransaction.throws(fakeError);
+				await tokenClient.sendSignedTokenTransaction(request);
+				should.fail();
+			} catch (err) {
+				err.message.should.equal('forced send transaction error');
+			}
 		});
 	});
 });

@@ -14,7 +14,6 @@
 
 'use strict';
 
-const Channel = require('./Channel');
 const TransactionID = require('./TransactionID');
 const util = require('util');
 const clientUtils = require('./client-utils.js');
@@ -348,26 +347,28 @@ const TokenClient = class {
 	/**
 	 * Sends signed token command to peer
 	 *
-	 * @param {SignedCommandRequest} request containing signedCommand and targets.
-	 * The signed command would be sent to peer directly.
-	 * @param {number} timeout the timeout setting passed on sendSignedCommand
+	 * @param {SignedCommandRequest} request - Required.
+	 *        Must contain command_bytes and signature properties.
+	 * @param {number} timeout - Optional. The timeout setting passed on sendSignedCommand.
 	 * @returns {Promise} A Promise for a "CommandResponse" message returned by
 	 *          the prover peer.
 	 */
 	async sendSignedTokenCommand(request, timeout) {
+		logger.debug('sendSignedTokenCommand - start');
+
 		// copy request to protect user input
 		const sendRequest = Object.assign({}, request);
 		if (!sendRequest.targets) {
 			sendRequest.targets = this._targets;
 		}
-		return Channel.sendSignedTokenCommand(sendRequest, timeout);
+		return this._channel.sendSignedTokenCommand(sendRequest, timeout);
 	}
 
 	/**
 	 * @typedef {Object} SignedTokenTransactionRequest
 	 *          This object contains properties that will be used for broadcasting a token transaction.
-	 * @property {Buffer} signature - Required. The signature.
-	 * @property {Buffer} payload_bytes - Required. The token transaction payload bytes.
+	 * @property {Buffer} payload_bytes - Required. Payload bytes for the token transaction.
+	 * @property {Buffer} signature - Required. Signer's signature for payload_bytes.
 	 * @property {TransactionID} txId - Required. Transaction ID to use for this request.
 	 * @property {Orderer | string} orderer - Optional. The orderer that will receive this request,
 	 *           when not provided, the transaction will be sent to the orderers assigned to this channel instance.
@@ -376,8 +377,8 @@ const TokenClient = class {
 	/**
 	 * send the signed token transaction
 	 *
-	 * @param {SignedTokenTransactionRequest} request - Required. The signed token transaction.
-	 *        Must contain 'signature' and 'tokentx_bytes' properties.
+	 * @param {SignedTokenTransactionRequest} request - Required.
+	 *        Must contain 'payload_bytes', 'signature' and 'txId' properties.
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Orderer instance and the global
@@ -389,6 +390,7 @@ const TokenClient = class {
 	 *          submitted transaction.
 	 */
 	async sendSignedTokenTransaction(request, timeout) {
+		logger.debug('sendSignedTokenTransaction - start');
 		return this._channel.sendSignedTokenTransaction(request, timeout);
 	}
 
