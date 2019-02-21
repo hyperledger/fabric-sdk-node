@@ -6,6 +6,8 @@
 
 'use strict';
 
+const TimeoutError = require('fabric-network/lib/errors/timeouterror');
+
 const logger = require('fabric-network/lib/logger').getLogger('TransactionEventHandler');
 const util = require('util');
 
@@ -104,7 +106,11 @@ class TransactionEventHandler {
 			.map((eventHub) => eventHub.getName())
 			.join(', ');
 		const message = 'Event strategy not satisfied within the timeout period. No response received from event hubs: ' + unrespondedEventHubs;
-		this._strategyFail(new Error(message));
+		const error = new TimeoutError({
+			message,
+			transactionId: this.transactionId
+		});
+		this._strategyFail(error);
 	}
 
 	_onEvent(eventHub, txId, code) {

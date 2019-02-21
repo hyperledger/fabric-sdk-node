@@ -14,6 +14,7 @@ const sinon = require('sinon');
 const ChannelEventHub = require('fabric-client').ChannelEventHub;
 
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
+const TimeoutError = require('fabric-network/lib/errors/timeouterror');
 
 describe('TransactionEventHandler', () => {
 	let stubEventHub;
@@ -183,7 +184,7 @@ describe('TransactionEventHandler', () => {
 			await handler.startListening();
 			const promise = handler.waitForEvents();
 			clock.runAll();
-			return expect(promise).to.be.rejectedWith('Event strategy not satisfied within the timeout period');
+			return expect(promise).to.be.rejectedWith(TimeoutError);
 		});
 
 		it('does not timeout if timeout set to zero', async () => {
@@ -214,6 +215,20 @@ describe('TransactionEventHandler', () => {
 			await handler.startListening();
 			clock.runAll();
 			return expect(handler.waitForEvents()).to.be.fulfilled;
+		});
+
+		it('timeout failure error has transaction ID property', async () => {
+			const options = {commitTimeout: 418};
+			handler = new TransactionEventHandler(transactionId, stubStrategy, options);
+			await handler.startListening();
+			const promise = handler.waitForEvents();
+			clock.runAll();
+			try {
+				await promise;
+				chai.assert.fail('Expected an error');
+			} catch (error) {
+				expect(error.transactionId).to.equal(transactionId);
+			}
 		});
 	});
 });

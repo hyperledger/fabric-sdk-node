@@ -1071,7 +1071,7 @@ const Client = class extends BaseClient {
 	 * standard array of objects.
 	 *
 	 * @typedef {array} ProposalResponseObject
-	 * @property {Array<(ProposalResponse|Error)>} index:0 - Array where each element is either a ProposalResponse
+	 * @property {Array.<(ProposalResponse|Error)>} index:0 - Array where each element is either a ProposalResponse
 	 *           object (for a successful response from the endorsing peer) or an Error object (for an unsuccessful
 	 *           peer response or runtime error).
 	 * @property {Object} index:1 - The original Proposal object needed when

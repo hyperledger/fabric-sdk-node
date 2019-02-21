@@ -17,7 +17,8 @@ const TransactionID = require('fabric-client/lib/TransactionID.js');
 const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
 
 const chai = require('chai');
-chai.should();
+const should = chai.should;
+should();
 chai.use(require('chai-as-promised'));
 
 const Network = require('../lib/network');
@@ -26,12 +27,12 @@ const Contract = require('../lib/contract');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 
 describe('Network', () => {
-	const mspId = 'MSP_ID';
-
 	let mockChannel, mockClient;
-	let mockPeer1, mockPeer2, mockPeer3;
+	let mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5;
+	let peerArray;
 	let network;
 	let mockTransactionID, mockGateway;
+	let stubQueryHandler;
 
 	beforeEach(() => {
 		mockChannel = sinon.createStubInstance(InternalChannel);
@@ -57,12 +58,33 @@ describe('Network', () => {
 		mockPeer3.index = 3;
 		mockPeer3.getName.returns('Peer3');
 
+		mockPeer4 = sinon.createStubInstance(Peer);
+		mockPeer4.index = 4;
+		mockPeer5 = sinon.createStubInstance(Peer);
+		mockPeer5.index = 5;
+
+		mockPeer1.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
+		mockPeer2.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
+		mockPeer3.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
+		mockPeer4.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
+		mockPeer5.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
+		peerArray = [mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5];
+		mockChannel.getPeers.returns(peerArray);
+
+		stubQueryHandler = {};
+
 		mockGateway = sinon.createStubInstance(Gateway);
 		mockGateway.getOptions.returns({
 			useDiscovery: false,
 			eventHandlerOptions: {
 				commitTimeout: 300,
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+			},
+			queryHandlerOptions: {
+				strategy: (theNetwork) => {
+					stubQueryHandler.network = theNetwork;
+					return stubQueryHandler;
+				}
 			}
 		});
 
@@ -79,23 +101,6 @@ describe('Network', () => {
 
 
 	describe('#_initializeInternalChannel', () => {
-		let peerArray;
-		let mockPeer4, mockPeer5;
-		beforeEach(() => {
-			mockPeer4 = sinon.createStubInstance(Peer);
-			mockPeer4.index = 4;
-			mockPeer5 = sinon.createStubInstance(Peer);
-			mockPeer5.index = 5;
-
-			mockPeer1.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
-			mockPeer2.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
-			mockPeer3.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
-			mockPeer4.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
-			mockPeer5.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
-			peerArray = [mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5];
-			mockChannel.getPeers.returns(peerArray);
-		});
-
 		it('should initialize the network using the first peer', async () => {
 			mockChannel.initialize.resolves();
 			await network._initializeInternalChannel({enabled:false, asLocalhost: false});
@@ -160,45 +165,8 @@ describe('Network', () => {
 		it('should initialize the internal channels', async () => {
 			network.initialized = false;
 			sinon.stub(network, '_initializeInternalChannel').returns();
-			const mockPeerMap = new Map();
-			mockPeerMap.set(mspId, [mockPeer1]);
-			sinon.stub(network, '_mapPeersToMSPid').returns(mockPeerMap);
 			await network._initialize();
 			network.initialized.should.equal(true);
-		});
-	});
-
-	describe('#_mapPeersToMSPid', () => {
-		let peerArray;
-		let mockPeer4, mockPeer5;
-		beforeEach(() => {
-			mockPeer4 = sinon.createStubInstance(Peer);
-			mockPeer4.index = 4;
-			mockPeer5 = sinon.createStubInstance(Peer);
-			mockPeer5.index = 5;
-
-			mockPeer1.getMspid.returns('MSP01');
-			mockPeer2.getMspid.returns('MSP02');
-			mockPeer3.getMspid.returns('MSP03');
-			mockPeer4.getMspid.returns('MSP03'); // duplicate id
-			mockPeer5.getMspid.returns();
-			peerArray = [mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5];
-			mockChannel.getPeers.returns(peerArray);
-		});
-
-		it('should initialize the peer map', async () => {
-			const peermap = network._mapPeersToMSPid();
-			peermap.size.should.equal(3);
-			peermap.get('MSP01').should.deep.equal([mockPeer1]);
-			peermap.get('MSP02').should.deep.equal([mockPeer2]);
-			peermap.get('MSP03').should.deep.equal([mockPeer3, mockPeer4]);
-		});
-
-		it('should throw error if no peers associated with MSPID', async () => {
-			mockChannel.getPeers.returns([]);
-			(() => {
-				network._mapPeersToMSPid();
-			}).should.throw(/no suitable peers associated with mspIds were found/);
 		});
 	});
 
@@ -257,18 +225,15 @@ describe('Network', () => {
 			network.initialized.should.equal(false);
 		});
 
-		it('should call dispose on the queryHandler if defined and work if no contracts have been got', () => {
-			const disposeStub = sinon.stub();
-			network.queryHandler = {
-				dispose: disposeStub
-			};
-			network._dispose();
-			sinon.assert.calledOnce(disposeStub);
-		});
-
 		it('calls close() on its channel', () => {
 			network._dispose();
 			sinon.assert.calledOnce(mockChannel.close);
+		});
+
+		it('calls dispose() on the event hub factory', () => {
+			const spy = sinon.spy(network.getEventHubFactory(), 'dispose');
+			network._dispose();
+			sinon.assert.called(spy);
 		});
 	});
 
@@ -276,6 +241,22 @@ describe('Network', () => {
 		it('Returns an EventHubFactory', () => {
 			const result = network.getEventHubFactory();
 			result.should.be.an.instanceOf(EventHubFactory);
+		});
+	});
+
+	describe('#getQueryHandler', () => {
+		it('Undefined before initialization', async () => {
+			const result = network.getQueryHandler();
+			should(result).not.exist;
+		});
+
+		it('Returns a query handler after initialization', async () => {
+			mockChannel.initialize.resolves();
+			await network._initialize({enabled: true});
+
+			const result = network.getQueryHandler();
+
+			result.network.should.equal(network);
 		});
 	});
 });

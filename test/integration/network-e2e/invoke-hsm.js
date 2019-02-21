@@ -78,13 +78,6 @@ async function createContract(t, gateway, gatewayOptions) {
 	return contract;
 }
 
-const getEventHubForOrg = async (gateway, orgMSP) => {
-	const network = await gateway.getNetwork(channelName);
-	const channel = network.getChannel();
-	const orgPeer = channel.getPeersForOrg(orgMSP)[0];
-	return channel.getChannelEventHub(orgPeer.getName());
-};
-
 test('\n\n****** Network End-to-end flow: import identity into wallet using hsm *****\n\n', async (t) => {
 	await setupAdmin();
 	await hsmIdentitySetup();
@@ -99,7 +92,6 @@ test('\n\n****** Network End-to-end flow: import identity into wallet using hsm 
 
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using file hsm wallet and default event strategy *****\n\n', async (t) => {
 	const gateway = new Gateway();
-	let org1EventHub;
 
 	try {
 		await setupAdmin();
@@ -113,26 +105,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			discovery: {enabled: false}
 		});
 
-		// Obtain an event hub that that will be used by the underlying implementation
-		org1EventHub = await getEventHubForOrg(gateway, 'Org1MSP');
-		const org2EventHub = await getEventHubForOrg(gateway, 'Org2MSP');
-
-		// initialize eventFired to 0
-		let eventFired = -1;
-
-		// have to register for all transaction events (a new feature in 1.3) as
-		// there is no way to know what the initial transaction id is
-		org1EventHub.registerTxEvent('all', (txId, code) => {
-			if (code === 'VALID') {
-				eventFired++;
-			}
-		}, () => {});
-
 		const response = await contract.submitTransaction('move', 'a', 'b', '100');
-
-		t.true(org1EventHub.isconnected(), 'org1 event hub correctly connected');
-		t.false(org2EventHub.isconnected(), 'org2 event hub correctly not connected');
-		t.equal(eventFired, 1, 'single event for org1 correctly unblocked submitTransaction');
 
 		const expectedResult = 'move succeed';
 		if (response.toString() === expectedResult) {
@@ -144,7 +117,6 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
 		gateway.disconnect();
-		t.false(org1EventHub.isconnected(), 'org1 event hub correctly been disconnected');
 	}
 	t.end();
 });

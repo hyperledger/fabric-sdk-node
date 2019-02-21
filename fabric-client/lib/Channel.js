@@ -155,7 +155,7 @@ const Channel = class {
 	 *           When used with `targets` parameter, the peer referenced here will be
 	 *           added to the `targets` array.
 	 *           Default is to use the first ChannelPeer assigned to this channel.
-	 * @property {Array[Peer | ChannelPeer]} targets - Optional. The target peers to be used
+	 * @property {Array.<(Peer | ChannelPeer)>} targets - Optional. The target peers to be used
 	 *           to make the initialization requests for configuration information.
 	 * 	         When used with `target` parameter, the peer referenced there will be
 	 *           added to the `targets` array.
@@ -283,9 +283,6 @@ const Channel = class {
 					logger.debug('%s - starting discovery', method);
 					target_peer = this._getTargetForDiscovery(target_peer);
 
-					if (!target_peer) {
-						throw new Error('No target provided for discovery services');
-					}
 					let discover_request = {
 						target: target_peer,
 						config: true
