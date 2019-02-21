@@ -39,7 +39,7 @@ describe('Peer', () => {
 		it('should not permit creation without an url', () => {
 			(() => {
 				new Peer();
-			}).should.throw(/Parameter "url" must be a string, not undefined/);
+			}).should.throw(TypeError);
 		});
 	});
 
