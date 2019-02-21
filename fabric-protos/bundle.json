@@ -4483,8 +4483,8 @@
                     "fields": [
                         {
                             "rule": "optional",
-                            "type": "PlainTokenAction",
-                            "name": "plain_action",
+                            "type": "TokenAction",
+                            "name": "token_action",
                             "id": 1,
                             "oneof": "action"
                         }
@@ -4496,42 +4496,28 @@
                     }
                 },
                 {
-                    "name": "PlainTokenAction",
+                    "name": "TokenAction",
                     "syntax": "proto3",
                     "fields": [
                         {
                             "rule": "optional",
-                            "type": "PlainImport",
-                            "name": "plain_import",
+                            "type": "Issue",
+                            "name": "issue",
                             "id": 1,
                             "oneof": "data"
                         },
                         {
                             "rule": "optional",
-                            "type": "PlainTransfer",
-                            "name": "plain_transfer",
+                            "type": "Transfer",
+                            "name": "transfer",
                             "id": 2,
                             "oneof": "data"
                         },
                         {
                             "rule": "optional",
-                            "type": "PlainTransfer",
-                            "name": "plain_redeem",
+                            "type": "Transfer",
+                            "name": "redeem",
                             "id": 3,
-                            "oneof": "data"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "PlainApprove",
-                            "name": "plain_approve",
-                            "id": 4,
-                            "oneof": "data"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "PlainTransferFrom",
-                            "name": "plain_transfer_From",
-                            "id": 5,
                             "oneof": "data"
                         }
                     ],
@@ -4539,9 +4525,7 @@
                         "data": [
                             1,
                             2,
-                            3,
-                            4,
-                            5
+                            3
                         ]
                     }
                 },
@@ -4576,19 +4560,19 @@
                     ]
                 },
                 {
-                    "name": "PlainImport",
+                    "name": "Issue",
                     "syntax": "proto3",
                     "fields": [
                         {
                             "rule": "repeated",
-                            "type": "PlainOutput",
+                            "type": "Token",
                             "name": "outputs",
                             "id": 1
                         }
                     ]
                 },
                 {
-                    "name": "PlainTransfer",
+                    "name": "Transfer",
                     "syntax": "proto3",
                     "fields": [
                         {
@@ -4599,62 +4583,14 @@
                         },
                         {
                             "rule": "repeated",
-                            "type": "PlainOutput",
+                            "type": "Token",
                             "name": "outputs",
                             "id": 2
                         }
                     ]
                 },
                 {
-                    "name": "PlainApprove",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "repeated",
-                            "type": "TokenId",
-                            "name": "inputs",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "PlainDelegatedOutput",
-                            "name": "delegated_outputs",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "PlainOutput",
-                            "name": "output",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "PlainTransferFrom",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "repeated",
-                            "type": "TokenId",
-                            "name": "inputs",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "PlainOutput",
-                            "name": "outputs",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "PlainDelegatedOutput",
-                            "name": "delegated_output",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "PlainOutput",
+                    "name": "Token",
                     "syntax": "proto3",
                     "fields": [
                         {
@@ -4692,36 +4628,6 @@
                             "type": "uint32",
                             "name": "index",
                             "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "PlainDelegatedOutput",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenOwner",
-                            "name": "owner",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "TokenOwner",
-                            "name": "delegatees",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "type",
-                            "id": 3
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "uint64",
-                            "name": "quantity",
-                            "id": 4
                         }
                     ]
                 },
@@ -4775,7 +4681,7 @@
                     "fields": [
                         {
                             "rule": "repeated",
-                            "type": "PlainOutput",
+                            "type": "Token",
                             "name": "outputs",
                             "id": 1
                         }
@@ -4938,48 +4844,6 @@
                     ]
                 },
                 {
-                    "name": "AllowanceRecipientShare",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenOwner",
-                            "name": "recipient",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "uint64",
-                            "name": "quantity",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "ApproveRequest",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "credential",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "AllowanceRecipientShare",
-                            "name": "allowance_shares",
-                            "id": 2
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "TokenId",
-                            "name": "token_ids",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
                     "name": "ExpectationRequest",
                     "syntax": "proto3",
                     "fields": [
@@ -5079,23 +4943,9 @@
                         },
                         {
                             "rule": "optional",
-                            "type": "ApproveRequest",
-                            "name": "approve_request",
-                            "id": 6,
-                            "oneof": "payload"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "TransferRequest",
-                            "name": "transfer_from_request",
-                            "id": 7,
-                            "oneof": "payload"
-                        },
-                        {
-                            "rule": "optional",
                             "type": "ExpectationRequest",
                             "name": "expectation_request",
-                            "id": 8,
+                            "id": 6,
                             "oneof": "payload"
                         }
                     ],
@@ -5105,9 +4955,7 @@
                             3,
                             4,
                             5,
-                            6,
-                            7,
-                            8
+                            6
                         ]
                     }
                 },
@@ -6763,20 +6611,6 @@
             ],
             "enums": [
                 {
-                    "name": "ConfidentialityLevel",
-                    "syntax": "proto3",
-                    "values": [
-                        {
-                            "name": "PUBLIC",
-                            "id": 0
-                        },
-                        {
-                            "name": "CONFIDENTIAL",
-                            "id": 1
-                        }
-                    ]
-                },
-                {
                     "name": "TxValidationCode",
                     "syntax": "proto3",
                     "values": [
@@ -6897,6 +6731,10 @@
                         {
                             "name": "VALIDATION_PARAMETER",
                             "id": 0
+                        },
+                        {
+                            "name": "VALIDATION_PARAMETER_V2",
+                            "id": 1
                         }
                     ]
                 }
@@ -7185,7 +7023,7 @@
                     ]
                 },
                 {
-                    "name": "DefineChaincodeForMyOrgArgs",
+                    "name": "ApproveChaincodeDefinitionForMyOrgArgs",
                     "syntax": "proto3",
                     "fields": [
                         {
@@ -7239,12 +7077,12 @@
                     ]
                 },
                 {
-                    "name": "DefineChaincodeForMyOrgResult",
+                    "name": "ApproveChaincodeDefinitionForMyOrgResult",
                     "syntax": "proto3",
                     "fields": []
                 },
                 {
-                    "name": "DefineChaincodeArgs",
+                    "name": "CommitChaincodeDefinitionArgs",
                     "syntax": "proto3",
                     "fields": [
                         {
@@ -7298,12 +7136,12 @@
                     ]
                 },
                 {
-                    "name": "DefineChaincodeResult",
+                    "name": "CommitChaincodeDefinitionResult",
                     "syntax": "proto3",
                     "fields": []
                 },
                 {
-                    "name": "QueryDefinedChaincodeArgs",
+                    "name": "QueryChaincodeDefinitionArgs",
                     "syntax": "proto3",
                     "fields": [
                         {
@@ -7315,7 +7153,7 @@
                     ]
                 },
                 {
-                    "name": "QueryDefinedChaincodeResult",
+                    "name": "QueryChaincodeDefinitionResult",
                     "syntax": "proto3",
                     "fields": [
                         {
@@ -7327,54 +7165,48 @@
                         {
                             "rule": "optional",
                             "type": "string",
-                            "name": "name",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
                             "name": "version",
-                            "id": 3
+                            "id": 2
                         },
                         {
                             "rule": "optional",
                             "type": "bytes",
                             "name": "hash",
-                            "id": 4
+                            "id": 3
                         },
                         {
                             "rule": "optional",
                             "type": "string",
                             "name": "endorsement_plugin",
-                            "id": 5
+                            "id": 4
                         },
                         {
                             "rule": "optional",
                             "type": "string",
                             "name": "validation_plugin",
-                            "id": 6
+                            "id": 5
                         },
                         {
                             "rule": "optional",
                             "type": "bytes",
                             "name": "validation_parameter",
-                            "id": 7
+                            "id": 6
                         },
                         {
                             "rule": "optional",
                             "type": "common.CollectionConfigPackage",
                             "name": "collections",
-                            "id": 8
+                            "id": 7
                         }
                     ]
                 },
                 {
-                    "name": "QueryDefinedNamespacesArgs",
+                    "name": "QueryNamespaceDefinitionsArgs",
                     "syntax": "proto3",
                     "fields": []
                 },
                 {
-                    "name": "QueryDefinedNamespacesResult",
+                    "name": "QueryNamespaceDefinitionsResult",
                     "syntax": "proto3",
                     "fields": [
                         {

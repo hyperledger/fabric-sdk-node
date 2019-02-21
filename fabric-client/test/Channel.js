@@ -3496,7 +3496,7 @@ describe('Channel', () => {
 
 			// prepare token transaction request
 			tokenTx = new fabprotos.token.TokenTransaction();
-			tokenTx.set('plain_action', new fabprotos.token.PlainTokenAction());
+			tokenTx.set('token_action', new fabprotos.token.TokenAction());
 			request = {tokenTransaction: tokenTx, txId: txIdStub};
 		});
 

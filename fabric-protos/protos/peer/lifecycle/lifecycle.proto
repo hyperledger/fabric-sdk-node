@@ -14,7 +14,7 @@ option java_package = "org.hyperledger.fabric.protos.peer.lifecycle";
 option go_package = "github.com/hyperledger/fabric/protos/peer/lifecycle";
 
 // InstallChaincodeArgs is the message used as the argument to
-// '+lifecycle.InstallChaincode'
+// '_lifecycle.InstallChaincode'
 message InstallChaincodeArgs {
     string name = 1;
     string version = 2;
@@ -22,32 +22,32 @@ message InstallChaincodeArgs {
 }
 
 // InstallChaincodeArgs is the message returned by
-// '+lifecycle.InstallChaincode'
+// '_lifecycle.InstallChaincode'
 message InstallChaincodeResult {
     bytes hash = 1;
 }
 
 // QueryInstalledChaincodeArgs is the message used as arguments
-// '+lifecycle.QueryInstalledChaincode'
+// '_lifecycle.QueryInstalledChaincode'
 message QueryInstalledChaincodeArgs {
     string name = 1;
     string version = 2;
 }
 
 // QueryInstalledChaincodeResult is the message returned by
-// '+lifecycle.QueryInstalledChaincode'
+// '_lifecycle.QueryInstalledChaincode'
 message QueryInstalledChaincodeResult {
     bytes hash = 1;
 }
 
 // QueryInstalledChaincodesArgs currently is an empty argument to
-// '+lifecycle.QueryInstalledChaincodes'.   In the future, it may be
+// '_lifecycle.QueryInstalledChaincodes'.   In the future, it may be
 // extended to have parameters.
 message QueryInstalledChaincodesArgs {
 }
 
 // QueryInstalledChaincodesResult is the message returned by
-// '+lifecycle.QueryInstalledChaincodes'.  It returns a list of
+// '_lifecycle.QueryInstalledChaincodes'.  It returns a list of
 // installed chaincodes.
 message QueryInstalledChaincodesResult {
     message InstalledChaincode {
@@ -58,9 +58,9 @@ message QueryInstalledChaincodesResult {
     repeated InstalledChaincode installed_chaincodes = 1;
 }
 
-// DefineChaincodeForMyOrgArgs is the message used as arguments to
-// `+lifecycle.DefineChaincodeForMyOrg`.
-message DefineChaincodeForMyOrgArgs {
+// ApproveChaincodeDefinitionForMyOrgArgs is the message used as arguments to
+// `_lifecycle.ApproveChaincodeDefinitionForMyOrg`.
+message ApproveChaincodeDefinitionForMyOrgArgs {
     int64 sequence = 1;
     string name = 2;
     string version = 3;
@@ -71,15 +71,15 @@ message DefineChaincodeForMyOrgArgs {
     common.CollectionConfigPackage collections = 8;
 }
 
-// DefineChaincodeForMyOrgResult is the message returned by
-// `+lifecycle.DefineChaincodeForMyOrg`. Currently it returns
+// ApproveChaincodeDefinitionForMyOrgResult is the message returned by
+// `_lifecycle.ApproveChaincodeDefinitionForMyOrg`. Currently it returns
 // nothing, but may be extended in the future.
-message DefineChaincodeForMyOrgResult {
+message ApproveChaincodeDefinitionForMyOrgResult {
 }
 
-// DefineChaincodeArgs is the message used as arguments to
-// `+lifecycle.DefineChaincode`.
-message DefineChaincodeArgs {
+// CommitChaincodeDefinitionArgs is the message used as arguments to
+// `_lifecycle.CommitChaincodeDefinition`.
+message CommitChaincodeDefinitionArgs {
     int64 sequence = 1;
     string name = 2;
     string version = 3;
@@ -90,39 +90,38 @@ message DefineChaincodeArgs {
     common.CollectionConfigPackage collections = 8;
 }
 
-// DefineChaincodeResult is the message returned by
-// `+lifecycle.DefineChaincode`. Currently it returns
+// CommitChaincodeDefinitionResult is the message returned by
+// `_lifecycle.CommitChaincodeDefinition`. Currently it returns
 // nothing, but may be extended in the future.
-message DefineChaincodeResult {
+message CommitChaincodeDefinitionResult {
 }
 
-// QueryDefinedChaincode is the message used as arguments to
-// `+lifecycle.QueryDefinedChaincode`.
-message QueryDefinedChaincodeArgs {
+// QueryChaincodeDefinition is the message used as arguments to
+// `_lifecycle.QueryChaincodeDefinition`.
+message QueryChaincodeDefinitionArgs {
     string name = 1;
 }
 
-// DefineChaincodeResult is the message returned by
-// `+lifecycle.QueryDefinedChaincode`.
-message QueryDefinedChaincodeResult {
+// CommitChaincodeDefinitionResult is the message returned by
+// `_lifecycle.QueryChaincodeDefinition`.
+message QueryChaincodeDefinitionResult {
     int64 sequence = 1;
-    string name = 2;
-    string version = 3;
-    bytes hash = 4;
-    string endorsement_plugin = 5;
-    string validation_plugin = 6;
-    bytes validation_parameter = 7;
-    common.CollectionConfigPackage collections = 8;
+    string version = 2;
+    bytes hash = 3;
+    string endorsement_plugin = 4;
+    string validation_plugin = 5;
+    bytes validation_parameter = 6;
+    common.CollectionConfigPackage collections = 7;
 }
 
-// QueryDefinedNamespaces is the message used as arguments to
-// `+lifecycle.QueryDefinedNamespaces`.
-message QueryDefinedNamespacesArgs {
+// QueryNamespaceDefinitions is the message used as arguments to
+// `_lifecycle.QueryNamespaceDefinitions`.
+message QueryNamespaceDefinitionsArgs {
 }
 
-// QueryDefinedNamespaces is the message returned by
-// `+lifecycle.QueryDefinedNamespaces`.
-message QueryDefinedNamespacesResult {
+// QueryNamespaceDefinitions is the message returned by
+// `_lifecycle.QueryNamespaceDefinitions`.
+message QueryNamespaceDefinitionsResult {
     message Namespace{
         string type = 1;
     }

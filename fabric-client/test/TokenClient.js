@@ -717,7 +717,7 @@ describe('TokenClient', () => {
 			command.setHeader(commandHeader);
 
 			tokenTx = new fabprotos.token.TokenTransaction();
-			tokenTx.set('plain_action', new fabprotos.token.PlainTokenAction());
+			tokenTx.set('token_action', new fabprotos.token.TokenAction());
 
 			// create stubs
 			sha2_256Stub = sinon.stub();
