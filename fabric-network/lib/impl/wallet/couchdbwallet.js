@@ -106,11 +106,20 @@ class CouchDBWalletKeyValueStore extends CouchDBVStore {
 	async delete(key) {
 		const self = this;
 		return new Promise((resolve) => {
-			self._database.destroy(key, (err) => {
-				if (err) {
+			self._database.get(key, (e, res) => {
+				if (e) {
 					return resolve(false);
 				}
-				return resolve(true);
+				if (!res._rev) {
+					return resolve(false);
+				}
+				const rev = res._rev;
+				self._database.destroy(key, rev, (err) => {
+					if (err) {
+						return resolve(false);
+					}
+					return resolve(true);
+				});
 			});
 		});
 	}
