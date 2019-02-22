@@ -3102,7 +3102,7 @@ describe('Client', () => {
 			MockNetworkConfig = sinon.stub();
 			readFileSyncStub = sinon.stub();
 			revert.push(Client.__set__('fs.readFileSync', readFileSyncStub));
-			revert.push(Client.__set__('path.resolve', (v) => v));
+			revert.push(Client.__set__('path.resolve', (v) => `/path/to/${v}`));
 			safeLoadStub = sinon.stub();
 			revert.push(Client.__set__('yaml.safeLoad', safeLoadStub));
 		});
@@ -3135,7 +3135,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 		});
 
-		it('should return the new network config when config is an object', () => {
+		it('should return the new network config when config is a 1.0 object', () => {
 			readFileSyncStub.returns('file-data');
 			getConfigSettingStub.returns({'1.0': 'network-config-file'});
 			requireStub.returns(MockNetworkConfig);
@@ -3143,11 +3143,11 @@ describe('Client', () => {
 			const networkConfig = _getNetworkConfig({version: '1.0'}, 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, {version: '1.0'}, 'client');
+			sinon.assert.calledWithExactly(MockNetworkConfig, {version: '1.0'}, 'client', null);
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});
 
-		it('should return the new network config when config is a yaml file path', () => {
+		it('should return the new network config when config is a 1.0 yaml file path', () => {
 			readFileSyncStub.returns('file-data');
 			safeLoadStub.returns({version: '1.0'});
 			getConfigSettingStub.returns({'1.0': 'network-config-file'});
@@ -3156,13 +3156,13 @@ describe('Client', () => {
 			const networkConfig = _getNetworkConfig('config.yaml', 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, {version: '1.0'}, 'client');
-			sinon.assert.calledWith(readFileSyncStub, 'config.yaml');
+			sinon.assert.calledWithExactly(MockNetworkConfig, {version: '1.0'}, 'client', '/path/to/config.yaml');
+			sinon.assert.calledWith(readFileSyncStub, '/path/to/config.yaml');
 			sinon.assert.calledWith(safeLoadStub, 'file-data');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});
 
-		it('should return the new network config when config is a yml file path', () => {
+		it('should return the new network config when config is a 1.0 yml file path', () => {
 			readFileSyncStub.returns('file-data');
 			safeLoadStub.returns({version: '1.0'});
 			getConfigSettingStub.returns({'1.0': 'network-config-file'});
@@ -3171,13 +3171,13 @@ describe('Client', () => {
 			const networkConfig = _getNetworkConfig('config.yml', 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, {version: '1.0'}, 'client');
-			sinon.assert.calledWith(readFileSyncStub, 'config.yml');
+			sinon.assert.calledWithExactly(MockNetworkConfig, {version: '1.0'}, 'client', '/path/to/config.yml');
+			sinon.assert.calledWith(readFileSyncStub, '/path/to/config.yml');
 			sinon.assert.calledWith(safeLoadStub, 'file-data');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});
 
-		it('should return the new network config when config is a yaml file path', () => {
+		it('should return the new network config when config is a 1.0 json file path', () => {
 			readFileSyncStub.returns('{"version":  "1.0"}');
 			safeLoadStub.returns({version: '1.0'});
 			getConfigSettingStub.returns({'1.0': 'network-config-file'});
@@ -3186,12 +3186,12 @@ describe('Client', () => {
 			const networkConfig = _getNetworkConfig('config.json', 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, {version: '1.0'}, 'client');
-			sinon.assert.calledWith(readFileSyncStub, 'config.json');
+			sinon.assert.calledWithExactly(MockNetworkConfig, {version: '1.0'}, 'client', '/path/to/config.json');
+			sinon.assert.calledWith(readFileSyncStub, '/path/to/config.json');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});
 
-		it('should return the new network config when config is a yaml file path', () => {
+		it('should return the new network config when config is a 1.1 json file path', () => {
 			readFileSyncStub.returns('{"version": 1.1}');
 			safeLoadStub.returns({version: 1.1});
 			getConfigSettingStub.returns({'1.1': 'network-config-file'});
@@ -3200,8 +3200,8 @@ describe('Client', () => {
 			const networkConfig = _getNetworkConfig('config.json', 'client');
 			sinon.assert.calledWith(getConfigSettingStub, 'network-config-schema');
 			sinon.assert.calledWith(requireStub, 'network-config-file');
-			sinon.assert.calledWith(MockNetworkConfig, {version: 1.1}, 'client');
-			sinon.assert.calledWith(readFileSyncStub, 'config.json');
+			sinon.assert.calledWithExactly(MockNetworkConfig, {version: 1.1}, 'client', '/path/to/config.json');
+			sinon.assert.calledWith(readFileSyncStub, '/path/to/config.json');
 			networkConfig.should.deep.equal(new MockNetworkConfig());
 		});
 	});

@@ -1857,11 +1857,12 @@ function _stringToSignature(string_signatures) {
 function _getNetworkConfig(loadConfig, client) {
 	let network_config = null;
 	let network_data = null;
+	let network_config_loc = null;
 	if (typeof loadConfig === 'string') {
-		const config_loc = path.resolve(loadConfig);
-		logger.debug('%s - looking at absolute path of ==>%s<==', '_getNetworkConfig', config_loc);
-		const file_data = fs.readFileSync(config_loc);
-		const file_ext = path.extname(config_loc);
+		network_config_loc = path.resolve(loadConfig);
+		logger.debug('%s - looking at absolute path of ==>%s<==', '_getNetworkConfig', network_config_loc);
+		const file_data = fs.readFileSync(network_config_loc);
+		const file_ext = path.extname(network_config_loc);
 		// maybe the file is yaml else has to be JSON
 		if ((/(yml|yaml)$/i).test(file_ext)) {
 			network_data = yaml.safeLoad(file_data);
@@ -1872,31 +1873,26 @@ function _getNetworkConfig(loadConfig, client) {
 		network_data = loadConfig;
 	}
 
-	let error_msg = null;
-	if (network_data) {
-		if (network_data.version) {
-			const parsing = Client.getConfigSetting('network-config-schema');
-			if (parsing) {
-				const pieces = network_data.version.toString().split('.');
-				const version = pieces[0] + '.' + pieces[1];
-				if (parsing[version]) {
-					const NetworkConfig = require(parsing[version]);
-					network_config = new NetworkConfig(network_data, client);
-				} else {
-					error_msg = 'common connection profile has an unknown "version"';
-				}
-			} else {
-				error_msg = 'missing "network-config-schema" configuration setting';
-			}
-		} else {
-			error_msg = '"version" is missing';
+	try {
+		if (!network_data) {
+			throw new Error('missing configuration data');
 		}
-	} else {
-		error_msg = 'missing configuration data';
-	}
-
-	if (error_msg) {
-		throw new Error(util.format('Invalid common connection profile due to %s', error_msg));
+		if (!network_data.version) {
+			throw new Error('"version" is missing');
+		}
+		const parsing = Client.getConfigSetting('network-config-schema');
+		if (!parsing) {
+			throw new Error('missing "network-config-schema" configuration setting');
+		}
+		const pieces = network_data.version.toString().split('.');
+		const version = pieces[0] + '.' + pieces[1];
+		if (!parsing[version]) {
+			throw new Error('common connection profile has an unknown "version"');
+		}
+		const NetworkConfig = require(parsing[version]);
+		network_config = new NetworkConfig(network_data, client, network_config_loc);
+	} catch (error) {
+		throw new Error(util.format('Invalid common connection profile due to %s', error.message));
 	}
 
 	return network_config;
