@@ -54,13 +54,23 @@ const NetworkConfig_1_0 = class {
 	 *
 	 * @param {Object} network_config - Common Connection Profile as represented in a JSON object
 	 */
-	constructor(network_config, client_context) {
+	constructor(network_config, client_context, network_config_loc) {
 		logger.debug('constructor, network_config: ' + JSON.stringify(network_config));
 		this._network_config = network_config;
 		this._client_context = client_context;
+		this._network_config_loc = network_config_loc;
 		this._peers = new Map();
 		this._channel = new Map();
 		this._orderers = new Map();
+	}
+
+	/**
+	 * Get the file system path that the network config was loaded from, if any.
+	 * @returns {string} The file system path that the network config was loaded
+	 * from, or null if it was not loaded directly from the file system.
+	 */
+	getNetworkConfigLocation() {
+		return this._network_config_loc;
 	}
 
 	mergeSettings(additions) {
@@ -163,7 +173,7 @@ const NetworkConfig_1_0 = class {
 			const peer_config = this._network_config[PEERS_CONFIG][name];
 			if (peer_config) {
 				const opts = {name: name};
-				opts.pem = getTLSCACert(peer_config);
+				opts.pem = getTLSCACert(peer_config, this._network_config_loc);
 				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, ENDORSER);
 				peer = this._client_context.newPeer(peer_config[URL], opts);
@@ -212,7 +222,7 @@ const NetworkConfig_1_0 = class {
 			const orderer_config = this._network_config[ORDERERS_CONFIG][name];
 			if (orderer_config) {
 				const opts = {name: name};
-				opts.pem = getTLSCACert(orderer_config);
+				opts.pem = getTLSCACert(orderer_config, this._network_config_loc);
 				Object.assign(opts, orderer_config[GRPC_CONNECTION_OPTIONS]);
 				this.addTimeout(opts, ORDERER);
 				orderer = this._client_context.newOrderer(orderer_config[URL], opts);
@@ -300,7 +310,7 @@ const NetworkConfig_1_0 = class {
 					certificateAuthority_config[CANAME],
 					certificateAuthority_config[URL],
 					certificateAuthority_config[HTTP_CONNECTION_OPTIONS],
-					getTLSCACert(certificateAuthority_config),
+					getTLSCACert(certificateAuthority_config, this._network_config_loc),
 					certificateAuthority_config[REGISTRAR]
 				);
 			}
@@ -396,14 +406,14 @@ const NetworkConfig_1_0 = class {
 	}
 };
 
-function getTLSCACert(config) {
+function getTLSCACert(config, network_config_loc) {
 	if (config && config[TLS_CACERTS]) {
-		return getPEMfromConfig(config[TLS_CACERTS]);
+		return getPEMfromConfig(config[TLS_CACERTS], network_config_loc);
 	}
 	return null;
 }
 
-function getPEMfromConfig(config) {
+function getPEMfromConfig(config, network_config_loc) {
 	let result = null;
 	if (config) {
 		if (config[PEM]) {
@@ -411,7 +421,7 @@ function getPEMfromConfig(config) {
 			result = config[PEM];
 		} else if (config[PATH]) {
 			// cert value is in a file
-			result = readFileSync(config[PATH]);
+			result = readFileSync(config[PATH], network_config_loc);
 			result = utils.normalizeX509(result);
 		}
 	}
@@ -419,15 +429,24 @@ function getPEMfromConfig(config) {
 	return result;
 }
 
-function readFileSync(config_path) {
-	try {
-		const config_loc = path.resolve(config_path);
-		const data = fs.readFileSync(config_loc);
-		return Buffer.from(data).toString();
-	} catch (err) {
-		logger.error('NetworkConfig101 - problem reading the PEM file :: ' + err);
-		throw err;
+function readFileSync(config_path, network_config_loc) {
+	const possiblePaths = [
+		path.resolve(config_path) // relative to cwd
+	];
+	if (network_config_loc) {
+		possiblePaths.push(path.resolve(path.dirname(network_config_loc), config_path));
 	}
+	let lastError;
+	for (const possiblePath of possiblePaths) {
+		try {
+			const data = fs.readFileSync(possiblePath);
+			return Buffer.from(data).toString();
+		} catch (error) {
+			lastError = error;
+		}
+	}
+	logger.error('NetworkConfig101 - problem reading the PEM file :: ' + lastError);
+	throw lastError;
 }
 
 module.exports = NetworkConfig_1_0;
