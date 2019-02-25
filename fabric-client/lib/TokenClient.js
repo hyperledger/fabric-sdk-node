@@ -50,7 +50,7 @@ const {HashPrimitives} = require('fabric-common');
  *
  * @example
  *   // prerequisites - have created the following objects:
- *   // client1 (with user1 context)
+ *   // client1 (with user1 context), user1Identity
  *   // client2 (with user2 context), user2Identity
  *   // mychannel
  *
@@ -69,11 +69,11 @@ const {HashPrimitives} = require('fabric-common');
  *
  *   // user1 calls issue method to issue tokens to user2
  *   // If it is successful, result.status should be 'SUCCESS'.
- *   // Wait a little for the transaction to be committed.
+ *   // Listen to the transaction event or wait a little for the transaction to be committed.
  *   let result = await tokenClient1.issue(request);
  *
  *   // user2 calls list method to get unspent tokens owned by user2
- *   // the above issued token should be an item in tokens
+ *   // the above issued token should be an item in tokens array
  *   let tokens = tokenClient2.list()
  *   tokens.forEach((token) => {
  *     // get token.id, token.type, token.quantity for each token
@@ -197,7 +197,8 @@ const TokenClient = class {
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Peer instance and the global
 	 *        timeout in the config settings.
-	 * * @returns {Promise} A Promise for a "BroadcastResponse" message returned by
+	 *
+	 * @returns {Promise} A Promise for a "BroadcastResponse" message returned by
 	 *          the orderer that contains a single "status" field for a
 	 *          standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
 	 *          This will be an acknowledgement from the orderer of a successfully
@@ -211,7 +212,6 @@ const TokenClient = class {
 		const sendRequest = Object.assign({}, request);
 		sendRequest.tokenCommand = tokenUtils.buildIssueCommand(request);
 		const result = await this._sendAndCommit(sendRequest, timeout);
-		logger.info('issue, returns %s', util.inspect(result, {depth: null}));
 		return result;
 	}
 
@@ -225,7 +225,8 @@ const TokenClient = class {
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Peer instance and the global
 	 *        timeout in the config settings.
-	 * * @returns {Promise} A Promise for a "BroadcastResponse" message returned by
+	 *
+	 * @returns {Promise} A Promise for a "BroadcastResponse" message returned by
 	 *          the orderer that contains a single "status" field for a
 	 *          standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
 	 *          This will be an acknowledgement from the orderer of a successfully
@@ -323,6 +324,8 @@ const TokenClient = class {
 	 *          submitted transaction.
 	 */
 	async _sendAndCommit(request, timeout) {
+		logger.debug('_sendAndCommit - Start');
+
 		if (!request.targets) {
 			request.targets = this._targets;
 		}
