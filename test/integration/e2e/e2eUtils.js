@@ -846,6 +846,83 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 
 module.exports.queryChaincode = queryChaincode;
 
+// It sets up everything needed for a TokenClient:
+// creates a client, enrolls a user, adds channel to client, and add orderers to the channel.
+// The channel must be created and joined before this call.
+// Returns an object including client, tokenClient, and user.
+function createTokenClient(org, channel_name, targets, t) {
+	init();
+
+	Client.setConfigSetting('request-timeout', 60000);
+
+	// this is a transaction, will just use org's admin identity to
+	// submit the request. either org should work properly
+	const client = new Client();
+	const channel = client.newChannel(channel_name);
+	const tokenClient = client.newTokenClient(channel, targets);
+
+	const orgName = ORGS[org].name;
+	const cryptoSuite = Client.newCryptoSuite();
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+	client.setCryptoSuite(cryptoSuite);
+
+	const caRootsPath = ORGS.orderer.tls_cacerts;
+	const cadata = fs.readFileSync(path.join(__dirname, caRootsPath));
+	const caroots = Buffer.from(cadata).toString();
+	let tlsInfo = null;
+
+	return e2eUtils.tlsEnroll(org)
+		.then((enrollment) => {
+			t.pass('Successfully retrieved TLS certificate');
+			tlsInfo = enrollment;
+			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+
+			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
+		}).then((store) => {
+
+			client.setStateStore(store);
+			return testUtil.getSubmitter(client, t, org);
+
+		}).then((admin) => {
+			the_user = admin;
+
+			t.pass('Successfully enrolled user \'admin\' (e2eUtil 4)');
+
+			channel.addOrderer(
+				client.newOrderer(
+					ORGS.orderer.url,
+					{
+						'pem': caroots,
+						'ssl-target-name-override': ORGS.orderer['server-hostname']
+					}
+				)
+			);
+
+			// set up the channel to use each org's 'peer1' for both requests and events
+			for (const key in ORGS) {
+				if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
+					const data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1.tls_cacerts));
+					const peer = client.newPeer(
+						ORGS[key].peer1.requests,
+						{
+							pem: Buffer.from(data).toString(),
+							'ssl-target-name-override': ORGS[key].peer1['server-hostname']
+						});
+					channel.addPeer(peer);
+				}
+			}
+
+			return {client: client, tokenClient: tokenClient, user: the_user};
+		},
+		(err) => {
+			logger.error('createTokenClient got error: %s', err);
+			t.fail('Failed to get submitter \'admin\'. Error: ' + err.stack ? err.stack : err);
+			throw new Error('Failed to get submitter');
+		});
+}
+
+module.exports.createTokenClient = createTokenClient;
+
 module.exports.sleep = testUtil.sleep;
 
 function loadMSPConfig(name, mspdir) {

@@ -24,6 +24,7 @@ const e2eUtils = require('./e2eUtils.js');
 let tx_id = null;
 
 let ORGS;
+const channelName = process.env.channel ? process.env.channel : testUtil.END2END.channel;
 
 //
 // Attempt to send a request to the orderer with the createChannel method
@@ -32,10 +33,10 @@ test('\n\n***** End-to-end flow: join channel *****\n\n', (t) => {
 	Client.addConfigFile(path.join(__dirname, './config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 
-	joinChannel('org1', t)
+	joinChannel('org1', channelName, t)
 		.then(() => {
 			t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS.org1.name));
-			return joinChannel('org2', t);
+			return joinChannel('org2', channelName, t);
 		}, (err) => {
 			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS.org1.name, err.stack ? err.stack : err));
 			t.end();
@@ -53,13 +54,14 @@ test('\n\n***** End-to-end flow: join channel *****\n\n', (t) => {
 		});
 });
 
-function joinChannel(org, t) {
-	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
+function joinChannel(org, defaultChannelName, t) {
+	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', defaultChannelName);
 	//
 	// Create and configure the test channel
 	//
 	const client = new Client();
 	const channel = client.newChannel(channel_name);
+	logger.info('joining channel %s', channel_name);
 
 	const orgName = ORGS[org].name;
 
