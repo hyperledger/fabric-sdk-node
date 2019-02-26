@@ -282,10 +282,10 @@ const Channel = class {
 						throw Error('No MSP information found');
 					}
 					if (discovery_results.orderers) {
-						this._buildDiscoveryOrderers(discovery_results, discovery_results.msps, request);
+						this._buildDiscoveryOrderers(discovery_results, discovery_results.msps, discover_request);
 					}
 					if (discovery_results.peers_by_org) {
-						this._buildDiscoveryPeers(discovery_results, discovery_results.msps, request);
+						this._buildDiscoveryPeers(discovery_results, discovery_results.msps, discover_request);
 					}
 
 					discovery_results.endorsement_plans = [];
@@ -312,7 +312,12 @@ const Channel = class {
 							if (discover_interest_results &&
 								discover_interest_results.endorsement_plans &&
 								discover_interest_results.endorsement_plans[0]) {
-								const plan = this._buildDiscoveryEndorsementPlan(discover_interest_results, plan_id, discovery_results.msps, request);
+								const plan = this._buildDiscoveryEndorsementPlan(
+									discover_interest_results,
+									plan_id,
+									discovery_results.msps,
+									discover_request
+								);
 								discovery_results.endorsement_plans.push(plan);
 								logger.debug('%s - Added an endorsement plan for %s', method, plan_id);
 							} else {
@@ -371,7 +376,7 @@ const Channel = class {
 		}
 	}
 
-	_buildDiscoveryOrderers(discovery_results, msps, options) {
+	_buildDiscoveryOrderers(discovery_results, msps, discover_request) {
 		const method = '_buildDiscoveryOrderers';
 		logger.debug('%s - build orderers', method);
 
@@ -385,13 +390,13 @@ const Channel = class {
 					endpoint.host,
 					endpoint.port,
 					msps,
-					options
+					discover_request
 				);
 			}
 		}
 	}
 
-	_buildDiscoveryPeers(discovery_results, msps, options) {
+	_buildDiscoveryPeers(discovery_results, msps, discover_request) {
 		const method = '_buildDiscoveryPeers';
 		logger.debug('%s - build peers', method);
 
@@ -410,14 +415,14 @@ const Channel = class {
 					peer.endpoint,
 					peer.mspid,
 					msps,
-					options
+					discover_request
 				);
 				logger.debug('%s - peer:%j', method, peer);
 			}
 		}
 	}
 
-	_buildDiscoveryEndorsementPlan(discovery_results, plan_id, msps, options) {
+	_buildDiscoveryEndorsementPlan(discovery_results, plan_id, msps, discover_request) {
 		const method = '_buildDiscoveryEndorsementPlan';
 		logger.debug('%s - build endorsement plan for %s', method, plan_id);
 
@@ -431,7 +436,7 @@ const Channel = class {
 					peer.endpoint,
 					peer.mspid,
 					msps,
-					options
+					discover_request
 				);
 				logger.debug('%s - peer:%j', method, peer);
 			}
@@ -1409,12 +1414,12 @@ const Channel = class {
 		return peers;
 	}
 
-	_buildOrdererName(msp_id, host, port, msps, request) {
+	_buildOrdererName(msp_id, host, port, msps, discover_request) {
 		const method = '_buildOrdererName';
 		logger.debug('%s - start', method);
 
 		const name = host + ':' + port;
-		const url = this._buildUrl(host, port, request);
+		const url = this._buildUrl(host, port, discover_request);
 		let found = null;
 		this._orderers.forEach((orderer) => {
 			if (orderer.getUrl() === url) {
@@ -1435,13 +1440,13 @@ const Channel = class {
 		return found.getName();
 	}
 
-	_buildPeerName(endpoint, msp_id, msps, request) {
+	_buildPeerName(endpoint, msp_id, msps, discover_request) {
 		const method = '_buildPeerName';
 		logger.debug('%s - start', method);
 
 		const name = endpoint;
 		const host_port = endpoint.split(':');
-		const url = this._buildUrl(host_port[0], host_port[1], request);
+		const url = this._buildUrl(host_port[0], host_port[1], discover_request);
 		let found = null;
 		this._channel_peers.forEach((peer) => {
 			if (peer.getUrl() === url) {
@@ -1462,7 +1467,7 @@ const Channel = class {
 		return found.getName();
 	}
 
-	_buildUrl(hostname, port, request) {
+	_buildUrl(hostname, port, discover_request) {
 		const method = '_buildUrl';
 		logger.debug('%s - start', method);
 
@@ -1473,7 +1478,16 @@ const Channel = class {
 			t_hostname = 'localhost';
 		}
 
-		const protocol = sdk_utils.getConfigSetting('discovery-protocol', 'grpcs');
+		// If we connect to the discovery peer over TLS, any peers returned by
+		// discovery should also use TLS. If we connect to the discovery peer
+		// without TLS, then any peers returned by discovery should not use TLS.
+		// A mixed set of TLS and non-TLS peers is unlikely but possible via the
+		// override.
+		let protocol = discover_request.target.isTLS() ? 'grpcs' : 'grpc';
+		const overrideProtocol = sdk_utils.getConfigSetting('override-discovery-protocol');
+		if (overrideProtocol) {
+			protocol = overrideProtocol;
+		}
 		const url = protocol + '://' + t_hostname + ':' + port;
 
 		return url;
@@ -1482,7 +1496,6 @@ const Channel = class {
 	_buildOptions(name, url, host, msp) {
 		const method = '_buildOptions';
 		logger.debug('%s - start', method);
-
 		const caroots = this._buildTlsRootCerts(msp);
 		const opts = {
 			'pem': caroots,

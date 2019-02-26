@@ -26,7 +26,7 @@ To use the service the application will have to connect with just one peer.
 * `channel.initialize()` - This method has been enhanced by adding an option to
 query a peer using the new service discovery to initialize the channel object.
 This method may be call at anytime to reinitialize the channel. When using discovery,
-this may be used to assign a new target peer providing the discover service.
+this may be used to assign a new target peer providing the discovery service.
 The initialize() method is also required to instantiate the handlers, by default
 the handlers shipped with the fabric-client are designed to use the discovery
 results.
@@ -57,8 +57,16 @@ organizations active on the network at the time of the query. see {@link Client#
 channel to be initialized, service discovery will be used. (default false)
 * `discovery-cache-life` - integer (time in milliseconds) - The amount of time the
 service discovery results are considered valid. (default 300000 - 5 minutes)
-* `discovery-protocol` - string - The protocol to use when building URL's for the
-discovered endpoints. The Discover Service only provides host:port. (default 'grpcs').
+* `override-discovery-protocol` - string - Override the protocol to use when
+building URL's for the discovered endpoints. The Discovery Service only provides
+host:port. By default, if you connect to the Discovery Service without TLS (grpc://),
+then all discovered endpoints will be connected to without TLS. If you connect to
+the Discovery Service with TLS (grpcs://), then all discovered endpoints will be
+connected to with TLS. You can use this configuration setting to force either grpc
+or grpcs for all discovered endpoints, regardless of how you connected to the
+Discovery Service. Please note that it is highly recommended not to connect to the
+Discovery Service or any discovered endpoints without TLS (grpc://), as all information
+will be sent over plaintext, un-encrypted.
 * `endorsement-handler` - string - The path to the endorsement handler. Allows for a
 custom handler to be used. This handler is used in the `sendTransactionProposal`
 method to determine the target peers and how to send the proposal.
@@ -85,7 +93,7 @@ the `discovery-cache-life` system setting. By default the cache life is
 ```
 Client.setConfigSetting('discover-cache-life', <milliseconds>);
 ```
-If there are no service discover results, the handler will send the
+If there are no service discovery results, the handler will send the
 endorsement request to the peers that have been assigned to the channel with
 the `endorsingPeer` role (a peer that has nor been assigned a role will default
 to having that role, this means that a role must be explicitly turned off).
@@ -147,7 +155,7 @@ assigned automatically when using the service discovery.
 
 ### To Initialize
 By default the fabric-client will not use the service discovery. To enable the
-use of the service, set the config setting to true or use the discover parameter
+use of the service, set the config setting to true or use the `discover` parameter
 on the `initialize()` call.
 
 note: {@link Channel#initialize} must be run to both enable discovery and to
@@ -191,7 +199,7 @@ await channel.initialize({
 });
 ```
 
-The return results of initialization with service discover will be the MSP configurations,
+The return results of initialization with service discovery will be the MSP configurations,
 the peers, the orderers, and the endorsing plans for all chaincodes on the
 channel in JSON format. The results are stored and cached internally and the caller
 does not have to do anything with the results, they are provided only for reference.
@@ -199,7 +207,7 @@ does not have to do anything with the results, they are provided only for refere
 The initialize call also allows for changing the endorsement handler by specifying
 a path to a custom endorsement handler. The handler may be changed independently
 of using the service discovery. The default endorsement handler however does use
-discover service results to determine the endorsing peers.
+discovery service results to determine the endorsing peers.
 
 ```
 await channel.initialize({
@@ -279,10 +287,10 @@ const peer = client.newPeer(....);
 channel.addPeer(peer);
 await channel.initialize({discover:true});
 ```
-When the channel is initialized using service discover and peers and orderers are added
-to the channel, a peer with the address that was used for service discover
+When the channel is initialized using service discovery and peers and orderers are added
+to the channel, a peer with the address that was used for service discovery
 will likely be on the list of discovered peers. A peer with the address used for
-service discover will not be added again to the channel as a peer with that address
+service discovery will not be added again to the channel as a peer with that address
 has already been assigned to the channel.
 
 The name a peer will be known by may be set by using the `name` setting when
@@ -310,7 +318,7 @@ await channel.initialize({discover:true, target:peer});
 When the channel is initialized using service discovery and peers and orderers
 are added to the channel, a peer with the address that was used for service
 discovery will likely be on the list of discovered peers. A peer instance with
-the address used for service discover will be added to the channel with the
+the address used for service discovery will be added to the channel with the
 same address as the peer instance used for service discovery because the peer
 instance used on the initialize call is not added to the channel, it is only
 used on the initialize call.
@@ -327,7 +335,7 @@ channel. The peer must have the role `discover`. As with all roles, if the role
 is not defined and set to false, the peer will have that role on the channel by
 default.
 
-The following example shows a peer that is going to be used primarily for service discover.
+The following example shows a peer that is going to be used primarily for service discovery.
 
 ```
 channels:
@@ -392,11 +400,11 @@ peer0.org1.example.com:7051
 ```
 ### To Endorse
 As discussed above, the `channel.sendTransactionProposal()` will now use a pluggable
-handler. The fabric-client will come with a handler that will use service discover.
+handler. The fabric-client will come with a handler that will use service discovery.
 By default the `endorsement-handler` configuration setting will point to the
 `DiscoveryEndorsementHandler`.  If the channel has been initialized using the
 service discovery and there are no targets define on the `sendTransactionProposal`
-call, the handler will use the service discover results based on the chaincode
+call, the handler will use the service discovery results based on the chaincode
 of the proposal request to determine the target peers
 to perform the endorsements.
 ```
@@ -529,7 +537,7 @@ added to the channel. By default the `commit-handler` configuration setting
 will point to the `BasicCommitHandler`. This handler will send the transaction
 to each orderer, one at a time, that has been assigned to the channel until it
 gets a `SUCCESS` response or until the list is exhausted. The orderers may been
-added manually, due to a service discover initialization or combination of the two.
+added manually, due to a service discovery initialization or combination of the two.
 If an orderer is specified on the call, only that orderer will be used.
 
 

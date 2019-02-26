@@ -17,8 +17,11 @@
 const rewire = require('rewire');
 const Remote = rewire('../lib/Remote');
 const Endpoint = Remote.Endpoint;
-const should = require('chai').should();
+const chai = require('chai');
+const should = chai.should();
 const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
+chai.use(sinonChai);
 
 
 describe('Remote', () => {
@@ -329,6 +332,26 @@ describe('Remote', () => {
 			string.should.equal(' Remote : {url:grpc://someurl}');
 		});
 	});
+
+	describe('#isTLS', () => {
+		it('should return true if TLS is enabled', () => {
+			const mockEndpoint = sinon.createStubInstance(Endpoint);
+			MockEndpoint.returns(mockEndpoint);
+			mockEndpoint.isTLS.returns(true);
+			const remote = new Remote('grpcs://someurl');
+			remote.isTLS().should.be.true;
+			mockEndpoint.isTLS.should.have.been.calledOnce;
+		});
+
+		it('should return false if TLS is not enabled', () => {
+			const mockEndpoint = sinon.createStubInstance(Endpoint);
+			MockEndpoint.returns(mockEndpoint);
+			mockEndpoint.isTLS.returns(false);
+			const remote = new Remote('grpc://someurl');
+			remote.isTLS().should.be.false;
+			mockEndpoint.isTLS.should.have.been.calledOnce;
+		});
+	});
 });
 
 describe('Endpoint', () => {
@@ -469,6 +492,25 @@ describe('Endpoint', () => {
 			sinon.assert.calledWith(FakeGrpc.credentials.createSsl, 'pembuf');
 			endpoint.creds.should.equal('creds');
 			endpoint.addr.should.equal('host');
+		});
+	});
+
+	describe('#isTLS', () => {
+		it('should return true if TLS is enabled', () => {
+			FakeUrlParser.parse.withArgs('grpcs://someurl', true).returns({protocol: 'grpcs:', host: 'host'});
+			FakeBuffer.from.onCall(0).returns('pem');
+			FakeBuffer.from.onCall(1).returns('\0');
+			FakeBuffer.concat.onCall(0).returns('pembuf');
+			FakeGrpc.credentials.createSsl.returns('creds');
+			const endpoint = new Endpoint('grpcs://someurl', 'pem');
+			endpoint.isTLS().should.be.true;
+		});
+
+		it('should return false if TLS is not enabled', () => {
+			FakeGrpc.credentials.createInsecure.returns('creds');
+			FakeUrlParser.parse.withArgs('grpc://someurl', true).returns({protocol: 'grpc:', host: 'host'});
+			const endpoint = new Endpoint('grpc://someurl');
+			endpoint.isTLS().should.be.false;
 		});
 	});
 });

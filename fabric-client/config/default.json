@@ -32,7 +32,7 @@
 	"grpc-wait-for-ready-timeout": 3000,
 	"discovery-as-localhost": true,
 	"discovery-cache-life": 300000,
-	"discovery-protocol": "grpcs",
+	"override-discovery-protocol": null,
 	"endorsement-handler": "fabric-client/lib/impl/DiscoveryEndorsementHandler.js",
 	"commit-handler": "fabric-client/lib/impl/BasicCommitHandler.js"
 }
