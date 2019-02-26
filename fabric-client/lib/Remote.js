@@ -228,6 +228,15 @@ class Remote {
 			'url:' + this._url +
 			'}';
 	}
+
+	/**
+	 * Determine whether or not this remote endpoint uses TLS.
+	 * @returns {boolean} True if this endpoint uses TLS, false otherwise.
+	 */
+	isTLS() {
+		return this._endpoint.isTLS();
+	}
+
 }
 
 module.exports = Remote;
@@ -247,14 +256,13 @@ class Endpoint {
 	constructor(url, pem, clientKey, clientCert) {
 
 		const purl = urlParser.parse(url, true);
-		let protocol;
 		if (purl.protocol) {
-			protocol = purl.protocol.toLowerCase().slice(0, -1);
+			this.protocol = purl.protocol.toLowerCase().slice(0, -1);
 		}
-		if (protocol === 'grpc') {
+		if (this.protocol === 'grpc') {
 			this.addr = purl.host;
 			this.creds = grpc.credentials.createInsecure();
-		} else if (protocol === 'grpcs') {
+		} else if (this.protocol === 'grpcs') {
 			if (!(typeof pem === 'string')) {
 				throw new Error('PEM encoded certificate is required.');
 			}
@@ -279,10 +287,19 @@ class Endpoint {
 		} else {
 			const error = new Error();
 			error.name = 'InvalidProtocol';
-			error.message = 'Invalid protocol: ' + protocol + '.  URLs must begin with grpc:// or grpcs://';
+			error.message = 'Invalid protocol: ' + this.protocol + '.  URLs must begin with grpc:// or grpcs://';
 			throw error;
 		}
 	}
+
+	/**
+	 * Determine whether or not this endpoint uses TLS.
+	 * @returns {boolean} True if this endpoint uses TLS, false otherwise.
+	 */
+	isTLS() {
+		return this.protocol === 'grpcs';
+	}
+
 }
 
 module.exports.Endpoint = Endpoint;
