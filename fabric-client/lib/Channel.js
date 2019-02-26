@@ -2564,8 +2564,8 @@ const Channel = class {
 			Buffer.from(this._name),
 			chaincodeDeploymentSpec.toBuffer(),
 			Buffer.from(''),
-			Buffer.from(''),
-			Buffer.from(''),
+			Buffer.from('escc'), // default
+			Buffer.from('vscc'), // default
 		];
 		if (request['endorsement-policy']) {
 			lcccSpec_args[3] = this._buildEndorsementPolicy(request['endorsement-policy']);
@@ -2573,6 +2573,14 @@ const Channel = class {
 		if (request['collections-config']) {
 			const collectionConfigPackage = CollectionConfig.buildCollectionConfigPackage(request['collections-config']);
 			lcccSpec_args[6] = collectionConfigPackage.toBuffer();
+		}
+
+		// client can specify the escc and vscc names
+		if (request.escc && typeof request.escc === 'string') {
+			lcccSpec_args[4] = Buffer.from(request.escc);
+		}
+		if (request.vscc && typeof request.vscc === 'string') {
+			lcccSpec_args[5] = Buffer.from(request.vscc);
 		}
 
 		const lcccSpec = {

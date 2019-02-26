@@ -2506,6 +2506,8 @@ describe('Channel', () => {
 			const input = fabprotos.protos.ChaincodeInvocationSpec.decode(payload.input);
 			const args = input.chaincode_spec.input.args;
 			args.should.have.lengthOf(6);
+			args[4].toBuffer().toString().should.equal('escc');
+			args[5].toBuffer().toString().should.equal('vscc');
 			const cds = fabprotos.protos.ChaincodeDeploymentSpec.decode(args[2]);
 			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
 			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
@@ -2521,12 +2523,16 @@ describe('Channel', () => {
 				chaincodeVersion: '1.0.0',
 				fcn: 'initLedger',
 				args: ['hello', 'world'],
+				escc: 'my-escc',
+				vscc: 'my-vscc',
 				txId
 			});
 			const payload = fabprotos.protos.ChaincodeProposalPayload.decode(proposal.payload);
 			const input = fabprotos.protos.ChaincodeInvocationSpec.decode(payload.input);
 			const args = input.chaincode_spec.input.args;
 			args.should.have.lengthOf(6);
+			args[4].toBuffer().toString().should.equal('my-escc');
+			args[5].toBuffer().toString().should.equal('my-vscc');
 			const cds = fabprotos.protos.ChaincodeDeploymentSpec.decode(args[2]);
 			cds.chaincode_spec.chaincode_id.name.should.equal('fabcar');
 			cds.chaincode_spec.chaincode_id.version.should.equal('1.0.0');
