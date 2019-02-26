@@ -945,6 +945,39 @@ describe('Channel', () => {
 			};
 			return expect(channel.initialize(request)).to.be.fulfilled;
 		});
+
+		it('Successfully applying configSetting parameter "initialize-with-discovery"', async () => {
+			sinon.stub(channel, '_initialize');
+			sdk_utils.setConfigSetting('initialize-with-discovery', true);
+
+			const request = {
+				target: 'peer0'
+			};
+			await channel.initialize(request);
+			channel._use_discovery.should.equal(true);
+		});
+
+		it('Successfully applying configSetting parameter "initialize-with-discovery"', async () => {
+			sinon.stub(channel, '_initialize');
+			sdk_utils.setConfigSetting('discovery-as-localhost', false);
+
+			const request = {
+				target: 'peer0'
+			};
+			await channel.initialize(request);
+			channel._as_localhost.should.equal(false);
+		});
+
+		it('Successfully applying configSetting parameter "discovery-cache-life"', async () => {
+			sinon.stub(channel, '_initialize');
+			sdk_utils.setConfigSetting('discovery-cache-life', 70000);
+
+			const request = {
+				target: 'peer0'
+			};
+			await channel.initialize(request);
+			channel._discovery_cache_life.should.equal(70000);
+		});
 	});
 
 	describe('#_initialize', () => {});
@@ -987,7 +1020,7 @@ describe('Channel', () => {
 
 	describe('#addPeer', () => {});
 
-	describe('#remoePeer', () => {});
+	describe('#removePeer', () => {});
 
 	describe('#gePeer', () => {});
 
