@@ -288,13 +288,15 @@ const FabricCAClient = class {
 		logger.debug('CONNECTION_TIMEOUT = %s, SO_TIMEOUT = %s', CONNECTION_TIMEOUT, SO_TIMEOUT ? SO_TIMEOUT : 'infinite');
 
 		const self = this;
+		const path = self._baseAPI + api_method;
+
 		const requestOptions = {
 			hostname: self._hostname,
 			port: self._port,
-			path: self._baseAPI + api_method,
+			path: path,
 			method: http_method,
 			headers: {
-				Authorization: self.generateAuthToken(requestObj, signingIdentity)
+				Authorization: self.generateAuthToken(requestObj, signingIdentity, path, http_method)
 			},
 			ca: self._tlsOptions.trustedRoots,
 			rejectUnauthorized: self._tlsOptions.verify,
@@ -364,20 +366,25 @@ const FabricCAClient = class {
 	/*
 	 * Generate authorization token required for accessing fabric-ca APIs
 	 */
-	generateAuthToken(reqBody, signingIdentity) {
+	generateAuthToken(reqBody, signingIdentity, path, method) {
 		// specific signing procedure is according to:
-		// https://github.com/hyperledger/fabric-ca/blob/master/util/util.go#L213
+		// https://github.com/hyperledger/fabric-ca/blob/master/util/util.go#L168
 		const cert = Buffer.from(signingIdentity._certificate).toString('base64');
-		let bodyAndcert;
+		let signString;
 		if (reqBody) {
 			const body = Buffer.from(JSON.stringify(reqBody)).toString('base64');
-			bodyAndcert = body + '.' + cert;
+			signString = body + '.' + cert;
 		} else {
-			bodyAndcert = '.' + cert;
+			signString = '.' + cert;
 		}
 
-		const sig = signingIdentity.sign(bodyAndcert, {hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives)});
-		logger.debug(util.format('bodyAndcert: %s', bodyAndcert));
+		if (path && method) {
+			const s = Buffer.from(path).toString('base64');
+			signString = method + '.' + s + '.' + signString;
+		}
+
+		const sig = signingIdentity.sign(signString, {hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives)});
+		logger.debug(util.format('signString: %s', signString));
 
 		const b64Sign = Buffer.from(sig, 'hex').toString('base64');
 		return cert + '.' + b64Sign;
