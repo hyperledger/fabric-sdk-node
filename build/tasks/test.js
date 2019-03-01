@@ -99,10 +99,8 @@ gulp.task('docker-clean', shell.task([
 	'docker rmi $(docker images | grep "^dev-" | awk \'{print $3}\')',
 
 	// clean up all the containers created by docker-compose
-	// -tape
-	'docker-compose -f test/fixtures/docker-compose.yaml down',
-	// -cucumber
-	'docker-compose -f test/scenario/docker-compose/docker-compose-tls.yaml down'
+	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls-level-db.yaml -p node down',
+	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls.yaml -p node down'
 ], {
 	verbose: true, // so we can see the docker command output
 	ignoreErrors: true // kill and rm may fail because the containers may have been cleaned up
@@ -110,7 +108,7 @@ gulp.task('docker-clean', shell.task([
 
 gulp.task('docker-ready', ['docker-clean'], shell.task([
 	// make sure that necessary containers are up by docker-compose
-	'docker-compose -f test/fixtures/docker-compose.yaml up -d'
+	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls-level-db.yaml -p node up -d'
 ]));
 
 gulp.task('lint', ['eslint', 'tslint']);
@@ -188,18 +186,18 @@ gulp.task('run-test-cucumber', shell.task(
 ));
 
 // Run e2e and scenario tests with code coverage
-gulp.task('test-fv-scenario', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-test-fv-sceanrio'));
+gulp.task('test-fv-scenario', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-test-fv-scenario'));
 
 // run cucumber separate
 gulp.task('test-fv-only', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-tape-e2e'));
 
-gulp.task('run-test-fv-sceanrio', (done) => {
+gulp.task('run-test-fv-scenario', (done) => {
 	const tasks = ['run-tape-e2e', 'docker-clean', 'run-test-cucumber'];
 	runSequence(...tasks, done);
 });
 
-gulp.task('run-test-sceanrio', (done) => {
-	const tasks = ['docker-clean', 'run-test-cucumber'];
+gulp.task('run-test-scenario', (done) => {
+	const tasks = ['run-test-cucumber'];
 	runSequence(...tasks, done);
 });
 
@@ -262,7 +260,6 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 		// saved the user certificates so they can interact with the
 		// network
 		return gulp.src(shouldRunTests([
-			'test/unit/config.js', // needs to be first
 			'test/integration/fabric-ca-affiliation-service-tests.js',
 			'test/integration/fabric-ca-identity-service-tests.js',
 			'test/integration/fabric-ca-certificate-service-tests.js',
@@ -270,7 +267,7 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 			'test/integration/nodechaincode/e2e.js',
 			'test/integration/e2e.js',
 			'test/integration/network-e2e/e2e.js',
-			'test/integration/network-e2e/e2e-hsm.js',
+			// 'test/integration/network-e2e/e2e-hsm.js',
 			'test/integration/signTransactionOffline.js',
 			'test/integration/query.js',
 			'test/integration/client.js',

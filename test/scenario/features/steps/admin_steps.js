@@ -11,10 +11,12 @@ const testUtil = require('../lib/utils');
 
 const path = require('path');
 
+const cryptoRoot = '../../../fixtures/crypto-material';
 const configRoot = '../../config';
-const ccpPath = '../../config/ccp.json';
-const tlsCcpPath = '../../config/ccp-tls.json';
-const policiesPath = '../../config/policies.json';
+const channelRoot = cryptoRoot + '/channel-config';
+const ccpPath = configRoot + '/ccp.json';
+const tlsCcpPath = configRoot + '/ccp-tls.json';
+const policiesPath = configRoot + '/policies.json';
 
 module.exports = function () {
 
@@ -34,7 +36,7 @@ module.exports = function () {
 		try {
 			for (const channelName in profile.getChannels()) {
 				// Create
-				await channel_util.create_channel(path.join(__dirname, configRoot), profile, tls, channelName);
+				await channel_util.create_channel(path.join(__dirname, channelRoot), profile, tls, channelName);
 			}
 			return Promise.resolve();
 		} catch (err) {
@@ -43,13 +45,13 @@ module.exports = function () {
 
 	});
 
-	this.Given(/^I update channel with name (.+?) with config file (.+?) from the (.+?) common connection profile/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (channelName, configFilePath, tlsType) => {
+	this.Given(/^I update channel with name (.+?) with config file (.+?) from the (.+?) common connection profile/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (channelName, txFileName, tlsType) => {
 		if (tlsType.localeCompare('non-tls') === 0) {
 			const profile =  new CCP(path.join(__dirname, ccpPath), true);
-			return channel_util.update_channel(profile, channelName, configFilePath, false);
+			return channel_util.update_channel(profile, channelName, path.join(channelRoot, txFileName), false);
 		} else {
 			const profile =  new CCP(path.join(__dirname, tlsCcpPath), true);
-			return channel_util.update_channel(profile, channelName, configFilePath, true);
+			return channel_util.update_channel(profile, channelName, path.join(channelRoot, txFileName), true);
 		}
 	}),
 
@@ -79,7 +81,7 @@ module.exports = function () {
 			const channels = profile.getChannels();
 			for (const channelName in channels) {
 				// Create
-				await channel_util.create_channel(path.join(__dirname, configRoot), profile, tls, channelName);
+				await channel_util.create_channel(path.join(__dirname, cryptoRoot), profile, tls, channelName);
 
 				// Join
 				const channel = profile.getChannel(channelName);
@@ -125,7 +127,7 @@ module.exports = function () {
 			// Create and join any channels identified
 			for (const channelName of channels) {
 				// Create
-				await channel_util.create_channel(path.join(__dirname, configRoot), profile, tls, channelName);
+				await channel_util.create_channel(path.join(__dirname, channelRoot), profile, tls, channelName);
 
 				// Join all orgs to the channel
 				const channel = profile.getChannel(channelName);

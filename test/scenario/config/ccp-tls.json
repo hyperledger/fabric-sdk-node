@@ -45,10 +45,10 @@
         "ca-org1"
       ],
       "adminPrivateKeyPEM":{
-		"path":"../config/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/keystore/key.pem"
+		"path":"../../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/key.pem"
 	  },
       "signedCertPEM":{
-		"path":"../config/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/signcerts/Admin@org1.example.com-cert.pem"
+		"path":"../../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem"
 	  }
     },
     "Org2":{
@@ -60,10 +60,10 @@
         "ca-org2"
       ],
       "adminPrivateKeyPEM":{
-		"path":"../config/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/keystore/key.pem"
+		"path":"../../fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/key.pem"
 	  },
       "signedCertPEM":{
-		"path":"../config/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/signcerts/Admin@org2.example.com-cert.pem"
+		"path":"../../fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/Admin@org2.example.com-cert.pem"
 	  }
     }
   },
@@ -75,13 +75,13 @@
         "ssl-target-name-override":"orderer.example.com"
       },
       "tlsCACerts":{
-        "path":"../config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem"
+        "path":"../../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt"
 	  },
 	  "adminPrivateKeyPEM":{
-		"path":"../config/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/keystore/key.pem"
+		"path":"../../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp/keystore/key.pem"
 	  },
 	  "signedCertPEM":{
-		"path":"../config/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/signcerts/Admin@example.com-cert.pem"
+		"path":"../../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp/signcerts/Admin@example.com-cert.pem"
 	  }
     }
   },
@@ -93,7 +93,7 @@
 		"request-timeout": 120001
       },
       "tlsCACerts":{
-        "path":"../config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem"
+        "path":"../../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt"
       }
     },
     "peer0.org2.example.com":{
@@ -103,7 +103,7 @@
 		"request-timeout": 120001
       },
       "tlsCACerts":{
-        "path":"../config/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tlscacerts/org2.example.com-cert.pem"
+        "path":"../../fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt"
       }
     }
   },
@@ -114,7 +114,7 @@
         "verify":true
       },
       "tlsCACerts":{
-        "path":"../config/crypto-config/peerOrganizations/org1.example.com/ca/org1.example.com-cert.pem"
+        "path":"../../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/ca/ca.org1.example.com-cert.pem"
       },
       "registrar":[
         {
@@ -129,7 +129,7 @@
 		  "verify":true
 		},
 		"tlsCACerts":{
-		  "path":"../config/crypto-config/peerOrganizations/org2.example.com/ca/org2.example.com-cert.pem"
+		  "path":"../../fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/ca/ca.org2.example.com-cert.pem"
 		},
 		"registrar":[
 		  {

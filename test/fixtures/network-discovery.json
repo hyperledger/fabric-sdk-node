@@ -17,7 +17,7 @@
         "ssl-target-name-override":"peer0.org1.example.com"
       },
       "tlsCACerts":{
-        "path":"test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem"
+        "path":"test/fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem"
       }
     }
   }

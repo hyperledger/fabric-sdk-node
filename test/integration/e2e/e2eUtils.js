@@ -731,7 +731,7 @@ module.exports.invokeChaincode = invokeChaincode;
 
 // Targets parameter is needed to query private data that are only available on a subset of peers based on collection policy.
 // pass [] to targets when you don't want to query a specific peer
-function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t, transientMap) {
+function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t, transientMap, usestore = false) {
 	init();
 
 	Client.setConfigSetting('request-timeout', 60000);
@@ -746,8 +746,11 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 
 	const orgName = ORGS[org].name;
 	const cryptoSuite = Client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
-	client.setCryptoSuite(cryptoSuite);
+	if (usestore) {
+		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
+		client.setCryptoSuite(cryptoSuite);
+	}
+
 	let tlsInfo = null;
 
 	return e2eUtils.tlsEnroll(org)
@@ -758,10 +761,10 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 
 			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		}).then((store) => {
-
-			client.setStateStore(store);
+			if (usestore) {
+				client.setStateStore(store);
+			}
 			return testUtil.getSubmitter(client, t, org);
-
 		}).then((admin) => {
 			the_user = admin;
 

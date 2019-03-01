@@ -75,7 +75,7 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', (t) => {
 
 			logger.info('\n\n***** Get the configtx config update configuration  *****\n\n');
 			// use the config update created by the configtx tool
-			const envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/' + channel_name + '.tx'));
+			const envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/channel-config', channel_name + '.tx'));
 			config = client.extractChannelConfig(envelope_bytes);
 			t.pass('Successfull extracted the config update from the configtx envelope');
 

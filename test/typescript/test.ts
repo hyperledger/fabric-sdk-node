@@ -101,7 +101,7 @@ test('use the connection profile file', (t: any) => {
 	client.initCredentialStores()
 		.then(() => {
 			t.pass('Successfully created the key value store and crypto store based on the sdk config and connection profile');
-			const envelopeBytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/mychannelts.tx'));
+			const envelopeBytes = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/channel-config/mychannelts.tx'));
 			config = client.extractChannelConfig(envelopeBytes);
 
 			const signature: ConfigSignature = client.signChannelConfig(config);

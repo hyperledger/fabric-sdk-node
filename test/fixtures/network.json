@@ -1,6 +1,6 @@
 {
-  "name":"global-trade-network",
-  "description":"The network to be in if you want to stay in the global trade business",
+  "name":"test-network",
+  "description":"Basic test network",
   "version":"1.0",
   "client":{
     "organization":"Org1",
@@ -41,8 +41,7 @@
     "Org1":{
       "mspid":"Org1MSP",
       "peers":[
-        "peer0.org1.example.com",
-        "peer1.org1.example.com"
+        "peer0.org1.example.com"
       ],
       "certificateAuthorities":[
         "ca-org1"
@@ -54,7 +53,12 @@
       "mspid":"Org2MSP",
       "peers":[
         "peer0.org2.example.com"
-      ]
+      ],
+      "certificateAuthorities":[
+        "ca-org2"
+	  ],
+	  "adminPrivateKeyPEM":"-----BEGIN PRIVATE KEY----- <etc>",
+      "signedCertPEM":"-----BEGIN CERTIFICATE----- <etc>"
     }
   },
   "orderers":{
@@ -64,7 +68,7 @@
         "ssl-target-name-override":"orderer.example.com"
       },
       "tlsCACerts":{
-        "path":"test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem"
+        "path":"test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
       }
     }
   },
@@ -75,7 +79,7 @@
         "ssl-target-name-override":"peer0.org1.example.com"
       },
       "tlsCACerts":{
-        "path":"test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem"
+        "path":"test/fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem"
       }
     },
     "peer0.org2.example.com":{
@@ -84,7 +88,7 @@
         "ssl-target-name-override":"peer0.org2.example.com"
       },
       "tlsCACerts":{
-        "path":"test/fixtures/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tlscacerts/org2.example.com-cert.pem"
+        "path":"test/fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp/tlscacerts/tlsca.org2.example.com-cert.pem"
       }
     }
   },
@@ -95,7 +99,7 @@
         "verify": false
       },
       "tlsCACerts":{
-        "path":"test/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/ca/org1.example.com-cert.pem"
+        "path":"test/fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/ca/ca.org1.example.com-cert.pem"
       },
       "registrar":[
         {
@@ -103,6 +107,21 @@
           "enrollSecret":"adminpw"
         }
       ]
-    }
+	},
+	"ca-org2":{
+		"url":"https://localhost:8054",
+		"httpOptions":{
+		  "verify": false
+		},
+		"tlsCACerts":{
+		  "path":"test/fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/ca/ca.org2.example.com-cert.pem"
+		},
+		"registrar":[
+		  {
+			"enrollId":"admin",
+			"enrollSecret":"adminpw"
+		  }
+		]
+	  }
   }
 }

@@ -90,7 +90,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 
 		await testUtil.getSubmitter(client, t, true /* get the org admin*/, 'org1');
 		t.pass('Successfully enrolled user \'admin\' for org1');
-		const config_json = fs.readFileSync(path.join(__dirname, '../fixtures/channel/' + channel_name + '.json'));
+		const config_json = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/channel-config', channel_name + '.json'));
 
 		const orderer = client.newOrderer(
 			ORGS.orderer.url,

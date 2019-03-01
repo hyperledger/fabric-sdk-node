@@ -210,10 +210,14 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', (t) => {
 			client.setStateStore(store);
 			return true;
 		}).then(() => {
+			const cryptoContent = {
+				privateKeyPEM: fs.readFileSync(path.join(__dirname, caImport.orgs[userOrg].cryptoContent.privateKeyPEM)).toString('utf8'),
+				signedCertPEM: fs.readFileSync(path.join(__dirname, caImport.orgs[userOrg].cryptoContent.signedCertPEM)).toString('utf8')
+			};
 			return client.createUser(
 				{username: caImport.orgs[userOrg].username,
 					mspid: caImport.orgs[userOrg].mspid,
-					cryptoContent: caImport.orgs[userOrg].cryptoContent
+					cryptoContent
 				});
 		}, (err) => {
 			logger.error(err.stack ? err.stack : err);

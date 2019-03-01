@@ -39,7 +39,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			client.setCryptoSuite(Client.newCryptoSuite());
 			client.setUserContext(new User('testUser'), true);
 			client.loadFromConfig(network_data);
-			const channel = client.getChannel('mychannel2');
+			const channel = client.getChannel('mychannel');
 			t.equals(channel.getPeers()[0].getUrl(), 'grpcs://localhost:7051', ' check to see that the peer has been added to the channel');
 			t.equals(channel.getPeers()[1].getUrl(), 'grpcs://localhost:8051', ' check to see that the peer has been added to the channel');
 		},
@@ -85,7 +85,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'orderer0': {
 			url: 'grpcs://localhost:7050',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			}
 		}
 	};
@@ -183,19 +183,19 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'peer2': {
 			url: 'grpcs://localhost:7052',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			}
 		},
 		'peer3': {
 			url: 'grpcs://localhost:7053',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			}
 		},
 		'peer4': {
 			url: 'grpcs://localhost:7054',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			}
 		},
 	};
@@ -212,7 +212,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'ca2': {
 			url: 'https://localhost:7052',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			},
 			grpcOptions: {verify: true},
 			registrar: {enrollId: 'admin2', enrollSecret: 'adminpw2'}
@@ -738,7 +738,7 @@ test('\n\n ** channel testing **\n\n', (t) => {
 	client.setUserContext(new User('testUser'), true);
 	client.loadFromConfig('test/fixtures/network.yaml');
 
-	const channel = client.getChannel('mychannel2');
+	const channel = client.getChannel('mychannel');
 	let channelEventHubs = channel.getChannelEventHubsForOrg('bad');
 	t.equals(channelEventHubs.length, 0, 'Checking that we got the correct number of peers in the list');
 	channelEventHubs = channel.getChannelEventHubsForOrg('Org2MSP');

@@ -15,7 +15,7 @@ const path = require('path');
 
 const testUtil = require('../../unit/util.js');
 const channel_name = testUtil.NETWORK_END2END.channel;
-const anchorPeerTXFileOrg1 = path.join(__dirname, '../../fixtures/channel/mychannel-org1anchor.tx');
+const anchorPeerTXFileOrg1 = path.join(__dirname, '../../fixtures/crypto-material/channel-config/mychannel-org1anchor.tx');
 
 
 test('\n\n***** Network End-to-end flow: setAnchorPeers *****\n\n', async (t) => {

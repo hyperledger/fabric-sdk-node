@@ -28,8 +28,8 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 	client_org1.setConfigSetting('initialize-with-discovery', true);
 
 	const channel_name = 'discovery';
-	const channel_path = path.join(__dirname, '../fixtures/channel/discovery.tx');
-	const anchor_path = path.join(__dirname, '../fixtures/channel/discovery_anchor.tx');
+	const channel_path = path.join(__dirname, '../fixtures/crypto-material/channel-config/discovery.tx');
+	const anchor_path = path.join(__dirname, '../fixtures/crypto-material/channel-config/discovery_anchor.tx');
 
 	try {
 		await createUpdateChannel(t, true, channel_path, channel_name, client_org1, client_org2); // create the channel
@@ -39,16 +39,16 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 		t.fail('Failed to create and update the channel');
 	}
 
-	let data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem'));
+	let data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem'));
 	let pem = Buffer.from(data).toString();
 	const peer_org1 = client_org1.newPeer('grpcs://localhost:7051', {pem: pem, 'ssl-target-name-override': 'peer0.org1.example.com', name: 'peer0.org1.example.com'});
 	const peer_bad = client_org1.newPeer('grpcs://localhost:9999', {pem: pem, 'ssl-target-name-override': 'peer9.org1.example.com', name: 'peer9.org1.example.com'});
 
-	data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tlscacerts/org2.example.com-cert.pem'));
+	data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp/tlscacerts/tlsca.org2.example.com-cert.pem'));
 	pem = Buffer.from(data).toString();
 	const peer_org2 = client_org2.newPeer('grpcs://localhost:8051', {pem: pem, 'ssl-target-name-override': 'peer0.org2.example.com', name: 'peer0.org2.example.com'});
 
-	data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'));
+	data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'));
 	pem = Buffer.from(data).toString();
 	const orderer_org1 = client_org1.newOrderer('grpcs://localhost:7050', {pem: pem, 'ssl-target-name-override': 'orderer.example.com', name: 'orderer.example.com'});
 	const orderer_org2 = client_org2.newOrderer('grpcs://localhost:7050', {pem: pem, 'ssl-target-name-override': 'orderer.example.com', name: 'orderer.example.com'});

@@ -65,13 +65,13 @@ test('*****  Test channel events', async (t) => {
 		// get the peer org's admin user identity
 		await testUtil.getSubmitter(client, t, true /* get peer org admin */, 'org1');
 
-		let data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'));
+		let data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'));
 		const orderer = client.newOrderer('grpcs://localhost:7050', {
 			'pem': Buffer.from(data).toString(),
 			'ssl-target-name-override': 'orderer.example.com'});
 		channel.addOrderer(orderer);
 
-		data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem'));
+		data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem'));
 		const peer = client.newPeer('grpcs://localhost:7051', {
 			pem: Buffer.from(data).toString(),
 			'ssl-target-name-override': 'peer0.org1.example.com'
@@ -79,7 +79,7 @@ test('*****  Test channel events', async (t) => {
 		channel.addPeer(peer);
 		targets.push(peer);
 
-		data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tlscacerts/org2.example.com-cert.pem'));
+		data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp/tlscacerts/tlsca.org2.example.com-cert.pem'));
 		const peer_org2 = client.newPeer('grpcs://localhost:8051', {
 			pem: Buffer.from(data).toString(),
 			'ssl-target-name-override': 'peer0.org2.example.com'

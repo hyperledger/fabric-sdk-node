@@ -21,9 +21,9 @@ const {KEYUTIL} = jsrsa;
 const elliptic = require('elliptic');
 const EC = elliptic.ec;
 
-const privateKeyPath = path.resolve(__dirname, '../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk');
+const privateKeyPath = path.resolve(__dirname, '../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/keystore/key.pem');
 const privateKeyPem = fs.readFileSync(privateKeyPath, 'utf8');
-const certPath = path.resolve(__dirname, '../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/signcerts/User1@org1.example.com-cert.pem');
+const certPath = path.resolve(__dirname, '../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem');
 const certPem = fs.readFileSync(certPath, 'utf8');
 const mspId = 'Org1MSP';
 
@@ -110,7 +110,7 @@ async function setupChannel() {
 	await TLSSetup(client);
 	const channel = client.newChannel(channelId);
 
-	const peerTLSCertPath = path.resolve(__dirname, '../fixtures/channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem');
+	const peerTLSCertPath = path.resolve(__dirname, '../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem');
 	const peerPEMCert = fs.readFileSync(peerTLSCertPath, 'utf8');
 	const peer = client.newPeer(
 		'grpcs://localhost:7051',
@@ -119,7 +119,7 @@ async function setupChannel() {
 			'ssl-target-name-override': 'peer0.org1.example.com',
 		}
 	);
-	const ordererTLSCertPath = path.resolve(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem');
+	const ordererTLSCertPath = path.resolve(__dirname, '../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem');
 	const ordererPEMCert = fs.readFileSync(ordererTLSCertPath, 'utf8');
 	const orderer = client.newOrderer(
 		'grpcs://localhost:7050',

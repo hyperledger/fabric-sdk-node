@@ -6,7 +6,6 @@
 
 const testUtil = require('../lib/utils');
 const path = require('path');
-
 const StateStore = require('../lib/state_store').StateStore;
 
 module.exports = function () {
@@ -18,9 +17,9 @@ module.exports = function () {
 		if (!fabricState || !fabricState.deployed || fabricState.type.localeCompare(type) !== 0) {
 			await testUtil.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
 			if (type.localeCompare('non-tls') === 0) {
-				await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../docker-compose/docker-compose.yaml') + ' -p cucumber up -d');
+				await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../../fixtures/docker-compose/docker-compose.yaml') + ' -p node up -d');
 			} else {
-				await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../docker-compose/docker-compose-tls.yaml') + ' -p cucumber up -d');
+				await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../../fixtures/docker-compose/docker-compose-tls.yaml') + ' -p node up -d');
 			}
 
 			StateStore.set('fabricState', {deployed: true, type: type});

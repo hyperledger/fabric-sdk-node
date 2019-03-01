@@ -82,7 +82,7 @@ test('\n\n***** Node-Chaincode U P G R A D E flow: query chaincode *****\n\n', (
 	const args = ['b'];
 	const expectedResult = '410';
 	const targets = [];  // empty array, meaning client will get the peers from the channel
-	e2eUtils.queryChaincode('org2', 'v1', targets, fcn, args, expectedResult, chaincodeId, t)
+	e2eUtils.queryChaincode('org2', 'v1', targets, fcn, args, expectedResult, chaincodeId, t, null, false)
 		.then((result) => {
 			if (result) {
 				t.pass('Successfully query chaincode on the channel');
@@ -108,7 +108,7 @@ test('\n\n***** Node-Chaincode TransientMap Support in Proposals *****\n\n', (t)
 	const args = ['b'];
 	const expectedResult = '410';
 	const targets = [];  // empty array, meaning client will get the peers from the channel
-	e2eUtils.queryChaincode('org2', 'v1', targets, fcn, args, expectedResult, chaincodeId, t, transient)
+	e2eUtils.queryChaincode('org2', 'v1', targets, fcn, args, expectedResult, chaincodeId, t, transient, false)
 		.then((result) => {
 			if (result) {
 				t.pass('Successfully verified transient map values');

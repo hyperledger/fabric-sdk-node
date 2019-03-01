@@ -18,7 +18,7 @@ const _commonProto = require('fabric-protos').common;
 const testUtil = require('../../unit/util.js');
 const e2eUtils = require('./e2eUtils.js');
 const channel_name = process.env.channel ? process.env.channel : 'mychannel';// can use "channel=<name>" to control the channel name from command line
-const anchorPeerTXFile = path.join(__dirname, '../../fixtures/channel/mychannel-org1anchor.tx');
+const anchorPeerTXFile = path.join(__dirname, '../../fixtures/crypto-material/channel-config/mychannel-org1anchor.tx');
 const org = 'org1';
 
 

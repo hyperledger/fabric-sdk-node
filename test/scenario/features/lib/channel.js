@@ -12,13 +12,13 @@ const fs = require('fs');
 
 /**
  * Create a channel
- * @param {string} configPath The path to the Fabric network common connection profile and associated data.
+ * @param {string} channelTxPath The path to where the channel tx block lives
  * @param {CommonConnectionProfile} ccp The common connection profile
  * @param {Boolean} tls Boolean true if tls network; false if not
  * @param {string} channelName the channel to create
  * @return {Promise} The return promise.
  */
-async function create_channel(configPath, ccp, tls, channelName) {
+async function create_channel(channelTxPath, ccp, tls, channelName) {
 	Client.setConfigSetting('request-timeout', 60000);
 
 	try {
@@ -63,7 +63,7 @@ async function create_channel(configPath, ccp, tls, channelName) {
 		await testUtil.getOrdererAdmin(client, ordererName, ccp);
 
 		// use the config update created by the configtx tool
-		const envelope_bytes = fs.readFileSync((path.join(configPath, 'crypto-config', channelName + '.tx')));
+		const envelope_bytes = fs.readFileSync((path.join(channelTxPath, channelName + '.tx')));
 		config = client.extractChannelConfig(envelope_bytes);
 
 		// sign the config for each org
@@ -263,10 +263,10 @@ async function join_channel(ccp, tls, channelName, orgName) {
  * Update a channel with a new config file
  * @param {CommonConnectionProfile} ccp The common connection profile
  * @param {String} channelName the name of the channel to join
- * @param {String} configPath the relative path of the config file (relative to this file)
+ * @param {String} channelTxPath the relative path of the channel config tx file
  * @param {Boolean} tls true if a tls network; false if not
  */
-async function update_channel(ccp, channelName, configPath, tls) {
+async function update_channel(ccp, channelName, channelTxPath, tls) {
 	Client.setConfigSetting('request-timeout', 60000);
 	const channels = ccp.getChannels();
 	if (!Object.keys(channels) || Object.keys(channels).length === 0) {
@@ -318,7 +318,7 @@ async function update_channel(ccp, channelName, configPath, tls) {
 		await testUtil.getOrdererAdmin(client, ordererName, ccp);
 
 		// use the config update created by the configtx tool
-		const envelope_bytes = fs.readFileSync(path.join(__dirname, configPath));
+		const envelope_bytes = fs.readFileSync(path.join(__dirname, channelTxPath));
 		config = client.extractChannelConfig(envelope_bytes);
 
 		// sign the config for each org
