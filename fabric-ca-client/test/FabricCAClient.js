@@ -23,10 +23,15 @@ const https = require('https');
 const events = require('events');
 
 const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
+
 const should = chai.should();
 const sinon = require('sinon');
 
 describe('FabricCAClient', () => {
+	const cryptoPrimitives = sinon.createStubInstance(CryptoSuite);
+	cryptoPrimitives.name = 'testCrypto';
 
 	describe('#constructor', () => {
 
@@ -69,7 +74,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			client._port.should.equal(7054);
@@ -91,7 +95,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			client._httpClient.should.deep.equal(http);
@@ -107,7 +110,6 @@ describe('FabricCAClient', () => {
 				port: 42
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			client._port.should.equal(42);
@@ -124,7 +126,6 @@ describe('FabricCAClient', () => {
 				tlsOptions: opts
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			client._tlsOptions.should.deep.equal(opts);
@@ -141,7 +142,6 @@ describe('FabricCAClient', () => {
 				tlsOptions: opts
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			client._tlsOptions.should.deep.equal({trustedRoots: 'much root', verify: true});
@@ -158,7 +158,6 @@ describe('FabricCAClient', () => {
 				tlsOptions: opts
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			client._tlsOptions.should.deep.equal({trustedRoots: [], verify: false});
@@ -187,7 +186,6 @@ describe('FabricCAClient', () => {
 					hostname: 'testHost'
 				};
 
-				const cryptoPrimitives = 'test primitives';
 				const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 				client.register('one', 'too', 'few', 'parameters', 'for', 'this_function_call');
 			}).should.throw(/Missing required parameters/);
@@ -201,7 +199,6 @@ describe('FabricCAClient', () => {
 					hostname: 'testHost'
 				};
 
-				const cryptoPrimitives = 'test primitives';
 				const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 				client.register(null, null, null, null, 'string_num', null, null);
 			}).should.throw(/Parameter 'maxEnrollments' must be a number/);
@@ -214,7 +211,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -246,7 +242,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -275,7 +270,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -304,7 +298,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.rejects(new Error('forced error'));
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -337,7 +330,6 @@ describe('FabricCAClient', () => {
 					hostname: 'testHost'
 				};
 
-				const cryptoPrimitives = 'test primitives';
 				const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 				client.revoke('one_too', 'few', 'parameters_for', 'this_function_call');
 			}).should.throw(/Missing required parameters/);
@@ -350,7 +342,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -380,7 +371,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.rejects(new Error('forced error'));
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -412,7 +402,6 @@ describe('FabricCAClient', () => {
 					hostname: 'testHost'
 				};
 
-				const cryptoPrimitives = 'test primitives';
 				const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 				client.reenroll('one_too_few_parameters_for_this_function_call');
 			}).should.throw(/Missing required parameters/);
@@ -425,7 +414,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -453,7 +441,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -478,7 +465,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.rejects(new Error('forced error'));
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -509,7 +495,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -541,7 +526,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -573,7 +557,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {secret: 'shhh!'}});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -605,7 +588,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const requestStub = sinon.stub();
 			requestStub.resolves();
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.request', requestStub);
@@ -646,7 +628,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const requestStub = sinon.stub();
 			requestStub.resolves();
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.request', requestStub);
@@ -686,7 +667,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const requestStub = sinon.stub();
 			requestStub.resolves();
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.request', requestStub);
@@ -725,7 +705,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const requestStub = sinon.stub();
 			requestStub.resolves();
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.request', requestStub);
@@ -769,7 +748,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.request('one_too', 'few_parameters_for_this_function_call').should.be.rejectedWith(/Missing required parameters/);
 		});
@@ -800,7 +778,6 @@ describe('FabricCAClient', () => {
 			generateAuthTokenStub.returns('test_authToken');
 			revert.push(FabricCAClientRewire.__set__('FabricCAClient.prototype.generateAuthToken', generateAuthTokenStub));
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.request('test_http_method', 'test_api_method', 'signingIdentity', {});
 
@@ -851,7 +828,6 @@ describe('FabricCAClient', () => {
 			generateAuthTokenStub.returns('test_authToken');
 			revert.push(FabricCAClientRewire.__set__('FabricCAClient.prototype.generateAuthToken', generateAuthTokenStub));
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			const result = await client.request('test_http_method', 'test_api_method', 'signingIdentity', {});
 			result.should.deep.equal({my_data: 'test_data', success: true});
@@ -883,7 +859,6 @@ describe('FabricCAClient', () => {
 			generateAuthTokenStub.returns('test_authToken');
 			revert.push(FabricCAClientRewire.__set__('FabricCAClient.prototype.generateAuthToken', generateAuthTokenStub));
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.request('test_http_method', 'test_api_method', 'signingIdentity', {}).should.be.rejectedWith(/fabric-ca request test_api_method failed with errors \["forced_errors"\]/);
 		});
@@ -914,7 +889,6 @@ describe('FabricCAClient', () => {
 			generateAuthTokenStub.returns('test_authToken');
 			revert.push(FabricCAClientRewire.__set__('FabricCAClient.prototype.generateAuthToken', generateAuthTokenStub));
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.request('test_http_method', 'test_api_method', 'signingIdentity', {}).should.be.rejectedWith(/Could not parse test_api_method response/);
 		});
@@ -943,7 +917,6 @@ describe('FabricCAClient', () => {
 			const generateAuthTokenStub = sinon.stub();
 			generateAuthTokenStub.returns('test_authToken');
 			revert.push(FabricCAClientRewire.__set__('FabricCAClient.prototype.generateAuthToken', generateAuthTokenStub));
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.request('test_http_method', 'test_api_method', 'signingIdentity').should.be.rejectedWith(/fabric-ca request test_api_method failed with HTTP status code 500/);
 		});
@@ -971,7 +944,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = new CryptoSuite(256, null, null);
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			const signStub = sinon.stub();
@@ -980,24 +952,48 @@ describe('FabricCAClient', () => {
 				_certificate: 'test_cert',
 				sign: signStub
 			};
-			client.generateAuthToken(null, fake);
+			client.generateAuthToken(null, fake, 'something/v', 'POST');
 
 			// should call signingIdentity.sign()
 			sinon.assert.calledOnce(signStub);
 
 			// Should pass unconcat string into sign method
 			const callArgs = signStub.getCall(0).args;
-			callArgs[0].should.equal('.dGVzdF9jZXJ0');
+			callArgs[0].should.equal('POST.c29tZXRoaW5nL3Y=..dGVzdF9jZXJ0');
 		});
 
-		it('should sign the certificate if a request body is provided', () => {
+		it('should sign the certificate if a request body, path and method are provided', () => {
 			const connect_opts = {
 				caname: 'test-ca-name',
 				protocol: 'https',
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = new CryptoSuite(256, null, null);
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+
+			const signStub = sinon.stub();
+			signStub.returns('signed');
+			const fake = {
+				_certificate: 'test_cert',
+				sign: signStub
+			};
+			client.generateAuthToken('test_body', fake, 'something/v', 'POST');
+
+			// should call signingIdentity.sign()
+			sinon.assert.calledOnce(signStub);
+
+			// Should pass concatenation into sign method
+			const callArgs = signStub.getCall(0).args;
+			callArgs[0].should.equal('POST.c29tZXRoaW5nL3Y=.InRlc3RfYm9keSI=.dGVzdF9jZXJ0');
+		});
+
+		it('should sign the certificate if only request body is provided', () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
+
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			const signStub = sinon.stub();
@@ -1011,19 +1007,18 @@ describe('FabricCAClient', () => {
 			// should call signingIdentity.sign()
 			sinon.assert.calledOnce(signStub);
 
-			// Should pass concatenatino into sign method
+			// Should pass concatenation into sign method
 			const callArgs = signStub.getCall(0).args;
 			callArgs[0].should.equal('InRlc3RfYm9keSI=.dGVzdF9jZXJ0');
 		});
 
-		it('should return a concatention of the cert and signing in base64 string', () => {
+		it('should return a concatenation of the cert and signing in base64 string', () => {
 			const connect_opts = {
 				caname: 'test-ca-name',
 				protocol: 'https',
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = new CryptoSuite(256, null, null);
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 
 			const signStub = sinon.stub();
@@ -1063,7 +1058,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.enroll('one_too', 'few_parameters_for_this_function_call').should.be.rejectedWith(/Missing required parameters/);
 		});
@@ -1090,7 +1084,6 @@ describe('FabricCAClient', () => {
 
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.enroll('enrollmentID', 'enrollmentSecret', 'csr', 'profile', ['my', 'attributes']);
 
@@ -1134,7 +1127,6 @@ describe('FabricCAClient', () => {
 
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			const result = await client.enroll('enough', 'parameters', 'for_this_function_call');
 			result.enrollmentCert.toString('ascii').should.equal('test_cert');
@@ -1163,7 +1155,6 @@ describe('FabricCAClient', () => {
 
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Enrollment failed with HTTP status code 500/);
 		});
@@ -1190,7 +1181,6 @@ describe('FabricCAClient', () => {
 
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Enrollment failed with errors \["forced errors"\]/);
 		});
@@ -1217,7 +1207,6 @@ describe('FabricCAClient', () => {
 
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Could not parse enrollment response/);
 		});
@@ -1243,7 +1232,6 @@ describe('FabricCAClient', () => {
 
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Enrollment failed with error \[such_error\]/);
 		});
@@ -1270,7 +1258,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
 			await client.generateCRL('one_too', 'few_parameters', 'for_this', 'function_call').should.be.rejectedWith(/Missing required parameters/);
 		});
@@ -1282,7 +1269,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {CRL: 'bazinga'}, success: true});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -1316,7 +1302,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({result: {CRL: 'bazinga'}, errors: 'test_fail'});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -1332,7 +1317,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.resolves({errors: 'test_fail'});
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
@@ -1348,7 +1332,6 @@ describe('FabricCAClient', () => {
 				hostname: 'testHost'
 			};
 
-			const cryptoPrimitives = 'test primitives';
 			const postStub = sinon.stub();
 			postStub.rejects(new Error('forced error'));
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
