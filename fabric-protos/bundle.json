@@ -1,400 +1,7 @@
 {
     "package": null,
     "syntax": "proto2",
-    "options": {
-        "go_package": "github.com/hyperledger/fabric/idemix"
-    },
     "messages": [
-        {
-            "name": "ECP",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "x",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "y",
-                    "id": 2
-                }
-            ]
-        },
-        {
-            "name": "ECP2",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "xa",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "xb",
-                    "id": 2
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "ya",
-                    "id": 3
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "yb",
-                    "id": 4
-                }
-            ]
-        },
-        {
-            "name": "IssuerPublicKey",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "repeated",
-                    "type": "string",
-                    "name": "attribute_names",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "h_sk",
-                    "id": 2
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "h_rand",
-                    "id": 3
-                },
-                {
-                    "rule": "repeated",
-                    "type": "ECP",
-                    "name": "h_attrs",
-                    "id": 4
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP2",
-                    "name": "w",
-                    "id": 5
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "bar_g1",
-                    "id": 6
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "bar_g2",
-                    "id": 7
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_c",
-                    "id": 8
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s",
-                    "id": 9
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "hash",
-                    "id": 10
-                }
-            ]
-        },
-        {
-            "name": "IssuerKey",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "isk",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "IssuerPublicKey",
-                    "name": "ipk",
-                    "id": 2
-                }
-            ]
-        },
-        {
-            "name": "Credential",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "a",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "b",
-                    "id": 2
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "e",
-                    "id": 3
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "s",
-                    "id": 4
-                },
-                {
-                    "rule": "repeated",
-                    "type": "bytes",
-                    "name": "attrs",
-                    "id": 5
-                }
-            ]
-        },
-        {
-            "name": "CredRequest",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "nym",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "issuer_nonce",
-                    "id": 2
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_c",
-                    "id": 3
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s",
-                    "id": 4
-                }
-            ]
-        },
-        {
-            "name": "Signature",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "a_prime",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "a_bar",
-                    "id": 2
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "b_prime",
-                    "id": 3
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_c",
-                    "id": 4
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s_sk",
-                    "id": 5
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s_e",
-                    "id": 6
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s_r2",
-                    "id": 7
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s_r3",
-                    "id": 8
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s_s_prime",
-                    "id": 9
-                },
-                {
-                    "rule": "repeated",
-                    "type": "bytes",
-                    "name": "proof_s_attrs",
-                    "id": 10
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "nonce",
-                    "id": 11
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP",
-                    "name": "nym",
-                    "id": 12
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s_r_nym",
-                    "id": 13
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP2",
-                    "name": "revocation_epoch_pk",
-                    "id": 14
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "revocation_pk_sig",
-                    "id": 15
-                },
-                {
-                    "rule": "optional",
-                    "type": "int64",
-                    "name": "epoch",
-                    "id": 16
-                },
-                {
-                    "rule": "optional",
-                    "type": "NonRevocationProof",
-                    "name": "non_revocation_proof",
-                    "id": 17
-                }
-            ]
-        },
-        {
-            "name": "NonRevocationProof",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "type": "int32",
-                    "name": "revocation_alg",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "non_revocation_proof",
-                    "id": 2
-                }
-            ]
-        },
-        {
-            "name": "NymSignature",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_c",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s_sk",
-                    "id": 2
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "proof_s_r_nym",
-                    "id": 3
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "nonce",
-                    "id": 4
-                }
-            ]
-        },
-        {
-            "name": "CredentialRevocationInformation",
-            "syntax": "proto3",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "type": "int64",
-                    "name": "epoch",
-                    "id": 1
-                },
-                {
-                    "rule": "optional",
-                    "type": "ECP2",
-                    "name": "epoch_pk",
-                    "id": 2
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "epoch_pk_sig",
-                    "id": 3
-                },
-                {
-                    "rule": "optional",
-                    "type": "int32",
-                    "name": "revocation_alg",
-                    "id": 4
-                },
-                {
-                    "rule": "optional",
-                    "type": "bytes",
-                    "name": "revocation_data",
-                    "id": 5
-                }
-            ]
-        },
         {
             "name": "google",
             "fields": [],
@@ -3991,7 +3598,7 @@
                     "fields": [
                         {
                             "rule": "optional",
-                            "type": "uint64",
+                            "type": "string",
                             "name": "tick_interval",
                             "id": 1
                         },
@@ -4607,7 +4214,7 @@
                         },
                         {
                             "rule": "optional",
-                            "type": "uint64",
+                            "type": "string",
                             "name": "quantity",
                             "id": 3
                         }
@@ -4688,97 +4295,7 @@
                     ]
                 },
                 {
-                    "name": "TokenToIssue",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenOwner",
-                            "name": "recipient",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "type",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "uint64",
-                            "name": "quantity",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "RecipientTransferShare",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenOwner",
-                            "name": "recipient",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "uint64",
-                            "name": "quantity",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "TokenOutput",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenId",
-                            "name": "id",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "type",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "uint64",
-                            "name": "quantity",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "UnspentTokens",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "repeated",
-                            "type": "TokenOutput",
-                            "name": "tokens",
-                            "id": 1
-                        }
-                    ]
-                },
-                {
-                    "name": "ListRequest",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "credential",
-                            "id": 1
-                        }
-                    ]
-                },
-                {
-                    "name": "ImportRequest",
+                    "name": "IssueRequest",
                     "syntax": "proto3",
                     "fields": [
                         {
@@ -4789,8 +4306,26 @@
                         },
                         {
                             "rule": "repeated",
-                            "type": "TokenToIssue",
+                            "type": "Token",
                             "name": "tokens_to_issue",
+                            "id": 2
+                        }
+                    ]
+                },
+                {
+                    "name": "RecipientShare",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "TokenOwner",
+                            "name": "recipient",
+                            "id": 1
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "quantity",
                             "id": 2
                         }
                     ]
@@ -4813,7 +4348,7 @@
                         },
                         {
                             "rule": "repeated",
-                            "type": "RecipientTransferShare",
+                            "type": "RecipientShare",
                             "name": "shares",
                             "id": 3
                         }
@@ -4837,9 +4372,57 @@
                         },
                         {
                             "rule": "optional",
-                            "type": "uint64",
-                            "name": "quantity_to_redeem",
+                            "type": "string",
+                            "name": "quantity",
                             "id": 3
+                        }
+                    ]
+                },
+                {
+                    "name": "UnspentToken",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "TokenId",
+                            "name": "id",
+                            "id": 1
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "type",
+                            "id": 2
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "quantity",
+                            "id": 3
+                        }
+                    ]
+                },
+                {
+                    "name": "UnspentTokens",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "repeated",
+                            "type": "UnspentToken",
+                            "name": "tokens",
+                            "id": 1
+                        }
+                    ]
+                },
+                {
+                    "name": "ListRequest",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "bytes",
+                            "name": "credential",
+                            "id": 1
                         }
                     ]
                 },
@@ -4915,8 +4498,8 @@
                         },
                         {
                             "rule": "optional",
-                            "type": "ImportRequest",
-                            "name": "import_request",
+                            "type": "IssueRequest",
+                            "name": "issue_request",
                             "id": 2,
                             "oneof": "payload"
                         },
@@ -6854,6 +6437,54 @@
             },
             "messages": [
                 {
+                    "name": "ChaincodeEndorsementInfo",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "version",
+                            "id": 1
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bytes",
+                            "name": "id",
+                            "id": 2
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bool",
+                            "name": "init_required",
+                            "id": 3
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "endorsement_plugin",
+                            "id": 4
+                        }
+                    ]
+                },
+                {
+                    "name": "ChaincodeValidationInfo",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "validation_plugin",
+                            "id": 1
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bytes",
+                            "name": "validation_parameter",
+                            "id": 2
+                        }
+                    ]
+                },
+                {
                     "name": "StateMetadata",
                     "syntax": "proto3",
                     "fields": [
@@ -6877,8 +6508,8 @@
                     "fields": [
                         {
                             "rule": "optional",
-                            "type": "string",
-                            "name": "String",
+                            "type": "int64",
+                            "name": "Int64",
                             "id": 1,
                             "oneof": "Type"
                         },
@@ -6888,28 +6519,12 @@
                             "name": "Bytes",
                             "id": 2,
                             "oneof": "Type"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "uint64",
-                            "name": "Uint64",
-                            "id": 3,
-                            "oneof": "Type"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "int64",
-                            "name": "Int64",
-                            "id": 4,
-                            "oneof": "Type"
                         }
                     ],
                     "oneofs": {
                         "Type": [
                             1,
-                            2,
-                            3,
-                            4
+                            2
                         ]
                     }
                 },
@@ -7073,6 +6688,12 @@
                             "type": "common.CollectionConfigPackage",
                             "name": "collections",
                             "id": 8
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bool",
+                            "name": "init_required",
+                            "id": 9
                         }
                     ]
                 },
@@ -7132,6 +6753,12 @@
                             "type": "common.CollectionConfigPackage",
                             "name": "collections",
                             "id": 8
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bool",
+                            "name": "init_required",
+                            "id": 9
                         }
                     ]
                 },
@@ -7197,6 +6824,12 @@
                             "type": "common.CollectionConfigPackage",
                             "name": "collections",
                             "id": 7
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bool",
+                            "name": "init_required",
+                            "id": 8
                         }
                     ]
                 },

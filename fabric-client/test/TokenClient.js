@@ -20,6 +20,7 @@ const Client = require('../lib/Client');
 const {Identity} = require('fabric-common');
 const TokenClient = rewire('../lib/TokenClient');
 const TransactionID = require('../lib/TransactionID.js');
+const token_utils = require('../lib/token-utils.js');
 const fabprotos = require('fabric-protos');
 
 const sinon = require('sinon');
@@ -125,7 +126,7 @@ describe('TokenClient', () => {
 
 		beforeEach(() => {
 			// prepare token request for issue
-			param = {recipient: testowner, type: 'abc123', quantity: 210};
+			param = {owner: testowner, type: 'abc123', quantity: 210};
 			request = {params: [param], txId: txId};
 			tokenClient = new TokenClient(client, mockChannel);
 		});
@@ -228,7 +229,7 @@ describe('TokenClient', () => {
 		beforeEach(() => {
 			// prepare token request for transfer
 			const tokenId = {tx_id: 'mock_tx_id', index: 0};
-			param = {recipient: testowner, quantity: 210};
+			param = {owner: testowner, quantity: 210};
 			request = {params: [param], tokenIds: [tokenId], txId: txId};
 
 			tokenClient = new TokenClient(client, mockChannel);
@@ -442,8 +443,8 @@ describe('TokenClient', () => {
 			// prepare mockResponse for sendTokenComandStub
 			const tokenId1 = {tx_id: 'mock_tx_id1', index: 0};
 			const tokenId2 = {tx_id: 'mock_tx_id2', index: 0};
-			const token1 = {id: tokenId1, type: 'abc123', quantity: 100};
-			const token2 = {id: tokenId2, type: 'xyz', quantity: 200};
+			const token1 = {id: tokenId1, type: 'abc123', quantity: token_utils.toHex(100)};
+			const token2 = {id: tokenId2, type: 'xyz', quantity: token_utils.toHex(200)};
 			mockTokens = [token1, token2];
 			mockResponse = new fabprotos.token.CommandResponse();
 			mockResponse.setUnspentTokens({tokens: mockTokens});
@@ -597,7 +598,7 @@ describe('TokenClient', () => {
 
 			// prepare request parameters
 			tokenIds = [{tx_id: 'mock_tx_id', index: 0}];
-			param = {recipient: testowner, type: 'abc123', quantity: 210};
+			param = {owner: testowner, type: 'abc123', quantity: 210};
 
 			// create stubs
 			buildTokenCommandHeaderStub = sinon.stub();

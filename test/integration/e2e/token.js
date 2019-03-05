@@ -9,6 +9,7 @@
 
 const util = require('util');
 const utils = require('fabric-client/lib/utils.js');
+const tokenUtils = require('fabric-client/lib/token-utils.js');
 const logger = utils.getLogger('E2E token');
 
 const tape = require('tape');
@@ -18,6 +19,7 @@ const test = _test(tape);
 const e2eUtils = require('./e2eUtils.js');
 const fabprotos = require('fabric-protos');
 
+// The channel should be created and joined before running tests in this file
 const channel_name = process.env.channel ? process.env.channel : 'tokenchannel';
 
 // Positive tests that call issue/transfer/redeem APIs to invoke token transactions
@@ -43,14 +45,14 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// build the request for user2 to issue tokens to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: 210
+			quantity: tokenUtils.toHex(200),
 		};
 		const param2 = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'horizon',
-			quantity: 300,
+			quantity: tokenUtils.toHex(200),
 		};
 		let request = {
 			params: [param, param2],
@@ -66,7 +68,7 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// user1 call list to view his tokens
 		result = await user1TokenClient.list();
 		logger.debug('\nuser1(org1) listed %d tokens after issue: \n%s', result.length, util.inspect(result, false, null));
-		validateTokens(result, [param, param2], 'for user1 (recipient) after issue', t);
+		validateTokens(result, [param, param2], 'for user1 (owner) after issue', t);
 
 		const transferToken = result[0];
 		const redeemToken = result[1];
@@ -74,8 +76,8 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
-			quantity: transferToken.quantity
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
+			quantity: transferToken.quantity,
 		};
 		request = {
 			tokenIds: [transferToken.id],
@@ -89,14 +91,14 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		t.equals(result.status, 'SUCCESS', 'Successfully sent transfer token transaction to orderer. Waiting for transaction to be committed ...');
 		await waitForTxEvent(eventhub, txId.getTransactionID(), 'VALID', t);
 
-		// verify user1's unspent tokens after transfer, it should return 1 token
+		// verify user1's (old owner) unspent tokens after transfer, it should not return the transferred token
 		result = await user1TokenClient.list();
 		logger.debug('(org1)list tokens after transfer token %s', util.inspect(result, false, null));
 		t.equals(result.length, 1, 'Checking number of tokens for user1 after transfer');
 		t.equals(result[0].type, redeemToken.type, 'Checking token type for user1 after transfer');
 		t.equals(result[0].quantity.low, redeemToken.quantity.low, 'Checking token quantity for user1 after transfer');
 
-		// verify recipient's (user2) unspent tokens after transfer, it should return 1 token
+		// verify user2's (new owner) unspent tokens after transfer, it should return the transferred token
 		result = await user2TokenClient.list();
 		t.equals(result.length, 1, 'Checking number of tokens for user2 after transfer');
 		t.equals(result[0].type, transferToken.type, 'Checking token type for user2 after transfer');
@@ -105,7 +107,7 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// build requst for user1 to redeem token
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			quantity: 50,
+			quantity: tokenUtils.toHex(50),
 		};
 		request = {
 			tokenIds: [redeemToken.id],
@@ -122,11 +124,11 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// verify owner's (user1) unspent tokens after redeem - pass optional request
 		request = {txId: user1TokenClient.getClient().newTransactionID()};
 		result = await user1TokenClient.list(request);
-		const remainingQuantity = redeemToken.quantity - param.quantity;
+		const remainingQuantity = tokenUtils.toHex(200 - 50);
 		logger.debug('(org1)list tokens after transfer token %s', util.inspect(result, false, null));
 		t.equals(result.length, 1, 'Checking number of tokens for user1 after redeem');
 		t.equals(result[0].type, redeemToken.type, 'Checking token type for user1 after redeem');
-		t.equals(result[0].quantity.low, remainingQuantity, 'Checking token quantity for user1 after redeem');
+		t.equals(result[0].quantity, remainingQuantity, 'Checking token quantity for user1 after redeem');
 
 		t.end();
 	} catch (err) {
@@ -156,9 +158,9 @@ test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: 210
+			quantity: tokenUtils.toHex(210)
 		};
 		let request = {
 			params: [param],
@@ -174,14 +176,14 @@ test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (
 		// user1 lists tokens after issue
 		result = await user1TokenClient.list();
 		logger.debug('\nuser1(org1) listed %d tokens after issue: \n%s', result.length, util.inspect(result, false, null));
-		validateTokens(result, [param], 'for user1 (recipient) after issue', t);
+		validateTokens(result, [param], 'for user1 (owner) after issue', t);
 
 		const transferToken = result[0];
 
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
 			quantity: transferToken.quantity
 		};
 		request = {
@@ -237,9 +239,9 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: 210
+			quantity: tokenUtils.toHex(210)
 		};
 		let request = {
 			params: [param],
@@ -255,15 +257,15 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		// user1 lists tokens after issue
 		result = await user1TokenClient.list();
 		logger.debug('\nuser1(org1) listed %d tokens after issue: \n%s', result.length, util.inspect(result, false, null));
-		validateTokens(result, [param], 'for user1 (recipient) after issue', t);
+		validateTokens(result, [param], 'for user1 (owner) after issue', t);
 
 		const transferToken = result[0];
 
 		// token is owned by user1, but user2 attempts to transfer the token, should fail
 		txId = user2TokenClient.getClient().newTransactionID();
 		param = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
-			quantity: 10
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
+			quantity: tokenUtils.toHex(10)
 		};
 		request = {
 			tokenIds: [transferToken.id],
@@ -304,9 +306,9 @@ test('\n\n***** Token end-to-end flow: invalid transfer amount fails *****\n\n',
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: 210
+			quantity: tokenUtils.toHex(210)
 		};
 		let request = {
 			params: [param],
@@ -322,15 +324,15 @@ test('\n\n***** Token end-to-end flow: invalid transfer amount fails *****\n\n',
 		// user1 lists tokens after issue
 		result = await user1TokenClient.list();
 		logger.debug('\nuser1(org1) listed %d tokens after issue: \n%s', result.length, util.inspect(result, false, null));
-		validateTokens(result, [param], 'for user1 (recipient) after issue', t);
+		validateTokens(result, [param], 'for user1 (owner) after issue', t);
 
 		const transferToken = result[0];
 
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
-			quantity: 10
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
+			quantity: tokenUtils.toHex(10)
 		};
 		request = {
 			tokenIds: [transferToken.id],
@@ -371,9 +373,9 @@ test('\n\n***** Token end-to-end flow: invalid redeem amount fails *****\n\n', a
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			recipient: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: 100
+			quantity: tokenUtils.toHex(100)
 		};
 		let request = {
 			params: [param],
@@ -389,14 +391,14 @@ test('\n\n***** Token end-to-end flow: invalid redeem amount fails *****\n\n', a
 		// user1 lists tokens after issue
 		result = await user1TokenClient.list();
 		logger.debug('\nuser1(org1) listed %d tokens after issue: \n%s', result.length, util.inspect(result, false, null));
-		validateTokens(result, [param], 'for user1 (recipient) after issue', t);
+		validateTokens(result, [param], 'for user1 (owner) after issue', t);
 
 		const redeemToken = result[0];
 
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			quantity: 110
+			quantity: tokenUtils.toHex(110)
 		};
 		request = {
 			tokenIds: [redeemToken.id],
@@ -404,7 +406,7 @@ test('\n\n***** Token end-to-end flow: invalid redeem amount fails *****\n\n', a
 			txId: txId,
 		};
 
-		// user1 transfers token to user2
+		// user1 redeem tokens
 		result = await user1TokenClient.redeem(request);
 		t.fail('Redeem failed because redeem quantity exceeded the token quantity');
 
@@ -412,7 +414,7 @@ test('\n\n***** Token end-to-end flow: invalid redeem amount fails *****\n\n', a
 	} catch (err) {
 		t.equals(
 			err.message,
-			'command response has error: total quantity [100] from TokenIds is less than quantity [110] to be redeemed',
+			'command response has error: total quantity [100] from TokenIds is less than quantity [0x6e] to be redeemed',
 			'Redeem failed as expected because redeemed quantity exceeded token quantity'
 		);
 		t.end();
@@ -464,11 +466,7 @@ function validateTokens(actual, expected, message, t) {
 				found = true;
 				t.equals(actualToken.type, expectedToken.type, 'Validating token type ' + message);
 				// compare quantity based on if it is a Long or simple integer
-				if (expectedToken.quantity.low) {
-					t.equals(actualToken.quantity.low, expectedToken.quantity.low, 'Validating token quantity ' + message);
-				} else {
-					t.equals(actualToken.quantity.low, expectedToken.quantity, 'Validating token quantity ' + message);
-				}
+				t.equals(actualToken.quantity, expectedToken.quantity, 'Validating token quantity ' + message);
 				break;
 			}
 		}

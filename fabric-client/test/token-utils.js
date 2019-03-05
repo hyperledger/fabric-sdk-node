@@ -48,7 +48,7 @@ describe('token-utils', () => {
 		beforeEach(() => {
 			// prepare token request
 			const owner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('test-owner')};
-			param = {recipient: owner, type: 'abc123', quantity: 210};
+			param = {owner: owner, type: 'abc123', quantity: TokenUtils.toHex(210)};
 			request = {params: [param], txId: txId, tokenIds: tokenIds};
 		});
 
@@ -80,11 +80,11 @@ describe('token-utils', () => {
 				}).should.throw('Missing required "params" in request on issue call');
 			});
 
-			it('should get error when parameter has no recipient', () => {
+			it('should get error when parameter has no owner', () => {
 				(() => {
-					param.recipient = undefined;
+					param.owner = undefined;
 					TokenUtils.checkTokenRequest(request, 'issue');
-				}).should.throw('Missing required "recipient" in request on issue call');
+				}).should.throw('Missing required "owner" in request on issue call');
 			});
 
 			it('should get error when parameter has no type', () => {
@@ -128,11 +128,11 @@ describe('token-utils', () => {
 				}).should.throw('Missing required "params" in request on transfer call');
 			});
 
-			it('should get error when parameter has no recipient', () => {
+			it('should get error when parameter has no owner', () => {
 				(() => {
-					param.recipient = undefined;
+					param.owner = undefined;
 					TokenUtils.checkTokenRequest(request, 'transfer');
-				}).should.throw('Missing required "recipient" in request on transfer call');
+				}).should.throw('Missing required "owner" in request on transfer call');
 			});
 
 			it('should get error when parameter has no quantity', () => {
@@ -241,18 +241,18 @@ describe('token-utils', () => {
 			// prepare token request for issue
 			const owner1 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner1')};
 			const owner2 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner2')};
-			param1 = {recipient: owner1, type: 'abc123', quantity: 210};
-			param2 = {recipient: owner2, type: 'horizon', quantity: 300};
+			param1 = {owner: owner1, type: 'abc123', quantity: TokenUtils.toHex(210)};
+			param2 = {owner: owner2, type: 'horizon', quantity: TokenUtils.toHex(300)};
 			request = {
 				params: [param1, param2],
 				txId: txId,
 			};
 
 			// create expected command based on request
-			const importRequest = new fabprotos.token.ImportRequest();
-			importRequest.setTokensToIssue([param1, param2]);
+			const issueRequest = new fabprotos.token.IssueRequest();
+			issueRequest.setTokensToIssue([param1, param2]);
 			expectedCommand = new fabprotos.token.Command();
-			expectedCommand.set('import_request', importRequest);
+			expectedCommand.set('issue_request', issueRequest);
 		});
 
 		it('should return a valid token command', () => {
@@ -267,8 +267,8 @@ describe('token-utils', () => {
 			const tokenId = {tx_id: 'mock_tx_id', index: 0};
 			const owner1 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner1')};
 			const owner2 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner2')};
-			param1 = {recipient: owner1, quantity: 100};
-			param2 = {recipient: owner2, quantity: 200};
+			param1 = {owner: owner1, quantity: TokenUtils.toHex(100)};
+			param2 = {owner: owner2, quantity: TokenUtils.toHex(200)};
 
 			request = {
 				tokenIds: [tokenId],
@@ -279,7 +279,9 @@ describe('token-utils', () => {
 			// create expected command based on request
 			const transferRequest = new fabprotos.token.TransferRequest();
 			transferRequest.setTokenIds([tokenId]);
-			transferRequest.setShares([param1, param2]);
+			const share1 = {recipient: param1.owner, quantity: param1.quantity};
+			const share2 = {recipient: param2.owner, quantity: param2.quantity};
+			transferRequest.setShares([share1, share2]);
 			expectedCommand = new fabprotos.token.Command();
 			expectedCommand.set('transfer_request', transferRequest);
 		});
@@ -294,7 +296,7 @@ describe('token-utils', () => {
 		beforeEach(() => {
 			// prepare token request for redeem
 			const tokenId = {tx_id: 'mock_tx_id', index: 0};
-			param1 = {quantity: 100};
+			param1 = {quantity: TokenUtils.toHex(100)};
 			request = {
 				tokenIds: [tokenId],
 				params: param1,
@@ -304,7 +306,7 @@ describe('token-utils', () => {
 			// create expected command based on request
 			const redeemRequest = new fabprotos.token.RedeemRequest();
 			redeemRequest.setTokenIds([tokenId]);
-			redeemRequest.setQuantityToRedeem(param1.quantity);
+			redeemRequest.setQuantity(param1.quantity);
 			expectedCommand = new fabprotos.token.Command();
 			expectedCommand.set('redeem_request', redeemRequest);
 		});
@@ -503,7 +505,7 @@ describe('token-utils', () => {
 			mockSigningIdentity = {sign: signStub};
 
 			command = new fabprotos.token.Command();
-			command.set('import_request', new fabprotos.token.ImportRequest());
+			command.set('issue_request', new fabprotos.token.IssueRequest());
 
 		});
 

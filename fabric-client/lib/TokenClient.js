@@ -64,7 +64,7 @@ const {HashPrimitives} = require('fabric-common');
  *   const txId = tokenClient1.newTransactionID();
  *   const owner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()};
  *   const tokenType = 'myTokenType';
- *   let param = {recipient: owner, type: tokenType, quantity: 200};
+ *   let param = {owner: owner, type: tokenType, quantity: 200};
  *   let request = {params: [param], txId: txId};
  *
  *   // user1 calls issue method to issue tokens to user2
@@ -93,7 +93,7 @@ const {HashPrimitives} = require('fabric-common');
  *
  *   // user2 calls transfer method to transfer the token to user1
  *   const newOwner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()};
- *   param = {recipient: newOwner, quantity: 150};
+ *   param = {owner: newOwner, quantity: 150};
  *   request = {params: [param], tokenId: token.id, txId: txId};
  *   result = await tokenClient1.transfer(request);
  *
@@ -164,11 +164,12 @@ const TokenClient = class {
 
 	/**
 	 * @typedef {Object} TokenParam
-	 *          This object contains properties that specify the recipient, type,
+	 *          This object contains properties that specify the owner, type,
 	 *          and quantity of a token kind.
-	 * @property {byte[]} recipient - Required for issue and transfer. The owner of the token.
+	 * @property {byte[]} owner - Required for issue and transfer. The owner of the token.
 	 * @property {string} type - Required for issue. The type of the token.
-	 * @property {Number} quantity - Required. The quantity of the token.
+	 * @property {HexString} quantity - Required. The quantity of the token in a HexString
+	 *          of the numeric value.
    */
 
 	/**
@@ -192,7 +193,7 @@ const TokenClient = class {
 	 * and broadcast the transaction to orderers.
 	 *
 	 * @param {TokenRequest} request - Required. A TokenRequest object.
-	 *        Must contain a 'params' TokenParam[] with recipient, type, and quantity properties.
+	 *        Must contain a 'params' TokenParam[] with owner, type, and quantity properties.
 	 * @param {Number} timeout - Optional. A number indicating milliseconds to wait on the
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Peer instance and the global
@@ -220,7 +221,7 @@ const TokenClient = class {
 	 * and broadcast the transaction to orderers.
 	 *
 	 * @param {TokenRequest} request - Required. A TokenRequest object.
-	 *        Must contain a 'params' TokenParam[] with recipient and quantity properties.
+	 *        Must contain a 'params' TokenParam[] with owner and quantity properties.
 	 * @param {Number} timeout - Optional. A number indicating milliseconds to wait on the
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Peer instance and the global
@@ -279,7 +280,7 @@ const TokenClient = class {
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Peer instance and the global
 	 *        timeout in the config settings.
-	 * @returns {Promise} A Promise for TokenOutput[] array returned by the prover peer
+	 * @returns {Promise} A Promise for UnspentToken[] array returned by the prover peer
 	 *          that contains all unspent tokens owned by the user.
 	 */
 	async list(request, timeout) {

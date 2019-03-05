@@ -3666,8 +3666,8 @@ describe('Channel', () => {
 
 			// create token command request
 			command = new fabprotos.token.Command();
-			const importRequest = new fabprotos.token.ImportRequest();
-			command.set('import_request', importRequest);
+			const issueRequest = new fabprotos.token.IssueRequest();
+			command.set('issue_request', issueRequest);
 			request = {tokenCommand: command, txId: txIdStub};
 		});
 

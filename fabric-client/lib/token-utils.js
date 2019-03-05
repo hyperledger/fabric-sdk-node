@@ -36,14 +36,14 @@ module.exports.buildIssueCommand = (request) => {
 	// iterate params to populate tokensToIssue
 	const tokensToIssue = [];
 	params.forEach((param) => {
-		const token = {recipient: param.recipient, type: param.type, quantity: param.quantity};
+		const token = {owner: param.owner, type: param.type, quantity: param.quantity};
 		tokensToIssue.push(token);
 	});
 
 	// construct import request and token command
-	const importRequest = {tokens_to_issue: tokensToIssue};
+	const issueRequest = {tokens_to_issue: tokensToIssue};
 	const tokenCmd = new fabprotos.token.Command();
-	tokenCmd.set('import_request', importRequest);
+	tokenCmd.set('issue_request', issueRequest);
 
 	return tokenCmd;
 };
@@ -62,7 +62,7 @@ module.exports.buildTransferCommand = (request) => {
 	// iterate params to populate transfer shares
 	const shares = [];
 	params.forEach((param) => {
-		const share = {recipient: param.recipient, quantity: param.quantity};
+		const share = {recipient: param.owner, quantity: param.quantity};
 		shares.push(share);
 	});
 
@@ -86,7 +86,7 @@ module.exports.buildRedeemCommand = (request) => {
 	}
 
 	// construct redeem request and token command
-	const redeemRequest = {token_ids: request.tokenIds, quantity_to_redeem: param.quantity};
+	const redeemRequest = {token_ids: request.tokenIds, quantity: param.quantity};
 	const tokenCmd = new fabprotos.token.Command();
 	tokenCmd.set('redeem_request', redeemRequest);
 
@@ -227,9 +227,9 @@ module.exports.checkTokenRequest = (request, command_name, txIdRequired) => {
 	}
 
 	params.forEach((param) => {
-		if (!param.recipient) {
+		if (!param.owner) {
 			if (command_name === 'issue' || command_name === 'transfer') {
-				throw new Error(util.format('Missing required "recipient" in request on %s call', command_name));
+				throw new Error(util.format('Missing required "owner" in request on %s call', command_name));
 			}
 		}
 		if (!param.type) {
@@ -256,3 +256,12 @@ exports.toSignedCommand = (signature, command_bytes) => ({signature: signature, 
  * @param payload_bytes
  */
 exports.toEnvelope = (signature, payload_bytes) => ({signature: signature, payload: payload_bytes});
+
+/**
+ * convert an uint to Hex string
+ */
+function toHex(value) {
+	return '0x' + value.toString(16);
+}
+
+module.exports.toHex = toHex;
