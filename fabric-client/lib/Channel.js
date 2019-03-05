@@ -109,6 +109,7 @@ const Channel = class {
 		this._last_discover_timestamp = null;
 		this._use_discovery = sdk_utils.getConfigSetting('initialize-with-discovery', false);
 		this._as_localhost = sdk_utils.getConfigSetting('discovery-as-localhost', true);
+		this._discovery_cache_life = sdk_utils.getConfigSetting('discovery-cache-life', 300000); // default is 5 minutes
 		this._endorsement_handler = null;
 		this._commit_handler = null;
 		this._prover_handler = null;
@@ -190,20 +191,31 @@ const Channel = class {
 
 				return true;
 			} else {
-				if (typeof request.discover !== 'undefined') {
-					if (typeof request.discover === 'boolean') {
-						logger.debug('%s - user requested discover %s', method, request.discover);
-						this._use_discovery = request.discover;
+				const use_discovery = (typeof request.discover !== 'undefined') ? request.discover : sdk_utils.getConfigSetting('initialize-with-discovery');
+				const as_localhost = (typeof request.asLocalhost !== 'undefined') ? request.asLocalhost : sdk_utils.getConfigSetting('discovery-as-localhost');
+				const cache_life_time = sdk_utils.getConfigSetting('discovery-cache-life');
+
+				if (typeof use_discovery !== 'undefined') {
+					if (typeof use_discovery === 'boolean') {
+						logger.debug('%s - user requested discover %s', method, use_discovery);
+						this._use_discovery = use_discovery;
 					} else {
-						throw new Error('Request parameter "discover" must be boolean');
+						throw new Error('Request parameter "discover" or config parameter "initialize-with-discovery" must be boolean');
 					}
 				}
-				if (typeof request.asLocalhost !== 'undefined') {
-					if (typeof request.asLocalhost === 'boolean') {
-						logger.debug('%s - user requested discovery as localhost %s', method, request.asLocalhost);
-						this._as_localhost = request.asLocalhost;
+				if (typeof as_localhost !== 'undefined') {
+					if (typeof as_localhost === 'boolean') {
+						logger.debug('%s - user requested discovery as localhost %s', method, as_localhost);
+						this._as_localhost = as_localhost;
 					} else {
-						throw new Error('Request parameter "asLocalhost" must be boolean');
+						throw new Error('Request parameter "asLocalhost" or config parameter "discovery-as-localhost" must be boolean');
+					}
+				}
+				if (typeof cache_life_time !== 'undefined') {
+					if (typeof cache_life_time === 'number') {
+						this._discovery_cache_life = cache_life_time;
+					} else {
+						throw new Error('Config parameter "discovery-cache-life" must be number');
 					}
 				}
 				if (request.endorsementHandler) {
@@ -636,7 +648,7 @@ const Channel = class {
 
 		if (this._use_discovery) {
 			const have_new_interests = this._merge_hints(endorsement_hints);
-			const allowed_age = sdk_utils.getConfigSetting('discovery-cache-life', 300000); // default is 5 minutes
+			const allowed_age = this._discovery_cache_life;
 			const now = Date.now();
 			if (have_new_interests || now - this._last_discover_timestamp > allowed_age) {
 				logger.debug('%s - need to refresh :: have_new_interests %s', method, have_new_interests);
