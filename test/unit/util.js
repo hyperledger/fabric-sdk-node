@@ -181,9 +181,9 @@ module.exports.setAdmin = function(client, userOrg) {
 };
 
 function getAdmin(client, t, userOrg) {
-	const keyPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/keystore', userOrg, userOrg));
+	const keyPath = path.join(__dirname, util.format('../fixtures/crypto-material/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/msp/keystore', userOrg, userOrg));
 	const keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
-	const certPath = path.join(__dirname, util.format('../fixtures/channel/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/signcerts', userOrg, userOrg));
+	const certPath = path.join(__dirname, util.format('../fixtures/crypto-material/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/msp/signcerts', userOrg, userOrg));
 	const certPEM = readAllFiles(certPath)[0];
 
 	const cryptoSuite = Client.newCryptoSuite();
@@ -203,9 +203,9 @@ function getAdmin(client, t, userOrg) {
 }
 
 function getOrdererAdmin(client, t) {
-	const keyPath = path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/keystore');
+	const keyPath = path.join(__dirname, '../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp/keystore');
 	const keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString();
-	const certPath = path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/signcerts');
+	const certPath = path.join(__dirname, '../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp/signcerts');
 	const certPEM = readAllFiles(certPath)[0];
 	t.comment('getOrdererAdmin');
 
@@ -370,7 +370,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 	let channel_org2 = null;
 	try {
 		// get the config envelope created by the configtx tool
-		const envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/adminconfig.tx'));
+		const envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/channel-config/', channel_name + '.tx'));
 		// Have the sdk get the config update object from the envelope.
 		// the config update object is what is required to be signed by all
 		// participating organizations

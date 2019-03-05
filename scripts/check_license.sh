@@ -14,11 +14,11 @@ function filterExcludedFiles {
 		| grep -v "^LICENSE$" \
 		| grep -v "\.png$" \
 		| grep -v "\.rst$" \
-		| grep -v "\.pem$" \
 		| grep -v "\.block$" \
 		| grep -v "\.tx$" \
 		| grep -v "\.txt$" \
-		| grep -v "_sk$" \
+		| grep -v "\.pem$" \
+		| grep -v ".crt$" \
 		| grep -v "\.key$" \
 		| grep -v "\.gen\.go$" \
 		| grep -v "^Gopkg\.lock$" \

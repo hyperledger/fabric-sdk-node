@@ -210,7 +210,6 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 			t.pass('Successfully retrieved TLS certificate');
 			tlsInfo = enrollment;
 			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
-
 			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		}).then((store) => {
 

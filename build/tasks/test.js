@@ -21,7 +21,7 @@ const shell = require('gulp-shell');
 const testConstants = require('../../test/unit/constants.js');
 
 // Debug level of Docker containers used in scenario tests
-process.env.DOCKER_DEBUG = 'INFO';
+process.env.DOCKER_DEBUG = 'debug';
 
 // by default for running the tests print debug to a file
 const debugPath = path.join(testConstants.tempdir, 'test-log', 'debug.log');
@@ -98,10 +98,8 @@ gulp.task('docker-clean', shell.task([
 	'docker rmi $(docker images | grep "^dev-" | awk \'{print $3}\')',
 
 	// clean up all the containers created by docker-compose
-	// -tape
-	'docker-compose -f test/fixtures/docker-compose.yaml down',
-	// -cucumber
-	'docker-compose -f test/scenario/docker-compose/docker-compose-tls.yaml down'
+	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls-level-db.yaml -p node down',
+	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls.yaml -p node down'
 ], {
 	verbose: true, // so we can see the docker command output
 	ignoreErrors: true // kill and rm may fail because the containers may have been cleaned up
@@ -109,7 +107,7 @@ gulp.task('docker-clean', shell.task([
 
 gulp.task('docker-ready', ['docker-clean'], shell.task([
 	// make sure that necessary containers are up by docker-compose
-	'docker-compose -f test/fixtures/docker-compose.yaml up -d'
+	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls-level-db.yaml -p node up -d'
 ]));
 
 gulp.task('lint', ['eslint', 'tslint']);

@@ -123,7 +123,7 @@ async function createChannel(t) {
 		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
 
 		// get the config envelope created by the configtx tool
-		const envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/channel/mychannel2.tx'));
+		const envelope_bytes = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/channel-config/mychannel.tx'));
 		// have the sdk get the config update object from the envelope
 		// the config update object is what is required to be signed by all
 		// participating organizations

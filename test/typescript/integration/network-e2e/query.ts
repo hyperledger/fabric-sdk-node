@@ -39,9 +39,9 @@ const tlsLabel = 'tlsId';
 
 async function createWallet(t: any, filePath: string): Promise<Wallet> {
 	// define the identity to use
-	const credPath = fixtures + '/channel/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com';
+	const credPath = fixtures + '/crypto-material/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp';
 	const cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
-	const key = fs.readFileSync(credPath + '/keystore/e4af7f90fa89b3e63116da5d278855cfb11e048397261844db89244549918731_sk').toString();
+	const key = fs.readFileSync(credPath + '/keystore/key.pem').toString();
 
 	const fileSystemWallet = new FileSystemWallet(filePath);
 

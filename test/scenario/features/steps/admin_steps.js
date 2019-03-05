@@ -11,20 +11,22 @@ const testUtil = require('../lib/utils');
 
 const path = require('path');
 
+const cryptoRoot = '../../../fixtures/crypto-material';
 const configRoot = '../../config';
-const ccpPath = '../../config/ccp.json';
-const tlsCcpPath = '../../config/ccp-tls.json';
-const policiesPath = '../../config/policies.json';
+const channelRoot = cryptoRoot + '/channel-config';
+const ccpPath = configRoot + '/ccp.json';
+const tlsCcpPath = configRoot + '/ccp-tls.json';
+const policiesPath = configRoot + '/policies.json';
 
 module.exports = function () {
 
 	this.Then(/^I can create a channels from the (.+?) common connection profile$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (tlsType) => {
 		if (tlsType.localeCompare('non-tls') === 0) {
 			const profile =  new CCP(path.join(__dirname, ccpPath), true);
-			return channel_util.create_channels(path.join(__dirname, configRoot), profile, false);
+			return channel_util.create_channels(path.join(__dirname, channelRoot), profile, false);
 		} else {
 			const profile =  new CCP(path.join(__dirname, tlsCcpPath), true);
-			return channel_util.create_channels(path.join(__dirname, configRoot), profile, true);
+			return channel_util.create_channels(path.join(__dirname, channelRoot), profile, true);
 		}
 	});
 
@@ -50,7 +52,7 @@ module.exports = function () {
 			profile = new CCP(path.join(__dirname, tlsCcpPath), true);
 		}
 
-		await channel_util.create_channels(path.join(__dirname, configRoot), profile, tls);
+		await channel_util.create_channels(path.join(__dirname, channelRoot), profile, tls);
 
 		const channels = profile.getChannels();
 		try {

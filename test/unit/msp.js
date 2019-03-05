@@ -24,26 +24,7 @@ const Identity = idModule.Identity;
 const mspProto = ProtoLoader.load(path.join(__dirname, '../../fabric-client/lib/protos/msp/msp_config.proto')).msp;
 
 const FABRIC = 0;
-const TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
-	'MIIDVDCCAvqgAwIBAgIBATAKBggqhkjOPQQDAjBOMRMwEQYDVQQKDArOoyBBY21l' +
-	'IENvMRkwFwYDVQQDExB0ZXN0LmV4YW1wbGUuY29tMQ8wDQYDVQQqEwZHb3BoZXIx' +
-	'CzAJBgNVBAYTAk5MMB4XDTE2MTIxNjIzMTAxM1oXDTE2MTIxNzAxMTAxM1owTjET' +
-	'MBEGA1UECgwKzqMgQWNtZSBDbzEZMBcGA1UEAxMQdGVzdC5leGFtcGxlLmNvbTEP' +
-	'MA0GA1UEKhMGR29waGVyMQswCQYDVQQGEwJOTDBZMBMGByqGSM49AgEGCCqGSM49' +
-	'AwEHA0IABFKnXh7hBdp6s9OJ/aadigT1z2WzBbSc7Hzb3rkaWFz4e+9alqqWg9lr' +
-	'ur/mDYzG9dudC8jFjVa7KIh+2BxgBayjggHHMIIBwzAOBgNVHQ8BAf8EBAMCAgQw' +
-	'JgYDVR0lBB8wHQYIKwYBBQUHAwIGCCsGAQUFBwMBBgIqAwYDgQsBMA8GA1UdEwEB' +
-	'/wQFMAMBAf8wDQYDVR0OBAYEBAECAwQwDwYDVR0jBAgwBoAEAQIDBDBiBggrBgEF' +
-	'BQcBAQRWMFQwJgYIKwYBBQUHMAGGGmh0dHA6Ly9vY0JDQ1NQLmV4YW1wbGUuY29t' +
-	'MCoGCCsGAQUFBzAChh5odHRwOi8vY3J0LmV4YW1wbGUuY29tL2NhMS5jcnQwRgYD' +
-	'VR0RBD8wPYIQdGVzdC5leGFtcGxlLmNvbYERZ29waGVyQGdvbGFuZy5vcmeHBH8A' +
-	'AAGHECABSGAAACABAAAAAAAAAGgwDwYDVR0gBAgwBjAEBgIqAzAqBgNVHR4EIzAh' +
-	'oB8wDoIMLmV4YW1wbGUuY29tMA2CC2V4YW1wbGUuY29tMFcGA1UdHwRQME4wJaAj' +
-	'oCGGH2h0dHA6Ly9jcmwxLmV4YW1wbGUuY29tL2NhMS5jcmwwJaAjoCGGH2h0dHA6' +
-	'Ly9jcmwyLmV4YW1wbGUuY29tL2NhMS5jcmwwFgYDKgMEBA9leHRyYSBleHRlbnNp' +
-	'b24wCgYIKoZIzj0EAwIDSAAwRQIgcguBb6FUxO+X8DbY17gpqSGuNC4NT4BddPg1' +
-	'UWUxIC0CIQDNyHQAwzhw+512meXRwG92GfpzSBssDKLdwlrqiHOu5A==' +
-	'-----END CERTIFICATE-----';
+const TEST_CERT_PEM = 	fs.readFileSync(path.resolve(__dirname, '../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/msp/cacerts/ca.org1.example.com-cert.pem'));
 
 test('\n\n** MSP Tests **\n\n', async (t) => {
 	testutil.resetDefaults();
@@ -91,12 +72,12 @@ test('\n\n** MSP Tests **\n\n', async (t) => {
 		'Check MSPManager.loadMSPs() arguments: each config must have getConfig() returning a valid FabricMSPConfig'
 	);
 
-	let config = loadMSPConfig('peerOrg0', 'org0');
+	let config = loadMSPConfig('peer0.org1.example.com');
 	t.pass('Successfully loaded msp config for org0');
 
 	configs.push(config);
 
-	config = loadMSPConfig('peerOrg1', 'org1');
+	config = loadMSPConfig('peer1.org1.example.com');
 	t.pass('Successfully loaded msp config for org1');
 
 	configs.push(config);
@@ -122,7 +103,7 @@ test('\n\n** MSP Tests **\n\n', async (t) => {
 	const mspImpl = new MSP({
 		rootCerts: [],
 		admins: [],
-		id: 'peerOrg0',
+		id: 'peer0.org1.example.com',
 		cryptoSuite: cryptoUtils
 	});
 
@@ -131,23 +112,23 @@ test('\n\n** MSP Tests **\n\n', async (t) => {
 
 	const serializedID = identity.serialize();
 	identity = await mspm.deserializeIdentity(serializedID);
-	t.equal(identity.getMSPId(), 'peerOrg0', 'Deserialized identity using MSP manager');
+	t.equal(identity.getMSPId(), 'peer0.org1.example.com', 'Deserialized identity using MSP manager');
 
-	t.equal(mspm.getMSP('peerOrg0').getId(), 'peerOrg0', 'Checking MSPManager getMSP() method');
+	t.equal(mspm.getMSP('peer0.org1.example.com').getId(), 'peer0.org1.example.com', 'Checking MSPManager getMSP() method');
 	t.end();
 
 });
 
-const loadMSPConfig = (name, org) => {
+const loadMSPConfig = (peerorg) => {
 	const mspConfig = new mspProto.MSPConfig();
 	mspConfig.setType(FABRIC); // type: FABRIC
 
 	const fConfig = new mspProto.FabricMSPConfig();
-	fConfig.setName(name);
+	fConfig.setName(peerorg);
 
-	let data = fs.readFileSync(path.resolve(__dirname, '../fixtures/msp', org, 'cacerts/org_ca.pem'));
+	let data = fs.readFileSync(path.resolve(__dirname, '../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers', peerorg, 'msp/cacerts/ca.org1.example.com-cert.pem'));
 	fConfig.setRootCerts([data]);
-	data = fs.readFileSync(path.resolve(__dirname, '../fixtures/msp', org, 'admincerts/admin.pem'));
+	data = fs.readFileSync(path.resolve(__dirname, '../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers', peerorg, 'msp/admincerts/Admin@org1.example.com-cert.pem'));
 	fConfig.setAdmins([data]);
 	mspConfig.setConfig(fConfig.toBuffer());
 	return mspConfig;

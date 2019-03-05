@@ -12,12 +12,12 @@ const fs = require('fs');
 
 /**
  * Create the channels located in the given common connection profile.
- * @param {string} configPath The path to the Fabric network common connection profile and associated data.
+ * @param {string} channelTxPath The path to where the channel tx block lives
  * @param {CommonConnectionProfile} ccp The common connection profile
  * @param {Boolean} tls Boolean true if tls network; false if not
  * @return {Promise} The return promise.
  */
-async function create_channels(configPath, ccp, tls) {
+async function create_channels(channelTxPath, ccp, tls) {
 	Client.setConfigSetting('request-timeout', 60000);
 	const channels = ccp.getChannels();
 	if (!Object.keys(channels) || Object.keys(channels).length === 0) {
@@ -70,7 +70,7 @@ async function create_channels(configPath, ccp, tls) {
 			await testUtil.getOrdererAdmin(client, ordererName, ccp);
 
 			// use the config update created by the configtx tool
-			const envelope_bytes = fs.readFileSync((path.join(configPath, 'crypto-config', channelName + '.tx')));
+			const envelope_bytes = fs.readFileSync((path.join(channelTxPath, channelName + '.tx')));
 			config = client.extractChannelConfig(envelope_bytes);
 
 			// sign the config for each org

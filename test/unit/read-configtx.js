@@ -30,7 +30,7 @@ test('\n\n***** READ in the genesis block *****\n\n', (t) => {
 	testUtil.resetDefaults();
 
 	// readin the envelope to send to the orderer
-	const normalPath = path.normalize(path.join(__dirname, '../fixtures/channel/twoorgs.genesis.block'));
+	const normalPath = path.normalize(path.join(__dirname, '../fixtures/crypto-material/config-base/twoorgs.genesis.block'));
 	const data = fs.readFileSync(normalPath);
 
 	const channel = new Channel('test', 'fake');

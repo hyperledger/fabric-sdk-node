@@ -46,12 +46,12 @@ test('\n\n***** use only admin identity  *****\n\n', async (t) => {
 
 async function manually(t, client) {
 	try {
-		let data = fs.readFileSync(path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/keystore/ef8e88d28a86f23466ad378003d819561adbedc77fe90cc250424ce4de179a3c_sk'));
+		let data = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp/keystore/key.pem'));
 		const key = data;
 		const keyPem = Buffer.from(data).toString();
-		data = fs.readFileSync(path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/signcerts/Admin@example.com-cert.pem'));
+		data = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp/signcerts/Admin@example.com-cert.pem'));
 		const cert = Buffer.from(data).toString();
-		data = fs.readFileSync(path.join(__dirname, '../fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'));
+		data = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'));
 		const pem = Buffer.from(data).toString();
 		t.pass('Successfully read all crypto material');
 

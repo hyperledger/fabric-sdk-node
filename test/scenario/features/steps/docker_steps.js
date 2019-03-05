@@ -12,12 +12,11 @@ module.exports = function () {
 	this.Given(/^I have deployed a (.+?) Fabric network/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (type) => {
 		await testUtil.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
 		if (type.localeCompare('non-tls') === 0) {
-			await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../docker-compose/docker-compose.yaml') + ' -p cucumber up -d');
-			return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
+			await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../../fixtures/docker-compose/docker-compose.yaml') + ' -p node up -d');
 		} else {
-			await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../docker-compose/docker-compose-tls.yaml') + ' -p cucumber up -d');
-			return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
+			await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../../fixtures/docker-compose/docker-compose-tls.yaml') + ' -p node up -d');
 		}
+		return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
 	});
 
 	this.Given(/^I have forcibly taken down all docker containers/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async () => {

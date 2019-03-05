@@ -247,7 +247,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'orderer0': {
 			url: 'grpcs://localhost:7050',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			}
 		}
 	};
@@ -345,22 +345,23 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'peer2': {
 			url: 'grpcs://localhost:7052',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			}
 		},
 		'peer3': {
 			url: 'grpcs://localhost:7053',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			}
 		},
 		'peer4': {
 			url: 'grpcs://localhost:7054',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			}
 		},
 	};
+
 
 	network_config.certificateAuthorities = {
 		'ca1': {
@@ -374,7 +375,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'ca2': {
 			url: 'https://localhost:7052',
 			'tlsCACerts': {
-				path: 'test/fixtures/channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem'
+				path: 'test/fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'
 			},
 			grpcOptions: {verify: true},
 			registrar: {enrollId: 'admin2', enrollSecret: 'adminpw2'}
