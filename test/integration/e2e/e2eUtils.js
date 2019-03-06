@@ -731,7 +731,7 @@ module.exports.invokeChaincode = invokeChaincode;
 
 // Targets parameter is needed to query private data that are only available on a subset of peers based on collection policy.
 // pass [] to targets when you don't want to query a specific peer
-function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t, transientMap, usestore = false) {
+function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t, transientMap, usestore = true) {
 	init();
 
 	Client.setConfigSetting('request-timeout', 60000);
