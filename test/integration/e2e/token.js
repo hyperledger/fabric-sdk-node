@@ -45,12 +45,12 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// build the request for user2 to issue tokens to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {type: 0, raw: user1Identity.serialize()},
 			type: 'abc123',
 			quantity: tokenUtils.toHex(200),
 		};
 		const param2 = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {type: 0, raw: user1Identity.serialize()},
 			type: 'horizon',
 			quantity: tokenUtils.toHex(200),
 		};
@@ -65,6 +65,10 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		t.equals(result.status, 'SUCCESS', 'Successfully sent issue token transaction to orderer. Waiting for transaction to be committed ...');
 		await waitForTxEvent(eventhub, txId.getTransactionID(), 'VALID', t);
 
+		// call queryTransaction to verify token transaction is decoded correctly
+		const issueTx = await user2TokenClient.getChannel().queryTransaction(txId.getTransactionID());
+		validateTransactionEnvelope(issueTx, 'issue', null, request.params, t);
+
 		// user1 call list to view his tokens
 		result = await user1TokenClient.list();
 		logger.debug('\nuser1(org1) listed %d tokens after issue: \n%s', result.length, util.inspect(result, false, null));
@@ -76,7 +80,7 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
+			owner: {type: 0, raw: user2Identity.serialize()},
 			quantity: transferToken.quantity,
 		};
 		request = {
@@ -91,18 +95,23 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		t.equals(result.status, 'SUCCESS', 'Successfully sent transfer token transaction to orderer. Waiting for transaction to be committed ...');
 		await waitForTxEvent(eventhub, txId.getTransactionID(), 'VALID', t);
 
+		// call queryTransaction to verify token transaction is decoded correctly
+		const redeemTx = await user2TokenClient.getChannel().queryTransaction(txId.getTransactionID());
+		param.type = transferToken.type;
+		validateTransactionEnvelope(redeemTx, 'transfer', request.tokenIds, [param], t);
+
 		// verify user1's (old owner) unspent tokens after transfer, it should not return the transferred token
 		result = await user1TokenClient.list();
 		logger.debug('(org1)list tokens after transfer token %s', util.inspect(result, false, null));
 		t.equals(result.length, 1, 'Checking number of tokens for user1 after transfer');
 		t.equals(result[0].type, redeemToken.type, 'Checking token type for user1 after transfer');
-		t.equals(result[0].quantity.low, redeemToken.quantity.low, 'Checking token quantity for user1 after transfer');
+		t.equals(result[0].quantity, redeemToken.quantity, 'Checking token quantity for user1 after transfer');
 
 		// verify user2's (new owner) unspent tokens after transfer, it should return the transferred token
 		result = await user2TokenClient.list();
 		t.equals(result.length, 1, 'Checking number of tokens for user2 after transfer');
 		t.equals(result[0].type, transferToken.type, 'Checking token type for user2 after transfer');
-		t.equals(result[0].quantity.low, transferToken.quantity.low, 'Checking token quantity for user2 after transfer');
+		t.equals(result[0].quantity, transferToken.quantity, 'Checking token quantity for user2 after transfer');
 
 		// build requst for user1 to redeem token
 		txId = user1TokenClient.getClient().newTransactionID();
@@ -465,7 +474,6 @@ function validateTokens(actual, expected, message, t) {
 			if (actualToken.type === expectedToken.type) {
 				found = true;
 				t.equals(actualToken.type, expectedToken.type, 'Validating token type ' + message);
-				// compare quantity based on if it is a Long or simple integer
 				t.equals(actualToken.quantity, expectedToken.quantity, 'Validating token quantity ' + message);
 				break;
 			}
@@ -473,6 +481,20 @@ function validateTokens(actual, expected, message, t) {
 		if (!found) {
 			t.fail('failed to validate token type (%s) %s', actualToken.type, message);
 		}
+	}
+}
+
+function validateTransactionEnvelope(txEnvelope, commandName, expectedInputs, expectedOutputs, t) {
+	logger.debug('queried transaction is: \n%s', util.inspect(txEnvelope, false, null));
+	const token_action = txEnvelope.transactionEnvelope.payload.data.token_action;
+	const action_data = token_action[token_action.data];
+	t.equals(token_action.data, commandName, 'Validating token transaction matches the command name');
+	t.equals(action_data.outputs.length, expectedOutputs.length, 'Validationing number of outputs in token transaction');
+	for (let i = 0; i < expectedOutputs.length; i++) {
+		t.deepEqual(action_data.outputs[i], expectedOutputs[i], 'Validationing output in token transaction');
+	}
+	if (expectedInputs) {
+		t.deepEqual(action_data.inputs, expectedInputs, 'Validationing inputs in token transaction');
 	}
 }
 

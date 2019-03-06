@@ -18,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const rewire = require('rewire');
+const fabprotos = require('fabric-protos');
 const BlockDecoderRewire = rewire('../lib/BlockDecoder');
 const should = require('chai').should();
 const sinon = require('sinon');
@@ -484,6 +485,103 @@ describe('BlockDecoder', () => {
 
 			const newData = decodeEndorserTransaction('trans_bytes');
 			newData.should.deep.equal({actions: []});
+		});
+	});
+
+	describe('#decodeTokenTransaction', () => {
+		let decodeTokenTransaction;
+
+		before(() => {
+			decodeTokenTransaction = BlockDecoderRewire.__get__('decodeTokenTransaction');
+		});
+
+		it('should add action to data when transaction with issue action is given', () => {
+			const output1 = {owner: {type: 0, raw: Buffer.from('owner1')}, type: 'type1', quantity: '0x3c'};
+			const output2 = {owner: {type: 0, raw: Buffer.from('owner2')}, type: 'type2', quantity: '0x5d'};
+
+			// build a token transaction protobuf message
+			const issue = new fabprotos.token.Issue();
+			const tokenAction = new fabprotos.token.TokenAction();
+			const tokentx = new fabprotos.token.TokenTransaction();
+			issue.setOutputs([output1, output2]);
+			tokenAction.set('issue', issue);
+			tokentx.setTokenAction(tokenAction);
+			revert.push(BlockDecoderRewire.__set__('fabprotos.token.TokenTransaction.decode', () => {
+				return tokentx;
+			}));
+
+			const newData = decodeTokenTransaction('trans_bytes');
+			newData.should.deep.equal({token_action: {data: 'issue', issue: {outputs: [output1, output2]}}});
+		});
+
+		it('should add action to data when transaction with transfer action is given', () => {
+			const output1 = {owner: {type: 0, raw: Buffer.from('owner1')}, type: 'type1', quantity: '0x3c'};
+			const output2 = {owner: {type: 0, raw: Buffer.from('owner2')}, type: 'type2', quantity: '0x5d'};
+			const tokenId = {index: 0, tx_id: 'input_txid'};
+
+			// build a token transaction protobuf message
+			const transfer = new fabprotos.token.Transfer();
+			const tokenAction = new fabprotos.token.TokenAction();
+			const tokentx = new fabprotos.token.TokenTransaction();
+			transfer.setOutputs([output1, output2]);
+			transfer.setInputs([tokenId]);
+			tokenAction.set('transfer', transfer);
+			tokentx.setTokenAction(tokenAction);
+			revert.push(BlockDecoderRewire.__set__('fabprotos.token.TokenTransaction.decode', () => {
+				return tokentx;
+			}));
+
+			const newData = decodeTokenTransaction('trans_bytes');
+			newData.should.deep.equal({token_action: {data: 'transfer', transfer: {inputs: [tokenId], outputs: [output1, output2]}}});
+		});
+
+		it('should add action to data when transaction with redeem action is given', () => {
+			const output1 = {type: 'type1', quantity: '0x3c'};
+			const output2 = {owner: {type: 0, raw: Buffer.from('owner2')}, type: 'type2', quantity: '0x5d'};
+			const tokenId = {index: 0, tx_id: 'input_txid'};
+
+			// build a token transaction protobuf message
+			const redeem = new fabprotos.token.Transfer();
+			const tokenAction = new fabprotos.token.TokenAction();
+			const tokentx = new fabprotos.token.TokenTransaction();
+			redeem.setOutputs([output1, output2]);
+			redeem.setInputs([tokenId]);
+			tokenAction.set('redeem', redeem);
+			tokentx.setTokenAction(tokenAction);
+			revert.push(BlockDecoderRewire.__set__('fabprotos.token.TokenTransaction.decode', () => {
+				return tokentx;
+			}));
+
+			const newData = decodeTokenTransaction('trans_bytes');
+			newData.token_action.data.should.equal('redeem');
+			newData.should.deep.equal({token_action: {data: 'redeem', 'redeem': {inputs: [tokenId], outputs: [output1, output2]}}});
+		});
+
+		it('should log an error when an error is thrown', () => {
+			revert.push(BlockDecoderRewire.__set__('fabprotos.token.TokenTransaction.decode', () => {
+				throw new Error();
+			}));
+			const newData = decodeTokenTransaction();
+			sinon.assert.called(FakeLogger.error);
+			newData.should.deep.equal({});
+		});
+
+		it('should return an empty object if transaction is not given', () => {
+			revert.push(BlockDecoderRewire.__set__('fabprotos.token.TokenTransaction.decode', () => {
+				return null;
+			}));
+
+			const newData = decodeTokenTransaction('trans_bytes');
+			newData.should.deep.equal({});
+		});
+
+		it('should return an empty object if transaction is given with no actions', () => {
+			revert.push(BlockDecoderRewire.__set__('fabprotos.token.TokenTransaction.decode', () => {
+				return {};
+			}));
+
+			const newData = decodeTokenTransaction('trans_bytes');
+			newData.should.deep.equal({});
 		});
 	});
 
@@ -2437,6 +2535,7 @@ describe('BlockDecoder', () => {
 		let decodeConfigEnvelopeStub;
 		let decodeConfigUpdateEnvelopeStub;
 		let decodeEndorserTransactionStub;
+		let decodeTokenTransactionStub;
 
 		beforeEach(() => {
 			decodeConfigEnvelopeStub = sandbox.stub();
@@ -2445,6 +2544,8 @@ describe('BlockDecoder', () => {
 			revert.push(BlockDecoderRewire.__set__('decodeConfigUpdateEnvelope', decodeConfigUpdateEnvelopeStub));
 			decodeEndorserTransactionStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeEndorserTransaction', decodeEndorserTransactionStub));
+			decodeTokenTransactionStub = sandbox.stub();
+			revert.push(BlockDecoderRewire.__set__('decodeTokenTransaction', decodeTokenTransactionStub));
 		});
 
 		it('should call decodeConfigEnvelope', () => {
@@ -2466,6 +2567,13 @@ describe('BlockDecoder', () => {
 			const payload = BlockDecoderRewire.HeaderType.decodePayloadBasedOnType('data', 3);
 			payload.should.equal('config');
 			sinon.assert.calledWith(decodeEndorserTransactionStub, 'data');
+		});
+
+		it('should call decodeTokenTransaction', () => {
+			decodeTokenTransactionStub.returns('tokentx');
+			const payload = BlockDecoderRewire.HeaderType.decodePayloadBasedOnType('data', 9);
+			payload.should.equal('tokentx');
+			sinon.assert.calledWith(decodeTokenTransactionStub, 'data');
 		});
 
 		it('should return an empty object and call Logger.debug as a default case', () => {
