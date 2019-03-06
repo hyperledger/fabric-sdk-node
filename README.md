@@ -75,7 +75,7 @@ The SDK has support for PKCS#11 interface in order to allow applications to make
     * `./configure --disable-gost` (would require additional libraries, turn it off unless you need gost algorithm support for the Russian market)
     * `make`
     * `sudo make install`
-  * set environment variable "SOFTHSM2_CONF" to "./test/fixtures/softhsm2.conf"
+  * set environment variable "SOFTHSM2_CONF" to "./test/fixtures/hsm/softhsm2.conf"
   * create a token to store keys inside slot 0: `softhsm2-util --init-token --slot 0 --label "My token 1"`, you will be prompted two PINs: SO (Security Officer) PIN that can be used to re-initialize the token, and user PIN to be used by applications to access the token for generating and retrieving keys
 
 The unit test assumes slot '0' and user PIN `98765432`. If your configuration is different, use these environment variables to pass in the values:

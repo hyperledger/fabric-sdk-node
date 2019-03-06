@@ -47,8 +47,8 @@ const credPath = fixtures + '/crypto-material/crypto-config/peerOrganizations/or
 const certificatePem: string = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
 const privateKeyPem: string = fs.readFileSync(credPath + '/keystore/key.pem').toString();
 const inMemoryWallet: Wallet = new InMemoryWallet();
-const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
-const ccpDiscovery: Buffer = fs.readFileSync(fixtures + '/network-discovery.json');
+const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
+const ccpDiscovery: Buffer = fs.readFileSync(fixtures + '/profiles/network-discovery.json');
 
 const expectedMoveResult = 'move succeed';
 

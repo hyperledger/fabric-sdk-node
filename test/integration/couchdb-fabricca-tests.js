@@ -39,7 +39,7 @@ test('Use FabricCAServices with a CouchDB KeyValueStore', (t) => {
 	ORGS = Client.getConfigSetting('test-network');
 
 	// Use the CouchDB specific config file
-	Client.addConfigFile('test/fixtures/couchdb.json');
+	Client.addConfigFile('test/fixtures/credentials/couchdb.json');
 
 	const fabricCAEndpoint = ORGS[userOrg].ca.url;
 	const keyValueStore = Client.getConfigSetting('key-value-store');

@@ -99,7 +99,7 @@ async function createChannel(t) {
 	//  this network config does not have the client information, we will
 	//  load that later so that we can switch this client to be in a different
 	//  organization
-	const client = Client.loadFromConfig('test/fixtures/network.yaml');
+	const client = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a Common connection profile');
 
 	const channel_name = 'mychannel';
@@ -115,7 +115,7 @@ async function createChannel(t) {
 	try {
 		// lets load the client information for this organization
 		// the file only has the client section
-		client.loadFromConfig('test/fixtures/org1.yaml');
+		client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 		t.pass('Successfully loaded client section of network config');
 
 		// tell this client instance where the state and key stores are located
@@ -144,7 +144,7 @@ async function createChannel(t) {
 	 	* switch to organization org2
 	 	*/
 
-		await client.loadFromConfig('test/fixtures/org2.yaml');
+		await client.loadFromConfig('test/fixtures/profiles/org2.yaml');
 		t.pass('Successfully loaded the client configuration for org2');
 
 		// reset the stores to be using the ones for this organization
@@ -229,7 +229,7 @@ async function createChannel(t) {
 		/*
 		 * switch to organization org1
 		 */
-		client.loadFromConfig('test/fixtures/org1.yaml');
+		client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 		t.pass('Successfully loaded \'admin\' for org1');
 
 		await client.initCredentialStores();
@@ -256,7 +256,7 @@ async function createChannel(t) {
 		await sleep(10000);
 		t.pass('Successfully waited for peers to join the channel');
 
-		process.env.GOPATH = path.join(__dirname, '../fixtures');
+		process.env.GOPATH = path.join(__dirname, '../fixtures/chaincode/goLang');
 		tx_id = client.newTransactionID(true);
 		// send proposal to endorser
 		request = {
@@ -280,7 +280,7 @@ async function createChannel(t) {
 		 * switch to organization org2
 		 */
 
-		client.loadFromConfig('test/fixtures/org2.yaml');
+		client.loadFromConfig('test/fixtures/profiles/org2.yaml');
 
 		await client.initCredentialStores();
 		t.pass('Successfully created the key value store  and crypto store based on the config and network config');
@@ -367,7 +367,7 @@ async function actions(t) {
 	//  this network config does not have the client information, we will
 	//  load that later so that we can switch this client to be in a different
 	//  organization
-	const client = Client.loadFromConfig('test/fixtures/network.yaml');
+	const client = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a common connection profile');
 
 	const channel_name = 'mychannel';
@@ -381,7 +381,7 @@ async function actions(t) {
 	try {
 		// lets load the client information for this organization
 		// the file only has the client section
-		client.loadFromConfig('test/fixtures/org1.yaml');
+		client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 		// tell this client instance where the state and key stores are located
 		await client.initCredentialStores();
 		t.pass('Successfully created the key value store  and crypto store based on the config and network config');

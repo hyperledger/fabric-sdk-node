@@ -379,7 +379,7 @@ function testLayoutQuantities(t, layouts) {
 }
 
 async function installChaincode(t, client, channel, peer, chaincode_id, chaincode_ver) {
-	const chaincode_path = path.resolve(__dirname, '../fixtures/src/node_cc/example_cc');
+	const chaincode_path = path.resolve(__dirname, '../fixtures/chaincode/node_cc/example_cc');
 
 	try {
 		// send proposal to endorser

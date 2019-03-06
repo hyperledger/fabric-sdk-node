@@ -25,7 +25,7 @@ logger.debug('caImport = %s', JSON.stringify(caImport));
 
 test('\n\n ** createUser happy path - file store **\n\n', (t) => {
 	testUtil.resetDefaults();
-	Client.addConfigFile(path.join(__dirname, '../fixtures/caimport.json'));
+	Client.addConfigFile(path.join(__dirname, '../fixtures/profiles/caimport.json'));
 	caImport = utils.getConfigSetting('ca-import', 'notfound');
 
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
@@ -79,7 +79,7 @@ test('\n\n ** createUser happy path - file store **\n\n', (t) => {
 
 test('\n\n ** createUser happy path - CouchDB **\n\n', (t) => {
 	// Use the CouchDB specific config file
-	Client.addConfigFile('test/fixtures/couchdb.json');
+	Client.addConfigFile('test/fixtures/credentials/couchdb.json');
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');// override
 	const couchdbIPAddr = Client.getConfigSetting('couchdb-ip-addr', 'notfound');
@@ -131,7 +131,7 @@ test('\n\n ** createUser happy path - CouchDB **\n\n', (t) => {
 
 test('\n\n ** createUser happy path - Cloudant  **\n\n', (t) => {
 	// Use the Cloudant specific config file
-	Client.addConfigFile('test/fixtures/cloudant.json');
+	Client.addConfigFile('test/fixtures/credentials/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');// override
 	const cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
@@ -183,7 +183,7 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', (t) => {
 
 test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', (t) => {
 	// Use the Cloudant specific config file
-	Client.addConfigFile('test/fixtures/cloudant.json');
+	Client.addConfigFile('test/fixtures/credentials/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
 	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');// override
 	const cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');

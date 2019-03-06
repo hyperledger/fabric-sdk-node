@@ -75,7 +75,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with default query
 
 	try {
 		const wallet = await createWallet(t, tmpdir);
-		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
@@ -130,7 +130,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_R
 
 	try {
 		const wallet = await createWallet(t, tmpdir);
-		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
@@ -188,7 +188,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_S
 
 	try {
 		const wallet = await createWallet(t, tmpdir);
-		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
@@ -246,7 +246,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with sample query 
 
 	try {
 		const wallet = await createWallet(t, tmpdir);
-		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
@@ -304,7 +304,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with transient dat
 
 	try {
 		const wallet = await createWallet(t, tmpdir);
-		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {
@@ -369,7 +369,7 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with empty string 
 
 	try {
 		const wallet = await createWallet(t, tmpdir);
-		const ccp: Buffer = fs.readFileSync(fixtures + '/network.json');
+		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
 		await gateway.connect(ccpObject, {

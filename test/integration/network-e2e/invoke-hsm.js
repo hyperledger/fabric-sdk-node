@@ -18,7 +18,7 @@ const chaincodeId = testUtils.NETWORK_END2END.chaincodeId;
 
 const fixtures = process.cwd() + '/test/fixtures';
 const inMemoryWallet = new InMemoryWallet();
-const ccp = fs.readFileSync(fixtures + '/network.json');
+const ccp = fs.readFileSync(fixtures + '/profiles/network.json');
 
 const common_pkcs_pathnames = [
 	'/usr/lib/softhsm/libsofthsm2.so',								// Ubuntu

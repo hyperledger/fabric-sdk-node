@@ -28,15 +28,15 @@ module.exports.END2END = {
 	chaincodeVersion: 'v0'
 };
 
-module.exports.NODE_CHAINCODE_PATH = path.resolve(__dirname, '../fixtures/src/node_cc/example_cc');
-module.exports.NODE_CHAINCODE_UPGRADE_PATH = path.resolve(__dirname, '../fixtures/src/node_cc/example_cc1');
-module.exports.NODE_CHAINCODE_UPGRADE_PATH_V2 = path.resolve(__dirname, '../fixtures/src/node_cc/example_cc2');
-module.exports.METADATA_PATH = path.resolve(__dirname, '../fixtures/metadata');
-module.exports.METADATA_PATH_PRIVATE_DATA = path.resolve(__dirname, '../fixtures/src/github.com/example_cc_private/META-INF');
-module.exports.COLLECTIONS_CONFIG_PATH = path.resolve(__dirname, '../fixtures/src/github.com/example_cc_private/collections_config.json');
+module.exports.NODE_CHAINCODE_PATH = path.resolve(__dirname, '../fixtures/chaincode/node_cc/example_cc');
+module.exports.NODE_CHAINCODE_UPGRADE_PATH = path.resolve(__dirname, '../fixtures/chaincode/node_cc/example_cc1');
+module.exports.NODE_CHAINCODE_UPGRADE_PATH_V2 = path.resolve(__dirname, '../fixtures/chaincode/node_cc/example_cc2');
+module.exports.METADATA_PATH = path.resolve(__dirname, '../fixtures/chaincode/metadata');
+module.exports.METADATA_PATH_PRIVATE_DATA = path.resolve(__dirname, '../fixtures/chaincode/goLang/src/github.com/example_cc_private/META-INF');
+module.exports.COLLECTIONS_CONFIG_PATH = path.resolve(__dirname, '../fixtures/chaincode/goLang/src/github.com/example_cc_private/collections_config.json');
 
-module.exports.JAVA_CHAINCODE_PATH = path.resolve(__dirname, '../fixtures/src/java_cc/example_cc');
-module.exports.JAVA_CHAINCODE_UPGRADE_PATH = path.resolve(__dirname, '../fixtures/src/java_cc/example_cc1');
+module.exports.JAVA_CHAINCODE_PATH = path.resolve(__dirname, '../fixtures/chaincode/java_cc/example_cc');
+module.exports.JAVA_CHAINCODE_UPGRADE_PATH = path.resolve(__dirname, '../fixtures/chaincode/java_cc/example_cc1');
 
 module.exports.NODE_END2END = {
 	channel: 'mychannel',
@@ -77,7 +77,7 @@ module.exports.storePathForOrg = function(org) {
 
 // temporarily set $GOPATH to the test fixture folder
 module.exports.setupChaincodeDeploy = function() {
-	process.env.GOPATH = path.join(__dirname, '../fixtures');
+	process.env.GOPATH = path.join(__dirname, '../fixtures/chaincode/goLang');
 };
 
 // specifically set the values to defaults because they may have been overridden when
@@ -317,12 +317,12 @@ module.exports.getClientForOrg = async function(t, org) {
 	//  this network config does not have the client information, we will
 	//  load that later so that we can switch this client to be in a different
 	//  organization
-	const client = Client.loadFromConfig('test/fixtures/network-ad.yaml');
+	const client = Client.loadFromConfig('test/fixtures/profiles/network-ad.yaml');
 	t.pass('Successfully loaded a common connection profile');
 
 	// load the client information for this organization
 	// this file only has the client section
-	client.loadFromConfig('test/fixtures/' + org + '.yaml');
+	client.loadFromConfig('test/fixtures/profiles/' + org + '.yaml');
 	t.pass('Successfully loaded client section of network config for organization:' + org);
 	if (client._adminSigningIdentity) {
 		t.pass('Successfully assigned an admin idenity to this client');
@@ -487,7 +487,7 @@ module.exports.setupChannel = async function(t, client_org1, client_org2, channe
 		/*
 		 *  I N S T A L L   C H A I N C O D E
 		 */
-		process.env.GOPATH = path.join(__dirname, '../fixtures');
+		process.env.GOPATH = path.join(__dirname, '../fixtures/chaincode/goLang');
 		tx_id = client_org1.newTransactionID(true);// get an admin transaction ID
 		request = {
 			targets: ['peer0.org1.example.com'],

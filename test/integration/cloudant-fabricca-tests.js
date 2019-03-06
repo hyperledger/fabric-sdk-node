@@ -40,7 +40,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', (t) => {
 	ORGS = Client.getConfigSetting('test-network');
 	const fabricCAEndpoint = ORGS[userOrg].ca.url;
 
-	Client.addConfigFile('test/fixtures/cloudant.json');
+	Client.addConfigFile('test/fixtures/credentials/cloudant.json');
 	const keyValueStore = Client.getConfigSetting('key-value-store');
 	logger.debug('cloudant Key Value Store = ' + keyValueStore);
 

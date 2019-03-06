@@ -32,7 +32,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 
 	t.doesNotThrow(
 		() => {
-			const config_loc = path.resolve('test/fixtures/network.yaml');
+			const config_loc = path.resolve('test/fixtures/profiles/network.yaml');
 			const file_data = fs.readFileSync(config_loc);
 			const network_data = yaml.safeLoad(file_data);
 			const client = Client.loadFromConfig(network_data);
@@ -636,11 +636,11 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 	);
 
 	try {
-		const client = Client.loadFromConfig('test/fixtures/network.yaml');
+		const client = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 		t.pass('Successfully loaded a common connection profile');
 		t.pass('Should be able to try to load an admin from the config');
 
-		client.loadFromConfig('test/fixtures/org1.yaml');
+		client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 		t.pass('Should be able to load an additional config ...this one has the client section');
 		t.pass('Should be able to try to load an admin from the config');
 		// check to see if we were able to load a setting from the yaml into
@@ -650,9 +650,9 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		t.fail('Fail - caught an error while trying to load a config and run the set admin');
 	}
 
-	const clientp1 = Client.loadFromConfig('test/fixtures/network.yaml');
+	const clientp1 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a common connection profile');
-	clientp1.loadFromConfig('test/fixtures/org1.yaml');
+	clientp1.loadFromConfig('test/fixtures/profiles/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 
 	const p1 = clientp1.initCredentialStores().then(() => {
@@ -665,9 +665,9 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		t.fail(util.format('Should not get an error when doing get signer: %O', err));
 	});
 
-	const clientp2 = Client.loadFromConfig('test/fixtures/network.yaml');
+	const clientp2 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a common connection profile');
-	clientp2.loadFromConfig('test/fixtures/org1.yaml');
+	clientp2.loadFromConfig('test/fixtures/profiles/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 	const p2 = clientp2.initCredentialStores().then(() => {
 		t.pass('Should be able to load the stores from the config');
@@ -684,9 +684,9 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		}
 	});
 
-	const clientp3 = Client.loadFromConfig('test/fixtures/network.yaml');
+	const clientp3 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a common connection profile');
-	clientp3.loadFromConfig('test/fixtures/org1.yaml');
+	clientp3.loadFromConfig('test/fixtures/profiles/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 	const p3 = clientp3.initCredentialStores().then(() => {
 		t.pass('Should be able to load the stores from the config');
@@ -703,7 +703,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		}
 	});
 
-	const clientp4 = Client.loadFromConfig('test/fixtures/network.yaml');
+	const clientp4 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a common connection profile');
 	const p4 = clientp4._setUserFromConfig({username: 'username', password: 'password'}).then(() => {
 		t.fail('Should not be able to load an user based on the config');
@@ -736,14 +736,14 @@ test('\n\n ** channel testing **\n\n', (t) => {
 	const client = new Client();
 	client.setCryptoSuite(Client.newCryptoSuite());
 	client.setUserContext(new User('testUser'), true);
-	client.loadFromConfig('test/fixtures/network.yaml');
+	client.loadFromConfig('test/fixtures/profiles/network.yaml');
 
 	const channel = client.getChannel('mychannel');
 	let channelEventHubs = channel.getChannelEventHubsForOrg('bad');
 	t.equals(channelEventHubs.length, 0, 'Checking that we got the correct number of peers in the list');
 	channelEventHubs = channel.getChannelEventHubsForOrg('Org2MSP');
 	t.equals(channelEventHubs[0].getName(), 'peer0.org2.example.com', 'Checking that we got the correct peer in the list');
-	client.loadFromConfig('test/fixtures/org1.yaml');
+	client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 	channelEventHubs = channel.getChannelEventHubsForOrg();
 	t.equals(channelEventHubs[0].getName(), 'peer0.org1.example.com', 'Checking that we got the correct peer in the list');
 

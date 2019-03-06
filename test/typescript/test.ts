@@ -44,9 +44,10 @@ import {
 	User,
 } from 'fabric-client';
 
-const configNetwork: string = path.resolve(__dirname, '../fixtures/network-ts.yaml');
-const configOrg1: string = path.resolve(__dirname, '../fixtures/org1.yaml');
-const configOrg2: string = path.resolve(__dirname, '../fixtures/org2.yaml');
+const configPath: string = path.join(__dirname, '../fixtures/profiles');
+const configNetwork: string = path.resolve(configPath, 'network-ts.yaml');
+const configOrg1: string = path.resolve(configPath, 'org1.yaml');
+const configOrg2: string = path.resolve(configPath, 'org2.yaml');
 const channelName: string = 'mychannelts';
 
 test('\n\n ** test TypeScript **', (t: any) => {
@@ -243,7 +244,7 @@ test('use the connection profile file', (t: any) => {
 			return sleep(10000);
 		}).then(() => {
 			t.pass('Successfully waited for peers to join the channel');
-			process.env.GOPATH = path.join(__dirname, '../fixtures');
+			process.env.GOPATH = path.join(__dirname, '../fixtures/chaincode/goLang');
 			logger.debug(`Set GOPATH to ${process.env.GOPATH}`);
 			const txId: TransactionId = client.newTransactionID(true);
 			// send proposal to endorser
@@ -349,7 +350,7 @@ test('use the connection profile file', (t: any) => {
 			 * switch to organization org2
 			 */
 
-			client.loadFromConfig('test/fixtures/org2.yaml');
+			client.loadFromConfig('test/fixtures/profiles/org2.yaml');
 
 			return client.initCredentialStores();
 		}).then(() => {
@@ -365,7 +366,7 @@ test('use the connection profile file', (t: any) => {
 			/*
 			 * switch to organization org1
 			 */
-			client.loadFromConfig('test/fixtures/org1.yaml');
+			client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 			t.pass('Successfully loaded config for org1');
 
 			return client.initCredentialStores();
