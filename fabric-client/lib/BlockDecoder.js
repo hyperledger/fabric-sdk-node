@@ -697,6 +697,54 @@ function decodeEndorserTransaction(trans_bytes) {
 	return data;
 }
 
+function decodeTokenTransaction(trans_bytes) {
+	logger.debug('decodeTokenTransaction start');
+
+	const data = {};
+	try {
+		const transaction = fabprotos.token.TokenTransaction.decode(trans_bytes);
+
+		if (transaction && transaction.token_action) {
+			const token_action = transaction.token_action;
+			const action_data = token_action[token_action.data];
+
+			// decode output tokens in action_data
+			const tokens = [];
+			for (const proto_token of action_data.outputs) {
+				const token = {};
+				if (proto_token.owner) {
+					// owner can be null for redeem
+					token.owner = {type: proto_token.owner.type, raw: proto_token.owner.raw.toBuffer()};
+				}
+				token.type = proto_token.type;
+				token.quantity = proto_token.quantity;
+				tokens.push(token);
+			}
+
+			// decode input token ids in action_data
+			const tokenIds = [];
+			if (action_data.inputs) {
+				for (const proto_input of action_data.inputs) {
+					const tokenId = {index: proto_input.index, tx_id: proto_input.tx_id};
+					tokenIds.push(tokenId);
+				}
+			}
+
+			// construct decoded data to return
+			data.token_action = {data: token_action.data};
+			if (tokenIds.length > 0) {
+				data.token_action[token_action.data] = {inputs: tokenIds, outputs: tokens};
+			} else {
+				data.token_action[token_action.data] = {outputs: tokens};
+			}
+		}
+	} catch (error) {
+		logger.error(' Unable to decodeTokenTransaction :: %s', error);
+	}
+
+	return data;
+}
+
 function decodeConfigEnvelope(config_envelope_bytes) {
 	const config_envelope = {};
 	const proto_config_envelope = fabprotos.common.ConfigEnvelope.decode(config_envelope_bytes);
@@ -1544,7 +1592,8 @@ const type_as_string = {
 	3: 'ENDORSER_TRANSACTION', // Used by the SDK to submit endorser based transactions
 	4: 'ORDERER_TRANSACTION', // Used internally by the orderer for management
 	5: 'DELIVER_SEEK_INFO', // Used as the type for Envelope messages submitted to instruct the Deliver API to seek
-	6: 'CHAINCODE_PACKAGE' // Used for packaging chaincode artifacts for install
+	6: 'CHAINCODE_PACKAGE', // Used for packaging chaincode artifacts for install
+	9: 'TOKEN_TRANSACTION' // Used by the SDK to submit token transactions
 };
 
 const HeaderType = class {
@@ -1572,6 +1621,9 @@ const HeaderType = class {
 				break;
 			case 3:
 				result = decodeEndorserTransaction(proto_data);
+				break;
+			case 9:
+				result = decodeTokenTransaction(proto_data);
 				break;
 			default:
 				logger.debug(' ***** found a header type of %s :: %s', type, HeaderType.convertToString(type));
