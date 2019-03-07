@@ -10,7 +10,7 @@ function filterExcludedFiles {
 		| grep -v "^\.git/" \
 		| grep -v "^\.build/" \
 		| grep -v "^vendor/" \
-		| grep -v "testdata/" \
+		| grep -v "test/fixtures/" \
 		| grep -v "^LICENSE$" \
 		| grep -v "\.png$" \
 		| grep -v "\.rst$" \
