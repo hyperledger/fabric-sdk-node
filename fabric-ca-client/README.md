@@ -6,7 +6,11 @@ SDK for writing node.js applications to interact with [Hyperledger Fabric CA](ht
 
 This package encapsulates the APIs to interact with the Fabric CA to manage user certificates lifecycle such as register, enroll, renew and revoke. 
 
-A separate package is provided, `fabric-client`, to interact with Peers and Orderers to install and instantiate chaincodes, send transactions and perform queries.
+Additional packages are also provided:
+1. `fabric-client`, supporting fine grain interactions with Peers and Orders of the Fabric network to install and instantiate chaincodes, send transaction invocations and perform chaincode queries.
+2. `fabric-network`, to provide APIs to connect to a Fabric network, submit transactions and perform queries against the ledger.
+3. `fabric-common`, encapsulates the common code used by all fabric-sdk-node packages.
+4. `fabric-protos`, encapsulates the Protocol Buffer files and generated JavaScript classes for Hyperledger Fabric
 
 For application developer documentations, please visit [https://fabric-sdk-node.github.io/](https://fabric-sdk-node.github.io/)
 
