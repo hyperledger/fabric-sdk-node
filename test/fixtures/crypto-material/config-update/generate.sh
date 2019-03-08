@@ -1,9 +1,18 @@
+#!/bin/bash
 #
 # SPDX-License-Identifier: Apache-2.0
 #
 
-echo 'Generating new channel update tx....'
-export FABRIC_CFG_PATH=$PWD
-configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ../channel-config/mychannel-org1anchor.tx -channelID mychannel -asOrg Org1MSP
-configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ../channel-config/discovery_anchor.tx -channelID discovery -asOrg Org1MSP
+# Set the path to teh crypto material to ensure it may be used
+CRYPTOGEN=$1
+export PATH=${PATH}:${CRYPTOGEN}
+
+# Get current location to ensure things go to the correct place
+BASEDIR=$(dirname $(realpath $0))
+
+echo
+echo "Creating new channel update tx blocks from within directory ${BASEDIR}"
+export FABRIC_CFG_PATH=$BASEDIR
+configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ${BASEDIR}/../channel-config/mychannel-org1anchor.tx -channelID mychannel -asOrg Org1MSP
+configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ${BASEDIR}/../channel-config/discovery_anchor.tx -channelID discovery -asOrg Org1MSP
 

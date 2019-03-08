@@ -19,11 +19,13 @@ tmp
 *.heapsnapshot
 
 #test files
+test/fixtures/crypto-material/crypto-config/
+test/fixtures/crypto-material/channel-config/
+test/fixtures/crypto-material/config-base/twoorgs.genesis.block
+test/fixtures/fabricca/enroll*.*
+test/fixtures/fabricca/test*.*
 test/typescript/**/*.js
 test/typescript/**/*.js.map
-test/fixtures/src/node_cc/example_cc/.npmrc
-test/fixtures/src/node_cc/example_cc1/.npmrc
-test/fixtures/src/github.com/example_cc/junk.go
 
 #fabric client
 fabric-client/.DS_Store

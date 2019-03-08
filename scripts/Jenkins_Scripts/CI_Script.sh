@@ -92,7 +92,7 @@ function removeUnwantedImages() {
 rm -rf $HOME/.node-gyp/ $HOME/.npm/ $HOME/.npmrc  || true
 
 # remove tmp/hfc and hfc-key-store data
-rm -rf /home/jenkins/npm /tmp/fabric-shim /tmp/hfc* /tmp/npm* /home/jenkins/kvsTemp /home/jenkins/.hfc-key-store
+rm -rf /home/jenkins/npm /tmp/fabric-shim /tmp/hfc* /tmp/npm* /home/jenkins/kvsTemp /home/jenkins/.hfc-key-store /tmp/fabric-binaries
 
 rm -rf /var/hyperledger/*
 
@@ -190,6 +190,15 @@ sdk_E2e_Tests() {
 
         # Install NPM before start the tests
         install_Npm
+
+		# Generate crypto material before running the tests
+		if [ $ARCH == "s390x" ]; then
+			# Run the s390x gulp task
+			gulp install-and-generate-certs-s390 || err_Check "ERROR!!! gulp install and generation of test certificates failed"
+		else
+			# Run the amd64 gulp task
+			gulp install-and-generate-certs || err_Check "ERROR!!! gulp install and generation of test certificates failed"
+		fi
 
         echo -e "\033[32m Execute Headless and Integration Tests" "\033[0m"
         gulp test || err_Check "ERROR!!! gulp test failed"

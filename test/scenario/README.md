@@ -11,6 +11,8 @@ Welcome to the Fabric-SDK-Node Cucumber test readme. Below are some notes on the
 
 This test suite is intended to provide high level test coverage from a scenario perspective, and tests herein represent those at the top of the test pyramid. Consequently, these test should be added to with due consideration and should encapsulate the completion of a high level user task; for more fine grained testing, the FV or unit test frameworks should be used.
 
+The test suite uses the docker network and crypto files from within `/test/fixtures`. If crypto material does not exist, which is the case if you have recently cloned the repository, it is necessary to run the `install-and-generate-certs` gulp task prior to running the tests.
+
 ## Structure
 
 The folder structure is the following:
@@ -27,12 +29,8 @@ scenario
 │       └───node
 │   
 └───config
-│   │   profile.json
-│   │   policies.json
-│   └───crypto-config
-│  
-└───docker-compose
-│       compose-files.yaml
+│    profile.json
+│    policies.json
 │
 └───features
     │   feature_file.feature 
@@ -46,15 +44,15 @@ scenario
 
 ```
 
-- The scenario tests and all required files are contained within the `scenario` directory
+- The scenario tests and all required test files are contained within the `scenario` directory
 - `chaincode` holds all the chaincode files used within the cucumber test, with each chaincode contained within a specific named folder, itself decomposed into goLang and node. The structure here is important, since step files rely on the consistent location and naming strategy to deploy named chaincode of a specific type.
-- `config` contains connection profiles, a json document of all possible endorsement policies, and a crypto-config directory that contains the crypto-material for the network defined within the docker-compose folder.
-- `docker-compose` contains the two test networks, tls and non-tls, that are used within the cucumber tests.
+- `config` contains connection profiles, and a json document of all possible endorsement policies
 - All feature files and supporting files are contained in the `features` directory
   - `*.feature` the self contained feature file that describes a set of feature scenarios that decompose into programmatic steps
   - `lib` contains helper files used by step files.
   - `steps` contains all the step files required by the feature files that exist in the parent directory.
   - `support` contains two framework files: the main `index.js` file called by the cucumber test runner, and a `hooks.js` file that is used to provide tag based before/after hooks.
+
 
 
 ## Running the Tests

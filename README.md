@@ -23,6 +23,7 @@ Clone the project and launch the following commands to install the dependencies 
 In the project root folder:
 * `npm install` to install dependencies
 * optionally, `gulp docs` to generate API docs if you want to review the doc content
+* `install-and-generate-certs` to generate the required crypto material used by the tests
 * `npm test` or `gulp test-headless` to run the headless tests that do not require any additional set up
 
 The following tests require setting up a local blockchain network as the target. You need to build the necessary Docker images required to run the network. Follow the steps below to set it up.
