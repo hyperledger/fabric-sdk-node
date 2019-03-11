@@ -288,7 +288,7 @@ const Client = class extends BaseClient {
 	 * The TokenClient provides APIs for applications to perform token functions.
 	 *
 	 * @param {Channel} channel - Required. A channel object.
-	 * @param {Peer[]/string[]} targets - Optional. One or multiple prover peers.
+	 * @param {Peer[]|string[]} targets - Optional. One or multiple prover peers.
 	 * @returns {TokenClient} a new instance of {@link TokenClient}.
 	 */
 	newTokenClient(channel, targets) {
