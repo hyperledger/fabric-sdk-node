@@ -3,10 +3,10 @@
 
  SPDX-License-Identifier: Apache-2.0
 */
-const os = require('os');
 const path = require('path');
 
-const tempdir = path.join(os.tmpdir(), 'hfc');
+// test temp directory is /fabric-sdk-node/test/temp
+const tempdir = path.join(__dirname, '../temp');
 
 const TEST_CERT_PEM = '-----BEGIN CERTIFICATE-----' +
 'MIIDVDCCAvqgAwIBAgIBATAKBggqhkjOPQQDAjBOMRMwEQYDVQQKDArOoyBBY21l' +
