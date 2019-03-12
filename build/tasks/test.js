@@ -208,6 +208,12 @@ gulp.task('run-test', (done) => {
 	runSequence(...tasks, done);
 });
 
+// fabric end-to-end test
+gulp.task('run-end-to-end', (done) => {
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'run-tape-e2e'];
+	runSequence(...tasks, done);
+});
+
 // Run all non-integration tests
 gulp.task('run-test-headless', (done) => {
 	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'test-mocha', 'run-tape-unit'];
