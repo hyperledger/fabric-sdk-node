@@ -73,12 +73,13 @@ const BaseClient = class {
 	 * This can be overriden with a configuration setting <code>key-value-store</code>, the value of which is the
 	 * full path of a CommonJS module for the alternative implementation.
 	 *
+	 * @async
 	 * @param {Object} options Specific to the implementation, for initializing the instance. For the built-in
 	 * file-based implementation, this requires a single property <code>path</code> to the top-level folder for the store
 	 * @returns {Promise} A Promise for a {@link module:api.KeyValueStore} instance of the KeyValueStore implementation
 	 */
-	static newDefaultKeyValueStore(options) {
-		return sdkUtils.newKeyValueStore(options);
+	static async newDefaultKeyValueStore(options) {
+		return await sdkUtils.newKeyValueStore(options);
 	}
 
 	/**

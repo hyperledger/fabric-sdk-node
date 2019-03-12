@@ -26,11 +26,11 @@ class FileSystemWallet extends BaseWallet {
 	 *
 	 * @static
 	 * @param {string} path the root path of the key value store
-	 * @returns {Promise} a promise that is resolved when a new File KVS instance is recreated.
+	 * @returns {FileKVS} a new File KVS instance.
 	 * @private
 	 */
-	static async _createFileKVS(path) {
-		return await new FileKVS({path});
+	static _createFileKVS(path) {
+		return new FileKVS({path});
 	}
 
 	/**
@@ -84,7 +84,9 @@ class FileSystemWallet extends BaseWallet {
 
 	async getStateStore(label) {
 		const partitionedPath = this._getPartitionedPath(label);
-		return FileSystemWallet._createFileKVS(partitionedPath);
+		const store = FileSystemWallet._createFileKVS(partitionedPath);
+		await store.initialize();
+		return store;
 	}
 
 	async getCryptoSuite(label) {

@@ -141,7 +141,7 @@ const MSP = class {
 	 * @returns {Promise} Promise for an {@link Identity} instance or
 	 *           or the Identity object itself if "storeKey" argument is false
 	 */
-	deserializeIdentity(serializedIdentity, storeKey) {
+	async deserializeIdentity(serializedIdentity, storeKey) {
 		logger.debug('importKey - start');
 		let store_key = true; // default
 		// if storing is not required and therefore a promise will not be returned
@@ -152,15 +152,14 @@ const MSP = class {
 		const sid = fabprotos.msp.SerializedIdentity.decode(serializedIdentity);
 		const cert = sid.getIdBytes().toBinary();
 		logger.debug('Encoded cert from deserialized identity: %s', cert);
+
+		let publicKey;
 		if (!store_key) {
-			const publicKey = this.cryptoSuite.importKey(cert, {algorithm: CryptoAlgorithms.X509Certificate, ephemeral: true});
-			return new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
+			publicKey = this.cryptoSuite.createKeyFromRaw(cert, {algorithm: CryptoAlgorithms.X509Certificate});
 		} else {
-			return this.cryptoSuite.importKey(cert, {algorithm: CryptoAlgorithms.X509Certificate})
-				.then((publicKey) => {
-					return new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
-				});
+			publicKey = await this.cryptoSuite.importKey(cert, {algorithm: CryptoAlgorithms.X509Certificate});
 		}
+		return new Identity(cert, publicKey, this.getId(), this.cryptoSuite);
 	}
 
 	/**

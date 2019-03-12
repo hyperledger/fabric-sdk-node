@@ -147,6 +147,8 @@ const User = class {
 
 	/**
 	 * Set the enrollment object for this User instance
+	 *
+	 * @async
 	 * @param {module:api.Key} privateKey the private key object
 	 * @param {string} certificate the PEM-encoded string of certificate
 	 * @param {string} mspId The Member Service Provider id for the local signing identity
@@ -179,7 +181,7 @@ const User = class {
 		if (this._cryptoSuite._cryptoKeyStore && !skipPersistence) {
 			pubKey = await this._cryptoSuite.importKey(certificate);
 		} else {
-			pubKey = await this._cryptoSuite.importKey(certificate, {ephemeral: true});
+			pubKey = await this._cryptoSuite.createKeyFromRaw(certificate);
 		}
 
 		this._identity = new Identity(certificate, pubKey, mspId, this._cryptoSuite);
@@ -196,11 +198,13 @@ const User = class {
 
 	/**
 	 * Set the current state of this member from a string based JSON object
+	 *
+	 * @async
 	 * @param {string} str - the member state serialized
 	 * @param {boolean} no_save - to indicate that the cryptoSuite should not save
 	 * @return {Member} Promise of the unmarshalled Member object represented by the serialized string
 	 */
-	fromString(str, no_save) {
+	async fromString(str, no_save) {
 		logger.debug('fromString --start');
 		const state = JSON.parse(str);
 
@@ -223,52 +227,36 @@ const User = class {
 			this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
 		}
 
-		const self = this;
 		let pubKey;
 
-		let import_promise = null;
 		const opts = {algorithm: CryptoAlgorithms.X509Certificate};
 		if (no_save) {
-			opts.ephemeral = true;
-			import_promise = new Promise((resolve, reject) => {
-				const key = this._cryptoSuite.importKey(state.enrollment.identity.certificate, opts);
-				// construct Promise because importKey does not return Promise when ephemeral is true
-				if (key) {
-					resolve(key);
-				} else {
-					reject(new Error('Import of saved user has failed'));
-				}
-			});
+			pubKey = this._cryptoSuite.createKeyFromRaw(state.enrollment.identity.certificate);
 		} else {
-			import_promise = this._cryptoSuite.importKey(state.enrollment.identity.certificate, opts);
+			pubKey = await this._cryptoSuite.importKey(state.enrollment.identity.certificate, opts);
 		}
 
-		return import_promise
-			.then((key) => {
-				pubKey = key;
+		const identity = new Identity(state.enrollment.identity.certificate, pubKey, this._mspId, this._cryptoSuite);
+		this._identity = identity;
 
-				const identity = new Identity(state.enrollment.identity.certificate, pubKey, self._mspId, this._cryptoSuite);
-				self._identity = identity;
+		// during serialization (see toString() below) only the key's SKI are saved
+		// swap out that for the real key from the crypto provider
+		const privateKey = await this._cryptoSuite.getKey(state.enrollment.signingIdentity);
 
-				// during serialization (see toString() below) only the key's SKI are saved
-				// swap out that for the real key from the crypto provider
-				return self._cryptoSuite.getKey(state.enrollment.signingIdentity);
-			}).then((privateKey) => {
-				// the key retrieved from the key store using the SKI could be a public key
-				// or a private key, check to make sure it's a private key
-				if (privateKey.isPrivate()) {
-					self._signingIdentity = new SigningIdentity(
-						state.enrollment.identity.certificate,
-						pubKey,
-						self._mspId,
-						self._cryptoSuite,
-						new Signer(self._cryptoSuite, privateKey));
+		// the key retrieved from the key store using the SKI could be a public key
+		// or a private key, check to make sure it's a private key
+		if (privateKey.isPrivate()) {
+			this._signingIdentity = new SigningIdentity(
+				state.enrollment.identity.certificate,
+				pubKey,
+				this._mspId,
+				this._cryptoSuite,
+				new Signer(this._cryptoSuite, privateKey));
 
-					return self;
-				} else {
-					throw new Error(util.format('Private key missing from key store. Can not establish the signing identity for user %s', state.name));
-				}
-			});
+			return this;
+		} else {
+			throw new Error(util.format('Private key missing from key store. Can not establish the signing identity for user %s', state.name));
+		}
 	}
 
 	/**

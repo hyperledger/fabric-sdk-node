@@ -33,11 +33,10 @@ class InMemoryWallet extends BaseWallet {
 		logger.debug('in InMemoryWallet constructor');
 	}
 
-	async getStateStore(label) {
+	getStateStore(label) {
 		logger.debug('in getStateStore, label = %s', label);
 		label = this.normalizeLabel(label);
-		const store = await new InMemoryKVS(label);
-		return store;
+		return new InMemoryKVS(label);
 	}
 
 	async getCryptoSuite(label) {
@@ -89,7 +88,6 @@ class InMemoryKVS extends KeyValueStore {
 		super();
 		logger.debug('in InMemoryKVS constructor, prefix = ' + prefix);
 		this.partitionKey = prefix;
-		return Promise.resolve(this);
 	}
 
 	async getValue(name) {

@@ -138,7 +138,7 @@ async function existing_channels(ccp, tls) {
 		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(org)}));
 		client.setCryptoSuite(cryptoSuite);
 
-		client.loadFromConfig(ccp.getProfile());
+		await client.loadFromConfig(ccp.getProfile());
 
 		// Run this to set the required identity on the client object
 		await testUtil.getSubmitter(client, true, orgName, ccp);

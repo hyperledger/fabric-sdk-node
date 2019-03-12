@@ -27,18 +27,18 @@ const NetworkConfig = require('fabric-client/lib/impl/NetworkConfig_1_0.js');
 const testutil = require('./util.js');
 
 
-test('\n\n ** configuration testing **\n\n', (t) => {
+test('\n\n ** configuration testing **\n\n', async (t) => {
 	testutil.resetDefaults();
 
 	t.doesNotThrow(
-		() => {
+		async () => {
 			const config_loc = path.resolve('test/fixtures/profiles/network.yaml');
 			const file_data = fs.readFileSync(config_loc);
 			const network_data = yaml.safeLoad(file_data);
-			const client = Client.loadFromConfig(network_data);
+			const client = await Client.loadFromConfig(network_data);
 			client.setCryptoSuite(Client.newCryptoSuite());
 			client.setUserContext(new User('testUser'), true);
-			client.loadFromConfig(network_data);
+			await client.loadFromConfig(network_data);
 			const channel = client.getChannel('mychannel');
 			t.equals(channel.getPeers()[0].getUrl(), 'grpcs://localhost:7051', ' check to see that the peer has been added to the channel');
 			t.equals(channel.getPeers()[1].getUrl(), 'grpcs://localhost:8051', ' check to see that the peer has been added to the channel');
@@ -63,16 +63,16 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		}
 	};
 
-	t.doesNotThrow(
-		() => {
-			const client = new Client();
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client._network_config = new NetworkConfig(network_config, client);
-			const channel = client.newChannel('mychannel');
-			t.equals('mychannel', channel.getName(), 'Channel should be named');
-		},
-		'Should be able to instantiate a new instance of "Channel" with an empty channel definition in the common connection profile'
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		const client = new Client();
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		client.setUserContext(new User('testUser'), true);
+		client._network_config = new NetworkConfig(network_config, client);
+		const channel = client.newChannel('mychannel');
+		t.equals('mychannel', channel.getName(), 'Channel should be named');
+	},
+	'able to instantiate a new instance of "Channel" with an empty channel definition in the common connection profile'
 	);
 
 	network_config.channels = {
@@ -90,23 +90,23 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		}
 	};
 
-	t.doesNotThrow(
-		() => {
-			const client = new Client();
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client._network_config = new NetworkConfig(network_config, client);
-			const channel = client.getChannel('mychannel');
-			t.equals('mychannel', channel.getName(), 'Channel should be named');
-			const orderer = channel.getOrderers()[0];
-			if (orderer instanceof Orderer) {
-				t.pass('Successfully got an orderer');
-			} else {
-				t.fail('Failed to get an orderer');
-			}
-			t.equals('orderer0', orderer.getName(), 'Orderer should be named');
-		},
-		'Should be able to instantiate a new instance of "Channel" with only orderer definition in the common connection profile'
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		const client = new Client();
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		client.setUserContext(new User('testUser'), true);
+		client._network_config = new NetworkConfig(network_config, client);
+		const channel = client.getChannel('mychannel');
+		t.equals('mychannel', channel.getName(), 'Channel should be named');
+		const orderer = channel.getOrderers()[0];
+		if (orderer instanceof Orderer) {
+			t.pass('Successfully got an orderer');
+		} else {
+			t.fail('Failed to get an orderer');
+		}
+		t.equals('orderer0', orderer.getName(), 'Orderer should be named');
+	},
+	'able to instantiate a new instance of "Channel" with only orderer definition in the common connection profile'
 	);
 
 	network_config.channels = {
@@ -122,23 +122,23 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 	};
 	network_config.orgainizations = {'org1': {}};
 
-	t.doesNotThrow(
-		() => {
-			const client = new Client();
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client._network_config = new NetworkConfig(network_config, client);
-			const channel = client.getChannel('mychannel');
-			t.equals('mychannel', channel.getName(), 'Channel should be named');
-			t.equals(channel.getPeers().length, 0, 'Peers should be empty');
-			const orderer = channel.getOrderers()[0];
-			if (orderer instanceof Orderer) {
-				t.pass('Successfully got an orderer');
-			} else {
-				t.fail('Failed to get an orderer');
-			}
-		},
-		'Should be able to instantiate a new instance of "Channel" with org that does not exist in the common connection profile'
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		const client = new Client();
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		await client.setUserContext(new User('testUser'), true);
+		client._network_config = new NetworkConfig(network_config, client);
+		const channel = client.getChannel('mychannel');
+		t.equals('mychannel', channel.getName(), 'Channel should be named');
+		t.equals(channel.getPeers().length, 0, 'Peers should be empty');
+		const orderer = channel.getOrderers()[0];
+		if (orderer instanceof Orderer) {
+			t.pass('Successfully got an orderer');
+		} else {
+			t.fail('Failed to get an orderer');
+		}
+	},
+	'able to instantiate a new instance of "Channel" with org that does not exist in the common connection profile'
 	);
 
 	network_config.organizations = {
@@ -154,23 +154,23 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		}
 	};
 
-	t.doesNotThrow(
-		() => {
-			const client = new Client();
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client._network_config = new NetworkConfig(network_config, client);
-			const channel = client.getChannel('mychannel');
-			t.equals('mychannel', channel.getName(), 'Channel should be named');
-			t.equals(channel.getPeers().length, 0, 'Peers should be empty');
-			const orderer = channel.getOrderers()[0];
-			if (orderer instanceof Orderer) {
-				t.pass('Successfully got an orderer');
-			} else {
-				t.fail('Failed to get an orderer');
-			}
-		},
-		'Should be able to instantiate a new instance of "Channel" with a peer in the org that does not exist in the common connection profile'
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		const client = new Client();
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		await client.setUserContext(new User('testUser'), true);
+		client._network_config = new NetworkConfig(network_config, client);
+		const channel = client.getChannel('mychannel');
+		t.equals('mychannel', channel.getName(), 'Channel should be named');
+		t.equals(channel.getPeers().length, 0, 'Peers should be empty');
+		const orderer = channel.getOrderers()[0];
+		if (orderer instanceof Orderer) {
+			t.pass('Successfully got an orderer');
+		} else {
+			t.fail('Failed to get an orderer');
+		}
+	},
+	'able to instantiate a new instance of "Channel" with a peer in the org that does not exist in the common connection profile'
 	);
 
 	network_config.peers = {
@@ -218,84 +218,85 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			registrar: {enrollId: 'admin2', enrollSecret: 'adminpw2'}
 		}
 	};
-	t.doesNotThrow(
-		() => {
-			const client = new Client();
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client._network_config = new NetworkConfig(network_config, client);
-			const channel = client.getChannel('mychannel');
-			t.equals('mychannel', channel.getName(), 'Channel should be named');
-			t.equals(channel.getPeers().length, 4, 'Peers should be four');
-			const peer = channel.getPeers()[0];
-			if (peer && peer.constructor && peer.constructor.name === 'ChannelPeer') {
-				t.pass('Successfully got a channel peer');
-			} else {
-				t.fail('Failed to get a channel peer');
-			}
-		},
-		'Should be able to instantiate a new instance of "Channel" with orderer, org and peer defined in the common connection profile'
+
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		const client = new Client();
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		client.setUserContext(new User('testUser'), true);
+		client._network_config = new NetworkConfig(network_config, client);
+		const channel = client.getChannel('mychannel');
+		t.equals('mychannel', channel.getName(), 'Channel should be named');
+		t.equals(channel.getPeers().length, 4, 'Peers should be four');
+		const peer = channel.getPeers()[0];
+		if (peer && peer.constructor && peer.constructor.name === 'ChannelPeer') {
+			t.pass('Successfully got a channel peer');
+		} else {
+			t.fail('Failed to get a channel peer');
+		}
+	},
+	'able to instantiate a new instance of "Channel" with orderer, org and peer defined in the common connection profile'
 	);
 
 	const peer1 = new Peer('grpcs://localhost:9999', {pem: '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'});
 
-	t.doesNotThrow(
-		() => {
-			const client = new Client();
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client._network_config = new NetworkConfig(network_config, client);
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		const client = new Client();
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		client.setUserContext(new User('testUser'), true);
+		client._network_config = new NetworkConfig(network_config, client);
 
-			let targets = client.getTargetPeers('peer1', client);
-			if (Array.isArray(targets)) {
-				t.pass('targets is an array');
-			} else {
-				t.fail('targets is not an array');
-			}
-			if (targets[0] instanceof Peer) {
-				t.pass('targets has a peer ');
-			} else {
-				t.fail('targets does not have a peer');
-			}
+		let targets = client.getTargetPeers('peer1', client);
+		if (Array.isArray(targets)) {
+			t.pass('targets is an array');
+		} else {
+			t.fail('targets is not an array');
+		}
+		if (targets[0] instanceof Peer) {
+			t.pass('targets has a peer ');
+		} else {
+			t.fail('targets does not have a peer');
+		}
 
-			targets = client.getTargetPeers(['peer1'], client);
-			if (Array.isArray(targets)) {
-				t.pass('targets is an array');
-			} else {
-				t.fail('targets is not an array');
-			}
-			if (targets[0] instanceof Peer) {
-				t.pass('targets has a peer ');
-			} else {
-				t.fail('targets does not have a peer');
-			}
+		targets = client.getTargetPeers(['peer1'], client);
+		if (Array.isArray(targets)) {
+			t.pass('targets is an array');
+		} else {
+			t.fail('targets is not an array');
+		}
+		if (targets[0] instanceof Peer) {
+			t.pass('targets has a peer ');
+		} else {
+			t.fail('targets does not have a peer');
+		}
 
-			targets = client.getTargetPeers(peer1, client);
-			if (Array.isArray(targets)) {
-				t.pass('targets is an array');
-			} else {
-				t.fail('targets is not an array');
-			}
-			if (targets[0] instanceof Peer) {
-				t.pass('targets has a peer ');
-			} else {
-				t.fail('targets does not have a peer');
-			}
+		targets = client.getTargetPeers(peer1, client);
+		if (Array.isArray(targets)) {
+			t.pass('targets is an array');
+		} else {
+			t.fail('targets is not an array');
+		}
+		if (targets[0] instanceof Peer) {
+			t.pass('targets has a peer ');
+		} else {
+			t.fail('targets does not have a peer');
+		}
 
-			targets = client.getTargetPeers([peer1], client);
-			if (Array.isArray(targets)) {
-				t.pass('targets is an array');
-			} else {
-				t.fail('targets is not an array');
-			}
-			if (targets[0] instanceof Peer) {
-				t.pass('targets has a peer ');
-			} else {
-				t.fail('targets does not have a peer');
-			}
+		targets = client.getTargetPeers([peer1], client);
+		if (Array.isArray(targets)) {
+			t.pass('targets is an array');
+		} else {
+			t.fail('targets is not an array');
+		}
+		if (targets[0] instanceof Peer) {
+			t.pass('targets has a peer ');
+		} else {
+			t.fail('targets does not have a peer');
+		}
 
-		},
-		'Should be able to get targets for peer'
+	},
+	'able to get targets for peer'
 	);
 
 	t.doesNotThrow(
@@ -358,37 +359,37 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'Should not get an error when working with credentialStore settings'
 	);
 
-	t.doesNotThrow(
-		() => {
-			const client = new Client();
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client._network_config = new NetworkConfig(network_config, client);
-			const organizations = client._network_config.getOrganizations();
-			if (Array.isArray(organizations)) {
-				t.pass('organizations is an array');
-			} else {
-				t.fail('organizations is not an array');
-			}
-			if (organizations[0] instanceof Organization) {
-				t.pass('organizations has a organization ');
-			} else {
-				t.fail('organizations does not have a organization');
-			}
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		const client = new Client();
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		client.setUserContext(new User('testUser'), true);
+		client._network_config = new NetworkConfig(network_config, client);
+		const organizations = client._network_config.getOrganizations();
+		if (Array.isArray(organizations)) {
+			t.pass('organizations is an array');
+		} else {
+			t.fail('organizations is not an array');
+		}
+		if (organizations[0] instanceof Organization) {
+			t.pass('organizations has a organization ');
+		} else {
+			t.fail('organizations does not have a organization');
+		}
 
-			let organization = client._network_config.getOrganization(organizations[0].getName());
-			let ca = organization.getCertificateAuthorities()[0];
-			t.equals('ca1', ca.getName(), 'check the ca name');
+		let organization = client._network_config.getOrganization(organizations[0].getName());
+		let ca = organization.getCertificateAuthorities()[0];
+		t.equals('ca1', ca.getName(), 'check the ca name');
 
-			organization = client._network_config.getOrganization(organizations[1].getName());
-			ca = organization.getCertificateAuthorities()[0];
-			t.equals('ca2', ca.getName(), 'check the ca name');
+		organization = client._network_config.getOrganization(organizations[1].getName());
+		ca = organization.getCertificateAuthorities()[0];
+		t.equals('ca2', ca.getName(), 'check the ca name');
 
-			organization = client._network_config.getOrganizationByMspId(organizations[0].getMspid());
-			ca = organization.getCertificateAuthorities()[0];
-			t.equals('ca1', ca.getName(), 'check the ca name');
-		},
-		'Should be able to get organizations'
+		organization = client._network_config.getOrganizationByMspId(organizations[0].getMspid());
+		ca = organization.getCertificateAuthorities()[0];
+		t.equals('ca1', ca.getName(), 'check the ca name');
+	},
+	'able to get organizations'
 	);
 
 	network_config.channels = {
@@ -403,33 +404,33 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		}
 	};
 
-	t.doesNotThrow(
-		() => {
-			let client = Client.loadFromConfig(network_config);
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			let channel = client.getChannel('mychannel');
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		let client = await Client.loadFromConfig(network_config);
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		client.setUserContext(new User('testUser'), true);
+		let channel = client.getChannel('mychannel');
 
-			checkTarget(channel._getTargetForQuery(), '7053', 'finding a default ledger query', t);
-			checkTarget(channel._getTargets(null, 'ledgerQuery'), '7053', 'finding a default ledger query', t);
-			checkTarget(channel._getTargetForQuery('peer1'), '7051', 'finding a string target for ledger query', t);
-			checkTarget(channel._getTargets('peer1'), '7051', 'finding a string target', t);
-			checkTarget(channel._getTargetForQuery(peer1), '9999', 'should get back the same target if a good peer', t);
-			checkTarget(channel._getTargets(peer1), '9999', 'should get back the same target if a good peer', t);
-			client = new Client();
-			channel = client.newChannel('mychannel');
-			channel.addPeer(peer1);
-			checkTarget(channel._getTargetForQuery(), '9999', 'finding a default ledger query without networkconfig', t);
-			checkTarget(channel._getTargets(undefined, 'ANY'), '9999', 'finding a default targets without networkconfig', t);
-		},
-		'Should be able to run channel target methods'
+		checkTarget(channel._getTargetForQuery(), '7053', 'finding a default ledger query', t);
+		checkTarget(channel._getTargets(null, 'ledgerQuery'), '7053', 'finding a default ledger query', t);
+		checkTarget(channel._getTargetForQuery('peer1'), '7051', 'finding a string target for ledger query', t);
+		checkTarget(channel._getTargets('peer1'), '7051', 'finding a string target', t);
+		checkTarget(channel._getTargetForQuery(peer1), '9999', 'should get back the same target if a good peer', t);
+		checkTarget(channel._getTargets(peer1), '9999', 'should get back the same target if a good peer', t);
+		client = new Client();
+		channel = client.newChannel('mychannel');
+		channel.addPeer(peer1);
+		checkTarget(channel._getTargetForQuery(), '9999', 'finding a default ledger query without networkconfig', t);
+		checkTarget(channel._getTargets(undefined, 'ANY'), '9999', 'finding a default targets without networkconfig', t);
+	},
+	'able to run channel target methods'
 	);
 
-
-	t.throws(
-		() => {
-			const client = Client.loadFromConfig(network_config);
-			client.setCryptoSuite(Client.newCryptoSuite());
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			const client = await Client.loadFromConfig(network_config);
+			const suite = await Client.newCryptoSuite();
+			client.setCryptoSuite(suite);
 			client.setUserContext(new User('testUser'), true);
 			const channel = client.getChannel('mychannel');
 			channel._getTargetForQuery(['peer1']);
@@ -438,10 +439,11 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'Should get an error back when passing an array'
 	);
 
-	t.throws(
-		() => {
-			const client = Client.loadFromConfig(network_config);
-			client.setCryptoSuite(Client.newCryptoSuite());
+	await testutil.tapeAsyncThrow(t,
+		async () => {
+			const client = await Client.loadFromConfig(network_config);
+			const suite = await Client.newCryptoSuite();
+			client.setCryptoSuite(suite);
 			client.setUserContext(new User('testUser'), true);
 			const channel = client.getChannel('mychannel');
 			channel._getTargets('bad');
@@ -480,63 +482,63 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		'Should get an error when the request orderer is not defined and the channel does not have any orderers'
 	);
 
-	t.doesNotThrow(
-		() => {
-			const client = new Client();
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client._network_config = new NetworkConfig(network_config, client);
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		const client = new Client();
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		client.setUserContext(new User('testUser'), true);
+		client._network_config = new NetworkConfig(network_config, client);
 
-			let orderer = client.getTargetOrderer('orderer0');
-			if (orderer instanceof Orderer) {
-				t.pass('orderer has a orderer ');
-			} else {
-				t.fail('orderer does not have a orderer');
-			}
+		let orderer = client.getTargetOrderer('orderer0');
+		if (orderer instanceof Orderer) {
+			t.pass('orderer has a orderer ');
+		} else {
+			t.fail('orderer does not have a orderer');
+		}
 
-			const orderer1 = new Orderer('grpcs://localhost:9999', {pem: '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'});
+		const orderer1 = new Orderer('grpcs://localhost:9999', {pem: '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----'});
 
-			orderer = client.getTargetOrderer(orderer1);
-			if (orderer instanceof Orderer) {
-				t.pass('orderer has a orderer ');
-			} else {
-				t.fail('orderer does not have a orderer');
-			}
+		orderer = client.getTargetOrderer(orderer1);
+		if (orderer instanceof Orderer) {
+			t.pass('orderer has a orderer ');
+		} else {
+			t.fail('orderer does not have a orderer');
+		}
 
-			orderer = client.getTargetOrderer(null, null, 'mychannel');
-			if (orderer instanceof Orderer) {
-				t.pass('orderer has a orderer ');
-			} else {
-				t.fail('orderer does not have a orderer');
-			}
+		orderer = client.getTargetOrderer(null, null, 'mychannel');
+		if (orderer instanceof Orderer) {
+			t.pass('orderer has a orderer ');
+		} else {
+			t.fail('orderer does not have a orderer');
+		}
 
-			orderer = client.getTargetOrderer(null, [orderer1]);
-			if (orderer instanceof Orderer) {
-				t.pass('orderer has a orderer ');
-			} else {
-				t.fail('orderer does not have a orderer');
-			}
-		},
-		'Should be able to get orderer'
+		orderer = client.getTargetOrderer(null, [orderer1]);
+		if (orderer instanceof Orderer) {
+			t.pass('orderer has a orderer ');
+		} else {
+			t.fail('orderer does not have a orderer');
+		}
+	},
+	'able to get orderer'
 	);
 
-	t.doesNotThrow(
-		() => {
-			const client = Client.loadFromConfig(network_config);
-			client.setCryptoSuite(Client.newCryptoSuite());
-			client.setUserContext(new User('testUser'), true);
-			client.getChannel('mychannel');
-			client.loadFromConfig({
-				version: '1.0.0',
-				channels: {
-					'otherchannel': {
-						orderers: ['orderer0']
-					}
+	await testutil.tapeAsyncNoThrow(t, async () => {
+		const client = await Client.loadFromConfig(network_config);
+		const suite = await Client.newCryptoSuite();
+		client.setCryptoSuite(suite);
+		client.setUserContext(new User('testUser'), true);
+		client.getChannel('mychannel');
+		await client.loadFromConfig({
+			version: '1.0.0',
+			channels: {
+				'otherchannel': {
+					orderers: ['orderer0']
 				}
-			});
-			client.getChannel('otherchannel');
-		},
-		'Should be able to load additional configurations'
+			}
+		});
+		client.getChannel('otherchannel');
+	},
+	'able to load additional configurations'
 	);
 
 	t.doesNotThrow(
@@ -590,40 +592,36 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			}
 		);
 
-	t.throws(
-		() => {
-			const client = new Client();
-			client._setAdminFromConfig();
-		},
-		/No common connection profile has been loaded/,
-		'Should get an error No common connection profile has been loaded'
+	await testutil.tapeAsyncThrow(t, async () => {
+		const client = new Client();
+		await client._setAdminFromConfig();
+	},
+	/No common connection profile has been loaded/,
+	'Should get an error No common connection profile has been loaded'
 	);
 
-	t.throws(
-		() => {
-			const client = new Client();
-			client.setAdminSigningIdentity();
-		},
-		/Invalid parameter. Must have a valid private key./,
-		'Should get an error Invalid parameter. Must have a valid private key.'
+	await testutil.tapeAsyncThrow(t, async () => {
+		const client = new Client();
+		await client.setAdminSigningIdentity();
+	},
+	/Invalid parameter. Must have a valid private key./,
+	'Should get an error Invalid parameter. Must have a valid private key.'
 	);
 
-	t.throws(
-		() => {
-			const client = new Client();
-			client.setAdminSigningIdentity('privateKey');
-		},
-		/Invalid parameter. Must have a valid certificate./,
-		'Should get an error Invalid parameter. Must have a valid certificate.'
+	await testutil.tapeAsyncThrow(t, async () => {
+		const client = new Client();
+		await client.setAdminSigningIdentity('privateKey');
+	},
+	/Invalid parameter. Must have a valid certificate./,
+	'Should get an error Invalid parameter. Must have a valid certificate.'
 	);
 
-	t.throws(
-		() => {
-			const client = new Client();
-			client.setAdminSigningIdentity('privateKey', 'cert');
-		},
-		/Invalid parameter. Must have a valid mspid./,
-		'Should get an error Invalid parameter. Must have a valid mspid.'
+	await testutil.tapeAsyncThrow(t, async () => {
+		const client = new Client();
+		await client.setAdminSigningIdentity('privateKey', 'cert');
+	},
+	/Invalid parameter. Must have a valid mspid./,
+	'Should get an error Invalid parameter. Must have a valid mspid.'
 	);
 
 	t.throws(
@@ -636,11 +634,11 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 	);
 
 	try {
-		const client = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
+		const client = await Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 		t.pass('Successfully loaded a common connection profile');
 		t.pass('Should be able to try to load an admin from the config');
 
-		client.loadFromConfig('test/fixtures/profiles/org1.yaml');
+		await client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 		t.pass('Should be able to load an additional config ...this one has the client section');
 		t.pass('Should be able to try to load an admin from the config');
 		// check to see if we were able to load a setting from the yaml into
@@ -650,14 +648,14 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		t.fail('Fail - caught an error while trying to load a config and run the set admin');
 	}
 
-	const clientp1 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
+	const clientp1 = await Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a common connection profile');
-	clientp1.loadFromConfig('test/fixtures/profiles/org1.yaml');
+	await clientp1.loadFromConfig('test/fixtures/profiles/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 
-	const p1 = clientp1.initCredentialStores().then(() => {
+	const p1 = clientp1.initCredentialStores().then(async() => {
 		t.pass('Should be able to load the stores from the config');
-		clientp1._setAdminFromConfig();
+		await clientp1._setAdminFromConfig();
 		t.pass('Should be able to load an admin from the config');
 		clientp1._getSigningIdentity(true);
 		t.pass('Should be able to get the loaded admin identity');
@@ -665,9 +663,9 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		t.fail(util.format('Should not get an error when doing get signer: %O', err));
 	});
 
-	const clientp2 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
+	const clientp2 =  await Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a common connection profile');
-	clientp2.loadFromConfig('test/fixtures/profiles/org1.yaml');
+	await clientp2.loadFromConfig('test/fixtures/profiles/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 	const p2 = clientp2.initCredentialStores().then(() => {
 		t.pass('Should be able to load the stores from the config');
@@ -684,9 +682,9 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		}
 	});
 
-	const clientp3 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
+	const clientp3 =  await Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a common connection profile');
-	clientp3.loadFromConfig('test/fixtures/profiles/org1.yaml');
+	await clientp3.loadFromConfig('test/fixtures/profiles/org1.yaml');
 	t.pass('Should be able to load an additional config ...this one has the client section');
 	const p3 = clientp3.initCredentialStores().then(() => {
 		t.pass('Should be able to load the stores from the config');
@@ -703,7 +701,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 		}
 	});
 
-	const clientp4 = Client.loadFromConfig('test/fixtures/profiles/network.yaml');
+	const clientp4 =  await Client.loadFromConfig('test/fixtures/profiles/network.yaml');
 	t.pass('Successfully loaded a common connection profile');
 	const p4 = clientp4._setUserFromConfig({username: 'username', password: 'password'}).then(() => {
 		t.fail('Should not be able to load an user based on the config');
@@ -732,18 +730,19 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 	t.end();
 });
 
-test('\n\n ** channel testing **\n\n', (t) => {
+test('\n\n ** channel testing **\n\n', async (t) => {
 	const client = new Client();
-	client.setCryptoSuite(Client.newCryptoSuite());
+	const suite = await Client.newCryptoSuite();
+	client.setCryptoSuite(suite);
 	client.setUserContext(new User('testUser'), true);
-	client.loadFromConfig('test/fixtures/profiles/network.yaml');
+	await client.loadFromConfig('test/fixtures/profiles/network.yaml');
 
 	const channel = client.getChannel('mychannel');
 	let channelEventHubs = channel.getChannelEventHubsForOrg('bad');
 	t.equals(channelEventHubs.length, 0, 'Checking that we got the correct number of peers in the list');
 	channelEventHubs = channel.getChannelEventHubsForOrg('Org2MSP');
 	t.equals(channelEventHubs[0].getName(), 'peer0.org2.example.com', 'Checking that we got the correct peer in the list');
-	client.loadFromConfig('test/fixtures/profiles/org1.yaml');
+	await client.loadFromConfig('test/fixtures/profiles/org1.yaml');
 	channelEventHubs = channel.getChannelEventHubsForOrg();
 	t.equals(channelEventHubs[0].getName(), 'peer0.org1.example.com', 'Checking that we got the correct peer in the list');
 

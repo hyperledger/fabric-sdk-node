@@ -107,10 +107,10 @@ describe('Client', () => {
 	});
 
 	describe('loadFromConfig', () => {
-		it('should create a Client instance and call loadFromConfig', () => {
+		it('should create a Client instance and call loadFromConfig', async () => {
 			const loadConfigStub = sinon.stub();
 			revert.push(Client.__set__('Client.prototype.loadFromConfig', loadConfigStub));
-			const client = Client.loadFromConfig('config');
+			const client = await Client.loadFromConfig('config');
 			sinon.assert.calledWith(loadConfigStub, 'config');
 			client.should.be.an.instanceof(Client);
 		});
@@ -137,27 +137,27 @@ describe('Client', () => {
 			_addConnectionOptionsFromConfig = sinon.stub(client, '_addConnectionOptionsFromConfig');
 		});
 
-		it('should get additional network config and set _network_config to it', () => {
+		it('should get additional network config and set _network_config to it', async () => {
 			mock_network_config.hasClient.returns(false);
 			client._network_config = null;
-			client.loadFromConfig('config');
+			await client.loadFromConfig('config');
 			sinon.assert.calledWith(_getNetworkConfigStub, 'config', client);
 			sinon.assert.called(mock_network_config.hasClient);
 		});
 
-		it('should get additional network config and merge it with the existing config', () => {
+		it('should get additional network config and merge it with the existing config', async () => {
 			mock_network_config.hasClient.returns(false);
 			client._network_config = mock_network_config;
-			client.loadFromConfig('config');
+			await client.loadFromConfig('config');
 			sinon.assert.calledWith(_getNetworkConfigStub, 'config', client);
 			sinon.assert.calledWith(mock_network_config.mergeSettings, mock_network_config);
 			sinon.assert.called(mock_network_config.hasClient);
 		});
 
-		it('should get additional network config and set adming and set mspid', () => {
+		it('should get additional network config and set adming and set mspid', async () => {
 			mock_network_config.hasClient.returns(true);
 			client._network_config = null;
-			client.loadFromConfig('config');
+			await client.loadFromConfig('config');
 			sinon.assert.calledWith(_getNetworkConfigStub, 'config', client);
 			sinon.assert.called(mock_network_config.hasClient);
 			sinon.assert.called(_setAdminFromConfigStub);
@@ -463,11 +463,11 @@ describe('Client', () => {
 	});
 
 	describe('#getPeersForOrg', () => {
-		it('returns peers for specified org', () => {
+		it('returns peers for specified org', async () => {
 			const clientOrg = connectionProfile.client.organization;
 			const mspId = connectionProfile.organizations[clientOrg].mspid;
 			const orgPeerNames = connectionProfile.organizations[clientOrg].peers;
-			const client = Client.loadFromConfig(connectionProfile);
+			const client = await Client.loadFromConfig(connectionProfile);
 
 			const peers = client.getPeersForOrg(mspId);
 
@@ -475,10 +475,10 @@ describe('Client', () => {
 			peerNames.should.deep.equal(orgPeerNames);
 		});
 
-		it('returns peers for client org in connection profile if no org specified', () => {
+		it('returns peers for client org in connection profile if no org specified', async () => {
 			const clientOrg = connectionProfile.client.organization;
 			const orgPeerNames = connectionProfile.organizations[clientOrg].peers;
-			const client = Client.loadFromConfig(connectionProfile);
+			const client = await Client.loadFromConfig(connectionProfile);
 
 			const peers = client.getPeersForOrg();
 
@@ -492,17 +492,17 @@ describe('Client', () => {
 			peers.should.be.empty;
 		});
 
-		it('returns empty list if organisation not in config', () => {
-			const client = Client.loadFromConfig(connectionProfile);
+		it('returns empty list if organisation not in config', async () => {
+			const client = await Client.loadFromConfig(connectionProfile);
 			const peers = client.getPeersForOrg('NON_EXISTENT_MSP_ID');
 			peers.should.be.empty;
 		});
 
-		it('returns peers for user context MSP ID if no org specified and no client org in connection profile', () => {
+		it('returns peers for user context MSP ID if no org specified and no client org in connection profile', async () => {
 			delete connectionProfile.client;
 			const userOrg = Object.values(connectionProfile.organizations).find((org) => org.mspid === userMspId);
 			const userPeerNames = userOrg.peers;
-			const client = Client.loadFromConfig(connectionProfile);
+			const client = await Client.loadFromConfig(connectionProfile);
 			client.setUserContext(fakeUser, true);
 
 			const peers = client.getPeersForOrg();
@@ -764,11 +764,11 @@ describe('Client', () => {
 			should.not.exist(actual);
 		});
 
-		it('MSP ID of the org in the client section of the connection profile if loaded from config', () => {
+		it('MSP ID of the org in the client section of the connection profile if loaded from config', async () => {
 			const clientOrg = connectionProfile.client.organization;
 			const expected = connectionProfile.organizations[clientOrg].mspid;
 
-			const client = Client.loadFromConfig(connectionProfile);
+			const client = await Client.loadFromConfig(connectionProfile);
 			const actual = client.getMspid();
 
 			actual.should.equal(expected);
@@ -782,8 +782,8 @@ describe('Client', () => {
 			actual.should.equal(userMspId);
 		});
 
-		it('MSP ID of the user context in preference to value from connection profile', () => {
-			const client = Client.loadFromConfig(connectionProfile);
+		it('MSP ID of the user context in preference to value from connection profile', async () => {
+			const client = await Client.loadFromConfig(connectionProfile);
 			client.setUserContext(fakeUser, true);
 			const actual = client.getMspid();
 
@@ -1817,11 +1817,15 @@ describe('Client', () => {
 		let setCryptoKeyStoreStub;
 		let newCryptoKeyStoreStub;
 		let setCryptoSuiteStub;
+		let keyValStub;
 
 		let client;
 		beforeEach(() => {
+			keyValStub = {
+				init: sinon.stub()
+			};
 			getClientConfigStub = sinon.stub();
-			newDefaultKeyValueStoreStub = sinon.stub().returns(Promise.resolve('key-val-store'));
+			newDefaultKeyValueStoreStub = sinon.stub().returns(keyValStub);
 			revert.push(Client.__set__('BaseClient.newDefaultKeyValueStore', newDefaultKeyValueStoreStub));
 			setStateStoreStub = sinon.stub();
 			setCryptoKeyStoreStub = sinon.stub();
@@ -1856,20 +1860,18 @@ describe('Client', () => {
 			}
 		});
 
-		it('should return true and set the cryptokeystore', async () => {
+		it('should set the cryptokeystore', async () => {
 			getClientConfigStub.returns({credentialStore: {cryptoStore: 'store'}});
 			client._network_config = {getClientConfig: getClientConfigStub};
 			newCryptoKeyStoreStub.returns('new-crypto');
-			const success = await client.initCredentialStores();
-			success.should.be.true;
+			await client.initCredentialStores();
 			sinon.assert.called(getClientConfigStub);
 			sinon.assert.calledWith(newDefaultKeyValueStoreStub, {cryptoStore: 'store'});
-			sinon.assert.calledWith(setStateStoreStub, 'key-val-store');
+			sinon.assert.calledWith(setStateStoreStub, keyValStub);
 			sinon.assert.called(cryptoSuiteStub);
 			sinon.assert.calledWith(setCryptoKeyStoreStub, 'new-crypto');
 			sinon.assert.calledWith(newCryptoKeyStoreStub, 'store');
 			sinon.assert.calledWith(setCryptoSuiteStub, {setCryptoKeyStore: setCryptoKeyStoreStub});
-
 		});
 	});
 
@@ -1933,6 +1935,7 @@ describe('Client', () => {
 		let getCryptoSuiteStub;
 		let newCryptoSuiteStub;
 		let importKeyStub;
+		let createKeyFromRawStub;
 		let SigningIdentityStub;
 		let SignerStub;
 
@@ -1940,7 +1943,11 @@ describe('Client', () => {
 		beforeEach(() => {
 			getCryptoSuiteStub = sinon.stub();
 			importKeyStub = sinon.stub();
-			newCryptoSuiteStub = sinon.stub().returns({importKey: importKeyStub});
+			createKeyFromRawStub = sinon.stub();
+			newCryptoSuiteStub = sinon.stub().returns({
+				importKey: importKeyStub,
+				createKeyFromRaw: createKeyFromRawStub
+			});
 			revert.push(Client.__set__('BaseClient.newCryptoSuite', newCryptoSuiteStub));
 			SigningIdentityStub = sinon.stub();
 			revert.push(Client.__set__('SigningIdentity', SigningIdentityStub));
@@ -1951,79 +1958,68 @@ describe('Client', () => {
 			client.getCryptoSuite = getCryptoSuiteStub;
 		});
 
-		it('should throw if no private key is given', () => {
-			(() => {
-				client.setAdminSigningIdentity(undefined, 'certificate', 'mspid');
-			}).should.throw('Invalid parameter. Must have a valid private key.');
+		it('should reject if no private key is given', async () => {
+			await client.setAdminSigningIdentity(undefined, 'certificate', 'mspid').should.be.rejectedWith('Invalid parameter. Must have a valid private key.');
 		});
 
-		it('should throw if private key is null', () => {
-			(() => {
-				client.setAdminSigningIdentity(null, 'certificate', 'mspid');
-			}).should.throw('Invalid parameter. Must have a valid private key.');
+		it('should throw if private key is null', async () => {
+			await client.setAdminSigningIdentity(null, 'certificate', 'mspid').should.be.rejectedWith('Invalid parameter. Must have a valid private key.');
 		});
 
-		it('should throw if private key is empty string', () => {
-			(() => {
-				client.setAdminSigningIdentity('', 'certificate', 'mspid');
-			}).should.throw('Invalid parameter. Must have a valid private key.');
+		it('should throw if private key is empty string', async () => {
+			await client.setAdminSigningIdentity('', 'certificate', 'mspid').should.be.rejectedWith('Invalid parameter. Must have a valid private key.');
 		});
 
-		it('should throw if no certificate key is given', () => {
-			(() => {
-				client.setAdminSigningIdentity('private-key', undefined, 'mspid');
-			}).should.throw('Invalid parameter. Must have a valid certificate.');
+		it('should throw if no certificate key is given', async () => {
+			await client.setAdminSigningIdentity('private-key', undefined, 'mspid').should.be.rejectedWith('Invalid parameter. Must have a valid certificate.');
 		});
 
-		it('should throw if certificate is null', () => {
-			(() => {
-				client.setAdminSigningIdentity('private-key', null, 'mspid');
-			}).should.throw('Invalid parameter. Must have a valid certificate.');
+		it('should throw if certificate is null', async () => {
+			await client.setAdminSigningIdentity('private-key', null, 'mspid').should.be.rejectedWith('Invalid parameter. Must have a valid certificate.');
 		});
 
-		it('should throw if certificate is empty string', () => {
-			(() => {
-				client.setAdminSigningIdentity('private-key', '', 'mspid');
-			}).should.throw('Invalid parameter. Must have a valid certificate.');
+		it('should throw if certificate is empty string', async () => {
+			await client.setAdminSigningIdentity('private-key', '', 'mspid').should.be.rejectedWith('Invalid parameter. Must have a valid certificate.');
 		});
 
-		it('should throw if no mspid is given', () => {
-			(() => {
-				client.setAdminSigningIdentity('private-key', 'certificate', undefined);
-			}).should.throw('Invalid parameter. Must have a valid mspid.');
+		it('should throw if no mspid is given', async () => {
+			await client.setAdminSigningIdentity('private-key', 'certificate', undefined).should.be.rejectedWith('Invalid parameter. Must have a valid mspid.');
 		});
 
-		it('should throw if certificate is null', () => {
-			(() => {
-				client.setAdminSigningIdentity('private-key', 'certificate', null);
-			}).should.throw('Invalid parameter. Must have a valid mspid.');
+		it('should throw if certificate is null', async () => {
+			await client.setAdminSigningIdentity('private-key', 'certificate', null).should.be.rejectedWith('Invalid parameter. Must have a valid mspid.');
 		});
 
-		it('should throw if certificate is empty string', () => {
-			(() => {
-				client.setAdminSigningIdentity('private-key', 'certificate', '');
-			}).should.throw('Invalid parameter. Must have a valid mspid.');
+		it('should throw if certificate is empty string', async () => {
+			await client.setAdminSigningIdentity('private-key', 'certificate', '').should.be.rejectedWith('Invalid parameter. Must have a valid mspid.');
 		});
 
-		it('should retrieve CryptoSuite and import the public and private keys before creating an identity', () => {
-			getCryptoSuiteStub.returns({importKey: importKeyStub});
-			importKeyStub.onCall(0).returns('private_key');
-			importKeyStub.onCall(1).returns('public_key');
-			client.setAdminSigningIdentity('private-key', 'certificate', 'mspid');
+		it('should retrieve CryptoSuite and import the public and private keys before creating an identity', async () => {
+			getCryptoSuiteStub.returns({
+				importKey: importKeyStub,
+				createKeyFromRaw: createKeyFromRawStub
+			});
+			createKeyFromRawStub.onCall(0).returns('private_key');
+			createKeyFromRawStub.onCall(1).returns('public_key');
+
+			await client.setAdminSigningIdentity('private-key', 'certificate', 'mspid');
+
 			sinon.assert.called(getCryptoSuiteStub);
-			sinon.assert.calledWith(importKeyStub, 'private-key', {ephemeral: true});
-			sinon.assert.calledWith(importKeyStub, 'certificate', {ephemeral: true});
+			sinon.assert.calledWith(createKeyFromRawStub, 'private-key');
+			sinon.assert.calledWith(createKeyFromRawStub, 'certificate');
 			sinon.assert.calledWith(SigningIdentityStub, 'certificate', 'public_key', 'mspid', getCryptoSuiteStub(), new SignerStub());
 			sinon.assert.calledWith(SignerStub, getCryptoSuiteStub(), 'private_key');
 			client._adminSigningIdentity.should.deep.equal(new SigningIdentityStub());
 		});
 
-		it('should create a new CryptoSuite and import the public and private keys before creating an identity', () => {
-			importKeyStub.onCall(0).returns('private_key');
-			importKeyStub.onCall(1).returns('public_key');
-			client.setAdminSigningIdentity('private-key', 'certificate', 'mspid');
-			sinon.assert.calledWith(importKeyStub, 'private-key', {ephemeral: true});
-			sinon.assert.calledWith(importKeyStub, 'certificate', {ephemeral: true});
+		it('should create a new CryptoSuite and import the public and private keys before creating an identity', async () => {
+			createKeyFromRawStub.onCall(0).returns('private_key');
+			createKeyFromRawStub.onCall(1).returns('public_key');
+
+			await client.setAdminSigningIdentity('private-key', 'certificate', 'mspid');
+
+			sinon.assert.calledWith(createKeyFromRawStub, 'private-key');
+			sinon.assert.calledWith(createKeyFromRawStub, 'certificate');
 			sinon.assert.calledWith(SigningIdentityStub, 'certificate', 'public_key', 'mspid', newCryptoSuiteStub(), new SignerStub());
 			sinon.assert.calledWith(SignerStub, newCryptoSuiteStub(), 'private_key');
 			client._adminSigningIdentity.should.deep.equal(new SigningIdentityStub());
@@ -2055,16 +2051,16 @@ describe('Client', () => {
 			client.setAdminSigningIdentity = getAdminSigningIdentityStub;
 		});
 
-		it('should throw an error if no network config is present', () => {
-			(() => {
-				client._setAdminFromConfig();
-			}).should.throw('No common connection profile has been loaded');
+		it('should throw an error if no network config is present', async () => {
+			await client._setAdminFromConfig().should.be.rejectedWith('No common connection profile has been loaded');
 		});
 
-		it('should not call anything if client config is null', () => {
+		it('should not call anything if client config is null', async () => {
 			getClientConfigStub.returns(null);
 			client._network_config = {getClientConfig: getClientConfigStub};
-			client._setAdminFromConfig();
+
+			await client._setAdminFromConfig();
+
 			sinon.assert.notCalled(getOrganizationStub);
 			sinon.assert.notCalled(getMspidStub);
 			sinon.assert.notCalled(getAdminPrivateKeyStub);
@@ -2613,6 +2609,7 @@ describe('Client', () => {
 		let readFileStub;
 		let getCryptoSuiteStub;
 		let importKeyStub;
+		let createKeyFromRawStub;
 		let setCryptoSuiteStub;
 		let setEnrollmentStub;
 		let setUserContextStub;
@@ -2629,7 +2626,8 @@ describe('Client', () => {
 			FakeUser.prototype.setEnrollment = setEnrollmentStub;
 			readFileStub = sinon.stub().returns(Promise.resolve(1));
 			getCryptoSuiteStub = sinon.stub();
-			importKeyStub = sinon.stub();
+			importKeyStub = sinon.stub().returns(Promise.resolve('imported-key'));
+			createKeyFromRawStub = sinon.stub().returns(Promise.resolve('created-key'));
 			setUserContextStub = sinon.stub().returns(Promise.resolve());
 			setCryptoKeyStoreStub = sinon.stub();
 
@@ -2637,7 +2635,10 @@ describe('Client', () => {
 			revert.push(Client.__set__('User', FakeUser));
 
 			client = new Client();
-			client.getCryptoSuite = getCryptoSuiteStub.returns({importKey: importKeyStub.returns(Promise.resolve('imported-key'))});
+			client.getCryptoSuite = getCryptoSuiteStub.returns({
+				importKey: importKeyStub,
+				createKeyFromRaw: createKeyFromRawStub
+			});
 			client.setUserContext = setUserContextStub;
 		});
 
@@ -2698,7 +2699,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(FakeLogger.debug, 'then signedCertPEM data');
 			sinon.assert.calledWith(setCryptoSuiteStub, getCryptoSuiteStub());
 			sinon.assert.called(getCryptoSuiteStub);
-			sinon.assert.calledWith(setEnrollmentStub, 'imported-key', 'privateKeyPEM', '1', true);
+			sinon.assert.calledWith(setEnrollmentStub, 'created-key', 'privateKeyPEM', '1', true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then setUserContext');
 			sinon.assert.calledWith(setUserContextStub, new FakeUser(), true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then user');
@@ -2716,7 +2717,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(FakeLogger.debug, 'then signedCertPEM data');
 			sinon.assert.calledWith(setCryptoSuiteStub, getCryptoSuiteStub());
 			sinon.assert.called(getCryptoSuiteStub);
-			sinon.assert.calledWith(setEnrollmentStub, 'imported-key', 'privateKeyPEM', '1', true);
+			sinon.assert.calledWith(setEnrollmentStub, 'created-key', 'privateKeyPEM', '1', true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then setUserContext');
 			sinon.assert.calledWith(setUserContextStub, new FakeUser(), true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then user');
@@ -2724,9 +2725,23 @@ describe('Client', () => {
 		});
 
 		it('should return a user if getCryptoSuite does not return null', async () => {
-			getCryptoSuiteStub.returns({setCryptoKeyStore: setCryptoKeyStoreStub, importKey: importKeyStub, _cryptoKeyStore: {}});
+			getCryptoSuiteStub.returns({
+				setCryptoKeyStore: setCryptoKeyStoreStub,
+				createKeyFromRaw: createKeyFromRawStub,
+				importKey: importKeyStub,
+				_cryptoKeyStore: {}
+			});
 			readFileStub.returns(Promise.resolve('privateKeyPEM'));
-			const user = await client.createUser({username: 'name', mspid: '1', cryptoContent: {privateKey: 'private-key', signedCert: 'signed-cert', signedCertPEM: 'signed-cert-PEM'}, skipPersistence: true});
+			const user = await client.createUser({
+				username: 'name',
+				mspid: '1',
+				cryptoContent: {
+					privateKey: 'private-key',
+					signedCert: 'signed-cert',
+					signedCertPEM: 'signed-cert-PEM'
+				},
+				skipPersistence: true
+			});
 			sinon.assert.calledWith(readFileStub, 'private-key');
 			sinon.assert.calledWith(FakeLogger.debug, 'then privateKeyPEM data');
 			sinon.assert.calledWith(readFileStub, 'signed-cert');
@@ -2734,7 +2749,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(setCryptoSuiteStub, getCryptoSuiteStub());
 			sinon.assert.called(getCryptoSuiteStub);
 			sinon.assert.calledWith(FakeLogger.debug, 'cryptoSuite has a cryptoKeyStore');
-			sinon.assert.calledWith(setEnrollmentStub, 'imported-key', 'privateKeyPEM', '1', true);
+			sinon.assert.calledWith(setEnrollmentStub, 'created-key', 'privateKeyPEM', '1', true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then setUserContext');
 			sinon.assert.calledWith(setUserContextStub, new FakeUser(), true);
 			sinon.assert.calledWith(FakeLogger.debug, 'then user');

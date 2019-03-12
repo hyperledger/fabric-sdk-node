@@ -10,8 +10,8 @@ const User = require('fabric-client/lib/User');
 
 class IDManager {
 
-	initialize(ccp) {
-		this.client = Client.loadFromConfig(ccp);
+	async initialize(ccp) {
+		this.client = await Client.loadFromConfig(ccp);
 	}
 
 	async registerUser(userID, options, issuerWallet, issuerId) {

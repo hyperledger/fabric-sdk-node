@@ -27,15 +27,18 @@ describe('CryptoSuite', () => {
 	});
 
 	describe('#generateKey', () => {
-		it('should return undefined', () => {
-			should.equal(cryptoSuite.generateKey(), undefined);
-			should.equal(cryptoSuite.generateKey({}), undefined);
+		it('should throw if unimplemented', () => {
+			(() => {
+				cryptoSuite.generateKey();
+			}).should.throw(/Unimplemented abstract method/);
 		});
 	});
 
 	describe('#generateEphemeralKey', () => {
-		it('should return undefined', () => {
-			should.equal(cryptoSuite.generateEphemeralKey(), undefined);
+		it('should throw if unimplemented', () => {
+			(() => {
+				cryptoSuite.generateEphemeralKey();
+			}).should.throw(/Unimplemented abstract method/);
 		});
 	});
 
@@ -48,10 +51,19 @@ describe('CryptoSuite', () => {
 	});
 
 	describe('#importKey', () => {
-		it('should return undefined', () => {
-			should.equal(cryptoSuite.importKey(), undefined);
-			should.equal(cryptoSuite.importKey('name'), undefined);
-			should.equal(cryptoSuite.importKey('name', {}), undefined);
+
+		it('should throw if unimplemented', () => {
+			(() => {
+				cryptoSuite.importKey();
+			}).should.throw(/Unimplemented abstract method/);
+		});
+	});
+
+	describe('#createKeyFromRaw', () => {
+		it('should throw if unimplemented', () => {
+			(() => {
+				cryptoSuite.createKeyFromRaw();
+			}).should.throw(/Unimplemented abstract method/);
 		});
 	});
 

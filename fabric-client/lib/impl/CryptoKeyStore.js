@@ -6,7 +6,6 @@
 */
 
 'use strict';
-
 const jsrsasign = require('jsrsasign');
 const KEYUTIL = jsrsasign.KEYUTIL;
 

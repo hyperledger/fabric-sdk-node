@@ -3704,7 +3704,7 @@ const Channel = class {
 	 * @returns {boolean} A boolean value of true when both the identity and
 	 *                    the signature are valid, false otherwise.
 	 */
-	verifyProposalResponse(proposal_response) {
+	async verifyProposalResponse(proposal_response) {
 		logger.debug('verifyProposalResponse - start');
 		if (!proposal_response) {
 			throw new Error('Missing proposal response');
@@ -3730,7 +3730,7 @@ const Channel = class {
 		logger.debug('verifyProposalResponse - found endorser\'s MSP');
 
 		try {
-			identity = msp.deserializeIdentity(endorsement.endorser, false);
+			identity = await msp.deserializeIdentity(endorsement.endorser, false);
 			if (!identity) {
 				throw new Error('Unable to find the endorser identity');
 			}

@@ -82,12 +82,14 @@ module.exports.newCryptoSuite = (setting) => {
 	return new cryptoSuite(keysize, hashAlgo, opts);
 };
 
-// Provide a Promise-based keyValueStore for couchdb, etc.
+// Provide a keyValueStore for couchdb, etc.
 module.exports.newKeyValueStore = async (options) => {
 	// initialize the correct KeyValueStore
 	const kvsEnv = exports.getConfigSetting('key-value-store');
-	const store = require(kvsEnv);
-	return new store(options);
+	const Store = require(kvsEnv);
+	const store = new Store(options);
+	await store.initialize();
+	return store;
 };
 
 const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];
@@ -391,26 +393,23 @@ const CryptoKeyStore = function (KVSImplClass, opts) {
 
 	};
 
-	this._getKeyStore = function () {
-		const CKS = require('./impl/CryptoKeyStore.js');
+	this._getKeyStore = async function () {
+		const CKS = require('fabric-client/lib/impl/CryptoKeyStore');
 
-		const self = this;
-		return new Promise((resolve, reject) => {
-			if (self._store === null) {
-				self.logger.debug(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', self._storeConfig));
+		if (this._store === null) {
+			this.logger.debug(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', this._storeConfig));
 
-				CKS(self._storeConfig.superClass, self._storeConfig.opts).then((ks) => {
-					self.logger.debug('_getKeyStore returning ks');
-					self._store = ks;
-					return resolve(self._store);
-				}).catch((err) => {
-					reject(err);
-				});
-			} else {
-				self.logger.debug('_getKeyStore resolving store');
-				return resolve(self._store);
+			try {
+				this._store  = await CKS(this._storeConfig.superClass, this._storeConfig.opts);
+				await this._store.initialize();
+				return this._store;
+			} catch (err) {
+				throw err;
 			}
-		});
+		} else {
+			this.logger.debug('_getKeyStore returning store');
+			return this._store;
+		}
 	};
 
 };

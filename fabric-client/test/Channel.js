@@ -357,10 +357,10 @@ describe('Channel', () => {
 			expect(org2PeerNames, 'org2').to.deep.equal([peer2.getName()]);
 		});
 
-		it('uses org from client if none supplied', () => {
+		it('uses org from client if none supplied', async () => {
 			const org1 = 'org1';
 			const org2 = 'org2';
-			client.loadFromConfig({
+			await client.loadFromConfig({
 				version: '1.0',
 				client: {
 					organization: 'Org1'
@@ -528,10 +528,10 @@ describe('Channel', () => {
 			assertChannelEventHubsMatchPeers(eventHubs, [peer1]);
 		});
 
-		it('returns channel event hubs for channel\'s orgnanization if no organization specified', () => {
+		it('returns channel event hubs for channel\'s orgnanization if no organization specified', async () => {
 			const org1 = 'org1';
 			const org2 = 'org2';
-			client.loadFromConfig({
+			await client.loadFromConfig({
 				version: '1.0',
 				client: {
 					organization: 'Org1'
@@ -743,70 +743,66 @@ describe('Channel', () => {
 	});
 
 	describe('#verifyProposalResponse', () => {
-		it('throws if proposal_response is missing', () => {
-			expect(() => channel.verifyProposalResponse(null)).to.throw('Missing proposal response');
+		it('throws if proposal_response is missing', async () => {
+			await channel.verifyProposalResponse(null).should.be.rejectedWith('Missing proposal response');
 		});
 
-		it('throws if parameter is not a ProposalResponse', () => {
-			expect(() => channel.verifyProposalResponse({})).to.throw('ProposalResponse');
+		it('throws if parameter is not a ProposalResponse', async () => {
+			await channel.verifyProposalResponse({}).should.be.rejectedWith('ProposalResponse');
 		});
 
-		it('throws if parameter is not a ProposalResponse', () => {
-			expect(() => channel.verifyProposalResponse([])).to.throw('ProposalResponse');
+		it('throws if parameter is not a ProposalResponse', async () => {
+			await channel.verifyProposalResponse([]).should.be.rejectedWith('ProposalResponse');
 		});
 
-		it('throws for unknown MSP ID in proposal response', () => {
+		it('throws for unknown MSP ID in proposal response', async () => {
 			channel.getMSPManager().getMSP.withArgs(mspId).returns(null);
 			const proposalResponse = createProposalResponse('messsage');
 
-			expect(() => channel.verifyProposalResponse(proposalResponse)).to.throw(mspId);
+			await channel.verifyProposalResponse(proposalResponse).should.be.rejectedWith(mspId);
 		});
 
-		it('returns false if MSP unable to deserialize identity', () => {
+		it('returns false if MSP unable to deserialize identity', async () => {
 			stubMsp.deserializeIdentity.returns(null);
 			const proposalResponse = createProposalResponse('messsage');
 
-			const result = channel.verifyProposalResponse(proposalResponse);
-
+			const result = await channel.verifyProposalResponse(proposalResponse);
 			expect(result).to.be.false;
 		});
 
-		it('returns false if identity not valid', () => {
+		it('returns false if identity not valid', async () => {
 			const proposalResponse = createProposalResponse('messsage');
 			stubMspIdentity.isValid.returns(false);
 
-			const result = channel.verifyProposalResponse(proposalResponse);
-
+			const result = await channel.verifyProposalResponse(proposalResponse);
 			expect(result).to.be.false;
 		});
 
-		it('returns false if signature not valid', () => {
+		it('returns false if signature not valid', async () => {
 			const proposalResponse = createProposalResponse('messsage');
 			stubMspIdentity.verify.returns(false);
 
-			const result = channel.verifyProposalResponse(proposalResponse);
-
+			const result = await channel.verifyProposalResponse(proposalResponse);
 			expect(result).to.be.false;
 		});
 
-		it('returns false if signature verification errors', () => {
+		it('returns false if signature verification errors', async () => {
 			const proposalResponse = createProposalResponse('messsage');
 			stubMspIdentity.verify.throws('VerifyError', 'test');
 
-			const result = channel.verifyProposalResponse(proposalResponse);
-
+			const result = await channel.verifyProposalResponse(proposalResponse);
 			expect(result).to.be.false;
 		});
 
-		it('returns true for valid proposal response', () => {
+		it('returns true for valid proposal response', async () => {
 			const proposalResponse = createProposalResponse('messsage');
-			const result = channel.verifyProposalResponse(proposalResponse);
+			const result = await channel.verifyProposalResponse(proposalResponse);
 			expect(result).to.be.true;
 		});
 
-		it('returns false if the proposal response is an error', () => {
+		it('returns false if the proposal response is an error', async () => {
 			const proposalResponse = new Error('sadface');
-			const result = channel.verifyProposalResponse(proposalResponse);
+			const result = await channel.verifyProposalResponse(proposalResponse);
 			expect(result).to.be.false;
 		});
 	});

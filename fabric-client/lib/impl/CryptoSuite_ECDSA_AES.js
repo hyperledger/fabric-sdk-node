@@ -96,23 +96,16 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 	}
 
 	async generateKey(opts) {
-		const pair = KEYUTIL.generateKeypair('EC', this._curveName);
-
-		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
-			logger.debug('generateKey, ephemeral true, Promise resolved');
-			return new ECDSAKey(pair.prvKeyObj);
-		} else {
-			if (!this._cryptoKeyStore) {
-				throw new Error('generateKey opts.ephemeral is false, which requires CryptoKeyStore to be set.');
-			}
-			// unless "opts.ephemeral" is explicitly set to "true", default to saving the key
-			const key = new ECDSAKey(pair.prvKeyObj);
-
-			const store = await this._cryptoKeyStore._getKeyStore();
-			logger.debug('generateKey, store.setValue');
-			await store.putKey(key);
-			return key;
+		if (!this._cryptoKeyStore) {
+			throw new Error('generateKey requires CryptoKeyStore to be set.');
 		}
+
+		const key = this.generateEphemeralKey();
+
+		const store = await this._cryptoKeyStore._getKeyStore();
+		logger.debug('generateKey, store.setValue');
+		await store.putKey(key);
+		return key;
 	}
 
 	/**
@@ -124,24 +117,11 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 	}
 
 	/**
-	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
+	 * This is an implementation of {@link module:api.CryptoSuite#createKeyFromRaw}
 	 */
-	importKey(pem, opts) {
-		logger.debug('importKey - start');
-		let store_key = true; // default
-		if (typeof opts !== 'undefined' && typeof opts.ephemeral !== 'undefined' && opts.ephemeral === true) {
-			store_key = false;
-		}
-		if (store_key && !this._cryptoKeyStore) {
-			throw new Error('importKey opts.ephemeral is false, which requires CryptoKeyStore to be set.');
-		}
+	createKeyFromRaw(pem) {
+		logger.debug('createKeyFromRaw - start');
 
-		const self = this;
-		// attempt to import the raw content, assuming it's one of the following:
-		// X.509v1/v3 PEM certificate (RSA/DSA/ECC)
-		// PKCS#8 PEM RSA/DSA/ECC public key
-		// PKCS#5 plain PEM DSA/RSA private key
-		// PKCS#8 plain PEM RSA/ECDSA private key
 		// TODO: add support for the following passcode-protected PEM formats
 		// - PKCS#5 encrypted PEM RSA/DSA private
 		// - PKCS#8 encrypted PEM RSA/ECDSA private key
@@ -149,43 +129,43 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 		pemString = makeRealPem(pemString);
 		let key = null;
 		let theKey = null;
-		let error = null;
+
 		try {
 			key = KEYUTIL.getKey(pemString);
 		} catch (err) {
-			error = new Error('Failed to parse key from PEM: ' + err);
+			logger.error('createKeyFromRaw - Failed to parse key from PEM: ', err);
+			throw new Error('Failed to parse key from PEM: ' + err);
 		}
 
 		if (key && key.type && key.type === 'EC') {
 			theKey = new ECDSAKey(key);
-			logger.debug('importKey - have the key %j', theKey);
-		} else {
-			error = new Error('Does not understand PEM contents other than ECDSA private keys and certificates');
-		}
-
-		if (!store_key) {
-			if (error) {
-				logger.error('importKey - %s', error);
-				throw error;
-			}
+			logger.debug('createKeyFromRaw - have the key %j', theKey);
 			return theKey;
 		} else {
-			if (error) {
-				logger.error('importKey - %j', error);
-				return Promise.reject(error);
-			}
-			return new Promise((resolve, reject) => {
-				return self._cryptoKeyStore._getKeyStore()
-					.then((store) => {
-						return store.putKey(theKey);
-					}).then(() => {
-						return resolve(theKey);
-					}).catch((err) => {
-						reject(err);
-					});
-
-			});
+			logger.error('createKeyFromRaw - Does not understand PEM contents other than ECDSA private keys and certificates');
+			throw new Error('Does not understand PEM contents other than ECDSA private keys and certificates');
 		}
+	}
+
+	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
+	 * Attempt to import the raw content, assuming it's one of the following:
+	 * 	X.509v1/v3 PEM certificate (RSA/DSA/ECC)
+	 * 	PKCS#8 PEM RSA/DSA/ECC public key
+	 * 	PKCS#5 plain PEM DSA/RSA private key
+	 * 	PKCS#8 plain PEM RSA/ECDSA private key
+	 */
+	async importKey(pem) {
+
+		if (!this._cryptoKeyStore) {
+			throw new Error('importKey requires CryptoKeyStore to be set.');
+		}
+
+		// Attempt Key creation from Raw input
+		const key = this.createKeyFromRaw(pem);
+		const store = await this._cryptoKeyStore._getKeyStore();
+		await store.putKey(key);
+		return key;
 	}
 
 	async getKey(ski) {

@@ -113,7 +113,7 @@ describe('Utils', () => {
 
 	describe('#newKeyValueStore', () => {
 		it('should create a new key value store', async() => {
-			const MockKeyValStore = sandbox.stub().returns(new Object({'value': 1}));
+			const MockKeyValStore = sandbox.stub().returns(new Object({'value': 1, initialize: sinon.stub().resolves}));
 			requireStub = sandbox.stub().returns(MockKeyValStore);
 			const getConfigSettingStub = sandbox.stub().returns('kvs');
 			revert.push(Utils.__set__('exports.getConfigSetting', getConfigSettingStub));
@@ -122,7 +122,7 @@ describe('Utils', () => {
 			const kvs = await Utils.newKeyValueStore('options');
 			sinon.assert.calledWith(requireStub, 'kvs');
 			sinon.assert.calledWith(MockKeyValStore, 'options');
-			kvs.should.deep.equal({value: 1});
+			kvs.value.should.equal(1);
 		});
 	});
 
@@ -408,10 +408,11 @@ describe('Utils', () => {
 			keyStore = new CryptoKeyStore((value) => value);
 		});
 
-		it('should return a promise to the this._store', async() => {
-			requireStub.returns(() => Promise.resolve('keystore'));
+		it('should return a store to the this._store', async() => {
+			const fakeKeystore = new Object({name:'keystore', initialize: sinon.stub()});
+			requireStub.returns(() => Promise.resolve(fakeKeystore));
 			const result = await keyStore._getKeyStore();
-			result.should.equal('keystore');
+			result.name.should.equal('keystore');
 		});
 
 		it('should return a promise to the this._store if this._store is set', async() => {

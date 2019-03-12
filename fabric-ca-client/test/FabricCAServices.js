@@ -219,6 +219,7 @@ describe('FabricCAServices', () => {
 			service = new FabricCAServicesRewire('http://penguin.com', null, 'ca_name', cryptoPrimitives);
 			clientMock = sinon.createStubInstance(FabricCAClient);
 			service._fabricCAClient = clientMock;
+			cryptoPrimitives._cryptoKeyStore = false;
 		});
 
 		it('should throw if missing required argument "request"', async () => {
@@ -252,7 +253,7 @@ describe('FabricCAServices', () => {
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);
 			keyStub.generateCSR.returns('CN=penguin');
-			cryptoPrimitives.generateKey.resolves(keyStub);
+			cryptoPrimitives.generateEphemeralKey.returns(keyStub);
 
 			// Take control of the enroll
 			clientMock.enroll.rejects(new Error('enroll error'));
@@ -271,6 +272,7 @@ describe('FabricCAServices', () => {
 			const keyStub = sinon.createStubInstance(ECDSAKey);
 			keyStub.generateCSR.throws(new Error('CSR error'));
 			cryptoPrimitives.generateKey.resolves(keyStub);
+			cryptoPrimitives.generateEphemeralKey.returns(keyStub);
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
 			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
@@ -283,7 +285,7 @@ describe('FabricCAServices', () => {
 			getSubjectCommonNameStub.returns('mr_penguin');
 			normalizeX509Stub.returns('normal');
 
-			cryptoPrimitives.generateKey.rejects(new Error('Key error'));
+			cryptoPrimitives.generateEphemeralKey.throws(new Error('Key error'));
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
 			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
@@ -319,9 +321,8 @@ describe('FabricCAServices', () => {
 			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
 			await service.enroll(req);
 
-			// Opts should contain false
-			const callArgs = newSuite.generateKey.getCall(0);
-			callArgs.args[0].should.deep.equal({ephemeral: false});
+			// should call generateKey, not generateEphemeral
+			sinon.assert.called(newSuite.generateKey);
 
 		});
 
@@ -333,6 +334,7 @@ describe('FabricCAServices', () => {
 			const keyStub = sinon.createStubInstance(ECDSAKey);
 			keyStub.generateCSR.returns('CN=penguin');
 			cryptoPrimitives.generateKey.resolves(keyStub);
+			cryptoPrimitives._cryptoKeyStore = true;
 
 			// Take control of the enroll
 			clientMock.enroll.resolves({
@@ -343,9 +345,8 @@ describe('FabricCAServices', () => {
 			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
 			await service.enroll(req);
 
-			// generateKey should be called with ephmereal set to true
-			const genKeyArgs = cryptoPrimitives.generateKey.getCall(0);
-			genKeyArgs.args[0].should.deep.equal({ephemeral: true});
+			// generateKey should be called
+			sinon.assert.calledOnce(cryptoPrimitives.generateKey);
 
 			// Enrol should be called with test values
 			sinon.assert.calledOnce(clientMock.enroll);
@@ -367,6 +368,7 @@ describe('FabricCAServices', () => {
 			const keyStub = sinon.createStubInstance(ECDSAKey);
 			keyStub.generateCSR.returns('CN=penguin');
 			cryptoPrimitives.generateKey.resolves(keyStub);
+			cryptoPrimitives._cryptoKeyStore = true;
 
 			// Take control of the enroll
 			clientMock.enroll.resolves({

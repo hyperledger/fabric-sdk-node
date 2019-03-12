@@ -95,24 +95,29 @@ test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 	t.end();
 });
 
-test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', (t) => {
+test('\n\n ** CryptoSuite_ECDSA_AES - error tests **\n\n', async (t) => {
 	testutil.resetDefaults();
 	const cryptoUtils = utils.newCryptoSuite();
-	t.throws(
-		() => {
-			cryptoUtils.importKey(TEST_CERT_PEM);
-		},
-		/importKey opts.ephemeral is false, which requires CryptoKeyStore to be set./,
-		'Test missing cryptoKeyStore: cryptoSuite.importKey'
-	);
-	cryptoUtils.generateKey().catch(err => {
+
+	try {
+		await cryptoUtils.importKey(TEST_CERT_PEM);
+		t.fail('Import key did not fail when testing missing cryptoKeyStore');
+	} catch (err) {
 		t.ok(err.toString()
-			.includes('generateKey opts.ephemeral is false, which requires CryptoKeyStore to be set.'),
+			.includes('importKey requires CryptoKeyStore to be set.'),
+		'Test missing cryptoKeyStore: cryptoSuite.importKey');
+	}
+
+	try {
+		await cryptoUtils.generateKey();
+		t.fail('generateKey did not fail when testing missing cryptoKeyStore');
+	} catch (err) {
+		t.ok(err.toString()
+			.includes('generateKey requires CryptoKeyStore to be set.'),
 		'Test missing cryptoKeyStore: cryptoSuite.generateKey');
+	}
 
-		t.end();
-	});
-
+	t.end();
 });
 
 test('\n\n ** CryptoSuite_ECDSA_AES - generateEphemeralKey tests **\n\n', (t) => {
@@ -129,29 +134,15 @@ test('\n\n ** CryptoSuite_ECDSA_AES - generateEphemeralKey tests **\n\n', (t) =>
 
 });
 
-test('\n\n ** CryptoSuite_ECDSA_AES - ephemeral true tests **\n\n', (t) => {
+test('\n\n ** CryptoSuite_ECDSA_AES - createKeyFromRaw **\n\n', async (t) => {
 	testutil.resetDefaults();
 	const cryptoUtils = utils.newCryptoSuite();
-	const key = cryptoUtils.importKey(TEST_KEY_PRIVATE_PEM, {ephemeral: true});
+	const key = cryptoUtils.createKeyFromRaw(TEST_KEY_PRIVATE_PEM);
 	if (key && key._key && key._key.type === 'EC') {
 		t.pass('importKey returned key using ephemeral true');
 	} else {
 		t.fail('importKey did not return key using ephemeral true');
 	}
-
-	return cryptoUtils.generateKey({ephemeral: true})
-		.then((generatedKey) => {
-			if (generatedKey && generatedKey._key && generatedKey._key.type === 'EC') {
-				t.pass('generateKey returned key using ephemeral true');
-				t.end();
-			} else {
-				t.fail('generateKey did not return key using ephemeral true');
-				t.end();
-			}
-		}, (err) => {
-			t.fail('Failed to generateKey. Can not progress any further. Exiting. ' + err.stack ? err.stack : err);
-			t.end();
-		});
 });
 
 test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
@@ -432,31 +423,3 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 			t.end();
 		});
 });
-
-// function cleanupFileKeyValueStore(keyValStorePath) {
-// 	var absPath = getAbsolutePath(keyValStorePath);
-// 	var exists = testutil.existsSync(absPath);
-// 	if (exists) {
-// 		fs.removeSync(absPath);
-// 	}
-// }
-
-// prepend absolute path where this test is running, then join to the relative path
-// function getAbsolutePath(dir) {
-// 	return path.join(process.cwd(), getRelativePath(dir));
-// }
-
-// get relative file path for either Unix or Windows
-// unix relative path does not start with '/'
-// windows relative path starts with '/'
-// function getRelativePath(dir /*string*/) {
-// 	if (/^win/.test(process.platform)) {
-// 		if (!(dir.toString().substr(0, 1) === '/')) dir = '/' + dir;
-// 		dir = path.resolve(dir);
-// 		dir = dir.replace(/([A-Z]:[\\\/]).*?/gi, '');
-// 		return dir;
-// 	} else {
-// 		if (dir.toString().substr(0, 1) === '/') dir = dir.substr(1);
-// 		return dir;
-// 	}
-// }

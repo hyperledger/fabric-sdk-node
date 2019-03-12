@@ -1,0 +1,30 @@
+Release Notes
+-------------
+
+
+Bug fixes and documentation improvements.
+
+Breaking Changes
+---------------------
+
+CR https://gerrit.hyperledger.org/r/#/c/29360/ delivers breaking changes to the key-value stores and Cryptosuite classes:
+ - Key-value stores no longer initialize the store within the constructor; there is a seperate (async) `initialize` method that contains the initialize logic.
+ - Cryptosuite interface is now strictly followed. The `generateKey` method within implementations no longer accepts `ephemeral: true` as an option; the `generateEphemeralKey` method should be used to retrive an ephemeral key.
+
+
+Known Vulnerabilities
+---------------------
+none
+
+
+Resolved Vulnerabilities
+------------------------
+none
+
+
+Known Issues & Workarounds
+--------------------------
+
+
+Change Log
+----------

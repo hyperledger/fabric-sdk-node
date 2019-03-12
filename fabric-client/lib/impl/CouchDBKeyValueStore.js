@@ -43,7 +43,6 @@ const CouchDBKeyValueStore = class extends KeyValueStore {
 		// Create the keyValStore instance
 		super();
 
-		const self = this;
 		// url is the database instance url
 		this._url = options.url;
 		// Name of the database, optional
@@ -52,125 +51,90 @@ const CouchDBKeyValueStore = class extends KeyValueStore {
 		} else {
 			this._name = options.name;
 		}
-
-		return new Promise(((resolve, reject) => {
-			// Initialize the CouchDB database client
-			const dbClient = nano(self._url);
-			// Check if the database already exists. If not, create it.
-			dbClient.db.get(self._name, (err) => {
-				// Check for error
-				if (err) {
-					// Database doesn't exist
-					if (err.error === 'not_found') {
-						logger.debug('No %s found, creating %s', self._name, self._name);
-
-						dbClient.db.create(self._name, (error) => {
-							if (error) {
-								return reject(new Error(util.format('Failed to create %s database due to error: %s', self._name, error.stack ? error.stack : error)));
-							}
-
-							logger.debug('Created %s database', self._name);
-							// Specify it as the database to use
-							self._database = dbClient.use(self._name);
-							resolve(self);
-						});
-					} else {
-						// Other error
-						return reject(new Error(util.format('Error creating %s database to store membership data: %s', self._name, err.stack ? err.stack : err)));
-					}
-				} else {
-					// Database exists
-					logger.debug('%s already exists', self._name);
-					// Specify it as the database to use
-					self._database = dbClient.use(self._name);
-					resolve(self);
-				}
-			});
-		}));
 	}
 
-	getValue(name) {
+	async initialize() {
+
+		// Initialize the CouchDB database client
+		const dbClient = nano(this._url);
+		const get = util.promisify(dbClient.db.get);
+		try {
+			await get(this._name);
+			// Database exists
+			logger.debug('%s already exists', this._name);
+			// Specify it as the database to use
+			this._database = dbClient.use(this._name);
+		} catch (err) {
+			if (err.error === 'not_found') {
+				logger.debug('No %s found, creating %s', this._name);
+				const create = util.promisify(dbClient.db.create);
+				try {
+					await create(this._name);
+					logger.debug('Created %s database', this._name);
+					// Specify it as the database to use
+					this._database = dbClient.use(this._name);
+				} catch (error) {
+					throw new Error(util.format('Failed to create %s database due to error: %s', this._name, error.stack ? error.stack : error.description));
+				}
+			} else {
+				// Other error
+				throw new Error(util.format('Error initializing database to store membership data: %s', this._name, err.stack ? err.stack : err.description));
+			}
+		}
+	}
+
+	async getValue(name) {
 		logger.debug('getValue', {key: name});
 
-		const self = this;
-		return new Promise(((resolve, reject) => {
-			self._database.get(name, (err, body) => {
-				// Check for error on retrieving from database
-				if (err) {
-					if (err.error !== 'not_found') {
-						logger.error('getValue: %s, ERROR: [%s.get] - ', name, self._name, err.error);
-						return reject(err.error);
-					} else {
-						logger.debug('getValue: %s, Entry does not exist', name);
-						return resolve(null);
-					}
-				} else {
-					logger.debug('getValue: %s, Retrieved message from %s.', name, self._name);
-					return resolve(body.member);
-				}
-			});
-		}));
+		const get = util.promisify(this._database.get);
+
+		try {
+			const body = await get(name);
+			return body.member;
+		} catch (err) {
+			if (err.error !== 'not_found') {
+				logger.error('getValue: %s, ERROR: [%s.get] - ', name, this._name, err.error);
+				throw err;
+			} else {
+				logger.debug('getValue: %s, Entry does not exist', name);
+				return null;
+			}
+		}
 	}
 
-	setValue(name, value) {
+	async setValue(name, value) {
 		logger.debug('setValue', {key: name});
 
-		const self = this;
+		const insert = util.promisify(this._database.insert);
+		const get = util.promisify(this._database.get);
+		let isNew;
+		let body;
+		try {
+			// perform a get to see if the key exists
+			body = await get(name);
 
-		return new Promise(((resolve, reject) => {
-			// Attempt to retrieve from the database to see if the entry exists
-			self._database.get(name, (err, body) => {
-				// Check for error on retrieving from database
-				if (err) {
-					if (err.error !== 'not_found') {
-						logger.error('setValue: %s, ERROR: [%s.get] - ', name, self._name, err.error);
-						reject(err.error);
-					} else {
-						// Entry does not exist
-						logger.debug('setValue: %s, Entry does not exist, insert it.', name);
-						self._dbInsert({_id: name, member: value})
-							.then((status) => {
-								logger.debug('setValue add: ' + name + ', status: ' + status);
-								if (status === true) {
-									resolve(value);
-								} else {
-									reject(new Error('Couch database insert add failed.'));
-								}
-							});
-					}
-				} else {
-					// Entry already exists and must be updated
-					// Update the database entry using the latest rev number
-					logger.debug('setValue: %s, Retrieved entry from %s. Latest rev number: %s', name, self._name, body._rev);
+			// Didn't error, so it exists
+			isNew = false;
+		} catch (error) {
+			if (error.error !== 'not_found') {
+				logger.error('setValue: %s, key check ERROR: - ', name, error.error);
+				throw error;
+			} else {
+				// Does not exist
+				isNew = true;
+			}
+		}
 
-					self._dbInsert({_id: name, _rev: body._rev, member: value})
-						.then((status) => {
-							logger.debug('setValue update: ' + name + ', status: ' + status);
-							if (status === true) {
-								resolve(value);
-							} else {
-								reject(new Error('Couch database insert update failed.'));
-							}
-						});
-				}
-			});
-		}));
-	}
-
-	_dbInsert(options) {
-		logger.debug('setValue, _dbInsert', {options: options});
-		const self = this;
-		return new Promise(((resolve, reject) => {
-			self._database.insert(options, (err) => {
-				if (err) {
-					logger.error('setValue, _dbInsert, ERROR: [%s.insert] - ', self._name, err.error);
-					reject(new Error(err.error));
-				} else {
-					logger.debug('setValue, _dbInsert, Inserted member into %s.', self._name);
-					resolve(true);
-				}
-			});
-		}));
+		// conditionally perform the set/update
+		const opts = isNew ? {_id: name, member: value} : {_id: name, _rev: body._rev, member: value};
+		try {
+			await insert(opts);
+			logger.debug('setValue [add]: ' + name + ', status: SUCCESS');
+			return value;
+		} catch (err) {
+			logger.debug('Couch database insert: ' + name + ', status: FAILED');
+			throw err;
+		}
 	}
 };
 

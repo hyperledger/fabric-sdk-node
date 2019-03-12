@@ -55,7 +55,7 @@ async function manually(t, client) {
 		const pem = Buffer.from(data).toString();
 		t.pass('Successfully read all crypto material');
 
-		client.setAdminSigningIdentity(key, cert, 'OrdererMSP');
+		await client.setAdminSigningIdentity(key, cert, 'OrdererMSP');
 		t.pass('Successfully set the client with admin signing identity');
 
 		const sys_channel = client.newChannel('testchainid');

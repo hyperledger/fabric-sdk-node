@@ -198,12 +198,7 @@ const FabricCAServices = class extends BaseClient {
 			}
 		}
 
-		let opts;
-		if (this.getCryptoSuite()._cryptoKeyStore) {
-			opts = {ephemeral: false};
-		} else {
-			opts = {ephemeral: true};
-		}
+		const storeKey = this.getCryptoSuite()._cryptoKeyStore ? true : false;
 
 		try {
 			let csr;
@@ -213,7 +208,11 @@ const FabricCAServices = class extends BaseClient {
 				csr = req.csr;
 			} else {
 				try {
-					privateKey = await this.getCryptoSuite().generateKey(opts);
+					if (storeKey) {
+						privateKey = await this.getCryptoSuite().generateKey();
+					} else {
+						privateKey = this.getCryptoSuite().generateEphemeralKey();
+					}
 					logger.debug('successfully generated key pairs');
 				} catch (err) {
 					throw new Error(util.format('Failed to generate key for enrollment due to error [%s]', err));
