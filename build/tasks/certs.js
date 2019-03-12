@@ -31,8 +31,7 @@ gulp.task('get-crypto-binaries-amd64', shell.task(
 );
 
 gulp.task('get-crypto-binaries-mac', shell.task(
-	'mkdir -p ' + binariesPath + ';' +
-	'wget ' + darwinBinaries + ' -P ' + binariesPath + ';' +
+	'curl --create-dirs --output ' + binariesPath + '/' + darwinTarFile + ' ' + darwinBinaries + ';' +
 	'tar xvzf ' + binariesPath + '/' + darwinTarFile + ' -C ' + binariesPath + ';')
 );
 

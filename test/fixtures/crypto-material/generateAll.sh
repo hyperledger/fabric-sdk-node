@@ -6,8 +6,8 @@ CRYPTOGEN=$1
 echo ''
 echo "Crypto-gen scripts running based on binaries location ${CRYPTOGEN}"
 
-BASEDIR=$(dirname $(realpath $0))
-${BASEDIR}/config-base/generate.sh ${CRYPTOGEN}
-${BASEDIR}/config-update/generate.sh ${CRYPTOGEN}
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+"${BASEDIR}/config-base/generate.sh" ${CRYPTOGEN}
+"${BASEDIR}/config-update/generate.sh" ${CRYPTOGEN}
 
 echo ''
