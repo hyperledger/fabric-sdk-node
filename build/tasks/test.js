@@ -179,6 +179,12 @@ gulp.task('run-test', (done) => {
 	runSequence(...tasks, done);
 });
 
+// fabric end-to-end test
+gulp.task('run-end-to-end', (done) => {
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'run-tape-e2e'];
+	runSequence(...tasks, done);
+});
+
 // Main test method to run all test suites
 // - lint, unit first, then FV, then scenario
 gulp.task('run-test-integration', (done) => {
