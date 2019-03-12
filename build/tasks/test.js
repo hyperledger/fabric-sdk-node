@@ -24,7 +24,7 @@ const testConstants = require('../../test/unit/constants.js');
 process.env.DOCKER_DEBUG = 'INFO';
 
 // by default for running the tests print debug to a file
-const debugPath = path.join(testConstants.tempdir, 'test-log', 'debug.log');
+const debugPath = path.join(testConstants.tempdir, 'debug.log');
 process.env.HFC_LOGGING = util.format('{"debug":"%s"}', escapeWindowsPath(debugPath));
 
 function escapeWindowsPath(p) {

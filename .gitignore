@@ -19,6 +19,8 @@ tmp
 *.heapsnapshot
 
 #test files
+test/temp/**
+!test/temp/.noignore
 test/fixtures/crypto-material/crypto-config/
 test/fixtures/crypto-material/channel-config/
 test/fixtures/crypto-material/config-base/twoorgs.genesis.block
