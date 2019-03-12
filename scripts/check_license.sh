@@ -32,6 +32,7 @@ function filterExcludedFiles {
 		| grep -v "\.jar$" \
 		| grep -v "\.csr$" \
 		| grep -v "\.proto$" \
+		| grep -v "\ci.properties$" \
 		| sort -u`
 }
 

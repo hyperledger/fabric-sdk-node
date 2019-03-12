@@ -100,7 +100,8 @@ gulp.task('docker-clean', shell.task([
 
 	// clean up all the containers created by docker-compose
 	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls-level-db.yaml -p node down',
-	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls.yaml -p node down'
+	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls.yaml -p node down',
+	'docker ps -a'
 ], {
 	verbose: true, // so we can see the docker command output
 	ignoreErrors: true // kill, rm, and rmi may fail because the containers may have been cleaned up or not exist
@@ -108,7 +109,8 @@ gulp.task('docker-clean', shell.task([
 
 gulp.task('docker-ready', ['docker-clean'], shell.task([
 	// make sure that necessary containers are up by docker-compose
-	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls-level-db.yaml -p node up -d'
+	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls-level-db.yaml -p node up -d && sleep 15',
+	'docker ps -a'
 ]));
 
 gulp.task('lint', ['eslint', 'tslint']);
