@@ -147,7 +147,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 		Promise.reject('Unsupported test ccType: ' + ccType);
 	}
 
-	Client.setConfigSetting('request-timeout', 120000);
+	Client.setConfigSetting('request-timeout', 300000);
 
 	const type = upgrade ? 'upgrade' : 'instantiate';
 

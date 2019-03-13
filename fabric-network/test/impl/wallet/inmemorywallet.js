@@ -85,6 +85,13 @@ describe('InMemoryWallet', () => {
 			});
 		});
 
+		describe('#getIdentityInfo', () => {
+			it('should not return null', async () => {
+				wallet.getAllLabels = () => Promise.resolve(['user3']);
+				const info = await wallet.list();
+				info.should.deep.equal([{label: 'user3', mspId: 'not provided', identifier: 'not provided'}]);
+			});
+		});
 	});
 
 	describe('label storage', () => {
@@ -206,13 +213,23 @@ mb3MM6J+V7kciO3hSyP5OJSBPWGlsjxQj2m55aFutmlleVfr6YiaLnYd
 				const list = await wallet.list();
 				list.length.should.equal(0);
 			});
-		});
 
+			it('should return a list containing not provided', async () => {
+				wallet.walletMixin.getIdentityInfo = () => null;
+				const list = await wallet.list();
+				list.length.should.equal(2);
+				list[0].mspId.should.equal('not provided');
+				list[1].mspId.should.equal('not provided');
+			});
+		});
 	});
 
-	describe('InMemoryKVS', async () => {
-		const wallet = new InMemoryWallet();
-		const store = await wallet.getStateStore('test');
+	describe('InMemoryKVS', () => {
+		let store;
+		beforeEach(async () => {
+			const wallet = new InMemoryWallet();
+			store = await wallet.getStateStore('test');
+		});
 
 		it('#getValue', async () => {
 			await store.setValue('user1', 'val1');

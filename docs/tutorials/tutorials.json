@@ -35,6 +35,15 @@
 	"query-peers": {
 		"title": "fabric-network: How to select peers for evaluating transactions (queries)"
 	},
+	"event-checkpointer": {
+		"title": "fabric-network: How to replay missed events"
+	},
+	"event-hub-management": {
+		"title": "fabric-network: How to automatically select and reconnect to event hubs"
+	},
+	"listening-to-events": {
+		"title": "fabric-network: How to listen to events"
+	},
 	"grpc-settings": {
 		"title": "fabric-client: How to set gRPC settings"
 	},

@@ -212,6 +212,18 @@ describe('CouchDBWalletKeyValueStore', () => {
 			const deleted = await kvs.delete('key');
 			deleted.should.be.false;
 		});
+
+		it('should return false if error occurs when finding the key', async () => {
+			destroyStub.yields(new Error());
+			const deleted = await kvs.delete('key');
+			deleted.should.be.false;
+		});
+
+		it('should return false if error occurs when finding the key', async () => {
+			destroyStub.yields(new Error());
+			const deleted = await kvs.delete('key');
+			deleted.should.be.false;
+		});
 	});
 
 	describe('#exists', () => {

@@ -21,6 +21,7 @@ const logger = utils.getLogger('ChannelEventHub.js');
 const {Identity} = require('./msp/identity');
 const TransactionID = require('./TransactionID');
 const util = require('util');
+const EventHubDisconnectError = require('./errors/EventHubDisconnectError');
 
 const BlockDecoder = require('./BlockDecoder.js');
 
@@ -588,7 +589,7 @@ class ChannelEventHub {
 
 	/**
 	 * Disconnects the ChannelEventHub from the peer event source.
-	 * Will close all event listeners and send an Error object
+	 * Will close all event listeners and send an EventHubDisconnectError object
 	 * with the message "ChannelEventHub has been shutdown" to
 	 * all listeners that provided an "onError" callback.
 	 */
@@ -597,14 +598,14 @@ class ChannelEventHub {
 			logger.debug('disconnect - disconnect is running');
 		} else {
 			this._disconnect_running = true;
-			this._disconnect(new Error('ChannelEventHub has been shutdown'));
+			this._disconnect(new EventHubDisconnectError('ChannelEventHub has been shutdown'));
 			this._disconnect_running = false;
 		}
 	}
 
 	/**
 	 * Disconnects the ChannelEventHub from the fabric peer service.
-	 * Will close all event listeners and send an Error object
+	 * Will close all event listeners and send an EventHubDisconnectError object
 	 * with the message "ChannelEventHub has been shutdown" to
 	 * all listeners that provided an "onError" callback.
 	 */
@@ -1387,6 +1388,10 @@ class ChannelEventHub {
 		}
 	}
 
+	isFiltered() {
+		return !!this._filtered_stream;
+	}
+
 	/*
 	 * private internal method for processing block events
 	 * @param {Object} block protobuf object
@@ -1462,7 +1467,7 @@ class ChannelEventHub {
 		}
 		if (trans_reg.disconnect) {
 			logger.debug('_callTransactionListener - automatically disconnect');
-			this._disconnect(new Error('Shutdown due to disconnect on transaction id registration'));
+			this._disconnect(new EventHubDisconnectError('Shutdown due to disconnect on transaction id registration'));
 		}
 	}
 
@@ -1556,7 +1561,7 @@ class ChannelEventHub {
 					logger.debug('_callChaincodeListener - automatically unregister tx listener for %s', tx_id);
 				}
 				if (chaincode_reg.event_reg.disconnect) {
-					this._disconnect(new Error('Shutdown due to disconnect on transaction id registration'));
+					this._disconnect(new EventHubDisconnectError('Shutdown due to disconnect on transaction id registration'));
 				}
 			} else {
 				logger.debug('_callChaincodeListener - NOT calling chaincode listener callback');
@@ -1577,7 +1582,7 @@ class ChannelEventHub {
 						this._start_stop_registration.unregister_action();
 					}
 					if (this._start_stop_registration.disconnect) {
-						this._disconnect(new Error('Shutdown due to end block number has been seen'));
+						this._disconnect(new EventHubDisconnectError('Shutdown due to end block number has been seen'));
 					}
 				}
 			}

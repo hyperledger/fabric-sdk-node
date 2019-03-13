@@ -20,6 +20,12 @@ export interface GatewayOptions {
 	discovery?: DiscoveryOptions;
 	eventHandlerOptions?: DefaultEventHandlerOptions;
 	queryHandlerOptions?: DefaultQueryHandlerOptions;
+	checkpointer?: CheckpointerOptions;
+}
+
+export interface CheckpointerOptions {
+	factory: CheckpointerFactory;
+	options: object;
 }
 
 export interface DiscoveryOptions {
@@ -39,7 +45,7 @@ export class DefaultEventHandlerStrategies {
 	public static NETWORK_SCOPE_ANYFORTX: TxEventHandlerFactory;
 }
 
-export type TxEventHandlerFactory = (transactionId: TransactionId, network: Network, options: object) => TxEventHandler;
+export type TxEventHandlerFactory = (transaction: Transaction, options: object) => TxEventHandler;
 
 export interface TxEventHandler {
 	startListening(): Promise<void>;
@@ -83,12 +89,15 @@ export class Gateway {
 export interface Network {
 	getChannel(): Channel;
 	getContract(chaincodeId: string, name?: string): Contract;
+	addBlockListener(listenerName: string, callback: (block: Client.Block) => void, options?: object): BlockEventListener;
+	addCommitListener(listenerName: string, callback: (error: Error, transactionId: string, status: string, blockNumber: string) => void, options?: object): TransactionEventListener;
 }
 
 export interface Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
+	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event: {[key: string]: any}, blockNumber: string, transactionId: string, status: string) => void, options?: object): ContractEventListener;
 }
 
 export interface TransientMap {
@@ -98,16 +107,18 @@ export interface Transaction {
 	evaluate(...args: string[]): Promise<Buffer>;
 	getName(): string;
 	getTransactionID(): TransactionId;
+	getNetwork(): Network;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
+	addCommitListener(callback: (error: Error, transactionId: string, status: string, blockNumber: string) => void, options: object, eventHub?: Client.ChannelEventHub): void;
 }
 
-export interface FabricError {
+export interface FabricError extends Error {
 	cause?: Error;
 	transactionId?: string;
 }
 
-export class TimeoutError implements FabricError {}
+export interface TimeoutError extends FabricError {} // tslint:disable-line:no-empty-interface
 
 //-------------------------------------------
 // Wallet Management
@@ -171,4 +182,55 @@ export class X509WalletMixin implements WalletMixin {
 export class HSMWalletMixin implements WalletMixin {
 	public static createIdentity(mspId: string, certificate: string): Identity;
 	constructor();
+}
+
+export interface Checkpoint {
+	blockNumber: number;
+	transactionIds: string[];
+}
+
+export class BaseCheckpointer {
+	public setChaincodeId(chaincodeId: string): void;
+}
+
+export class FileSystemCheckpointer extends BaseCheckpointer {
+	constructor();
+	public initialize(channelName: string, listenerName: string): void;
+	public save(transactionId: string, blockNumber: string): void;
+	public load(): Checkpoint;
+}
+
+export type CheckpointerFactory = (channelName: string, listenerName: string, options: object) => BaseCheckpointer;
+
+export class EventHubManager {
+	constructor();
+	public getEventHub(peer: Client.Peer): Client.ChannelEventHub;
+	public getEventHubs(peers: Client.Peer[]): Client.ChannelEventHub[];
+	public getReplayEventHub(peer: Client.Peer): Client.ChannelEventHub;
+	public getReplayEventHubs(peers: Client.Peer[]): Client.ChannelEventHub[];
+}
+
+export class TransactionEventListener {
+	public register(): void;
+	public setEventHub(eventHub: Client.ChannelEventHub): void;
+	public unregister(): void;
+}
+
+export class ContractEventListener {
+	public register(): void;
+	public unregister(): void;
+}
+
+export class BlockEventListener {
+	public register(): void;
+	public unregister(): void;
+}
+
+export interface BaseEventHubSelectionStrategy {
+	getNextPeer(): Client.Peer;
+	updateEventHubAvailability(deadPeer: Client.Peer): void;
+}
+
+export class DefaultEventHubSelectionStrategies {
+	public static MSPID_SCOPE_ROUND_ROBIN: BaseEventHubSelectionStrategy;
 }
