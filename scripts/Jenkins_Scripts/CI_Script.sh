@@ -28,7 +28,7 @@ err_Check() {
   docker logs couchdb >& couchdb.log
 
   # Copy debug log
-  cp /tmp/hfc/test-log/*.log $WORKSPACE || true
+  cp ${WORKSPACE}/gopath/src/github.com/hyperledger/fabric-sdk-node/test/temp/*.log $WORKSPACE || true
   clean_Environment
   exit 1
 }
