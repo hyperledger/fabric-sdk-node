@@ -4,8 +4,8 @@
 #
 
 # Set the path to teh crypto material to ensure it may be used
-CRYPTOGEN="$1"
-export PATH="${PATH}:${CRYPTOGEN}"
+CRYPTOGEN=$1
+export PATH=${CRYPTOGEN}:${PATH}
 
 # Get current location to ensure things go to the correct place
 BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"

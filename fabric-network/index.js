@@ -60,4 +60,6 @@ module.exports.FileSystemWallet = require('./lib/impl/wallet/filesystemwallet');
 module.exports.CouchDBWallet = require('./lib/impl/wallet/couchdbwallet');
 module.exports.DefaultEventHandlerStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 module.exports.DefaultQueryHandlerStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
+module.exports.CheckpointFactories = require('fabric-network/lib/impl/event/checkpointfactories');
+module.exports.EventHubSelectionStrategies = require('fabric-network/lib/impl/event/defaulteventhubselectionstrategies');
 module.exports.TimeoutError = require('fabric-network/lib/errors/timeouterror');

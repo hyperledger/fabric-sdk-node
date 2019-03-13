@@ -27,7 +27,10 @@ describe('BaseWallet', () => {
 	});
 
 	describe('Unimplemented methods', () => {
-		const wallet = new BaseWallet();
+		let wallet;
+		beforeEach(() => {
+			wallet = new BaseWallet();
+		});
 
 		it('throws exception calling import()', () => {
 			return wallet.import(null, null).should.be.rejectedWith('Not implemented');
@@ -55,5 +58,4 @@ describe('BaseWallet', () => {
 		});
 
 	});
-
 });

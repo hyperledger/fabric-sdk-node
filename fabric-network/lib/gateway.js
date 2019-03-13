@@ -11,6 +11,8 @@ const Client = require('fabric-client');
 const Network = require('./network');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
+const EventHubSelectionStrategies = require('fabric-network/lib/impl/event/defaulteventhubselectionstrategies');
+const CheckpointFactories = require('fabric-network/lib/impl/event/checkpointfactories');
 
 const logger = require('./logger').getLogger('Gateway');
 
@@ -25,6 +27,8 @@ const logger = require('./logger').getLogger('Gateway');
  * @property {module:fabric-network.Gateway~DefaultQueryHandlerOptions} [queryHandlerOptions] Options for the inbuilt
  * default query handler capability.
  * @property {module:fabric-network.Gateway~DiscoveryOptions} [discovery] Discovery options.
+ * @property {module:fabric-network.Gateway~DefaultEventHubSelectionOptions} [eventHubSelectionOptions] Event hub selection options.
+ * @property {module:fabric-network.Network~CheckpointerFactory} [checkpointer] Event hub selection options.
  */
 
 /**
@@ -56,6 +60,38 @@ const logger = require('./logger').getLogger('Gateway');
  * @property {Function} cancelListening Cancel listening. Called if submission of the transaction to the orderer
  * fails.
  */
+
+/**
+ * @typedef {Object} Gateway~CheckpointerFactory
+ * @memberof module:fabric-network
+ * @param {String} channelName the name of the channel the checkpoint exists in
+ * @param {String} listenerName the name of the listener being checkpointed
+ * @param {Object} [options] Optional. Options to configure behaviour of customer checkpointers i.e.
+ * Supplying database connection details
+ * @returns {BaseCheckpointer}
+ */
+
+/**
+ * @typedef {Object} Gateway~DefaultEventHubSelectionOptions
+ * @memberof module:fabric-network
+ * @property {?module:fabric-network.Gateway~DefaultEventHubSelectionFactory} [strategy=MSPID_SCOPE_ROUND_ROBIN] Selects the next
+ * event hub in the event of a new listener being created or an event hub disconnect
+ */
+
+/**
+ * @typedef {Object} Gateway~DefaultEventHubSelectionFactory
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network} network The network the event hub is being selected for
+ * @returns {module:fabric-network.Gateway~BaseEventHubSelectionStrategy}
+ */
+
+/**
+  * @typedef {Object} Gateway~BaseEventHubSelectionStrategy
+  * @memberof module:fabric-network
+  * @property {Function} getNextPeer Function that returns the next peer in the list of available peers
+  * @property {Function} updateEventHubAvailability Function that updates the availability of an event hub
+  */
+
 
 /**
  * @typedef {Object} Gateway~DefaultQueryHandlerOptions
@@ -129,6 +165,13 @@ class Gateway {
 			},
 			discovery: {
 				enabled: Client.getConfigSetting('initialize-with-discovery', true)
+			},
+			checkpointer: {
+				factory: CheckpointFactories.FILE_SYSTEM_CHECKPOINTER,
+				options: {}
+			},
+			eventHubSelectionOptions: {
+				strategy: EventHubSelectionStrategies.MSPID_SCOPE_ROUND_ROBIN,
 			}
 		};
 	}

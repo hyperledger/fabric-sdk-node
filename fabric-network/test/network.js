@@ -12,7 +12,6 @@ const InternalChannel = rewire('fabric-client/lib/Channel');
 const Peer = InternalChannel.__get__('ChannelPeer');
 const Client = require('fabric-client');
 const ChannelEventHub = Client.ChannelEventHub;
-const EventHubFactory = require('fabric-network/lib/impl/event/eventhubfactory');
 const TransactionID = require('fabric-client/lib/TransactionID.js');
 const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
 
@@ -25,6 +24,10 @@ const Network = require('../lib/network');
 const Gateway = require('../lib/gateway');
 const Contract = require('../lib/contract');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
+const AbstractEventHubSelectionStrategy = require('fabric-network/lib/impl/event/abstracteventhubselectionstrategy');
+const EventHubManager = require('fabric-network/lib/impl/event/eventhubmanager');
+const CommitEventListener = require('fabric-network/lib/impl/event/commiteventlistener');
+const BlockEventListener = require('fabric-network/lib/impl/event/blockeventlistener');
 
 describe('Network', () => {
 	let mockChannel, mockClient;
@@ -33,9 +36,13 @@ describe('Network', () => {
 	let network;
 	let mockTransactionID, mockGateway;
 	let stubQueryHandler;
+	let stubEventHubSelectionStrategy;
+	let mockEventHubManager;
+	let mockEventHub;
 
 	beforeEach(() => {
 		mockChannel = sinon.createStubInstance(InternalChannel);
+		mockEventHub = sinon.createStubInstance(ChannelEventHub);
 		mockClient = sinon.createStubInstance(Client);
 		mockTransactionID = sinon.createStubInstance(TransactionID);
 		mockTransactionID.getTransactionID.returns('00000000-0000-0000-0000-000000000000');
@@ -73,6 +80,8 @@ describe('Network', () => {
 
 		stubQueryHandler = {};
 
+		stubEventHubSelectionStrategy = sinon.createStubInstance(AbstractEventHubSelectionStrategy);
+
 		mockGateway = sinon.createStubInstance(Gateway);
 		mockGateway.getOptions.returns({
 			useDiscovery: false,
@@ -85,14 +94,24 @@ describe('Network', () => {
 					stubQueryHandler.network = theNetwork;
 					return stubQueryHandler;
 				}
+			},
+			eventHubSelectionOptions: {
+				strategy: (theNetwork) => {
+					stubEventHubSelectionStrategy.network = theNetwork;
+					return stubEventHubSelectionStrategy;
+				}
 			}
 		});
 
 		mockGateway.getClient.returns(mockClient);
 		mockClient.getPeersForOrg.returns([mockPeer1, mockPeer2]);
 
-		network = new Network(mockGateway, mockChannel);
+		mockEventHubManager = sinon.createStubInstance(EventHubManager);
+		mockEventHubManager.getPeers.returns([mockPeer1, mockPeer2]);
+		mockEventHubManager.getEventHub.returns(mockEventHub);
 
+		network = new Network(mockGateway, mockChannel);
+		network.eventHubManager = mockEventHubManager;
 	});
 
 	afterEach(() => {
@@ -231,16 +250,16 @@ describe('Network', () => {
 		});
 
 		it('calls dispose() on the event hub factory', () => {
-			const spy = sinon.spy(network.getEventHubFactory(), 'dispose');
+			const spy = network.getEventHubManager().dispose;
 			network._dispose();
 			sinon.assert.called(spy);
 		});
-	});
 
-	describe('#getEventHubFactory', () => {
-		it('Returns an EventHubFactory', () => {
-			const result = network.getEventHubFactory();
-			result.should.be.an.instanceOf(EventHubFactory);
+		it('calls unregister on its listeners', () => {
+			const mockListener = sinon.createStubInstance(BlockEventListener);
+			network.listeners.set('mockListener', mockListener);
+			network._dispose();
+			sinon.assert.calledOnce(mockListener.unregister);
 		});
 	});
 
@@ -257,6 +276,88 @@ describe('Network', () => {
 			const result = network.getQueryHandler();
 
 			result.network.should.equal(network);
+		});
+	});
+
+	describe('#addCommitListener', () => {
+		let listenerName;
+		let callback;
+		beforeEach(() => {
+			listenerName = '00000000-0000-0000-0000-000000000000';
+			callback = () => {};
+			mockEventHub._transactionRegistrations = {};
+			mockEventHub._transactionRegistrations[listenerName] = {}; // Preregister listener with eh
+		});
+
+		it('should create options if the options param is undefined', async () => {
+			const listener = await network.addCommitListener(listenerName, callback, null, mockEventHub);
+			listener.should.to.be.instanceof(CommitEventListener);
+			listener.eventHub.should.to.equal(mockEventHub);
+			network.listeners.get(listener.listenerName).should.to.equal(listener);
+		});
+
+		it('should create an instance of BlockEventListener and add it to the list of listeners', async () => {
+			const listener = await network.addCommitListener(listenerName, callback, {}, mockEventHub);
+			listener.should.to.be.instanceof(CommitEventListener);
+			listener.eventHub.should.to.equal(mockEventHub);
+			network.listeners.get(listener.listenerName).should.to.equal(listener);
+		});
+
+		it('should not set an event hub if an event hub is not given', async () => {
+			mockEventHubManager.getReplayEventHub.returns(mockEventHub);
+			const listener = await network.addCommitListener(listenerName, callback, null);
+			listener.eventHub.should.equal(mockEventHub);
+		});
+	});
+
+	describe('#addBlockListener', () => {
+		let listenerName;
+		let callback;
+		beforeEach(() => {
+			listenerName = 'testBlockListener';
+			callback = () => {};
+		});
+
+		it('should create options if the options param is undefined', async () => {
+			const listener = await network.addBlockListener(listenerName, callback);
+			listener.should.to.be.instanceof(BlockEventListener);
+			network.listeners.get(listenerName).should.to.equal(listener);
+		});
+
+		it('should create an instance of BlockEventListener and add it to the list of listeners', async () => {
+			const listener = await network.addBlockListener(listenerName, callback, {});
+			listener.should.to.be.instanceof(BlockEventListener);
+			network.listeners.get(listenerName).should.to.equal(listener);
+		});
+
+		it('should change options.replay=undefined to options.replay=false', async () => {
+			sinon.spy(network, 'getCheckpointer');
+			await network.addBlockListener(listenerName, callback, {replay: undefined});
+			sinon.assert.calledWith(network.getCheckpointer, {checkpointer: undefined, replay: false});
+		});
+
+		it('should change options.replay=\'true\' to options.replay=true', async () => {
+			sinon.spy(network, 'getCheckpointer');
+			await network.addBlockListener(listenerName, callback, {replay: 'true'});
+			sinon.assert.calledWith(network.getCheckpointer, {checkpointer: undefined, replay: true});
+		});
+	});
+
+	describe('#saveListener', () => {
+		it ('should register a new listener if the name isnt taken', () => {
+			const listener = {};
+			network.listeners.set('listener1', {});
+			network.saveListener('listener2', listener);
+			network.listeners.get('listener2').should.equal(listener);
+		});
+
+		it('should throw if the listener is registered with an existing name', () => {
+			const listener = sinon.createStubInstance(BlockEventListener);
+			network.listeners.set('listener1', listener);
+			(() => {
+				network.saveListener('listener1', listener);
+			}).should.throw('Listener already exists with the name listener1');
+			sinon.assert.called(listener.unregister);
 		});
 	});
 });

@@ -14,7 +14,7 @@
 // global shared library from ci-management repository
 // https://github.com/hyperledger/ci-management/tree/master/vars (Global Shared scripts)
 timestamps { // set the timestamps on the jenkins console
-  timeout(40) { // Build timeout set to 40 mins
+  timeout(60) { // Build timeout set to 60 mins
     if(env.NODE_ARCH != "hyp-x") {
       node ('hyp-z') { // trigger jobs on s390x builds nodes
         env.NODE_VER = "8.14.0" // Set node version
