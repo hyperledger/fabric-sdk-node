@@ -1,12 +1,14 @@
-## Hyperledger Fabric Common for Node.js
+## Hyperledger Fabric Protos for Node.js
 
 SDK for writing node.js applications to interact with [Hyperledger Fabric](http://hyperledger-fabric.readthedocs.io/en/latest/).
 
-This package encapsulates the common code used by the `fabric-ca-client`, `fabric-client` packages. Additional packages are also provided:
+This package encapsulates the Protocol Buffer files and generated JavaScript classes for Hyperledger Fabric. 
+
+Additional packages are also provided:
 1. `fabric-client`, supporting fine grain interactions with Peers and Orders of the Fabric network to install and instantiate chaincodes, send transaction invocations and perform chaincode queries.
 2. `fabric-ca-client`, to interact with the fabric-ca to manage user certificates.
 3. `fabric-network`, to provide APIs to connect to a Fabric network, submit transactions and perform queries against the ledger.
-5. `fabric-protos`, encapsulates the Protocol Buffer files and generated JavaScript classes for Hyperledger Fabric
+4. `fabric-common`, encapsulates the common code used by all fabric-sdk-node packages.
 
 For application developer documentations, please visit [https://fabric-sdk-node.github.io/](https://fabric-sdk-node.github.io/)
 
