@@ -7,7 +7,7 @@
 // Set env vars for the channel name and subdir for token e2e tests
 
 process.env.channel = 'tokenchannel';
-process.env.channeltx_subdir = 'v2';
+process.env.channeltx_subdir = 'config-v2';
 
 // Create and join the channel and then run token e2e tests
 require('./e2e/create-channel.js');

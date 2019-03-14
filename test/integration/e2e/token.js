@@ -148,6 +148,7 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 });
 
 test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (t) => {
+	let transferToken;
 	try {
 		// create TokenClient for user1 (admin user in org1)
 		const user1ClientObj = await e2eUtils.createTokenClient('org1', channel_name, 'localhost:7051', t);
@@ -187,7 +188,7 @@ test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (
 		logger.debug('\nuser1(org1) listed %d tokens after issue: \n%s', result.length, util.inspect(result, false, null));
 		validateTokens(result, [param], 'for user1 (owner) after issue', t);
 
-		const transferToken = result[0];
+		transferToken = result[0];
 
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
@@ -216,18 +217,23 @@ test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (
 		};
 
 		// user1 transfers token again using the same tokenIds
-		result = await user1TokenClient.transfer(request);
-		await waitForTxEvent(eventhub, txId.getTransactionID(), 'INVALID_OTHER_REASON', t);
-
+		await user1TokenClient.transfer(request);
+		t.fail('Transfer should have failed due to double spending');
 		t.end();
 	} catch (err) {
-		logger.error(err);
-		t.fail('Failed to test token commands due to error: ' + err.stack ? err.stack : err);
+		const tokenId = '(' + transferToken.id.tx_id + ', ' + transferToken.id.index + ')';
+		t.equals(
+			err.message,
+			'command response has error: input TokenId ' + tokenId + ' does not exist or not owned by the user',
+			'Transfer failed as expected because token id has been spent and does not exist any more'
+		);
 		t.end();
 	}
 });
 
 test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', async (t) => {
+	let transferToken;
+
 	try {
 		// create TokenClient for user1 (admin user in org1)
 		// create TokenClient for user1 (admin user in org1)
@@ -268,7 +274,7 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		logger.debug('\nuser1(org1) listed %d tokens after issue: \n%s', result.length, util.inspect(result, false, null));
 		validateTokens(result, [param], 'for user1 (owner) after issue', t);
 
-		const transferToken = result[0];
+		transferToken = result[0];
 
 		// token is owned by user1, but user2 attempts to transfer the token, should fail
 		txId = user2TokenClient.getClient().newTransactionID();
@@ -287,10 +293,12 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		t.fail('');
 		t.end();
 	} catch (err) {
+		const tokenId = '(' + transferToken.id.tx_id + ', ' + transferToken.id.index + ')';
 		t.equals(
 			err.message,
-			'command response has error: the requestor does not own inputs',
-			'Transfer failed as expected because the requestor does not own the token');
+			'command response has error: input TokenId ' + tokenId + ' does not exist or not owned by the user',
+			'Transfer failed as expected because the requestor does not own the token'
+		);
 		t.end();
 	}
 });

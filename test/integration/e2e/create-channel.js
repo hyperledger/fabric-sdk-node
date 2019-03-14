@@ -55,8 +55,8 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', async (t) => {
 	client.setCryptoSuite(cryptoSuite);
 
 	// use the config update created by the configtx tool
-	const channeltx_basename = process.env.channeltx_subdir ? path.join(process.env.channeltx_subdir, channel_name) : channel_name;
-	const envelope_bytes = fs.readFileSync(path.join(__dirname, '../../fixtures/crypto-material/channel-config', channeltx_basename + '.tx'));
+	const channeltx_subdir = process.env.channeltx_subdir ? process.env.channeltx_subdir : 'channel-config';
+	const envelope_bytes = fs.readFileSync(path.join(__dirname, '../../fixtures/crypto-material', channeltx_subdir, channel_name + '.tx'));
 	const config = client.extractChannelConfig(envelope_bytes);
 	t.pass('Successfully extracted the config update from the configtx envelope');
 
