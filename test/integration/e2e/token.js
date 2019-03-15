@@ -236,18 +236,22 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 
 	try {
 		// create TokenClient for user1 (admin user in org1)
-		// create TokenClient for user1 (admin user in org1)
 		const user1ClientObj = await e2eUtils.createTokenClient('org1', channel_name, 'localhost:7051', t);
 		const user1TokenClient = user1ClientObj.tokenClient;
 		const user1Identity = user1ClientObj.user.getIdentity();
 
-		// create TokenClient for user2 (admin user in org2)
-		const user2ClientObj = await e2eUtils.createTokenClient('org2', channel_name, 'localhost:8051', t);
+		// create TokenClient for user2 (admin user in org2), no target peer provided
+		const user2ClientObj = await e2eUtils.createTokenClient('org2', channel_name, undefined, t);
 		const user2TokenClient = user2ClientObj.tokenClient;
 		const user2Identity = user2ClientObj.user.getIdentity();
 
 		await resetTokens(user1TokenClient, 'user1', t);
 		await resetTokens(user2TokenClient, 'user2', t);
+
+		// use BasicProverHandler for this test
+		const req = {proverHandler : 'fabric-client/lib/impl/BasicProverHandler.js'};
+		user1TokenClient.getChannel().initialize(req);
+		user2TokenClient.getChannel().initialize(req);
 
 		const eventhub = user1TokenClient._channel.getChannelEventHub('localhost:7051');
 

@@ -3369,11 +3369,6 @@ const Channel = class {
 			throw new Error(util.format('Missing required "tokenCommand" in request on the %s call', method));
 		}
 
-		// convert any names into peer objects or if empty find all
-		// prover peers added to this channel
-		const targetPeers = this._getTargets(request.targets, Constants.NetworkConfig.PROVER_PEER_ROLE);
-		logger.debug('sendTokenCommand, number targetPeers=%d', targetPeers.length);
-
 		if (this._prover_handler) {
 			logger.debug('%s - running with prover handler', method);
 			const signedCommand = Channel._buildSignedTokenCommand(request, this._name, this._clientContext);
@@ -3387,6 +3382,9 @@ const Channel = class {
 			const response = await this._prover_handler.processCommand(params);
 			return response;
 		} else {
+			// convert any names into peer objects or if empty find all
+			// prover peers added to this channel
+			const targetPeers = this._getTargets(request.targets, Constants.NetworkConfig.PROVER_PEER_ROLE);
 			return Channel.sendTokenCommand(request, targetPeers, this._name, this._clientContext, timeout);
 		}
 	}
