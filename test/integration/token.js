@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// This includes end-to-end tests for the fabric token feature, both positive and negative.
+// This includes end-to-end tests for the fabtoken feature, both positive and negative.
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const util = require('util');
+
 const utils = require('fabric-client/lib/utils.js');
 const tokenUtils = require('fabric-client/lib/token-utils.js');
 const logger = utils.getLogger('E2E token');
@@ -16,11 +19,54 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 
-const e2eUtils = require('./e2eUtils.js');
+const testUtil = require('../unit/util.js');
+const e2eUtils = require('./e2e/e2eUtils.js');
 const fabprotos = require('fabric-protos');
 
-// The channel should be created and joined before running tests in this file
+// The channel for token e2e tests which should be created and joined in setup tests
 const channel_name = process.env.channel ? process.env.channel : 'tokenchannel';
+const channel_path = path.join(__dirname, '../fixtures/crypto-material/config-v2', channel_name + '.tx');
+
+// This setup test creates and joins the "tokenchannel"
+test('\n\n***** setup: create and join the token channel  *****\n\n', async (t) => {
+	// this will use the connection profile to set up the client
+	const client_org1 = await testUtil.getClientForOrg(t, 'org1');
+	const client_org2 = await testUtil.getClientForOrg(t, 'org2');
+
+	client_org1.setConfigSetting('initialize-with-discovery', true);
+
+	// create channel
+	try {
+		await createChannel(t, channel_path, channel_name, client_org1, client_org2); // create the channel
+		t.pass('***** Token channel has been created *****');
+	} catch (error) {
+		t.fail('Failed to create the token channel');
+	}
+
+	// create the peer and orderer objects for the network (must match docker compose yaml)
+	let data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem'));
+	let pem = Buffer.from(data).toString();
+	const peer_org1 = client_org1.newPeer('grpcs://localhost:7051', {pem: pem, 'ssl-target-name-override': 'peer0.org1.example.com', name: 'peer0.org1.example.com'});
+
+	data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp/tlscacerts/tlsca.org2.example.com-cert.pem'));
+	pem = Buffer.from(data).toString();
+	const peer_org2 = client_org2.newPeer('grpcs://localhost:8051', {pem: pem, 'ssl-target-name-override': 'peer0.org2.example.com', name: 'peer0.org2.example.com'});
+
+	data = fs.readFileSync(path.join(__dirname, 'e2e', '../../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'));
+	pem = Buffer.from(data).toString();
+	const orderer_org1 = client_org1.newOrderer('grpcs://localhost:7050', {pem: pem, 'ssl-target-name-override': 'orderer.example.com', name: 'orderer.example.com'});
+	const orderer_org2 = client_org2.newOrderer('grpcs://localhost:7050', {pem: pem, 'ssl-target-name-override': 'orderer.example.com', name: 'orderer.example.com'});
+
+	// join peers to the channel
+	try {
+		await joinChannel(t, channel_name, peer_org1, orderer_org1, client_org1);
+		await joinChannel(t, channel_name, peer_org2, orderer_org2, client_org2);
+		t.pass('***** Token channel has been joined *****');
+	} catch (error) {
+		t.fail('Failed to join token channel');
+	}
+	t.end();
+});
 
 // Positive tests that call issue/transfer/redeem APIs to invoke token transactions
 // and call list API to verify the results.
@@ -520,3 +566,88 @@ async function resetTokens(tokenClient, userName, t) {
 		t.equals(result.status, 'SUCCESS', 'Successfully resetting tokens for user %s', userName);
 	}
 }
+
+async function createChannel(t, file, channelName, client_org1, client_org2) {
+	// get the config envelope created by the configtx tool
+	const envelope_bytes = fs.readFileSync(file);
+	// Have the sdk get the config update object from the envelope.
+	// the config update object is what is required to be signed by all
+	// participating organizations
+	const config = client_org1.extractChannelConfig(envelope_bytes);
+	t.pass('Successfully extracted the config update from the configtx envelope');
+
+	const signatures = [];
+	// sign the config by the  admins
+	const signature1 = client_org1.signChannelConfig(config);
+	signatures.push(signature1);
+	t.pass('Successfully signed config update for org1');
+	const signature2 = client_org2.signChannelConfig(config);
+	signatures.push(signature2);
+	t.pass('Successfully signed config update for org2');
+	// now we have enough signatures...
+
+	// get an admin based transaction
+	const tx_id = client_org1.newTransactionID(true);
+
+	const request = {
+		config: config,
+		signatures : signatures,
+		name : channelName,
+		orderer : 'orderer.example.com',
+		txId  : tx_id
+	};
+
+	try {
+		const results = await client_org1.createChannel(request);
+		if (results.status === 'SUCCESS') {
+			t.pass('Successfully created the channel.');
+			await testUtil.sleep(5000);
+		} else {
+			t.fail('Failed to create the channel. ' + results.status + ' :: ' + results.info);
+			throw new Error('Failed to create the channel. ');
+		}
+	} catch (error) {
+		logger.error('Token channel create - catch network config test error:: %s', error.stack ? error.stack : error);
+		t.fail('Failed to create channel :' + error);
+		throw Error('Failed to create the channel');
+	}
+}
+
+async function joinChannel(t, channelName, peer, orderer, client) {
+	try {
+		const channel = client.newChannel(channelName);
+
+		// get an admin based transaction
+		let tx_id = client.newTransactionID(true);
+
+		let request = {
+			orderer: orderer,
+			txId : 	tx_id
+		};
+
+		const genesis_block = await channel.getGenesisBlock(request);
+		t.pass('Successfully got the genesis block');
+
+		tx_id = client.newTransactionID(true);
+		request = {
+			targets: [peer],
+			block : genesis_block,
+			txId : 	tx_id
+		};
+
+		const join_results = await channel.joinChannel(request, 30000);
+		if (join_results && join_results[0] && join_results[0].response && join_results[0].response.status === 200) {
+			t.pass('Successfully joined channel on org');
+		} else {
+			t.fail('Failed to join channel on org');
+			throw new Error('Failed to join channel on org');
+		}
+
+		return channel;
+	} catch (error) {
+		logger.error('Not able to join ' + error);
+		t.fail('Failed to join ');
+		throw Error('Failed to join');
+	}
+}
+
