@@ -104,6 +104,10 @@ HFC defines the following abstract classes for application developers to supply 
 
 3. If the user application uses an alternative membership service than the one provided by the component `fabric-ca`, the client code will likely need to use an alternative client to `fabric-ca-client` to interact with that membership service.
 
+### Continuous Integration
+
+Please have a look at [Continuous Integration Process](docs/sdk-node-ci.md)
+
 ### Contributing
 
 Check [the documentation](./CONTRIBUTING.md) on how to contribute to this project for the full details.
