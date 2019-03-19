@@ -1,4 +1,5 @@
-/*
+/**
+ * SPDX-License-Identifier: Apache-2.0
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -132,28 +133,28 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} InitializeRequest
-	 * @property {string | Peer | ChannelPeer} target - Optional. The target peer to be used
+	 * @property {string | Peer | ChannelPeer} [target] - Optional. The target peer to be used
 	 *           to make the initialization requests for configuration information.
 	 *           When used with `targets` parameter, the peer referenced here will be
 	 *           added to the `targets` array.
 	 *           Default is to use the first ChannelPeer assigned to this channel.
-	 * @property {string[] | Peer[] | ChannelPeer[]} targets - Optional. The target peers to be used
+	 * @property {string[] | Peer[] | ChannelPeer[]} [targets] - Optional. The target peers to be used
 	 *           to make the initialization requests for configuration information.
-	 * 	         When used with `target` parameter, the peer referenced there will be
+	 *             When used with `target` parameter, the peer referenced there will be
 	 *           added to the `targets` array.
 	 *           Default is to use the first ChannelPeer assigned to this channel.
-	 * @property {boolean} discover - Optional. Use the discovery service on the
+	 * @property {boolean} [discover] - Optional. Use the discovery service on the
 	 *           the target peer to load the configuration and network information.
 	 *           Default is false. When false, the target peer will use the
 	 *           Peer query to load only the configuration information.
-	 * @property {string} endorsementHandler - Optional. The path to a custom
+	 * @property {string} [endorsementHandler] - Optional. The path to a custom
 	 *           endorsement handler implementing {@link EndorsementHandler}.
-	 * @property {string} commitHandler - Optional. The path to a custom
+	 * @property {string} [commitHandler] - Optional. The path to a custom
 	 *           commit handler implementing {@link CommitHandler}.
-	 * @property {boolean} asLocalhost - Optional. Convert discovered host addresses
+	 * @property {boolean} [asLocalhost] - Optional. Convert discovered host addresses
 	 *           to be 'localhost'. Will be needed when running a docker composed
 	 *           fabric network on the local system; otherwise should be disabled. Defaults to true.
-	 * @property {byte[]} configUpdate - Optional. To initialize this channel with
+	 * @property {byte[]} [configUpdate] - Optional. To initialize this channel with
 	 *           a serialized ConfigUpdate protobuf object.
 	 */
 
@@ -173,7 +174,7 @@ const Channel = class {
 	 * the fabric network when using discovery. This application must provide a
 	 * peer running the fabric discovery service.
 	 *
-	 * @param {InitializeRequest} request - Optional.  a {@link InitializeRequest}
+	 * @param {InitializeRequest} [request] Optional.  a {@link InitializeRequest}
 	 * @return {Promise} A Promise that will resolve when the action is complete
 	 */
 	async initialize(request) {
@@ -495,7 +496,7 @@ const Channel = class {
 	 * @typedef {Object} DiscoveryResultEndpoint
 	 * @property {string} host
 	 * @property {number} port
-	 * @property {string} name Optional. the name of this endpoint
+	 * @property {string} [name] Optional. the name of this endpoint
 	 */
 
 	/**
@@ -545,10 +546,10 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} DiscoveryResults
-	 * @property {Object.<string, DiscoveryResultMSPConfig>} msps - Optional. The msp config found.
-	 * @property {Object.<string, DiscoveryResultEndpoints>} orderers - Optional. The orderers found.
-	 * @property {Object.<string, DiscoveryResultPeers>} peers_by_org - Optional. The peers by org found.
-	 * @property {DiscoveryResultEndorsementPlan[]} endorsement_plans - Optional.
+	 * @property {Object.<string, DiscoveryResultMSPConfig>} [msps] Optional. The msp config found.
+	 * @property {Object.<string, DiscoveryResultEndpoints>} [orderers] Optional. The orderers found.
+	 * @property {Object.<string, DiscoveryResultPeers>} [peers_by_org] Optional. The peers by org found.
+	 * @property {DiscoveryResultEndorsementPlan[]} [endorsement_plans] Optional.
 	 * @property {number} timestamp - The timestamp at which the discovery results are updated.
 	 */
 
@@ -771,7 +772,7 @@ const Channel = class {
 	 * @param {Peer} peer - An instance of the Peer class that has been initialized with URL
 	 *        and other gRPC options such as TLS credentials and request timeout.
 	 * @param {string} mspid - The mpsid of the organization this peer belongs.
-	 * @param {ChannelPeerRoles} roles - Optional. The roles this peer will perform
+	 * @param {ChannelPeerRoles} [roles] Optional. The roles this peer will perform
 	 *        on this channel.  A role that is not defined will default to true
 	 * @param {boolean} replace - If a peer exist with the same name, replace
 	 *        with this one.
@@ -950,7 +951,7 @@ const Channel = class {
 	 * This method will create a new ChannelEventHub and not save a reference.
 	 * Use the {getChannelEventHub} to reuse a ChannelEventHub.
 	 *
-	 * @param {Peer | string} peer Optional. A Peer instance or the name of a
+	 * @param {Peer | string} [peer] Optional. A Peer instance or the name of a
 	 *        peer that has been assigned to the channel. If not provided the
 	 *        ChannelEventHub must be connected with a "target" peer.
 	 * @returns {ChannelEventHub} The ChannelEventHub instance
@@ -993,7 +994,7 @@ const Channel = class {
 	 * Returns a list of {@link ChannelEventHub} based on the peers that are
 	 * defined in this channel that are in the organization.
 	 *
-	 * @param {string} mspid - Optional - The mspid of an organization
+	 * @param {string} [mspid] Optional. The mspid of an organization
 	 * @returns {ChannelEventHub[]} An array of ChannelEventHub instances
 	 */
 	getChannelEventHubsForOrg(mspid) {
@@ -1025,7 +1026,7 @@ const Channel = class {
 	 * Returns a list of {@link Peer} that are
 	 * defined in this channel that are in the named organization.
 	 *
-	 * @param {string} mspid - Optional - The name of an organization
+	 * @param {string} [mspid] Optional. The name of an organization
 	 * @returns {Peer[]} An array of Peer instances
 	 */
 	getPeersForOrg(mspid) {
@@ -1051,8 +1052,8 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} OrdererRequest
-	 * @property {TransactionID} txId - Optional. Object with the transaction id and nonce
-	 * @property {Orderer} orderer - Optional. The orderer instance or string name
+	 * @property {TransactionID} [txId] Optional. Object with the transaction id and nonce
+	 * @property {Orderer} [orderer] Optional. The orderer instance or string name
 	 *                     of the orderer to retrieve genesis block from
 	 */
 
@@ -1062,7 +1063,7 @@ const Channel = class {
 	 * provided the genesis block. This method must be called before calling
 	 * [joinChannel()]{@link Channel#joinChannel}.
 	 *
-	 * @param {OrdererRequest} request - Optional - A transaction ID object
+	 * @param {OrdererRequest} [request] Optional - A transaction ID object
 	 * @returns {Promise} A Promise for an encoded protobuf "Block"
 	 */
 	getGenesisBlock(request) {
@@ -1128,18 +1129,18 @@ const Channel = class {
 	 * Internal use only
 	 *
 	 * @typedef {Object} DiscoveryRequest
-	 * @property {Peer | string} target - Optional. A Peer object or Peer name that
+	 * @property {Peer | string} [target] Optional. A Peer object or Peer name that
 	 *           will be asked to discovery information about this channel.
 	 *           Default is the first peer assigned to this channel that has the
 	 *           'discover' role.
-	 * @property {DiscoveryChaincodeInterest[]} interests - Optional. An
+	 * @property {DiscoveryChaincodeInterest[]} [interests] Optional. An
 	 *           Array of {@link DiscoveryChaincodeInterest} that have chaincodes
 	 *           and collections to calculate the endorsement plans.
-	 * @property {boolean} config - Optional. To indicate that the channel configuration
+	 * @property {boolean} [config] Optional. To indicate that the channel configuration
 	 *           should be included in the discovery query.
-	 * @property {boolean} local - Optional. To indicate that the local endpoints
+	 * @property {boolean} [local] Optional. To indicate that the local endpoints
 	 *           should be included in the discovery query.
-	 * @property {boolean} useAdmin - Optional. To indicate that the admin identity
+	 * @property {boolean} [useAdmin] Optional. To indicate that the admin identity
 	 *           should be used to make the discovery request
 	 */
 
@@ -1148,7 +1149,7 @@ const Channel = class {
 	 * network.
 	 *
 	 * @param {DiscoveryRequest} request -
-	 * @returns {DiscoveryResponse} The results from the discovery service
+	 * @returns {Promise<DiscoveryResponse>} The results from the discovery service //TODO missing typeDef DiscoveryResponse
 	 */
 	async _discover(request) {
 		const method = '_discover';
@@ -1500,9 +1501,7 @@ const Channel = class {
 		if (overrideProtocol) {
 			protocol = overrideProtocol;
 		}
-		const url = protocol + '://' + t_hostname + ':' + port;
-
-		return url;
+		return protocol + '://' + t_hostname + ':' + port;
 	}
 
 	_buildOptions(name, url, host, msp) {
@@ -1608,12 +1607,9 @@ const Channel = class {
 	 */
 	_buildDiscoveryInterest(name, collections) {
 		logger.debug('_buildDiscoveryInterest - name %s', name);
-		const interest = {};
-		interest.chaincodes = [];
-		const chaincodes = this._buildDiscoveryChaincodeCall(name, collections);
-		interest.chaincodes.push(chaincodes);
-
-		return interest;
+		return {
+			chaincodes: [this._buildDiscoveryChaincodeCall(name, collections)]
+		};
 	}
 
 	/* internal metnod
@@ -1693,7 +1689,7 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} JoinChannelRequest
-	 * @property {Peer[] | string[]} targets - Optional. An array of Peer objects or Peer names that will
+	 * @property {Peer[] | string[]} [targets] Optional. An array of Peer objects or Peer names that will
 	 *                              be asked to join this channel. When using Peer names or left
 	 *                              empty (use default targets) there must be a loaded network
 	 *                              configuration.
@@ -1770,9 +1766,9 @@ const Channel = class {
 
 	/**
 	 * Asks the peer for the current (latest) configuration block for this channel.
-	 * @param {string | Peer} target - Optional. The peer to be used to make the
+	 * @param {string | Peer} [target] Optional. The peer to be used to make the
 	 *        request.
-	 * @param {Number} timeout - Optional. A number indicating milliseconds to wait
+	 * @param {Number} [timeout] Optional. A number indicating milliseconds to wait
 	 *                           on the response before rejecting the promise with a
 	 *                           timeout error. This overrides the default timeout
 	 *                           of the {@link Peer} instance(s) and the global timeout
@@ -2015,9 +2011,9 @@ const Channel = class {
 	 * Queries for various useful information on the state of the Channel
 	 * (height, known peers).
 	 *
-	 * @param {Peer} target - Optional. The peer that is the target for this query.  If no target is passed,
+	 * @param {Peer} [target] Optional. The peer that is the target for this query.  If no target is passed,
 	 *                        the query will use the first peer that was added to the channel object.
-	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
+	 * @param {boolean} [useAdmin] Optional. Indicates that the admin credentials should be used in making
 	 *                  this call to the peer.
 	 * @returns {Promise} A Promise for a {@link BlockchainInfo} object with blockchain height,
 	 *                        current block hash and previous block hash.
@@ -2058,11 +2054,11 @@ const Channel = class {
 	 * Queries the ledger on the target peer for a Block TransactionID.
 	 *
 	 * @param {string} tx_id - The TransactionID of the Block in question.
-	 * @param {Peer} target - Optional. The peer to send the query to. If no target is passed,
+	 * @param {Peer} [target] Optional. The peer to send the query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
+	 * @param {boolean} [useAdmin] Optional. Indicates that the admin credentials should be used in making
 	 *                  this call to the peer.
-	 * @param {boolean} skipDecode - Optional. If true, this function returns an encoded block.
+	 * @param {boolean} [skipDecode] Optional. If true, this function returns an encoded block.
 	 * @returns {Promise} A Promise for a {@link Block} matching the tx_id, fully decoded into an object.
 	 */
 	async queryBlockByTxID(tx_id, target, useAdmin, skipDecode) {
@@ -2110,11 +2106,11 @@ const Channel = class {
 	 * Queries the ledger on the target peer for a Block by block hash.
 	 *
 	 * @param {byte[]} blockHash of the Block in question.
-	 * @param {Peer} target - Optional. The peer to send the query to. If no target is passed,
+	 * @param {Peer} [target] Optional. The peer to send the query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
+	 * @param {boolean} [useAdmin] Optional. Indicates that the admin credentials should be used in making
 	 *                  this call to the peer.
-	 * @param {boolean} skipDecode - Optional. If true, this function returns an encoded block.
+	 * @param {boolean} [skipDecode] Optional. If true, this function returns an encoded block.
 	 * @returns {Promise} A Promise for a {@link Block} matching the hash, fully decoded into an object.
 	 */
 	async queryBlockByHash(blockHash, target, useAdmin, skipDecode) {
@@ -2162,11 +2158,11 @@ const Channel = class {
 	 * Queries the ledger on the target peer for Block by block number.
 	 *
 	 * @param {number} blockNumber - The number of the Block in question.
-	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
+	 * @param {Peer} [target] Optional. The peer to send this query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
+	 * @param {boolean} [useAdmin] Optional. Indicates that the admin credentials should be used in making
 	 *                  this call to the peer.
-	 * @param {boolean} skipDecode - Optional. If true, this function returns an encoded block.
+	 * @param {boolean} [skipDecode] Optional. If true, this function returns an encoded block.
 	 * @returns {Promise} A Promise for a {@link Block} at the blockNumber slot in the ledger, fully decoded into an object.
 	 */
 	async queryBlock(blockNumber, target, useAdmin, skipDecode) {
@@ -2216,11 +2212,11 @@ const Channel = class {
 	 * Queries the ledger on the target peer for Transaction by id.
 	 *
 	 * @param {string} tx_id - The id of the transaction
-	 * @param {Peer} target - Optional. The peer to send this query to. If no target is passed,
+	 * @param {Peer} [target] Optional. The peer to send this query to. If no target is passed,
 	 *                        the query is sent to the first peer that was added to the channel object.
-	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
+	 * @param {boolean} [useAdmin] Optional. Indicates that the admin credentials should be used in making
 	 *                  this call to the peer.
-	 * @param {boolean} skipDecode - Optional. If true, this function returns an encoded transaction.
+	 * @param {boolean} [skipDecode] Optional. If true, this function returns an encoded transaction.
 	 * @returns {Promise} A Promise for a fully decoded {@link ProcessedTransaction} object.
 	 */
 	async queryTransaction(tx_id, target, useAdmin, skipDecode) {
@@ -2267,10 +2263,10 @@ const Channel = class {
 	/**
 	 * Queries the ledger on the target peer for instantiated chaincodes on this channel.
 	 *
-	 * @param {Peer} target - Optional. The peer to send this query to. If no
+	 * @param {Peer} [target] Optional. The peer to send this query to. If no
 	 *        target is passed, the query is sent to the first peer that was
 	 *        added to the channel object.
-	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials
+	 * @param {boolean} [useAdmin] Optional. Indicates that the admin credentials
 	 *        should be used in making this call to the peer. An administrative
 	 *        identity must have been loaded by common connection profile or by
 	 *        using the 'setAdminSigningIdentity' method.
@@ -2317,8 +2313,8 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} CollectionQueryOptions
-	 * @property {string} chaincodeId - Required. Name of the chaincode
-	 * @property {string|Peer} target - Optional. The peer that will receive this
+	 * @property {string} [chaincodeId] Required. Name of the chaincode
+	 * @property {string|Peer} [target] Optional. The peer that will receive this
 	 *           request, when not provided the first peer in this channel
 	 *           object will be used.
 	 */
@@ -2354,7 +2350,7 @@ const Channel = class {
 	 * Query for the collection definitions associated with a chaincode.
 	 *
 	 * @param {CollectionQueryOptions} options - Required. The options to query the collections config.
-	 * @param {boolean} useAdmin - Optional. To indicate that the admin identity
+	 * @param {boolean} [useAdmin] Optional. To indicate that the admin identity
 	 *           should be used to make the query request
 	 * @returns {Promise<CollectionQueryResponse[]>} returns a promise for an array of
 	 *          {@link CollectionQueryResponse} objects.
@@ -2376,48 +2372,44 @@ const Channel = class {
 			signer,
 			chaincodeId: Constants.LSCC,
 			fcn: 'GetCollectionsConfig',
-			args: [options.chaincodeId],
+			args: [options.chaincodeId]
 		};
 
-		try {
-			const [responses] = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
-			if (responses && Array.isArray(responses)) {
-				if (responses.length > 1) {
-					throw new Error('Too many results returned');
-				}
-				const [response] = responses;
-				if (response instanceof Error) {
-					throw response;
-				}
-				if (!response.response) {
-					throw new Error('Didn\'t receive a valid peer response');
-				}
-				logger.debug('%s - response status :: %d', method, response.response.status);
-
-				if (response.response.status !== 200) {
-					logger.debug('%s - response:%j', method, response);
-					if (response.response.message) {
-						throw new Error(response.response.message);
-					}
-					throw new Error('Failed to retrieve collections config from peer');
-				}
-				const queryResponse = decodeCollectionsConfig(response.response.payload);
-				logger.debug('%s - get %s collections for chaincode %s from peer', method, queryResponse.length, options.chaincodeId);
-				return queryResponse;
+		const [responses] = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
+		if (responses && Array.isArray(responses)) {
+			if (responses.length > 1) {
+				throw new Error('Too many results returned');
 			}
-			throw new Error('Failed to retrieve collections config from peer');
-		} catch (e) {
-			throw e;
+			const [response] = responses;
+			if (response instanceof Error) {
+				throw response;
+			}
+			if (!response.response) {
+				throw new Error('Didn\'t receive a valid peer response');
+			}
+			logger.debug('%s - response status :: %d', method, response.response.status);
+
+			if (response.response.status !== 200) {
+				logger.debug('%s - response:%j', method, response);
+				if (response.response.message) {
+					throw new Error(response.response.message);
+				}
+				throw new Error('Failed to retrieve collections config from peer');
+			}
+			const queryResponse = decodeCollectionsConfig(response.response.payload);
+			logger.debug('%s - get %s collections for chaincode %s from peer', method, queryResponse.length, options.chaincodeId);
+			return queryResponse;
 		}
+		throw new Error('Failed to retrieve collections config from peer');
 	}
 
 	/**
 	 * @typedef {Object} ChaincodeInstantiateUpgradeRequest
-	 * @property {Peer[] | string[]} targets - Optional. An array of endorsing
+	 * @property {Peer[] | string[]} [targets] Optional. An array of endorsing
 	 *           {@link Peer} objects or peer names as the targets of the request.
 	 *           When this parameter is omitted the target list will include peers assigned
 	 *           to this channel instance that are in the endorsing role.
-	 * @property {string} chaincodeType - Optional. Type of chaincode. One of
+	 * @property {string} [chaincodeType] Optional. Type of chaincode. One of
 	 *           'golang', 'car', 'java' or 'node'. Default is 'golang'. Note that 'java'
 	 *           is not yet supported.
 	 * @property {string} chaincodeId - Required. The name of the chaincode
@@ -2425,20 +2417,20 @@ const Channel = class {
 	 *           such as 'v1'
 	 * @property {TransactionID} txId - Required. Object with the transaction id
 	 *           and nonce
-	 * @property {string} collections-config - Optional. The path to the collections
+	 * @property {string} [collections-config] Optional. The path to the collections
 	 *           config. More details can be found at this [tutorial]{@link https://fabric-sdk-node.github.io/tutorial-private-data.html}
-	 * @property {object} [transientMap] - Optional. Object with String property names
+	 * @property {object} [transientMap] Optional. Object with String property names
 	 *           and Buffer property values that can be used by the chaincode but not
 	 *           saved in the ledger. Data such as cryptographic information for
 	 *           encryption can be passed to the chaincode using this technique. Data
 	 *           that is to be kept in a private data store (a collection) should be
 	 *           passed to the chaincode in the transientMap.
-	 * @property {string} fcn - Optional. The function name to be returned when
+	 * @property {string} [fcn] Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code> in the target
 	 *           chaincode.
-	 * @property {string[]} args - Optional. Array of string arguments to pass to
+	 * @property {string[]} [args] Optional. Array of string arguments to pass to
 	 *           the function identified by the <code>fcn</code> value.
-	 * @property {Object} endorsement-policy - Optional. EndorsementPolicy object
+	 * @property {Object} [endorsement-policy] Optional. EndorsementPolicy object
 	 *           for this chaincode (see examples below). If not specified, a default
 	 *           policy of "a signature by any member from any of the organizations
 	 *           corresponding to the array of member service providers" is used.
@@ -2590,7 +2582,7 @@ const Channel = class {
 			chaincodeDeploymentSpec.toBuffer(),
 			Buffer.from(''),
 			Buffer.from('escc'), // default
-			Buffer.from('vscc'), // default
+			Buffer.from('vscc') // default
 		];
 		if (request['endorsement-policy']) {
 			lcccSpec_args[3] = this._buildEndorsementPolicy(request['endorsement-policy']);
@@ -2631,11 +2623,12 @@ const Channel = class {
 		const responses = await client_utils.sendPeersProposal(peers, signed_proposal, timeout);
 		return [responses, proposal];
 	}
+
 	/**
 	 * @typedef {Object} ChaincodeDefineRequest
 	 *  This object contains many properties that will be when defining
 	 *  a chaincode on the channel for an organization or channel wide
-	 * @property {Peer[] | string[]} targets - Optional. The peers that will
+	 * @property {Peer[] | string[]} [targets] Optional. The peers that will
 	 *  receive the define request. When not provided, peers that have been
 	 *  added to the channel with the 'endorser' role.
 	 * @property {object} chaincode - Required. The chaincode object containing
@@ -2674,7 +2667,7 @@ const Channel = class {
 	 *
 	 * @async
 	 * @param {ChaincodeDefineRequest} request - Required.
-	 * @param {Number} timeout - Optional. Timeout specific for this request.
+	 * @param {Number} [timeout] Optional. Timeout specific for this request.
 	 *
 	 * @return {Object} Return object will contain the proposalResponses and the proposal
 	 */
@@ -2700,7 +2693,7 @@ const Channel = class {
 	 *
 	 * @async
 	 * @param {ChaincodeDefineRequest} request - Required.
-	 * @param {Number} timeout - Optional. Timeout specific for this request.
+	 * @param {Number} [timeout] Optional. Timeout specific for this request.
 	 *
 	 * @return {Object} Return object will contain the proposalResponses and the proposal
 	 */
@@ -2722,68 +2715,68 @@ const Channel = class {
 	/**
 	 * @typedef {Object} ChaincodeInvokeRequest
 	 *          This object contains many properties that will be used by the Discovery service.
-	 * @property {Peer[] | string[]} targets - Optional. The peers that will receive this request,
+	 * @property {Peer[] | string[]} [targets] Optional. The peers that will receive this request,
 	 *           when not provided the list of peers added to this channel object will
 	 *           be used. When this channel has been initialized to use the discovery
 	 *           service, the proposal will be sent to the peers on the list provided
 	 *           by the discovery service if no targets are specified.
 	 * @property {string} chaincodeId - Required. The id of the chaincode to process
 	 *           the transaction proposal
-	 * @property {DiscoveryChaincodeIntereset} endorsement_hint - Optional. A
+	 * @property {DiscoveryChaincodeInterest} [endorsement_hint] Optional. A
 	 *           of {@link DiscoveryChaincodeInterest} object that will be used by
 	 *           discovery service to calculate an appropriate endorsement plan.
 	 *           The parameter is only required when the endorsement will be preformed
 	 *           by a chaincode that will call other chaincodes or if the endorsement
 	 *           should be made by only peers within a collection or collections.
-	 * @property {TransactionID} txId - Optional. TransactionID object with the
+	 * @property {TransactionID} [txId] Optional. TransactionID object with the
 	 *           transaction id and nonce. txId is required for [sendTransactionProposal]{@link Channel#sendTransactionProposal}
 	 *           and optional for [generateUnsignedProposal]{@link Channel#generateUnsignedProposal}
-	 * @property {object} [transientMap] - Optional. Object with String property names
+	 * @property {object} [transientMap] Optional. Object with String property names
 	 *           and Buffer property values that can be used by the chaincode but not
 	 *           saved in the ledger. Data such as cryptographic information for
 	 *           encryption can be passed to the chaincode using this technique. Data
 	 *           that is to be kept in a private data store (a collection) should be
 	 *           passed to the chaincode in the transientMap.
-	 * @property {string} fcn - Optional. The function name to be returned when
+	 * @property {string} [fcn] Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code>
 	 *           in the target chaincode. Default is 'invoke'
 	 * @property {string[]} args - An array of string arguments specific to the
 	 *           chaincode's 'Invoke' method
-	 * @property {string[]} required - Optional. An array of strings that represent
+	 * @property {string[]} [required] Optional. An array of strings that represent
 	 *           the names of peers that are required for the endorsement. These will
 	 *           be the only peers which the proposal will be sent.
 	 *           This list only applies to endorsements using the discovery service.
 	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
-	 * @property {string[]} ignore - Optional. An array of strings that represent
+	 * @property {string[]} [ignore] Optional. An array of strings that represent
 	 *           the names of peers that should be ignored by the endorsement.
 	 *           This list only applies to endorsements using the discovery service.
 	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
-	 * @property {string[]} preferred - Optional. An array of strings that represent
+	 * @property {string[]} [preferred] Optional. An array of strings that represent
 	 *           the names of peers that should be given priority by the endorsement.
 	 *           Priority means that these peers will be chosen first for endorsements
 	 *           when an endorsement plan has more peers in a group then needed to
 	 *           satisfy the endorsement policy.
 	 *           This list only applies to endorsements using the discovery service.
 	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
-	 * @property {string[]} requiredOrgs - Optional. An array of strings that represent
+	 * @property {string[]} [requiredOrgs] Optional. An array of strings that represent
 	 *           the names of an organization's MSP id that are required for the
 	 *           endorsement. Only peers in these organizations will be sent the
 	 *           proposal.
 	 *           This list only applies to endorsements using the discovery service.
 	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
-	 * @property {string[]} ignoreOrgs - Optional. An array of strings that represent
+	 * @property {string[]} [ignoreOrgs] Optional. An array of strings that represent
 	 *           the names of an organization's MSP id that should be ignored by the
 	 *           endorsement.
 	 *           This list only applies to endorsements using the discovery service.
 	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
-	 * @property {string[]} preferredOrgs - Optional. An array of strings that represent
+	 * @property {string[]} [preferredOrgs] Optional. An array of strings that represent
 	 *           the names of an organization's MSP id that should be given priority
 	 *           by the endorsement. Peers within an organization may have their
 	 *           ledger height considered  using the optional property {@link preferredHeightGap}
 	 *           before being added to the priority list.
 	 *           This list only applies to endorsements using the discovery service.
 	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
-	 * @property {Number} preferredHeightGap - Optional. An integer representing
+	 * @property {Number} [preferredHeightGap] Optional. An integer representing
 	 *           the maximum difference in the block height of a peer and the
 	 *           highest block height found in a group of peers within an endorsement
 	 *           plan allowed to be a preferred peer. A peer will not be given
@@ -2793,7 +2786,7 @@ const Channel = class {
 	 *           not be considered when being added to the preferred list.
 	 *           This list only applies to endorsements using the discovery service.
 	 *           This property is used by the {@link DiscoveryEndorsementHandler}.
-	 * @property {string} sort - Optional. A string value that indicates how
+	 * @property {string} [sort] Optional. A string value that indicates how
 	 *           the peers within groups should be chosen.
 	 *           "ledgerHeight", sort the peers descending by the number of blocks
 	 *            on the channel ledger.
@@ -2955,12 +2948,12 @@ const Channel = class {
 	 *           [endorsement]{@link Channel#sendTransactionProposal} call
 	 * @property {Proposal} proposal - A Proposal object containing the original
 	 *           request for endorsement(s)
-	 * @property {TransactionId} txID - Optional. - Must be the transaction ID object
+	 * @property {TransactionId} [txID] Optional. - Must be the transaction ID object
 	 *           used in the proposal endorsement. The transactionID will
 	 *           only be used to determine if the signing of the request
 	 *           should be done by the admin identity or the user assigned
 	 *           to the client instance.
-	 * @property {Orderer|string} orderer - Optional. The orderer instance or string name
+	 * @property {Orderer|string} [orderer] Optional. The orderer instance or string name
 	 *                     of the orderer to operate. See {@link Client.getTargetOrderer}
 	 */
 
@@ -3063,8 +3056,8 @@ const Channel = class {
 	 * @property {string} fcn - Required. The function name.
 	 * @property {string[]} args - Required. Arguments to send to chaincode.
 	 * @property {string} chaincodeId - Required. ChaincodeId.
-	 * @property {Buffer} argbytes - Optional. Include when an argument must be included as bytes.
-	 * @property {object} [transientMap] - Optional. Object with String property names
+	 * @property {Buffer} [argbytes] Optional. Include when an argument must be included as bytes.
+	 * @property {object} [transientMap] Optional. Object with String property names
 	 *           and Buffer property values that can be used by the chaincode but not
 	 *           saved in the ledger. Data such as cryptographic information for
 	 *           encryption can be passed to the chaincode using this technique. Data
@@ -3225,7 +3218,7 @@ const Channel = class {
 	 * @typedef {Object} SignedCommitProposal
 	 * @property {TransactionRequest} request - Required. The commit request
 	 * @property {Buffer} signedTransaction - Required. The signed transaction
-	 * @property {Orderer|string} orderer - Optional. The orderer instance or string name
+	 * @property {Orderer|string} [orderer] - Optional. The orderer instance or string name
 	 *                     of the orderer to operate. See {@link Client.getTargetOrderer}
 	 */
 
@@ -3301,7 +3294,7 @@ const Channel = class {
 	 *
 	 * @param {SignedCommandRequest} request - Required. Signed token command
 	 *        that will be sent to peer. Must contain a signedCommand object.
-	 * @param {Number} timeout - Optional. A number indicating milliseconds to wait on the
+	 * @param {Number} [timeout] Optional. A number indicating milliseconds to wait on the
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Orderer instance and the global
 	 *        timeout in the config settings.
@@ -3327,7 +3320,7 @@ const Channel = class {
 			const params = {
 				request: request,
 				signed_command: signedCommand,
-				timeout: timeout,
+				timeout: timeout
 			};
 
 			const response = await this._prover_handler.processCommand(params);
@@ -3349,7 +3342,7 @@ const Channel = class {
 	 * and skip the remaining peers.
 	 *
 	 * @param {TokenRequest} request - Required. A [TokenRequest]{@link TokenClient#TokenRequest}.
-	 * @param {Number} timeout - Optional. A number indicating milliseconds to wait on the
+	 * @param {Number} [timeout] Optional. A number indicating milliseconds to wait on the
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Peer instance and the global
 	 *        timeout in the config settings.
@@ -3376,7 +3369,7 @@ const Channel = class {
 			const params = {
 				request: request,
 				signed_command: signedCommand,
-				timeout: timeout,
+				timeout: timeout
 			};
 
 			const response = await this._prover_handler.processCommand(params);
@@ -3467,7 +3460,7 @@ const Channel = class {
 			const params = {
 				signed_envelope,
 				request: request,
-				timeout: timeout,
+				timeout: timeout
 			};
 
 			return this._commit_handler.commit(params);
@@ -3483,7 +3476,7 @@ const Channel = class {
 	 *          This object contains properties that will be used for broadcasting token transaction.
 	 * @property {TokenTransaction} tokenTransaction - Required. The response from sendTokenCommand.
 	 * @property {TransactionID} txId - Required. Transaction ID to use for this request.
-	 * @property {Orderer | string} orderer - Optional. The orderer that will receive this request,
+	 * @property {Orderer | string} [orderer] Optional. The orderer that will receive this request,
 	 *           when not provided, the transaction will be sent to the orderers assigned to this channel instance.
 	 */
 
@@ -3584,24 +3577,24 @@ const Channel = class {
 
 	/**
 	 * @typedef {Object} ChaincodeQueryRequest
-	 * @property {Peer[]} targets - Optional. The peers that will receive this
+	 * @property {Peer[]} [targets] Optional. The peers that will receive this
 	 *           request, when not provided the list of peers added to this channel
 	 *           object will be used.
 	 * @property {string} chaincodeId - Required. The id of the chaincode to process
 	 *           the transaction proposal
-	 * @property {object} transientMap - Optional. Object with String property names
+	 * @property {object} [transientMap] Optional. Object with String property names
 	 *           and Buffer property values that can be used by the chaincode but not
 	 *           saved in the ledger. Data such as cryptographic information for
 	 *           encryption can be passed to the chaincode using this technique. Data
 	 *           that is to be kept in a private data store (a collection) should be
 	 *           passed to the chaincode in the transientMap.
-	 * @property {string} fcn - Optional. The function name to be returned when
+	 * @property {string} [fcn] - Optional. The function name to be returned when
 	 *           calling <code>stub.GetFunctionAndParameters()</code>
 	 *           in the target chaincode. Default is 'invoke'
 	 * @property {string[]} args - An array of string arguments specific to the
 	 *           chaincode's 'Invoke' method
 	 * @property {integer} request_timeout - The timeout value to use for this request
-	 * @property {TransactionID} txId Optional. Transaction ID to use for the query.
+	 * @property {TransactionID} [txId] Optional. Transaction ID to use for the query.
 	 */
 
 	/**
@@ -3617,7 +3610,7 @@ const Channel = class {
 	 * privileges will apply. In this case the <code>useAdmin</code> parameter to this function will be ignored.
 	 *
 	 * @param {ChaincodeQueryRequest} request
-	 * @param {boolean} useAdmin - Optional. Indicates that the admin credentials should be used in making
+	 * @param {boolean} [useAdmin] Optional. Indicates that the admin credentials should be used in making
 	 *                  this call. Ignored if the <code>request</code> contains a <code>txId</code> property.
 	 * @returns {Promise} A Promise for an array of byte array results returned from the chaincode
 	 *                    on all Endorsing Peers
@@ -3766,7 +3759,7 @@ const Channel = class {
 	 * This will validate that the endorsing peers all agree on the result
 	 * of the chaincode execution.
 	 *
-	 * @param {ProposalResponse[]} The proposal responses from all endorsing peers
+	 * @param {ProposalResponse[]} proposal_responses The proposal responses from all endorsing peers
 	 * @returns {boolean} True when all proposals compare equally, false otherwise.
 	 */
 	compareProposalResponseResults(proposal_responses) {
@@ -4180,28 +4173,28 @@ function loadConfigValue(config_items, versions, config_value, group_name, org, 
 
 /**
  * @typedef {Object} ChannelPeerRoles
- * @property {boolean} endorsingPeer - Optional. This peer may be sent transaction
+ * @property {boolean} [endorsingPeer] Optional. This peer may be sent transaction
  *           proposals for endorsements. The peer must have the chaincode installed.
  *           The app can also use this property to decide which peers to send the
  *           chaincode install request.
  *           Default: true
  *
- * @property {boolean} chaincodeQuery - Optional. This peer may be sent transaction
+ * @property {boolean} [chaincodeQuery] Optional. This peer may be sent transaction
  *           proposals meant only as a query. The peer must have the chaincode
  *           installed. The app can also use this property to decide which peers
  *           to send the chaincode install request.
  *           Default: true
  *
- * @property {boolean} ledgerQuery - Optional. This peer may be sent query proposals
+ * @property {boolean} [ledgerQuery] Optional. This peer may be sent query proposals
  *           that do not require chaincodes, like queryBlock(), queryTransaction(), etc.
  *           Default: true
  *
- * @property {boolean} eventSource - Optional. This peer may be the target of a
+ * @property {boolean} [eventSource] Optional. This peer may be the target of a
  *           event listener registration? All peers can produce events, but the
- *           appliatiion typically only needs to connect to one.
+ *           application typically only needs to connect to one.
  *           Default: true
  *
- * @property {boolean} discover - Optional. This peer may be the target of service
+ * @property {boolean} [discover] Optional. This peer may be the target of service
  *           discovery.
  *           Default: true
  */
@@ -4426,7 +4419,7 @@ function decodeCollectionsConfig(payload) {
 	const queryResponse = fabprotos.common.CollectionConfigPackage.decode(payload);
 	queryResponse.config.forEach((config) => {
 		let collectionConfig = {
-			type: config.payload,
+			type: config.payload
 		};
 		if (config.payload === 'static_collection_config') {
 			const {static_collection_config} = config;
@@ -4437,7 +4430,7 @@ function decodeCollectionsConfig(payload) {
 			delete static_collection_config.member_orgs_policy;
 			static_collection_config.policy = {
 				identities: identities.map(i => JSON.parse(i)),
-				policy: signature_policy.rule.n_out_of,
+				policy: signature_policy.rule.n_out_of
 			};
 
 			static_collection_config.block_to_live = static_collection_config.block_to_live.toInt();
