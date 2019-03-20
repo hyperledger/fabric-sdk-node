@@ -20,7 +20,6 @@ const Client = require('../lib/Client');
 const {Identity} = require('fabric-common');
 const TokenClient = rewire('../lib/TokenClient');
 const TransactionID = require('../lib/TransactionID.js');
-const token_utils = require('../lib/token-utils.js');
 const fabprotos = require('fabric-protos');
 
 const sinon = require('sinon');
@@ -443,8 +442,8 @@ describe('TokenClient', () => {
 			// prepare mockResponse for sendTokenComandStub
 			const tokenId1 = {tx_id: 'mock_tx_id1', index: 0};
 			const tokenId2 = {tx_id: 'mock_tx_id2', index: 0};
-			const token1 = {id: tokenId1, type: 'abc123', quantity: token_utils.toHex(100)};
-			const token2 = {id: tokenId2, type: 'xyz', quantity: token_utils.toHex(200)};
+			const token1 = {id: tokenId1, type: 'abc123', quantity: '100'};
+			const token2 = {id: tokenId2, type: 'xyz', quantity: '200'};
 			mockTokens = [token1, token2];
 			mockResponse = new fabprotos.token.CommandResponse();
 			mockResponse.setUnspentTokens({tokens: mockTokens});

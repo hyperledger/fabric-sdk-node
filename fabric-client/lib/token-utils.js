@@ -177,7 +177,9 @@ module.exports.buildTokenCommandHeader = (creator, channelId, nonce, tlsCertHash
 	header.setCreator(creator.serialize());
 	header.setNonce(nonce);
 	header.setTimestamp(timestamp);
-	header.setTlsCertHash(tlsCertHash);
+	if (tlsCertHash !== undefined && tlsCertHash !== null) {
+		header.setTlsCertHash(tlsCertHash);
+	}
 
 	return header;
 };

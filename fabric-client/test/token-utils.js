@@ -48,7 +48,7 @@ describe('token-utils', () => {
 		beforeEach(() => {
 			// prepare token request
 			const owner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('test-owner')};
-			param = {owner: owner, type: 'abc123', quantity: TokenUtils.toHex(210)};
+			param = {owner: owner, type: 'abc123', quantity: '210'};
 			request = {params: [param], txId: txId, tokenIds: tokenIds};
 		});
 
@@ -241,8 +241,8 @@ describe('token-utils', () => {
 			// prepare token request for issue
 			const owner1 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner1')};
 			const owner2 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner2')};
-			param1 = {owner: owner1, type: 'abc123', quantity: TokenUtils.toHex(210)};
-			param2 = {owner: owner2, type: 'horizon', quantity: TokenUtils.toHex(300)};
+			param1 = {owner: owner1, type: 'abc123', quantity: '210'};
+			param2 = {owner: owner2, type: 'horizon', quantity: '300'};
 			request = {
 				params: [param1, param2],
 				txId: txId,
@@ -267,8 +267,8 @@ describe('token-utils', () => {
 			const tokenId = {tx_id: 'mock_tx_id', index: 0};
 			const owner1 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner1')};
 			const owner2 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner2')};
-			param1 = {owner: owner1, quantity: TokenUtils.toHex(100)};
-			param2 = {owner: owner2, quantity: TokenUtils.toHex(200)};
+			param1 = {owner: owner1, quantity: '100'};
+			param2 = {owner: owner2, quantity: '200'};
 
 			request = {
 				tokenIds: [tokenId],
@@ -296,7 +296,7 @@ describe('token-utils', () => {
 		beforeEach(() => {
 			// prepare token request for redeem
 			const tokenId = {tx_id: 'mock_tx_id', index: 0};
-			param1 = {quantity: TokenUtils.toHex(100)};
+			param1 = {quantity: '100'};
 			request = {
 				tokenIds: [tokenId],
 				params: param1,
@@ -541,7 +541,7 @@ describe('token-utils', () => {
 			mockCreator = {serialize: serializeStub};
 		});
 
-		it('should return a token command header', () => {
+		it('should return a token command header with tls cert', () => {
 			const expectedHeader = new fabprotos.token.Header();
 			expectedHeader.setChannelId(channelId);
 			expectedHeader.setCreator(Buffer.from('serialized-creator'));
@@ -549,6 +549,22 @@ describe('token-utils', () => {
 			expectedHeader.setTlsCertHash(tlsCertHash);
 
 			const header = TokenUtils.buildTokenCommandHeader(mockCreator, channelId, nonce, tlsCertHash);
+
+			// verify header has timestamp
+			header.hasOwnProperty('timestamp').should.equal(true);
+			expectedHeader.timestamp = header.timestamp;
+
+			// compare toBuffer since they are protobuf messages
+			header.toBuffer().should.deep.equal(expectedHeader.toBuffer());
+		});
+
+		it('should return a token command header without tls cert', () => {
+			const expectedHeader = new fabprotos.token.Header();
+			expectedHeader.setChannelId(channelId);
+			expectedHeader.setCreator(Buffer.from('serialized-creator'));
+			expectedHeader.setNonce(nonce);
+
+			const header = TokenUtils.buildTokenCommandHeader(mockCreator, channelId, nonce);
 
 			// verify header has timestamp
 			header.hasOwnProperty('timestamp').should.equal(true);

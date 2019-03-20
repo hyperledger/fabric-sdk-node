@@ -93,12 +93,12 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		let param = {
 			owner: {type: 0, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: tokenUtils.toHex(200),
+			quantity: '200'
 		};
 		const param2 = {
 			owner: {type: 0, raw: user1Identity.serialize()},
 			type: 'horizon',
-			quantity: tokenUtils.toHex(200),
+			quantity: '200'
 		};
 		let request = {
 			params: [param, param2],
@@ -162,7 +162,7 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// build requst for user1 to redeem token
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			quantity: tokenUtils.toHex(50),
+			quantity: '50'
 		};
 		request = {
 			tokenIds: [redeemToken.id],
@@ -179,7 +179,7 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// verify owner's (user1) unspent tokens after redeem - pass optional request
 		request = {txId: user1TokenClient.getClient().newTransactionID()};
 		result = await user1TokenClient.list(request);
-		const remainingQuantity = tokenUtils.toHex(200 - 50);
+		const remainingQuantity = '150'; // 200 - 50
 		logger.debug('(org1)list tokens after transfer token %s', util.inspect(result, false, null));
 		t.equals(result.length, 1, 'Checking number of tokens for user1 after redeem');
 		t.equals(result[0].type, redeemToken.type, 'Checking token type for user1 after redeem');
@@ -216,7 +216,7 @@ test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (
 		let param = {
 			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: tokenUtils.toHex(210)
+			quantity: '210'
 		};
 		let request = {
 			params: [param],
@@ -306,7 +306,7 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		let param = {
 			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: tokenUtils.toHex(210)
+			quantity: '210'
 		};
 		let request = {
 			params: [param],
@@ -330,7 +330,7 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		txId = user2TokenClient.getClient().newTransactionID();
 		param = {
 			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
-			quantity: tokenUtils.toHex(10)
+			quantity: '10'
 		};
 		request = {
 			tokenIds: [transferToken.id],
@@ -375,7 +375,7 @@ test('\n\n***** Token end-to-end flow: invalid transfer amount fails *****\n\n',
 		let param = {
 			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: tokenUtils.toHex(210)
+			quantity: '210'
 		};
 		let request = {
 			params: [param],
@@ -399,7 +399,7 @@ test('\n\n***** Token end-to-end flow: invalid transfer amount fails *****\n\n',
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
 			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
-			quantity: tokenUtils.toHex(10)
+			quantity: '10'
 		};
 		request = {
 			tokenIds: [transferToken.id],
@@ -442,7 +442,7 @@ test('\n\n***** Token end-to-end flow: invalid redeem amount fails *****\n\n', a
 		let param = {
 			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
 			type: 'abc123',
-			quantity: tokenUtils.toHex(100)
+			quantity: '100'
 		};
 		let request = {
 			params: [param],
@@ -465,7 +465,7 @@ test('\n\n***** Token end-to-end flow: invalid redeem amount fails *****\n\n', a
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			quantity: tokenUtils.toHex(110)
+			quantity: '110'
 		};
 		request = {
 			tokenIds: [redeemToken.id],
@@ -481,7 +481,7 @@ test('\n\n***** Token end-to-end flow: invalid redeem amount fails *****\n\n', a
 	} catch (err) {
 		t.equals(
 			err.message,
-			'command response has error: total quantity [100] from TokenIds is less than quantity [0x6e] to be redeemed',
+			'command response has error: total quantity [100] from TokenIds is less than quantity [110] to be redeemed',
 			'Redeem failed as expected because redeemed quantity exceeded token quantity'
 		);
 		t.end();
@@ -546,10 +546,14 @@ function validateTransactionEnvelope(txEnvelope, commandName, expectedInputs, ex
 	logger.debug('queried transaction is: \n%s', util.inspect(txEnvelope, false, null));
 	const token_action = txEnvelope.transactionEnvelope.payload.data.token_action;
 	const action_data = token_action[token_action.data];
-	t.equals(token_action.data, commandName, 'Validating token transaction matches the command name');
+	t.equals(token_action.data, commandName, 'Validating token transaction matches command name ' + commandName);
 	t.equals(action_data.outputs.length, expectedOutputs.length, 'Validationing number of outputs in token transaction');
 	for (let i = 0; i < expectedOutputs.length; i++) {
-		t.deepEqual(action_data.outputs[i], expectedOutputs[i], 'Validationing output in token transaction');
+		// fabtoken uses hex string in token transaction, so convert expectedQuantity to hex string
+		const expectedQuantityToHex = tokenUtils.toHex(parseInt(expectedOutputs[i].quantity));
+		t.deepEqual(action_data.outputs[i].quantity, expectedQuantityToHex, 'Validationing quantity in token transaction');
+		t.deepEqual(action_data.outputs[i].owner, expectedOutputs[i].owner, 'Validationing owner in token transaction');
+		t.deepEqual(action_data.outputs[i].type, expectedOutputs[i].type, 'Validationing type in token transaction');
 	}
 	if (expectedInputs) {
 		t.deepEqual(action_data.inputs, expectedInputs, 'Validationing inputs in token transaction');

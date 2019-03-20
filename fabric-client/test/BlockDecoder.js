@@ -496,8 +496,8 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should add action to data when transaction with issue action is given', () => {
-			const output1 = {owner: {type: 0, raw: Buffer.from('owner1')}, type: 'type1', quantity: '0x3c'};
-			const output2 = {owner: {type: 0, raw: Buffer.from('owner2')}, type: 'type2', quantity: '0x5d'};
+			const output1 = {owner: {type: 0, raw: Buffer.from('owner1')}, type: 'type1', quantity: '100'};
+			const output2 = {owner: {type: 0, raw: Buffer.from('owner2')}, type: 'type2', quantity: '200'};
 
 			// build a token transaction protobuf message
 			const issue = new fabprotos.token.Issue();
@@ -515,8 +515,8 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should add action to data when transaction with transfer action is given', () => {
-			const output1 = {owner: {type: 0, raw: Buffer.from('owner1')}, type: 'type1', quantity: '0x3c'};
-			const output2 = {owner: {type: 0, raw: Buffer.from('owner2')}, type: 'type2', quantity: '0x5d'};
+			const output1 = {owner: {type: 0, raw: Buffer.from('owner1')}, type: 'type1', quantity: '100'};
+			const output2 = {owner: {type: 0, raw: Buffer.from('owner2')}, type: 'type2', quantity: '200'};
 			const tokenId = {index: 0, tx_id: 'input_txid'};
 
 			// build a token transaction protobuf message
@@ -536,8 +536,8 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should add action to data when transaction with redeem action is given', () => {
-			const output1 = {type: 'type1', quantity: '0x3c'};
-			const output2 = {owner: {type: 0, raw: Buffer.from('owner2')}, type: 'type2', quantity: '0x5d'};
+			const output1 = {type: 'type1', quantity: '100'};
+			const output2 = {owner: {type: 0, raw: Buffer.from('owner2')}, type: 'type2', quantity: '200'};
 			const tokenId = {index: 0, tx_id: 'input_txid'};
 
 			// build a token transaction protobuf message
