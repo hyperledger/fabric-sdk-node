@@ -315,7 +315,7 @@ const FabricCAClient = class {
 
 					if (!payload) {
 						return reject(new Error(
-							util.format('fabric-ca request %s failed with HTTP status code %s', api_method, JSON.parse(data).statusCode)));
+							util.format('fabric-ca request %s failed with HTTP status code %s', api_method, response.statusCode)));
 					}
 					// response should be JSON
 					let responseObj;
@@ -454,7 +454,7 @@ const FabricCAClient = class {
 
 					if (!payload) {
 						return reject(new Error(
-							util.format('Enrollment failed with HTTP status code', JSON.parse(data).statusCode)));
+							util.format('Enrollment failed with HTTP status code', response.statusCode)));
 					}
 					// response should be JSON
 					try {

@@ -931,10 +931,11 @@ describe('FabricCAClient', () => {
 				// Create a mock response object...
 				const res = new events.EventEmitter();
 				res.setEncoding = function () { };
+				res.statusCode = 500;
 				callback(res);
 
 				// ...end with only status code being sent.
-				res.emit('end', '{"statusCode":500}');
+				res.emit('end');
 				return new events.EventEmitter();
 			});
 
@@ -1153,11 +1154,12 @@ describe('FabricCAClient', () => {
 				// Create a mock response object...
 				const res = new events.EventEmitter();
 				res.setEncoding = function () { };
+				res.statusCode = 500;
 				callback(res);
 
 				// ...end with only status code being sent.
 				res.emit('data');
-				res.emit('end', '{"statusCode":500}');
+				res.emit('end');
 				return new events.EventEmitter();
 			});
 
