@@ -43,5 +43,8 @@
 	},
 	"chaincode-lifecycle": {
 		"title": "fabric-client: How to install and start your chaincode"
+	},
+	"fabtoken": {
+		"title": "fabric-client: How to perform token operations"
 	}
 }

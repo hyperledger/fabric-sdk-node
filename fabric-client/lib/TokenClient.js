@@ -50,8 +50,8 @@ const {HashPrimitives} = require('fabric-common');
  *
  * @example
  *   // prerequisites - have created the following objects:
- *   // client1 (with user1 context), user1Identity
- *   // client2 (with user2 context), user2Identity
+ *   // user1, client1 (associated to user1 context)
+ *   // user2, client2 (associated to user2 context)
  *   // mychannel
  *
  *   // create a TokenClient object from client1 (user1)
@@ -60,11 +60,11 @@ const {HashPrimitives} = require('fabric-common');
  *   // create a TokenClient object from client2 (user2)
  *   const tokenClient2 = client2.newTokenClient(mychannel);
  *
- *   // create request to issue tokens
+ *   // create request to issue tokens to user2
  *   const txId = tokenClient1.newTransactionID();
- *   const owner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()};
+ *   const owner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2.getIdentity().serialize()};
  *   const tokenType = 'myTokenType';
- *   let param = {owner: owner, type: tokenType, quantity: 200};
+ *   let param = {owner: owner, type: tokenType, quantity: '200'};
  *   let request = {params: [param], txId: txId};
  *
  *   // user1 calls issue method to issue tokens to user2
@@ -80,7 +80,7 @@ const {HashPrimitives} = require('fabric-common');
  *   });
  *
  *   // user2 calls redeem method, result.status should be SUCCESS
- *   param = {quantity: 50};
+ *   param = {quantity: '50'};
  *   request = {params: [param], txId: txId};
  *   result = await tokenClient2.redeem(request);
  *
@@ -92,8 +92,8 @@ const {HashPrimitives} = require('fabric-common');
  *   });
  *
  *   // user2 calls transfer method to transfer the token to user1
- *   const newOwner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()};
- *   param = {owner: newOwner, quantity: 150};
+ *   const newOwner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1.getIdentity().serialize()};
+ *   param = {owner: newOwner, quantity: '150'};
  *   request = {params: [param], tokenId: token.id, txId: txId};
  *   result = await tokenClient1.transfer(request);
  *

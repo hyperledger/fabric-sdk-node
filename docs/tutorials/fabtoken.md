@@ -53,9 +53,9 @@ It demonstrates how to issue, transfer, redeem, and list tokens.
 
 Assume the following objects have been created:
 
-* issuer identity, client (associated to issuer context)
-* user1 identity, client1 (associated to user1 context)
-* user2 identity, client2 (associated to user1 context)
+* issuer, client (associated to issuer context)
+* user1, client1 (associated to user1 context)
+* user2, client2 (associated to user1 context)
 * mychannel
 
 #### Use case 1: issue tokens
@@ -68,12 +68,12 @@ const tokenclient = client.newTokenClient(mychannel);
 // create a request for issue
 const txId = client.newTransactionID();
 const param1 = {
-	owner: user1Identity.serialize(),
+	owner: user1.getIdentity().serialize(),
 	type: 'USD',
 	quantity: '500',
 };
 const param2 = {
-	owner: user2Identity.serialize(),
+	owner: user2.getIdentity().serialize(),
 	type: 'EURO',
 	quantity: '300',
 };
@@ -115,11 +115,11 @@ user1 wants to transfer 300 to user2. He will transfer the remaining 200 to hims
 // After transfer, user2 will have 300 quantity of the token and user1 will have 200 quantity of the token.
 const txId = client1.newTransactionID();
 const param1 = {
-	owner: user2Identity.serialize(),
+	owner: user2.getIdentity().serialize(),
 	quantity: '300',
 };
 const param2 = {
-	owner: user1Identity.serialize(),
+	owner: user1.getIdentity().serialize(),
 	quantity: '200',
 };
 const transferRequest = {
