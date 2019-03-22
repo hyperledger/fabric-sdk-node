@@ -27,7 +27,7 @@
     "fabric-common": "file:../fabric-common",
     "fabric-protos": "file:../fabric-protos",
     "fs-extra": "^6.0.1",
-    "grpc": "1.14.2",
+    "grpc": "1.17.0",
     "js-sha3": "^0.7.0",
     "jsrsasign": "^7.2.2",
     "jssha": "^2.1.0",
