@@ -24,4 +24,11 @@ git commit -m "SDK commit - $SDK_COMMIT"
 # Credentials are stored as Global Variables in Jenkins
 git config remote.gh-pages.url https://$NODE_SDK_USERNAME:$NODE_SDK_PASSWORD@github.com/$NODE_SDK_USERNAME/$TARGET_REPO
 # Push API docs to target repository
+
+echo " ____  _   _ ____  _   _      _    ____ ___   ____   ___   ____ ____   "
+echo "|  _ \| | | / ___|| | | |    / \  |  _ \_ _| |  _ \ / _ \ / ___/ ___|  "
+echo "| |_) | | | \___ \| |_| |   / _ \ | |_) | |  | | | | | | | |   \___ \  "
+echo "|  __/| |_| |___) |  _  |  / ___ \|  __/| |  | |_| | |_| | |___ ___) | "
+echo "|_|    \___/|____/|_| |_| /_/   \_\_|  |___| |____/ \___/ \____|____/  "
+
 git push gh-pages master
