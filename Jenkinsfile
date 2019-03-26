@@ -158,7 +158,7 @@ def buildStages() {
         }
       }
 // Publish npm modules only from amd64 merge jobs
-if ((env.JOB_TYPE == "merge") && (env.MARCH = "amd64")) {
+if (env.JOB_TYPE == "merge" && env.MARCH == "amd64") {
   publishNpm()
   apiDocs()
 } else {
@@ -192,12 +192,13 @@ if ((env.JOB_TYPE == "merge") && (env.MARCH = "amd64")) {
 def publishNpm() {
   // Publish npm modules after successful merge
   stage("Publish npm Modules") {
+    def ROOTDIR = pwd()
     sh 'echo "-------> Publish npm Modules"'
     withCredentials([[$class       : 'StringBinding',
       credentialsId: 'NPM_LOCAL',
       variable : 'NPM_TOKEN']]) {
       try {
-        dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_script") {
+        dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_scripts") {
           sh './ciScript.sh --publish_NpmModules'
         }
       } catch (err) {
@@ -212,13 +213,14 @@ def publishNpm() {
 def apiDocs() {
   // Publish SDK_NODE API docs after successful merge
   stage("Publish API Docs") {
+    def ROOTDIR = pwd()
     sh 'echo "--------> Publish API Docs"'
     withCredentials([[$class     : 'UsernamePasswordMultiBinding',
       credentialsId: 'sdk-node-credentials',
       usernameVariable: 'NODE_SDK_USERNAME',
       passwordVariable: 'NODE_SDK_PASSWORD']]) {
     try {
-      dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_script") {
+      dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_scripts") {
         sh './ciScript.sh --publish_ApiDocs'
       }
     }

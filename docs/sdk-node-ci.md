@@ -38,13 +38,13 @@ clone the repository with the Gerrit Refspec.
 
  **VERIFY FLOW**
 
-    CleanEnvironment -- OutputEnvironment -- Checkout SCM -- Build Artifacts -- Headless Tests -- Integration Tests -- Cucumber & Logger Tests
+    CleanEnvironment -- OutputEnvironment -- Checkout SCM -- Build Artifacts -- NPM Install -- Headless Tests -- Integration Tests -- Cucumber & Logger Tests
 
 and the below is the series of stages for the merge job flow. (`fabric-sdk-node-merge-x86_64`)
 
  **Merge FLOW**
 
-    CleanEnvironment -- OutputEnvironment -- Checkout SCM -- Build Artifacts -- Headless Tests -- Integration Tests -- Cucumber & Logger Tests -- Publish NPM modules -- Publish API Docs
+    CleanEnvironment -- OutputEnvironment -- Checkout SCM -- Build Artifacts -- NPM Install -- Headless Tests -- Integration Tests -- Cucumber & Logger Tests -- Publish NPM modules -- Publish API Docs
 
 - After cleanEnvironment and Display the environment details on the Jenkins console, CI scripts
   fetches the Gerrit refspec and try to execute **Headless and Integration Tests**. `docker-ready`
@@ -84,7 +84,7 @@ the build jobs are progressing.
 Developer can post below comments to trigger the particular failed build:
 
     reverify-x or reverify - to restart the build on sdk-node-verify x86_64 platform.
-    remerge-x or remerge - to restart the build on sdk-node-verify x86_64 platform.
+    remerge-x or remerge - to restart the build on sdk-node-merge x86_64 platform.
 
 #### Where to see the output of the stages?
 
