@@ -24,6 +24,8 @@ timestamps { // set the timestamps on the jenkins console
       } // End node
     } else {
       node ('hyp-x') { // trigger jobs on x86_64 builds nodes
+        // LF team has to install the newer version in Jenkins global config
+        // Send an email to helpdesk@hyperledger.org to add newer version
         def nodeHome = tool 'nodejs-8.14.0'
         env.GOPATH = "$WORKSPACE/gopath"
         env.PATH = "$GOPATH/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${nodeHome}/bin:$PATH"
@@ -62,11 +64,13 @@ def buildStages() {
             env.GOROOT = "/opt/go/go" + props["GO_VER"] + ".linux." + "$MARCH"
             env.GOPATH = "$GOPATH/bin"
             env.PATH = "$GOROOT/bin:$GOPATH/bin:$PATH"
-            // call buildFabric to clone and build images
+            // Clone fabric repository
             fabBuildLibrary.cloneScm('fabric', '$GERRIT_BRANCH')
+            // Build fabric images
             fabBuildLibrary.fabBuildImages('fabric', 'docker')
-            // call buildFabric to clone and build images
+            // Clone fabric-ca repository
             fabBuildLibrary.cloneScm('fabric-ca', '$GERRIT_BRANCH')
+            // Build fabric-ca docker images
             fabBuildLibrary.fabBuildImages('fabric-ca', 'docker')
             // Pull Docker Images from nexus3
               fabBuildLibrary.pullDockerImages(props["FAB_BASE_VERSION"], props["FAB_IMAGES_LIST"])
@@ -103,7 +107,7 @@ def buildStages() {
       }
 
 // Publish npm modules only from amd64 merge jobs
-if ((env.JOB_TYPE == "merge") && (env.MARCH = "amd64")) {
+if (env.JOB_TYPE == "merge" && env.MARCH == "amd64") {
   publishNpm()
   apiDocs()
 } else {
@@ -135,12 +139,13 @@ if ((env.JOB_TYPE == "merge") && (env.MARCH = "amd64")) {
 def publishNpm() {
   // Publish npm modules after successful merge
   stage("Publish npm Modules") {
+    def ROOTDIR = pwd()
     sh 'echo "-------> Publish npm Modules"'
     withCredentials([[$class       : 'StringBinding',
       credentialsId: 'NPM_LOCAL',
       variable : 'NPM_TOKEN']]) {
       try {
-        dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_script") {
+        dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_scripts") {
           sh './ciScript.sh --publish_NpmModules'
         }
       } catch (err) {
@@ -155,13 +160,14 @@ def publishNpm() {
 def apiDocs() {
   // Publish SDK_NODE API docs after successful merge
   stage("Publish API Docs") {
+    def ROOTDIR = pwd()
     sh 'echo "--------> Publish API Docs"'
     withCredentials([[$class     : 'UsernamePasswordMultiBinding',
       credentialsId: 'sdk-node-credentials',
       usernameVariable: 'NODE_SDK_USERNAME',
       passwordVariable: 'NODE_SDK_PASSWORD']]) {
     try {
-      dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_script") {
+      dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_scripts") {
         sh './ciScript.sh --publish_ApiDocs'
       }
     }

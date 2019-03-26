@@ -8,7 +8,7 @@ the pipeline job configuration template here https://ci-docs.readthedocs.io/en/l
 
 ## CI Pipeline flow
 
-![](sdk-node-pipeline-flow.png)
+![](images/sdk-node-pipeline.png)
 
 - Every Gerrit patchset triggers a verify job and run the below tests from the `Jenkinsfile`
 
@@ -82,7 +82,7 @@ build jobs are progressing.
 Developer can post below comments to trigger the particular failed build:
     
      reverify-x or reverify - to restart the build on sdk-node-verify x86_64 platform.
-     remerge-x or remerge - to restart the build on sdk-node-verify x86_64 platform.
+     remerge-x or remerge - to restart the build on sdk-node-merge x86_64 platform.
 
 #### Where to see the output of the stages?
 
