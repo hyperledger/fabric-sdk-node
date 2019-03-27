@@ -7,10 +7,9 @@
 
 'use strict';
 
-const {KeyValueStore} = require('fabric-common');
+const {KeyValueStore, Utils: utils} = require('fabric-common');
 const fs = require('fs-extra');
 const path = require('path');
-const utils = require('../utils');
 
 const logger = utils.getLogger('FileKeyValueStore.js');
 

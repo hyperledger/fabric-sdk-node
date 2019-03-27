@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils, User} = require('fabric-common');
 const logger = utils.getLogger('fileKeyValStore-fabricca');
 
 const tape = require('tape');
@@ -17,7 +17,6 @@ const fs = require('fs-extra');
 const path = require('path');
 const Client = require('fabric-client');
 
-const User = require('fabric-client/lib/User.js');
 const FabricCAServices = require('fabric-ca-client/lib/FabricCAServices');
 
 const userOrg = 'org1';
@@ -37,7 +36,7 @@ test('Use FabricCAServices with a File KeyValueStore', (t) => {
 
 	// Set the relevant configuration values
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');
 
 	// var keyValueStore = Client.getConfigSetting('key-value-store');
 	const keyValStorePath = path.join(testUtil.getTempDir(), 'customKeyValStorePath');

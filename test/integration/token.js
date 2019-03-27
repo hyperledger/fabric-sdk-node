@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const tokenUtils = require('fabric-client/lib/token-utils.js');
 const logger = utils.getLogger('E2E token');
 

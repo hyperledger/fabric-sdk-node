@@ -11,8 +11,8 @@ import * as util from 'util';
 
 import FabricCAServices = require('fabric-ca-client');
 import Client = require('fabric-client');
-
-import utils = require('fabric-client/lib/utils');
+import FabricCommon = require('fabric-common');
+const {Utils: utils} = FabricCommon;
 const logger = utils.getLogger('connection profile');
 
 import { IEnrollmentRequest } from 'fabric-ca-client';

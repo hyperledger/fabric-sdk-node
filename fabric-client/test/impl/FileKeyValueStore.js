@@ -7,7 +7,7 @@
 'use strict';
 
 const rewire = require('rewire');
-const FileKeyValueStoreRW = rewire('../../lib/impl/FileKeyValueStore');
+const FileKeyValueStoreRW = rewire('../../../fabric-common/lib/impl/FileKeyValueStore');
 
 const chai = require('chai');
 const should = chai.should();

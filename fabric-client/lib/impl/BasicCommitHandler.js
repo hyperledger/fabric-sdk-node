@@ -7,7 +7,7 @@
 
 'use strict';
 
-const utils = require('../utils');
+const {Utils: utils} = require('fabric-common');
 const Constants = require('../Constants.js');
 const CommitHandler = require('../CommitHandler');
 const logger = utils.getLogger('BasicCommitHandler');
@@ -110,7 +110,7 @@ class BasicCommitHandler extends CommitHandler {
 			for (const orderer of orderers) {
 				logger.debug('%s - starting orderer %s', method, orderer.getName());
 				try {
-					const results =  await orderer.sendBroadcast(envelope, timeout);
+					const results = await orderer.sendBroadcast(envelope, timeout);
 					if (results) {
 						if (results.status === 'SUCCESS') {
 							logger.debug('%s - Successfully sent transaction to the orderer %s', method, orderer.getName());
@@ -138,7 +138,6 @@ class BasicCommitHandler extends CommitHandler {
 		}
 	}
 }
-
 
 
 module.exports = BasicCommitHandler;

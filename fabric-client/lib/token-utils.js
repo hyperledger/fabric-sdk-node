@@ -16,7 +16,7 @@
 
 const util = require('util');
 const client_utils = require('./client-utils.js');
-const utils = require('./utils.js');
+const {Utils: utils} = require('fabric-common');
 const logger = utils.getLogger('token-utils.js');
 const fabprotos = require('fabric-protos');
 

@@ -1,22 +1,11 @@
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
 
 const rewire = require('rewire');
-const Utils = rewire('../lib/utils');
-const Long = require('long');
+const Utils = rewire('../../fabric-common/lib/Utils');
 
 
 const should = require('chai').should();
@@ -499,34 +488,6 @@ describe('Utils', () => {
 		});
 	});
 
-	describe('#convertToLong', () => {
-		it('should throw an error if value is not set', () => {
-			(() => {
-				Utils.convertToLong();
-			}).should.throw(/value parameter is missing/);
-		});
-
-		it('should throw an error if value is not a number', () => {
-			(() => {
-				Utils.convertToLong('test');
-			}).should.throw(/value:test is not a valid number/);
-		});
-
-		it('should return the Long value', () => {
-			const result = Utils.convertToLong(Long.fromValue(1));
-			result.should.deep.equal(Long.fromValue(1));
-		});
-
-		it('should return the Long value', () => {
-			const result = Utils.convertToLong(1.0);
-			result.should.deep.equal(Long.fromValue(1));
-		});
-
-		it('should return the Long value', () => {
-			const result = Utils.convertToLong(0.0);
-			result.should.deep.equal(Long.fromValue(0));
-		});
-	});
 
 	describe('#checkIntegerConfig', () => {
 		it('should throw an error if config value is not an integer', () => {

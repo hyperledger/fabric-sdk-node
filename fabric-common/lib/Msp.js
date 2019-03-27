@@ -5,8 +5,10 @@
 */
 'use strict';
 
-const {CryptoAlgorithms, Identity, SigningIdentity} = require('fabric-common');
-const utils = require('../utils.js');
+const CryptoAlgorithms = require('./CryptoAlgorithms');
+const Identity = require('./Identity');
+const SigningIdentity = require('./SigningIdentity');
+const utils = require('./Utils');
 const logger = utils.getLogger('msp.js');
 
 const fabprotos = require('fabric-protos');
@@ -23,15 +25,15 @@ const MSP = class {
 	 * Setup the MSP instance according to configuration information
 	 * @param {Object} config A configuration object specific to the implementation. For this
 	 * implementation it uses the following fields:
-	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
+	 *        <br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
 	 *           signing certificates. Required for MSPs used in verifying signatures
-	 *		<br>`intermediateCerts`: array of {@link Identity} representing trust anchors for validating
+	 *        <br>`intermediateCerts`: array of {@link Identity} representing trust anchors for validating
 	 *           signing certificates. optional for MSPs used in verifying signatures
-	 *		<br>`admins`: array of {@link Identity} representing admin privileges
-	 *		<br>`signer`: {@link SigningIdentity} signing identity. Required for MSPs used in signing
-	 *		<br>`id`: {string} value for the identifier of this instance
-	 *		<br>`orgs`: {string} array of organizational unit identifiers
-	 *		<br>`cryptoSuite': the underlying {@link module:api.CryptoSuite} for crypto primitive operations
+	 *        <br>`admins`: array of {@link Identity} representing admin privileges
+	 *        <br>`signer`: {@link SigningIdentity} signing identity. Required for MSPs used in signing
+	 *        <br>`id`: {string} value for the identifier of this instance
+	 *        <br>`orgs`: {string} array of organizational unit identifiers
+	 *        <br>`cryptoSuite': the underlying {@link module:api.CryptoSuite} for crypto primitive operations
 	 */
 	constructor(config) {
 		logger.debug('const - start');
@@ -135,7 +137,7 @@ const MSP = class {
 	/**
 	 * DeserializeIdentity deserializes an identity
 	 * @param {byte[]} serializedIdentity - A protobuf-based serialization of an object with
-	 * 	      two fields: mspid and idBytes for certificate PEM bytes
+	 *          two fields: mspid and idBytes for certificate PEM bytes
 	 * @param {boolean} storeKey - if the user should be stored in the key store. Only when
 	 *        false will a promise not be returned
 	 * @returns {Promise} Promise for an {@link Identity} instance or

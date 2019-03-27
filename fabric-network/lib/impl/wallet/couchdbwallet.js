@@ -7,7 +7,7 @@
 
 const Client = require('fabric-client');
 const BaseWallet = require('./basewallet');
-const CouchDBVStore = require('fabric-client/lib/impl/CouchDBKeyValueStore');
+const CouchDBVStore = require('fabric-common/lib/impl/CouchDBKeyValueStore');
 const logger = require('../../logger').getLogger('CouchDBWallet');
 const Nano = require('nano');
 

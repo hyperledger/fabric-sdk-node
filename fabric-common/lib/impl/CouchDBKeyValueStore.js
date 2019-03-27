@@ -7,9 +7,8 @@
 
 'use strict';
 
-const {KeyValueStore} = require('fabric-common');
+const {KeyValueStore, Utils: utils} = require('fabric-common');
 const util = require('util');
-const utils = require('../utils');
 const nano = require('nano');
 
 const logger = utils.getLogger('CouchDBKeyValueStore.js');

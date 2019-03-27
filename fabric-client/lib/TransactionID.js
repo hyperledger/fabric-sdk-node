@@ -7,10 +7,9 @@
 
 'use strict';
 
-const utils = require('./utils.js');
+
+const {Utils: utils, HashPrimitives, User} = require('fabric-common');
 const logger = utils.getLogger('TransactionID.js');
-const User = require('./User.js');
-const {HashPrimitives} = require('fabric-common');
 
 /**
  * The class representing the transaction identifier. Provides for
@@ -22,12 +21,12 @@ const {HashPrimitives} = require('fabric-common');
 class TransactionID {
 
 	/**
-     * Builds a new transaction Id based on a user's certificate and an automatically
-     * generates a nonce value.
-     * @param {Identity} signer_or_userContext - An instance of {@link Identity} that provides an unique
-     *                 base for this transaction id. This also may be an instance of a {@User}.
-     * @param {boolean} admin - Indicates that this instance will be used for administrative  transactions.
-     */
+	 * Builds a new transaction Id based on a user's certificate and an automatically
+	 * generates a nonce value.
+	 * @param {Identity} signer_or_userContext - An instance of {@link Identity} that provides an unique
+	 *                 base for this transaction id. This also may be an instance of a {@User}.
+	 * @param {boolean} admin - Indicates that this instance will be used for administrative  transactions.
+	 */
 	constructor(signer_or_userContext, admin) {
 		logger.debug('constructor - start');
 		if (!signer_or_userContext) {
@@ -51,22 +50,22 @@ class TransactionID {
 	}
 
 	/**
-     * The transaction ID
-     */
+	 * The transaction ID
+	 */
 	getTransactionID() {
 		return this._transaction_id;
 	}
 
 	/**
-     * The nonce value
-     */
+	 * The nonce value
+	 */
 	getNonce() {
 		return this._nonce;
 	}
 
 	/**
-     * indicates if this transactionID was generated for an admin
-     */
+	 * indicates if this transactionID was generated for an admin
+	 */
 	isAdmin() {
 		if (this._admin) {
 			return true;

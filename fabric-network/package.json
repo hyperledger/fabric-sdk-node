@@ -24,6 +24,7 @@
   "dependencies": {
     "fabric-client": "file:../fabric-client",
     "fabric-ca-client": "file:../fabric-ca-client",
+	  "fabric-common": "file:../fabric-common",
     "nano": "^6.4.4",
     "rimraf": "^2.6.2",
     "uuid": "^3.2.1"

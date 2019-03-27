@@ -186,7 +186,7 @@ describe('CouchDBWalletKeyValueStore', () => {
 	let kvs;
 	before(() => {
 		CouchDBWallet = proxyquire('../../../lib/impl/wallet/couchdbwallet', {
-			'fabric-client/lib/impl/CouchDBKeyValueStore': class {}
+			'fabric-common/lib/impl/CouchDBKeyValueStore': class {}
 		});
 	});
 	beforeEach(() => {

@@ -1,13 +1,10 @@
-/*
- Copyright 2018 IBM All Rights Reserved.
-
- SPDX-License-Identifier: Apache-2.0
-
-*/
+/**
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 'use strict';
-
-const logger = require('./utils').getLogger('AffiliationService');
+const {Utils} = require('fabric-common');
+const logger = Utils.getLogger('AffiliationService');
 const checkRegistrar = require('./helper').checkRegistrar;
 
 /**

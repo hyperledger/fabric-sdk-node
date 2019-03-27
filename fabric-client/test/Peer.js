@@ -106,7 +106,7 @@ describe('Peer', () => {
 				})
 				.catch(() => {
 					sinon.assert.called(debugStub);
-					debugStub.getCall(1).args.should.deep.equal(['%s - Start ----%s %s', 'sendProposal', 'host:2700', 'grpc://host:2700']);
+					debugStub.getCall(1).lastArg.should.equal('_createClients - create peer endorser connection host:2700');
 				});
 		});
 
@@ -387,7 +387,7 @@ describe('Peer', () => {
 				})
 				.catch(() => {
 					sinon.assert.called(debugStub);
-					debugStub.getCall(1).args.should.deep.equal(['%s - Start', 'sendDiscovery']);
+					debugStub.getCall(1).lastArg.should.equal('_createClients - create peer endorser connection host:2700');
 				});
 		});
 
@@ -572,7 +572,7 @@ describe('Peer', () => {
 				})
 				.catch(() => {
 					sinon.assert.called(debugStub);
-					debugStub.getCall(1).args.should.deep.equal(['%s - Start ----%s %s', 'sendTokenCommand', 'host:2700', 'grpc://host:2700']);
+					debugStub.getCall(1).lastArg.should.equal('_createClients - create peer endorser connection host:2700');
 				});
 		});
 

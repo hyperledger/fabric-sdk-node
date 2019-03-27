@@ -17,7 +17,7 @@ const test = _test(tape);
 
 const util = require('util');
 const testutil = require('./util.js');
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const fs = require('fs-extra');
 const path = require('path');
 const os = require('os');
@@ -26,9 +26,9 @@ const KEYUTIL = jsrsa.KEYUTIL;
 const CouchdbMock = require('mock-couch');
 const nano = require('nano');
 
-const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
-const CKS = require('fabric-client/lib/impl/CryptoKeyStore.js');
-const CouchDBKeyValueStore = require('fabric-client/lib/impl/CouchDBKeyValueStore.js');
+const ecdsaKey = require('fabric-common/lib/impl/ecdsa/key.js');
+const CKS = require('fabric-common/lib/impl/CryptoKeyStore.js');
+const CouchDBKeyValueStore = require('fabric-common/lib/impl/CouchDBKeyValueStore.js');
 
 const TEST_KEY_PRIVATE_PEM = '-----BEGIN PRIVATE KEY-----' +
 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgZYMvf3w5VkzzsTQY' +
@@ -102,7 +102,7 @@ test('\n\n** CryptoKeyStore tests **\n\n', (t) => {
 
 
 test('\n\n** CryptoKeyStore tests - couchdb based store tests - use configSetting **\n\n', (t) => {
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/CouchDBKeyValueStore.js');
 
 	const couchdb = CouchdbMock.createServer();
 	couchdb.listen(5985);
@@ -217,7 +217,7 @@ function testKeyStore(store, t) {
 }
 
 test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', (t) => {
-	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
 	const keyValStorePath = 'tmp/keyValStore1';
 	const config = {path: keyValStorePath};
 	let cs = utils.newCryptoKeyStore(config);

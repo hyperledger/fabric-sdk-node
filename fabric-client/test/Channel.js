@@ -1,15 +1,5 @@
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
@@ -29,13 +19,11 @@ const ChannelEventHub = require('fabric-client/lib/ChannelEventHub');
 const Chaincode = require('fabric-client/lib/Chaincode');
 const Client = require('fabric-client/lib/Client');
 const Constants = require('fabric-client/lib/Constants');
-const {Identity, SigningIdentity} = require('fabric-common');
-const MSP = require('fabric-client/lib/msp/msp');
+const {Identity, SigningIdentity, Utils: sdk_utils, MSP} = require('fabric-common');
 const MSPManager = require('fabric-client/lib/msp/msp-manager');
 const Orderer = require('fabric-client/lib/Orderer');
 const Peer = require('fabric-client/lib/Peer');
 const TransactionID = require('fabric-client/lib/TransactionID');
-const sdk_utils = require('fabric-client/lib/utils.js');
 
 const fabprotos = require('fabric-protos');
 const responseProto = fabprotos.protos;
@@ -74,12 +62,14 @@ describe('Channel', () => {
 
 	beforeEach(() => {
 		const FakeLogger = {
-			debug : () => {},
-			error: () => {}
+			debug: () => {
+			},
+			error: () => {
+			}
 		};
 
 		const FakePolicy = {
-			buildPolicy :buildPolicyStub
+			buildPolicy: buildPolicyStub
 		};
 
 		debugStub = sinon.stub(FakeLogger, 'debug');
@@ -669,7 +659,7 @@ describe('Channel', () => {
 			request = {
 				fcn: 'functionName',
 				args: ['a', 'b', 'c'],
-				chaincodeId: 'chaincode-id',
+				chaincodeId: 'chaincode-id'
 			};
 		});
 
@@ -970,7 +960,7 @@ describe('Channel', () => {
 			getConfigSettingStub.callThrough();
 
 			const request = {
-				target: peer1,
+				target: peer1
 			};
 			return expect(channel.initialize(request)).to.be.fulfilled;
 		});
@@ -1014,17 +1004,26 @@ describe('Channel', () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];
-			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			peer2.state_info = {
+				payload: new gossipProto.GossipMessage({
+					state_info: {
+						properties: {
+							ledger_height: 1,
+							chaincodes: [{name: 'mynewcc'}]
+						}
+					}
+				}).toBuffer()
+			};
 			const discoveryResponse = {
 				peer: peer1,
 				results: [
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1032,44 +1031,78 @@ describe('Channel', () => {
 			const init = await channel.initialize({discover: true, target: peer1});
 			sinon.assert.calledWith(getClientCertHash, true);
 			sinon.assert.calledWith(setClientTlsCertHashStub, 'hash');
-			expect(init.orderers).to.deep.equal({[mspId]: {endpoints: [{name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`, host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}});
+			expect(init.orderers).to.deep.equal({
+				[mspId]: {
+					endpoints: [{
+						name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`,
+						host: orderer1._endpoint.addr,
+						port: orderer1._endpoint.port
+					}]
+				}
+			});
 		});
 
 		it('finds orderers', async () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];
-			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			peer2.state_info = {
+				payload: new gossipProto.GossipMessage({
+					state_info: {
+						properties: {
+							ledger_height: 1,
+							chaincodes: [{name: 'mynewcc'}]
+						}
+					}
+				}).toBuffer()
+			};
 			const discoveryResponse = {
 				peer: peer1,
 				results: [
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
 			const init = await channel.initialize({discover: true, target: peer1});
-			expect(init.orderers).to.deep.equal({[mspId]: {endpoints: [{name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`, host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}});
+			expect(init.orderers).to.deep.equal({
+				[mspId]: {
+					endpoints: [{
+						name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`,
+						host: orderer1._endpoint.addr,
+						port: orderer1._endpoint.port
+					}]
+				}
+			});
 		});
 
 		it('sets discovery interests', async () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];
-			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			peer2.state_info = {
+				payload: new gossipProto.GossipMessage({
+					state_info: {
+						properties: {
+							ledger_height: 1,
+							chaincodes: [{name: 'mynewcc'}]
+						}
+					}
+				}).toBuffer()
+			};
 			const discoveryResponse = {
 				peer: peer1,
 				results: [
 					{
 						config_result: {msps: {[mspId]: stubMsp}},
-						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1083,20 +1116,31 @@ describe('Channel', () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];
-			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			peer2.state_info = {
+				payload: new gossipProto.GossipMessage({
+					state_info: {
+						properties: {
+							ledger_height: 1,
+							chaincodes: [{name: 'mynewcc'}]
+						}
+					}
+				}).toBuffer()
+			};
 			const discoveryResponse = {
 				peer: peer1,
 				results: [
 					{
 						config_result: {msps: {[mspId]: stubMsp}},
 						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
-						cc_query_res: {content: [{
-							chaincode: {name: 'mynewcc'},
-							endorsers_by_groups: {group1: {peers: [peer2]}},
-							layouts: [{quantities_by_group: ['layout']}]
-						}]}
+						cc_query_res: {
+							content: [{
+								chaincode: {name: 'mynewcc'},
+								endorsers_by_groups: {group1: {peers: [peer2]}},
+								layouts: [{quantities_by_group: ['layout']}]
+							}]
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1127,7 +1171,16 @@ describe('Channel', () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];
-			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			peer2.state_info = {
+				payload: new gossipProto.GossipMessage({
+					state_info: {
+						properties: {
+							ledger_height: 1,
+							chaincodes: [{name: 'mynewcc'}]
+						}
+					}
+				}).toBuffer()
+			};
 			const discoveryResponse = {
 				peer: peer1,
 				results: [
@@ -1136,7 +1189,7 @@ describe('Channel', () => {
 						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
 						cc_query_res: {}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1148,7 +1201,16 @@ describe('Channel', () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];
-			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			peer2.state_info = {
+				payload: new gossipProto.GossipMessage({
+					state_info: {
+						properties: {
+							ledger_height: 1,
+							chaincodes: [{name: 'mynewcc'}]
+						}
+					}
+				}).toBuffer()
+			};
 			const discoveryResponse = {
 				peer: peer1,
 				results: [
@@ -1157,7 +1219,7 @@ describe('Channel', () => {
 						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
 						cc_query_res: {content: 'not an array'}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1215,15 +1277,20 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#_initialize', () => {});
+	describe('#_initialize', () => {
+	});
 
-	describe('_buildDiscoveryMSPs', () => {});
+	describe('_buildDiscoveryMSPs', () => {
+	});
 
-	describe('#_buildDiscoveryOrderers', () => {});
+	describe('#_buildDiscoveryOrderers', () => {
+	});
 
-	describe('#_buildDiscoveryPeers', () => {});
+	describe('#_buildDiscoveryPeers', () => {
+	});
 
-	describe('#_buildDiscoveryEndorsementPlan', () => {});
+	describe('#_buildDiscoveryEndorsementPlan', () => {
+	});
 
 	describe('#_discover', () => {
 	});
@@ -1233,7 +1300,7 @@ describe('Channel', () => {
 			const discoveryResponse = {
 				interests: [{name: 'mycc'}],
 				peer: peer1,
-				results: [{config_result: {msps: {[mspId]: stubMsp}}}],
+				results: [{config_result: {msps: {[mspId]: stubMsp}}}]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1247,7 +1314,7 @@ describe('Channel', () => {
 					orgs: mspId,
 					rootCerts: 'root-certs',
 					tls_intermediate_certs: 'tls_intermediate_certs',
-					tls_root_certs: 'tls_root_certs',
+					tls_root_certs: 'tls_root_certs'
 				}
 			});
 			expect(discoveryResults.orders).to.be.undefined;
@@ -1291,33 +1358,47 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#getOrganizations', () => {});
+	describe('#getOrganizations', () => {
+	});
 
-	describe('#setMSPManager', () => {});
+	describe('#setMSPManager', () => {
+	});
 
-	describe('#getMSPManager', () => {});
+	describe('#getMSPManager', () => {
+	});
 
-	describe('#addPeer', () => {});
+	describe('#addPeer', () => {
+	});
 
-	describe('#removePeer', () => {});
+	describe('#removePeer', () => {
+	});
 
-	describe('#gePeer', () => {});
+	describe('#gePeer', () => {
+	});
 
-	describe('#getChannelPeers', () => {});
+	describe('#getChannelPeers', () => {
+	});
 
-	describe('#addOrderer', () => {});
+	describe('#addOrderer', () => {
+	});
 
-	describe('#removeOrderer', () => {});
+	describe('#removeOrderer', () => {
+	});
 
-	describe('#getOrderer', () => {});
+	describe('#getOrderer', () => {
+	});
 
-	describe('#getOrderers', () => {});
+	describe('#getOrderers', () => {
+	});
 
-	describe('#newChannelEventHub', () => {});
+	describe('#newChannelEventHub', () => {
+	});
 
-	describe('#getChannelEventHub', () => {});
+	describe('#getChannelEventHub', () => {
+	});
 
-	describe('#getChannelEventHubsForOrg', () => {});
+	describe('#getChannelEventHubsForOrg', () => {
+	});
 
 	describe('#getGenesisBlock', () => {
 
@@ -1325,23 +1406,40 @@ describe('Channel', () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];
-			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			peer2.state_info = {
+				payload: new gossipProto.GossipMessage({
+					state_info: {
+						properties: {
+							ledger_height: 1,
+							chaincodes: [{name: 'mynewcc'}]
+						}
+					}
+				}).toBuffer()
+			};
 			const discoveryResponse = {
 				peer: peer1,
 				results: [
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
 			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
 			const init = await channel.initialize({discover: true, target: peer1});
-			expect(init.orderers).to.deep.equal({[mspId]: {endpoints: [{name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`, host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}});
+			expect(init.orderers).to.deep.equal({
+				[mspId]: {
+					endpoints: [{
+						name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`,
+						host: orderer1._endpoint.addr,
+						port: orderer1._endpoint.port
+					}]
+				}
+			});
 			orderer3.sendDeliver.returns('genesis-block');
 			const block = await channel.getGenesisBlock();
 			sinon.assert.called(channel._clientContext.getTargetOrderer);
@@ -1355,23 +1453,40 @@ describe('Channel', () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];
-			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			peer2.state_info = {
+				payload: new gossipProto.GossipMessage({
+					state_info: {
+						properties: {
+							ledger_height: 1,
+							chaincodes: [{name: 'mynewcc'}]
+						}
+					}
+				}).toBuffer()
+			};
 			const discoveryResponse = {
 				peer: peer1,
 				results: [
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
 			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer3);
 			const init = await channel.initialize({discover: true, target: peer1});
-			expect(init.orderers).to.deep.equal({[mspId]: {endpoints: [{name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`, host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}});
+			expect(init.orderers).to.deep.equal({
+				[mspId]: {
+					endpoints: [{
+						name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`,
+						host: orderer1._endpoint.addr,
+						port: orderer1._endpoint.port
+					}]
+				}
+			});
 			orderer3.sendDeliver.returns('genesis-block');
 			const txId = client.newTransactionID();
 			const block = await channel.getGenesisBlock({txId});
@@ -1395,10 +1510,10 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1413,18 +1528,27 @@ describe('Channel', () => {
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
 			peer2.membership_info = {payload: new gossipProto.GossipMessage({alive_msg: {membership: {endpoint: peer2.getUrl()}}}).toBuffer()};
 			peer2.chaincodes = [{name: 'mynewcc'}];
-			peer2.state_info = {payload: new gossipProto.GossipMessage({state_info: {properties: {ledger_height: 1, chaincodes: [{name: 'mynewcc'}]}}}).toBuffer()};
+			peer2.state_info = {
+				payload: new gossipProto.GossipMessage({
+					state_info: {
+						properties: {
+							ledger_height: 1,
+							chaincodes: [{name: 'mynewcc'}]
+						}
+					}
+				}).toBuffer()
+			};
 			const discoveryResponse = {
 				peer: peer1,
 				results: [
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
 						},
-						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1443,10 +1567,10 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1507,7 +1631,7 @@ describe('Channel', () => {
 		it('should not thow if no config_result is given', () => {
 			const discoveryResponse = {
 				peer: peer1,
-				results: [{}],
+				results: [{}]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1518,7 +1642,7 @@ describe('Channel', () => {
 		it('should not error given an empty result.config_result', () => {
 			const discoveryResponse = {
 				peer: peer1,
-				results: [{config_result: null}],
+				results: [{config_result: null}]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1529,7 +1653,7 @@ describe('Channel', () => {
 		it('should not error given an empty result.config_result.msps', () => {
 			const discoveryResponse = {
 				peer: peer1,
-				results: [{config_result: {}}],
+				results: [{config_result: {}}]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1540,9 +1664,11 @@ describe('Channel', () => {
 		it('should throw if anything errors whilst building the discovery config', () => {
 			const discoveryResponse = {
 				peer: peer1,
-				results: [{config_result: {
-					msps: {[mspId]: {}}
-				}}],
+				results: [{
+					config_result: {
+						msps: {[mspId]: {}}
+					}
+				}]
 			};
 			debugStub.withArgs('%s - found organization %s', '_processDiscoveryConfigResults', 'org1').callsFake(() => {
 				throw new Error('forced error');
@@ -1561,9 +1687,9 @@ describe('Channel', () => {
 						config_result: {
 							msps: {[mspId]: {}}
 						},
-						members: {peers_by_org: null},
+						members: {peers_by_org: null}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1582,11 +1708,11 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
 						},
-						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1606,11 +1732,11 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
 						},
-						members: {peers_by_org: {[mspId]: {peers: [peer2]}}},
+						members: {peers_by_org: {[mspId]: {peers: [peer2]}}}
 					}
-				],
+				]
 			};
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -1620,15 +1746,20 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#_processDiscoveryChaincodeResults', () => {});
+	describe('#_processDiscoveryChaincodeResults', () => {
+	});
 
-	describe('#_processDiscoveryResults', () => {});
+	describe('#_processDiscoveryResults', () => {
+	});
 
-	describe('#_processDiscoveryMembershipResults', () => {});
+	describe('#_processDiscoveryMembershipResults', () => {
+	});
 
-	describe('#_processPeers', () => {});
+	describe('#_processPeers', () => {
+	});
 
-	describe('#_processPeers', () => {});
+	describe('#_processPeers', () => {
+	});
 
 	describe('#_buildOrdererName', () => {
 
@@ -2056,15 +2187,26 @@ describe('Channel', () => {
 		});
 
 		it('should throw if targets is missing', () => {
-			expect(() => channel.joinChannel({txId: 1, block: 'something'})).to.throw(/"targets" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network/);
+			expect(() => channel.joinChannel({
+				txId: 1,
+				block: 'something'
+			})).to.throw(/"targets" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network/);
 		});
 
 		it('should throw if invalid target', () => {
-			expect(() => channel.joinChannel({txId: 1, block: 'something', targets: [{}]})).to.throw(/Target peer is not a valid peer object instance/);
+			expect(() => channel.joinChannel({
+				txId: 1,
+				block: 'something',
+				targets: [{}]
+			})).to.throw(/Target peer is not a valid peer object instance/);
 		});
 
 		it('should throw if not existing target', () => {
-			expect(() => channel.joinChannel({txId: 1, block: 'something', targets: 'penguin'})).to.throw(/Peer with name "penguin" not assigned to this channel/);
+			expect(() => channel.joinChannel({
+				txId: 1,
+				block: 'something',
+				targets: 'penguin'
+			})).to.throw(/Peer with name "penguin" not assigned to this channel/);
 		});
 
 		it('should be rejected is sendPeersProposal fails', async () => {
@@ -2077,7 +2219,7 @@ describe('Channel', () => {
 			const request = {
 				txId: client.newTransactionID(),
 				block: {toBuffer: () => new Buffer('{}')},
-				targets: [peer1],
+				targets: [peer1]
 			};
 			const res = await channel.joinChannel(request);
 			expect(res).to.deep.equal([err]);
@@ -2111,10 +2253,10 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
 			sinon.stub(orderer1, 'sendDeliver').returns(null);
@@ -2132,10 +2274,10 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
 			sinon.stub(orderer1, 'sendDeliver').onCall(0).returns({
@@ -2145,7 +2287,8 @@ describe('Channel', () => {
 						null,
 						commonProto.Metadata.encode('{value: []}')
 					]
-				}});
+				}
+			});
 			orderer1.sendDeliver.onCall(1).returns(null);
 			sinon.stub(peer1, 'waitForReady').resolves();
 			sinon.stub(peer1._discoveryClient, 'discover').callsArgWith(1, null, discoveryResponse);
@@ -2161,10 +2304,10 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
 			sinon.stub(orderer1, 'sendDeliver').onCall(0).returns({
@@ -2174,7 +2317,8 @@ describe('Channel', () => {
 						null,
 						commonProto.Metadata.encode('{value: []}')
 					]
-				}});
+				}
+			});
 			orderer1.sendDeliver.onCall(1).returns({
 				header: {number: 1},
 				data: {data: []}
@@ -2193,10 +2337,10 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
 			sinon.stub(orderer1, 'sendDeliver').onCall(0).returns({
@@ -2206,7 +2350,8 @@ describe('Channel', () => {
 						null,
 						commonProto.Metadata.encode('{value: []}')
 					]
-				}});
+				}
+			});
 			const envelope = new commonProto.Envelope();
 			const payload = new commonProto.Payload();
 			const header = new commonProto.Header();
@@ -2237,10 +2382,10 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint:[{host:orderer1._endpoint.addr, port:orderer1._endpoint.port}]}}
-						},
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+						}
 					}
-				],
+				]
 			};
 			sinon.stub(channel._clientContext, 'getTargetOrderer').returns(orderer1);
 			sinon.stub(orderer1, 'sendDeliver').onCall(0).returns({
@@ -2250,7 +2395,8 @@ describe('Channel', () => {
 						null,
 						commonProto.Metadata.encode('{value: []}')
 					]
-				}});
+				}
+			});
 			const envelope = new commonProto.Envelope();
 			const payload = new commonProto.Payload();
 			const header = new commonProto.Header();
@@ -2262,7 +2408,7 @@ describe('Channel', () => {
 				tx_id: 'tx_id',
 				epoch: 1,
 				extension: '',
-				tls_cert_hash:''
+				tls_cert_hash: ''
 			});
 			const data = new configtxProto.ConfigEnvelope();
 			data.setConfig({});
@@ -2678,13 +2824,30 @@ describe('Channel', () => {
 			});
 			const response = await channel.queryInstantiatedChaincodes(peer1);
 			sinon.match({
-				'chaincodes':[
-					{'name':'mycc', 'version':'', 'path':'', 'input':'', 'escc':'', 'vscc':'', 'id':{'buffer': sinon.match.instanceOf(Buffer), 'offset':0, 'markedOffset':-1, 'limit':0, 'littleEndian':false, 'noAssert':false}}
-				]}).test(response);
+				'chaincodes': [
+					{
+						'name': 'mycc',
+						'version': '',
+						'path': '',
+						'input': '',
+						'escc': '',
+						'vscc': '',
+						'id': {
+							'buffer': sinon.match.instanceOf(Buffer),
+							'offset': 0,
+							'markedOffset': -1,
+							'limit': 0,
+							'littleEndian': false,
+							'noAssert': false
+						}
+					}
+				]
+			}).test(response);
 		});
 	});
 
-	describe('#queryCollectionsConfig', () => {});
+	describe('#queryCollectionsConfig', () => {
+	});
 
 	describe('#sendInstantiateProposal', () => {
 		it('should call _sendChaincodeProposal', () => {
@@ -2919,7 +3082,8 @@ describe('Channel', () => {
 
 	});
 
-	describe('Channel.sendTransactionProposal', () => {});
+	describe('Channel.sendTransactionProposal', () => {
+	});
 
 	describe('#sendTransaction', () => {
 
@@ -2936,14 +3100,19 @@ describe('Channel', () => {
 		});
 
 		it('should throw if no endorsements in request object', () => {
-			return expect(channel.sendTransaction({proposal: 'blah', proposalResponses: {response: {status: 500}}})).to.be.rejectedWith('no valid endorsements found');
+			return expect(channel.sendTransaction({
+				proposal: 'blah',
+				proposalResponses: {response: {status: 500}}
+			})).to.be.rejectedWith('no valid endorsements found');
 		});
 
 	});
 
-	describe('#sendSignedTransation', () => {});
+	describe('#sendSignedTransation', () => {
+	});
 
-	describe('#buildEnvelope', () => {});
+	describe('#buildEnvelope', () => {
+	});
 
 	describe('#queryByChaincode', () => {
 		const peer1Result = 'PEER1_RESULT';
@@ -3036,11 +3205,14 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#_getTargetForQuery', () => {});
+	describe('#_getTargetForQuery', () => {
+	});
 
-	describe('#_getTargetForDiscovery', () => {});
+	describe('#_getTargetForDiscovery', () => {
+	});
 
-	describe('#_getTargets', () => {});
+	describe('#_getTargets', () => {
+	});
 
 	describe('#_getOrderer', () => {
 
@@ -3080,11 +3252,14 @@ describe('Channel', () => {
 
 	});
 
-	describe('#_getProposalResponseResults', () => {});
+	describe('#_getProposalResponseResults', () => {
+	});
 
-	describe('#loadConfigGroup', () => {});
+	describe('#loadConfigGroup', () => {
+	});
 
-	describe('#loadConfigValue', () => {});
+	describe('#loadConfigValue', () => {
+	});
 
 	describe('#sendTokenCommand(static)', () => {
 		let sandbox;
@@ -3103,8 +3278,10 @@ describe('Channel', () => {
 
 		beforeEach(() => {
 			const FakeLogger = {
-				debug : () => {},
-				error: () => {}
+				debug: () => {
+				},
+				error: () => {
+				}
 			};
 			debugStub = sinon.stub(FakeLogger, 'debug');
 
@@ -3155,7 +3332,7 @@ describe('Channel', () => {
 			}
 		});
 
-		it('should throw an error if sendTokenCommandToPeer fails',  async () => {
+		it('should throw an error if sendTokenCommandToPeer fails', async () => {
 			try {
 				const fakeError = new Error('forced send command error');
 				sendTokenCommandToPeerStub.throws(fakeError);
@@ -3184,8 +3361,10 @@ describe('Channel', () => {
 
 		beforeEach(() => {
 			const FakeLogger = {
-				debug : () => {},
-				error: () => {}
+				debug: () => {
+				},
+				error: () => {
+				}
 			};
 			debugStub = sinon.stub(FakeLogger, 'debug');
 
@@ -3307,8 +3486,10 @@ describe('Channel', () => {
 
 		beforeEach(() => {
 			const FakeLogger = {
-				debug : () => {},
-				error: () => {}
+				debug: () => {
+				},
+				error: () => {
+				}
 			};
 			debugStub = sinon.stub(FakeLogger, 'debug');
 
@@ -3420,8 +3601,10 @@ describe('Channel', () => {
 
 		beforeEach(() => {
 			const FakeLogger = {
-				debug : () => {},
-				error: () => {}
+				debug: () => {
+				},
+				error: () => {
+				}
 			};
 			debugStub = sinon.stub(FakeLogger, 'debug');
 
@@ -3551,8 +3734,10 @@ describe('Channel', () => {
 
 		beforeEach(() => {
 			const FakeLogger = {
-				debug : () => {},
-				error: () => {}
+				debug: () => {
+				},
+				error: () => {
+				}
 			};
 			debugStub = sinon.stub(FakeLogger, 'debug');
 

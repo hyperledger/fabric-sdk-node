@@ -28,7 +28,6 @@
     "fabric-common": "file:../fabric-common",
     "fabric-protos": "file:../fabric-protos",
     "fs-extra": "^6.0.1",
-    "grpc": "1.17.0",
     "hoek": "^4.2.1",
     "ignore-walk": "^3.0.0",
     "js-sha3": "^0.7.0",
@@ -41,11 +40,9 @@
     "nconf": "^0.10.0",
     "pkcs11js": "^1.0.6",
     "promise-settle": "^0.3.0",
-    "sjcl": "1.0.7",
     "stream-buffers": "3.0.1",
     "tar-stream": "1.6.1",
-    "url": "^0.11.0",
-    "winston": "^2.2.0"
+    "url": "^0.11.0"
   },
   "devDependencies": {
     "chai": "^4.1.2",

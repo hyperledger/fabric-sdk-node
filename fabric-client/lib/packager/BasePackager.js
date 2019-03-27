@@ -20,7 +20,7 @@ const klaw = require('klaw');
 const tar = require('tar-stream');
 const path = require('path');
 const zlib = require('zlib');
-const utils = require('../utils.js');
+const {Utils: utils} = require('fabric-common');
 
 const logger = utils.getLogger('packager/BasePackager.js');
 
@@ -31,7 +31,7 @@ const BasePackager = class {
 	 *
 	 * @param {*} [keep] Array of valid source file extensions
 	 */
-	constructor (keep) {
+	constructor(keep) {
 		if (this.constructor === BasePackager) {
 			// BasePackager can not be constructed.
 			throw new TypeError('Can not construct abstract class.');
@@ -50,7 +50,7 @@ const BasePackager = class {
 	 * @param chaincodePath
 	 * @param metadataPath
 	 */
-	package (chaincodePath, metadataPath) {
+	package(chaincodePath, metadataPath) {
 		throw new TypeError('Please implement method package from child class');
 	}
 
@@ -60,7 +60,7 @@ const BasePackager = class {
 	 *
 	 * @param filepath
 	 */
-	findSource (filepath) {
+	findSource(filepath) {
 		throw new Error('abstract function called');
 	}
 
@@ -71,7 +71,7 @@ const BasePackager = class {
 	 * Only files with a ".json" extension will be included in the results.
 	 * @returns {Promise}
 	 */
-	findMetadataDescriptors (filePath) {
+	findMetadataDescriptors(filePath) {
 		return new Promise((resolve, reject) => {
 			logger.debug('findMetadataDescriptors : start');
 			const descriptors = [];
@@ -104,7 +104,7 @@ const BasePackager = class {
 	 * @param filePath The top-level directory containing the metadata descriptors.
 	 * @returns {boolean} Returns true for valid metadata descriptors.
 	 */
-	isMetadata (filePath) {
+	isMetadata(filePath) {
 		const extensions = ['.json'];
 		return (extensions.indexOf(path.extname(filePath)) !== -1);
 	}
@@ -117,7 +117,7 @@ const BasePackager = class {
 	 * @param filePath
 	 * @returns {boolean}
 	 */
-	isSource (filePath) {
+	isSource(filePath) {
 		return (this.keep.indexOf(path.extname(filePath)) !== -1);
 	}
 
@@ -129,7 +129,7 @@ const BasePackager = class {
 	 * @param desc
 	 * @returns {Promise}
 	 */
-	packEntry (pack, desc) {
+	packEntry(pack, desc) {
 		return new Promise((resolve, reject) => {
 			// Use a synchronous read to reduce non-determinism
 			const content = fs.readFileSync(desc.fqp);
@@ -165,7 +165,7 @@ const BasePackager = class {
 	 * @param dest
 	 * @returns {Promise}
 	 */
-	generateTarGz (descriptors, dest) {
+	generateTarGz(descriptors, dest) {
 		return new Promise((resolve, reject) => {
 			const pack = tar.pack();
 			// Setup the pipeline to compress on the fly and resolve/reject the promise

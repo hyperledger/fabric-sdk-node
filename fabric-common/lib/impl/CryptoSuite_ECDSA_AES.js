@@ -8,14 +8,13 @@
 'use strict';
 
 // requires
-const {CryptoAlgorithms, CryptoSuite, HashPrimitives} = require('fabric-common');
+const {CryptoAlgorithms, CryptoSuite, HashPrimitives, Utils: utils} = require('fabric-common');
 const elliptic = require('elliptic');
 const EC = elliptic.ec;
 const jsrsa = require('jsrsasign');
 const {KEYUTIL} = jsrsa;
 const util = require('util');
 const Signature = require('elliptic/lib/elliptic/ec/signature.js');
-const utils = require('../utils');
 const ECDSAKey = require('./ecdsa/key.js');
 
 const logger = utils.getLogger('crypto_ecdsa_aes');
@@ -150,10 +149,10 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#importKey}
 	 * Attempt to import the raw content, assuming it's one of the following:
-	 * 	X.509v1/v3 PEM certificate (RSA/DSA/ECC)
-	 * 	PKCS#8 PEM RSA/DSA/ECC public key
-	 * 	PKCS#5 plain PEM DSA/RSA private key
-	 * 	PKCS#8 plain PEM RSA/ECDSA private key
+	 *    X.509v1/v3 PEM certificate (RSA/DSA/ECC)
+	 *    PKCS#8 PEM RSA/DSA/ECC public key
+	 *    PKCS#5 plain PEM DSA/RSA private key
+	 *    PKCS#8 plain PEM RSA/ECDSA private key
 	 */
 	async importKey(pem) {
 

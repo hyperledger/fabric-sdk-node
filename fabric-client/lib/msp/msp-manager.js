@@ -10,8 +10,7 @@
 const util = require('util');
 const fabprotos = require('fabric-protos');
 
-const MSP = require('./msp.js');
-const utils = require('../utils.js');
+const {Utils: utils, MSP} = require('fabric-common');
 const logger = utils.getLogger('MSPManager.js');
 
 /**
@@ -86,7 +85,7 @@ const MSPManager = class {
 				intermediateCerts: fabricConfig.getIntermediateCerts(),
 				admins: fabricConfig.getAdmins(),
 				id: fabricConfig.getName(),
-				orgs : orgs,
+				orgs: orgs,
 				cryptoSuite: cs,
 				tls_root_certs: fabricConfig.getTlsRootCerts(),
 				tls_intermediate_certs: fabricConfig.getTlsIntermediateCerts()
@@ -101,15 +100,15 @@ const MSPManager = class {
 	 * Create and add MSP instance to this manager according to configuration information
 	 * @param {Object} config A configuration object specific to the implementation. For this
 	 * implementation it uses the following fields:
-	 *		<br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
+	 *        <br>`rootCerts`: array of {@link Identity} representing trust anchors for validating
 	 *           signing certificates. Required for MSPs used in verifying signatures
-	 *		<br>`intermediateCerts`: array of {@link Identity} representing trust anchors for validating
+	 *        <br>`intermediateCerts`: array of {@link Identity} representing trust anchors for validating
 	 *           signing certificates. optional for MSPs used in verifying signatures
-	 *		<br>`admins`: array of {@link Identity} representing admin privileges
-	 *		<br>`signer`: {@link SigningIdentity} signing identity. Required for MSPs used in signing
-	 *		<br>`id`: {string} value for the identifier of this instance
-	 *		<br>`orgs`: {string} array of organizational unit identifiers
-	 *		<br>`cryptoSuite': the underlying {@link module:api.CryptoSuite} for crypto primitive operations
+	 *        <br>`admins`: array of {@link Identity} representing admin privileges
+	 *        <br>`signer`: {@link SigningIdentity} signing identity. Required for MSPs used in signing
+	 *        <br>`id`: {string} value for the identifier of this instance
+	 *        <br>`orgs`: {string} array of organizational unit identifiers
+	 *        <br>`cryptoSuite': the underlying {@link module:api.CryptoSuite} for crypto primitive operations
 	 *@return {MSP} The newly created MSP instance
 	 */
 	addMSP(config) {

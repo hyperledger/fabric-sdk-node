@@ -9,7 +9,7 @@
 
 const fs = require('fs-extra');
 const path = require('path');
-const utils = require('../utils');
+const {Utils: utils} = require('fabric-common');
 const Constants = require('../Constants.js');
 const Channel = require('../Channel.js');
 const Organization = require('../Organization.js');
@@ -191,8 +191,8 @@ const NetworkConfig_1_0 = class {
 			return;
 		}
 		if (opts && this.hasClient() &&
-		this._network_config.client.connection &&
-		this._network_config.client.connection.timeout) {
+			this._network_config.client.connection &&
+			this._network_config.client.connection.timeout) {
 			const timeouts = this._network_config.client.connection.timeout;
 			let timeout = '';
 			if (type === ENDORSER && timeouts.peer && timeouts.peer.endorser) {
@@ -244,6 +244,7 @@ const NetworkConfig_1_0 = class {
 			}
 		}
 	}
+
 	getOrganization(name, only_client) {
 		const method = 'getOrganization';
 		logger.debug('%s - name %s', method, name);

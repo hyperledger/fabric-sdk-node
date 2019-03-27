@@ -39,9 +39,12 @@ describe('ChannelEventHub', () => {
 		sandbox = sinon.createSandbox();
 
 		FakeLogger = {
-			debug : () => {},
-			error: () => {},
-			warn: () => {}
+			debug: () => {
+			},
+			error: () => {
+			},
+			warn: () => {
+			}
 		};
 		sandbox.stub(FakeLogger);
 		revert.push(ChannelEventHub.__set__('logger', FakeLogger));
@@ -267,7 +270,7 @@ describe('ChannelEventHub', () => {
 	});
 
 	describe('#_checkAllowRegistrations', () => {
-		it ('should throw an error if registration is not allowed', () => {
+		it('should throw an error if registration is not allowed', () => {
 			const hub = new ChannelEventHub('channel', 'peer');
 			hub._start_stop_registration = true;
 			(() => {
@@ -275,7 +278,7 @@ describe('ChannelEventHub', () => {
 			}).should.throw(/This ChannelEventHub is not open to event listener registrations/);
 		});
 
-		it ('should not throw an error if registration is allowed', () => {
+		it('should not throw an error if registration is allowed', () => {
 			const hub = new ChannelEventHub('channel', 'peer');
 			hub._allowRegistration = true;
 			(() => {
@@ -411,7 +414,6 @@ describe('ChannelEventHub', () => {
 	});
 
 	describe('#_connect', () => {
-		let convertToLongStub;
 		let _shutdownStub;
 		let _disconnectStub;
 		let setTimeoutStub;
@@ -429,8 +431,6 @@ describe('ChannelEventHub', () => {
 
 		let hub;
 		beforeEach(() => {
-			convertToLongStub = sandbox.stub();
-			revert.push(ChannelEventHub.__set__('utils.convertToLong', convertToLongStub));
 			isStreamReadyStub = sandbox.stub();
 			revert.push(ChannelEventHub.__set__('isStreamReady', isStreamReadyStub));
 			_sendSignedRegistrationStub = sandbox.stub();
@@ -644,10 +644,8 @@ describe('ChannelEventHub', () => {
 			isStreamReadyStub.returns(true);
 			onStub.yields({Type: 'block'});
 			decodeBlockStub.returns({header: {number: 1}});
-			convertToLongStub.returns(1);
 			hub._connect({signedEvent: true});
-			sinon.assert.calledWith(convertToLongStub, 1);
-			hub._last_block_seen.should.equal(1);
+			hub._last_block_seen.should.deep.equal(Long.fromInt(1));
 		});
 
 		it('should parse a filtered block and update _last_seen_block', () => {
@@ -656,11 +654,9 @@ describe('ChannelEventHub', () => {
 			checkAndAddConfigSettingStub.onCall(2).returns({});
 			getConfigSettingStub.withArgs('request-timeout', 3000).returns(1000);
 			isStreamReadyStub.returns(true);
-			convertToLongStub.returns(1);
 			onStub.yields({Type: 'filtered_block', filtered_block: {number: 1}});
 			hub._connect({signedEvent: true});
-			sinon.assert.calledWith(convertToLongStub, 1);
-			hub._last_block_seen.should.equal(1);
+			hub._last_block_seen.should.deep.equal(Long.fromInt(1));
 		});
 
 		it('should call disconnect if called with instance of Error', () => {
@@ -669,7 +665,6 @@ describe('ChannelEventHub', () => {
 			checkAndAddConfigSettingStub.onCall(2).returns({});
 			getConfigSettingStub.withArgs('request-timeout', 3000).returns(1000);
 			isStreamReadyStub.returns(true);
-			convertToLongStub.returns(1);
 			const error = new Error('test error');
 			onStub.yields(error);
 			hub._connect({signedEvent: true});
@@ -743,7 +738,7 @@ describe('ChannelEventHub', () => {
 			hub._setReplayDefaults = _setReplayDefaultsStub;
 			hub.getPeerAddr = getPeerAddrStub;
 
-			hub.disconnect({message:'error'});
+			hub.disconnect({message: 'error'});
 			sinon.assert.called(_closeAllCallbacksStub);
 			sinon.assert.called(_shutdownStub);
 			sinon.assert.called(_setReplayDefaultsStub);
@@ -807,12 +802,12 @@ describe('ChannelEventHub', () => {
 			hub = new ChannelEventHub('channel', 'peer');
 		});
 
-		it ('should log entry', () => {
+		it('should log entry', () => {
 			hub._validateSignedEvent({signature: 'signature', payload: 'payload'});
 			sinon.assert.calledWith(FakeLogger.debug, '%s - enter', '_validateSignedEvent');
 		});
 
-		it ('should log exit', () => {
+		it('should log exit', () => {
 			hub._validateSignedEvent({signature: 'signature', payload: 'payload'});
 			sinon.assert.calledWith(FakeLogger.debug, '%s - exit', '_validateSignedEvent');
 		});
@@ -1512,9 +1507,11 @@ describe('ChannelEventHub', () => {
 		});
 
 		it('should throw a string and call _disconnect if _stream is not set but force_reconnect is', () => {
-			hub._stream = {isPaused: () => {
-				throw 'Error';
-			}};
+			hub._stream = {
+				isPaused: () => {
+					throw 'Error';
+				}
+			};
 			hub.checkConnection(true);
 			sinon.assert.called(FakeLogger.error);
 			sinon.assert.calledWith(FakeLogger.error, 'checkConnection - error ::Error');
@@ -1522,9 +1519,11 @@ describe('ChannelEventHub', () => {
 		});
 
 		it('should throw a string and call _disconnect if _stream is not set but force_reconnect is', () => {
-			hub._stream = {isPaused: () => {
-				throw new Error();
-			}};
+			hub._stream = {
+				isPaused: () => {
+					throw new Error();
+				}
+			};
 			hub.checkConnection(true);
 			sinon.assert.called(FakeLogger.error);
 			sinon.assert.calledWithMatch(FakeLogger.error, Error);
@@ -2078,7 +2077,14 @@ describe('ChannelEventHub', () => {
 		it('should call _callChaincodeListener for every chaincode_action', () => {
 			const mockAction = {chaincode_event: 'event'};
 			hub._chaincodeRegistrants = {'cc': 'val'};
-			hub._processChaincodeEvents({number: 1, filtered_transactions: [{txid: 'txid', tx_validation_code: 'code', transaction_actions: {chaincode_actions: [mockAction, mockAction]}}]});
+			hub._processChaincodeEvents({
+				number: 1,
+				filtered_transactions: [{
+					txid: 'txid',
+					tx_validation_code: 'code',
+					transaction_actions: {chaincode_actions: [mockAction, mockAction]}
+				}]
+			});
 			sinon.assert.calledTwice(_callChaincodeListenerStub);
 			sinon.assert.calledWith(_callChaincodeListenerStub, 'event', 1, 'txid', 'code', true);
 		});
@@ -2347,7 +2353,8 @@ describe('isStreamReady', () => {
 
 	beforeEach(() => {
 		FakeLogger = {
-			debug: () => {}
+			debug: () => {
+			}
 		};
 		sinon.stub(FakeLogger);
 		ChannelEventHub.__set__('logger', FakeLogger);
@@ -2398,7 +2405,10 @@ describe('EventRegistration', () => {
 
 	beforeEach(() => {
 		sandbox = sinon.createSandbox();
-		FakeLogger = {debug: () => {}};
+		FakeLogger = {
+			debug: () => {
+			}
+		};
 		sandbox.stub(FakeLogger);
 		ChannelEventHub.__set__('logger', FakeLogger);
 	});

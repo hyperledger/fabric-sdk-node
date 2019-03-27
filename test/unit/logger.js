@@ -12,7 +12,7 @@ const test = _test(tape);
 
 const hfc = require('fabric-client');
 const testutil = require('./util.js');
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 
 const bunyan = require('bunyan');
 const log4js = require('log4js');

@@ -14,7 +14,7 @@
 
 'use strict';
 
-const utils = require('./utils.js');
+const {Utils: utils} = require('fabric-common');
 const Remote = require('./Remote');
 const fabprotos = require('fabric-protos');
 const util = require('util');
@@ -138,7 +138,7 @@ class Peer extends Remote {
 					}
 				} else {
 					if (proposalResponse) {
-						logger.debug('%s - Received proposal response from peer "%s": status - %s', method, self._url, (proposalResponse.response &&  proposalResponse.response.status) ? proposalResponse.response.status : 'undefined');
+						logger.debug('%s - Received proposal response from peer "%s": status - %s', method, self._url, (proposalResponse.response && proposalResponse.response.status) ? proposalResponse.response.status : 'undefined');
 						// 400 is the error threshold level, anything below that the endorser will endorse it.
 						if (proposalResponse.response && proposalResponse.response.status < 400) {
 							proposalResponse.peer = self.getCharacteristics();
@@ -291,7 +291,7 @@ class Peer extends Remote {
 	toString() {
 		return 'Peer:{' +
 			'url:' + this._url +
-		'}';
+			'}';
 	}
 
 }

@@ -13,7 +13,7 @@
 
 'use strict';
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const logger = utils.getLogger('query');
 
 const tape = require('tape');
@@ -56,7 +56,7 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 	let bcInfo = null;
 	let tx_block = null;
 
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');
 	const cryptoSuite = Client.newCryptoSuite();
 	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
 	client.setCryptoSuite(cryptoSuite);

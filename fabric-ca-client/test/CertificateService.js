@@ -1,15 +1,5 @@
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
@@ -17,7 +7,7 @@
 const rewire = require('rewire');
 const CertificateServiceRewire = rewire('../lib/CertificateService');
 const FabricCAClient = require('../lib/FabricCAClient');
-const User = require('../lib/User');
+const {User} = require('fabric-common');
 
 require('chai').should();
 const sinon = require('sinon');
@@ -51,8 +41,10 @@ describe('IdentityService', () => {
 			service = new CertificateServiceRewire(clientStub);
 
 			const FakeLogger = {
-				debug : () => {},
-				error: () => {}
+				debug: () => {
+				},
+				error: () => {
+				}
 			};
 
 			debugStub = sinon.stub(FakeLogger, 'debug');
@@ -104,7 +96,7 @@ describe('IdentityService', () => {
 			callArgs[1].should.deep.equal('myID');
 		});
 
-		it('should call get with the correctly mapped request', async() => {
+		it('should call get with the correctly mapped request', async () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 

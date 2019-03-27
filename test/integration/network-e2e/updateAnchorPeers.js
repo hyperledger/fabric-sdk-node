@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils: utils} = require('fabric-common');
 const logger = utils.getLogger('E2E setAnchorPeers');
 
 const tape = require('tape');
@@ -59,10 +59,10 @@ async function updateChannel(t, file, channelName, client_org1, client_org2) {
 
 	const request = {
 		config: config,
-		signatures : signatures,
-		name : channelName,
-		orderer : 'orderer.example.com',
-		txId  : tx_id
+		signatures: signatures,
+		name: channelName,
+		orderer: 'orderer.example.com',
+		txId: tx_id
 	};
 
 	try {

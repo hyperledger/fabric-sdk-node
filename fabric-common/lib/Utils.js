@@ -12,9 +12,8 @@ const winston = require('winston');
 const crypto = require('crypto');
 const path = require('path');
 const os = require('os');
-const Long = require('long');
 
-const {Config} = require('fabric-common');
+const Config = require('./Config');
 const sjcl = require('sjcl');
 
 //
@@ -28,9 +27,9 @@ const sjcl = require('sjcl');
  * - newCryptoSuite({keysize: 384})
  * - newCryptoSuite()
  * @param {Object} setting This optional parameter is an object with the following optional properties:
- * 	- software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
- *		default is true (for software based implementation), specific implementation module is specified
- *		in the setting 'crypto-suite-software'
+ *    - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
+ *        default is true (for software based implementation), specific implementation module is specified
+ *        in the setting 'crypto-suite-software'
  *  - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
  *  - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
  *  - hash {string}: 'SHA2' or 'SHA3'
@@ -394,13 +393,13 @@ const CryptoKeyStore = function (KVSImplClass, opts) {
 	};
 
 	this._getKeyStore = async function () {
-		const CKS = require('fabric-client/lib/impl/CryptoKeyStore');
+		const CKS = require('./impl/CryptoKeyStore');
 
 		if (this._store === null) {
 			this.logger.debug(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', this._storeConfig));
 
 			try {
-				this._store  = await CKS(this._storeConfig.superClass, this._storeConfig.opts);
+				this._store = await CKS(this._storeConfig.superClass, this._storeConfig.opts);
 				await this._store.initialize();
 				return this._store;
 			} catch (err) {
@@ -490,36 +489,6 @@ module.exports.pemToDER = (pem) => {
 	// var hex = Buffer.from(contents.join(''), 'base64').toString('hex');
 	const hex = Buffer.from(contents.join(''), 'base64');
 	return hex;
-};
-
-
-/*
- * Converts to a Long number
- * Returns a null if the incoming value is not a string that represents a
- * number or an actual javascript number. Also allows for a Long object to be
- * passed in as the value to convert
- */
-module.exports.convertToLong = (value) => {
-	let result;
-	if (Long.isLong(value)) {
-		result = value; // already a long
-	} else if (typeof value !== 'undefined' && value !== null) {
-		result = Long.fromValue(value);
-		// Long will return a zero for invalid strings so make sure we did
-		// not get a real zero as the incoming value
-		if (result.equals(Long.ZERO)) {
-			if (Number.isInteger(value) || value === '0') {
-				// all good
-			} else {
-				// anything else must be a string that is not a valid number
-				throw new Error(util.format('value:%s is not a valid number ', value));
-			}
-		}
-	} else {
-		throw new Error('value parameter is missing');
-	}
-
-	return result;
 };
 
 module.exports.checkIntegerConfig = (opts, configName) => {

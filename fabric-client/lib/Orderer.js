@@ -1,13 +1,10 @@
-/*
- Copyright 2016, 2018 IBM All Rights Reserved.
-
- SPDX-License-Identifier: Apache-2.0
-
-*/
+/**
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 'use strict';
 
-const utils = require('./utils.js');
+const {Utils: utils} = require('fabric-common');
 const Remote = require('./Remote');
 
 const fabprotos = require('fabric-protos');

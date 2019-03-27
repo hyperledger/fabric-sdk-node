@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 
 
 const tape = require('tape');
@@ -35,7 +35,7 @@ const org = 'org1';
 //
 test('\n\n** TEST ** orderer via member missing orderer', async (t) => {
 	testUtil.resetDefaults();
-	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
 	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 	const orgName = ORGS[org].name;

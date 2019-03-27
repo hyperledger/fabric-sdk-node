@@ -7,8 +7,8 @@
 
 'use strict';
 
-const {CryptoAlgorithms, CryptoSuite, HashPrimitives} = require('fabric-common');
-const utils = require('../utils');
+const {CryptoAlgorithms, CryptoSuite, HashPrimitives, Utils: utils} = require('fabric-common');
+
 const aesKey = require('./aes/pkcs11_key.js');
 const ecdsaKey = require('./ecdsa/pkcs11_key.js');
 
@@ -76,7 +76,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 *     pin: string,       // the user's PIN
 	 *     usertype: number,  // the user type
 	 *     readwrite: boolean // true if the session is read/write or false if read-only
- 	 *   }
+	 *   }
 	 * </pre>
 	 * If 'lib' is not specified or null, its value will be taken from the
 	 * CRYPTO_PKCS11_LIB env var, and if the env var is not set, its value will
@@ -366,7 +366,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			 * private key pair.
 			 */
 			{type: pkcs11js.CKA_PRIVATE, value: this._pkcs11Login},
-			{type: pkcs11js.CKA_TOKEN, value: this._pkcs11Login && pkcs11Token},
+			{type: pkcs11js.CKA_TOKEN, value: this._pkcs11Login && pkcs11Token}
 		];
 
 		try {
@@ -387,7 +387,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 				{type: pkcs11js.CKA_ENCRYPT},
 				{type: pkcs11js.CKA_DECRYPT},
 				{type: pkcs11js.CKA_PRIVATE},
-				{type: pkcs11js.CKA_TOKEN},
+				{type: pkcs11js.CKA_TOKEN}
 			];
 			logger.debug(__func() + 'secretKey: ' + util.inspect(
 				this._pkcs11GetAttributeValue(
@@ -414,7 +414,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			{type: pkcs11js.CKA_PRIVATE, value: this._pkcs11Login},
 			{type: pkcs11js.CKA_TOKEN, value: this._pkcs11Login && pkcs11Token},
 			{type: pkcs11js.CKA_SIGN, value: true},
-			{type: pkcs11js.CKA_DERIVE, value: true},
+			{type: pkcs11js.CKA_DERIVE, value: true}
 		];
 		const publicKeyTemplate = [
 			// { type: pkcs11js.CKA_ID,        value: ski },
@@ -426,7 +426,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			{
 				type: pkcs11js.CKA_EC_PARAMS,
 				value: Buffer.from(_pkcs11ParamsSizeToOid[this._keySize], 'hex')
-			},
+			}
 		];
 
 		try {
@@ -446,7 +446,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 				{type: pkcs11js.CKA_CLASS},
 				{type: pkcs11js.CKA_KEY_TYPE},
 				{type: pkcs11js.CKA_PRIVATE},
-				{type: pkcs11js.CKA_TOKEN},
+				{type: pkcs11js.CKA_TOKEN}
 			];
 			logger.debug(__func() + 'privateKey: ' + util.inspect(
 				this._pkcs11GetAttributeValue(
@@ -511,7 +511,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			const secretKeyHandle = this._pkcs11FindObjects(pkcs11, pkcs11Session, [
 				{type: pkcs11js.CKA_ID, value: ski},
 				{type: pkcs11js.CKA_CLASS, value: pkcs11js.CKO_SECRET_KEY},
-				{type: pkcs11js.CKA_KEY_TYPE, value: pkcs11js.CKK_AES},
+				{type: pkcs11js.CKA_KEY_TYPE, value: pkcs11js.CKK_AES}
 			]);
 			if (secretKeyHandle.length === 1) {
 				return {secretKey: secretKeyHandle[0]};
@@ -522,12 +522,12 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			const privKeyHandle = this._pkcs11FindObjects(pkcs11, pkcs11Session, [
 				{type: pkcs11js.CKA_ID, value: ski},
 				{type: pkcs11js.CKA_CLASS, value: pkcs11js.CKO_PRIVATE_KEY},
-				{type: pkcs11js.CKA_KEY_TYPE, value: pkcs11js.CKK_EC},
+				{type: pkcs11js.CKA_KEY_TYPE, value: pkcs11js.CKK_EC}
 			]);
 			const pubKeyHandle = this._pkcs11FindObjects(pkcs11, pkcs11Session, [
 				{type: pkcs11js.CKA_ID, value: ski},
 				{type: pkcs11js.CKA_CLASS, value: pkcs11js.CKO_PUBLIC_KEY},
-				{type: pkcs11js.CKA_KEY_TYPE, value: pkcs11js.CKK_EC},
+				{type: pkcs11js.CKA_KEY_TYPE, value: pkcs11js.CKK_EC}
 			]);
 			if (pubKeyHandle.length !== 1 || privKeyHandle.length !== 1) {
 				throw new Error(__func() + 'no key with SKI ' +
@@ -553,7 +553,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 					this._pkcs11, this._pkcs11Session, publicKey,
 					[
 						{type: pkcs11js.CKA_EC_PARAMS},
-						{type: pkcs11js.CKA_EC_POINT},
+						{type: pkcs11js.CKA_EC_POINT}
 					]);
 			logger.debug(__func() + 'attribuites: ' +
 				util.inspect(attribs, {depth: null}));
@@ -700,7 +700,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			{type: pkcs11js.CKA_ENCRYPT, value: true},
 			{type: pkcs11js.CKA_DECRYPT, value: true},
 			{type: pkcs11js.CKA_PRIVATE, value: this._pkcs11Login},
-			{type: pkcs11js.CKA_TOKEN, value: false},
+			{type: pkcs11js.CKA_TOKEN, value: false}
 		];
 
 		try {
@@ -711,7 +711,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 					parameter: {
 						type: pkcs11js.CK_PARAMS_EC_DH,
 						kdf: pkcs11js.CKD_SHA256_KDF,
-						publicData: pub._ecpt,
+						publicData: pub._ecpt
 					}
 				},
 				key._handle, derivedKeyTemplate);
@@ -732,7 +732,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			{type: pkcs11js.CKA_ENCRYPT, value: true},
 			{type: pkcs11js.CKA_DECRYPT, value: true},
 			{type: pkcs11js.CKA_PRIVATE, value: this._pkcs11Login},
-			{type: pkcs11js.CKA_TOKEN, value: this._pkcs11Login && pkcs11Token},
+			{type: pkcs11js.CKA_TOKEN, value: this._pkcs11Login && pkcs11Token}
 		];
 
 		try {
@@ -774,7 +774,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 				{type: pkcs11js.CKA_KEY_TYPE},
 				{type: pkcs11js.CKA_PRIVATE},
 				{type: pkcs11js.CKA_TOKEN},
-				{type: pkcs11js.CKA_ID},
+				{type: pkcs11js.CKA_ID}
 			];
 			logger.debug(__func() + 'obj:  ' + util.inspect(obj, {depth: null}));
 			logger.debug(__func() + 'attr: ' +
@@ -911,8 +911,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 						handle.publicKey);
 
 					const keySize = _pkcs11ParamsOidToSize[
-						attr.ecparams.toString('hex').
-							toUpperCase()];
+						attr.ecparams.toString('hex').toUpperCase()];
 					if (keySize === undefined ||
 						keySize !== self._keySize) {
 						throw new Error(__func() + ' key size mismatch, class: ' + self._keySize + ', ski: ' + keySize);

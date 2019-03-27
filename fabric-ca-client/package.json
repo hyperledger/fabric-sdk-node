@@ -27,16 +27,11 @@
     "fabric-common": "file:../fabric-common",
     "fabric-protos": "file:../fabric-protos",
     "fs-extra": "^6.0.1",
-    "grpc": "1.17.0",
     "js-sha3": "^0.7.0",
     "jsrsasign": "^7.2.2",
     "jssha": "^2.1.0",
-    "long": "^4.0.0",
-    "nconf": "^0.10.0",
-    "sjcl": "1.0.7",
     "url": "^0.11.0",
-    "util": "^0.10.3",
-    "winston": "^2.2.0"
+    "util": "^0.10.3"
   },
   "devDependencies": {
     "chai": "^4.1.2",

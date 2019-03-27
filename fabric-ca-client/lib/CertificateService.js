@@ -5,7 +5,9 @@
  */
 
 const querystring = require('querystring');
-const logger = require('./utils.js').getLogger('CertificateService');
+const {Utils} = require('fabric-common');
+
+const logger = Utils.getLogger('CertificateService');
 const checkRegistrar = require('./helper').checkRegistrar;
 
 class CertificateService {

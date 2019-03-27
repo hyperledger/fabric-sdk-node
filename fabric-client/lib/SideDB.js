@@ -16,8 +16,8 @@ const fabprotos = require('fabric-protos');
 const fs = require('fs');
 const Long = require('long');
 const Policy = require('./Policy.js');
+const {Utils: utils} = require('fabric-common');
 
-const utils = require('./utils.js');
 const logger = utils.getLogger('SideDB.js');
 const {format} = require('util');
 
@@ -83,7 +83,7 @@ class CollectionConfig {
 			name,
 			policy,
 			maxPeerCount,
-			requiredPeerCount,
+			requiredPeerCount
 		} = collectionConfig;
 
 		if (!name || typeof name !== 'string') {

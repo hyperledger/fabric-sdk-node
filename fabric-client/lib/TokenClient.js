@@ -14,15 +14,14 @@
 
 'use strict';
 
+const {Utils: utils, Identity, HashPrimitives} = require('fabric-common');
+
 const TransactionID = require('./TransactionID');
 const util = require('util');
 const clientUtils = require('./client-utils.js');
 const tokenUtils = require('./token-utils.js');
-const utils = require('./utils.js');
 const logger = utils.getLogger('TokenClient.js');
 const fabprotos = require('fabric-protos');
-const {Identity} = require('fabric-common');
-const {HashPrimitives} = require('fabric-common');
 
 /**
  * @classdesc
@@ -111,7 +110,7 @@ const TokenClient = class {
 	/**
 	 * Construct a TokenClient object.
 	 *
-   * @param {Client} client - The Client instance.
+	 * @param {Client} client - The Client instance.
 	 * @param {Channel} channel - The channel object.
 	 * @param {Peer[]} targets - The prover peer(s) that are trusted by the token client
 	 */
@@ -191,7 +190,7 @@ const TokenClient = class {
 	 * @property {string} commandName - Required. The token command name, such as
 	 *           issue, transfer, redeem, and list.
 	 * @property {byte[]} tokenIds - Required for transfer and redeem.
-	             An array of token ids that will be spent by the token command.
+	 An array of token ids that will be spent by the token command.
 	 * @property {TokenParam[]} params - Required. One or multiple TokenParam
 	 *           for the token command.
 	 * @property {TransactionID} txId - Optional. Required for issue, transfer and redeem.

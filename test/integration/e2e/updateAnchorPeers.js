@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const logger = utils.getLogger('E2E setAnchorPeers');
 
 const tape = require('tape');
@@ -61,7 +61,7 @@ test('\n\n***** End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
 	const data = fs.readFileSync(path.join(__dirname, caRootsPath));
 	const caroots = Buffer.from(data).toString();
 
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');
 
 	const tlsInfo = await e2eUtils.tlsEnroll(org);
 	client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
