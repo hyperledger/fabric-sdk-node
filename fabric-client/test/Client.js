@@ -2990,10 +2990,10 @@ describe('Client', () => {
 			newOpts.hope.should.equal('found');
 		});
 
-		it('should call _buildConnectionOptions and return opts', () => {
+		it('should call _buildConnectionOptions and return default opts', () => {
 			const client = new Client();
 			const opts = client.getConfigSetting('connection-options');
-			const newOpts = client._buildConnectionOptions(opts);
+			const newOpts = client._buildConnectionOptions();
 			newOpts.should.deep.equal(opts);
 		});
 	});
