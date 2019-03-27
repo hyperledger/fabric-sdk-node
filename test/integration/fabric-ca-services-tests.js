@@ -102,6 +102,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 			t.fail('Failed to import the public key from the enrollment certificate. ' + err.stack ? err.stack : err);
 			t.end();
 		}).then(() => {
+			caService.setConfigSetting('socket-operation-timeout', 100000);
 			return caService._fabricCAClient.register(enrollmentID, null, 'client', userOrg, 1, [], signingIdentity);
 		}).then((secret) => {
 			t.comment('secret: ' + JSON.stringify(secret));

@@ -1,5 +1,5 @@
 This tutorial describes the approaches that can be selected by users of the
-fabric-network module for ensuring that submitted transactions are commited
+fabric-network module for ensuring that submitted transactions are committed
 on peers.
 
 ### Overview
@@ -61,7 +61,7 @@ strategies, it is possible to implement your own event handling. This is
 achieved by specifying your own factory function as the event handling
 strategy. The factory function should return a *transaction event handler*
 object and take two parameters:
-1. Transaction ID: `String`
+1. Transaction: `Transaction`
 2. Blockchain network: `Network`
 
 The Network provides access to peers and event hubs from which events should

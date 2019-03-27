@@ -247,6 +247,7 @@ const Chaincode = class {
 	}
 
 	async echo(stub, args) {
+		stub.setEvent('echo', Buffer.from('content'));
 		if (args.length > 0) {
 			return shim.success(Buffer.from(args[0]));
 		} else {

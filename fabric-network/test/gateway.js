@@ -397,6 +397,7 @@ describe('Gateway', () => {
 				mockClient.getChannel.withArgs('bar').returns(mockInternalChannel);
 				gateway.getCurrentIdentity = sinon.stub().returns({_mspId: 'MSP01'});
 				gateway.getOptions().queryHandlerOptions.strategy = () => {};
+				gateway.getOptions().eventHubSelectionOptions.strategy = () => {};
 
 				const network2 = await gateway.getNetwork('bar');
 				network2.should.be.instanceof(Network);
@@ -410,6 +411,7 @@ describe('Gateway', () => {
 				mockClient.newChannel.withArgs('bar').returns(mockInternalChannel);
 				gateway.getCurrentIdentity = sinon.stub().returns({_mspId: 'MSP01'});
 				gateway.getOptions().queryHandlerOptions.strategy = () => {};
+				gateway.getOptions().eventHubSelectionOptions.strategy = () => {};
 
 				const network2 = await gateway.getNetwork('bar');
 				network2.should.be.instanceof(Network);

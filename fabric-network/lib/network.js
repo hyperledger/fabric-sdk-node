@@ -7,7 +7,9 @@
 'use strict';
 const FabricConstants = require('fabric-client/lib/Constants');
 const Contract = require('./contract');
-const EventHubFactory = require('fabric-network/lib/impl/event/eventhubfactory');
+const EventHubManager = require('fabric-network/lib/impl/event/eventhubmanager');
+const BlockEventListener = require('fabric-network/lib/impl/event/blockeventlistener');
+const CommitEventListener = require('fabric-network/lib/impl/event/commiteventlistener');
 
 const logger = require('./logger').getLogger('Network');
 const util = require('util');
@@ -31,8 +33,8 @@ class Network {
 		this.gateway = gateway;
 		this.channel = channel;
 		this.contracts = new Map();
-		this.eventHubFactory = new EventHubFactory(channel);
 		this.initialized = false;
+		this.listeners = new Map();
 	}
 
 	/**
@@ -106,6 +108,12 @@ class Network {
 		// Must be created after channel initialization to ensure discovery has located peers
 		const queryHandlerOptions = this.gateway.getOptions().queryHandlerOptions;
 		this.queryHandler = queryHandlerOptions.strategy(this, queryHandlerOptions);
+
+		this.checkpointer = this.gateway.getOptions().checkpointer;
+
+		const eventHubSelectionOptions = this.gateway.getOptions().eventHubSelectionOptions;
+		this.eventHubSelectionStrategy = eventHubSelectionOptions.strategy(this);
+		this.eventHubManager = new EventHubManager(this);
 	}
 
 	/**
@@ -134,6 +142,7 @@ class Network {
 				this,
 				chaincodeId,
 				this.gateway,
+				this.getCheckpointer(),
 				name
 			);
 			this.contracts.set(key, contract);
@@ -144,24 +153,16 @@ class Network {
 	_dispose() {
 		logger.debug('in _dispose');
 
+		this.listeners.forEach(listener => listener.unregister());
 		// Danger as this cached in gateway, and also async so how would
 		// network._dispose() followed by network.initialize() be safe ?
 		// make this private is the safest option.
 		this.contracts.clear();
 
-		this.eventHubFactory.dispose();
+		this.eventHubManager.dispose();
 		this.channel.close();
 
 		this.initialized = false;
-	}
-
-	/**
-	 * Get the event hub factory for this network.
-	 * @private
-	 * @returns {EventHubFactory} An event hub factory.
-	 */
-	getEventHubFactory() {
-		return this.eventHubFactory;
 	}
 
 	/**
@@ -171,6 +172,92 @@ class Network {
 	 */
 	getQueryHandler() {
 		return this.queryHandler;
+	}
+
+	/**
+	 * Get the checkpoint factory
+	 * @private
+	 * @returns {Function} The checkpointer factory
+	 */
+	getCheckpointer() {
+		return this.checkpointer;
+	}
+
+	/**
+	 * Get the event hub manager
+	 * @private
+	 * @returns {EventHubManager} An event hub manager
+	 */
+	getEventHubManager() {
+		return this.eventHubManager;
+	}
+
+	/**
+	 * Get the event hub selection strategy
+	 * @private
+	 * @returns {BaseEventHubSelectionStrategy}
+	 */
+	getEventHubSelectionStrategy() {
+		return this.eventHubSelectionStrategy;
+	}
+
+	/**
+	 * Save the listener to a map in Network
+	 * @param {String} listenerName the name of the listener being saved
+	 * @param {AbstractEventListener} listener the listener to be saved
+	 * @private
+	 */
+	saveListener(listenerName, listener) {
+		if (this.listeners.has(listenerName)) {
+			listener.unregister();
+			throw new Error(`Listener already exists with the name ${listenerName}`);
+		}
+		this.listeners.set(listenerName, listener);
+	}
+
+	/**
+	 * Create a block event listener
+	 * @param {String} listenerName the name of the listener
+	 * @param {Function} callback the callback called when an event is triggered with signature (error, block)
+	 * @param {Object} [options] Optional. Tjhe event listener options
+	 */
+	async addBlockListener(listenerName, callback, options) {
+		if (!options) {
+			options = {};
+		}
+		options.replay = options.replay ? true : false;
+		options.checkpointer = this.getCheckpointer(options);
+		const listener = new BlockEventListener(this, listenerName, callback, options);
+		this.saveListener(listenerName, listener);
+		await listener.register();
+		return listener;
+	}
+
+	/**
+	 * Create a commit event listener for this transaction.
+	 * @param {string} transactionId The transactionId being watched
+	 * @param {Function} callback - This callback will be triggered when
+	 *		a transaction commit event is emitted. It takes parameters
+	 * 		of error, transactionId, transaction status and block number
+	 * @param {RegistrationOptions} [options] - Optional. Options on
+	 * 		registrations allowing start and end block numbers.
+	 * @param {ChannelEventHub} [eventHub] - Optional. Used to override the event hub selection
+	 * @returns {CommitEventListener}
+	 * @async
+	 */
+	async addCommitListener(transactionId, callback, options, eventHub) {
+		if (!options) {
+			options = {};
+		}
+		options.replay = false;
+		options.checkpointer = null;
+		const listener = new CommitEventListener(this, transactionId, callback, options);
+		if (eventHub) {
+			listener.setEventHub(eventHub, options.fixedEventHub);
+		}
+		this.saveListener(listener.listenerName, listener);
+		await listener.register();
+		return listener;
 	}
 }
 

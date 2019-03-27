@@ -12,32 +12,36 @@ const TransactionEventHandler = require('fabric-network/lib/impl/event/transacti
 
 function getOrganizationEventHubs(network) {
 	const peers = network.getChannel().getPeersForOrg();
-	return network.getEventHubFactory().getEventHubs(peers);
+	return network.getEventHubManager().getEventHubs(peers);
 }
 
 function getNetworkEventHubs(network) {
 	const peers = network.getChannel().getPeers();
-	return network.getEventHubFactory().getEventHubs(peers);
+	return network.getEventHubManager().getEventHubs(peers);
 }
 
-function MSPID_SCOPE_ALLFORTX(transactionId, network, options) {
+function MSPID_SCOPE_ALLFORTX(transaction, options) {
+	const network = transaction.getNetwork();
 	const eventStrategy = new AllForTxStrategy(getOrganizationEventHubs(network));
-	return new TransactionEventHandler(transactionId, eventStrategy, options);
+	return new TransactionEventHandler(transaction, eventStrategy, options);
 }
 
-function MSPID_SCOPE_ANYFORTX(transactionId, network, options) {
+function MSPID_SCOPE_ANYFORTX(transaction, options) {
+	const network = transaction.getNetwork();
 	const eventStrategy = new AnyForTxStrategy(getOrganizationEventHubs(network));
-	return new TransactionEventHandler(transactionId, eventStrategy, options);
+	return new TransactionEventHandler(transaction, eventStrategy, options);
 }
 
-function NETWORK_SCOPE_ALLFORTX(transactionId, network, options) {
+function NETWORK_SCOPE_ALLFORTX(transaction, options) {
+	const network = transaction.getNetwork();
 	const eventStrategy = new AllForTxStrategy(getNetworkEventHubs(network));
-	return new TransactionEventHandler(transactionId, eventStrategy, options);
+	return new TransactionEventHandler(transaction, eventStrategy, options);
 }
 
-function NETWORK_SCOPE_ANYFORTX(transactionId, network, options) {
+function NETWORK_SCOPE_ANYFORTX(transaction, options) {
+	const network = transaction.getNetwork();
 	const eventStrategy = new AnyForTxStrategy(getNetworkEventHubs(network));
-	return new TransactionEventHandler(transactionId, eventStrategy, options);
+	return new TransactionEventHandler(transaction, eventStrategy, options);
 }
 
 /**
