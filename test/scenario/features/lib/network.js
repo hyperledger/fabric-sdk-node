@@ -7,9 +7,17 @@
 const {Gateway, InMemoryWallet, X509WalletMixin} = require('fabric-network');
 const testUtil = require('./utils.js');
 const fs = require('fs');
+const chai = require('chai');
+const expect = chai.expect;
 
 // Internal Map of connected gateways
 const gateways = new Map();
+
+// Internal Map of event listenerData
+// {calls, payloads}
+const listeners = new Map();
+// {listener, payloads}
+const transactions = new Map();
 
 // transaction types
 const types = ['evaluate', 'error', 'submit'];
@@ -111,6 +119,8 @@ async function disconnectAllGateways() {
 			await gateway.disconnect();
 		}
 		gateways.clear();
+		listeners.clear();
+		transactions.clear();
 	} catch (err) {
 		testUtil.logError('disconnectAllGateways() failed with error ', err);
 		throw err;
@@ -174,6 +184,34 @@ async function performGatewayTransaction(gatewayName, ccName, channelName, args,
 	}
 }
 
+async function performGatewayTransactionWithListener(gatewayName, ccName, channelName, args) {
+	// Get contract from Gateway
+	const gatewayObj = gateways.get(gatewayName);
+	const gateway = gatewayObj.gateway;
+	const contract = await retrieveContractFromGateway(gateway, channelName, ccName);
+
+	// Split args
+	const argArray = args.slice(1, -1).split(',');
+	const func = argArray[0];
+	const funcArgs = argArray.slice(1);
+	try {
+		testUtil.logMsg('Submitting transaction [' + func + '] with arguments ' + args);
+		// const result = await contract.submitTransaction(func, ...funcArgs);
+		const transaction = contract.createTransaction(func);
+		await transaction.addCommitListener((err, ...cbArgs) => {
+
+		});
+		const result = await transaction.submit(...funcArgs);
+		gatewayObj.result = {type: 'submit', response: result.toString()};
+		testUtil.logMsg('Successfully submitted transaction [' + func + ']');
+		return Promise.resolve();
+	} catch (err) {
+		gatewayObj.result = {type: 'error', result: err.toString()};
+		testUtil.logError(err);
+		throw err;
+	}
+}
+
 /**
  * Compare the last gateway transaction response with a passed value
  * @param {String} type type of resposne
@@ -224,11 +262,123 @@ function getGateway(gatewayName) {
 	}
 }
 
-module.exports.connectGateway = connectGateway;
-module.exports.performGatewayTransaction = performGatewayTransaction;
-module.exports.disconnectGateway = disconnectGateway;
-module.exports.disconnectAllGateways = disconnectAllGateways;
-module.exports.lastResponseCompare = lastResponseCompare;
-module.exports.lastResult = lastResult;
-module.exports.lastTypeCompare = lastTypeCompare;
-module.exports.getGateway = getGateway;
+async function createContractListener(gatewayName, channelName, ccName, eventName, listenerName) {
+	const gateway = gateways.get(gatewayName).gateway;
+	const contract = await retrieveContractFromGateway(gateway, channelName, ccName);
+	if (!listeners.has(listenerName)) {
+		listeners.set(listenerName, {calls: 0, payloads: []});
+	}
+	const listener = await contract.addContractListener(listenerName, eventName, (err, ...args) => {
+		if (err) {
+			testUtil.logMsg('Contract event error', err);
+			return err;
+		}
+		testUtil.logMsg('Received a contract event', listenerName);
+		const listenerInfo = listeners.get(listenerName);
+		listenerInfo.payloads.push(args);
+		listenerInfo.calls = listenerInfo.payloads.length;
+	}, {replay: true});
+	const listenerInfo = listeners.get(listenerName);
+	listenerInfo.listener = listener;
+	listeners.set(listenerName, listenerInfo);
+}
+
+async function createBlockListener(gatewayName, channelName, ccName, listenerName, filtered) {
+	const gateway = gateways.get(gatewayName).gateway;
+	const contract = await retrieveContractFromGateway(gateway, channelName, ccName);
+	const network = contract.getNetwork();
+	if (!listeners.has(listenerName)) {
+		listeners.set(listenerName, {calls: 0, payloads: []});
+	}
+	const listener = await network.addBlockListener(listenerName, (err, block) => {
+		if (err) {
+			testUtil.logMsg('Block event error', err);
+			return err;
+		}
+		testUtil.logMsg('Received a block event', listenerName);
+		if (filtered) {
+			expect(block).to.have.property('channel_id');
+			expect(block).to.have.property('number');
+			expect(block).to.have.property('filtered_transactions');
+		} else {
+			expect(block).to.have.property('header');
+			expect(block).to.have.property('data');
+			expect(block).to.have.property('metadata');
+		}
+		const listenerInfo = listeners.get(listenerName);
+		listenerInfo.payloads.push(block);
+		listenerInfo.calls = listenerInfo.payloads.length;
+	}, {filtered, replay: true});
+	const listenerInfo = listeners.get(listenerName);
+	listenerInfo.listener = listener;
+	listeners.set(listenerName, listenerInfo);
+}
+
+function getListenerInfo(listenerName) {
+	if (listeners.has(listenerName)) {
+		return listeners.get(listenerName);
+	}
+	return {};
+}
+
+function resetListenerCalls(listenerName) {
+	if (listeners.has(listenerName)) {
+		const listenerInfo = listeners.get(listenerName);
+		listenerInfo.payloads = [];
+		listenerInfo.calls = 0;
+	}
+}
+
+async function createTransaction(gatewayName, transactionName, fcnName, chaincodeId, channelName) {
+	const gateway = getGateway(gatewayName);
+	const contract = await retrieveContractFromGateway(gateway, channelName, chaincodeId);
+	const transaction = contract.createTransaction(fcnName);
+	transactions.set(transactionName, transaction);
+}
+
+async function createCommitListener(transactionName, listenerName) {
+	const transaction = transactions.get(transactionName);
+	if (!transaction) {
+		throw new Error(`Transaction with name ${transactionName} does not exist`);
+	}
+	const listener = await transaction.addCommitListener((err, ...args) => {
+		if (err) {
+			testUtil.logMsg('Commit event error', err);
+			return err;
+		}
+		testUtil.logMsg('Received a commit event', listenerName);
+		const listenerInfo = listeners.get(listenerName);
+		listenerInfo.payloads.push(args);
+		listenerInfo.calls = listenerInfo.payloads.length;
+	});
+	listeners.set(listenerName, {listener, payloads: []});
+}
+
+async function submitExistingTransaction(transactionName, args) {
+	const transaction = transactions.get(transactionName);
+	if (!transaction) {
+		throw new Error(`Transaction with name ${transactionName} does not exist`);
+	}
+	const argsSplit = args.slice(1, -1).split(', ');
+	return await transaction.submit(...argsSplit);
+}
+
+
+module.exports = {
+	connectGateway,
+	performGatewayTransaction,
+	performGatewayTransactionWithListener,
+	disconnectGateway,
+	disconnectAllGateways,
+	lastResponseCompare,
+	lastResult,
+	lastTypeCompare,
+	getGateway,
+	createContractListener,
+	createBlockListener,
+	getListenerInfo,
+	resetListenerCalls,
+	createTransaction,
+	createCommitListener,
+	submitExistingTransaction
+};

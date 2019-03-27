@@ -18,6 +18,9 @@ const ccpPath = configRoot + '/ccp.json';
 const tlsCcpPath = configRoot + '/ccp-tls.json';
 const policiesPath = configRoot + '/policies.json';
 
+const instantiatedChaincodesOnChannels = new Map();
+const installedChaincodesOnPeers = new Map();
+
 module.exports = function () {
 
 	this.Given(/^I create all channels from the (.+?) common connection profile$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (tlsType) => {
@@ -156,7 +159,14 @@ module.exports = function () {
 			tls = true;
 			profile =  new CCP(path.join(__dirname, tlsCcpPath), true);
 		}
-		return chaincode_util.installChaincode(ccName, ccName, ccType, version, tls, profile, orgName, channelName);
+		if (!installedChaincodesOnPeers.has(orgName)) {
+			installedChaincodesOnPeers.set(orgName, []);
+		}
+		if (!installedChaincodesOnPeers.get(orgName).includes(`${ccName}${version}${ccType}`)) {
+			await chaincode_util.installChaincode(ccName, ccName, ccType, version, tls, profile, orgName, channelName);
+			installedChaincodesOnPeers.set(orgName, [...installedChaincodesOnPeers.get(orgName), `${ccName}${version}${ccType}`]);
+		}
+		return true;
 	});
 
 	this.Given(/^I install (.+?) chaincode named (.+?) to the (.+?) Fabric network$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (ccType, ccName, tlsType) => {
@@ -179,7 +189,14 @@ module.exports = function () {
 		// fixed version
 		const version = '1.0.0';
 
-		return chaincode_util.installChaincode(ccName, ccName, ccType, version, tls, profile, orgName, channelName);
+		if (!installedChaincodesOnPeers.has(orgName)) {
+			installedChaincodesOnPeers.set(orgName, []);
+		}
+		if (!installedChaincodesOnPeers.get(orgName).includes(`${ccName}${version}${ccType}`)) {
+			await chaincode_util.installChaincode(ccName, ccName, ccType, version, tls, profile, orgName, channelName);
+			installedChaincodesOnPeers.set(orgName, [installedChaincodesOnPeers.get(orgName), `${ccName}${version}${ccType}`]);
+		}
+		return true;
 	});
 
 	this.Given(/^I install (.+?) chaincode named (.+?) as (.+?) to the (.+?) Fabric network$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (ccType, ccName, ccId, tlsType) => {
@@ -202,7 +219,14 @@ module.exports = function () {
 		// fixed version
 		const version = '1.0.0';
 
-		return chaincode_util.installChaincode(ccName, ccId, ccType, version, tls, profile, orgName, channelName);
+		if (!installedChaincodesOnPeers.has(orgName)) {
+			installedChaincodesOnPeers.set(orgName, []);
+		}
+		if (!installedChaincodesOnPeers.get(orgName).includes(`${ccName}${version}${ccType}`)) {
+			await chaincode_util.installChaincode(ccName, ccId, ccType, version, tls, profile, orgName, channelName);
+			installedChaincodesOnPeers.set(orgName, [...installedChaincodesOnPeers.get(orgName), `${ccName}${version}${ccType}`]);
+		}
+		return true;
 	});
 
 	this.Then(/^I can instantiate the (.+?) installed (.+?) chaincode at version (.+?) named (.+?) on the (.+?) Fabric network as organization (.+?) on channel (.+?) with endorsement policy (.+?) and args (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (exisiting, ccType, version, ccName, tlsType, orgName, channelName, policyType, args) => {
@@ -224,7 +248,14 @@ module.exports = function () {
 		}
 
 		const policy = require(path.join(__dirname, policiesPath))[policyType];
-		return chaincode_util.instantiateChaincode(ccName, ccName, ccType, args, version, upgrade, tls, profile, orgName, channelName, policy);
+		if (!instantiatedChaincodesOnChannels.has(channelName)) {
+			instantiatedChaincodesOnChannels.set(channelName, []);
+		}
+		if (!instantiatedChaincodesOnChannels.get(channelName).includes(`${ccName}${version}${ccType}`)) {
+			await chaincode_util.instantiateChaincode(ccName, ccName, ccType, args, version, upgrade, tls, profile, orgName, channelName, policy);
+			instantiatedChaincodesOnChannels.set(channelName, [...instantiatedChaincodesOnChannels.get(channelName), `${ccName}${version}${ccType}`]);
+		}
+		return true;
 	});
 
 	this.Then(/^I can instantiate the (.+?) installed (.+?) chaincode at version (.+?) named (.+?) with identifier (.+?) on the (.+?) Fabric network as organization (.+?) on channel (.+?) with endorsement policy (.+?) and args (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (exisiting, ccType, version, ccName, ccId, tlsType, orgName, channelName, policyType, args) => {
@@ -246,7 +277,14 @@ module.exports = function () {
 		}
 
 		const policy = require(path.join(__dirname, policiesPath))[policyType];
-		return chaincode_util.instantiateChaincode(ccName, ccId, ccType, args, version, upgrade, tls, profile, orgName, channelName, policy);
+		if (!instantiatedChaincodesOnChannels.has(channelName)) {
+			instantiatedChaincodesOnChannels.set(channelName, []);
+		}
+		if (!instantiatedChaincodesOnChannels.get(channelName).includes(`${ccName}${version}${ccType}`)) {
+			await chaincode_util.instantiateChaincode(ccName, ccId, ccType, args, version, upgrade, tls, profile, orgName, channelName, policy);
+			instantiatedChaincodesOnChannels.set(channelName, [...instantiatedChaincodesOnChannels.get(channelName), `${ccName}${version}${ccType}`]);
+		}
+		return true;
 	});
 
 	this.Given(/^I install\/instantiate (.+?) chaincode named (.+?) at version (.+?) as (.+?) to the (.+?) Fabric network for all organizations on channel (.+?) with endorsement policy (.+?) and args (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (ccType, ccName, version, ccId, tlsType, channelName, policyType, args) => {
@@ -266,10 +304,23 @@ module.exports = function () {
 		try {
 			for (const org in orgs) {
 				const orgName = orgs[org];
-				await chaincode_util.installChaincode(ccName, ccId, ccType, version, tls, profile, orgName, channelName);
+				if (!installedChaincodesOnPeers.has(orgName)) {
+					installedChaincodesOnPeers.set(orgName, []);
+				}
+				if (!installedChaincodesOnPeers.get(orgName).includes(`${ccName}${version}${ccType}`)) {
+					await chaincode_util.installChaincode(ccName, ccId, ccType, version, tls, profile, orgName, channelName);
+					installedChaincodesOnPeers.set(orgName, [...installedChaincodesOnPeers.get(orgName), `${ccName}${version}${ccType}`]);
+				}
 			}
 
-			return chaincode_util.instantiateChaincode(ccName, ccId, ccType, args, version, false, tls, profile, orgs[0], channelName, policy);
+			if (!instantiatedChaincodesOnChannels.has(channelName)) {
+				instantiatedChaincodesOnChannels.set(channelName, []);
+			}
+			if (!instantiatedChaincodesOnChannels.get(channelName).includes(`${ccName}${version}${ccType}`)) {
+				await chaincode_util.instantiateChaincode(ccName, ccId, ccType, args, version, false, tls, profile, orgs[0], channelName, policy);
+				instantiatedChaincodesOnChannels.set(channelName, [...instantiatedChaincodesOnChannels.get(channelName), `${ccName}${version}${ccType}`]);
+			}
+			return true;
 		} catch (err) {
 			testUtil.logError('Install/Instantiate failed with error: ', err);
 			throw err;

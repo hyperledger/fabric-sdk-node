@@ -10,9 +10,11 @@ const sinon = require('sinon');
 const chai = require('chai');
 const expect = chai.expect;
 
-const EventHubFactory = require('fabric-network/lib/impl/event/eventhubfactory');
+const EventHubManager = require('fabric-network/lib/impl/event/eventhubmanager');
 const ChannelEventHub = require('fabric-client').ChannelEventHub;
 const Network = require('fabric-network/lib/network');
+const Transaction = require('fabric-network/lib/transaction');
+const TransactionID = require('fabric-client/lib/TransactionID');
 const Channel = require('fabric-client').Channel;
 const AllForTxStrategy = require('fabric-network/lib/impl/event/allfortxstrategy');
 const AnyForTxStrategy = require('fabric-network/lib/impl/event/anyfortxstrategy');
@@ -32,6 +34,7 @@ describe('DefaultEventHandlerStrategies', () => {
 
 	let options;
 	let stubNetwork;
+	let stubTransaction;
 
 	beforeEach(() => {
 		options = {
@@ -49,8 +52,8 @@ describe('DefaultEventHandlerStrategies', () => {
 		const stubEventHub = sinon.createStubInstance(ChannelEventHub);
 		stubEventHub.isconnected.returns(true);
 
-		const stubEventHubFactory = sinon.createStubInstance(EventHubFactory);
-		stubEventHubFactory.getEventHubs.withArgs([stubPeer]).resolves([stubEventHub]);
+		const stubEventHubManager = sinon.createStubInstance(EventHubManager);
+		stubEventHubManager.getEventHubs.withArgs([stubPeer]).resolves([stubEventHub]);
 
 		const channel = sinon.createStubInstance(Channel);
 		channel.getPeers.returns([stubPeer]);
@@ -58,7 +61,13 @@ describe('DefaultEventHandlerStrategies', () => {
 
 		stubNetwork = sinon.createStubInstance(Network);
 		stubNetwork.getChannel.returns(channel);
-		stubNetwork.getEventHubFactory.returns(stubEventHubFactory);
+		stubNetwork.getEventHubManager.returns(stubEventHubManager);
+
+		stubTransaction = sinon.createStubInstance(Transaction);
+		const stubTransactionId = sinon.createStubInstance(TransactionID);
+		stubTransactionId.getTransactionID.returns(transactionId);
+		stubTransaction.getTransactionID.returns(stubTransactionId);
+		stubTransaction.getNetwork.returns(stubNetwork);
 	});
 
 	afterEach(() => {
@@ -71,11 +80,15 @@ describe('DefaultEventHandlerStrategies', () => {
 		let eventHandler;
 
 		beforeEach(() => {
-			eventHandler = createTxEventHandler(transactionId, stubNetwork, options);
+			eventHandler = createTxEventHandler(stubTransaction, options);
 		});
 
 		it('Returns a TransactionEventHandler', () => {
 			expect(eventHandler).to.be.an.instanceOf(TransactionEventHandler);
+		});
+
+		it('Sets transaction on event handler', () => {
+			expect(eventHandler.transaction).to.equal(stubTransaction);
 		});
 
 		it('Sets transaction ID on event handler', () => {

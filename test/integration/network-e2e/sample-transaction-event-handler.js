@@ -23,7 +23,10 @@ class SampleTransactionEventHandler {
 	 * @param {Number} [options.commitTimeout] Time in seconds to wait for commit events to be reveived.
 	 */
 	constructor(transactionId, eventHubs, options) {
-		this.transactionId = transactionId;
+		if (typeof transactionId === 'object') {
+			this.transaction = transactionId;
+		}
+		this.transactionId = this.transaction ? this.transaction.getTransactionID().getTransactionID() : transactionId;
 		this.eventHubs = eventHubs;
 
 		const defaultOptions = {

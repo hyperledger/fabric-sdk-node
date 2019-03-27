@@ -7,6 +7,7 @@
 'use strict';
 
 const Transaction = require('fabric-network/lib/transaction');
+const ContractEventListener = require('./impl/event/contracteventlistener');
 
 const logger = require('./logger').getLogger('Contract');
 const util = require('util');
@@ -47,7 +48,7 @@ function verifyNamespace(namespace) {
  * @hideconstructor
  */
 class Contract {
-	constructor(network, chaincodeId, gateway, namespace) {
+	constructor(network, chaincodeId, gateway, checkpointer, namespace) {
 		logger.debug('in Contract constructor');
 
 		verifyNamespace(namespace);
@@ -57,6 +58,7 @@ class Contract {
 		this.chaincodeId = chaincodeId;
 		this.gateway = gateway;
 		this.namespace = namespace;
+		this.checkpointer = checkpointer;
 	}
 
 	/**
@@ -84,6 +86,23 @@ class Contract {
 	 */
 	getChaincodeId() {
 		return this.chaincodeId;
+	}
+
+	getCheckpointer(options) {
+		if (options) {
+			if (typeof options.checkpointer === 'undefined') {
+				return this.checkpointer;
+			} else if (typeof options.checkpointer === 'function') {
+				return options.checkpointer;
+			} else if (options.checkpointer === false) {
+				return null;
+			}
+		}
+		return this.checkpointer;
+	}
+
+	getEventHubSelectionStrategy() {
+		return this.network.eventHubSelectionStrategy;
 	}
 
 	/**
@@ -152,6 +171,32 @@ class Contract {
 	async evaluateTransaction(name, ...args) {
 		return this.createTransaction(name).evaluate(...args);
 	}
+
+	/**
+	 * Create a commit event listener for this transaction.
+	 * @param {string} listenerName The name of the listener
+	 * @param {Function} callback - This callback will be triggered when
+	 *		a transaction commit event is emitted. It takes parameters
+	 * 		of error, event payload, block number, transaction ID and status
+	 * @param {RegistrationOptions} [options] - Optional. Options on
+	 * 		registrations allowing start and end block numbers.
+	 * @param {ChannelEventHub} [eventHub] - Optional. Used to override the event hub selection
+	 * @returns {CommitEventListener}
+	 * @async
+	 */
+	async addContractListener(listenerName, eventName, callback, options) {
+		if (!options) {
+			options = {};
+		}
+		options.replay = options.replay ? true : false;
+		options.checkpointer = this.getCheckpointer(options);
+		const listener = new ContractEventListener(this, listenerName, eventName, callback, options);
+		const network = this.getNetwork();
+		network.saveListener(listenerName, listener);
+		await listener.register();
+		return listener;
+	}
+
 }
 
 module.exports = Contract;

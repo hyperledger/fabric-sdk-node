@@ -57,6 +57,7 @@ describe('Transaction', () => {
 	let stubContract;
 	let transaction;
 	let channel;
+	let network;
 	let stubQueryHandler;
 
 	beforeEach(() => {
@@ -70,7 +71,7 @@ describe('Transaction', () => {
 			evaluate: sinon.fake.resolves(expectedResult)
 		};
 
-		const network = sinon.createStubInstance(Network);
+		network = sinon.createStubInstance(Network);
 		network.getQueryHandler.returns(stubQueryHandler);
 		stubContract.getNetwork.returns(network);
 
@@ -204,11 +205,9 @@ describe('Transaction', () => {
 
 		it('uses a supplied event handler strategy', async () => {
 			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const txId = transaction.getTransactionID().getTransactionID();
-			const network = stubContract.getNetwork();
 			const options = stubContract.getEventHandlerOptions();
 			const stubEventHandlerFactoryFn = sinon.stub();
-			stubEventHandlerFactoryFn.withArgs(txId, network, options).returns(stubEventHandler);
+			stubEventHandlerFactoryFn.withArgs(transaction, stubContract.getNetwork(), options).returns(stubEventHandler);
 
 			await transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn).submit();
 
@@ -314,6 +313,24 @@ describe('Transaction', () => {
 			await transaction.submit();
 			const promise = transaction.evaluate();
 			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
+		});
+	});
+
+	describe('#addCommitListener', () => {
+		it('should call Network.addCommitlistner', async () => {
+			network.addCommitListener.resolves('listener');
+			const callback = (err, transationId, status, blockNumber) => {};
+			const listener = await transaction.addCommitListener(callback, {}, 'eventHub');
+			expect(listener).to.equal('listener');
+			sinon.assert.calledWith(network.addCommitListener, 'TRANSACTION_ID', callback, {}, 'eventHub');
+		});
+	});
+
+	describe('#getNetwork', () => {
+		it('should call Contract.getNetwork', () => {
+			stubContract.getNetwork.returns(network);
+			expect(transaction.getNetwork()).to.equal(network);
+			sinon.assert.called(stubContract.getNetwork);
 		});
 	});
 });

@@ -1,0 +1,19 @@
+{
+	"name": "events",
+	"version": "1.0.0",
+	"description": "events chaincode implemented in node.js",
+    "main": "index.js",
+	"engines": {
+		"node": ">=8",
+		"npm": ">=5"
+	},
+	"scripts": {
+        "start": "fabric-chaincode-node start"
+	},
+	"engine-strict": true,
+	"license": "Apache-2.0",
+	"dependencies": {
+        "fabric-contract-api": "unstable",
+        "fabric-shim": "unstable"
+	}
+}

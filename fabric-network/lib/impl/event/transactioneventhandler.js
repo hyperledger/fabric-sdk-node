@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -29,12 +29,13 @@ class TransactionEventHandler {
 	/**
 	 * Constructor.
 	 * @private
-	 * @param {String} transactionId Transaction ID.
+	 * @param {Transaction} transaction Traneaction object.
 	 * @param {Object} strategy Event strategy implementation.
 	 * @param {TransactionEventHandlerOptions} [options] Additional options.
 	 */
-	constructor(transactionId, strategy, options) {
-		this.transactionId = transactionId;
+	constructor(transaction, strategy, options) {
+		this.transaction = transaction;
+		this.transactionId = transaction.getTransactionID().getTransactionID();
 		this.strategy = strategy;
 
 		const defaultOptions = {
@@ -80,19 +81,17 @@ class TransactionEventHandler {
 	}
 
 	async _registerTxEventListeners() {
-		const registrationOptions = {unregister: true};
+		const registrationOptions = {unregister: true, fixedEventHub: true};
 
 		const promises = this.eventHubs.map((eventHub) => {
-			return new Promise((resolve) => {
+			return new Promise(async (resolve) => {
 				logger.debug('_registerTxEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
-
-				eventHub.registerTxEvent(
-					this.transactionId,
-					(txId, code) => this._onEvent(eventHub, txId, code),
-					(err) => this._onError(eventHub, err),
-					registrationOptions
-				);
-				eventHub.connect();
+				await this.transaction.addCommitListener((err, txId, code) => {
+					if (err) {
+						return this._onError(eventHub, err);
+					}
+					return this._onEvent(eventHub, txId, code);
+				}, registrationOptions, eventHub);
 				resolve();
 			});
 		});
@@ -126,7 +125,7 @@ class TransactionEventHandler {
 	}
 
 	_onError(eventHub, err) {
-		logger.info('_onError:', util.format('received error from peer %s: %s', eventHub.getPeerAddr(), err));
+		logger.debug('_onError:', util.format('received error from peer %s: %s', eventHub.getPeerAddr(), err));
 
 		this._receivedEventHubResponse(eventHub);
 		this.strategy.errorReceived(this._strategySuccess.bind(this), this._strategyFail.bind(this));
@@ -141,7 +140,7 @@ class TransactionEventHandler {
 	 * @private
 	 */
 	_strategySuccess() {
-		logger.info('_strategySuccess:', util.format('strategy success for transaction %j', this.transactionId));
+		logger.debug('_strategySuccess:', util.format('strategy success for transaction %j', this.transactionId));
 
 		this.cancelListening();
 		this._resolveNotificationPromise();
