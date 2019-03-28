@@ -89,15 +89,15 @@ export class Gateway {
 export interface Network {
 	getChannel(): Channel;
 	getContract(chaincodeId: string, name?: string): Contract;
-	addBlockListener(listenerName: string, callback: (block: Client.Block) => void, options?: object): BlockEventListener;
-	addCommitListener(listenerName: string, callback: (error: Error, transactionId: string, status: string, blockNumber: string) => void, options?: object): TransactionEventListener;
+	addBlockListener(listenerName: string, callback: (block: Client.Block) => void, options?: object): Promise<BlockEventListener>;
+	addCommitListener(listenerName: string, callback: (error: Error, transactionId: string, status: string, blockNumber: string) => void, options?: object): Promise<CommitEventListener>;
 }
 
 export interface Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event: {[key: string]: any}, blockNumber: string, transactionId: string, status: string) => void, options?: object): ContractEventListener;
+	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event: {[key: string]: any}, blockNumber: string, transactionId: string, status: string) => void, options?: object): Promise<ContractEventListener>;
 }
 
 export interface TransientMap {
@@ -110,7 +110,7 @@ export interface Transaction {
 	getNetwork(): Network;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
-	addCommitListener(callback: (error: Error, transactionId: string, status: string, blockNumber: string) => void, options: object, eventHub?: Client.ChannelEventHub): void;
+	addCommitListener(callback: (error: Error, transactionId: string, status: string, blockNumber: string) => void, options: object, eventHub?: Client.ChannelEventHub): Promise<CommitEventListener>;
 }
 
 export interface FabricError extends Error {
@@ -195,9 +195,9 @@ export class BaseCheckpointer {
 
 export class FileSystemCheckpointer extends BaseCheckpointer {
 	constructor();
-	public initialize(channelName: string, listenerName: string): void;
-	public save(transactionId: string, blockNumber: string): void;
-	public load(): Checkpoint;
+	public initialize(channelName: string, listenerName: string): Promise<void>;
+	public save(transactionId: string, blockNumber: string): Promise<void>;
+	public load(): Promise<Checkpoint>;
 }
 
 export type CheckpointerFactory = (channelName: string, listenerName: string, options: object) => BaseCheckpointer;
@@ -210,7 +210,7 @@ export class EventHubManager {
 	public getReplayEventHubs(peers: Client.Peer[]): Client.ChannelEventHub[];
 }
 
-export class TransactionEventListener {
+export class CommitEventListener {
 	public register(): void;
 	public setEventHub(eventHub: Client.ChannelEventHub): void;
 	public unregister(): void;
