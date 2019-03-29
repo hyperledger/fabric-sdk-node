@@ -1631,6 +1631,21 @@ describe('Channel', () => {
 	describe('#_processPeers', () => {});
 
 	describe('#_buildOrdererName', () => {
+
+		const ordererDefaultConnectionOptions = {
+			'grpc.default_authority': 'orderer.example.com',
+			'grpc.max_receive_message_length': -1,
+			'grpc.max_send_message_length': -1,
+			'grpc.ssl_target_name_override': 'orderer.example.com',
+			name: 'orderer.example.com:7050',
+
+			'grpc.http2.max_pings_without_data': 0,
+			'grpc.http2.min_time_between_pings_ms': 120000,
+			'grpc.keepalive_permit_without_calls': 1,
+			'grpc.keepalive_time_ms': 120000,
+			'grpc.keepalive_timeout_ms': 20000
+		};
+
 		it('should match an existing orderer', () => {
 			const orderer = sinon.createStubInstance(Orderer);
 			orderer.getUrl.returns('grpcs://peer:7051');
@@ -1670,13 +1685,7 @@ describe('Channel', () => {
 			name.should.equal('orderer.example.com:7050');
 			const orderer = channel.getOrderer('orderer.example.com:7050');
 			orderer.getUrl().should.equal('grpc://orderer.example.com:7050');
-			orderer._options.should.deep.equal({
-				'grpc.default_authority': 'orderer.example.com',
-				'grpc.max_receive_message_length': -1,
-				'grpc.max_send_message_length': -1,
-				'grpc.ssl_target_name_override': 'orderer.example.com',
-				name: 'orderer.example.com:7050'
-			});
+			orderer._options.should.deep.equal(ordererDefaultConnectionOptions);
 		});
 
 		it('should add a new orderer if all information is available (non-TLS, localhost)', () => {
@@ -1691,13 +1700,7 @@ describe('Channel', () => {
 			name.should.equal('orderer.example.com:7050');
 			const orderer = channel.getOrderer('orderer.example.com:7050');
 			orderer.getUrl().should.equal('grpc://localhost:7050');
-			orderer._options.should.deep.equal({
-				'grpc.default_authority': 'orderer.example.com',
-				'grpc.max_receive_message_length': -1,
-				'grpc.max_send_message_length': -1,
-				'grpc.ssl_target_name_override': 'orderer.example.com',
-				name: 'orderer.example.com:7050'
-			});
+			orderer._options.should.deep.equal(ordererDefaultConnectionOptions);
 		});
 
 		it('should add a new orderer if all information is available (TLS)', () => {
@@ -1712,13 +1715,7 @@ describe('Channel', () => {
 			name.should.equal('orderer.example.com:7050');
 			const orderer = channel.getOrderer('orderer.example.com:7050');
 			orderer.getUrl().should.equal('grpcs://orderer.example.com:7050');
-			orderer._options.should.deep.equal({
-				'grpc.default_authority': 'orderer.example.com',
-				'grpc.max_receive_message_length': -1,
-				'grpc.max_send_message_length': -1,
-				'grpc.ssl_target_name_override': 'orderer.example.com',
-				name: 'orderer.example.com:7050'
-			});
+			orderer._options.should.deep.equal(ordererDefaultConnectionOptions);
 		});
 
 		it('should add a new orderer if all information is available (TLS, localhost)', () => {
@@ -1733,13 +1730,7 @@ describe('Channel', () => {
 			name.should.equal('orderer.example.com:7050');
 			const orderer = channel.getOrderer('orderer.example.com:7050');
 			orderer.getUrl().should.equal('grpcs://localhost:7050');
-			orderer._options.should.deep.equal({
-				'grpc.default_authority': 'orderer.example.com',
-				'grpc.max_receive_message_length': -1,
-				'grpc.max_send_message_length': -1,
-				'grpc.ssl_target_name_override': 'orderer.example.com',
-				name: 'orderer.example.com:7050'
-			});
+			orderer._options.should.deep.equal(ordererDefaultConnectionOptions);
 		});
 
 		it('should add a new orderer if all information is available (forced TLS)', () => {
@@ -1788,6 +1779,24 @@ describe('Channel', () => {
 	});
 
 	describe('#_buildPeerName', () => {
+
+		const peerDefaultConnectionOptions = { // according to fabric-client/config/default.json
+			'grpc.default_authority': 'peer0.org1.example.com',
+			'grpc.max_receive_message_length': -1,
+			'grpc.max_send_message_length': -1,
+			'grpc.ssl_target_name_override': 'peer0.org1.example.com',
+			name: 'peer0.org1.example.com:7051',
+
+			'grpc.http2.max_pings_without_data': 0,
+			'grpc.http2.min_time_between_pings_ms': 120000,
+			'grpc.keepalive_permit_without_calls': 1,
+			'grpc.keepalive_time_ms': 120000,
+			'grpc.keepalive_timeout_ms': 20000
+		};
+
+		const peerRemoteConnectionOptions = Object.assign({}, peerDefaultConnectionOptions,
+			{'grpc.default_authority': 'peer0.org1.example.com'});
+
 		it('should match an existing peer', () => {
 			const peer = sinon.createStubInstance(Peer);
 			sinon.stub(channel, '_buildUrl').returns('grpcs://peer:7051');
@@ -1822,13 +1831,7 @@ describe('Channel', () => {
 			const channelPeer = channel.getPeer('peer0.org1.example.com:7051');
 			const peer = channelPeer.getPeer();
 			peer.getUrl().should.equal('grpc://peer0.org1.example.com:7051');
-			peer._options.should.deep.equal({
-				'grpc.default_authority': 'peer0.org1.example.com',
-				'grpc.max_receive_message_length': -1,
-				'grpc.max_send_message_length': -1,
-				'grpc.ssl_target_name_override': 'peer0.org1.example.com',
-				name: 'peer0.org1.example.com:7051'
-			});
+			peer._options.should.deep.equal(peerRemoteConnectionOptions);
 		});
 
 		it('should add a new peer if all information is available (non-TLS, localhost)', () => {
@@ -1844,13 +1847,7 @@ describe('Channel', () => {
 			const channelPeer = channel.getPeer('peer0.org1.example.com:7051');
 			const peer = channelPeer.getPeer();
 			peer.getUrl().should.equal('grpc://localhost:7051');
-			peer._options.should.deep.equal({
-				'grpc.default_authority': 'peer0.org1.example.com',
-				'grpc.max_receive_message_length': -1,
-				'grpc.max_send_message_length': -1,
-				'grpc.ssl_target_name_override': 'peer0.org1.example.com',
-				name: 'peer0.org1.example.com:7051'
-			});
+			peer._options.should.deep.equal(peerRemoteConnectionOptions);
 		});
 
 		it('should add a new peer if all information is available (TLS)', () => {
@@ -1866,13 +1863,7 @@ describe('Channel', () => {
 			const channelPeer = channel.getPeer('peer0.org1.example.com:7051');
 			const peer = channelPeer.getPeer();
 			peer.getUrl().should.equal('grpcs://peer0.org1.example.com:7051');
-			peer._options.should.deep.equal({
-				'grpc.default_authority': 'peer0.org1.example.com',
-				'grpc.max_receive_message_length': -1,
-				'grpc.max_send_message_length': -1,
-				'grpc.ssl_target_name_override': 'peer0.org1.example.com',
-				name: 'peer0.org1.example.com:7051'
-			});
+			peer._options.should.deep.equal(Object.assign({}, peerRemoteConnectionOptions));
 		});
 
 		it('should add a new peer if all information is available (TLS, localhost)', () => {
@@ -1888,13 +1879,7 @@ describe('Channel', () => {
 			const channelPeer = channel.getPeer('peer0.org1.example.com:7051');
 			const peer = channelPeer.getPeer();
 			peer.getUrl().should.equal('grpcs://localhost:7051');
-			peer._options.should.deep.equal({
-				'grpc.default_authority': 'peer0.org1.example.com',
-				'grpc.max_receive_message_length': -1,
-				'grpc.max_send_message_length': -1,
-				'grpc.ssl_target_name_override': 'peer0.org1.example.com',
-				name: 'peer0.org1.example.com:7051'
-			});
+			peer._options.should.deep.equal(Object.assign({}, peerRemoteConnectionOptions));
 		});
 
 		it('should add a new peer if all information is available (forced TLS)', () => {
@@ -1947,6 +1932,7 @@ describe('Channel', () => {
 	describe('#_buildOptions', () => {
 		it('should return the build options', () => {
 			client = sinon.createStubInstance(Client);
+			client.buildConnectionOptions.callsFake(opts => opts);
 			channel._clientContext = client;
 			const msp = {tls_root_certs: 'ROOT_CERT'};
 			const pem = 'ROOT_CERT';

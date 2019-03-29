@@ -432,7 +432,7 @@ describe('Client', () => {
 			const peerStub = sinon.stub();
 			revert.push(Client.__set__('Peer', peerStub));
 			const client = new Client();
-			client._buildConnectionOptions = (value) => value;
+			client.buildConnectionOptions = (value) => value;
 			const peer = client.newPeer('url', 'opts');
 			sinon.assert.calledWith(peerStub, 'url', 'opts');
 			peer.should.deep.equal(new peerStub());
@@ -517,7 +517,7 @@ describe('Client', () => {
 			const ordererStub = sinon.stub();
 			revert.push(Client.__set__('Orderer', ordererStub));
 			const client = new Client();
-			client._buildConnectionOptions = (value) => value;
+			client.buildConnectionOptions = (value) => value;
 			const peer = client.newOrderer('url', 'opts');
 			sinon.assert.calledWith(ordererStub, 'url', 'opts');
 			peer.should.deep.equal(new ordererStub());
@@ -2963,12 +2963,12 @@ describe('Client', () => {
 		});
 	});
 
-	describe('#_buildConnectionOptions', () => {
+	describe('#buildConnectionOptions', () => {
 		it('should contain option from original option', () => {
 			const opts = {'clientCert': 'thing'};
 			const client = new Client();
 			client.setTlsClientCertAndKey('cert', 'key');
-			const newOpts = client._buildConnectionOptions(opts);
+			const newOpts = client.buildConnectionOptions(opts);
 			newOpts.clientCert.should.equal('thing');
 		});
 
@@ -2976,7 +2976,7 @@ describe('Client', () => {
 			const opts = {'some': 'thing'};
 			const client = new Client();
 			client.setTlsClientCertAndKey('cert', 'key');
-			const newOpts = client._buildConnectionOptions(opts);
+			const newOpts = client.buildConnectionOptions(opts);
 			newOpts.some.should.equal('thing');
 			newOpts.clientCert.should.equal('cert');
 		});
@@ -2985,15 +2985,15 @@ describe('Client', () => {
 			const opts = {'safe': 'thing'};
 			const client = new Client();
 			client.addConnectionOptions({'safe': 'other', 'hope': 'found'});
-			const newOpts = client._buildConnectionOptions(opts);
+			const newOpts = client.buildConnectionOptions(opts);
 			newOpts.safe.should.equal('thing');
 			newOpts.hope.should.equal('found');
 		});
 
-		it('should call _buildConnectionOptions and return default opts', () => {
+		it('should call buildConnectionOptions and return default opts', () => {
 			const client = new Client();
 			const opts = client.getConfigSetting('connection-options');
-			const newOpts = client._buildConnectionOptions();
+			const newOpts = client.buildConnectionOptions();
 			newOpts.should.deep.equal(opts);
 		});
 	});

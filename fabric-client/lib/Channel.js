@@ -1508,11 +1508,12 @@ const Channel = class {
 		const method = '_buildOptions';
 		logger.debug('%s - start', method);
 		const caroots = this._buildTlsRootCerts(msp);
-		const opts = {
+		let opts = {
 			'pem': caroots,
 			'ssl-target-name-override': host,
 			'name': name
 		};
+		opts = this._clientContext.buildConnectionOptions(opts);
 		this._clientContext.addTlsClientCertAndKey(opts);
 
 		return opts;

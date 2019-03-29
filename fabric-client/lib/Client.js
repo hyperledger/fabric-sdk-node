@@ -187,10 +187,10 @@ const Client = class extends BaseClient {
 		}
 	}
 
-	/*
+	/**
 	 * Utility method to merge connection options into a set of options and
 	 * return a new options object.
-	 * The client's options will not override any existing settings by
+	 * The client's options and default connection options will not override any passed settings by
 	 * the same name, these will only be added as new settings to the
 	 * application's options being passed in. see {@link Client#addConnectionOptions}
 	 * for how this client will have connection options to merge.
@@ -200,7 +200,7 @@ const Client = class extends BaseClient {
 	 * @returns {object} - The object holding both the application's options
 	 *          and this client's options.
 	 */
-	_buildConnectionOptions(options) {
+	buildConnectionOptions(options) {
 		const method = 'getConnectionOptions';
 		logger.debug('%s - start', method);
 		let return_options = Object.assign({}, Client.getConfigSetting('connection-options'));
@@ -256,7 +256,7 @@ const Client = class extends BaseClient {
 	 * methods are called.
 	 * Options will be automatically added when loading a common connection profile
 	 * and the client section has the 'connection' section with an 'options' attribute.
-	 * These options will be initially loaded from the system configuration
+	 * Default connection options will be initially loaded from the system configuration
 	 * 'connection-options' setting.
 	 *
 	 * @param {object} options - The connection options that will be added to
@@ -431,7 +431,7 @@ const Client = class extends BaseClient {
 	 * @returns {Peer} The Peer instance.
 	 */
 	newPeer(url, opts) {
-		return new Peer(url, this._buildConnectionOptions(opts));
+		return new Peer(url, this.buildConnectionOptions(opts));
 	}
 
 	/**
@@ -492,7 +492,7 @@ const Client = class extends BaseClient {
 	 * @returns {Orderer} The Orderer instance.
 	 */
 	newOrderer(url, opts) {
-		return new Orderer(url, this._buildConnectionOptions(opts));
+		return new Orderer(url, this.buildConnectionOptions(opts));
 	}
 
 	/**

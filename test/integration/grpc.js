@@ -231,7 +231,7 @@ function sentConnectionOptionsIfDefined(optionName, optionValue) {
 }
 
 function getClientOptionsDefinedInDefault(client, defaultConnectionOptions) {
-	const clientConnectionOptions = client._buildConnectionOptions();
+	const clientConnectionOptions = client.buildConnectionOptions();
 	const clientOptionsSubset = {};
 	Object.keys(defaultConnectionOptions).forEach(key => clientOptionsSubset[key] = clientConnectionOptions[key]);
 	return clientOptionsSubset;
