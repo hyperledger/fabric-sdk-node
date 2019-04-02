@@ -58,16 +58,16 @@ class BlockEventListener extends AbstractEventListener {
 	 * @param {*} block Either a full or filtered block
 	 * @private
 	 */
-	_onEvent(block) {
+	async _onEvent(block) {
 		const blockNumber = Number(block.number);
 
 		try {
-			this.eventCallback(null, block);
+			await this.eventCallback(null, block);
+			if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
+				await this.checkpointer.save(null, blockNumber);
+			}
 		} catch (err) {
 			logger.error(util.format('Error executing callback: %s', err));
-		}
-		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
-			this.checkpointer.save(null, blockNumber);
 		}
 		if (this._registration.unregister) {
 			this.unregister();
