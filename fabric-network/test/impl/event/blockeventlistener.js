@@ -93,36 +93,36 @@ describe('BlockEventListener', () => {
 			sandbox.stub(blockEventListener, 'eventCallback');
 		});
 
-		it('should call the event callback', () => {
+		it('should call the event callback', async () => {
 			const block = {number: '10'};
-			blockEventListener._onEvent(block);
+			await blockEventListener._onEvent(block);
 			sinon.assert.calledWith(blockEventListener.eventCallback, null, block);
 			sinon.assert.notCalled(checkpointerStub.save);
 			sinon.assert.notCalled(blockEventListener.unregister);
 		});
 
-		it('should save a checkpoint', () => {
+		it('should save a checkpoint', async () => {
 			const block = {number: '10'};
 			blockEventListener.checkpointer = checkpointerStub;
-			blockEventListener._onEvent(block);
+			await blockEventListener._onEvent(block);
 			sinon.assert.calledWith(checkpointerStub.save, null, 10);
 		});
 
-		it('should unregister if registration.unregister is set', () => {
+		it('should unregister if registration.unregister is set', async () => {
 			const block = {number: '10'};
 			blockEventListener._registration.unregister = true;
-			blockEventListener._onEvent(block);
+			await blockEventListener._onEvent(block);
 			sinon.assert.calledWith(blockEventListener.eventCallback, null, block);
 			sinon.assert.called(blockEventListener.unregister);
 		});
 
-		it ('should not save a checkpoint if the callback fails', () => {
+		it ('should not save a checkpoint if the callback fails', async () => {
 			const block = {number: '10'};
 			blockEventListener.eventCallback.throws(new Error());
 			blockEventListener.checkpointer = checkpointerStub;
-			blockEventListener._onEvent(block);
+			await blockEventListener._onEvent(block);
 			sinon.assert.calledWith(blockEventListener.eventCallback, null, block);
-			sinon.assert.calledWith(checkpointerStub.save, null, 10);
+			sinon.assert.notCalled(checkpointerStub.save);
 		});
 	});
 

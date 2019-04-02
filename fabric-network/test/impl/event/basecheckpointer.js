@@ -38,4 +38,12 @@ describe('BaseCheckpointer', () => {
 			expect(checkpointer.load()).to.be.rejectedWith('Method has not been implemented');
 		});
 	});
+
+	describe('#setChaincodeId', () => {
+		it('should set the chaincodeId', () => {
+			const checkpointer = new BaseCheckpointer();
+			checkpointer.setChaincodeId('CHAINCODE_ID');
+			expect(checkpointer._chaincodeId).to.equal('CHAINCODE_ID');
+		});
+	});
 });
