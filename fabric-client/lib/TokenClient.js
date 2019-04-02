@@ -61,8 +61,9 @@ const {HashPrimitives} = require('fabric-common');
  *   const tokenClient2 = client2.newTokenClient(mychannel);
  *
  *   // create request to issue tokens to user2
+ *   // owner type is optional; default is 0 (i.e., TokenOwner_MSP_IDENTIFIER type)
  *   const txId = tokenClient1.newTransactionID();
- *   const owner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2.getIdentity().serialize()};
+ *   const owner = {raw: user2.getIdentity().serialize(), type: 0};
  *   const tokenType = 'myTokenType';
  *   let param = {owner: owner, type: tokenType, quantity: '200'};
  *   let request = {params: [param], txId: txId};
@@ -92,7 +93,8 @@ const {HashPrimitives} = require('fabric-common');
  *   });
  *
  *   // user2 calls transfer method to transfer the token to user1
- *   const newOwner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1.getIdentity().serialize()};
+ *   // owner type is optional; default is 0 (i.e., TokenOwner_MSP_IDENTIFIER type)
+ *   const newOwner = {raw: user1.getIdentity().serialize(), type: 0};
  *   param = {owner: newOwner, quantity: '150'};
  *   request = {params: [param], tokenId: token.id, txId: txId};
  *   result = await tokenClient1.transfer(request);
@@ -163,14 +165,21 @@ const TokenClient = class {
 	}
 
 	/**
+	 * @typedef {Object} TokenOwner
+	 *          This object contains the bytes and type for the owner.
+	 * @property {byte[]} raw - Required. The serialized bytes for the owner.
+	 * @property {int} type - Optional. Default is 0 (i.e., TokenOwner_MSP_IDENTIFIER type).
+	 */
+
+	/**
 	 * @typedef {Object} TokenParam
 	 *          This object contains properties that specify the owner, type,
 	 *          and quantity of a token kind.
-	 * @property {byte[]} owner - Required for issue and transfer. The owner of the token.
+	 * @property {TokenOwner} owner - Required for issue and transfer. The recipient of the token.
 	 * @property {string} type - Required for issue. The type of the token.
-	 * @property {HexString} quantity - Required. The quantity of the token in a HexString
-	 *          of the numeric value.
-   */
+	 * @property {string} quantity - Required. The quantity of the token in decimal string format.
+	 *           For example, use '200' for 200.
+	 */
 
 	/**
 	 * @typedef {Object} TokenRequest

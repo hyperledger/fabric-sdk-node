@@ -65,18 +65,22 @@ The issuer issues tokens to user1 and user 2
 // create a TokenClient instance from client
 const tokenclient = client.newTokenClient(mychannel);
 
-// create a request for issue
+// create a transaction ID for "issuer"
 const txId = client.newTransactionID();
+
+// create two parameters for issue, one for user1 and one for user2
 const param1 = {
-	owner: user1.getIdentity().serialize(),
+	owner: {raw: user1.getIdentity().serialize(), type: 0},
 	type: 'USD',
 	quantity: '500',
 };
 const param2 = {
-	owner: user2.getIdentity().serialize(),
+	owner: {raw: user2.getIdentity().serialize(), type: 0},
 	type: 'EURO',
 	quantity: '300',
 };
+
+// create the token request for issue
 const issueRequest = {
 	params: [param1, param2],
 	txId: txId,
@@ -90,15 +94,15 @@ const result = await tokenClient.issue(issueRequest);
 ```
 
 #### Use case 2: list tokens
-user1 lists his unspent tokens
+You can only list unspent tokens owned by yourself.
 ```
 // create a TokenClient instance from client1
 const user1Tokenclient = client1.newTokenClient(mychannel);
 
-// user1 list his tokens
+// user1 lists tokens
 const mytokens = await user1TokenClient.list();
 
-// iterate the tokens to get token id, type, and quantity
+// iterate the tokens to get token id, type, and quantity for each token
 for (const token of tokens) {
 	// get token.id, token.type, and token.quantity
 	// token.id will be used for transfer and redeem
@@ -106,22 +110,29 @@ for (const token of tokens) {
 ```
 
 #### Use case 3: transfer tokens
-Before a user transfers his tokens, he must get the token id(s) that he wants to transfer.
+You can only transfer tokens owned by yourself. Call the "list" method to get the token id(s) you want to transfer.
 Assume user1 wants to transfer 'tokenid1' to user2. The token quantity is 500 and
-user1 wants to transfer 300 to user2. He will transfer the remaining 200 to himself.
+user1 wants to transfer 300 to user2.  The remaining 200 will be transferred to user1
+because the total quantity for transfer must be same as the total quanity in the original tokens.
 
 ```
-// Create a request (see TokenRequest doc) for transfer.
+// create a request (see TokenRequest doc) for transfer.
 // After transfer, user2 will have 300 quantity of the token and user1 will have 200 quantity of the token.
+
+// create the transaction ID for "user1" who will transfer tokens
 const txId = client1.newTransactionID();
+
+// create two parameters, where param1 is to transfer 300 to user2 and param2 is to transfer the remaining 200 to user1.
 const param1 = {
-	owner: user2.getIdentity().serialize(),
+	owner: {raw: user2.getIdentity().serialize(), type:0},
 	quantity: '300',
 };
 const param2 = {
-	owner: user1.getIdentity().serialize(),
+	owner: {raw: user1.getIdentity().serialize(), type:0},
 	quantity: '200',
 };
+
+// create the request for transfer
 const transferRequest = {
 	tokenIds: [tokenid1],
 	params: [param1, param2],
@@ -129,6 +140,7 @@ const transferRequest = {
 };
 
 // user1 calls transfer method to transfer the token to user2
+// after transfer, the old "tokenid1" will be destroyed and new token ids will be created
 const mytokens = await user1TokenClient.transfer(transferRequest);
 
 // The above method broadcasts the transaction to the orderer.
@@ -136,8 +148,8 @@ const mytokens = await user1TokenClient.transfer(transferRequest);
 ```
 
 #### Use case 4: redeem tokens
-Before a user redeems his tokens, he must get the token id(s) that he wants to transfer.
-Assume user2 wants to redeem "tokenid2" and he wants to redeem 100 out of 300.
+You can only redeem tokens owned by yourself. Call the "list" method to get the token id(s) you want to redeem.
+Assume user2 wants to redeem 100 out of 300 from the "tokenid2" token.
 ```
 // create a TokenClient instance from client2
 const user2Tokenclient = client2.newTokenClient(mychannel);
@@ -148,16 +160,21 @@ const param = {
 	quantity: '100',
 };
 const redeemRequest = {
+	tokenIds: [tokenid2],
 	params: [param],
 	txId: txId,
 };
 
-// user2 calls redeem method. After redeem, user2 will have 200 left, with a new token id.
-// The old token id will be gone since it has been spent.
+// user2 calls redeem method.
 const result = await user2TokenClient.redeem(redeemRequest);
 
 // The above method broadcasts the transaction to the orderer.
 // You can monitor its completion with the channel event service
+
+// After redeem, user2 will have 200 left, with a new token id.
+// The old "tokenid2" will be destroyed since it has been spent.
+// You can call list to verify the result.
+const tokens = await user2TokenClient.list();
 ```
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">
