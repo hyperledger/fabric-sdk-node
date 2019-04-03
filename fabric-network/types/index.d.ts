@@ -89,15 +89,15 @@ export class Gateway {
 export interface Network {
 	getChannel(): Channel;
 	getContract(chaincodeId: string, name?: string): Contract;
-	addBlockListener(listenerName: string, callback: (block: Client.Block) => void, options?: object): Promise<BlockEventListener>;
-	addCommitListener(listenerName: string, callback: (error: Error, transactionId: string, status: string, blockNumber: string) => void, options?: object): Promise<CommitEventListener>;
+	addBlockListener(listenerName: string, callback: (block: Client.Block) => Promise<any>, options?: object): Promise<BlockEventListener>;
+	addCommitListener(listenerName: string, callback: (error: Error, transactionId: string, status: string, blockNumber: string) => Promise<any>, options?: object): Promise<CommitEventListener>;
 }
 
 export interface Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event: {[key: string]: any}, blockNumber: string, transactionId: string, status: string) => void, options?: object): Promise<ContractEventListener>;
+	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event: {[key: string]: any}, blockNumber: string, transactionId: string, status: string) => Promise<any>, options?: object): Promise<ContractEventListener>;
 }
 
 export interface TransientMap {
@@ -110,7 +110,7 @@ export interface Transaction {
 	getNetwork(): Network;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
-	addCommitListener(callback: (error: Error, transactionId: string, status: string, blockNumber: string) => void, options: object, eventHub?: Client.ChannelEventHub): Promise<CommitEventListener>;
+	addCommitListener(callback: (error: Error, transactionId: string, status: string, blockNumber: string) => Promise<any>, options: object, eventHub?: Client.ChannelEventHub): Promise<CommitEventListener>;
 }
 
 export interface FabricError extends Error {

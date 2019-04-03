@@ -149,7 +149,7 @@ describe('ContractEventListener', () => {
 			contractEventListener.options.replay = true;
 			await contractEventListener._onEvent(event, blockNumber, transactionId, status);
 			sinon.assert.calledWith(contractEventListener.eventCallback, null, event, Number(blockNumber), transactionId, status);
-			sinon.assert.calledWith(checkpointerStub.save, 'transactionId', 10);
+			sinon.assert.notCalled(checkpointerStub.save);
 		});
 
 		it('should skip a transaction if it is in the checkpoint', async () => {

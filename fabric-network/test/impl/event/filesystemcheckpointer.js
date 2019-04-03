@@ -139,4 +139,12 @@ describe('FileSystemCheckpointer', () => {
 			expect(loadedCheckpoint).to.deep.equal({});
 		});
 	});
+
+	describe('#_getCheckpointFileName', () => {
+		it('should return a file path including the chaincode ID', () => {
+			const chaincodeId = 'CHAINCODE_ID';
+			checkpointer.setChaincodeId(chaincodeId);
+			expect(checkpointer._getCheckpointFileName()).to.equal(`home/.hlf-checkpoint/${channelName}/${chaincodeId}/${listenerName}`);
+		});
+	});
 });
