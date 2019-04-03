@@ -21,7 +21,6 @@ const test = _test(tape);
 
 const testUtil = require('../unit/util.js');
 const e2eUtils = require('./e2e/e2eUtils.js');
-const fabprotos = require('fabric-protos');
 
 // The channel for token e2e tests which should be created and joined in setup tests
 const channel_name = process.env.channel ? process.env.channel : 'tokenchannel';
@@ -214,7 +213,7 @@ test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {raw: user1Identity.serialize()},
 			type: 'abc123',
 			quantity: '210'
 		};
@@ -239,7 +238,7 @@ test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
+			owner: {raw: user2Identity.serialize()},
 			quantity: transferToken.quantity
 		};
 		request = {
@@ -304,7 +303,7 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {raw: user1Identity.serialize()},
 			type: 'abc123',
 			quantity: '210'
 		};
@@ -329,7 +328,7 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		// token is owned by user1, but user2 attempts to transfer the token, should fail
 		txId = user2TokenClient.getClient().newTransactionID();
 		param = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
+			owner: {raw: user2Identity.serialize()},
 			quantity: '10'
 		};
 		request = {
@@ -373,7 +372,7 @@ test('\n\n***** Token end-to-end flow: invalid transfer amount fails *****\n\n',
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {raw: user1Identity.serialize()},
 			type: 'abc123',
 			quantity: '210'
 		};
@@ -398,7 +397,7 @@ test('\n\n***** Token end-to-end flow: invalid transfer amount fails *****\n\n',
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user2Identity.serialize()},
+			owner: {raw: user2Identity.serialize()},
 			quantity: '10'
 		};
 		request = {
@@ -440,7 +439,7 @@ test('\n\n***** Token end-to-end flow: invalid redeem amount fails *****\n\n', a
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: user1Identity.serialize()},
+			owner: {raw: user1Identity.serialize()},
 			type: 'abc123',
 			quantity: '100'
 		};
