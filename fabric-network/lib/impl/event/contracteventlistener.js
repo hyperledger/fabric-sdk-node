@@ -77,7 +77,7 @@ class ContractEventListener extends AbstractEventListener {
 		let useCheckpoint = false;
 		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
 			const checkpoint = await this.checkpointer.load();
-			useCheckpoint = true;
+			useCheckpoint = Number(checkpoint.blockNumber || 0) <= Number(blockNumber);
 			if (checkpoint && checkpoint.transactionIds && checkpoint.transactionIds.includes(transactionId)) {
 				logger.debug(util.format('_onEvent skipped transaction: %s', transactionId));
 				return;
@@ -116,18 +116,29 @@ class ContractEventListener extends AbstractEventListener {
 	}
 
 	/**
+	 *
 	 * Finds a new event hub for the listener in the event of one shutting down. Will
 	 * create a new instance if checkpointer is being used, or reuse one if not
+	 * @private
 	 */
 	async _registerWithNewEventHub() {
 		this.unregister();
-		if (this.checkpointer instanceof BaseCheckpointer && this.useEventReplay()) {
+		if (this.options.fixedEventHub && !this.eventHub) {
+			throw new Error('No event hub given and option fixedEventHub is set');
+		}
+		const useCheckpointing = this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer;
+		if (useCheckpointing && !this.options.fixedEventHub) {
 			this.eventHub = this.getEventHubManager().getReplayEventHub();
+		} else if (useCheckpointing && this.options.fixedEventHub) {
+			this.eventHub = this.getEventHubManager().getReplayEventHub(this.eventHub._peer);
+		} else if (!useCheckpointing && this.options.fixedEventHub) {
+			this.eventHub = this.getEventHubManager().getEventHub(this.eventHub._peer);
 		} else {
 			this.eventHub = this.getEventHubManager().getEventHub();
 		}
-		await this.register(this.contract.getChaincodeId());
+		await this.register();
 	}
+
 }
 
 module.exports = ContractEventListener;

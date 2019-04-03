@@ -64,6 +64,11 @@ class AbstractEventListener {
 			logger.error('No peers available to register a listener');
 			return;
 		}
+
+		if (!this.eventHub && this.options.fixedEventHub) {
+			throw new Error('No event hub given and option fixedEventHub is set');
+		}
+
 		if (this._registered) {
 			throw new Error('Listener already registered');
 		}
@@ -92,9 +97,9 @@ class AbstractEventListener {
 		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
 			this._firstCheckpoint = checkpoint = await this.checkpointer.load();
 			const blockchainInfo = await this.channel.queryInfo();
-			if (checkpoint && checkpoint.blockNumber && blockchainInfo.height - 1 <= Number(checkpoint.blockNumber)) {
-				logger.debug(`Requested Block Number: ${checkpoint.blockNumber} Latest Block Number: ${blockchainInfo.height - 1}`);
-				this.options.startBlock = Long.fromValue(checkpoint.blockNumber);
+			if (checkpoint && checkpoint.blockNumber && blockchainInfo.height - 1 > Number(checkpoint.blockNumber)) {
+				logger.debug(`Requested Block Number: ${Number(checkpoint.blockNumber) + 1} Latest Block Number: ${blockchainInfo.height - 1}`);
+				this.options.startBlock = Long.fromInt(Number(checkpoint.blockNumber) + 1);
 			}
 		}
 	}
@@ -110,6 +115,15 @@ class AbstractEventListener {
 		delete this.options.endBlock;
 		delete this.options.disconnect;
 		this._firstCheckpoint = {};
+	}
+
+	/**
+	 * @param {module:fabric-client.ChannelEventHub} eventhub Event hub.
+	 * @param {boolean} isFixed If true only this peers event hub will be used
+	 */
+	setEventHub(eventHub, isFixed) {
+		this.eventHub = eventHub;
+		this.options.fixedEventHub = isFixed;
 	}
 
 	/**

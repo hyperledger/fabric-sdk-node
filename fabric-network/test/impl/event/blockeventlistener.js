@@ -18,7 +18,8 @@ const Channel = require('fabric-client/lib/Channel');
 const EventHubDisconnectError = require('fabric-client/lib/errors/EventHubDisconnectError');
 const BlockEventListener = require('fabric-network/lib/impl/event/blockeventlistener');
 const EventHubManager = require('fabric-network/lib/impl/event/eventhubmanager');
-const Checkpointer = require('fabric-network/lib/impl/event/basecheckpointer');
+const BaseCheckpointer = require('fabric-network/lib/impl/event/basecheckpointer');
+const InMemoryCheckpointer = require('./inmemorycheckpointer');
 
 describe('BlockEventListener', () => {
 	let sandbox;
@@ -43,7 +44,7 @@ describe('BlockEventListener', () => {
 		eventHubManagerStub.getPeers.returns(['peer1']);
 		networkStub.getEventHubManager.returns(eventHubManagerStub);
 		eventHubStub = sandbox.createStubInstance(ChannelEventHub);
-		checkpointerStub = sandbox.createStubInstance(Checkpointer);
+		checkpointerStub = sandbox.createStubInstance(BaseCheckpointer);
 		blockEventListener = new BlockEventListener(networkStub, 'test', () => {}, {replay: true});
 	});
 	describe('#register', () => {
@@ -103,6 +104,7 @@ describe('BlockEventListener', () => {
 
 		it('should save a checkpoint', async () => {
 			const block = {number: '10'};
+			checkpointerStub.load.returns({});
 			blockEventListener.checkpointer = checkpointerStub;
 			await blockEventListener._onEvent(block);
 			sinon.assert.calledWith(checkpointerStub.save, null, 10);
@@ -168,22 +170,106 @@ describe('BlockEventListener', () => {
 			sandbox.stub(blockEventListener, 'eventCallback');
 			eventHubManagerStub.getReplayEventHub.returns(eventHubStub);
 			eventHubManagerStub.getEventHub.returns(eventHubStub);
-			sinon.stub(blockEventListener, 'register');
 		});
 
-		it('should call unregister, get a new event hub and reregister', () => {
-			blockEventListener._registerWithNewEventHub();
+		it('should call unregister, get a new event hub and reregister', async () => {
+			sandbox.stub(blockEventListener, 'register');
+			await blockEventListener._registerWithNewEventHub();
 			sinon.assert.called(blockEventListener.unregister);
 			sinon.assert.called(eventHubManagerStub.getEventHub);
 			sinon.assert.called(blockEventListener.register);
 		});
 
-		it('should get a replay event hub if a checkpointer is present', () => {
+		it('should get a replay event hub if a checkpointer is present', async () => {
+			sandbox.stub(blockEventListener, 'register');
 			blockEventListener.checkpointer = checkpointerStub;
-			blockEventListener._registerWithNewEventHub();
+			blockEventListener.options.replay = true;
+			await blockEventListener._registerWithNewEventHub();
 			sinon.assert.called(blockEventListener.unregister);
 			sinon.assert.called(eventHubManagerStub.getReplayEventHub);
 			sinon.assert.called(blockEventListener.register);
+		});
+
+		it('should throw if options.fixedEventHub is true and no event hub is set', () => {
+			blockEventListener.setEventHub(null, true);
+			return expect(blockEventListener.register()).to.be.rejectedWith('No event hub given and option fixedEventHub is set');
+		});
+
+		it('should throw if options.fixedEventHub is true and no event hub is set', () => {
+			blockEventListener.setEventHub(null, true);
+			return expect(blockEventListener._registerWithNewEventHub()).to.be.rejectedWith('No event hub given and option fixedEventHub is set');
+		});
+
+		it('should get an new instance of the existing event hub', async () => {
+			blockEventListener.checkpointer = checkpointerStub;
+			eventHubStub._peer = 'peer';
+			blockEventListener.setEventHub(eventHubStub, true);
+			await blockEventListener._registerWithNewEventHub();
+
+			sinon.assert.calledWith(eventHubManagerStub.getReplayEventHub, eventHubStub._peer);
+		});
+
+		it('should get the same existing event hub', async () => {
+			eventHubStub._peer = 'peer';
+			blockEventListener.setEventHub(eventHubStub, true);
+			await blockEventListener._registerWithNewEventHub();
+
+			sinon.assert.calledWith(eventHubManagerStub.getEventHub, eventHubStub._peer);
+		});
+
+		it('should get an existing event hub', async () => {
+			eventHubStub._peer = 'peer';
+			await blockEventListener._registerWithNewEventHub();
+
+			sinon.assert.calledWith(eventHubManagerStub.getEventHub);
+		});
+	});
+
+	describe('Checkpointing Behaviour', () => {
+		let checkpointer;
+		it('should set the block number and transaction ID', async () => {
+			checkpointer = new InMemoryCheckpointer();
+			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener.eventHub = eventHubStub;
+			eventHubStub.registerBlockEvent.returns({});
+			await blockEventListener.register();
+			await blockEventListener._onEvent({number: 1});
+			const checkpoint = await checkpointer.load();
+			expect(checkpoint.blockNumber).to.equal(1);
+		});
+
+		it('should update with a new block number', async () => {
+			checkpointer = new InMemoryCheckpointer();
+			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener.eventHub = eventHubStub;
+			eventHubStub.registerBlockEvent.returns({});
+			await blockEventListener.register();
+			await blockEventListener._onEvent({number: 2});
+			await blockEventListener._onEvent({number: 1});
+			const checkpoint = await checkpointer.load();
+			expect(checkpoint.blockNumber).to.equal(2);
+		});
+
+		it('should set the start block', async() => {
+			channelStub.queryInfo.resolves({height: '3'});
+			checkpointer = new InMemoryCheckpointer();
+			checkpointer.checkpoint = {blockNumber: '1'};
+			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener.eventHub = eventHubStub;
+			eventHubStub.registerBlockEvent.returns({});
+			await blockEventListener.register();
+			expect(blockEventListener.options.startBlock.toInt()).to.equal(2);
+		});
+
+		it('should not set the start block if it equals the current height', async() => {
+			channelStub.queryInfo.resolves({height: '3'});
+			checkpointer = new InMemoryCheckpointer();
+			checkpointer.checkpoint = {blockNumber: '2'};
+			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener.eventHub = eventHubStub;
+			eventHubStub.registerBlockEvent.returns({});
+			await blockEventListener.register();
+			expect(blockEventListener.options.startBlock).to.be.undefined;
 		});
 	});
 });
