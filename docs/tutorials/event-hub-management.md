@@ -2,6 +2,9 @@ This tutorial describes how to define the behavior of the event hub selection st
 
 The `ChannelEventHub` is a fabric-client class that receives contract, commit and block events from the event hub within a peer. The `fabric-network` abstracts the event hub away, and instead uses an event hub selection strategy to create new event hub instances or reuse existing instances. 
 
+#### Note
+If you do not want the event hub strategy to manage event hubs for a listener, call `AbstractEventListener.setEventHub(eventHub: ChannelEventHub, isFixed: boolean)` and it will continue to use the same event hub
+
 The interface for an event hub selection strategy is as follows:
 
 ```javascript

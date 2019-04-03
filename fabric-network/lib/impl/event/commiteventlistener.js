@@ -56,15 +56,6 @@ class CommitEventListener extends AbstractEventListener {
 		this._registered = true;
 	}
 
-	/**
-	 * @param {module:fabric-client.ChannelEventHub} eventhub Event hub.
-	 * @param {boolean} isFixed If true only this peers event hub will be used
-	 */
-	setEventHub(eventHub, isFixed) {
-		this.eventHub = eventHub;
-		this.options.fixedEventHub = isFixed;
-	}
-
 	unregister() {
 		super.unregister();
 		if (this.eventHub) {

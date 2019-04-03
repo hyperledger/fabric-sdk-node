@@ -64,7 +64,10 @@ class BlockEventListener extends AbstractEventListener {
 		try {
 			await this.eventCallback(null, block);
 			if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
-				await this.checkpointer.save(null, blockNumber);
+				const checkpoint = await this.checkpointer.load();
+				if (!checkpoint.blockNumber || Number(checkpoint.blockNumber) <= Number(blockNumber)) {
+					await this.checkpointer.save(null, blockNumber);
+				}
 			}
 		} catch (err) {
 			logger.error(util.format('Error executing callback: %s', err));
@@ -100,8 +103,16 @@ class BlockEventListener extends AbstractEventListener {
 	 */
 	async _registerWithNewEventHub() {
 		this.unregister();
-		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
+		if (this.options.fixedEventHub && !this.eventHub) {
+			throw new Error('No event hub given and option fixedEventHub is set');
+		}
+		const useCheckpointing = this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer;
+		if (useCheckpointing && !this.options.fixedEventHub) {
 			this.eventHub = this.getEventHubManager().getReplayEventHub();
+		} else if (useCheckpointing && this.options.fixedEventHub) {
+			this.eventHub = this.getEventHubManager().getReplayEventHub(this.eventHub._peer);
+		} else if (!useCheckpointing && this.options.fixedEventHub) {
+			this.eventHub = this.getEventHubManager().getEventHub(this.eventHub._peer);
 		} else {
 			this.eventHub = this.getEventHubManager().getEventHub();
 		}

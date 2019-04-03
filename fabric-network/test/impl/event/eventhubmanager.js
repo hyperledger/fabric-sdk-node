@@ -41,6 +41,7 @@ describe('EventHubManager', () => {
 		networkStub = sandbox.createStubInstance(Network);
 		networkStub.getChannel.returns(channelStub);
 		eventHubFactoryStub = sandbox.createStubInstance(EventHubFactory);
+		eventHubFactoryStub._savedEventHubs = new Map();
 		eventHubSelectionStrategyStub = sandbox.createStubInstance(AbstractEventHubSelectionStrategy);
 		networkStub.getEventHubSelectionStrategy.returns(eventHubSelectionStrategyStub);
 		eventHubManager = new EventHubManager(networkStub);
@@ -71,6 +72,7 @@ describe('EventHubManager', () => {
 	describe('#getEventHub', () => {
 		it('should return an event hub from the event hub factory given a peer', () => {
 			const peer = {getPeer: () => 'peer'};
+			eventHubFactoryStub._savedEventHubs.set('peer', {original: anotherEventHub, proxy: anotherEventHub});
 			eventHubFactoryStub.getEventHub.returns(anotherEventHub);
 
 			const eventHub = eventHubManager.getEventHub(peer);
