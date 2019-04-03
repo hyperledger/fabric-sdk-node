@@ -74,17 +74,21 @@ class ContractEventListener extends AbstractEventListener {
 	async _onEvent(event, blockNumber, transactionId, status) {
 		logger.debug(`_onEvent[${this.listenerName}]:`, util.format('success for transaction %s', transactionId));
 		blockNumber = Number(blockNumber);
+		let useCheckpoint = false;
 		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
 			const checkpoint = await this.checkpointer.load();
+			useCheckpoint = true;
 			if (checkpoint && checkpoint.transactionIds && checkpoint.transactionIds.includes(transactionId)) {
 				logger.debug(util.format('_onEvent skipped transaction: %s', transactionId));
 				return;
 			}
-			await this.checkpointer.save(transactionId, blockNumber);
 		}
 
 		try {
-			this.eventCallback(null, event, blockNumber, transactionId, status);
+			await this.eventCallback(null, event, blockNumber, transactionId, status);
+			if (useCheckpoint) {
+				await this.checkpointer.save(transactionId, blockNumber);
+			}
 		} catch (err) {
 			logger.debug(util.format('_onEvent error from callback: %s', err));
 		}
