@@ -8,6 +8,12 @@ Events are emitted by peers when blocks are committed. Two types of events suppo
 
 In the case of an application crashing and events being missed, applications may still want to execute the event callback for the event it missed. Peers in a Fabric network support event replay, and to support this, the fabric-network module supports checkpointing strategies that track the last block and transactions in that block, that have been seen by the client. 
 
+#### Notes
+`Block Number` = `Block Height - 1` 
+When using checkpointing:
+- The listener will only catch up on events if the `startBlock` is less than the current `Block Number`
+- If the latest block in the checkpointer is block `n` the `startBlock` will be `n + 1` (e.g. for checkpoint `blockNumber=1`,`startBlock=2`)
+
 ### Checkpointers
 
 The `BaseCheckpoint` class is an interface that is to be used by all Checkpoint classes. fabric-network has one default class, `FileSystemCheckpointer` that is exported as a factory in the `CheckpointFactories`. The `FILE_SYSTEM_CHECKPOINTER` is the default checkpointer.

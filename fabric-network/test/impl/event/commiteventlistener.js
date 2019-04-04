@@ -11,6 +11,7 @@ chai.use(require('chai-as-promised'));
 const expect = chai.expect;
 const sinon = require('sinon');
 
+const Channel = require('fabric-client/lib/Channel');
 const Contract = require('fabric-network/lib/contract');
 const Network = require('fabric-network/lib/network');
 const EventHubManager = require('fabric-network/lib/impl/event/eventhubmanager');
@@ -23,15 +24,18 @@ describe('CommitEventListener', () => {
 	let eventHubStub;
 	let contractStub;
 	let networkStub;
+	let channelStub;
 	let listener;
 	let callback;
 
 	beforeEach(() => {
 		sandbox = sinon.createSandbox();
 		eventHubStub = sandbox.createStubInstance(ChannelEventHub);
-		eventHubStub._transactionRegistrations = [];
+		eventHubStub._transactionRegistrations = {};
 		contractStub = sandbox.createStubInstance(Contract);
 		networkStub = sandbox.createStubInstance(Network);
+		channelStub = sandbox.createStubInstance(Channel);
+		networkStub.getChannel.returns(channelStub);
 		contractStub.getNetwork.returns(networkStub);
 		eventHubManagerStub = sinon.createStubInstance(EventHubManager);
 		eventHubManagerStub.getPeers.returns(['peer1']);
@@ -119,31 +123,31 @@ describe('CommitEventListener', () => {
 			sandbox.stub(listener, 'eventCallback');
 		});
 
-		it('should call the event callback', () => {
+		it('should call the event callback', async () => {
 			const blockNumber = '10';
 			const transactionId = 'transactionId';
 			const status = 'VALID';
-			listener._onEvent(transactionId, status, blockNumber);
+			await listener._onEvent(transactionId, status, blockNumber);
 			sinon.assert.calledWith(listener.eventCallback, null, transactionId, status, Number(blockNumber));
 			sinon.assert.notCalled(listener.unregister);
 		});
 
-		it('should unregister if registration.unregister is set', () => {
+		it('should unregister if registration.unregister is set', async () => {
 			const blockNumber = '10';
 			const transactionId = 'transactionId';
 			const status = 'VALID';
 			listener._registration.unregister = true;
-			listener._onEvent(transactionId, status, blockNumber);
+			await listener._onEvent(transactionId, status, blockNumber);
 			sinon.assert.calledWith(listener.eventCallback, null, transactionId, status, 10);
 			sinon.assert.called(listener.unregister);
 		});
 
-		it('should not fail if eventCallback throws', () => {
+		it('should not fail if eventCallback throws', async () => {
 			const blockNumber = '10';
 			const transactionId = 'transactionId';
 			const status = 'VALID';
 			listener.eventCallback.throws(new Error('forced error'));
-			listener._onEvent(transactionId, status, blockNumber);
+			await listener._onEvent(transactionId, status, blockNumber);
 		});
 	});
 
@@ -183,31 +187,31 @@ describe('CommitEventListener', () => {
 			sinon.stub(listener, 'register');
 		});
 
-		it('should call the correct methods', () => {
-			listener._registerWithNewEventHub();
+		it('should call the correct methods', async () => {
+			await listener._registerWithNewEventHub();
 			sinon.assert.called(eventHubManagerStub.getReplayEventHub);
 			expect(listener.eventHub).to.equal(eventHubStub);
 			expect(listener.options.disconnect).to.be.true;
 			sinon.assert.called(listener.register);
 		});
 
-		it('should call EventHubManager.getFixedEventHub if options.fixedEventHub', () => {
+		it('should call EventHubManager.getFixedEventHub if options.fixedEventHub', async () => {
 			eventHubStub._peer = 'peer';
 			listener.eventHub = eventHubStub;
 			listener.options.fixedEventHub = true;
-			listener._registerWithNewEventHub();
+			await listener._registerWithNewEventHub();
 			sinon.assert.calledWith(eventHubManagerStub.getFixedEventHub, eventHubStub._peer);
 		});
 
-		it('should unregister if the listener is already registered', () => {
+		it('should unregister if the listener is already registered', async () => {
 			listener._registered = true;
-			listener._registerWithNewEventHub();
+			await listener._registerWithNewEventHub();
 			sinon.assert.called(listener.unregister);
 		});
 
 		it('should throw if options.fixedEventHub is set and no event hub is given', () => {
 			listener.options.fixedEventHub = true;
-			expect(listener._registerWithNewEventHub()).to.be.rejectedWith();
+			return expect(listener._registerWithNewEventHub()).to.be.rejectedWith();
 		});
 	});
 
