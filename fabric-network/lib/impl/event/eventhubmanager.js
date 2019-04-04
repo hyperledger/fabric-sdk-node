@@ -7,7 +7,7 @@
 'use strict';
 
 const EventHubFactory = require('./eventhubfactory');
-
+const logger = require('fabric-network/lib/logger').getLogger('EventHubManager');
 /**
  * The Event Hub Manager is responsible for creating and distributing event hubs.
  * It uses the event hub factory to reuse event hubs that exists, and maintains
@@ -42,6 +42,7 @@ class EventHubManager {
 		if (eventHub.isconnected() && eventHub.isFiltered() !== !!filtered) {
 			return this.getReplayEventHub(peer);
 		}
+		this.log();
 		return eventHub;
 	}
 
@@ -50,6 +51,7 @@ class EventHubManager {
 	 * @param {module:fabric-client.Peer[]} peers A list of peer instances
 	 */
 	getEventHubs(peers) {
+		this.log();
 		return this.eventHubFactory.getEventHubs(peers);
 	}
 
@@ -69,6 +71,7 @@ class EventHubManager {
 		peer = this.eventHubSelectionStrategy.getNextPeer();
 		const eh = this.channel.newChannelEventHub(peer);
 		this.newEventHubs.push(eh);
+		this.log();
 		return eh;
 	}
 
@@ -80,6 +83,7 @@ class EventHubManager {
 	getFixedEventHub(peer) {
 		const eventHub = this.channel.newChannelEventHub(peer);
 		this.newEventHubs.push(eventHub);
+		this.log();
 		return eventHub;
 	}
 
@@ -121,6 +125,14 @@ class EventHubManager {
 		const blockRegistrations = Object.values(eventHub._blockRegistrations).length;
 		const txRegistrations = Object.values(eventHub._transactionRegistrations).length;
 		return (chaincodeRegistrations + blockRegistrations + txRegistrations) === 0;
+	}
+
+	log() {
+		const factoryEventHubs = Array.from(this.eventHubFactory._savedEventHubs.values());
+		const connectedFactoryEventHubs = factoryEventHubs.filter(eh => eh.original.isconnected());
+		logger.debug(`Factory Event Hubs: ${connectedFactoryEventHubs.length}/${factoryEventHubs.length}`);
+		const connectedReplayEventHubs = this.newEventHubs.filter(eh => eh.isconnected());
+		logger.debug(`Replay Event Hubs: ${connectedReplayEventHubs.length}/${this.newEventHubs.length}`);
 	}
 }
 

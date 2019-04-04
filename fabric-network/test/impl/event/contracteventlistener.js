@@ -17,6 +17,7 @@ const EventHubDisconnectError = require('fabric-client/lib/errors/EventHubDiscon
 const ContractEventListener = require('fabric-network/lib/impl/event/contracteventlistener');
 const EventHubManager = require('fabric-network/lib/impl/event/eventhubmanager');
 const Checkpointer = require('fabric-network/lib/impl/event/basecheckpointer');
+const InMemoryCheckpointer = require('./inmemorycheckpointer');
 
 describe('ContractEventListener', () => {
 	let sandbox;
@@ -42,7 +43,8 @@ describe('ContractEventListener', () => {
 		eventHubManagerStub.getPeers.returns(['peer1']);
 		eventHubStub = sandbox.createStubInstance(ChannelEventHub);
 		checkpointerStub = sandbox.createStubInstance(Checkpointer);
-		contractEventListener = new ContractEventListener(contractStub, 'test', 'eventName', () => {}, {});
+		checkpointerStub.load.returns({});
+		contractEventListener = new ContractEventListener(contractStub, 'test', 'eventName', () => {}, {replay: true});
 	});
 
 	afterEach(() => {
@@ -67,7 +69,7 @@ describe('ContractEventListener', () => {
 				'eventName',
 				sinon.match.func,
 				sinon.match.func,
-				{}
+				{replay: true}
 			);
 			sinon.assert.calledWith(contractEventListener._onEvent.bind, contractEventListener);
 			sinon.assert.calledWith(contractEventListener._onError.bind, contractEventListener);
@@ -209,23 +211,130 @@ describe('ContractEventListener', () => {
 			sandbox.stub(contractEventListener, 'eventCallback');
 			eventHubManagerStub.getReplayEventHub.returns(eventHubStub);
 			eventHubManagerStub.getEventHub.returns(eventHubStub);
-			sinon.stub(contractEventListener, 'register');
 		});
 
-		it('should call unregister, get a new event hub and reregister', () => {
-			contractEventListener._registerWithNewEventHub();
+		it('should call unregister, get a new event hub and reregister', async () => {
+			sinon.stub(contractEventListener, 'register');
+			await contractEventListener._registerWithNewEventHub();
 			sinon.assert.called(contractEventListener.unregister);
 			sinon.assert.called(eventHubManagerStub.getEventHub);
 			sinon.assert.called(contractEventListener.register);
 		});
 
-		it('should get a replay event hub if a checkpointer is present', () => {
+		it('should get a replay event hub if a checkpointer is present', async () => {
+			sinon.stub(contractEventListener, 'register');
 			contractEventListener.checkpointer = checkpointerStub;
 			contractEventListener.options.replay = true;
-			contractEventListener._registerWithNewEventHub();
+			await contractEventListener._registerWithNewEventHub();
 			sinon.assert.called(contractEventListener.unregister);
 			sinon.assert.called(eventHubManagerStub.getReplayEventHub);
 			sinon.assert.called(contractEventListener.register);
+		});
+
+		it('should throw if options.fixedEventHub is true and no event hub is set', () => {
+			contractEventListener.setEventHub(null, true);
+			return expect(contractEventListener.register()).to.be.rejectedWith('No event hub given and option fixedEventHub is set');
+		});
+
+		it('should throw if options.fixedEventHub is true and no event hub is set', () => {
+			contractEventListener.setEventHub(null, true);
+			return expect(contractEventListener._registerWithNewEventHub()).to.be.rejectedWith('No event hub given and option fixedEventHub is set');
+		});
+
+		it('should get an new instance of the existing event hub', async () => {
+			contractEventListener.checkpointer = checkpointerStub;
+			eventHubStub._peer = 'peer';
+			contractEventListener.setEventHub(eventHubStub, true);
+			await contractEventListener._registerWithNewEventHub();
+
+			sinon.assert.calledWith(eventHubManagerStub.getReplayEventHub, eventHubStub._peer);
+		});
+
+		it('should get the same existing event hub', async () => {
+			eventHubStub._peer = 'peer';
+			contractEventListener.setEventHub(eventHubStub, true);
+			await contractEventListener._registerWithNewEventHub();
+
+			sinon.assert.calledWith(eventHubManagerStub.getEventHub, eventHubStub._peer);
+		});
+
+		it('should get an existing event hub', async () => {
+			eventHubStub._peer = 'peer';
+			await contractEventListener._registerWithNewEventHub();
+
+			sinon.assert.calledWith(eventHubManagerStub.getEventHub);
+		});
+	});
+
+	describe('Checkpointing Behaviour', () => {
+		let checkpointer;
+		it('should set the block number and transaction ID', async () => {
+			checkpointer = new InMemoryCheckpointer();
+			contractEventListener = new ContractEventListener(contractStub, 'listener', 'event', (err, event) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			contractEventListener.eventHub = eventHubStub;
+			eventHubStub.registerChaincodeEvent.returns({});
+			await contractEventListener.register();
+			await contractEventListener._onEvent({}, 1, 'TRANSACTION_ID');
+			const checkpoint = await checkpointer.load();
+			expect(checkpoint.blockNumber).to.equal(1);
+			expect(checkpoint.transactionIds).to.deep.equal(['TRANSACTION_ID']);
+		});
+
+		it('should update with a new block number', async () => {
+			checkpointer = new InMemoryCheckpointer();
+			contractEventListener = new ContractEventListener(contractStub, 'listener', 'event', (err, event) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			contractEventListener.eventHub = eventHubStub;
+			eventHubStub.registerChaincodeEvent.returns({});
+			await contractEventListener.register();
+			await contractEventListener._onEvent({}, 1, 'TRANSACTION_ID');
+			await contractEventListener._onEvent({}, 1, 'TRANSACTION_ID_2');
+			let checkpoint = await checkpointer.load();
+			expect(checkpoint.blockNumber).to.equal(1);
+			expect(checkpoint.transactionIds).to.deep.equal(['TRANSACTION_ID', 'TRANSACTION_ID_2']);
+			await contractEventListener._onEvent({}, 2, 'TRANSACTION_ID_3');
+			checkpoint = await checkpointer.load();
+			expect(checkpoint.blockNumber).to.equal(2);
+			expect(checkpoint.transactionIds).to.deep.equal(['TRANSACTION_ID_3']);
+		});
+
+		it('should set the start block', async () => {
+			channelStub.queryInfo.resolves({height: '3'});
+			checkpointer = new InMemoryCheckpointer();
+			checkpointer.checkpoint = {blockNumber: 2, transactionIds: []};
+			contractEventListener = new ContractEventListener(contractStub, 'listener', 'event', (err, event) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			contractEventListener.eventHub = eventHubStub;
+			eventHubStub.registerChaincodeEvent.returns({});
+			await contractEventListener.register();
+			expect(contractEventListener.options.startBlock).to.be.undefined;
+		});
+
+		it('should not set the start block', async () => {
+			channelStub.queryInfo.resolves({height: '3'});
+			checkpointer = new InMemoryCheckpointer();
+			checkpointer.checkpoint = {blockNumber: 1, transactionIds: []};
+			contractEventListener = new ContractEventListener(contractStub, 'listener', 'event', (err, event) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			contractEventListener.eventHub = eventHubStub;
+			eventHubStub.registerChaincodeEvent.returns({});
+			await contractEventListener.register();
+			expect(contractEventListener.options.startBlock.toInt()).to.equal(2);
+		});
+
+		it('should skip a transaction that is already checkpointed', async () => {
+			checkpointer = new InMemoryCheckpointer();
+			let calls = 0;
+			contractEventListener = new ContractEventListener(contractStub, 'listener', 'event', (err, event) => {
+				if (err) {
+					return;
+				}
+				calls++;
+			}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			contractEventListener.eventHub = eventHubStub;
+			eventHubStub.registerChaincodeEvent.returns({});
+			await contractEventListener.register();
+			await contractEventListener._onEvent({}, 1, 'TRANSACTION_ID');
+			await contractEventListener._onEvent({}, 1, 'TRANSACTION_ID_2');
+			await contractEventListener._onEvent({}, 1, 'TRANSACTION_ID_2');
+			expect(calls).to.equal(2);
 		});
 	});
 });

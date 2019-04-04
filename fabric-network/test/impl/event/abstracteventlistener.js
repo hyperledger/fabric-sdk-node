@@ -43,7 +43,7 @@ describe('AbstractEventListener', () => {
 		networkStub.getChannel.returns(channelStub);
 		channelStub.getName.returns('mychannel');
 		eventHubManagerStub.getPeers.returns(['peer1']);
-		channelStub.queryInfo.returns({height: 0});
+		channelStub.queryInfo.returns({height: 10});
 
 		contractStub.getChaincodeId.returns('ccid');
 		const callback = (err) => {};
@@ -93,12 +93,12 @@ describe('AbstractEventListener', () => {
 		});
 
 		it('should not call checkpointer.initialize()', async () => {
-			const checkpoint = {transactionId: 'txid', blockNumber: '10'};
+			const checkpoint = {transactionId: 'txid', blockNumber: '8'};
 			checkpointerStub.load.returns(checkpoint);
 			testListener.checkpointer = checkpointerStub;
 			await testListener.register();
 			sinon.assert.called(checkpointerStub.load);
-			expect(testListener.options.startBlock.toNumber()).to.equal(10); // Start block is a Long
+			expect(testListener.options.startBlock.toNumber()).to.equal(9); // Start block is a Long
 			expect(testListener._firstCheckpoint).to.deep.equal(checkpoint);
 		});
 
