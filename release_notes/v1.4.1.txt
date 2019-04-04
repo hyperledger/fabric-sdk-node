@@ -1,0 +1,27 @@
+Release Notes
+-------------
+
+Fabric 1.4.1 is a maintenance release containing bug fixes and documentation improvements.
+It also contains two new enhancements to the gateway programming model:
+
+1. Support for pluggable query handlers, allowing peer selection strategies to be specified.
+2. Ability to subscribe to chaincode/transaction/block events, including automatic catch up (replay) of missed events.
+
+
+Known Vulnerabilities
+---------------------
+none
+
+
+Resolved Vulnerabilities
+------------------------
+none
+
+
+Known Issues & Workarounds
+--------------------------
+
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/CHANGELOG.md#v141

@@ -1,3 +1,41 @@
+## v1.4.1
+Thu  4 Apr 2019 10:44:58 BST
+
+* [12466fd](https://github.com/hyperledger/fabric-sdk-node/commit/12466fd) [[FABN-1100](https://jira.hyperledger.org/browse/FABN-1100)] Tidy start block and event hub management
+* [02b2a54](https://github.com/hyperledger/fabric-sdk-node/commit/02b2a54) [[FABN-1194](https://jira.hyperledger.org/browse/FABN-1194)] Use connection options for discovery peer
+* [1a12452](https://github.com/hyperledger/fabric-sdk-node/commit/1a12452) [[FABN-1100](https://jira.hyperledger.org/browse/FABN-1100)] Checkpoint after callback is complete
+* [ea5750f](https://github.com/hyperledger/fabric-sdk-node/commit/ea5750f) [[FABN-1100](https://jira.hyperledger.org/browse/FABN-1100)] Ammended typescript definitions
+* [404adbe](https://github.com/hyperledger/fabric-sdk-node/commit/404adbe) [[FABN-1100](https://jira.hyperledger.org/browse/FABN-1100)] Event handling abstractions
+* [f23244a](https://github.com/hyperledger/fabric-sdk-node/commit/f23244a) [FABN-1193](https://jira.hyperledger.org/browse/FABN-1193) Update CI Scripts
+* [fe99b96](https://github.com/hyperledger/fabric-sdk-node/commit/fe99b96) [FABCI-304](https://jira.hyperledger.org/browse/FABCI-304) Update CI Pipeline script
+* [4daba1f](https://github.com/hyperledger/fabric-sdk-node/commit/4daba1f) [[FABN-1155](https://jira.hyperledger.org/browse/FABN-1155)] Include missed connection setting
+* [ecaedf0](https://github.com/hyperledger/fabric-sdk-node/commit/ecaedf0) [FABN-1188](https://jira.hyperledger.org/browse/FABN-1188) Update thirdparty version to 0.4.15
+* [c24f702](https://github.com/hyperledger/fabric-sdk-node/commit/c24f702) Properly handle empty responses
+* [b90dc16](https://github.com/hyperledger/fabric-sdk-node/commit/b90dc16) [[FABN-1123](https://jira.hyperledger.org/browse/FABN-1123)] Fix identity update maxEnrollments
+* [ed0897e](https://github.com/hyperledger/fabric-sdk-node/commit/ed0897e) [FABN-1177 Add gulp end-to-](https://jira.hyperledger.org/browse/FABN-1177 Add gulp end-to-)end test for fabric
+* [c10865c](https://github.com/hyperledger/fabric-sdk-node/commit/c10865c) [[FABN-1160](https://jira.hyperledger.org/browse/FABN-1160)] Fix TLS logic for discovered peers
+* [adbe75a](https://github.com/hyperledger/fabric-sdk-node/commit/adbe75a) [[FABN-1169](https://jira.hyperledger.org/browse/FABN-1169)] Backport certifcate fix from master
+* [3bc8b6c](https://github.com/hyperledger/fabric-sdk-node/commit/3bc8b6c) [FABN-682](https://jira.hyperledger.org/browse/FABN-682) NodeSDK  client specify escc/vscc names
+* [ded4d70](https://github.com/hyperledger/fabric-sdk-node/commit/ded4d70) [[FABN-1159](https://jira.hyperledger.org/browse/FABN-1159)] Allow PEM paths relative to CCP
+* [19fcd2b](https://github.com/hyperledger/fabric-sdk-node/commit/19fcd2b) [FABN-1118](https://jira.hyperledger.org/browse/FABN-1118): Unit test fixes for Node 10
+* [a6c306c](https://github.com/hyperledger/fabric-sdk-node/commit/a6c306c) [FABN-1156](https://jira.hyperledger.org/browse/FABN-1156): Backport pluggable query handler
+* [51c7850](https://github.com/hyperledger/fabric-sdk-node/commit/51c7850) [FABN-1143](https://jira.hyperledger.org/browse/FABN-1143): Remove spurious error log
+* [34d36d8](https://github.com/hyperledger/fabric-sdk-node/commit/34d36d8) [FABN-1128](https://jira.hyperledger.org/browse/FABN-1128) Discovery options not merged correctly
+* [61a1eba](https://github.com/hyperledger/fabric-sdk-node/commit/61a1eba) [[FABN-1130](https://jira.hyperledger.org/browse/FABN-1130)] Stop using "init" as default function name
+* [433b5af](https://github.com/hyperledger/fabric-sdk-node/commit/433b5af) [[FABN-1127](https://jira.hyperledger.org/browse/FABN-1127)] Corrected typescript definitions
+* [4b6b3b1](https://github.com/hyperledger/fabric-sdk-node/commit/4b6b3b1) [FAB-1117](https://jira.hyperledger.org/browse/FAB-1117) NodeSDK event hub connect
+* [9ea9c26](https://github.com/hyperledger/fabric-sdk-node/commit/9ea9c26) [FABN-1124](https://jira.hyperledger.org/browse/FABN-1124): Use MSP ID from client user context
+* [cb44392](https://github.com/hyperledger/fabric-sdk-node/commit/cb44392) [FABN-1110](https://jira.hyperledger.org/browse/FABN-1110) Update CI script to remove nvm installation
+* [fab0933](https://github.com/hyperledger/fabric-sdk-node/commit/fab0933) [[FABN-1031](https://jira.hyperledger.org/browse/FABN-1031)] Make grpc levels consistent
+* [02adcce](https://github.com/hyperledger/fabric-sdk-node/commit/02adcce) [FABN-1031 -](https://jira.hyperledger.org/browse/FABN-1031 -) additional grpc library for updating
+* [b787847](https://github.com/hyperledger/fabric-sdk-node/commit/b787847) [FABN-1096](https://jira.hyperledger.org/browse/FABN-1096) NodeSDK add member_only_read
+* [a0ae6b0](https://github.com/hyperledger/fabric-sdk-node/commit/a0ae6b0) [FABN-1098](https://jira.hyperledger.org/browse/FABN-1098) NodeSDK allow multiple targets
+* [4891f64](https://github.com/hyperledger/fabric-sdk-node/commit/4891f64) [[FAB-13075](https://jira.hyperledger.org/browse/FAB-13075)] Move to updated x509
+* [7932c01](https://github.com/hyperledger/fabric-sdk-node/commit/7932c01) [FABN-1083](https://jira.hyperledger.org/browse/FABN-1083) NodeSDK allow commit/endorse handler
+* [d33724d](https://github.com/hyperledger/fabric-sdk-node/commit/d33724d) [FABN-1097](https://jira.hyperledger.org/browse/FABN-1097) NodeSDK use class name
+* [dd98a05](https://github.com/hyperledger/fabric-sdk-node/commit/dd98a05) [FAB-13574](https://jira.hyperledger.org/browse/FAB-13574) NodeSDK prepare 1.4.1
+* [ee39b92](https://github.com/hyperledger/fabric-sdk-node/commit/ee39b92) [FABN-1093](https://jira.hyperledger.org/browse/FABN-1093) Update Jenkinsfile.z
+
 ## v1.4.0
 Wed  9 Jan 2019 09:42:07 GMT
 
