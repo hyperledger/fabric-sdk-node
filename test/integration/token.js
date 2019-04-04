@@ -96,7 +96,7 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		};
 		const param2 = {
 			owner: {type: 0, raw: user1Identity.serialize()},
-			type: 'horizon',
+			type: 'ibm',
 			quantity: '200'
 		};
 		let request = {
@@ -352,7 +352,7 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 	}
 });
 
-test('\n\n***** Token end-to-end flow: invalid transfer amount fails *****\n\n', async (t) => {
+test('\n\n***** Token end-to-end flow: transfer with remaining balance succeeds *****\n\n', async (t) => {
 	try {
 		// create TokenClient for user1 (admin user in org1)
 		const user1ClientObj = await e2eUtils.createTokenClient('org1', channel_name, 'localhost:7051', t);
@@ -406,11 +406,23 @@ test('\n\n***** Token end-to-end flow: invalid transfer amount fails *****\n\n',
 			txId: txId,
 		};
 
-		// user1 transfers token to user2
+		// user1 transfers token to user2, balance (210-10=200) should be remained for user1
 		result = await user1TokenClient.transfer(request);
 		logger.debug('transfer returns: %s', util.inspect(result, {depth: null}));
 		t.equals(result.status, 'SUCCESS', 'Successfully sent transfer token transaction to orderer. Waiting for transaction to be committed ...');
-		await waitForTxEvent(eventhub, txId.getTransactionID(), 'INVALID_OTHER_REASON', t);
+		await waitForTxEvent(eventhub, txId.getTransactionID(), 'VALID', t);
+
+		// user2 lists tokens after transfer, expect quantity of 10
+		param = {type: 'abc123', quantity: '10'};
+		result = await user2TokenClient.list();
+		logger.debug('\nuser2(org2) listed %d tokens after transfer: \n%s', result.length, util.inspect(result, false, null));
+		validateTokens(result, [param], 'for user2 (recipient) after transfer', t);
+
+		// user1 lists tokens after transfer, expect quantity of 210-10=200
+		param = {type: 'abc123', quantity: '200'};
+		result = await user1TokenClient.list();
+		logger.debug('\nuser1(org1) listed %d tokens after transfer: \n%s', result.length, util.inspect(result, false, null));
+		validateTokens(result, [param], 'for user1 (owner) after transfer', t);
 
 		t.end();
 	} catch (err) {
