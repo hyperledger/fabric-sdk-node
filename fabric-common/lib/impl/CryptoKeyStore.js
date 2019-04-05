@@ -6,10 +6,10 @@
 */
 
 'use strict';
+const {Utils: utils} = require('fabric-common');
 const jsrsasign = require('jsrsasign');
 const KEYUTIL = jsrsasign.KEYUTIL;
 
-const utils = require('../utils.js');
 const ECDSAKey = require('./ecdsa/key.js');
 
 /*
@@ -68,7 +68,7 @@ const CryptoKeyStoreMixin = (KeyValueStore) => class extends KeyValueStore {
  *
  * @class
  */
-const CryptoKeyStore = function(KVSImplClass, opts) {
+const CryptoKeyStore = function (KVSImplClass, opts) {
 	let superClass;
 
 	if (typeof KVSImplClass !== 'function') {
@@ -86,7 +86,8 @@ const CryptoKeyStore = function(KVSImplClass, opts) {
 		opts = KVSImplClass;
 	}
 
-	const MyClass = class extends CryptoKeyStoreMixin(superClass) {};
+	const MyClass = class extends CryptoKeyStoreMixin(superClass) {
+	};
 	return new MyClass(opts);
 };
 

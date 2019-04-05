@@ -6,7 +6,7 @@
 
 'use strict';
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils, User} = require('fabric-common');
 const logger = utils.getLogger('unit.client');
 
 const tape = require('tape');
@@ -18,7 +18,6 @@ const yaml = require('js-yaml');
 const util = require('util');
 
 const Client = require('fabric-client');
-const User = require('fabric-client/lib/User.js');
 const Peer = require('fabric-client/lib/Peer.js');
 const Orderer = require('fabric-client/lib/Orderer.js');
 const Organization = require('fabric-client/lib/Organization.js');

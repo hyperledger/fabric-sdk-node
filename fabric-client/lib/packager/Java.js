@@ -16,7 +16,8 @@
 
 const path = require('path');
 const sbuf = require('stream-buffers');
-const utils = require('../utils.js');
+const {Utils: utils} = require('fabric-common');
+
 const walk = require('ignore-walk');
 
 const logger = utils.getLogger('JavaPackager.js');
@@ -31,7 +32,7 @@ class JavaPackager extends BasePackager {
 	 * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors
 	 * @returns {Promise.<byte[]>}
 	 */
-	async package (chaincodePath, metadataPath) {
+	async package(chaincodePath, metadataPath) {
 		logger.debug('packaging Java source from %s', chaincodePath);
 
 		const buffer = new sbuf.WritableStreamBuffer();
@@ -55,7 +56,7 @@ class JavaPackager extends BasePackager {
 	 * @param filePath
 	 * @returns {Promise}
 	 */
-	async findSource (filePath) {
+	async findSource(filePath) {
 		const descriptors = [];
 
 		const files = await walk({path: filePath, follow: true});

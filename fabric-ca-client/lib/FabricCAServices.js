@@ -7,11 +7,11 @@
 
 'use strict';
 
-const utils = require('./utils.js');
-const BaseClient = require('./BaseClient');
+const {Utils: utils, BaseClient} = require('fabric-common');
+
 const FabricCAClient = require('./FabricCAClient');
 
-const normalizeX509 = require('./BaseClient').normalizeX509;
+const {normalizeX509} = BaseClient;
 const util = require('util');
 const parseURL = require('./helper').parseURL;
 const path = require('path');
@@ -41,7 +41,7 @@ const FabricCAServices = class extends BaseClient {
 	 * constructor
 	 *
 	 * @param {string | object} url The endpoint URL for Fabric CA services of the form: "http://host:port" or "https://host:port"
-	 	When this parameter is an object then it must include the parameters listed as key value pairs.
+	 When this parameter is an object then it must include the parameters listed as key value pairs.
 	 * @param {TLSOptions} tlsOptions The TLS settings to use when the Fabric CA services endpoint uses "https"
 	 * @param {string} caName The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
 	 *  a single server. If omitted or null or an empty string, then the default CA is the target of requests
@@ -55,43 +55,44 @@ const FabricCAServices = class extends BaseClient {
 	 *  is provided for this purpose, which can be used on top of any implementation of the {@link KeyValueStore} interface,
 	 *  such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
 	 */
-	constructor(url_p, tlsOptions_p, caName_p, cryptoSuite_p) {
+	constructor(url, tlsOptions, caName, cryptoSuite) {
 		super();
-		let url, tlsOptions, caName, cryptoSuite;
-		if (typeof url_p === 'object') {
-			url = url_p.url;
-			tlsOptions = url_p.tlsOptions;
-			caName = url_p.caName;
-			cryptoSuite = url_p.cryptoSuite;
+		let _url, _tlsOptions, _caName, _cryptoSuite;
+		if (typeof url === 'object') {
+			_url = url.url;
+			_tlsOptions = url.tlsOptions;
+			_caName = url.caName;
+			_cryptoSuite = url.cryptoSuite;
 		} else {
-			url = url_p;
-			tlsOptions = tlsOptions_p;
-			caName = caName_p;
-			cryptoSuite = cryptoSuite_p;
+			_url = url;
+			_tlsOptions = tlsOptions;
+			_caName = caName;
+			_cryptoSuite = cryptoSuite;
 		}
 
-		this.caName = caName;
+		this.caName = _caName;
 
-		const endpoint = parseURL(url);
+		const endpoint = parseURL(_url);
 
-		if (cryptoSuite) {
-			this.setCryptoSuite(cryptoSuite);
+		if (_cryptoSuite) {
+			this.setCryptoSuite(_cryptoSuite);
 		} else {
 			this.setCryptoSuite(utils.newCryptoSuite());
 			this.getCryptoSuite().setCryptoKeyStore(utils.newCryptoKeyStore());
 		}
 
 		this._fabricCAClient = new FabricCAClient({
-			caname: caName,
+			caname: _caName,
 			protocol: endpoint.protocol,
 			hostname: endpoint.hostname,
 			port: endpoint.port,
-			tlsOptions: tlsOptions
+			tlsOptions: _tlsOptions
 		}, this.getCryptoSuite());
 
 		logger.debug('Successfully constructed Fabric CA service client: endpoint - %j', endpoint);
 
 	}
+
 	/**
 	 * Returns the name of the certificate authority.
 	 *
@@ -230,7 +231,7 @@ const FabricCAServices = class extends BaseClient {
 
 			const enrollment = {
 				certificate: enrollResponse.enrollmentCert,
-				rootCertificate: enrollResponse.caCertChain,
+				rootCertificate: enrollResponse.caCertChain
 			};
 			if (!req.csr) {
 				enrollment.key = privateKey;
@@ -422,8 +423,8 @@ const FabricCAServices = class extends BaseClient {
 	 */
 
 	/**
-	* return a printable representation of this object
-	*/
+	 * return a printable representation of this object
+	 */
 	toString() {
 		return 'FabricCAServices : {' +
 			'hostname: ' + this._fabricCAClient._hostname +

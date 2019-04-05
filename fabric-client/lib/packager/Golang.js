@@ -17,7 +17,8 @@
 const klaw = require('klaw');
 const path = require('path');
 const sbuf = require('stream-buffers');
-const utils = require('../utils.js');
+const {Utils: utils} = require('fabric-common');
+
 const BasePackager = require('./BasePackager');
 
 const logger = utils.getLogger('packager/Golang.js');
@@ -31,7 +32,7 @@ class GolangPackager extends BasePackager {
 	 * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors.
 	 * @returns {Promise.<TResult>}
 	 */
-	package (chaincodePath, metadataPath) {
+	package(chaincodePath, metadataPath) {
 		logger.debug('packaging GOLANG from %s', chaincodePath);
 
 		// Determine the user's $GOPATH
@@ -72,7 +73,7 @@ class GolangPackager extends BasePackager {
 	 * @param filePath
 	 * @returns {Promise}
 	 */
-	findSource (goPath, filePath) {
+	findSource(goPath, filePath) {
 		return new Promise((resolve, reject) => {
 			const descriptors = [];
 			klaw(filePath)

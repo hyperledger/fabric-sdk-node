@@ -18,7 +18,7 @@ const Golang = require('./packager/Golang.js');
 const Car = require('./packager/Car.js');
 const Node = require('./packager/Node.js');
 const Java = require('./packager/Java.js');
-const utils = require('./utils.js');
+const {Utils: utils} = require('fabric-common');
 
 const logger = utils.getLogger('packager');
 

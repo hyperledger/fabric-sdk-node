@@ -15,8 +15,8 @@
 'use strict';
 
 const rewire = require('rewire');
-const BaseClientRewire = rewire('../lib/BaseClient');
-const BaseClient = require('../lib/BaseClient');
+const {BaseClient} = require('fabric-common');
+const BaseClientRewire = rewire('fabric-common/lib/BaseClient');
 
 const chai = require('chai');
 const sinon = require('sinon');

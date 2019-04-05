@@ -14,8 +14,7 @@
  */
 
 'use strict';
-
-const sdk_utils = require('./utils.js');
+const {Identity, Utils: sdk_utils} = require('fabric-common');
 const client_utils = require('./client-utils.js');
 const token_utils = require('./token-utils.js');
 const util = require('util');
@@ -31,7 +30,7 @@ const MSPManager = require('./msp/msp-manager.js');
 const Policy = require('./Policy.js');
 const Constants = require('./Constants.js');
 const CollectionConfig = require('./SideDB.js');
-const {Identity} = require('fabric-common');
+
 const ChannelHelper = require('./utils/ChannelHelper');
 
 const ImplicitMetaPolicy_Rule = {0: 'ANY', 1: 'ALL', 2: 'MAJORITY'};

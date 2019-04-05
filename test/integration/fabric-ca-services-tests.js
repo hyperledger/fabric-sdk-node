@@ -13,7 +13,7 @@
 // the fabric-ca-client package by editing build/tasks/ca.js
 // ///////////////////////////////////////////////////////////////
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils: utils, Signer, SigningIdentity, MSP, User} = require('fabric-common');
 const logger = utils.getLogger('integration.client');
 
 const tape = require('tape');
@@ -29,9 +29,6 @@ const http = require('http');
 
 const testUtil = require('../unit/util.js');
 
-const LocalMSP = require('fabric-ca-client/lib/msp/msp.js');
-const {Signer, SigningIdentity} = require('fabric-common');
-const User = require('fabric-ca-client/lib/User.js');
 
 // var keyValStorePath = testUtil.KVS;
 const FabricCAServices = require('fabric-ca-client/lib/FabricCAServices');
@@ -88,7 +85,7 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 		}).then((pubKey) => {
 			t.pass('Successfully imported public key from the resulting enrollment certificate');
 
-			const msp = new LocalMSP({
+			const msp = new MSP({
 				id: ORGS[userOrg].mspid,
 				cryptoSuite: caService.getCryptoSuite()
 			});
@@ -142,12 +139,16 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 
 			return caService.revoke({enrollmentID: 'testUserX'}, member);
 		}, (err) => {
-			t.fail('Failed to register "testUserX". '  + err.stack ? err.stack : err);
+			t.fail('Failed to register "testUserX". ' + err.stack ? err.stack : err);
 			t.end();
 		}).then((response) => {
 			t.equal(response.success, true, 'Successfully revoked "testUserX"');
 
-			return caService.register({enrollmentID: 'testUserY', enrollmentSecret: 'testUserYSecret', affiliation: 'org2.department1'}, member);
+			return caService.register({
+				enrollmentID: 'testUserY',
+				enrollmentSecret: 'testUserYSecret',
+				affiliation: 'org2.department1'
+			}, member);
 		}, (err) => {
 			t.fail('Failed to revoke "testUserX". ' + err.stack ? err.stack : err);
 			t.end();
@@ -201,13 +202,14 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 				affiliation: 'org1.department2',
 				attrs: [
 					{name: 'hf.Registrar.Roles', value: 'client'},
-					{name:'ecert', value:'default', ecert:true},
-					{name:'test1attr', value:'test1attr'}
-				]}, member);
+					{name: 'ecert', value: 'default', ecert: true},
+					{name: 'test1attr', value: 'test1attr'}
+				]
+			}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "test1" ');
 
-			return caService.enroll({enrollmentID: 'test1', enrollmentSecret: secret, attr_reqs :[]});
+			return caService.enroll({enrollmentID: 'test1', enrollmentSecret: secret, attr_reqs: []});
 		}).then((enrollment) => {
 			t.pass('Successfully enrolled "test1"');
 
@@ -220,9 +222,10 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 				affiliation: 'org1.department2',
 				attrs: [
 					{name: 'hf.Registrar.Roles', value: 'client'},
-					{name:'ecert', value:'default', ecert:true},
-					{name:'test2attr', value:'test2attr'}
-				]}, member);
+					{name: 'ecert', value: 'default', ecert: true},
+					{name: 'test2attr', value: 'test2attr'}
+				]
+			}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "test2" ');
 
@@ -239,13 +242,18 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 				affiliation: 'org1.department2',
 				attrs: [
 					{name: 'hf.Registrar.Roles', value: 'client'},
-					{name:'ecert', value:'default', ecert:true},
-					{name:'test3attr', value:'test3attr'}
-				]}, member);
+					{name: 'ecert', value: 'default', ecert: true},
+					{name: 'test3attr', value: 'test3attr'}
+				]
+			}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "test3" ');
 
-			return caService.enroll({enrollmentID: 'test3', enrollmentSecret: secret,  attr_reqs :[{name:'test3attr'}, {name:'ecert'}]});
+			return caService.enroll({
+				enrollmentID: 'test3',
+				enrollmentSecret: secret,
+				attr_reqs: [{name: 'test3attr'}, {name: 'ecert'}]
+			});
 		}).then((enrollment) => {
 			t.pass('Successfully enrolled "test3"');
 
@@ -259,13 +267,18 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 				attrs: [
 					{name: 'hf.Registrar.Roles', value: 'client'},
 					{name: 'hf.Registrar.Attributes', value: '*'},
-					{name:'dfattrib', value:'default', ecert:true},
-					{name:'myattrib', value:'somevalue and lots of other information'}
-				]}, member);
+					{name: 'dfattrib', value: 'default', ecert: true},
+					{name: 'myattrib', value: 'somevalue and lots of other information'}
+				]
+			}, member);
 		}).then((secret) => {
 			t.pass('Successfully registered "webAdmin" who can register other users with no role');
 
-			return caService.enroll({enrollmentID: 'webAdmin', enrollmentSecret: secret, attr_reqs :[{name:'myattrib', optional : false}]});
+			return caService.enroll({
+				enrollmentID: 'webAdmin',
+				enrollmentSecret: secret,
+				attr_reqs: [{name: 'myattrib', optional: false}]
+			});
 		}, (err) => {
 			t.fail('Failed to register "webAdmin". ' + err.stack ? err.stack : err);
 			t.end();
@@ -287,7 +300,11 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 		}, (err) => {
 			t.pass('Successfully rejected attempt to register a user of invalid role. ' + err);
 
-			return caService.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org2.department1'}, webAdmin);
+			return caService.register({
+				enrollmentID: 'auditor',
+				role: 'client',
+				affiliation: 'org2.department1'
+			}, webAdmin);
 		}).then(() => {
 			t.fail('Failed to capture the error when registering "auditor" of role "client" from "webAdmin" but using invalid affiliation');
 		}, (err) => {
@@ -295,7 +312,11 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 				t.pass('Successfully captured the error when registering "auditor" of role "client" from "webAdmin" but using invalid affiliation');
 			}
 
-			return caService.register({enrollmentID: 'auditor', role: 'client', affiliation: 'org1.department2'}, webAdmin);
+			return caService.register({
+				enrollmentID: 'auditor',
+				role: 'client',
+				affiliation: 'org1.department2'
+			}, webAdmin);
 		}).then(() => {
 			t.pass('Successfully registered "auditor" of role "client" from "webAdmin"');
 
@@ -308,13 +329,13 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 			t.equal(typeof res.key !== 'undefined' && res.key !== null, true, 'Checking re-enroll response has the private key');
 			t.equal(typeof res.certificate !== 'undefined' && res.certificate !== null, true, 'Checking re-enroll response has the certificate');
 
-			return caService.reenroll(webAdmin, [{name:'myattrib', require : true}]);
+			return caService.reenroll(webAdmin, [{name: 'myattrib', require: true}]);
 		}).then((res) => {
 			t.pass('Successfully re-enrolled "webAdmin" user with the request for attributes');
 			checkoutCertForAttributes(t, res.certificate, true, 'myattrib');
 			checkoutCertForAttributes(t, res.certificate, false, 'dfattrib');
 
-			return caService.reenroll(webAdmin, [{name:'myattrib', require : true}, {name:'dfattrib'}]);
+			return caService.reenroll(webAdmin, [{name: 'myattrib', require: true}, {name: 'dfattrib'}]);
 		}).then((res) => {
 			t.pass('Successfully re-enrolled "webAdmin" user with the request for attributes');
 			checkoutCertForAttributes(t, res.certificate, true, 'myattrib');
@@ -398,7 +419,7 @@ test('\n\n ** FabricCAClient: Test enroll With a CSR **\n\n', async (t) => {
 		const newUser = {
 			enrollmentID: 'aTestUser',
 			maxEnrollments: -1,
-			enrollmentSecret: 'userpw',
+			enrollmentSecret: 'userpw'
 		};
 		await caService.register(newUser, admin);
 
@@ -407,7 +428,7 @@ test('\n\n ** FabricCAClient: Test enroll With a CSR **\n\n', async (t) => {
 		const req = {
 			enrollmentID: newUser.enrollmentID,
 			enrollmentSecret: newUser.enrollmentSecret,
-			csr: myCsr,
+			csr: myCsr
 		};
 
 		const enrollment = await caService.enroll(req);

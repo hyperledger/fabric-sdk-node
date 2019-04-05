@@ -10,7 +10,7 @@ const rimraf = require('rimraf');
 const fs = require('fs-extra');
 const Path = require('path');
 const BaseWallet = require('./basewallet');
-const FileKVS = require('fabric-client/lib/impl/FileKeyValueStore');
+const FileKVS = require('fabric-common/lib/impl/FileKeyValueStore');
 const logger = require('../../logger').getLogger('FileSystemWallet');
 
 /**

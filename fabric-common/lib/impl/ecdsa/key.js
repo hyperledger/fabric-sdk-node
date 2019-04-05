@@ -7,13 +7,12 @@
 
 'use strict';
 
-const utils = require('../../utils.js');
+const {HashPrimitives, Key, Utils: utils} = require('fabric-common');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 const KEYUTIL = jsrsa.KEYUTIL;
 const ECDSA = jsrsa.ECDSA;
 const jws = jsrsa.jws;
-const {HashPrimitives, Key} = require('fabric-common');
 const logger = utils.getLogger('ecdsa/key.js');
 
 /**

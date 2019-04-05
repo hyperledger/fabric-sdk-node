@@ -6,7 +6,7 @@
 
 'use strict';
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const util = require('util');
 
 module.exports.registerTxEvent = function(eh, txid, timeout) {

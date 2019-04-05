@@ -7,9 +7,7 @@
 'use strict';
 
 
-const MSP = require('../../lib/msp/msp');
-const {Config, CryptoAlgorithms, Identity, SigningIdentity} = require('fabric-common');
-const utils = require('../../lib/utils');
+const {Config, CryptoAlgorithms, Identity, SigningIdentity, Utils: utils, MSP} = require('fabric-common');
 const path = require('path');
 const fs = require('fs');
 
@@ -17,7 +15,7 @@ require('chai');
 const sinon = require('sinon');
 
 const rewire = require('rewire');
-const MspRewire = rewire('../../lib/msp/msp');
+const MspRewire = rewire('../../../fabric-common/lib/Msp.js');
 
 const certificateAsPEM = fs.readFileSync(path.join(__dirname, '..', 'data', 'cert.pem')).toString('utf8');
 
@@ -370,7 +368,10 @@ describe('MSP', () => {
 				cryptoSuite: cryptoUtils
 			});
 
-			const pubKey = cryptoUtils.importKey(certificateAsPEM, {algorithm: CryptoAlgorithms.X509Certificate, ephemeral: true});
+			const pubKey = cryptoUtils.importKey(certificateAsPEM, {
+				algorithm: CryptoAlgorithms.X509Certificate,
+				ephemeral: true
+			});
 			const identity = new Identity(certificateAsPEM, pubKey, msp.getId(), cryptoUtils);
 			const serializedID = identity.serialize();
 

@@ -14,11 +14,11 @@
 
 'use strict';
 const Long = require('long');
-const utils = require('./utils.js');
+const {Utils: utils, Identity} = require('fabric-common');
 const clientUtils = require('./client-utils.js');
 const Constants = require('./Constants.js');
 const logger = utils.getLogger('ChannelEventHub.js');
-const {Identity} = require('fabric-common');
+const {convertToLong} = require('./utils/format');
 const TransactionID = require('./TransactionID');
 const util = require('util');
 const EventHubDisconnectError = require('./errors/EventHubDisconnectError');
@@ -369,7 +369,7 @@ class ChannelEventHub {
 			this._filtered_stream = !full_block;
 			logger.debug('%s - filtered block stream set to:%s', method, !full_block);
 		} else {
-			logger.debug('%s - using a filtered block stream by default',  method);
+			logger.debug('%s - using a filtered block stream by default', method);
 		}
 
 		logger.debug('%s - signed event:%s', method, !!signedEvent);
@@ -498,10 +498,10 @@ class ChannelEventHub {
 					let block = null;
 					if (deliverResponse.Type === 'block') {
 						block = BlockDecoder.decodeBlock(deliverResponse.block);
-						self._last_block_seen = utils.convertToLong(block.header.number);
+						self._last_block_seen = convertToLong(block.header.number);
 					} else {
 						block = JSON.parse(JSON.stringify(deliverResponse.filtered_block));
-						self._last_block_seen = utils.convertToLong(block.number);
+						self._last_block_seen = convertToLong(block.number);
 					}
 					logger.debug('on.data - incoming block number %s', self._last_block_seen);
 
@@ -660,7 +660,7 @@ class ChannelEventHub {
 
 		const opt = {
 			identity: signer,
-			txId,
+			txId
 		};
 		const seekPayloadBytes = this.generateUnsignedRegistration(opt);
 
@@ -695,7 +695,7 @@ class ChannelEventHub {
 		logger.debug('%s - exit', method);
 		return {
 			signature: signedEvent.signature,
-			payload: signedEvent.payload,
+			payload: signedEvent.payload
 		};
 	}
 
@@ -906,11 +906,11 @@ class ChannelEventHub {
 				_block_num = NEWEST;
 			} else {
 				// maybe it is a string number
-				_block_num = utils.convertToLong(block_num);
+				_block_num = convertToLong(block_num);
 			}
 		} else {
 			if (typeof block_num !== 'undefined' && block_num !== null) {
-				_block_num = utils.convertToLong(block_num);
+				_block_num = convertToLong(block_num);
 			}
 		}
 
@@ -928,6 +928,7 @@ class ChannelEventHub {
 
 		return _endBlock;
 	}
+
 	/*
 	 * Internal method
 	 * checks the startBlock/endBlock options
@@ -1672,7 +1673,8 @@ class EventRegistration {
 		this._onErrorFn = onError;
 		this.unregister = default_unregister;
 		this.disconnect = default_disconnect;
-		this.unregister_action = () => { }; // do nothing by default
+		this.unregister_action = () => {
+		}; // do nothing by default
 
 		if (options) {
 			if (typeof options.unregister === 'undefined' || options.unregister === null) {

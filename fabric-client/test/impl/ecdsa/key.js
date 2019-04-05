@@ -7,7 +7,7 @@
 'use strict';
 
 const rewire = require('rewire');
-const ECDSA_KEY_REWIRE = rewire('../../../lib/impl/ecdsa/key');
+const ECDSA_KEY_REWIRE = rewire('../../../../fabric-common/lib/impl/ecdsa/key');
 const jsrsa = require('jsrsasign');
 const KEYUTIL = jsrsa.KEYUTIL;
 
@@ -117,7 +117,7 @@ describe('ECDSA_KEY', () => {
 			if (revert) {
 				revert();
 			}
-			revert  = null;
+			revert = null;
 		});
 
 		it('should throw when trying to generate if public', () => {
@@ -190,7 +190,7 @@ describe('ECDSA_KEY', () => {
 			if (revert) {
 				revert();
 			}
-			revert  = null;
+			revert = null;
 		});
 
 		it('should throw when trying to generate if public', () => {

@@ -6,7 +6,7 @@
 
 'use strict';
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const logger = utils.getLogger('integration.client');
 
 const tape = require('tape');
@@ -28,7 +28,7 @@ test('\n\n ** createUser happy path - file store **\n\n', (t) => {
 	Client.addConfigFile(path.join(__dirname, '../fixtures/profiles/caimport.json'));
 	caImport = utils.getConfigSetting('ca-import', 'notfound');
 
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');
 	utils.setConfigSetting('crypto-keysize', 256);
 	const userOrg = 'org1';
 
@@ -81,7 +81,7 @@ test('\n\n ** createUser happy path - CouchDB **\n\n', (t) => {
 	// Use the CouchDB specific config file
 	Client.addConfigFile('test/fixtures/credentials/couchdb.json');
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');// override
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/CouchDBKeyValueStore.js');// override
 	const couchdbIPAddr = Client.getConfigSetting('couchdb-ip-addr', 'notfound');
 	const couchdbPort = Client.getConfigSetting('couchdb-port', 'notfound');
 	const keyValStorePath = couchdbIPAddr + ':' + couchdbPort;
@@ -133,7 +133,7 @@ test('\n\n ** createUser happy path - Cloudant  **\n\n', (t) => {
 	// Use the Cloudant specific config file
 	Client.addConfigFile('test/fixtures/credentials/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');// override
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/CouchDBKeyValueStore.js');// override
 	const cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
 	const cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
 	const cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');
@@ -185,7 +185,7 @@ test('\n\n ** createUser happy path - Cloudant - PEM Strings  **\n\n', (t) => {
 	// Use the Cloudant specific config file
 	Client.addConfigFile('test/fixtures/credentials/cloudant.json');
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');// override
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/CouchDBKeyValueStore.js');// override
 	const cloudantUsername = Client.getConfigSetting('cloudant-username', 'notfound');
 	const cloudantPassword = Client.getConfigSetting('cloudant-password', 'notfound');
 	const cloudantBluemix = Client.getConfigSetting('cloudant-bluemix', 'notfound');

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils, User} = require('fabric-common');
 const logger = utils.getLogger('cloudant-fabricca');
 
 const tape = require('tape');
@@ -13,7 +13,6 @@ const test = _test(tape);
 
 const path = require('path');
 const Client = require('fabric-client');
-const User = require('fabric-client/lib/User.js');
 const FabricCAServices = require('fabric-ca-client/lib/FabricCAServices');
 const testUtil = require('../unit/util.js');
 
@@ -61,7 +60,7 @@ test('Use FabricCAServices wih a Cloudant CouchDB KeyValueStore', (t) => {
 
 	// Set the relevant configuration values
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/CouchDBKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/CouchDBKeyValueStore.js');
 
 	// Clean up the cloudant couchdb test database
 	const dbname = 'member_db';

@@ -13,8 +13,7 @@ const should = chai.should();
 const rewire = require('rewire');
 
 const Client = require('fabric-client');
-const {CryptoSuite, KeyValueStore} = require('fabric-common');
-const User = require('fabric-client/lib/User');
+const {CryptoSuite, KeyValueStore, User} = require('fabric-common');
 const HSMWalletMixin = rewire('./../../../lib/impl/wallet/hsmwalletmixin');
 const {KEYUTIL} = require('jsrsasign');
 

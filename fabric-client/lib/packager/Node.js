@@ -16,7 +16,8 @@
 
 const path = require('path');
 const sbuf = require('stream-buffers');
-const utils = require('../utils.js');
+const {Utils: utils} = require('fabric-common');
+
 const walk = require('ignore-walk');
 
 const logger = utils.getLogger('packager/Node.js');
@@ -32,7 +33,7 @@ class NodePackager extends BasePackager {
 	 * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors
 	 * @returns {Promise.<TResult>}
 	 */
-	package (chaincodePath, metadataPath) {
+	package(chaincodePath, metadataPath) {
 		logger.debug('packaging Node from %s', chaincodePath);
 
 		// Compose the path to the chaincode project directory
@@ -67,7 +68,7 @@ class NodePackager extends BasePackager {
 	 * @param filePath
 	 * @returns {Promise}
 	 */
-	findSource (filePath) {
+	findSource(filePath) {
 		return walk({
 			path: filePath,
 			// applies filtering based on the same rules as "npm publish":

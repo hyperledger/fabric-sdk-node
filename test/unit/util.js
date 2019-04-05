@@ -11,10 +11,9 @@ const util = require('util');
 
 const Client = require('fabric-client');
 const copService = require('fabric-ca-client/lib/FabricCAServices.js');
-const User = require('fabric-client/lib/User.js');
+const {Utils:utils, User} = require('fabric-common');
 const Constants = require('./constants.js');
-
-const logger = require('fabric-client/lib/utils.js').getLogger('TestUtil');
+const logger = utils.getLogger('TestUtil');
 
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
 module.exports.CHAINCODE_UPGRADE_PATH = 'github.com/example_cc1';

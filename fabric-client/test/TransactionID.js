@@ -18,9 +18,8 @@ const rewire = require('rewire');
 const TransactionID = require('../lib/TransactionID');
 const TransactionIDRewire = rewire('../lib/TransactionID');
 
-const {Identity} = require('fabric-common');
-const User = require('../lib/User');
-const Utils = require('../lib/utils');
+const {Identity, Utils, User} = require('fabric-common');
+
 
 require('chai').should();
 const sinon = require('sinon');

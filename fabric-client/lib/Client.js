@@ -7,12 +7,9 @@
 
 'use strict';
 
-const sdkUtils = require('./utils.js');
-const clientUtils = require('./client-utils.js');
+const {KeyValueStore, Signer, SigningIdentity, Utils: sdkUtils, User, BaseClient} = require('fabric-common');
 
-const {KeyValueStore, Signer, SigningIdentity} = require('fabric-common');
-const BaseClient = require('./BaseClient.js');
-const User = require('./User.js');
+const clientUtils = require('./client-utils.js');
 const Chaincode = require('./Chaincode.js');
 const Channel = require('./Channel.js');
 const Package = require('./Package.js');
@@ -900,7 +897,7 @@ const Client = class extends BaseClient {
 	 * @typedef {Object} PeerQueryResponse
 	 * @property {Object} peers_by_org
 	 * @example
-{
+	 {
 	"peers_by_org": {
 		"Org1MSP": {
 			"peers":[
@@ -914,7 +911,7 @@ const Client = class extends BaseClient {
 		}
 	}
 }
-	*/
+	 */
 
 	/**
 	 * Queries the target peer for a list of {@link Peer} objects of all peers

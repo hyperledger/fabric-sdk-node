@@ -15,8 +15,8 @@
 'use strict';
 
 const rewire = require('rewire');
-const UserRewire = rewire('../lib/User');
-const User = require('../lib/User');
+const UserRewire = rewire('fabric-common/lib/User');
+const {User} = require('fabric-common');
 
 const chai = require('chai');
 const should = chai.should();
@@ -46,7 +46,12 @@ describe('User', () => {
 		});
 
 		it('should conditionally initialise parameters if cfg is an object with an enrollmentID and roles', () => {
-			const obj = new Object({enrollmentID: 'user_enrollmentID', name: 'user_name', roles: ['role_1', 'role_2'], affiliation: 'user_affiliation'});
+			const obj = new Object({
+				enrollmentID: 'user_enrollmentID',
+				name: 'user_name',
+				roles: ['role_1', 'role_2'],
+				affiliation: 'user_affiliation'
+			});
 			const myUser = new User(obj);
 			myUser._name.should.equal(obj.enrollmentID);
 			myUser._roles.should.equal(obj.roles);
@@ -81,7 +86,12 @@ describe('User', () => {
 
 	describe('#getRoles', () => {
 		it('should get the users roles', () => {
-			const obj = new Object({enrollmentID: 'user_enrollmentID', name: 'user_name', roles: ['role_1', 'role_2'], affiliation: 'user_affiliation'});
+			const obj = new Object({
+				enrollmentID: 'user_enrollmentID',
+				name: 'user_name',
+				roles: ['role_1', 'role_2'],
+				affiliation: 'user_affiliation'
+			});
 			const myUser = new User(obj);
 			myUser.getRoles().should.equal(obj.roles);
 		});
@@ -89,7 +99,12 @@ describe('User', () => {
 
 	describe('#setRoles', () => {
 		it('should set the users roles', () => {
-			const myUser = new User({enrollmentID: 'user_enrollmentID', name: 'user_name', roles: ['role_1', 'role_2'], affiliation: 'user_affiliation'});
+			const myUser = new User({
+				enrollmentID: 'user_enrollmentID',
+				name: 'user_name',
+				roles: ['role_1', 'role_2'],
+				affiliation: 'user_affiliation'
+			});
 			myUser.setRoles(['new_role_1', 'new_role_2']);
 			myUser._roles.should.deep.equal(['new_role_1', 'new_role_2']);
 		});
@@ -97,7 +112,12 @@ describe('User', () => {
 
 	describe('#getAffiliation', () => {
 		it('should get the users affiliation', () => {
-			const obj = new Object({enrollmentID: 'user_enrollmentID', name: 'user_name', roles: ['role_1', 'role_2'], affiliation: 'user_affiliation'});
+			const obj = new Object({
+				enrollmentID: 'user_enrollmentID',
+				name: 'user_name',
+				roles: ['role_1', 'role_2'],
+				affiliation: 'user_affiliation'
+			});
 			const myUser = new User(obj);
 			myUser.getAffiliation().should.equal(obj.affiliation);
 		});
@@ -105,7 +125,12 @@ describe('User', () => {
 
 	describe('#setAffiliation', () => {
 		it('should set the users affiliation', () => {
-			const myUser = new User({enrollmentID: 'user_enrollmentID', name: 'user_name', roles: ['role_1', 'role_2'], affiliation: 'user_affiliation'});
+			const myUser = new User({
+				enrollmentID: 'user_enrollmentID',
+				name: 'user_name',
+				roles: ['role_1', 'role_2'],
+				affiliation: 'user_affiliation'
+			});
 			myUser.setAffiliation('new_affiliation');
 			myUser._affiliation.should.equal('new_affiliation');
 		});
@@ -144,52 +169,58 @@ describe('User', () => {
 	});
 
 	describe('#setEnrollment', () => {
-		it('should throw error if no privateKey parameter', async() => {
+		it('should throw error if no privateKey parameter', async () => {
 			const myUser = new User('my_cfg');
 			await myUser.setEnrollment(null, 'test_certificate', 'test_mspId', true)
 				.should.be.rejectedWith(/Invalid parameter. Must have a valid private key./);
 		});
 
-		it('should throw error if the privateKey parameter is an empty string', async() => {
+		it('should throw error if the privateKey parameter is an empty string', async () => {
 			const myUser = new User('my_cfg');
 			await myUser.setEnrollment('', 'test_certificate', 'test_mspId', true)
 				.should.be.rejectedWith(/Invalid parameter. Must have a valid private key./);
 		});
 
-		it('should throw error if no certificate parameter', async() => {
+		it('should throw error if no certificate parameter', async () => {
 			const myUser = new User('my_cfg');
 			await myUser.setEnrollment('test_privateKey', null, 'test_mspId', true)
 				.should.be.rejectedWith(/Invalid parameter. Must have a valid certificate./);
 		});
 
-		it('should throw error if certificate parameter is an empty string', async() => {
+		it('should throw error if certificate parameter is an empty string', async () => {
 			const myUser = new User('my_cfg');
 			await myUser.setEnrollment('test_privateKey', '', 'test_mspId', true)
 				.should.be.rejectedWith(/Invalid parameter. Must have a valid certificate./);
 		});
 
-		it('should throw error if no mspId parameter', async() => {
+		it('should throw error if no mspId parameter', async () => {
 			const myUser = new User('my_cfg');
 			await myUser.setEnrollment('test_privateKey', 'test_certificate', null, true)
 				.should.be.rejectedWith(/Invalid parameter. Must have a valid mspId./);
 		});
 
-		it('should throw error if mspId parameter is an empty string', async() => {
+		it('should throw error if mspId parameter is an empty string', async () => {
 			const myUser = new User('my_cfg');
 			await myUser.setEnrollment('test_privateKey', 'test_certificate', '', true)
 				.should.be.rejectedWith(/Invalid parameter. Must have a valid mspId./);
 		});
 
-		it('should set the cryptoSuite if its not already set', async() => {
+		it('should set the cryptoSuite if its not already set', async () => {
 			const sandbox = sinon.createSandbox();
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
+				newCryptoSuite: () => {
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
 			const FakeSigningIdentity = sandbox.stub();
 
-			const returnStub = sandbox.stub({setCryptoKeyStore: () => {}, importKey: () => {}, createKeyFromRaw: () => {}});
+			const returnStub = sandbox.stub({
+				setCryptoKeyStore: () => {
+				}, importKey: () => {
+				}, createKeyFromRaw: () => {
+				}
+			});
 			const newCryptoSuiteStub = sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(returnStub);
 
 			UserRewire.__set__('sdkUtils', FakeSdkUtils);
@@ -203,20 +234,25 @@ describe('User', () => {
 			obj._cryptoSuite.should.equal(returnStub);
 		});
 
-		it('should set users crypto key store if skipPersistance is false', async() => {
+		it('should set users crypto key store if skipPersistance is false', async () => {
 			const sandbox = sinon.createSandbox();
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
 			const FakeSigningIdentity = sandbox.stub();
 
 			const cryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
-				createKeyFromRaw: () => {}
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
+				createKeyFromRaw: () => {
+				}
 			};
 
 			const FakeSetCryptoKeyStore = sandbox.stub(cryptoSuite, 'setCryptoKeyStore');
@@ -236,20 +272,24 @@ describe('User', () => {
 			sinon.assert.calledWith(FakeSetCryptoKeyStore, 'test_cryptoKeyStore');
 		});
 
-		it('should create and set a pubKey variable if the cryptoKeyStore is set and skipPersistence is false', async() => {
+		it('should create and set a pubKey variable if the cryptoKeyStore is set and skipPersistence is false', async () => {
 			const sandbox = sinon.createSandbox();
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
 			const FakeSigningIdentity = sandbox.stub();
 
 			const cryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
-				_cryptoKeyStore: 'cryptoKeyStore',
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
+				_cryptoKeyStore: 'cryptoKeyStore'
 			};
 
 			const FakeImportKey = sandbox.stub(cryptoSuite, 'importKey');
@@ -269,20 +309,25 @@ describe('User', () => {
 			sinon.assert.calledWith(FakeImportKey, 'test_certificate');
 		});
 
-		it('should create and set a pubKey variable if the either the cryptoKeyStore is not set or skipPersitence is true', async() => {
+		it('should create and set a pubKey variable if the either the cryptoKeyStore is not set or skipPersitence is true', async () => {
 			const sandbox = sinon.createSandbox();
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
 			const FakeSigningIdentity = sandbox.stub();
 
 			const cryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
-				createKeyFromRaw: () => {}
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
+				createKeyFromRaw: () => {
+				}
 			};
 
 			const FakeCreateKey = sandbox.stub(cryptoSuite, 'createKeyFromRaw');
@@ -302,20 +347,25 @@ describe('User', () => {
 			sinon.assert.calledWith(FakeCreateKey, 'test_certificate');
 		});
 
-		it('should set the users identity', async() => {
+		it('should set the users identity', async () => {
 			const sandbox = sinon.createSandbox();
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
 			const FakeSigningIdentity = sandbox.stub();
 
 			const FakeCryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
-				createKeyFromRaw: () => {},
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
+				createKeyFromRaw: () => {
+				},
 				_cryptoKeyStore: true
 			};
 
@@ -335,20 +385,25 @@ describe('User', () => {
 			sinon.assert.calledWith(FakeIdentity, 'test_certificate', 'import_key', 'test_mspId', FakeCryptoSuite);
 		});
 
-		it('should set the users signingIdentity', async() => {
+		it('should set the users signingIdentity', async () => {
 			const sandbox = sinon.createSandbox();
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
 			const FakeSigningIdentity = sandbox.stub();
 
 			const FakeCryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
-				createKeyFromRaw: () => {}
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
+				createKeyFromRaw: () => {
+				}
 			};
 
 			sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(FakeCryptoSuite);
@@ -404,12 +459,15 @@ describe('User', () => {
 
 		it('should log and set the users state, name, roles, afilliation and enrollmentSecret', async () => {
 			const FakeLogger = {
-				debug: () => {}
+				debug: () => {
+				}
 			};
 
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const privateStub = {
@@ -419,10 +477,12 @@ describe('User', () => {
 			};
 
 			const FakeCryptoSuite = {
-				setCryptoKeyStore: () => {},
+				setCryptoKeyStore: () => {
+				},
 				importKey: () => sinon.stub().resolves(),
 				getKey: sinon.stub().returns(privateStub),
-				createKeyFromRaw: () => {}
+				createKeyFromRaw: () => {
+				}
 			};
 
 			const debugStub = sandbox.stub(FakeLogger, 'debug');
@@ -448,7 +508,8 @@ describe('User', () => {
 
 		it('should throw error if state name is not the same as user name', async () => {
 			const FakeLogger = {
-				debug: () => {}
+				debug: () => {
+				}
 			};
 
 			sandbox.stub(FakeLogger, 'debug');
@@ -461,7 +522,8 @@ describe('User', () => {
 
 		it('should throw error if the state has no mspid', async () => {
 			const FakeLogger = {
-				debug: () => {}
+				debug: () => {
+				}
 			};
 
 			sandbox.stub(FakeLogger, 'debug');
@@ -474,12 +536,15 @@ describe('User', () => {
 
 		it('should set the users mspid to the state mspid', async () => {
 			const FakeLogger = {
-				debug: () => {}
+				debug: () => {
+				}
 			};
 
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const privateStub = {
@@ -489,14 +554,18 @@ describe('User', () => {
 			};
 
 			const FakeCryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
 				getKey: sinon.stub().returns(privateStub),
-				createKeyFromRaw: () => {}
+				createKeyFromRaw: () => {
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
-			const promise = new Promise(() => {});
+			const promise = new Promise(() => {
+			});
 
 			sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(FakeCryptoSuite);
 			sandbox.stub(FakeSdkUtils, 'newCryptoKeyStore').returns('test_cryptoKeyStore');
@@ -516,12 +585,15 @@ describe('User', () => {
 
 		it('should throw an error if resulting key is not private', async () => {
 			const FakeLogger = {
-				debug: () => {}
+				debug: () => {
+				}
 			};
 
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const privateStub = {
@@ -531,14 +603,18 @@ describe('User', () => {
 			};
 
 			const FakeCryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
 				getKey: sinon.stub().returns(privateStub),
-				createKeyFromRaw: () => {}
+				createKeyFromRaw: () => {
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
-			const promise = new Promise(() => {});
+			const promise = new Promise(() => {
+			});
 
 			sandbox.stub(FakeSdkUtils, 'newCryptoSuite').returns(FakeCryptoSuite);
 			sandbox.stub(FakeSdkUtils, 'newCryptoKeyStore').returns('test_cryptoKeyStore');
@@ -555,30 +631,39 @@ describe('User', () => {
 
 		it('should set import_promise if no_save is false', async () => {
 			const FakeLogger = {
-				debug: () => {}
+				debug: () => {
+				}
 			};
 
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const FakeCryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
-				getKey: () => {},
-				createKeyFromRaw: () => {}
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
+				getKey: () => {
+				},
+				createKeyFromRaw: () => {
+				}
 			};
 
 			const FakeCryptoAlgorithms = {
-				X509Certificate: 'X509Certificate',
+				X509Certificate: 'X509Certificate'
 			};
 
 			const FakeIdentity = sandbox.stub();
 			const promise = new Promise((resolve) => {
-				resolve({isPrivate() {
-					return true;
-				}});
+				resolve({
+					isPrivate() {
+						return true;
+					}
+				});
 			});
 			const FakeImportKey = sandbox.stub(FakeCryptoSuite, 'importKey').returns(promise);
 
@@ -600,23 +685,30 @@ describe('User', () => {
 
 		it('should return the _cryptoSuite key', async () => {
 			const FakeLogger = {
-				debug: () => {}
+				debug: () => {
+				}
 			};
 
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const FakeCryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
-				getKey: () => {},
-				createKeyFromRaw: () => {}
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
+				getKey: () => {
+				},
+				createKeyFromRaw: () => {
+				}
 			};
 
 			const FakeCryptoAlgorithms = {
-				X509Certificate: 'X509Certificate',
+				X509Certificate: 'X509Certificate'
 			};
 
 			const FakeKey = {
@@ -647,19 +739,26 @@ describe('User', () => {
 
 		it('should assign the self variable with a signing identity if the privateKey is private', async () => {
 			const FakeLogger = {
-				debug: () => {}
+				debug: () => {
+				}
 			};
 
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const FakeCryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
-				getKey: () => {},
-				createKeyFromRaw: () => {}
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
+				getKey: () => {
+				},
+				createKeyFromRaw: () => {
+				}
 			};
 
 			const FakeKey = {
@@ -694,26 +793,35 @@ describe('User', () => {
 
 		it('should throw error if private key is missing', async () => {
 			const FakeLogger = {
-				debug: () => {}
+				debug: () => {
+				}
 			};
 
 			const FakeSdkUtils = {
-				newCryptoSuite: () => {},
-				newCryptoKeyStore: () => {},
+				newCryptoSuite: () => {
+				},
+				newCryptoKeyStore: () => {
+				}
 			};
 
 			const FakeCryptoSuite = {
-				setCryptoKeyStore: () => {},
-				importKey: () => {},
-				getKey: () => {},
-				createKeyFromRaw: () => {}
+				setCryptoKeyStore: () => {
+				},
+				importKey: () => {
+				},
+				getKey: () => {
+				},
+				createKeyFromRaw: () => {
+				}
 			};
 
 			const FakeIdentity = sandbox.stub();
 			const promise = new Promise(((resolve) => {
-				resolve({isPrivate() {
-					return false;
-				}});
+				resolve({
+					isPrivate() {
+						return false;
+					}
+				});
 			}));
 			sandbox.stub(FakeCryptoSuite, 'importKey').returns(promise);
 
@@ -732,22 +840,43 @@ describe('User', () => {
 
 	describe('#toString', () => {
 		it('should create a state and return it when the user has no signingIdentity or identity', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 
 			user.toString().should.equal('{"name":"cfg","mspid":"","roles":"test_role","affiliation":"test_affiliation","enrollmentSecret":"","enrollment":{}}');
 		});
 
 		it('should set serializedEnrollment.signingIdentity if the user has a signingIdentity', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
-			user._signingIdentity = {_signer: {_key: {getSKI() {
-				return 'test_signingIdentity';
-			}}}};
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
+			user._signingIdentity = {
+				_signer: {
+					_key: {
+						getSKI() {
+							return 'test_signingIdentity';
+						}
+					}
+				}
+			};
 
 			user.toString().should.equal('{"name":"cfg","mspid":"","roles":"test_role","affiliation":"test_affiliation","enrollmentSecret":"","enrollment":{"signingIdentity":"test_signingIdentity"}}');
 		});
 
 		it('should set serializedEnrollment.identity.certificate if the user has an identity.certificate', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._identity = {_certificate: 'test_certificate'};
 
 			user.toString().should.equal('{"name":"cfg","mspid":"","roles":"test_role","affiliation":"test_affiliation","enrollmentSecret":"","enrollment":{"identity":{"certificate":"test_certificate"}}}');
@@ -756,7 +885,12 @@ describe('User', () => {
 
 	describe('#User.isInstance', () => {
 		it('should return true if every user parameter is defined', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._enrollmentSecret = 'test_enrollmentSecret';
 			user._identity = 'test_identity';
 			user._signingIdentity = 'test_signingIdentity';
@@ -767,7 +901,12 @@ describe('User', () => {
 		});
 
 		it('should return false if user._name is undefined', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._enrollmentSecret = 'test_enrollmentSecret';
 			user._identity = 'test_identity';
 			user._signingIdentity = 'test_signingIdentity';
@@ -779,7 +918,12 @@ describe('User', () => {
 		});
 
 		it('should return false if user._roles is undefined', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._enrollmentSecret = 'test_enrollmentSecret';
 			user._identity = 'test_identity';
 			user._signingIdentity = 'test_signingIdentity';
@@ -791,7 +935,12 @@ describe('User', () => {
 		});
 
 		it('should return false if user._affiliation is undefined', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._enrollmentSecret = 'test_enrollmentSecret';
 			user._identity = 'test_identity';
 			user._signingIdentity = 'test_signingIdentity';
@@ -803,7 +952,12 @@ describe('User', () => {
 		});
 
 		it('should return false if user._enrollmentSecret is undefined', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._enrollmentSecret = undefined;
 			user._identity = 'test_identity';
 			user._signingIdentity = 'test_signingIdentity';
@@ -814,7 +968,12 @@ describe('User', () => {
 		});
 
 		it('should return false if user._identity is undefined', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._enrollmentSecret = 'test_enrollmentSecret';
 			user._identity = undefined;
 			user._signingIdentity = 'test_signingIdentity';
@@ -825,7 +984,12 @@ describe('User', () => {
 		});
 
 		it('should return false if user._signingIdentity is undefined', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._enrollmentSecret = 'test_enrollmentSecret';
 			user._identity = 'test_identity';
 			user._signingIdentity = undefined;
@@ -836,7 +1000,12 @@ describe('User', () => {
 		});
 
 		it('should return false if user._mspId is undefined', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._enrollmentSecret = 'test_enrollmentSecret';
 			user._identity = 'test_identity';
 			user._signingIdentity = 'test_signingIdentity';
@@ -847,7 +1016,12 @@ describe('User', () => {
 		});
 
 		it('should return false if user._cryptoSuite is undefined', () => {
-			const user = new User({enrollmentID: 'cfg', name: 'cfg', roles: 'test_role', affiliation: 'test_affiliation'});
+			const user = new User({
+				enrollmentID: 'cfg',
+				name: 'cfg',
+				roles: 'test_role',
+				affiliation: 'test_affiliation'
+			});
 			user._enrollmentSecret = 'test_enrollmentSecret';
 			user._identity = 'test_identity';
 			user._signingIdentity = 'test_signingIdentity';

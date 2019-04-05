@@ -15,7 +15,7 @@
  *        superagent
  *        superagent-promise
  */
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const logger = utils.getLogger('configinator');
 
 const tape = require('tape');
@@ -60,7 +60,7 @@ test('\n\n***** configtxlator flow for create and then update  *****\n\n', async
 	// Acting as a client in org1 when creating the channel
 	const org = ORGS.org1.name;
 
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');
 	try {
 
 		const tlsInfo = await e2eUtils.tlsEnroll(org);

@@ -6,7 +6,7 @@
 'use strict';
 
 const Client = require('fabric-client');
-const User = require('fabric-client/lib/User');
+const {User} = require('fabric-common');
 
 class IDManager {
 

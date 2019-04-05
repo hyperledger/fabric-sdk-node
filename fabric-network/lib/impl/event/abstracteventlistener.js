@@ -9,7 +9,8 @@ const Long = require('long');
 
 const EventHubDisconnectError = require('fabric-client/lib/errors/EventHubDisconnectError');
 const BaseCheckpointer = require('./basecheckpointer');
-const logger = require('fabric-client/lib/utils').getLogger('AbstractEventListener');
+const {Utils} = require('fabric-common');
+const logger = Utils.getLogger('AbstractEventListener');
 
 /**
  * @typedef {Object} module:fabric-network.Network~ListenerOptions

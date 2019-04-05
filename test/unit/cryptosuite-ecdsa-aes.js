@@ -11,7 +11,7 @@ const _test = require('tape-promise').default;
 const test = _test(tape);
 
 const testutil = require('./util.js');
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils, User} = require('fabric-common');
 const path = require('path');
 const fs = require('fs-extra');
 const util = require('util');
@@ -19,9 +19,8 @@ const util = require('util');
 const jsrsa = require('jsrsasign');
 const ECDSA = jsrsa.ECDSA;
 
-const CryptoSuite_ECDSA_AES = require('fabric-client/lib/impl/CryptoSuite_ECDSA_AES.js');
-const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
-const User = require('fabric-client/lib/User.js');
+const CryptoSuite_ECDSA_AES = require('fabric-common/lib/impl/CryptoSuite_ECDSA_AES.js');
+const ecdsaKey = require('fabric-common/lib/impl/ecdsa/key.js');
 const elliptic = require('elliptic');
 const Signature = require('elliptic/lib/elliptic/ec/signature.js');
 
@@ -168,7 +167,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 
 	// reset to default key size
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');// force for gulp test
+	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');// force for gulp test
 	cryptoUtils = utils.newCryptoSuite();
 	cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 

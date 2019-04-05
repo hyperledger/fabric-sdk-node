@@ -16,7 +16,7 @@ const _test = require('tape-promise').default;
 const test = _test(tape);
 
 const Client = require('fabric-client');
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const testUtil = require('../unit/util.js');
 const e2e = testUtil.END2END;
 const e2eUtils = require('./e2e/e2eUtils.js');

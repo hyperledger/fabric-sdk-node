@@ -11,7 +11,7 @@ const path = require('path');
 const FabricCAServices = require('../../fabric-ca-client');
 const {HFCAIdentityAttributes, HFCAIdentityType} = require('../../fabric-ca-client/lib/IdentityService');
 
-const User = require('../../fabric-ca-client/lib/User');
+const {User} = require('fabric-common');
 
 const userOrg1 = 'org1';
 const userOrg2 = 'org2';
@@ -83,14 +83,20 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 
 		let enrollment;
 		// enroll the new created user at ca_Org1
-		enrollment = await caService1.enroll({enrollmentID: testIdentity.enrollmentID, enrollmentSecret: testIdentity.enrollmentSecret});
+		enrollment = await caService1.enroll({
+			enrollmentID: testIdentity.enrollmentID,
+			enrollmentSecret: testIdentity.enrollmentSecret
+		});
 		t.pass(`Successfully enrolled ${testIdentity.enrollmentID} at ca_Org1`);
 		const identity = new User(testIdentity.enrollmentID);
 		await identity.setEnrollment(enrollment.key, enrollment.certificate, 'Org1MSP');
 
 		// should throw error if we enroll this new identity at ca_Org2
 		try {
-			enrollment = await caService2.enroll({enrollmentID: testIdentity.enrollmentID, enrollmentSecret: testIdentity.enrollmentSecret});
+			enrollment = await caService2.enroll({
+				enrollmentID: testIdentity.enrollmentID,
+				enrollmentSecret: testIdentity.enrollmentSecret
+			});
 			t.fail('should throw error if we enroll this new identity at ca_Org2');
 			t.end();
 		} catch (e) {

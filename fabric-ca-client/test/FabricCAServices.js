@@ -18,9 +18,9 @@ const rewire = require('rewire');
 const FabricCAServicesRewire = rewire('../lib/FabricCAServices');
 const FabricCAClient = rewire('../lib/FabricCAClient');
 
-const CryptoSuite = require('../lib/impl/CryptoSuite_ECDSA_AES.js');
-const ECDSAKey = require('../lib/impl/ecdsa/key');
-const User = require('../lib/User');
+const CryptoSuite = require('fabric-common/lib/impl/CryptoSuite_ECDSA_AES.js');
+const ECDSAKey = require('fabric-common/lib/impl/ecdsa/key');
+const {User} = require('fabric-common');
 
 const chai = require('chai');
 const should = chai.should();
@@ -193,7 +193,14 @@ describe('FabricCAServices', () => {
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
 
-			service.register({enrollmentID: 'bob', enrollmentSecret: 'shhh!', maxEnrollments: 7, role: 'test_role', affiliation: 'test_affiliation', attrs: 'test_atts'}, registrar);
+			service.register({
+				enrollmentID: 'bob',
+				enrollmentSecret: 'shhh!',
+				maxEnrollments: 7,
+				role: 'test_role',
+				affiliation: 'test_affiliation',
+				attrs: 'test_atts'
+			}, registrar);
 			sinon.assert.calledOnce(clientMock.register);
 
 			// should be called with test values
@@ -239,11 +246,19 @@ describe('FabricCAServices', () => {
 		});
 
 		it('should throw if request attributes is specified but not an array', async () => {
-			await service.enroll({enrollmentID: 'isSet', enrollmentSecret: 'shhhh!', attr_reqs: 'incorrect'}).should.be.rejectedWith(/req.attr_reqs is not an array/);
+			await service.enroll({
+				enrollmentID: 'isSet',
+				enrollmentSecret: 'shhhh!',
+				attr_reqs: 'incorrect'
+			}).should.be.rejectedWith(/req.attr_reqs is not an array/);
 		});
 
 		it('should throw if any request attributes are missing a name', async () => {
-			await service.enroll({enrollmentID: 'isSet', enrollmentSecret: 'shhhh!', attr_reqs: [{name: 'pingu'}, {missing: 'name'}]}).should.be.rejectedWith(/req.att_regs is missing the attribute name/);
+			await service.enroll({
+				enrollmentID: 'isSet',
+				enrollmentSecret: 'shhhh!',
+				attr_reqs: [{name: 'pingu'}, {missing: 'name'}]
+			}).should.be.rejectedWith(/req.att_regs is missing the attribute name/);
 		});
 
 		it('should reject on enroll failure', async () => {
@@ -259,7 +274,12 @@ describe('FabricCAServices', () => {
 			clientMock.enroll.rejects(new Error('enroll error'));
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
-			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const req = {
+				enrollmentID: 'enrollmentID',
+				enrollmentSecret: 'enrollmentSecret',
+				profile: 'profile',
+				attr_reqs: atts
+			};
 
 			await service.enroll(req).should.be.rejectedWith(/enroll error/);
 		});
@@ -275,7 +295,12 @@ describe('FabricCAServices', () => {
 			cryptoPrimitives.generateEphemeralKey.returns(keyStub);
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
-			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const req = {
+				enrollmentID: 'enrollmentID',
+				enrollmentSecret: 'enrollmentSecret',
+				profile: 'profile',
+				attr_reqs: atts
+			};
 
 			await service.enroll(req).should.be.rejectedWith(/Failed to generate CSR for enrollmemnt due to error \[Error: CSR error\]/);
 		});
@@ -288,7 +313,12 @@ describe('FabricCAServices', () => {
 			cryptoPrimitives.generateEphemeralKey.throws(new Error('Key error'));
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
-			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const req = {
+				enrollmentID: 'enrollmentID',
+				enrollmentSecret: 'enrollmentSecret',
+				profile: 'profile',
+				attr_reqs: atts
+			};
 
 			await service.enroll(req).should.be.rejectedWith(/Failed to generate key for enrollment due to error \[Error: Key error\]/);
 		});
@@ -318,7 +348,12 @@ describe('FabricCAServices', () => {
 			});
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
-			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const req = {
+				enrollmentID: 'enrollmentID',
+				enrollmentSecret: 'enrollmentSecret',
+				profile: 'profile',
+				attr_reqs: atts
+			};
 			await service.enroll(req);
 
 			// should call generateKey, not generateEphemeral
@@ -342,7 +377,12 @@ describe('FabricCAServices', () => {
 			});
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
-			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
+			const req = {
+				enrollmentID: 'enrollmentID',
+				enrollmentSecret: 'enrollmentSecret',
+				profile: 'profile',
+				attr_reqs: atts
+			};
 			await service.enroll(req);
 
 			// generateKey should be called

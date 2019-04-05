@@ -15,12 +15,11 @@
 
 'use strict';
 
-const grpc = require('grpc');
+const grpc = require('fabric-protos/grpc');
 const urlParser = require('url');
 
-const utils = require('./utils.js');
+const {Utils: utils, HashPrimitives} = require('fabric-common');
 const logger = utils.getLogger('Remote.js');
-const {HashPrimitives} = require('fabric-common');
 const MAX_SEND = 'grpc.max_send_message_length';
 const MAX_RECEIVE = 'grpc.max_receive_message_length';
 const MAX_SEND_V10 = 'grpc-max-send-message-length';

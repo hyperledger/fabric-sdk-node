@@ -9,7 +9,7 @@ const _test = require('tape-promise').default;
 const test = _test(tape);
 const path = require('path');
 const FabricCAServices = require('../../fabric-ca-client/lib/FabricCAServices');
-const User = require('../../fabric-ca-client/lib/User');
+const {User} = require('fabric-common');
 const {HFCAIdentityAttributes, HFCAIdentityType} = require('../../fabric-ca-client/lib/IdentityService');
 
 const userOrg1 = 'org1';

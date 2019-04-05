@@ -7,7 +7,7 @@
 
 const Client = require('fabric-client');
 const {KEYUTIL} = require('jsrsasign');
-const ecdsaKey = require('fabric-client/lib/impl/ecdsa/key.js');
+const ecdsaKey = require('fabric-common/lib/impl/ecdsa/key.js');
 
 const HSMSuite = new Map();
 

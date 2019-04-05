@@ -15,7 +15,7 @@
 
 'use strict';
 
-const utils = require('./utils.js');
+const {Utils: utils} = require('fabric-common');
 const logger = utils.getLogger('CertificateAuthority.js');
 
 /**
@@ -193,9 +193,9 @@ const CertificateAuthority = class {
 	 */
 	toString() {
 		return 'CertificateAuthority : {' +
-		'name : ' +  this._name +
-		', url : ' +  this._url +
-		'}';
+			'name : ' + this._name +
+			', url : ' + this._url +
+			'}';
 	}
 
 };

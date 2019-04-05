@@ -18,7 +18,7 @@ const IdentityService = require('../lib/IdentityService');
 const IdentityServiceRewire = rewire('../lib/IdentityService');
 
 const FabricCAClient = require('../lib/FabricCAClient');
-const User = require('../lib/User');
+const {User} = require('fabric-common');
 
 require('chai').should();
 const sinon = require('sinon');
@@ -183,7 +183,10 @@ describe('IdentityService', () => {
 
 			const registrar = new User('bob');
 			registrar._signingIdentity = 'myID';
-			await identity.create({enrollmentID: 'dummy', affiliation: 'dummy'}, registrar).should.be.rejectedWith('forced error');
+			await identity.create({
+				enrollmentID: 'dummy',
+				affiliation: 'dummy'
+			}, registrar).should.be.rejectedWith('forced error');
 		});
 	});
 

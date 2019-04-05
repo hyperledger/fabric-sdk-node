@@ -15,13 +15,11 @@
 'use strict';
 const {format} = require('util');
 
-const utils = require('./utils.js');
+const {Utils: utils} = require('fabric-common');
 const logger = utils.getLogger('Chaincode.js');
 const Policy = require('./Policy.js');
 const CollectionConfig = require('./SideDB.js');
 const fabprotos = require('fabric-protos').protos;
-
-
 
 
 /**
@@ -446,8 +444,8 @@ const Chaincode = class {
 					logger.debug('%s - hash values are the same :: %s', method, hash);
 				} else {
 					const msg = utils.format('The install for chaincode: %s version: ' +
-					'%s did not return the same hash value of %s, value was %s',
-					this._name, this._version, this._hash, hash);
+						'%s did not return the same hash value of %s, value was %s',
+						this._name, this._version, this._hash, hash);
 					logger.error(msg);
 					throw new Error(msg);
 				}
@@ -550,11 +548,11 @@ const Chaincode = class {
 	 */
 	toString() {
 		return 'Chaincode : {' +
-			'name : ' +  this._name +
-			', version : ' +  this._version +
+			'name : ' + this._name +
+			', version : ' + this._version +
 			', sequence : ' + this._sequence +
 			', hash : ' + this._hash +
-		'}';
+			'}';
 	}
 
 	static translateCCType(type) {

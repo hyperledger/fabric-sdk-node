@@ -15,7 +15,8 @@
 'use strict';
 
 const fabprotos = require('fabric-protos');
-const utils = require('./utils.js');
+const {Utils:utils} = require('fabric-common');
+
 const logger = utils.getLogger('BlockDecoder.js');
 
 /**

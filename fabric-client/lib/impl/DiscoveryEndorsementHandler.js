@@ -10,7 +10,7 @@
 const Long = require('long');
 const util = require('util');
 
-const utils = require('../utils');
+const {Utils: utils} = require('fabric-common');
 const EndorsementHandler = require('../EndorsementHandler');
 const logger = utils.getLogger('DiscoveryEndorsementHandler');
 const client_utils = require('fabric-client/lib/client-utils.js');
@@ -315,6 +315,7 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 			}
 		});
 	}
+
 	/*
 	 * utility method that will take a group of peers and modify the order
 	 * of the peers within the group based on the user's requirements
@@ -459,7 +460,7 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 
 					return result;
 				}
-				logger.debug('%s - compare not available (%s) (%s)', method, typeof(a.ledger_height), typeof(b.ledger_height));
+				logger.debug('%s - compare not available (%s) (%s)', method, typeof (a.ledger_height), typeof (b.ledger_height));
 
 				return 1;
 			});

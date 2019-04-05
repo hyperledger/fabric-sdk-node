@@ -10,7 +10,7 @@
 // Prerequisite: a chaincode reading/writing private data, install-channel.js and join-channels.js
 'use strict';
 
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const logger = utils.getLogger('E2E private-data');
 
 const tape = require('tape');

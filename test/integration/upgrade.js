@@ -14,7 +14,7 @@ const path = require('path');
 const fs = require('fs');
 
 const Client = require('fabric-client');
-const utils = require('fabric-client/lib/utils.js');
+const {Utils:utils} = require('fabric-common');
 const testUtil = require('../unit/util.js');
 const e2eUtils = require('./e2e/e2eUtils.js');
 const logger = utils.getLogger('upgrade-chaincode');

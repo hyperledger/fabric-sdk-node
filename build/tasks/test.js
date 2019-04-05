@@ -79,7 +79,7 @@ gulp.task('pre-test', () => {
 		'fabric-ca-client/lib/FabricCAClientImpl.js',
 		'fabric-ca-client/lib/helper.js',
 		'fabric-ca-client/lib/IdentityService.js',
-		'fabric-ca-client/lib/AffiliationService.js',
+		'fabric-ca-client/lib/AffiliationService.js'
 	]);
 });
 
@@ -116,7 +116,7 @@ gulp.task('docker-ready', ['docker-clean'], shell.task([
 gulp.task('lint', ['eslint', 'tslint']);
 
 gulp.task('compile', shell.task([
-	'npm run compile',
+	'npm run compile'
 ], {
 	verbose: true, // so we can see the docker command output
 	ignoreErrors: false // once compile failed, throw error
@@ -143,7 +143,6 @@ gulp.task('run-test-mocha', (done) => {
 	const tasks = ['mocha-fabric-common', 'mocha-fabric-ca-client', 'mocha-fabric-client', 'mocha-fabric-network', 'mocha-fabric-protos'];
 	runSequence(...tasks, done);
 });
-
 gulp.task('mocha-fabric-common',
 	() => {
 		return gulp.src(['./fabric-common/test/**/*.js'], {read: false})
@@ -206,19 +205,19 @@ gulp.task('run-test-scenario', (done) => {
 // Main test method to run all test suites
 // - lint, unit first, then FV, then scenario
 gulp.task('run-test', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'docs', 'test-mocha', 'run-tape-unit', 'test-fv-only'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'compile', 'lint', 'docs', 'test-mocha', 'run-tape-unit', 'test-fv-only'];
 	runSequence(...tasks, done);
 });
 
 // fabric end-to-end test
 gulp.task('run-end-to-end', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'run-tape-e2e'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'compile', 'run-tape-e2e'];
 	runSequence(...tasks, done);
 });
 
 // Run all non-integration tests
 gulp.task('run-test-headless', (done) => {
-	const tasks = ['clean-up', 'pre-test', 'ca', 'lint', 'test-mocha', 'run-tape-unit'];
+	const tasks = ['clean-up', 'pre-test', 'lint', 'test-mocha', 'run-tape-unit'];
 	runSequence(...tasks, done);
 });
 
@@ -232,7 +231,7 @@ gulp.task('run-tape-unit',
 			'test/unit/**/*.js',
 			'!test/unit/constants.js',
 			'!test/unit/util.js',
-			'!test/unit/logger.js',
+			'!test/unit/logger.js'
 		]))
 			.pipe(tape({
 				reporter: tapColorize()
@@ -302,7 +301,7 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 			'test/integration/token.js',
 
 			// Typescript
-			'test/typescript/test.js',
+			'test/typescript/test.js'
 		]))
 			.pipe(tape({
 				reporter: tapColorize()
@@ -319,21 +318,21 @@ function shouldRunTests(tests) {
 	if (arch.indexOf('s390') === 0) {
 		tests.push('!test/unit/pkcs11.js');
 		tests.push('!test/integration/network-e2e/e2e-hsm.js');
-	// check to see if they want to test PKCS11
+		// check to see if they want to test PKCS11
 	} else if (typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() === 'true') {
 		tests.push('!test/integration/network-e2e/e2e.js');
-	// check to see if they do not want to test PKCS11
+		// check to see if they do not want to test PKCS11
 	} else if (typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() === 'false') {
 		tests.push('!test/unit/pkcs11.js');
 		tests.push('!test/integration/network-e2e/e2e-hsm.js');
-	// default is to run the PKCS11 tests so we need to disable the non HSM version
+		// default is to run the PKCS11 tests so we need to disable the non HSM version
 	} else {
 		tests.push('!test/integration/network-e2e/e2e.js');
 	}
 	// keep the java tests
 	if (typeof process.env.JAVA_TESTS === 'string' && process.env.JAVA_TESTS.toLowerCase() === 'true') {
-	// disable when z390 or when JAVA tests is off
-	} else 	if ((arch.indexOf('s390') === 0) || (typeof process.env.JAVA_TESTS === 'string' && process.env.JAVA_TESTS.toLowerCase() === 'false')) {
+		// disable when z390 or when JAVA tests is off
+	} else if ((arch.indexOf('s390') === 0) || (typeof process.env.JAVA_TESTS === 'string' && process.env.JAVA_TESTS.toLowerCase() === 'false')) {
 		tests.push('!test/integration/javachaincode/e2e.js');
 	}
 
