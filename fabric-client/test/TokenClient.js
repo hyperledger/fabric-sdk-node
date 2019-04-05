@@ -46,7 +46,7 @@ describe('TokenClient', () => {
 	let client;
 	let tokenClient;
 
-	const testowner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('testowner')};
+	const testowner = Buffer.from('testowner');
 	const txId = sinon.createStubInstance(TransactionID);
 	const channelId = 'mychannel';
 

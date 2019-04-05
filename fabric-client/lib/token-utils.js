@@ -36,7 +36,8 @@ module.exports.buildIssueCommand = (request) => {
 	// iterate params to populate tokensToIssue
 	const tokensToIssue = [];
 	params.forEach((param) => {
-		const token = {owner: param.owner, type: param.type, quantity: param.quantity};
+		const owner = {raw: param.owner, type: fabprotos.token.TokenOwner_MSP_IDENTIFIER};
+		const token = {owner: owner, type: param.type, quantity: param.quantity};
 		tokensToIssue.push(token);
 	});
 
@@ -62,7 +63,8 @@ module.exports.buildTransferCommand = (request) => {
 	// iterate params to populate transfer shares
 	const shares = [];
 	params.forEach((param) => {
-		const share = {recipient: param.owner, quantity: param.quantity};
+		const owner = {raw: param.owner, type: fabprotos.token.TokenOwner_MSP_IDENTIFIER};
+		const share = {recipient: owner, quantity: param.quantity};
 		shares.push(share);
 	});
 

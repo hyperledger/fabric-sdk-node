@@ -90,12 +90,12 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// build the request for user2 to issue tokens to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {type: 0, raw: user1Identity.serialize()},
+			owner: user1Identity.serialize(),
 			type: 'abc123',
 			quantity: '200'
 		};
 		const param2 = {
-			owner: {type: 0, raw: user1Identity.serialize()},
+			owner: user1Identity.serialize(),
 			type: 'ibm',
 			quantity: '200'
 		};
@@ -125,7 +125,7 @@ test('\n\n***** Token end-to-end flow (green path): issue, transfer, redeem and 
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			owner: {type: 0, raw: user2Identity.serialize()},
+			owner: user2Identity.serialize(),
 			quantity: transferToken.quantity,
 		};
 		request = {
@@ -213,7 +213,7 @@ test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {raw: user1Identity.serialize()},
+			owner: user1Identity.serialize(),
 			type: 'abc123',
 			quantity: '210'
 		};
@@ -238,7 +238,7 @@ test('\n\n***** Token end-to-end flow: double spending fails *****\n\n', async (
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			owner: {raw: user2Identity.serialize()},
+			owner: user2Identity.serialize(),
 			quantity: transferToken.quantity
 		};
 		request = {
@@ -303,7 +303,7 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {raw: user1Identity.serialize()},
+			owner: user1Identity.serialize(),
 			type: 'abc123',
 			quantity: '210'
 		};
@@ -328,7 +328,7 @@ test('\n\n***** Token end-to-end flow: non owner transfer fails *****\n\n', asyn
 		// token is owned by user1, but user2 attempts to transfer the token, should fail
 		txId = user2TokenClient.getClient().newTransactionID();
 		param = {
-			owner: {raw: user2Identity.serialize()},
+			owner: user2Identity.serialize(),
 			quantity: '10'
 		};
 		request = {
@@ -372,7 +372,7 @@ test('\n\n***** Token end-to-end flow: transfer with remaining balance succeeds 
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {raw: user1Identity.serialize()},
+			owner: user1Identity.serialize(),
 			type: 'abc123',
 			quantity: '210'
 		};
@@ -397,7 +397,7 @@ test('\n\n***** Token end-to-end flow: transfer with remaining balance succeeds 
 		// build request for user1 to transfer transfer token to user2
 		txId = user1TokenClient.getClient().newTransactionID();
 		param = {
-			owner: {raw: user2Identity.serialize()},
+			owner: user2Identity.serialize(),
 			quantity: '10'
 		};
 		request = {
@@ -451,7 +451,7 @@ test('\n\n***** Token end-to-end flow: invalid redeem amount fails *****\n\n', a
 		// build request for user2 to issue a token to user1
 		let txId = user2TokenClient.getClient().newTransactionID();
 		let param = {
-			owner: {raw: user1Identity.serialize()},
+			owner: user1Identity.serialize(),
 			type: 'abc123',
 			quantity: '100'
 		};
@@ -562,8 +562,9 @@ function validateTransactionEnvelope(txEnvelope, commandName, expectedInputs, ex
 	for (let i = 0; i < expectedOutputs.length; i++) {
 		// fabtoken uses hex string in token transaction, so convert expectedQuantity to hex string
 		const expectedQuantityToHex = tokenUtils.toHex(parseInt(expectedOutputs[i].quantity));
+		// list tokens returns owner in TokenOwner format {raw: xxx}, so get raw field.
+		t.deepEqual(action_data.outputs[i].owner.raw, expectedOutputs[i].owner, 'Validationing owner in token transaction');
 		t.deepEqual(action_data.outputs[i].quantity, expectedQuantityToHex, 'Validationing quantity in token transaction');
-		t.deepEqual(action_data.outputs[i].owner, expectedOutputs[i].owner, 'Validationing owner in token transaction');
 		t.deepEqual(action_data.outputs[i].type, expectedOutputs[i].type, 'Validationing type in token transaction');
 	}
 	if (expectedInputs) {

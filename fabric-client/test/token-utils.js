@@ -47,7 +47,7 @@ describe('token-utils', () => {
 
 		beforeEach(() => {
 			// prepare token request
-			const owner = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('test-owner')};
+			const owner = Buffer.from('test-owner');
 			param = {owner: owner, type: 'abc123', quantity: '210'};
 			request = {params: [param], txId: txId, tokenIds: tokenIds};
 		});
@@ -239,8 +239,8 @@ describe('token-utils', () => {
 	describe('#buildIssueCommand', () => {
 		beforeEach(() => {
 			// prepare token request for issue
-			const owner1 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner1')};
-			const owner2 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner2')};
+			const owner1 = Buffer.from('owner1');
+			const owner2 = Buffer.from('owner2');
 			param1 = {owner: owner1, type: 'abc123', quantity: '210'};
 			param2 = {owner: owner2, type: 'horizon', quantity: '300'};
 			request = {
@@ -249,8 +249,10 @@ describe('token-utils', () => {
 			};
 
 			// create expected command based on request
+			const token1 = {owner: {raw: owner1, type:0}, type: 'abc123', quantity: '210'};
+			const token2 = {owner: {raw: owner2, type:0}, type: 'horizon', quantity: '300'};
 			const issueRequest = new fabprotos.token.IssueRequest();
-			issueRequest.setTokensToIssue([param1, param2]);
+			issueRequest.setTokensToIssue([token1, token2]);
 			expectedCommand = new fabprotos.token.Command();
 			expectedCommand.set('issue_request', issueRequest);
 		});
@@ -265,8 +267,8 @@ describe('token-utils', () => {
 		beforeEach(() => {
 			// prepare token request for transfer
 			const tokenId = {tx_id: 'mock_tx_id', index: 0};
-			const owner1 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner1')};
-			const owner2 = {type: fabprotos.token.TokenOwner_MSP_IDENTIFIER, raw: Buffer.from('owner2')};
+			const owner1 = Buffer.from('owner1');
+			const owner2 = Buffer.from('owner2');
 			param1 = {owner: owner1, quantity: '100'};
 			param2 = {owner: owner2, quantity: '200'};
 
@@ -279,8 +281,8 @@ describe('token-utils', () => {
 			// create expected command based on request
 			const transferRequest = new fabprotos.token.TransferRequest();
 			transferRequest.setTokenIds([tokenId]);
-			const share1 = {recipient: param1.owner, quantity: param1.quantity};
-			const share2 = {recipient: param2.owner, quantity: param2.quantity};
+			const share1 = {recipient: {raw: owner1, type: 0}, quantity: param1.quantity};
+			const share2 = {recipient: {raw: owner2, type:0}, quantity: param2.quantity};
 			transferRequest.setShares([share1, share2]);
 			expectedCommand = new fabprotos.token.Command();
 			expectedCommand.set('transfer_request', transferRequest);

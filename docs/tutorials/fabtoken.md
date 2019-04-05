@@ -70,12 +70,12 @@ const txId = client.newTransactionID();
 
 // create two parameters for issue, one for user1 and one for user2
 const param1 = {
-	owner: {raw: user1.getIdentity().serialize(), type: 0},
+	owner: user1.getIdentity().serialize(),
 	type: 'USD',
 	quantity: '500',
 };
 const param2 = {
-	owner: {raw: user2.getIdentity().serialize(), type: 0},
+	owner: user2.getIdentity().serialize(),
 	type: 'EURO',
 	quantity: '300',
 };
@@ -124,11 +124,11 @@ const txId = client1.newTransactionID();
 
 // create two parameters, where param1 is to transfer 300 to user2 and param2 is to transfer the remaining 200 to user1.
 const param1 = {
-	owner: {raw: user2.getIdentity().serialize(), type:0},
+	owner: user2.getIdentity().serialize(),
 	quantity: '300',
 };
 const param2 = {
-	owner: {raw: user1.getIdentity().serialize(), type:0},
+	owner: user1.getIdentity().serialize(),
 	quantity: '200',
 };
 
