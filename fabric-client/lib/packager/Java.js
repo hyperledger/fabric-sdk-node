@@ -33,12 +33,12 @@ class JavaPackager extends BasePackager {
 	 * @returns {Promise.<byte[]>}
 	 */
 	async package(chaincodePath, metadataPath) {
-		logger.debug('packaging Java source from %s', chaincodePath);
+		logger.debug(`packaging Java source from ${chaincodePath}`);
 
 		const buffer = new sbuf.WritableStreamBuffer();
 		let descriptors = await this.findSource(chaincodePath);
 		if (metadataPath) {
-			logger.debug('packaging metadata files from %s', metadataPath);
+			logger.debug(`packaging metadata files from ${metadataPath}`);
 
 			const metaDescriptors = await super.findMetadataDescriptors(metadataPath);
 			descriptors = descriptors.concat(metaDescriptors);
@@ -71,7 +71,7 @@ class JavaPackager extends BasePackager {
 				descriptors.push(desc);
 			});
 		} else {
-			logger.debug(' No files found at this path %s', filePath);
+			logger.debug(` No files found at this path ${filePath}`);
 		}
 
 		return descriptors;

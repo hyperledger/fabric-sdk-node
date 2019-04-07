@@ -10,7 +10,8 @@
 const util = require('util');
 const fabprotos = require('fabric-protos');
 
-const {Utils: utils, MSP} = require('fabric-common');
+const {Utils: utils} = require('fabric-common');
+const MSP = require('./Msp.js');
 const logger = utils.getLogger('MSPManager.js');
 
 /**

@@ -32,8 +32,8 @@ class GolangPackager extends BasePackager {
 	 * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors.
 	 * @returns {Promise.<TResult>}
 	 */
-	package(chaincodePath, metadataPath) {
-		logger.debug('packaging GOLANG from %s', chaincodePath);
+	async package(chaincodePath, metadataPath) {
+		logger.debug(`packaging GOLANG from ${chaincodePath}`);
 
 		// Determine the user's $GOPATH
 		const goPath = process.env.GOPATH;
@@ -48,20 +48,15 @@ class GolangPackager extends BasePackager {
 
 		const buffer = new sbuf.WritableStreamBuffer();
 
-		return this.findSource(goPath, projDir).then((srcDescriptors) => {
-			if (metadataPath) {
-				return super.findMetadataDescriptors(metadataPath)
-					.then((metaDescriptors) => {
-						return srcDescriptors.concat(metaDescriptors);
-					});
-			} else {
-				return srcDescriptors;
-			}
-		}).then((descriptors) => {
-			return super.generateTarGz(descriptors, buffer);
-		}).then(() => {
-			return buffer.getContents();
-		});
+		const srcDescriptors = await this.findSource(goPath, projDir);
+
+		let descriptors = srcDescriptors;
+		if (metadataPath) {
+			const metaDescriptors = await super.findMetadataDescriptors(metadataPath);
+			descriptors = srcDescriptors.concat(metaDescriptors);
+		}
+		await super.generateTarGz(descriptors, buffer);
+		return buffer.getContents();
 	}
 
 	/**

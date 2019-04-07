@@ -7,8 +7,8 @@
 'use strict';
 
 const rewire = require('rewire');
-const CouchDBKeyValueStoreRW = rewire('fabric-common/lib/impl/CouchDBKeyValueStore');
-const CouchDBKeyValueStore = require('fabric-common/lib/impl/CouchDBKeyValueStore');
+const CouchDBKeyValueStoreRW = rewire('../../lib/impl/CouchDBKeyValueStore');
+const CouchDBKeyValueStore = require('../../lib/impl/CouchDBKeyValueStore');
 const CouchdbMock = require('mock-couch');
 
 const chai = require('chai');

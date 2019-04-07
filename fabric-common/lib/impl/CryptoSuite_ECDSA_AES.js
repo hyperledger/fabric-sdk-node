@@ -8,7 +8,7 @@
 'use strict';
 
 // requires
-const {CryptoAlgorithms, CryptoSuite, HashPrimitives, Utils: utils} = require('fabric-common');
+const {CryptoAlgorithms, CryptoSuite, HashPrimitives, Utils: utils} = require('../../');
 const elliptic = require('elliptic');
 const EC = elliptic.ec;
 const jsrsa = require('jsrsasign');

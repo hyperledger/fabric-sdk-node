@@ -33,8 +33,8 @@ class NodePackager extends BasePackager {
 	 * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors
 	 * @returns {Promise.<TResult>}
 	 */
-	package(chaincodePath, metadataPath) {
-		logger.debug('packaging Node from %s', chaincodePath);
+	async package(chaincodePath, metadataPath) {
+		logger.debug(`packaging Node from ${chaincodePath}`);
 
 		// Compose the path to the chaincode project directory
 		const projDir = chaincodePath;
@@ -45,20 +45,14 @@ class NodePackager extends BasePackager {
 		// will need to assemble sources from multiple packages
 
 		const buffer = new sbuf.WritableStreamBuffer();
-		return this.findSource(projDir).then((srcDescriptors) => {
-			if (metadataPath) {
-				return super.findMetadataDescriptors(metadataPath)
-					.then((metaDescriptors) => {
-						return srcDescriptors.concat(metaDescriptors);
-					});
-			} else {
-				return srcDescriptors;
-			}
-		}).then((descriptors) => {
-			return super.generateTarGz(descriptors, buffer);
-		}).then(() => {
-			return buffer.getContents();
-		});
+		const srcDescriptors = await this.findSource(projDir);
+		let descriptors = srcDescriptors;
+		if (metadataPath) {
+			const metaDescriptors = await super.findMetadataDescriptors(metadataPath);
+			descriptors = srcDescriptors.concat(metaDescriptors);
+		}
+		await super.generateTarGz(descriptors, buffer);
+		return buffer.getContents();
 	}
 
 	/**
@@ -68,36 +62,35 @@ class NodePackager extends BasePackager {
 	 * @param filePath
 	 * @returns {Promise}
 	 */
-	findSource(filePath) {
-		return walk({
+	async findSource(filePath) {
+		let files = await walk({
 			path: filePath,
 			// applies filtering based on the same rules as "npm publish":
 			// if .npmignore exists, uses rules it specifies
 			ignoreFiles: ['.npmignore'],
 			// follow symlink dirs
 			follow: true
-		}).then((files) => {
-			const descriptors = [];
-
-			if (!files) {
-				files = [];
-			}
-
-			// ignore the node_modules folder by default
-			files = files.filter(f => f.indexOf('node_modules') !== 0);
-
-			files.forEach((entry) => {
-				const desc = {
-					name: path.join('src', entry).split('\\').join('/'), // for windows style paths
-					fqp: path.join(filePath, entry)
-				};
-
-				logger.debug('adding entry', desc);
-				descriptors.push(desc);
-			});
-
-			return descriptors;
 		});
+		const descriptors = [];
+
+		if (!files) {
+			files = [];
+		}
+
+		// ignore the node_modules folder by default
+		files = files.filter(f => f.indexOf('node_modules') !== 0);
+
+		files.forEach((entry) => {
+			const desc = {
+				name: path.join('src', entry).split('\\').join('/'), // for windows style paths
+				fqp: path.join(filePath, entry)
+			};
+
+			logger.debug('adding entry', desc);
+			descriptors.push(desc);
+		});
+
+		return descriptors;
 	}
 }
 

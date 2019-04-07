@@ -7,7 +7,7 @@
 
 'use strict';
 
-const {Key} = require('fabric-common');
+const {Key} = require('../../../');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 

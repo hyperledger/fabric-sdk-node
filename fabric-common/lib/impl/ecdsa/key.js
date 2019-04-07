@@ -7,7 +7,7 @@
 
 'use strict';
 
-const {HashPrimitives, Key, Utils: utils} = require('fabric-common');
+const {HashPrimitives, Key, Utils: utils} = require('../../../');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 const KEYUTIL = jsrsa.KEYUTIL;

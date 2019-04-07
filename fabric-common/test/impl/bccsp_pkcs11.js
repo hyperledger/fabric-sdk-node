@@ -7,7 +7,7 @@
 'use strict';
 
 const rewire = require('rewire');
-const PKCS11_Rewire = rewire('../../../fabric-common/lib/impl/bccsp_pkcs11');
+const PKCS11_Rewire = rewire('../../lib/impl/bccsp_pkcs11');
 
 const chai = require('chai');
 chai.should();

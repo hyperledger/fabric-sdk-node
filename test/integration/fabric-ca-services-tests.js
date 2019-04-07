@@ -13,7 +13,7 @@
 // the fabric-ca-client package by editing build/tasks/ca.js
 // ///////////////////////////////////////////////////////////////
 
-const {Utils: utils, Signer, SigningIdentity, MSP, User} = require('fabric-common');
+const {Utils: utils, Signer, SigningIdentity, User} = require('fabric-common');
 const logger = utils.getLogger('integration.client');
 
 const tape = require('tape');
@@ -85,13 +85,10 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 		}).then((pubKey) => {
 			t.pass('Successfully imported public key from the resulting enrollment certificate');
 
-			const msp = new MSP({
-				id: ORGS[userOrg].mspid,
-				cryptoSuite: caService.getCryptoSuite()
-			});
+			const cryptoSuite = caService.getCryptoSuite();
+			const id = ORGS[userOrg].mspid;
 
-			signingIdentity = new SigningIdentity(eResult.certificate, pubKey, msp.getId(), msp.cryptoSuite,
-				new Signer(msp.cryptoSuite, eResult.key));
+			signingIdentity = new SigningIdentity(eResult.certificate, pubKey, id, cryptoSuite, new Signer(cryptoSuite, eResult.key));
 			return timeOutTest(signingIdentity, t);
 		}, (err) => {
 			t.fail('Failed to import the public key from the enrollment certificate. ' + err.stack ? err.stack : err);

@@ -7,7 +7,7 @@
 'use strict';
 
 
-const {Config, CryptoAlgorithms, Identity, SigningIdentity, Utils: utils, MSP} = require('fabric-common');
+const {Config, CryptoAlgorithms, Identity, SigningIdentity, Utils: utils} = require('fabric-common');
 const path = require('path');
 const fs = require('fs');
 
@@ -15,7 +15,8 @@ require('chai');
 const sinon = require('sinon');
 
 const rewire = require('rewire');
-const MspRewire = rewire('../../../fabric-common/lib/Msp.js');
+const MSP = require('../../lib/msp/Msp.js');
+const MspRewire = rewire('../../lib/msp/Msp.js');
 
 const certificateAsPEM = fs.readFileSync(path.join(__dirname, '..', 'data', 'cert.pem')).toString('utf8');
 

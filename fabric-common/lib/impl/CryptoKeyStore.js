@@ -6,7 +6,7 @@
 */
 
 'use strict';
-const {Utils: utils} = require('fabric-common');
+const {Utils: utils} = require('../../');
 const jsrsasign = require('jsrsasign');
 const KEYUTIL = jsrsasign.KEYUTIL;
 

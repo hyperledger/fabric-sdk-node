@@ -7,7 +7,7 @@
 
 'use strict';
 
-const {KeyValueStore, Utils: utils} = require('fabric-common');
+const {KeyValueStore, Utils: utils} = require('../../');
 const fs = require('fs-extra');
 const path = require('path');
 

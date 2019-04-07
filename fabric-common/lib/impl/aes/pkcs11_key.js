@@ -7,7 +7,7 @@
 
 'use strict';
 
-const {Key} = require('fabric-common');
+const {Key} = require('../../../');
 
 const PKCS11_AES_KEY = class extends Key {
 

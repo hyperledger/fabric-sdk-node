@@ -7,7 +7,7 @@
 
 'use strict';
 
-const {KeyValueStore, Utils: utils} = require('fabric-common');
+const {KeyValueStore, Utils: utils} = require('../../');
 const util = require('util');
 const nano = require('nano');
 

@@ -7,7 +7,7 @@
 'use strict';
 
 const rewire = require('rewire');
-const ECDSA_KEY_REWIRE = rewire('../../../../fabric-common/lib/impl/ecdsa/key');
+const ECDSA_KEY_REWIRE = rewire('../../../lib/impl/ecdsa/key');
 const jsrsa = require('jsrsasign');
 const KEYUTIL = jsrsa.KEYUTIL;
 

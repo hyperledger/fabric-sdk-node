@@ -16,7 +16,6 @@ const SigningIdentity = require('./lib/SigningIdentity');
 const Utils = require('./lib/Utils');
 const User = require('./lib/User');
 const BaseClient = require('./lib/BaseClient');
-const MSP = require('./lib/Msp');
 
 module.exports = {
 	Config,
@@ -30,6 +29,5 @@ module.exports = {
 	SigningIdentity,
 	Utils,
 	User,
-	BaseClient,
-	MSP
+	BaseClient
 };

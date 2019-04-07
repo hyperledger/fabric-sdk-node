@@ -37,8 +37,10 @@ describe('Java', () => {
 		revert = [];
 		sandbox = sinon.createSandbox();
 		FakeLogger = {
-			error: () => {},
-			debug: () => {}
+			error: () => {
+			},
+			debug: () => {
+			}
 		};
 		sinon.stub(FakeLogger);
 		revert.push(Java.__set__('logger', FakeLogger));
@@ -65,14 +67,14 @@ describe('Java', () => {
 			java.findSource = findSourceStub;
 		});
 
-		it('should return the package when given the metadata path', async() => {
+		it('should return the package when given the metadata path', async () => {
 			findSourceStub.resolves(['descriptor2']);
 			await java.package('ccpath', 'metadatapath');
 			sinon.assert.calledWith(generateTarGzStub, ['descriptor2', 'descriptor1'], new bufferStub());
 			sinon.assert.called(getContentsStub);
 		});
 
-		it('should return the package when not given the metadata path', async() => {
+		it('should return the package when not given the metadata path', async () => {
 			findSourceStub.resolves(['descriptor2']);
 			await java.package('ccpath');
 			sinon.assert.calledWith(generateTarGzStub, ['descriptor2'], new bufferStub());
@@ -88,17 +90,18 @@ describe('Java', () => {
 			revert.push(Java.__set__('walk', walkStub));
 		});
 
-		it('should return a list of descriptors if files are returned', async() => {
+		it('should return a list of descriptors if files are returned', async () => {
 			walkStub.resolves(['FILE_1']);
 			const descriptors = await java.findSource('path');
 			sinon.assert.calledWith(FakeLogger.debug, 'adding descriptor entry', {fqp: 'path/FILE_1', name: 'src/FILE_1'});
 			descriptors.should.deep.equal([{fqp: 'path/FILE_1', name: 'src/FILE_1'}]);
 		});
 
-		it('should return a list of descriptors if no files are returned', async() => {
+		it('should return a list of descriptors if no files are returned', async () => {
 			walkStub.resolves();
-			const descriptors = await java.findSource('path');
-			sinon.assert.calledWith(FakeLogger.debug, ' No files found at this path %s', 'path');
+			const _path = 'path';
+			const descriptors = await java.findSource(_path);
+			sinon.assert.calledWith(FakeLogger.debug, ` No files found at this path ${_path}`);
 			descriptors.should.deep.equal([]);
 		});
 	});

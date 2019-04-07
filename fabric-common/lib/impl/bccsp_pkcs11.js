@@ -7,7 +7,7 @@
 
 'use strict';
 
-const {CryptoAlgorithms, CryptoSuite, HashPrimitives, Utils: utils} = require('fabric-common');
+const {CryptoAlgorithms, CryptoSuite, HashPrimitives, Utils: utils} = require('../../');
 
 const aesKey = require('./aes/pkcs11_key.js');
 const ecdsaKey = require('./ecdsa/pkcs11_key.js');

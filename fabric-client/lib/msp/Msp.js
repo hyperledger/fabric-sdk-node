@@ -5,10 +5,10 @@
 */
 'use strict';
 
-const CryptoAlgorithms = require('./CryptoAlgorithms');
-const Identity = require('./Identity');
-const SigningIdentity = require('./SigningIdentity');
-const utils = require('./Utils');
+const CryptoAlgorithms = require('fabric-common/lib/CryptoAlgorithms');
+const Identity = require('fabric-common/lib/Identity');
+const SigningIdentity = require('fabric-common/lib/SigningIdentity');
+const utils = require('fabric-common/lib/Utils');
 const logger = utils.getLogger('msp.js');
 
 const fabprotos = require('fabric-protos');
