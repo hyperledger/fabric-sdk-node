@@ -3,8 +3,8 @@ This tutorial illustrates how to perform FabToken operations using
 the Node.js fabric-client SDK. FabToken is a new feature in
 Hyperledger Fabric 2.0 Alpha and fabric-client 2.0 Alpha.
 
-Refer to the following document to understand the concepts and functions in FabToken.
-* FabToken document (link not available yet)
+For more information about tokens on Hyperledger Fabric, see
+[Using Fabtoken](https://hyperledger-fabric.readthedocs.io/en/latest/token/FabToken.html)
 
 For more information on:
 * getting started with Hyperledger Fabric see
