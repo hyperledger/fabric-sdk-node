@@ -511,8 +511,11 @@ async function timeOutTest(signingIdentity, t) {
 	} catch (e) {
 		end = Date.now();
 		t.equal(Math.floor((end - start) / 1000), 5, 'should have duration roughly equals 5000');
-		t.equal(e.message, 'Calling /aMethod endpoint failed, READ Timeout', 'should throw error after SO_TIMEOUT');
+		if (e.message.includes('endpoint failed')) {
+			t.pass('Successfully throw error after SO_TIMEOUT');
+		} else {
+			t.fail('did not throw error after SO_TIMEOUT');
+		}
 		mockServer.close();
-		t.pass('Successfully tested SO_TIMEOUT');
 	}
 }
