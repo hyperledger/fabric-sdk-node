@@ -21,6 +21,7 @@
 		"test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
 	},
 	"dependencies": {
+		"elliptic": "^6.2.3",
 		"winston": "^2.2.0",
 		"nconf": "^0.10.0",
 		"nano": "^6.4.4",
