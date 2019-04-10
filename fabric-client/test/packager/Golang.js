@@ -15,14 +15,13 @@
 'use strict';
 
 const rewire = require('rewire');
-const Golang = rewire('../../lib/packager/Golang');
-
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const sinon = require('sinon');
 
 describe('Golang', () => {
+	const Golang = rewire('../../lib/packager/Golang');
 
 	let revert;
 	let sandbox;

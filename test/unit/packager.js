@@ -3,7 +3,7 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
+/* eslint-disable no-console */
 'use strict';
 
 const tape = require('tape');
@@ -117,6 +117,7 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 				}
 
 				const checkPath = path.join(destDir, 'src', 'github.com', 'example_cc', 'example_cc.go');
+				console.log('***** checkPath :: ' + checkPath);
 				t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "chaincode/github.com/example_cc/example_cc.go" file');
 
 				t.end();

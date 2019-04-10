@@ -153,7 +153,7 @@ async function existing_channels(ccp, tls) {
 				channelNames.push(channelObj.channel_id);
 			});
 		}
-		console.log('Discovered channels: ', channelNames);
+		console.log('Discovered channels: ', channelNames); // eslint-disable-line
 		return channelNames;
 	} catch (err) {
 		testUtil.logError('Failed to extract existing channels ' + (err.stack ? err.stack : err));

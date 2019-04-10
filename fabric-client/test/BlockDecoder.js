@@ -163,7 +163,7 @@ describe('BlockDecoder', () => {
 		it('should throw error if not given a byte buffer', () => {
 			(() => {
 				BlockDecoderRewire.decodeTransaction(new Uint8Array(2));
-			}).should.throw(/Proccesed transaction data is not a byte buffer/);
+			}).should.throw(/Processed transaction data is not a byte buffer/);
 		});
 
 		it('should generate a processed transaction', () => {

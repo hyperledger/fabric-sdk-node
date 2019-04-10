@@ -16,28 +16,27 @@ option go_package = "github.com/hyperledger/fabric/protos/peer/lifecycle";
 // InstallChaincodeArgs is the message used as the argument to
 // '_lifecycle.InstallChaincode'
 message InstallChaincodeArgs {
-    string name = 1;
-    string version = 2;
-    bytes chaincode_install_package = 3; // This should be a marshaled peer.ChaincodeInstallPackage
+    bytes chaincode_install_package = 1; // This should be a marshaled lifecycle.ChaincodePackage
 }
 
 // InstallChaincodeArgs is the message returned by
 // '_lifecycle.InstallChaincode'
 message InstallChaincodeResult {
-    bytes hash = 1;
+    string package_id = 1;
+    string label = 2;
 }
 
 // QueryInstalledChaincodeArgs is the message used as arguments
 // '_lifecycle.QueryInstalledChaincode'
 message QueryInstalledChaincodeArgs {
-    string name = 1;
-    string version = 2;
+    string package_id = 1;
 }
 
 // QueryInstalledChaincodeResult is the message returned by
 // '_lifecycle.QueryInstalledChaincode'
 message QueryInstalledChaincodeResult {
-    bytes hash = 1;
+    string package_id = 1;
+    string label = 2;
 }
 
 // QueryInstalledChaincodesArgs currently is an empty argument to
@@ -51,9 +50,8 @@ message QueryInstalledChaincodesArgs {
 // installed chaincodes.
 message QueryInstalledChaincodesResult {
     message InstalledChaincode {
-        string name = 1;
-        string version = 2;
-        bytes hash = 3;
+        string package_id = 1;
+        string label = 2;
     }
     repeated InstalledChaincode installed_chaincodes = 1;
 }
@@ -64,12 +62,25 @@ message ApproveChaincodeDefinitionForMyOrgArgs {
     int64 sequence = 1;
     string name = 2;
     string version = 3;
-    bytes hash = 4;
-    string endorsement_plugin = 5;
-    string validation_plugin = 6;
-    bytes validation_parameter = 7;
-    common.CollectionConfigPackage collections = 8;
-    bool init_required = 9;
+    string endorsement_plugin = 4;
+    string validation_plugin = 5;
+    bytes validation_parameter = 6;
+    common.CollectionConfigPackage collections = 7;
+    bool init_required = 8;
+    ChaincodeSource source = 9;
+}
+
+message ChaincodeSource {
+    message Unavailable {}
+
+    message Local {
+        string package_id = 1;
+    }
+
+    oneof Type {
+        Unavailable unavailable = 1;
+        Local local_package = 2;
+    }
 }
 
 // ApproveChaincodeDefinitionForMyOrgResult is the message returned by
@@ -84,18 +95,38 @@ message CommitChaincodeDefinitionArgs {
     int64 sequence = 1;
     string name = 2;
     string version = 3;
-    bytes hash = 4;
-    string endorsement_plugin = 5;
-    string validation_plugin = 6;
-    bytes validation_parameter = 7;
-    common.CollectionConfigPackage collections = 8;
-    bool init_required = 9;
+    string endorsement_plugin = 4;
+    string validation_plugin = 5;
+    bytes validation_parameter = 6;
+    common.CollectionConfigPackage collections = 7;
+    bool init_required = 8;
 }
 
 // CommitChaincodeDefinitionResult is the message returned by
 // `_lifecycle.CommitChaincodeDefinition`. Currently it returns
 // nothing, but may be extended in the future.
 message CommitChaincodeDefinitionResult {
+}
+
+// QueryApprovalStatusArgs is the message used as arguments to
+// `_lifecycle.QueryApprovalStatus`
+message QueryApprovalStatusArgs {
+    int64 sequence = 1;
+    string name = 2;
+    string version = 3;
+    string endorsement_plugin = 4;
+    string validation_plugin = 5;
+    bytes validation_parameter = 6;
+    common.CollectionConfigPackage collections = 7;
+    bool init_required = 8;
+}
+
+// QueryApprovalStatusResults is the message returned by
+// `_lifecycle.QueryApprovalStatus`. It returns a map of
+// orgs to their approval (true/false) for the definition
+// supplied as args
+message QueryApprovalStatusResults {
+    map<string, bool> approved = 1;
 }
 
 // QueryChaincodeDefinition is the message used as arguments to
@@ -109,12 +140,11 @@ message QueryChaincodeDefinitionArgs {
 message QueryChaincodeDefinitionResult {
     int64 sequence = 1;
     string version = 2;
-    bytes hash = 3;
-    string endorsement_plugin = 4;
-    string validation_plugin = 5;
-    bytes validation_parameter = 6;
-    common.CollectionConfigPackage collections = 7;
-    bool init_required = 8;
+    string endorsement_plugin = 3;
+    string validation_plugin = 4;
+    bytes validation_parameter = 5;
+    common.CollectionConfigPackage collections = 6;
+    bool init_required = 7;
 }
 
 // QueryNamespaceDefinitions is the message used as arguments to

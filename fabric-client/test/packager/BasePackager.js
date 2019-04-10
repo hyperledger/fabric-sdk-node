@@ -15,8 +15,6 @@
 'use strict';
 
 const rewire = require('rewire');
-const BasePackager = rewire('../../lib/packager/BasePackager');
-
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
@@ -24,22 +22,18 @@ const sinon = require('sinon');
 const should = chai.should();
 
 describe('BasePackager', () => {
+	const BasePackager = rewire('../../lib/packager/BasePackager');
 
 	let revert;
 	let sandbox;
 	let FakeLogger;
-
-	let Child;
 	let ValidChild;
 
 	beforeEach(() => {
 		revert = [];
 		sandbox = sinon.createSandbox();
-		Child = class extends BasePackager {};
 		ValidChild = class extends BasePackager {
-			package(chaincodePath, metadataPath) {
-				super.package(chaincodePath, metadataPath);
-			}
+			// no implementations
 		};
 		FakeLogger = {
 			error: () => {},
@@ -63,28 +57,55 @@ describe('BasePackager', () => {
 			}).should.throw(TypeError, 'Can not construct abstract class.');
 		});
 
-		it ('should throw an error if package isnt overriden', () => {
-			Child.prototype.constructor = function() {};
-			(() => {
-				new Child();
-			}).should.throw(TypeError, 'Please implement method package from child class');
-		});
+		// it ('should throw an error if package is not overridden', () => {
+		// 	Child.prototype.constructor = function() {};
+		// 	(() => {
+		// 		new Child();
+		// 	}).should.throw(TypeError, 'Please implement method package from child class');
+		// });
 	});
 
 	describe('#package', () => {
-		it('should throw a TypeError', () => {
+		it('should throw an implement Error', async () => {
 			const packager = new ValidChild();
 
-			(() => {
-				packager.package();
-			}).should.throw(TypeError, 'Please implement method package from child class');
+			try {
+				await packager.package();
+			} catch (err) {
+				err.message.should.equal('Please implement method package from child class');
+			}
 		});
 
-		it('should throw a TypeError', () => {
+		it('should throw an implement Error', async () => {
 			const packager = new ValidChild();
-			(() => {
-				packager.package('chaincode-path');
-			}).should.throw(TypeError, 'Please implement method package from child class');
+
+			try {
+				await packager.package('some parm');
+			} catch (err) {
+				err.message.should.equal('Please implement method package from child class');
+			}
+		});
+	});
+
+	describe('#finalPackage', () => {
+		it('should throw an implement Error', async () => {
+			const packager = new ValidChild();
+
+			try {
+				await packager.finalPackage();
+			} catch (err) {
+				err.message.should.equal('Please implement method finalPackage from child class');
+			}
+		});
+
+		it('should throw an implement Error', async () => {
+			const packager = new ValidChild();
+
+			try {
+				await packager.finalPackage('some parm');
+			} catch (err) {
+				err.message.should.equal('Please implement method finalPackage from child class');
+			}
 		});
 	});
 
@@ -184,7 +205,7 @@ describe('BasePackager', () => {
 		});
 	});
 
-	describe('#packEntry', () => {
+	describe('#packFileEntry', () => {
 		let packager;
 		let readFileSyncStub;
 		let entryStub;
@@ -199,7 +220,7 @@ describe('BasePackager', () => {
 		it('should throw an error if fs reads nothing', async() => {
 			readFileSyncStub.returns(null);
 			try {
-				await packager.packEntry({}, {fqp: 'file-name'});
+				await packager.packFileEntry({}, {fqp: 'file-name'});
 				should.fail();
 			} catch (err) {
 				err.should.be.instanceof(Error);
@@ -208,10 +229,10 @@ describe('BasePackager', () => {
 		});
 
 		it('should reject with error if pack.entry callback has an error', async() => {
-			readFileSyncStub.returns({size: 10});
+			readFileSyncStub.returns({length: 10});
 			entryStub.yields(new Error('Entry error'));
 			try {
-				await packager.packEntry({entry: entryStub}, {fqp: 'file-name'});
+				await packager.packFileEntry({entry: entryStub}, {fqp: 'file-name'});
 				should.fail();
 			} catch (err) {
 				err.should.be.instanceof(Error);
@@ -220,9 +241,9 @@ describe('BasePackager', () => {
 		});
 
 		it('should resolve with true if pack.entry callback does not have an error', async() => {
-			readFileSyncStub.returns({size: 10});
+			readFileSyncStub.returns({length: 10});
 			entryStub.yields();
-			const result = await packager.packEntry({entry: entryStub}, {fqp: 'file-name', name: 'name'});
+			const result = await packager.packFileEntry({entry: entryStub}, {fqp: 'file-name', name: 'name'});
 			const header = {
 				name: 'name',
 				size: 10,
@@ -231,7 +252,41 @@ describe('BasePackager', () => {
 				mtime: new Date(0),
 				ctime: new Date(0),
 			};
-			sinon.assert.calledWithMatch(entryStub, header, {size: 10}, Function);
+			sinon.assert.calledWithMatch(entryStub, header, {length: 10}, Function);
+			result.should.be.true;
+		});
+	});
+
+	describe('#packMemoryEntry', () => {
+		let packager;
+		let entryStub;
+		beforeEach(() => {
+			entryStub = sandbox.stub();
+			packager = new ValidChild();
+		});
+
+		it('should throw an error if bytes are null', async() => {
+			try {
+				await packager.packMemoryEntry({}, {bytes: null});
+				should.fail();
+			} catch (err) {
+				err.should.be.instanceof(Error);
+				err.message.should.equal('Missing content');
+			}
+		});
+
+		it('should resolve with true if pack.entry callback does not have an error', async() => {
+			entryStub.yields();
+			const result = await packager.packMemoryEntry({entry: entryStub}, {bytes: Buffer.from('abc'), name: 'name'});
+			const header = {
+				name: 'name',
+				size: 3,
+				mode: 0o100644,
+				atime: new Date(0),
+				mtime: new Date(0),
+				ctime: new Date(0),
+			};
+			sinon.assert.calledWithMatch(entryStub, header, {length: 3}, Function);
 			result.should.be.true;
 		});
 	});
@@ -244,7 +299,8 @@ describe('BasePackager', () => {
 		let pipeStub;
 		let createGzipStub;
 		let packStub;
-		let packEntryStub;
+		let packFileEntryStub;
+		let packMemoryEntryStub;
 		let finalizeStub;
 
 		let packager;
@@ -260,9 +316,11 @@ describe('BasePackager', () => {
 			revert.push(BasePackager.__set__('tar', tarStub));
 			zlibStub = {createGzip: createGzipStub};
 			revert.push(BasePackager.__set__('zlib', zlibStub));
-			packEntryStub = sandbox.stub();
+			packFileEntryStub = sandbox.stub();
+			packMemoryEntryStub = sandbox.stub();
 			packager = new ValidChild();
-			packager.packEntry = packEntryStub;
+			packager.packFileEntry = packFileEntryStub;
+			packager.packMemoryEntry = packMemoryEntryStub;
 		});
 
 		it('should reject with error if on error is called', async() => {
@@ -285,8 +343,8 @@ describe('BasePackager', () => {
 		});
 
 		it('should throw an error if a task promise is rejected', async() => {
-			packEntryStub.onCall(0).resolves();
-			packEntryStub.onCall(1).rejects();
+			packFileEntryStub.onCall(0).resolves();
+			packFileEntryStub.onCall(1).rejects();
 			try {
 				await packager.generateTarGz(['desc1', 'desc2'], 'dest');
 				should.fail();
@@ -295,10 +353,19 @@ describe('BasePackager', () => {
 			}
 		});
 
-		it('should resolve all promises and call finalize', (done) => {
+		it('should resolve all pack file promises and call finalize', (done) => {
 			finalizeStub.callsFake(done);
-			packEntryStub.resolves();
+			packFileEntryStub.resolves();
 			packager.generateTarGz(['desc1'], 'dest')
+				.then(() => {
+					sinon.assert.called(finalizeStub);
+				});
+		});
+
+		it('should resolve all pack memory promises and call finalize', (done) => {
+			finalizeStub.callsFake(done);
+			packMemoryEntryStub.resolves();
+			packager.generateTarGz([{bytes:'desc1'}], 'dest')
 				.then(() => {
 					sinon.assert.called(finalizeStub);
 				});

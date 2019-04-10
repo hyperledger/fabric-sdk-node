@@ -18,6 +18,7 @@ const Golang = require('./packager/Golang.js');
 const Car = require('./packager/Car.js');
 const Node = require('./packager/Node.js');
 const Java = require('./packager/Java.js');
+const Lifecycle = require('./packager/Lifecycle.js');
 const {Utils: utils} = require('fabric-common');
 
 const logger = utils.getLogger('packager');
@@ -32,9 +33,11 @@ const logger = utils.getLogger('packager');
  * @param {boolean} devmode -Set to true to use chaincode development mode
  * @param {string} metadataPath - Optional.
  *        The path to the top-level directory containing metadata descriptors
+ * @property {string} [goPath] - Optional. The path to be used with the golang
+ *        chaincode. Will default to the environment "GOPATH" value.
  * @returns {Promise} A promise for the data as a byte array
  */
-module.exports.package = async function (chaincodePath, chaincodeType, devmode, metadataPath) {
+module.exports.package = async function (chaincodePath, chaincodeType, devmode, metadataPath, goPath) {
 	logger.debug('packager: chaincodePath: %s, chaincodeType: %s, devmode: %s, metadataPath: %s',
 		chaincodePath, chaincodeType, devmode, metadataPath);
 
@@ -67,5 +70,43 @@ module.exports.package = async function (chaincodePath, chaincodeType, devmode, 
 			handler = new Golang(['.go', '.c', '.h', '.s']);
 	}
 
-	return handler.package(chaincodePath, metadataPath);
+	return handler.package(chaincodePath, metadataPath, goPath);
+};
+
+/**
+ * Utility function to do the final packaging of chaincode. This will create the tar ball
+ * needed by the Chaincode Lifecycle system chaincode. The content produced will be used
+ * as the InstallChaincodeArgs Chaincode Install Package bytes.
+ *
+ * The contents will be returned as a byte array.
+ *
+ * @param {string} label The label of the chaincode package
+ * @param {string} chaincodeType The chaincode type
+ * @param {Byte[]} packageBytes The chaincode package
+ * @param {string} chaincodePath Optional unless chaincodeType is "golang".
+ * @returns {Promise<byte[]>} A promise for the data as a byte array
+ */
+module.exports.finalPackage = async function (label, chaincodeType, packageBytes, chaincodePath) {
+	logger.debug('finalPackager - Start');
+
+	if (!label) {
+		throw new Error('Missing "label" parameter');
+	}
+
+	if (!chaincodeType) {
+		throw new Error('Missing "chaincodeType" parameter');
+	}
+
+	if (!packageBytes) {
+		throw new Error('Missing "packageBytes" parameter');
+	}
+
+	if (chaincodeType === 'golang') {
+		if (!chaincodePath) {
+			throw new Error('Missing "chaincodePath" parameter');
+		}
+	}
+
+	const handler = new Lifecycle();
+	return handler.finalPackage(label, chaincodeType, packageBytes, chaincodePath);
 };

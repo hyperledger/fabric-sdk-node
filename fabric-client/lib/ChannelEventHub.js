@@ -1449,6 +1449,8 @@ class ChannelEventHub {
 			this._callTransactionListener(tx_id, val_code, block_num, all_trans_reg);
 		}
 		if (trans_reg || all_trans_reg) {
+			logger.debug('_callTransactionListener - call backs found for this transaction %s', tx_id);
+		} else {
 			logger.debug('_callTransactionListener - no call backs found for this transaction %s', tx_id);
 		}
 	}

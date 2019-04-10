@@ -26,6 +26,9 @@ process.env.DOCKER_DEBUG = 'INFO';
 // by default for running the tests print debug to a file
 const debugPath = path.join(testConstants.tempdir, 'debug.log');
 process.env.HFC_LOGGING = util.format('{"debug":"%s"}', escapeWindowsPath(debugPath));
+// by default for running the tests print debug to a file
+const debugCPath = path.join(testConstants.tempdir, 'debugc.log');
+const cucumber_log = util.format('{"debug":"%s"}', escapeWindowsPath(debugCPath));
 
 function escapeWindowsPath(p) {
 	if (path.sep === '/') {
@@ -183,7 +186,7 @@ gulp.task('test-tape', shell.task('npx nyc gulp run-tape-unit'));
 
 // Definition of Cucumber (scenario) test suite
 gulp.task('run-test-cucumber', shell.task(
-	'export HFC_LOGGING=""; npm run test:cucumber'
+	'export HFC_LOGGING=\'' + cucumber_log + '\'; npm run test:cucumber'
 ));
 
 // Run e2e and scenario tests with code coverage

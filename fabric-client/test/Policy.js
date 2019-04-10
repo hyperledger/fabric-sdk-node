@@ -173,6 +173,28 @@ describe('Policy', () => {
 			sinon.assert.calledOnce(toBufferStub);
 		});
 
+		it('should use the policy if provided', () => {
+			PolicyRewire.buildPolicy([], policy, true);
+
+			// Set version
+			sinon.assert.calledOnce(setVersionStub);
+			sinon.assert.calledWith(setVersionStub, 0);
+
+			// Set rule
+			sinon.assert.calledOnce(setRuleStub);
+			let args = setRuleStub.getCall(0).args;
+			args[0].getName().should.be.equal('MockSignaturePolicy');
+
+			// Set identities Array
+			sinon.assert.calledOnce(setIdentitiesStub);
+			args = setIdentitiesStub.getCall(0).args;
+			args[0][0].principal_classification.should.be.equal(0);
+
+
+			// Not Sent to buffer
+			sinon.assert.notCalled(toBufferStub);
+		});
+
 	});
 
 	describe('#buildPrincipal', () => {
@@ -294,7 +316,7 @@ describe('Policy', () => {
 			result.should.equal('role');
 		});
 
-		it('should return organisation type', () => {
+		it('should return organization type', () => {
 			const result = getIdentityType({'organization-unit': 'my organization-unit'});
 			result.should.equal('organization-unit');
 		});
@@ -336,7 +358,7 @@ describe('Policy', () => {
 		const RewirePolicy = rewire('../lib/Policy');
 		const parsePolicy = RewirePolicy.__get__('parsePolicy');
 
-		it('should return a signiture policy with the type "signedby" set if that policy type', () => {
+		it('should return a signature policy with the type "signedby" set if that policy type', () => {
 
 			const policy = {
 				'signed-by': 0
@@ -349,7 +371,7 @@ describe('Policy', () => {
 			should.not.exist(result.n_out_of);
 		});
 
-		it('should return a signiture policy with the type "n_out_of" set if that policy type', () => {
+		it('should return a signature policy with the type "n_out_of" set if that policy type', () => {
 
 			const policy = {
 				'1-of': [

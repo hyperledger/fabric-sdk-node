@@ -65,8 +65,9 @@ const EndorsementPolicy = class {
 	 * endorsement policy to be constructed
 	 * @param {Policy} policy The policy specification. It has two high-level properties: identities and policy.
 	 * see the type definition of {@link Policy} for details.
+	 * @param {boolean} [returnProto] Optional. If the return value should be in bytes or protobuf.
 	 */
-	static buildPolicy(msps, policy) {
+	static buildPolicy(msps, policy, returnProto) {
 		const principals = [];
 		const envelope = new fabprotos.common.SignaturePolicyEnvelope();
 		if (!policy) {
@@ -94,7 +95,7 @@ const EndorsementPolicy = class {
 			}
 
 			if (principals.length === 0) {
-				throw new Error('Verifying MSPs not found in the channel object, make sure "intialize()" is called first.');
+				throw new Error('Verifying MSPs not found in the channel object, make sure "initialize()" is called first.');
 			}
 
 			// construct 'one of any' policy
@@ -109,6 +110,9 @@ const EndorsementPolicy = class {
 			envelope.setRule(noutof);
 			envelope.setIdentities(principals);
 
+			if (returnProto) {
+				return envelope;
+			}
 			return envelope.toBuffer();
 		} else {
 			// check the structure of the policy object is legit
@@ -125,6 +129,9 @@ const EndorsementPolicy = class {
 			envelope.setRule(thePolicy);
 			envelope.setIdentities(principals);
 
+			if (returnProto) {
+				return envelope;
+			}
 			return envelope.toBuffer();
 		}
 	}

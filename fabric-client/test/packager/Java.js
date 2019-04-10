@@ -15,14 +15,13 @@
 'use strict';
 
 const rewire = require('rewire');
-const Java = rewire('../../lib/packager/Java');
-
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const sinon = require('sinon');
 
 describe('Java', () => {
+	const Java = rewire('../../lib/packager/Java');
 
 	let revert;
 	let sandbox;

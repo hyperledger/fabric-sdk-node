@@ -16,10 +16,10 @@ const fabprotos = require('fabric-protos');
 /*
  * This function will build the proposal
  */
-module.exports.buildProposal = (invokeSpec, header, transientMap) => {
+module.exports.buildProposal = (chaincodeSpec, header, transientMap) => {
 	// construct the ChaincodeInvocationSpec
 	const cciSpec = new fabprotos.protos.ChaincodeInvocationSpec();
-	cciSpec.setChaincodeSpec(invokeSpec);
+	cciSpec.setChaincodeSpec(chaincodeSpec);
 
 	const cc_payload = new fabprotos.protos.ChaincodeProposalPayload();
 	cc_payload.setInput(cciSpec.toBuffer());
@@ -85,7 +85,65 @@ module.exports.signProposal = (signingIdentity, proposal) => {
  * @param signature
  * @param proposal_bytes
  */
-exports.toEnvelope = ({signature, proposal_bytes}) => ({signature, payload: proposal_bytes});
+module.exports.toEnvelope = ({signature, proposal_bytes}) => ({signature, payload: proposal_bytes});
+
+
+module.exports.buildSignedProposal = (request, channelId, client_context) => {
+	const method = 'buildSignedProposal';
+	logger.debug('%s - start', method);
+
+	const args = [];
+	args.push(Buffer.from(request.fcn ? request.fcn : 'invoke', 'utf8'));
+	logger.debug('%s - adding function arg:%s', method, request.fcn ? request.fcn : 'invoke');
+
+	for (let i = 0; i < request.args.length; i++) {
+		logger.debug('%s - adding arg', method);
+		args.push(Buffer.from(request.args[i], 'utf8'));
+	}
+	// special case to support the bytes argument of the query by hash
+	if (request.argbytes) {
+		logger.debug('%s - adding the argument :: argbytes', method);
+		args.push(request.argbytes);
+	} else {
+		logger.debug('%s - not adding the argument :: argbytes', method);
+	}
+
+	logger.debug('%s - chaincode ID:%s', method, request.chaincodeId);
+	const chaincodeSpec = new fabprotos.protos.ChaincodeSpec();
+	chaincodeSpec.setType(fabprotos.protos.ChaincodeSpec.Type.GOLANG);
+	const chaincode_id = new fabprotos.protos.ChaincodeID();
+	chaincode_id.setName(request.chaincodeId);
+	chaincodeSpec.setChaincodeId(chaincode_id);
+	const input = new fabprotos.protos.ChaincodeInput();
+	input.setArgs(args);
+	if (request.is_init) {
+		input.setIsInit(true);
+	}
+	chaincodeSpec.setInput(input);
+
+	let signer = null;
+	if (request.signer) {
+		signer = request.signer;
+	} else {
+		signer = client_context._getSigningIdentity(request.txId.isAdmin());
+	}
+
+	const channelHeader = module.exports.buildChannelHeader(
+		fabprotos.common.HeaderType.ENDORSER_TRANSACTION,
+		channelId,
+		request.txId.getTransactionID(),
+		null,
+		request.chaincodeId,
+		module.exports.buildCurrentTimestamp(),
+		client_context.getClientCertHash()
+	);
+
+	const header = module.exports.buildHeader(signer, channelHeader, request.txId.getNonce());
+	const proposal = module.exports.buildProposal(chaincodeSpec, header, request.transientMap);
+	const signed_proposal = module.exports.signProposal(signer, proposal);
+
+	return {signed: signed_proposal, source: proposal};
+};
 
 /*
  * This function will build a common channel header

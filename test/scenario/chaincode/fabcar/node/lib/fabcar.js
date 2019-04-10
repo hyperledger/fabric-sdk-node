@@ -9,7 +9,7 @@ const {Contract} = require('fabric-contract-api');
 class FabCar extends Contract {
 
 	async initLedger(ctx) {
-		console.info('============= START : Initialize Ledger ===========');
+		console.info('============= START : Initialize Ledger ==========='); // eslint-disable-line
 		const cars = [
 			{
 				color: 'blue',
@@ -76,9 +76,9 @@ class FabCar extends Contract {
 		for (let i = 0; i < cars.length; i++) {
 			cars[i].docType = 'car';
 			await ctx.stub.putState('CAR' + i, Buffer.from(JSON.stringify(cars[i])));
-			console.info('Added <--> ', cars[i]);
+			console.info('Added <--> ', cars[i]); // eslint-disable-line
 		}
-		console.info('============= END : Initialize Ledger ===========');
+		console.info('============= END : Initialize Ledger ==========='); // eslint-disable-line
 	}
 
 	async queryCar(ctx, carNumber) {
@@ -86,12 +86,12 @@ class FabCar extends Contract {
 		if (!carAsBytes || carAsBytes.length === 0) {
 			throw new Error(`${carNumber} does not exist`);
 		}
-		console.log(carAsBytes.toString());
+		console.log(carAsBytes.toString()); // eslint-disable-line
 		return carAsBytes.toString();
 	}
 
 	async createCar(ctx, carNumber, make, model, color, owner) {
-		console.info('============= START : Create Car ===========');
+		console.info('============= START : Create Car ==========='); // eslint-disable-line
 
 		const car = {
 			color,
@@ -102,7 +102,7 @@ class FabCar extends Contract {
 		};
 
 		await ctx.stub.putState(carNumber, Buffer.from(JSON.stringify(car)));
-		console.info('============= END : Create Car ===========');
+		console.info('============= END : Create Car ==========='); // eslint-disable-line
 	}
 
 	async queryAllCars(ctx) {
@@ -123,7 +123,7 @@ class FabCar extends Contract {
 				try {
 					Record = JSON.parse(res.value.value.toString('utf8'));
 				} catch (err) {
-					console.log(err);
+					console.log(err); // eslint-disable-line
 					Record = res.value.value.toString('utf8');
 				}
 				allResults.push({Key, Record});
@@ -137,7 +137,7 @@ class FabCar extends Contract {
 	}
 
 	async changeCarOwner(ctx, carNumber, newOwner) {
-		console.info('============= START : changeCarOwner ===========');
+		console.info('============= START : changeCarOwner ==========='); // eslint-disable-line
 
 		const carAsBytes = await ctx.stub.getState(carNumber); // get the car from chaincode state
 		if (!carAsBytes || carAsBytes.length === 0) {
@@ -147,7 +147,7 @@ class FabCar extends Contract {
 		car.owner = newOwner;
 
 		await ctx.stub.putState(carNumber, Buffer.from(JSON.stringify(car)));
-		console.info('============= END : changeCarOwner ===========');
+		console.info('============= END : changeCarOwner ==========='); // eslint-disable-line
 	}
 
 }
