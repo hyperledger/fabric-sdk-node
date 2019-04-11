@@ -339,7 +339,7 @@ const Chaincode = class {
 	/**
 	 * Provide the endorsement policy definition for this chaincode. The input is a JSON object.
 	 *
-	 * @example <caption>Endorsement policy: "Signed by any member from one of the organizations"</caption>
+	 * @example <caption>Object Endorsement policy: "Signed by any member from one of the organizations"</caption>
 	 * {
 	 *   identities: [
 	 *     { role: {name: "member", mspId: "org1"}},
@@ -349,7 +349,7 @@ const Chaincode = class {
 	 *     "1-of": [{"signed-by": 0}, {"signed-by": 1}]
 	 *   }
 	 * }
-	 * @example <caption>Endorsement policy: "Signed by admin of the ordererOrg and any member from one of the peer organizations"</caption>
+	 * @example <caption>Object Endorsement policy: "Signed by admin of the ordererOrg and any member from one of the peer organizations"</caption>
 	 * {
 	 *   identities: [
 	 *     {role: {name: "member", mspId: "peerOrg1"}},
@@ -363,7 +363,12 @@ const Chaincode = class {
 	 *     ]
 	 *   }
 	 * }
-	 * @param {string} policy - The JSON representation of an fabric endorsement policy.
+	 * @example <caption>String Endorsement policy: "Policy reference of an existing policy in your channel configuration"</caption>
+	 *    /Channel/Application/Endorsement
+	 * @param {string | object} policy - When the policy is a string it will be
+	 * the canonical path to a policy in the Channel configuration.
+	 * When an object, it will be the fabric-client's JSON representation
+	 * of an fabric endorsement policy.
 	 */
 	setEndorsementPolicyDefinition(policy) {
 		const method = 'setEndorsementPolicyDefinition';

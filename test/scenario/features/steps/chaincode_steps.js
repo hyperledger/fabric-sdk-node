@@ -31,18 +31,6 @@ module.exports = function () {
 			const chaincode = client.newChaincode(chaincode_name, chaincode_version);
 			// chaincode.setInitRequired(true);
 
-			const ENDORSEMENT_POLICY = {
-				identities: [
-					{role: {name: 'member', mspId: 'Org1MSP'}},
-					{role: {name: 'member', mspId: 'Org2MSP'}}
-				],
-				policy: {
-					'1-of': [{'signed-by': 0}, {'signed-by': 1}]
-				}
-			};
-
-			chaincode.setEndorsementPolicyDefinition(ENDORSEMENT_POLICY);
-
 			const request = {
 				chaincodePath: chaincode_path,
 				metadataPath: metadata_path,
@@ -81,11 +69,11 @@ module.exports = function () {
 			}
 		});
 
-	this.Then(/^I can approve (.+?) chaincode at version (.+?) named (.+?) as organization (.+?) on channel (.+?)$/,
-		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
-		async (chaincode_type, chaincode_version, chaincode_name, org_name, channel_name) => {
+	this.Then(/^I can approve (.+?) chaincode at version (.+?) named (.+?) as organization (.+?) on channel (.+?) with endorsement policy (.+?)$/,
+		{timeout: testUtil.TIMEOUTS.LONG_STEP},
+		async (chaincode_type, chaincode_version, chaincode_name, org_name, channel_name, endorsement_policy) => {
 			const step = 'Chaincode approval';
-			testUtil.logMsg(format('%s - starting for %s, %s, %s, %s, %s', step, chaincode_type, chaincode_version, chaincode_name, org_name, channel_name));
+			testUtil.logMsg(format('%s - starting for %s, %s, %s, %s, %s, %s', step, chaincode_type, chaincode_version, chaincode_name, org_name, channel_name, endorsement_policy));
 
 			const cc_save_name = format('chaincode-%s-%s', org_name, chaincode_name);
 
@@ -95,6 +83,31 @@ module.exports = function () {
 			const chaincode = Client.getConfigSetting(cc_save_name).value;
 
 			const channel =	Client.getConfigSetting('channel-' + org_name + '-' + channel_name).value;
+
+			const ENDORSEMENT_POLICY = {
+				identities: [
+					{role: {name: 'member', mspId: 'Org1MSP'}},
+					{role: {name: 'member', mspId: 'Org2MSP'}}
+				],
+				policy: {
+					'1-of': [{'signed-by': 0}, {'signed-by': 1}]
+				}
+			};
+
+			switch (endorsement_policy) {
+				case 'default':
+					// leave it blank and let fabric decide
+					break;
+				case 'both_orgs':
+					chaincode.setEndorsementPolicyDefinition(ENDORSEMENT_POLICY);
+					break;
+				default:
+					chaincode.setEndorsementPolicyDefinition(endorsement_policy);
+			}
+
+			// replace the saved one with the one updated with endorsement policy
+			Client.setConfigSetting(cc_save_name, {value: chaincode});
+
 			const txId = client.newTransactionID(true);
 
 			const request = {

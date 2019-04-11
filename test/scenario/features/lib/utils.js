@@ -413,7 +413,7 @@ async function commitProposal(tx_id, proposalResponses, proposal, channel, peer)
 			logError('Timeout - Failed to receive the event:  waiting on ' + channel_event_hub.getPeerAddr());
 			channel_event_hub.disconnect();
 			reject('TIMEOUT waiting on ' + channel_event_hub.getPeerAddr());
-		}, 15000);
+		}, 120000);
 
 		channel_event_hub.registerTxEvent(deployId.toString(), (tx, code) => {
 			logMsg('The chaincode transaction has been committed on peer ' + channel_event_hub.getPeerAddr());
@@ -437,7 +437,13 @@ async function commitProposal(tx_id, proposalResponses, proposal, channel, peer)
 	logMsg('register eventhub tx=' + deployId);
 	promises.push(txPromise);
 
-	const results = await Promise.all(promises);
+	let results = null;
+	try {
+		results = await Promise.all(promises);
+	} catch (error) {
+		logMsg('Transaction failed ::' + error);
+		throw error;
+	}
 
 	// orderer results are first as it was the first promise
 	if (results && results[0]) {

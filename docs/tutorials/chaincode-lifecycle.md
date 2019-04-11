@@ -24,8 +24,8 @@ The Fabric 2.0 Alpha introduces decentralized governance for chaincode. The new
 Fabric chaincode lifecycle allows multiple organizations to come to agreement
 on the parameters of a chaincode, such as the chaincode endorsement policy,
 before it can be used to interact with the ledger. You will need to enable the
-new Fabric chaincode lifecycle on your network by setting the channel
-capabilities to `V2_0` to use the steps in this tutorial.
+new Fabric chaincode lifecycle on your channel definition by setting the
+Applications capabilities to `V2_0: true` to use the steps in this tutorial.
 
 Channel members need to complete the following steps before they can start
 using a chaincode:
@@ -166,7 +166,7 @@ const packge_request = {
    chaincodeType: 'golang',
    goPath: '/gopath',
    chaincodePath: '/path/to/code',
-   metadataPath: '/path/to/metadat'
+   metadataPath: '/path/to/metadata'
 }
 const package = await mychaincode.package(package_request);
 ```
@@ -292,13 +292,13 @@ const results = await mychannel.sendTransaction(orderer_request);
 The chaincode is ready to be used after it is defined on a channel. If you did
 not request the execution of your chaincode's `Init` function, then the chaincode
 container will start after the first invoke. If you used `setInitRequired(true)`
-to request that the `Init` function be executed, then you need to invoke the
-`Init` before any other transactions can be executed.
+then you need to invoke with `is_init` set to `true`
+before any other transactions can be executed.
 
-The following code snippet below requests the execution of the `Init` function.
+The following code snippet below requests the initialization of your chaincode.
 Note that `is_init` needs to be set to `true` as part of the request, and the
-`Init` function must be called using `sendTransaction` rather than the
-"Invoke" method of your chaincode.
+`Init` method will be called rather than the
+`Invoke` method of your chaincode.
 
 ```
 // initialize the chaincode
