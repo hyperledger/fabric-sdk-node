@@ -1,7 +1,7 @@
 {
   "name": "fabric-common",
-  "version": "1.4.1",
-  "tag": "latest",
+  "version": "1.4.2-snapshot",
+  "tag": "unstable-1.4",
   "description" : "This package encapsulates the common code used by the `fabric-ca-client`, `fabric-client` packages.",
   "keywords" :[
 	  "blockchain",
