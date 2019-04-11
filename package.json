@@ -1,6 +1,6 @@
 {
   "name": "fabric-sdk-node",
-  "version": "2.0.0-snapshot",
+  "version": "2.0.0-alpha",
   "testFabricVersion": "master",
   "testFabricThirdParty": "0.4.15",
   "docsLatestVersion": "release-1.4",
