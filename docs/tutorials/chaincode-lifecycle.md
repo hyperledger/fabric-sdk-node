@@ -162,13 +162,13 @@ optionally be sent to other channel members out of band.
 
 ```
 // package the source code
-const packge_request = {
+const package_request = {
    chaincodeType: 'golang',
    goPath: '/gopath',
    chaincodePath: '/path/to/code',
    metadataPath: '/path/to/metadata'
 }
-const package = await mychaincode.package(package_request);
+const cc_package = await mychaincode.package(package_request);
 ```
 
 If you are given the channel package out of band by another organization, use
@@ -176,7 +176,7 @@ the following method to import the chaincode package before it can be installed.
 
 ```
 // use an existing package
-mychaincode.setPackage(package);
+mychaincode.setPackage(cc_package);
 ```
 
 ### Step 3: Install
@@ -355,7 +355,7 @@ const package_request = {
    chaincodePath: '/path/to/code',
    metadataPath: '/path/to/metadata'
 }
-const package = await mychaincode.package(package_request);
+const cc_package = await mychaincode.package(package_request);
 
 // step 3: install
  const install_request = {
@@ -434,7 +434,7 @@ const package_request = {
    chaincodePath: '/path/to/code',
    metadataPath: '/path/to/metadata'
 }
-const package = await mychaincode.package(package_request);
+const cc_package = await mychaincode.package(package_request);
 
 // step 3: install
  const install_request = {
@@ -552,7 +552,7 @@ const package_request = {
    chaincodePath: '/path/to/code',
    metadataPath: '/path/to/metadata'
 }
-const package = await mychaincode.package(package_request);
+const cc_package = await mychaincode.package(package_request);
 
 // step 3: install
  const install_request = {
