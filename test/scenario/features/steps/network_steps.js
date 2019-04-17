@@ -64,8 +64,12 @@ module.exports = function () {
 	});
 
 	// Events
-	this.Then(/^I use the gateway named (.+?) to listen for (.+?) events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, eventName, listenerName, ccName, channelName) => {
+	this.Then(/^I use the gateway named (.+?) to listen for ([^\s.]+?) events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, eventName, listenerName, ccName, channelName) => {
 		return await network_util.createContractListener(gatewayName, channelName, ccName, eventName, listenerName);
+	});
+
+	this.Then(/^I use the gateway named (.+?) to listen for unfiltered (.+?) events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, eventName, listenerName, ccName, channelName) => {
+		return await network_util.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, false, false);
 	});
 
 	this.Then(/^I use the gateway named (.+?) to listen for filtered_block_events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, listenerName, ccName, channelName) => {

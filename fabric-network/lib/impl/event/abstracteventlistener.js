@@ -52,6 +52,7 @@ class AbstractEventListener {
 		this._firstCheckpoint = {};
 		this._registration = null;
 		this._filtered = typeof options.filtered === 'boolean' ? options.filtered : true;
+		this._usingCheckpointer = false;
 	}
 
 	/**
@@ -72,9 +73,12 @@ class AbstractEventListener {
 		if (this._registered) {
 			throw new Error('Listener already registered');
 		}
-		if (this.eventHub && this.eventHub.isconnected() && !!this.eventHub.isFiltered() !== this._filtered) {
+		if (this.eventHub && this.eventHub.isconnected() && this.eventHub.isFiltered() !== this._filtered) {
+			this.eventHub._filtered_stream = this._filtered;
 			this.eventHub.disconnect();
-			this.eventHub = null;
+			if (!this.options.fixedEventHub) {
+				this.eventHub = null;
+			}
 		}
 
 		if (this.options.checkpointer) {
@@ -100,6 +104,9 @@ class AbstractEventListener {
 			if (checkpoint && checkpoint.blockNumber && blockchainInfo.height - 1 > Number(checkpoint.blockNumber)) {
 				logger.debug(`Requested Block Number: ${Number(checkpoint.blockNumber) + 1} Latest Block Number: ${blockchainInfo.height - 1}`);
 				this.options.startBlock = Long.fromInt(Number(checkpoint.blockNumber) + 1);
+				this._usingCheckpointer = true;
+			} else {
+				this._usingCheckpointer = false;
 			}
 		}
 	}

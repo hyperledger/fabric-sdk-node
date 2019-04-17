@@ -253,7 +253,13 @@ function getGateway(gatewayName) {
 	}
 }
 
-async function createContractListener(gatewayName, channelName, ccName, eventName, listenerName) {
+async function createContractListener(gatewayName, channelName, ccName, eventName, listenerName, replay, filtered) {
+	if (typeof filtered === 'undefined') {
+		filtered = true;
+	}
+	if (typeof replay === 'undefined') {
+		replay = true;
+	}
 	const gateway = gateways.get(gatewayName).gateway;
 	const contract = await retrieveContractFromGateway(gateway, channelName, ccName);
 	if (!listeners.has(listenerName)) {
@@ -265,10 +271,15 @@ async function createContractListener(gatewayName, channelName, ccName, eventNam
 			return err;
 		}
 		testUtil.logMsg('Received a contract event', listenerName);
+		if (!filtered) {
+			const [event] = args;
+			expect(event.payload.toString('utf8')).to.equal('content');
+		}
+
 		const listenerInfo = listeners.get(listenerName);
 		listenerInfo.payloads.push(args);
 		listenerInfo.calls = listenerInfo.payloads.length;
-	}, {replay: true});
+	}, {replay, filtered});
 	const listenerInfo = listeners.get(listenerName);
 	listenerInfo.listener = listener;
 	listeners.set(listenerName, listenerInfo);

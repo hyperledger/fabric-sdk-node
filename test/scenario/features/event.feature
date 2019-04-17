@@ -11,7 +11,7 @@ Feature: Listen to events using a fabric-network
 		And I can create a gateway named test_gateway as user User1 within Org1 using the tls common connection profile
 		Given I can install/instantiate node chaincode at version 1.0.0 named events to the tls Fabric network for all organizations on channel mychannel with endorsement policy 1AdminOr2Other and args [initLedger]
 
-	Scenario: Using a Contract I can listen to contract events emmited by instantiated chaincodes
+	Scenario: Using a Contract I can listen to contract events emitted by instantiated chaincodes
 		When I use the gateway named test_gateway to listen for create events with listener createValueListener on chaincode events instantiated on channel mychannel
 		When I use the gateway named test_gateway to submit 5 transactions with args [createValue] for chaincode events instantiated on channel mychannel
 		Then I receive 5 events from the listener createValueListener
@@ -19,7 +19,7 @@ Feature: Listen to events using a fabric-network
 		When I use the gateway named test_gateway to submit 10 transactions with args [createValueDisconnect] for chaincode events instantiated on fabric channel mychannel disconnecting the event hub on listener ehDisconnectListener every 5 transactions
 		Then I receive 10 events from the listener ehDisconnectListener
 
-	Scenario: Using a Contract I can listen to block events emmited by networks
+	Scenario: Using a Contract I can listen to block events emitted by networks
 		When I use the gateway named test_gateway to listen for filtered_block_events with listener filteredBlockListener on chaincode events instantiated on channel mychannel
 		When I use the gateway named test_gateway to submit a transaction with args [createValue] for chaincode events instantiated on channel mychannel
 		Then I receive at least 1 events from the listener filteredBlockListener
@@ -32,3 +32,8 @@ Feature: Listen to events using a fabric-network
 		When I use the transaction named transaction1 to create a commit listener called transaction1Listener
 		When I use the transaction named transaction1 to submit a transaction with args []
 		Then I receive 1 events from the listener transaction1Listener
+
+	Scenario: Using a Contract I can listen to contract events emitted by instantiated chaincodes
+		When I use the gateway named test_gateway to listen for unfiltered create events with listener createValueListener on chaincode events instantiated on channel mychannel
+		When I use the gateway named test_gateway to submit 5 transactions with args [createValue] for chaincode events instantiated on channel mychannel
+		Then I receive 5 events from the listener createValueListener

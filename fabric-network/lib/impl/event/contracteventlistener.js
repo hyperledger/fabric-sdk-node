@@ -41,6 +41,10 @@ class ContractEventListener extends AbstractEventListener {
 		if (!this.eventHub) {
 			return await this._registerWithNewEventHub();
 		}
+		if (this._usingCheckpointer) {
+			this.eventHub.connect(!this._filtered);
+		}
+
 		this._registration = this.eventHub.registerChaincodeEvent(
 			this.contract.getChaincodeId(),
 			this.eventName,
@@ -49,7 +53,9 @@ class ContractEventListener extends AbstractEventListener {
 			this.options
 		);
 		this._registered = true;
-		this.eventHub.connect(!this._filtered);
+		if (!this._usingCheckpointer) {
+			this.eventHub.connect(!this._filtered);
+		}
 	}
 
 	/**

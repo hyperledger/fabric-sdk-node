@@ -46,6 +46,7 @@ describe('BlockEventListener', () => {
 		eventHubStub = sandbox.createStubInstance(ChannelEventHub);
 		checkpointerStub = sandbox.createStubInstance(BaseCheckpointer);
 		blockEventListener = new BlockEventListener(networkStub, 'test', () => {}, {replay: true});
+		eventHubStub.isFiltered.returns(true);
 	});
 	describe('#register', () => {
 		it('should register a block event, connect to the event hub and set the register flag', async () => {
