@@ -224,8 +224,10 @@ describe('Contract', () => {
 			listenerName = 'testContractListener';
 			testEventName = 'testEvent';
 			callback = () => {};
+			mockEventHub.isFiltered.returns(true);
 		});
 		it('should create options if the options param is undefined', async () => {
+			mockEventHub.isconnected.returns(true);
 			const listener = await contract.addContractListener(listenerName, testEventName, callback);
 			expect(listener).to.be.instanceof(ContractEventListener);
 			expect(network.listeners.get(listenerName)).to.equal(listener);

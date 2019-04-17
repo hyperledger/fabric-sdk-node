@@ -287,6 +287,7 @@ describe('Network', () => {
 			callback = () => {};
 			mockEventHub._transactionRegistrations = {};
 			mockEventHub._transactionRegistrations[listenerName] = {}; // Preregister listener with eh
+			mockEventHub.isFiltered.returns(true);
 		});
 
 		it('should create options if the options param is undefined', async () => {
@@ -316,6 +317,7 @@ describe('Network', () => {
 		beforeEach(() => {
 			listenerName = 'testBlockListener';
 			callback = () => {};
+			mockEventHub.isFiltered.returns(true);
 		});
 
 		it('should create options if the options param is undefined', async () => {
