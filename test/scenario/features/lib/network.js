@@ -258,7 +258,7 @@ async function createContractListener(gatewayName, channelName, ccName, eventNam
 		filtered = true;
 	}
 	if (typeof replay === 'undefined') {
-		replay = true;
+		replay = false;
 	}
 	const gateway = gateways.get(gatewayName).gateway;
 	const contract = await retrieveContractFromGateway(gateway, channelName, ccName);

@@ -33,6 +33,36 @@ describe('ChannelEventHub', () => {
 
 	let FakeLogger;
 	const tmpSetDelete = Set.prototype.delete;
+	const block = {
+		data: {
+			data: [
+				{
+					payload: {
+						data: {
+							actions: [
+								{
+									payload: {
+										action: {
+											proposal_response_payload: {
+												extension: {events: {chaincode_id: 'mychaincode', event_name: 'event', tx_id: 'tx_id', payload: 'payload'}}
+											}
+										}
+									}
+								}
+							]
+						},
+						header: {
+							channel_header: {type: 3, tx_id: 'tx_id'}
+						}
+					}
+				}
+			]
+		},
+		metadata: {
+			metadata: {'transactions_filter': ['code0']}
+		},
+		header: {number: 1}
+	};
 
 	beforeEach(() => {
 		revert = [];
@@ -735,7 +765,7 @@ describe('ChannelEventHub', () => {
 		it('should call a debug log', () => {
 			hub._disconnect_running = true;
 			hub.disconnect();
-			sinon.assert.calledWith(FakeLogger.debug, 'disconnect - disconnect is running');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - disconnect is running');
 		});
 
 		it('should log, call _disconnect and change disconnect_running to false', () => {
@@ -1276,16 +1306,17 @@ describe('ChannelEventHub', () => {
 		});
 
 		it('should log for each chaincode registration', () => {
-			hub._chaincodeRegistrants = {reg1: [{ccid: 'cc', eventNameFilter: 'event', event_reg: {}}]};
+			const onErrorStub = sandbox.stub();
+			hub._chaincodeRegistrants = new Map();
+			hub._chaincodeRegistrants.set({chaincode_id: 'cc', event_name: 'event', event_reg: {onError: onErrorStub}}, {chaincode_id: 'cc', event_name: 'event', event_reg: {onError: onErrorStub}});
 			hub._closeAllCallbacks();
-			sinon.assert.calledWith(FakeLogger.debug, '%s - closing this chaincode event ccid:%s eventNameFilter:%s', '_closeAllCallbacks - peer', 'cc', 'event');
-			hub._chaincodeRegistrants.should.deep.equal({});
-
+			sinon.assert.calledWith(FakeLogger.debug, '%s - closing this chaincode event chaincode_id:%s event_name:%s', '_closeAllCallbacks - peer', 'cc', 'event');
 		});
 
 		it('should call onError if onError method in chaincode registration', () => {
 			const onErrorStub = sandbox.stub();
-			hub._chaincodeRegistrants = {reg1: [{ccid: 'cc', eventNameFilter: 'event', event_reg: {onError: onErrorStub}}]};
+			hub._chaincodeRegistrants = new Map();
+			hub._chaincodeRegistrants.set({chaincode_id: 'cc', event_name: 'event', event_reg: {onError: onErrorStub}}, {chaincode_id: 'cc', event_name: 'event', event_reg: {onError: onErrorStub}});
 			hub._closeAllCallbacks('Error');
 			sinon.assert.calledWith(onErrorStub, 'Error');
 		});
@@ -1676,21 +1707,21 @@ describe('ChannelEventHub', () => {
 			hub.unregisterChaincodeEvent = unregisterChaincodeEventStub;
 		});
 
-		it('should throw if ccid is missing', () => {
+		it('should throw if chaincode_id is missing', () => {
 			(() => {
 				hub.registerChaincodeEvent();
-			}).should.throw(Error, 'Missing "ccid" parameter');
+			}).should.throw(Error, 'Missing "chaincode_id" parameter');
 		});
 
-		it('should throw if eventname is missing', () => {
+		it('should throw if event_name is missing', () => {
 			(() => {
-				hub.registerChaincodeEvent('ccid');
-			}).should.throw(Error, 'Missing "eventname" parameter');
+				hub.registerChaincodeEvent('chaincode_id');
+			}).should.throw(Error, 'Missing "event_name" parameter');
 		});
 
 		it('should throw if onEvent is missing', () => {
 			(() => {
-				hub.registerChaincodeEvent('ccid', 'eventname');
+				hub.registerChaincodeEvent('chaincode_id', 'event_name');
 			}).should.throw(Error, 'Missing "onEvent" parameter');
 		});
 
@@ -1703,23 +1734,30 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(ChaincodeRegistrationStub, 'cc', 'event', new EventRegistrationStub());
 			sinon.assert.called(_checkConnectionStub);
 		});
-
-		it('should use an existing cbtable', () => {
-			const cc = {add: sandbox.stub()};
-			hub._chaincodeRegistrants = {'cc': cc};
-			_checkReplayStub.returns(2);
-			hub.registerChaincodeEvent('cc', 'event', 'onEvent', 'onError', 'options');
-			hub._start_stop_action.unregister.should.be.instanceof(Function);
-			hub._start_stop_action.unregister();
-			sinon.assert.called(unregisterChaincodeEventStub);
-		});
 	});
 
 	describe('#unregisterChaincodeEvent', () => {
 		let hub;
+		let FakeMap;
 
 		beforeEach(() => {
 			hub = new ChannelEventHub('channel', 'peer');
+			FakeMap = {
+				set: () => {
+				},
+				get: () => {
+				},
+				delete: () => {
+				},
+				has: (something) => {
+					if (something && something.chaincode_id === 'known') {
+						return true;
+					}
+					return false;
+				}
+			};
+			sandbox.stub(FakeMap);
+			hub._chaincodeRegistrants = FakeMap;
 		});
 
 		it('should log on entry', () => {
@@ -1737,26 +1775,21 @@ describe('ChannelEventHub', () => {
 
 		it('should throw an error if chaincodeRegistrant is not found and throw is true', () => {
 			(() => {
-				hub.unregisterChaincodeEvent({ccid: 'unknown'}, true);
+				hub.unregisterChaincodeEvent({chaincode_id: 'unknown'}, true);
 			}).should.throw(Error, 'No event registration for chaincode id unknown');
 		});
 
-		it('should call delete if chaincodeRegistrant is not found and throw is false', () => {
-			sandbox.stub(Set.prototype, 'delete');
-			hub._chaincodeRegistrants = {known: new Set()};
-			hub.unregisterChaincodeEvent({ccid: 'known'}, false);
-			sinon.assert.calledWith(Set.prototype.delete, {ccid: 'known'});
-		});
-
 		it('should call not delete the _chaincodeRegistrants entry if the set has length > 0', () => {
-			hub._chaincodeRegistrants = {known: new Set([1])};
-			hub.unregisterChaincodeEvent({ccid: 'known'}, false);
-			hub._chaincodeRegistrants.known.should.deep.equal(new Set([1]));
+			hub._chaincodeRegistrants = new Map();
+			hub._chaincodeRegistrants.set('known', 'something');
+			should.equal(hub._chaincodeRegistrants.size, 1, 'chaincode registrations should have one');
+			hub.unregisterChaincodeEvent('known', false);
+			should.equal(hub._chaincodeRegistrants.size, 0, 'chaincode registrations should be empty');
 		});
 
-		it('should not call delete if cbtable not found', () => {
+		it('should not call delete if chaincode reg not found', () => {
 			sandbox.stub(Set.prototype, 'delete');
-			hub.unregisterChaincodeEvent({ccid: 'known'}, false);
+			hub.unregisterChaincodeEvent({chaincode_id: 'known'}, false);
 			sinon.assert.notCalled(Set.prototype.delete);
 		});
 	});
@@ -2049,7 +2082,7 @@ describe('ChannelEventHub', () => {
 			hub = new ChannelEventHub('channel', 'peer');
 			const fakeTx1 = {txid: '1'};
 			const fakeTx2 = {txid: '2'};
-			const block = {
+			const testblock = {
 				number: 1,
 				filtered_transactions: [fakeTx1, fakeTx2]
 			};
@@ -2059,7 +2092,7 @@ describe('ChannelEventHub', () => {
 			hub.registerTxEvent(fakeTx1.txid, txOnEventStub, onErrorStub, {});
 			hub.registerTxEvent('all', allOnEventStub, onErrorStub, {});
 
-			hub._processTxEvents(block);
+			hub._processTxEvents(testblock);
 
 			sinon.assert.calledOnce(txOnEventStub);
 			sinon.assert.calledTwice(allOnEventStub);
@@ -2138,189 +2171,145 @@ describe('ChannelEventHub', () => {
 	});
 
 	describe('#_processChaincodeEvents', () => {
-		let _callChaincodeListenerStub;
+		let _queueChaincodeEventStub;
 		let hub;
-		beforeEach(() => {
-			_callChaincodeListenerStub = sandbox.stub();
-			hub = new ChannelEventHub('channel', 'peer');
-			hub._callChaincodeListener = _callChaincodeListenerStub;
 
+		beforeEach(() => {
+			_queueChaincodeEventStub = sandbox.stub();
+			hub = new ChannelEventHub('channel', 'peer');
+			hub._queueChaincodeEvent = _queueChaincodeEventStub;
+			hub.registerChaincodeEvent('cc', 'event', 'onEvent', 'onError');
 			revert.push(ChannelEventHub.__set__('_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER', 'transactions_filter'));
 		});
 
 		it('should log and return if no chaincodeRegistrants are present', () => {
-			hub._chaincodeRegistrants = {};
+			hub._chaincodeRegistrants = new Map();
 			hub._processChaincodeEvents();
-			sinon.assert.calledWith(FakeLogger.debug, '_processChaincodeEvents - no registered chaincode event "listeners"');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - no registered chaincode event "listeners"');
 		});
 
 		it('should do nothing if there are no filtered_transactions', () => {
-			hub._chaincodeRegistrants = {'cc': 'val'};
 			hub._processChaincodeEvents({number: 1});
-			sinon.assert.notCalled(_callChaincodeListenerStub);
+			sinon.assert.notCalled(_queueChaincodeEventStub);
 		});
 
 		it('should do nothing if there are no transaction_actions on a filtered transaction', () => {
-			hub._chaincodeRegistrants = {'cc': 'val'};
 			hub._processChaincodeEvents({number: 1, filtered_transactions: [{}]});
-			sinon.assert.notCalled(_callChaincodeListenerStub);
+			sinon.assert.notCalled(_queueChaincodeEventStub);
 		});
 
 		it('should do nothing if there are no chaincode_actions on a filtered transaction_actions', () => {
-			hub._chaincodeRegistrants = {'cc': 'val'};
 			hub._processChaincodeEvents({number: 1, filtered_transactions: [{transaction_actions: {}}]});
-			sinon.assert.notCalled(_callChaincodeListenerStub);
+			sinon.assert.notCalled(_queueChaincodeEventStub);
 		});
 
-		it('should call _callChaincodeListener for every chaincode_action', () => {
-			const mockAction = {chaincode_event: 'event'};
-			hub._chaincodeRegistrants = {'cc': 'val'};
-			hub._processChaincodeEvents({number: 1, filtered_transactions: [{txid: 'txid', tx_validation_code: 'code', transaction_actions: {chaincode_actions: [mockAction, mockAction]}}]});
-			sinon.assert.calledTwice(_callChaincodeListenerStub);
-			sinon.assert.calledWith(_callChaincodeListenerStub, 'event', 1, 'txid', 'code', true);
-		});
-
-		it('should log for for each data in the block', () => {
-			hub._chaincodeRegistrants = {'cc': 'val'};
-			hub._processChaincodeEvents({data: {data: ['data']}});
-			sinon.assert.calledWith(FakeLogger.debug, '_processChaincodeEvents - trans index=0');
+		it('should call _queueChaincodeEventStub for every chaincode_action', () => {
+			const mockAction = {chaincode_event: {chaincode_id: 'channel_id', event_name: 'event_name'}};
+			hub._processChaincodeEvents({
+				number: 1,
+				filtered_transactions: [{
+					txid: 'txid',
+					tx_validation_code: 'code',
+					transaction_actions: {chaincode_actions: [mockAction, mockAction]}
+				}]
+			});
+			sinon.assert.called(_queueChaincodeEventStub);
 		});
 
 		it('should log if an error is thrown when unmarshalling the transaction', () => {
-			hub._chaincodeRegistrants = {'cc': 'val'};
 			hub._processChaincodeEvents({data: {data: [undefined]}});
 			sinon.assert.calledWithMatch(FakeLogger.error, 'on.data - Error unmarshalling transaction=');
 		});
 
 		it('should log if block is not of type endorser', () => {
 			const mockData = {payload: {header: {channel_header: {type: 0}}}};
-			hub._chaincodeRegistrants = {'cc': 'val'};
 			hub._processChaincodeEvents({data: {data: [mockData]}});
-			sinon.assert.calledWithMatch(FakeLogger.debug, '_processChaincodeEvents - block is not endorser transaction type');
+			sinon.assert.calledWithMatch(FakeLogger.debug, '%s - block is not endorser transaction type');
 		});
 
 		it('should log if there are no transactions', () => {
 			const mockData = {payload: {header: {channel_header: {type: 3}}}};
-			hub._chaincodeRegistrants = {'cc': 'val'};
 			hub._processChaincodeEvents({data: {data: [mockData]}});
-			sinon.assert.calledWithMatch(FakeLogger.debug, '_processChaincodeEvents - no transactions or transaction actions');
+			sinon.assert.calledWithMatch(FakeLogger.debug, '%s - no transactions or transaction actions');
 		});
 
 		it('should log if there are no transaction actions', () => {
 			const mockData = {payload: {data: {}, header: {channel_header: {type: 3}}}};
-			hub._chaincodeRegistrants = {'cc': 'val'};
 			hub._processChaincodeEvents({data: {data: [mockData]}});
-			sinon.assert.calledWithMatch(FakeLogger.debug, '_processChaincodeEvents - no transactions or transaction actions');
+			sinon.assert.calledWithMatch(FakeLogger.debug, '%s - no transactions or transaction actions');
 		});
 
-		it('should log and call _callChaincodeListener', () => {
-			const block = {
-				data: {
-					data: [
-						{
-							payload: {
-								data: {
-									actions: [
-										{
-											payload: {
-												action: {
-													proposal_response_payload: {
-														extension: {events: 'ccevent'}
-													}
-												}
-											}
-										}
-									]
-								},
-								header: {
-									channel_header: {type: 3, tx_id: 'tx_id'}
-								}
-							}
-						}
-					]
-				},
-				metadata: {
-					metadata: {'transactions_filter': ['code0']}
-				},
-				header: {number: 1}
-			};
-			hub._chaincodeRegistrants = {'cc': 'val'};
+		it('should log and call _queueChaincodeEvent', () => {
 			hub._processChaincodeEvents(block);
-			sinon.assert.calledWithMatch(FakeLogger.debug, '_processChaincodeEvents - chaincode_event %s', 'ccevent');
-			sinon.assert.calledWith(_callChaincodeListenerStub, 'ccevent', 1, 'tx_id', 'code0', false);
+			sinon.assert.calledWithMatch(FakeLogger.debug, '%s - chaincode_event %s');
+			sinon.assert.called(_queueChaincodeEventStub);
+		});
 
+
+		it('should remove listener if unregister is true', () => {
+			should.equal(hub._chaincodeRegistrants.size, 1, 'Should just one chaincode regs');
+			const chaincodeReg = hub.registerChaincodeEvent('mychaincode', 'event', () => {}, null, {unregister:true});
+			should.equal(hub._chaincodeRegistrants.size, 2, 'Should have two chaincode regs');
+			hub._queueChaincodeEvent = (chaincode_event, block_num, tx_id, val_code, all_events) => {
+				all_events.set(chaincodeReg, [{chaincode_event, block_num, tx_id, val_code}]);
+			};
+			hub._processChaincodeEvents(block);
+			should.equal(hub._chaincodeRegistrants.size, 1, 'Should now have one chaincode regs');
+			sinon.assert.calledWithMatch(FakeLogger.debug, '%s - automatically unregister chaincode event listener %s');
+		});
+
+
+		it('should disconnect the hub when disconnect is true', () => {
+			should.equal(hub._chaincodeRegistrants.size, 1, 'Should just one chaincode regs');
+			let saveErr = 'none';
+			const chaincodeReg = hub.registerChaincodeEvent('mychaincode', 'event',
+				() => {},
+				(err) => {
+					saveErr = err.message;
+				},
+				{disconnect:true}
+			);
+			should.equal(hub._chaincodeRegistrants.size, 2, 'Should have two chaincode regs');
+			hub._queueChaincodeEvent = (chaincode_event, block_num, tx_id, val_code, all_events) => {
+				all_events.set(chaincodeReg, [{chaincode_event, block_num, tx_id, val_code}]);
+			};
+			hub._processChaincodeEvents(block);
+			should.equal(hub._chaincodeRegistrants.size, 0, 'Should not have any chaincode regs');
+			sinon.assert.calledWithMatch(FakeLogger.debug, '%s - automatically disconnect event hub with chaincode event listener disconnect=true %s');
+			should.equal(saveErr, 'Shutdown due to disconnect on chaincode event registration', 'Should have saved the correct error message');
 		});
 	});
 
-	describe('#_callChaincodeListener', () => {
+	describe('#_queueChaincodeEvent', () => {
 		let convertValidationCodeStub;
-		let onEventStub;
-		let deleteStub;
-		let _disconnectStub;
-
 		let hub;
+
 		beforeEach(() => {
 			convertValidationCodeStub = sandbox.stub();
 			revert.push(ChannelEventHub.__set__('convertValidationCode', convertValidationCodeStub));
-			onEventStub = sandbox.stub();
-			deleteStub = sandbox.stub();
-			_disconnectStub = sandbox.stub();
-
 			hub = new ChannelEventHub('channel', 'peer');
-		});
-
-		it('should log and return if chaincode registrant is not found', () => {
-			const res = hub._callChaincodeListener({chaincode_id: 'cc'}, 'block_num', 'tx_id', 'val_code', 'filtered');
-			sinon.assert.calledWith(FakeLogger.debug, '_callChaincodeListener - no chaincode listeners found');
-			should.equal(res, undefined);
+			hub.registerChaincodeEvent('cc', 'event', 'onEvent', 'onError');
 		});
 
 		it('should log and call convertValidationCode', () => {
 			convertValidationCodeStub.returns('status');
-			hub._chaincodeRegistrants = {cc: []};
-			hub._callChaincodeListener({chaincode_id: 'cc'}, 'block_num', 'tx_id', 'val_code', 'filtered');
+			hub._queueChaincodeEvent({chaincode_id: 'cc', event_name: 'event'}, 'block_num', 'tx_id', 'val_code', new Map());
 			sinon.assert.calledWith(convertValidationCodeStub, 'val_code');
-			sinon.assert.calledWith(FakeLogger.debug, '_callChaincodeListener - txid=%s  val_code=%s', 'tx_id', 'status');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - txid=%s  val_code=%s', '_queueChaincodeEvent', 'tx_id', 'status');
 		});
 
 		it('should log if the event name does not match the filter', () => {
 			convertValidationCodeStub.returns('status');
-			hub._chaincodeRegistrants = {cc: [{eventNameFilter: new RegExp('filter')}]};
-			hub._callChaincodeListener({chaincode_id: 'cc'}, 'block_num', 'tx_id', 'val_code', 'filtered');
-			sinon.assert.calledWith(FakeLogger.debug, '_callChaincodeListener - NOT calling chaincode listener callback');
+			hub._queueChaincodeEvent({chaincode_id: 'aa', event_name: 'not'}, 'block_num', 'tx_id', 'val_code', new Map());
+			sinon.assert.calledWith(FakeLogger.debug, '%s - NOT queuing chaincode event: %s', '_queueChaincodeEvent', 'not');
 		});
 
-		it('should delete the payload from the chaincode event if filtered is true', () => {
+		it('should log if the event name does not match the filter', () => {
 			convertValidationCodeStub.returns('status');
-			const chaincodeReg = {eventNameFilter: new RegExp(/event/), event_reg: {onEvent: onEventStub}};
-			const chaincodeEvent = {chaincode_id: 'cc', event_name: 'event', payload: 'payload'};
-			hub._chaincodeRegistrants = {cc: [chaincodeReg]};
-			hub._callChaincodeListener(chaincodeEvent, 'block_num', 'tx_id', 'val_code', true);
-			sinon.assert.called(onEventStub);
-			sinon.assert.calledWith(onEventStub, {chaincode_id: 'cc', event_name: 'event'}, 'block_num', 'tx_id', 'status');
-		});
-
-		it('should call delete if unregister is true', () => {
-			convertValidationCodeStub.returns('status');
-			const chaincodeReg = {eventNameFilter: new RegExp(/event/), event_reg: {onEvent: onEventStub, unregister: true}};
-			const chaincodeEvent = {chaincode_id: 'cc', event_name: 'event', payload: 'payload'};
-			hub._chaincodeRegistrants = {cc: new Set([chaincodeReg])};
-			hub.unregisterChaincodeEvent = deleteStub;
-			hub._callChaincodeListener(chaincodeEvent, 'block_num', 'tx_id', 'val_code', false);
-			sinon.assert.called(deleteStub);
-			sinon.assert.calledWith(deleteStub, chaincodeReg);
-			sinon.assert.calledWith(FakeLogger.debug, '_callChaincodeListener - automatically unregister chaincode event listener for tx_id:%s', 'tx_id');
-			delete Set.prototype.delete;
-		});
-
-		it('should call disconnect if disconnect is true', () => {
-			convertValidationCodeStub.returns('status');
-			const chaincodeReg = {eventNameFilter: new RegExp(/event/), event_reg: {onEvent: onEventStub, disconnect: true}};
-			const chaincodeEvent = {chaincode_id: 'cc', event_name: 'event', payload: 'payload'};
-			hub._disconnect = _disconnectStub;
-			hub._chaincodeRegistrants = {cc: [chaincodeReg]};
-			hub._callChaincodeListener(chaincodeEvent, 'block_num', 'tx_id', 'val_code', false);
-			sinon.assert.calledWith(_disconnectStub, sinon.match(Error));
+			const all_events = new Map();
+			hub._queueChaincodeEvent({chaincode_id: 'cc', event_name: 'event'}, 'block_num', 'tx_id', 'val_code', all_events);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - queuing chaincode event: %s', '_queueChaincodeEvent', 'event');
+			should.equal(all_events.size, 1, 'Should have added an event to the queue list');
 		});
 	});
 
@@ -2522,10 +2511,11 @@ describe('ChaincodeRegistration', () => {
 
 	describe('#constructor', () => {
 		it('should set the correct properties', () => {
-			const ccReg = new ChaincodeRegistration('ccid', /eventNameFilter/, 'event_reg');
-			ccReg.ccid.should.equal('ccid');
-			ccReg.eventNameFilter.should.deep.equal(new RegExp(/eventNameFilter/));
+			const ccReg = new ChaincodeRegistration('chaincode_id', /event_name/, 'event_reg', false);
+			ccReg.chaincode_id.should.deep.equal(new RegExp(/chaincode_id/));
+			ccReg.event_name.should.deep.equal(new RegExp(/event_name/));
 			ccReg.event_reg.should.equal('event_reg');
+			ccReg.as_array.should.equal(false);
 		});
 	});
 });

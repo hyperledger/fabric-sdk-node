@@ -460,7 +460,7 @@ describe('Channel', () => {
 
 		it('returns the same channel event hub on subsequent calls', () => {
 			channel.addPeer(peer1);
-			const channelEventHub = channel.newChannelEventHub(peer1.getName());
+			const channelEventHub = channel.getChannelEventHub(peer1.getName());
 			expect(channel.getChannelEventHub(peer1.getName())).to.deep.equal(channelEventHub);
 		});
 

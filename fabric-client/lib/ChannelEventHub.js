@@ -136,6 +136,7 @@ const LAST_SEEN = 'last_seen'; // what this event hub sees as the last block rec
  * @class
  */
 
+let event_hub_number = 1;
 class ChannelEventHub {
 
 	/**
@@ -149,13 +150,15 @@ class ChannelEventHub {
 
 	constructor(channel, peer) {
 		logger.debug('const ');
+
+		this._event_hub_number = event_hub_number++;
 		// this will hold the last block number received
 		this._last_block_seen = null;
 
 		this._setReplayDefaults();
 
 		// hashtable of clients registered for chaincode events
-		this._chaincodeRegistrants = {};
+		this._chaincodeRegistrants = new Map();
 		// set of clients registered for block events
 		this._block_registrant_count = 0;
 		this._blockRegistrations = {};
@@ -291,6 +294,10 @@ class ChannelEventHub {
 	 *        fabric event service. When using a string, the {@link Channel}
 	 *        must have a peer assigned with that name. This peer will replace
 	 *        the current peer endpoint of this channel event hub.
+	 * @property {boolean} as_array - Optional. Only used with chaincode code
+	 *        events to indicate that all chaincode events found in a block
+	 *        should be sent as an array to the callback rather than the default
+	 *        one at a time.
 	 */
 
 	/**
@@ -320,7 +327,7 @@ class ChannelEventHub {
 	 */
 	connect(options, connectCallback) {
 		const method = 'connect';
-		logger.debug('%s - start', method);
+		logger.debug('%s - start - hub:%s', method, this._event_hub_number);
 		let signedEvent = null;
 		let full_block = null;
 		const connect_request = {};
@@ -594,8 +601,10 @@ class ChannelEventHub {
 	 * all listeners that provided an "onError" callback.
 	 */
 	disconnect() {
+		const method = 'disconnect';
+		logger.debug('%s - start - hub:%s', method, this._event_hub_number);
 		if (this._disconnect_running) {
-			logger.debug('disconnect - disconnect is running');
+			logger.debug('%s - disconnect is running', method);
 		} else {
 			this._disconnect_running = true;
 			this._disconnect(new EventHubDisconnectError('ChannelEventHub has been shutdown'));
@@ -620,7 +629,9 @@ class ChannelEventHub {
 	 * all listeners that provided an "onError" callback.
 	 */
 	_disconnect(err) {
-		logger.debug('_disconnect - start -- called due to:: %s, peer:%s', err.message, this.getPeerAddr());
+		const method = '_disconnect';
+		logger.debug('%s - start - hub:%s', method, this._event_hub_number);
+		logger.debug('%s - called due to:: %s, peer:%s', method, err.message, this.getPeerAddr());
 		this._connect_running = false;
 		this._closeAllCallbacks(err);
 		this._shutdown();
@@ -632,7 +643,7 @@ class ChannelEventHub {
 			this.connectCallback = null; // clean up
 		}
 
-		logger.debug('_disconnect - end -- called due to:: %s, peer:%s', err.message, this.getPeerAddr());
+		logger.debug('%s - end -- called due to:: %s, peer:%s', method, err.message, this.getPeerAddr());
 	}
 
 	/*
@@ -871,20 +882,16 @@ class ChannelEventHub {
 		}
 		this._transactionRegistrations = {};
 
-		const cc_closer = (key) => {
-			const cbtable = this._chaincodeRegistrants[key];
-			cbtable.forEach((chaincode_reg) => {
-				logger.debug('%s - closing this chaincode event ccid:%s eventNameFilter:%s', method, chaincode_reg.ccid, chaincode_reg.eventNameFilter);
-				if (chaincode_reg.event_reg.onError) {
-					chaincode_reg.event_reg.onError(err);
-				}
-			});
-		};
+		logger.debug('%s - chaincodeRegistrants %s', method, this._chaincodeRegistrants.size);
+		for (const chaincode_reg of this._chaincodeRegistrants.keys()) {
+			if (chaincode_reg.event_reg.onError) {
+				logger.debug('%s - closing this chaincode event chaincode_id:%s event_name:%s', method, chaincode_reg.chaincode_id, chaincode_reg.event_name);
+				chaincode_reg.event_reg.onError(err);
+			}
+		}
+		this._chaincodeRegistrants.clear();
 
-		logger.debug('%s - chaincodeRegistrants %s', method, Object.keys(this._chaincodeRegistrants).length);
-		Object.keys(this._chaincodeRegistrants).forEach(cc_closer);
-		this._chaincodeRegistrants = {};
-
+		// all done
 		logger.debug('%s - end', method);
 	}
 
@@ -1147,16 +1154,26 @@ class ChannelEventHub {
 	 * asynchronously. The best practice would be to provide an
 	 * "onError" callback to be notified when this ChannelEventHub has an issue.
 	 *
-	 * @param {string} ccid - Id of the chaincode of interest
-	 * @param {string|RegExp} eventname - The exact name of the chaincode event or
+	 * @param {string} chaincode_id - Id of the chaincode of interest
+	 * @param {string|RegExp} event_name - The exact name of the chaincode event or
 	 *        regular expression that will be matched against the name given to
 	 *        the target chaincode's call
 	 *        <code>stub.SetEvent(name, payload)</code>)
-	 * @param {function} onEvent - callback function for matched events. It gets passed
-	 *        four parameters, a {@link ChaincodeEvent} object,
-	 *        the block number this transaction was committed to the ledger,
-	 *        the transaction ID, and a string representing the status of
-	 *        the transaction.
+	 * @param {function} onEvent - callback function for matched events. It will
+	 *        be called with four parameters when not using "as_array".
+	 *        <ul><li>{@link ChaincodeEvent} - The chaincode event as produced by the chaincode,
+	 *        <li>{Long} - the block number that contains this chaincode event
+	 *        <li>{string} - the transaction ID that contains this chaincode event
+	 *        <li>{string} - the transaction status of the transaction that contains this chaincode event
+	 *        </ul>When using "as_array: true" option, there will be one
+	 *        parameter of an array of an event objects with the above values which may be used
+	 *        as in the example below.
+	 * @example <caption>Chaincode callback to process events when as_array:true </caption>
+	 *        function myCallback(...events) {
+	 *           for ({chaincode_event, block_num, tx_id, tx_status} of events) {
+	 *               // process the chaincode event
+	 *           }
+	 *        }
 	 * @param {function} onError - Optional callback function to be notified when
 	 *        this ChannelEventHub is shutdown. The shutdown may be caused by a network
 	 *        or connection error, by a call to the "disconnect()" method or when
@@ -1167,16 +1184,20 @@ class ChannelEventHub {
 	 * @param {RegistrationOpts} options - Options on the registrations to allow
 	 *        for start and end block numbers, automatically unregister and
 	 *        automatically disconnect.
+	 * 	      Chaincode event listeners may also use the "as_array" option to
+	 *        indicate that all the chaincode events found that match this
+	 *        definition be sent to the callback as an array or call the callback for
+	 *        each one individually.
 	 * @returns {Object} An object that should be treated as an opaque handle used
 	 *        to unregister (see [unregisterChaincodeEvent()]{@link ChannelEventHub#unregisterChaincodeEvent})
 	 */
-	registerChaincodeEvent(ccid, eventname, onEvent, onError, options) {
+	registerChaincodeEvent(chaincode_id, event_name, onEvent, onError, options) {
 		logger.debug('registerChaincodeEvent - start');
-		if (!ccid) {
-			throw new Error('Missing "ccid" parameter');
+		if (!chaincode_id) {
+			throw new Error('Missing "chaincode_id" parameter');
 		}
-		if (!eventname) {
-			throw new Error('Missing "eventname" parameter');
+		if (!event_name) {
+			throw new Error('Missing "event_name" parameter');
 		}
 		if (!onEvent) {
 			throw new Error('Missing "onEvent" parameter');
@@ -1187,20 +1208,18 @@ class ChannelEventHub {
 
 		const event_reg = new EventRegistration(onEvent, onError, options, false, false);
 
-		const chaincode_reg = new ChaincodeRegistration(ccid, eventname, event_reg);
+		let as_array = false; // default is send one at a time
+		if (options && typeof options.as_array === 'boolean') {
+			as_array = options.as_array;
+		}
+		const chaincode_reg = new ChaincodeRegistration(chaincode_id, event_name, event_reg, as_array);
+
 		const unregister_action = () => {
 			this.unregisterChaincodeEvent(chaincode_reg);
 		};
 		this._on_end_actions(chaincode_reg, unregister_action, startstop_mode, options);
 
-		let cbtable = this._chaincodeRegistrants[ccid];
-		if (!cbtable) {
-			cbtable = new Set();
-			this._chaincodeRegistrants[ccid] = cbtable;
-		}
-		cbtable.add(chaincode_reg);
-
-
+		this._chaincodeRegistrants.set(chaincode_reg, chaincode_reg);
 
 		this._checkConnection();
 
@@ -1222,14 +1241,10 @@ class ChannelEventHub {
 		if (!listener_handle) {
 			throw new Error('Missing "listener_handle" parameter');
 		}
-		const cbtable = this._chaincodeRegistrants[listener_handle.ccid];
-		if (!cbtable && throwError) {
-			throw new Error(`No event registration for chaincode id ${listener_handle.ccid}`);
-		} else if (cbtable) {
-			cbtable.delete(listener_handle);
-			if (cbtable.size <= 0) {
-				delete this._chaincodeRegistrants[listener_handle.ccid];
-			}
+		if (!this._chaincodeRegistrants.has(listener_handle) && throwError) {
+			throw new Error(`No event registration for chaincode id ${listener_handle.chaincode_id}`);
+		} else {
+			this._chaincodeRegistrants.delete(listener_handle);
 		}
 	}
 
@@ -1480,23 +1495,27 @@ class ChannelEventHub {
 	 * @param {Object} block protobuf object which might contain the chaincode event from the fabric
 	 */
 	_processChaincodeEvents(block) {
-		if (Object.keys(this._chaincodeRegistrants).length === 0) {
-			logger.debug('_processChaincodeEvents - no registered chaincode event "listeners"');
+		const method = '_processChaincodeEvents';
+		if (this._chaincodeRegistrants.size === 0) {
+			logger.debug('%s - no registered chaincode event "listeners"', method);
 			return;
 		}
-
+		const all_events = new Map();
 		if (block.number) {
 			if (block.filtered_transactions) {
 				for (const filtered_transaction of block.filtered_transactions) {
 					if (filtered_transaction.transaction_actions) {
 						if (filtered_transaction.transaction_actions.chaincode_actions) {
 							for (const chaincode_action of filtered_transaction.transaction_actions.chaincode_actions) {
-
-								this._callChaincodeListener(chaincode_action.chaincode_event,
+								// need to remove the payload since with filtered blocks it
+								// has an empty byte array value which is not the real value
+								// we do not want the listener to think that is the value
+								delete chaincode_action.chaincode_event.payload;
+								this._queueChaincodeEvent(chaincode_action.chaincode_event,
 									block.number,
 									filtered_transaction.txid,
 									filtered_transaction.tx_validation_code,
-									true);
+									all_events);
 							}
 						}
 					}
@@ -1504,75 +1523,86 @@ class ChannelEventHub {
 			}
 		} else {
 			for (let index = 0; index < block.data.data.length; index++) {
-				logger.debug(`_processChaincodeEvents - trans index=${index}`);
+				logger.debug(`%s - trans index=${index}`, method);
 				try {
 					const env = block.data.data[index];
-					const pload = env.payload;
-					const channel_header = pload.header.channel_header;
+					const channel_header = env.payload.header.channel_header;
 					if (channel_header.type === 3) { // only ENDORSER_TRANSACTION have chaincode events
-						const tx = pload.data;
+						const tx = env.payload.data;
 						if (tx && tx.actions) {
 							for (const {payload} of tx.actions) {
 								const chaincode_event = payload.action.proposal_response_payload.extension.events;
-								logger.debug('_processChaincodeEvents - chaincode_event %s', chaincode_event);
+								logger.debug('%s - chaincode_event %s', method, chaincode_event);
 
 								const txStatusCodes = block.metadata.metadata[_commonProto.BlockMetadataIndex.TRANSACTIONS_FILTER];
 								const channelHeader = block.data.data[index].payload.header.channel_header;
 								const val_code = txStatusCodes[index];
 
-								this._callChaincodeListener(chaincode_event,
+								this._queueChaincodeEvent(chaincode_event,
 									block.header.number,
 									channelHeader.tx_id,
 									val_code,
-									false);
+									all_events);
 							}
 						} else {
-							logger.debug('_processChaincodeEvents - no transactions or transaction actions');
+							logger.debug('%s - no transactions or transaction actions', method);
 						}
 					} else {
-						logger.debug('_processChaincodeEvents - block is not endorser transaction type');
+						logger.debug('%s - block is not endorser transaction type', method);
 					}
 				} catch (err) {
 					logger.error('on.data - Error unmarshalling transaction=', err);
 				}
 			}
 		}
+
+		// send all events for each listener
+		for (const [chaincode_reg, events] of all_events.entries()) {
+			if (chaincode_reg.as_array) {
+				// call as an array ... all at once
+				chaincode_reg.event_reg.onEvent(events);
+			} else {
+				for (const event of events) {
+					// call one at a time
+					chaincode_reg.event_reg.onEvent(event.chaincode_event, event.block_num, event.tx_id, event.tx_status);
+				}
+			}
+			// see if we should automatically unregister this event listener or disconnect this hub
+			if (chaincode_reg.event_reg.unregister) {
+				this.unregisterChaincodeEvent(chaincode_reg);
+				logger.debug('%s - automatically unregister chaincode event listener %s', method, chaincode_reg);
+			}
+			if (chaincode_reg.event_reg.disconnect) {
+				logger.debug('%s - automatically disconnect event hub with chaincode event listener disconnect=true %s', method, chaincode_reg);
+				this._disconnect(new EventHubDisconnectError('Shutdown due to disconnect on chaincode event registration'));
+			}
+		}
 	}
 
-	_callChaincodeListener(chaincode_event, block_num, tx_id, val_code, filtered) {
-		logger.debug('_callChaincodeListener - chaincode_event %s', chaincode_event);
-		const cbtable = this._chaincodeRegistrants[chaincode_event.chaincode_id];
-		if (!cbtable) {
-			logger.debug('_callChaincodeListener - no chaincode listeners found');
-			return;
-		}
+	_queueChaincodeEvent(chaincode_event, block_num, tx_id, val_code, all_events) {
+		const method = '_queueChaincodeEvent';
+		logger.debug('%s - chaincode_event %s', method, chaincode_event);
+
 		const tx_status = convertValidationCode(val_code);
 
-		logger.debug('_callChaincodeListener - txid=%s  val_code=%s', tx_id, tx_status);
+		logger.debug('%s - txid=%s  val_code=%s', method, tx_id, tx_status);
 
-		cbtable.forEach((chaincode_reg) => {
-			if (chaincode_reg.eventNameFilter.test(chaincode_event.event_name)) {
-				logger.debug('_callChaincodeListener - calling chaincode listener callback');
-				if (filtered) {
-					// need to remove the payload since with filtered blocks it
-					// has an empty byte array value which is not the real value
-					// we do not want the listener to think that is the value
-					delete chaincode_event.payload;
+		for (const chaincode_reg of this._chaincodeRegistrants.keys()) {
+			// check each listener to see if this chaincode event matches
+			if (chaincode_reg.chaincode_id.test(chaincode_event.chaincode_id) &&
+				chaincode_reg.event_name.test(chaincode_event.event_name)) {
+				// we have a match - save it to be sent later
+				logger.debug('%s - queuing chaincode event: %s', method, chaincode_event.event_name);
+				let events = all_events.get(chaincode_reg);
+				if (!events) {
+					events = [];
+					all_events.set(chaincode_reg, events);
 				}
-				chaincode_reg.event_reg.onEvent(chaincode_event, block_num, tx_id, tx_status);
-
-				// see if we should automatically unregister this event listener or disconnect this hub
-				if (chaincode_reg.event_reg.unregister) {
-					this.unregisterChaincodeEvent(chaincode_reg);
-					logger.debug('_callChaincodeListener - automatically unregister chaincode event listener for tx_id:%s', tx_id);
-				}
-				if (chaincode_reg.event_reg.disconnect) {
-					this._disconnect(new EventHubDisconnectError('Shutdown due to disconnect on chaincode event registration'));
-				}
+				events.push({chaincode_event, block_num, tx_id, tx_status});
 			} else {
-				logger.debug('_callChaincodeListener - NOT calling chaincode listener callback');
+				logger.debug('%s - NOT queuing chaincode event: %s', method, chaincode_event.event_name);
 			}
-		});
+		}
 	}
 
 	/*
@@ -1685,17 +1715,29 @@ class ChaincodeRegistration {
 	/**
 	 * Constructs a chaincode callback entry
 	 *
-	 * @param {string} ccid - chaincode id
-	 * @param {string|RegExp} eventNameFilter - The regex used to filter events
+	 * @param {string} chaincode_id - chaincode id
+	 * @param {string|RegExp} event_name - The regex used to filter events
 	 * @param {EventRegistration} event_reg - event registrations callbacks
+	 * @param {as_array} as_array - should all the chaincode events found that match this
+	 *  definition be sent to the callback as an array or call the callback for
+	 *  each one individually.
 	 */
-	constructor(ccid, eventNameFilter, event_reg) {
-		// chaincode id
-		this.ccid = ccid;
+	constructor(chaincode_id, event_name, event_reg, as_array) {
+		// chaincode id (regex filter)
+		this.chaincode_id = new RegExp(chaincode_id);
 		// event name regex filter
-		this.eventNameFilter = new RegExp(eventNameFilter);
+		this.event_name = new RegExp(event_name);
 
 		this.event_reg = event_reg;
+
+		this.events = [];
+
+		this.as_array = as_array;
+	}
+
+	toString() {
+		return 'ChaincodeRegistration:' + this.chaincode_id +
+			' event_name:' + this.event_name;
 	}
 }
 
