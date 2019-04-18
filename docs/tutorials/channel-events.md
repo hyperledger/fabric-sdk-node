@@ -359,6 +359,11 @@ channel-based event service once the event has been seen. The default is false.
 When not set and the endBlock has been set the ChannelEventHub instance
 will automatically disconnect itself.
 
+* {boolean} `as_array` -- (Optional) This setting indicates to the 
+`ChannelEventHub` instance to send all chaincode events to the
+callback as array rather than one at a time. This setting is only
+available for chaincode events.
+
 ### Get a Channel-based Event Hub
 Use the fabric-client {@link Channel} 
 {@link Channel#newChannelEventHub newChannelEventHub} object to
@@ -662,6 +667,31 @@ let send_trans = channel.sendTransaction({proposalResponses: results[0], proposa
 // now that we have two promises all set to go... execute them
 return Promise.all([event_monitor, send_trans]);
 }).then((results) => {
+```
+
+The default is to receive the chaincode events one at a time, however
+it would be difficult to know that a chaincode event was missed
+and to maintain the order within the block.
+Using the new option `as_array` the callback will
+receive all chaincode events found in a block as an array.
+The following example will register a chaincode listener with a callback that
+will handle the chaincodes as an array, notice the fifth parameter is an
+options object with the 'as_array' true setting.
+
+```
+channel_event_hub.registerChaincodeEvent(
+   'mychaincode',
+   'myeventname',
+   (...events) => {
+      for (const {chaincode_event, block_num, tx_id, tx_status} of events) {
+         /* process each event */
+      }
+    },
+    (err) =>{
+      /* process err */
+    },
+    { as_array: true}
+);
 ```
 
 ### When using mutual tls

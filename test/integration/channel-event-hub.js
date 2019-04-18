@@ -370,7 +370,7 @@ test('*****  Test channel events', async (t) => {
 		 *    Register two chaincode event listeners with defaults
 		 */
 		const event_monitor1 = createChaincodeRegistration(t, 'first chaincode', event_hub, chaincode_id, '^evtsender*');
-		const event_monitor2 = createChaincodeRegistration(t, 'second chaincode', event_hub, chaincode_id, '^evtsender*');
+		const event_monitor2 = createChaincodeRegistrationAsArray(t, 'second chaincode', event_hub, chaincode_id, '^evtsender*');
 		send_trans = channel.sendTransaction({proposalResponses: results[0], proposal: results[1]});
 
 		/*
@@ -386,8 +386,8 @@ test('*****  Test channel events', async (t) => {
 		results = await Promise.all([event_monitor1, event_monitor2, send_trans]);
 		t.pass('Successfully submitted the transaction to be committed');
 
-		t.equals(results[0], 'RECEIVEDfirst chaincode', 'Checking that we got the correct resolve string from our first event callback');
-		t.equals(results[1], 'RECEIVEDsecond chaincode', 'Checking that we got the correct resolve string from our second event callback');
+		t.equals(results[0], 'RECEIVED first chaincode', 'Checking that we got the correct resolve string from our first event callback');
+		t.equals(results[1], 'RECEIVED second chaincode', 'Checking that we got the correct resolve string from our second event callback');
 
 		// check the status of the sendTransaction
 		//   notice that we are using index 2, these are based on the order of
@@ -981,12 +981,60 @@ function createChaincodeRegistration(t, message, event_hub, chaincode_id, chainc
 			// So in this case we want to shutdown the event listener
 			event_hub.unregisterChaincodeEvent(regid);
 			t.pass('Successfully received the chaincode event on block number ' + block_num + ' for ' + message);
-			resolve('RECEIVED' + message);
+			resolve('RECEIVED ' + message);
 		}, (error) => {
 			clearTimeout(timeout_handle);
 			t.fail('Failed to receive the ' + message + ' ::' + error);
 			reject(error);
 		});
+	});
+	return event_monitor;
+}
+
+function createChaincodeRegistrationAsArray(t, message, event_hub, chaincode_id, chaincode_eventname) {
+	const event_monitor = new Promise((resolve, reject) => {
+		let regid = null;
+		const timeout_handle = setTimeout(() => {
+			if (regid) {
+				event_hub.unregisterChaincodeEvent(regid);
+				t.fail('Timeout - Failed to receive the ' + message);
+			}
+			reject(new Error('Timed out waiting for chaincode event ' + message));
+		}, 40000);
+
+		regid = event_hub.registerChaincodeEvent(chaincode_id.toString(), chaincode_eventname, (...events) => {
+			clearTimeout(timeout_handle);
+			let success = false;
+			for (const {chaincode_event, block_num, tx_id, tx_status} of events) {
+				t.pass('Successfully got a chaincode event ' + chaincode_event + ' as array with transid:' + tx_id + ' with status:' + tx_status);
+				t.pass('Successfully received the chaincode event on block number ' + block_num + ' for ' + message);
+				// --- With filtered events there is no chaincode event payload,
+				// --- the chaincode event does have the chaincode event name.
+				// --- To get the payload you must call the connect(true) to get full blocks
+				// --- and you must have the access rights to get those blocks that
+				// --- contain your chaincode events with the payload
+				success = true;
+			}
+
+			// Chaincode event listeners are meant to run continuously
+			// Therefore the default to automatically unregister is false
+			// So in this case we have to shutdown the event listener
+			event_hub.unregisterChaincodeEvent(regid);
+
+			if (success) {
+				t.pass('Successfully got a chaincode event as array');
+				resolve('RECEIVED ' + message);
+			} else {
+				t.fail('Failed to get the chaincode event as an array');
+				reject('FAILED ' + message);
+			}
+		}, (error) => {
+			clearTimeout(timeout_handle);
+			t.fail('Failed to receive the ' + message + ' ::' + error);
+			reject(error);
+		},
+			{as_array: true}
+		);
 	});
 	return event_monitor;
 }
