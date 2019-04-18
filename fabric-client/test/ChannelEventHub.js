@@ -113,6 +113,23 @@ describe('ChannelEventHub', () => {
 		});
 	});
 
+	describe('#isFiltered', () => {
+		let hub;
+		beforeEach(() => {
+			hub = new ChannelEventHub('channel', 'peer');
+		});
+
+		it('should return true', () => {
+			hub._filtered_stream = true;
+			should.equal(hub.isFiltered(), true, 'isFiltered should return true');
+		});
+
+		it('should return false', () => {
+			hub._filtered_stream = false;
+			should.equal(hub.isFiltered(), false, 'isFiltered should return false');
+		});
+	});
+
 	describe('#_assignPeer', () => {
 		let hub, peer, channel;
 
@@ -272,7 +289,7 @@ describe('ChannelEventHub', () => {
 	describe('#_checkAllowRegistrations', () => {
 		it('should throw an error if registration is not allowed', () => {
 			const hub = new ChannelEventHub('channel', 'peer');
-			hub._start_stop_registration = true;
+			hub._start_stop_action = true;
 			(() => {
 				hub._checkAllowRegistrations();
 			}).should.throw(/This ChannelEventHub is not open to event listener registrations/);
@@ -411,6 +428,21 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(FakeLogger.debug, '%s - options do not include startBlock');
 			sinon.assert.calledWith(FakeLogger.debug, '%s - options do not include endBlock');
 		});
+
+		it('should set the callback', () => {
+			getPeerAddrStub.returns('peer');
+			hub._clientContext._userContext = {};
+			hub.connect({}, 'callback');
+			sinon.assert.calledWith(_connectStub, {});
+			should.equal(hub.connectCallback, 'callback', 'Should have set the callback on connect');
+		});
+
+		it('should call _connect with the force option', () => {
+			getPeerAddrStub.returns('peer');
+			hub._clientContext._userContext = {};
+			hub.connect({force: true});
+			sinon.assert.calledWith(_connectStub, {force: true});
+		});
 	});
 
 	describe('#_connect', () => {
@@ -548,7 +580,7 @@ describe('ChannelEventHub', () => {
 		});
 
 
-		it('should call stream on data log about an success response and not success status', () => {
+		it('should call stream on data log about a success response and not success status', () => {
 			hub._filtered_stream = false;
 			checkAndAddConfigSettingStub.onCall(0).returns({});
 			checkAndAddConfigSettingStub.onCall(1).returns({});
@@ -564,7 +596,7 @@ describe('ChannelEventHub', () => {
 		});
 
 
-		it('should call stream on data log about an success response and success status if _ending_block_seen and _last_block_seen set', () => {
+		it('should call stream on data log about a success response and success status if _ending_block_seen and _last_block_seen set', () => {
 			hub._ending_block_seen = 1;
 			hub._ending_block_newest = 1;
 			hub._last_block_seen = 1;
@@ -581,7 +613,7 @@ describe('ChannelEventHub', () => {
 		});
 
 
-		it('should call stream on data log about an success response and success status if _ending_block_seen and _last_block_seen not set', () => {
+		it('should call stream on data log about a success response and success status if _ending_block_seen and _last_block_seen not set', () => {
 			checkAndAddConfigSettingStub.onCall(0).returns({});
 			checkAndAddConfigSettingStub.onCall(1).returns({});
 			checkAndAddConfigSettingStub.onCall(2).returns({});
@@ -604,6 +636,22 @@ describe('ChannelEventHub', () => {
 			onStub.yields({Type: 'status', status: 'SUCCESS'});
 			hub._connect({signedEvent: true});
 			sinon.assert.calledWith(FakeLogger.debug, 'on.data - incoming block was from a cancelled stream');
+		});
+
+		it('should log debug and call connect call back', () => {
+			checkAndAddConfigSettingStub.onCall(0).returns({});
+			checkAndAddConfigSettingStub.onCall(1).returns({});
+			checkAndAddConfigSettingStub.onCall(2).returns({});
+			getConfigSettingStub.withArgs('request-timeout', 3000).returns(1000);
+			isStreamReadyStub.returns(true);
+			onStub.yields({Type: 'block'});
+			decodeBlockStub.returns('block');
+			const myConnectCallback = sandbox.stub();
+			hub.connectCallback = myConnectCallback;
+			hub._start_stop_connect = true;
+			hub._connect({signedEvent: true});
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data - first block received , this ChannelEventHub now registered');
+			sinon.assert.called(myConnectCallback);
 		});
 
 		it('should log debug and errors if connected and an error is detected', () => {
@@ -733,15 +781,18 @@ describe('ChannelEventHub', () => {
 			const _setReplayDefaultsStub = sandbox.stub();
 			const getPeerAddrStub = sandbox.stub().returns('addr');
 			const hub = new ChannelEventHub('channel', 'peer');
+			const myConnectCallback = sandbox.stub();
 			hub._closeAllCallbacks = _closeAllCallbacksStub;
 			hub._shutdown = _shutdownStub;
 			hub._setReplayDefaults = _setReplayDefaultsStub;
 			hub.getPeerAddr = getPeerAddrStub;
+			hub.connectCallback = myConnectCallback;
 
 			hub.disconnect({message: 'error'});
 			sinon.assert.called(_closeAllCallbacksStub);
 			sinon.assert.called(_shutdownStub);
 			sinon.assert.called(_setReplayDefaultsStub);
+			sinon.assert.called(myConnectCallback);
 			hub._connected.should.be.false;
 			hub._connect_running.should.be.false;
 		});
@@ -1082,6 +1133,31 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledTwice(toBufferStub);
 		});
 
+		it('should run with startBlock:1 and endBlock:newest given identity and txId', () => {
+			hub._starting_block_number = 1;
+			hub._ending_block_number = 'oldest';
+			hub.generateUnsignedRegistration({identity: 'identity', txId: new TransactionIDStub(), mspId: 'mspId', certificate: 'certificate'});
+			sinon.assert.calledWith(SeekSpecifiedStub);
+			sinon.assert.calledWith(setNumberStub, 1);
+			sinon.assert.calledWith(setSpecifiedStub, new SeekSpecifiedStub());
+			sinon.assert.called(SeekOldestStub);
+			sinon.assert.calledWith(setOldestStub, new SeekOldestStub());
+			sinon.assert.called(SeekPositionStub);
+			sinon.assert.called(SeekInfoStub);
+			sinon.assert.calledWith(setStartStub, new SeekPositionStub());
+			sinon.assert.calledWith(setStopStub, new SeekPositionStub());
+			sinon.assert.calledWith(setBehaviorStub, 'FAIL_IF_NOT_READY');
+			sinon.assert.called(buildChannelHeaderStub);
+			sinon.assert.called(getTransactionIDStub);
+			sinon.assert.called(getClientCertHashStub);
+			sinon.assert.called(getNonceStub);
+			sinon.assert.called(buildHeaderStub);
+			sinon.assert.called(buildHeaderStub);
+			sinon.assert.called(setHeaderStub);
+			sinon.assert.called(setDataStub);
+			sinon.assert.calledTwice(toBufferStub);
+		});
+
 		it('should run with startBlock:1 and endBlock:1 given identity and txId', () => {
 			hub._starting_block_number = 1;
 			hub._ending_block_number = 1;
@@ -1219,43 +1295,43 @@ describe('ChannelEventHub', () => {
 		it('should return NO_START_STOP and log on entry and exit', () => {
 			const result = hub._checkReplay({});
 			result.should.equal(0);
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - start');
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - end');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - start');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
 		});
 
 		it('should return START_ONLY with startBlock parameter of 1', () => {
 			const result = hub._checkReplay({startBlock: 1});
 			result.should.equal(1);
 			hub._starting_block_number.toInt().should.equal(1);
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', Long.fromInt(1));
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will start at block %s', '_checkReplay', Long.fromInt(1));
 		});
 
 		it('should return START_ONLY with startBlock parameter of string 1', () => {
 			const result = hub._checkReplay({startBlock: '1'});
 			result.should.equal(1);
 			hub._starting_block_number.toInt().should.equal(1);
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', Long.fromInt(1));
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will start at block %s', '_checkReplay', Long.fromInt(1));
 		});
 
 		it('should return START_ONLY with startBlock parameter of Long 1', () => {
 			const result = hub._checkReplay({startBlock: Long.fromInt(1)});
 			result.should.equal(1);
 			hub._starting_block_number.toInt().should.equal(1);
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', Long.fromInt(1));
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will start at block %s', '_checkReplay', Long.fromInt(1));
 		});
 
 		it('should return START_ONLY with startBlock parameter of newest', () => {
 			const result = hub._checkReplay({startBlock: 'newest'});
 			result.should.equal(1);
 			hub._starting_block_number.should.equal('newest');
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', 'newest');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will start at block %s', '_checkReplay', 'newest');
 		});
 
 		it('should return START_ONLY with startBlock parameter of oldest', () => {
 			const result = hub._checkReplay({startBlock: 'oldest'});
 			result.should.equal(1);
 			hub._starting_block_number.should.equal('oldest');
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', 'oldest');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will start at block %s', '_checkReplay', 'oldest');
 		});
 
 		it('should return START_ONLY with startBlock parameter of last_seen', () => {
@@ -1263,42 +1339,42 @@ describe('ChannelEventHub', () => {
 			const result = hub._checkReplay({startBlock: 'last_seen'});
 			result.should.equal(1);
 			hub._starting_block_number.should.equal(1);
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will start at block %s', 1);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will start at block %s', '_checkReplay', 1);
 		});
 
 		it('should return END_ONLY with endBlock parameter of 1', () => {
 			const result = hub._checkReplay({endBlock: 1});
 			result.should.equal(2);
 			hub._ending_block_number.toInt().should.equal(1);
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', Long.fromInt(1));
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will end at block %s', '_checkReplay', Long.fromInt(1));
 		});
 
 		it('should return END_ONLY with endBlock parameter of string 1', () => {
 			const result = hub._checkReplay({endBlock: '1'});
 			result.should.equal(2);
 			hub._ending_block_number.toInt().should.equal(1);
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', Long.fromInt(1));
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will end at block %s', '_checkReplay', Long.fromInt(1));
 		});
 
 		it('should return END_ONLY with endBlock parameter of Long 1', () => {
 			const result = hub._checkReplay({endBlock: Long.fromInt(1)});
 			result.should.equal(2);
 			hub._ending_block_number.toInt().should.equal(1);
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', Long.fromInt(1));
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will end at block %s', '_checkReplay', Long.fromInt(1));
 		});
 
 		it('should return END_ONLY with endBlock parameter of newest', () => {
 			const result = hub._checkReplay({endBlock: 'newest'});
 			result.should.equal(2);
 			hub._ending_block_number.should.equal('newest');
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', 'newest');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will end at block %s', '_checkReplay', 'newest');
 		});
 
 		it('should return END_ONLY with endBlock parameter of oldest', () => {
 			const result = hub._checkReplay({endBlock: 'oldest'});
 			result.should.equal(2);
 			hub._ending_block_number.should.equal('oldest');
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', 'oldest');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will end at block %s', '_checkReplay', 'oldest');
 		});
 
 		it('should return END_ONLY with endBlock parameter of last_seen', () => {
@@ -1306,7 +1382,7 @@ describe('ChannelEventHub', () => {
 			const result = hub._checkReplay({endBlock: 'last_seen'});
 			result.should.equal(2);
 			hub._ending_block_number.should.equal(1);
-			sinon.assert.calledWith(FakeLogger.debug, '_checkReplay - Event listening will end at block %s', 1);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - Event listening will end at block %s', '_checkReplay', 1);
 		});
 
 		it('should throw an error if startBlock is greater than endBlock', () => {
@@ -1315,16 +1391,16 @@ describe('ChannelEventHub', () => {
 			}).should.throw('"startBlock" (2) must not be greater than "endBlock" (1)');
 		});
 
-		it('should throw an error if startBlock given and have _start_stop_registration', () => {
-			hub._start_stop_registration = {};
+		it('should throw an error if startBlock given and have _start_stop_action', () => {
+			hub._start_stop_action = {};
 			(() => {
 				hub._checkReplay({startBlock: 1}, true);
 			}).should.throw('Not able to connect with startBlock or endBlock when a registered listener has those options.');
 			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has a registered listener that has options of startBlock or endBlock');
 		});
 
-		it('should throw an error if endBlock given and have _start_stop_registration', () => {
-			hub._start_stop_registration = {};
+		it('should throw an error if endBlock given and have _start_stop_action', () => {
+			hub._start_stop_action = {};
 			(() => {
 				hub._checkReplay({endBlock: 1}, true);
 			}).should.throw('Not able to connect with startBlock or endBlock when a registered listener has those options.');
@@ -1404,6 +1480,14 @@ describe('ChannelEventHub', () => {
 				hub._checkReplay({startBlock: 1, endBlock: 2});
 			}).should.throw('Registrations with startBlock or endBlock are not allowed if this ChannelEventHub is connected with a startBlock or endBlock');
 			sinon.assert.calledWith(FakeLogger.error, 'This ChannelEventHub has been connected with a startBlock or endBlock');
+		});
+
+		it('should set the start and end blocks from connect', () => {
+			hub._start_stop_connect = false;
+			hub._checkReplay({startBlock: Long.fromInt(1), endBlock: Long.fromInt(2)}, true);
+			should.equal(hub._ending_block_number.toInt(), 2, 'Should have a ending block from connect');
+			should.equal(hub._starting_block_number.toInt(), 1, 'Should have a starting block from connect');
+			should.equal(hub._start_stop_connect, true, 'Should see that we have a start stop from connect');
 		});
 	});
 
@@ -1624,8 +1708,8 @@ describe('ChannelEventHub', () => {
 			hub._chaincodeRegistrants = {'cc': cc};
 			_checkReplayStub.returns(2);
 			hub.registerChaincodeEvent('cc', 'event', 'onEvent', 'onError', 'options');
-			hub._start_stop_registration.unregister_action.should.be.instanceof(Function);
-			hub._start_stop_registration.unregister_action();
+			hub._start_stop_action.unregister.should.be.instanceof(Function);
+			hub._start_stop_action.unregister();
 			sinon.assert.called(unregisterChaincodeEventStub);
 		});
 	});
@@ -1709,23 +1793,23 @@ describe('ChannelEventHub', () => {
 			const regNumber = hub.registerBlockEvent('onEvent', 'onError', 'options');
 			sinon.assert.called(_checkAllowRegistrationsStub);
 			sinon.assert.calledWith(_checkReplayStub, 'options');
-			sinon.assert.calledWith(EventRegistrationStub, 'onEvent', 'onError', 'options', true, false);
+			sinon.assert.calledWith(EventRegistrationStub, 'onEvent', 'onError', 'options', false, false);
 			sinon.assert.called(_checkConnectionStub);
 			regNumber.should.equal(1);
 			hub._blockRegistrations[1].should.deep.equal(new EventRegistrationStub());
 		});
 
-		it('shold change default_disconnect to true', () => {
+		it('should change default_disconnect to false', () => {
 			_checkReplayStub.returns(2);
 			hub.registerBlockEvent('onEvent', 'onError', 'options');
-			sinon.assert.calledWith(EventRegistrationStub, 'onEvent', 'onError', 'options', true, true);
+			sinon.assert.calledWith(EventRegistrationStub, 'onEvent', 'onError', 'options', false, false);
 		});
 
-		it('should set _start_stop_registration, unregister_action callback and call unregisterBlockEvent', () => {
-			_checkReplayStub.returns(1);
-			hub.registerBlockEvent('onEvent', 'onError', 'options');
-			should.exist(hub._start_stop_registration);
-			hub._start_stop_registration.unregister_action();
+		it('should set _start_stop_action, unregister_action callback and call unregisterBlockEvent', () => {
+			_checkReplayStub.returns(2);
+			hub.registerBlockEvent('onEvent', 'onError', {endBlock:2});
+			should.exist(hub._start_stop_action);
+			hub._start_stop_action.unregister();
 			sinon.assert.calledWith(unregisterBlockEventStub, 1);
 		});
 	});
@@ -1822,19 +1906,19 @@ describe('ChannelEventHub', () => {
 			txid.should.equal('txid');
 		});
 
-		it('should cahnge txid to lowercase change default_unregister to false and change default_disconnect to true', () => {
+		it('should change txid to lowercase change default_unregister to false and change default_disconnect to false', () => {
 			_checkReplayStub.returns(2);
 			const txid = hub.registerTxEvent('ALL', 'onEvent', 'onError', 'options');
 			sinon.assert.calledWith(_checkAllowRegistrationsStub);
 			sinon.assert.calledWith(_checkReplayStub, 'options');
-			sinon.assert.calledWith(EventRegistrationsStub, 'onEvent', 'onError', 'options', false, true);
+			sinon.assert.calledWith(EventRegistrationsStub, 'onEvent', 'onError', 'options', false, false);
 			txid.should.equal('all');
 		});
 
 		it('should set the unregister_action', () => {
-			_checkReplayStub.returns(1);
+			_checkReplayStub.returns(2);
 			hub.registerTxEvent('ALL', 'onEvent', 'onError', 'options');
-			hub._start_stop_registration.unregister_action();
+			hub._start_stop_action.unregister();
 			sinon.assert.calledWith(unregisterTxEventStub, 'all');
 			sinon.assert.calledWith(_checkConnectionStub);
 		});
@@ -1871,6 +1955,7 @@ describe('ChannelEventHub', () => {
 
 	describe('#_processBlockEvents', () => {
 		let hub;
+
 		beforeEach(() => {
 			hub = new ChannelEventHub('channel', 'peer');
 		});
@@ -1897,6 +1982,18 @@ describe('ChannelEventHub', () => {
 			hub._processBlockEvents('block');
 
 			sinon.assert.calledTwice(onEventStub);
+		});
+
+		it('should call unregister and disconnect', () => {
+			const onEventStub = sandbox.stub();
+			hub.unregisterBlockEvent = sandbox.stub();
+			hub._disconnect = sandbox.stub();
+			hub._blockRegistrations = {key1: {onEvent: onEventStub, unregister: true, disconnect:true}};
+			hub._processBlockEvents('block');
+			sinon.assert.calledWith(FakeLogger.debug, '_processBlockEvents - calling block listener callback');
+			sinon.assert.calledWith(onEventStub, 'block');
+			sinon.assert.calledWith(hub.unregisterBlockEvent, 'key1');
+			sinon.assert.called(hub._disconnect);
 		});
 	});
 
@@ -2019,7 +2116,7 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(FakeLogger.debug, '_callTransactionListener - about to call the transaction call back for code=%s tx=%s', 'val_code', 'tx_id');
 		});
 
-		it('shold call convertValidationCode and trans_reg.onEvent', () => {
+		it('should call convertValidationCode and trans_reg.onEvent', () => {
 			convertValidationCodeStub.returns('status');
 			hub._callTransactionListener('tx_id', 'val_code', 1, {onEvent: onEventStub});
 			sinon.assert.calledWith(convertValidationCodeStub, 'val_code');
@@ -2213,12 +2310,12 @@ describe('ChannelEventHub', () => {
 			convertValidationCodeStub.returns('status');
 			const chaincodeReg = {eventNameFilter: new RegExp(/event/), event_reg: {onEvent: onEventStub, unregister: true}};
 			const chaincodeEvent = {chaincode_id: 'cc', event_name: 'event', payload: 'payload'};
-			Set.prototype.delete = deleteStub;
 			hub._chaincodeRegistrants = {cc: new Set([chaincodeReg])};
+			hub.unregisterChaincodeEvent = deleteStub;
 			hub._callChaincodeListener(chaincodeEvent, 'block_num', 'tx_id', 'val_code', false);
 			sinon.assert.called(deleteStub);
 			sinon.assert.calledWith(deleteStub, chaincodeReg);
-			sinon.assert.calledWith(FakeLogger.debug, '_callChaincodeListener - automatically unregister tx listener for %s', 'tx_id');
+			sinon.assert.calledWith(FakeLogger.debug, '_callChaincodeListener - automatically unregister chaincode event listener for tx_id:%s', 'tx_id');
 			delete Set.prototype.delete;
 		});
 
@@ -2265,7 +2362,7 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(lteStub, null);
 		});
 
-		it('should exit if _start_stop_registration is null', () => {
+		it('should exit if _start_stop_action is null', () => {
 			lteStub.returns(true);
 			hub._last_block_seen = 1;
 			hub._ending_block_number = {lessThanOrEqual: lteStub};
@@ -2276,10 +2373,10 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(lteStub, 1);
 		});
 
-		it('should exit if _start_stop_registration is not null and unregister is false', () => {
+		it('should exit if _start_stop_action is not null and unregister is false', () => {
 			lteStub.returns(true);
 			hub._last_block_seen = 1;
-			hub._start_stop_registration = {unregister: false};
+			hub._start_stop_action = {unregister: false};
 			hub._ending_block_number = {lessThanOrEqual: lteStub};
 			hub._checkReplayEnd();
 			hub._ending_block_seen.should.be.true;
@@ -2288,10 +2385,10 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(lteStub, 1);
 		});
 
-		it('should exit if _start_stop_registration is not null and unregister is true after calling unregister_action', () => {
+		it('should exit if _start_stop_action is not null and unregister is true after calling unregister_action', () => {
 			lteStub.returns(true);
 			hub._last_block_seen = 1;
-			hub._start_stop_registration = {unregister: true, unregister_action: unregister_actionStub};
+			hub._start_stop_action = {unregister: unregister_actionStub};
 			hub._ending_block_number = {lessThanOrEqual: lteStub};
 			hub._checkReplayEnd();
 			hub._ending_block_seen.should.be.true;
@@ -2300,10 +2397,10 @@ describe('ChannelEventHub', () => {
 			sinon.assert.calledWith(lteStub, 1);
 		});
 
-		it('should exit if _start_stop_registration is not null and disconnect is true after calling disconnect', () => {
+		it('should exit if _start_stop_action is not null and disconnect is true after calling disconnect', () => {
 			lteStub.returns(true);
 			hub._last_block_seen = 1;
-			hub._start_stop_registration = {unregister: false, disconnect: true};
+			hub._start_stop_action = {unregister: false, disconnect: true};
 			hub._ending_block_number = {lessThanOrEqual: lteStub};
 			hub._checkReplayEnd();
 			hub._ending_block_seen.should.be.true;
@@ -2319,7 +2416,53 @@ describe('ChannelEventHub', () => {
 		should.equal(hub._ending_block_number, null);
 		hub._ending_block_seen.should.be.false;
 		hub._ending_block_newest.should.be.false;
-		should.equal(hub._start_stop_registration, null);
+		should.equal(hub._start_stop_action, null);
+	});
+
+	describe('#_on_end_actions', () => {
+
+		let hub;
+		beforeEach(() => {
+			hub = new ChannelEventHub('channel', 'peer');
+		});
+
+		it('should exit without calling if startstop mode is not greater than no_start_stop', () => {
+			hub._on_end_actions('EVENT_REG', 'ACTION', hub.NO_START_STOP, {});
+			should.equal(hub._start_stop_action, null);
+			sinon.assert.calledWith(FakeLogger.debug, '_on_end_actions - no end block action required');
+		});
+
+		it('should not set the unregister action', () => {
+			hub._on_end_actions('EVENT_REG', 'ACTION', hub.END_ONLY, {unregister: false});
+			should.equal(hub._start_stop_action, null);
+		});
+
+		it('should not set the unregister action', () => {
+			hub._on_end_actions('EVENT_REG', 'ACTION', 3, {unregister: false});
+			should.equal(hub._start_stop_action.unregister, undefined);
+			should.equal(hub._start_stop_action.event_reg, 'EVENT_REG');
+		});
+
+		it('should set the unregister action', () => {
+			hub._on_end_actions('EVENT_REG', 'ACTION', 3, {unregister: true});
+			should.equal(hub._start_stop_action.unregister, 'ACTION');
+		});
+
+		it('should not set the disconnect action', () => {
+			hub._on_end_actions('EVENT_REG', 'ACTION', hub.END_ONLY, {unregister: false});
+			should.equal(hub._start_stop_action, null);
+		});
+
+		it('should not set the disconnect action', () => {
+			hub._on_end_actions('EVENT_REG', 'ACTION', 3, {disconnect: false});
+			should.equal(hub._start_stop_action.disconnect, undefined);
+			should.equal(hub._start_stop_action.event_reg, 'EVENT_REG');
+		});
+
+		it('should set the disconnect action', () => {
+			hub._on_end_actions('EVENT_REG', 'ACTION', 3, {disconnect: true});
+			should.equal(hub._start_stop_action.disconnect, true);
+		});
 	});
 });
 
@@ -2415,8 +2558,8 @@ describe('EventRegistration', () => {
 
 	describe('#constructor', () => {
 		it('should log if unregister is not defined', () => {
-			new EventRegistration('onEvent', 'onError', {});
-			sinon.assert.calledWith(FakeLogger.debug, 'const-EventRegistration - unregister was not defined');
+			new EventRegistration('onEvent', 'onError', {}, false, false);
+			sinon.assert.calledWith(FakeLogger.debug, 'const-EventRegistration - unregister was not defined, using default of %s');
 		});
 
 		it('should set unregister if it is boolean', () => {
@@ -2431,8 +2574,8 @@ describe('EventRegistration', () => {
 		});
 
 		it('should log if disconnect is not defined', () => {
-			new EventRegistration('onEvent', 'onError', {});
-			sinon.assert.calledWith(FakeLogger.debug, 'const-EventRegistration - disconnect was not defined');
+			new EventRegistration('onEvent', 'onError', {}, false, false);
+			sinon.assert.calledWith(FakeLogger.debug, 'const-EventRegistration - disconnect was not defined, using default of %s');
 		});
 
 		it('should set disconnect if it is boolean', () => {
@@ -2452,8 +2595,6 @@ describe('EventRegistration', () => {
 			reg._onErrorFn.should.equal('onError');
 			reg.unregister.should.equal('default_unregister');
 			reg.disconnect.should.equal('default_disconnect');
-			reg.unregister_action.should.be.instanceof(Function);
-			should.equal(reg.unregister_action(), undefined);
 		});
 	});
 });

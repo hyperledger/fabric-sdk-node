@@ -209,9 +209,9 @@ test('*****  Test channel events', async (t) => {
 			t.fail('Should have received the callback error');
 		} catch (error) {
 			if (got_callback_error) {
-				t.pass('Successfully got the expexted error from the event service callback testing::' + error.toString());
+				t.pass('Successfully got the expected error from the event service callback testing::' + error.toString());
 			} else {
-				t.fail('FAILED to get the expexted error from the event service callback testing::' + error.toString());
+				t.fail('FAILED to get the expected error from the event service callback testing::' + error.toString());
 			}
 		}
 
@@ -532,10 +532,10 @@ test('*****  Test channel events', async (t) => {
 			const handle = setTimeout(() => {
 				t.fail('Timeout - Failed to replay all the block events in a reasonable amount of time');
 				throw new Error('Timeout -  block replay has not completed');
-			}, 10000);
+			}, 300000);
 
 			// register to replay all block events
-			eh2.registerBlockEvent((full_block) => {
+			const block_reg = eh2.registerBlockEvent((full_block) => {
 				t.pass('Successfully got a replayed block ::' + full_block.header.number);
 				// block number is decoded into human readable form
 				// let's put it back into a long
@@ -543,6 +543,7 @@ test('*****  Test channel events', async (t) => {
 				if (event_block.equals(current_block)) {
 					t.pass('Successfully got the last block number');
 					clearTimeout(handle);
+					eh2.unregisterBlockEvent(block_reg); // not required, default is to unregister when last block is seen
 					resolve('all blocks replayed');
 				}
 				// keep going...do not resolve this promise yet

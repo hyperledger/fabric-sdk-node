@@ -276,7 +276,7 @@ therefore the registration must be made before the
 channel event hub has setup the connection.
 Replaying events may confuse other event listeners; therefore, only one listener
 will be allowed on a `ChannelEventHub` when `startBlock`
-and/or `endBlock` are used.
+and/or `endBlock` are used on a listener registration.
   
   - `Number` - A number value may be specified as the block number.
   
@@ -335,20 +335,29 @@ Using this option on an event listener does require that this
 channel event hub has been previously running.
 
 * {boolean} `unregister` -- (Optional) This setting indicates that the
-registration should be removed (unregister) when the event is seen. When the
+registration should be removed (unregister) after the event is seen. When the
 application is using a timeout to only wait a specified amount of time for the
 transaction to be seen, the timeout processing should include the manual
 'unregister' of the transaction event listener to avoid the event callbacks
 being called unexpectedly. The default for this setting is different for the
 different types of event listeners. For block listeners the default is true when
-an end_block was set as a option. For transaction listeners the default is true.
-For chaincode listeners the default will be false as the match filter might be
-intended for many transactions.
+an end_block was set as a option, the listener will be active and receiving
+blocks until the end block is received and then the listener will be automatically
+unregistered. For transaction listeners the default is true and once the transaction
+event has occurred the listener will be automatically unregistered. If the
+transaction listener has used an endBlock, the default will be
+to automatically unregister the listener even if the transaction has not been
+seen.
+For chaincode event listeners the default will be false as the match filter
+might be intended for many transactions, however if the chaincode event
+listener has set an endBlock it will be automatically unregistered after
+the endBlock is seen.
 
 * {boolean} `disconnect` -- (Optional) This setting indicates to the
 `ChannelEventHub` instance to automatically disconnect itself from the peer's
-channel-based event service once the event has been seen. The default is false
-unless the endBlock has been set, then the default will be true.
+channel-based event service once the event has been seen. The default is false.
+When not set and the endBlock has been set the ChannelEventHub instance
+will automatically disconnect itself.
 
 ### Get a Channel-based Event Hub
 Use the fabric-client {@link Channel} 
