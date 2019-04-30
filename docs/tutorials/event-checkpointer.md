@@ -1,3 +1,4 @@
+`Experimental`
 This tutorial describes the approaches that can be selected by users of the fabric-network module for replaying missed events emitted by peers.
 
 ### Overview
@@ -36,6 +37,7 @@ const connectOptions = {
 const gateway = new Gateway()
 await gateway.connect(connectionProfile, connectOptions);
 ```
+`Note:` When using the filesystem checkpointer, use absolute paths rather than relative paths
 
 Configuring a listener to be checkpointed required two properties:
 1. `replay : boolean` - Tells the listener to record a checkpoint. Required if checkpointing is desired

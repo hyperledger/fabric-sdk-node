@@ -92,7 +92,7 @@ class Contract {
 		if (options) {
 			if (typeof options.checkpointer === 'undefined') {
 				return this.checkpointer;
-			} else if (typeof options.checkpointer === 'function') {
+			} else if (options.hasOwnProperty('checkpointer') && typeof options.checkpointer.factory === 'function') {
 				return options.checkpointer;
 			} else if (options.checkpointer === false) {
 				return null;

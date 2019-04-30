@@ -51,7 +51,7 @@ class AbstractEventListener {
 		this._registered = false;
 		this._firstCheckpoint = {};
 		this._registration = null;
-		this._filtered = typeof options.filtered === 'boolean' ? options.filtered : true;
+		this._filtered = typeof options.filtered === 'boolean' ? options.filtered : false;
 		this._usingCheckpointer = false;
 	}
 
@@ -73,11 +73,13 @@ class AbstractEventListener {
 		if (this._registered) {
 			throw new Error('Listener already registered');
 		}
-		if (this.eventHub && this.eventHub.isconnected() && this.eventHub.isFiltered() !== this._filtered) {
-			this.eventHub._filtered_stream = this._filtered;
-			this.eventHub.disconnect();
-			if (!this.options.fixedEventHub) {
-				this.eventHub = null;
+		if (this.eventHub && this.eventHub.isconnected()) {
+			if (this.eventHub.isFiltered() !== this._filtered) {
+				this.eventHub._filtered_stream = this._filtered;
+				this.eventHub.disconnect();
+				if (!this.options.fixedEventHub) {
+					this.eventHub = null;
+				}
 			}
 		}
 

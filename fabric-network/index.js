@@ -63,3 +63,4 @@ module.exports.DefaultQueryHandlerStrategies = require('fabric-network/lib/impl/
 module.exports.CheckpointFactories = require('fabric-network/lib/impl/event/checkpointfactories');
 module.exports.EventHubSelectionStrategies = require('fabric-network/lib/impl/event/defaulteventhubselectionstrategies');
 module.exports.TimeoutError = require('fabric-network/lib/errors/timeouterror');
+module.exports.FileSystemCheckpointer = require('fabric-network/lib/impl/event/filesystemcheckpointer');

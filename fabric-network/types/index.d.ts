@@ -89,15 +89,15 @@ export class Gateway {
 export interface Network {
 	getChannel(): Channel;
 	getContract(chaincodeId: string, name?: string): Contract;
-	addBlockListener(listenerName: string, callback: (block: Client.Block) => Promise<any>, options?: object): BlockEventListener;
-	addCommitListener(listenerName: string, callback: (error: Error, transactionId: string, status: string, blockNumber: string) => Promise<any>, options?: object): CommitEventListener;
+	addBlockListener(listenerName: string, callback: (block: Client.Block) => Promise<any>, options?: object): Promise<BlockEventListener>;
+	addCommitListener(listenerName: string, callback: (error: Error, transactionId: string, status: string, blockNumber: string) => Promise<any>, options?: object): Promise<CommitEventListener>;
 }
 
 export interface Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event: {[key: string]: any}, blockNumber: string, transactionId: string, status: string) => Promise<any>, options?: object): ContractEventListener;
+	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event: {[key: string]: any}, blockNumber: string, transactionId: string, status: string) => Promise<any>, options?: object): Promise<ContractEventListener>;
 }
 
 export interface TransientMap {
@@ -194,8 +194,8 @@ export class BaseCheckpointer {
 }
 
 export class FileSystemCheckpointer extends BaseCheckpointer {
-	constructor();
-	public initialize(channelName: string, listenerName: string): Promise<void>;
+	constructor(channelName: string, listenerName: string, options: any);
+	public initialize(): Promise<void>;
 	public save(transactionId: string, blockNumber: string): Promise<void>;
 	public load(): Promise<Checkpoint>;
 }
