@@ -97,47 +97,99 @@ due to the last block being received if replaying with the endBlock set to 'newe
 This is an optional parameter. This parameter will contain the following optional
 properties:
 
-* {integer} `startBlock` -- (Optional) The starting block number for event
-  checking. When included, the peer's channel-based event service will be asked to start
-  sending blocks from this block number.
+* {integer | 'newest' | 'oldest' | 'last_seen'} `startBlock` 
+(Optional) The starting block number for event checking. 
+When included, the Peer's channel-based event service will be asked to start
+sending blocks from this block number.
+This is how to resume listening or replay missed blocks that were added
+to the ledger. This option changes how the connection is made to the fabric
+Peer's channel-based event service,
+therefore the registration must be made before the
+channel event hub has setup the connection.
+Replaying events may confuse other event listeners; therefore, only one listener
+will be allowed on a `ChannelEventHub` when `startBlock`
+and/or `endBlock` are used on a listener registration.
+  
+  - `Number` - A number value may be specified as the block number.
+  
+  - `'newest'` - The string of 'newest'. This will have the block
+number determined by the Peer's channel-based event service at connect
+time of the the newest block on the ledger.
+  
+  - `'oldest'` - The string of 'oldest'. This will have the block
+number determined by the Peer's channel-based event service at connect
+time of the the oldest block on the ledger, unless your ledger
+has been pruned, this will be block 0. 
+  
+  - `'last_seen'` - The string of 'oldest'. This will have the channel event hub
+instance determine the block number at the time of the registration.
+The number will be based on the last block that this channel event hub has
+received from the Peer's channel-based event service.
+Using this option on an event listener does require that this
+channel event hub has been previously running.
 
-  This is also how to resume listening or replay missed blocks that were added
-	to the ledger. The default value is the number of the last block on the ledger.
-	Replaying events may confuse other event listeners; therefore, only one listener
-	will be allowed on a `ChannelEventHub` when `startBlock` and/or `endBlock` are used.
-	When this parameter is excluded (as it will be normally) the event service
-	will be asked to start sending blocks from the last (newest) block on the ledger.
+* {integer | 'newest' | 'oldest' | 'last_seen' } `endBlock` 
+(Optional) The ending block number for event checking.
+When included, the  Peer's channel-based event service will be asked to stop
+sending blocks once this block is delivered.
+This is how to replay missed blocks that were added to the ledger. When a
+`startBlock` is not included, the `endBlock` must be equal to or larger than
+the current channel block height. 
+This option changes how the connection is made to the fabric
+Peer's channel-based event service, therefore the
+registration must be made before the
+channel event hub has setup the connection.
+Replaying events may confuse other event
+listeners; therefore, only one listener will be allowed on a `ChannelEventHub`
+when `startBlock` and/or `endBlock` are used.
+The value 'newest' will indicate that 'endBlock' will be calculated by the
+peer as the newest block on the ledger.
+This allows the application to replay up to the latest block on
+the ledger and then the listener will stop and be notified by the
+'onError' callback.
 
-* {integer | 'newest'} `endBlock` -- (Optional) The ending block number for event checking.
-  When included, the peer's channel-based event service will be asked to stop
-	sending blocks once this block is delivered.
-
-  This is how to replay missed blocks that were added to the ledger. When a
-	`startBlock` is not included, the `endBlock` must be equal to or larger than
-	the current channel block height. Replaying events may confuse other event
-	listeners; therefore, only one listener will be allowed on a `ChannelEventHub`
-	when `startBlock` and/or `endBlock` are used.
-	The value 'newest' will indicate that 'endBlock' will be calculated by the
-	peer as the newest block on the ledger.
-	This allows the application to replay up to the latest block on
-	the ledger and then the listener will stop and be notified by the
-	'onError' callback.
+  - `Number` - A number value may be specified as the block number.
+  
+  - `'newest'` - The string of 'newest'. This will have the block
+number determined by the Peer's channel-based event service at connect
+time of the the newest block on the ledger.
+  
+  - `'oldest'` - The string of 'oldest'. This will have the block
+number determined by the Peer's channel-based event service at connect
+time of the the oldest block on the ledger, unless your ledger
+has been pruned, this will be block 0. 
+  
+  - `'last_seen'` - The string of 'oldest'. This will have the channel event hub
+instance determine the block number at the time of the registration.
+The number will be based on the last block that this channel event hub has
+received from the Peer's channel-based event service.
+Using this option on an event listener does require that this
+channel event hub has been previously running.
 
 * {boolean} `unregister` -- (Optional) This setting indicates that the
-  registration should be removed (unregister) when the event is seen. When the
-	application is using a timeout to only wait a specified amount of time for the
-	transaction to be seen, the timeout processing should include the manual
-	'unregister' of the transaction event listener to avoid the event callbacks
-	being called unexpectedly. The default for this setting is different for the
-	different types of event listeners. For block listeners the default is true when
-  an end_block was set as a option. For transaction listeners the default is true.
-  For chaincode listeners the default will be false as the match filter might be
-  intended for many transactions.
+registration should be removed (unregister) after the event is seen. When the
+application is using a timeout to only wait a specified amount of time for the
+transaction to be seen, the timeout processing should include the manual
+'unregister' of the transaction event listener to avoid the event callbacks
+being called unexpectedly. The default for this setting is different for the
+different types of event listeners. For block listeners the default is true when
+an end_block was set as a option, the listener will be active and receiving
+blocks until the end block is received and then the listener will be automatically
+unregistered. For transaction listeners the default is true and once the transaction
+event has occurred the listener will be automatically unregistered. If the
+transaction listener has used an endBlock, the default will be
+to automatically unregister the listener even if the transaction has not been
+seen.
+For chaincode event listeners the default will be false as the match filter
+might be intended for many transactions, however if the chaincode event
+listener has set an endBlock it will be automatically unregistered after
+the endBlock is seen.
 
-* {boolean} `disconnect` -- (Optional) This option setting Indicates to the
-  `ChannelEventHub` instance to automatically disconnect itself from the peer's
-	channel-based event service once the event has been seen. The default is false
-	unless the endBlock has been set, then it it will be true.
+* {boolean} `disconnect` -- (Optional) This setting indicates to the
+`ChannelEventHub` instance to automatically disconnect itself from the peer's
+channel-based event service once the event has been seen. The default is false.
+When not set and the endBlock has been set the ChannelEventHub instance
+will automatically disconnect itself.
 
 ### Get a Channel-based Event Hub
 New methods have been added to the Fabric Node.js client `Channel` object to
