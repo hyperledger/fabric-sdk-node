@@ -40,6 +40,10 @@ describe('Contract', () => {
 
 	beforeEach(() => {
 		mockEventHub = sinon.createStubInstance(ChannelEventHub);
+		mockEventHub.connect = (filtered) => {
+			mockEventHub.isconnected.returns(true);
+			return mockEventHub._filtered_stream = filtered;
+		};
 		mockChannel = sinon.createStubInstance(Channel);
 		mockClient = sinon.createStubInstance(Client);
 
@@ -115,14 +119,14 @@ describe('Contract', () => {
 		});
 
 		it('should return the global checkpointer if it is true in options', () => {
-			const checkpointer = contract.getCheckpointer({checkpointer: 'LOL'});
+			const checkpointer = contract.getCheckpointer({checkpointer: 'something'});
 			expect(checkpointer).to.equal(mockCheckpointer);
 		});
 
 		it('should return the checkpointer passed as an option', () => {
-			const checkpointerFactory = () => {};
-			const checkpointer = contract.getCheckpointer({checkpointer: checkpointerFactory});
-			expect(checkpointer).to.equal(checkpointerFactory);
+			const options = {checkpointer: {factory: () => {}}};
+			const checkpointer = contract.getCheckpointer(options);
+			expect(checkpointer).to.equal(options.checkpointer);
 			expect(checkpointer).to.not.equal(mockCheckpointer);
 		});
 
@@ -227,7 +231,6 @@ describe('Contract', () => {
 			mockEventHub.isFiltered.returns(true);
 		});
 		it('should create options if the options param is undefined', async () => {
-			mockEventHub.isconnected.returns(true);
 			const listener = await contract.addContractListener(listenerName, testEventName, callback);
 			expect(listener).to.be.instanceof(ContractEventListener);
 			expect(network.listeners.get(listenerName)).to.equal(listener);

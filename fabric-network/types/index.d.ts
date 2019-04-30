@@ -194,8 +194,8 @@ export class BaseCheckpointer {
 }
 
 export class FileSystemCheckpointer extends BaseCheckpointer {
-	constructor();
-	public initialize(channelName: string, listenerName: string): Promise<void>;
+	constructor(channelName: string, listenerName: string, options: any);
+	public initialize(): Promise<void>;
 	public save(transactionId: string, blockNumber: string): Promise<void>;
 	public load(): Promise<Checkpoint>;
 }

@@ -48,6 +48,7 @@ class ContractEventListener extends AbstractEventListener {
 			this._onError.bind(this),
 			this.options
 		);
+
 		this._registered = true;
 		this.eventHub.connect(!this._filtered);
 	}
