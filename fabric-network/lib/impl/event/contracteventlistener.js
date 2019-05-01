@@ -52,6 +52,7 @@ class ContractEventListener extends AbstractEventListener {
 			this._onError.bind(this),
 			this.options
 		);
+
 		this._registered = true;
 		if (!this._usingCheckpointer) {
 			this.eventHub.connect(!this._filtered);
