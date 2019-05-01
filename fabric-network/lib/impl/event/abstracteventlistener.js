@@ -73,9 +73,12 @@ class AbstractEventListener {
 		if (this._registered) {
 			throw new Error('Listener already registered');
 		}
-		if (this.eventHub && this.eventHub.isconnected() && !!this.eventHub.isFiltered() !== this._filtered) {
+		if (this.eventHub && this.eventHub.isconnected() && this.eventHub.isFiltered() !== this._filtered) {
+			this.eventHub._filtered_stream = this._filtered;
 			this.eventHub.disconnect();
-			this.eventHub = null;
+			if (!this.options.fixedEventHub) {
+				this.eventHub = null;
+			}
 		}
 
 		if (this.options.checkpointer) {

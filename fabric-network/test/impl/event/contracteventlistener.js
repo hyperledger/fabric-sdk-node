@@ -45,6 +45,7 @@ describe('ContractEventListener', () => {
 		checkpointerStub = sandbox.createStubInstance(Checkpointer);
 		checkpointerStub.load.returns({});
 		contractEventListener = new ContractEventListener(contractStub, 'test', 'eventName', () => {}, {replay: true});
+		eventHubStub.isFiltered.returns(true);
 	});
 
 	afterEach(() => {

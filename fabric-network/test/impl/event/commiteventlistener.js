@@ -40,6 +40,7 @@ describe('CommitEventListener', () => {
 		eventHubManagerStub = sinon.createStubInstance(EventHubManager);
 		eventHubManagerStub.getPeers.returns(['peer1']);
 		networkStub.getEventHubManager.returns(eventHubManagerStub);
+		eventHubStub.isFiltered.returns(true);
 
 		callback = () => {};
 		listener = new CommitEventListener(networkStub, 'transactionId', callback, {});
@@ -59,7 +60,6 @@ describe('CommitEventListener', () => {
 	describe('#register', () => {
 		beforeEach(() => {
 			sandbox.stub(listener, '_registerWithNewEventHub');
-			// sandbox.stub(eventHubManagerStub, 'getEventHub');
 		});
 
 		it('should grab a new event hub if one isnt given', async () => {

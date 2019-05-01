@@ -132,6 +132,15 @@ describe('AbstractEventListener', () => {
 			await listener.register();
 		});
 
+		it('should not reset the event hub if it is fixed and filtered status doesn\'t match', async () => {
+			const listener = new AbstractEventListener(networkStub, 'testlistener', () => {}, {filtered: true});
+			const eventHub = sandbox.createStubInstance(ChannelEventHub);
+			eventHub.isFiltered.returns(false);
+			eventHub.isconnected.returns(true);
+			listener.setEventHub(eventHub, true);
+			await listener.register();
+			expect(listener.eventHub).to.equal(eventHub);
+		});
 	});
 
 	describe('#unregister', () => {
