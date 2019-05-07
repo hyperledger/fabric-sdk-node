@@ -93,11 +93,12 @@ class Package {
 		Package._validateNameAndVersion(name, version);
 		const codePackage = await Packager.package(path, type, false, metadataPath);
 		logger.debug('Package.fromDirectory - code package is %s bytes', codePackage.length);
+		const fixedPath = path.split('\\').join('/'); // for windows style paths
 		const chaincodeSpec = {
 			type: clientUtils.translateCCType(type),
 			chaincode_id: {
 				name,
-				path,
+				path: fixedPath,
 				version
 			}
 		};
