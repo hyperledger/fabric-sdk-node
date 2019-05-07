@@ -46,6 +46,10 @@ const Chaincode = class {
 			return this.query(stub, args);
 		}
 
+		if (fcn === 'returnError') {
+			return this.returnError(stub, args);
+		}
+
 		if (fcn === 'throwError') {
 			return this.throwError(stub, args);
 		}
@@ -158,8 +162,12 @@ const Chaincode = class {
 		return shim.success(Buffer.from(Aval.toString()));
 	}
 
+	async returnError(stub, args) {
+		return shim.error(new Error(args[0] || 'returnError: chaincode error response'));
+	}
+
 	async throwError(stub, args) {
-		return shim.error(new Error('throwError: an error occurred'));
+		throw new Error(args[0] || 'throwError: chaincode error thrown');
 	}
 
 	async testTransient(stub) {

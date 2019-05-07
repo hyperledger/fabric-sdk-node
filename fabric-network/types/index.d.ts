@@ -73,7 +73,7 @@ export interface Query {
 }
 
 export interface QueryResults {
-	[peerName: string]: Buffer | Error;
+	[peerName: string]: Buffer | Client.ProposalErrorResponse;
 }
 
 export class Gateway {

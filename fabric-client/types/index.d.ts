@@ -287,7 +287,11 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		info?: string;
 	}
 
-	export type ProposalResponseObject = [Array<Client.ProposalResponse | Error>, Client.Proposal];
+	export interface ProposalErrorResponse extends Error {
+		isProposalResponse?: boolean;
+	}
+
+	export type ProposalResponseObject = [Array<Client.ProposalResponse | Client.ProposalErrorResponse>, Client.Proposal];
 
 	export interface OrdererRequest {
 		txId?: TransactionId;

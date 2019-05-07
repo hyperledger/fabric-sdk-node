@@ -32,8 +32,8 @@ test('\n\n***** Node-Chaincode End-to-end flow: query chaincode *****\n\n', asyn
 	}
 
 	try {
-		expectedResult = new Error('throwError: an error occurred');
-		const result = await e2eUtils.queryChaincode('org2', 'v0', targets, 'throwError', args, expectedResult, chaincodeId, t, null, false);
+		expectedResult = new Error('returnError: an error occurred');
+		const result = await e2eUtils.queryChaincode('org2', 'v0', targets, 'returnError', [expectedResult.message], expectedResult, chaincodeId, t);
 		if (result) {
 			t.pass('Sucessfully handled error from a query');
 		} else {

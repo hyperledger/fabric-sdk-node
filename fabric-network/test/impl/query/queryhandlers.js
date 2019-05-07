@@ -15,10 +15,13 @@ const expect = chai.expect;
 chai.use(require('chai-as-promised'));
 
 describe('QueryHandlers', () => {
-	const queryResult = Buffer.from('QUERY_RESULT');
+	const querySuccessResult = Buffer.from('SUCCESS_QUERY_RESULT');
+	const queryErrorResult = new Error('ERROR_QUERY_RESULT');
+	queryErrorResult.isProposalResponse = true;
 	const queryFailMessage = 'QUERY_FAILED';
 
 	let failedPeers;
+	let errorPeers;
 	let fakeEvaluate;
 	let stubQuery;
 	let stubPeer1;
@@ -26,14 +29,17 @@ describe('QueryHandlers', () => {
 
 	beforeEach(() => {
 		failedPeers = [];
+		errorPeers = [];
 		fakeEvaluate = sinon.fake(async (peers) => {
 			const results = [];
 			for (const peer of peers) {
 				const peerName = peer.getName();
 				if (failedPeers.includes(peer)) {
 					results[peerName] = new Error(`${queryFailMessage}: ${peerName}`);
+				} else if (errorPeers.includes(peer)) {
+					results[peerName] = queryErrorResult;
 				} else {
-					results[peerName] = queryResult;
+					results[peerName] = querySuccessResult;
 				}
 			}
 			return results;
@@ -78,7 +84,7 @@ describe('QueryHandlers', () => {
 
 		it('returns query result', async () => {
 			const result = await strategy.evaluate(stubQuery);
-			expect(result).to.equal(queryResult);
+			expect(result).to.equal(querySuccessResult);
 		});
 
 		it('queries second peer if first fails', async () => {
@@ -116,7 +122,7 @@ describe('QueryHandlers', () => {
 
 			const result = await strategy.evaluate(stubQuery);
 
-			expect(result).equals(queryResult);
+			expect(result).equals(querySuccessResult);
 		});
 
 		it('throws if all peers fail', () => {
@@ -124,6 +130,13 @@ describe('QueryHandlers', () => {
 
 			return expect(strategy.evaluate(stubQuery))
 				.to.be.rejectedWith(queryFailMessage);
+		});
+
+		it('throws if peer returns error response', () => {
+			errorPeers = [stubPeer1];
+
+			return expect(strategy.evaluate(stubQuery))
+				.to.be.rejectedWith(queryErrorResult);
 		});
 	});
 
@@ -160,7 +173,7 @@ describe('QueryHandlers', () => {
 
 		it('returns query result', async () => {
 			const result = await strategy.evaluate(stubQuery);
-			expect(result).to.equal(queryResult);
+			expect(result).to.equal(querySuccessResult);
 		});
 
 		it('queries second peer if first fails', async () => {
@@ -187,7 +200,7 @@ describe('QueryHandlers', () => {
 
 			const result = await strategy.evaluate(stubQuery);
 
-			expect(result).equals(queryResult);
+			expect(result).equals(querySuccessResult);
 		});
 
 		it('throws if all peers fail', () => {
@@ -195,6 +208,13 @@ describe('QueryHandlers', () => {
 
 			return expect(strategy.evaluate(stubQuery))
 				.to.be.rejectedWith(queryFailMessage);
+		});
+
+		it('throws if peer returns error response', () => {
+			errorPeers = [stubPeer1];
+
+			return expect(strategy.evaluate(stubQuery))
+				.to.be.rejectedWith(queryErrorResult);
 		});
 	});
 });
