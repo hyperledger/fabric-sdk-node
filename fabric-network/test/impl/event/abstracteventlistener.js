@@ -67,6 +67,7 @@ describe('AbstractEventListener', () => {
 			expect(listener._registered).to.be.false;
 			expect(listener._firstCheckpoint).to.deep.equal({});
 			expect(listener._registration).to.be.null;
+			expect(listener._filtered).to.be.false;
 		});
 
 		it('should set options if options is undefined', () => {
@@ -76,8 +77,8 @@ describe('AbstractEventListener', () => {
 		});
 
 		it('should set this.filtered to be options.filtered', () => {
-			const listener = new AbstractEventListener(networkStub, 'testListener', () => {}, {filtered: false});
-			expect(listener._filtered).to.be.false;
+			const listener = new AbstractEventListener(networkStub, 'testListener', () => {}, {filtered: true});
+			expect(listener._filtered).to.be.true;
 		});
 	});
 
