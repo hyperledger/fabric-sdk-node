@@ -32,8 +32,8 @@ test('\n\n***** End-to-end flow: invoke transaction to move money *****\n\n', as
 	}
 
 	try {
-		expectedResult = new Error('throwError: an error occurred');
-		await e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/* useStore*/, 'throwError', args, expectedResult);
+		expectedResult = new Error('returnError: an error occurred');
+		await e2eUtils.invokeChaincode('org2', 'v0', chaincodeId, t, false/* useStore*/, 'returnError', [expectedResult.message], expectedResult);
 	} catch (err) {
 		t.fail('Failed to query chaincode on the channel. ' + err.stack ? err.stack : err);
 	}

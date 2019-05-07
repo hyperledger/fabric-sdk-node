@@ -86,6 +86,21 @@ async function getInternalEventHubForOrg(gateway: Gateway, orgMSP: string): Prom
 	return eventHubManager.getEventHub(orgPeer);
 }
 
+async function testErrorResponse(t: any, contract: Contract): Promise<void> {
+	const errorMessage = 'TRANSACTION_ERROR_RESPONSE_MESSAGE';
+
+	try {
+		const response = await contract.submitTransaction('returnError', errorMessage);
+		t.fail('Transaction "returnError" should have thrown an error.  Got response: ' + response.toString());
+	} catch (expectedErr) {
+		if (expectedErr.message.includes(errorMessage)) {
+			t.pass('Successfully handled invocation errors');
+		} else {
+			t.fail('Unexpected exception: ' + expectedErr);
+		}
+	}
+}
+
 test('\n\n***** Network End-to-end flow: import identity into wallet and configure tls *****\n\n', async (t: any) => {
 	try {
 		await inMemoryIdentitySetup();
@@ -761,7 +776,6 @@ test('\n\n***** Network End-to-end flow: invoke transaction while channel\'s eve
 
 test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
-
 	try {
 		const contract = await createContract(t, gateway, {
 			clientTlsIdentity: 'tlsId',
@@ -772,15 +786,7 @@ test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', as
 			wallet: inMemoryWallet,
 		});
 
-		const response = await contract.submitTransaction('throwError', 'a', 'b', '100');
-		t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-	} catch (expectedErr) {
-		t.comment(expectedErr.message);
-		if (expectedErr.message.includes('throwError: an error occurred')) {
-			t.pass('Successfully handled invocation errors');
-		} else {
-			t.fail('Unexpected exception: ' + expectedErr.message);
-		}
+		await testErrorResponse(t, contract);
 	} finally {
 		gateway.disconnect();
 	}
@@ -822,7 +828,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const contract = await network.getContract(chaincodeId);
 		t.pass('Got the contract, about to submit "move" transaction');
 
-		let response = await contract.submitTransaction('move', 'a', 'b', '100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		const expectedResult = 'move succeed';
 		if (response.toString() === expectedResult) {
@@ -831,16 +837,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
 
-		try {
-			response = await contract.submitTransaction('throwError', 'a', 'b', '100');
-			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-		} catch (expectedErr) {
-			if (expectedErr.message.includes('throwError: an error occurred')) {
-				t.pass('Successfully handled invocation errors');
-			} else {
-				t.fail('Unexpected exception: ' + expectedErr.message);
-			}
-		}
+		await testErrorResponse(t, contract);
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
@@ -889,7 +886,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 		const contract = await network.getContract(chaincodeId);
 		t.pass('Got the contract, about to submit "move" transaction');
 
-		let response = await contract.submitTransaction('move', 'a', 'b', '100');
+		const response = await contract.submitTransaction('move', 'a', 'b', '100');
 
 		const expectedResult = 'move succeed';
 		if (response.toString() === expectedResult) {
@@ -898,16 +895,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			t.fail('Unexpected response from transaction chaincode: ' + response);
 		}
 
-		try {
-			response = await contract.submitTransaction('throwError', 'a', 'b', '100');
-			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-		} catch (expectedErr) {
-			if (expectedErr.message.includes('throwError: an error occurred')) {
-				t.pass('Successfully handled invocation errors');
-			} else {
-				t.fail('Unexpected exception: ' + expectedErr.message);
-			}
-		}
+		await testErrorResponse(t, contract);
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {

@@ -14,8 +14,10 @@ import path = require('path');
 import rimraf = require('rimraf');
 import tape = require('tape');
 import tapePromise = require('tape-promise');
+import util = require('util');
 
 import {
+	Contract,
 	DefaultQueryHandlerStrategies,
 	FileSystemWallet,
 	Gateway,
@@ -69,6 +71,53 @@ async function deleteWallet(filePath: string): Promise<void> {
 	await rimRafPromise;
 }
 
+async function testSuccessfulQuery(t: any, contract: Contract): Promise<void> {
+	t.comment('Testing successful query');
+
+	const response = await contract.evaluateTransaction('query', 'a');
+
+	if (!isNaN(parseInt(response.toString(), 10))) {
+		t.pass('Successfully got back a value');
+	} else {
+		t.fail('Unexpected response from transaction chaincode: ' + response);
+	}
+}
+
+async function testQueryErrorResponse(t: any, contract: Contract): Promise<void> {
+	t.comment('Testing query error response');
+
+	const errorMessage = 'QUERY_ERROR_RESPONSE_MESSAGE';
+	try {
+		const response = await contract.evaluateTransaction('returnError', errorMessage);
+		t.fail('Transaction "returnError" should have thrown an error. Got response: ' + response.toString());
+	} catch (expectedErr) {
+		if (expectedErr.isProposalResponse && expectedErr.message.includes(errorMessage)) {
+			t.pass('Successfully handled query error response');
+		} else {
+			t.fail(util.format('Unexpected exception: %O', expectedErr));
+		}
+	}
+}
+
+async function testChaincodeRuntimeError(t: any, contract: Contract): Promise<void> {
+	// No-op for now since chaincode runtime errors are not distinguishable from error responses and introduce a
+	// significant delay while the chaincode container times out waiting for the chaincide to supply a response
+
+	// t.comment('Testing chaincode runtime error');
+
+	// const errorMessage = 'QUERY_ERROR_THROWN_MESSAGE';
+	// try {
+	// 	const response = await contract.evaluateTransaction('throwError', errorMessage);
+	// 	t.fail('Transaction "throwError" should have thrown an error. Got response: ' + response.toString());
+	// } catch (expectedErr) {
+	// 	if (expectedErr.isProposalResponse) {
+	// 		t.pass('Successfully handled chaincode runtime error');
+	// 	} else {
+	// 		t.fail(util.format('Unexpected exception: %O', expectedErr));
+	// 	}
+	// }
+}
+
 test('\n\n***** Network End-to-end flow: evaluate transaction with default query handler *****\n\n', async (t: any) => {
 	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
 	const gateway = new Gateway();
@@ -92,28 +141,11 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with default query
 		t.pass('Initialized the channel, ' + channelName);
 
 		const contract = await channel.getContract(chaincodeId);
-		t.pass('Got the contract, about to evaluate (query) transaction');
+		t.pass('Got the contract, ' + chaincodeId);
 
-		// try a standard query
-		let response = await contract.evaluateTransaction('query', 'a');
-
-		if (!isNaN(parseInt(response.toString(), 10))) {
-			t.pass('Successfully got back a value');
-		} else {
-			t.fail('Unexpected response from transaction chaincode: ' + response);
-		}
-
-		// check we deal with an error returned.
-		try {
-			response = await contract.evaluateTransaction('throwError', 'a', 'b', '100');
-			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-		} catch (expectedErr) {
-			if (expectedErr.message.includes('throwError: an error occurred')) {
-				t.pass('Successfully handled invocation errors');
-			} else {
-				t.fail('Unexpected exception: ' + expectedErr.message);
-			}
-		}
+		await testSuccessfulQuery(t, contract);
+		await testQueryErrorResponse(t, contract);
+		await testChaincodeRuntimeError(t, contract);
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
@@ -150,28 +182,11 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_R
 		t.pass('Initialized the channel, ' + channelName);
 
 		const contract = await channel.getContract(chaincodeId);
-		t.pass('Got the contract, about to evaluate (query) transaction');
+		t.pass('Got the contract, ' + chaincodeId);
 
-		// try a standard query
-		let response = await contract.evaluateTransaction('query', 'a');
-
-		if (!isNaN(parseInt(response.toString(), 10))) {
-			t.pass('Successfully got back a value');
-		} else {
-			t.fail('Unexpected response from transaction chaincode: ' + response);
-		}
-
-		// check we deal with an error returned.
-		try {
-			response = await contract.evaluateTransaction('throwError', 'a', 'b', '100');
-			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-		} catch (expectedErr) {
-			if (expectedErr.message.includes('throwError: an error occurred')) {
-				t.pass('Successfully handled invocation errors');
-			} else {
-				t.fail('Unexpected exception: ' + expectedErr.message);
-			}
-		}
+		await testSuccessfulQuery(t, contract);
+		await testQueryErrorResponse(t, contract);
+		await testChaincodeRuntimeError(t, contract);
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
@@ -208,28 +223,11 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_S
 		t.pass('Initialized the channel, ' + channelName);
 
 		const contract = await channel.getContract(chaincodeId);
-		t.pass('Got the contract, about to evaluate (query) transaction');
+		t.pass('Got the contract, ' + chaincodeId);
 
-		// try a standard query
-		let response = await contract.evaluateTransaction('query', 'a');
-
-		if (!isNaN(parseInt(response.toString(), 10))) {
-			t.pass('Successfully got back a value');
-		} else {
-			t.fail('Unexpected response from transaction chaincode: ' + response);
-		}
-
-		// check we deal with an error returned.
-		try {
-			response = await contract.evaluateTransaction('throwError', 'a', 'b', '100');
-			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-		} catch (expectedErr) {
-			if (expectedErr.message.includes('throwError: an error occurred')) {
-				t.pass('Successfully handled invocation errors');
-			} else {
-				t.fail('Unexpected exception: ' + expectedErr.message);
-			}
-		}
+		await testSuccessfulQuery(t, contract);
+		await testQueryErrorResponse(t, contract);
+		await testChaincodeRuntimeError(t, contract);
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
@@ -266,28 +264,11 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with sample query 
 		t.pass('Initialized the channel, ' + channelName);
 
 		const contract = await channel.getContract(chaincodeId);
-		t.pass('Got the contract, about to evaluate (query) transaction');
+		t.pass('Got the contract, ' + chaincodeId);
 
-		// try a standard query
-		let response = await contract.evaluateTransaction('query', 'a');
-
-		if (!isNaN(parseInt(response.toString(), 10))) {
-			t.pass('Successfully got back a value');
-		} else {
-			t.fail('Unexpected response from transaction chaincode: ' + response);
-		}
-
-		// check we deal with an error returned.
-		try {
-			response = await contract.evaluateTransaction('throwError', 'a', 'b', '100');
-			t.fail('Transaction "throwError" should have thrown an error.  Got response: ' + response.toString());
-		} catch (expectedErr) {
-			if (expectedErr.message.includes('throwError: an error occurred')) {
-				t.pass('Successfully handled invocation errors');
-			} else {
-				t.fail('Unexpected exception: ' + expectedErr.message);
-			}
-		}
+		await testSuccessfulQuery(t, contract);
+		await testQueryErrorResponse(t, contract);
+		await testChaincodeRuntimeError(t, contract);
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {

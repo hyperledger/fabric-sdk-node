@@ -37,11 +37,16 @@ class SampleQueryHandler implements QueryHandler {
 			const results = await query.evaluate([peer]);
 			const result = results[peer.getName()];
 
-			if (result instanceof Error) {
-				errorMessages.push(result.message);
-			} else {
+			if (!(result instanceof Error)) {
+				// Good response from peer
 				return result;
 			}
+			if (result.isProposalResponse) {
+				// Error response from peer
+				throw result;
+			}
+			// Failed to get response from peer
+			errorMessages.push(result.message);
 		}
 
 		const message = util.format('Evaluate failed with the following errors: %j', errorMessages);
