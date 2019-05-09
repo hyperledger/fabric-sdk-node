@@ -2,8 +2,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
 const {Utils: utils} = require('fabric-common');
 const config = utils.getConfig();
 const logger = utils.getLogger('FabricCAClient.js');
@@ -40,7 +38,7 @@ const FabricCAClient = class {
 		try {
 			this._validateConnectionOpts(connect_opts);
 		} catch (err) {
-			throw new Error('Invalid connection options. ' + err.message);
+			throw new Error(`Invalid connection options. ${err.message}`);
 		}
 
 		this._caName = connect_opts.caname,
@@ -283,7 +281,7 @@ const FabricCAClient = class {
 		const requestOptions = {
 			hostname: self._hostname,
 			port: self._port,
-			path: path,
+			path,
 			method: http_method,
 			headers: {
 				Authorization: self.generateAuthToken(requestObj, signingIdentity, path, http_method)
@@ -363,21 +361,21 @@ const FabricCAClient = class {
 		let signString;
 		if (reqBody) {
 			const body = Buffer.from(JSON.stringify(reqBody)).toString('base64');
-			signString = body + '.' + cert;
+			signString = `${body}.${cert}`;
 		} else {
-			signString = '.' + cert;
+			signString = `.${cert}`;
 		}
 
 		if (path && method) {
 			const s = Buffer.from(path).toString('base64');
-			signString = method + '.' + s + '.' + signString;
+			signString = `${method}.${s}.${signString}`;
 		}
 
 		const sig = signingIdentity.sign(signString, {hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives)});
 		logger.debug(util.format('signString: %s', signString));
 
 		const b64Sign = Buffer.from(sig, 'hex').toString('base64');
-		return cert + '.' + b64Sign;
+		return `${cert}.${b64Sign}`;
 	}
 
 	/**
@@ -416,9 +414,9 @@ const FabricCAClient = class {
 		const requestOptions = {
 			hostname: self._hostname,
 			port: self._port,
-			path: self._baseAPI + 'enroll',
+			path: `${self._baseAPI}enroll`,
 			method: 'POST',
-			auth: enrollmentID + ':' + enrollmentSecret,
+			auth: `${enrollmentID}:${enrollmentSecret}`,
 			ca: self._tlsOptions.trustedRoots,
 			rejectUnauthorized: self._tlsOptions.verify
 		};
