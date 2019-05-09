@@ -945,7 +945,7 @@ const Channel = class {
 	}
 
 	/**
-	 * Returns an {@link ChannelEventHub} object. An event hub object encapsulates the
+	 * Returns a {@link ChannelEventHub} object. An event hub object encapsulates the
 	 * properties of an event stream on a peer node, through which the peer publishes
 	 * notifications of blocks being committed in the channel's ledger.
 	 * This method will create a new ChannelEventHub and not save a reference.
@@ -968,7 +968,7 @@ const Channel = class {
 	}
 
 	/**
-	 * Returns an {@link ChannelEventHub} object. An event hub object encapsulates the
+	 * Returns a {@link ChannelEventHub} object. An event hub object encapsulates the
 	 * properties of an event stream on a peer node, through which the peer publishes
 	 * notifications of blocks being committed in the channel's ledger.
 	 * This method will create a new ChannelEventHub if one does not exist.
