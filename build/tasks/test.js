@@ -180,6 +180,8 @@ gulp.task('run-test', (done) => {
 	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'run-test-mocha', 'run-tape-unit', 'run-tape-e2e', 'run-test-logger', 'docker-clean', 'run-test-cucumber'];
 	runSequence(...tasks, done);
 });
+// Main test to run all tests
+gulp.task('test', shell.task('npx nyc gulp run-test'));
 
 // fabric end-to-end test
 gulp.task('run-end-to-end', (done) => {
@@ -187,15 +189,11 @@ gulp.task('run-end-to-end', (done) => {
 	runSequence(...tasks, done);
 });
 
-// Main test method to run all test suites
-// - lint, unit first, then FV, then scenario
 gulp.task('run-test-integration', (done) => {
 	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'lint', 'run-tape-e2e'];
 	runSequence(...tasks, done);
 });
 
-// Main test method to run all test suites
-// - lint, unit first, then FV, then scenario
 gulp.task('test-cucumber', (done) => {
 	const tasks = ['clean-up', 'docker-clean', 'run-test-cucumber'];
 	runSequence(...tasks, done);
