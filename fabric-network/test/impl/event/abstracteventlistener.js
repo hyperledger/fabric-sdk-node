@@ -88,18 +88,18 @@ describe('AbstractEventListener', () => {
 			expect(testListener.register()).to.be.rejectedWith('Listener already registered');
 		});
 
-		it('should not call checkpointer._initialize() or checkpointer.load()', async () => {
+		it('should not call checkpointer._initialize() or checkpointer.loadStartingCheckpoint()', async () => {
 			await testListener.register();
-			sinon.assert.notCalled(checkpointerStub.load);
+			sinon.assert.notCalled(checkpointerStub.loadStartingCheckpoint);
 		});
 
 		it('should not call checkpointer.initialize()', async () => {
 			const checkpoint = {transactionId: 'txid', blockNumber: '8'};
-			checkpointerStub.load.returns(checkpoint);
+			checkpointerStub.loadStartingCheckpoint.returns(checkpoint);
 			testListener.checkpointer = checkpointerStub;
 			await testListener.register();
-			sinon.assert.called(checkpointerStub.load);
-			expect(testListener.options.startBlock.toNumber()).to.equal(9); // Start block is a Long
+			sinon.assert.called(checkpointerStub.loadStartingCheckpoint);
+			expect(testListener.clientOptions.startBlock.toNumber()).to.equal(9); // Start block is a Long
 			expect(testListener._firstCheckpoint).to.deep.equal(checkpoint);
 		});
 
@@ -142,11 +142,19 @@ describe('AbstractEventListener', () => {
 			await listener.register();
 			expect(listener.eventHub).to.equal(eventHub);
 		});
+
+		it('should set startBlock of 1', async () => {
+			checkpointerStub.load.returns({transactionId: 'txid', blockNumber: 0});
+			checkpointerStub.loadStartingCheckpoint.returns({transactionId: 'txid', blockNumber: '0'});
+			testListener.checkpointer = checkpointerStub;
+			await testListener.register();
+			expect(testListener.clientOptions.startBlock.toInt()).to.equal(1);
+		});
 	});
 
 	describe('#unregister', () => {
 		beforeEach(async () => {
-			checkpointerStub.load.returns({transactionId: 'txid', blockNumber: '10'});
+			checkpointerStub.loadStartingCheckpoint.returns({transactionId: 'txid', blockNumber: '10'});
 			testListener.checkpointer = checkpointerStub;
 			await testListener.register();
 		});
@@ -154,7 +162,7 @@ describe('AbstractEventListener', () => {
 			await testListener.unregister();
 			expect(testListener._registered).to.be.false;
 			expect(testListener.startBlock).to.be.undefined;
-			expect(testListener.options.endBlock).to.be.undefined;
+			expect(testListener.clientOptions.endBlock).to.be.undefined;
 			expect(testListener._firstCheckpoint).to.deep.equal({});
 		});
 	});

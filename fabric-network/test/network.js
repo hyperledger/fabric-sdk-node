@@ -28,6 +28,7 @@ const AbstractEventHubSelectionStrategy = require('fabric-network/lib/impl/event
 const EventHubManager = require('fabric-network/lib/impl/event/eventhubmanager');
 const CommitEventListener = require('fabric-network/lib/impl/event/commiteventlistener');
 const BlockEventListener = require('fabric-network/lib/impl/event/blockeventlistener');
+const BaseCheckpointer = require('fabric-network/lib/impl/event/basecheckpointer');
 
 describe('Network', () => {
 	let mockChannel, mockClient;
@@ -39,6 +40,7 @@ describe('Network', () => {
 	let stubEventHubSelectionStrategy;
 	let mockEventHubManager;
 	let mockEventHub;
+	let mockCheckpointer;
 
 	beforeEach(() => {
 		mockChannel = sinon.createStubInstance(InternalChannel);
@@ -112,6 +114,8 @@ describe('Network', () => {
 
 		network = new Network(mockGateway, mockChannel);
 		network.eventHubManager = mockEventHubManager;
+		mockCheckpointer = sinon.createStubInstance(BaseCheckpointer);
+		network.checkpointer = mockCheckpointer;
 	});
 
 	afterEach(() => {
@@ -335,15 +339,45 @@ describe('Network', () => {
 		it('should change options.replay=undefined to options.replay=false', async () => {
 			sinon.spy(network, 'getCheckpointer');
 			await network.addBlockListener(listenerName, callback, {replay: undefined});
-			sinon.assert.calledWith(network.getCheckpointer, {checkpointer: undefined, replay: false});
+			sinon.assert.calledWith(network.getCheckpointer, {checkpointer: mockCheckpointer, replay: false});
 		});
 
 		it('should change options.replay=\'true\' to options.replay=true', async () => {
 			sinon.spy(network, 'getCheckpointer');
 			await network.addBlockListener(listenerName, callback, {replay: 'true'});
-			sinon.assert.calledWith(network.getCheckpointer, {checkpointer: undefined, replay: true});
+			sinon.assert.calledWith(network.getCheckpointer, {checkpointer: mockCheckpointer, replay: true});
 		});
 	});
+
+	describe('#getCheckpointer', () => {
+		it('should return the global checkpointer if it is undefined in options', () => {
+			const checkpointer = network.getCheckpointer();
+			checkpointer.should.equal(mockCheckpointer);
+		});
+
+		it('should return the global checkpointer if it is undefined in options object', () => {
+			const checkpointer = network.getCheckpointer({});
+			checkpointer.should.to.equal(mockCheckpointer);
+		});
+
+		it('should return the global checkpointer if it is true in options', () => {
+			const checkpointer = network.getCheckpointer({checkpointer: true});
+			checkpointer.should.equal(mockCheckpointer);
+		});
+
+		it('should return the checkpointer passed as an option', () => {
+			const options = {checkpointer: {factory: () => {}}};
+			const checkpointer = network.getCheckpointer(options);
+			checkpointer.should.equal(options.checkpointer);
+			checkpointer.should.not.equal(mockCheckpointer);
+		});
+
+		it('should return null if checkpointer is false', () => {
+			const checkpointer = network.getCheckpointer({checkpointer: false});
+			should(checkpointer).equal(undefined);
+		});
+	});
+
 
 	describe('#saveListener', () => {
 		it ('should register a new listener if the name isnt taken', () => {

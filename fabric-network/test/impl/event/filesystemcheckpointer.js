@@ -113,6 +113,27 @@ describe('FileSystemCheckpointer', () => {
 			await checkpointer.save(null, 1);
 			sinon.assert.calledWith(fs.writeFile, checkpointer._getCheckpointFileName(), JSON.stringify({'blockNumber':1, 'transactionIds':[]}));
 		});
+
+		it('should change the checkpointer to a multi-block version if an expectedTotal is given', async () => {
+			fs.exists.resolves(true);
+			fs.readFile.resolves(JSON.stringify({blockNumber: 0, transactionIds: ['transactionId']}));
+			await checkpointer.save('transactionId', 1, 10);
+			sinon.assert.calledWith(
+				fs.writeFile,
+				checkpointer._getCheckpointFileName(),
+				JSON.stringify({
+					0: {
+						'blockNumber':0,
+						'transactionIds':['transactionId'],
+					},
+					1: {
+						'blockNumber':1,
+						'transactionIds':['transactionId'],
+						'expectedTotal': 10
+					},
+				})
+			);
+		});
 	});
 
 	describe('#load', () => {
@@ -137,6 +158,48 @@ describe('FileSystemCheckpointer', () => {
 			fs.readFile.resolves(checkpoint);
 			const loadedCheckpoint = await checkpointer.load();
 			expect(loadedCheckpoint).to.deep.equal({});
+		});
+	});
+
+	describe('#loadStartingCheckpoint', () => {
+		it('should return the loaded checkpoint if there is only one checkpoint in the file', async () => {
+			const checkpoint = {blockNumber: 1, transactionIds: []};
+			fs.exists.resolves(true);
+			fs.readFile.resolves(JSON.stringify(checkpoint));
+			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			expect(loadedCheckpoint).to.deep.equal(checkpoint);
+		});
+
+		it('should return the checkpoint for block 1 if block 2 has had all of its events', async () => {
+			const checkpoint = {1: {blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 2}, 2: {blockNumber: 2, transactionIds: ['transactionId3'], expectedNumber: 1}};
+			fs.exists.resolves(true);
+			fs.readFile.resolves(JSON.stringify(checkpoint));
+			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			expect(loadedCheckpoint).to.deep.equal({blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 2});
+		});
+
+		it('should return the checkpoint for block 1 if block 2 has not had all of its events', async () => {
+			const checkpoint = {1: {blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 2}, 2: {blockNumber: 2, transactionIds: ['transactionId3'], expectedNumber: 2}};
+			fs.exists.resolves(true);
+			fs.readFile.resolves(JSON.stringify(checkpoint));
+			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			expect(loadedCheckpoint).to.deep.equal({blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 2});
+		});
+
+		it('should return the last block if all of the events have been received', async () => {
+			const checkpoint = {1: {blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 1}, 2: {blockNumber: 2, transactionIds: ['transactionId2'], expectedNumber: 1}};
+			fs.exists.resolves(true);
+			fs.readFile.resolves(JSON.stringify(checkpoint));
+			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			expect(loadedCheckpoint).to.deep.equal({blockNumber: 2, transactionIds: ['transactionId2'], expectedNumber: 1});
+		});
+
+		it('should return the last block if expectedNumber is not given', async () => {
+			const checkpoint = {1: {blockNumber: 1, transactionIds: ['transactionId1']}};
+			fs.exists.resolves(true);
+			fs.readFile.resolves(JSON.stringify(checkpoint));
+			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			expect(loadedCheckpoint).to.deep.equal({blockNumber: 1, transactionIds: ['transactionId1']});
 		});
 	});
 

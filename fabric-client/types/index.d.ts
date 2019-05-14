@@ -317,7 +317,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 
 	export interface Block {
 		header: {
-			number: number;
+			number: string;
 			previous_hash: Buffer;
 			data_hash: Buffer;
 		};

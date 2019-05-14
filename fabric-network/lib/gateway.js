@@ -62,16 +62,6 @@ const logger = require('./logger').getLogger('Gateway');
  */
 
 /**
- * @typedef {Object} Gateway~CheckpointerFactory
- * @memberof module:fabric-network
- * @param {String} channelName the name of the channel the checkpoint exists in
- * @param {String} listenerName the name of the listener being checkpointed
- * @param {Object} [options] Optional. Options to configure behaviour of customer checkpointers i.e.
- * Supplying database connection details
- * @returns {BaseCheckpointer}
- */
-
-/**
  * @typedef {Object} Gateway~DefaultEventHubSelectionOptions
  * @memberof module:fabric-network
  * @property {?module:fabric-network.Gateway~DefaultEventHubSelectionFactory} [strategy=MSPID_SCOPE_ROUND_ROBIN] Selects the next

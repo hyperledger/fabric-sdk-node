@@ -14,6 +14,9 @@
  * @class
  */
 class AbstractEventHubSelectionStrategy {
+	/**
+	 * @param {Peer[]} peers list of peers whose event hub should be used
+	 */
 	constructor(peers) {
 		this.peers = peers;
 	}
