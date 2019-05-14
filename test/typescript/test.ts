@@ -20,7 +20,7 @@ import {
 	Block,
 	BlockchainInfo,
 	BroadcastResponse,
-	ChaincodeInstallRequest,
+	ChaincodeInstallRequestv1,
 	ChaincodeInstantiateUpgradeRequest,
 	ChaincodeInvokeRequest,
 	ChaincodeQueryRequest,
@@ -248,7 +248,7 @@ test('use the connection profile file', async (t: any) => {
 			logger.debug(`Set GOPATH to ${process.env.GOPATH}`);
 			const txId: TransactionId = client.newTransactionID(true);
 			// send proposal to endorser
-			const request: ChaincodeInstallRequest = {
+			const request: ChaincodeInstallRequestv1 = {
 				chaincodeId: 'examplets',
 				chaincodePath: 'github.com/example_cc',
 				chaincodeVersion: 'v1',
@@ -274,7 +274,7 @@ test('use the connection profile file', async (t: any) => {
 			t.pass('Successfully loaded the client configuration for org2');
 			const txId: TransactionId = client.newTransactionID(true);
 			// send proposal to endorser
-			const request: ChaincodeInstallRequest = {
+			const request: ChaincodeInstallRequestv1 = {
 				chaincodeId: 'examplets',
 				chaincodePath: 'github.com/example_cc',
 				chaincodeVersion: 'v1',

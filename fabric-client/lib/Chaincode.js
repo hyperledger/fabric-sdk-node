@@ -174,7 +174,7 @@ const Chaincode = class {
 	/**
 	 * Get the source code package
 	 *
-	 * @returns {number} The package of this chaincode
+	 * @returns {byte[]} The package of this chaincode
 	 */
 	getPackage() {
 
@@ -195,28 +195,12 @@ const Chaincode = class {
 
 	/**
 	 * Get the chaincode type
+	 *
+	 * @returns {string} The type of this chaincode
 	 */
 	getType() {
 
 		return this._type;
-	}
-
-	/**
-	 * Set if the chaincode initialize is required
-	 * @param {boolean} required Indicates if this chaincode must be initialized
-	 */
-	setInitRequired(required) {
-		this._init_required = required;
-
-		return this;
-	}
-
-	/**
-	 * Get the initialize required setting
-	 */
-	getInitRequired() {
-
-		return this._init_required;
 	}
 
 	/**
@@ -231,7 +215,29 @@ const Chaincode = class {
 	}
 
 	/**
+	 * Set if the chaincode initialize is required
+	 * @param {boolean} required Indicates if this chaincode must be initialized
+	 */
+	setInitRequired(required) {
+		this._init_required = required;
+
+		return this;
+	}
+
+	/**
+	 * Get the initialize required setting
+	 *
+	 * @returns {boolean}
+	 */
+	getInitRequired() {
+
+		return this._init_required;
+	}
+
+	/**
 	 * Get the chaincode path
+	 *
+	 * @returns {string}
 	 */
 	getChaincodePath() {
 
@@ -250,6 +256,8 @@ const Chaincode = class {
 
 	/**
 	 * Get the chaincode path
+	 *
+	 * @returns {string}
 	 */
 	getMetadataPath() {
 
@@ -268,6 +276,8 @@ const Chaincode = class {
 
 	/**
 	 * Get the goLang path
+	 *
+	 * @returns {string}
 	 */
 	getGoLangPath() {
 
@@ -731,7 +741,7 @@ const Chaincode = class {
 	}
 
 
-	/**
+	/*
 	 * Build a ApproveChaincodeDefinitionForMyOrgArgs protobuf object
 	 * based on this Chaincode definition
 	 */
@@ -758,7 +768,7 @@ const Chaincode = class {
 		return arg;
 	}
 
-	/**
+	/*
 	 * Build a QueryApprovalStatusArgs protobuf object
 	 * based on this Chaincode definition
 	 */
@@ -774,7 +784,7 @@ const Chaincode = class {
 		return arg;
 	}
 
-	/**
+	/*
 	 * Build a CommitChaincodeDefinitionArgs protobuf object
 	 * based on this Chaincode definition
 	 */
