@@ -17,9 +17,18 @@ const util = require('util');
  *
  *
  * @private
+ * @memberof module:fabric-network
  * @class
  */
 class BlockEventListener extends AbstractEventListener {
+	/**
+	 *
+	 * @param {module:fabric-network.Network} network The fabric network
+	 * @param {string} listenerName the name of the listener being created
+	 * @param {Function} eventCallback The event callback called when a transaction is committed.
+	 * It has signature (err, block)
+	 * @param {module:fabric-network.Network~ListenerOptions} options
+	 */
 	constructor(network, listenerName, eventCallback, options) {
 		super(network, listenerName, eventCallback, options);
 	}
@@ -35,7 +44,7 @@ class BlockEventListener extends AbstractEventListener {
 		this._registration = this.eventHub.registerBlockEvent(
 			this._onEvent.bind(this),
 			this._onError.bind(this),
-			this.options
+			this.clientOptions
 		);
 		this.eventHub.connect(!this._filtered);
 		this._registered = true;
@@ -55,7 +64,7 @@ class BlockEventListener extends AbstractEventListener {
 	 * The callback triggered when the event was successful. Checkpoints the last
 	 * block and transaction seen once the callback has run and unregisters the
 	 * listener if the unregister flag was provided
-	 * @param {*} block Either a full or filtered block
+	 * @param {Block} block Either a full or filtered block
 	 * @private
 	 */
 	async _onEvent(block) {

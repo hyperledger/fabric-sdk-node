@@ -70,7 +70,7 @@ describe('ContractEventListener', () => {
 				'eventName',
 				sinon.match.func,
 				sinon.match.func,
-				{replay: true}
+				{as_array: true}
 			);
 			sinon.assert.calledWith(contractEventListener._onEvent.bind, contractEventListener);
 			sinon.assert.calledWith(contractEventListener._onError.bind, contractEventListener);
@@ -82,6 +82,19 @@ describe('ContractEventListener', () => {
 			sandbox.stub(contractEventListener, '_registerWithNewEventHub');
 			await contractEventListener.register();
 			sinon.assert.called(contractEventListener._registerWithNewEventHub);
+		});
+
+		it('should automatically set as_array on event registration if replay is used', async () => {
+			contractEventListener.eventHub = eventHubStub;
+			await contractEventListener.register();
+			sinon.assert.calledWith(
+				eventHubStub.registerChaincodeEvent,
+				'chaincodeid',
+				'eventName',
+				sinon.match.func,
+				sinon.match.func,
+				{as_array: true}
+			);
 		});
 	});
 
@@ -107,13 +120,28 @@ describe('ContractEventListener', () => {
 			sandbox.stub(contractEventListener, 'eventCallback');
 		});
 
-		it('should call the event callback', () => {
+		it('should call the event callback', async () => {
 			const event = {name: 'eventName'};
 			const blockNumber = '10';
 			const transactionId = 'transactionId';
 			const status = 'VALID';
-			contractEventListener._onEvent(event, blockNumber, transactionId, status);
+			await contractEventListener._onEvent(event, blockNumber, transactionId, status);
 			sinon.assert.calledWith(contractEventListener.eventCallback, null, event, Number(blockNumber), transactionId, status);
+			sinon.assert.notCalled(checkpointerStub.save);
+			sinon.assert.notCalled(contractEventListener.unregister);
+		});
+
+		it('should emit multiple events events if received as an array', async () => {
+			const blockNumber = '10';
+			const status = 'VALID';
+			const events = [
+				{chaincode_event: {name: 'eventName0'}, tx_id: '1', block_num: blockNumber, tx_status: status},
+				{chaincode_event: {name: 'eventName1'}, tx_id: '2', block_num: blockNumber, tx_status: status}
+			];
+			await contractEventListener._onEvent(events);
+			sinon.assert.calledTwice(contractEventListener.eventCallback);
+			sinon.assert.calledWith(contractEventListener.eventCallback, null, events[0].chaincode_event, Number(blockNumber), '1', status);
+			sinon.assert.calledWith(contractEventListener.eventCallback, null, events[1].chaincode_event, Number(blockNumber), '2', status);
 			sinon.assert.notCalled(checkpointerStub.save);
 			sinon.assert.notCalled(contractEventListener.unregister);
 		});
@@ -128,6 +156,24 @@ describe('ContractEventListener', () => {
 			await contractEventListener._onEvent(event, blockNumber, transactionId, status);
 			sinon.assert.calledWith(contractEventListener.eventCallback, null, event, Number(blockNumber), transactionId, status);
 			sinon.assert.calledWith(checkpointerStub.save, 'transactionId', 10);
+			sinon.assert.notCalled(contractEventListener.unregister);
+		});
+
+		it('should save multiple checkpoints if events received as an array', async () => {
+			const blockNumber = '10';
+			const status = 'VALID';
+			const events = [
+				{chaincode_event: {name: 'eventName0'}, tx_id: '1', block_num: blockNumber, tx_status: status},
+				{chaincode_event: {name: 'eventName1'}, tx_id: '2', block_num: blockNumber, tx_status: status}
+			];
+			contractEventListener.checkpointer = checkpointerStub;
+			contractEventListener.options.replay = true;
+			contractEventListener.clientOptions.as_array = true;
+			await contractEventListener._onEvent(events);
+
+			sinon.assert.calledTwice(checkpointerStub.save);
+			sinon.assert.calledWith(checkpointerStub.save, '1', Number(blockNumber));
+			sinon.assert.calledWith(checkpointerStub.save, '2', Number(blockNumber));
 			sinon.assert.notCalled(contractEventListener.unregister);
 		});
 
@@ -157,7 +203,7 @@ describe('ContractEventListener', () => {
 
 		it('should skip a transaction if it is in the checkpoint', async () => {
 			contractEventListener.checkpointer = checkpointerStub;
-			const checkpoint = {transactionIds: ['transactionId']};
+			const checkpoint = {blockNumber: 10, transactionIds: ['transactionId']};
 			contractEventListener._firstCheckpoint = checkpoint;
 			checkpointerStub.load.returns(checkpoint);
 			const event = {name: 'eventName'};
@@ -317,7 +363,7 @@ describe('ContractEventListener', () => {
 			contractEventListener.eventHub = eventHubStub;
 			eventHubStub.registerChaincodeEvent.returns({});
 			await contractEventListener.register();
-			expect(contractEventListener.options.startBlock.toInt()).to.equal(2);
+			expect(contractEventListener.clientOptions.startBlock.toInt()).to.equal(2);
 		});
 
 		it('should skip a transaction that is already checkpointed', async () => {

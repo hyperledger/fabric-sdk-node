@@ -13,7 +13,7 @@ const util = require('util');
 /**
  * The Commit Event Listener handles transaction commit events
  *
- * @private
+ * @memberof module:fabric-network
  * @class
  */
 class CommitEventListener extends AbstractEventListener {
@@ -23,7 +23,7 @@ class CommitEventListener extends AbstractEventListener {
 	 * @param {string} transactionId the transaction id being listened to
 	 * @param {Function} eventCallback The event callback called when a transaction is committed.
 	 * It has signature (err, transactionId, status, blockNumber)
-	 * @param {*} options
+	 * @param {module:fabric-network.Network~ListenerOptions} options
 	 */
 	constructor(network, transactionId, eventCallback, options) {
 		const listenerName = transactionId + Math.random();
@@ -49,7 +49,7 @@ class CommitEventListener extends AbstractEventListener {
 			this.transactionId,
 			this._onEvent.bind(this),
 			this._onError.bind(this),
-			Object.assign({unregister: true}, this.options)
+			Object.assign({unregister: true}, this.clientOptions)
 		);
 		this._registration = this.eventHub._transactionRegistrations[txid];
 		this.eventHub.connect(!this._filtered);
@@ -96,7 +96,7 @@ class CommitEventListener extends AbstractEventListener {
 			this.eventHub = this.getEventHubManager().getFixedEventHub(this.eventHub._peer);
 		}
 
-		this.options.disconnect = true;
+		this.clientOptions.disconnect = true;
 		await this.register();
 	}
 
