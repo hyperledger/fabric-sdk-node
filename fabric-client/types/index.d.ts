@@ -5,9 +5,11 @@
  */
 
 /* tslint:disable:max-classes-per-file */
+/* tslint:disable:ordered-imports */
 
-import FabricCAServices = require('fabric-ca-client');
 import { BaseClient } from './base';
+import FabricCAServices = require('fabric-ca-client');
+import { lstatSync } from 'fs';
 
 interface ProtoBufObject {
 	toBuffer(): Buffer;
@@ -48,7 +50,7 @@ declare class Client extends BaseClient {
 	public queryPeers(request: Client.PeerQueryRequest): Promise<Client.PeerQueryResponse>;
 	public queryChannels(peer: Client.Peer | string, useAdmin?: boolean): Promise<Client.ChannelQueryResponse>;
 	public queryInstalledChaincodes(peer: Client.Peer | string, useAdmin?: boolean): Promise<Client.ChaincodeQueryResponse>;
-	public installChaincode(request: Client.ChaincodeInstallRequest, timeout?: number): Promise<Client.ProposalResponseObject>;
+	public installChaincode(request: Client.ChaincodeInstallRequestv1, timeout?: number): Promise<Client.ProposalResponseObject>;
 	public initCredentialStores(): Promise<boolean>;
 	public setStateStore(store: Client.IKeyValueStore): void;
 	public setAdminSigningIdentity(privateKey: string, certificate: string, mspid: string): void;
@@ -155,6 +157,44 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		configUpdate?: Buffer;
 	}
 
+	export interface ChaincodeDefinitionQueryRequest {
+		target: Peer;
+		chaincodeId: string;
+		request_timeout?: number;
+		txId?: TransactionId;
+	}
+
+	export interface NamespaceDefinitionsRequest {
+		target: Peer;
+		request_timeout?: number;
+		txId?: TransactionId;
+	}
+
+	export interface ApprovalStatusRequest {
+		target: Peer;
+		request_timeout?: number;
+		txId?: TransactionId;
+		chaincode: Chaincode;
+	}
+
+	export interface InstalledChaincodeRequest {
+		target: Peer;
+		request_timeout?: number;
+		txId?: TransactionId;
+		package_id: string;
+	}
+
+	export interface InstalledChaincodesRequest {
+		target: Peer;
+		request_timeout?: number;
+		txId?: TransactionId;
+	}
+
+	export interface QueryInstalledChaincodeResult {
+		package_id: string;
+		label: string;
+	}
+
 	export class Channel {
 		public static sendSignedProposal(request: SignedProposal, timeout?: number): Promise<ProposalResponseObject>;
 
@@ -222,6 +262,14 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public queryByChaincode(request: ChaincodeQueryRequest, useAdmin?: boolean): Promise<Buffer[]>;
 		public verifyProposalResponse(proposalResponse: ProposalResponse): boolean;
 		public compareProposalResponseResults(proposalResponses: ProposalResponse[]): boolean;
+
+		public approveChaincodeForOrg(request: ChaincodeRequest): Promise<object>;
+		public commitChaincode(request: ChaincodeRequest): Promise<object>;
+		public queryChaincodeDefinition(request: ChaincodeDefinitionQueryRequest): Promise<Chaincode>;
+		public queryNamespaceDefinitions(request: NamespaceDefinitionsRequest): Promise<object>;
+		public queryApprovalStatus(request: ApprovalStatusRequest): Promise<object>;
+		public queryInstalledChaincode(request: InstalledChaincodeRequest): Promise<QueryInstalledChaincodeResult>;
+		public queryInstalledChaincodes(request: InstalledChaincodesRequest): Promise<QueryInstalledChaincodeResult[]>;
 	}
 
 	export interface ChannelPeerRoles {
@@ -460,7 +508,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		metadataPath?: string;
 	}
 
-	export type ChaincodeInstallRequest = ChaincodePackageInstallRequest | ChaincodePathInstallRequest;
+	export type ChaincodeInstallRequestv1 = ChaincodePackageInstallRequest | ChaincodePathInstallRequest;
 
 	export interface ChaincodeInstantiateUpgradeRequest {
 		targets?: Peer[] | string[];
@@ -493,6 +541,12 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		transientMap?: TransientMap;
 		fcn?: string;
 		args: string[];
+		txId?: TransactionId;
+	}
+
+	export interface ChaincodeRequest {
+		targets?: Peer[] | string[];
+		chaincode: Chaincode;
 		txId?: TransactionId;
 	}
 
@@ -730,5 +784,56 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public getType(): ChaincodeType;
 		public getFileNames(): string[];
 		public toBuffer(): Promise<Buffer>;
+	}
+
+	export interface ChaincodePackageRequest {
+		label?: string;
+		chaincodeType: ChaincodeType;
+		chaincodePath: string;
+		metadataPath?: string;
+		goPath?: string;
+	}
+
+	export interface ChaincodeInstallRequest {
+		target: Peer;
+		request_timeout?: number;
+		txId: TransactionId;
+	}
+
+	export class Chaincode {
+		public static fromQueryResult(name: string, payload: ByteBuffer, client: Client): Chaincode;
+		constructor(name: string, version: string, client: Client);
+		public getName(): string;
+		public getVersion(): string;
+		public setVersion(version: string): Chaincode;
+		public getSequence(): Long;
+		public setSequence(sequence: Long): Chaincode;
+		public getPackage(): Buffer;
+		public setPackage(packagedChaincode: Buffer): Chaincode;
+		public getType(): ChaincodeType;
+		public setType(type: ChaincodeType): Chaincode;
+		public getInitRequired(): boolean;
+		public setInitRequired(required: boolean): Chaincode;
+		public getChaincodePath(): string;
+		public setChaincodePath(path: string): Chaincode;
+		public getMetadataPath(): string;
+		public setMetadataPath(path: string): Chaincode;
+		public getGoLangPath(): string;
+		public setGoLangPath(path: string): Chaincode;
+		public getLabel(): string;
+		public setLabel(label: string): Chaincode;
+		public getPackageId(): string;
+		public setPackageId(packageId: string): Chaincode;
+		public getEndorsementPolicyDefinition(): object;
+		public setEndorsementPolicyDefinition(policy: object): Chaincode;
+		public getEndorsementPolicy(): object;
+		public setEndorsementPolicy(policy: object): Chaincode;
+		public getCollectionConfigPackageDefinition(): object;
+		public setCollectionConfigPackageDefinition(configPackage: object): Chaincode;
+		public getCollectionConfigPackage(): object;
+		public validate(): void;
+		public package(request: ChaincodePackageRequest): Promise<Buffer>;
+		public install(request: ChaincodeInstallRequest): Promise<string>;
+		public toString(): string;
 	}
 }

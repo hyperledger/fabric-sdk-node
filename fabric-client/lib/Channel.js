@@ -3933,10 +3933,16 @@ const Channel = class {
 	 */
 
 	/**
+	 * @typedef {Object} QueryInstalledChaincodeResult
+	 * @property {string} package_id - The package ID of the installed chaincode
+	 * @property {string} label - The label as provided by the client application
+	 */
+
+	/**
 	 * Sends a QueryInstalledChaincode request to one peer.
 	 *
 	 * @param {InstalledChaincodeRequest} request
-	 * @returns {Promise} A Promise for a {@link Chaincode} instance
+	 * @returns {Promise} A Promise for a {@link QueryInstalledChaincodeResult}
 	 */
 	async queryInstalledChaincode(request) {
 		const method = 'queryInstalledChaincode';
@@ -4003,7 +4009,7 @@ const Channel = class {
 			throw results;
 		}
 
-		return results;
+		return JSON.parse(results.encodeJSON());
 	}
 
 	/**
@@ -4019,7 +4025,7 @@ const Channel = class {
 	 * Sends a QueryInstalledChaincodes request to one peer.
 	 *
 	 * @param {InstalledChaincodesRequest} request
-	 * @returns {Promise} A Promise for a {@link Chaincode} instance
+	 * @returns {Promise} A Promise for a {@link QueryInstalledChaincodeResult[]}
 	 */
 	async queryInstalledChaincodes(request) {
 		const method = 'queryInstalledChaincodes';
@@ -4082,7 +4088,7 @@ const Channel = class {
 			throw results;
 		}
 
-		return results;
+		return JSON.parse(results.encodeJSON());
 	}
 
 	/**
