@@ -58,7 +58,7 @@ describe('BlockEventListener', () => {
 				eventHubStub.registerBlockEvent,
 				sinon.match.func,
 				sinon.match.func,
-				{replay: true}
+				{}
 			);
 			sinon.assert.calledWith(blockEventListener._onEvent.bind, blockEventListener);
 			sinon.assert.calledWith(blockEventListener._onError.bind, blockEventListener);
@@ -259,7 +259,7 @@ describe('BlockEventListener', () => {
 			blockEventListener.eventHub = eventHubStub;
 			eventHubStub.registerBlockEvent.returns({});
 			await blockEventListener.register();
-			expect(blockEventListener.options.startBlock.toInt()).to.equal(2);
+			expect(blockEventListener.clientOptions.startBlock.toInt()).to.equal(2);
 		});
 
 		it('should not set the start block if it equals the current height', async() => {

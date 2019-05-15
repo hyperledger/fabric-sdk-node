@@ -15,6 +15,26 @@ const logger = require('./logger').getLogger('Network');
 const util = require('util');
 
 /**
+ * @typedef {Object} Network~EventListenerOptions
+ * @memberof module:fabric-network
+ * @property {Object} checkpointer The checkpointer factory and options
+ * @property {module:fabric-network.Network~CheckpointerFactory} checkpointer.factory The checkpointer factory
+ * @property {Object} [checkpointer.options] The checkpoint configuration options
+ * @property {boolean} [replay=false] event replay and checkpointing on listener
+ * @property {boolean} [filtered=false] use receive filtered block events or not
+ */
+
+/**
+ * @typedef {Function} Network~CheckpointerFactory
+ * @memberof module:fabric-network
+ * @param {String} channelName the name of the channel the checkpoint exists in
+ * @param {String} listenerName the name of the listener being checkpointed
+ * @param {Object} [options] Optional. Options to configure behaviour of custom checkpointers i.e.
+ * Supplying database connection details
+ * @returns {BaseCheckpointer}
+ */
+
+/**
  * A Network represents the set of peers in a Fabric network.
  * Applications should get a Network instance using the
  * gateway's [getNetwork]{@link module:fabric-network.Gateway#getNetwork} method.
@@ -177,9 +197,19 @@ class Network {
 	/**
 	 * Get the checkpoint factory
 	 * @private
+	 * @param {Object} options the event listener options
 	 * @returns {Function} The checkpointer factory
 	 */
-	getCheckpointer() {
+	getCheckpointer(options) {
+		if (options) {
+			if (typeof options.checkpointer === 'undefined') {
+				return this.checkpointer;
+			} else if (options.hasOwnProperty('checkpointer') && typeof options.checkpointer.factory === 'function') {
+				return options.checkpointer;
+			} else if (options.checkpointer === false) {
+				return null;
+			}
+		}
 		return this.checkpointer;
 	}
 
@@ -219,7 +249,9 @@ class Network {
 	 * Create a block event listener
 	 * @param {String} listenerName the name of the listener
 	 * @param {Function} callback the callback called when an event is triggered with signature (error, block)
-	 * @param {Object} [options] Optional. Tjhe event listener options
+	 * @param {module:fabric-network.Network~EventListenerOptions} [options] Optional. The event listener options
+	 * @returns {BlockEventListener}
+	 * @async
 	 */
 	async addBlockListener(listenerName, callback, options) {
 		if (!options) {
@@ -239,7 +271,7 @@ class Network {
 	 * @param {Function} callback - This callback will be triggered when
 	 *		a transaction commit event is emitted. It takes parameters
 	 * 		of error, transactionId, transaction status and block number
-	 * @param {RegistrationOptions} [options] - Optional. Options on
+	 * @param {module:fabric-network.Network~EventListenerOptions} [options] Optional. The event listener options
 	 * 		registrations allowing start and end block numbers.
 	 * @param {ChannelEventHub} [eventHub] - Optional. Used to override the event hub selection
 	 * @returns {CommitEventListener}

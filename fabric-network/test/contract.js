@@ -245,7 +245,10 @@ describe('Contract', () => {
 		it('should change options.replay=undefined to options.replay=false', async () => {
 			sinon.spy(contract, 'getCheckpointer');
 			await contract.addContractListener(listenerName, testEventName, callback, {replay: undefined});
-			sinon.assert.calledWith(contract.getCheckpointer, {replay: false, checkpointer: sinon.match.instanceOf(BaseCheckpointer)});
+			sinon.assert.calledWith(contract.getCheckpointer, {
+				replay: false,
+				checkpointer: sinon.match.instanceOf(BaseCheckpointer)
+			});
 		});
 
 		it('should change options.replay=\'true\' to options.replay=true', async () => {

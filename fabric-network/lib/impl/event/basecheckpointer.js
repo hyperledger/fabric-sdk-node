@@ -7,7 +7,15 @@
 'use strict';
 
 /**
+ * @typedef {Object} BaseCheckpointer~Checkpoint
+ * @memberof module:fabric-network
+ * @property {number} blockNumber
+ * @property {string[]} transactionIds
+ */
+
+/**
  * Base checkpointer providing an interface for checkpointers
+ * @memberof module:fabric-network
  * @class
  */
 class BaseCheckpointer {
@@ -24,14 +32,17 @@ class BaseCheckpointer {
 	 * Updates the storage mechanism
 	 * @param {String} transactionId the transaction ID
 	 * @param {Number} blockNumber the block number
+	 * @param {Number} expectedTotal the number of events expected in this block
 	 * @async
 	 */
-	async save(transactionId, blockNumber) {
+	async save(transactionId, blockNumber, expectedTotal) {
 		throw new Error('Method has not been implemented');
 	}
 
 	/**
 	 * Loads the latest checkpoint
+	 * @return {module:fabric-network.BaseCheckpointer~Checkpoint | Object} Object parameter has key
+	 * blockNumber: string and value {@link module:fabric-network.BaseCheckpointer~Checkpoint}
 	 * @async
 	 */
 	async load() {
@@ -39,10 +50,20 @@ class BaseCheckpointer {
 	}
 
 	/**
+	 * Loads the earliest incomplete checkpoint to decide which
+	 * block to replay from
+	 * @return {module:fabric-network.BaseCheckpointer~Checkpoint}
+	 * @async
+	 */
+	async loadStartingCheckpoint() {
+		return this.load();
+	}
+
+	/**
 	 * Sets the chaincode ID to group together listeners
 	 * @param {String} chaincodeId the chaincodeId
 	 */
-	async setChaincodeId(chaincodeId) {
+	setChaincodeId(chaincodeId) {
 		this._chaincodeId = chaincodeId;
 	}
 }

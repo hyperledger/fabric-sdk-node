@@ -39,6 +39,13 @@ describe('BaseCheckpointer', () => {
 		});
 	});
 
+	describe('#loadStartingCheckpoint', () => {
+		it('should throw an exception', () => {
+			const checkpointer = new BaseCheckpointer();
+			expect(checkpointer.loadStartingCheckpoint()).to.be.rejectedWith('Method has not been implemented');
+		});
+	});
+
 	describe('#setChaincodeId', () => {
 		it('should set the chaincodeId', () => {
 			const checkpointer = new BaseCheckpointer();

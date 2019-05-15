@@ -13,21 +13,11 @@ const {Utils} = require('fabric-common');
 const logger = Utils.getLogger('AbstractEventListener');
 
 /**
- * @typedef {Object} module:fabric-network.Network~ListenerOptions
- * @memberof module:fabric-network
- * @property {Object} checkpointer The checkpointer factory and options
- * @property {Gateway~CheckpointerFactory} checkpointer.factory The checkpointer factory
- * @property {Object} checkpointer.options The checkpoint configuration options
- * @property {boolean} replay event replay and checkpointing on listener
- * @extends RegistrationOpts
- */
-
-/**
  * Event listener base class handles initializing common properties across contract, transaction
  * and block event listeners.
  *
  * Instances of the event listeners are stateful and must only be used for one listener
- * @private
+ * @memberof module:fabric-network
  * @class
  */
 class AbstractEventListener {
@@ -48,6 +38,7 @@ class AbstractEventListener {
 		this.listenerName = listenerName;
 		this.eventCallback = eventCallback;
 		this.options = options;
+		this.clientOptions = {}; // fabric-client ChannelEventHub options
 
 		this._registered = false;
 		this._firstCheckpoint = {};
@@ -83,7 +74,6 @@ class AbstractEventListener {
 				}
 			}
 		}
-
 		if (this.options.checkpointer) {
 			if (typeof this.options.checkpointer.factory === 'function') {
 				this.checkpointer = this.options.checkpointer.factory(
@@ -102,11 +92,11 @@ class AbstractEventListener {
 
 		let checkpoint;
 		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
-			this._firstCheckpoint = checkpoint = await this.checkpointer.load();
+			this._firstCheckpoint = checkpoint = await this.checkpointer.loadStartingCheckpoint();
 			const blockchainInfo = await this.channel.queryInfo();
-			if (checkpoint && checkpoint.blockNumber && blockchainInfo.height - 1 > Number(checkpoint.blockNumber)) {
+			if (checkpoint && checkpoint.hasOwnProperty('blockNumber') && !isNaN(checkpoint.blockNumber) && blockchainInfo.height - 1 > Number(checkpoint.blockNumber)) {
 				logger.debug(`Requested Block Number: ${Number(checkpoint.blockNumber) + 1} Latest Block Number: ${blockchainInfo.height - 1}`);
-				this.options.startBlock = Long.fromInt(Number(checkpoint.blockNumber) + 1);
+				this.clientOptions.startBlock = Long.fromInt(Number(checkpoint.blockNumber) + 1);
 			}
 		}
 	}
@@ -118,10 +108,8 @@ class AbstractEventListener {
 	unregister() {
 		logger.debug(`Unregister event listener: ${this.listenerName}`);
 		this._registered = false;
-		delete this.options.startBlock;
-		delete this.options.endBlock;
-		delete this.options.disconnect;
 		this._firstCheckpoint = {};
+		this.clientOptions = {};
 	}
 
 	/**

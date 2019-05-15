@@ -14,7 +14,7 @@ const util = require('util');
 /**
  * The Contract Event Listener handles contract events from the chaincode.
  *
- * @private
+ * @memberof module:fabric-network
  * @class
  */
 class ContractEventListener extends AbstractEventListener {
@@ -25,12 +25,18 @@ class ContractEventListener extends AbstractEventListener {
 	 * @param {string} eventName The name of the contract event being listened for
 	 * @param {function} eventCallback The event callback called when an event is received.
 	 * It has signature (err, BlockEvent, blockNumber, transactionId)
-	 * @param {*} options
+	 * @param {module:fabric-network.Network~ListenerOptions} options
 	 */
 	constructor(contract, listenerName, eventName, eventCallback, options) {
 		super(contract.getNetwork(), listenerName, eventCallback, options);
 		this.contract = contract;
 		this.eventName = eventName;
+
+		if (this.useEventReplay()) {
+			Object.assign(this.clientOptions, {as_array: true});
+		} else {
+			Object.assign(this.clientOptions, {as_array: false});
+		}
 	}
 
 	/**
@@ -46,7 +52,7 @@ class ContractEventListener extends AbstractEventListener {
 			this.eventName,
 			this._onEvent.bind(this),
 			this._onError.bind(this),
-			this.options
+			this.clientOptions
 		);
 
 		this._registered = true;
@@ -71,13 +77,20 @@ class ContractEventListener extends AbstractEventListener {
 	 * @param {number} blockNumber the block number this transaction was committed inside
 	 * @param {string} transactionId the transaction ID of the transaction this event was emitted by
 	 * @param {string} status the status of the the transaction
+	 * @param {string} [expectedNumber] the expected number of events from the block
 	 */
-	async _onEvent(event, blockNumber, transactionId, status) {
+	async _onEvent(event, blockNumber, transactionId, status, expectedNumber) {
+		if (Array.isArray(event)) {
+			return this._onEvents(event, blockNumber, transactionId, status, event.length);
+		}
 		logger.debug(`_onEvent[${this.listenerName}]:`, util.format('success for transaction %s', transactionId));
 		blockNumber = Number(blockNumber);
 		let useCheckpoint = false;
 		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
-			const checkpoint = await this.checkpointer.load();
+			let checkpoint = await this.checkpointer.load();
+			if (!checkpoint.hasOwnProperty('blockNumber') && Object.keys(checkpoint).length > 0) {
+				checkpoint = checkpoint[blockNumber];
+			}
 			useCheckpoint = Number(checkpoint.blockNumber || 0) <= Number(blockNumber);
 			if (checkpoint && checkpoint.transactionIds && checkpoint.transactionIds.includes(transactionId)) {
 				logger.debug(util.format('_onEvent skipped transaction: %s', transactionId));
@@ -88,7 +101,7 @@ class ContractEventListener extends AbstractEventListener {
 		try {
 			await this.eventCallback(null, event, blockNumber, transactionId, status);
 			if (useCheckpoint) {
-				await this.checkpointer.save(transactionId, blockNumber);
+				await this.checkpointer.save(transactionId, blockNumber, expectedNumber);
 			}
 		} catch (err) {
 			logger.debug(util.format('_onEvent error from callback: %s', err));
@@ -98,8 +111,13 @@ class ContractEventListener extends AbstractEventListener {
 		}
 	}
 
+	async _onEvents(events) {
+		logger.debug('Received contract events as array');
+		await Promise.all(events.map((event) => this._onEvent(event.chaincode_event, event.block_num, event.tx_id, event.tx_status)));
+	}
+
 	/**
-	 * This callback is triggerend when the event was unsuccessful. If the error indicates
+	 * This callback is triggered when the event was unsuccessful. If the error indicates
 	 * that the event hub shutdown and the listener is still registered, it updates the
 	 * {@link EventHubSelectionStrategy} status of event hubs (if implemented) and finds a
 	 * new event hub to connect to

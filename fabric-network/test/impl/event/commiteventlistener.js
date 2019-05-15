@@ -191,7 +191,7 @@ describe('CommitEventListener', () => {
 			await listener._registerWithNewEventHub();
 			sinon.assert.called(eventHubManagerStub.getReplayEventHub);
 			expect(listener.eventHub).to.equal(eventHubStub);
-			expect(listener.options.disconnect).to.be.true;
+			expect(listener.clientOptions.disconnect).to.be.true;
 			sinon.assert.called(listener.register);
 		});
 
