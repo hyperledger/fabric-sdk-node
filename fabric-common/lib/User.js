@@ -118,6 +118,15 @@ const User = class {
 	}
 
 	/**
+	 * Set the {@link SigningIdentity} object for this User instance, used to generate signatures
+	 * @param {SigningIdentity} the identity object that encapsulates the user's private key for signing
+	 */
+	setSigningIdentity(signingIdentity) {
+		this._signingIdentity = signingIdentity;
+		this._identity = signingIdentity;
+	}
+
+	/**
 	 * Get the {@link module:api.CryptoSuite} cryptoSuite object for this User instance.
 	 * @returns {module:api.CryptoSuite} the cryptoSuite used to store crypto and key store settings
 	 */

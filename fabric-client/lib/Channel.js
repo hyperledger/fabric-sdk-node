@@ -3669,7 +3669,7 @@ const Channel = class {
 	}
 
 	/**
-	 * @typedef {Object} ChaincodeDefinitionQueryRequest
+	 * @typedef {Object} QueryChaincodeDefinitionRequest
 	 * @property {Peer | string} target - Required. The peer that will receive
 	 *  this request
 	 * @property {string} chaincodeId - Required. Name of the chaincode
@@ -3682,7 +3682,7 @@ const Channel = class {
 	/**
 	 * Sends a QueryChaincodeDefintion request to one peer.
 	 *
-	 * @param {ChaincodeDefinitionQueryRequest} request
+	 * @param {QueryChaincodeDefinitionRequest} request
 	 * @returns {Promise} A Promise for a {@link Chaincode} instance
 	 */
 	async queryChaincodeDefinition(request) {
@@ -3754,7 +3754,7 @@ const Channel = class {
 	}
 
 	/**
-	 * @typedef {Object} NamespaceDefinitionsRequest
+	 * @typedef {Object} QueryNamespaceDefinitionsRequest
 	 * @property {Peer | string} target - Required. The peer that will receive
 	 *  this request
 	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this
@@ -3766,7 +3766,7 @@ const Channel = class {
 	/**
 	 * Sends a QueryNamespaceDefinitions request to one peer.
 	 *
-	 * @param {NamespaceDefinitionsRequest} request
+	 * @param {QueryNamespaceDefinitionsRequest} request
 	 * @returns {Promise} A Promise for an {Object} with a "namespaces" map
 	 */
 	async queryNamespaceDefinitions(request) {
@@ -3834,7 +3834,7 @@ const Channel = class {
 	}
 
 	/**
-	 * @typedef {Object} ApprovalStatusRequest
+	 * @typedef {Object} QueryApprovalStatusRequest
 	 * @property {Peer | string} target - Required. The peer that will receive
 	 *  this request
 	 * @property {object} chaincode - Required. The chaincode object containing
@@ -3849,7 +3849,7 @@ const Channel = class {
 	/**
 	 * Sends a QueryApprovalStatus request to one peer.
 	 *
-	 * @param {ApprovalStatusRequest} request
+	 * @param {QueryApprovalStatusRequest} request
 	 * @returns {Promise} A Promise for a {@link Chaincode} instance
 	 */
 	async queryApprovalStatus(request) {
@@ -3923,7 +3923,7 @@ const Channel = class {
 	}
 
 	/**
-	 * @typedef {Object} InstalledChaincodeRequest
+	 * @typedef {Object} QueryInstalledChaincodeRequest
 	 * @property {Peer | string} target - Required. The peer that will receive
 	 *  this request
 	 * @property {string} package_id - Required. Package Id of the chaincode
@@ -3941,7 +3941,7 @@ const Channel = class {
 	/**
 	 * Sends a QueryInstalledChaincode request to one peer.
 	 *
-	 * @param {InstalledChaincodeRequest} request
+	 * @param {QueryInstalledChaincodeRequest} request
 	 * @returns {Promise} A Promise for a {@link QueryInstalledChaincodeResult}
 	 */
 	async queryInstalledChaincode(request) {
@@ -4013,7 +4013,7 @@ const Channel = class {
 	}
 
 	/**
-	 * @typedef {Object} InstalledChaincodesRequest
+	 * @typedef {Object} QueryInstalledChaincodesRequest
 	 * @property {Peer | string} target - Required. The peer that will receive
 	 *  this request
 	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this request
@@ -4024,7 +4024,7 @@ const Channel = class {
 	/**
 	 * Sends a QueryInstalledChaincodes request to one peer.
 	 *
-	 * @param {InstalledChaincodesRequest} request
+	 * @param {QueryInstalledChaincodesRequest} request
 	 * @returns {Promise} A Promise for a {@link QueryInstalledChaincodeResult[]}
 	 */
 	async queryInstalledChaincodes(request) {

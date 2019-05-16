@@ -5,6 +5,7 @@
  */
 
 import * as fs from 'fs-extra';
+import * as Long from 'long';
 import * as path from 'path';
 import * as test from 'tape';
 import * as util from 'util';
@@ -20,16 +21,21 @@ import {
 	Block,
 	BlockchainInfo,
 	BroadcastResponse,
+	Chaincode,
+	ChaincodeInstallRequest,
 	ChaincodeInstallRequestv1,
 	ChaincodeInstantiateUpgradeRequest,
 	ChaincodeInvokeRequest,
+	ChaincodePackageRequest,
 	ChaincodeQueryRequest,
 	ChaincodeQueryResponse,
+	ChaincodeRequest,
 	Channel,
 	ChannelEventHub,
 	ChannelQueryResponse,
 	ChannelRequest,
 	ConfigSignature,
+	EndorsementResults,
 	ICryptoKeyStore,
 	ICryptoSuite,
 	JoinChannelRequest,
@@ -39,6 +45,12 @@ import {
 	Proposal,
 	ProposalResponse,
 	ProposalResponseObject,
+	QueryApprovalStatusRequest,
+	QueryChaincodeDefinitionRequest,
+	QueryInstalledChaincodeRequest,
+	QueryInstalledChaincodeResult,
+	QueryInstalledChaincodesRequest,
+	QueryNamespaceDefinitionsRequest,
 	TransactionId,
 	TransactionRequest,
 	User,
@@ -74,6 +86,11 @@ test('\n\n ** test TypeScript **', (t: any) => {
 
 	const ceh = new ChannelEventHub(channel, p);
 	t.equal(ceh.constructor.name, 'ChannelEventHub');
+
+	//let cc: Chaincode = new Chaincode('name', 'version', client);
+	//t.equal(cc.constructor.name, 'Chaincode');
+	const cc2: Chaincode = client.newChaincode('name', 'version');
+	t.equal(cc2.constructor.name, 'Chaincode');
 
 	t.pass('Pass all Class check');
 	t.end();
@@ -722,6 +739,345 @@ test('use the connection profile file', async (t: any) => {
 		});
 });
 
+//-------------------
+test('test the new lifecycle APIs', async (t: any) => {
+	const client1 = await getClientForOrg(configNetwork, configOrg1);
+	const client2 = await getClientForOrg(configNetwork, configOrg2);
+	const channel1 = client1.newChannel('tokenchannel');
+	const channel2 = client2.newChannel('tokenchannel');
+
+	let data = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem'));
+	let pem = Buffer.from(data).toString();
+	const peer1 = client1.newPeer('grpcs://localhost:7051', {'pem': pem, 'ssl-target-name-override': 'peer0.org1.example.com', 'name': 'peer0.org1.example.com'});
+
+	data = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp/tlscacerts/tlsca.org2.example.com-cert.pem'));
+	pem = Buffer.from(data).toString();
+	const peer2 = client2.newPeer('grpcs://localhost:8051', {'pem': pem, 'ssl-target-name-override': 'peer0.org2.example.com', 'name': 'peer0.org2.example.com'});
+
+	data = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem'));
+	pem = Buffer.from(data).toString();
+	const orderer1 = client1.newOrderer('grpcs://localhost:7050', {'pem': pem, 'ssl-target-name-override': 'orderer.example.com', 'name': 'orderer.example.com'});
+	channel1.addOrderer(orderer1);
+	const orderer2 = client2.newOrderer('grpcs://localhost:7050', {'pem': pem, 'ssl-target-name-override': 'orderer.example.com', 'name': 'orderer.example.com'});
+	channel2.addOrderer(orderer2);
+
+	// P A C K A G E
+	const metadatapath = path.join(__dirname, '../fixtures/chaincode/metadata');
+	const chaincodepath = path.join(__dirname, '../fixtures/chaincode/node_cc/example_cc');
+
+	const chaincode1: Chaincode = client1.newChaincode('mychaincode', 'v1');
+	const chaincode2: Chaincode = client2.newChaincode('mychaincode', 'v1');
+
+	const packagerequest: ChaincodePackageRequest = {
+		chaincodePath: chaincodepath,
+		chaincodeType: 'node',
+		metadataPath: metadatapath,
+	};
+
+	try {
+		await chaincode1.package(packagerequest);
+		t.pass('Successfully package the chaincode1');
+	} catch (error) {
+		t.fail('Failed to Package, Error:' + error);
+	}
+
+	try {
+		await chaincode2.package(packagerequest);
+		t.pass('Successfully package the code');
+	} catch (error) {
+		t.fail('Failed to Package, Error:' + error);
+	}
+
+	// I N S T A L L
+	const installrequest1: ChaincodeInstallRequest = {
+		request_timeout: 10000,
+		target: peer1,
+	};
+
+	try {
+		const packageid = await chaincode1.install(installrequest1);
+		t.pass('Successfully installed the code on peer1 with package ID of ' + packageid);
+	} catch (error) {
+		t.fail('Failed to Install on peer1, Error:' + error);
+	}
+
+	const installrequest2: ChaincodeInstallRequest = {
+		request_timeout: 10000,
+		target: peer2,
+	};
+
+	try {
+		const packageid = await chaincode2.install(installrequest2);
+		t.pass('Successfully installed the code on peer2 with package ID of ' + packageid);
+	} catch (error) {
+		t.fail('Failed to Install on peer2, Error:' + error);
+	}
+
+	// A P P R O V E
+	const ENDORSEMENT_POLICY = {
+		identities: [
+			{role: {name: 'member', mspId: 'Org1MSP'}},
+			{role: {name: 'member', mspId: 'Org2MSP'}},
+		],
+		policy: {
+			'1-of': [{'signed-by': 0}, {'signed-by': 1}],
+		},
+	};
+	chaincode1.setEndorsementPolicyDefinition(ENDORSEMENT_POLICY);
+	t.pass('Successfully set chaincode1 with endorsement policy');
+
+	const txId1 = client1.newTransactionID(true);
+	t.pass('Successfully created TX for peer1:' + txId1.getTransactionID());
+
+	const approverequest1: ChaincodeRequest = {
+		chaincode: chaincode1,
+		request_timeout: 3000,
+		targets: [peer1],
+		txId: txId1,
+	};
+
+	try {
+		const result: EndorsementResults = await channel1.approveChaincodeForOrg(approverequest1);
+		for (const response of result.proposalResponses) {
+			if (response instanceof Error) {
+				throw response;
+			} else if (response.response && response.response.status) {
+				if (response.response.status === 200) {
+					t.pass('Successfully endorsed the approved on peer1 package ID of ' + chaincode1.getPackageId());
+				} else {
+					throw Error('Problem with the chaincode1 approval' + response.status + ' :: ' + response.message);
+				}
+			} else {
+				throw Error('Problem with the chaincode1 approval no response returned');
+			}
+		}
+		await commitProposal(txId1, result.proposalResponses, result.proposal, channel1, peer1);
+	} catch (error) {
+		t.fail('Failed to Approve on peer1, Error:' + error);
+	}
+
+	chaincode2.setEndorsementPolicyDefinition(ENDORSEMENT_POLICY);
+	t.pass('Successfully set chaincode2 with endorsement policy');
+
+	const txId2 = client2.newTransactionID(true);
+	t.pass('Successfully created TX for peer2:' + txId2.getTransactionID());
+
+	const approverequest2: ChaincodeRequest = {
+		chaincode: chaincode2,
+		request_timeout: 3000,
+		targets: [peer2],
+		txId: txId2,
+	};
+
+	try {
+		const result: EndorsementResults = await channel2.approveChaincodeForOrg(approverequest2);
+		t.pass('Successfully endorsed the approved on peer2 package ID of ' + chaincode2.getPackageId());
+		await commitProposal(txId2, result.proposalResponses, result.proposal, channel2, peer2);
+	} catch (error) {
+		t.fail('Failed to Approve on peer2, Error:' + error);
+	}
+
+	const qapprovalstatusrequest: QueryApprovalStatusRequest = {
+		chaincode: chaincode1,
+		target : peer1,
+	};
+
+	try {
+		const results = await channel1.queryApprovalStatus(qapprovalstatusrequest);
+		t.pass('Successfully queried for approval status' + JSON.stringify(results));
+	} catch (error) {
+		t.fail('Failed to query for approval status, Error:' + error);
+	}
+
+	// C O M M I T
+	const txIdc = client1.newTransactionID(true);
+
+	const request = {
+		chaincode: chaincode1,
+		request_timeout: 3000,
+		targets: [peer1, peer2],
+		txId: txIdc,
+	};
+
+	try {
+		const result: EndorsementResults = await channel1.commitChaincode(request);
+		t.pass('Successfully endorsed the commit of package ID of ' + chaincode1.getPackageId());
+		await commitProposal(txIdc, result.proposalResponses, result.proposal, channel1, peer1);
+	} catch (error) {
+		t.fail('Failed to Commit, Error:' + error);
+	}
+
+	// Q U E R I E S
+	const qinstalledchaincoderequest: QueryInstalledChaincodeRequest = {
+		package_id: chaincode1.getPackageId(),
+		target : peer1,
+	};
+
+	try {
+		const results: QueryInstalledChaincodeResult = await channel1.queryInstalledChaincode(qinstalledchaincoderequest);
+		t.pass('Successfully queried installed chaincode the code with package ID of ' + results.package_id);
+	} catch (error) {
+		t.fail('Failed to query installed chaincode, Error:' + error);
+	}
+
+	const qinstalledchaincodesrequest: QueryInstalledChaincodesRequest = {
+		target : peer1,
+	};
+
+	try {
+		const results: any = await channel1.queryInstalledChaincodes(qinstalledchaincodesrequest);
+		t.pass('Successfully queried installed chaincodes the code with package ID of ' + JSON.stringify(results));
+	} catch (error) {
+		t.fail('Failed to query for installed chaincodes, Error:' + error);
+	}
+
+	const qchaincodedefinitionrequest: QueryChaincodeDefinitionRequest = {
+		chaincodeId: chaincode1.getName(),
+		target : peer1,
+	};
+
+	try {
+		const result: Chaincode = await channel1.queryChaincodeDefinition(qchaincodedefinitionrequest);
+		t.pass('Successfully queried for chaincode definition name:' + result.getName() + ', package_id:' + result.getPackageId());
+	} catch (error) {
+		t.fail('Failed to query for chaincode definition, Error:' + error);
+	}
+
+	const qnamespacedefinitionsrequest: QueryNamespaceDefinitionsRequest = {
+		target : peer1,
+	};
+
+	try {
+		const results = await channel1.queryNamespaceDefinitions(qnamespacedefinitionsrequest);
+		t.pass('Successfully queried for namespace definitions ' + JSON.stringify(results));
+	} catch (error) {
+		t.fail('Failed to query for namespace definition, Error:' + error);
+	}
+
+	chaincode1.setSequence(new Long(2));
+
+	const qapprovalstatusrequest2: QueryApprovalStatusRequest = {
+		chaincode: chaincode1,
+		target : peer1,
+	};
+
+	try {
+		const results = await channel1.queryApprovalStatus(qapprovalstatusrequest2);
+		t.pass('Successfully queried for approval status' + JSON.stringify(results));
+	} catch (error) {
+		t.fail('Failed to query for approval status, Error:' + error);
+	}
+	t.end();
+});
+
 function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function getClientForOrg(networkccp: string, orgccp: string) {
+	// build a 'Client' instance that knows of a network
+	//  this network config does not have the client information, we will
+	//  load that later so that we can switch this client to be in a different
+	//  organization
+	const client = await Client.loadFromConfig(networkccp);
+
+	// load the client information for this organization
+	// this file only has the client section
+	await client.loadFromConfig(orgccp);
+
+	// tell this client instance where the state and key stores are located
+	await client.initCredentialStores();
+
+	const user = new User('admin');
+	user.setSigningIdentity(client._getSigningIdentity(true));
+	client.setUserContext(user, true);
+
+	// get the CA associated with this client's organization
+	// ---- this must only be run after the client has been loaded with a
+	// client section of the connection profile
+	const caService = client.getCertificateAuthority();
+
+	const request = {
+		enrollmentID: 'admin',
+		enrollmentSecret: 'adminpw',
+		profile: 'tls',
+	};
+	const enrollment = await caService.enroll(request);
+
+	const key = enrollment.key.toBytes();
+	const cert = enrollment.certificate;
+
+	// set the material on the client to be used when building endpoints for the user
+	client.setTlsClientCertAndKey(cert, key);
+
+	return client;
+}
+
+async function commitProposal(txid: any, proposalResponsesD: any, proposalD: any, channel: any, peer: any) {
+	const deployId = txid.getTransactionID();
+	const promises = [];
+	const request = {
+		proposal: proposalD,
+		proposalResponses: proposalResponsesD,
+		txId: txid,
+	};
+	promises.push(channel.sendTransaction(request));
+
+	const channeleventhub = channel.newChannelEventHub(peer);
+	const txPromise = new Promise((resolve, reject) => {
+		const handle = setTimeout(() => {
+			channeleventhub.disconnect();
+			reject('TIMEOUT waiting on ' + channeleventhub.getPeerAddr());
+		}, 120000);
+
+		channeleventhub.registerTxEvent(deployId.toString(), (tx: string, code: string) => {
+			clearTimeout(handle);
+			if (code !== 'VALID') {
+				reject(code);
+			} else {
+				resolve(code);
+			}
+		}, (err: any) => {
+			clearTimeout(handle);
+			reject(err);
+		}, {
+			disconnect: true,
+		});
+		channeleventhub.connect();
+	});
+	promises.push(txPromise);
+
+	let results = null;
+	try {
+		results = await Promise.all(promises);
+	} catch (error) {
+		throw error;
+	}
+
+	// orderer results are first as it was the first promise
+	if (results && results[0]) {
+		if (results[0] instanceof Error) {
+			throw results[0];
+		}
+		if (results[0].status) {
+			if (results[0].status === 'SUCCESS') {
+				if (results[1]) {
+					if (results[1] instanceof Error) {
+						throw results[1];
+					}
+					if (results[1] === 'VALID') {
+						return true;
+					} else {
+						throw Error('Transaction was not valid: code=' + results[1]);
+					}
+				} else {
+					throw Error('Event Hub did not provide results');
+				}
+			} else {
+				throw Error('Failed to submit transaction to the orderer, status=' + results[1].status);
+			}
+		}  else {
+			throw Error('Failed to submit transaction successfully to the orderer no status');
+		}
+	}
 }
