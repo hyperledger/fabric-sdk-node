@@ -15,7 +15,7 @@ The following section targets a current or future contributor to this project it
 To build and test, the following pre-requisites must be installed first:
 * node runtime LTS version 8.9.0 or higher, up to 9.0 ( __Node v9.0+ is not supported__ )
 * npm tool version 5.5.1 or higher
-* gulp command (must be installed globaly with `npm install -g gulp`)
+* gulp command (must be installed globally with `npm install -g gulp`)
 * docker (not required if you only want to run the headless tests with `npm test`, see below)
 
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
