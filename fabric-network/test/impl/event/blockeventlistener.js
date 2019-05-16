@@ -96,7 +96,7 @@ describe('BlockEventListener', () => {
 		});
 
 		it('should call the event callback', async () => {
-			const block = {number: '10'};
+			const block = {header: {number: '10'}};
 			await blockEventListener._onEvent(block);
 			sinon.assert.calledWith(blockEventListener.eventCallback, null, block);
 			sinon.assert.notCalled(checkpointerStub.save);
@@ -104,7 +104,7 @@ describe('BlockEventListener', () => {
 		});
 
 		it('should save a checkpoint', async () => {
-			const block = {number: '10'};
+			const block = {header: {number: '10'}};
 			checkpointerStub.load.returns({});
 			blockEventListener.checkpointer = checkpointerStub;
 			await blockEventListener._onEvent(block);
@@ -112,7 +112,7 @@ describe('BlockEventListener', () => {
 		});
 
 		it('should unregister if registration.unregister is set', async () => {
-			const block = {number: '10'};
+			const block = {header: {number: '10'}};
 			blockEventListener._registration.unregister = true;
 			await blockEventListener._onEvent(block);
 			sinon.assert.calledWith(blockEventListener.eventCallback, null, block);
@@ -120,7 +120,7 @@ describe('BlockEventListener', () => {
 		});
 
 		it ('should not save a checkpoint if the callback fails', async () => {
-			const block = {number: '10'};
+			const block = {header: {number: '10'}};
 			blockEventListener.eventCallback.throws(new Error());
 			blockEventListener.checkpointer = checkpointerStub;
 			await blockEventListener._onEvent(block);
@@ -234,19 +234,31 @@ describe('BlockEventListener', () => {
 			blockEventListener.eventHub = eventHubStub;
 			eventHubStub.registerBlockEvent.returns({});
 			await blockEventListener.register();
-			await blockEventListener._onEvent({number: 1});
+			await blockEventListener._onEvent({header: {number: 1}});
 			const checkpoint = await checkpointer.load();
 			expect(checkpoint.blockNumber).to.equal(1);
 		});
 
-		it('should update with a new block number', async () => {
+		it('should update with a new block number (filtered)', async () => {
 			checkpointer = new InMemoryCheckpointer();
-			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {filtered: true, replay: true, checkpointer: {factory: () => checkpointer}});
 			blockEventListener.eventHub = eventHubStub;
 			eventHubStub.registerBlockEvent.returns({});
 			await blockEventListener.register();
 			await blockEventListener._onEvent({number: 2});
 			await blockEventListener._onEvent({number: 1});
+			const checkpoint = await checkpointer.load();
+			expect(checkpoint.blockNumber).to.equal(2);
+		});
+
+		it('should update with a new block number (unfiltered)', async () => {
+			checkpointer = new InMemoryCheckpointer();
+			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener.eventHub = eventHubStub;
+			eventHubStub.registerBlockEvent.returns({});
+			await blockEventListener.register();
+			await blockEventListener._onEvent({header: {number: 2}});
+			await blockEventListener._onEvent({header: {number: 1}});
 			const checkpoint = await checkpointer.load();
 			expect(checkpoint.blockNumber).to.equal(2);
 		});
