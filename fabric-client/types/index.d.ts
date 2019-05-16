@@ -54,6 +54,7 @@ declare class Client extends BaseClient {
 	public initCredentialStores(): Promise<boolean>;
 	public setStateStore(store: Client.IKeyValueStore): void;
 	public setAdminSigningIdentity(privateKey: string, certificate: string, mspid: string): void;
+	public _getSigningIdentity(admin: boolean): Client.ISigningIdentity;
 	public saveUserToStateStore(): Promise<Client.User>;
 	public setUserContext(user: Client.User | Client.UserContext, skipPersistence?: boolean): Promise<Client.User>;
 	public getUserContext(name: string, checkPersistence?: boolean): Promise<Client.User> | Client.User;
@@ -64,6 +65,8 @@ declare class Client extends BaseClient {
 	public getTargetPeers(requestTargets: string | string[] | Client.Peer | Client.Peer[]): Client.Peer[];
 	public getTargetOrderer(requestOrderer?: string | Client.Orderer, channelOrderers?: Client.Orderer[], channelName?: string): Client.Orderer;
 	public getClientCertHash(create: boolean): Buffer;
+
+	public newChaincode(name: string, version: string): Client.Chaincode;
 }
 
 export = Client;
@@ -141,6 +144,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public setAffiliation(affiliation: string): void;
 		public getIdentity(): IIdentity;
 		public getSigningIdentity(): ISigningIdentity;
+		public setSigningIdentity(signingIdentity: ISigningIdentity): void;
 		public getCryptoSuite(): ICryptoSuite;
 		public setCryptoSuite(suite: ICryptoSuite): void;
 		public setEnrollment(privateKey: ICryptoKey, certificate: string, mspId: string): Promise<void>;
@@ -157,34 +161,39 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		configUpdate?: Buffer;
 	}
 
-	export interface ChaincodeDefinitionQueryRequest {
+	export interface EndorsementResults {
+		proposalResponses: any;
+		proposal: any;
+	}
+
+	export interface QueryChaincodeDefinitionRequest {
 		target: Peer;
 		chaincodeId: string;
 		request_timeout?: number;
 		txId?: TransactionId;
 	}
 
-	export interface NamespaceDefinitionsRequest {
+	export interface QueryNamespaceDefinitionsRequest {
 		target: Peer;
 		request_timeout?: number;
 		txId?: TransactionId;
 	}
 
-	export interface ApprovalStatusRequest {
+	export interface QueryApprovalStatusRequest {
 		target: Peer;
 		request_timeout?: number;
 		txId?: TransactionId;
 		chaincode: Chaincode;
 	}
 
-	export interface InstalledChaincodeRequest {
+	export interface QueryInstalledChaincodeRequest {
 		target: Peer;
 		request_timeout?: number;
 		txId?: TransactionId;
 		package_id: string;
 	}
 
-	export interface InstalledChaincodesRequest {
+	export interface QueryInstalledChaincodesRequest {
 		target: Peer;
 		request_timeout?: number;
 		txId?: TransactionId;
@@ -263,13 +272,13 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public verifyProposalResponse(proposalResponse: ProposalResponse): boolean;
 		public compareProposalResponseResults(proposalResponses: ProposalResponse[]): boolean;
 
-		public approveChaincodeForOrg(request: ChaincodeRequest): Promise<object>;
-		public commitChaincode(request: ChaincodeRequest): Promise<object>;
-		public queryChaincodeDefinition(request: ChaincodeDefinitionQueryRequest): Promise<Chaincode>;
-		public queryNamespaceDefinitions(request: NamespaceDefinitionsRequest): Promise<object>;
-		public queryApprovalStatus(request: ApprovalStatusRequest): Promise<object>;
-		public queryInstalledChaincode(request: InstalledChaincodeRequest): Promise<QueryInstalledChaincodeResult>;
-		public queryInstalledChaincodes(request: InstalledChaincodesRequest): Promise<QueryInstalledChaincodeResult[]>;
+		public approveChaincodeForOrg(request: ChaincodeRequest): Promise<EndorsementResults>;
+		public commitChaincode(request: ChaincodeRequest): Promise<EndorsementResults>;
+		public queryChaincodeDefinition(request: QueryChaincodeDefinitionRequest): Promise<Chaincode>;
+		public queryNamespaceDefinitions(request: QueryNamespaceDefinitionsRequest): Promise<object>;
+		public queryApprovalStatus(request: QueryApprovalStatusRequest): Promise<object>;
+		public queryInstalledChaincode(request: QueryInstalledChaincodeRequest): Promise<QueryInstalledChaincodeResult>;
+		public queryInstalledChaincodes(request: QueryInstalledChaincodesRequest): Promise<QueryInstalledChaincodeResult[]>;
 	}
 
 	export interface ChannelPeerRoles {
@@ -548,6 +557,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		targets?: Peer[] | string[];
 		chaincode: Chaincode;
 		txId?: TransactionId;
+		request_timeout?: number;
 	}
 
 	export interface KeyOpts {
@@ -797,7 +807,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 	export interface ChaincodeInstallRequest {
 		target: Peer;
 		request_timeout?: number;
-		txId: TransactionId;
+		txId?: TransactionId;
 	}
 
 	export class Chaincode {
