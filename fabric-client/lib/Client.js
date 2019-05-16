@@ -1982,3 +1982,4 @@ module.exports.Orderer = Orderer;
 module.exports.Channel = Channel;
 module.exports.User = User;
 module.exports.Package = Package;
+module.exports.Chaincode = Chaincode;
