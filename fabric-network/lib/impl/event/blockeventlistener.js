@@ -59,7 +59,12 @@ class BlockEventListener extends AbstractEventListener {
 	 * @private
 	 */
 	async _onEvent(block) {
-		const blockNumber = Number(block.number);
+		let blockNumber;
+		if (!this._filtered) {
+			blockNumber = Number(block.header.number);
+		} else {
+			blockNumber = Number(block.number);
+		}
 
 		try {
 			await this.eventCallback(null, block);
