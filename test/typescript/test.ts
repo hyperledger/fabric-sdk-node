@@ -87,8 +87,8 @@ test('\n\n ** test TypeScript **', (t: any) => {
 	const ceh = new ChannelEventHub(channel, p);
 	t.equal(ceh.constructor.name, 'ChannelEventHub');
 
-	//let cc: Chaincode = new Chaincode('name', 'version', client);
-	//t.equal(cc.constructor.name, 'Chaincode');
+	const cc: Chaincode = new Chaincode('name', 'version', client);
+	t.equal(cc.constructor.name, 'Chaincode');
 	const cc2: Chaincode = client.newChaincode('name', 'version');
 	t.equal(cc2.constructor.name, 'Chaincode');
 
