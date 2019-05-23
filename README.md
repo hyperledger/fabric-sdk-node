@@ -109,6 +109,11 @@ HFC defines the following abstract classes for application developers to supply 
 
 Please have a look at [Continuous Integration Process](docs/sdk-node-ci.md)
 
+
+### Release notes
+
+Check the `./release_notes` directory for the release notes of the specified release.
+
 ### Contributing
 
 Check [the documentation](./CONTRIBUTING.md) on how to contribute to this project for the full details.
