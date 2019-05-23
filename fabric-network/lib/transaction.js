@@ -191,19 +191,15 @@ class Transaction {
 		}
 
 		const validResponses = [];
-		const invalidResponses = [];
-		const invalidResponseMsgs = [];
+		const errorResponses = [];
 
 		responses.forEach((responseContent) => {
 			if (responseContent instanceof Error) {
 				// this is either an error from the sdk, peer response or chaincode response.
 				// we can distinguish between sdk vs peer/chaincode by the isProposalResponse flag in the future.
 				// TODO: would be handy to know which peer the response is from and include it here.
-				const message = responseContent.message;
 				logger.warn('_validatePeerResponses: Received error response from peer:', responseContent);
-				logger.debug('_validatePeerResponses: invalid response from peer %j', responseContent.peer);
-				invalidResponseMsgs.push(message);
-				invalidResponses.push(responseContent);
+				errorResponses.push(responseContent);
 			} else {
 				// anything else is a successful response ie status will be less then 400.
 				// in the future we can do things like verifyProposalResponse and compareProposalResponseResults
@@ -215,14 +211,16 @@ class Transaction {
 		});
 
 		if (validResponses.length === 0) {
-			const messages = Array.of(`No valid responses from any peers. ${invalidResponseMsgs.length} peer error responses:`,
-				...invalidResponseMsgs);
+			const errorMessages = errorResponses.map((response) => util.format('peer=%s, status=%s, message=%s',
+				response.peer.name, response.status, response.message));
+			const messages = Array.of(`No valid responses from any peers. ${errorResponses.length} peer error responses:`,
+				...errorMessages);
 			const msg = messages.join('\n    ');
 			logger.error('_validatePeerResponses: ' + msg);
 			throw new Error(msg);
 		}
 
-		return {validResponses, invalidResponses};
+		return {validResponses, invalidResponses: errorResponses};
 	}
 
 	/**

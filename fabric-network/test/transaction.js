@@ -24,26 +24,35 @@ describe('Transaction', () => {
 	const chaincodeId = 'chaincode-id';
 	const expectedResult = Buffer.from('42');
 
+	const peerInfo = {name: 'PEER_NAME', url: 'grpc://fakehost:9999'};
 	const fakeProposal = {proposal: 'I do'};
 	const fakeHeader = {header: 'gooooal'};
 	const validProposalResponse = {
 		response: {
 			status: 200,
 			payload: expectedResult,
-			peer: {url: 'grpc://fakehost:9999'}
+			peer: peerInfo
 		}
 	};
 	const noPayloadProposalResponse = {
 		response: {
-			status: 200
+			status: 200,
+			peer: peerInfo
 		}
 	};
 	const errorResponseMessage = 'I_AM_AN_ERROR_RESPONSE';
-	const errorProposalResponse = Object.assign(new Error(errorResponseMessage), {response: {status: 500, payload: 'error', peer: {url: 'grpc://fakehost:9999'}}});
+	// Note that error responses have the 'response' property of the actual proposal response promoted up to the
+	// top-level error object in Peer.sendProposal()
+	const errorProposalResponse = Object.assign(new Error(errorResponseMessage), {
+		status: 500,
+		payload: 'error',
+		peer: peerInfo
+	});
 	const emptyStringProposalResponse = {
 		response: {
 			status: 200,
-			payload: Buffer.from('')
+			payload: Buffer.from(''),
+			peer: peerInfo
 		}
 	};
 
@@ -178,6 +187,18 @@ describe('Transaction', () => {
 			channel.sendTransactionProposal.resolves(errorProposalResponses);
 			const promise = transaction.submit();
 			return expect(promise).to.be.rejectedWith(errorResponseMessage);
+		});
+
+		it('throws with message including underlying error status', () => {
+			channel.sendTransactionProposal.resolves(errorProposalResponses);
+			const promise = transaction.submit();
+			return expect(promise).to.be.rejectedWith(`${errorProposalResponse.status}`);
+		});
+
+		it('throws with message including underlying error peer name', () => {
+			channel.sendTransactionProposal.resolves(errorProposalResponses);
+			const promise = transaction.submit();
+			return expect(promise).to.be.rejectedWith(`${errorProposalResponse.peer.name}`);
 		});
 
 		it('succeeds if some proposal responses are valid', () => {

@@ -21,7 +21,7 @@
     "test:network": "npm run coverage -- fabric-network/test",
     "test:cucumber": "cucumber-js ./test/scenario/features/*.feature",
     "test:all": "nyc npm run unit-test:all",
-    "unit-test:all": "npm run unit-test -- fabric-ca-client/test && npm run unit-test -- fabric-client/test && npm run unit-test -- fabric-network/test",
+    "unit-test:all": "npm run unit-test -- fabric-common/test && npm run unit-test -- fabric-ca-client/test && npm run unit-test -- fabric-client/test && npm run unit-test -- fabric-network/test",
     "coverage": "nyc npm run unit-test",
     "unit-test": "mocha --exclude 'fabric-client/test/data/**' --recursive",
     "compile": "tsc --project test/typescript",
