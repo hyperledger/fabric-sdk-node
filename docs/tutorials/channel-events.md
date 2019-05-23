@@ -414,11 +414,22 @@ to the event service.
 Steps to be notified when a chaincode event occurs:
 - Get a channel event hub instance, this should be done once and reused.
 - Connect the channel event hub instance with the peer's event service. You
-may wish to connect before registering when reusing the ChannelEventHub
-instance for many transactions.
+should connect before registering when reusing the ChannelEventHub
+instance for many transactions and if waiting for a chaincode event in
+a transaction that will be committed.
+	- **Note:** When the ChannelEventHub `connect` completes to the Peer's event
+	service blocks will start to be delivered to the ChannelEventHub instance.
+	If the startBlock parameter is not used, the first block received will be
+	the latest block. The latest block may contain a chaincode event and it
+	may match the chaincode event that you will register. This latest block
+	is not the block that will contain the transaction that you will commit
+	shortly and is just the last block on the channel ledger. We know that
+	it is not our block because we have not committed our transaction,
+	however the Peer was asked to start and keep sending the latest blocks.
+	So you should connect first then register and then commit when using
+	chaincode events.
 - Register your callback with the name of the chaincode event, you may use
 a regular expression to match on more than one name.
-- Connect the channel event hub if not already connected.
 - Somewhere on the network a transaction is endorsed and committed containing
 a chaincode event.
 - Process the chaincode events as they come in.
@@ -553,9 +564,9 @@ channel_event_hub.register...
 
 ```
 
-The best practice is connect after registering for chaincode events or
-block events. connecting after allows the connect to easily be modified
-to include the "startBlock" (for replay) and not change the flow.
+The best practice is to connect before registering for chaincode events. When
+connect is not part of the registration flow then it is easily modified
+to include the "startBlock" (for replay).
 Since filtered blocks contain very little information, chaincode events
 and block events may not be useful unless full blocks are received. The
 user performing the connect must have the access authority to see full
