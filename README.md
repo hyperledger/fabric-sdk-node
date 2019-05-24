@@ -1,53 +1,45 @@
 ## Hyperledger Fabric Client SDK for Node.js
 
-The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with a Hyperledger Fabric blockchain.
+The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with a Hyperledger Fabric blockchain. This readme is directed towards a current or future contributor to this project, and gives an overview of setting up the project locally and running tests. For more information on the SDK, including features and an API reference, please visit the [SDK documentation](https://fabric-sdk-node.github.io/).
 
-As an application developer, to learn about how to install and use the Node.js SDK, please visit the [SDK documentation](https://fabric-sdk-node.github.io/).
-
-This project publishes three separate npm packages:
+This project publishes the following npm packages:
 * `fabric-client` - main client for the [Hyperledger Fabric](http://hyperledger-fabric.readthedocs.io/en/latest/). Applications can use this package to install and instantiate chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
 * `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](http://hyperledger-fabric-ca.readthedocs.io/en/latest/users-guide.html). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, the application does not need to use this package.
+* `fabric-common` - This package contains common codes shared by other packages
 * `fabric-network` - This package encapsulates the APIs to connect to a Fabric network, submit transactions and perform queries against the ledger at a higher level of abstraction than through the `fabric-client`.
+* `fabric-protos` - This package encapsulates the protobuffers that are used to communicate over gRPC
 
-The following section targets a current or future contributor to this project itself.
-
-### Build and Test
+## Build and Test
 To build and test, the following pre-requisites must be installed first:
-* node runtime LTS version 8.9.0 or higher, up to 9.0 ( __Node v9.0+ is not supported__ )
-* npm tool version 5.5.1 or higher
+* node runtime LTS version 8 or 10
+* npm tool version 5.6.0 or higher
 * gulp command (must be installed globally with `npm install -g gulp`)
 * docker (not required if you only want to run the headless tests with `npm test`, see below)
 
+
+### Run unit tests
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
 
 In the project root folder:
-* `npm install` to install dependencies
-* optionally, `gulp docs` to generate API docs if you want to review the doc content
-* `install-and-generate-certs` to generate the required crypto material used by the tests
-* `npm test` or `gulp test-headless` to run the headless tests that do not require any additional set up
+* Install all dependancies via `npm install`
+* Optionally, to generate API docs via `gulp docs` 
+* To generate the required crypto material used by the tests, use one of the following patform specific commands:
+  * For Linux `gulp install-and-generate-certs`
+  * For mac `gulp install-and-generate-certs-mac`
+  * For s390 `gulp install-and-generate-certs-s390`
+* To run the headless tests that do not require any additional set up use `npm test` or `gulp test-headless` 
 
-The following tests require setting up a local blockchain network as the target. You need to build the necessary Docker images required to run the network. Follow the steps below to set it up.
-* You will need the peers, orderers and fabric-ca server (new implementation of the member service) to run the tests. The first two components are from the *fabric* repository. The fabric-ca server is from the *fabric-ca* repository.
-* git clone both the *fabric* and *fabric-ca* repositories into the $GOPATH/src/github.com/hyperledger folder in your native host (MacOS, Windows or Ubuntu, etc).
+### Run Integration Tests
+Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Nexus. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run retrieve-images`
 
-You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.):
-* If docker is installed and it’s not ‘Docker for Mac/Windows’, uninstall and follow Docker’s clean up instructions to uninstall completely.
-* Install [‘Docker for Mac’](https://docs.docker.com/docker-for-mac/install) or [`Docker for Windows`](https://docs.docker.com/docker-for-windows/install), or [`Docker on linux`](https://docs.docker.com/engine/installation/linux/ubuntu/#install-docker)
-* Only for Mac, you need to install a gnu-compatible version of the `tar` utility:
-  * Install Brew: http://brew.sh
-  * run `brew install gnu-tar —-with-default-names` in order to swap out Mac's default tar command for a gnu-compliant one needed by chaincode execution on the peers
+Now you are ready to run the integration tests. It is advisable to clear out any previous key value stores that may have cached user enrollment certificates using the command (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`) prior to testing in isolation.
 
-* build fabric-ca docker image (new membership service)
-  * cd `$GOPATH/src/github.com/hyperledger/fabric-ca`
-  * run `make docker`. For more build instructions see [fabric-ca README](https://github.com/hyperledger/fabric-ca)
-* build fabric peer and orderer docker images and other ancillary images
-  * `cd $GOPATH/src/github.com/hyperledger/fabric`
-  * run `make docker` to build the docker images (you may need to run `make docker-clean` first if you've built before)
-* Now you are ready to run the tests:
-  * Clear out your previous key value stores that may have cached user enrollment certificates (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`)
-  * run `gulp test` to execute the entire test suite (800+ test cases), or you can run them individually
-  * Test happy path from end to end, run `node test/integration/e2e.js`
-  * Test end to end one step at a time, make sure to follow this sequence:
+We have functional and scenario based tests that may be run via the following commands:
+  * end to end (tape) tests may be run via `gulp run-test-functional`
+  * scenario (cucumber) tests may be run via `gulp run-test-scenario`
+  * You may run both integration test styles using `gulp run-test-fv-scenario`
+  * All tests (unit and integration) may be run using the command `gulp run-test-all`
+  * It is possible to run tests individually, though at the moment the functional integration tests are not isolated, meaning that there is a sequencing requirement. For instance, one of the e2e tests under `test/integration/e2e.js` may be run in the sequence
     * `node test/integration/e2e/create-channel.js`
     * `node test/integration/e2e/join-channel.js`
     * `node test/integration/e2e/updateAnchorPeers.js`
@@ -55,11 +47,6 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
     * `node test/integration/e2e/instantiate-chaincode.js`
     * `node test/integration/e2e/invoke-transaction.js`
     * `node test/integration/e2e/query.js`
-  * Test user management by member services with the following tests that exercise the fabric-ca-client package with a KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
-    * `test/integration/fabric-ca-services-tests.js`
-    * `test/integration/couchdb-fabricca-tests.js`
-    * `test/integration/cloudant-fabricca-tests.js`
-  * To re-run `node test/integration/e2e.js` or `fabric-ca-services-tests.js` stop the network (ctrl-c), clean up the docker instances (`docker rm $(docker ps -aq)`) and restart the network with `docker-compose up` as described above.
 
 ### Special Tests for Hardware Security Module support via PKCS#11 interface
 The SDK has support for PKCS#11 interface in order to allow applications to make use of HSM devices for key management. To turn these tests off, set environment variable "PKCS11_TESTS" to "false". In order to run the tests:

@@ -192,7 +192,7 @@ gulp.task('run-test-cucumber', shell.task(
 // Run e2e and scenario tests with code coverage
 gulp.task('test-fv-scenario', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-test-fv-scenario'));
 
-// run cucumber separate
+// run fv only
 gulp.task('test-fv-only', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-tape-e2e'));
 
 gulp.task('run-test-fv-scenario', (done) => {
@@ -205,8 +205,18 @@ gulp.task('run-test-scenario', (done) => {
 	runSequence(...tasks, done);
 });
 
+gulp.task('run-test-functional', (done) => {
+	const tasks = ['test-fv-only'];
+	runSequence(...tasks, done);
+});
+
 // Main test method to run all test suites
 // - lint, unit first, then FV, then scenario
+gulp.task('run-test-all', (done) => {
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'compile', 'lint', 'docs', 'test-mocha', 'run-tape-unit', 'test-fv-only', 'run-test-scenario'];
+	runSequence(...tasks, done);
+});
+// As above, without scenario
 gulp.task('run-test', (done) => {
 	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'compile', 'lint', 'docs', 'test-mocha', 'run-tape-unit', 'test-fv-only'];
 	runSequence(...tasks, done);
