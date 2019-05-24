@@ -748,7 +748,7 @@ describe('Chaincode', () => {
 			FakeUtils.sendPeersProposal = () => {
 				const payload = new lifecycle_protos.InstallChaincodeResult();
 				payload.setPackageId('package_id');
-				payload.setLabel('mychaincode:v1');
+				payload.setLabel('mychaincode_v1');
 				const response = {response: {status: 200, payload: payload.toBuffer()}};
 				return [response];
 			};
@@ -765,7 +765,7 @@ describe('Chaincode', () => {
 			FakeUtils.sendPeersProposal = () => {
 				const payload = new lifecycle_protos.InstallChaincodeResult();
 				payload.setPackageId('package_id');
-				payload.setLabel('mychaincode:fail');
+				payload.setLabel('mychaincode_fail');
 				const response = {response: {status: 200, payload: payload.toBuffer()}};
 				return [response];
 			};
@@ -788,7 +788,7 @@ describe('Chaincode', () => {
 			FakeUtils.sendPeersProposal = () => {
 				const payload = new lifecycle_protos.InstallChaincodeResult();
 				payload.setPackageId('package_id');
-				payload.setLabel('mychaincode:v1');
+				payload.setLabel('mychaincode_v1');
 				const response = {response: {status: 200, payload: payload.toBuffer()}};
 				return [response];
 			};
