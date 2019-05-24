@@ -64,8 +64,8 @@ module.exports = function () {
 	});
 
 	// Events
-	this.Then(/^I use the gateway named (.+?) to listen for ([^\s.]+?) events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, eventName, listenerName, ccName, channelName) => {
-		return await network_util.createContractListener(gatewayName, channelName, ccName, eventName, listenerName);
+	this.Then(/^I use the gateway named (.+?) to listen for filtered ([^\s.]+?) events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, eventName, listenerName, ccName, channelName) => {
+		return await network_util.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, false, true);
 	});
 
 	this.Then(/^I use the gateway named (.+?) to listen for unfiltered (.+?) events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, eventName, listenerName, ccName, channelName) => {
@@ -151,11 +151,21 @@ module.exports = function () {
 		}
 	});
 
-	this.Then(/^I can disconnect from the gateway named (.+?)$/, {timeout:testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName) => {
+	this.Then(/^The gateway named (.+?) has a (.+?) type response matching (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (gatewayName, type, expected) => {
+		const sameType = network_util.lastTypeCompare(gatewayName, type);
+		const sameResponse = network_util.lastResponseCompare(gatewayName, expected);
+		if (sameType && sameResponse) {
+			return Promise.resolve();
+		} else {
+			throw new Error('Expected and actual results from previous transaction did not match. Expected [' + expected + '] but had [' + network_util.lastResult(gatewayName).response + ']');
+		}
+	});
+
+	this.Then(/^I can disconnect from the gateway named (.+?)$/, {timeout:testUtil.TIMEOUTS.LONG_STEP}, async (gatewayName) => {
 		return await network_util.disconnectGateway(gatewayName);
 	});
 
-	this.Then(/^I have disconnected from all gateways$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async () => {
+	this.Then(/^I have disconnected from all gateways$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async () => {
 		return await network_util.disconnectAllGateways();
 	});
 };
