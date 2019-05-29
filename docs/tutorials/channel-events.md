@@ -43,14 +43,14 @@ you should not assume that your transaction is in the block associated with the
 first block event received after registration to the peer's channel-based event
 service. Instead, you may simply register for a transaction event.
 
-### APIs on the Channel
+### Channel APIs
 * `newChannelEventHub(peer)` -- A Channel instance method to get a new instance
 of a `ChannelEventHub`.
 * `getChannelEventHubsForOrg` -- Gets a list of `ChannelEventHubs` based on an
 organization. If the organization name is omitted then the current organization
 of the current user is used.
 
-### `ChannelEventHub` and APIs new in v1.1
+### `ChannelEventHub` APIs
 * `registerBlockEvent(eventCallBack, errorCallBack, options)` -- To register for
 block events.
 * `unregisterBlockEvent(reg_num)` -- To remove a block registration.
@@ -61,7 +61,7 @@ for a specific transaction event.
 register for chaincode events.
 * `unregisterChaincodeEvent(cc_handle)` -- To remove a chaincode event
 registration.
-* `connect(full_block)` -- To have the client channel event hub connect with the
+* `connect({full_block: true})` -- To have the client channel event hub connect with the
 fabric channel-based event service. This call must be made before events will be
 received by your instance of a `ChannelEventHub`. When the channel-based event hub
 connects with the service, it will request to receive blocks or filtered blocks.
@@ -484,10 +484,10 @@ when the end block event is seen by the listener. The application will not have
 to handle this housekeeping.
 
 ```
-block_reg = channel_event_hub.registerBlockEvent((full_block) => {
+block_reg = channel_event_hub.registerBlockEvent((block) => {
 	console.log('Successfully received a block event');
 	<do something with the block>
-	const event_block = Long.fromValue(full_block.header.number);
+	const event_block = Long.fromValue(block.header.number);
 	if(event_block.equals(current_block)) {
 		console.log('Successfully got the last block number');
 		<application is now up to date>
@@ -500,7 +500,7 @@ block_reg = channel_event_hub.registerBlockEvent((full_block) => {
 	// so they are not required to be set in the following example
 	{startBlock:23, endBlock:30, unregister: true, disconnect: true}
 );
-channel_event_hub.connect(true); //get full blocks
+channel_event_hub.connect({full_block: true}); //get full blocks and no connect callback
 ```
 
 The following example will register with a start block number and an end block
