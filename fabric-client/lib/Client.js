@@ -1528,9 +1528,9 @@ const Client = class extends BaseClient {
 	 *
 	 * @typedef {Object} UserNamePasswordObject
 	 * @property {string} username - Required. A string representing the user name of the user
-	 * @property {string} password - Optional. A string repsesenting the password of the user
-	 * @property {string} caName - Optional. A string repsesenting the name of the Certificate Authority.
-	 If not specified, will use the first Certifcate Authority on the list.
+	 * @property {string} password - Optional. A string representing the password of the user
+	 * @property {string} caName - Optional. A string representing the name of the Certificate Authority.
+	 If not specified, will use the first Certificate Authority on the list.
 	 */
 
 	/**
@@ -1618,7 +1618,7 @@ const Client = class extends BaseClient {
 			}
 
 			// this could be because the application has not set a user context yet for this client, which would
-			// be an error condiditon, or it could be that this app has crashed before and is recovering, so we
+			// be an error condition, or it could be that this app has crashed before and is recovering, so we
 			// should allow the previously saved user context object to be deserialized
 
 			// first check if there is a user context of the specified name in persistence
