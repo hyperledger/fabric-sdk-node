@@ -127,7 +127,7 @@ the fabric network.
 -- To have the client channel event hub shutdown the connection
 to the fabric network channel-based event service and notify all current channel
 event registrations of the shutdown by using the registered `errorCallBack`s.
-* {@link ChannelEventHub#connect connect(boolean)}
+* {@link ChannelEventHub#connect connect()}
 -- **Deprecated** -
 To have the client channel event hub connect with the
 fabric channel-based event service. This call must be made before events will be
