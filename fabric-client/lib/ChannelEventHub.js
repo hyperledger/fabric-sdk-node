@@ -556,27 +556,27 @@ class ChannelEventHub {
 		});
 
 		this._stream.on('end', () => {
-			self._connect_running = false;
-			clearTimeout(connection_setup_timeout);
 			logger.debug('on.end - event stream:%s _current_stream:%s peer:%s', stream_id, self._current_stream, self.getPeerAddr());
 			if (stream_id !== self._current_stream) {
 				logger.debug('on.end - incoming message was from a canceled stream');
 				return;
 			}
+			self._connect_running = false;
+			clearTimeout(connection_setup_timeout);
 
 			logger.debug('on.end - grpc stream is ready :%s', isStreamReady(self));
 			self._disconnect(new Error('fabric peer service has disconnected due to an "end" event'));
 		});
 
 		this._stream.on('error', (err) => {
-			self._connect_running = false;
-			clearTimeout(connection_setup_timeout);
 			logger.debug('on.error - block stream:%s _current_stream:%s  peer:%s', stream_id, self._current_stream, self.getPeerAddr());
 			if (stream_id !== self._current_stream) {
 				logger.debug('on.error - incoming message was from a cancelled stream');
 				logger.debug('on.error - %s %s', new Date(), err);
 				return;
 			}
+			self._connect_running = false;
+			clearTimeout(connection_setup_timeout);
 
 			logger.debug('on.error - grpc stream is ready :%s', isStreamReady(self));
 			if (err instanceof Error) {
