@@ -23,6 +23,7 @@
   "dependencies": {
     "@types/bytebuffer": "^5.0.34",
     "callsite": "^1.0.0",
+    "fabric-ca-client": "file:../fabric-ca-client",
     "fabric-common": "file:../fabric-common",
     "fabric-protos": "file:../fabric-protos",
     "fs-extra": "^6.0.1",
