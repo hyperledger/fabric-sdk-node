@@ -79,8 +79,8 @@
     "tape-promise": "^3.0.0",
     "tar-fs": "^1.13.0",
     "targz": "^1.0.1",
-    "tslint": "^5.11.0",
-    "typescript": "^3.3.3",
+    "tslint": "5.11.0",
+    "typescript": "3.4.5",
     "winston": "^2.2.0"
   },
   "license": "Apache-2.0",
