@@ -22,7 +22,7 @@ const FabricCAClient = class {
 	/**
 	 * constructor
 	 *
-	 * @param {object} connect_opts Connection options for communciating with the Fabric CA server
+	 * @param {object} connect_opts Connection options for communicating with the Fabric CA server
 	 * @param {string} connect_opts.protocol The protocol to use (either HTTP or HTTPS)
 	 * @param {string} connect_opts.hostname The hostname of the Fabric CA server endpoint
 	 * @param {number} connect_opts.port The port of the Fabric CA server endpoint
@@ -263,7 +263,7 @@ const FabricCAClient = class {
 		}
 
 		if (requestObj) {
-			requestObj.caName = this._caName;
+			requestObj.caname = this._caName;
 		}
 		// establish socket timeout
 		// default: 3000ms
@@ -422,7 +422,7 @@ const FabricCAClient = class {
 		};
 
 		const enrollRequest = {
-			caName: self._caName,
+			caname: self._caName,
 			certificate_request: csr
 		};
 
