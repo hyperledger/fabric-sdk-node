@@ -24,7 +24,7 @@ class AbstractEventListener {
 	/**
 	 * Constructor
 	 * @param {module:fabric-network.Network} network The network
-	 * @param {string} listenerName The name of the listener being created
+	 * @param {string} listenerName a unique name identifying the listener.
 	 * @param {function} eventCallback The function called when the event is triggered.
 	 * It has signature (err, ...args) where args changes depending on the event type
 	 * @param {module:fabric-network.Network~ListenerOptions} options Event handler options
@@ -113,7 +113,7 @@ class AbstractEventListener {
 	}
 
 	/**
-	 * @param {module:fabric-client.ChannelEventHub} eventhub Event hub.
+	 * @param {ChannelEventHub} eventHub Event hub.
 	 * @param {boolean} isFixed If true only this peers event hub will be used
 	 */
 	setEventHub(eventHub, isFixed) {

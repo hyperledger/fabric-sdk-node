@@ -63,12 +63,12 @@ class CommitEventListener extends AbstractEventListener {
 		}
 	}
 
-	_onEvent(txid, status, blockNumber) {
+	async _onEvent(txid, status, blockNumber) {
 		logger.debug('_onEvent:', util.format('success for transaction %s', txid));
 		blockNumber = Number(blockNumber);
 
 		try {
-			this.eventCallback(null, txid, status, blockNumber);
+			await this.eventCallback(null, txid, status, blockNumber);
 		} catch (err) {
 			logger.debug(util.format('_onEvent error from callback: %s', err));
 		}

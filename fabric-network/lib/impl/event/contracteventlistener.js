@@ -21,7 +21,7 @@ class ContractEventListener extends AbstractEventListener {
 	/**
 	 * Constructor.
 	 * @param {Contract} contract The contract instance
-	 * @param {string} listenerName The name of the listener
+	 * @param {string} listenerName a unique name identifying the listener
 	 * @param {string} eventName The name of the contract event being listened for
 	 * @param {function} eventCallback The event callback called when an event is received.
 	 * It has signature (err, BlockEvent, blockNumber, transactionId)
