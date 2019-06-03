@@ -27,7 +27,7 @@ class FileSystemCheckpointer extends BaseCheckpointer {
 	/**
 	 *
 	 * @param {string} channelName
-	 * @param {string} listenerName A listener name unique to the network instance
+	 * @param {string} listenerName The name of the listener being checkpointed
 	 * @param {module:fabric-network.FileSystemCheckpointer~FileSystemCheckpointerOptions} options
 	 */
 	constructor(channelName, listenerName, options = {}) {

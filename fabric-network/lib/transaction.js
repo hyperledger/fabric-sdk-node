@@ -249,10 +249,10 @@ class Transaction {
 	 * @param {Function} callback - This callback will be triggered when
 	 *		a transaction commit event is emitted. It takes parameters
 	 * 		of error, transactionId, transaction status and block number
-	 * @param {RegistrationOptions} [options] - Optional. Options on
+	 * @param {module:fabric-network.Network~ListenerOptions} [options] - Optional. Options on
 	 * 		registrations allowing start and end block numbers.
 	 * @param {ChannelEventHub} [eventHub] - Optional. Used to override the event hub selection
-	 * @returns {CommitEventListener}
+	 * @returns {module:fabric-network~CommitEventListener}
 	 * @async
 	 */
 	async addCommitListener(callback, options, eventHub) {

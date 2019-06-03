@@ -12,6 +12,11 @@ function FILE_SYSTEM_CHECKPOINTER(channelName, listenerName, options) {
 	return new FileSystemCheckpointer(channelName, listenerName, options);
 }
 
+/**
+ * @typedef module:fabric-network~CheckpointFactories
+ * @memberof module:fabric-network
+ * @property {function} FILE_SYSTEM_CHECKPOINTER Checkpoint using the file system
+ */
 module.exports = {
 	FILE_SYSTEM_CHECKPOINTER
 };

@@ -1,4 +1,3 @@
-`Experimental`
 This tutorial describes the approaches that can be selected by users of the fabric-network module for replaying missed events emitted by peers.
 
 ### Overview
@@ -17,40 +16,13 @@ When using checkpointing:
 
 ### Checkpointers
 
-The `BaseCheckpoint` class is an interface that is to be used by all Checkpoint classes. fabric-network has one default class, `FileSystemCheckpointer` that is exported as a factory in the `CheckpointFactories`. The `FILE_SYSTEM_CHECKPOINTER` is the default checkpointer.
+The `BaseCheckpoint` class is an interface that is to be used by all Checkpoint classes. fabric-network has one default class, {@link module:fabric-network~FileSystemCheckpointer} that is exported as a factory in the {@link module:fabric-network~CheckpointFactories}. The `FILE_SYSTEM_CHECKPOINTER` is the default checkpointer.
 
 A checkpoint factory is a function that returns an instance with `BaseCheckpointer` as a parent class. These classes implement the `async save(channelName, listenerName)` and `async load()` functions. 
 
 A checkpointer is called each time the event callback is triggered. 
 
 The checkpointer can be set when connecting to a gateway or when creating the event listener.
-```javascript
-const { Gateway, CheckpointFactories } = require('fabric-network');
-
-const connectOptions = {
-	checkpointer: { 
-		factory: CheckpointFactories.FILE_SYSTEM_CHECKPOINTER,
-		options: {} // Options usable by the factory
-	}
-};
-
-const gateway = new Gateway()
-await gateway.connect(connectionProfile, connectOptions);
-```
-`Note:` When using the filesystem checkpointer, use absolute paths rather than relative paths
-
-Configuring a listener to be checkpointed required two properties:
-1. `replay : boolean` - Tells the listener to record a checkpoint. Required if checkpointing is desired
-2. `checkpointer : BaseCheckpointer` - If a checkpointer is not specified in the gateway, it must be specified here
-```javascript
-const listener = await contract.addContractListener('saleEventListener', 'sale', (err, event, blockNumber, txId) => {
-	if (err) {
-		console.error(err);
-		return;
-	}
-	// -- Do something
-}, {replay: true, checkpointer: {factory: MyCheckpointer});
-```
 
 ### Custom Checkpointer
 
@@ -59,25 +31,81 @@ Users can configure their own checkpointer. This requires two components to be c
 2. The Factory
 
 ```javascript
-class DbCheckpointer extends BaseCheckpointer {
-	constructor(channelName, listenerName, dbOptions) {
+const fs = require('fs-extra');
+const path = require('path');
+const { Gateway } = require('fabric-network');
+
+class FileSystemCheckpointer extends BaseCheckpointer {
+	constructor(channelName, listenerName, fsOptions) {
 		super(channelName, listenerName);
-		this.db = new Db(dbOptions);
+		this.basePath = path.resolve(fsOptions.basePath);
+		this.channelName = channelName;
+		this.listenerName = listenerName;
 	}
 
-	async save(transactionId, blockNumber) { /* Your implementation using a database */ }
+	/**
+	 * Initializes the checkpointer directory structure 
+	 */
+	async _initialize() {
+		const cpPath = this._getCheckpointFileName()
+	}
 
-	async load() { /* Your implementation using a database*/ }
+	/**
+	 * Constructs the checkpoint files name
+	 */
+	_getCheckpointFileName() {
+		let filePath = path.join(this._basePath, this._channelName);
+		if (this._chaincodeId) {
+			filePath = path.join(filePath, this._chaincodeId);
+		}
+		return path.join(filePath, this._listenerName);
+	}
+
+	async save(transactionId, blockNumber) { 
+		const cpPath = this._getCheckpointFileName()
+		if (!(await fs.exists(cpPath))) {
+			await this._initialize();
+		}
+		const latestCheckpoint = await this.load();
+		if (Number(latestCheckpoint.blockNumber) === Number(blockNumber)) {
+			const transactionIds = latestCheckpoint.transactionIds;
+			latestCheckpoint.transactionIds = transactionIds;
+		} else {
+			latestCheckpoint.blockNumber = blockNumber;
+			latestCheckpoint.transactionIds = [transactionIds];
+		}
+		await fs.writeFile(cppPath, JSON.stringify(latestCheckpoint));
+	}
+
+	async load() {
+		const cpPath = this._getCheckpointFileName(this._chaincodeId);
+		if (!(await fs.exists(cpPath))) {
+			await this._initialize();
+		}
+		const chkptBuffer = await fs.readFile(cpFile);
+		let checkpoint = checkpointBuffer.toString('utf8');
+		if (!checkpoint) {
+			checkpoint = {};
+		} else {
+			checkpoint = JSON.parse(checkpoint);
+		}
+		return checkpoint;
+	}
 }
 
-function BD_CHECKPOINTER_FACTORY(channelName, listenerName, options) {
-	return new DbCheckpointer(channelName, listenerName, options);
+function File_SYSTEM_CHECKPOINTER_FACTORY(channelName, listenerName, options) {
+	return new FileSystemCheckpointer(channelName, listenerName, options);
 }
 
 const gateway = new Gateway();
 await gateway.connect({
 	checkpointer: { 
-		factory: DB_CHECKPOINTER_FACTORY,
-		options: {host: 'http://localhost'}
+		factory: FILE_SYSTEM_CHECKPOINTER_FACTORY,
+		options: {basePath: '/home/blockchain/checkpoints'} // These options will vary depending on the checkpointer implementation
 });
+
 ```
+`Note:` When using the filesystem checkpointer, use absolute paths rather than relative paths
+
+When specifying a specific type of checkpointer for a listener, the `checkpointer` option in {@link module:fabric-network.Network~EventListenerOptions`}
+

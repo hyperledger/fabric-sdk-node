@@ -24,10 +24,10 @@ function MSPID_SCOPE_ROUND_ROBIN(network) {
 }
 
 /**
- * @typedef DefaultEventHubSelectionStrategies
+ * @typedef module:fabric-network~DefaultEventHubSelectionStrategies
  * @memberof module:fabric-network
  * @property {function} MSPID_SCOPE_ROUND_ROBIN Reconnect to any of the event emitting peers in the org after
- * a disconnect occurs
+ * a disconnect occurs. Select the event hub in a 'round robin' fashion
  */
 module.exports = {
 	MSPID_SCOPE_ROUND_ROBIN
