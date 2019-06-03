@@ -30,7 +30,7 @@
 		"1.0": "fabric-client/lib/impl/NetworkConfig_1_0.js"
 	},
 	"grpc-wait-for-ready-timeout": 3000,
-	"discovery-as-localhost": true,
+	"discovery-as-localhost": false,
 	"discovery-cache-life": 300000,
 	"override-discovery-protocol": null,
 	"endorsement-handler": "fabric-client/lib/impl/DiscoveryEndorsementHandler.js",
