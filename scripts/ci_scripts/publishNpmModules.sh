@@ -34,6 +34,10 @@ npmPublish() {
           sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
       fi
 
+      if [ "$1" = "fabric-client" ]; then
+          sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
+      fi
+
       # Replace existing version with $UNSTABLE_INCREMENT_VERSION
       sed -i 's/\(.*\"version\"\: \"\)\(.*\)/\1'$UNSTABLE_INCREMENT_VERSION\"\,'/' package.json
       # Show Version after modify the package.json with latest version to publish
