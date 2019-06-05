@@ -72,11 +72,11 @@ const logger = require('./logger').getLogger('Gateway');
  * @typedef {Object} Gateway~DefaultEventHubSelectionFactory
  * @memberof module:fabric-network
  * @param {module:fabric-network.Network} network The network the event hub is being selected for
- * @returns {module:fabric-network.Gateway~BaseEventHubSelectionStrategy}
+ * @returns {module:fabric-network.Gateway~AbstractEventHubSelectionStrategy}
  */
 
 /**
-  * @typedef {Object} Gateway~BaseEventHubSelectionStrategy
+  * @typedef {Object} Gateway~AbstractEventHubSelectionStrategy
   * @memberof module:fabric-network
   * @property {Function} getNextPeer Function that returns the next peer in the list of available peers
   * @property {Function} updateEventHubAvailability Function that updates the availability of an event hub

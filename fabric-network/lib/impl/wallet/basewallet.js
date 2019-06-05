@@ -15,6 +15,7 @@ const util = require('util');
 /**
  * Base class for the built-in wallet implementations.  For internal use only.
  * @class
+ * @memberof module:fabric-network
  * @implements {Wallet}
  */
 class BaseWallet extends Wallet {

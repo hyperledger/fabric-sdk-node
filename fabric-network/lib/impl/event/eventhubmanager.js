@@ -12,7 +12,7 @@ const logger = require('fabric-network/lib/logger').getLogger('EventHubManager')
  * The Event Hub Manager is responsible for creating and distributing event hubs.
  * It uses the event hub factory to reuse event hubs that exists, and maintains
  * its own list of new event hubs that are used for event replay
- * @private
+ * @memberof module:fabric-network
  * @class
  */
 class EventHubManager {
@@ -31,7 +31,7 @@ class EventHubManager {
 	 * it will get the next peer defined by the {@link EventHubSelectionStrategy}
 	 * @param {Peer} peer A peer instance
 	 * @param {boolean} filtered Flag to decide between filtered and unfiltered events
-	 * @returns {module:fabric-client.ChannelEventHub} The event hub
+	 * @returns {ChannelEventHub} The event hub
 	 */
 	getEventHub(peer, filtered) {
 		if (!peer) {
@@ -48,7 +48,7 @@ class EventHubManager {
 
 	/**
 	 * Gets a list of event hubs from the {@link EventHubFactory} for a list of peers
-	 * @param {module:fabric-client.Peer[]} peers A list of peer instances
+	 * @param {Peer[]} peers A list of peer instances
 	 */
 	getEventHubs(peers) {
 		this.log();
@@ -58,8 +58,8 @@ class EventHubManager {
 	/**
 	 * Gets a new event hub instance for a give peer and updates the list of new event
 	 * hubs that have been created
-	 * @param {module:fabric-client.Peer} peer A peer instance
-	 * @returns {module:fabric-client.ChannelEventHub} The event hub
+	 * @param {Peer} peer A peer instance
+	 * @returns {ChannelEventHub} The event hub
 	 */
 	getReplayEventHub(peer) {
 		for (const index in this.newEventHubs) {
@@ -77,8 +77,8 @@ class EventHubManager {
 
 	/**
 	 * Will get a new event hub instance without the possibility of selecting a new peer
-	 * @param {module:fabric-client.Peer} peer A peer instance
-	 * @returns {module:fabric-client.ChannelEventHub} The event hub
+	 * @param {Peer} peer A peer instance
+	 * @returns {ChannelEventHub} The event hub
 	 */
 	getFixedEventHub(peer) {
 		const eventHub = this.channel.newChannelEventHub(peer);
@@ -90,7 +90,7 @@ class EventHubManager {
 	/**
 	 * When called with a peer, it updates the {@link EventHubSelectionStategy} with the
 	 * new status of a peer to allow for intelligent strategies
-	 * @param {module:fabric-client:Peer} deadPeer A peer instance
+	 * @param {Peer} deadPeer A peer instance
 	 */
 	updateEventHubAvailability(deadPeer) {
 		return this.eventHubSelectionStrategy.updateEventHubAvailability(deadPeer);
@@ -114,8 +114,9 @@ class EventHubManager {
 
 	/**
 	 * Check if an event hub has any registrations
-	 * @param {module:fabric-client.ChannelEventHub} eventHub An event hub instance
+	 * @param {ChannelEventHub} eventHub An event hub instance
 	 * @returns {boolean}
+	 * @private
 	 */
 	_isNewEventHub(eventHub) {
 		if (!eventHub) {

@@ -21,7 +21,7 @@ class CommitEventListener extends AbstractEventListener {
 	 *
 	 * @param {module:fabric-network.Network} network The fabric network
 	 * @param {string} transactionId the transaction id being listened to
-	 * @param {Function} eventCallback The event callback called when a transaction is commited.
+	 * @param {Function} eventCallback The event callback called when a transaction is committed.
 	 * It has signature (err, transactionId, status, blockNumber)
 	 * @param {module:fabric-network.Network~ListenerOptions} options
 	 */
@@ -63,12 +63,12 @@ class CommitEventListener extends AbstractEventListener {
 		}
 	}
 
-	_onEvent(txid, status, blockNumber) {
+	async _onEvent(txid, status, blockNumber) {
 		logger.debug('_onEvent:', util.format('success for transaction %s', txid));
 		blockNumber = Number(blockNumber);
 
 		try {
-			this.eventCallback(null, txid, status, blockNumber);
+			await this.eventCallback(null, txid, status, blockNumber);
 		} catch (err) {
 			logger.debug(util.format('_onEvent error from callback: %s', err));
 		}

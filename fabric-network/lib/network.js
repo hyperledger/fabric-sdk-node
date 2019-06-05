@@ -22,6 +22,7 @@ const util = require('util');
  * @property {Object} [checkpointer.options] The checkpoint configuration options
  * @property {boolean} [replay=false] event replay and checkpointing on listener
  * @property {boolean} [filtered=false] use receive filtered block events or not
+ * @property {boolean} [unregister=false] unregisters the listener as soon as a single event is received
  */
 
 /**
@@ -216,7 +217,7 @@ class Network {
 	/**
 	 * Get the event hub manager
 	 * @private
-	 * @returns {EventHubManager} An event hub manager
+	 * @returns {module:fabric-network.EventHubManager} An event hub manager
 	 */
 	getEventHubManager() {
 		return this.eventHubManager;
@@ -225,7 +226,7 @@ class Network {
 	/**
 	 * Get the event hub selection strategy
 	 * @private
-	 * @returns {BaseEventHubSelectionStrategy}
+	 * @returns {module:fabric-network.AbstractEventHubSelectionStrategy}
 	 */
 	getEventHubSelectionStrategy() {
 		return this.eventHubSelectionStrategy;
@@ -247,10 +248,10 @@ class Network {
 
 	/**
 	 * Create a block event listener
-	 * @param {String} listenerName the name of the listener
+	 * @param {String} listenerName a unique name identifying the listener
 	 * @param {Function} callback the callback called when an event is triggered with signature (error, block)
 	 * @param {module:fabric-network.Network~EventListenerOptions} [options] Optional. The event listener options
-	 * @returns {BlockEventListener}
+	 * @returns {module:fabric-network~BlockEventListener}
 	 * @async
 	 */
 	async addBlockListener(listenerName, callback, options) {
@@ -274,7 +275,7 @@ class Network {
 	 * @param {module:fabric-network.Network~EventListenerOptions} [options] Optional. The event listener options
 	 * 		registrations allowing start and end block numbers.
 	 * @param {ChannelEventHub} [eventHub] - Optional. Used to override the event hub selection
-	 * @returns {CommitEventListener}
+	 * @returns {module:fabric-network~CommitEventListener}
 	 * @async
 	 */
 	async addCommitListener(transactionId, callback, options, eventHub) {

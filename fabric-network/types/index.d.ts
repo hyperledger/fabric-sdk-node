@@ -32,6 +32,7 @@ export interface EventListenerOptions {
 	checkpointer?: CheckpointerOptions;
 	replay?: boolean;
 	filtered?: boolean;
+	unregister?: boolean;
 }
 
 export interface DiscoveryOptions {
@@ -95,8 +96,9 @@ export class Gateway {
 export interface Network {
 	getChannel(): Channel;
 	getContract(chaincodeId: string, name?: string): Contract;
-	addBlockListener(listenerName: string, callback: (error: Error, block?: Client.Block) => Promise<any>, options?: object): Promise<BlockEventListener>;
-	addCommitListener(listenerName: string, callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: object): Promise<CommitEventListener>;
+	addBlockListener(listenerName: string, callback: (error: Error, block?: Client.Block) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
+	addCommitListener(transactionId: string, callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
+	unregisterAllEventListeners(): void;
 }
 
 export interface Contract {
@@ -233,11 +235,16 @@ export class BlockEventListener {
 	public unregister(): void;
 }
 
+// Alias for AbstractEventHubSelectionStrategy
 export interface BaseEventHubSelectionStrategy {
+	getNextPeer(): Client.Peer;
+	updateEventHubAvailability(deadPeer: Client.Peer): void;
+}
+export interface AbstractEventHubSelectionStrategy {
 	getNextPeer(): Client.Peer;
 	updateEventHubAvailability(deadPeer: Client.Peer): void;
 }
 
 export class DefaultEventHubSelectionStrategies {
-	public static MSPID_SCOPE_ROUND_ROBIN: BaseEventHubSelectionStrategy;
+	public static MSPID_SCOPE_ROUND_ROBIN: AbstractEventHubSelectionStrategy;
 }

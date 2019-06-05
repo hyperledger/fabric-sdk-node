@@ -21,9 +21,9 @@ class ContractEventListener extends AbstractEventListener {
 	/**
 	 * Constructor.
 	 * @param {Contract} contract The contract instance
-	 * @param {string} listenerName The name of the listener
+	 * @param {string} listenerName a unique name identifying the listener
 	 * @param {string} eventName The name of the contract event being listened for
-	 * @param {function} eventCallback The event callback called when an event is recieved.
+	 * @param {function} eventCallback The event callback called when an event is received.
 	 * It has signature (err, BlockEvent, blockNumber, transactionId)
 	 * @param {module:fabric-network.Network~ListenerOptions} options
 	 */
@@ -80,7 +80,7 @@ class ContractEventListener extends AbstractEventListener {
 	 * block and transaction seen once the callback has run and unregisters the
 	 * listener if the unregister flag was provided
 	 * @param {ChaincodeEvent} event the event emitted
-	 * @param {number} blockNumber the block number this transaction was commited inside
+	 * @param {number} blockNumber the block number this transaction was committed inside
 	 * @param {string} transactionId the transaction ID of the transaction this event was emitted by
 	 * @param {string} status the status of the the transaction
 	 * @param {string} [expectedNumber] the expected number of events from the block

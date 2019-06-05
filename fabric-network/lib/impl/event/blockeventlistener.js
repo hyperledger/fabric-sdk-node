@@ -24,7 +24,7 @@ class BlockEventListener extends AbstractEventListener {
 	/**
 	 *
 	 * @param {module:fabric-network.Network} network The fabric network
-	 * @param {string} listenerName the name of the listener being created
+	 * @param {string} listenerName a unique name identifying the listener
 	 * @param {Function} eventCallback The event callback called when a transaction is committed.
 	 * It has signature (err, block)
 	 * @param {module:fabric-network.Network~ListenerOptions} options
