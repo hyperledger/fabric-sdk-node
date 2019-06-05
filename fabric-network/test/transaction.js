@@ -11,9 +11,11 @@ const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-as-promised'));
 
+const Client = require('fabric-client');
 const Channel = require('fabric-client/lib/Channel');
 const Contract = require('fabric-network/lib/contract');
 const Network = require('fabric-network/lib/network');
+const Gateway = require('fabric-network/lib/gateway');
 const Query = require('fabric-network/lib/impl/query/query');
 const Transaction = require('fabric-network/lib/transaction');
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
@@ -91,6 +93,12 @@ describe('Transaction', () => {
 
 		stubContract.getChaincodeId.returns(chaincodeId);
 		stubContract.getEventHandlerOptions.returns({commitTimeout: 418});
+
+		const mockClient = sinon.createStubInstance(Client);
+		const mockGateway = sinon.createStubInstance(Gateway);
+		mockGateway.getClient.returns(mockClient);
+		mockClient.getConfigSetting.returns(45000);
+		stubContract.gateway = mockGateway;
 
 		transaction = new Transaction(stubContract, transactionName);
 	});
@@ -262,6 +270,18 @@ describe('Transaction', () => {
 			const promise = transaction.submit();
 			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
 		});
+
+		it('sends proposal with long timeout', async () => {
+			stubContract.getEventHandlerOptions.returns({commitTimeout: 999});
+			await transaction.submit();
+			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 999000);
+		});
+
+		it('sends proposal with short timeout', async () => {
+			stubContract.getEventHandlerOptions.returns({commitTimeout: 3});
+			await transaction.submit();
+			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 45000);
+		});
 	});
 
 	describe('#evaluate', () => {
@@ -335,6 +355,27 @@ describe('Transaction', () => {
 			const promise = transaction.evaluate();
 			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
 		});
+
+		it('builds correct request for invocation with long timeout', async () => {
+			stubContract.getEventHandlerOptions.returns({commitTimeout: 999});
+
+			await transaction.evaluate();
+
+			const query = stubQueryHandler.evaluate.lastArg;
+			expect(query._request).to.deep.include({
+				request_timeout: 999000
+			});
+		});
+
+		it('builds correct request for invocation with short timeout', async () => {
+			stubContract.getEventHandlerOptions.returns({commitTimeout: 3});
+
+			await transaction.evaluate();
+
+			const query = stubQueryHandler.evaluate.lastArg;
+			expect(query._request.request_timeout).to.be.undefined;
+		});
+
 	});
 
 	describe('#addCommitListener', () => {
