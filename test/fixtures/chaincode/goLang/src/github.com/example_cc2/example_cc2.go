@@ -25,8 +25,6 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-var logger = shim.NewLogger("example_cc2")
-
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
@@ -34,7 +32,7 @@ type SimpleChaincode struct {
 // Init - Re-initialize one of the parties' asset holdings
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
-	logger.Info("########### example_cc2 Init ###########")
+	fmt.Printf("########### example_cc2 Init ###########")
 
 	_, args := stub.GetFunctionAndParameters()
 	var A string    // Entities
@@ -47,7 +45,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	if err != nil {
 		return shim.Error("Expecting integer value for asset holding")
 	}
-	logger.Info("Aval = %d\n", Aval)
+	fmt.Printf("Aval = %d\n", Aval)
 
 	// Write the state to the ledger
 	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
@@ -60,7 +58,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
 // Invoke - Transaction makes payment of X units from A to B
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("########### example_cc1 Invoke ###########")
+	fmt.Printf("########### example_cc1 Invoke ###########")
 
 	function, args := stub.GetFunctionAndParameters()
 
@@ -69,7 +67,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.query(stub, args)
 	}
 
-	logger.Errorf("Unknown action: %s, check the first argument, must be 'query'", args[0])
+	fmt.Printf("Unknown action: %s, check the first argument, must be 'query'", args[0])
 	return shim.Error(fmt.Sprintf("Unknown action: %s, check the first argument, must be 'query'", args[0]))
 }
 
@@ -98,13 +96,13 @@ func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string)
 	}
 
 	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
-	logger.Infof("Query Response:%s\n", jsonResp)
+	fmt.Printf("Query Response:%s\n", jsonResp)
 	return shim.Success(Avalbytes)
 }
 
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		logger.Errorf("Error starting Simple chaincode: %s", err)
+		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
 }

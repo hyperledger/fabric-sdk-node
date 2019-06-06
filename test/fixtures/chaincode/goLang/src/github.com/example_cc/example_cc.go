@@ -25,15 +25,13 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-var logger = shim.NewLogger("example_cc0")
-
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
 
 // Init - initialize the state
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
-	logger.Info("########### example_cc0 Init ###########")
+	fmt.Printf("########### example_cc0 Init ###########")
 
 	_, args := stub.GetFunctionAndParameters()
 	var A, B string    // Entities
@@ -55,7 +53,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 	if err != nil {
 		return shim.Error("Expecting integer value for asset holding")
 	}
-	logger.Infof("Aval = %d, Bval = %d\n", Aval, Bval)
+	fmt.Printf("Aval = %d, Bval = %d\n", Aval, Bval)
 
 	// Write the state to the ledger
 	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
@@ -73,12 +71,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
 // Invoke - Transaction makes payment of X units from A to B
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("########### example_cc0 Invoke ###########")
+	fmt.Printf("########### example_cc0 Invoke ###########")
 
 	function, args := stub.GetFunctionAndParameters()
 
-	logger.Info("function: ", function)
-	logger.Info("args: ", args)
+	fmt.Printf("function: ", function)
+	fmt.Printf("args: ", args)
 
 	if function == "delete" {
 		// Deletes an entity from its state
@@ -104,7 +102,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.Init(stub)
 	}
 
-	logger.Errorf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0])
+	fmt.Printf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0])
 	return shim.Error(fmt.Sprintf("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: %v", args[0]))
 }
 
@@ -149,7 +147,7 @@ func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) 
 	}
 	Aval = Aval - X
 	Bval = Bval + X
-	logger.Infof("Aval = %d, Bval = %d\n", Aval, Bval)
+	fmt.Printf("Aval = %d, Bval = %d\n", Aval, Bval)
 
 	// Write the state back to the ledger
 	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
@@ -207,7 +205,7 @@ func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string)
 	}
 
 	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
-	logger.Infof("Query Response:%s\n", jsonResp)
+	fmt.Printf("Query Response:%s\n", jsonResp)
 	return shim.Success(Avalbytes)
 }
 
@@ -219,6 +217,6 @@ func (t *SimpleChaincode) throwError(stub shim.ChaincodeStubInterface, args []st
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		logger.Errorf("Error starting Simple chaincode: %s", err)
+		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
 }

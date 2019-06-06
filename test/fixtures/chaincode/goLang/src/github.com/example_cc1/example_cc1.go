@@ -25,8 +25,6 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-var logger = shim.NewLogger("example_cc1")
-
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
@@ -34,7 +32,7 @@ type SimpleChaincode struct {
 //Init - instantiation of the state
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
-	logger.Info("########### example_cc1 Init ###########")
+	fmt.Printf("########### example_cc1 Init ###########")
 
 	// test the transient map support with chaincode instantiation
 	return t.testTransient(stub)
@@ -42,7 +40,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
 // Invoke - Transaction makes payment of X units from A to B
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("########### example_cc1 Invoke ###########")
+	fmt.Printf("########### example_cc1 Invoke ###########")
 
 	function, args := stub.GetFunctionAndParameters()
 
@@ -71,7 +69,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.testTransient(stub)
 	}
 
-	logger.Errorf("Unknown action: %s, check the first argument, must be one of 'delete', 'query', 'echo', 'testTransient' or 'move'", args[0])
+	fmt.Printf("Unknown action: %s, check the first argument, must be one of 'delete', 'query', 'echo', 'testTransient' or 'move'", args[0])
 	return shim.Error(fmt.Sprintf("Unknown action: %s, check the first argument, must be one of 'delete', 'query', 'echo', 'testTransient' or 'move'", args[0]))
 }
 
@@ -116,7 +114,7 @@ func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) 
 	}
 	Aval = Aval - X
 	Bval = Bval + X + 10 //new version chaincode gives a bonus
-	logger.Infof("Aval = %d, Bval = %d\n", Aval, Bval)
+	fmt.Printf("Aval = %d, Bval = %d\n", Aval, Bval)
 
 	// Write the state back to the ledger
 	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
@@ -174,7 +172,7 @@ func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string)
 	}
 
 	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
-	logger.Infof("Query Response:%s\n", jsonResp)
+	fmt.Printf("Query Response:%s\n", jsonResp)
 	return shim.Success(Avalbytes)
 }
 
@@ -187,13 +185,13 @@ func (t *SimpleChaincode) throwError(stub shim.ChaincodeStubInterface, args []st
 func (t *SimpleChaincode) testTransient(stub shim.ChaincodeStubInterface) pb.Response {
 	tm, err := stub.GetTransient()
 	if err != nil {
-		logger.Error("Did not find expected transient map in the proposal")
+		fmt.Printf("Did not find expected transient map in the proposal")
 		return shim.Error("{\"Error\":\"Did not find expected transient map in the proposal}")
 	}
 
 	v, ok := tm["test"]
 	if !ok {
-		logger.Error("Did not find expected key \"test\" in the transient map of the proposal")
+		fmt.Printf("Did not find expected key \"test\" in the transient map of the proposal")
 		return shim.Error("{\"Error\":\"Did not find expected key \"test\" in the transient map of the proposal}")
 	}
 
@@ -203,13 +201,13 @@ func (t *SimpleChaincode) testTransient(stub shim.ChaincodeStubInterface) pb.Res
 // Used to return what's in the input for testing purposes
 func (t *SimpleChaincode) echo(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
-	logger.Info("Echo Response\n")
+	fmt.Printf("Echo Response\n")
 	return shim.Success([]byte(args[0]))
 }
 
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		logger.Errorf("Error starting Simple chaincode: %s", err)
+		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
 }

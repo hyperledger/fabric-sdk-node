@@ -23,7 +23,7 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
-var logger = shim.NewLogger("events_cc")
+
 
 // EventSender example simple Chaincode implementation
 type EventSender struct {
@@ -31,7 +31,7 @@ type EventSender struct {
 
 // Init function
 func (t *EventSender) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("*********** Init ***********")
+	fmt.Printf("*********** Init ***********")
 
 	err := stub.PutState("numEvents", []byte("0"))
 	if err != nil {
@@ -42,7 +42,7 @@ func (t *EventSender) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 // Invoke - invoke the chaincode
 func (t *EventSender) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("*********** Invoke ***********")
+	fmt.Printf("*********** Invoke ***********")
 	function, args := stub.GetFunctionAndParameters()
 
 	if function != "invoke" {
@@ -62,7 +62,7 @@ func (t *EventSender) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 // Invoke function
 func (t *EventSender) invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("########### invoke start ###########")
+	fmt.Printf("########### invoke start ###########")
 
 	_ , args := stub.GetFunctionAndParameters()
 	if len(args) != 2 {
@@ -77,9 +77,9 @@ func (t *EventSender) invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	tosend := "Event " + string(b) + args[1]
 	eventName := "evtsender" + args[0]
 
-	logger.Infof("########### invoke - numEvents:%s\n", numEvents)
-	logger.Infof("########### invoke - tosend:%s\n", tosend)
-	logger.Infof("########### invoke - eventName:%s\n", eventName)
+	fmt.Printf("########### invoke - numEvents:%s\n", numEvents)
+	fmt.Printf("########### invoke - tosend:%s\n", tosend)
+	fmt.Printf("########### invoke - eventName:%s\n", eventName)
 
 	err = stub.PutState("numEvents", []byte(strconv.Itoa(numEvents+1)))
 	if err != nil {
@@ -95,7 +95,7 @@ func (t *EventSender) invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 // Clear State function
 func (t *EventSender) clear(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("########### clear ###########")
+	fmt.Printf("########### clear ###########")
 
 	err := stub.PutState("numEvents", []byte("0"))
 	if err != nil {
@@ -106,11 +106,11 @@ func (t *EventSender) clear(stub shim.ChaincodeStubInterface) pb.Response {
 
 // Query function
 func (t *EventSender) query(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("########### query ###########")
+	fmt.Printf("########### query ###########")
 
 	b, err := stub.GetState("numEvents")
 	numEvents, _ := strconv.Atoi(string(b))
-	logger.Infof("########### query - numEvents:%s\n", numEvents)
+	fmt.Printf("########### query - numEvents:%s\n", numEvents)
 
 	if err != nil {
 		return shim.Error("Failed to get state")
