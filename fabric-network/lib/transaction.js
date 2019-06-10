@@ -125,12 +125,19 @@ class Transaction {
 		const network = this._contract.getNetwork();
 		const channel = network.getChannel();
 		const txId = this._transactionId.getTransactionID();
-		const eventHandler = this._createTxEventHandler(this, network, this._contract.getEventHandlerOptions());
+		const options = this._contract.getEventHandlerOptions();
+		const eventHandler = this._createTxEventHandler(this, network, options);
 
 		const request = this._buildRequest(args);
 
+		const commitTimeout = options.commitTimeout * 1000; // in ms
+		let timeout = this._contract.gateway.getClient().getConfigSetting('request-timeout', commitTimeout);
+		if (timeout < commitTimeout) {
+			timeout = commitTimeout;
+		}
+
 		// node sdk will target all peers on the channel that are endorsingPeer or do something special for a discovery environment
-		const results = await channel.sendTransactionProposal(request);
+		const results = await channel.sendTransactionProposal(request, timeout);
 		const proposalResponses = results[0];
 		const proposal = results[1];
 
@@ -239,6 +246,13 @@ class Transaction {
 
 		const channel = this._contract.getNetwork().getChannel();
 		const request = this._buildRequest(args);
+
+		const commitTimeout = this._contract.getEventHandlerOptions().commitTimeout * 1000; // in ms
+		const timeout = this._contract.gateway.getClient().getConfigSetting('request-timeout', commitTimeout);
+		if (timeout < commitTimeout) {
+			request.request_timeout = commitTimeout;
+		}
+
 		const query = new Query(channel, request);
 
 		return this._queryHandler.evaluate(query);
