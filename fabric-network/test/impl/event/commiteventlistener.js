@@ -14,6 +14,7 @@ const sinon = require('sinon');
 const Channel = require('fabric-client/lib/Channel');
 const Contract = require('fabric-network/lib/contract');
 const Network = require('fabric-network/lib/network');
+const Gateway = require('fabric-network/lib/gateway');
 const EventHubManager = require('fabric-network/lib/impl/event/eventhubmanager');
 const ChannelEventHub = require('fabric-client/lib/ChannelEventHub');
 const CommitEventListener = require('fabric-network/lib/impl/event/commiteventlistener');
@@ -23,7 +24,7 @@ describe('CommitEventListener', () => {
 	let eventHubManagerStub;
 	let eventHubStub;
 	let contractStub;
-	let networkStub;
+	let network;
 	let channelStub;
 	let listener;
 	let callback;
@@ -33,17 +34,18 @@ describe('CommitEventListener', () => {
 		eventHubStub = sandbox.createStubInstance(ChannelEventHub);
 		eventHubStub._transactionRegistrations = {};
 		contractStub = sandbox.createStubInstance(Contract);
-		networkStub = sandbox.createStubInstance(Network);
+		// network = sandbox.createStubInstance(Network);
+		const gatewayStub = sandbox.createStubInstance(Gateway);
 		channelStub = sandbox.createStubInstance(Channel);
-		networkStub.getChannel.returns(channelStub);
-		contractStub.getNetwork.returns(networkStub);
+		network = new Network(gatewayStub, channelStub);
+		contractStub.getNetwork.returns(network);
 		eventHubManagerStub = sinon.createStubInstance(EventHubManager);
 		eventHubManagerStub.getPeers.returns(['peer1']);
-		networkStub.getEventHubManager.returns(eventHubManagerStub);
+		sandbox.stub(network, 'getEventHubManager').returns(eventHubManagerStub);
 		eventHubStub.isFiltered.returns(true);
 
 		callback = () => {};
-		listener = new CommitEventListener(networkStub, 'transactionId', callback, {});
+		listener = new CommitEventListener(network, 'transactionId', callback, {});
 	});
 
 	afterEach(() => {
@@ -59,12 +61,12 @@ describe('CommitEventListener', () => {
 
 	describe('#register', () => {
 		beforeEach(() => {
-			sandbox.stub(listener, '_registerWithNewEventHub');
+			sandbox.stub(listener, '_registerWithNewCommitEventHub');
 		});
 
 		it('should grab a new event hub if one isnt given', async () => {
 			await listener.register();
-			sinon.assert.called(listener._registerWithNewEventHub);
+			sinon.assert.called(listener._registerWithNewCommitEventHub);
 		});
 
 		it('should assign a new event hub if given on has registrations', async () => {
@@ -108,11 +110,20 @@ describe('CommitEventListener', () => {
 			sinon.assert.notCalled(eventHubStub.unregisterTxEvent);
 		});
 
-		it('should call ChannelEventHub.unregisterBlockEvent', () => {
+		it('should call ChannelEventHub.unregisterBlockEvent', async () => {
 			listener.eventHub = eventHubStub;
-			listener.register();
+			await listener.register();
 			listener.unregister();
 			sinon.assert.calledWith(eventHubStub.unregisterTxEvent, 'transactionId');
+		});
+
+		it('should remove the listener from the network', async () => {
+			network.listeners.set(listener.listenerName, listener);
+			listener.eventHub = eventHubStub;
+			await listener.register();
+			expect(network.listeners.get(listener.listenerName)).to.equal(listener);
+			listener.unregister();
+			expect(network.listeners.has(listener.listenerName)).to.be.false;
 		});
 	});
 
@@ -178,7 +189,7 @@ describe('CommitEventListener', () => {
 		});
 	});
 
-	describe('#_registerWithNewEventHub', () => {
+	describe('#_registerWithNewCommitEventHub', () => {
 		beforeEach(() => {
 			listener._registration = {};
 			sandbox.spy(listener, 'unregister');
@@ -188,7 +199,7 @@ describe('CommitEventListener', () => {
 		});
 
 		it('should call the correct methods', async () => {
-			await listener._registerWithNewEventHub();
+			await listener._registerWithNewCommitEventHub();
 			sinon.assert.called(eventHubManagerStub.getReplayEventHub);
 			expect(listener.eventHub).to.equal(eventHubStub);
 			expect(listener.clientOptions.disconnect).to.be.true;
@@ -199,19 +210,19 @@ describe('CommitEventListener', () => {
 			eventHubStub._peer = 'peer';
 			listener.eventHub = eventHubStub;
 			listener.options.fixedEventHub = true;
-			await listener._registerWithNewEventHub();
+			await listener._registerWithNewCommitEventHub();
 			sinon.assert.calledWith(eventHubManagerStub.getFixedEventHub, eventHubStub._peer);
 		});
 
 		it('should unregister if the listener is already registered', async () => {
 			listener._registered = true;
-			await listener._registerWithNewEventHub();
+			await listener._registerWithNewCommitEventHub();
 			sinon.assert.called(listener.unregister);
 		});
 
 		it('should throw if options.fixedEventHub is set and no event hub is given', () => {
 			listener.options.fixedEventHub = true;
-			return expect(listener._registerWithNewEventHub()).to.be.rejectedWith();
+			return expect(listener._registerWithNewCommitEventHub()).to.be.rejectedWith();
 		});
 	});
 

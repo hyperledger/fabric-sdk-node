@@ -15,7 +15,7 @@ module.exports = function () {
 		const fabricState = StateStore.get('fabricState');
 
 		if (!fabricState || !fabricState.deployed || fabricState.type.localeCompare(type) !== 0) {
-			await testUtil.runShellCommand(undefined, 'rm -f ~/.hlf-checkpoint');
+			await testUtil.runShellCommand(undefined, 'rm -rf ~/.hlf-checkpoint');
 			await testUtil.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
 			if (type.localeCompare('non-tls') === 0) {
 				await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../../fixtures/docker-compose/docker-compose.yaml') + ' -p node up -d');
@@ -29,7 +29,7 @@ module.exports = function () {
 	});
 
 	this.Given(/^I have forcibly taken down all docker containers/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async () => {
-		await testUtil.runShellCommand(undefined, 'rm -f ~/.hlf-checkpoint');
+		await testUtil.runShellCommand(undefined, 'rm -rf ~/.hlf-checkpoint');
 		await testUtil.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
 		StateStore.set('fabricState', {deployed: false, type: null});
 		return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);

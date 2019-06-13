@@ -33,6 +33,11 @@ export interface EventListenerOptions {
 	replay?: boolean;
 	filtered?: boolean;
 	unregister?: boolean;
+	startBlock?: number;
+	endBlock?: number;
+	asArray?: boolean;
+	eventHubConnectWait?: number;
+	eventHubConnectTimeout?: number;
 }
 
 export interface DiscoveryOptions {
@@ -105,7 +110,7 @@ export interface Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event?: {[key: string]: any}, blockNumber?: string, transactionId?: string, status?: string) => Promise<any>, options?: object): Promise<ContractEventListener>;
+	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event?: {[key: string]: any} | Array<{[key: string]: any}>, blockNumber?: string, transactionId?: string, status?: string) => Promise<any>, options?: EventListenerOptions): Promise<ContractEventListener>;
 }
 
 export interface TransientMap {
@@ -199,7 +204,7 @@ export interface Checkpoint {
 
 export class BaseCheckpointer {
 	public setChaincodeId(chaincodeId: string): void;
-	public loadStartingCheckpoint(): Promise<Checkpoint>;
+	public loadLatestCheckpoint(): Promise<Checkpoint>;
 }
 
 export class FileSystemCheckpointer extends BaseCheckpointer {

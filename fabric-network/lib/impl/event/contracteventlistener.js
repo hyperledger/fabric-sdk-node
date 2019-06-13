@@ -33,9 +33,13 @@ class ContractEventListener extends AbstractEventListener {
 		this.eventName = eventName;
 
 		if (this.useEventReplay()) {
-			Object.assign(this.clientOptions, {as_array: true});
+			Object.assign(this.clientOptions, {
+				as_array: true
+			});
 		} else {
-			Object.assign(this.clientOptions, {as_array: false});
+			Object.assign(this.clientOptions, {
+				as_array: this.options.asArray ? this.options.asArray : false
+			});
 		}
 	}
 
@@ -45,8 +49,16 @@ class ContractEventListener extends AbstractEventListener {
 	async register() {
 		await super.register(this.contract.getChaincodeId());
 		if (!this.eventHub) {
+			if (!this._eventHubConnectTimeout) {
+				this._setEventHubConnectTimeout();
+			}
+			if (this._abandonEventHubConnect) {
+				this._unsetEventHubConnectTimeout();
+				return;
+			}
 			return await this._registerWithNewEventHub();
 		}
+		this._unsetEventHubConnectTimeout();
 		this._registration = this.eventHub.registerChaincodeEvent(
 			this.contract.getChaincodeId(),
 			this.eventName,
@@ -87,10 +99,8 @@ class ContractEventListener extends AbstractEventListener {
 		blockNumber = Number(blockNumber);
 		let useCheckpoint = false;
 		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
-			let checkpoint = await this.checkpointer.load();
-			if (!checkpoint.hasOwnProperty('blockNumber') && Object.keys(checkpoint).length > 0) {
-				checkpoint = checkpoint[blockNumber];
-			}
+			const checkpoint = await this.checkpointer.loadLatestCheckpoint();
+
 			useCheckpoint = Number(checkpoint.blockNumber || 0) <= Number(blockNumber);
 			if (checkpoint && checkpoint.transactionIds && checkpoint.transactionIds.includes(transactionId)) {
 				logger.debug(util.format('_onEvent skipped transaction: %s', transactionId));
@@ -112,8 +122,16 @@ class ContractEventListener extends AbstractEventListener {
 	}
 
 	async _onEvents(events) {
-		logger.debug('Received contract events as array');
-		await Promise.all(events.map((event) => this._onEvent(event.chaincode_event, event.block_num, event.tx_id, event.tx_status)));
+		logger.debug(`[${this.listenerName}]: Received contract events as array`);
+		if (!this.options.asArray) {
+			logger.debug(`[${this.listenerName}]: Splitting events`);
+			await Promise.all(
+				events.map((event) => this._onEvent(event.chaincode_event, event.block_num, event.tx_id, event.tx_status, events.length))
+			);
+		} else {
+			logger.debug(`[${this.listenerName}]: Sending events to callback as array`);
+			await this.eventCallback(events);
+		}
 	}
 
 	/**
@@ -131,33 +149,8 @@ class ContractEventListener extends AbstractEventListener {
 				await this._registerWithNewEventHub();
 			}
 		}
-		this.eventCallback(error);
+		await this.eventCallback(error);
 	}
-
-	/**
-	 *
-	 * Finds a new event hub for the listener in the event of one shutting down. Will
-	 * create a new instance if checkpointer is being used, or reuse one if not
-	 * @private
-	 */
-	async _registerWithNewEventHub() {
-		this.unregister();
-		if (this.options.fixedEventHub && !this.eventHub) {
-			throw new Error('No event hub given and option fixedEventHub is set');
-		}
-		const useCheckpointing = this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer;
-		if (useCheckpointing && !this.options.fixedEventHub) {
-			this.eventHub = this.getEventHubManager().getReplayEventHub();
-		} else if (useCheckpointing && this.options.fixedEventHub) {
-			this.eventHub = this.getEventHubManager().getReplayEventHub(this.eventHub._peer);
-		} else if (!useCheckpointing && this.options.fixedEventHub) {
-			this.eventHub = this.getEventHubManager().getEventHub(this.eventHub._peer);
-		} else {
-			this.eventHub = this.getEventHubManager().getEventHub();
-		}
-		await this.register();
-	}
-
 }
 
 module.exports = ContractEventListener;

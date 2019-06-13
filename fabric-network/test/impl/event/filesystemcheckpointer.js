@@ -134,6 +134,17 @@ describe('FileSystemCheckpointer', () => {
 				})
 			);
 		});
+
+		it('should support loading a multi-block checkpoint', async () => {
+			fs.exists.resolves(true);
+			fs.readFile.resolves(JSON.stringify({1: {blockNumber: 1, transactionIds: ['transactionId'], expectedTotal: 10}}));
+			await checkpointer.save('transactionId2', 1, 10);
+			sinon.assert.calledWith(
+				fs.writeFile,
+				checkpointer._getCheckpointFileName(),
+				JSON.stringify({1: {blockNumber: 1, transactionIds: ['transactionId', 'transactionId2'], expectedTotal: 10}})
+			);
+		});
 	});
 
 	describe('#load', () => {
@@ -161,12 +172,12 @@ describe('FileSystemCheckpointer', () => {
 		});
 	});
 
-	describe('#loadStartingCheckpoint', () => {
+	describe('#loadLatestCheckpoint', () => {
 		it('should return the loaded checkpoint if there is only one checkpoint in the file', async () => {
 			const checkpoint = {blockNumber: 1, transactionIds: []};
 			fs.exists.resolves(true);
 			fs.readFile.resolves(JSON.stringify(checkpoint));
-			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			const loadedCheckpoint = await checkpointer.loadLatestCheckpoint();
 			expect(loadedCheckpoint).to.deep.equal(checkpoint);
 		});
 
@@ -174,7 +185,7 @@ describe('FileSystemCheckpointer', () => {
 			const checkpoint = {1: {blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 2}, 2: {blockNumber: 2, transactionIds: ['transactionId3'], expectedNumber: 1}};
 			fs.exists.resolves(true);
 			fs.readFile.resolves(JSON.stringify(checkpoint));
-			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			const loadedCheckpoint = await checkpointer.loadLatestCheckpoint();
 			expect(loadedCheckpoint).to.deep.equal({blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 2});
 		});
 
@@ -182,7 +193,7 @@ describe('FileSystemCheckpointer', () => {
 			const checkpoint = {1: {blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 2}, 2: {blockNumber: 2, transactionIds: ['transactionId3'], expectedNumber: 2}};
 			fs.exists.resolves(true);
 			fs.readFile.resolves(JSON.stringify(checkpoint));
-			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			const loadedCheckpoint = await checkpointer.loadLatestCheckpoint();
 			expect(loadedCheckpoint).to.deep.equal({blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 2});
 		});
 
@@ -190,7 +201,7 @@ describe('FileSystemCheckpointer', () => {
 			const checkpoint = {1: {blockNumber: 1, transactionIds: ['transactionId1'], expectedNumber: 1}, 2: {blockNumber: 2, transactionIds: ['transactionId2'], expectedNumber: 1}};
 			fs.exists.resolves(true);
 			fs.readFile.resolves(JSON.stringify(checkpoint));
-			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			const loadedCheckpoint = await checkpointer.loadLatestCheckpoint();
 			expect(loadedCheckpoint).to.deep.equal({blockNumber: 2, transactionIds: ['transactionId2'], expectedNumber: 1});
 		});
 
@@ -198,7 +209,7 @@ describe('FileSystemCheckpointer', () => {
 			const checkpoint = {1: {blockNumber: 1, transactionIds: ['transactionId1']}};
 			fs.exists.resolves(true);
 			fs.readFile.resolves(JSON.stringify(checkpoint));
-			const loadedCheckpoint = await checkpointer.loadStartingCheckpoint();
+			const loadedCheckpoint = await checkpointer.loadLatestCheckpoint();
 			expect(loadedCheckpoint).to.deep.equal({blockNumber: 1, transactionIds: ['transactionId1']});
 		});
 	});
@@ -208,6 +219,21 @@ describe('FileSystemCheckpointer', () => {
 			const chaincodeId = 'CHAINCODE_ID';
 			checkpointer.setChaincodeId(chaincodeId);
 			expect(checkpointer._getCheckpointFileName()).to.equal(`home/.hlf-checkpoint/${channelName}/${chaincodeId}/${listenerName}`);
+		});
+	});
+
+	describe('#_prune', () => {
+		it('should prune a checkpoint to 1 block', () => {
+			checkpointer.options.maxLength = 1;
+			const checkpoint = [{blockNumber: 1}, {blockNumber: 2}];
+			const prunedCheckpoint = checkpointer._prune(checkpoint);
+			expect(prunedCheckpoint).to.deep.equal({2: {blockNumber: 2}});
+		});
+
+		it('should not prune when single checkpoint is given', () => {
+			const checkpoint = {blockNumber: 1};
+			const prunedCheckpoint = checkpointer._prune(checkpoint);
+			expect(prunedCheckpoint).to.deep.equal({blockNumber: 1});
 		});
 	});
 });

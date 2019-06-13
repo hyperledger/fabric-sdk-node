@@ -192,7 +192,7 @@ class Contract {
 		options.checkpointer = this.getCheckpointer(options);
 		const listener = new ContractEventListener(this, listenerName, eventName, callback, options);
 		const network = this.getNetwork();
-		network.saveListener(listenerName, listener);
+		network._checkListenerNameIsUnique(listener.listenerName);
 		await listener.register();
 		return listener;
 	}

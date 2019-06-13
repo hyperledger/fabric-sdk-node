@@ -11,6 +11,7 @@
  * @memberof module:fabric-network
  * @property {number} blockNumber
  * @property {string[]} transactionIds
+ * @property {number} [expectedTotal] The expected number of events in the block
  */
 
 /**
@@ -55,7 +56,7 @@ class BaseCheckpointer {
 	 * @return {module:fabric-network.BaseCheckpointer~Checkpoint}
 	 * @async
 	 */
-	async loadStartingCheckpoint() {
+	async loadLatestCheckpoint() {
 		return this.load();
 	}
 

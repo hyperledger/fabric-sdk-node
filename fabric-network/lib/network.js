@@ -23,6 +23,11 @@ const util = require('util');
  * @property {boolean} [replay=false] event replay and checkpointing on listener
  * @property {boolean} [filtered=false] use receive filtered block events or not
  * @property {boolean} [unregister=false] unregisters the listener as soon as a single event is received
+ * @property {number} [startBlock] the first block to play events from
+ * @property {number} [endBlock] the final block to play events from
+ * @property {boolean} [asArray] will deliver all of the events in a block to the callback
+ * @property {number} [eventHubConnectWait=1000] the number of milliseconds before looking for a new event hub
+ * @property {number} [eventHubConnectTimeout=30000] the number of milliseconds before timing out event hub connect
  */
 
 /**
@@ -239,10 +244,7 @@ class Network {
 	 * @private
 	 */
 	saveListener(listenerName, listener) {
-		if (this.listeners.has(listenerName)) {
-			listener.unregister();
-			throw new Error(`Listener already exists with the name ${listenerName}`);
-		}
+		this._checkListenerNameIsUnique(listenerName);
 		this.listeners.set(listenerName, listener);
 	}
 
@@ -261,7 +263,7 @@ class Network {
 		options.replay = options.replay ? true : false;
 		options.checkpointer = this.getCheckpointer(options);
 		const listener = new BlockEventListener(this, listenerName, callback, options);
-		this.saveListener(listenerName, listener);
+		this._checkListenerNameIsUnique(listener.listenerName);
 		await listener.register();
 		return listener;
 	}
@@ -285,12 +287,18 @@ class Network {
 		options.replay = false;
 		options.checkpointer = null;
 		const listener = new CommitEventListener(this, transactionId, callback, options);
+		this._checkListenerNameIsUnique(listener.listenerName);
 		if (eventHub) {
 			listener.setEventHub(eventHub, options.fixedEventHub);
 		}
-		this.saveListener(listener.listenerName, listener);
 		await listener.register();
 		return listener;
+	}
+
+	_checkListenerNameIsUnique(listenerName) {
+		if (this.listeners.has(listenerName)) {
+			throw new Error(`Listener already exists with the name ${listenerName}`);
+		}
 	}
 }
 

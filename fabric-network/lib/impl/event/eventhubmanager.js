@@ -24,6 +24,7 @@ class EventHubManager {
 		this.channel = network.getChannel();
 		this.eventHubFactory = new EventHubFactory(this.channel);
 		this.eventHubSelectionStrategy = network.getEventHubSelectionStrategy();
+
 		this.newEventHubs = [];
 	}
 	/**
@@ -64,7 +65,7 @@ class EventHubManager {
 	getReplayEventHub(peer) {
 		for (const index in this.newEventHubs) {
 			const eventHub = this.newEventHubs[index];
-			if (this._isNewEventHub(eventHub) && (!peer || eventHub.getName() === peer.getName())) {
+			if (!eventHub.isconnected() && this._isNewEventHub(eventHub) && (!peer || eventHub.getName() === peer.getName())) {
 				this.newEventHubs.splice(index, 1);
 			}
 		}
@@ -88,7 +89,7 @@ class EventHubManager {
 	}
 
 	/**
-	 * When called with a peer, it updates the {@link EventHubSelectionStategy} with the
+	 * When called with a peer, it updates the {@link EventHubSelectionStrategy} with the
 	 * new status of a peer to allow for intelligent strategies
 	 * @param {Peer} deadPeer A peer instance
 	 */

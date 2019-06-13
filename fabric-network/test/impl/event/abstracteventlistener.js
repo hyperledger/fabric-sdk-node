@@ -24,7 +24,7 @@ describe('AbstractEventListener', () => {
 
 	let testListener;
 	let contractStub;
-	let networkStub;
+	let network;
 	let checkpointerStub;
 	let eventHubManagerStub;
 	let channelStub;
@@ -34,20 +34,20 @@ describe('AbstractEventListener', () => {
 
 		eventHubManagerStub = sandbox.createStubInstance(EventHubManager);
 		contractStub = sandbox.createStubInstance(Contract);
-		networkStub = sandbox.createStubInstance(Network);
-		networkStub.getEventHubManager.returns(eventHubManagerStub);
-		contractStub.getNetwork.returns(networkStub);
+		network = new Network();
+		contractStub.getNetwork.returns(network);
 		checkpointerStub = sandbox.createStubInstance(FileSystemCheckpointer);
 		checkpointerStub.setChaincodeId = sandbox.stub();
 		channelStub = sandbox.createStubInstance(Channel);
-		networkStub.getChannel.returns(channelStub);
+		sandbox.stub(network, 'getChannel').returns(channelStub);
 		channelStub.getName.returns('mychannel');
 		eventHubManagerStub.getPeers.returns(['peer1']);
 		channelStub.queryInfo.returns({height: 10});
+		sandbox.stub(network, 'getEventHubManager').returns(eventHubManagerStub);
 
 		contractStub.getChaincodeId.returns('ccid');
 		const callback = (err) => {};
-		testListener = new AbstractEventListener(networkStub, 'testListener', callback, {option: 'anoption', replay: true});
+		testListener = new AbstractEventListener(network, 'testListener', callback, {option: 'anoption', replay: true});
 
 	});
 
@@ -58,11 +58,11 @@ describe('AbstractEventListener', () => {
 	describe('#constructor', () => {
 		it('should set the correct properties on instantiation', () => {
 			const callback = (err) => {};
-			const listener = new AbstractEventListener(networkStub, 'testlistener', callback, {option: 'anoption'});
-			expect(listener.network).to.equal(networkStub);
+			const listener = new AbstractEventListener(network, 'testlistener', callback, {option: 'anoption'});
+			expect(listener.network).to.equal(network);
 			expect(listener.listenerName).to.equal('testlistener');
 			expect(listener.eventCallback).to.equal(callback);
-			expect(listener.options).to.deep.equal({option: 'anoption'});
+			expect(listener.options).to.deep.equal({option: 'anoption', eventHubConnectTimeout: 30000, eventHubConnectWait: 1000});
 			expect(listener.checkpointer).to.be.undefined;
 			expect(listener._registered).to.be.false;
 			expect(listener._firstCheckpoint).to.deep.equal({});
@@ -72,33 +72,54 @@ describe('AbstractEventListener', () => {
 
 		it('should set options if options is undefined', () => {
 			const callback = (err) => {};
-			const listener = new AbstractEventListener(networkStub, 'testlistener', callback);
-			expect(listener.options).to.deep.equal({});
+			const listener = new AbstractEventListener(network, 'testlistener', callback);
+			expect(listener.options).to.deep.equal({eventHubConnectTimeout: 30000, eventHubConnectWait: 1000});
 		});
 
 		it('should set this.filtered to be options.filtered', () => {
-			const listener = new AbstractEventListener(networkStub, 'testListener', () => {}, {filtered: true});
+			const listener = new AbstractEventListener(network, 'testListener', () => {}, {filtered: true});
 			expect(listener._filtered).to.be.true;
+		});
+
+		it('should set and unset the startBlock from clientOptions and options respectively', () => {
+			const callback = (err) => {};
+			const listener = new AbstractEventListener(network, 'testlistener', callback, {startBlock: 0});
+			expect(listener.options).to.deep.equal({eventHubConnectTimeout: 30000, eventHubConnectWait: 1000});
+			expect(listener.clientOptions).to.deep.equal({startBlock: 0});
+		});
+
+		it('should set and unset the endBlock from clientOptions and options respectively', () => {
+			const callback = (err) => {};
+			const listener = new AbstractEventListener(network, 'testlistener', callback, {endBlock: 0});
+			expect(listener.options).to.deep.equal({eventHubConnectTimeout: 30000, eventHubConnectWait: 1000});
+			expect(listener.clientOptions).to.deep.equal({endBlock: 0});
+		});
+
+		it('should set and unset the startBlock and endBlock from clientOptions and options respectively', () => {
+			const callback = (err) => {};
+			const listener = new AbstractEventListener(network, 'testlistener', callback, {startBlock: 0, endBlock: 10});
+			expect(listener.options).to.deep.equal({eventHubConnectTimeout: 30000, eventHubConnectWait: 1000});
+			expect(listener.clientOptions).to.deep.equal({startBlock: 0, endBlock: 10});
 		});
 	});
 
 	describe('#register', () => {
-		it('should throw if the listener is already registered', () => {
+		it('should throw if the listener is already registered', async () => {
 			testListener._registered = true;
-			expect(testListener.register()).to.be.rejectedWith('Listener already registered');
+			await expect(testListener.register()).to.be.rejectedWith('Listener already registered');
 		});
 
-		it('should not call checkpointer._initialize() or checkpointer.loadStartingCheckpoint()', async () => {
+		it('should not call checkpointer._initialize() or checkpointer.loadLatestCheckpoint()', async () => {
 			await testListener.register();
-			sinon.assert.notCalled(checkpointerStub.loadStartingCheckpoint);
+			sinon.assert.notCalled(checkpointerStub.loadLatestCheckpoint);
 		});
 
 		it('should not call checkpointer.initialize()', async () => {
 			const checkpoint = {transactionId: 'txid', blockNumber: '8'};
-			checkpointerStub.loadStartingCheckpoint.returns(checkpoint);
+			checkpointerStub.loadLatestCheckpoint.returns(checkpoint);
 			testListener.checkpointer = checkpointerStub;
 			await testListener.register();
-			sinon.assert.called(checkpointerStub.loadStartingCheckpoint);
+			sinon.assert.called(checkpointerStub.loadLatestCheckpoint);
 			expect(testListener.clientOptions.startBlock.toNumber()).to.equal(9); // Start block is a Long
 			expect(testListener._firstCheckpoint).to.deep.equal(checkpoint);
 		});
@@ -121,7 +142,7 @@ describe('AbstractEventListener', () => {
 
 		it('should call the checkpointer factory if it is set', async () => {
 			const checkpointerFactoryStub = sinon.stub().returns(checkpointerStub);
-			const listener = new AbstractEventListener(networkStub, 'testlistener', () => {}, {replay: true, checkpointer: {factory: checkpointerFactoryStub}});
+			const listener = new AbstractEventListener(network, 'testlistener', () => {}, {replay: true, checkpointer: {factory: checkpointerFactoryStub}});
 			await listener.register();
 			sinon.assert.calledWith(checkpointerFactoryStub, 'mychannel', 'testlistener');
 			sinon.assert.called(checkpointerStub.setChaincodeId);
@@ -129,12 +150,12 @@ describe('AbstractEventListener', () => {
 		});
 
 		it('should log an error if replay is enabled and no checkpointer is given', async () => {
-			const listener = new AbstractEventListener(networkStub, 'testlistener', () => {}, {replay: true});
+			const listener = new AbstractEventListener(network, 'testlistener', () => {}, {replay: true});
 			await listener.register();
 		});
 
 		it('should not reset the event hub if it is fixed and filtered status doesn\'t match', async () => {
-			const listener = new AbstractEventListener(networkStub, 'testlistener', () => {}, {filtered: true});
+			const listener = new AbstractEventListener(network, 'testlistener', () => {}, {filtered: true});
 			const eventHub = sandbox.createStubInstance(ChannelEventHub);
 			eventHub.isFiltered.returns(false);
 			eventHub.isconnected.returns(true);
@@ -145,16 +166,52 @@ describe('AbstractEventListener', () => {
 
 		it('should set startBlock of 1', async () => {
 			checkpointerStub.load.returns({transactionId: 'txid', blockNumber: 0});
-			checkpointerStub.loadStartingCheckpoint.returns({transactionId: 'txid', blockNumber: '0'});
+			checkpointerStub.loadLatestCheckpoint.returns({transactionId: 'txid', blockNumber: '0'});
 			testListener.checkpointer = checkpointerStub;
 			await testListener.register();
 			expect(testListener.clientOptions.startBlock.toInt()).to.equal(1);
+		});
+
+		it('should register the listener with the network', async () => {
+			await testListener.register();
+			expect(network.listeners.get(testListener.listenerName)).to.equal(testListener);
+		});
+
+		it('should do nothing if the event hub is connected and the filtered status has not changed', async () => {
+			const eventHub = sandbox.createStubInstance(ChannelEventHub);
+			eventHub.isconnected.returns(true);
+			eventHub.isFiltered.returns(false);
+			testListener.eventHub = eventHub;
+			await testListener.register();
+			sinon.assert.notCalled(eventHub.disconnect);
+		});
+
+		it('should set replay to false if startBlock is set', async () => {
+			const eventHub = sandbox.createStubInstance(ChannelEventHub);
+			eventHub.isconnected.returns(true);
+			eventHub.isFiltered.returns(false);
+			testListener.eventHub = eventHub;
+			testListener.options.replay = true;
+			testListener.clientOptions.startBlock = 0;
+			await testListener.register();
+			expect(testListener.options.replay).to.be.false;
+		});
+
+		it('should set replay to false if endBlock is set', async () => {
+			const eventHub = sandbox.createStubInstance(ChannelEventHub);
+			eventHub.isconnected.returns(true);
+			eventHub.isFiltered.returns(false);
+			testListener.eventHub = eventHub;
+			testListener.options.replay = true;
+			testListener.clientOptions.endBlock = 10;
+			await testListener.register();
+			expect(testListener.options.replay).to.be.false;
 		});
 	});
 
 	describe('#unregister', () => {
 		beforeEach(async () => {
-			checkpointerStub.loadStartingCheckpoint.returns({transactionId: 'txid', blockNumber: '10'});
+			checkpointerStub.loadLatestCheckpoint.returns({transactionId: 'txid', blockNumber: '10'});
 			testListener.checkpointer = checkpointerStub;
 			await testListener.register();
 		});
@@ -213,6 +270,28 @@ describe('AbstractEventListener', () => {
 
 		it('should return true if the error message does match', () => {
 			expect(testListener._isShutdownMessage(new EventHubDisconnectError())).to.be.true;
+		});
+	});
+
+	describe('#_setEventHubConnectWait', async () => {
+		it('should resolve', async () => {
+			testListener.options.eventHubConnectWait = 0;
+			expect(testListener._setEventHubConnectWait()).to.eventually.be.fulfilled;
+		});
+	});
+
+	describe('#_setEventHubConnectTimeout', async () => {
+		it('should unset _abandonEventHubConnect', async () => {
+			testListener.options.eventHubConnectTimeout = 0;
+			testListener._setEventHubConnectTimeout();
+			expect(testListener._abandonEventHubConnect).to.be.false;
+		});
+	});
+
+	describe('#_unsetEventHubConnectTimeout', async () => {
+		it('should unset _eventHubConnectTimeout', async () => {
+			testListener._unsetEventHubConnectTimeout();
+			expect(testListener._eventHubConnectTimeout).to.be.null;
 		});
 	});
 });

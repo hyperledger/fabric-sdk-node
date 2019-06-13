@@ -25,7 +25,7 @@ describe('BlockEventListener', () => {
 	let sandbox;
 	let channelStub;
 	let contractStub;
-	let networkStub;
+	let network;
 	let eventHubStub;
 	let checkpointerStub;
 	let eventHubManagerStub;
@@ -37,15 +37,15 @@ describe('BlockEventListener', () => {
 		channelStub.getName.returns('mychannel');
 		contractStub = sandbox.createStubInstance(Contract);
 		contractStub.getChaincodeId.returns('chaincodeid');
-		networkStub = sandbox.createStubInstance(Network);
-		networkStub.getChannel.returns(channelStub);
-		contractStub.getNetwork.returns(networkStub);
+		network = new Network();
+		sandbox.stub(network, 'getChannel').returns(channelStub);
+		contractStub.getNetwork.returns(network);
 		eventHubManagerStub = sinon.createStubInstance(EventHubManager);
 		eventHubManagerStub.getPeers.returns(['peer1']);
-		networkStub.getEventHubManager.returns(eventHubManagerStub);
+		sandbox.stub(network, 'getEventHubManager').returns(eventHubManagerStub);
 		eventHubStub = sandbox.createStubInstance(ChannelEventHub);
 		checkpointerStub = sandbox.createStubInstance(BaseCheckpointer);
-		blockEventListener = new BlockEventListener(networkStub, 'test', () => {}, {replay: true});
+		blockEventListener = new BlockEventListener(network, 'blockTest', () => {}, {replay: true});
 		eventHubStub.isFiltered.returns(true);
 	});
 	describe('#register', () => {
@@ -67,7 +67,7 @@ describe('BlockEventListener', () => {
 		});
 
 		it('should call _registerWithNewEventHub', async () => {
-			sandbox.stub(blockEventListener, '_registerWithNewEventHub');
+			sandbox.spy(blockEventListener, '_registerWithNewEventHub');
 			await blockEventListener.register();
 			sinon.assert.called(blockEventListener._registerWithNewEventHub);
 		});
@@ -230,7 +230,7 @@ describe('BlockEventListener', () => {
 		let checkpointer;
 		it('should set the block number and transaction ID', async () => {
 			checkpointer = new InMemoryCheckpointer();
-			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener = new BlockEventListener(network, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
 			blockEventListener.eventHub = eventHubStub;
 			eventHubStub.registerBlockEvent.returns({});
 			await blockEventListener.register();
@@ -241,7 +241,7 @@ describe('BlockEventListener', () => {
 
 		it('should update with a new block number (filtered)', async () => {
 			checkpointer = new InMemoryCheckpointer();
-			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {filtered: true, replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener = new BlockEventListener(network, 'listener', (block) => {}, {filtered: true, replay: true, checkpointer: {factory: () => checkpointer}});
 			blockEventListener.eventHub = eventHubStub;
 			eventHubStub.registerBlockEvent.returns({});
 			await blockEventListener.register();
@@ -253,7 +253,7 @@ describe('BlockEventListener', () => {
 
 		it('should update with a new block number (unfiltered)', async () => {
 			checkpointer = new InMemoryCheckpointer();
-			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener = new BlockEventListener(network, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
 			blockEventListener.eventHub = eventHubStub;
 			eventHubStub.registerBlockEvent.returns({});
 			await blockEventListener.register();
@@ -267,7 +267,7 @@ describe('BlockEventListener', () => {
 			channelStub.queryInfo.resolves({height: '3'});
 			checkpointer = new InMemoryCheckpointer();
 			checkpointer.checkpoint = {blockNumber: '1'};
-			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener = new BlockEventListener(network, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
 			blockEventListener.eventHub = eventHubStub;
 			eventHubStub.registerBlockEvent.returns({});
 			await blockEventListener.register();
@@ -278,7 +278,7 @@ describe('BlockEventListener', () => {
 			channelStub.queryInfo.resolves({height: '3'});
 			checkpointer = new InMemoryCheckpointer();
 			checkpointer.checkpoint = {blockNumber: '2'};
-			blockEventListener = new BlockEventListener(networkStub, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
+			blockEventListener = new BlockEventListener(network, 'listener', (block) => {}, {replay: true, checkpointer: {factory: () => checkpointer}});
 			blockEventListener.eventHub = eventHubStub;
 			eventHubStub.registerBlockEvent.returns({});
 			await blockEventListener.register();
