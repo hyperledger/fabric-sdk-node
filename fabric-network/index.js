@@ -20,11 +20,11 @@
  * <h3>Getting started</h3>
  *
  * <p>The entry point used to interact with a Hyperledger Fabric blockchain network is the
- * [Gateway]{@link module:fabric-network.Gateway} class. This provides a connection to a peer within the blockchain
- * network, and enables access to any of the blockchain [Network]{@link module:fabric-network.Network}s (channels) for
- * which that peer is a member. This in turn provides access to Smart [Contract]{@link module:fabric-network.Contract}s
- * (chaincode) running within that blockchain network, and to which
- * [Transaction]{@link module:fabric-network.Transaction}s can be
+ * [Gateway]{@link module:fabric-network.Gateway} class. Once instantiated, this long-living object provides a
+ * reusable connection to a peer within the blockchain network, and enables access to any of the blockchain
+ * [Network]{@link module:fabric-network.Network}s (channels) for which that peer is a member. This in turn
+ * provides access to Smart [Contract]{@link module:fabric-network.Contract}s (chaincode) running within that
+ * blockchain network, and to which [Transaction]{@link module:fabric-network.Transaction}s can be
  * [submit]{@link module:fabric-network.Transaction#submit}ted or queries can be
  * [evaluate]{@link module:fabric-network.Transaction#evaluate}d.</p>
  *
@@ -43,8 +43,15 @@
  * const network = await gateway.getNetwork(channelName);
  * const contract = network.getContract(chaincodeId);
  *
- * // Submit transactions or evaluate queries for the smart contract
- * const result = await contract.createTransaction(transactionName)
+ * // Submit transactions for the smart contract
+ * const args = [arg1, arg2];
+ * const submitResult = await contract.submitTransaction("transactionName", ...args);
+ *
+ * // Evaluate queries for the smart contract
+ * const evalResult = await contract.evaluateTransaction("transactionName", ...args);
+ *
+ * // Create and submit transactions for the smart contract with transient data
+ * const transientResult = await contract.createTransaction(transactionName)
  *     .setTransient(privateData)
  *     .submit(arg1, arg2);
  *
