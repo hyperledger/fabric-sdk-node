@@ -270,7 +270,7 @@ async function createContractListener(gatewayName, channelName, ccName, eventNam
 			testUtil.logMsg('Contract event error', err);
 			return err;
 		}
-		testUtil.logMsg('Received a contract event', listenerName);
+		testUtil.logMsg(`Received a contract event [${listenerName}]`);
 		if (!filtered) {
 			const [event] = args;
 			expect(event.payload.toString('utf8')).to.equal('content');
@@ -285,7 +285,7 @@ async function createContractListener(gatewayName, channelName, ccName, eventNam
 	listeners.set(listenerName, listenerInfo);
 }
 
-async function createBlockListener(gatewayName, channelName, ccName, listenerName, filtered) {
+async function createBlockListener(gatewayName, channelName, ccName, listenerName, filtered, replay, startBlock, endBlock) {
 	const gateway = gateways.get(gatewayName).gateway;
 	const contract = await retrieveContractFromGateway(gateway, channelName, ccName);
 	const network = contract.getNetwork();
@@ -307,10 +307,17 @@ async function createBlockListener(gatewayName, channelName, ccName, listenerNam
 			expect(block).to.have.property('data');
 			expect(block).to.have.property('metadata');
 		}
+		const blockNumber = filtered ? block.number : block.header.number;
+		if (startBlock) {
+			expect(Number(blockNumber)).to.be.greaterThan(Number(startBlock) - 1);
+		}
+		if (endBlock) {
+			expect(Number(blockNumber)).to.be.lessThan(Number(endBlock) + 1);
+		}
 		const listenerInfo = listeners.get(listenerName);
 		listenerInfo.payloads.push(block);
 		listenerInfo.calls = listenerInfo.payloads.length;
-	}, {filtered, replay: true});
+	}, {filtered, replay, startBlock, endBlock});
 	const listenerInfo = listeners.get(listenerName);
 	listenerInfo.listener = listener;
 	listeners.set(listenerName, listenerInfo);
@@ -353,7 +360,7 @@ async function createCommitListener(transactionName, listenerName) {
 		listenerInfo.payloads.push(args);
 		listenerInfo.calls = listenerInfo.payloads.length;
 	});
-	listeners.set(listenerName, {listener, payloads: []});
+	listeners.set(listenerName, {listener, payloads: [], calls: 0});
 }
 
 async function submitExistingTransaction(transactionName, args) {

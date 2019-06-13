@@ -39,14 +39,24 @@ class BlockEventListener extends AbstractEventListener {
 	async register() {
 		await super.register();
 		if (!this.eventHub) {
-			return this._registerWithNewEventHub();
+			if (!this._eventHubConnectTimeout) {
+				this._setEventHubConnectTimeout();
+			}
+			if (this._abandonEventHubConnect) {
+				this._unsetEventHubConnectTimeout();
+				return;
+			}
+			return await this._registerWithNewEventHub();
 		}
+		this._unsetEventHubConnectTimeout();
 		this._registration = this.eventHub.registerBlockEvent(
 			this._onEvent.bind(this),
 			this._onError.bind(this),
 			this.clientOptions
 		);
-		this.eventHub.connect(!this._filtered);
+		if (!this.eventHub.isconnected()) {
+			this.eventHub.connect(!this._filtered);
+		}
 		this._registered = true;
 	}
 
@@ -103,34 +113,13 @@ class BlockEventListener extends AbstractEventListener {
 		logger.debug('_onError:', util.format('received error from peer %s: %j', this.eventHub.getPeerAddr(), error));
 		if (error) {
 			if (this._isShutdownMessage(error) && this.isregistered()) {
+				this._firstRegistrationAttempt = true;
+				this._unsetEventHubConnectTimeout();
 				this.getEventHubManager().updateEventHubAvailability(this.eventHub._peer);
 				await this._registerWithNewEventHub();
 			}
 		}
 		this.eventCallback(error);
-	}
-
-	/**
-	 * Finds a new event hub for the listener in the event of one shutting down. Will
-	 * create a new instance if checkpointer is being used, or reuse one if not
-	 * @private
-	 */
-	async _registerWithNewEventHub() {
-		this.unregister();
-		if (this.options.fixedEventHub && !this.eventHub) {
-			throw new Error('No event hub given and option fixedEventHub is set');
-		}
-		const useCheckpointing = this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer;
-		if (useCheckpointing && !this.options.fixedEventHub) {
-			this.eventHub = this.getEventHubManager().getReplayEventHub();
-		} else if (useCheckpointing && this.options.fixedEventHub) {
-			this.eventHub = this.getEventHubManager().getReplayEventHub(this.eventHub._peer);
-		} else if (!useCheckpointing && this.options.fixedEventHub) {
-			this.eventHub = this.getEventHubManager().getEventHub(this.eventHub._peer);
-		} else {
-			this.eventHub = this.getEventHubManager().getEventHub();
-		}
-		await this.register();
 	}
 }
 

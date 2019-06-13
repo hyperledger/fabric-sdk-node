@@ -79,6 +79,7 @@ describe('Network', () => {
 		mockPeer5.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
 		peerArray = [mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5];
 		mockChannel.getPeers.returns(peerArray);
+		mockCheckpointer = sinon.createStubInstance(BaseCheckpointer);
 
 		stubQueryHandler = {};
 
@@ -350,6 +351,10 @@ describe('Network', () => {
 	});
 
 	describe('#getCheckpointer', () => {
+		beforeEach(() => {
+			network.checkpointer = mockCheckpointer;
+		});
+
 		it('should return the global checkpointer if it is undefined in options', () => {
 			const checkpointer = network.getCheckpointer();
 			checkpointer.should.equal(mockCheckpointer);
@@ -357,11 +362,11 @@ describe('Network', () => {
 
 		it('should return the global checkpointer if it is undefined in options object', () => {
 			const checkpointer = network.getCheckpointer({});
-			checkpointer.should.to.equal(mockCheckpointer);
+			checkpointer.should.equal(mockCheckpointer);
 		});
 
 		it('should return the global checkpointer if it is true in options', () => {
-			const checkpointer = network.getCheckpointer({checkpointer: true});
+			const checkpointer = network.getCheckpointer({checkpointer: 'something'});
 			checkpointer.should.equal(mockCheckpointer);
 		});
 
@@ -374,10 +379,9 @@ describe('Network', () => {
 
 		it('should return null if checkpointer is false', () => {
 			const checkpointer = network.getCheckpointer({checkpointer: false});
-			should(checkpointer).equal(undefined);
+			should().equal(checkpointer, null);
 		});
 	});
-
 
 	describe('#saveListener', () => {
 		it ('should register a new listener if the name isnt taken', () => {
@@ -393,7 +397,15 @@ describe('Network', () => {
 			(() => {
 				network.saveListener('listener1', listener);
 			}).should.throw('Listener already exists with the name listener1');
-			sinon.assert.called(listener.unregister);
+		});
+	});
+
+	describe('#_checkListenerNameIsUnique', () => {
+		it('should throw if the listener name has been used before', () => {
+			network.listeners.set('listenerName', {});
+			(() => {
+				network._checkListenerNameIsUnique('listenerName');
+			}).should.throw('Listener already exists with the name listenerName');
 		});
 	});
 });
