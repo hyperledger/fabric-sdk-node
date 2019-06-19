@@ -1,3 +1,28 @@
+## v1.4.2
+Wed 19 Jun 2019 14:15:03 BST
+
+* [670989a](https://github.com/hyperledger/fabric-sdk-node/commit/670989a) [FABN-1259](https://jira.hyperledger.org/browse/FABN-1259) fix timeout when debugging chaincode
+* [521290e](https://github.com/hyperledger/fabric-sdk-node/commit/521290e) [FABN-1220 NodeSDK fix fabric-ca-](https://jira.hyperledger.org/browse/FABN-1220 NodeSDK fix fabric-ca-)client version
+* [18865fa](https://github.com/hyperledger/fabric-sdk-node/commit/18865fa) [[FABN-1203] fabric-](https://jira.hyperledger.org/browse/FABN-1203] fabric-)network event listening doc changes
+* [fead20e](https://github.com/hyperledger/fabric-sdk-node/commit/fead20e) [FABN-1220 NodeSDK fabric-ca-](https://jira.hyperledger.org/browse/FABN-1220 NodeSDK fabric-ca-)client dependency
+* [412e4cb](https://github.com/hyperledger/fabric-sdk-node/commit/412e4cb) [FABN-1256](https://jira.hyperledger.org/browse/FABN-1256) NodeSDK reset as_local default
+* [b0ec92c](https://github.com/hyperledger/fabric-sdk-node/commit/b0ec92c) [FABN-1133](https://jira.hyperledger.org/browse/FABN-1133) NodeSDK switch to caname
+* [f9e2664](https://github.com/hyperledger/fabric-sdk-node/commit/f9e2664) [FABN-401](https://jira.hyperledger.org/browse/FABN-401) NodeSDK Add connect info to tutorial
+* [813338e](https://github.com/hyperledger/fabric-sdk-node/commit/813338e) [FABN-1210](https://jira.hyperledger.org/browse/FABN-1210) NodeSDK Chaincode events as array
+* [64b6e56](https://github.com/hyperledger/fabric-sdk-node/commit/64b6e56) [FABN-1239](https://jira.hyperledger.org/browse/FABN-1239): Better error on submitTransaction failure
+* [992099f](https://github.com/hyperledger/fabric-sdk-node/commit/992099f) [[FABN-1205](https://jira.hyperledger.org/browse/FABN-1205)] Chaincode event data fix
+* [302503e](https://github.com/hyperledger/fabric-sdk-node/commit/302503e) [[FABN-1235](https://jira.hyperledger.org/browse/FABN-1235)] Block event checkpointer fix
+* [3dfa259](https://github.com/hyperledger/fabric-sdk-node/commit/3dfa259) [[FABN-1232](https://jira.hyperledger.org/browse/FABN-1232)] missing gulp test
+* [a98a72d](https://github.com/hyperledger/fabric-sdk-node/commit/a98a72d) [FABN-1231](https://jira.hyperledger.org/browse/FABN-1231) NodeSDK add connect to event tutorial
+* [81ec3e9](https://github.com/hyperledger/fabric-sdk-node/commit/81ec3e9) [FABN-1226](https://jira.hyperledger.org/browse/FABN-1226): Better handling of query error responses
+* [4f62e20](https://github.com/hyperledger/fabric-sdk-node/commit/4f62e20) [[FABN-1225](https://jira.hyperledger.org/browse/FABN-1225)] Convert CDS path seps from Win to UNIX
+* [33a52b8](https://github.com/hyperledger/fabric-sdk-node/commit/33a52b8) [[FABN-1100](https://jira.hyperledger.org/browse/FABN-1100)] Fix for checkpoint factory
+* [1c3bbac](https://github.com/hyperledger/fabric-sdk-node/commit/1c3bbac) [[FABN-1216](https://jira.hyperledger.org/browse/FABN-1216)] package.json add node 10
+* [f65f22c](https://github.com/hyperledger/fabric-sdk-node/commit/f65f22c) [FABN-1207](https://jira.hyperledger.org/browse/FABN-1207) NodeSDK chaincode event defaults
+* [43846df](https://github.com/hyperledger/fabric-sdk-node/commit/43846df) [#[FABN-1206](https://jira.hyperledger.org/browse/FABN-1206)] Fixed inability to receive filtered events
+* [c74c0e7](https://github.com/hyperledger/fabric-sdk-node/commit/c74c0e7) [FAB-14977](https://jira.hyperledger.org/browse/FAB-14977) NodeSDK prepare for next release
+* [d34e374](https://github.com/hyperledger/fabric-sdk-node/commit/d34e374) [FABN-1201](https://jira.hyperledger.org/browse/FABN-1201) NodeSDK fix SO_TIMEOUT error
+
 ## v1.4.1
 Thu  4 Apr 2019 10:44:58 BST
 
