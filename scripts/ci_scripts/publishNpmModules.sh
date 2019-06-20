@@ -59,6 +59,10 @@ npmPublish() {
           sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
       fi
 
+	  if [ "$1" = "fabric-client" ]; then
+		  sed -i 's/\(.*\"fabric-ca-client\"\: \"\)\(.*\)/\1'$CURRENT_TAG\"\,'/' package.json
+	  fi
+
     npm publish --tag $CURRENT_TAG
     if [ $? != 0 ]; then
       echo -e "\033[31m FAILED TO PUBLISH $CURRENT_TAG of $1 npm module" "\033[0m"

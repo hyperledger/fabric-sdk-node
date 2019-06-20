@@ -6,7 +6,7 @@
     "blockchain"
   ],
   "version": "1.4.2",
-  "tag": "latest",
+  "tag": "skip",
   "main": "index.js",
   "repository": {
     "type": "gerrit",
