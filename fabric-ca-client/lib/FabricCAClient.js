@@ -144,11 +144,12 @@ const FabricCAClient = class {
 	 * @param {string} serial Serial number string, hex encoded, for the specific certificate to revoke
 	 * @param {string} reason The reason for revocation. See https://godoc.org/golang.org/x/crypto/ocsp
 	 *  for valid values
+	 * @param {bool} gencrl GenCRL specifies whether to generate a CRL
 	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
 	 * signing certificate, hash algorithm and signature algorithm
 	 * @returns {Promise} The revocation results
 	 */
-	revoke(enrollmentID, aki, serial, reason, signingIdentity) {
+	revoke(enrollmentID, aki, serial, reason, gencrl, signingIdentity) {
 
 		const self = this;
 
@@ -164,7 +165,8 @@ const FabricCAClient = class {
 				'id': enrollmentID,
 				'aki': aki,
 				'serial': serial,
-				'reason': reason
+				'reason': reason,
+				'gencrl': gencrl,
 			};
 
 			return self.post('revoke', regRequest, signingIdentity)

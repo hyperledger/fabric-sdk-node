@@ -334,6 +334,7 @@ const FabricCAServices = class extends BaseClient {
 	 * <br> - aki {string}. Authority Key Identifier string, hex encoded, for the specific certificate to revoke
 	 * <br> - serial {string}. Serial number string, hex encoded, for the specific certificate to revoke
 	 * <br> - reason {string}. The reason for revocation. See https://godoc.org/golang.org/x/crypto/ocsp
+	 * <br> - gencrl {bool}. GenCRL specifies whether to generate a CRL
 	 *  for valid values. The default value is 0 (ocsp.Unspecified).
 	 * @param {User} registrar The identity of the registrar (i.e. who is performing the revocation)
 	 * @returns {Promise} The revocation results
@@ -356,6 +357,7 @@ const FabricCAServices = class extends BaseClient {
 			request.aki,
 			request.serial,
 			(request.reason) ? request.reason : null,
+			(request.gencrl) ? request.gencrl : false,
 			registrar.getSigningIdentity());
 	}
 

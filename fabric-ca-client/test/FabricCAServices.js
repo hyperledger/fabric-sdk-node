@@ -641,7 +641,8 @@ describe('FabricCAServices', () => {
 			callArgs.args[1].should.equal('aki');
 			callArgs.args[2].should.equal('serial');
 			callArgs.args[3].should.equal('de-friended');
-			callArgs.args[4].should.equal('myID');
+			callArgs.args[4].should.equal(false);
+			callArgs.args[5].should.equal('myID');
 		});
 
 		it('should call the revoke function on the FabricCAClient object with conditional reasoning', () => {
@@ -661,7 +662,7 @@ describe('FabricCAServices', () => {
 			callArgs.args[1].should.equal('aki');
 			callArgs.args[2].should.equal('serial');
 			should.not.exist(callArgs.args[3]);
-			callArgs.args[4].should.equal('myID');
+			callArgs.args[5].should.equal('myID');
 		});
 	});
 
