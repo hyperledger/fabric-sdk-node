@@ -127,7 +127,6 @@ class ContractEventListener extends AbstractEventListener {
 	}
 
 	async _onEvents(events) {
-		console.log('_onEvents');
 		logger.debug(`[${this.listenerName}]: Received contract events as array`);
 		if (!this.options.asArray) {
 			logger.debug(`[${this.listenerName}]: Splitting events`);

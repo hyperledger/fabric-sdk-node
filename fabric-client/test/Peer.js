@@ -105,7 +105,7 @@ describe('Peer', () => {
 				})
 				.catch(() => {
 					sinon.assert.called(debugStub);
-					debugStub.getCall(1).args.should.deep.equal(['%s - Start ----%s %s', 'sendProposal', 'host:2700', 'grpc://host:2700']);
+					debugStub.getCall(1).args.should.deep.equal(['_createClients - create peer endorser connection host:2700']);
 				});
 		});
 
@@ -367,7 +367,7 @@ describe('Peer', () => {
 			sandbox.restore();
 		});
 
-		it('should log on entry', async () => {
+		it('should log on entry', () => {
 			const FakeLogger = {
 				debug : () => {},
 				error: () => {}
@@ -386,7 +386,7 @@ describe('Peer', () => {
 				})
 				.catch(() => {
 					sinon.assert.called(debugStub);
-					debugStub.getCall(1).args.should.deep.equal(['%s - Start', 'sendDiscovery']);
+					debugStub.getCall(1).args.should.deep.equal(['_createClients - create peer endorser connection host:2700']);
 				});
 		});
 

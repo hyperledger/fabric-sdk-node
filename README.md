@@ -34,7 +34,9 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
 * Install [‘Docker for Mac’](https://docs.docker.com/docker-for-mac/install) or [`Docker for Windows`](https://docs.docker.com/docker-for-windows/install), or [`Docker on linux`](https://docs.docker.com/engine/installation/linux/ubuntu/#install-docker)
 * Only for Mac, you need to install a gnu-compatible version of the `tar` utility:
   * Install Brew: http://brew.sh
-  * run `brew install gnu-tar —-with-default-names` in order to swap out Mac's default tar command for a gnu-compliant one needed by chaincode execution on the peers
+  * run `brew install gnu-tar`.
+  * After installing, run `export PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH"` in order to swap out Mac's default tar command for a gnu-compliant one needed by chaincode execution on the peers
+  * optionally, you can add the environment PATH variable as above to your .bashrc or .bash_profile.
 
 * build fabric-ca docker image (new membership service)
   * cd `$GOPATH/src/github.com/hyperledger/fabric-ca`
