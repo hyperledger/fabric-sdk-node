@@ -6,7 +6,7 @@
     "blockchain"
   ],
   "version": "1.4.3",
-  "tag": "latest",
+  "tag": "skip",
   "main": "index.js",
   "scripts": {
     "test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
