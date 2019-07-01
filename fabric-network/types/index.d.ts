@@ -33,6 +33,11 @@ export interface EventListenerOptions {
 	replay?: boolean;
 	filtered?: boolean;
 	unregister?: boolean;
+	startBlock?: number;
+	endBlock?: number;
+	asArray?: boolean;
+	eventHubConnectWait?: number;
+	eventHubConnectTimeout?: number;
 }
 
 export interface DiscoveryOptions {
@@ -96,8 +101,8 @@ export class Gateway {
 export interface Network {
 	getChannel(): Channel;
 	getContract(chaincodeId: string, name?: string): Contract;
-	addBlockListener(listenerName: string, callback: (error: Error, block?: Client.Block) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
-	addCommitListener(transactionId: string, callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
+	addBlockListener(listenerName: string, callback: (error: Error, block?: Client.Block | Client.FilteredBlock) => Promise<void> | void, options?: EventListenerOptions): Promise<BlockEventListener>;
+	addCommitListener(transactionId: string, callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<void> | void, options?: EventListenerOptions): Promise<CommitEventListener>;
 	unregisterAllEventListeners(): void;
 }
 
@@ -105,7 +110,7 @@ export interface Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event?: {[key: string]: any}, blockNumber?: string, transactionId?: string, status?: string) => Promise<any>, options?: object): Promise<ContractEventListener>;
+	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event?: Client.ChaincodeEvent | Client.ChaincodeEvent[], blockNumber ?: string, transactionId ?: string, status ?: string) => Promise <void> | void , options ?: EventListenerOptions): Promise<ContractEventListener>;
 }
 
 export interface TransientMap {
@@ -118,7 +123,7 @@ export interface Transaction {
 	getNetwork(): Network;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
-	addCommitListener(callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: object, eventHub?: Client.ChannelEventHub): Promise<CommitEventListener>;
+	addCommitListener(callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<void> | void, options?: object, eventHub?: Client.ChannelEventHub): Promise<CommitEventListener>;
 }
 
 export interface FabricError extends Error {
@@ -199,7 +204,7 @@ export interface Checkpoint {
 
 export class BaseCheckpointer {
 	public setChaincodeId(chaincodeId: string): void;
-	public loadStartingCheckpoint(): Promise<Checkpoint>;
+	public loadLatestCheckpoint(): Promise<Checkpoint>;
 }
 
 export class FileSystemCheckpointer extends BaseCheckpointer {

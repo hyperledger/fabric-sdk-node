@@ -64,23 +64,23 @@ module.exports = function () {
 	});
 
 	// Events
-	this.Then(/^I use the gateway named (.+?) to listen for filtered ([^\s.]+?) events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, eventName, listenerName, ccName, channelName) => {
-		return await network_util.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, false, true);
+	this.Then(/^I use the gateway named (.+?) to listen for (filtered|unfiltered) ([^\s.]+?) events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, eventType, eventName, listenerName, ccName, channelName) => {
+		return await network_util.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, true, eventType === 'unfiltered');
 	});
 
-	this.Then(/^I use the gateway named (.+?) to listen for unfiltered (.+?) events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, eventName, listenerName, ccName, channelName) => {
-		return await network_util.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, false, false);
+	this.Then(/^I use the gateway named (.+?) to listen for filtered_block_events with listener ([a-zA-Z]+) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, listenerName, ccName, channelName) => {
+		return await network_util.createBlockListener(gatewayName, channelName, ccName, listenerName, true, true);
 	});
 
-	this.Then(/^I use the gateway named (.+?) to listen for filtered_block_events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, listenerName, ccName, channelName) => {
-		return await network_util.createBlockListener(gatewayName, channelName, ccName, listenerName, true);
+	this.Then(/^I use the gateway named (.+?) to listen for unfiltered_block_events with listener ([a-zA-Z]+) between ([0-9]+) and ([0-9]+) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, listenerName, startBlock, endBlock, ccName, channelName) => {
+		await network_util.createBlockListener(gatewayName, channelName, ccName, listenerName, false, false, startBlock, endBlock);
 	});
 
-	this.Then(/^I use the gateway named (.+?) to listen for unfiltered_block_events with listener (.+?) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, listenerName, ccName, channelName) => {
+	this.Then(/^I use the gateway named (.+?) to listen for unfiltered_block_events with listener ([a-zA-Z]+) on chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, listenerName, ccName, channelName) => {
 		return await network_util.createBlockListener(gatewayName, channelName, ccName, listenerName, false);
 	});
 
-	this.Then(/^I receive ([0-9]+) events from the listener (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (calls, listenerName) => {
+	this.Then(/^I receive ([0-9]+) events from the listener (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (calls, listenerName) => {
 		await new Promise(resolve => {
 			const interval = setInterval(() => {
 				const listenerInfo = network_util.getListenerInfo(listenerName);
@@ -89,7 +89,7 @@ module.exports = function () {
 					clearTimeout(timeout);
 					resolve();
 				}
-			}, 1000);
+			}, 100);
 			const timeout = setTimeout(() => {
 				resolve();
 				clearInterval(interval);

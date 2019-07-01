@@ -32,6 +32,11 @@ class AbstractEventListener {
 		if (!options) {
 			options = {};
 		}
+		options = Object.assign({
+			eventHubConnectWait: 1000,
+			eventHubConnectTimeout: 30000
+		}, options);
+
 		this.channel = network.getChannel();
 		this.network = network;
 		this.listenerName = listenerName;
@@ -39,11 +44,23 @@ class AbstractEventListener {
 		this.options = options;
 		this.clientOptions = {}; // fabric-client ChannelEventHub options
 
+		if (this.options.startBlock !== undefined && this.options.startBlock !== null) {
+			this.clientOptions.startBlock = Number(this.options.startBlock);
+			delete this.options.startBlock;
+		}
+
+		if (this.options.endBlock !== undefined && this.options.endBlock !== null) {
+			this.clientOptions.endBlock = Number(this.options.endBlock);
+			delete this.options.endBlock;
+		}
+
 		this._registered = false;
 		this._firstCheckpoint = {};
 		this._registration = null;
 		this._filtered = typeof options.filtered === 'boolean' ? options.filtered : false;
 		this._usingCheckpointer = false;
+		this._firstRegistrationAttempt = true;
+		this._abandonEventHubConnect = false;
 	}
 
 	/**
@@ -63,6 +80,10 @@ class AbstractEventListener {
 
 		if (this._registered) {
 			throw new Error('Listener already registered');
+		}
+
+		if (!this.network.listeners.has(this.listenerName)) {
+			this.network.saveListener(this.listenerName, this);
 		}
 		if (this.eventHub && this.eventHub.isconnected()) {
 			if (this.eventHub.isFiltered() !== this._filtered) {
@@ -87,11 +108,16 @@ class AbstractEventListener {
 			if (!this.getCheckpointer()) {
 				logger.error('Opted to use checkpointing without defining a checkpointer');
 			}
+			if ((this.clientOptions.startBlock !== null) && (this.clientOptions.startBlock !== undefined) ||
+			(this.clientOptions.endBlock !== null) && (this.clientOptions.endBlock !== undefined)) {
+				logger.debug('startBlock and/or endBlock were given. Disabling event replay');
+				this.options.replay = false;
+			}
 		}
 
 		let checkpoint;
 		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
-			this._firstCheckpoint = checkpoint = await this.checkpointer.loadStartingCheckpoint();
+			this._firstCheckpoint = checkpoint = await this.checkpointer.loadLatestCheckpoint();
 			const blockchainInfo = await this.channel.queryInfo();
 			if (checkpoint && checkpoint.hasOwnProperty('blockNumber') && !isNaN(checkpoint.blockNumber) && blockchainInfo.height - 1 > Number(checkpoint.blockNumber)) {
 				logger.debug(`Requested Block Number: ${Number(checkpoint.blockNumber) + 1} Latest Block Number: ${blockchainInfo.height - 1}`);
@@ -104,14 +130,16 @@ class AbstractEventListener {
 	}
 
 	/**
-	 * Called by the super classes unregister function. Removes state from the listener so it
-	 * can be reregistered at a later time
+	 * Called by the super classes unregister function.
 	 */
 	unregister() {
 		logger.debug(`Unregister event listener: ${this.listenerName}`);
 		this._registered = false;
+		this._abandonEventHubConnect = true;
 		this._firstCheckpoint = {};
-		this.clientOptions = {};
+		if (this.network.listeners.has(this.listenerName)) {
+			this.network.listeners.delete(this.listenerName);
+		}
 	}
 
 	/**
@@ -163,6 +191,71 @@ class AbstractEventListener {
 			return error instanceof EventHubDisconnectError;
 		}
 		return false;
+	}
+
+	async _setEventHubConnectWait() {
+		logger.debug(`[${this.listenerName}]: The event hub connect failed. Waiting ${this.options.eventHubConnectWait}ms then trying again`);
+		await new Promise(resolve => setTimeout(resolve, this.options.eventHubConnectWait));
+	}
+
+	_setEventHubConnectTimeout() {
+		this._abandonEventHubConnect = false;
+		this._eventHubConnectTimeout = setTimeout(() => {
+			logger.error(`[${this.listenerName}]: The event hub failed to connect after ${this.options.eventHubConnectTimeout}ms`);
+		}, this.options.eventHubConnectTimeout);
+	}
+
+	_unsetEventHubConnectTimeout() {
+		clearTimeout(this._eventHubConnectTimeout);
+		this._eventHubConnectTimeout = null;
+	}
+
+	/**
+	 *
+	 * Finds a new event hub for the listener in the event of one shutting down. Will
+	 * create a new instance if checkpointer is being used, or reuse one if not
+	 * @private
+	 */
+	async _registerWithNewEventHub() {
+		this.unregister();
+		if (this.options.fixedEventHub && !this.eventHub) {
+			throw new Error('No event hub given and option fixedEventHub is set');
+		}
+		if (!this._firstRegistrationAttempt) {
+			await this._setEventHubConnectWait();
+		}
+
+		const useCheckpointing = this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer ||
+									(this.clientOptions.startBlock || this.clientOptions.endBlock);
+
+		if (useCheckpointing && !this.options.fixedEventHub) {
+			this.eventHub = this.getEventHubManager().getReplayEventHub();
+		} else if (useCheckpointing && this.options.fixedEventHub) {
+			this.eventHub = this.getEventHubManager().getReplayEventHub(this.eventHub._peer);
+		} else if (!useCheckpointing && this.options.fixedEventHub) {
+			this.eventHub = this.getEventHubManager().getEventHub(this.eventHub._peer);
+		} else {
+			this.eventHub = this.getEventHubManager().getEventHub();
+		}
+		this._firstRegistrationAttempt = false;
+		await this.register();
+	}
+
+	async connectEventHub() {
+		return new Promise((resolve, reject) => {
+			const connectTimeout = setTimeout(() => {
+				if (!this.eventHub.isconnected()) {
+					logger.error('Failed to connect to event hub');
+					this.eventHub = null;
+					reject();
+				}
+				resolve();
+			}, this.options.eventHubConnectTimeout);
+			this.eventHub.connect(!this._filtered, () => {
+				clearTimeout(connectTimeout);
+				resolve();
+			});
+		});
 	}
 }
 

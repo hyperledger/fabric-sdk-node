@@ -39,10 +39,10 @@ describe('BaseCheckpointer', () => {
 		});
 	});
 
-	describe('#loadStartingCheckpoint', () => {
+	describe('#loadLatestCheckpoint', () => {
 		it('should throw an exception', () => {
 			const checkpointer = new BaseCheckpointer();
-			expect(checkpointer.loadStartingCheckpoint()).to.be.rejectedWith('Method has not been implemented');
+			expect(checkpointer.loadLatestCheckpoint()).to.be.rejectedWith('Method has not been implemented');
 		});
 	});
 

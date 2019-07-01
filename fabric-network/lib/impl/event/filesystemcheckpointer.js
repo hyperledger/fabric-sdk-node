@@ -14,21 +14,22 @@ const BaseCheckpointer = require('./basecheckpointer');
 /**
  * @typedef FileSystemCheckpointer~FileSystemCheckpointerOptions
  * @memberof module:fabric-network
- * @property {string} basePath The directory that will store the checkpoint
+ * @property {string} [basePath] The directory that will store the checkpoint
+ * @property {number} [maxLength] The maximum number of blocks that can be in the checkpointer
  */
 
 /**
  * Created a checkpointer in a file per event listener
  * @memberof module:fabric-network
- * @extends module:fabric-network.BaseCheckpointer
+ * @extends module:fabric-network~BaseCheckpointer
  * @class
  */
 class FileSystemCheckpointer extends BaseCheckpointer {
 	/**
 	 *
 	 * @param {string} channelName
-	 * @param {string} listenerName The name of the listener being checkpointed
-	 * @param {module:fabric-network.FileSystemCheckpointer~FileSystemCheckpointerOptions} options
+	 * @param {string} listenerName The name of the listener being checkpointer
+	 * @param {module:fabric-network.FileSystemCheckpointer~FileSystemCheckpointerOptions} [options]
 	 */
 	constructor(channelName, listenerName, options = {}) {
 		super(options);
@@ -84,6 +85,7 @@ class FileSystemCheckpointer extends BaseCheckpointer {
 		}
 		if (hasExpectedTotal) {
 			fullCheckpoint[blockNumber] = checkpoint;
+			fullCheckpoint = this._prune(fullCheckpoint);
 			await fs.writeFile(checkpointPath, JSON.stringify(fullCheckpoint));
 		} else {
 			await fs.writeFile(checkpointPath, JSON.stringify(checkpoint));
@@ -111,7 +113,7 @@ class FileSystemCheckpointer extends BaseCheckpointer {
 	/**
 	 * @inheritdoc
 	 */
-	async loadStartingCheckpoint() {
+	async loadLatestCheckpoint() {
 		const checkpoint = await this.load();
 		const orderedBlockNumbers = Object.keys(checkpoint).sort();
 		if (checkpoint.hasOwnProperty('blockNumber') || orderedBlockNumbers.length === 0) {
@@ -136,6 +138,24 @@ class FileSystemCheckpointer extends BaseCheckpointer {
 			filePath = path.join(filePath, this._chaincodeId);
 		}
 		return path.join(filePath, this._listenerName);
+	}
+
+	_prune(checkpoint) {
+		if (!checkpoint.hasOwnProperty('blockNumber')) {
+			checkpoint = Object.values(checkpoint).sort((a, b) => {
+				return b.blockNumber - a.blockNumber;
+			});
+
+			if (checkpoint.length > this.options.maxLength) {
+				checkpoint = checkpoint.slice(0, this.options.maxLength);
+			}
+			const rebuiltCheckpoint = {};
+			for (const cp of checkpoint) {
+				rebuiltCheckpoint[cp.blockNumber] = cp;
+			}
+			return rebuiltCheckpoint;
+		}
+		return checkpoint;
 	}
 }
 

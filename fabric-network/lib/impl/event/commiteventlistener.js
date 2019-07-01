@@ -34,8 +34,7 @@ class CommitEventListener extends AbstractEventListener {
 	async register() {
 		await super.register();
 		if (!this.eventHub) {
-			logger.debug('No event hub. Retrieving new one.');
-			return await this._registerWithNewEventHub();
+			return await this._registerWithNewCommitEventHub();
 		}
 		if (this._isAlreadyRegistered(this.eventHub)) { // Prevents a transaction being registered twice with the same event hub
 			logger.debug('Event hub already has registrations. Generating new event hub instance.');
@@ -45,14 +44,17 @@ class CommitEventListener extends AbstractEventListener {
 				this.eventHub = this.getEventHubManager().getFixedEventHub(this.eventHub._peer);
 			}
 		}
-		const txid = this.eventHub.registerTxEvent(
+		this._unsetEventHubConnectTimeout();
+		const txId = this.eventHub.registerTxEvent(
 			this.transactionId,
 			this._onEvent.bind(this),
 			this._onError.bind(this),
 			Object.assign({unregister: true}, this.clientOptions)
 		);
-		this._registration = this.eventHub._transactionRegistrations[txid];
-		this.eventHub.connect(!this._filtered);
+		this._registration = this.eventHub._transactionRegistrations[txId];
+		if (!this.eventHub.isconnected()) {
+			this.eventHub.connect(!this._filtered);
+		}
 		this._registered = true;
 	}
 
@@ -60,6 +62,7 @@ class CommitEventListener extends AbstractEventListener {
 		super.unregister();
 		if (this.eventHub) {
 			this.eventHub.unregisterTxEvent(this.transactionId);
+			this.network.listeners.delete(this.listenerName);
 		}
 	}
 
@@ -83,7 +86,7 @@ class CommitEventListener extends AbstractEventListener {
 	}
 
 
-	async _registerWithNewEventHub() {
+	async _registerWithNewCommitEventHub() {
 		if (this.isregistered()) {
 			this.unregister();
 		}

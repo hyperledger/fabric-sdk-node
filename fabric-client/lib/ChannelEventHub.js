@@ -1486,7 +1486,7 @@ class ChannelEventHub {
 		}
 		if (trans_reg.disconnect) {
 			logger.debug('_callTransactionListener - automatically disconnect');
-			this._disconnect(new EventHubDisconnectError('Shutdown due to disconnect on transaction id registration'));
+			this._disconnect(new Error('Shutdown due to disconnect on transaction id registration'));
 		}
 	}
 

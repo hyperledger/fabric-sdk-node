@@ -21,7 +21,7 @@ module.exports = function () {
 	});
 
 	this.Given(/^I have forcibly taken down all docker containers/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async () => {
-		await testUtil.runShellCommand(undefined, 'rm -r ~/.hlf-checkpoint');
+		await testUtil.runShellCommand(undefined, 'rm -rf ~/.hlf-checkpoint');
 		await testUtil.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
 		return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
 	});

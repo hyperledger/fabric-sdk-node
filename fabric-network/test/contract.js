@@ -40,10 +40,10 @@ describe('Contract', () => {
 
 	beforeEach(() => {
 		mockEventHub = sinon.createStubInstance(ChannelEventHub);
-		mockEventHub.connect = (filtered) => {
+		mockEventHub.connect.yields((filtered) => {
 			mockEventHub.isconnected.returns(true);
 			return mockEventHub._filtered_stream = filtered;
-		};
+		});
 		mockChannel = sinon.createStubInstance(Channel);
 		mockClient = sinon.createStubInstance(Client);
 
