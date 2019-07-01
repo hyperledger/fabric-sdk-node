@@ -216,6 +216,10 @@ class Remote {
 		characteristics.url = this._url;
 		characteristics.name = this._name;
 		characteristics.options = this._options;
+		// remove a private key
+		if (characteristics.options.clientKey) {
+			delete characteristics.options.clientKey;
+		}
 
 		return characteristics;
 	}
