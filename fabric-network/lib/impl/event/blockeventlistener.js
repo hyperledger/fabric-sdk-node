@@ -54,7 +54,9 @@ class BlockEventListener extends AbstractEventListener {
 			this._onError.bind(this),
 			this.clientOptions
 		);
-		this.eventHub.connect(!this._filtered);
+		if (!this.eventHub.isconnected()) {
+			this.eventHub.connect(!this._filtered);
+		}
 		this._registered = true;
 	}
 
@@ -111,6 +113,8 @@ class BlockEventListener extends AbstractEventListener {
 		logger.debug('_onError:', util.format('received error from peer %s: %j', this.eventHub.getPeerAddr(), error));
 		if (error) {
 			if (this._isShutdownMessage(error) && this.isregistered()) {
+				this._firstRegistrationAttempt = true;
+				this._unsetEventHubConnectTimeout();
 				this.getEventHubManager().updateEventHubAvailability(this.eventHub._peer);
 				await this._registerWithNewEventHub();
 			}

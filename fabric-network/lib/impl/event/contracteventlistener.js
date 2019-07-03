@@ -59,6 +59,9 @@ class ContractEventListener extends AbstractEventListener {
 			return await this._registerWithNewEventHub();
 		}
 		this._unsetEventHubConnectTimeout();
+		if (!this._usingCheckpointer && !this.eventHub.isconnected()) {
+			await this.connectEventHub();
+		}
 		this._registration = this.eventHub.registerChaincodeEvent(
 			this.contract.getChaincodeId(),
 			this.eventName,
@@ -68,7 +71,9 @@ class ContractEventListener extends AbstractEventListener {
 		);
 
 		this._registered = true;
-		this.eventHub.connect(!this._filtered);
+		if (this._usingCheckpointer && !this.eventHub.isconnected()) {
+			await this.connectEventHub();
+		}
 	}
 
 	/**
@@ -122,6 +127,7 @@ class ContractEventListener extends AbstractEventListener {
 	}
 
 	async _onEvents(events) {
+		console.log('_onEvents');
 		logger.debug(`[${this.listenerName}]: Received contract events as array`);
 		if (!this.options.asArray) {
 			logger.debug(`[${this.listenerName}]: Splitting events`);
@@ -145,8 +151,9 @@ class ContractEventListener extends AbstractEventListener {
 		logger.debug('_onError:', util.format('received error from peer %s: %j', this.eventHub.getPeerAddr(), error));
 		if (error) {
 			if (this._isShutdownMessage(error) && this.isregistered()) {
+				this._firstRegistrationAttempt = true;
 				this.getEventHubManager().updateEventHubAvailability(this.eventHub._peer);
-				await this._registerWithNewEventHub();
+				await this._registerWithNewEventHub(true);
 			}
 		}
 		await this.eventCallback(error);

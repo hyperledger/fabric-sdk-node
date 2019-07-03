@@ -238,6 +238,23 @@ class AbstractEventListener {
 		this._firstRegistrationAttempt = false;
 		await this.register();
 	}
+
+	async connectEventHub() {
+		return new Promise((resolve, reject) => {
+			const connectTimeout = setTimeout(() => {
+				if (!this.eventHub.isconnected()) {
+					logger.error('Failed to connect to event hub');
+					this.eventHub = null;
+					reject();
+				}
+				resolve();
+			}, this.options.eventHubConnectTimeout);
+			this.eventHub.connect(!this._filtered, () => {
+				clearTimeout(connectTimeout);
+				resolve();
+			});
+		});
+	}
 }
 
 module.exports = AbstractEventListener;

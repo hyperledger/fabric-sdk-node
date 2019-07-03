@@ -41,6 +41,10 @@ describe('ContractEventListener', () => {
 		eventHubManagerStub = sinon.createStubInstance(EventHubManager);
 		sandbox.stub(network, 'getEventHubManager').returns(eventHubManagerStub);
 		eventHubStub = sandbox.createStubInstance(ChannelEventHub);
+		eventHubStub.connect.yields((filtered) => {
+			eventHubStub.isconnected.returns(true);
+			return eventHubStub._filtered_stream = filtered;
+		});
 		eventHubManagerStub.getPeers.returns(['peer1']);
 		eventHubManagerStub.getEventHub.returns(eventHubStub);
 		eventHubManagerStub.getReplayEventHub.returns(eventHubStub);

@@ -117,7 +117,7 @@ module.exports = function () {
 					clearTimeout(timeout);
 					resolve();
 				}
-			}, 1000);
+			}, 100);
 			timeout = setTimeout(() => {
 				resolve();
 				clearInterval(interval);

@@ -382,6 +382,19 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		metadata: { metadata: any };
 	}
 
+	export interface FilteredBlock {
+		channel_id: string;
+		number: string;
+		filtered_transactions: FilteredTransaction[];
+	}
+
+	export interface FilteredTransaction {
+		Data: string;
+		txid: string;
+		type: string;
+		transaction_actions: any[];
+	}
+
 	export interface ProposalResponse {
 		version: number;
 		timestamp: Date;
@@ -429,7 +442,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public checkConnection(forceReconnect: boolean): string;
 		public registerChaincodeEvent(ccid: string, eventname: string, onEvent: (event: ChaincodeEvent, blockNumber?: number, txId?: string, txStatus?: string) => void, onError?: (err: Error) => void, options?: RegistrationOpts): ChaincodeChannelEventHandle;
 		public unregisterChaincodeEvent(handle: ChaincodeChannelEventHandle, throwError?: boolean): void;
-		public registerBlockEvent(onEvent: (block: Block) => void, onError?: (err: Error) => void, options?: RegistrationOpts): number;
+		public registerBlockEvent(onEvent: (block: Block | FilteredBlock) => void, onError?: (err: Error) => void, options?: RegistrationOpts): number;
 		public unregisterBlockEvent(blockRegistrationNumber: number, throwError: boolean): void;
 		public registerTxEvent(txId: string, onEvent: (txId: string, code: string, blockNumber: number) => void, onError?: (err: Error) => void, options?: RegistrationOpts): string;
 		public unregisterTxEvent(txId: string, throwError?: boolean): void;

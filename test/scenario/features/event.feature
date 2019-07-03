@@ -36,8 +36,7 @@ Feature: Listen to events using a fabric-network
 	Scenario: Using a Contract I can listen to contract events emmited by instantiated chaincodes
 		When I use the gateway named test_gateway to listen for unfiltered create events with listener unfilteredListener on chaincode events01 instantiated on channel mychannel
 		When I use the gateway named test_gateway to submit 5 transactions with args [createValue] for chaincode events01 instantiated on channel mychannel
-		# Waiting for 6 events as ChannelEventHub returns the last block connected
-		Then I receive 6 events from the listener unfilteredListener
+		Then I receive 5 events from the listener unfilteredListener
 
 	Scenario: Using a Contract I can listen to block events emitted by networks between a start and end block
 		When I use the gateway named test_gateway to listen for unfiltered_block_events with listener unFilteredBlockListener between 0 and 5 on chaincode events01 instantiated on channel mychannel

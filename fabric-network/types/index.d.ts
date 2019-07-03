@@ -101,7 +101,7 @@ export class Gateway {
 export interface Network {
 	getChannel(): Channel;
 	getContract(chaincodeId: string, name?: string): Contract;
-	addBlockListener(listenerName: string, callback: (error: Error, block?: Client.Block) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
+	addBlockListener(listenerName: string, callback: (error: Error, block?: Client.Block | Client.FilteredBlock) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
 	addCommitListener(transactionId: string, callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
 	unregisterAllEventListeners(): void;
 }

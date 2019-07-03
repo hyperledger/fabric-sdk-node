@@ -52,7 +52,9 @@ class CommitEventListener extends AbstractEventListener {
 			Object.assign({unregister: true}, this.clientOptions)
 		);
 		this._registration = this.eventHub._transactionRegistrations[txId];
-		this.eventHub.connect(!this._filtered);
+		if (!this.eventHub.isconnected()) {
+			this.eventHub.connect(!this._filtered);
+		}
 		this._registered = true;
 	}
 
