@@ -27,7 +27,7 @@
     "elliptic": "^6.2.3",
     "fabric-ca-client": "file:../fabric-ca-client",
     "fs-extra": "^6.0.1",
-    "grpc": "1.17.0",
+    "grpc": "1.21.1",
     "hoek": "^4.2.1",
     "ignore-walk": "^3.0.0",
     "js-sha3": "^0.7.0",
