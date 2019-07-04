@@ -740,7 +740,7 @@ test('use the connection profile file', async (t: any) => {
 });
 
 //-------------------
-test('test the new lifecycle APIs', async (t: any) => {
+test.skip('test the new lifecycle APIs', async (t: any) => {
 	const client1 = await getClientForOrg(configNetwork, configOrg1);
 	const client2 = await getClientForOrg(configNetwork, configOrg2);
 	const channel1 = client1.newChannel('tokenchannel');
