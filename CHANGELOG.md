@@ -1,3 +1,12 @@
+## v1.4.4
+Fri  5 Jul 2019 13:52:44 BST
+
+* [f7dd021](https://github.com/hyperledger/fabric-sdk-node/commit/f7dd021) [FABN-1303](https://jira.hyperledger.org/browse/FABN-1303) Update to version 1.21.1 of grpc
+* [b861782](https://github.com/hyperledger/fabric-sdk-node/commit/b861782) [FABN-1288](https://jira.hyperledger.org/browse/FABN-1288) NodeSDK remove clientKey from log
+* [5cda959](https://github.com/hyperledger/fabric-sdk-node/commit/5cda959) [[FABN-1251](https://jira.hyperledger.org/browse/FABN-1251)] Added start/end block functionality
+* [bb2d9ae](https://github.com/hyperledger/fabric-sdk-node/commit/bb2d9ae) [FABN-1284 1.4.3-](https://jira.hyperledger.org/browse/FABN-1284 1.4.3-)snapshot update
+* [e4f340b](https://github.com/hyperledger/fabric-sdk-node/commit/e4f340b) [FABN-1220 NodeSDK add fabric-ca-](https://jira.hyperledger.org/browse/FABN-1220 NodeSDK add fabric-ca-)client
+
 ## v1.4.2
 Wed 19 Jun 2019 14:15:03 BST
 
