@@ -34,7 +34,7 @@ export interface EventListenerOptions {
 	filtered?: boolean;
 	unregister?: boolean;
 	startBlock?: number;
-	endBlock?: number;
+	endBlock?: number | 'newest';
 	asArray?: boolean;
 	eventHubConnectWait?: number;
 	eventHubConnectTimeout?: number;
