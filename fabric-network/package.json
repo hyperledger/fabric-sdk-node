@@ -5,8 +5,8 @@
     "hyperledger",
     "blockchain"
   ],
-  "version": "1.4.4",
-  "tag": "latest",
+  "version": "1.4.5-snapshot",
+  "tag": "unstable-1.4",
   "main": "index.js",
   "repository": {
     "type": "gerrit",
