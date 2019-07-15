@@ -817,15 +817,15 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 
 				const attributes = this._pkcs11GenerateKey(this._pkcs11, this._pkcs11Session, !!opts.persist);
 				// generateKey will need to know the ski, so set in a map here for use later
-				this.keyToSki.set(key, attributes.ski);
 				const key = new aesKey(attributes, this._keySize);
+				this.keyToSki.set(key, attributes.ski);
 				return key;
 			}
 			case 'ECDSA': {
 				const attributes = this._pkcs11GenerateECKeyPair(this._pkcs11, this._pkcs11Session, !!opts.persist);
 				// generateKey will need to know the ski, so set in a map here for use later
-				this.keyToSki.set(key, attributes.ski);
 				const key = new ecdsaKey(attributes, this._keySize);
+				this.keyToSki.set(key, attributes.ski);
 				key._cryptoSuite = this;
 				return key;
 			}
