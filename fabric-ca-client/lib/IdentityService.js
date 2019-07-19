@@ -182,9 +182,11 @@ class IdentityService {
 	 * @param {string} enrollmentID
 	 * @param {User} registrar
 	 * @param {boolean} force - Optional. With force, some identity can delete itself
+	 * @param {string}	caname - Optional. The name of the CA to direct this request to within the server,
+	 * or the default CA if not specified
 	 * @return {Promise} {@link ServiceResponse}
 	 */
-	delete(enrollmentID, registrar, force) {
+	delete(enrollmentID, registrar, force, caname) {
 		if (!enrollmentID || typeof enrollmentID !== 'string') {
 			throw new Error('Missing required argument "enrollmentID", or argument "enrollmentID" is not a valid string');
 		}
@@ -193,7 +195,9 @@ class IdentityService {
 		const signingIdentity = registrar.getSigningIdentity();
 
 		let url = 'identities/' + enrollmentID;
-		if (force === true) {
+		if (caname && force === true) {
+			url = url + '?ca='+ caname + '&&force=true';
+		} else if (force === true) {
 			url = url + '?force=true';
 		}
 		return this.client.delete(url, signingIdentity);
