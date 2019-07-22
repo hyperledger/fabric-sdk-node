@@ -185,6 +185,7 @@ declare namespace FabricCAServices {
         getOne(enrollmentID: string, registrar: User): Promise<IServiceResponse>;
         getAll(registrar: User): Promise<IServiceResponse>;
         delete(enrollmentID: string, registrar: User): Promise<IServiceResponse>;
+        deleteFromCA(enrollmentID: string, registrar: User): Promise<IServiceResponse>;
         update(enrollmentID: string, req: IIdentityRequest, registrar: User): Promise<IServiceResponse>;
     }
 }
