@@ -22,11 +22,11 @@
  * <p>The entry point used to interact with a Hyperledger Fabric blockchain network is the
  * [Gateway]{@link module:fabric-network.Gateway} class. Once instantiated, this long-living object provides a
  * reusable connection to a peer within the blockchain network, and enables access to any of the blockchain
- * [Network]{@link module:fabric-network.Network}s (channels) for which that peer is a member. This in turn
- * provides access to Smart [Contract]{@link module:fabric-network.Contract}s (chaincode) running within that
- * blockchain network, and to which [Transaction]{@link module:fabric-network.Transaction}s can be
- * [submit]{@link module:fabric-network.Transaction#submit}ted or queries can be
- * [evaluate]{@link module:fabric-network.Transaction#evaluate}d.</p>
+ * [Networks]{@link module:fabric-network.Network} (channels) for which that peer is a member. This in turn
+ * provides access to Smart [Contracts]{@link module:fabric-network.Contract} (chaincode) running within that
+ * blockchain network, and to which [Transactions]{@link module:fabric-network.Transaction} can be
+ * [submitted]{@link module:fabric-network.Transaction#submit} or queries can be
+ * [evaluated]{@link module:fabric-network.Transaction#evaluate}.</p>
  *
  * <p>Private data can be submitted to transactions as [transient]{@link module:fabric-network.Transaction#setTransient}
  * data to prevent it from being recorded on the ledger.</p>

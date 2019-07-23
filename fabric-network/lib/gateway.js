@@ -115,7 +115,7 @@ const logger = require('./logger').getLogger('Gateway');
 /**
  * The gateway peer provides the connection point for an application to access the Fabric network.  It is instantiated using
  * the default constructor.
- * It can then be connected to a fabric network using the [connect]{@link #connect} method by passing either a CCP definition
+ * It can then be connected to a fabric network using the [connect]{@link #connect} method by passing either a common connection profile definition
  * or an existing {@link Client} object.
  * Once connected, it can then access individual Network instances (channels) using the [getNetwork]{@link #getNetwork} method
  * which in turn can access the [smart contracts]{@link Contract} installed on a network and
