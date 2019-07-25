@@ -994,6 +994,38 @@ describe('Channel', () => {
 			expect(channel._as_localhost).to.be.true;
 		});
 
+		it('set channel._as_localhost if getConfigSetting returns string value \'true\'', async () => {
+			sinon.stub(sdk_utils, 'getConfigSetting').returns('true');
+			const cli = new Client();
+			const ch = new Channel('does-not-matter', cli);
+
+			expect(ch._as_localhost).to.be.true;
+		});
+
+		it('set channel._as_localhost to false if getConfigSetting returns string value \'false\'', async () => {
+			sinon.stub(sdk_utils, 'getConfigSetting').returns('false');
+			const cli = new Client();
+			const ch = new Channel('does-not-matter', cli);
+
+			expect(ch._as_localhost).to.be.false;
+		});
+
+		it('set channel._as_localhost if getConfigSetting returns boolean value true', async () => {
+			sinon.stub(sdk_utils, 'getConfigSetting').returns(true);
+			const cli = new Client();
+			const ch = new Channel('does-not-matter', cli);
+
+			expect(ch._as_localhost).to.be.true;
+		});
+
+		it('set channel._as_localhost to false if getConfigSetting returns boolean value false', async () => {
+			sinon.stub(sdk_utils, 'getConfigSetting').returns(false);
+			const cli = new Client();
+			const ch = new Channel('does-not-matter', cli);
+
+			expect(ch._as_localhost).to.be.false;
+		});
+
 		it('throws if discovery is set and target peer has no msp information', () => {
 			sinon.stub(peer1, 'sendDiscovery').resolves({results: []});
 			return expect(channel.initialize({discover: true, target: peer1})).to.be.rejectedWith('No MSP information found');

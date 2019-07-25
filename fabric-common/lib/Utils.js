@@ -15,6 +15,7 @@ const os = require('os');
 
 const Config = require('./Config');
 const sjcl = require('sjcl');
+const yn = require('yn');
 
 //
 // The following methods are for loading the proper implementation of an extensible APIs.
@@ -41,7 +42,7 @@ module.exports.newCryptoSuite = (setting) => {
 	if (setting && typeof setting.software === 'boolean') {
 		useHSM = !setting.software;
 	} else {
-		useHSM = exports.getConfigSetting('crypto-hsm');
+		useHSM = yn(exports.getConfigSetting('crypto-hsm'));
 	}
 
 	csImpl = useHSM ? exports.getConfigSetting('crypto-suite-hsm') : exports.getConfigSetting('crypto-suite-software');

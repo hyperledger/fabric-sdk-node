@@ -91,6 +91,35 @@ test('\n\n** utils.newCryptoSuite tests **\n\n', (t) => {
 		expectedError,
 		'Should attempt to load the bccsp_pkcs11 module and fail because of the dummy library path'
 	);
+
+	// Control crypto-hsm settings via env variable
+	process.env.CRYPTO_HSM = false;
+	testutil.resetDefaults();
+	cs = utils.newCryptoSuite({keysize: 384, algorithm: 'EC'});
+	t.equal(cs instanceof CryptoSuite_ECDSA_AES, true, 'Should return an instance of CryptoSuite_ECDSA_AES');
+	t.equal(cs._keySize, 384, 'Returned instance should have keysize of 384');
+
+	process.env.CRYPTO_HSM = true;
+	testutil.resetDefaults();
+	t.throws(
+		() => {
+			cs = utils.newCryptoSuite({keysize: 384, algorithm: 'EC'});
+		},
+		/PKCS11 library path must be specified/,
+		'Should attempt to load the bccsp_pkcs11 module and fail because of the lack of library path'
+	);
+
+	process.env.CRYPTO_HSM = true;
+	testutil.resetDefaults();
+	t.throws(
+		() => {
+			cs = utils.newCryptoSuite({lib: '/usr/local/lib', slot: 0, pin: '1234'});
+		},
+		expectedError,
+		'Should attempt to load the bccsp_pkcs11 module and fail because of the dummy library path'
+	);
+	// Need to set it 'undefined' to prevent side effect to the other test suites
+	process.env.CRYPTO_HSM = undefined;
 	t.end();
 });
 

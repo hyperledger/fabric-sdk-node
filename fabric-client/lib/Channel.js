@@ -31,6 +31,7 @@ const MSPManager = require('./msp/msp-manager.js');
 const Policy = require('./Policy.js');
 const Constants = require('./Constants.js');
 const CollectionConfig = require('./SideDB.js');
+const yn = require('yn');
 
 const ChannelHelper = require('./utils/ChannelHelper');
 
@@ -109,7 +110,7 @@ const Channel = class {
 		this._discovery_results = null;
 		this._last_discover_timestamp = null;
 		this._use_discovery = sdk_utils.getConfigSetting('initialize-with-discovery', false);
-		this._as_localhost = sdk_utils.getConfigSetting('discovery-as-localhost', true);
+		this._as_localhost = yn(sdk_utils.getConfigSetting('discovery-as-localhost', true));
 		this._discovery_cache_life = sdk_utils.getConfigSetting('discovery-cache-life', 300000); // default is 5 minutes
 		this._endorsement_handler = null;
 		this._commit_handler = null;
