@@ -44,9 +44,13 @@ describe('DefaultEventHandlerStrategies', () => {
 
 		const stubPeer = {
 			_stubInfo: 'peer',
-			getName: function() {
-				return 'peer';
-			}
+			getName: () => 'peer',
+			isInRole: () => true
+		};
+		const stubNonEventingPeer = {
+			_stubInfo: 'nonEventingPeer',
+			getName: () => 'peer',
+			isInRole: () => false
 		};
 
 		const stubEventHub = sinon.createStubInstance(ChannelEventHub);
@@ -56,8 +60,8 @@ describe('DefaultEventHandlerStrategies', () => {
 		stubEventHubManager.getEventHubs.withArgs([stubPeer]).resolves([stubEventHub]);
 
 		const channel = sinon.createStubInstance(Channel);
-		channel.getPeers.returns([stubPeer]);
-		channel.getPeersForOrg.returns([stubPeer]);
+		channel.getPeers.returns([stubPeer, stubNonEventingPeer]);
+		channel.getPeersForOrg.returns([stubPeer, stubNonEventingPeer]);
 
 		stubNetwork = sinon.createStubInstance(Network);
 		stubNetwork.getChannel.returns(channel);
