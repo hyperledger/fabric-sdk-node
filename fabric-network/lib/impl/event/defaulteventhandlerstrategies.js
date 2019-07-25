@@ -6,18 +6,24 @@
 
 'use strict';
 
+const FabricConstants = require('fabric-client/lib/Constants');
+
 const AllForTxStrategy = require('fabric-network/lib/impl/event/allfortxstrategy');
 const AnyForTxStrategy = require('fabric-network/lib/impl/event/anyfortxstrategy');
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
 
 function getOrganizationEventHubs(network) {
-	const peers = network.getChannel().getPeersForOrg();
+	const peers = network.getChannel().getPeersForOrg().filter(hasEventSourceRole);
 	return network.getEventHubManager().getEventHubs(peers);
 }
 
 function getNetworkEventHubs(network) {
-	const peers = network.getChannel().getPeers();
+	const peers = network.getChannel().getPeers().filter(hasEventSourceRole);
 	return network.getEventHubManager().getEventHubs(peers);
+}
+
+function hasEventSourceRole(peer) {
+	return peer.isInRole(FabricConstants.NetworkConfig.EVENT_SOURCE_ROLE);
 }
 
 function MSPID_SCOPE_ALLFORTX(transaction, options) {
