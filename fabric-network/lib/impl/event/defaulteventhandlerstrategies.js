@@ -47,21 +47,21 @@ function NETWORK_SCOPE_ANYFORTX(transaction, options) {
 /**
  * @typedef DefaultEventHandlerStrategies
  * @memberof module:fabric-network
- * @property NETWORK_SCOPE_ANYFORTX Listen to all event hubs for the connected organisation.
- * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} method will wait
- * until <b>all</b> of the events to be received from
- * all of the event hubs that are still connected (minimum 1).
- * @property MSPID_SCOPE_ALLFORTX Listen to all event hubs for the connected organisation.
- * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} method will wait
- * until the first event from <b>any</b> of the event hubs that are still connected.
- * @property MSPID_SCOPE_ANYFORTX Listen to all event hubs for all peers in the current network.
- * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} method will wait
- * until <b>all</b> of the events to be received from
- * all of the event hubs that are still connected (minimum 1).
- * @property NETWORK_SCOPE_ALLFORTX Listen to all event hubs for all peers in the current network.
- * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} method will wait
- * until the first event from <b>any</b> of the event hubs that are still connected.
-*/
+ * @property MSPID_SCOPE_ALLFORTX Listen for transaction commit events from all peers in the client identity's
+ * organization.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until successful
+ * events are received from <em>all</em> currently connected peers (minimum 1).
+ * @property MSPID_SCOPE_ANYFORTX Listen for transaction commit events from all peers in the client identity's
+ * organization.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until a
+ * successful event is received from <em>any</em> peer.
+ * @property NETWORK_SCOPE_ALLFORTX Listen for transaction commit events from all peers in the network.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until successful
+ * events are received from <em>all</em> currently connected peers (minimum 1).
+ * @property NETWORK_SCOPE_ANYFORTX Listen for transaction commit events from all peers in the network.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until a
+ * successful event is received from <em>any</em> peer.
+ */
 
 module.exports = {
 	MSPID_SCOPE_ALLFORTX,
