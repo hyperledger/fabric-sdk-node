@@ -21,17 +21,18 @@
 		"test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
 	},
 	"engines": {
-    "node": "^8.9.0 || ^10.15.3",
-    "npm": "^5.5.1 || ^6.4.1"
-  },
+		"node": "^8.9.0 || ^10.15.3",
+		"npm": "^5.5.1 || ^6.4.1"
+	},
 	"dependencies": {
 		"elliptic": "^6.2.3",
-		"winston": "^2.2.0",
-		"nconf": "^0.10.0",
-		"nano": "^6.4.4",
 		"js-sha3": "^0.7.0",
+		"nano": "^6.4.4",
+		"nconf": "^0.10.0",
 		"pkcs11js": "^1.0.6",
-		"sjcl": "1.0.7"
+		"sjcl": "1.0.7",
+		"winston": "^2.2.0",
+		"yn": "^3.1.0"
 	},
 	"devDependencies": {
 		"chai": "^4.1.2",
