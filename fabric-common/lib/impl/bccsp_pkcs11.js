@@ -800,6 +800,9 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 * containing the private key and the public key.
 	 */
 	generateEphemeralKey(opts) {
+		if (!opts) {
+			opts = {};
+		}
 		if (opts !== null && (typeof opts.algorithm === 'undefined' || opts.algorithm === null)) {
 			opts.algorithm = 'ECDSA';
 		}
@@ -1024,6 +1027,9 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	createKeyFromRaw(pem, opts) {
 		const optsLocal = opts ? opts : {};
 		const token = !optsLocal.ephemeral;
+		if (optsLocal !== null && (typeof optsLocal.algorithm === 'undefined' || optsLocal.algorithm === null)) {
+			optsLocal.algorithm = 'X509Certificate';
+		}
 		switch (optsLocal.algorithm.toUpperCase()) {
 			case 'X509CERTIFICATE':
 				return new ECDSAKey(KEYUTIL.getKey(pem));
