@@ -68,12 +68,12 @@ describe('Lifecycle Packager', () => {
 	describe('#buildPackageDescriptors', () => {
 		it('should return a list of descriptors for the package', async () => {
 			const descriptors = await lifecycle.buildPackageDescriptors(Buffer.from('abc'));
-			expect(descriptors[0].name).to.equal('Chaincode-Package.tar.gz');
+			expect(descriptors[0].name).to.equal('code.tar.gz');
 		});
 
 		it('should return an empty descriptor when no content provided', async () => {
 			const descriptors = await lifecycle.buildPackageDescriptors();
-			expect(descriptors[0].name).to.equal('Chaincode-Package.tar.gz');
+			expect(descriptors[0].name).to.equal('code.tar.gz');
 		});
 	});
 });

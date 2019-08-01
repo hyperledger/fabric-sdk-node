@@ -85,7 +85,7 @@ class LifecyclePackager extends BasePackager {
 		const descriptors = [];
 		const packageDescriptor = {
 			bytes: bytes,
-			name: 'Chaincode-Package.tar.gz'
+			name: 'code.tar.gz'
 		};
 		descriptors.push(packageDescriptor);
 
