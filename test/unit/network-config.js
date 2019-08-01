@@ -604,7 +604,7 @@ test('\n\n ** configuration testing **\n\n', (t) => {
 			const channel = client.newChannel('mychannel');
 			channel._getTargetForQuery();
 		},
-		/"target" parameter not specified and no peers are set on this Channel instance or specfied for this channel in the network/,
+		/"target" parameter not specified and no peers are set on this Channel instance or specified for this channel in the network/,
 		'Should get an error back when no targets are available'
 	);
 
