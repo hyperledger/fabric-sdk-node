@@ -17,7 +17,6 @@ const util = require('util');
  * Delegates to an event strategy to decide whether events or errors received should be interpreted as success or
  * failure of a transaction.
  * @private
- * @class
  */
 class TransactionEventHandler {
 	/**
@@ -56,12 +55,11 @@ class TransactionEventHandler {
 
 	/**
 	 * Called to initiate listening for transaction events.
-	 * @async
 	 */
 	async startListening() {
 		if (this.eventHubs.length > 0) {
 			this._setListenTimeout();
-			await this._registerTxEventListeners();
+			this._registerTxEventListeners();
 		} else {
 			logger.debug('startListening: No event hubs');
 			this._resolveNotificationPromise();
@@ -75,34 +73,28 @@ class TransactionEventHandler {
 
 		logger.debug('_setListenTimeout:', `setTimeout(${this.options.commitTimeout}) for transaction ${this.transactionId}`);
 
-		this.timeoutHandler = setTimeout(() => {
-			this._timeoutFail();
-		}, this.options.commitTimeout * 1000);
+		this.timeoutHandler = setTimeout(
+			() => this._timeoutFail(),
+			this.options.commitTimeout * 1000
+		);
 	}
 
-	async _registerTxEventListeners() {
-		const registrationOptions = {unregister: true, fixedEventHub: true};
-
-		const promises = this.eventHubs.map((eventHub) => {
-			return new Promise(async (resolve) => {
-				logger.debug('_registerTxEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
-				await this.transaction.addCommitListener((err, txId, code) => {
-					if (err) {
-						return this._onError(eventHub, err);
-					}
-					return this._onEvent(eventHub, txId, code);
-				}, registrationOptions, eventHub);
-				resolve();
-			});
+	_registerTxEventListeners() {
+		this.eventHubs.forEach(eventHub => {
+			logger.debug('_registerTxEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
+			eventHub.registerTxEvent(
+				this.transactionId,
+				(txId, code) => this._onEvent(eventHub, txId, code),
+				(err) => this._onError(eventHub, err)
+			);
+			eventHub.connect();
 		});
-
-		await Promise.all(promises);
 	}
 
 	_timeoutFail() {
 		const unrespondedEventHubs = this.eventHubs
-			.filter((eventHub) => !this.respondedEventHubs.has(eventHub))
-			.map((eventHub) => eventHub.getName())
+			.filter(eventHub => !this.respondedEventHubs.has(eventHub))
+			.map(eventHub => eventHub.getName())
 			.join(', ');
 		const message = 'Event strategy not satisfied within the timeout period. No response received from event hubs: ' + unrespondedEventHubs;
 		const error = new TimeoutError({
@@ -160,7 +152,6 @@ class TransactionEventHandler {
 
 	/**
      * Wait until enough events have been received from the event hubs to satisfy the event handling strategy.
-     * @async
 	 * @throws {Error} if the transaction commit is not successful within the timeout period.
      */
 	async waitForEvents() {
@@ -175,9 +166,8 @@ class TransactionEventHandler {
 		logger.debug('cancelListening called');
 
 		clearTimeout(this.timeoutHandler);
-		this.eventHubs.forEach((eventHub) => eventHub.unregisterTxEvent(this.transactionId));
+		this.eventHubs.forEach(eventHub => eventHub.unregisterTxEvent(this.transactionId));
 	}
-
 }
 
 module.exports = TransactionEventHandler;

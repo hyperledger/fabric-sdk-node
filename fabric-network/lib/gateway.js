@@ -44,7 +44,7 @@ const logger = require('./logger').getLogger('Gateway');
 /**
  * @typedef {Function} Gateway~TxEventHandlerFactory
  * @memberof module:fabric-network
- * @param {String} transactionId The transaction ID for which the handler should listen.
+ * @param {Transaction} transaction The transaction for which the handler should listen for commit events.
  * @param {module:fabric-network.Network} network The network on which this transaction is being submitted.
  * @returns {module:fabric-network.Gateway~TxEventHandler} A transaction event handler.
  */
