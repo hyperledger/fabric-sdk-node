@@ -10,27 +10,26 @@
 
 /**
  * Handler that listens for commit events for a specific transaction from a set of event hubs.
- * A new instance of this class should be created to handle each transaction as it maintains state
+ * A new instance of this class is created to handle each transaction as it maintains state
  * related to events for a given transaction.
- * @class
+ *
+ * This implementation will unblock once all the event hubs have either supplied a vaid transaction commit event or
+ * disconnected.
  */
 class SampleTransactionEventHandler {
 	/**
 	 * Constructor.
-	 * @param {String} transactionId Transaction ID for which events will be received.
+	 * @param {Transaction} transaction Transaction ID for which events will be received.
 	 * @param {ChannelEventHub[]} eventHubs Event hubs from which events will be received.
 	 * @param {Object} [options] Additional configuration options.
 	 * @param {Number} [options.commitTimeout] Time in seconds to wait for commit events to be reveived.
 	 */
-	constructor(transactionId, eventHubs, options) {
-		if (typeof transactionId === 'object') {
-			this.transaction = transactionId;
-		}
-		this.transactionId = this.transaction ? this.transaction.getTransactionID().getTransactionID() : transactionId;
+	constructor(transaction, eventHubs, options) {
+		this.transactionId = transaction.getTransactionID().getTransactionID();
 		this.eventHubs = eventHubs;
 
 		const defaultOptions = {
-			commitTimeout: 120 // 2 minutes
+			commitTimeout: 120 // 2 minutes (120 seconds)
 		};
 		this.options = Object.assign(defaultOptions, options);
 
@@ -46,14 +45,13 @@ class SampleTransactionEventHandler {
 
 	/**
 	 * Called to initiate listening for transaction events.
-	 * @async
 	 * @throws {Error} if not in a state where the handling strategy can be satified and the transaction should
 	 * be aborted. For example, if insufficient event hubs could be connected.
 	 */
 	async startListening() {
 		if (this.eventHubs.length > 0) {
 			this._setListenTimeout();
-			await this._registerTxEventListeners();
+			this._registerTxEventListeners();
 		} else {
 			// Assume success if no event hubs
 			this._resolveNotificationPromise();
@@ -62,7 +60,6 @@ class SampleTransactionEventHandler {
 
 	/**
      * Wait until enough events have been received from the event hubs to satisfy the event handling strategy.
-     * @async
 	 * @throws {Error} if the transaction commit is not successful within the timeout period.
      */
 	async waitForEvents() {
@@ -74,10 +71,7 @@ class SampleTransactionEventHandler {
      */
 	cancelListening() {
 		clearTimeout(this.timeoutHandler);
-		this.eventHubs.forEach((eventHub) => {
-			eventHub.unregisterTxEvent(this.transactionId);
-			eventHub.disconnect();
-		});
+		this.eventHubs.forEach(eventHub => eventHub.unregisterTxEvent(this.transactionId));
 	}
 
 	_setListenTimeout() {
@@ -90,23 +84,15 @@ class SampleTransactionEventHandler {
 		}, this.options.commitTimeout * 1000);
 	}
 
-	async _registerTxEventListeners() {
-		const registrationOptions = {unregister: true, disconnect: true};
-
-		const promises = this.eventHubs.map((eventHub) => {
-			return new Promise((resolve) => {
-				eventHub.registerTxEvent(
-					this.transactionId,
-					(txId, code) => this._onEvent(eventHub, txId, code),
-					(err) => this._onError(eventHub, err),
-					registrationOptions
-				);
-				eventHub.connect();
-				resolve();
-			});
+	_registerTxEventListeners() {
+		this.eventHubs.forEach(eventHub => {
+			eventHub.registerTxEvent(
+				this.transactionId,
+				(txId, code) => this._onEvent(eventHub, txId, code),
+				(err) => this._onError(eventHub, err)
+			);
+			eventHub.connect();
 		});
-
-		await Promise.all(promises);
 	}
 
 	_onEvent(eventHub, txId, code) {
@@ -151,11 +137,22 @@ class SampleTransactionEventHandler {
 	}
 }
 
-function createTransactionEventHandler(transactionId, network) {
+/**
+ * Factory function called for each submitted transaction, which supplies a commit handler instance for that
+ * transaction. This implementation returns a commit handler that listens to all eventing peers in the user's
+ * organization.
+ * @param {Transaction} transaction The transaction being submitted.
+ * @param {Network} network The network where the transaction is being submitted.
+ */
+function createTransactionEventHandler(transaction, network) {
 	const channel = network.getChannel();
-	const peers = channel.getPeersForOrg();
-	const eventHubs = peers.map((peer) => channel.newChannelEventHub(peer.getName()));
-	return new SampleTransactionEventHandler(transactionId, eventHubs);
+	const peers = channel.getPeersForOrg().filter(hasEventSourceRole);
+	const eventHubs = peers.map(peer => channel.getChannelEventHub(peer.getName()));
+	return new SampleTransactionEventHandler(transaction, eventHubs);
+}
+
+function hasEventSourceRole(peer) {
+	return peer.isInRole('eventSource');
 }
 
 module.exports = createTransactionEventHandler;

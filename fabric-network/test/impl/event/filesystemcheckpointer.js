@@ -77,7 +77,7 @@ describe('FileSystemCheckpointer', () => {
 	describe('#save', () => {
 
 		it('should initialize the checkpointer file doesnt exist', async () => {
-			fs.readFile.resolves(new Buffer(''));
+			fs.readFile.resolves(Buffer.from(''));
 			fs.exists.resolves(false);
 			sinon.spy(checkpointer, '_initialize');
 			sinon.spy(checkpointer, 'load');
