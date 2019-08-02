@@ -12,23 +12,21 @@ const SingleQueryHandler = require('fabric-network/lib/impl/query/singlequeryhan
 const RoundRobinQueryHandler = require('fabric-network/lib/impl/query/roundrobinqueryhandler');
 
 function getOrganizationPeers(network) {
-	return network.getChannel().getPeersForOrg();
+	return network.getChannel().getPeersForOrg().filter(hasChaincodeQueryRole);
 }
 
-function filterQueryablePeers(peers) {
-	return peers.filter((peer) => peer.isInRole(FabricConstants.NetworkConfig.CHAINCODE_QUERY_ROLE));
+function hasChaincodeQueryRole(peer) {
+	return peer.isInRole(FabricConstants.NetworkConfig.CHAINCODE_QUERY_ROLE);
 }
 
 function MSPID_SCOPE_SINGLE(network, options) {
-	const orgPeers = getOrganizationPeers(network);
-	const queryPeers = filterQueryablePeers(orgPeers);
-	return new SingleQueryHandler(queryPeers);
+	const peers = getOrganizationPeers(network);
+	return new SingleQueryHandler(peers);
 }
 
 function MSPID_SCOPE_ROUND_ROBIN(network, options) {
-	const orgPeers = getOrganizationPeers(network);
-	const queryPeers = filterQueryablePeers(orgPeers);
-	return new RoundRobinQueryHandler(queryPeers);
+	const peers = getOrganizationPeers(network);
+	return new RoundRobinQueryHandler(peers);
 }
 
 /**
