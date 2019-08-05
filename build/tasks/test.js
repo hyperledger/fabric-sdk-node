@@ -130,7 +130,7 @@ gulp.task('compile', shell.task([
 //  - Cannot use gulp-istabul because it throws "unexpected identifier" for async/await functions
 
 // Main test to run all tests
-gulp.task('test', shell.task('npx nyc gulp run-test'));
+gulp.task('test', shell.task('npx nyc gulp run-test-all'));
 
 // Test to run all unit tests
 gulp.task('test-headless', shell.task('npx gulp run-test-headless'));
@@ -170,7 +170,7 @@ gulp.task('mocha-fabric-client',
 gulp.task('mocha-fabric-network',
 	() => {
 		return gulp.src(['./fabric-network/test/**/*.js'], {read: false})
-			.pipe(mocha({reporter: 'list', exit: true}));
+			.pipe(mocha({reporter: 'list', exit: true, timeout: 10000}));
 	}
 );
 
@@ -287,7 +287,7 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 			'test/integration/nodechaincode/e2e.js',
 			'test/integration/e2e.js',
 			'test/integration/network-e2e/e2e.js',
-			// 'test/integration/network-e2e/e2e-hsm.js',
+			'test/integration/network-e2e/e2e-hsm.js',
 			'test/integration/signTransactionOffline.js',
 			'test/integration/query.js',
 			'test/integration/client.js',
@@ -332,9 +332,6 @@ function shouldRunTests(tests) {
 		tests.push('!test/unit/pkcs11.js');
 		tests.push('!test/integration/network-e2e/e2e-hsm.js');
 		// check to see if they want to test PKCS11
-	} else if (typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() === 'true') {
-		tests.push('!test/integration/network-e2e/e2e.js');
-		// check to see if they do not want to test PKCS11
 	} else if (typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() === 'false') {
 		tests.push('!test/unit/pkcs11.js');
 		tests.push('!test/integration/network-e2e/e2e-hsm.js');

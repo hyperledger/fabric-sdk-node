@@ -152,7 +152,7 @@ class Remote {
 			client.waitForReady(timeout, (err) => {
 				if (err) {
 					if (err.message) {
-						err.message = err.message + ' URL:' + self.getUrl();
+						err.message = err.message + ' URL:' + self.getUrl() + ' timeout:' + this._grpc_wait_for_ready_timeout;
 					}
 					err.connectFailed = true;
 					logger.error(err);

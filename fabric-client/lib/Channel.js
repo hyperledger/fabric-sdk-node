@@ -45,6 +45,8 @@ function logAndThrow(methodName, errorMessage) {
 	throw new Error(errorMessage);
 }
 
+let channel_count = 1;
+
 /**
  * Channels provide data isolation for a set of participating organizations.
  * <br><br>
@@ -116,7 +118,8 @@ const Channel = class {
 		this._commit_handler = null;
 		this._prover_handler = null;
 
-		logger.debug('Constructed Channel instance: name - %s, network mode: %s', this._name, !this._devMode);
+		this._number = channel_count++;
+		logger.debug('Constructed Channel instance:%s name - %s, network mode: %s', this._number, this._name, !this._devMode);
 	}
 
 	/**
@@ -179,14 +182,16 @@ const Channel = class {
 	 * @return {Promise} A Promise that will resolve when the action is complete
 	 */
 	async initialize(request) {
-		const method = 'initialize';
-		logger.debug('%s - start', method);
+		const method = 'initialize' + this._number;
+		logger.debug('%s - start channel:%s', method, this._name);
 
 		let endorsement_handler_path = null;
 		let commit_handler_path = null;
 		let prover_handler_path = null;
 
 		if (request) {
+			logger.debug('%s - request.asLocalhost:%s', method, request.asLocalhost);
+			logger.debug('%s - ConfigSetting-discovery-as-localhost:%s', method, sdk_utils.getConfigSetting('discovery-as-localhost'));
 			if (request.configUpdate) {
 				logger.debug('%s - have a configupdate', method);
 				this.loadConfigUpdate(request.configUpdate);
@@ -1489,7 +1494,10 @@ const Channel = class {
 
 		// endpoints may be running in containers on the local system
 		if (this._as_localhost) {
+			logger.debug('%s - mapping to localhost %s', method, t_hostname);
 			t_hostname = 'localhost';
+		} else {
+			logger.debug('%s - not mapping to localhost %s', method, t_hostname);
 		}
 
 		// If we connect to the discovery peer over TLS, any peers returned by
@@ -2859,7 +2867,9 @@ const Channel = class {
 		const method = 'sendTransactionProposal';
 		logger.debug('%s - start', method);
 
+
 		const errorMsg = client_utils.checkProposalRequest(request, true);
+
 		if (errorMsg) {
 			logAndThrow(method, errorMsg);
 		}

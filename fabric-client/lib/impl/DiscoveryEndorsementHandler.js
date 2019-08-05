@@ -126,6 +126,7 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 
 	async _endorse(endorsement_plan, request, proposal, timeout) {
 		const method = '_endorse';
+		logger.debug('%s - start', method);
 
 		// see if we have an endorsement plan for the requested chaincodes/collection call
 		if (endorsement_plan) {
@@ -136,12 +137,12 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 			results.failed_endorsements = [];
 			results.success = false;
 
-			const required = this._create_map(request.required, 'endpoint');
-			const preferred = this._create_map(request.preferred, 'endpoint');
-			const ignored = this._create_map(request.ignored, 'endpoint');
-			const required_orgs = this._create_map(request.requiredOrgs, 'mspid');
-			const preferred_orgs = this._create_map(request.preferredOrgs, 'mspid');
-			const ignored_orgs = this._create_map(request.ignoredOrgs, 'mspid');
+			const required = this._create_map(request.required, 'required');
+			const preferred = this._create_map(request.preferred, 'preferred');
+			const ignored = this._create_map(request.ignored, 'ignored');
+			const required_orgs = this._create_map(request.requiredOrgs, 'requiredOrgs');
+			const preferred_orgs = this._create_map(request.preferredOrgs, 'preferredOrgs');
+			const ignored_orgs = this._create_map(request.ignoredOrgs, 'ignoredOrgs');
 			let preferred_height_gap = null;
 			try {
 				preferred_height_gap = Long.fromValue(request.preferredHeightGap);
@@ -182,7 +183,13 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 
 			if (!results.success) {
 				const error = new Error('Endorsement has failed');
+				logger.error('%s - endorsement failed::%s', method, error.stack);
 				error.endorsements = results.failed_endorsements;
+				for (const endorsement of results.endorsements) {
+					if (endorsement instanceof Error) {
+						logger.error('%s - %s', method, endorsement.stack);
+					}
+				}
 				throw error;
 			}
 
@@ -345,8 +352,11 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 
 		for (const group_name in endorsement_plan.groups) {
 			const group = endorsement_plan.groups[group_name];
+			logger.debug('%s starting - group: %s - size: %s', method, group_name, group.peers.length);
 			// remove ignored and non-required
 			const clean_list = this._removePeers(ignored, ignored_orgs, required, required_orgs, group.peers);
+			logger.debug('%s removed - group: %s - size: %s', method, group_name, clean_list.length);
+
 			// get the highest ledger height if needed
 			let highest = null;
 			if (preferred_height_gap) {
@@ -354,10 +364,13 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 			}
 			// sort based on ledger height or randomly
 			const sorted_list = this._sortPeerList(sort, clean_list);
+			logger.debug('%s sorted - group: %s - size: %s', method, group_name, sorted_list.length);
 			// pop the priority peers off the sorted list
 			const split_lists = this._splitList(preferred, preferred_orgs, highest, preferred_height_gap, sorted_list);
 			// put the priorities on top
 			const reordered_list = split_lists.priority.concat(split_lists.non_priority);
+			logger.debug('%s reordered - group: %s - size: %s', method, group_name, reordered_list.length);
+
 			// set the rebuilt peer list into the group
 			group.peers = reordered_list;
 		}
@@ -365,10 +378,13 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 		logger.debug('%s - updated endorsement_plan:%j', method, endorsement_plan);
 	}
 
-	_create_map(array) {
+	_create_map(items, type) {
+		const method = '_create_map';
+		logger.debug('%s - start for %s', method, type);
 		const map = new Map();
-		if (array && Array.isArray(array)) {
-			array.forEach((item) => {
+		if (items && Array.isArray(items)) {
+			items.forEach((item) => {
+				logger.debug('%s - adding %s', method, item);
 				map.set(item, item);
 			});
 		}
@@ -381,35 +397,42 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 	 */
 	_removePeers(ignored_peers, ignored_orgs, required_peers, required_orgs, peers) {
 		const method = '_removePeers';
-		logger.debug('%s - start', method);
+		logger.debug('%s - start size:%s', method, peers.length);
 		const keep_list = [];
 		for (const peer of peers) {
 			let found = ignored_peers.has(peer.name);
 			if (!found) {
 				found = ignored_orgs.has(peer.mspid);
 				if (!found) {
+					logger.debug('%s - not found in ignored list - peer:%s', method, peer.name);
 					// if the user has requested required peers/orgs
 					// then all peers that stay on the list must be
 					// one of those peers or in one of those orgs
-					if (required_peers.size || required_orgs.size) {
+					if (required_peers.size > 0 || required_orgs.size > 0) {
 						found = required_peers.has(peer.name);
 						if (!found) {
+							logger.debug('%s - not found in required peers - peer:%s', method, peer.name);
 							found = required_orgs.has(peer.mspid);
 						}
 						// if we did not find it on a either list then
 						// this peer will not be added to the keep list
 						if (!found) {
+							logger.debug('%s - removing peer:%s', method, peer.name);
 							continue; // do not add this peer to the keep list
 						}
 					}
 
 					// looks like this peer is not on the ignored list and
 					// is on the required list (if being used);
+					logger.debug('%s - keeping peer:%s', method, peer.name);
 					keep_list.push(peer);
 				}
+			} else {
+				logger.debug('%s - found in ignored list - peer:%s', method, peer.name);
 			}
 		}
 
+		logger.debug('%s - end size:%s', method, keep_list.length);
 		return keep_list;
 	}
 
@@ -429,8 +452,8 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 	}
 
 	_sortPeerList(sort, peers) {
-		const method = '_sortList';
-		logger.debug('%s - start - %s', method, sort);
+		const method = '_sortPeerList';
+		logger.debug('%s - start - sort:%s - size:%s', method, sort, peers.length);
 		let sorted = null;
 
 		if (!sort || sort === BLOCK_HEIGHT || sort === DEFAULT) {
@@ -474,7 +497,7 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 
 	_splitList(preferred_peers, preferred_orgs, preferred_height_gap, highest, sorted_list) {
 		const method = '_splitList';
-		logger.debug('%s - start', method);
+		logger.debug('%s - start size:%s', method, sorted_list.length);
 		const list = {};
 		list.priority = [];
 		list.non_priority = [];
@@ -508,6 +531,7 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 			}
 		}
 
+		logger.debug('%s - end - priority:%s - non_priority:%s', method, list.priority.length, list.non_priority.length);
 		return list;
 	}
 
