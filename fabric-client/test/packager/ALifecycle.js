@@ -39,29 +39,29 @@ describe('Lifecycle Packager', () => {
 
 		it('should return the package when given all parameters', async () => {
 			const final_package = await lifecycle.finalPackage('name', 'v1', 'golang', Buffer.from('abc'), '/path');
-			expect(final_package.length).to.be.gt(200);
+			expect(final_package.length).to.be.gt(175);
 		});
 
 		it('should return the package when given all parameters but the path', async () => {
 			const final_package = await lifecycle.finalPackage('name', 'v1', 'golang', Buffer.from('abc'));
-			expect(final_package.length).to.be.gt(200);
+			expect(final_package.length).to.be.gt(175);
 		});
 	});
 
 	describe('#buildMetaDataDescriptors', () => {
 		it('should return a list of descriptors for the metadata without a path', async () => {
 			const descriptors = await lifecycle.buildMetaDataDescriptors('node');
-			expect(descriptors[0].name).to.equal('Chaincode-Package-Metadata.json');
+			expect(descriptors[0].name).to.equal('metadata.json');
 		});
 
 		it('should return a list of descriptors for the metadata with a path', async () => {
 			const descriptors = await lifecycle.buildMetaDataDescriptors('golang', '/path');
-			expect(descriptors[0].name).to.equal('Chaincode-Package-Metadata.json');
+			expect(descriptors[0].name).to.equal('metadata.json');
 		});
 
 		it('should return a list of descriptors for the metadata with no name and no path', async () => {
 			const descriptors = await lifecycle.buildMetaDataDescriptors();
-			expect(descriptors[0].name).to.equal('Chaincode-Package-Metadata.json');
+			expect(descriptors[0].name).to.equal('metadata.json');
 		});
 	});
 

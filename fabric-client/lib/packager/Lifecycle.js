@@ -70,7 +70,7 @@ class LifecyclePackager extends BasePackager {
 		const descriptors = [];
 		const metadataDescriptor = {
 			bytes: Buffer.from(JSON.stringify(metadata), 'utf8'),
-			name: 'Chaincode-Package-Metadata.json'
+			name: 'metadata.json'
 		};
 		descriptors.push(metadataDescriptor);
 
