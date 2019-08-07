@@ -2982,7 +2982,7 @@ const Channel = class {
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Orderer instance and the global
 	 *        timeout in the config settings.
-	 * @returns {Promise} A Promise for a "BroadcastResponse" message returned by
+	 * @returns {Promise} A Promise for a {@link BroadcastResponse} message returned by
 	 *          the orderer that contains a single "status" field for a
 	 *          standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
 	 *          This will be an acknowledgement from the orderer of a successfully
@@ -3497,7 +3497,7 @@ const Channel = class {
 	 *        response before rejecting the promise with a timeout error. This
 	 *        overrides the default timeout of the Orderer instance and the global
 	 *        timeout in the config settings.
-	 * @returns {Promise} A Promise for a "BroadcastResponse" message returned by
+	 * @returns {Promise} A Promise for a {@link BroadcastResponse} message returned by
 	 *          the orderer that contains a single "status" field for a
 	 *          standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
 	 *          submitted transaction.

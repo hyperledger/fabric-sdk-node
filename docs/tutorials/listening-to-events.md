@@ -63,7 +63,7 @@ const network = await gateway.getNetwork('mychannel');
 
 /**
  * @param {String} listenerName the name of the event listener
- * @param {Function} callback the callback function with signature (error, blockNumber, transactionId, status)
+ * @param {Function} callback the callback function with signature (error, block)
  * @param {module:fabric-network.Network~EventListenerOptions} options
 **/
 const listener = await network.addBlockListener('my-block-listener', (error, block) => {

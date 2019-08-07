@@ -207,7 +207,7 @@ number determined by the Peer's channel-based event service at connect
 time of the the oldest block on the ledger, unless your ledger
 has been pruned, this will be block 0. 
   
-  - `'last_seen'` - The string of 'oldest'. This will have the channel event hub
+  - `'last_seen'` - The string of 'last_seen'. This will have the channel event hub
 instance determine the block number at the time of the registration.
 The number will be based on the last block that this channel event hub has
 received from the Peer's channel-based event service.
@@ -238,7 +238,7 @@ number determined by the Peer's channel-based event service at connect
 time of the the oldest block on the ledger, unless your ledger
 has been pruned, this will be block 0. 
   
-  - `'last_seen'` - The string of 'oldest'. This will have the channel event hub
+  - `'last_seen'` - The string of 'last_seen'. This will have the channel event hub
 instance determine the block number at the time of the registration.
 The number will be based on the last block that this channel event hub has
 received from the Peer's channel-based event service.
@@ -289,7 +289,7 @@ number determined by the Peer's channel-based event service at connect
 time of the the oldest block on the ledger, unless your ledger
 has been pruned, this will be block 0. 
   
-  - `'last_seen'` - The string of 'oldest'. This will have the channel event hub
+  - `'last_seen'` - The string of 'last_seen'. This will have the channel event hub
 instance determine the block number at the time of the registration.
 The number will be based on the last block that this channel event hub has
 received from the Peer's channel-based event service.
@@ -327,7 +327,7 @@ number determined by the Peer's channel-based event service at connect
 time of the the oldest block on the ledger, unless your ledger
 has been pruned, this will be block 0. 
   
-  - `'last_seen'` - The string of 'oldest'. This will have the channel event hub
+  - `'last_seen'` - The string of 'last_seen'. This will have the channel event hub
 instance determine the block number at the time of the registration.
 The number will be based on the last block that this channel event hub has
 received from the Peer's channel-based event service.
@@ -443,14 +443,6 @@ start receiving blocks as they are added to the ledger, unless a
 the block specified. When a block is received by the ChannelEventHub
 instance from the Peer's event service, this is known as a block
 event,
-
-Steps to be notified when a block event occurs:
-- Get a channel event hub instance.
-- Register to receive blocks.
-- Connect the channel event hub instance with the peer's event service.
-- Somewhere on the network a transaction is endorsed and committed.
-- Process the blocks as they come in.
-- Disconnect the channel event hub when finished listening.
 
 Steps to be notified when a block event occurs:
 - Get a channel event hub instance.

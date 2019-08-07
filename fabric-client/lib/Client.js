@@ -761,7 +761,7 @@ const Client = class extends BaseClient {
 	 *                               required settings and signatures to initialize this channel. This envelope
 	 *                               would have been created by the command line tool
 	 *                               [configtxgen]{@link http://hyperledger-fabric.readthedocs.io/en/latest/configtxgen.html} or
-	 *                               [configtxlator]{@link https://github.com/hyperledger/fabric/blob/master/examples/configtxupdate/README.md}
+	 *                               [configtxlator]{@link https://hyperledger-fabric.readthedocs.io/en/latest/commands/configtxlator.html}
 	 * @property {byte[]} config - Optional. Protobuf ConfigUpdate object extracted from a ConfigEnvelope
 	 *                             created by the configtxgen tool. See [extractChannelConfig()]{@link Client#extractChannelConfig}.
 	 *                             The ConfigUpdate object may also be created by the configtxlator tool.

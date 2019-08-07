@@ -12,7 +12,7 @@ process of creating and updating see
 * configuration transaction generator see
 [configtxgen](http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html#configuration-transaction-generator)
 * configuration translation tool see
-[configtxlator](https://github.com/hyperledger/fabric/tree/master/examples/configtxupdate)
+[configtxlator](https://hyperledger-fabric.readthedocs.io/en/latest/commands/configtxlator.html)
 
 The following assumes an understanding of the Hyperledger Fabric network
 (orderers and peers),

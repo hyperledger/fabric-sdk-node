@@ -37,7 +37,7 @@ class CommitHandler {
 	 * orderers to send the endorsed transaction.
 	 *
 	 * @param {CommitHandlerParameters} params - A {@link CommitHandlerParameters}
-	 * @returns {Promise} A Promise for the {@link ProposalResponseObject}, the
+	 * @returns {Promise} A Promise for the {@link BroadcastResponse}, the
 	 *        same results as calling the {@link Channel#sendTransaction}
 	 *        method directly.
 	 */
