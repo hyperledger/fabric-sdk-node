@@ -11,6 +11,7 @@ function filterExcludedFiles {
 		| grep -v "^\.build/" \
 		| grep -v "^vendor/" \
 		| grep -v "testdata/" \
+		| grep -v "test/data/" \
 		| grep -v "^LICENSE$" \
 		| grep -v "\.png$" \
 		| grep -v "\.rst$" \

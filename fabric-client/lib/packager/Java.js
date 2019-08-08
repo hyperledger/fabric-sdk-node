@@ -58,7 +58,8 @@ class JavaPackager extends BasePackager {
 	async findSource (filePath) {
 		const descriptors = [];
 
-		const files = await walk({path: filePath, follow: true});
+		const ignoreFiles = ['.fabricignore'];
+		const files = await walk({path: filePath, follow: true, ignoreFiles});
 		if (files) {
 			files.forEach((entry) => {
 				const desc = {

@@ -54,7 +54,7 @@ describe('Golang', () => {
 		};
 		revert.push(Golang.__set__('sbuf.WritableStreamBuffer', bufferStub));
 
-		golang = new Golang();
+		golang = new Golang(['.go']);
 	});
 
 	describe('#package', () => {
@@ -81,54 +81,23 @@ describe('Golang', () => {
 	});
 
 	describe('#findSource', () => {
-		let klawStub;
-		let isFileStub;
-		let isSourceStub;
-		let onStub;
-		let entryStub;
+		let walkStub;
 
 		beforeEach(() => {
-			isFileStub = sandbox.stub();
-			isSourceStub = sandbox.stub();
-			revert.push(Golang.__set__('BasePackager.prototype.isSource', isSourceStub));
-			onStub = sandbox.stub();
-			onStub.returns({on: onStub});
-			klawStub = sandbox.stub().returns({on: onStub});
-			revert.push(Golang.__set__('klaw', klawStub));
-			entryStub = {stats: {isFile: isFileStub}, path: 'path'};
+			walkStub = sandbox.stub().resolves();
+			revert.push(Golang.__set__('walk', walkStub));
 		});
 
-		it('should throw an error', async() => {
-			onStub.withArgs('error').yields(new Error('fake error'), {path: 'path'});
-			try {
-				await golang.findSource('gopath', 'filepath');
-			} catch (err) {
-				sinon.assert.calledWithMatch(FakeLogger.error, /error while packaging path/);
-				err.should.be.instanceof(Error);
-			}
+		it('should return a list of descriptors if files are returned', async() => {
+			walkStub.resolves(['FILE_1.go']);
+			const descriptors = await golang.findSource('go', 'go/src/path');
+			sinon.assert.calledWith(FakeLogger.debug, 'adding entry', {fqp: 'go/src/path/FILE_1.go', name: 'src/path/FILE_1.go'});
+			descriptors.should.deep.equal([{fqp: 'go/src/path/FILE_1.go', name: 'src/path/FILE_1.go'}]);
 		});
 
-		it('should return a list of descriptors and log each one added', async() => {
-			onStub.withArgs('data').yields(entryStub).returns({on: onStub});
-			onStub.withArgs('end').yields();
-			isFileStub.returns(true);
-			isSourceStub.returns(true);
-
-			const desctiptors = await golang.findSource('gopath', 'filepath');
-			sinon.assert.calledWith(FakeLogger.debug, 'adding entry', {name: '../path', fqp: 'path'});
-			desctiptors.should.deep.equal([{
-				'fqp': 'path',
-				'name': '../path'
-			}]);
-		});
-
-		it('should not add a descriptor if entry is not a file', async() => {
-			onStub.withArgs('data').yields(entryStub).returns({on: onStub});
-			onStub.withArgs('end').yields();
-			isFileStub.returns(false);
-			isSourceStub.returns(true);
-
-			const descriptors = await golang.findSource('gopath', 'filepath');
+		it('should return a list of descriptors if no files are returned', async() => {
+			walkStub.resolves();
+			const descriptors = await golang.findSource('go', 'go/src/path');
 			sinon.assert.notCalled(FakeLogger.debug);
 			descriptors.should.deep.equal([]);
 		});

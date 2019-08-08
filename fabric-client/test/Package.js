@@ -14,13 +14,17 @@ const chai = require('chai');
 chai.should();
 chai.use(require('chai-as-promised'));
 
-const languages = ['golang', 'javascript', 'typescript', 'java'];
-
 const languageToType = {
 	golang: 'golang',
+	golangWithFabricIgnores: 'golang',
 	javascript: 'node',
+	javascriptWithFabricIgnores: 'node',
+	javascriptWithNpmIgnores: 'node',
 	typescript: 'node',
-	java: 'java'
+	typescriptWithFabricIgnores: 'node',
+	typescriptWithNpmIgnores: 'node',
+	java: 'java',
+	javaWithFabricIgnores: 'java'
 };
 
 const fileNames = {
@@ -28,6 +32,12 @@ const fileNames = {
 		'src/golang-contract/chaincode.go',
 		'src/golang-contract/chaincode_test.go',
 		'src/golang-contract/main.go'
+	],
+	golangWithFabricIgnores: [
+		'src/golangWithFabricIgnores-contract/.editorconfig',
+		'src/golangWithFabricIgnores-contract/.fabricignore',
+		'src/golangWithFabricIgnores-contract/chaincode.go',
+		'src/golangWithFabricIgnores-contract/main.go'
 	],
 	javascript: [
 		'src/.editorconfig',
@@ -40,6 +50,27 @@ const fileNames = {
 		'src/test/chaincode.js',
 		'src/test/start.js'
 	],
+	javascriptWithFabricIgnores: [
+		'src/.editorconfig',
+		'src/.eslintignore',
+		'src/.eslintrc.js',
+		'src/.fabricignore',
+		'src/index.js',
+		'src/lib/chaincode.js',
+		'src/lib/start.js',
+		'src/node_modules/whatever/index.js',
+		'src/package.json'
+	],
+	javascriptWithNpmIgnores: [
+		'src/.editorconfig',
+		'src/.eslintignore',
+		'src/.eslintrc.js',
+		'src/.npmignore',
+		'src/index.js',
+		'src/lib/chaincode.js',
+		'src/lib/start.js',
+		'src/package.json'
+	],
 	typescript: [
 		'src/.editorconfig',
 		'src/package.json',
@@ -51,14 +82,44 @@ const fileNames = {
 		'src/tsconfig.json',
 		'src/tslint.json'
 	],
+	typescriptWithFabricIgnores: [
+		'src/.editorconfig',
+		'src/.fabricignore',
+		'src/node_modules/whatever/index.js',
+		'src/package.json',
+		'src/src/chaincode.ts',
+		'src/src/index.ts',
+		'src/src/start.ts',
+		'src/tsconfig.json',
+		'src/tslint.json'
+	],
+	typescriptWithNpmIgnores: [
+		'src/.editorconfig',
+		'src/.npmignore',
+		'src/package.json',
+		'src/src/chaincode.ts',
+		'src/src/index.ts',
+		'src/src/start.ts',
+		'src/tsconfig.json',
+		'src/tslint.json'
+	],
 	java: [
 		'src/build.gradle',
 		'src/settings.gradle',
 		'src/src/main/java/org/example/Chaincode.java',
 		'src/src/main/java/org/example/Start.java',
 		'src/src/test/java/org/example/ChaincodeTest.java'
+	],
+	javaWithFabricIgnores: [
+		'src/.fabricignore',
+		'src/build.gradle',
+		'src/settings.gradle',
+		'src/src/main/java/org/example/Chaincode.java',
+		'src/src/main/java/org/example/Start.java'
 	]
 };
+
+const languages = Object.keys(fileNames);
 
 const metadataFileNames = [
 	'META-INF/statedb/couchdb/indexes/indexOwner.json'
@@ -80,6 +141,10 @@ describe('Package', () => {
 	describe('#fromBuffer', () => {
 
 		for (const language of languages) {
+
+			if (language.endsWith('Ignores')) {
+				continue;
+			}
 
 			const type = languageToType[language];
 
@@ -115,7 +180,7 @@ describe('Package', () => {
 
 			it(`should throw an error for an empty smart contract name [${language}]`, async () => {
 				let pkgDirectory;
-				if (language === 'golang') {
+				if (language.startsWith('golang')) {
 					pkgDirectory = `${language}-contract`;
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
@@ -126,7 +191,7 @@ describe('Package', () => {
 
 			it(`should throw an error for an invalid smart contract name [${language}]`, async () => {
 				let pkgDirectory;
-				if (language === 'golang') {
+				if (language.startsWith('golang')) {
 					pkgDirectory = `${language}-contract`;
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
@@ -137,7 +202,7 @@ describe('Package', () => {
 
 			it(`should throw an error for an empty smart contract version [${language}]`, async () => {
 				let pkgDirectory;
-				if (language === 'golang') {
+				if (language.startsWith('golang')) {
 					pkgDirectory = `${language}-contract`;
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
@@ -148,7 +213,7 @@ describe('Package', () => {
 
 			it(`should throw an error for an invalid smart contract version [${language}]`, async () => {
 				let pkgDirectory;
-				if (language === 'golang') {
+				if (language.startsWith('golang')) {
 					pkgDirectory = `${language}-contract`;
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
@@ -159,7 +224,7 @@ describe('Package', () => {
 
 			it(`should create a smart contract package from a directory [${language}]`, async () => {
 				let pkgDirectory;
-				if (language === 'golang') {
+				if (language.startsWith('golang')) {
 					pkgDirectory = `${language}-contract`;
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
@@ -173,7 +238,7 @@ describe('Package', () => {
 
 			it(`should create a smart contract package from a directory with metadata [${language}]`, async () => {
 				let pkgDirectory;
-				if (language === 'golang') {
+				if (language.startsWith('golang')) {
 					pkgDirectory = `${language}-contract`;
 				} else {
 					pkgDirectory = path.resolve(__dirname, 'data', `${language}-contract`);
@@ -193,6 +258,10 @@ describe('Package', () => {
 	describe('#toBuffer', async () => {
 
 		for (const language of languages) {
+
+			if (language.endsWith('Ignores')) {
+				continue;
+			}
 
 			it(`should save a smart contract package to a buffer [${language}]`, async () => {
 				const pkgFile = path.resolve(__dirname, 'data', `${language}-contract.cds`);
