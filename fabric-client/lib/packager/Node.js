@@ -15,7 +15,6 @@
 'use strict';
 
 const path = require('path');
-const sbuf = require('stream-buffers');
 const {Utils: utils} = require('fabric-common');
 
 const walk = require('ignore-walk');
@@ -23,6 +22,7 @@ const walk = require('ignore-walk');
 const logger = utils.getLogger('packager/Node.js');
 
 const BasePackager = require('./BasePackager');
+const BufferStream = require('./BufferStream');
 
 class NodePackager extends BasePackager {
 
@@ -44,15 +44,15 @@ class NodePackager extends BasePackager {
 		// strictly necessary yet, they pave the way for the future where we
 		// will need to assemble sources from multiple packages
 
-		const buffer = new sbuf.WritableStreamBuffer();
 		const srcDescriptors = await this.findSource(projDir);
 		let descriptors = srcDescriptors;
 		if (metadataPath) {
 			const metaDescriptors = await super.findMetadataDescriptors(metadataPath);
 			descriptors = srcDescriptors.concat(metaDescriptors);
 		}
-		await super.generateTarGz(descriptors, buffer);
-		return buffer.getContents();
+		const stream = new BufferStream();
+		await super.generateTarGz(descriptors, stream);
+		return stream.toBuffer();
 	}
 
 	/**

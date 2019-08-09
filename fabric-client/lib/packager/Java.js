@@ -15,7 +15,6 @@
 'use strict';
 
 const path = require('path');
-const sbuf = require('stream-buffers');
 const {Utils: utils} = require('fabric-common');
 
 const walk = require('ignore-walk');
@@ -23,6 +22,7 @@ const walk = require('ignore-walk');
 const logger = utils.getLogger('JavaPackager.js');
 
 const BasePackager = require('./BasePackager');
+const BufferStream = require('./BufferStream');
 
 class JavaPackager extends BasePackager {
 
@@ -35,7 +35,6 @@ class JavaPackager extends BasePackager {
 	async package(chaincodePath, metadataPath) {
 		logger.debug(`packaging Java source from ${chaincodePath}`);
 
-		const buffer = new sbuf.WritableStreamBuffer();
 		let descriptors = await this.findSource(chaincodePath);
 		if (metadataPath) {
 			logger.debug(`packaging metadata files from ${metadataPath}`);
@@ -43,9 +42,9 @@ class JavaPackager extends BasePackager {
 			const metaDescriptors = await super.findMetadataDescriptors(metadataPath);
 			descriptors = descriptors.concat(metaDescriptors);
 		}
-		await super.generateTarGz(descriptors, buffer);
-
-		return buffer.getContents();
+		const stream = new BufferStream();
+		await super.generateTarGz(descriptors, stream);
+		return stream.toBuffer();
 	}
 
 	/**
