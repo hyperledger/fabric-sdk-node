@@ -16,6 +16,7 @@
 
 const rewire = require('rewire');
 const Golang = rewire('../../lib/packager/Golang');
+const BufferStream = require('../../lib/packager/BufferStream');
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -29,8 +30,6 @@ describe('Golang', () => {
 	let FakeLogger;
 	let findMetadataDescriptorsStub;
 	let generateTarGzStub;
-	let bufferStub;
-	let getContentsStub;
 
 	let golang;
 	beforeEach(() => {
@@ -46,13 +45,6 @@ describe('Golang', () => {
 		generateTarGzStub = sandbox.stub().resolves();
 		revert.push(Golang.__set__('BasePackager.prototype.findMetadataDescriptors', findMetadataDescriptorsStub));
 		revert.push(Golang.__set__('BasePackager.prototype.generateTarGz', generateTarGzStub));
-		getContentsStub = sandbox.stub();
-		bufferStub = class {
-			constructor() {
-				this.getContents = getContentsStub;
-			}
-		};
-		revert.push(Golang.__set__('sbuf.WritableStreamBuffer', bufferStub));
 
 		golang = new Golang(['.go']);
 	});
@@ -68,15 +60,13 @@ describe('Golang', () => {
 		it('should return the package when given the metadata path', async() => {
 			findSourceStub.resolves(['descriptor2']);
 			await golang.package('ccpath', 'metadatapath');
-			sinon.assert.calledWith(generateTarGzStub, ['descriptor2', 'descriptor1'], new bufferStub());
-			sinon.assert.called(getContentsStub);
+			sinon.assert.calledWith(generateTarGzStub, ['descriptor2', 'descriptor1'], sinon.match.instanceOf(BufferStream));
 		});
 
 		it('should return the package when not given the metadata path', async() => {
 			findSourceStub.resolves(['descriptor2']);
 			await golang.package('ccpath');
-			sinon.assert.calledWith(generateTarGzStub, ['descriptor2'], new bufferStub());
-			sinon.assert.called(getContentsStub);
+			sinon.assert.calledWith(generateTarGzStub, ['descriptor2'], sinon.match.instanceOf(BufferStream));
 		});
 	});
 

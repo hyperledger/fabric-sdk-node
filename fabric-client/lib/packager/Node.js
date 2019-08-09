@@ -16,13 +16,13 @@
 
 const fs = require('fs-extra');
 const path = require('path');
-const sbuf = require('stream-buffers');
 const utils = require('../utils.js');
 const walk = require('ignore-walk');
 
 const logger = utils.getLogger('packager/Node.js');
 
 const BasePackager = require('./BasePackager');
+const BufferStream = require('./BufferStream');
 
 class NodePackager extends BasePackager {
 
@@ -33,7 +33,7 @@ class NodePackager extends BasePackager {
 	 * @param {string} [metadataPath] The path to the top-level directory containing metadata descriptors
 	 * @returns {Promise.<TResult>}
 	 */
-	package (chaincodePath, metadataPath) {
+	async package (chaincodePath, metadataPath) {
 		logger.debug('packaging Node from %s', chaincodePath);
 
 		// Compose the path to the chaincode project directory
@@ -44,21 +44,17 @@ class NodePackager extends BasePackager {
 		// strictly necessary yet, they pave the way for the future where we
 		// will need to assemble sources from multiple packages
 
-		const buffer = new sbuf.WritableStreamBuffer();
-		return this.findSource(projDir).then((srcDescriptors) => {
-			if (metadataPath) {
-				return super.findMetadataDescriptors(metadataPath)
-					.then((metaDescriptors) => {
-						return srcDescriptors.concat(metaDescriptors);
-					});
-			} else {
-				return srcDescriptors;
-			}
-		}).then((descriptors) => {
-			return super.generateTarGz(descriptors, buffer);
-		}).then(() => {
-			return buffer.getContents();
-		});
+		const srcDescriptors = await this.findSource(projDir);
+		let descriptors;
+		if (metadataPath) {
+			const metaDescriptors = await super.findMetadataDescriptors(metadataPath);
+			descriptors = srcDescriptors.concat(metaDescriptors);
+		} else {
+			descriptors = srcDescriptors;
+		}
+		const stream = new BufferStream();
+		await super.generateTarGz(descriptors, stream);
+		return stream.toBuffer();
 	}
 
 	/**

@@ -17,6 +17,7 @@
 
 const rewire = require('rewire');
 const Node = rewire('../../lib/packager/Node');
+const BufferStream = require('../../lib/packager/BufferStream');
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -30,8 +31,6 @@ describe('Node', () => {
 	let FakeLogger;
 	let findMetadataDescriptorsStub;
 	let generateTarGzStub;
-	let bufferStub;
-	let getContentsStub;
 
 	let node;
 	beforeEach(() => {
@@ -47,13 +46,6 @@ describe('Node', () => {
 		generateTarGzStub = sandbox.stub().resolves();
 		revert.push(Node.__set__('BasePackager.prototype.findMetadataDescriptors', findMetadataDescriptorsStub));
 		revert.push(Node.__set__('BasePackager.prototype.generateTarGz', generateTarGzStub));
-		getContentsStub = sandbox.stub();
-		bufferStub = class {
-			constructor() {
-				this.getContents = getContentsStub;
-			}
-		};
-		revert.push(Node.__set__('sbuf.WritableStreamBuffer', bufferStub));
 
 		node = new Node();
 	});
@@ -69,15 +61,13 @@ describe('Node', () => {
 		it('should return the package when given the metadata path', async() => {
 			findSourceStub.resolves(['descriptor2']);
 			await node.package('ccpath', 'metadatapath');
-			sinon.assert.calledWith(generateTarGzStub, ['descriptor2', 'descriptor1'], new bufferStub());
-			sinon.assert.called(getContentsStub);
+			sinon.assert.calledWith(generateTarGzStub, ['descriptor2', 'descriptor1'], sinon.match.instanceOf(BufferStream));
 		});
 
 		it('should return the package when not given the metadata path', async() => {
 			findSourceStub.resolves(['descriptor2']);
 			await node.package('ccpath');
-			sinon.assert.calledWith(generateTarGzStub, ['descriptor2'], new bufferStub());
-			sinon.assert.called(getContentsStub);
+			sinon.assert.calledWith(generateTarGzStub, ['descriptor2'], sinon.match.instanceOf(BufferStream));
 		});
 	});
 
