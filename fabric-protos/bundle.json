@@ -1308,6 +1308,10 @@
                                 {
                                     "name": "PEER",
                                     "id": 3
+                                },
+                                {
+                                    "name": "ORDERER",
+                                    "id": 4
                                 }
                             ]
                         }
@@ -2315,6 +2319,10 @@
                         {
                             "name": "ORDERER",
                             "id": 3
+                        },
+                        {
+                            "name": "COMMIT_HASH",
+                            "id": 4
                         }
                     ]
                 }
@@ -3575,6 +3583,18 @@
                             "type": "FabricOUIdentifier",
                             "name": "peer_ou_identifier",
                             "id": 3
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "FabricOUIdentifier",
+                            "name": "admin_ou_identifier",
+                            "id": 4
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "FabricOUIdentifier",
+                            "name": "orderer_ou_identifier",
+                            "id": 5
                         }
                     ]
                 },
@@ -4110,6 +4130,12 @@
                             "type": "bytes",
                             "name": "payload",
                             "id": 2
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bytes",
+                            "name": "metadata",
+                            "id": 3
                         }
                     ]
                 },
@@ -4179,41 +4205,23 @@
                         },
                         {
                             "rule": "optional",
-                            "type": "MigrationState",
-                            "name": "migration_state",
+                            "type": "State",
+                            "name": "state",
                             "id": 3
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "uint64",
-                            "name": "migration_context",
-                            "id": 4
                         }
                     ],
                     "enums": [
                         {
-                            "name": "MigrationState",
+                            "name": "State",
                             "syntax": "proto3",
                             "values": [
                                 {
-                                    "name": "MIG_STATE_NONE",
+                                    "name": "STATE_NORMAL",
                                     "id": 0
                                 },
                                 {
-                                    "name": "MIG_STATE_START",
+                                    "name": "STATE_MAINTENANCE",
                                     "id": 1
-                                },
-                                {
-                                    "name": "MIG_STATE_COMMIT",
-                                    "id": 2
-                                },
-                                {
-                                    "name": "MIG_STATE_ABORT",
-                                    "id": 3
-                                },
-                                {
-                                    "name": "MIG_STATE_CONTEXT",
-                                    "id": 4
                                 }
                             ]
                         }
@@ -4506,6 +4514,12 @@
                             "type": "SeekBehavior",
                             "name": "behavior",
                             "id": 3
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "SeekErrorResponse",
+                            "name": "error_response",
+                            "id": 4
                         }
                     ],
                     "enums": [
@@ -4519,6 +4533,20 @@
                                 },
                                 {
                                     "name": "FAIL_IF_NOT_READY",
+                                    "id": 1
+                                }
+                            ]
+                        },
+                        {
+                            "name": "SeekErrorResponse",
+                            "syntax": "proto3",
+                            "values": [
+                                {
+                                    "name": "STRICT",
+                                    "id": 0
+                                },
+                                {
+                                    "name": "BEST_EFFORT",
                                     "id": 1
                                 }
                             ]
@@ -4708,6 +4736,21 @@
                             "id": 3
                         }
                     ]
+                },
+                {
+                    "name": "ClusterMetadata",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "repeated",
+                            "type": "uint64",
+                            "name": "active_nodes",
+                            "id": 1,
+                            "options": {
+                                "packed": true
+                            }
+                        }
+                    ]
                 }
             ],
             "isNamespace": true
@@ -4718,7 +4761,7 @@
             "syntax": "proto2",
             "options": {
                 "java_package": "org.hyperledger.fabric.protos.peer",
-                "java_outer_classname": "AdminPackage",
+                "java_outer_classname": "ProposalPackage",
                 "go_package": "github.com/hyperledger/fabric/protos/peer"
             },
             "messages": [
@@ -5190,28 +5233,6 @@
                             "type": "bytes",
                             "name": "code_package",
                             "id": 3
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "ExecutionEnvironment",
-                            "name": "exec_env",
-                            "id": 4
-                        }
-                    ],
-                    "enums": [
-                        {
-                            "name": "ExecutionEnvironment",
-                            "syntax": "proto3",
-                            "values": [
-                                {
-                                    "name": "DOCKER",
-                                    "id": 0
-                                },
-                                {
-                                    "name": "SYSTEM",
-                                    "id": 1
-                                }
-                            ]
                         }
                     ]
                 },
@@ -5932,36 +5953,6 @@
                     ]
                 },
                 {
-                    "name": "PeerID",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "name",
-                            "id": 1
-                        }
-                    ]
-                },
-                {
-                    "name": "PeerEndpoint",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "PeerID",
-                            "name": "id",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "address",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
                     "name": "ChaincodeQueryResponse",
                     "syntax": "proto3",
                     "fields": [
@@ -6090,142 +6081,6 @@
                     ],
                     "oneofs": {
                         "Type": [
-                            1,
-                            2
-                        ]
-                    }
-                },
-                {
-                    "name": "ServerStatus",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "StatusCode",
-                            "name": "status",
-                            "id": 1
-                        }
-                    ],
-                    "enums": [
-                        {
-                            "name": "StatusCode",
-                            "syntax": "proto3",
-                            "values": [
-                                {
-                                    "name": "UNDEFINED",
-                                    "id": 0
-                                },
-                                {
-                                    "name": "STARTED",
-                                    "id": 1
-                                },
-                                {
-                                    "name": "STOPPED",
-                                    "id": 2
-                                },
-                                {
-                                    "name": "PAUSED",
-                                    "id": 3
-                                },
-                                {
-                                    "name": "ERROR",
-                                    "id": 4
-                                },
-                                {
-                                    "name": "UNKNOWN",
-                                    "id": 5
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "LogLevelRequest",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "log_module",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "log_level",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "LogLevelResponse",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "log_module",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "log_level",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "LogSpecRequest",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "log_spec",
-                            "id": 1
-                        }
-                    ]
-                },
-                {
-                    "name": "LogSpecResponse",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "log_spec",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "error",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "AdminOperation",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "LogLevelRequest",
-                            "name": "logReq",
-                            "id": 1,
-                            "oneof": "content"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "LogSpecRequest",
-                            "name": "logSpecReq",
-                            "id": 2,
-                            "oneof": "content"
-                        }
-                    ],
-                    "oneofs": {
-                        "content": [
                             1,
                             2
                         ]
@@ -6412,61 +6267,6 @@
                             "options": {}
                         }
                     }
-                },
-                {
-                    "name": "Admin",
-                    "options": {},
-                    "rpc": {
-                        "GetStatus": {
-                            "request": "common.Envelope",
-                            "request_stream": false,
-                            "response": "ServerStatus",
-                            "response_stream": false,
-                            "options": {}
-                        },
-                        "StartServer": {
-                            "request": "common.Envelope",
-                            "request_stream": false,
-                            "response": "ServerStatus",
-                            "response_stream": false,
-                            "options": {}
-                        },
-                        "GetModuleLogLevel": {
-                            "request": "common.Envelope",
-                            "request_stream": false,
-                            "response": "LogLevelResponse",
-                            "response_stream": false,
-                            "options": {}
-                        },
-                        "SetModuleLogLevel": {
-                            "request": "common.Envelope",
-                            "request_stream": false,
-                            "response": "LogLevelResponse",
-                            "response_stream": false,
-                            "options": {}
-                        },
-                        "RevertLogLevels": {
-                            "request": "common.Envelope",
-                            "request_stream": false,
-                            "response": "google.protobuf.Empty",
-                            "response_stream": false,
-                            "options": {}
-                        },
-                        "GetLogSpec": {
-                            "request": "common.Envelope",
-                            "request_stream": false,
-                            "response": "LogSpecResponse",
-                            "response_stream": false,
-                            "options": {}
-                        },
-                        "SetLogSpec": {
-                            "request": "common.Envelope",
-                            "request_stream": false,
-                            "response": "LogSpecResponse",
-                            "response_stream": false,
-                            "options": {}
-                        }
-                    }
                 }
             ],
             "isNamespace": true
@@ -6541,6 +6341,30 @@
                     ]
                 },
                 {
+                    "name": "GetInstalledChaincodePackageArgs",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "package_id",
+                            "id": 1
+                        }
+                    ]
+                },
+                {
+                    "name": "GetInstalledChaincodePackageResult",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "bytes",
+                            "name": "chaincode_install_package",
+                            "id": 1
+                        }
+                    ]
+                },
+                {
                     "name": "QueryInstalledChaincodesArgs",
                     "syntax": "proto3",
                     "fields": []
@@ -6571,6 +6395,43 @@
                                     "rule": "optional",
                                     "type": "string",
                                     "name": "label",
+                                    "id": 2
+                                },
+                                {
+                                    "rule": "map",
+                                    "type": "References",
+                                    "keytype": "string",
+                                    "name": "references",
+                                    "id": 3
+                                }
+                            ]
+                        },
+                        {
+                            "name": "References",
+                            "syntax": "proto3",
+                            "fields": [
+                                {
+                                    "rule": "repeated",
+                                    "type": "Chaincode",
+                                    "name": "chaincodes",
+                                    "id": 1
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Chaincode",
+                            "syntax": "proto3",
+                            "fields": [
+                                {
+                                    "rule": "optional",
+                                    "type": "string",
+                                    "name": "name",
+                                    "id": 1
+                                },
+                                {
+                                    "rule": "optional",
+                                    "type": "string",
+                                    "name": "version",
                                     "id": 2
                                 }
                             ]
@@ -6747,7 +6608,7 @@
                     "fields": []
                 },
                 {
-                    "name": "QueryApprovalStatusArgs",
+                    "name": "CheckCommitReadinessArgs",
                     "syntax": "proto3",
                     "fields": [
                         {
@@ -6801,14 +6662,14 @@
                     ]
                 },
                 {
-                    "name": "QueryApprovalStatusResults",
+                    "name": "CheckCommitReadinessResult",
                     "syntax": "proto3",
                     "fields": [
                         {
                             "rule": "map",
                             "type": "bool",
                             "keytype": "string",
-                            "name": "approved",
+                            "name": "approvals",
                             "id": 1
                         }
                     ]
@@ -6870,36 +6731,84 @@
                             "type": "bool",
                             "name": "init_required",
                             "id": 7
+                        },
+                        {
+                            "rule": "map",
+                            "type": "bool",
+                            "keytype": "string",
+                            "name": "approvals",
+                            "id": 8
                         }
                     ]
                 },
                 {
-                    "name": "QueryNamespaceDefinitionsArgs",
+                    "name": "QueryChaincodeDefinitionsArgs",
                     "syntax": "proto3",
                     "fields": []
                 },
                 {
-                    "name": "QueryNamespaceDefinitionsResult",
+                    "name": "QueryChaincodeDefinitionsResult",
                     "syntax": "proto3",
                     "fields": [
                         {
-                            "rule": "map",
-                            "type": "Namespace",
-                            "keytype": "string",
-                            "name": "namespaces",
+                            "rule": "repeated",
+                            "type": "ChaincodeDefinition",
+                            "name": "chaincode_definitions",
                             "id": 1
                         }
                     ],
                     "messages": [
                         {
-                            "name": "Namespace",
+                            "name": "ChaincodeDefinition",
                             "syntax": "proto3",
                             "fields": [
                                 {
                                     "rule": "optional",
                                     "type": "string",
-                                    "name": "type",
+                                    "name": "name",
                                     "id": 1
+                                },
+                                {
+                                    "rule": "optional",
+                                    "type": "int64",
+                                    "name": "sequence",
+                                    "id": 2
+                                },
+                                {
+                                    "rule": "optional",
+                                    "type": "string",
+                                    "name": "version",
+                                    "id": 3
+                                },
+                                {
+                                    "rule": "optional",
+                                    "type": "string",
+                                    "name": "endorsement_plugin",
+                                    "id": 4
+                                },
+                                {
+                                    "rule": "optional",
+                                    "type": "string",
+                                    "name": "validation_plugin",
+                                    "id": 5
+                                },
+                                {
+                                    "rule": "optional",
+                                    "type": "bytes",
+                                    "name": "validation_parameter",
+                                    "id": 6
+                                },
+                                {
+                                    "rule": "optional",
+                                    "type": "common.CollectionConfigPackage",
+                                    "name": "collections",
+                                    "id": 7
+                                },
+                                {
+                                    "rule": "optional",
+                                    "type": "bool",
+                                    "name": "init_required",
+                                    "id": 8
                                 }
                             ]
                         }

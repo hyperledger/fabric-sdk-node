@@ -769,16 +769,15 @@ const Chaincode = class {
 	}
 
 	/*
-	 * Build a QueryApprovalStatusArgs protobuf object
+	 * Build a CheckCommitReadinessArgs protobuf object
 	 * based on this Chaincode definition
 	 */
-	getQueryApprovalStatusArgs() {
-		const method = 'getQueryApprovalStatusArgs';
+	getCheckCommitReadinessArgs() {
+		const method = 'getCheckCommitReadinessArgs';
 		logger.debug('%s - start', method);
 
-		const arg = new lifecycle_protos.QueryApprovalStatusArgs();
+		const arg = new lifecycle_protos.CheckCommitReadinessArgs();
 		this._setCommon(arg);
-		// arg.setSequence(Long.fromValue(2));
 
 		logger.debug('%s - end', method);
 		return arg;
