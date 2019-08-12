@@ -13,7 +13,8 @@ The following section targets a current or future contributor to this project it
 
 ### Build and Test
 To build and test, the following pre-requisites must be installed first:
-* node runtime LTS version 8.9.0 or higher, up to 9.0 ( __Node v9.0+ is not supported__ )
+* Node.js, version 8 is supported from 8.9.4 and higher.
+* Node.js, version 10 is supported from 10.15.3 and higher.
 * npm tool version 5.5.1 or higher
 * gulp command (must be installed globaly with `npm install -g gulp`)
 * docker (not required if you only want to run the headless tests with `npm test`, see below)
@@ -88,7 +89,7 @@ The unit test assumes slot '0' and user PIN `98765432`. If your configuration is
 ### Hyperledger Fabric Client objects and reference documentation
 The SDK has support for Java based Chaincode. To turn these tests off, set the environment variable "JAVA_TESTS" to false.
 
-### Hyperledger Fabric Client objects 
+### Hyperledger Fabric Client objects
 fabric-client and fabric-ca-client are written in CommonJS modules and take advantage of ECMAScript 2015 class syntax.
 
 * The main top-level class is **Client**. The client's view of a fabric [channel] is the class **Channel**.
@@ -115,4 +116,3 @@ Please have a look at [Continuous Integration Process](docs/sdk-node-ci.md)
 Check [the documentation](./CONTRIBUTING.md) on how to contribute to this project for the full details.
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
-
