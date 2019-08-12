@@ -205,6 +205,11 @@ gulp.task('run-test-scenario', (done) => {
 	runSequence(...tasks, done);
 });
 
+gulp.task('run-test-merge', (done) => {
+	const tasks = ['run-test-cucumber'];
+	runSequence(...tasks, done);
+});
+
 gulp.task('run-test-functional', (done) => {
 	const tasks = ['test-fv-only'];
 	runSequence(...tasks, done);
