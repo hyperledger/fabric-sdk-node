@@ -3359,7 +3359,7 @@ describe('Channel', () => {
 
 		it('returns valid peer response payloads', async () => {
 			const result = await channel.queryChaincodeDefinition(request);
-			expect(result.getName()).to.equal('chaincodeId');
+			expect(result.version).to.equal('v1');
 		});
 
 		it('returns error peer response messages', async () => {
@@ -3380,7 +3380,7 @@ describe('Channel', () => {
 			try {
 				await channel.queryChaincodeDefinition(request);
 			} catch (error) {
-				expect(error.message).to.equal('.protos.ProposalResponse');
+				expect(error.message).to.equal('QueryChaincodeDefinition has bad status 500');
 			}
 		});
 

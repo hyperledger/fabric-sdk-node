@@ -20,7 +20,6 @@ const token_utils = require('./token-utils.js');
 const util = require('util');
 const Peer = require('./Peer.js');
 const ChannelEventHub = require('./ChannelEventHub.js');
-const Chaincode = require('./Chaincode.js');
 const Orderer = require('./Orderer.js');
 const BlockDecoder = require('./BlockDecoder.js');
 const TransactionID = require('./TransactionID.js');
@@ -3740,19 +3739,19 @@ const Channel = class {
 		responses.forEach((response) => {
 			if (response instanceof Error) {
 				results = response;
-			} else if (response.response && response.response.payload) {
+			} else if (response.response && response.response.status) {
 				if (response.response.status === 200) {
-					const chaincode = Chaincode.fromQueryResult(request.chaincodeId, response.response.payload, this._clientContext);
-					results = chaincode;
+					logger.debug('%s - decode payload', method);
+					results = fabprotos.lifecycle.QueryChaincodeDefinitionResult.decode(response.response.payload);
 				} else {
 					if (response.response.message) {
 						results = new Error(response.response.message);
 					} else {
-						results = new Error(response);
+						results = new Error('QueryChaincodeDefinition has bad status ' + response.response.status);
 					}
 				}
 			} else {
-				results = new Error(response);
+				results = new Error('QueryChaincodeDefinition does not have results');
 			}
 		});
 
@@ -3761,7 +3760,7 @@ const Channel = class {
 			throw results;
 		}
 
-		return results;
+		return JSON.parse(results.encodeJSON());
 	}
 
 
@@ -4012,6 +4011,174 @@ const Channel = class {
 				}
 			} else {
 				results = new Error('QueryInstalledChaincodes does not have results');
+			}
+		});
+
+		if (results instanceof Error) {
+			logger.error(results);
+			throw results;
+		}
+
+		return JSON.parse(results.encodeJSON());
+	}
+
+	/**
+	 * @typedef {Object} QueryChaincodeDefinitionsRequest
+	 * @property {Peer | string} target - Required. The peer that will receive
+	 *  this request
+	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this request
+	 * @property {TransactionID} [txId] - Optional. Transaction ID to use for the
+	 *  query. Required when using the admin idendity.
+	 */
+
+	/**
+	 * Sends a QueryChaincodeDefinitions request to one peer.
+	 *
+	 * @param {QueryChaincodeDefinitionsRequest} request
+	 * @returns {Promise} A Promise for a {@link QueryChaincodeDefinitionsResult[]}
+	 */
+	async queryChaincodeDefinitions(request) {
+		const method = 'queryChaincodeDefinitions';
+		logger.debug('%s - start', method);
+
+		let useAdmin = false;
+		if (!request) {
+			throw new Error('Missing request object parameter');
+		}
+
+		if (request.txId) {
+			useAdmin = request.txId.isAdmin();
+		}
+
+		const targets = this._getTargets(request.target, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = request.txId || new TransactionID(signer, useAdmin);
+
+		const arg = new fabprotos.lifecycle.QueryChaincodeDefinitionsArgs();
+
+		const query_request = {
+			targets: targets,
+			chaincodeId: '_lifecycle',
+			fcn: 'QueryChaincodeDefinitions',
+			args: [arg.toBuffer()],
+			txId: txId,
+			signer: signer
+		};
+
+		const proposalResults = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
+		const responses = proposalResults[0];
+		logger.debug('%s - results received', method);
+
+		if (!responses || !Array.isArray(responses)) {
+			throw new Error('Results are missing from the QueryChaincodeDefinitions');
+		}
+
+		let results;
+		responses.forEach((response) => {
+			if (response instanceof Error) {
+				results = response;
+			} else if (response.response && response.response.status) {
+				if (response.response.status === 200) {
+					logger.debug('%s - decode payload', method);
+					results = fabprotos.lifecycle.QueryChaincodeDefinitionsResult.decode(response.response.payload);
+				} else {
+					if (response.response.message) {
+						results = new Error(response.response.message);
+					} else {
+						results = new Error('QueryChaincodeDefinitions has bad status ' + response.response.status);
+					}
+				}
+			} else {
+				results = new Error('QueryChaincodeDefinitions does not have results');
+			}
+		});
+
+		if (results instanceof Error) {
+			logger.error(results);
+			throw results;
+		}
+
+		return JSON.parse(results.encodeJSON());
+	}
+
+	/**
+	 * @typedef {Object} GetInstalledChaincodePackageRequest
+	 * @property {Peer | string} target - Required. The peer that will receive
+	 *  this request
+	 * @property {string} package_id - Required. Package Id of the chaincode
+	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this request
+	 * @property {TransactionID} [txId] - Optional. Transaction ID to use for the
+	 *  query. Required when using the admin idendity.
+	 */
+
+	/**
+ 	 * @typedef {Object} GetInstalledChaincodePackageResult
+ 	 * @property {byte[]} chaincode_install_package - The package bytes
+ 	 */
+
+	/**
+	 * Sends a QueryInstalledChaincode request to one peer.
+	 *
+	 * @param {GetInstalledChaincodePackageRequest} request
+	 * @returns {Promise} A Promise for a {byte[]} the installed package.
+	 */
+	async getInstalledChaincodePackage(request) {
+		const method = 'getInstalledChaincodePackage';
+		logger.debug('%s - start', method);
+
+		let useAdmin = false;
+		if (!request) {
+			throw new Error('Missing request object parameter');
+		}
+		if (!request.package_id) {
+			throw new Error('Missing "package_id" request parameter');
+		}
+
+		if (request.txId) {
+			useAdmin = request.txId.isAdmin();
+		}
+
+		const targets = this._getTargets(request.target, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		const signer = this._clientContext._getSigningIdentity(useAdmin);
+		const txId = request.txId || new TransactionID(signer, useAdmin);
+
+		const arg = new fabprotos.lifecycle.GetInstalledChaincodePackageArgs();
+		arg.setPackageId(request.package_id);
+
+		const query_request = {
+			targets: targets,
+			chaincodeId: '_lifecycle',
+			fcn: 'GetInstalledChaincodePackage',
+			args: [arg.toBuffer()],
+			txId: txId,
+			signer: signer
+		};
+
+		const proposalResults = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
+		const responses = proposalResults[0];
+		logger.debug('%s - results received', method);
+
+		if (!responses || !Array.isArray(responses)) {
+			throw new Error('Results are missing from the GetInstalledChaincodePackage');
+		}
+
+		let results;
+		responses.forEach((response) => {
+			if (response instanceof Error) {
+				results = response;
+			} else if (response.response && response.response.status) {
+				if (response.response.status === 200) {
+					logger.debug('%s - decode payload', method);
+					results = fabprotos.lifecycle.GetInstalledChaincodePackageResult.decode(response.response.payload);
+				} else {
+					if (response.response.message) {
+						results = new Error(response.response.message);
+					} else {
+						results = new Error('GetInstalledChaincodePackage has bad status ' + response.response.status);
+					}
+				}
+			} else {
+				results = new Error('GetInstalledChaincodePackage does not have results');
 			}
 		});
 

@@ -333,24 +333,46 @@ module.exports = function () {
 			const channel =	Client.getConfigSetting('channel-' + org_name + '-' + channel_name).value;
 			const txId = client.newTransactionID(true);
 
-			const request = {
-				target : peer,
-				txId: txId,
-				chaincodeId: chaincode.getName()
-			};
-
 			try {
-				const result = await channel.queryChaincodeDefinition(request);
+				let request = {
+					target : peer,
+					txId: txId,
+					chaincodeId: chaincode.getName()
+				};
+				let result = await channel.queryChaincodeDefinition(request);
 				if (result instanceof Error) {
 					testUtil.logAndThrow(result);
 				} else if (result) {
-					if (result.getName() === chaincode_name) {
-						testUtil.logMsg(format('%s - Good peer response %s', step, 'found the chaincode definition'));
-					} else {
-						testUtil.logAndThrow(format('Problem with the chaincode query for definition'));
-					}
+					testUtil.logMsg(format('%s - Good peer response %j', step, result));
 				} else {
 					testUtil.logAndThrow('Problem with the chaincode query for definition no response returned');
+				}
+
+				request = {
+					target : peer,
+					txId: txId
+				};
+				result = await channel.queryChaincodeDefinitions(request);
+				if (result instanceof Error) {
+					testUtil.logAndThrow(result);
+				} else if (result) {
+					testUtil.logMsg(format('QueryChaincodeDefinitions - Good peer response %j', result));
+				} else {
+					testUtil.logAndThrow('Problem with the chaincode query for definitions no response returned');
+				}
+
+				request = {
+					target : peer,
+					txId: txId,
+					package_id: chaincode.getPackageId()
+				};
+				result = await channel.getInstalledChaincodePackage(request);
+				if (result instanceof Error) {
+					testUtil.logAndThrow(result);
+				} else if (result) {
+					testUtil.logMsg(format('GetInstalledChaincodePackage - Good peer response %j', result));
+				} else {
+					testUtil.logAndThrow('Problem with the GetInstalledChaincodePackage, no response returned');
 				}
 			} catch (error) {
 				testUtil.logAndThrow(error);
