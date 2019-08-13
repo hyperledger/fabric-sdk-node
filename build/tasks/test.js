@@ -1,3 +1,4 @@
+
 /*
 # Copyright IBM Corp. All Rights Reserved.
 #
@@ -206,7 +207,7 @@ gulp.task('run-test-scenario', (done) => {
 });
 
 gulp.task('run-test-merge', (done) => {
-	const tasks = ['run-test-cucumber'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'run-test-cucumber'];
 	runSequence(...tasks, done);
 });
 
