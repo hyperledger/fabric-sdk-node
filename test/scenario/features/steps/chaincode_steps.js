@@ -357,38 +357,10 @@ module.exports = function () {
 			}
 		});
 
-	this.Then(/^I can query for namespaces as organization (.+?) on channel (.+?)$/,
-		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
-		async (org_name, channel_name) => {
-			const step = 'QueryNamespaceDefinitions';
-			testUtil.logMsg(format('%s - starting for %s, %s', step, org_name, channel_name));
-
-			const client = Client.getConfigSetting('client-' + org_name).value;
-			const peer = Client.getConfigSetting('peer-' + org_name).value;
-			const channel =	Client.getConfigSetting('channel-' + org_name + '-' + channel_name).value;
-			const txId = client.newTransactionID(true);
-
-			const request = {
-				target : peer,
-				txId: txId
-			};
-
-			try {
-				const results = await channel.queryNamespaceDefinitions(request);
-				if (typeof results === 'object') {
-					testUtil.logMsg(format('%s - Good peer response, the namespaces map: %j', step, results));
-				} else {
-					testUtil.logAndThrow(format('Problem with the %s', step));
-				}
-			} catch (error) {
-				testUtil.logAndThrow(format('Problem with the %s %s', step, error));
-			}
-		});
-
-	this.Then(/^I can query for chaincode (.+?) for approval status as organization (.+?) on channel (.+?)$/,
+	this.Then(/^I can query for chaincode (.+?) for commit status as organization (.+?) on channel (.+?)$/,
 		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
 		async (chaincode_name, org_name, channel_name) => {
-			const step = 'QueryApprovalStatus';
+			const step = 'CheckCommitReadiness';
 			testUtil.logMsg(format('%s - starting for %s, %s, %s', step, chaincode_name, org_name, channel_name));
 
 			const client = Client.getConfigSetting('client-' + org_name).value;
@@ -405,9 +377,9 @@ module.exports = function () {
 			};
 
 			try {
-				const results = await channel.queryApprovalStatus(request);
+				const results = await channel.checkCommitReadiness(request);
 				if (typeof results === 'object') {
-					testUtil.logMsg(format('%s - Good peer response, the approval status map: %j', step, results));
+					testUtil.logMsg(format('%s - Good peer response, the commmit status map: %j', step, results));
 				} else {
 					testUtil.logAndThrow(format('Problem with the %s', step));
 				}

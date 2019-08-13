@@ -3764,85 +3764,6 @@ const Channel = class {
 		return results;
 	}
 
-	/**
-	 * @typedef {Object} QueryNamespaceDefinitionsRequest
-	 * @property {Peer | string} target - Required. The peer that will receive
-	 *  this request
-	 * @property {integer} [request_timeout] - Optional. The timeout value to use for this
-	 *  request
-	 * @property {TransactionID} [txId] - Optional. Transaction ID to use for the
-	 *  query. Required when using the admin idendity.
-	 */
-
-	/**
-	 * Sends a QueryNamespaceDefinitions request to one peer.
-	 *
-	 * @param {QueryNamespaceDefinitionsRequest} request
-	 * @returns {Promise} A Promise for an {Object} with a "namespaces" map
-	 */
-	async queryNamespaceDefinitions(request) {
-		const method = 'queryNamespaceDefinitions';
-		logger.debug('%s - start', method);
-
-		let useAdmin = false;
-		if (!request) {
-			throw new Error('Missing request object parameter');
-		}
-
-		if (request.txId) {
-			useAdmin = request.txId.isAdmin();
-		}
-
-		const targets = this._getTargets(request.target, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
-		const signer = this._clientContext._getSigningIdentity(useAdmin);
-		const txId = request.txId || new TransactionID(signer, useAdmin);
-
-		const arg = new fabprotos.lifecycle.QueryNamespaceDefinitionsArgs();
-
-		const query_request = {
-			targets: targets,
-			chaincodeId: '_lifecycle',
-			fcn: 'QueryNamespaceDefinitions',
-			args: [arg.toBuffer()],
-			txId: txId,
-			signer: signer
-		};
-
-		const proposalResults = await Channel.sendTransactionProposal(query_request, this._name, this._clientContext, request.request_timeout);
-		const responses = proposalResults[0];
-		logger.debug('%s - results received', method);
-
-		if (!responses || !Array.isArray(responses)) {
-			throw new Error('Results are missing from the QueryNamespaceDefinitions');
-		}
-
-		let results;
-		responses.forEach((response) => {
-			if (response instanceof Error) {
-				results = response;
-			} else if (response.response && response.response.status) {
-				if (response.response.status === 200) {
-					logger.debug('%s - decode payload', method);
-					results = fabprotos.lifecycle.QueryNamespaceDefinitionsResult.decode(response.response.payload);
-				} else {
-					if (response.response.message) {
-						results = new Error(response.response.message);
-					} else {
-						results = new Error('QueryNamespaceDefinitions has bad status ' + response.response.status);
-					}
-				}
-			} else {
-				results = new Error('QueryNamespaceDefinitions does not have results');
-			}
-		});
-
-		if (results instanceof Error) {
-			logger.error(results);
-			throw results;
-		}
-
-		return JSON.parse(results.encodeJSON());
-	}
 
 	/**
 	 * @typedef {Object} QueryApprovalStatusRequest
@@ -3863,8 +3784,8 @@ const Channel = class {
 	 * @param {QueryApprovalStatusRequest} request
 	 * @returns {Promise} A Promise for a {@link Chaincode} instance
 	 */
-	async queryApprovalStatus(request) {
-		const method = 'queryApprovalStatus';
+	async checkCommitReadiness(request) {
+		const method = 'checkCommitReadiness';
 		logger.debug('%s - start', method);
 
 		let useAdmin = false;
@@ -3885,13 +3806,13 @@ const Channel = class {
 		const signer = this._clientContext._getSigningIdentity(useAdmin);
 		const txId = request.txId || new TransactionID(signer, useAdmin);
 
-		const arg = request.chaincode.getQueryApprovalStatusArgs();
+		const arg = request.chaincode.getCheckCommitReadinessArgs();
 
 
 		const query_request = {
 			targets: targets,
 			chaincodeId: '_lifecycle',
-			fcn: 'QueryApprovalStatus',
+			fcn: 'CheckCommitReadiness',
 			args: [arg.toBuffer()],
 			txId: txId,
 			signer: signer
@@ -3902,7 +3823,7 @@ const Channel = class {
 		logger.debug('%s - results received', method);
 
 		if (!responses || !Array.isArray(responses)) {
-			throw new Error('Results are missing from the QueryApprovalStatus');
+			throw new Error('Results are missing from the CheckCommitReadiness');
 		}
 
 		let results;
@@ -3912,16 +3833,16 @@ const Channel = class {
 			} else if (response.response && response.response.status) {
 				if (response.response.status === 200) {
 					logger.debug('%s - decode payload', method);
-					results = fabprotos.lifecycle.QueryApprovalStatusResults.decode(response.response.payload);
+					results = fabprotos.lifecycle.CheckCommitReadinessResult.decode(response.response.payload);
 				} else {
 					if (response.response.message) {
 						results = new Error(response.response.message);
 					} else {
-						results = new Error('QueryApprovalStatus has bad status ' + response.response.status);
+						results = new Error('CheckCommitReadiness has bad status ' + response.response.status);
 					}
 				}
 			} else {
-				results = new Error('QueryApprovalStatus does not have results');
+				results = new Error('CheckCommitReadiness does not have results');
 			}
 		});
 

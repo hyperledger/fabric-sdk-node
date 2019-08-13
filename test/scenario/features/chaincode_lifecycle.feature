@@ -3,15 +3,12 @@
 #
 
 @debug
-@clean-images
 
 Feature: Use the v2.0 chaincode lifecycle process
 
-	@skip
 	Background:
 		Given I have forcibly taken down all docker containers
 
-	@skip
 	Scenario: Using the SDK I can run new chaincode
 		Given I have deployed a tls Fabric network
 		Given I have created fabric-client network instances
@@ -41,9 +38,9 @@ Feature: Use the v2.0 chaincode lifecycle process
 		And I can approve java chaincode at version v1 named example_cc_java as organization org2 on channel tokenchannel with endorsement policy both_orgs
 		And I can approve golang chaincode at version v1 named example_cc_golang as organization org2 on channel tokenchannel with endorsement policy both_orgs
 
-		And I can query for chaincode example_cc_node for approval status as organization org1 on channel tokenchannel
-		And I can query for chaincode example_cc_java for approval status as organization org1 on channel tokenchannel
-		And I can query for chaincode example_cc_golang for approval status as organization org1 on channel tokenchannel
+		And I can query for chaincode example_cc_node for commit status as organization org1 on channel tokenchannel
+		And I can query for chaincode example_cc_java for commit status as organization org1 on channel tokenchannel
+		And I can query for chaincode example_cc_golang for commit status as organization org1 on channel tokenchannel
 
 		And I can commit node chaincode at version v1 named example_cc_node as organization org1 on channel tokenchannel
 		And I can commit java chaincode at version v1 named example_cc_java as organization org1 on channel tokenchannel
@@ -62,13 +59,12 @@ Feature: Use the v2.0 chaincode lifecycle process
 		And I can query for defined chaincode example_cc_golang as organization org1 on channel tokenchannel
 
 
-		And I can query for chaincode example_cc_node for approval status as organization org1 on channel tokenchannel
-		And I can query for chaincode example_cc_java for approval status as organization org1 on channel tokenchannel
-		And I can query for chaincode example_cc_golang for approval status as organization org1 on channel tokenchannel
+		And I can query for chaincode example_cc_node for commit status as organization org1 on channel tokenchannel
+		And I can query for chaincode example_cc_java for commit status as organization org1 on channel tokenchannel
+		And I can query for chaincode example_cc_golang for commit status as organization org1 on channel tokenchannel
 
 		And I can query installed chaincode example_cc_node as organization org1 on channel tokenchannel
 		And I can query installed chaincode example_cc_java as organization org1 on channel tokenchannel
 		And I can query installed chaincode example_cc_golang as organization org1 on channel tokenchannel
 
 		And I can query installed chaincodes as organization org1 on channel tokenchannel
-		And I can query for namespaces as organization org1 on channel tokenchannel
