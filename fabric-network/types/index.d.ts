@@ -121,6 +121,7 @@ export interface Transaction {
 	getName(): string;
 	getTransactionID(): TransactionId;
 	getNetwork(): Network;
+	setEndorsingPeers(peers: ChannelPeer[]): this;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
 	addCommitListener(callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: object, eventHub?: Client.ChannelEventHub): Promise<CommitEventListener>;

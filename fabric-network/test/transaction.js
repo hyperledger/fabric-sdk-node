@@ -10,9 +10,12 @@ const sinon = require('sinon');
 const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-as-promised'));
+const rewire = require('rewire');
 
 const Client = require('fabric-client');
 const Channel = require('fabric-client/lib/Channel');
+const RewireChannel = rewire('fabric-client/lib/Channel');
+const ChannelPeer = RewireChannel.__get__('ChannelPeer');
 const Contract = require('fabric-network/lib/contract');
 const Network = require('fabric-network/lib/network');
 const Gateway = require('fabric-network/lib/gateway');
@@ -281,6 +284,16 @@ describe('Transaction', () => {
 			stubContract.getEventHandlerOptions.returns({commitTimeout: 3});
 			await transaction.submit();
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 45000);
+		});
+
+		it('sends proposal to specified peers', async () => {
+			const peer = sinon.createStubInstance(ChannelPeer);
+			const endorsingPeers = [peer];
+
+			await transaction.setEndorsingPeers(endorsingPeers).submit();
+
+			expectedProposal.targets = endorsingPeers;
+			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
 		});
 	});
 
