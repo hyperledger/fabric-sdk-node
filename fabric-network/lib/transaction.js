@@ -58,6 +58,7 @@ class Transaction {
 		this._createTxEventHandler = (() => noOpTxEventHandler);
 		this._isInvoked = false;
 		this._queryHandler = contract.getNetwork().getQueryHandler();
+		this._endorsingPeers = null;
 	}
 
 	/**
@@ -101,6 +102,16 @@ class Transaction {
 	}
 
 	/**
+	 * Set the peers that should be used for endorsement when this transaction is submitted to the ledger.
+	 * @param {ChannelPeer[]} peers Endorsing peers.
+	 * @returns {module:fabric-network.Transaction} This object, to allow function chaining.
+	 */
+	setEndorsingPeers(peers) {
+		this._endorsingPeers = peers;
+		return this;
+	}
+
+	/**
 	 * Returns the network from the contract
 	 * @returns {module:fabric-network.Network}
 	 */
@@ -129,6 +140,9 @@ class Transaction {
 		const eventHandler = this._createTxEventHandler(this, network, options);
 
 		const request = this._buildRequest(args);
+		if (this._endorsingPeers) {
+			request.targets = this._endorsingPeers;
+		}
 
 		const commitTimeout = options.commitTimeout * 1000; // in ms
 		let timeout = this._contract.gateway.getClient().getConfigSetting('request-timeout', commitTimeout);
