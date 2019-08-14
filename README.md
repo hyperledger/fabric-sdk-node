@@ -11,8 +11,8 @@ This project publishes the following npm packages:
 
 ## Build and Test
 To build and test, the following pre-requisites must be installed first:
-* node runtime LTS version 8 or 10
-* npm tool version 5.6.0 or higher
+* node runtime LTS version 10
+* npm tool version 6 or higher
 * gulp command (must be installed globally with `npm install -g gulp`)
 * docker (not required if you only want to run the headless tests with `npm test`, see below)
 
@@ -22,12 +22,12 @@ Clone the project and launch the following commands to install the dependencies 
 
 In the project root folder:
 * Install all dependancies via `npm install`
-* Optionally, to generate API docs via `gulp docs` 
+* Optionally, to generate API docs via `gulp docs`
 * To generate the required crypto material used by the tests, use one of the following patform specific commands:
   * For Linux `gulp install-and-generate-certs`
   * For mac `gulp install-and-generate-certs-mac`
   * For s390 `gulp install-and-generate-certs-s390`
-* To run the headless tests that do not require any additional set up use `npm test` or `gulp test-headless` 
+* To run the headless tests that do not require any additional set up use `npm test` or `gulp test-headless`
 
 ### Run Integration Tests
 Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Nexus. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run retrieve-images`
@@ -74,7 +74,7 @@ The unit test assumes slot '0' and user PIN `98765432`. If your configuration is
 ### Hyperledger Fabric Client objects and reference documentation
 The SDK has support for Java based Chaincode. To turn these tests off, set the environment variable "JAVA_TESTS" to false.
 
-### Hyperledger Fabric Client objects 
+### Hyperledger Fabric Client objects
 fabric-client and fabric-ca-client are written in CommonJS modules and take advantage of ECMAScript 2015 class syntax.
 
 * The main top-level class is **Client**. The client's view of a fabric [channel] is the class **Channel**.
