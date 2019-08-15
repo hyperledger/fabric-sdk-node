@@ -211,27 +211,19 @@ class Gateway {
 		// setup an initial identity for the Gateway
 		if (options.identity) {
 			logger.debug('%s - setting identity', method);
-			this.currentIdentity = await options.wallet.setUserContext(this.client, options.identity);
+			const identity = await options.wallet.get(options.identity);
+			const provider = options.wallet.getProviderRegistry().getProvider(identity.type);
+			await provider.setUserContext(this.client, identity, options.identity);
 		}
 
 		if (options.clientTlsIdentity) {
-			const tlsIdentity = await options.wallet.export(options.clientTlsIdentity);
-			this.client.setTlsClientCertAndKey(tlsIdentity.certificate, tlsIdentity.privateKey);
+			const tlsIdentity = await options.wallet.get(options.clientTlsIdentity);
+			this.client.setTlsClientCertAndKey(tlsIdentity.credentials.certificate, tlsIdentity.credentials.privateKey);
 		}
 
 		if (options.tlsInfo && !options.clientTlsIdentity) {
 			this.client.setTlsClientCertAndKey(options.tlsInfo.certificate, options.tlsInfo.key);
 		}
-	}
-
-	/**
-     * Get the current identity
-     *
-     * @returns {User} The current identity used by this Gateway.
-     */
-	getCurrentIdentity() {
-		logger.debug('in getCurrentIdentity');
-		return this.currentIdentity;
 	}
 
 	/**

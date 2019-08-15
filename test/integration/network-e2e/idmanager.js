@@ -6,19 +6,30 @@
 'use strict';
 
 const Client = require('fabric-client');
-const {User} = require('fabric-common');
 
 class IDManager {
-
-	async initialize(ccp) {
-		this.client = await Client.loadFromConfig(ccp);
+	constructor(ccp, hsmOptions) {
+		this.ccp = ccp;
+		this.hsmOptions = hsmOptions;
+		this.hsmOptions.software = false;
 	}
 
-	async registerUser(userID, options, issuerWallet, issuerId) {
-		if (!options) {
-			options = {};
-		}
-		const identity = await issuerWallet.setUserContext(this.client, issuerId);
+	async initialize() {
+		this.defaultClient = await Client.loadFromConfig(this.ccp);
+		this.defaultClient.setCryptoSuite(Client.newCryptoSuite());
+
+		this.hsmClient = await Client.loadFromConfig(this.ccp);
+		const hsmCryptoSuite = Client.newCryptoSuite(this.hsmOptions);
+		// Setting a key store triggers enrollment using this crypto suite to store the generated private key in the HSM
+		hsmCryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: '/tmp'}));
+		this.hsmClient.setCryptoSuite(hsmCryptoSuite);
+	}
+
+	async registerUser(userID, issuerWallet, issuerId, options = {}) {
+		const identity = await issuerWallet.get(issuerId);
+		const provider = issuerWallet.getProviderRegistry().getProvider(identity.type);
+		await provider.setUserContext(this.defaultClient, identity, issuerId);
+		const user = await this.defaultClient.getUserContext();
 
 		const registerRequest = {
 			enrollmentID: userID,
@@ -59,24 +70,24 @@ class IDManager {
 			});
 		}
 
-		const userSecret = await this.client.getCertificateAuthority().register(registerRequest, identity);
+		const userSecret = await this.defaultClient.getCertificateAuthority().register(registerRequest, user);
 		return userSecret;
 	}
 
-	async enrollToWallet(userID, secret, mspId, walletToImportTo) {
-		await walletToImportTo.configureClientStores(this.client, userID);
+	async enroll(userID, secret) {
 		const options = {enrollmentID: userID, enrollmentSecret: secret};
-		const enrollment = await this.client.getCertificateAuthority().enroll(options);
-		// private key will now have been stored
-		const user = new User(userID);
-		user.setCryptoSuite(this.client.getCryptoSuite());
-		await user.setEnrollment(enrollment.key, enrollment.certificate, mspId);
-		// public key will now have been stored
-		await this.client.setUserContext(user);
-		// state store will now have been saved
-
+		return await this.defaultClient.getCertificateAuthority().enroll(options);
 	}
 
+	async enrollToHsm(userID, secret) {
+		const options = {enrollmentID: userID, enrollmentSecret: secret};
+		// Enrollment also stores the generated private key in the HSM
+		return await this.hsmClient.getCertificateAuthority().enroll(options);
+	}
+
+	closeHsmSession() {
+		this.hsmClient.getCryptoSuite().closeSession();
+	}
 }
 
 module.exports = IDManager;

@@ -38,8 +38,6 @@ fabric-client/.nyc_output
 fabric-ca-client/.DS_Store
 fabric-ca-client/node_modules/*
 fabric-ca-client/.nyc_output
-fabric-ca-client/types/base.d.ts
-fabric-ca-client/types/tsconfig.json
 
 #fabric network items
 fabric-network/.DS_Store
@@ -48,6 +46,7 @@ fabric-network/.nyc_output
 fabric-network/_*
 fabric-network/e2e
 fabric-network/OUTSTA*
+fabric-network/lib/*
 
 #fabric common items
 fabric-common/node_modules/*

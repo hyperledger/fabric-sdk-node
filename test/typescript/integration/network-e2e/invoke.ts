@@ -17,16 +17,14 @@ import tapePromise = require('tape-promise');
 
 import {
 	Contract,
-	CouchDBWallet,
 	DefaultEventHandlerStrategies,
-	FileSystemWallet,
 	Gateway,
 	GatewayOptions,
-	InMemoryWallet,
 	Transaction,
 	TransientMap,
 	Wallet,
-	X509WalletMixin,
+	Wallets,
+	X509Identity,
 } from 'fabric-network';
 
 import {
@@ -46,22 +44,46 @@ const fixtures = process.cwd() + '/test/fixtures';
 const credPath = fixtures + '/crypto-material/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp';
 const certificatePem: string = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
 const privateKeyPem: string = fs.readFileSync(credPath + '/keystore/key.pem').toString();
-const inMemoryWallet: Wallet = new InMemoryWallet();
 const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 const ccpDiscovery: Buffer = fs.readFileSync(fixtures + '/profiles/network-discovery.json');
+const identityName = 'User1@org1.example.com';
+const tlsIdentityName = 'tlsId';
 
 const expectedMoveResult = 'move succeed';
 
-async function inMemoryIdentitySetup(): Promise<void> {
-	await inMemoryWallet.import('User1@org1.example.com', X509WalletMixin.createIdentity('Org1MSP', certificatePem, privateKeyPem));
+let inMemoryWallet: Wallet | undefined;
+async function getWallet(): Promise<Wallet> {
+	if (!inMemoryWallet) {
+		inMemoryWallet = await Wallets.newInMemoryWallet();
+		await identitySetup(inMemoryWallet);
+	}
+	return inMemoryWallet;
 }
 
-async function tlsSetup(): Promise<void> {
+async function identitySetup(wallet: Wallet): Promise<void> {
+	const identity: X509Identity = {
+		credentials: {
+			certificate: certificatePem,
+			privateKey: privateKeyPem,
+		},
+		mspId: 'Org1MSP',
+		type: 'X.509',
+	};
+	await wallet.put(identityName, identity);
+
 	const tlsInfo = await e2eUtils.tlsEnroll('org1');
-	await inMemoryWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
+	const tlsIdentity: X509Identity = {
+		credentials: {
+			certificate: tlsInfo.certificate,
+			privateKey: tlsInfo.key,
+		},
+		mspId: 'org1',
+		type: 'X.509',
+	};
+	await wallet.put(tlsIdentityName, tlsIdentity);
 }
 
-async function createContract(t: any, gateway: Gateway, gatewayOptions: GatewayOptions): Promise<Contract> {
+async function createContract(t: tape.Test, gateway: Gateway, gatewayOptions: GatewayOptions): Promise<Contract> {
 	const useDiscovery = !(gatewayOptions.discovery && gatewayOptions.discovery.enabled === false);
 	const profile = useDiscovery ? ccpDiscovery : ccp;
 	await gateway.connect(JSON.parse(profile.toString()), gatewayOptions);
@@ -86,7 +108,7 @@ async function getInternalEventHubForOrg(gateway: Gateway, orgMSP: string): Prom
 	return eventHubManager.getEventHub(orgPeer);
 }
 
-async function testErrorResponse(t: any, contract: Contract): Promise<void> {
+async function testErrorResponse(t: tape.Test, contract: Contract): Promise<void> {
 	const errorMessage = 'TRANSACTION_ERROR_RESPONSE_MESSAGE';
 
 	try {
@@ -101,12 +123,16 @@ async function testErrorResponse(t: any, contract: Contract): Promise<void> {
 	}
 }
 
-test('\n\n***** Network End-to-end flow: import identity into wallet and configure tls *****\n\n', async (t: any) => {
+async function createTempDir(): Promise<string> {
+	const prefix = path.join(os.tmpdir(), 'integration-network-test-');
+	return await fs.mkdtemp(prefix);
+}
+
+test('\n\n***** Network End-to-end flow: import identity into wallet and configure tls *****\n\n', async (t: tape.Test) => {
 	try {
-		await inMemoryIdentitySetup();
-		await tlsSetup();
-		const exists = await inMemoryWallet.exists('User1@org1.example.com');
-		if (exists) {
+		const wallet = await getWallet();
+		const identity = await wallet.get(identityName);
+		if (identity) {
 			t.pass('Successfully imported User1@org1.example.com into wallet');
 		} else {
 			t.fail('Failed to import User1@org1.example.com into wallet');
@@ -117,19 +143,20 @@ test('\n\n***** Network End-to-end flow: import identity into wallet and configu
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and default event strategy with discovery *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and default event strategy with discovery *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	let org1EventHub: ChannelEventHub | undefined;
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				asLocalhost: true,
 				enabled: true,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const transaction = contract.createTransaction('move');
@@ -169,19 +196,20 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke multiple transactions to move money using in memory wallet and default event strategy *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke multiple transactions to move money using in memory wallet and default event strategy *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	let org1EventHub: ChannelEventHub | undefined;
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				asLocalhost: true, // Redundant since discovery is disabled but ensures TS definitions are correct
 				enabled: false,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const transactions: Transaction[] = [];
@@ -248,21 +276,22 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions to move mo
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and MSPID_SCOPE_ALLFORTX event strategy *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and MSPID_SCOPE_ALLFORTX event strategy *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	let org1EventHub: ChannelEventHub | undefined;
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const transaction = contract.createTransaction('move');
@@ -302,21 +331,22 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and MSPID_SCOPE_ANYFORTX event strategy *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and MSPID_SCOPE_ANYFORTX event strategy *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	let org1EventHub: ChannelEventHub | undefined;
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ANYFORTX,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const transaction = contract.createTransaction('move');
@@ -356,22 +386,23 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ALLFORTX event strategy *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ALLFORTX event strategy *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	let org1EventHub: ChannelEventHub | undefined;
 	let org2EventHub: ChannelEventHub | undefined;
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ALLFORTX,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const transaction = contract.createTransaction('move');
@@ -420,14 +451,15 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ALLFORTX event strategy with discovery *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ALLFORTX event strategy with discovery *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	let org1EventHub: ChannelEventHub | undefined;
 	let org2EventHub: ChannelEventHub | undefined;
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				asLocalhost: true,
 				enabled: true,
@@ -435,8 +467,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ALLFORTX,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const transaction = contract.createTransaction('move');
@@ -485,22 +517,23 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ANYFORTX event strategy *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ANYFORTX event strategy *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	let org1EventHub: ChannelEventHub | undefined;
 	let org2EventHub: ChannelEventHub | undefined;
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ANYFORTX,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const transaction = contract.createTransaction('move');
@@ -552,14 +585,15 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ANYFORTX event strategy with discovery *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and NETWORK_SCOPE_ANYFORTX event strategy with discovery *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	let org1EventHub: ChannelEventHub | undefined;
 	let org2EventHub: ChannelEventHub | undefined;
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				asLocalhost: true,
 				enabled: true,
@@ -567,8 +601,8 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 			eventHandlerOptions: {
 				strategy: DefaultEventHandlerStrategies.NETWORK_SCOPE_ANYFORTX,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const transaction = contract.createTransaction('move');
@@ -619,20 +653,21 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and plug-in event strategy *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and plug-in event strategy *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
 			eventHandlerOptions: {
 				strategy: sampleEventStrategy,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const response = await contract.submitTransaction('move', 'a', 'b', '100');
@@ -651,17 +686,18 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction with transient data *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction with transient data *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const transaction = contract.createTransaction('getTransient');
@@ -702,17 +738,18 @@ test('\n\n***** Network End-to-end flow: invoke transaction with transient data 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction with empty string response *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction with empty string response *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const response = await contract.submitTransaction('echo', '');
@@ -731,17 +768,18 @@ test('\n\n***** Network End-to-end flow: invoke transaction with empty string re
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction while channel\'s event hub is replaying blocks *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction while channel\'s event hub is replaying blocks *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const network = await gateway.getNetwork(channelName);
@@ -786,16 +824,17 @@ test('\n\n***** Network End-to-end flow: invoke transaction while channel\'s eve
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		await testErrorResponse(t, contract);
@@ -806,30 +845,20 @@ test('\n\n***** Network End-to-end flow: handle transaction error *****\n\n', as
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in file system wallet *****\n\n', async (t: any) => {
-	const tmpdir = path.join(os.tmpdir(), 'integration-network-test987');
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in file system wallet *****\n\n', async (t: tape.Test) => {
+	const tmpdir = await createTempDir();
 	const gateway = new Gateway();
 
 	try {
-		// define the identity to use
-		const identityLabel = 'User1@org1.example.com';
-
-		const fileSystemWallet: Wallet = new FileSystemWallet(tmpdir);
-
-		// prep wallet and test it at the same time
-		await fileSystemWallet.import(identityLabel, X509WalletMixin.createIdentity('Org1MSP', certificatePem, privateKeyPem));
-		const exists = await fileSystemWallet.exists(identityLabel);
-		t.ok(exists, 'Successfully imported User1@org1.example.com into wallet');
-		const tlsInfo = await e2eUtils.tlsEnroll('org1');
-
-		await fileSystemWallet.import('tlsId', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
+		const fileSystemWallet: Wallet = await Wallets.newFileSystemWallet(tmpdir);
+		await identitySetup(fileSystemWallet);
 
 		await gateway.connect(JSON.parse(ccp.toString()), {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
-			identity: identityLabel,
+			identity: identityName,
 			wallet: fileSystemWallet,
 		});
 		t.pass('Connected to the gateway');
@@ -870,24 +899,18 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using CouchDB wallet *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using CouchDB wallet *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	try {
-		const identityLabel = 'user1-org1_example_com';
-		const couchDBWallet = new CouchDBWallet({url: 'http://localhost:5984'});
-		await couchDBWallet.import(identityLabel, X509WalletMixin.createIdentity('Org1MSP', certificatePem, privateKeyPem));
-		const exists = await couchDBWallet.exists(identityLabel);
-		t.ok(exists, 'Successfully imported User1@org1.example.com into wallet');
-
-		const tlsInfo = await e2eUtils.tlsEnroll('org1');
-		await couchDBWallet.import('tls_id', X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
+		const couchDBWallet = await Wallets.newCouchDBWallet({url: 'http://localhost:5984'});
+		await identitySetup(couchDBWallet);
 
 		await gateway.connect(JSON.parse(ccp.toString()), {
-			clientTlsIdentity: 'tls_id',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
-			identity: identityLabel,
+			identity: identityName,
 			wallet: couchDBWallet,
 		});
 		t.pass('Connected to the gateway');
@@ -913,19 +936,22 @@ test('\n\n***** Network End-to-end flow: invoke transaction to move money using 
 	} finally {
 		gateway.disconnect();
 	}
+
+	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke multiple transactions concurrently *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke multiple transactions concurrently *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const expected = 'RESULT';
@@ -951,16 +977,17 @@ test('\n\n***** Network End-to-end flow: invoke multiple transactions concurrent
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: specify endorsing peers *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: specify endorsing peers *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const network = await gateway.getNetwork(channelName);
@@ -985,9 +1012,10 @@ test('\n\n***** Network End-to-end flow: specify endorsing peers *****\n\n', asy
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: specify endorsing peers when discovery is enabled *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: specify endorsing peers when discovery is enabled *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 	try {
+		const wallet = await getWallet();
 		const gatewayOptions =  {
 			clientTlsIdentity: 'tlsId',
 			discovery: {
@@ -995,7 +1023,7 @@ test('\n\n***** Network End-to-end flow: specify endorsing peers when discovery 
 				enabled: true,
 			},
 			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			wallet,
 		};
 
 		await gateway.connect(JSON.parse(ccp.toString()), gatewayOptions);
@@ -1027,20 +1055,21 @@ test('\n\n***** Network End-to-end flow: specify endorsing peers when discovery 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and no event strategy *****\n\n', async (t: any) => {
+test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and no event strategy *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
+		const wallet = await getWallet();
 		const contract = await createContract(t, gateway, {
-			clientTlsIdentity: 'tlsId',
+			clientTlsIdentity: tlsIdentityName,
 			discovery: {
 				enabled: false,
 			},
 			eventHandlerOptions: {
 				strategy: null,
 			},
-			identity: 'User1@org1.example.com',
-			wallet: inMemoryWallet,
+			identity: identityName,
+			wallet,
 		});
 
 		const response = await contract.submitTransaction('move', 'a', 'b', '100');

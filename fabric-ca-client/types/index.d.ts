@@ -15,7 +15,7 @@
 */
 
 import { ICryptoSuite, ICryptoKeyStore, IKeyValueStore, User } from "fabric-client";
-import { BaseClient } from './base';
+import { BaseClient } from 'fabric-client/types/base';
 
 declare class FabricCAServices extends BaseClient {
     constructor(url: string | FabricCAServices.IFabricCAService, tlsOptions?: FabricCAServices.TLSOptions, caName?: string, cryptoSuite?: ICryptoSuite);

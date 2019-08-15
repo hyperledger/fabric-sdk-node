@@ -6,11 +6,19 @@
 
 /* tslint:disable:max-classes-per-file */
 
-import { Channel, ChannelPeer, TransactionId, User } from 'fabric-client';
+import * as Client from 'fabric-client';
 
-import Client = require('fabric-client');
+import { Wallet } from '../src/impl/wallet/wallet';
 
-//-------------------------------------------
+export {
+	Wallet,
+};
+
+export { Wallets } from '../src/impl/wallet/wallets';
+export { HsmOptions, HsmX509Provider, HsmX509Identity } from '../src/impl/wallet/hsmx509identity';
+export { X509Identity } from '../src/impl/wallet/x509identity';
+export { IdentityProviderRegistry } from '../src/impl/wallet/identityproviderregistry';
+
 // Main fabric network classes
 //-------------------------------------------
 export interface GatewayOptions {
@@ -81,7 +89,7 @@ export interface QueryHandler {
 }
 
 export interface Query {
-	evaluate(peers: ChannelPeer[]): Promise<QueryResults>;
+	evaluate(peers: Client.ChannelPeer[]): Promise<QueryResults>;
 }
 
 export interface QueryResults {
@@ -93,13 +101,13 @@ export class Gateway {
 	public connect(config: Client | string | object, options: GatewayOptions): Promise<void>;
 	public disconnect(): void;
 	public getClient(): Client;
-	public getCurrentIdentity(): User;
+	public getCurrentIdentity(): Client.User;
 	public getNetwork(channelName: string): Promise<Network>;
 	public getOptions(): GatewayOptions;
 }
 
 export interface Network {
-	getChannel(): Channel;
+	getChannel(): Client.Channel;
 	getContract(chaincodeId: string, name?: string): Contract;
 	addBlockListener(listenerName: string, callback: (error: Error, block?: Client.Block | Client.FilteredBlock) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
 	addCommitListener(transactionId: string, callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
@@ -119,9 +127,9 @@ export interface TransientMap {
 export interface Transaction {
 	evaluate(...args: string[]): Promise<Buffer>;
 	getName(): string;
-	getTransactionID(): TransactionId;
+	getTransactionID(): Client.TransactionId;
 	getNetwork(): Network;
-	setEndorsingPeers(peers: ChannelPeer[]): this;
+	setEndorsingPeers(peers: Client.ChannelPeer[]): this;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
 	addCommitListener(callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: object, eventHub?: Client.ChannelEventHub): Promise<CommitEventListener>;
@@ -133,70 +141,6 @@ export interface FabricError extends Error {
 }
 
 export interface TimeoutError extends FabricError {} // tslint:disable-line:no-empty-interface
-
-//-------------------------------------------
-// Wallet Management
-//-------------------------------------------
-export interface Identity {
-	type: string;
-}
-
-export interface IdentityInfo {
-	label: string;
-	identifier?: string;
-	mspId?: string;
-}
-
-export interface Wallet {
-	delete(label: string): Promise<void>;
-	exists(label: string): Promise<boolean>;
-	export(label: string): Promise<Identity>;
-	import(label: string, identity: Identity): Promise<void>;
-	list(): Promise<IdentityInfo[]>;
-}
-
-export class InMemoryWallet implements Wallet {
-	constructor(mixin?: WalletMixin);
-	public delete(label: string): Promise<void>;
-	public exists(label: string): Promise<boolean>;
-	public export(label: string): Promise<Identity>;
-	public import(label: string, identity: Identity): Promise<void>;
-	public list(): Promise<IdentityInfo[]>;
-}
-
-export class FileSystemWallet implements Wallet {
-	constructor(path: string, mixin?: WalletMixin);
-	public delete(label: string): Promise<void>;
-	public exists(label: string): Promise<boolean>;
-	public export(label: string): Promise<Identity>;
-	public import(label: string, identity: Identity): Promise<void>;
-	public list(): Promise<IdentityInfo[]>;
-}
-
-export class CouchDBWallet implements Wallet {
-	constructor(options: CouchDBWalletOptions, mixin?: WalletMixin)
-	public delete(label: string): Promise<void>;
-	public exists(label: string): Promise<boolean>;
-	public export(label: string): Promise<Identity>;
-	public import(label: string, identity: Identity): Promise<void>;
-	public list(): Promise<IdentityInfo[]>;
-}
-
-export interface CouchDBWalletOptions {
-	url: string;
-}
-
-export interface WalletMixin {} // tslint:disable-line:no-empty-interface
-
-export class X509WalletMixin implements WalletMixin {
-	public static createIdentity(mspId: string, certificate: string, privateKey: string): Identity;
-	constructor();
-}
-
-export class HSMWalletMixin implements WalletMixin {
-	public static createIdentity(mspId: string, certificate: string): Identity;
-	constructor();
-}
 
 export interface Checkpoint {
 	blockNumber: number;
@@ -253,4 +197,28 @@ export interface AbstractEventHubSelectionStrategy {
 
 export class DefaultEventHubSelectionStrategies {
 	public static MSPID_SCOPE_ROUND_ROBIN: AbstractEventHubSelectionStrategy;
+}
+
+export interface WalletStore {
+	delete(label: string): Promise<void>;
+	get(label: string): Promise<Buffer | undefined>;
+	list(): Promise<string[]>;
+	put(label: string, data: Buffer): Promise<void>;
+}
+
+export interface Identity {
+	type: string;
+	mspId: string;
+}
+
+export interface IdentityData {
+	readonly type: string;
+	readonly version: number;
+}
+
+export interface IdentityProvider {
+	readonly type: string;
+	fromJson(data: IdentityData): Identity;
+	toJson(identity: Identity): IdentityData;
+	setUserContext(client: Client, identity: Identity, name: string): Promise<void>;
 }

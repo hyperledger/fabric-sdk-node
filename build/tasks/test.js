@@ -91,6 +91,7 @@ gulp.task('clean-up', () => {
 	// some tests create temporary files or directories
 	// they are all created in the same temp folder
 	fs.removeSync(testConstants.tempdir);
+	fs.removeSync('fabric-network/lib');
 	return fs.ensureFileSync(debugPath);
 });
 
@@ -170,8 +171,8 @@ gulp.task('mocha-fabric-client',
 
 gulp.task('mocha-fabric-network',
 	() => {
-		return gulp.src(['./fabric-network/test/**/*.js'], {read: false})
-			.pipe(mocha({reporter: 'list', exit: true, timeout: 10000}));
+		return gulp.src(['./fabric-network/test/**/*.{js,ts}'], {read: false})
+			.pipe(mocha({reporter: 'list', exit: true, timeout: 10000, require: ['ts-node/register']}));
 	}
 );
 
@@ -236,7 +237,7 @@ gulp.task('run-end-to-end', (done) => {
 
 // Run all non-integration tests
 gulp.task('run-test-headless', (done) => {
-	const tasks = ['clean-up', 'pre-test', 'lint', 'test-mocha', 'run-tape-unit'];
+	const tasks = ['clean-up', 'pre-test', 'compile', 'lint', 'test-mocha', 'run-tape-unit'];
 	runSequence(...tasks, done);
 });
 
@@ -317,7 +318,6 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 			'test/integration/javachaincode/e2e.js',
 			'test/integration/discovery.js',
 			'test/integration/grpc.js',
-			'test/integration/token.js',
 
 			// Typescript
 			'test/typescript/test.js'
@@ -333,16 +333,16 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 // - disable javachaincode except for x86 environment
 // - may enable the java testing with environment variable
 function shouldRunTests(tests) {
-	// for now always disable the pkcs11 testing on s390
-	if (arch.indexOf('s390') === 0) {
+	if (arch.startsWith('s390')) {
+		// for now always disable the pkcs11 testing on s390
 		tests.push('!test/unit/pkcs11.js');
 		tests.push('!test/integration/network-e2e/e2e-hsm.js');
-		// check to see if they want to test PKCS11
 	} else if (typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() === 'false') {
+		// Disable HSM tests if not doing PKCS11 testing
 		tests.push('!test/unit/pkcs11.js');
 		tests.push('!test/integration/network-e2e/e2e-hsm.js');
-		// default is to run the PKCS11 tests so we need to disable the non HSM version
 	} else {
+		// default is to run the PKCS11 tests so we need to disable the non HSM version
 		tests.push('!test/integration/network-e2e/e2e.js');
 	}
 	// keep the java tests

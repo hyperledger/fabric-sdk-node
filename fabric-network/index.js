@@ -33,7 +33,7 @@
  *
  * @example
  * // Obtain the smart contract with which our application wants to interact
- * const wallet = new FileSystemWallet(walletDirectoryPath);
+ * const wallet = await Wallets.newFileSystemWallet(walletDirectoryPath);
  * const gatewayOptions: GatewayOptions = {
  *     identity: 'user@example.org', // Previously imported identity
  *     wallet,
@@ -58,13 +58,96 @@
  * @module fabric-network
  */
 
+/**
+ * A base user identity. Actual identity objects will extend this basic structure with credentials applicable to their
+ * type. See [X509Identity]{@link module:fabric-network.X509Identity} and
+ * [HsmX509Identity]{@link module:fabric-network.HsmX509Identity}.
+ * @typedef {object} Identity
+ * @memberof module:fabric-network
+ * @property {string} type The type of the identity.
+ * @property {string} mspId The member services provider with which this identity is associated.
+ */
+
+/**
+ * Identity described by an X.509 certificate.
+ * @typedef {object} X509Identity
+ * @memberof module:fabric-network
+ * @implements module:fabric-network.Identity
+ * @property {'X.509'} type The type of the identity.
+ * @property {string} credentials.certificate Certificate in PEM format.
+ * @property {string} credentials.privateKey Private key in PEM format.
+ */
+
+/**
+ * Identity described by an X.509 certificate where the private key is stored in a hardware security module.
+ * To use identities of this type, a suitable [HsmX509Provider]{@link module:fabric-network.HsmX509Provider} must be
+ * created and added to the identity provider registry of the wallet containing the identity.
+ * @typedef {object} HsmX509Identity
+ * @memberof module:fabric-network
+ * @implements module:fabric-network.Identity
+ * @property {'HSM-X.509'} type The type of the identity.
+ * @property {string} credentials.certificate Certificate in PEM format.
+ */
+
+/**
+ * Understands the format of identities of a given type. Converts identity objects to/from the persistent format used
+ * within wallet stores, and configures the client with a given identity.
+ * @typedef IdentityProvider
+ * @memberof module:fabric-network
+ * @property {string} type The type identifier for identities that this provider understands.
+ */
+
+/**
+ * Options describing how to connect to a hardware security module. Options without default values are mandatory but
+ * may be be omitted from this object if they are specified through environment variables or external configuration.
+ * @typedef {object} HsmOptions
+ * @memberof module:fabric-network
+ * @property {string} [lib] Path to implementation-specific PKCS#11 library used to interact with the HSM.
+ * @property {string} [pin] PIN used to access the HSM.
+ * @property {number} [slot] The hardware slot number where data is stored in the HSM.
+ * @property {number} [usertype=1] Specify the user type for accessing the HSM.
+ * @property {boolean} [readwrite=true] True if the session should be read/write; false if read-only.
+ */
+
+/**
+ * Interface for store implementation that provide backing storage for identities in a [Wallet]{@link module:fabric-network.Wallet}.
+ * @interface WalletStore
+ * @memberof module:fabric-network
+ */
+/**
+ * Delete data associated with a given label.
+ * @function module:fabric-network.WalletStore#delete
+ * @async
+ * @param {string} label A label identifying stored data.
+ * @returns {Promise<void>}
+ */
+/**
+ * Get data associated with a given label.
+ * @function module:fabric-network.WalletStore#get
+ * @async
+ * @param {string} label A label identifying stored data.
+ * @returns {Promise<Buffer | undefined>} Stored data as a Buffer if it exists; otherwise undefined.
+ */
+/**
+ * List the labels for all stored data.
+ * @function module:fabric-network.WalletStore#list
+ * @async
+ * @returns {Promise<string[]>} A list of labels.
+ */
+/**
+ * Put data associated with a given label.
+ * @function module:fabric-network.WalletStore#put
+ * @async
+ * @param {string} label A label identifying stored data.
+ * @param {Buffer} data Data to store.
+ * @returns {Promise<void>}
+ */
+
 module.exports.Gateway = require('./lib/gateway');
-module.exports.Wallet = require('./lib/api/wallet');
-module.exports.InMemoryWallet = require('./lib/impl/wallet/inmemorywallet');
-module.exports.X509WalletMixin = require('./lib/impl/wallet/x509walletmixin');
-module.exports.HSMWalletMixin = require('./lib/impl/wallet/hsmwalletmixin');
-module.exports.FileSystemWallet = require('./lib/impl/wallet/filesystemwallet');
-module.exports.CouchDBWallet = require('./lib/impl/wallet/couchdbwallet');
+module.exports.Wallet = require('./lib/impl/wallet/wallet').Wallet;
+module.exports.Wallets = require('./lib/impl/wallet/wallets').Wallets;
+module.exports.IdentityProviderRegistry = require('./lib/impl/wallet/identityproviderregistry').IdentityProviderRegistry;
+module.exports.HsmX509Provider = require('./lib/impl/wallet/hsmx509identity').HsmX509Provider;
 module.exports.DefaultEventHandlerStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 module.exports.DefaultQueryHandlerStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
 module.exports.CheckpointFactories = require('fabric-network/lib/impl/event/checkpointfactories');

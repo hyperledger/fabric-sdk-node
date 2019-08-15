@@ -11,7 +11,6 @@
 import fs = require('fs-extra');
 import os = require('os');
 import path = require('path');
-import rimraf = require('rimraf');
 import tape = require('tape');
 import tapePromise = require('tape-promise');
 import util = require('util');
@@ -19,11 +18,11 @@ import util = require('util');
 import {
 	Contract,
 	DefaultQueryHandlerStrategies,
-	FileSystemWallet,
 	Gateway,
 	TransientMap,
 	Wallet,
-	X509WalletMixin,
+	Wallets,
+	X509Identity,
 } from 'fabric-network';
 
 import sampleQueryStrategy = require('./sample-query-handler');
@@ -39,39 +38,42 @@ const fixtures = process.cwd() + '/test/fixtures';
 const identityLabel = 'User1@org1.example.com';
 const tlsLabel = 'tlsId';
 
-async function createWallet(t: any, filePath: string): Promise<Wallet> {
+async function createWallet(t: tape.Test): Promise<Wallet> {
 	// define the identity to use
 	const credPath = fixtures + '/crypto-material/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp';
 	const cert = fs.readFileSync(credPath + '/signcerts/User1@org1.example.com-cert.pem').toString();
 	const key = fs.readFileSync(credPath + '/keystore/key.pem').toString();
 
-	const fileSystemWallet = new FileSystemWallet(filePath);
+	const wallet = await Wallets.newInMemoryWallet();
 
 	// prep wallet and test it at the same time
-	await fileSystemWallet.import(identityLabel, X509WalletMixin.createIdentity('Org1MSP', cert, key));
-	const exists = await fileSystemWallet.exists(identityLabel);
-	t.ok(exists, 'Successfully imported User1@org1.example.com into wallet');
+	const identity: X509Identity = {
+		credentials: {
+			certificate: cert,
+			privateKey: key,
+		},
+		mspId: 'Org1MSP',
+		type: 'X.509',
+	};
+	await wallet.put(identityLabel, identity);
+	const savedIdentity = await wallet.get(identityLabel);
+	t.ok(savedIdentity, 'Successfully imported User1@org1.example.com into wallet');
+
 	const tlsInfo = await e2eUtils.tlsEnroll('org1');
+	const tlsIdentity: X509Identity = {
+		credentials: {
+			certificate: tlsInfo.certificate,
+			privateKey: tlsInfo.key,
+		},
+		mspId: 'org1',
+		type: 'X.509',
+	};
+	await wallet.put(tlsLabel, tlsIdentity);
 
-	await fileSystemWallet.import(tlsLabel, X509WalletMixin.createIdentity('org1', tlsInfo.certificate, tlsInfo.key));
-
-	return fileSystemWallet;
+	return wallet;
 }
 
-async function deleteWallet(filePath: string): Promise<void> {
-	const rimRafPromise = new Promise((resolve) => {
-		rimraf(filePath, (err: Error) => {
-			if (err) {
-				console.log(`failed to delete ${filePath}, error was ${err}`); // tslint:disable-line:no-console
-				resolve();
-			}
-			resolve();
-		});
-	});
-	await rimRafPromise;
-}
-
-async function testSuccessfulQuery(t: any, contract: Contract): Promise<void> {
+async function testSuccessfulQuery(t: tape.Test, contract: Contract): Promise<void> {
 	t.comment('Testing successful query');
 
 	const response = await contract.evaluateTransaction('query', 'a');
@@ -83,7 +85,7 @@ async function testSuccessfulQuery(t: any, contract: Contract): Promise<void> {
 	}
 }
 
-async function testQueryErrorResponse(t: any, contract: Contract): Promise<void> {
+async function testQueryErrorResponse(t: tape.Test, contract: Contract): Promise<void> {
 	t.comment('Testing query error response');
 
 	const errorMessage = 'QUERY_ERROR_RESPONSE_MESSAGE';
@@ -99,7 +101,7 @@ async function testQueryErrorResponse(t: any, contract: Contract): Promise<void>
 	}
 }
 
-async function testChaincodeRuntimeError(t: any, contract: Contract): Promise<void> {
+async function testChaincodeRuntimeError(t: tape.Test, contract: Contract): Promise<void> {
 	// No-op for now since chaincode runtime errors are not distinguishable from error responses and introduce a
 	// significant delay while the chaincode container times out waiting for the chaincide to supply a response
 
@@ -118,12 +120,11 @@ async function testChaincodeRuntimeError(t: any, contract: Contract): Promise<vo
 	// }
 }
 
-test('\n\n***** Network End-to-end flow: evaluate transaction with default query handler *****\n\n', async (t: any) => {
-	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+test('\n\n***** Network End-to-end flow: evaluate transaction with default query handler *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
-		const wallet = await createWallet(t, tmpdir);
+		const wallet = await createWallet(t);
 		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
@@ -149,19 +150,17 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with default query
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
-		await deleteWallet(tmpdir);
 		gateway.disconnect();
 	}
 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_ROUND_ROBIN query handler *****\n\n', async (t: any) => {
-	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_ROUND_ROBIN query handler *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
-		const wallet = await createWallet(t, tmpdir);
+		const wallet = await createWallet(t);
 		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
@@ -190,19 +189,17 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_R
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
-		await deleteWallet(tmpdir);
 		gateway.disconnect();
 	}
 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_SINGLE query handler *****\n\n', async (t: any) => {
-	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_SINGLE query handler *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
-		const wallet = await createWallet(t, tmpdir);
+		const wallet = await createWallet(t);
 		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
@@ -231,19 +228,17 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with MSPID_SCOPE_S
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
-		await deleteWallet(tmpdir);
 		gateway.disconnect();
 	}
 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: evaluate transaction with sample query handler *****\n\n', async (t: any) => {
-	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+test('\n\n***** Network End-to-end flow: evaluate transaction with sample query handler *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
-		const wallet = await createWallet(t, tmpdir);
+		const wallet = await createWallet(t);
 		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
@@ -272,19 +267,17 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with sample query 
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
-		await deleteWallet(tmpdir);
 		gateway.disconnect();
 	}
 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: evaluate transaction with transient data *****\n\n', async (t: any) => {
-	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+test('\n\n***** Network End-to-end flow: evaluate transaction with transient data *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
-		const wallet = await createWallet(t, tmpdir);
+		const wallet = await createWallet(t);
 		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
@@ -337,19 +330,17 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with transient dat
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
-		await deleteWallet(tmpdir);
 		gateway.disconnect();
 	}
 
 	t.end();
 });
 
-test('\n\n***** Network End-to-end flow: evaluate transaction with empty string result *****\n\n', async (t: any) => {
-	const tmpdir = path.join(os.tmpdir(), 'integration-network-test988');
+test('\n\n***** Network End-to-end flow: evaluate transaction with empty string result *****\n\n', async (t: tape.Test) => {
 	const gateway = new Gateway();
 
 	try {
-		const wallet = await createWallet(t, tmpdir);
+		const wallet = await createWallet(t);
 		const ccp: Buffer = fs.readFileSync(fixtures + '/profiles/network.json');
 		const ccpObject = JSON.parse(ccp.toString());
 
@@ -379,7 +370,6 @@ test('\n\n***** Network End-to-end flow: evaluate transaction with empty string 
 	} catch (err) {
 		t.fail('Failed to invoke transaction chaincode on channel. ' + err.stack ? err.stack : err);
 	} finally {
-		await deleteWallet(tmpdir);
 		gateway.disconnect();
 	}
 

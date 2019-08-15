@@ -53,7 +53,7 @@
 	"chaincode-lifecycle": {
 		"title": "fabric-client: How to install and start your chaincode"
 	},
-	"hsm-pkcs11": {
-		"title": "Testing for Hardware Security Module via PKCS#11 interface"
+	"wallet": {
+		"title": "fabric-network: Using wallets to manage identities"
 	}
 }

@@ -20,20 +20,46 @@ chai.use(require('chai-as-promised'));
 
 const Network = require('../lib/network');
 const Gateway = require('../lib/gateway');
-const Wallet = require('../lib/api/wallet');
+const {Wallets} = require('../lib/impl/wallet/wallets');
 const QueryStrategies = require('../lib/impl/query/defaultqueryhandlerstrategies');
 
 describe('Gateway', () => {
 	let mockClient;
+	let wallet;
+	const idLabel = 'myId';
+	const identity = {
+		type: 'X.509',
+		mspId: 'ID_MSPID',
+		credentials: {
+			certificate: 'CERTIFICATE',
+			privateKey: 'PRIVATE_KEY',
+		}
+	};
+	const idUser = Object.assign(sinon.createStubInstance(Client.User), {_stubInfo: 'identity'});
+	const tlsLabel = 'myTlsId';
+	const tlsIdentity = {
+		type: 'X.509',
+		mspId: 'TLS_MSPID',
+		credentials: {
+			certificate: 'TLS_CERTIFICATE',
+			privateKey: 'TLS_PRIVATE_KEY',
+		}
+	};
+	const tlsUser = Object.assign(sinon.createStubInstance(Client.User), {_stubInfo: 'tlsIdentity'});
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		mockClient = sinon.createStubInstance(Client);
+		mockClient.createUser.withArgs(sinon.match(data => data.mspid === identity.mspId)).returns(idUser);
+		mockClient.createUser.withArgs(sinon.match(data => data.mspid === tlsIdentity.mspId)).returns(tlsUser);
+
+		wallet = await Wallets.newInMemoryWallet();
+		await wallet.put(idLabel, identity);
+		await wallet.put(tlsLabel, tlsIdentity);
 	});
 
 	afterEach(() => {
 		sinon.restore();
 	});
-
 
 	describe('#_mergeOptions', () => {
 		let defaultOptions;
@@ -210,13 +236,10 @@ describe('Gateway', () => {
 
 	describe('#connect', () => {
 		let gateway;
-		let mockWallet;
 
 		beforeEach(() => {
 			gateway = new Gateway();
-			mockWallet = sinon.createStubInstance(Wallet);
 			sinon.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
-			mockWallet.setUserContext.withArgs(mockClient, 'admin').returns('foo');
 		});
 
 		it('should fail without options supplied', () => {
@@ -226,7 +249,7 @@ describe('Gateway', () => {
 
 		it('should fail without wallet option supplied', () => {
 			const options = {
-				identity: 'admin'
+				identity: idLabel
 			};
 			return gateway.connect('ccp', options)
 				.should.be.rejectedWith(/A wallet must be assigned to a Gateway instance/);
@@ -234,47 +257,44 @@ describe('Gateway', () => {
 
 		it('should connect to the gateway with default plugins', async () => {
 			const options = {
-				wallet: mockWallet,
+				wallet,
 			};
 			await gateway.connect('ccp', options);
 			gateway.client.should.equal(mockClient);
-			should.not.exist(gateway.currentIdentity);
+			sinon.assert.notCalled(mockClient.setUserContext);
 		});
 
 		it('should connect to the gateway with identity', async () => {
 			const options = {
-				wallet: mockWallet,
-				identity: 'admin'
+				wallet,
+				identity: idLabel
 			};
 			await gateway.connect('ccp', options);
 			gateway.client.should.equal(mockClient);
-			gateway.currentIdentity.should.equal('foo');
+			sinon.assert.calledWith(mockClient.setUserContext, idUser);
 		});
 
 		it('should connect to the gateway with identity and set client tls crypto material', async () => {
-			mockWallet.export.withArgs('tlsId').resolves({certificate: 'acert', privateKey: 'akey'});
-
 			const options = {
-				wallet: mockWallet,
-				identity: 'admin',
-				clientTlsIdentity: 'tlsId'
+				wallet,
+				identity: idLabel,
+				clientTlsIdentity: tlsLabel
 			};
 			await gateway.connect('ccp', options);
 			gateway.client.should.equal(mockClient);
-			gateway.currentIdentity.should.equal('foo');
 			sinon.assert.calledOnce(mockClient.setTlsClientCertAndKey);
-			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey, 'acert', 'akey');
+			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey,
+				tlsIdentity.credentials.certificate, tlsIdentity.credentials.privateKey);
 		});
 
 		it('should connect to the gateway with identity and set client tls crypto material using tlsInfo', async () => {
 			const options = {
-				wallet: mockWallet,
-				identity: 'admin',
+				wallet,
+				identity: idLabel,
 				tlsInfo: {certificate: 'acert', key: 'akey'}
 			};
 			await gateway.connect('ccp', options);
 			gateway.client.should.equal(mockClient);
-			gateway.currentIdentity.should.equal('foo');
 			sinon.assert.calledOnce(mockClient.setTlsClientCertAndKey);
 			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey, 'acert', 'akey');
 		});
@@ -282,17 +302,16 @@ describe('Gateway', () => {
 
 		it('should connect from an existing client object', async () => {
 			const options = {
-				wallet: mockWallet,
-				identity: 'admin'
+				wallet,
+				identity: idLabel
 			};
 			await gateway.connect(mockClient, options);
 			gateway.client.should.equal(mockClient);
-			gateway.currentIdentity.should.equal('foo');
 		});
 
 		it('has default transaction event handling strategy if none specified', async () => {
 			const options = {
-				wallet: mockWallet
+				wallet
 			};
 			await gateway.connect('ccp', options);
 			gateway.options.eventHandlerOptions.strategy.should.be.a('Function');
@@ -301,7 +320,7 @@ describe('Gateway', () => {
 		it('allows transaction event handling strategy to be specified', async () => {
 			const stubStrategyFn = function stubStrategyFn() { };
 			const options = {
-				wallet: mockWallet,
+				wallet,
 				eventStrategy: stubStrategyFn
 			};
 			await gateway.connect('ccp', options);
@@ -310,7 +329,7 @@ describe('Gateway', () => {
 
 		it('allows null transaction event handling strategy to be set', async () => {
 			const options = {
-				wallet: mockWallet,
+				wallet,
 				eventStrategy: null
 			};
 			await gateway.connect('ccp', options);
@@ -320,25 +339,15 @@ describe('Gateway', () => {
 
 	describe('getters', () => {
 		let gateway;
-		let mockWallet;
 
 		beforeEach(async () => {
 			gateway = new Gateway();
-			mockWallet = sinon.createStubInstance(Wallet);
 			sinon.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
-			mockWallet.setUserContext.withArgs(mockClient, 'admin').returns('foo');
 			const options = {
-				wallet: mockWallet,
-				identity: 'admin'
+				wallet,
+				identity: idLabel
 			};
 			await gateway.connect('ccp', options);
-
-		});
-
-		describe('#getCurrentIdentity', () => {
-			it('should return the initialized identity', () => {
-				gateway.getCurrentIdentity().should.equal('foo');
-			});
 		});
 
 		describe('#getClient', () => {
@@ -350,8 +359,8 @@ describe('Gateway', () => {
 		describe('#getOptions', () => {
 			it('should return the initialized options', () => {
 				const expectedOptions = {
-					wallet: mockWallet,
-					identity: 'admin',
+					wallet,
+					identity: idLabel,
 					queryHandlerOptions: {
 						strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 					}

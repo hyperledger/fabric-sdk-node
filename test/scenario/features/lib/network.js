@@ -4,7 +4,7 @@
 
 'use strict';
 
-const {Gateway, InMemoryWallet, X509WalletMixin} = require('fabric-network');
+const {Gateway, Wallets} = require('fabric-network');
 const testUtil = require('./utils.js');
 const fs = require('fs');
 const chai = require('chai');
@@ -23,27 +23,36 @@ const transactions = new Map();
 const types = ['evaluate', 'error', 'submit'];
 
 /**
- * Perform an  in memeory ID setup
- * @param {InMemoryWallet} inMemoryWallet the in memory wallet to use
+ * Perform an ID setup
+ * @param {Wallet} wallet the in memory wallet to use
  * @param {CommonConnectionProfile} ccp The common connection profile
  * @param {String} orgName the organization name
  * @param {String} userName the user name
  * @return {String} the identity name
  */
-async function inMemoryIdentitySetup(inMemoryWallet, ccp, orgName, userName) {
+async function identitySetup(wallet, ccp, orgName, userName) {
 
 	const org = ccp.getOrganization(orgName);
 	const orgMsp = org.mspid;
 
-	const identity = userName + '@' + orgName;
+	const identityName = userName + '@' + orgName;
 
 	const userCertPath = org.signedCertPEM.path.replace(/Admin/g, userName);
-	const userKeyPath = org.adminPrivateKeyPEM.path.replace(/Admin/g, userName);
+	const cert = fs.readFileSync(userCertPath).toString('utf8');
 
-	const cert = fs.readFileSync(userCertPath);
-	const key = fs.readFileSync(userKeyPath);
-	await inMemoryWallet.import(identity, X509WalletMixin.createIdentity(orgMsp, cert, key));
-	return identity;
+	const userKeyPath = org.adminPrivateKeyPEM.path.replace(/Admin/g, userName);
+	const key = fs.readFileSync(userKeyPath).toString('utf8');
+
+	const identity = {
+		credentials: {
+			certificate: cert,
+			privateKey: key
+		},
+		mspId: orgMsp,
+		type: 'X.509'
+	};
+	await wallet.put(identityName, identity);
+	return identityName;
 }
 
 /**
@@ -59,19 +68,29 @@ async function inMemoryIdentitySetup(inMemoryWallet, ccp, orgName, userName) {
 async function connectGateway(ccp, tls, userName, orgName, gatewayName, useDiscovery) {
 
 	const gateway = new Gateway();
-	const inMemoryWallet = new InMemoryWallet();
+	const wallet = await Wallets.newInMemoryWallet();
 
 	// import specified user to wallet
-	const userIdentity = await inMemoryIdentitySetup(inMemoryWallet, ccp, orgName, userName);
+	const userIdentity = await identitySetup(wallet, ccp, orgName, userName);
 
 	if (tls) {
 		const caName = ccp.getCertificatAuthoritiesForOrg(orgName)[0];
 		const fabricCAEndpoint = ccp.getCertificateAuthority(caName).url;
 		const tlsInfo = await testUtil.tlsEnroll(fabricCAEndpoint, caName);
-		await inMemoryWallet.import('tlsId', X509WalletMixin.createIdentity(userIdentity, tlsInfo.certificate, tlsInfo.key));
+		const caOrg = ccp.getOrganization(orgName);
+
+		const tlsIdentity = {
+			credentials: {
+				certificate: tlsInfo.certificate,
+				privateKey: tlsInfo.key
+			},
+			mspId: caOrg.mspid,
+			type: 'X.509'
+		};
+		await wallet.put('tlsId', tlsIdentity);
 	}
 	const opts = {
-		wallet: inMemoryWallet,
+		wallet,
 		identity: userIdentity,
 		discovery: {enabled: useDiscovery}
 	};

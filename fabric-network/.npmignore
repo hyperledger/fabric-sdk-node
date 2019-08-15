@@ -13,3 +13,6 @@ npm-debug.log
 
 # Test Files #
 /test
+
+# Source files #
+/src
