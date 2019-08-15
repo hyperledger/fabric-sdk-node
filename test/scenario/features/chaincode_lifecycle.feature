@@ -14,9 +14,9 @@ Feature: Use the v2.0 chaincode lifecycle process
 		Given I have created fabric-client network instances
 		Then I can create and join a version_two capabilities channel named tokenchannel to two organizations
 
-		And I can package node chaincode at version v1 named example_cc_node as organization org1 with goPath na located at ../../../../test/fixtures/chaincode/node_cc/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata
-		And I can package java chaincode at version v1 named example_cc_java as organization org1 with goPath na located at ../../../../test/fixtures/chaincode/java_cc/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata
-		And I can package golang chaincode at version v1 named example_cc_golang as organization org1 with goPath ../../../../test/fixtures/chaincode/goLang located at github.com/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata
+		And I can package node chaincode at version v1 named example_cc_node as organization org1 with goPath na located at ../../../../test/fixtures/chaincode/node_cc/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata with initrequired
+		And I can package java chaincode at version v1 named example_cc_java as organization org1 with goPath na located at ../../../../test/fixtures/chaincode/java_cc/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata with initrequired
+		And I can package golang chaincode at version v1 named example_cc_golang as organization org1 with goPath ../../../../test/fixtures/chaincode/goLang located at github.com/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata with initrequired
 
 		And I can install node chaincode at version v1 named example_cc_node as organization org1
 		And I can install java chaincode at version v1 named example_cc_java as organization org1
@@ -26,9 +26,9 @@ Feature: Use the v2.0 chaincode lifecycle process
 		And I can approve java chaincode at version v1 named example_cc_java as organization org1 on channel tokenchannel with endorsement policy both_orgs
 		And I can approve golang chaincode at version v1 named example_cc_golang as organization org1 on channel tokenchannel with endorsement policy both_orgs
 
-		And I can package node chaincode at version v1 named example_cc_node as organization org2 with goPath na located at ../../../../test/fixtures/chaincode/node_cc/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata
-		And I can package java chaincode at version v1 named example_cc_java as organization org2 with goPath na located at ../../../../test/fixtures/chaincode/java_cc/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata
-		And I can package golang chaincode at version v1 named example_cc_golang as organization org2 with goPath ../../../../test/fixtures/chaincode/goLang located at github.com/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata
+		And I can package node chaincode at version v1 named example_cc_node as organization org2 with goPath na located at ../../../../test/fixtures/chaincode/node_cc/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata with initrequired
+		And I can package java chaincode at version v1 named example_cc_java as organization org2 with goPath na located at ../../../../test/fixtures/chaincode/java_cc/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata with initrequired
+		And I can package golang chaincode at version v1 named example_cc_golang as organization org2 with goPath ../../../../test/fixtures/chaincode/goLang located at github.com/example_cc and metadata located at ../../../../test/fixtures/chaincode/metadata with initrequired
 
 		And I can install node chaincode at version v1 named example_cc_node as organization org2
 		And I can install java chaincode at version v1 named example_cc_java as organization org2

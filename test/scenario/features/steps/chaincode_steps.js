@@ -11,9 +11,9 @@ const Client = require('fabric-client');
 
 module.exports = function () {
 
-	this.Then(/^I can package (.+?) chaincode at version (.+?) named (.+?) as organization (.+?) with goPath (.+?) located at (.+?) and metadata located at (.+?)$/,
+	this.Then(/^I can package (.+?) chaincode at version (.+?) named (.+?) as organization (.+?) with goPath (.+?) located at (.+?) and metadata located at (.+?) with (.+?)$/,
 		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
-		async (chaincode_type, chaincode_version, chaincode_name, org_name, _go_path, _chaincode_path, metadata_path) => {
+		async (chaincode_type, chaincode_version, chaincode_name, org_name, _go_path, _chaincode_path, metadata_path, init_required) => {
 			const cc_save_name = format('chaincode-%s-%s', org_name, chaincode_name);
 
 			metadata_path = path.join(__dirname, metadata_path);
@@ -29,7 +29,12 @@ module.exports = function () {
 
 			const client = Client.getConfigSetting('client-' + org_name).value;
 			const chaincode = client.newChaincode(chaincode_name, chaincode_version);
-			// chaincode.setInitRequired(true);
+			if (init_required === 'initrequired') {
+				chaincode.setInitRequired(true);
+				testUtil.logMsg(` -- packaging step setting init required for ${chaincode_type} named ${chaincode_name}`);
+			} else {
+				testUtil.logMsg(` -- packaging step NO init required for ${chaincode_type} named ${chaincode_name}`);
+			}
 
 			const request = {
 				chaincodePath: chaincode_path,
