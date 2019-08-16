@@ -2871,8 +2871,13 @@ const Channel = class {
 		}
 
 		// convert any names into peer objects or if empty find all
-		// endorsing peers added to this channel
-		request.targets = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		// endorsing peers added to this channel if discovery is off
+		if (!this._use_discovery || request.targets) {
+			logger.debug('%s - checking for targets');
+			request.targets = this._getTargets(request.targets, Constants.NetworkConfig.ENDORSING_PEER_ROLE);
+		} else {
+			logger.debug('%s - discovery is on and no targets');
+		}
 
 		// always use the handler if available (may not be just for discovery)
 		if (this._endorsement_handler) {
@@ -4141,7 +4146,9 @@ const Channel = class {
 		const state = {
 			name: this._name,
 			orderers: orderers.length > 0 ? orderers : 'N/A',
-			peers: peers.length > 0 ? peers : 'N/A'
+			peers: peers.length > 0 ? peers : 'N/A',
+			discovery: this._use_discovery,
+			number: this._number
 		};
 
 		return JSON.stringify(state).toString();

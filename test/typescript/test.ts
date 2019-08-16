@@ -63,6 +63,8 @@ const configOrg2: string = path.resolve(configPath, 'org2.yaml');
 const channelName: string = 'mychannelts';
 
 test('\n\n ** test TypeScript **', (t: any) => {
+	Client.setConfigSetting('initialize-with-discovery', false);
+
 	const client: Client = new Client();
 	t.equal(client.constructor.name, 'Client');
 
@@ -182,6 +184,7 @@ test('use the connection profile file', async (t: any) => {
 		}).then(() => {
 			t.pass('Successfully waited to make sure new channel was created.');
 			channel = client.getChannel(channelName);
+			t.comment (`Channel ${channelName} ::${channel.toString()}`);
 
 			const txId = client.newTransactionID(true);
 			const request: OrdererRequest = { txId };
@@ -241,6 +244,7 @@ test('use the connection profile file', async (t: any) => {
 			// set the material on the client to be used when building endpoints for the user
 			client.setTlsClientCertAndKey(cert, key);
 			channel = client.getChannel(channelName);
+			t.comment (`Channel ${channelName} ::${channel.toString()}`);
 
 			const txId: TransactionId = client.newTransactionID(true);
 			const request: JoinChannelRequest = {
@@ -733,7 +737,7 @@ test('use the connection profile file', async (t: any) => {
 			t.pass('Testing has completed successfully');
 			t.end();
 		}).catch((err: Error) => {
-			t.fail(err.message);
+			t.fail('Failed in test.ts - ' + err.stack);
 			t.end();
 			throw err;
 		});

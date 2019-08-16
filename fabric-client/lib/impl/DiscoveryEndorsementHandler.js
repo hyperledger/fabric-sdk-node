@@ -98,8 +98,8 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 			timeout = params.timeout;
 		}
 
-		// when not using discovery
-		if (!params.use_discovery) {
+		// when targets specified then do not use discovery
+		if (params.request.targets) {
 			logger.debug('%s - running without discovery', method);
 			const responses = await client_utils.sendPeersProposal(params.request.targets, params.signed_proposal, timeout);
 

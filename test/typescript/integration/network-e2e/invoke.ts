@@ -985,6 +985,48 @@ test('\n\n***** Network End-to-end flow: specify endorsing peers *****\n\n', asy
 	t.end();
 });
 
+test('\n\n***** Network End-to-end flow: specify endorsing peers when discovery is enabled *****\n\n', async (t: any) => {
+	const gateway = new Gateway();
+	try {
+		const gatewayOptions =  {
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				asLocalhost: false, // leave false so that if use a discovered peer is used it will fail
+				enabled: true,
+			},
+			identity: 'User1@org1.example.com',
+			wallet: inMemoryWallet,
+		};
+
+		await gateway.connect(JSON.parse(ccp.toString()), gatewayOptions);
+		t.pass('Connected to the gateway');
+
+		const network = await gateway.getNetwork(channelName);
+		t.pass('Initialized the network, ' + channelName);
+
+		const contract = network.getContract(chaincodeId);
+		t.pass('Got the contract');
+
+		// these peers will not have the same names as the discovered peers or
+		// the same URL because asLocalhost is false
+		const channel = network.getChannel();
+		const endorsingPeer1 = channel.getChannelPeer('peer0.org1.example.com');
+		const endorsingPeer2 = channel.getChannelPeer('peer0.org2.example.com');
+
+		await contract.createTransaction('echo')
+			.setEndorsingPeers([endorsingPeer1, endorsingPeer2])
+			.submit('RESULT');
+		t.pass('Transaction was successfully submitted with endorsing peers');
+	} catch (error) {
+		const stacktrace = error.stack;
+		t.fail('Transaction failed with unexpected error: ' + stacktrace || error);
+	} finally {
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and no event strategy *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
 

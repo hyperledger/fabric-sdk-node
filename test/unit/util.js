@@ -583,7 +583,7 @@ module.exports.buildJoinEventMonitor = function(t, client, channel_name, peer_na
 	return event_block_promise;
 };
 
-module.exports.invokeAsAdmin = async function(t, client, channel, additional_request_opts) {
+module.exports.invokeAsAdmin = async function(t, client, channel, additional_request_opts, shouldFail) {
 	let tx_id_string = null;
 	try {
 		// get a admin based transaction id
@@ -607,16 +607,25 @@ module.exports.invokeAsAdmin = async function(t, client, channel, additional_req
 			let one_good = false;
 			const proposal_response = proposalResponses[i];
 			if (proposal_response.response && proposal_response.response.status === 200) {
-				t.pass('transaction proposal has response status of good');
+				if (!shouldFail) {
+					t.pass('transaction proposal has response status of good');
+				}
 				one_good = true;
 			} else {
-				t.fail('transaction proposal was bad');
+				if (!shouldFail) {
+					t.fail('transaction proposal was bad');
+				} else {
+					t.pass('transaction proposal was bad');
+				}
 			}
 			all_good = all_good & one_good;
 		}
 
 		if (!all_good) {
-			t.fail('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
+			if (!shouldFail) {
+				t.fail('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
+			}
+			t.comment('###### got an error - will throw and error');
 			throw new Error('Failed to send invoke Proposal or receive valid response. Response null or status is not 200. exiting...');
 		}
 		request = {
@@ -637,7 +646,13 @@ module.exports.invokeAsAdmin = async function(t, client, channel, additional_req
 		}
 	} catch (error) {
 		logger.error('Invoke - catch network config test error:: %s', error.stack ? error.stack : error);
-		t.fail('Test failed with ' + error);
+		t.comment('###### got an error - ' + error);
+
+		if (!shouldFail) {
+			t.fail('Test failed with ' + error);
+		} else {
+			throw error;
+		}
 	}
 
 	return tx_id_string;

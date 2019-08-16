@@ -339,6 +339,7 @@ const Client = class extends BaseClient {
 	 * @returns {Channel} The channel instance
 	 */
 	getChannel(name, throwError = true) {
+		const method = 'getChannel';
 		let channel;
 		if (name) {
 			channel = this._channels.get(name);
@@ -348,6 +349,7 @@ const Client = class extends BaseClient {
 		}
 
 		if (channel) {
+			logger.debug('%s - returning existing channel %s', method, name);
 			return channel;
 		}
 
@@ -358,11 +360,14 @@ const Client = class extends BaseClient {
 				name = channel_names[0];
 			}
 			if (name) {
+				logger.debug('%s - building new channel from network config %s', method, name);
 				channel = this._network_config.getChannel(name);
 			}
 		}
 		if (channel) {
 			this._channels.set(name, channel);
+			logger.debug('%s - returning new channel %s', method, name);
+
 			return channel;
 		}
 

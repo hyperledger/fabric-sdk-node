@@ -282,11 +282,20 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 
 	const force_target_request = {
 		chaincodeId: first_chaincode_name,
-		target: 'peer0.org1.example.com'
+		targets: ['peer0.org1.example.com:7051']
 	};
 	await testUtil.invokeAsAdmin(t, client_org1, channel_org1, force_target_request);
 
-	t.pass('***** Invokes and Queries complete *****');
+	const bad_target_request = {
+		chaincodeId: first_chaincode_name,
+		targets: [peer_bad]
+	};
+	try {
+		await testUtil.invokeAsAdmin(t, client_org1, channel_org1, bad_target_request, true);
+		t.fail('Failed to get the error with a bad target');
+	} catch (error) {
+		t.pass('Successfully got the error with a bad target' + error);
+	}
 
 	const tx_id = client_org1.newTransactionID(true);
 	tx_id_string = tx_id.getTransactionID();
@@ -308,6 +317,7 @@ test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 		}
 	}
 
+	t.pass('***** Invokes and Queries complete *****');
 
 	try {
 		await installChaincode(t, client_org1, channel_org1, peer_org1, second_chaincode_name, second_chaincode_ver);
@@ -406,7 +416,7 @@ async function installChaincode(t, client, channel, peer, chaincode_id, chaincod
 }
 
 async function startChaincode(t, client, channel, orderer, peers, chaincode_id, chaincode_ver) {
-
+	t.pass('***** will start the chaincode ' + chaincode_id);
 	try {
 		// reset the testing
 		const tx_id = client.newTransactionID(true);
@@ -456,8 +466,10 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 			]
 		};
 
-		const proposal_results = await channel.sendInstantiateProposal(proposal_request, 10 * 60 * 1000);
+		const proposal_results = await channel.sendInstantiateProposal(proposal_request, 2 * 60 * 1000);
 		if (proposal_results[0][0].response.status === 200) {
+			t.pass('Successfully endorsed the sendInstantiateProposal');
+
 			const commit_request = {
 				orderer: orderer,
 				proposalResponses: proposal_results[0],
@@ -472,6 +484,8 @@ async function startChaincode(t, client, channel, orderer, peers, chaincode_id, 
 			} else {
 				t.fail('Chaincode is not running');
 			}
+		} else {
+			t.fail('Failed to endorsed the sendInstantiateProposal');
 		}
 	} catch (error) {
 		logger.error(error);
@@ -519,7 +533,7 @@ async function createUpdateChannel(t, create, file, channel_name, client_org1, c
 		}
 		if (results.status === 'SUCCESS') {
 			t.pass('Successfully ' + text + ' the channel.');
-			await testUtil.sleep(5000);
+			await testUtil.sleep(20000);
 		} else {
 			t.fail('Failed to create the channel. ' + results.status + ' :: ' + results.info);
 			throw new Error('Failed to ' + text + ' the channel. ');
@@ -556,6 +570,7 @@ async function joinChannel(t, channel_name, peer, orderer, client) {
 		const join_results = await channel.joinChannel(request, 30000);
 		if (join_results && join_results[0] && join_results[0].response && join_results[0].response.status === 200) {
 			t.pass('Successfully joined channel on org');
+			await testUtil.sleep(5000);
 		} else {
 			t.fail('Failed to join channel on org');
 			throw new Error('Failed to join channel on org');
