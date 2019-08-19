@@ -92,7 +92,7 @@ def buildStages() {
       }
       // Run gulp tests (headless and integration tests)
       stage("Headless & Integration Tests") {
-        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
+        // wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
           try {
             dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_scripts") {
               sh './ciScript.sh --sdk_e2e_Tests'
@@ -103,7 +103,7 @@ def buildStages() {
             currentBuild.result = 'FAILURE'
             throw err
           }
-        }
+        // }
       }
 
 // Publish npm modules only from amd64 merge jobs
