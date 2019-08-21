@@ -63,9 +63,9 @@ class LifecyclePackager extends BasePackager {
 			path = '';
 		}
 		const metadata = {
-			Label: label,
-			Path: path,
-			Type: type
+			label: label,
+			path: path,
+			type: type
 		};
 		const descriptors = [];
 		const metadataDescriptor = {
