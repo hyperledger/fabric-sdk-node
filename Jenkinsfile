@@ -92,7 +92,7 @@ def buildStages() {
         }
       }
       stage("NPM Install") {
-            wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
+            // wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
               try {
                 dir("$ROOTDIR/$PROJECT_DIR") {
                   sh '''
@@ -110,11 +110,11 @@ def buildStages() {
                 currentBuild.result = 'FAILURE'
                 throw err
               }
-            }
+            // }
           }
       // Run gulp tests (headless and integration tests)
       stage("Headless Tests") {
-        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
+        // wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
           try {
             dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_scripts") {
               sh './ciScript.sh --sdk_Headless'
@@ -125,11 +125,11 @@ def buildStages() {
             currentBuild.result = 'FAILURE'
             throw err
           }
-        }
+        // }
       }
       // Run Integration
       stage("Integration Tests") {
-        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
+        // wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
           try {
             dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_scripts") {
               sh './ciScript.sh --sdk_Integration'
@@ -140,11 +140,11 @@ def buildStages() {
             currentBuild.result = 'FAILURE'
             throw err
           }
-        }
+        // }
       }
       // Run Cucumber & Logger
       stage("Cucumber & Logger Tests") {
-        wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
+        // wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
           try {
             dir("$ROOTDIR/$PROJECT_DIR/scripts/ci_scripts") {
               sh './ciScript.sh --sdk_Cucumber --sdk_Logger'
@@ -155,7 +155,7 @@ def buildStages() {
             currentBuild.result = 'FAILURE'
             throw err
           }
-        }
+        // }
       }
 // Publish npm modules only from amd64 merge jobs
 if (env.JOB_TYPE == "merge" && env.MARCH == "amd64") {
