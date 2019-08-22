@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+set -e
 CRYPTOGEN=$1
 echo ''
 echo "Crypto-gen scripts running based on binaries location ${CRYPTOGEN}"

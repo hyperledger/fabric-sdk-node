@@ -16,7 +16,6 @@
 'use strict';
 const {Identity, Utils: sdk_utils} = require('fabric-common');
 const client_utils = require('./client-utils.js');
-const token_utils = require('./token-utils.js');
 const util = require('util');
 const Peer = require('./Peer.js');
 const ChannelEventHub = require('./ChannelEventHub.js');
@@ -115,7 +114,6 @@ const Channel = class {
 		this._discovery_cache_life = sdk_utils.getConfigSetting('discovery-cache-life', 300000); // default is 5 minutes
 		this._endorsement_handler = null;
 		this._commit_handler = null;
-		this._prover_handler = null;
 
 		this._number = channel_count++;
 		logger.debug('Constructed Channel instance:%s name - %s, network mode: %s', this._number, this._name, !this._devMode);
@@ -186,7 +184,6 @@ const Channel = class {
 
 		let endorsement_handler_path = null;
 		let commit_handler_path = null;
-		let prover_handler_path = null;
 
 		if (request) {
 			logger.debug('%s - request.asLocalhost:%s', method, request.asLocalhost);
@@ -232,17 +229,12 @@ const Channel = class {
 					logger.debug('%s - user requested commitHandler %s', method, request.commitHandler);
 					commit_handler_path = request.commitHandler;
 				}
-				if (request.proverHandler) {
-					logger.debug('%s - user requested proverHandler %s', method, request.proverHandler);
-					prover_handler_path = request.proverHandler;
-				}
 			}
 		}
 
 		// setup the handlers
 		this._endorsement_handler = await this._build_handler(endorsement_handler_path, 'endorsement-handler');
 		this._commit_handler = await this._build_handler(commit_handler_path, 'commit-handler');
-		this._prover_handler = await this._build_handler(prover_handler_path, 'prover-handler');
 
 		let results = null;
 		try {
@@ -3288,292 +3280,6 @@ const Channel = class {
 
 		const signer = clientContext._getSigningIdentity(use_admin_signer);
 		return client_utils.toEnvelope(client_utils.signProposal(signer, payload));
-	}
-
-	/**
-	 * Send signed token command to peer
-	 *
-	 * @param {SignedCommandRequest} request - Required. Signed token command
-	 *        that will be sent to peer. Must contain a signedCommand object.
-	 * @param {Number} [timeout] Optional. A number indicating milliseconds to wait on the
-	 *        response before rejecting the promise with a timeout error. This
-	 *        overrides the default timeout of the Orderer instance and the global
-	 *        timeout in the config settings.
-	 * @returns {Promise} A Promise for the {@link CommandResponse}
-	 */
-	async sendSignedTokenCommand(request, timeout) {
-		const method = 'sendSignedTokenCommand';
-		logger.debug('%s - start', method);
-
-		if (!request) {
-			throw Error(util.format('Missing required "request" parameter on the %s call', method));
-		}
-		if (!request.command_bytes) {
-			throw new Error(util.format('Missing required "command_bytes" in request on the %s call', method));
-		}
-		if (!request.signature) {
-			throw new Error(util.format('Missing required "signature" in request on the %s call', method));
-		}
-
-		const signedCommand = token_utils.toSignedCommand(request.signature, request.command_bytes);
-
-		if (this._prover_handler) {
-			const params = {
-				request: request,
-				signed_command: signedCommand,
-				timeout: timeout
-			};
-
-			const response = await this._prover_handler.processCommand(params);
-			return response;
-		} else {
-			// convert any names into peer objects or if empty find all
-			// prover peers added to this channel
-			const targetPeers = this._getTargets(request.targets, Constants.NetworkConfig.PROVER_PEER_ROLE);
-			return await token_utils.sendTokenCommandToPeer(targetPeers, signedCommand, timeout);
-		}
-	}
-
-	/**
-	 * Sends a token command to a prover peer and returns a [CommandResponse] {@link CommandResponse}
-	 * that contains either a token transaction or unspent tokens depending on the command.
-	 *
-	 * If multiple prover peers are configured, the function will send to one peer
-	 * at a time. If a peer returns the response, it will return the response
-	 * and skip the remaining peers.
-	 *
-	 * @param {TokenRequest} request - Required. A [TokenRequest]{@link TokenClient#TokenRequest}.
-	 * @param {Number} [timeout] Optional. A number indicating milliseconds to wait on the
-	 *        response before rejecting the promise with a timeout error. This
-	 *        overrides the default timeout of the Peer instance and the global
-	 *        timeout in the config settings.
-	 * @returns {Promise} A Promise for the {@link CommandResponse}
-	 */
-	async sendTokenCommand(request, timeout) {
-		const method = 'sendTokenCommand';
-		logger.debug('%s - start', method);
-
-		if (!request) {
-			throw Error(util.format('Missing required "request" parameter on the %s call', method));
-		}
-		if (!request.txId) {
-			throw new Error(util.format('Missing required "txId" in request on the %s call', method));
-		}
-		if (!request.tokenCommand) {
-			throw new Error(util.format('Missing required "tokenCommand" in request on the %s call', method));
-		}
-
-		if (this._prover_handler) {
-			logger.debug('%s - running with prover handler', method);
-			const signedCommand = Channel._buildSignedTokenCommand(request, this._name, this._clientContext);
-
-			const params = {
-				request: request,
-				signed_command: signedCommand,
-				timeout: timeout
-			};
-
-			const response = await this._prover_handler.processCommand(params);
-			return response;
-		} else {
-			// convert any names into peer objects or if empty find all
-			// prover peers added to this channel
-			const targetPeers = this._getTargets(request.targets, Constants.NetworkConfig.PROVER_PEER_ROLE);
-			return Channel.sendTokenCommand(request, targetPeers, this._name, this._clientContext, timeout);
-		}
-	}
-
-	/*
-	 * Internal static method to allow token command to be sent without
-	 * creating a new channel
-	 */
-	static async sendTokenCommand(request, targets, channelId, client_context, timeout) {
-		const method = 'sendTokenCommand(static)';
-		logger.debug('%s - start', method);
-
-		const signedCommand = Channel._buildSignedTokenCommand(request, channelId, client_context);
-		const responses = await token_utils.sendTokenCommandToPeer(targets, signedCommand, timeout);
-		return responses;
-	}
-
-	/*
-	 * Internal static method to create header and sign the token command
-	 * without creating a channel.
-	 */
-	static _buildSignedTokenCommand(request, channelId, client_context) {
-		const method = '_buildSignedTokenCommand';
-		logger.debug('%s - start, channelId %s', method, channelId);
-
-		let signer = null;
-		if (request.signer) {
-			signer = request.signer;
-		} else {
-			signer = client_context._getSigningIdentity(request.txId.isAdmin());
-		}
-
-		const header = token_utils.buildTokenCommandHeader(
-			signer, channelId, request.txId.getNonce(), client_context.getClientCertHash());
-
-		// copy tokenCommand to a local variable so that we can update it
-		const command = Object.assign(request.tokenCommand);
-		command.setHeader(header);
-		logger.debug('%s - before signCommand', method);
-		const signed_command = token_utils.signCommand(signer, command);
-
-		return signed_command;
-	}
-
-	/**
-	 * send the signed token transaction
-	 *
-	 * @param {SignedTokenTransactionRequest} request - Required. The signed token transaction.
-	 *        Must contain 'signature' and 'tokentx_bytes' properties.
-	 * @param {Number} timeout - A number indicating milliseconds to wait on the
-	 *        response before rejecting the promise with a timeout error. This
-	 *        overrides the default timeout of the Orderer instance and the global
-	 *        timeout in the config settings.
-	 * @returns {BroadcastResponse} A BroadcastResponse message returned by
-	 *          the orderer that contains a single "status" field for a
-	 *          standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
-	 *          This will be an acknowledgement from the orderer of a successfully
-	 *          submitted transaction.
-	 */
-	async sendSignedTokenTransaction(request, timeout) {
-		const method = 'sendSignedTokenTransaction';
-		logger.debug('%s - start', method);
-
-		if (!request) {
-			throw Error(util.format('Missing required "request" parameter on the %s call', method));
-		}
-		if (!request.signature) {
-			throw new Error(util.format('Missing required "signature" in request on the %s call', method));
-		}
-		if (!request.payload_bytes) {
-			throw new Error(util.format('Missing required "payload_bytes" in request on the %s call', method));
-		}
-		if (!request.txId) {
-			throw new Error(util.format('Missing required "txId" in request on the %s call', method));
-		}
-
-		const signed_envelope = token_utils.toEnvelope(request.signature, request.payload_bytes);
-
-		if (this._commit_handler) {
-			const params = {
-				signed_envelope,
-				request: request,
-				timeout: timeout
-			};
-
-			return this._commit_handler.commit(params);
-		} else {
-			// verify that we have an orderer configured
-			const orderer = this._clientContext.getTargetOrderer(request.orderer, this.getOrderers(), this._name);
-			return orderer.sendBroadcast(signed_envelope, timeout);
-		}
-	}
-
-	/**
-	 * @typedef {Object} TokenTransactionRequest
-	 *          This object contains properties that will be used for broadcasting token transaction.
-	 * @property {TokenTransaction} tokenTransaction - Required. The response from sendTokenCommand.
-	 * @property {TransactionID} txId - Required. Transaction ID to use for this request.
-	 * @property {Orderer | string} [orderer] Optional. The orderer that will receive this request,
-	 *           when not provided, the transaction will be sent to the orderers assigned to this channel instance.
-	 */
-
-	/**
-	 * Send the token transaction to the orderer for further processing. When the committing peers
-	 * successfully validate the transactions, it will mark the transaction as valid inside
-	 * the block. After all transactions in a block have been validated, and marked either as
-	 * valid or invalid (with a [reason code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L125}),
-	 * the block will be appended (committed) to the channel's ledger on the peer.
-	 * <br><br>
-	 * The caller of this method must use the response returned from the
-	 * [sendTokenCommand()]{@link Channel#sendTokenCommand}.
-	 *
-	 * @param {TokenTransactionRequest} request - {@link TokenTransactionRequest}
-	 * @param {Number} timeout - A number indicating milliseconds to wait on the
-	 *        response before rejecting the promise with a timeout error. This
-	 *        overrides the default timeout of the Orderer instance and the global
-	 *        timeout in the config settings.
-	 * @returns {Promise} A Promise for a {@link BroadcastResponse} message returned by
-	 *          the orderer that contains a single "status" field for a
-	 *          standard [HTTP response code]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/common/common.proto#L27}.
-	 *          submitted transaction.
-	 *          This will be an acknowledgement from the orderer of a successfully
-	 *          submitted transaction.
-	 */
-	async sendTokenTransaction(request, timeout) {
-		const method = 'sendTokenTransaction';
-		logger.debug('%s - start', method);
-
-		if (!request) {
-			throw Error(util.format('Missing required "request" parameter on the %s call', method));
-		}
-		if (!request.txId) {
-			throw new Error(util.format('Missing required "txId" in request on the %s call', method));
-		}
-		if (!request.tokenTransaction) {
-			throw new Error(util.format('Missing required "tokenTransaction" in request on the %s call', method));
-		}
-
-		const isAdmin = request.txId.isAdmin();
-		const signer = this._clientContext._getSigningIdentity(isAdmin);
-		const envelope = Channel._buildTokenTxEnvelope(request, this._name, this._clientContext, signer, isAdmin);
-
-		if (this._commit_handler) {
-			// protect the users input
-			const param_request = Object.assign({}, request);
-			if (param_request.orderer) {
-				// check and convert to orderer object if a name
-				param_request.orderer = this._clientContext.getTargetOrderer(param_request.orderer, this.getOrderers(), this._name);
-			}
-			const params = {
-				signed_envelope: envelope,
-				request: param_request,
-				timeout: timeout
-			};
-			return this._commit_handler.commit(params);
-		} else {
-			const orderer = this._clientContext.getTargetOrderer(request.orderer, this.getOrderers(), this._name);
-			return orderer.sendBroadcast(envelope, timeout);
-		}
-	}
-
-	/*
-	 * Internal static method to allow transaction envelope to be built without
-	 * creating a new channel
-	 */
-	static _buildTokenTxEnvelope(request, channelId, clientContext, signer, use_admin_signer) {
-		const txId = request.txId;
-		const channel_header = client_utils.buildChannelHeader(
-			fabprotos.common.HeaderType.TOKEN_TRANSACTION,
-			channelId,
-			txId.getTransactionID(),
-			null, // no epoch
-			'',
-			client_utils.buildCurrentTimestamp(),
-			clientContext.getClientCertHash()
-		);
-
-		const signature_header = new fabprotos.common.SignatureHeader();
-		signature_header.setCreator(signer.serialize());
-		signature_header.setNonce(txId.getNonce());
-
-		const header = new fabprotos.common.Header();
-		header.setChannelHeader(channel_header.toBuffer());
-		header.setSignatureHeader(signature_header.toBuffer());
-
-		const payload = new fabprotos.common.Payload();
-		payload.setHeader(header);
-		payload.setData(request.tokenTransaction.toBuffer());
-		const payloadBytes = payload.toBuffer();
-		const signature = Buffer.from(signer.sign(payloadBytes));
-
-		const envelope = new fabprotos.common.Envelope();
-		envelope.setPayload(payloadBytes);
-		envelope.setSignature(signature);
-		return envelope;
 	}
 
 	/**

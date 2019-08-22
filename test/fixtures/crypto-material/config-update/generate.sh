@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+set -e
 
 # Set the path to teh crypto material to ensure it may be used
 CRYPTOGEN=$1

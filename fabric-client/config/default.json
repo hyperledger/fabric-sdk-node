@@ -34,6 +34,5 @@
 	"discovery-cache-life": 300000,
 	"override-discovery-protocol": null,
 	"endorsement-handler": "fabric-client/lib/impl/DiscoveryEndorsementHandler.js",
-	"commit-handler": "fabric-client/lib/impl/BasicCommitHandler.js",
-	"prover-handler": "fabric-client/lib/impl/BasicProverHandler.js"
+	"commit-handler": "fabric-client/lib/impl/BasicCommitHandler.js"
 }

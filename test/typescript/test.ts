@@ -743,8 +743,8 @@ test('use the connection profile file', async (t: any) => {
 test.skip('test the new lifecycle APIs', async (t: any) => {
 	const client1 = await getClientForOrg(configNetwork, configOrg1);
 	const client2 = await getClientForOrg(configNetwork, configOrg2);
-	const channel1 = client1.newChannel('tokenchannel');
-	const channel2 = client2.newChannel('tokenchannel');
+	const channel1 = client1.newChannel('channel1');
+	const channel2 = client2.newChannel('channel2');
 
 	let data = fs.readFileSync(path.join(__dirname, '../fixtures/crypto-material/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem'));
 	let pem = Buffer.from(data).toString();
