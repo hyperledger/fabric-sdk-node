@@ -25,6 +25,8 @@ enum Status {
 }
 
 enum HeaderType {
+    reserved 7, 9;
+    reserved "PEER_RESOURCE_UPDATE", "TOKEN_TRANSACTION";
 
     MESSAGE = 0;                     // Used for messages which are signed but opaque
     CONFIG = 1;                      // Used for messages which express the channel config
