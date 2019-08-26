@@ -116,8 +116,8 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 		}
 
 		if (endorsement_plan) {
-
-			return this._endorse(endorsement_plan, request, params.signed_proposal, timeout);
+			const working_discovery = JSON.parse(JSON.stringify(endorsement_plan));
+			return this._endorse(working_discovery, request, params.signed_proposal, timeout);
 		} else {
 			logger.error('%s - no endorsement plan found for %j', method, params.endorsement_hint);
 			throw Error('No endorsement plan available for ' + JSON.stringify(params.endorsement_hint));
