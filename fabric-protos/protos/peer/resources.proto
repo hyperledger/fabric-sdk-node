@@ -1,13 +1,11 @@
-/*
-Copyright IBM Corp. All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright the Hyperledger Fabric contributors. All rights reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
 
 syntax = "proto3";
 
 option java_package = "org.hyperledger.fabric.protos.peer";
-option go_package = "github.com/hyperledger/fabric/protos/peer";
+option go_package = "github.com/hyperledger/fabric-protos-go/peer";
 
 package protos;
 

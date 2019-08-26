@@ -1,17 +1,15 @@
-/*
-Copyright IBM Corp. All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright the Hyperledger Fabric contributors. All rights reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
 
 syntax = "proto3";
 
-import "common/common.proto";
-
-option go_package = "github.com/hyperledger/fabric/protos/orderer";
+option go_package = "github.com/hyperledger/fabric-protos-go/orderer";
 option java_package = "org.hyperledger.fabric.protos.orderer";
 
 package orderer;
+
+import "common/common.proto";
 
 // Cluster defines communication between cluster members.
 service Cluster {

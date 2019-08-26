@@ -6,9 +6,10 @@
   "main": "index.js",
   "scripts": {
     "update:clean": "rimraf bundle.json protos && mkdirp protos",
-    "update:copy": "cpx \"${GOPATH}/src/github.com/hyperledger/fabric/protos/**/*.proto\" protos",
+    "update:copy": "cpx \"${GOPATH}/src/github.com/hyperledger/fabric-protos/**/*.proto\" protos",
+    "update:cleanup": "sed -i .bak -e '/enum HeaderType {/,/}/ {/reserved/d;}' protos/common/common.proto && rm protos/common/common.proto.bak",
     "update:pbjs": "pbjs -t json -p google-protos -p protos $(find google-protos protos -name \"*.proto\" -type f) -o bundle.json",
-    "update": "npm run update:clean && npm run update:copy && npm run update:pbjs",
+    "update": "npm run update:clean && npm run update:copy && npm run update:cleanup && npm run update:pbjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

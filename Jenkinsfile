@@ -64,8 +64,9 @@ def buildStages() {
             env.GOROOT = "/opt/go/go" + props["GO_VER"] + ".linux." + "$MARCH"
             env.GOPATH = "$GOPATH/bin"
             env.PATH = "$GOROOT/bin:$GOPATH/bin:$PATH"
-            // Clone fabric repository
+            // Clone fabric repositories
             fabBuildLibrary.cloneScm('fabric', '$GERRIT_BRANCH')
+            fabBuildLibrary.cloneScm('fabric-protos', '$GERRIT_BRANCH')
             // Build fabric images
             fabBuildLibrary.fabBuildImages('fabric', 'docker')
             // Clone fabric-ca repository
@@ -73,7 +74,7 @@ def buildStages() {
             // Build fabric-ca docker images
             fabBuildLibrary.fabBuildImages('fabric-ca', 'docker')
             // Pull Docker Images from nexus3
-              fabBuildLibrary.pullDockerImages(props["FAB_BASE_VERSION"], props["FAB_IMAGES_LIST"])
+            fabBuildLibrary.pullDockerImages(props["FAB_BASE_VERSION"], props["FAB_IMAGES_LIST"])
             // Pull Thirdparty Docker Images from hyperledger DockerHub
             fabBuildLibrary.pullThirdPartyImages(props["FAB_BASEIMAGE_VERSION"], props["FAB_THIRDPARTY_IMAGES_LIST"])
           } else {

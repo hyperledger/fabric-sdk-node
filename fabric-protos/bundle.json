@@ -52,640 +52,11 @@
             "isNamespace": true
         },
         {
-            "name": "token",
-            "fields": [],
-            "syntax": "proto2",
-            "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/token",
-                "java_package": "org.hyperledger.fabric.protos.token"
-            },
-            "messages": [
-                {
-                    "name": "TokenTransaction",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenAction",
-                            "name": "token_action",
-                            "id": 1,
-                            "oneof": "action"
-                        }
-                    ],
-                    "oneofs": {
-                        "action": [
-                            1
-                        ]
-                    }
-                },
-                {
-                    "name": "TokenAction",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "Issue",
-                            "name": "issue",
-                            "id": 1,
-                            "oneof": "data"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "Transfer",
-                            "name": "transfer",
-                            "id": 2,
-                            "oneof": "data"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "Transfer",
-                            "name": "redeem",
-                            "id": 3,
-                            "oneof": "data"
-                        }
-                    ],
-                    "oneofs": {
-                        "data": [
-                            1,
-                            2,
-                            3
-                        ]
-                    }
-                },
-                {
-                    "name": "TokenOwner",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "Type",
-                            "name": "type",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "raw",
-                            "id": 2
-                        }
-                    ],
-                    "enums": [
-                        {
-                            "name": "Type",
-                            "syntax": "proto3",
-                            "values": [
-                                {
-                                    "name": "MSP_IDENTIFIER",
-                                    "id": 0
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Issue",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "repeated",
-                            "type": "Token",
-                            "name": "outputs",
-                            "id": 1
-                        }
-                    ]
-                },
-                {
-                    "name": "Transfer",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "repeated",
-                            "type": "TokenId",
-                            "name": "inputs",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "Token",
-                            "name": "outputs",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "Token",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenOwner",
-                            "name": "owner",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "type",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "quantity",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "TokenId",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "tx_id",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "uint32",
-                            "name": "index",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "TokenOperation",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenOperationAction",
-                            "name": "Action",
-                            "id": 1,
-                            "oneof": "Operation"
-                        }
-                    ],
-                    "oneofs": {
-                        "Operation": [
-                            1
-                        ]
-                    }
-                },
-                {
-                    "name": "TokenOperationAction",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenActionTerms",
-                            "name": "Issue",
-                            "id": 1,
-                            "oneof": "Payload"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "TokenActionTerms",
-                            "name": "Transfer",
-                            "id": 2,
-                            "oneof": "Payload"
-                        }
-                    ],
-                    "oneofs": {
-                        "Payload": [
-                            1,
-                            2
-                        ]
-                    }
-                },
-                {
-                    "name": "TokenActionTerms",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenOwner",
-                            "name": "Sender",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "Token",
-                            "name": "Outputs",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "IssueRequest",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "credential",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "Token",
-                            "name": "tokens_to_issue",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "RecipientShare",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenOwner",
-                            "name": "recipient",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "quantity",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "TokenTransactions",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "repeated",
-                            "type": "TokenTransaction",
-                            "name": "txs",
-                            "id": 1
-                        }
-                    ]
-                },
-                {
-                    "name": "TransferRequest",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "credential",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "TokenId",
-                            "name": "token_ids",
-                            "id": 2
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "RecipientShare",
-                            "name": "shares",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "RedeemRequest",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "credential",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "TokenId",
-                            "name": "token_ids",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "quantity",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "UnspentToken",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "TokenId",
-                            "name": "id",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "type",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "quantity",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "UnspentTokens",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "repeated",
-                            "type": "UnspentToken",
-                            "name": "tokens",
-                            "id": 1
-                        }
-                    ]
-                },
-                {
-                    "name": "ListRequest",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "credential",
-                            "id": 1
-                        }
-                    ]
-                },
-                {
-                    "name": "TokenOperationRequest",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "credential",
-                            "id": 1
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "TokenOperation",
-                            "name": "operations",
-                            "id": 2
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "TokenId",
-                            "name": "token_ids",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "Header",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "google.protobuf.Timestamp",
-                            "name": "timestamp",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "channel_id",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "nonce",
-                            "id": 3
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "creator",
-                            "id": 4
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "tls_cert_hash",
-                            "id": 5
-                        }
-                    ]
-                },
-                {
-                    "name": "Command",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "Header",
-                            "name": "header",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "IssueRequest",
-                            "name": "issue_request",
-                            "id": 2,
-                            "oneof": "payload"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "TransferRequest",
-                            "name": "transfer_request",
-                            "id": 3,
-                            "oneof": "payload"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "ListRequest",
-                            "name": "list_request",
-                            "id": 4,
-                            "oneof": "payload"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "RedeemRequest",
-                            "name": "redeem_request",
-                            "id": 5,
-                            "oneof": "payload"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "TokenOperationRequest",
-                            "name": "token_operation_request",
-                            "id": 6,
-                            "oneof": "payload"
-                        }
-                    ],
-                    "oneofs": {
-                        "payload": [
-                            2,
-                            3,
-                            4,
-                            5,
-                            6
-                        ]
-                    }
-                },
-                {
-                    "name": "SignedCommand",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "command",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "signature",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "CommandResponseHeader",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "google.protobuf.Timestamp",
-                            "name": "timestamp",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "command_hash",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "creator",
-                            "id": 3
-                        }
-                    ]
-                },
-                {
-                    "name": "Error",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "message",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "payload",
-                            "id": 2
-                        }
-                    ]
-                },
-                {
-                    "name": "CommandResponse",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "CommandResponseHeader",
-                            "name": "header",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "Error",
-                            "name": "err",
-                            "id": 2,
-                            "oneof": "payload"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "TokenTransaction",
-                            "name": "token_transaction",
-                            "id": 3,
-                            "oneof": "payload"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "UnspentTokens",
-                            "name": "unspent_tokens",
-                            "id": 4,
-                            "oneof": "payload"
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "TokenTransactions",
-                            "name": "token_transactions",
-                            "id": 5,
-                            "oneof": "payload"
-                        }
-                    ],
-                    "oneofs": {
-                        "payload": [
-                            2,
-                            3,
-                            4,
-                            5
-                        ]
-                    }
-                },
-                {
-                    "name": "SignedCommandResponse",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "response",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "bytes",
-                            "name": "signature",
-                            "id": 2
-                        }
-                    ]
-                }
-            ],
-            "services": [
-                {
-                    "name": "Prover",
-                    "options": {},
-                    "rpc": {
-                        "ProcessCommand": {
-                            "request": "SignedCommand",
-                            "request_stream": false,
-                            "response": "SignedCommandResponse",
-                            "response_stream": false,
-                            "options": {}
-                        }
-                    }
-                }
-            ],
-            "isNamespace": true
-        },
-        {
             "name": "kvrwset",
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset",
+                "go_package": "github.com/hyperledger/fabric-protos-go/ledger/rwset/kvrwset",
                 "java_package": "org.hyperledger.fabric.protos.ledger.rwset.kvrwset"
             },
             "messages": [
@@ -987,7 +358,7 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/ledger/rwset",
+                "go_package": "github.com/hyperledger/fabric-protos-go/ledger/rwset",
                 "java_package": "org.hyperledger.fabric.protos.ledger.rwset"
             },
             "messages": [
@@ -1131,7 +502,7 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/ledger/queryresult",
+                "go_package": "github.com/hyperledger/fabric-protos-go/ledger/queryresult",
                 "java_package": "org.hyperledger.fabric.protos.ledger.queryresult"
             },
             "messages": [
@@ -1197,7 +568,7 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/common",
+                "go_package": "github.com/hyperledger/fabric-protos-go/common",
                 "java_package": "org.hyperledger.fabric.protos.common"
             },
             "messages": [
@@ -2293,10 +1664,6 @@
                         {
                             "name": "PEER_ADMIN_OPERATION",
                             "id": 8
-                        },
-                        {
-                            "name": "TOKEN_TRANSACTION",
-                            "id": 9
                         }
                     ]
                 },
@@ -2334,7 +1701,7 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/transientstore",
+                "go_package": "github.com/hyperledger/fabric-protos-go/transientstore",
                 "java_package": "org.hyperledger.fabric.protos.transientstore"
             },
             "messages": [
@@ -2371,7 +1738,7 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/gossip"
+                "go_package": "github.com/hyperledger/fabric-protos-go/gossip"
             },
             "messages": [
                 {
@@ -3317,7 +2684,7 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/msp",
+                "go_package": "github.com/hyperledger/fabric-protos-go/msp",
                 "java_package": "org.hyperledger.fabric.protos.msp",
                 "java_outer_classname": "MspConfigPackage"
             },
@@ -3660,7 +3027,7 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/discovery"
+                "go_package": "github.com/hyperledger/fabric-protos-go/discovery"
             },
             "messages": [
                 {
@@ -4067,7 +3434,7 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/orderer",
+                "go_package": "github.com/hyperledger/fabric-protos-go/orderer",
                 "java_package": "org.hyperledger.fabric.protos.orderer"
             },
             "messages": [
@@ -4622,7 +3989,7 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric/protos/orderer/etcdraft",
+                "go_package": "github.com/hyperledger/fabric-protos-go/orderer/etcdraft",
                 "java_package": "org.hyperledger.fabric.protos.orderer.etcdraft"
             },
             "messages": [
@@ -4762,7 +4129,7 @@
             "options": {
                 "java_package": "org.hyperledger.fabric.protos.peer",
                 "java_outer_classname": "ProposalPackage",
-                "go_package": "github.com/hyperledger/fabric/protos/peer"
+                "go_package": "github.com/hyperledger/fabric-protos-go/peer"
             },
             "messages": [
                 {
@@ -5078,6 +4445,25 @@
                     ]
                 },
                 {
+                    "name": "BlockAndPrivateData",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "common.Block",
+                            "name": "block",
+                            "id": 1
+                        },
+                        {
+                            "rule": "map",
+                            "type": "rwset.TxPvtReadWriteSet",
+                            "keytype": "uint64",
+                            "name": "private_data_map",
+                            "id": 2
+                        }
+                    ]
+                },
+                {
                     "name": "DeliverResponse",
                     "syntax": "proto3",
                     "fields": [
@@ -5101,13 +4487,21 @@
                             "name": "filtered_block",
                             "id": 3,
                             "oneof": "Type"
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "BlockAndPrivateData",
+                            "name": "block_and_private_data",
+                            "id": 4,
+                            "oneof": "Type"
                         }
                     ],
                     "oneofs": {
                         "Type": [
                             1,
                             2,
-                            3
+                            3,
+                            4
                         ]
                     }
                 },
@@ -5308,12 +4702,6 @@
                     "fields": [
                         {
                             "rule": "optional",
-                            "type": "bytes",
-                            "name": "payload_visibility",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
                             "type": "ChaincodeID",
                             "name": "chaincode_id",
                             "id": 2
@@ -5366,12 +4754,6 @@
                             "type": "ChaincodeID",
                             "name": "chaincode_id",
                             "id": 4
-                        },
-                        {
-                            "rule": "repeated",
-                            "type": "token.TokenOperation",
-                            "name": "token_operations",
-                            "id": 5
                         }
                     ]
                 },
@@ -6239,6 +5621,13 @@
                             "response": "DeliverResponse",
                             "response_stream": true,
                             "options": {}
+                        },
+                        "DeliverWithPrivateData": {
+                            "request": "common.Envelope",
+                            "request_stream": true,
+                            "response": "DeliverResponse",
+                            "response_stream": true,
+                            "options": {}
                         }
                     }
                 },
@@ -6277,7 +5666,7 @@
             "syntax": "proto2",
             "options": {
                 "java_package": "org.hyperledger.fabric.protos.peer.lifecycle",
-                "go_package": "github.com/hyperledger/fabric/protos/peer/lifecycle"
+                "go_package": "github.com/hyperledger/fabric-protos-go/peer/lifecycle"
             },
             "messages": [
                 {
@@ -6337,6 +5726,45 @@
                             "type": "string",
                             "name": "label",
                             "id": 2
+                        },
+                        {
+                            "rule": "map",
+                            "type": "References",
+                            "keytype": "string",
+                            "name": "references",
+                            "id": 3
+                        }
+                    ],
+                    "messages": [
+                        {
+                            "name": "References",
+                            "syntax": "proto3",
+                            "fields": [
+                                {
+                                    "rule": "repeated",
+                                    "type": "Chaincode",
+                                    "name": "chaincodes",
+                                    "id": 1
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Chaincode",
+                            "syntax": "proto3",
+                            "fields": [
+                                {
+                                    "rule": "optional",
+                                    "type": "string",
+                                    "name": "name",
+                                    "id": 1
+                                },
+                                {
+                                    "rule": "optional",
+                                    "type": "string",
+                                    "name": "version",
+                                    "id": 2
+                                }
+                            ]
                         }
                     ]
                 },

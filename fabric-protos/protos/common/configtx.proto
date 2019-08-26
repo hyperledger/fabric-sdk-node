@@ -1,18 +1,16 @@
-/*
-Copyright IBM Corp. 2017 All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright the Hyperledger Fabric contributors. All rights reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
 
 syntax = "proto3";
 
-import "common/common.proto";
-import "common/policies.proto";
-
-option go_package = "github.com/hyperledger/fabric/protos/common";
+option go_package = "github.com/hyperledger/fabric-protos-go/common";
 option java_package = "org.hyperledger.fabric.protos.common";
 
 package common;
+
+import "common/common.proto";
+import "common/policies.proto";
 
 // ConfigEnvelope is designed to contain _all_ configuration for a chain with no dependency
 // on previous configuration transactions.

@@ -1,16 +1,15 @@
-// Copyright IBM Corp. All Rights Reserved.
+// Copyright the Hyperledger Fabric contributors. All rights reserved.
 //
 // SPDX-License-Identifier: Apache-2.0
-//
+
 syntax = "proto3";
+
+option go_package = "github.com/hyperledger/fabric-protos-go/discovery" ;
+
+package discovery;
 
 import "gossip/message.proto";
 import "msp/msp_config.proto";
-import "msp/identities.proto";
-
-option go_package = "github.com/hyperledger/fabric/protos/discovery" ;
-
-package discovery;
 
 // Discovery defines a service that serves information about the fabric network
 // like which peers, orderers, chaincodes, etc.
@@ -231,5 +230,3 @@ message Endpoint {
     string host = 1;
     uint32 port = 2;
 }
-
-
