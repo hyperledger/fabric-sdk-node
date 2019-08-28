@@ -55,5 +55,8 @@
 	},
 	"fabtoken": {
 		"title": "fabric-client: How to perform token operations"
+	},
+	"hsm-pkcs11": {
+		"title": "Testing for Hardware Security Module via PKCS#11 interface"
 	}
 }
