@@ -49,5 +49,8 @@
 	},
 	"handlers": {
 		"title": "fabric-client: How to use the endorsement and commit handlers"
+	},
+	"hsm-pkcs11": {
+		"title": "Testing for Hardware Security Module via PKCS#11 interface"
 	}
 }
