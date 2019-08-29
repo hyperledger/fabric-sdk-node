@@ -13,6 +13,7 @@ const testutil = require('./util.js');
 const path = require('path');
 const fs = require('fs-extra');
 const targz = require('targz');
+const testUtil = require('./util.js');
 
 const Packager = require('fabric-client/lib/Packager.js');
 const Node = require('fabric-client/lib/packager/Node.js');
@@ -66,7 +67,7 @@ test('\n\n** BasePackager tests **\n\n', (t) => {
 	t.end();
 });
 
-test('\n\n** Golang Packager tests **\n\n', (t) => {
+test('\n\n** Golang Packager tests **\n\n', async (t) => {
 	Packager.package('blah', '', true)
 		.then((data) => {
 			t.equal(data, null, 'Channel.packageChaincode() should return null for dev mode');
@@ -111,11 +112,11 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 			targz.decompress({
 				src: tmpFile,
 				dest: destDir
-			}, (err) => {
+			}, async (err) => {
 				if (err) {
 					t.fail('Failed to extract generated chaincode package. ' + err);
 				}
-
+				await testUtil.sleep(1000);
 				const checkPath = path.join(destDir, 'src', 'github.com', 'example_cc', 'example_cc.go');
 				t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "src/github.com/example_cc/example_cc.go" file');
 
@@ -130,13 +131,13 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 			targz.decompress({
 				src: tmpFile,
 				dest: destDir
-			}, (err) => {
+			}, async (err) => {
 				if (err) {
 					t.fail('Failed to extract generated chaincode package. ' + err);
-					const checkPath = path.join(destDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
-					t.equal(fs.existsSync(checkPath), true,
-						'The tar.gz file produced by Packager.package() has the "META-INF/statedb/couchdb/indexes/index.json" file');
 				}
+				await testUtil.sleep(1000);
+				const checkPath = path.join(destDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
+				t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "META-INF/statedb/couchdb/indexes/index.json" file');
 				t.end();
 			});
 		}).catch((err) => {

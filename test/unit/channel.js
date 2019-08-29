@@ -966,7 +966,7 @@ test('\n\n** TEST ** orderer via channel set/get bad address', (t) => {
 		() => {
 			channel.addOrderer(new Orderer());
 		},
-		/TypeError: Parameter "url" must be a string, not undefined/,
+		/TypeError/,
 		'Test setting an empty orderer address'
 	);
 
