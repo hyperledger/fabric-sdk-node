@@ -67,7 +67,7 @@ module.exports.package = async function (chaincodePath, chaincodeType, devmode, 
 			handler = new Java();
 			break;
 		default:
-			handler = new Golang(['.go', '.c', '.h', '.s']);
+			handler = new Golang(['.go', '.c', '.h', '.s', '.mod', '.sum']);
 	}
 
 	return handler.package(chaincodePath, metadataPath, goPath);

@@ -14,10 +14,11 @@ const chai = require('chai');
 chai.should();
 chai.use(require('chai-as-promised'));
 
-const languages = ['golang', 'javascript', 'typescript', 'java'];
+const languages = ['golang', 'gomodule', 'javascript', 'typescript', 'java'];
 
 const languageToType = {
 	golang: 'golang',
+	gomodule: 'golang',
 	javascript: 'node',
 	typescript: 'node',
 	java: 'java'
@@ -28,6 +29,13 @@ const fileNames = {
 		'src/golang-contract/chaincode.go',
 		'src/golang-contract/chaincode_test.go',
 		'src/golang-contract/main.go'
+	],
+	gomodule: [
+		'src/chaincode.go',
+		'src/chaincode_test.go',
+		'src/go.mod',
+		'src/go.sum',
+		'src/main.go'
 	],
 	javascript: [
 		'src/.editorconfig',

@@ -117,6 +117,7 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 				}
 
 				const checkPath = path.join(destDir, 'src', 'github.com', 'example_cc', 'example_cc.go');
+				console.log('***** tmpFile   :: ' + tmpFile);
 				console.log('***** checkPath :: ' + checkPath);
 				t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "chaincode/github.com/example_cc/example_cc.go" file');
 

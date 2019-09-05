@@ -5,12 +5,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 set -ex
-cd $(dirname $0)
-export GOPATH=$PWD/go
-peer chaincode package -l golang -n my-contract -v 1.2.3 -p golang-contract golang-contract.cds
+cd "$(dirname "$0")"
+GOPATH=$PWD/go peer chaincode package -l golang -n my-contract -v 1.2.3 -p golang-contract golang-contract.cds
 cp -rf META-INF go/src/golang-contract/
-peer chaincode package -l golang -n my-contract -v 1.2.3 -p golang-contract golang-contract-metadata.cds
+GOPATH=$PWD/go peer chaincode package -l golang -n my-contract -v 1.2.3 -p golang-contract golang-contract-metadata.cds
 rm -rf go/src/golang-contract/META-INF
+peer chaincode package -l golang -n my-contract -v 1.2.3 -p gomodule-contract gomodule-contract.cds
+cp -rf META-INF gomodule-contract/
+peer chaincode package -l golang -n my-contract -v 1.2.3 -p gomodule-contract gomodule-contract-metadata.cds
+rm -rf gomodule-contract/META-INF
 peer chaincode package -l node -n my-contract -v 1.2.3 -p javascript-contract javascript-contract.cds
 cp -rf META-INF javascript-contract/
 peer chaincode package -l node -n my-contract -v 1.2.3 -p javascript-contract javascript-contract-metadata.cds

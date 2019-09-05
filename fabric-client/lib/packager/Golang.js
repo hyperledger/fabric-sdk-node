@@ -13,6 +13,7 @@
  */
 'use strict';
 
+const fs = require('fs-extra');
 const klaw = require('klaw');
 const path = require('path');
 const sbuf = require('stream-buffers');
@@ -26,7 +27,8 @@ class GolangPackager extends BasePackager {
 
 	/**
 	 * Package chaincode source and metadata for deployment.
-	 * @param {string} chaincodePath The Go package name. The package must be located under GOPATH/src.
+	 * @param {string} chaincodePath The Go package name or path to Go module. If a package name, it must be
+	 *        located under GOPATH/src. If a path to a Go module, a go.mod must be present.
 	 * @param {string} [metadataPath[] Optional. The path to the top-level directory containing metadata descriptors.
 	 * @param {string} [goPath] Optional. The GOPATH setting used when building the chaincode. This will
 	 *        default to the environment setting "GOPATH".
@@ -39,11 +41,17 @@ class GolangPackager extends BasePackager {
 			_goPath = process.env.GOPATH;
 		}
 
+		// Compose the path to the go.mod candidate
+		const isModule = fs.existsSync(path.join(chaincodePath, 'go.mod'));
+
 		// Compose the path to the chaincode project directory
-		const projDir = path.join(_goPath, 'src', chaincodePath);
+		const projDir = isModule ? chaincodePath : path.join(_goPath, 'src', chaincodePath);
+		const basePath = isModule ? chaincodePath : _goPath;
 
 		logger.debug('packaging GOLANG chaincodePath from %s', chaincodePath);
+		logger.debug('packaging GOLANG isModule %s', isModule);
 		logger.debug('packaging GOLANG _goPath from %s', _goPath);
+		logger.debug('packaging GOLANG basePath from %s', basePath);
 		logger.debug('packaging GOLANG projDir from %s', projDir);
 
 		// We generate the tar in two phases: First grab a list of descriptors,
@@ -51,29 +59,34 @@ class GolangPackager extends BasePackager {
 		// strictly necessary yet, they pave the way for the future where we
 		// will need to assemble sources from multiple packages
 
-		const buffer = new sbuf.WritableStreamBuffer();
-
-		const srcDescriptors = await this.findSource(_goPath, projDir);
-
-		let descriptors = srcDescriptors;
+		const srcDescriptors = await this.findSource(basePath, projDir);
+		let descriptors = srcDescriptors.map(desc => {
+			if (isModule) {
+				desc.name = path.join('src', desc.name);
+			}
+			return desc;
+		});
 		if (metadataPath) {
 			const metaDescriptors = await super.findMetadataDescriptors(metadataPath);
 			descriptors = srcDescriptors.concat(metaDescriptors);
 		}
+
+		const buffer = new sbuf.WritableStreamBuffer();
 		await super.generateTarGz(descriptors, buffer);
 		return buffer.getContents();
 	}
 
 	/**
-	 * Given an input 'filePath', recursively parse the filesystem for any files
-	 * that fit the criteria for being valid golang source (ISREG + (*.(go|c|h)))
-	 * As a convenience, we also formulate a tar-friendly "name" for each file
-	 * based on relative position to 'goPath'.
-	 * @param goPath
+	 * Given an input 'filePath', recursively parse the filesystem for any
+	 * files that fit the criteria for being valid golang source (ISREG +
+	 * (*.(go|c|h|s|mod|sum))) As a convenience, we also formulate a
+	 * tar-friendly "name" for each file based on relative position to
+	 * 'basePath'.
+	 * @param basePath
 	 * @param filePath
 	 * @returns {Promise}
 	 */
-	findSource(goPath, filePath) {
+	findSource(basePath, filePath) {
 		return new Promise((resolve, reject) => {
 			const descriptors = [];
 			klaw(filePath)
@@ -81,7 +94,7 @@ class GolangPackager extends BasePackager {
 
 					if (entry.stats.isFile() && super.isSource(entry.path)) {
 						const desc = {
-							name: path.relative(goPath, entry.path).split('\\').join('/'), // for windows style paths
+							name: path.relative(basePath, entry.path).split('\\').join('/'), // for windows style paths
 							fqp: entry.path
 						};
 
