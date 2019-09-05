@@ -1,0 +1,15 @@
+# Copyright IBM Corp All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hyperledger/fabric-chaincode-go"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hyperledger/fabric-protos-go"
+
+[prune]
+  go-tests = true
+  unused-packages = true

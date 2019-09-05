@@ -64,6 +64,8 @@ const metadataFileNames = [
 	'META-INF/statedb/couchdb/indexes/indexOwner.json'
 ];
 
+const golangFilterRegex = /^src\/golang-contract\/(vendor\/|Gopkg.lock$|Gopkg.toml$)/g;
+
 describe('Package', () => {
 
 	let GOPATH;
@@ -90,7 +92,7 @@ describe('Package', () => {
 				pkg.getName().should.equal('my-contract');
 				pkg.getVersion().should.equal('1.2.3');
 				pkg.getType().should.equal(type);
-				pkg.getFileNames().should.deep.equal(fileNames[language]);
+				pkg.getFileNames().filter(name => !name.match(golangFilterRegex)).should.deep.equal(fileNames[language]);
 			});
 
 			it(`should load a smart contract package from a buffer with metadata [${language}]`, async () => {
@@ -100,7 +102,8 @@ describe('Package', () => {
 				pkg.getName().should.equal('my-contract');
 				pkg.getVersion().should.equal('1.2.3');
 				pkg.getType().should.equal(type);
-				pkg.getFileNames().should.deep.equal(metadataFileNames.concat(fileNames[language]));
+				pkg.getFileNames().filter(name => !name.match(golangFilterRegex))
+					.should.deep.equal(metadataFileNames.concat(fileNames[language]));
 			});
 
 		}
@@ -168,7 +171,8 @@ describe('Package', () => {
 				pkg.getName().should.equal('my-contract');
 				pkg.getVersion().should.equal('1.2.3');
 				pkg.getType().should.equal(type);
-				pkg.getFileNames().should.deep.equal(fileNames[language]);
+				pkg.getFileNames().filter(name => !name.match(golangFilterRegex))
+					.should.deep.equal(fileNames[language]);
 			});
 
 			it(`should create a smart contract package from a directory with metadata [${language}]`, async () => {
@@ -183,7 +187,8 @@ describe('Package', () => {
 				pkg.getName().should.equal('my-contract');
 				pkg.getVersion().should.equal('1.2.3');
 				pkg.getType().should.equal(type);
-				pkg.getFileNames().should.deep.equal(metadataFileNames.concat(fileNames[language]));
+				pkg.getFileNames().filter(name => !name.match(golangFilterRegex))
+					.should.deep.equal(metadataFileNames.concat(fileNames[language]));
 			});
 
 		}

@@ -34,7 +34,9 @@ class Package {
 			const fileNames = [];
 			extract.on('entry', (header, stream, next) => {
 				logger.debug('Package._findFileNames - found entry %s', header.name);
-				fileNames.push(header.name);
+				if (header.type === 'file') {
+					fileNames.push(header.name);
+				}
 				stream.on('end', () => {
 					next();
 				});

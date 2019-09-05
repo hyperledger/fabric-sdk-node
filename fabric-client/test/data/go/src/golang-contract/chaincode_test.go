@@ -9,7 +9,7 @@ package main
 import (
 	"testing"
 
-	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric-chaincode-go/shim"
 )
 
 func TestInit(t *testing.T) {

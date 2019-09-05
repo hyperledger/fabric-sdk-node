@@ -164,7 +164,7 @@ gulp.task('mocha-fabric-ca-client',
 gulp.task('mocha-fabric-client',
 	() => {
 		return gulp.src(['./fabric-client/test/**/*.js', '!./fabric-client/test/data/**/*.js'], {read: false})
-			.pipe(mocha({reporter: 'list', exit: true}));
+			.pipe(mocha({reporter: 'list', exit: true, timeout: 10000}));
 	}
 );
 
