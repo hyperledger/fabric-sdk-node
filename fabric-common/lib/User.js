@@ -1,8 +1,7 @@
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
-
-'use strict';
+const TYPE = 'User';
 
 const util = require('util');
 const CryptoAlgorithms = require('./CryptoAlgorithms');
@@ -10,7 +9,9 @@ const Identity = require('./Identity');
 const Signer = require('./Signer');
 const SigningIdentity = require('./SigningIdentity');
 const sdkUtils = require('./Utils');
-const logger = sdkUtils.getLogger('User.js');
+const logger = sdkUtils.getLogger(TYPE);
+const check = sdkUtils.checkParameter;
+
 
 /**
  * The User class represents users that have been enrolled and represented by
@@ -43,6 +44,7 @@ const User = class {
 	 *   - affiliation {string}: optional. affiliation with a group or organization
 	 */
 	constructor(cfg) {
+		this.type = TYPE;
 		if (typeof cfg === 'string') {
 			this._name = cfg;
 			this._roles = null; // string[]
@@ -226,7 +228,9 @@ const User = class {
 
 		if (!this._cryptoSuite) {
 			this._cryptoSuite = sdkUtils.newCryptoSuite();
-			this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
+			if (no_save) {
+				this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
+			}
 		}
 
 		let pubKey;
@@ -259,6 +263,37 @@ const User = class {
 		} else {
 			throw new Error(util.format('Private key missing from key store. Can not establish the signing identity for user %s', state.name));
 		}
+	}
+
+	/**
+	 * Returns a {@link User} object with signing identities based on the
+	 * private key and the corresponding x509 certificate. This allows applications
+	 * to use pre-existing crypto materials (private keys and certificates) to
+	 * construct user objects with signing capabilities, as an alternative to
+	 * dynamically enrolling users with [fabric-ca]{@link http://hyperledger-fabric-ca.readthedocs.io/en/latest/}
+	 *
+	 * @async
+	 * @param {UserOpts} opts - Essential information about the user
+	 * @returns {User} the user object.
+	 */
+	static createUser(name = check('name'), password, mspid = check('mspid'), signedCertPEM = check('signedCertPEM'), privateKeyPEM) {
+		logger.debug('createUser %s', name);
+		const cryptoSuite = sdkUtils.newCryptoSuite();
+		let privateKey = null;
+		if (privateKeyPEM) {
+			privateKey = cryptoSuite.createKeyFromRaw(privateKeyPEM.toString());
+		}
+		const pubKey = cryptoSuite.createKeyFromRaw(signedCertPEM.toString());
+		const user = new User(name);
+		user._enrollmentSecret = password;
+		user._cryptoSuite = cryptoSuite;
+		user._mspId = mspid;
+		user._identity = new Identity(signedCertPEM, pubKey, mspid, cryptoSuite);
+		if (privateKey) {
+			user._signingIdentity = new SigningIdentity(signedCertPEM, pubKey, mspid, cryptoSuite, new Signer(cryptoSuite, privateKey));
+		}
+
+		return user;
 	}
 
 	/**

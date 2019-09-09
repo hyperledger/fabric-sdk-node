@@ -1682,7 +1682,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
 			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
 			response.should.deep.equal([['response'], 'proposal']);
-		});
+		}).timeout(200000);
 
 		it('should install using chaincode ID, chaincode version, chaincode path, and chaincode type', async () => {
 			const fromDirectoryStub = sinon.stub(Package, 'fromDirectory').withArgs({
@@ -1715,7 +1715,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
 			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
 			response.should.deep.equal([['response'], 'proposal']);
-		});
+		}).timeout(200000);
 
 		it('should install using chaincode ID, chaincode version, chaincode path, chaincode type, and metadata path', async () => {
 			const fromDirectoryStub = sinon.stub(Package, 'fromDirectory').withArgs({
@@ -1749,7 +1749,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
 			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
 			response.should.deep.equal([['response'], 'proposal']);
-		});
+		}).timeout(200000);
 
 		it('should install, but not package, when dev mode is enabled', async () => {
 			client.setDevMode(true);
@@ -1771,7 +1771,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
 			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
 			response.should.deep.equal([['response'], 'proposal']);
-		});
+		}).timeout(200000);
 
 		it('should install using a chaincode package', async () => {
 			const fromDirectoryStub = sinon.stub(Package, 'fromDirectory').rejects(new Error('such error'));
@@ -1792,7 +1792,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
 			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
 			response.should.deep.equal([['response'], 'proposal']);
-		});
+		}).timeout(200000);
 
 		it('should install using an explicit transaction ID', async () => {
 			const fromDirectoryStub = sinon.stub(Package, 'fromDirectory').withArgs({
@@ -1825,7 +1825,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
 			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
 			response.should.deep.equal([['response'], 'proposal']);
-		});
+		}).timeout(200000);
 
 		it('should install using the specified target peers', async () => {
 			const fromDirectoryStub = sinon.stub(Package, 'fromDirectory').withArgs({
@@ -1858,7 +1858,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
 			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
 			response.should.deep.equal([['response'], 'proposal']);
-		});
+		}).timeout(200000);
 
 		it('should install using the peers discovered for the channel', async () => {
 			const fromDirectoryStub = sinon.stub(Package, 'fromDirectory').withArgs({
@@ -1891,7 +1891,7 @@ describe('Client', () => {
 			sinon.assert.calledWith(signProposalStub, 'signer', 'proposal');
 			sinon.assert.calledWith(sendPeersProposalStub, ['peer'], 'signed-proposal', undefined);
 			response.should.deep.equal([['response'], 'proposal']);
-		});
+		}).timeout(200000);
 	});
 
 	describe('#initCredentialStores', () => {
