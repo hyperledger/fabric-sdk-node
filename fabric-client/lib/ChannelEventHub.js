@@ -176,6 +176,9 @@ class ChannelEventHub {
 		// using filtered blocks
 		this._filtered_stream = true; // the default
 
+		// using private data
+		this._stream_with_private_data = false; // the default
+
 		// connect count for this instance
 		this._current_stream = 0;
 		// reference to the channel instance holding critical context such as signing identity
@@ -249,7 +252,7 @@ class ChannelEventHub {
 
 	/**
 	 * @typedef {Object} ConnectOptions
-	 * @property {boolean} full_block - Optional. To indicate that the connection
+	 * @property {boolean} [full_block] - Optional. To indicate that the connection
 	 *        with the peer will be sending full blocks or filtered blocks to this
 	 *        ChannelEventHub.
 	 *        The default will be to establish a connection using filtered blocks.
@@ -260,7 +263,14 @@ class ChannelEventHub {
 	 *        receive full blocks.
 	 *        Registering a block listener on a filtered block connection may not
 	 *        provide sufficient information.
-	 * @property {Number | string} startBlock - Optional. This will have the connection
+	 * @property {boolean} [private_data] - Optional. To indicate that the connection
+	 *        with the peer will be sending full blocks with private data.
+	 *        The default will be to establish a connection without retrieving private data.
+	 *        Blocks with private data have an extra field called 'private_data' which
+	 *        contains a map of the key-values writes of the private data collections the
+	 *        peer can access. The private_data option can only be set to true if the option
+	 *        full_block is set to true, otherwise it will throw an error.
+	 * @property {Number | string} [startBlock] - Optional. This will have the connection
 	 *        setup to start sending blocks back to the event hub at the block
 	 *        with this number. If connecting with a
 	 *        a startBlock then event listeners may not be registered with a
@@ -272,7 +282,7 @@ class ChannelEventHub {
 	 *        If the event hub should start with the latest block on the ledger,
 	 *        use the string 'latest' or do use a startBlock.
 	 *        Default is to start with the latest block on the ledger.
-	 * @property {Number | string} endBlock - Optional. This will have the connection
+	 * @property {Number | string} [endBlock] - Optional. This will have the connection
 	 *        setup to end sending blocks back to the event hub at the block
 	 *        with this number. If connecting with a
 	 *        a endBlock then event listeners may not be registered with a
@@ -282,11 +292,11 @@ class ChannelEventHub {
 	 *        If the event hub should end with the current block on the
 	 *        ledger use the string 'newest'.
 	 *        Default is to not stop sending.
-	 * @property {SignedEvent} signedEvent - Optional. The signed event to be sent
+	 * @property {SignedEvent} [signedEvent] - Optional. The signed event to be sent
 	 *        to the peer. This option is useful when the fabric-client application
 	 *        does not have the user's privateKey and can not sign requests to the
 	 *        fabric network.
-	 * @property {Peer | string} target - Optional. The peer that provides the
+	 * @property {Peer | string} [target] - Optional. The peer that provides the
 	 *        fabric event service. When using a string, the {@link Channel}
 	 *        must have a peer assigned with that name. This peer will replace
 	 *        the current peer endpoint of this channel event hub.
@@ -322,6 +332,7 @@ class ChannelEventHub {
 		logger.debug('%s - start - hub:%s', method, this._event_hub_number);
 		let signedEvent = null;
 		let full_block = null;
+		let private_data = null;
 		const connect_request = {};
 
 		// the following supports the users using the boolean parameter to control
@@ -332,6 +343,7 @@ class ChannelEventHub {
 		if (typeof options === 'object' && options !== null) {
 			signedEvent = options.signedEvent || null;
 			full_block = options.full_block || null;
+			private_data = options.private_data || null;
 
 			if (typeof options.force === 'boolean') {
 				connect_request.force = options.force;
@@ -373,6 +385,16 @@ class ChannelEventHub {
 			logger.debug('%s - filtered block stream set to:%s', method, !full_block);
 		} else {
 			logger.debug('%s - using a filtered block stream by default', method);
+		}
+
+		if (typeof private_data === 'boolean') {
+			if (private_data && !full_block) {
+				throw new Error('A filtered stream can not deliver private data, if you want to be able to deliver private data you have to set up the full_block option to true');
+			}
+			this._stream_with_private_data = private_data;
+			logger.debug('%s - deliver block  with private data set to:%s', method, !private_data);
+		} else {
+			logger.debug('%s - delivering block without private data by default', method);
 		}
 
 		logger.debug('%s - signed event:%s', method, !!signedEvent);
@@ -469,7 +491,11 @@ class ChannelEventHub {
 		if (this._filtered_stream) {
 			this._stream = this._event_client.deliverFiltered();
 		} else {
-			this._stream = this._event_client.deliver();
+			if (this._stream_with_private_data) {
+				this._stream = this._event_client.deliverWithPrivateData();
+			} else {
+				this._stream = this._event_client.deliver();
+			}
 		}
 
 		this._stream.on('data', (deliverResponse) => {
@@ -485,7 +511,7 @@ class ChannelEventHub {
 			}
 
 			logger.debug('on.data - grpc stream is ready :%s', isStreamReady(self));
-			if (deliverResponse.Type === 'block' || deliverResponse.Type === 'filtered_block') {
+			if (deliverResponse.Type === 'block' || deliverResponse.Type === 'filtered_block' || deliverResponse.Type === 'block_and_private_data') {
 				if (self._connected === true) {
 					logger.debug('on.data - new block received - check event registrations');
 				} else {
@@ -501,6 +527,9 @@ class ChannelEventHub {
 					let block = null;
 					if (deliverResponse.Type === 'block') {
 						block = BlockDecoder.decodeBlock(deliverResponse.block);
+						self._last_block_seen = convertToLong(block.header.number);
+					} else if (deliverResponse.Type === 'block_and_private_data') {
+						block = BlockDecoder.decodeBlockWithPrivateData(deliverResponse.block_and_private_data);
 						self._last_block_seen = convertToLong(block.header.number);
 					} else {
 						block = JSON.parse(JSON.stringify(deliverResponse.filtered_block));

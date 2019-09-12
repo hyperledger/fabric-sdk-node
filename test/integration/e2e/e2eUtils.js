@@ -181,7 +181,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 	}
 
 	const targets = [];
-	const eventhubs = [];
+	const txEventHubs = [];
 
 	let type = 'instantiate';
 	if (upgrade) {
@@ -249,7 +249,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 					channel.addPeer(peer);
 
 					const eh = channel.newChannelEventHub(peer);
-					eventhubs.push(eh);
+					txEventHubs.push(eh);
 				}
 			}
 
@@ -367,7 +367,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 			const eventPromises = [];
 			eventPromises.push(channel.sendTransaction(request));
 
-			eventhubs.forEach((eh) => {
+			txEventHubs.forEach((eh) => {
 				const txPromise = new Promise((resolve, reject) => {
 					const handle = setTimeout(() => {
 						t.fail('Timeout - Failed to receive the event for instantiate:  waiting on ' + eh.getPeerAddr());
@@ -458,14 +458,15 @@ function buildChaincodeProposal(client, theuser, chaincode_id, chaincode_path, v
 }
 module.exports.buildChaincodeProposal = buildChaincodeProposal;
 
-function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, expectedResult) {
+function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, expectedResult, expectedPrivateDataMap) {
 	init();
 
 	logger.debug('invokeChaincode begin');
 	Client.setConfigSetting('request-timeout', 60000);
 	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
 
-	const eventhubs = [];
+	const txEventHubs = [];
+	const blockEventHubs = [];
 	let pass_results = null;
 
 	// this is a transaction, will just use org's identity to
@@ -532,12 +533,14 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 					const peer = client.newPeer(
 						ORGS[key].peer1.requests,
 						{
+							name:ORGS[key].name,
 							pem: Buffer.from(newData).toString(),
 							'ssl-target-name-override': ORGS[key].peer1['server-hostname']
 						}
 					);
 					channel.addPeer(peer);
-					eventhubs.push(channel.newChannelEventHub(peer));
+					txEventHubs.push(channel.newChannelEventHub(peer));
+					blockEventHubs.push(channel.newChannelEventHub(peer));
 				}
 			}
 
@@ -644,7 +647,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 				const deployId = tx_id.getTransactionID();
 
 				const eventPromises = [];
-				eventhubs.forEach((eh) => {
+				txEventHubs.forEach((eh) => {
 					const txPromise = new Promise((resolve, reject) => {
 						const handle = setTimeout(() => {
 							t.fail('Timeout - Failed to receive the event for commit:  waiting on ' + eh.getPeerAddr());
@@ -672,6 +675,60 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 					});
 					eventPromises.push(txPromise);
 				});
+
+				if (expectedPrivateDataMap) {
+
+					if (!Object.keys(expectedPrivateDataMap).length) {
+						throw new Error('the expected private data map can not be empty');
+					}
+
+					blockEventHubs.forEach((eh) => {
+
+						const peerName = eh.getName();
+						const expectedPrivateData = expectedPrivateDataMap[peerName]; // we make sure to be checking the right private data for each peer org
+
+						const blockPromise = new Promise((resolve, reject) => {
+
+							const handle = setTimeout(() => {
+								if (Object.keys(expectedPrivateData).length) {
+									t.fail('Timeout - Failed to receive the the expected private data in the block event:  waiting on ' + eh.getPeerAddr());
+									eh.disconnect(); // will not be using this event hub
+									reject('TIMEOUT waiting on ' + eh.getPeerAddr());
+								}
+							}, 30000);
+
+							eh.registerBlockEvent((block) => {
+								const privateData = block.private_data;
+								if (blockHavePrivateDataHashes(block)) {
+									if (checkPrivateDataContent(privateData, expectedPrivateData)) {
+										t.pass('Successfully received the private data in the deliver of the block ' + block.header.number + ' at the eventhub on  ' +  eh.getPeerAddr());
+									}
+								}
+								// if there is no more data to expect, is because it found everything that expected
+								// that means the calling was succesfull
+								if (!Object.keys(expectedPrivateData).length) {
+									t.pass('Successfully checked the presence of the expected private data in the blocks delivered by eventhub  ' +  eh.getPeerAddr());
+									delete expectedPrivateDataMap[peerName]; // as we found the expected private data element, then we delete it because we dont expect it anymore
+									if (!Object.keys(expectedPrivateDataMap).length) { // expecting no more data, then it was all found
+										t.pass('Successfully checked the presence of all the expectedPrivateData in the blocks delivered');
+									}
+									clearTimeout(handle);
+									eh.disconnect();
+									resolve();
+								}
+							}, (error) => {
+								if (Object.keys(expectedPrivateData).length) {
+									t.fail('There was a problem with the fetching of the block: ' + error + ' and there is still expecting results to be checked');
+									clearTimeout(handle);
+									reject(error);
+								}
+							});
+							eh.connect({full_block:true, private_data:true});
+
+						});
+						eventPromises.push(blockPromise);
+					});
+				}
 
 				const sendPromise = channel.sendTransaction(request);
 				return Promise.all([sendPromise].concat(eventPromises))
@@ -925,6 +982,79 @@ function getTargetPeers(channel, targets) {
 		}
 	}
 	return targetPeers;
+}
+
+// checks if a block contains transactions with private data
+function blockHavePrivateDataHashes(block) {
+	// iterate over the block to look if there is any trail of private data
+	let hasPrivateData = false;
+
+	const blockData = block.data.data;
+	blockData.forEach((dataItem) => {
+		const payloadActions = dataItem.payload.data.actions;
+		payloadActions.forEach((payloadAction) => {
+			const nsRWSet = payloadAction.payload.action.proposal_response_payload.extension.results.ns_rwset;
+			nsRWSet.forEach((rw) => {
+				const collectionHashedRWset = rw.collection_hashed_rwset;
+				if (collectionHashedRWset.length) { // if collectionHashedRWset is not empty then it have private data... obviously
+					hasPrivateData = true;
+				}
+			});
+		});
+	});
+
+	return hasPrivateData;
+
+}
+
+// checks that the private data matches the expected result
+function checkPrivateDataContent(privateData, expectedResults) {
+
+	if (!expectedResults || Object.keys(expectedResults).length === 0) {
+		throw new Error('you have to provide some expected results');
+	}
+	if (!privateData || Object.keys(privateData).length === 0) {
+		throw new Error('you have to provide private data to check');
+	}
+
+	// we iterate over the complexity of the private data object to gouge out the value of the writes
+
+	for (const i in privateData) {
+		// here we iterate over each transaction in the block
+
+
+		const privateDataTransaction = privateData[i];
+		for (const j in privateDataTransaction.ns_pvt_rwset) {
+			// here we iterate over each namespace read-write set
+
+			const nsPrivateRW = privateDataTransaction.ns_pvt_rwset[j];
+			for (const k in nsPrivateRW.collection_pvt_rwset) {
+				// here we iterate over each collection read-write set in the given namespace
+
+				const colPrivateRW = nsPrivateRW.collection_pvt_rwset[k];
+				// we look for the expected value given the name of the collection that we have in this iteration
+				const expectedValue = expectedResults[colPrivateRW.collection_name];
+
+				if (!expectedValue) {
+					// if expectedValue is undefined is because the collection name was not present in the expectedResults parameter
+					continue;
+				}
+
+				for (const l in colPrivateRW.rwset.writes) {
+					const realValue = colPrivateRW.rwset.writes[l];
+					if (realValue.key === expectedValue.key && realValue.value === expectedValue.value) {
+						// if we found in the real private data values a matching pair with the expected values
+						// then we remove it from the expected results, because we are no more expecting them
+						delete expectedResults[colPrivateRW.collection_name];
+					}
+				}
+			}
+		}
+	}
+
+	// if the expected results are empty is because we found all af them, and then we dont expect them anymore
+	// that means that the checking was successful, otherwise not
+	return (Object.keys(expectedResults).length === 0);
 }
 
 async function getCollectionsConfig(t, org, chaincodeId, channel_name) {
