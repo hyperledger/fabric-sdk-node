@@ -36,15 +36,18 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 	const caService1 = new FabricCAServices(fabricCAEndpoint1, tlsOptions, ORGS[userOrg1].ca.name);
 	const caService2 = new FabricCAServices(fabricCAEndpoint2, tlsOptions, ORGS[userOrg2].ca.name);
 
+	const adminName = 'admin';
+	const userName = 'user_' + Math.random().toFixed(3).slice(2);
+
 	const bootstrapUser = {
-		enrollmentID: 'admin',
+		enrollmentID: adminName,
 		enrollmentSecret: 'adminpw'
 	};
 
 	let admin1;
 	let admin2;
 	const testIdentity = {
-		enrollmentID: 'user_' + Math.random().toFixed(3).toString(),
+		enrollmentID: userName,
 		enrollmentSecret: 'userpw',
 		affiliation: 'org1',
 		// set this identity can manage identities of the role client
@@ -78,7 +81,7 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 
 		// create a new Identity with admin1
 		let resp = await hfcaIdentityService1.create(testIdentity, admin1);
-		t.equal(resp, testIdentity.enrollmentSecret);
+		t.equal(resp, testIdentity.enrollmentSecret, 'Response matched enrollment secret');
 		t.pass('Successfully created new Identity %s by admin1', testIdentity.enrollmentID);
 
 		let enrollment;
@@ -100,46 +103,51 @@ test('\n\n ** FabricCAServices - IdentityService Test **\n\n', async (t) => {
 			t.fail('should throw error if we enroll this new identity at ca_Org2');
 			t.end();
 		} catch (e) {
-			t.equal(e.message.indexOf('failure') >= 0, true);
-			t.pass('should throw error if we enroll this new identity at ca_Org2');
+			t.ok(e.message.indexOf('failure') >= 0, 'throws expected error if we enroll this new identity at ca_Org2');
 		}
 
 		// get this Identity from ca_Org1 by identity
 		resp = await hfcaIdentityService1.getOne(testIdentity.enrollmentID, identity);
 		t.pass(`Successfully get indentity ${testIdentity.enrollmentID}`);
-		t.equal(resp.success, true);
+		t.ok(resp.success, 'Successful response for user call to getOne');
 		t.equal(resp.result.id, testIdentity.enrollmentID);
 		t.equal(resp.result.affiliation, testIdentity.affiliation);
 
 		// get this Identity from ca_Org1 by admin1
 		resp = await hfcaIdentityService1.getOne(testIdentity.enrollmentID, admin1);
-		t.equal(resp.success, true);
+		t.ok(resp.success, 'Successful response for admin1 call to getOne');
 
-		// identity can only find itself
+		// Identity visibility for CA1 user
 		resp = await hfcaIdentityService1.getAll(identity);
-		t.equal(resp.success, true);
-		t.equal(resp.result.identities.length > 0, true);
+		t.ok(resp.success, 'Successful response for user call to getAll');
+		const userIds = resp.result.identities.map(v => v.id);
+		t.ok(userIds.some(id => id === userName), 'user can get the user identity');
+		t.notOk(userIds.some(id => id === adminName), 'user can not get the admin identity');
 
-		// admin of ca1 can find two identities
+		// Identity visibility for CA1 admin
 		resp = await hfcaIdentityService1.getAll(admin1);
-		t.equal(resp.success, true);
-		t.equal(resp.result.identities.length > 1, true);
+		t.ok(resp.success, 'Successful response for admin1 call to getAll');
+		const admin1Ids = resp.result.identities.map(v => v.id);
+		t.ok(admin1Ids.some(id => id === userName), 'admin1 can get the user identity');
+		t.ok(admin1Ids.some(id => id === adminName), 'admin1 can get the admin identity');
 
-		// admin of ca2 can only find 1 identity
+		// Identity visibility for CA2 admin
 		resp = await hfcaIdentityService2.getAll(admin2);
-		t.equal(resp.success, true);
-		t.equal(resp.result.identities.length > 0, true);
+		t.ok(resp.success, 'Successful response for admin2 call to getAll');
+		const admin2Ids = resp.result.identities.map(v => v.id);
+		t.notOk(admin2Ids.some(id => id === userName), 'admin2 can not get the user identity');
+		t.ok(admin2Ids.some(id => id === adminName), 'admin2 can get the admin identity');
 
 		// update test identity with admin1
-		resp = await hfcaIdentityService1.update(identity._name, update, admin1);
-		t.equal(resp.result.secret, update.enrollmentSecret);
-		t.pass('Successfully updated indentity ' + identity._name);
+		resp = await hfcaIdentityService1.update(identity.getName(), update, admin1);
+		t.equal(resp.result.secret, update.enrollmentSecret, 'Response secret matches enrollment secret');
+		t.pass('Successfully updated indentity ' + identity.getName());
 
 		// identity delete itself
-		resp = await hfcaIdentityService1.delete(identity._name, identity, true);
-		t.equal(resp.success, true);
-		t.equal(resp.result.id, identity._name);
-		t.pass('Successfully deleted identity ' + identity._name);
+		resp = await hfcaIdentityService1.delete(identity.getName(), identity, true);
+		t.ok(resp.success, 'Successful response for user call to delete itself');
+		t.equal(resp.result.id, identity.getName());
+		t.pass('Successfully deleted identity ' + identity.getName());
 		t.end();
 	} catch (e) {
 		t.fail(e);
