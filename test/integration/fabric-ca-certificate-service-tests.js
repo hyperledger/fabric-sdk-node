@@ -56,7 +56,11 @@ test('\n\n ** FabricCAServices - CertificateService Test **\n\n', async (t) => {
 
 		resp = await certificateService1.getCertificates(null, user1);
 		t.equal(resp.success, true, 'certificate service should response success');
-		t.equal(resp.result.certs.length, 1, 'the new created user can only view the certificate it owns');
+		// all certificates for this users affiliation will be returned; if we're the first
+		// test to enroll a user for org2 then we could assert just one certificate, but if
+		// another test runs first (as the CA is for all tests) it'll fail. just check we can
+		// see at least one certificate!
+		t.equal(resp.result.certs.length > 0, true, 'the new created user can also view certificates');
 
 		// get certificate by enrollment id, user1._name = user1.enrollmentId
 		resp = await certificateService1.getCertificates({id: user1.getName()}, user1);
@@ -94,7 +98,7 @@ async function createAndEnrollIdentity(ca, admin) {
 	const identityService = ca.newIdentityService();
 
 	const req = {
-		enrollmentID: 'user_' + Math.random().toFixed(3).toString(),
+		enrollmentID: 'user_' + Math.floor(Math.random() * 1000),
 		enrollmentSecret: 'userpw',
 		affiliation,
 		// set this identity can manage identities of the role user
