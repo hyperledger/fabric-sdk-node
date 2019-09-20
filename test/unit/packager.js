@@ -108,39 +108,48 @@ test('\n\n** Golang Packager tests **\n\n', (t) => {
 			const destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
 			fs.writeFileSync(tmpFile, data);
 			fs.removeSync(destDir);
-			targz.decompress({
-				src: tmpFile,
-				dest: destDir
-			}, (err) => {
-				if (err) {
-					t.fail('Failed to extract generated chaincode package. ' + err);
-				}
-
-				const checkPath = path.join(destDir, 'src', 'github.com', 'example_cc', 'example_cc.go');
-				console.log('***** tmpFile   :: ' + tmpFile);
-				console.log('***** checkPath :: ' + checkPath);
-				t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "chaincode/github.com/example_cc/example_cc.go" file');
-
-				t.end();
+			return new Promise((resolve, reject) => {
+				targz.decompress({
+					src: tmpFile,
+					dest: destDir
+				}, (err) => {
+					if (err) {
+						t.fail('Failed to extract generated chaincode package. ' + err);
+						return reject(err);
+					}
+					resolve();
+				});
 			});
+		}).then(() => {
+			const destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
+			const checkPath = path.join(destDir, 'src', 'github.com', 'example_cc', 'example_cc.go');
+			console.log('***** tmpFile   :: ' + tmpFile);
+			console.log('***** checkPath :: ' + checkPath);
+			t.equal(fs.existsSync(checkPath), true, 'The tar.gz file produced by Packager.package() has the "chaincode/github.com/example_cc/example_cc.go" file');
 			return Packager.package(testutil.CHAINCODE_PATH, '', false, testutil.METADATA_PATH);
 		}).then((data) => {
 			const tmpFile = path.join(testutil.getTempDir(), 'test-deploy-copy.tar.gz');
 			const destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
 			fs.writeFileSync(tmpFile, data);
 			fs.removeSync(destDir);
-			targz.decompress({
-				src: tmpFile,
-				dest: destDir
-			}, (err) => {
-				if (err) {
-					t.fail('Failed to extract generated chaincode package. ' + err);
-					const checkPath = path.join(destDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
-					t.equal(fs.existsSync(checkPath), true,
-						'The tar.gz file produced by Packager.package() has the "META-INF/statedb/couchdb/indexes/index.json" file');
-				}
-				t.end();
+			return new Promise((resolve, reject) => {
+				targz.decompress({
+					src: tmpFile,
+					dest: destDir
+				}, (err) => {
+					if (err) {
+						t.fail('Failed to extract generated chaincode package. ' + err);
+						return reject(err);
+					}
+					resolve();
+				});
 			});
+		}).then(() => {
+			const destDir = path.join(testutil.getTempDir(), 'test-deploy-copy-tar-gz');
+			const checkPath = path.join(destDir, 'META-INF', 'statedb', 'couchdb', 'indexes', 'index.json');
+			t.equal(fs.existsSync(checkPath), true,
+				'The tar.gz file produced by Packager.package() has the "META-INF/statedb/couchdb/indexes/index.json" file');
+			t.end();
 		}).catch((err) => {
 			t.fail('Caught error in Package.package tests');
 			t.comment(err.stack ? err.stack : err);
