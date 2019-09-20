@@ -187,7 +187,7 @@ const Chaincode = class {
 			return shim.error(Buffer.from('{"Error":"Did not find expected key "test" in the transient map of the proposal}'));
 		}
 
-		return shim.success(v.value);
+		return shim.success(v);
 	}
 
 	/*
