@@ -53,9 +53,6 @@
 	"chaincode-lifecycle": {
 		"title": "fabric-client: How to install and start your chaincode"
 	},
-	"fabtoken": {
-		"title": "fabric-client: How to perform token operations"
-	},
 	"hsm-pkcs11": {
 		"title": "Testing for Hardware Security Module via PKCS#11 interface"
 	}

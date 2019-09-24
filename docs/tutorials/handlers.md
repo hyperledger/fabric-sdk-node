@@ -48,11 +48,6 @@ a custom handler to be used. This handler is used in the
 {@linkcode Channel#sendTransaction sendTransaction()} method
 to determine the orderers and how to send the transaction to be committed.
 (default 'fabric-client/lib/impl/BasicCommitHandler.js')
-* `prover-handler` - string - The path to the prover handler. Allows for a
-custom handler to be used. This handler is used in the
-{@linkcode Channel#sendTokenCommand sendTokenCommand()}
-method to determine the target peers and how to send the token command.
-(default 'fabric-client/lib/impl/BasicProverHandler.js')
 
 ### new Endorsement Handler
 The sending of a proposal to be endorsed may be done using custom code. The
@@ -101,7 +96,7 @@ The default handler was designed to be used with discovery to provided automatic
 selection of orderers and fail over. When used without discovery the handler will
 still provide fail over to all orderers assigned to the channel, sending to
 each one in orderer until an orderer response successfully to the transaction
-submission. 
+submission.
 The handler may also be changed using the `commitHandler` attribute on the
 `channel.initialize()` request call parameter. This will instantiate a handler
 located at the path provide in the attribute just for this channel.
@@ -127,38 +122,3 @@ channel is initialized, the channel will read the path setting and create an
 instance of the handler for use by the new channel instance.
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
-
-### new Prover Handler
-The sending of a token command to a prover peer may be done using custom code. The
-fabric-client will use by default the file called `BasicProverHandler`.
-The default handler was designed to be used without discovery.
-The default handler will only send to the peers as defined in the targets parameter
-or the peers with the 'proverPeer' role assigned to the channel instance.
-A different prover handler may be used by changing the configuration setting
-"prover-handler" with the `setConfigSetting()` or placing a new line
-in configuration JSON file that the application has applied to the fabric-client
-configuration. This will instantiate a handler located at the path provided
-in the `prover-handler` attribute for all channels initialized after the call.
-The handler may also be changed using the `proverHandler` attribute on the
-`channel.initialize()` request call parameter. This will instantiate a handler
-located at the path provide in the attribute just for this channel instance.
-```
-// set value in memory
-Client.setConfigSetting('prover-handler', '/path/to/the/handler.js');
---or--
-// the path to an additional config file
-Client.addConfigFile('/path/to/config.json');
-// the json file contains the following line
-// "prover-handler": "/path/to/the/handler.js"
---or--
-const request = {
-	...
-	proverHandler: "/path/to/the/handler.js",
-	...
-}
-// initialize must be run to use handlers.
-channel.initialize(request);
-```
-A prover handler should extend the {@link ProverHandler}. When the
-channel is initialized, the channel will read the path setting and create an
-instance of the handler for use by the new channel instance.
