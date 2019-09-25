@@ -16,11 +16,12 @@ const os = require('os');
 
 // High level constants for timeouts
 const TIMEOUTS = {
-	LONG_STEP : 240 * 1000,
-	MED_STEP : 120 * 1000,
+	HUGE_TIME: 20 * 60 * 1000,
+	LONG_STEP: 240 * 1000,
+	MED_STEP: 120 * 1000,
 	SHORT_STEP: 60 * 1000,
-	LONG_INC : 30 * 1000,
-	MED_INC : 10 * 1000,
+	LONG_INC: 30 * 1000,
+	MED_INC: 10 * 1000,
 	SHORT_INC: 5 * 1000
 };
 

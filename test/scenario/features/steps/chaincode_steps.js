@@ -12,7 +12,7 @@ const Client = require('fabric-client');
 module.exports = function () {
 
 	this.Then(/^I can package (.+?) chaincode at version (.+?) named (.+?) as organization (.+?) with goPath (.+?) located at (.+?) and metadata located at (.+?) with (.+?)$/,
-		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
+		{timeout: testUtil.TIMEOUTS.LONG_STEP},
 		async (chaincode_type, chaincode_version, chaincode_name, org_name, _go_path, _chaincode_path, metadata_path, init_required) => {
 			const cc_save_name = format('chaincode-%s-%s', org_name, chaincode_name);
 
@@ -45,6 +45,7 @@ module.exports = function () {
 
 			// ------------- test the package API
 			// const package_bytes = await chaincode.package(request);
+			testUtil.logMsg(` -- packaging step about to package ${chaincode_type} named ${chaincode_name}`);
 			await chaincode.package(request);
 
 			// save it for later use
@@ -52,7 +53,7 @@ module.exports = function () {
 		});
 
 	this.Then(/^I can install (.+?) chaincode at version (.+?) named (.+?) as organization (.+?)$/,
-		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
+		{timeout: testUtil.TIMEOUTS.HUGE_TIME},
 		async (chaincode_type, chaincode_version, chaincode_name, org_name) => {
 			const cc_save_name = format('chaincode-%s-%s', org_name, chaincode_name);
 
@@ -62,7 +63,7 @@ module.exports = function () {
 
 			const request = {
 				target: peer,
-				request_timeout: 10000
+				request_timeout: 20 * 60 * 1000
 			};
 
 			// ------------- test the install API
@@ -119,7 +120,7 @@ module.exports = function () {
 				chaincode: chaincode,
 				targets: [peer],
 				txId: txId,
-				request_timeout: 3000
+				request_timeout: 60000
 			};
 
 			try {
@@ -153,7 +154,7 @@ module.exports = function () {
 		});
 
 	this.Then(/^I can commit (.+?) chaincode at version (.+?) named (.+?) as organization (.+?) on channel (.+?)$/,
-		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
+		{timeout: testUtil.TIMEOUTS.LONG_STEP},
 		async (chaincode_type, chaincode_version, chaincode_name, org_name, channel_name) => {
 			const step = 'Chaincode commit';
 			testUtil.logMsg(format('%s - starting for %s, %s, %s, %s, %s', step, chaincode_type, chaincode_version, chaincode_name, org_name, channel_name));
@@ -170,7 +171,7 @@ module.exports = function () {
 				chaincode: chaincode,
 				targets: [peer1, peer2],
 				txId: txId,
-				request_timeout: 3000
+				request_timeout: 60000
 			};
 
 			try {
@@ -234,6 +235,7 @@ module.exports = function () {
 			}
 
 			try {
+				// might be the first time, so will take extra time
 				const results = await channel.sendTransactionProposal(request, 120000);
 				if (results && results[0]) {
 					const proposalResponses = results[0];
@@ -267,7 +269,7 @@ module.exports = function () {
 		});
 
 	this.Then(/^I can query installed chaincode (.+?) as organization (.+?) on channel (.+?)$/,
-		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
+		{timeout: testUtil.TIMEOUTS.LONG_STEP},
 		async (chaincode_name, org_name, channel_name) => {
 			const step = 'QueryInstalledChaincode';
 			testUtil.logMsg(format('%s - starting for %s, %s, %s', step, chaincode_name, org_name, channel_name));
@@ -298,7 +300,7 @@ module.exports = function () {
 		});
 
 	this.Then(/^I can query installed chaincodes as organization (.+?) on channel (.+?)$/,
-		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
+		{timeout: testUtil.TIMEOUTS.LONG_STEP},
 		async (org_name, channel_name) => {
 			const step = 'QueryInstalledChaincodes';
 			testUtil.logMsg(format('%s - starting for %s, %s', step, org_name, channel_name));
@@ -326,7 +328,7 @@ module.exports = function () {
 		});
 
 	this.Then(/^I can query for defined chaincode (.+?) as organization (.+?) on channel (.+?)$/,
-		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
+		{timeout: testUtil.TIMEOUTS.LONG_STEP},
 		async (chaincode_name, org_name, channel_name) => {
 			const step = 'QueryChaincodeDefinition';
 			testUtil.logMsg(format('%s - starting for %s, %s, %s', step, chaincode_name, org_name, channel_name));
@@ -375,7 +377,7 @@ module.exports = function () {
 				if (result instanceof Error) {
 					testUtil.logAndThrow(result);
 				} else if (result) {
-					testUtil.logMsg(format('GetInstalledChaincodePackage - Good peer response %j', result));
+					testUtil.logMsg(format('GetInstalledChaincodePackage - Good peer response - too big to show'));
 				} else {
 					testUtil.logAndThrow('Problem with the GetInstalledChaincodePackage, no response returned');
 				}
@@ -385,7 +387,7 @@ module.exports = function () {
 		});
 
 	this.Then(/^I can query for chaincode (.+?) for commit status as organization (.+?) on channel (.+?)$/,
-		{timeout: testUtil.TIMEOUTS.SHORT_STEP},
+		{timeout: testUtil.TIMEOUTS.LONG_STEP},
 		async (chaincode_name, org_name, channel_name) => {
 			const step = 'CheckCommitReadiness';
 			testUtil.logMsg(format('%s - starting for %s, %s, %s', step, chaincode_name, org_name, channel_name));
