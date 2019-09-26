@@ -71,7 +71,7 @@ module.exports = function () {
 				const package_id = await chaincode.install(request);
 				testUtil.logMsg(' installed the code with package ID of ' + package_id);
 			} catch (error) {
-				testUtil.logError('Install Error :: ' + error);
+				testUtil.logAndThrow('Install Error :: ' + error);
 			}
 		});
 
