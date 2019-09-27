@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { IdentityProvider } from 'fabric-network';
+import { IdentityProvider } from './identityprovider';
 import { X509Provider } from './x509identity';
 
 const defaultProviders: IdentityProvider[] = [

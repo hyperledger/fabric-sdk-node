@@ -4,22 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import chai = require('chai');
-const expect = chai.expect;
-
 import {
 	HsmX509Identity,
 	HsmX509Provider,
 } from '../../../src/impl/wallet/hsmx509identity';
+import { Identity } from '../../../src/impl/wallet/identity';
+import { IdentityData } from '../../../src/impl/wallet/identitydata';
+import { IdentityProvider } from '../../../src/impl/wallet/identityprovider';
 import {
 	X509Identity,
 	X509Provider,
 } from '../../../src/impl/wallet/x509identity';
-import {
-	Identity,
-	IdentityData,
-	IdentityProvider,
-} from '../../../types';
+
+import chai = require('chai');
+const expect = chai.expect;
 
 interface ProviderData {
 	dataVersions: { [version: string]: IdentityData };

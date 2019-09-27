@@ -13,6 +13,7 @@ gulp.task('tslint', () => {
 		'fabric-network/**/*.ts',
 		'test/**/*.ts',
 		'!fabric-network/coverage/**',
+		'!fabric-network/lib/**',
 		'!fabric-network/node_modules/**',
 		'!fabric-client/coverage/**',
 		'!fabric-client/node_modules/**',

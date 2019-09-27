@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { WalletStore } from 'fabric-network';
+import { WalletStore } from './walletstore';
 
 export class InMemoryWalletStore implements WalletStore {
 	private readonly map: Map<string, Buffer> = new Map();

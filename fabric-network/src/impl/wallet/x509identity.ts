@@ -6,11 +6,9 @@
 
 import * as Client from 'fabric-client';
 
-import {
-	Identity,
-	IdentityData,
-	IdentityProvider,
-} from 'fabric-network';
+import { Identity } from './identity';
+import { IdentityData } from './identitydata';
+import { IdentityProvider } from './identityprovider';
 
 export interface X509Identity extends Identity {
 	type: 'X.509';

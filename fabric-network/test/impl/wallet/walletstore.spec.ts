@@ -4,9 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import chai = require('chai');
-const expect = chai.expect;
-
 import fs = require('fs-extra');
 import os = require('os');
 import path = require('path');
@@ -17,7 +14,10 @@ const rimraf = util.promisify(rawRimraf);
 
 import { FileSystemWalletStore } from '../../../src/impl/wallet/filesystemwalletstore';
 import { InMemoryWalletStore } from '../../../src/impl/wallet/inmemorywalletstore';
-import { WalletStore } from '../../../types';
+import { WalletStore } from '../../../src/impl/wallet/walletstore';
+
+import chai = require('chai');
+const expect = chai.expect;
 
 async function createTempDir(): Promise<string> {
 	const prefix = path.join(os.tmpdir(), 'fabric-network-test-');

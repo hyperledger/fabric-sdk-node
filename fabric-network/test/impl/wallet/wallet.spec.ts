@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { Identity } from '../../../src/impl/wallet/identity';
 import { Wallet } from '../../../src/impl/wallet/wallet';
 import { Wallets } from '../../../src/impl/wallet/wallets';
 import { X509Identity } from '../../../src/impl/wallet/x509identity';
-import { Identity } from '../../../types';
 
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');

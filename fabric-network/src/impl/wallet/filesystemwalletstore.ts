@@ -7,7 +7,7 @@
 import fs = require('fs-extra');
 import path = require('path');
 
-import { WalletStore } from 'fabric-network';
+import { WalletStore } from './walletstore';
 
 const suffix = '.id';
 

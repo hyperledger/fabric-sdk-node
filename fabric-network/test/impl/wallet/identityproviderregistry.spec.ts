@@ -4,12 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { IdentityProvider } from '../../../src/impl/wallet/identityprovider';
 import { IdentityProviderRegistry } from '../../../src/impl/wallet/identityproviderregistry';
 
 import chai = require('chai');
 const expect = chai.expect;
-
-import { IdentityProvider } from 'fabric-network';
 
 describe('IdentityProviderRegistry', () => {
 	const fakeProvider: IdentityProvider = {

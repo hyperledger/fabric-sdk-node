@@ -4,13 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-	Identity,
-	IdentityData,
-	WalletStore,
-} from 'fabric-network';
-
+import { Identity } from './identity';
+import { IdentityData } from './identitydata';
 import { IdentityProviderRegistry } from './identityproviderregistry';
+import { WalletStore } from './walletstore';
 
 const encoding = 'utf8';
 
