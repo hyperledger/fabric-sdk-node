@@ -532,6 +532,29 @@ rule
 	}
 
 	/**
+	 * Constructs an object containing all decoded values from the
+	 * protobuf encoded `BlockAndPrivateData` object
+	 *
+	 * @param {Object} block_with_private_data - an object that represents the protobuf common.BlockAndPrivateData
+	 * @returns {Block} An object of the fully decoded protobuf common.Block with its private data as a new property
+	 */
+	static decodeBlockWithPrivateData(block_with_private_data) {
+		if (!block_with_private_data) {
+			throw new Error('Block with private data input data is missing');
+		}
+		let block = {};
+		try {
+			block = this.decodeBlock(block_with_private_data.block);
+			block.private_data = decodePrivateData(block_with_private_data.private_data_map);
+		} catch (error) {
+			logger.error('decode - ::' + (error.stack ? error.stack : error));
+			throw new Error('Block with private data decode has failed with ' + error.toString());
+		}
+
+		return block;
+	}
+
+	/**
 	 * @typedef {Object} ProcessedTransaction
 	 * @property {number} validationCode - See [this list]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L125}
 	 *                                     for all the defined validation codes
@@ -565,6 +588,23 @@ payload -- {}
 		return processed_transaction;
 	}
 };
+
+function decodePrivateData(private_data_map) {
+	const private_data = {};
+	for (const i in private_data_map) {
+		const privateDataTransaction = private_data_map[i];
+		for (const j in privateDataTransaction.ns_pvt_rwset) {
+			const nsPrivateRW = privateDataTransaction.ns_pvt_rwset[j];
+			for (const k in nsPrivateRW.collection_pvt_rwset) {
+				const colPrivateRW = nsPrivateRW.collection_pvt_rwset[k];
+				colPrivateRW.rwset = decodeKVRWSet(colPrivateRW.rwset);
+				nsPrivateRW.collection_pvt_rwset[k] = colPrivateRW;
+			}
+		}
+		private_data[i] = privateDataTransaction;
+	}
+	return private_data;
+}
 
 function decodeBlockHeader(proto_block_header) {
 	const block_header = {};

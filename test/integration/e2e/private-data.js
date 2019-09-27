@@ -44,7 +44,7 @@ test('\n\n***** End-to-end flow: private data *****\n\n', async (t) => {
 			t.pass('Successfully instantiated chaincode ' + chaincodePath + ' on the channel');
 			await e2eUtils.sleep(5000);
 		} else {
-			t.fail('Failed to instantiate chaincode ' + chaincodePath + ' on the channel');
+			t.fail('Failed to instantiate chaincode ' + chaincodePath + ' on the channel ');
 			t.end();
 		}
 
@@ -52,7 +52,26 @@ test('\n\n***** End-to-end flow: private data *****\n\n', async (t) => {
 		let args = ['name1', 'blue', '35', 'tom', '99'];
 		let expectedResult = 'set private data';
 
-		result = await e2eUtils.invokeChaincode('org1', 'v0', chaincodeId, t, false, fcn, args, expectedResult);
+		const expectedPrivateDataResults = {
+			peerOrg1:{
+				detailCol: {
+					key: 'name1',
+					value:'{"docType":"detailCol","name":"name1","color":"blue","size":35,"owner":"tom"}'
+				},
+				sensitiveCol: {
+					key: 'name1',
+					value:'{"docType":"sensitiveCol","name":"name1","price":99}'
+				}
+			},
+			peerOrg2:{
+				detailCol: {
+					key: 'name1',
+					value:'{"docType":"detailCol","name":"name1","color":"blue","size":35,"owner":"tom"}'
+				}
+			}
+		};
+
+		result = await e2eUtils.invokeChaincode('org1', 'v0', chaincodeId, t, false, fcn, args, expectedResult, expectedPrivateDataResults);
 		if (result) {
 			t.pass('Successfully invoke transaction chaincode ' + chaincodePath + ' on channel');
 			await e2eUtils.sleep(5000);
