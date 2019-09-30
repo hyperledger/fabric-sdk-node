@@ -203,17 +203,17 @@ gulp.task('run-test-fv-scenario', (done) => {
 });
 
 gulp.task('run-test-scenario', (done) => {
-	const tasks = ['run-test-cucumber'];
+	const tasks = ['compile', 'run-test-cucumber'];
 	runSequence(...tasks, done);
 });
 
 gulp.task('run-test-merge', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'run-test-cucumber'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test',  'compile', 'run-test-cucumber'];
 	runSequence(...tasks, done);
 });
 
 gulp.task('run-test-functional', (done) => {
-	const tasks = ['test-fv-only'];
+	const tasks = ['compile', 'test-fv-only'];
 	runSequence(...tasks, done);
 });
 
