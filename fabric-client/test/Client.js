@@ -1663,10 +1663,11 @@ describe('Client', () => {
 				version: '0.0.1',
 				path: 'mycc',
 				type: undefined,
-				metadataPath: undefined
+				metadataPath: undefined,
+				goPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
-			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer']};
+			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer'], goPath: undefined};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
 			sinon.assert.calledOnce(fromDirectoryStub);
@@ -1690,7 +1691,8 @@ describe('Client', () => {
 				version: '0.0.1',
 				path: 'mycc',
 				type: 'java',
-				metadataPath: undefined
+				metadataPath: undefined,
+				goPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
 			const request = {
@@ -1698,6 +1700,7 @@ describe('Client', () => {
 				chaincodeVersion: '0.0.1',
 				chaincodePath: 'mycc',
 				chaincodeType: 'java',
+				goPath: undefined,
 				targets: ['peer']
 			};
 			const response = await client.installChaincode(request);
@@ -1723,7 +1726,8 @@ describe('Client', () => {
 				version: '0.0.1',
 				path: 'mycc',
 				type: 'java',
-				metadataPath: 'mycc/META-INF'
+				metadataPath: 'mycc/META-INF',
+				goPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
 			const request = {
@@ -1732,7 +1736,8 @@ describe('Client', () => {
 				chaincodePath: 'mycc',
 				chaincodeType: 'java',
 				metadataPath: 'mycc/META-INF',
-				targets: ['peer']
+				targets: ['peer'],
+				goPath: undefined
 			};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
@@ -1755,7 +1760,7 @@ describe('Client', () => {
 			client.setDevMode(true);
 			const fromDirectoryStub = sinon.stub(Package, 'fromDirectory').rejects(new Error('such error'));
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
-			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer']};
+			const request = {chaincodeId: 'mycc', chaincodeVersion: '0.0.1', chaincodePath: 'mycc', targets: ['peer'], goPath: undefined};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
 			sinon.assert.notCalled(fromDirectoryStub);
@@ -1776,7 +1781,7 @@ describe('Client', () => {
 		it('should install using a chaincode package', async () => {
 			const fromDirectoryStub = sinon.stub(Package, 'fromDirectory').rejects(new Error('such error'));
 			getTargetPeersStub.withArgs(['peer']).returns(['peer']);
-			const request = {chaincodePackage: smartContractPackageBytes, targets: ['peer']};
+			const request = {chaincodePackage: smartContractPackageBytes, targets: ['peer'], goPath: undefined};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, ['peer']);
 			sinon.assert.notCalled(fromDirectoryStub);
@@ -1800,7 +1805,8 @@ describe('Client', () => {
 				version: '0.0.1',
 				path: 'mycc',
 				type: undefined,
-				metadataPath: undefined
+				metadataPath: undefined,
+				goPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.returns(['peer']);
 			const request = {
@@ -1809,7 +1815,8 @@ describe('Client', () => {
 				chaincodePath: 'mycc',
 				targets: [],
 				channelNames: [],
-				txId: {isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub}
+				txId: {isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub,
+					goPath: undefined}
 			};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, []);
@@ -1833,7 +1840,8 @@ describe('Client', () => {
 				version: '0.0.1',
 				path: 'mycc',
 				type: undefined,
-				metadataPath: undefined
+				metadataPath: undefined,
+				goPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.returns(['peer']);
 			const request = {
@@ -1842,7 +1850,8 @@ describe('Client', () => {
 				chaincodePath: 'mycc',
 				targets: [],
 				channelNames: [],
-				txId: {isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub}
+				txId: {isAdmin: isAdminStub, getNonce: getNonceStub, getTransactionID: getTransactionIDStub},
+				goPath: undefined
 			};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, []);
@@ -1866,7 +1875,8 @@ describe('Client', () => {
 				version: '0.0.1',
 				path: 'mycc',
 				type: undefined,
-				metadataPath: undefined
+				metadataPath: undefined,
+				goPath: undefined
 			}).resolves(smartContractPackage);
 			getTargetPeersStub.returns();
 			getPeersForOrgOnChannelStub.withArgs(['mychannel']).returns(['peer']);
@@ -1874,7 +1884,8 @@ describe('Client', () => {
 				chaincodeId: 'mycc',
 				chaincodeVersion: '0.0.1',
 				chaincodePath: 'mycc',
-				channelNames: ['mychannel']
+				channelNames: ['mychannel'],
+				goPath: undefined
 			};
 			const response = await client.installChaincode(request);
 			sinon.assert.calledWith(getTargetPeersStub, undefined);

@@ -1098,6 +1098,7 @@ const Client = class extends BaseClient {
 	 * @property {string} metadataPath - Optional. The path to the top-level
 	 *           directory containing metadata descriptors.
 	 * @property {string} chaincodeId - Required. Name of the chaincode
+	 * @property {string} goPath - Optional. The path to be used with the golang chaincode.
 	 * @property {string} chaincodeVersion - Required. Version string of the
 	 *           chaincode, such as 'v1'
 	 * @property {byte[]} chaincodePackage - Optional. Byte array of the archive
@@ -1195,7 +1196,8 @@ const Client = class extends BaseClient {
 					version: request.chaincodeVersion,
 					path: request.chaincodePath,
 					type: request.chaincodeType,
-					metadataPath: request.metadataPath
+					metadataPath: request.metadataPath,
+					goPath: request.goPath
 				});
 				cdsBytes = await cdsPkg.toBuffer();
 				logger.debug(`installChaincode - built chaincode package (${cdsBytes.length} bytes)`);
