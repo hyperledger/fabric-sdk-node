@@ -52,7 +52,7 @@ await gateway.connect(connectionProfile, connectOptions);
 Specifying `null` as the event handling strategy will cause transaction
 invocations to return immediately after successfully sending the endorsed
 transaction to the orderer. It will not wait for any commit events to be
-received from peers.
+received from peers.  For more details on *Event Handling Options*, see [DefaultEventHandlerOptions](module-fabric-network.Gateway.html#~DefaultEventHandlerOptions__anchor).
 
 ### Plug-in event handlers
 
@@ -82,6 +82,8 @@ const connectOptions = {
 const gateway = new Gateway();
 await gateway.connect(connectionProfile, connectOptions);
 ```
+
+For more details on *Event Handling Options*, see [DefaultEventHandlerOptions](module-fabric-network.Gateway.html#~DefaultEventHandlerOptions__anchor).
 
 The *transaction event handler* object returned must implement the following
 lifecycle functions.
