@@ -417,7 +417,11 @@ declare namespace Client { // tslint:disable-line:no-namespace
 
 	export interface ConnectOptions {
 		full_block?: boolean;
+		private_data?: boolean;
+		startBlock?: number | string;
+		endBlock?: number | string;
 		signedEvent?: SignedEvent;
+		target?: Peer | string;
 	}
 
 	export interface EventHubRegistrationRequest {
