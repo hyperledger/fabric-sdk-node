@@ -337,7 +337,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			client.revoke('enrollmentID', 'aki', 'serial', 'reason', 'signingIdentity');
+			client.revoke('enrollmentID', 'aki', 'serial', 'reason', false, 'signingIdentity');
 
 			// should call post
 			sinon.assert.calledOnce(postStub);
@@ -349,7 +349,8 @@ describe('FabricCAClient', () => {
 				id: 'enrollmentID',
 				aki: 'aki',
 				serial: 'serial',
-				reason: 'reason'
+				reason: 'reason',
+				gencrl: false
 			});
 			callArgs[2].should.equal('signingIdentity');
 		});
