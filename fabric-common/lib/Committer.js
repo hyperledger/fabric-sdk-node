@@ -13,37 +13,37 @@ const fabprotos = require('fabric-protos');
 const logger = getLogger(TYPE);
 
 /**
- * @typedef {Error} SYSTEM_TIMEOUT The Error message string that indicates that
+ * @typedef {Error} SYSTEM TIMEOUT The Error message string that indicates that
  *  the request operation has timed out due to a system issue. This will
  *  indicate that the issue is local rather than remote. If there is
- *  an issue with the remote node a 'REQUEST_TIMEOUT' error message
+ *  an issue with the remote node a 'REQUEST TIMEOUT' error message
  *  will be returned.
  *  The operation will only use one timer for both types of timeouts.
  *  The timer will start running as the operation begins. If the timer
  *  expires before the local instance is able to make the outbound
- *  request then 'SYSTEM_TIMEOUT' error will be returned. If the local
+ *  request then 'SYSTEM TIMEOUT' error will be returned. If the local
  *  instance is able to make the outbound request and the timer expires
- *  before the remote node responds then the 'REQUEST_TIMEOUT' is
- *  returned. The timer is controlled by the 'request-timeout' setting
+ *  before the remote node responds then the 'REQUEST TIMEOUT' is
+ *  returned. The timer is controlled by the 'requestTimeout' setting
  *  or passed on a call that makes an outbound request
- *  @example 'client.setConfigSetting('request-timeout', 3000)'
+ *  @example 'client.setConfigSetting('requestTimeout', 3000)'
  *  @example 'channel.sendTranaction(request, 3000)'
  */
 
 /**
- * @typedef {Error} REQUEST_TIMEOUT The Error message string that indicates that
+ * @typedef {Error} REQUEST TIMEOUT The Error message string that indicates that
  *  the request operation has timed out due to a remote node issue.
- *  If there is an issue with the local system a 'SYSTEM_TIMEOUT'
+ *  If there is an issue with the local system a 'SYSTEM TIMEOUT'
  *  error message will be returned.
  *  The operation will only use one timer for both types of timeouts.
  *  The timer will start running as the operation begins. If the timer
  *  expires before the local instance is able to make the outbound
- *  request then 'SYSTEM_TIMEOUT' error will be returned. If the local
+ *  request then 'SYSTEM TIMEOUT' error will be returned. If the local
  *  instance is able to make the outbound request and the timer expires
- *  before the remote node responds then the 'REQUEST_TIMEOUT' is
- *  returned. The timer is controlled by the 'request-timeout' setting
+ *  before the remote node responds then the 'REQUEST TIMEOUT' is
+ *  returned. The timer is controlled by the 'requestTimeout' setting
  *  or passed on a call that makes an outbound request
- *  @example 'client.setConfigSetting('request-timeout', 3000)'
+ *  @example 'client.setConfigSetting('requestTimeout', 3000)'
  *  @example 'channel.sendTranaction(request, 3000)'
  */
 
@@ -101,7 +101,7 @@ class Committer extends ServiceEndpoint {
 	 *  response before rejecting the promise with a timeout error. This
 	 *  overrides the request-timeout config connection setting of this instance.
 	 * @returns {Promise} A Promise for a {@link BroadcastResponse} object
-	 * @throws {SYSTEM_TIMEOUT | REQUEST_TIMEOUT}
+	 * @throws {SYSTEM TIMEOUT | REQUEST TIMEOUT}
 	 */
 	sendBroadcast(envelope, timeout) {
 		const method = 'sendBroadcast';
@@ -115,15 +115,15 @@ class Committer extends ServiceEndpoint {
 			if (this.connected === false) {
 				throw Error(`Broadcast Client ${this.name} ${this.endpoint.url} is not connected`);
 			}
-			let rto = this.options['request-timeout'];
+			let rto = this.options.requestTimeout;
 			if (typeof timeout === 'number') {
 				rto = timeout;
 			}
 
 			const broadcast = this.service.broadcast();
 			// if it timeouts before the send of the envelope completes
-			// we will get a SYSTEM_TIMEOUT
-			let error_msg = 'SYSTEM_TIMEOUT';
+			// we will get a SYSTEM TIMEOUT
+			let error_msg = 'SYSTEM TIMEOUT';
 
 			const broadcast_timeout = setTimeout(() => {
 				logger.error(`${this.name} - ${method} timed out after:${rto}`);
@@ -142,7 +142,7 @@ class Committer extends ServiceEndpoint {
 					return resolve(response);
 				} else {
 					logger.error(`${this.name} ERROR - ${method} reject with invalid response from the committer`);
-					return reject(new Error('SYSTEM_ERROR'));
+					return reject(new Error('SYSTEM ERROR'));
 				}
 			});
 
@@ -157,8 +157,8 @@ class Committer extends ServiceEndpoint {
 				broadcast.end();
 				if (err && err.code) {
 					if (err.code === 14) {
-						logger.error(`${method} - ${this.name} SERVICE_UNAVAILABLE on error code: ${err.code}`);
-						return reject(new Error('SERVICE_UNAVAILABLE'));
+						logger.error(`${method} - ${this.name} SERVICE UNAVAILABLE on error code: ${err.code}`);
+						return reject(new Error('SERVICE UNAVAILABLE'));
 					}
 				}
 				logger.error(`${method} - ${this.name} on error: ${JSON.stringify(err.stack ? err.stack : err)}`);
@@ -167,8 +167,8 @@ class Committer extends ServiceEndpoint {
 
 			broadcast.write(envelope);
 			// the send of envelope has completed
-			// if it timeouts after this point we will get a REQUEST_TIMEOUT
-			error_msg = 'REQUEST_TIMEOUT';
+			// if it timeouts after this point we will get a REQUEST TIMEOUT
+			error_msg = 'REQUEST TIMEOUT';
 			logger.debug(`${method} - sent message`);
 		});
 	}

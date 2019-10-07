@@ -15,6 +15,7 @@ const Discovery = rewire('../lib/Discovery');
 const Client = require('../lib/Client');
 const Discoverer = require('../lib/Discoverer');
 const Endorser = require('../lib/Endorser');
+const Committer = require('../lib/Committer');
 const User = rewire('../lib/User');
 const TestUtils = require('./TestUtils');
 
@@ -69,6 +70,10 @@ describe('Discovery', () => {
 		}
 	};
 
+	const orderers = {
+		OrdererMSP: {endpoints: [{host: 'orderer.example.com', port: 7150, name: 'orderer.example.com'}]}
+	};
+
 	TestUtils.setCryptoConfigSettings();
 
 	const client = new Client('myclient');
@@ -81,19 +86,49 @@ describe('Discovery', () => {
 	let discoverer;
 	let discovery;
 	let endpoint;
+	let sandbox;
+	let revert;
 
 	const endorser = sinon.createStubInstance(Endorser);
 	endorser.type = 'Endorser';
-	const getEndorser = sinon.stub();
+	const committer = sinon.createStubInstance(Committer);
+	committer.type = 'Committer';
+
+	let FakeLogger;
 
 	beforeEach(async () => {
+		revert = [];
+		sandbox = sinon.createSandbox();
+		FakeLogger = {
+			debug: () => {
+			},
+			error: () => {
+			},
+			warn: () => {
+			}
+		};
+		sandbox.stub(FakeLogger);
+		revert.push(Discovery.__set__('logger', FakeLogger));
+
 		discoverer = new Discoverer('mydiscoverer', client);
 		endpoint = client.newEndpoint({url: 'grpc://somehost.com'});
 		discoverer.endpoint = endpoint;
-		discovery = channel.newDiscovery('mydiscovery');
-		client.getEndorser = getEndorser;
-		getEndorser.returns(endorser);
+		discovery = new Discovery('mydiscovery', channel);
+		client.getEndorser = sinon.stub().returns(endorser);
+		client.newEndorser = sinon.stub().returns(endorser);
 		endorser.connect.resolves(true);
+		client.newCommitter = sinon.stub().returns(committer);
+		committer.connect.resolves(true);
+		committer.name = 'mycommitter';
+		channel.committers = new Map();
+		channel.addCommitter = sinon.stub();
+	});
+
+	afterEach(() => {
+		if (revert.length) {
+			revert.forEach(Function.prototype.call, Function.prototype.call);
+		}
+		sandbox.restore();
 	});
 
 	describe('#constructor', () => {
@@ -344,12 +379,12 @@ describe('Discovery', () => {
 			}).should.throw('Missing port parameter');
 		});
 		it('should handle as localhost', () => {
-			discovery.as_localhost = true;
+			discovery.asLocalhost = true;
 			const results = discovery._buildUrl('hostname', 1000);
 			should.equal(results, 'grpcs://localhost:1000');
 		});
 		it('should handle not as localhost', () => {
-			discovery.as_localhost = false;
+			discovery.asLocalhost = false;
 			const results = discovery._buildUrl('hostname', 1000);
 			should.equal(results, 'grpcs://hostname:1000');
 		});
@@ -410,12 +445,47 @@ describe('Discovery', () => {
 			should.equal(results, '');
 		});
 	});
+	describe('#_buildOrderers', () => {
+		it('should handle no parms', async () => {
+			await discovery._buildOrderers();
+			sinon.assert.calledWith(FakeLogger.debug, '%s - no orderers to build');
+		});
+		it('should run', async () => {
+			await discovery._buildOrderers(orderers);
+			sinon.assert.calledWith(FakeLogger.debug, '_buildOrderers[mydiscovery] - orderer msp:OrdererMSP');
+		});
+	});
+
+	describe('#_buildOrderer', () => {
+		it('should handle found committer on the channel', async () => {
+			committer.name = 'mycommitter:80';
+			channel.getCommitter = sinon.stub().returns(committer);
+			const results = await discovery._buildOrderer('mycommitter', '80', 'mspid');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - orderer is already added to the channel - %s');
+			should.equal(results, 'mycommitter:80');
+		});
+		it('should run', async () => {
+			committer.name = 'mycommitter:80';
+			channel.getCommitter = sinon.stub().returns(committer);
+			const results = await discovery._buildOrderer('mycommitter', '80', 'mspid');
+			should.equal(results, 'mycommitter:80');
+		});
+		it('should throw connect error', async () => {
+			channel.getCommitter = sinon.stub().returns();
+			committer.connect.throws(new Error('failed to connect'));
+			const results = await discovery._buildOrderer('mycommitter', '80', 'mspid');
+			should.equal(results, 'mycommitter:80');
+			sinon.assert.calledWith(FakeLogger.error, '_buildOrderer[mydiscovery] - Unable to connect to the discovered orderer mycommitter:80 due to Error: failed to connect');
+		});
+	});
+
 	describe('#_buildPeer', () => {
 		it('should handle no parms', async () => {
 			await discovery._buildPeer().should.be.rejectedWith('Missing discovery_peer parameter');
 		});
 		it('should handle found endorser on the channel', async () => {
 			endorser.name = 'mypeer';
+			channel.endorsers = new Map();
 			channel.addEndorser(endorser);
 			const results = await discovery._buildPeer({endpoint: 'mypeer'});
 			should.equal(results, endorser);
@@ -450,7 +520,7 @@ describe('Discovery', () => {
 	describe('#_processConfig', () => {
 		it('should handle no parms', async () => {
 			const results = await discovery._processConfig();
-			should.exist(results.msps);
+			should.exist(results);
 		});
 		it('should handle no msps', async () => {
 			const config = {
@@ -482,6 +552,7 @@ describe('Discovery', () => {
 
 	describe('#_processPeers', () => {
 		it('should handle missing endorser state info', async () => {
+			channel.endorsers = new Map();
 			const q_peers = [
 				{
 					identity: TestUtils.createSerializedIdentity(),

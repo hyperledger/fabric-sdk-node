@@ -60,7 +60,7 @@ describe('Endorser', () => {
 			}
 			endorser.service.processProposal = sinon.stub().callsFake(Fake);
 
-			await endorser.sendProposal('send', 0).should.be.rejectedWith(/REQUEST_TIMEOUT/);
+			await endorser.sendProposal('send', 0).should.be.rejectedWith(/REQUEST TIMEOUT/);
 
 		});
 		it('should reject Error object on proposal response error string', async () => {

@@ -102,7 +102,8 @@ class ServiceEndpoint {
 		return new Promise((resolve, reject) => {
 			logger.debug(`${method} - promise running ${this.name} - ${this.endpoint.url}`);
 			this.connected = false;
-			const timeout = new Date().getTime() + this.options['grpc-wait-for-ready-timeout'];
+			const wait_ready_timeout = this.options['grpc-wait-for-ready-timeout'];
+			const timeout = new Date().getTime() + wait_ready_timeout;
 			if (!this.service) {
 				reject(new Error(`ServiceEndpoint ${this.type}-${this.name} grpc service has not been started`));
 			}
@@ -113,7 +114,7 @@ class ServiceEndpoint {
 					}
 					err.connectFailed = true;
 					logger.error(err);
-					logger.error(`${method} - Failed to connect to remote gRPC server ${this.name} url:${this.endpoint.url}`);
+					logger.error(`${method} - Failed to connect to remote gRPC server ${this.name} url:${this.endpoint.url} timeout:${wait_ready_timeout}`);
 					reject(err);
 				} else {
 					this.connected = true;

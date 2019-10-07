@@ -60,7 +60,7 @@ describe('Discoverer', () => {
 			}
 			discoverer.service.discover = sinon.stub().callsFake(Fake);
 
-			await discoverer.sendDiscovery('send', 0).should.be.rejectedWith(/REQUEST_TIMEOUT/);
+			await discoverer.sendDiscovery('send', 0).should.be.rejectedWith(/REQUEST TIMEOUT/);
 
 		});
 		it('should reject Error object on discover response error string', async () => {

@@ -230,19 +230,19 @@ describe('DiscoveryHandler', () => {
 	});
 
 	describe('#query', () => {
-		it('should reject if signed_envelope arg is not given', async () => {
-			await discoveryHandler.query().should.be.rejectedWith(/Missing signed_envelope parameter/);
+		it('should reject if signedEnvelope arg is not given', async () => {
+			await discoveryHandler.query().should.be.rejectedWith(/Missing signedEnvelope parameter/);
 		});
 		it('should reject if endorsers are missing', async () => {
-			await discoveryHandler.query('signed_envelope', {mspid: 'msp3'}).should.be.rejectedWith(/No endorsers assigned to the channel/);
+			await discoveryHandler.query('signedEnvelope', {mspid: 'msp3'}).should.be.rejectedWith(/No endorsers assigned to the channel/);
 		});
 		it('should run with endorsers assigned by mspid', async () => {
-			const results = await discoveryHandler.query('signed_envelope', {mspid: 'Org1MSP'});
+			const results = await discoveryHandler.query('signedEnvelope', {mspid: 'Org1MSP'});
 			results[0].should.deep.equal(good);
 			results[1].should.deep.equal(good);
 		});
 		it('should run with endorsers assigned', async () => {
-			const results = await discoveryHandler.query('signed_envelope');
+			const results = await discoveryHandler.query('signedEnvelope');
 			results[0].should.deep.equal(good);
 			results[1].should.deep.equal(good);
 			results[2].should.deep.equal(good);
@@ -250,7 +250,7 @@ describe('DiscoveryHandler', () => {
 		it('should run with endorsers assigned', async () => {
 			const error = Error('FAILED');
 			channel.getEndorser(org1[1]).sendProposal = sandbox.stub().rejects(error);
-			const results = await discoveryHandler.query('signed_envelope', {request_timeout: 2000});
+			const results = await discoveryHandler.query('signedEnvelope', {requestTimeout: 2000});
 			results[0].should.deep.equal(error);
 			results[1].should.deep.equal(good);
 			results[2].should.deep.equal(good);
@@ -258,55 +258,55 @@ describe('DiscoveryHandler', () => {
 	});
 
 	describe('#commit', () => {
-		it('should reject if signed_envelope arg is not given', async () => {
-			await discoveryHandler.commit().should.be.rejectedWith(/Missing signed_envelope parameter/);
+		it('should reject if signedEnvelope arg is not given', async () => {
+			await discoveryHandler.commit().should.be.rejectedWith(/Missing signedEnvelope parameter/);
 		});
 		it('should reject if orderers are missing', async () => {
-			await discoveryHandler.commit('signed_envelope', {mspid: 'msp3'}).should.be.rejectedWith(/No committers assigned to the channel/);
+			await discoveryHandler.commit('signedEnvelope', {mspid: 'msp3'}).should.be.rejectedWith(/No committers assigned to the channel/);
 		});
 		it('should run with orderers assigned by mspid', async () => {
-			const results = await discoveryHandler.commit('signed_envelope', {mspid: 'msp1', request_timeout: 2000});
+			const results = await discoveryHandler.commit('signedEnvelope', {mspid: 'msp1', requestTimeout: 2000});
 			results.status.should.equal('SUCCESS');
 		});
 		it('should run with orderers assigned', async () => {
-			const results = await discoveryHandler.commit('signed_envelope');
+			const results = await discoveryHandler.commit('signedEnvelope');
 			results.status.should.equal('SUCCESS');
 		});
 		it('should run with orderers assigned', async () => {
-			const results = await discoveryHandler.commit('signed_envelope');
+			const results = await discoveryHandler.commit('signedEnvelope');
 			results.status.should.equal('SUCCESS');
 		});
 		it('should reject orderer returns missing results', async () => {
 			channel.removeCommitter(channel.getCommitter('orderer2'));
 			channel.removeCommitter(channel.getCommitter('orderer3'));
 			channel.getCommitter('orderer1').sendBroadcast = sandbox.stub().resolves();
-			await discoveryHandler.commit('signed_envelope')
+			await discoveryHandler.commit('signedEnvelope')
 				.should.be.rejectedWith(/Failed to send transaction to the committer/);
 		});
 		it('should reject when status is not correct', async () => {
 			channel.getCommitter('orderer2').sendBroadcast = sandbox.stub().resolves({status: 'FAILED'});
-			await discoveryHandler.commit('signed_envelope', {mspid: 'msp2'})
+			await discoveryHandler.commit('signedEnvelope', {mspid: 'msp2'})
 				.should.be.rejectedWith(/Failed to send transaction successfully to the committer status:FAILED/);
 		});
 		it('should reject when orderer returns an error', async () => {
 			channel.getCommitter('orderer2').sendBroadcast = sandbox.stub().rejects(new Error('FAILED with Error'));
-			await discoveryHandler.commit('signed_envelope', {mspid: 'msp2'})
+			await discoveryHandler.commit('signedEnvelope', {mspid: 'msp2'})
 				.should.be.rejectedWith(/FAILED with Error/);
 		});
 	});
 
 	describe('#endorse', () => {
-		it('should reject if signed_proposal arg is not given', async () => {
-			await discoveryHandler.endorse().should.be.rejectedWith(/Missing signed_proposal parameter/);
+		it('should reject if signedProposal arg is not given', async () => {
+			await discoveryHandler.endorse().should.be.rejectedWith(/Missing signedProposal parameter/);
 		});
 		it('should reject if no endorsement plans are available', async () => {
 			discovery.getDiscoveryResults = sandbox.stub().resolves();
-			await discoveryHandler.endorse('signed_proposal').should.be.rejectedWith(/No endorsement plan available/);
+			await discoveryHandler.endorse('signedProposal').should.be.rejectedWith(/No endorsement plan available/);
 		});
 		it('should run ok', async () => {
 			discovery.getDiscoveryResults = sandbox.stub().resolves({endorsement_plan: {something: 'plan a'}});
 			discoveryHandler._endorse = sandbox.stub().resolves('DONE');
-			const results = await discoveryHandler.endorse('signed_proposal', {request_timeout: 2000});
+			const results = await discoveryHandler.endorse('signedProposal', {requestTimeout: 2000});
 			results.should.equal('DONE');
 		});
 	});

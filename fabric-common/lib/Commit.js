@@ -123,7 +123,7 @@ class Commit extends Proposal {
 	 * When not included an handler must be included.
 	 * @property {EndorsementHandler} - [handler] - Optional. The handler to send the endorsements.
 	 * When not included, targets must be included.
-	 * @property {Number} [request_timeout] - Optional. The request timeout
+	 * @property {Number} [requestTimeout] - Optional. The request timeout
 	 */
 
 	/**
@@ -147,7 +147,7 @@ class Commit extends Proposal {
 		const method = `send[${this.chaincodeName}]`;
 		logger.debug('%s - start', method);
 
-		const {handler, targets, request_timeout} = request;
+		const {handler, targets, requestTimeout} = request;
 
 		const envelope = this.getSignedEnvelope();
 
@@ -162,7 +162,7 @@ class Commit extends Proposal {
 			let bad_result = {};
 			bad_result.status = 'UNKNOWN';
 			for (const committer of committers) {
-				const result = await committer.sendBroadcast(envelope, request_timeout);
+				const result = await committer.sendBroadcast(envelope, requestTimeout);
 				if (result.status === 'SUCCESS') {
 
 					return result;

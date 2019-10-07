@@ -32,7 +32,18 @@ describe('Client', () => {
 	beforeEach(() => {
 		client = new Client('myclient');
 	});
-
+	describe('#newClient', () => {
+		it('should require a name', () => {
+			(() => {
+				Client.newClient();
+			}).should.throw('Missing name parameter');
+		});
+		it('should run', () => {
+			const test = Client.newClient('test');
+			test.type.should.equal('Client');
+			test.name.should.equal('test');
+		});
+	});
 	describe('#constructor', () => {
 		it('should require a name', () => {
 			(() => {
@@ -73,6 +84,29 @@ describe('Client', () => {
 			(() => {
 				client.newEndpoint({'url': 'C'});
 			}).should.throw('Invalid protocol: Protocol must be grpc or grpcs');
+		});
+		it('should require a valid wait for ready timeout', () => {
+			(() => {
+				client.newEndpoint({'grpc-wait-for-ready-timeout': 'C'});
+			}).should.throw('invalid grpc-wait-for-ready-timeout :: C');
+		});
+		it('should require a valid request timeout', () => {
+			(() => {
+				client.newEndpoint({'requestTimeout': 'C'});
+			}).should.throw('invalid requestTimeout :: C');
+		});
+		it('should use the default wait for ready timeout', () => {
+			client.getConnectionOptions = sinon.stub().returns({'url': 'grpc://somehost.com'});
+			const endpoint = client.newEndpoint({});
+			endpoint.options['grpc-wait-for-ready-timeout'].should.equal(3000);
+		});
+		it('should check that wait for ready timeout is good number', () => {
+			client.getConnectionOptions = sinon.stub().returns({
+				'url': 'grpc://somehost.com',
+				'grpc-wait-for-ready-timeout': 2000
+			});
+			const endpoint = client.newEndpoint({});
+			endpoint.options['grpc-wait-for-ready-timeout'].should.equal(2000);
 		});
 		it('should add in an options and keep what is there', () => {
 			const endpoint = client.newEndpoint({'url': 'grpc://somehost.com', 'some': 'C'});

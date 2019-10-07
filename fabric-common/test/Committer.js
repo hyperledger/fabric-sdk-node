@@ -63,7 +63,7 @@ describe('Committer', () => {
 			response.end = sinon.stub();
 			broadcast.returns(response);
 
-			await orderer.sendBroadcast({info: 'inform'}, 1).should.be.rejectedWith(/REQUEST_TIMEOUT/);
+			await orderer.sendBroadcast({info: 'inform'}, 1).should.be.rejectedWith(/REQUEST TIMEOUT/);
 		});
 		it('should reject on invalid request', async () => {
 			const response = new PassThrough({objectMode: true});
@@ -71,7 +71,7 @@ describe('Committer', () => {
 			response.write({invalid: 'response'});
 			broadcast.returns(response);
 
-			await orderer.sendBroadcast('hello').should.be.rejectedWith(/SYSTEM_ERROR/);
+			await orderer.sendBroadcast('hello').should.be.rejectedWith(/SYSTEM ERROR/);
 		});
 		it('should reject on receiving an error', async () => {
 			util.inherits(Writer, Writable);
@@ -99,7 +99,7 @@ describe('Committer', () => {
 			const response = new Writer({objectMode: true});
 			broadcast.returns(response);
 
-			await orderer.sendBroadcast({status: 'SUCCESS', info: 'my info'}).should.be.rejectedWith(/SERVICE_UNAVAILABLE/);
+			await orderer.sendBroadcast({status: 'SUCCESS', info: 'my info'}).should.be.rejectedWith(/SERVICE UNAVAILABLE/);
 		});
 		it('should reject on receiving a 500 error', async () => {
 			util.inherits(Writer, Writable);

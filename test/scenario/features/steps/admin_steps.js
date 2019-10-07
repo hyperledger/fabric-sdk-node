@@ -24,6 +24,16 @@ const installedChaincodesOnPeers = new Map();
 const Client = require('fabric-client');
 
 module.exports = function () {
+	this.Given(/^I put a log message (.+?)$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (message) => {
+
+		testUtil.logMsg('\n\n\n**********************************************************************************');
+		testUtil.logMsg('**********************************************************************************');
+		testUtil.logMsg(`****** ${message} ******`);
+		testUtil.logMsg('**********************************************************************************');
+		testUtil.logMsg('**********************************************************************************\n\n\n');
+
+	});
+
 
 	this.Given(/^I create all channels from the (.+?) common connection profile$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (tlsType) => {
 
@@ -105,7 +115,7 @@ module.exports = function () {
 		}
 	});
 
-	this.Given(/^I have created and joint all channels from the (.+?) common connection profile$/, {timeout: testUtil.TIMEOUTS.MED_STEP}, async (tlsType) => {
+	this.Given(/^I have created and joined all channels from the (.+?) common connection profile$/, {timeout: testUtil.TIMEOUTS.MED_STEP}, async (tlsType) => {
 		let tls;
 		let profile;
 
@@ -325,6 +335,35 @@ module.exports = function () {
 			return true;
 		} catch (err) {
 			testUtil.logError('Install/Instantiate failed with error: ', err);
+			throw err;
+		}
+
+	});
+
+	this.Given(/^I force install\/instantiate (.+?) chaincode named (.+?) at version (.+?) as (.+?) to the (.+?) Fabric network for all organizations on channel (.+?) with endorsement policy (.+?) and args (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (ccType, ccName, version, ccId, tlsType, channelName, policyType, args) => {
+		let profile;
+		let tls;
+		if (tlsType.localeCompare('non-tls') === 0) {
+			tls = false;
+			profile = new CCP(path.join(__dirname, ccpPath), true);
+		} else {
+			tls = true;
+			profile = new CCP(path.join(__dirname, tlsCcpPath), true);
+		}
+		const policy = require(path.join(__dirname, policiesPath))[policyType];
+
+		const orgs = profile.getOrganizationsForChannel(channelName);
+
+		try {
+			for (const org in orgs) {
+				const orgName = orgs[org];
+				await chaincode_util.installChaincode(ccName, ccId, ccType, version, tls, profile, orgName, channelName);
+			}
+			await chaincode_util.instantiateChaincode(ccName, ccId, ccType, args, version, false, tls, profile, orgs[0], channelName, policy);
+
+			return true;
+		} catch (err) {
+			testUtil.logError('Force Install/Instantiate failed with error: ', err);
 			throw err;
 		}
 

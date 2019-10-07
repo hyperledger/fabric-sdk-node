@@ -55,7 +55,7 @@ class Endorser extends ServiceEndpoint {
 	 *  has been signed
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
 	 *  response before rejecting the promise with a timeout error. This
-	 *  overrides the request-timeout config connection setting of this instance.
+	 *  overrides the requestTimeout config connection setting of this instance.
 	 * @returns {Promise} A Promise for a {@link ProposalResponse}
 	 */
 	sendProposal(signedProposal, timeout) {
@@ -69,14 +69,14 @@ class Endorser extends ServiceEndpoint {
 			if (this.connected === false) {
 				throw Error(`Broadcast Client ${this.name} ${this.endpoint.url} is not connected`);
 			}
-			let rto = this.options['request-timeout'];
+			let rto = this.options.requestTimeout;
 			if (typeof timeout === 'number') {
 				rto = timeout;
 			}
 			const send_timeout = setTimeout(() => {
 				clearTimeout(send_timeout);
 				logger.error(`${method} - ${this.name} timed out after:${rto}`);
-				return reject(new Error('REQUEST_TIMEOUT'));
+				return reject(new Error('REQUEST TIMEOUT'));
 			}, rto);
 
 			this.service.processProposal(signedProposal, (err, proposalResponse) => {

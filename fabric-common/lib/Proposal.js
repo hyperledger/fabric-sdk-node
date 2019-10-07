@@ -242,7 +242,7 @@ class Proposal extends ServiceAction {
 	 * @typedef {Object} SendRequest
 	 * @property {Peer[]} [targets] - Optional. The peers to send the proposal.
 	 * @property {EndorsementHandler} - [handler] - Optional. The handler to send the proposal.
-	 * @property {Number} [request_timeout] - Optional. The request timeout
+	 * @property {Number} [requestTimeout] - Optional. The request timeout
 	 */
 
 	/**
@@ -260,17 +260,17 @@ class Proposal extends ServiceAction {
 	async send(request = {}) {
 		const method = `send[${this.chaincodeName}]`;
 		logger.debug('%s - start', method);
-		const {handler, targets, request_timeout} = request;
-		const signed_envelope = this.getSignedProposal();
+		const {handler, targets, requestTimeout} = request;
+		const signedEnvelope = this.getSignedProposal();
 		this._proposalResponses = [];
 		this._proposalErrors = [];
 
 		if (handler) {
 			let results;
 			if (this.type === 'Query') {
-				results = await handler.query(signed_envelope, request);
+				results = await handler.query(signedEnvelope, request);
 			} else {
-				results = await handler.endorse(signed_envelope, request);
+				results = await handler.endorse(signedEnvelope, request);
 			}
 			logger.debug('%s - have results from handler', method);
 			results.forEach((result) => {
@@ -286,7 +286,7 @@ class Proposal extends ServiceAction {
 			logger.debug('%s - have targets', method);
 			const peers = this.channel.getTargetEndorsers(targets);
 			const promises = peers.map(async (peer) => {
-				return peer.sendProposal(signed_envelope, request_timeout);
+				return peer.sendProposal(signedEnvelope, requestTimeout);
 			});
 
 			logger.debug('%s - about to send to all peers', method);

@@ -95,11 +95,11 @@ const ServiceAction = class {
 
 		this._checkPayloadAndSignature();
 
-		const signed_proposal = new fabprotos.protos.SignedProposal();
-		signed_proposal.setSignature(this._signature);
-		signed_proposal.setProposalBytes(this._payload);
+		const signedProposal = new fabprotos.protos.SignedProposal();
+		signedProposal.setSignature(this._signature);
+		signedProposal.setProposalBytes(this._payload);
 
-		return signed_proposal;
+		return signedProposal;
 	}
 
 	/**
