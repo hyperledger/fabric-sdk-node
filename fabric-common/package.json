@@ -29,10 +29,12 @@
 		"js-sha3": "^0.7.0",
 		"nano": "^6.4.4",
 		"nconf": "^0.10.0",
-		"pkcs11js": "^1.0.6",
 		"sjcl": "1.0.7",
 		"winston": "^2.2.0",
 		"yn": "^3.1.0"
+	},
+	"optionalDependencies": {
+		"pkcs11js": "^1.0.6"
 	},
 	"devDependencies": {
 		"chai": "^4.1.2",
