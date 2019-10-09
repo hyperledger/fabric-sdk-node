@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+'use strict';
+
 const rewire = require('rewire');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -12,6 +14,9 @@ chai.use(chaiAsPromised);
 
 const User = rewire('../lib/User');
 const TestUtils = require('./TestUtils');
+const {Utils} = require('..');
+const path = require('path');
+const fs = require('fs-extra');
 
 describe('User', () => {
 	TestUtils.setCryptoConfigSettings();
@@ -107,6 +112,34 @@ describe('User', () => {
 		// 	f_user.fromString(string, true);
 		// 	await f_user._name.should.be.equal('user');
 		// });
+
+		it('should throw an error when the private key is missing from a user enrollment object', async () => {
+			const testUserEnrollment = {
+				'name': 'admin2',
+				'mspid': 'test',
+				'roles': null,
+				'affiliation': '',
+				'enrollmentSecret': '',
+				'enrollment': {
+					'signingIdentity': '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a',
+					'identity': {
+						'certificate': TestUtils.TEST_KEY_PRIVATE_CERT_PEM
+					}
+				}
+			};
+			// manufacture an error condition where the private key does not exist for the SKI, and only the public key does
+			const cryptoSuite = Utils.newCryptoSuite();
+			cryptoSuite.setCryptoKeyStore(Utils.newCryptoKeyStore());
+			await cryptoSuite.importKey(cert);
+
+			fs.removeSync(path.join(Utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
+
+			const user = new User('admin2');
+			user.setCryptoSuite(cryptoSuite);
+			const enrollmentString = JSON.stringify(testUserEnrollment);
+			await user.fromString(enrollmentString).should.be.rejectedWith(/Private key missing from key store/);
+
+		});
 	});
 
 	describe('#toString', () => {

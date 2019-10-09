@@ -56,12 +56,6 @@ describe('CryptoSuite_PKCS11', () => {
 			}).should.throw(/PKCS11 library path must be specified/);
 		});
 
-		it('should throw when no library path is given', () => {
-			(() => {
-				new PKCS11_Rewire(256);
-			}).should.throw(/PKCS11 library path must be specified/);
-		});
-
 		it('should throw if pkcs11 slot not given', () => {
 			(() => {
 				new PKCS11_Rewire(256, 'sha2', {lib: '/temp'});

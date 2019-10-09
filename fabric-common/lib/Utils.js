@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+'use strict';
+
 const Long = require('long');
 const util = require('util');
 const winston = require('winston');

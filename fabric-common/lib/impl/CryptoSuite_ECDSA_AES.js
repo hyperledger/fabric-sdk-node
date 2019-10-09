@@ -194,7 +194,7 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 
 	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#sign}
-	 * Signs digest using key k.
+	 * Signs digest using key.
 	 */
 	sign(key, digest) {
 		if (typeof key === 'undefined' || key === null) {

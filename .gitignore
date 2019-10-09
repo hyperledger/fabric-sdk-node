@@ -17,6 +17,8 @@ tmp
 .nyc_output/*
 *.csv
 *.heapsnapshot
+.scannerwork/*
+sonar-project.properties
 
 #test files
 test/temp/**
