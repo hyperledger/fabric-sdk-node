@@ -20,7 +20,7 @@ dependencies {
 repositories {
     jcenter()
     maven { 
-        url 'https://jitpack.io' 
+        url 'https://www.jitpack.io' 
     }
     maven {
         url "https://nexus.hyperledger.org/content/repositories/snapshots/"

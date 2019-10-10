@@ -12,7 +12,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { 
-        url 'https://jitpack.io' 
+        url 'https://www.jitpack.io' 
     }
 }
 
