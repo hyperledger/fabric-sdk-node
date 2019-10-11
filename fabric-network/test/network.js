@@ -175,9 +175,18 @@ describe('Network', () => {
 			mockPeer5.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(false);
 			peerArray = [mockPeer1, mockPeer2, mockPeer3, mockPeer4, mockPeer5];
 			mockChannel.getPeers.returns(peerArray);
-			return network._initializeInternalChannel({discover: false})
-				.should.be.rejectedWith(/no suitable peers available to initialize from/);
+			return network._initializeInternalChannel({enabled:false, asLocalhost: true})
+				.should.be.rejectedWith(/No peers defined in channel that have the ledger query role/);
 		});
+
+		it('should fail if no peers defined for specified MSP', async () => {
+			network.initialized = false;
+			mockClient.getPeersForOrg.returns([]);
+			mockClient.getMspid.returns('myMSP');
+			return network._initializeInternalChannel({enabled:true, asLocalhost: true})
+				.should.be.rejectedWith(/No peers defined for MSP \'myMSP\' to discover from/);
+		});
+
 	});
 
 	describe('#initialize', () => {

@@ -76,17 +76,22 @@ class Network {
 
 		let ledgerPeers;
 		if (discovery.enabled) {
-			ledgerPeers = this.gateway.getClient().getPeersForOrg();
+			const client = this.gateway.getClient();
+			ledgerPeers = client.getPeersForOrg();
+			if (ledgerPeers.length === 0) {
+				const msg = `No peers defined for MSP '${client.getMspid()}' to discover from`;
+				logger.error('_initializeInternalChannel: ' + msg);
+				throw new Error(msg);
+			}
 		} else {
 			ledgerPeers = this.channel.getPeers().filter((cPeer) => {
 				return cPeer.isInRole(FabricConstants.NetworkConfig.LEDGER_QUERY_ROLE);
 			});
-		}
-
-		if (ledgerPeers.length === 0) {
-			const msg = 'no suitable peers available to initialize from';
-			logger.error('_initializeInternalChannel: ' + msg);
-			throw new Error(msg);
+			if (ledgerPeers.length === 0) {
+				const msg = 'No peers defined in channel that have the ledger query role';
+				logger.error('_initializeInternalChannel: ' + msg);
+				throw new Error(msg);
+			}
 		}
 
 		let ledgerPeerIndex = 0;
