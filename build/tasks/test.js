@@ -96,17 +96,12 @@ gulp.task('clean-up', () => {
 });
 
 gulp.task('docker-clean', shell.task([
-	// stop and remove chaincode docker instances
+	// stop and remove docker containers
 	'docker kill $(docker ps -aq)',
 	'docker rm $(docker ps -aq) -f',
 
 	// remove chaincode images so that they get rebuilt during test
-	'docker rmi $(docker images | grep "^dev-" | awk \'{print $3}\')',
-
-	// clean up all the containers created by docker-compose
-	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls-level-db.yaml -p node down',
-	'docker-compose -f test/fixtures/docker-compose/docker-compose-tls.yaml -p node down',
-	'docker ps -a'
+	'docker rmi $(docker images | grep "^dev-" | awk \'{print $3}\')'
 ], {
 	verbose: true, // so we can see the docker command output
 	ignoreErrors: true // kill, rm, and rmi may fail because the containers may have been cleaned up or not exist
@@ -140,8 +135,10 @@ gulp.task('test-headless', shell.task('npx gulp run-test-headless'));
 // Only run Mocha unit tests
 gulp.task('test-mocha', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-test-mocha'));
 
-// Only run scenario tests
-gulp.task('test-cucumber', shell.task('npx nyc npm run test:cucumber'));
+// Only run javascript scenario tests
+gulp.task('test:cucumber', shell.task('npx nyc npm run test:cucumber'));
+// Only run typescript scenario tests
+gulp.task('test:ts-cucumber', shell.task('npx nyc npm run test:ts-cucumber'));
 
 // Definition of Mocha (unit) test suites
 gulp.task('run-test-mocha', (done) => {
@@ -186,9 +183,13 @@ gulp.task('mocha-fabric-protos',
 // Test to run all unit tests
 gulp.task('test-tape', shell.task('npx nyc gulp run-tape-unit'));
 
-// Definition of Cucumber (scenario) test suite
-gulp.task('run-test-cucumber', shell.task(
+// Definition of Javascript Cucumber (scenario) test suite
+gulp.task('run-test:cucumber', shell.task(
 	'export HFC_LOGGING=\'' + cucumber_log + '\'; npm run test:cucumber'
+));
+// Definition of Typescript Cucumber (scenario) test suite
+gulp.task('run-test:ts-cucumber', shell.task(
+	'export HFC_LOGGING=\'' + cucumber_log + '\'; npm run test:ts-cucumber'
 ));
 
 // Run e2e and scenario tests with code coverage
@@ -198,17 +199,17 @@ gulp.task('test-fv-scenario', shell.task('npx nyc --check-coverage --lines 92 --
 gulp.task('test-fv-only', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-tape-e2e'));
 
 gulp.task('run-test-fv-scenario', (done) => {
-	const tasks = ['run-tape-e2e', 'docker-clean', 'run-test-cucumber'];
+	const tasks = ['run-tape-e2e', 'docker-clean', 'run-test:cucumber', 'docker-clean', 'run-test:ts-cucumber'];
 	runSequence(...tasks, done);
 });
 
 gulp.task('run-test-scenario', (done) => {
-	const tasks = ['compile', 'run-test-cucumber'];
+	const tasks = ['compile', 'run-test:cucumber', 'docker-clean', 'run-test:ts-cucumber'];
 	runSequence(...tasks, done);
 });
 
 gulp.task('run-test-merge', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test',  'compile', 'run-test-cucumber'];
+	const tasks = ['clean-up', 'docker-clean', 'pre-test',  'compile', 'run-test:cucumber', 'docker-clean', 'run-test:ts-cucumber'];
 	runSequence(...tasks, done);
 });
 

@@ -23,11 +23,17 @@ sonar-project.properties
 #test files
 test/temp/**
 !test/temp/.noignore
+# - crypto material
 test/fixtures/crypto-material/crypto-config/
 test/fixtures/crypto-material/channel-config/
 test/fixtures/crypto-material/config-base/twoorgs.genesis.block
 test/fixtures/fabricca/enroll*.*
 test/fixtures/fabricca/test*.*
+# - ts:scenario crypto material
+test/ts-fixtures/crypto-material/crypto-config/
+test/ts-fixtures/crypto-material/channel-config/
+test/ts-fixtures/crypto-material/config-base/twoorgs.genesis.block
+# - generated typescript files
 test/typescript/**/*.js
 test/typescript/**/*.js.map
 

@@ -45,6 +45,7 @@ gulp.task('get-crypto-binaries-s390', shell.task(
 // - shell command to run the required test file scripts
 gulp.task('generate-test-certs', shell.task(
 	'./test/fixtures/crypto-material/generateAll.sh ' + binariesPath + '/bin;' +
+	'./test/ts-fixtures/crypto-material/generateAll.sh ' + binariesPath + '/bin;' +
 	'./test/fixtures/fabricca/generateCSR.sh;')
 );
 
