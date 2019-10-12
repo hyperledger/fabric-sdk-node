@@ -273,7 +273,7 @@ class EventService extends ServiceAction {
 	/**
 	 * @typedef {Object} StartEventRequest
 	 * @property {Eventers[]} targets - The Eventers to send the start stream request.
-	 * @property {Number} [request_timeout] - Optional. The request timeout
+	 * @property {Number} [requestTimeout] - Optional. The request timeout
 	 */
 
 	/**
@@ -290,7 +290,7 @@ class EventService extends ServiceAction {
 		const method = `send[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		const {targets = checkParameter('targets'), request_timeout} = request;
+		const {targets = checkParameter('targets'), requestTimeout} = request;
 		const envelope = this.getSignedEnvelope();
 		this.eventer = null;
 		let start_error = null;
@@ -298,7 +298,7 @@ class EventService extends ServiceAction {
 
 		for (const target of targets) {
 			try {
-				this.eventer = await this._startService(target, envelope, request_timeout);
+				this.eventer = await this._startService(target, envelope, requestTimeout);
 			} catch (error) {
 				logger.error('%s - Starting stream to %s failed', method, target.name);
 				start_error = error;
@@ -317,7 +317,7 @@ class EventService extends ServiceAction {
 	 * internal method to startup a stream and bind this event hub's callbacks
 	 * to a specific target's gRPC stream
 	 */
-	_startService(eventer, envelope, request_timeout) {
+	_startService(eventer, envelope, requestTimeout) {
 		const method = `_startService[${this.name}]`;
 
 		return new Promise((resolve, reject) => {
@@ -330,15 +330,15 @@ class EventService extends ServiceAction {
 				return;
 			}
 
-			if (!request_timeout) {
-				request_timeout = eventer.endpoint.options['request-timeout'];
+			if (!requestTimeout) {
+				requestTimeout = eventer.endpoint.options.requestTimeout;
 			}
 
 			logger.debug('%s - create stream setup timeout', method);
 			const connection_setup_timeout = setTimeout(() => {
-				logger.error(`EventService[${this.name}] timed out after:${request_timeout}`);
+				logger.error(`EventService[${this.name}] timed out after:${requestTimeout}`);
 				reject(Error('Event service timed out - Unable to start listening'));
-			}, request_timeout);
+			}, requestTimeout);
 
 			logger.debug('%s - create stream based on blockType', method, this.blockType);
 			eventer.setStreamByType(this.blockType);

@@ -40,10 +40,10 @@ class Discovery extends ServiceAction {
 		this.channel = channel;
 		this.client = channel.client;
 		this.type = TYPE;
-		this.refresh_age = 5 * 60 * 1000; // 5 minutes default
+		this.refreshAge = 5 * 60 * 1000; // 5 minutes default
 
 		this.discoveryResults = null;
-		this.as_localhost = false;
+		this.asLocalhost = false;
 
 		this._current_target = null;
 
@@ -209,14 +209,14 @@ class Discovery extends ServiceAction {
 
 	/**
 	 * @typedef {Object} DiscoverRequest
-	 * @property {boolean} [as_localhost] - Optional. When discovery is running in a
+	 * @property {boolean} [asLocalhost] - Optional. When discovery is running in a
 	 *  virtual environment, the host name of peers and orderers created by this
 	 *  service may have to converted to localhost for connections to be established.
-	 * @property {number} [request_timeout] - Optional. The request timeout
-	 * @property {number} [refresh_age] - Optional. The milliseconds before the
+	 * @property {number} [requestTimeout] - Optional. The request timeout
+	 * @property {number} [refreshAge] - Optional. The milliseconds before the
 	 *  discovery results will be refreshed automatically. When the {@link Discovery#getDiscoveryResults}
 	 *  is called with refresh = true and the age of the discovery results
-	 *  is older then 'refresh_age' the current signed request will be sent
+	 *  is older then 'refreshAge' the current signed request will be sent
 	 *  to the peer's discovery service.
 	 *  Default: 5 minutes.
 	 */
@@ -231,21 +231,21 @@ class Discovery extends ServiceAction {
 		const method = `send[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		const {request_timeout, as_localhost, refresh_age, targets = checkParameter('targets')} = request;
+		const {requestTimeout, asLocalhost, refreshAge, targets = checkParameter('targets')} = request;
 
 		// may be needed later for refresh
-		this.as_localhost = as_localhost;
-		this.refresh_age = refresh_age;
-		this.request_timeout = request_timeout;
+		this.asLocalhost = asLocalhost;
+		this.refreshAge = refreshAge;
+		this.requestTimeout = requestTimeout;
 		this.targets = targets;
 
-		const signed_envelope = this.getSignedEnvelope();
+		const signedEnvelope = this.getSignedEnvelope();
 
 		let response;
 		for (const target of targets) {
 			logger.debug(`${method} - about to discover on ${target.endpoint.url}`);
 			try {
-				response = await target.sendDiscovery(signed_envelope, this.request_timeout);
+				response = await target.sendDiscovery(signedEnvelope, this.requestTimeout);
 				this._current_target = target;
 				break;
 			} catch (error) {
@@ -273,9 +273,9 @@ class Discovery extends ServiceAction {
 					logger.debug(`${method} - process result index:${index}`);
 					if (result.config_result) {
 						logger.debug(`${method} - process result - have config_result in ${index}`);
-						const config = await this._processConfig(result.config_result);
+						const config = this._processConfig(result.config_result);
 						this.discoveryResults.msps = config.msps;
-						this.discoveryResults.orderers = config.orderers;
+						this.discoveryResults.orderers = await this._buildOrderers(config.orderers);
 					}
 					if (result.members) {
 						logger.debug(`${method} - process result - have members in ${index}`);
@@ -313,8 +313,8 @@ class Discovery extends ServiceAction {
 		if (!this.discoveryResults) {
 			throw Error('No discovery results found');
 		}
-		if (refresh && (new Date()).getTime() - this.discoveryResults.timestamp > this.refresh_age) {
-			await this.send({as_localhost: this.as_localhost, request_timeout: this.request_timeout, targets: this.targets});
+		if (refresh && (new Date()).getTime() - this.discoveryResults.timestamp > this.refreshAge) {
+			await this.send({asLocalhost: this.asLocalhost, requestTimeout: this.requestTimeout, targets: this.targets});
 		} else {
 			logger.debug(`${method} - not refreshing`);
 		}
@@ -396,7 +396,7 @@ class Discovery extends ServiceAction {
 		return endorsement_plan;
 	}
 
-	async _processConfig(q_config) {
+	_processConfig(q_config) {
 		const method = `_processConfig[${this.name}]`;
 		logger.debug(`${method} - start`);
 		const config = {};
@@ -436,7 +436,6 @@ class Discovery extends ServiceAction {
 						config.orderers[mspid].endpoints.push(endpoint);
 					}
 				}
-				await this._buildOrderers(config.orderers);
 			} else {
 				logger.debug(`${method} - no orderers found`);
 			}
@@ -513,12 +512,18 @@ class Discovery extends ServiceAction {
 		const method = `_buildOrderers[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		for (const msp_id in orderers) {
-			logger.debug(`${method} - orderer msp:${msp_id}`);
-			for (const endpoint of orderers[msp_id].endpoints) {
-				endpoint.name = this._buildOrderer(endpoint.host, endpoint.port, msp_id);
+		if (!orderers) {
+			logger.debug('%s - no orderers to build', method);
+		} else {
+			for (const msp_id in orderers) {
+				logger.debug(`${method} - orderer msp:${msp_id}`);
+				for (const endpoint of orderers[msp_id].endpoints) {
+					endpoint.name = await this._buildOrderer(endpoint.host, endpoint.port, msp_id);
+				}
 			}
 		}
+
+		return orderers;
 	}
 
 	async _buildOrderer(host, port, msp_id) {
@@ -528,7 +533,7 @@ class Discovery extends ServiceAction {
 		const address = `${host}:${port}`;
 		const found = this.channel.getCommitter(address);
 		if (found) {
-			logger.debug(`${method} - orderer is already added to the channel - ${address}`);
+			logger.debug('%s - orderer is already added to the channel - %s', method, address);
 			return found.name;
 		}
 
@@ -585,7 +590,7 @@ class Discovery extends ServiceAction {
 
 		let t_hostname = hostname;
 		// endpoints may be running in containers on the local system
-		if (this.as_localhost) {
+		if (this.asLocalhost) {
 			t_hostname = 'localhost';
 		}
 

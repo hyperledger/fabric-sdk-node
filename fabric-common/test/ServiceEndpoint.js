@@ -61,6 +61,7 @@ describe('ServiceEndpoint', () => {
 			serviceEndpoint.connected = false;
 			serviceEndpoint.service = null;
 			serviceEndpoint.serviceClass = fabprotos.protos.Endorser;
+			endpoint.options['grpc-wait-for-ready-timeout'] = 100;
 			await serviceEndpoint.connect(endpoint).should.be.rejectedWith(/Failed to connect/);
 		});
 		it('should run if connected', async () => {

@@ -15,7 +15,7 @@ module.exports.certificateAsPEM = fs.readFileSync(path.join(__dirname, 'data', '
 module.exports.keyAsPEM = fs.readFileSync(path.join(__dirname, 'data', 'key.pem'));
 
 module.exports.setCryptoConfigSettings = () => {
-	Utils.setConfigSetting('connection-options', {'request-timeout': 3000});
+	Utils.setConfigSetting('connection-options', {'requestTimeout': 3000});
 	Utils.setConfigSetting('crypto-hsm', false);
 	Utils.setConfigSetting('crypto-suite-software', {'EC': 'fabric-common/lib/impl/CryptoSuite_ECDSA_AES.js'});
 	Utils.setConfigSetting('crypto-hash-algo', 'SHA2');

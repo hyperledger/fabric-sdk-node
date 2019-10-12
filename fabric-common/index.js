@@ -16,8 +16,10 @@ const SigningIdentity = require('./lib/SigningIdentity');
 const Utils = require('./lib/Utils');
 const User = require('./lib/User');
 const BaseClient = require('./lib/BaseClient');
+const Client = require('./lib/Client');
 
 module.exports = {
+	Client,
 	Config,
 	CryptoAlgorithms,
 	CryptoSuite,

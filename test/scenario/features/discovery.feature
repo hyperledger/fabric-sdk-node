@@ -7,8 +7,10 @@
 Feature: Configure Fabric using SDK using discovery service and submit/evaluate using a network Gateway
 
 	Background:
+		Given I put a log message DISCOVERY TESTING
+		Given I have forcibly taken down all docker containers
 		Given I have deployed a tls Fabric network
-		And I have created and joint all channels from the tls common connection profile
+		And I have created and joined all channels from the tls common connection profile
 		And I have created a gateway named discovery_gateway as user User1 within Org1 using the discovery common connection profile
 		And I update channel with name mychannel with config file mychannel-org1anchor.tx from the tls common connection profile
 

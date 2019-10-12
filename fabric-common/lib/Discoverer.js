@@ -58,7 +58,7 @@ class Discoverer extends ServiceEndpoint {
 			if (this.connected === false) {
 				throw Error(`Discovery Client ${this.name} ${this.endpoint.url} is not connected`);
 			}
-			let rto = this.options['request-timeout'];
+			let rto = this.options.requestTimeout;
 			if (typeof timeout === 'number') {
 				rto = timeout;
 			}
@@ -66,7 +66,7 @@ class Discoverer extends ServiceEndpoint {
 			const send_timeout = setTimeout(() => {
 				clearTimeout(send_timeout);
 				logger.error(`${method} - timed out after:${rto}`);
-				return reject(new Error('REQUEST_TIMEOUT'));
+				return reject(new Error('REQUEST TIMEOUT'));
 			}, rto);
 
 			this.service.discover(signedEnvelope, (err, response) => {

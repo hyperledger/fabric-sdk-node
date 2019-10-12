@@ -6,8 +6,9 @@
 @clean-gateway
 Feature: Listen to events using a fabric-network
 	Background:
+		Given I put a log message EVENT TESTING
 		Given I have deployed a tls Fabric network
-		And I have created and joint all channels from the tls common connection profile
+		And I have created and joined all channels from the tls common connection profile
 		And I have created a gateway named test_gateway as user User1 within Org1 using the tls common connection profile
 		Given I install/instantiate node chaincode named events at version 1.0.0 as events01 to the tls Fabric network for all organizations on channel mychannel with endorsement policy 1AdminOr2Other and args [initLedger]
 

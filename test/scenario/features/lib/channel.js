@@ -20,6 +20,7 @@ const fs = require('fs');
  */
 async function create_channel(channelTxPath, ccp, tls, channelName) {
 	Client.setConfigSetting('request-timeout', 60000);
+	testUtil.logMsg('Will create channel [' + channelName + ']');
 
 	try {
 		const channel = ccp.getChannel(channelName);
@@ -116,6 +117,7 @@ async function create_channel(channelTxPath, ccp, tls, channelName) {
  */
 async function existing_channels(ccp, tls) {
 	Client.setConfigSetting('request-timeout', 60000);
+	testUtil.logMsg('Looking for existing channels');
 
 	try {
 		// Acting as a client in first org when checking the channel
@@ -171,6 +173,8 @@ async function existing_channels(ccp, tls) {
  * @param {String} orgName the name of the org
  */
 async function join_channel(ccp, tls, channelName, orgName) {
+	testUtil.logMsg('Will join channel [' + channelName + ']');
+
 	Client.setConfigSetting('request-timeout', 60000);
 	const client = new Client();
 	const channel = client.newChannel(channelName);
@@ -268,6 +272,8 @@ async function join_channel(ccp, tls, channelName, orgName) {
  */
 async function update_channel(ccp, channelName, channelTxPath, tls) {
 	Client.setConfigSetting('request-timeout', 60000);
+	testUtil.logMsg('Will update channel [' + channelName + ']');
+
 	const channels = ccp.getChannels();
 	if (!Object.keys(channels) || Object.keys(channels).length === 0) {
 		return Promise.reject(new Error('No channel information found'));
@@ -276,9 +282,9 @@ async function update_channel(ccp, channelName, channelTxPath, tls) {
 	try {
 		const channel = channels[channelName];
 
-		testUtil.logMsg('Creating channel [' + channelName + '] ...');
+		testUtil.logMsg('Updating channel [' + channelName + '] ...');
 
-		// Acting as a client in first org when creating the channel
+		// Acting as a client in first org when updating the channel
 		const client = new Client();
 		const orgs = ccp.getOrganizations();
 		const orgName = Object.keys(orgs)[0];

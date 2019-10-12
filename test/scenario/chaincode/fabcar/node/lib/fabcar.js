@@ -100,8 +100,26 @@ class FabCar extends Contract {
 			model,
 			owner,
 		};
-
 		await ctx.stub.putState(carNumber, Buffer.from(JSON.stringify(car)));
+
+		console.info('============= CHAINCODE EVENT : newcar ==========='); // eslint-disable-line
+		ctx.stub.setEvent('newcar', make);
+
+		console.info('============= TRANSIENT DATA : createCar ==========='); // eslint-disable-line
+		try {
+			const transientMap = ctx.stub.getTransient();
+			const value = transientMap.get('test');
+
+			if (value) {
+				const value_as_string = value.toString('utf8');
+				console.info('========= Found data of ' + value_as_string); // eslint-disable-line
+				return value_as_string;
+			}
+		} catch (error) {
+			console.info('Problem with the transient map in the proposal' + error.toString()); // eslint-disable-line
+			return ctx.stub.error(Buffer.from('Problem with the transient map in the proposal'));
+		}
+
 		console.info('============= END : Create Car ==========='); // eslint-disable-line
 	}
 

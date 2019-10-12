@@ -52,6 +52,15 @@ const Client = class extends BaseClient {
 	}
 
 	/**
+	 * Construct a Client object.
+	 *
+	 * @param {string} name - The name of the client.
+	 */
+	static newClient(name) {
+		return new Client(name);
+	}
+
+	/**
 	 * @typedef {Object} ConnectOptions
 	 * @property {string} url The committer URL with format of 'grpc(s)://host:port'.
 	 * @property {string} pem - The Endorser's TLS certificate, in PEM format,
@@ -107,6 +116,30 @@ const Client = class extends BaseClient {
 
 		const options = this.getConnectionOptions(opts);
 		const ssl_target_name_override = options['ssl-target-name-override'];
+
+		// make sure we have wait for ready timeout
+		const timeout = options['grpc-wait-for-ready-timeout'];
+		if (!timeout) {
+			options['grpc-wait-for-ready-timeout'] = 3000; // default 3 seconds
+		} else {
+			if (Number.isInteger(timeout)) {
+				logger.debug('%s grpc-wait-for-ready-timeout set to %s', method, timeout);
+			} else {
+				throw Error(`invalid grpc-wait-for-ready-timeout :: ${timeout}`);
+			}
+		}
+
+		// make sure we have wait for request timeout
+		const requestTimeout = options.requestTimeout;
+		if (!requestTimeout) {
+			options.requestTimeout = 3000; // default 3 seconds
+		} else {
+			if (Number.isInteger(requestTimeout)) {
+				logger.debug('%s requestTimeout set to %s', method, requestTimeout);
+			} else {
+				throw Error(`invalid requestTimeout :: ${requestTimeout}`);
+			}
+		}
 
 		if (typeof ssl_target_name_override === 'string') {
 			options['grpc.ssl_target_name_override'] = ssl_target_name_override;

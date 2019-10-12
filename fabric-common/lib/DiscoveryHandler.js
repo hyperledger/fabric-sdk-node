@@ -39,20 +39,20 @@ class DiscoveryHandler extends ServiceHandler {
 
 	/**
 	 * This will send transactions to all peers found by discovery.
-	 * @param {*} signed_envelope
+	 * @param {*} signedEnvelope
 	 * @param {Object} request - Include a 'mspid' when just peers from
 	 *  an organization are required
 	 */
-	async query(signed_envelope = checkParameter('signed_envelope'), request = {}) {
+	async query(signedEnvelope = checkParameter('signedEnvelope'), request = {}) {
 		const method = 'query';
 		logger.debug('%s - start', method);
 
-		const {request_timeout, mspid} = request;
+		const {requestTimeout, mspid} = request;
 		let results;
 
-		let timeout = getConfigSetting('request-timeout');
-		if (request_timeout) {
-			timeout = request_timeout;
+		let timeout = getConfigSetting('requestTimeout');
+		if (requestTimeout) {
+			timeout = requestTimeout;
 		}
 
 		// forces a refresh if needed
@@ -62,7 +62,7 @@ class DiscoveryHandler extends ServiceHandler {
 		if (endorsers && endorsers.length > 0) {
 			logger.debug('%s - found %s endorsers assigned to channel', method, endorsers.length);
 			const promises = endorsers.map(async (endorser) => {
-				return endorser.sendProposal(signed_envelope, timeout);
+				return endorser.sendProposal(signedEnvelope, timeout);
 			});
 			results = await settle(promises);
 			results.forEach((result) => {
@@ -84,18 +84,18 @@ class DiscoveryHandler extends ServiceHandler {
 	/**
 	 * This will submit transactions to be committed to one committer at time from a provided
 	 *  list or a list currently assigned to the channel.
-	 * @param {*} signed_proposal
+	 * @param {*} signedProposal
 	 * @param {Object} request
 	 */
-	async commit(signed_envelope = checkParameter('signed_envelope'), request = {}) {
+	async commit(signedEnvelope = checkParameter('signedEnvelope'), request = {}) {
 		const method = 'commit';
 		logger.debug('%s - start', method);
 
-		const {request_timeout, mspid} = request;
+		const {requestTimeout, mspid} = request;
 
-		let timeout = getConfigSetting('request-timeout');
-		if (request_timeout) {
-			timeout = request_timeout;
+		let timeout = getConfigSetting('requestTimeout');
+		if (requestTimeout) {
+			timeout = requestTimeout;
 		}
 
 		// force a refresh if needed
@@ -111,7 +111,7 @@ class DiscoveryHandler extends ServiceHandler {
 			for (const committer of committers) {
 				logger.debug('%s - sending to committer %s', method, committer.name);
 				try {
-					const results = await committer.sendBroadcast(signed_envelope, timeout);
+					const results = await committer.sendBroadcast(signedEnvelope, timeout);
 					if (results) {
 						if (results.status === 'SUCCESS') {
 							logger.debug('%s - Successfully sent transaction to the committer %s', method, committer.name);
@@ -140,16 +140,16 @@ class DiscoveryHandler extends ServiceHandler {
 	/**
 	 * This method will submit transactions to be endorsed to endorsers as
 	 * determined by the endorser's discovery service
-	 * @param {*} signed_proposal
+	 * @param {*} signedProposal
 	 * @param {*} request
 	 */
-	async endorse(signed_proposal = checkParameter('signed_proposal'), request = {}) {
+	async endorse(signedProposal = checkParameter('signedProposal'), request = {}) {
 		const method = 'endorse';
 		logger.debug('%s - start', method);
 
-		let timeout = getConfigSetting('request-timeout');
-		if (request.request_timeout) {
-			timeout = request.request_timeout;
+		let timeout = getConfigSetting('requestTimeout');
+		if (request.requestTimeout) {
+			timeout = request.requestTimeout;
 		}
 
 		const results = await this.discovery.getDiscoveryResults(true);
@@ -157,7 +157,7 @@ class DiscoveryHandler extends ServiceHandler {
 		if (results && results.endorsement_plan) {
 			const working_discovery = JSON.parse(JSON.stringify(results.endorsement_plan));
 
-			return this._endorse(working_discovery, request, signed_proposal, timeout);
+			return this._endorse(working_discovery, request, signedProposal, timeout);
 		} else {
 			throw Error('No endorsement plan available');
 		}

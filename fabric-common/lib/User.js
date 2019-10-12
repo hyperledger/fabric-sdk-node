@@ -80,6 +80,14 @@ const User = class {
 	}
 
 	/**
+	 * Get the enrollment secret.
+	 * @returns {string} The password.
+	 */
+	getEnrollmentSecret() {
+		return this._enrollmentSecret;
+	}
+
+	/**
 	 * Set the roles.
 	 * @param roles {string[]} The roles.
 	 */

@@ -101,9 +101,9 @@ describe('ServiceAction', () => {
 		it('should get signed proposal', () => {
 			serviceAction._payload = Buffer.from('payload');
 			serviceAction._signature = Buffer.from('signature');
-			const signed_proposal = serviceAction.getSignedProposal();
-			should.equal(signed_proposal.getProposalBytes().toBuffer().toString('hex'), serviceAction._payload.toString('hex'));
-			should.equal(signed_proposal.getSignature().toBuffer().toString('hex'), serviceAction._signature.toString('hex'));
+			const signedProposal = serviceAction.getSignedProposal();
+			should.equal(signedProposal.getProposalBytes().toBuffer().toString('hex'), serviceAction._payload.toString('hex'));
+			should.equal(signedProposal.getSignature().toBuffer().toString('hex'), serviceAction._signature.toString('hex'));
 		});
 	});
 
@@ -111,9 +111,9 @@ describe('ServiceAction', () => {
 		it('should get signed envelope', () => {
 			serviceAction._payload = Buffer.from('payload');
 			serviceAction._signature = Buffer.from('signature');
-			const signed_envelope = serviceAction.getSignedEnvelope();
-			should.equal(signed_envelope.payload.toString('hex'), serviceAction._payload.toString('hex'));
-			should.equal(signed_envelope.signature.toString('hex'), serviceAction._signature.toString('hex'));
+			const signedEnvelope = serviceAction.getSignedEnvelope();
+			should.equal(signedEnvelope.payload.toString('hex'), serviceAction._payload.toString('hex'));
+			should.equal(signedEnvelope.signature.toString('hex'), serviceAction._signature.toString('hex'));
 		});
 	});
 

@@ -7,9 +7,11 @@
 Feature: Use the v2.0 chaincode lifecycle process
 
 	Background:
+		Given I put a log message CHAINCODE LIFECYCLE TESTING
 		Given I have forcibly taken down all docker containers
 
 	Scenario: Using the SDK I can run new chaincode
+		Given I have forcibly taken down all docker containers
 		Given I have deployed a tls Fabric network
 		Given I have created fabric-client network instances
 		Then I can create and join a version_two capabilities channel named lifecyclechannel to two organizations
