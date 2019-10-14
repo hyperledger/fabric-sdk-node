@@ -162,14 +162,12 @@ class Signer {
      *
      * Note that when a signature of a hash of a larger message is needed,
      * the caller is responsible for hashing the larger message and passing
-     * the hash (as digest) and the hash function (as opts) to Sign.
+     * the hash (as digest) to Sign.
 	 *
 	 * @param {byte[]} digest The message to sign
-	 * @param {Object} opts
-	 *      hashingFunction: the function to use to hash
 	 */
-	sign(digest, opts) {
-		return this._cryptoSuite.sign(this._key, digest, opts);
+	sign(digest) {
+		return this._cryptoSuite.sign(this._key, digest);
 	}
 }
 
@@ -233,7 +231,7 @@ class SigningIdentity extends Identity {
 		}
 
 		const digest = hashFunction(msg);
-		return this._signer.sign(Buffer.from(digest, 'hex'), null);
+		return this._signer.sign(Buffer.from(digest, 'hex'));
 	}
 
 	static isInstance(object) {

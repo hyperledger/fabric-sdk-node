@@ -187,7 +187,7 @@ test('\n\n**PKCS11 - Test generate ephemeral ECDSA key pair, sign, and verify.\n
 		t.pass('Successfully generated ECDSA key pair');
 
 		const message = 'Hello World!';
-		const sig = cryptoUtils.sign(key, Buffer.from(message), null);
+		const sig = cryptoUtils.sign(key, Buffer.from(message));
 		t.pass('Successfully signed message');
 
 		const v = cryptoUtils.verify(key, sig, Buffer.from(message));
@@ -223,7 +223,7 @@ test('\n\n**PKCS11 - Test sign and verify with non-ephemeral ECDSA key pair in t
 		t.true(!!key, 'Successfully recovered key from store using calculated SKI');
 
 		const message = 'Hello World!';
-		const sig = cryptoUtils.sign(key, Buffer.from(message), null);
+		const sig = cryptoUtils.sign(key, Buffer.from(message));
 
 		const v = cryptoUtils.verify(key, sig, Buffer.from(message));
 		t.equal(v, true, 'Successfully verified signature');
