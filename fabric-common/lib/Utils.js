@@ -92,8 +92,6 @@ module.exports.newKeyValueStore = async (options) => {
 	return store;
 };
 
-const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];
-
 //
 // Internal API.
 // Notice this API is only used at the SDK scope. For the client application, do not use
@@ -102,7 +100,7 @@ const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];
 // Get the standard logger to use throughout the SDK code. If the client application has
 // configured a logger, then that'll be returned.
 //
-// The user can also make user of the built-in "winston" based logger and use the environment
+// The user can also make use of the built-in "winston" based logger and use the environment
 // variable HFC_LOGGING to pass in configurations in the following format:
 //
 // {
@@ -111,13 +109,17 @@ const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];
 //   'info': 'console'					// 'console' is a keyword for logging to console
 // }
 //
+
+const LOGGING_LEVELS = ['debug', 'info', 'warn', 'error'];
+
 module.exports.getLogger = function (name) {
-	const saveLogger = function (logger) {
+	let logger;
+	const saveLogger = function (loggerToSave) {
 		if (global.hfc) {
-			global.hfc.logger = logger;
+			global.hfc.logger = loggerToSave;
 		} else {
 			global.hfc = {
-				logger: logger
+				logger: loggerToSave
 			};
 		}
 	};
@@ -131,7 +133,7 @@ module.exports.getLogger = function (name) {
 	};
 
 	const insertLoggerName = (originalLogger, lname) => {
-		const logger = Object.assign({}, originalLogger);
+		logger = Object.assign({}, originalLogger);
 
 		LOGGING_LEVELS.forEach((method) => {
 			const func = originalLogger[method];
@@ -165,7 +167,7 @@ module.exports.getLogger = function (name) {
 				throw new Error('Environment variable "HFC_LOGGING" must be an object conforming to the format documented.');
 			}
 			for (const level in config) {
-				if (!config.hasOwnProperty(level)) {
+				if (!config[level]) {
 					continue;
 				}
 
@@ -194,21 +196,21 @@ module.exports.getLogger = function (name) {
 				}
 			}
 
-			const logger = new winston.Logger(options);
+			logger = new winston.Logger(options);
 			logger.debug('Successfully constructed a winston logger with configurations', config);
 			saveLogger(logger);
 			return insertLoggerName(logger, name);
 		} catch (err) {
 			// the user's configuration from environment variable failed to parse.
 			// construct the default logger, log a warning and return it
-			const logger = newDefaultLogger();
+			logger = newDefaultLogger();
 			saveLogger(logger);
 			logger.log('warn', 'Failed to parse environment variable "HFC_LOGGING". Returned a winston logger with default configurations. Error: %s', err.stack ? err.stack : err);
 			return insertLoggerName(logger, name);
 		}
 	}
 
-	const logger = newDefaultLogger();
+	logger = newDefaultLogger();
 	saveLogger(logger);
 	logger.debug('Returning a new winston logger with default configurations');
 	return insertLoggerName(logger, name);

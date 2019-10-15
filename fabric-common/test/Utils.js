@@ -9,10 +9,12 @@ const {Utils} = require('..');
 const path = require('path');
 const CryptoSuite_ECDSA_AES = require('../lib/impl/CryptoSuite_ECDSA_AES');
 const testUtils = require('./TestUtils');
-
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const sinonChai = require('sinon-chai');
+const tmp = require('tmp');
+const fs = require('fs-extra');
+const winston = require('winston');
 
 const should = chai.should();
 chai.use(chaiAsPromised);
@@ -96,4 +98,101 @@ describe('Utils', () => {
 
 	});
 
+	describe('getLogger', () => {
+
+		const loggingSetting = Utils.getConfigSetting('hfc-logging');
+
+		it('should return a default winston logger', () => {
+			testUtils.setHFCLogging('undefined');
+			const logger = Utils.getLogger('testLogger');
+
+			logger.transports.should.be.an.instanceOf(Object);
+			logger.transports.console.should.be.an.instanceOf(winston.transports.Console);
+			logger.transports.console.exceptionsLevel.should.equal('error');
+			logger.level.should.equal('info');
+		});
+
+		it('should return a default logger if the settings are defined incorrectly', () => {
+			testUtils.setHFCLogging("{'debug': 'console'}"); // eslint-disable-line quotes
+
+			const logger = Utils.getLogger('testLogger');
+			logger.transports.console.should.be.an.instanceOf(winston.transports.Console);
+			logger.transports.console.exceptionsLevel.should.equal('error');
+			logger.level.should.equal('info');
+		});
+
+		it('should return a default logger if the settings are defined illegally', () => {
+			testUtils.setHFCLogging(5435453);
+
+			const logger = Utils.getLogger('testLogger');
+			logger.transports.console.should.be.an.instanceOf(winston.transports.Console);
+			logger.transports.console.exceptionsLevel.should.equal('error');
+			logger.level.should.equal('info');
+		});
+
+		describe('log to a file', async () => {
+			let debugFilePath;
+			let errorFilePath;
+			let dir;
+
+			before(async () => {
+				// create a temp file
+				dir = tmp.dirSync();
+				debugFilePath  = path.join(dir.name, 'debug.log');
+				errorFilePath = path.join(dir.name, 'error.log');
+				await fs.ensureFile(debugFilePath);
+				await fs.ensureFile(errorFilePath);
+			});
+
+			it('should write to a log file with the correct logging level', async () => {
+				testUtils.setHFCLogging(`{"debug": "${debugFilePath}", "error": "${errorFilePath}"}`);
+
+				const loggerName = 'fileLogger';
+				const logger = Utils.getLogger(loggerName);
+				logger.transports.should.be.an.instanceOf(Object);
+				logger.transports.debugfile.should.be.an.instanceOf(winston.transports.File);
+				logger.transports.debugfile.dirname.should.equal(dir.name);
+				logger.transports.errorfile.should.be.an.instanceOf(winston.transports.File);
+				logger.transports.errorfile.dirname.should.equal(dir.name);
+
+				// Log to the file
+				logger.error('Test logger - error');
+				logger.warn('Test logger - warn');
+				logger.info('Test logger - info');
+				logger.debug('Test logger - debug');
+
+				// wait for the logger to log
+				await new Promise(resolve => setTimeout(resolve, 10));
+
+				// read the debug file
+				const debugData = await fs.readFile(debugFilePath);
+				// debug file should contain all logging
+				debugData.indexOf(`error: [${loggerName}]: Test logger - error`).should.be.greaterThan(0);
+				debugData.indexOf(`warn: [${loggerName}]: Test logger - warn`).should.be.greaterThan(0);
+				debugData.indexOf(`info: [${loggerName}]: Test logger - info`).should.be.greaterThan(0);
+				debugData.indexOf(`debug: [${loggerName}]: Test logger - debug`).should.be.greaterThan(0);
+				debugData.indexOf('Successfully constructed a winston logger with configurations').should.be.greaterThan(0);
+
+				// read the error file
+				const errorData = await fs.readFile(errorFilePath);
+				// error file should only contain errors
+				errorData.indexOf(`error: [${loggerName}]: Test logger - error`).should.be.greaterThan(0);
+				errorData.indexOf('Test logger - warn').should.equal(-1);
+				errorData.indexOf('Test logger - info').should.equal(-1);
+				errorData.indexOf('Test logger - debug').should.equal(-1);
+			});
+
+			after(async () => {
+				// Remove tmp dir
+				await fs.remove(dir.name);
+			});
+
+		});
+
+		after(async () => {
+			// restore logging settings
+			Utils.setConfigSetting('hfc-logging', loggingSetting);
+
+		});
+	});
 });

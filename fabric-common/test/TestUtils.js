@@ -23,6 +23,11 @@ module.exports.setCryptoConfigSettings = () => {
 	Utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');
 };
 
+module.exports.setHFCLogging = (value) => {
+	Utils.setConfigSetting('hfc-logging', value);
+	global.hfc.logger = undefined;
+};
+
 module.exports.createErrorResponse = (message) => {
 	const proposalResponse = module.exports.createProposalResponse(message, 500);
 

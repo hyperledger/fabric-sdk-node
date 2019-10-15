@@ -12,7 +12,6 @@ const util = require('util');
 const Client = require('fabric-client');
 const copService = require('fabric-ca-client/lib/FabricCAServices.js');
 const {Utils:utils, User} = require('fabric-common');
-const Constants = require('./constants.js');
 const logger = utils.getLogger('TestUtil');
 
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
@@ -52,7 +51,7 @@ module.exports.NETWORK_END2END = {
 };
 
 // all temporary files and directories are created under here
-const tempdir = Constants.tempdir;
+const tempdir = path.join(__dirname, '../temp');
 
 logger.info(util.format(
 	'\n\n*******************************************************************************' +

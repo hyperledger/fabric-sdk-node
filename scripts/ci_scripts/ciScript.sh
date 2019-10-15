@@ -98,7 +98,7 @@ sdk_e2e_Tests() {
   fi
 
   echo " ########################"
-  echo -e "\033[1m R U N  g u l p T E S T S \033[0m"
+  echo -e "\033[1m RUN  gulp TESTS \033[0m"
   echo " ####################### "
 
   echo -e "\033[32m Execute Headless and Integration Tests" "\033[0m"
@@ -106,16 +106,8 @@ sdk_e2e_Tests() {
   gulp test || err_Check "ERROR!!! gulp test failed"
   set +x
 
-  echo " ############################# "
-  echo -e "\033[1m  R U N  test-logging T E S T S \033[0m"
-  echo " ############################# "
-
-  set -x
-  gulp test-logging || err_Check "ERROR!!! gulp test-logging failed"
-  set +x
-
   echo " ################################## "
-  echo -e "\033[1m  R U N run-test-scenario  T E S T S \033[0m"
+  echo -e "\033[1m  RUN run-test-scenario  TESTS \033[0m"
   echo " ################################## "
 
   echo -e "\033[32m Execute cucumber tests" "\033[0m"
