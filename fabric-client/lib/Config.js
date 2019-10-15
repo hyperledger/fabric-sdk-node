@@ -53,8 +53,8 @@ const Config = class {
 	//
 	reorderFileStores(path, bottom) {
 		// first remove all the file stores
-		for (const x in this._fileStores) {
-			this._config.remove(this._fileStores[x]);
+		for (const fileStore of this._fileStores) {
+			this._config.remove(fileStore);
 		}
 
 		if (bottom) {
@@ -66,9 +66,8 @@ const Config = class {
 		}
 
 		// now load all the file stores
-		for (const x in this._fileStores) {
-			const name = this._fileStores[x];
-			this._config.file(name, name);
+		for (const fileStore of this._fileStores) {
+			this._config.file(fileStore, fileStore);
 		}
 	}
 
