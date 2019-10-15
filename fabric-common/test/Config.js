@@ -75,38 +75,33 @@ describe('Config', () => {
 	});
 
 	describe('#reorderFileStores', () => {
-		let configStub;
-		let fileStoresStub;
+
+		let config;
 
 		beforeEach(() => {
-			configStub = {remove: () => {}, file: () => {}};
-			sandbox.stub(configStub);
-			fileStoresStub = {push: () => {}, unshift: () => {}};
-			sandbox.stub(fileStoresStub);
+			config = new Config();
 		});
 
-		it('should re-add file store items where bottom is false', () => {
-			const config = new Config();
-			config._fileStores = fileStoresStub;
-			config._config = configStub;
-			config.reorderFileStores('path', false);
-			sinon.assert.calledWith(configStub.remove, fileStoresStub.push);
-			sinon.assert.calledWith(configStub.remove, fileStoresStub.unshift);
-			sinon.assert.calledWith(fileStoresStub.unshift, 'path');
-			sinon.assert.calledWith(configStub.file, fileStoresStub.push, fileStoresStub.push);
-			sinon.assert.calledWith(configStub.file, fileStoresStub.unshift, fileStoresStub.unshift);
+		it('should add the new file store to the bottom of an empty list', () => {
+			config.reorderFileStores('/some/path', true);
+			config._fileStores.should.deep.equal(['/some/path']);
 		});
 
-		it('should re-add file store items where bottom is true', () => {
-			const config = new Config();
-			config._fileStores = fileStoresStub;
-			config._config = configStub;
-			config.reorderFileStores('path', true);
-			sinon.assert.calledWith(configStub.remove, fileStoresStub.push);
-			sinon.assert.calledWith(configStub.remove, fileStoresStub.unshift);
-			sinon.assert.calledWith(fileStoresStub.push, 'path');
-			sinon.assert.calledWith(configStub.file, fileStoresStub.push, fileStoresStub.push);
-			sinon.assert.calledWith(configStub.file, fileStoresStub.unshift, fileStoresStub.unshift);
+		it('should add the new file store to the bottom of an non-empty list', () => {
+			config._fileStores = ['/some/other/path1', '/some/other/path2'];
+			config.reorderFileStores('/some/path', true);
+			config._fileStores.should.deep.equal(['/some/other/path1', '/some/other/path2', '/some/path']);
+		});
+
+		it('should add the new file store to the front of an empty list', () => {
+			config.reorderFileStores('/some/path', false);
+			config._fileStores.should.deep.equal(['/some/path']);
+		});
+
+		it('should add the new file store to the front of an non-empty list', () => {
+			config._fileStores = ['/some/other/path1', '/some/other/path2'];
+			config.reorderFileStores('/some/path', false);
+			config._fileStores.should.deep.equal(['/some/path', '/some/other/path1', '/some/other/path2']);
 		});
 	});
 
