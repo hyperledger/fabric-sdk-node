@@ -4,16 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const Client = require('fabric-client');
 const nano = require('nano');
-const Cloudant = require('@cloudant/cloudant');
-
-module.exports.getCloudantClient = function() {
-	const username = Client.getConfigSetting('cloudant-username', 'notfound');
-	const password = Client.getConfigSetting('cloudant-password', 'notfound');
-
-	return Cloudant({account: username, password: password});
-};
 
 module.exports.destroy = function(name, url) {
 	this._url = url;

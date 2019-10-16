@@ -20,7 +20,7 @@ STABLE_TAG=$ARCH-$STABLE_VERSION
 echo "---------> STABLE_VERSION:" $STABLE_VERSION
 
 dockerTag() {
-  for IMAGES in ca peer orderer ccenv baseos nodeenv javaenv; do
+  for IMAGES in ca peer orderer ccenv baseos nodeenv javaenv tools; do
     echo "Images: $IMAGES"
     echo
     docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG

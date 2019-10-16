@@ -67,7 +67,8 @@ services:
     container_name: peer
     image: hyperledger/fabric-peer${DOCKER_IMG_TAG}
     environment:
-      - CORE_CHAINCODE_EXECUTETIMEOUT=999999
+      - CORE_CHAINCODE_EXECUTETIMEOUT=400s
+      - CORE_CHAINCODE_DEPLOYTIMEOUT=400s
 
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ADDRESSAUTODETECT=true

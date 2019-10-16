@@ -300,7 +300,6 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 			'test/integration/query.js',
 			'test/integration/client.js',
 			'test/integration/orderer-channel-tests.js',
-			'test/integration/cloudant-fabricca-tests.js',
 			'test/integration/couchdb-fabricca-tests.js',
 			'test/integration/fileKeyValueStore-fabricca-tests.js',
 			'test/integration/install.js',
@@ -316,7 +315,6 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 			'test/integration/invoke.js',
 			'test/integration/network-config.js',
 			'test/integration/only-admin.js',
-			'test/integration/javachaincode/e2e.js',
 			'test/integration/discovery.js',
 			'test/integration/grpc.js',
 
@@ -331,8 +329,6 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 // Filter out tests that should not be run on specific operating systems since only the x64 CI jobs are configured with SoftHSM
 // - disable the pkcs11 (HSM) tests for s390 (non x86)
 // - may be enabled manually with an environment variable, (actually left enabled, but disable the non HSM version of the e2e test)
-// - disable javachaincode except for x86 environment
-// - may enable the java testing with environment variable
 function shouldRunTests(tests) {
 	if (arch.startsWith('s390')) {
 		// for now always disable the pkcs11 testing on s390
@@ -345,12 +341,6 @@ function shouldRunTests(tests) {
 	} else {
 		// default is to run the PKCS11 tests so we need to disable the non HSM version
 		tests.push('!test/integration/network-e2e/e2e.js');
-	}
-	// keep the java tests
-	if (typeof process.env.JAVA_TESTS === 'string' && process.env.JAVA_TESTS.toLowerCase() === 'true') {
-		// disable when z390 or when JAVA tests is off
-	} else if ((arch.indexOf('s390') === 0) || (typeof process.env.JAVA_TESTS === 'string' && process.env.JAVA_TESTS.toLowerCase() === 'false')) {
-		tests.push('!test/integration/javachaincode/e2e.js');
 	}
 
 	return tests;
