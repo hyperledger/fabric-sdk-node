@@ -27,12 +27,12 @@ export async function cli_chaincode_install_for_org(ccType: string, ccName: stri
 	const persistName = `${ccName}@${ccVersion}`;
 	if (AdminUtils.isContractInstalled(persistName)) {
 		// Do not reinstall
-		BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been installed on the peers for organization ${orgName}`, undefined);
+		BaseUtils.logMsg(`Smart contract ${persistName} has already been installed on the peers for organization ${orgName}`, undefined);
 		return;
 	} else {
 		try {
 			// Use CLI container to install smart contract (no TLS options required)
-			BaseUtils.logMsg(`Attempting to install smart contract ${ccName} at version ${ccVersion} for organization ${orgName} using the CLI`, undefined);
+			BaseUtils.logMsg(`Attempting to install smart contract ${persistName} for organization ${orgName} using the CLI`, undefined);
 
 			const ccPath = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName);
 			let installCommand: string[];
@@ -45,6 +45,7 @@ export async function cli_chaincode_install_for_org(ccType: string, ccName: stri
 			];
 
 			await commandRunner.runShellCommand(true, installCommand.join(' '), VERBOSE_CLI);
+			await BaseUtils.sleep(Constants.INC_SHORT);
 
 			// Update state store with <name>@<version>
 			AdminUtils.addToInstalledContracts(persistName);

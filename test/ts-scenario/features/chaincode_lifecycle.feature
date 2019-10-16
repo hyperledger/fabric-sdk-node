@@ -1,0 +1,56 @@
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+@lifecycle
+Feature: Use the v2.0 chaincode lifecycle process to perform lifecycle operations on all supported smart contract languages
+
+	Background:
+		Given I place a scenario start message LIFECYCLE SDK FEATURE
+		Given I deploy a tls Fabric network
+		And I use the cli to create and join the channel named lifecyclechannel on the deployed network
+
+	Scenario: Using the SDK I can run node smart contracts thorugh their lifecycle on a two org network
+		Given I package a node contract at version v1 named legacyNode as organizations [Org1,Org2] with initialization required
+		When I install a packaged contract named legacyNode as organizations [Org1,Org2]
+		Then I can retrieve an installed contract package named legacyNode as organizations [Org1,Org2] on channel lifecyclechannel
+		When I approve the installed contract named legacyNode as organizations [Org1,Org2] on channel lifecyclechannel with endorsement policy 1ofAny
+		Then I can query commit readiness for contract named legacyNode as organizations [Org1,Org2] on channel lifecyclechannel with expected approvals status of {"Org1MSP":true,"Org2MSP":true}
+		When I call commit on contract named legacyNode as organization Org1 on channel lifecyclechannel
+		Then I can query for defined contract named legacyNode as organizations [Org1,Org2] on channel lifecyclechannel with expected result including {"init_required":true,"version":"v1", "sequence":"1", "validation_plugin": "vscc", "endorsement_plugin": "escc"}
+		And I can submit invalid function penguin on contract named legacyNode as organization Org1 on channel lifecyclechannel with args [] I receive an error with status 500 and message containing invalid invocation: chaincode 'legacyNode' has not been initialized for this version, must call as init first
+		And I can submit function init on contract named legacyNode as organization Org1 on channel lifecyclechannel with args ["a","1000","b","2000"]
+		And I can submit invalid function penguin on contract named legacyNode as organization Org1 on channel lifecyclechannel with args [] I receive an error with status 500 and message containing Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: penguin
+		And I can submit function move on contract named legacyNode as organization Org1 on channel lifecyclechannel with args ["a","b","100"]
+		And I can submit function query on contract named legacyNode as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
+		And I can query function query on contract named legacyNode as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
+
+	Scenario: Using the SDK I can run Java smart contracts thorugh their lifecycle on a two org network
+		Given I package a java contract at version v1 named legacyJava as organizations [Org1,Org2] with initialization required
+		When I install a packaged contract named legacyJava as organizations [Org1,Org2]
+		Then I can retrieve an installed contract package named legacyJava as organizations [Org1,Org2] on channel lifecyclechannel
+		When I approve the installed contract named legacyJava as organizations [Org1,Org2] on channel lifecyclechannel with endorsement policy 1ofAny
+		Then I can query commit readiness for contract named legacyJava as organizations [Org1,Org2] on channel lifecyclechannel with expected approvals status of {"Org1MSP":true,"Org2MSP":true}
+		When I call commit on contract named legacyJava as organization Org1 on channel lifecyclechannel
+		Then I can query for defined contract named legacyJava as organizations [Org1,Org2] on channel lifecyclechannel with expected result including {"init_required":true,"version":"v1", "sequence":"1", "validation_plugin": "vscc", "endorsement_plugin": "escc"}
+		And I can submit invalid function penguin on contract named legacyJava as organization Org1 on channel lifecyclechannel with args [] I receive an error with status 500 and message containing invalid invocation: chaincode 'legacyJava' has not been initialized for this version, must call as init first
+		And I can submit function init on contract named legacyJava as organization Org1 on channel lifecyclechannel with args ["a","1000","b","2000"]
+		And I can submit invalid function penguin on contract named legacyJava as organization Org1 on channel lifecyclechannel with args [] I receive an error with status 500 and message containing Invalid invoke function name. Expecting one of: ["move", "delete", "query"] but found::penguin
+		And I can submit function move on contract named legacyJava as organization Org1 on channel lifecyclechannel with args ["a","b","100"]
+		And I can submit function query on contract named legacyJava as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
+		And I can query function query on contract named legacyJava as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
+
+	Scenario: Using the SDK I can run GoLang smart contracts thorugh their lifecycle on a two org network
+		Given I package a golang contract at version v1 named legacyGo as organizations [Org1,Org2] with initialization required
+		When I install a packaged contract named legacyGo as organizations [Org1,Org2]
+		Then I can retrieve an installed contract package named legacyGo as organizations [Org1,Org2] on channel lifecyclechannel
+		When I approve the installed contract named legacyGo as organizations [Org1,Org2] on channel lifecyclechannel with endorsement policy 1ofAny
+		Then I can query commit readiness for contract named legacyGo as organizations [Org1,Org2] on channel lifecyclechannel with expected approvals status of {"Org1MSP":true,"Org2MSP":true}
+		When I call commit on contract named legacyGo as organization Org1 on channel lifecyclechannel
+		Then I can query for defined contract named legacyGo as organizations [Org1,Org2] on channel lifecyclechannel with expected result including {"init_required":true,"version":"v1", "sequence":"1", "validation_plugin": "vscc", "endorsement_plugin": "escc"}
+		And I can submit invalid function penguin on contract named legacyGo as organization Org1 on channel lifecyclechannel with args [] I receive an error with status 500 and message containing invalid invocation: chaincode 'legacyGo' has not been initialized for this version, must call as init first
+		And I can submit function init on contract named legacyGo as organization Org1 on channel lifecyclechannel with args ["a","1000","b","2000"]
+		And I can submit invalid function penguin on contract named legacyGo as organization Org1 on channel lifecyclechannel with args [] I receive an error with status 500 and message containing Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'. But got: penguin
+		And I can submit function move on contract named legacyGo as organization Org1 on channel lifecyclechannel with args ["a","b","100"]
+		And I can submit function query on contract named legacyGo as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
+		And I can query function query on contract named legacyGo as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900

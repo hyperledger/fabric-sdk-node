@@ -8,15 +8,12 @@ import { Constants } from '../constants';
 import { CommonConnectionProfile } from './commonConnectionProfile';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
-import { StateStore } from './utility/stateStore';
 
 import * as Client from 'fabric-client';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const stateStore = StateStore.getInstance();
 const supportedLanguageTypes = ['node', 'golang'];
-const chaincodeRootPath = '../../../ts-fixtures/chaincode';
 
 export async function sdk_chaincode_install_for_org(ccType: string, ccName: string,  ccVersion: string, chaincodeId: string, tls: boolean, ccp: CommonConnectionProfile, orgName: string, channelName: string) {
 
@@ -75,7 +72,7 @@ export async function sdk_chaincode_install_for_org(ccType: string, ccName: stri
 		await AdminUtils.getSubmitter(client, true /* get peer org admin */, orgName, ccp);
 
 		// chaincode and metadata paths
-		const chaincodePath = path.join(__dirname, chaincodeRootPath, ccType, ccName);
+		const chaincodePath = path.join(__dirname, Constants.LIB_TO_CHAINCODE, ccType, ccName);
 		const metadataPath = path.join(chaincodePath, 'metadata');
 
 		// send proposal to endorser
@@ -132,10 +129,10 @@ export async function sdk_chaincode_install_for_org(ccType: string, ccName: stri
  * @param {CommonConnectionProfile} ccp The common connection profile
  * @param {String} orgName The name of the organization to use
  * @param {String} channelName The channel name
- * @param {String} policy The endorsement policy object from the configuration file.
+ * @param {Object} policy The endorsement policy object from the configuration file.
  * @return {Promise} The return promise.
  */
-export async function sdk_chaincode_instantiate(ccName: string, ccType: string, ccVersion: string, chaincodeId: string, args: string, upgrade: boolean, tls: boolean, ccp: CommonConnectionProfile, orgName: string, channelName: string, policy: string) {
+export async function sdk_chaincode_instantiate(ccName: string, ccType: string, ccVersion: string, chaincodeId: string, args: string, upgrade: boolean, tls: boolean, ccp: CommonConnectionProfile, orgName: string, channelName: string, policy: any) {
 	if (!supportedLanguageTypes.includes(ccType)) {
 		Promise.reject(`Unsupported test ccType: ${ccType}`);
 	}
@@ -200,7 +197,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: string, 
 		await channel.initialize();
 
 		const transientMap = {test: 'transientValue'};
-		const ccPath = path.join(__dirname, chaincodeRootPath, ccName, ccType);
+		const ccPath = path.join(__dirname, Constants.LIB_TO_CHAINCODE, ccName, ccType);
 		const proposalRequest = buildChaincodeProposal(client, chaincodeId, ccPath, ccVersion, ccType, args, upgrade, transientMap, policy);
 
 		let results;

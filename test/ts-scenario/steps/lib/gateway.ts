@@ -10,7 +10,6 @@ import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 import { StateStore } from './utility/stateStore';
 
-import * as FabricCAServices from 'fabric-ca-client';
 import { Gateway, Wallet, Wallets } from 'fabric-network';
 import * as fs from 'fs';
 
@@ -28,7 +27,7 @@ const txnResponseTypes = ['evaluate', 'error', 'submit'];
  * @param {Boolean} useDiscovery toggle discovery on
  * @return {Gateway} the connected gateway
  */
-export async function CreateGateway(ccp: CommonConnectionProfile, tls: boolean, userName: string, orgName: string, gatewayName: string, useDiscovery: boolean) {
+export async function createGateway(ccp: CommonConnectionProfile, tls: boolean, userName: string, orgName: string, gatewayName: string, useDiscovery: boolean) {
 
 	// Might already have a wallet to use
 	let wallet = stateStore.get(Constants.WALLET);
@@ -78,8 +77,11 @@ export async function CreateGateway(ccp: CommonConnectionProfile, tls: boolean, 
 	};
 
 	await gateway.connect(ccp.getProfile(), opts);
-
+	addGatewayObjectToStateStore(gatewayName, gateway);
 	BaseUtils.logMsg(`Gateway ${gatewayName} connected`, undefined);
+}
+
+function addGatewayObjectToStateStore(gatewayName: string, gateway: any) {
 	let gateways = stateStore.get(Constants.GATEWAYS);
 	if (gateways) {
 		gateways.set(gatewayName, { gateway });
@@ -89,6 +91,25 @@ export async function CreateGateway(ccp: CommonConnectionProfile, tls: boolean, 
 	}
 
 	stateStore.set(Constants.GATEWAYS, gateways);
+}
+
+function getGatewayObject(gatewayName: string) {
+	const gateways = stateStore.get(Constants.GATEWAYS);
+	if (gateways.get(gatewayName)) {
+		return gateways.get(gatewayName);
+	} else {
+		return undefined;
+	}
+}
+
+export function getGateway(gatewayName: string) {
+	const gateways = stateStore.get(Constants.GATEWAYS);
+	if (gateways.get(gatewayName)) {
+		return gateways.get(gatewayName).gateway;
+	} else {
+		const msg = `Gateway named ${gatewayName} is not present in the state store`;
+		BaseUtils.logAndThrow(msg);
+	}
 }
 
 /**
@@ -135,7 +156,7 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfile, orgNa
  * @param {String} txnType the type of transaction (submit/evaluate)
  * @return {Object} resolved Promise if a submit transaction; evaluate result if not
  */
-export async function PerformGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string) {
+export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string) {
 	// What type of txn is this?
 	if (txnTypes.indexOf(txnType) === -1) {
 		throw  new Error(`Unknown transaction type ${txnType}, must be one of ${txnTypes}`);
@@ -185,7 +206,7 @@ export async function PerformGatewayTransaction(gatewayName: string, contractNam
  * @param {String} contractId the smart contract ID to retrieve the smart contract for
  * @return {Contract} the contract for the instantiated smart contract ID on the channel
  */
-async function retrieveContractFromGateway(gateway: Gateway, channelName: string, contractId: string) {
+export async function retrieveContractFromGateway(gateway: Gateway, channelName: string, contractId: string) {
 	try {
 		BaseUtils.logMsg(`Retrieving contract from channel ${channelName}`, undefined);
 		const network = await gateway.getNetwork(channelName);
@@ -202,7 +223,7 @@ async function retrieveContractFromGateway(gateway: Gateway, channelName: string
  * @param {String} gatewayName gateway name
  * @param {String} type type of response
  */
-export function LastTransactionTypeCompare(gatewayName: string, type: string) {
+export function lastTransactionTypeCompare(gatewayName: string, type: string) {
 	const gateways = stateStore.get(Constants.GATEWAYS);
 	const gatewayObj = gateways.get(gatewayName);
 
@@ -225,7 +246,7 @@ export function LastTransactionTypeCompare(gatewayName: string, type: string) {
  * Retrieve the last gateway transaction result
  * @param {String} type type of response
  */
-export function GetLastTransactionResult(gatewayName: string) {
+export function getLastTransactionResult(gatewayName: string) {
 	const gatewayObj = getGatewayObject(gatewayName);
 	return gatewayObj.result;
 }
@@ -235,24 +256,15 @@ export function GetLastTransactionResult(gatewayName: string) {
  * @param {String} type type of response
  * @param {*} msg the message to compare against
  */
-export function LastTransactionResponseCompare(gatewayName: string, msg: string) {
+export function lastTransactionResponseCompare(gatewayName: string, msg: string) {
 	const gatewayObj = getGatewayObject(gatewayName);
 	return (gatewayObj.result.response.localeCompare(msg) === 0);
-}
-
-function getGatewayObject(gatewayName: string) {
-	const gateways = stateStore.get(Constants.GATEWAYS);
-	if (gateways.get(gatewayName)) {
-		return gateways.get(gatewayName);
-	} else {
-		return undefined;
-	}
 }
 
 /**
  * Disconnect all gateways within the `gateways` Map
  */
-export async function DisconnectAllGateways() {
+export async function disconnectAllGateways() {
 	try {
 		const gateways = stateStore.get(Constants.GATEWAYS);
 		if (gateways) {

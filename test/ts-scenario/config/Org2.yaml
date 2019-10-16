@@ -1,0 +1,60 @@
+---
+#
+# The network connection profile provides client applications the information about the target
+# blockchain network that are necessary for the applications to interact with it. These are all
+# knowledge that must be acquired from out-of-band sources. This file provides such a source.
+#
+name: "global-trade-network"
+
+#
+# Describes the type of the backend, "hl-fabric" for Hyperledger Fabric, "hl-stl" for Hyperledger
+# Sawtooth Lake, etc.
+#
+type: "hl-fabric@^1.0.0"
+description: "The network to be in if you want to stay in the global trade business"
+version: 1.0.0
+
+#
+# The client section is SDK-specific. The sample below is for the node.js SDK
+#
+client:
+  # Which organization does this application instance belong to? The value is the name of an org
+  # defined under "organizations"
+  organization: Org2
+
+  # set connection timeouts for the peer and orderer for the client
+  connection:
+    timeout:
+      peer:
+        # the timeout in seconds to be used on requests to a peer,
+        # for example 'sendTransactionProposal'
+        endorser: 120
+        # the timeout in seconds to be used by applications when waiting for an
+        # event to occur. This time should be used in a javascript timer object
+        # that will cancel the event registration with the event hub instance.
+        eventHub: 60
+        # the timeout in seconds to be used when setting up the connection
+        # with the peer's event hub. If the peer does not acknowledge the
+        # connection within the time, the application will be notified over the
+        # error callback if provided.
+        eventReg: 3
+      # the timeout in seconds to be used on request to the orderer,
+      # for example
+      orderer: 30
+
+  # Since the node.js SDK supports pluggable KV stores, the properties under "credentialStore"
+  # are implementation specific
+  credentialStore:
+    # Specific to FileKeyValueStore.js. Can be others if using an alternative impl. For instance,
+    # CouchDBKeyValueStore.js would require an object here for properties like url, db name, etc.
+    path: "/tmp/hfc-kvs/org2"
+
+    # Specific to the CryptoSuite implementation. Software-based implementations like
+    # CryptoSuite_ECDSA_AES.js requires a key store. PKCS#11 based implementations does
+    # not.
+    cryptoStore:
+      # Specific to the underlying KeyValueStore that backs the crypto key store.
+      path: "/tmp/hfc-cvs/org2"
+
+    # Specific to Composer environment
+    wallet: wallet-name

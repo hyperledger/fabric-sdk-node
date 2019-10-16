@@ -4,7 +4,7 @@
 #
 set -e
 
-# Set the path to teh crypto material to ensure it may be used
+# Set the path to the crypto material to ensure it may be used
 CRYPTOGEN=$1
 export PATH=${CRYPTOGEN}:${PATH}
 
@@ -22,9 +22,10 @@ echo 'Generating base crypto-material and channel tx files....'
 export FABRIC_CFG_PATH="${BASEDIR}"
 cryptogen generate --config="${BASEDIR}/crypto-config.yaml" --output="${BASEDIR}/../crypto-config"
 configtxgen -profile TwoOrgsOrdererGenesis -outputBlock "${BASEDIR}/twoorgs.genesis.block"
-configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/mychannel.tx" -channelID mychannel # sceanrio test gateway feature
-configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/mychannel2.tx" -channelID mychannel2 # scenario test deprecated sdk
-configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/discovery.tx" -channelID discovery # sceanrio test discovery feature
+configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/gatewaychannel.tx" -channelID gatewaychannel # sceanrio test gateway feature
+configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/deprecatedchannel.tx" -channelID deprecatedchannel # scenario test deprecated sdk
+configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/discoverychannel.tx" -channelID discoverychannel # sceanrio test discovery feature
+configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/eventschannel.tx" -channelID eventschannel # sceanrio test discovery feature
 
 echo 'Generating crypto-material complete, now renaming keys...'
 # Rename the key files we use to be key.pem instead of a uuid

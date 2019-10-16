@@ -38,11 +38,11 @@ export async function tlsEnroll(fabricCAEndpoint: string, caName: string) {
 	return enrollment;
 }
 
-export function getSubmitter(client: Client, peerAdmin: boolean, org: string, ccp: CommonConnectionProfile) {
+export async function getSubmitter(client: Client, peerAdmin: boolean, org: string, ccp: CommonConnectionProfile) {
 	if (peerAdmin) {
-		return getOrgAdmin(client, org, ccp);
+		return await getOrgAdmin(client, org, ccp);
 	} else {
-		return getMember('admin', 'adminpw', client, org, ccp);
+		return await getMember('admin', 'adminpw', client, org, ccp);
 	}
 }
 
@@ -53,7 +53,7 @@ export function getSubmitter(client: Client, peerAdmin: boolean, org: string, cc
  * @param {CommonConnectionProfile} ccp the common connection profile
  * @return {User} The admin user identity.
  */
-function getOrgAdmin(client: Client, userOrg: string, ccp: CommonConnectionProfile) {
+async function getOrgAdmin(client: Client, userOrg: string, ccp: CommonConnectionProfile) {
 	try {
 
 		const org = ccp.getOrganization(userOrg);
@@ -67,7 +67,7 @@ function getOrgAdmin(client: Client, userOrg: string, ccp: CommonConnectionProfi
 		const cryptoSuite = Client.newCryptoSuite();
 		client.setCryptoSuite(cryptoSuite);
 
-		return Promise.resolve(client.createUser({
+		await client.createUser({
 			cryptoContent: {
 				privateKeyPEM: keyPEM.toString(),
 				signedCertPEM: certPEM.toString(),
@@ -75,7 +75,7 @@ function getOrgAdmin(client: Client, userOrg: string, ccp: CommonConnectionProfi
 			mspid: org.mspid,
 			skipPersistence: true,
 			username: 'peer' + userOrg + 'Admin',
-		}));
+		});
 	} catch (err) {
 		return Promise.reject(err);
 	}
@@ -135,6 +135,72 @@ async function getMember(username: string, password: string, client: Client, use
 	}
 }
 
+export function getPeerObjectsForClientOnChannel(orgClient: Client, channelName: string, ccp: CommonConnectionProfile) {
+	const peerObjects: Client.Peer[] = [];
+	const peerNames = Object.keys(ccp.getPeersForChannel(channelName)) as string[];
+
+	peerNames.forEach((peerName) => {
+		const peer = ccp.getPeer(peerName);
+		const data = fs.readFileSync(peer.tlsCACerts.path);
+		peerObjects.push(orgClient.newPeer(
+			peer.url,
+			{
+				'pem': Buffer.from(data).toString(),
+				'ssl-target-name-override': peer.grpcOptions['ssl-target-name-override'],
+			},
+		));
+	});
+	return peerObjects;
+}
+
+/**
+ * Augment a base client instance (that only knows the client org/connection options) with peer and orderers from a CCP
+ * @param client The base client object
+ * @param orgName The org name to augment with
+ * @param ccp The CCP to use to augment the base client
+ * @param tls Boolean tls enabled
+ */
+export async function augmentBaseClientWithCcp(client: Client, orgName: string, ccp: CommonConnectionProfile, tls: boolean) {
+	// Add peers to orgClient
+	const peers = ccp.getPeersForOrganization(orgName) as string[];
+	peers.forEach((peerName) => {
+		const peer = ccp.getPeer(peerName);
+		const data = fs.readFileSync(peer.tlsCACerts.path);
+		client.newPeer(
+			peer.url,
+			{
+				'pem': Buffer.from(data).toString(),
+				'ssl-target-name-override': peer.grpcOptions['ssl-target-name-override'],
+			},
+		);
+	});
+
+	// Add orderers to orgClient
+	const orderers = ccp.getOrderersForChannel(Constants.LIFECYCLE_CHANNEL) as string[];
+	orderers.forEach((ordererName) => {
+		const orderer = ccp.getOrderer(ordererName);
+		const data = fs.readFileSync(orderer.tlsCACerts.path);
+		client.newOrderer(
+			orderer.url,
+			{
+				'name': ordererName,
+				'pem': Buffer.from(data).toString(),
+				'ssl-target-name-override': orderer.grpcOptions['ssl-target-name-override'],
+			},
+		);
+	});
+
+	// set tls cert/key (if tls)
+	if (tls) {
+		const caName = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
+		const fabricCAEndpoint = ccp.getCertificateAuthority(caName).url;
+		const tlsInfo = await tlsEnroll(fabricCAEndpoint, caName);
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+	}
+
+	getOrgAdmin(client, orgName, ccp);
+}
+
 /**
  * Check if a smart contract is known to be installed by checking the state store
  * @param scName the name <name>@<version> of the smart contract to search for
@@ -142,6 +208,12 @@ async function getMember(username: string, password: string, client: Client, use
  */
 export function isContractInstalled(scName: string) {
 	const installed = stateStore.get(Constants.INSTALLED_SC);
+	if (installed) {
+		BaseUtils.logMsg(`Known installed smart contracts: [${installed}]`, undefined);
+	} else {
+		BaseUtils.logMsg('No known installed smart contracts', undefined);
+	}
+
 	return (installed && installed.includes(scName));
 }
 
@@ -261,5 +333,33 @@ export function addOrgToJointChannel(orgName: string, channelName: string) {
 			joinedChannels[channelName] = [orgName];
 		}
 		stateStore.set(Constants.JOINED_CHANNELS, joinedChannels);
+	}
+}
+
+/**
+ * Check if the channel has been updated
+ * @param channelName the channel name
+ * @param txName the txUpdate name
+ */
+export function channelHasBeenUpdated(channelName: string, txName: string) {
+	const updatedChannels = stateStore.get(Constants.UPDATED_CHANNELS);
+	return (updatedChannels && updatedChannels[channelName] && updatedChannels[channelName].includes(txName));
+}
+
+export function addToUpdatedChannel(channelName: string, txName: string) {
+	let updatedChannels = stateStore.get(Constants.UPDATED_CHANNELS);
+	if (updatedChannels && updatedChannels[channelName]) {
+		updatedChannels[channelName] = updatedChannels[channelName].concat(txName);
+		stateStore.set(Constants.UPDATED_CHANNELS, updatedChannels);
+	} else {
+		if (updatedChannels) {
+			// object exists, but no channel items
+			updatedChannels[channelName] = [txName];
+		} else {
+			// no object (first run through)
+			updatedChannels = {};
+			updatedChannels[channelName] = [txName];
+		}
+		stateStore.set(Constants.UPDATED_CHANNELS, updatedChannels);
 	}
 }

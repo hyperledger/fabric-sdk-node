@@ -5,7 +5,7 @@
 'use strict';
 
 import { Constants } from '../steps/constants';
-import { DisconnectAllGateways } from '../steps/lib/gateway';
+import * as Gateway from '../steps/lib/gateway';
 import * as BaseUtils from '../steps/lib/utility/baseUtils';
 import { CommandRunner } from '../steps/lib/utility/commandRunner';
 import { StateStore } from '../steps/lib/utility/stateStore';
@@ -30,5 +30,5 @@ AfterAll({}, async () => {
 After({tags: '@clean-gateway'}, async () => {
 	// If a test fails without disconnecting gateways, then the tests will hang
 	BaseUtils.logMsg('Disconnecting from all gateways ...',  null);
-	await DisconnectAllGateways();
+	await Gateway.disconnectAllGateways();
 });

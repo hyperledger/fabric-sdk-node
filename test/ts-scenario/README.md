@@ -1,9 +1,9 @@
 # Cucumber Test Scenarios For Fabric-SDK-Node
 
 Welcome to the Fabric-SDK-Node Cucumber test readme. Below are some notes on these tests, but before you go any further, here are some general contribution guide lines:
- - All tests re written in Typescript
+ - All tests are written in Typescript
  - Each feature file should have its own tag
- - All features and scenarios must be isolated from one another (no relying on other tests to create things for you!)
+ - All features and scenarios must be isolated from one another (no relying on other tests to create things for you!) by running on a **new channel**. The convention is to have the channel name match the feature that is being tested.
    - Each feature must be runnable in isolation
    - Each scenario must be runnable in isolation
 - Full suite should complete in the presence of failures; it is important that the suite completes on all eventualities and not hang if a test fails. For instance, this can occur if a process is not terminated.
@@ -18,6 +18,13 @@ The test suite uses the docker network and crypto files from within `/test/ts-fi
 The folder structure is the following:
 
 ```
+ts-fixtures
+└───chaincode
+└───cryptomaterial
+│    └───config-base
+│    └───config-update
+└───docker-compose
+
 ts-scenario
 │   README.md
 │   tsconfig.json 
@@ -37,16 +44,21 @@ ts-scenario
 
 ```
 
+- The scenario test resources are contained within the `ts-fixture` directory
+  - `chaincode` contains deployable smart contracts
+  - `cryptomaterial config-base` contains the channel creation files **add to these to get new channels for new feature files**
+  - `cryptomaterial config-update` contains the channel update files
+  - `docker-compose` contains the network files to test against
+
 - The scenario tests and all required test files are contained within the `ts-scenario` directory
-- `config` contains connection profiles, and a json document of all possible endorsement policies
-- All feature files and supporting files are contained in the `features` directory
-  - `*.feature` the self contained feature file that describes a set of feature scenarios that decompose into programmatic steps
-- `steps` contains all the step files required by the feature files that exist in the parent directory.
-- `support` contains two framework files: the main `index.js` file called by the cucumber test runner, and a `hooks.js` file that is used to provide tag based before/after hooks.
+  - `config` contains connection profiles, and a json document of all possible endorsement policies
+  - All feature files and supporting files are contained in the `features` directory
+    - `*.feature` the self contained feature file that describes a set of feature scenarios that decompose into programmatic steps
+  - `steps` contains all the step files required by the feature files that exist in the parent directory.
+  - `support` contains two framework files: the main `index.js` file called by the cucumber test runner, and a `hooks.js` file that is used to provide tag based before/after hooks.
 
 
 ## Running the Tests
-
 The tests are run at a high level within the `/build` directory using the main `test.js` gulp file, or the npm script:
 - To run the test using gulp, issue the command `gulp run-test:ts-cucumber`. 
 - To run the test using npm script, issue the command `npm run test:ts-cucumber`. 

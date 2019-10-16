@@ -13,7 +13,7 @@
     }
   },
   "channels":{
-    "mychannel":{
+    "deprecatedchannel":{
       "orderers":[
         "orderer.example.com"
       ],
@@ -34,7 +34,7 @@
       "chaincodes":[
       ]
 	},
-	"mychannel2":{
+	"gatewaychannel":{
 		"orderers":[
 		  "orderer.example.com"
 		],

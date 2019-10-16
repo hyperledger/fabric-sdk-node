@@ -49,9 +49,9 @@ export async function cli_channel_create(channelName: string, tls: boolean) {
 
 		createChannelCommand = createChannelCommand.concat(tlsOptions);
 		await commandRunner.runShellCommand(true, createChannelCommand.join(' '), VERBOSE_CLI);
-		BaseUtils.logMsg(`Channel ${channelName} has been created`, undefined);
+		await BaseUtils.sleep(Constants.INC_SHORT);
 
-		// Add to known created channels
+		BaseUtils.logMsg(`Channel ${channelName} has been created`, undefined);
 		AdminUtils.addToCreatedChannels(channelName);
 	} catch (err) {
 		BaseUtils.logError(`Failed to create channel ${channelName}`, err);
@@ -92,9 +92,9 @@ export async function cli_join_org_to_channel(orgName: string, channelName: stri
 
 		joinChannelCommand = joinChannelCommand.concat(tlsOptions);
 		await commandRunner.runShellCommand(true, joinChannelCommand.join(' '), VERBOSE_CLI);
-		BaseUtils.logMsg(`Channel ${channelName} has been joined by organization ${orgName}`, undefined);
 
-		// Add to known joined channels
+		await BaseUtils.sleep(Constants.INC_SHORT);
+		BaseUtils.logMsg(`Channel ${channelName} has been joined by organization ${orgName}`, undefined);
 		AdminUtils.addOrgToJointChannel(orgName, channelName);
 	} catch (err) {
 		BaseUtils.logError('Join Channel failure: ', err);
@@ -111,26 +111,34 @@ export async function cli_join_org_to_channel(orgName: string, channelName: stri
 export async function cli_channel_update(channelName: string, updateTx: string, tls: boolean) {
 
 	try {
-		// Use CLI container to update channel
-		BaseUtils.logMsg(`Using default CLI container ${Constants.DEFAULT_CLI_CONTAINER} to update channel ${channelName} of type ${tls ? 'tls' : 'non-tls'} with updateTx ${updateTx}`, undefined);
 
-		let tlsOptions: string[];
-		if (tls) {
-			tlsOptions = ['--tls', 'true', '--cafile', '/etc/hyperledger/configtx/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem'];
+		if (AdminUtils.channelHasBeenUpdated(channelName, updateTx)) {
+			BaseUtils.logMsg(`Channel ${channelName} has already been updated, skipping ...`, undefined);
 		} else {
-			tlsOptions = [];
-		}
-		let updateChannelCommand: string[];
-		updateChannelCommand = [
-			'docker', 'exec', `${Constants.DEFAULT_CLI_CONTAINER}_cli`, 'peer', 'channel', 'update',
-			'-o', 'orderer.example.com:7050',
-			'-c', `${channelName}`,
-			'-f', `/etc/hyperledger/configtx/channel-config/${updateTx}`,
-		];
+			// Use CLI container to update channel
+			BaseUtils.logMsg(`Using default CLI container ${Constants.DEFAULT_CLI_CONTAINER} to update channel ${channelName} of type ${tls ? 'tls' : 'non-tls'} with updateTx ${updateTx}`, undefined);
 
-		updateChannelCommand = updateChannelCommand.concat(tlsOptions);
-		await commandRunner.runShellCommand(true, updateChannelCommand.join(' '), VERBOSE_CLI);
-		BaseUtils.logMsg(`Channel ${channelName} has been updated`, undefined);
+			let tlsOptions: string[];
+			if (tls) {
+				tlsOptions = ['--tls', 'true', '--cafile', '/etc/hyperledger/configtx/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem'];
+			} else {
+				tlsOptions = [];
+			}
+			let updateChannelCommand: string[];
+			updateChannelCommand = [
+				'docker', 'exec', `${Constants.DEFAULT_CLI_CONTAINER}_cli`, 'peer', 'channel', 'update',
+				'-o', 'orderer.example.com:7050',
+				'-c', `${channelName}`,
+				'-f', `/etc/hyperledger/configtx/channel-config/${updateTx}`,
+			];
+
+			updateChannelCommand = updateChannelCommand.concat(tlsOptions);
+			await commandRunner.runShellCommand(true, updateChannelCommand.join(' '), VERBOSE_CLI);
+			await BaseUtils.sleep(Constants.INC_SHORT);
+
+			AdminUtils.addToUpdatedChannel(channelName, updateTx);
+			BaseUtils.logMsg(`Channel ${channelName} has been updated`, undefined);
+		}
 	} catch (err) {
 		BaseUtils.logError('Failed to update channels: ', (err.stack ? err.stack : err));
 		return Promise.reject(err);
