@@ -23,7 +23,7 @@ The Fabric-SDK-Node repository contains unit and functional (e2e) tests to ensur
 Unit tests for each package are held locally under a `package/test` directory that mirrors the `package/lib` directory. Tests within these directories are written in Mocha, and may be run locally within the package via the `npm test` command at the package level. We make use of the following dependancies within the unit tests:
 - [Sinon](https://sinonjs.org/) for test spies, stubs and mocks
 - [Rewire](https://github.com/jhnns/rewire) for greater control of the component under test
-- [Istanbul](https://istanbul.js.org/) for code coverage reports
+- [Nyc](https://www.npmjs.com/package/nyc) for code coverage reports
 
 It is expected that new code deliveries come with unit tests that:
 - are isolated - all unit tests should be capable of being run indiviually as well as in the suite(s)
@@ -31,11 +31,15 @@ It is expected that new code deliveries come with unit tests that:
 - test golden path and failure path
 - provide 100% line coverage
 
+We are working towards 100% code coverage. As you add new functionality and unit tests, please increase the coverage limits in the `nyc` section of the top level `package.json`.
+
 ### Functional Tests
-Functional tests are held at the repository level under the `~/test/integration` directory and target a Fabric network that has been created based upon information within the `~/test/fixtures` directory.
+Functional tests are held at the repository level under the `test/integration` directory and target a Fabric network that has been created based upon information within the `test/fixtures` directory.
 
 The functional tests are currently written in [Tape]('https://github.com/substack/tape'), with the intention of testing the Fabric-SDK-Node packages from a user perspective against a live Hyperledger Fabric Network.
 
+### Coverage
+The coverage reports are generated as html files in the `coverage` directory. The gulp tasks `test-mocha`, `test-fv-only`, `run-test:cucumber` and `run-test:ts-cucumber` will print out a text coverage summary table. Therefore four coverage tables are printed during a CI run, each with different coverage limits set. The global nyc configuration for coverage is defined in the `nyc` block in the top-level `package.json`. Specific coverage configuration for each package is defined in `package/package.json`.
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
 s

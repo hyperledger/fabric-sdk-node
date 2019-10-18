@@ -107,5 +107,28 @@
   ],
   "dependencies": {
     "fs-extra": "^6.0.1"
+  },
+  "nyc": {
+    "exclude": [
+      "gulpfile.js",
+      "build/tasks/**",
+      "test/**",
+      "fabric-*/index.js",
+      "fabric-*/test/**",
+      "fabric-protos/grpc.js"
+    ],
+    "extension": [
+      ".ts"
+    ],
+    "reporter": [
+      "text",
+      "html"
+    ],
+    "cache": true,
+    "check-coverage": true,
+    "statements": 87,
+    "branches": 81,
+    "functions": 89,
+    "lines": 87
   }
 }

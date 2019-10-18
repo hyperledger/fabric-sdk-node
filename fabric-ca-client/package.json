@@ -9,7 +9,7 @@
   "tag": "unstable",
   "main": "index.js",
   "scripts": {
-    "test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
+    "test": "nyc mocha --recursive  -t 10000"
   },
   "repository": {
     "type": "github (read mirror)",
@@ -47,20 +47,18 @@
     "exclude": [
       "index.js",
       "coverage/**",
-      "lib/impl",
-      "lib/msp",
-      "lib/protos",
       "test/**"
     ],
     "reporter": [
-      "text-summary",
+      "text",
       "html"
     ],
     "all": true,
+    "cache": true,
     "check-coverage": true,
-    "statements": 20,
-    "branches": 5,
-    "functions": 10,
-    "lines": 20
+    "statements": 98,
+    "branches": 97,
+    "functions": 93,
+    "lines": 98
   }
 }

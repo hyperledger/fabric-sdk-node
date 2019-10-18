@@ -50,7 +50,7 @@ const CRAZY_SPEC = {
 	}
 };
 
-describe.only('policies.proto', () => {
+describe('policies.proto', () => {
 
 	it('should be able to decode a Policy', () => {
 		const policy = Policy.buildPolicy([], CRAZY_SPEC);

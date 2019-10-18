@@ -15,7 +15,6 @@ the pipeline job configuration template here https://ci-docs.readthedocs.io/en/l
   - gulp
   - gulp ca
   - gulp test
-  - gulp run-test-scenario targets to run sdk-node tests.
 
 All the above tests run on the Hyperledger infarstructure x86_64 build nodes. All these nodes uses
 the packer with pre-configured software packages. This helps us to run the tests in much faster than

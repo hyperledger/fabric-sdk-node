@@ -122,23 +122,17 @@ gulp.task('compile', shell.task([
 	ignoreErrors: false // once compile failed, throw error
 }));
 
-// Execute specific tests  with code coverage enabled
-//  - Use nyc instead of gulp-istanbul to generate coverage report
-//  - Cannot use gulp-istabul because it throws "unexpected identifier" for async/await functions
+// Execute specific tests with code coverage enabled
+// Use nyc to generate coverage report, config in fabric-sdk-node/package.json
 
 // Main test to run all tests
-gulp.task('test', shell.task('npx nyc gulp run-test-all'));
+gulp.task('test', shell.task('gulp run-test-all'));
 
 // Test to run all unit tests
 gulp.task('test-headless', shell.task('npx gulp run-test-headless'));
 
-// Only run Mocha unit tests
-gulp.task('test-mocha', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-test-mocha'));
-
-// Only run javascript scenario tests
-gulp.task('test:cucumber', shell.task('npx nyc npm run test:cucumber'));
-// Only run typescript scenario tests
-gulp.task('test:ts-cucumber', shell.task('npx nyc npm run test:ts-cucumber'));
+// Only run Mocha unit tests, with coverage
+gulp.task('test-mocha', shell.task('npx nyc gulp run-test-mocha'));
 
 // Definition of Mocha (unit) test suites
 gulp.task('run-test-mocha', (done) => {
@@ -181,19 +175,22 @@ gulp.task('mocha-fabric-protos',
 );
 
 // Definition of Javascript Cucumber (scenario) test suite
+// override the global nyc configuration (defined in top level package.json)
 gulp.task('run-test:cucumber', shell.task(
-	'export HFC_LOGGING=\'' + cucumber_log + '\'; npm run test:cucumber'
+	'export HFC_LOGGING=\'' + cucumber_log + '\'; npx nyc --check-coverage --statements 57 --branches 42 --functions 59 --lines 57 npm run test:cucumber'
 ));
 // Definition of Typescript Cucumber (scenario) test suite
+// override the global nyc configuration
 gulp.task('run-test:ts-cucumber', shell.task(
-	'export HFC_LOGGING=\'' + cucumber_log + '\'; npm run test:ts-cucumber'
+	'export HFC_LOGGING=\'' + cucumber_log + '\'; npx nyc --check-coverage --statements 34 --branches 23 --functions 34 --lines 33 npm run test:ts-cucumber'
 ));
 
 // Run e2e and scenario tests with code coverage
-gulp.task('test-fv-scenario', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-test-fv-scenario'));
+gulp.task('test-fv-scenario', shell.task('npx nyc gulp run-test-fv-scenario'));
 
-// run fv only
-gulp.task('test-fv-only', shell.task('npx nyc --check-coverage --lines 92 --functions 90 --branches 70 gulp run-tape-e2e'));
+// run fv only with code coverage
+// override the global nyc configuration
+gulp.task('test-fv-only', shell.task('npx nyc --check-coverage --statements 55 --branches 44 --functions 57 --lines 55 gulp run-tape-e2e'));
 
 gulp.task('run-test-fv-scenario', (done) => {
 	const tasks = ['run-tape-e2e', 'docker-clean', 'run-test:cucumber', 'docker-clean', 'run-test:ts-cucumber'];

@@ -18,7 +18,7 @@
     "email": "fabric@lists.hyperledger.org"
   },
   "scripts": {
-    "test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
+    "test": "nyc mocha --recursive  -t 10000"
   },
   "engines": {
     "node": "^8.9.0 || ^10.15.3",
@@ -50,17 +50,19 @@
       "coverage/**",
       "test/**"
     ],
+    "extension": [
+      ".ts"
+    ],
     "reporter": [
-      "text-summary",
+      "text",
       "html"
     ],
     "cache": true,
-    "all": true,
     "check-coverage": true,
-    "statements": 100,
-    "branches": 100,
-    "functions": 100,
-    "lines": 100
+    "statements": 94,
+    "branches": 95,
+    "functions":89,
+    "lines": 94
   },
   "license": "Apache-2.0",
   "licenses": [
