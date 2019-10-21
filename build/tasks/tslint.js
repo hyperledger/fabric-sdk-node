@@ -8,7 +8,6 @@ const tslint = require('gulp-tslint');
 
 gulp.task('tslint', () => {
 	return gulp.src([
-		// 'fabric-ca/**/*.ts',
 		'fabric-client/**/*.ts',
 		'fabric-network/**/*.ts',
 		'test/**/*.ts',
@@ -17,8 +16,6 @@ gulp.task('tslint', () => {
 		'!fabric-network/node_modules/**',
 		'!fabric-client/coverage/**',
 		'!fabric-client/node_modules/**',
-		'!fabric-ca-client/coverage/**',
-		'!fabric-ca-client/node_modules/**',
 	]).pipe(tslint({
 		formatter: 'prose'
 	})).pipe(tslint.report({

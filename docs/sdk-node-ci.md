@@ -13,7 +13,6 @@ the pipeline job configuration template here https://ci-docs.readthedocs.io/en/l
 - Every Gerrit patchset triggers a verify job and run the below tests from the `Jenkinsfile`
 
   - gulp
-  - gulp ca
   - gulp test
 
 All the above tests run on the Hyperledger infarstructure x86_64 build nodes. All these nodes uses

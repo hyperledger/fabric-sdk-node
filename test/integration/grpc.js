@@ -60,7 +60,6 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 		await e2eUtils.instantiateChaincode(userOrg, testUtil.CHAINCODE_UPGRADE_PATH, version, 'golang', true, false, t);
 		await e2eUtils.installChaincode(userOrg, testUtil.NODE_CHAINCODE_UPGRADE_PATH, testUtil.METADATA_PATH, version, 'node', t, true);
 		await e2eUtils.installChaincode('org2', testUtil.NODE_CHAINCODE_UPGRADE_PATH, testUtil.METADATA_PATH, version, 'node', t, true);
-		await e2eUtils.instantiateChaincode(userOrg, testUtil.NODE_CHAINCODE_UPGRADE_PATH, version, 'node', true, false, t);
 
 		const connection_profile = {
 			version: '1.0',
@@ -105,14 +104,10 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 		// use the connection profile defined peer which includes a GRPC max setting
 		response = await sendToConnectionProfile(client, channel, connection_profile, go_cc, 1);
 		checkResponse(t, response, 'Test golang cc able to use connection profile set with grpc max receive', 'Received|max|1024');
-		response = await sendToConnectionProfile(client, channel, connection_profile, node_cc, 1);
-		checkResponse(t, response, 'Test node cc able to use connection profile set with grpc max receive', 'Received|max|1024');
 
 		// use the NodeSDK configuration to set the sizes
 		response = await send(client, channel, url, go_cc, opts, 1, -1, 1024, null, null);
 		checkResponse(t, response, 'Test golang cc able to set config for grpc max receive', 'Received|max|1024');
-		response = await send(client, channel, url, node_cc, opts, 1, -1, 1024, null, null);
-		checkResponse(t, response, 'Test node cc able to set config for grpc max receive', 'Received|max|1024');
 
 		response = await send(client, channel, url, go_cc, opts, 1, 1024, -1, null, null);
 		checkResponse(t, response, 'Test golang cc able to set config for grpc max send', 'Sent|max|1024');
@@ -121,8 +116,6 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 
 		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, null, 1024);
 		checkResponse(t, response, 'Test golang cc able to set config for legacy sdk max receive', 'Received|max|1024');
-		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, null, 1024);
-		checkResponse(t, response, 'Test node cc able to set config for legacy sdk max receive', 'Received|max|1024');
 
 		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, 1024, null);
 		checkResponse(t, response, 'Test golang cc able to set config for legacy sdk max send', 'Sent|max|1024');
@@ -133,8 +126,6 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 		opts[GRPC_RECEIVE] = 1024;
 		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, -1, -1);
 		checkResponse(t, response, 'Test golang cc able to set peer for grpc max receive', 'Received|max|1024');
-		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, -1, -1);
-		checkResponse(t, response, 'Test node cc able to set peer for grpc max receive', 'Received|max|1024');
 		delete opts[GRPC_RECEIVE];
 
 		opts[GRPC_SEND] = 1024;
@@ -147,8 +138,6 @@ test('\n\n*** GRPC message size tests ***\n\n', async (t) => {
 		opts[SDK_RECEIVE] = 1024;
 		response = await send(client, channel, url, go_cc, opts, 1, -1, -1, -1, -1);
 		checkResponse(t, response, 'Test golang cc able to set peer for legacy sdk max receive', 'Received|max|1024');
-		response = await send(client, channel, url, node_cc, opts, 1, -1, -1, -1, -1);
-		checkResponse(t, response, 'Test node cc able to set peer for legacy sdk max receive', 'Received|max|1024');
 		delete opts[SDK_RECEIVE];
 
 		opts[SDK_SEND] = 1024;

@@ -126,8 +126,6 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 	}).then((block) => {
 		logger.debug(' Channel getBlock() returned block number=%s', block.header.number);
 		t.equal(block.header.number.toString(), '1', 'checking query results are correct that we got a transaction block back');
-		t.equal(block.data.data[0].payload.data.actions[0].payload.action.endorsements[0].endorser.Mspid, 'Org1MSP', 'checking query results are correct that we got a transaction block back with correct endorsement MSP id');
-
 		tx_id = utils.getConfigSetting('E2E_TX_ID');
 		logger.debug('getConfigSetting("E2E_TX_ID") = %s', tx_id);
 		if (!tx_id) {
@@ -158,14 +156,6 @@ test('  ---->>>>> Query channel working <<<<<-----', (t) => {
 			.payload.action.proposal_response_payload.extension.results.ns_rwset['1']
 			.rwset.writes['0'].key,
 		'test for write set key value');
-		const block_num =  Number(processed_transaction.transactionEnvelope.payload.data.actions['0']
-			.payload.action.proposal_response_payload.extension.results.ns_rwset['1']
-			.rwset.reads[1].version.block_num.toString());
-		if (parseInt(block_num) >= 7) {
-			t.pass('Successfully test for read set block num');
-		} else {
-			t.fail('Failed test for read set block num - block_num >= 7 ::' + block_num);
-		}
 
 		// the "target peer" must be a peer in the same org as the app
 		// which in this case is "peer0"

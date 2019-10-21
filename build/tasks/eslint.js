@@ -12,6 +12,7 @@ gulp.task('eslint', () => {
 		'fabric-network/**/*.js',
 		'fabric-client/**/*.js',
 		'fabric-ca-client/lib/*.js',
+		'fabric-common/**/*.js',
 		'!coverage/**',
 		'!docs/**',
 		'!fabric-network/coverage/**',
@@ -21,9 +22,10 @@ gulp.task('eslint', () => {
 		'!fabric-client/node_modules/**',
 		'!fabric-ca-client/coverage/**',
 		'!fabric-ca-client/node_modules/**',
+		'!fabric-common/node_modules/**',
+		'!fabric-common/coverage/**',
 		'!node_modules/**',
 		'!test/typescript/**/*.js',
-		'!tmp/**',
 		'!fabric-protos/**',
 	]).pipe(eslint())
 		.pipe(eslint.format())
