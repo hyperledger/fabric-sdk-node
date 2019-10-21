@@ -60,6 +60,23 @@ describe('Channel', () => {
 
 	mspId = 'mspId';
 
+	const pem_cert =
+	'-----BEGIN CERTIFICATE-----\n' +
+	'MIICSTCCAe+gAwIBAgIQPHXmPqjzn2bon7JrBRPS2DAKBggqhkjOPQQDAjB2MQsw\n' +
+	'CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\n' +
+	'YW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEfMB0GA1UEAxMWdGxz\n' +
+	'Y2Eub3JnMS5leGFtcGxlLmNvbTAeFw0xOTAyMjExNDI4MDBaFw0yOTAyMTgxNDI4\n' +
+	'MDBaMHYxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQH\n' +
+	'Ew1TYW4gRnJhbmNpc2NvMRkwFwYDVQQKExBvcmcxLmV4YW1wbGUuY29tMR8wHQYD\n' +
+	'VQQDExZ0bHNjYS5vcmcxLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0D\n' +
+	'AQcDQgAELAsSPvzK3EdhGPZAMKYh67s02WqfYUe09xMzy7BzNODUKcbyIW5i7GVQ\n' +
+	'3YurSkR/auRsk6FG45Q1zTZaEvwVH6NfMF0wDgYDVR0PAQH/BAQDAgGmMA8GA1Ud\n' +
+	'JQQIMAYGBFUdJQAwDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQg8HHn3ScArMdH\n' +
+	'lkp+jpcDXtIAzWnVf4F9rBHvUNjcC1owCgYIKoZIzj0EAwIDSAAwRQIhAMi+R+ZI\n' +
+	'XgZV40IztD8aQDr/sntDTu/8Nw7Y0DGEhwaQAiBEnBCdRXaBcENWnAnastAg+RA5\n' +
+	'XALSidlQqZKrK4L3Yg==\n' +
+	'-----END CERTIFICATE-----\n';
+
 	beforeEach(() => {
 		const FakeLogger = {
 			debug: () => {
@@ -91,11 +108,11 @@ describe('Channel', () => {
 
 		stubMsp = sinon.createStubInstance(MSP);
 		stubMsp.organizational_unit_identifiers = mspId;
-		stubMsp.root_certs = Buffer.from('root-certs');
-		stubMsp.intermediate_certs = Buffer.from('intermediate-certs');
-		stubMsp.admins = Buffer.from('admin');
-		stubMsp.tls_root_certs = Buffer.from('tls_root_certs');
-		stubMsp.tls_intermediate_certs = Buffer.from('tls_intermediate_certs');
+		stubMsp.root_certs = Buffer.from(pem_cert);
+		stubMsp.intermediate_certs = Buffer.from(pem_cert);
+		stubMsp.admins = Buffer.from(pem_cert);
+		stubMsp.tls_root_certs = Buffer.from(pem_cert);
+		stubMsp.tls_intermediate_certs = Buffer.from(pem_cert);
 		stubMsp.deserializeIdentity.returns(stubMspIdentity);
 
 		sinon.stub(channel.getMSPManager(), 'getMSP').withArgs(mspId).returns(stubMsp);
@@ -1030,7 +1047,7 @@ describe('Channel', () => {
 			return expect(channel.initialize({discover: true, target: peer1})).to.be.rejectedWith('No MSP information found');
 		});
 
-		it('should set the clientTlsCertHash if the cert has is available', async () => {
+		it('should set the clientTlsCertHash if the cert is available', async () => {
 			const setClientTlsCertHashStub = sinon.stub();
 			ChannelRewire.__set__('fabprotos.discovery.AuthInfo.prototype.setClientTlsCertHash', setClientTlsCertHashStub);
 			peer2.identity = new identityProto.SerializedIdentity({mspid: mspId}).toBuffer();
@@ -1052,7 +1069,7 @@ describe('Channel', () => {
 					{
 						config_result: {
 							msps: {[mspId]: stubMsp},
-							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: orderer1._endpoint.port}]}}
+							orderers: {[mspId]: {endpoint: [{host: orderer1._endpoint.addr, port: 7050}]}}
 						}
 					}
 				]
@@ -1066,9 +1083,9 @@ describe('Channel', () => {
 			expect(init.orderers).to.deep.equal({
 				[mspId]: {
 					endpoints: [{
-						name: `${orderer1._endpoint.addr}:${orderer1._endpoint.port}`,
+						name: `${orderer1._endpoint.addr}:7050`,
 						host: orderer1._endpoint.addr,
-						port: orderer1._endpoint.port
+						port: 7050
 					}]
 				}
 			});
@@ -1340,13 +1357,13 @@ describe('Channel', () => {
 			const discoveryResults = await channel.getDiscoveryResults({});
 			expect(discoveryResults.msps).to.deep.equal({
 				[mspId]: {
-					admins: 'admin',
+					admins: pem_cert,
 					id: 'org1',
-					intermediateCerts: 'intermediate-certs',
+					intermediateCerts: pem_cert,
 					orgs: mspId,
-					rootCerts: 'root-certs',
-					tls_intermediate_certs: 'tls_intermediate_certs',
-					tls_root_certs: 'tls_root_certs'
+					rootCerts: pem_cert,
+					tls_intermediate_certs: pem_cert,
+					tls_root_certs: pem_cert
 				}
 			});
 			expect(discoveryResults.orders).to.be.undefined;

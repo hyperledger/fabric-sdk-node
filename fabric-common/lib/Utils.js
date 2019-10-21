@@ -466,7 +466,13 @@ module.exports.normalizeX509 = (raw) => {
 
 	// make sure '-----BEGIN CERTIFICATE-----' and '-----END CERTIFICATE-----' are in their own lines
 	// and that it ends in a new line
-	return matches.join('\n') + '\n';
+	let result =  matches.join('\n') + '\n';
+
+	// could be this has multiple certs within
+	const regex2 = /----------/;
+	result = result.replace(new RegExp(regex2, 'g'), '-----\n-----');
+
+	return result;
 };
 
 /*
@@ -521,6 +527,15 @@ module.exports.convertBytetoString = (buffer_array, encoding) => {
 		result = a_strings.join('');
 	} else {
 		result = buffer_array.toString(decode_as);
+	}
+
+	return result;
+};
+
+module.exports.byteToNormalizedPEM = (buffer_array, encoding) => {
+	let result = module.exports.convertBytetoString(buffer_array, encoding);
+	if (result) {
+		result = module.exports.normalizeX509(result);
 	}
 
 	return result;

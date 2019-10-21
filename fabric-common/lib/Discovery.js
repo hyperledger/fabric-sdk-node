@@ -7,7 +7,7 @@
 const TYPE = 'Discovery';
 const Long = require('long');
 
-const {convertBytetoString, checkParameter, getLogger} = require('./Utils.js');
+const {byteToNormalizedPEM, checkParameter, getLogger} = require('./Utils.js');
 const ServiceAction = require('./ServiceAction.js');
 const DiscoveryHandler = require('./DiscoveryHandler.js');
 
@@ -412,11 +412,11 @@ class Discovery extends ServiceAction {
 						id: id,
 						name: id,
 						organizational_unit_identifiers: q_msp.organizational_unit_identifiers,
-						root_certs: convertBytetoString(q_msp.root_certs),
-						intermediate_certs: convertBytetoString(q_msp.intermediate_certs),
-						admins: convertBytetoString(q_msp.admins),
-						tls_root_certs: convertBytetoString(q_msp.tls_root_certs),
-						tls_intermediate_certs: convertBytetoString(q_msp.tls_intermediate_certs)
+						root_certs: byteToNormalizedPEM(q_msp.root_certs),
+						intermediate_certs: byteToNormalizedPEM(q_msp.intermediate_certs),
+						admins: byteToNormalizedPEM(q_msp.admins),
+						tls_root_certs: byteToNormalizedPEM(q_msp.tls_root_certs),
+						tls_intermediate_certs: byteToNormalizedPEM(q_msp.tls_intermediate_certs)
 					};
 					config.msps[id] = msp_config;
 					this.channel.addMSP(msp_config, true);

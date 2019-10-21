@@ -1337,11 +1337,11 @@ const Channel = class {
 					const msp_config = {
 						id: id,
 						orgs: q_msp.organizational_unit_identifiers,
-						rootCerts: sdk_utils.convertBytetoString(q_msp.root_certs),
-						intermediateCerts: sdk_utils.convertBytetoString(q_msp.intermediate_certs),
-						admins: sdk_utils.convertBytetoString(q_msp.admins),
-						tls_root_certs: sdk_utils.convertBytetoString(q_msp.tls_root_certs),
-						tls_intermediate_certs: sdk_utils.convertBytetoString(q_msp.tls_intermediate_certs)
+						rootCerts: sdk_utils.byteToNormalizedPEM(q_msp.root_certs),
+						intermediateCerts: sdk_utils.byteToNormalizedPEM(q_msp.intermediate_certs),
+						admins: sdk_utils.byteToNormalizedPEM(q_msp.admins),
+						tls_root_certs: sdk_utils.byteToNormalizedPEM(q_msp.tls_root_certs),
+						tls_intermediate_certs: sdk_utils.byteToNormalizedPEM(q_msp.tls_intermediate_certs)
 					};
 					config.msps[id] = msp_config;
 				}

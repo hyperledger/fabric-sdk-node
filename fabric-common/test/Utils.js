@@ -21,6 +21,71 @@ chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
 describe('Utils', () => {
+	describe('#byteToNormalizedPEM', () => {
+		let pem, pem_no_new_line;
+		beforeEach(() => {
+			pem =
+				'-----BEGIN CERTIFICATE-----\n' +
+				'MIICSTCCAe+gAwIBAgIQPHXmPqjzn2bon7JrBRPS2DAKBggqhkjOPQQDAjB2MQsw\n' +
+				'CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\n' +
+				'YW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEfMB0GA1UEAxMWdGxz\n' +
+				'Y2Eub3JnMS5leGFtcGxlLmNvbTAeFw0xOTAyMjExNDI4MDBaFw0yOTAyMTgxNDI4\n' +
+				'MDBaMHYxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQH\n' +
+				'Ew1TYW4gRnJhbmNpc2NvMRkwFwYDVQQKExBvcmcxLmV4YW1wbGUuY29tMR8wHQYD\n' +
+				'VQQDExZ0bHNjYS5vcmcxLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0D\n' +
+				'AQcDQgAELAsSPvzK3EdhGPZAMKYh67s02WqfYUe09xMzy7BzNODUKcbyIW5i7GVQ\n' +
+				'3YurSkR/auRsk6FG45Q1zTZaEvwVH6NfMF0wDgYDVR0PAQH/BAQDAgGmMA8GA1Ud\n' +
+				'JQQIMAYGBFUdJQAwDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQg8HHn3ScArMdH\n' +
+				'lkp+jpcDXtIAzWnVf4F9rBHvUNjcC1owCgYIKoZIzj0EAwIDSAAwRQIhAMi+R+ZI\n' +
+				'XgZV40IztD8aQDr/sntDTu/8Nw7Y0DGEhwaQAiBEnBCdRXaBcENWnAnastAg+RA5\n' +
+				'XALSidlQqZKrK4L3Yg==\n' +
+				'-----END CERTIFICATE-----\n';
+			pem_no_new_line =
+				'-----BEGIN CERTIFICATE-----\n' +
+				'MIICSTCCAe+gAwIBAgIQPHXmPqjzn2bon7JrBRPS2DAKBggqhkjOPQQDAjB2MQsw\n' +
+				'CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\n' +
+				'YW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEfMB0GA1UEAxMWdGxz\n' +
+				'Y2Eub3JnMS5leGFtcGxlLmNvbTAeFw0xOTAyMjExNDI4MDBaFw0yOTAyMTgxNDI4\n' +
+				'MDBaMHYxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQH\n' +
+				'Ew1TYW4gRnJhbmNpc2NvMRkwFwYDVQQKExBvcmcxLmV4YW1wbGUuY29tMR8wHQYD\n' +
+				'VQQDExZ0bHNjYS5vcmcxLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0D\n' +
+				'AQcDQgAELAsSPvzK3EdhGPZAMKYh67s02WqfYUe09xMzy7BzNODUKcbyIW5i7GVQ\n' +
+				'3YurSkR/auRsk6FG45Q1zTZaEvwVH6NfMF0wDgYDVR0PAQH/BAQDAgGmMA8GA1Ud\n' +
+				'JQQIMAYGBFUdJQAwDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQg8HHn3ScArMdH\n' +
+				'lkp+jpcDXtIAzWnVf4F9rBHvUNjcC1owCgYIKoZIzj0EAwIDSAAwRQIhAMi+R+ZI\n' +
+				'XgZV40IztD8aQDr/sntDTu/8Nw7Y0DGEhwaQAiBEnBCdRXaBcENWnAnastAg+RA5\n' +
+				'XALSidlQqZKrK4L3Yg==\n' +
+				'-----END CERTIFICATE-----';
+		});
+
+		it('should convert one byte to a good PEM', () => {
+			const normalized = Utils.byteToNormalizedPEM(Buffer.from(pem));
+			normalized.should.be.equal(pem);
+		});
+
+		it('should convert two certs in byte to a good PEM', () => {
+			const twoCerts = Buffer.concat([Buffer.from(pem), Buffer.from(pem)]);
+			const normalized = Utils.byteToNormalizedPEM(twoCerts);
+			normalized.should.be.equal(pem + pem);
+		});
+
+		it('should convert one byte to a good PEM with no ending new line', () => {
+			const normalized = Utils.byteToNormalizedPEM(Buffer.from(pem_no_new_line));
+			normalized.should.be.equal(pem);
+		});
+
+		it('should convert two certs in byte to a good PEM', () => {
+			const twoCerts = Buffer.concat([Buffer.from(pem_no_new_line), Buffer.from(pem_no_new_line)]);
+			const normalized = Utils.byteToNormalizedPEM(twoCerts);
+			normalized.should.be.equal(pem + pem);
+		});
+
+		it('should convert three certs in byte to a good PEM', () => {
+			const twoCerts = Buffer.concat([Buffer.from(pem_no_new_line), Buffer.from(pem_no_new_line), Buffer.from(pem_no_new_line)]);
+			const normalized = Utils.byteToNormalizedPEM(twoCerts);
+			normalized.should.be.equal(pem + pem + pem);
+		});
+	});
 
 	describe('#newCryptoSuite', () => {
 
