@@ -10,6 +10,22 @@ const path = require('path');
 
 const Utils = require('../lib/Utils');
 const fabprotos = require('fabric-protos');
+const pem =
+'-----BEGIN CERTIFICATE-----\n' +
+'MIICSTCCAe+gAwIBAgIQPHXmPqjzn2bon7JrBRPS2DAKBggqhkjOPQQDAjB2MQsw\n' +
+'CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\n' +
+'YW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEfMB0GA1UEAxMWdGxz\n' +
+'Y2Eub3JnMS5leGFtcGxlLmNvbTAeFw0xOTAyMjExNDI4MDBaFw0yOTAyMTgxNDI4\n' +
+'MDBaMHYxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQH\n' +
+'Ew1TYW4gRnJhbmNpc2NvMRkwFwYDVQQKExBvcmcxLmV4YW1wbGUuY29tMR8wHQYD\n' +
+'VQQDExZ0bHNjYS5vcmcxLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0D\n' +
+'AQcDQgAELAsSPvzK3EdhGPZAMKYh67s02WqfYUe09xMzy7BzNODUKcbyIW5i7GVQ\n' +
+'3YurSkR/auRsk6FG45Q1zTZaEvwVH6NfMF0wDgYDVR0PAQH/BAQDAgGmMA8GA1Ud\n' +
+'JQQIMAYGBFUdJQAwDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQg8HHn3ScArMdH\n' +
+'lkp+jpcDXtIAzWnVf4F9rBHvUNjcC1owCgYIKoZIzj0EAwIDSAAwRQIhAMi+R+ZI\n' +
+'XgZV40IztD8aQDr/sntDTu/8Nw7Y0DGEhwaQAiBEnBCdRXaBcENWnAnastAg+RA5\n' +
+'XALSidlQqZKrK4L3Yg==\n' +
+'-----END CERTIFICATE-----\n';
 
 module.exports.certificateAsPEM = fs.readFileSync(path.join(__dirname, 'data', 'cert.pem'));
 module.exports.keyAsPEM = fs.readFileSync(path.join(__dirname, 'data', 'key.pem'));
@@ -82,8 +98,10 @@ module.exports.createProposalResponse = (results, status = 200) => {
 module.exports.createMsp = (name = 'mspid') => {
 	const msp = new fabprotos.msp.FabricMSPConfig();
 	msp.setName(name);
-	msp.setRootCerts(Buffer.from('root_certs'));
-	msp.setTlsIntermediateCerts(Buffer.from('tls_intermediate_certs'));
+	// msp.setRootCerts(Buffer.from(pem));
+	msp.root_certs = Buffer.from(pem);
+	// msp.setTlsIntermediateCerts(Buffer.from(pem));
+	msp.tls_intermediate_certs = Buffer.from(pem);
 
 	return msp;
 };

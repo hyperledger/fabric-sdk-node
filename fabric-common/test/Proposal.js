@@ -82,13 +82,13 @@ describe('Proposal', () => {
 		});
 		it('should return interest and collections', () => {
 			const collections = ['col1', 'col2'];
-			proposal.collections_interest = collections;
+			proposal.collectionsInterest = collections;
 			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode', collection_names: collections}]);
+			interest.should.deep.equal([{name: 'chaincode', collectionNames: collections}]);
 		});
-		it('should return interest and collections', () => {
-			const chaincode_collection = {name: 'chain2', collection_names: ['col1', 'col2']};
-			proposal.chaincodes_collections_interest = [chaincode_collection];
+		it('should return interest and chaincode and chaincode collections ', () => {
+			const chaincode_collection = {name: 'chain2', collectionNames: ['col1', 'col2']};
+			proposal.chaincodesCollectionsInterest = [chaincode_collection];
 			const interest = proposal.buildProposalInterest();
 			interest.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
 		});
@@ -97,42 +97,42 @@ describe('Proposal', () => {
 	describe('#addCollectionInterest', () => {
 		it('should save collection interest', () => {
 			proposal.addCollectionInterest('col1');
-			proposal.collections_interest.should.deep.equal(['col1']);
+			proposal.collectionsInterest.should.deep.equal(['col1']);
 		});
 		it('should save collection interest', () => {
 			const collections = ['col1', 'col2'];
 			proposal.addCollectionInterest('col1');
 			proposal.addCollectionInterest('col2');
-			proposal.collections_interest.should.deep.equal(collections);
+			proposal.collectionsInterest.should.deep.equal(collections);
 			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode', collection_names: collections}]);
+			interest.should.deep.equal([{name: 'chaincode', collectionNames: collections}]);
 		});
 		it('should require a string collection name', () => {
 			(() => {
 				proposal.addCollectionInterest({});
-			}).should.throw('Invalid collection_name parameter');
+			}).should.throw('Invalid collectionName parameter');
 		});
 	});
 
 	describe('#addChaincodeCollectionsInterest', () => {
 		it('should save chaincode collection interest', () => {
-			const chaincode_collection = {name: 'chain2', collection_names: ['col1', 'col2']};
+			const chaincode_collection = {name: 'chain2', collectionNames: ['col1', 'col2']};
 			proposal.addChaincodeCollectionsInterest('chain2', 'col1', 'col2');
-			proposal.chaincodes_collections_interest.should.deep.equal([chaincode_collection]);
+			proposal.chaincodesCollectionsInterest.should.deep.equal([chaincode_collection]);
 			const interest = proposal.buildProposalInterest();
 			interest.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
 		});
 		it('should save chaincode only chaincode collection interest', () => {
 			const chaincode_collection = {name: 'chain2'};
 			proposal.addChaincodeCollectionsInterest('chain2');
-			proposal.chaincodes_collections_interest.should.deep.equal([chaincode_collection]);
+			proposal.chaincodesCollectionsInterest.should.deep.equal([chaincode_collection]);
 			const interest = proposal.buildProposalInterest();
 			interest.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
 		});
 		it('should require a string chaincode name', () => {
 			(() => {
 				proposal.addChaincodeCollectionsInterest({});
-			}).should.throw('Invalid chaincode_name parameter');
+			}).should.throw('Invalid chaincodeName parameter');
 		});
 	});
 
@@ -283,49 +283,49 @@ describe('Proposal', () => {
 	});
 
 	describe('#compareProposalResponseResults', () => {
-		it('should require a proposal_responses', () => {
+		it('should require a proposalResponses', () => {
 			(() => {
 				proposal.compareProposalResponseResults();
-			}).should.throw('Missing proposal_responses parameter');
+			}).should.throw('Missing proposalResponses parameter');
 		});
-		it('should require an array of proposal_responses', () => {
+		it('should require an array of proposalResponses', () => {
 			(() => {
 				proposal.compareProposalResponseResults('string');
-			}).should.throw('proposal_responses must be an array but was string');
+			}).should.throw('proposalResponses must be an array, typeof=string');
 		});
-		it('should require an array of proposal_responses', () => {
+		it('should require an array of proposalResponses 2', () => {
 			(() => {
 				proposal.compareProposalResponseResults([]);
-			}).should.throw('proposal_responses is empty');
+			}).should.throw('proposalResponses is empty');
 		});
-		it('if proposal_responses has any error return false', () => {
-			const proposal_responses = [
+		it('if proposalResponses has any error return false', () => {
+			const proposalResponses = [
 				new Error('proposal error')
 			];
-			const results = proposal.compareProposalResponseResults(proposal_responses);
+			const results = proposal.compareProposalResponseResults(proposalResponses);
 			results.should.be.false;
 		});
-		it('if only one proposal_responses return true', () => {
-			const proposal_responses = [
+		it('if only one proposalResponses return true', () => {
+			const proposalResponses = [
 				{payload: TestUtils.createResponsePayload('result1')}
 			];
-			const results = proposal.compareProposalResponseResults(proposal_responses);
+			const results = proposal.compareProposalResponseResults(proposalResponses);
 			results.should.be.true;
 		});
-		it('if two same proposal_responses return true', () => {
-			const proposal_responses = [
+		it('if two same proposalResponses return true', () => {
+			const proposalResponses = [
 				{payload: TestUtils.createResponsePayload('result1')},
 				{payload: TestUtils.createResponsePayload('result1')}
 			];
-			const results = proposal.compareProposalResponseResults(proposal_responses);
+			const results = proposal.compareProposalResponseResults(proposalResponses);
 			results.should.be.true;
 		});
-		it('if two not same proposal_responses return false', () => {
-			const proposal_responses = [
+		it('if two not same proposalResponses return false', () => {
+			const proposalResponses = [
 				{payload: TestUtils.createResponsePayload('result1')},
 				{payload: TestUtils.createResponsePayload('result2')}
 			];
-			const results = proposal.compareProposalResponseResults(proposal_responses);
+			const results = proposal.compareProposalResponseResults(proposalResponses);
 			results.should.be.false;
 		});
 	});
@@ -333,12 +333,12 @@ describe('Proposal', () => {
 	describe('#_getProposalResponseResults', () => {
 		const _getProposalResponseResults = Proposal.__get__('_getProposalResponseResults');
 
-		it('should require a proposal_response', () => {
+		it('should require a proposalResponse', () => {
 			(() => {
 				_getProposalResponseResults();
-			}).should.throw('Missing proposal_response parameter');
+			}).should.throw('Missing proposalResponse parameter');
 		});
-		it('should require a proposal_response.payload', () => {
+		it('should require a proposalResponse.payload', () => {
 			(() => {
 				_getProposalResponseResults({});
 			}).should.throw('Parameter must be a ProposalResponse Object');
@@ -347,16 +347,16 @@ describe('Proposal', () => {
 
 
 	describe('#verifyProposalResponse', () => {
-		it('should require proposal_response', () => {
+		it('should require proposalResponse', () => {
 			(() => {
 				proposal.verifyProposalResponse();
-			}).should.throw('Missing proposal_response parameter');
+			}).should.throw('Missing proposalResponse parameter');
 		});
 		it('should be false if an error', () => {
 			const results = proposal.verifyProposalResponse(new Error('bad'));
 			results.should.be.false;
 		});
-		it('should require proposal_response.endorsement', () => {
+		it('should require proposalResponse.endorsement', () => {
 			(() => {
 				proposal.verifyProposalResponse({});
 			}).should.throw('Parameter must be a ProposalResponse Object');

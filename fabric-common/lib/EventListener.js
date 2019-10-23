@@ -40,8 +40,10 @@ class EventListener {
 	 *  and when there is a match
 	 *  the event will have taken place and the listener's callback will be
 	 *  called (notified).
+	 * @param {string} [chaincodeId] - optional - used to isolate chaincode events
+	 *  to a specific chaincode.
 	 */
-	constructor(listenerType = checkParameter('listenerType'), callback = checkParameter('callback'), options, event) {
+	constructor(listenerType = checkParameter('listenerType'), callback = checkParameter('callback'), options, event, chaincodeId) {
 		this.type = TYPE;
 		this.listenerType = listenerType;
 		if (listenerType === EventListener.TX && !event) {
@@ -57,6 +59,7 @@ class EventListener {
 		this.endBlock = convertToLong(options.endBlock, false);
 		this.startBlock = convertToLong(options.startBlock, false);
 		this.event = event;
+		this.chaincodeId = chaincodeId;
 	}
 
 	/**

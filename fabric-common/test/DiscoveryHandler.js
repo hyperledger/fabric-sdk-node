@@ -168,41 +168,51 @@ describe('DiscoveryHandler', () => {
 		channel = client.newChannel('mychannel');
 		const peer11 = client.newEndorser(org1[1], org1[0]);
 		peer11.sendProposal = sandbox.stub().resolves(good);
+		peer11.connected = true;
 		channel.addEndorser(peer11);
 		const peer12 = client.newEndorser(org1[2], org1[0]);
 		peer12.sendProposal = sandbox.stub().resolves(good);
+		peer12.connected = true;
 		channel.addEndorser(peer12);
 
 		const peer21 = client.newEndorser(org2[1], org2[0]);
 		peer21.sendProposal = sandbox.stub().resolves(good);
+		peer21.connected = true;
 		channel.addEndorser(peer21);
 		const peer22 = client.newEndorser(org2[2], org2[0]);
 		peer22.sendProposal = sandbox.stub().resolves(good);
+		peer22.connected = true;
 		channel.addEndorser(peer22);
 
 		const peer31 = client.newEndorser(org3[1], org3[0]);
 		peer31.sendProposal = sandbox.stub().resolves(good);
+		peer31.connected = true;
 		channel.addEndorser(peer31);
 		const peer32 = client.newEndorser(org3[2], org3[0]);
 		peer32.sendProposal = sandbox.stub().resolves(good);
+		peer32.connected = true;
 		channel.addEndorser(peer32);
 		const peer33 = client.newEndorser(org3[3], org3[0]);
 		peer33.sendProposal = sandbox.stub().resolves(good);
+		peer33.connected = true;
 		channel.addEndorser(peer33);
 
 		const orderer1 = client.newCommitter('orderer1', 'msp1');
 		orderer1.sendBroadcast = sandbox.stub().resolves({status: 'SUCCESS'});
+		orderer1.connected = true;
 		channel.addCommitter(orderer1);
 
 		const orderer2 = client.newCommitter('orderer2', 'msp2');
 		orderer2.sendBroadcast = sandbox.stub().resolves({status: 'SUCCESS'});
+		orderer2.connected = true;
 		channel.addCommitter(orderer2);
 
 		const orderer3 = client.newCommitter('orderer3', 'msp1');
 		orderer3.sendBroadcast = sandbox.stub().resolves({status: 'SUCCESS'});
+		orderer3.connected = true;
 		channel.addCommitter(orderer3);
 
-		discovery = channel.newDiscovery('mydiscovery');
+		discovery = channel.newDiscoveryService('mydiscovery');
 		discovery.getDiscoveryResults = sandbox.stub().resolves({});
 		discoveryHandler = new DiscoveryHandler(discovery);
 
@@ -230,19 +240,19 @@ describe('DiscoveryHandler', () => {
 	});
 
 	describe('#query', () => {
-		it('should reject if signedEnvelope arg is not given', async () => {
-			await discoveryHandler.query().should.be.rejectedWith(/Missing signedEnvelope parameter/);
+		it('should reject if signedProposal arg is not given', async () => {
+			await discoveryHandler.query().should.be.rejectedWith(/Missing signedProposal parameter/);
 		});
 		it('should reject if endorsers are missing', async () => {
-			await discoveryHandler.query('signedEnvelope', {mspid: 'msp3'}).should.be.rejectedWith(/No endorsers assigned to the channel/);
+			await discoveryHandler.query('signedProposal', {mspid: 'msp3'}).should.be.rejectedWith(/No endorsers assigned to the channel/);
 		});
 		it('should run with endorsers assigned by mspid', async () => {
-			const results = await discoveryHandler.query('signedEnvelope', {mspid: 'Org1MSP'});
+			const results = await discoveryHandler.query('signedProposal', {mspid: 'Org1MSP'});
 			results[0].should.deep.equal(good);
 			results[1].should.deep.equal(good);
 		});
 		it('should run with endorsers assigned', async () => {
-			const results = await discoveryHandler.query('signedEnvelope');
+			const results = await discoveryHandler.query('signedProposal');
 			results[0].should.deep.equal(good);
 			results[1].should.deep.equal(good);
 			results[2].should.deep.equal(good);
@@ -250,7 +260,7 @@ describe('DiscoveryHandler', () => {
 		it('should run with endorsers assigned', async () => {
 			const error = Error('FAILED');
 			channel.getEndorser(org1[1]).sendProposal = sandbox.stub().rejects(error);
-			const results = await discoveryHandler.query('signedEnvelope', {requestTimeout: 2000});
+			const results = await discoveryHandler.query('signedProposal', {requestTimeout: 2000});
 			results[0].should.deep.equal(error);
 			results[1].should.deep.equal(good);
 			results[2].should.deep.equal(good);

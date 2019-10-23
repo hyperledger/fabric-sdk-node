@@ -11,7 +11,7 @@ const should = chai.should();
 chai.use(chaiAsPromised);
 const sinon = require('sinon');
 
-const Discovery = rewire('../lib/Discovery');
+const DiscoveryService = rewire('../lib/DiscoveryService');
 const Client = require('../lib/Client');
 const Discoverer = require('../lib/Discoverer');
 const Endorser = require('../lib/Endorser');
@@ -19,7 +19,7 @@ const Committer = require('../lib/Committer');
 const User = rewire('../lib/User');
 const TestUtils = require('./TestUtils');
 
-describe('Discovery', () => {
+describe('DiscoveryService', () => {
 	const cc_query_res = {result: 'cc_query_res',
 		cc_query_res: {content: [{
 			chaincode: 'mychaincode',
@@ -60,12 +60,20 @@ describe('Discovery', () => {
 	const config_result = {result: 'config_result',
 		config_result: {
 			msps: {
-				msp1: TestUtils.createMsp(),
-				msp2: TestUtils.createMsp()
+				msp1: TestUtils.createMsp('msp1'),
+				msp2: TestUtils.createMsp('msp2')
 			},
 			orderers: {
 				msp1: TestUtils.createEndpoints('hosta', 2),
 				msp2: TestUtils.createEndpoints('hostb', 2)
+			}
+		}
+	};
+	const config_result2 = {result: 'config_result',
+		config_result: {
+			msps: {
+				msp1: TestUtils.createMsp('msp1'),
+				msp2: TestUtils.createMsp('msp2')
 			}
 		}
 	};
@@ -108,15 +116,16 @@ describe('Discovery', () => {
 			}
 		};
 		sandbox.stub(FakeLogger);
-		revert.push(Discovery.__set__('logger', FakeLogger));
+		revert.push(DiscoveryService.__set__('logger', FakeLogger));
 
 		discoverer = new Discoverer('mydiscoverer', client);
 		endpoint = client.newEndpoint({url: 'grpc://somehost.com'});
 		discoverer.endpoint = endpoint;
-		discovery = new Discovery('mydiscovery', channel);
+		discovery = new DiscoveryService('mydiscovery', channel);
 		client.getEndorser = sinon.stub().returns(endorser);
 		client.newEndorser = sinon.stub().returns(endorser);
 		endorser.connect.resolves(true);
+		endorser.connected = true;
 		client.newCommitter = sinon.stub().returns(committer);
 		committer.connect.resolves(true);
 		committer.name = 'mycommitter';
@@ -134,24 +143,48 @@ describe('Discovery', () => {
 	describe('#constructor', () => {
 		it('should require a name', () => {
 			(() => {
-				new Discovery();
+				new DiscoveryService();
 			}).should.throw('Missing name parameter');
 		});
 		it('should require a Channel', () => {
 			(() => {
-				new Discovery('chaincode');
+				new DiscoveryService('chaincode');
 			}).should.throw('Missing channel parameter');
 		});
 		it('should create', () => {
-			const discovery2 = new Discovery('chaincode', channel);
-			discovery2.type.should.equal('Discovery');
+			const discovery2 = new DiscoveryService('chaincode', channel);
+			discovery2.type.should.equal('DiscoveryService');
+		});
+	});
+
+	describe('#setTargets', () => {
+		it('should require targets', () => {
+			(() => {
+				discovery.setTargets();
+			}).should.throw('Missing targets parameter');
+		});
+		it('should require targets as an array', () => {
+			(() => {
+				discovery.setTargets(discoverer);
+			}).should.throw('targets parameter is not an array');
+		});
+		it('should throw when target not connected', () => {
+			(() => {
+				discovery.setTargets([discoverer]);
+			}).should.throw('Discoverer mydiscoverer is not connected');
+		});
+		it('should handle connected target', () => {
+			discoverer.connected = true;
+			discovery.setTargets([discoverer]);
+			should.equal(discovery.targets[0].type, 'Discoverer');
+			should.equal(discovery.targets[0].name, 'mydiscoverer');
 		});
 	});
 
 	describe('#newHandler', () => {
 		it('should return new handler', () => {
 			const handler = discovery.newHandler();
-			should.equal(handler.discovery.type, 'Discovery');
+			should.equal(handler.discovery.type, 'DiscoveryService');
 			should.equal(handler.discovery.name, 'mydiscovery');
 		});
 	});
@@ -206,7 +239,7 @@ describe('Discovery', () => {
 			discovery.build(idx);
 			discovery.sign(idx);
 			sinon.stub(discoverer, 'sendDiscovery').resolves({});
-			await discovery.send({targets: [discoverer]}).should.be.rejectedWith('Discovery has failed to return results');
+			await discovery.send({targets: [discoverer]}).should.be.rejectedWith('DiscoveryService has failed to return results');
 		});
 		it('should be able to handle result error', async () => {
 			discovery.build(idx);
@@ -224,13 +257,30 @@ describe('Discovery', () => {
 			discovery.build(idx);
 			discovery.sign(idx);
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results:[{result: 'error', error: {content: 'result error'}}]});
-			await discovery.send({targets: [discoverer]}).should.be.rejectedWith('Discovery: mydiscovery error: result error');
+			await discovery.send({targets: [discoverer]}).should.be.rejectedWith('DiscoveryService: mydiscovery error: result error');
+		});
+		it('handle results from config with preexist target', async () => {
+			discovery.build(idx);
+			discovery.sign(idx);
+			endorser.name = 'peer1';
+			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result]});
+			discovery.targets = [discoverer];
+			const results = await discovery.send();
+			should.exist(results.msps);
 		});
 		it('handle results from config', async () => {
 			discovery.build(idx);
 			discovery.sign(idx);
 			endorser.name = 'peer1';
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result]});
+			const results = await discovery.send({targets: [discoverer]});
+			should.exist(results.msps);
+		});
+		it('handle results from config with no orderers', async () => {
+			discovery.build(idx);
+			discovery.sign(idx);
+			endorser.name = 'peer1';
+			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result2]});
 			const results = await discovery.send({targets: [discoverer]});
 			should.exist(results.msps);
 		});
@@ -256,7 +306,7 @@ describe('Discovery', () => {
 			discovery.sign(idx);
 			endorser.name = 'peer3';
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result, bad_members]});
-			const results = await discovery.send({targets: [discoverer]});
+			const results = await discovery.send({targets: [discoverer], asLocalhost: true});
 			should.exist(results.peers_by_org);
 
 		});
@@ -302,7 +352,7 @@ describe('Discovery', () => {
 	describe('#toString', () => {
 		it('should return string', () => {
 			const string = discovery.toString();
-			should.equal(string, 'Discovery: {name: mydiscovery, channel: mychannel}');
+			should.equal(string, 'DiscoveryService: {name: mydiscovery, channel: mychannel}');
 		});
 	});
 
@@ -535,8 +585,8 @@ describe('Discovery', () => {
 		it('should handle no msps', async () => {
 			const config = {
 				msps: {
-					msp1: TestUtils.createMsp(),
-					msp2: TestUtils.createMsp()
+					msp1: TestUtils.createMsp('msp3'),
+					msp2: TestUtils.createMsp('msp4')
 				}
 			};
 			const results = await discovery._processConfig(config);

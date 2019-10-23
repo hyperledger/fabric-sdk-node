@@ -56,7 +56,8 @@ class Endorser extends ServiceEndpoint {
 	 * @param {Number} timeout - A number indicating milliseconds to wait on the
 	 *  response before rejecting the promise with a timeout error. This
 	 *  overrides the requestTimeout config connection setting of this instance.
-	 * @returns {Promise} A Promise for a {@link ProposalResponse}
+	 * @returns {Promise} A Promise for a Object that is the Protobuf
+	 *  'protos.ProposalResponse' see fabric-protos/protos/peer/proposal_response.proto
 	 */
 	sendProposal(signedProposal, timeout) {
 		const method = `sendProposal[${this.name}]`;

@@ -270,7 +270,7 @@ module.exports = function () {
 				});
 
 				// ----- D I S C O V E R Y -----
-				const discovery = channel.newDiscovery('mydiscovery');
+				const discovery = channel.newDiscoveryService('mydiscovery');
 				const discoverer = client.newDiscoverer('peer1-discovery');
 
 				try {
@@ -389,7 +389,7 @@ module.exports = function () {
 					'ssl-target-name-override': 'peer0.org1.example.com'
 				});
 
-				const discovery = channel.newDiscovery('mydiscovery');
+				const discovery = channel.newDiscoveryService('mydiscovery');
 				const discoverer = client.newDiscoverer('peer1-discovery');
 				const event_service = channel.newEventService('myevent_service');
 
@@ -814,6 +814,7 @@ module.exports = function () {
 					}, 10000);
 
 					event_service.registerChaincodeListener(
+						chaincode_name,
 						'newcar',
 						(error, event) => {
 							clearTimeout(handle);

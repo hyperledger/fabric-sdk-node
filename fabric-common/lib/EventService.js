@@ -69,23 +69,54 @@ class EventService extends ServiceAction {
 		// the last block number received
 		this.lastBlockNumber = null;
 
-		this.start_block = NEWEST;
-		this.end_block = null;
-		this.end_block_seen = false;
+		this.startBlock = NEWEST;
+		this.endBlock = null;
+		this._end_block_seen = false;
 
-		this._eventRegistrations = new Map();
+		this._eventListenerRegistrations = new Map();
 		this._reg_counter = 0;
 		this._haveBlockListeners = false;
 		this._haveTxListeners = false;
 		this._haveChaincodeListeners = false;
 
 		// peer's event service
-		this.eventer = null;
-
+		this.targets = null;
+		this._current_eventer = null;
 		// closing state to case of multiple calls
 		this._close_running = false;
+		// remember the blockType this EventService is listening
+		// will be set during the .build call
+		this.blockType = null;
 
 		this.channel = channel;
+	}
+
+	/**
+	 * Use this method to set the ServiceEndpoint for this ServiceAction class
+	 * The {@link Eventer} a ServiceEndpoint must be connected before making
+	 * this assignment.
+	 * @property {Eventer[]} targets - The connected Eventer instances to
+	 *  be used when no targets are provided on the send.
+	 */
+	setTargets(targets = checkParameter('targets')) {
+		const method = `setTargets[${this.name}]`;
+		logger.debug('%s - start', method);
+
+		if (!Array.isArray(targets)) {
+			throw Error('targets parameter is not an array');
+		}
+
+		for (const eventer of targets) {
+			if (eventer.connected) {
+				logger.debug('%s - target is connected %s', method, eventer.name);
+			} else {
+				throw Error(`Eventer ${eventer.name} is not connected`);
+			}
+		}
+		// must be all targets are connected
+		this.targets = targets;
+
+		return this;
 	}
 
 	/*
@@ -124,9 +155,9 @@ class EventService extends ServiceAction {
 		}
 		this._close_running = true;
 		this._closeAllCallbacks(reason_error);
-		if (this.eventer) {
-			this.eventer.disconnect();
-			this.eventer = null;
+		if (this._current_eventer) {
+			this._current_eventer.disconnect();
+			this._current_eventer = null;
 		}
 		this._close_running = false;
 
@@ -183,10 +214,10 @@ class EventService extends ServiceAction {
 		logger.debug(`${method} - start`);
 
 		const {startBlock, endBlock, blockType = FILTERED_BLOCK} = options;
-		this.start_block = this._checkBlockNum(startBlock);
-		this.end_block = this._checkBlockNum(endBlock);
-		if (this.start_block && this.end_block && this.end_block.greaterThan && this.start_block.greaterThan) {
-			if (this.start_block.greaterThan(this.end_block)) {
+		this.startBlock = this._checkBlockNum(startBlock);
+		this.endBlock = this._checkBlockNum(endBlock);
+		if (this.startBlock && this.endBlock && this.endBlock.greaterThan && this.startBlock.greaterThan) {
+			if (this.startBlock.greaterThan(this.endBlock)) {
 				throw Error('"startBlock" must not be greater than "endBlock"');
 			}
 		}
@@ -208,35 +239,35 @@ class EventService extends ServiceAction {
 
 		// build start proto
 		const seekStart = new fabprotos.orderer.SeekPosition();
-		if (!this.start_block || this.start_block === NEWEST) {
-			if (this.end_block === OLDEST) {
+		if (!this.startBlock || this.startBlock === NEWEST) {
+			if (this.endBlock === OLDEST) {
 				throw Error('"startBlock" must not be greater than "endBlock"');
 			}
 			const seekNewest = new fabprotos.orderer.SeekNewest();
 			seekStart.setNewest(seekNewest);
-		} else if (this.start_block === OLDEST) {
+		} else if (this.startBlock === OLDEST) {
 			const seekOldest = new fabprotos.orderer.SeekOldest();
 			seekStart.setOldest(seekOldest);
-		} else if (this.start_block) {
+		} else if (this.startBlock) {
 			const seekSpecifiedStart = new fabprotos.orderer.SeekSpecified();
-			seekSpecifiedStart.setNumber(this.start_block);
+			seekSpecifiedStart.setNumber(this.startBlock);
 			seekStart.setSpecified(seekSpecifiedStart);
 		}
 
 		// build stop proto
 		const seekStop = new fabprotos.orderer.SeekPosition();
-		if (this.end_block === NEWEST) {
+		if (this.endBlock === NEWEST) {
 			const seekNewest = new fabprotos.orderer.SeekNewest();
 			seekStop.setNewest(seekNewest);
 			behavior = fabprotos.orderer.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
-		} else if (this.end_block === OLDEST) {
+		} else if (this.endBlock === OLDEST) {
 			const seekOldest = new fabprotos.orderer.SeekOldest();
 			seekStop.setOldest(seekOldest);
 			behavior = fabprotos.orderer.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
 		} else {
 			const seekSpecifiedStop = new fabprotos.orderer.SeekSpecified();
-			if (this.end_block) {
-				seekSpecifiedStop.setNumber(this.end_block);
+			if (this.endBlock) {
+				seekSpecifiedStop.setNumber(this.endBlock);
 				// user should be told that the block does not exist
 				behavior = fabprotos.orderer.SeekInfo.SeekBehavior.FAIL_IF_NOT_READY;
 			} else {
@@ -292,18 +323,26 @@ class EventService extends ServiceAction {
 
 		const {targets = checkParameter('targets'), requestTimeout} = request;
 		const envelope = this.getSignedEnvelope();
-		this.eventer = null;
+		this._current_eventer = null;
 		let start_error = null;
-		this.end_block_seen = false;
+		this._end_block_seen = false;
+
+		if (targets) {
+			this.targets = targets;
+		} else if (this.targets) {
+			logger.debug('%s - using preassigned targets', method);
+		} else {
+			checkParameter('targets');
+		}
 
 		for (const target of targets) {
 			try {
-				this.eventer = await this._startService(target, envelope, requestTimeout);
+				this._current_eventer = await this._startService(target, envelope, requestTimeout);
 			} catch (error) {
 				logger.error('%s - Starting stream to %s failed', method, target.name);
 				start_error = error;
 			}
-			if (this.eventer) {
+			if (this._current_eventer) {
 				start_error = null;
 				break;
 			}
@@ -333,6 +372,7 @@ class EventService extends ServiceAction {
 			if (!requestTimeout) {
 				requestTimeout = eventer.endpoint.options.requestTimeout;
 			}
+			logger.debug('%a - setup timer %s', method, requestTimeout);
 
 			logger.debug('%s - create stream setup timeout', method);
 			const connection_setup_timeout = setTimeout(() => {
@@ -394,9 +434,9 @@ class EventService extends ServiceAction {
 						this._processEndBlock(block_num);
 
 						// check to see if we should shut things down
-						if (this.end_block) {
-							if (this.end_block.lessThanOrEqual(this.lastBlockNumber)) {
-								this.end_block_seen = true;
+						if (this.endBlock) {
+							if (this.endBlock.lessThanOrEqual(this.lastBlockNumber)) {
+								this._end_block_seen = true;
 								this._close(new Error(`Shutdown due to end block number has been seen: ${this.lastBlockNumber.toNumber()}`));
 							}
 						}
@@ -409,14 +449,16 @@ class EventService extends ServiceAction {
 				} else if (deliverResponse.Type === 'status') {
 					if (deliverResponse.status === 'SUCCESS') {
 						logger.debug('%s - on.data received type status of SUCCESS', method);
-						if (this.end_block_seen) {
+						if (this._end_block_seen) {
 							// this is normal after the last block comes in when we set an ending block
-							logger.debug('on.data - status received after last block seen: %s block_num:', deliverResponse.status, this.lastBlockNumber.toNumber());
-						}
-						if (this.ending_block === NEWEST) {
+							logger.debug('on.data - status received after last block seen: %s block_num: %s', deliverResponse.status, this.lastBlockNumber.toNumber());
+						} else if (this.endBlock === NEWEST) {
 							// this is normal after the last block comes in when we set to newest as an ending block
-							logger.debug('on.data - status received when newest block seen: %s block_num:', deliverResponse.status, this.lastBlockNumber.toNumber());
+							logger.debug('on.data - status received when newest block seen: %s block_num: %s', deliverResponse.status, this.lastBlockNumber.toNumber());
 							this._close(new Error(`Newest block received:${this.lastBlockNumber.toNumber()} status:${deliverResponse.status}`));
+						} else if (this.endBlock) {
+							logger.debug('on.data - status received before the endblock has been seen');
+							this._close(new Error(`End block of ${this.endBlock.toNumber()} not received. Last block received ${this.lastBlockNumber.toNumber()}`));
 						}
 					} else {
 						// tell all registered users that something is wrong and shutting down
@@ -447,7 +489,7 @@ class EventService extends ServiceAction {
 				// down only if this event service has been started, which means
 				// that event service has an eventer endpoint assigned and this
 				// service is actively listening
-				if (this.eventer) {
+				if (this._current_eventer) {
 					logger.debug('%s - close all application listeners', method);
 					this._close(end_error);
 				} else {
@@ -480,7 +522,7 @@ class EventService extends ServiceAction {
 				// down only if this event service has been started, which means
 				// that event service has an eventer endpoint assigned and this
 				// service is actively listening
-				if (this.eventer) {
+				if (this._current_eventer) {
 					logger.debug('%s - close all application listeners - %s', method, out_error);
 					this._close(out_error);
 				} else {
@@ -489,8 +531,8 @@ class EventService extends ServiceAction {
 					// we may try another target on the list or the application
 					// will try with another targets list
 					logger.error('%s - reject the promise - %s', method, out_error);
-					reject(out_error);
 				}
+				reject(out_error);
 			});
 
 			try {
@@ -510,11 +552,26 @@ class EventService extends ServiceAction {
 	 * {@link Eventer} assigned and the event endpoint has a listening stream
 	 * connected and active.
 	 */
+	isStarted() {
+		const method = `isStarted[${this.name}]`;
+		logger.debug(`${method} - start`);
+
+		if (this._current_eventer && this._current_eventer.isStreamReady()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Use this method to indicate if this event service has event listeners
+	 * {@link EventListener} assigned and waiting for an event.
+	 */
 	isListening() {
 		const method = `isListening[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		if (this.eventer && this.eventer.isStreamReady()) {
+		if (this._eventListenerRegistrations.size > 0) {
 			return true;
 		} else {
 			return false;
@@ -530,12 +587,12 @@ class EventService extends ServiceAction {
 		const method = `_closeAllCallbacks[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		logger.debug('%s - event registrations %s', method, this._eventRegistrations.size);
-		for (const event_reg of this._eventRegistrations.values()) {
+		logger.debug('%s - event registrations %s', method, this._eventListenerRegistrations.size);
+		for (const event_reg of this._eventListenerRegistrations.values()) {
 			logger.debug('%s - closing event registration:%s', method, event_reg);
 			event_reg.onEvent(err);
 		}
-		this._eventRegistrations.clear();
+		this._eventListenerRegistrations.clear();
 
 		// all done
 		logger.debug('%s - end', method);
@@ -563,7 +620,7 @@ class EventService extends ServiceAction {
 	}
 
 	/**
-	 * @typedef {Object} RegistrationOpts
+	 * @typedef {Object} EventRegistrationOptions
 	 * @property {boolean} unregister - Optional - This options setting indicates
 	 *  the registration should be removed (unregister) when the event
 	 *  is seen or the endBlock seen. When the application is using a timeout
@@ -601,8 +658,8 @@ class EventService extends ServiceAction {
 	unregisterEventListener(eventListener = checkParameter('eventListener')) {
 		const method = `unregisterEventListener[${this.name}]`;
 		logger.debug(`${method} - start - eventListener:${eventListener}`);
-		if (this._eventRegistrations.has(eventListener)) {
-			this._eventRegistrations.delete(eventListener);
+		if (this._eventListenerRegistrations.has(eventListener)) {
+			this._eventListenerRegistrations.delete(eventListener);
 		} else {
 			throw Error('eventListener not found');
 		}
@@ -610,7 +667,7 @@ class EventService extends ServiceAction {
 		let found_block = false;
 		let found_tx = false;
 		let found_chaincode = false;
-		for (const event_reg of this._eventRegistrations.values()) {
+		for (const event_reg of this._eventListenerRegistrations.values()) {
 			if (event_reg.listenerType === BLOCK) {
 				found_block = true;
 			} else if (event_reg.listenerType === TX) {
@@ -636,7 +693,7 @@ class EventService extends ServiceAction {
 	 * @param {function} callback - Callback function that takes two parameters:
 	 *  <ul>
 	 *  <li>{Error} error
-	 *  <li>{BlockEvent} event
+	 *  <li>{EventInfo} event
 	 *  </ul>
 	 *  The "error" will be null unless this EventService has been shutdown.
 	 *  The shutdown may be caused by a network, connection error,
@@ -646,19 +703,19 @@ class EventService extends ServiceAction {
 	 *  shutdown due to the last block being received if the service has been
 	 *  setup with an endBlock to be 'newest' or a specific block number that
 	 *  has been seen.
-	 * <br> The "event" will be the {@link BlockEvent} object.
-	 * @param {RegistrationOpts} options - Options on the registrations to allow
+	 * <br> The "event" will be the {@link EventInfo} object.
+	 * @param {EventRegistrationOptions} options - Options on the registrations to allow
 	 *  for start and end block numbers, automatically unregister.
 	 * @returns {EventListener} The EventListener instance to be used to
 	 *  remove this registration using {@link EventService#unregisterEvent})
 	 */
-	registerChaincodeListener(eventName = checkParameter('eventName'), callback = checkParameter('callback'), options) {
+	registerChaincodeListener(chaincodeId = checkParameter('chaincodeId'), eventName = checkParameter('eventName'), callback = checkParameter('callback'), options) {
 		const method = `registerChaincodeListener[${this.name}]`;
 		logger.debug(`${method} - start`);
 
 		const event_name = new RegExp(eventName);
-		const event_reg = new EventListener(CHAINCODE, callback, options, event_name);
-		this._eventRegistrations.set(event_reg, event_reg);
+		const event_reg = new EventListener(CHAINCODE, callback, options, event_name, chaincodeId);
+		this._eventListenerRegistrations.set(event_reg, event_reg);
 		this._haveChaincodeListeners = true;
 
 		return event_reg;
@@ -684,7 +741,7 @@ class EventService extends ServiceAction {
 	 *  setup with an endBlock to be 'newest' or a specific block number that
 	 *  has been seen.
 	 * <br> The Event will be the {@link Event} object.
-	 * @param {RegistrationOpts} options - Options on the registrations to allow
+	 * @param {EventRegistrationOptions} options - Options on the registrations to allow
 	 *  for start and end block numbers, automatically unregister and
 	 *  automatically disconnect.
 	 * @returns {EventListener} The EventListener instance to be used to
@@ -695,7 +752,7 @@ class EventService extends ServiceAction {
 		logger.debug(`${method} - start`);
 
 		const event_reg = new EventListener(BLOCK, callback, options, null);
-		this._eventRegistrations.set(event_reg, event_reg);
+		this._eventListenerRegistrations.set(event_reg, event_reg);
 		this._haveBlockListeners = true;
 
 		return event_reg;
@@ -722,7 +779,7 @@ class EventService extends ServiceAction {
 	 *  This callback will also be called with an Error when the EventService is
 	 *  shutdown due to the last block being received if replaying and requesting
 	 *  the endBlock to be 'newest' or a specific value.
-	 * @param {RegistrationOpts} options - Options on the registrations to allow
+	 * @param {EventRegistrationOptions} options - Options on the registrations to allow
 	 *  for start and end block numbers, automatically unregister.
 	 * @returns {EventListener} The EventListener instance to be used to
 	 *  remove this registration using {@link EventService#unregisterEvent})
@@ -746,7 +803,7 @@ class EventService extends ServiceAction {
 		}
 
 		const event_reg = new EventListener(TX, callback, send_options, _txid);
-		this._eventRegistrations.set(event_reg, event_reg);
+		this._eventListenerRegistrations.set(event_reg, event_reg);
 		this._haveTxListeners = true;
 
 		return event_reg;
@@ -761,10 +818,10 @@ class EventService extends ServiceAction {
 		const method = `_processEndBlock[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		for (const listener of this._eventRegistrations.values()) {
+		for (const listener of this._eventListenerRegistrations.values()) {
 			if (listener.endBlock) {
 				if (listener.endBlock.equals(block_num)) {
-					const event = new BlockEvent(this);
+					const event = new EventInfo(this);
 					event.endBlockReceived = true;
 					event.blockNumber = block_num;
 					listener.onEvent(null, event);
@@ -793,10 +850,10 @@ class EventService extends ServiceAction {
 			logger.debug(`${method} - no block listeners`);
 			return;
 		}
-		for (const block_reg of this._eventRegistrations.values()) {
+		for (const block_reg of this._eventListenerRegistrations.values()) {
 			if (block_reg.listenerType === BLOCK) {
 				logger.debug(`${method} - calling block listener callback`);
-				const event = new BlockEvent(this);
+				const event = new EventInfo(this);
 				event.block = full;
 				event.filteredBlock = filtered;
 				event.privateData = private_data;
@@ -852,13 +909,13 @@ class EventService extends ServiceAction {
 		const method = `_callTransactionListener[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		for (const trans_reg of this._eventRegistrations.values()) {
+		for (const trans_reg of this._eventListenerRegistrations.values()) {
 			// check each listener to see if this transaction ID matches
 			if (trans_reg.listenerType === TX) {
 				if (trans_reg.event === tx_id || trans_reg.event === ALL) {
 					logger.debug(`${method} - about to call the transaction call back with code=${val_code} tx=${tx_id}`);
 					const status = convertValidationCode(val_code);
-					const event = new BlockEvent(this);
+					const event = new EventInfo(this);
 					event.blockNumber = block_num;
 					event.transactionId = tx_id;
 					event.status = status;
@@ -928,7 +985,8 @@ class EventService extends ServiceAction {
 								const channelHeader = full_block.data.data[index].payload.header.channel_header;
 								const val_code = txStatusCodes[index];
 
-								this._queueChaincodeEvent(chaincode_event,
+								this._queueChaincodeEvent(
+									chaincode_event,
 									full_block.header.number,
 									channelHeader.tx_id,
 									val_code,
@@ -969,14 +1027,16 @@ class EventService extends ServiceAction {
 
 		logger.debug(`${method} - txid=${tx_id}  val_code=${tx_status}`);
 
-		for (const chaincode_reg of this._eventRegistrations.values()) {
+		for (const chaincode_reg of this._eventListenerRegistrations.values()) {
 			// check each listener to see if this chaincode event matches
-			if (chaincode_reg.listenerType === CHAINCODE && chaincode_reg.event.test(chaincode_event.event_name)) {
+			if (chaincode_reg.listenerType === CHAINCODE &&
+				chaincode_reg.chaincodeId === chaincode_event.chaincode_id &&
+				chaincode_reg.event.test(chaincode_event.event_name)) {
 				// we have a match - save it to be sent later
 				logger.debug(`${method} - queuing chaincode event: ${chaincode_event.event_name}`);
 				let event = all_events.get(chaincode_reg);
 				if (!event) {
-					event = new BlockEvent(this);
+					event = new EventInfo(this);
 					event.blockNumber = block_num;
 					event.chaincodeEvents = [];
 					all_events.set(chaincode_reg, event);
@@ -1034,7 +1094,7 @@ class ChaincodeEvent {
 	}
 }
 /**
- * @typedef {Object} BlockEvent
+ * @typedef {Object} EventInfo
  * @property {EventService} EventService - this EventService.
  * @property {Long} - blockNumber - The block number that contains
  *  this event.
@@ -1050,9 +1110,9 @@ class ChaincodeEvent {
  * @property {object} [privateData] -A data map of any included private data.
  */
 
-class BlockEvent {
+class EventInfo {
 	/**
-	 * Constructs a {@link BlockEvent} object that contains all information about an Event.
+	 * Constructs a {@link EventInfo} object that contains all information about an Event.
 	 */
 	constructor(eventHub) {
 		this.eventHub = eventHub;

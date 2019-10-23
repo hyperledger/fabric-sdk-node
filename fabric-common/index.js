@@ -18,6 +18,27 @@ const User = require('./lib/User');
 const BaseClient = require('./lib/BaseClient');
 const Client = require('./lib/Client');
 
+const BlockDecoder = require('./lib/BlockDecoder');
+const Channel = require('./lib/Channel');
+const Commit = require('./lib/Commit');
+const Committer = require('./lib/Committer');
+const Discoverer = require('./lib/Discoverer');
+const DiscoveryHandler = require('./lib/DiscoveryHandler');
+const DiscoveryService = require('./lib/DiscoveryService');
+const Endorsement = require('./lib/Endorsement');
+const Endorser = require('./lib/Endorser');
+const Endpoint = require('./lib/Endpoint');
+const Eventer = require('./lib/Eventer');
+const EventListener = require('./lib/EventListener');
+const EventService = require('./lib/EventService');
+const Hash = require('./lib/Hash');
+const IdentityContext = require('./lib/IdentityContext');
+const Proposal = require('./lib/Proposal');
+const Query = require('./lib/Query');
+const ServiceAction = require('./lib/ServiceAction');
+const ServiceEndpoint = require('./lib/ServiceEndpoint');
+const ServiceHandler = require('./lib/ServiceHandler');
+
 module.exports = {
 	Client,
 	Config,
@@ -31,5 +52,25 @@ module.exports = {
 	SigningIdentity,
 	Utils,
 	User,
-	BaseClient
+	BaseClient,
+	BlockDecoder,
+	Channel,
+	Commit,
+	Committer,
+	Discoverer,
+	DiscoveryHandler,
+	DiscoveryService,
+	Endorsement,
+	Endorser,
+	Endpoint,
+	Eventer,
+	EventListener,
+	EventService,
+	Hash,
+	IdentityContext,
+	Proposal,
+	Query,
+	ServiceAction,
+	ServiceEndpoint,
+	ServiceHandler
 };
