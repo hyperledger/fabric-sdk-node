@@ -15,7 +15,7 @@ const test = _test(tape);
 const fs = require('fs');
 const path = require('path');
 
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 
 test('\n\n***** D I S C O V E R Y  *****\n\n', async (t) => {
 

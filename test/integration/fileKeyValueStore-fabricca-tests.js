@@ -11,7 +11,7 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 const fs = require('fs-extra');
 
 const path = require('path');

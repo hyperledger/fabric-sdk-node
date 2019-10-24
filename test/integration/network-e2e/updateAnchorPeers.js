@@ -13,7 +13,7 @@ const test = _test(tape);
 const fs = require('fs');
 const path = require('path');
 
-const testUtil = require('../../unit/util.js');
+const testUtil = require('../util.js');
 const channel_name = testUtil.NETWORK_END2END.channel;
 const anchorPeerTXFileOrg1 = path.join(__dirname, '../../fixtures/crypto-material/channel-config/mychannel-org1anchor.tx');
 

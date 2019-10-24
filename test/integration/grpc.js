@@ -17,7 +17,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 
 const e2eUtils = require('./e2e/e2eUtils.js');
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 const Client = require('fabric-client');
 
 const GRPC_SEND = 'grpc.max_send_message_length';

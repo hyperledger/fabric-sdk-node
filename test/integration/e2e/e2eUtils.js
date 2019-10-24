@@ -16,7 +16,7 @@ const fs = require('fs');
 const util = require('util');
 
 const Client = require('fabric-client');
-const testUtil = require('../../unit/util.js');
+const testUtil = require('../util.js');
 const e2eUtils = require('./e2eUtils.js');
 
 const e2e = testUtil.END2END;

@@ -11,7 +11,7 @@ const {Gateway, HsmX509Provider, Wallets} = require('fabric-network');
 const fs = require('fs-extra');
 
 const e2eUtils = require('../e2e/e2eUtils.js');
-const testUtils = require('../../unit/util');
+const testUtils = require('../util.js');
 const channelName = testUtils.NETWORK_END2END.channel;
 const chaincodeId = testUtils.NETWORK_END2END.chaincodeId;
 

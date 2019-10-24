@@ -117,7 +117,7 @@ module.exports.existsSync = function(absolutePath /* string*/) {
 
 module.exports.readFile = readFile;
 
-Client.addConfigFile(path.join(__dirname, '../integration/e2e/config.json'));
+Client.addConfigFile(path.join(__dirname, './e2e/config.json'));
 const ORGS = Client.getConfigSetting('test-network');
 
 const	tlsOptions = {

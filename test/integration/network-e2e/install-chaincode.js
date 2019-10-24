@@ -16,7 +16,7 @@ const _test = require('tape-promise').default;
 const test = _test(tape);
 
 const e2eUtils = require('../e2e/e2eUtils.js');
-const testUtil = require('../../unit/util.js');
+const testUtil = require('../util.js');
 const version = 'v0';
 
 test('\n\n***** Network End-to-end flow: chaincode install *****\n\n', (t) => {

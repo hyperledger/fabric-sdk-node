@@ -28,7 +28,7 @@ import {
 import sampleQueryStrategy = require('./sample-query-handler');
 
 import e2eUtils = require('../../../integration/e2e/e2eUtils.js');
-import testUtils = require('../../../unit/util.js');
+import testUtils = require('../../../integration/util.js');
 
 const test: any = tapePromise.default(tape);
 const channelName: string = testUtils.NETWORK_END2END.channel;

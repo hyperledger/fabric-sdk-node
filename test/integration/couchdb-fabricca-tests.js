@@ -15,7 +15,7 @@ const path = require('path');
 const Client = require('fabric-client');
 
 const FabricCAServices = require('fabric-ca-client/lib/FabricCAServices');
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 
 const couchdbUtil = require('./couchdb-util.js');
 

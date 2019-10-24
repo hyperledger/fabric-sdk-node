@@ -17,7 +17,7 @@ const util = require('util');
 const Client = require('fabric-client');
 const {Utils:utils} = require('fabric-common');
 const e2eUtils = require('./e2e/e2eUtils.js');
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 const logger = utils.getLogger('instantiate-chaincode');
 
 const e2e = testUtil.END2END;

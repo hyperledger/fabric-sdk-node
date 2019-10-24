@@ -19,7 +19,7 @@ const fsx = require('fs-extra');
 
 const path = require('path');
 
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 
 
 test('\n\n***** clean up the connection profile testing stores  *****\n\n', async (t) => {

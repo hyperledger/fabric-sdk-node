@@ -18,7 +18,7 @@ const fs = require('fs');
 const Long = require('long');
 
 const Client = require('fabric-client');
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 const e2eUtils = require('./e2e/e2eUtils.js');
 
 // When running this as a standalone test, be sure to create and join a channel called 'mychannel'
@@ -1033,7 +1033,7 @@ function createChaincodeRegistrationAsArray(t, message, event_hub, chaincode_id,
 			t.fail('Failed to receive the ' + message + ' ::' + error);
 			reject(error);
 		},
-			{as_array: true}
+		{as_array: true}
 		);
 	});
 	return event_monitor;
