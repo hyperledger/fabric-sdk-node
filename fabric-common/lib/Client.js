@@ -8,8 +8,7 @@ const TYPE = 'Client';
 
 const crypto = require('crypto');
 
-const {checkParameter, getLogger, getConfigSetting, pemToDER} = require('./Utils.js');
-const BaseClient = require('./BaseClient');
+const {checkParameter, getLogger, pemToDER, setConfigSetting, getConfigSetting} = require('./Utils.js');
 const Channel = require('./Channel');
 const Endpoint = require('./Endpoint');
 const Committer = require('./Committer');
@@ -19,8 +18,6 @@ const Discoverer = require('./Discoverer');
 const IdentityContext = require('./IdentityContext');
 const logger = getLogger(TYPE);
 
-process.env.GRPC_SSL_CIPHER_SUITES = getConfigSetting('grpc-ssl-cipher-suites');
-
 /**
  * @classdesc
  * This class represents a Client, the central place
@@ -28,7 +25,7 @@ process.env.GRPC_SSL_CIPHER_SUITES = getConfigSetting('grpc-ssl-cipher-suites');
  *
  * @class
  */
-const Client = class extends BaseClient {
+const Client = class {
 
 	/**
 	 * Construct a Client object.
@@ -39,16 +36,20 @@ const Client = class extends BaseClient {
 	 */
 	constructor(name = checkParameter('name')) {
 		logger.debug(`${TYPE}.constructor[${name}] - start `);
-		super();
 		this.type = TYPE;
 
 		this.name = name;
+		this.mspid = null;
+
 		this._tls_mutual = {};
 		this._tls_mutual.selfGenerated = false;
 
 		this.endorsers = new Map();
 		this.committers = new Map();
 		this.channels = new Map();
+
+		// options for centralized management
+		this.centralizedOptions = null;
 	}
 
 	/**
@@ -61,6 +62,14 @@ const Client = class extends BaseClient {
 	}
 
 	/**
+	 * Builds an {@link IdentityContext} instance with the given user.
+	 * Will be used when building proposals, commits, and queries.
+	 * @param {User} [user] instance
+	 */
+	newIdentityContext(user = checkParameter('user')) {
+		return new IdentityContext(user, this);
+	}
+	/**
 	 * @typedef {Object} ConnectOptions
 	 * @property {string} url The committer URL with format of 'grpc(s)://host:port'.
 	 * @property {string} pem - The Endorser's TLS certificate, in PEM format,
@@ -71,6 +80,8 @@ const Client = class extends BaseClient {
 	 * @property {string} clientCert - The public certificate, in PEM format,
 	 *  to use with the grpcs protocol and mutual TLS. When not provided the cert
 	 *  assigned to this client instance will be used.
+	 * @property {Number} requestTimeout - The timeout to use for request on this
+	 *  connection.
 	 * @property {string} ssl-target-name-override - Used in test environment only,
 	 *  when the server certificate's hostname (in the 'CN' field) does not match
 	 *  the actual host endpoint that the server process runs at, the application
@@ -94,11 +105,23 @@ const Client = class extends BaseClient {
 	getConnectionOptions(options) {
 		const method = `getConnectionOptions: ${this.name}`;
 		logger.debug('%s - start', method);
-		let return_options = Object.assign({}, BaseClient.getConfigSetting('connection-options'));
+
+		// start with options from the config system (mainly config/default.json)
+		let return_options = Object.assign({}, getConfigSetting('connection-options'));
+
+		// override with any centralized options
+		if (this.centralizedOptions) {
+			return_options = Object.assign(return_options, this.centralizedOptions);
+		}
+
+		// apply the tls info
 		if (this._tls_mutual.clientCert && this._tls_mutual.clientKey) {
 			return_options.clientCert = this._tls_mutual.clientCert;
 			return_options.clientKey = this._tls_mutual.clientKey;
 		}
+
+		// now finally override with any specific options for this
+		// connection
 		return_options = Object.assign(return_options, options);
 
 		return return_options;
@@ -108,19 +131,19 @@ const Client = class extends BaseClient {
 	 * Use this method to build an endpoint options object. This may be reused
 	 * when connecting to endorsers, committers, discovers and eventers. The input
 	 * opts must have an "url" for connecting to a fabric service.
-	 * @param {ConnectOptions} opts
+	 * @param {ConnectOptions} options
 	 */
-	newEndpoint(opts = {}) {
+	newEndpoint(options = {}) {
 		const method = `newEndpoint: ${this.name}`;
 		logger.debug('%s - start', method);
 
-		const options = this.getConnectionOptions(opts);
-		const ssl_target_name_override = options['ssl-target-name-override'];
+		const _options = this.getConnectionOptions(options);
+		const ssl_target_name_override = _options['ssl-target-name-override'];
 
 		// make sure we have wait for ready timeout
-		const timeout = options['grpc-wait-for-ready-timeout'];
+		const timeout = _options['grpc-wait-for-ready-timeout'];
 		if (!timeout) {
-			options['grpc-wait-for-ready-timeout'] = 3000; // default 3 seconds
+			_options['grpc-wait-for-ready-timeout'] = 3000; // default 3 seconds
 		} else {
 			if (Number.isInteger(timeout)) {
 				logger.debug('%s grpc-wait-for-ready-timeout set to %s', method, timeout);
@@ -130,9 +153,9 @@ const Client = class extends BaseClient {
 		}
 
 		// make sure we have wait for request timeout
-		const requestTimeout = options.requestTimeout;
+		const requestTimeout = _options.requestTimeout;
 		if (!requestTimeout) {
-			options.requestTimeout = 3000; // default 3 seconds
+			_options.requestTimeout = 3000; // default 3 seconds
 		} else {
 			if (Number.isInteger(requestTimeout)) {
 				logger.debug('%s requestTimeout set to %s', method, requestTimeout);
@@ -142,23 +165,14 @@ const Client = class extends BaseClient {
 		}
 
 		if (typeof ssl_target_name_override === 'string') {
-			options['grpc.ssl_target_name_override'] = ssl_target_name_override;
-			options['grpc.default_authority'] = ssl_target_name_override;
+			_options['grpc.ssl_target_name_override'] = ssl_target_name_override;
+			_options['grpc.default_authority'] = ssl_target_name_override;
 			logger.debug('%s - ssl_target_name_override: %s', method, ssl_target_name_override);
 		}
-		const endpoint = new Endpoint(options);
-		logger.debug('new endpoint url: %s', options.url);
+		const endpoint = new Endpoint(_options);
+		logger.debug('new endpoint url: %s', _options.url);
 
 		return endpoint;
-	}
-
-	/**
-	 * Builds a {@link IdentityContext} instance with the given user.
-	 * Will be used when building proposals, commits, and queries.
-	 * @param {User} user instance
-	 */
-	newIdentityContext(user = checkParameter('user')) {
-		return new IdentityContext(user, this);
 	}
 
 	/**
@@ -205,6 +219,21 @@ const Client = class extends BaseClient {
 		logger.debug('%s return endorser name:%s', method, name);
 		return endorser;
 	}
+
+	/**
+	 * Will return an array of {@link Endorser} instances that have been
+	 * assigned to this channel instance. Include a MSPID to only return endorsers
+	 * in a specific organization.
+	 *
+	 * @param {string} [mspid] - Optional. The mspid of the endorsers to return
+	 * @return {Endorser[]} the list of {@link Endorser}s.
+	 */
+	getEndorsers(mspid) {
+		const method = `getEndorsers[${this.name}]`;
+		logger.debug(`${method} - start`);
+
+		return Channel._getServiceEndpoints(this.endorsers.values(), 'Endorser', mspid);
+	}
 	/**
 	 * Returns a {@link Committer} instance with the given name.
 	 * Will return a new instance. Does not check for existing instances
@@ -248,6 +277,20 @@ const Client = class extends BaseClient {
 
 		logger.debug('%s return committer name:%s', method, name);
 		return committer;
+	}
+	/**
+	 * Will return an array of {@link Committer} instances that have been
+	 * assigned to this channel instance. Include a MSPID to only return committers
+	 * in a specific organization.
+	 *
+	 * @param {string} [mspid] - Optional. The mspid of the endorsers to return
+	 * @return {Committer[]} the list of {@link Committer}s.
+	 */
+	getCommitters(mspid) {
+		const method = `getCommitters[${this.name}]`;
+		logger.debug(`${method} - start`);
+
+		return Channel._getServiceEndpoints(this.committers.values(), 'Committer', mspid);
 	}
 
 	/**
@@ -356,28 +399,32 @@ const Client = class extends BaseClient {
 			// generate X509 cert pair
 			// use the default software cryptosuite, not the client assigned cryptosuite, which may be
 			// HSM, or the default has been set to HSM. FABN-830
-			const key = BaseClient.newCryptoSuite({software: true}).generateEphemeralKey();
+			const key = Client.newCryptoSuite({software: true}).generateEphemeralKey();
 			this._tls_mutual.clientKey = key.toBytes();
 			this._tls_mutual.clientCert = key.generateX509Certificate('fabric-client');
 			this._tls_mutual.selfGenerated = true;
 		}
+
+		return this;
 	}
 
 	/**
 	 * Utility method to add the mutual tls client material to a set of options.
-	 * @param {object} opts - The options object holding the connection settings
+	 * @param {ConnectOptions} options - The options object holding the connection settings
 	 *  that will be updated with the mutual TLS clientCert and clientKey.
 	 * @throws Will throw an error if generating the tls client material fails
 	 */
-	addTlsClientCertAndKey(opts) {
+	addTlsClientCertAndKey(options) {
 		// use client cert pair if it exists and is not a self cert generated by this class
 		if (!this._tls_mutual.selfGenerated && this._tls_mutual.clientCert && this._tls_mutual.clientKey) {
-			opts.clientCert = this._tls_mutual.clientCert;
-			opts.clientKey = this._tls_mutual.clientKey;
+			options.clientCert = this._tls_mutual.clientCert;
+			options.clientKey = this._tls_mutual.clientKey;
 		}
+
+		return this;
 	}
 
-	/**
+	/*
 	 * Get the client certificate hash
 	 * @returns {byte[]} The hash of the client certificate
 	 */
@@ -406,6 +453,52 @@ const Client = class extends BaseClient {
 		return `Client: {name:${this.name}}`;
 	}
 
+	/**
+	 * Adds a setting to override all settings that are
+	 * part of the hierarchical configuration.
+	 *
+	 * <br><p>
+	 * The hierarchical configuration settings search order: see {@link BaseClient.getConfigSetting}
+	 *
+	 * @param {String} name - The name of a setting
+	 * @param {Object} value - The value of a setting
+	 */
+	static setConfigSetting(name, value) {
+		setConfigSetting(name, value);
+	}
+
+	// make available from the client instance
+	setConfigSetting(name, value) {
+		setConfigSetting(name, value);
+	}
+
+	/**
+	 * Retrieves a setting from the hierarchical configuration and if not found
+	 * will return the provided default value.
+	 *
+	 * <br><br>
+	 * The hierarchical configuration settings search order for a setting <code>aa-bb</code>:
+	 * <ol>
+	 * <li> memory: if the setting has been added with <pre>Client.setConfigSetting('aa-bb', 'value')</pre>
+	 * <li> Command-line arguments: like <pre>node app.js --aa-bb value</pre>
+	 * <li> Environment variables: <pre>AA_BB=value node app.js</pre>
+	 * <li> Custom Files: all files added with <code>addConfigFile(path)</code>
+	 *     will be ordered by when added, where same settings in the files added later will override those added earlier
+	 * <li> The file located at <code>lib/config/default.json</code> with default settings
+	 *
+	 * @param {String} name - The name of a setting
+	 * @param {Object} default_value - The value of a setting if not found in the hierarchical configuration
+	 */
+	static getConfigSetting(name, default_value) {
+
+		return getConfigSetting(name, default_value);
+	}
+
+	// make available from the client instance
+	getConfigSetting(name, default_value) {
+
+		return getConfigSetting(name, default_value);
+	}
 };
 
 function computeHash(data) {

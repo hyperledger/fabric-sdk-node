@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const TYPE = 'Discovery';
+const TYPE = 'DiscoveryService';
 const Long = require('long');
 
 const {byteToNormalizedPEM, checkParameter, getLogger} = require('./Utils.js');
@@ -16,23 +16,23 @@ const logger = getLogger(TYPE);
 const fabprotos = require('fabric-protos');
 
 /**
- * The Discovery class represents a peer in the target fabric network that
+ * The DiscoveryService class represents a peer in the target fabric network that
  * is providing the discovery service for the channel.
  *
  * @class
  * @extends ServiceAction
  */
-class Discovery extends ServiceAction {
+class DiscoveryService extends ServiceAction {
 
 	/**
-	 * Construct a Discovery object with the name.
+	 * Construct a DiscoveryService object with the name.
 	 * Use the connect method with options to establish a
 	 * connection with the fabric network endpoint.
 	 *
 	 * @param {string} name - The name of this discovery peer
 	 * @param {Client} client - The client instance
 	 * @param {Channel} channel
-	 * @returns {Discovery} The Discovery instance.
+	 * @returns {DiscoveryService} The DiscoveryService instance.
 	 */
 	constructor(name = checkParameter('name'), channel = checkParameter('channel')) {
 		logger.debug(`${TYPE}.constructor[${name}] - start `);
@@ -46,18 +46,48 @@ class Discovery extends ServiceAction {
 		this.asLocalhost = false;
 
 		this._current_target = null;
+		this.targets = null; // will be used when targets are not provided
 
 	}
 
 	/**
+	 * Use this method to set the ServiceEndpoint for this ServiceAction class
+	 * The {@link Discoverer} a ServiceEndpoint must be connected before making
+	 * this assignment.
+	 * @property {Discoverer[]} targets - The connected Discoverer instances to
+	 *  be used when no targets are provided on the send.
+	 */
+	setTargets(targets = checkParameter('targets')) {
+		const method = `setTargets[${this.name}]`;
+		logger.debug('%s - start', method);
+
+		if (!Array.isArray(targets)) {
+			throw Error('targets parameter is not an array');
+		}
+
+		for (const discoverer of targets) {
+			if (discoverer.connected) {
+				logger.debug('%s - target is connected %s', method, discoverer.name);
+			} else {
+				throw Error(`Discoverer ${discoverer.name} is not connected`);
+			}
+		}
+		// must be all targets are connected
+		this.targets = targets;
+
+		return this;
+	}
+
+	/**
 	 * Use this method to get a new handler that will use this
-	 * instance of the Discovery service.
+	 * instance of the DiscoveryService service.
 	 *
 	 * @returns {DiscoveryHandler} Discovery handler
 	 */
 	newHandler() {
 		const method = `newHandler[${this.name}]`;
 		logger.debug(`${method} - start`);
+
 		return new DiscoveryHandler(this);
 	}
 
@@ -219,6 +249,9 @@ class Discovery extends ServiceAction {
 	 *  is older then 'refreshAge' the current signed request will be sent
 	 *  to the peer's discovery service.
 	 *  Default: 5 minutes.
+	 * @property {Discoverer[]} targets - Optional. An array of {@link Discoverer}
+	 *  instances. When not included the assigned discoverer will be used. The
+	 *  discoverer may be assigned anytime before the {@link DiscoveryService#send} is called.
 	 */
 
 	/**
@@ -231,18 +264,25 @@ class Discovery extends ServiceAction {
 		const method = `send[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		const {requestTimeout, asLocalhost, refreshAge, targets = checkParameter('targets')} = request;
+		const {requestTimeout, asLocalhost, refreshAge, targets} = request;
 
-		// may be needed later for refresh
-		this.asLocalhost = asLocalhost;
+		if (typeof asLocalhost === 'boolean') {
+			this.asLocalhost = asLocalhost;
+		}
 		this.refreshAge = refreshAge;
 		this.requestTimeout = requestTimeout;
-		this.targets = targets;
+		if (targets) {
+			this.targets = targets;
+		} else if (this.targets) {
+			logger.debug('%s - using preassigned targets', method);
+		} else {
+			checkParameter('targets');
+		}
 
 		const signedEnvelope = this.getSignedEnvelope();
 
 		let response;
-		for (const target of targets) {
+		for (const target of this.targets) {
 			logger.debug(`${method} - about to discover on ${target.endpoint.url}`);
 			try {
 				response = await target.sendDiscovery(signedEnvelope, this.requestTimeout);
@@ -290,19 +330,19 @@ class Discovery extends ServiceAction {
 			}
 
 			if (error_msg) {
-				throw Error(`Discovery: ${this.name} error: ${error_msg}`);
+				throw Error(`DiscoveryService: ${this.name} error: ${error_msg}`);
 			} else {
 				this.discoveryResults.timestamp = (new Date()).getTime();
 				return this.discoveryResults;
 			}
 		} else {
-			throw new Error('Discovery has failed to return results');
+			throw new Error('DiscoveryService has failed to return results');
 		}
 	}
 
 	/**
 	 * Get the discovered results. The results are from the discovery service
-	 * of the Peer and based on the discovery request of {@link Discovery#BuildDiscoveryRequest}
+	 * of the Peer and based on the discovery request of {@link DiscoveryService#BuildDiscoveryRequest}
 	 * that was sent to the Peer with {@link Discover#discover}.
 	 * @param {boolean} [refresh] - Optional. Refresh the discovery results if
 	 *  results are older then the refresh age.
@@ -419,7 +459,7 @@ class Discovery extends ServiceAction {
 						tls_intermediate_certs: byteToNormalizedPEM(q_msp.tls_intermediate_certs)
 					};
 					config.msps[id] = msp_config;
-					this.channel.addMSP(msp_config, true);
+					this.channel.addMsp(msp_config, true);
 				}
 			} else {
 				logger.debug(`${method} - no msps found`);
@@ -673,8 +713,8 @@ class Discovery extends ServiceAction {
 	 */
 	toString() {
 
-		return `Discovery: {name: ${this.name}, channel: ${this.channel.name}}`;
+		return `DiscoveryService: {name: ${this.name}, channel: ${this.channel.name}}`;
 	}
 }
 
-module.exports = Discovery;
+module.exports = DiscoveryService;

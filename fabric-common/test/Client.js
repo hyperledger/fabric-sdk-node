@@ -68,6 +68,12 @@ describe('Client', () => {
 			options.some.should.equal('C');
 			options.clientCert.should.equal('added-cert');
 		});
+		it('should add in an options from the centralized options', () => {
+			client.centralizedOptions = {option1: 'value1'};
+			const options = client.getConnectionOptions({'some': 'C', 'clientCert': 'added-cert'});
+			options.some.should.equal('C');
+			options.option1.should.equal('value1');
+		});
 	});
 	describe('#newEndpoint', () => {
 		it('should require a url', () => {
@@ -169,6 +175,7 @@ describe('Client', () => {
 			inst.mspid.should.equal('mspid');
 		});
 	});
+
 	describe('#getEndorser', () => {
 		it('should require a name', () => {
 			(() => {
@@ -227,6 +234,42 @@ describe('Client', () => {
 			inst.something = 'something';
 			const inst2 = client.getCommitter('name');
 			inst2.something.should.equal('something');
+		});
+	});
+	describe('#getEndorsers', () => {
+		it('should be able to getEndorsers empty array', () => {
+			const check = client.getEndorsers();
+			should.equal(check.length, 0, 'Able to get an empty array');
+		});
+		it('should be able to getEndorsers no msp provided', () => {
+			client.getEndorser('endorser1', 'msp1');
+			client.getEndorser('endorser2', 'msp2');
+			const check = client.getEndorsers();
+			should.equal(check.length, 2, 'Able to get a list of 2');
+		});
+		it('should be able to getEndorsers msp provided', () => {
+			client.getEndorser('endorser1', 'msp1');
+			client.getEndorser('endorser2', 'msp2');
+			const check = client.getEndorsers('msp1');
+			should.equal(check.length, 1, 'Able to get a list of 1');
+		});
+	});
+	describe('#getCommitters', () => {
+		it('should be able to getCommitters empty array', () => {
+			const check = client.getCommitters();
+			should.equal(check.length, 0, 'Able to get an empty array');
+		});
+		it('should be able to getCommitters no msp provided', () => {
+			client.getCommitter('committer1', 'msp1');
+			client.getCommitter('committer2', 'msp2');
+			const check = client.getCommitters();
+			should.equal(check.length, 2, 'Able to get a list of 2');
+		});
+		it('should be able to getCommitters msp provided', () => {
+			client.getCommitter('committer1', 'msp1');
+			client.getCommitter('committer2', 'msp2');
+			const check = client.getCommitters('msp1');
+			should.equal(check.length, 1, 'Able to get a list of 1');
 		});
 	});
 	describe('#newEventer', () => {
@@ -306,7 +349,7 @@ describe('Client', () => {
 				generateX509Certificate: generateX509CertificateStub
 			});
 			const newCryptoSuiteStub = sinon.stub().returns({generateEphemeralKey: generateEphemeralKeyStub});
-			Client.__set__('BaseClient.newCryptoSuite', newCryptoSuiteStub);
+			Client.__set__('Client.newCryptoSuite', newCryptoSuiteStub);
 			const myClient = new Client('client');
 
 			myClient.setTlsClientCertAndKey();
@@ -367,6 +410,19 @@ describe('Client', () => {
 			should.equal(hash.toString('hex'), hash2.toString('hex'));
 		});
 	});
+	describe('#set/getConfigSetting', () => {
+		it('should run static', () => {
+			client.setConfigSetting('name1', 'value1');
+			const value = client.getConfigSetting('name1');
+			should.equal(value, 'value1');
+		});
+		it('should run static', () => {
+			Client.setConfigSetting('name1', 'value1');
+			const value = Client.getConfigSetting('name1');
+			should.equal(value, 'value1');
+		});
+	});
+
 	describe('#toString', () => {
 		it('should return string', () => {
 			const string = client.toString();

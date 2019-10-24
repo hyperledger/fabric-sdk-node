@@ -38,8 +38,8 @@ class Proposal extends ServiceAction {
 
 		this.chaincodeName = chaincodeName;
 		this.channel = channel;
-		this.collections_interest = [];
-		this.chaincodes_collections_interest = [];
+		this.collectionsInterest = [];
+		this.chaincodesCollectionsInterest = [];
 	}
 
 	/**
@@ -68,7 +68,7 @@ class Proposal extends ServiceAction {
 	 * chaincodes and collections that this chaincode code will call.
 	 * @example
 	 *    [
-	 *      { name: "mychaincode", collection_names: ["mycollection"] }
+	 *      { name: "mychaincode", collectionNames: ["mycollection"] }
 	 *    ]
 	 */
 	buildProposalInterest() {
@@ -79,11 +79,11 @@ class Proposal extends ServiceAction {
 		const chaincode = {};
 		interest.push(chaincode);
 		chaincode.name = this.chaincodeName;
-		if (this.collections_interest.length > 0) {
-			chaincode.collection_names = this.collections_interest;
+		if (this.collectionsInterest.length > 0) {
+			chaincode.collectionNames = this.collectionsInterest;
 		}
-		if (this.chaincodes_collections_interest.length > 0) {
-			interest = interest.concat(this.chaincodes_collections_interest);
+		if (this.chaincodesCollectionsInterest.length > 0) {
+			interest = interest.concat(this.chaincodesCollectionsInterest);
 		}
 
 		return interest;
@@ -93,15 +93,15 @@ class Proposal extends ServiceAction {
 	 * Use this method to add collection names associated
 	 * with this proposal's chaincode name. These will be
 	 * used to build a Discovery interest. {@link Proposal#buildProposalInterest}
-	 * @param {string} collection_name - collection name
+	 * @param {string} collectionName - collection name
 	 */
-	addCollectionInterest(collection_name) {
+	addCollectionInterest(collectionName) {
 		const method = `addCollectionInterest[${this.chaincodeName}]`;
 		logger.debug('%s - start', method);
-		if (typeof collection_name === 'string') {
-			this.collections_interest.push(collection_name);
+		if (typeof collectionName === 'string') {
+			this.collectionsInterest.push(collectionName);
 		} else {
-			throw Error('Invalid collection_name parameter');
+			throw Error('Invalid collectionName parameter');
 		}
 
 		return this;
@@ -111,21 +111,21 @@ class Proposal extends ServiceAction {
 	 * Use this method to add a chaincode name and collection names
 	 * that this proposal's chaincode will call. These will be used
 	 * to build a Discovery interest. {@link Proposal#buildProposalInterest}
-	 * @param {string} chaincode_name - chaincode name
-	 * @param  {...string} collection_names - one or more collection names
+	 * @param {string} chaincodeName - chaincode name
+	 * @param  {...string} collectionNames - one or more collection names
 	 */
-	addChaincodeCollectionsInterest(chaincode_name, ...collection_names) {
+	addChaincodeCollectionsInterest(chaincodeName, ...collectionNames) {
 		const method = `addChaincodeCollectionsInterest[${this.chaincodeName}]`;
 		logger.debug('%s - start', method);
-		if (typeof chaincode_name === 'string') {
+		if (typeof chaincodeName === 'string') {
 			const added_chaincode = {};
-			added_chaincode.name = chaincode_name;
-			if (collection_names && collection_names.length > 0) {
-				added_chaincode.collection_names = collection_names;
+			added_chaincode.name = chaincodeName;
+			if (collectionNames && collectionNames.length > 0) {
+				added_chaincode.collectionNames = collectionNames;
 			}
-			this.chaincodes_collections_interest.push(added_chaincode);
+			this.chaincodesCollectionsInterest.push(added_chaincode);
 		} else {
-			throw Error('Invalid chaincode_name parameter');
+			throw Error('Invalid chaincodeName parameter');
 		}
 
 		return this;
@@ -239,7 +239,7 @@ class Proposal extends ServiceAction {
 	}
 
 	/**
-	 * @typedef {Object} SendRequest
+	 * @typedef {Object} SendProposalRequest
 	 * @property {Peer[]} [targets] - Optional. The peers to send the proposal.
 	 * @property {EndorsementHandler} - [handler] - Optional. The handler to send the proposal.
 	 * @property {Number} [requestTimeout] - Optional. The request timeout
@@ -248,13 +248,75 @@ class Proposal extends ServiceAction {
 	/**
 	 * @typedef {Object} ProposalResponse
 	 * @property {Error[]} errors -  errors returned from the endorsement
-	 * @property {Response[]} responses - endorsements returned from the endorsement
+	 * @property {EndorsementResponse[]} responses - The endorsements returned from
+	 *  the endorsing peers.
+	 * @property {Buffer[]} queryResults - the results as extracted from the
+	 *  endorsement {@link EndorsementResponse} from an {@link Query} endorsement
+	 *  that was only a query and will not be committed.
+	 */
+
+	/**
+	 * @typedef {Object} EndorsementResponse
+	 * This object is the protobuf object returned from the peer when doing
+	 * an endorsement of a proposal. The following description is from the protobuf
+	 * file fabric-protos/protos/peer/proposal_response.protos
+	 * @example
+// A ProposalResponse is returned from an endorser to the proposal submitter.
+// The idea is that this message contains the endorser's response to the
+// request of a client to perform an action over a chaincode (or more
+// generically on the ledger); the response might be success/error (conveyed in
+// the Response field) together with a description of the action and a
+// signature over it by that endorser.  If a sufficient number of distinct
+// endorsers agree on the same action and produce signature to that effect, a
+// transaction can be generated and sent for ordering.
+message ProposalResponse {
+	// Version indicates message protocol version
+	int32 version = 1;
+
+	// Timestamp is the time that the message
+	// was created as  defined by the sender
+	google.protobuf.Timestamp timestamp = 2;
+
+	// A response message indicating whether the
+	// endorsement of the action was successful
+	Response response = 4;
+
+	// The payload of response. It is the bytes of ProposalResponsePayload
+	bytes payload = 5;
+
+	// The endorsement of the proposal, basically
+	// the endorser's signature over the payload
+	Endorsement endorsement = 6;
+}
+
+// A response with a representation similar to an HTTP response that can
+// be used within another message.
+message Response {
+	// A status code that should follow the HTTP status codes.
+	int32 status = 1;
+
+	// A message associated with the response code.
+	string message = 2;
+
+	// A payload that can be used to include metadata with this response.
+	bytes payload = 3;
+}
+
+message Endorsement {
+	// Identity of the endorser (e.g. its certificate)
+	bytes endorser = 1;
+
+	// Signature of the payload included in ProposalResponse concatenated with
+	// the endorser's certificate; ie, sign(ProposalResponse.payload + endorser)
+	bytes signature = 2;
+}
+	 *
 	 */
 
 	/**
 	 * Send a signed transaction proposal to peer(s)
 	 *
-	 * @param {SendRequest} request options
+	 * @param {SendProposalRequest} request options
 	 * @returns {ProposalResponse} The results of sending
 	 */
 	async send(request = {}) {
@@ -349,22 +411,22 @@ class Proposal extends ServiceAction {
 	 * has been called to load this channel's MSPs. The MSPs will have the
 	 * trusted root certificates for this channel.
 	 *
-	 * @param {ProposalResponse} proposal_response - The endorsement response
+	 * @param {ProposalResponse} proposalResponse - The endorsement response
 	 * from the peer,
 	 * includes the endorser certificate and signature over the
 	 * proposal + endorsement result + endorser certificate.
 	 * @returns {boolean} A boolean value of true when both the identity and
 	 * the signature are valid, false otherwise.
 	 */
-	verifyProposalResponse(proposal_response = checkParameter('proposal_response')) {
+	verifyProposalResponse(proposalResponse = checkParameter('proposalResponse')) {
 		const method = `verifyProposalResponse[${this.chaincodeName}]`;
 		logger.debug('%s - start', method);
 
-		if (proposal_response instanceof Error) {
+		if (proposalResponse instanceof Error) {
 
 			return false;
 		}
-		if (!proposal_response.endorsement) {
+		if (!proposalResponse.endorsement) {
 			throw new Error('Parameter must be a ProposalResponse Object');
 		}
 		logger.error('%s - This method needs to be implemented', method);
@@ -429,29 +491,29 @@ class Proposal extends ServiceAction {
 	 * This will validate that the endorsing peers all agree on the result
 	 * of the chaincode execution.
 	 *
-	 * @param {ProposalResponse[]} proposal_responses - The proposal responses
+	 * @param {ProposalResponse[]} proposalResponses - The proposal responses
 	 * from all endorsing peers
 	 * @returns {boolean} True when all proposals compare equally, false otherwise.
 	 */
-	compareProposalResponseResults(proposal_responses = checkParameter('proposal_responses')) {
+	compareProposalResponseResults(proposalResponses = checkParameter('proposalResponses')) {
 		const method = `compareProposalResponseResults[${this.chaincodeName}]`;
 		logger.debug('%s - start', method);
 
-		if (!Array.isArray(proposal_responses)) {
-			throw new Error('proposal_responses must be an array but was ' + typeof proposal_responses);
+		if (!Array.isArray(proposalResponses)) {
+			throw new Error('proposalResponses must be an array, typeof=' + typeof proposalResponses);
 		}
-		if (proposal_responses.length === 0) {
-			throw new Error('proposal_responses is empty');
+		if (proposalResponses.length === 0) {
+			throw new Error('proposalResponses is empty');
 		}
 
-		if (proposal_responses.some((response) => response instanceof Error)) {
+		if (proposalResponses.some((response) => response instanceof Error)) {
 
 			return false;
 		}
 
-		const first_one = _getProposalResponseResults(proposal_responses[0]);
-		for (let i = 1; i < proposal_responses.length; i++) {
-			const next_one = _getProposalResponseResults(proposal_responses[i]);
+		const first_one = _getProposalResponseResults(proposalResponses[0]);
+		for (let i = 1; i < proposalResponses.length; i++) {
+			const next_one = _getProposalResponseResults(proposalResponses[i]);
 			if (next_one.equals(first_one)) {
 				logger.debug('%s - read/writes result sets match index=%s', method, i);
 			} else {
@@ -475,11 +537,11 @@ class Proposal extends ServiceAction {
 
 // internal utility method to decode and get the write set
 // from a proposal response
-function _getProposalResponseResults(proposal_response = checkParameter('proposal_response')) {
-	if (!proposal_response.payload) {
+function _getProposalResponseResults(proposaResponse = checkParameter('proposalResponse')) {
+	if (!proposaResponse.payload) {
 		throw new Error('Parameter must be a ProposalResponse Object');
 	}
-	const payload = fabprotos.protos.ProposalResponsePayload.decode(proposal_response.payload);
+	const payload = fabprotos.protos.ProposalResponsePayload.decode(proposaResponse.payload);
 	const extension = fabprotos.protos.ChaincodeAction.decode(payload.extension);
 
 	// return a buffer object which has an equals method

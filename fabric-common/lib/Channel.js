@@ -7,7 +7,7 @@
 const TYPE = 'Channel';
 
 const EventService = require('./EventService.js');
-const Discovery = require('./Discovery.js');
+const DiscoveryService = require('./DiscoveryService.js');
 const Endorsement = require('./Endorsement.js');
 const Commit = require('./Commit.js');
 const Query = require('./Query.js');
@@ -126,16 +126,16 @@ const Channel = class {
 	}
 
 	/**
-	 * Returns a {@link Discovery} instance with the given name.
+	 * Returns a {@link DiscoveryService} instance with the given name.
 	 * Will return a new instance.
 	 *
 	 * @param {string} name The name of this discovery instance.
-	 * @returns {Discovery} The discovery instance.
+	 * @returns {DiscoveryService} The discovery instance.
 	 */
-	newDiscovery(name = checkParameter('name')) {
+	newDiscoveryService(name = checkParameter('name')) {
 		const method = `newDiscovery[${this.name}]`;
-		logger.debug(`${method} - start - create new Discovery name:${name} for channel:${this.name}`);
-		return new Discovery(name, this);
+		logger.debug(`${method} - start - create new DiscoveryService name:${name} for channel:${this.name}`);
+		return new DiscoveryService(name, this);
 	}
 
 	/**
@@ -187,8 +187,8 @@ const Channel = class {
 	 *
 	 * @returns {MspConfig} The MSP JSON object
 	 */
-	getMSP(id = checkParameter('id')) {
-		logger.debug(`getMSP[${this.name}] - start id:${id}`);
+	getMsp(id = checkParameter('id')) {
+		logger.debug(`getMsp[${this.name}] - start id:${id}`);
 
 		return this.msps.get(id);
 	}
@@ -198,8 +198,9 @@ const Channel = class {
 	 * @param {string} id - The id of the MSP to remove
 	 * @return {boolean} true if able to remove from the list
 	 */
-	removeMSP(id = checkParameter('id')) {
-		logger.debug(`removeMSP[${this.name}] - start`);
+	removeMsp(id = checkParameter('id')) {
+		logger.debug(`removeMsp[${this.name}] - start`);
+
 		return this.msps.delete(id);
 	}
 
@@ -209,8 +210,8 @@ const Channel = class {
 	 * @param {boolean} replace - If a MSP config has already been added to
 	 *  this channel then replace it with this new configuration.
 	 */
-	addMSP(msp = checkParameter('msp'), replace) {
-		const method = `addMSP[${this.name}]`;
+	addMsp(msp = checkParameter('msp'), replace) {
+		const method = `addMsp[${this.name}]`;
 		logger.debug(`${method} - start`);
 		if (!msp.id) {
 			throw Error('MSP does not have an id');
@@ -219,7 +220,7 @@ const Channel = class {
 		if (check) {
 			if (replace) {
 				logger.debug(`${method} - removing existing MSP  --name: ${msp.id}`);
-				this.removeMSP(check.id);
+				this.removeMsp(check.id);
 			} else {
 				const error = new Error(`MSP ${msp.id} already exists`);
 				logger.error(`${method} - error:${error.message}`);
@@ -251,6 +252,9 @@ const Channel = class {
 		}
 		if (!(endorser.type === 'Endorser')) {
 			throw Error('Missing valid endorser instance');
+		}
+		if (!(endorser.connected)) {
+			throw Error('Endorser must be connected');
 		}
 		const name = endorser.name;
 		const check = this.endorsers.get(name);
@@ -300,6 +304,21 @@ const Channel = class {
 	}
 
 	/**
+	 * Will return an array of {@link Endorser} instances that have been
+	 * assigned to this channel instance. Include a MSPID to only return endorsers
+	 * in a specific organization.
+	 *
+	 * @param {string} [mspid] - Optional. The mspid of the endorsers to return
+	 * @return {Endorser[]} the list of {@link Endorser}s.
+	 */
+	getEndorsers(mspid) {
+		const method = `getEndorsers[${this.name}]`;
+		logger.debug(`${method} - start`);
+
+		return Channel._getServiceEndpoints(this.endorsers.values(), 'Endorser', mspid);
+	}
+
+	/**
 	 * Add the committer object to the channel object
 	 *
 	 * @param {Committer} committer - An instance of the Committer class.
@@ -314,6 +333,9 @@ const Channel = class {
 		}
 		if (!(committer.type === 'Committer')) {
 			throw Error('Missing valid committer instance');
+		}
+		if (!(committer.connected)) {
+			throw Error('Committer must be connected');
 		}
 		const name = committer.name;
 		const check = this.committers.get(name);
@@ -365,21 +387,6 @@ const Channel = class {
 	}
 
 	/**
-	 * Will return an array of {@link Endorser} instances that have been
-	 * assigned to this channel instance. Include a MSPID to only return endorsers
-	 * in a specific organization.
-	 *
-	 * @param {string} [mspid] - Optional. The mspid of the endorsers to return
-	 * @return {Endorser[]} the list of {@link Endorser}s.
-	 */
-	getEndorsers(mspid) {
-		const method = `getEndorsers[${this.name}]`;
-		logger.debug(`${method} - start`);
-
-		return this._getServiceEndpoints(this.endorsers.values(), 'Endorser', mspid);
-	}
-
-	/**
 	 * Will return an array of {@link Committer} instances that have been
 	 * assigned to this channel instance. Include a MSPID to only return committers
 	 * in a specific organization.
@@ -391,11 +398,11 @@ const Channel = class {
 		const method = `getCommitters[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		return this._getServiceEndpoints(this.committers.values(), 'Committer', mspid);
+		return Channel._getServiceEndpoints(this.committers.values(), 'Committer', mspid);
 	}
 
-	_getServiceEndpoints(remotes, type, mspid) {
-		const method = `_getServiceEndpoints[${this.name}]`;
+	static _getServiceEndpoints(remotes, type, mspid) {
+		const method = '_getServiceEndpoints';
 		logger.debug(`${method} - start`);
 		const results = [];
 		for (const remote of remotes) {

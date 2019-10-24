@@ -8,6 +8,7 @@ const EventService = rewire('../lib/EventService');
 const Client = rewire('../lib/Client');
 const User = require('../lib/User');
 const EventListener = require('../lib/EventListener');
+const Eventer = require('../lib/Eventer');
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -31,20 +32,21 @@ describe('EventService', () => {
 	let channel;
 	let eventService;
 	let endpoint;
+	let eventer;
 
 	const user = User.createUser('user', 'password', 'mspid', TestUtils.certificateAsPEM, TestUtils.keyAsPEM);
 	const idx = client.newIdentityContext(user);
 
 	const tmpSetDelete = Set.prototype.delete;
 	const chaincode_event = {
-		chaincode_id: 'mychaincode',
+		chaincode_id: 'chaincode1',
 		event_name: 'event1',
 		tx_id: 'tx1',
 		payload: 'payload'
 	};
 	const chaincode_event2 = {
-		chaincode_id: 'mychaincode2',
-		event_name: 'event1',
+		chaincode_id: 'chaincode2',
+		event_name: 'event2',
 		tx_id: 'tx2',
 		payload: 'payload'
 	};
@@ -121,6 +123,8 @@ describe('EventService', () => {
 		channel = client.newChannel('mychannel');
 		eventService = new EventService('myhub', channel);
 		endpoint = client.newEndpoint({url: 'grpc://host:2700'});
+		eventer = new Eventer('eventer1', client);
+		eventer.endpoint = endpoint;
 	});
 
 	afterEach(() => {
@@ -150,15 +154,38 @@ describe('EventService', () => {
 			const eventService2 = new EventService('myhub', channel);
 			eventService2.name.should.equal('myhub');
 			eventService2.type.should.equal('EventService');
-			eventService2.start_block.should.equal('newest');
-			eventService2.end_block_seen.should.be.false;
+			eventService2.startBlock.should.equal('newest');
+			eventService2._end_block_seen.should.be.false;
 			eventService2._reg_counter.should.be.equal(0);
 			eventService2._haveBlockListeners.should.be.false;
 			eventService2._haveTxListeners.should.be.false;
 			eventService2._haveChaincodeListeners.should.be.false;
 			eventService2._close_running.should.be.false;
 			eventService2.channel.should.be.deep.equal(channel);
-			eventService2.type.should.be.equal('EventService');
+		});
+	});
+
+	describe('#setTargets', () => {
+		it('should require targets', () => {
+			(() => {
+				eventService.setTargets();
+			}).should.throw('Missing targets parameter');
+		});
+		it('should require targets as an array', () => {
+			(() => {
+				eventService.setTargets(eventer);
+			}).should.throw('targets parameter is not an array');
+		});
+		it('should throw when target not connected', () => {
+			(() => {
+				eventService.setTargets([eventer]);
+			}).should.throw('Eventer eventer1 is not connected');
+		});
+		it('should handle connected target', () => {
+			eventer.connected = true;
+			eventService.setTargets([eventer]);
+			should.equal(eventService.targets[0].type, 'Eventer');
+			should.equal(eventService.targets[0].name, 'eventer1');
 		});
 	});
 
@@ -358,14 +385,14 @@ describe('EventService', () => {
 			eventService._payload =  Buffer.from('payload');
 			eventService._signature = Buffer.from('signature');
 			await eventService.send({targets: [eventer1]});
-			eventService.eventer.should.be.deep.equal(eventer1);
+			eventService._current_eventer.should.be.deep.equal(eventer1);
 		});
 		it('rejects if not built and signed', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.checkConnection = sinon.stub().returns(true);
 			await eventService.send({targets: [eventer1]}).should.be.rejectedWith('The send payload has not been built');
 		});
-		it('', async () => {
+		it('rejects and has failed stream message', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			sinon.stub(eventService, '_startService').rejects(Error('failed'));
 			eventService._payload =  Buffer.from('payload');
@@ -383,7 +410,6 @@ describe('EventService', () => {
 		let isStreamReadyStub;
 		let decodeBlockStub;
 
-		let hub; // event service for the stream testing
 		beforeEach(() => {
 			isStreamReadyStub = sandbox.stub();
 			revert.push(EventService.__set__('isStreamReady', isStreamReadyStub));
@@ -397,7 +423,7 @@ describe('EventService', () => {
 			eventProtoDeliverStub = sandbox.stub().returns({deliverFiltered: deliverFilteredStub, deliver: deliverStub});
 			revert.push(EventService.__set__('fabprotos.protos.Deliver', eventProtoDeliverStub));
 
-			hub = new EventService('myhub', channel);
+			eventService = new EventService('myhub', channel);
 		});
 
 		it('throws if eventer stream is running', async () => {
@@ -456,15 +482,40 @@ describe('EventService', () => {
 			eventService.blockType = 'full';
 			await eventService._startService(eventer1, {}, 10).should.be.rejectedWith('ForcedError');
 		});
+		it('rejects error on stream receive error with eventer assigned', async () => {
+			util.inherits(Writer, Writable);
+			function Writer(opt) {
+				Writable.call(this, opt);
+			}
+			Writer.prototype._write = function(data, encoding, callback) {
+				const myErr = new Error('ForcedError');
+				myErr.code = 14;
+				callback(myErr);
+			};
+			const stream = new Writer({objectMode: true});
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.endpoint = endpoint;
+			eventer1.checkConnection = sinon.stub().returns(true);
+			eventer1.setStreamByType = function() {
+				this.stream = stream;
+			};
+			eventService.blockType = 'full';
+			eventService._close = sinon.stub();
+			eventService._current_eventer = sinon.stub();
+			eventService._current_eventer.disconnect = sinon.stub();
+			await eventService._startService(eventer1, {}, 10).should.be.rejectedWith('ForcedError');
+			sinon.assert.called(eventService._close);
+
+		});
 		it('should call stream on data and log about an unknown response', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
-			hub.blockType = 'full';
+			eventService.blockType = 'full';
 			onStub.yields({Type: 'unknown'});
 			// TEST CALL
-			await hub._startService(eventer1, {}, 3000);
+			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.calledWith(FakeLogger.error, 'on.data - unknown deliverResponse type %s', 'unknown');
 		});
@@ -473,10 +524,10 @@ describe('EventService', () => {
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
-			hub.blockType = 'full';
+			eventService.blockType = 'full';
 			onStub.yields({Type: 'block', block: 'place holder'});
 			// TEST CALL
-			await hub._startService(eventer1, {}, 3000);
+			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.calledWith(FakeLogger.debug, 'on.data - incoming block number 1');
 		});
@@ -485,14 +536,14 @@ describe('EventService', () => {
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
-			hub.blockType = 'full';
-			hub.end_block = Long.fromValue(1);
+			eventService.blockType = 'full';
+			eventService.endBlock = Long.fromValue(1);
 			onStub.yields({Type: 'block', block: 'place holder'});
-			hub._close = sinon.stub();
+			eventService._close = sinon.stub();
 			// TEST CALL
-			await hub._startService(eventer1, {}, 3000);
+			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
-			sinon.assert.called(hub._close);
+			sinon.assert.called(eventService._close);
 			sinon.assert.calledWith(FakeLogger.debug, 'on.data - incoming block number 1');
 		});
 		it('should call stream on data and catch an error', async () => {
@@ -500,47 +551,82 @@ describe('EventService', () => {
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
-			hub.blockType = 'full';
+			eventService.blockType = 'full';
 			onStub.yields({Type: 'block', block: 'place holder'});
-			hub._close = sinon.stub();
-			hub._processEndBlock = sinon.stub().throws(Error('onData Error'));
+			eventService._close = sinon.stub();
+			eventService._processEndBlock = sinon.stub().throws(Error('onData Error'));
 			// TEST CALL
-			await hub._startService(eventer1, {}, 3000);
+			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
-			sinon.assert.called(hub._close);
+			sinon.assert.called(eventService._close);
 			sinon.assert.calledWith(FakeLogger.error, '_startService[myhub] EventService has detected an error Error: onData Error');
+		});
+		it('should call stream on data with status and end block seen', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.checkConnection = sinon.stub().returns(true);
+			eventer1.waitForReady = sandbox.stub().resolves();
+			await eventer1.connect(endpoint);
+			eventService.blockType = 'full';
+			onStub.yields({Type: 'status', status: 'SUCCESS'});
+			eventService._close = sinon.stub();
+			eventService._end_block_seen = true;
+			eventService.lastBlockNumber = Long.fromValue(1);
+			eventService.endBlock = Long.fromValue(1);
+			// TEST CALL
+			await eventService._startService(eventer1, {}, 3000);
+			sinon.assert.called(deliverStub);
+			sinon.assert.notCalled(eventService._close);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received after last block seen: %s block_num: %s');
 		});
 		it('should call stream on data with status and end block seen and newest block seen', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
-			hub.blockType = 'full';
+			eventService.blockType = 'full';
 			onStub.yields({Type: 'status', status: 'SUCCESS'});
-			hub._close = sinon.stub();
-			hub.end_block_seen = true;
-			hub.lastBlockNumber = Long.fromValue(1);
-			hub.ending_block = 'newest';
+			eventService._close = sinon.stub();
+			eventService._end_block_seen = false;
+			eventService.lastBlockNumber = Long.fromValue(1);
+			eventService.endBlock = 'newest';
 			// TEST CALL
-			await hub._startService(eventer1, {}, 3000);
+			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
-			sinon.assert.called(hub._close);
+			sinon.assert.called(eventService._close);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received after last block seen: %s block_num:');
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received when newest block seen: %s block_num:');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received when newest block seen: %s block_num: %s');
+		});
+		it('should call stream on data with status and end block not seen', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.checkConnection = sinon.stub().returns(true);
+			eventer1.waitForReady = sandbox.stub().resolves();
+			await eventer1.connect(endpoint);
+			eventService.blockType = 'full';
+			onStub.yields({Type: 'status', status: 'SUCCESS'});
+			eventService._close = sinon.stub();
+			eventService._end_block_seen = false;
+			eventService.lastBlockNumber = Long.fromValue(1);
+			eventService.endBlock = Long.fromValue(3);
+			// TEST CALL
+			await eventService._startService(eventer1, {}, 3000);
+			sinon.assert.called(deliverStub);
+			sinon.assert.called(eventService._close);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received before the endblock has been seen');
 		});
 		it('should call stream on data with type status of SUCCESS', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
-			hub.blockType = 'full';
+			eventService.blockType = 'full';
 			onStub.yields({Type: 'status', status: 'SUCCESS'});
-			hub._close = sinon.stub();
+			eventService._close = sinon.stub();
 			// TEST CALL
-			await hub._startService(eventer1, {}, 3000);
+			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
-			sinon.assert.notCalled(hub._close);
+			sinon.assert.notCalled(eventService._close);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
 		});
 		it('should call stream on data with type status of not SUCCESS', async () => {
@@ -548,31 +634,43 @@ describe('EventService', () => {
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
-			hub.blockType = 'full';
+			eventService.blockType = 'full';
 			onStub.yields({Type: 'status', status: 'BAD'});
-			hub._close = sinon.stub();
+			eventService._close = sinon.stub();
 			// TEST CALL
-			await hub._startService(eventer1, {}, 3000);
+			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
-			sinon.assert.called(hub._close);
+			sinon.assert.called(eventService._close);
 			sinon.assert.calledWith(FakeLogger.error, 'on.data - unexpected deliverResponse status received - %s');
+		});
+	});
+
+	describe('#isStarted', () => {
+		it('should return true', () => {
+			eventService._current_eventer = sinon.stub();
+			eventService._current_eventer.isStreamReady = sinon.stub().returns(true);
+			const results = eventService.isStarted();
+			results.should.be.true;
+		});
+		it('should return false', () => {
+			eventService._current_eventer = sinon.stub();
+			eventService._current_eventer.isStreamReady = sinon.stub().returns(false);
+			const results = eventService.isStarted();
+			results.should.be.false;
+		});
+		it('should return false when no eventer assigned', () => {
+			const results = eventService.isStarted();
+			results.should.be.false;
 		});
 	});
 
 	describe('#isListening', () => {
 		it('should return true', () => {
-			eventService.eventer = sinon.stub();
-			eventService.eventer.isStreamReady = sinon.stub().returns(true);
+			eventService._eventListenerRegistrations.set('something', 'else');
 			const results = eventService.isListening();
 			results.should.be.true;
 		});
 		it('should return false', () => {
-			eventService.eventer = sinon.stub();
-			eventService.eventer.isStreamReady = sinon.stub().returns(false);
-			const results = eventService.isListening();
-			results.should.be.false;
-		});
-		it('should return false when no eventer assigned', () => {
 			const results = eventService.isListening();
 			results.should.be.false;
 		});
@@ -587,7 +685,7 @@ describe('EventService', () => {
 			const registrations = new Map();
 			const eventOnEventStub1 = sinon.stub();
 			registrations.set('event1', {onEvent: eventOnEventStub1});
-			eventService._eventRegistrations = registrations;
+			eventService._eventListenerRegistrations = registrations;
 			eventService._closeAllCallbacks();
 			sinon.assert.called(eventOnEventStub1);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
@@ -638,7 +736,7 @@ describe('EventService', () => {
 			const eventListener = new EventListener('block', sinon.stub());
 			const registrations = new Map();
 			registrations.set(eventListener, eventListener);
-			eventService._eventRegistrations = registrations;
+			eventService._eventListenerRegistrations = registrations;
 			const results = eventService.unregisterEventListener(eventListener);
 			should.equal(results, eventService);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
@@ -651,9 +749,9 @@ describe('EventService', () => {
 			registrations.set(eventListener1, eventListener1);
 			const eventListener2 = new EventListener('tx', sinon.stub(), null, 'txid');
 			registrations.set(eventListener2, eventListener2);
-			const eventListener3 = new EventListener('chaincode', sinon.stub(), null, 'eventname');
+			const eventListener3 = new EventListener('chaincode', sinon.stub(), null, 'eventname', 'chaincode');
 			registrations.set(eventListener3, eventListener3);
-			eventService._eventRegistrations = registrations;
+			eventService._eventListenerRegistrations = registrations;
 			const results = eventService.unregisterEventListener(eventListener);
 			should.equal(results, eventService);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
@@ -664,24 +762,29 @@ describe('EventService', () => {
 	});
 
 	describe('#registerChaincodeListener', () => {
-		it('should throw if eventName not given', () => {
+		it('should throw if chaincodeId not given', () => {
 			(() => {
 				eventService.registerChaincodeListener();
+			}).should.throw(/Missing chaincodeId parameter/);
+		});
+		it('should throw if eventName not given', () => {
+			(() => {
+				eventService.registerChaincodeListener('chaincodeId');
 			}).should.throw(/Missing eventName parameter/);
 		});
 		it('should throw if callback not given', () => {
 			(() => {
-				eventService.registerChaincodeListener('eventname');
+				eventService.registerChaincodeListener('chaincodeId', 'eventname');
 			}).should.throw(/Missing callback parameter/);
 		});
 		it('should set the have flag', () => {
 			eventService._haveChaincodeListeners.should.be.false;
-			eventService.registerChaincodeListener('eventname', sinon.stub());
+			eventService.registerChaincodeListener('chaincodeId', 'eventname', sinon.stub());
 			eventService._haveChaincodeListeners.should.be.true;
 		});
 		it('should set the have flag with options', () => {
 			eventService._haveChaincodeListeners.should.be.false;
-			eventService.registerChaincodeListener('eventname', sinon.stub(), {unregister: false});
+			eventService.registerChaincodeListener('chaincoderId', 'eventname', sinon.stub(), {unregister: false});
 			eventService._haveChaincodeListeners.should.be.true;
 		});
 	});
@@ -792,7 +895,7 @@ describe('EventService', () => {
 			eventService._processBlockEvents('full', 'filtered', 'private_data', 1);
 			sinon.assert.calledWith(FakeLogger.debug, '_processBlockEvents[myhub] - calling block listener callback');
 			sinon.assert.called(block_callback);
-			should.equal(eventService._eventRegistrations.has(block_reg), true);
+			should.equal(eventService._eventListenerRegistrations.has(block_reg), true);
 		});
 		it('should process the block and remove registration', () => {
 			const block_callback = sinon.stub();
@@ -800,7 +903,7 @@ describe('EventService', () => {
 			eventService._processBlockEvents('full', 'filtered', 'private_data', 1);
 			sinon.assert.calledWith(FakeLogger.debug, '_processBlockEvents[myhub] - calling block listener callback');
 			sinon.assert.called(block_callback);
-			should.equal(eventService._eventRegistrations.has(block_reg), false);
+			should.equal(eventService._eventListenerRegistrations.has(block_reg), false);
 		});
 	});
 
@@ -835,7 +938,7 @@ describe('EventService', () => {
 			eventService._callTransactionListener('tx1', 'valid', 1);
 			sinon.assert.calledWith(FakeLogger.debug, '_callTransactionListener[myhub] - about to call the transaction call back with code=valid tx=tx1');
 			sinon.assert.called(tx_callback);
-			should.equal(eventService._eventRegistrations.has(tx_reg), true);
+			should.equal(eventService._eventListenerRegistrations.has(tx_reg), true);
 		});
 		it('should call tx callback and remove the registration', () => {
 			const tx_callback = sinon.stub();
@@ -844,7 +947,7 @@ describe('EventService', () => {
 			eventService._callTransactionListener('tx1', 'valid', 1);
 			sinon.assert.calledWith(FakeLogger.debug, '_callTransactionListener[myhub] - about to call the transaction call back with code=valid tx=tx1');
 			sinon.assert.called(tx_callback);
-			should.equal(eventService._eventRegistrations.has(tx_reg), false);
+			should.equal(eventService._eventListenerRegistrations.has(tx_reg), false);
 		});
 		it('should call tx callback and remove the registration', () => {
 			const tx_callback = sinon.stub();
@@ -853,7 +956,7 @@ describe('EventService', () => {
 			eventService._callTransactionListener('tx1', 'valid', 1);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - tx listener for %s - not called');
 			sinon.assert.notCalled(tx_callback);
-			should.equal(eventService._eventRegistrations.has(tx_reg), true);
+			should.equal(eventService._eventListenerRegistrations.has(tx_reg), true);
 		});
 	});
 
@@ -864,14 +967,14 @@ describe('EventService', () => {
 		});
 		it('should work with filtered block', () => {
 			const chaincode_callback = sinon.stub();
-			const chainocode_reg = eventService.registerChaincodeListener('event1', chaincode_callback, {unregister: true});
+			const chainocode_reg = eventService.registerChaincodeListener('chaincode1', 'event1', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents(block, filtered_block);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - calling callback - %s');
 			sinon.assert.called(chaincode_callback);
-			should.equal(eventService._eventRegistrations.has(chainocode_reg), false);
+			should.equal(eventService._eventListenerRegistrations.has(chainocode_reg), false);
 		});
-		it('should get an array with 4 events on a filtered block', () => {
+		it('should get an array with 3 events on a filtered block', () => {
 			let chaincode_events;
 			const chaincode_callback = (error, event) => {
 				if (error) {
@@ -879,80 +982,95 @@ describe('EventService', () => {
 				}
 				chaincode_events = event.chaincodeEvents;
 			};
-			const chainocode_reg = eventService.registerChaincodeListener('event1', chaincode_callback, {unregister: true});
+			const chainocode_reg = eventService.registerChaincodeListener('chaincode1', 'event1', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents(block, filtered_block);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - calling callback - %s');
-			should.equal(eventService._eventRegistrations.has(chainocode_reg), false);
-			should.equal(chaincode_events.length, 4);
+			should.equal(eventService._eventListenerRegistrations.has(chainocode_reg), false);
+			should.equal(chaincode_events.length, 3);
+		});
+		it('should get an array with 1 events on a filtered block', () => {
+			let chaincode_events;
+			const chaincode_callback = (error, event) => {
+				if (error) {
+					throw Error('This should not happen');
+				}
+				chaincode_events = event.chaincodeEvents;
+			};
+			const chainocode_reg = eventService.registerChaincodeListener('chaincode2', 'event2', chaincode_callback, {unregister: true});
+
+			eventService._processChaincodeEvents(block, filtered_block);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - calling callback - %s');
+			should.equal(eventService._eventListenerRegistrations.has(chainocode_reg), false);
+			should.equal(chaincode_events.length, 1);
 		});
 		it('should work with full block', () => {
 			const chaincode_callback = sinon.stub();
-			const chainocode_reg = eventService.registerChaincodeListener('event1', chaincode_callback, {unregister: true});
+			const chainocode_reg = eventService.registerChaincodeListener('chaincode1', 'event1', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents(block);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - calling callback - %s');
 			sinon.assert.called(chaincode_callback);
-			should.equal(eventService._eventRegistrations.has(chainocode_reg), false);
+			should.equal(eventService._eventListenerRegistrations.has(chainocode_reg), false);
 		});
 		it('should work with filtered block not remove reg', () => {
 			const chaincode_callback = sinon.stub();
-			const chainocode_reg = eventService.registerChaincodeListener('event1', chaincode_callback, {unregister: false});
+			const chainocode_reg = eventService.registerChaincodeListener('chaincode1', 'event1', chaincode_callback, {unregister: false});
 
 			eventService._processChaincodeEvents(block, filtered_block);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - calling callback - %s');
 			sinon.assert.called(chaincode_callback);
-			should.equal(eventService._eventRegistrations.has(chainocode_reg), true);
+			should.equal(eventService._eventListenerRegistrations.has(chainocode_reg), true);
 		});
 		it('should work with full block and not remove reg', () => {
 			const chaincode_callback = sinon.stub();
-			const chainocode_reg = eventService.registerChaincodeListener('event1', chaincode_callback, {unregister: false});
+			const chainocode_reg = eventService.registerChaincodeListener('chaincode1', 'event1', chaincode_callback, {unregister: false});
 
 			eventService._processChaincodeEvents(block);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - calling callback - %s');
 			sinon.assert.called(chaincode_callback);
-			should.equal(eventService._eventRegistrations.has(chainocode_reg), true);
+			should.equal(eventService._eventListenerRegistrations.has(chainocode_reg), true);
 		});
 		it('should not call reg and not remove', () => {
 			const chaincode_callback = sinon.stub();
-			const chainocode_reg = eventService.registerChaincodeListener('event2', chaincode_callback, {unregister: true});
+			const chainocode_reg = eventService.registerChaincodeListener('chaincode1', 'event2', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents(block, filtered_block);
 			sinon.assert.calledWith(FakeLogger.debug, '_queueChaincodeEvent[myhub] - NOT queuing chaincode event: event1');
-			should.equal(eventService._eventRegistrations.has(chainocode_reg), true);
+			should.equal(eventService._eventListenerRegistrations.has(chainocode_reg), true);
 		});
 		it('should not call reg and not remove', () => {
 			const chaincode_callback = sinon.stub();
-			const chainocode_reg = eventService.registerChaincodeListener('event2', chaincode_callback, {unregister: true});
+			const chainocode_reg = eventService.registerChaincodeListener('chaincode1', 'event2', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents(block);
 			sinon.assert.calledWith(FakeLogger.debug, '_queueChaincodeEvent[myhub] - NOT queuing chaincode event: event1');
-			should.equal(eventService._eventRegistrations.has(chainocode_reg), true);
+			should.equal(eventService._eventListenerRegistrations.has(chainocode_reg), true);
 		});
 		it('should not have an error', () => {
 			const chaincode_callback = sinon.stub();
-			eventService.registerChaincodeListener('event2', chaincode_callback, {unregister: true});
+			eventService.registerChaincodeListener('chaincode1', 'event2', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents(block, {});
 			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
 		});
 		it('should not have an error', () => {
 			const chaincode_callback = sinon.stub();
-			eventService.registerChaincodeListener('event2', chaincode_callback, {unregister: true});
+			eventService.registerChaincodeListener('chaincode1', 'event2', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents(block, {filtered_transactions: [{}]});
 			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
 		});
 		it('should not have an error with no chaincode actions', () => {
 			const chaincode_callback = sinon.stub();
-			eventService.registerChaincodeListener('event2', chaincode_callback, {unregister: true});
+			eventService.registerChaincodeListener('chaincode1', 'event2', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents(block, {filtered_transactions: [{transaction_actions: {}}]});
 			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
 		});
 		it('should not have an error with no chaincode_action in chaincode_actions', () => {
 			const chaincode_callback = sinon.stub();
-			eventService.registerChaincodeListener('event2', chaincode_callback, {unregister: true});
+			eventService.registerChaincodeListener('chaincode1', 'event2', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents(block,
 				{filtered_transactions: [{transaction_actions: {chaincode_actions: [{chaincode_event: {}}]}}]});
@@ -960,21 +1078,21 @@ describe('EventService', () => {
 		});
 		it('should not have an error with non endorser block', () => {
 			const chaincode_callback = sinon.stub();
-			eventService.registerChaincodeListener('event2', chaincode_callback, {unregister: true});
+			eventService.registerChaincodeListener('chaincode1', 'event2', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents({data: {data: [{payload: {header: {channel_header: {type: 1}}}}]}});
 			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
 		});
 		it('should not have an error with non endorser block', () => {
 			const chaincode_callback = sinon.stub();
-			eventService.registerChaincodeListener('event2', chaincode_callback, {unregister: true});
+			eventService.registerChaincodeListener('chaincode1', 'event2', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents({data: {data: [{payload: {header: {channel_header: {type: 3}}}}]}});
 			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
 		});
 		it('should not have an error with non endorser block', () => {
 			const chaincode_callback = sinon.stub();
-			eventService.registerChaincodeListener('event2', chaincode_callback, {unregister: true});
+			eventService.registerChaincodeListener('chaincode1', 'event2', chaincode_callback, {unregister: true});
 
 			eventService._processChaincodeEvents({
 				data: {
@@ -998,7 +1116,7 @@ describe('EventService', () => {
 
 	describe('#_queueChaincodeEvent', () => {
 		it('should work', () => {
-			eventService.registerChaincodeListener('event1', sinon.stub(), {unregister: true});
+			eventService.registerChaincodeListener('chaincode1', 'event1', sinon.stub(), {unregister: true});
 			eventService._queueChaincodeEvent(chaincode_event, 1, 'tx1', 'valid', new Map());
 			sinon.assert.calledWith(FakeLogger.debug, '_queueChaincodeEvent[myhub] - queuing chaincode event: event1');
 		});

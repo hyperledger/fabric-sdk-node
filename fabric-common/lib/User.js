@@ -72,6 +72,14 @@ const User = class {
 	}
 
 	/**
+	 * Get the MSP Id.
+	 * @returns {string} The mspid.
+	 */
+	getMspid() {
+		return this._mspId;
+	}
+
+	/**
 	 * Get the roles.
 	 * @returns {string[]} The roles.
 	 */
@@ -155,6 +163,27 @@ const User = class {
 	 */
 	setCryptoSuite(cryptoSuite) {
 		this._cryptoSuite = cryptoSuite;
+	}
+
+	/**
+	 * @typedef {Object} CryptoSetting
+	 * @property {boolean} software Whether to load a software-based implementation (true) or HSM implementation (false)
+	 *    default is true (for software based implementation), specific implementation module is specified
+	 *    in the setting 'crypto-suite-software'
+	 * @property {number} keysize The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
+	 * @property {string} algorithm Digital signature algorithm, currently supporting ECDSA only with value 'EC'
+	 * @property {string} hash 'SHA2' or 'SHA3'
+	 */
+
+	/**
+	 * This is a factory method. It returns a new instance of the CryptoSuite API implementation, based on the "setting"
+	 * that is passed in, or if skipped, based on default values of the {@link CryptoSetting} properties.
+	 *
+	 * @param {CryptoSetting} setting Optional
+	 * @returns {module:api.CryptoSuite} a new instance of the CryptoSuite API implementation
+	 */
+	static newCryptoSuite(setting) {
+		return sdkUtils.newCryptoSuite(setting);
 	}
 
 	/**

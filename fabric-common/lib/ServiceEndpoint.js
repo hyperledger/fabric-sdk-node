@@ -33,7 +33,7 @@ class ServiceEndpoint {
 	 * disconnect the connection before re-connecting to the service.
 	 *
 	 * @param {Endpoint} endpoint - Service connection options including the url.
-	 * @param {ConnectionOpts} options - Any specific options for this instance
+	 * @param {ConnectionOptions} options - Any specific options for this instance
 	 *  of the connection to the peer. These will override options from the
 	 *  endpoint service connection options.
 	 */

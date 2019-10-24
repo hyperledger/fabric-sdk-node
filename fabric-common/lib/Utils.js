@@ -216,6 +216,55 @@ module.exports.getLogger = function (name) {
 	return insertLoggerName(logger, name);
 };
 
+/**
+ * Configures a logger for the entire SDK to use and override the default logger. Unless this method is called,
+ * the SDK uses a default logger based on [winston]{@link https://www.npmjs.com/package/winston}.
+ * When using the built-in winston based logger, use the configuration setting <code>hfc-logging</code> to pass
+ * in configurations in the following format:
+ * <br><br>
+ * <pre>
+ * {
+ *   'error': 'error.log',			// 'error' logs are printed to file 'error.log' relative of the current working dir for node.js
+ *   'debug': '/tmp/myapp/debug.log',	// 'debug' and anything more critical ('info', 'warn', 'error') can also be an absolute path
+ *   'info': 'console'			// 'console' is a keyword for logging to console
+ * }
+ * </pre>
+ * <br>
+ * @param {Object} logger a logger instance that defines the following methods: debug(), info(), warn(), error() with
+ * string interpolation methods like [util.format]{@link https://nodejs.org/api/util.html#util_util_format_format}.
+ */
+module.exports.setLogger = (logger) => {
+	let err = '';
+
+	if (typeof logger.debug !== 'function') {
+		err += 'debug() ';
+	}
+
+	if (typeof logger.info !== 'function') {
+		err += 'info() ';
+	}
+
+	if (typeof logger.warn !== 'function') {
+		err += 'warn() ';
+	}
+
+	if (typeof logger.error !== 'function') {
+		err += 'error()';
+	}
+
+	if (err !== '') {
+		throw new Error('The "logger" parameter must be an object that implements the following methods, which are missing: ' + err);
+	}
+
+	if (global.hfc) {
+		global.hfc.logger = logger;
+	} else {
+		global.hfc = {
+			logger: logger
+		};
+	}
+};
+
 //
 // Internal method to add additional configuration file to override default file configuration settings
 //

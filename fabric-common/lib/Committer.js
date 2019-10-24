@@ -101,7 +101,7 @@ class Committer extends ServiceEndpoint {
 	 *  response before rejecting the promise with a timeout error. This
 	 *  overrides the request-timeout config connection setting of this instance.
 	 * @returns {Promise} A Promise for a {@link BroadcastResponse} object
-	 * @throws {SYSTEM TIMEOUT | REQUEST TIMEOUT}
+	 * @throws {Error}
 	 */
 	sendBroadcast(envelope, timeout) {
 		const method = 'sendBroadcast';

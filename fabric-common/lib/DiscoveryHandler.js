@@ -29,7 +29,7 @@ class DiscoveryHandler extends ServiceHandler {
 	/**
 	 * constructor
 	 *
-	 * @param {ChannelDiscovery} discovery - The channel discovery source for this handler.
+	 * @param {DiscoveryService} discovery - The discovery service for this handler.
 	 */
 	constructor(discovery) {
 		logger.debug('DiscoveryHandler.constructor - start');
@@ -39,11 +39,11 @@ class DiscoveryHandler extends ServiceHandler {
 
 	/**
 	 * This will send transactions to all peers found by discovery.
-	 * @param {*} signedEnvelope
+	 * @param {*} signedProposal
 	 * @param {Object} request - Include a 'mspid' when just peers from
 	 *  an organization are required
 	 */
-	async query(signedEnvelope = checkParameter('signedEnvelope'), request = {}) {
+	async query(signedProposal = checkParameter('signedProposal'), request = {}) {
 		const method = 'query';
 		logger.debug('%s - start', method);
 
@@ -62,7 +62,7 @@ class DiscoveryHandler extends ServiceHandler {
 		if (endorsers && endorsers.length > 0) {
 			logger.debug('%s - found %s endorsers assigned to channel', method, endorsers.length);
 			const promises = endorsers.map(async (endorser) => {
-				return endorser.sendProposal(signedEnvelope, timeout);
+				return endorser.sendProposal(signedProposal, timeout);
 			});
 			results = await settle(promises);
 			results.forEach((result) => {

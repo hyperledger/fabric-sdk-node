@@ -39,7 +39,7 @@ class Commit extends Proposal {
 	}
 
 	/**
-	 * @typedef {Object} CommitRequest
+	 * @typedef {Object} CommitBuildRequest
 	 * @property {Endorsement} endorsement - Required. The Endorsement
 	 *  that will be committed.
 	 */
@@ -49,7 +49,7 @@ class Commit extends Proposal {
 	 * @param {IdentityContext} [idContext] - The context is not used
 	 *  and is only specified here to be consistent with other ServiceAction
 	 *  build method calls.
-	 * @param {CommitRequest} request - The commit options of the request.
+	 * @param {CommitBuildRequest} request - The commit options of the request.
 	 * @returns {byte[]} The commits payload bytes to be signed.
 	 */
 	build(idContext = checkParameter('idContext'), request = {}) {
@@ -118,7 +118,7 @@ class Commit extends Proposal {
 	}
 
 	/**
-	 * @typedef {Object} CommitRequest
+	 * @typedef {Object} CommitSendRequest
 	 * @property {Committers[]} [targets] - Optional. The Committers to send the endorsements.
 	 * When not included an handler must be included.
 	 * @property {EndorsementHandler} - [handler] - Optional. The handler to send the endorsements.
@@ -140,7 +140,7 @@ class Commit extends Proposal {
 	 * This method will use the proposal responses returned from the {@link Proposal#endorse} along
 	 * with the proposal that was sent for endorsement.
 	 *
-	 * @param {CommitRequest} request - {@link CommitRequest}
+	 * @param {CommitSendRequest} request - {@link CommitRequest}
 	 * @returns commit results
 	 */
 	async send(request = {}) {
